@@ -2,39 +2,41 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C79C3F2D4
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D38C3F2D1
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:33:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 576D122B48
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D27B122B48
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:33:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726876AbgCBDdE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 1 Mar 2020 22:33:04 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:60506 "EHLO smtp.infotech.no"
+        id S1726884AbgCBDdG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 1 Mar 2020 22:33:06 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:60518 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726764AbgCBDdD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 1 Mar 2020 22:33:03 -0500
+        id S1726764AbgCBDdG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 1 Mar 2020 22:33:06 -0500
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id CE3E120426C;
-        Mon,  2 Mar 2020 04:33:01 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTP id 3362920425B;
+        Mon,  2 Mar 2020 04:33:04 +0100 (CET)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fv80GrZZ9Biy; Mon,  2 Mar 2020 04:32:54 +0100 (CET)
+        with ESMTP id tRb8o0KCmzys; Mon,  2 Mar 2020 04:33:02 +0100 (CET)
 Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 54FDD20414E;
-        Mon,  2 Mar 2020 04:32:53 +0100 (CET)
+        by smtp.infotech.no (Postfix) with ESMTPA id EB95120425A;
+        Mon,  2 Mar 2020 04:32:57 +0100 (CET)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v8 00/38] sg: add v4 interface
-Date:   Sun,  1 Mar 2020 22:32:11 -0500
-Message-Id: <20200302033249.4515-1-dgilbert@interlog.com>
+Subject: [PATCH v8 04/38] sg: rework sg_poll(), minor changes
+Date:   Sun,  1 Mar 2020 22:32:15 -0500
+Message-Id: <20200302033249.4515-5-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200302033249.4515-1-dgilbert@interlog.com>
+References: <20200302033249.4515-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -42,151 +44,194 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patchset is the first stage of a two stage rewrite of the scsi
-generic (sg) driver. The main goal of the first stage is to
-introduce the sg v4 interface that uses 'struct sg_io_v4' as well
-as keeping and modernizing the sg v3 interface (based on 'struct
-sg_io_hdr'). The async interface formerly requiring the use of
-write() and read() system calls now have ioctl(SG_IOSUBMIT) and
-ioctl(SG_IORECEIVE) replacements. See:
-    http://sg.danny.cz/sg/sg_v40.html
-for more details.
+Re-arrange code in sg_poll(). Rename sg_read_oxfer() to
+sg_rd_append(). In sg_start_req() rename rw to r0w.
+Plus associated changes demanded by checkpatch.pl
 
-Due to changes in the production sg driver (mainly due to
-compat_ioctl() work) there are many changes in this patchset just
-keeping up. Significant changes appeared in lk 5.5.3 with more
-in lk 5.6.0-rc1. This patchset is build on the latter.
+*** Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-The complete patchset, whose second stage has an additional 25 patches
-(i.e. 63 patches in all), can be found soon at the above link.
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/sg.c | 67 ++++++++++++++++++++++-------------------------
+ 1 file changed, 31 insertions(+), 36 deletions(-)
 
-Changes since v7 (sent to linux-scsi list on 20200227)
-  - improve direct IO code, remove the SG_FRQ_DIO_IN_USE
-    sg_request::frq_bm flag as it is no longer needed
-  - simplify state changing code. Many state changes (rq_st) do not
-    need changes to the xarray "marks"; only lock those that do
-    (reviewer queried the locking)
-  - remove some misplaced likely()/unlikely() macros. They are gathered
-    together in a separate patch (in a second patchset)
-  - change a cast that the kbuild robot complained about. It also
-    flagged a stack size problem in sg_ioctl_common() for reasons not
-    given nor obvious. That function (and its parents) declare only
-    simple scalars on the stack.
-  - add 'Reviewed-by' where appropriate
-
-Changes since v6 (sent to linux-scsi list on 20200112)
-  - based on Martin Petersen's 5.7/scsi-queue branch in his
-    linux-scsi repository
-  - major work on mmap support: when mmap(2) is used the reserve
-    request scatter gather list is rebuilt to have order=0
-    elements (i.e. each is PAGE_SIZE bytes).
-  - address one kbuild robot issue: add include defining size_t
-  - nearly all patches that have been reviewed have been changed,
-    usually in minor ways. Those patches have "***" before the
-    "Reviewed-by" line.
-
-Changes since v5 (sent to linux-scsi list on 20191008)
-  - replace linked lists with xarray mechanism
-  - use the locking in the xarray implementation to
-    replace several discrete locks
-  - some patches that were previously reviewed by
-    Hannes Reinecke have had small changes made to
-    them usually associated with xarrays. Those have
-    been marked with "***" prepended to the
-    "Reviewed-by" line
-  - bump the driver version number to 4.0.08
-
-Changes since v4 (sent to linux-scsi list on 20190829)
-  - remove much of the logic in the previous patchset
-    series from and including:
-        [PATCH v4 11/22] sg: replace rq array with lists
-    to
-        [PATCH v4 22/22] sg: bump version to 4.0.03
-  - bump the driver version number from 3.5.36 to 3.9.01
-    [20190606] reflecting that the v4 interface has not
-    been implemented (in this patchset)
-  - patches 13/23 through to 22/23 reduce the complexity
-    of "[PATCH v4 11/22] sg: replace rq array with lists"
-    measured in KiloBytes from about 130 KB to 80 KB.
-  - various changes suggested by reviewers of the v4
-    patchset have been implemented
-  - change all %p descriptors (mainly in SG_LOG() macros)
-    to %pK so that the debug output remains useful in
-    recent kernels. Evidently sys admins can selectively
-    turn on pointer obfuscation on %pK as required on
-    secure systems.
-
-Changes since v3 (sent to linux-scsi list on 20190807):
-  - move __must_hold attributes into separate patch
-  - move procfs and debugfs file scope definitions toward
-    the end of sg.c to avoid forward declarations
-  - move module_param* and MODULE_* macros to end of sg.c
-  - expand debugfs support with snapshot_devs which allows
-    filtering of snapshot output by sg device(s)
-  - add a WARN_ONCE when write(2) is used with the sg v3
-    interface. Suggest using SG_IOSUBMIT_V3 instead.
-  - address more of the review comments from Hannes Reinecke
-    and Christoph Hellwig
-  - add various reviewed-by tags where appropriate
-
-Changes since v2 (sent to linux-scsi list on 20190727):
-  - address issues "Reported-by: kbuild test robot <lkp@intel.com>".
-    The main one was to change the bsg header included to:
-    include/uapi/linux/bsg.h rather than include/linux/bsg.h
-  - address some of the review comments from Hannes Reinecke;
-    email responses have been sent for review comments that
-    did not result in code changes
-
-Changes since v1 (sent to linux-scsi list on 20190616):
-  - change ktime_get_boot_ns() to ktime_get_boottime_ns() to reflect
-    kernel API change first seen in lk 5.3.0-rc1
-
-Douglas Gilbert (38):
-  sg: move functions around
-  sg: remove typedefs, type+formatting cleanup
-  sg: sg_log and is_enabled
-  sg: rework sg_poll(), minor changes
-  sg: bitops in sg_device
-  sg: make open count an atomic
-  sg: move header to uapi section
-  sg: speed sg_poll and sg_get_num_waiting
-  sg: sg_allow_if_err_recovery and renames
-  sg: improve naming
-  sg: change rwlock to spinlock
-  sg: ioctl handling
-  sg: split sg_read
-  sg: sg_common_write add structure for arguments
-  sg: rework sg_vma_fault
-  sg: rework sg_mmap
-  sg: replace sg_allow_access
-  sg: rework scatter gather handling
-  sg: introduce request state machine
-  sg: sg_find_srp_by_id
-  sg: sg_fill_request_element
-  sg: printk change %p to %pK
-  sg: xarray for fds in device
-  sg: xarray for reqs in fd
-  sg: replace rq array with lists
-  sg: sense buffer rework
-  sg: add sg v4 interface support
-  sg: rework debug info
-  sg: add 8 byte SCSI LUN to sg_scsi_id
-  sg: expand sg_comm_wr_t
-  sg: add sg_iosubmit_v3 and sg_ioreceive_v3 ioctls
-  sg: add some __must_hold macros
-  sg: move procfs objects to avoid forward decls
-  sg: protect multiple receivers
-  sg: first debugfs support
-  sg: rework mmap support
-  sg: warn v3 write system call users
-  sg: bump version to 4.0.08
-
- drivers/scsi/sg.c      | 5173 +++++++++++++++++++++++++++-------------
- include/scsi/sg.h      |  270 +--
- include/uapi/scsi/sg.h |  374 +++
- 3 files changed, 3909 insertions(+), 1908 deletions(-)
- create mode 100644 include/uapi/scsi/sg.h
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 77840caf5716..6e1610d575d7 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -182,8 +182,8 @@ static ssize_t sg_new_write(struct sg_fd *sfp, struct file *file,
+ 			    struct sg_request **o_srp);
+ static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 			   u8 *cmnd, int timeout, int blocking);
+-static int sg_read_oxfer(struct sg_request *srp, char __user *outp,
+-			 int num_xfer);
++static int sg_rd_append(struct sg_request *srp, char __user *outp,
++			int num_xfer);
+ static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
+ static void sg_build_reserve(struct sg_fd *sfp, int req_size);
+ static void sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp,
+@@ -793,7 +793,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 		old_hdr = kmalloc(SZ_SG_HEADER, GFP_KERNEL);
+ 		if (!old_hdr)
+ 			return -ENOMEM;
+-		if (__copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
++		if (copy_from_user(old_hdr, buf, SZ_SG_HEADER)) {
+ 			retval = -EFAULT;
+ 			goto free_old_hdr;
+ 		}
+@@ -806,7 +806,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 					retval = -ENOMEM;
+ 					goto free_old_hdr;
+ 				}
+-				retval = __copy_from_user
++				retval = copy_from_user
+ 				    (new_hdr, buf, SZ_SG_IO_HDR);
+ 				req_pack_id = new_hdr->pack_id;
+ 				kfree(new_hdr);
+@@ -901,7 +901,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 
+ 	/* Now copy the result back to the user buffer.  */
+ 	if (count >= SZ_SG_HEADER) {
+-		if (__copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
++		if (copy_to_user(buf, old_hdr, SZ_SG_HEADER)) {
+ 			retval = -EFAULT;
+ 			goto free_old_hdr;
+ 		}
+@@ -909,7 +909,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 		if (count > old_hdr->reply_len)
+ 			count = old_hdr->reply_len;
+ 		if (count > SZ_SG_HEADER) {
+-			if (sg_read_oxfer(srp, buf, count - SZ_SG_HEADER)) {
++			if (sg_rd_append(srp, buf, count - SZ_SG_HEADER)) {
+ 				retval = -EFAULT;
+ 				goto free_old_hdr;
+ 			}
+@@ -1275,38 +1275,34 @@ sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ static __poll_t
+ sg_poll(struct file *filp, poll_table * wait)
+ {
+-	__poll_t res = 0;
+-	struct sg_device *sdp;
+-	struct sg_fd *sfp;
++	__poll_t p_res = 0;
++	struct sg_fd *sfp = filp->private_data;
+ 	struct sg_request *srp;
+ 	int count = 0;
+ 	unsigned long iflags;
+ 
+-	sfp = filp->private_data;
+ 	if (!sfp)
+ 		return EPOLLERR;
+-	sdp = sfp->parentdp;
+-	if (!sdp)
+-		return EPOLLERR;
+ 	poll_wait(filp, &sfp->read_wait, wait);
+ 	read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	list_for_each_entry(srp, &sfp->rq_list, entry) {
+ 		/* if any read waiting, flag it */
+-		if ((0 == res) && (1 == srp->done) && (!srp->sg_io_owned))
+-			res = EPOLLIN | EPOLLRDNORM;
++		if (p_res == 0 && srp->done == 1 && !srp->sg_io_owned)
++			p_res = EPOLLIN | EPOLLRDNORM;
+ 		++count;
+ 	}
+ 	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 
+-	if (atomic_read(&sdp->detaching))
+-		res |= EPOLLHUP;
+-	else if (!sfp->cmd_q) {
+-		if (0 == count)
+-			res |= EPOLLOUT | EPOLLWRNORM;
+-	} else if (count < SG_MAX_QUEUE)
+-		res |= EPOLLOUT | EPOLLWRNORM;
+-	SG_LOG(3, sfp, "%s: res=0x%x\n", __func__, (__force u32)res);
+-	return res;
++	if (sfp->parentdp && atomic_read(&sfp->parentdp->detaching)) {
++		p_res |= EPOLLHUP;
++	} else if (!sfp->cmd_q) {
++		if (count == 0)
++			p_res |= EPOLLOUT | EPOLLWRNORM;
++	} else if (count < SG_MAX_QUEUE) {
++		p_res |= EPOLLOUT | EPOLLWRNORM;
++	}
++	SG_LOG(3, sfp, "%s: p_res=0x%x\n", __func__, (__force u32)p_res);
++	return p_res;
+ }
+ 
+ static int
+@@ -1823,7 +1819,7 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
+ 	struct sg_scatter_hold *rsv_schp = &sfp->reserve;
+ 	struct request_queue *q = sfp->parentdp->device->request_queue;
+ 	struct rq_map_data *md, map_data;
+-	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
++	int r0w = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
+ 	u8 *long_cmdp = NULL;
+ 
+ 	if (hp->cmd_len > BLK_MAX_CDB) {
+@@ -1833,7 +1829,7 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
+ 		SG_LOG(5, sfp, "%s: long_cmdp=0x%p ++\n", __func__, long_cmdp);
+ 	}
+ 	SG_LOG(4, sfp, "%s: dxfer_len=%d, data-%s\n", __func__, dxfer_len,
+-	       (rw ? "OUT" : "IN"));
++	       (r0w ? "OUT" : "IN"));
+ 
+ 	/*
+ 	 * NOTE
+@@ -1912,11 +1908,11 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
+ 
+ #ifdef CONFIG_COMPAT
+ 		if (in_compat_syscall())
+-			res = compat_import_iovec(rw, hp->dxferp, iov_count,
++			res = compat_import_iovec(r0w, hp->dxferp, iov_count,
+ 						  0, &iov, &i);
+ 		else
+ #endif
+-			res = import_iovec(rw, hp->dxferp, iov_count,
++			res = import_iovec(r0w, hp->dxferp, iov_count,
+ 					   0, &iov, &i);
+ 		if (res < 0)
+ 			return res;
+@@ -2086,33 +2082,32 @@ sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp)
+  * appended to given struct sg_header object.
+  */
+ static int
+-sg_read_oxfer(struct sg_request *srp, char __user *outp, int num_read_xfer)
++sg_rd_append(struct sg_request *srp, char __user *outp, int num_xfer)
+ {
+ 	struct sg_scatter_hold *schp = &srp->data;
+ 	int k, num;
+ 
+-	SG_LOG(4, srp->parentfp, "%s: num_xfer=%d\n", __func__, num_read_xfer);
+-	if ((!outp) || (num_read_xfer <= 0))
++	SG_LOG(4, srp->parentfp, "%s: num_xfer=%d\n", __func__, num_xfer);
++	if (!outp || num_xfer <= 0)
+ 		return 0;
+ 
+ 	num = 1 << (PAGE_SHIFT + schp->page_order);
+ 	for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
+-		if (num > num_read_xfer) {
++		if (num > num_xfer) {
+ 			if (copy_to_user(outp, page_address(schp->pages[k]),
+-					   num_read_xfer))
++					   num_xfer))
+ 				return -EFAULT;
+ 			break;
+ 		} else {
+ 			if (copy_to_user(outp, page_address(schp->pages[k]),
+ 					   num))
+ 				return -EFAULT;
+-			num_read_xfer -= num;
+-			if (num_read_xfer <= 0)
++			num_xfer -= num;
++			if (num_xfer <= 0)
+ 				break;
+ 			outp += num;
+ 		}
+ 	}
+-
+ 	return 0;
+ }
+ 
 -- 
 2.25.1
 
