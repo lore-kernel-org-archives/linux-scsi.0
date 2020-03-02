@@ -6,52 +6,52 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F09BC3F2CE
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:30:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72279C3F2D4
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:30:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2C8122B48
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:30:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19C1A2073B
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 03:30:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbgCBDai (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 1 Mar 2020 22:30:38 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:39600 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726720AbgCBDai (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Mar 2020 22:30:38 -0500
-Received: by mail-pg1-f193.google.com with SMTP id s2so3843008pgv.6
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Mar 2020 19:30:35 -0800 (PST)
+        id S1726822AbgCBDal (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 1 Mar 2020 22:30:41 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:43088 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726720AbgCBDal (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Mar 2020 22:30:41 -0500
+Received: by mail-pf1-f196.google.com with SMTP id s1so4838433pfh.10
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Mar 2020 19:30:37 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=IBjFQSQ5PeTylMiW9Lc/pXPhAR5sL3I1PuCtNYxpYsI=;
-        b=SzdOAqozEKlO/WeoCrdukegVOMLiBHIFoK4TykvI9Udwv47kkiXLxfOs2qKTdNfwSn
-         7vKf6oMkeB+WjVPzmak/ORpUeMsbhJq0flR0XCU39vmGR3z66+kZ9ayEGheIYUP29SFG
-         Zt72q6dIhWRTdQBPitW5vOHHc1F0/ANHRZp31TOa5r9HbG5L8I1c1sSzdJihl4D06Djd
-         oGJt9eK15VdSwexc6Jx76SPUeZf+DOXcYjtwAOpKRh+wFOfGTI6zKeolo6jNdK0Acpzl
-         zb66CXYsx862YpUVV05aTG+8E2kSwYLBB0xDOK37+Gke8i1prHJHkxFc27CyOjThICfZ
-         S7sg==
-X-Gm-Message-State: APjAAAU1waNr5wLx1+E9UpiNGVWTAdTGjgh6rUAx22A77jpM1pVVNWNs
-        rLsOQT/Ei8MIftBvj83iBRo=
-X-Google-Smtp-Source: APXvYqy8C9I0OpmuIpL8cXzXs9/NjIDSA7KjmigFuFu3jarYu+f3utlqMY8tVzfrWC+3in7xf2HyJA==
-X-Received: by 2002:a62:ed19:: with SMTP id u25mr16543954pfh.173.1583119834103;
-        Sun, 01 Mar 2020 19:30:34 -0800 (PST)
+        bh=YnByogSS0hqTckilj0dPoccD6rIJxzrp77iuJ+xtnXQ=;
+        b=SvtAVakUnYHucuU7GZbvg5b0m4tI5ESlg+H4DeGGfoAiS9yx5YsU3C+IULo5Qq6wYh
+         l8Gm1aKK2Ky4OoTQTAA344PPCRM7b2y6ZjOE55raow32t6xoyMjMbfx1geKeG6Q/ylIK
+         1F8+5p8IcgPYyEGHLQpVEwsrTr7cDabraz2aKIBqqgyGZBl5nIcjLPsAStIW4T+ZaZ7U
+         2stqQzGcDknbOt9LMhCchOexMcIcblAF94/kUNPyGO9GyJRsppKkg95jlIe8EOWrSJEM
+         sHWkmbr2ViT9bP8tP7f6c9YF+HzB87bRdvoJYSKp9nldXLDnfdr4wXM9C9mW447E/gb1
+         nNyg==
+X-Gm-Message-State: ANhLgQ0KWOqsl7cJ/7gsQuYaWuqhnyKv3kdSTYqInOU8wW6Z1lo8F0IF
+        yll/WqA9C/qrlEIOgjmReWM=
+X-Google-Smtp-Source: ADFU+vuAjhCB2GhI8A+7RRzQqkGILw36XM9ollpMifo7D2AHNKjrmaEQuHxQy66vLp9OGmQT5S93xA==
+X-Received: by 2002:a62:b50c:: with SMTP id y12mr1191167pfe.206.1583119836318;
+        Sun, 01 Mar 2020 19:30:36 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7869:cc6e:b1f7:9f7d])
-        by smtp.gmail.com with ESMTPSA id z3sm18782254pfz.155.2020.03.01.19.30.32
+        by smtp.gmail.com with ESMTPSA id z3sm18782254pfz.155.2020.03.01.19.30.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Mar 2020 19:30:33 -0800 (PST)
+        Sun, 01 Mar 2020 19:30:34 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Himanshu Madhani <hmadhani@marvell.com>,
         Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
         Daniel Wagner <dwagner@suse.de>,
+        Martin Wilck <mwilck@suse.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH 2/4] qla2xxx: Fix endianness annotations in header files
-Date:   Sun,  1 Mar 2020 19:30:21 -0800
-Message-Id: <20200302033023.27718-3-bvanassche@acm.org>
+Subject: [PATCH 3/4] qla2xxx: Fix endianness annotations in source files
+Date:   Sun,  1 Mar 2020 19:30:22 -0800
+Message-Id: <20200302033023.27718-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200302033023.27718-1-bvanassche@acm.org>
 References: <20200302033023.27718-1-bvanassche@acm.org>
@@ -62,3754 +62,2253 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Annotate members of FC protocol and firmware dump data structures as big
-endian. Annotate members of RISC control structures as little endian.
-Annotate mailbox registers as little endian. Annotate the mb[] arrays as
-CPU-endian because communication of the mb[] values with the hardware
-happens through the readw() and writew() functions. readw() converts from
-__le16 to u16 and writew() converts from u16 to __le16.
+Fix all endianness complaints reported by sparse (C=2).
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Cc: Quinn Tran <qutran@marvell.com>
-Cc: Martin Wilck <mwilck@suse.com>
 Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Martin Wilck <mwilck@suse.com>
 Cc: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_dbg.h    | 442 +++++++++---------
- drivers/scsi/qla2xxx/qla_def.h    | 646 +++++++++++++-------------
- drivers/scsi/qla2xxx/qla_fw.h     | 738 +++++++++++++++---------------
- drivers/scsi/qla2xxx/qla_inline.h |   2 +-
- drivers/scsi/qla2xxx/qla_mr.h     |   8 +-
- drivers/scsi/qla2xxx/qla_nvme.h   |  46 +-
- drivers/scsi/qla2xxx/qla_nx.h     |  36 +-
- drivers/scsi/qla2xxx/qla_target.h | 208 ++++-----
- 8 files changed, 1063 insertions(+), 1063 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c   |  3 +-
+ drivers/scsi/qla2xxx/qla_bsg.c    |  4 +-
+ drivers/scsi/qla2xxx/qla_dbg.c    | 90 +++++++++++++++----------------
+ drivers/scsi/qla2xxx/qla_init.c   | 80 ++++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_iocb.c   | 57 ++++++++++----------
+ drivers/scsi/qla2xxx/qla_isr.c    | 85 ++++++++++++++---------------
+ drivers/scsi/qla2xxx/qla_mbx.c    | 35 ++++++------
+ drivers/scsi/qla2xxx/qla_mr.c     |  9 ++--
+ drivers/scsi/qla2xxx/qla_nvme.c   |  8 +--
+ drivers/scsi/qla2xxx/qla_nx.c     | 89 +++++++++++++++---------------
+ drivers/scsi/qla2xxx/qla_os.c     | 24 ++++-----
+ drivers/scsi/qla2xxx/qla_sup.c    | 73 +++++++++++++------------
+ drivers/scsi/qla2xxx/qla_target.c | 74 ++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_tmpl.c   |  4 +-
+ 14 files changed, 319 insertions(+), 316 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index 433e95502808..8d50af935d9e 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -12,205 +12,205 @@
-  */
- 
- struct qla2300_fw_dump {
--	uint16_t hccr;
--	uint16_t pbiu_reg[8];
--	uint16_t risc_host_reg[8];
--	uint16_t mailbox_reg[32];
--	uint16_t resp_dma_reg[32];
--	uint16_t dma_reg[48];
--	uint16_t risc_hdw_reg[16];
--	uint16_t risc_gp0_reg[16];
--	uint16_t risc_gp1_reg[16];
--	uint16_t risc_gp2_reg[16];
--	uint16_t risc_gp3_reg[16];
--	uint16_t risc_gp4_reg[16];
--	uint16_t risc_gp5_reg[16];
--	uint16_t risc_gp6_reg[16];
--	uint16_t risc_gp7_reg[16];
--	uint16_t frame_buf_hdw_reg[64];
--	uint16_t fpm_b0_reg[64];
--	uint16_t fpm_b1_reg[64];
--	uint16_t risc_ram[0xf800];
--	uint16_t stack_ram[0x1000];
--	uint16_t data_ram[1];
-+	__be16 hccr;
-+	__be16 pbiu_reg[8];
-+	__be16 risc_host_reg[8];
-+	__be16 mailbox_reg[32];
-+	__be16 resp_dma_reg[32];
-+	__be16 dma_reg[48];
-+	__be16 risc_hdw_reg[16];
-+	__be16 risc_gp0_reg[16];
-+	__be16 risc_gp1_reg[16];
-+	__be16 risc_gp2_reg[16];
-+	__be16 risc_gp3_reg[16];
-+	__be16 risc_gp4_reg[16];
-+	__be16 risc_gp5_reg[16];
-+	__be16 risc_gp6_reg[16];
-+	__be16 risc_gp7_reg[16];
-+	__be16 frame_buf_hdw_reg[64];
-+	__be16 fpm_b0_reg[64];
-+	__be16 fpm_b1_reg[64];
-+	__be16 risc_ram[0xf800];
-+	__be16 stack_ram[0x1000];
-+	__be16 data_ram[1];
- };
- 
- struct qla2100_fw_dump {
--	uint16_t hccr;
--	uint16_t pbiu_reg[8];
--	uint16_t mailbox_reg[32];
--	uint16_t dma_reg[48];
--	uint16_t risc_hdw_reg[16];
--	uint16_t risc_gp0_reg[16];
--	uint16_t risc_gp1_reg[16];
--	uint16_t risc_gp2_reg[16];
--	uint16_t risc_gp3_reg[16];
--	uint16_t risc_gp4_reg[16];
--	uint16_t risc_gp5_reg[16];
--	uint16_t risc_gp6_reg[16];
--	uint16_t risc_gp7_reg[16];
--	uint16_t frame_buf_hdw_reg[16];
--	uint16_t fpm_b0_reg[64];
--	uint16_t fpm_b1_reg[64];
--	uint16_t risc_ram[0xf000];
-+	__be16 hccr;
-+	__be16 pbiu_reg[8];
-+	__be16 mailbox_reg[32];
-+	__be16 dma_reg[48];
-+	__be16 risc_hdw_reg[16];
-+	__be16 risc_gp0_reg[16];
-+	__be16 risc_gp1_reg[16];
-+	__be16 risc_gp2_reg[16];
-+	__be16 risc_gp3_reg[16];
-+	__be16 risc_gp4_reg[16];
-+	__be16 risc_gp5_reg[16];
-+	__be16 risc_gp6_reg[16];
-+	__be16 risc_gp7_reg[16];
-+	__be16 frame_buf_hdw_reg[16];
-+	__be16 fpm_b0_reg[64];
-+	__be16 fpm_b1_reg[64];
-+	__be16 risc_ram[0xf000];
- };
- 
- struct qla24xx_fw_dump {
--	uint32_t host_status;
--	uint32_t host_reg[32];
--	uint32_t shadow_reg[7];
--	uint16_t mailbox_reg[32];
--	uint32_t xseq_gp_reg[128];
--	uint32_t xseq_0_reg[16];
--	uint32_t xseq_1_reg[16];
--	uint32_t rseq_gp_reg[128];
--	uint32_t rseq_0_reg[16];
--	uint32_t rseq_1_reg[16];
--	uint32_t rseq_2_reg[16];
--	uint32_t cmd_dma_reg[16];
--	uint32_t req0_dma_reg[15];
--	uint32_t resp0_dma_reg[15];
--	uint32_t req1_dma_reg[15];
--	uint32_t xmt0_dma_reg[32];
--	uint32_t xmt1_dma_reg[32];
--	uint32_t xmt2_dma_reg[32];
--	uint32_t xmt3_dma_reg[32];
--	uint32_t xmt4_dma_reg[32];
--	uint32_t xmt_data_dma_reg[16];
--	uint32_t rcvt0_data_dma_reg[32];
--	uint32_t rcvt1_data_dma_reg[32];
--	uint32_t risc_gp_reg[128];
--	uint32_t lmc_reg[112];
--	uint32_t fpm_hdw_reg[192];
--	uint32_t fb_hdw_reg[176];
--	uint32_t code_ram[0x2000];
--	uint32_t ext_mem[1];
-+	__be32	host_status;
-+	__be32	host_reg[32];
-+	__be32	shadow_reg[7];
-+	__be16	mailbox_reg[32];
-+	__be32	xseq_gp_reg[128];
-+	__be32	xseq_0_reg[16];
-+	__be32	xseq_1_reg[16];
-+	__be32	rseq_gp_reg[128];
-+	__be32	rseq_0_reg[16];
-+	__be32	rseq_1_reg[16];
-+	__be32	rseq_2_reg[16];
-+	__be32	cmd_dma_reg[16];
-+	__be32	req0_dma_reg[15];
-+	__be32	resp0_dma_reg[15];
-+	__be32	req1_dma_reg[15];
-+	__be32	xmt0_dma_reg[32];
-+	__be32	xmt1_dma_reg[32];
-+	__be32	xmt2_dma_reg[32];
-+	__be32	xmt3_dma_reg[32];
-+	__be32	xmt4_dma_reg[32];
-+	__be32	xmt_data_dma_reg[16];
-+	__be32	rcvt0_data_dma_reg[32];
-+	__be32	rcvt1_data_dma_reg[32];
-+	__be32	risc_gp_reg[128];
-+	__be32	lmc_reg[112];
-+	__be32	fpm_hdw_reg[192];
-+	__be32	fb_hdw_reg[176];
-+	__be32	code_ram[0x2000];
-+	__be32	ext_mem[1];
- };
- 
- struct qla25xx_fw_dump {
--	uint32_t host_status;
--	uint32_t host_risc_reg[32];
--	uint32_t pcie_regs[4];
--	uint32_t host_reg[32];
--	uint32_t shadow_reg[11];
--	uint32_t risc_io_reg;
--	uint16_t mailbox_reg[32];
--	uint32_t xseq_gp_reg[128];
--	uint32_t xseq_0_reg[48];
--	uint32_t xseq_1_reg[16];
--	uint32_t rseq_gp_reg[128];
--	uint32_t rseq_0_reg[32];
--	uint32_t rseq_1_reg[16];
--	uint32_t rseq_2_reg[16];
--	uint32_t aseq_gp_reg[128];
--	uint32_t aseq_0_reg[32];
--	uint32_t aseq_1_reg[16];
--	uint32_t aseq_2_reg[16];
--	uint32_t cmd_dma_reg[16];
--	uint32_t req0_dma_reg[15];
--	uint32_t resp0_dma_reg[15];
--	uint32_t req1_dma_reg[15];
--	uint32_t xmt0_dma_reg[32];
--	uint32_t xmt1_dma_reg[32];
--	uint32_t xmt2_dma_reg[32];
--	uint32_t xmt3_dma_reg[32];
--	uint32_t xmt4_dma_reg[32];
--	uint32_t xmt_data_dma_reg[16];
--	uint32_t rcvt0_data_dma_reg[32];
--	uint32_t rcvt1_data_dma_reg[32];
--	uint32_t risc_gp_reg[128];
--	uint32_t lmc_reg[128];
--	uint32_t fpm_hdw_reg[192];
--	uint32_t fb_hdw_reg[192];
--	uint32_t code_ram[0x2000];
--	uint32_t ext_mem[1];
-+	__be32	host_status;
-+	__be32	host_risc_reg[32];
-+	__be32	pcie_regs[4];
-+	__be32	host_reg[32];
-+	__be32	shadow_reg[11];
-+	__be32	risc_io_reg;
-+	__be16	mailbox_reg[32];
-+	__be32	xseq_gp_reg[128];
-+	__be32	xseq_0_reg[48];
-+	__be32	xseq_1_reg[16];
-+	__be32	rseq_gp_reg[128];
-+	__be32	rseq_0_reg[32];
-+	__be32	rseq_1_reg[16];
-+	__be32	rseq_2_reg[16];
-+	__be32	aseq_gp_reg[128];
-+	__be32	aseq_0_reg[32];
-+	__be32	aseq_1_reg[16];
-+	__be32	aseq_2_reg[16];
-+	__be32	cmd_dma_reg[16];
-+	__be32	req0_dma_reg[15];
-+	__be32	resp0_dma_reg[15];
-+	__be32	req1_dma_reg[15];
-+	__be32	xmt0_dma_reg[32];
-+	__be32	xmt1_dma_reg[32];
-+	__be32	xmt2_dma_reg[32];
-+	__be32	xmt3_dma_reg[32];
-+	__be32	xmt4_dma_reg[32];
-+	__be32	xmt_data_dma_reg[16];
-+	__be32	rcvt0_data_dma_reg[32];
-+	__be32	rcvt1_data_dma_reg[32];
-+	__be32	risc_gp_reg[128];
-+	__be32	lmc_reg[128];
-+	__be32	fpm_hdw_reg[192];
-+	__be32	fb_hdw_reg[192];
-+	__be32	code_ram[0x2000];
-+	__be32	ext_mem[1];
- };
- 
- struct qla81xx_fw_dump {
--	uint32_t host_status;
--	uint32_t host_risc_reg[32];
--	uint32_t pcie_regs[4];
--	uint32_t host_reg[32];
--	uint32_t shadow_reg[11];
--	uint32_t risc_io_reg;
--	uint16_t mailbox_reg[32];
--	uint32_t xseq_gp_reg[128];
--	uint32_t xseq_0_reg[48];
--	uint32_t xseq_1_reg[16];
--	uint32_t rseq_gp_reg[128];
--	uint32_t rseq_0_reg[32];
--	uint32_t rseq_1_reg[16];
--	uint32_t rseq_2_reg[16];
--	uint32_t aseq_gp_reg[128];
--	uint32_t aseq_0_reg[32];
--	uint32_t aseq_1_reg[16];
--	uint32_t aseq_2_reg[16];
--	uint32_t cmd_dma_reg[16];
--	uint32_t req0_dma_reg[15];
--	uint32_t resp0_dma_reg[15];
--	uint32_t req1_dma_reg[15];
--	uint32_t xmt0_dma_reg[32];
--	uint32_t xmt1_dma_reg[32];
--	uint32_t xmt2_dma_reg[32];
--	uint32_t xmt3_dma_reg[32];
--	uint32_t xmt4_dma_reg[32];
--	uint32_t xmt_data_dma_reg[16];
--	uint32_t rcvt0_data_dma_reg[32];
--	uint32_t rcvt1_data_dma_reg[32];
--	uint32_t risc_gp_reg[128];
--	uint32_t lmc_reg[128];
--	uint32_t fpm_hdw_reg[224];
--	uint32_t fb_hdw_reg[208];
--	uint32_t code_ram[0x2000];
--	uint32_t ext_mem[1];
-+	__be32	host_status;
-+	__be32	host_risc_reg[32];
-+	__be32	pcie_regs[4];
-+	__be32	host_reg[32];
-+	__be32	shadow_reg[11];
-+	__be32	risc_io_reg;
-+	__be16	mailbox_reg[32];
-+	__be32	xseq_gp_reg[128];
-+	__be32	xseq_0_reg[48];
-+	__be32	xseq_1_reg[16];
-+	__be32	rseq_gp_reg[128];
-+	__be32	rseq_0_reg[32];
-+	__be32	rseq_1_reg[16];
-+	__be32	rseq_2_reg[16];
-+	__be32	aseq_gp_reg[128];
-+	__be32	aseq_0_reg[32];
-+	__be32	aseq_1_reg[16];
-+	__be32	aseq_2_reg[16];
-+	__be32	cmd_dma_reg[16];
-+	__be32	req0_dma_reg[15];
-+	__be32	resp0_dma_reg[15];
-+	__be32	req1_dma_reg[15];
-+	__be32	xmt0_dma_reg[32];
-+	__be32	xmt1_dma_reg[32];
-+	__be32	xmt2_dma_reg[32];
-+	__be32	xmt3_dma_reg[32];
-+	__be32	xmt4_dma_reg[32];
-+	__be32	xmt_data_dma_reg[16];
-+	__be32	rcvt0_data_dma_reg[32];
-+	__be32	rcvt1_data_dma_reg[32];
-+	__be32	risc_gp_reg[128];
-+	__be32	lmc_reg[128];
-+	__be32	fpm_hdw_reg[224];
-+	__be32	fb_hdw_reg[208];
-+	__be32	code_ram[0x2000];
-+	__be32	ext_mem[1];
- };
- 
- struct qla83xx_fw_dump {
--	uint32_t host_status;
--	uint32_t host_risc_reg[48];
--	uint32_t pcie_regs[4];
--	uint32_t host_reg[32];
--	uint32_t shadow_reg[11];
--	uint32_t risc_io_reg;
--	uint16_t mailbox_reg[32];
--	uint32_t xseq_gp_reg[256];
--	uint32_t xseq_0_reg[48];
--	uint32_t xseq_1_reg[16];
--	uint32_t xseq_2_reg[16];
--	uint32_t rseq_gp_reg[256];
--	uint32_t rseq_0_reg[32];
--	uint32_t rseq_1_reg[16];
--	uint32_t rseq_2_reg[16];
--	uint32_t rseq_3_reg[16];
--	uint32_t aseq_gp_reg[256];
--	uint32_t aseq_0_reg[32];
--	uint32_t aseq_1_reg[16];
--	uint32_t aseq_2_reg[16];
--	uint32_t aseq_3_reg[16];
--	uint32_t cmd_dma_reg[64];
--	uint32_t req0_dma_reg[15];
--	uint32_t resp0_dma_reg[15];
--	uint32_t req1_dma_reg[15];
--	uint32_t xmt0_dma_reg[32];
--	uint32_t xmt1_dma_reg[32];
--	uint32_t xmt2_dma_reg[32];
--	uint32_t xmt3_dma_reg[32];
--	uint32_t xmt4_dma_reg[32];
--	uint32_t xmt_data_dma_reg[16];
--	uint32_t rcvt0_data_dma_reg[32];
--	uint32_t rcvt1_data_dma_reg[32];
--	uint32_t risc_gp_reg[128];
--	uint32_t lmc_reg[128];
--	uint32_t fpm_hdw_reg[256];
--	uint32_t rq0_array_reg[256];
--	uint32_t rq1_array_reg[256];
--	uint32_t rp0_array_reg[256];
--	uint32_t rp1_array_reg[256];
--	uint32_t queue_control_reg[16];
--	uint32_t fb_hdw_reg[432];
--	uint32_t at0_array_reg[128];
--	uint32_t code_ram[0x2400];
--	uint32_t ext_mem[1];
-+	__be32	host_status;
-+	__be32	host_risc_reg[48];
-+	__be32	pcie_regs[4];
-+	__be32	host_reg[32];
-+	__be32	shadow_reg[11];
-+	__be32	risc_io_reg;
-+	__be16	mailbox_reg[32];
-+	__be32	xseq_gp_reg[256];
-+	__be32	xseq_0_reg[48];
-+	__be32	xseq_1_reg[16];
-+	__be32	xseq_2_reg[16];
-+	__be32	rseq_gp_reg[256];
-+	__be32	rseq_0_reg[32];
-+	__be32	rseq_1_reg[16];
-+	__be32	rseq_2_reg[16];
-+	__be32	rseq_3_reg[16];
-+	__be32	aseq_gp_reg[256];
-+	__be32	aseq_0_reg[32];
-+	__be32	aseq_1_reg[16];
-+	__be32	aseq_2_reg[16];
-+	__be32	aseq_3_reg[16];
-+	__be32	cmd_dma_reg[64];
-+	__be32	req0_dma_reg[15];
-+	__be32	resp0_dma_reg[15];
-+	__be32	req1_dma_reg[15];
-+	__be32	xmt0_dma_reg[32];
-+	__be32	xmt1_dma_reg[32];
-+	__be32	xmt2_dma_reg[32];
-+	__be32	xmt3_dma_reg[32];
-+	__be32	xmt4_dma_reg[32];
-+	__be32	xmt_data_dma_reg[16];
-+	__be32	rcvt0_data_dma_reg[32];
-+	__be32	rcvt1_data_dma_reg[32];
-+	__be32	risc_gp_reg[128];
-+	__be32	lmc_reg[128];
-+	__be32	fpm_hdw_reg[256];
-+	__be32	rq0_array_reg[256];
-+	__be32	rq1_array_reg[256];
-+	__be32	rp0_array_reg[256];
-+	__be32	rp1_array_reg[256];
-+	__be32	queue_control_reg[16];
-+	__be32	fb_hdw_reg[432];
-+	__be32	at0_array_reg[128];
-+	__be32	code_ram[0x2400];
-+	__be32	ext_mem[1];
- };
- 
- #define EFT_NUM_BUFFERS		4
-@@ -223,44 +223,44 @@ struct qla83xx_fw_dump {
- #define fce_calc_size(b)	((FCE_BYTES_PER_BUFFER) * (b))
- 
- struct qla2xxx_fce_chain {
--	uint32_t type;
--	uint32_t chain_size;
-+	__be32	type;
-+	__be32	chain_size;
- 
--	uint32_t size;
--	uint32_t addr_l;
--	uint32_t addr_h;
--	uint32_t eregs[8];
-+	__be32	size;
-+	__be32	addr_l;
-+	__be32	addr_h;
-+	__be32	eregs[8];
- };
- 
- /* used by exchange off load and extended login offload */
- struct qla2xxx_offld_chain {
--	uint32_t type;
--	uint32_t chain_size;
-+	__be32	type;
-+	__be32	chain_size;
- 
--	uint32_t size;
--	u64	 addr;
-+	__be32	size;
-+	__be64	addr;
- };
- 
- struct qla2xxx_mq_chain {
--	uint32_t type;
--	uint32_t chain_size;
-+	__be32	type;
-+	__be32	chain_size;
- 
--	uint32_t count;
--	uint32_t qregs[4 * QLA_MQ_SIZE];
-+	__be32	count;
-+	__be32	qregs[4 * QLA_MQ_SIZE];
- };
- 
- struct qla2xxx_mqueue_header {
--	uint32_t queue;
-+	__be32	queue;
- #define TYPE_REQUEST_QUEUE	0x1
- #define TYPE_RESPONSE_QUEUE	0x2
- #define TYPE_ATIO_QUEUE		0x3
--	uint32_t number;
--	uint32_t size;
-+	__be32	number;
-+	__be32	size;
- };
- 
- struct qla2xxx_mqueue_chain {
--	uint32_t type;
--	uint32_t chain_size;
-+	__be32	type;
-+	__be32	chain_size;
- };
- 
- #define DUMP_CHAIN_VARIANT	0x80000000
-@@ -273,28 +273,28 @@ struct qla2xxx_mqueue_chain {
- 
- struct qla2xxx_fw_dump {
- 	uint8_t signature[4];
--	uint32_t version;
-+	__be32	version;
- 
--	uint32_t fw_major_version;
--	uint32_t fw_minor_version;
--	uint32_t fw_subminor_version;
--	uint32_t fw_attributes;
-+	__be32 fw_major_version;
-+	__be32 fw_minor_version;
-+	__be32 fw_subminor_version;
-+	__be32 fw_attributes;
- 
--	uint32_t vendor;
--	uint32_t device;
--	uint32_t subsystem_vendor;
--	uint32_t subsystem_device;
-+	__be32 vendor;
-+	__be32 device;
-+	__be32 subsystem_vendor;
-+	__be32 subsystem_device;
- 
--	uint32_t fixed_size;
--	uint32_t mem_size;
--	uint32_t req_q_size;
--	uint32_t rsp_q_size;
-+	__be32	fixed_size;
-+	__be32	mem_size;
-+	__be32	req_q_size;
-+	__be32	rsp_q_size;
- 
--	uint32_t eft_size;
--	uint32_t eft_addr_l;
--	uint32_t eft_addr_h;
-+	__be32	eft_size;
-+	__be32	eft_addr_l;
-+	__be32	eft_addr_h;
- 
--	uint32_t header_size;
-+	__be32	header_size;
- 
- 	union {
- 		struct qla2100_fw_dump isp21;
-@@ -369,7 +369,7 @@ ql_log_qp(uint32_t, struct qla_qpair *, int32_t, const char *fmt, ...);
- 
- extern int qla27xx_dump_mpi_ram(struct qla_hw_data *, uint32_t, uint32_t *,
- 	uint32_t, void **);
--extern int qla24xx_dump_ram(struct qla_hw_data *, uint32_t, uint32_t *,
-+extern int qla24xx_dump_ram(struct qla_hw_data *, uint32_t, __be32 *,
- 	uint32_t, void **);
- extern void qla24xx_pause_risc(struct device_reg_24xx __iomem *,
- 	struct qla_hw_data *);
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 47c7a56438b5..ebb22c1a9df7 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -520,8 +520,8 @@ struct srb_iocb {
- #define MAX_IOCB_MB_REG 28
- #define SIZEOF_IOCB_MB_REG (MAX_IOCB_MB_REG * sizeof(uint16_t))
- 		struct {
--			__le16 in_mb[MAX_IOCB_MB_REG];	/* from FW */
--			__le16 out_mb[MAX_IOCB_MB_REG];	/* to FW */
-+			u16 in_mb[MAX_IOCB_MB_REG];	/* from FW */
-+			u16 out_mb[MAX_IOCB_MB_REG];	/* to FW */
- 			void *out, *in;
- 			dma_addr_t out_dma, in_dma;
- 			struct completion comp;
-@@ -532,7 +532,7 @@ struct srb_iocb {
- 		} nack;
- 		struct {
- 			__le16 comp_status;
--			uint16_t rsp_pyld_len;
-+			__le16 rsp_pyld_len;
- 			uint8_t	aen_op;
- 			void *desc;
- 
-@@ -663,23 +663,23 @@ struct msg_echo_lb {
-  * ISP I/O Register Set structure definitions.
-  */
- struct device_reg_2xxx {
--	uint16_t flash_address; 	/* Flash BIOS address */
--	uint16_t flash_data;		/* Flash BIOS data */
--	uint16_t unused_1[1];		/* Gap */
--	uint16_t ctrl_status;		/* Control/Status */
-+	__le16	flash_address; 	/* Flash BIOS address */
-+	__le16	flash_data;		/* Flash BIOS data */
-+	__le16	unused_1[1];		/* Gap */
-+	__le16	ctrl_status;		/* Control/Status */
- #define CSR_FLASH_64K_BANK	BIT_3	/* Flash upper 64K bank select */
- #define CSR_FLASH_ENABLE	BIT_1	/* Flash BIOS Read/Write enable */
- #define CSR_ISP_SOFT_RESET	BIT_0	/* ISP soft reset */
- 
--	uint16_t ictrl;			/* Interrupt control */
-+	__le16	ictrl;			/* Interrupt control */
- #define ICR_EN_INT		BIT_15	/* ISP enable interrupts. */
- #define ICR_EN_RISC		BIT_3	/* ISP enable RISC interrupts. */
- 
--	uint16_t istatus;		/* Interrupt status */
-+	__le16	istatus;		/* Interrupt status */
- #define ISR_RISC_INT		BIT_3	/* RISC interrupt */
- 
--	uint16_t semaphore;		/* Semaphore */
--	uint16_t nvram;			/* NVRAM register. */
-+	__le16	semaphore;		/* Semaphore */
-+	__le16	nvram;			/* NVRAM register. */
- #define NVR_DESELECT		0
- #define NVR_BUSY		BIT_15
- #define NVR_WRT_ENABLE		BIT_14	/* Write enable */
-@@ -693,80 +693,80 @@ struct device_reg_2xxx {
- 
- 	union {
- 		struct {
--			uint16_t mailbox0;
--			uint16_t mailbox1;
--			uint16_t mailbox2;
--			uint16_t mailbox3;
--			uint16_t mailbox4;
--			uint16_t mailbox5;
--			uint16_t mailbox6;
--			uint16_t mailbox7;
--			uint16_t unused_2[59];	/* Gap */
-+			__le16	mailbox0;
-+			__le16	mailbox1;
-+			__le16	mailbox2;
-+			__le16	mailbox3;
-+			__le16	mailbox4;
-+			__le16	mailbox5;
-+			__le16	mailbox6;
-+			__le16	mailbox7;
-+			__le16	unused_2[59];	/* Gap */
- 		} __attribute__((packed)) isp2100;
- 		struct {
- 						/* Request Queue */
--			uint16_t req_q_in;	/*  In-Pointer */
--			uint16_t req_q_out;	/*  Out-Pointer */
-+			__le16	req_q_in;	/*  In-Pointer */
-+			__le16	req_q_out;	/*  Out-Pointer */
- 						/* Response Queue */
--			uint16_t rsp_q_in;	/*  In-Pointer */
--			uint16_t rsp_q_out;	/*  Out-Pointer */
-+			__le16	rsp_q_in;	/*  In-Pointer */
-+			__le16	rsp_q_out;	/*  Out-Pointer */
- 
- 						/* RISC to Host Status */
--			uint32_t host_status;
-+			__le32	host_status;
- #define HSR_RISC_INT		BIT_15	/* RISC interrupt */
- #define HSR_RISC_PAUSED		BIT_8	/* RISC Paused */
- 
- 					/* Host to Host Semaphore */
--			uint16_t host_semaphore;
--			uint16_t unused_3[17];	/* Gap */
--			uint16_t mailbox0;
--			uint16_t mailbox1;
--			uint16_t mailbox2;
--			uint16_t mailbox3;
--			uint16_t mailbox4;
--			uint16_t mailbox5;
--			uint16_t mailbox6;
--			uint16_t mailbox7;
--			uint16_t mailbox8;
--			uint16_t mailbox9;
--			uint16_t mailbox10;
--			uint16_t mailbox11;
--			uint16_t mailbox12;
--			uint16_t mailbox13;
--			uint16_t mailbox14;
--			uint16_t mailbox15;
--			uint16_t mailbox16;
--			uint16_t mailbox17;
--			uint16_t mailbox18;
--			uint16_t mailbox19;
--			uint16_t mailbox20;
--			uint16_t mailbox21;
--			uint16_t mailbox22;
--			uint16_t mailbox23;
--			uint16_t mailbox24;
--			uint16_t mailbox25;
--			uint16_t mailbox26;
--			uint16_t mailbox27;
--			uint16_t mailbox28;
--			uint16_t mailbox29;
--			uint16_t mailbox30;
--			uint16_t mailbox31;
--			uint16_t fb_cmd;
--			uint16_t unused_4[10];	/* Gap */
-+			__le16	host_semaphore;
-+			__le16	unused_3[17];	/* Gap */
-+			__le16	mailbox0;
-+			__le16	mailbox1;
-+			__le16	mailbox2;
-+			__le16	mailbox3;
-+			__le16	mailbox4;
-+			__le16	mailbox5;
-+			__le16	mailbox6;
-+			__le16	mailbox7;
-+			__le16	mailbox8;
-+			__le16	mailbox9;
-+			__le16	mailbox10;
-+			__le16	mailbox11;
-+			__le16	mailbox12;
-+			__le16	mailbox13;
-+			__le16	mailbox14;
-+			__le16	mailbox15;
-+			__le16	mailbox16;
-+			__le16	mailbox17;
-+			__le16	mailbox18;
-+			__le16	mailbox19;
-+			__le16	mailbox20;
-+			__le16	mailbox21;
-+			__le16	mailbox22;
-+			__le16	mailbox23;
-+			__le16	mailbox24;
-+			__le16	mailbox25;
-+			__le16	mailbox26;
-+			__le16	mailbox27;
-+			__le16	mailbox28;
-+			__le16	mailbox29;
-+			__le16	mailbox30;
-+			__le16	mailbox31;
-+			__le16	fb_cmd;
-+			__le16	unused_4[10];	/* Gap */
- 		} __attribute__((packed)) isp2300;
- 	} u;
- 
--	uint16_t fpm_diag_config;
--	uint16_t unused_5[0x4];		/* Gap */
--	uint16_t risc_hw;
--	uint16_t unused_5_1;		/* Gap */
--	uint16_t pcr;			/* Processor Control Register. */
--	uint16_t unused_6[0x5];		/* Gap */
--	uint16_t mctr;			/* Memory Configuration and Timing. */
--	uint16_t unused_7[0x3];		/* Gap */
--	uint16_t fb_cmd_2100;		/* Unused on 23XX */
--	uint16_t unused_8[0x3];		/* Gap */
--	uint16_t hccr;			/* Host command & control register. */
-+	__le16	fpm_diag_config;
-+	__le16	unused_5[0x4];		/* Gap */
-+	__le16	risc_hw;
-+	__le16	unused_5_1;		/* Gap */
-+	__le16	pcr;			/* Processor Control Register. */
-+	__le16	unused_6[0x5];		/* Gap */
-+	__le16	mctr;			/* Memory Configuration and Timing. */
-+	__le16	unused_7[0x3];		/* Gap */
-+	__le16	fb_cmd_2100;		/* Unused on 23XX */
-+	__le16	unused_8[0x3];		/* Gap */
-+	__le16	hccr;			/* Host command & control register. */
- #define HCCR_HOST_INT		BIT_7	/* Host interrupt bit */
- #define HCCR_RISC_PAUSE		BIT_5	/* Pause mode bit */
- 					/* HCCR commands */
-@@ -779,9 +779,9 @@ struct device_reg_2xxx {
- #define	HCCR_DISABLE_PARITY_PAUSE 0x4001 /* Disable parity error RISC pause. */
- #define HCCR_ENABLE_PARITY	0xA000	/* Enable PARITY interrupt */
- 
--	uint16_t unused_9[5];		/* Gap */
--	uint16_t gpiod;			/* GPIO Data register. */
--	uint16_t gpioe;			/* GPIO Enable register. */
-+	__le16	unused_9[5];		/* Gap */
-+	__le16	gpiod;			/* GPIO Data register. */
-+	__le16	gpioe;			/* GPIO Enable register. */
- #define GPIO_LED_MASK			0x00C0
- #define GPIO_LED_GREEN_OFF_AMBER_OFF	0x0000
- #define GPIO_LED_GREEN_ON_AMBER_OFF	0x0040
-@@ -793,95 +793,95 @@ struct device_reg_2xxx {
- 
- 	union {
- 		struct {
--			uint16_t unused_10[8];	/* Gap */
--			uint16_t mailbox8;
--			uint16_t mailbox9;
--			uint16_t mailbox10;
--			uint16_t mailbox11;
--			uint16_t mailbox12;
--			uint16_t mailbox13;
--			uint16_t mailbox14;
--			uint16_t mailbox15;
--			uint16_t mailbox16;
--			uint16_t mailbox17;
--			uint16_t mailbox18;
--			uint16_t mailbox19;
--			uint16_t mailbox20;
--			uint16_t mailbox21;
--			uint16_t mailbox22;
--			uint16_t mailbox23;	/* Also probe reg. */
-+			__le16	unused_10[8];	/* Gap */
-+			__le16	mailbox8;
-+			__le16	mailbox9;
-+			__le16	mailbox10;
-+			__le16	mailbox11;
-+			__le16	mailbox12;
-+			__le16	mailbox13;
-+			__le16	mailbox14;
-+			__le16	mailbox15;
-+			__le16	mailbox16;
-+			__le16	mailbox17;
-+			__le16	mailbox18;
-+			__le16	mailbox19;
-+			__le16	mailbox20;
-+			__le16	mailbox21;
-+			__le16	mailbox22;
-+			__le16	mailbox23;	/* Also probe reg. */
- 		} __attribute__((packed)) isp2200;
- 	} u_end;
- };
- 
- struct device_reg_25xxmq {
--	uint32_t req_q_in;
--	uint32_t req_q_out;
--	uint32_t rsp_q_in;
--	uint32_t rsp_q_out;
--	uint32_t atio_q_in;
--	uint32_t atio_q_out;
-+	__le32	req_q_in;
-+	__le32	req_q_out;
-+	__le32	rsp_q_in;
-+	__le32	rsp_q_out;
-+	__le32	atio_q_in;
-+	__le32	atio_q_out;
- };
- 
- 
- struct device_reg_fx00 {
--	uint32_t mailbox0;		/* 00 */
--	uint32_t mailbox1;		/* 04 */
--	uint32_t mailbox2;		/* 08 */
--	uint32_t mailbox3;		/* 0C */
--	uint32_t mailbox4;		/* 10 */
--	uint32_t mailbox5;		/* 14 */
--	uint32_t mailbox6;		/* 18 */
--	uint32_t mailbox7;		/* 1C */
--	uint32_t mailbox8;		/* 20 */
--	uint32_t mailbox9;		/* 24 */
--	uint32_t mailbox10;		/* 28 */
--	uint32_t mailbox11;
--	uint32_t mailbox12;
--	uint32_t mailbox13;
--	uint32_t mailbox14;
--	uint32_t mailbox15;
--	uint32_t mailbox16;
--	uint32_t mailbox17;
--	uint32_t mailbox18;
--	uint32_t mailbox19;
--	uint32_t mailbox20;
--	uint32_t mailbox21;
--	uint32_t mailbox22;
--	uint32_t mailbox23;
--	uint32_t mailbox24;
--	uint32_t mailbox25;
--	uint32_t mailbox26;
--	uint32_t mailbox27;
--	uint32_t mailbox28;
--	uint32_t mailbox29;
--	uint32_t mailbox30;
--	uint32_t mailbox31;
--	uint32_t aenmailbox0;
--	uint32_t aenmailbox1;
--	uint32_t aenmailbox2;
--	uint32_t aenmailbox3;
--	uint32_t aenmailbox4;
--	uint32_t aenmailbox5;
--	uint32_t aenmailbox6;
--	uint32_t aenmailbox7;
-+	__le32	mailbox0;		/* 00 */
-+	__le32	mailbox1;		/* 04 */
-+	__le32	mailbox2;		/* 08 */
-+	__le32	mailbox3;		/* 0C */
-+	__le32	mailbox4;		/* 10 */
-+	__le32	mailbox5;		/* 14 */
-+	__le32	mailbox6;		/* 18 */
-+	__le32	mailbox7;		/* 1C */
-+	__le32	mailbox8;		/* 20 */
-+	__le32	mailbox9;		/* 24 */
-+	__le32	mailbox10;		/* 28 */
-+	__le32	mailbox11;
-+	__le32	mailbox12;
-+	__le32	mailbox13;
-+	__le32	mailbox14;
-+	__le32	mailbox15;
-+	__le32	mailbox16;
-+	__le32	mailbox17;
-+	__le32	mailbox18;
-+	__le32	mailbox19;
-+	__le32	mailbox20;
-+	__le32	mailbox21;
-+	__le32	mailbox22;
-+	__le32	mailbox23;
-+	__le32	mailbox24;
-+	__le32	mailbox25;
-+	__le32	mailbox26;
-+	__le32	mailbox27;
-+	__le32	mailbox28;
-+	__le32	mailbox29;
-+	__le32	mailbox30;
-+	__le32	mailbox31;
-+	__le32	aenmailbox0;
-+	__le32	aenmailbox1;
-+	__le32	aenmailbox2;
-+	__le32	aenmailbox3;
-+	__le32	aenmailbox4;
-+	__le32	aenmailbox5;
-+	__le32	aenmailbox6;
-+	__le32	aenmailbox7;
- 	/* Request Queue. */
--	uint32_t req_q_in;		/* A0 - Request Queue In-Pointer */
--	uint32_t req_q_out;		/* A4 - Request Queue Out-Pointer */
-+	__le32	req_q_in;		/* A0 - Request Queue In-Pointer */
-+	__le32	req_q_out;		/* A4 - Request Queue Out-Pointer */
- 	/* Response Queue. */
--	uint32_t rsp_q_in;		/* A8 - Response Queue In-Pointer */
--	uint32_t rsp_q_out;		/* AC - Response Queue Out-Pointer */
-+	__le32	rsp_q_in;		/* A8 - Response Queue In-Pointer */
-+	__le32	rsp_q_out;		/* AC - Response Queue Out-Pointer */
- 	/* Init values shadowed on FW Up Event */
--	uint32_t initval0;		/* B0 */
--	uint32_t initval1;		/* B4 */
--	uint32_t initval2;		/* B8 */
--	uint32_t initval3;		/* BC */
--	uint32_t initval4;		/* C0 */
--	uint32_t initval5;		/* C4 */
--	uint32_t initval6;		/* C8 */
--	uint32_t initval7;		/* CC */
--	uint32_t fwheartbeat;		/* D0 */
--	uint32_t pseudoaen;		/* D4 */
-+	__le32	initval0;		/* B0 */
-+	__le32	initval1;		/* B4 */
-+	__le32	initval2;		/* B8 */
-+	__le32	initval3;		/* BC */
-+	__le32	initval4;		/* C0 */
-+	__le32	initval5;		/* C4 */
-+	__le32	initval6;		/* C8 */
-+	__le32	initval7;		/* CC */
-+	__le32	fwheartbeat;		/* D0 */
-+	__le32	pseudoaen;		/* D4 */
- };
- 
- 
-@@ -1316,7 +1316,7 @@ typedef struct {
- 	uint8_t port_id[4];
- 	uint8_t node_name[WWN_SIZE];
- 	uint8_t port_name[WWN_SIZE];
--	uint16_t execution_throttle;
-+	__le16	execution_throttle;
- 	uint16_t execution_count;
- 	uint8_t reset_count;
- 	uint8_t reserved_2;
-@@ -1402,9 +1402,9 @@ typedef struct {
- 	 */
- 	uint8_t  firmware_options[2];
- 
--	uint16_t frame_payload_size;
--	uint16_t max_iocb_allocation;
--	uint16_t execution_throttle;
-+	__le16	frame_payload_size;
-+	__le16	max_iocb_allocation;
-+	__le16	execution_throttle;
- 	uint8_t  retry_count;
- 	uint8_t	 retry_delay;			/* unused */
- 	uint8_t	 port_name[WWN_SIZE];		/* Big endian. */
-@@ -1413,17 +1413,17 @@ typedef struct {
- 	uint8_t	 login_timeout;
- 	uint8_t	 node_name[WWN_SIZE];		/* Big endian. */
- 
--	uint16_t request_q_outpointer;
--	uint16_t response_q_inpointer;
--	uint16_t request_q_length;
--	uint16_t response_q_length;
--	__le64   request_q_address __packed;
--	__le64   response_q_address __packed;
-+	__le16	request_q_outpointer;
-+	__le16	response_q_inpointer;
-+	__le16	request_q_length;
-+	__le16	response_q_length;
-+	__le64  request_q_address __packed;
-+	__le64  response_q_address __packed;
- 
--	uint16_t lun_enables;
-+	__le16	lun_enables;
- 	uint8_t  command_resource_count;
- 	uint8_t  immediate_notify_resource_count;
--	uint16_t timeout;
-+	__le16	timeout;
- 	uint8_t  reserved_2[2];
- 
- 	/*
-@@ -1571,8 +1571,8 @@ typedef struct {
- 	uint8_t	 firmware_options[2];
- 
- 	uint16_t frame_payload_size;
--	uint16_t max_iocb_allocation;
--	uint16_t execution_throttle;
-+	__le16	max_iocb_allocation;
-+	__le16	execution_throttle;
- 	uint8_t	 retry_count;
- 	uint8_t	 retry_delay;			/* unused */
- 	uint8_t	 port_name[WWN_SIZE];		/* Big endian. */
-@@ -1696,7 +1696,7 @@ typedef struct {
- 	uint8_t reset_delay;
- 	uint8_t port_down_retry_count;
- 	uint8_t boot_id_number;
--	uint16_t max_luns_per_target;
-+	__le16	max_luns_per_target;
- 	uint8_t fcode_boot_port_name[WWN_SIZE];
- 	uint8_t alternate_port_name[WWN_SIZE];
- 	uint8_t alternate_node_name[WWN_SIZE];
-@@ -1802,7 +1802,7 @@ struct atio {
- };
- 
- typedef union {
--	uint16_t extended;
-+	__le16	extended;
- 	struct {
- 		uint8_t reserved;
- 		uint8_t standard;
-@@ -1828,18 +1828,18 @@ typedef struct {
- 	uint8_t entry_status;		/* Entry Status. */
- 	uint32_t handle;		/* System handle. */
- 	target_id_t target;		/* SCSI ID */
--	uint16_t lun;			/* SCSI LUN */
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	lun;			/* SCSI LUN */
-+	__le16	control_flags;		/* Control flags. */
- #define CF_WRITE	BIT_6
- #define CF_READ		BIT_5
- #define CF_SIMPLE_TAG	BIT_3
- #define CF_ORDERED_TAG	BIT_2
- #define CF_HEAD_TAG	BIT_1
- 	uint16_t reserved_1;
--	uint16_t timeout;		/* Command timeout. */
--	uint16_t dseg_count;		/* Data segment count. */
-+	__le16	timeout;		/* Command timeout. */
-+	__le16	dseg_count;		/* Data segment count. */
- 	uint8_t scsi_cdb[MAX_CMDSZ]; 	/* SCSI command words. */
--	uint32_t byte_count;		/* Total byte count. */
-+	__le32	byte_count;		/* Total byte count. */
- 	union {
- 		struct dsd32 dsd32[3];
- 		struct dsd64 dsd64[2];
-@@ -1857,11 +1857,11 @@ typedef struct {
- 	uint8_t entry_status;		/* Entry Status. */
- 	uint32_t handle;		/* System handle. */
- 	target_id_t target;		/* SCSI ID */
--	uint16_t lun;			/* SCSI LUN */
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	lun;			/* SCSI LUN */
-+	__le16	control_flags;		/* Control flags. */
- 	uint16_t reserved_1;
--	uint16_t timeout;		/* Command timeout. */
--	uint16_t dseg_count;		/* Data segment count. */
-+	__le16	timeout;		/* Command timeout. */
-+	__le16	dseg_count;		/* Data segment count. */
- 	uint8_t scsi_cdb[MAX_CMDSZ];	/* SCSI command words. */
- 	uint32_t byte_count;		/* Total byte count. */
- 	struct dsd64 dsd[2];
-@@ -1923,7 +1923,7 @@ struct crc_context {
- 	__le16 guard_seed;		/* Initial Guard Seed */
- 	__le16 prot_opts;		/* Requested Data Protection Mode */
- 	__le16 blk_size;		/* Data size in bytes */
--	uint16_t runt_blk_guard;	/* Guard value for runt block (tape
-+	__le16	runt_blk_guard;	/* Guard value for runt block (tape
- 					 * only) */
- 	__le32 byte_count;		/* Total byte count/ total data
- 					 * transfer count */
-@@ -1976,13 +1976,13 @@ typedef struct {
- 	uint8_t sys_define;		/* System defined. */
- 	uint8_t entry_status;		/* Entry Status. */
- 	uint32_t handle;		/* System handle. */
--	uint16_t scsi_status;		/* SCSI status. */
--	uint16_t comp_status;		/* Completion status. */
--	uint16_t state_flags;		/* State flags. */
--	uint16_t status_flags;		/* Status flags. */
--	uint16_t rsp_info_len;		/* Response Info Length. */
--	uint16_t req_sense_length;	/* Request sense data length. */
--	uint32_t residual_length;	/* Residual transfer length. */
-+	__le16	scsi_status;		/* SCSI status. */
-+	__le16	comp_status;		/* Completion status. */
-+	__le16	state_flags;		/* State flags. */
-+	__le16	status_flags;		/* Status flags. */
-+	__le16	rsp_info_len;		/* Response Info Length. */
-+	__le16	req_sense_length;	/* Request sense data length. */
-+	__le32	residual_length;	/* Residual transfer length. */
- 	uint8_t rsp_info[8];		/* FCP response information. */
- 	uint8_t req_sense_data[32];	/* Request sense data. */
- } sts_entry_t;
-@@ -2114,8 +2114,8 @@ typedef struct {
- 					/* clear port changed, */
- 					/* use sequence number. */
- 	uint8_t reserved_1;
--	uint16_t sequence_number;	/* Sequence number of event */
--	uint16_t lun;			/* SCSI LUN */
-+	__le16	sequence_number;	/* Sequence number of event */
-+	__le16	lun;			/* SCSI LUN */
- 	uint8_t reserved_2[48];
- } mrk_entry_t;
- 
-@@ -2130,19 +2130,19 @@ typedef struct {
- 	uint8_t entry_status;		/* Entry Status. */
- 	uint32_t handle1;		/* System handle. */
- 	target_id_t loop_id;
--	uint16_t status;
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	status;
-+	__le16	control_flags;		/* Control flags. */
- 	uint16_t reserved2;
--	uint16_t timeout;
--	uint16_t cmd_dsd_count;
--	uint16_t total_dsd_count;
-+	__le16	timeout;
-+	__le16	cmd_dsd_count;
-+	__le16	total_dsd_count;
- 	uint8_t type;
- 	uint8_t r_ctl;
--	uint16_t rx_id;
-+	__le16	rx_id;
- 	uint16_t reserved3;
- 	uint32_t handle2;
--	uint32_t rsp_bytecount;
--	uint32_t req_bytecount;
-+	__le32	rsp_bytecount;
-+	__le32	req_bytecount;
- 	struct dsd64 req_dsd;
- 	struct dsd64 rsp_dsd;
- } ms_iocb_entry_t;
-@@ -2170,20 +2170,20 @@ struct mbx_entry {
- 	uint32_t handle;
- 	target_id_t loop_id;
- 
--	uint16_t status;
--	uint16_t state_flags;
--	uint16_t status_flags;
-+	__le16	status;
-+	__le16	state_flags;
-+	__le16	status_flags;
- 
- 	uint32_t sys_define2[2];
- 
--	uint16_t mb0;
--	uint16_t mb1;
--	uint16_t mb2;
--	uint16_t mb3;
--	uint16_t mb6;
--	uint16_t mb7;
--	uint16_t mb9;
--	uint16_t mb10;
-+	__le16	mb0;
-+	__le16	mb1;
-+	__le16	mb2;
-+	__le16	mb3;
-+	__le16	mb6;
-+	__le16	mb7;
-+	__le16	mb9;
-+	__le16	mb10;
- 	uint32_t reserved_2[2];
- 	uint8_t node_name[WWN_SIZE];
- 	uint8_t port_name[WWN_SIZE];
-@@ -2205,52 +2205,52 @@ struct imm_ntfy_from_isp {
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	union {
- 		struct {
--			uint32_t sys_define_2; /* System defined. */
-+			__le32	sys_define_2; /* System defined. */
- 			target_id_t target;
--			uint16_t lun;
-+			__le16	lun;
- 			uint8_t  target_id;
- 			uint8_t  reserved_1;
--			uint16_t status_modifier;
--			uint16_t status;
--			uint16_t task_flags;
--			uint16_t seq_id;
--			uint16_t srr_rx_id;
--			uint32_t srr_rel_offs;
--			uint16_t srr_ui;
-+			__le16	status_modifier;
-+			__le16	status;
-+			__le16	task_flags;
-+			__le16	seq_id;
-+			__le16	srr_rx_id;
-+			__le32	srr_rel_offs;
-+			__le16	srr_ui;
- #define SRR_IU_DATA_IN	0x1
- #define SRR_IU_DATA_OUT	0x5
- #define SRR_IU_STATUS	0x7
--			uint16_t srr_ox_id;
-+			__le16	srr_ox_id;
- 			uint8_t reserved_2[28];
- 		} isp2x;
- 		struct {
- 			uint32_t reserved;
--			uint16_t nport_handle;
-+			__le16	nport_handle;
- 			uint16_t reserved_2;
--			uint16_t flags;
-+			__le16	flags;
- #define NOTIFY24XX_FLAGS_GLOBAL_TPRLO   BIT_1
- #define NOTIFY24XX_FLAGS_PUREX_IOCB     BIT_0
--			uint16_t srr_rx_id;
--			uint16_t status;
-+			__le16	srr_rx_id;
-+			__le16	status;
- 			uint8_t  status_subcode;
- 			uint8_t  fw_handle;
- 			uint32_t exchange_address;
--			uint32_t srr_rel_offs;
--			uint16_t srr_ui;
--			uint16_t srr_ox_id;
-+			__le32	srr_rel_offs;
-+			__le16	srr_ui;
-+			__le16	srr_ox_id;
- 			union {
- 				struct {
- 					uint8_t node_name[8];
- 				} plogi; /* PLOGI/ADISC/PDISC */
- 				struct {
- 					/* PRLI word 3 bit 0-15 */
--					uint16_t wd3_lo;
-+					__le16	wd3_lo;
- 					uint8_t resv0[6];
- 				} prli;
- 				struct {
- 					uint8_t port_id[3];
- 					uint8_t resv1;
--					uint16_t nport_handle;
-+					__le16	nport_handle;
- 					uint16_t resv2;
- 				} req_els;
- 			} u;
-@@ -2263,7 +2263,7 @@ struct imm_ntfy_from_isp {
- 		} isp24;
- 	} u;
- 	uint16_t reserved_7;
--	uint16_t ox_id;
-+	__le16	ox_id;
- } __packed;
- #endif
- 
-@@ -2653,8 +2653,8 @@ static const char * const port_dstate_str[] = {
- #define FDMI_HBA_VENDOR_IDENTIFIER		0xe0
- 
- struct ct_fdmi_hba_attr {
--	uint16_t type;
--	uint16_t len;
-+	__be16	type;
-+	__be16	len;
- 	union {
- 		uint8_t node_name[WWN_SIZE];
- 		uint8_t manufacturer[64];
-@@ -2666,11 +2666,11 @@ struct ct_fdmi_hba_attr {
- 		uint8_t orom_version[16];
- 		uint8_t fw_version[32];
- 		uint8_t os_version[128];
--		uint32_t max_ct_len;
-+		__be32	 max_ct_len;
- 
- 		uint8_t sym_name[256];
--		uint32_t vendor_specific_info;
--		uint32_t num_ports;
-+		__be32	 vendor_specific_info;
-+		__be32	 num_ports;
- 		uint8_t fabric_name[WWN_SIZE];
- 		uint8_t bios_name[32];
- 		uint8_t vendor_identifier[8];
-@@ -2678,12 +2678,12 @@ struct ct_fdmi_hba_attr {
- };
- 
- struct ct_fdmi1_hba_attributes {
--	uint32_t count;
-+	__be32	count;
- 	struct ct_fdmi_hba_attr entry[FDMI1_HBA_ATTR_COUNT];
- };
- 
- struct ct_fdmi2_hba_attributes {
--	uint32_t count;
-+	__be32	count;
- 	struct ct_fdmi_hba_attr entry[FDMI2_HBA_ATTR_COUNT];
- };
- 
-@@ -2735,44 +2735,44 @@ struct ct_fdmi2_hba_attributes {
- #define FC_CLASS_2_3	0x0C
- 
- struct ct_fdmi_port_attr {
--	uint16_t type;
--	uint16_t len;
-+	__be16	type;
-+	__be16	len;
- 	union {
- 		uint8_t fc4_types[32];
--		uint32_t sup_speed;
--		uint32_t cur_speed;
--		uint32_t max_frame_size;
-+		__be32	sup_speed;
-+		__be32	cur_speed;
-+		__be32	max_frame_size;
- 		uint8_t os_dev_name[32];
- 		uint8_t host_name[256];
- 
- 		uint8_t node_name[WWN_SIZE];
- 		uint8_t port_name[WWN_SIZE];
- 		uint8_t port_sym_name[128];
--		uint32_t port_type;
--		uint32_t port_supported_cos;
-+		__be32	port_type;
-+		__be32	port_supported_cos;
- 		uint8_t fabric_name[WWN_SIZE];
- 		uint8_t port_fc4_type[32];
--		uint32_t port_state;
--		uint32_t num_ports;
--		uint32_t port_id;
-+		__be32	 port_state;
-+		__be32	 num_ports;
-+		__be32	 port_id;
- 
- 		uint8_t smartsan_service[24];
- 		uint8_t smartsan_guid[16];
- 		uint8_t smartsan_version[24];
- 		uint8_t smartsan_prod_name[16];
--		uint32_t smartsan_port_info;
--		uint32_t smartsan_qos_support;
--		uint32_t smartsan_security_support;
-+		__be32	 smartsan_port_info;
-+		__be32	 smartsan_qos_support;
-+		__be32	 smartsan_security_support;
- 	} a;
- };
- 
- struct ct_fdmi1_port_attributes {
--	uint32_t count;
-+	__be32	 count;
- 	struct ct_fdmi_port_attr entry[FDMI1_PORT_ATTR_COUNT];
- };
- 
- struct ct_fdmi2_port_attributes {
--	uint32_t count;
-+	__be32	count;
- 	struct ct_fdmi_port_attr entry[FDMI2_PORT_ATTR_COUNT];
- };
- 
-@@ -2826,8 +2826,8 @@ struct ct_cmd_hdr {
- /* CT command request */
- struct ct_sns_req {
- 	struct ct_cmd_hdr header;
--	uint16_t command;
--	uint16_t max_rsp_size;
-+	__be16	command;
-+	__be16	max_rsp_size;
- 	uint8_t fragment_id;
- 	uint8_t reserved[3];
- 
-@@ -2884,7 +2884,7 @@ struct ct_sns_req {
- 
- 		struct {
- 			uint8_t hba_identifier[8];
--			uint32_t entry_count;
-+			__be32	entry_count;
- 			uint8_t port_name[8];
- 			struct ct_fdmi2_hba_attributes attrs;
- 		} rhba;
-@@ -2939,7 +2939,7 @@ struct ct_sns_req {
- /* CT command response header */
- struct ct_rsp_hdr {
- 	struct ct_cmd_hdr header;
--	uint16_t response;
-+	__be16	response;
- 	uint16_t residual;
- 	uint8_t fragment_id;
- 	uint8_t reason_code;
-@@ -3025,8 +3025,8 @@ struct ct_sns_rsp {
- 		} gfpn_id;
- 
- 		struct {
--			uint16_t speeds;
--			uint16_t speed;
-+			__be16	speeds;
-+			__be16	speed;
- 		} gpsc;
- 
- #define GFF_FCP_SCSI_OFFSET	7
-@@ -3116,13 +3116,13 @@ struct fab_scan {
- struct sns_cmd_pkt {
- 	union {
- 		struct {
--			uint16_t buffer_length;
--			uint16_t reserved_1;
--			__le64	 buffer_address __packed;
--			uint16_t subcommand_length;
--			uint16_t reserved_2;
--			uint16_t subcommand;
--			uint16_t size;
-+			__le16	buffer_length;
-+			__le16	reserved_1;
-+			__le64	buffer_address __packed;
-+			__le16	subcommand_length;
-+			__le16	reserved_2;
-+			__le16	subcommand;
-+			__le16	size;
- 			uint32_t reserved_3;
- 			uint8_t param[36];
- 		} cmd;
-@@ -3148,7 +3148,7 @@ struct gid_list_info {
- 	uint8_t	area;
- 	uint8_t	domain;
- 	uint8_t	loop_id_2100;	/* ISP2100/ISP2200 -- 4 bytes. */
--	uint16_t loop_id;	/* ISP23XX         -- 6 bytes. */
-+	__le16	loop_id;	/* ISP23XX         -- 6 bytes. */
- 	uint16_t reserved_1;	/* ISP24XX         -- 8 bytes. */
- };
- 
-@@ -3456,8 +3456,8 @@ struct rsp_que {
- 	dma_addr_t  dma;
- 	response_t *ring;
- 	response_t *ring_ptr;
--	uint32_t __iomem *rsp_q_in;	/* FWI2-capable only. */
--	uint32_t __iomem *rsp_q_out;
-+	__le32	__iomem *rsp_q_in;	/* FWI2-capable only. */
-+	__le32	__iomem *rsp_q_out;
- 	uint16_t  ring_index;
- 	uint16_t  out_ptr;
- 	uint16_t  *in_ptr;		/* queue shadow in index */
-@@ -3483,8 +3483,8 @@ struct req_que {
- 	dma_addr_t  dma;
- 	request_t *ring;
- 	request_t *ring_ptr;
--	uint32_t __iomem *req_q_in;	/* FWI2-capable only. */
--	uint32_t __iomem *req_q_out;
-+	__le32	__iomem *req_q_in;	/* FWI2-capable only. */
-+	__le32	__iomem *req_q_out;
- 	uint16_t  ring_index;
- 	uint16_t  in_ptr;
- 	uint16_t  *out_ptr;		/* queue shadow out index */
-@@ -3579,98 +3579,98 @@ struct rdp_req_payload {
- 
- struct rdp_rsp_payload {
- 	struct {
--		uint32_t cmd;
--		uint32_t len;
-+		__be32	cmd;
-+		__be32	len;
- 	} hdr;
- 
- 	/* LS Request Info descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint32_t req_payload_word_0;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be32	req_payload_word_0;
- 	} ls_req_info_desc;
- 
- 	/* LS Request Info descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint32_t req_payload_word_0;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be32	req_payload_word_0;
- 	} ls_req_info_desc2;
- 
- 	/* SFP diagnostic param descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint16_t temperature;
--		uint16_t vcc;
--		uint16_t tx_bias;
--		uint16_t tx_power;
--		uint16_t rx_power;
--		uint16_t sfp_flags;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be16	temperature;
-+		__be16	vcc;
-+		__be16	tx_bias;
-+		__be16	tx_power;
-+		__be16	rx_power;
-+		__be16	sfp_flags;
- 	} sfp_diag_desc;
- 
- 	/* Port Speed Descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint16_t speed_capab;
--		uint16_t operating_speed;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be16	speed_capab;
-+		__be16	operating_speed;
- 	} port_speed_desc;
- 
- 	/* Link Error Status Descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint32_t link_fail_cnt;
--		uint32_t loss_sync_cnt;
--		uint32_t loss_sig_cnt;
--		uint32_t prim_seq_err_cnt;
--		uint32_t inval_xmit_word_cnt;
--		uint32_t inval_crc_cnt;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be32	link_fail_cnt;
-+		__be32	loss_sync_cnt;
-+		__be32	loss_sig_cnt;
-+		__be32	prim_seq_err_cnt;
-+		__be32	inval_xmit_word_cnt;
-+		__be32	inval_crc_cnt;
- 		uint8_t  pn_port_phy_type;
- 		uint8_t  reserved[3];
- 	} ls_err_desc;
- 
- 	/* Port name description with diag param */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
-+		__be32	desc_tag;
-+		__be32	desc_len;
- 		uint8_t WWNN[WWN_SIZE];
- 		uint8_t WWPN[WWN_SIZE];
- 	} port_name_diag_desc;
- 
- 	/* Port Name desc for Direct attached Fx_Port or Nx_Port */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
-+		__be32	desc_tag;
-+		__be32	desc_len;
- 		uint8_t WWNN[WWN_SIZE];
- 		uint8_t WWPN[WWN_SIZE];
- 	} port_name_direct_desc;
- 
- 	/* Buffer Credit descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint32_t fcport_b2b;
--		uint32_t attached_fcport_b2b;
--		uint32_t fcport_rtt;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be32	fcport_b2b;
-+		__be32	attached_fcport_b2b;
-+		__be32	fcport_rtt;
- 	} buffer_credit_desc;
- 
- 	/* Optical Element Data Descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
--		uint16_t high_alarm;
--		uint16_t low_alarm;
--		uint16_t high_warn;
--		uint16_t low_warn;
--		uint32_t element_flags;
-+		__be32	desc_tag;
-+		__be32	desc_len;
-+		__be16	high_alarm;
-+		__be16	low_alarm;
-+		__be16	high_warn;
-+		__be16	low_warn;
-+		__be32	element_flags;
- 	} optical_elmt_desc[5];
- 
- 	/* Optical Product Data Descriptor */
- 	struct {
--		uint32_t desc_tag;
--		uint32_t desc_len;
-+		__be32	desc_tag;
-+		__be32	desc_len;
- 		uint8_t  vendor_name[16];
- 		uint8_t  part_number[16];
- 		uint8_t  serial_number[16];
-@@ -3708,17 +3708,17 @@ struct qlt_hw_data {
- 	struct atio *atio_ring_ptr;	/* Current address. */
- 	uint16_t atio_ring_index; /* Current index. */
- 	uint16_t atio_q_length;
--	uint32_t __iomem *atio_q_in;
--	uint32_t __iomem *atio_q_out;
-+	__le32 __iomem *atio_q_in;
-+	__le32 __iomem *atio_q_out;
- 
- 	struct qla_tgt_func_tmpl *tgt_ops;
- 	struct qla_tgt_vp_map *tgt_vp_map;
- 
- 	int saved_set;
--	uint16_t saved_exchange_count;
--	uint32_t saved_firmware_options_1;
--	uint32_t saved_firmware_options_2;
--	uint32_t saved_firmware_options_3;
-+	__le16	saved_exchange_count;
-+	__le32	saved_firmware_options_1;
-+	__le32	saved_firmware_options_2;
-+	__le32	saved_firmware_options_3;
- 	uint8_t saved_firmware_options[2];
- 	uint8_t saved_add_firmware_options[2];
- 
-@@ -4212,7 +4212,7 @@ struct qla_hw_data {
- 
- 	uint16_t	fw_options[16];         /* slots: 1,2,3,10,11 */
- 	uint8_t		fw_seriallink_options[4];
--	uint16_t	fw_seriallink_options24[4];
-+	__le16		fw_seriallink_options24[4];
- 
- 	uint8_t		serdes_version[3];
- 	uint8_t		mpi_version[3];
-@@ -4392,7 +4392,7 @@ struct qla_hw_data {
- #define NUM_DSD_CHAIN 4096
- 
- 	uint8_t fw_type;
--	__le32 file_prd_off;	/* File firmware product offset */
-+	uint32_t file_prd_off;	/* File firmware product offset */
- 
- 	uint32_t	md_template_size;
- 	void		*md_tmplt_hdr;
-@@ -4698,13 +4698,13 @@ typedef struct scsi_qla_host {
- 
- struct qla27xx_image_status {
- 	uint8_t image_status_mask;
--	uint16_t generation;
-+	__le16	generation;
- 	uint8_t ver_major;
- 	uint8_t ver_minor;
- 	uint8_t bitmap;		/* 28xx only */
- 	uint8_t reserved[2];
--	uint32_t checksum;
--	uint32_t signature;
-+	__le32	checksum;
-+	__le32	signature;
- } __packed;
- 
- /* 28xx aux image status bimap values */
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index f9bad5bd7198..4c7577b1c9fd 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -134,28 +134,28 @@ struct vp_database_24xx {
- struct nvram_24xx {
- 	/* NVRAM header. */
- 	uint8_t id[4];
--	uint16_t nvram_version;
-+	__le16	nvram_version;
- 	uint16_t reserved_0;
- 
- 	/* Firmware Initialization Control Block. */
--	uint16_t version;
-+	__le16	version;
- 	uint16_t reserved_1;
--	__le16 frame_payload_size;
--	uint16_t execution_throttle;
--	uint16_t exchange_count;
--	uint16_t hard_address;
-+	__le16	frame_payload_size;
-+	__le16	execution_throttle;
-+	__le16	exchange_count;
-+	__le16	hard_address;
- 
- 	uint8_t port_name[WWN_SIZE];
- 	uint8_t node_name[WWN_SIZE];
- 
--	uint16_t login_retry_count;
--	uint16_t link_down_on_nos;
--	uint16_t interrupt_delay_timer;
--	uint16_t login_timeout;
-+	__le16	login_retry_count;
-+	__le16	link_down_on_nos;
-+	__le16	interrupt_delay_timer;
-+	__le16	login_timeout;
- 
--	uint32_t firmware_options_1;
--	uint32_t firmware_options_2;
--	uint32_t firmware_options_3;
-+	__le32	firmware_options_1;
-+	__le32	firmware_options_2;
-+	__le32	firmware_options_3;
- 
- 	/* Offset 56. */
- 
-@@ -178,7 +178,7 @@ struct nvram_24xx {
- 	 * BIT 11-13 = Output Emphasis 4G
- 	 * BIT 14-15 = Reserved
- 	 */
--	uint16_t seriallink_options[4];
-+	__le16	seriallink_options[4];
- 
- 	uint16_t reserved_2[16];
- 
-@@ -218,25 +218,25 @@ struct nvram_24xx {
- 	 *
- 	 * BIT 16-31 =
- 	 */
--	uint32_t host_p;
-+	__le32	host_p;
- 
- 	uint8_t alternate_port_name[WWN_SIZE];
- 	uint8_t alternate_node_name[WWN_SIZE];
- 
- 	uint8_t boot_port_name[WWN_SIZE];
--	uint16_t boot_lun_number;
-+	__le16	boot_lun_number;
- 	uint16_t reserved_8;
- 
- 	uint8_t alt1_boot_port_name[WWN_SIZE];
--	uint16_t alt1_boot_lun_number;
-+	__le16	alt1_boot_lun_number;
- 	uint16_t reserved_9;
- 
- 	uint8_t alt2_boot_port_name[WWN_SIZE];
--	uint16_t alt2_boot_lun_number;
-+	__le16	alt2_boot_lun_number;
- 	uint16_t reserved_10;
- 
- 	uint8_t alt3_boot_port_name[WWN_SIZE];
--	uint16_t alt3_boot_lun_number;
-+	__le16	alt3_boot_lun_number;
- 	uint16_t reserved_11;
- 
- 	/*
-@@ -249,23 +249,23 @@ struct nvram_24xx {
- 	 * BIT 6 = Reserved
- 	 * BIT 7-31 =
- 	 */
--	uint32_t efi_parameters;
-+	__le32	efi_parameters;
- 
- 	uint8_t reset_delay;
- 	uint8_t reserved_12;
- 	uint16_t reserved_13;
- 
--	uint16_t boot_id_number;
-+	__le16	boot_id_number;
- 	uint16_t reserved_14;
- 
--	uint16_t max_luns_per_target;
-+	__le16	max_luns_per_target;
- 	uint16_t reserved_15;
- 
--	uint16_t port_down_retry_count;
--	uint16_t link_down_timeout;
-+	__le16	port_down_retry_count;
-+	__le16	link_down_timeout;
- 
- 	/* FCode parameters. */
--	uint16_t fcode_parameter;
-+	__le16	fcode_parameter;
- 
- 	uint16_t reserved_16[3];
- 
-@@ -275,13 +275,13 @@ struct nvram_24xx {
- 	uint8_t prev_drv_ver_minor;
- 	uint8_t prev_drv_ver_subminor;
- 
--	uint16_t prev_bios_ver_major;
--	uint16_t prev_bios_ver_minor;
-+	__le16	prev_bios_ver_major;
-+	__le16	prev_bios_ver_minor;
- 
--	uint16_t prev_efi_ver_major;
--	uint16_t prev_efi_ver_minor;
-+	__le16	prev_efi_ver_major;
-+	__le16	prev_efi_ver_minor;
- 
--	uint16_t prev_fw_ver_major;
-+	__le16	prev_fw_ver_major;
- 	uint8_t prev_fw_ver_minor;
- 	uint8_t prev_fw_ver_subminor;
- 
-@@ -309,7 +309,7 @@ struct nvram_24xx {
- 	uint16_t subsystem_vendor_id;
- 	uint16_t subsystem_device_id;
- 
--	uint32_t checksum;
-+	__le32	checksum;
- };
- 
- /*
-@@ -318,46 +318,46 @@ struct nvram_24xx {
-  */
- #define	ICB_VERSION 1
- struct init_cb_24xx {
--	uint16_t version;
-+	__le16	version;
- 	uint16_t reserved_1;
- 
--	uint16_t frame_payload_size;
--	uint16_t execution_throttle;
--	uint16_t exchange_count;
-+	__le16	frame_payload_size;
-+	__le16	execution_throttle;
-+	__le16	exchange_count;
- 
--	uint16_t hard_address;
-+	__le16	hard_address;
- 
- 	uint8_t port_name[WWN_SIZE];		/* Big endian. */
- 	uint8_t node_name[WWN_SIZE];		/* Big endian. */
- 
--	uint16_t response_q_inpointer;
--	uint16_t request_q_outpointer;
-+	__le16	response_q_inpointer;
-+	__le16	request_q_outpointer;
- 
--	uint16_t login_retry_count;
-+	__le16	login_retry_count;
- 
--	uint16_t prio_request_q_outpointer;
-+	__le16	prio_request_q_outpointer;
- 
--	uint16_t response_q_length;
--	uint16_t request_q_length;
-+	__le16	response_q_length;
-+	__le16	request_q_length;
- 
--	uint16_t link_down_on_nos;		/* Milliseconds. */
-+	__le16	link_down_on_nos;		/* Milliseconds. */
- 
--	uint16_t prio_request_q_length;
-+	__le16	prio_request_q_length;
- 
- 	__le64	 request_q_address __packed;
- 	__le64	 response_q_address __packed;
- 	__le64	 prio_request_q_address __packed;
- 
--	uint16_t msix;
--	uint16_t msix_atio;
-+	__le16	msix;
-+	__le16	msix_atio;
- 	uint8_t reserved_2[4];
- 
--	uint16_t atio_q_inpointer;
--	uint16_t atio_q_length;
--	__le64	 atio_q_address __packed;
-+	__le16	atio_q_inpointer;
-+	__le16	atio_q_length;
-+	__le64	atio_q_address __packed;
- 
--	uint16_t interrupt_delay_timer;		/* 100us increments. */
--	uint16_t login_timeout;
-+	__le16	interrupt_delay_timer;		/* 100us increments. */
-+	__le16	login_timeout;
- 
- 	/*
- 	 * BIT 0  = Enable Hard Loop Id
-@@ -378,7 +378,7 @@ struct init_cb_24xx {
- 	 * BIT 14 = Node Name Option
- 	 * BIT 15-31 = Reserved
- 	 */
--	uint32_t firmware_options_1;
-+	__le32	firmware_options_1;
- 
- 	/*
- 	 * BIT 0  = Operation Mode bit 0
-@@ -399,7 +399,7 @@ struct init_cb_24xx {
- 	 * BIT 14 = Enable Target PRLI Control
- 	 * BIT 15-31 = Reserved
- 	 */
--	uint32_t firmware_options_2;
-+	__le32	firmware_options_2;
- 
- 	/*
- 	 * BIT 0  = Reserved
-@@ -425,9 +425,9 @@ struct init_cb_24xx {
- 	 * BIT 30 = Enable request queue 0 out index shadowing
- 	 * BIT 31 = Reserved
- 	 */
--	uint32_t firmware_options_3;
--	uint16_t qos;
--	uint16_t rid;
-+	__le32	firmware_options_3;
-+	__le16	 qos;
-+	__le16	 rid;
- 	uint8_t  reserved_3[20];
- };
- 
-@@ -443,27 +443,27 @@ struct cmd_bidir {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT hanlde. */
-+	__le16	nport_handle;		/* N_PORT hanlde. */
- 
--	uint16_t timeout;		/* Commnad timeout. */
-+	__le16	timeout;		/* Command timeout. */
- 
--	uint16_t wr_dseg_count;		/* Write Data segment count. */
--	uint16_t rd_dseg_count;		/* Read Data segment count. */
-+	__le16	wr_dseg_count;		/* Write Data segment count. */
-+	__le16	rd_dseg_count;		/* Read Data segment count. */
- 
- 	struct scsi_lun lun;		/* FCP LUN (BE). */
- 
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	control_flags;		/* Control flags. */
- #define BD_WRAP_BACK			BIT_3
- #define BD_READ_DATA			BIT_1
- #define BD_WRITE_DATA			BIT_0
- 
--	uint16_t fcp_cmnd_dseg_len;		/* Data segment length. */
-+	__le16	fcp_cmnd_dseg_len;		/* Data segment length. */
- 	__le64	 fcp_cmnd_dseg_address __packed;/* Data segment address. */
- 
- 	uint16_t reserved[2];			/* Reserved */
- 
--	uint32_t rd_byte_count;			/* Total Byte count Read. */
--	uint32_t wr_byte_count;			/* Total Byte count write. */
-+	__le32	rd_byte_count;			/* Total Byte count Read. */
-+	__le32	wr_byte_count;			/* Total Byte count write. */
- 
- 	uint8_t port_id[3];			/* PortID of destination port.*/
- 	uint8_t vp_index;
-@@ -480,28 +480,28 @@ struct cmd_type_6 {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
--	uint16_t timeout;		/* Command timeout. */
-+	__le16	nport_handle;		/* N_PORT handle. */
-+	__le16	timeout;		/* Command timeout. */
- 
--	uint16_t dseg_count;		/* Data segment count. */
-+	__le16	dseg_count;		/* Data segment count. */
- 
--	uint16_t fcp_rsp_dsd_len;	/* FCP_RSP DSD length. */
-+	__le16	fcp_rsp_dsd_len;	/* FCP_RSP DSD length. */
- 
- 	struct scsi_lun lun;		/* FCP LUN (BE). */
- 
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	control_flags;		/* Control flags. */
- #define CF_DIF_SEG_DESCR_ENABLE		BIT_3
- #define CF_DATA_SEG_DESCR_ENABLE	BIT_2
- #define CF_READ_DATA			BIT_1
- #define CF_WRITE_DATA			BIT_0
- 
--	uint16_t fcp_cmnd_dseg_len;	/* Data segment length. */
-+	__le16	fcp_cmnd_dseg_len;	/* Data segment length. */
- 					/* Data segment address. */
- 	__le64	 fcp_cmnd_dseg_address __packed;
- 					/* Data segment address. */
- 	__le64	 fcp_rsp_dseg_address __packed;
- 
--	uint32_t byte_count;		/* Total byte count. */
-+	__le32	byte_count;		/* Total byte count. */
- 
- 	uint8_t port_id[3];		/* PortID of destination port. */
- 	uint8_t vp_index;
-@@ -518,16 +518,16 @@ struct cmd_type_7 {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
--	uint16_t timeout;		/* Command timeout. */
-+	__le16	nport_handle;		/* N_PORT handle. */
-+	__le16	timeout;		/* Command timeout. */
- #define FW_MAX_TIMEOUT		0x1999
- 
--	uint16_t dseg_count;		/* Data segment count. */
-+	__le16	dseg_count;		/* Data segment count. */
- 	uint16_t reserved_1;
- 
- 	struct scsi_lun lun;		/* FCP LUN (BE). */
- 
--	uint16_t task_mgmt_flags;	/* Task management flags. */
-+	__le16	task_mgmt_flags;	/* Task management flags. */
- #define TMF_CLEAR_ACA		BIT_14
- #define TMF_TARGET_RESET	BIT_13
- #define TMF_LUN_RESET		BIT_12
-@@ -547,7 +547,7 @@ struct cmd_type_7 {
- 	uint8_t crn;
- 
- 	uint8_t fcp_cdb[MAX_CMDSZ]; 	/* SCSI command words. */
--	uint32_t byte_count;		/* Total byte count. */
-+	__le32	byte_count;		/* Total byte count. */
- 
- 	uint8_t port_id[3];		/* PortID of destination port. */
- 	uint8_t vp_index;
-@@ -565,29 +565,29 @@ struct cmd_type_crc_2 {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
--	uint16_t timeout;		/* Command timeout. */
-+	__le16	nport_handle;		/* N_PORT handle. */
-+	__le16	timeout;		/* Command timeout. */
- 
--	uint16_t dseg_count;		/* Data segment count. */
-+	__le16	dseg_count;		/* Data segment count. */
- 
--	uint16_t fcp_rsp_dseg_len;	/* FCP_RSP DSD length. */
-+	__le16	fcp_rsp_dseg_len;	/* FCP_RSP DSD length. */
- 
- 	struct scsi_lun lun;		/* FCP LUN (BE). */
- 
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	control_flags;		/* Control flags. */
- 
--	uint16_t fcp_cmnd_dseg_len;	/* Data segment length. */
-+	__le16	fcp_cmnd_dseg_len;	/* Data segment length. */
- 	__le64	 fcp_cmnd_dseg_address __packed;
- 					/* Data segment address. */
- 	__le64	 fcp_rsp_dseg_address __packed;
- 
--	uint32_t byte_count;		/* Total byte count. */
-+	__le32	byte_count;		/* Total byte count. */
- 
- 	uint8_t port_id[3];		/* PortID of destination port. */
- 	uint8_t vp_index;
- 
- 	__le64	 crc_context_address __packed;	/* Data segment address. */
--	uint16_t crc_context_len;		/* Data segment length. */
-+	__le16	crc_context_len;		/* Data segment length. */
- 	uint16_t reserved_1;			/* MUST be set to 0. */
- };
- 
-@@ -604,32 +604,32 @@ struct sts_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t comp_status;		/* Completion status. */
--	uint16_t ox_id;			/* OX_ID used by the firmware. */
-+	__le16	comp_status;		/* Completion status. */
-+	__le16	ox_id;			/* OX_ID used by the firmware. */
- 
--	uint32_t residual_len;		/* FW calc residual transfer length. */
-+	__le32	residual_len;		/* FW calc residual transfer length. */
- 
- 	union {
- 		uint16_t reserved_1;
--		uint16_t nvme_rsp_pyld_len;
-+		__le16	nvme_rsp_pyld_len;
- 	};
- 
--	uint16_t state_flags;		/* State flags. */
-+	__le16	state_flags;		/* State flags. */
- #define SF_TRANSFERRED_DATA	BIT_11
- #define SF_NVME_ERSP            BIT_6
- #define SF_FCP_RSP_DMA		BIT_0
- 
--	uint16_t retry_delay;
--	uint16_t scsi_status;		/* SCSI status. */
-+	__le16	retry_delay;
-+	__le16	scsi_status;		/* SCSI status. */
- #define SS_CONFIRMATION_REQ		BIT_12
- 
--	uint32_t rsp_residual_count;	/* FCP RSP residual count. */
-+	__le32	rsp_residual_count;	/* FCP RSP residual count. */
- 
--	uint32_t sense_len;		/* FCP SENSE length. */
-+	__le32	sense_len;		/* FCP SENSE length. */
- 
- 	union {
- 		struct {
--			uint32_t rsp_data_len;	/* FCP response data length  */
-+			__le32	rsp_data_len;	/* FCP response data length  */
- 			uint8_t data[28];	/* FCP rsp/sense information */
- 		};
- 		struct nvme_fc_ersp_iu nvme_ersp;
-@@ -672,7 +672,7 @@ struct mrk_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 
- 	uint8_t modifier;		/* Modifier (7-0). */
- #define MK_SYNC_ID_LUN	0		/* Synchronize ID/LUN */
-@@ -701,24 +701,24 @@ struct ct_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t comp_status;		/* Completion status. */
-+	__le16	comp_status;		/* Completion status. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 
--	uint16_t cmd_dsd_count;
-+	__le16	cmd_dsd_count;
- 
- 	uint8_t vp_index;
- 	uint8_t reserved_1;
- 
--	uint16_t timeout;		/* Command timeout. */
-+	__le16	timeout;		/* Command timeout. */
- 	uint16_t reserved_2;
- 
--	uint16_t rsp_dsd_count;
-+	__le16	rsp_dsd_count;
- 
- 	uint8_t reserved_3[10];
- 
--	uint32_t rsp_byte_count;
--	uint32_t cmd_byte_count;
-+	__le32	rsp_byte_count;
-+	__le32	cmd_byte_count;
- 
- 	struct dsd64 dsd[2];
- };
-@@ -733,17 +733,17 @@ struct purex_entry_24xx {
- 	uint8_t sys_define;		/* System defined. */
- 	uint8_t entry_status;		/* Entry Status. */
- 
--	uint16_t reserved1;
-+	__le16	reserved1;
- 	uint8_t vp_idx;
- 	uint8_t reserved2;
- 
--	uint16_t status_flags;
-+	__le16	status_flags;
- 	uint16_t nport_handle;
- 
--	uint16_t frame_size;
--	uint16_t trunc_frame_size;
-+	__le16	frame_size;
-+	__le16	trunc_frame_size;
- 
--	uint32_t rx_xchg_addr;
-+	__le32	rx_xchg_addr;
- 
- 	uint8_t d_id[3];
- 	uint8_t r_ctl;
-@@ -754,13 +754,13 @@ struct purex_entry_24xx {
- 	uint8_t f_ctl[3];
- 	uint8_t type;
- 
--	uint16_t seq_cnt;
-+	__le16	seq_cnt;
- 	uint8_t df_ctl;
- 	uint8_t seq_id;
- 
--	uint16_t rx_id;
--	uint16_t ox_id;
--	uint32_t param;
-+	__le16	rx_id;
-+	__le16	ox_id;
-+	__le32	param;
- 
- 	uint8_t els_frame_payload[20];
- };
-@@ -780,15 +780,15 @@ struct els_entry_24xx {
- 	uint16_t comp_status;		/* response only */
- 	uint16_t nport_handle;
- 
--	uint16_t tx_dsd_count;
-+	__le16	tx_dsd_count;
- 
- 	uint8_t vp_index;
- 	uint8_t sof_type;
- #define EST_SOFI3		(1 << 4)
- #define EST_SOFI2		(3 << 4)
- 
--	uint32_t rx_xchg_address;	/* Receive exchange address. */
--	uint16_t rx_dsd_count;
-+	__le32	rx_xchg_address;	/* Receive exchange address. */
-+	__le16	rx_dsd_count;
- 
- 	uint8_t opcode;
- 	uint8_t reserved_2;
-@@ -796,7 +796,7 @@ struct els_entry_24xx {
- 	uint8_t d_id[3];
- 	uint8_t s_id[3];
- 
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	control_flags;		/* Control flags. */
- #define ECF_PAYLOAD_DESCR_MASK	(BIT_15|BIT_14|BIT_13)
- #define EPD_ELS_COMMAND		(0 << 13)
- #define EPD_ELS_ACC		(1 << 13)
-@@ -817,10 +817,10 @@ struct els_entry_24xx {
- 			__le32	 rx_len;		/* DSD 1 length. */
- 		};
- 		struct {
--			uint32_t total_byte_count;
--			uint32_t error_subcode_1;
--			uint32_t error_subcode_2;
--			uint32_t error_subcode_3;
-+			__le32	total_byte_count;
-+			__le32	error_subcode_1;
-+			__le32	error_subcode_2;
-+			__le32	error_subcode_3;
- 		};
- 	};
- };
-@@ -831,19 +831,19 @@ struct els_sts_entry_24xx {
- 	uint8_t sys_define;		/* System Defined. */
- 	uint8_t entry_status;		/* Entry Status. */
- 
--	uint32_t handle;		/* System handle. */
-+	__le32	handle;		/* System handle. */
- 
--	uint16_t comp_status;
-+	__le16	comp_status;
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 
--	uint16_t reserved_1;
-+	__le16	reserved_1;
- 
- 	uint8_t vp_index;
- 	uint8_t sof_type;
- 
--	uint32_t rx_xchg_address;	/* Receive exchange address. */
--	uint16_t reserved_2;
-+	__le32	rx_xchg_address;	/* Receive exchange address. */
-+	__le16	reserved_2;
- 
- 	uint8_t opcode;
- 	uint8_t reserved_3;
-@@ -851,13 +851,13 @@ struct els_sts_entry_24xx {
- 	uint8_t d_id[3];
- 	uint8_t s_id[3];
- 
--	uint16_t control_flags;		/* Control flags. */
--	uint32_t total_byte_count;
--	uint32_t error_subcode_1;
--	uint32_t error_subcode_2;
--	uint32_t error_subcode_3;
-+	__le16	control_flags;		/* Control flags. */
-+	__le32	total_byte_count;
-+	__le32	error_subcode_1;
-+	__le32	error_subcode_2;
-+	__le32	error_subcode_3;
- 
--	uint32_t reserved_4[4];
-+	__le32	reserved_4[4];
- };
- /*
-  * ISP queue - Mailbox Command entry structure definition.
-@@ -884,12 +884,12 @@ struct logio_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t comp_status;		/* Completion status. */
-+	__le16	comp_status;		/* Completion status. */
- #define CS_LOGIO_ERROR		0x31	/* Login/Logout IOCB error. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 
--	uint16_t control_flags;		/* Control flags. */
-+	__le16	control_flags;		/* Control flags. */
- 					/* Modifiers. */
- #define LCF_INCLUDE_SNS		BIT_10	/* Include SNS (FFFFFC) during LOGO. */
- #define LCF_FCP2_OVERRIDE	BIT_9	/* Set/Reset word 3 of PRLI. */
-@@ -918,7 +918,7 @@ struct logio_entry_24xx {
- 
- 	uint8_t rsp_size;		/* Response size in 32bit words. */
- 
--	uint32_t io_parameter[11];	/* General I/O parameters. */
-+	__le32	io_parameter[11];	/* General I/O parameters. */
- #define LSC_SCODE_NOLINK	0x01
- #define LSC_SCODE_NOIOCB	0x02
- #define LSC_SCODE_NOXCB		0x03
-@@ -946,17 +946,17 @@ struct tsk_mgmt_entry {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 
- 	uint16_t reserved_1;
- 
--	uint16_t delay;			/* Activity delay in seconds. */
-+	__le16	delay;			/* Activity delay in seconds. */
- 
--	uint16_t timeout;		/* Command timeout. */
-+	__le16	timeout;		/* Command timeout. */
- 
- 	struct scsi_lun lun;		/* FCP LUN (BE). */
- 
--	uint32_t control_flags;		/* Control Flags. */
-+	__le32	control_flags;		/* Control Flags. */
- #define TCF_NOTMCMD_TO_TARGET	BIT_31
- #define TCF_LUN_RESET		BIT_4
- #define TCF_ABORT_TASK_SET	BIT_3
-@@ -981,15 +981,15 @@ struct abort_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 					/* or Completion status. */
- 
--	uint16_t options;		/* Options. */
-+	__le16	options;		/* Options. */
- #define AOF_NO_ABTS		BIT_0	/* Do not send any ABTS. */
- 
- 	uint32_t handle_to_abort;	/* System handle to abort. */
- 
--	uint16_t req_que_no;
-+	__le16	req_que_no;
- 	uint8_t reserved_1[30];
- 
- 	uint8_t port_id[3];		/* PortID of destination port. */
-@@ -1006,16 +1006,16 @@ struct abts_entry_24xx {
- 	uint8_t handle_count;
- 	uint8_t entry_status;
- 
--	uint32_t handle;		/* type 0x55 only */
-+	__le32	handle;		/* type 0x55 only */
- 
--	uint16_t comp_status;		/* type 0x55 only */
--	uint16_t nport_handle;		/* type 0x54 only */
-+	__le16	comp_status;		/* type 0x55 only */
-+	__le16	nport_handle;		/* type 0x54 only */
- 
--	uint16_t control_flags;		/* type 0x55 only */
-+	__le16	control_flags;		/* type 0x55 only */
- 	uint8_t vp_idx;
- 	uint8_t sof_type;		/* sof_type is upper nibble */
- 
--	uint32_t rx_xch_addr;
-+	__le32	rx_xch_addr;
- 
- 	uint8_t d_id[3];
- 	uint8_t r_ctl;
-@@ -1026,30 +1026,30 @@ struct abts_entry_24xx {
- 	uint8_t f_ctl[3];
- 	uint8_t type;
- 
--	uint16_t seq_cnt;
-+	__le16	seq_cnt;
- 	uint8_t df_ctl;
- 	uint8_t seq_id;
- 
--	uint16_t rx_id;
--	uint16_t ox_id;
-+	__le16	rx_id;
-+	__le16	ox_id;
- 
--	uint32_t param;
-+	__le32	param;
- 
- 	union {
- 		struct {
--			uint32_t subcode3;
--			uint32_t rsvd;
--			uint32_t subcode1;
--			uint32_t subcode2;
-+			__le32	subcode3;
-+			__le32	rsvd;
-+			__le32	subcode1;
-+			__le32	subcode2;
- 		} error;
- 		struct {
--			uint16_t rsrvd1;
-+			__le16	rsrvd1;
- 			uint8_t last_seq_id;
- 			uint8_t seq_id_valid;
--			uint16_t aborted_rx_id;
--			uint16_t aborted_ox_id;
--			uint16_t high_seq_cnt;
--			uint16_t low_seq_cnt;
-+			__le16	aborted_rx_id;
-+			__le16	aborted_ox_id;
-+			__le16	high_seq_cnt;
-+			__le16	low_seq_cnt;
- 		} ba_acc;
- 		struct {
- 			uint8_t vendor_unique;
-@@ -1058,7 +1058,7 @@ struct abts_entry_24xx {
- 		} ba_rjt;
- 	} payload;
- 
--	uint32_t rx_xch_addr_to_abort;
-+	__le32	rx_xch_addr_to_abort;
- } __packed;
- 
- /* ABTS payload explanation values */
-@@ -1087,7 +1087,7 @@ struct abts_entry_24xx {
-  * ISP I/O Register Set structure definitions.
-  */
- struct device_reg_24xx {
--	uint32_t flash_addr;		/* Flash/NVRAM BIOS address. */
-+	__le32	flash_addr;		/* Flash/NVRAM BIOS address. */
- #define FARX_DATA_FLAG	BIT_31
- #define FARX_ACCESS_FLASH_CONF	0x7FFD0000
- #define FARX_ACCESS_FLASH_DATA	0x7FF00000
-@@ -1138,9 +1138,9 @@ struct device_reg_24xx {
- #define HW_EVENT_NVRAM_CHKSUM_ERR	0xF023
- #define HW_EVENT_FLASH_FW_ERR	0xF024
- 
--	uint32_t flash_data;		/* Flash/NVRAM BIOS data. */
-+	__le32	flash_data;		/* Flash/NVRAM BIOS data. */
- 
--	uint32_t ctrl_status;		/* Control/Status. */
-+	__le32	ctrl_status;		/* Control/Status. */
- #define CSRX_FLASH_ACCESS_ERROR	BIT_18	/* Flash/NVRAM Access Error. */
- #define CSRX_DMA_ACTIVE		BIT_17	/* DMA Active status. */
- #define CSRX_DMA_SHUTDOWN	BIT_16	/* DMA Shutdown control status. */
-@@ -1166,35 +1166,35 @@ struct device_reg_24xx {
- #define CSRX_FLASH_ENABLE	BIT_1	/* Flash BIOS Read/Write enable. */
- #define CSRX_ISP_SOFT_RESET	BIT_0	/* ISP soft reset. */
- 
--	uint32_t ictrl;			/* Interrupt control. */
-+	__le32	ictrl;			/* Interrupt control. */
- #define ICRX_EN_RISC_INT	BIT_3	/* Enable RISC interrupts on PCI. */
- 
--	uint32_t istatus;		/* Interrupt status. */
-+	__le32	istatus;		/* Interrupt status. */
- #define ISRX_RISC_INT		BIT_3	/* RISC interrupt. */
- 
--	uint32_t unused_1[2];		/* Gap. */
-+	__le32	unused_1[2];		/* Gap. */
- 
- 					/* Request Queue. */
--	uint32_t req_q_in;		/*  In-Pointer. */
--	uint32_t req_q_out;		/*  Out-Pointer. */
-+	__le32	req_q_in;		/*  In-Pointer. */
-+	__le32	req_q_out;		/*  Out-Pointer. */
- 					/* Response Queue. */
--	uint32_t rsp_q_in;		/*  In-Pointer. */
--	uint32_t rsp_q_out;		/*  Out-Pointer. */
-+	__le32	rsp_q_in;		/*  In-Pointer. */
-+	__le32	rsp_q_out;		/*  Out-Pointer. */
- 					/* Priority Request Queue. */
--	uint32_t preq_q_in;		/*  In-Pointer. */
--	uint32_t preq_q_out;		/*  Out-Pointer. */
-+	__le32	preq_q_in;		/*  In-Pointer. */
-+	__le32	preq_q_out;		/*  Out-Pointer. */
- 
--	uint32_t unused_2[2];		/* Gap. */
-+	__le32	unused_2[2];		/* Gap. */
- 
- 					/* ATIO Queue. */
--	uint32_t atio_q_in;		/*  In-Pointer. */
--	uint32_t atio_q_out;		/*  Out-Pointer. */
-+	__le32	atio_q_in;		/*  In-Pointer. */
-+	__le32	atio_q_out;		/*  Out-Pointer. */
- 
--	uint32_t host_status;
-+	__le32	host_status;
- #define HSRX_RISC_INT		BIT_15	/* RISC to Host interrupt. */
- #define HSRX_RISC_PAUSED	BIT_8	/* RISC Paused. */
- 
--	uint32_t hccr;			/* Host command & control register. */
-+	__le32	hccr;			/* Host command & control register. */
- 					/* HCCR statuses. */
- #define HCCRX_HOST_INT		BIT_6	/* Host to RISC interrupt bit. */
- #define HCCRX_RISC_RESET	BIT_5	/* RISC Reset mode bit. */
-@@ -1216,7 +1216,7 @@ struct device_reg_24xx {
- 					/* Clear RISC to PCI interrupt. */
- #define HCCRX_CLR_RISC_INT	0xA0000000
- 
--	uint32_t gpiod;			/* GPIO Data register. */
-+	__le32	gpiod;			/* GPIO Data register. */
- 
- 					/* LED update mask. */
- #define GPDX_LED_UPDATE_MASK	(BIT_20|BIT_19|BIT_18)
-@@ -1235,7 +1235,7 @@ struct device_reg_24xx {
- 					/* Data in/out. */
- #define GPDX_DATA_INOUT		(BIT_1|BIT_0)
- 
--	uint32_t gpioe;			/* GPIO Enable register. */
-+	__le32	gpioe;			/* GPIO Enable register. */
- 					/* Enable update mask. */
- #define GPEX_ENABLE_UPDATE_MASK	(BIT_17|BIT_16)
- 					/* Enable update mask. */
-@@ -1243,52 +1243,52 @@ struct device_reg_24xx {
- 					/* Enable. */
- #define GPEX_ENABLE		(BIT_1|BIT_0)
- 
--	uint32_t iobase_addr;		/* I/O Bus Base Address register. */
--
--	uint32_t unused_3[10];		/* Gap. */
--
--	uint16_t mailbox0;
--	uint16_t mailbox1;
--	uint16_t mailbox2;
--	uint16_t mailbox3;
--	uint16_t mailbox4;
--	uint16_t mailbox5;
--	uint16_t mailbox6;
--	uint16_t mailbox7;
--	uint16_t mailbox8;
--	uint16_t mailbox9;
--	uint16_t mailbox10;
--	uint16_t mailbox11;
--	uint16_t mailbox12;
--	uint16_t mailbox13;
--	uint16_t mailbox14;
--	uint16_t mailbox15;
--	uint16_t mailbox16;
--	uint16_t mailbox17;
--	uint16_t mailbox18;
--	uint16_t mailbox19;
--	uint16_t mailbox20;
--	uint16_t mailbox21;
--	uint16_t mailbox22;
--	uint16_t mailbox23;
--	uint16_t mailbox24;
--	uint16_t mailbox25;
--	uint16_t mailbox26;
--	uint16_t mailbox27;
--	uint16_t mailbox28;
--	uint16_t mailbox29;
--	uint16_t mailbox30;
--	uint16_t mailbox31;
--
--	uint32_t iobase_window;
--	uint32_t iobase_c4;
--	uint32_t iobase_c8;
--	uint32_t unused_4_1[6];		/* Gap. */
--	uint32_t iobase_q;
--	uint32_t unused_5[2];		/* Gap. */
--	uint32_t iobase_select;
--	uint32_t unused_6[2];		/* Gap. */
--	uint32_t iobase_sdata;
-+	__le32	iobase_addr;		/* I/O Bus Base Address register. */
-+
-+	__le32	unused_3[10];		/* Gap. */
-+
-+	__le16	mailbox0;
-+	__le16	mailbox1;
-+	__le16	mailbox2;
-+	__le16	mailbox3;
-+	__le16	mailbox4;
-+	__le16	mailbox5;
-+	__le16	mailbox6;
-+	__le16	mailbox7;
-+	__le16	mailbox8;
-+	__le16	mailbox9;
-+	__le16	mailbox10;
-+	__le16	mailbox11;
-+	__le16	mailbox12;
-+	__le16	mailbox13;
-+	__le16	mailbox14;
-+	__le16	mailbox15;
-+	__le16	mailbox16;
-+	__le16	mailbox17;
-+	__le16	mailbox18;
-+	__le16	mailbox19;
-+	__le16	mailbox20;
-+	__le16	mailbox21;
-+	__le16	mailbox22;
-+	__le16	mailbox23;
-+	__le16	mailbox24;
-+	__le16	mailbox25;
-+	__le16	mailbox26;
-+	__le16	mailbox27;
-+	__le16	mailbox28;
-+	__le16	mailbox29;
-+	__le16	mailbox30;
-+	__le16	mailbox31;
-+
-+	__le32	iobase_window;
-+	__le32	iobase_c4;
-+	__le32	iobase_c8;
-+	__le32	unused_4_1[6];		/* Gap. */
-+	__le32	iobase_q;
-+	__le32	unused_5[2];		/* Gap. */
-+	__le32	iobase_select;
-+	__le32	unused_6[2];		/* Gap. */
-+	__le32	iobase_sdata;
- };
- /* RISC-RISC semaphore register PCI offet */
- #define RISC_REGISTER_BASE_OFFSET	0x7010
-@@ -1354,8 +1354,8 @@ struct mid_conf_entry_24xx {
- struct mid_init_cb_24xx {
- 	struct init_cb_24xx init_cb;
- 
--	uint16_t count;
--	uint16_t options;
-+	__le16	count;
-+	__le16	options;
- 
- 	struct mid_conf_entry_24xx entries[MAX_MULTI_ID_FABRIC];
- };
-@@ -1389,27 +1389,27 @@ struct vp_ctrl_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t vp_idx_failed;
-+	__le16	vp_idx_failed;
- 
--	uint16_t comp_status;		/* Completion status. */
-+	__le16	comp_status;		/* Completion status. */
- #define CS_VCE_IOCB_ERROR       0x01    /* Error processing IOCB */
- #define CS_VCE_ACQ_ID_ERROR	0x02	/* Error while acquireing ID. */
- #define CS_VCE_BUSY		0x05	/* Firmware not ready to accept cmd. */
- 
--	uint16_t command;
-+	__le16	command;
- #define VCE_COMMAND_ENABLE_VPS	0x00	/* Enable VPs. */
- #define VCE_COMMAND_DISABLE_VPS	0x08	/* Disable VPs. */
- #define VCE_COMMAND_DISABLE_VPS_REINIT	0x09 /* Disable VPs and reinit link. */
- #define VCE_COMMAND_DISABLE_VPS_LOGO	0x0a /* Disable VPs and LOGO ports. */
- #define VCE_COMMAND_DISABLE_VPS_LOGO_ALL        0x0b /* Disable VPs and LOGO ports. */
- 
--	uint16_t vp_count;
-+	__le16	vp_count;
- 
- 	uint8_t vp_idx_map[16];
--	uint16_t flags;
--	uint16_t id;
-+	__le16	flags;
-+	__le16	id;
- 	uint16_t reserved_4;
--	uint16_t hopct;
-+	__le16	hopct;
- 	uint8_t reserved_5[24];
- };
- 
-@@ -1425,12 +1425,12 @@ struct vp_config_entry_24xx {
- 
- 	uint32_t handle;		/* System handle. */
- 
--	uint16_t flags;
-+	__le16	flags;
- #define CS_VF_BIND_VPORTS_TO_VF         BIT_0
- #define CS_VF_SET_QOS_OF_VPORTS         BIT_1
- #define CS_VF_SET_HOPS_OF_VPORTS        BIT_2
- 
--	uint16_t comp_status;		/* Completion status. */
-+	__le16	comp_status;		/* Completion status. */
- #define CS_VCT_STS_ERROR	0x01	/* Specified VPs were not disabled. */
- #define CS_VCT_CNT_ERROR	0x02	/* Invalid VP count. */
- #define CS_VCT_ERROR		0x03	/* Unknown error. */
-@@ -1457,9 +1457,9 @@ struct vp_config_entry_24xx {
- 	uint16_t reserved_vp2;
- 	uint8_t port_name_idx2[WWN_SIZE];
- 	uint8_t node_name_idx2[WWN_SIZE];
--	uint16_t id;
-+	__le16	id;
- 	uint16_t reserved_4;
--	uint16_t hopct;
-+	__le16	hopct;
- 	uint8_t reserved_5[2];
- };
- 
-@@ -1486,7 +1486,7 @@ struct vp_rpt_id_entry_24xx {
- 	uint8_t entry_count;		/* Entry count. */
- 	uint8_t sys_define;		/* System defined. */
- 	uint8_t entry_status;		/* Entry Status. */
--	uint32_t resv1;
-+	__le32 resv1;
- 	uint8_t vp_acquired;
- 	uint8_t vp_setup;
- 	uint8_t vp_idx;		/* Format 0=reserved */
-@@ -1573,13 +1573,13 @@ struct vf_evfp_entry_24xx {
- 
- struct qla_fdt_layout {
- 	uint8_t sig[4];
--	uint16_t version;
--	uint16_t len;
--	uint16_t checksum;
-+	__le16	version;
-+	__le16	len;
-+	__le16	checksum;
- 	uint8_t unused1[2];
- 	uint8_t model[16];
--	uint16_t man_id;
--	uint16_t id;
-+	__le16	man_id;
-+	__le16	id;
- 	uint8_t flags;
- 	uint8_t erase_cmd;
- 	uint8_t alt_erase_cmd;
-@@ -1588,15 +1588,15 @@ struct qla_fdt_layout {
- 	uint8_t wrt_sts_reg_cmd;
- 	uint8_t unprotect_sec_cmd;
- 	uint8_t read_man_id_cmd;
--	uint32_t block_size;
--	uint32_t alt_block_size;
--	uint32_t flash_size;
--	uint32_t wrt_enable_data;
-+	__le32 block_size;
-+	__le32 alt_block_size;
-+	__le32 flash_size;
-+	__le32 wrt_enable_data;
- 	uint8_t read_id_addr_len;
- 	uint8_t wrt_disable_bits;
- 	uint8_t read_dev_id_len;
- 	uint8_t chip_erase_cmd;
--	uint16_t read_timeout;
-+	__le16	read_timeout;
- 	uint8_t protect_sec_cmd;
- 	uint8_t unused2[65];
- };
-@@ -1605,11 +1605,11 @@ struct qla_fdt_layout {
- 
- struct qla_flt_location {
- 	uint8_t sig[4];
--	uint16_t start_lo;
--	uint16_t start_hi;
-+	__le16	start_lo;
-+	__le16	start_hi;
- 	uint8_t version;
- 	uint8_t unused[5];
--	uint16_t checksum;
-+	__le16	checksum;
- };
- 
- #define FLT_REG_FW		0x01
-@@ -1664,19 +1664,19 @@ struct qla_flt_location {
- #define FLT_REG_PEP_SEC_28XX		0xF1
- 
- struct qla_flt_region {
--	uint16_t code;
-+	__le16	code;
- 	uint8_t attribute;
- 	uint8_t reserved;
--	uint32_t size;
--	uint32_t start;
--	uint32_t end;
-+	__le32 size;
-+	__le32 start;
-+	__le32 end;
- };
- 
- struct qla_flt_header {
--	uint16_t version;
--	uint16_t length;
--	uint16_t checksum;
--	uint16_t unused;
-+	__le16	version;
-+	__le16	length;
-+	__le16	checksum;
-+	__le16	unused;
- 	struct qla_flt_region region[0];
- };
- 
-@@ -1688,18 +1688,18 @@ struct qla_flt_header {
- 
- struct qla_npiv_header {
- 	uint8_t sig[2];
--	uint16_t version;
--	uint16_t entries;
--	uint16_t unused[4];
--	uint16_t checksum;
-+	__le16	version;
-+	__le16	entries;
-+	__le16	unused[4];
-+	__le16	checksum;
- };
- 
- struct qla_npiv_entry {
--	uint16_t flags;
--	uint16_t vf_id;
-+	__le16	flags;
-+	__le16	vf_id;
- 	uint8_t q_qos;
- 	uint8_t f_qos;
--	uint16_t unused1;
-+	__le16	unused1;
- 	uint8_t port_name[WWN_SIZE];
- 	uint8_t node_name[WWN_SIZE];
- };
-@@ -1729,7 +1729,7 @@ struct verify_chip_entry_84xx {
- 
- 	uint32_t handle;
- 
--	uint16_t options;
-+	__le16	options;
- #define VCO_DONT_UPDATE_FW	BIT_0
- #define VCO_FORCE_UPDATE	BIT_1
- #define VCO_DONT_RESET_UPDATE	BIT_2
-@@ -1737,18 +1737,18 @@ struct verify_chip_entry_84xx {
- #define VCO_END_OF_DATA		BIT_14
- #define VCO_ENABLE_DSD		BIT_15
- 
--	uint16_t reserved_1;
-+	__le16	reserved_1;
- 
--	uint16_t data_seg_cnt;
--	uint16_t reserved_2[3];
-+	__le16	data_seg_cnt;
-+	__le16	reserved_2[3];
- 
--	uint32_t fw_ver;
-+	__le32	fw_ver;
- 	uint32_t exchange_address;
- 
--	uint32_t reserved_3[3];
--	uint32_t fw_size;
--	uint32_t fw_seq_size;
--	uint32_t relative_offset;
-+	__le32 reserved_3[3];
-+	__le32	fw_size;
-+	__le32	fw_seq_size;
-+	__le32	relative_offset;
- 
- 	struct dsd64 dsd;
- };
-@@ -1761,22 +1761,22 @@ struct verify_chip_rsp_84xx {
- 
- 	uint32_t handle;
- 
--	uint16_t comp_status;
-+	__le16	comp_status;
- #define CS_VCS_CHIP_FAILURE	0x3
- #define CS_VCS_BAD_EXCHANGE	0x8
- #define CS_VCS_SEQ_COMPLETEi	0x40
- 
--	uint16_t failure_code;
-+	__le16	failure_code;
- #define VFC_CHECKSUM_ERROR	0x1
- #define VFC_INVALID_LEN		0x2
- #define VFC_ALREADY_IN_PROGRESS	0x8
- 
--	uint16_t reserved_1[4];
-+	__le16	reserved_1[4];
- 
--	uint32_t fw_ver;
-+	__le32	fw_ver;
- 	uint32_t exchange_address;
- 
--	uint32_t reserved_2[6];
-+	__le32 reserved_2[6];
- };
- 
- #define ACCESS_CHIP_IOCB_TYPE	0x2B
-@@ -1788,24 +1788,24 @@ struct access_chip_84xx {
- 
- 	uint32_t handle;
- 
--	uint16_t options;
-+	__le16	options;
- #define ACO_DUMP_MEMORY		0x0
- #define ACO_LOAD_MEMORY		0x1
- #define ACO_CHANGE_CONFIG_PARAM	0x2
- #define ACO_REQUEST_INFO	0x3
- 
--	uint16_t reserved1;
-+	__le16	reserved1;
- 
--	uint16_t dseg_count;
--	uint16_t reserved2[3];
-+	__le16	dseg_count;
-+	__le16	reserved2[3];
- 
--	uint32_t parameter1;
--	uint32_t parameter2;
--	uint32_t parameter3;
-+	__le32	parameter1;
-+	__le32	parameter2;
-+	__le32	parameter3;
- 
--	uint32_t reserved3[3];
--	uint32_t total_byte_cnt;
--	uint32_t reserved4;
-+	__le32	reserved3[3];
-+	__le32	total_byte_cnt;
-+	__le32	reserved4;
- 
- 	struct dsd64 dsd;
- };
-@@ -1818,11 +1818,11 @@ struct access_chip_rsp_84xx {
- 
- 	uint32_t handle;
- 
--	uint16_t comp_status;
--	uint16_t failure_code;
--	uint32_t residual_count;
-+	__le16	comp_status;
-+	__le16	failure_code;
-+	__le32	residual_count;
- 
--	uint32_t reserved[12];
-+	__le32	reserved[12];
- };
- 
- /* 81XX Support **************************************************************/
-@@ -1877,52 +1877,52 @@ struct access_chip_rsp_84xx {
- struct nvram_81xx {
- 	/* NVRAM header. */
- 	uint8_t id[4];
--	uint16_t nvram_version;
--	uint16_t reserved_0;
-+	__le16	nvram_version;
-+	__le16	reserved_0;
- 
- 	/* Firmware Initialization Control Block. */
--	uint16_t version;
--	uint16_t reserved_1;
--	uint16_t frame_payload_size;
--	uint16_t execution_throttle;
--	uint16_t exchange_count;
--	uint16_t reserved_2;
-+	__le16	version;
-+	__le16	reserved_1;
-+	__le16	frame_payload_size;
-+	__le16	execution_throttle;
-+	__le16	exchange_count;
-+	__le16	reserved_2;
- 
- 	uint8_t port_name[WWN_SIZE];
- 	uint8_t node_name[WWN_SIZE];
- 
--	uint16_t login_retry_count;
--	uint16_t reserved_3;
--	uint16_t interrupt_delay_timer;
--	uint16_t login_timeout;
-+	__le16	login_retry_count;
-+	__le16	reserved_3;
-+	__le16	interrupt_delay_timer;
-+	__le16	login_timeout;
- 
--	uint32_t firmware_options_1;
--	uint32_t firmware_options_2;
--	uint32_t firmware_options_3;
-+	__le32	firmware_options_1;
-+	__le32	firmware_options_2;
-+	__le32	firmware_options_3;
- 
--	uint16_t reserved_4[4];
-+	__le16	reserved_4[4];
- 
- 	/* Offset 64. */
- 	uint8_t enode_mac[6];
--	uint16_t reserved_5[5];
-+	__le16	reserved_5[5];
- 
- 	/* Offset 80. */
--	uint16_t reserved_6[24];
-+	__le16	reserved_6[24];
- 
- 	/* Offset 128. */
--	uint16_t ex_version;
-+	__le16	ex_version;
- 	uint8_t prio_fcf_matching_flags;
- 	uint8_t reserved_6_1[3];
--	uint16_t pri_fcf_vlan_id;
-+	__le16	pri_fcf_vlan_id;
- 	uint8_t pri_fcf_fabric_name[8];
--	uint16_t reserved_6_2[7];
-+	__le16	reserved_6_2[7];
- 	uint8_t spma_mac_addr[6];
--	uint16_t reserved_6_3[14];
-+	__le16	reserved_6_3[14];
- 
- 	/* Offset 192. */
- 	uint8_t min_supported_speed;
- 	uint8_t reserved_7_0;
--	uint16_t reserved_7[31];
-+	__le16	reserved_7[31];
- 
- 	/*
- 	 * BIT 0  = Enable spinup delay
-@@ -1955,26 +1955,26 @@ struct nvram_81xx {
- 	 * BIT 25 = Temp WWPN
- 	 * BIT 26-31 =
- 	 */
--	uint32_t host_p;
-+	__le32	host_p;
- 
- 	uint8_t alternate_port_name[WWN_SIZE];
- 	uint8_t alternate_node_name[WWN_SIZE];
- 
- 	uint8_t boot_port_name[WWN_SIZE];
--	uint16_t boot_lun_number;
--	uint16_t reserved_8;
-+	__le16	boot_lun_number;
-+	__le16	reserved_8;
- 
- 	uint8_t alt1_boot_port_name[WWN_SIZE];
--	uint16_t alt1_boot_lun_number;
--	uint16_t reserved_9;
-+	__le16	alt1_boot_lun_number;
-+	__le16	reserved_9;
- 
- 	uint8_t alt2_boot_port_name[WWN_SIZE];
--	uint16_t alt2_boot_lun_number;
--	uint16_t reserved_10;
-+	__le16	alt2_boot_lun_number;
-+	__le16	reserved_10;
- 
- 	uint8_t alt3_boot_port_name[WWN_SIZE];
--	uint16_t alt3_boot_lun_number;
--	uint16_t reserved_11;
-+	__le16	alt3_boot_lun_number;
-+	__le16	reserved_11;
- 
- 	/*
- 	 * BIT 0 = Selective Login
-@@ -1986,35 +1986,35 @@ struct nvram_81xx {
- 	 * BIT 6 = Reserved
- 	 * BIT 7-31 =
- 	 */
--	uint32_t efi_parameters;
-+	__le32	efi_parameters;
- 
- 	uint8_t reset_delay;
- 	uint8_t reserved_12;
--	uint16_t reserved_13;
-+	__le16	reserved_13;
- 
--	uint16_t boot_id_number;
--	uint16_t reserved_14;
-+	__le16	boot_id_number;
-+	__le16	reserved_14;
- 
--	uint16_t max_luns_per_target;
--	uint16_t reserved_15;
-+	__le16	max_luns_per_target;
-+	__le16	reserved_15;
- 
--	uint16_t port_down_retry_count;
--	uint16_t link_down_timeout;
-+	__le16	port_down_retry_count;
-+	__le16	link_down_timeout;
- 
- 	/* FCode parameters. */
--	uint16_t fcode_parameter;
-+	__le16	fcode_parameter;
- 
--	uint16_t reserved_16[3];
-+	__le16	reserved_16[3];
- 
- 	/* Offset 352. */
- 	uint8_t reserved_17[4];
--	uint16_t reserved_18[5];
-+	__le16	reserved_18[5];
- 	uint8_t reserved_19[2];
--	uint16_t reserved_20[8];
-+	__le16	reserved_20[8];
- 
- 	/* Offset 384. */
- 	uint8_t reserved_21[16];
--	uint16_t reserved_22[3];
-+	__le16	reserved_22[3];
- 
- 	/* Offset 406 (0x196) Enhanced Features
- 	 * BIT 0    = Extended BB credits for LR
-@@ -2027,20 +2027,20 @@ struct nvram_81xx {
- 	uint16_t reserved_24[4];
- 
- 	/* Offset 416. */
--	uint16_t reserved_25[32];
-+	__le16	reserved_25[32];
- 
- 	/* Offset 480. */
- 	uint8_t model_name[16];
- 
- 	/* Offset 496. */
--	uint16_t feature_mask_l;
--	uint16_t feature_mask_h;
--	uint16_t reserved_26[2];
-+	__le16	feature_mask_l;
-+	__le16	feature_mask_h;
-+	__le16	reserved_26[2];
- 
--	uint16_t subsystem_vendor_id;
--	uint16_t subsystem_device_id;
-+	__le16	subsystem_vendor_id;
-+	__le16	subsystem_device_id;
- 
--	uint32_t checksum;
-+	__le32	checksum;
- };
- 
- /*
-@@ -2049,31 +2049,31 @@ struct nvram_81xx {
-  */
- #define	ICB_VERSION 1
- struct init_cb_81xx {
--	uint16_t version;
--	uint16_t reserved_1;
-+	__le16	version;
-+	__le16	reserved_1;
- 
--	uint16_t frame_payload_size;
--	uint16_t execution_throttle;
--	uint16_t exchange_count;
-+	__le16	frame_payload_size;
-+	__le16	execution_throttle;
-+	__le16	exchange_count;
- 
--	uint16_t reserved_2;
-+	__le16	reserved_2;
- 
- 	uint8_t port_name[WWN_SIZE];		/* Big endian. */
- 	uint8_t node_name[WWN_SIZE];		/* Big endian. */
- 
--	uint16_t response_q_inpointer;
--	uint16_t request_q_outpointer;
-+	__le16	response_q_inpointer;
-+	__le16	request_q_outpointer;
- 
--	uint16_t login_retry_count;
-+	__le16	login_retry_count;
- 
--	uint16_t prio_request_q_outpointer;
-+	__le16	prio_request_q_outpointer;
- 
--	uint16_t response_q_length;
--	uint16_t request_q_length;
-+	__le16	response_q_length;
-+	__le16	request_q_length;
- 
--	uint16_t reserved_3;
-+	__le16	reserved_3;
- 
--	uint16_t prio_request_q_length;
-+	__le16	prio_request_q_length;
- 
- 	__le64	 request_q_address __packed;
- 	__le64	 response_q_address __packed;
-@@ -2081,12 +2081,12 @@ struct init_cb_81xx {
- 
- 	uint8_t reserved_4[8];
- 
--	uint16_t atio_q_inpointer;
--	uint16_t atio_q_length;
-+	__le16	atio_q_inpointer;
-+	__le16	atio_q_length;
- 	__le64	 atio_q_address __packed;
- 
--	uint16_t interrupt_delay_timer;		/* 100us increments. */
--	uint16_t login_timeout;
-+	__le16	interrupt_delay_timer;		/* 100us increments. */
-+	__le16	login_timeout;
- 
- 	/*
- 	 * BIT 0-3 = Reserved
-@@ -2099,7 +2099,7 @@ struct init_cb_81xx {
- 	 * BIT 14 = Node Name Option
- 	 * BIT 15-31 = Reserved
- 	 */
--	uint32_t firmware_options_1;
-+	__le32	firmware_options_1;
- 
- 	/*
- 	 * BIT 0  = Operation Mode bit 0
-@@ -2117,7 +2117,7 @@ struct init_cb_81xx {
- 	 * BIT 14 = Enable Target PRLI Control
- 	 * BIT 15-31 = Reserved
- 	 */
--	uint32_t firmware_options_2;
-+	__le32	firmware_options_2;
- 
- 	/*
- 	 * BIT 0-3 = Reserved
-@@ -2138,7 +2138,7 @@ struct init_cb_81xx {
- 	 * BIT 28 = SPMA selection bit 1
- 	 * BIT 30-31 = Reserved
- 	 */
--	uint32_t firmware_options_3;
-+	__le32	firmware_options_3;
- 
- 	uint8_t  reserved_5[8];
- 
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 364b3db8b2dc..77f97552fe74 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -40,7 +40,7 @@ qla24xx_calc_iocbs(scsi_qla_host_t *vha, uint16_t dsds)
-  *      register value.
-  */
- static __inline__ uint16_t
--qla2x00_debounce_register(volatile uint16_t __iomem *addr)
-+qla2x00_debounce_register(volatile __le16 __iomem *addr)
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 97cabd7e0014..cd7235f3e103 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -207,10 +207,9 @@ qla2x00_sysfs_write_nvram(struct file *filp, struct kobject *kobj,
+ 
+ 	/* Checksum NVRAM. */
+ 	if (IS_FWI2_CAPABLE(ha)) {
+-		uint32_t *iter;
++		__le32 *iter = (__force __le32 *)buf;
+ 		uint32_t chksum;
+ 
+-		iter = (uint32_t *)buf;
+ 		chksum = 0;
+ 		for (cnt = 0; cnt < ((count >> 2) - 1); cnt++, iter++)
+ 			chksum += le32_to_cpu(*iter);
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 97b51c477972..71d51666b48c 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -490,7 +490,7 @@ qla2x00_process_ct(struct bsg_job *bsg_job)
+ 			>> 24;
+ 	switch (loop_id) {
+ 	case 0xFC:
+-		loop_id = cpu_to_le16(NPH_SNS);
++		loop_id = NPH_SNS;
+ 		break;
+ 	case 0xFA:
+ 		loop_id = vha->mgmt_svr_loop_id;
+@@ -2042,7 +2042,7 @@ qlafx00_mgmt_cmd(struct bsg_job *bsg_job)
+ 
+ 	/* Initialize all required  fields of fcport */
+ 	fcport->vha = vha;
+-	fcport->loop_id = piocb_rqst->dataword;
++	fcport->loop_id = le32_to_cpu(piocb_rqst->dataword);
+ 
+ 	sp->type = SRB_FXIOCB_BCMD;
+ 	sp->name = "bsg_fx_mgmt";
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 88a56e8480f7..62d6ff5e5ec5 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -113,7 +113,7 @@ qla27xx_dump_mpi_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
  {
- 	volatile uint16_t first;
- 	volatile uint16_t second;
-diff --git a/drivers/scsi/qla2xxx/qla_mr.h b/drivers/scsi/qla2xxx/qla_mr.h
-index 4567f0c42486..2b335d86f174 100644
---- a/drivers/scsi/qla2xxx/qla_mr.h
-+++ b/drivers/scsi/qla2xxx/qla_mr.h
-@@ -96,7 +96,7 @@ struct tsk_mgmt_entry_fx00 {
- 	uint8_t sys_define;
- 	uint8_t entry_status;		/* Entry Status. */
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 	dma_addr_t dump_dma = ha->gid_list_dma;
+-	uint32_t *chunk = (void *)ha->gid_list;
++	uint32_t *chunk = (uint32_t *)ha->gid_list;
+ 	uint32_t dwords = qla2x00_gid_list_size(ha) / 4;
+ 	uint32_t stat;
+ 	ulong i, j, timer = 6000000;
+@@ -187,13 +187,13 @@ qla27xx_dump_mpi_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+ }
  
--	__le32 handle;		/* System handle. */
-+	uint32_t handle;		/* System handle. */
+ int
+-qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+-    uint32_t ram_dwords, void **nxt)
++qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, __be32 *ram,
++		 uint32_t ram_dwords, void **nxt)
+ {
+ 	int rval = QLA_FUNCTION_FAILED;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 	dma_addr_t dump_dma = ha->gid_list_dma;
+-	uint32_t *chunk = (void *)ha->gid_list;
++	uint32_t *chunk = (uint32_t *)ha->gid_list;
+ 	uint32_t dwords = qla2x00_gid_list_size(ha) / 4;
+ 	uint32_t stat;
+ 	ulong i, j, timer = 6000000;
+@@ -252,9 +252,9 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+ 			return rval;
+ 		}
+ 		for (j = 0; j < dwords; j++) {
+-			ram[i + j] =
+-			    (IS_QLA27XX(ha) || IS_QLA28XX(ha)) ?
+-			    chunk[j] : swab32(chunk[j]);
++			ram[i + j] = (__force __be32)
++				((IS_QLA27XX(ha) || IS_QLA28XX(ha)) ?
++				 chunk[j] : swab32(chunk[j]));
+ 		}
+ 	}
  
- 	uint32_t reserved_0;
+@@ -263,8 +263,8 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+ }
  
-@@ -121,13 +121,13 @@ struct abort_iocb_entry_fx00 {
- 	uint8_t sys_define;		/* System defined. */
- 	uint8_t entry_status;		/* Entry Status. */
+ static int
+-qla24xx_dump_memory(struct qla_hw_data *ha, uint32_t *code_ram,
+-    uint32_t cram_size, void **nxt)
++qla24xx_dump_memory(struct qla_hw_data *ha, __be32 *code_ram,
++		    uint32_t cram_size, void **nxt)
+ {
+ 	int rval;
  
--	__le32 handle;		/* System handle. */
-+	uint32_t handle;		/* System handle. */
- 	__le32 reserved_0;
+@@ -284,11 +284,11 @@ qla24xx_dump_memory(struct qla_hw_data *ha, uint32_t *code_ram,
+ 	return rval;
+ }
  
- 	__le16 tgt_id_sts;		/* Completion status. */
- 	__le16 options;
+-static uint32_t *
++static __be32 *
+ qla24xx_read_window(struct device_reg_24xx __iomem *reg, uint32_t iobase,
+-    uint32_t count, uint32_t *buf)
++		    uint32_t count, __be32 *buf)
+ {
+-	uint32_t __iomem *dmp_reg;
++	__le32 __iomem *dmp_reg;
  
--	__le32 abort_handle;		/* System handle. */
-+	uint32_t abort_handle;		/* System handle. */
- 	__le32 reserved_2;
+ 	WRT_REG_DWORD(&reg->iobase_addr, iobase);
+ 	dmp_reg = &reg->iobase_window;
+@@ -366,7 +366,7 @@ qla24xx_soft_reset(struct qla_hw_data *ha)
+ }
  
- 	__le16 req_que_no;
-@@ -166,7 +166,7 @@ struct fxdisc_entry_fx00 {
- 	uint8_t sys_define;		/* System Defined. */
- 	uint8_t entry_status;		/* Entry Status. */
+ static int
+-qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
++qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, __be16 *ram,
+     uint32_t ram_words, void **nxt)
+ {
+ 	int rval;
+@@ -374,7 +374,7 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
+ 	uint16_t mb0;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+ 	dma_addr_t dump_dma = ha->gid_list_dma;
+-	uint16_t *dump = (uint16_t *)ha->gid_list;
++	__le16 *dump = (__force __le16 *)ha->gid_list;
  
--	__le32 handle;		/* System handle. */
-+	uint32_t handle;		/* System handle. */
- 	__le32 reserved_0;		/* System handle. */
+ 	rval = QLA_SUCCESS;
+ 	mb0 = 0;
+@@ -439,7 +439,7 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
+ 		if (test_and_clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags)) {
+ 			rval = mb0 & MBS_MASK;
+ 			for (idx = 0; idx < words; idx++)
+-				ram[cnt + idx] = swab16(dump[idx]);
++				ram[cnt + idx] = cpu_to_be16(le16_to_cpu(dump[idx]));
+ 		} else {
+ 			rval = QLA_FUNCTION_FAILED;
+ 		}
+@@ -451,9 +451,9 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
  
- 	__le16 func_num;
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.h b/drivers/scsi/qla2xxx/qla_nvme.h
-index ef912902d4e5..d7f0df93ab36 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.h
-+++ b/drivers/scsi/qla2xxx/qla_nvme.h
-@@ -48,26 +48,26 @@ struct cmd_nvme {
- 	uint8_t entry_status;           /* Entry Status. */
+ static inline void
+ qla2xxx_read_window(struct device_reg_2xxx __iomem *reg, uint32_t count,
+-    uint16_t *buf)
++		    __be16 *buf)
+ {
+-	uint16_t __iomem *dmp_reg = &reg->u.isp2300.fb_cmd;
++	__le16 __iomem *dmp_reg = &reg->u.isp2300.fb_cmd;
  
- 	uint32_t handle;                /* System handle. */
--	uint16_t nport_handle;          /* N_PORT handle. */
--	uint16_t timeout;               /* Command timeout. */
-+	__le16	nport_handle;		/* N_PORT handle. */
-+	__le16	timeout;		/* Command timeout. */
+ 	for ( ; count--; dmp_reg++)
+ 		*buf++ = htons(RD_REG_WORD(dmp_reg));
+@@ -470,10 +470,10 @@ qla24xx_copy_eft(struct qla_hw_data *ha, void *ptr)
+ }
  
--	uint16_t dseg_count;            /* Data segment count. */
--	uint16_t nvme_rsp_dsd_len;      /* NVMe RSP DSD length */
-+	__le16	dseg_count;		/* Data segment count. */
-+	__le16	nvme_rsp_dsd_len;	/* NVMe RSP DSD length */
+ static inline void *
+-qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ {
+ 	uint32_t cnt;
+-	uint32_t *iter_reg;
++	__be32 *iter_reg;
+ 	struct qla2xxx_fce_chain *fcec = ptr;
  
- 	uint64_t rsvd;
+ 	if (!ha->fce)
+@@ -497,7 +497,7 @@ qla25xx_copy_fce(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ }
  
--	uint16_t control_flags;         /* Control Flags */
-+	__le16	control_flags;		/* Control Flags */
- #define CF_NVME_FIRST_BURST_ENABLE	BIT_11
- #define CF_DIF_SEG_DESCR_ENABLE         BIT_3
- #define CF_DATA_SEG_DESCR_ENABLE        BIT_2
- #define CF_READ_DATA                    BIT_1
- #define CF_WRITE_DATA                   BIT_0
+ static inline void *
+-qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ {
+ 	struct qla2xxx_offld_chain *c = ptr;
  
--	uint16_t nvme_cmnd_dseg_len;             /* Data segment length. */
-+	__le16	nvme_cmnd_dseg_len;             /* Data segment length. */
- 	__le64	 nvme_cmnd_dseg_address __packed;/* Data segment address. */
- 	__le64	 nvme_rsp_dseg_address __packed; /* Data segment address. */
+@@ -515,11 +515,11 @@ qla25xx_copy_exlogin(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ 	ptr += sizeof(struct qla2xxx_offld_chain);
+ 	memcpy(ptr, ha->exlogin_buf, ha->exlogin_size);
  
--	uint32_t byte_count;            /* Total byte count. */
-+	__le32	byte_count;		/* Total byte count. */
+-	return (char *)ptr + cpu_to_be32(c->size);
++	return (char *)ptr + be32_to_cpu(c->size);
+ }
  
- 	uint8_t port_id[3];             /* PortID of destination port. */
- 	uint8_t vp_index;
-@@ -82,24 +82,24 @@ struct pt_ls4_request {
- 	uint8_t sys_define;
- 	uint8_t entry_status;
- 	uint32_t handle;
--	uint16_t status;
--	uint16_t nport_handle;
--	uint16_t tx_dseg_count;
-+	__le16	status;
-+	__le16	nport_handle;
-+	__le16	tx_dseg_count;
- 	uint8_t  vp_index;
- 	uint8_t  rsvd;
--	uint16_t timeout;
--	uint16_t control_flags;
-+	__le16	timeout;
-+	__le16	control_flags;
- #define CF_LS4_SHIFT		13
- #define CF_LS4_ORIGINATOR	0
- #define CF_LS4_RESPONDER	1
- #define CF_LS4_RESPONDER_TERM	2
+ static inline void *
+-qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ {
+ 	struct qla2xxx_offld_chain *c = ptr;
  
--	uint16_t rx_dseg_count;
-+	__le16	rx_dseg_count;
- 	uint16_t rsvd2;
- 	uint32_t exchange_address;
- 	uint32_t rsvd3;
--	uint32_t rx_byte_count;
--	uint32_t tx_byte_count;
-+	__le32	rx_byte_count;
-+	__le32	tx_byte_count;
- 	struct dsd64 dsd[2];
+@@ -537,12 +537,12 @@ qla81xx_copy_exchoffld(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ 	ptr += sizeof(struct qla2xxx_offld_chain);
+ 	memcpy(ptr, ha->exchoffld_buf, ha->exchoffld_size);
+ 
+-	return (char *)ptr + cpu_to_be32(c->size);
++	return (char *)ptr + be32_to_cpu(c->size);
+ }
+ 
+ static inline void *
+ qla2xxx_copy_atioqueues(struct qla_hw_data *ha, void *ptr,
+-	uint32_t **last_chain)
++			__be32 **last_chain)
+ {
+ 	struct qla2xxx_mqueue_chain *q;
+ 	struct qla2xxx_mqueue_header *qh;
+@@ -589,7 +589,7 @@ qla2xxx_copy_atioqueues(struct qla_hw_data *ha, void *ptr,
+ }
+ 
+ static inline void *
+-qla25xx_copy_mqueues(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++qla25xx_copy_mqueues(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ {
+ 	struct qla2xxx_mqueue_chain *q;
+ 	struct qla2xxx_mqueue_header *qh;
+@@ -660,7 +660,7 @@ qla25xx_copy_mqueues(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ }
+ 
+ static inline void *
+-qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
++qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ {
+ 	uint32_t cnt, que_idx;
+ 	uint8_t que_cnt;
+@@ -726,7 +726,7 @@ qla2300_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	uint32_t	cnt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+-	uint16_t __iomem *dmp_reg;
++	__le16 __iomem *dmp_reg;
+ 	unsigned long	flags;
+ 	struct qla2300_fw_dump	*fw;
+ 	void		*nxt;
+@@ -898,7 +898,7 @@ qla2100_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	uint16_t	mb0, mb2;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+-	uint16_t __iomem *dmp_reg;
++	__le16 __iomem *dmp_reg;
+ 	unsigned long	flags;
+ 	struct qla2100_fw_dump	*fw;
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+@@ -1095,14 +1095,14 @@ qla24xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	uint32_t	cnt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	uint32_t __iomem *dmp_reg;
+-	uint32_t	*iter_reg;
+-	uint16_t __iomem *mbx_reg;
++	__le32 __iomem *dmp_reg;
++	__be32		*iter_reg;
++	__le16 __iomem *mbx_reg;
+ 	unsigned long	flags;
+ 	struct qla24xx_fw_dump *fw;
+ 	void		*nxt;
+ 	void		*nxt_chain;
+-	uint32_t	*last_chain = NULL;
++	__be32		*last_chain = NULL;
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	if (IS_P3P_TYPE(ha))
+@@ -1354,13 +1354,13 @@ qla25xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	uint32_t	cnt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	uint32_t __iomem *dmp_reg;
+-	uint32_t	*iter_reg;
+-	uint16_t __iomem *mbx_reg;
++	__le32 __iomem *dmp_reg;
++	__be32		*iter_reg;
++	__le16 __iomem *mbx_reg;
+ 	unsigned long	flags;
+ 	struct qla25xx_fw_dump *fw;
+ 	void		*nxt, *nxt_chain;
+-	uint32_t	*last_chain = NULL;
++	__be32		*last_chain = NULL;
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	flags = 0;
+@@ -1680,13 +1680,13 @@ qla81xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	uint32_t	cnt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	uint32_t __iomem *dmp_reg;
+-	uint32_t	*iter_reg;
+-	uint16_t __iomem *mbx_reg;
++	__le32 __iomem *dmp_reg;
++	__be32		*iter_reg;
++	__le16 __iomem *mbx_reg;
+ 	unsigned long	flags;
+ 	struct qla81xx_fw_dump *fw;
+ 	void		*nxt, *nxt_chain;
+-	uint32_t	*last_chain = NULL;
++	__be32		*last_chain = NULL;
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	flags = 0;
+@@ -2008,13 +2008,13 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
+ 	uint32_t	cnt;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	uint32_t __iomem *dmp_reg;
+-	uint32_t	*iter_reg;
+-	uint16_t __iomem *mbx_reg;
++	__le32 __iomem *dmp_reg;
++	__be32		*iter_reg;
++	__le16 __iomem *mbx_reg;
+ 	unsigned long	flags;
+ 	struct qla83xx_fw_dump *fw;
+ 	void		*nxt, *nxt_chain;
+-	uint32_t	*last_chain = NULL;
++	__be32		*last_chain = NULL;
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	flags = 0;
+@@ -2717,7 +2717,7 @@ ql_dump_regs(uint level, scsi_qla_host_t *vha, uint id)
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+ 	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
+ 	struct device_reg_82xx __iomem *reg82 = &ha->iobase->isp82;
+-	uint16_t __iomem *mbx_reg;
++	__le16 __iomem *mbx_reg;
+ 
+ 	if (!ql_mask_match(level))
+ 		return;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 582fc5dcc98c..b5cca8f0974f 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -120,7 +120,7 @@ static void qla24xx_abort_iocb_timeout(void *data)
+ 	if (sp->cmd_sp)
+ 		sp->cmd_sp->done(sp->cmd_sp, QLA_OS_TIMER_EXPIRED);
+ 
+-	abt->u.abt.comp_status = CS_TIMEOUT;
++	abt->u.abt.comp_status = cpu_to_le16(CS_TIMEOUT);
+ 	sp->done(sp, QLA_OS_TIMER_EXPIRED);
+ }
+ 
+@@ -1343,7 +1343,7 @@ int qla24xx_async_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
+ 	mb[9] = vha->vp_idx;
+ 	mb[10] = opt;
+ 
+-	mbx->u.mbx.in = (void *)pd;
++	mbx->u.mbx.in = pd;
+ 	mbx->u.mbx.in_dma = pd_dma;
+ 
+ 	sp->done = qla24xx_async_gpdb_sp_done;
+@@ -1791,7 +1791,7 @@ qla2x00_tmf_iocb_timeout(void *data)
+ 			}
+ 		}
+ 		spin_unlock_irqrestore(sp->qpair->qp_lock_ptr, flags);
+-		tmf->u.tmf.comp_status = CS_TIMEOUT;
++		tmf->u.tmf.comp_status = cpu_to_le16(CS_TIMEOUT);
+ 		tmf->u.tmf.data = QLA_FUNCTION_FAILED;
+ 		complete(&tmf->u.tmf.comp);
+ 	}
+@@ -4092,7 +4092,7 @@ qla24xx_config_rings(struct scsi_qla_host *vha)
+ 		ql_dbg(ql_dbg_init, vha, 0x00fd,
+ 		    "Speed set by user : %s Gbps \n",
+ 		    qla2x00_get_link_speed_str(ha, ha->set_data_rate));
+-		icb->firmware_options_3 = (ha->set_data_rate << 13);
++		icb->firmware_options_3 = cpu_to_le32(ha->set_data_rate << 13);
+ 	}
+ 
+ 	/* PCI posting */
+@@ -4183,12 +4183,14 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 		mid_init_cb->init_cb.execution_throttle =
+ 		    cpu_to_le16(ha->cur_fw_xcb_count);
+ 		ha->flags.dport_enabled =
+-		    (mid_init_cb->init_cb.firmware_options_1 & BIT_7) != 0;
++			(le32_to_cpu(mid_init_cb->init_cb.firmware_options_1) &
++			 BIT_7) != 0;
+ 		ql_dbg(ql_dbg_init, vha, 0x0191, "DPORT Support: %s.\n",
+ 		    (ha->flags.dport_enabled) ? "enabled" : "disabled");
+ 		/* FA-WWPN Status */
+ 		ha->flags.fawwpn_enabled =
+-		    (mid_init_cb->init_cb.firmware_options_1 & BIT_6) != 0;
++			(le32_to_cpu(mid_init_cb->init_cb.firmware_options_1) &
++			 BIT_6) != 0;
+ 		ql_dbg(ql_dbg_init, vha, 0x00bc, "FA-WWPN Support: %s.\n",
+ 		    (ha->flags.fawwpn_enabled) ? "enabled" : "disabled");
+ 	}
+@@ -7145,7 +7147,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 	int   rval;
+ 	struct init_cb_24xx *icb;
+ 	struct nvram_24xx *nv;
+-	uint32_t *dptr;
++	__le32 *dptr;
+ 	uint8_t  *dptr1, *dptr2;
+ 	uint32_t chksum;
+ 	uint16_t cnt;
+@@ -7173,7 +7175,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 	    ha->nvram_base - FA_NVRAM_FUNC0_ADDR, FA_NVRAM_VPD_SIZE * 4);
+ 
+ 	/* Get NVRAM data into cache and calculate checksum. */
+-	dptr = (uint32_t *)nv;
++	dptr = (__force __le32 *)nv;
+ 	ha->isp_ops->read_nvram(vha, dptr, ha->nvram_base, ha->nvram_size);
+ 	for (cnt = 0, chksum = 0; cnt < ha->nvram_size >> 2; cnt++, dptr++)
+ 		chksum += le32_to_cpu(*dptr);
+@@ -7201,7 +7203,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 		memset(nv, 0, ha->nvram_size);
+ 		nv->nvram_version = cpu_to_le16(ICB_VERSION);
+ 		nv->version = cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = 2048;
++		nv->frame_payload_size = cpu_to_le16(2048);
+ 		nv->execution_throttle = cpu_to_le16(0xFFFF);
+ 		nv->exchange_count = cpu_to_le16(0);
+ 		nv->hard_address = cpu_to_le16(124);
+@@ -7369,7 +7371,7 @@ qla24xx_nvram_config(scsi_qla_host_t *vha)
+ 		ha->login_retry_count = ql2xloginretrycount;
+ 
+ 	/* N2N: driver will initiate Login instead of FW */
+-	icb->firmware_options_3 |= BIT_8;
++	icb->firmware_options_3 |= cpu_to_le32(BIT_8);
+ 
+ 	/* Enable ZIO. */
+ 	if (!vha->flags.init_done) {
+@@ -7437,7 +7439,7 @@ qla27xx_check_image_status_signature(struct qla27xx_image_status *image_status)
+ static ulong
+ qla27xx_image_status_checksum(struct qla27xx_image_status *image_status)
+ {
+-	uint32_t *p = (void *)image_status;
++	__le32 *p = (__force __le32 *)image_status;
+ 	uint n = sizeof(*image_status) / sizeof(*p);
+ 	uint32_t sum = 0;
+ 
+@@ -7500,7 +7502,7 @@ qla28xx_get_aux_images(
+ 		goto check_sec_image;
+ 	}
+ 
+-	qla24xx_read_flash_data(vha, (void *)&pri_aux_image_status,
++	qla24xx_read_flash_data(vha, (uint32_t *)&pri_aux_image_status,
+ 	    ha->flt_region_aux_img_status_pri,
+ 	    sizeof(pri_aux_image_status) >> 2);
+ 	qla27xx_print_image(vha, "Primary aux image", &pri_aux_image_status);
+@@ -7533,7 +7535,7 @@ qla28xx_get_aux_images(
+ 		goto check_valid_image;
+ 	}
+ 
+-	qla24xx_read_flash_data(vha, (void *)&sec_aux_image_status,
++	qla24xx_read_flash_data(vha, (uint32_t *)&sec_aux_image_status,
+ 	    ha->flt_region_aux_img_status_sec,
+ 	    sizeof(sec_aux_image_status) >> 2);
+ 	qla27xx_print_image(vha, "Secondary aux image", &sec_aux_image_status);
+@@ -7598,7 +7600,7 @@ qla27xx_get_active_image(struct scsi_qla_host *vha,
+ 		goto check_sec_image;
+ 	}
+ 
+-	if (qla24xx_read_flash_data(vha, (void *)(&pri_image_status),
++	if (qla24xx_read_flash_data(vha, (uint32_t *)&pri_image_status,
+ 	    ha->flt_region_img_status_pri, sizeof(pri_image_status) >> 2) !=
+ 	    QLA_SUCCESS) {
+ 		WARN_ON_ONCE(true);
+@@ -7633,7 +7635,7 @@ qla27xx_get_active_image(struct scsi_qla_host *vha,
+ 		goto check_valid_image;
+ 	}
+ 
+-	qla24xx_read_flash_data(vha, (uint32_t *)(&sec_image_status),
++	qla24xx_read_flash_data(vha, (uint32_t *)&sec_image_status,
+ 	    ha->flt_region_img_status_sec, sizeof(sec_image_status) >> 2);
+ 	qla27xx_print_image(vha, "Secondary image", &sec_image_status);
+ 
+@@ -7705,7 +7707,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 	ql_dbg(ql_dbg_init, vha, 0x008b,
+ 	    "FW: Loading firmware from flash (%x).\n", faddr);
+ 
+-	dcode = (void *)req->ring;
++	dcode = (uint32_t *)req->ring;
+ 	qla24xx_read_flash_data(vha, dcode, faddr, 8);
+ 	if (qla24xx_risc_firmware_invalid(dcode)) {
+ 		ql_log(ql_log_fatal, vha, 0x008c,
+@@ -7718,18 +7720,18 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+-	dcode = (void *)req->ring;
++	dcode = (uint32_t *)req->ring;
+ 	*srisc_addr = 0;
+ 	segments = FA_RISC_CODE_SEGMENTS;
+ 	for (j = 0; j < segments; j++) {
+ 		ql_dbg(ql_dbg_init, vha, 0x008d,
+ 		    "-> Loading segment %u...\n", j);
+ 		qla24xx_read_flash_data(vha, dcode, faddr, 10);
+-		risc_addr = be32_to_cpu(dcode[2]);
+-		risc_size = be32_to_cpu(dcode[3]);
++		risc_addr = swab32(dcode[2]);
++		risc_size = swab32(dcode[3]);
+ 		if (!*srisc_addr) {
+ 			*srisc_addr = risc_addr;
+-			risc_attr = be32_to_cpu(dcode[9]);
++			risc_attr = swab32(dcode[9]);
+ 		}
+ 
+ 		dlen = ha->fw_transfer_size >> 2;
+@@ -7740,7 +7742,8 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 			ql_dbg(ql_dbg_init, vha, 0x008e,
+ 			    "-> Loading fragment %u: %#x <- %#x (%#lx dwords)...\n",
+ 			    fragment, risc_addr, faddr, dlen);
+-			qla24xx_read_flash_data(vha, dcode, faddr, dlen);
++			qla24xx_read_flash_data(vha, dcode, faddr,
++						dlen);
+ 			for (i = 0; i < dlen; i++)
+ 				dcode[i] = swab32(dcode[i]);
+ 
+@@ -7769,9 +7772,9 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 		fwdt->template = NULL;
+ 		fwdt->length = 0;
+ 
+-		dcode = (void *)req->ring;
++		dcode = (uint32_t *)req->ring;
+ 		qla24xx_read_flash_data(vha, dcode, faddr, 7);
+-		risc_size = be32_to_cpu(dcode[2]);
++		risc_size = swab32(dcode[2]);
+ 		ql_dbg(ql_dbg_init, vha, 0x0161,
+ 		    "-> fwdt%u template array at %#x (%#x dwords)\n",
+ 		    j, faddr, risc_size);
+@@ -7840,7 +7843,8 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ {
+ 	int	rval;
+ 	int	i, fragment;
+-	uint16_t *wcode, *fwcode;
++	uint16_t *wcode;
++	__be16 *fwcode;
+ 	uint32_t risc_addr, risc_size, fwclen, wlen, *seg;
+ 	struct fw_blob *blob;
+ 	struct qla_hw_data *ha = vha->hw;
+@@ -7860,7 +7864,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 
+ 	wcode = (uint16_t *)req->ring;
+ 	*srisc_addr = 0;
+-	fwcode = (uint16_t *)blob->fw->data;
++	fwcode = (__force __be16 *)blob->fw->data;
+ 	fwclen = 0;
+ 
+ 	/* Validate firmware image by checking version. */
+@@ -7908,7 +7912,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 			    "words 0x%x.\n", risc_addr, wlen);
+ 
+ 			for (i = 0; i < wlen; i++)
+-				wcode[i] = swab16(fwcode[i]);
++				wcode[i] = swab16((__force u32)fwcode[i]);
+ 
+ 			rval = qla2x00_load_ram(vha, req->dma, risc_addr,
+ 			    wlen);
+@@ -7945,7 +7949,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	ulong i;
+ 	uint j;
+ 	struct fw_blob *blob;
+-	uint32_t *fwcode;
++	__be32 *fwcode;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 	struct fwdt *fwdt = ha->fwdt;
+@@ -7961,8 +7965,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+-	fwcode = (void *)blob->fw->data;
+-	dcode = fwcode;
++	fwcode = (__force __be32 *)blob->fw->data;
++	dcode = (__force uint32_t *)fwcode;
+ 	if (qla24xx_risc_firmware_invalid(dcode)) {
+ 		ql_log(ql_log_fatal, vha, 0x0093,
+ 		    "Unable to verify integrity of firmware image (%zd).\n",
+@@ -7973,7 +7977,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+-	dcode = (void *)req->ring;
++	dcode = (uint32_t *)req->ring;
+ 	*srisc_addr = 0;
+ 	segments = FA_RISC_CODE_SEGMENTS;
+ 	for (j = 0; j < segments; j++) {
+@@ -7999,7 +8003,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 			    dlen);
+ 
+ 			for (i = 0; i < dlen; i++)
+-				dcode[i] = swab32(fwcode[i]);
++				dcode[i] = be32_to_cpu(fwcode[i]);
+ 
+ 			rval = qla2x00_load_ram(vha, req->dma, risc_addr, dlen);
+ 			if (rval) {
+@@ -8053,7 +8057,7 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 
+ 		dcode = fwdt->template;
+ 		for (i = 0; i < risc_size; i++)
+-			dcode[i] = fwcode[i];
++			dcode[i] = (__force u32)fwcode[i];
+ 
+ 		if (!qla27xx_fwdt_template_valid(dcode)) {
+ 			ql_log(ql_log_warn, vha, 0x0175,
+@@ -8324,7 +8328,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	int   rval;
+ 	struct init_cb_81xx *icb;
+ 	struct nvram_81xx *nv;
+-	uint32_t *dptr;
++	__le32 *dptr;
+ 	uint8_t  *dptr1, *dptr2;
+ 	uint32_t chksum;
+ 	uint16_t cnt;
+@@ -8371,7 +8375,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	    "primary" : "secondary");
+ 	ha->isp_ops->read_optrom(vha, ha->nvram, faddr << 2, ha->nvram_size);
+ 
+-	dptr = (uint32_t *)nv;
++	dptr = (__force __le32 *)nv;
+ 	for (cnt = 0, chksum = 0; cnt < ha->nvram_size >> 2; cnt++, dptr++)
+ 		chksum += le32_to_cpu(*dptr);
+ 
+@@ -8398,7 +8402,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 		memset(nv, 0, ha->nvram_size);
+ 		nv->nvram_version = cpu_to_le16(ICB_VERSION);
+ 		nv->version = cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = 2048;
++		nv->frame_payload_size = cpu_to_le16(2048);
+ 		nv->execution_throttle = cpu_to_le16(0xFFFF);
+ 		nv->exchange_count = cpu_to_le16(0);
+ 		nv->port_name[0] = 0x21;
+@@ -8442,7 +8446,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	}
+ 
+ 	if (IS_T10_PI_CAPABLE(ha))
+-		nv->frame_payload_size &= ~7;
++		nv->frame_payload_size &= cpu_to_le16(~7);
+ 
+ 	qlt_81xx_config_nvram_stage1(vha, nv);
+ 
+@@ -8605,10 +8609,10 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	}
+ 
+ 	 /* enable RIDA Format2 */
+-	icb->firmware_options_3 |= BIT_0;
++	icb->firmware_options_3 |= cpu_to_le32(BIT_0);
+ 
+ 	/* N2N: driver will initiate Login instead of FW */
+-	icb->firmware_options_3 |= BIT_8;
++	icb->firmware_options_3 |= cpu_to_le32(BIT_8);
+ 
+ 	/* Determine NVMe/FCP priority for target ports */
+ 	ha->fc4_type_priority = qla2xxx_get_fc4_priority(vha);
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 182bd68c79ac..6345e5d2a9ac 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -661,7 +661,7 @@ qla24xx_build_scsi_type_6_iocbs(srb_t *sp, struct cmd_type_6 *cmd_pkt,
+ 	cur_dsd->address = 0;
+ 	cur_dsd->length = 0;
+ 	cur_dsd++;
+-	cmd_pkt->control_flags |= CF_DATA_SEG_DESCR_ENABLE;
++	cmd_pkt->control_flags |= cpu_to_le16(CF_DATA_SEG_DESCR_ENABLE);
+ 	return 0;
+ }
+ 
+@@ -755,8 +755,8 @@ qla24xx_build_scsi_iocbs(srb_t *sp, struct cmd_type_7 *cmd_pkt,
+ }
+ 
+ struct fw_dif_context {
+-	uint32_t ref_tag;
+-	uint16_t app_tag;
++	__le32	ref_tag;
++	__le16	app_tag;
+ 	uint8_t ref_tag_mask[4];	/* Validation/Replacement Mask*/
+ 	uint8_t app_tag_mask[2];	/* Validation/Replacement Mask*/
  };
+@@ -1389,7 +1389,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
+     uint16_t tot_dsds, uint16_t tot_prot_dsds, uint16_t fw_prot_opts)
+ {
+ 	struct dsd64		*cur_dsd;
+-	uint32_t		*fcp_dl;
++	__be32			*fcp_dl;
+ 	scsi_qla_host_t		*vha;
+ 	struct scsi_cmnd	*cmd;
+ 	uint32_t		total_bytes = 0;
+@@ -1456,7 +1456,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
+ 	    &crc_ctx_pkt->ref_tag, tot_prot_dsds);
  
-@@ -112,8 +112,8 @@ struct pt_ls4_rx_unsol {
- 	uint8_t vp_index;
- 	uint8_t rsvd2;
- 	uint16_t rsvd3;
--	uint16_t nport_handle;
--	uint16_t frame_size;
-+	__le16	nport_handle;
-+	__le16	frame_size;
- 	uint16_t rsvd4;
- 	uint32_t exchange_address;
- 	uint8_t d_id[3];
-@@ -122,16 +122,16 @@ struct pt_ls4_rx_unsol {
- 	uint8_t cs_ctl;
- 	uint8_t f_ctl[3];
- 	uint8_t type;
--	uint16_t seq_cnt;
-+	__le16	seq_cnt;
- 	uint8_t df_ctl;
- 	uint8_t seq_id;
--	uint16_t rx_id;
--	uint16_t ox_id;
--	uint32_t param;
--	uint32_t desc0;
-+	__le16	rx_id;
-+	__le16	ox_id;
-+	__le32	param;
-+	__le32	desc0;
- #define PT_LS4_PAYLOAD_OFFSET 0x2c
- #define PT_LS4_FIRST_PACKET_LEN 20
--	uint32_t desc_len;
-+	__le32	desc_len;
- 	uint32_t payload[3];
- };
+ 	put_unaligned_le64(crc_ctx_dma, &cmd_pkt->crc_context_address);
+-	cmd_pkt->crc_context_len = CRC_CONTEXT_LEN_FW;
++	cmd_pkt->crc_context_len = cpu_to_le16(CRC_CONTEXT_LEN_FW);
  
-diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
-index 230abee10598..93344a05910a 100644
---- a/drivers/scsi/qla2xxx/qla_nx.h
-+++ b/drivers/scsi/qla2xxx/qla_nx.h
-@@ -800,16 +800,16 @@ struct qla82xx_legacy_intr_set {
- #define QLA82XX_URI_FIRMWARE_IDX_OFF	29
+ 	/* Determine SCSI command length -- align to 4 byte boundary */
+ 	if (cmd->cmd_len > 16) {
+@@ -1545,7 +1545,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
+ 	crc_ctx_pkt->guard_seed = cpu_to_le16(0);
+ 	/* Fibre channel byte count */
+ 	cmd_pkt->byte_count = cpu_to_le32(total_bytes);
+-	fcp_dl = (uint32_t *)(crc_ctx_pkt->fcp_cmnd.cdb + 16 +
++	fcp_dl = (void *)(crc_ctx_pkt->fcp_cmnd.cdb + 16 +
+ 	    additional_fcpcdb_len);
+ 	*fcp_dl = htonl(total_bytes);
  
- struct qla82xx_uri_table_desc{
--	uint32_t	findex;
--	uint32_t	num_entries;
--	uint32_t	entry_size;
--	uint32_t	reserved[5];
-+	__le32	findex;
-+	__le32	num_entries;
-+	__le32	entry_size;
-+	__le32	reserved[5];
- };
+@@ -2344,9 +2344,10 @@ qla24xx_prli_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
+ 	logio->control_flags = cpu_to_le16(LCF_COMMAND_PRLI);
+ 	if (lio->u.logio.flags & SRB_LOGIN_NVME_PRLI) {
+-		logio->control_flags |= LCF_NVME_PRLI;
++		logio->control_flags |= cpu_to_le16(LCF_NVME_PRLI);
+ 		if (sp->vha->flags.nvme_first_burst)
+-			logio->io_parameter[0] = NVME_PRLI_SP_FIRST_BURST;
++			logio->io_parameter[0] =
++				cpu_to_le32(NVME_PRLI_SP_FIRST_BURST);
+ 	}
  
- struct qla82xx_uri_data_desc{
--	uint32_t	findex;
--	uint32_t	size;
--	uint32_t	reserved[5];
-+	__le32	findex;
-+	__le32	size;
-+	__le32	reserved[5];
- };
+ 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+@@ -2679,8 +2680,8 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ 	els_iocb->sys_define = 0;
+ 	els_iocb->entry_status = 0;
+ 	els_iocb->handle = sp->handle;
+-	els_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+-	els_iocb->tx_dsd_count = 1;
++	els_iocb->nport_handle = sp->fcport->loop_id;
++	els_iocb->tx_dsd_count = cpu_to_le16(1);
+ 	els_iocb->vp_index = vha->vp_idx;
+ 	els_iocb->sof_type = EST_SOFI3;
+ 	els_iocb->rx_dsd_count = 0;
+@@ -2700,7 +2701,7 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ 			cpu_to_le32(sizeof(struct els_plogi_payload));
+ 		put_unaligned_le64(elsio->u.els_plogi.els_plogi_pyld_dma,
+ 				   &els_iocb->tx_address);
+-		els_iocb->rx_dsd_count = 1;
++		els_iocb->rx_dsd_count = cpu_to_le16(1);
+ 		els_iocb->rx_byte_count = els_iocb->rx_len =
+ 			cpu_to_le32(sizeof(struct els_plogi_payload));
+ 		put_unaligned_le64(elsio->u.els_plogi.els_resp_pyld_dma,
+@@ -2712,7 +2713,7 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+ 		    (uint8_t *)els_iocb,
+ 		    sizeof(*els_iocb));
+ 	} else {
+-		els_iocb->control_flags = 1 << 13;
++		els_iocb->control_flags = cpu_to_le16(1 << 13);
+ 		els_iocb->tx_byte_count =
+ 			cpu_to_le32(sizeof(struct els_logo_payload));
+ 		put_unaligned_le64(elsio->u.els_logo.els_logo_pyld_dma,
+@@ -3022,7 +3023,7 @@ qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
+         els_iocb->sys_define = 0;
+         els_iocb->entry_status = 0;
+         els_iocb->handle = sp->handle;
+-        els_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
++        els_iocb->nport_handle = sp->fcport->loop_id;
+ 	els_iocb->tx_dsd_count = cpu_to_le16(bsg_job->request_payload.sg_cnt);
+ 	els_iocb->vp_index = sp->vha->vp_idx;
+         els_iocb->sof_type = EST_SOFI3;
+@@ -3216,7 +3217,7 @@ qla82xx_start_scsi(srb_t *sp)
+ 	uint16_t	tot_dsds;
+ 	struct device_reg_82xx __iomem *reg;
+ 	uint32_t dbval;
+-	uint32_t *fcp_dl;
++	__be32 *fcp_dl;
+ 	uint8_t additional_cdb_len;
+ 	struct ct6_dsd *ctx;
+ 	struct scsi_qla_host *vha = sp->vha;
+@@ -3398,7 +3399,7 @@ qla82xx_start_scsi(srb_t *sp)
  
- /* UNIFIED ROMIMAGE END */
-@@ -829,22 +829,22 @@ struct qla82xx_uri_data_desc{
-  * ISP 8021 I/O Register Set structure definitions.
-  */
- struct device_reg_82xx {
--	uint32_t req_q_out[64];		/* Request Queue out-Pointer (64 * 4) */
--	uint32_t rsp_q_in[64];		/* Response Queue In-Pointer. */
--	uint32_t rsp_q_out[64];		/* Response Queue Out-Pointer. */
-+	__le32	req_q_out[64];		/* Request Queue out-Pointer (64 * 4) */
-+	__le32	rsp_q_in[64];		/* Response Queue In-Pointer. */
-+	__le32	rsp_q_out[64];		/* Response Queue Out-Pointer. */
+ 		memcpy(ctx->fcp_cmnd->cdb, cmd->cmnd, cmd->cmd_len);
  
--	uint16_t mailbox_in[32];	/* Mail box In registers */
--	uint16_t unused_1[32];
--	uint32_t hint;			/* Host interrupt register */
-+	__le16	mailbox_in[32];		/* Mailbox In registers */
-+	__le16	unused_1[32];
-+	__le32	hint;			/* Host interrupt register */
- #define	HINT_MBX_INT_PENDING	BIT_0
--	uint16_t unused_2[62];
--	uint16_t mailbox_out[32];	/* Mail box Out registers */
--	uint32_t unused_3[48];
-+	__le16	unused_2[62];
-+	__le16	mailbox_out[32];	/* Mailbox Out registers */
-+	__le32	unused_3[48];
+-		fcp_dl = (uint32_t *)(ctx->fcp_cmnd->cdb + 16 +
++		fcp_dl = (void *)(ctx->fcp_cmnd->cdb + 16 +
+ 		    additional_cdb_len);
+ 		*fcp_dl = htonl((uint32_t)scsi_bufflen(cmd));
  
--	uint32_t host_status;		/* host status */
-+	__le32	host_status;		/* host status */
- #define HSRX_RISC_INT		BIT_15	/* RISC to Host interrupt. */
- #define HSRX_RISC_PAUSED	BIT_8	/* RISC Paused. */
--	uint32_t host_int;		/* Interrupt status. */
-+	__le32	host_int;		/* Interrupt status. */
- #define ISRX_NX_RISC_INT	BIT_0	/* RISC interrupt. */
- };
+@@ -3536,7 +3537,7 @@ qla24xx_abort_iocb(srb_t *sp, struct abort_entry_24xx *abt_iocb)
+ 	memset(abt_iocb, 0, sizeof(struct abort_entry_24xx));
+ 	abt_iocb->entry_type = ABORT_IOCB_TYPE;
+ 	abt_iocb->entry_count = 1;
+-	abt_iocb->handle = cpu_to_le32(make_handle(req->id, sp->handle));
++	abt_iocb->handle = make_handle(req->id, sp->handle);
+ 	if (sp->fcport) {
+ 		abt_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+ 		abt_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
+@@ -3544,10 +3545,10 @@ qla24xx_abort_iocb(srb_t *sp, struct abort_entry_24xx *abt_iocb)
+ 		abt_iocb->port_id[2] = sp->fcport->d_id.b.domain;
+ 	}
+ 	abt_iocb->handle_to_abort =
+-	    cpu_to_le32(make_handle(aio->u.abt.req_que_no,
+-				    aio->u.abt.cmd_hndl));
++		make_handle(le16_to_cpu(aio->u.abt.req_que_no),
++			    aio->u.abt.cmd_hndl);
+ 	abt_iocb->vp_index = vha->vp_idx;
+-	abt_iocb->req_que_no = cpu_to_le16(aio->u.abt.req_que_no);
++	abt_iocb->req_que_no = aio->u.abt.req_que_no;
+ 	/* Send the command to the firmware */
+ 	wmb();
+ }
+@@ -3562,7 +3563,7 @@ qla2x00_mb_iocb(srb_t *sp, struct mbx_24xx_entry *mbx)
+ 	sz = min(ARRAY_SIZE(mbx->mb), ARRAY_SIZE(sp->u.iocb_cmd.u.mbx.out_mb));
  
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 3cf8590feeac..eb176fd9c105 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -135,37 +135,37 @@ struct nack_to_isp {
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	union {
- 		struct {
--			uint32_t sys_define_2; /* System defined. */
-+			__le32	sys_define_2; /* System defined. */
- 			target_id_t target;
- 			uint8_t	 target_id;
- 			uint8_t	 reserved_1;
--			uint16_t flags;
--			uint16_t resp_code;
--			uint16_t status;
--			uint16_t task_flags;
--			uint16_t seq_id;
--			uint16_t srr_rx_id;
--			uint32_t srr_rel_offs;
--			uint16_t srr_ui;
--			uint16_t srr_flags;
--			uint16_t srr_reject_code;
-+			__le16	flags;
-+			__le16	resp_code;
-+			__le16	status;
-+			__le16	task_flags;
-+			__le16	seq_id;
-+			__le16	srr_rx_id;
-+			__le32	srr_rel_offs;
-+			__le16	srr_ui;
-+			__le16	srr_flags;
-+			__le16	srr_reject_code;
- 			uint8_t  srr_reject_vendor_uniq;
- 			uint8_t  srr_reject_code_expl;
- 			uint8_t  reserved_2[24];
- 		} isp2x;
- 		struct {
- 			uint32_t handle;
--			uint16_t nport_handle;
-+			__le16	nport_handle;
- 			uint16_t reserved_1;
--			uint16_t flags;
--			uint16_t srr_rx_id;
--			uint16_t status;
-+			__le16	flags;
-+			__le16	srr_rx_id;
-+			__le16	status;
- 			uint8_t  status_subcode;
- 			uint8_t  fw_handle;
- 			uint32_t exchange_address;
--			uint32_t srr_rel_offs;
--			uint16_t srr_ui;
--			uint16_t srr_flags;
-+			__le32	srr_rel_offs;
-+			__le16	srr_ui;
-+			__le16	srr_flags;
- 			uint8_t  reserved_4[19];
- 			uint8_t  vp_index;
- 			uint8_t  srr_reject_vendor_uniq;
-@@ -175,7 +175,7 @@ struct nack_to_isp {
- 		} isp24;
- 	} u;
- 	uint8_t  reserved[2];
--	uint16_t ox_id;
-+	__le16	ox_id;
- } __packed;
- #define NOTIFY_ACK_FLAGS_TERMINATE	BIT_3
- #define NOTIFY_ACK_SRR_FLAGS_ACCEPT	0
-@@ -206,16 +206,16 @@ struct ctio_to_2xxx {
- 	uint8_t	 entry_status;		/* Entry Status. */
- 	uint32_t handle;		/* System defined handle */
- 	target_id_t target;
--	uint16_t rx_id;
--	uint16_t flags;
--	uint16_t status;
--	uint16_t timeout;		/* 0 = 30 seconds, 0xFFFF = disable */
--	uint16_t dseg_count;		/* Data segment count. */
--	uint32_t relative_offset;
--	uint32_t residual;
--	uint16_t reserved_1[3];
--	uint16_t scsi_status;
--	uint32_t transfer_length;
-+	__le16	rx_id;
-+	__le16	flags;
-+	__le16	status;
-+	__le16	timeout;		/* 0 = 30 seconds, 0xFFFF = disable */
-+	__le16	dseg_count;		/* Data segment count. */
-+	__le32	relative_offset;
-+	__le32	residual;
-+	__le16	reserved_1[3];
-+	__le16	scsi_status;
-+	__le32	transfer_length;
- 	struct dsd32 dsd[3];
- } __packed;
- #define ATIO_PATH_INVALID       0x07
-@@ -257,7 +257,7 @@ struct fcp_hdr {
- 	uint16_t seq_cnt;
- 	__be16   ox_id;
- 	uint16_t rx_id;
--	uint32_t parameter;
-+	__le32	parameter;
- } __packed;
+ 	for (i = 0; i < sz; i++)
+-		mbx->mb[i] = cpu_to_le16(sp->u.iocb_cmd.u.mbx.out_mb[i]);
++		mbx->mb[i] = sp->u.iocb_cmd.u.mbx.out_mb[i];
+ }
  
- struct fcp_hdr_le {
-@@ -267,12 +267,12 @@ struct fcp_hdr_le {
- 	uint8_t  cs_ctl;
- 	uint8_t  f_ctl[3];
- 	uint8_t  type;
--	uint16_t seq_cnt;
-+	__le16	seq_cnt;
- 	uint8_t  df_ctl;
- 	uint8_t  seq_id;
--	uint16_t rx_id;
--	uint16_t ox_id;
--	uint32_t parameter;
-+	__le16	rx_id;
-+	__le16	ox_id;
-+	__le32	parameter;
- } __packed;
+ static void
+@@ -3586,7 +3587,7 @@ static void qla2x00_send_notify_ack_iocb(srb_t *sp,
+ 	nack->u.isp24.nport_handle = ntfy->u.isp24.nport_handle;
+ 	if (le16_to_cpu(ntfy->u.isp24.status) == IMM_NTFY_ELS) {
+ 		nack->u.isp24.flags = ntfy->u.isp24.flags &
+-			cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
++			cpu_to_le16(NOTIFY24XX_FLAGS_PUREX_IOCB);
+ 	}
+ 	nack->u.isp24.srr_rx_id = ntfy->u.isp24.srr_rx_id;
+ 	nack->u.isp24.status = ntfy->u.isp24.status;
+@@ -3613,20 +3614,20 @@ qla_nvme_ls(srb_t *sp, struct pt_ls4_request *cmd_pkt)
+ 	nvme = &sp->u.iocb_cmd;
+ 	cmd_pkt->entry_type = PT_LS4_REQUEST;
+ 	cmd_pkt->entry_count = 1;
+-	cmd_pkt->control_flags = CF_LS4_ORIGINATOR << CF_LS4_SHIFT;
++	cmd_pkt->control_flags = cpu_to_le16(CF_LS4_ORIGINATOR << CF_LS4_SHIFT);
  
- #define F_CTL_EXCH_CONTEXT_RESP	BIT_23
-@@ -306,7 +306,7 @@ struct atio7_fcp_cmnd {
- 	 * BUILD_BUG_ON in qlt_init().
+ 	cmd_pkt->timeout = cpu_to_le16(nvme->u.nvme.timeout_sec);
+ 	cmd_pkt->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+ 	cmd_pkt->vp_index = sp->fcport->vha->vp_idx;
+ 
+-	cmd_pkt->tx_dseg_count = 1;
+-	cmd_pkt->tx_byte_count = nvme->u.nvme.cmd_len;
+-	cmd_pkt->dsd[0].length = nvme->u.nvme.cmd_len;
++	cmd_pkt->tx_dseg_count = cpu_to_le16(1);
++	cmd_pkt->tx_byte_count = cpu_to_le32(nvme->u.nvme.cmd_len);
++	cmd_pkt->dsd[0].length = cpu_to_le32(nvme->u.nvme.cmd_len);
+ 	put_unaligned_le64(nvme->u.nvme.cmd_dma, &cmd_pkt->dsd[0].address);
+ 
+-	cmd_pkt->rx_dseg_count = 1;
+-	cmd_pkt->rx_byte_count = nvme->u.nvme.rsp_len;
+-	cmd_pkt->dsd[1].length  = nvme->u.nvme.rsp_len;
++	cmd_pkt->rx_dseg_count = cpu_to_le16(1);
++	cmd_pkt->rx_byte_count = cpu_to_le32(nvme->u.nvme.rsp_len);
++	cmd_pkt->dsd[1].length = cpu_to_le32(nvme->u.nvme.rsp_len);
+ 	put_unaligned_le64(nvme->u.nvme.rsp_dma, &cmd_pkt->dsd[1].address);
+ 
+ 	return rval;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index a5aae276fbb2..50c0d77fcf2d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -92,7 +92,7 @@ qla24xx_process_abts(struct scsi_qla_host *vha, void *pkt)
+ 	rsp_els->entry_count = 1;
+ 	rsp_els->nport_handle = ~0;
+ 	rsp_els->rx_xchg_address = abts->rx_xch_addr_to_abort;
+-	rsp_els->control_flags = EPD_RX_XCHG;
++	rsp_els->control_flags = cpu_to_le16(EPD_RX_XCHG);
+ 	ql_dbg(ql_dbg_init, vha, 0x0283,
+ 	    "Sending ELS Response to terminate exchange %#x...\n",
+ 	    abts->rx_xch_addr_to_abort);
+@@ -142,7 +142,7 @@ qla24xx_process_abts(struct scsi_qla_host *vha, void *pkt)
+ 	abts_rsp->ox_id = abts->ox_id;
+ 	abts_rsp->payload.ba_acc.aborted_rx_id = abts->rx_id;
+ 	abts_rsp->payload.ba_acc.aborted_ox_id = abts->ox_id;
+-	abts_rsp->payload.ba_acc.high_seq_cnt = ~0;
++	abts_rsp->payload.ba_acc.high_seq_cnt = cpu_to_le16(~0);
+ 	abts_rsp->rx_xch_addr_to_abort = abts->rx_xch_addr_to_abort;
+ 	ql_dbg(ql_dbg_init, vha, 0x028b,
+ 	    "Sending BA ACC response to ABTS %#x...\n",
+@@ -413,7 +413,7 @@ qla2x00_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ {
+ 	uint16_t	cnt;
+ 	uint32_t	mboxes;
+-	uint16_t __iomem *wptr;
++	__le16 __iomem *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+ 
+@@ -429,11 +429,11 @@ qla2x00_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ 	ha->flags.mbox_int = 1;
+ 	ha->mailbox_out[0] = mb0;
+ 	mboxes >>= 1;
+-	wptr = (uint16_t __iomem *)MAILBOX_REG(ha, reg, 1);
++	wptr = MAILBOX_REG(ha, reg, 1);
+ 
+ 	for (cnt = 1; cnt < ha->mbx_count; cnt++) {
+ 		if (IS_QLA2200(ha) && cnt == 8)
+-			wptr = (uint16_t __iomem *)MAILBOX_REG(ha, reg, 8);
++			wptr = MAILBOX_REG(ha, reg, 8);
+ 		if ((cnt == 4 || cnt == 5) && (mboxes & BIT_0))
+ 			ha->mailbox_out[cnt] = qla2x00_debounce_register(wptr);
+ 		else if (mboxes & BIT_0)
+@@ -457,9 +457,9 @@ qla81xx_idc_event(scsi_qla_host_t *vha, uint16_t aen, uint16_t descr)
+ 
+ 	/* Seed data -- mailbox1 -> mailbox7. */
+ 	if (IS_QLA81XX(vha->hw) || IS_QLA83XX(vha->hw))
+-		wptr = (uint16_t __iomem *)&reg24->mailbox1;
++		wptr = &reg24->mailbox1;
+ 	else if (IS_QLA8044(vha->hw))
+-		wptr = (uint16_t __iomem *)&reg82->mailbox_out[1];
++		wptr = &reg82->mailbox_out[1];
+ 	else
+ 		return;
+ 
+@@ -786,7 +786,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 		goto skip_rio;
+ 	switch (mb[0]) {
+ 	case MBA_SCSI_COMPLETION:
+-		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
++		handles[0] = make_handle(mb[2], mb[1]);
+ 		handle_cnt = 1;
+ 		break;
+ 	case MBA_CMPLT_1_16BIT:
+@@ -825,10 +825,9 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+ 		mb[0] = MBA_SCSI_COMPLETION;
+ 		break;
+ 	case MBA_CMPLT_2_32BIT:
+-		handles[0] = le32_to_cpu((uint32_t)((mb[2] << 16) | mb[1]));
+-		handles[1] = le32_to_cpu(
+-		    ((uint32_t)(RD_MAILBOX_REG(ha, reg, 7) << 16)) |
+-		    RD_MAILBOX_REG(ha, reg, 6));
++		handles[0] = make_handle(mb[2], mb[1]);
++		handles[1] = make_handle(RD_MAILBOX_REG(ha, reg, 7),
++					 RD_MAILBOX_REG(ha, reg, 6));
+ 		handle_cnt = 2;
+ 		mb[0] = MBA_SCSI_COMPLETION;
+ 		break;
+@@ -1647,7 +1646,7 @@ qla24xx_mbx_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	sz = min(ARRAY_SIZE(pkt->mb), ARRAY_SIZE(sp->u.iocb_cmd.u.mbx.in_mb));
+ 
+ 	for (i = 0; i < sz; i++)
+-		si->u.mbx.in_mb[i] = le16_to_cpu(pkt->mb[i]);
++		si->u.mbx.in_mb[i] = pkt->mb[i];
+ 
+ 	res = (si->u.mbx.in_mb[0] & MBS_MASK);
+ 
+@@ -1748,6 +1747,7 @@ static void
+ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+     struct sts_entry_24xx *pkt, int iocb_type)
+ {
++	struct els_sts_entry_24xx *ese = (struct els_sts_entry_24xx *)pkt;
+ 	const char func[] = "ELS_CT_IOCB";
+ 	const char *type;
+ 	srb_t *sp;
+@@ -1797,23 +1797,22 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	}
+ 
+ 	comp_status = fw_status[0] = le16_to_cpu(pkt->comp_status);
+-	fw_status[1] = le16_to_cpu(((struct els_sts_entry_24xx *)pkt)->error_subcode_1);
+-	fw_status[2] = le16_to_cpu(((struct els_sts_entry_24xx *)pkt)->error_subcode_2);
++	fw_status[1] = le32_to_cpu(ese->error_subcode_1);
++	fw_status[2] = le32_to_cpu(ese->error_subcode_2);
+ 
+ 	if (iocb_type == ELS_IOCB_TYPE) {
+ 		els = &sp->u.iocb_cmd;
+ 		els->u.els_plogi.fw_status[0] = fw_status[0];
+ 		els->u.els_plogi.fw_status[1] = fw_status[1];
+ 		els->u.els_plogi.fw_status[2] = fw_status[2];
+-		els->u.els_plogi.comp_status = fw_status[0];
++		els->u.els_plogi.comp_status = cpu_to_le16(fw_status[0]);
+ 		if (comp_status == CS_COMPLETE) {
+ 			res =  DID_OK << 16;
+ 		} else {
+ 			if (comp_status == CS_DATA_UNDERRUN) {
+ 				res =  DID_OK << 16;
+-				els->u.els_plogi.len =
+-				le16_to_cpu(((struct els_sts_entry_24xx *)
+-					pkt)->total_byte_count);
++				els->u.els_plogi.len = cpu_to_le16(le32_to_cpu(
++					ese->total_byte_count));
+ 			} else {
+ 				els->u.els_plogi.len = 0;
+ 				res = DID_ERROR << 16;
+@@ -1822,8 +1821,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		ql_dbg(ql_dbg_user, vha, 0x503f,
+ 		    "ELS IOCB Done -%s error hdl=%x comp_status=0x%x error subcode 1=0x%x error subcode 2=0x%x total_byte=0x%x\n",
+ 		    type, sp->handle, comp_status, fw_status[1], fw_status[2],
+-		    le16_to_cpu(((struct els_sts_entry_24xx *)
+-			pkt)->total_byte_count));
++		    le32_to_cpu(ese->total_byte_count));
+ 		goto els_ct_done;
+ 	}
+ 
+@@ -1839,23 +1837,20 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		if (comp_status == CS_DATA_UNDERRUN) {
+ 			res = DID_OK << 16;
+ 			bsg_reply->reply_payload_rcv_len =
+-			    le16_to_cpu(((struct els_sts_entry_24xx *)pkt)->total_byte_count);
++				le32_to_cpu(ese->total_byte_count);
+ 
+ 			ql_dbg(ql_dbg_user, vha, 0x503f,
+ 			    "ELS-CT pass-through-%s error hdl=%x comp_status-status=0x%x "
+ 			    "error subcode 1=0x%x error subcode 2=0x%x total_byte = 0x%x.\n",
+ 			    type, sp->handle, comp_status, fw_status[1], fw_status[2],
+-			    le16_to_cpu(((struct els_sts_entry_24xx *)
+-				pkt)->total_byte_count));
++			    le32_to_cpu(ese->total_byte_count));
+ 		} else {
+ 			ql_dbg(ql_dbg_user, vha, 0x5040,
+ 			    "ELS-CT pass-through-%s error hdl=%x comp_status-status=0x%x "
+ 			    "error subcode 1=0x%x error subcode 2=0x%x.\n",
+ 			    type, sp->handle, comp_status,
+-			    le16_to_cpu(((struct els_sts_entry_24xx *)
+-				pkt)->error_subcode_1),
+-			    le16_to_cpu(((struct els_sts_entry_24xx *)
+-				    pkt)->error_subcode_2));
++			    le32_to_cpu(ese->error_subcode_1),
++			    le32_to_cpu(ese->error_subcode_2));
+ 			res = DID_ERROR << 16;
+ 			bsg_reply->reply_payload_rcv_len = 0;
+ 		}
+@@ -2063,7 +2058,7 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	uint16_t        state_flags;
+ 	struct nvmefc_fcp_req *fd;
+ 	uint16_t        ret = QLA_SUCCESS;
+-	uint16_t	comp_status = le16_to_cpu(sts->comp_status);
++	__le16		comp_status = sts->comp_status;
+ 	int		logit = 0;
+ 
+ 	iocb = &sp->u.iocb_cmd;
+@@ -2094,7 +2089,7 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	} else if ((state_flags & (SF_FCP_RSP_DMA | SF_NVME_ERSP)) ==
+ 			(SF_FCP_RSP_DMA | SF_NVME_ERSP)) {
+ 		/* Response already DMA'd to fd->rspaddr. */
+-		iocb->u.nvme.rsp_pyld_len = le16_to_cpu(sts->nvme_rsp_pyld_len);
++		iocb->u.nvme.rsp_pyld_len = sts->nvme_rsp_pyld_len;
+ 	} else if ((state_flags & SF_FCP_RSP_DMA)) {
+ 		/*
+ 		 * Non-zero value in first 12 bytes of NVMe_RSP IU, treat this
+@@ -2111,8 +2106,8 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 
+ 		inbuf = (uint32_t *)&sts->nvme_ersp_data;
+ 		outbuf = (uint32_t *)fd->rspaddr;
+-		iocb->u.nvme.rsp_pyld_len = le16_to_cpu(sts->nvme_rsp_pyld_len);
+-		if (unlikely(iocb->u.nvme.rsp_pyld_len >
++		iocb->u.nvme.rsp_pyld_len = sts->nvme_rsp_pyld_len;
++		if (unlikely(le16_to_cpu(iocb->u.nvme.rsp_pyld_len) >
+ 		    sizeof(struct nvme_fc_ersp_iu))) {
+ 			if (ql_mask_match(ql_dbg_io)) {
+ 				WARN_ONCE(1, "Unexpected response payload length %u.\n",
+@@ -2122,9 +2117,9 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 				    iocb->u.nvme.rsp_pyld_len);
+ 			}
+ 			iocb->u.nvme.rsp_pyld_len =
+-			    sizeof(struct nvme_fc_ersp_iu);
++				cpu_to_le16(sizeof(struct nvme_fc_ersp_iu));
+ 		}
+-		iter = iocb->u.nvme.rsp_pyld_len >> 2;
++		iter = le16_to_cpu(iocb->u.nvme.rsp_pyld_len) >> 2;
+ 		for (; iter; iter--)
+ 			*outbuf++ = swab32(*inbuf++);
+ 	}
+@@ -2139,7 +2134,7 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 				"Dropped frame(s) detected (sent/rcvd=%u/%u).\n",
+ 				tgt_xfer_len, fd->transferred_length);
+ 			logit = 1;
+-		} else if (comp_status == CS_DATA_UNDERRUN) {
++		} else if (le16_to_cpu(comp_status) == CS_DATA_UNDERRUN) {
+ 			/*
+ 			 * Do not log if this is just an underflow and there
+ 			 * is no data loss.
+@@ -2159,7 +2154,7 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	 * If transport error then Failure (HBA rejects request)
+ 	 * otherwise transport will handle.
  	 */
- 	uint8_t  add_cdb[4];
--	/* uint32_t data_length; */
-+	/* __le32	data_length; */
- } __packed;
+-	switch (comp_status) {
++	switch (le16_to_cpu(comp_status)) {
+ 	case CS_COMPLETE:
+ 		break;
  
- /*
-@@ -316,27 +316,27 @@ struct atio7_fcp_cmnd {
- struct atio_from_isp {
- 	union {
- 		struct {
--			uint16_t entry_hdr;
-+			__le16	entry_hdr;
- 			uint8_t  sys_define;   /* System defined. */
- 			uint8_t  entry_status; /* Entry Status.   */
--			uint32_t sys_define_2; /* System defined. */
-+			__le32	sys_define_2; /* System defined. */
- 			target_id_t target;
--			uint16_t rx_id;
--			uint16_t flags;
--			uint16_t status;
-+			__le16	rx_id;
-+			__le16	flags;
-+			__le16	status;
- 			uint8_t  command_ref;
- 			uint8_t  task_codes;
- 			uint8_t  task_flags;
- 			uint8_t  execution_codes;
- 			uint8_t  cdb[MAX_CMDSZ];
--			uint32_t data_length;
--			uint16_t lun;
-+			__le32	data_length;
-+			__le16	lun;
- 			uint8_t  initiator_port_name[WWN_SIZE]; /* on qla23xx */
--			uint16_t reserved_32[6];
--			uint16_t ox_id;
-+			__le16	reserved_32[6];
-+			__le16	ox_id;
- 		} isp2x;
- 		struct {
--			uint16_t entry_hdr;
-+			__le16	entry_hdr;
- 			uint8_t  fcp_cmnd_len_low;
- 			uint8_t  fcp_cmnd_len_high:4;
- 			uint8_t  attr:4;
-@@ -352,7 +352,7 @@ struct atio_from_isp {
- #define FCP_CMD_LENGTH_MASK 0x0fff
- #define FCP_CMD_LENGTH_MIN  0x38
- 			uint8_t  data[56];
--			uint32_t signature;
-+			__le32	signature;
- #define ATIO_PROCESSED 0xDEADDEAD		/* Signature */
- 		} raw;
- 	} u;
-@@ -395,10 +395,10 @@ struct ctio7_to_24xx {
- 	uint8_t	 sys_define;		    /* System defined. */
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	uint32_t handle;		    /* System defined handle */
--	uint16_t nport_handle;
-+	__le16	nport_handle;
- #define CTIO7_NHANDLE_UNRECOGNIZED	0xFFFF
--	uint16_t timeout;
--	uint16_t dseg_count;		    /* Data segment count. */
-+	__le16	timeout;
-+	__le16	dseg_count;		    /* Data segment count. */
- 	uint8_t  vp_index;
- 	uint8_t  add_flags;
- 	le_id_t  initiator_id;
-@@ -406,25 +406,25 @@ struct ctio7_to_24xx {
- 	uint32_t exchange_addr;
- 	union {
- 		struct {
--			uint16_t reserved1;
-+			__le16	reserved1;
- 			__le16 flags;
--			uint32_t residual;
-+			__le32	residual;
- 			__le16 ox_id;
--			uint16_t scsi_status;
--			uint32_t relative_offset;
--			uint32_t reserved2;
--			uint32_t transfer_length;
--			uint32_t reserved3;
-+			__le16	scsi_status;
-+			__le32	relative_offset;
-+			__le32	reserved2;
-+			__le32	transfer_length;
-+			__le32	reserved3;
- 			struct dsd64 dsd;
- 		} status0;
- 		struct {
--			uint16_t sense_length;
-+			__le16	sense_length;
- 			__le16 flags;
--			uint32_t residual;
-+			__le32	residual;
- 			__le16 ox_id;
--			uint16_t scsi_status;
--			uint16_t response_len;
--			uint16_t reserved;
-+			__le16	scsi_status;
-+			__le16	response_len;
-+			__le16	reserved;
- 			uint8_t sense_data[24];
- 		} status1;
- 	} u;
-@@ -440,18 +440,18 @@ struct ctio7_from_24xx {
- 	uint8_t	 sys_define;		    /* System defined. */
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	uint32_t handle;		    /* System defined handle */
--	uint16_t status;
--	uint16_t timeout;
--	uint16_t dseg_count;		    /* Data segment count. */
-+	__le16	status;
-+	__le16	timeout;
-+	__le16	dseg_count;		    /* Data segment count. */
- 	uint8_t  vp_index;
- 	uint8_t  reserved1[5];
- 	uint32_t exchange_address;
--	uint16_t reserved2;
--	uint16_t flags;
--	uint32_t residual;
--	uint16_t ox_id;
--	uint16_t reserved3;
--	uint32_t relative_offset;
-+	__le16	reserved2;
-+	__le16	flags;
-+	__le32	residual;
-+	__le16	ox_id;
-+	__le16	reserved3;
-+	__le32	relative_offset;
- 	uint8_t  reserved4[24];
- } __packed;
+@@ -2392,9 +2387,9 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
+ 	 * For type     3: ref & app tag is all 'f's
+ 	 * For type 0,1,2: app tag is all 'f's
+ 	 */
+-	if ((a_app_tag == T10_PI_APP_ESCAPE) &&
+-	    ((scsi_get_prot_type(cmd) != SCSI_PROT_DIF_TYPE3) ||
+-	     (a_ref_tag == T10_PI_REF_ESCAPE))) {
++	if (a_app_tag == be16_to_cpu(T10_PI_APP_ESCAPE) &&
++	    (scsi_get_prot_type(cmd) != SCSI_PROT_DIF_TYPE3 ||
++	     a_ref_tag == be32_to_cpu(T10_PI_REF_ESCAPE))) {
+ 		uint32_t blocks_done, resid;
+ 		sector_t lba_s = scsi_get_lba(cmd);
  
-@@ -489,10 +489,10 @@ struct ctio_crc2_to_fw {
- 	uint8_t entry_status;		/* Entry Status. */
+@@ -2752,6 +2747,8 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 	sense_len = par_sense_len = rsp_info_len = resid_len =
+ 	    fw_resid_len = 0;
+ 	if (IS_FWI2_CAPABLE(ha)) {
++		u16 sts24_retry_delay = le16_to_cpu(sts24->retry_delay);
++
+ 		if (scsi_status & SS_SENSE_LEN_VALID)
+ 			sense_len = le32_to_cpu(sts24->sense_len);
+ 		if (scsi_status & SS_RESPONSE_INFO_LEN_VALID)
+@@ -2766,11 +2763,11 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 		ox_id = le16_to_cpu(sts24->ox_id);
+ 		par_sense_len = sizeof(sts24->data);
+ 		/* Valid values of the retry delay timer are 0x1-0xffef */
+-		if (sts24->retry_delay > 0 && sts24->retry_delay < 0xfff1) {
+-			retry_delay = sts24->retry_delay & 0x3fff;
++		if (sts24_retry_delay > 0 && sts24_retry_delay < 0xfff1) {
++			retry_delay = sts24_retry_delay & 0x3fff;
+ 			ql_dbg(ql_dbg_io, sp->vha, 0x3033,
+ 			    "%s: scope=%#x retry_delay=%#x\n", __func__,
+-			    sts24->retry_delay >> 14, retry_delay);
++			    sts24_retry_delay >> 14, retry_delay);
+ 		}
+ 	} else {
+ 		if (scsi_status & SS_SENSE_LEN_VALID)
+@@ -3160,7 +3157,7 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ 	ha->flags.mbox_int = 1;
+ 	ha->mailbox_out[0] = mb0;
+ 	mboxes >>= 1;
+-	wptr = (uint16_t __iomem *)&reg->mailbox1;
++	wptr = &reg->mailbox1;
  
- 	uint32_t handle;		/* System handle. */
--	uint16_t nport_handle;		/* N_PORT handle. */
-+	__le16	nport_handle;		/* N_PORT handle. */
- 	__le16 timeout;		/* Command timeout. */
+ 	for (cnt = 1; cnt < ha->mbx_count; cnt++) {
+ 		if (mboxes & BIT_0)
+@@ -3184,7 +3181,7 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		return;
  
--	uint16_t dseg_count;		/* Data segment count. */
-+	__le16	dseg_count;		/* Data segment count. */
- 	uint8_t  vp_index;
- 	uint8_t  add_flags;		/* additional flags */
- #define CTIO_CRC2_AF_DIF_DSD_ENA BIT_3
-@@ -500,18 +500,18 @@ struct ctio_crc2_to_fw {
- 	le_id_t  initiator_id;		/* initiator ID */
- 	uint8_t  reserved1;
- 	uint32_t exchange_addr;		/* rcv exchange address */
--	uint16_t reserved2;
-+	__le16	reserved2;
- 	__le16 flags;			/* refer to CTIO7 flags values */
--	uint32_t residual;
-+	__le32	residual;
- 	__le16 ox_id;
--	uint16_t scsi_status;
-+	__le16	scsi_status;
- 	__le32 relative_offset;
--	uint32_t reserved5;
-+	__le32	reserved5;
- 	__le32 transfer_length;		/* total fc transfer length */
--	uint32_t reserved6;
-+	__le32	reserved6;
- 	__le64	 crc_context_address __packed; /* Data segment address. */
--	uint16_t crc_context_len;	/* Data segment length. */
--	uint16_t reserved_1;		/* MUST be set to 0. */
-+	__le16	crc_context_len;	/* Data segment length. */
-+	__le16	reserved_1;		/* MUST be set to 0. */
- };
+ 	abt = &sp->u.iocb_cmd;
+-	abt->u.abt.comp_status = le16_to_cpu(pkt->nport_handle);
++	abt->u.abt.comp_status = pkt->nport_handle;
+ 	sp->done(sp, 0);
+ }
  
- /* CTIO Type CRC_x Status IOCB */
-@@ -522,20 +522,20 @@ struct ctio_crc_from_fw {
- 	uint8_t entry_status;		/* Entry Status. */
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 9fd83d1bffe0..0927952d5d99 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -208,11 +208,11 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
  
- 	uint32_t handle;		/* System handle. */
--	uint16_t status;
--	uint16_t timeout;		/* Command timeout. */
--	uint16_t dseg_count;		/* Data segment count. */
--	uint32_t reserved1;
--	uint16_t state_flags;
-+	__le16	status;
-+	__le16	timeout;		/* Command timeout. */
-+	__le16	dseg_count;		/* Data segment count. */
-+	__le32	reserved1;
-+	__le16	state_flags;
- #define CTIO_CRC_SF_DIF_CHOPPED BIT_4
+ 	/* Load mailbox registers. */
+ 	if (IS_P3P_TYPE(ha))
+-		optr = (uint16_t __iomem *)&reg->isp82.mailbox_in[0];
++		optr = &reg->isp82.mailbox_in[0];
+ 	else if (IS_FWI2_CAPABLE(ha) && !(IS_P3P_TYPE(ha)))
+-		optr = (uint16_t __iomem *)&reg->isp24.mailbox0;
++		optr = &reg->isp24.mailbox0;
+ 	else
+-		optr = (uint16_t __iomem *)MAILBOX_REG(ha, &reg->isp, 0);
++		optr = MAILBOX_REG(ha, &reg->isp, 0);
  
- 	uint32_t exchange_address;	/* rcv exchange address */
--	uint16_t reserved2;
--	uint16_t flags;
--	uint32_t resid_xfer_length;
--	uint16_t ox_id;
-+	__le16	reserved2;
-+	__le16	flags;
-+	__le32	resid_xfer_length;
-+	__le16	ox_id;
- 	uint8_t  reserved3[12];
--	uint16_t runt_guard;		/* reported runt blk guard */
-+	__le16	runt_guard;		/* reported runt blk guard */
- 	uint8_t  actual_dif[8];
- 	uint8_t  expected_dif[8];
- } __packed;
-@@ -558,7 +558,7 @@ struct abts_recv_from_24xx {
- 	uint8_t	 sys_define;		    /* System defined. */
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	uint8_t  reserved_1[6];
--	uint16_t nport_handle;
-+	__le16	nport_handle;
- 	uint8_t  reserved_2[2];
- 	uint8_t  vp_index;
- 	uint8_t  reserved_3:4;
-@@ -572,15 +572,15 @@ struct abts_recv_from_24xx {
- #define ABTS_PARAM_ABORT_SEQ		BIT_0
+ 	iptr = mcp->mb;
+ 	command = mcp->mb[0];
+@@ -222,8 +222,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	    "Mailbox registers (OUT):\n");
+ 	for (cnt = 0; cnt < ha->mbx_count; cnt++) {
+ 		if (IS_QLA2200(ha) && cnt == 8)
+-			optr =
+-			    (uint16_t __iomem *)MAILBOX_REG(ha, &reg->isp, 8);
++			optr = MAILBOX_REG(ha, &reg->isp, 8);
+ 		if (mboxes & BIT_0) {
+ 			ql_dbg(ql_dbg_mbx, vha, 0x1112,
+ 			    "mbox[%d]<-0x%04x\n", cnt, *iptr);
+@@ -3110,8 +3109,8 @@ qla24xx_get_isp_stats(scsi_qla_host_t *vha, struct link_statistics *stats,
+ 	mc.mb[6] = MSW(MSD(stats_dma));
+ 	mc.mb[7] = LSW(MSD(stats_dma));
+ 	mc.mb[8] = dwords;
+-	mc.mb[9] = cpu_to_le16(vha->vp_idx);
+-	mc.mb[10] = cpu_to_le16(options);
++	mc.mb[9] = vha->vp_idx;
++	mc.mb[10] = options;
  
- struct ba_acc_le {
--	uint16_t reserved;
-+	__le16	reserved;
- 	uint8_t  seq_id_last;
- 	uint8_t  seq_id_valid;
- #define SEQ_ID_VALID	0x80
- #define SEQ_ID_INVALID	0x00
--	uint16_t rx_id;
--	uint16_t ox_id;
--	uint16_t high_seq_cnt;
--	uint16_t low_seq_cnt;
-+	__le16	rx_id;
-+	__le16	ox_id;
-+	__le16	high_seq_cnt;
-+	__le16	low_seq_cnt;
- } __packed;
+ 	rval = qla24xx_send_mb_cmd(vha, &mc);
  
- struct ba_rjt_le {
-@@ -604,9 +604,9 @@ struct abts_resp_to_24xx {
- 	uint8_t	 sys_define;		    /* System defined. */
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	uint32_t handle;
--	uint16_t reserved_1;
--	uint16_t nport_handle;
--	uint16_t control_flags;
-+	__le16	reserved_1;
-+	__le16	nport_handle;
-+	__le16	control_flags;
- #define ABTS_CONTR_FLG_TERM_EXCHG	BIT_0
- 	uint8_t  vp_index;
- 	uint8_t  reserved_3:4;
-@@ -617,7 +617,7 @@ struct abts_resp_to_24xx {
- 		struct ba_acc_le ba_acct;
- 		struct ba_rjt_le ba_rjt;
- 	} __packed payload;
--	uint32_t reserved_4;
-+	__le32	reserved_4;
- 	uint32_t exchange_addr_to_abort;
- } __packed;
+@@ -3204,7 +3203,7 @@ qla24xx_abort_command(srb_t *sp)
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1090,
+ 		    "Failed to complete IOCB -- completion status (%x).\n",
+ 		    le16_to_cpu(abt->nport_handle));
+-		if (abt->nport_handle == CS_IOCB_ERROR)
++		if (abt->nport_handle == cpu_to_le16(CS_IOCB_ERROR))
+ 			rval = QLA_FUNCTION_PARAMETER_ERROR;
+ 		else
+ 			rval = QLA_FUNCTION_FAILED;
+@@ -4727,7 +4726,7 @@ qla82xx_set_driver_version(scsi_qla_host_t *vha, char *version)
+ 	mbx_cmd_t *mcp = &mc;
+ 	int i;
+ 	int len;
+-	uint16_t *str;
++	__le16 *str;
+ 	struct qla_hw_data *ha = vha->hw;
  
-@@ -634,20 +634,20 @@ struct abts_resp_from_24xx_fw {
- 	uint8_t	 sys_define;		    /* System defined. */
- 	uint8_t	 entry_status;		    /* Entry Status. */
- 	uint32_t handle;
--	uint16_t compl_status;
-+	__le16	compl_status;
- #define ABTS_RESP_COMPL_SUCCESS		0
- #define ABTS_RESP_COMPL_SUBCODE_ERROR	0x31
--	uint16_t nport_handle;
--	uint16_t reserved_1;
-+	__le16	nport_handle;
-+	__le16	reserved_1;
- 	uint8_t  reserved_2;
- 	uint8_t  reserved_3:4;
- 	uint8_t  sof_type:4;
- 	uint32_t exchange_address;
- 	struct fcp_hdr_le fcp_hdr_le;
- 	uint8_t reserved_4[8];
--	uint32_t error_subcode1;
-+	__le32	error_subcode1;
- #define ABTS_RESP_SUBCODE_ERR_ABORTED_EXCH_NOT_TERM	0x1E
--	uint32_t error_subcode2;
-+	__le32	error_subcode2;
- 	uint32_t exchange_addr_to_abort;
- } __packed;
+ 	if (!IS_P3P_TYPE(ha))
+@@ -4743,7 +4742,7 @@ qla82xx_set_driver_version(scsi_qla_host_t *vha, char *version)
+ 	mcp->mb[1] = RNID_TYPE_SET_VERSION << 8;
+ 	mcp->out_mb = MBX_1|MBX_0;
+ 	for (i = 4; i < 16 && len; i++, str++, len -= 2) {
+-		mcp->mb[i] = cpu_to_le16p(str);
++		mcp->mb[i] = le16_to_cpup(str);
+ 		mcp->out_mb |= 1<<i;
+ 	}
+ 	for (; i < 16; i++) {
+@@ -4861,7 +4860,7 @@ qla24xx_get_port_login_templ(scsi_qla_host_t *vha, dma_addr_t buf_dma,
+ 		    "Done %s.\n", __func__);
+ 		bp = (uint32_t *) buf;
+ 		for (i = 0; i < (bufsiz-4)/4; i++, bp++)
+-			*bp = le32_to_cpu(*bp);
++			*bp = le32_to_cpu((__force __le32)*bp);
+ 	}
+ 
+ 	return rval;
+@@ -6472,13 +6471,13 @@ int qla24xx_gpdb_wait(struct scsi_qla_host *vha, fc_port_t *fcport, u8 opt)
+ 
+ 	memset(&mc, 0, sizeof(mc));
+ 	mc.mb[0] = MBC_GET_PORT_DATABASE;
+-	mc.mb[1] = cpu_to_le16(fcport->loop_id);
++	mc.mb[1] = fcport->loop_id;
+ 	mc.mb[2] = MSW(pd_dma);
+ 	mc.mb[3] = LSW(pd_dma);
+ 	mc.mb[6] = MSW(MSD(pd_dma));
+ 	mc.mb[7] = LSW(MSD(pd_dma));
+-	mc.mb[9] = cpu_to_le16(vha->vp_idx);
+-	mc.mb[10] = cpu_to_le16((uint16_t)opt);
++	mc.mb[9] = vha->vp_idx;
++	mc.mb[10] = opt;
+ 
+ 	rval = qla24xx_send_mb_cmd(vha, &mc);
+ 	if (rval != QLA_SUCCESS) {
+@@ -6589,7 +6588,7 @@ int qla24xx_gidlist_wait(struct scsi_qla_host *vha,
+ 	mc.mb[6] = MSW(MSD(id_list_dma));
+ 	mc.mb[7] = LSW(MSD(id_list_dma));
+ 	mc.mb[8] = 0;
+-	mc.mb[9] = cpu_to_le16(vha->vp_idx);
++	mc.mb[9] = vha->vp_idx;
+ 
+ 	rval = qla24xx_send_mb_cmd(vha, &mc);
+ 	if (rval != QLA_SUCCESS) {
+@@ -6615,8 +6614,8 @@ int qla27xx_set_zio_threshold(scsi_qla_host_t *vha, uint16_t value)
+ 
+ 	memset(mcp->mb, 0 , sizeof(mcp->mb));
+ 	mcp->mb[0] = MBC_GET_SET_ZIO_THRESHOLD;
+-	mcp->mb[1] = cpu_to_le16(1);
+-	mcp->mb[2] = cpu_to_le16(value);
++	mcp->mb[1] = 1;
++	mcp->mb[2] = value;
+ 	mcp->out_mb = MBX_2 | MBX_1 | MBX_0;
+ 	mcp->in_mb = MBX_2 | MBX_0;
+ 	mcp->tov = MBX_TOV_SECONDS;
+@@ -6641,7 +6640,7 @@ int qla27xx_get_zio_threshold(scsi_qla_host_t *vha, uint16_t *value)
+ 
+ 	memset(mcp->mb, 0, sizeof(mcp->mb));
+ 	mcp->mb[0] = MBC_GET_SET_ZIO_THRESHOLD;
+-	mcp->mb[1] = cpu_to_le16(0);
++	mcp->mb[1] = 0;
+ 	mcp->out_mb = MBX_1 | MBX_0;
+ 	mcp->in_mb = MBX_2 | MBX_0;
+ 	mcp->tov = MBX_TOV_SECONDS;
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index df99911b8bb9..8b02a2c0f0c2 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -3205,7 +3205,7 @@ qlafx00_tm_iocb(srb_t *sp, struct tsk_mgmt_entry_fx00 *ptm_iocb)
+ 	memset(&tm_iocb, 0, sizeof(struct tsk_mgmt_entry_fx00));
+ 	tm_iocb.entry_type = TSK_MGMT_IOCB_TYPE_FX00;
+ 	tm_iocb.entry_count = 1;
+-	tm_iocb.handle = cpu_to_le32(make_handle(req->id, sp->handle));
++	tm_iocb.handle = make_handle(req->id, sp->handle);
+ 	tm_iocb.reserved_0 = 0;
+ 	tm_iocb.tgt_id = cpu_to_le16(sp->fcport->tgt_id);
+ 	tm_iocb.control_flags = cpu_to_le32(fxio->u.tmf.flags);
+@@ -3231,9 +3231,8 @@ qlafx00_abort_iocb(srb_t *sp, struct abort_iocb_entry_fx00 *pabt_iocb)
+ 	memset(&abt_iocb, 0, sizeof(struct abort_iocb_entry_fx00));
+ 	abt_iocb.entry_type = ABORT_IOCB_TYPE_FX00;
+ 	abt_iocb.entry_count = 1;
+-	abt_iocb.handle = cpu_to_le32(make_handle(req->id, sp->handle));
+-	abt_iocb.abort_handle =
+-	    cpu_to_le32(make_handle(req->id, fxio->u.abt.cmd_hndl));
++	abt_iocb.handle = make_handle(req->id, sp->handle);
++	abt_iocb.abort_handle = make_handle(req->id, fxio->u.abt.cmd_hndl);
+ 	abt_iocb.tgt_id_sts = cpu_to_le16(sp->fcport->tgt_id);
+ 	abt_iocb.req_que_no = cpu_to_le16(req->id);
+ 
+@@ -3254,7 +3253,7 @@ qlafx00_fxdisc_iocb(srb_t *sp, struct fxdisc_entry_fx00 *pfxiocb)
+ 
+ 	memset(&fx_iocb, 0, sizeof(struct fxdisc_entry_fx00));
+ 	fx_iocb.entry_type = FX00_IOCB_TYPE;
+-	fx_iocb.handle = cpu_to_le32(sp->handle);
++	fx_iocb.handle = sp->handle;
+ 	fx_iocb.entry_count = entry_cnt;
+ 
+ 	if (sp->type == SRB_FXIOCB_DCMD) {
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 84e2a980dea0..84732125b559 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -138,7 +138,7 @@ static void qla_nvme_release_fcp_cmd_kref(struct kref *kref)
+ 	priv->sp = NULL;
+ 	sp->priv = NULL;
+ 	if (priv->comp_status == QLA_SUCCESS) {
+-		fd->rcv_rsplen = nvme->u.nvme.rsp_pyld_len;
++		fd->rcv_rsplen = le16_to_cpu(nvme->u.nvme.rsp_pyld_len);
+ 	} else {
+ 		fd->rcv_rsplen = 0;
+ 		fd->transferred_length = 0;
+@@ -426,11 +426,11 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
+ 
+ 	/* No data transfer how do we check buffer len == 0?? */
+ 	if (fd->io_dir == NVMEFC_FCP_READ) {
+-		cmd_pkt->control_flags = CF_READ_DATA;
++		cmd_pkt->control_flags = cpu_to_le16(CF_READ_DATA);
+ 		vha->qla_stats.input_bytes += fd->payload_length;
+ 		vha->qla_stats.input_requests++;
+ 	} else if (fd->io_dir == NVMEFC_FCP_WRITE) {
+-		cmd_pkt->control_flags = CF_WRITE_DATA;
++		cmd_pkt->control_flags = cpu_to_le16(CF_WRITE_DATA);
+ 		if ((vha->flags.nvme_first_burst) &&
+ 		    (sp->fcport->nvme_prli_service_param &
+ 			NVME_PRLI_SP_FIRST_BURST)) {
+@@ -438,7 +438,7 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
+ 			    sp->fcport->nvme_first_burst_size) ||
+ 				(sp->fcport->nvme_first_burst_size == 0))
+ 				cmd_pkt->control_flags |=
+-				    CF_NVME_FIRST_BURST_ENABLE;
++					cpu_to_le16(CF_NVME_FIRST_BURST_ENABLE);
+ 		}
+ 		vha->qla_stats.output_bytes += fd->payload_length;
+ 		vha->qla_stats.output_requests++;
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 185c5f34d4c1..b295a5308646 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1561,14 +1561,14 @@ qla82xx_get_table_desc(const u8 *unirom, int section)
+ 	uint32_t i;
+ 	struct qla82xx_uri_table_desc *directory =
+ 		(struct qla82xx_uri_table_desc *)&unirom[0];
+-	__le32 offset;
+-	__le32 tab_type;
+-	__le32 entries = cpu_to_le32(directory->num_entries);
++	uint32_t offset;
++	uint32_t tab_type;
++	uint32_t entries = le32_to_cpu(directory->num_entries);
+ 
+ 	for (i = 0; i < entries; i++) {
+-		offset = cpu_to_le32(directory->findex) +
+-		    (i * cpu_to_le32(directory->entry_size));
+-		tab_type = cpu_to_le32(*((u32 *)&unirom[offset] + 8));
++		offset = le32_to_cpu(directory->findex) +
++		    (i * le32_to_cpu(directory->entry_size));
++		tab_type = get_unaligned_le32((u32 *)&unirom[offset] + 8);
+ 
+ 		if (tab_type == section)
+ 			return (struct qla82xx_uri_table_desc *)&unirom[offset];
+@@ -1582,16 +1582,17 @@ qla82xx_get_data_desc(struct qla_hw_data *ha,
+ 	u32 section, u32 idx_offset)
+ {
+ 	const u8 *unirom = ha->hablob->fw->data;
+-	int idx = cpu_to_le32(*((int *)&unirom[ha->file_prd_off] + idx_offset));
++	int idx = get_unaligned_le32((u32 *)&unirom[ha->file_prd_off] +
++				     idx_offset);
+ 	struct qla82xx_uri_table_desc *tab_desc = NULL;
+-	__le32 offset;
++	uint32_t offset;
+ 
+ 	tab_desc = qla82xx_get_table_desc(unirom, section);
+ 	if (!tab_desc)
+ 		return NULL;
+ 
+-	offset = cpu_to_le32(tab_desc->findex) +
+-	    (cpu_to_le32(tab_desc->entry_size) * idx);
++	offset = le32_to_cpu(tab_desc->findex) +
++	    (le32_to_cpu(tab_desc->entry_size) * idx);
+ 
+ 	return (struct qla82xx_uri_data_desc *)&unirom[offset];
+ }
+@@ -1606,7 +1607,7 @@ qla82xx_get_bootld_offset(struct qla_hw_data *ha)
+ 		uri_desc = qla82xx_get_data_desc(ha,
+ 		    QLA82XX_URI_DIR_SECT_BOOTLD, QLA82XX_URI_BOOTLD_IDX_OFF);
+ 		if (uri_desc)
+-			offset = cpu_to_le32(uri_desc->findex);
++			offset = le32_to_cpu(uri_desc->findex);
+ 	}
+ 
+ 	return (u8 *)&ha->hablob->fw->data[offset];
+@@ -1620,7 +1621,7 @@ static u32 qla82xx_get_fw_size(struct qla_hw_data *ha)
+ 		uri_desc =  qla82xx_get_data_desc(ha, QLA82XX_URI_DIR_SECT_FW,
+ 		    QLA82XX_URI_FIRMWARE_IDX_OFF);
+ 		if (uri_desc)
+-			return cpu_to_le32(uri_desc->size);
++			return le32_to_cpu(uri_desc->size);
+ 	}
+ 
+ 	return get_unaligned_le32(&ha->hablob->fw->data[FW_SIZE_OFFSET]);
+@@ -1636,7 +1637,7 @@ qla82xx_get_fw_offs(struct qla_hw_data *ha)
+ 		uri_desc = qla82xx_get_data_desc(ha, QLA82XX_URI_DIR_SECT_FW,
+ 			QLA82XX_URI_FIRMWARE_IDX_OFF);
+ 		if (uri_desc)
+-			offset = cpu_to_le32(uri_desc->findex);
++			offset = le32_to_cpu(uri_desc->findex);
+ 	}
+ 
+ 	return (u8 *)&ha->hablob->fw->data[offset];
+@@ -1847,8 +1848,8 @@ qla82xx_set_product_offset(struct qla_hw_data *ha)
+ 	struct qla82xx_uri_table_desc *ptab_desc = NULL;
+ 	const uint8_t *unirom = ha->hablob->fw->data;
+ 	uint32_t i;
+-	__le32 entries;
+-	__le32 flags, file_chiprev, offset;
++	uint32_t entries;
++	uint32_t flags, file_chiprev, offset;
+ 	uint8_t chiprev = ha->chip_revision;
+ 	/* Hardcoding mn_present flag for P3P */
+ 	int mn_present = 0;
+@@ -1859,14 +1860,14 @@ qla82xx_set_product_offset(struct qla_hw_data *ha)
+ 	if (!ptab_desc)
+ 		return -1;
+ 
+-	entries = cpu_to_le32(ptab_desc->num_entries);
++	entries = le32_to_cpu(ptab_desc->num_entries);
+ 
+ 	for (i = 0; i < entries; i++) {
+-		offset = cpu_to_le32(ptab_desc->findex) +
+-			(i * cpu_to_le32(ptab_desc->entry_size));
+-		flags = cpu_to_le32(*((int *)&unirom[offset] +
++		offset = le32_to_cpu(ptab_desc->findex) +
++			(i * le32_to_cpu(ptab_desc->entry_size));
++		flags = le32_to_cpu(*((__le32 *)&unirom[offset] +
+ 			QLA82XX_URI_FLAGS_OFF));
+-		file_chiprev = cpu_to_le32(*((int *)&unirom[offset] +
++		file_chiprev = le32_to_cpu(*((__le32 *)&unirom[offset] +
+ 			QLA82XX_URI_CHIP_REV_OFF));
+ 
+ 		flagbit = mn_present ? 1 : 2;
+@@ -2549,8 +2550,8 @@ qla82xx_start_firmware(scsi_qla_host_t *vha)
+ 	return qla82xx_check_rcvpeg_state(ha);
+ }
+ 
+-static uint32_t *
+-qla82xx_read_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
++static __le32 *
++qla82xx_read_flash_data(scsi_qla_host_t *vha, __le32 *dwptr, uint32_t faddr,
+ 	uint32_t length)
+ {
+ 	uint32_t i;
+@@ -2675,13 +2676,13 @@ qla82xx_read_optrom_data(struct scsi_qla_host *vha, void *buf,
+ 	uint32_t offset, uint32_t length)
+ {
+ 	scsi_block_requests(vha->host);
+-	qla82xx_read_flash_data(vha, (uint32_t *)buf, offset, length);
++	qla82xx_read_flash_data(vha, buf, offset, length);
+ 	scsi_unblock_requests(vha->host);
+ 	return buf;
+ }
+ 
+ static int
+-qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
++qla82xx_write_flash_data(struct scsi_qla_host *vha, __le32 *dwptr,
+ 	uint32_t faddr, uint32_t dwords)
+ {
+ 	int ret;
+@@ -2758,7 +2759,7 @@ qla82xx_write_flash_data(struct scsi_qla_host *vha, uint32_t *dwptr,
+ 		}
+ 
+ 		ret = qla82xx_write_flash_dword(ha, faddr,
+-		    cpu_to_le32(*dwptr));
++						le32_to_cpu(*dwptr));
+ 		if (ret) {
+ 			ql_dbg(ql_dbg_p3p, vha, 0xb020,
+ 			    "Unable to program flash address=%x data=%x.\n",
+@@ -3724,7 +3725,7 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
+ /* Minidump related functions */
+ static int
+ qla82xx_minidump_process_control(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla82xx_md_entry_crb *crb_entry;
+@@ -3841,12 +3842,12 @@ qla82xx_minidump_process_control(scsi_qla_host_t *vha,
+ 
+ static void
+ qla82xx_minidump_process_rdocm(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t r_addr, r_stride, loop_cnt, i, r_value;
+ 	struct qla82xx_md_entry_rdocm *ocm_hdr;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	ocm_hdr = (struct qla82xx_md_entry_rdocm *)entry_hdr;
+ 	r_addr = ocm_hdr->read_addr;
+@@ -3863,12 +3864,12 @@ qla82xx_minidump_process_rdocm(scsi_qla_host_t *vha,
+ 
+ static void
+ qla82xx_minidump_process_rdmux(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t r_addr, s_stride, s_addr, s_value, loop_cnt, i, r_value;
+ 	struct qla82xx_md_entry_mux *mux_hdr;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	mux_hdr = (struct qla82xx_md_entry_mux *)entry_hdr;
+ 	r_addr = mux_hdr->read_addr;
+@@ -3889,12 +3890,12 @@ qla82xx_minidump_process_rdmux(scsi_qla_host_t *vha,
+ 
+ static void
+ qla82xx_minidump_process_rdcrb(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t r_addr, r_stride, loop_cnt, i, r_value;
+ 	struct qla82xx_md_entry_crb *crb_hdr;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	crb_hdr = (struct qla82xx_md_entry_crb *)entry_hdr;
+ 	r_addr = crb_hdr->addr;
+@@ -3912,7 +3913,7 @@ qla82xx_minidump_process_rdcrb(scsi_qla_host_t *vha,
+ 
+ static int
+ qla82xx_minidump_process_l2tag(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t addr, r_addr, c_addr, t_r_addr;
+@@ -3921,7 +3922,7 @@ qla82xx_minidump_process_l2tag(scsi_qla_host_t *vha,
+ 	uint32_t c_value_w, c_value_r;
+ 	struct qla82xx_md_entry_cache *cache_hdr;
+ 	int rval = QLA_FUNCTION_FAILED;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	cache_hdr = (struct qla82xx_md_entry_cache *)entry_hdr;
+ 	loop_count = cache_hdr->op_count;
+@@ -3971,14 +3972,14 @@ qla82xx_minidump_process_l2tag(scsi_qla_host_t *vha,
+ 
+ static void
+ qla82xx_minidump_process_l1cache(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t addr, r_addr, c_addr, t_r_addr;
+ 	uint32_t i, k, loop_count, t_value, r_cnt, r_value;
+ 	uint32_t c_value_w;
+ 	struct qla82xx_md_entry_cache *cache_hdr;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	cache_hdr = (struct qla82xx_md_entry_cache *)entry_hdr;
+ 	loop_count = cache_hdr->op_count;
+@@ -4006,14 +4007,14 @@ qla82xx_minidump_process_l1cache(scsi_qla_host_t *vha,
+ 
+ static void
+ qla82xx_minidump_process_queue(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t s_addr, r_addr;
+ 	uint32_t r_stride, r_value, r_cnt, qid = 0;
+ 	uint32_t i, k, loop_cnt;
+ 	struct qla82xx_md_entry_queue *q_hdr;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	q_hdr = (struct qla82xx_md_entry_queue *)entry_hdr;
+ 	s_addr = q_hdr->select_addr;
+@@ -4036,13 +4037,13 @@ qla82xx_minidump_process_queue(scsi_qla_host_t *vha,
+ 
+ static void
+ qla82xx_minidump_process_rdrom(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t r_addr, r_value;
+ 	uint32_t i, loop_cnt;
+ 	struct qla82xx_md_entry_rdrom *rom_hdr;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	rom_hdr = (struct qla82xx_md_entry_rdrom *)entry_hdr;
+ 	r_addr = rom_hdr->read_addr;
+@@ -4062,7 +4063,7 @@ qla82xx_minidump_process_rdrom(scsi_qla_host_t *vha,
+ 
+ static int
+ qla82xx_minidump_process_rdmem(scsi_qla_host_t *vha,
+-	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++	qla82xx_md_entry_hdr_t *entry_hdr, __le32 **d_ptr)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint32_t r_addr, r_value, r_data;
+@@ -4070,7 +4071,7 @@ qla82xx_minidump_process_rdmem(scsi_qla_host_t *vha,
+ 	struct qla82xx_md_entry_rdmem *m_hdr;
+ 	unsigned long flags;
+ 	int rval = QLA_FUNCTION_FAILED;
+-	uint32_t *data_ptr = *d_ptr;
++	__le32 *data_ptr = *d_ptr;
+ 
+ 	m_hdr = (struct qla82xx_md_entry_rdmem *)entry_hdr;
+ 	r_addr = m_hdr->read_addr;
+@@ -4163,12 +4164,12 @@ qla82xx_md_collect(scsi_qla_host_t *vha)
+ 	int no_entry_hdr = 0;
+ 	qla82xx_md_entry_hdr_t *entry_hdr;
+ 	struct qla82xx_md_template_hdr *tmplt_hdr;
+-	uint32_t *data_ptr;
++	__le32 *data_ptr;
+ 	uint32_t total_data_size = 0, f_capture_mask, data_collected = 0;
+ 	int i = 0, rval = QLA_FUNCTION_FAILED;
+ 
+ 	tmplt_hdr = (struct qla82xx_md_template_hdr *)ha->md_tmplt_hdr;
+-	data_ptr = (uint32_t *)ha->md_dump;
++	data_ptr = ha->md_dump;
+ 
+ 	if (ha->fw_dumped) {
+ 		ql_log(ql_log_warn, vha, 0xb037,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3e65b8e9ed47..29654a6fef5b 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -5974,7 +5974,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 	rsp_els->entry_status = 0;
+ 	rsp_els->handle = 0;
+ 	rsp_els->nport_handle = purex->nport_handle;
+-	rsp_els->tx_dsd_count = 1;
++	rsp_els->tx_dsd_count = cpu_to_le16(1);
+ 	rsp_els->vp_index = purex->vp_idx;
+ 	rsp_els->sof_type = EST_SOFI3;
+ 	rsp_els->rx_xchg_address = purex->rx_xchg_addr;
+@@ -5985,7 +5985,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 	rsp_els->d_id[1] = purex->s_id[1];
+ 	rsp_els->d_id[2] = purex->s_id[2];
+ 
+-	rsp_els->control_flags = EPD_ELS_ACC;
++	rsp_els->control_flags = cpu_to_le16(EPD_ELS_ACC);
+ 	rsp_els->rx_byte_count = 0;
+ 	rsp_els->tx_byte_count = cpu_to_le32(rsp_payload_length);
+ 
+@@ -5997,8 +5997,8 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 
+ 	/* Prepare Response Payload */
+ 	rsp_payload->hdr.cmd = cpu_to_be32(0x2 << 24); /* LS_ACC */
+-	rsp_payload->hdr.len = cpu_to_be32(
+-	    rsp_els->tx_byte_count - sizeof(rsp_payload->hdr));
++	rsp_payload->hdr.len = cpu_to_be32(le32_to_cpu(rsp_els->tx_byte_count) -
++					   sizeof(rsp_payload->hdr));
+ 
+ 	/* Link service Request Info Descriptor */
+ 	rsp_payload->ls_req_info_desc.desc_tag = cpu_to_be32(0x1);
+@@ -6048,7 +6048,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 		memset(sfp, 0, SFP_RTDI_LEN);
+ 		rval = qla2x00_read_sfp(vha, sfp_dma, sfp, 0xa2, 0x60, 10, 0);
+ 		if (!rval) {
+-			uint16_t *trx = (void *)sfp; /* already be16 */
++			__be16 *trx = (__force __be16 *)sfp; /* already be16 */
+ 			rsp_payload->sfp_diag_desc.temperature = trx[0];
+ 			rsp_payload->sfp_diag_desc.vcc = trx[1];
+ 			rsp_payload->sfp_diag_desc.tx_bias = trx[2];
+@@ -6075,17 +6075,17 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 		rval = qla24xx_get_isp_stats(vha, stat, stat_dma, 0);
+ 		if (!rval) {
+ 			rsp_payload->ls_err_desc.link_fail_cnt =
+-			    cpu_to_be32(stat->link_fail_cnt);
++			    cpu_to_be32(le32_to_cpu(stat->link_fail_cnt));
+ 			rsp_payload->ls_err_desc.loss_sync_cnt =
+-			    cpu_to_be32(stat->loss_sync_cnt);
++			    cpu_to_be32(le32_to_cpu(stat->loss_sync_cnt));
+ 			rsp_payload->ls_err_desc.loss_sig_cnt =
+-			    cpu_to_be32(stat->loss_sig_cnt);
++			    cpu_to_be32(le32_to_cpu(stat->loss_sig_cnt));
+ 			rsp_payload->ls_err_desc.prim_seq_err_cnt =
+-			    cpu_to_be32(stat->prim_seq_err_cnt);
++			    cpu_to_be32(le32_to_cpu(stat->prim_seq_err_cnt));
+ 			rsp_payload->ls_err_desc.inval_xmit_word_cnt =
+-			    cpu_to_be32(stat->inval_xmit_word_cnt);
++			    cpu_to_be32(le32_to_cpu(stat->inval_xmit_word_cnt));
+ 			rsp_payload->ls_err_desc.inval_crc_cnt =
+-			    cpu_to_be32(stat->inval_crc_cnt);
++			    cpu_to_be32(le32_to_cpu(stat->inval_crc_cnt));
+ 			rsp_payload->ls_err_desc.pn_port_phy_type |= BIT_6;
+ 		}
+ 	}
+@@ -6157,7 +6157,7 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha, void *pkt)
+ 		memset(sfp, 0, SFP_RTDI_LEN);
+ 		rval = qla2x00_read_sfp(vha, sfp_dma, sfp, 0xa2, 0, 64, 0);
+ 		if (!rval) {
+-			uint16_t *trx = (void *)sfp; /* already be16 */
++			__be16 *trx = (__force __be16 *)sfp; /* already be16 */
+ 
+ 			/* Optical Element Descriptor, Temperature */
+ 			rsp_payload->optical_elmt_desc[0].high_alarm = trx[0];
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index 3da79ee1d88e..d324b24ac431 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -183,7 +183,7 @@ qla2x00_nv_deselect(struct qla_hw_data *ha)
+  * @data: word to program
+  */
+ static void
+-qla2x00_write_nvram_word(struct qla_hw_data *ha, uint32_t addr, uint16_t data)
++qla2x00_write_nvram_word(struct qla_hw_data *ha, uint32_t addr, __le16 data)
+ {
+ 	int count;
+ 	uint16_t word;
+@@ -202,7 +202,7 @@ qla2x00_write_nvram_word(struct qla_hw_data *ha, uint32_t addr, uint16_t data)
+ 
+ 	/* Write data */
+ 	nv_cmd = (addr << 16) | NV_WRITE_OP;
+-	nv_cmd |= data;
++	nv_cmd |= (__force u16)data;
+ 	nv_cmd <<= 5;
+ 	for (count = 0; count < 27; count++) {
+ 		if (nv_cmd & BIT_31)
+@@ -241,7 +241,7 @@ qla2x00_write_nvram_word(struct qla_hw_data *ha, uint32_t addr, uint16_t data)
+ 
+ static int
+ qla2x00_write_nvram_word_tmo(struct qla_hw_data *ha, uint32_t addr,
+-	uint16_t data, uint32_t tmo)
++			     __le16 data, uint32_t tmo)
+ {
+ 	int ret, count;
+ 	uint16_t word;
+@@ -261,7 +261,7 @@ qla2x00_write_nvram_word_tmo(struct qla_hw_data *ha, uint32_t addr,
+ 
+ 	/* Write data */
+ 	nv_cmd = (addr << 16) | NV_WRITE_OP;
+-	nv_cmd |= data;
++	nv_cmd |= (__force u16)data;
+ 	nv_cmd <<= 5;
+ 	for (count = 0; count < 27; count++) {
+ 		if (nv_cmd & BIT_31)
+@@ -308,7 +308,7 @@ qla2x00_clear_nvram_protection(struct qla_hw_data *ha)
+ 	int ret, stat;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+ 	uint32_t word, wait_cnt;
+-	uint16_t wprot, wprot_old;
++	__le16 wprot, wprot_old;
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 
+ 	/* Clear NVRAM write protection. */
+@@ -318,7 +318,7 @@ qla2x00_clear_nvram_protection(struct qla_hw_data *ha)
+ 	stat = qla2x00_write_nvram_word_tmo(ha, ha->nvram_base,
+ 					    cpu_to_le16(0x1234), 100000);
+ 	wprot = cpu_to_le16(qla2x00_get_nvram_word(ha, ha->nvram_base));
+-	if (stat != QLA_SUCCESS || wprot != 0x1234) {
++	if (stat != QLA_SUCCESS || wprot != cpu_to_le16(0x1234)) {
+ 		/* Write enable. */
+ 		qla2x00_nv_write(ha, NVR_DATA_OUT);
+ 		qla2x00_nv_write(ha, 0);
+@@ -549,7 +549,8 @@ qla2xxx_find_flt_start(scsi_qla_host_t *vha, uint32_t *start)
+ {
+ 	const char *loc, *locations[] = { "DEF", "PCI" };
+ 	uint32_t pcihdr, pcids;
+-	uint16_t cnt, chksum, *wptr;
++	uint16_t cnt, chksum;
++	__le16 *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 	struct qla_flt_location *fltl = (void *)req->ring;
+@@ -610,7 +611,7 @@ qla2xxx_find_flt_start(scsi_qla_host_t *vha, uint32_t *start)
+ 	if (memcmp(fltl->sig, "QFLT", 4))
+ 		goto end;
+ 
+-	wptr = (void *)req->ring;
++	wptr = (__force __le16 *)req->ring;
+ 	cnt = sizeof(*fltl) / sizeof(*wptr);
+ 	for (chksum = 0; cnt--; wptr++)
+ 		chksum += le16_to_cpu(*wptr);
+@@ -671,7 +672,8 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint32_t flt_addr)
+ 	uint32_t def = IS_QLA81XX(ha) ? 2 : IS_QLA25XX(ha) ? 1 : 0;
+ 	struct qla_flt_header *flt = ha->flt;
+ 	struct qla_flt_region *region = &flt->region[0];
+-	uint16_t *wptr, cnt, chksum;
++	__le16 *wptr;
++	uint16_t cnt, chksum;
+ 	uint32_t start;
+ 
+ 	/* Assign FCP prio region since older adapters may not have FLT, or
+@@ -681,8 +683,8 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint32_t flt_addr)
+ 	    fcp_prio_cfg0[def] : fcp_prio_cfg1[def];
+ 
+ 	ha->flt_region_flt = flt_addr;
+-	wptr = (uint16_t *)ha->flt;
+-	ha->isp_ops->read_optrom(vha, (void *)flt, flt_addr << 2,
++	wptr = (__force __le16 *)ha->flt;
++	ha->isp_ops->read_optrom(vha, flt, flt_addr << 2,
+ 	    (sizeof(struct qla_flt_header) + FLT_REGIONS_SIZE));
+ 
+ 	if (le16_to_cpu(*wptr) == 0xffff)
+@@ -949,7 +951,7 @@ qla2xxx_get_fdt_info(scsi_qla_host_t *vha)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 	uint16_t cnt, chksum;
+-	uint16_t *wptr = (void *)req->ring;
++	__le16 *wptr = (__force __le16 *)req->ring;
+ 	struct qla_fdt_layout *fdt = (struct qla_fdt_layout *)req->ring;
+ 	uint8_t	man_id, flash_id;
+ 	uint16_t mid = 0, fid = 0;
+@@ -1042,14 +1044,14 @@ static void
+ qla2xxx_get_idc_param(scsi_qla_host_t *vha)
+ {
+ #define QLA82XX_IDC_PARAM_ADDR       0x003e885c
+-	uint32_t *wptr;
++	__le32 *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+ 
+ 	if (!(IS_P3P_TYPE(ha)))
+ 		return;
+ 
+-	wptr = (uint32_t *)req->ring;
++	wptr = (__force __le32 *)req->ring;
+ 	ha->isp_ops->read_optrom(vha, req->ring, QLA82XX_IDC_PARAM_ADDR, 8);
+ 
+ 	if (*wptr == cpu_to_le32(0xffffffff)) {
+@@ -1095,7 +1097,7 @@ qla2xxx_flash_npiv_conf(scsi_qla_host_t *vha)
+ {
+ #define NPIV_CONFIG_SIZE	(16*1024)
+ 	void *data;
+-	uint16_t *wptr;
++	__le16 *wptr;
+ 	uint16_t cnt, chksum;
+ 	int i;
+ 	struct qla_npiv_header hdr;
+@@ -1265,7 +1267,7 @@ qla24xx_erase_sector(scsi_qla_host_t *vha, uint32_t fdata)
+ }
+ 
+ static int
+-qla24xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
++qla24xx_write_flash_data(scsi_qla_host_t *vha, __le32 *dwptr, uint32_t faddr,
+     uint32_t dwords)
+ {
+ 	int ret;
+@@ -1352,7 +1354,7 @@ qla24xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 
+ 		/* Slow write */
+ 		ret = qla24xx_write_flash_dword(ha,
+-		    flash_data_addr(ha, faddr), cpu_to_le32(*dwptr));
++		    flash_data_addr(ha, faddr), le32_to_cpu(*dwptr));
+ 		if (ret) {
+ 			ql_dbg(ql_dbg_user, vha, 0x7006,
+ 			    "Failed slopw write %x (%x)\n", faddr, *dwptr);
+@@ -1379,11 +1381,11 @@ qla2x00_read_nvram_data(scsi_qla_host_t *vha, void *buf, uint32_t naddr,
+     uint32_t bytes)
+ {
+ 	uint32_t i;
+-	uint16_t *wptr;
++	__le16 *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	/* Word reads to NVRAM via registers. */
+-	wptr = (uint16_t *)buf;
++	wptr = buf;
+ 	qla2x00_lock_nvram_access(ha);
+ 	for (i = 0; i < bytes >> 1; i++, naddr++)
+ 		wptr[i] = cpu_to_le16(qla2x00_get_nvram_word(ha,
+@@ -1456,7 +1458,7 @@ qla24xx_write_nvram_data(scsi_qla_host_t *vha, void *buf, uint32_t naddr,
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	uint32_t *dwptr = buf;
++	__le32 *dwptr = buf;
+ 	uint32_t i;
+ 	int ret;
+ 
+@@ -1478,7 +1480,7 @@ qla24xx_write_nvram_data(scsi_qla_host_t *vha, void *buf, uint32_t naddr,
+ 	naddr = nvram_data_addr(ha, naddr);
+ 	bytes >>= 2;
+ 	for (i = 0; i < bytes; i++, naddr++, dwptr++) {
+-		if (qla24xx_write_flash_dword(ha, naddr, cpu_to_le32(*dwptr))) {
++		if (qla24xx_write_flash_dword(ha, naddr, le32_to_cpu(*dwptr))) {
+ 			ql_dbg(ql_dbg_user, vha, 0x709a,
+ 			    "Unable to program nvram address=%x data=%x.\n",
+ 			    naddr, *dwptr);
+@@ -2610,7 +2612,7 @@ qla24xx_read_optrom_data(struct scsi_qla_host *vha, void *buf,
+ 	set_bit(MBX_UPDATE_FLASH_ACTIVE, &ha->mbx_cmd_flags);
+ 
+ 	/* Go with read. */
+-	qla24xx_read_flash_data(vha, (void *)buf, offset >> 2, length >> 2);
++	qla24xx_read_flash_data(vha, buf, offset >> 2, length >> 2);
+ 
+ 	/* Resume HBA. */
+ 	clear_bit(MBX_UPDATE_FLASH_ACTIVE, &ha->mbx_cmd_flags);
+@@ -2662,7 +2664,7 @@ qla28xx_get_flash_region(struct scsi_qla_host *vha, uint32_t start,
+ 
+ 	cnt = le16_to_cpu(flt->length) / sizeof(struct qla_flt_region);
+ 	for (; cnt; cnt--, flt_reg++) {
+-		if (flt_reg->start == start) {
++		if (le32_to_cpu(flt_reg->start) == start) {
+ 			memcpy((uint8_t *)region, flt_reg,
+ 			    sizeof(struct qla_flt_region));
+ 			rval = QLA_SUCCESS;
+@@ -2691,7 +2693,7 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 	struct qla_flt_region region;
+ 	bool reset_to_rom = false;
+ 	uint32_t risc_size, risc_attr = 0;
+-	uint32_t *fw_array = NULL;
++	__be32 *fw_array = NULL;
+ 
+ 	/* Retrieve region info - must be a start address passed in */
+ 	rval = qla28xx_get_flash_region(vha, offset, &region);
+@@ -2722,12 +2724,12 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 		ql_log(ql_log_warn + ql_dbg_verbose, vha, 0xffff,
+ 		    "Region %x is secure\n", region.code);
+ 
+-		switch (region.code) {
++		switch (le16_to_cpu(region.code)) {
+ 		case FLT_REG_FW:
+ 		case FLT_REG_FW_SEC_27XX:
+ 		case FLT_REG_MPI_PRI_28XX:
+ 		case FLT_REG_MPI_SEC_28XX:
+-			fw_array = dwptr;
++			fw_array = (__force __be32 *)dwptr;
+ 
+ 			/* 1st fw array */
+ 			risc_size = be32_to_cpu(fw_array[3]);
+@@ -2761,7 +2763,7 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 
+ 		case FLT_REG_PEP_PRI_28XX:
+ 		case FLT_REG_PEP_SEC_28XX:
+-			fw_array = dwptr;
++			fw_array = (__force __be32 *)dwptr;
+ 
+ 			/* 1st fw array */
+ 			risc_size = be32_to_cpu(fw_array[3]);
+@@ -2892,7 +2894,8 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 		if (region.attribute && buf_size_without_sfub) {
+ 			ql_log(ql_log_warn + ql_dbg_verbose, vha, 0xffff,
+ 			    "Sending Secure Flash MB Cmd\n");
+-			rval = qla28xx_secure_flash_update(vha, 0, region.code,
++			rval = qla28xx_secure_flash_update(vha, 0,
++				le16_to_cpu(region.code),
+ 				buf_size_without_sfub, sfub_dma,
+ 				sizeof(struct secure_flash_update_block) >> 2);
+ 			if (rval != QLA_SUCCESS) {
+@@ -2981,11 +2984,11 @@ qla24xx_write_optrom_data(struct scsi_qla_host *vha, void *buf,
+ 
+ 	/* Go with write. */
+ 	if (IS_QLA28XX(ha))
+-		rval = qla28xx_write_flash_data(vha, (uint32_t *)buf,
+-		    offset >> 2, length >> 2);
++		rval = qla28xx_write_flash_data(vha, buf, offset >> 2,
++						length >> 2);
+ 	else
+-		rval = qla24xx_write_flash_data(vha, (uint32_t *)buf,
+-		    offset >> 2, length >> 2);
++		rval = qla24xx_write_flash_data(vha, buf, offset >> 2,
++						length >> 2);
+ 
+ 	clear_bit(MBX_UPDATE_FLASH_ACTIVE, &ha->mbx_cmd_flags);
+ 	scsi_unblock_requests(vha->host);
+@@ -3513,7 +3516,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, void *mbuf)
+ 		ql_dump_buffer(ql_dbg_init, vha, 0x005f, dcode, 32);
+ 	} else {
+ 		for (i = 0; i < 4; i++)
+-			ha->fw_revision[i] = be32_to_cpu(dcode[4+i]);
++			ha->fw_revision[i] = swab32(dcode[4+i]);
+ 		ql_dbg(ql_dbg_init, vha, 0x0060,
+ 		    "Firmware revision (flash) %u.%u.%u (%x).\n",
+ 		    ha->fw_revision[0], ha->fw_revision[1],
+@@ -3528,7 +3531,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, void *mbuf)
+ 
+ 	memset(ha->gold_fw_version, 0, sizeof(ha->gold_fw_version));
+ 	faddr = ha->flt_region_gold_fw;
+-	qla24xx_read_flash_data(vha, (void *)dcode, ha->flt_region_gold_fw, 8);
++	qla24xx_read_flash_data(vha, dcode, ha->flt_region_gold_fw, 8);
+ 	if (qla24xx_risc_firmware_invalid(dcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0056,
+ 		    "Unrecognized golden fw at %#x.\n", faddr);
+@@ -3537,7 +3540,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, void *mbuf)
+ 	}
+ 
+ 	for (i = 0; i < 4; i++)
+-		ha->gold_fw_version[i] = be32_to_cpu(dcode[4+i]);
++		ha->gold_fw_version[i] = swab32(dcode[4+i]);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index c4c6a8e1b46d..23505c82439d 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -378,7 +378,7 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 		qlt_issue_marker(vha, ha_locked);
+ 
+ 		if ((entry->u.isp24.vp_index != 0xFF) &&
+-		    (entry->u.isp24.nport_handle != 0xFFFF)) {
++		    (entry->u.isp24.nport_handle != cpu_to_le16(0xFFFF))) {
+ 			host = qlt_find_host_by_vp_idx(vha,
+ 			    entry->u.isp24.vp_index);
+ 			if (unlikely(!host)) {
+@@ -1697,7 +1697,7 @@ static void qlt_send_notify_ack(struct qla_qpair *qpair,
+ 	nack->u.isp24.nport_handle = ntfy->u.isp24.nport_handle;
+ 	if (le16_to_cpu(ntfy->u.isp24.status) == IMM_NTFY_ELS) {
+ 		nack->u.isp24.flags = ntfy->u.isp24.flags &
+-			cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
++			cpu_to_le16(NOTIFY24XX_FLAGS_PUREX_IOCB);
+ 	}
+ 	nack->u.isp24.srr_rx_id = ntfy->u.isp24.srr_rx_id;
+ 	nack->u.isp24.status = ntfy->u.isp24.status;
+@@ -1725,7 +1725,8 @@ static int qlt_build_abts_resp_iocb(struct qla_tgt_mgmt_cmd *mcmd)
+ 	struct scsi_qla_host *vha = mcmd->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct abts_resp_to_24xx *resp;
+-	uint32_t f_ctl, h;
++	__le32 f_ctl;
++	uint32_t h;
+ 	uint8_t *p;
+ 	int rc;
+ 	struct abts_recv_from_24xx *abts = &mcmd->orig_iocb.abts;
+@@ -1782,7 +1783,7 @@ static int qlt_build_abts_resp_iocb(struct qla_tgt_mgmt_cmd *mcmd)
+ 		resp->fcp_hdr_le.r_ctl = R_CTL_BASIC_LINK_SERV | R_CTL_B_ACC;
+ 		resp->payload.ba_acct.seq_id_valid = SEQ_ID_INVALID;
+ 		resp->payload.ba_acct.low_seq_cnt = 0x0000;
+-		resp->payload.ba_acct.high_seq_cnt = 0xFFFF;
++		resp->payload.ba_acct.high_seq_cnt = cpu_to_le16(0xFFFF);
+ 		resp->payload.ba_acct.ox_id = abts->fcp_hdr_le.ox_id;
+ 		resp->payload.ba_acct.rx_id = abts->fcp_hdr_le.rx_id;
+ 	} else {
+@@ -1814,7 +1815,7 @@ static void qlt_24xx_send_abts_resp(struct qla_qpair *qpair,
+ 	struct scsi_qla_host *vha = qpair->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct abts_resp_to_24xx *resp;
+-	uint32_t f_ctl;
++	__le32 f_ctl;
+ 	uint8_t *p;
+ 
+ 	ql_dbg(ql_dbg_tgt, vha, 0xe006,
+@@ -1857,7 +1858,7 @@ static void qlt_24xx_send_abts_resp(struct qla_qpair *qpair,
+ 		resp->fcp_hdr_le.r_ctl = R_CTL_BASIC_LINK_SERV | R_CTL_B_ACC;
+ 		resp->payload.ba_acct.seq_id_valid = SEQ_ID_INVALID;
+ 		resp->payload.ba_acct.low_seq_cnt = 0x0000;
+-		resp->payload.ba_acct.high_seq_cnt = 0xFFFF;
++		resp->payload.ba_acct.high_seq_cnt = cpu_to_le16(0xFFFF);
+ 		resp->payload.ba_acct.ox_id = abts->fcp_hdr_le.ox_id;
+ 		resp->payload.ba_acct.rx_id = abts->fcp_hdr_le.rx_id;
+ 	} else {
+@@ -2223,7 +2224,7 @@ static void qlt_24xx_send_task_mgmt_ctio(struct qla_qpair *qpair,
+ 	ctio->entry_type = CTIO_TYPE7;
+ 	ctio->entry_count = 1;
+ 	ctio->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
+-	ctio->nport_handle = mcmd->sess->loop_id;
++	ctio->nport_handle = cpu_to_le16(mcmd->sess->loop_id);
+ 	ctio->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
+ 	ctio->vp_index = ha->vp_idx;
+ 	ctio->initiator_id = be_id_to_le(atio->u.isp24.fcp_hdr.s_id);
+@@ -2280,7 +2281,7 @@ void qlt_send_resp_ctio(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
+ 	ctio->entry_type = CTIO_TYPE7;
+ 	ctio->entry_count = 1;
+ 	ctio->handle = QLA_TGT_SKIP_HANDLE;
+-	ctio->nport_handle = cmd->sess->loop_id;
++	ctio->nport_handle = cpu_to_le16(cmd->sess->loop_id);
+ 	ctio->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
+ 	ctio->vp_index = vha->vp_idx;
+ 	ctio->initiator_id = be_id_to_le(atio->u.isp24.fcp_hdr.s_id);
+@@ -2840,10 +2841,12 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
+ 		    cpu_to_le16(SS_SENSE_LEN_VALID);
+ 		ctio->u.status1.sense_length =
+ 		    cpu_to_le16(prm->sense_buffer_len);
+-		for (i = 0; i < prm->sense_buffer_len/4; i++)
+-			((uint32_t *)ctio->u.status1.sense_data)[i] =
+-				cpu_to_be32(((uint32_t *)prm->sense_buffer)[i]);
++		for (i = 0; i < prm->sense_buffer_len/4; i++) {
++			uint32_t v;
+ 
++			v = get_unaligned_be32(&((uint32_t *)prm->sense_buffer)[i]);
++			put_unaligned_le32(v, &((uint32_t *)ctio->u.status1.sense_data)[i]);
++		}
+ 		qlt_print_dif_err(prm);
+ 
+ 	} else {
+@@ -3114,7 +3117,7 @@ qlt_build_ctio_crc2_pkt(struct qla_qpair *qpair, struct qla_tgt_prm *prm)
+ 	else if (cmd->dma_data_direction == DMA_FROM_DEVICE)
+ 		pkt->flags = cpu_to_le16(CTIO7_FLAGS_DATA_OUT);
+ 
+-	pkt->dseg_count = prm->tot_dsds;
++	pkt->dseg_count = cpu_to_le16(prm->tot_dsds);
+ 	/* Fibre channel byte count */
+ 	pkt->transfer_length = cpu_to_le32(transfer_length);
+ 
+@@ -3136,7 +3139,7 @@ qlt_build_ctio_crc2_pkt(struct qla_qpair *qpair, struct qla_tgt_prm *prm)
+ 	qla_tgt_set_dif_tags(cmd, crc_ctx_pkt, &fw_prot_opts);
+ 
+ 	put_unaligned_le64(crc_ctx_dma, &pkt->crc_context_address);
+-	pkt->crc_context_len = CRC_CONTEXT_LEN_FW;
++	pkt->crc_context_len = cpu_to_le16(CRC_CONTEXT_LEN_FW);
+ 
+ 	if (!bundling) {
+ 		cur_dsd = &crc_ctx_pkt->u.nobundling.data_dsd[0];
+@@ -3573,7 +3576,7 @@ static int __qlt_send_term_imm_notif(struct scsi_qla_host *vha,
+ 	nack->u.isp24.nport_handle = ntfy->u.isp24.nport_handle;
+ 	if (le16_to_cpu(ntfy->u.isp24.status) == IMM_NTFY_ELS) {
+ 		nack->u.isp24.flags = ntfy->u.isp24.flags &
+-			__constant_cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
++			cpu_to_le16(NOTIFY24XX_FLAGS_PUREX_IOCB);
+ 	}
+ 
+ 	/* terminate */
+@@ -3647,7 +3650,7 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
+ 
+ 	ctio24 = (struct ctio7_to_24xx *)pkt;
+ 	ctio24->entry_type = CTIO_TYPE7;
+-	ctio24->nport_handle = CTIO7_NHANDLE_UNRECOGNIZED;
++	ctio24->nport_handle = cpu_to_le16(CTIO7_NHANDLE_UNRECOGNIZED);
+ 	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
+ 	ctio24->vp_index = vha->vp_idx;
+ 	ctio24->initiator_id = be_id_to_le(atio->u.isp24.fcp_hdr.s_id);
+@@ -5302,7 +5305,7 @@ static int __qlt_send_busy(struct qla_qpair *qpair,
+ 
+ 	ctio24 = (struct ctio7_to_24xx *)pkt;
+ 	ctio24->entry_type = CTIO_TYPE7;
+-	ctio24->nport_handle = sess->loop_id;
++	ctio24->nport_handle = cpu_to_le16(sess->loop_id);
+ 	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
+ 	ctio24->vp_index = vha->vp_idx;
+ 	ctio24->initiator_id = be_id_to_le(atio->u.isp24.fcp_hdr.s_id);
+@@ -5315,13 +5318,14 @@ static int __qlt_send_busy(struct qla_qpair *qpair,
+ 	 * CTIO from fw w/o se_cmd doesn't provide enough info to retry it,
+ 	 * if the explicit conformation is used.
+ 	 */
+-	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
++	ctio24->u.status1.ox_id =
++		cpu_to_le16(be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id));
+ 	ctio24->u.status1.scsi_status = cpu_to_le16(status);
+ 
+-	ctio24->u.status1.residual = get_datalen_for_atio(atio);
++	ctio24->u.status1.residual = cpu_to_le32(get_datalen_for_atio(atio));
+ 
+ 	if (ctio24->u.status1.residual != 0)
+-		ctio24->u.status1.scsi_status |= SS_RESIDUAL_UNDER;
++		ctio24->u.status1.scsi_status |= cpu_to_le16(SS_RESIDUAL_UNDER);
+ 
+ 	/* Memory Barrier */
+ 	wmb();
+@@ -5713,8 +5717,8 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+ 	    entry->compl_status);
+ 
+ 	if (le16_to_cpu(entry->compl_status) != ABTS_RESP_COMPL_SUCCESS) {
+-		if ((entry->error_subcode1 == 0x1E) &&
+-		    (entry->error_subcode2 == 0)) {
++		if (le32_to_cpu(entry->error_subcode1) == 0x1E &&
++		    le32_to_cpu(entry->error_subcode2) == 0) {
+ 			if (qlt_chk_unresolv_exchg(vha, rsp->qpair, entry)) {
+ 				ha->tgt.tgt_ops->free_mcmd(mcmd);
+ 				return;
+@@ -5928,8 +5932,7 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03b,
+ 		    "qla_target(%d): Async LOOP_UP occurred "
+ 		    "(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx,
+-		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+-		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
++		    mailbox[0], mailbox[1], mailbox[2], mailbox[3]);
+ 		if (tgt->link_reinit_iocb_pending) {
+ 			qlt_send_notify_ack(ha->base_qpair,
+ 			    (void *)&tgt->link_reinit_iocb,
+@@ -5946,18 +5949,16 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03c,
+ 		    "qla_target(%d): Async event %#x occurred "
+ 		    "(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx, code,
+-		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+-		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
++		    mailbox[0], mailbox[1], mailbox[2], mailbox[3]);
+ 		break;
+ 
+ 	case MBA_REJECTED_FCP_CMD:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf017,
+ 		    "qla_target(%d): Async event LS_REJECT occurred (m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)",
+ 		    vha->vp_idx,
+-		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+-		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
++		    mailbox[0], mailbox[1], mailbox[2], mailbox[3]);
+ 
+-		if (le16_to_cpu(mailbox[3]) == 1) {
++		if (mailbox[3] == 1) {
+ 			/* exchange starvation. */
+ 			vha->hw->exch_starvation++;
+ 			if (vha->hw->exch_starvation > 5) {
+@@ -5981,10 +5982,9 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 		    "qla_target(%d): Port update async event %#x "
+ 		    "occurred: updating the ports database (m[0]=%x, m[1]=%x, "
+ 		    "m[2]=%x, m[3]=%x)", vha->vp_idx, code,
+-		    le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
+-		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
++		    mailbox[0], mailbox[1], mailbox[2], mailbox[3]);
+ 
+-		login_code = le16_to_cpu(mailbox[2]);
++		login_code = mailbox[2];
+ 		if (login_code == 0x4) {
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03e,
+ 			    "Async MB 2: Got PLOGI Complete\n");
+@@ -6729,7 +6729,7 @@ qlt_init_atio_q_entries(struct scsi_qla_host *vha)
+ 		return;
+ 
+ 	for (cnt = 0; cnt < ha->tgt.atio_q_length; cnt++) {
+-		pkt->u.raw.signature = ATIO_PROCESSED;
++		pkt->u.raw.signature = cpu_to_le32(ATIO_PROCESSED);
+ 		pkt++;
+ 	}
+ 
+@@ -6764,7 +6764,7 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha, uint8_t ha_locked)
+ 			    "corrupted fcp frame SID[%3phN] OXID[%04x] EXCG[%x] %64phN\n",
+ 			    &pkt->u.isp24.fcp_hdr.s_id,
+ 			    be16_to_cpu(pkt->u.isp24.fcp_hdr.ox_id),
+-			    le32_to_cpu(pkt->u.isp24.exchange_addr), pkt);
++			    pkt->u.isp24.exchange_addr, pkt);
+ 
+ 			adjust_corrupted_atio(pkt);
+ 			qlt_send_term_exchange(ha->base_qpair, NULL, pkt,
+@@ -6782,7 +6782,7 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha, uint8_t ha_locked)
+ 			} else
+ 				ha->tgt.atio_ring_ptr++;
+ 
+-			pkt->u.raw.signature = ATIO_PROCESSED;
++			pkt->u.raw.signature = cpu_to_le32(ATIO_PROCESSED);
+ 			pkt = (struct atio_from_isp *)ha->tgt.atio_ring_ptr;
+ 		}
+ 		wmb();
+@@ -6811,10 +6811,10 @@ qlt_24xx_config_rings(struct scsi_qla_host *vha)
+ 			if (IS_QLA2071(ha)) {
+ 				/* 4 ports Baker: Enable Interrupt Handshake */
+ 				icb->msix_atio = 0;
+-				icb->firmware_options_2 |= BIT_26;
++				icb->firmware_options_2 |= cpu_to_le32(BIT_26);
+ 			} else {
+ 				icb->msix_atio = cpu_to_le16(msix->entry);
+-				icb->firmware_options_2 &= ~BIT_26;
++				icb->firmware_options_2 &= cpu_to_le32(~BIT_26);
+ 			}
+ 			ql_dbg(ql_dbg_init, vha, 0xf072,
+ 			    "Registering ICB vector 0x%x for atio que.\n",
+@@ -6824,7 +6824,7 @@ qlt_24xx_config_rings(struct scsi_qla_host *vha)
+ 		/* INTx|MSI */
+ 		if (IS_QLA83XX(ha) || IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+ 			icb->msix_atio = 0;
+-			icb->firmware_options_2 |= BIT_26;
++			icb->firmware_options_2 |= cpu_to_le32(BIT_26);
+ 			ql_dbg(ql_dbg_init, vha, 0xf072,
+ 			    "%s: Use INTx for ATIOQ.\n", __func__);
+ 		}
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 6aeb1c3fb7a8..ce69e5febae3 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -895,9 +895,9 @@ qla27xx_firmware_info(struct scsi_qla_host *vha,
+ 	tmp->firmware_version[0] = vha->hw->fw_major_version;
+ 	tmp->firmware_version[1] = vha->hw->fw_minor_version;
+ 	tmp->firmware_version[2] = vha->hw->fw_subminor_version;
+-	tmp->firmware_version[3] = cpu_to_le32(
++	tmp->firmware_version[3] = (__force u32)cpu_to_le32(
+ 		vha->hw->fw_attributes_h << 16 | vha->hw->fw_attributes);
+-	tmp->firmware_version[4] = cpu_to_le32(
++	tmp->firmware_version[4] = (__force u32)cpu_to_le32(
+ 	  vha->hw->fw_attributes_ext[1] << 16 | vha->hw->fw_attributes_ext[0]);
+ }
  
