@@ -2,91 +2,121 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EFD1C3F2CD
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 14:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 837D4C3F2CD
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 16:22:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D76D2166E
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 14:39:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50F0B21556
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 16:22:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727175AbgCBOjm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 09:39:42 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:28256 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727113AbgCBOjm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2020 09:39:42 -0500
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 022EOWAm121755;
-        Mon, 2 Mar 2020 09:39:35 -0500
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2yfmq9vv6t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 02 Mar 2020 09:39:35 -0500
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 022EcW9S003989;
-        Mon, 2 Mar 2020 14:39:34 GMT
-Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
-        by ppma05wdc.us.ibm.com with ESMTP id 2yffk62vfm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 02 Mar 2020 14:39:34 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 022EdX4Z19661308
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 2 Mar 2020 14:39:33 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8B0737805F;
-        Mon,  2 Mar 2020 14:39:33 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AAB2C7805E;
-        Mon,  2 Mar 2020 14:39:32 +0000 (GMT)
-Received: from oc6034535106.ibm.com (unknown [9.160.4.131])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Mon,  2 Mar 2020 14:39:32 +0000 (GMT)
-From:   Brian King <brking@linux.vnet.ibm.com>
-To:     tyreld@linux.vnet.ibm.com
-Cc:     brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, sfr@canb.auug.org.au
-Subject: [PATCH] ibmvfc: Fix NULL return compiler warning
-Date:   Mon,  2 Mar 2020 08:39:21 -0600
-Message-Id: <1583159961-15903-1-git-send-email-brking@linux.vnet.ibm.com>
-X-Mailer: git-send-email 1.8.3.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-03-02_04:2020-03-02,2020-03-02 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 mlxscore=0
- spamscore=0 clxscore=1015 lowpriorityscore=0 suspectscore=1 bulkscore=0
- mlxlogscore=770 phishscore=0 adultscore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003020105
+        id S1727060AbgCBQWs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 11:22:48 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50274 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726831AbgCBQWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 11:22:47 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 5442AAECE;
+        Mon,  2 Mar 2020 16:22:45 +0000 (UTC)
+Date:   Mon, 2 Mar 2020 17:22:44 +0100
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 1/4] qla2xxx: Use raw_smp_processor_id() where appropriate
+Message-ID: <20200302162244.uo52axk2kxipur6m@beryllium.lan>
+References: <20200302033023.27718-1-bvanassche@acm.org>
+ <20200302033023.27718-2-bvanassche@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200302033023.27718-2-bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix up a compiler warning introduced via 54b04c99d02e
+Hi Bart,
 
-Fixes: 54b04c99d02e ("scsi: ibmvfc: Avoid loss of all paths during SVC node reboot")
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Sun, Mar 01, 2020 at 07:30:20PM -0800, Bart Van Assche wrote:
+> This patch fixes e.g. the following kernel complaint:
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 84dd8c5..7da9e06 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3641,7 +3641,7 @@ static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *tgt)
- 	struct ibmvfc_event *evt;
- 
- 	if (vhost->discovery_threads >= disc_threads)
--		return NULL;
-+		return;
- 
- 	vhost->discovery_threads++;
- 	evt = __ibmvfc_tgt_get_implicit_logout_evt(tgt,
--- 
-1.8.3.1
+[...]
 
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 5b2deaa730bf..582fc5dcc98c 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -8992,7 +8992,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos,
+>  		qpair->rsp->req = qpair->req;
+>  		qpair->rsp->qpair = qpair;
+>  		/* init qpair to this cpu. Will adjust at run time. */
+> -		qla_cpu_update(qpair, smp_processor_id());
+> +		qla_cpu_update(qpair, raw_smp_processor_id());
+
+When this is updated later anway, why not inializing with a invalid id
+from beginning? Because using raw_smp_processor_id() is just silencing
+the report without addressing the problem.
+
+>  		if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
+>  			if (ha->fw_attributes & BIT_4)
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> index 8d7a905f6247..a5aae276fbb2 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -3217,8 +3217,8 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+>  	if (!ha->flags.fw_started)
+>  		return;
+>  
+> -	if (rsp->qpair->cpuid != smp_processor_id())
+> -		qla_cpu_update(rsp->qpair, smp_processor_id());
+> +	if (rsp->qpair->cpuid != raw_smp_processor_id())
+> +		qla_cpu_update(rsp->qpair, raw_smp_processor_id());
+
+If I read it correctly, qla24xx_processor_response_queue() can be
+called from either IRQ context or from a threading context. So that
+means complaint that smp_processor_id() is used in preemptable context
+is correct. So again this is just silencing it.
+
+>  
+>  	while (rsp->ring_ptr->signature != RESPONSE_PROCESSED) {
+>  		pkt = (struct sts_entry_24xx *)rsp->ring_ptr;
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index 622e7337affc..c4c6a8e1b46d 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -4368,7 +4368,7 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
+>  		queue_work_on(cmd->se_cmd.cpuid, qla_tgt_wq, &cmd->work);
+>  	} else if (ha->msix_count) {
+>  		if (cmd->atio.u.isp24.fcp_cmnd.rddata)
+> -			queue_work_on(smp_processor_id(), qla_tgt_wq,
+> +			queue_work_on(raw_smp_processor_id(), qla_tgt_wq,
+
+As I understand the code this is the main reason why the code tries to
+figure out on which CPU it is running. The first part of the
+processing happens either in IRQ context or in the threading context
+in which qla24xx_process_response_queue() runs and now the second part
+of the processing happens in the work queue. And this code tries to
+stick the processing context on the same CPU to avoid cash trashing.
+
+At creation time of the qpair queues, the CPU on which they should be
+processed should be noted. And in this code path we just would look up
+on which queue we are and which CPU should be used.
+
+This would also avoid the qla_cpu_update() call in
+qla24xx_process_response_queue().
+
+So far the theory, I tried to figure out how to implement this scheme
+but I'm still strungling with the code base.
+
+Thanks,
+Daniel
