@@ -4,54 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0FFBC3F2D6
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2D6C3F2D8
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F8CA246B4
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBC3C2468E
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137117;
-	bh=whC7giiFv+Yk442YMgup2KDESn5/o/XkEA6JPZfKSOU=;
+	s=default; t=1583137137;
+	bh=38vWwY8WDeo4wWGBmnlve3hnkekL6KaGDbK0Cb1AvEo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=qTcsdV2vpIUykNwVOOvzAZ5d7Te1dR3kh6kPaBhfY8G7JiKlXh2vwI8rIhqK8Y1UW
-	 N4bHV9tfi+bPpdVkSwVbLCHs+TxaGAfAzuv5jYOr6sUTtSK01+PUhx4sLv5mvdI2El
-	 R4TNUDL50O+onrRd0+PC0zuKEhen/M9pl0vkkRM8=
+	b=AdF/P7VjC9rzzVRp6MGnxmFO8yML6RZxnqEY/ZFwtbfczqBX81rWdbLBymvndppbW
+	 66LgPDqvMoibLpqe7SKvKSfqbT5DO0ncahVtbOxXKC27BuEpIOLlw30hwwOn3Pbung
+	 jGklczPWR2CbIC2T3UdDWJPnt0i3fHITlpVxfyA8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727852AbgCBISg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:18:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57084 "EHLO mail.kernel.org"
+        id S1727519AbgCBISf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:18:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57094 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727142AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727201AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Mar 2020 03:16:21 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 312FE246CD;
+        by mail.kernel.org (Postfix) with ESMTPSA id 62B3E246E4;
         Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=whC7giiFv+Yk442YMgup2KDESn5/o/XkEA6JPZfKSOU=;
+        bh=38vWwY8WDeo4wWGBmnlve3hnkekL6KaGDbK0Cb1AvEo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wGk3J5HlEheZ32y/4VOv0ANHBoVnpC05frr3DIwvRXZyMmDIdC7yWr9SHgNk+J0ss
-         Ziq3Li+N9118FzjH3EvwYeM8aNw2l4EGJMhV8Q3E0xgJ8DY/1VOJYa63K+ZxehW3J2
-         BwCPBBxU4+Y8Pk9YLVyLA2FucY+fYzPPggD1BARY=
+        b=XhVdc3SnAxRviRnL4o/a7J5QsaARF1FI+uv+cGiwwWrBPYEn9RndBbhiglEB2hq4G
+         e1nSLvk/ewT9/C37jl6YKjgad+nNc9hGCnr+c8Oe5WtIZ6rLuaLdS8l6WjA1k60t91
+         +ubEDEPEwvNVqMMNaWFkIFXySLhLgevjmrblLC64=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003xQ-9b; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003xp-Di; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Khalid Aziz <khalid@gonehiking.org>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 11/42] docs: scsi: convert BusLogic.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:44 +0100
-Message-Id: <750629b6a5233c85c5391c44d126606b8aabefc8.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 16/42] docs: scsi: convert g_NCR5380.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:49 +0100
+Message-Id: <a66e9ea704be6a7aa81b9864ad66a32b75ab808d.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -64,335 +65,188 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../scsi/{BusLogic.txt => BusLogic.rst}       | 89 +++++++++++++------
+ .../scsi/{g_NCR5380.txt => g_NCR5380.rst}     | 89 ++++++++++++-------
  Documentation/scsi/index.rst                  |  1 +
- drivers/scsi/BusLogic.c                       |  2 +-
- drivers/scsi/Kconfig                          |  2 +-
- 4 files changed, 67 insertions(+), 27 deletions(-)
- rename Documentation/scsi/{BusLogic.txt => BusLogic.rst} (93%)
+ Documentation/scsi/scsi-parameters.txt        |  6 +-
+ MAINTAINERS                                   |  2 +-
+ drivers/scsi/g_NCR5380.c                      |  2 +-
+ 5 files changed, 63 insertions(+), 37 deletions(-)
+ rename Documentation/scsi/{g_NCR5380.txt => g_NCR5380.rst} (41%)
 
-diff --git a/Documentation/scsi/BusLogic.txt b/Documentation/scsi/BusLogic.rst
-similarity index 93%
-rename from Documentation/scsi/BusLogic.txt
-rename to Documentation/scsi/BusLogic.rst
-index 48e982cd6fe7..b60169812358 100644
---- a/Documentation/scsi/BusLogic.txt
-+++ b/Documentation/scsi/BusLogic.rst
-@@ -1,6 +1,11 @@
--	   BusLogic MultiMaster and FlashPoint SCSI Driver for Linux
+diff --git a/Documentation/scsi/g_NCR5380.txt b/Documentation/scsi/g_NCR5380.rst
+similarity index 41%
+rename from Documentation/scsi/g_NCR5380.txt
+rename to Documentation/scsi/g_NCR5380.rst
+index 37b1967a00a9..a282059fec43 100644
+--- a/Documentation/scsi/g_NCR5380.txt
++++ b/Documentation/scsi/g_NCR5380.rst
+@@ -1,7 +1,13 @@
+-README file for the Linux g_NCR5380 driver.
 +.. SPDX-License-Identifier: GPL-2.0
++.. include:: <isonum.txt>
+ 
+-(c) 1993 Drew Eckhard
+-NCR53c400 extensions (c) 1994,1995,1996 Kevin Lentin
++==========================================
++README file for the Linux g_NCR5380 driver
++==========================================
 +
-+=========================================================
-+BusLogic MultiMaster and FlashPoint SCSI Driver for Linux
-+=========================================================
- 
- 			 Version 2.0.15 for Linux 2.0
++Copyright |copy| 1993 Drew Eckhard
 +
- 			 Version 2.1.15 for Linux 2.1
++NCR53c400 extensions Copyright |copy| 1994,1995,1996 Kevin Lentin
  
- 			      PRODUCTION RELEASE
-@@ -8,13 +13,16 @@
- 				17 August 1998
- 
- 			       Leonard N. Zubkoff
+ This file documents the NCR53c400 extensions by Kevin Lentin and some
+ enhancements to the NCR5380 core.
+@@ -26,43 +32,62 @@ time. More info to come in the future.
+ This driver works as a module.
+ When included as a module, parameters can be passed on the insmod/modprobe
+ command line:
 +
- 			       Dandelion Digital
++  ============= ===============================================================
+   irq=xx[,...]	the interrupt(s)
+   base=xx[,...]	the port or base address(es) (for port or memory mapped, resp.)
+   card=xx[,...]	card type(s):
+-		0 = NCR5380,
+-		1 = NCR53C400,
+-		2 = NCR53C400A,
+-		3 = Domex Technology Corp 3181E (DTC3181E)
+-		4 = Hewlett Packard C2502
 +
- 			       lnz@dandelion.com
++		==  ======================================
++		0   NCR5380,
++		1   NCR53C400,
++		2   NCR53C400A,
++		3   Domex Technology Corp 3181E (DTC3181E)
++		4   Hewlett Packard C2502
++		==  ======================================
++  ============= ===============================================================
  
- 	 Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
- 
- 
--				 INTRODUCTION
-+Introduction
-+============
- 
- BusLogic, Inc. designed and manufactured a variety of high performance SCSI
- host adapters which share a common programming interface across a diverse
-@@ -86,9 +94,11 @@ Contact information for offices in Europe and Japan is available on the Web
- site.
- 
- 
--				DRIVER FEATURES
-+Driver Features
-+===============
- 
--o Configuration Reporting and Testing
-+Configuration Reporting and Testing
-+-----------------------------------
- 
-   During system initialization, the driver reports extensively on the host
-   adapter hardware configuration, including the synchronous transfer parameters
-@@ -130,7 +140,8 @@ o Configuration Reporting and Testing
-     The status of Wide Negotiation, Disconnect/Reconnect, and Tagged Queuing
-     are reported as "Enabled", Disabled", or a sequence of "Y" and "N" letters.
- 
--o Performance Features
-+Performance Features
-+--------------------
- 
-   BusLogic SCSI Host Adapters directly implement SCSI-2 Tagged Queuing, and so
-   support has been included in the driver to utilize tagged queuing with any
-@@ -150,7 +161,8 @@ o Performance Features
-   queue depth of 1 is selected.  Tagged queuing is also disabled for individual
-   target devices if disconnect/reconnect is disabled for that device.
- 
--o Robustness Features
-+Robustness Features
-+-------------------
- 
-   The driver implements extensive error recovery procedures.  When the higher
-   level parts of the SCSI subsystem request that a timed out command be reset,
-@@ -174,7 +186,8 @@ o Robustness Features
-   lock up or crash, and thereby allowing a clean shutdown and restart after the
-   offending component is removed.
- 
--o PCI Configuration Support
-+PCI Configuration Support
-+-------------------------
- 
-   On PCI systems running kernels compiled with PCI BIOS support enabled, this
-   driver will interrogate the PCI configuration space and use the I/O port
-@@ -184,19 +197,22 @@ o PCI Configuration Support
-   used to disable the ISA compatible I/O port entirely as it is not necessary.
-   The ISA compatible I/O port is disabled by default on the BT-948/958/958D.
- 
--o /proc File System Support
-+/proc File System Support
-+-------------------------
- 
-   Copies of the host adapter configuration information together with updated
-   data transfer and error recovery statistics are available through the
-   /proc/scsi/BusLogic/<N> interface.
- 
--o Shared Interrupts Support
-+Shared Interrupts Support
-+-------------------------
- 
-   On systems that support shared interrupts, any number of BusLogic Host
-   Adapters may share the same interrupt request channel.
- 
- 
--			    SUPPORTED HOST ADAPTERS
-+Supported Host Adapters
-+=======================
- 
- The following list comprises the supported BusLogic SCSI Host Adapters as of
- the date of this document.  It is recommended that anyone purchasing a BusLogic
-@@ -205,6 +221,7 @@ that it is or will be supported.
- 
- FlashPoint Series PCI Host Adapters:
- 
-+=======================	=============================================
- FlashPoint LT (BT-930)	Ultra SCSI-3
- FlashPoint LT (BT-930R)	Ultra SCSI-3 with RAIDPlus
- FlashPoint LT (BT-920)	Ultra SCSI-3 (BT-930 without BIOS)
-@@ -214,15 +231,19 @@ FlashPoint LW (BT-950)	Wide Ultra SCSI-3
- FlashPoint LW (BT-950R)	Wide Ultra SCSI-3 with RAIDPlus
- FlashPoint DW (BT-952)	Dual Channel Wide Ultra SCSI-3
- FlashPoint DW (BT-952R)	Dual Channel Wide Ultra SCSI-3 with RAIDPlus
-+=======================	=============================================
- 
- MultiMaster "W" Series Host Adapters:
- 
-+=======     ===		==============================
- BT-948	    PCI		Ultra SCSI-3
- BT-958	    PCI		Wide Ultra SCSI-3
- BT-958D	    PCI		Wide Differential Ultra SCSI-3
-+=======     ===		==============================
- 
- MultiMaster "C" Series Host Adapters:
- 
-+========    ====	==============================
- BT-946C	    PCI		Fast SCSI-2
- BT-956C	    PCI		Wide Fast SCSI-2
- BT-956CD    PCI		Wide Differential Fast SCSI-2
-@@ -232,9 +253,11 @@ BT-757C	    EISA	Wide Fast SCSI-2
- BT-757CD    EISA	Wide Differential Fast SCSI-2
- BT-545C	    ISA		Fast SCSI-2
- BT-540CF    ISA		Fast SCSI-2
-+========    ====	==============================
- 
- MultiMaster "S" Series Host Adapters:
- 
-+=======     ====	==============================
- BT-445S	    VLB		Fast SCSI-2
- BT-747S	    EISA	Fast SCSI-2
- BT-747D	    EISA	Differential Fast SCSI-2
-@@ -244,11 +267,14 @@ BT-545S	    ISA		Fast SCSI-2
- BT-542D	    ISA		Differential Fast SCSI-2
- BT-742A	    EISA	SCSI-2 (742A revision H)
- BT-542B	    ISA		SCSI-2 (542B revision H)
-+=======     ====	==============================
- 
- MultiMaster "A" Series Host Adapters:
- 
-+=======     ====	==============================
- BT-742A	    EISA	SCSI-2 (742A revisions A - G)
- BT-542B	    ISA		SCSI-2 (542B revisions A - G)
-+=======     ====	==============================
- 
- AMI FastDisk Host Adapters that are true BusLogic MultiMaster clones are also
- supported by this driver.
-@@ -260,9 +286,11 @@ list.  The retail kit includes the bare board and manual as well as cabling and
- driver media and documentation that are not provided with bare boards.
- 
- 
--			 FLASHPOINT INSTALLATION NOTES
-+FlashPoint Installation Notes
-+=============================
- 
--o RAIDPlus Support
-+RAIDPlus Support
-+----------------
- 
-   FlashPoint Host Adapters now include RAIDPlus, Mylex's bootable software
-   RAID.  RAIDPlus is not supported on Linux, and there are no plans to support
-@@ -273,7 +301,8 @@ o RAIDPlus Support
-   than RAIDPlus, so there is little impetus to include RAIDPlus support in the
-   BusLogic driver.
- 
--o Enabling UltraSCSI Transfers
-+Enabling UltraSCSI Transfers
-+----------------------------
- 
-   FlashPoint Host Adapters ship with their configuration set to "Factory
-   Default" settings that are conservative and do not allow for UltraSCSI speed
-@@ -287,12 +316,14 @@ o Enabling UltraSCSI Transfers
-   the "Optimum Performance" settings are loaded.
- 
- 
--		      BT-948/958/958D INSTALLATION NOTES
-+BT-948/958/958D Installation Notes
-+==================================
- 
- The BT-948/958/958D PCI Ultra SCSI Host Adapters have some features which may
- require attention in some circumstances when installing Linux.
- 
--o PCI I/O Port Assignments
-+PCI I/O Port Assignments
-+------------------------
- 
-   When configured to factory default settings, the BT-948/958/958D will only
-   recognize the PCI I/O port assignments made by the motherboard's PCI BIOS.
-@@ -312,7 +343,8 @@ o PCI I/O Port Assignments
-   possible future I/O port conflicts.  The older BT-946C/956C/956CD also have
-   this configuration option, but the factory default setting is "Primary".
- 
--o PCI Slot Scanning Order
-+PCI Slot Scanning Order
-+-----------------------
- 
-   In systems with multiple BusLogic PCI Host Adapters, the order in which the
-   PCI slots are scanned may appear reversed with the BT-948/958/958D as
-@@ -339,7 +371,8 @@ o PCI Slot Scanning Order
-   so as to recognize the host adapters in the same order as they are enumerated
-   by the host adapter's BIOS.
- 
--o Enabling UltraSCSI Transfers
-+Enabling UltraSCSI Transfers
-+----------------------------
- 
-   The BT-948/958/958D ship with their configuration set to "Factory Default"
-   settings that are conservative and do not allow for UltraSCSI speed to be
-@@ -353,7 +386,8 @@ o Enabling UltraSCSI Transfers
-   "Optimum Performance" settings are loaded.
- 
- 
--				DRIVER OPTIONS
-+Driver Options
-+==============
- 
- BusLogic Driver Options may be specified either via the Linux Kernel Command
- Line or via the Loadable Kernel Module Installation Facility.  Driver Options
-@@ -520,30 +554,34 @@ The following examples demonstrate setting the Queue Depth for Target Devices
- Devices on the second host adapter to 31, and the Bus Settle Time on the
- second host adapter to 30 seconds.
- 
--Linux Kernel Command Line:
-+Linux Kernel Command Line::
- 
-   linux BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30
- 
--LILO Linux Boot Loader (in /etc/lilo.conf):
-+LILO Linux Boot Loader (in /etc/lilo.conf)::
- 
-   append = "BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"
- 
--INSMOD Loadable Kernel Module Installation Facility:
-+INSMOD Loadable Kernel Module Installation Facility::
- 
-   insmod BusLogic.o \
-       'BusLogic="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
- 
--NOTE: Module Utilities 2.1.71 or later is required for correct parsing
+ These old-style parameters can support only one card:
+-  ncr_irq=xx   the interrupt
+-  ncr_addr=xx  the port or base address (for port or memory
+-               mapped, resp.)
+-  ncr_5380=1   to set up for a NCR5380 board
+-  ncr_53c400=1 to set up for a NCR53C400 board
 +
-+.. Note::
++  ============= =================================================
++  ncr_irq=xx    the interrupt
++  ncr_addr=xx   the port or base address (for port or memory
++                mapped, resp.)
++  ncr_5380=1    to set up for a NCR5380 board
++  ncr_53c400=1  to set up for a NCR53C400 board
+   ncr_53c400a=1 to set up for a NCR53C400A board
+-  dtc_3181e=1  to set up for a Domex Technology Corp 3181E board
+-  hp_c2502=1   to set up for a Hewlett Packard C2502 board
+-
+-E.g. Trantor T130B in its default configuration:
+-modprobe g_NCR5380 irq=5 base=0x350 card=1
+-or alternatively, using the old syntax,
+-modprobe g_NCR5380 ncr_irq=5 ncr_addr=0x350 ncr_53c400=1
+-
+-E.g. a port mapped NCR5380 board, driver to probe for IRQ:
+-modprobe g_NCR5380 base=0x350 card=0
+-or alternatively,
+-modprobe g_NCR5380 ncr_addr=0x350 ncr_5380=1
+-
+-E.g. a memory mapped NCR53C400 board with no IRQ:
+-modprobe g_NCR5380 irq=255 base=0xc8000 card=1
+-or alternatively,
+-modprobe g_NCR5380 ncr_irq=255 ncr_addr=0xc8000 ncr_53c400=1
++  dtc_3181e=1   to set up for a Domex Technology Corp 3181E board
++  hp_c2502=1    to set up for a Hewlett Packard C2502 board
++  ============= =================================================
 +
-+      Module Utilities 2.1.71 or later is required for correct parsing
-       of driver options containing commas.
++E.g. Trantor T130B in its default configuration::
++
++	modprobe g_NCR5380 irq=5 base=0x350 card=1
++
++or alternatively, using the old syntax::
++
++	modprobe g_NCR5380 ncr_irq=5 ncr_addr=0x350 ncr_53c400=1
++
++E.g. a port mapped NCR5380 board, driver to probe for IRQ::
++
++	modprobe g_NCR5380 base=0x350 card=0
++
++or alternatively::
++
++	modprobe g_NCR5380 ncr_addr=0x350 ncr_5380=1
++
++E.g. a memory mapped NCR53C400 board with no IRQ::
++
++	modprobe g_NCR5380 irq=255 base=0xc8000 card=1
++
++or alternatively::
++
++	modprobe g_NCR5380 ncr_irq=255 ncr_addr=0xc8000 ncr_53c400=1
  
+ E.g. two cards, DTC3181 (in non-PnP mode) at 0x240 with no IRQ
+-and HP C2502 at 0x300 with IRQ 7:
+-modprobe g_NCR5380 irq=0,7 base=0x240,0x300 card=3,4
++and HP C2502 at 0x300 with IRQ 7::
++
++	modprobe g_NCR5380 irq=0,7 base=0x240,0x300 card=3,4
  
--			      DRIVER INSTALLATION
-+Driver Installation
-+===================
- 
- This distribution was prepared for Linux kernel version 2.0.35, but should be
- compatible with 2.0.4 or any later 2.0 series kernel.
- 
- To install the new BusLogic SCSI driver, you may use the following commands,
--replacing "/usr/src" with wherever you keep your Linux kernel source tree:
-+replacing "/usr/src" with wherever you keep your Linux kernel source tree::
- 
-   cd /usr/src
-   tar -xvzf BusLogic-2.0.15.tar.gz
-@@ -557,7 +595,8 @@ Then install "arch/x86/boot/zImage" as your standard kernel, run lilo if
- appropriate, and reboot.
- 
- 
--		      BUSLOGIC ANNOUNCEMENTS MAILING LIST
-+BusLogic Announcements Mailing List
-+===================================
- 
- The BusLogic Announcements Mailing List provides a forum for informing Linux
- users of new driver releases and other announcements regarding Linux support
+ Kevin Lentin
+ K.Lentin@cs.monash.edu.au
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index d453fb3f1f7d..6bb2428c1d56 100644
+index aad8359357e6..4b577c9e804e 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -15,5 +15,6 @@ Linux SCSI Subsystem
-    aic7xxx
-    bfa
-    bnx2fc
-+   BusLogic
+@@ -20,5 +20,6 @@ Linux SCSI Subsystem
+    dc395x
+    dpti
+    FlashPoint
++   g_NCR5380
  
     scsi_transport_srp/figures
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 3170b295a5da..9b8be4f0da19 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -3652,7 +3652,7 @@ static bool __init blogic_parse(char **str, char *keyword)
-   selected host adapter.
+diff --git a/Documentation/scsi/scsi-parameters.txt b/Documentation/scsi/scsi-parameters.txt
+index 266fd3b2398a..864bbf7f737b 100644
+--- a/Documentation/scsi/scsi-parameters.txt
++++ b/Documentation/scsi/scsi-parameters.txt
+@@ -57,13 +57,13 @@ parameters may be changed at runtime by the command
+ 			See header of drivers/scsi/NCR_D700.c.
  
-   The BusLogic Driver Probing Options are described in
--  <file:Documentation/scsi/BusLogic.txt>.
-+  <file:Documentation/scsi/BusLogic.rst>.
- */
+ 	ncr5380=	[HW,SCSI]
+-			See Documentation/scsi/g_NCR5380.txt.
++			See Documentation/scsi/g_NCR5380.rst.
  
- static int __init blogic_parseopts(char *options)
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 18af62594bc0..5ec7330f82b6 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -502,7 +502,7 @@ config SCSI_BUSLOGIC
- 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
- 	  Adapters. Consult the SCSI-HOWTO, available from
- 	  <http://www.tldp.org/docs.html#howto>, and the files
--	  <file:Documentation/scsi/BusLogic.txt> and
-+	  <file:Documentation/scsi/BusLogic.rst> and
- 	  <file:Documentation/scsi/FlashPoint.txt> for more information.
- 	  Note that support for FlashPoint is only available for 32-bit
- 	  x86 configurations.
+ 	ncr53c400=	[HW,SCSI]
+-			See Documentation/scsi/g_NCR5380.txt.
++			See Documentation/scsi/g_NCR5380.rst.
+ 
+ 	ncr53c400a=	[HW,SCSI]
+-			See Documentation/scsi/g_NCR5380.txt.
++			See Documentation/scsi/g_NCR5380.rst.
+ 
+ 	ncr53c8xx=	[HW,SCSI]
+ 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1e2ab816fe66..451a3f67d23a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11533,7 +11533,7 @@ M:	Finn Thain <fthain@telegraphics.com.au>
+ M:	Michael Schmitz <schmitzmic@gmail.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/scsi/g_NCR5380.txt
++F:	Documentation/scsi/g_NCR5380.rst
+ F:	drivers/scsi/NCR5380.*
+ F:	drivers/scsi/arm/cumana_1.c
+ F:	drivers/scsi/arm/oak.c
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 2ab774e62e40..2cc676e3df6a 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -20,7 +20,7 @@
+  * Added ISAPNP support for DTC436 adapters,
+  * Thomas Sailer, sailer@ife.ee.ethz.ch
+  *
+- * See Documentation/scsi/g_NCR5380.txt for more info.
++ * See Documentation/scsi/g_NCR5380.rst for more info.
+  */
+ 
+ #include <asm/io.h>
 -- 
 2.21.1
 
