@@ -2,59 +2,61 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_SBL,URIBL_SBL_A,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF64FC3F2D6
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA0FAC3F2D9
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C3E4246B4
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A69EC246B4
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137081;
-	bh=XyjwF2ioxjiZ5JUZ0SraExulaBFZymyuvfekf1/i9Ao=;
+	s=default; t=1583137083;
+	bh=mTZXZyNfex88ftiSETcaCC5SMnrKlg50EFJe11w+CZA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=auAQY8UM3xeIuc4BV7RDdL811oXzZTO9q0XWyd2ntjNPjk/rHB+Hb8JUHig2H3ZtM
-	 PjMOURCtZZbTwRLoPcOu9N9PdNeEizJC3fIuQRNBt8AJMUB4Hg/gcLw6eCsJlAu/JX
-	 HLKIX540FoeEvGBDoS4E1jt3kVTdRjL//Ck/EJ8U=
+	b=Yz2glCKbmbB+EbYUG5kvn0O2yAwblzuA6N7pmdD3/YA4rxC79WRFrJpoX71ENYkOL
+	 hq0tEV5tpRhjxmJs7x6giTTGHo+Nr+bM8s5rswb/lbzfr5/Dxb/0TxnIHQkhC8YxQy
+	 IIQxIMTUAx3ft5Rv8O6k6A4OFKN3/z8mpOWMwJsY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727730AbgCBIR4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:17:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57208 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727222AbgCBIQW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727299AbgCBIQW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 2 Mar 2020 03:16:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727125AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 03:16:21 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3F54E246D4;
+        by mail.kernel.org (Postfix) with ESMTPSA id 15470246C2;
         Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=XyjwF2ioxjiZ5JUZ0SraExulaBFZymyuvfekf1/i9Ao=;
+        bh=mTZXZyNfex88ftiSETcaCC5SMnrKlg50EFJe11w+CZA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kMvBRIm+FMBnKOiFudW5uAPkV9FCcAmZKaQt5VG+W9sLSxV5NSzVTeT6dNTf4fBlf
-         FoIKotbzPsl20AWmsCLmOnRn7Mb3RIxO/LOGvSEE7cfLkwoEhPhogXjZR9ivelv9bk
-         J5V9Y+8hNmJUvnlkObIj6lF6VVbcvC+cRok3Ze1Q=
+        b=xb0kvZ6KN3ieeoRpvRQcneQE4OvWDGFCIIcdLND2awWpOsxYrUH1h8lRifLuCIFYz
+         i0bd0ktaepO9xE4pCY6TX1xlH5wQTPzzT6P+WpOMvXPFlp/4D0J29jwDMf3rLzdzCG
+         /5gqiXq8K+MSlRhfZtjLxaXpj8aGySoPSR1rm0Lg=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003xk-Cq; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003x3-4m; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Juergen E. Fischer" <fischer@norbit.de>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 15/42] docs: scsi: convert FlashPoint.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:48 +0100
-Message-Id: <e755b9644047eed6be69fcc77eb797f0801fcb99.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 06/42] docs: scsi: convert aha152x.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:39 +0100
+Message-Id: <097cfcc7f25343676a1fedcefed7e3b91b41b4df.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -63,317 +65,227 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../scsi/{FlashPoint.txt => FlashPoint.rst}   | 225 +++++++++---------
- Documentation/scsi/index.rst                  |   1 +
- drivers/scsi/Kconfig                          |   2 +-
- 3 files changed, 121 insertions(+), 107 deletions(-)
- rename Documentation/scsi/{FlashPoint.txt => FlashPoint.rst} (21%)
+ .../scsi/{aha152x.txt => aha152x.rst}         | 73 ++++++++++++-------
+ Documentation/scsi/index.rst                  |  1 +
+ Documentation/scsi/scsi-parameters.txt        |  2 +-
+ drivers/scsi/Kconfig                          |  2 +-
+ drivers/scsi/aha152x.c                        |  4 +-
+ 5 files changed, 52 insertions(+), 30 deletions(-)
+ rename Documentation/scsi/{aha152x.txt => aha152x.rst} (76%)
 
-diff --git a/Documentation/scsi/FlashPoint.txt b/Documentation/scsi/FlashPoint.rst
-similarity index 21%
-rename from Documentation/scsi/FlashPoint.txt
-rename to Documentation/scsi/FlashPoint.rst
-index 5b5f29cb9f8b..ef3c07e94ad6 100644
---- a/Documentation/scsi/FlashPoint.txt
-+++ b/Documentation/scsi/FlashPoint.rst
-@@ -1,27 +1,34 @@
+diff --git a/Documentation/scsi/aha152x.txt b/Documentation/scsi/aha152x.rst
+similarity index 76%
+rename from Documentation/scsi/aha152x.txt
+rename to Documentation/scsi/aha152x.rst
+index 94848734ac66..7012b5c46d5d 100644
+--- a/Documentation/scsi/aha152x.txt
++++ b/Documentation/scsi/aha152x.rst
+@@ -1,7 +1,12 @@
+-$Id: README.aha152x,v 1.2 1999/12/25 15:32:30 fischer Exp fischer $
 +.. SPDX-License-Identifier: GPL-2.0
++.. include:: <isonum.txt>
 +
-+===================================
-+The BusLogic FlashPoint SCSI Driver
-+===================================
++=====================================================
+ Adaptec AHA-1520/1522 SCSI driver for Linux (aha152x)
++=====================================================
 +
- The BusLogic FlashPoint SCSI Host Adapters are now fully supported on Linux.
- The upgrade program described below has been officially terminated effective
- 31 March 1997 since it is no longer needed.
++Copyright |copy| 1993-1999 Jürgen Fischer <fischer@norbit.de>
  
-+::
+-Copyright 1993-1999 Jürgen Fischer <fischer@norbit.de>
+ TC1550 patches by Luuk van Dijk (ldz@xs4all.nl)
  
-+  	  MYLEX INTRODUCES LINUX OPERATING SYSTEM SUPPORT FOR ITS
-+  	      BUSLOGIC FLASHPOINT LINE OF SCSI HOST ADAPTERS
  
--	  MYLEX INTRODUCES LINUX OPERATING SYSTEM SUPPORT FOR ITS
--	      BUSLOGIC FLASHPOINT LINE OF SCSI HOST ADAPTERS
+@@ -14,8 +19,10 @@ less polling loops), has slightly higher throughput (at
+ least on my ancient test box; a i486/33Mhz/20MB).
  
-+  FREMONT, CA, -- October 8, 1996 -- Mylex Corporation has expanded Linux
-+  operating system support to its BusLogic brand of FlashPoint Ultra SCSI
-+  host adapters.  All of BusLogic's other SCSI host adapters, including the
-+  MultiMaster line, currently support the Linux operating system.  Linux
-+  drivers and information will be available on October 15th at
-+  http://sourceforge.net/projects/dandelion/.
  
--FREMONT, CA, -- October 8, 1996 -- Mylex Corporation has expanded Linux
--operating system support to its BusLogic brand of FlashPoint Ultra SCSI
--host adapters.  All of BusLogic's other SCSI host adapters, including the
--MultiMaster line, currently support the Linux operating system.  Linux
--drivers and information will be available on October 15th at
--http://sourceforge.net/projects/dandelion/.
--
--"Mylex is committed to supporting the Linux community," says Peter Shambora,
--vice president of marketing for Mylex.  "We have supported Linux driver
--development and provided technical support for our host adapters for several
--years, and are pleased to now make our FlashPoint products available to this
--user base."
-+  "Mylex is committed to supporting the Linux community," says Peter Shambora,
-+  vice president of marketing for Mylex.  "We have supported Linux driver
-+  development and provided technical support for our host adapters for several
-+  years, and are pleased to now make our FlashPoint products available to this
-+  user base."
+-CONFIGURATION ARGUMENTS:
++Configuration Arguments
++=======================
  
- The Linux Operating System
++============  ========================================  ======================
+ IOPORT        base io address                           (0x340/0x140)
+ IRQ           interrupt level                           (9-12; default 11)
+ SCSI_ID       scsi id of controller                     (0-7; default 7)
+@@ -25,31 +32,38 @@ SYNCHRONOUS   enable synchronous transfers              (0/1; default 1 [on])
+ DELAY:        bus reset delay                           (default 100)
+ EXT_TRANS:    enable extended translation               (0/1: default 0 [off])
+               (see NOTES)
++============  ========================================  ======================
+ 
+-COMPILE TIME CONFIGURATION (go into AHA152X in drivers/scsi/Makefile):
++Compile Time Configuration
 +==========================
  
- Linux is a freely-distributed implementation of UNIX for Intel x86, Sun
- SPARC, SGI MIPS, Motorola 68k, Digital Alpha AXP and Motorola PowerPC
-@@ -30,6 +37,7 @@ System, Emacs, and TCP/IP networking.  Further information is available at
- http://www.linux.org and http://www.ssc.com/.
+--DAUTOCONF
+- use configuration the controller reports (AHA-152x only)
++(go into AHA152X in drivers/scsi/Makefile):
  
- FlashPoint Host Adapters
-+========================
+--DSKIP_BIOSTEST
+- Don't test for BIOS signature (AHA-1510 or disabled BIOS)
++- DAUTOCONF
++    use configuration the controller reports (AHA-152x only)
  
- The FlashPoint family of Ultra SCSI host adapters, designed for workstation
- and file server environments, are available in narrow, wide, dual channel,
-@@ -38,6 +46,7 @@ automation technology, which minimizes SCSI command overhead and reduces
- the number of interrupts generated to the CPU.
+--DSETUP0="{ IOPORT, IRQ, SCSI_ID, RECONNECT, PARITY, SYNCHRONOUS, DELAY, EXT_TRANS }"
+- override for the first controller 
++- DSKIP_BIOSTEST
++    Don't test for BIOS signature (AHA-1510 or disabled BIOS)
  
- About Mylex
-+===========
+--DSETUP1="{ IOPORT, IRQ, SCSI_ID, RECONNECT, PARITY, SYNCHRONOUS, DELAY, EXT_TRANS }"
+- override for the second controller
++- DSETUP0="{ IOPORT, IRQ, SCSI_ID, RECONNECT, PARITY, SYNCHRONOUS, DELAY, EXT_TRANS }"
++    override for the first controller
  
- Mylex Corporation (NASDAQ/NM SYMBOL: MYLX), founded in 1983, is a leading
- producer of RAID technology and network management products.  The company
-@@ -51,16 +60,20 @@ and availability.  Products are sold globally through a network of OEMs,
- major distributors, VARs, and system integrators.  Mylex Corporation is
- headquartered at 34551 Ardenwood Blvd., Fremont, CA.
+--DAHA152X_DEBUG
+- enable debugging output
++- DSETUP1="{ IOPORT, IRQ, SCSI_ID, RECONNECT, PARITY, SYNCHRONOUS, DELAY, EXT_TRANS }"
++    override for the second controller
  
--				   ####
--
- Contact:
-+========
+--DAHA152X_STAT
+- enable some statistics
++- DAHA152X_DEBUG
++    enable debugging output
+ 
++- DAHA152X_STAT
++    enable some statistics
+ 
+-LILO COMMAND LINE OPTIONS:
+ 
+-aha152x=<IOPORT>[,<IRQ>[,<SCSI-ID>[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY> [,<EXT_TRANS]]]]]]]
++LILO Command Line Options
++=========================
 +
-+::
++ ::
 +
-+  Peter Shambora
-+  Vice President of Marketing
-+  Mylex Corp.
-+  510/796-6100
-+  peters@mylex.com
++    aha152x=<IOPORT>[,<IRQ>[,<SCSI-ID>[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY> [,<EXT_TRANS]]]]]]]
+ 
+  The normal configuration can be overridden by specifying a command line.
+  When you do this, the BIOS test is skipped. Entered values have to be
+@@ -58,17 +72,21 @@ aha152x=<IOPORT>[,<IRQ>[,<SCSI-ID>[,<RECONNECT>[,<PARITY>[,<SYNCHRONOUS>[,<DELAY
+  For two controllers use the aha152x statement twice.
+ 
+ 
+-SYMBOLS FOR MODULE CONFIGURATION:
++Symbols for Module Configuration
++================================
+ 
+ Choose from 2 alternatives:
+ 
+-1. specify everything (old)
++1. specify everything (old)::
 +
++    aha152x=IOPORT,IRQ,SCSI_ID,RECONNECT,PARITY,SYNCHRONOUS,DELAY,EXT_TRANS
+ 
+-aha152x=IOPORT,IRQ,SCSI_ID,RECONNECT,PARITY,SYNCHRONOUS,DELAY,EXT_TRANS
+   configuration override for first controller
+ 
++  ::
 +
-+::
++    aha152x1=IOPORT,IRQ,SCSI_ID,RECONNECT,PARITY,SYNCHRONOUS,DELAY,EXT_TRANS
  
--Peter Shambora
--Vice President of Marketing
--Mylex Corp.
--510/796-6100
--peters@mylex.com
--
- 			       ANNOUNCEMENT
- 	       BusLogic FlashPoint LT/BT-948 Upgrade Program
- 			      1 February 1996
-@@ -69,95 +82,95 @@ peters@mylex.com
- 	       BusLogic FlashPoint LW/BT-958 Upgrade Program
- 			       14 June 1996
+-aha152x1=IOPORT,IRQ,SCSI_ID,RECONNECT,PARITY,SYNCHRONOUS,DELAY,EXT_TRANS
+   configuration override for second controller
  
--Ever since its introduction last October, the BusLogic FlashPoint LT has
--been problematic for members of the Linux community, in that no Linux
--drivers have been available for this new Ultra SCSI product.  Despite its
--officially being positioned as a desktop workstation product, and not being
--particularly well suited for a high performance multitasking operating
--system like Linux, the FlashPoint LT has been touted by computer system
--vendors as the latest thing, and has been sold even on many of their high
--end systems, to the exclusion of the older MultiMaster products.  This has
--caused grief for many people who inadvertently purchased a system expecting
--that all BusLogic SCSI Host Adapters were supported by Linux, only to
--discover that the FlashPoint was not supported and would not be for quite
--some time, if ever.
-+  Ever since its introduction last October, the BusLogic FlashPoint LT has
-+  been problematic for members of the Linux community, in that no Linux
-+  drivers have been available for this new Ultra SCSI product.  Despite its
-+  officially being positioned as a desktop workstation product, and not being
-+  particularly well suited for a high performance multitasking operating
-+  system like Linux, the FlashPoint LT has been touted by computer system
-+  vendors as the latest thing, and has been sold even on many of their high
-+  end systems, to the exclusion of the older MultiMaster products.  This has
-+  caused grief for many people who inadvertently purchased a system expecting
-+  that all BusLogic SCSI Host Adapters were supported by Linux, only to
-+  discover that the FlashPoint was not supported and would not be for quite
-+  some time, if ever.
+ 2. specify only what you need to (irq or io is required; new)
+@@ -101,7 +119,8 @@ exttrans=EXTTRANS0[,EXTTRANS1]
+ If you use both alternatives the first will be taken.
  
--After this problem was identified, BusLogic contacted its major OEM
--customers to make sure the BT-946C/956C MultiMaster cards would still be
--made available, and that Linux users who mistakenly ordered systems with
--the FlashPoint would be able to upgrade to the BT-946C.  While this helped
--many purchasers of new systems, it was only a partial solution to the
--overall problem of FlashPoint support for Linux users.  It did nothing to
--assist the people who initially purchased a FlashPoint for a supported
--operating system and then later decided to run Linux, or those who had
--ended up with a FlashPoint LT, believing it was supported, and were unable
--to return it.
-+  After this problem was identified, BusLogic contacted its major OEM
-+  customers to make sure the BT-946C/956C MultiMaster cards would still be
-+  made available, and that Linux users who mistakenly ordered systems with
-+  the FlashPoint would be able to upgrade to the BT-946C.  While this helped
-+  many purchasers of new systems, it was only a partial solution to the
-+  overall problem of FlashPoint support for Linux users.  It did nothing to
-+  assist the people who initially purchased a FlashPoint for a supported
-+  operating system and then later decided to run Linux, or those who had
-+  ended up with a FlashPoint LT, believing it was supported, and were unable
-+  to return it.
  
--In the middle of December, I asked to meet with BusLogic's senior
--management to discuss the issues related to Linux and free software support
--for the FlashPoint.  Rumors of varying accuracy had been circulating
--publicly about BusLogic's attitude toward the Linux community, and I felt
--it was best that these issues be addressed directly.  I sent an email
--message after 11pm one evening, and the meeting took place the next
--afternoon.  Unfortunately, corporate wheels sometimes grind slowly,
--especially when a company is being acquired, and so it's taken until now
--before the details were completely determined and a public statement could
--be made.
-+  In the middle of December, I asked to meet with BusLogic's senior
-+  management to discuss the issues related to Linux and free software support
-+  for the FlashPoint.  Rumors of varying accuracy had been circulating
-+  publicly about BusLogic's attitude toward the Linux community, and I felt
-+  it was best that these issues be addressed directly.  I sent an email
-+  message after 11pm one evening, and the meeting took place the next
-+  afternoon.  Unfortunately, corporate wheels sometimes grind slowly,
-+  especially when a company is being acquired, and so it's taken until now
-+  before the details were completely determined and a public statement could
-+  be made.
+-NOTES ON EXT_TRANS: 
++Notes on EXT_TRANS
++==================
  
--BusLogic is not prepared at this time to release the information necessary
--for third parties to write drivers for the FlashPoint.  The only existing
--FlashPoint drivers have been written directly by BusLogic Engineering, and
--there is no FlashPoint documentation sufficiently detailed to allow outside
--developers to write a driver without substantial assistance.  While there
--are people at BusLogic who would rather not release the details of the
--FlashPoint architecture at all, that debate has not yet been settled either
--way.  In any event, even if documentation were available today it would
--take quite a while for a usable driver to be written, especially since I'm
--not convinced that the effort required would be worthwhile.
-+  BusLogic is not prepared at this time to release the information necessary
-+  for third parties to write drivers for the FlashPoint.  The only existing
-+  FlashPoint drivers have been written directly by BusLogic Engineering, and
-+  there is no FlashPoint documentation sufficiently detailed to allow outside
-+  developers to write a driver without substantial assistance.  While there
-+  are people at BusLogic who would rather not release the details of the
-+  FlashPoint architecture at all, that debate has not yet been settled either
-+  way.  In any event, even if documentation were available today it would
-+  take quite a while for a usable driver to be written, especially since I'm
-+  not convinced that the effort required would be worthwhile.
+ SCSI uses block numbers to address blocks/sectors on a device.
+ The BIOS uses a cylinder/head/sector addressing scheme (C/H/S)
+@@ -150,8 +169,9 @@ geometry right in most cases:
+ - for disks<1GB: use default translation (C/32/64)
  
--However, BusLogic does remain committed to providing a high performance
--SCSI solution for the Linux community, and does not want to see anyone left
--unable to run Linux because they have a Flashpoint LT.  Therefore, BusLogic
--has put in place a direct upgrade program to allow any Linux user worldwide
--to trade in their FlashPoint LT for the new BT-948 MultiMaster PCI Ultra
--SCSI Host Adapter.  The BT-948 is the Ultra SCSI successor to the BT-946C
--and has all the best features of both the BT-946C and FlashPoint LT,
--including smart termination and a flash PROM for easy firmware updates, and
--is of course compatible with the present Linux driver.  The price for this
--upgrade has been set at US $45 plus shipping and handling, and the upgrade
--program will be administered through BusLogic Technical Support, which can
--be reached by electronic mail at techsup@buslogic.com, by Voice at +1 408
--654-0760, or by FAX at +1 408 492-1542.
-+  However, BusLogic does remain committed to providing a high performance
-+  SCSI solution for the Linux community, and does not want to see anyone left
-+  unable to run Linux because they have a Flashpoint LT.  Therefore, BusLogic
-+  has put in place a direct upgrade program to allow any Linux user worldwide
-+  to trade in their FlashPoint LT for the new BT-948 MultiMaster PCI Ultra
-+  SCSI Host Adapter.  The BT-948 is the Ultra SCSI successor to the BT-946C
-+  and has all the best features of both the BT-946C and FlashPoint LT,
-+  including smart termination and a flash PROM for easy firmware updates, and
-+  is of course compatible with the present Linux driver.  The price for this
-+  upgrade has been set at US $45 plus shipping and handling, and the upgrade
-+  program will be administered through BusLogic Technical Support, which can
-+  be reached by electronic mail at techsup@buslogic.com, by Voice at +1 408
-+  654-0760, or by FAX at +1 408 492-1542.
+ - for disks>1GB:
++
+   - take current geometry from the partition table
+-    (using scsicam_bios_param and accept only `valid' geometries,
++    (using scsicam_bios_param and accept only 'valid' geometries,
+     ie. either (C/32/64) or (C/63/255)).  This can be extended translation
+     even if it's not enabled in the driver.
  
--As of 14 June 1996, the original BusLogic FlashPoint LT to BT-948 upgrade
--program has now been extended to encompass the FlashPoint LW Wide Ultra
--SCSI Host Adapter.  Any Linux user worldwide may trade in their FlashPoint
--LW (BT-950) for a BT-958 MultiMaster PCI Ultra SCSI Host Adapter.  The
--price for this upgrade has been set at US $65 plus shipping and handling.
-+  As of 14 June 1996, the original BusLogic FlashPoint LT to BT-948 upgrade
-+  program has now been extended to encompass the FlashPoint LW Wide Ultra
-+  SCSI Host Adapter.  Any Linux user worldwide may trade in their FlashPoint
-+  LW (BT-950) for a BT-958 MultiMaster PCI Ultra SCSI Host Adapter.  The
-+  price for this upgrade has been set at US $65 plus shipping and handling.
+@@ -161,7 +181,8 @@ geometry right in most cases:
+     disks.
  
--I was a beta test site for the BT-948/958, and versions 1.2.1 and 1.3.1 of
--my BusLogic driver already included latent support for the BT-948/958.
--Additional cosmetic support for the Ultra SCSI MultiMaster cards was added
--subsequent releases.  As a result of this cooperative testing process,
--several firmware bugs were found and corrected.  My heavily loaded Linux
--test system provided an ideal environment for testing error recovery
--processes that are much more rarely exercised in production systems, but
--are crucial to overall system stability.  It was especially convenient
--being able to work directly with their firmware engineer in demonstrating
--the problems under control of the firmware debugging environment; things
--sure have come a long way since the last time I worked on firmware for an
--embedded system.  I am presently working on some performance testing and
--expect to have some data to report in the not too distant future.
-+  I was a beta test site for the BT-948/958, and versions 1.2.1 and 1.3.1 of
-+  my BusLogic driver already included latent support for the BT-948/958.
-+  Additional cosmetic support for the Ultra SCSI MultiMaster cards was added
-+  subsequent releases.  As a result of this cooperative testing process,
-+  several firmware bugs were found and corrected.  My heavily loaded Linux
-+  test system provided an ideal environment for testing error recovery
-+  processes that are much more rarely exercised in production systems, but
-+  are crucial to overall system stability.  It was especially convenient
-+  being able to work directly with their firmware engineer in demonstrating
-+  the problems under control of the firmware debugging environment; things
-+  sure have come a long way since the last time I worked on firmware for an
-+  embedded system.  I am presently working on some performance testing and
-+  expect to have some data to report in the not too distant future.
  
--BusLogic asked me to send this announcement since a large percentage of the
--questions regarding support for the FlashPoint have either been sent to me
--directly via email, or have appeared in the Linux newsgroups in which I
--participate.  To summarize, BusLogic is offering Linux users an upgrade
--from the unsupported FlashPoint LT (BT-930) to the supported BT-948 for US
--$45 plus shipping and handling, or from the unsupported FlashPoint LW
--(BT-950) to the supported BT-958 for $65 plus shipping and handling.
--Contact BusLogic Technical Support at techsup@buslogic.com or +1 408
--654-0760 to take advantage of their offer.
-+  BusLogic asked me to send this announcement since a large percentage of the
-+  questions regarding support for the FlashPoint have either been sent to me
-+  directly via email, or have appeared in the Linux newsgroups in which I
-+  participate.  To summarize, BusLogic is offering Linux users an upgrade
-+  from the unsupported FlashPoint LT (BT-930) to the supported BT-948 for US
-+  $45 plus shipping and handling, or from the unsupported FlashPoint LW
-+  (BT-950) to the supported BT-958 for $65 plus shipping and handling.
-+  Contact BusLogic Technical Support at techsup@buslogic.com or +1 408
-+  654-0760 to take advantage of their offer.
+-REFERENCES USED:
++References Used
++===============
  
--		Leonard N. Zubkoff
--		lnz@dandelion.com
-+  		Leonard N. Zubkoff
-+  		lnz@dandelion.com
+  "AIC-6260 SCSI Chip Specification", Adaptec Corporation.
+ 
+@@ -177,7 +198,7 @@ REFERENCES USED:
+ 
+  Drew Eckhardt (drew@cs.colorado.edu)
+ 
+- Eric Youngdale (eric@andante.org) 
++ Eric Youngdale (eric@andante.org)
+ 
+  special thanks to Eric Youngdale for the free(!) supplying the
+  documentation on the chip.
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index b553dd9904bf..aad8359357e6 100644
+index df526a0ceccf..8404e991b588 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -19,5 +19,6 @@ Linux SCSI Subsystem
-    cxgb3i
-    dc395x
-    dpti
-+   FlashPoint
+@@ -10,5 +10,6 @@ Linux SCSI Subsystem
+    53c700
+    aacraid
+    advansys
++   aha152x
  
     scsi_transport_srp/figures
+diff --git a/Documentation/scsi/scsi-parameters.txt b/Documentation/scsi/scsi-parameters.txt
+index 25a4b4cf04a6..064d6dfcac26 100644
+--- a/Documentation/scsi/scsi-parameters.txt
++++ b/Documentation/scsi/scsi-parameters.txt
+@@ -16,7 +16,7 @@ parameters may be changed at runtime by the command
+ 			See header of drivers/scsi/advansys.c.
+ 
+ 	aha152x=	[HW,SCSI]
+-			See Documentation/scsi/aha152x.txt.
++			See Documentation/scsi/aha152x.rst.
+ 
+ 	aha1542=	[HW,SCSI]
+ 			Format: <portbase>[,<buson>,<busoff>[,<dmaspeed>]]
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 5e834fba7934..e47498f7627e 100644
+index a153444318fb..18af62594bc0 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -503,7 +503,7 @@ config SCSI_BUSLOGIC
- 	  Adapters. Consult the SCSI-HOWTO, available from
- 	  <http://www.tldp.org/docs.html#howto>, and the files
- 	  <file:Documentation/scsi/BusLogic.rst> and
--	  <file:Documentation/scsi/FlashPoint.txt> for more information.
-+	  <file:Documentation/scsi/FlashPoint.rst> for more information.
- 	  Note that support for FlashPoint is only available for 32-bit
- 	  x86 configurations.
+@@ -383,7 +383,7 @@ config SCSI_AHA152X
  
+ 	  It is explained in section 3.3 of the SCSI-HOWTO, available from
+ 	  <http://www.tldp.org/docs.html#howto>. You might also want to
+-	  read the file <file:Documentation/scsi/aha152x.txt>.
++	  read the file <file:Documentation/scsi/aha152x.rst>.
+ 
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called aha152x.
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index eb466c2e1839..90f97df1c42a 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -220,7 +220,7 @@
+  *
+  **************************************************************************
+ 
+- see Documentation/scsi/aha152x.txt for configuration details
++ see Documentation/scsi/aha152x.rst for configuration details
+ 
+  **************************************************************************/
+ 
+@@ -1249,7 +1249,7 @@ static int aha152x_biosparam(struct scsi_device *sdev, struct block_device *bdev
+ 				       "aha152x: unable to verify geometry for disk with >1GB.\n"
+ 				       "         Using default translation. Please verify yourself.\n"
+ 				       "         Perhaps you need to enable extended translation in the driver.\n"
+-				       "         See Documentation/scsi/aha152x.txt for details.\n");
++				       "         See Documentation/scsi/aha152x.rst for details.\n");
+ 			}
+ 		} else {
+ 			info_array[0] = info[0];
 -- 
 2.21.1
 
