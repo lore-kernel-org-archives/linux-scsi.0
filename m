@@ -2,82 +2,91 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D76BCC3F2D2
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 13:54:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EFD1C3F2CD
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 14:39:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A26072187F
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 13:54:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="a4c4z1jO"
+	by mail.kernel.org (Postfix) with ESMTP id 0D76D2166E
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 14:39:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727439AbgCBNyA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 08:54:00 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:34822 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726793AbgCBNx7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2020 08:53:59 -0500
-X-UUID: 21efdbd243d345c5b3ab4482d27b7061-20200302
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=0RbdWX8Fxh/6C5WD9L6DJxUtCmSunSS08zgopxXghdE=;
-        b=a4c4z1jON8lv4gVbzuW37Je1lS2uRLO33ASDA5d38JEju9sybFThAOJS7j/6S4dO3TmAnb6Ilx49Lk5rK1121Fl73qRHYMR/rxJTCMRZSD8kbr6cu+pwMLn8I26rcUUbuZE3rRlf4BWtIvtqSZkxnnbq5y89bf0bH+0SPnCtkFY=;
-X-UUID: 21efdbd243d345c5b3ab4482d27b7061-20200302
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1532422314; Mon, 02 Mar 2020 21:53:50 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 2 Mar 2020 21:51:08 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 2 Mar 2020 21:53:15 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v1] scsi: ufs-mediatek: fix HOST_PA_TACTIVATE quirk for Samsung UFS Devices
-Date:   Mon, 2 Mar 2020 21:53:46 +0800
-Message-ID: <20200302135346.16797-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: D821A7F8565A24F42421CDA7B2AE2730833BCD91F3CAE1B5A150FD3669E3742E2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1727175AbgCBOjm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 09:39:42 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:28256 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727113AbgCBOjm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2020 09:39:42 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 022EOWAm121755;
+        Mon, 2 Mar 2020 09:39:35 -0500
+Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2yfmq9vv6t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 02 Mar 2020 09:39:35 -0500
+Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
+        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 022EcW9S003989;
+        Mon, 2 Mar 2020 14:39:34 GMT
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+        by ppma05wdc.us.ibm.com with ESMTP id 2yffk62vfm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 02 Mar 2020 14:39:34 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 022EdX4Z19661308
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 2 Mar 2020 14:39:33 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8B0737805F;
+        Mon,  2 Mar 2020 14:39:33 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id AAB2C7805E;
+        Mon,  2 Mar 2020 14:39:32 +0000 (GMT)
+Received: from oc6034535106.ibm.com (unknown [9.160.4.131])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Mon,  2 Mar 2020 14:39:32 +0000 (GMT)
+From:   Brian King <brking@linux.vnet.ibm.com>
+To:     tyreld@linux.vnet.ibm.com
+Cc:     brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, sfr@canb.auug.org.au
+Subject: [PATCH] ibmvfc: Fix NULL return compiler warning
+Date:   Mon,  2 Mar 2020 08:39:21 -0600
+Message-Id: <1583159961-15903-1-git-send-email-brking@linux.vnet.ibm.com>
+X-Mailer: git-send-email 1.8.3.1
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-03-02_04:2020-03-02,2020-03-02 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 mlxscore=0
+ spamscore=0 clxscore=1015 lowpriorityscore=0 suspectscore=1 bulkscore=0
+ mlxlogscore=770 phishscore=0 adultscore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2003020105
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-RGV2aWNlIHF1aXJrICJVRlNfREVWSUNFX1FVSVJLX0hPU1RfUEFfVEFDVElWQVRFIiBpcyBlbmFi
-bGVkIGZvciBhbGwNClNhbXN1bmcgZGV2aWNlcyBieSBkZWZhdWx0IGN1cnJlbnRseS4NCg0KSG93
-ZXZlciBNZWRpYVRlayBVRlMgaG9zdCByZXF1aXJlcyBkaWZmZXJlbnQgaG9zdCdzIFBBX1RBQ1RJ
-VkFURQ0KY29uZmlndXJhdGlvbi4gSGVuY2UgY2xlYXIgdGhpcyBxdWlyayBmaXJzdCBhbmQgdGhl
-biBhcHBseSB2ZW5kb3Itc3BlY2lmaWMNCnZhbHVlIGluIHZvcHMgY2FsbGJhY2suDQoNClNpZ25l
-ZC1vZmYtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQotLS0NCiBk
-cml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5jIHwgNCArKystDQogMSBmaWxlIGNoYW5nZWQs
-IDMgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMN
-CmluZGV4IGRlNjUwODIyYzlkOS4uM2IwZTU3NWQ3NDYwIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYw0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0
-ZWsuYw0KQEAgLTUzMyw4ICs1MzMsMTAgQEAgc3RhdGljIGludCB1ZnNfbXRrX2FwcGx5X2Rldl9x
-dWlya3Moc3RydWN0IHVmc19oYmEgKmhiYSkNCiAJc3RydWN0IHVmc19kZXZfaW5mbyAqZGV2X2lu
-Zm8gPSAmaGJhLT5kZXZfaW5mbzsNCiAJdTE2IG1pZCA9IGRldl9pbmZvLT53bWFudWZhY3R1cmVy
-aWQ7DQogDQotCWlmIChtaWQgPT0gVUZTX1ZFTkRPUl9TQU1TVU5HKQ0KKwlpZiAobWlkID09IFVG
-U19WRU5ET1JfU0FNU1VORykgew0KKwkJaGJhLT5kZXZfcXVpcmtzICY9IH5VRlNfREVWSUNFX1FV
-SVJLX0hPU1RfUEFfVEFDVElWQVRFOw0KIAkJdWZzaGNkX2RtZV9zZXQoaGJhLCBVSUNfQVJHX01J
-QihQQV9UQUNUSVZBVEUpLCA2KTsNCisJfQ0KIA0KIAkvKg0KIAkgKiBEZWNpZGUgd2FpdGluZyB0
-aW1lIGJlZm9yZSBnYXRpbmcgcmVmZXJlbmNlIGNsb2NrIGFuZA0KLS0gDQoyLjE4LjANCg==
+Fix up a compiler warning introduced via 54b04c99d02e
+
+Fixes: 54b04c99d02e ("scsi: ibmvfc: Avoid loss of all paths during SVC node reboot")
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 84dd8c5..7da9e06 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -3641,7 +3641,7 @@ static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *tgt)
+ 	struct ibmvfc_event *evt;
+ 
+ 	if (vhost->discovery_threads >= disc_threads)
+-		return NULL;
++		return;
+ 
+ 	vhost->discovery_threads++;
+ 	evt = __ibmvfc_tgt_get_implicit_logout_evt(tgt,
+-- 
+1.8.3.1
 
