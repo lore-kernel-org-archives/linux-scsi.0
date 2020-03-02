@@ -2,175 +2,249 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA3EC3F2D1
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 18:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15299C3F2D1
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 18:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D2972166E
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 18:38:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="XGROOcOZ"
+	by mail.kernel.org (Postfix) with ESMTP id E091821D56
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 18:40:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727261AbgCBSiM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 13:38:12 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:36568 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727234AbgCBSiM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2020 13:38:12 -0500
-Received: by mail-ot1-f67.google.com with SMTP id j14so284392otq.3
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Mar 2020 10:38:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=JF728VY/9odZQchiuYIX1SMEWalj7zW3r00nUkKmHSw=;
-        b=XGROOcOZ9XsqKG1V2Yez15bWlmur2cYxHK7rHzjvgs9qfUxtpUfTP3wQXD4AtG7ZzS
-         i2UPTXxVmLpdEQ674iVeu8E4IkZ9BMbGBluhU0gbmz6a1jOEcnk8TLCqmhvM8+OE0mkA
-         Mzce1UZCX+deZeseHodZfrV7qFLpTkg5t5LIY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=JF728VY/9odZQchiuYIX1SMEWalj7zW3r00nUkKmHSw=;
-        b=nZ7oGRaQ6VoJ2PYnwmx0TPIlOqhYzZhHJFpKW6qgxQOuUVa+GYHeLiNJPbfhuAYOMY
-         q4wR/dEjt0gyu4KL94w1h/YwGEWYnJ5+Kec+GRRnC3T88lF0NSg5Y0KOU+itGAm6viom
-         1m6FctexIXvCL5WXwttp72Vxq0triws41EQPACy5+JuOwBO/w/S3lJKHGYAV1GiUHZtE
-         M84+JsEUBIdpstJBrjBarmHENHTzCecvE2e5d5AqsPPExHucnyClP3hsLQA3mmFN4dib
-         tTMeDiPkcmmJAZrMH5AMZD+Exlar3885/AVj345RueEc0jYt0MGmFKJUVUBUeVjdPPEb
-         nhlQ==
-X-Gm-Message-State: ANhLgQ1BtGCMzre5zD6XeOZ7vayGK0oVfrdwpxY4EXzDVW6IbmK7NEXX
-        u4Byetq1pFkoUlH3mm7RU+JaCLaCznjFyZ/O0EzYsQ==
-X-Google-Smtp-Source: ADFU+vuqLF6f4Ceh0bDNWjqootX8EJdKoXmZncw5SuLMaYVMOaJ7jRFs7Lzz2PAlOkRS5DiJ2pXjj8BERECt2JXhKfw=
-X-Received: by 2002:a9d:6446:: with SMTP id m6mr416114otl.122.1583174291488;
- Mon, 02 Mar 2020 10:38:11 -0800 (PST)
+        id S1727590AbgCBSk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 13:40:59 -0500
+Received: from mx2.suse.de ([195.135.220.15]:39340 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727389AbgCBSk7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 13:40:59 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 937CEB2C1;
+        Mon,  2 Mar 2020 18:40:56 +0000 (UTC)
+Date:   Mon, 2 Mar 2020 19:40:55 +0100
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 3/4] qla2xxx: Fix endianness annotations in source files
+Message-ID: <20200302184055.dtjktj4sbsyysk5m@beryllium.lan>
+References: <20200302033023.27718-1-bvanassche@acm.org>
+ <20200302033023.27718-4-bvanassche@acm.org>
 MIME-Version: 1.0
-References: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
- <1579000882-20246-11-git-send-email-anand.lodnoor@broadcom.com>
- <7ca1562c-7a7a-17c5-2429-9725d465a4a8@suse.de> <b5ab348d98b790578325140226f741c8@mail.gmail.com>
- <d7119a15-8be8-9fb2-3c50-8b0a6605982d@huawei.com> <CAAO+jF-P3MkB2mo6pmYH1ihjRGpfjkkgXZg9dAZ29nYmU6T2=A@mail.gmail.com>
- <93deab34-53a3-afcf-4862-6b168a9f60cc@huawei.com> <79fe7843-9d71-bdde-957c-32dde22437d9@suse.de>
- <5ac6fd4f-eef8-700b-89d2-c8b3cd6e12ca@huawei.com>
-In-Reply-To: <5ac6fd4f-eef8-700b-89d2-c8b3cd6e12ca@huawei.com>
-From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Tue, 3 Mar 2020 00:07:44 +0530
-Message-ID: <CAL2rwxqfo1_Wnea=4xb1K+OQTQ4aMd0GjOQG9tkc+E7V-5toqw@mail.gmail.com>
-Subject: Re: [PATCH v2 10/11] megaraid_sas: Use Block layer API to check SCSI
- device in-flight IO requests
-To:     John Garry <john.garry@huawei.com>
-Cc:     Hannes Reinecke <hare@suse.de>,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>,
-        Sankar Patra <sankar.patra@broadcom.com>,
-        Sasikumar PC <sasikumar.pc@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200302033023.27718-4-bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Mar 2, 2020 at 3:21 PM John Garry <john.garry@huawei.com> wrote:
->
->
-> >> static inline void
-> >> megasas_get_msix_index(struct megasas_instance *instance,
-> >>                 struct scsi_cmnd *scmd,
-> >>                 struct megasas_cmd_fusion *cmd,
-> >>                 u8 data_arms)
-> >> {
-> >> ...
-> >>
-> >> sdev_busy = atomic_read(&hctx->nr_active);
-> >>
-> >> if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
-> >>      sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
-> >>      cmd->request_desc->SCSIIO.MSIxIndex =
-> >>              mega_mod64(...),
-> >>      else if (instance->msix_load_balance)
-> >>          cmd->request_desc->SCSIIO.MSIxIndex =
-> >>              (mega_mod64(...),
-> >>                  instance->msix_vectors));
-> >>
-> >> Will this make a difference? I am not sure. Maybe, on this basis,
-> >> magaraid sas is not a good candidate to change to expose multiple queues.
-> >>
-> >> Ignoring that for a moment, since we no longer keep a host busy count,
-> >> and I figure that we don't want to back to using
-> >> scsi_device.device_busy, is the judgement of hctx->nr_active ok to use
-> >> to decide whether to use these performance queues?
-> >>
-> > Personally, I wonder if the current implementation of high-IOPs queues
-> > makes sense with multiqueue. > Thing is, the current high-IOPs queue mechanism of shifting I/O to
-> > another internal queue doesn't align nicely with the blk-mq architecture.
->
-> Right, we should not be hiding HW queues from blk-mq like this. This
-> breaks the symmetry. Maybe we can move this functionality to blk-mq, but
-> I doubt that this is a common use case.
-We added this concept of extra queues for megraid_sas latest gen of controllers
-for performance reasons. Here is some background-
-https://lore.kernel.org/lkml/20180829084618.GA24765@ming.t460p/t/
-We worked with the community to have such interface for managed(for
-low latency queues) and non-managed(High IOPs queues)
-interrupts co-existence.
+On Sun, Mar 01, 2020 at 07:30:22PM -0800, Bart Van Assche wrote:
+> Fix all endianness complaints reported by sparse (C=2).
 
->
-> > What we _do_ have, though, is a 'poll' queue mechanism, allowing to
-> > separate out one (or several) queues for polling, to allow for ..
-> > indeed, high-IOPs.
->
-> Any examples or references for this?
->
-> > So it would be interesting to figure out if we don't get similar
-> > performance by using the 'poll' queue implementation from blk-mq instead
-> > of the current one.
->
-> I thought that this driver/or mpt3sas already used a polling mode.
->
-> And for these low-latency queues, I figure that the issue is not just
-> polling vs interrupt, but indeed how fast the HW queue can consume SQEs.
-> A HW queue may only be able to consume at a limited rate - that's why we
-> segregate.
-Yes, there is no polling in any of HW queues. High IOPs queues have
-interrupt coalescing enabled whereas
-low latency queues does not have interrupt coalescing. megaraid_sas
-driver would choose which set of queues
-among these two has to be used depending on workload. For latency
-oriented workload, driver would use low
-latency queues and for IOPs profile, driver would use High IOPs queues.
->
-> As an aside, that is actually an issue for blk-mq. For 1 to many HW
-> queue-to-CPU mapping, limiting many CPUs a single queue can limit IOPs
-> since HW queues can only consume at a limited rate.
-We were able to achieve performance target for MegaRAID latest gen
-controller with this model of few set
- of HW queues mapped to local numa CPUs and low latency queues has one
-to one mapping to CPUs.
-This is default behavior of queues segregation in megaraid_sas driver
-to satisfy our IOPs and latency requirements altogether.
-However we have given module parameter- "perf_mode" to tune queues
-behavior. i.e turning on/off interrupt
-coalescing on all HW queues where this one to many queues to CPU
-mapping would not happen.
+[...]
+
+>  int
+> -qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+> -    uint32_t ram_dwords, void **nxt)
+> +qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, __be32 *ram,
+> +		 uint32_t ram_dwords, void **nxt)
+>  {
+>  	int rval = QLA_FUNCTION_FAILED;
+>  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+>  	dma_addr_t dump_dma = ha->gid_list_dma;
+> -	uint32_t *chunk = (void *)ha->gid_list;
+> +	uint32_t *chunk = (uint32_t *)ha->gid_list;
+>  	uint32_t dwords = qla2x00_gid_list_size(ha) / 4;
+>  	uint32_t stat;
+>  	ulong i, j, timer = 6000000;
+> @@ -252,9 +252,9 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+>  			return rval;
+>  		}
+>  		for (j = 0; j < dwords; j++) {
+> -			ram[i + j] =
+> -			    (IS_QLA27XX(ha) || IS_QLA28XX(ha)) ?
+> -			    chunk[j] : swab32(chunk[j]);
+> +			ram[i + j] = (__force __be32)
+> +				((IS_QLA27XX(ha) || IS_QLA28XX(ha)) ?
+> +				 chunk[j] : swab32(chunk[j]));
+
+Isn't this assuming the host runs in little endian mode? Because later down...
+
+>  		}
+>  	}
+>  
+> @@ -263,8 +263,8 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+>  }
+>  
+>  static int
+> -qla24xx_dump_memory(struct qla_hw_data *ha, uint32_t *code_ram,
+> -    uint32_t cram_size, void **nxt)
+> +qla24xx_dump_memory(struct qla_hw_data *ha, __be32 *code_ram,
+> +		    uint32_t cram_size, void **nxt)
+>  {
+>  	int rval;
+>  
+> @@ -284,11 +284,11 @@ qla24xx_dump_memory(struct qla_hw_data *ha, uint32_t *code_ram,
+>  	return rval;
+>  }
+>  
+> -static uint32_t *
+> +static __be32 *
+>  qla24xx_read_window(struct device_reg_24xx __iomem *reg, uint32_t iobase,
+> -    uint32_t count, uint32_t *buf)
+> +		    uint32_t count, __be32 *buf)
+>  {
+> -	uint32_t __iomem *dmp_reg;
+> +	__le32 __iomem *dmp_reg;
+>  
+>  	WRT_REG_DWORD(&reg->iobase_addr, iobase);
+>  	dmp_reg = &reg->iobase_window;
+> @@ -366,7 +366,7 @@ qla24xx_soft_reset(struct qla_hw_data *ha)
+>  }
+>  
+>  static int
+> -qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
+> +qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, __be16 *ram,
+>      uint32_t ram_words, void **nxt)
+>  {
+>  	int rval;
+> @@ -374,7 +374,7 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
+>  	uint16_t mb0;
+>  	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+>  	dma_addr_t dump_dma = ha->gid_list_dma;
+> -	uint16_t *dump = (uint16_t *)ha->gid_list;
+> +	__le16 *dump = (__force __le16 *)ha->gid_list;
+>  
+>  	rval = QLA_SUCCESS;
+>  	mb0 = 0;
+> @@ -439,7 +439,7 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
+>  		if (test_and_clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags)) {
+>  			rval = mb0 & MBS_MASK;
+>  			for (idx = 0; idx < words; idx++)
+> -				ram[cnt + idx] = swab16(dump[idx]);
+> +				ram[cnt + idx] = cpu_to_be16(le16_to_cpu(dump[idx]));
+
+... cpu_to_be16() is used.
+
+> @@ -7705,7 +7707,7 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+>  	ql_dbg(ql_dbg_init, vha, 0x008b,
+>  	    "FW: Loading firmware from flash (%x).\n", faddr);
+>  
+> -	dcode = (void *)req->ring;
+> +	dcode = (uint32_t *)req->ring;
+>  	qla24xx_read_flash_data(vha, dcode, faddr, 8);
+>  	if (qla24xx_risc_firmware_invalid(dcode)) {
+>  		ql_log(ql_log_fatal, vha, 0x008c,
+> @@ -7718,18 +7720,18 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+>  		return QLA_FUNCTION_FAILED;
+>  	}
+>  
+> -	dcode = (void *)req->ring;
+> +	dcode = (uint32_t *)req->ring;
+>  	*srisc_addr = 0;
+>  	segments = FA_RISC_CODE_SEGMENTS;
+>  	for (j = 0; j < segments; j++) {
+>  		ql_dbg(ql_dbg_init, vha, 0x008d,
+>  		    "-> Loading segment %u...\n", j);
+>  		qla24xx_read_flash_data(vha, dcode, faddr, 10);
+> -		risc_addr = be32_to_cpu(dcode[2]);
+> -		risc_size = be32_to_cpu(dcode[3]);
+> +		risc_addr = swab32(dcode[2]);
+> +		risc_size = swab32(dcode[3]);
+>  		if (!*srisc_addr) {
+>  			*srisc_addr = risc_addr;
+> -			risc_attr = be32_to_cpu(dcode[9]);
+> +			risc_attr = swab32(dcode[9]);
+>  		}
+
+also here, this looks like hardcoded endianess.
+
+> @@ -7769,9 +7772,9 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+>  		fwdt->template = NULL;
+>  		fwdt->length = 0;
+>  
+> -		dcode = (void *)req->ring;
+> +		dcode = (uint32_t *)req->ring;
+>  		qla24xx_read_flash_data(vha, dcode, faddr, 7);
+> -		risc_size = be32_to_cpu(dcode[2]);
+> +		risc_size = swab32(dcode[2]);
+
+dito.
+
+>  		ql_dbg(ql_dbg_init, vha, 0x0161,
+>  		    "-> fwdt%u template array at %#x (%#x dwords)\n",
+>  		    j, faddr, risc_size);
+> @@ -7840,7 +7843,8 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+>  {
+>  	int	rval;
+>  	int	i, fragment;
+> -	uint16_t *wcode, *fwcode;
+> +	uint16_t *wcode;
+> +	__be16 *fwcode;
+>  	uint32_t risc_addr, risc_size, fwclen, wlen, *seg;
+>  	struct fw_blob *blob;
+>  	struct qla_hw_data *ha = vha->hw;
+> @@ -7860,7 +7864,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+>  
+>  	wcode = (uint16_t *)req->ring;
+>  	*srisc_addr = 0;
+> -	fwcode = (uint16_t *)blob->fw->data;
+> +	fwcode = (__force __be16 *)blob->fw->data;
+>  	fwclen = 0;
+>  
+>  	/* Validate firmware image by checking version. */
+> @@ -7908,7 +7912,7 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+>  			    "words 0x%x.\n", risc_addr, wlen);
+>  
+>  			for (i = 0; i < wlen; i++)
+> -				wcode[i] = swab16(fwcode[i]);
+> +				wcode[i] = swab16((__force u32)fwcode[i]);
+
+dito.
+
+> @@ -3216,7 +3217,7 @@ qla82xx_start_scsi(srb_t *sp)
+>  	uint16_t	tot_dsds;
+>  	struct device_reg_82xx __iomem *reg;
+>  	uint32_t dbval;
+> -	uint32_t *fcp_dl;
+> +	__be32 *fcp_dl;
+>  	uint8_t additional_cdb_len;
+>  	struct ct6_dsd *ctx;
+>  	struct scsi_qla_host *vha = sp->vha;
+> @@ -3398,7 +3399,7 @@ qla82xx_start_scsi(srb_t *sp)
+>  
+>  		memcpy(ctx->fcp_cmnd->cdb, cmd->cmnd, cmd->cmd_len);
+>  
+> -		fcp_dl = (uint32_t *)(ctx->fcp_cmnd->cdb + 16 +
+> +		fcp_dl = (void *)(ctx->fcp_cmnd->cdb + 16 +
+>  		    additional_cdb_len);
+
+Shouldn't this be (__be32*)?
+
+>  		*fcp_dl = htonl((uint32_t)scsi_bufflen(cmd));
+
+
+
+> @@ -3537,7 +3540,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, void *mbuf)
+>  	}
+>  
+>  	for (i = 0; i < 4; i++)
+> -		ha->gold_fw_version[i] = be32_to_cpu(dcode[4+i]);
+> +		ha->gold_fw_version[i] = swab32(dcode[4+i]);
+>  
+>  	return ret;
+>  }
+
+Here again why the swab32() call.
 
 Thanks,
-Sumit
->
-> >
-> > Which would also have the benefit that we could support the io_uring
-> > interface natively with megaraid_sas, which I think would be a benefit
-> > on its own.
-> >
->
-> thanks,
-> John
->
+Daniel
+
+/me brain hurts now
