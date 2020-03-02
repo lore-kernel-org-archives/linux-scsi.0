@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8400BC3F2D2
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F22FDC3F2D2
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44CAD246B4
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C49BE246B6
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137149;
-	bh=GLxZsUQq+Lij8M5TFkR1baqj1S8OGH1zk8esZJ1wNcg=;
+	s=default; t=1583137164;
+	bh=IfRS/R6H+Szpiwi72smGycLsGnORNH/i9azDqozRPuI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HeHzVj8MTrOA9eunlNCFxjJ0yXPjpCt4+uvrmJiuoTnUXd005P/jP2oFn/cysho3O
-	 LjST5rzH/7Bv9MzjQpUeBgbu+tVtSz4quI11Z0bvNWW8q9nvTNlGYNJUN0WQoYHUv0
-	 Bi22H5eXDfzE3yG04P/yW+P6AcM6Z3cozCTfkP2k=
+	b=UeKW3DpLMD/RiylM/2I0DKdmGiTgHCk6EKX6rJOmUiiFHM7WGyrLpu647Wt6cS8cU
+	 jhqn5jj3M+h7UpjBMq75eFf0LZ39jk2ksTrVdvruEuLq2HeQto5Qw/6oDA63VT3mC1
+	 4LeLhTH8HL+Kb8AJk4ghh7UDu26elIMfnD3NGoaA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727573AbgCBITA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:19:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57094 "EHLO mail.kernel.org"
+        id S1727704AbgCBITV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:19:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56678 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727154AbgCBIQU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727059AbgCBIQU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Mar 2020 03:16:20 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 401E2246D5;
-        Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E937E246B9;
+        Mon,  2 Mar 2020 08:16:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=GLxZsUQq+Lij8M5TFkR1baqj1S8OGH1zk8esZJ1wNcg=;
+        bh=IfRS/R6H+Szpiwi72smGycLsGnORNH/i9azDqozRPuI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ds7nPUvsI4F0Celyc8rzVkvLv8/pNwQpo5zgezjJtGA1lFPoCD58AHPo7Bct/N2Ne
-         4h2apFBDolOWigUnJXUPUQ+hb4zRJR1NNQNEDFr0ikYPcqgxI2gXOWuhml5NTjpmJK
-         7apaLpK13kNjRc/cnZSp4VRwuest8tfUGdgdMhHc=
+        b=CzV9VHYdj2Md+uBvKwr2W8pqXFNMC0teiREa9ZEjgsuqNdPGQLiPuip47nIgxChct
+         YOJTFKADMnjkpNLRKORFD88zSBtOS9dyjiXI1KKY20SfOcD7zdxoOZYuoXWDPEztMK
+         mG+wRybjS9E+RUyV/YOhcl9xvwbb/fIAbGuJW72s=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003xe-C0; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003wv-2Y; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 14/42] docs: scsi: convert dpti.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:47 +0100
-Message-Id: <212fd7961c134c5bd73d87cd818bcddc30270804.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 04/42] docs: scsi: convert aacraid.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:37 +0100
+Message-Id: <67c60ad88777c91937d49771e2a3f48cbf353e4c.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -64,267 +64,152 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- Documentation/scsi/dpti.rst   | 92 +++++++++++++++++++++++++++++++++++
- Documentation/scsi/dpti.txt   | 83 -------------------------------
- Documentation/scsi/index.rst  |  1 +
- drivers/scsi/Kconfig          |  2 +-
- drivers/scsi/dpt/dpti_ioctl.h |  2 +-
- drivers/scsi/dpt_i2o.c        |  2 +-
- drivers/scsi/dpti.h           |  2 +-
- 7 files changed, 97 insertions(+), 87 deletions(-)
- create mode 100644 Documentation/scsi/dpti.rst
- delete mode 100644 Documentation/scsi/dpti.txt
+ .../scsi/{aacraid.txt => aacraid.rst}         | 59 ++++++++++++++-----
+ Documentation/scsi/index.rst                  |  1 +
+ MAINTAINERS                                   |  2 +-
+ drivers/scsi/Kconfig                          |  2 +-
+ 4 files changed, 46 insertions(+), 18 deletions(-)
+ rename Documentation/scsi/{aacraid.txt => aacraid.rst} (83%)
 
-diff --git a/Documentation/scsi/dpti.rst b/Documentation/scsi/dpti.rst
-new file mode 100644
-index 000000000000..0496919d87d3
---- /dev/null
-+++ b/Documentation/scsi/dpti.rst
-@@ -0,0 +1,92 @@
+diff --git a/Documentation/scsi/aacraid.txt b/Documentation/scsi/aacraid.rst
+similarity index 83%
+rename from Documentation/scsi/aacraid.txt
+rename to Documentation/scsi/aacraid.rst
+index 30f643f611b2..1904674b94f3 100644
+--- a/Documentation/scsi/aacraid.txt
++++ b/Documentation/scsi/aacraid.rst
+@@ -1,7 +1,11 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+===================
-+Adaptec dpti driver
-+===================
++===================================
+ AACRAID Driver for Linux (take two)
++===================================
+ 
+ Introduction
+--------------------------
++============
+ The aacraid driver adds support for Adaptec (http://www.adaptec.com)
+ RAID controllers. This is a major rewrite from the original
+ Adaptec supplied driver. It has significantly cleaned up both the code
+@@ -9,8 +13,11 @@ and the running binary size (the module is less than half the size of
+ the original).
+ 
+ Supported Cards/Chipsets
+--------------------------
++========================
 +
-+Redistribution and use in source form, with or without modification, are
-+permitted provided that redistributions of source code must retain the
-+above copyright notice, this list of conditions and the following disclaimer.
++	===================	=======	=======================================
+ 	PCI ID (pci.ids)	OEM	Product
++	===================	=======	=======================================
+ 	9005:0285:9005:0285	Adaptec	2200S (Vulcan)
+ 	9005:0285:9005:0286	Adaptec	2120S (Crusader)
+ 	9005:0285:9005:0287	Adaptec	2200S (Vulcan-2m)
+@@ -117,34 +124,54 @@ Supported Cards/Chipsets
+ 	9005:0285:108e:0286	SUN	STK RAID INT (Cougar)
+ 	9005:0285:108e:0287	SUN	STK RAID EXT (Prometheus)
+ 	9005:0285:108e:7aae	SUN	STK RAID EM (Narvi)
++	===================	=======	=======================================
+ 
+ People
+--------------------------
++======
 +
-+This software is provided ``as is`` by Adaptec and
-+any express or implied warranties, including, but not limited to, the
-+implied warranties of merchantability and fitness for a particular purpose,
-+are disclaimed. In no event shall Adaptec be
-+liable for any direct, indirect, incidental, special, exemplary or
-+consequential damages (including, but not limited to, procurement of
-+substitute goods or services; loss of use, data, or profits; or business
-+interruptions) however caused and on any theory of liability, whether in
-+contract, strict liability, or tort (including negligence or otherwise)
-+arising in any way out of the use of this driver software, even if advised
-+of the possibility of such damage.
-+
-+This driver supports the Adaptec I2O RAID and DPT SmartRAID V I2O boards.
-+
-+Credits
-+=======
-+
-+The original linux driver was ported to Linux by Karen White while at
-+Dell Computer.  It was ported from Bob Pasteur's (of DPT) original
-+non-Linux driver.  Mark Salyzyn and Bob Pasteur consulted on the original
-+driver.
-+
-+2.0 version of the driver by Deanna Bonds and Mark Salyzyn.
-+
-+History
-+=======
-+
-+The driver was originally ported to linux version 2.0.34
-+
-+==== ==========================================================================
-+V2.0 Rewrite of driver.  Re-architectured based on i2o subsystem.
-+     This was the first full GPL version since the last version used
-+     i2osig headers which were not GPL.  Developer Testing version.
-+V2.1 Internal testing
-+V2.2 First released version
-+
-+V2.3 Changes:
-+
-+     - Added Raptor Support
-+     - Fixed bug causing system to hang under extreme load with
-+     - management utilities running (removed GFP_DMA from kmalloc flags)
-+
-+V2.4 First version ready to be submitted to be embedded in the kernel
-+
-+     Changes:
-+
-+     - Implemented suggestions from Alan Cox
-+     - Added calculation of resid for sg layer
-+     - Better error handling
-+     - Added checking underflow conditions
-+     - Added DATAPROTECT checking
-+     - Changed error return codes
-+     - Fixed pointer bug in bus reset routine
-+     - Enabled hba reset from ioctls (allows a FW flash to reboot and use
-+       the new FW without having to reboot)
-+     - Changed proc output
-+==== ==========================================================================
-+
-+TODO
-+====
-+- Add 64 bit Scatter Gather when compiled on 64 bit architectures
-+- Add sparse lun scanning
-+- Add code that checks if a device that had been taken offline is
-+  now online (at the FW level) when test unit ready or inquiry
-+  command from scsi-core
-+- Add proc read interface
-+- busrescan command
-+- rescan command
-+- Add code to rescan routine that notifies scsi-core about new devices
-+- Add support for C-PCI (hotplug stuff)
-+- Add ioctl passthru error recovery
-+
-+Notes
-+=====
-+The DPT card optimizes the order of processing commands.  Consequently,
-+a command may take up to 6 minutes to complete after it has been sent
-+to the board.
-+
-+The files dpti_ioctl.h dptsig.h osd_defs.h osd_util.h sys_info.h are part of the
-+interface files for Adaptec's management routines.  These define the structures used
-+in the ioctls.  They are written to be portable.  They are hard to read, but I need
-+to use them 'as is' or I can miss changes in the interface.
-diff --git a/Documentation/scsi/dpti.txt b/Documentation/scsi/dpti.txt
-deleted file mode 100644
-index f36dc0e7c8da..000000000000
---- a/Documentation/scsi/dpti.txt
-+++ /dev/null
-@@ -1,83 +0,0 @@
-- /* TERMS AND CONDITIONS OF USE
-- * 
-- * Redistribution and use in source form, with or without modification, are
-- * permitted provided that redistributions of source code must retain the
-- * above copyright notice, this list of conditions and the following disclaimer.
-- * 
-- * This software is provided `as is' by Adaptec and
-- * any express or implied warranties, including, but not limited to, the
-- * implied warranties of merchantability and fitness for a particular purpose,
-- * are disclaimed. In no event shall Adaptec be
-- * liable for any direct, indirect, incidental, special, exemplary or
-- * consequential damages (including, but not limited to, procurement of
-- * substitute goods or services; loss of use, data, or profits; or business
-- * interruptions) however caused and on any theory of liability, whether in
-- * contract, strict liability, or tort (including negligence or otherwise)
-- * arising in any way out of the use of this driver software, even if advised
-- * of the possibility of such damage.
-- * 
-- ****************************************************************
-- * This driver supports the Adaptec I2O RAID and DPT SmartRAID V I2O boards.
-- *
-- * CREDITS:
-- * The original linux driver was ported to Linux by Karen White while at 
-- * Dell Computer.  It was ported from Bob Pasteur's (of DPT) original 
-- * non-Linux driver.  Mark Salyzyn and Bob Pasteur consulted on the original
-- * driver. 
-- * 
-- * 2.0 version of the driver by Deanna Bonds and Mark Salyzyn.
-- *
-- * HISTORY:
-- * The driver was originally ported to linux version 2.0.34 
-- *
-- * V2.0 Rewrite of driver.  Re-architectured based on i2o subsystem.
-- *   This was the first full GPL version since the last version used
-- *   i2osig headers which were not GPL.  Developer Testing version.
-- * V2.1 Internal testing
-- * V2.2 First released version
-- *
-- * V2.3 
-- *   Changes:
-- *      Added Raptor Support
-- *      Fixed bug causing system to hang under extreme load with 
-- *         management utilities running (removed GFP_DMA from kmalloc flags)
-- *
-- *
-- * V2.4 First version ready to be submitted to be embedded in the kernel
-- *   Changes: 
-- *      Implemented suggestions from Alan Cox
-- *      Added calculation of resid for sg layer
-- *      Better error handling
-- *         Added checking underflow conditions 
-- *         Added DATAPROTECT checking
-- *         Changed error return codes
-- *         Fixed pointer bug in bus reset routine
-- *      Enabled hba reset from ioctls (allows a FW flash to reboot and use the new
-- *         FW without having to reboot)
-- *      Changed proc output
-- *
-- * TODO:
-- *      Add 64 bit Scatter Gather when compiled on 64 bit architectures
-- *      Add sparse lun scanning 
-- *      Add code that checks if a device that had been taken offline is
-- *         now online (at the FW level) when test unit ready or inquiry 
-- *         command from scsi-core
-- *      Add proc read interface
-- *         busrescan command
-- *         rescan command
-- *      Add code to rescan routine that notifies scsi-core about new devices
-- *      Add support for C-PCI (hotplug stuff)
-- *      Add ioctl passthru error recovery
-- *
-- * NOTES:
-- * The DPT card optimizes the order of processing commands.  Consequently,
-- * a command may take up to 6 minutes to complete after it has been sent
-- * to the board.  
-- *
-- * The files dpti_ioctl.h dptsig.h osd_defs.h osd_util.h sys_info.h are part of the
-- * interface files for Adaptec's management routines.  These define the structures used
-- * in the ioctls.  They are written to be portable.  They are hard to read, but I need
-- * to use them 'as is' or I can miss changes in the interface.
-- *
-- */
+ Alan Cox <alan@lxorguk.ukuu.org.uk>
+-Christoph Hellwig <hch@infradead.org>	(updates for new-style PCI probing and SCSI host registration,
+-					 small cleanups/fixes)
+-Matt Domsch <matt_domsch@dell.com>	(revision ioctl, adapter messages)
+-Deanna Bonds                            (non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
+-					 added new ioctls, changed scsi interface to use new error handler,
+-					 increased the number of fibs and outstanding commands to a container)
 -
+-					(fixed 64bit and 64G memory model, changed confusing naming convention
+-					 where fibs that go to the hardware are consistently called hw_fibs and
+-					 not just fibs like the name of the driver tracking structure)
+-Mark Salyzyn <Mark_Salyzyn@adaptec.com> Fixed panic issues and added some new product ids for upcoming hbas. Performance tuning, card failover and bug mitigations.
++
++Christoph Hellwig <hch@infradead.org>
++
++- updates for new-style PCI probing and SCSI host registration,
++  small cleanups/fixes
++
++Matt Domsch <matt_domsch@dell.com>
++
++- revision ioctl, adapter messages
++
++Deanna Bonds
++
++- non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
++  added new ioctls, changed scsi interface to use new error handler,
++  increased the number of fibs and outstanding commands to a container
++- fixed 64bit and 64G memory model, changed confusing naming convention
++  where fibs that go to the hardware are consistently called hw_fibs and
++  not just fibs like the name of the driver tracking structure
++
++Mark Salyzyn <Mark_Salyzyn@adaptec.com>
++
++- Fixed panic issues and added some new product ids for upcoming hbas.
++- Performance tuning, card failover and bug mitigations.
++
+ Achim Leubner <Achim_Leubner@adaptec.com>
+ 
+-Original Driver
++- Original Driver
++
+ -------------------------
++
+ Adaptec Unix OEM Product Group
+ 
+ Mailing List
+--------------------------
++============
++
+ linux-scsi@vger.kernel.org (Interested parties troll here)
+ Also note this is very different to Brian's original driver
+ so don't expect him to support it.
++
+ Adaptec does support this driver.  Contact Adaptec tech support or
+ aacraid@adaptec.com
+ 
+ Original by Brian Boerner February 2001
++
+ Rewritten by Alan Cox, November 2001
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index 6fe00709cbce..b553dd9904bf 100644
+index 99efc77c3ac2..2e0429d1a7a5 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -18,5 +18,6 @@ Linux SCSI Subsystem
-    BusLogic
-    cxgb3i
-    dc395x
-+   dpti
+@@ -8,5 +8,6 @@ Linux SCSI Subsystem
+    :maxdepth: 1
+ 
+    53c700
++   aacraid
  
     scsi_transport_srp/figures
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1552db209e69..cb6ecdbc96da 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -236,7 +236,7 @@ M:	Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+ L:	linux-scsi@vger.kernel.org
+ W:	http://www.adaptec.com/
+ S:	Supported
+-F:	Documentation/scsi/aacraid.txt
++F:	Documentation/scsi/aacraid.rst
+ F:	drivers/scsi/aacraid/
+ 
+ ABI/API
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 9f5b2ddec6e0..5e834fba7934 100644
+index 2b882b96e0d4..a153444318fb 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -448,7 +448,7 @@ config SCSI_DPT_I2O
+@@ -421,7 +421,7 @@ config SCSI_AACRAID
  	help
- 	  This driver supports all of Adaptec's I2O based RAID controllers as 
- 	  well as the DPT SmartRaid V cards.  This is an Adaptec maintained
--	  driver by Deanna Bonds.  See <file:Documentation/scsi/dpti.txt>.
-+	  driver by Deanna Bonds.  See <file:Documentation/scsi/dpti.rst>.
+ 	  This driver supports a variety of Dell, HP, Adaptec, IBM and
+ 	  ICP storage products. For a list of supported products, refer
+-	  to <file:Documentation/scsi/aacraid.txt>.
++	  to <file:Documentation/scsi/aacraid.rst>.
  
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called dpt_i2o.
-diff --git a/drivers/scsi/dpt/dpti_ioctl.h b/drivers/scsi/dpt/dpti_ioctl.h
-index 6bc33f4f020d..25e9251f8c78 100644
---- a/drivers/scsi/dpt/dpti_ioctl.h
-+++ b/drivers/scsi/dpt/dpti_ioctl.h
-@@ -5,7 +5,7 @@
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2001 by Adaptec
- 
--    See Documentation/scsi/dpti.txt for history, notes, license info
-+    See Documentation/scsi/dpti.rst for history, notes, license info
-     and credits
-  ***************************************************************************/
- 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index abc74fd474dc..5362fb0b96a7 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -8,7 +8,7 @@
- 			   July 30, 2001 First version being submitted
- 			   for inclusion in the kernel.  V2.4
- 
--    See Documentation/scsi/dpti.txt for history, notes, license info
-+    See Documentation/scsi/dpti.rst for history, notes, license info
-     and credits
-  ***************************************************************************/
- 
-diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
-index 42b1e28b5884..6da9ab1fcfe8 100644
---- a/drivers/scsi/dpti.h
-+++ b/drivers/scsi/dpti.h
-@@ -5,7 +5,7 @@
-     begin                : Thu Sep 7 2000
-     copyright            : (C) 2001 by Adaptec
- 
--    See Documentation/scsi/dpti.txt for history, notes, license info
-+    See Documentation/scsi/dpti.rst for history, notes, license info
-     and credits
-  ***************************************************************************/
- 
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called aacraid.
 -- 
 2.21.1
 
