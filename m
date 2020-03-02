@@ -2,122 +2,140 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24259C3F2D1
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 09:11:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5E81C3F2D1
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 09:17:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF185246A1
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 09:11:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="vAK36ER2"
+	by mail.kernel.org (Postfix) with ESMTP id A3E86246A1
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 09:17:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726874AbgCBJLr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 04:11:47 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:36558 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726382AbgCBJLr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Mar 2020 04:11:47 -0500
-X-UUID: 85e8bf4af8164fee9720b06c6b768bef-20200302
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=0Y23yxwohWhXaBotvUv65ILHSsUsxieq1MmLFigexZw=;
-        b=vAK36ER269blXWVp9ID1zgWmo9YVYJ4yZROsmsh22z0kJguPv94Cbr9fvWNRUty0Vqt7P2L3rjw3La5SWEKG/lVcW2EhwGaYYQh6HZDR4/lS7+78Nlq0nweI+b+57NW2uey1dIDNMER7A9bgjHAn0Dq1agr8syj3B7JabkS+wL0=;
-X-UUID: 85e8bf4af8164fee9720b06c6b768bef-20200302
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1409833056; Mon, 02 Mar 2020 17:11:42 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 2 Mar 2020 17:09:00 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 2 Mar 2020 17:11:08 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <ebiggers@kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <cang@codeaurora.org>, <satyat@google.com>,
-        <matthias.bgg@gmail.com>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-fscrypt@vger.kernel.org>,
-        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
-        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>,
-        <light.hsieh@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [RFC PATCH v1] scsi: ufs-mediatek: add inline encryption support
-Date:   Mon, 2 Mar 2020 17:11:38 +0800
-Message-ID: <20200302091138.10341-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1726874AbgCBJRX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 04:17:23 -0500
+Received: from mx2.suse.de ([195.135.220.15]:54620 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726144AbgCBJRX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 04:17:23 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 5764CACCA;
+        Mon,  2 Mar 2020 09:17:20 +0000 (UTC)
+Subject: Re: [PATCH v2 10/11] megaraid_sas: Use Block layer API to check SCSI
+ device in-flight IO requests
+To:     John Garry <john.garry@huawei.com>,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>,
+        Sankar Patra <sankar.patra@broadcom.com>,
+        Sasikumar PC <sasikumar.pc@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
+ <1579000882-20246-11-git-send-email-anand.lodnoor@broadcom.com>
+ <7ca1562c-7a7a-17c5-2429-9725d465a4a8@suse.de>
+ <b5ab348d98b790578325140226f741c8@mail.gmail.com>
+ <d7119a15-8be8-9fb2-3c50-8b0a6605982d@huawei.com>
+ <CAAO+jF-P3MkB2mo6pmYH1ihjRGpfjkkgXZg9dAZ29nYmU6T2=A@mail.gmail.com>
+ <93deab34-53a3-afcf-4862-6b168a9f60cc@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <79fe7843-9d71-bdde-957c-32dde22437d9@suse.de>
+Date:   Mon, 2 Mar 2020 10:17:16 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 1E0A8519FB5C75622F8B15201DA37225490402B846AFCF514B41CA5CB4FE07DC2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <93deab34-53a3-afcf-4862-6b168a9f60cc@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-QWRkIGlubGluZSBlbmNyeXB0aW9uIHN1cHBvcnQgdG8gdWZzLW1lZGlhdGVrLg0KDQpUaGUgc3Rh
-bmRhcmRzLWNvbXBsaWFudCBwYXJ0cywgc3VjaCBhcyBxdWVyeWluZyB0aGUgY3J5cHRvIGNhcGFi
-aWxpdGllcw0KYW5kIGVuYWJsaW5nIGNyeXB0byBmb3IgaW5kaXZpZHVhbCBVRlMgcmVxdWVzdHMs
-IGFyZSBhbHJlYWR5IGhhbmRsZWQgYnkNCnVmc2hjZC1jcnlwdG8uYywgd2hpY2ggaXRzZWxmIGlz
-IHdpcmVkIGludG8gdGhlIGJsay1jcnlwdG8gZnJhbWV3b3JrLg0KDQpIb3dldmVyIE1lZGlhVGVr
-IFVGUyBob3N0IHJlcXVpcmVzIGEgdmVuZG9yLXNwZWNpZmljIGhjZV9lbmFibGUgb3BlcmF0aW9u
-DQp0byBhbGxvdyBjcnlwdG8tcmVsYXRlZCByZWdpc3RlcnMgYmVpbmcgYWNjZXNzZWQgbm9ybWFs
-bHkgaW4ga2VybmVsLg0KQWZ0ZXIgdGhpcyBzdGVwLCBNZWRpYVRlayBVRlMgaG9zdCBjYW4gd29y
-ayBhcyBzdGFuZGFyZC1jb21wbGlhbnQgaG9zdA0KZm9yIGlubGluZS1lbmNyeXB0aW9uIHJlbGF0
-ZWQgZnVuY3Rpb25zLg0KDQpUaGlzIHBhdGNoIGlzIHJlYmFzZWQgdG8gdGhlIGxhdGVzdCB3aXAt
-aW5saW5lLWVuY3J5cHRpb24gYnJhbmNoIGluDQpFcmljIEJpZ2dlcnMncyBnaXQ6DQpodHRwczov
-L2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9lYmlnZ2Vycy9saW51eC5n
-aXQvDQoNClNpZ25lZC1vZmYtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5j
-b20+DQotLS0NCiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5jIHwgMjcgKysrKysrKysr
-KysrKysrKysrKysrKysrKystDQogZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaCB8ICAx
-ICsNCiAyIGZpbGVzIGNoYW5nZWQsIDI3IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCg0K
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMgYi9kcml2ZXJzL3Nj
-c2kvdWZzL3Vmcy1tZWRpYXRlay5jDQppbmRleCA1M2VhZTVmZTJhZGUuLjEyZDAxZmQzZDVlMSAx
-MDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMNCisrKyBiL2RyaXZl
-cnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMNCkBAIC0xNSw2ICsxNSw3IEBADQogI2luY2x1ZGUg
-PGxpbnV4L3NvYy9tZWRpYXRlay9tdGtfc2lwX3N2Yy5oPg0KIA0KICNpbmNsdWRlICJ1ZnNoY2Qu
-aCINCisjaW5jbHVkZSAidWZzaGNkLWNyeXB0by5oIg0KICNpbmNsdWRlICJ1ZnNoY2QtcGx0ZnJt
-LmgiDQogI2luY2x1ZGUgInVmc19xdWlya3MuaCINCiAjaW5jbHVkZSAidW5pcHJvLmgiDQpAQCAt
-MjQsNiArMjUsOSBAQA0KIAlhcm1fc21jY2Nfc21jKE1US19TSVBfVUZTX0NPTlRST0wsIFwNCiAJ
-CSAgICAgIGNtZCwgdmFsLCAwLCAwLCAwLCAwLCAwLCAmKHJlcykpDQogDQorI2RlZmluZSB1ZnNf
-bXRrX2NyeXB0b19jdHJsKHJlcywgZW5hYmxlKSBcDQorCXVmc19tdGtfc21jKFVGU19NVEtfU0lQ
-X0NSWVBUT19DVFJMLCBlbmFibGUsIHJlcykNCisNCiAjZGVmaW5lIHVmc19tdGtfcmVmX2Nsa19u
-b3RpZnkob24sIHJlcykgXA0KIAl1ZnNfbXRrX3NtYyhVRlNfTVRLX1NJUF9SRUZfQ0xLX05PVElG
-SUNBVElPTiwgb24sIHJlcykNCiANCkBAIC02Niw3ICs3MCwyNyBAQCBzdGF0aWMgdm9pZCB1ZnNf
-bXRrX2NmZ191bmlwcm9fY2coc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBlbmFibGUpDQogCX0N
-CiB9DQogDQotc3RhdGljIGludCB1ZnNfbXRrX2JpbmRfbXBoeShzdHJ1Y3QgdWZzX2hiYSAqaGJh
-KQ0KK3N0YXRpYyB2b2lkIHVmc19tdGtfY3J5cHRvX2VuYWJsZShzdHJ1Y3QgdWZzX2hiYSAqaGJh
-KQ0KK3sNCisJc3RydWN0IGFybV9zbWNjY19yZXMgcmVzOw0KKw0KKwl1ZnNfbXRrX2NyeXB0b19j
-dHJsKHJlcywgMSk7DQorCWlmIChyZXMuYTApIHsNCisJCWRldl9pbmZvKGhiYS0+ZGV2LCAiJXM6
-IGNyeXB0byBlbmFibGUgZmFpbGVkLCBlcnI6ICVsdVxuIiwNCisJCQkgX19mdW5jX18sIHJlcy5h
-MCk7DQorCX0NCit9DQorDQorc3RhdGljIGludCB1ZnNfbXRrX2hjZV9lbmFibGVfbm90aWZ5KHN0
-cnVjdCB1ZnNfaGJhICpoYmEsDQorCQkJCSAgICAgZW51bSB1ZnNfbm90aWZ5X2NoYW5nZV9zdGF0
-dXMgc3RhdHVzKQ0KK3sNCisJaWYgKHN0YXR1cyA9PSBQUkVfQ0hBTkdFICYmIHVmc2hjZF9oYmFf
-aXNfY3J5cHRvX3N1cHBvcnRlZChoYmEpKQ0KKwkJdWZzX210a19jcnlwdG9fZW5hYmxlKGhiYSk7
-DQorDQorCXJldHVybiAwOw0KK30NCisNCitpbnQgdWZzX210a19iaW5kX21waHkoc3RydWN0IHVm
-c19oYmEgKmhiYSkNCiB7DQogCXN0cnVjdCB1ZnNfbXRrX2hvc3QgKmhvc3QgPSB1ZnNoY2RfZ2V0
-X3ZhcmlhbnQoaGJhKTsNCiAJc3RydWN0IGRldmljZSAqZGV2ID0gaGJhLT5kZXY7DQpAQCAtNDk0
-LDYgKzUxOCw3IEBAIHN0YXRpYyBzdHJ1Y3QgdWZzX2hiYV92YXJpYW50X29wcyB1ZnNfaGJhX210
-a192b3BzID0gew0KIAkubmFtZSAgICAgICAgICAgICAgICA9ICJtZWRpYXRlay51ZnNoY2kiLA0K
-IAkuaW5pdCAgICAgICAgICAgICAgICA9IHVmc19tdGtfaW5pdCwNCiAJLnNldHVwX2Nsb2NrcyAg
-ICAgICAgPSB1ZnNfbXRrX3NldHVwX2Nsb2NrcywNCisJLmhjZV9lbmFibGVfbm90aWZ5ICAgPSB1
-ZnNfbXRrX2hjZV9lbmFibGVfbm90aWZ5LA0KIAkubGlua19zdGFydHVwX25vdGlmeSA9IHVmc19t
-dGtfbGlua19zdGFydHVwX25vdGlmeSwNCiAJLnB3cl9jaGFuZ2Vfbm90aWZ5ICAgPSB1ZnNfbXRr
-X3B3cl9jaGFuZ2Vfbm90aWZ5LA0KIAkuYXBwbHlfZGV2X3F1aXJrcyAgICA9IHVmc19tdGtfYXBw
-bHlfZGV2X3F1aXJrcywNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRl
-ay5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KaW5kZXggZmNjZGQ5NzlkNmZi
-Li41ZWJhYTU5ODk4YmYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRl
-ay5oDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5oDQpAQCAtNTgsNiArNTgs
-NyBAQA0KICAqLw0KICNkZWZpbmUgTVRLX1NJUF9VRlNfQ09OVFJPTCAgICAgICAgICAgICAgIE1U
-S19TSVBfU01DX0NNRCgweDI3NikNCiAjZGVmaW5lIFVGU19NVEtfU0lQX0RFVklDRV9SRVNFVCAg
-ICAgICAgICBCSVQoMSkNCisjZGVmaW5lIFVGU19NVEtfU0lQX0NSWVBUT19DVFJMICAgICAgICAg
-ICBCSVQoMikNCiAjZGVmaW5lIFVGU19NVEtfU0lQX1JFRl9DTEtfTk9USUZJQ0FUSU9OICBCSVQo
-MykNCiANCiAvKg0KLS0gDQoyLjE4LjANCg==
+On 2/27/20 1:32 PM, John Garry wrote:
+>>
+>>     Is blk_mq_hw_ctx.nr_active really the same as 
+>> scsi_device.device_busy?
+>>
+>> *Both of them are not the same but it serves our purpose to get the 
+>> number of outstanding io requests. Please refer below link for more 
+>> details:*
+>>
+>> https://lore.kernel.org/linux-scsi/20191105002334.GA11436@ming.t460p/
+> 
+> Thanks for the pointer, but there did not seem to be a conclusion there: 
+> https://lore.kernel.org/linux-scsi/20191105002334.GA11436@ming.t460p/
+> 
+> Anyway, if we move to exposing multiple HW queues in the megaraid SAS 
+> driver:
+> 
+>   host->nr_hw_queues = instance->msix_vectors -
+>                        instance->low_latency_index_start;
+> 
+> Then hctx->nr_active will no longer be the total active requests per 
+> host, but rather per hctx.
+> 
+> In addition, hctx->nr_active will no longer be properly maintained, as 
+> it would be based on the hctx HW queue actually being used by the LLDD 
+> for that request, which is not always true now. That is because in 
+> megasas_get_msix_index() a judgement may be made to use a low-latency HW 
+> queue instead:
+> 
+> static inline void
+> megasas_get_msix_index(struct megasas_instance *instance,
+>                 struct scsi_cmnd *scmd,
+>                 struct megasas_cmd_fusion *cmd,
+>                 u8 data_arms)
+> {
+> ...
+> 
+> sdev_busy = atomic_read(&hctx->nr_active);
+> 
+> if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
+>      sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
+>      cmd->request_desc->SCSIIO.MSIxIndex =
+>              mega_mod64(...),
+>      else if (instance->msix_load_balance)
+>          cmd->request_desc->SCSIIO.MSIxIndex =
+>              (mega_mod64(...),
+>                  instance->msix_vectors));
+> 
+> Will this make a difference? I am not sure. Maybe, on this basis, 
+> magaraid sas is not a good candidate to change to expose multiple queues.
+> 
+> Ignoring that for a moment, since we no longer keep a host busy count, 
+> and I figure that we don't want to back to using 
+> scsi_device.device_busy, is the judgement of hctx->nr_active ok to use 
+> to decide whether to use these performance queues?
+> 
+Personally, I wonder if the current implementation of high-IOPs queues 
+makes sense with multiqueue.
+Thing is, the current high-IOPs queue mechanism of shifting I/O to 
+another internal queue doesn't align nicely with the blk-mq architecture.
+What we _do_ have, though, is a 'poll' queue mechanism, allowing to 
+separate out one (or several) queues for polling, to allow for .. 
+indeed, high-IOPs.
+So it would be interesting to figure out if we don't get similar 
+performance by using the 'poll' queue implementation from blk-mq instead 
+of the current one.
 
+Which would also have the benefit that we could support the io_uring 
+interface natively with megaraid_sas, which I think would be a benefit 
+on its own.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
