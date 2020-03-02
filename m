@@ -4,52 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C2BC3F2DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0FFBC3F2D6
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 497A5246B4
+	by mail.kernel.org (Postfix) with ESMTP id 8F8CA246B4
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1583137117;
-	bh=TYe3QSV9TWPID/dPwasRZ4lyd48T/A8F4VzFpXM3i6o=;
+	bh=whC7giiFv+Yk442YMgup2KDESn5/o/XkEA6JPZfKSOU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=oMRgHsnTUo79nDemf6gOEe33h7OxZWsdOlo6dkw22tU1+MhtOUaS0RzP9aQGAGTQ/
-	 +oPVaHrAdI/7ODbcWsHfMTpX8eG+aCeeUYP4yw4B+Lg71yLbhoKUaQnUN/a6FL3Pel
-	 3pYRNG/wp339004atSXoAxUjs3ZZqvwvlt9NmUb4=
+	b=qTcsdV2vpIUykNwVOOvzAZ5d7Te1dR3kh6kPaBhfY8G7JiKlXh2vwI8rIhqK8Y1UW
+	 N4bHV9tfi+bPpdVkSwVbLCHs+TxaGAfAzuv5jYOr6sUTtSK01+PUhx4sLv5mvdI2El
+	 R4TNUDL50O+onrRd0+PC0zuKEhen/M9pl0vkkRM8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727574AbgCBISg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727852AbgCBISg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 2 Mar 2020 03:18:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57142 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:57084 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727173AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727142AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Mar 2020 03:16:21 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4C9FF246D7;
+        by mail.kernel.org (Postfix) with ESMTPSA id 312FE246CD;
         Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=TYe3QSV9TWPID/dPwasRZ4lyd48T/A8F4VzFpXM3i6o=;
+        bh=whC7giiFv+Yk442YMgup2KDESn5/o/XkEA6JPZfKSOU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VJ86OOo30dwmnFplL+Ics9T+Z9MTzZ/iVuVgUe1m20X1ST2a4jvzE2nv9U9HcfrAS
-         g9hGOI4JXHz/tHydaC52h0kCOvtwst0/mdAFs18Do+dQ/leH2iFdCvr6qf9UeQ8oDZ
-         sik0La4WyfkLrULb3VucSBdlevK2eDf20QtRrX/0=
+        b=wGk3J5HlEheZ32y/4VOv0ANHBoVnpC05frr3DIwvRXZyMmDIdC7yWr9SHgNk+J0ss
+         Ziq3Li+N9118FzjH3EvwYeM8aNw2l4EGJMhV8Q3E0xgJ8DY/1VOJYa63K+ZxehW3J2
+         BwCPBBxU4+Y8Pk9YLVyLA2FucY+fYzPPggD1BARY=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003xv-F3; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003xQ-9b; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Don Brace <don.brace@microsemi.com>,
-        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
-Subject: [PATCH 17/42] docs: scsi: convert hpsa.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:50 +0100
-Message-Id: <ea58e04176d43fb7194615b145060aa04c9cf3ad.1583136624.git.mchehab+huawei@kernel.org>
+        Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 11/42] docs: scsi: convert BusLogic.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:44 +0100
+Message-Id: <750629b6a5233c85c5391c44d126606b8aabefc8.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -62,187 +64,335 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- Documentation/scsi/{hpsa.txt => hpsa.rst} | 79 +++++++++++------------
- Documentation/scsi/index.rst              |  1 +
- MAINTAINERS                               |  2 +-
- 3 files changed, 41 insertions(+), 41 deletions(-)
- rename Documentation/scsi/{hpsa.txt => hpsa.rst} (77%)
+ .../scsi/{BusLogic.txt => BusLogic.rst}       | 89 +++++++++++++------
+ Documentation/scsi/index.rst                  |  1 +
+ drivers/scsi/BusLogic.c                       |  2 +-
+ drivers/scsi/Kconfig                          |  2 +-
+ 4 files changed, 67 insertions(+), 27 deletions(-)
+ rename Documentation/scsi/{BusLogic.txt => BusLogic.rst} (93%)
 
-diff --git a/Documentation/scsi/hpsa.txt b/Documentation/scsi/hpsa.rst
-similarity index 77%
-rename from Documentation/scsi/hpsa.txt
-rename to Documentation/scsi/hpsa.rst
-index 891435a72fce..340e10c6e35f 100644
---- a/Documentation/scsi/hpsa.txt
-+++ b/Documentation/scsi/hpsa.rst
-@@ -1,6 +1,8 @@
+diff --git a/Documentation/scsi/BusLogic.txt b/Documentation/scsi/BusLogic.rst
+similarity index 93%
+rename from Documentation/scsi/BusLogic.txt
+rename to Documentation/scsi/BusLogic.rst
+index 48e982cd6fe7..b60169812358 100644
+--- a/Documentation/scsi/BusLogic.txt
++++ b/Documentation/scsi/BusLogic.rst
+@@ -1,6 +1,11 @@
+-	   BusLogic MultiMaster and FlashPoint SCSI Driver for Linux
 +.. SPDX-License-Identifier: GPL-2.0
++
++=========================================================
++BusLogic MultiMaster and FlashPoint SCSI Driver for Linux
++=========================================================
  
-+=========================================
- HPSA - Hewlett Packard Smart Array driver
-------------------------------------------
-+=========================================
+ 			 Version 2.0.15 for Linux 2.0
++
+ 			 Version 2.1.15 for Linux 2.1
  
- This file describes the hpsa SCSI driver for HP Smart Array controllers.
- The hpsa driver is intended to supplant the cciss driver for newer
-@@ -11,17 +13,17 @@ driver (for logical drives) AND a SCSI driver (for tape drives). This
- complexity and eliminating that complexity is one of the reasons
- for hpsa to exist.
+ 			      PRODUCTION RELEASE
+@@ -8,13 +13,16 @@
+ 				17 August 1998
  
--Supported devices:
--------------------
-+Supported devices
-+=================
+ 			       Leonard N. Zubkoff
++
+ 			       Dandelion Digital
++
+ 			       lnz@dandelion.com
  
--Smart Array P212
--Smart Array P410
--Smart Array P410i
--Smart Array P411
--Smart Array P812
--Smart Array P712m
--Smart Array P711m
--StorageWorks P1210m
-+- Smart Array P212
-+- Smart Array P410
-+- Smart Array P410i
-+- Smart Array P411
-+- Smart Array P812
-+- Smart Array P712m
-+- Smart Array P711m
-+- StorageWorks P1210m
+ 	 Copyright 1995-1998 by Leonard N. Zubkoff <lnz@dandelion.com>
  
- Additionally, older Smart Arrays may work with the hpsa driver if the kernel
- boot parameter "hpsa_allow_any=1" is specified, however these are not tested
-@@ -35,18 +37,20 @@ mode, each command completion requires an interrupt, while with "performant mode
- command completions indicated by a single interrupt.
  
- HPSA specific entries in /sys
-------------------------------
+-				 INTRODUCTION
++Introduction
++============
+ 
+ BusLogic, Inc. designed and manufactured a variety of high performance SCSI
+ host adapters which share a common programming interface across a diverse
+@@ -86,9 +94,11 @@ Contact information for offices in Europe and Japan is available on the Web
+ site.
+ 
+ 
+-				DRIVER FEATURES
++Driver Features
++===============
+ 
+-o Configuration Reporting and Testing
++Configuration Reporting and Testing
++-----------------------------------
+ 
+   During system initialization, the driver reports extensively on the host
+   adapter hardware configuration, including the synchronous transfer parameters
+@@ -130,7 +140,8 @@ o Configuration Reporting and Testing
+     The status of Wide Negotiation, Disconnect/Reconnect, and Tagged Queuing
+     are reported as "Enabled", Disabled", or a sequence of "Y" and "N" letters.
+ 
+-o Performance Features
++Performance Features
++--------------------
+ 
+   BusLogic SCSI Host Adapters directly implement SCSI-2 Tagged Queuing, and so
+   support has been included in the driver to utilize tagged queuing with any
+@@ -150,7 +161,8 @@ o Performance Features
+   queue depth of 1 is selected.  Tagged queuing is also disabled for individual
+   target devices if disconnect/reconnect is disabled for that device.
+ 
+-o Robustness Features
++Robustness Features
++-------------------
+ 
+   The driver implements extensive error recovery procedures.  When the higher
+   level parts of the SCSI subsystem request that a timed out command be reset,
+@@ -174,7 +186,8 @@ o Robustness Features
+   lock up or crash, and thereby allowing a clean shutdown and restart after the
+   offending component is removed.
+ 
+-o PCI Configuration Support
++PCI Configuration Support
++-------------------------
+ 
+   On PCI systems running kernels compiled with PCI BIOS support enabled, this
+   driver will interrogate the PCI configuration space and use the I/O port
+@@ -184,19 +197,22 @@ o PCI Configuration Support
+   used to disable the ISA compatible I/O port entirely as it is not necessary.
+   The ISA compatible I/O port is disabled by default on the BT-948/958/958D.
+ 
+-o /proc File System Support
++/proc File System Support
++-------------------------
+ 
+   Copies of the host adapter configuration information together with updated
+   data transfer and error recovery statistics are available through the
+   /proc/scsi/BusLogic/<N> interface.
+ 
+-o Shared Interrupts Support
++Shared Interrupts Support
++-------------------------
+ 
+   On systems that support shared interrupts, any number of BusLogic Host
+   Adapters may share the same interrupt request channel.
+ 
+ 
+-			    SUPPORTED HOST ADAPTERS
++Supported Host Adapters
++=======================
+ 
+ The following list comprises the supported BusLogic SCSI Host Adapters as of
+ the date of this document.  It is recommended that anyone purchasing a BusLogic
+@@ -205,6 +221,7 @@ that it is or will be supported.
+ 
+ FlashPoint Series PCI Host Adapters:
+ 
++=======================	=============================================
+ FlashPoint LT (BT-930)	Ultra SCSI-3
+ FlashPoint LT (BT-930R)	Ultra SCSI-3 with RAIDPlus
+ FlashPoint LT (BT-920)	Ultra SCSI-3 (BT-930 without BIOS)
+@@ -214,15 +231,19 @@ FlashPoint LW (BT-950)	Wide Ultra SCSI-3
+ FlashPoint LW (BT-950R)	Wide Ultra SCSI-3 with RAIDPlus
+ FlashPoint DW (BT-952)	Dual Channel Wide Ultra SCSI-3
+ FlashPoint DW (BT-952R)	Dual Channel Wide Ultra SCSI-3 with RAIDPlus
++=======================	=============================================
+ 
+ MultiMaster "W" Series Host Adapters:
+ 
++=======     ===		==============================
+ BT-948	    PCI		Ultra SCSI-3
+ BT-958	    PCI		Wide Ultra SCSI-3
+ BT-958D	    PCI		Wide Differential Ultra SCSI-3
++=======     ===		==============================
+ 
+ MultiMaster "C" Series Host Adapters:
+ 
++========    ====	==============================
+ BT-946C	    PCI		Fast SCSI-2
+ BT-956C	    PCI		Wide Fast SCSI-2
+ BT-956CD    PCI		Wide Differential Fast SCSI-2
+@@ -232,9 +253,11 @@ BT-757C	    EISA	Wide Fast SCSI-2
+ BT-757CD    EISA	Wide Differential Fast SCSI-2
+ BT-545C	    ISA		Fast SCSI-2
+ BT-540CF    ISA		Fast SCSI-2
++========    ====	==============================
+ 
+ MultiMaster "S" Series Host Adapters:
+ 
++=======     ====	==============================
+ BT-445S	    VLB		Fast SCSI-2
+ BT-747S	    EISA	Fast SCSI-2
+ BT-747D	    EISA	Differential Fast SCSI-2
+@@ -244,11 +267,14 @@ BT-545S	    ISA		Fast SCSI-2
+ BT-542D	    ISA		Differential Fast SCSI-2
+ BT-742A	    EISA	SCSI-2 (742A revision H)
+ BT-542B	    ISA		SCSI-2 (542B revision H)
++=======     ====	==============================
+ 
+ MultiMaster "A" Series Host Adapters:
+ 
++=======     ====	==============================
+ BT-742A	    EISA	SCSI-2 (742A revisions A - G)
+ BT-542B	    ISA		SCSI-2 (542B revisions A - G)
++=======     ====	==============================
+ 
+ AMI FastDisk Host Adapters that are true BusLogic MultiMaster clones are also
+ supported by this driver.
+@@ -260,9 +286,11 @@ list.  The retail kit includes the bare board and manual as well as cabling and
+ driver media and documentation that are not provided with bare boards.
+ 
+ 
+-			 FLASHPOINT INSTALLATION NOTES
++FlashPoint Installation Notes
 +=============================
  
-   In addition to the generic SCSI attributes available in /sys, hpsa supports
-   the following attributes:
+-o RAIDPlus Support
++RAIDPlus Support
++----------------
  
--  HPSA specific host attributes:
--  ------------------------------
-+HPSA specific host attributes
-+=============================
+   FlashPoint Host Adapters now include RAIDPlus, Mylex's bootable software
+   RAID.  RAIDPlus is not supported on Linux, and there are no plans to support
+@@ -273,7 +301,8 @@ o RAIDPlus Support
+   than RAIDPlus, so there is little impetus to include RAIDPlus support in the
+   BusLogic driver.
  
--  /sys/class/scsi_host/host*/rescan
--  /sys/class/scsi_host/host*/firmware_revision
--  /sys/class/scsi_host/host*/resettable
--  /sys/class/scsi_host/host*/transport_mode
-+  ::
+-o Enabling UltraSCSI Transfers
++Enabling UltraSCSI Transfers
++----------------------------
+ 
+   FlashPoint Host Adapters ship with their configuration set to "Factory
+   Default" settings that are conservative and do not allow for UltraSCSI speed
+@@ -287,12 +316,14 @@ o Enabling UltraSCSI Transfers
+   the "Optimum Performance" settings are loaded.
+ 
+ 
+-		      BT-948/958/958D INSTALLATION NOTES
++BT-948/958/958D Installation Notes
++==================================
+ 
+ The BT-948/958/958D PCI Ultra SCSI Host Adapters have some features which may
+ require attention in some circumstances when installing Linux.
+ 
+-o PCI I/O Port Assignments
++PCI I/O Port Assignments
++------------------------
+ 
+   When configured to factory default settings, the BT-948/958/958D will only
+   recognize the PCI I/O port assignments made by the motherboard's PCI BIOS.
+@@ -312,7 +343,8 @@ o PCI I/O Port Assignments
+   possible future I/O port conflicts.  The older BT-946C/956C/956CD also have
+   this configuration option, but the factory default setting is "Primary".
+ 
+-o PCI Slot Scanning Order
++PCI Slot Scanning Order
++-----------------------
+ 
+   In systems with multiple BusLogic PCI Host Adapters, the order in which the
+   PCI slots are scanned may appear reversed with the BT-948/958/958D as
+@@ -339,7 +371,8 @@ o PCI Slot Scanning Order
+   so as to recognize the host adapters in the same order as they are enumerated
+   by the host adapter's BIOS.
+ 
+-o Enabling UltraSCSI Transfers
++Enabling UltraSCSI Transfers
++----------------------------
+ 
+   The BT-948/958/958D ship with their configuration set to "Factory Default"
+   settings that are conservative and do not allow for UltraSCSI speed to be
+@@ -353,7 +386,8 @@ o Enabling UltraSCSI Transfers
+   "Optimum Performance" settings are loaded.
+ 
+ 
+-				DRIVER OPTIONS
++Driver Options
++==============
+ 
+ BusLogic Driver Options may be specified either via the Linux Kernel Command
+ Line or via the Loadable Kernel Module Installation Facility.  Driver Options
+@@ -520,30 +554,34 @@ The following examples demonstrate setting the Queue Depth for Target Devices
+ Devices on the second host adapter to 31, and the Bus Settle Time on the
+ second host adapter to 30 seconds.
+ 
+-Linux Kernel Command Line:
++Linux Kernel Command Line::
+ 
+   linux BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30
+ 
+-LILO Linux Boot Loader (in /etc/lilo.conf):
++LILO Linux Boot Loader (in /etc/lilo.conf)::
+ 
+   append = "BusLogic=QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"
+ 
+-INSMOD Loadable Kernel Module Installation Facility:
++INSMOD Loadable Kernel Module Installation Facility::
+ 
+   insmod BusLogic.o \
+       'BusLogic="QueueDepth:[,7,15];QueueDepth:31,BusSettleTime:30"'
+ 
+-NOTE: Module Utilities 2.1.71 or later is required for correct parsing
 +
-+    /sys/class/scsi_host/host*/rescan
-+    /sys/class/scsi_host/host*/firmware_revision
-+    /sys/class/scsi_host/host*/resettable
-+    /sys/class/scsi_host/host*/transport_mode
- 
-   the host "rescan" attribute is a write only attribute.  Writing to this
-   attribute will cause the driver to scan for new, changed, or removed devices
-@@ -58,7 +62,7 @@ HPSA specific entries in /sys
-   tape drives, or entire storage boxes containing pre-configured logical drives.
- 
-   The "firmware_revision" attribute contains the firmware version of the Smart Array.
--  For example:
-+  For example::
- 
- 	root@host:/sys/class/scsi_host/host4# cat firmware_revision
- 	7.14
-@@ -78,16 +82,18 @@ HPSA specific entries in /sys
-   kexec tools to warn the user if they attempt to designate a device which is
-   unable to honor the reset_devices kernel parameter as a dump device.
- 
--  HPSA specific disk attributes:
--  ------------------------------
-+HPSA specific disk attributes
-+-----------------------------
- 
--  /sys/class/scsi_disk/c:b:t:l/device/unique_id
--  /sys/class/scsi_disk/c:b:t:l/device/raid_level
--  /sys/class/scsi_disk/c:b:t:l/device/lunid
-+  ::
++.. Note::
 +
-+    /sys/class/scsi_disk/c:b:t:l/device/unique_id
-+    /sys/class/scsi_disk/c:b:t:l/device/raid_level
-+    /sys/class/scsi_disk/c:b:t:l/device/lunid
++      Module Utilities 2.1.71 or later is required for correct parsing
+       of driver options containing commas.
  
-   (where c:b:t:l are the controller, bus, target and lun of the device)
  
--  For example:
-+  For example::
+-			      DRIVER INSTALLATION
++Driver Installation
++===================
  
- 	root@host:/sys/class/scsi_disk/4:0:0:0/device# cat unique_id
- 	600508B1001044395355323037570F77
-@@ -96,35 +102,28 @@ HPSA specific entries in /sys
- 	root@host:/sys/class/scsi_disk/4:0:0:0/device# cat raid_level
- 	RAID 0
+ This distribution was prepared for Linux kernel version 2.0.35, but should be
+ compatible with 2.0.4 or any later 2.0 series kernel.
  
--HPSA specific ioctls:
-----------------------
-+HPSA specific ioctls
-+====================
+ To install the new BusLogic SCSI driver, you may use the following commands,
+-replacing "/usr/src" with wherever you keep your Linux kernel source tree:
++replacing "/usr/src" with wherever you keep your Linux kernel source tree::
  
-   For compatibility with applications written for the cciss driver, many, but
-   not all of the ioctls supported by the cciss driver are also supported by the
-   hpsa driver.  The data structures used by these are described in
-   include/linux/cciss_ioctl.h
+   cd /usr/src
+   tar -xvzf BusLogic-2.0.15.tar.gz
+@@ -557,7 +595,8 @@ Then install "arch/x86/boot/zImage" as your standard kernel, run lilo if
+ appropriate, and reboot.
  
--  CCISS_DEREGDISK
--  CCISS_REGNEWDISK
--  CCISS_REGNEWD
--
--  The above three ioctls all do exactly the same thing, which is to cause the driver
--  to rescan for new devices.  This does exactly the same thing as writing to the
--  hpsa specific host "rescan" attribute.
-+  CCISS_DEREGDISK, CCISS_REGNEWDISK, CCISS_REGNEWD
-+	The above three ioctls all do exactly the same thing, which is to cause the driver
-+	to rescan for new devices.  This does exactly the same thing as writing to the
-+	hpsa specific host "rescan" attribute.
  
-   CCISS_GETPCIINFO
--
- 	Returns PCI domain, bus, device and function and "board ID" (PCI subsystem ID).
+-		      BUSLOGIC ANNOUNCEMENTS MAILING LIST
++BusLogic Announcements Mailing List
++===================================
  
-   CCISS_GETDRIVVER
-+	Returns driver version in three bytes encoded as::
- 
--	Returns driver version in three bytes encoded as:
- 		(major_version << 16) | (minor_version << 8) | (subminor_version)
- 
--  CCISS_PASSTHRU
--  CCISS_BIG_PASSTHRU
--
-+  CCISS_PASSTHRU, CCISS_BIG_PASSTHRU
- 	Allows "BMIC" and "CISS" commands to be passed through to the Smart Array.
- 	These are used extensively by the HP Array Configuration Utility, SNMP storage
- 	agents, etc.  See cciss_vol_status at http://cciss.sf.net for some examples.
--
+ The BusLogic Announcements Mailing List provides a forum for informing Linux
+ users of new driver releases and other announcements regarding Linux support
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index 4b577c9e804e..b16f348bd31b 100644
+index d453fb3f1f7d..6bb2428c1d56 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -21,5 +21,6 @@ Linux SCSI Subsystem
-    dpti
-    FlashPoint
-    g_NCR5380
-+   hpsa
+@@ -15,5 +15,6 @@ Linux SCSI Subsystem
+    aic7xxx
+    bfa
+    bnx2fc
++   BusLogic
  
     scsi_transport_srp/figures
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 451a3f67d23a..39767eca07d9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7456,7 +7456,7 @@ M:	Don Brace <don.brace@microsemi.com>
- L:	esc.storagedev@microsemi.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
--F:	Documentation/scsi/hpsa.txt
-+F:	Documentation/scsi/hpsa.rst
- F:	drivers/scsi/hpsa*.[ch]
- F:	include/linux/cciss*.h
- F:	include/uapi/linux/cciss*.h
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 3170b295a5da..9b8be4f0da19 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -3652,7 +3652,7 @@ static bool __init blogic_parse(char **str, char *keyword)
+   selected host adapter.
+ 
+   The BusLogic Driver Probing Options are described in
+-  <file:Documentation/scsi/BusLogic.txt>.
++  <file:Documentation/scsi/BusLogic.rst>.
+ */
+ 
+ static int __init blogic_parseopts(char *options)
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 18af62594bc0..5ec7330f82b6 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -502,7 +502,7 @@ config SCSI_BUSLOGIC
+ 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
+ 	  Adapters. Consult the SCSI-HOWTO, available from
+ 	  <http://www.tldp.org/docs.html#howto>, and the files
+-	  <file:Documentation/scsi/BusLogic.txt> and
++	  <file:Documentation/scsi/BusLogic.rst> and
+ 	  <file:Documentation/scsi/FlashPoint.txt> for more information.
+ 	  Note that support for FlashPoint is only available for 32-bit
+ 	  x86 configurations.
 -- 
 2.21.1
 
