@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 478CBC3F2D9
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:16:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 391FFC3F2DA
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:16:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE75E246B6
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:16:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0985246B6
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:16:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137010;
-	bh=nHBE8hSbRK70GyTxcyABzfwHy/ZXR4Alx6a7xDaRBdM=;
+	s=default; t=1583137012;
+	bh=90wzNjLuD3Fp4qDalU+A3+NsFKeYjsXkN+NHd6HEAlg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=r4D0sX37SqZ19mIG780ximGKnwoU0ZZRnN3VgbggCXHvOyHT+pMkdaF/U1Dr38mLW
-	 9dasEaet74eWBYsIOSnbP4eJgSGohfTK5bIfaav8PN/iACQ/MXHi9l4Lt3uIMGSq4n
-	 0CXp4OfuDCnzncS3Az82ibvRNMUL/cpZGKu7Ceas=
+	b=qvv6I43WFVqJPVfH7hZh0SFn6+aGX35aATxp2SB+eYmiQsdNkXYbddNL1piWnhhZL
+	 58TZjupXvVaUhVj1ifj0zCdzPX5k20/ofmsLWqdFY1dm5td5J/Y0WMmSINqwM6YtRz
+	 eEea49SThwzx2JHfZPsq2DR6zKaS6kbTZYb5SyJs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727486AbgCBIQj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1727470AbgCBIQj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 2 Mar 2020 03:16:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57084 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:57208 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727384AbgCBIQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727385AbgCBIQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Mar 2020 03:16:25 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E79F624707;
-        Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 069032470D;
+        Mon,  2 Mar 2020 08:16:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136980;
-        bh=nHBE8hSbRK70GyTxcyABzfwHy/ZXR4Alx6a7xDaRBdM=;
+        bh=90wzNjLuD3Fp4qDalU+A3+NsFKeYjsXkN+NHd6HEAlg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qIpB2NKKaH2ix1Guxbxs3nD9C/6IdU52JS3mZeJPD18KNY28Io8VCE6RUbiW8MEvN
-         XDICDWvdkw+C5grV57dbyijuBw5zxP9becnYHU9KxEsdrGpgnN5KBYT6Wa8D8Mbbb7
-         0BPka476h7WnMRHRYtJD0EZ8nLhZYJgtWLOFkxFA=
+        b=hsxF3FmZqAmbFYnF5qhgldUhGoMB/p0xuwhTwRK6Y4zYFl/jmScNwvF6sF/MW+hQI
+         WrNWoWeT2gABnrUfzCX/kLxvwumoC7F+hVagJlC1Tr+Ic3bRbuvHbhd7+w7hkY+aIv
+         fMsp52q0inwwcc6D5lzQb3yJRccybF135Q0w3iTg=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFO-0003zf-1C; Mon, 02 Mar 2020 09:16:18 +0100
+        id 1j8gFO-0003zy-4N; Mon, 02 Mar 2020 09:16:18 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
@@ -48,9 +48,9 @@ Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 38/42] docs: scsi: convert sym53c8xx_2.txt to ReST
-Date:   Mon,  2 Mar 2020 09:16:11 +0100
-Message-Id: <08202c87294d61d147ec4ac784219d20805cdeb5.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 42/42] docs: scsi: convert arcmsr_spec.txt to ReST
+Date:   Mon,  2 Mar 2020 09:16:15 +0100
+Message-Id: <6f8e4da4ea643adbe048f55504a59427c5e50c97.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -61,1647 +61,1558 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This file had its own peculiar style, not following any other
+files inside the Kernel (as far as I saw).
+
+Had to do a number of changes here, starting by removing the two
+leading asterisks from each line, adding table and literal
+block markups and changing whitespace and blank lines.
+
+The end result is that (IMHO), it is now a lot easier to read
+it as a text file, while producing a good html output.
+
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- Documentation/scsi/index.rst                  |    1 +
- .../scsi/{sym53c8xx_2.txt => sym53c8xx_2.rst} | 1109 ++++++++++-------
- drivers/scsi/Kconfig                          |    2 +-
- 3 files changed, 637 insertions(+), 475 deletions(-)
- rename Documentation/scsi/{sym53c8xx_2.txt => sym53c8xx_2.rst} (53%)
+ Documentation/scsi/arcmsr_spec.rst | 907 +++++++++++++++++++++++++++++
+ Documentation/scsi/arcmsr_spec.txt | 574 ------------------
+ Documentation/scsi/index.rst       |   1 +
+ drivers/scsi/arcmsr/arcmsr_attr.c  |   2 +-
+ drivers/scsi/arcmsr/arcmsr_hba.c   |   2 +-
+ 5 files changed, 910 insertions(+), 576 deletions(-)
+ create mode 100644 Documentation/scsi/arcmsr_spec.rst
+ delete mode 100644 Documentation/scsi/arcmsr_spec.txt
 
-diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index 00584fb0588c..238dd0ac36a6 100644
---- a/Documentation/scsi/index.rst
-+++ b/Documentation/scsi/index.rst
-@@ -42,5 +42,6 @@ Linux SCSI Subsystem
-    smartpqi
-    st
-    sym53c500_cs
-+   sym53c8xx_2
- 
-    scsi_transport_srp/figures
-diff --git a/Documentation/scsi/sym53c8xx_2.txt b/Documentation/scsi/sym53c8xx_2.rst
-similarity index 53%
-rename from Documentation/scsi/sym53c8xx_2.txt
-rename to Documentation/scsi/sym53c8xx_2.rst
-index d28186553fb0..8de44a7baa9b 100644
---- a/Documentation/scsi/sym53c8xx_2.txt
-+++ b/Documentation/scsi/sym53c8xx_2.rst
-@@ -1,99 +1,111 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+=========================================
- The Linux SYM-2 driver documentation file
-+=========================================
- 
- Written by Gerard Roudier <groudier@free.fr>
-+
- 21 Rue Carnot
-+
- 95170 DEUIL LA BARRE - FRANCE
- 
- Updated by Matthew Wilcox <matthew@wil.cx>
- 
- 2004-10-09
--===============================================================================
- 
--1.  Introduction
--2.  Supported chips and SCSI features
--3.  Advantages of this driver for newer chips.
--      3.1 Optimized SCSI SCRIPTS
--      3.2 New features appeared with the SYM53C896
--4.  Memory mapped I/O versus normal I/O
--5.  Tagged command queueing
--6.  Parity checking
--7.  Profiling information
--8.  Control commands
--      8.1  Set minimum synchronous period
--      8.2  Set wide size
--      8.3  Set maximum number of concurrent tagged commands
--      8.4  Set debug mode
--      8.5  Set flag (no_disc)
--      8.6  Set verbose level
--      8.7  Reset all logical units of a target
--      8.8  Abort all tasks of all logical units of a target
--9.  Configuration parameters
--10. Boot setup commands
--      10.1 Syntax
--      10.2 Available arguments
--             10.2.1  Default number of tagged commands
--             10.2.2  Burst max
--             10.2.3  LED support
--             10.2.4  Differential mode
--             10.2.5  IRQ mode
--             10.2.6  Check SCSI BUS 
--             10.2.7  Suggest a default SCSI id for hosts
--             10.2.8  Verbosity level
--             10.2.9  Debug mode
--             10.2.10 Settle delay
--             10.2.11 Serial NVRAM
--             10.2.12 Exclude a host from being attached
--      10.3 Converting from old options
--      10.4 SCSI BUS checking boot option
--11. SCSI problem troubleshooting
--      15.1 Problem tracking
--      15.2 Understanding hardware error reports
--12. Serial NVRAM support (by Richard Waltham)
--      17.1 Features
--      17.2 Symbios NVRAM layout
--      17.3 Tekram  NVRAM layout
-+.. Contents
-+
-+   1.  Introduction
-+   2.  Supported chips and SCSI features
-+   3.  Advantages of this driver for newer chips.
-+         3.1 Optimized SCSI SCRIPTS
-+         3.2 New features appeared with the SYM53C896
-+   4.  Memory mapped I/O versus normal I/O
-+   5.  Tagged command queueing
-+   6.  Parity checking
-+   7.  Profiling information
-+   8.  Control commands
-+         8.1  Set minimum synchronous period
-+         8.2  Set wide size
-+         8.3  Set maximum number of concurrent tagged commands
-+         8.4  Set debug mode
-+         8.5  Set flag (no_disc)
-+         8.6  Set verbose level
-+         8.7  Reset all logical units of a target
-+         8.8  Abort all tasks of all logical units of a target
-+   9.  Configuration parameters
-+   10. Boot setup commands
-+         10.1 Syntax
-+         10.2 Available arguments
-+                10.2.1  Default number of tagged commands
-+                10.2.2  Burst max
-+                10.2.3  LED support
-+                10.2.4  Differential mode
-+                10.2.5  IRQ mode
-+                10.2.6  Check SCSI BUS
-+                10.2.7  Suggest a default SCSI id for hosts
-+                10.2.8  Verbosity level
-+                10.2.9  Debug mode
-+                10.2.10 Settle delay
-+                10.2.11 Serial NVRAM
-+                10.2.12 Exclude a host from being attached
-+         10.3 Converting from old options
-+         10.4 SCSI BUS checking boot option
-+   11. SCSI problem troubleshooting
-+         15.1 Problem tracking
-+         15.2 Understanding hardware error reports
-+   12. Serial NVRAM support (by Richard Waltham)
-+         17.1 Features
-+         17.2 Symbios NVRAM layout
-+         17.3 Tekram  NVRAM layout
- 
--===============================================================================
- 
- 1. Introduction
-+===============
- 
- This driver supports the whole SYM53C8XX family of PCI-SCSI controllers.
--It also support the subset of LSI53C10XX PCI-SCSI controllers that are based 
-+It also support the subset of LSI53C10XX PCI-SCSI controllers that are based
- on the SYM53C8XX SCRIPTS language.
- 
--It replaces the sym53c8xx+ncr53c8xx driver bundle and shares its core code 
--with the FreeBSD SYM-2 driver. The `glue' that allows this driver to work 
-+It replaces the sym53c8xx+ncr53c8xx driver bundle and shares its core code
-+with the FreeBSD SYM-2 driver. The 'glue' that allows this driver to work
- under Linux is contained in 2 files named sym_glue.h and sym_glue.c.
--Other drivers files are intended not to depend on the Operating System 
-+Other drivers files are intended not to depend on the Operating System
- on which the driver is used.
- 
- The history of this driver can be summarized as follows:
- 
- 1993: ncr driver written for 386bsd and FreeBSD by:
--          Wolfgang Stanglmeier        <wolf@cologne.de>
--          Stefan Esser                <se@mi.Uni-Koeln.de>
-+
-+          - Wolfgang Stanglmeier        <wolf@cologne.de>
-+          - Stefan Esser                <se@mi.Uni-Koeln.de>
- 
- 1996: port of the ncr driver to Linux-1.2.13 and rename it ncr53c8xx.
--          Gerard Roudier
- 
--1998: new sym53c8xx driver for Linux based on LOAD/STORE instruction and that 
-+          - Gerard Roudier
-+
-+1998: new sym53c8xx driver for Linux based on LOAD/STORE instruction and that
-       adds full support for the 896 but drops support for early NCR devices.
--          Gerard Roudier
- 
--1999: port of the sym53c8xx driver to FreeBSD and support for the LSI53C1010 
--      33 MHz and 66MHz Ultra-3 controllers. The new driver is named `sym'.
--          Gerard Roudier
-+          - Gerard Roudier
- 
--2000: Add support for early NCR devices to FreeBSD `sym' driver.
--      Break the driver into several sources and separate the OS glue 
-+1999: port of the sym53c8xx driver to FreeBSD and support for the LSI53C1010
-+      33 MHz and 66MHz Ultra-3 controllers. The new driver is named 'sym'.
-+
-+          - Gerard Roudier
-+
-+2000: Add support for early NCR devices to FreeBSD 'sym' driver.
-+      Break the driver into several sources and separate the OS glue
-       code from the core code that can be shared among different O/Ses.
-       Write a glue code for Linux.
--          Gerard Roudier
-+
-+          - Gerard Roudier
- 
- 2004: Remove FreeBSD compatibility code.  Remove support for versions of
-       Linux before 2.6.  Start using Linux facilities.
- 
--This README file addresses the Linux version of the driver. Under FreeBSD, 
-+This README file addresses the Linux version of the driver. Under FreeBSD,
- the driver documentation is the sym.8 man page.
- 
- Information about new chips is available at LSILOGIC web server:
-@@ -104,113 +116,145 @@ SCSI standard documentations are available at T10 site:
- 
-           http://www.t10.org/
- 
--Useful SCSI tools written by Eric Youngdale are part of most Linux 
-+Useful SCSI tools written by Eric Youngdale are part of most Linux
- distributions:
--   scsiinfo:    command line tool
--   scsi-config: TCL/Tk tool using scsiinfo
-+
-+   ============ ==========================
-+   scsiinfo     command line tool
-+   scsi-config  TCL/Tk tool using scsiinfo
-+   ============ ==========================
- 
- 2. Supported chips and SCSI features
-+====================================
- 
- The following features are supported for all chips:
- 
--	Synchronous negotiation
--	Disconnection
--	Tagged command queuing
--	SCSI parity checking
--	PCI Master parity checking
-+	- Synchronous negotiation
-+	- Disconnection
-+	- Tagged command queuing
-+	- SCSI parity checking
-+	- PCI Master parity checking
- 
- Other features depends on chip capabilities.
--The driver notably uses optimized SCRIPTS for devices that support 
--LOAD/STORE and handles PHASE MISMATCH from SCRIPTS for devices that 
-+
-+The driver notably uses optimized SCRIPTS for devices that support
-+LOAD/STORE and handles PHASE MISMATCH from SCRIPTS for devices that
- support the corresponding feature.
- 
- The following table shows some characteristics of the chip family.
- 
--       On board                                   LOAD/STORE   HARDWARE
--Chip   SDMS BIOS   Wide   SCSI std.   Max. sync   SCRIPTS      PHASE MISMATCH
------   ---------   ----   ---------   ----------  ----------   --------------
--810        N         N      FAST10    10 MB/s        N             N
--810A       N         N      FAST10    10 MB/s        Y             N
--815        Y         N      FAST10    10 MB/s        N             N
--825        Y         Y      FAST10    20 MB/s        N             N
--825A       Y         Y      FAST10    20 MB/s        Y             N
--860        N         N      FAST20    20 MB/s        Y             N
--875        Y         Y      FAST20    40 MB/s        Y             N
--875A       Y         Y      FAST20    40 MB/s        Y             Y
--876        Y         Y      FAST20    40 MB/s        Y             N
--895        Y         Y      FAST40    80 MB/s        Y             N
--895A       Y         Y      FAST40    80 MB/s        Y             Y
--896        Y         Y      FAST40    80 MB/s        Y             Y
--897        Y         Y      FAST40    80 MB/s        Y             Y
--1510D      Y         Y      FAST40    80 MB/s        Y             Y
--1010       Y         Y      FAST80   160 MB/s        Y             Y
--1010_66*   Y         Y      FAST80   160 MB/s        Y             Y
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|        |           |     |           |            |Load/store  |Hardware |
-+|        |On board   |     |           |            |scripts     |phase    |
-+|Chip    |SDMS BIOS  |Wide |SCSI std.  | Max. sync  |            |mismatch |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|810     |     N     |  N  | FAST10    | 10 MB/s    |      N     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|810A    |     N     |  N  | FAST10    | 10 MB/s    |      Y     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|815     |     Y     |  N  | FAST10    | 10 MB/s    |      N     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|825     |     Y     |  Y  | FAST10    | 20 MB/s    |      N     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|825A    |     Y     |  Y  | FAST10    | 20 MB/s    |      Y     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|860     |     N     |  N  | FAST20    | 20 MB/s    |      Y     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|875     |     Y     |  Y  | FAST20    | 40 MB/s    |      Y     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|875A    |     Y     |  Y  | FAST20    | 40 MB/s    |      Y     |    Y    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|876     |     Y     |  Y  | FAST20    | 40 MB/s    |      Y     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|895     |     Y     |  Y  | FAST40    | 80 MB/s    |      Y     |    N    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|895A    |     Y     |  Y  | FAST40    | 80 MB/s    |      Y     |    Y    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|896     |     Y     |  Y  | FAST40    | 80 MB/s    |      Y     |    Y    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|897     |     Y     |  Y  | FAST40    | 80 MB/s    |      Y     |    Y    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|1510D   |     Y     |  Y  | FAST40    | 80 MB/s    |      Y     |    Y    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|1010    |     Y     |  Y  | FAST80    |160 MB/s    |      Y     |    Y    |
-++--------+-----------+-----+-----------+------------+------------+---------+
-+|1010_66 |     Y     |  Y  | FAST80    |160 MB/s    |      Y     |    Y    |
-+|[1]_    |           |     |           |            |            |         |
-++--------+-----------+-----+-----------+------------+------------+---------+
- 
--* Chip supports 33MHz and 66MHz PCI bus clock.
-+.. [1] Chip supports 33MHz and 66MHz PCI bus clock.
- 
- 
- Summary of other supported features:
- 
--Module:                allow to load the driver
--Memory mapped I/O:     increases performance
--Control commands:      write operations to the proc SCSI file system
--Debugging information: written to syslog (expert only)
--Scatter / gather
--Shared interrupt
--Boot setup commands
--Serial NVRAM:          Symbios and Tekram formats
-+:Module:                allow to load the driver
-+:Memory mapped I/O:     increases performance
-+:Control commands:      write operations to the proc SCSI file system
-+:Debugging information: written to syslog (expert only)
-+:Serial NVRAM:          Symbios and Tekram formats
-+
-+- Scatter / gather
-+- Shared interrupt
-+- Boot setup commands
- 
- 
- 3. Advantages of this driver for newer chips.
-+=============================================
- 
--3.1 Optimized SCSI SCRIPTS.
-+3.1 Optimized SCSI SCRIPTS
-+--------------------------
- 
--All chips except the 810, 815 and 825, support new SCSI SCRIPTS instructions 
--named LOAD and STORE that allow to move up to 1 DWORD from/to an IO register 
--to/from memory much faster that the MOVE MEMORY instruction that is supported 
-+All chips except the 810, 815 and 825, support new SCSI SCRIPTS instructions
-+named LOAD and STORE that allow to move up to 1 DWORD from/to an IO register
-+to/from memory much faster that the MOVE MEMORY instruction that is supported
- by the 53c7xx and 53c8xx family.
- 
--The LOAD/STORE instructions support absolute and DSA relative addressing 
--modes. The SCSI SCRIPTS had been entirely rewritten using LOAD/STORE instead 
-+The LOAD/STORE instructions support absolute and DSA relative addressing
-+modes. The SCSI SCRIPTS had been entirely rewritten using LOAD/STORE instead
- of MOVE MEMORY instructions.
- 
--Due to the lack of LOAD/STORE SCRIPTS instructions by earlier chips, this 
--driver also incorporates a different SCRIPTS set based on MEMORY MOVE, in 
-+Due to the lack of LOAD/STORE SCRIPTS instructions by earlier chips, this
-+driver also incorporates a different SCRIPTS set based on MEMORY MOVE, in
- order to provide support for the entire SYM53C8XX chips family.
- 
- 3.2 New features appeared with the SYM53C896
-+--------------------------------------------
- 
--Newer chips (see above) allows handling of the phase mismatch context from 
--SCRIPTS (avoids the phase mismatch interrupt that stops the SCSI processor 
-+Newer chips (see above) allows handling of the phase mismatch context from
-+SCRIPTS (avoids the phase mismatch interrupt that stops the SCSI processor
- until the C code has saved the context of the transfer).
- 
--The 896 and 1010 chips support 64 bit PCI transactions and addressing, 
-+The 896 and 1010 chips support 64 bit PCI transactions and addressing,
- while the 895A supports 32 bit PCI transactions and 64 bit addressing.
--The SCRIPTS processor of these chips is not true 64 bit, but uses segment 
--registers for bit 32-63. Another interesting feature is that LOAD/STORE 
-+The SCRIPTS processor of these chips is not true 64 bit, but uses segment
-+registers for bit 32-63. Another interesting feature is that LOAD/STORE
- instructions that address the on-chip RAM (8k) remain internal to the chip.
- 
- 4. Memory mapped I/O versus normal I/O
-+======================================
- 
--Memory mapped I/O has less latency than normal I/O and is the recommended 
--way for doing IO with PCI devices. Memory mapped I/O seems to work fine on 
--most hardware configurations, but some poorly designed chipsets may break 
--this feature. A configuration option is provided for normal I/O to be 
-+Memory mapped I/O has less latency than normal I/O and is the recommended
-+way for doing IO with PCI devices. Memory mapped I/O seems to work fine on
-+most hardware configurations, but some poorly designed chipsets may break
-+this feature. A configuration option is provided for normal I/O to be
- used but the driver defaults to MMIO.
- 
- 5. Tagged command queueing
-+==========================
- 
--Queuing more than 1 command at a time to a device allows it to perform 
--optimizations based on actual head positions and its mechanical 
-+Queuing more than 1 command at a time to a device allows it to perform
-+optimizations based on actual head positions and its mechanical
- characteristics. This feature may also reduce average command latency.
--In order to really gain advantage of this feature, devices must have 
--a reasonable cache size (No miracle is to be expected for a low-end 
-+In order to really gain advantage of this feature, devices must have
-+a reasonable cache size (No miracle is to be expected for a low-end
- hard disk with 128 KB or less).
-+
- Some known old SCSI devices do not properly support tagged command queuing.
--Generally, firmware revisions that fix this kind of problems are available 
-+Generally, firmware revisions that fix this kind of problems are available
- at respective vendor web/ftp sites.
--All I can say is that I never have had problem with tagged queuing using 
--this driver and its predecessors. Hard disks that behaved correctly for 
-+
-+All I can say is that I never have had problem with tagged queuing using
-+this driver and its predecessors. Hard disks that behaved correctly for
- me using tagged commands are the following:
- 
- - IBM S12 0662
-@@ -223,9 +267,9 @@ me using tagged commands are the following:
- - Quantum Atlas IV
- - Seagate Cheetah II
- 
--If your controller has NVRAM, you can configure this feature per target 
--from the user setup tool. The Tekram Setup program allows to tune the 
--maximum number of queued commands up to 32. The Symbios Setup only allows 
-+If your controller has NVRAM, you can configure this feature per target
-+from the user setup tool. The Tekram Setup program allows to tune the
-+maximum number of queued commands up to 32. The Symbios Setup only allows
- to enable or disable this feature.
- 
- The maximum number of simultaneous tagged commands queued to a device
-@@ -233,15 +277,15 @@ is currently set to 16 by default.  This value is suitable for most SCSI
- disks.  With large SCSI disks (>= 2GB, cache >= 512KB, average seek time
- <= 10 ms), using a larger value may give better performances.
- 
--This driver supports up to 255 commands per device, and but using more than 
--64 is generally not worth-while, unless you are using a very large disk or 
--disk arrays. It is noticeable that most of recent hard disks seem not to 
--accept more than 64 simultaneous commands. So, using more than 64 queued 
-+This driver supports up to 255 commands per device, and but using more than
-+64 is generally not worth-while, unless you are using a very large disk or
-+disk arrays. It is noticeable that most of recent hard disks seem not to
-+accept more than 64 simultaneous commands. So, using more than 64 queued
- commands is probably just resource wasting.
- 
--If your controller does not have NVRAM or if it is managed by the SDMS 
--BIOS/SETUP, you can configure tagged queueing feature and device queue 
--depths from the boot command-line. For example:
-+If your controller does not have NVRAM or if it is managed by the SDMS
-+BIOS/SETUP, you can configure tagged queueing feature and device queue
-+depths from the boot command-line. For example::
- 
-   sym53c8xx=tags:4/t2t3q15-t4q7/t1u0q32
- 
-@@ -257,25 +301,28 @@ In some special conditions, some SCSI disk firmwares may return a
- QUEUE FULL status for a SCSI command. This behaviour is managed by the
- driver using the following heuristic:
- 
--- Each time a QUEUE FULL status is returned, tagged queue depth is reduced 
--  to the actual number of disconnected commands. 
-+- Each time a QUEUE FULL status is returned, tagged queue depth is reduced
-+  to the actual number of disconnected commands.
- 
- - Every 200 successfully completed SCSI commands, if allowed by the
-   current limit, the maximum number of queueable commands is incremented.
- 
--Since QUEUE FULL status reception and handling is resource wasting, the 
--driver notifies by default this problem to user by indicating the actual 
--number of commands used and their status, as well as its decision on the 
-+Since QUEUE FULL status reception and handling is resource wasting, the
-+driver notifies by default this problem to user by indicating the actual
-+number of commands used and their status, as well as its decision on the
- device queue depth change.
--The heuristic used by the driver in handling QUEUE FULL ensures that the 
--impact on performances is not too bad. You can get rid of the messages by 
-+The heuristic used by the driver in handling QUEUE FULL ensures that the
-+impact on performances is not too bad. You can get rid of the messages by
- setting verbose level to zero, as follow:
- 
--1st method: boot your system using 'sym53c8xx=verb:0' option.
--2nd method: apply "setverbose 0" control command to the proc fs entry 
-+1st method:
-+	    boot your system using 'sym53c8xx=verb:0' option.
-+2nd method:
-+	    apply "setverbose 0" control command to the proc fs entry
-             corresponding to your controller after boot-up.
- 
- 6. Parity checking
-+==================
- 
- The driver supports SCSI parity checking and PCI bus master parity
- checking.  These features must be enabled in order to ensure safe
-@@ -284,17 +331,19 @@ with parity.  The options to defeat parity checking have been removed
- from the driver.
- 
- 7. Profiling information
-+========================
- 
- This driver does not provide profiling information as did its predecessors.
--This feature was not this useful and added complexity to the code. 
--As the driver code got more complex, I have decided to remove everything 
-+This feature was not this useful and added complexity to the code.
-+As the driver code got more complex, I have decided to remove everything
- that didn't seem actually useful.
- 
- 8. Control commands
+diff --git a/Documentation/scsi/arcmsr_spec.rst b/Documentation/scsi/arcmsr_spec.rst
+new file mode 100644
+index 000000000000..83dd53bcff78
+--- /dev/null
++++ b/Documentation/scsi/arcmsr_spec.rst
+@@ -0,0 +1,907 @@
++ARECA FIRMWARE SPEC
 +===================
- 
- Control commands can be sent to the driver with write operations to
- the proc SCSI file system. The generic command syntax is the
--following:
-+following::
- 
-       echo "<verb> <parameters>" >/proc/scsi/sym53c8xx/0
-       (assumes controller number is 0)
-@@ -305,97 +354,112 @@ apply to all targets of the SCSI chain (except the controller).
- Available commands:
- 
- 8.1 Set minimum synchronous period factor
-+-----------------------------------------
- 
-     setsync <target> <period factor>
- 
--    target:    target number
--    period:    minimum synchronous period.
-+    :target:   target number
-+    :period:   minimum synchronous period.
-                Maximum speed = 1000/(4*period factor) except for special
-                cases below.
- 
-     Specify a period of 0, to force asynchronous transfer mode.
- 
--       9 means 12.5 nano-seconds synchronous period
--      10 means 25 nano-seconds synchronous period
--      11 means 30 nano-seconds synchronous period
--      12 means 50 nano-seconds synchronous period
-+     -  9 means 12.5 nano-seconds synchronous period
-+     - 10 means 25 nano-seconds synchronous period
-+     - 11 means 30 nano-seconds synchronous period
-+     - 12 means 50 nano-seconds synchronous period
- 
- 8.2 Set wide size
-+-----------------
- 
-     setwide <target> <size>
- 
--    target:    target number
--    size:      0=8 bits, 1=16bits
-+    :target:   target number
-+    :size:     0=8 bits, 1=16bits
- 
- 8.3 Set maximum number of concurrent tagged commands
-- 
-+----------------------------------------------------
 +
-     settags <target> <tags>
- 
--    target:    target number
--    tags:      number of concurrent tagged commands
-+    :target:   target number
-+    :tags:     number of concurrent tagged commands
-                must not be greater than configured (default: 16)
- 
- 8.4 Set debug mode
-+------------------
- 
-     setdebug <list of debug flags>
- 
-     Available debug flags:
--        alloc:   print info about memory allocations (ccb, lcb)
--        queue:   print info about insertions into the command start queue
--        result:  print sense data on CHECK CONDITION status
--        scatter: print info about the scatter process
--        scripts: print info about the script binding process
--	tiny:    print minimal debugging information
--	timing:  print timing information of the NCR chip
--	nego:    print information about SCSI negotiations
--	phase:   print information on script interruptions
-+
-+	======== ========================================================
-+        alloc    print info about memory allocations (ccb, lcb)
-+        queue    print info about insertions into the command start queue
-+        result   print sense data on CHECK CONDITION status
-+        scatter  print info about the scatter process
-+        scripts  print info about the script binding process
-+	tiny     print minimal debugging information
-+	timing   print timing information of the NCR chip
-+	nego     print information about SCSI negotiations
-+	phase    print information on script interruptions
-+	======== ========================================================
- 
-     Use "setdebug" with no argument to reset debug flags.
- 
- 
- 8.5 Set flag (no_disc)
-- 
-+----------------------
-+
-     setflag <target> <flag>
- 
--    target:    target number
-+    :target:    target number
- 
-     For the moment, only one flag is available:
- 
-         no_disc:   not allow target to disconnect.
- 
-     Do not specify any flag in order to reset the flag. For example:
--    - setflag 4
-+
-+    setflag 4
-       will reset no_disc flag for target 4, so will allow it disconnections.
--    - setflag all
-+    setflag all
-       will allow disconnection for all devices on the SCSI bus.
- 
- 
- 8.6 Set verbose level
-+---------------------
- 
-     setverbose #level
- 
--    The driver default verbose level is 1. This command allows to change 
-+    The driver default verbose level is 1. This command allows to change
-     th driver verbose level after boot-up.
- 
- 8.7 Reset all logical units of a target
-+---------------------------------------
- 
-     resetdev <target>
- 
--    target:    target number
-+    :target:    target number
-+
-     The driver will try to send a BUS DEVICE RESET message to the target.
- 
- 8.8 Abort all tasks of all logical units of a target
-+----------------------------------------------------
- 
-     cleardev <target>
- 
--    target:    target number
--    The driver will try to send a ABORT message to all the logical units 
-+    :target:    target number
-+
-+    The driver will try to send a ABORT message to all the logical units
-     of the target.
- 
- 
- 9. Configuration parameters
-+===========================
- 
--Under kernel configuration tools (make menuconfig, for example), it is 
-+Under kernel configuration tools (make menuconfig, for example), it is
- possible to change some default driver configuration parameters.
- If the firmware of all your devices is perfect enough, all the
- features supported by the driver can be enabled at start-up. However,
-@@ -414,166 +478,238 @@ Default tagged command queue depth    (default answer: 16)
-     This parameter can be specified from the boot command line.
- 
- Maximum number of queued commands     (default answer: 32)
--    This option allows you to specify the maximum number of tagged commands 
-+    This option allows you to specify the maximum number of tagged commands
-     that can be queued to a device. The maximum supported value is 255.
- 
- Synchronous transfers frequency       (default answer: 80)
--    This option allows you to specify the frequency in MHz the driver 
-+    This option allows you to specify the frequency in MHz the driver
-     will use at boot time for synchronous data transfer negotiations.
-     0 means "asynchronous data transfers".
- 
- 10. Boot setup commands
++Usage of IOP331 adapter
 +=======================
- 
- 10.1 Syntax
-+-----------
- 
- Setup commands can be passed to the driver either at boot time or as
- parameters to modprobe, as described in Documentation/admin-guide/kernel-parameters.rst
- 
--Example of boot setup command under lilo prompt:
-+Example of boot setup command under lilo prompt::
- 
--lilo: linux root=/dev/sda2 sym53c8xx.cmd_per_lun=4 sym53c8xx.sync=10 sym53c8xx.debug=0x200
-+    lilo: linux root=/dev/sda2 sym53c8xx.cmd_per_lun=4 sym53c8xx.sync=10 sym53c8xx.debug=0x200
- 
- - enable tagged commands, up to 4 tagged commands queued.
- - set synchronous negotiation speed to 10 Mega-transfers / second.
- - set DEBUG_NEGO flag.
- 
- The following command will install the driver module with the same
--options as above.
-+options as above::
- 
-     modprobe sym53c8xx cmd_per_lun=4 sync=10 debug=0x200
- 
- 10.2 Available arguments
-+------------------------
- 
- 10.2.1  Default number of tagged commands
--        cmd_per_lun=0 (or cmd_per_lun=1) tagged command queuing disabled
--        cmd_per_lun=#tags (#tags > 1) tagged command queuing enabled
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-+        - cmd_per_lun=0 (or cmd_per_lun=1) tagged command queuing disabled
-+        - cmd_per_lun=#tags (#tags > 1) tagged command queuing enabled
 +
-   #tags will be truncated to the max queued commands configuration parameter.
- 
- 10.2.2 Burst max
-+^^^^^^^^^^^^^^^^
++(All In/Out is in IOP331's view)
 +
-+	========== ======================================================
-         burst=0    burst disabled
-         burst=255  get burst length from initial IO register settings.
-         burst=#x   burst enabled (1<<#x burst transfers max)
--  #x is an integer value which is log base 2 of the burst transfers max.
++1. Message 0
++------------
 +
-+		   #x is an integer value which is log base 2 of the burst
-+		   transfers max.
-+	========== ======================================================
++- InitThread message and return code
 +
-   By default the driver uses the maximum value supported by the chip.
- 
- 10.2.3 LED support
-+^^^^^^^^^^^^^^^^^^
++2. Doorbell is used for RS-232 emulation
++----------------------------------------
 +
-+	=====      ===================
-         led=1      enable  LED support
-         led=0      disable LED support
-+	=====      ===================
++inDoorBell
++    bit0
++	data in ready
++	zDRIVER DATA WRITE OK)
++    bit1
++	data out has been read
++	(DRIVER DATA READ OK)
 +
-   Do not enable LED support if your scsi board does not use SDMS BIOS.
-   (See 'Configuration parameters')
- 
- 10.2.4 Differential mode
--        diff=0	never set up diff mode
-+^^^^^^^^^^^^^^^^^^^^^^^^
++outDooeBell:
++    bit0
++	data out ready
++	(IOP331 DATA WRITE OK)
++    bit1
++	data in has been read
++	(IOP331 DATA READ OK)
 +
-+	======	=================================
-+	diff=0	never set up diff mode
-         diff=1	set up diff mode if BIOS set it
-         diff=2	always set up diff mode
-         diff=3	set diff mode if GPIO3 is not set
-+	======	=================================
- 
- 10.2.5 IRQ mode
-+^^^^^^^^^^^^^^^
++3. Index Memory Usage
++---------------------
 +
-+	======     ================================================
-         irqm=0     always open drain
-         irqm=1     same as initial settings (assumed BIOS settings)
-         irqm=2     always totem pole
-+	======     ================================================
++============   ==========================================
++offset 0xf00   for RS232 out (request buffer)
++offset 0xe00   for RS232 in  (scratch buffer)
++offset 0xa00   for inbound message code message_rwbuffer
++	       (driver send to IOP331)
++offset 0xa00   for outbound message code message_rwbuffer
++	       (IOP331 send to driver)
++============   ==========================================
 +
-+10.2.6 Check SCSI BUS
-+^^^^^^^^^^^^^^^^^^^^^
- 
--10.2.6 Check SCSI BUS 
-         buschk=<option bits>
- 
-     Available option bits:
--        0x0:   No check.
--        0x1:   Check and do not attach the controller on error.  
--        0x2:   Check and just warn on error.
++4. RS-232 emulation
++-------------------
 +
-+	===    ================================================
-+        0x0    No check.
-+        0x1    Check and do not attach the controller on error.
-+        0x2    Check and just warn on error.
-+	===    ================================================
- 
- 10.2.7 Suggest a default SCSI id for hosts
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++Currently 128 byte buffer is used:
 +
-+	==========	==========================================
-         hostid=255	no id suggested.
--        hostid=#x   (0 < x < 7) x suggested for hosts SCSI id.
-+        hostid=#x	(0 < x < 7) x suggested for hosts SCSI id.
-+	==========	==========================================
- 
--    If a host SCSI id is available from the NVRAM, the driver will ignore 
--    any value suggested as boot option. Otherwise, if a suggested value 
--    different from 255 has been supplied, it will use it. Otherwise, it will 
--    try to deduce the value previously set in the hardware and use value 
-+    If a host SCSI id is available from the NVRAM, the driver will ignore
-+    any value suggested as boot option. Otherwise, if a suggested value
-+    different from 255 has been supplied, it will use it. Otherwise, it will
-+    try to deduce the value previously set in the hardware and use value
-     7 if the hardware value is zero.
- 
- 10.2.8  Verbosity level
-+^^^^^^^^^^^^^^^^^^^^^^^
++============   =====================
++1st uint32_t   Data length (1--124)
++Byte 4--127    Max 124 bytes of data
++============   =====================
 +
-+	======     ========
-         verb=0     minimal
-         verb=1     normal
-         verb=2     too much
-+	======     ========
- 
- 10.2.9 Debug mode
--        debug=0	 clear debug flags
--        debug=#x   set debug flags
--  #x is an integer value combining the following power-of-2 values:
--  DEBUG_ALLOC       0x1
--  DEBUG_PHASE       0x2
--  DEBUG_POLL        0x4
--  DEBUG_QUEUE       0x8
--  DEBUG_RESULT     0x10
--  DEBUG_SCATTER    0x20
--  DEBUG_SCRIPT     0x40
--  DEBUG_TINY       0x80
--  DEBUG_TIMING    0x100
--  DEBUG_NEGO      0x200
--  DEBUG_TAGS      0x400
--  DEBUG_FREEZE    0x800
--  DEBUG_RESTART  0x1000
-+^^^^^^^^^^^^^^^^^
- 
--  You can play safely with DEBUG_NEGO. However, some of these flags may 
--  generate bunches of syslog messages. 
-+	=========   ====================================
-+        debug=0	    clear debug flags
-+        debug=#x    set debug flags
++5. PostQ
++--------
 +
-+		    #x is an integer value combining the
-+		    following power-of-2 values:
++All SCSI Command must be sent through postQ:
 +
-+		    =============  ======
-+		    DEBUG_ALLOC       0x1
-+		    DEBUG_PHASE       0x2
-+		    DEBUG_POLL        0x4
-+		    DEBUG_QUEUE       0x8
-+		    DEBUG_RESULT     0x10
-+		    DEBUG_SCATTER    0x20
-+		    DEBUG_SCRIPT     0x40
-+		    DEBUG_TINY       0x80
-+		    DEBUG_TIMING    0x100
-+		    DEBUG_NEGO      0x200
-+		    DEBUG_TAGS      0x400
-+		    DEBUG_FREEZE    0x800
-+		    DEBUG_RESTART  0x1000
-+		    =============  ======
-+	=========   ====================================
++    (inbound queue port)
++	Request frame must be 32 bytes aligned:
 +
-+  You can play safely with DEBUG_NEGO. However, some of these flags may
-+  generate bunches of syslog messages.
- 
- 10.2.10 Settle delay
-+^^^^^^^^^^^^^^^^^^^^
++	    #bit27--bit31
++		flag for post ccb
++	    #bit0--bit26
++		real address (bit27--bit31) of post arcmsr_cdb
 +
-+	========	===================
-         settle=n	delay for n seconds
-+	========	===================
- 
-   After a bus reset, the driver will delay for n seconds before talking
-   to any device on the bus.  The default is 3 seconds and safe mode will
-   default it to 10.
- 
- 10.2.11 Serial NVRAM
--	NB: option not currently implemented.
-+^^^^^^^^^^^^^^^^^^^^
++		=====   ===================
++		bit31   ==  ===============
++			0   256 bytes frame
++			1   512 bytes frame
++			==  ===============
++		bit30   ==  ==============
++			0   normal request
++			1   BIOS request
++			==  ==============
++		bit29   reserved
++		bit28   reserved
++		bit27   reserved
++		=====   ===================
 +
-+	.. Note:: option not currently implemented.
++    (outbount queue port)
++	Request reply:
 +
-+	=======     =========================================
-         nvram=n     do not look for serial NVRAM
-         nvram=y     test controllers for onboard serial NVRAM
-+	=======     =========================================
++	    #bit27--bit31
++		    flag for reply
++	    #bit0--bit26
++		    real address (bit27--bit31) of reply arcmsr_cdb
 +
-         (alternate binary form)
++		    =====   =======================================================
++		    bit31   must be 0 (for this type of reply)
++		    bit30   reserved for BIOS handshake
++		    bit29   reserved
++		    bit28   ==  ===================================================
++			    0   no error, ignore AdapStatus/DevStatus/SenseData
++			    1   Error, error code in AdapStatus/DevStatus/SenseData
++			    ==  ===================================================
++		    bit27   reserved
++		    =====   =======================================================
 +
-         nvram=<bits options>
++6. BIOS request
++---------------
 +
-+        ====   =================================================================
-         0x01   look for NVRAM  (equivalent to nvram=y)
-         0x02   ignore NVRAM "Synchronous negotiation" parameters for all devices
-         0x04   ignore NVRAM "Wide negotiation"  parameter for all devices
-         0x08   ignore NVRAM "Scan at boot time" parameter for all devices
-         0x80   also attach controllers set to OFF in the NVRAM (sym53c8xx only)
-+        ====   =================================================================
- 
- 10.2.12 Exclude a host from being attached
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++All BIOS request is the same with request from PostQ
 +
-         excl=<io_address>,...
- 
-     Prevent host at a given io address from being attached.
--    For example 'excl=0xb400,0xc000' indicate to the 
-+    For example 'excl=0xb400,0xc000' indicate to the
-     driver not to attach hosts at address 0xb400 and 0xc000.
- 
- 10.3 Converting from old style options
++Except:
++
++Request frame is sent from configuration space:
++
++	============   ==========================
++	offset: 0x78   Request Frame (bit30 == 1)
++	offset: 0x18   writeonly to generate
++		       IRQ to IOP331
++	============   ==========================
++
++Completion of request::
++
++	(bit30 == 0, bit28==err flag)
++
++7. Definition of SGL entry (structure)
 +--------------------------------------
 +
-+Previously, the sym2 driver accepted arguments of the form::
- 
--Previously, the sym2 driver accepted arguments of the form
- 	sym53c8xx=tags:4,sync:10,debug:0x200
- 
- As a result of the new module parameters, this is no longer available.
- Most of the options have remained the same, but tags has become
- cmd_per_lun to reflect its different purposes.  The sample above would
--be specified as:
-+be specified as::
-+
- 	modprobe sym53c8xx cmd_per_lun=4 sync=10 debug=0x200
- 
--or on the kernel boot line as:
-+or on the kernel boot line as::
-+
- 	sym53c8xx.cmd_per_lun=4 sym53c8xx.sync=10 sym53c8xx.debug=0x200
- 
--10.4 SCSI BUS checking boot option.
-+10.4 SCSI BUS checking boot option
-+----------------------------------
- 
--When this option is set to a non-zero value, the driver checks SCSI lines 
-+When this option is set to a non-zero value, the driver checks SCSI lines
- logic state, 100 micro-seconds after having asserted the SCSI RESET line.
- The driver just reads SCSI lines and checks all lines read FALSE except RESET.
--Since SCSI devices shall release the BUS at most 800 nano-seconds after SCSI 
-+Since SCSI devices shall release the BUS at most 800 nano-seconds after SCSI
- RESET has been asserted, any signal to TRUE may indicate a SCSI BUS problem.
- Unfortunately, the following common SCSI BUS problems are not detected:
-+
- - Only 1 terminator installed.
- - Misplaced terminators.
- - Bad quality terminators.
--On the other hand, either bad cabling, broken devices, not conformant 
-+
-+On the other hand, either bad cabling, broken devices, not conformant
- devices, ... may cause a SCSI signal to be wrong when te driver reads it.
- 
- 15. SCSI problem troubleshooting
-+================================
- 
- 15.1 Problem tracking
-+---------------------
- 
- Most SCSI problems are due to a non conformant SCSI bus or too buggy
- devices.  If unfortunately you have SCSI problems, you can check the
-@@ -607,86 +743,96 @@ hard disks.  Good SCSI hard disks with a large cache gain advantage of
- tagged commands queuing.
- 
- 15.2 Understanding hardware error reports
++8. Message1 Out - Diag Status Code (????)
 +-----------------------------------------
- 
--When the driver detects an unexpected error condition, it may display a 
--message of the following pattern.
-+When the driver detects an unexpected error condition, it may display a
-+message of the following pattern::
- 
--sym0:1: ERROR (0:48) (1-21-65) (f/95/0) @ (script 7c0:19000000).
--sym0: script cmd = 19000000
--sym0: regdump: da 10 80 95 47 0f 01 07 75 01 81 21 80 01 09 00.
-+    sym0:1: ERROR (0:48) (1-21-65) (f/95/0) @ (script 7c0:19000000).
-+    sym0: script cmd = 19000000
-+    sym0: regdump: da 10 80 95 47 0f 01 07 75 01 81 21 80 01 09 00.
- 
--Some fields in such a message may help you understand the cause of the 
--problem, as follows:
-+Some fields in such a message may help you understand the cause of the
-+problem, as follows::
- 
--sym0:1: ERROR (0:48) (1-21-65) (f/95/0) @ (script 7c0:19000000).
--.....A.........B.C....D.E..F....G.H..I.......J.....K...L.......
-+    sym0:1: ERROR (0:48) (1-21-65) (f/95/0) @ (script 7c0:19000000).
-+    .....A.........B.C....D.E..F....G.H..I.......J.....K...L.......
- 
- Field A : target number.
--  SCSI ID of the device the controller was talking with at the moment the 
-+  SCSI ID of the device the controller was talking with at the moment the
-   error occurs.
- 
- Field B : DSTAT io register (DMA STATUS)
--  Bit 0x40 : MDPE Master Data Parity Error
-+  ========   =============================================================
-+  Bit 0x40   MDPE Master Data Parity Error
-              Data parity error detected on the PCI BUS.
--  Bit 0x20 : BF   Bus Fault
-+  Bit 0x20   BF   Bus Fault
-              PCI bus fault condition detected
--  Bit 0x01 : IID  Illegal Instruction Detected
--             Set by the chip when it detects an Illegal Instruction format 
-+  Bit 0x01   IID  Illegal Instruction Detected
-+             Set by the chip when it detects an Illegal Instruction format
-              on some condition that makes an instruction illegal.
--  Bit 0x80 : DFE Dma Fifo Empty
-+  Bit 0x80   DFE Dma Fifo Empty
-              Pure status bit that does not indicate an error.
--  If the reported DSTAT value contains a combination of MDPE (0x40), 
-+  ========   =============================================================
 +
-+  If the reported DSTAT value contains a combination of MDPE (0x40),
-   BF (0x20), then the cause may be likely due to a PCI BUS problem.
- 
- Field C : SIST io register (SCSI Interrupt Status)
--  Bit 0x08 : SGE  SCSI GROSS ERROR
--             Indicates that the chip detected a severe error condition 
-+  ========   ==================================================================
-+  Bit 0x08   SGE  SCSI GROSS ERROR
-+             Indicates that the chip detected a severe error condition
-              on the SCSI BUS that prevents the SCSI protocol from functioning
-              properly.
--  Bit 0x04 : UDC  Unexpected Disconnection
--             Indicates that the device released the SCSI BUS when the chip 
--             was not expecting this to happen. A device may behave so to 
-+  Bit 0x04   UDC  Unexpected Disconnection
-+             Indicates that the device released the SCSI BUS when the chip
-+             was not expecting this to happen. A device may behave so to
-              indicate the SCSI initiator that an error condition not reportable              using the SCSI protocol has occurred.
--  Bit 0x02 : RST  SCSI BUS Reset
--             Generally SCSI targets do not reset the SCSI BUS, although any 
-+  Bit 0x02   RST  SCSI BUS Reset
-+             Generally SCSI targets do not reset the SCSI BUS, although any
-              device on the BUS can reset it at any time.
--  Bit 0x01 : PAR  Parity
-+  Bit 0x01   PAR  Parity
-              SCSI parity error detected.
--  On a faulty SCSI BUS, any error condition among SGE (0x08), UDC (0x04) and 
--  PAR (0x01) may be detected by the chip. If your SCSI system sometimes 
--  encounters such error conditions, especially SCSI GROSS ERROR, then a SCSI 
-+  ========   ==================================================================
-+
-+  On a faulty SCSI BUS, any error condition among SGE (0x08), UDC (0x04) and
-+  PAR (0x01) may be detected by the chip. If your SCSI system sometimes
-+  encounters such error conditions, especially SCSI GROSS ERROR, then a SCSI
-   BUS problem is likely the cause of these errors.
- 
--For fields D,E,F,G and H, you may look into the sym53c8xx_defs.h file 
-+For fields D,E,F,G and H, you may look into the sym53c8xx_defs.h file
- that contains some minimal comments on IO register bits.
-+
- Field D : SOCL  Scsi Output Control Latch
--          This register reflects the state of the SCSI control lines the 
-+          This register reflects the state of the SCSI control lines the
-           chip want to drive or compare against.
- Field E : SBCL  Scsi Bus Control Lines
-           Actual value of control lines on the SCSI BUS.
- Field F : SBDL  Scsi Bus Data Lines
-           Actual value of data lines on the SCSI BUS.
- Field G : SXFER  SCSI Transfer
--          Contains the setting of the Synchronous Period for output and 
-+          Contains the setting of the Synchronous Period for output and
-           the current Synchronous offset (offset 0 means asynchronous).
- Field H : SCNTL3 Scsi Control Register 3
--          Contains the setting of timing values for both asynchronous and 
--          synchronous data transfers. 
-+          Contains the setting of timing values for both asynchronous and
-+          synchronous data transfers.
- Field I : SCNTL4 Scsi Control Register 4
-           Only meaningful for 53C1010 Ultra3 controllers.
- 
--Understanding Fields J, K, L and dumps requires to have good knowledge of 
-+Understanding Fields J, K, L and dumps requires to have good knowledge of
- SCSI standards, chip cores functionnals and internal driver data structures.
--You are not required to decode and understand them, unless you want to help 
-+You are not required to decode and understand them, unless you want to help
- maintain the driver code.
- 
- 17. Serial NVRAM (added by Richard Waltham: dormouse@farsrobt.demon.co.uk)
-+==========================================================================
- 
- 17.1 Features
-+-------------
- 
- Enabling serial NVRAM support enables detection of the serial NVRAM included
--on Symbios and some Symbios compatible host adaptors, and Tekram boards. The 
--serial NVRAM is used by Symbios and Tekram to hold set up parameters for the 
-+on Symbios and some Symbios compatible host adaptors, and Tekram boards. The
-+serial NVRAM is used by Symbios and Tekram to hold set up parameters for the
- host adaptor and its attached drives.
- 
- The Symbios NVRAM also holds data on the boot order of host adaptors in a
-@@ -694,102 +840,122 @@ system with more than one host adaptor.  This information is no longer used
- as it's fundamentally incompatible with the hotplug PCI model.
- 
- Tekram boards using Symbios chips, DC390W/F/U, which have NVRAM are detected
--and this is used to distinguish between Symbios compatible and Tekram host 
-+and this is used to distinguish between Symbios compatible and Tekram host
- adaptors. This is used to disable the Symbios compatible "diff" setting
--incorrectly set on Tekram boards if the CONFIG_SCSI_53C8XX_SYMBIOS_COMPAT 
--configuration parameter is set enabling both Symbios and Tekram boards to be 
-+incorrectly set on Tekram boards if the CONFIG_SCSI_53C8XX_SYMBIOS_COMPAT
-+configuration parameter is set enabling both Symbios and Tekram boards to be
- used together with the Symbios cards using all their features, including
- "diff" support. ("led pin" support for Symbios compatible cards can remain
- enabled when using Tekram cards. It does nothing useful for Tekram host
- adaptors but does not cause problems either.)
- 
--The parameters the driver is able to get from the NVRAM depend on the 
-+The parameters the driver is able to get from the NVRAM depend on the
- data format used, as follow:
- 
--                                 Tekram format      Symbios format
--General and host parameters
--    Boot order                         N                   Y
--    Host SCSI ID                       Y                   Y
--    SCSI parity checking               Y                   Y
--    Verbose boot messages              N                   Y
--SCSI devices parameters
--    Synchronous transfer speed         Y                   Y
--    Wide 16 / Narrow                   Y                   Y
--    Tagged Command Queuing enabled     Y                   Y
--    Disconnections enabled             Y                   Y
--    Scan at boot time                  N                   Y
-++-------------------------------+------------------+--------------+
-+|                               |Tekram format     |Symbios format|
-++-------------------------------+------------------+--------------+
-+|General and host parameters    |                  |              |
-++-------------------------------+------------------+--------------+
-+|  * Boot order                 |        N         |       Y      |
-++-------------------------------+------------------+--------------+
-+|  * Host SCSI ID               |        Y         |       Y      |
-++-------------------------------+------------------+--------------+
-+|  * SCSI parity checking       |        Y         |       Y      |
-++-------------------------------+------------------+--------------+
-+|  * Verbose boot messages      |        N         |       Y      |
-++-------------------------------+------------------+--------------+
-+|SCSI devices parameters                                          |
-++-------------------------------+------------------+--------------+
-+|  * Synchronous transfer speed |        Y         |       Y      |
-++-------------------------------+------------------+--------------+
-+|  * Wide 16 / Narrow           |        Y         |       Y      |
-++-------------------------------+------------------+--------------+
-+|  * Tagged Command Queuing     |        Y         |       Y      |
-+|    enabled                    |                  |              |
-++-------------------------------+------------------+--------------+
-+|  * Disconnections enabled     |        Y         |       Y      |
-++-------------------------------+------------------+--------------+
-+|  * Scan at boot time          |        N         |       Y      |
-++-------------------------------+------------------+--------------+
- 
--In order to speed up the system boot, for each device configured without 
--the "scan at boot time" option, the driver forces an error on the 
-+
-+In order to speed up the system boot, for each device configured without
-+the "scan at boot time" option, the driver forces an error on the
- first TEST UNIT READY command received for this device.
- 
- 
- 17.2 Symbios NVRAM layout
-+-------------------------
-+
-+typical data at NVRAM address 0x100 (53c810a NVRAM)::
-+
-+    00 00
-+    64 01
-+    8e 0b
-+
-+    00 30 00 00 00 00 07 00 00 00 00 00 00 00 07 04 10 04 00 00
-+
-+    04 00 0f 00 00 10 00 50 00 00 01 00 00 62
-+    04 00 03 00 00 10 00 58 00 00 01 00 00 63
-+    04 00 01 00 00 10 00 48 00 00 01 00 00 61
-+    00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+    00 00 00 00 00 00 00 00
-+
-+    fe fe
-+    00 00
-+    00 00
- 
--typical data at NVRAM address 0x100 (53c810a NVRAM)
-------------------------------------------------------------
--00 00
--64 01
--8e 0b
--
--00 30 00 00 00 00 07 00 00 00 00 00 00 00 07 04 10 04 00 00 
--
--04 00 0f 00 00 10 00 50 00 00 01 00 00 62 
--04 00 03 00 00 10 00 58 00 00 01 00 00 63 
--04 00 01 00 00 10 00 48 00 00 01 00 00 61 
--00 00 00 00 00 00 00 00 00 00 00 00 00 00 
--
--0f 00 08 08 64 00 0a 00
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--00 00 00 00 00 00 00 00 
--
--fe fe
--00 00
--00 00
-------------------------------------------------------------
- NVRAM layout details
- 
--NVRAM Address 0x000-0x0ff not used
--              0x100-0x26f initialised data
--              0x270-0x7ff not used
-+============= =================
-+NVRAM Address
-+============= =================
-+0x000-0x0ff   not used
-+0x100-0x26f   initialised data
-+0x270-0x7ff   not used
-+============= =================
- 
--general layout
-+general layout::
- 
-         header  -   6 bytes,
-         data    - 356 bytes (checksum is byte sum of this data)
-@@ -797,7 +963,7 @@ general layout
-                   ---
-         total     368 bytes
- 
--data area layout
-+data area layout::
- 
-         controller set up  -  20 bytes
-         boot configuration -  56 bytes (4x14 bytes)
-@@ -806,52 +972,51 @@ data area layout
-                              ---
-         total                356 bytes
- 
-------------------------------------------------------------
--header
-+header::
- 
--00 00   - ?? start marker
--64 01   - byte count (lsb/msb excludes header/trailer)
--8e 0b   - checksum (lsb/msb excludes header/trailer)
-------------------------------------------------------------
--controller set up
-+    00 00   - ?? start marker
-+    64 01   - byte count (lsb/msb excludes header/trailer)
-+    8e 0b   - checksum (lsb/msb excludes header/trailer)
- 
--00 30 00 00 00 00 07 00 00 00 00 00 00 00 07 04 10 04 00 00
--                   |     |           |     |
--                   |     |           |      -- host ID
--                   |     |           |
--                   |     |            --Removable Media Support
--                   |     |               0x00 = none
--                   |     |               0x01 = Bootable Device
--                   |     |               0x02 = All with Media
--                   |     |
--                   |      --flag bits 2
--                   |        0x00000001= scan order hi->low
--                   |            (default 0x00 - scan low->hi)
--                    --flag bits 1
--                       0x00000001 scam enable
--                       0x00000010 parity enable
--                       0x00000100 verbose boot msgs
-+controller set up::
-+
-+    00 30 00 00 00 00 07 00 00 00 00 00 00 00 07 04 10 04 00 00
-+		    |     |           |     |
-+		    |     |           |      -- host ID
-+		    |     |           |
-+		    |     |            --Removable Media Support
-+		    |     |               0x00 = none
-+		    |     |               0x01 = Bootable Device
-+		    |     |               0x02 = All with Media
-+		    |     |
-+		    |      --flag bits 2
-+		    |        0x00000001= scan order hi->low
-+		    |            (default 0x00 - scan low->hi)
-+			--flag bits 1
-+			0x00000001 scam enable
-+			0x00000010 parity enable
-+			0x00000100 verbose boot msgs
- 
- remaining bytes unknown - they do not appear to change in my
- current set up for any of the controllers.
- 
- default set up is identical for 53c810a and 53c875 NVRAM
- (Removable Media added Symbios BIOS version 4.09)
-------------------------------------------------------------
-+
- boot configuration
- 
--boot order set by order of the devices in this table
-+boot order set by order of the devices in this table::
- 
--04 00 0f 00 00 10 00 50 00 00 01 00 00 62 -- 1st controller
--04 00 03 00 00 10 00 58 00 00 01 00 00 63    2nd controller
--04 00 01 00 00 10 00 48 00 00 01 00 00 61    3rd controller
--00 00 00 00 00 00 00 00 00 00 00 00 00 00    4th controller
--       |  |  |  |     |        |     |  |
--       |  |  |  |     |        |      ---- PCI io port adr
--       |  |  |  |     |         --0x01 init/scan at boot time
--       |  |  |  |      --PCI device/function number (0xdddddfff)
--       |  |   ----- ?? PCI vendor ID (lsb/msb)
--        ----PCI device ID (lsb/msb)
-+    04 00 0f 00 00 10 00 50 00 00 01 00 00 62 -- 1st controller
-+    04 00 03 00 00 10 00 58 00 00 01 00 00 63    2nd controller
-+    04 00 01 00 00 10 00 48 00 00 01 00 00 61    3rd controller
-+    00 00 00 00 00 00 00 00 00 00 00 00 00 00    4th controller
-+	|  |  |  |     |        |     |  |
-+	|  |  |  |     |        |      ---- PCI io port adr
-+	|  |  |  |     |         --0x01 init/scan at boot time
-+	|  |  |  |      --PCI device/function number (0xdddddfff)
-+	|  |   ----- ?? PCI vendor ID (lsb/msb)
-+	    ----PCI device ID (lsb/msb)
- 
- ?? use of this data is a guess but seems reasonable
- 
-@@ -859,120 +1024,120 @@ remaining bytes unknown - they do not appear to change in my
- current set up
- 
- default set up is identical for 53c810a and 53c875 NVRAM
-------------------------------------------------------------
--device set up (up to 16 devices - includes controller)
- 
--0f 00 08 08 64 00 0a 00 - id 0
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
-+device set up (up to 16 devices - includes controller)::
- 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 
--0f 00 08 08 64 00 0a 00 - id 15
-- |     |  |  |     |  |
-- |     |  |  |      ----timeout (lsb/msb)
-- |     |  |   --synch period (0x?? 40 Mtrans/sec- fast 40) (probably 0x28)
-- |     |  |                  (0x30 20 Mtrans/sec- fast 20)
-- |     |  |                  (0x64 10 Mtrans/sec- fast )
-- |     |  |                  (0xc8  5 Mtrans/sec)
-- |     |  |                  (0x00  asynchronous)
-- |     |   -- ?? max sync offset (0x08 in NVRAM on 53c810a) 
-- |     |                         (0x10 in NVRAM on 53c875)
-- |      --device bus width (0x08 narrow)
-- |                         (0x10 16 bit wide)
--  --flag bits
--    0x00000001 - disconnect enabled
--    0x00000010 - scan at boot time
--    0x00000100 - scan luns
--    0x00001000 - queue tags enabled
-+    0f 00 08 08 64 00 0a 00 - id 0
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00
-+    0f 00 08 08 64 00 0a 00 - id 15
-+    |     |  |  |     |  |
-+    |     |  |  |      ----timeout (lsb/msb)
-+    |     |  |   --synch period (0x?? 40 Mtrans/sec- fast 40) (probably 0x28)
-+    |     |  |                  (0x30 20 Mtrans/sec- fast 20)
-+    |     |  |                  (0x64 10 Mtrans/sec- fast )
-+    |     |  |                  (0xc8  5 Mtrans/sec)
-+    |     |  |                  (0x00  asynchronous)
-+    |     |   -- ?? max sync offset (0x08 in NVRAM on 53c810a)
-+    |     |                         (0x10 in NVRAM on 53c875)
-+    |      --device bus width (0x08 narrow)
-+    |                         (0x10 16 bit wide)
-+    --flag bits
-+	0x00000001 - disconnect enabled
-+	0x00000010 - scan at boot time
-+	0x00000100 - scan luns
-+	0x00001000 - queue tags enabled
- 
- remaining bytes unknown - they do not appear to change in my
- current set up
- 
--?? use of this data is a guess but seems reasonable 
-+?? use of this data is a guess but seems reasonable
- (but it could be max bus width)
- 
- default set up for 53c810a NVRAM
--default set up for 53c875 NVRAM - bus width     - 0x10
-+default set up for 53c875 NVRAM
-+
-+				- bus width     - 0x10
-                                 - sync offset ? - 0x10
-                                 - sync period   - 0x30
-------------------------------------------------------------
--?? spare device space (32 bit bus ??)
- 
--00 00 00 00 00 00 00 00  (19x8bytes)
--.
--.
--00 00 00 00 00 00 00 00
-+?? spare device space (32 bit bus ??)::
- 
--default set up is identical for 53c810a and 53c875 NVRAM
-------------------------------------------------------------
--trailer
--
--fe fe   - ? end marker ?
--00 00
--00 00
-+    00 00 00 00 00 00 00 00  (19x8bytes)
-+    .
-+    .
-+    00 00 00 00 00 00 00 00
- 
- default set up is identical for 53c810a and 53c875 NVRAM
-------------------------------------------------------------
- 
-+trailer::
- 
-+    fe fe   - ? end marker ?
-+    00 00
-+    00 00
-+
-+default set up is identical for 53c810a and 53c875 NVRAM
- 
- 17.3 Tekram NVRAM layout
++9. Message0 message code
 +------------------------
- 
- nvram 64x16 (1024 bit)
- 
--Drive settings
-+Drive settings::
- 
--Drive ID 0-15 (addr 0x0yyyy0 = device setup, yyyy = ID)
--              (addr 0x0yyyy1 = 0x0000)
-+    Drive ID 0-15 (addr 0x0yyyy0 = device setup, yyyy = ID)
-+		(addr 0x0yyyy1 = 0x0000)
- 
--    x x x x  x x x x  x x x x  x x x x
--               | | |      | |  | | | |
--               | | |      | |  | | |  ----- parity check   0 - off
--               | | |      | |  | | |                       1 - on
--               | | |      | |  | | |
--               | | |      | |  | |  ------- sync neg       0 - off
--               | | |      | |  | |                         1 - on
--               | | |      | |  | |
--               | | |      | |  |  --------- disconnect     0 - off
--               | | |      | |  |                           1 - on
--               | | |      | |  |
--               | | |      | |   ----------- start cmd      0 - off
--               | | |      | |                              1 - on
--               | | |      | |
--               | | |      |  -------------- tagged cmds    0 - off
--               | | |      |                                1 - on
--               | | |      | 
--               | | |       ---------------- wide neg       0 - off
--               | | |                                       1 - on
--               | | |
--                --------------------------- sync rate      0 - 10.0 Mtrans/sec
--                                                           1 -  8.0
--                                                           2 -  6.6
--                                                           3 -  5.7
--                                                           4 -  5.0
--                                                           5 -  4.0
--                                                           6 -  3.0
--                                                           7 -  2.0
--                                                           7 -  2.0
--                                                           8 - 20.0
--                                                           9 - 16.7
--                                                           a - 13.9
--                                                           b - 11.9
-+	x x x x  x x x x  x x x x  x x x x
-+		| | |      | |  | | | |
-+		| | |      | |  | | |  ----- parity check   0 - off
-+		| | |      | |  | | |                       1 - on
-+		| | |      | |  | | |
-+		| | |      | |  | |  ------- sync neg       0 - off
-+		| | |      | |  | |                         1 - on
-+		| | |      | |  | |
-+		| | |      | |  |  --------- disconnect     0 - off
-+		| | |      | |  |                           1 - on
-+		| | |      | |  |
-+		| | |      | |   ----------- start cmd      0 - off
-+		| | |      | |                              1 - on
-+		| | |      | |
-+		| | |      |  -------------- tagged cmds    0 - off
-+		| | |      |                                1 - on
-+		| | |      |
-+		| | |       ---------------- wide neg       0 - off
-+		| | |                                       1 - on
-+		| | |
-+		    --------------------------- sync rate      0 - 10.0 Mtrans/sec
-+							    1 -  8.0
-+							    2 -  6.6
-+							    3 -  5.7
-+							    4 -  5.0
-+							    5 -  4.0
-+							    6 -  3.0
-+							    7 -  2.0
-+							    7 -  2.0
-+							    8 - 20.0
-+							    9 - 16.7
-+							    a - 13.9
-+							    b - 11.9
- 
- Global settings
- 
--Host flags 0 (addr 0x100000, 32) 
-+Host flags 0 (addr 0x100000, 32)::
- 
-     x x x x  x x x x  x x x x  x x x x
-     | | | |  | | | |           | | | |
-@@ -980,7 +1145,7 @@ Host flags 0 (addr 0x100000, 32)
-     | | | |  | | | |
-     | | | |  | | |  ----------------------- support for    0 - off
-     | | | |  | | |                          > 2 drives     1 - on
--    | | | |  | | | 
-+    | | | |  | | |
-     | | | |  | |  ------------------------- support drives 0 - off
-     | | | |  | |                            > 1Gbytes      1 - on
-     | | | |  | |
-@@ -1000,10 +1165,10 @@ Host flags 0 (addr 0x100000, 32)
-                                             as BIOS dev    1 - boot device
-                                                            2 - all
- 
--Host flags 1 (addr 0x100001, 33)
-+Host flags 1 (addr 0x100001, 33)::
- 
-     x x x x  x x x x  x x x x  x x x x
--               | | |             | | | 
-+               | | |             | | |
-                | | |              --------- boot delay     0 -   3 sec
-                | | |                                       1 -   5
-                | | |                                       2 -  10
-@@ -1018,7 +1183,7 @@ Host flags 1 (addr 0x100001, 33)
-                                                            3 - 16
-                                                            4 - 32
- 
--Host flags 2 (addr 0x100010, 34)
-+Host flags 2 (addr 0x100010, 34)::
- 
-     x x x x  x x x x  x x x x  x x x x
-                                      |
-@@ -1031,18 +1196,14 @@ checksum = 0x1234 - (sum addr 0-63)
- 
- ----------------------------------------------------------------------------
- 
--default nvram data:
-+default nvram data::
- 
--0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
--0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
--0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
--0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 
-+    0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
-+    0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
-+    0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
-+    0x0037 0x0000 0x0037 0x0000 0x0037 0x0000 0x0037 0x0000
- 
--0x0f07 0x0400 0x0001 0x0000 0x0000 0x0000 0x0000 0x0000
--0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
--0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
--0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0xfbbc
--
--
--===============================================================================
--End of Linux SYM-2 driver documentation file
-+    0x0f07 0x0400 0x0001 0x0000 0x0000 0x0000 0x0000 0x0000
-+    0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-+    0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000
-+    0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0xfbbc
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 5bde34020b3a..b5be6f43ec3f 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -921,7 +921,7 @@ config SCSI_SYM53C8XX_2
- 	  language.  It does not support LSI53C10XX Ultra-320 PCI-X SCSI
- 	  controllers; you need to use the Fusion MPT driver for that.
- 
--	  Please read <file:Documentation/scsi/sym53c8xx_2.txt> for more
-+	  Please read <file:Documentation/scsi/sym53c8xx_2.rst> for more
- 	  information.
- 
- config SCSI_SYM53C8XX_DMA_ADDRESSING_MODE
++
++======  =================================================================
++0x00    NOP
++0x01    Get Config
++	->offset 0xa00 :for outbound message code message_rwbuffer
++	(IOP331 send to driver)
++
++	===================== ==========================================
++	Signature             0x87974060(4)
++	Request len           0x00000200(4)
++	numbers of queue      0x00000100(4)
++	SDRAM Size            0x00000100(4)-->256 MB
++	IDE Channels          0x00000008(4)
++	vendor                40 bytes char
++	model                 8 bytes char
++	FirmVer               16 bytes char
++	Device Map            16 bytes char
++	FirmwareVersion       DWORD
++
++			      - Added for checking of
++				new firmware capability
++	===================== ==========================================
++0x02    Set Config
++	->offset 0xa00 :for inbound message code message_rwbuffer
++	(driver send to IOP331)
++
++	========================= ==================
++	Signature                 0x87974063(4)
++	UPPER32 of Request Frame  (4)-->Driver Only
++	========================= ==================
++0x03    Reset (Abort all queued Command)
++0x04    Stop Background Activity
++0x05    Flush Cache
++0x06    Start Background Activity
++	(re-start if background is halted)
++0x07    Check If Host Command Pending
++	(Novell May Need This Function)
++0x08    Set controller time
++	->offset 0xa00   for inbound message code message_rwbuffer
++	(driver to IOP331)
++
++	======   ==================
++	byte 0   0xaa <-- signature
++	byte 1   0x55 <-- signature
++	byte 2   year (04)
++	byte 3   month (1..12)
++	byte 4   date (1..31)
++	byte 5   hour (0..23)
++	byte 6   minute (0..59)
++	byte 7   second (0..59)
++	======   ==================
++======  =================================================================
++
++
++RS-232 Interface for Areca Raid Controller
++==========================================
++
++      The low level command interface is exclusive with VT100 terminal
++
++1. Sequence of command execution
++--------------------------------
++
++	(A) Header
++		3 bytes sequence (0x5E, 0x01, 0x61)
++
++	(B) Command block
++		variable length of data including length,
++		command code, data and checksum byte
++
++	(C) Return data
++		variable length of data
++
++2. Command block
++----------------
++
++	(A) 1st byte
++		command block length (low byte)
++
++	(B) 2nd byte
++		command block length (high byte)
++
++		.. Note:: command block length shouldn't > 2040 bytes,
++			  length excludes these two bytes
++
++	(C) 3rd byte
++		command code
++
++	(D) 4th and following bytes
++		variable length data bytes
++
++	    depends on command code
++
++	(E) last byte
++	    checksum byte (sum of 1st byte until last data byte)
++
++3. Command code and associated data
++-----------------------------------
++
++The following are command code defined in raid controller Command
++code 0x10--0x1? are used for system level management,
++no password checking is needed and should be implemented in separate
++well controlled utility and not for end user access.
++Command code 0x20--0x?? always check the password,
++password must be entered to enable these command::
++
++	enum
++	{
++		GUI_SET_SERIAL=0x10,
++		GUI_SET_VENDOR,
++		GUI_SET_MODEL,
++		GUI_IDENTIFY,
++		GUI_CHECK_PASSWORD,
++		GUI_LOGOUT,
++		GUI_HTTP,
++		GUI_SET_ETHERNET_ADDR,
++		GUI_SET_LOGO,
++		GUI_POLL_EVENT,
++		GUI_GET_EVENT,
++		GUI_GET_HW_MONITOR,
++		//    GUI_QUICK_CREATE=0x20, (function removed)
++		GUI_GET_INFO_R=0x20,
++		GUI_GET_INFO_V,
++		GUI_GET_INFO_P,
++		GUI_GET_INFO_S,
++		GUI_CLEAR_EVENT,
++		GUI_MUTE_BEEPER=0x30,
++		GUI_BEEPER_SETTING,
++		GUI_SET_PASSWORD,
++		GUI_HOST_INTERFACE_MODE,
++		GUI_REBUILD_PRIORITY,
++		GUI_MAX_ATA_MODE,
++		GUI_RESET_CONTROLLER,
++		GUI_COM_PORT_SETTING,
++		GUI_NO_OPERATION,
++		GUI_DHCP_IP,
++		GUI_CREATE_PASS_THROUGH=0x40,
++		GUI_MODIFY_PASS_THROUGH,
++		GUI_DELETE_PASS_THROUGH,
++		GUI_IDENTIFY_DEVICE,
++		GUI_CREATE_RAIDSET=0x50,
++		GUI_DELETE_RAIDSET,
++		GUI_EXPAND_RAIDSET,
++		GUI_ACTIVATE_RAIDSET,
++		GUI_CREATE_HOT_SPARE,
++		GUI_DELETE_HOT_SPARE,
++		GUI_CREATE_VOLUME=0x60,
++		GUI_MODIFY_VOLUME,
++		GUI_DELETE_VOLUME,
++		GUI_START_CHECK_VOLUME,
++		GUI_STOP_CHECK_VOLUME
++	};
++
++Command description
++^^^^^^^^^^^^^^^^^^^
++
++GUI_SET_SERIAL
++	Set the controller serial#
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x10
++	byte 3            password length (should be 0x0f)
++	byte 4-0x13       should be "ArEcATecHnoLogY"
++	byte 0x14--0x23   Serial number string (must be 16 bytes)
++	================  =============================================
++
++GUI_SET_VENDOR
++	Set vendor string for the controller
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x11
++	byte 3            password length (should be 0x08)
++	byte 4-0x13       should be "ArEcAvAr"
++	byte 0x14--0x3B   vendor string (must be 40 bytes)
++	================  =============================================
++
++GUI_SET_MODEL
++	Set the model name of the controller
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x12
++	byte 3            password length (should be 0x08)
++	byte 4-0x13       should be "ArEcAvAr"
++	byte 0x14--0x1B   model string (must be 8 bytes)
++	================  =============================================
++
++GUI_IDENTIFY
++	Identify device
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x13
++			    return "Areca RAID Subsystem "
++	================  =============================================
++
++GUI_CHECK_PASSWORD
++	Verify password
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x14
++	byte 3            password length
++	byte 4-0x??       user password to be checked
++	================  =============================================
++
++GUI_LOGOUT
++	Logout GUI (force password checking on next command)
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x15
++	================  =============================================
++
++GUI_HTTP
++	HTTP interface (reserved for Http proxy service)(0x16)
++
++GUI_SET_ETHERNET_ADDR
++	Set the ethernet MAC address
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x17
++	byte 3            password length (should be 0x08)
++	byte 4-0x13       should be "ArEcAvAr"
++	byte 0x14--0x19   Ethernet MAC address (must be 6 bytes)
++	================  =============================================
++
++GUI_SET_LOGO
++	Set logo in HTTP
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x18
++	byte 3            Page# (0/1/2/3) (0xff --> clear OEM logo)
++	byte 4/5/6/7      0x55/0xaa/0xa5/0x5a
++	byte 8            TITLE.JPG data (each page must be 2000 bytes)
++
++			  .. Note:: page0 1st 2 byte must be
++				    actual length of the JPG file
++	================  =============================================
++
++GUI_POLL_EVENT
++	Poll If Event Log Changed
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x19
++	================  =============================================
++
++GUI_GET_EVENT
++	Read Event
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x1a
++	byte 3            Event Page (0:1st page/1/2/3:last page)
++	================  =============================================
++
++GUI_GET_HW_MONITOR
++	Get HW monitor data
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x1b
++	byte 3 		  # of FANs(example 2)
++	byte 4 		  # of Voltage sensor(example 3)
++	byte 5 		  # of temperature sensor(example 2)
++	byte 6 		  # of power
++	byte 7/8          Fan#0 (RPM)
++	byte 9/10         Fan#1
++	byte 11/12 	  Voltage#0 original value in ``*1000``
++	byte 13/14 	  Voltage#0 value
++	byte 15/16 	  Voltage#1 org
++	byte 17/18 	  Voltage#1
++	byte 19/20 	  Voltage#2 org
++	byte 21/22 	  Voltage#2
++	byte 23 	  Temp#0
++	byte 24 	  Temp#1
++	byte 25 	  Power indicator (bit0   power#0,
++			  bit1   power#1)
++	byte 26 	  UPS indicator
++	================  =============================================
++
++GUI_QUICK_CREATE
++	Quick create raid/volume set
++
++	================  ==============================================
++	byte 0,1       	  length
++	byte 2         	  command code 0x20
++	byte 3/4/5/6   	  raw capacity
++	byte 7 		  raid level
++	byte 8 		  stripe size
++	byte 9 		  spare
++	byte 10/11/12/13  device mask (the devices to create raid/volume)
++	================  ==============================================
++
++    This function is removed, application like
++    to implement quick create function
++
++    need to use GUI_CREATE_RAIDSET and GUI_CREATE_VOLUMESET function.
++
++GUI_GET_INFO_R
++	Get Raid Set Information
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x20
++	byte 3            raidset#
++	================  =============================================
++
++	::
++
++	    typedef struct sGUI_RAIDSET
++	    {
++		    BYTE grsRaidSetName[16];
++		    DWORD grsCapacity;
++		    DWORD grsCapacityX;
++		    DWORD grsFailMask;
++		    BYTE grsDevArray[32];
++		    BYTE grsMemberDevices;
++		    BYTE grsNewMemberDevices;
++		    BYTE grsRaidState;
++		    BYTE grsVolumes;
++		    BYTE grsVolumeList[16];
++		    BYTE grsRes1;
++		    BYTE grsRes2;
++		    BYTE grsRes3;
++		    BYTE grsFreeSegments;
++		    DWORD grsRawStripes[8];
++		    DWORD grsRes4;
++		    DWORD grsRes5; //     Total to 128 bytes
++		    DWORD grsRes6; //     Total to 128 bytes
++	    } sGUI_RAIDSET, *pGUI_RAIDSET;
++
++GUI_GET_INFO_V
++	Get Volume Set Information
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x21
++	byte 3            volumeset#
++	================  =============================================
++
++	::
++
++	    typedef struct sGUI_VOLUMESET
++	    {
++		    BYTE gvsVolumeName[16]; //     16
++		    DWORD gvsCapacity;
++		    DWORD gvsCapacityX;
++		    DWORD gvsFailMask;
++		    DWORD gvsStripeSize;
++		    DWORD gvsNewFailMask;
++		    DWORD gvsNewStripeSize;
++		    DWORD gvsVolumeStatus;
++		    DWORD gvsProgress; //     32
++		    sSCSI_ATTR gvsScsi;
++		    BYTE gvsMemberDisks;
++		    BYTE gvsRaidLevel; //     8
++		    BYTE gvsNewMemberDisks;
++		    BYTE gvsNewRaidLevel;
++		    BYTE gvsRaidSetNumber;
++		    BYTE gvsRes0; //     4
++		    BYTE gvsRes1[4]; //     64 bytes
++	    } sGUI_VOLUMESET, *pGUI_VOLUMESET;
++
++GUI_GET_INFO_P
++	Get Physical Drive Information
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x22
++	byte 3            drive # (from 0 to max-channels - 1)
++	================  =============================================
++
++	::
++
++	    typedef struct sGUI_PHY_DRV
++	    {
++		    BYTE gpdModelName[40];
++		    BYTE gpdSerialNumber[20];
++		    BYTE gpdFirmRev[8];
++		    DWORD gpdCapacity;
++		    DWORD gpdCapacityX; //     Reserved for expansion
++		    BYTE gpdDeviceState;
++		    BYTE gpdPioMode;
++		    BYTE gpdCurrentUdmaMode;
++		    BYTE gpdUdmaMode;
++		    BYTE gpdDriveSelect;
++		    BYTE gpdRaidNumber; //     0xff if not belongs to a raid set
++		    sSCSI_ATTR gpdScsi;
++		    BYTE gpdReserved[40]; //     Total to 128 bytes
++	    } sGUI_PHY_DRV, *pGUI_PHY_DRV;
++
++GUI_GET_INFO_S
++	Get System Information
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x23
++	================  =============================================
++
++	::
++
++	    typedef struct sCOM_ATTR
++	    {
++		    BYTE comBaudRate;
++		    BYTE comDataBits;
++		    BYTE comStopBits;
++		    BYTE comParity;
++		    BYTE comFlowControl;
++	    } sCOM_ATTR, *pCOM_ATTR;
++	    typedef struct sSYSTEM_INFO
++	    {
++		    BYTE gsiVendorName[40];
++		    BYTE gsiSerialNumber[16];
++		    BYTE gsiFirmVersion[16];
++		    BYTE gsiBootVersion[16];
++		    BYTE gsiMbVersion[16];
++		    BYTE gsiModelName[8];
++		    BYTE gsiLocalIp[4];
++		    BYTE gsiCurrentIp[4];
++		    DWORD gsiTimeTick;
++		    DWORD gsiCpuSpeed;
++		    DWORD gsiICache;
++		    DWORD gsiDCache;
++		    DWORD gsiScache;
++		    DWORD gsiMemorySize;
++		    DWORD gsiMemorySpeed;
++		    DWORD gsiEvents;
++		    BYTE gsiMacAddress[6];
++		    BYTE gsiDhcp;
++		    BYTE gsiBeeper;
++		    BYTE gsiChannelUsage;
++		    BYTE gsiMaxAtaMode;
++		    BYTE gsiSdramEcc; //     1:if ECC enabled
++		    BYTE gsiRebuildPriority;
++		    sCOM_ATTR gsiComA; //     5 bytes
++		    sCOM_ATTR gsiComB; //     5 bytes
++		    BYTE gsiIdeChannels;
++		    BYTE gsiScsiHostChannels;
++		    BYTE gsiIdeHostChannels;
++		    BYTE gsiMaxVolumeSet;
++		    BYTE gsiMaxRaidSet;
++		    BYTE gsiEtherPort; //     1:if ether net port supported
++		    BYTE gsiRaid6Engine; //     1:Raid6 engine supported
++		    BYTE gsiRes[75];
++	    } sSYSTEM_INFO, *pSYSTEM_INFO;
++
++GUI_CLEAR_EVENT
++	Clear System Event
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x24
++	================  =============================================
++
++GUI_MUTE_BEEPER
++	Mute current beeper
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x30
++	================  =============================================
++GUI_BEEPER_SETTING
++	Disable beeper
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x31
++	byte 3            0->disable, 1->enable
++	================  =============================================
++
++GUI_SET_PASSWORD
++	Change password
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x32
++	byte 3 		  pass word length ( must <= 15 )
++	byte 4 		  password (must be alpha-numerical)
++	================  =============================================
++
++GUI_HOST_INTERFACE_MODE
++	Set host interface mode
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x33
++	byte 3 		  0->Independent, 1->cluster
++	================  =============================================
++
++GUI_REBUILD_PRIORITY
++	Set rebuild priority
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x34
++	byte 3 		  0/1/2/3 (low->high)
++	================  =============================================
++
++GUI_MAX_ATA_MODE
++	Set maximum ATA mode to be used
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x35
++	byte 3 		  0/1/2/3 (133/100/66/33)
++	================  =============================================
++
++GUI_RESET_CONTROLLER
++	Reset Controller
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x36
++			  * Response with VT100 screen (discard it)
++	================  =============================================
++
++GUI_COM_PORT_SETTING
++	COM port setting
++
++	================  =================================================
++	byte 0,1	  length
++	byte 2 		  command code 0x37
++	byte 3 		  0->COMA (term port),
++			  1->COMB (debug port)
++	byte 4 		  0/1/2/3/4/5/6/7
++			  (1200/2400/4800/9600/19200/38400/57600/115200)
++	byte 5 		  data bit
++			  (0:7 bit, 1:8 bit   must be 8 bit)
++	byte 6 		  stop bit (0:1, 1:2 stop bits)
++	byte 7 		  parity (0:none, 1:off, 2:even)
++	byte 8 		  flow control
++			  (0:none, 1:xon/xoff, 2:hardware => must use none)
++	================  =================================================
++
++GUI_NO_OPERATION
++	No operation
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x38
++	================  =============================================
++
++GUI_DHCP_IP
++	Set DHCP option and local IP address
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x39
++	byte 3            0:dhcp disabled, 1:dhcp enabled
++	byte 4/5/6/7      IP address
++	================  =============================================
++
++GUI_CREATE_PASS_THROUGH
++	Create pass through disk
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x40
++	byte 3 		  device #
++	byte 4 		  scsi channel (0/1)
++	byte 5 		  scsi id (0-->15)
++	byte 6 		  scsi lun (0-->7)
++	byte 7 		  tagged queue (1   enabled)
++	byte 8 		  cache mode (1   enabled)
++	byte 9 		  max speed (0/1/2/3/4,
++			  async/20/40/80/160 for scsi)
++			  (0/1/2/3/4, 33/66/100/133/150 for ide  )
++	================  =============================================
++
++GUI_MODIFY_PASS_THROUGH
++	Modify pass through disk
++
++	================  =============================================
++	byte 0,1          length
++	byte 2 		  command code 0x41
++	byte 3 		  device #
++	byte 4 		  scsi channel (0/1)
++	byte 5 		  scsi id (0-->15)
++	byte 6 		  scsi lun (0-->7)
++	byte 7 		  tagged queue (1   enabled)
++	byte 8 		  cache mode (1   enabled)
++	byte 9 		  max speed (0/1/2/3/4,
++			  async/20/40/80/160 for scsi)
++			  (0/1/2/3/4, 33/66/100/133/150 for ide  )
++	================  =============================================
++
++GUI_DELETE_PASS_THROUGH
++	Delete pass through disk
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x42
++	byte 3            device# to be deleted
++	================  =============================================
++GUI_IDENTIFY_DEVICE
++	Identify Device
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x43
++	byte 3            Flash Method
++			  (0:flash selected, 1:flash not selected)
++	byte 4/5/6/7      IDE device mask to be flashed
++			  .. Note:: no response data available
++	================  =============================================
++
++GUI_CREATE_RAIDSET
++	Create Raid Set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x50
++	byte 3/4/5/6      device mask
++	byte 7-22         raidset name (if byte 7 == 0:use default)
++	================  =============================================
++
++GUI_DELETE_RAIDSET
++	Delete Raid Set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x51
++	byte 3            raidset#
++	================  =============================================
++
++GUI_EXPAND_RAIDSET
++	Expand Raid Set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x52
++	byte 3            raidset#
++	byte 4/5/6/7      device mask for expansion
++	byte 8/9/10       (8:0 no change, 1 change, 0xff:terminate,
++			  9:new raid level,
++			  10:new stripe size
++			  0/1/2/3/4/5->4/8/16/32/64/128K )
++	byte 11/12/13     repeat for each volume in the raidset
++	================  =============================================
++
++GUI_ACTIVATE_RAIDSET
++	Activate incomplete raid set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x53
++	byte 3            raidset#
++	================  =============================================
++
++GUI_CREATE_HOT_SPARE
++	Create hot spare disk
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x54
++	byte 3/4/5/6      device mask for hot spare creation
++	================  =============================================
++
++GUI_DELETE_HOT_SPARE
++	Delete hot spare disk
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x55
++	byte 3/4/5/6      device mask for hot spare deletion
++	================  =============================================
++
++GUI_CREATE_VOLUME
++	Create volume set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x60
++	byte 3            raidset#
++	byte 4-19         volume set name
++			  (if byte4 == 0, use default)
++	byte 20-27        volume capacity (blocks)
++	byte 28 	  raid level
++	byte 29 	  stripe size
++			  (0/1/2/3/4/5->4/8/16/32/64/128K)
++	byte 30 	  channel
++	byte 31 	  ID
++	byte 32 	  LUN
++	byte 33 	  1 enable tag
++	byte 34 	  1 enable cache
++	byte 35 	  speed
++			  (0/1/2/3/4->async/20/40/80/160 for scsi)
++			  (0/1/2/3/4->33/66/100/133/150 for IDE  )
++	byte 36 	  1 to select quick init
++	================  =============================================
++
++GUI_MODIFY_VOLUME
++	Modify volume Set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x61
++	byte 3            volumeset#
++	byte 4-19         new volume set name
++			  (if byte4 == 0, not change)
++	byte 20-27        new volume capacity (reserved)
++	byte 28 	  new raid level
++	byte 29 	  new stripe size
++			  (0/1/2/3/4/5->4/8/16/32/64/128K)
++	byte 30 	  new channel
++	byte 31 	  new ID
++	byte 32 	  new LUN
++	byte 33 	  1 enable tag
++	byte 34 	  1 enable cache
++	byte 35 	  speed
++			  (0/1/2/3/4->async/20/40/80/160 for scsi)
++			  (0/1/2/3/4->33/66/100/133/150 for IDE  )
++	================  =============================================
++
++GUI_DELETE_VOLUME
++	Delete volume set
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x62
++	byte 3            volumeset#
++	================  =============================================
++
++GUI_START_CHECK_VOLUME
++	Start volume consistency check
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x63
++	byte 3            volumeset#
++	================  =============================================
++
++GUI_STOP_CHECK_VOLUME
++	Stop volume consistency check
++
++	================  =============================================
++	byte 0,1          length
++	byte 2            command code 0x64
++	================  =============================================
++
++4. Returned data
++----------------
++
++(A) Header
++    3 bytes sequence (0x5E, 0x01, 0x61)
++(B) Length
++    2 bytes
++    (low byte 1st, excludes length and checksum byte)
++(C)
++    status or data:
++
++	1) If length == 1 ==> 1 byte status code::
++
++		#define GUI_OK                    0x41
++		#define GUI_RAIDSET_NOT_NORMAL    0x42
++		#define GUI_VOLUMESET_NOT_NORMAL  0x43
++		#define GUI_NO_RAIDSET            0x44
++		#define GUI_NO_VOLUMESET          0x45
++		#define GUI_NO_PHYSICAL_DRIVE     0x46
++		#define GUI_PARAMETER_ERROR       0x47
++		#define GUI_UNSUPPORTED_COMMAND   0x48
++		#define GUI_DISK_CONFIG_CHANGED   0x49
++		#define GUI_INVALID_PASSWORD      0x4a
++		#define GUI_NO_DISK_SPACE         0x4b
++		#define GUI_CHECKSUM_ERROR        0x4c
++		#define GUI_PASSWORD_REQUIRED     0x4d
++
++	2) If length > 1:
++
++		data block returned from controller
++		and the contents depends on the command code
++
++(E) Checksum
++    checksum of length and status or data byte
++
+diff --git a/Documentation/scsi/arcmsr_spec.txt b/Documentation/scsi/arcmsr_spec.txt
+deleted file mode 100644
+index 45d9482c1517..000000000000
+--- a/Documentation/scsi/arcmsr_spec.txt
++++ /dev/null
+@@ -1,574 +0,0 @@
+-*******************************************************************************
+-**                            ARECA FIRMWARE SPEC
+-*******************************************************************************
+-**	Usage of IOP331 adapter
+-**	(All In/Out is in IOP331's view)
+-**	1. Message 0 --> InitThread message and return code
+-**	2. Doorbell is used for RS-232 emulation
+-**		inDoorBell :    bit0 -- data in ready
+-**			(DRIVER DATA WRITE OK)
+-**				bit1 -- data out has been read
+-**			(DRIVER DATA READ OK)
+-**		outDooeBell:    bit0 -- data out ready
+-**			(IOP331 DATA WRITE OK)
+-**				bit1 -- data in has been read
+-**			(IOP331 DATA READ OK)
+-**	3. Index Memory Usage
+-**	offset 0xf00 : for RS232 out (request buffer)
+-**	offset 0xe00 : for RS232 in  (scratch buffer)
+-**	offset 0xa00 : for inbound message code message_rwbuffer
+-**			(driver send to IOP331)
+-**	offset 0xa00 : for outbound message code message_rwbuffer
+-**			(IOP331 send to driver)
+-**	4. RS-232 emulation
+-**		Currently 128 byte buffer is used
+-**			1st uint32_t : Data length (1--124)
+-**			Byte 4--127  : Max 124 bytes of data
+-**	5. PostQ
+-**	All SCSI Command must be sent through postQ:
+-**	(inbound queue port)	Request frame must be 32 bytes aligned
+-**	#bit27--bit31 => flag for post ccb
+-**	#bit0--bit26  => real address (bit27--bit31) of post arcmsr_cdb
+-**		bit31 :
+-**			0 : 256 bytes frame
+-**			1 : 512 bytes frame
+-**		bit30 :
+-**			0 : normal request
+-**			1 : BIOS request
+-**		bit29 : reserved
+-**		bit28 : reserved
+-**		bit27 : reserved
+-**  ---------------------------------------------------------------------------
+-**	(outbount queue port)	Request reply
+-**	#bit27--bit31
+-**		=> flag for reply
+-**	#bit0--bit26
+-**		=> real address (bit27--bit31) of reply arcmsr_cdb
+-**			bit31 : must be 0 (for this type of reply)
+-**			bit30 : reserved for BIOS handshake
+-**			bit29 : reserved
+-**			bit28 :
+-**			0 : no error, ignore AdapStatus/DevStatus/SenseData
+-**			1 : Error, error code in AdapStatus/DevStatus/SenseData
+-**			bit27 : reserved
+-**	6. BIOS request
+-**		All BIOS request is the same with request from PostQ
+-**		Except :
+-**			Request frame is sent from configuration space
+-**		offset: 0x78 : Request Frame (bit30 == 1)
+-**		offset: 0x18 : writeonly to generate
+-**					IRQ to IOP331
+-**		Completion of request:
+-**			(bit30 == 0, bit28==err flag)
+-**	7. Definition of SGL entry (structure)
+-**	8. Message1 Out - Diag Status Code (????)
+-**	9. Message0 message code :
+-**		0x00 : NOP
+-**		0x01 : Get Config
+-**		->offset 0xa00 :for outbound message code message_rwbuffer
+-**		(IOP331 send to driver)
+-**		Signature             0x87974060(4)
+-**		Request len           0x00000200(4)
+-**		numbers of queue      0x00000100(4)
+-**		SDRAM Size            0x00000100(4)-->256 MB
+-**		IDE Channels          0x00000008(4)
+-**		vendor                40 bytes char
+-**		model                  8 bytes char
+-**		FirmVer               16 bytes char
+-**		Device Map            16 bytes char
+-**		FirmwareVersion DWORD <== Added for checking of
+-**						new firmware capability
+-**		0x02 : Set Config
+-**		->offset 0xa00 :for inbound message code message_rwbuffer
+-**		(driver send to IOP331)
+-**		Signature             0x87974063(4)
+-**		UPPER32 of Request Frame  (4)-->Driver Only
+-**		0x03 : Reset (Abort all queued Command)
+-**		0x04 : Stop Background Activity
+-**		0x05 : Flush Cache
+-**		0x06 : Start Background Activity
+-**			(re-start if background is halted)
+-**		0x07 : Check If Host Command Pending
+-**			(Novell May Need This Function)
+-**		0x08 : Set controller time
+-**		->offset 0xa00 : for inbound message code message_rwbuffer
+-**		(driver to IOP331)
+-**		byte 0 : 0xaa <-- signature
+-**		byte 1 : 0x55 <-- signature
+-**		byte 2 : year (04)
+-**		byte 3 : month (1..12)
+-**		byte 4 : date (1..31)
+-**		byte 5 : hour (0..23)
+-**		byte 6 : minute (0..59)
+-**		byte 7 : second (0..59)
+-*******************************************************************************
+-*******************************************************************************
+-**      	RS-232 Interface for Areca Raid Controller
+-**      The low level command interface is exclusive with VT100 terminal
+-**  --------------------------------------------------------------------
+-**      1. Sequence of command execution
+-**  --------------------------------------------------------------------
+-**    	(A) Header : 3 bytes sequence (0x5E, 0x01, 0x61)
+-**    	(B) Command block : variable length of data including length,
+-**    		command code, data and checksum byte
+-**    	(C) Return data : variable length of data
+-**  --------------------------------------------------------------------
+-**    2. Command block
+-**  --------------------------------------------------------------------
+-**    	(A) 1st byte : command block length (low byte)
+-**    	(B) 2nd byte : command block length (high byte)
+-**                note ..command block length shouldn't > 2040 bytes,
+-**    		length excludes these two bytes
+-**    	(C) 3rd byte : command code
+-**    	(D) 4th and following bytes : variable length data bytes
+-**    		depends on command code
+-**    	(E) last byte : checksum byte (sum of 1st byte until last data byte)
+-**  --------------------------------------------------------------------
+-**    3. Command code and associated data
+-**  --------------------------------------------------------------------
+-**    	The following are command code defined in raid controller Command
+-**    	code 0x10--0x1? are used for system level management,
+-**    	no password checking is needed and should be implemented in separate
+-**    	well controlled utility and not for end user access.
+-**    	Command code 0x20--0x?? always check the password,
+-**    	password must be entered to enable these command.
+-**    	enum
+-**    	{
+-**    		GUI_SET_SERIAL=0x10,
+-**    		GUI_SET_VENDOR,
+-**    		GUI_SET_MODEL,
+-**    		GUI_IDENTIFY,
+-**    		GUI_CHECK_PASSWORD,
+-**    		GUI_LOGOUT,
+-**    		GUI_HTTP,
+-**    		GUI_SET_ETHERNET_ADDR,
+-**    		GUI_SET_LOGO,
+-**    		GUI_POLL_EVENT,
+-**    		GUI_GET_EVENT,
+-**    		GUI_GET_HW_MONITOR,
+-**    		//    GUI_QUICK_CREATE=0x20, (function removed)
+-**    		GUI_GET_INFO_R=0x20,
+-**    		GUI_GET_INFO_V,
+-**    		GUI_GET_INFO_P,
+-**    		GUI_GET_INFO_S,
+-**    		GUI_CLEAR_EVENT,
+-**    		GUI_MUTE_BEEPER=0x30,
+-**    		GUI_BEEPER_SETTING,
+-**    		GUI_SET_PASSWORD,
+-**    		GUI_HOST_INTERFACE_MODE,
+-**    		GUI_REBUILD_PRIORITY,
+-**    		GUI_MAX_ATA_MODE,
+-**    		GUI_RESET_CONTROLLER,
+-**    		GUI_COM_PORT_SETTING,
+-**    		GUI_NO_OPERATION,
+-**    		GUI_DHCP_IP,
+-**    		GUI_CREATE_PASS_THROUGH=0x40,
+-**    		GUI_MODIFY_PASS_THROUGH,
+-**    		GUI_DELETE_PASS_THROUGH,
+-**    		GUI_IDENTIFY_DEVICE,
+-**    		GUI_CREATE_RAIDSET=0x50,
+-**    		GUI_DELETE_RAIDSET,
+-**    		GUI_EXPAND_RAIDSET,
+-**    		GUI_ACTIVATE_RAIDSET,
+-**    		GUI_CREATE_HOT_SPARE,
+-**    		GUI_DELETE_HOT_SPARE,
+-**    		GUI_CREATE_VOLUME=0x60,
+-**    		GUI_MODIFY_VOLUME,
+-**    		GUI_DELETE_VOLUME,
+-**    		GUI_START_CHECK_VOLUME,
+-**    		GUI_STOP_CHECK_VOLUME
+-**    	};
+-**    Command description :
+-**    	GUI_SET_SERIAL : Set the controller serial#
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x10
+-**    		byte 3          : password length (should be 0x0f)
+-**    		byte 4-0x13     : should be "ArEcATecHnoLogY"
+-**    		byte 0x14--0x23 : Serial number string (must be 16 bytes)
+-**      GUI_SET_VENDOR : Set vendor string for the controller
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x11
+-**    		byte 3          : password length (should be 0x08)
+-**    		byte 4-0x13     : should be "ArEcAvAr"
+-**    		byte 0x14--0x3B : vendor string (must be 40 bytes)
+-**      GUI_SET_MODEL : Set the model name of the controller
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x12
+-**    		byte 3          : password length (should be 0x08)
+-**    		byte 4-0x13     : should be "ArEcAvAr"
+-**    		byte 0x14--0x1B : model string (must be 8 bytes)
+-**      GUI_IDENTIFY : Identify device
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x13
+-**    		                  return "Areca RAID Subsystem "
+-**      GUI_CHECK_PASSWORD : Verify password
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x14
+-**    		byte 3          : password length
+-**    		byte 4-0x??     : user password to be checked
+-**      GUI_LOGOUT : Logout GUI (force password checking on next command)
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x15
+-**      GUI_HTTP : HTTP interface (reserved for Http proxy service)(0x16)
+-**
+-**      GUI_SET_ETHERNET_ADDR : Set the ethernet MAC address
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x17
+-**    		byte 3          : password length (should be 0x08)
+-**    		byte 4-0x13     : should be "ArEcAvAr"
+-**    		byte 0x14--0x19 : Ethernet MAC address (must be 6 bytes)
+-**      GUI_SET_LOGO : Set logo in HTTP
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x18
+-**    		byte 3          : Page# (0/1/2/3) (0xff --> clear OEM logo)
+-**    		byte 4/5/6/7    : 0x55/0xaa/0xa5/0x5a
+-**    		byte 8          : TITLE.JPG data (each page must be 2000 bytes)
+-**    		                  note page0 1st 2 byte must be
+-**    					actual length of the JPG file
+-**      GUI_POLL_EVENT : Poll If Event Log Changed
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x19
+-**      GUI_GET_EVENT : Read Event
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x1a
+-**    		byte 3          : Event Page (0:1st page/1/2/3:last page)
+-**      GUI_GET_HW_MONITOR : Get HW monitor data
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x1b
+-**    		byte 3 			: # of FANs(example 2)
+-**    		byte 4 			: # of Voltage sensor(example 3)
+-**    		byte 5 			: # of temperature sensor(example 2)
+-**    		byte 6 			: # of power
+-**    		byte 7/8        : Fan#0 (RPM)
+-**    		byte 9/10       : Fan#1
+-**    		byte 11/12 		: Voltage#0 original value in *1000
+-**    		byte 13/14 		: Voltage#0 value
+-**    		byte 15/16 		: Voltage#1 org
+-**    		byte 17/18 		: Voltage#1
+-**    		byte 19/20 		: Voltage#2 org
+-**    		byte 21/22 		: Voltage#2
+-**    		byte 23 		: Temp#0
+-**    		byte 24 		: Temp#1
+-**    		byte 25 		: Power indicator (bit0 : power#0,
+-**    						 bit1 : power#1)
+-**    		byte 26 		: UPS indicator
+-**      GUI_QUICK_CREATE : Quick create raid/volume set
+-**    	    byte 0,1        : length
+-**    	    byte 2          : command code 0x20
+-**    	    byte 3/4/5/6    : raw capacity
+-**    	    byte 7 			: raid level
+-**    	    byte 8 			: stripe size
+-**    	    byte 9 			: spare
+-**    	    byte 10/11/12/13: device mask (the devices to create raid/volume)
+-**    		This function is removed, application like
+-**    		to implement quick create function
+-**    	need to use GUI_CREATE_RAIDSET and GUI_CREATE_VOLUMESET function.
+-**      GUI_GET_INFO_R : Get Raid Set Information
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x20
+-**    		byte 3          : raidset#
+-**    	typedef struct sGUI_RAIDSET
+-**    	{
+-**    		BYTE grsRaidSetName[16];
+-**    		DWORD grsCapacity;
+-**    		DWORD grsCapacityX;
+-**    		DWORD grsFailMask;
+-**    		BYTE grsDevArray[32];
+-**    		BYTE grsMemberDevices;
+-**    		BYTE grsNewMemberDevices;
+-**    		BYTE grsRaidState;
+-**    		BYTE grsVolumes;
+-**    		BYTE grsVolumeList[16];
+-**    		BYTE grsRes1;
+-**    		BYTE grsRes2;
+-**    		BYTE grsRes3;
+-**    		BYTE grsFreeSegments;
+-**    		DWORD grsRawStripes[8];
+-**    		DWORD grsRes4;
+-**    		DWORD grsRes5; //     Total to 128 bytes
+-**    		DWORD grsRes6; //     Total to 128 bytes
+-**    	} sGUI_RAIDSET, *pGUI_RAIDSET;
+-**      GUI_GET_INFO_V : Get Volume Set Information
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x21
+-**    		byte 3          : volumeset#
+-**    	typedef struct sGUI_VOLUMESET
+-**    	{
+-**    		BYTE gvsVolumeName[16]; //     16
+-**    		DWORD gvsCapacity;
+-**    		DWORD gvsCapacityX;
+-**    		DWORD gvsFailMask;
+-**    		DWORD gvsStripeSize;
+-**    		DWORD gvsNewFailMask;
+-**    		DWORD gvsNewStripeSize;
+-**    		DWORD gvsVolumeStatus;
+-**    		DWORD gvsProgress; //     32
+-**    		sSCSI_ATTR gvsScsi;
+-**    		BYTE gvsMemberDisks;
+-**    		BYTE gvsRaidLevel; //     8
+-**    		BYTE gvsNewMemberDisks;
+-**    		BYTE gvsNewRaidLevel;
+-**    		BYTE gvsRaidSetNumber;
+-**    		BYTE gvsRes0; //     4
+-**    		BYTE gvsRes1[4]; //     64 bytes
+-**    	} sGUI_VOLUMESET, *pGUI_VOLUMESET;
+-**      GUI_GET_INFO_P : Get Physical Drive Information
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x22
+-**    		byte 3          : drive # (from 0 to max-channels - 1)
+-**    	typedef struct sGUI_PHY_DRV
+-**    	{
+-**    		BYTE gpdModelName[40];
+-**    		BYTE gpdSerialNumber[20];
+-**    		BYTE gpdFirmRev[8];
+-**    		DWORD gpdCapacity;
+-**    		DWORD gpdCapacityX; //     Reserved for expansion
+-**    		BYTE gpdDeviceState;
+-**    		BYTE gpdPioMode;
+-**    		BYTE gpdCurrentUdmaMode;
+-**    		BYTE gpdUdmaMode;
+-**    		BYTE gpdDriveSelect;
+-**    		BYTE gpdRaidNumber; //     0xff if not belongs to a raid set
+-**    		sSCSI_ATTR gpdScsi;
+-**    		BYTE gpdReserved[40]; //     Total to 128 bytes
+-**    	} sGUI_PHY_DRV, *pGUI_PHY_DRV;
+-**    	GUI_GET_INFO_S : Get System Information
+-**      	byte 0,1        : length
+-**      	byte 2          : command code 0x23
+-**    	typedef struct sCOM_ATTR
+-**    	{
+-**    		BYTE comBaudRate;
+-**    		BYTE comDataBits;
+-**    		BYTE comStopBits;
+-**    		BYTE comParity;
+-**    		BYTE comFlowControl;
+-**    	} sCOM_ATTR, *pCOM_ATTR;
+-**    	typedef struct sSYSTEM_INFO
+-**    	{
+-**    		BYTE gsiVendorName[40];
+-**    		BYTE gsiSerialNumber[16];
+-**    		BYTE gsiFirmVersion[16];
+-**    		BYTE gsiBootVersion[16];
+-**    		BYTE gsiMbVersion[16];
+-**    		BYTE gsiModelName[8];
+-**    		BYTE gsiLocalIp[4];
+-**    		BYTE gsiCurrentIp[4];
+-**    		DWORD gsiTimeTick;
+-**    		DWORD gsiCpuSpeed;
+-**    		DWORD gsiICache;
+-**    		DWORD gsiDCache;
+-**    		DWORD gsiScache;
+-**    		DWORD gsiMemorySize;
+-**    		DWORD gsiMemorySpeed;
+-**    		DWORD gsiEvents;
+-**    		BYTE gsiMacAddress[6];
+-**    		BYTE gsiDhcp;
+-**    		BYTE gsiBeeper;
+-**    		BYTE gsiChannelUsage;
+-**    		BYTE gsiMaxAtaMode;
+-**    		BYTE gsiSdramEcc; //     1:if ECC enabled
+-**    		BYTE gsiRebuildPriority;
+-**    		sCOM_ATTR gsiComA; //     5 bytes
+-**    		sCOM_ATTR gsiComB; //     5 bytes
+-**    		BYTE gsiIdeChannels;
+-**    		BYTE gsiScsiHostChannels;
+-**    		BYTE gsiIdeHostChannels;
+-**    		BYTE gsiMaxVolumeSet;
+-**    		BYTE gsiMaxRaidSet;
+-**    		BYTE gsiEtherPort; //     1:if ether net port supported
+-**    		BYTE gsiRaid6Engine; //     1:Raid6 engine supported
+-**    		BYTE gsiRes[75];
+-**    	} sSYSTEM_INFO, *pSYSTEM_INFO;
+-**    	GUI_CLEAR_EVENT : Clear System Event
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x24
+-**      GUI_MUTE_BEEPER : Mute current beeper
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x30
+-**      GUI_BEEPER_SETTING : Disable beeper
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x31
+-**    		byte 3          : 0->disable, 1->enable
+-**      GUI_SET_PASSWORD : Change password
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x32
+-**    		byte 3 			: pass word length ( must <= 15 )
+-**    		byte 4 			: password (must be alpha-numerical)
+-**    	GUI_HOST_INTERFACE_MODE : Set host interface mode
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x33
+-**    		byte 3 			: 0->Independent, 1->cluster
+-**      GUI_REBUILD_PRIORITY : Set rebuild priority
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x34
+-**    		byte 3 			: 0/1/2/3 (low->high)
+-**      GUI_MAX_ATA_MODE : Set maximum ATA mode to be used
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x35
+-**    		byte 3 			: 0/1/2/3 (133/100/66/33)
+-**      GUI_RESET_CONTROLLER : Reset Controller
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x36
+-**                            *Response with VT100 screen (discard it)
+-**      GUI_COM_PORT_SETTING : COM port setting
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x37
+-**    		byte 3 			: 0->COMA (term port),
+-**    					  1->COMB (debug port)
+-**    		byte 4 			: 0/1/2/3/4/5/6/7
+-**    			(1200/2400/4800/9600/19200/38400/57600/115200)
+-**    		byte 5 			: data bit
+-**    					(0:7 bit, 1:8 bit : must be 8 bit)
+-**    		byte 6 			: stop bit (0:1, 1:2 stop bits)
+-**    		byte 7 			: parity (0:none, 1:off, 2:even)
+-**    		byte 8 			: flow control
+-**    			(0:none, 1:xon/xoff, 2:hardware => must use none)
+-**      GUI_NO_OPERATION : No operation
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x38
+-**      GUI_DHCP_IP : Set DHCP option and local IP address
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x39
+-**    		byte 3          : 0:dhcp disabled, 1:dhcp enabled
+-**    		byte 4/5/6/7    : IP address
+-**      GUI_CREATE_PASS_THROUGH : Create pass through disk
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x40
+-**    		byte 3 			: device #
+-**    		byte 4 			: scsi channel (0/1)
+-**    		byte 5 			: scsi id (0-->15)
+-**    		byte 6 			: scsi lun (0-->7)
+-**    		byte 7 			: tagged queue (1 : enabled)
+-**    		byte 8 			: cache mode (1 : enabled)
+-**    		byte 9 			: max speed (0/1/2/3/4,
+-**    			async/20/40/80/160 for scsi)
+-**    			(0/1/2/3/4, 33/66/100/133/150 for ide  )
+-**      GUI_MODIFY_PASS_THROUGH : Modify pass through disk
+-**    		byte 0,1        : length
+-**    		byte 2 			: command code 0x41
+-**    		byte 3 			: device #
+-**    		byte 4 			: scsi channel (0/1)
+-**    		byte 5 			: scsi id (0-->15)
+-**    		byte 6 			: scsi lun (0-->7)
+-**    		byte 7 			: tagged queue (1 : enabled)
+-**    		byte 8 			: cache mode (1 : enabled)
+-**    		byte 9 			: max speed (0/1/2/3/4,
+-**    					async/20/40/80/160 for scsi)
+-**    			(0/1/2/3/4, 33/66/100/133/150 for ide  )
+-**      GUI_DELETE_PASS_THROUGH : Delete pass through disk
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x42
+-**    		byte 3          : device# to be deleted
+-**      GUI_IDENTIFY_DEVICE : Identify Device
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x43
+-**    		byte 3          : Flash Method
+-**    				(0:flash selected, 1:flash not selected)
+-**    		byte 4/5/6/7    : IDE device mask to be flashed
+-**                           note .... no response data available
+-**    	GUI_CREATE_RAIDSET : Create Raid Set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x50
+-**    		byte 3/4/5/6    : device mask
+-**    		byte 7-22       : raidset name (if byte 7 == 0:use default)
+-**      GUI_DELETE_RAIDSET : Delete Raid Set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x51
+-**    		byte 3          : raidset#
+-**    	GUI_EXPAND_RAIDSET : Expand Raid Set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x52
+-**    		byte 3          : raidset#
+-**    		byte 4/5/6/7    : device mask for expansion
+-**    		byte 8/9/10     : (8:0 no change, 1 change, 0xff:terminate,
+-**    				9:new raid level,
+-**    				10:new stripe size
+-**    				0/1/2/3/4/5->4/8/16/32/64/128K )
+-**    		byte 11/12/13   : repeat for each volume in the raidset
+-**      GUI_ACTIVATE_RAIDSET : Activate incomplete raid set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x53
+-**    		byte 3          : raidset#
+-**      GUI_CREATE_HOT_SPARE : Create hot spare disk
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x54
+-**    		byte 3/4/5/6    : device mask for hot spare creation
+-**    	GUI_DELETE_HOT_SPARE : Delete hot spare disk
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x55
+-**    		byte 3/4/5/6    : device mask for hot spare deletion
+-**    	GUI_CREATE_VOLUME : Create volume set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x60
+-**    		byte 3          : raidset#
+-**    		byte 4-19       : volume set name
+-**    				(if byte4 == 0, use default)
+-**    		byte 20-27      : volume capacity (blocks)
+-**    		byte 28 		: raid level
+-**    		byte 29 		: stripe size
+-**    				(0/1/2/3/4/5->4/8/16/32/64/128K)
+-**    		byte 30 		: channel
+-**    		byte 31 		: ID
+-**    		byte 32 		: LUN
+-**    		byte 33 		: 1 enable tag
+-**    		byte 34 		: 1 enable cache
+-**    		byte 35 		: speed
+-**    		(0/1/2/3/4->async/20/40/80/160 for scsi)
+-**    		(0/1/2/3/4->33/66/100/133/150 for IDE  )
+-**    		byte 36 		: 1 to select quick init
+-**
+-**    	GUI_MODIFY_VOLUME : Modify volume Set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x61
+-**    		byte 3          : volumeset#
+-**    		byte 4-19       : new volume set name
+-**    		(if byte4 == 0, not change)
+-**    		byte 20-27      : new volume capacity (reserved)
+-**    		byte 28 		: new raid level
+-**    		byte 29 		: new stripe size
+-**    		(0/1/2/3/4/5->4/8/16/32/64/128K)
+-**    		byte 30 		: new channel
+-**    		byte 31 		: new ID
+-**    		byte 32 		: new LUN
+-**    		byte 33 		: 1 enable tag
+-**    		byte 34 		: 1 enable cache
+-**    		byte 35 		: speed
+-**    		(0/1/2/3/4->async/20/40/80/160 for scsi)
+-**    		(0/1/2/3/4->33/66/100/133/150 for IDE  )
+-**    	GUI_DELETE_VOLUME : Delete volume set
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x62
+-**    		byte 3          : volumeset#
+-**    	GUI_START_CHECK_VOLUME : Start volume consistency check
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x63
+-**    		byte 3          : volumeset#
+-**    	GUI_STOP_CHECK_VOLUME : Stop volume consistency check
+-**    		byte 0,1        : length
+-**    		byte 2          : command code 0x64
+-** ---------------------------------------------------------------------
+-**    4. Returned data
+-** ---------------------------------------------------------------------
+-**    	(A) Header          : 3 bytes sequence (0x5E, 0x01, 0x61)
+-**    	(B) Length          : 2 bytes
+-**    			(low byte 1st, excludes length and checksum byte)
+-**    	(C) status or data  :
+-**           <1> If length == 1 ==> 1 byte status code
+-**    		#define GUI_OK                    0x41
+-**    		#define GUI_RAIDSET_NOT_NORMAL    0x42
+-**    		#define GUI_VOLUMESET_NOT_NORMAL  0x43
+-**    		#define GUI_NO_RAIDSET            0x44
+-**    		#define GUI_NO_VOLUMESET          0x45
+-**    		#define GUI_NO_PHYSICAL_DRIVE     0x46
+-**    		#define GUI_PARAMETER_ERROR       0x47
+-**    		#define GUI_UNSUPPORTED_COMMAND   0x48
+-**    		#define GUI_DISK_CONFIG_CHANGED   0x49
+-**    		#define GUI_INVALID_PASSWORD      0x4a
+-**    		#define GUI_NO_DISK_SPACE         0x4b
+-**    		#define GUI_CHECKSUM_ERROR        0x4c
+-**    		#define GUI_PASSWORD_REQUIRED     0x4d
+-**           <2> If length > 1 ==>
+-**    		data block returned from controller
+-**    		and the contents depends on the command code
+-**    	(E) Checksum        : checksum of length and status or data byte
+-**************************************************************************
+diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
+index 260f1145431d..7c5f5f8f614e 100644
+--- a/Documentation/scsi/index.rst
++++ b/Documentation/scsi/index.rst
+@@ -13,6 +13,7 @@ Linux SCSI Subsystem
+    aha152x
+    aic79xx
+    aic7xxx
++   arcmsr_spec
+    bfa
+    bnx2fc
+    BusLogic
+diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
+index 259d9c20bf25..57be9609d504 100644
+--- a/drivers/scsi/arcmsr/arcmsr_attr.c
++++ b/drivers/scsi/arcmsr/arcmsr_attr.c
+@@ -41,7 +41,7 @@
+ ** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************
+ ** For history of changes, see Documentation/scsi/ChangeLog.arcmsr
+-**     Firmware Specification, see Documentation/scsi/arcmsr_spec.txt
++**     Firmware Specification, see Documentation/scsi/arcmsr_spec.rst
+ *******************************************************************************
+ */
+ #include <linux/module.h>
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 40dc8eac0e3a..a48632b05ade 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -41,7 +41,7 @@
+ ** THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *******************************************************************************
+ ** For history of changes, see Documentation/scsi/ChangeLog.arcmsr
+-**     Firmware Specification, see Documentation/scsi/arcmsr_spec.txt
++**     Firmware Specification, see Documentation/scsi/arcmsr_spec.rst
+ *******************************************************************************
+ */
+ #include <linux/module.h>
 -- 
 2.21.1
 
