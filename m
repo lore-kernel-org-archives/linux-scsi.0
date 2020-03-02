@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 031E1C3F2DE
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C11A2C3F2DD
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A749E246BB
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B359246B4
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137086;
-	bh=vEDPp85owWebGGqnzGJmrLSQpWL2YJUvewWbPy2d2tE=;
+	s=default; t=1583137085;
+	bh=dfDnmwYQtS1gFi80gMuISybB4qFpZBjZOytk4JVftMk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Wx/xV983LGYytC6qjkTy1rWkMlfOYIURR3jjqFvGizNrtoEKbx2bxRP5tA3uiiRTk
-	 uziSbhcfG4v+yWe2LeoeOh4Fh10qaNXTpbSoqLjm8TsNWZlxF5OPT+RHwL6TbzTZVf
-	 aJDsPtQ21rvZJx6IVlcghHUFkVuqiRYHuynjZoUQ=
+	b=OeAucUz/dHJkoNAoC5hWeBy6Cry4ykHo5XaMhPBTCpX0U6Z4b+Kbzs36UmmvD7MYS
+	 17YVKVICU7/2/Q1IV3qefvAHWQLZtRtq2cuRWzk+HBcE2XMjWi47BH29sC29pxWs5u
+	 fX40/O/Qe8Fr0QLETUZ/uNwUUFTRapwnu+MfK32o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727753AbgCBISF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:18:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57086 "EHLO mail.kernel.org"
+        id S1727507AbgCBISE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:18:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57096 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727143AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727159AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Mar 2020 03:16:21 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 11F68246BF;
+        by mail.kernel.org (Postfix) with ESMTPSA id 1D4C1246C4;
         Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=vEDPp85owWebGGqnzGJmrLSQpWL2YJUvewWbPy2d2tE=;
+        bh=dfDnmwYQtS1gFi80gMuISybB4qFpZBjZOytk4JVftMk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BG9jgGvG7OeYIM0JBHvlBKxa3qaJlTNxUAj1DPj+mLnUYR9w9cRARTGoimjzh6TGk
-         bcrFOgbr2d9rOb8vv6iMXbrJMoYcnZPSl142QK3lHxmJpY8y/e0UekQ4bV2t/op30l
-         tlZSAOYs5iZaKuTBz24nCK7r9N33mLK4Sf4XWaMA=
+        b=U3dqy1GBWYTMWEr+6/9djJgRBZi7E1BL2xpFwK2LFKQvdRpJMGIxPuJi7JkLir3OK
+         0Kf21wAfY4RPpnKypPGaNiekB79xOE4sn7Ztyr3Fwm/1J4lMogLjKWqP78qlq2PsJq
+         rLUeoL04vnHazZFWddFPAI8ECBm2lGiLr2x+ZcbI=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003x8-5z; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003xD-6x; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
@@ -49,9 +49,9 @@ Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 07/42] docs: scsi: convert aic79xx.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:40 +0100
-Message-Id: <e8a40337a2173f028c9ac569d3d71fd880f4fab5.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 08/42] docs: scsi: convert aic7xxx.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:41 +0100
+Message-Id: <dc2b1ffe4bf64cfc4b32328740704a30e8d38a79.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -64,256 +64,224 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../scsi/{aic79xx.txt => aic79xx.rst}         | 586 ++++++++++--------
+ .../scsi/{aic7xxx.txt => aic7xxx.rst}         | 446 ++++++++++--------
  Documentation/scsi/index.rst                  |   1 +
  Documentation/scsi/scsi-parameters.txt        |   2 +-
- drivers/scsi/aic7xxx/Kconfig.aic79xx          |   2 +-
- 4 files changed, 344 insertions(+), 247 deletions(-)
- rename Documentation/scsi/{aic79xx.txt => aic79xx.rst} (48%)
+ drivers/scsi/aic7xxx/Kconfig.aic7xxx          |   2 +-
+ 4 files changed, 258 insertions(+), 193 deletions(-)
+ rename Documentation/scsi/{aic7xxx.txt => aic7xxx.rst} (49%)
 
-diff --git a/Documentation/scsi/aic79xx.txt b/Documentation/scsi/aic79xx.rst
-similarity index 48%
-rename from Documentation/scsi/aic79xx.txt
-rename to Documentation/scsi/aic79xx.rst
-index e2d3273000d4..071ff5111a4f 100644
---- a/Documentation/scsi/aic79xx.txt
-+++ b/Documentation/scsi/aic79xx.rst
-@@ -1,11 +1,13 @@
+diff --git a/Documentation/scsi/aic7xxx.txt b/Documentation/scsi/aic7xxx.rst
+similarity index 49%
+rename from Documentation/scsi/aic7xxx.txt
+rename to Documentation/scsi/aic7xxx.rst
+index 7c5d0223d444..bad0e5567b21 100644
+--- a/Documentation/scsi/aic7xxx.txt
++++ b/Documentation/scsi/aic7xxx.rst
+@@ -1,8 +1,11 @@
 -====================================================================
--=             Adaptec Ultra320 Family Manager Set                  =
--=                                                                  =
+-=    Adaptec Aic7xxx Fast -> Ultra160 Family Manager Set v7.0      =
 -=                            README for                            =
--=                    The Linux Operating System                    =
+-=                     The Linux Operating System                   =
 -====================================================================
 +.. SPDX-License-Identifier: GPL-2.0
 +.. include:: <isonum.txt>
- 
--The following information is available in this file:
-+===================================
-+Adaptec Ultra320 Family Manager Set
-+===================================
++
++========================================================
++Adaptec Aic7xxx Fast -> Ultra160 Family Manager Set v7.0
++========================================================
 +
 +README for The Linux Operating System
-+
-+.. The following information is available in this file:
  
-   1. Supported Hardware
-   2. Version History
-@@ -15,28 +17,32 @@ The following information is available in this file:
+ The following information is available in this file:
  
+@@ -12,13 +15,15 @@ The following information is available in this file:
+   4. Contacting Adaptec
  
  1. Supported Hardware
 +=====================
  
--   The following Adaptec SCSI Host Adapters are supported by this 
--   driver set. 
-+   The following Adaptec SCSI Host Adapters are supported by this
-+   driver set.
+    The following Adaptec SCSI Chips and Host Adapters are supported by
+-   the aic7xxx driver. 
++   the aic7xxx driver.
  
-+   =============              =========================================
-    Ultra320 ASIC              Description
--   ----------------------------------------------------------------
--   AIC-7901A                  Single Channel 64-bit PCI-X 133MHz to 
-+   =============              =========================================
-+   AIC-7901A                  Single Channel 64-bit PCI-X 133MHz to
-                               Ultra320 SCSI ASIC
--   AIC-7901B                  Single Channel 64-bit PCI-X 133MHz to 
-+   AIC-7901B                  Single Channel 64-bit PCI-X 133MHz to
-                               Ultra320 SCSI ASIC with Retained Training
--   AIC-7902A4                 Dual Channel 64-bit PCI-X 133MHz to 
-+   AIC-7902A4                 Dual Channel 64-bit PCI-X 133MHz to
-                               Ultra320 SCSI ASIC
-    AIC-7902B                  Dual Channel 64-bit PCI-X 133MHz to
-                               Ultra320 SCSI ASIC with Retained Training
-+   =============              =========================================
+-   Chip    MIPS  Host Bus  MaxSync  MaxWidth  SCBs  Notes
+-   ---------------------------------------------------------------
+-   aic7770  10    EISA/VL   10MHz    16Bit      4   1
++   ======== ===== ========= ======== ========= ===== ===============
++   Chip     MIPS  Host Bus  MaxSync  MaxWidth  SCBs  Notes
++   ======== ===== ========= ======== ========= ===== ===============
++   aic7770  10    EISA/VL   10MHz    16Bit      4    1
+    aic7850  10    PCI/32    10MHz    8Bit       3
+    aic7855  10    PCI/32    10MHz    8Bit       3
+    aic7856  10    PCI/32    10MHz    8Bit       3
+@@ -28,12 +33,13 @@ The following information is available in this file:
+    aic7880  10    PCI/32    20MHz    16Bit      16
+    aic7890  20    PCI/32    40MHz    16Bit      16      3 4 5 6 7 8
+    aic7891  20    PCI/64    40MHz    16Bit      16      3 4 5 6 7 8
+-   aic7892  20   PCI/64-66  80MHz    16Bit      16      3 4 5 6 7 8
++   aic7892  20    PCI/64-66 80MHz    16Bit      16      3 4 5 6 7 8
+    aic7895  15    PCI/32    20MHz    16Bit      16    2 3 4 5
+    aic7895C 15    PCI/32    20MHz    16Bit      16    2 3 4 5     8
+    aic7896  20    PCI/32    40MHz    16Bit      16    2 3 4 5 6 7 8
+    aic7897  20    PCI/64    40MHz    16Bit      16    2 3 4 5 6 7 8
+-   aic7899  20   PCI/64-66  80MHz    16Bit      16    2 3 4 5 6 7 8
++   aic7899  20    PCI/64-66 80MHz    16Bit      16    2 3 4 5 6 7 8
++   ======== ===== ========= ======== ========= ===== ===============
  
-+   ========================== ===================================== ============
-    Ultra320 Adapters          Description                              ASIC
+    1.   Multiplexed Twin Channel Device - One controller servicing two
+         busses.
+@@ -44,15 +50,16 @@ The following information is available in this file:
+         for all possible target/lun combinations.
+    5.   Block Move Instruction Support - Doubles the speed of certain
+         sequencer operations.
+-   6.   `Bayonet' style Scatter Gather Engine - Improves S/G prefetch
++   6.   'Bayonet' style Scatter Gather Engine - Improves S/G prefetch
+         performance.
+    7.   Queuing Registers - Allows queuing of new transactions without
+         pausing the sequencer.
+    8.   Multiple Target IDs - Allows the controller to respond to selection
+         as a target on multiple SCSI IDs.
+ 
++   ============== ======= =========== =============== =============== =========
+    Controller      Chip   Host-Bus    Int-Connectors  Ext-Connectors  Notes
 -   --------------------------------------------------------------------------
-+   ========================== ===================================== ============
-    Adaptec SCSI Card 39320    Dual Channel 64-bit PCI-X 133MHz to   7902A4/7902B
--                              Ultra320 SCSI Card (one external 
-+                              Ultra320 SCSI Card (one external
-                               68-pin, two internal 68-pin)
-    Adaptec SCSI Card 39320A   Dual Channel 64-bit PCI-X 133MHz to      7902B
--                              Ultra320 SCSI Card (one external 
-+                              Ultra320 SCSI Card (one external
-                               68-pin, two internal 68-pin)
-    Adaptec SCSI Card 39320D   Dual Channel 64-bit PCI-X 133MHz to      7902A4
-                               Ultra320 SCSI Card (two external VHDC
-@@ -46,11 +52,11 @@ The following information is available in this file:
-                               and one internal 68-pin) based on the
-                               AIC-7902B ASIC
-    Adaptec SCSI Card 29320    Single Channel 64-bit PCI-X 133MHz to    7901A
--                              Ultra320 SCSI Card (one external 
-+                              Ultra320 SCSI Card (one external
-                               68-pin, two internal 68-pin, one
-                               internal 50-pin)
-    Adaptec SCSI Card 29320A   Single Channel 64-bit PCI-X 133MHz to    7901B
--                              Ultra320 SCSI Card (one external 
-+                              Ultra320 SCSI Card (one external
-                               68-pin, two internal 68-pin, one
-                               internal 50-pin)
-    Adaptec SCSI Card 29320LP  Single Channel 64-bit Low Profile        7901A
-@@ -61,18 +67,22 @@ The following information is available in this file:
-                               PCI-X 133MHz to Ultra320 SCSI Card
-                               (One external VHDC, one internal
-                               68-pin)
-+   ========================== ===================================== ============
-+
++   ============== ======= =========== =============== =============== =========
+    AHA-274X[A]    aic7770   EISA         SE-50M         SE-HD50F
+    AHA-274X[A]W   aic7770   EISA         SE-HD68F       SE-HD68F
+                                          SE-50M
+@@ -73,7 +80,7 @@ The following information is available in this file:
+    AHA-2915C      aic7860   PCI/32       SE-50M
+    AHA-2940AU/CN  aic7860   PCI/32       SE-50M         SE-HD50F
+    AHA-2944W      aic7870   PCI/32     HVD-HD68F        HVD-HD68F
+-                                        HVD-50M
++                                       HVD-50M
+    AHA-3940W      aic7870   PCI/32     2 X SE-HD68F     SE-HD68F        2
+    AHA-2940UW     aic7880   PCI/32       SE-HD68F
+                                          SE-50M         SE-HD68F
+@@ -85,12 +92,12 @@ The following information is available in this file:
+    AHA-3940UWD    aic7880   PCI/32     2 X SE-HD68F   2 X SE-VHD68F       3
+    AHA-3940U      aic7880   PCI/32     2 X SE-50M       SE-HD50F          3
+    AHA-2944UW     aic7880   PCI/32      HVD-HD68F       HVD-HD68F
+-                                         HVD-50M
++                                        HVD-50M
+    AHA-3944UWD    aic7880   PCI/32     2 X HVD-HD68F  2 X HVD-VHD68F      3
+    AHA-4944UW     aic7880   PCI/32
+    AHA-2930UW     aic7880   PCI/32
+    AHA-2940UW Pro aic7880   PCI/32      SE-HD68F        SE-HD68F            4
+-                                         SE-50M
++                                        SE-50M
+    AHA-2940UW/CN  aic7880   PCI/32
+    AHA-2940UDual  aic7895   PCI/32
+    AHA-2940UWDual aic7895   PCI/32
+@@ -102,27 +109,28 @@ The following information is available in this file:
+    AHA-2940U2B    aic7890   PCI/32      LVD-HD68F       LVD-HD68F
+    AHA-2940U2 OEM aic7891   PCI/64
+    AHA-2940U2W    aic7890   PCI/32      LVD-HD68F       LVD-HD68F
+-                                        SE-HD68F 
+-                                         SE-50M
++                                        SE-HD68F
++                                        SE-50M
+    AHA-2950U2B    aic7891   PCI/64      LVD-HD68F       LVD-HD68F
+    AHA-2930U2     aic7890   PCI/32      LVD-HD68F       SE-HD50F
+-                                         SE-50M 
++                                        SE-50M
+    AHA-3950U2B    aic7897   PCI/64
+    AHA-3950U2D    aic7897   PCI/64
+    AHA-29160      aic7892   PCI/64-66
+    AHA-29160 CPQ  aic7892   PCI/64-66
+    AHA-29160N     aic7892   PCI/32      LVD-HD68F       SE-HD50F
+-                                         SE-50M
++                                        SE-50M
+    AHA-29160LP    aic7892   PCI/64-66
+    AHA-19160      aic7892   PCI/64-66
+    AHA-29150LP    aic7892   PCI/64-66
+    AHA-29130LP    aic7892   PCI/64-66
+    AHA-3960D      aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
+-                                         LVD-50M
++                                       LVD-50M
+    AHA-3960D CPQ  aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
+-                                         LVD-50M
++                                       LVD-50M
+    AHA-39160      aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
+-                                         LVD-50M
++                                       LVD-50M
++   ============== ======= =========== =============== =============== =========
+ 
+    1. No BIOS support
+    2. DEC21050 PCI-PCI bridge with multiple controller chips on secondary bus
+@@ -131,11 +139,14 @@ The following information is available in this file:
+       SCSI "stub" effects.
+ 
  2. Version History
+-   7.0	  (4th August, 2005)
 +==================
- 
--   3.0	  (December 1st, 2005)
 +
-+ * 3.0	  (December 1st, 2005)
++   * 7.0	  (4th August, 2005)
  	- Updated driver to use SCSI transport class infrastructure
- 	- Upported sequencer and core fixes from adaptec released
- 	  version 2.0.15 of the driver.
- 
--   1.3.11 (July 11, 2003)
-+ * 1.3.11 (July 11, 2003)
-         - Fix several deadlock issues.
-         - Add 29320ALP and 39320B Id's.
- 
--   1.3.10 (June 3rd, 2003)
-+ * 1.3.10 (June 3rd, 2003)
-         - Align the SCB_TAG field on a 16byte boundary.  This avoids
-           SCB corruption on some PCI-33 busses.
-         - Correct non-zero luns on Rev B. hardware.
-@@ -87,7 +97,7 @@ The following information is available in this file:
+ 	- Upported sequencer and core fixes from last adaptec released
+ 	  version of the driver.
+-   6.2.36 (June 3rd, 2003)
++
++   * 6.2.36 (June 3rd, 2003)
+         - Correct code that disables PCI parity error checking.
+         - Correct and simplify handling of the ignore wide residue
+           message.  The previous code would fail to report a residual
+@@ -153,18 +164,18 @@ The following information is available in this file:
            by some other driver probe that occurred before we
            claimed the controller.
  
--   1.3.9 (May 22nd, 2003)
-+ * 1.3.9 (May 22nd, 2003)
-         - Fix compiler errors.
-         - Remove S/G splitting for segments that cross a 4GB boundary.
-           This is guaranteed not to happen in Linux.
-@@ -100,7 +110,7 @@ The following information is available in this file:
-           if the transaction data length was even and we received
-           an IWR message.
+-   6.2.35 (May 14th, 2003)
++   * 6.2.35 (May 14th, 2003)
+         - Fix a few GCC 3.3 compiler warnings.
+         - Correct operation on EISA Twin Channel controller.
+         - Add support for 2.5.X's scsi_report_device_reset().
  
--   1.3.8 (April 29th, 2003)
-+ * 1.3.8 (April 29th, 2003)
-         - Fix types accessed via the command line interface code.
-         - Perform a few firmware optimizations.
-         - Fix "Unexpected PKT busfree" errors.
-@@ -113,7 +123,7 @@ The following information is available in this file:
-         - Add support for new 2.5.X interrupt API.
-         - Correct big-endian architecture support.
+-   6.2.34 (May 5th, 2003)
++   * 6.2.34 (May 5th, 2003)
+         - Fix locking regression introduced in 6.2.29 that
+           could cause a lock order reversal between the io_request_lock
+           and our per-softc lock.  This was only possible on RH9,
+           SuSE, and kernel.org 2.4.X kernels.
  
--   1.3.7 (April 16th, 2003)
-+ * 1.3.7 (April 16th, 2003)
-         - Use del_timer_sync() to ensure that no timeouts
-           are pending during controller shutdown.
-         - For pre-2.5.X kernels, carefully adjust our segment
-@@ -122,14 +132,14 @@ The following information is available in this file:
-         - Workaround duplicate device entries in the mid-layer
-           device list during add-single-device.
+-   6.2.33 (April 30th, 2003)
++   * 6.2.33 (April 30th, 2003)
+         - Dynamically disable PCI parity error reporting after
+           10 errors are reported to the user.  These errors are
+           the result of some other device issuing PCI transactions
+@@ -172,172 +183,224 @@ The following information is available in this file:
+           problem, continuing to report the errors just degrades
+           our performance.
  
--   1.3.6 (March 28th, 2003)
-+ * 1.3.6 (March 28th, 2003)
-         - Correct a double free in the Domain Validation code.
-         - Correct a reference to free'ed memory during controller
-           shutdown.
-         - Reset the bus on an SE->LVD change.  This is required
-           to reset our transceivers.
+-   6.2.32 (March 28th, 2003)
++   * 6.2.32 (March 28th, 2003)
+         - Dynamically sized S/G lists to avoid SCSI malloc
+           pool fragmentation and SCSI mid-layer deadlock.
  
--   1.3.5 (March 24th, 2003)
-+ * 1.3.5 (March 24th, 2003)
-         - Fix a few register window mode bugs.
-         - Include read streaming in the PPR flags we display in
-           diagnostics as well as /proc.
-@@ -144,16 +154,16 @@ The following information is available in this file:
-         - Cleanup command line parsing and move much of this code
-           to aiclib.
+-   6.2.28 (January 20th, 2003)
++   * 6.2.28 (January 20th, 2003)
+         - Domain Validation Fixes
+         - Add ability to disable PCI parity error checking.
+         - Enhanced Memory Mapped I/O probe
  
--   1.3.4 (February 28th, 2003)
-+ * 1.3.4 (February 28th, 2003)
-         - Correct a race condition in our error recovery handler.
-         - Allow Test Unit Ready commands to take a full 5 seconds
-           during Domain Validation.
- 
--   1.3.2 (February 19th, 2003)
-+ * 1.3.2 (February 19th, 2003)
-         - Correct a Rev B. regression due to the GEM318
-           compatibility fix included in 1.3.1.
--          
--   1.3.1 (February 11th, 2003)
-+
-+ * 1.3.1 (February 11th, 2003)
-         - Add support for the 39320A.
-         - Improve recovery for certain PCI-X errors.
-         - Fix handling of LQ/DATA/LQ/DATA for the
-@@ -166,42 +176,43 @@ The following information is available in this file:
-         - Adapt to a change in the 2.5.X daemonize() API.
-         - Correct a "Missing case in ahd_handle_scsiint" panic.
- 
--   1.3.0 (January 21st, 2003)
-+ * 1.3.0 (January 21st, 2003)
-         - Full regression testing for all U320 products completed.
-         - Added abort and target/lun reset error recovery handler and
-           interrupt coalescing.
- 
--   1.2.0 (November 14th, 2002)
-+ * 1.2.0 (November 14th, 2002)
-         - Added support for Domain Validation
-         - Add support for the Hewlett-Packard version of the 39320D
-           and AIC-7902 adapters.
-+
-         Support for previous adapters has not been fully tested and should
-         only be used at the customer's own risk.
- 
--   1.1.1 (September 24th, 2002)
-+ * 1.1.1 (September 24th, 2002)
-         - Added support for the Linux 2.5.X kernel series
- 
--   1.1.0 (September 17th, 2002)
-+ * 1.1.0 (September 17th, 2002)
-         - Added support for four additional SCSI products:
-           ASC-39320, ASC-29320, ASC-29320LP, AIC-7901.
- 
--   1.0.0 (May 30th, 2002)
-+ * 1.0.0 (May 30th, 2002)
-         - Initial driver release.
- 
--   2.1. Software/Hardware Features
-+ * 2.1. Software/Hardware Features
-         - Support for the SPI-4 "Ultra320" standard:
-           - 320MB/s transfer rates
-           - Packetized SCSI Protocol at 160MB/s and 320MB/s
-           - Quick Arbitration Selection (QAS)
-           - Retained Training Information (Rev B. ASIC only)
-         - Interrupt Coalescing
--        - Initiator Mode (target mode not currently 
-+        - Initiator Mode (target mode not currently
-           supported)
-         - Support for the PCI-X standard up to 133MHz
-         - Support for the PCI v2.2 standard
-         - Domain Validation
- 
--   2.2. Operating System Support:
-+ * 2.2. Operating System Support:
-         - Redhat Linux 7.2, 7.3, 8.0, Advanced Server 2.1
-         - SuSE Linux 7.3, 8.0, 8.1, Enterprise Server 7
-         - only Intel and AMD x86 supported at this time
-@@ -210,197 +221,278 @@ The following information is available in this file:
-      Refer to the User's Guide for more details on this.
+-   6.2.20 (November 7th, 2002)
++   * 6.2.20 (November 7th, 2002)
+         - Added Domain Validation.
  
  3. Command Line Options
 +=======================
  
 -        WARNING: ALTERING OR ADDING THESE DRIVER PARAMETERS
++
 +    .. Warning::
 +
-+	         ALTERING OR ADDING THESE DRIVER PARAMETERS
++                 ALTERING OR ADDING THESE DRIVER PARAMETERS
                   INCORRECTLY CAN RENDER YOUR SYSTEM INOPERABLE.
 -                 USE THEM WITH CAUTION. 
 +                 USE THEM WITH CAUTION.
  
-    Put a .conf file in the /etc/modprobe.d/ directory and add/edit a
--   line containing 'options aic79xx aic79xx=[command[,command...]]' where
+    Put a .conf file in the /etc/modprobe.d directory and add/edit a
+-   line containing 'options aic7xxx aic7xxx=[command[,command...]]' where
 -   'command' is one or more of the following:
 -   -----------------------------------------------------------------
 -              Option: verbose
@@ -324,11 +292,33 @@ index e2d3273000d4..071ff5111a4f 100644
 -   -----------------------------------------------------------------
 -              Option: debug:[value]
 -          Definition: Enables various levels of debugging information
--                      The bit definitions for the debugging mask can
--                      be found in drivers/scsi/aic7xxx/aic79xx.h under
--                      the "Debug" heading.
 -     Possible Values: 0x0000 = no debugging, 0xffff = full debugging
 -       Default Value: 0x0000
+-   -----------------------------------------------------------------
+-              Option: no_probe
+-              Option: probe_eisa_vl
+-          Definition: Do not probe for EISA/VLB controllers.
+-                      This is a toggle.  If the driver is compiled
+-                      to not probe EISA/VLB controllers by default,
+-                      specifying "no_probe" will enable this probing.
+-                      If the driver is compiled to probe EISA/VLB
+-                      controllers by default, specifying "no_probe"
+-                      will disable this probing.
+-     Possible Values: This option is a toggle
+-       Default Value: EISA/VLB probing is disabled by default.
+-   -----------------------------------------------------------------
+-              Option: pci_parity
+-          Definition: Toggles the detection of PCI parity errors.
+-                      On many motherboards with VIA chipsets,
+-                      PCI parity is not generated correctly on the
+-                      PCI bus.  It is impossible for the hardware to
+-                      differentiate between these "spurious" parity
+-                      errors and real parity errors.  The symptom of
+-                      this problem is a stream of the message:
+-    "scsi0: Data Parity Error Detected during address or write data phase"
+-                      output by the driver.
+-     Possible Values: This option is a toggle
+-       Default Value: PCI Parity Error reporting is disabled
 -   -----------------------------------------------------------------
 -              Option: no_reset
 -          Definition: Do not reset the bus during the initial probe
@@ -353,7 +343,7 @@ index e2d3273000d4..071ff5111a4f 100644
 -     Possible Values: This option is a flag
 -       Default Value: disabled
 -   -----------------------------------------------------------------
--              Option: global_tag_depth
+-              Option: global_tag_depth:[value]
 -          Definition: Global tag depth for all targets on all busses.
 -                      This option sets the default tag depth which
 -                      may be selectively overridden vi the tag_info
@@ -383,32 +373,12 @@ index e2d3273000d4..071ff5111a4f 100644
 -     Possible Values: 1 - 253
 -       Default Value: 32
 -   -----------------------------------------------------------------
--              Option: rd_strm: {rd_strm_bitmask[,rd_strm_bitmask...]}
--          Definition: Enable read streaming on a per target basis.
--                      The rd_strm_bitmask is a 16 bit hex value in which
--                      each bit represents a target.  Setting the target's
--                      bit to '1' enables read streaming for that
--                      target.  Controllers may be omitted indicating that
--                      they should retain the default read streaming setting.
--             Example: rd_strm:{0x0041}
--                        On Controller 0
--                          enables read streaming for targets 0 and 6.
--                          disables read streaming for targets 1-5,7-15.
--                        All other targets retain the default read
--                        streaming setting.
--             Example: rd_strm:{0x0023,,0xFFFF}
--                        On Controller 0
--                          enables read streaming for targets 1,2, and 5.
--                          disables read streaming for targets 3,4,6-15.
--                        On Controller 2
--                          enables read streaming for all targets.
--                        All other targets retain the default read
--                        streaming setting.
--                      
--     Possible Values: 0x0000 - 0xffff
--       Default Value: 0x0000
+-              Option: seltime:[value]
+-          Definition: Specifies the selection timeout value
+-     Possible Values: 0 = 256ms, 1 = 128ms, 2 = 64ms, 3 = 32ms
+-       Default Value: 0
 -   -----------------------------------------------------------------
--              Option: dv: {value[,value...]}
+-              Option: dv: {value[,value...]} 
 -          Definition: Set Domain Validation Policy on a per-controller basis.
 -                      Controllers may be omitted indicating that
 -                      they should retain the default read streaming setting.
@@ -422,74 +392,96 @@ index e2d3273000d4..071ff5111a4f 100644
 -     Possible Values: < 0 Use setting from serial EEPROM.
 -                      0 Disable DV
 -                      > 0 Enable DV
--       Default Value: DV Serial EEPROM configuration setting.
--   -----------------------------------------------------------------
--              Option: seltime:[value]
--          Definition: Specifies the selection timeout value
--     Possible Values: 0 = 256ms, 1 = 128ms, 2 = 64ms, 3 = 32ms
--       Default Value: 0
+-
+-       Default Value: SCSI-Select setting on controllers with a SCSI Select
+-                      option for DV.  Otherwise, on for controllers supporting
+-                      U160 speeds and off for all other controller types.
 -   -----------------------------------------------------------------
 -
--   *** The following three options should only be changed at ***
--   *** the direction of a technical support representative.  ***
--
--   -----------------------------------------------------------------
--              Option: precomp: {value[,value...]}
--          Definition: Set IO Cell precompensation value on a per-controller
--                      basis.
--                      Controllers may be omitted indicating that
--                      they should retain the default precompensation setting.
--             Example: precomp:{0x1}
--                        On Controller 0 set precompensation to 1.
--             Example: precomp:{1,,7}
--                        On Controller 0 set precompensation to 1.
--                        On Controller 2 set precompensation to 8.
--                      
--     Possible Values: 0 - 7
--       Default Value: Varies based on chip revision
--   -----------------------------------------------------------------
--              Option: slewrate: {value[,value...]}
--          Definition: Set IO Cell slew rate on a per-controller basis.
-+   line containing ``options aic79xx aic79xx=[command[,command...]]`` where
+-   Example:
+-   'options aic7xxx aic7xxx=verbose,no_probe,tag_info:{{},{,,10}},seltime:1'
+-        enables verbose logging, Disable EISA/VLB probing,
+-        and set tag depth on Controller 1/Target 2 to 10 tags.
++   line containing ``options aic7xxx aic7xxx=[command[,command...]]`` where
 +   ``command`` is one or more of the following:
 +
-+
 +verbose
++
 +    :Definition: enable additional informative messages during driver operation.
 +    :Possible Values: This option is a flag
 +    :Default Value: disabled
 +
++
 +debug:[value]
++
 +    :Definition: Enables various levels of debugging information
-+                 The bit definitions for the debugging mask can
-+                 be found in drivers/scsi/aic7xxx/aic79xx.h under
-+                 the "Debug" heading.
 +    :Possible Values: 0x0000 = no debugging, 0xffff = full debugging
 +    :Default Value: 0x0000
 +
++no_probe
++
++probe_eisa_vl
++
++    :Definition: Do not probe for EISA/VLB controllers.
++		 This is a toggle.  If the driver is compiled
++		 to not probe EISA/VLB controllers by default,
++		 specifying "no_probe" will enable this probing.
++		 If the driver is compiled to probe EISA/VLB
++		 controllers by default, specifying "no_probe"
++		 will disable this probing.
++
++    :Possible Values: This option is a toggle
++    :Default Value: EISA/VLB probing is disabled by default.
++
++pci_parity
++
++    :Definition: Toggles the detection of PCI parity errors.
++		 On many motherboards with VIA chipsets,
++		 PCI parity is not generated correctly on the
++		 PCI bus.  It is impossible for the hardware to
++		 differentiate between these "spurious" parity
++		 errors and real parity errors.  The symptom of
++		 this problem is a stream of the message::
++
++		    "scsi0:	Data Parity Error Detected during address or write data phase"
++
++		 output by the driver.
++
++    :Possible Values: This option is a toggle
++    :Default Value: PCI Parity Error reporting is disabled
++
 +no_reset
++
 +    :Definition: Do not reset the bus during the initial probe
-+                 phase
++		 phase
++
 +    :Possible Values: This option is a flag
 +    :Default Value: disabled
 +
 +extended
++
 +    :Definition: Force extended translation on the controller
 +    :Possible Values: This option is a flag
 +    :Default Value: disabled
 +
 +periodic_otag
++
 +    :Definition: Send an ordered tag periodically to prevent
-+                 tag starvation.  Needed for some older devices
++		 tag starvation.  Needed for some older devices
++
 +    :Possible Values: This option is a flag
 +    :Default Value: disabled
 +
 +reverse_scan
-+    :Definition: Probe the scsi bus in reverse order, starting with target 15
++
++    :Definition: Probe the scsi bus in reverse order, starting
++		with target 15
++
 +    :Possible Values: This option is a flag
 +    :Default Value: disabled
 +
-+global_tag_depth
++global_tag_depth:[value]
++
 +    :Definition: Global tag depth for all targets on all busses.
 +		 This option sets the default tag depth which
 +		 may be selectively overridden vi the tag_info
@@ -499,89 +491,52 @@ index e2d3273000d4..071ff5111a4f 100644
 +    :Default Value: 32
 +
 +tag_info:{{value[,value...]}[,{value[,value...]}...]}
++
 +    :Definition: Set the per-target tagged queue depth on a
-+                 per controller basis.  Both controllers and targets
-+                 may be omitted indicating that they should retain
-+                 the default tag depth.
++		 per controller basis.  Both controllers and targets
++		 may be omitted indicating that they should retain
++		 the default tag depth.
 +
 +    :Possible Values: 1 - 253
 +    :Default Value: 32
 +
 +    Examples:
 +
++	    ::
 +
-+	::
++	        tag_info:{{16,32,32,64,8,8,,32,32,32,32,32,32,32,32,32}
 +
-+	    tag_info:{{16,32,32,64,8,8,,32,32,32,32,32,32,32,32,32}
++	    On Controller 0:
 +
-+	On Controller 0
-+
-+	    - specifies a tag depth of 16 for target 0
-+	    - specifies a tag depth of 64 for target 3
-+	    - specifies a tag depth of 8 for targets 4 and 5
-+	    - leaves target 6 at the default
-+	    - specifies a tag depth of 32 for targets 1,2,7-15
-+
-+	All other targets retain the default depth.
-+
-+	::
-+
-+	    tag_info:{{},{32,,32}}
-+
-+	On Controller 1
-+
-+	    - specifies a tag depth of 32 for targets 0 and 2
-+
-+	All other targets retain the default depth.
-+
-+
-+rd_strm: {rd_strm_bitmask[,rd_strm_bitmask...]}
-+    :Definition: Enable read streaming on a per target basis.
-+		 The rd_strm_bitmask is a 16 bit hex value in which
-+		 each bit represents a target.  Setting the target's
-+		 bit to '1' enables read streaming for that
-+		 target.  Controllers may be omitted indicating that
-+		 they should retain the default read streaming setting.
-+
-+    Examples:
++		- specifies a tag depth of 16 for target 0
++		- specifies a tag depth of 64 for target 3
++		- specifies a tag depth of 8 for targets 4 and 5
++		- leaves target 6 at the default
++		- specifies a tag depth of 32 for targets 1,2,7-15
++		- All other targets retain the default depth.
 +
 +	    ::
 +
-+		rd_strm:{0x0041}
++                tag_info:{{},{32,,32}}
 +
-+	    On Controller 0
++	    On Controller 1:
 +
-+		- enables read streaming for targets 0 and 6.
-+		- disables read streaming for targets 1-5,7-15.
++		- specifies a tag depth of 32 for targets 0 and 2
++		- All other targets retain the default depth.
 +
-+	    All other targets retain the default read
-+	    streaming setting.
++seltime:[value]
 +
-+	    ::
-+
-+		rd_strm:{0x0023,,0xFFFF}
-+
-+	    On Controller 0
-+
-+		- enables read streaming for targets 1,2, and 5.
-+		- disables read streaming for targets 3,4,6-15.
-+
-+	    On Controller 2
-+
-+		- enables read streaming for all targets.
-+
-+	    All other targets retain the default read
-+	    streaming setting.
-+
-+    :Possible Values: 0x0000 - 0xffff
-+    :Default Value: 0x0000
++    :Definition: Specifies the selection timeout value
++    :Possible Values: 0 = 256ms, 1 = 128ms, 2 = 64ms, 3 = 32ms
++    :Default Value: 0
 +
 +dv: {value[,value...]}
-+    :Definition: Set Domain Validation Policy on a per-controller basis.
-+                 Controllers may be omitted indicating that
-+                 they should retain the default read streaming setting.
 +
-+     :Possible Values:
++    :Definition: Set Domain Validation Policy on a per-controller basis.
++		 Controllers may be omitted indicating that
++		 they should retain the default read streaming setting.
++
++    :Possible Values:
 +
 +		      ==== ===============================
 +		       < 0 Use setting from serial EEPROM.
@@ -589,168 +544,31 @@ index e2d3273000d4..071ff5111a4f 100644
 +		       > 0 Enable DV
 +		      ==== ===============================
 +
-+    :Default Value: DV Serial EEPROM configuration setting.
++
++    :Default Value: SCSI-Select setting on controllers with a SCSI Select
++		    option for DV.  Otherwise, on for controllers supporting
++		    U160 speeds and off for all other controller types.
 +
 +    Example:
 +
-+	::
++	    ::
 +
-+	    dv:{-1,0,,1,1,0}
++		dv:{-1,0,,1,1,0}
 +
-+	- On Controller 0 leave DV at its default setting.
-+	- On Controller 1 disable DV.
-+	- Skip configuration on Controller 2.
-+	- On Controllers 3 and 4 enable DV.
-+	- On Controller 5 disable DV.
-+
-+seltime:[value]
-+    :Definition: Specifies the selection timeout value
-+    :Possible Values: 0 = 256ms, 1 = 128ms, 2 = 64ms, 3 = 32ms
-+    :Default Value: 0
-+
-+.. Warning:
-+
-+    The following three options should only be changed at
-+    the direction of a technical support representative.
-+
-+
-+precomp: {value[,value...]}
-+    :Definition: Set IO Cell precompensation value on a per-controller basis.
-+                 Controllers may be omitted indicating that
-+                 they should retain the default precompensation setting.
-+
-+    :Possible Values: 0 - 7
-+    :Default Value: Varies based on chip revision
-+
-+    Examples:
-+
-+	::
-+
-+	    precomp:{0x1}
-+
-+	On Controller 0 set precompensation to 1.
-+
-+	::
-+
-+	    precomp:{1,,7}
-+
-+	- On Controller 0 set precompensation to 1.
-+	- On Controller 2 set precompensation to 8.
-+
-+slewrate: {value[,value...]}
-+    :Definition: Set IO Cell slew rate on a per-controller basis.
-                       Controllers may be omitted indicating that
-                       they should retain the default slew rate setting.
--             Example: slewrate:{0x1}
--                        On Controller 0 set slew rate to 1.
--             Example: slewrate :{1,,8}
--                        On Controller 0 set slew rate to 1.
--                        On Controller 2 set slew rate to 8.
--                      
--     Possible Values: 0 - 15
--       Default Value: Varies based on chip revision
--   -----------------------------------------------------------------
--              Option: amplitude: {value[,value...]}
--          Definition: Set IO Cell signal amplitude on a per-controller basis.
--                      Controllers may be omitted indicating that
--                      they should retain the default read streaming setting.
--             Example: amplitude:{0x1}
--                        On Controller 0 set amplitude to 1.
--             Example: amplitude :{1,,7}
--                        On Controller 0 set amplitude to 1.
--                        On Controller 2 set amplitude to 7.
--                      
--     Possible Values: 1 - 7
--       Default Value: Varies based on chip revision
--   -----------------------------------------------------------------
--
--   Example: 'options aic79xx aic79xx=verbose,rd_strm:{{0x0041}}'
--        enables verbose output in the driver and turns read streaming on
--        for targets 0 and 6 of Controller 0.
-+
-+    :Possible Values: 0 - 15
-+    :Default Value: Varies based on chip revision
-+
-+    Examples:
-+
-+	::
-+
-+	    slewrate:{0x1}
-+
-+	- On Controller 0 set slew rate to 1.
-+
-+	::
-+
-+	    slewrate :{1,,8}
-+
-+	- On Controller 0 set slew rate to 1.
-+	- On Controller 2 set slew rate to 8.
-+
-+amplitude: {value[,value...]}
-+    :Definition: Set IO Cell signal amplitude on a per-controller basis.
-+                 Controllers may be omitted indicating that
-+                 they should retain the default read streaming setting.
-+
-+    :Possible Values: 1 - 7
-+    :Default Value: Varies based on chip revision
-+
-+    Examples:
-+
-+    ::
-+
-+	amplitude:{0x1}
-+
-+    On Controller 0 set amplitude to 1.
-+
-+    ::
-+
-+	amplitude :{1,,7}
-+
-+    - On Controller 0 set amplitude to 1.
-+    - On Controller 2 set amplitude to 7.
++	   - On Controller 0 leave DV at its default setting.
++	   - On Controller 1 disable DV.
++	   - Skip configuration on Controller 2.
++	   - On Controllers 3 and 4 enable DV.
++	   - On Controller 5 disable DV.
 +
 +Example::
 +
-+    options aic79xx aic79xx=verbose,rd_strm:{{0x0041}}
++    options aic7xxx aic7xxx=verbose,no_probe,tag_info:{{},{,,10}},seltime:1
 +
-+enables verbose output in the driver and turns read streaming on
-+for targets 0 and 6 of Controller 0.
++enables verbose logging, Disable EISA/VLB probing,
++and set tag depth on Controller 1/Target 2 to 10 tags.
  
- 4. Additional Notes
-+===================
- 
--   4.1. Known/Unresolved or FYI Issues
-+4.1. Known/Unresolved or FYI Issues
-+-----------------------------------
- 
-         * Under SuSE Linux Enterprise 7, the driver may fail to operate
-           correctly due to a problem with PCI interrupt routing in the
-           Linux kernel.  Please contact SuSE for an updated Linux
-           kernel.
- 
--   4.2. Third-Party Compatibility Issues
-+4.2. Third-Party Compatibility Issues
-+-------------------------------------
- 
-         * Adaptec only supports Ultra320 hard drives running
-           the latest firmware available. Please check with
-           your hard drive manufacturer to ensure you have the
-           latest version.
- 
--   4.3. Operating System or Technology Limitations
--        
--        * PCI Hot Plug is untested and may cause the operating system 
-+4.3. Operating System or Technology Limitations
-+-----------------------------------------------
-+
-+        * PCI Hot Plug is untested and may cause the operating system
-           to stop responding.
-         * Luns that are not numbered contiguously starting with 0 might not
-           be automatically probed during system startup.  This is a limitation
-@@ -417,30 +509,34 @@ The following information is available in this file:
- 
- 
- 5. Adaptec Customer Support
+ 4. Adaptec Customer Support
 +===========================
  
 -   A Technical Support Identification (TSID) Number is required for 
@@ -787,7 +605,7 @@ index e2d3273000d4..071ff5111a4f 100644
        To expedite your service, have your computer with you.
      - To order Adaptec products, including accessories and cables,
        call 408-957-7274.  To order cables online go to
-@@ -449,49 +545,49 @@ The following information is available in this file:
+@@ -346,49 +409,50 @@ The following information is available in this file:
     Europe
      - Visit our Web site at http://www.adaptec.com/en-US/_common/world_index.
      - To speak with a Technical Support Specialist, call, or email,
@@ -841,6 +659,7 @@ index e2d3273000d4..071ff5111a4f 100644
 - * FILE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - */
 +Copyright |copy| 2003 Adaptec Inc. 691 S. Milpitas Blvd., Milpitas CA 95035 USA.
++
 +All rights reserved.
 +
 +You are permitted to redistribute, use and modify this README file in whole
@@ -870,41 +689,41 @@ index e2d3273000d4..071ff5111a4f 100644
 +NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS README
 +FILE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index 8404e991b588..b7fdfc0cb956 100644
+index b7fdfc0cb956..c0b66763515f 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -11,5 +11,6 @@ Linux SCSI Subsystem
-    aacraid
+@@ -12,5 +12,6 @@ Linux SCSI Subsystem
     advansys
     aha152x
-+   aic79xx
+    aic79xx
++   aic7xxx
  
     scsi_transport_srp/figures
 diff --git a/Documentation/scsi/scsi-parameters.txt b/Documentation/scsi/scsi-parameters.txt
-index 064d6dfcac26..8ed9c662a1d4 100644
+index 8ed9c662a1d4..266fd3b2398a 100644
 --- a/Documentation/scsi/scsi-parameters.txt
 +++ b/Documentation/scsi/scsi-parameters.txt
-@@ -25,7 +25,7 @@ parameters may be changed at runtime by the command
- 			See Documentation/scsi/aic7xxx.txt.
+@@ -22,7 +22,7 @@ parameters may be changed at runtime by the command
+ 			Format: <portbase>[,<buson>,<busoff>[,<dmaspeed>]]
+ 
+ 	aic7xxx=	[HW,SCSI]
+-			See Documentation/scsi/aic7xxx.txt.
++			See Documentation/scsi/aic7xxx.rst.
  
  	aic79xx=	[HW,SCSI]
--			See Documentation/scsi/aic79xx.txt.
-+			See Documentation/scsi/aic79xx.rst.
- 
- 	atascsi=	[HW,SCSI]
- 			See drivers/scsi/atari_scsi.c.
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic79xx b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-index 16743fb9eead..d4c50b8fce29 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic79xx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-@@ -32,7 +32,7 @@ config AIC79XX_CMDS_PER_DEVICE
+ 			See Documentation/scsi/aic79xx.rst.
+diff --git a/drivers/scsi/aic7xxx/Kconfig.aic7xxx b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
+index 3546b8cc401f..9d027549d698 100644
+--- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
++++ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
+@@ -37,7 +37,7 @@ config AIC7XXX_CMDS_PER_DEVICE
  	on some devices.  The upper bound is 253.  0 disables tagged queueing.
  
  	Per device tag depth can be controlled via the kernel command line
--	"tag_info" option.  See Documentation/scsi/aic79xx.txt for details.
-+	"tag_info" option.  See Documentation/scsi/aic79xx.rst for details.
+-	"tag_info" option.  See Documentation/scsi/aic7xxx.txt for details.
++	"tag_info" option.  See Documentation/scsi/aic7xxx.rst for details.
  
- config AIC79XX_RESET_DELAY_MS
+ config AIC7XXX_RESET_DELAY_MS
  	int "Initial bus reset delay in milli-seconds"
 -- 
 2.21.1
