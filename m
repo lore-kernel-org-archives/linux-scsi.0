@@ -7,51 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F22FDC3F2D2
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B46C3F2D8
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C49BE246B6
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 306B9246BE
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137164;
-	bh=IfRS/R6H+Szpiwi72smGycLsGnORNH/i9azDqozRPuI=;
+	s=default; t=1583137173;
+	bh=XsQJ1i4+U1vKLIHBb0iuZxTTYKZjKKpjTdHYQ+ASJBg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UeKW3DpLMD/RiylM/2I0DKdmGiTgHCk6EKX6rJOmUiiFHM7WGyrLpu647Wt6cS8cU
-	 jhqn5jj3M+h7UpjBMq75eFf0LZ39jk2ksTrVdvruEuLq2HeQto5Qw/6oDA63VT3mC1
-	 4LeLhTH8HL+Kb8AJk4ghh7UDu26elIMfnD3NGoaA=
+	b=taaCVQ3j1y4YVEIdOyVcmjxKDR3/kbDjVskbEmRlmlJ7jdtjNJxq9DCuQUWd/rT7o
+	 mn0nQkzQKhD2KIr/FgABpqsX7vEKQjCVcRKgcpXWvwNtSVnvuJtYBI9s8RmWwf2uuZ
+	 Q1RJN7ali/zmimJyWvivTRvE0TF51S8Ds8gtNars=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727704AbgCBITV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:19:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56678 "EHLO mail.kernel.org"
+        id S1727609AbgCBITZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:19:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727059AbgCBIQU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 2 Mar 2020 03:16:20 -0500
+        id S1726960AbgCBIQT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 03:16:19 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E937E246B9;
+        by mail.kernel.org (Postfix) with ESMTPSA id E075E246B6;
         Mon,  2 Mar 2020 08:16:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=IfRS/R6H+Szpiwi72smGycLsGnORNH/i9azDqozRPuI=;
+        bh=XsQJ1i4+U1vKLIHBb0iuZxTTYKZjKKpjTdHYQ+ASJBg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CzV9VHYdj2Md+uBvKwr2W8pqXFNMC0teiREa9ZEjgsuqNdPGQLiPuip47nIgxChct
-         YOJTFKADMnjkpNLRKORFD88zSBtOS9dyjiXI1KKY20SfOcD7zdxoOZYuoXWDPEztMK
-         mG+wRybjS9E+RUyV/YOhcl9xvwbb/fIAbGuJW72s=
+        b=XVg1QNhic0ebfUl+Cdak06D/0msKDQp70nvO31BvDpJrDErWJFDUilsXQj/a733z1
+         h2+QUfPRMymErWgf02cxnvCO8bebZrH/ZR4qISSsd1Mp6M8RxCA63MF1pkJwyxAMoO
+         XOXwrneVk96/e7J6n+iCdhfO0UX3hb8IpV5Fk7Nw=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003wv-2Y; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003wr-1o; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 04/42] docs: scsi: convert aacraid.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:37 +0100
-Message-Id: <67c60ad88777c91937d49771e2a3f48cbf353e4c.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 03/42] docs: scsi: convert 53c700.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:36 +0100
+Message-Id: <a2e5116b70564f36b4fc7f1f1e5da1e693d7dadb.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -64,152 +62,155 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../scsi/{aacraid.txt => aacraid.rst}         | 59 ++++++++++++++-----
- Documentation/scsi/index.rst                  |  1 +
+ Documentation/scsi/{53c700.txt => 53c700.rst} | 61 +++++++++----------
+ Documentation/scsi/index.rst                  |  2 +
  MAINTAINERS                                   |  2 +-
- drivers/scsi/Kconfig                          |  2 +-
- 4 files changed, 46 insertions(+), 18 deletions(-)
- rename Documentation/scsi/{aacraid.txt => aacraid.rst} (83%)
+ 3 files changed, 33 insertions(+), 32 deletions(-)
+ rename Documentation/scsi/{53c700.txt => 53c700.rst} (75%)
 
-diff --git a/Documentation/scsi/aacraid.txt b/Documentation/scsi/aacraid.rst
-similarity index 83%
-rename from Documentation/scsi/aacraid.txt
-rename to Documentation/scsi/aacraid.rst
-index 30f643f611b2..1904674b94f3 100644
---- a/Documentation/scsi/aacraid.txt
-+++ b/Documentation/scsi/aacraid.rst
-@@ -1,7 +1,11 @@
+diff --git a/Documentation/scsi/53c700.txt b/Documentation/scsi/53c700.rst
+similarity index 75%
+rename from Documentation/scsi/53c700.txt
+rename to Documentation/scsi/53c700.rst
+index e31aceb6df15..53a0e9f9c198 100644
+--- a/Documentation/scsi/53c700.txt
++++ b/Documentation/scsi/53c700.rst
+@@ -1,3 +1,9 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+===================================
- AACRAID Driver for Linux (take two)
-+===================================
- 
- Introduction
---------------------------
-+============
- The aacraid driver adds support for Adaptec (http://www.adaptec.com)
- RAID controllers. This is a major rewrite from the original
- Adaptec supplied driver. It has significantly cleaned up both the code
-@@ -9,8 +13,11 @@ and the running binary size (the module is less than half the size of
- the original).
- 
- Supported Cards/Chipsets
---------------------------
-+========================
++=======================
++The 53c700 Driver Notes
++=======================
 +
-+	===================	=======	=======================================
- 	PCI ID (pci.ids)	OEM	Product
-+	===================	=======	=======================================
- 	9005:0285:9005:0285	Adaptec	2200S (Vulcan)
- 	9005:0285:9005:0286	Adaptec	2120S (Crusader)
- 	9005:0285:9005:0287	Adaptec	2200S (Vulcan-2m)
-@@ -117,34 +124,54 @@ Supported Cards/Chipsets
- 	9005:0285:108e:0286	SUN	STK RAID INT (Cougar)
- 	9005:0285:108e:0287	SUN	STK RAID EXT (Prometheus)
- 	9005:0285:108e:7aae	SUN	STK RAID EM (Narvi)
-+	===================	=======	=======================================
+ General Description
+ ===================
  
- People
---------------------------
-+======
-+
- Alan Cox <alan@lxorguk.ukuu.org.uk>
--Christoph Hellwig <hch@infradead.org>	(updates for new-style PCI probing and SCSI host registration,
--					 small cleanups/fixes)
--Matt Domsch <matt_domsch@dell.com>	(revision ioctl, adapter messages)
--Deanna Bonds                            (non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
--					 added new ioctls, changed scsi interface to use new error handler,
--					 increased the number of fibs and outstanding commands to a container)
+@@ -16,9 +22,9 @@ fill in to get the driver working.
+ Compile Time Flags
+ ==================
+ 
+-A compile time flag is:
++A compile time flag is::
+ 
+-CONFIG_53C700_LE_ON_BE
++	CONFIG_53C700_LE_ON_BE
+ 
+ define if the chipset must be supported in little endian mode on a big
+ endian architecture (used for the 700 on parisc).
+@@ -51,9 +57,11 @@ consistent with the best operation of the chip (although some choose
+ to drive it off the CPU or bus clock rather than going to the expense
+ of an extra clock chip).  The best operation clock speeds are:
+ 
+-53c700 - 25MHz
+-53c700-66 - 50MHz
+-53c710 - 40Mhz
++=========  =====
++53c700     25MHz
++53c700-66  50MHz
++53c710     40Mhz
++=========  =====
+ 
+ Writing Your Glue Driver
+ ========================
+@@ -69,7 +77,7 @@ parameters that matter to you (see below), plumb the NCR_700_intr
+ routine into the interrupt line and call NCR_700_detect with the host
+ template and the new parameters as arguments.  You should also call
+ the relevant request_*_region function and place the register base
+-address into the `base' pointer of the host parameters.
++address into the 'base' pointer of the host parameters.
+ 
+ In the release routine, you must free the NCR_700_Host_Parameters that
+ you allocated, call the corresponding release_*_region and free the
+@@ -78,7 +86,7 @@ interrupt.
+ Handling Interrupts
+ -------------------
+ 
+-In general, you should just plumb the card's interrupt line in with 
++In general, you should just plumb the card's interrupt line in with
+ 
+ request_irq(irq, NCR_700_intr, <irq flags>, <driver name>, host);
+ 
+@@ -95,41 +103,32 @@ Settable NCR_700_Host_Parameters
+ The following are a list of the user settable parameters:
+ 
+ clock: (MANDATORY)
 -
--					(fixed 64bit and 64G memory model, changed confusing naming convention
--					 where fibs that go to the hardware are consistently called hw_fibs and
--					 not just fibs like the name of the driver tracking structure)
--Mark Salyzyn <Mark_Salyzyn@adaptec.com> Fixed panic issues and added some new product ids for upcoming hbas. Performance tuning, card failover and bug mitigations.
-+
-+Christoph Hellwig <hch@infradead.org>
-+
-+- updates for new-style PCI probing and SCSI host registration,
-+  small cleanups/fixes
-+
-+Matt Domsch <matt_domsch@dell.com>
-+
-+- revision ioctl, adapter messages
-+
-+Deanna Bonds
-+
-+- non-DASD support, PAE fibs and 64 bit, added new adaptec controllers
-+  added new ioctls, changed scsi interface to use new error handler,
-+  increased the number of fibs and outstanding commands to a container
-+- fixed 64bit and 64G memory model, changed confusing naming convention
-+  where fibs that go to the hardware are consistently called hw_fibs and
-+  not just fibs like the name of the driver tracking structure
-+
-+Mark Salyzyn <Mark_Salyzyn@adaptec.com>
-+
-+- Fixed panic issues and added some new product ids for upcoming hbas.
-+- Performance tuning, card failover and bug mitigations.
-+
- Achim Leubner <Achim_Leubner@adaptec.com>
+-Set to the clock speed of the chip in MHz.
++  Set to the clock speed of the chip in MHz.
  
--Original Driver
-+- Original Driver
-+
- -------------------------
-+
- Adaptec Unix OEM Product Group
+ base: (MANDATORY)
+-
+-set to the base of the io or mem region for the register set. On 64
+-bit architectures this is only 32 bits wide, so the registers must be
+-mapped into the low 32 bits of memory.
++  Set to the base of the io or mem region for the register set. On 64
++  bit architectures this is only 32 bits wide, so the registers must be
++  mapped into the low 32 bits of memory.
  
- Mailing List
---------------------------
-+============
-+
- linux-scsi@vger.kernel.org (Interested parties troll here)
- Also note this is very different to Brian's original driver
- so don't expect him to support it.
-+
- Adaptec does support this driver.  Contact Adaptec tech support or
- aacraid@adaptec.com
+ pci_dev: (OPTIONAL)
+-
+-set to the PCI board device.  Leave NULL for a non-pci board.  This is
+-used for the pci_alloc_consistent() and pci_map_*() functions.
++  Set to the PCI board device.  Leave NULL for a non-pci board.  This is
++  used for the pci_alloc_consistent() and pci_map_*() functions.
  
- Original by Brian Boerner February 2001
-+
- Rewritten by Alan Cox, November 2001
+ dmode_extra: (OPTIONAL, 53c710 only)
+-
+-extra flags for the DMODE register.  These are used to control bus
+-output pins on the 710.  The settings should be a combination of
+-DMODE_FC1 and DMODE_FC2.  What these pins actually do is entirely up
+-to the board designer.  Usually it is safe to ignore this setting.
++  Extra flags for the DMODE register.  These are used to control bus
++  output pins on the 710.  The settings should be a combination of
++  DMODE_FC1 and DMODE_FC2.  What these pins actually do is entirely up
++  to the board designer.  Usually it is safe to ignore this setting.
+ 
+ differential: (OPTIONAL)
+-
+-set to 1 if the chip drives a differential bus.
++  Set to 1 if the chip drives a differential bus.
+ 
+ force_le_on_be: (OPTIONAL, only if CONFIG_53C700_LE_ON_BE is set)
+-
+-set to 1 if the chip is operating in little endian mode on a big
+-endian architecture.
++  Set to 1 if the chip is operating in little endian mode on a big
++  endian architecture.
+ 
+ chip710: (OPTIONAL)
+-
+-set to 1 if the chip is a 53c710.
++  Set to 1 if the chip is a 53c710.
+ 
+ burst_disable: (OPTIONAL, 53c710 only)
+-
+-disable 8 byte bursting for DMA transfers.
+-
++  Disable 8 byte bursting for DMA transfers.
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index 99efc77c3ac2..2e0429d1a7a5 100644
+index 3ef7ad65372a..99efc77c3ac2 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -8,5 +8,6 @@ Linux SCSI Subsystem
+@@ -7,4 +7,6 @@ Linux SCSI Subsystem
+ .. toctree::
     :maxdepth: 1
  
-    53c700
-+   aacraid
- 
++   53c700
++
     scsi_transport_srp/figures
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 1552db209e69..cb6ecdbc96da 100644
+index 09b04505e7c3..1552db209e69 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -236,7 +236,7 @@ M:	Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+@@ -9445,7 +9445,7 @@ LASI 53c700 driver for PARISC
+ M:	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
  L:	linux-scsi@vger.kernel.org
- W:	http://www.adaptec.com/
- S:	Supported
--F:	Documentation/scsi/aacraid.txt
-+F:	Documentation/scsi/aacraid.rst
- F:	drivers/scsi/aacraid/
+ S:	Maintained
+-F:	Documentation/scsi/53c700.txt
++F:	Documentation/scsi/53c700.rst
+ F:	drivers/scsi/53c700*
  
- ABI/API
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 2b882b96e0d4..a153444318fb 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -421,7 +421,7 @@ config SCSI_AACRAID
- 	help
- 	  This driver supports a variety of Dell, HP, Adaptec, IBM and
- 	  ICP storage products. For a list of supported products, refer
--	  to <file:Documentation/scsi/aacraid.txt>.
-+	  to <file:Documentation/scsi/aacraid.rst>.
- 
- 	  To compile this driver as a module, choose M here: the module
- 	  will be called aacraid.
+ LEAKING_ADDRESSES
 -- 
 2.21.1
 
