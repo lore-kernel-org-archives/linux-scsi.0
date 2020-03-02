@@ -2,131 +2,317 @@ Return-Path: <SRS0=R5J5=4T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD60C3F2D1
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 04:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04DEEC3F2D1
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:16:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A8D6246B6
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 04:32:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C561824719
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:16:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583136981;
+	bh=UUeqA613VDXAuLWp1j8Y80aqjpOlSA5wseX1Ou+T7Z0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=GSMsp+5AVMILVM6ZpVf+7fdkdJawnjZBD0SzHvd8kTMbSohaHV7gXivHS5fVw59Eg
+	 gEJWKp3MNFs4iEipcjrw0kmar/i1Lc/VmxVDpQkc3vzjWcnfU9d/34d+H1tCyusoRI
+	 2/pGMgLgzOXIg0b8tMd6eEo+3pPvmwh8AVsdpN5A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726880AbgCBEc4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 1 Mar 2020 23:32:56 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:40232 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726872AbgCBEc4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Mar 2020 23:32:56 -0500
-Received: by mail-pg1-f194.google.com with SMTP id t24so4766825pgj.7
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Mar 2020 20:32:55 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=7HWLsd1mfXSob5XJkWHd47yl4ghJ0sYkMyHI9pOV8fs=;
-        b=TBCPmlhHNsvLqblchXPvuf3Pxnm05u6A7tkUo6whLnEF8i9XXV9ArTJcFMLnBO9lKU
-         1YiaU8MuJd6bRcUgTWeITp43/sP+lH0CKOo/TG0rp8M2Jt7ANolGJi0UeMKBrFsGxVpz
-         6Ww0l4nigLJbKIx0PDzd+rsjXcAA59JKfC/Z4WpgluZyBUT6tg2oYqhXuqhs/gDNzs/P
-         HNQ518p3pylx0T4Doh44nAAX4QdpxwA89NtCVKP5f58BmR7t9ZfFEQ6VosQHmqUevy5R
-         4lOVHhjayb2HQzlKDPCBv0jPMMli8CAbm7E2nxeGUTI9UnjUCi+dUEJQqFxYN88+2pE9
-         8sEQ==
-X-Gm-Message-State: APjAAAWyLBtmX1rjSQZyRzE7H56LCzmZXQMqj5Dk1VhOPUcIobEeKmKr
-        mx9349ofdkB6K5kDllBB6sg=
-X-Google-Smtp-Source: APXvYqwelXXjYkgfzr/dCyA2z9OKqL1JEh6TKuORyr3BlZmGHxQpbJtJUgV2VV9V3dZujcYifNM0hg==
-X-Received: by 2002:a63:be48:: with SMTP id g8mr18049799pgo.23.1583123574487;
-        Sun, 01 Mar 2020 20:32:54 -0800 (PST)
-Received: from ?IPv6:2601:647:4000:d7:7869:cc6e:b1f7:9f7d? ([2601:647:4000:d7:7869:cc6e:b1f7:9f7d])
-        by smtp.gmail.com with ESMTPSA id x18sm6917256pfo.148.2020.03.01.20.32.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 01 Mar 2020 20:32:53 -0800 (PST)
-Subject: Re: [PATCH] scsi: avoid to fetch scsi host template instance in IO
- path
-To:     Ming Lei <ming.lei@redhat.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        "Ewan D . Milne" <emilne@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bart.vanassche@wdc.com>,
-        Christoph Hellwig <hch@lst.de>
-References: <20200228093346.31213-1-ming.lei@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <9c78c7f3-d9eb-a2d4-c155-82d8f0228880@acm.org>
-Date:   Sun, 1 Mar 2020 20:32:52 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1727189AbgCBIQU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:16:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56682 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727076AbgCBIQU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 03:16:20 -0500
+Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id EA6E6246BB;
+        Mon,  2 Mar 2020 08:16:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583136979;
+        bh=UUeqA613VDXAuLWp1j8Y80aqjpOlSA5wseX1Ou+T7Z0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VFfLmWAuNkxCRk0ytGY3SHL/IW+vg1V+FMLE8AgbyKFzRi7NvlXSwTuAq2Vtilseo
+         q72t32u7cmavmP8Z1bC1zVz9y81qWAUgzveCT4G5vFrkBsTiL5GF0F+zLEUT5AutNO
+         2n47tDr8tLh81JtUsk+ZvNamiCXLHGaB2fTtidjQ=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1j8gFN-0003wz-3J; Mon, 02 Mar 2020 09:16:17 +0100
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH 05/42] docs: scsi: convert advansys.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:38 +0100
+Message-Id: <3c697a046e641c81cdfd0784f037d41d54766931.1583136624.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.21.1
+In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
+References: <cover.1583136624.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200228093346.31213-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-28 01:33, Ming Lei wrote:
-> scsi host template struct is quite big, and the following three
-> fields are needed in SCSI IO path:
-> 
-> - queuecommand
-> - commit_rqs
-> - cmd_size
-> 
-> Cache them into scsi host intance, so that we can avoid to fetch
-> big scsi host template instance in IO path.
-> 
-> 40% IOPS boost can be observed in my scsi_debug performance test after
-> applying this change.
-> 
-> Cc: Sumanesh Samanta <sumanesh.samanta@broadcom.com>
-> Cc: Ewan D . Milne <emilne@redhat.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ .../scsi/{advansys.txt => advansys.rst}       | 129 +++++++++++-------
+ Documentation/scsi/index.rst                  |   1 +
+ MAINTAINERS                                   |   2 +-
+ 3 files changed, 81 insertions(+), 51 deletions(-)
+ rename Documentation/scsi/{advansys.txt => advansys.rst} (73%)
 
-Please use my current email address instead of the above old and no
-longer valid email address. See also the .mailmap file. I think I have
-asked this before.
+diff --git a/Documentation/scsi/advansys.txt b/Documentation/scsi/advansys.rst
+similarity index 73%
+rename from Documentation/scsi/advansys.txt
+rename to Documentation/scsi/advansys.rst
+index 4a3db62b7424..e0367e179696 100644
+--- a/Documentation/scsi/advansys.txt
++++ b/Documentation/scsi/advansys.rst
+@@ -1,3 +1,9 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++=====================
++AdvanSys Driver Notes
++=====================
++
+ AdvanSys (Advanced System Products, Inc.) manufactures the following
+ RISC-based, Bus-Mastering, Fast (10 Mhz) and Ultra (20 Mhz) Narrow
+ (8-bit transfer) SCSI Host Adapters for the ISA, EISA, VL, and PCI
+@@ -12,50 +18,51 @@ adapter detected. The number of CDBs used by the driver can be
+ lowered in the BIOS by changing the 'Host Queue Size' adapter setting.
+ 
+ Laptop Products:
+-   ABP-480 - Bus-Master CardBus (16 CDB)
++  - ABP-480 - Bus-Master CardBus (16 CDB)
+ 
+ Connectivity Products:
+-   ABP510/5150 - Bus-Master ISA (240 CDB)
+-   ABP5140 - Bus-Master ISA PnP (16 CDB)
+-   ABP5142 - Bus-Master ISA PnP with floppy (16 CDB)
+-   ABP902/3902 - Bus-Master PCI (16 CDB)
+-   ABP3905 - Bus-Master PCI (16 CDB)
+-   ABP915 - Bus-Master PCI (16 CDB)
+-   ABP920 - Bus-Master PCI (16 CDB)
+-   ABP3922 - Bus-Master PCI (16 CDB)
+-   ABP3925 - Bus-Master PCI (16 CDB)
+-   ABP930 - Bus-Master PCI (16 CDB)
+-   ABP930U - Bus-Master PCI Ultra (16 CDB)
+-   ABP930UA - Bus-Master PCI Ultra (16 CDB)
+-   ABP960 - Bus-Master PCI MAC/PC (16 CDB)
+-   ABP960U - Bus-Master PCI MAC/PC Ultra (16 CDB)
++   - ABP510/5150 - Bus-Master ISA (240 CDB)
++   - ABP5140 - Bus-Master ISA PnP (16 CDB)
++   - ABP5142 - Bus-Master ISA PnP with floppy (16 CDB)
++   - ABP902/3902 - Bus-Master PCI (16 CDB)
++   - ABP3905 - Bus-Master PCI (16 CDB)
++   - ABP915 - Bus-Master PCI (16 CDB)
++   - ABP920 - Bus-Master PCI (16 CDB)
++   - ABP3922 - Bus-Master PCI (16 CDB)
++   - ABP3925 - Bus-Master PCI (16 CDB)
++   - ABP930 - Bus-Master PCI (16 CDB)
++   - ABP930U - Bus-Master PCI Ultra (16 CDB)
++   - ABP930UA - Bus-Master PCI Ultra (16 CDB)
++   - ABP960 - Bus-Master PCI MAC/PC (16 CDB)
++   - ABP960U - Bus-Master PCI MAC/PC Ultra (16 CDB)
+ 
+ Single Channel Products:
+-   ABP542 - Bus-Master ISA with floppy (240 CDB)
+-   ABP742 - Bus-Master EISA (240 CDB)
+-   ABP842 - Bus-Master VL (240 CDB)
+-   ABP940 - Bus-Master PCI (240 CDB)
+-   ABP940U - Bus-Master PCI Ultra (240 CDB)
+-   ABP940UA/3940UA - Bus-Master PCI Ultra (240 CDB)
+-   ABP970 - Bus-Master PCI MAC/PC (240 CDB)
+-   ABP970U - Bus-Master PCI MAC/PC Ultra (240 CDB)
+-   ABP3960UA - Bus-Master PCI MAC/PC Ultra (240 CDB)
+-   ABP940UW/3940UW - Bus-Master PCI Ultra-Wide (253 CDB)
+-   ABP970UW - Bus-Master PCI MAC/PC Ultra-Wide (253 CDB)
+-   ABP3940U2W - Bus-Master PCI LVD/Ultra2-Wide (253 CDB)
++   - ABP542 - Bus-Master ISA with floppy (240 CDB)
++   - ABP742 - Bus-Master EISA (240 CDB)
++   - ABP842 - Bus-Master VL (240 CDB)
++   - ABP940 - Bus-Master PCI (240 CDB)
++   - ABP940U - Bus-Master PCI Ultra (240 CDB)
++   - ABP940UA/3940UA - Bus-Master PCI Ultra (240 CDB)
++   - ABP970 - Bus-Master PCI MAC/PC (240 CDB)
++   - ABP970U - Bus-Master PCI MAC/PC Ultra (240 CDB)
++   - ABP3960UA - Bus-Master PCI MAC/PC Ultra (240 CDB)
++   - ABP940UW/3940UW - Bus-Master PCI Ultra-Wide (253 CDB)
++   - ABP970UW - Bus-Master PCI MAC/PC Ultra-Wide (253 CDB)
++   - ABP3940U2W - Bus-Master PCI LVD/Ultra2-Wide (253 CDB)
+ 
+ Multi-Channel Products:
+-   ABP752 - Dual Channel Bus-Master EISA (240 CDB Per Channel)
+-   ABP852 - Dual Channel Bus-Master VL (240 CDB Per Channel)
+-   ABP950 - Dual Channel Bus-Master PCI (240 CDB Per Channel)
+-   ABP950UW - Dual Channel Bus-Master PCI Ultra-Wide (253 CDB Per Channel)
+-   ABP980 - Four Channel Bus-Master PCI (240 CDB Per Channel)
+-   ABP980U - Four Channel Bus-Master PCI Ultra (240 CDB Per Channel)
+-   ABP980UA/3980UA - Four Channel Bus-Master PCI Ultra (16 CDB Per Chan.)
+-   ABP3950U2W - Bus-Master PCI LVD/Ultra2-Wide and Ultra-Wide (253 CDB)
+-   ABP3950U3W - Bus-Master PCI Dual LVD2/Ultra3-Wide (253 CDB)
++   - ABP752 - Dual Channel Bus-Master EISA (240 CDB Per Channel)
++   - ABP852 - Dual Channel Bus-Master VL (240 CDB Per Channel)
++   - ABP950 - Dual Channel Bus-Master PCI (240 CDB Per Channel)
++   - ABP950UW - Dual Channel Bus-Master PCI Ultra-Wide (253 CDB Per Channel)
++   - ABP980 - Four Channel Bus-Master PCI (240 CDB Per Channel)
++   - ABP980U - Four Channel Bus-Master PCI Ultra (240 CDB Per Channel)
++   - ABP980UA/3980UA - Four Channel Bus-Master PCI Ultra (16 CDB Per Chan.)
++   - ABP3950U2W - Bus-Master PCI LVD/Ultra2-Wide and Ultra-Wide (253 CDB)
++   - ABP3950U3W - Bus-Master PCI Dual LVD2/Ultra3-Wide (253 CDB)
+ 
+ Driver Compile Time Options and Debugging
++=========================================
+ 
+ The following constants can be defined in the source file.
+ 
+@@ -88,26 +95,30 @@ The following constants can be defined in the source file.
+    first three hex digits of the pseudo I/O Port must be set to
+    'deb' and the fourth hex digit specifies the debug level: 0 - F.
+    The following command line will look for an adapter at 0x330
+-   and set the debug level to 2.
++   and set the debug level to 2::
+ 
+       linux advansys=0x330,0,0,0,0xdeb2
+ 
+    If the driver is built as a loadable module this variable can be
+    defined when the driver is loaded. The following insmod command
+-   will set the debug level to one.
++   will set the debug level to one::
+ 
+       insmod advansys.o asc_dbglvl=1
+ 
+    Debugging Message Levels:
+-      0: Errors Only
+-      1: High-Level Tracing
+-      2-N: Verbose Tracing
++
++
++      ==== ==================
++      0    Errors Only
++      1    High-Level Tracing
++      2-N  Verbose Tracing
++      ==== ==================
+ 
+    To enable debug output to console, please make sure that:
+ 
+    a. System and kernel logging is enabled (syslogd, klogd running).
+    b. Kernel messages are routed to console output. Check
+-      /etc/syslog.conf for an entry similar to this:
++      /etc/syslog.conf for an entry similar to this::
+ 
+            kern.*                  /dev/console
+ 
+@@ -120,8 +131,11 @@ The following constants can be defined in the source file.
+ 
+    Alternatively you can enable printk() to console with this
+    program. However, this is not the 'official' way to do this.
++
+    Debug output is logged in /var/log/messages.
+ 
++   ::
++
+      main()
+      {
+              syscall(103, 7, 0, 0);
+@@ -144,11 +158,11 @@ The following constants can be defined in the source file.
+    Statistics are only available for kernels greater than or equal
+    to v1.3.0 with the CONFIG_PROC_FS (/proc) file system configured.
+ 
+-   AdvanSys SCSI adapter files have the following path name format:
++   AdvanSys SCSI adapter files have the following path name format::
+ 
+       /proc/scsi/advansys/{0,1,2,3,...}
+ 
+-   This information can be displayed with cat. For example:
++   This information can be displayed with cat. For example::
+ 
+       cat /proc/scsi/advansys/0
+ 
+@@ -156,6 +170,7 @@ The following constants can be defined in the source file.
+    contain adapter and device configuration information.
+ 
+ Driver LILO Option
++==================
+ 
+ If init/main.c is modified as described in the 'Directions for Adding
+ the AdvanSys Driver to Linux' section (B.4.) above, the driver will
+@@ -167,17 +182,30 @@ affects searching for ISA and VL boards.
+ 
+ Examples:
+   1. Eliminate I/O port scanning:
+-       boot: linux advansys=
+-         or
+-       boot: linux advansys=0x0
++
++     boot::
++
++	linux advansys=
++
++     or::
++
++	boot: linux advansys=0x0
++
+   2. Limit I/O port scanning to one I/O port:
+-       boot: linux advansys=0x110
++
++     boot::
++
++	linux advansys=0x110
++
+   3. Limit I/O port scanning to four I/O ports:
+-       boot: linux advansys=0x110,0x210,0x230,0x330
++
++     boot::
++
++	linux advansys=0x110,0x210,0x230,0x330
+ 
+ For a loadable module the same effect can be achieved by setting
+ the 'asc_iopflag' variable and 'asc_ioport' array when loading
+-the driver, e.g.
++the driver, e.g.::
+ 
+       insmod advansys.o asc_iopflag=1 asc_ioport=0x110,0x330
+ 
+@@ -187,6 +215,7 @@ the 'Driver Compile Time Options and Debugging' section above for
+ more information.
+ 
+ Credits (Chronological Order)
++=============================
+ 
+ Bob Frey <bfrey@turbolinux.com.cn> wrote the AdvanSys SCSI driver
+ and maintained it up to 3.3F. He continues to answer questions
+diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
+index 2e0429d1a7a5..df526a0ceccf 100644
+--- a/Documentation/scsi/index.rst
++++ b/Documentation/scsi/index.rst
+@@ -9,5 +9,6 @@ Linux SCSI Subsystem
+ 
+    53c700
+    aacraid
++   advansys
+ 
+    scsi_transport_srp/figures
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cb6ecdbc96da..aac8ef48dc08 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -540,7 +540,7 @@ M:	Matthew Wilcox <willy@infradead.org>
+ M:	Hannes Reinecke <hare@suse.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/scsi/advansys.txt
++F:	Documentation/scsi/advansys.rst
+ F:	drivers/scsi/advansys.c
+ 
+ ADXL34X THREE-AXIS DIGITAL ACCELEROMETER DRIVER (ADXL345/ADXL346)
+-- 
+2.21.1
 
-> @@ -1148,7 +1148,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
->  	in_flight = test_bit(SCMD_STATE_INFLIGHT, &cmd->state);
->  	/* zero out the cmd, except for the embedded scsi_request */
->  	memset((char *)cmd + sizeof(cmd->req), 0,
-> -		sizeof(*cmd) - sizeof(cmd->req) + dev->host->hostt->cmd_size);
-> +		sizeof(*cmd) - sizeof(cmd->req) + dev->host->cmd_size);
->  
->  	cmd->device = dev;
->  	cmd->sense_buffer = buf;
-
-This patch does not apply on Martin's 5.7/scsi-queue branch. Please rebase.
-
-Thanks,
-
-Bart.
