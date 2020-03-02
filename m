@@ -7,52 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E2D6C3F2D8
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8400BC3F2D2
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBC3C2468E
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44CAD246B4
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:19:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137137;
-	bh=38vWwY8WDeo4wWGBmnlve3hnkekL6KaGDbK0Cb1AvEo=;
+	s=default; t=1583137149;
+	bh=GLxZsUQq+Lij8M5TFkR1baqj1S8OGH1zk8esZJ1wNcg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AdF/P7VjC9rzzVRp6MGnxmFO8yML6RZxnqEY/ZFwtbfczqBX81rWdbLBymvndppbW
-	 66LgPDqvMoibLpqe7SKvKSfqbT5DO0ncahVtbOxXKC27BuEpIOLlw30hwwOn3Pbung
-	 jGklczPWR2CbIC2T3UdDWJPnt0i3fHITlpVxfyA8=
+	b=HeHzVj8MTrOA9eunlNCFxjJ0yXPjpCt4+uvrmJiuoTnUXd005P/jP2oFn/cysho3O
+	 LjST5rzH/7Bv9MzjQpUeBgbu+tVtSz4quI11Z0bvNWW8q9nvTNlGYNJUN0WQoYHUv0
+	 Bi22H5eXDfzE3yG04P/yW+P6AcM6Z3cozCTfkP2k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727519AbgCBISf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:18:35 -0500
+        id S1727573AbgCBITA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:19:00 -0500
 Received: from mail.kernel.org ([198.145.29.99]:57094 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727201AbgCBIQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 2 Mar 2020 03:16:21 -0500
+        id S1727154AbgCBIQU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 2 Mar 2020 03:16:20 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 62B3E246E4;
+        by mail.kernel.org (Postfix) with ESMTPSA id 401E2246D5;
         Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=38vWwY8WDeo4wWGBmnlve3hnkekL6KaGDbK0Cb1AvEo=;
+        bh=GLxZsUQq+Lij8M5TFkR1baqj1S8OGH1zk8esZJ1wNcg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XhVdc3SnAxRviRnL4o/a7J5QsaARF1FI+uv+cGiwwWrBPYEn9RndBbhiglEB2hq4G
-         e1nSLvk/ewT9/C37jl6YKjgad+nNc9hGCnr+c8Oe5WtIZ6rLuaLdS8l6WjA1k60t91
-         +ubEDEPEwvNVqMMNaWFkIFXySLhLgevjmrblLC64=
+        b=ds7nPUvsI4F0Celyc8rzVkvLv8/pNwQpo5zgezjJtGA1lFPoCD58AHPo7Bct/N2Ne
+         4h2apFBDolOWigUnJXUPUQ+hb4zRJR1NNQNEDFr0ikYPcqgxI2gXOWuhml5NTjpmJK
+         7apaLpK13kNjRc/cnZSp4VRwuest8tfUGdgdMhHc=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003xp-Di; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003xe-C0; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 16/42] docs: scsi: convert g_NCR5380.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:49 +0100
-Message-Id: <a66e9ea704be6a7aa81b9864ad66a32b75ab808d.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 14/42] docs: scsi: convert dpti.txt to ReST
+Date:   Mon,  2 Mar 2020 09:15:47 +0100
+Message-Id: <212fd7961c134c5bd73d87cd818bcddc30270804.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -65,188 +64,267 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- .../scsi/{g_NCR5380.txt => g_NCR5380.rst}     | 89 ++++++++++++-------
- Documentation/scsi/index.rst                  |  1 +
- Documentation/scsi/scsi-parameters.txt        |  6 +-
- MAINTAINERS                                   |  2 +-
- drivers/scsi/g_NCR5380.c                      |  2 +-
- 5 files changed, 63 insertions(+), 37 deletions(-)
- rename Documentation/scsi/{g_NCR5380.txt => g_NCR5380.rst} (41%)
+ Documentation/scsi/dpti.rst   | 92 +++++++++++++++++++++++++++++++++++
+ Documentation/scsi/dpti.txt   | 83 -------------------------------
+ Documentation/scsi/index.rst  |  1 +
+ drivers/scsi/Kconfig          |  2 +-
+ drivers/scsi/dpt/dpti_ioctl.h |  2 +-
+ drivers/scsi/dpt_i2o.c        |  2 +-
+ drivers/scsi/dpti.h           |  2 +-
+ 7 files changed, 97 insertions(+), 87 deletions(-)
+ create mode 100644 Documentation/scsi/dpti.rst
+ delete mode 100644 Documentation/scsi/dpti.txt
 
-diff --git a/Documentation/scsi/g_NCR5380.txt b/Documentation/scsi/g_NCR5380.rst
-similarity index 41%
-rename from Documentation/scsi/g_NCR5380.txt
-rename to Documentation/scsi/g_NCR5380.rst
-index 37b1967a00a9..a282059fec43 100644
---- a/Documentation/scsi/g_NCR5380.txt
-+++ b/Documentation/scsi/g_NCR5380.rst
-@@ -1,7 +1,13 @@
--README file for the Linux g_NCR5380 driver.
+diff --git a/Documentation/scsi/dpti.rst b/Documentation/scsi/dpti.rst
+new file mode 100644
+index 000000000000..0496919d87d3
+--- /dev/null
++++ b/Documentation/scsi/dpti.rst
+@@ -0,0 +1,92 @@
 +.. SPDX-License-Identifier: GPL-2.0
-+.. include:: <isonum.txt>
- 
--(c) 1993 Drew Eckhard
--NCR53c400 extensions (c) 1994,1995,1996 Kevin Lentin
-+==========================================
-+README file for the Linux g_NCR5380 driver
-+==========================================
 +
-+Copyright |copy| 1993 Drew Eckhard
++===================
++Adaptec dpti driver
++===================
 +
-+NCR53c400 extensions Copyright |copy| 1994,1995,1996 Kevin Lentin
- 
- This file documents the NCR53c400 extensions by Kevin Lentin and some
- enhancements to the NCR5380 core.
-@@ -26,43 +32,62 @@ time. More info to come in the future.
- This driver works as a module.
- When included as a module, parameters can be passed on the insmod/modprobe
- command line:
++Redistribution and use in source form, with or without modification, are
++permitted provided that redistributions of source code must retain the
++above copyright notice, this list of conditions and the following disclaimer.
 +
-+  ============= ===============================================================
-   irq=xx[,...]	the interrupt(s)
-   base=xx[,...]	the port or base address(es) (for port or memory mapped, resp.)
-   card=xx[,...]	card type(s):
--		0 = NCR5380,
--		1 = NCR53C400,
--		2 = NCR53C400A,
--		3 = Domex Technology Corp 3181E (DTC3181E)
--		4 = Hewlett Packard C2502
++This software is provided ``as is`` by Adaptec and
++any express or implied warranties, including, but not limited to, the
++implied warranties of merchantability and fitness for a particular purpose,
++are disclaimed. In no event shall Adaptec be
++liable for any direct, indirect, incidental, special, exemplary or
++consequential damages (including, but not limited to, procurement of
++substitute goods or services; loss of use, data, or profits; or business
++interruptions) however caused and on any theory of liability, whether in
++contract, strict liability, or tort (including negligence or otherwise)
++arising in any way out of the use of this driver software, even if advised
++of the possibility of such damage.
 +
-+		==  ======================================
-+		0   NCR5380,
-+		1   NCR53C400,
-+		2   NCR53C400A,
-+		3   Domex Technology Corp 3181E (DTC3181E)
-+		4   Hewlett Packard C2502
-+		==  ======================================
-+  ============= ===============================================================
- 
- These old-style parameters can support only one card:
--  ncr_irq=xx   the interrupt
--  ncr_addr=xx  the port or base address (for port or memory
--               mapped, resp.)
--  ncr_5380=1   to set up for a NCR5380 board
--  ncr_53c400=1 to set up for a NCR53C400 board
++This driver supports the Adaptec I2O RAID and DPT SmartRAID V I2O boards.
 +
-+  ============= =================================================
-+  ncr_irq=xx    the interrupt
-+  ncr_addr=xx   the port or base address (for port or memory
-+                mapped, resp.)
-+  ncr_5380=1    to set up for a NCR5380 board
-+  ncr_53c400=1  to set up for a NCR53C400 board
-   ncr_53c400a=1 to set up for a NCR53C400A board
--  dtc_3181e=1  to set up for a Domex Technology Corp 3181E board
--  hp_c2502=1   to set up for a Hewlett Packard C2502 board
++Credits
++=======
++
++The original linux driver was ported to Linux by Karen White while at
++Dell Computer.  It was ported from Bob Pasteur's (of DPT) original
++non-Linux driver.  Mark Salyzyn and Bob Pasteur consulted on the original
++driver.
++
++2.0 version of the driver by Deanna Bonds and Mark Salyzyn.
++
++History
++=======
++
++The driver was originally ported to linux version 2.0.34
++
++==== ==========================================================================
++V2.0 Rewrite of driver.  Re-architectured based on i2o subsystem.
++     This was the first full GPL version since the last version used
++     i2osig headers which were not GPL.  Developer Testing version.
++V2.1 Internal testing
++V2.2 First released version
++
++V2.3 Changes:
++
++     - Added Raptor Support
++     - Fixed bug causing system to hang under extreme load with
++     - management utilities running (removed GFP_DMA from kmalloc flags)
++
++V2.4 First version ready to be submitted to be embedded in the kernel
++
++     Changes:
++
++     - Implemented suggestions from Alan Cox
++     - Added calculation of resid for sg layer
++     - Better error handling
++     - Added checking underflow conditions
++     - Added DATAPROTECT checking
++     - Changed error return codes
++     - Fixed pointer bug in bus reset routine
++     - Enabled hba reset from ioctls (allows a FW flash to reboot and use
++       the new FW without having to reboot)
++     - Changed proc output
++==== ==========================================================================
++
++TODO
++====
++- Add 64 bit Scatter Gather when compiled on 64 bit architectures
++- Add sparse lun scanning
++- Add code that checks if a device that had been taken offline is
++  now online (at the FW level) when test unit ready or inquiry
++  command from scsi-core
++- Add proc read interface
++- busrescan command
++- rescan command
++- Add code to rescan routine that notifies scsi-core about new devices
++- Add support for C-PCI (hotplug stuff)
++- Add ioctl passthru error recovery
++
++Notes
++=====
++The DPT card optimizes the order of processing commands.  Consequently,
++a command may take up to 6 minutes to complete after it has been sent
++to the board.
++
++The files dpti_ioctl.h dptsig.h osd_defs.h osd_util.h sys_info.h are part of the
++interface files for Adaptec's management routines.  These define the structures used
++in the ioctls.  They are written to be portable.  They are hard to read, but I need
++to use them 'as is' or I can miss changes in the interface.
+diff --git a/Documentation/scsi/dpti.txt b/Documentation/scsi/dpti.txt
+deleted file mode 100644
+index f36dc0e7c8da..000000000000
+--- a/Documentation/scsi/dpti.txt
++++ /dev/null
+@@ -1,83 +0,0 @@
+- /* TERMS AND CONDITIONS OF USE
+- * 
+- * Redistribution and use in source form, with or without modification, are
+- * permitted provided that redistributions of source code must retain the
+- * above copyright notice, this list of conditions and the following disclaimer.
+- * 
+- * This software is provided `as is' by Adaptec and
+- * any express or implied warranties, including, but not limited to, the
+- * implied warranties of merchantability and fitness for a particular purpose,
+- * are disclaimed. In no event shall Adaptec be
+- * liable for any direct, indirect, incidental, special, exemplary or
+- * consequential damages (including, but not limited to, procurement of
+- * substitute goods or services; loss of use, data, or profits; or business
+- * interruptions) however caused and on any theory of liability, whether in
+- * contract, strict liability, or tort (including negligence or otherwise)
+- * arising in any way out of the use of this driver software, even if advised
+- * of the possibility of such damage.
+- * 
+- ****************************************************************
+- * This driver supports the Adaptec I2O RAID and DPT SmartRAID V I2O boards.
+- *
+- * CREDITS:
+- * The original linux driver was ported to Linux by Karen White while at 
+- * Dell Computer.  It was ported from Bob Pasteur's (of DPT) original 
+- * non-Linux driver.  Mark Salyzyn and Bob Pasteur consulted on the original
+- * driver. 
+- * 
+- * 2.0 version of the driver by Deanna Bonds and Mark Salyzyn.
+- *
+- * HISTORY:
+- * The driver was originally ported to linux version 2.0.34 
+- *
+- * V2.0 Rewrite of driver.  Re-architectured based on i2o subsystem.
+- *   This was the first full GPL version since the last version used
+- *   i2osig headers which were not GPL.  Developer Testing version.
+- * V2.1 Internal testing
+- * V2.2 First released version
+- *
+- * V2.3 
+- *   Changes:
+- *      Added Raptor Support
+- *      Fixed bug causing system to hang under extreme load with 
+- *         management utilities running (removed GFP_DMA from kmalloc flags)
+- *
+- *
+- * V2.4 First version ready to be submitted to be embedded in the kernel
+- *   Changes: 
+- *      Implemented suggestions from Alan Cox
+- *      Added calculation of resid for sg layer
+- *      Better error handling
+- *         Added checking underflow conditions 
+- *         Added DATAPROTECT checking
+- *         Changed error return codes
+- *         Fixed pointer bug in bus reset routine
+- *      Enabled hba reset from ioctls (allows a FW flash to reboot and use the new
+- *         FW without having to reboot)
+- *      Changed proc output
+- *
+- * TODO:
+- *      Add 64 bit Scatter Gather when compiled on 64 bit architectures
+- *      Add sparse lun scanning 
+- *      Add code that checks if a device that had been taken offline is
+- *         now online (at the FW level) when test unit ready or inquiry 
+- *         command from scsi-core
+- *      Add proc read interface
+- *         busrescan command
+- *         rescan command
+- *      Add code to rescan routine that notifies scsi-core about new devices
+- *      Add support for C-PCI (hotplug stuff)
+- *      Add ioctl passthru error recovery
+- *
+- * NOTES:
+- * The DPT card optimizes the order of processing commands.  Consequently,
+- * a command may take up to 6 minutes to complete after it has been sent
+- * to the board.  
+- *
+- * The files dpti_ioctl.h dptsig.h osd_defs.h osd_util.h sys_info.h are part of the
+- * interface files for Adaptec's management routines.  These define the structures used
+- * in the ioctls.  They are written to be portable.  They are hard to read, but I need
+- * to use them 'as is' or I can miss changes in the interface.
+- *
+- */
 -
--E.g. Trantor T130B in its default configuration:
--modprobe g_NCR5380 irq=5 base=0x350 card=1
--or alternatively, using the old syntax,
--modprobe g_NCR5380 ncr_irq=5 ncr_addr=0x350 ncr_53c400=1
--
--E.g. a port mapped NCR5380 board, driver to probe for IRQ:
--modprobe g_NCR5380 base=0x350 card=0
--or alternatively,
--modprobe g_NCR5380 ncr_addr=0x350 ncr_5380=1
--
--E.g. a memory mapped NCR53C400 board with no IRQ:
--modprobe g_NCR5380 irq=255 base=0xc8000 card=1
--or alternatively,
--modprobe g_NCR5380 ncr_irq=255 ncr_addr=0xc8000 ncr_53c400=1
-+  dtc_3181e=1   to set up for a Domex Technology Corp 3181E board
-+  hp_c2502=1    to set up for a Hewlett Packard C2502 board
-+  ============= =================================================
-+
-+E.g. Trantor T130B in its default configuration::
-+
-+	modprobe g_NCR5380 irq=5 base=0x350 card=1
-+
-+or alternatively, using the old syntax::
-+
-+	modprobe g_NCR5380 ncr_irq=5 ncr_addr=0x350 ncr_53c400=1
-+
-+E.g. a port mapped NCR5380 board, driver to probe for IRQ::
-+
-+	modprobe g_NCR5380 base=0x350 card=0
-+
-+or alternatively::
-+
-+	modprobe g_NCR5380 ncr_addr=0x350 ncr_5380=1
-+
-+E.g. a memory mapped NCR53C400 board with no IRQ::
-+
-+	modprobe g_NCR5380 irq=255 base=0xc8000 card=1
-+
-+or alternatively::
-+
-+	modprobe g_NCR5380 ncr_irq=255 ncr_addr=0xc8000 ncr_53c400=1
- 
- E.g. two cards, DTC3181 (in non-PnP mode) at 0x240 with no IRQ
--and HP C2502 at 0x300 with IRQ 7:
--modprobe g_NCR5380 irq=0,7 base=0x240,0x300 card=3,4
-+and HP C2502 at 0x300 with IRQ 7::
-+
-+	modprobe g_NCR5380 irq=0,7 base=0x240,0x300 card=3,4
- 
- Kevin Lentin
- K.Lentin@cs.monash.edu.au
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index aad8359357e6..4b577c9e804e 100644
+index 6fe00709cbce..b553dd9904bf 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -20,5 +20,6 @@ Linux SCSI Subsystem
+@@ -18,5 +18,6 @@ Linux SCSI Subsystem
+    BusLogic
+    cxgb3i
     dc395x
-    dpti
-    FlashPoint
-+   g_NCR5380
++   dpti
  
     scsi_transport_srp/figures
-diff --git a/Documentation/scsi/scsi-parameters.txt b/Documentation/scsi/scsi-parameters.txt
-index 266fd3b2398a..864bbf7f737b 100644
---- a/Documentation/scsi/scsi-parameters.txt
-+++ b/Documentation/scsi/scsi-parameters.txt
-@@ -57,13 +57,13 @@ parameters may be changed at runtime by the command
- 			See header of drivers/scsi/NCR_D700.c.
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9f5b2ddec6e0..5e834fba7934 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -448,7 +448,7 @@ config SCSI_DPT_I2O
+ 	help
+ 	  This driver supports all of Adaptec's I2O based RAID controllers as 
+ 	  well as the DPT SmartRaid V cards.  This is an Adaptec maintained
+-	  driver by Deanna Bonds.  See <file:Documentation/scsi/dpti.txt>.
++	  driver by Deanna Bonds.  See <file:Documentation/scsi/dpti.rst>.
  
- 	ncr5380=	[HW,SCSI]
--			See Documentation/scsi/g_NCR5380.txt.
-+			See Documentation/scsi/g_NCR5380.rst.
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called dpt_i2o.
+diff --git a/drivers/scsi/dpt/dpti_ioctl.h b/drivers/scsi/dpt/dpti_ioctl.h
+index 6bc33f4f020d..25e9251f8c78 100644
+--- a/drivers/scsi/dpt/dpti_ioctl.h
++++ b/drivers/scsi/dpt/dpti_ioctl.h
+@@ -5,7 +5,7 @@
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2001 by Adaptec
  
- 	ncr53c400=	[HW,SCSI]
--			See Documentation/scsi/g_NCR5380.txt.
-+			See Documentation/scsi/g_NCR5380.rst.
+-    See Documentation/scsi/dpti.txt for history, notes, license info
++    See Documentation/scsi/dpti.rst for history, notes, license info
+     and credits
+  ***************************************************************************/
  
- 	ncr53c400a=	[HW,SCSI]
--			See Documentation/scsi/g_NCR5380.txt.
-+			See Documentation/scsi/g_NCR5380.rst.
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index abc74fd474dc..5362fb0b96a7 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -8,7 +8,7 @@
+ 			   July 30, 2001 First version being submitted
+ 			   for inclusion in the kernel.  V2.4
  
- 	ncr53c8xx=	[HW,SCSI]
+-    See Documentation/scsi/dpti.txt for history, notes, license info
++    See Documentation/scsi/dpti.rst for history, notes, license info
+     and credits
+  ***************************************************************************/
  
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1e2ab816fe66..451a3f67d23a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11533,7 +11533,7 @@ M:	Finn Thain <fthain@telegraphics.com.au>
- M:	Michael Schmitz <schmitzmic@gmail.com>
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
--F:	Documentation/scsi/g_NCR5380.txt
-+F:	Documentation/scsi/g_NCR5380.rst
- F:	drivers/scsi/NCR5380.*
- F:	drivers/scsi/arm/cumana_1.c
- F:	drivers/scsi/arm/oak.c
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 2ab774e62e40..2cc676e3df6a 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -20,7 +20,7 @@
-  * Added ISAPNP support for DTC436 adapters,
-  * Thomas Sailer, sailer@ife.ee.ethz.ch
-  *
-- * See Documentation/scsi/g_NCR5380.txt for more info.
-+ * See Documentation/scsi/g_NCR5380.rst for more info.
-  */
+diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
+index 42b1e28b5884..6da9ab1fcfe8 100644
+--- a/drivers/scsi/dpti.h
++++ b/drivers/scsi/dpti.h
+@@ -5,7 +5,7 @@
+     begin                : Thu Sep 7 2000
+     copyright            : (C) 2001 by Adaptec
  
- #include <asm/io.h>
+-    See Documentation/scsi/dpti.txt for history, notes, license info
++    See Documentation/scsi/dpti.rst for history, notes, license info
+     and credits
+  ***************************************************************************/
+ 
 -- 
 2.21.1
 
