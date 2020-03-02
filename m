@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB138C3F2D2
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BE8FC3F2D8
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 81E522468E
+	by mail.kernel.org (Postfix) with ESMTP id F2AD0246BB
 	for <linux-scsi@archiver.kernel.org>; Mon,  2 Mar 2020 08:17:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583137073;
-	bh=s531gSxDkVtdzJAGp8Gxaqlfbpc382cg5q+qNefPNJQ=;
+	s=default; t=1583137074;
+	bh=6sbFKCi8a4l1ayl3j3LXRMPY+oORPvV1Q6kKCVDtBHA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sYWkGE/IT2uoUvGKU+2AEDN+zDL4cHG2+P7VyKZVp1F21R5re97ZZ1mxmrRxyHA5p
-	 E4+qAtURJ312mrCNLGEMEVVIT2qBKUM/9pXdvdyoi2HgemRfBWO2SMn8vdjku9uWm2
-	 meow4sC8jkE2JuM2QBhGrptC7iKwoDu3GCH/oYHA=
+	b=eKcQCaGbPb/XaG3P6qsSj9ZgAuMoeDjs9XiPRZuOVZoECYckXVZ20v1GoWydfxgq+
+	 rlWFx0zq6Oe0Cv6jfuZSn82a8+d+2AWBCgUSvAdkd47no07EG/5Q7H8Hpo8j6a32T2
+	 TSfsc8RIBuU2SBThgD/aw0YRWlVTZFWfYUDC8Jwg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727700AbgCBIRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Mar 2020 03:17:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57212 "EHLO mail.kernel.org"
+        id S1727432AbgCBIRm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Mar 2020 03:17:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57062 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727237AbgCBIQW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727261AbgCBIQW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 2 Mar 2020 03:16:22 -0500
 Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 90F4F246EE;
+        by mail.kernel.org (Postfix) with ESMTPSA id 9459D246EF;
         Mon,  2 Mar 2020 08:16:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1583136979;
-        bh=s531gSxDkVtdzJAGp8Gxaqlfbpc382cg5q+qNefPNJQ=;
+        bh=6sbFKCi8a4l1ayl3j3LXRMPY+oORPvV1Q6kKCVDtBHA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=X15Rw1GV1++3pJBDxAayewKzBkVMzNrtizhyLzo5iQdKScxac29NZesaAIcRNbzgj
-         AXUV3jbxHgjQ3YUBNeSiFtB1mUtaCZuTd9WEuh5xrtSWQ01YCb5O2p1r7bFS3vsNkQ
-         V/H5cLDzjpucYoHHuHQ6Es/oTnpLa7p6vkDdK5JY=
+        b=gDeKl8gdujGQ6fnznI0yr3ojjOccyj9f3EQhcwni+2YHRMCpgVHBQoNYXHH3qZtqb
+         KkCl4OoqqygLMzI00kmxPHdzIkQwyb4irU/QO8PHOFJcxmOjh2UIhieNXJSQlhq9mS
+         mbtm9KS/Vp33AJwlH7QmmI8tI0Pg4ppJ+V8FAVnA=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1j8gFN-0003yg-Mj; Mon, 02 Mar 2020 09:16:17 +0100
+        id 1j8gFN-0003yl-NY; Mon, 02 Mar 2020 09:16:17 +0100
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
@@ -48,9 +48,9 @@ Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 26/42] docs: scsi: convert qlogicfas.txt to ReST
-Date:   Mon,  2 Mar 2020 09:15:59 +0100
-Message-Id: <b69f795c781811b9a908abe43485f1dca0ee8ac5.1583136624.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 27/42] docs: scsi: convert scsi-changer.txt to ReST
+Date:   Mon,  2 Mar 2020 09:16:00 +0100
+Message-Id: <433d073fa982174a19783c2e59412b724e2cf946.1583136624.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1583136624.git.mchehab+huawei@kernel.org>
 References: <cover.1583136624.git.mchehab+huawei@kernel.org>
@@ -63,92 +63,129 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- Documentation/scsi/index.rst                    |  1 +
- .../scsi/{qlogicfas.txt => qlogicfas.rst}       | 17 +++++++++++++----
- drivers/scsi/Kconfig                            |  2 +-
- 3 files changed, 15 insertions(+), 5 deletions(-)
- rename Documentation/scsi/{qlogicfas.txt => qlogicfas.rst} (92%)
+ Documentation/scsi/index.rst                  |  1 +
+ .../{scsi-changer.txt => scsi-changer.rst}    | 36 ++++++++++---------
+ drivers/scsi/Kconfig                          |  2 +-
+ 3 files changed, 22 insertions(+), 17 deletions(-)
+ rename Documentation/scsi/{scsi-changer.txt => scsi-changer.rst} (87%)
 
 diff --git a/Documentation/scsi/index.rst b/Documentation/scsi/index.rst
-index 17327f67af68..29e211ee9145 100644
+index 29e211ee9145..635a3b3c5e90 100644
 --- a/Documentation/scsi/index.rst
 +++ b/Documentation/scsi/index.rst
-@@ -30,5 +30,6 @@ Linux SCSI Subsystem
-    ncr53c8xx
+@@ -31,5 +31,6 @@ Linux SCSI Subsystem
     NinjaSCSI
     ppa
-+   qlogicfas
+    qlogicfas
++   scsi-changer
  
     scsi_transport_srp/figures
-diff --git a/Documentation/scsi/qlogicfas.txt b/Documentation/scsi/qlogicfas.rst
-similarity index 92%
-rename from Documentation/scsi/qlogicfas.txt
-rename to Documentation/scsi/qlogicfas.rst
-index c211d827fef2..b17f1b3676c3 100644
---- a/Documentation/scsi/qlogicfas.txt
-+++ b/Documentation/scsi/qlogicfas.rst
-@@ -1,3 +1,8 @@
+diff --git a/Documentation/scsi/scsi-changer.txt b/Documentation/scsi/scsi-changer.rst
+similarity index 87%
+rename from Documentation/scsi/scsi-changer.txt
+rename to Documentation/scsi/scsi-changer.rst
+index ade046ea7c17..ab60e7e61a6c 100644
+--- a/Documentation/scsi/scsi-changer.txt
++++ b/Documentation/scsi/scsi-changer.rst
+@@ -1,4 +1,6 @@
 +.. SPDX-License-Identifier: GPL-2.0
+ 
++========================================
+ README for the SCSI media changer driver
+ ========================================
+ 
+@@ -28,15 +30,17 @@ The SCSI changer model is complex, compared to - for example - IDE-CD
+ changers. But it allows to handle nearly all possible cases. It knows
+ 4 different types of changer elements:
+ 
+-  media transport - this one shuffles around the media, i.e. the
++  ===============   ==================================================
++  media transport   this one shuffles around the media, i.e. the
+                     transport arm.  Also known as "picker".
+-  storage         - a slot which can hold a media.
+-  import/export   - the same as above, but is accessible from outside,
++  storage           a slot which can hold a media.
++  import/export     the same as above, but is accessible from outside,
+                     i.e. there the operator (you !) can use this to
+                     fill in and remove media from the changer.
+ 		    Sometimes named "mailslot".
+-  data transfer   - this is the device which reads/writes, i.e. the
++  data transfer     this is the device which reads/writes, i.e. the
+ 		    CD-ROM / Tape / whatever drive.
++  ===============   ==================================================
+ 
+ None of these is limited to one: A huge Jukebox could have slots for
+ 123 CD-ROM's, 5 CD-ROM readers (and therefore 6 SCSI ID's: the changer
+@@ -131,24 +135,23 @@ timeout_init=<seconds>
+ timeout_move=<seconds>
+ 	timeout for all other commands (default: 120).
+ 
+-dt_id=<id1>,<id2>,...
+-dt_lun=<lun1>,<lun2>,...
++dt_id=<id1>,<id2>,... / dt_lun=<lun1>,<lun2>,...
+ 	These two allow to specify the SCSI ID and LUN for the data
+ 	transfer elements.  You likely don't need this as the jukebox
+ 	should provide this information.  But some devices don't ...
+ 
+-vendor_firsts=
+-vendor_counts=
+-vendor_labels=
++vendor_firsts=, vendor_counts=, vendor_labels=
+ 	These insmod options can be used to tell the driver that there
+ 	are some vendor-specific element types.  Grundig for example
+ 	does this.  Some jukeboxes have a printer to label fresh burned
+ 	CDs, which is addressed as element 0xc000 (type 5).  To tell the
+-	driver about this vendor-specific element, use this:
++	driver about this vendor-specific element, use this::
 +
-+=================================
-+Qlogic FASXXX Family Driver Notes
-+=================================
+ 		$ insmod ch			\
+ 			vendor_firsts=0xc000	\
+ 			vendor_counts=1		\
+ 			vendor_labels=printer
++
+ 	All three insmod options accept up to four comma-separated
+ 	values, this way you can configure the element types 5-8.
+ 	You likely need the SCSI specs for the device in question to
+@@ -162,13 +165,15 @@ Credits
+ I wrote this driver using the famous mailing-patches-around-the-world
+ method.  With (more or less) help from:
  
- This driver supports the Qlogic FASXXX family of chips.  This driver
- only works with the ISA, VLB, and PCMCIA versions of the Qlogic
-@@ -16,7 +21,8 @@ is provided by the qla1280 driver.
- Nor does it support the PCI-Basic, which is supported by the
- 'am53c974' driver.
+-	Daniel Moehwald <moehwald@hdg.de>
+-	Dane Jasper <dane@sonic.net>
+-	R. Scott Bailey <sbailey@dsddi.eds.com>
+-	Jonathan Corbet <corbet@lwn.net>
++	- Daniel Moehwald <moehwald@hdg.de>
++	- Dane Jasper <dane@sonic.net>
++	- R. Scott Bailey <sbailey@dsddi.eds.com>
++	- Jonathan Corbet <corbet@lwn.net>
  
--PCMCIA SUPPORT
-+PCMCIA Support
-+==============
+ Special thanks go to
+-	Martin Kuehne <martin.kuehne@bnbt.de>
++
++	- Martin Kuehne <martin.kuehne@bnbt.de>
++
+ for a old, second-hand (but full functional) cdrom jukebox which I use
+ to develop/test driver and tools now.
  
- This currently only works if the card is enabled first from DOS.  This
- means you will have to load your socket and card services, and
-@@ -31,7 +37,8 @@ it from configuring the card.
- I am working with the PCMCIA group to make it more flexible, but that
- may take a while.
+@@ -176,5 +181,4 @@ Have fun,
  
--ALL CARDS
-+All Cards
-+=========
+    Gerd
  
- The top of the qlogic.c file has a number of defines that controls
- configuration.  As shipped, it provides a balance between speed and
-@@ -46,7 +53,8 @@ command or something.  It comes up faster if this is set to zero, and
- if you have reliable hardware and connections it may be more useful to
- not reset things.
- 
--SOME TROUBLESHOOTING TIPS
-+Some Troubleshooting Tips
-+=========================
- 
- Make sure it works properly under DOS.  You should also do an initial FDISK
- on a new drive if you want partitions.
-@@ -54,7 +62,8 @@ on a new drive if you want partitions.
- Don't enable all the speedups first.  If anything is wrong, they will make
- any problem worse.
- 
--IMPORTANT
-+Important
-+=========
- 
- The best way to test if your cables, termination, etc. are good is to
- copy a very big file (e.g. a doublespace container file, or a very
+--- 
+ Gerd Knorr <kraxel@bytesex.org>
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 82462d6a4ce5..d34c682e94cf 100644
+index d34c682e94cf..6cb9abb0898d 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1117,7 +1117,7 @@ config SCSI_QLOGIC_FAS
- 	  SCSI support"), below.
- 
- 	  Information about this driver is contained in
--	  <file:Documentation/scsi/qlogicfas.txt>.  You should also read the
-+	  <file:Documentation/scsi/qlogicfas.rst>.  You should also read the
- 	  SCSI-HOWTO, available from
- 	  <http://www.tldp.org/docs.html#howto>.
- 
+@@ -149,7 +149,7 @@ config CHR_DEV_SCH
+ 	  don't need this for those tiny 6-slot cdrom changers.  Media
+ 	  changers are listed as "Type: Medium Changer" in /proc/scsi/scsi.
+ 	  If you have such hardware and want to use it with linux, say Y
+-	  here.  Check <file:Documentation/scsi/scsi-changer.txt> for details.
++	  here.  Check <file:Documentation/scsi/scsi-changer.rst> for details.
+ 	
+ 	  If you want to compile this as a module ( = code which can be
+ 	  inserted in and removed from the running kernel whenever you want),
 -- 
 2.21.1
 
