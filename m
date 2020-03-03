@@ -2,174 +2,179 @@ Return-Path: <SRS0=hRFu=4U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DAC0C3F2CD
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 06:15:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1DEDC3F2C6
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 06:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 394B5215A4
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 06:15:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C41920CC7
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 06:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725840AbgCCGP3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Mar 2020 01:15:29 -0500
-Received: from smtp.infotech.no ([82.134.31.41]:37148 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725554AbgCCGP3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 3 Mar 2020 01:15:29 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 669A6204238;
-        Tue,  3 Mar 2020 07:15:26 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id vzGVcn-H6IgH; Tue,  3 Mar 2020 07:15:23 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id CE81D204237;
-        Tue,  3 Mar 2020 07:15:22 +0100 (CET)
-To:     SCSI development list <linux-scsi@vger.kernel.org>
-Reply-To: dgilbert@interlog.com
-Cc:     Martin Pitt <mpitt@debian.org>,
-        David Sommerseth <davids@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Ritesh Raj Sarraf <rrs@researchut.com>,
-        "Robin H. Johnson" <robbat2@gentoo.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.45 available
-Message-ID: <f534152a-0b08-019e-96a4-f7611a400635@interlog.com>
-Date:   Tue, 3 Mar 2020 01:15:19 -0500
+        id S1725818AbgCCGgL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Mar 2020 01:36:11 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37411 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725308AbgCCGgK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2020 01:36:10 -0500
+Received: by mail-pg1-f195.google.com with SMTP id z12so1053979pgl.4
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Mar 2020 22:36:08 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=39HOCf2JMg9+vgJ5wsw8QjVhYL09gU1lYCeWL3iw2Nw=;
+        b=jZmFGEwUbFAQBcrUgLOK4mjugCtAMTqiIwFBTBpdxWFNs+P85c5T0FuQzsVZpkMD4H
+         30Wf/o7E9Uv8F0Fo5RPHoJTVOeFNImBntAP1P91UFDmY31FLW0sSvv9yVHXLMzejPur4
+         zNZgWyZih9xxWy6noaKOLF5QfXSLSTwnBncZY146tQXeDMbc7x+vrEWlcucKCPSw8GjH
+         mVp7hb/hr8adt0R7SUC97uO7NQrZIBn+WnWl9YV/xOqrNsezXI594N9F9pT5ZsCcEvB4
+         29Cplh3/dDHrdMO11mh1fcrnQlrQvYmSyX5eIsfqD7dNuETV1gpf2Q2pIL0HfHooBZWm
+         SiOw==
+X-Gm-Message-State: ANhLgQ0LOf3r4Z/snYu/BUDBgxYwg68mLHQDHVaKSINUUgq1VkfAYrxH
+        dHumSXj4x7mpe9Hl7/X6P8Q=
+X-Google-Smtp-Source: ADFU+vuhQ66dn7MNSRVkt48y6XbbUpGaD42DFNASQT53LHlOtr0yIr6ffPrHnkovxtEoQQfIbeVO8A==
+X-Received: by 2002:a63:5124:: with SMTP id f36mr2558156pgb.288.1583217367693;
+        Mon, 02 Mar 2020 22:36:07 -0800 (PST)
+Received: from ?IPv6:2601:647:4000:d7:5909:8e52:fd69:e98d? ([2601:647:4000:d7:5909:8e52:fd69:e98d])
+        by smtp.gmail.com with ESMTPSA id t71sm1169751pjb.41.2020.03.02.22.36.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Mar 2020 22:36:06 -0800 (PST)
+Subject: Re: [PATCH 3/4] qla2xxx: Fix endianness annotations in source files
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200302033023.27718-1-bvanassche@acm.org>
+ <20200302033023.27718-4-bvanassche@acm.org>
+ <20200302184055.dtjktj4sbsyysk5m@beryllium.lan>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <08d14c58-d8bb-b0ff-d81b-91373ab6a09c@acm.org>
+Date:   Mon, 2 Mar 2020 22:36:05 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
+In-Reply-To: <20200302184055.dtjktj4sbsyysk5m@beryllium.lan>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sg3_utils is a package of command line utilities for sending SCSI commands
-to storage devices. It some contexts it can send ATA and NVMe commands.
-The package targets the Linux 5, 4, 3, 2.6 and 2.4 kernel series. It has
-ports to FreeBSD, Android, Solaris, and Windows (cygwin and MinGW).
+On 2020-03-02 10:40, Daniel Wagner wrote:
+> On Sun, Mar 01, 2020 at 07:30:22PM -0800, Bart Van Assche wrote:
+>> Fix all endianness complaints reported by sparse (C=2).
+> 
+> [...]
+> 
+>>  int
+>> -qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+>> -    uint32_t ram_dwords, void **nxt)
+>> +qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, __be32 *ram,
+>> +		 uint32_t ram_dwords, void **nxt)
+>>  {
+>>  	int rval = QLA_FUNCTION_FAILED;
+>>  	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+>>  	dma_addr_t dump_dma = ha->gid_list_dma;
+>> -	uint32_t *chunk = (void *)ha->gid_list;
+>> +	uint32_t *chunk = (uint32_t *)ha->gid_list;
+>>  	uint32_t dwords = qla2x00_gid_list_size(ha) / 4;
+>>  	uint32_t stat;
+>>  	ulong i, j, timer = 6000000;
+>> @@ -252,9 +252,9 @@ qla24xx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint32_t *ram,
+>>  			return rval;
+>>  		}
+>>  		for (j = 0; j < dwords; j++) {
+>> -			ram[i + j] =
+>> -			    (IS_QLA27XX(ha) || IS_QLA28XX(ha)) ?
+>> -			    chunk[j] : swab32(chunk[j]);
+>> +			ram[i + j] = (__force __be32)
+>> +				((IS_QLA27XX(ha) || IS_QLA28XX(ha)) ?
+>> +				 chunk[j] : swab32(chunk[j]));
+> 
+> Isn't this assuming the host runs in little endian mode? Because later down...
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The sg_ses utility (for enclosure devices) is discussed at:
-     http://sg.danny.cz/sg/sg_ses.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
-Hopefully this github mirror will be updated shortly:
-     https://github.com/hreinecke/sg3_utils
+My goal was not to change the behavior of the code on x86. Bugs on big
+endian systems can be fixed later on (my guess is that this driver does
+not work reliably on big endian), and searching through the code for
+__force casts probably provides some good starting points.
 
-Here is the top of that ChangeLog, stopping at the previous release:
+>> @@ -439,7 +439,7 @@ qla2xxx_dump_ram(struct qla_hw_data *ha, uint32_t addr, uint16_t *ram,
+>>  		if (test_and_clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags)) {
+>>  			rval = mb0 & MBS_MASK;
+>>  			for (idx = 0; idx < words; idx++)
+>> -				ram[cnt + idx] = swab16(dump[idx]);
+>> +				ram[cnt + idx] = cpu_to_be16(le16_to_cpu(dump[idx]));
+> 
+> ... cpu_to_be16() is used.
 
-Changelog for sg3_utils-1.45 [20200229] [svn: r843]
-   - sg_get_elem_status: new utility [sbc4r16]
-   - sg_ses: bug: --page= being overridden when --control and --data= also
-     given; fix
-     - document explicit Element type codes and example
-     - rename 'SAS SlimLine' to SlimSAS [ses4r02]
-     - add --inhex=FN, equivalent to --data=@FN, for compatibility with
-       other utilities
-     - 'fan speed factor' field added in 20-013r1
-   - sg_opcodes: expand MLU (now 2 bits, spc5r20)
-     - include RWCDLP field as extension of CDLP field (spc5r01)
-   - sg_write_buffer: allow comma and period separated lists when input
-     from stdin
-   - sg_inq: update version descriptors to spc5r21
-     - add some NVMe 1.4 snippets to ctl identify
-   - sg_format: add --dcrt used twice (FOV=1 DCRT=0)
-     - add support for FORMAT WITH PRESET (sbc4r18)
-   - sg_raw: fix --send bug when using stdin
-   - sg_vpd: 3pc VPD page add copy group descriptor
-     - add --examine option
-     - new zoned block device char. page (zbc2r04)
-   - sg_read_buffer: decode read microcode status page
-     - add --inhex=FN option
-   - sg_request: add --error option, replaces opcode with 0xff (or skips call
-     to pass-through)
-   - sg_get_lba_status: add --inhex=FN option
-   - sg_xcopy: add --fco (fast copy only) (spc5r20)
-     - implement --app=1 (append) on regular OFILE type
-   - sg_scan (win32): expand limits for big arrays
-   - sg_modes: placeholders for Command duration limit  T2A and T2B mpages
-     (sbc4r17)
-     - improve zbc support (e.g. caching mpage)
-   - sg_logs: add Command duration limits statistics lpage (spc6r01)
-     - zoned block device statistics log page: shorten counter fields from
-       8 to 4 bytes (zbc2r02)
-       - new field in this log page (zbc2r04)
-     - change '-ll' option to suppress subpages=0xff apart from page
-       0x0,0xff. Used three times: list all pages and subpages names
-       reported
-   - sg_reassign: for defect list format 6 (vendor specific) don't try to decode
-   - sg_rep_zones: expand some fields per zbc2r04
-     - add --num= and --wp options
-   - sg_verify: correct so issues VERIFY(16)
-     - add --0 and --ff options and implement bytchk=3 properly
-   - sg_write_same: add --ff for 0xff fill
-   - sg_luns: report new "target commands" w-lun (19-117)
-   - sg_dd: add --verify support
-   - sgp_dd: support memory-mapped IO via mmap flag
-   - inhex directory: new, contains ASCII hex files that can be used with
-     the '--inhex=' option
-   - sg_lib: add sg_t10_uuid_desig2str()
-     - add sg_get_command_str and sg_print_command_len()
-     - speed up sg_print_command()
-     - sg_scsi_normalize_sense(): populate byte4,5,6
-     - tweak sg_pt interface to better handle bidi
-     - sg_cmds_process_resp(): two arguments removed
-     - add ${PACKAGE_VERSION} to '.so' name
-     - add sg_f2hex_arr()
-     - update some tables for NVMe 1.4
-     - sg_get_num()+sg_get_llnum(): add 'e' decoding, exabytes; allow
-       addition (e.g. --count=3+1k)
-     - asc/ascq match asc-num.txt @t10 20191014
-     - new zbc2r04 service actions
-   - sg_pt_freebsd: fixes for FreeBSD 12.0 release
-   - scripts: update 54-before-scsi-sg3_id.rules, scsi-enable-target-scan.sh
-     and 59-fc-wwpn-id.rules
-   - linux: add nanosecond durations when SG3_UTILS_LINUX_NANO environment
-     variable givenand Linux sg driver >= 4.0.30
-   - rescan-scsi-bus: widen LUN 0 only scanning
-     - multiple patches to sync with Suse
-   - testing/sg_tst_async: fix free_list issue
-   - testing/sg_tst_ioctl: for sg 4.0 driver
-   - testing/sg_tst_bidi: for sg 4.0 driver
-   - testing/sgh_dd: test request sharing, mreqs...
-     - add --verify support
-   - testing/sgs_dd: back from archive, for testing SIGPOLL (SIGIO) and
-     realtime (RT) signals
-   - testing/sg_chk_asc: allow LF and CR/LF in asc-num.txt
-   - testing: 'make' now builds both C and C++ programs
-   - sg_pt: add sg_get_opcode_translation() to replace global pointer to
-     array: sg_opcode_info_arr[]
-     - extend small SNTL to support read capacity
-   - utils/hxascdmp: add -o=<offset> option
-     - add -1, -2 and -q options
-   - sg_io_linux (sg_lib): add sg_linux_sense_print()
-   - sg_pt_linux: uses sg v4 interface if sg driver >= 4.0.0 . Force sg v3
-     always by building with './configure --disable-linux-sgv4'
-     - add sg_linux_get_sg_version() function
-   - add: 'SPDX-License-Identifier: BSD-2-Clause' or a small number of
-     'GPL-2.0-or-later'
-   - gcc-9: suppress (pointless) warnings
-   - automake: upgrade to version 1.16.1
-   - autoconf: upgrade to version 2.69
-   - sync with fixes from Redhat, via github
+The above code implements swab16() but without triggering sparse
+endianness warnings.
 
-Changelog for sg3_utils-1.44 [20180912] [svn: r791]
-....
+>>  		if (!*srisc_addr) {
+>>  			*srisc_addr = risc_addr;
+>> -			risc_attr = be32_to_cpu(dcode[9]);
+>> +			risc_attr = swab32(dcode[9]);
+>>  		}
+> 
+> also here, this looks like hardcoded endianess.
 
+It was not clear to me whether the purpose of the code was to convert
+from __be32 to CPU endianness or from __be32 to __le32.
 
-Wow, almost 18 months since the last release. Will try to bring that back
-to roughly six months.
+>> @@ -3398,7 +3399,7 @@ qla82xx_start_scsi(srb_t *sp)
+>>  
+>>  		memcpy(ctx->fcp_cmnd->cdb, cmd->cmnd, cmd->cmd_len);
+>>  
+>> -		fcp_dl = (uint32_t *)(ctx->fcp_cmnd->cdb + 16 +
+>> +		fcp_dl = (void *)(ctx->fcp_cmnd->cdb + 16 +
+>>  		    additional_cdb_len);
+> 
+> Shouldn't this be (__be32*)?
 
-Doug Gilbert
+Good catch. I will change the cast.
 
+>> @@ -3537,7 +3540,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, void *mbuf)
+>>  	}
+>>  
+>>  	for (i = 0; i < 4; i++)
+>> -		ha->gold_fw_version[i] = be32_to_cpu(dcode[4+i]);
+>> +		ha->gold_fw_version[i] = swab32(dcode[4+i]);
+>>  
+>>  	return ret;
+>>  }
+> 
+> Here again why the swab32() call.
+I will restore the be32_to_cpu() call.
 
-PS My subversion revision at the release point was 843, but the github mirror
-may show revision 844. That last revision is the release tag.
+Bart.
