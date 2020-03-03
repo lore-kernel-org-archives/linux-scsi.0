@@ -2,203 +2,241 @@ Return-Path: <SRS0=hRFu=4U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0CBC3F2CD
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 14:11:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 192FAC3F2D1
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 16:59:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E5D62086A
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 14:11:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA11720857
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 16:59:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="IuUcjVhI";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="RJiDiSxC"
+	dkim=pass (2048-bit key) header.d=seagate.com header.i=@seagate.com header.b="eGhqyRJz";
+	dkim=pass (1024-bit key) header.d=seagate.com header.i=@seagate.com header.b="ZCkJQEZi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728093AbgCCOLK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Mar 2020 09:11:10 -0500
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25540 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727585AbgCCOLK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2020 09:11:10 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 023E2bsE007349;
-        Tue, 3 Mar 2020 06:11:01 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+        id S1729013AbgCCQ7a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Mar 2020 11:59:30 -0500
+Received: from mx0a-00003501.pphosted.com ([67.231.144.15]:40894 "EHLO
+        mx0a-00003501.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727077AbgCCQ73 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2020 11:59:29 -0500
+X-Greylist: delayed 1140 seconds by postgrey-1.27 at vger.kernel.org; Tue, 03 Mar 2020 11:59:29 EST
+Received: from pps.filterd (m0075550.ppops.net [127.0.0.1])
+        by mx0a-00003501.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 023GLNDD042333;
+        Tue, 3 Mar 2020 11:40:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seagate.com; h=from : to : cc :
  subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=pfpt0818;
- bh=hEqmELqET1o0It/KKGE1QpvGa4AWvga93Z1ZcJyNdDk=;
- b=IuUcjVhI+1bI0rv3pIWDwcR1WhnM5YXIz9WnsfxXSJSdUxNjAwN35BTSybVofybsROp/
- Hk4/mkbSdI7Aqm/14Ue5uGhaLpNjG8y14uHj4YO754VEMn4+OFBhP51GBXEa/QMI/b5R
- +qSnNPfVxll52RtDYZyxWu+jMlUcuWNIjq1ZnYPEvJLAtGABXpTaJE0a2EucTCo41d8y
- 0Kb2XVUs21gaHweivCkBNdcEJPf3wlxKW9jZ6aIWVmt5gbDA4J+9sWk/U3vTTrr3HsUr
- U2eykgKlwRPP58ISqhRKk+nng+0qAZYl+WQ7XjYWlwAJPyTb1KZrma2W84EncYnFbmFv xQ== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2yhn0xs1w3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Tue, 03 Mar 2020 06:11:01 -0800
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 3 Mar
- 2020 06:10:58 -0800
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 3 Mar
- 2020 06:10:58 -0800
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (104.47.70.105)
- by SC-EXCH03.marvell.com (10.93.176.83) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Tue, 3 Mar 2020 06:10:58 -0800
+ content-transfer-encoding : mime-version; s=proofpoint;
+ bh=BWRxjEjEztcWfLIaudrwi3VvQ8tjftJn+2Vk1fd3XiA=;
+ b=eGhqyRJz26DvY3yblLJbkd7EBhz726dFW82syh2Yl8AMaN1K/438BRZolfkhH/8Tk0pl
+ eITPAPRynw7xE8TX/hzH7XNUCyTVOjApP7H21fDDaAKUfzO5fa6hDxud/75hEjlm69Oi
+ dsYU3pqslHu33IykyxBU+FydZsYBSI3g0yndUqBdI651ro8s935/SRU49LesyWzZhBDF
+ EFGQ1HER+MPmN/sjPOrXUvDfduZPjuwCPDaT1+BujYdRudUNnPGIlJ/uRXw7fXhfWb7O
+ R9jDFFwvkaR+uztzPTaiFW1pnyTsxeGQ9qNSerELTf4dqZ3fjxWAXdFrYRe+ORJEbxjG gw== 
+Authentication-Results: seagate.com;
+        dkim=pass header.d=seagate.com header.s=selector1
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2108.outbound.protection.outlook.com [104.47.55.108])
+        by mx0a-00003501.pphosted.com with ESMTP id 2yg64qqvv6-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 03 Mar 2020 11:40:28 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Gl4zSl+WpaeHpeQwctDwd5ufWC3DlQ2MXWWUyM252JGFePFdy5V8C/sfnTVXf5n3PgtRbbE1PerQC3FZrocjboUtWuavEIvsoa5CTowq4Ush6vwwqDAlANaQ/aj79LgfVeaWJwxlA7gbM+COhRCgcNso15J5OOPkEyboP6YMStEMcb9kvH4VLppH0UPmw92DGZR0s3B/i727iKomPhK5elM6M1mlGH4Tyae2FLa4rUWbhFQciGI4iUFKgX5TLsQ6RVh0Fr4rthaXgfriMLdKuQkj6YCaxQZwxZsMT/JkpXQIFJ5YCOlpIvjdDb/k91jZxITpPMOccqPqu88NdKrEMg==
+ b=TX4FWMY7toMlwZS6cDqNnKNUTW62OrMEqC4r8BWzpI0Aa9SoBL22yZVutPf72J/5QmXXRuHFsP0p82RQa6GqrPtolhNZNCj0ruJ8cToej6UikxPYNhXmQDR6ku//FLSdLak8OfQCYUwSZPrsAzg5C36/75X2gWxfD3qzREHikZfraEamcVdAFYP1WstIdPOlv0IavKui9fYr+BM0QyawFeRudrLi7zDIMjC+Y7h0t9ctV2GgcpSGHg8iW1cfNEIVxl7hEM8dXdPH+l2u94P97g4xJBlQzdlYgG4l1qG77XYs9zI8/xy+SDtIpsHVO7BVzUsDm+UIUPkhyYTgS/y3Ow==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hEqmELqET1o0It/KKGE1QpvGa4AWvga93Z1ZcJyNdDk=;
- b=BMn+mrtR5sfEjRqH3FLzMX1i2PTomqLOpQSQJqK9kqhOlGJRygMBJJWxdSucGQCeFsv3LWoZk9WNYHoplxQ0/7gHwVcfWC+xlUOzwWDOJsCzTTl5TIlp44FdG/d1rXZyDfWaoqQLtBtNTC27FADTcHAsOKyQ0Ff89tOG8Al+4ol0uXr0TiC9k5LpyM6Ce70Uqbg7ffv1qM7WbO27BFjtDXqxSwZDPJnzL6J2GEDjoxET0wUsBdbjS3lGCJ/d0oJFsmBEzjXKIocbyaFzK7oZTqXlnRXzDyoPD3BWlVOoWcLtNw0ftVsYdxDeAYr05ThApwNioXqDgpKYxGAN104qqQ==
+ bh=BWRxjEjEztcWfLIaudrwi3VvQ8tjftJn+2Vk1fd3XiA=;
+ b=CR7avJnzHHgUd7c3+6Sy1be4qpjEcGZqbS0gEjxA2JpQugZXGo7H8LH62+Zm1rjZZBTZuvmCqQQ2fzgjVOFIOCQsKzo4pLYb0ZcytHLrQU9JDS67XGx783tyCZwC94mZHOQgFjjdKa6J/coCGebwvXDImTgeaMfKzGdw/SsSy/OiiZimP+Hz5+LdWSjzJYX60UQgOroX+mr5hN8rFk1od8hKc6ok3vVn92JvxBcFw90c8Dl2+SVGAy0i7UpJSF6XpxiDpc13xWUzb2ZU/Sn81kgIsk86Y0wUqHY3+9qOVw9ONP2ecwshbE+c4Wn1qdT6QLXZGJzReUJuAiSmDdc3DA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ smtp.mailfrom=seagate.com; dmarc=pass action=none header.from=seagate.com;
+ dkim=pass header.d=seagate.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seagate.com;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hEqmELqET1o0It/KKGE1QpvGa4AWvga93Z1ZcJyNdDk=;
- b=RJiDiSxCiEvtyhVMgfKBFp91Y+ga7gYtE5ZDVo5+lXi55JxIMc5KtAs5EIP+8JMbNau+LevTPBqMQ0FowV1olVn9RIqTSOFXZUz9Kp3JfePHYLmAekyKCYyVBjvs01/Q8c8YjNFI9xx21jZYLyS+XpiSZBKBUvyP3Xl8cEcuAB4=
-Received: from DM5PR1801MB1820.namprd18.prod.outlook.com (2603:10b6:4:6a::12)
- by DM5PR1801MB1979.namprd18.prod.outlook.com (2603:10b6:4:69::28) with
+ bh=BWRxjEjEztcWfLIaudrwi3VvQ8tjftJn+2Vk1fd3XiA=;
+ b=ZCkJQEZiyMs7wgunSWEl9xLCoTbwr8UIeIrUY6WmlRfquseLQqGdT87z8vFzeHrJeIu0CNwdkSntC+FLMHzU8RGnEg1ZzFIjtGwEeAhMdLDIrzpLOoVMSUXqCuwO3azMzpOMIx/GGPim4zWg8D6zODltF9T9ePd/nkut1R7Yp28=
+Received: from BN8PR20MB2563.namprd20.prod.outlook.com (2603:10b6:408:d2::30)
+ by BN8PR20MB2690.namprd20.prod.outlook.com (2603:10b6:408:87::33) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2772.19; Tue, 3 Mar
- 2020 14:10:56 +0000
-Received: from DM5PR1801MB1820.namprd18.prod.outlook.com
- ([fe80::3cc1:38d7:b255:9e2b]) by DM5PR1801MB1820.namprd18.prod.outlook.com
- ([fe80::3cc1:38d7:b255:9e2b%3]) with mapi id 15.20.2772.019; Tue, 3 Mar 2020
- 14:10:56 +0000
-From:   Himanshu Madhani <hmadhani@marvell.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Daniel Wagner <dwagner@suse.de>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH 3/4] qla2xxx: Fix endianness annotations in source files
-Thread-Topic: [PATCH 3/4] qla2xxx: Fix endianness annotations in source files
-Thread-Index: AQHV8SYK0xrupWZUXEGFKvNWrn5+wag2hDsA
-Date:   Tue, 3 Mar 2020 14:10:56 +0000
-Message-ID: <A9F44BB4-8DEF-48FC-BACF-B4AC2A493A54@marvell.com>
-References: <20200302033023.27718-1-bvanassche@acm.org>
- <20200302033023.27718-4-bvanassche@acm.org>
- <20200302184055.dtjktj4sbsyysk5m@beryllium.lan>
- <08d14c58-d8bb-b0ff-d81b-91373ab6a09c@acm.org>
-In-Reply-To: <08d14c58-d8bb-b0ff-d81b-91373ab6a09c@acm.org>
+ 2020 16:40:26 +0000
+Received: from BN8PR20MB2563.namprd20.prod.outlook.com
+ ([fe80::1574:1d51:1bf8:95c6]) by BN8PR20MB2563.namprd20.prod.outlook.com
+ ([fe80::1574:1d51:1bf8:95c6%6]) with mapi id 15.20.2772.019; Tue, 3 Mar 2020
+ 16:40:26 +0000
+From:   Muhammad Ahmad <muhammad.ahmad@seagate.com>
+To:     Tim Walker <tim.t.walker@seagate.com>,
+        Dave Chinner <david@fromorbit.com>
+CC:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Multi-actuator HDDs
+Thread-Topic: [LSF/MM/BPF TOPIC] Multi-actuator HDDs
+Thread-Index: AQHV5dmwqHfF02zsAkGfojnVYTf1s6g3J8Tk
+Date:   Tue, 3 Mar 2020 16:40:26 +0000
+Message-ID: <BN8PR20MB25637F379AA26DC89110A2B78EE40@BN8PR20MB2563.namprd20.prod.outlook.com>
+References: <CAPNbX4RxaZLi9F=ShVb85GZo_nMFaMhMuqhK50d5CLaarVDCeg@mail.gmail.com>
+ <20200210215222.GB10776@dread.disaster.area>,<CANo=J14NY9TG9RAUMfX2N-q2ZCqiD0CGGVWu-DTgKJDQK20CRg@mail.gmail.com>
+In-Reply-To: <CANo=J14NY9TG9RAUMfX2N-q2ZCqiD0CGGVWu-DTgKJDQK20CRg@mail.gmail.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-user-agent: Microsoft-MacOutlook/10.22.0.200209
-x-originating-ip: [70.114.128.235]
+x-originating-ip: [134.204.222.36]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2cd025f2-e45a-4872-a0cf-08d7bf7cb132
-x-ms-traffictypediagnostic: DM5PR1801MB1979:
+x-ms-office365-filtering-correlation-id: fa0fe5a4-dd3f-4cd3-000f-08d7bf9193ca
+x-ms-traffictypediagnostic: BN8PR20MB2690:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM5PR1801MB197902A8F26ED6BF34F77F6DD6E40@DM5PR1801MB1979.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-microsoft-antispam-prvs: <BN8PR20MB26905C79E41523717EFF37298EE40@BN8PR20MB2690.namprd20.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
 x-forefront-prvs: 03319F6FEF
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(366004)(396003)(39850400004)(346002)(376002)(136003)(189003)(199004)(71200400001)(110136005)(316002)(86362001)(2906002)(54906003)(6512007)(6486002)(36756003)(26005)(2616005)(66556008)(33656002)(91956017)(76116006)(66946007)(66446008)(64756008)(66476007)(8936002)(478600001)(6506007)(186003)(8676002)(81156014)(53546011)(81166006)(4326008)(5660300002);DIR:OUT;SFP:1101;SCL:1;SRVR:DM5PR1801MB1979;H:DM5PR1801MB1820.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(376002)(39860400002)(366004)(346002)(396003)(189003)(199004)(2906002)(5660300002)(52536014)(33656002)(86362001)(26005)(8936002)(55016002)(9686003)(81166006)(64756008)(54906003)(66446008)(508600001)(81156014)(110136005)(8676002)(71200400001)(966005)(7696005)(76116006)(66946007)(53546011)(6506007)(66476007)(66556008)(44832011)(186003)(316002)(91956017)(4326008);DIR:OUT;SFP:1101;SCL:1;SRVR:BN8PR20MB2690;H:BN8PR20MB2563.namprd20.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: seagate.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: gSrhx6yjgEDNgCObRKg2igrYTnfj3N6m3NwVM8T9if5EYtd1X5Y6yy3Jh0ExqXEnKaeUMP5uFpBbcYL/2pGfKPDC22gRPJu3RwZbhw83gRsyF7nEvABnEwMMlcDBlzwzR9IF1/qEBmK4GgFpU9RvJ5K5+h26NqNl6pt+ee3FeJcRkxsXAIiD5XaO9dKWyX3ACtH55V3gKW6/CP0NtYdq6TGy6V/zvtj3Fkma1WJtOTYSxR92nqssICCMXIzXYgyKATiYUD9s29MwHIPbZPqnOWBmOISwyboJhZAMJce3gUth4B7mJTU3FDqoUtFtJZskXT0kxw0jsXiSpkyMCnWuLiaww1giQSnikn/igjKZkyccmEg+l+uMClM9VM0JfevKwuETpGMGB8oFKop0JKa5T1SRT0EmAlO721SZPdnwSgthhR972TKNyHz8P/UMjZDY
-x-ms-exchange-antispam-messagedata: raabcYZbKkegFmHYSRgqzI6xHpo7sn1Hydq9R7bRNwiE5ReC2qEUfPAWhO/DYI7YI54VMmST4Yme1fMwVCvxM85iFoKQY/5COXn2RGpuc1WdjyqF5Je0Mfo1tggqMwVlyuW1CScJHXrjkCEXaP0U8w==
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <87395A29DC390048A0E4FDD0DD7BC689@namprd18.prod.outlook.com>
-Content-Transfer-Encoding: base64
+x-microsoft-antispam-message-info: E3pIIpgOa2HUdwCj7zg4gO6ZPqfKlfyC/bYtA3dJUz/fLWxAglGlZHKCxywgLc1QyBNCSkxDnkzTeV9IjZVjN+ilA+oohU2qovRrIgf6OP6Roq7AFjnMW2mDjc/pfXKNie7uQi6rJzTWI5B/FKCK+k3hBK+iR/lIVkXPvy9sJywhfaXW0LAh5hWYScehNb1KfgTEmakZhXqh6GbdWcOfPeJxB/LVXaB4Vd8t7THGC2zUSNtKmM/+NEHzF11SUbTh5LgEgfr0m89A6Okj4FS5lO+dnvP2wiO2BN7Nd2Lm5sn7c9znua758IxCa0glS9jp0F4RT1Vvg36Vnxkse48MVVrGZGOJmH0AZCeYy0PlwCYxRSpYragmAJdyvkkxY63hFCXTkkxwVtVKmgeOtYxyNaz6bdDgYGMOjguQrpwn/adZW2oCooYJxXwwLgKfDR1qNH7UkUzH+5Fanx5IJzNVxw+Hm3lO25oRAp3esTbaKfrthlryq/uU3Mi0rUps3Sxv+xSIvU3phI3/J5LufHiKQQ==
+x-ms-exchange-antispam-messagedata: GQf7cGwf3uBz45tg44m/HaW+G73iQ/lyl+M1ZPyMH4XOqGTGJeS0OCEbemVFRQhxfmCyTmIQEAsBrCdwAWlc0/TUO11e6AO0zvhT30nC12fHrjA7z4Ni8zIjunfn40x9uvEIqpTJWF0iFIjIhrrcuw==
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2cd025f2-e45a-4872-a0cf-08d7bf7cb132
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Mar 2020 14:10:56.4560
+X-OriginatorOrg: seagate.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fa0fe5a4-dd3f-4cd3-000f-08d7bf9193ca
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Mar 2020 16:40:26.6247
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-id: d466216a-c643-434a-9c2e-057448c17cbe
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vOzS1FWBKt9GOiF/2hboTMH6mLEKfDSBpds4MWyDDEefBvQZY4TPn/csdH/xgmEGImiaqseyQUFpcnyaeXQFTg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR1801MB1979
-X-OriginatorOrg: marvell.com
+X-MS-Exchange-CrossTenant-userprincipalname: jPjRnxB85be7slX23uBJl6lvv6NDwdQyxfA6BnjEKJgBbdzA/+zuA9UEo0U7cK6e5uNFDlfXSWO8eXXSqn1HpaFRE4djYneboZapvjDyfL8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR20MB2690
+X-Proofpoint-PolicyRoute: Outbound
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-03-03_04:2020-03-03,2020-03-03 signatures=0
+ definitions=2020-03-03_05:2020-03-03,2020-03-03 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 mlxscore=0
+ adultscore=0 priorityscore=1501 spamscore=0 phishscore=0 clxscore=1011
+ impostorscore=0 suspectscore=0 mlxlogscore=999 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2003030115
+X-Proofpoint-Spam-Policy: Default Domain Policy
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQmFydC9EYW5pZWwsDQoNCg0K77u/T24gMy8zLzIwLCAxMjozNiBBTSwgImxpbnV4LXNjc2kt
-b3duZXJAdmdlci5rZXJuZWwub3JnIG9uIGJlaGFsZiBvZiBCYXJ0IFZhbiBBc3NjaGUiIDxsaW51
-eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBvbiBiZWhhbGYgb2YgYnZhbmFzc2NoZUBhY20u
-b3JnPiB3cm90ZToNCg0KICAgIE9uIDIwMjAtMDMtMDIgMTA6NDAsIERhbmllbCBXYWduZXIgd3Jv
-dGU6DQogICAgPiBPbiBTdW4sIE1hciAwMSwgMjAyMCBhdCAwNzozMDoyMlBNIC0wODAwLCBCYXJ0
-IFZhbiBBc3NjaGUgd3JvdGU6DQogICAgPj4gRml4IGFsbCBlbmRpYW5uZXNzIGNvbXBsYWludHMg
-cmVwb3J0ZWQgYnkgc3BhcnNlIChDPTIpLg0KICAgID4gDQogICAgPiBbLi4uXQ0KICAgID4gDQog
-ICAgPj4gIGludA0KICAgID4+IC1xbGEyNHh4X2R1bXBfcmFtKHN0cnVjdCBxbGFfaHdfZGF0YSAq
-aGEsIHVpbnQzMl90IGFkZHIsIHVpbnQzMl90ICpyYW0sDQogICAgPj4gLSAgICB1aW50MzJfdCBy
-YW1fZHdvcmRzLCB2b2lkICoqbnh0KQ0KICAgID4+ICtxbGEyNHh4X2R1bXBfcmFtKHN0cnVjdCBx
-bGFfaHdfZGF0YSAqaGEsIHVpbnQzMl90IGFkZHIsIF9fYmUzMiAqcmFtLA0KICAgID4+ICsJCSB1
-aW50MzJfdCByYW1fZHdvcmRzLCB2b2lkICoqbnh0KQ0KICAgID4+ICB7DQogICAgPj4gIAlpbnQg
-cnZhbCA9IFFMQV9GVU5DVElPTl9GQUlMRUQ7DQogICAgPj4gIAlzdHJ1Y3QgZGV2aWNlX3JlZ18y
-NHh4IF9faW9tZW0gKnJlZyA9ICZoYS0+aW9iYXNlLT5pc3AyNDsNCiAgICA+PiAgCWRtYV9hZGRy
-X3QgZHVtcF9kbWEgPSBoYS0+Z2lkX2xpc3RfZG1hOw0KICAgID4+IC0JdWludDMyX3QgKmNodW5r
-ID0gKHZvaWQgKiloYS0+Z2lkX2xpc3Q7DQogICAgPj4gKwl1aW50MzJfdCAqY2h1bmsgPSAodWlu
-dDMyX3QgKiloYS0+Z2lkX2xpc3Q7DQogICAgPj4gIAl1aW50MzJfdCBkd29yZHMgPSBxbGEyeDAw
-X2dpZF9saXN0X3NpemUoaGEpIC8gNDsNCiAgICA+PiAgCXVpbnQzMl90IHN0YXQ7DQogICAgPj4g
-IAl1bG9uZyBpLCBqLCB0aW1lciA9IDYwMDAwMDA7DQogICAgPj4gQEAgLTI1Miw5ICsyNTIsOSBA
-QCBxbGEyNHh4X2R1bXBfcmFtKHN0cnVjdCBxbGFfaHdfZGF0YSAqaGEsIHVpbnQzMl90IGFkZHIs
-IHVpbnQzMl90ICpyYW0sDQogICAgPj4gIAkJCXJldHVybiBydmFsOw0KICAgID4+ICAJCX0NCiAg
-ICA+PiAgCQlmb3IgKGogPSAwOyBqIDwgZHdvcmRzOyBqKyspIHsNCiAgICA+PiAtCQkJcmFtW2kg
-KyBqXSA9DQogICAgPj4gLQkJCSAgICAoSVNfUUxBMjdYWChoYSkgfHwgSVNfUUxBMjhYWChoYSkp
-ID8NCiAgICA+PiAtCQkJICAgIGNodW5rW2pdIDogc3dhYjMyKGNodW5rW2pdKTsNCiAgICA+PiAr
-CQkJcmFtW2kgKyBqXSA9IChfX2ZvcmNlIF9fYmUzMikNCiAgICA+PiArCQkJCSgoSVNfUUxBMjdY
-WChoYSkgfHwgSVNfUUxBMjhYWChoYSkpID8NCiAgICA+PiArCQkJCSBjaHVua1tqXSA6IHN3YWIz
-MihjaHVua1tqXSkpOw0KICAgID4gDQogICAgPiBJc24ndCB0aGlzIGFzc3VtaW5nIHRoZSBob3N0
-IHJ1bnMgaW4gbGl0dGxlIGVuZGlhbiBtb2RlPyBCZWNhdXNlIGxhdGVyIGRvd24uLi4NCiAgICAN
-CiAgICBNeSBnb2FsIHdhcyBub3QgdG8gY2hhbmdlIHRoZSBiZWhhdmlvciBvZiB0aGUgY29kZSBv
-biB4ODYuIEJ1Z3Mgb24gYmlnDQogICAgZW5kaWFuIHN5c3RlbXMgY2FuIGJlIGZpeGVkIGxhdGVy
-IG9uIChteSBndWVzcyBpcyB0aGF0IHRoaXMgZHJpdmVyIGRvZXMNCiAgICBub3Qgd29yayByZWxp
-YWJseSBvbiBiaWcgZW5kaWFuKSwgYW5kIHNlYXJjaGluZyB0aHJvdWdoIHRoZSBjb2RlIGZvcg0K
-ICAgIF9fZm9yY2UgY2FzdHMgcHJvYmFibHkgcHJvdmlkZXMgc29tZSBnb29kIHN0YXJ0aW5nIHBv
-aW50cy4NCiAgICANCldlIGhhZCBtYWRlIHN1cmUgZHJpdmVyIHdvcmtzIG9uIGJpZyBlbmRpYW4g
-c3lzdGVtIGFuZCB0aGUgcmVhc29uIHRoZXNlIHdlcmUgbm90IGNoYW5nZWQgd2FzIHRvIG1ha2Ug
-c3VyZSBpdCBkb2VzIG5vdCBicmVhayBiaWcgZW5kaWFuIGFyY2hpdGVjdHVyZS4gIEl0J3MgYmVl
-biBhIGZldyB5ZWFycyBzaW5jZSBJIHZlcmlmaWVkIGJpZyBlbmRpYW4gY29tcGF0aWJpbGl0eSB3
-aXRoIHRoZSBkcml2ZXIsIGJ1dCBJIGFtIGhlc2l0YW50IHRvIGdvIGNoYW5nZSB0aGluZ3Mgd2l0
-aG91dCBtYWtpbmcgc3VyZSBpdCB3b3JrcyBvbiBiaWcgZW5kaWFuIHN5c3RlbXMuIFdlIGFyZSB0
-YWtpbmcgYmlnIHJpc2sgb2YgYmxpbmRseSBjaGFuZ2luZyB0aGluZ3MuIA0KDQpJJ2xsIGFzayBv
-dXIgdGVzdGluZyBmb2xrcyB0byB0ZXN0IHRoaXMgb3V0IGFuZCBzZWUgaWYgd2UgZGlzY292ZXIg
-aXNzdWUgd2l0aCB0aGVzZSBjaGFuZ2VzLiBVbnRpbCB0aGVuIEknbGwgaG9sZCBvZmYgb24gQWNj
-ZXB0aW5nIGNoYW5nZXMuDQoNCiAgICA+PiBAQCAtNDM5LDcgKzQzOSw3IEBAIHFsYTJ4eHhfZHVt
-cF9yYW0oc3RydWN0IHFsYV9od19kYXRhICpoYSwgdWludDMyX3QgYWRkciwgdWludDE2X3QgKnJh
-bSwNCiAgICA+PiAgCQlpZiAodGVzdF9hbmRfY2xlYXJfYml0KE1CWF9JTlRFUlJVUFQsICZoYS0+
-bWJ4X2NtZF9mbGFncykpIHsNCiAgICA+PiAgCQkJcnZhbCA9IG1iMCAmIE1CU19NQVNLOw0KICAg
-ID4+ICAJCQlmb3IgKGlkeCA9IDA7IGlkeCA8IHdvcmRzOyBpZHgrKykNCiAgICA+PiAtCQkJCXJh
-bVtjbnQgKyBpZHhdID0gc3dhYjE2KGR1bXBbaWR4XSk7DQogICAgPj4gKwkJCQlyYW1bY250ICsg
-aWR4XSA9IGNwdV90b19iZTE2KGxlMTZfdG9fY3B1KGR1bXBbaWR4XSkpOw0KICAgID4gDQogICAg
-PiAuLi4gY3B1X3RvX2JlMTYoKSBpcyB1c2VkLg0KICAgIA0KICAgIFRoZSBhYm92ZSBjb2RlIGlt
-cGxlbWVudHMgc3dhYjE2KCkgYnV0IHdpdGhvdXQgdHJpZ2dlcmluZyBzcGFyc2UNCiAgICBlbmRp
-YW5uZXNzIHdhcm5pbmdzLg0KICAgIA0KICAgID4+ICAJCWlmICghKnNyaXNjX2FkZHIpIHsNCiAg
-ICA+PiAgCQkJKnNyaXNjX2FkZHIgPSByaXNjX2FkZHI7DQogICAgPj4gLQkJCXJpc2NfYXR0ciA9
-IGJlMzJfdG9fY3B1KGRjb2RlWzldKTsNCiAgICA+PiArCQkJcmlzY19hdHRyID0gc3dhYjMyKGRj
-b2RlWzldKTsNCiAgICA+PiAgCQl9DQogICAgPiANCiAgICA+IGFsc28gaGVyZSwgdGhpcyBsb29r
-cyBsaWtlIGhhcmRjb2RlZCBlbmRpYW5lc3MuDQogICAgDQogICAgSXQgd2FzIG5vdCBjbGVhciB0
-byBtZSB3aGV0aGVyIHRoZSBwdXJwb3NlIG9mIHRoZSBjb2RlIHdhcyB0byBjb252ZXJ0DQogICAg
-ZnJvbSBfX2JlMzIgdG8gQ1BVIGVuZGlhbm5lc3Mgb3IgZnJvbSBfX2JlMzIgdG8gX19sZTMyLg0K
-ICAgIA0KICAgID4+IEBAIC0zMzk4LDcgKzMzOTksNyBAQCBxbGE4Mnh4X3N0YXJ0X3Njc2koc3Ji
-X3QgKnNwKQ0KICAgID4+ICANCiAgICA+PiAgCQltZW1jcHkoY3R4LT5mY3BfY21uZC0+Y2RiLCBj
-bWQtPmNtbmQsIGNtZC0+Y21kX2xlbik7DQogICAgPj4gIA0KICAgID4+IC0JCWZjcF9kbCA9ICh1
-aW50MzJfdCAqKShjdHgtPmZjcF9jbW5kLT5jZGIgKyAxNiArDQogICAgPj4gKwkJZmNwX2RsID0g
-KHZvaWQgKikoY3R4LT5mY3BfY21uZC0+Y2RiICsgMTYgKw0KICAgID4+ICAJCSAgICBhZGRpdGlv
-bmFsX2NkYl9sZW4pOw0KICAgID4gDQogICAgPiBTaG91bGRuJ3QgdGhpcyBiZSAoX19iZTMyKik/
-DQogICAgDQogICAgR29vZCBjYXRjaC4gSSB3aWxsIGNoYW5nZSB0aGUgY2FzdC4NCiAgICANCiAg
-ICA+PiBAQCAtMzUzNyw3ICszNTQwLDcgQEAgcWxhMjR4eF9nZXRfZmxhc2hfdmVyc2lvbihzY3Np
-X3FsYV9ob3N0X3QgKnZoYSwgdm9pZCAqbWJ1ZikNCiAgICA+PiAgCX0NCiAgICA+PiAgDQogICAg
-Pj4gIAlmb3IgKGkgPSAwOyBpIDwgNDsgaSsrKQ0KICAgID4+IC0JCWhhLT5nb2xkX2Z3X3ZlcnNp
-b25baV0gPSBiZTMyX3RvX2NwdShkY29kZVs0K2ldKTsNCiAgICA+PiArCQloYS0+Z29sZF9md192
-ZXJzaW9uW2ldID0gc3dhYjMyKGRjb2RlWzQraV0pOw0KICAgID4+ICANCiAgICA+PiAgCXJldHVy
-biByZXQ7DQogICAgPj4gIH0NCiAgICA+IA0KICAgID4gSGVyZSBhZ2FpbiB3aHkgdGhlIHN3YWIz
-MigpIGNhbGwuDQogICAgSSB3aWxsIHJlc3RvcmUgdGhlIGJlMzJfdG9fY3B1KCkgY2FsbC4NCiAg
-ICANCiAgICBCYXJ0Lg0KICAgIA0KDQo=
+Are the topics for LSF/MM/BPF finalized? Trying to see if this topic made t=
+he cut or not.=A0=0A=
+=0A=
+Regards,=0A=
+-Muhammad=0A=
+=0A=
+=0A=
+From: Timothy T. Walker <tim.t.walker@seagate.com>=0A=
+=0A=
+Sent: Tuesday, February 11, 2020 1:23 PM=0A=
+=0A=
+To: Dave Chinner <david@fromorbit.com>=0A=
+=0A=
+Cc: Muhammad Ahmad <muhammad.ahmad@seagate.com>; linux-fsdevel@vger.kernel.=
+org <linux-fsdevel@vger.kernel.org>; linux-block@vger.kernel.org <linux-blo=
+ck@vger.kernel.org>; linux-scsi <linux-scsi@vger.kernel.org>=0A=
+=0A=
+Subject: Re: [LSF/MM/BPF TOPIC] Multi-actuator HDDs=0A=
+=0A=
+=A0=0A=
+=0A=
+=0A=
+On Mon, Feb 10, 2020 at 4:52 PM Dave Chinner <david@fromorbit.com> wrote:=
+=0A=
+=0A=
+>=0A=
+=0A=
+> On Mon, Feb 10, 2020 at 12:01:13PM -0600, Muhammad Ahmad wrote:=0A=
+=0A=
+> > Background:=0A=
+=0A=
+> > As the capacity of HDDs increases so is the need to increase=0A=
+=0A=
+> > performance to efficiently utilize this increase in capacity. The=0A=
+=0A=
+> > current school of thought is to use Multi-Actuators to increase=0A=
+=0A=
+> > spinning disk performance. Seagate has already announced it=92s SAS=0A=
+=0A=
+> > Dual-Lun, Dual-Actuator device. [1]=0A=
+=0A=
+> >=0A=
+=0A=
+> > Discussion Proposal:=0A=
+=0A=
+> > What impacts multi-actuator HDDs has on the linux storage stack?=0A=
+=0A=
+> >=0A=
+=0A=
+> > A discussion on the pros & cons of accessing the actuators through a=0A=
+=0A=
+> > single combined LUN or multiple individual LUNs? In the single LUN=0A=
+=0A=
+> > scenario, how should the device communicate it=92s LBA to actuator=0A=
+=0A=
+> > mapping? In the case of multi-lun, how should we manage commands that=
+=0A=
+=0A=
+> > affect both actuators?=0A=
+=0A=
+>=0A=
+=0A=
+> What ground does this cover that wasn't discussed a couple of years=0A=
+=0A=
+> ago at LSFMM?=0A=
+=0A=
+>=0A=
+=0A=
+> =0A=
+https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__lwn.net_Articles_753=
+652_&d=3DDwIDaQ&c=3DIGDlg0lD0b-nebmJJ0Kp8A&r=3DNW1X0yRHNNEluZ8sOGXBxCbQJZPW=
+cIkPT0Uy3ynVsFU&m=3D2Eb6xxsYMqNOn4F3Yiola3ef2BTCKKg06zpnqJ_m1c8&s=3DJtxAw3Y=
+13PHlYJygS847dBUVRXeM061Snm3hq01DFlY&e=3D=0A=
+=0A=
+>=0A=
+=0A=
+> Cheers,=0A=
+=0A=
+>=0A=
+=0A=
+> Dave.=0A=
+=0A=
+> --=0A=
+=0A=
+> Dave Chinner=0A=
+=0A=
+> david@fromorbit.com=0A=
+=0A=
+=0A=
+=0A=
+Hi all-=0A=
+=0A=
+=0A=
+=0A=
+The multi-actuator fundamentals remain the same from a couple of years=0A=
+=0A=
+ago. One development is to combine the actuators' address spaces into=0A=
+=0A=
+a single LUN. We'd like to show you a couple of system block diagrams,=0A=
+=0A=
+and talk about the queue management and command scheduling.=0A=
+=0A=
+=0A=
+=0A=
+Best regards,=0A=
+=0A=
+-Tim=0A=
+=0A=
+=0A=
+=0A=
+-- =0A=
+=0A=
+Tim Walker=0A=
+=0A=
+Product Design Systems Engineering, Seagate Technology=0A=
+=0A=
+(303) 775-3770=
