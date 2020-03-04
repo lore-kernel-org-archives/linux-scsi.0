@@ -2,109 +2,167 @@ Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E237C3F2D1
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 16:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0788FC3F2D8
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 17:04:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C9E121775
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 16:11:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C58D522B48
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 17:04:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="SLHEESA+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729386AbgCDQL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 11:11:57 -0500
-Received: from mail-pl1-f176.google.com ([209.85.214.176]:37271 "EHLO
-        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726561AbgCDQL5 (ORCPT
-        <rfc822;Linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 11:11:57 -0500
-Received: by mail-pl1-f176.google.com with SMTP id b8so1207882plx.4
-        for <Linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 08:11:57 -0800 (PST)
+        id S1729833AbgCDREw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 12:04:52 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:37094 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727308AbgCDREv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 12:04:51 -0500
+Received: by mail-pg1-f194.google.com with SMTP id z12so1272251pgl.4
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 09:04:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:content-transfer-encoding:in-reply-to:references
+         :subject:from:cc:to:date:message-id:user-agent;
+        bh=+ou/OdAfTiHYp4j2KMmUahM1JBJV325ndgSFeza38do=;
+        b=SLHEESA+7k3EclcR1c45IiMJT4Fv3sBySnsgP7jdnPR9aF8PtoMUSZ54awwT2KgbLF
+         vyjd5lzwQ2FjtXJ6/bOztSJIxL2FQ6NE+mSwaK2e/q0Dvi9b5yeIKYcM2vZdODv+5fD9
+         9s+E5guANFSaHOZjuHleUMTwkW2pozVzi7v+g=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=OfbWj39Lc5Lt7SX5ER1kwwduCXGN5iOIU0hVtYMDbz8=;
-        b=TAfX+ut1IGvefWQyow0lDr7EE8OobjrBulnw/LYUNlvtHtRL+FcEh3L3AXQ7CIMEMv
-         MFoYHMFLyvHU0IXLpwB1g5YEH+BtJS1AH2a10UEPu/xHcJ1MOl30lkFyTL/Lkn8VqNJm
-         f0FgbT+2weW3UirB8eaw1RScicA5NuTqtb3EmV7sHY+V4+fTGfmTn3kA7N+rukMG+dfi
-         wxtGNSuFDRS9wgT+OCH52T/mfZ3p3KZz9JE93sRKUoas1v0r3IpI8l+gxVaUgaPkmKdb
-         E2My57a29Oj6s0tfz9DrlSUqu1Xk1eG3oHUZ5uHrXCY0+MXPeOmU5rSQgu/psc6yG4AM
-         kovg==
-X-Gm-Message-State: ANhLgQ1KJKn+jVWBeGWIWl19k82dDzYMvBnefAplN+2+u8p5nBhZEiJQ
-        r3noChJxtJMu9yq8D0FHe+A=
-X-Google-Smtp-Source: ADFU+vvGabdFQ+k82pYPI9KJktiWvX+pKJCMqC7hTypuQEg9b6hsBh0Mf9q7YOHCqVKJclHJPRUKOw==
-X-Received: by 2002:a17:90a:37d0:: with SMTP id v74mr3763406pjb.0.1583338316226;
-        Wed, 04 Mar 2020 08:11:56 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id z17sm17078005pfk.110.2020.03.04.08.11.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Mar 2020 08:11:55 -0800 (PST)
-Subject: Re: [LSF/MM/BPF TOPIC] Storage: generic completion polling
-To:     Hannes Reinecke <hare@suse.de>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>,
-        Keith Busch <keith.busch@wdc.com>,
-        James Smart <james.smart@broadcom.com>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        Kashyap Desai <Kashyap.Desai@broadcom.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>
-References: <6a263bd4-8989-b766-1d33-7b57f4de0c7d@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <048834b9-041e-6d4d-3e2e-1489a72468c9@acm.org>
-Date:   Wed, 4 Mar 2020 08:11:53 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        h=x-gm-message-state:mime-version:content-transfer-encoding
+         :in-reply-to:references:subject:from:cc:to:date:message-id
+         :user-agent;
+        bh=+ou/OdAfTiHYp4j2KMmUahM1JBJV325ndgSFeza38do=;
+        b=QIUES0XA5yI4iNJ9tZDqh9cfdwGwHhuzQRoACCINVQWeYaUy03xI8VAtEbf9+4GyLw
+         4EdE5DFIFFVuQYWB34b1D8qmWXwr+52Oi2FpviL9Cjj+AU64Jo4tubt1e6BRh/exoTnP
+         nbEw0i7ScD97ZpIOMeIK1t1b/QKgbReTu5J+o9qxbO4Mi1n8WW5tuUr1Z2vTjg9TMKum
+         gP1KBxj0pb735RcEYHOk7pgcbeo4ucDRDkOwWKipjX5D2rWNszH4EvbXtLr8yAT3R8Uw
+         RyWMBeZOctXCIva5LXxuXHQT/gASt2RWQjyhwON8qwRkwzkmXJ//aTAteBIshBNN8yIB
+         VjWw==
+X-Gm-Message-State: ANhLgQ3OSNr7XXtmiHx0pHS/S8grccWJJewzAWx/FHkaeU9SqlznD3De
+        gTL/KXLF/2imFGagl5O9N4Dr8A==
+X-Google-Smtp-Source: ADFU+vsqNg1+yh+/sD1uGquKOupANCVFksOVini3LC+fUYE3d/JepP8yCmd7cxFAe18RcCRpmNdiTA==
+X-Received: by 2002:a63:f752:: with SMTP id f18mr3426343pgk.196.1583341490800;
+        Wed, 04 Mar 2020 09:04:50 -0800 (PST)
+Received: from chromium.org ([2620:15c:202:1:fa53:7765:582b:82b9])
+        by smtp.gmail.com with ESMTPSA id b15sm29092475pft.58.2020.03.04.09.04.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Mar 2020 09:04:50 -0800 (PST)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <6a263bd4-8989-b766-1d33-7b57f4de0c7d@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20200304064942.371978-2-ebiggers@kernel.org>
+References: <20200304064942.371978-1-ebiggers@kernel.org> <20200304064942.371978-2-ebiggers@kernel.org>
+Subject: Re: [RFC PATCH v2 1/4] firmware: qcom_scm: Add support for programming inline crypto keys
+From:   Stephen Boyd <swboyd@chromium.org>
+Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Andy Gross <agross@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+To:     Eric Biggers <ebiggers@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Date:   Wed, 04 Mar 2020 09:04:49 -0800
+Message-ID: <158334148941.7173.15031605009318265979@swboyd.mtv.corp.google.com>
+User-Agent: alot/0.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/3/20 11:17 PM, Hannes Reinecke wrote:
-> there had been quite some discussion around completion polling and the
-> fact that for high-performance devices it might be a performance benefit
-> [1][2]. And during discussion with other people (hello tglx) the
-> reaction always had been "Can't you do NAPI?"
-> 
-> So the question is: Can we?
-> IE is it possible to have a generic framework for handling polled
-> completiona and interrupt completions, shifting between them depending
-> on the load?
-> 
-> My idea is to have a sequence like
-> completion polling -> interrupt handling -> threaded irq/polling
-> IE invoke completion polling directly from the submission path, enable
-> interrupts to handle completions from the interrupt handler, and finally
-> shift to completion polling again if too many completions are present.
-> Clearly this approach involves quite some tunables (like how many
-> completions before enabling polling from interrupt context, how long to
-> wait for completions before enabling interrupts etc), but I thing it
-> would be worthwhile having this as a generic framework as then one could
-> start experimenting with the various tunables to see which works best
-> for the individual hardware.
-> And it would lift the burden from the hardware vendors to implement a
-> similar mechanism on their own.
+Quoting Eric Biggers (2020-03-03 22:49:39)
+> diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+> index 059bb0fbae9e..7fb9f606250f 100644
+> --- a/drivers/firmware/qcom_scm.c
+> +++ b/drivers/firmware/qcom_scm.c
+> @@ -926,6 +927,101 @@ int qcom_scm_ocmem_unlock(enum qcom_scm_ocmem_clien=
+t id, u32 offset, u32 size)
+[...]
+> +
+> +/**
+> + * qcom_scm_ice_set_key() - Set an inline encryption key
+> + * @index: the keyslot into which to set the key
+> + * @key: the key to program
+> + * @key_size: the size of the key in bytes
+> + * @cipher: the encryption algorithm the key is for
+> + * @data_unit_size: the encryption data unit size, i.e. the size of each
+> + *                 individual plaintext and ciphertext.  Given in 512-by=
+te
+> + *                 units, e.g. 1 =3D 512 bytes, 8 =3D 4096 bytes, etc.
+> + *
+> + * Program a key into a keyslot of Qualcomm ICE (Inline Crypto Engine), =
+where it
+> + * can then be used to encrypt/decrypt UFS I/O requests inline.
+> + *
+> + * The UFSHCI standard defines a standard way to do this, but it doesn't=
+ work on
+> + * these SoCs; only this SCM call does.
+> + *
+> + * Return: 0 on success; -errno on failure.
+> + */
+> +int qcom_scm_ice_set_key(u32 index, const u8 *key, int key_size,
+> +                        enum qcom_scm_ice_cipher cipher, int data_unit_s=
+ize)
 
-To me the above sounds like a description of the lib/irq_poll mechanism? 
- From the top of lib/irq_poll.c:
+Why not make key_size and data_unit_size unsigned?
 
-/*
-  * Functions related to interrupt-poll handling in the block layer. This
-  * is similar to NAPI for network devices.
-  */
+> +{
+> +       struct qcom_scm_desc desc =3D {
+> +               .svc =3D QCOM_SCM_SVC_ES,
+> +               .cmd =3D QCOM_SCM_ES_CONFIG_SET_ICE_KEY,
+> +               .arginfo =3D QCOM_SCM_ARGS(5, QCOM_SCM_VAL, QCOM_SCM_RW,
+> +                                        QCOM_SCM_VAL, QCOM_SCM_VAL,
+> +                                        QCOM_SCM_VAL),
+> +               .args[0] =3D index,
+> +               .args[2] =3D key_size,
+> +               .args[3] =3D cipher,
+> +               .args[4] =3D data_unit_size,
+> +               .owner =3D ARM_SMCCC_OWNER_SIP,
+> +       };
+> +       u8 *keybuf;
+> +       dma_addr_t key_phys;
+> +       int ret;
+> +
+> +       keybuf =3D kmemdup(key, key_size, GFP_KERNEL);
 
-Anyway, I'm interested in participating in the discussion of this topic.
+Is this to make the key physically contiguous? Probably worth a comment
+to help others understand why this is here.
 
-Bart.
+> +       if (!keybuf)
+> +               return -ENOMEM;
+> +
+> +       key_phys =3D dma_map_single(__scm->dev, keybuf, key_size, DMA_TO_=
+DEVICE);
+> +       if (dma_mapping_error(__scm->dev, key_phys)) {
+> +               ret =3D -ENOMEM;
+> +               goto out;
+> +       }
+> +       desc.args[1] =3D key_phys;
+> +
+> +       ret =3D qcom_scm_call(__scm->dev, &desc, NULL);
+> +
+> +       dma_unmap_single(__scm->dev, key_phys, key_size, DMA_TO_DEVICE);
+> +out:
+> +       kzfree(keybuf);
 
+And this is because we want to clear key contents out of the slab? What
+about if the dma_map_single() bounces to a bounce buffer? I think that
+isn't going to happen because __scm->dev is just some firmware device
+that doesn't require bounce buffers but it's worth another comment to
+clarify this.
+
+> +       return ret;
+> +}
+> +EXPORT_SYMBOL(qcom_scm_ice_set_key);
+> +
+>  /**
+>   * qcom_scm_hdcp_available() - Check if secure environment supports HDCP.
+>   *
