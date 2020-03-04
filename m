@@ -2,450 +2,433 @@ Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C55FFC3F2D1
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 10:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0717C3F2DA
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 15:35:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8986920705
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 10:36:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 947E52465D
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 15:35:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cOf9ecOE"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mRIOjSGp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387396AbgCDKgU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 05:36:20 -0500
-Received: from mail-qv1-f68.google.com ([209.85.219.68]:38818 "EHLO
-        mail-qv1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728301AbgCDKgU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 05:36:20 -0500
-Received: by mail-qv1-f68.google.com with SMTP id g16so543259qvz.5
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 02:36:19 -0800 (PST)
+        id S2388098AbgCDPfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 10:35:15 -0500
+Received: from mail-vk1-f193.google.com ([209.85.221.193]:34469 "EHLO
+        mail-vk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388158AbgCDPfP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 10:35:15 -0500
+Received: by mail-vk1-f193.google.com with SMTP id w67so677679vkf.1
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 07:35:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=SqpaJf/BMWttA8K7zEORpG3yAqd77PxtNtS4Qu4RSvM=;
-        b=cOf9ecOEP8nBsdRZywS2nq15H5F8XGB3QljfN5D9WaTITGSU0YToSxznArzvX3rLfL
-         UZM0FXFOk8r6bSVgWwIyd0csug/KzqqL78sALqiIXiYJ8nPIA0cJgeVUAQCRST6PZ+ST
-         LetySVyi11ZMIAd/VeePDp8Wz0bwJ8had+awU=
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6cS3FWfjvrO1ZUT7DZy+lSQzbt9YdNm9ZhTZZc8PAug=;
+        b=mRIOjSGpn9s/L+86kk3Uww2g23Pb3wdpimWCHzZQQGefklq7yXvUPTYWSj2MZHp1iC
+         sYA2BK5S2x0Mpw5f5Mj7pUM9efeKgkkATpGekWCt/mP/CI8EixGuzz4LJ+cUVWHTvUlZ
+         +Oy5EXNfRzxrT6L1xGtxNxtJMyRfQhmkKuizDbGLEy7PfGceuBQwaUjkkNJtcZXEPtJG
+         fItbFSVs8uCSirpdgjVDOpLYC9wVCM7pnH2p3eSYnMBdjf2Ck0fI5hnA/C+2kJ2xUSNG
+         KKMZS0IUHuOllR1rLYriX6SG92omJbqHXiAYFo3pNiWqoxcJeKpOVwvFFtyYY2FCdxmq
+         ru5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=SqpaJf/BMWttA8K7zEORpG3yAqd77PxtNtS4Qu4RSvM=;
-        b=bGesO2QCET7uMnz281O0jQ3ra9qroBE4zac5SRdZaxeZfTOVsutZAw5BTxen1Zz2jA
-         kjwHtryyXPJEz/S09KPNReE332psovAQlaGlPy9citVY21zyWprF+UEDN2NBgsp7lmYb
-         aZeOjd9OHH1Lw7ff3/ugqa+18t6I0X58CXAwNOcjYGwsoWvIrkWXnM2EzDZ51NyReAOr
-         O9CBsDtWw6sbH1n33idQKHL9C2FKOmev/LRgkrrsaCNGunpxLxKnDDiVCaytEED88jWO
-         ikrOc5zkSaRGAS3GTZeAuUtEBAQ+7M958UKF/fr78kRPACNN3HF4Fx4wAcRcSxGRjhVw
-         8Acg==
-X-Gm-Message-State: ANhLgQ0a3qvH1oMPNgNg0/ae/bnItf/haJLOqf6zyI4gnz2Y+p43M45g
-        HXJtbOL+1eFY6vYU4eiO3ofMZhHDROsD5O6Y2X5LwhoH
-X-Google-Smtp-Source: ADFU+vtNt7zJfZrDE0YsrUGGRY8u/bh2BdICxi1IkncZhOxfnCCW5Zyh7gUVXycPGvD1z6Ubvi/kuAok7KI3xsMnytE=
-X-Received: by 2002:a05:6214:118d:: with SMTP id t13mr1440488qvv.192.1583318178446;
- Wed, 04 Mar 2020 02:36:18 -0800 (PST)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1581940533-13795-1-git-send-email-kashyap.desai@broadcom.com> <4c89034d-d56e-567a-2f84-e3aca41c3f6b@suse.de>
-In-Reply-To: <4c89034d-d56e-567a-2f84-e3aca41c3f6b@suse.de>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=6cS3FWfjvrO1ZUT7DZy+lSQzbt9YdNm9ZhTZZc8PAug=;
+        b=MgKrIJXrzZiymNoQErJYKxSAOjionrWfX6YjbYZ/kIpmE6MkHo1vZf4MLXuYt1muYB
+         LOB5naCrwCdUPzOA7P1szK/4spzWpm6tsqNpKTjxjNYG5KTkGwkMRkVYaoY/QhqAuGwd
+         kkHXGpdR/0HlDcTFyV4VOwlrrH21OL9XaTLVcQmzhCYu2Cpqt9BCeEu/KbDMvP68gOnY
+         5bPnMEC1RU6jpyn1oSKgGq67CawWyxyUXP1vUfQ8W45wio9rUEzaNPNT5v5GebtZq403
+         C0gF9anvVpRfm9fhHD88juuM39bHsRege7GlZEqECCoOzbdbu7nQp35QIpByQap78KbX
+         Hr/A==
+X-Gm-Message-State: ANhLgQ31NlhBOQqGb0L6+HcJuX1qKnpMYh7kzsvAQJevViulCJ1CjaMt
+        NpQGEgbQYcMUdnLgvs+cNoSf0NctskzitU8z7HQoMg==
+X-Google-Smtp-Source: ADFU+vv27biy3HG8yDmFUfALjgCLWWI0UWXsQhDngblfPmSvrgnEbHYIJzjZFyYXAszTxn5WrS/P8mt0TjVii5+r2/s=
+X-Received: by 2002:ac5:c4fc:: with SMTP id b28mr1719680vkl.101.1583336112179;
+ Wed, 04 Mar 2020 07:35:12 -0800 (PST)
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQIz7HzIU6vx7Bue1PmMV2dYshfgsgHl/ZfUp20T+JA=
-Date:   Wed, 4 Mar 2020 16:06:13 +0530
-Message-ID: <9d67b7929b7c95bd7b4aff35e89cec94@mail.gmail.com>
-Subject: RE: [RFC PATCH] megaraid_sas : threaded irq hybrid polling
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc:     axboe@kernel.dk, martin.petersen@oracle.com,
-        Sumanesh Samanta <sumanesh.samanta@broadcom.com>,
-        linux-nvme@lists.infradead.org, ming.lei@redhat.com,
-        kbusch@kernel.org
+References: <20200223165724.23816-1-mcroce@redhat.com>
+In-Reply-To: <20200223165724.23816-1-mcroce@redhat.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Wed, 4 Mar 2020 16:34:36 +0100
+Message-ID: <CAPDyKFrw+PHqcy_yDgj4V9WBy0b8+zbNugHvc4kBOCO2_FT6xg@mail.gmail.com>
+Subject: Re: [PATCH] block: refactor duplicated macros
+To:     Matteo Croce <mcroce@redhat.com>
+Cc:     linux-block <linux-block@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm@lists.01.org, linux-bcache@vger.kernel.org,
+        linux-raid@vger.kernel.org,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        xen-devel@lists.xenproject.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Anna Schumaker <anna.schumaker@netapp.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >
-> I actually would like to have something more generic; threaded irq pollin=
-g
-> looks like something where most high-performance drivers would benefit
-> from.
-> So I think it might be worthwhile posting a topic for LSF/MM to have a
-> broader discussion.
-
-This requirement is generic for many Storage controller so having common
-interface would help through LSF forum.
-
+On Sun, 23 Feb 2020 at 17:57, Matteo Croce <mcroce@redhat.com> wrote:
 >
-> Thing is, I wonder if it wouldn't be more efficient for high-performance
-> devices
-> to first try for completions in-line, ie start with polling _first_, then
-> enable
-> interrupt handler, and then shift to polling for more completions.
-> But this will involve timeouts which probably would be need to be tweaked
-> per hardware/driver; one could even look into disable individual
-> functionality
-> completely (if you disable the first and the last part you're back to the
-> original
-> implementation, if you disable the first it's the algorithm you proposed)=
-.
-
-Is it worth to export blk_mq_poll_nsecs OR provide avg latency return by
-blk_mq_poll_nsecs in SCSI command so that low level driver can use it ?
-
-Problem for HBA which connect different types of drives having range of
-latency  =E2=80=93
-
-We need poll delay per reply queue (not per sdev). Block layer=E2=80=99s po=
-ll delay
-is per sdev. For Native NVMe, it is fine because they will have consistent
-latency on each block size.
-For MR/IT HBA it is a problem -  It is possible that we have IO in reply
-queue with different latency 10usec, 100 usec, 50 usec, 5 usec etc. I canno=
-t
-pick last and also I cannot pick average of all.
-
-What we need is < poll delay> =3D least among all pending IO. To handle thi=
-s I
-did some changes in next RFC version.
-
-In submission path, driver will set poll_delay which is smallest of the all
-IO.
-In completion path, driver will read poll_delay in thread. Once it read tha=
-t
-value, it will reset poll_delay to ZERO. This is an indication in submissio=
-n
-path that they can forget all previous data and restart.
-Also, I skipped IO which has more than 1msec latency so that we do not
-create unwanted latency. 1msec latency is only possible for HDD random
-profile.
-
-Some of the stats indicates that using blk_mq_poll_nsecs, I can get best
-result.  Highest IOPS, Low latency and Low CPU utilization.
-
-<24 SSD, QD =3D 32, RandRead>
-
-usleep delay		IOPs	Latency		CPU utilization
-blk_mq_poll_nsecs	3.3M	189.47usec	18%
-5 usec			3.3M	189.47usec	52%
-20 usec			3.3M	189.61usec	29%
-40 usec			3.3M	189.61usec	22%
-80 usec			3.2M	194.34usec	18%
-
-<24 HDD, QD =3D 32, Sequential Read>
-usleep delay		IOPs	Latency		CPU utilization
-blk_mq_poll_nsecs	1.24M	545.81usec	8%
-5 usec			1.24M	545.81usec	16%
-20 usec			1.24M	545.81usec	13%
-40 usec			1.24M	545.81usec	12%
-80 usec			1.24M	545.81usec	15%
-200 usec		1.24M	545.81usec	8%
-
-I exported " blk_mq_poll_nsecs " function so that driver can use it. Here i=
-s
-RFC V2 -
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h
-b/drivers/scsi/megaraid/megaraid_sas.h
-index 83d8c4c..4d6dcd0 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2212,6 +2212,10 @@ struct megasas_irq_context {
- 	struct irq_poll irqpoll;
- 	bool irq_poll_scheduled;
- 	bool irq_line_enable;
-+	bool attempt_irq_poll;
-+	unsigned int poll_usec;
-+	atomic_t   in_used;
-+	atomic_t   pending_cmds;
- };
-
- struct MR_DRV_SYSTEM_INFO {
-@@ -2709,4 +2713,6 @@ int megasas_adp_reset_wait_for_ready(struct
-megasas_instance *instance,
- 				     int ocr_context);
- int megasas_irqpoll(struct irq_poll *irqpoll, int budget);
- void megasas_dump_fusion_io(struct scsi_cmnd *scmd);
-+irqreturn_t megasas_irq_check_fusion(int irq, void *devp);
-+irqreturn_t megasas_irq_fusion_thread(int irq, void *devp);
- #endif				/*LSI_MEGARAID_SAS_H */
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-b/drivers/scsi/megaraid/megaraid_sas_base.c
-index fd4b5ac..4dc8d1c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5536,6 +5536,8 @@ void megasas_setup_irq_poll(struct megasas_instance
-*instance)
- 		irq_ctx =3D &instance->irq_context[i];
- 		irq_ctx->os_irq =3D pci_irq_vector(instance->pdev, i);
- 		irq_ctx->irq_poll_scheduled =3D false;
-+		atomic_set(&irq_ctx->in_used, 0);
-+		atomic_set(&irq_ctx->pending_cmds, 0);
- 		irq_poll_init(&irq_ctx->irqpoll,
- 			      instance->threshold_reply_count,
- 			      megasas_irqpoll);
-@@ -5585,7 +5587,7 @@ megasas_setup_irqs_ioapic(struct megasas_instance
-*instance)
- static int
- megasas_setup_irqs_msix(struct megasas_instance *instance, u8 is_probe)
- {
--	int i, j;
-+	int i, j, ret;
- 	struct pci_dev *pdev;
-
- 	pdev =3D instance->pdev;
-@@ -5596,9 +5598,12 @@ megasas_setup_irqs_msix(struct megasas_instance
-*instance, u8 is_probe)
- 		instance->irq_context[i].MSIxIndex =3D i;
- 		snprintf(instance->irq_context[i].name, MEGASAS_MSIX_NAME_LEN,
-"%s%u-msix%u",
- 			"megasas", instance->host->host_no, i);
--		if (request_irq(pci_irq_vector(pdev, i),
--			instance->instancet->service_isr, 0, instance->irq_context[i].name,
--			&instance->irq_context[i])) {
-+		ret =3D request_threaded_irq(pci_irq_vector(pdev, i),
-+				megasas_irq_check_fusion,
-+				megasas_irq_fusion_thread, IRQF_ONESHOT,
-+				instance->irq_context[i].name,
-+				&instance->irq_context[i]);
-+		if (ret) {
- 			dev_err(&instance->pdev->dev,
- 				"Failed to register IRQ for vector %d.\n", i);
- 			for (j =3D 0; j < i; j++)
-@@ -7799,6 +7804,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
- {
- 	int i;
- 	struct Scsi_Host *host;
-+	struct scsi_device *sdev;
- 	struct megasas_instance *instance;
- 	struct fusion_context *fusion;
- 	u32 pd_seq_map_sz;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-old mode 100644
-new mode 100755
-index f3b36fd..c07841e
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -44,9 +44,13 @@
- #include <scsi/scsi_dbg.h>
- #include <linux/dmi.h>
-
-+
- #include "megaraid_sas_fusion.h"
- #include "megaraid_sas.h"
-
-+extern unsigned long blk_mq_poll_nsecs(struct request_queue *q,
-+				struct blk_mq_hw_ctx *hctx,
-+				struct request *rq);
-
- extern void megasas_free_cmds(struct megasas_instance *instance);
- extern struct megasas_cmd *megasas_get_cmd(struct megasas_instance
-@@ -371,13 +375,17 @@ megasas_get_msix_index(struct megasas_instance
-*instance,
- 		       struct megasas_cmd_fusion *cmd,
- 		       u8 data_arms)
- {
-+	struct megasas_irq_context *irq_ctx;
- 	int sdev_busy;
-+	unsigned int poll_nsec =3D 0;
-
- 	/* nr_hw_queue =3D 1 for MegaRAID */
- 	struct blk_mq_hw_ctx *hctx =3D
- 		scmd->device->request_queue->queue_hw_ctx[0];
-
- 	sdev_busy =3D atomic_read(&hctx->nr_active);
-+	poll_nsec =3D blk_mq_poll_nsecs(scmd->device->request_queue,
-+			hctx, scmd->request);
-
- 	if (instance->perf_mode =3D=3D MR_BALANCED_PERF_MODE &&
- 	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
-@@ -391,6 +399,19 @@ megasas_get_msix_index(struct megasas_instance
-*instance,
- 	else
- 		cmd->request_desc->SCSIIO.MSIxIndex =3D
- 			instance->reply_map[raw_smp_processor_id()];
-+
-+	irq_ctx =3D &instance->irq_context[cmd->request_desc->SCSIIO.MSIxIndex];
-+
-+	/* Execute Polling for faster device. latency < 1msec.
-+	 * Potential candidate is SAS, SATA, NVME SSDs.
-+	 * Sequential workload on HDDs.
-+	 */
-+	if (atomic_inc_return(&irq_ctx->pending_cmds) >
-+		MR_DEVICE_HIGH_IOPS_DEPTH && (poll_nsec < 1000000)) {
-+		irq_ctx->poll_usec =3D min_not_zero(irq_ctx->poll_usec,
-+					poll_nsec) / 1000;
-+		irq_ctx->attempt_irq_poll =3D true;
-+	}
- }
-
- /**
-@@ -2754,6 +2775,7 @@ megasas_build_ldio_fusion(struct megasas_instance
-*instance,
- 	u16 ld;
- 	u32 start_lba_lo, start_lba_hi, device_id, datalength =3D 0;
- 	u32 scsi_buff_len;
-+	struct megasas_irq_context *irq_ctx;
- 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
- 	struct IO_REQUEST_INFO io_info;
- 	struct fusion_context *fusion;
-@@ -3101,6 +3123,7 @@ megasas_build_syspd_fusion(struct megasas_instance
-*instance,
- 	u16 pd_index =3D 0;
- 	u16 os_timeout_value;
- 	u16 timeout_limit;
-+	struct megasas_irq_context *irq_ctx;
- 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
- 	struct RAID_CONTEXT	*pRAID_Context;
- 	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
-@@ -3540,6 +3563,7 @@ complete_cmd_fusion(struct megasas_instance *instance=
-,
-u32 MSIxIndex,
-
- 	fusion =3D instance->ctrl_context;
-
-+
- 	if (atomic_read(&instance->adprecovery) =3D=3D MEGASAS_HW_CRITICAL_ERROR)
- 		return IRQ_HANDLED;
-
-@@ -3556,6 +3580,9 @@ complete_cmd_fusion(struct megasas_instance *instance=
-,
-u32 MSIxIndex,
- 	if (reply_descript_type =3D=3D MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
- 		return IRQ_NONE;
-
-+	if (!atomic_add_unless(&irq_context->in_used, 1, 1))
-+		return 0;
-+
- 	num_completed =3D 0;
-
- 	while (d_val.u.low !=3D cpu_to_le32(UINT_MAX) &&
-@@ -3596,6 +3623,7 @@ complete_cmd_fusion(struct megasas_instance *instance=
-,
-u32 MSIxIndex,
- 			/* Fall through - and complete IO */
- 		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO Path */
- 			atomic_dec(&instance->fw_outstanding);
-+			atomic_dec(&irq_context->pending_cmds);
- 			if (cmd_fusion->r1_alt_dev_handle =3D=3D MR_DEVHANDLE_INVALID) {
- 				map_cmd_status(fusion, scmd_local, status,
- 					       extStatus, le32_to_cpu(data_length),
-@@ -3669,6 +3697,7 @@ complete_cmd_fusion(struct megasas_instance *instance=
-,
-u32 MSIxIndex,
- 					irq_context->irq_line_enable =3D true;
- 					irq_poll_sched(&irq_context->irqpoll);
- 				}
-+				atomic_dec(&irq_context->in_used);
- 				return num_completed;
- 			}
- 		}
-@@ -3686,6 +3715,8 @@ complete_cmd_fusion(struct megasas_instance *instance=
-,
-u32 MSIxIndex,
- 				instance->reply_post_host_index_addr[0]);
- 		megasas_check_and_restore_queue_depth(instance);
- 	}
-+
-+	atomic_dec(&irq_context->in_used);
- 	return num_completed;
- }
-
-@@ -3817,6 +3848,75 @@ static irqreturn_t megasas_isr_fusion(int irq, void
-*devp)
- 			? IRQ_HANDLED : IRQ_NONE;
- }
-
-+/*
-+ * megasas_irq_fusion_thread:
-+ */
-+irqreturn_t megasas_irq_fusion_thread(int irq, void *devp)
-+{
-+	int num_completed =3D 0;
-+	struct megasas_irq_context *irq_context =3D devp;
-+	struct megasas_instance *instance =3D irq_context->instance;
-+	unsigned int curr_poll_usec;
-+
-+	num_completed +=3D complete_cmd_fusion(instance,
-+					irq_context->MSIxIndex, irq_context);
-+
-+	/* If there are still pending completion, let's wait for some time
-+	 * and retry since enable/disable irq is expensive operation.
-+	 */
-+	do {
-+		if (atomic_read(&irq_context->pending_cmds)) {
-+			curr_poll_usec =3D irq_context->poll_usec ?
-+				irq_context->poll_usec : 4;
-+			irq_context->poll_usec =3D 0;
-+			usleep_range(curr_poll_usec/2, curr_poll_usec);
-+			num_completed +=3D complete_cmd_fusion(instance,
-+						irq_context->MSIxIndex,
-+						irq_context);
-+		}
-+
-+	} while (atomic_read(&irq_context->pending_cmds) &&
-+			(num_completed < instance->cur_can_queue));
-+
-+	irq_context->attempt_irq_poll =3D false;
-+	enable_irq(irq_context->os_irq);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+/*
-+ * megasas_irq_check_fusion:
-+ *
-+ * For threaded interrupts, this handler will be called and its job is to
-+ * complete command in first attempt before it calls threaded isr handler.
-+ *
-+ * Threaded ISR handler will be called if there is a prediction of more
-+ * completion pending.
-+ */
-+irqreturn_t megasas_irq_check_fusion(int irq, void *devp)
-+{
-+	irqreturn_t ret;
-+	struct megasas_irq_context *irq_context =3D devp;
-+	struct megasas_instance *instance =3D irq_context->instance;
-+
-+	if (instance->mask_interrupts)
-+		return IRQ_NONE;
-+
-+	/* First attempt from primary handler */
-+	ret =3D megasas_isr_fusion(irq, devp);
-+
-+	/* Primary handler predict more IO in completion queue,
-+	 * so let's use threaded irq poll.
-+	 */
-+	if (!irq_context->attempt_irq_poll ||
-+			(atomic_read(&irq_context->pending_cmds) =3D=3D 0))
-+		return IRQ_HANDLED;
-+
-+	disable_irq_nosync(irq_context->os_irq);
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+
- /**
-  * build_mpt_mfi_pass_thru - builds a cmd fo MFI Pass thru
-  * @instance:			Adapter soft state
-
+> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
+> several times in different flavours across the whole tree.
+> Define them just once in a common header.
 >
-> But as I said, that probably warrants a wider discussion.
+> Signed-off-by: Matteo Croce <mcroce@redhat.com>
 
-Agree.
+For mmc:
 
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+
+Kind regards
+Uffe
+
+
+> ---
+>  block/blk-lib.c                  |  2 +-
+>  drivers/block/brd.c              |  3 ---
+>  drivers/block/null_blk_main.c    |  4 ----
+>  drivers/block/zram/zram_drv.c    |  8 ++++----
+>  drivers/block/zram/zram_drv.h    |  2 --
+>  drivers/dax/super.c              |  2 +-
+>  drivers/md/bcache/util.h         |  2 --
+>  drivers/md/dm-bufio.c            |  6 +++---
+>  drivers/md/dm-integrity.c        | 10 +++++-----
+>  drivers/md/md.c                  |  4 ++--
+>  drivers/md/raid1.c               |  2 +-
+>  drivers/mmc/core/host.c          |  3 ++-
+>  drivers/scsi/xen-scsifront.c     |  4 ++--
+>  fs/iomap/buffered-io.c           |  2 +-
+>  fs/nfs/blocklayout/blocklayout.h |  2 --
+>  include/linux/blkdev.h           |  4 ++++
+>  include/linux/device-mapper.h    |  1 -
+>  17 files changed, 26 insertions(+), 35 deletions(-)
 >
-> Cheers,
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index 5f2c429d4378..f5e705d307e0 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -260,7 +260,7 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
+>   */
+>  static unsigned int __blkdev_sectors_to_bio_pages(sector_t nr_sects)
+>  {
+> -       sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SIZE / 512);
+> +       sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SECTORS);
 >
-> Hannes
+>         return min(pages, (sector_t)BIO_MAX_PAGES);
+>  }
+> diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+> index 220c5e18aba0..33e2cbe11400 100644
+> --- a/drivers/block/brd.c
+> +++ b/drivers/block/brd.c
+> @@ -25,9 +25,6 @@
+>
+>  #include <linux/uaccess.h>
+>
+> -#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> -#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> -
+>  /*
+>   * Each block ramdisk device has a radix_tree brd_pages of pages that stores
+>   * the pages containing the block device's contents. A brd page's ->index is
+> diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
+> index 16510795e377..c42af6cf0b97 100644
+> --- a/drivers/block/null_blk_main.c
+> +++ b/drivers/block/null_blk_main.c
+> @@ -11,10 +11,6 @@
+>  #include <linux/init.h>
+>  #include "null_blk.h"
+>
+> -#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> -#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> -#define SECTOR_MASK            (PAGE_SECTORS - 1)
+> -
+>  #define FREE_BATCH             16
+>
+>  #define TICKS_PER_SEC          50ULL
+> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+> index 1bdb5793842b..6ee59da4a6e2 100644
+> --- a/drivers/block/zram/zram_drv.c
+> +++ b/drivers/block/zram/zram_drv.c
+> @@ -1548,9 +1548,9 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
+>         struct bio_vec bvec;
+>         struct bvec_iter iter;
+>
+> -       index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
+> +       index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
+>         offset = (bio->bi_iter.bi_sector &
+> -                 (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
+> +                 SECTOR_MASK) << SECTOR_SHIFT;
+>
+>         switch (bio_op(bio)) {
+>         case REQ_OP_DISCARD:
+> @@ -1643,8 +1643,8 @@ static int zram_rw_page(struct block_device *bdev, sector_t sector,
+>                 goto out;
+>         }
+>
+> -       index = sector >> SECTORS_PER_PAGE_SHIFT;
+> -       offset = (sector & (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
+> +       index = sector >> PAGE_SECTORS_SHIFT;
+> +       offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
+>
+>         bv.bv_page = page;
+>         bv.bv_len = PAGE_SIZE;
+> diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
+> index f2fd46daa760..12309175d55e 100644
+> --- a/drivers/block/zram/zram_drv.h
+> +++ b/drivers/block/zram/zram_drv.h
+> @@ -21,8 +21,6 @@
+>
+>  #include "zcomp.h"
+>
+> -#define SECTORS_PER_PAGE_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
+> -#define SECTORS_PER_PAGE       (1 << SECTORS_PER_PAGE_SHIFT)
+>  #define ZRAM_LOGICAL_BLOCK_SHIFT 12
+>  #define ZRAM_LOGICAL_BLOCK_SIZE        (1 << ZRAM_LOGICAL_BLOCK_SHIFT)
+>  #define ZRAM_SECTOR_PER_LOGICAL_BLOCK  \
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 0aa4b6bc5101..7f7672f72085 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -92,7 +92,7 @@ bool __generic_fsdax_supported(struct dax_device *dax_dev,
+>                 return false;
+>         }
+>
+> -       last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SIZE / 512;
+> +       last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SECTORS;
+>         err = bdev_dax_pgoff(bdev, last_page, PAGE_SIZE, &pgoff_end);
+>         if (err) {
+>                 pr_debug("%s: error: unaligned partition for dax\n",
+> diff --git a/drivers/md/bcache/util.h b/drivers/md/bcache/util.h
+> index c029f7443190..55196e0f37c3 100644
+> --- a/drivers/md/bcache/util.h
+> +++ b/drivers/md/bcache/util.h
+> @@ -15,8 +15,6 @@
+>
+>  #include "closure.h"
+>
+> -#define PAGE_SECTORS           (PAGE_SIZE / 512)
+> -
+>  struct closure;
+>
+>  #ifdef CONFIG_BCACHE_DEBUG
+> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+> index 2d519c223562..f4496ce0d598 100644
+> --- a/drivers/md/dm-bufio.c
+> +++ b/drivers/md/dm-bufio.c
+> @@ -384,7 +384,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
+>             gfp_mask & __GFP_NORETRY) {
+>                 *data_mode = DATA_MODE_GET_FREE_PAGES;
+>                 return (void *)__get_free_pages(gfp_mask,
+> -                                               c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
+> +                                               c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
+>         }
+>
+>         *data_mode = DATA_MODE_VMALLOC;
+> @@ -422,7 +422,7 @@ static void free_buffer_data(struct dm_bufio_client *c,
+>
+>         case DATA_MODE_GET_FREE_PAGES:
+>                 free_pages((unsigned long)data,
+> -                          c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
+> +                          c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
+>                 break;
+>
+>         case DATA_MODE_VMALLOC:
+> @@ -597,7 +597,7 @@ static void use_bio(struct dm_buffer *b, int rw, sector_t sector,
+>         unsigned vec_size, len;
+>
+>         vec_size = b->c->block_size >> PAGE_SHIFT;
+> -       if (unlikely(b->c->sectors_per_block_bits < PAGE_SHIFT - SECTOR_SHIFT))
+> +       if (unlikely(b->c->sectors_per_block_bits < PAGE_SECTORS_SHIFT))
+>                 vec_size += 2;
+>
+>         bio = bio_kmalloc(GFP_NOWAIT | __GFP_NORETRY | __GFP_NOWARN, vec_size);
+> diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+> index b225b3e445fa..4e60cda465cc 100644
+> --- a/drivers/md/dm-integrity.c
+> +++ b/drivers/md/dm-integrity.c
+> @@ -652,7 +652,7 @@ static void page_list_location(struct dm_integrity_c *ic, unsigned section, unsi
+>
+>         sector = section * ic->journal_section_sectors + offset;
+>
+> -       *pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +       *pl_index = sector >> PAGE_SECTORS_SHIFT;
+>         *pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>  }
+>
+> @@ -951,7 +951,7 @@ static void rw_journal_sectors(struct dm_integrity_c *ic, int op, int op_flags,
+>                 return;
+>         }
+>
+> -       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +       pl_index = sector >> PAGE_SECTORS_SHIFT;
+>         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>
+>         io_req.bi_op = op;
+> @@ -1072,7 +1072,7 @@ static void copy_from_journal(struct dm_integrity_c *ic, unsigned section, unsig
+>
+>         sector = section * ic->journal_section_sectors + JOURNAL_BLOCK_SECTORS + offset;
+>
+> -       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +       pl_index = sector >> PAGE_SECTORS_SHIFT;
+>         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>
+>         io_req.bi_op = REQ_OP_WRITE;
+> @@ -3343,7 +3343,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+>         ic->commit_ids[3] = cpu_to_le64(0x4444444444444444ULL);
+>
+>         journal_pages = roundup((__u64)ic->journal_sections * ic->journal_section_sectors,
+> -                               PAGE_SIZE >> SECTOR_SHIFT) >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +                               PAGE_SIZE >> SECTOR_SHIFT) >> PAGE_SECTORS_SHIFT;
+>         journal_desc_size = journal_pages * sizeof(struct page_list);
+>         if (journal_pages >= totalram_pages() - totalhigh_pages() || journal_desc_size > ULONG_MAX) {
+>                 *error = "Journal doesn't fit into memory";
+> @@ -4075,7 +4075,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>                         spin_lock_init(&bbs->bio_queue_lock);
+>
+>                         sector = i * (BITMAP_BLOCK_SIZE >> SECTOR_SHIFT);
+> -                       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
+> +                       pl_index = sector >> PAGE_SECTORS_SHIFT;
+>                         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+>
+>                         bbs->bitmap = lowmem_page_address(ic->journal[pl_index].page) + pl_offset;
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 469f551863be..b28f9390608f 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1734,7 +1734,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
+>                 __le64 *bbp;
+>                 int i;
+>                 int sectors = le16_to_cpu(sb->bblog_size);
+> -               if (sectors > (PAGE_SIZE / 512))
+> +               if (sectors > PAGE_SECTORS)
+>                         return -EINVAL;
+>                 offset = le32_to_cpu(sb->bblog_offset);
+>                 if (offset == 0)
+> @@ -8733,7 +8733,7 @@ void md_do_sync(struct md_thread *thread)
+>         /*
+>          * Tune reconstruction:
+>          */
+> -       window = 32 * (PAGE_SIZE / 512);
+> +       window = 32 * PAGE_SECTORS;
+>         pr_debug("md: using %dk window, over a total of %lluk.\n",
+>                  window/2, (unsigned long long)max_sectors/2);
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index cd810e195086..37a0b571903a 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -2129,7 +2129,7 @@ static void process_checks(struct r1bio *r1_bio)
+>         int vcnt;
+>
+>         /* Fix variable parts of all bios */
+> -       vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+> +       vcnt = (r1_bio->sectors + PAGE_SECTORS - 1) >> (PAGE_SHIFT - 9);
+>         for (i = 0; i < conf->raid_disks * 2; i++) {
+>                 blk_status_t status;
+>                 struct bio *b = r1_bio->bios[i];
+> diff --git a/drivers/mmc/core/host.c b/drivers/mmc/core/host.c
+> index c8768726d925..4a23fb9d5642 100644
+> --- a/drivers/mmc/core/host.c
+> +++ b/drivers/mmc/core/host.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/export.h>
+>  #include <linux/leds.h>
+>  #include <linux/slab.h>
+> +#include <linux/blkdev.h>
+>
+>  #include <linux/mmc/host.h>
+>  #include <linux/mmc/card.h>
+> @@ -427,7 +428,7 @@ struct mmc_host *mmc_alloc_host(int extra, struct device *dev)
+>
+>         host->max_req_size = PAGE_SIZE;
+>         host->max_blk_size = 512;
+> -       host->max_blk_count = PAGE_SIZE / 512;
+> +       host->max_blk_count = PAGE_SECTORS;
+>
+>         host->fixed_drv_type = -EINVAL;
+>         host->ios.power_delay_ms = 10;
+> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
+> index f0068e96a177..e6b29e54d07a 100644
+> --- a/drivers/scsi/xen-scsifront.c
+> +++ b/drivers/scsi/xen-scsifront.c
+> @@ -852,7 +852,7 @@ static int scsifront_probe(struct xenbus_device *dev,
+>         host->max_id      = VSCSIIF_MAX_TARGET;
+>         host->max_channel = 0;
+>         host->max_lun     = VSCSIIF_MAX_LUN;
+> -       host->max_sectors = (host->sg_tablesize - 1) * PAGE_SIZE / 512;
+> +       host->max_sectors = (host->sg_tablesize - 1) * PAGE_SECTORS;
+>         host->max_cmd_len = VSCSIIF_MAX_COMMAND_SIZE;
+>
+>         err = scsi_add_host(host, &dev->dev);
+> @@ -1073,7 +1073,7 @@ static void scsifront_read_backend_params(struct xenbus_device *dev,
+>                          host->sg_tablesize, nr_segs);
+>
+>         host->sg_tablesize = nr_segs;
+> -       host->max_sectors = (nr_segs - 1) * PAGE_SIZE / 512;
+> +       host->max_sectors = (nr_segs - 1) * PAGE_SECTORS;
+>  }
+>
+>  static void scsifront_backend_changed(struct xenbus_device *dev,
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 7c84c4c027c4..60505fc156c5 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -29,7 +29,7 @@ struct iomap_page {
+>         atomic_t                read_count;
+>         atomic_t                write_count;
+>         spinlock_t              uptodate_lock;
+> -       DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
+> +       DECLARE_BITMAP(uptodate, PAGE_SECTORS);
+>  };
+>
+>  static inline struct iomap_page *to_iomap_page(struct page *page)
+> diff --git a/fs/nfs/blocklayout/blocklayout.h b/fs/nfs/blocklayout/blocklayout.h
+> index 716bc75e9ed2..22407751e0fd 100644
+> --- a/fs/nfs/blocklayout/blocklayout.h
+> +++ b/fs/nfs/blocklayout/blocklayout.h
+> @@ -40,8 +40,6 @@
+>  #include "../pnfs.h"
+>  #include "../netns.h"
+>
+> -#define PAGE_CACHE_SECTORS (PAGE_SIZE >> SECTOR_SHIFT)
+> -#define PAGE_CACHE_SECTOR_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
+>  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
+>
+>  struct pnfs_block_dev;
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 053ea4b51988..b3c9be6906a0 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -910,6 +910,10 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
+>  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
+>  #endif
+>
+> +#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> +#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> +#define SECTOR_MASK            (PAGE_SECTORS - 1)
+> +
+>  /*
+>   * blk_rq_pos()                        : the current sector
+>   * blk_rq_bytes()              : bytes left in the entire request
+> diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+> index 475668c69dbc..c98a533f8ffa 100644
+> --- a/include/linux/device-mapper.h
+> +++ b/include/linux/device-mapper.h
+> @@ -141,7 +141,6 @@ typedef long (*dm_dax_direct_access_fn) (struct dm_target *ti, pgoff_t pgoff,
+>                 long nr_pages, void **kaddr, pfn_t *pfn);
+>  typedef size_t (*dm_dax_copy_iter_fn)(struct dm_target *ti, pgoff_t pgoff,
+>                 void *addr, size_t bytes, struct iov_iter *i);
+> -#define PAGE_SECTORS (PAGE_SIZE / 512)
+>
+>  void dm_error(const char *message);
+>
 > --
-> Dr. Hannes Reinecke		           Kernel Storage Architect
-> hare@suse.de			                  +49 911 74053 688
-> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg =
-HRB
-> 36809 (AG N=C3=BCrnberg), GF: Felix Imend=C3=B6rffer
+> 2.24.1
+>
