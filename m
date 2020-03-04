@@ -6,30 +6,26 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29E4CC3F2D1
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 06:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A9BC3F2D1
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 07:17:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 083D02073D
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 06:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E19F2215A4
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 07:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728273AbgCDG5F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 01:57:05 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51742 "EHLO mx2.suse.de"
+        id S1727176AbgCDHRL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 02:17:11 -0500
+Received: from mx2.suse.de ([195.135.220.15]:60574 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727595AbgCDG5F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Mar 2020 01:57:05 -0500
+        id S1726275AbgCDHRL (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+        Wed, 4 Mar 2020 02:17:11 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 7C7ECB2DA;
-        Wed,  4 Mar 2020 06:57:02 +0000 (UTC)
-Subject: Re: [RFC PATCH] megaraid_sas : threaded irq hybrid polling
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     axboe@kernel.dk, martin.petersen@oracle.com,
-        sumanesh.samanta@broadcom.com, linux-nvme@lists.infradead.org,
-        ming.lei@redhat.com, kbusch@kernel.org
-References: <1581940533-13795-1-git-send-email-kashyap.desai@broadcom.com>
+        by mx2.suse.de (Postfix) with ESMTP id BC252AB64;
+        Wed,  4 Mar 2020 07:17:08 +0000 (UTC)
+To:     "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>
 From:   Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM/BPF TOPIC] Storage: generic completion polling
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  mQINBE6KyREBEACwRN6XKClPtxPiABx5GW+Yr1snfhjzExxkTYaINHsWHlsLg13kiemsS6o7
@@ -74,12 +70,21 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <4c89034d-d56e-567a-2f84-e3aca41c3f6b@suse.de>
-Date:   Wed, 4 Mar 2020 07:57:01 +0100
+Cc:     "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@wdc.com>,
+        James Smart <james.smart@broadcom.com>,
+        Kashyap Desai <Kashyap.Desai@broadcom.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Himanshu Madhani <hmadhani@marvell.com>
+Message-ID: <6a263bd4-8989-b766-1d33-7b57f4de0c7d@suse.de>
+Date:   Wed, 4 Mar 2020 08:17:06 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <1581940533-13795-1-git-send-email-kashyap.desai@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,52 +93,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2/17/20 12:55 PM, Kashyap Desai wrote:
-> High performance HBAs under scsi layer can reach more than 3.0M IOPs.
-> MegaRaid Aero controller can achieve to 3.3M IOPs.In future there may be requirement to reach 6.0+ M IOPs.
-> One of the key bottlenecks is serving interrupts for each IO completion.
-> Block layer has interface blk_poll which can be used as zero interrupt poll queue.
-> Extending blk_poll to scsi mid layer helps and I was able to get max IOPs same as nvme <poll_queues> interface.
-> 
-> blk_poll is currently merged with io_uring interface and it requires application change to adopt blk_poll.
-> 
-> This RFC covers the logic of handling irq polling in driver using threaded ISR interface.
-> Changes in this RFC is described as below -
-> 
-> - Use Threaded ISR interface.
-> - Primary ISR handler runs from h/w interrupt context.
-> - Secondary ISR handler runs from thread context.
-> - Driver will drain reply queue from Primary ISR handler for every interrupt it receives.
-> - Primary handler will decide to call Secondary handler or not.
->   This interface can be optimized later, if driver or block layer keep submission and completion stats per each h/w queue.
->   Current megaraid_sas driver is single h/w queue based, so I have picked below decision maker.
->   If per scsi device has outstanding command more than 8, mark that msix index as “attempt_irq_poll”.
-> - Every time secondary ISR handler runs, primary handler will disable IRQ.
->   Once secondary handler completes the task, it will re-enable IRQ.
->   If there is no completion, let's wait for some time and retry polling as enable/disable irq is expensive operation.
->   Without this wait in threaded IRQ polling, we will not allow submitter to use CPU and pump more IO.
-> 
-> NVME driver is also trying something similar to reduce ISR overhead.
-> Discussion started in Dec-2019.
-> https://lore.kernel.org/linux-nvme/20191209175622.1964-1-kbusch@kernel.org/
-> 
-I actually would like to have something more generic; threaded irq
-polling looks like something where most high-performance drivers would
-benefit from.
-So I think it might be worthwhile posting a topic for LSF/MM to have a
-broader discussion.
+Hi all,
 
-Thing is, I wonder if it wouldn't be more efficient for high-performance
-devices to first try for completions in-line, ie start with polling
-_first_, then enable interrupt handler, and then shift to polling for
-more completions.
-But this will involve timeouts which probably would be need to be
-tweaked per hardware/driver; one could even look into disable individual
-functionality completely (if you disable the first and the last part
-you're back to the original implementation, if you disable the first
-it's the algorithm you proposed).
+there had been quite some discussion around completion polling and the
+fact that for high-performance devices it might be a performance benefit
+[1][2]. And during discussion with other people (hello tglx) the
+reaction always had been "Can't you do NAPI?"
 
-But as I said, that probably warrants a wider discussion.
+So the question is: Can we?
+IE is it possible to have a generic framework for handling polled
+completiona and interrupt completions, shifting between them depending
+on the load?
+
+My idea is to have a sequence like
+completion polling -> interrupt handling -> threaded irq/polling
+IE invoke completion polling directly from the submission path, enable
+interrupts to handle completions from the interrupt handler, and finally
+shift to completion polling again if too many completions are present.
+Clearly this approach involves quite some tunables (like how many
+completions before enabling polling from interrupt context, how long to
+wait for completions before enabling interrupts etc), but I thing it
+would be worthwhile having this as a generic framework as then one could
+start experimenting with the various tunables to see which works best
+for the individual hardware.
+And it would lift the burden from the hardware vendors to implement a
+similar mechanism on their own.
+
+Proposed participants:
+Martin K. Petersen
+Jens Axboe
+Christoph Hellwig
+Keith Busch
+Kashyap Desai
+James Smart
+Himanshu Madhani
+Sagi Grimberg
+
+[1]http://lists.infradead.org/pipermail/linux-nvme/2020-February/028961.html
+[2]https://lore.kernel.org/linux-nvme/20191209175622.1964-1-kbusch@kernel.org/
 
 Cheers,
 
