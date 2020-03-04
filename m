@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5683C3F2CD
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 05:29:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02764C3F2D7
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 05:30:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A02C120842
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 05:29:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0FC120842
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 05:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725892AbgCDF34 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 00:29:56 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:36102 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725839AbgCDF34 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 00:29:56 -0500
-Received: by mail-pl1-f196.google.com with SMTP id g12so500767plo.3
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Mar 2020 21:29:55 -0800 (PST)
+        id S1726007AbgCDFaC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 00:30:02 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:36157 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbgCDFaC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 00:30:02 -0500
+Received: by mail-pf1-f193.google.com with SMTP id i13so367045pfe.3
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Mar 2020 21:30:00 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=s2qoA3oryiz1uT1/l27o7025/tE8Rmm9bGpEUdQwcqI=;
-        b=YJ1aZMQPZXKh6vYCikU15og0WL5NXbkz4z1fcVqw3LitrEyDau3diYimy4upKa4YlC
-         Dr/zVAgm4/raLMu1faUkfX1qDbgbJAjqcgyH7vLwEcTydDAIxVu651Q8+J0YeYnRu5LZ
-         33+LMP0xo6uVEpS7NHM3XZy6y30R1x07jUMOmrzflRIQXUG++rfKRGtAaxjc+1XIh05v
-         B43YYo973P5WVutWYWTlgupBHG38NvmEgETtWUPG1CKPCbMuzdrzkcAu/1lTWqYlN6zF
-         2whvZJ7roqbgANW5t/2EBjFrhhMgrN570hdCzPd/UewZ7JqwyJkPakbO/vry2crKKXFr
-         IrVg==
-X-Gm-Message-State: ANhLgQ2PPc1Zwy6vMjQPcfdr2kDTrIwnpjUz8KGopWrmEOPjahw6DpJq
-        ljT8oP2vGju3zga1guVsKfk=
-X-Google-Smtp-Source: ADFU+vuxcGAVV9UnbjKOT40zPgshV2REq5zMnndHhKnexwb1rrgjELau99QQFpocfxS+PpwQ/7CX1g==
-X-Received: by 2002:a17:902:208:: with SMTP id 8mr1572250plc.198.1583299794943;
-        Tue, 03 Mar 2020 21:29:54 -0800 (PST)
+        bh=Smtv5KnV8K/186fc8hgz/oqZu6mQlYbYWw87SYC6Vqg=;
+        b=AxiRWgKi3xwgj4TutbBtPDNLWNeiTr3rJkwosQ1nePZi3Ldzgn6dmQQNiHhYnN3nax
+         xnQVntxXji85iPI8k5oUk4xLqyK6EVh+tQbKgKWcg0HX6BvgB9P8+LexeRrdHgvY1EaT
+         7TJ8JQQpoT3gcFlN3wIqi3fuyOda9BWE1jy5dPqq4kcEBNxTvPY65hIR2SQL3sex9xh1
+         pm8kTUNWvF9jS3TZIVaolmCjKGjjRA2mnxmzApjSAPwhPXfcaoeudYkwFswXY8b3ziNz
+         VEvKjyQ6PFsVB9zWDSVbMmchMIIzaSF5WqNfS+QDy1YLaTnLff2R635ywqglcr4wqAtt
+         NwLg==
+X-Gm-Message-State: ANhLgQ1ln9mFMG6mAxYEQb71vuZv8/kL+Rl13tU8i5Lwts8kTc1OuUSU
+        rZfqEp/D7CDHhHVvdQC+Czc=
+X-Google-Smtp-Source: ADFU+vtNyC4BEterJNuXUirtAgkvNz6Ca3O16wtvI9dXBeT84RsljcIs0rEaEdb71gB2yc8D1FEYDw==
+X-Received: by 2002:aa7:9497:: with SMTP id z23mr1416270pfk.229.1583299800220;
+        Tue, 03 Mar 2020 21:30:00 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:a86e:343d:2eff:fb40])
-        by smtp.gmail.com with ESMTPSA id p94sm972784pjp.15.2020.03.03.21.29.53
+        by smtp.gmail.com with ESMTPSA id p94sm972784pjp.15.2020.03.03.21.29.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Mar 2020 21:29:54 -0800 (PST)
+        Tue, 03 Mar 2020 21:29:59 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -49,9 +49,9 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Martin Wilck <mwilck@suse.com>,
         Daniel Wagner <dwagner@suse.de>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v2 2/6] qla2xxx: Add more BUILD_BUG_ON() statements
-Date:   Tue,  3 Mar 2020 21:29:41 -0800
-Message-Id: <20200304052945.23250-3-bvanassche@acm.org>
+Subject: [PATCH v2 5/6] qla2xxx: Fix the code that reads from mailbox registers
+Date:   Tue,  3 Mar 2020 21:29:44 -0800
+Message-Id: <20200304052945.23250-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200304052945.23250-1-bvanassche@acm.org>
 References: <20200304052945.23250-1-bvanassche@acm.org>
@@ -62,8 +62,10 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Before fixing the endianness annotations in data structures, make the
-compiler verify the size of FC protocol and firmware data structures.
+Make the MMIO accessors stronly typed such that the compiler checks whether
+the accessor function is used that matches the register width. Fix those
+MMIO reads where another number of bits was read or written than the size
+of the register.
 
 Cc: Himanshu Madhani <hmadhani@marvell.com>
 Cc: Quinn Tran <qutran@marvell.com>
@@ -72,109 +74,264 @@ Cc: Daniel Wagner <dwagner@suse.de>
 Cc: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 67 +++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
+ drivers/scsi/qla2xxx/qla_def.h  | 53 +++++++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_init.c |  6 ++--
+ drivers/scsi/qla2xxx/qla_iocb.c |  2 +-
+ drivers/scsi/qla2xxx/qla_isr.c  |  4 +--
+ drivers/scsi/qla2xxx/qla_mbx.c  |  2 +-
+ drivers/scsi/qla2xxx/qla_mr.c   | 26 ++++++++--------
+ drivers/scsi/qla2xxx/qla_nx.c   |  4 +--
+ drivers/scsi/qla2xxx/qla_os.c   |  2 +-
+ 8 files changed, 67 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index ebb22c1a9df7..7e5677c69bed 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -128,15 +128,50 @@ static inline uint32_t make_handle(uint16_t x, uint16_t y)
+  * I/O register
+ */
+ 
+-#define RD_REG_BYTE(addr)		readb(addr)
+-#define RD_REG_WORD(addr)		readw(addr)
+-#define RD_REG_DWORD(addr)		readl(addr)
+-#define RD_REG_BYTE_RELAXED(addr)	readb_relaxed(addr)
+-#define RD_REG_WORD_RELAXED(addr)	readw_relaxed(addr)
+-#define RD_REG_DWORD_RELAXED(addr)	readl_relaxed(addr)
+-#define WRT_REG_BYTE(addr, data)	writeb(data, addr)
+-#define WRT_REG_WORD(addr, data)	writew(data, addr)
+-#define WRT_REG_DWORD(addr, data)	writel(data, addr)
++static inline u8 RD_REG_BYTE(const volatile u8 __iomem *addr)
++{
++	return readb(addr);
++}
++
++static inline u16 RD_REG_WORD(const volatile __le16 __iomem *addr)
++{
++	return readw(addr);
++}
++
++static inline u32 RD_REG_DWORD(const volatile __le32 __iomem *addr)
++{
++	return readl(addr);
++}
++
++static inline u8 RD_REG_BYTE_RELAXED(const volatile u8 __iomem *addr)
++{
++	return readb_relaxed(addr);
++}
++
++static inline u16 RD_REG_WORD_RELAXED(const volatile __le16 __iomem *addr)
++{
++	return readw_relaxed(addr);
++}
++
++static inline u32 RD_REG_DWORD_RELAXED(const volatile __le32 __iomem *addr)
++{
++	return readl_relaxed(addr);
++}
++
++static inline void WRT_REG_BYTE(volatile u8 __iomem *addr, u8 data)
++{
++	return writeb(data, addr);
++}
++
++static inline void WRT_REG_WORD(volatile __le16 __iomem *addr, u16 data)
++{
++	return writew(data, addr);
++}
++
++static inline void WRT_REG_DWORD(volatile __le32 __iomem *addr, u32 data)
++{
++	return writel(data, addr);
++}
+ 
+ /*
+  * ISP83XX specific remote register addresses
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 1ce0b89d6bd5..bd9d3e0847c2 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2219,7 +2219,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 
+ 	/* Check for secure flash support */
+ 	if (IS_QLA28XX(ha)) {
+-		if (RD_REG_DWORD(&reg->mailbox12) & BIT_0)
++		if (RD_REG_WORD(&reg->mailbox12) & BIT_0)
+ 			ha->flags.secure_adapter = 1;
+ 		ql_log(ql_log_info, vha, 0xffff, "Secure Adapter: %s\n",
+ 		    (ha->flags.secure_adapter) ? "Yes" : "No");
+@@ -2780,7 +2780,7 @@ qla24xx_reset_risc(scsi_qla_host_t *vha)
+ 	ql_dbg(ql_dbg_init + ql_dbg_verbose, vha, 0x017f,
+ 	    "HCCR: 0x%x, MailBox0 Status 0x%x\n",
+ 	    RD_REG_DWORD(&reg->hccr),
+-	    RD_REG_DWORD(&reg->mailbox0));
++	    RD_REG_WORD(&reg->mailbox0));
+ 
+ 	/* Wait for soft-reset to complete. */
+ 	RD_REG_DWORD(&reg->ctrl_status);
+@@ -4096,7 +4096,7 @@ qla24xx_config_rings(struct scsi_qla_host *vha)
+ 	}
+ 
+ 	/* PCI posting */
+-	RD_REG_DWORD(&ioreg->hccr);
++	RD_REG_WORD(&ioreg->hccr);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 46c189105149..d3b255898543 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2268,7 +2268,7 @@ __qla2x00_alloc_iocbs(struct qla_qpair *qpair, srb_t *sp)
+ 		    IS_QLA28XX(ha))
+ 			cnt = RD_REG_DWORD(&reg->isp25mq.req_q_out);
+ 		else if (IS_P3P_TYPE(ha))
+-			cnt = RD_REG_DWORD(&reg->isp82.req_q_out);
++			cnt = RD_REG_DWORD(reg->isp82.req_q_out);
+ 		else if (IS_FWI2_CAPABLE(ha))
+ 			cnt = RD_REG_DWORD(&reg->isp24.req_q_out);
+ 		else if (IS_QLAFX00(ha))
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 50c0d77fcf2d..9d4084cd2acb 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -452,7 +452,7 @@ qla81xx_idc_event(scsi_qla_host_t *vha, uint16_t aen, uint16_t descr)
+ 	int rval;
+ 	struct device_reg_24xx __iomem *reg24 = &vha->hw->iobase->isp24;
+ 	struct device_reg_82xx __iomem *reg82 = &vha->hw->iobase->isp82;
+-	uint16_t __iomem *wptr;
++	__le16 __iomem *wptr;
+ 	uint16_t cnt, timeout, mb[QLA_IDC_ACK_REGS];
+ 
+ 	/* Seed data -- mailbox1 -> mailbox7. */
+@@ -3141,7 +3141,7 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ {
+ 	uint16_t	cnt;
+ 	uint32_t	mboxes;
+-	uint16_t __iomem *wptr;
++	__le16 __iomem *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 0927952d5d99..6dfb6aca5960 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -106,7 +106,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 	uint8_t		io_lock_on;
+ 	uint16_t	command = 0;
+ 	uint16_t	*iptr;
+-	uint16_t __iomem *optr;
++	__le16 __iomem  *optr;
+ 	uint32_t	cnt;
+ 	uint32_t	mboxes;
+ 	unsigned long	wait_time;
+diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
+index 8b02a2c0f0c2..6df48494b2b3 100644
+--- a/drivers/scsi/qla2xxx/qla_mr.c
++++ b/drivers/scsi/qla2xxx/qla_mr.c
+@@ -46,7 +46,7 @@ qlafx00_mailbox_command(scsi_qla_host_t *vha, struct mbx_cmd_32 *mcp)
+ 	uint8_t		io_lock_on;
+ 	uint16_t	command = 0;
+ 	uint32_t	*iptr;
+-	uint32_t __iomem *optr;
++	__le32 __iomem *optr;
+ 	uint32_t	cnt;
+ 	uint32_t	mboxes;
+ 	unsigned long	wait_time;
+@@ -109,7 +109,7 @@ qlafx00_mailbox_command(scsi_qla_host_t *vha, struct mbx_cmd_32 *mcp)
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+ 	/* Load mailbox registers. */
+-	optr = (uint32_t __iomem *)&reg->ispfx00.mailbox0;
++	optr = &reg->ispfx00.mailbox0;
+ 
+ 	iptr = mcp->mb;
+ 	command = mcp->mb[0];
+@@ -2846,13 +2846,13 @@ qlafx00_async_event(scsi_qla_host_t *vha)
+ 		break;
+ 
+ 	default:
+-		ha->aenmb[1] = RD_REG_WORD(&reg->aenmailbox1);
+-		ha->aenmb[2] = RD_REG_WORD(&reg->aenmailbox2);
+-		ha->aenmb[3] = RD_REG_WORD(&reg->aenmailbox3);
+-		ha->aenmb[4] = RD_REG_WORD(&reg->aenmailbox4);
+-		ha->aenmb[5] = RD_REG_WORD(&reg->aenmailbox5);
+-		ha->aenmb[6] = RD_REG_WORD(&reg->aenmailbox6);
+-		ha->aenmb[7] = RD_REG_WORD(&reg->aenmailbox7);
++		ha->aenmb[1] = RD_REG_DWORD(&reg->aenmailbox1);
++		ha->aenmb[2] = RD_REG_DWORD(&reg->aenmailbox2);
++		ha->aenmb[3] = RD_REG_DWORD(&reg->aenmailbox3);
++		ha->aenmb[4] = RD_REG_DWORD(&reg->aenmailbox4);
++		ha->aenmb[5] = RD_REG_DWORD(&reg->aenmailbox5);
++		ha->aenmb[6] = RD_REG_DWORD(&reg->aenmailbox6);
++		ha->aenmb[7] = RD_REG_DWORD(&reg->aenmailbox7);
+ 		ql_dbg(ql_dbg_async, vha, 0x5078,
+ 		    "AEN:%04x %04x %04x %04x :%04x %04x %04x %04x\n",
+ 		    ha->aenmb[0], ha->aenmb[1], ha->aenmb[2], ha->aenmb[3],
+@@ -2872,7 +2872,7 @@ static void
+ qlafx00_mbx_completion(scsi_qla_host_t *vha, uint32_t mb0)
+ {
+ 	uint16_t	cnt;
+-	uint32_t __iomem *wptr;
++	__le32 __iomem *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_fx00 __iomem *reg = &ha->iobase->ispfx00;
+ 
+@@ -2882,7 +2882,7 @@ qlafx00_mbx_completion(scsi_qla_host_t *vha, uint32_t mb0)
+ 	/* Load return mailbox registers. */
+ 	ha->flags.mbox_int = 1;
+ 	ha->mailbox_out32[0] = mb0;
+-	wptr = (uint32_t __iomem *)&reg->mailbox17;
++	wptr = &reg->mailbox17;
+ 
+ 	for (cnt = 1; cnt < ha->mbx_count; cnt++) {
+ 		ha->mailbox_out32[cnt] = RD_REG_DWORD(wptr);
+@@ -2939,13 +2939,13 @@ qlafx00_intr_handler(int irq, void *dev_id)
+ 			break;
+ 
+ 		if (stat & QLAFX00_INTR_MB_CMPLT) {
+-			mb[0] = RD_REG_WORD(&reg->mailbox16);
++			mb[0] = RD_REG_DWORD(&reg->mailbox16);
+ 			qlafx00_mbx_completion(vha, mb[0]);
+ 			status |= MBX_INTERRUPT;
+ 			clr_intr |= QLAFX00_INTR_MB_CMPLT;
+ 		}
+ 		if (intr_stat & QLAFX00_INTR_ASYNC_CMPLT) {
+-			ha->aenmb[0] = RD_REG_WORD(&reg->aenmailbox0);
++			ha->aenmb[0] = RD_REG_DWORD(&reg->aenmailbox0);
+ 			qlafx00_async_event(vha);
+ 			clr_intr |= QLAFX00_INTR_ASYNC_CMPLT;
+ 		}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index b295a5308646..c04150110417 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1997,11 +1997,11 @@ void
+ qla82xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ {
+ 	uint16_t	cnt;
+-	uint16_t __iomem *wptr;
++	__le16 __iomem *wptr;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct device_reg_82xx __iomem *reg = &ha->iobase->isp82;
+ 
+-	wptr = (uint16_t __iomem *)&reg->mailbox_out[1];
++	wptr = &reg->mailbox_out[1];
+ 
+ 	/* Load return mailbox registers. */
+ 	ha->flags.mbox_int = 1;
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 17d85c4d1e3e..b2d47828dd5b 100644
+index e78e1649c818..e7d753df7d7c 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7838,31 +7838,98 @@ qla2x00_module_init(void)
- {
- 	int ret = 0;
+@@ -7574,7 +7574,7 @@ qla2xxx_pci_mmio_enabled(struct pci_dev *pdev)
  
-+	BUILD_BUG_ON(sizeof(cmd_a64_entry_t) != 64);
- 	BUILD_BUG_ON(sizeof(cmd_entry_t) != 64);
- 	BUILD_BUG_ON(sizeof(cont_a64_entry_t) != 64);
- 	BUILD_BUG_ON(sizeof(cont_entry_t) != 64);
- 	BUILD_BUG_ON(sizeof(init_cb_t) != 96);
-+	BUILD_BUG_ON(sizeof(mrk_entry_t) != 64);
- 	BUILD_BUG_ON(sizeof(ms_iocb_entry_t) != 64);
- 	BUILD_BUG_ON(sizeof(request_t) != 64);
-+	BUILD_BUG_ON(sizeof(struct abort_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct abts_entry_24xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct access_chip_84xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct access_chip_84xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct access_chip_rsp_84xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct cmd_bidir) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_bidir) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_nvme) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_type_6) != 64);
-+	BUILD_BUG_ON(sizeof(struct cmd_type_6) != 64);
-+	BUILD_BUG_ON(sizeof(struct cmd_type_7) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_type_7) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_type_7_fx00) != 64);
- 	BUILD_BUG_ON(sizeof(struct cmd_type_crc_2) != 64);
-+	BUILD_BUG_ON(sizeof(struct cmd_type_crc_2) != 64);
-+	BUILD_BUG_ON(sizeof(struct ct_entry_24xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct ct_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct ct_fdmi1_hba_attributes) != 2344);
-+	BUILD_BUG_ON(sizeof(struct ct_fdmi2_hba_attributes) != 4424);
-+	BUILD_BUG_ON(sizeof(struct ct_fdmi2_port_attributes) != 4164);
-+	BUILD_BUG_ON(sizeof(struct ct_fdmi_hba_attr) != 260);
-+	BUILD_BUG_ON(sizeof(struct ct_fdmi_port_attr) != 260);
-+	BUILD_BUG_ON(sizeof(struct ct_rsp_hdr) != 16);
-+	BUILD_BUG_ON(sizeof(struct ct_sns_req) != 4460);
- 	BUILD_BUG_ON(sizeof(struct ctio_crc2_to_fw) != 64);
-+	BUILD_BUG_ON(sizeof(struct device_reg_24xx) != 256);
-+	BUILD_BUG_ON(sizeof(struct device_reg_25xxmq) != 24);
-+	BUILD_BUG_ON(sizeof(struct device_reg_2xxx) != 256);
-+	BUILD_BUG_ON(sizeof(struct device_reg_fx00) != 216);
-+	BUILD_BUG_ON(sizeof(struct els_entry_24xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct els_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct els_sts_entry_24xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct fxdisc_entry_fx00) != 64);
-+	BUILD_BUG_ON(sizeof(struct imm_ntfy_from_isp) != 64);
- 	BUILD_BUG_ON(sizeof(struct init_cb_24xx) != 128);
- 	BUILD_BUG_ON(sizeof(struct init_cb_81xx) != 128);
-+	BUILD_BUG_ON(sizeof(struct init_cb_81xx) != 128);
-+	BUILD_BUG_ON(sizeof(struct logio_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct mbx_entry) != 64);
-+	BUILD_BUG_ON(sizeof(struct mid_init_cb_24xx) != 5252);
-+	BUILD_BUG_ON(sizeof(struct mrk_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct nvram_24xx) != 512);
-+	BUILD_BUG_ON(sizeof(struct nvram_81xx) != 512);
- 	BUILD_BUG_ON(sizeof(struct pt_ls4_request) != 64);
-+	BUILD_BUG_ON(sizeof(struct purex_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct qla2100_fw_dump) != 123634);
-+	BUILD_BUG_ON(sizeof(struct qla2300_fw_dump) != 136100);
-+	BUILD_BUG_ON(sizeof(struct qla24xx_fw_dump) != 37976);
-+	BUILD_BUG_ON(sizeof(struct qla25xx_fw_dump) != 39228);
-+	BUILD_BUG_ON(sizeof(struct qla2xxx_fce_chain) != 52);
-+	BUILD_BUG_ON(sizeof(struct qla2xxx_fw_dump) != 136172);
-+	BUILD_BUG_ON(sizeof(struct qla2xxx_mq_chain) != 524);
-+	BUILD_BUG_ON(sizeof(struct qla2xxx_mqueue_chain) != 8);
-+	BUILD_BUG_ON(sizeof(struct qla2xxx_mqueue_header) != 12);
-+	BUILD_BUG_ON(sizeof(struct qla2xxx_offld_chain) != 24);
-+	BUILD_BUG_ON(sizeof(struct qla81xx_fw_dump) != 39420);
-+	BUILD_BUG_ON(sizeof(struct qla83xx_fw_dump) != 51196);
-+	BUILD_BUG_ON(sizeof(struct qla_fdt_layout) != 128);
-+	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
- 	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
- 	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
-+	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
-+	BUILD_BUG_ON(sizeof(struct qla_npiv_entry) != 24);
-+	BUILD_BUG_ON(sizeof(struct qla_npiv_header) != 16);
-+	BUILD_BUG_ON(sizeof(struct rdp_rsp_payload) != 336);
- 	BUILD_BUG_ON(sizeof(struct sns_cmd_pkt) != 2064);
-+	BUILD_BUG_ON(sizeof(struct sns_cmd_pkt) != 2064);
-+	BUILD_BUG_ON(sizeof(struct srb_iocb) != 312);
-+	BUILD_BUG_ON(sizeof(struct sts_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry) != 64);
-+	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct verify_chip_rsp_84xx) != 52);
-+	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
- 	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
-+	BUILD_BUG_ON(sizeof(struct vp_config_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct vp_ctrl_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(struct vp_rpt_id_entry_24xx) != 64);
-+	BUILD_BUG_ON(sizeof(sts21_entry_t) != 64);
-+	BUILD_BUG_ON(sizeof(sts22_entry_t) != 64);
-+	BUILD_BUG_ON(sizeof(sts_cont_entry_t) != 64);
-+	BUILD_BUG_ON(sizeof(sts_entry_t) != 64);
-+	BUILD_BUG_ON(sizeof(sw_info_t) != 32);
-+	BUILD_BUG_ON(sizeof(target_id_t) != 2);
- 
- 	/* Allocate cache for SRBs. */
- 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	if (IS_QLA2100(ha) || IS_QLA2200(ha)){
+-		stat = RD_REG_DWORD(&reg->hccr);
++		stat = RD_REG_WORD(&reg->hccr);
+ 		if (stat & HCCR_RISC_PAUSE)
+ 			risc_paused = 1;
+ 	} else if (IS_QLA23XX(ha)) {
