@@ -2,132 +2,118 @@ Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AF61C3F2D9
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 20:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F6E7C3F2D7
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 20:57:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E4B021775
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 20:52:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583355157;
-	bh=Yy7g0WHmMA+XvHq358KrlIHYS689IGU12Jg+T87EMl4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=VG38sfk9caLUlCy3uiSnWOQWfH8UseJ/iJnDaL0PwiwZuZS8r6a4bNAPUIp6cAu6U
-	 ffRDGqy6woN699fhsBnz7B9wsXxtRpMNIP78N4ynrVliCLxy46lZ6geH80CwufnCYK
-	 68IBpYfuqcRIXnGRpbqIY/kSWNOHQAkP1fWPPjSY=
+	by mail.kernel.org (Postfix) with ESMTP id 0724820848
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 20:57:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="Jrd8sZi8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728926AbgCDUwg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 15:52:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42390 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726440AbgCDUwg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Mar 2020 15:52:36 -0500
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA56D21739;
-        Wed,  4 Mar 2020 20:52:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583355155;
-        bh=Yy7g0WHmMA+XvHq358KrlIHYS689IGU12Jg+T87EMl4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RdDkH6qnZW24r4KJJz4t3+U0AYVsR//20noWdX275RBGC9HRBgUtYJI4dkyJ8lO7D
-         /RXYxuJTc1oxcTcpZmw9dFXVcG+p5qVVpVTNwHpua6nGX9uTm7izuj5SIoClkXxQt6
-         ipZYufGVGN+Fi3rit1ebkYFvd+NxjKE+FCUEo15E=
-Date:   Wed, 4 Mar 2020 12:52:33 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     bmuthuku@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        'Alim Akhtar' <alim.akhtar@samsung.com>,
-        'Andy Gross' <agross@kernel.org>,
-        'Avri Altman' <avri.altman@wdc.com>,
-        'Barani Muthukumaran' <bmuthuku@qti.qualcomm.com>,
-        'Bjorn Andersson' <bjorn.andersson@linaro.org>,
-        'Can Guo' <cang@codeaurora.org>,
-        'Elliot Berman' <eberman@codeaurora.org>,
-        'Jaegeuk Kim' <jaegeuk@kernel.org>,
-        Neeraj Soni <neersoni@qti.qualcomm.com>,
-        Gaurav Kashyap <gaurkash@qti.qualcomm.com>,
-        Ravi Pathuru <spathuru@qti.qualcomm.com>
-Subject: Re: [RFC PATCH v2 3/4] scsi: ufs: add program_key() variant op
-Message-ID: <20200304205233.GB1005@sol.localdomain>
-References: <20200304064942.371978-1-ebiggers@kernel.org>
- <20200304064942.371978-4-ebiggers@kernel.org>
- <000301d5f262$0d0dc260$27294720$@codeaurora.org>
+        id S1729175AbgCDU5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 15:57:06 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:34809 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728482AbgCDU5G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 15:57:06 -0500
+Received: by mail-oi1-f196.google.com with SMTP id g6so3605757oiy.1
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 12:57:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NeXW7YNWKtPM2qhkPxW/kiKtKjk7UpmXN4m91WTJNCM=;
+        b=Jrd8sZi8FK4jANBFdzU+UpRWAbAAy7EQjaFH7cCT7k1bLXlDXEqYwWTvoy3XqwXx9N
+         oje8H4L7MQFhh/bZTgymvv2Pm37WnJid2buYJA06o01S3aAmAE8SEIX9iecggKE4D5CE
+         61KhXhqzn6oIfP2TyxecT/+zPVW/hkGof5elxwtp5/Z+NXZpjf7XRFXWQl6Mu6GIZoOt
+         3f4+ZqUK0FE9Egdunl86lWrAB4VPqJuYmuCSW0UKbBKN4yNFCOOzR4iO+QBmSS1MIDz0
+         6PS4VpG3X07nTssv+skbDbHfMb1PQmdi4QqJ5NUXJoDp2a2BbU134cApL9tz3ODL8TiU
+         FUMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=NeXW7YNWKtPM2qhkPxW/kiKtKjk7UpmXN4m91WTJNCM=;
+        b=XHC7DiXtQWMbTk3mMyYcpgi4KfPcC7uSXbamcq207wrWbvmwlsZfTzHkmoAOa9m6Kl
+         Q9TGUI30jeuiRGWxYnBnftGbBHKYOpfD6x3WhCMfuxMU7o1rF6novd4GFQlZQFT2VlFK
+         nEcGuo9FbvSMatvn1yYQ/zpm0n+5+AOdx31sXffNxr0R85+KE6w+ZC3gydQ4fuim5g47
+         J98vA5ExPvivXoFauhxD38BtNlGmEjzDCtI2XbTnGptCg0rSxXxAQ6Cm3KYD4RFFEqcR
+         e5Oku3D2v0VLWzck1BQmrVqwyScuhtjvhRgcY2jKgGM0YrBTP5GAB410l8Gdtb36SQ3O
+         ka0w==
+X-Gm-Message-State: ANhLgQ1q1TuIh6wzXApzlIVsalTn4ih8INWPfcSRKTeCAi5hRMNacdp4
+        CQRp6y4B5CmDN9nt4nSlzd9OOsyMz9VCLO7/4ZS83A==
+X-Google-Smtp-Source: ADFU+vtFbEv31ANDFs0/4N9Z/l6H9sqYzjPTVswiZTAKAsgysts9zHxyIRsH1as4Wq2QvfA+x1ko0P0794u+WWSSnqw=
+X-Received: by 2002:aca:ed58:: with SMTP id l85mr1490175oih.70.1583355426008;
+ Wed, 04 Mar 2020 12:57:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000301d5f262$0d0dc260$27294720$@codeaurora.org>
+References: <20200223165724.23816-1-mcroce@redhat.com>
+In-Reply-To: <20200223165724.23816-1-mcroce@redhat.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 4 Mar 2020 12:56:54 -0800
+Message-ID: <CAPcyv4ijKqVhHixsp42kZL4p7uReJ67p3XoPyw5ojM-ZsOOUOg@mail.gmail.com>
+Subject: Re: [PATCH] block: refactor duplicated macros
+To:     Matteo Croce <mcroce@redhat.com>
+Cc:     linux-block@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-bcache@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-mmc@vger.kernel.org,
+        xen-devel <xen-devel@lists.xenproject.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Anna Schumaker <anna.schumaker@netapp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Barani,
+On Sun, Feb 23, 2020 at 9:04 AM Matteo Croce <mcroce@redhat.com> wrote:
+>
+> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
+> several times in different flavours across the whole tree.
+> Define them just once in a common header.
+>
+> Signed-off-by: Matteo Croce <mcroce@redhat.com>
+> ---
+>  block/blk-lib.c                  |  2 +-
+>  drivers/block/brd.c              |  3 ---
+>  drivers/block/null_blk_main.c    |  4 ----
+>  drivers/block/zram/zram_drv.c    |  8 ++++----
+>  drivers/block/zram/zram_drv.h    |  2 --
+>  drivers/dax/super.c              |  2 +-
 
-On Wed, Mar 04, 2020 at 12:18:20PM -0800, bmuthuku@codeaurora.org wrote:
-> Eric, I strongly recommend not to support the old mechanism of calling into
-> TEE to set keys as this has been deprecated and will not work with newer
-> hardware. 
+For the dax change:
 
-Actually, I've also verified that this driver works nearly as-is on Snapdragon
-865 and Snapdragon 765.  (Those SoCs currently lack upstream support, but I
-tested with downstream kernels.)  IIUC, this is the latest Qualcomm hardware in
-the real world.  Lots of phones will be shipping with those SoCS this year.
+Acked-by: Dan Williams <dan.j.williams@intel.com>
 
-So your position is that crypto support for current Qualcomm hardware shouldn't
-be added, and instead we should wait years for new hardware that hasn't even
-been announced/released yet and has no upstream kernel support at all yet?
-Snapdragon 845 (via DragonBoard 845c) already has upstream support.
+However...
 
-We can easily support multiple hardware versions in the driver, so I don't see
-why this is an issue.
+[..]
+>  include/linux/blkdev.h           |  4 ++++
+[..]
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 053ea4b51988..b3c9be6906a0 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -910,6 +910,10 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
+>  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
+>  #endif
+>
+> +#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
+> +#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
+> +#define SECTOR_MASK            (PAGE_SECTORS - 1)
+> +
 
-In particular, if Qualcomm releases new hardware that just complies with the UFS
-standard and doesn't require these weird vendor-specific SCM calls, we can just
-conditionally skip the quirks when standard hardware is detected.
+...I think SECTOR_MASK is misnamed given it considers pages, and
+should probably match the polarity of PAGE_MASK, i.e.
 
-> There are few issues with this patch, it adds all the code within
-> UFS and we would have to reimplement all the common ICE code for eMMC as
-> well.
-
-The downstream solution of having a separate ICE "device" and "driver" is really
-horrendous and results in lots of layering violations and unnecessary code,
-since as far as I can tell ICE is actually part of the UFS and eMMC controllers
-and not a separate device.
-
-So I think starting with the ICE logic in ufs-qcom is the right approach.
-
-If it turns out that sdhci-msm needs similar ICE management code, we can put it
-in a library.  Though, note that after I removed all the unneeded stuff, we're
-only talking about ~200 lines of code, so it may not even be worthwhile.
-
-However, an issue with eMMC is that the eMMC crypto standard hasn't actually
-been published yet.  And I haven't heard of any vendors implementing it besides
-Qualcomm, nor do I know of any upstream SoC we can use to develop it.
-
-So if you want eMMC crypto support, you're going to have to help with it.
-
-> For clearing a key, the patch uses program_key to set zeroes to the
-> keyslot, without going into details (since newer hardware is not yet public)
-> this will not work.
-
-That's incorrect; this patch uses the SCM call QCOM_SCM_ES_INVALIDATE_ICE_KEY to
-evict keys.  That's exactly what the downstream driver does.
-
-Of course, when we add support for newer hardware we can use whatever keyslot
-management method works on that hardware.  Hopefully, it's the standard UFS
-method and not another weird vendor-specific method.
-
-> We have a plan to upstream ICE support with the new hardware along with the
-> framework to support wrapped keys and add sdhci/cqhci-crypto support.
-
-Great, what's the timeline on this?  Are there patches you can point to
-anywhere?  How would one get ahold of this hardware, and does it / will it have
-upstream kernel support like sda845 does?
-
-- Eric
+#define PAGE_SECTORS_MASK            (~(PAGE_SECTORS - 1))
