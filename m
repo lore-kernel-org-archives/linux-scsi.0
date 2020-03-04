@@ -2,118 +2,158 @@ Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F6E7C3F2D7
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 20:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B8BAC3F2D7
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 21:10:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0724820848
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 20:57:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="Jrd8sZi8"
+	by mail.kernel.org (Postfix) with ESMTP id EEADB21741
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 21:10:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583356224;
+	bh=kepRXjqWr6V9/zasQpimjVtmfbbtcRsr8G6rLRP+xds=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=UEtcMA8X2JsrFmWpPAXJjAOWYGiJgLS+0hj/cJ8+EyaO181A+xx+ZYG/t8+7JVfcz
+	 mvDviJO2S9t4B0kJioul7diTtFdYfC4/L+QbANJQiejfCYHLWf7pjj+AHdZRQph7Qs
+	 m1wJFhunbsTbpECkVDSoZ7o8qLXHFlEu3tDNtsb8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729175AbgCDU5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 15:57:06 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:34809 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728482AbgCDU5G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 15:57:06 -0500
-Received: by mail-oi1-f196.google.com with SMTP id g6so3605757oiy.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 12:57:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=NeXW7YNWKtPM2qhkPxW/kiKtKjk7UpmXN4m91WTJNCM=;
-        b=Jrd8sZi8FK4jANBFdzU+UpRWAbAAy7EQjaFH7cCT7k1bLXlDXEqYwWTvoy3XqwXx9N
-         oje8H4L7MQFhh/bZTgymvv2Pm37WnJid2buYJA06o01S3aAmAE8SEIX9iecggKE4D5CE
-         61KhXhqzn6oIfP2TyxecT/+zPVW/hkGof5elxwtp5/Z+NXZpjf7XRFXWQl6Mu6GIZoOt
-         3f4+ZqUK0FE9Egdunl86lWrAB4VPqJuYmuCSW0UKbBKN4yNFCOOzR4iO+QBmSS1MIDz0
-         6PS4VpG3X07nTssv+skbDbHfMb1PQmdi4QqJ5NUXJoDp2a2BbU134cApL9tz3ODL8TiU
-         FUMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=NeXW7YNWKtPM2qhkPxW/kiKtKjk7UpmXN4m91WTJNCM=;
-        b=XHC7DiXtQWMbTk3mMyYcpgi4KfPcC7uSXbamcq207wrWbvmwlsZfTzHkmoAOa9m6Kl
-         Q9TGUI30jeuiRGWxYnBnftGbBHKYOpfD6x3WhCMfuxMU7o1rF6novd4GFQlZQFT2VlFK
-         nEcGuo9FbvSMatvn1yYQ/zpm0n+5+AOdx31sXffNxr0R85+KE6w+ZC3gydQ4fuim5g47
-         J98vA5ExPvivXoFauhxD38BtNlGmEjzDCtI2XbTnGptCg0rSxXxAQ6Cm3KYD4RFFEqcR
-         e5Oku3D2v0VLWzck1BQmrVqwyScuhtjvhRgcY2jKgGM0YrBTP5GAB410l8Gdtb36SQ3O
-         ka0w==
-X-Gm-Message-State: ANhLgQ1q1TuIh6wzXApzlIVsalTn4ih8INWPfcSRKTeCAi5hRMNacdp4
-        CQRp6y4B5CmDN9nt4nSlzd9OOsyMz9VCLO7/4ZS83A==
-X-Google-Smtp-Source: ADFU+vtFbEv31ANDFs0/4N9Z/l6H9sqYzjPTVswiZTAKAsgysts9zHxyIRsH1as4Wq2QvfA+x1ko0P0794u+WWSSnqw=
-X-Received: by 2002:aca:ed58:: with SMTP id l85mr1490175oih.70.1583355426008;
- Wed, 04 Mar 2020 12:57:06 -0800 (PST)
+        id S2388026AbgCDVKX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 16:10:23 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47348 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728614AbgCDVKW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Mar 2020 16:10:22 -0500
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DDEF020842;
+        Wed,  4 Mar 2020 21:10:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583356221;
+        bh=kepRXjqWr6V9/zasQpimjVtmfbbtcRsr8G6rLRP+xds=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PmMyFhx05N23SO1Sn3z652YyV0bzBl8rEXnmpOb0CFUMZthAsRYlfO4VJgM2PTUEG
+         MTsHvnpA+toAi8y7ca7tY6Kxq+QNLCZ98xqZxB+aNWp6nCTP293jFFTg8en60/BTdd
+         hL8Y4h81osifJ6SPrHCR0gCbiQOXCoW4Xo1D4vGE=
+Date:   Wed, 4 Mar 2020 13:10:19 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Stephen Boyd <swboyd@chromium.org>
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Andy Gross <agross@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [RFC PATCH v2 1/4] firmware: qcom_scm: Add support for
+ programming inline crypto keys
+Message-ID: <20200304211019.GC1005@sol.localdomain>
+References: <20200304064942.371978-1-ebiggers@kernel.org>
+ <20200304064942.371978-2-ebiggers@kernel.org>
+ <158334148941.7173.15031605009318265979@swboyd.mtv.corp.google.com>
 MIME-Version: 1.0
-References: <20200223165724.23816-1-mcroce@redhat.com>
-In-Reply-To: <20200223165724.23816-1-mcroce@redhat.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 4 Mar 2020 12:56:54 -0800
-Message-ID: <CAPcyv4ijKqVhHixsp42kZL4p7uReJ67p3XoPyw5ojM-ZsOOUOg@mail.gmail.com>
-Subject: Re: [PATCH] block: refactor duplicated macros
-To:     Matteo Croce <mcroce@redhat.com>
-Cc:     linux-block@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-bcache@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-mmc@vger.kernel.org,
-        xen-devel <xen-devel@lists.xenproject.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Anna Schumaker <anna.schumaker@netapp.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <158334148941.7173.15031605009318265979@swboyd.mtv.corp.google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Feb 23, 2020 at 9:04 AM Matteo Croce <mcroce@redhat.com> wrote:
->
-> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
-> several times in different flavours across the whole tree.
-> Define them just once in a common header.
->
-> Signed-off-by: Matteo Croce <mcroce@redhat.com>
-> ---
->  block/blk-lib.c                  |  2 +-
->  drivers/block/brd.c              |  3 ---
->  drivers/block/null_blk_main.c    |  4 ----
->  drivers/block/zram/zram_drv.c    |  8 ++++----
->  drivers/block/zram/zram_drv.h    |  2 --
->  drivers/dax/super.c              |  2 +-
+On Wed, Mar 04, 2020 at 09:04:49AM -0800, Stephen Boyd wrote:
+> Quoting Eric Biggers (2020-03-03 22:49:39)
+> > diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+> > index 059bb0fbae9e..7fb9f606250f 100644
+> > --- a/drivers/firmware/qcom_scm.c
+> > +++ b/drivers/firmware/qcom_scm.c
+> > @@ -926,6 +927,101 @@ int qcom_scm_ocmem_unlock(enum qcom_scm_ocmem_client id, u32 offset, u32 size)
+> [...]
+> > +
+> > +/**
+> > + * qcom_scm_ice_set_key() - Set an inline encryption key
+> > + * @index: the keyslot into which to set the key
+> > + * @key: the key to program
+> > + * @key_size: the size of the key in bytes
+> > + * @cipher: the encryption algorithm the key is for
+> > + * @data_unit_size: the encryption data unit size, i.e. the size of each
+> > + *                 individual plaintext and ciphertext.  Given in 512-byte
+> > + *                 units, e.g. 1 = 512 bytes, 8 = 4096 bytes, etc.
+> > + *
+> > + * Program a key into a keyslot of Qualcomm ICE (Inline Crypto Engine), where it
+> > + * can then be used to encrypt/decrypt UFS I/O requests inline.
+> > + *
+> > + * The UFSHCI standard defines a standard way to do this, but it doesn't work on
+> > + * these SoCs; only this SCM call does.
+> > + *
+> > + * Return: 0 on success; -errno on failure.
+> > + */
+> > +int qcom_scm_ice_set_key(u32 index, const u8 *key, int key_size,
+> > +                        enum qcom_scm_ice_cipher cipher, int data_unit_size)
+> 
+> Why not make key_size and data_unit_size unsigned?
 
-For the dax change:
+No reason other than that 'int' is fewer characters and is a good default when
+no other particular type is warranted.  But I can change them to 'unsigned int'
+if people prefer to make it clearer that they can't be negative.
 
-Acked-by: Dan Williams <dan.j.williams@intel.com>
+> 
+> > +{
+> > +       struct qcom_scm_desc desc = {
+> > +               .svc = QCOM_SCM_SVC_ES,
+> > +               .cmd = QCOM_SCM_ES_CONFIG_SET_ICE_KEY,
+> > +               .arginfo = QCOM_SCM_ARGS(5, QCOM_SCM_VAL, QCOM_SCM_RW,
+> > +                                        QCOM_SCM_VAL, QCOM_SCM_VAL,
+> > +                                        QCOM_SCM_VAL),
+> > +               .args[0] = index,
+> > +               .args[2] = key_size,
+> > +               .args[3] = cipher,
+> > +               .args[4] = data_unit_size,
+> > +               .owner = ARM_SMCCC_OWNER_SIP,
+> > +       };
+> > +       u8 *keybuf;
+> > +       dma_addr_t key_phys;
+> > +       int ret;
+> > +
+> > +       keybuf = kmemdup(key, key_size, GFP_KERNEL);
+> 
+> Is this to make the key physically contiguous? Probably worth a comment
+> to help others understand why this is here.
 
-However...
+Yes, dma_map_single() requires physically contiguous memory.  I'll add a
+comment.
 
-[..]
->  include/linux/blkdev.h           |  4 ++++
-[..]
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 053ea4b51988..b3c9be6906a0 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -910,6 +910,10 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
->  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
->  #endif
->
-> +#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
-> +#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
-> +#define SECTOR_MASK            (PAGE_SECTORS - 1)
-> +
+> 
+> > +       if (!keybuf)
+> > +               return -ENOMEM;
+> > +
+> > +       key_phys = dma_map_single(__scm->dev, keybuf, key_size, DMA_TO_DEVICE);
+> > +       if (dma_mapping_error(__scm->dev, key_phys)) {
+> > +               ret = -ENOMEM;
+> > +               goto out;
+> > +       }
+> > +       desc.args[1] = key_phys;
+> > +
+> > +       ret = qcom_scm_call(__scm->dev, &desc, NULL);
+> > +
+> > +       dma_unmap_single(__scm->dev, key_phys, key_size, DMA_TO_DEVICE);
+> > +out:
+> > +       kzfree(keybuf);
+> 
+> And this is because we want to clear key contents out of the slab? What
+> about if the dma_map_single() bounces to a bounce buffer? I think that
+> isn't going to happen because __scm->dev is just some firmware device
+> that doesn't require bounce buffers but it's worth another comment to
+> clarify this.
 
-...I think SECTOR_MASK is misnamed given it considers pages, and
-should probably match the polarity of PAGE_MASK, i.e.
+Yes, in crypto-related code we always try to wipe keys after use.  I don't think
+a bounce buffer would actually be used here, though it would be preferable to
+wipe the DMA memory too so that we don't rely on that.  But I didn't see how to
+do that; I'm not a DMA API expert.  Maybe dma_alloc_coherent()?  This isn't
+really performance-critical.
 
-#define PAGE_SECTORS_MASK            (~(PAGE_SECTORS - 1))
+- Eric
