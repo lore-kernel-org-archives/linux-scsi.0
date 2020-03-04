@@ -1,147 +1,123 @@
-Return-Path: <SRS0=hRFu=4U=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6010EC3F2C6
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 17:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9671CC3F2D7
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 02:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3672720842
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Mar 2020 17:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60AE12073D
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 02:21:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VF+ShkYj"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="iyv4DQGA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730436AbgCCREk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Mar 2020 12:04:40 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:46166 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729000AbgCCREk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2020 12:04:40 -0500
-Received: by mail-oi1-f194.google.com with SMTP id a22so3689247oid.13
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Mar 2020 09:04:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=nDi7A+gkYL7OoFq32eYl6bafxazQzCG7Rv7c8V0YjuI=;
-        b=VF+ShkYj2EVYnWWrU2Eai/I96nziUKshOIPoV+t8bOtixtbmegmb5ysn7/YYEbZOjB
-         VGjHIOiK8TlAXnvzYh5ACWkVLlF/XXRfnJzg7bLs1YPBiMEJYT036CgAp1rzwlMPplML
-         ztFi/G1Y2AVfevnXsCtCQvtPTZ2+RwHktG8rY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nDi7A+gkYL7OoFq32eYl6bafxazQzCG7Rv7c8V0YjuI=;
-        b=NmxrO9KunF94cO6KCijfLiBcoHLV686EbkbLZ0fhf5gdIkTdwh7wz8vCplxASKxGdT
-         Ptp+yrvPb/BLQNDLmcZ0lVt5WUbcLXp53FtPha7gCwoLhi1JACiBO1ERcrp4vrxV2I8o
-         pPYlIV7J+Oc03RtKWi4i9O6+AWfy+co0LRuwIL/jQKe3DisckFKwJI/zDi8F1zIjIyic
-         W/rP8fW7xDW5yef7B5ePQgx8xsEUG8uouYPivT043bMW5o7SbR8RzdJPq6dI07z6dPV9
-         jzU6U0l0LSJYPFY0gRG3e8QNKGz8oNvLHgfiNC7gmfXTqY6Haq/DPwKNGAz3TvXexDVp
-         /6Ag==
-X-Gm-Message-State: ANhLgQ1g/1+4WKkyajD3fVoDQd1Z3Qjc1bvJ1uuX2gerie6HIFahq3zw
-        QsN/vkI9xEl1lwkhVxHeBhTFYJISrQGR7ipghL9Jpg==
-X-Google-Smtp-Source: ADFU+vvhoG4SzGAyv2ocipIApdBPfttPa6O32dOwPdgnCLSk5xAuAf2x4SNeFH7c5TC3fCZp22fKU+jSmuD/gPOrwdk=
-X-Received: by 2002:aca:4c02:: with SMTP id z2mr3189379oia.9.1583255079634;
- Tue, 03 Mar 2020 09:04:39 -0800 (PST)
+        id S2387554AbgCDCVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Mar 2020 21:21:31 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:51183 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2387400AbgCDCVa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Mar 2020 21:21:30 -0500
+X-UUID: dbc3c446a699493cab4b5666f1c37bf2-20200304
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Dm2V6GDWvlxQSEubyRoFN1pLie+rFhFwHaZFOLLiCqw=;
+        b=iyv4DQGAgUhykmexFoEHsa+5g7ZRs/voyb4EhescE6Mha12o3MgyFqBvQbWDpv2bX9/hDyD2MqAfQRwzUO7iTdekXVy76Do0Hh6kp7gsh4D4AUuP7C5mKI0WkxitFUWpUufYBLcIMV1KZo/dgRTv/l+Ewpf1ZHmKTzLmUQjFdn8=;
+X-UUID: dbc3c446a699493cab4b5666f1c37bf2-20200304
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 947991880; Wed, 04 Mar 2020 10:21:17 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Wed, 4 Mar 2020 10:18:34 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Wed, 4 Mar 2020 10:18:44 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <ebiggers@kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <cang@codeaurora.org>, <satyat@google.com>,
+        <matthias.bgg@gmail.com>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-fscrypt@vger.kernel.org>,
+        <kuohong.wang@mediatek.com>, <peter.wang@mediatek.com>,
+        <chun-hung.wu@mediatek.com>, <andy.teng@mediatek.com>,
+        <light.hsieh@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [RFC PATCH v2] scsi: ufs-mediatek: add inline encryption support
+Date:   Wed, 4 Mar 2020 10:21:02 +0800
+Message-ID: <20200304022101.14165-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-References: <1579000882-20246-1-git-send-email-anand.lodnoor@broadcom.com>
- <1579000882-20246-11-git-send-email-anand.lodnoor@broadcom.com>
- <7ca1562c-7a7a-17c5-2429-9725d465a4a8@suse.de> <b5ab348d98b790578325140226f741c8@mail.gmail.com>
- <d7119a15-8be8-9fb2-3c50-8b0a6605982d@huawei.com> <CAAO+jF-P3MkB2mo6pmYH1ihjRGpfjkkgXZg9dAZ29nYmU6T2=A@mail.gmail.com>
- <93deab34-53a3-afcf-4862-6b168a9f60cc@huawei.com> <79fe7843-9d71-bdde-957c-32dde22437d9@suse.de>
- <5ac6fd4f-eef8-700b-89d2-c8b3cd6e12ca@huawei.com> <CAL2rwxqfo1_Wnea=4xb1K+OQTQ4aMd0GjOQG9tkc+E7V-5toqw@mail.gmail.com>
- <aa0d2c4c-b54b-8d68-1a18-d7449f46962b@huawei.com>
-In-Reply-To: <aa0d2c4c-b54b-8d68-1a18-d7449f46962b@huawei.com>
-From:   Sumit Saxena <sumit.saxena@broadcom.com>
-Date:   Tue, 3 Mar 2020 22:34:12 +0530
-Message-ID: <CAL2rwxrS8Ebud0ZYwC6vcGi0Pv-PA12s-mHdJfkGaEmkqRDVDA@mail.gmail.com>
-Subject: Re: [PATCH v2 10/11] megaraid_sas: Use Block layer API to check SCSI
- device in-flight IO requests
-To:     John Garry <john.garry@huawei.com>
-Cc:     Hannes Reinecke <hare@suse.de>,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>,
-        Sankar Patra <sankar.patra@broadcom.com>,
-        Sasikumar PC <sasikumar.pc@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 6FCB616A2934E695AB18D81FA70BEAADA050A97D3BDBD961B702E6F8CF1085B92000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Mar 3, 2020 at 5:23 PM John Garry <john.garry@huawei.com> wrote:
->
-> >> And for these low-latency queues, I figure that the issue is not just
-> >> polling vs interrupt, but indeed how fast the HW queue can consume SQEs.
-> >> A HW queue may only be able to consume at a limited rate - that's why we
-> >> segregate.
-> > Yes, there is no polling in any of HW queues. High IOPs queues have
-> > interrupt coalescing enabled whereas
-> > low latency queues does not have interrupt coalescing. megaraid_sas
-> > driver would choose which set of queues
-> > among these two has to be used depending on workload. For latency
-> > oriented workload, driver would use low
-> > latency queues and for IOPs profile, driver would use High IOPs queues.
-> >>
-> >> As an aside, that is actually an issue for blk-mq. For 1 to many HW
-> >> queue-to-CPU mapping, limiting many CPUs a single queue can limit IOPs
-> >> since HW queues can only consume at a limited rate.
-> > We were able to achieve performance target for MegaRAID latest gen
-> > controller with this model of few set
-> >   of HW queues mapped to local numa CPUs and low latency queues has one
-> > to one mapping to CPUs.
-> > This is default behavior of queues segregation in megaraid_sas driver
-> > to satisfy our IOPs and latency requirements altogether.
-> > However we have given module parameter- "perf_mode" to tune queues
-> > behavior. i.e turning on/off interrupt
-> > coalescing on all HW queues where this one to many queues to CPU
-> > mapping would not happen.
->
-> Hi Sumit,
-Hi John,
->
-> OK, I have a rough idea of the concept. And again I'd say megaraid sas
-> may not be a good candidate to expose > 1 HW queues, as we hide HW
-> queues and don't maintain the symmetry with blk-mq layer.
-Sorry, my last response was not very clear. I was referring to reply
-queues as HW queues
-not submission queues. I agree with you, since megaraid_sas HW has
-single submission
-queue so >1 HW queue would not help to improve performance. Testing
-done by us on shared
-tagset patches worked by you/Hannes was to ensure no performance drop
-from single HW
-submission queue based driver.
->
-> Indeed, I do not even expect a performance increase in exposing > 1 HW
-> queues since the driver already uses the reply map + managed interrupts.
->
-> The main reason for that change in some drivers - apart from losing the
-> duplicated ugliness of the reply map - is to leverage the blk-mq feature
-> to drain a hctx for CPU hotplug [0] - is this something which megaraid
-> sas is vulnerable to and would benefit from?
-"megaraid_sas" driver would be benefited with draining of IO
-completions directed to
-hotplugged(offlined) CPU. With current driver IO completion would
-hang, if CPU on which IO is to be
-completed goes offline.
+QWRkIGlubGluZSBlbmNyeXB0aW9uIHN1cHBvcnQgdG8gdWZzLW1lZGlhdGVrLg0KDQpUaGUgc3Rh
+bmRhcmRzLWNvbXBsaWFudCBwYXJ0cywgc3VjaCBhcyBxdWVyeWluZyB0aGUgY3J5cHRvIGNhcGFi
+aWxpdGllcw0KYW5kIGVuYWJsaW5nIGNyeXB0byBmb3IgaW5kaXZpZHVhbCBVRlMgcmVxdWVzdHMs
+IGFyZSBhbHJlYWR5IGhhbmRsZWQgYnkNCnVmc2hjZC1jcnlwdG8uYywgd2hpY2ggaXRzZWxmIGlz
+IHdpcmVkIGludG8gdGhlIGJsay1jcnlwdG8gZnJhbWV3b3JrLg0KDQpIb3dldmVyIE1lZGlhVGVr
+IFVGUyBob3N0IHJlcXVpcmVzIGEgdmVuZG9yLXNwZWNpZmljIGhjZV9lbmFibGUgb3BlcmF0aW9u
+DQp0byBhbGxvdyBjcnlwdG8tcmVsYXRlZCByZWdpc3RlcnMgYmVpbmcgYWNjZXNzZWQgbm9ybWFs
+bHkgaW4ga2VybmVsLg0KQWZ0ZXIgdGhpcyBzdGVwLCBNZWRpYVRlayBVRlMgaG9zdCBjYW4gd29y
+ayBhcyBzdGFuZGFyZC1jb21wbGlhbnQgaG9zdA0KZm9yIGlubGluZS1lbmNyeXB0aW9uIHJlbGF0
+ZWQgZnVuY3Rpb25zLg0KDQpUaGlzIHBhdGNoIGlzIHJlYmFzZWQgdG8gYmVsb3cgcmVwbyBhbmQg
+dGFnOg0KCVJlcG86IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9mcy9mc2NyeXB0L2Zz
+Y3J5cHQuZ2l0DQoJVGFnOiBpbmxpbmUtZW5jcnlwdGlvbi12Nw0KDQpTaWduZWQtb2ZmLWJ5OiBT
+dGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KLS0tDQogZHJpdmVycy9zY3Np
+L3Vmcy91ZnMtbWVkaWF0ZWsuYyB8IDI3ICsrKysrKysrKysrKysrKysrKysrKysrKysrLQ0KIGRy
+aXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmggfCAgMSArDQogMiBmaWxlcyBjaGFuZ2VkLCAy
+NyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvdWZzL3Vmcy1tZWRpYXRlay5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYw0K
+aW5kZXggNTNlYWU1ZmUyYWRlLi4xMmQwMWZkM2Q1ZTEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Nj
+c2kvdWZzL3Vmcy1tZWRpYXRlay5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRl
+ay5jDQpAQCAtMTUsNiArMTUsNyBAQA0KICNpbmNsdWRlIDxsaW51eC9zb2MvbWVkaWF0ZWsvbXRr
+X3NpcF9zdmMuaD4NCiANCiAjaW5jbHVkZSAidWZzaGNkLmgiDQorI2luY2x1ZGUgInVmc2hjZC1j
+cnlwdG8uaCINCiAjaW5jbHVkZSAidWZzaGNkLXBsdGZybS5oIg0KICNpbmNsdWRlICJ1ZnNfcXVp
+cmtzLmgiDQogI2luY2x1ZGUgInVuaXByby5oIg0KQEAgLTI0LDYgKzI1LDkgQEANCiAJYXJtX3Nt
+Y2NjX3NtYyhNVEtfU0lQX1VGU19DT05UUk9MLCBcDQogCQkgICAgICBjbWQsIHZhbCwgMCwgMCwg
+MCwgMCwgMCwgJihyZXMpKQ0KIA0KKyNkZWZpbmUgdWZzX210a19jcnlwdG9fY3RybChyZXMsIGVu
+YWJsZSkgXA0KKwl1ZnNfbXRrX3NtYyhVRlNfTVRLX1NJUF9DUllQVE9fQ1RSTCwgZW5hYmxlLCBy
+ZXMpDQorDQogI2RlZmluZSB1ZnNfbXRrX3JlZl9jbGtfbm90aWZ5KG9uLCByZXMpIFwNCiAJdWZz
+X210a19zbWMoVUZTX01US19TSVBfUkVGX0NMS19OT1RJRklDQVRJT04sIG9uLCByZXMpDQogDQpA
+QCAtNjYsNyArNzAsMjcgQEAgc3RhdGljIHZvaWQgdWZzX210a19jZmdfdW5pcHJvX2NnKHN0cnVj
+dCB1ZnNfaGJhICpoYmEsIGJvb2wgZW5hYmxlKQ0KIAl9DQogfQ0KIA0KLXN0YXRpYyBpbnQgdWZz
+X210a19iaW5kX21waHkoc3RydWN0IHVmc19oYmEgKmhiYSkNCitzdGF0aWMgdm9pZCB1ZnNfbXRr
+X2NyeXB0b19lbmFibGUoc3RydWN0IHVmc19oYmEgKmhiYSkNCit7DQorCXN0cnVjdCBhcm1fc21j
+Y2NfcmVzIHJlczsNCisNCisJdWZzX210a19jcnlwdG9fY3RybChyZXMsIDEpOw0KKwlpZiAocmVz
+LmEwKSB7DQorCQlkZXZfaW5mbyhoYmEtPmRldiwgIiVzOiBjcnlwdG8gZW5hYmxlIGZhaWxlZCwg
+ZXJyOiAlbHVcbiIsDQorCQkJIF9fZnVuY19fLCByZXMuYTApOw0KKwl9DQorfQ0KKw0KK3N0YXRp
+YyBpbnQgdWZzX210a19oY2VfZW5hYmxlX25vdGlmeShzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KKwkJ
+CQkgICAgIGVudW0gdWZzX25vdGlmeV9jaGFuZ2Vfc3RhdHVzIHN0YXR1cykNCit7DQorCWlmIChz
+dGF0dXMgPT0gUFJFX0NIQU5HRSAmJiB1ZnNoY2RfaGJhX2lzX2NyeXB0b19zdXBwb3J0ZWQoaGJh
+KSkNCisJCXVmc19tdGtfY3J5cHRvX2VuYWJsZShoYmEpOw0KKw0KKwlyZXR1cm4gMDsNCit9DQor
+DQoraW50IHVmc19tdGtfYmluZF9tcGh5KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogew0KIAlzdHJ1
+Y3QgdWZzX210a19ob3N0ICpob3N0ID0gdWZzaGNkX2dldF92YXJpYW50KGhiYSk7DQogCXN0cnVj
+dCBkZXZpY2UgKmRldiA9IGhiYS0+ZGV2Ow0KQEAgLTQ5NCw2ICs1MTgsNyBAQCBzdGF0aWMgc3Ry
+dWN0IHVmc19oYmFfdmFyaWFudF9vcHMgdWZzX2hiYV9tdGtfdm9wcyA9IHsNCiAJLm5hbWUgICAg
+ICAgICAgICAgICAgPSAibWVkaWF0ZWsudWZzaGNpIiwNCiAJLmluaXQgICAgICAgICAgICAgICAg
+PSB1ZnNfbXRrX2luaXQsDQogCS5zZXR1cF9jbG9ja3MgICAgICAgID0gdWZzX210a19zZXR1cF9j
+bG9ja3MsDQorCS5oY2VfZW5hYmxlX25vdGlmeSAgID0gdWZzX210a19oY2VfZW5hYmxlX25vdGlm
+eSwNCiAJLmxpbmtfc3RhcnR1cF9ub3RpZnkgPSB1ZnNfbXRrX2xpbmtfc3RhcnR1cF9ub3RpZnks
+DQogCS5wd3JfY2hhbmdlX25vdGlmeSAgID0gdWZzX210a19wd3JfY2hhbmdlX25vdGlmeSwNCiAJ
+LmFwcGx5X2Rldl9xdWlya3MgICAgPSB1ZnNfbXRrX2FwcGx5X2Rldl9xdWlya3MsDQpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaCBiL2RyaXZlcnMvc2NzaS91ZnMv
+dWZzLW1lZGlhdGVrLmgNCmluZGV4IGZjY2RkOTc5ZDZmYi4uNWViYWE1OTg5OGJmIDEwMDY0NA0K
+LS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KKysrIGIvZHJpdmVycy9zY3Np
+L3Vmcy91ZnMtbWVkaWF0ZWsuaA0KQEAgLTU4LDYgKzU4LDcgQEANCiAgKi8NCiAjZGVmaW5lIE1U
+S19TSVBfVUZTX0NPTlRST0wgICAgICAgICAgICAgICBNVEtfU0lQX1NNQ19DTUQoMHgyNzYpDQog
+I2RlZmluZSBVRlNfTVRLX1NJUF9ERVZJQ0VfUkVTRVQgICAgICAgICAgQklUKDEpDQorI2RlZmlu
+ZSBVRlNfTVRLX1NJUF9DUllQVE9fQ1RSTCAgICAgICAgICAgQklUKDIpDQogI2RlZmluZSBVRlNf
+TVRLX1NJUF9SRUZfQ0xLX05PVElGSUNBVElPTiAgQklUKDMpDQogDQogLyoNCi0tIA0KMi4xOC4w
+DQo=
 
-Thanks,
-Sumit
->
-> Thanks,
-> John
->
-> [0]
-> https://lore.kernel.org/linux-block/20200115114409.28895-1-ming.lei@redhat.com/
