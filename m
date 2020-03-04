@@ -2,433 +2,109 @@ Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0717C3F2DA
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 15:35:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E237C3F2D1
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 16:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 947E52465D
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 15:35:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mRIOjSGp"
+	by mail.kernel.org (Postfix) with ESMTP id 3C9E121775
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 16:11:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388098AbgCDPfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 10:35:15 -0500
-Received: from mail-vk1-f193.google.com ([209.85.221.193]:34469 "EHLO
-        mail-vk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388158AbgCDPfP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 10:35:15 -0500
-Received: by mail-vk1-f193.google.com with SMTP id w67so677679vkf.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 07:35:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6cS3FWfjvrO1ZUT7DZy+lSQzbt9YdNm9ZhTZZc8PAug=;
-        b=mRIOjSGpn9s/L+86kk3Uww2g23Pb3wdpimWCHzZQQGefklq7yXvUPTYWSj2MZHp1iC
-         sYA2BK5S2x0Mpw5f5Mj7pUM9efeKgkkATpGekWCt/mP/CI8EixGuzz4LJ+cUVWHTvUlZ
-         +Oy5EXNfRzxrT6L1xGtxNxtJMyRfQhmkKuizDbGLEy7PfGceuBQwaUjkkNJtcZXEPtJG
-         fItbFSVs8uCSirpdgjVDOpLYC9wVCM7pnH2p3eSYnMBdjf2Ck0fI5hnA/C+2kJ2xUSNG
-         KKMZS0IUHuOllR1rLYriX6SG92omJbqHXiAYFo3pNiWqoxcJeKpOVwvFFtyYY2FCdxmq
-         ru5w==
+        id S1729386AbgCDQL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 11:11:57 -0500
+Received: from mail-pl1-f176.google.com ([209.85.214.176]:37271 "EHLO
+        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726561AbgCDQL5 (ORCPT
+        <rfc822;Linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 11:11:57 -0500
+Received: by mail-pl1-f176.google.com with SMTP id b8so1207882plx.4
+        for <Linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 08:11:57 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=6cS3FWfjvrO1ZUT7DZy+lSQzbt9YdNm9ZhTZZc8PAug=;
-        b=MgKrIJXrzZiymNoQErJYKxSAOjionrWfX6YjbYZ/kIpmE6MkHo1vZf4MLXuYt1muYB
-         LOB5naCrwCdUPzOA7P1szK/4spzWpm6tsqNpKTjxjNYG5KTkGwkMRkVYaoY/QhqAuGwd
-         kkHXGpdR/0HlDcTFyV4VOwlrrH21OL9XaTLVcQmzhCYu2Cpqt9BCeEu/KbDMvP68gOnY
-         5bPnMEC1RU6jpyn1oSKgGq67CawWyxyUXP1vUfQ8W45wio9rUEzaNPNT5v5GebtZq403
-         C0gF9anvVpRfm9fhHD88juuM39bHsRege7GlZEqECCoOzbdbu7nQp35QIpByQap78KbX
-         Hr/A==
-X-Gm-Message-State: ANhLgQ31NlhBOQqGb0L6+HcJuX1qKnpMYh7kzsvAQJevViulCJ1CjaMt
-        NpQGEgbQYcMUdnLgvs+cNoSf0NctskzitU8z7HQoMg==
-X-Google-Smtp-Source: ADFU+vv27biy3HG8yDmFUfALjgCLWWI0UWXsQhDngblfPmSvrgnEbHYIJzjZFyYXAszTxn5WrS/P8mt0TjVii5+r2/s=
-X-Received: by 2002:ac5:c4fc:: with SMTP id b28mr1719680vkl.101.1583336112179;
- Wed, 04 Mar 2020 07:35:12 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=OfbWj39Lc5Lt7SX5ER1kwwduCXGN5iOIU0hVtYMDbz8=;
+        b=TAfX+ut1IGvefWQyow0lDr7EE8OobjrBulnw/LYUNlvtHtRL+FcEh3L3AXQ7CIMEMv
+         MFoYHMFLyvHU0IXLpwB1g5YEH+BtJS1AH2a10UEPu/xHcJ1MOl30lkFyTL/Lkn8VqNJm
+         f0FgbT+2weW3UirB8eaw1RScicA5NuTqtb3EmV7sHY+V4+fTGfmTn3kA7N+rukMG+dfi
+         wxtGNSuFDRS9wgT+OCH52T/mfZ3p3KZz9JE93sRKUoas1v0r3IpI8l+gxVaUgaPkmKdb
+         E2My57a29Oj6s0tfz9DrlSUqu1Xk1eG3oHUZ5uHrXCY0+MXPeOmU5rSQgu/psc6yG4AM
+         kovg==
+X-Gm-Message-State: ANhLgQ1KJKn+jVWBeGWIWl19k82dDzYMvBnefAplN+2+u8p5nBhZEiJQ
+        r3noChJxtJMu9yq8D0FHe+A=
+X-Google-Smtp-Source: ADFU+vvGabdFQ+k82pYPI9KJktiWvX+pKJCMqC7hTypuQEg9b6hsBh0Mf9q7YOHCqVKJclHJPRUKOw==
+X-Received: by 2002:a17:90a:37d0:: with SMTP id v74mr3763406pjb.0.1583338316226;
+        Wed, 04 Mar 2020 08:11:56 -0800 (PST)
+Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
+        by smtp.gmail.com with ESMTPSA id z17sm17078005pfk.110.2020.03.04.08.11.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Mar 2020 08:11:55 -0800 (PST)
+Subject: Re: [LSF/MM/BPF TOPIC] Storage: generic completion polling
+To:     Hannes Reinecke <hare@suse.de>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>,
+        Keith Busch <keith.busch@wdc.com>,
+        James Smart <james.smart@broadcom.com>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        Kashyap Desai <Kashyap.Desai@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>
+References: <6a263bd4-8989-b766-1d33-7b57f4de0c7d@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <048834b9-041e-6d4d-3e2e-1489a72468c9@acm.org>
+Date:   Wed, 4 Mar 2020 08:11:53 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-References: <20200223165724.23816-1-mcroce@redhat.com>
-In-Reply-To: <20200223165724.23816-1-mcroce@redhat.com>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Wed, 4 Mar 2020 16:34:36 +0100
-Message-ID: <CAPDyKFrw+PHqcy_yDgj4V9WBy0b8+zbNugHvc4kBOCO2_FT6xg@mail.gmail.com>
-Subject: Re: [PATCH] block: refactor duplicated macros
-To:     Matteo Croce <mcroce@redhat.com>
-Cc:     linux-block <linux-block@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvdimm@lists.01.org, linux-bcache@vger.kernel.org,
-        linux-raid@vger.kernel.org,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        xen-devel@lists.xenproject.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <6a263bd4-8989-b766-1d33-7b57f4de0c7d@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 23 Feb 2020 at 17:57, Matteo Croce <mcroce@redhat.com> wrote:
->
-> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
-> several times in different flavours across the whole tree.
-> Define them just once in a common header.
->
-> Signed-off-by: Matteo Croce <mcroce@redhat.com>
+On 3/3/20 11:17 PM, Hannes Reinecke wrote:
+> there had been quite some discussion around completion polling and the
+> fact that for high-performance devices it might be a performance benefit
+> [1][2]. And during discussion with other people (hello tglx) the
+> reaction always had been "Can't you do NAPI?"
+> 
+> So the question is: Can we?
+> IE is it possible to have a generic framework for handling polled
+> completiona and interrupt completions, shifting between them depending
+> on the load?
+> 
+> My idea is to have a sequence like
+> completion polling -> interrupt handling -> threaded irq/polling
+> IE invoke completion polling directly from the submission path, enable
+> interrupts to handle completions from the interrupt handler, and finally
+> shift to completion polling again if too many completions are present.
+> Clearly this approach involves quite some tunables (like how many
+> completions before enabling polling from interrupt context, how long to
+> wait for completions before enabling interrupts etc), but I thing it
+> would be worthwhile having this as a generic framework as then one could
+> start experimenting with the various tunables to see which works best
+> for the individual hardware.
+> And it would lift the burden from the hardware vendors to implement a
+> similar mechanism on their own.
 
-For mmc:
+To me the above sounds like a description of the lib/irq_poll mechanism? 
+ From the top of lib/irq_poll.c:
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+/*
+  * Functions related to interrupt-poll handling in the block layer. This
+  * is similar to NAPI for network devices.
+  */
 
-Kind regards
-Uffe
+Anyway, I'm interested in participating in the discussion of this topic.
 
+Bart.
 
-> ---
->  block/blk-lib.c                  |  2 +-
->  drivers/block/brd.c              |  3 ---
->  drivers/block/null_blk_main.c    |  4 ----
->  drivers/block/zram/zram_drv.c    |  8 ++++----
->  drivers/block/zram/zram_drv.h    |  2 --
->  drivers/dax/super.c              |  2 +-
->  drivers/md/bcache/util.h         |  2 --
->  drivers/md/dm-bufio.c            |  6 +++---
->  drivers/md/dm-integrity.c        | 10 +++++-----
->  drivers/md/md.c                  |  4 ++--
->  drivers/md/raid1.c               |  2 +-
->  drivers/mmc/core/host.c          |  3 ++-
->  drivers/scsi/xen-scsifront.c     |  4 ++--
->  fs/iomap/buffered-io.c           |  2 +-
->  fs/nfs/blocklayout/blocklayout.h |  2 --
->  include/linux/blkdev.h           |  4 ++++
->  include/linux/device-mapper.h    |  1 -
->  17 files changed, 26 insertions(+), 35 deletions(-)
->
-> diff --git a/block/blk-lib.c b/block/blk-lib.c
-> index 5f2c429d4378..f5e705d307e0 100644
-> --- a/block/blk-lib.c
-> +++ b/block/blk-lib.c
-> @@ -260,7 +260,7 @@ static int __blkdev_issue_write_zeroes(struct block_device *bdev,
->   */
->  static unsigned int __blkdev_sectors_to_bio_pages(sector_t nr_sects)
->  {
-> -       sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SIZE / 512);
-> +       sector_t pages = DIV_ROUND_UP_SECTOR_T(nr_sects, PAGE_SECTORS);
->
->         return min(pages, (sector_t)BIO_MAX_PAGES);
->  }
-> diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-> index 220c5e18aba0..33e2cbe11400 100644
-> --- a/drivers/block/brd.c
-> +++ b/drivers/block/brd.c
-> @@ -25,9 +25,6 @@
->
->  #include <linux/uaccess.h>
->
-> -#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
-> -#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
-> -
->  /*
->   * Each block ramdisk device has a radix_tree brd_pages of pages that stores
->   * the pages containing the block device's contents. A brd page's ->index is
-> diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
-> index 16510795e377..c42af6cf0b97 100644
-> --- a/drivers/block/null_blk_main.c
-> +++ b/drivers/block/null_blk_main.c
-> @@ -11,10 +11,6 @@
->  #include <linux/init.h>
->  #include "null_blk.h"
->
-> -#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
-> -#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
-> -#define SECTOR_MASK            (PAGE_SECTORS - 1)
-> -
->  #define FREE_BATCH             16
->
->  #define TICKS_PER_SEC          50ULL
-> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-> index 1bdb5793842b..6ee59da4a6e2 100644
-> --- a/drivers/block/zram/zram_drv.c
-> +++ b/drivers/block/zram/zram_drv.c
-> @@ -1548,9 +1548,9 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
->         struct bio_vec bvec;
->         struct bvec_iter iter;
->
-> -       index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
-> +       index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
->         offset = (bio->bi_iter.bi_sector &
-> -                 (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
-> +                 SECTOR_MASK) << SECTOR_SHIFT;
->
->         switch (bio_op(bio)) {
->         case REQ_OP_DISCARD:
-> @@ -1643,8 +1643,8 @@ static int zram_rw_page(struct block_device *bdev, sector_t sector,
->                 goto out;
->         }
->
-> -       index = sector >> SECTORS_PER_PAGE_SHIFT;
-> -       offset = (sector & (SECTORS_PER_PAGE - 1)) << SECTOR_SHIFT;
-> +       index = sector >> PAGE_SECTORS_SHIFT;
-> +       offset = (sector & SECTOR_MASK) << SECTOR_SHIFT;
->
->         bv.bv_page = page;
->         bv.bv_len = PAGE_SIZE;
-> diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
-> index f2fd46daa760..12309175d55e 100644
-> --- a/drivers/block/zram/zram_drv.h
-> +++ b/drivers/block/zram/zram_drv.h
-> @@ -21,8 +21,6 @@
->
->  #include "zcomp.h"
->
-> -#define SECTORS_PER_PAGE_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
-> -#define SECTORS_PER_PAGE       (1 << SECTORS_PER_PAGE_SHIFT)
->  #define ZRAM_LOGICAL_BLOCK_SHIFT 12
->  #define ZRAM_LOGICAL_BLOCK_SIZE        (1 << ZRAM_LOGICAL_BLOCK_SHIFT)
->  #define ZRAM_SECTOR_PER_LOGICAL_BLOCK  \
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 0aa4b6bc5101..7f7672f72085 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -92,7 +92,7 @@ bool __generic_fsdax_supported(struct dax_device *dax_dev,
->                 return false;
->         }
->
-> -       last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SIZE / 512;
-> +       last_page = PFN_DOWN((start + sectors - 1) * 512) * PAGE_SECTORS;
->         err = bdev_dax_pgoff(bdev, last_page, PAGE_SIZE, &pgoff_end);
->         if (err) {
->                 pr_debug("%s: error: unaligned partition for dax\n",
-> diff --git a/drivers/md/bcache/util.h b/drivers/md/bcache/util.h
-> index c029f7443190..55196e0f37c3 100644
-> --- a/drivers/md/bcache/util.h
-> +++ b/drivers/md/bcache/util.h
-> @@ -15,8 +15,6 @@
->
->  #include "closure.h"
->
-> -#define PAGE_SECTORS           (PAGE_SIZE / 512)
-> -
->  struct closure;
->
->  #ifdef CONFIG_BCACHE_DEBUG
-> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> index 2d519c223562..f4496ce0d598 100644
-> --- a/drivers/md/dm-bufio.c
-> +++ b/drivers/md/dm-bufio.c
-> @@ -384,7 +384,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
->             gfp_mask & __GFP_NORETRY) {
->                 *data_mode = DATA_MODE_GET_FREE_PAGES;
->                 return (void *)__get_free_pages(gfp_mask,
-> -                                               c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-> +                                               c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
->         }
->
->         *data_mode = DATA_MODE_VMALLOC;
-> @@ -422,7 +422,7 @@ static void free_buffer_data(struct dm_bufio_client *c,
->
->         case DATA_MODE_GET_FREE_PAGES:
->                 free_pages((unsigned long)data,
-> -                          c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-> +                          c->sectors_per_block_bits - PAGE_SECTORS_SHIFT);
->                 break;
->
->         case DATA_MODE_VMALLOC:
-> @@ -597,7 +597,7 @@ static void use_bio(struct dm_buffer *b, int rw, sector_t sector,
->         unsigned vec_size, len;
->
->         vec_size = b->c->block_size >> PAGE_SHIFT;
-> -       if (unlikely(b->c->sectors_per_block_bits < PAGE_SHIFT - SECTOR_SHIFT))
-> +       if (unlikely(b->c->sectors_per_block_bits < PAGE_SECTORS_SHIFT))
->                 vec_size += 2;
->
->         bio = bio_kmalloc(GFP_NOWAIT | __GFP_NORETRY | __GFP_NOWARN, vec_size);
-> diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-> index b225b3e445fa..4e60cda465cc 100644
-> --- a/drivers/md/dm-integrity.c
-> +++ b/drivers/md/dm-integrity.c
-> @@ -652,7 +652,7 @@ static void page_list_location(struct dm_integrity_c *ic, unsigned section, unsi
->
->         sector = section * ic->journal_section_sectors + offset;
->
-> -       *pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-> +       *pl_index = sector >> PAGE_SECTORS_SHIFT;
->         *pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
->  }
->
-> @@ -951,7 +951,7 @@ static void rw_journal_sectors(struct dm_integrity_c *ic, int op, int op_flags,
->                 return;
->         }
->
-> -       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-> +       pl_index = sector >> PAGE_SECTORS_SHIFT;
->         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
->
->         io_req.bi_op = op;
-> @@ -1072,7 +1072,7 @@ static void copy_from_journal(struct dm_integrity_c *ic, unsigned section, unsig
->
->         sector = section * ic->journal_section_sectors + JOURNAL_BLOCK_SECTORS + offset;
->
-> -       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-> +       pl_index = sector >> PAGE_SECTORS_SHIFT;
->         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
->
->         io_req.bi_op = REQ_OP_WRITE;
-> @@ -3343,7 +3343,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
->         ic->commit_ids[3] = cpu_to_le64(0x4444444444444444ULL);
->
->         journal_pages = roundup((__u64)ic->journal_sections * ic->journal_section_sectors,
-> -                               PAGE_SIZE >> SECTOR_SHIFT) >> (PAGE_SHIFT - SECTOR_SHIFT);
-> +                               PAGE_SIZE >> SECTOR_SHIFT) >> PAGE_SECTORS_SHIFT;
->         journal_desc_size = journal_pages * sizeof(struct page_list);
->         if (journal_pages >= totalram_pages() - totalhigh_pages() || journal_desc_size > ULONG_MAX) {
->                 *error = "Journal doesn't fit into memory";
-> @@ -4075,7 +4075,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
->                         spin_lock_init(&bbs->bio_queue_lock);
->
->                         sector = i * (BITMAP_BLOCK_SIZE >> SECTOR_SHIFT);
-> -                       pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
-> +                       pl_index = sector >> PAGE_SECTORS_SHIFT;
->                         pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
->
->                         bbs->bitmap = lowmem_page_address(ic->journal[pl_index].page) + pl_offset;
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 469f551863be..b28f9390608f 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1734,7 +1734,7 @@ static int super_1_load(struct md_rdev *rdev, struct md_rdev *refdev, int minor_
->                 __le64 *bbp;
->                 int i;
->                 int sectors = le16_to_cpu(sb->bblog_size);
-> -               if (sectors > (PAGE_SIZE / 512))
-> +               if (sectors > PAGE_SECTORS)
->                         return -EINVAL;
->                 offset = le32_to_cpu(sb->bblog_offset);
->                 if (offset == 0)
-> @@ -8733,7 +8733,7 @@ void md_do_sync(struct md_thread *thread)
->         /*
->          * Tune reconstruction:
->          */
-> -       window = 32 * (PAGE_SIZE / 512);
-> +       window = 32 * PAGE_SECTORS;
->         pr_debug("md: using %dk window, over a total of %lluk.\n",
->                  window/2, (unsigned long long)max_sectors/2);
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index cd810e195086..37a0b571903a 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2129,7 +2129,7 @@ static void process_checks(struct r1bio *r1_bio)
->         int vcnt;
->
->         /* Fix variable parts of all bios */
-> -       vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
-> +       vcnt = (r1_bio->sectors + PAGE_SECTORS - 1) >> (PAGE_SHIFT - 9);
->         for (i = 0; i < conf->raid_disks * 2; i++) {
->                 blk_status_t status;
->                 struct bio *b = r1_bio->bios[i];
-> diff --git a/drivers/mmc/core/host.c b/drivers/mmc/core/host.c
-> index c8768726d925..4a23fb9d5642 100644
-> --- a/drivers/mmc/core/host.c
-> +++ b/drivers/mmc/core/host.c
-> @@ -18,6 +18,7 @@
->  #include <linux/export.h>
->  #include <linux/leds.h>
->  #include <linux/slab.h>
-> +#include <linux/blkdev.h>
->
->  #include <linux/mmc/host.h>
->  #include <linux/mmc/card.h>
-> @@ -427,7 +428,7 @@ struct mmc_host *mmc_alloc_host(int extra, struct device *dev)
->
->         host->max_req_size = PAGE_SIZE;
->         host->max_blk_size = 512;
-> -       host->max_blk_count = PAGE_SIZE / 512;
-> +       host->max_blk_count = PAGE_SECTORS;
->
->         host->fixed_drv_type = -EINVAL;
->         host->ios.power_delay_ms = 10;
-> diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-> index f0068e96a177..e6b29e54d07a 100644
-> --- a/drivers/scsi/xen-scsifront.c
-> +++ b/drivers/scsi/xen-scsifront.c
-> @@ -852,7 +852,7 @@ static int scsifront_probe(struct xenbus_device *dev,
->         host->max_id      = VSCSIIF_MAX_TARGET;
->         host->max_channel = 0;
->         host->max_lun     = VSCSIIF_MAX_LUN;
-> -       host->max_sectors = (host->sg_tablesize - 1) * PAGE_SIZE / 512;
-> +       host->max_sectors = (host->sg_tablesize - 1) * PAGE_SECTORS;
->         host->max_cmd_len = VSCSIIF_MAX_COMMAND_SIZE;
->
->         err = scsi_add_host(host, &dev->dev);
-> @@ -1073,7 +1073,7 @@ static void scsifront_read_backend_params(struct xenbus_device *dev,
->                          host->sg_tablesize, nr_segs);
->
->         host->sg_tablesize = nr_segs;
-> -       host->max_sectors = (nr_segs - 1) * PAGE_SIZE / 512;
-> +       host->max_sectors = (nr_segs - 1) * PAGE_SECTORS;
->  }
->
->  static void scsifront_backend_changed(struct xenbus_device *dev,
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 7c84c4c027c4..60505fc156c5 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -29,7 +29,7 @@ struct iomap_page {
->         atomic_t                read_count;
->         atomic_t                write_count;
->         spinlock_t              uptodate_lock;
-> -       DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-> +       DECLARE_BITMAP(uptodate, PAGE_SECTORS);
->  };
->
->  static inline struct iomap_page *to_iomap_page(struct page *page)
-> diff --git a/fs/nfs/blocklayout/blocklayout.h b/fs/nfs/blocklayout/blocklayout.h
-> index 716bc75e9ed2..22407751e0fd 100644
-> --- a/fs/nfs/blocklayout/blocklayout.h
-> +++ b/fs/nfs/blocklayout/blocklayout.h
-> @@ -40,8 +40,6 @@
->  #include "../pnfs.h"
->  #include "../netns.h"
->
-> -#define PAGE_CACHE_SECTORS (PAGE_SIZE >> SECTOR_SHIFT)
-> -#define PAGE_CACHE_SECTOR_SHIFT (PAGE_SHIFT - SECTOR_SHIFT)
->  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
->
->  struct pnfs_block_dev;
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 053ea4b51988..b3c9be6906a0 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -910,6 +910,10 @@ static inline struct request_queue *bdev_get_queue(struct block_device *bdev)
->  #define SECTOR_SIZE (1 << SECTOR_SHIFT)
->  #endif
->
-> +#define PAGE_SECTORS_SHIFT     (PAGE_SHIFT - SECTOR_SHIFT)
-> +#define PAGE_SECTORS           (1 << PAGE_SECTORS_SHIFT)
-> +#define SECTOR_MASK            (PAGE_SECTORS - 1)
-> +
->  /*
->   * blk_rq_pos()                        : the current sector
->   * blk_rq_bytes()              : bytes left in the entire request
-> diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-> index 475668c69dbc..c98a533f8ffa 100644
-> --- a/include/linux/device-mapper.h
-> +++ b/include/linux/device-mapper.h
-> @@ -141,7 +141,6 @@ typedef long (*dm_dax_direct_access_fn) (struct dm_target *ti, pgoff_t pgoff,
->                 long nr_pages, void **kaddr, pfn_t *pfn);
->  typedef size_t (*dm_dax_copy_iter_fn)(struct dm_target *ti, pgoff_t pgoff,
->                 void *addr, size_t bytes, struct iov_iter *i);
-> -#define PAGE_SECTORS (PAGE_SIZE / 512)
->
->  void dm_error(const char *message);
->
-> --
-> 2.24.1
->
