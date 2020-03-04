@@ -2,42 +2,42 @@ Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E59C3F2D1
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 06:50:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7908C3F2DA
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 06:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9191F22522
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 06:50:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0AB72166E
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 06:50:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583304612;
-	bh=hKHt3mWDAi5/2pwURoereWV15TLyzLsiROBqLj0xwTQ=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=0yPEuga0A0RTNoWQ7l7xfTLyTfJ8mxjlPnvx7rVqm2y1//Wa8Sl1zdGzyYEpuF3LQ
-	 WrsRQT2q6rvN6ZIuW1yOG+rcDVd+bd1xKFcjGF3RU1DcJ2hHiy+LKGa/f6VZLiSLgm
-	 n08785HKnW3LCPd7p7FiuYElGYy6aq8W0Zd4wjeI=
+	s=default; t=1583304613;
+	bh=+4AENmoA3eeOfawHzzPJN3Pot/B0aANIVWQejdaR66U=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=DZxdMKEL1klmzVQrMebB/7H6UpGNFnh01O23ipdy9wfUUvnRh/lZI3jzlGWysyeu4
+	 nqV8U3Xng1Y3Giot3ICjSJA5zFPnGIBTjKentkq/UXwWhWB6+hIqvJeN19OaAiLy8E
+	 xjnqXJuT/JNgCbs2zjOpjtGe6ljXY3Cz0X7PWbyY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728278AbgCDGuM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 01:50:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56814 "EHLO mail.kernel.org"
+        id S2387610AbgCDGuN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 01:50:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56854 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
         id S1725271AbgCDGuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 4 Mar 2020 01:50:12 -0500
 Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A83FC2146E;
-        Wed,  4 Mar 2020 06:50:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BB3B821775;
+        Wed,  4 Mar 2020 06:50:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583304611;
-        bh=hKHt3mWDAi5/2pwURoereWV15TLyzLsiROBqLj0xwTQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=llE169QOK5XHbqB7oK9wDxmveaSDKg7JD7a/z3DgIWoVSAfZ4nx48C9niMI0FQd1O
-         Hg4mvU8+0ZavXlT3jn/1ronBlCgTRAHEwvvOHTuozdsfXJlyZGt5ZsvjiMZUcUl49N
-         nTqSIrI8qJWmxzO3B8VvV8mZi8DKPZ4i5MwFcLZY=
+        s=default; t=1583304612;
+        bh=+4AENmoA3eeOfawHzzPJN3Pot/B0aANIVWQejdaR66U=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=1cwCk9bI/BXuz9Xkd53leZWxGxTSwgX+YGbXhPSgl1lzxbWoOTxG4BJieJi5wV88N
+         Tql6yPSzRlfhfYZtvUYCihNolMQzX3DpDnqOeQ0czU0b3ImFiMlC3ztZvLhWVSH15/
+         1N4VlmldGSGmeFo1fM5/VWAsHnmGJQHucGfQvpoE=
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
@@ -49,10 +49,12 @@ Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
         Can Guo <cang@codeaurora.org>,
         Elliot Berman <eberman@codeaurora.org>,
         Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: [RFC PATCH v2 0/4] Inline crypto support on DragonBoard 845c
-Date:   Tue,  3 Mar 2020 22:49:38 -0800
-Message-Id: <20200304064942.371978-1-ebiggers@kernel.org>
+Subject: [RFC PATCH v2 2/4] arm64: dts: sdm845: add Inline Crypto Engine registers and clock
+Date:   Tue,  3 Mar 2020 22:49:40 -0800
+Message-Id: <20200304064942.371978-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200304064942.371978-1-ebiggers@kernel.org>
+References: <20200304064942.371978-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -60,70 +62,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+From: Eric Biggers <ebiggers@google.com>
 
-This patchset implements UFS inline crypto support on the DragonBoard
-845c, using the Qualcomm Inline Crypto Engine (ICE) that's present on
-the Snapdragon 845 SoC.
+Add the vendor-specific registers and clock for Qualcomm ICE (Inline
+Crypto Engine) to the device tree node for the UFS host controller on
+sdm845, so that the ufs-qcom driver will be able to use inline crypto.
 
-This is based on top of the patchset "[PATCH v7 0/9] Inline Encryption
-Support" by Satya Tangirala, which adds support for the UFS standard
-inline crypto, the block layer changes needed to use inline crypto, and
-support for inline crypto in fscrypt (ext4 and f2fs encryption).  Link:
-https://lkml.kernel.org/r/20200221115050.238976-1-satyat@google.com
+Use a separate register range rather than extending the main UFS range
+because there's a gap between the two, and the ICE registers are
+vendor-specific.  (Actually, the hardware claims that the ICE range also
+includes the array of standard crypto configuration registers; however,
+on this SoC the Linux kernel isn't permitted to access them directly.)
 
-This new patchset is mostly a RFC showing hardware inline crypto working
-on a publicly available development board that runs the mainline Linux
-kernel.  While patches 1-2 could be applied now, patches 3-4 depend on
-the main "Inline Encryption Support" patchset being merged first.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ arch/arm64/boot/dts/qcom/sdm845.dtsi | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-Most of the logic needed to use ICE is already handled by ufshcd-crypto
-and the blk-crypto framework, which are introduced by the "Inline
-Encryption Support" patchset.  Therefore, this new patchset just adds
-the vendor-specific parts.  I also only implemented support for version
-3 of the ICE hardware, which seems to be easier to use than older
-versions; and for now I only implemented UFS support, not eMMC.
-
-Due to these factors, I was able to greatly simplify the driver from the
-vendor's original.  It seems to work fine in testing with fscrypt and
-with a blk-crypto self-test I'm also working on.  But I'd appreciate
-feedback from anyone who may be more familiar with this hardware as to
-whether I might have missed anything important.
-
-This patchset is also available in git at:
-    Repo: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
-    Tag: db845c-crypto-v2
-
-Changed v1 => v2:
-    - Rebased onto the v7 inline encryption patchset.
-    - Account for all the recent qcom_scm changes.
-    - Don't ignore errors from ->program_key().
-    - Don't dereference NULL hba->vops.
-    - Dropped the patch that added UFSHCD_QUIRK_BROKEN_CRYPTO, as this
-      flag is now included in the main inline encryption patchset.
-    - Many other cleanups.
-
-Eric Biggers (4):
-  firmware: qcom_scm: Add support for programming inline crypto keys
-  arm64: dts: sdm845: add Inline Crypto Engine registers and clock
-  scsi: ufs: add program_key() variant op
-  scsi: ufs-qcom: add Inline Crypto Engine support
-
- MAINTAINERS                          |   2 +-
- arch/arm64/boot/dts/qcom/sdm845.dtsi |  13 +-
- drivers/firmware/qcom_scm.c          |  96 +++++++++++
- drivers/firmware/qcom_scm.h          |   4 +
- drivers/scsi/ufs/Kconfig             |   1 +
- drivers/scsi/ufs/Makefile            |   4 +-
- drivers/scsi/ufs/ufs-qcom-ice.c      | 245 +++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-qcom.c          |  18 +-
- drivers/scsi/ufs/ufs-qcom.h          |  27 +++
- drivers/scsi/ufs/ufshcd-crypto.c     |  34 ++--
- drivers/scsi/ufs/ufshcd.h            |   3 +
- include/linux/qcom_scm.h             |  19 +++
- 12 files changed, 440 insertions(+), 26 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
-
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index d42302b8889b..dd6b4e596fcf 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -1367,7 +1367,9 @@ system-cache-controller@1100000 {
+ 		ufs_mem_hc: ufshc@1d84000 {
+ 			compatible = "qcom,sdm845-ufshc", "qcom,ufshc",
+ 				     "jedec,ufs-2.0";
+-			reg = <0 0x01d84000 0 0x2500>;
++			reg = <0 0x01d84000 0 0x2500>,
++			      <0 0 0 0>,
++			      <0 0x01d90000 0 0x8000>;
+ 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+ 			phys = <&ufs_mem_phy_lanes>;
+ 			phy-names = "ufsphy";
+@@ -1387,7 +1389,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				"ref_clk",
+ 				"tx_lane0_sync_clk",
+ 				"rx_lane0_sync_clk",
+-				"rx_lane1_sync_clk";
++				"rx_lane1_sync_clk",
++				"ice_core_clk";
+ 			clocks =
+ 				<&gcc GCC_UFS_PHY_AXI_CLK>,
+ 				<&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+@@ -1396,7 +1399,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<&rpmhcc RPMH_CXO_CLK>,
+ 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+ 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+-				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
++				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
++				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
+ 			freq-table-hz =
+ 				<50000000 200000000>,
+ 				<0 0>,
+@@ -1405,7 +1409,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<0 0>,
+ 				<0 0>,
+ 				<0 0>,
+-				<0 0>;
++				<0 0>,
++				<0 300000000>;
+ 
+ 			status = "disabled";
+ 		};
 -- 
 2.25.1
 
