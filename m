@@ -2,52 +2,59 @@ Return-Path: <SRS0=fWC9=4W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2163DC3F2CD
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 04:54:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FDEC3F2D1
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 04:54:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0029F21556
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 04:54:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CD1A208C3
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 04:54:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725880AbgCEEyj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 23:54:39 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:42374 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725875AbgCEEyj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 23:54:39 -0500
-Received: by mail-pf1-f196.google.com with SMTP id f5so2139249pfk.9
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 20:54:38 -0800 (PST)
+        id S1725897AbgCEEyl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 23:54:41 -0500
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:33352 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725875AbgCEEyk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 23:54:40 -0500
+Received: by mail-pl1-f193.google.com with SMTP id ay11so2090197plb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 20:54:40 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=a4arn3+z0djVRoPiaT9H3CuPNjHYfljY/DlqhcnXh7M=;
-        b=it+Z/72UiqvkiWlDAFtHNKEFB7BUjC1uYb9OxjYyDE4LTM/o+ILPQKGq/nMDFIKk4q
-         PgA/HZAvL78+e9McHchcR7ZIXlL1B4DcbB9vj44VofypBitBNK1/PX3FU5+pgPR0UD49
-         zbHP3Hz+hUdDl+8ffg9KgzYjBvqh3xABaA/sqeRSANXpbh+1S+Z63mCEAAVxdn8OcqIx
-         Bzq5Q/Ok3M/SOjXfj7NcD8jEKKF5OP+0leqZ+K97p1x7DvhWl12Z2DMHtYthsvsW3w5F
-         ZIERB0RbejgycchwJPYBhdk/KN52HF2F0wiV4qjeRJ0Zu+XEoEGmNDbNDBfsdVFE9PGM
-         jlUg==
-X-Gm-Message-State: ANhLgQ0FDPb1PWDjrwru8KJaEH4bE/uX7f6DuYfEYke99Zy3vEu0YdB8
-        ZG5LD/w4BbEM0GdNw17XcIE/VGrW
-X-Google-Smtp-Source: ADFU+vtV1IMdaqsmOLB63u8jjXCZKxhnXDzl3VlUHNgeg60klNCowQTRCJZzjesXUmQ+C5MneMd2NA==
-X-Received: by 2002:a63:7c54:: with SMTP id l20mr5709509pgn.158.1583384078045;
-        Wed, 04 Mar 2020 20:54:38 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=lf1QL76ziI65U5gOivbA3x8nMKWkWYV8h3cJoAZMWyI=;
+        b=VhoArE5rgtu5dT0IoCzoSbI1OpoiFjGKJeGbA8j+J2tuyZdezJF8PKM8MBnjZS3HSv
+         tjaw0900BySnxIgt65KApj8lXF5cDL+b6ZwmKlmb7LmihD4Q004Thd+nYqkrdLUbX12R
+         lMKOVyI4sgNjRjNi63ReCQCm0EFDo1jTYq5qHK+WpCOsqcuRNFWhhQiViO1pJmrIDKh7
+         /ygo9sGwwHMuSc1OJdxPPoLvGxrXGhhTKlFwgMVylw6C9qzUUWLQ2LcL5pEj+DzzaY3q
+         r2C4glX0lXf9dWYiZuqkyXSL06fZ4V14ZVszBbbpPLrrQ4gCMNnDtnijt7DEdFpHaW6f
+         OBfw==
+X-Gm-Message-State: ANhLgQ3nhTL67ZFS4XthX3+ZyG6wpsTk/vjx5kpSwnU0Q1/KYQIjAbis
+        PdQdSTCRnbt9ReE5IYspJ9s=
+X-Google-Smtp-Source: ADFU+vtQ9Ru9W8KRLFie6xPAxAW18lA6amhaVma0lg1S+WDHOZiCRRxHjEhxFllhwcJJc3ohe3OpUg==
+X-Received: by 2002:a17:902:7d98:: with SMTP id a24mr6488405plm.307.1583384079632;
+        Wed, 04 Mar 2020 20:54:39 -0800 (PST)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:ec16:4fc:3bb2:cb4a])
-        by smtp.gmail.com with ESMTPSA id y14sm313721pfp.59.2020.03.04.20.54.36
+        by smtp.gmail.com with ESMTPSA id y14sm313721pfp.59.2020.03.04.20.54.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Mar 2020 20:54:37 -0800 (PST)
+        Wed, 04 Mar 2020 20:54:38 -0800 (PST)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v3 0/6] Fix qla2xxx endianness annotations
-Date:   Wed,  4 Mar 2020 20:54:25 -0800
-Message-Id: <20200305045431.30061-1-bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH v3 1/6] qla2xxx: Sort BUILD_BUG_ON() statements alphabetically
+Date:   Wed,  4 Mar 2020 20:54:26 -0800
+Message-Id: <20200305045431.30061-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200305045431.30061-1-bvanassche@acm.org>
+References: <20200305045431.30061-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -55,57 +62,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+Before adding more BUILD_BUG_ON() statements, sort the existing statements
+alphabetically.
 
-This patch series fixes the endianness annotations in the qla2xxx driver.
-Please consider this patch series for the v5.7 kernel.
+Cc: Himanshu Madhani <hmadhani@marvell.com>
+Cc: Quinn Tran <qutran@marvell.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-
-Bart.
-
-Changes compared to v2:
-- Removed one BUILD_BUG_ON() statement.
-
-Changes compared to v1:
-- Left out the raw_smp_processor_id() patch because it may take time to achieve
-  agreement about this patch.
-- Added three patches to this series: two patches for verifying structure size
-  at compile time and one patch for changing function names from upper case to
-  lower case.
-
-Bart Van Assche (6):
-  qla2xxx: Sort BUILD_BUG_ON() statements alphabetically
-  qla2xxx: Add more BUILD_BUG_ON() statements
-  qla2xxx: Fix endianness annotations in header files
-  qla2xxx: Fix endianness annotations in source files
-  qla2xxx: Fix the code that reads from mailbox registers
-  qla2xxx: Change {RD,WRT}_REG_*() function names from upper case into
-    lower case
-
- drivers/scsi/qla2xxx/qla_attr.c    |   3 +-
- drivers/scsi/qla2xxx/qla_bsg.c     |   4 +-
- drivers/scsi/qla2xxx/qla_dbg.c     | 672 +++++++++++++-------------
- drivers/scsi/qla2xxx/qla_dbg.h     | 442 ++++++++---------
- drivers/scsi/qla2xxx/qla_def.h     | 711 ++++++++++++++-------------
- drivers/scsi/qla2xxx/qla_fw.h      | 738 ++++++++++++++---------------
- drivers/scsi/qla2xxx/qla_init.c    | 279 +++++------
- drivers/scsi/qla2xxx/qla_inline.h  |   8 +-
- drivers/scsi/qla2xxx/qla_iocb.c    | 121 ++---
- drivers/scsi/qla2xxx/qla_isr.c     | 217 +++++----
- drivers/scsi/qla2xxx/qla_mbx.c     | 111 +++--
- drivers/scsi/qla2xxx/qla_mr.c      | 111 +++--
- drivers/scsi/qla2xxx/qla_mr.h      |  32 +-
- drivers/scsi/qla2xxx/qla_nvme.c    |  12 +-
- drivers/scsi/qla2xxx/qla_nvme.h    |  46 +-
- drivers/scsi/qla2xxx/qla_nx.c      | 161 +++----
- drivers/scsi/qla2xxx/qla_nx.h      |  36 +-
- drivers/scsi/qla2xxx/qla_nx2.c     |  12 +-
- drivers/scsi/qla2xxx/qla_os.c      | 128 +++--
- drivers/scsi/qla2xxx/qla_sup.c     | 345 +++++++-------
- drivers/scsi/qla2xxx/qla_target.c  |  84 ++--
- drivers/scsi/qla2xxx/qla_target.h  | 208 ++++----
- drivers/scsi/qla2xxx/qla_tmpl.c    |  12 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  14 +
- 24 files changed, 2317 insertions(+), 2190 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3e65b8e9ed47..17d85c4d1e3e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -7858,11 +7858,11 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(struct init_cb_24xx) != 128);
+ 	BUILD_BUG_ON(sizeof(struct init_cb_81xx) != 128);
+ 	BUILD_BUG_ON(sizeof(struct pt_ls4_request) != 64);
++	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
++	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
+ 	BUILD_BUG_ON(sizeof(struct sns_cmd_pkt) != 2064);
+ 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
+ 	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
+-	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
+-	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
+ 
+ 	/* Allocate cache for SRBs. */
+ 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
