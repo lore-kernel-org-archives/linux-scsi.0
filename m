@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4C0EC3F2D2
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 17:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28491C3F2D8
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 17:23:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D31F207FD
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 17:20:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00C3D2072D
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 17:23:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583428846;
+	s=default; t=1583428989;
 	bh=N3h6q8tCGOh4BWQmsC7dtfhBTXK5drPci7XihK3wjb4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=D35WB+OnpQJZxrrWve2HcJmhJr7ipY1PCrOMVT9hq5WrFmslVcAfca1fFg4RANk8B
-	 s4LpAxmZsq7wTcRqw3CK5UWdag2z434wHOqvkh+/QY22jgxYsK9aORITyeu9+HeHnx
-	 YliqNogWocPDfPY7ckXBsAjjm/ofiGelA17B6R2g=
+	b=D0Z/yimrER8aPmf0heYxYF3aJLJwK7fqhisJTlhE0FKXA23136PsXKKdCLuJOy6/H
+	 r9FN1kgCCLt9SxhxDjbHxqHIaQiNRgY2J6853SOI4EokYNpNgrVpP3q6t1WUE2G4rt
+	 UTvNvdqWkXruVaBO1oG5dj5xjQ0FRlC6Lp87QNZw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728297AbgCERUp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 12:20:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41224 "EHLO mail.kernel.org"
+        id S1728078AbgCERW5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Mar 2020 12:22:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39440 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727813AbgCEROt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Mar 2020 12:14:49 -0500
+        id S1727381AbgCERNq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Mar 2020 12:13:46 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AD7B724655;
-        Thu,  5 Mar 2020 17:14:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6A28D207FD;
+        Thu,  5 Mar 2020 17:13:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583428488;
+        s=default; t=1583428426;
         bh=N3h6q8tCGOh4BWQmsC7dtfhBTXK5drPci7XihK3wjb4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZhQxh7Fl1THNBX7IbjD1cjPTXUN+tnRtU+6BzTCX1NJGBVDx7f7XMCiHwCC8gVk9N
-         PkCICv/eYb/VYyTt2feb7N6RmIf2FQM3gPM7DC9Xj/qLhX97uXmpKvKcmlS2EkQmNV
-         TlSb/NTOcxNdFJM3RKY+N8/8OfV3Z2yy611FQKb4=
+        b=j6aBP/V0agNKztaFyOrJ4W8wEe0ADwtKwcOgctjcwH0uDyEVuoQyIJuQl5vGc0zam
+         ubr8rRg9BIU6E9ojjYdrMK5KuiiJSs3X0YabSdlTo9JL4MpER05tlyZcegiBwaUygK
+         3rx5i8/Rdww+R3RKt2hZE14B6mmAsUame5Tz30EQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Igor Druzhinin <igor.druzhinin@citrix.com>,
         Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 23/58] scsi: libfc: free response frame from GPN_ID
-Date:   Thu,  5 Mar 2020 12:13:44 -0500
-Message-Id: <20200305171420.29595-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 27/67] scsi: libfc: free response frame from GPN_ID
+Date:   Thu,  5 Mar 2020 12:12:28 -0500
+Message-Id: <20200305171309.29118-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200305171420.29595-1-sashal@kernel.org>
-References: <20200305171420.29595-1-sashal@kernel.org>
+In-Reply-To: <20200305171309.29118-1-sashal@kernel.org>
+References: <20200305171309.29118-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
