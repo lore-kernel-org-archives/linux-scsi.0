@@ -2,191 +2,76 @@ Return-Path: <SRS0=fWC9=4W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 254A0C3F2CD
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 15:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B72C3F2D7
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 16:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 024AE208CD
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 15:35:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB3312166E
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 16:11:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tow7fovI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726563AbgCEPfe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 10:35:34 -0500
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:56250 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbgCEPfe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 10:35:34 -0500
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: krisman)
-        with ESMTPSA id 2CE24296C4A
-From:   Gabriel Krisman Bertazi <krisman@collabora.com>
-To:     lduncan@suse.com
-Cc:     cleech@redhat.com, martin.petersen@oracle.com,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        kernel@collabora.com, Khazhismel Kumykov <khazhy@google.com>,
-        Junho Ryu <jayr@google.com>
-Subject: [PATCH v2] iscsi: Report connection state on sysfs
-Date:   Thu,  5 Mar 2020 10:35:21 -0500
-Message-Id: <20200305153521.1374259-1-krisman@collabora.com>
-X-Mailer: git-send-email 2.25.0
+        id S1726222AbgCEQLl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Mar 2020 11:11:41 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:40164 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726111AbgCEQLk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 11:11:40 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Uen6VLar276Fa0qz/XOKv1RvuUuLbo9suzCz5NScJNI=; b=tow7fovI56zU/zHIFBvyQFjPvu
+        oxu7I0rkCiFvKuf0jEyycgSOkgif2ymuw5tLBs0Iv2NiEPVqH11+DMB5tD5Y1H5n5aG/6Y8W7Z8/g
+        I9rzwwornx2tBwTtWTg7Jy50rRRciiS730r/9jfMQuw/uB3cN+ipx7Q+YO+vTUh+5OgwpnmMwOvPd
+        xjsFxPMQlR8JlJEeUjcvs7Uk/1Dg1af47nYqVfza4SpnXum9WuKlu4VGLvQsHemNL/GQhsJkzwJID
+        JJsVbxURX6EkP2HNco5kV4mp9mkq4B9IciJaI9mhKj378teu4MbbrEbnSAeqCsMgEfix3nL3UWdSI
+        wvQ8JOIw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j9t63-00054F-6B; Thu, 05 Mar 2020 16:11:39 +0000
+Date:   Thu, 5 Mar 2020 08:11:39 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v7 1/9] block: Keyslot Manager for Inline Encryption
+Message-ID: <20200305161139.GA19270@infradead.org>
+References: <20200221115050.238976-1-satyat@google.com>
+ <20200221115050.238976-2-satyat@google.com>
+ <20200221170434.GA438@infradead.org>
+ <20200221173118.GA30670@infradead.org>
+ <20200227181411.GB877@sol.localdomain>
+ <20200227212512.GA162309@google.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200227212512.GA162309@google.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If an iSCSI connection happens to fail while the daemon isn't
-running (due to a crash or for another reason), the kernel failure
-report is not received.  When the daemon restarts, there is insufficient
-kernel state in sysfs for it to know that this happened.  open-iscsi
-tries to reopen every connection, but on different initiators, we'd like
-to know which connections have failed.
+On Thu, Feb 27, 2020 at 01:25:12PM -0800, Satya Tangirala wrote:
+> I think it does make some sense at least to make the keyslot type opaque
+> to most of the system other than the driver itself (the driver will now
+> have to call a function like blk_ksm_slot_idx_for_keyslot to actually get
+> a keyslot number at the end of the day). Also this way, the keyslot manager
+> can verify that the keyslot passed to blk_ksm_put_slot is actually part of
+> that keyslot manager (and that somebody isn't releasing a slot number that
+> was actually acquired from a different keyslot manager). I don't think
+> it's much benefit or loss either way, but I already switched to passing
+> pointers to struct keyslot around instead of ints, so I'll keep it that
+> way unless you strongly feel that using ints in this case is better
+> than struct keyslot *.
 
-There is session->state, but that has a different lifetime than an iSCSI
-connection, so it doesn't directly relflect the connection state.
-
-Cc: Khazhismel Kumykov <khazhy@google.com>
-Suggested-by: Junho Ryu <jayr@google.com>
-Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
----
- drivers/scsi/libiscsi.c             |  7 +++++-
- drivers/scsi/scsi_transport_iscsi.c | 38 ++++++++++++++++++++++++++++-
- include/scsi/scsi_transport_iscsi.h |  8 ++++++
- 3 files changed, 51 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 70b99c0e2e67..ca488c57ead4 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -3153,13 +3153,18 @@ void iscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
- 
- 	switch (flag) {
- 	case STOP_CONN_RECOVER:
-+		cls_conn->state = ISCSI_CONN_FAILED;
-+		break;
- 	case STOP_CONN_TERM:
--		iscsi_start_session_recovery(session, conn, flag);
-+		cls_conn->state = ISCSI_CONN_DOWN;
- 		break;
- 	default:
- 		iscsi_conn_printk(KERN_ERR, conn,
- 				  "invalid stop flag %d\n", flag);
-+		return;
- 	}
-+
-+	iscsi_start_session_recovery(session, conn, flag);
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_stop);
- 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 17a45716a0fe..9b6bd03b0963 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2276,6 +2276,7 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
- 	INIT_LIST_HEAD(&conn->conn_list_err);
- 	conn->transport = transport;
- 	conn->cid = cid;
-+	conn->state = ISCSI_CONN_DOWN;
- 
- 	/* this is released in the dev's release function */
- 	if (!get_device(&session->dev))
-@@ -3709,8 +3710,11 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		break;
- 	case ISCSI_UEVENT_START_CONN:
- 		conn = iscsi_conn_lookup(ev->u.start_conn.sid, ev->u.start_conn.cid);
--		if (conn)
-+		if (conn) {
- 			ev->r.retcode = transport->start_conn(conn);
-+			if (!ev->r.retcode)
-+				conn->state = ISCSI_CONN_UP;
-+		}
- 		else
- 			err = -EINVAL;
- 		break;
-@@ -3907,6 +3911,35 @@ iscsi_conn_attr(tcp_xmit_wsf, ISCSI_PARAM_TCP_XMIT_WSF);
- iscsi_conn_attr(tcp_recv_wsf, ISCSI_PARAM_TCP_RECV_WSF);
- iscsi_conn_attr(local_ipaddr, ISCSI_PARAM_LOCAL_IPADDR);
- 
-+static const struct {
-+	int value;
-+	char *name;
-+} connection_state_names[] = {
-+	{ISCSI_CONN_UP, "up"},
-+	{ISCSI_CONN_DOWN, "down"},
-+	{ISCSI_CONN_FAILED, "failed"}
-+};
-+
-+static const char *connection_state_name(int state)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(connection_state_names); i++) {
-+		if (connection_state_names[i].value == state)
-+			return connection_state_names[i].name;
-+	}
-+	return NULL;
-+}
-+
-+static ssize_t show_conn_state(struct device *dev,
-+			       struct device_attribute *attr, char *buf)
-+{
-+	struct iscsi_cls_conn *conn = iscsi_dev_to_conn(dev->parent);
-+
-+	return sprintf(buf, "%s\n", connection_state_name(conn->state));
-+}
-+static ISCSI_CLASS_ATTR(conn, state, S_IRUGO, show_conn_state,
-+			NULL);
- 
- #define iscsi_conn_ep_attr_show(param)					\
- static ssize_t show_conn_ep_param_##param(struct device *dev,		\
-@@ -3976,6 +4009,7 @@ static struct attribute *iscsi_conn_attrs[] = {
- 	&dev_attr_conn_tcp_xmit_wsf.attr,
- 	&dev_attr_conn_tcp_recv_wsf.attr,
- 	&dev_attr_conn_local_ipaddr.attr,
-+	&dev_attr_conn_state.attr,
- 	NULL,
- };
- 
-@@ -4047,6 +4081,8 @@ static umode_t iscsi_conn_attr_is_visible(struct kobject *kobj,
- 		param = ISCSI_PARAM_TCP_RECV_WSF;
- 	else if (attr == &dev_attr_conn_local_ipaddr.attr)
- 		param = ISCSI_PARAM_LOCAL_IPADDR;
-+	else if (attr == &dev_attr_conn_state.attr)
-+		return S_IRUGO;
- 	else {
- 		WARN_ONCE(1, "Invalid conn attr");
- 		return 0;
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index fa8814245796..d710cf48b038 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -188,6 +188,13 @@ extern void iscsi_ping_comp_event(uint32_t host_no,
- 				  uint32_t status, uint32_t pid,
- 				  uint32_t data_size, uint8_t *data);
- 
-+/* iscsi class connection state */
-+enum {
-+	ISCSI_CONN_UP = 0,
-+	ISCSI_CONN_DOWN,
-+	ISCSI_CONN_FAILED,
-+};
-+
- struct iscsi_cls_conn {
- 	struct list_head conn_list;	/* item in connlist */
- 	struct list_head conn_list_err;	/* item in connlist_err */
-@@ -198,6 +205,7 @@ struct iscsi_cls_conn {
- 	struct iscsi_endpoint *ep;
- 
- 	struct device dev;		/* sysfs transport/container device */
-+	int state;
- };
- 
- #define iscsi_dev_to_conn(_dev) \
--- 
-2.25.0
-
+Exactly.  This provides a little type safety.
