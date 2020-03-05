@@ -1,96 +1,74 @@
-Return-Path: <SRS0=THiH=4V=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=fWC9=4W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49687C3F2CE
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 23:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EBA9C3F2CD
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 04:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 207E520842
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Mar 2020 23:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57347208CD
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 04:07:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="VdMFZZKY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388468AbgCDXeE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Mar 2020 18:34:04 -0500
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:42306 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388407AbgCDXeE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 18:34:04 -0500
-Received: by mail-pl1-f195.google.com with SMTP id u3so1758699plr.9
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Mar 2020 15:34:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=gykwNNuyk2Q7gDAHD6Zsfoyme0Udz5ys84EX9qpMQOk=;
-        b=G0aQS7ztnIjfDrhQsrj6RJwkhHD3zHLHcP6n4mZSuK6SUvXLvaxDJtBcE8prUyR5gZ
-         xi/733gKDWJ9Cz8IhMqZex4Cm5uC8/g5QS2xNAF+cqUjWBPtxNLHgg9Cs56iaJ/ZT98+
-         eQmhkvcLWaqo1svqZx/l16KMRxXfqnyKsY+fKwhwoqumzuhE0NFHtr1B6P+8Gp2oHnvd
-         jle63a6luA/WVtSGtEhl2ALvUjuJDOaAM1kDgYKqjrwajVF5uAVnFOIZCxlYHuiI+Dx/
-         0yNqzjQvviMi6Sm3euPdYoyXEJ6f4Y5JtFhKmY7XLLpaIxAI9Uqt6psAYhePooAgVWcb
-         xEJA==
-X-Gm-Message-State: ANhLgQ1hw1wSqLyGlcdZ7EbOZwhrjPOf7crEqNVd8SP8FRhty9gEPqpW
-        ST7TDPKRYQBK3KaVOdSSiQE=
-X-Google-Smtp-Source: ADFU+vunIFBzrk2kHVbQsMwIE3QEfJmT24Q9dhH3B40X+8t3UP+gDLx3Fqcy4CfX5s9hMWD5GQKH3g==
-X-Received: by 2002:a17:90a:9515:: with SMTP id t21mr5471524pjo.14.1583364843143;
-        Wed, 04 Mar 2020 15:34:03 -0800 (PST)
-Received: from desktop-bart.svl.corp.google.com ([2620:15c:2cd:202:4308:52a3:24b6:2c60])
-        by smtp.gmail.com with ESMTPSA id j12sm3903714pjd.4.2020.03.04.15.34.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Mar 2020 15:34:02 -0800 (PST)
-Subject: Re: [PATCH] iscsi: Report connection state on sysfs
-To:     open-iscsi@googlegroups.com,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        lduncan@suse.com
-Cc:     cleech@redhat.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, kernel@collabora.com,
-        Khazhismel Kumykov <khazhy@google.com>,
-        Junho Ryu <jayr@google.com>
-References: <20200304225704.1221703-1-krisman@collabora.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <387eebf7-3256-3462-f91d-e42a5de4824d@acm.org>
-Date:   Wed, 4 Mar 2020 15:34:01 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1726191AbgCEEHN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Mar 2020 23:07:13 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:16398 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725893AbgCEEHM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Mar 2020 23:07:12 -0500
+X-UUID: bd3abfec93084a7d8cafadc7aa2a7baf-20200305
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=uT3b+HVjGTui2Fg/xFBgMfnNPkFCcTSrdu3yNux9XCE=;
+        b=VdMFZZKYWKpD6uRDAoui/V6wxNaE4o694Vjkv7ZR/mgYhfOWqAY9TsALjAOAxvx89Cgn6jsXPvO/pzmWAggj0o/EZ3Fs3aG3Tnm3YQ+/jRQcJ3DISVX3FvD/Me4fNrUrxVq3gBHuXFdp0STAxVbOH/oEmQ3F8d5ThMhlNsQVGZU=;
+X-UUID: bd3abfec93084a7d8cafadc7aa2a7baf-20200305
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 963485352; Thu, 05 Mar 2020 12:07:06 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Thu, 5 Mar 2020 12:05:03 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 5 Mar 2020 12:06:20 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 0/4] scsi: ufs: some cleanups and make the delay for host enabling customizable
+Date:   Thu, 5 Mar 2020 12:07:00 +0800
+Message-ID: <20200305040704.10645-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-In-Reply-To: <20200304225704.1221703-1-krisman@collabora.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/4/20 2:57 PM, Gabriel Krisman Bertazi wrote:
-> +static const struct {
-> +	int state;
-> +	char *name;
-> +} connection_state_name[] = {
-> +	{ISCSI_CONN_UP, "up"},
-> +	{ISCSI_CONN_DOWN, "down"},
-> +	{ISCSI_CONN_FAILED, "failed"}
-> +};
-> +
-> +static ssize_t
-> +show_conn_state(struct device *dev, struct device_attribute *attr,
-> +		     char *buf)
-> +{
-> +	struct iscsi_cls_conn *conn = iscsi_dev_to_conn(dev->parent);
-> +
-> +	return sprintf(buf, "%s\n",
-> +		       connection_state_name[conn->state].name);
-> +}
-> +static ISCSI_CLASS_ATTR(conn, state, S_IRUGO, show_conn_state,
-> +			NULL);
+SGksDQoNClRoaXMgcGF0Y2hzZXQgZG8gc29tZSBjbGVhbnVwcyBpbiB1ZnMgaG9zdCBkcml2ZXIg
+YW5kIG1ha2UgdGhlIGRlbGF5IGZvciBob3N0IGVuYWJsaW5nIGN1c3RvbWl6YWJsZQ0KYnkgZGlm
+ZmVyZW50IGNvbnRyb2xsZXIgb3IgdmVuZG9ycy4NCg0KU3RhbmxleSBDaHUgKDQpOg0KICBzY3Np
+OiB1ZnM6IHJlbW92ZSBpbml0X3ByZWZldGNoX2RhdGEgaW4gc3RydWN0IHVmc19oYmENCiAgc2Nz
+aTogdWZzOiB1c2UgYW4gZW51bSBmb3IgaG9zdCBjYXBhYmlsaXRpZXMNCiAgc2NzaTogdWZzOiBh
+bGxvdyBjdXN0b21pemVkIGRlbGF5IGZvciBob3N0IGVuYWJsaW5nDQogIHNjc2k6IHVmcy1tZWRp
+YXRlazogcmVtb3ZlIGRlbGF5IGZvciBob3N0IGVuYWJsaW5nDQoNCiBkcml2ZXJzL3Njc2kvdWZz
+L3Vmcy1tZWRpYXRlay5jIHwgIDIgKw0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgICAgICAg
+fCAyMSArKysrKy0tLS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCAgICAgICB8IDY4ICsr
+KysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLQ0KIDMgZmlsZXMgY2hhbmdlZCwgNTEgaW5z
+ZXJ0aW9ucygrKSwgNDAgZGVsZXRpb25zKC0pDQoNCi0tIA0KMi4xOC4wDQo=
 
-The above code can only work if ISCSI_CONN_UP == 0, ISCSI_CONN_DOWN == 1 
-and ISCSI_CONN_FAILED == 2. Please don't hardcode such a dependency and 
-use designated initializers instead.
-
-Thanks,
-
-Bart.
