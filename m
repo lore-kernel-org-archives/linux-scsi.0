@@ -6,24 +6,23 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44241C3F2CD
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 12:52:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 152BAC3F2D1
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 12:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E6A321556
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 12:52:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB8D32166E
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 12:52:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726079AbgCEMwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 07:52:06 -0500
-Received: from mx2.suse.de ([195.135.220.15]:60850 "EHLO mx2.suse.de"
+        id S1726080AbgCEMwr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Mar 2020 07:52:47 -0500
+Received: from mx2.suse.de ([195.135.220.15]:32826 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725880AbgCEMwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Mar 2020 07:52:06 -0500
+        id S1725989AbgCEMwr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Mar 2020 07:52:47 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id C1DA3B2AF;
-        Thu,  5 Mar 2020 12:52:04 +0000 (UTC)
-Subject: Re: [PATCH RFC v6 05/10] blk-mq: Add support in
- hctx_tags_bitmap_show() for a shared sbitmap
+        by mx2.suse.de (Postfix) with ESMTP id 70B43B2AF;
+        Thu,  5 Mar 2020 12:52:45 +0000 (UTC)
+Subject: Re: [PATCH RFC v6 07/10] scsi: hisi_sas: Switch v3 hw to MQ
 To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
         jejb@linux.ibm.com, martin.petersen@oracle.com,
         ming.lei@redhat.com, bvanassche@acm.org, don.brace@microsemi.com,
@@ -32,14 +31,14 @@ To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
 Cc:     chenxiang66@hisilicon.com, linux-block@vger.kernel.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com
 References: <1583409280-158604-1-git-send-email-john.garry@huawei.com>
- <1583409280-158604-6-git-send-email-john.garry@huawei.com>
+ <1583409280-158604-8-git-send-email-john.garry@huawei.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <14a0a7ec-3d12-64ab-6c10-241cd117a3c4@suse.de>
-Date:   Thu, 5 Mar 2020 13:52:03 +0100
+Message-ID: <ae175f51-3ca4-2413-5854-41bfac325a90@suse.de>
+Date:   Thu, 5 Mar 2020 13:52:43 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <1583409280-158604-6-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1583409280-158604-8-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -49,19 +48,15 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 3/5/20 12:54 PM, John Garry wrote:
-> Since a set-wide shared tag sbitmap may be used, it is no longer valid to
-> examine the per-hctx tagset for getting the active requests for a hctx
-> (when a shared sbitmap is used).
+> Now that the block layer provides a shared tag, we can switch the driver
+> to expose all HW queues.
 > 
-> As such, add support for the shared sbitmap by using an intermediate
-> sbitmap per hctx, iterating all active tags for the specific hctx in the
-> shared sbitmap.
-> 
-> Originally-by: Bart Van Assche <bvanassche@acm.org>
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->   block/blk-mq-debugfs.c | 57 ++++++++++++++++++++++++++++++++++++++++--
->   1 file changed, 55 insertions(+), 2 deletions(-)
+>   drivers/scsi/hisi_sas/hisi_sas.h       |  3 +-
+>   drivers/scsi/hisi_sas/hisi_sas_main.c  | 36 ++++++-----
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 87 +++++++++++---------------
+>   3 files changed, 56 insertions(+), 70 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
