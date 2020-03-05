@@ -2,133 +2,115 @@ Return-Path: <SRS0=fWC9=4W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14925C3F2D1
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 21:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9124C3F2D1
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 21:42:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E91ED20728
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 21:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A60A620870
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Mar 2020 21:42:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726178AbgCEVQM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 16:16:12 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:35909 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbgCEVQM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 16:16:12 -0500
-Received: by mail-pl1-f193.google.com with SMTP id g12so3178914plo.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Mar 2020 13:16:11 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=mRy0QXwPQyZJPqAhJuywWDK9M11rkux+kVjPm7zQzS0=;
-        b=FZdU6E2r0NEdzNwC2KvFYv5E3xT9eSIbhiIOvcbm5c6GuqJH59MFU9Gv34FIDIv975
-         G/UH73EB33qfcCgBJpU2oNaW32vgvpmRN0mV6G8RDlk9s3xKrs303DBbeXDkve7eDoXY
-         vYCaELQao1rgpPhUGaQRRbVxYJVDPMlwYh2yL8ioIgZpEoTgLZbH53xLPx57UwbM5Pr2
-         l0JrR3+XyC/gTIzwcUQ5OX82iT//oaMjFaq9pFmu6skYglm1pUfryxvIl+wUFlg88WDF
-         A5faFGGOXGmwaJGqM4UlMj6irEk6R/S45gU3Rc6iqW6DuS5yWxbCA4UX13z3lffFKj1+
-         kxMg==
-X-Gm-Message-State: ANhLgQ3xy6EGW6oXPTSB/RCvFpv8fkizCw74+KPDENfivtUXsTYuz+0l
-        jb5c25foX8q6yeKx+N31N+Y=
-X-Google-Smtp-Source: ADFU+vveZbE8ake7pQqO0YibzLIkJEnOkBMHlJ2EgU6987ZyTh4GtB4Z90lkmLZrrJqg7IouAuuoQQ==
-X-Received: by 2002:a17:902:2e:: with SMTP id 43mr74899pla.326.1583442970886;
-        Thu, 05 Mar 2020 13:16:10 -0800 (PST)
-Received: from ?IPv6:2620:15c:2c1:200:fb9c:664d:d2ad:c9b5? ([2620:15c:2c1:200:fb9c:664d:d2ad:c9b5])
-        by smtp.gmail.com with ESMTPSA id a36sm32330380pga.32.2020.03.05.13.16.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Mar 2020 13:16:09 -0800 (PST)
-Subject: Re: [PATCH v2] iscsi: Report connection state on sysfs
-To:     open-iscsi@googlegroups.com,
-        Gabriel Krisman Bertazi <krisman@collabora.com>
-Cc:     lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, kernel@collabora.com,
-        Khazhismel Kumykov <khazhy@google.com>,
-        Junho Ryu <jayr@google.com>
-References: <20200305153521.1374259-1-krisman@collabora.com>
- <bc70bd6d-6d13-4d1c-8559-140411e361d9@acm.org> <854kv2bobx.fsf@collabora.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <b2b62579-b2b6-b797-501b-186ac24df399@acm.org>
-Date:   Thu, 5 Mar 2020 13:16:08 -0800
+        id S1726080AbgCEVm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Mar 2020 16:42:58 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:47601 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725991AbgCEVm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Mar 2020 16:42:58 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 1E740204190;
+        Thu,  5 Mar 2020 22:42:55 +0100 (CET)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id mobywGpSBefm; Thu,  5 Mar 2020 22:42:48 +0100 (CET)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id E74B320417C;
+        Thu,  5 Mar 2020 22:42:47 +0100 (CET)
+To:     SCSI development list <linux-scsi@vger.kernel.org>
+Reply-To: dgilbert@interlog.com
+Cc:     Tomas Fasth <tomfa@debian.org>, Martin Pitt <mpitt@debian.org>,
+        David Sommerseth <davids@redhat.com>,
+        Hannes Reinecke <hare@suse.de>, delphij@delphij.net
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] sdparm 1.10 available
+Message-ID: <afdc68bc-3deb-6434-1eec-3570fc6fe64c@interlog.com>
+Date:   Thu, 5 Mar 2020 16:42:46 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <854kv2bobx.fsf@collabora.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/5/20 11:20 AM, Gabriel Krisman Bertazi wrote:
-> Bart Van Assche <bvanassche@acm.org> writes:
-> 
->> On 3/5/20 7:35 AM, Gabriel Krisman Bertazi wrote:
->>> +static const struct {
->>> +	int value;
->>> +	char *name;
->>> +} connection_state_names[] = {
->>> +	{ISCSI_CONN_UP, "up"},
->>> +	{ISCSI_CONN_DOWN, "down"},
->>> +	{ISCSI_CONN_FAILED, "failed"}
->>> +};
->>> +
->>> +static const char *connection_state_name(int state)
->>> +{
->>> +	int i;
->>> +
->>> +	for (i = 0; i < ARRAY_SIZE(connection_state_names); i++) {
->>> +		if (connection_state_names[i].value == state)
->>> +			return connection_state_names[i].name;
->>> +	}
->>> +	return NULL;
->>> +}
->>> +
->>> +static ssize_t show_conn_state(struct device *dev,
->>> +			       struct device_attribute *attr, char *buf)
->>> +{
->>> +	struct iscsi_cls_conn *conn = iscsi_dev_to_conn(dev->parent);
->>> +
->>> +	return sprintf(buf, "%s\n", connection_state_name(conn->state));
->>> +}
->>> +static ISCSI_CLASS_ATTR(conn, state, S_IRUGO, show_conn_state,
->>> +			NULL);
->>
->> What has been changed in v2 compared to v1? Please always include a
->> changelog when posting a new version.
->>
->> Additionally, it seems like the comment I posted on v1 has not been
->> addressed?
-> 
-> Hi Bart,
-> 
-> v2 no longer has the dependency for specific values for the state, as
-> you requested.  It follows the pattern in similar places in the iscsi
-> code.  Why would designated initializers be better than my solution?
+sdparm is a command line utility designed to get and set SCSI device
+parameters (cf hdparm for ATA disks). The parameters are held in
+mode pages. Apart from SCSI devices (e.g. disks, tapes and enclosures)
+sdparm can be used on any device that uses a SCSI command set. sdparm
+also can decode VPD pages including the device identification page.
+Commands to start and stop the media; load and unload removable media
+and some other housekeeping functions are supported. sdparm supports
+the Linux kernel 2.6, 3, 4 and 5 series with ports to FreeBSD, Solaris,
+Android and Windows.
 
-Hi Gabriel,
+For more information and downloads see:
+     http://sg.danny.cz/sg/sdparm.html
 
-How about removing the loop as follows?
+There is a github mirror (or my subversion repository) at:
+     https://github.com/doug-gilbert/sdparm
 
-static const char *const connection_state_names[] = {
-	[ISCSI_CONN_UP]     = "up",
-	[ISCSI_CONN_DOWN]   = "down",
-	[ISCSI_CONN_FAILED] = "failed",
-};
 
-...
-	if ((unsigned)conn->state < ARRAY_SIZE(connection_state_names))
-		return sprintf(buf, "%s\n",
-			connection_state_names[conn->state]);
-	else
-		...
-...
+ChangeLog for sdparm-1.11 [20200303] [svn: r334]
+   - Allow ZBC mode pages to use existing SBC mpages
+     as permitted by zbc2r04 chapter 6.4.1 table 70
+   - add --out_mask=OM option for mode page control
+     bitmask (current, changeable, default and/or saveable)
+   - add --examine option to iterate over mode+vpd pages
+   - add Out of band management control mpage (spl5r01)
+   - expand SAS configure port mode page [0x19,0x2] with
+     configure port mode fields (spl5r07)
+   - accept additional transport acronyms (e.g. ib for srp)
+   - power condition mpage: rename fields IDLE->IDLE_A;
+     STANDBY->STANDBY_Z; ICT->IACT and SCT->SZCT
+   - device configuration extension mpage: expand PEWS
+     field with added PE_UN (PEWS units) field (ssc5r05)
+   - add Zoned block device control mpage (zbc2r04a)
+   - --defaults option can be used twice: reverts all
+     pages to their defaults (new in spc5r11, RTD bit)
+   - vpd: decode TransportIDs in SCSI port page
+     - --all option used twice lists all VPD pages
+     - decode SCSI Feature sets page (spc5r16)
+     - extended inquiry data, sync with spc5r09 + sbc4r11
+     - 3 party copy page improvements including
+       Copy group identifier
+     - block limits and block limit extension VPD pages:
+       add extra info about corner cases
+     - add maximum inquiry|mode_page change logs fields
+       to extended inquiry vpd page (spc5r17)
+     - fully implement Device constituents VPD page
+   - command=capacity with --long force read capacity(16)
+     with full reporting of response
+   - --wscan option: expand bus type to include NVMe
+   - mode page output with -HHH suitable for --inhex=
+   - add flexible geometery page (obsolete) sbc2r00
+   - point svn:externals to rev 843 of sg3_utils [v 1.45]
+   - convert many two valued 'int's to bool
+   - shellcheck corrections on scripts
+   - upgrade automake to version 1.15 (U16.04)
+   - rework configure.ac and src/Makefile.am
+   - add --enable-debug to ./configure
+   - update BSD license from 3 to 2 clause aka FreeBSD
+     license (without reference to FreeBSD project)
+   - debian: bump compat file contents from 7 to 10
 
-Thanks,
+ChangeLog for sdparm-1.10 [20160222] [svn: r279]
+....
 
-Bart.
+
+Doug Gilbert
+
