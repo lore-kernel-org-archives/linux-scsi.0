@@ -5,224 +5,211 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A7F8C10F25
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 15:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4748BC10DCE
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 15:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8F6520848
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 15:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 172D420409
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 15:10:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qFmS+w6H"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Kq00mnAm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbgCFPK2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Mar 2020 10:10:28 -0500
-Received: from mailout4.samsung.com ([203.254.224.34]:29510 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727069AbgCFPK2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2020 10:10:28 -0500
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200306151026epoutp046d29b858ccc1de2576037613bcb041bf~5v50_S5Me2389923899epoutp04a
-        for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2020 15:10:26 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200306151026epoutp046d29b858ccc1de2576037613bcb041bf~5v50_S5Me2389923899epoutp04a
+        id S1727089AbgCFPKc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Mar 2020 10:10:32 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:43626 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727085AbgCFPKb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2020 10:10:31 -0500
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200306151030epoutp027068554ca263aee2feffe931e9084ef4~5v54wDYv71874718747epoutp02s
+        for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2020 15:10:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200306151030epoutp027068554ca263aee2feffe931e9084ef4~5v54wDYv71874718747epoutp02s
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1583507426;
-        bh=0ogGbMGNWOHu+IsRUj8FqJ93r0JgndC1MhFG6E6RBAQ=;
+        s=mail20170921; t=1583507430;
+        bh=Uv4cai3N/6iGiG+frqpXISdvuE4Q8SV0BV8u68PjRt8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qFmS+w6Hkb4qQHLj9MshPwF7zHir2kvNgbPkfoMNvFAlpt7MG6z3ZZnZ+LCeGVbGD
-         Ywmok/iNklWa8qS5Z9jg7m7tF4aF+GENJFft4wrUvf4gprPbqv8A2ImVwugVn4JPDK
-         J3EqbJ3vGQ893vBDcgay53W3xzStX80oC6wwfCSw=
+        b=Kq00mnAmiD9l5aDJ5ccZR+Vs23eWp7KCyLgmVwP0dtZ3mJBn3+aO3S+zhQmFiIW64
+         34M1JmtFt6wzk+XBEhgQeo8aHE26ErPy11+Mh4/UzfzIsIYKLPYZBlFSkvRgpjPPmB
+         CEpkTseasmVYmSqpuMeDmyOKYJzMZJ5RCDtwKqZw=
 Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
         epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20200306151025epcas5p32dc1ab8dffc322c12c9640a1bba20e3c~5v50P6e4G2035720357epcas5p3z;
-        Fri,  6 Mar 2020 15:10:25 +0000 (GMT)
+        20200306151028epcas5p3d69f1b1620a40b2f7212e02e8c875574~5v53gmdVe2035720357epcas5p32;
+        Fri,  6 Mar 2020 15:10:28 +0000 (GMT)
 Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
         epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        11.14.20197.1E7626E5; Sat,  7 Mar 2020 00:10:25 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-        20200306151024epcas5p491fdbd529fee8ed788de9cd318a80def~5v5z6l3uQ0468404684epcas5p4f;
-        Fri,  6 Mar 2020 15:10:24 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200306151024epsmtrp182a30e4addcb08620c2b6f1dafbfbc4d~5v5z535Yb0147001470epsmtrp1j;
-        Fri,  6 Mar 2020 15:10:24 +0000 (GMT)
-X-AuditID: b6c32a4a-769ff70000014ee5-05-5e6267e147ef
+        E1.14.20197.4E7626E5; Sat,  7 Mar 2020 00:10:28 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200306151028epcas5p25ec9ccacedf49fa47ebb94bcdff42c54~5v53IuP8v2890128901epcas5p2K;
+        Fri,  6 Mar 2020 15:10:28 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200306151028epsmtrp25864d648bdb966e92e8102eb7bc59ca5~5v53H-DSy3206832068epsmtrp2g;
+        Fri,  6 Mar 2020 15:10:28 +0000 (GMT)
+X-AuditID: b6c32a4a-781ff70000014ee5-0a-5e6267e496ed
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1C.04.06569.0E7626E5; Sat,  7 Mar 2020 00:10:24 +0900 (KST)
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        50.32.10238.4E7626E5; Sat,  7 Mar 2020 00:10:28 +0900 (KST)
 Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
         [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200306151023epsmtip18a7c33bb365b8a2219f91a65de9de5e8~5v5yeB2_I0035300353epsmtip1c;
-        Fri,  6 Mar 2020 15:10:23 +0000 (GMT)
+        20200306151026epsmtip1e2fe9ac0d6c97df9c3a1f53f7a38116a~5v51p22VU0060400604epsmtip1V;
+        Fri,  6 Mar 2020 15:10:26 +0000 (GMT)
 From:   Alim Akhtar <alim.akhtar@samsung.com>
 To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
         linux-scsi@vger.kernel.org
 Cc:     krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
         kwmad.kim@samsung.com, stanley.chu@mediatek.com,
         cang@codeaurora.org, Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH 3/5] Documentation: devicetree: ufs: Add DT bindings for
- exynos UFS host controller
-Date:   Fri,  6 Mar 2020 20:35:27 +0530
-Message-Id: <20200306150529.3370-4-alim.akhtar@samsung.com>
+Subject: [PATCH 5/5] arm64: dts: Add node for ufs exynos7
+Date:   Fri,  6 Mar 2020 20:35:29 +0530
+Message-Id: <20200306150529.3370-6-alim.akhtar@samsung.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200306150529.3370-1-alim.akhtar@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLIsWRmVeSWpSXmKPExsWy7bCmuu7D9KQ4g/+9vBYP5m1js3j58yqb
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrNIsWRmVeSWpSXmKPExsWy7bCmuu6T9KQ4g0+3tC0ezNvGZvHy51U2
+        i0/rl7FazD9yjtXi/PkN7BY3txxlsei+voPNYvnxf0wWrXuPsFss3XqT0YHL43JfL5PHplWd
+        bB4tJ/ezeHx8eovFo2/LKkaPz5vkPNoPdDMFsEdx2aSk5mSWpRbp2yVwZZxoOspasFO64ljT
+        OtYGxjeiXYycHBICJhJfv61i62Lk4hAS2M0oMW3mbnYI5xOjxMEZr5khnG+MEveur2GCafly
+        oYkVxBYS2Mso8XVqMURRC5PE8y+b2UESbALaEnenbwFrEBEIkLj0/iDYDmaBrYwSrdeWABVx
+        cAgLWErs++INUsMioCqx6MQkVpAwr4C1xMNuR4hd8hKrNxxgBrE5BWwkfiy6BXaQhMABNonZ
+        vyezQhS5SMx/vYAdwhaWeHV8C5QtJfH53V42kJkSAtkSPbuMIcI1EkvnHWOBsO0lDlyZwwJS
+        wiygKbF+lz5ImFmAT6L39xMmiE5eiY42IYhqVYnmd1ehOqUlJnZ3Qx3gIbH6/WI2SIj0M0rM
+        PSY9gVF2FsLQBYyMqxglUwuKc9NTi00LjPJSy/WKE3OLS/PS9ZLzczcxgpOEltcOxmXnfA4x
+        CnAwKvHwOlgnxQmxJpYVV+YeYpTgYFYS4RU2jY8T4k1JrKxKLcqPLyrNSS0+xCjNwaIkzjuJ
+        9WqMkEB6YklqdmpqQWoRTJaJg1OqgXH+VK7T6/+zV3VNSf9y6W/LhPBpNitbi7WqHO/zPjCf
+        zmTQKBh41qC9wvCd2rz+81HshquWHIt+smTPBXHr/wf0hE4WBHXprD+1ecu8jyfk5ZMuNBzm
+        /H2h5JjKDpZFjw99WKawzEJgjmfBixsNDK0TPMtCU1fKnvxRLi9w+NLXS0kd3N7Rhz4qsRRn
+        JBpqMRcVJwIAH12Hpw4DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDLMWRmVeSWpSXmKPExsWy7bCSnO6T9KQ4g/5DQhYP5m1js3j58yqb
         xaf1y1gt5h85x2px/vwGdoubW46yWHRf38Fmsfz4PyaL1r1H2C2Wbr3J6MDlcbmvl8lj06pO
-        No+Wk/tZPD4+vcXi0bdlFaPH501yHu0HupkC2KO4bFJSczLLUov07RK4Mnof7mcp2KJdMfnH
-        adYGxulKXYycHBICJhLP5q9hA7GFBHYzSvQu0YKwPzFKfF3p0MXIBWR/Y5RY1DuXEaZhXuMa
-        JojEXkaJ+Q1fGSGcFiaJtR23WEGq2AS0Je5O38IEYosIBEhcen+QDaSIWWAro0TrtSXsIAlh
-        gVSJzkPfwRpYBFQl7j0+AtbAK2AtcXnbPWaIdfISqzccALM5BWwkfiy6xQwySELgCJvEx+X7
-        mCCKXCTuP+9ig7CFJV4d38IOYUtJvOxvA7I5gOxsiZ5dxhDhGoml846xQNj2EgeuzGEBKWEW
-        0JRYv0sfJMwswCfR+/sJE0Qnr0RHmxBEtapE87urUJ3SEhO7u1khbA+Jvq4NzJBw6GeU2LPj
-        HNMERtlZCFMXMDKuYpRMLSjOTU8tNi0wykst1ytOzC0uzUvXS87P3cQIThRaXjsYl53zOcQo
-        wMGoxMPrYJ0UJ8SaWFZcmXuIUYKDWUmEV9g0Pk6INyWxsiq1KD++qDQntfgQozQHi5I47yTW
-        qzFCAumJJanZqakFqUUwWSYOTqkGxgXP0uZubW7g6ZjO7KAwUSfBXXb3JR62/hKGdYtqD8iL
-        npr76MijJaa17qEuz/oe5fXVuNUlTM7kCjV+mjv7w38/YQG1eovco8EP7fexVF6yafh+d+HG
-        kqkaBRzsz/Nuu795s//FqXo9tWeTPibMi58YlfNV/u7SA6eyo3Vec+/lXB/ZELrimRJLcUai
-        oRZzUXEiAJChfBgQAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHLMWRmVeSWpSXmKPExsWy7bCSnO6D9KQ4g+ftphYP5m1js3j58yqb
-        xaf1y1gt5h85x2px/vwGdoubW46yWHRf38Fmsfz4PyaL1r1H2C2Wbr3J6MDlcbmvl8lj06pO
-        No+Wk/tZPD4+vcXi0bdlFaPH501yHu0HupkC2KO4bFJSczLLUov07RK4Mnof7mcp2KJdMfnH
-        adYGxulKXYycHBICJhLzGtcwdTFycQgJ7GaUeHx8LztEQlri+sYJULawxMp/z9khipqYJBbf
-        O8oCkmAT0Ja4O30LE4gtIhAkcW/NWlaQImaBvYwSm48eYwVJCAskSzy5sp8ZxGYRUJW49/gI
-        WAOvgLXE5W33mCE2yEus3nAAzOYUsJH4segWmC0EVHN+1gb2CYx8CxgZVjFKphYU56bnFhsW
-        GOWllusVJ+YWl+al6yXn525iBIeqltYOxhMn4g8xCnAwKvHwOlgnxQmxJpYVV+YeYpTgYFYS
-        4RU2jY8T4k1JrKxKLcqPLyrNSS0+xCjNwaIkziuffyxSSCA9sSQ1OzW1ILUIJsvEwSnVwJg5
-        e9rU55NfblmveeV61vsrDKuEpKM+uHFFlp3PWZ5fVpubJBwka7FTvnVdbG/3owKZwPOcu1/y
-        Hr5gvmH97NatVhdjP6+Mu9N7aeV2we+OvpaHllvfqw21fP+YTWv2il5vFwX38HtSu6OZ1KtY
-        5vz++uH05IZm95WfZs/XDMgSEpvx7Gj7gkYlluKMREMt5qLiRAB+AE/ZUQIAAA==
-X-CMS-MailID: 20200306151024epcas5p491fdbd529fee8ed788de9cd318a80def
+        No+Wk/tZPD4+vcXi0bdlFaPH501yHu0HupkC2KO4bFJSczLLUov07RK4Mk40HWUt2Cldcaxp
+        HWsD4xvRLkZODgkBE4kvF5pYuxi5OIQEdjNKvF/fxAKRkJa4vnECO4QtLLHy33N2iKImJokf
+        U68xgiTYBLQl7k7fwgRiiwgESdxbsxZsErPAXkaJzUePATkcHMIClhL7vniD1LAIqEosOjEJ
+        LMwrYC3xsNsRYr68xOoNB5hBbE4BG4kfi26B2UJAJednbWCfwMi3gJFhFaNkakFxbnpusWGB
+        YV5quV5xYm5xaV66XnJ+7iZGcJhqae5gvLwk/hCjAAejEg/vDNukOCHWxLLiytxDjBIczEoi
+        vMKm8XFCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeZ/mHYsUEkhPLEnNTk0tSC2CyTJxcEo1MDKw
+        aq68tuLifalXRqmGte5WC7fGLRG62lHenxtp4L4xQ6Ng+aHDCbarMyR27b0dc+8C74LJLi2z
+        v1XlmTK8eausofVrjnZELfsTXtM/R4U/M3NsTX/te+2aVG+QwkE9n4V5aUn5uy6ULL6/6Mrx
+        BlOTWS/YWxgMbxxrDLm14ibfCx3O/9amIkosxRmJhlrMRcWJADQw0yJPAgAA
+X-CMS-MailID: 20200306151028epcas5p25ec9ccacedf49fa47ebb94bcdff42c54
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
-X-CMS-RootMailID: 20200306151024epcas5p491fdbd529fee8ed788de9cd318a80def
+X-CMS-RootMailID: 20200306151028epcas5p25ec9ccacedf49fa47ebb94bcdff42c54
 References: <20200306150529.3370-1-alim.akhtar@samsung.com>
-        <CGME20200306151024epcas5p491fdbd529fee8ed788de9cd318a80def@epcas5p4.samsung.com>
+        <CGME20200306151028epcas5p25ec9ccacedf49fa47ebb94bcdff42c54@epcas5p2.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This adds Exynos Universal Flash Storage (UFS) Host Controller DT bindings.
+Adding dt node foe UFS and UFS-PHY for exynos7 SoC.
 
-Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
 Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- .../devicetree/bindings/ufs/ufs-exynos.txt    | 104 ++++++++++++++++++
- 1 file changed, 104 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ .../boot/dts/exynos/exynos7-espresso.dts      | 16 ++++++
+ arch/arm64/boot/dts/exynos/exynos7.dtsi       | 56 ++++++++++++++++++-
+ 2 files changed, 70 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-exynos.txt b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
-new file mode 100644
-index 000000000000..08e2d1497b1b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
-@@ -0,0 +1,104 @@
-+* Exynos Universal Flash Storage (UFS) Host Controller
+diff --git a/arch/arm64/boot/dts/exynos/exynos7-espresso.dts b/arch/arm64/boot/dts/exynos/exynos7-espresso.dts
+index 7af288fa9475..dee5a3ae7de3 100644
+--- a/arch/arm64/boot/dts/exynos/exynos7-espresso.dts
++++ b/arch/arm64/boot/dts/exynos/exynos7-espresso.dts
+@@ -410,3 +410,19 @@
+ 	vbus-supply = <&usb30_vbus_reg>;
+ 	vbus-boost-supply = <&usb3drd_boost_5v>;
+ };
 +
-+UFSHC nodes are defined to describe on-chip UFS host controllers.
-+Each UFS controller instance should have its own node.
++&ufs {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&ufs_rst_n &ufs_refclk_out>;
++	ufs,pwr-attr-mode = "FAST";
++	ufs,pwr-attr-lane = <2>;
++	ufs,pwr-attr-gear = <2>;
++	ufs,pwr-attr-hs-series = "HS_rate_b";
++	ufs-rx-adv-fine-gran-sup_en = <1>;
++	ufs-rx-adv-fine-gran-step = <3>;
++	ufs-rx-adv-min-activate-time-cap = <9>;
++	ufs-pa-granularity = <6>;
++	ufs-pa-tacctivate = <3>;
++	ufs-pa-hibern8time = <20>;
++};
+diff --git a/arch/arm64/boot/dts/exynos/exynos7.dtsi b/arch/arm64/boot/dts/exynos/exynos7.dtsi
+index 5558045637ac..3edf63d18873 100644
+--- a/arch/arm64/boot/dts/exynos/exynos7.dtsi
++++ b/arch/arm64/boot/dts/exynos/exynos7.dtsi
+@@ -220,9 +220,14 @@
+ 			#clock-cells = <1>;
+ 			clocks = <&fin_pll>, <&clock_top1 DOUT_ACLK_FSYS1_200>,
+ 				 <&clock_top1 DOUT_SCLK_MMC0>,
+-				 <&clock_top1 DOUT_SCLK_MMC1>;
++				 <&clock_top1 DOUT_SCLK_MMC1>,
++				 <&clock_top1 DOUT_SCLK_UFSUNIPRO20>,
++				 <&clock_top1 DOUT_SCLK_PHY_FSYS1>,
++				 <&clock_top1 DOUT_SCLK_PHY_FSYS1_26M>;
+ 			clock-names = "fin_pll", "dout_aclk_fsys1_200",
+-				      "dout_sclk_mmc0", "dout_sclk_mmc1";
++				      "dout_sclk_mmc0", "dout_sclk_mmc1",
++				      "dout_sclk_ufsunipro20", "dout_sclk_phy_fsys1",
++				      "dout_sclk_phy_fsys1_26m";
+ 		};
+ 
+ 		serial_0: serial@13630000 {
+@@ -634,6 +639,53 @@
+ 				phy-names = "usb2-phy", "usb3-phy";
+ 			};
+ 		};
 +
-+Required properties:
-+- compatible        : compatible name, contains "samsung,exynos7-ufs"
-+- interrupts        : <interrupt mapping for UFS host controller IRQ>
-+- reg               : Should contain HCI, vendor specific, UNIPRO and
-+		      UFS protector address space
-+- reg-names	    : "hci", "vs_hci", "unipro", "ufsp";
++		ufs: ufs@15570000 {
++			compatible ="samsung,exynos7-ufs";
++			#address-cells = <1>;
++			#size-cells = <1>;
++			ranges;
++			reg =
++				<0x15570000 0x100>,  /* 0: HCI standard */
++				<0x15570100 0x100>,  /* 1: Vendor specificed */
++				<0x15571000 0x200>,  /* 2: UNIPRO */
++				<0x15572000 0x300>;  /* 3: UFS protector */
++			reg-names = "hci", "vs_hci", "unipro", "ufsp";
++			interrupts = <GIC_SPI 200 IRQ_TYPE_LEVEL_HIGH>;
++			clocks =
++				/* core clock */
++				<&clock_fsys1 ACLK_UFS20_LINK>,
++				/* unipro clocks */
++				<&clock_fsys1 SCLK_UFSUNIPRO20_USER>;
++			clock-names =
++				/* core clocks */
++				"core_clk",
++				/* unipro clocks */
++				"sclk_unipro_main";
++			freq-table-hz = <0 0>, <0 0>;
++			pclk-freq-avail-range = <70000000 133000000>;
++			ufs,pwr-local-l2-timer = <8000 28000 20000>;
++			ufs,pwr-remote-l2-timer = <12000 32000 16000>;
++			phys = <&ufs_phy>;
++			phy-names = "ufs-phy";
++			status = "disabled";
++		};
 +
-+Optional properties:
-+- vdd-hba-supply        : phandle to UFS host controller supply regulator node
-+- vcc-supply            : phandle to VCC supply regulator node
-+- vccq-supply           : phandle to VCCQ supply regulator node
-+- vccq2-supply          : phandle to VCCQ2 supply regulator node
-+- vcc-supply-1p8        : For embedded UFS devices, valid VCC range is 1.7-1.95V
-+                          or 2.7-3.6V. This boolean property when set, specifies
-+			  to use low voltage range of 1.7-1.95V. Note for external
-+			  UFS cards this property is invalid and valid VCC range is
-+			  always 2.7-3.6V.
-+- vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
-+- vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
-+- vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
-+- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
-+
-+- clocks                : List of phandle and clock specifier pairs
-+- clock-names           : List of clock input name strings sorted in the same
-+                          order as the clocks property.
-+			  "core", "sclk_unipro_main", "ref" and ref_parent
-+
-+- freq-table-hz		: Array of <min max> operating frequencies stored in the same
-+			  order as the clocks property. If this property is not
-+			  defined or a value in the array is "0" then it is assumed
-+			  that the frequency is set by the parent clock or a
-+			  fixed rate clock source.
-+- pclk-freq-avail-range : specifies available frequency range(min/max) for APB clock
-+- ufs,pwr-attr-mode : specifies mode value for power mode change, possible values are
-+			"FAST", "SLOW", "FAST_auto" and "SLOW_auto"
-+- ufs,pwr-attr-lane : specifies lane count value for power mode change
-+		      allowed values are 1 or 2
-+- ufs,pwr-attr-gear : specifies gear count value for power mode change
-+		      allowed values are 1 or 2
-+- ufs,pwr-attr-hs-series : specifies HS rate series for power mode change
-+			   can be one of "HS_rate_b" or "HS_rate_a"
-+- ufs,pwr-local-l2-timer : specifies array of local UNIPRO L2 timer values
-+			   3 timers supported
-+			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
-+- ufs,pwr-remote-l2-timer : specifies array of remote UNIPRO L2 timer values
-+			   3 timers supported
-+			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
-+- ufs-rx-adv-fine-gran-sup_en : specifies support of fine granularity of MPHY,
-+			      this is a boolean property.
-+- ufs-rx-adv-fine-gran-step : specifies granularity steps of MPHY,
-+			      allowed step size is 0 to 3
-+- ufs-rx-adv-min-activate-time-cap : specifies rx advanced minimum activate time of MPHY
-+				     range is 1 to 9
-+- ufs-pa-granularity : specifies Granularity for PA_TActivate and PA_Hibern8Time
-+- ufs-pa-tacctivate : specifies time to wake-up remote M-RX
-+- ufs-pa-hibern8time : specifies minimum time to wait in HIBERN8 state
-+
-+Note: If above properties are not defined it can be assumed that the supply
-+regulators or clocks are always on.
-+
-+Example:
-+	ufshc@0x15570000 {
-+		compatible = "samsung,exynos7-ufs";
-+		reg = <0x15570000 0x100>,
-+		      <0x15570100 0x100>,
-+		      <0x15571000 0x200>,
-+		      <0x15572000 0x300>;
-+		reg-names = "hci", "vs_hci", "unipro", "ufsp";
-+		interrupts = <0 200 0>;
-+
-+		vdd-hba-supply = <&xxx_reg0>;
-+		vdd-hba-fixed-regulator;
-+		vcc-supply = <&xxx_reg1>;
-+		vcc-supply-1p8;
-+		vccq-supply = <&xxx_reg2>;
-+		vccq2-supply = <&xxx_reg3>;
-+		vcc-max-microamp = 500000;
-+		vccq-max-microamp = 200000;
-+		vccq2-max-microamp = 200000;
-+
-+		clocks = <&core 0>, <&ref 0>, <&iface 0>;
-+		clock-names = "core", "sclk_unipro_main", "ref", "ref_parent";
-+		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>, <0 0>;
-+
-+		pclk-freq-avail-range = <70000000 133000000>;
-+
-+		ufs,pwr-attr-mode = "FAST";
-+		ufs,pwr-attr-lane = <2>;
-+		ufs,pwr-attr-gear = <2>;
-+		ufs,pwr-attr-hs-series = "HS_rate_b";
-+		ufs,pwr-local-l2-timer = <8000 28000 20000>;
-+		ufs,pwr-remote-l2-timer = <12000 32000 16000>;
-+		ufs-rx-adv-fine-gran-sup_en = <1>;
-+		ufs-rx-adv-fine-gran-step = <3>;
-+		ufs-rx-adv-min-activate-time-cap = <9>;
-+		ufs-pa-granularity = <6>;
-+		ufs-pa-tacctivate = <6>;
-+		ufs-pa-hibern8time = <20>;
-+	};
++		ufs_phy: ufs-phy@0x15571800 {
++			compatible = "samsung,exynos7-ufs-phy";
++			reg = <0x15571800 0x240>;
++			reg-names = "phy-pma";
++			samsung,pmu-syscon = <&pmu_system_controller>;
++			#phy-cells = <0>;
++			clocks =
++				/* refclk clocks */
++				<&clock_fsys1 MOUT_FSYS1_PHYCLK_SEL1>,
++				<&clock_top1 CLK_SCLK_PHY_FSYS1_26M>;
++			clock-names =
++				/* refclk clocks */
++				"ref_clk_parent",
++				"ref_clk";
++		};
+ 	};
+ 
+ 	timer {
 -- 
 2.17.1
 
