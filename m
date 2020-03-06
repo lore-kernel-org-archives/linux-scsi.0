@@ -2,115 +2,118 @@ Return-Path: <SRS0=edO9=4X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14DABC3F2D7
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E30C10DCE
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 10:30:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1D1B20848
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D6CA2084E
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 10:30:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Bzb0Uvt1"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="V2SwrQ6Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726682AbgCFE7i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 23:59:38 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:43136 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726563AbgCFE7i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 23:59:38 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1583470777; h=References: In-Reply-To: References:
- In-Reply-To: Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=KA5SegCo5AW0cExJCz9BWH9qh1K5CDu6sI3vMXYPwJc=; b=Bzb0Uvt1U6rsfQONC6P6Wj2z11Ed/IV1uznJr9/rMTp62kphjiqMDyLOLWVMFI861mATKlMN
- 63Ym765eiO5xxxhp0QjvdcWUygTSkFxhm+6ddtO/8WVbdOom5HRJzui3r+Hdx49McOSMsGWH
- Cxop/Ae4rfi1yqd22OBUHxLg+fs=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e61d8aa.7f0c1fbbc730-smtp-out-n05;
- Fri, 06 Mar 2020 04:59:22 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AB05DC4479F; Fri,  6 Mar 2020 04:59:21 +0000 (UTC)
-Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7CFA7C4479C;
-        Fri,  6 Mar 2020 04:59:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7CFA7C4479C
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=nguyenb@codeaurora.org
-From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
-To:     ulf.hansson@linaro.org, robh+dt@kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     linux-mmc@vger.kernel.org, asutoshd@codeaurora.org,
-        cang@codeaurora.org, Sahitya Tummala <stummala@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        "Bao D. Nguyen" <nguyenb@codeaurora.org>
-Subject: [PATCH v2 4/4] mmc: core: update host->card after getting RCA for SD card
-Date:   Thu,  5 Mar 2020 20:58:18 -0800
-Message-Id: <ca874be0c6eea046d82dc85d66d4665d266cf8c9.1583470026.git.nguyenb@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <cover.1583470026.git.nguyenb@codeaurora.org>
-References: <cover.1583470026.git.nguyenb@codeaurora.org>
-In-Reply-To: <cover.1583470026.git.nguyenb@codeaurora.org>
-References: <cover.1583470026.git.nguyenb@codeaurora.org>
+        id S1726359AbgCFKae (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Mar 2020 05:30:34 -0500
+Received: from mail-vk1-f196.google.com ([209.85.221.196]:40730 "EHLO
+        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726171AbgCFKae (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2020 05:30:34 -0500
+Received: by mail-vk1-f196.google.com with SMTP id c129so463102vkh.7
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2020 02:30:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CiEHFDX5XCyqxsRPXe0c69an10+KUtnxfdeFDLtN22M=;
+        b=V2SwrQ6Q37K/It9fEqHQK6Y8UWzqPhz/RSVXNYUeuROPCNxIbb9/k4K6yvE4eVGDYW
+         iV5qCHDlAmewh4x9xJbTaCqzzGFohDhizaCy3ObP5BKdc2Upw4tDFyK06gIPelY16BA/
+         pCcRC0HOFVb4s+Mxl5/fqSGcObERGaK0Cde6iIlpL8Ptk4INIQVE6AHOfB7FpIKTwVXN
+         KZOdzUeKKvgu7YvJdD2VXAvAo0AJSTytWC5FSP7m6jVQKw/n6OOu7nUSh5Jyy6Y7gCGy
+         YMhm4rPm0cD974+PETJ2dT8uQZzjsAEiwHJpwNA+WOmlDkSXXMNDvJ2byLcd8jBCCwYn
+         qhZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=CiEHFDX5XCyqxsRPXe0c69an10+KUtnxfdeFDLtN22M=;
+        b=pgIkTDGfOMpCRJ53ugGdaNQ+mxUvBbXwEZ45W6iWZGBps1C2JxJ2bcfoL/5sJJWNxa
+         UIWqCaOpOmhsK1FVjnvkB/d6+m4C9OpkWrqGahQFz9LRVq6uiwXlTdCBokAb1kvG6T3G
+         xBTERg1PSEx+AYntUcA/mFvfkcQRIUBZ6ch65PgLY++HB7bNG6S876cWxO7+XfKczi5E
+         bTOABZ6ylX7e8JDQriSYsGI1+jMWgimJkcCa6zcBaq9uXq6JIZ9DWjiLXciz2SbB0q8r
+         MftcLIR8kr4EOmtYuNqM/iUtuEJu5fLjkY1Wfgn0NfEltjSG/NQDhnqhhq4jFnIAdiXy
+         Zb+g==
+X-Gm-Message-State: ANhLgQ3ghibZ/KKyqX/iAPM3FxAPEneX1WUGgqKnVIAgzc0BiJhHPKWJ
+        IG88LETOyfMwdSC4DqcNS3Vk4Ort0Pi/s6LBlMwBamlV
+X-Google-Smtp-Source: ADFU+vuyitkE8/2HLqkIC9+fIzBUR+dCUhlIHfF2nPz3wi79/VK4ACp9VkezVy4BksFiUyzlY1gvtv0RTfFZQrrn6qY=
+X-Received: by 2002:a1f:434d:: with SMTP id q74mr1139900vka.59.1583490633314;
+ Fri, 06 Mar 2020 02:30:33 -0800 (PST)
+MIME-Version: 1.0
+References: <cover.1582839544.git.nguyenb@codeaurora.org> <b328b981a785525b8424b4ab2197dc1ec54417d1.1582839544.git.nguyenb@codeaurora.org>
+ <CAPDyKFrGmXj8HWNz2irUd7i8Cb77U8rLM=V91vcrWE+r7Pqeyg@mail.gmail.com> <fd4bdb88d984a4095215347bc6e80afe@codeaurora.org>
+In-Reply-To: <fd4bdb88d984a4095215347bc6e80afe@codeaurora.org>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Fri, 6 Mar 2020 11:29:55 +0100
+Message-ID: <CAPDyKFq8MWW-3ys9OhQtFepohexD34e9_6X3suYPrAAKnATp6g@mail.gmail.com>
+Subject: Re: [<PATCH v1> 1/4] mmc: core: Add check for NULL pointer access
+To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sahitya Tummala <stummala@codeaurora.org>
+On Fri, 6 Mar 2020 at 04:38, <nguyenb@codeaurora.org> wrote:
+>
+> On 2020-02-27 22:46, Ulf Hansson wrote:
+> > On Thu, 27 Feb 2020 at 23:06, Bao D. Nguyen <nguyenb@codeaurora.org>
+> > wrote:
+> >>
+> >> If the SD card is removed, the mmc_card pointer can be set to NULL
+> >> by the mmc_sd_remove() function. Check mmc_card pointer to avoid NULL
+> >> pointer access.
+> >>
+> >> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
+> >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> >> ---
+> >>  drivers/mmc/core/bus.c  | 5 +++++
+> >>  drivers/mmc/core/core.c | 3 +++
+> >>  2 files changed, 8 insertions(+)
+> >>
+> >> diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
+> >> index 74de3f2..4558f51 100644
+> >> --- a/drivers/mmc/core/bus.c
+> >> +++ b/drivers/mmc/core/bus.c
+> >> @@ -131,6 +131,11 @@ static void mmc_bus_shutdown(struct device *dev)
+> >>         struct mmc_host *host = card->host;
+> >>         int ret;
+> >
+> > This obviously doesn't solve anything as we have already dereferenced
+> > the card->host above. In other words we should hit a NULL pointer
+> > dereference bug then.
+> >
+> > More exactly, how do you trigger this problem?
+> I am porting this fix in the older kernel version 3.4. In that version
+> 3.4, the pointer check was needed.
+> Obviously, this NULL pointer check is not helping anything here as you
+> pointed out. I will remove this check and resubmit.
 
-Make the host->card available before tuning is invoked for SD card.
-In the sdhci_msm_execute_tuning(), we will send CMD13 only if
-host->card is present because it needs the card->rca as its
-argument to be sent. For emmc, host->card is already updated
-immediately after the mmc_alloc_card(). In the similar way,
-this change is for SD card. Without this change, tuning functionality
-will not be able to send CMD13 to make sure the card is ready
-for next data command. If the last tuning command failed
-and we did not send CMD13 to ensure card is in transfer state,
-the next read/write command will fail.
+Don't get me wrong, we have had serious errors in the mmc core before,
+that we needed to fix. Perhaps, the series are addressing some issues
+like this, I don't know.
 
-Signed-off-by: Sahitya Tummala <stummala@codeaurora.org>
-Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/mmc/core/sd.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+The point is, either you need to provide a detailed theoretical proof,
+or a description of how to reproduce the problem. If not, I don't see
+how I can pick any of your patches, sorry.
 
-diff --git a/drivers/mmc/core/sd.c b/drivers/mmc/core/sd.c
-index 76c7add..f0872e3 100644
---- a/drivers/mmc/core/sd.c
-+++ b/drivers/mmc/core/sd.c
-@@ -989,6 +989,7 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
- 		err = mmc_send_relative_addr(host, &card->rca);
- 		if (err)
- 			goto free_card;
-+		host->card = card;
- 	}
- 
- 	if (!oldcard) {
-@@ -1100,12 +1101,13 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
- 		goto free_card;
- 	}
- done:
--	host->card = card;
- 	return 0;
- 
- free_card:
--	if (!oldcard)
-+	if (!oldcard) {
-+		host->card = NULL;
- 		mmc_remove_card(card);
-+	}
- 
- 	return err;
- }
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+[...]
+
+Kind regards
+Uffe
