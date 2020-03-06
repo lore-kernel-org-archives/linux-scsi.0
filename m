@@ -2,114 +2,88 @@ Return-Path: <SRS0=edO9=4X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5645C3F2C6
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 03:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A47DFC3F2D7
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D74120848
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 03:38:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CD502084E
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ulyIuQQv"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="I8D1qrxM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726378AbgCFDil (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 22:38:41 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:23568 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726243AbgCFDil (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 22:38:41 -0500
+        id S1726382AbgCFE7W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Mar 2020 23:59:22 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:42458 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726162AbgCFE7V (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 23:59:21 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1583465920; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Xrqy1Nw8K3ed/VZmjwlPm8bWGmb9xQw2xhPR2bt2Yuo=;
- b=ulyIuQQv81I0GPKY7EvsVSdAmgmd+XhFxCdVSeOyXN+YoUD0Vlfh0ciepvOVjrghSLV5N4LB
- Llr8Wr5ovhNEN2J9WKcSbkxzPXm1YEmG2jn43jxKl88fIXjyz0/HX++JgCmSINEPhynH6c2u
- zEaC1WnvsGbgqa828C8FzliPlCM=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ s=smtp; t=1583470760; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=MBmpXjI5RscO1PxyM0pnTjZMR2IIngyCvzYv0CDL26w=; b=I8D1qrxMReidEtm1aXp63g2G2tSgVWbUt7UKelceEhlWm3MksNqZKLvVvELVxMVI8tgC3Lpo
+ 9y08ma8bYguKNzhV+u2clDHyBu4rk8xKMiKp2Z5aP6kVfhRqnxacdqeAELPqtjBPQ8mF6CyV
+ GgmoKnn2C+l9i4ULOGwd4wvdgjY=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e61c5b0.7fdbdf9d57d8-smtp-out-n01;
- Fri, 06 Mar 2020 03:38:24 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e61d8a8.7f8e83e6bca8-smtp-out-n02;
+ Fri, 06 Mar 2020 04:59:20 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A290CC4479C; Fri,  6 Mar 2020 03:38:24 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id 13BCEC4479F; Fri,  6 Mar 2020 04:59:19 +0000 (UTC)
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1ED85C43383;
-        Fri,  6 Mar 2020 03:38:24 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 05 Mar 2020 19:38:24 -0800
-From:   nguyenb@codeaurora.org
-To:     Ulf Hansson <ulf.hansson@linaro.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-mmc@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>,
-        cang@codeaurora.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>
-Subject: Re: [<PATCH v1> 1/4] mmc: core: Add check for NULL pointer access
-In-Reply-To: <CAPDyKFrGmXj8HWNz2irUd7i8Cb77U8rLM=V91vcrWE+r7Pqeyg@mail.gmail.com>
-References: <cover.1582839544.git.nguyenb@codeaurora.org>
- <b328b981a785525b8424b4ab2197dc1ec54417d1.1582839544.git.nguyenb@codeaurora.org>
- <CAPDyKFrGmXj8HWNz2irUd7i8Cb77U8rLM=V91vcrWE+r7Pqeyg@mail.gmail.com>
-Message-ID: <fd4bdb88d984a4095215347bc6e80afe@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F84BC43383;
+        Fri,  6 Mar 2020 04:59:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4F84BC43383
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=nguyenb@codeaurora.org
+From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
+To:     ulf.hansson@linaro.org, robh+dt@kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     linux-mmc@vger.kernel.org, asutoshd@codeaurora.org,
+        cang@codeaurora.org, "Bao D. Nguyen" <nguyenb@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org
+Subject: [PATCH v2 0/4] SD card bug fixes
+Date:   Thu,  5 Mar 2020 20:58:14 -0800
+Message-Id: <cover.1583470026.git.nguyenb@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-02-27 22:46, Ulf Hansson wrote:
-> On Thu, 27 Feb 2020 at 23:06, Bao D. Nguyen <nguyenb@codeaurora.org> 
-> wrote:
->> 
->> If the SD card is removed, the mmc_card pointer can be set to NULL
->> by the mmc_sd_remove() function. Check mmc_card pointer to avoid NULL
->> pointer access.
->> 
->> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> ---
->>  drivers/mmc/core/bus.c  | 5 +++++
->>  drivers/mmc/core/core.c | 3 +++
->>  2 files changed, 8 insertions(+)
->> 
->> diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
->> index 74de3f2..4558f51 100644
->> --- a/drivers/mmc/core/bus.c
->> +++ b/drivers/mmc/core/bus.c
->> @@ -131,6 +131,11 @@ static void mmc_bus_shutdown(struct device *dev)
->>         struct mmc_host *host = card->host;
->>         int ret;
-> 
-> This obviously doesn't solve anything as we have already dereferenced
-> the card->host above. In other words we should hit a NULL pointer
-> dereference bug then.
-> 
-> More exactly, how do you trigger this problem?
-I am porting this fix in the older kernel version 3.4. In that version 
-3.4, the pointer check was needed.
-Obviously, this NULL pointer check is not helping anything here as you 
-pointed out. I will remove this check and resubmit.
 
-> 
->> 
->> +       if (!card) {
->> +               dev_dbg(dev, "%s: %s: card is NULL\n", dev_name(dev), 
->> __func__);
->> +               return;
->> +       }
->> +
->>         if (dev->driver && drv->shutdown)
->>                 drv->shutdown(card);
->> 
-> 
-> [...]
-> 
-> Kind regards
-> Uffe
+I tried to make some changes earlier in the patch
+[<PATCH v1> 9/9] mmc: sd: Fix trivial SD card issues].
+There were a lot of valid comments asking to clarify
+and separate the fixes into logical patches. With this
+patch series, I am trying to address those comments.
+
+Changes since v1:
+- Addressed Ulf Hansson's comment regarding unnecessary NULL pointer check in the mmc_bus_shutdown(). 
+
+Bao D. Nguyen (1):
+  mmc: core: Add check for NULL pointer access
+
+Ritesh Harjani (1):
+  mmc: core: Make host->card as NULL when card is removed
+
+Sahitya Tummala (1):
+  mmc: core: update host->card after getting RCA for SD card
+
+Subhash Jadavani (1):
+  mmc: core: Attribute the IO wait time properly in
+    mmc_wait_for_req_done()
+
+ drivers/mmc/core/bus.c  | 3 +++
+ drivers/mmc/core/core.c | 5 ++++-
+ drivers/mmc/core/sd.c   | 6 ++++--
+ 3 files changed, 11 insertions(+), 3 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
