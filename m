@@ -2,109 +2,113 @@ Return-Path: <SRS0=edO9=4X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA85C10DCE
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 10:34:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78842C10F25
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 11:12:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 745462084E
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 10:34:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ZLULudkH"
+	by mail.kernel.org (Postfix) with ESMTP id 5BA3320848
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 11:12:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726090AbgCFKep (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Mar 2020 05:34:45 -0500
-Received: from mail-ua1-f67.google.com ([209.85.222.67]:34663 "EHLO
-        mail-ua1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726026AbgCFKep (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Mar 2020 05:34:45 -0500
-Received: by mail-ua1-f67.google.com with SMTP id a18so519574uao.1
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2020 02:34:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GT0ntR2z9Q7DroDptCmU+j0smBwinzmlH6vDJL9WblE=;
-        b=ZLULudkHvXV4ZvbyBv44o2dHue+GCPa6yYvaj0xzRg1d0/bVL4hPnnUTKze44/a3FH
-         ntvxjbf16nm9HhFB8W5vw8AFVFc3obvUxgg7OfGwV1O8G0Jjz6Ry7ZbPbGbLY5kUWbNw
-         3mL+Mr60zF9Xi0LmZma5hKELAjezG7cVcMPeBtNRvTxu1uJi4eT/9ohXb58IlPvPh6/O
-         zX3y17rSqemcWGylhrV61IkDQEfO6fLJcc0VFI/mJSSoF6YQ9dD8PPeC5YwlymwsPNCs
-         68mVTRf/7T3bdFbUIO+z5YVc7VzDqex5xqx+A1gRo64rNaMf/26KVgBRc/joFeoefa1v
-         GlIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GT0ntR2z9Q7DroDptCmU+j0smBwinzmlH6vDJL9WblE=;
-        b=DbBq9oyP+pAkWsSCLjQ9kszw1GdaoQ0DeA1xhMRvVl+6Rft17CTKrb6nt1x4hDRE+v
-         I9LW1pyr3y+2z/F+6dud2nYVd1FG15edkEJVhDhwIXlqQkDZ3gs0hDvONdNC8VghAJHJ
-         jm2jKrlWEoEqTbJyWOe+318uvMvXvWqKdQipZbIIwPhR3O9ZVi3k3WzHTxZwwgX83A5g
-         BV+CrsqsxoYX+7w++suFOSulTvCrqB5ZkgVvnv94zmT83Y04o4Y0W6+pNNCbiNVREQB9
-         M7oWp72DTTv3jb+4G0rB+5G/FK0WvrLIyLrKDneljy0BVJfItkUgsv/v+dGSzHfmMbEl
-         jr4Q==
-X-Gm-Message-State: ANhLgQ3K1isxskj41s+7/38Isb731r6EPU/IxtCqJEgA8mvJDUXRItN0
-        SGIyQNZBIF5ZL0so39KBv9Gen1kdzEst8CxzmOVzpg==
-X-Google-Smtp-Source: ADFU+vsccrpNmQoGmWKgd27yAiKL7MMj3EMEHiKF8xGAVUuUSDA4ognzPZOwSuNT4QQpNLci0+/3pMczEX5GkpQxeBc=
-X-Received: by 2002:ab0:20a:: with SMTP id 10mr1213237uas.19.1583490884114;
- Fri, 06 Mar 2020 02:34:44 -0800 (PST)
+        id S1726171AbgCFLMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Mar 2020 06:12:12 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2514 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726129AbgCFLMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 6 Mar 2020 06:12:12 -0500
+Received: from lhreml703-cah.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 207A84D45544E5D3D868;
+        Fri,  6 Mar 2020 11:12:10 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ lhreml703-cah.china.huawei.com (10.201.108.44) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Fri, 6 Mar 2020 11:12:09 +0000
+Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Fri, 6 Mar 2020
+ 11:12:09 +0000
+Subject: Re: [PATCH RFC v6 06/10] scsi: Add template flag 'host_tagset'
+To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <bvanassche@acm.org>, <hare@suse.de>, <don.brace@microsemi.com>,
+        <sumit.saxena@broadcom.com>, <hch@infradead.org>,
+        <kashyap.desai@broadcom.com>,
+        <shivasharan.srikanteshwara@broadcom.com>
+CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <esc.storagedev@microsemi.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <1583409280-158604-1-git-send-email-john.garry@huawei.com>
+ <1583409280-158604-7-git-send-email-john.garry@huawei.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <f59950ce-9813-3811-d903-75ef493e2d4a@huawei.com>
+Date:   Fri, 6 Mar 2020 11:12:08 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-References: <cover.1583470026.git.nguyenb@codeaurora.org> <a4f22132015159005c41f7cce0b361b363c7b845.1583470026.git.nguyenb@codeaurora.org>
-In-Reply-To: <a4f22132015159005c41f7cce0b361b363c7b845.1583470026.git.nguyenb@codeaurora.org>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Fri, 6 Mar 2020 11:34:08 +0100
-Message-ID: <CAPDyKFreBQPCPxGM3+LZ5rzYW7e1kgm-e5Pgg26XXD76_Fe=TA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/4] mmc: core: Add check for NULL pointer access
-To:     "Bao D. Nguyen" <nguyenb@codeaurora.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        Asutosh Das <asutoshd@codeaurora.org>, cang@codeaurora.org,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1583409280-158604-7-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.45]
+X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 6 Mar 2020 at 05:59, Bao D. Nguyen <nguyenb@codeaurora.org> wrote:
->
-> If the SD card is removed, the mmc_card pointer can be set to NULL
-> by the mmc_sd_remove() function. Check mmc_card pointer to avoid NULL
-> pointer access.
+On 05/03/2020 11:54, John Garry wrote:
+> From: Hannes Reinecke <hare@suse.com>
+> 
+> Add a host template flag 'host_tagset' so hostwide tagset can be
+> shared on multiple reply queues after the SCSI device's reply queue
+> is converted to blk-mq hw queue.
 
-As stated in the other replies, this is just a vague explanation to a
-*potential* problem.
+We should also change the comment about Scsi_host.nr_hw_queues in 
+include/scsi/scsi_host.h also, like this:
 
-Please explain the details for how this problem can occur - or a way
-to reproduce the problem.
+* Note: it is assumed that each hardware queue has a queue depth of
+* can_queue. In other words, the total queue depth per host
+-* is nr_hw_queues * can_queue.
++* is nr_hw_queues * can_queue. However, in the case of .host_tagset
++* being set, the total queue depth per host is can_queue.
 
-Kind regards
-Uffe
-
->
-> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  drivers/mmc/core/core.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
-> index 6b38c19..94441a0 100644
-> --- a/drivers/mmc/core/core.c
-> +++ b/drivers/mmc/core/core.c
-> @@ -666,6 +666,9 @@ void mmc_set_data_timeout(struct mmc_data *data, const struct mmc_card *card)
->  {
->         unsigned int mult;
->
-> +       if (!card)
-> +               return;
+>   drivers/scsi/scsi_lib.c  | 2 ++
+>   include/scsi/scsi_host.h | 3 +++
+>   2 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 610ee41fa54c..84788ccc2672 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1901,6 +1901,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>   	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+>   	shost->tag_set.flags |=
+>   		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
+> +	if (shost->hostt->host_tagset)
+> +		shost->tag_set.flags |= BLK_MQ_F_TAG_HCTX_SHARED;
+>   	shost->tag_set.driver_data = shost;
+>   
+>   	return blk_mq_alloc_tag_set(&shost->tag_set);
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index f577647bf5f2..4fd0af0883dd 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -429,6 +429,9 @@ struct scsi_host_template {
+>   	/* True if the low-level driver supports blk-mq only */
+>   	unsigned force_blk_mq:1;
+>   
+> +	/* True if the host uses host-wide tagspace */
+> +	unsigned host_tagset:1;
 > +
->         /*
->          * SDIO cards only define an upper 1 s limit on access.
->          */
-> --
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
+>   	/*
+>   	 * Countdown for host blocking with no commands outstanding.
+>   	 */
+> 
+
