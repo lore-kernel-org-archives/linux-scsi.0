@@ -7,52 +7,51 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F38EEC3F2D7
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1263EC3F2D8
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6AC820848
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0E3F2084E
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Mar 2020 04:59:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="kGRywfMK"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="FlYFvdcc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726533AbgCFE71 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Mar 2020 23:59:27 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:43136 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726490AbgCFE71 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 23:59:27 -0500
+        id S1726635AbgCFE7f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Mar 2020 23:59:35 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:46971 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726563AbgCFE7f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Mar 2020 23:59:35 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1583470766; h=References: In-Reply-To: References:
+ s=smtp; t=1583470774; h=References: In-Reply-To: References:
  In-Reply-To: Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=5MWQLtho3ToFXSVprC0VQBc7lkh4LWocTd4tRw1QnuM=; b=kGRywfMKsioOp7JQeaWDmvb57aujsONSqlWF6W08AHocmsvAGrfIV6CM3oRFrv1kRF/vCtwk
- 2gj6XV2Uybt6SI5H71nZy1t6JQn3jxzgHwfaQh7jFif/nECjMEqKIMO3wkswH3Uo1lR3N8Ew
- 98TDpb0iTEd/HGMgjJoqcoZj6/4=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ bh=GXpAlZQMJ46d8E+NzPOHbu6ayMMgQpR5QqmL2e60+KI=; b=FlYFvdccdc0SGW0NzLEEmmfsKiXZGch4IJCV92DRL58lEoNtoGBA9ahssNXMnJO3tr3P4bxT
+ voVoYHU8b6Xx+9fPOctfpjdVCleQ990gjl9Jtp3cqdn/H/ChIv/AokiKWlLF/tccs6vrXfZ0
+ cZ/+/Jf2ocxdseAd1z7j/0WSUME=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e61d8a9.7f45f5bef068-smtp-out-n02;
- Fri, 06 Mar 2020 04:59:21 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e61d8a8.7f0c1172a768-smtp-out-n04;
+ Fri, 06 Mar 2020 04:59:20 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B30ADC433A2; Fri,  6 Mar 2020 04:59:20 +0000 (UTC)
+        id A26ABC447A4; Fri,  6 Mar 2020 04:59:19 +0000 (UTC)
 Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EA478C43383;
-        Fri,  6 Mar 2020 04:59:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EA478C43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D0539C433A2;
+        Fri,  6 Mar 2020 04:59:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D0539C433A2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=nguyenb@codeaurora.org
 From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
 To:     ulf.hansson@linaro.org, robh+dt@kernel.org,
         linux-scsi@vger.kernel.org
 Cc:     linux-mmc@vger.kernel.org, asutoshd@codeaurora.org,
-        cang@codeaurora.org, Ritesh Harjani <riteshh@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        "Bao D. Nguyen" <nguyenb@codeaurora.org>
-Subject: [PATCH v2 3/4] mmc: core: Make host->card as NULL when card is removed
-Date:   Thu,  5 Mar 2020 20:58:17 -0800
-Message-Id: <17f39df2f08f6d40b829d115255ddb2d2ef4bc2a.1583470026.git.nguyenb@codeaurora.org>
+        cang@codeaurora.org, "Bao D. Nguyen" <nguyenb@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org
+Subject: [PATCH v2 1/4] mmc: core: Add check for NULL pointer access
+Date:   Thu,  5 Mar 2020 20:58:15 -0800
+Message-Id: <a4f22132015159005c41f7cce0b361b363c7b845.1583470026.git.nguyenb@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <cover.1583470026.git.nguyenb@codeaurora.org>
 References: <cover.1583470026.git.nguyenb@codeaurora.org>
@@ -63,39 +62,30 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ritesh Harjani <riteshh@codeaurora.org>
+If the SD card is removed, the mmc_card pointer can be set to NULL
+by the mmc_sd_remove() function. Check mmc_card pointer to avoid NULL
+pointer access.
 
-Make host->card as NULL when card is removed otherwise
-we do see some kernel crashes in async contexts,
-where host->card is referred (as dangling pointer).
-
-Signed-off-by: Ritesh Harjani <riteshh@codeaurora.org>
 Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
 Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/mmc/core/bus.c | 3 +++
+ drivers/mmc/core/core.c | 3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
-index 74de3f2..e83821c 100644
---- a/drivers/mmc/core/bus.c
-+++ b/drivers/mmc/core/bus.c
-@@ -247,12 +247,15 @@ void mmc_unregister_driver(struct mmc_driver *drv)
- static void mmc_release_card(struct device *dev)
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index 6b38c19..94441a0 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -666,6 +666,9 @@ void mmc_set_data_timeout(struct mmc_data *data, const struct mmc_card *card)
  {
- 	struct mmc_card *card = mmc_dev_to_card(dev);
-+	struct mmc_host *host = card->host;
+ 	unsigned int mult;
  
- 	sdio_free_common_cis(card);
- 
- 	kfree(card->info);
- 
- 	kfree(card);
-+	if (host)
-+		host->card = NULL;
- }
- 
- /*
++	if (!card)
++		return;
++
+ 	/*
+ 	 * SDIO cards only define an upper 1 s limit on access.
+ 	 */
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
