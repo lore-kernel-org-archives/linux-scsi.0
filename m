@@ -2,55 +2,54 @@ Return-Path: <SRS0=held=4Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE6AAC10DCE
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 20:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6121C10F27
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 21:45:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD9372067C
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 20:56:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CE4820684
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 21:45:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726352AbgCHU4H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Mar 2020 16:56:07 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:46182 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726332AbgCHU4G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2020 16:56:06 -0400
-Received: by mail-pf1-f193.google.com with SMTP id c19so1574216pfo.13
-        for <linux-scsi@vger.kernel.org>; Sun, 08 Mar 2020 13:56:06 -0700 (PDT)
+        id S1726380AbgCHVpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Mar 2020 17:45:07 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:34828 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726352AbgCHVpH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2020 17:45:07 -0400
+Received: by mail-pj1-f66.google.com with SMTP id s8so3525606pjq.0;
+        Sun, 08 Mar 2020 14:45:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=AZ7v8grRna6jwbVxs/BIawQiWcEEVjqvd8INa/kzMK4=;
-        b=eqFY69unxS0g8pV5svN7GHlFBQi7axXcjzmEuDAASPjuMotJwY1WsmXXKkPvx5LNy9
-         IW5f/YjWqRsPOqdWLrvVc7f8HnvSlazhe3ZL0zcSYfFnf+Z7I3N6f7KoFl8gkT4v0/K0
-         uGZZqjxW2CWcoJNPBLt66WpCTHpPHG2JnyRsgoEPqJ1yz0PyrmgDUS7NlfefQdLl5pwb
-         HAavMZg78/uHSBTO2aw9KFPgEBdbqHHMkg/LOKsmVumZvomFLWk9u/Y/Jl5DhHMPzFbj
-         vS12yTIFzu5XGhpD7pk9EIsyNbM3TnFQwoKFzyg3jCIWWSajrzOUcUr32I0eTBRljByB
-         njfg==
-X-Gm-Message-State: ANhLgQ3bTH6bm0X2lldGYyxK4maajS9kIWcDzP2Oj40kbotKXEFhdHye
-        MYZl3LlNghv9cZzJeomkyga2t88f
-X-Google-Smtp-Source: ADFU+vvXrNBXw9sBVyFaQ32OXWA/kGUXZiHXacToohvhAfanKd6padNAN6zdCk42RtN2VElpxGAJtw==
-X-Received: by 2002:a63:be09:: with SMTP id l9mr13231435pgf.439.1583700965232;
-        Sun, 08 Mar 2020 13:56:05 -0700 (PDT)
+        bh=4F53RjDlw97BH0lkA5noyK4t9LWwAN0mbB/TrVCqLJk=;
+        b=uBU+wwNtczSi+j5MEBy5stW7msjzRicg3fh9yZ9i+QcOOMyzP5sjiV8UBZtAyN8v77
+         KcJ3MG/jeT++QR1ZfSfnIIWQdCrIkn3rQpVYlLs7fuYZD8oj3ZWXwXLwiIWBtLzlDtYy
+         aaybQgj34Cq2If2ScPJIztOYSgfdRyj813ZBgMZZ3YUzQzkO1xtxMUWrJONzeWoBkQ2K
+         jw1+zMHCxzd+8lXW1G3H0MPMpPO3dYTNlmMWATtuo8IWdxLO9xkJSBtPr2RRXuMGfhdx
+         EJ8mqsp3URgy9HiNy/asQhYwQ5wTwF8kTddjyL8MBj2mG0NnaH7qYOZBFNlzCD2vGAcT
+         YMhg==
+X-Gm-Message-State: ANhLgQ1MNHD69tZG81dzZkEBLfkyqTeKI+nfByKtMuon2jRuSDsTZ/7T
+        Kgcn5Oe617yaOZgWATrotKwQAkpj
+X-Google-Smtp-Source: ADFU+vvaBhjhuQGCIRG4IwUxxrUsYWhp8yen5Bz9m4b9tRd8snmsAWpnuA7fYQ7t9kJ87zTNYZtL8g==
+X-Received: by 2002:a17:902:44d:: with SMTP id 71mr12766896ple.95.1583703905160;
+        Sun, 08 Mar 2020 14:45:05 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:1b6:6e46:9c16:a30? ([2601:647:4000:d7:1b6:6e46:9c16:a30])
-        by smtp.gmail.com with ESMTPSA id y9sm6718888pgo.80.2020.03.08.13.56.03
+        by smtp.gmail.com with ESMTPSA id u12sm42286480pgr.3.2020.03.08.14.45.03
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 08 Mar 2020 13:56:04 -0700 (PDT)
-Subject: Re: [EXT] Re: [PATCH v2 0/4] ufs: Let the SCSI core allocate
- per-command UFS data
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20200123035637.21848-1-bvanassche@acm.org>
- <yq1v9nq5enp.fsf@oracle.com>
- <BN7PR08MB56844C7D0198E487B9F31A03DBE10@BN7PR08MB5684.namprd08.prod.outlook.com>
+        Sun, 08 Mar 2020 14:45:04 -0700 (PDT)
+Subject: Re: [RFC PATCH v2 1/1] scsi: ufs: fix lrbp pointer incorrect
+ initialization issue
+To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200308145648.28675-1-beanhuo@micron.com>
+ <20200308145648.28675-2-beanhuo@micron.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -75,12 +74,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <63f2ab75-6d23-855b-ba26-0c9260f86df9@acm.org>
-Date:   Sun, 8 Mar 2020 13:56:03 -0700
+Message-ID: <e44de0a9-1864-d074-19cd-902a534f5c61@acm.org>
+Date:   Sun, 8 Mar 2020 14:45:02 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <BN7PR08MB56844C7D0198E487B9F31A03DBE10@BN7PR08MB5684.namprd08.prod.outlook.com>
+In-Reply-To: <20200308145648.28675-2-beanhuo@micron.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -89,14 +88,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-08 06:31, Bean Huo (beanhuo) wrote:
-> The 4/4 of this series patch has huge impact on UFS driver, we didn't test yet and thoroughly review it.
-> It has been mainlined. After the  4/4 patch, UFS device probe failed and the root case is the incorrect lrbp.
-> I submitted a workaround patch for this.
-> we can now either withdraw this 4/4 patch, or need fixup patch.
+On 2020-03-08 07:56, Bean Huo wrote:
+> The parameter cmd of ufshcd_init_cmd_priv() wasn't given a correct tag
+> value while the SCSI layer calls back ufshcd_init_cmd_priv(), this results
+> in all pointers of lrbp in UFS driver point to first the lrbp.
+> 
+> As this is just observed, the patch is for reference so others
+> who want to use the latest UFS driver can avoid this issue. Any recommend
+> is welcomed.
 
-Thanks for having reported this. Let's continue the conversation on the
-patch with the proposed fix.
+How about also removing ufshcd_init_cmd_priv(), like in the untested patch
+below?
+
+Thanks,
 
 Bart.
 
+Subject: [PATCH] ufs: Fix LRB initialization
+
+There are two issues with the ufshcd_init_lrb() call in
+ufshcd_init_cmd_priv():
+- cmd->tag is set from inside scsi_mq_prep_fn() and hence is not yet set
+  when ufshcd_init_cmd_priv() is set.
+- Inside ufshcd_init_cmd_priv() the tag can only be derived from the SCSI
+  command pointer if no scheduler has been associated with the UFS block
+  device. If no scheduler is associated with a block device, the
+  relationship between hctx->tags->static_rqs[] and rq->tag is static.
+  If a scheduler has been configured, a single tag can be associated
+  with a different struct request if a request is reallocated.
+
+Fixes: 34656dda81ac ("ufs: Let the SCSI core allocate per-command UFS data")
+---
+ drivers/scsi/ufs/ufshcd.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e987fa3a77c7..1589ba70672f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2473,6 +2473,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+
+ 	WARN_ON_ONCE(!ufshcd_is_scsi(cmd->request));
+
++	ufshcd_init_lrb(hba, lrbp, tag);
++
+ 	if (!down_read_trylock(&hba->clk_scaling_lock))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+
+@@ -2707,6 +2709,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+
+ 	init_completion(&wait);
+ 	lrbp = ufshcd_req_to_lrb(req);
++	ufshcd_init_lrb(hba, lrbp, tag);
+ 	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+ 	if (unlikely(err))
+ 		goto out_put_tag;
+@@ -3504,14 +3507,6 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 	}
+ }
+
+-static int ufshcd_init_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+-{
+-	struct ufs_hba *hba = shost_priv(shost);
+-
+-	ufshcd_init_lrb(hba, scsi_cmd_priv(cmd), cmd->tag);
+-	return 0;
+-}
+-
+ /**
+  * ufshcd_dme_link_startup - Notify Unipro to perform link startup
+  * @hba: per adapter instance
+@@ -5900,6 +5895,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+
+ 	init_completion(&wait);
+ 	lrbp = ufshcd_req_to_lrb(req);
++	ufshcd_init_lrb(hba, lrbp, tag);
+ 	lrbp->sense_bufflen = 0;
+ 	lrbp->sense_buffer = NULL;
+ 	lrbp->task_tag = tag;
+@@ -7180,7 +7176,6 @@ static struct scsi_host_template ufshcd_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= UFSHCD,
+ 	.proc_name		= UFSHCD,
+-	.init_cmd_priv		= ufshcd_init_cmd_priv,
+ 	.queuecommand		= ufshcd_queuecommand,
+ 	.slave_alloc		= ufshcd_slave_alloc,
+ 	.slave_configure	= ufshcd_slave_configure,
