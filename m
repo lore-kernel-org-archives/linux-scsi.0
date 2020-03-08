@@ -2,52 +2,57 @@ Return-Path: <SRS0=held=4Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1771DC10F25
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 02:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 393BCC10F25
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 02:40:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1E23206D5
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 02:23:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A0972075A
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 02:40:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbgCHCXk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Mar 2020 21:23:40 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:40876 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726138AbgCHCXk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2020 21:23:40 -0500
-Received: by mail-pg1-f195.google.com with SMTP id t24so3042551pgj.7;
-        Sat, 07 Mar 2020 18:23:39 -0800 (PST)
+        id S1726339AbgCHCkx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Mar 2020 21:40:53 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:43434 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726284AbgCHCkx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Mar 2020 21:40:53 -0500
+Received: by mail-pf1-f194.google.com with SMTP id c144so3165107pfb.10
+        for <linux-scsi@vger.kernel.org>; Sat, 07 Mar 2020 18:40:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=prRadkOgljmcVFZ0EQ43osDjYhqzZ8ylMyUcgnXfTLI=;
-        b=t+PyG7exAmaLMMrfercqQWvZ3tnDuEiKKh/KGEBxXuJOGbZGnWhE7PpOHipdbHHNxU
-         fZ/CqgNTLSO2RAP5OfK2KXlLcK7xJ7TJ8ZmAmoHW+zkAemmUAHb+7iLh368g9gXc4CEQ
-         bckl9jc2wXTP31Y1WnRiRUFvAebv41YxUoo4ra04eXuRxov4x9uRllu2184woQQseinr
-         27gYbI5Vo6N5me5EV8RIaNzv08YVyLHXVLieQARZ+kCmTIEQN4IuVZI378V47+BAsW8j
-         jQqRVBF+dfan88uzvIdBIoyb/TwnuQW3yDE8ezIUueEYfD43OQSviRHaLYwrnFnLkQH6
-         oS8g==
-X-Gm-Message-State: ANhLgQ0eA16H5TI5QKNZK/TxABZ0EN3qIvZz3uMpOCy6Z+rhr6EYRiJM
-        3N1/6r9PRx9ZHpA3Mn9nKR0=
-X-Google-Smtp-Source: ADFU+vvnClbMcuiLeqrDI5Lh99HdoJJA21S7J1NbeCWVEL9gbVNgSRgtAtCfZna2aKWto3/j77Rs5w==
-X-Received: by 2002:a63:fc1c:: with SMTP id j28mr10281377pgi.289.1583634219265;
-        Sat, 07 Mar 2020 18:23:39 -0800 (PST)
+        bh=wLqJdZTncUBKwxSeBPicWA0zkriCSOscov5Ay2qbZLE=;
+        b=n5RMY8kRiYi2bpn+hrNb8G+0AaAFKYrbULqYNwKX0DVqZ17GgtMTfsbgup5cqAAhkW
+         g5y7XVAPKXMGB2SRWByLAS3Z1Vr9ko1qE9UabMNE15flmZnKIIcg7gryMOhmgEgvW7zx
+         4u1N8cJ3qcxPMVAK/T+W9Kn1B0FUHFQuk7W7NqzmpPSLc2nEoWv5y3nS34n13yBHlZAK
+         dfZagcsuMo5AIpfwXGd5lZ5sRg7IdDnfsMcZU5F17Qos4VnTQLQPnjIvf5nhqFdzXEe3
+         J/gi5SA2Seq2wCsEf0zHSoz4u6VJygeAyuLmZidwZS5dSdXqBLC02cFCvKt7K5amAk8o
+         UFXQ==
+X-Gm-Message-State: ANhLgQ14eMLvbp6opDXhG3zLKs2SrBx+QO3Q1dnd3zwyZyFcmSFP3rVk
+        AJtTePj50FSE+SQnMaTgNXY=
+X-Google-Smtp-Source: ADFU+vt3FHqeQgC0et0yHkgQ+EuhH7MhotrS7sRzFRHYM0kqrx0VQr04kKQqes8+YNUA9Js/pz0JIA==
+X-Received: by 2002:a63:c54b:: with SMTP id g11mr10271139pgd.164.1583635250804;
+        Sat, 07 Mar 2020 18:40:50 -0800 (PST)
 Received: from ?IPv6:2601:647:4000:d7:b9ba:8890:46d5:d60d? ([2601:647:4000:d7:b9ba:8890:46d5:d60d])
-        by smtp.gmail.com with ESMTPSA id ay10sm13897002pjb.37.2020.03.07.18.23.37
+        by smtp.gmail.com with ESMTPSA id b16sm12209195pff.25.2020.03.07.18.40.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 07 Mar 2020 18:23:38 -0800 (PST)
-Subject: Re: [PATCH v2] scsi: aacraid: fix -Wcast-function-type
-To:     Phong Tran <tranmanphong@gmail.com>, aacraid@microsemi.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        keescook@chromium.org
-References: <20200307132103.4687-1-tranmanphong@gmail.com>
- <20200308020143.9351-1-tranmanphong@gmail.com>
+        Sat, 07 Mar 2020 18:40:50 -0800 (PST)
+Subject: Re: [PATCH] fusion: fix if-statement empty body warning
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <ce2233a7-e470-0fc2-f908-75f52c6ec3e1@infradead.org>
+ <d9dbd9ac-4f48-eb3d-b2ff-2cceb255f9e9@infradead.org>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -72,12 +77,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <d18e3d83-d1b5-5979-c2ec-235e4f5095a3@acm.org>
-Date:   Sat, 7 Mar 2020 18:23:37 -0800
+Message-ID: <cbf84b8c-1130-53cf-5416-f4099bbd4ce0@acm.org>
+Date:   Sat, 7 Mar 2020 18:40:48 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200308020143.9351-1-tranmanphong@gmail.com>
+In-Reply-To: <d9dbd9ac-4f48-eb3d-b2ff-2cceb255f9e9@infradead.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -86,17 +91,15 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-07 18:01, Phong Tran wrote:
-> correct usage prototype of callback scsi_cmnd.scsi_done()
-> Report by: https://github.com/KSPP/linux/issues/20
+On 2020-03-07 18:10, Randy Dunlap wrote:
+> Would you (anyone) rather see something different here,
+> such as using pr_debug() or no_printk() instead of an
+> empty do-while loop?
+> 
+> I went with a minimal change, but I can do something else
+> if that is preferred.
 
-This description is confusing. I think a better description would have
-been "Make the aacraid driver -Wcast-function-type clean."
-
-Anyway:
+If "do {} while(0)" is changed into "no_printk x", feel free to add the
+following:
 
 Reviewed-by: Bart van Assche <bvanassche@acm.org>
-
-
-
-
