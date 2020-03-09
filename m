@@ -1,176 +1,166 @@
-Return-Path: <SRS0=held=4Z=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=qdS7=42=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6121C10F27
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 21:45:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64953C10F27
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Mar 2020 07:14:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CE4820684
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Mar 2020 21:45:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EEBE206D5
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Mar 2020 07:14:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbgCHVpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Mar 2020 17:45:07 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:34828 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726352AbgCHVpH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Mar 2020 17:45:07 -0400
-Received: by mail-pj1-f66.google.com with SMTP id s8so3525606pjq.0;
-        Sun, 08 Mar 2020 14:45:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=4F53RjDlw97BH0lkA5noyK4t9LWwAN0mbB/TrVCqLJk=;
-        b=uBU+wwNtczSi+j5MEBy5stW7msjzRicg3fh9yZ9i+QcOOMyzP5sjiV8UBZtAyN8v77
-         KcJ3MG/jeT++QR1ZfSfnIIWQdCrIkn3rQpVYlLs7fuYZD8oj3ZWXwXLwiIWBtLzlDtYy
-         aaybQgj34Cq2If2ScPJIztOYSgfdRyj813ZBgMZZ3YUzQzkO1xtxMUWrJONzeWoBkQ2K
-         jw1+zMHCxzd+8lXW1G3H0MPMpPO3dYTNlmMWATtuo8IWdxLO9xkJSBtPr2RRXuMGfhdx
-         EJ8mqsp3URgy9HiNy/asQhYwQ5wTwF8kTddjyL8MBj2mG0NnaH7qYOZBFNlzCD2vGAcT
-         YMhg==
-X-Gm-Message-State: ANhLgQ1MNHD69tZG81dzZkEBLfkyqTeKI+nfByKtMuon2jRuSDsTZ/7T
-        Kgcn5Oe617yaOZgWATrotKwQAkpj
-X-Google-Smtp-Source: ADFU+vvaBhjhuQGCIRG4IwUxxrUsYWhp8yen5Bz9m4b9tRd8snmsAWpnuA7fYQ7t9kJ87zTNYZtL8g==
-X-Received: by 2002:a17:902:44d:: with SMTP id 71mr12766896ple.95.1583703905160;
-        Sun, 08 Mar 2020 14:45:05 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:1b6:6e46:9c16:a30? ([2601:647:4000:d7:1b6:6e46:9c16:a30])
-        by smtp.gmail.com with ESMTPSA id u12sm42286480pgr.3.2020.03.08.14.45.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 08 Mar 2020 14:45:04 -0700 (PDT)
-Subject: Re: [RFC PATCH v2 1/1] scsi: ufs: fix lrbp pointer incorrect
- initialization issue
-To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200308145648.28675-1-beanhuo@micron.com>
- <20200308145648.28675-2-beanhuo@micron.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <e44de0a9-1864-d074-19cd-902a534f5c61@acm.org>
-Date:   Sun, 8 Mar 2020 14:45:02 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1726071AbgCIHOn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Mar 2020 03:14:43 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60156 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725962AbgCIHOn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Mar 2020 03:14:43 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 6AB2FB314;
+        Mon,  9 Mar 2020 07:14:41 +0000 (UTC)
+Subject: Re: [PATCH v2] fusion: fix if-statement empty body warning
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com
+References: <ff9df31b-c4c1-c942-1cbf-18039e084c8e@infradead.org>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <dc09535d-9d20-7a82-7687-58ba4c39659f@suse.de>
+Date:   Mon, 9 Mar 2020 08:14:40 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200308145648.28675-2-beanhuo@micron.com>
+In-Reply-To: <ff9df31b-c4c1-c942-1cbf-18039e084c8e@infradead.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-08 07:56, Bean Huo wrote:
-> The parameter cmd of ufshcd_init_cmd_priv() wasn't given a correct tag
-> value while the SCSI layer calls back ufshcd_init_cmd_priv(), this results
-> in all pointers of lrbp in UFS driver point to first the lrbp.
+On 3/8/20 6:01 AM, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
 > 
-> As this is just observed, the patch is for reference so others
-> who want to use the latest UFS driver can avoid this issue. Any recommend
-> is welcomed.
+> When driver debugging is not enabled, change the debug print macros
+> to use the no_printk() macro.
+> 
+> This fixes a gcc warning when -Wextra is set:
+> ../drivers/message/fusion/mptlan.c:266:39: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+> 
+> I have verified that there is very little object code change (with
+> gcc 7.5.0). There are a few changes like:
+>   cmp %a,%b
+>   jl $1
+> to
+>   cmp %b,%a
+>   jg $1
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: MPT-FusionLinux.pdl@broadcom.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Bart van Assche <bvanassche@acm.org>
+> ---
+> v2: use no_printk() macro instead of an empty do-while loop (Bart)
+> 
+>  drivers/message/fusion/mptlan.h |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> --- linux-next-20200306.orig/drivers/message/fusion/mptlan.h
+> +++ linux-next-20200306/drivers/message/fusion/mptlan.h
+> @@ -64,6 +64,7 @@
+>  #include <linux/if_arp.h>
+>  #include <linux/init.h>
+>  #include <linux/kernel.h>
+> +#include <linux/printk.h>
+>  #include <linux/slab.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/workqueue.h>
+> @@ -111,13 +112,13 @@ MODULE_DESCRIPTION(LANAME);
+>  #ifdef MPT_LAN_IO_DEBUG
+>  #define dioprintk(x)  printk x
+>  #else
+> -#define dioprintk(x)
+> +#define dioprintk(x)  no_printk x
+>  #endif
+>  
+>  #ifdef MPT_LAN_DEBUG
+>  #define dlprintk(x)  printk x
+>  #else
+> -#define dlprintk(x)
+> +#define dlprintk(x)  no_printk x
+>  #endif
+>  
+>  #define NETDEV_TO_LANPRIV_PTR(d)	((struct mpt_lan_priv *)netdev_priv(d))
+> 
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-How about also removing ufshcd_init_cmd_priv(), like in the untested patch
-below?
+Cheers,
 
-Thanks,
-
-Bart.
-
-Subject: [PATCH] ufs: Fix LRB initialization
-
-There are two issues with the ufshcd_init_lrb() call in
-ufshcd_init_cmd_priv():
-- cmd->tag is set from inside scsi_mq_prep_fn() and hence is not yet set
-  when ufshcd_init_cmd_priv() is set.
-- Inside ufshcd_init_cmd_priv() the tag can only be derived from the SCSI
-  command pointer if no scheduler has been associated with the UFS block
-  device. If no scheduler is associated with a block device, the
-  relationship between hctx->tags->static_rqs[] and rq->tag is static.
-  If a scheduler has been configured, a single tag can be associated
-  with a different struct request if a request is reallocated.
-
-Fixes: 34656dda81ac ("ufs: Let the SCSI core allocate per-command UFS data")
----
- drivers/scsi/ufs/ufshcd.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index e987fa3a77c7..1589ba70672f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2473,6 +2473,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-
- 	WARN_ON_ONCE(!ufshcd_is_scsi(cmd->request));
-
-+	ufshcd_init_lrb(hba, lrbp, tag);
-+
- 	if (!down_read_trylock(&hba->clk_scaling_lock))
- 		return SCSI_MLQUEUE_HOST_BUSY;
-
-@@ -2707,6 +2709,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
-
- 	init_completion(&wait);
- 	lrbp = ufshcd_req_to_lrb(req);
-+	ufshcd_init_lrb(hba, lrbp, tag);
- 	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
- 	if (unlikely(err))
- 		goto out_put_tag;
-@@ -3504,14 +3507,6 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
- 	}
- }
-
--static int ufshcd_init_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
--{
--	struct ufs_hba *hba = shost_priv(shost);
--
--	ufshcd_init_lrb(hba, scsi_cmd_priv(cmd), cmd->tag);
--	return 0;
--}
--
- /**
-  * ufshcd_dme_link_startup - Notify Unipro to perform link startup
-  * @hba: per adapter instance
-@@ -5900,6 +5895,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
-
- 	init_completion(&wait);
- 	lrbp = ufshcd_req_to_lrb(req);
-+	ufshcd_init_lrb(hba, lrbp, tag);
- 	lrbp->sense_bufflen = 0;
- 	lrbp->sense_buffer = NULL;
- 	lrbp->task_tag = tag;
-@@ -7180,7 +7176,6 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= UFSHCD,
- 	.proc_name		= UFSHCD,
--	.init_cmd_priv		= ufshcd_init_cmd_priv,
- 	.queuecommand		= ufshcd_queuecommand,
- 	.slave_alloc		= ufshcd_slave_alloc,
- 	.slave_configure	= ufshcd_slave_configure,
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
