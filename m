@@ -2,112 +2,117 @@ Return-Path: <SRS0=qdS7=42=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35783C10F27
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Mar 2020 14:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28558C10F27
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Mar 2020 15:53:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 159BA20727
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Mar 2020 14:21:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F034C208C3
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Mar 2020 15:53:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y5wSdA1s"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726520AbgCIOVK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Mar 2020 10:21:10 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2527 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726400AbgCIOVK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Mar 2020 10:21:10 -0400
-Received: from lhreml702-cah.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id 5F3D7F9F51FD24917E65;
-        Mon,  9 Mar 2020 14:21:08 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml702-cah.china.huawei.com (10.201.108.43) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Mon, 9 Mar 2020 14:21:07 +0000
-Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 9 Mar 2020
- 14:21:07 +0000
-Subject: Re: [PATCH RFC 00/24] scsi: enable reserved commands for LLDDs
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        <linux-scsi@vger.kernel.org>, "Ming Lei" <ming.lei@redhat.com>
-References: <20190529132901.27645-1-hare@suse.de>
- <e5c2b01a-71d9-ef94-3bf6-0830d866e4cf@huawei.com>
- <801604cd-d51f-2a4a-0e68-b6fcff9c9974@huawei.com>
- <65727403-a390-795f-08ce-581ed4e3f3c2@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <736c92c7-149b-1473-faed-484304e254ab@huawei.com>
-Date:   Mon, 9 Mar 2020 14:21:06 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726979AbgCIPxg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Mar 2020 11:53:36 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:47015 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726973AbgCIPxg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Mar 2020 11:53:36 -0400
+Received: by mail-pg1-f196.google.com with SMTP id y30so4867961pga.13;
+        Mon, 09 Mar 2020 08:53:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=0QOwGWZDroTuYZKUvEz4ThZBE28k0R9BlVBpj2B89t4=;
+        b=Y5wSdA1sUAyKXpPWRphvCWwfduXynvra+u0WNhAfzkPhfNscROVbGY1S/bkaVAtR0d
+         DWMvs8OIREJ2zcLq4NdG0hahwt1OzZt2yRnkl7O5eDMvo3y7kE/ujGZIGHRI7Tdp844p
+         PBvypNHY1xNK/dsjrSC5IB/6EysRnW3R9ehUfxBd8dbMeyyS6mcs+V5dZYdnDZfV0SCY
+         60WQA2j3zEZQ9Sv9UYyTU/rf4JJRqKbPXsvRewmszm/qQgtdpewpwyyvdysdb8ROXcVj
+         Ti4UFYqV1Xp5vL87P/TG+TtI1QU22yrhdESprjAPQyapSkpHbXI+Ea4QsO5OxvEphEEg
+         Gwkg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=0QOwGWZDroTuYZKUvEz4ThZBE28k0R9BlVBpj2B89t4=;
+        b=iqu/wZSi/w3IsN//BSOcRQJNz/Up/UoNNwAjqHd86lFJcrOfLNchLKLycgGGQHK2za
+         AKiKpYnkTOptXWUQVWqrY771FJ50zwVgpD7k4/CjdwXxOl5q7gKYHOfO6RcNFbxiCQTA
+         Gzw/mM6bQnvgcU5epJc9QXVFwvkEalRtUcxOzwiWmbpHTx1sDe+lVKbaWxm1s8Csb+zz
+         DeWmTFeH6+pdcTO17QEo8HcYFasO81IVShLiaU1RVTyjGNIZeO1v/UEpp7Ak9plnDO62
+         wi+j3Ze6ADZ7UkrMhOF30RfCT2ZqJrIuPfuGHCJAAR5pcJsqLCVw6SbZb/LE86nwbGDV
+         A8wg==
+X-Gm-Message-State: ANhLgQ0gDNnx0Ys2fo4nxK43NdSWTwTikPIuG66TreEpXFN7op7r1Hbz
+        vVpGm4traA1u5XF+X3KTSHQ=
+X-Google-Smtp-Source: ADFU+vuQluF3zszB7MLftbqie/sqdqSHh8ucl+t/SkIiqtpGEtE4K7yJ2sP012gDBJrIwKyGUerv9w==
+X-Received: by 2002:a63:1862:: with SMTP id 34mr13988788pgy.191.1583769214024;
+        Mon, 09 Mar 2020 08:53:34 -0700 (PDT)
+Received: from debian.net.fpt ([2405:4800:58c7:2b5b:996c:8b3a:a70f:c38a])
+        by smtp.gmail.com with ESMTPSA id w31sm19138587pgl.84.2020.03.09.08.53.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Mar 2020 08:53:33 -0700 (PDT)
+From:   Phong Tran <tranmanphong@gmail.com>
+To:     john.garry@huawei.com
+Cc:     aacraid@microsemi.com, bvanassche@acm.org, jejb@linux.ibm.com,
+        keescook@chromium.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        tranmanphong@gmail.com
+Subject: [PATCH v3] scsi: aacraid: cleanup warning cast-function-type
+Date:   Mon,  9 Mar 2020 22:53:19 +0700
+Message-Id: <20200309155319.12658-1-tranmanphong@gmail.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <9a0e6373-b4a3-0822-3b65-e3b326266832@huawei.com>
+References: <9a0e6373-b4a3-0822-3b65-e3b326266832@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <65727403-a390-795f-08ce-581ed4e3f3c2@suse.de>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.45]
-X-ClientProxiedBy: lhreml720-chm.china.huawei.com (10.201.108.71) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/03/2020 13:57, Hannes Reinecke wrote:
-> On 3/9/20 1:48 PM, John Garry wrote:
->> On 23/08/2019 14:26, John Garry wrote:
->>>>
->>>> quite some drivers use internal commands for various purposes, most
->>>> commonly sending TMFs or querying the HBA status.
->>>> While these commands use the same submission mechanism than normal
->>>> I/O commands, they will not be counted as outstanding commands,
->>>> requiring those drivers to implement their own mechanism to figure
->>>> out outstanding commands.
->>>> This patchset enables the use of reserved tags for the SCSI midlayer,
->>>> enabling LLDDs to rely on the block layer for tracking outstanding
->>>> commands.
->>>> More importantly, it allows LLDD to request a valid tag from the block
->>>> layer without having to implement some tracking mechanism within the
->>>> driver. This removes quite some hacks which were required for some
->>>> drivers (eg. fnic or snic).
->>>>
->>>> As usual, comments and reviews are welcome.
->>>>
->>>
->> Hi Hannes,
->>
->> JFYI, I have rebased this series to 5.6-rc4 here:
->>
->> https://github.com/hisilicon/kernel-dev/tree/private-topic-sas-5.6-resv-commands-v1
->>
->>
->> I am interested in enabling this for libsas and associated HBAs, so
->> there are some patches on top for that.
->>
->> No review comments have been addressed, apart from removing "block:
->> disable elevator for reserved tags"
->>
->> Please let me know your plan for this series.
->>
-> The plan is to wait for the shared tagset patchset to go in first :-)
-> 
+Make the aacraid driver -Wcast-function-type clean
+Report by: https://github.com/KSPP/linux/issues/20
 
-I think that one should go last. Or, to be more specific, switching the 
-drivers to expose multiple queues - which is part of that series - 
-should go last.
+drivers/scsi/aacraid/aachba.c:813:23:
+warning: cast between incompatible function types from
+'int (*)(struct scsi_cmnd *)' to 'void (*)(struct scsi_cmnd *)'
+[-Wcast-function-type]
 
-> Without it we'll be running on one tag bitmap per queue, and we risk
-> duplicate tags when sending down reserved commands :-(
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
+Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+---
+ drivers/scsi/aacraid/aachba.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Until we expose multiple queues, we still have a single HW queue from 
-blk-mq perspective, so will only have a single tagset per HBA, so no 
-chance of duplicate tags.
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 33dbc051bff9..ebfb42af67f5 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -798,6 +798,11 @@ static int aac_probe_container_callback1(struct scsi_cmnd * scsicmd)
+ 	return 0;
+ }
+ 
++static void aac_probe_container_scsi_done(struct scsi_cmnd *scsi_cmnd)
++{
++	aac_probe_container_callback1(scsi_cmnd);
++}
++
+ int aac_probe_container(struct aac_dev *dev, int cid)
+ {
+ 	struct scsi_cmnd *scsicmd = kmalloc(sizeof(*scsicmd), GFP_KERNEL);
+@@ -810,7 +815,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
+ 		return -ENOMEM;
+ 	}
+ 	scsicmd->list.next = NULL;
+-	scsicmd->scsi_done = (void (*)(struct scsi_cmnd*))aac_probe_container_callback1;
++	scsicmd->scsi_done = aac_probe_container_scsi_done;
+ 
+ 	scsicmd->device = scsidev;
+ 	scsidev->sdev_state = 0;
+-- 
+2.20.1
 
-This series should be able to go in without dependencies.
-
-Thanks,
-John
