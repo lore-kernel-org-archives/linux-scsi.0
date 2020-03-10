@@ -2,29 +2,28 @@ Return-Path: <SRS0=Pfrg=43=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0BEC18E5A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 16:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA7AEC3F2C6
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 16:31:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6592222522
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 16:31:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C81AD22522
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 16:31:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727367AbgCJQbA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Mar 2020 12:31:00 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:35862 "EHLO huawei.com"
+        id S1727437AbgCJQbI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Mar 2020 12:31:08 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:35842 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727206AbgCJQa5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Mar 2020 12:30:57 -0400
+        id S1727265AbgCJQbI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Mar 2020 12:31:08 -0400
 Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 1E041576F27D61B42F79;
+        by Forcepoint Email with ESMTP id 16DE65EE380EC62AB3CC;
         Wed, 11 Mar 2020 00:30:34 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.487.0; Wed, 11 Mar 2020 00:30:26 +0800
+ 14.3.487.0; Wed, 11 Mar 2020 00:30:23 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
         <martin.petersen@oracle.com>, <hare@suse.de>,
@@ -33,13 +32,11 @@ CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>,
         <virtualization@lists.linux-foundation.org>,
         <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH RFC v2 07/24] virtio_scsi: use reserved commands for TMF
-Date:   Wed, 11 Mar 2020 00:25:33 +0800
-Message-ID: <1583857550-12049-8-git-send-email-john.garry@huawei.com>
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH RFC v2 00/24] scsi: enable reserved commands for LLDDs 
+Date:   Wed, 11 Mar 2020 00:25:26 +0800
+Message-ID: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
-References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -49,247 +46,117 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
+This is v2 of original series from Hannes, which I'm hijacking for the
+moment:
+https://patchwork.kernel.org/cover/10967071/
 
-Set two commands aside for TMF, and use reserved commands to issue
-TMFs. With that we can drop the TMF memory pool.
+And the background:
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/virtio_scsi.c | 107 +++++++++++++++----------------------
- 1 file changed, 43 insertions(+), 64 deletions(-)
+Quite some drivers use internal commands for various purposes, most
+commonly sending TMFs or querying the HBA status.
+While these commands use the same submission mechanism than normal
+I/O commands, they will not be counted as outstanding commands,
+requiring those drivers to implement their own mechanism to figure
+out outstanding commands.
+This patchset enables the use of reserved tags for the SCSI midlayer,
+enabling LLDDs to rely on the block layer for tracking outstanding
+commands.
+More importantly, it allows LLDD to request a valid tag from the block
+layer without having to implement some tracking mechanism within the
+driver. This removes quite some hacks which were required for some
+drivers (eg. fnic or snic).
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index bfec84aacd90..05c772be2c9c 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -35,10 +35,10 @@
- #define VIRTIO_SCSI_MEMPOOL_SZ 64
- #define VIRTIO_SCSI_EVENT_LEN 8
- #define VIRTIO_SCSI_VQ_BASE 2
-+#define VIRTIO_SCSI_RESERVED_CMDS 2
- 
- /* Command queue element */
- struct virtio_scsi_cmd {
--	struct scsi_cmnd *sc;
- 	struct completion *comp;
- 	union {
- 		struct virtio_scsi_cmd_req       cmd;
-@@ -86,9 +86,6 @@ struct virtio_scsi {
- 	struct virtio_scsi_vq req_vqs[];
- };
- 
--static struct kmem_cache *virtscsi_cmd_cache;
--static mempool_t *virtscsi_cmd_pool;
--
- static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
- {
- 	return vdev->priv;
-@@ -108,7 +105,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
- static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
- {
- 	struct virtio_scsi_cmd *cmd = buf;
--	struct scsi_cmnd *sc = cmd->sc;
-+	struct scsi_cmnd *sc = scsi_cmd_from_priv(cmd);
- 	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
- 
- 	dev_dbg(&sc->device->sdev_gendev,
-@@ -406,7 +403,7 @@ static int __virtscsi_add_cmd(struct virtqueue *vq,
- 			    struct virtio_scsi_cmd *cmd,
- 			    size_t req_size, size_t resp_size)
- {
--	struct scsi_cmnd *sc = cmd->sc;
-+	struct scsi_cmnd *sc = scsi_cmd_from_priv(cmd);
- 	struct scatterlist *sgs[6], req, resp;
- 	struct sg_table *out, *in;
- 	unsigned out_num = 0, in_num = 0;
-@@ -557,8 +554,6 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
- 	dev_dbg(&sc->device->sdev_gendev,
- 		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
- 
--	cmd->sc = sc;
--
- 	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
- 
- #ifdef CONFIG_BLK_DEV_INTEGRITY
-@@ -590,17 +585,17 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
- static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
- {
- 	DECLARE_COMPLETION_ONSTACK(comp);
--	int ret = FAILED;
- 
- 	cmd->comp = &comp;
-+
- 	if (virtscsi_add_cmd(&vscsi->ctrl_vq, cmd,
- 			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf, true) < 0)
--		goto out;
-+		return FAILED;
- 
- 	wait_for_completion(&comp);
- 	if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
- 	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
--		ret = SUCCESS;
-+		return SUCCESS;
- 
- 	/*
- 	 * The spec guarantees that all requests related to the TMF have
-@@ -613,33 +608,37 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
- 	 * REQ_ATOM_COMPLETE has been set.
- 	 */
- 	virtscsi_poll_requests(vscsi);
--
--out:
--	mempool_free(cmd, virtscsi_cmd_pool);
--	return ret;
-+	return FAILED;
- }
- 
- static int virtscsi_device_reset(struct scsi_cmnd *sc)
- {
-+	struct scsi_device *sdev = sc->device;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_cmnd *reset_sc;
- 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
- 	struct virtio_scsi_cmd *cmd;
-+	int rc;
- 
--	sdev_printk(KERN_INFO, sc->device, "device reset\n");
--	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
--	if (!cmd)
-+	sdev_printk(KERN_INFO, sdev, "device reset\n");
-+	reset_sc = scsi_get_reserved_cmd(shost);
-+	if (!reset_sc)
- 		return FAILED;
--
-+	cmd = scsi_cmd_priv(reset_sc);
- 	memset(cmd, 0, sizeof(*cmd));
- 	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
- 		.type = VIRTIO_SCSI_T_TMF,
- 		.subtype = cpu_to_virtio32(vscsi->vdev,
- 					     VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET),
- 		.lun[0] = 1,
--		.lun[1] = sc->device->id,
--		.lun[2] = (sc->device->lun >> 8) | 0x40,
--		.lun[3] = sc->device->lun & 0xff,
-+		.lun[1] = sdev->id,
-+		.lun[2] = (sdev->lun >> 8) | 0x40,
-+		.lun[3] = sdev->lun & 0xff,
- 	};
--	return virtscsi_tmf(vscsi, cmd);
-+	rc = virtscsi_tmf(vscsi, cmd);
-+	scsi_put_reserved_cmd(reset_sc);
-+
-+	return rc;
- }
- 
- static int virtscsi_device_alloc(struct scsi_device *sdevice)
-@@ -679,25 +678,32 @@ static int virtscsi_change_queue_depth(struct scsi_device *sdev, int qdepth)
- 
- static int virtscsi_abort(struct scsi_cmnd *sc)
- {
--	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
-+	struct scsi_device *sdev = sc->device;
-+	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_cmnd *reset_sc;
-+	struct virtio_scsi *vscsi = shost_priv(sdev->host);
- 	struct virtio_scsi_cmd *cmd;
-+	int rc;
- 
- 	scmd_printk(KERN_INFO, sc, "abort\n");
--	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
--	if (!cmd)
-+	reset_sc = scsi_get_reserved_cmd(shost);
-+	if (!reset_sc)
- 		return FAILED;
-+	cmd = scsi_cmd_priv(reset_sc);
- 
- 	memset(cmd, 0, sizeof(*cmd));
- 	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
- 		.type = VIRTIO_SCSI_T_TMF,
- 		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
- 		.lun[0] = 1,
--		.lun[1] = sc->device->id,
--		.lun[2] = (sc->device->lun >> 8) | 0x40,
--		.lun[3] = sc->device->lun & 0xff,
-+		.lun[1] = sdev->id,
-+		.lun[2] = (sdev->lun >> 8) | 0x40,
-+		.lun[3] = sdev->lun & 0xff,
- 		.tag = cpu_to_virtio64(vscsi->vdev, (unsigned long)sc),
- 	};
--	return virtscsi_tmf(vscsi, cmd);
-+	rc = virtscsi_tmf(vscsi, cmd);
-+	scsi_put_reserved_cmd(reset_sc);
-+	return rc;
- }
- 
- static int virtscsi_map_queues(struct Scsi_Host *shost)
-@@ -866,6 +872,11 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 		goto virtscsi_init_failed;
- 
- 	shost->can_queue = virtqueue_get_vring_size(vscsi->req_vqs[0].vq);
-+	shost->can_queue -= VIRTIO_SCSI_RESERVED_CMDS;
-+	if (shost->can_queue <= 0) {
-+		err = -ENOMEM;
-+		goto scsi_add_host_failed;
-+	}
- 
- 	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
- 	shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
-@@ -879,6 +890,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 	shost->max_channel = 0;
- 	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
- 	shost->nr_hw_queues = num_queues;
-+	shost->nr_reserved_cmds = VIRTIO_SCSI_RESERVED_CMDS;
- 
- #ifdef CONFIG_BLK_DEV_INTEGRITY
- 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
-@@ -980,45 +992,12 @@ static struct virtio_driver virtio_scsi_driver = {
- 
- static int __init init(void)
- {
--	int ret = -ENOMEM;
--
--	virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
--	if (!virtscsi_cmd_cache) {
--		pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
--		goto error;
--	}
--
--
--	virtscsi_cmd_pool =
--		mempool_create_slab_pool(VIRTIO_SCSI_MEMPOOL_SZ,
--					 virtscsi_cmd_cache);
--	if (!virtscsi_cmd_pool) {
--		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
--		goto error;
--	}
--	ret = register_virtio_driver(&virtio_scsi_driver);
--	if (ret < 0)
--		goto error;
--
--	return 0;
--
--error:
--	if (virtscsi_cmd_pool) {
--		mempool_destroy(virtscsi_cmd_pool);
--		virtscsi_cmd_pool = NULL;
--	}
--	if (virtscsi_cmd_cache) {
--		kmem_cache_destroy(virtscsi_cmd_cache);
--		virtscsi_cmd_cache = NULL;
--	}
--	return ret;
-+	return register_virtio_driver(&virtio_scsi_driver);
- }
- 
- static void __exit fini(void)
- {
- 	unregister_virtio_driver(&virtio_scsi_driver);
--	mempool_destroy(virtscsi_cmd_pool);
--	kmem_cache_destroy(virtscsi_cmd_cache);
- }
- module_init(init);
- module_exit(fini);
+Finally:
+
+As I see, there is no dependency on this series to go into the kernel now.
+And we need it for [0].
+
+Note: [0] also depends on [1]
+
+[0] https://lore.kernel.org/linux-block/1583409280-158604-1-git-send-email-john.garry@huawei.com/T/#t
+[1] https://lore.kernel.org/linux-block/20191014015043.25029-1-ming.lei@redhat.com/
+
+Differences to v1:
+- Make scsi_{get, put}_reserved_cmd() for Scsi host
+	- Previously we separate scsi_{get, put}_reserved_cmd() for sdev
+	  and scsi_host_get_reserved_cmd() for the host
+- Fix how Scsi_Host.can_queue is set in the virtio-scsi change
+- Drop Scsi_Host.use_reserved_cmd_q
+- Drop scsi_is_reserved_cmd()
+	- It was unused
+	- But keep blk_mq_rq_is_reserved()
+- Add support in libsas and associated HBA drivers
+	- Allocate reserved command in slow task
+	- Switch hisi_sas to use reserved Scsi command
+- Reorder the series a little
+- Some tidying
+
+Hannes Reinecke (22):
+  scsi: add 'nr_reserved_cmds' field to the SCSI host template
+  scsi: allocate separate queue for reserved commands
+  blk-mq: Implement blk_mq_rq_is_reserved()
+  scsi: Add scsi_{get, put}_reserved_cmd()
+  csiostor: use reserved command for LUN reset
+  scsi: add scsi_cmd_from_priv()
+  virtio_scsi: use reserved commands for TMF
+  scsi: add host tagset busy iterator
+  fnic: use reserved commands
+  fnic: use scsi_host_tagset_busy_iter() to traverse commands
+  hpsa: move hpsa_hba_inquiry after scsi_add_host()
+  hpsa: use reserved commands
+  hpsa: use blk_mq_tagset_busy_iter() to traverse outstanding commands
+  hpsa: drop refcount field from CommandList
+  snic: use reserved commands
+  snic: use tagset iter for traversing commands
+  aacraid: move scsi_add_host()
+  aacraid: use private commands
+  aacraid: replace cmd_list with scsi_host_tagset_busy_iter()
+  aacraid: use scsi_host_tagset_busy_iter() to traverse outstanding
+    commands
+  dpt_i2o: drop cmd_list usage
+  scsi: drop scsi command list
+
+John Garry (2):
+  scsi: libsas: aic94xx: hisi_sas: mvsas: pm8001: Allocate Scsi_cmd for
+    slow task
+  scsi: hisi_sas: Use libsas slow task SCSI command
+
+ block/blk-mq.c                         |  13 +
+ drivers/scsi/aacraid/aachba.c          | 125 ++--
+ drivers/scsi/aacraid/aacraid.h         |   6 +-
+ drivers/scsi/aacraid/comminit.c        |  28 +-
+ drivers/scsi/aacraid/commsup.c         | 134 ++--
+ drivers/scsi/aacraid/linit.c           | 300 ++++----
+ drivers/scsi/csiostor/csio_init.c      |   3 +-
+ drivers/scsi/csiostor/csio_scsi.c      |  49 +-
+ drivers/scsi/dpt_i2o.c                 |  23 +-
+ drivers/scsi/fnic/fnic_scsi.c          | 917 +++++++++++--------------
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  13 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   5 +-
+ drivers/scsi/hosts.c                   |  27 +
+ drivers/scsi/hpsa.c                    | 313 ++++-----
+ drivers/scsi/hpsa.h                    |   1 -
+ drivers/scsi/hpsa_cmd.h                |   1 -
+ drivers/scsi/libsas/sas_expander.c     |   3 +-
+ drivers/scsi/libsas/sas_init.c         |  36 +-
+ drivers/scsi/mvsas/mv_sas.c            |   2 +-
+ drivers/scsi/pm8001/pm8001_hwi.c       |   4 +-
+ drivers/scsi/pm8001/pm8001_sas.c       |   4 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c       |   4 +-
+ drivers/scsi/scsi.c                    |   1 -
+ drivers/scsi/scsi_lib.c                |  80 ++-
+ drivers/scsi/scsi_scan.c               |   1 -
+ drivers/scsi/snic/snic.h               |   2 +-
+ drivers/scsi/snic/snic_main.c          |   2 +
+ drivers/scsi/snic/snic_scsi.c          | 502 +++++++-------
+ drivers/scsi/virtio_scsi.c             | 107 ++-
+ include/linux/blk-mq.h                 |   2 +
+ include/scsi/libsas.h                  |   4 +-
+ include/scsi/scsi_cmnd.h               |  14 +-
+ include/scsi/scsi_device.h             |   1 -
+ include/scsi/scsi_host.h               |  14 +-
+ 34 files changed, 1346 insertions(+), 1395 deletions(-)
+
 -- 
 2.17.1
 
