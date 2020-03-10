@@ -2,103 +2,102 @@ Return-Path: <SRS0=Pfrg=43=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D93C10DCE
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 23:00:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F3C6C10DCE
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 23:09:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0193021927
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 23:00:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20C3A2071B
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 23:09:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GMIgy8hp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KfAbE8M9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726899AbgCJXAi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Mar 2020 19:00:38 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50072 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726325AbgCJXAi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2020 19:00:38 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02AMxV0t017503;
-        Tue, 10 Mar 2020 23:00:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=i3Rrze2zLHhh/9lu6+7QyPURtXI7bqcfz2wJF8WwDqE=;
- b=GMIgy8hplbtLsbl76VzNYETvuUfSXMPUmHdKc3DW+udUGXE55ZASIei45Xpmt/iOnP1Q
- dhjRSByqxzO8NoxMdA96/DBKZcLN+p1hZbjGzsZENV+BvrLMkea1z2tm4NLa3au9Bd2H
- ZSyO2W6kpGl26YZ7KBILkb+sNjENTqqFsNxxFcezL9ZmDlOxn9JhNdAN+0FkXIWFqqKG
- RNzEvDKrHixkp5SHAi/9ewMvtJZ8J1pck8Nk8yz1s4MkoWbvWmFu4f4BKvIQG0X+3+4N
- Y1CfOJEPaMWfjDEDhzeCRseZAAyEAAOGAdRk6Yq4L7pHxa0hHvne7v/qmduD98aghzYh Zw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2yp7hm4tdv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 10 Mar 2020 23:00:23 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02AMwDUC068580;
-        Tue, 10 Mar 2020 23:00:22 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2yp8punfcw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 10 Mar 2020 23:00:22 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02AN0Isv025845;
-        Tue, 10 Mar 2020 23:00:18 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Mar 2020 16:00:18 -0700
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Fix possible unclocked access to auto hibern8 timer register
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1583398391-14273-1-git-send-email-cang@codeaurora.org>
-Date:   Tue, 10 Mar 2020 19:00:14 -0400
-In-Reply-To: <1583398391-14273-1-git-send-email-cang@codeaurora.org> (Can
-        Guo's message of "Thu, 5 Mar 2020 00:53:07 -0800")
-Message-ID: <yq1lfo7u875.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727642AbgCJXJB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Mar 2020 19:09:01 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:54956 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726325AbgCJXJB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Mar 2020 19:09:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583881740;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wkPE+IhNE5fdZSVJ5cOurXqU2RwW85UEqdhYtpKuSmI=;
+        b=KfAbE8M9nVSOtyM5f/LW/80dV7Ch67+MJycCckHWNDfrQ+nVpiOFjF8Bt3vfe/zslOdtyx
+        0psCWV6IqGPPrQ9CUCrs3DMCaRiAfISyhurtTAyhOIGd7kjjbPDQKCL/Q44ABIkcLrreo/
+        p567zBz74ycWzuM9HTM/LxImuDZd0MA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-25-ai_V4I1sODC8ESQzccoL5A-1; Tue, 10 Mar 2020 19:08:58 -0400
+X-MC-Unique: ai_V4I1sODC8ESQzccoL5A-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E5DFA184C810;
+        Tue, 10 Mar 2020 23:08:50 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B50BB10013A1;
+        Tue, 10 Mar 2020 23:08:40 +0000 (UTC)
+Date:   Wed, 11 Mar 2020 07:08:35 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hare@suse.de, bvanassche@acm.org, hch@infradead.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH RFC v2 01/24] scsi: add 'nr_reserved_cmds' field to the
+ SCSI host template
+Message-ID: <20200310230835.GA16056@ming.t460p>
+References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
+ <1583857550-12049-2-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- mlxlogscore=947 bulkscore=0 suspectscore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003100136
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9556 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0
- priorityscore=1501 clxscore=1011 mlxscore=0 impostorscore=0
- mlxlogscore=999 suspectscore=0 phishscore=0 malwarescore=0 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2001150001 definitions=main-2003100136
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1583857550-12049-2-git-send-email-john.garry@huawei.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Mar 11, 2020 at 12:25:27AM +0800, John Garry wrote:
+> From: Hannes Reinecke <hare@suse.com>
+> 
+> Add a new field 'nr_reserved_cmds' to the SCSI host template to
+> instruct the block layer to set aside a tag space for reserved
+> commands.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_lib.c  | 1 +
+>  include/scsi/scsi_host.h | 6 ++++++
+>  2 files changed, 7 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 610ee41fa54c..2967325df7a0 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1896,6 +1896,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>  		shost->tag_set.ops = &scsi_mq_ops_no_commit;
+>  	shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
+>  	shost->tag_set.queue_depth = shost->can_queue;
+> +	shost->tag_set.reserved_tags = shost->nr_reserved_cmds;
 
-Can,
+You reserve tags for special usage, meantime the whole queue depth
+isn't increased, that means the tags for IO request is decreased given
+reserved tags can't be used for IO, so IO performance may be effected.
 
-> Before access auto hibner8 timer register, make sure power and clock
-> are properly configured to avoid unclocked register access.
+If not the case, please explain a bit in commit log.
 
-Applied to 5.6/scsi-fixes, thank you!
+Thanks,
+Ming
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
