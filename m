@@ -2,65 +2,75 @@ Return-Path: <SRS0=Pfrg=43=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42303C2BB58
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 18:35:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0FCC10DCE
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 20:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D7D12465D
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 18:35:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="H7Hg3iHh"
+	by mail.kernel.org (Postfix) with ESMTP id 5D59F22522
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 20:47:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727566AbgCJSfP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Mar 2020 14:35:15 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:44868 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727526AbgCJSfO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2020 14:35:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=f2QIKjI8cYNlOJbeMqgxIhxEPRSUmrEl+tsAYjSK8m8=; b=H7Hg3iHhU9Pw60VhTAE9cYI6HR
-        2toN/jrJZ6zBbyrU0G7lJrEeLpeekDWBK9hhLqMI5Koq3UHLf0o/gLNWYajwyZEp9mivPiKG5dbHU
-        lYv2ueIuG2okv8ihdoPp19X46Uuk0YubE/yk/cUdeH85mHgOHyQR/Z40XEGShkUtc2WQsjM5tNdn1
-        u7KUHl8+5GQ455+JRI2KBRzr1CKF9+Ti8uSEuxAYcFqpnDuQXCKNGa4NYktKWVRUN95/brwwxfDQ7
-        U7gQA1jmJuWgJAcoJnQ/dK64b99M7ZqjRhMIPA5KZpMYYoAiIG4d8MEvM9enYix/NFph/hu+l1qzX
-        0Apbw/eA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jBjia-0007xl-Nv; Tue, 10 Mar 2020 18:35:04 +0000
-Date:   Tue, 10 Mar 2020 11:35:04 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     John Garry <john.garry@huawei.com>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        hare@suse.de, ming.lei@redhat.com, bvanassche@acm.org,
-        hch@infradead.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        Hannes Reinecke <hare@suse.com>
+        id S1726463AbgCJUrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Mar 2020 16:47:19 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2546 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726273AbgCJUrT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Mar 2020 16:47:19 -0400
+Received: from LHREML710-CAH.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id AED8D1EA86F300381B4F;
+        Tue, 10 Mar 2020 20:47:14 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ LHREML710-CAH.china.huawei.com (10.201.108.33) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Tue, 10 Mar 2020 20:47:14 +0000
+Received: from [127.0.0.1] (10.210.167.10) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Tue, 10 Mar
+ 2020 20:47:12 +0000
 Subject: Re: [PATCH RFC v2 22/24] scsi: drop scsi command list
-Message-ID: <20200310183504.GB14549@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hare@suse.de>,
+        <ming.lei@redhat.com>, <bvanassche@acm.org>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>,
+        <virtualization@lists.linux-foundation.org>,
+        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
+        Hannes Reinecke <hare@suse.com>
 References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
  <1583857550-12049-23-git-send-email-john.garry@huawei.com>
+ <20200310183504.GB14549@infradead.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <2ffd671a-e580-cd5e-dd90-802f9641519f@huawei.com>
+Date:   Tue, 10 Mar 2020 20:47:10 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1583857550-12049-23-git-send-email-john.garry@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200310183504.GB14549@infradead.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.167.10]
+X-ClientProxiedBy: lhreml726-chm.china.huawei.com (10.201.108.77) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 11, 2020 at 12:25:48AM +0800, John Garry wrote:
-> From: Hannes Reinecke <hare@suse.com>
+On 10/03/2020 18:35, Christoph Hellwig wrote:
+> On Wed, Mar 11, 2020 at 12:25:48AM +0800, John Garry wrote:
+>> From: Hannes Reinecke <hare@suse.com>
+>>
+>> No users left, kill it.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
 > 
-> No users left, kill it.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Wasn't this part of a series from Hannes that already got merged?
 
-Wasn't this part of a series from Hannes that already got merged?
+
+Ah, yes. I'll check what can be dropped now.
+
+cheers
