@@ -2,75 +2,100 @@ Return-Path: <SRS0=Pfrg=43=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0FCC10DCE
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 20:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72719C10DCE
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 21:06:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D59F22522
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 20:47:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B89C222C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Mar 2020 21:06:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583874380;
+	bh=vhxZrp2Lx5DeATCenHy71j1LATXknii/r2+vE+Yb5m0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=KjIrIfgn4BTysW0vws3UCDBtILOon5VktIkDzMwiPi/aRJqpY4yuj0H/n0TxuurtM
+	 2aO5H+1ZM54NaA5QbsZgwC36vkegb6CRIX7AWuDIkbqcJ+v/wEMkueDDswS8AZy6CG
+	 58+HRLIIDKcPHamGmBm5CMHuUnrAMAjXPtG8cgo0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbgCJUrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Mar 2020 16:47:19 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2546 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726273AbgCJUrT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Mar 2020 16:47:19 -0400
-Received: from LHREML710-CAH.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id AED8D1EA86F300381B4F;
-        Tue, 10 Mar 2020 20:47:14 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- LHREML710-CAH.china.huawei.com (10.201.108.33) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 10 Mar 2020 20:47:14 +0000
-Received: from [127.0.0.1] (10.210.167.10) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Tue, 10 Mar
- 2020 20:47:12 +0000
-Subject: Re: [PATCH RFC v2 22/24] scsi: drop scsi command list
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hare@suse.de>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>,
-        <virtualization@lists.linux-foundation.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-23-git-send-email-john.garry@huawei.com>
- <20200310183504.GB14549@infradead.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2ffd671a-e580-cd5e-dd90-802f9641519f@huawei.com>
-Date:   Tue, 10 Mar 2020 20:47:10 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727639AbgCJVGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Mar 2020 17:06:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40586 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726271AbgCJVGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Mar 2020 17:06:17 -0400
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 36E4A227BF;
+        Tue, 10 Mar 2020 21:06:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583874376;
+        bh=vhxZrp2Lx5DeATCenHy71j1LATXknii/r2+vE+Yb5m0=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=VSxML8CZIv6TujbXRjRw9Ndm8hswQ0Iy4czB2jk6b7uVrcoP7w2FT3QpRGHO/Gfw8
+         1PAC8sWmIxLgfBwLT0IoBg95GgOQJewHjIgNWqAF9o7XsmOF2nFAtuL0aHnkZz6PQW
+         ByM8dtKGpYIidv0mnusE83YjNVcG4UXW3V9qqpcY=
+Received: by mail-lf1-f54.google.com with SMTP id i10so12136173lfg.11;
+        Tue, 10 Mar 2020 14:06:16 -0700 (PDT)
+X-Gm-Message-State: ANhLgQ04zCsRs7UK9XWxVx7wooYAdDNSM9b0I0WQv78AILIpGR7hrwLU
+        Mm1oEeT5RNcvNoUsZ/IhpxOsvFDGqis7tSd4obw=
+X-Google-Smtp-Source: ADFU+vudBQrw1oSvW+1z/bikz1NjhAJyNp9q/S1l7eZSBzV8bqzYmhmQtaOP3eZbtp4E2HGJaK7++RE5+JjVfD/y/h8=
+X-Received: by 2002:ac2:554d:: with SMTP id l13mr39638lfk.82.1583874374294;
+ Tue, 10 Mar 2020 14:06:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200310183504.GB14549@infradead.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.167.10]
-X-ClientProxiedBy: lhreml726-chm.china.huawei.com (10.201.108.77) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20200223165724.23816-1-mcroce@redhat.com>
+In-Reply-To: <20200223165724.23816-1-mcroce@redhat.com>
+From:   Song Liu <song@kernel.org>
+Date:   Tue, 10 Mar 2020 14:06:02 -0700
+X-Gmail-Original-Message-ID: <CAPhsuW6DOkyvscJhxXPE+KLsw=WH6CQ=8_5uThzf7_pmD3E8JA@mail.gmail.com>
+Message-ID: <CAPhsuW6DOkyvscJhxXPE+KLsw=WH6CQ=8_5uThzf7_pmD3E8JA@mail.gmail.com>
+Subject: Re: [PATCH] block: refactor duplicated macros
+To:     Matteo Croce <mcroce@redhat.com>
+Cc:     linux-block@vger.kernel.org,
+        open list <linux-kernel@vger.kernel.org>,
+        linux-nvdimm@lists.01.org, linux-bcache@vger.kernel.org,
+        linux-raid <linux-raid@vger.kernel.org>,
+        linux-mmc@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-scsi@vger.kernel.org, linux-nfs@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Anna Schumaker <anna.schumaker@netapp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/03/2020 18:35, Christoph Hellwig wrote:
-> On Wed, Mar 11, 2020 at 12:25:48AM +0800, John Garry wrote:
->> From: Hannes Reinecke <hare@suse.com>
->>
->> No users left, kill it.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> 
-> Wasn't this part of a series from Hannes that already got merged?
+On Sun, Feb 23, 2020 at 8:58 AM Matteo Croce <mcroce@redhat.com> wrote:
+>
+> The macros PAGE_SECTORS, PAGE_SECTORS_SHIFT and SECTOR_MASK are defined
+> several times in different flavours across the whole tree.
+> Define them just once in a common header.
+>
+> Signed-off-by: Matteo Croce <mcroce@redhat.com>
+> ---
+>  block/blk-lib.c                  |  2 +-
+>  drivers/block/brd.c              |  3 ---
+>  drivers/block/null_blk_main.c    |  4 ----
+>  drivers/block/zram/zram_drv.c    |  8 ++++----
+>  drivers/block/zram/zram_drv.h    |  2 --
+>  drivers/dax/super.c              |  2 +-
+>  drivers/md/bcache/util.h         |  2 --
+>  drivers/md/dm-bufio.c            |  6 +++---
+>  drivers/md/dm-integrity.c        | 10 +++++-----
+>  drivers/md/md.c                  |  4 ++--
+>  drivers/md/raid1.c               |  2 +-
+>  drivers/mmc/core/host.c          |  3 ++-
+>  drivers/scsi/xen-scsifront.c     |  4 ++--
+>  fs/iomap/buffered-io.c           |  2 +-
+>  fs/nfs/blocklayout/blocklayout.h |  2 --
+>  include/linux/blkdev.h           |  4 ++++
+>  include/linux/device-mapper.h    |  1 -
+>  17 files changed, 26 insertions(+), 35 deletions(-)
 
+For md:
 
-Ah, yes. I'll check what can be dropped now.
-
-cheers
+Acked-by: Song Liu <song@kernel.org>
