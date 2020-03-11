@@ -5,140 +5,138 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48E0BC10F29
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 08:00:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA90C10F27
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 08:11:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DCC3205C9
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 08:00:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D66D220873
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 08:11:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LslJIrMG"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="POfxxDLx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728525AbgCKIAv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Mar 2020 04:00:51 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:40541 "EHLO
+        id S1726923AbgCKIL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 04:11:26 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:45073 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728195AbgCKIAs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 04:00:48 -0400
+        with ESMTP id S1726310AbgCKIL0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 04:11:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1583913647;
+        s=mimecast20190719; t=1583914284;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=BTQ/qk+PVYNZHsKM28XRoYcuNh5fpwlLGdRZPJQp7IM=;
-        b=LslJIrMGyeY2qzQm10qSrcGvSYRN8FBQ5Hne4C9WZ7XT0uncO0TxbFEXclI+C5cpC57Rsy
-        bXACM3pIn9caWatPyzNNfKi6V1BkVPnNisU36dUWbjYbaHT5IlTDejF23SOYr0cSUq9EqN
-        Y/rlARvVePkrWt7DrapHVS12B6esNKw=
+        bh=mclFMWusgTyOtMcXNsfUg9sVqxkjUF7Bq9avEjcdG/I=;
+        b=POfxxDLxLRxz0GchrXi5J2QGfflxcAJJ8m1RKPDVXWvAOpYfT6l1kxLLp1KmI/rUf78b2Y
+        ClXVoU7XfNEMvLGtrUXfmIhnNV7FqUMBi7lHiGZjYdfqyPlmkTUJtZC8kRIIUWYihwdreO
+        xmOHQzlc0SeuLcwl0f/+E07TwHg6WNM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-8-QGvsN90iOsqhbPUTuUsqug-1; Wed, 11 Mar 2020 04:00:43 -0400
-X-MC-Unique: QGvsN90iOsqhbPUTuUsqug-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-494-sWznBkZzPgyeEBOnUFWxYg-1; Wed, 11 Mar 2020 04:11:22 -0400
+X-MC-Unique: sWznBkZzPgyeEBOnUFWxYg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6EAB418B5F8A;
-        Wed, 11 Mar 2020 08:00:41 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 980BC107ACC4;
+        Wed, 11 Mar 2020 08:11:20 +0000 (UTC)
 Received: from ming.t460p (ovpn-8-26.pek2.redhat.com [10.72.8.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 69F7D60C18;
-        Wed, 11 Mar 2020 08:00:30 +0000 (UTC)
-Date:   Wed, 11 Mar 2020 16:00:26 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D1E6610372C5;
+        Wed, 11 Mar 2020 08:11:06 +0000 (UTC)
+Date:   Wed, 11 Mar 2020 16:10:59 +0800
 From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org,
-        hch@infradead.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hare@suse.de, bvanassche@acm.org, hch@infradead.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
         virtualization@lists.linux-foundation.org,
         esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
         Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH RFC v2 01/24] scsi: add 'nr_reserved_cmds' field to the
- SCSI host template
-Message-ID: <20200311080026.GB31504@ming.t460p>
+Subject: Re: [PATCH RFC v2 12/24] hpsa: use reserved commands
+Message-ID: <20200311081059.GC31504@ming.t460p>
 References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-2-git-send-email-john.garry@huawei.com>
- <20200310230835.GA16056@ming.t460p>
- <fecc400c-fe6b-144a-51f9-1b3b2704c1a2@suse.de>
+ <1583857550-12049-13-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fecc400c-fe6b-144a-51f9-1b3b2704c1a2@suse.de>
+In-Reply-To: <1583857550-12049-13-git-send-email-john.garry@huawei.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 11, 2020 at 07:55:46AM +0100, Hannes Reinecke wrote:
-> On 3/11/20 12:08 AM, Ming Lei wrote:
-> > On Wed, Mar 11, 2020 at 12:25:27AM +0800, John Garry wrote:
-> >> From: Hannes Reinecke <hare@suse.com>
-> >>
-> >> Add a new field 'nr_reserved_cmds' to the SCSI host template to
-> >> instruct the block layer to set aside a tag space for reserved
-> >> commands.
-> >>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> >> ---
-> >>  drivers/scsi/scsi_lib.c  | 1 +
-> >>  include/scsi/scsi_host.h | 6 ++++++
-> >>  2 files changed, 7 insertions(+)
-> >>
-> >> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> >> index 610ee41fa54c..2967325df7a0 100644
-> >> --- a/drivers/scsi/scsi_lib.c
-> >> +++ b/drivers/scsi/scsi_lib.c
-> >> @@ -1896,6 +1896,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
-> >>  		shost->tag_set.ops = &scsi_mq_ops_no_commit;
-> >>  	shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
-> >>  	shost->tag_set.queue_depth = shost->can_queue;
-> >> +	shost->tag_set.reserved_tags = shost->nr_reserved_cmds;
-> > 
-> > You reserve tags for special usage, meantime the whole queue depth
-> > isn't increased, that means the tags for IO request is decreased given
-> > reserved tags can't be used for IO, so IO performance may be effected.
-> > 
-> > If not the case, please explain a bit in commit log.
-> > 
-> The overall idea of this patchset is to fold _existing_ management
-> command handling into using the blk-mq bitmap.
-> Currently, quite a lot of drivers are using management commands
-> internally, which typically use the same hardware tag pool (ie they are
-> being allocated from the same hardware resources) than the 'normal' I/O
-> commands.
-> But as they are using the same tagpool these drivers already decrement
-> the available number of commands; check eg. hpsa:
+On Wed, Mar 11, 2020 at 12:25:38AM +0800, John Garry wrote:
+> From: Hannes Reinecke <hare@suse.com>
 > 
-> static int hpsa_scsi_host_alloc(struct ctlr_info *h)
-> {
-> 	struct Scsi_Host *sh;
+> Enable the use of reserved commands, and drop the hand-crafted
+> command allocation.
 > 
-> 	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
-> 	if (sh == NULL) {
-> 		dev_err(&h->pdev->dev, "scsi_host_alloc failed\n");
-> 		return -ENOMEM;
-> 	}
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/hpsa.c | 147 ++++++++++++++------------------------------
+>  drivers/scsi/hpsa.h |   1 -
+>  2 files changed, 45 insertions(+), 103 deletions(-)
 > 
-> 	sh->io_port = 0;
-> 	sh->n_io_port = 0;
-> 	sh->this_id = -1;
-> 	sh->max_channel = 3;
-> 	sh->max_cmd_len = MAX_COMMAND_SIZE;
-> 	sh->max_lun = HPSA_MAX_LUN;
-> 	sh->max_id = HPSA_MAX_LUN;
-> 	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
-> 	sh->cmd_per_lun = sh->can_queue;
-> 
-> So the idea of this patchset is to convert existing use-cases; seeing
-> that they already reserve commands internally performance will not be
-> affected.
-> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 703f824584fe..c14dd4b6e598 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -244,10 +244,6 @@ static struct hpsa_scsi_dev_t
+>  	*hpsa_find_device_by_sas_rphy(struct ctlr_info *h,
+>  		struct sas_rphy *rphy);
+>  
+> -#define SCSI_CMD_BUSY ((struct scsi_cmnd *)&hpsa_cmd_busy)
+> -static const struct scsi_cmnd hpsa_cmd_busy;
+> -#define SCSI_CMD_IDLE ((struct scsi_cmnd *)&hpsa_cmd_idle)
+> -static const struct scsi_cmnd hpsa_cmd_idle;
+>  static int number_of_controllers;
+>  
+>  static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
+> @@ -342,7 +338,7 @@ static inline struct ctlr_info *shost_to_hba(struct Scsi_Host *sh)
+>  
+>  static inline bool hpsa_is_cmd_idle(struct CommandList *c)
+>  {
+> -	return c->scsi_cmd == SCSI_CMD_IDLE;
+> +	return c->scsi_cmd == NULL;
+>  }
+>  
+>  /* extract sense key, asc, and ascq from sense data.  -1 means invalid. */
+> @@ -2445,7 +2441,12 @@ static void hpsa_cmd_resolve_events(struct ctlr_info *h,
+>  	 * this command has completed.  Then, check to see if the handler is
+>  	 * waiting for this command, and, if so, wake it.
+>  	 */
+> -	c->scsi_cmd = SCSI_CMD_IDLE;
+> +	if (c->scsi_cmd && c->cmd_type == CMD_IOCTL_PEND) {
+> +		struct scsi_cmnd *scmd = c->scsi_cmd;
+> +
+> +		scsi_put_reserved_cmd(scmd);
+> +	}
+> +	c->scsi_cmd = NULL;
+>  	mb();	/* Declare command idle before checking for pending events. */
+>  	if (dev) {
+>  		atomic_dec(&dev->commands_outstanding);
+> @@ -5502,7 +5503,6 @@ static void hpsa_cmd_init(struct ctlr_info *h, int index,
+>  	c->ErrDesc.Addr = cpu_to_le64((u64) err_dma_handle);
+>  	c->ErrDesc.Len = cpu_to_le32((u32) sizeof(*c->err_info));
+>  	c->h = h;
+> -	c->scsi_cmd = SCSI_CMD_IDLE;
+>  }
+>  
+>  static void hpsa_preinitialize_commands(struct ctlr_info *h)
+> @@ -5803,6 +5803,7 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+>  	sh->max_lun = HPSA_MAX_LUN;
+>  	sh->max_id = HPSA_MAX_LUN;
+>  	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
+> +	sh->nr_reserved_cmds = HPSA_NRESERVED_CMDS;
 
-OK, got it.
+Now .nr_reserved_cmds has been passed to blk-mq, you need to increase
+sh->can_queue to h->nr_cmds, because .can_queue is the whole queue depth
+(include the part of reserved tags), otherwise, IO tags will be
+decreased.
 
-I'd suggest to add comment about this idea in commit log, cause
-it is one fundamental thing about this change.
+Not look into other drivers, I guess they need such change too.
 
 Thanks,
 Ming
