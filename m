@@ -6,59 +6,48 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FB67C10F25
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 03:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0615AC10F25
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 04:04:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DFFC521655
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 03:52:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D049721D56
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 04:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727702AbgCKDwE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Mar 2020 23:52:04 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:32883 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727685AbgCKDwE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Mar 2020 23:52:04 -0400
-Received: by mail-pf1-f194.google.com with SMTP id n7so519856pfn.0;
-        Tue, 10 Mar 2020 20:52:03 -0700 (PDT)
+        id S1726375AbgCKEEK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 00:04:10 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:37176 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725379AbgCKEEK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 00:04:10 -0400
+Received: by mail-pf1-f193.google.com with SMTP id p14so525256pfn.4
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2020 21:04:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=4jWgXx47//lwhsK545GCcf8+J7kzYJPs216sdqcaw9s=;
-        b=TW+0cTiFtTEVo4Tv7RTH10WLCdTdyFE/bpVL1Od7GanN4NbkkSEOqbyWJHiwiXRZFc
-         /yinK0PrikS3BmS1SAS2s5ZX8meLUAWOIrWsjtF07x10DUpxl3FlnS5hUX/lh5Ryw+sn
-         DzszxHO2r4V7S3AbJxwcmj9X/cCbge9CMqhSDr7tI6YnsozpGrgmNqlN2hJm7KxlP6/W
-         o0WJXH/GaY7plIOF0BrBZLxZWUNcFBLt1CIWEZvfLdnJyC8uVGuSDWHlJDqMh8pOK/ir
-         /Km30cAIUDlB3Qv9ksGj2Pux+/D3ufO2673rACqDi+34cwDKyor7shLwFwz91k/oflhJ
-         imew==
-X-Gm-Message-State: ANhLgQ2+F/lkgZlQTRX3m0ksRsgHIScmA6YoX4S9iFAJRbiDotZoycel
-        vB0OIpPDB+5fcyqwCYfhBnyWDvmk
-X-Google-Smtp-Source: ADFU+vsPe3nR1yGq0IDimdwPKTmAbQvmNKp34gHbk96fo5xifYNzU9RqWOJGKqN9VqdizJVY2fi/ew==
-X-Received: by 2002:a65:5688:: with SMTP id v8mr850865pgs.403.1583898722629;
-        Tue, 10 Mar 2020 20:52:02 -0700 (PDT)
+        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=SImUdL5+Px2FKhiXlk6gKByruov3pRF3MA7DTFrWhiY=;
+        b=oHb3qam5Vepu9k/sufaWkA+LE74L+UjBRuJ9tIr+yMhL1uuDBAl8N/A/Y8dMo1zuqW
+         xg6qEhn5fRE5La9SfWKW6ZGq+6imkMed7J3GG5uWZOWscl/y0gm0biimHCIcWCHdM5lv
+         1KBDbtP6L0/0F7DorP0twEC7l8xWKo75ClU83lTlcLHTgpEfjCy8NpkAzUxCQoeyj869
+         ryY5pGNGD2JeUwijeX6a7JsWuGH+DRSh6U3PwkwmBypyTbJzf+jVUj2G8w72FnYL7szE
+         g6Am3PD0KqQT/aBg1m5jeiFAC2StzUUa3XjPOZwvf9qFsKjnedTRhFWuZZ7ScExVIKnd
+         gz/w==
+X-Gm-Message-State: ANhLgQ3Y0Z0u39Rp4egWYcvZULs5fsOCk82SIoNH6logKRjFpo5xBQOg
+        dMsAYicH2UE0VTjrNB5O7YcRXd8h
+X-Google-Smtp-Source: ADFU+vvHBEiYhLiJSjPGJbW3SEMEMF7VcaWHHfrmVuTj/AOGU5z+TD1PN1Om3q8wvPD9LjSiHGAP8A==
+X-Received: by 2002:a63:9d04:: with SMTP id i4mr976636pgd.294.1583899447098;
+        Tue, 10 Mar 2020 21:04:07 -0700 (PDT)
 Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id g11sm20680768pfo.184.2020.03.10.20.52.00
+        by smtp.gmail.com with ESMTPSA id b12sm3614528pjz.46.2020.03.10.21.04.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Mar 2020 20:52:01 -0700 (PDT)
-Subject: Re: [EXT] Re: [PATCH v3 1/1] scsi: ufs: fix LRB pointer incorrect
- initialization issue
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20200309161057.9897-1-beanhuo@micron.com>
- <20200309161057.9897-2-beanhuo@micron.com>
- <ede4addf-73c7-e5f8-5143-91eb0cd3eb9b@acm.org>
- <BN7PR08MB5684F9667DE1CD05D0D01EE6DBFF0@BN7PR08MB5684.namprd08.prod.outlook.com>
+        Tue, 10 Mar 2020 21:04:06 -0700 (PDT)
+Subject: Re: [PATCH] scsi: avoid repetitive logging of device offline messages
+To:     "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
+References: <20200309181416.10665-1-emilne@redhat.com>
+ <b7f3c0d1-0f08-83e2-6df5-8b6a02201ba6@acm.org>
+ <c9ebe5ecaff898c848402413d9404b23dfe999e6.camel@redhat.com>
+ <ccbaa97a-c946-f235-c7c3-3d9d6bf319c0@acm.org>
+ <e13d0e51e83fd2fc5d653633a9cfb74e2b24b5a6.camel@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -83,12 +72,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <00b4f8d0-32d3-58c7-6361-6177ed8aaaed@acm.org>
-Date:   Tue, 10 Mar 2020 20:49:48 -0700
+Message-ID: <789f1dc7-38bf-eced-85b1-ad22e7d69757@acm.org>
+Date:   Tue, 10 Mar 2020 21:01:51 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <BN7PR08MB5684F9667DE1CD05D0D01EE6DBFF0@BN7PR08MB5684.namprd08.prod.outlook.com>
+In-Reply-To: <e13d0e51e83fd2fc5d653633a9cfb74e2b24b5a6.camel@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -97,43 +86,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-10 00:53, Bean Huo (beanhuo) wrote:
-> Hi, Bart 
-> 
->> Subject: [EXT] Re: [PATCH v3 1/1] scsi: ufs: fix LRB pointer incorrect initialization
->> issue
+On 2020-03-10 09:44, Ewan D. Milne wrote:
+> On Mon, 2020-03-09 at 19:02 -0700, Bart Van Assche wrote:
+>> On 2020-03-09 13:54, Ewan D. Milne wrote:
+>>> The only purpose of the flag is to try to suppress duplicate messages,
+>>> in the common case it is a single thread submitting the queued I/O which
+>>> is going to get rejected.  If multiple threads submit I/O there might
+>>> be duplicated messages but that is not all that critical.  Hence the
+>>> lack of locking on the flag.
 >>
->> On 2020-03-09 09:10, huobean@gmail.com wrote:
->>> @@ -4834,6 +4829,7 @@ static void __ufshcd_transfer_req_compl(struct
->> ufs_hba *hba,
->>>  			continue;
->>>  		cmd = blk_mq_rq_to_pdu(req);
->>>  		lrbp = scsi_cmd_priv(cmd);
->>> +		ufshcd_init_lrb(hba, lrbp, index);
->>>  		if (ufshcd_is_scsi(req)) {
->>>  			ufshcd_add_command_trace(hba, req, "complete");
->>>  			result = ufshcd_transfer_rsp_status(hba, lrbp);
->>
->> This ufshcd_init_lrb() call looks incorrect to me. I think that
->> ufshcd_init_lrb() should only be called before a request is submitted to the UFS
->> controller and also that ufshcd_init_lrb() should not be called from the
->> completion path.
+>> My concern is that scsi_prep_state_check() may be called from more than
+>> one thread at the same time and that bitfield changes are not thread-safe.
 > 
-> __ufshcd_transfer_req_compl()
-> 	ufshcd_transfer_rsp_status()  will access lrbp->ucd_rsp_ptr.
-> Without calling ufshcd_init_lrb() here, there will be an error.
+> Yes, I agree that the flag is not thread-safe, but I don't think that
+> is a concern.  Because if we get multiple rejecting I/O messages until
+> the other threads see the flag change we are no worse off than before,
+> and once the sdev state changes back to SDEV_RUNNING we won't call
+> scsi_prep_state_check() and examine the flag.
 
-Hi Bean,
+Hi Ewan,
 
-I think that ufshcd_init_lrb() should only be called from the code that
-prepares a command before it is submitted and not from the command
-completion path. Because v5.6-rc5 has already been released, there is
-not that much time left until the merge window opens. I think it is less
-risky to revert commit 34656dda81ac ("scsi: ufs: Let the SCSI core
-allocate per-command UFS data") than to proceed with the above patch. Do
-you want to submit a revert or do you perhaps want me to do that?
+This is the entire list of bitfields in struct scsi_device:
+
+	unsigned removable:1;
+	unsigned changed:1;
+	unsigned busy:1;
+	unsigned lockable:1;
+	unsigned locked:1;
+	unsigned borken:1;
+	unsigned disconnect:1;
+	unsigned soft_reset:1;
+	unsigned sdtr:1;
+	unsigned wdtr:1;
+	unsigned ppr:1;
+	unsigned tagged_supported:1;
+	unsigned simple_tags:1;
+	unsigned was_reset:1;
+	unsigned expecting_cc_ua:1;
+	unsigned use_10_for_rw:1;
+	unsigned use_10_for_ms:1;
+	unsigned set_dbd_for_ms:1;
+	unsigned no_report_opcodes:1;
+	unsigned no_write_same:1;
+	unsigned use_16_for_rw:1;
+	unsigned skip_ms_page_8:1;
+	unsigned skip_ms_page_3f:1;
+	unsigned skip_vpd_pages:1;
+	unsigned try_vpd_pages:1;
+	unsigned use_192_bytes_for_3f:1;
+	unsigned no_start_on_add:1;
+	unsigned allow_restart:1;
+	unsigned manage_start_stop:1;
+	unsigned start_stop_pwr_cond:1;
+	unsigned no_uld_attach:1;
+	unsigned select_no_atn:1;
+	unsigned fix_capacity:1;
+	unsigned guess_capacity:1;
+	unsigned retry_hwerror:1;
+	unsigned last_sector_bug:1;
+	unsigned no_read_disc_info:1;
+	unsigned no_read_capacity_16:1;
+	unsigned try_rc_10_first:1;
+	unsigned security_supported:1;
+	unsigned is_visible:1;
+	unsigned wce_default_on:1;
+	unsigned no_dif:1;
+	unsigned broken_fua:1;
+	unsigned lun_in_cdb:1;
+	unsigned unmap_limit_for_ws:1;
+	unsigned rpm_autosuspend:1;
+
+If any thread modifies any of these existing bitfields concurrently with
+scsi_prep_state_check(), one of the two modifications will be lost. That
+is because compilers implement bitfield changes as follows:
+
+new_value = (old_value & ~(1 << ...)) | (1 << ...);
+
+If two such assignment statements are executed concurrently, both start
+from the same 'old_value' and only one of the two changes will happen.
+I'm concerned that this patch introduces a maintenance problem in the
+long term. Has it been considered to make 'offline_already' a 32-bits
+integer variable or a boolean instead of a bitfield? I think such
+variables can be modified without discarding values written from another
+thread.
 
 Thanks,
 
 Bart.
+
 
