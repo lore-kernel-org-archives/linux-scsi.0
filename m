@@ -2,76 +2,120 @@ Return-Path: <SRS0=VRpU=44=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CB7FC10F29
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 09:16:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E62CC18E5A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 10:37:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B0E720848
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 09:16:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6416E21D7E
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 10:37:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="dsY+/MsB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728739AbgCKJQk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Mar 2020 05:16:40 -0400
-Received: from mx2.suse.de ([195.135.220.15]:47778 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726097AbgCKJQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Mar 2020 05:16:39 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 9F377AB3D;
-        Wed, 11 Mar 2020 09:16:37 +0000 (UTC)
-From:   Takashi Iwai <tiwai@suse.de>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Brian King <brking@us.ibm.com>
-Subject: [PATCH 5/8] scsi: ipr: Use scnprintf() for avoiding potential buffer overflow
-Date:   Wed, 11 Mar 2020 10:16:27 +0100
-Message-Id: <20200311091630.22565-6-tiwai@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200311091630.22565-1-tiwai@suse.de>
-References: <20200311091630.22565-1-tiwai@suse.de>
+        id S1726817AbgCKKhJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 06:37:09 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:39973 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726672AbgCKKhJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 06:37:09 -0400
+Received: by mail-pg1-f194.google.com with SMTP id t24so964041pgj.7
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2020 03:37:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=zDAtGZZlnMl0nThiIiOP76Uq+16Zqz24GZvrNhqC2vY=;
+        b=dsY+/MsBt2iIGklM4BYJHdvvl/3P5lxTQo7dEML4wIcJ5OwCA/ZT/ilZbXJBuojPHD
+         que491N0rlKv/g1op+AaBWzoLHZwxeMmc/8lP+zaX7reNzfjUbzUlOES96zAsgqLN4Wu
+         TbwTXyp5hpVER9ECiK0S512Vf6YDib45g7sGI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=zDAtGZZlnMl0nThiIiOP76Uq+16Zqz24GZvrNhqC2vY=;
+        b=biPfq1gUbyKgxxk/T92LmAKh6KOSsE4c00XR2U3GeLKBl4aYaJY7lv+Yh4wV1u1Xvu
+         VTd4Z7wDuutTz6cVCRa+w670uSrR2BAYwzij9IT4KzwqYDfbpSqHCG8kncIMj2hbdclx
+         jpDDsDMRw5DI6pxqjoYggM7hP9J/vlTStlEl3LalWA1rIdrJ69KqBQGoMDuaigrbU/xk
+         x9txbqpCgcfhtHe6FzKtvv0+n2Po4V7D7dLJ/t/uI0pbtM8FlKO1rOi3J4f81LEs1QA0
+         QJRAmgLmeTw25LNdVr+7WC+C+zsNNj/80ATG8OrWxZDIHrX6UnWI8jYHjltg6Rusf8S3
+         6lSA==
+X-Gm-Message-State: ANhLgQ0GrYKblvwb2NYEeqy5Y9UbgD7zQ4nOEBDFRPPJ3avvrOf0y5/o
+        dLUA14/txOmhBAGakF70rzG86Q==
+X-Google-Smtp-Source: ADFU+vvNPQ1qsX7n2U3cijoD2VYGzq2zDqlEBEbY82LByWfqG8NCc62qAiwBkAu6hBRj9M5TBs6FBg==
+X-Received: by 2002:a63:82c2:: with SMTP id w185mr2331272pgd.382.1583923028194;
+        Wed, 11 Mar 2020 03:37:08 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id z3sm51156004pfz.155.2020.03.11.03.37.05
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 11 Mar 2020 03:37:07 -0700 (PDT)
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, stable@vger.kernel.org,
+        amit@kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Fix kernel panic observed on soft HBA unplug
+Date:   Wed, 11 Mar 2020 06:36:53 -0400
+Message-Id: <1583923013-3935-1-git-send-email-sreekanth.reddy@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since snprintf() returns the would-be-output size instead of the
-actual output size, the succeeding calls may go beyond the given
-buffer limit.  Fix it by replacing with scnprintf().
+Generic protection fault type kernel panic is observed when user
+performs soft(ordered) HBA unplug operation while IOs are running
+on drives connected to HBA.
 
-Cc: Brian King <brking@us.ibm.com>
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
+When user performs ordered HBA removal operation then kernel calls
+PCI device's .remove() call back function where driver is flushing out
+all the outstanding SCSI IO commands with DID_NO_CONNECT host byte and
+also un-maps sg buffers allocated for these IO commands.
+But in the ordered HBA removal case (unlike of real HBA hot unplug)
+HBA device is still alive and hence HBA hardware is performing the
+DMA operations to those buffers on the system memory which are already
+unmapped while flushing out the outstanding SCSI IO commands
+and this leads to Kernel panic.
+
+Fix:
+Don't flush out the outstanding IOs from .remove() path in case of
+ordered HBA removal since HBA will be still alive in this case and
+it can complete the outstanding IOs. Flush out the outstanding IOs
+only in case physical HBA hot unplug where their won't be any
+communication with the HBA.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/ipr.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index ae45cbe98ae2..155832d54efa 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -1299,9 +1299,9 @@ static char *__ipr_format_res_path(u8 *res_path, char *buffer, int len)
- 	char *p = buffer;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 778d5e6..04a40af 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -9908,8 +9908,8 @@ static void scsih_remove(struct pci_dev *pdev)
  
- 	*p = '\0';
--	p += snprintf(p, buffer + len - p, "%02X", res_path[0]);
-+	p += scnprintf(p, buffer + len - p, "%02X", res_path[0]);
- 	for (i = 1; res_path[i] != 0xff && ((i * 3) < len); i++)
--		p += snprintf(p, buffer + len - p, "-%02X", res_path[i]);
-+		p += scnprintf(p, buffer + len - p, "-%02X", res_path[i]);
+ 	ioc->remove_host = 1;
  
- 	return buffer;
- }
-@@ -1322,7 +1322,7 @@ static char *ipr_format_res_path(struct ipr_ioa_cfg *ioa_cfg,
- 	char *p = buffer;
+-	mpt3sas_wait_for_commands_to_complete(ioc);
+-	_scsih_flush_running_cmds(ioc);
++	if (!pci_device_is_present(pdev))
++		_scsih_flush_running_cmds(ioc);
  
- 	*p = '\0';
--	p += snprintf(p, buffer + len - p, "%d/", ioa_cfg->host->host_no);
-+	p += scnprintf(p, buffer + len - p, "%d/", ioa_cfg->host->host_no);
- 	__ipr_format_res_path(res_path, p, len - (buffer - p));
- 	return buffer;
- }
+ 	_scsih_fw_event_cleanup_queue(ioc);
+ 
+@@ -9992,8 +9992,8 @@ static void scsih_remove(struct pci_dev *pdev)
+ 
+ 	ioc->remove_host = 1;
+ 
+-	mpt3sas_wait_for_commands_to_complete(ioc);
+-	_scsih_flush_running_cmds(ioc);
++	if (!pci_device_is_present(pdev))
++		_scsih_flush_running_cmds(ioc);
+ 
+ 	_scsih_fw_event_cleanup_queue(ioc);
+ 
 -- 
-2.16.4
+1.8.3.1
 
