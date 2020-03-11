@@ -2,88 +2,152 @@ Return-Path: <SRS0=VRpU=44=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41DA5C18E5A
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 11:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2E0BC10F27
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 11:50:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14FEE22525
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 11:29:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A53CA222C3
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 11:50:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d0lRn6AB"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YQh5UMbw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729058AbgCKL3l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Mar 2020 07:29:41 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:41400 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726387AbgCKL3k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 07:29:40 -0400
-Received: by mail-wr1-f66.google.com with SMTP id s14so2110298wrt.8;
-        Wed, 11 Mar 2020 04:29:37 -0700 (PDT)
+        id S1729216AbgCKLuD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 07:50:03 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:42968 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729165AbgCKLuD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 07:50:03 -0400
+Received: by mail-ot1-f66.google.com with SMTP id 66so1579101otd.9
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2020 04:50:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=F/1IjY74pBxnbZAUC/tSx+RiXpp/LVmOLwLIf85D7FY=;
-        b=d0lRn6ABE5qWra0CLlK2bhJ/dlNno9C070G9gKL/LsIXVl0vow/djfBBj5+/fDJNuW
-         HTLqJMr5dlBP9j4eZJvLfi+yQ6O257cWRfx2+O7EvG/C85kKtA/38VDPwWdXKciT6AW6
-         nFUWBzmX1pUvInpxQ3IcOGzuK1w5FGznEnIQoc1ir4VdhACggCqn1sOMw0HC96a4GjXZ
-         ND/z8JjYThiFyGrMdSeDpljZQQIw8zWLvX9KIy3natqYmdBtz7HoHruqB+QPmsywytwU
-         +LHR1rZ30tyqwA1PPNWNp+6/AoIjkBAe2+RfdnIdY4FWbT0uv7gqz+4YIXjpbZEG/8TW
-         8nSg==
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Xy7DjMTeIRHoMxJnXMiMNMf4Q69p1Oxv7TIvAtxfT9c=;
+        b=YQh5UMbw47J5h9vQqSC3JBKsWPZuXJXRmK/pRh1J6TbaR1v/u7wCbaOwP98A9Vqb/C
+         BvNhZKL8SEunuynTYeXJPATieyTaDEEfxM0MynoM8MJvIYY12alDBPaNnO5c/zNwcv8z
+         xFx0pcV0HWHa3ytx70YfrftAkITVWUKqcFBr4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=F/1IjY74pBxnbZAUC/tSx+RiXpp/LVmOLwLIf85D7FY=;
-        b=GDwYLGcHaNmMKd32wZgLnfvms8WZ2wSy9hcc9ZBk9NrvsfSE281VYrpw78+G4QXTiA
-         FjRbPzRXh3iMrvuPTquR5rLgnmCSRjTU6boRbFG2vnN3YwFKyw98LpDlpNFnTPqJMD3t
-         rsBz3gch+70wGAP71nXEzrFqgDQ+sjG1JNXBUHR2hp3PZltwqJ0Omf6Y8oNQHFLd/X4u
-         sRuOpFr8Cvg8KiNLvIYgKLvNLAfAfgaoHwDnXkPkdHaCUY51Ow1wCM2g+KxkRu+VB4sY
-         rvZuZfKN80S6MucA7OwucpBGKQZPKoDDQdjH4WJ+Rqiy+n1FHMrr8GC5s2Ma7E50Q32o
-         scoQ==
-X-Gm-Message-State: ANhLgQ3hVjLryL3OF7bOpwKytogLWzqLKI2nVvTO3njBqQ9NmhZdccti
-        gOOsE5LkZwR8th5Q2EasUpY=
-X-Google-Smtp-Source: ADFU+vu94/0g3Ai+2NOGtniTLjXfMqe4XX0B950G1NhcTNpERstbQBnS7eidIwjhblo7ehgQWM7WUw==
-X-Received: by 2002:adf:c40e:: with SMTP id v14mr3992518wrf.408.1583926176989;
-        Wed, 11 Mar 2020 04:29:36 -0700 (PDT)
-Received: from localhost.localdomain (ip5f5bee49.dynamic.kabel-deutschland.de. [95.91.238.73])
-        by smtp.gmail.com with ESMTPSA id l64sm8190735wmf.30.2020.03.11.04.29.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Mar 2020 04:29:36 -0700 (PDT)
-From:   huobean@gmail.com
-X-Google-Original-From: beanhuo@micron.com
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/1] Revert "scsi: ufs: Let the SCSI core allocate per-command UFS data"
-Date:   Wed, 11 Mar 2020 12:29:20 +0100
-Message-Id: <20200311112921.29031-1-beanhuo@micron.com>
-X-Mailer: git-send-email 2.17.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Xy7DjMTeIRHoMxJnXMiMNMf4Q69p1Oxv7TIvAtxfT9c=;
+        b=bfNDndYz1u2gn3mT4VoIUU2Ct+02hHWRXKpRBM9HllJqfv5a64Y1FSYLM93Gk77r91
+         MzS5bBYtqfeQsepzeGIya9l8+UbGz8OZRiuVjRtkKVjowKQMG8bJyFmpOl3DKnjRwBCi
+         mnyppGOr4x32H9mHog9KVYVInLAAiRomUyZ42jXLN12DhNrPi/VtjwtLUV1LgxCTjUxw
+         iWoQRSr+3yLB6u8gzgtxP8QFN5a/fYB9Xb5lz/puqr3q1+ZfYknGbknON5fLqxEdNFNU
+         3h/TXx5647q9EVJ1ZsDvdBFVE4NnmjwKCrHgSPN8NLRc/MS6brDoNNGnubIeuhM3PbUy
+         5Dmg==
+X-Gm-Message-State: ANhLgQ2RrVq6JsmRJA8lgoj4cRZZiwC8Eji13tBjeXQfzKknCDkrzNfF
+        AvjgUCekpn3xcTI0h36LGPALWce7QlP/Sqs8PCFSrg==
+X-Google-Smtp-Source: ADFU+vsZ5brv97OyXUL7zxrDRiFZQpFhd3Ccroy9Ob0D0PnJQzHP6SONUsVWuzSd2CJPEiT5d3eM3Izh1O9cZo3MMBM=
+X-Received: by 2002:a9d:64b:: with SMTP id 69mr1899193otn.237.1583927402216;
+ Wed, 11 Mar 2020 04:50:02 -0700 (PDT)
+MIME-Version: 1.0
+References: <1583923013-3935-1-git-send-email-sreekanth.reddy@broadcom.com>
+ <5d68479b9a852cc8c29b36eaa76c45cbd4fdd39a.camel@kernel.org> <CAK=zhgrpov8=MkJVVhyr2O6zcJHaR3B-2h2TcRbyCXBx9i8GCQ@mail.gmail.com>
+In-Reply-To: <CAK=zhgrpov8=MkJVVhyr2O6zcJHaR3B-2h2TcRbyCXBx9i8GCQ@mail.gmail.com>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Wed, 11 Mar 2020 17:19:50 +0530
+Message-ID: <CAK=zhgp-oFoMkG_X8e5sm13=14TA5WZAHXYSeuZAV2fmUKbPow@mail.gmail.com>
+Subject: Re: [PATCH] mpt3sas: Fix kernel panic observed on soft HBA unplug
+To:     Amit Shah <amit@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bean Huo <beanhuo@micron.com>
+On Wed, Mar 11, 2020 at 4:55 PM Sreekanth Reddy
+<sreekanth.reddy@broadcom.com> wrote:
+>
+> On Wed, Mar 11, 2020 at 4:35 PM Amit Shah <amit@kernel.org> wrote:
+> >
+> > On Wed, 2020-03-11 at 06:36 -0400, Sreekanth Reddy wrote:
+> > > Generic protection fault type kernel panic is observed when user
+> > > performs soft(ordered) HBA unplug operation while IOs are running
+> > > on drives connected to HBA.
+> > >
+> > > When user performs ordered HBA removal operation then kernel calls
+> > > PCI device's .remove() call back function where driver is flushing
+> > > out
+> > > all the outstanding SCSI IO commands with DID_NO_CONNECT host byte
+> > > and
+> > > also un-maps sg buffers allocated for these IO commands.
+> > > But in the ordered HBA removal case (unlike of real HBA hot unplug)
+> > > HBA device is still alive and hence HBA hardware is performing the
+> > > DMA operations to those buffers on the system memory which are
+> > > already
+> > > unmapped while flushing out the outstanding SCSI IO commands
+> > > and this leads to Kernel panic.
+> > >
+> > > Fix:
+> > > Don't flush out the outstanding IOs from .remove() path in case of
+> > > ordered HBA removal since HBA will be still alive in this case and
+> > > it can complete the outstanding IOs. Flush out the outstanding IOs
+> > > only in case physical HBA hot unplug where their won't be any
+> > > communication with the HBA.
+> >
+> > Can you please point to the commit that introduces the bug?
+>
+> Sure I will add the commit ID which introduced this bug in the next patch.
+>
+> >
+> > >
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> > > ---
+> > >  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
+> > >  1 file changed, 4 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > index 778d5e6..04a40af 100644
+> > > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > @@ -9908,8 +9908,8 @@ static void scsih_remove(struct pci_dev *pdev)
+> > >
+> > >       ioc->remove_host = 1;
+> > >
+> > > -     mpt3sas_wait_for_commands_to_complete(ioc);
+> > > -     _scsih_flush_running_cmds(ioc);
+> > > +     if (!pci_device_is_present(pdev))
+> > > +             _scsih_flush_running_cmds(ioc);
+> > >
+> > >       _scsih_fw_event_cleanup_queue(ioc);
+> > >
+> > > @@ -9992,8 +9992,8 @@ static void scsih_remove(struct pci_dev *pdev)
+> >
+> > Just a note: this function is scsih_shutdown().  Doesn't block
+> > application of the patch, though.  Just wondering how the patch was
+> > created.
 
-Hi, Martin
+I got your query now,  yes this hunk change is in scsih_shutdown()
+function. I am not sure why scsih_remove name is getting displayed
+here in this hunk. I have used 'git format-patch' to generate the
+patch.
 
-Based on Bart's feedack, the less risky way is to revert commit:
-
-34656dda81ac "scsi: ufs: Let the SCSI core allocate per-command UFS data"
-
-Bean Huo (1):
-  Revert "scsi: ufs: Let the SCSI core allocate per-command UFS data"
-
- drivers/scsi/ufs/ufshcd.c | 198 ++++++++++++++------------------------
- drivers/scsi/ufs/ufshcd.h |   5 +
- 2 files changed, 75 insertions(+), 128 deletions(-)
-
--- 
-2.17.1
-
+>
+> Sorry I didn't get you. Can you please elaborate your query?
+>
+> >
+> > >
+> > >       ioc->remove_host = 1;
+> > >
+> > > -     mpt3sas_wait_for_commands_to_complete(ioc);
+> > > -     _scsih_flush_running_cmds(ioc);
+> > > +     if (!pci_device_is_present(pdev))
+> > > +             _scsih_flush_running_cmds(ioc);
+> > >
+> > >       _scsih_fw_event_cleanup_queue(ioc);
+> > >
+> >
