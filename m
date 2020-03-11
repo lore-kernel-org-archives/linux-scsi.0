@@ -2,84 +2,99 @@ Return-Path: <SRS0=VRpU=44=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6491EC18E5B
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:03:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F421FC10F27
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:38:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C03521D56
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:03:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3511720575
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:38:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Pq5WI5+3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729696AbgCKOC7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Mar 2020 10:02:59 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35434 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729646AbgCKOC7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 10:02:59 -0400
-Received: by mail-pg1-f194.google.com with SMTP id 7so1274673pgr.2;
-        Wed, 11 Mar 2020 07:02:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=KLtJmXhCIzrNkvAdjsvCjhryZc8RxSTUaj1Utezcg4w=;
-        b=Ul/Qi53HauxzhwgPCTYwXJ5mV+gpqp+w7OlTlqBFJLkGfD4XnD0PRqpyAZxsCFimZI
-         H6I3+d3M3K5i6dxVBQfMMPzAKrZWUW2MM+TNS0e9jHUU/h9NHfuDAxOO/u7grHRFQ85K
-         Hw4v37vXOntYmAiwAJx2ixbZQjKiHHDC9cltftZC7t8AV2EymBhIWC/DBfAqRJEkO58B
-         EDNdnChnZgmLgS4xzjbJ8kyEf1c3DZILjz0BbVr29S+c7X4xKsj0u1SIYyMGEHqGtPI4
-         zuL7S4/iIxDssk7xrNY5aiLnPvCfyuWeX4LUY9qJBb5WmLx8Ra3cVVihEDJWTOxbFq76
-         qLZA==
-X-Gm-Message-State: ANhLgQ2Pd0007nsL8qlkIrbOlKwtT4fxKQ0Ey223IdPk6G2XDGx7lbjj
-        HgyBZwCxL1t0sPrKFfM2cvu5d7M1
-X-Google-Smtp-Source: ADFU+vsM1mSTO9fsERSzVPJY4Zav1t/67hGUP2jF0REJxK+KfcAyl4/qSyv2hDMWOAKT7jFhIhr87Q==
-X-Received: by 2002:a63:af58:: with SMTP id s24mr3006593pgo.15.1583935377149;
-        Wed, 11 Mar 2020 07:02:57 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:af99:b4cf:6b17:1075? ([2601:647:4000:d7:af99:b4cf:6b17:1075])
-        by smtp.gmail.com with ESMTPSA id 63sm11193597pfx.132.2020.03.11.07.02.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Mar 2020 07:02:55 -0700 (PDT)
-Subject: Re: [EXT] RE: [PATCH 0/1] Revert "scsi: ufs: Let the SCSI core
- allocate per-command UFS data"
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        Avri Altman <Avri.Altman@wdc.com>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20200311112921.29031-1-beanhuo@micron.com>
- <SN6PR04MB46404175998962B4FA575824FCFC0@SN6PR04MB4640.namprd04.prod.outlook.com>
- <BN7PR08MB5684DBAD57C95A40CB62B24ADBFC0@BN7PR08MB5684.namprd08.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <cfa5b0c8-1ca6-5d1c-591b-67e783d979fd@acm.org>
-Date:   Wed, 11 Mar 2020 07:02:54 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1729833AbgCKOir (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 10:38:47 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:40540 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729718AbgCKOir (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Mar 2020 10:38:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583937526;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=/J3I+ex4SvmIY+7EAcBB18vkXoztt3EPUNGrhEijzQg=;
+        b=Pq5WI5+3lK28vT68QqPNB2qY5b8imDpU3Qc5ehVlL3EKH2DOHB7M+8inXmORr2xzETON5a
+        COGhIqiLF53q6FByp061XZT2xDBvRHAde0wgcyrTqWvR5c78GF4c1ALFw/4IIpEszOsRp2
+        ix8ABdXO6YZKwGXaYBCCFNgm+91u30w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-32-c2o9MtmFNf68XwawDK1keA-1; Wed, 11 Mar 2020 10:38:42 -0400
+X-MC-Unique: c2o9MtmFNf68XwawDK1keA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4FAA9800D54;
+        Wed, 11 Mar 2020 14:38:41 +0000 (UTC)
+Received: from emilne (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D4E1760BF1;
+        Wed, 11 Mar 2020 14:38:40 +0000 (UTC)
+Message-ID: <01a81b7a7e347ab1c567ad005658159af5a90050.camel@redhat.com>
+Subject: Re: [PATCH] scsi: avoid repetitive logging of device offline
+ messages
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+Date:   Wed, 11 Mar 2020 10:38:40 -0400
+In-Reply-To: <789f1dc7-38bf-eced-85b1-ad22e7d69757@acm.org>
+References: <20200309181416.10665-1-emilne@redhat.com>
+         <b7f3c0d1-0f08-83e2-6df5-8b6a02201ba6@acm.org>
+         <c9ebe5ecaff898c848402413d9404b23dfe999e6.camel@redhat.com>
+         <ccbaa97a-c946-f235-c7c3-3d9d6bf319c0@acm.org>
+         <e13d0e51e83fd2fc5d653633a9cfb74e2b24b5a6.camel@redhat.com>
+         <789f1dc7-38bf-eced-85b1-ad22e7d69757@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-In-Reply-To: <BN7PR08MB5684DBAD57C95A40CB62B24ADBFC0@BN7PR08MB5684.namprd08.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/11/20 5:53 AM, Bean Huo (beanhuo) wrote:
-> Hi, Avri
-> Do you want to revert all or two (scsi: ufs: Let the SCSI core allocate per-command UFS data,   scsi: core: Introduce {init,exit}_cmd_priv() )?
-> Because the patches "scsi: ufs: Simplify two tests" and  "scsi: ufs: Introduce ufshcd_init_lrb()" are ok to me.
-> No problem keeping them. Just this one "scsi: core: Introduce {init,exit}_cmd_priv()" is not necessary, since no drivers it now.
+On Tue, 2020-03-10 at 21:01 -0700, Bart Van Assche wrote:
+> 
 
-I agree with Bean. The other patches from the same series are small and 
-easy to review. The SCSI core patch has been tested with other SCSI LLDs.
+...
 
-Bart.
+> If any thread modifies any of these existing bitfields concurrently with
+> scsi_prep_state_check(), one of the two modifications will be lost. That
+> is because compilers implement bitfield changes as follows:
+> 
+> new_value = (old_value & ~(1 << ...)) | (1 << ...);
+> 
+> If two such assignment statements are executed concurrently, both start
+> from the same 'old_value' and only one of the two changes will happen.
+> I'm concerned that this patch introduces a maintenance problem in the
+> long term. Has it been considered to make 'offline_already' a 32-bits
+> integer variable or a boolean instead of a bitfield? I think such
+> variables can be modified without discarding values written from another
+> thread.
+> 
+> Thanks,
+> 
+> Bart.
+> 
+
+I understand your concern about long-term maintenance, and introducing
+a pattern that could be used by other code that needs more accurate
+state.  (Although, it is likely that a lock or an atomic operation might
+be required in other cases).  I'll post a v2 changing this to a boolean.
+
+-Ewan
+
+
