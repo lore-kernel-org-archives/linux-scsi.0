@@ -2,124 +2,170 @@ Return-Path: <SRS0=VRpU=44=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78821C10F27
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:39:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 534CDC18E5A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2ED520637
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:39:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TaMRLiyZ"
+	by mail.kernel.org (Postfix) with ESMTP id D8794206B1
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 14:49:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583938145;
+	bh=Lp2TDaKNCUJS9eZ3DKl1bd7agxEyvwp2y1IvejzOnZc=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
+	b=fKzsUGLOGSclvNqetPY45FMbHG+YduNPBfsj6wIi5lw+d7IvWQ3C2eWVFoPgqv+4o
+	 uDP+6YsQTjAEmz/GqmVhKwmZyqKkdCe1EQvHbN87VfJo9EW+TyiKDkPT5jT6AV5H49
+	 O2XO1Fmlz1b1Q3v/RXYPWSUDOv0KW3m7ov5uZeOc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729889AbgCKOjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Mar 2020 10:39:36 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:32066 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729795AbgCKOjf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Mar 2020 10:39:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1583937574;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=knoYa6Ul91pRyCLzoyCTBwuRxcecxBgIlJRY/JE6WzI=;
-        b=TaMRLiyZN9pD9PQoPSvgI8hEe935TJJ7M5dWW2GS3DAeI4lP51AdSqiY5LafnCV1klT9X+
-        3WT894knLhMdKMe1OHKRYdtgeoyJUEyv4rnVuMGFeZPJEW7YPiMNI4F6VQNMg1uO2FtL1D
-        wDWiWmL8rjzdogrFx4G40/mb4Wih7mw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-400-qfldEiujOJaXWKMSMLX6Cg-1; Wed, 11 Mar 2020 10:39:32 -0400
-X-MC-Unique: qfldEiujOJaXWKMSMLX6Cg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D816F107ACC7
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2020 14:39:31 +0000 (UTC)
-Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8369B8F37A
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2020 14:39:31 +0000 (UTC)
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: avoid repetitive logging of device offline messages
-Date:   Wed, 11 Mar 2020 10:39:30 -0400
-Message-Id: <20200311143930.20674-1-emilne@redhat.com>
-MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-Content-Transfer-Encoding: quoted-printable
+        id S1729878AbgCKOtG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 10:49:06 -0400
+Received: from merlin.infradead.org ([205.233.59.134]:43506 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729100AbgCKOtG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Mar 2020 10:49:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Mime-Version:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=ciO+jzKFeCBVC6s8fTQmFiAqvKcW+Wt5eThe08/9Bfo=; b=dCiVxa6GyVh2Peo4sOgXJ4i2Vk
+        MLKwNvJwvaY8M6i1FuGThikC1FEEkx6KFVEAGkHok+oTAWbFojTZeLB9cxmKHz8o/sHkQ0LuLgSoH
+        Crx0A3ObNpdOm0DFEdpJRItn8wggjBtNpFNeTKxsrXmmF9bdDJEd2VwbhRDJ4MZF7z8NPitYaQU8t
+        U0vipf/tP9t1oUQKtvJ8Pusiei4fw6o+M0556Yav7uOdoT4FkfAXDAN/zxIDIF7qNW3CRMhwCFc43
+        Dqmh2B7J6yL8iXNJ1DFa7/gumBXhXk0sqIi8AB6hMle/4ibiql3kD3Phi+4FYkXZw8CCR6PVPIsTS
+        Yq1O/tAw==;
+Received: from [54.239.6.186] (helo=u0c626add9cce5a.drs10.amazon.com)
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jC2fN-00017v-Q3; Wed, 11 Mar 2020 14:49:02 +0000
+Message-ID: <8bfcee3ee98003da4d6cdb81d9e80f860d85d7d5.camel@kernel.org>
+Subject: Re: [PATCH] mpt3sas: Fix kernel panic observed on soft HBA unplug
+From:   Amit Shah <amit@kernel.org>
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
+Date:   Wed, 11 Mar 2020 15:48:59 +0100
+In-Reply-To: <CAK=zhgp-oFoMkG_X8e5sm13=14TA5WZAHXYSeuZAV2fmUKbPow@mail.gmail.com>
+References: <1583923013-3935-1-git-send-email-sreekanth.reddy@broadcom.com>
+         <5d68479b9a852cc8c29b36eaa76c45cbd4fdd39a.camel@kernel.org>
+         <CAK=zhgrpov8=MkJVVhyr2O6zcJHaR3B-2h2TcRbyCXBx9i8GCQ@mail.gmail.com>
+         <CAK=zhgp-oFoMkG_X8e5sm13=14TA5WZAHXYSeuZAV2fmUKbPow@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Large queues of I/O to offline devices that are eventually
-submitted when devices are unblocked result in a many repeated
-"rejecting I/O to offline device" messages.  These messages
-can fill up the dmesg buffer in crash dumps so no useful
-prior messages remain.  In addition, if a serial console
-is used, the flood of messages can cause a hard lockup in
-the console code.
+On Wed, 2020-03-11 at 17:19 +0530, Sreekanth Reddy wrote:
+> On Wed, Mar 11, 2020 at 4:55 PM Sreekanth Reddy
+> <sreekanth.reddy@broadcom.com> wrote:
+> > 
+> > On Wed, Mar 11, 2020 at 4:35 PM Amit Shah <amit@kernel.org> wrote:
+> > > 
+> > > On Wed, 2020-03-11 at 06:36 -0400, Sreekanth Reddy wrote:
+> > > > Generic protection fault type kernel panic is observed when
+> > > > user
+> > > > performs soft(ordered) HBA unplug operation while IOs are
+> > > > running
+> > > > on drives connected to HBA.
+> > > > 
+> > > > When user performs ordered HBA removal operation then kernel
+> > > > calls
+> > > > PCI device's .remove() call back function where driver is
+> > > > flushing
+> > > > out
+> > > > all the outstanding SCSI IO commands with DID_NO_CONNECT host
+> > > > byte
+> > > > and
+> > > > also un-maps sg buffers allocated for these IO commands.
+> > > > But in the ordered HBA removal case (unlike of real HBA hot
+> > > > unplug)
+> > > > HBA device is still alive and hence HBA hardware is performing
+> > > > the
+> > > > DMA operations to those buffers on the system memory which are
+> > > > already
+> > > > unmapped while flushing out the outstanding SCSI IO commands
+> > > > and this leads to Kernel panic.
+> > > > 
+> > > > Fix:
+> > > > Don't flush out the outstanding IOs from .remove() path in case
+> > > > of
+> > > > ordered HBA removal since HBA will be still alive in this case
+> > > > and
+> > > > it can complete the outstanding IOs. Flush out the outstanding
+> > > > IOs
+> > > > only in case physical HBA hot unplug where their won't be any
+> > > > communication with the HBA.
+> > > 
+> > > Can you please point to the commit that introduces the bug?
+> > 
+> > Sure I will add the commit ID which introduced this bug in the next
+> > patch.
 
-Introduce a flag indicating the message has already been logged
-for the device, and reset the flag when scsi_device_set_state()
-changes the device state.
+Thanks.
 
-v2:
-	Changed flag type from bitfield to bool by request
+> > 
+> > > 
+> > > > 
+> > > > Cc: stable@vger.kernel.org
+> > > > Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> > > > ---
+> > > >  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
+> > > >  1 file changed, 4 insertions(+), 4 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > > b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > > index 778d5e6..04a40af 100644
+> > > > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > > > @@ -9908,8 +9908,8 @@ static void scsih_remove(struct pci_dev
+> > > > *pdev)
+> > > > 
+> > > >       ioc->remove_host = 1;
+> > > > 
+> > > > -     mpt3sas_wait_for_commands_to_complete(ioc);
+> > > > -     _scsih_flush_running_cmds(ioc);
+> > > > +     if (!pci_device_is_present(pdev))
+> > > > +             _scsih_flush_running_cmds(ioc);
+> > > > 
+> > > >       _scsih_fw_event_cleanup_queue(ioc);
+> > > > 
+> > > > @@ -9992,8 +9992,8 @@ static void scsih_remove(struct pci_dev
+> > > > *pdev)
+> > > 
+> > > Just a note: this function is scsih_shutdown().  Doesn't block
+> > > application of the patch, though.  Just wondering how the patch
+> > > was
+> > > created.
+> 
+> I got your query now,  yes this hunk change is in scsih_shutdown()
+> function. I am not sure why scsih_remove name is getting displayed
+> here in this hunk. I have used 'git format-patch' to generate the
+> patch.
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_lib.c    | 8 ++++++--
- include/scsi/scsi_device.h | 3 +++
- 2 files changed, 9 insertions(+), 2 deletions(-)
+Thanks.  Does the commit description need an update as well?  It only
+talks about remove callback.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 610ee41..a45e728 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1240,8 +1240,11 @@ scsi_prep_state_check(struct scsi_device *sdev, st=
-ruct request *req)
- 		 * commands.  The device must be brought online
- 		 * before trying any recovery commands.
- 		 */
--		sdev_printk(KERN_ERR, sdev,
--			    "rejecting I/O to offline device\n");
-+		if (!sdev->offline_already) {
-+			sdev->offline_already =3D true;
-+			sdev_printk(KERN_ERR, sdev,
-+				    "rejecting I/O to offline device\n");
-+		}
- 		return BLK_STS_IOERR;
- 	case SDEV_DEL:
- 		/*
-@@ -2340,6 +2343,7 @@ scsi_device_set_state(struct scsi_device *sdev, enu=
-m scsi_device_state state)
- 		break;
-=20
- 	}
-+	sdev->offline_already =3D false;
- 	sdev->sdev_state =3D state;
- 	return 0;
-=20
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f8312a3..cd9656f 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -204,6 +204,9 @@ struct scsi_device {
- 	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
- 	unsigned rpm_autosuspend:1;	/* Enable runtime autosuspend at device
- 					 * creation time */
-+
-+	bool offline_already;		/* Device offline message logged */
-+
- 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
-=20
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events=
- */
---=20
-2.1.0
+> 
+> > 
+> > Sorry I didn't get you. Can you please elaborate your query?
+> > 
+> > > 
+> > > > 
+> > > >       ioc->remove_host = 1;
+> > > > 
+> > > > -     mpt3sas_wait_for_commands_to_complete(ioc);
+> > > > -     _scsih_flush_running_cmds(ioc);
+> > > > +     if (!pci_device_is_present(pdev))
+> > > > +             _scsih_flush_running_cmds(ioc);
+> > > > 
+> > > >       _scsih_fw_event_cleanup_queue(ioc);
+> > > > 
 
