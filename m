@@ -2,38 +2,42 @@ Return-Path: <SRS0=VRpU=44=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B39F1C10F25
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 06:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C3EC10F25
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 06:58:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E4522146E
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 06:55:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08D5E20873
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Mar 2020 06:58:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728325AbgCKGzu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Mar 2020 02:55:50 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56254 "EHLO mx2.suse.de"
+        id S1726923AbgCKG6x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Mar 2020 02:58:53 -0400
+Received: from mx2.suse.de ([195.135.220.15]:57504 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725976AbgCKGzu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Mar 2020 02:55:50 -0400
+        id S1726160AbgCKG6x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Mar 2020 02:58:53 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 27380AF47;
-        Wed, 11 Mar 2020 06:55:47 +0000 (UTC)
-Subject: Re: [PATCH RFC v2 01/24] scsi: add 'nr_reserved_cmds' field to the
- SCSI host template
-To:     Ming Lei <ming.lei@redhat.com>, John Garry <john.garry@huawei.com>
+        by mx2.suse.de (Postfix) with ESMTP id 86921AECE;
+        Wed, 11 Mar 2020 06:58:50 +0000 (UTC)
+Subject: Re: [PATCH RFC v2 02/24] scsi: allocate separate queue for reserved
+ commands
+To:     Christoph Hellwig <hch@infradead.org>,
+        John Garry <john.garry@huawei.com>
 Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        bvanassche@acm.org, hch@infradead.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        ming.lei@redhat.com, bvanassche@acm.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
         virtualization@lists.linux-foundation.org,
         esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
         Hannes Reinecke <hare@suse.com>
 References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-2-git-send-email-john.garry@huawei.com>
- <20200310230835.GA16056@ming.t460p>
+ <1583857550-12049-3-git-send-email-john.garry@huawei.com>
+ <20200310183243.GA14549@infradead.org>
+ <79cf4341-f2a2-dcc9-be0d-2efc6e83028a@huawei.com>
+ <20200311062228.GA13522@infradead.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -79,12 +83,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <fecc400c-fe6b-144a-51f9-1b3b2704c1a2@suse.de>
-Date:   Wed, 11 Mar 2020 07:55:46 +0100
+Message-ID: <7bc94a9f-ec86-b343-0951-eba548c71b67@suse.de>
+Date:   Wed, 11 Mar 2020 07:58:50 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200310230835.GA16056@ming.t460p>
+In-Reply-To: <20200311062228.GA13522@infradead.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -93,68 +97,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/11/20 12:08 AM, Ming Lei wrote:
-> On Wed, Mar 11, 2020 at 12:25:27AM +0800, John Garry wrote:
->> From: Hannes Reinecke <hare@suse.com>
+On 3/11/20 7:22 AM, Christoph Hellwig wrote:
+> On Tue, Mar 10, 2020 at 09:08:56PM +0000, John Garry wrote:
+>> On 10/03/2020 18:32, Christoph Hellwig wrote:
+>>> On Wed, Mar 11, 2020 at 12:25:28AM +0800, John Garry wrote:
+>>>> From: Hannes Reinecke <hare@suse.com>
+>>>>
+>>>> Allocate a separate 'reserved_cmd_q' for sending reserved commands.
+>>>
+>>> Why?  Reserved command specifically are not in any way tied to queues.
+>>> .
+>>>
 >>
->> Add a new field 'nr_reserved_cmds' to the SCSI host template to
->> instruct the block layer to set aside a tag space for reserved
->> commands.
+>> So the v1 series used a combination of the sdev queue and the per-host
+>> reserved_cmd_q. Back then you questioned using the sdev queue for virtio
+>> scsi, and the unconfirmed conclusion was to use a common per-host q. This is
+>> the best link I can find now:
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  drivers/scsi/scsi_lib.c  | 1 +
->>  include/scsi/scsi_host.h | 6 ++++++
->>  2 files changed, 7 insertions(+)
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 610ee41fa54c..2967325df7a0 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1896,6 +1896,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->>  		shost->tag_set.ops = &scsi_mq_ops_no_commit;
->>  	shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
->>  	shost->tag_set.queue_depth = shost->can_queue;
->> +	shost->tag_set.reserved_tags = shost->nr_reserved_cmds;
+>> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg83177.html
 > 
-> You reserve tags for special usage, meantime the whole queue depth
-> isn't increased, that means the tags for IO request is decreased given
-> reserved tags can't be used for IO, so IO performance may be effected.
+> That was just a question on why virtio uses the per-device tags, which
+> didn't look like it made any sense.  What I'm worried about here is
+> mixing up the concept of reserved tags in the tagset, and queues to use
+> them.  Note that we already have the scsi_get_host_dev to allocate
+> a scsi_device and thus a request_queue for the host itself.  That seems
+> like the better interface to use a tag for a host wide command vs
+> introducing a parallel path.
 > 
-> If not the case, please explain a bit in commit log.
-> 
-The overall idea of this patchset is to fold _existing_ management
-command handling into using the blk-mq bitmap.
-Currently, quite a lot of drivers are using management commands
-internally, which typically use the same hardware tag pool (ie they are
-being allocated from the same hardware resources) than the 'normal' I/O
-commands.
-But as they are using the same tagpool these drivers already decrement
-the available number of commands; check eg. hpsa:
+Ah. Right.
+Will be looking into that, and convert the patchset over to it.
 
-static int hpsa_scsi_host_alloc(struct ctlr_info *h)
-{
-	struct Scsi_Host *sh;
-
-	sh = scsi_host_alloc(&hpsa_driver_template, sizeof(h));
-	if (sh == NULL) {
-		dev_err(&h->pdev->dev, "scsi_host_alloc failed\n");
-		return -ENOMEM;
-	}
-
-	sh->io_port = 0;
-	sh->n_io_port = 0;
-	sh->this_id = -1;
-	sh->max_channel = 3;
-	sh->max_cmd_len = MAX_COMMAND_SIZE;
-	sh->max_lun = HPSA_MAX_LUN;
-	sh->max_id = HPSA_MAX_LUN;
-	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
-	sh->cmd_per_lun = sh->can_queue;
-
-So the idea of this patchset is to convert existing use-cases; seeing
-that they already reserve commands internally performance will not be
-affected.
+And the problem of the separate queue is the fact that I'll need a queue
+to reserve tags from; trying to allocate a tag directly from the bitmap
+turns out to be major surgery in the blocklayer with no immediate gain.
+And I can't use per-device queues as for some drivers the reserved
+commands are used to query the HBA itself to figure out how many devices
+are present.
 
 Cheers,
 
