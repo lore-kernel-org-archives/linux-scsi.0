@@ -2,158 +2,93 @@ Return-Path: <SRS0=tebG=45=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62167C10DCE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 10:58:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F17C1975A
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 11:09:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45DE720716
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 10:58:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9601920674
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 11:09:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="raoRhFSh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726725AbgCLK6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 06:58:47 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2553 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726302AbgCLK6q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Mar 2020 06:58:46 -0400
-Received: from lhreml701-cah.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 12875E41F06CB2DA1C75;
-        Thu, 12 Mar 2020 10:58:43 +0000 (GMT)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- lhreml701-cah.china.huawei.com (10.201.108.42) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 12 Mar 2020 10:58:42 +0000
-Received: from [127.0.0.1] (10.202.226.45) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Thu, 12 Mar
- 2020 10:58:42 +0000
-Subject: Re: [PATCH V2 05/13] pm80xx : Support for char device.
-To:     Jinpu Wang <jinpu.wang@cloud.ionos.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Deepak Ukey <deepak.ukey@microchip.com>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        Viswas G <Viswas.G@microchip.com>,
-        Jack Wang <jinpu.wang@profitbricks.com>, <yuuzheng@google.com>,
-        Vikram Auradkar <auradkar@google.com>, <vishakhavc@google.com>,
-        <bjashnani@google.com>, Radha Ramachandran <radha@google.com>,
-        <akshatzen@google.com>
-References: <20200117071923.7445-1-deepak.ukey@microchip.com>
- <20200117071923.7445-6-deepak.ukey@microchip.com>
- <CAMGffEnc1sWgOB7PENtbBQUzJ6iRORHrJe4Y5FV1+WkgrhAwOg@mail.gmail.com>
- <yq17e1lk666.fsf@oracle.com>
- <MN2PR11MB3550E72F0521F873F52AF671EF0D0@MN2PR11MB3550.namprd11.prod.outlook.com>
- <68e52d06-1fd2-770d-627a-7e8c79067282@huawei.com>
- <MN2PR11MB35509B0042BEE7BFBB707CA8EF0C0@MN2PR11MB3550.namprd11.prod.outlook.com>
- <3e76b6e1-9c3d-2e5c-896e-f1af9a785fe5@huawei.com>
- <MN2PR11MB35505927EB38FFD749E535CBEF0A0@MN2PR11MB3550.namprd11.prod.outlook.com>
- <CAMGffEnHim9GD2F+7ueyoMWuYpdqghGGYqfLrWcAcN3WfXm_Ng@mail.gmail.com>
- <92a5ed32-eecb-dc1b-c485-1b691573f5de@interlog.com>
- <CAMGffEnxq9HTFZ3htbXMQoO4DQr5L+rOS5_KYUh2-edqFNWO1w@mail.gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <647fdd73-d4f5-efc3-a496-e161aa48f70a@huawei.com>
-Date:   Thu, 12 Mar 2020 10:58:41 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726986AbgCLLJR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 07:09:17 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:9062 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726725AbgCLLJQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 07:09:16 -0400
+X-UUID: 42ed6ee42ad44e1aaa72c5a7344fd513-20200312
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=4SVFDx1dUwhWROvYtY0dTPYSsP2l15nHohTxw716oJc=;
+        b=raoRhFShaI3fvFgqXGZ9zcADKs3YbDzar/bElNspPbib4UnS74pyakDo02ezSP7/ibi7pflz+/mErovvfzzHEQEsr/517N5QXjo1HbgDp6uH93UkzYAEB8CsddiLhol8i+mz5bodM9VRcj3sNpih556IY+cqN6FuQtQg5yJJ6tM=;
+X-UUID: 42ed6ee42ad44e1aaa72c5a7344fd513-20200312
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 119174148; Thu, 12 Mar 2020 19:09:12 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Thu, 12 Mar 2020 19:06:22 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 12 Mar 2020 19:08:51 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v2 6/8] scsi: ufs: allow customized delay for host enabling
+Date:   Thu, 12 Mar 2020 19:09:06 +0800
+Message-ID: <20200312110908.14895-7-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200312110908.14895-1-stanley.chu@mediatek.com>
+References: <20200312110908.14895-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMGffEnxq9HTFZ3htbXMQoO4DQr5L+rOS5_KYUh2-edqFNWO1w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.45]
-X-ClientProxiedBy: lhreml722-chm.china.huawei.com (10.201.108.73) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 3DF717522B25820C5912D4A86210E1EA0937932E319A8C75A401C2BEAEDD37B12000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/03/2020 08:49, Jinpu Wang wrote:
-> On Wed, Mar 11, 2020 at 11:13 PM Douglas Gilbert <dgilbert@interlog.com> wrote:
->>
->> On 2020-03-11 1:08 p.m., Jinpu Wang wrote:
->>> On Tue, Jan 28, 2020 at 10:43 AM <Deepak.Ukey@microchip.com> wrote:
->>>>
->>>>
->>>> EXTERNAL EMAIL: Do not click links or open attachments unless you know the content is safe
->>>>
->>>> On 22/01/2020 08:50, Deepak.Ukey@microchip.com wrote:
->>>>> -r--r--r-- 1 root root 4096 Jan 21 12:05 running_disparity_error_count
->>>>> ***
->>>>> -r--r--r-- 1 root root 4096 Jan 21 12:05 sas_address
->>>>> lrwxrwxrwx 1 root root    0 Jan 21 11:45 subsystem ->
->>>>> ../../../../../../../class/sas_phy
->>>>> -r--r--r-- 1 root root 4096 Jan 21 12:05 target_port_protocols
->>>>> -rw-r--r-- 1 root root 4096 Jan 21 11:45 uevent
->>>>>
->>>>> Maybe the other stuff provided in the patches are useful, I don't know.
->>>>> But debugfs seems better for that.
->>>>>
->>>>>         - 0006-pm80xx-sysfs-attribute-for-number-of-phys
->>>>>         - 0007-pm80xx-IOCTL-functionality-to-get-phy-status gets things like Programmed Link Rate, Negotiated Link Rate, PHY Identifier
->>>>>         - 0008-pm80xx-IOCTL-functionality-to-get-phy-error provides other things like Invalid Dword Error Count, Disparity Error Count
->>>>>         - Thanks for addressing it. We can get this info from /sys/class/sas_phy and /sys/class/sas_port so we will drop these above mentioned three patches from the next              - patch series.
->>>>>
->>>
->>>>>
->>>>>         - 0009-pm80xx-IOCTL-functionality-for-GPIO
->>>>>         - 0013-pm80xx-IOCTL-functionality-for-TWI-device
->>>>>         - For the above patches management utility passes command specific information to driver through IOCTL structure, which used by driver to frame the command and         - send to FW.  We are using the IOCTL interface for the same. Please let us know your thought.
->>>>
->>>> So I specifically questioned the SGPIO patch and why it would have an IOCTL, as this function is supported in kernel libsas/SAS transport code as an SMP function.
->>>>>    Thank you for your suggestions. We will make use of function supported in libsas.
->>>
->>> So basically you only need IOCTL for GPIO and TWI devices, others can
->>> implement via libsas interface or from sysfs directly.
->>>
->>> I would like to suggest you do send out other changes without the
->>> IOCTL parts first, and consider again Is it really needed by the user
->>> to control GPIO and TWI, and if there is other way to do it?
->>>
->>> Sorry, I don't have a better suggestion!
->>
->> LSI SAS HBAs (LSI now owned by Broadcom) implement an internal ** SMP
->> target. It can be seen here:
->>
->> # ls /dev/bsg
->> 3:0:0:0  3:0:3:0  8:0:0:0  8:0:0:3           end_device-3:1    expander-3:0
->> 3:0:1:0  4:0:0:0  8:0:0:1  8:0:0:4           end_device-3:1:0  expander-3:1
->> 3:0:2:0  7:0:0:0  8:0:0:2  end_device-3:0:1  end_device-3:2    sas_host3
->>
->> It is the last device node: "sas_host3". How do I know it is a SMP target?
->> Because this works:
->>
->> # smp_read_gpio /dev/bsg/sas_host3
->> Read GPIO register response:
->>     GPIO_CFG[0]:
->>       version: 0
->>       GPIO enable: 1
->>       cfg register count: 2
->>       gp register count: 1
->>       supported drive count: 16
->>
-
-JFYI, that specific command is not implemented for libsas SMP host 
-handler (see 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/scsi/libsas/sas_host_smp.c?h=v5.6-rc5#n278), 
-but the write command should be ok
-
->> When you work out what LSI are doing with this, perhaps you could write
->> an article about it and make it publicly available.
-
-Firmware magic...
-
->> It is always a good idea to see how your competitors solve problems :-)
-> This sounds indeed a better solution, thanks for the info, Doug
-> 
-> @Deepak Ukey can you check if you guys can also do it this way?
-> 
-> Regards,
-> Jack Wang
-> .
-> 
+Q3VycmVudGx5IGEgMSBtcyBkZWxheSBpcyBhcHBsaWVkIGJlZm9yZSBwb2xsaW5nIENPTlRST0xM
+RVJfRU5BQkxFDQpiaXQuIFRoaXMgZGVsYXkgbWF5IG5vdCBiZSByZXF1aXJlZCBvciBjYW4gYmUg
+Y2hhbmdlZCBpbiBkaWZmZXJlbnQNCmNvbnRyb2xsZXJzLiBNYWtlIHRoZSBkZWxheSBhcyBhIGNo
+YW5nZWFibGUgdmFsdWUgaW4gc3RydWN0IHVmc19oYmEgdG8NCmFsbG93IGl0IGN1c3RvbWl6ZWQg
+YnkgdmVuZG9ycy4NCg0KU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1l
+ZGlhdGVrLmNvbT4NClJldmlld2VkLWJ5OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJvcmEub3JnPg0K
+LS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8IDMgKystDQogZHJpdmVycy9zY3NpL3Vm
+cy91ZnNoY2QuaCB8IDEgKw0KIDIgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAxIGRl
+bGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJp
+dmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KaW5kZXggY2U2NWQzMjFhNzNmLi5kY2JmNDVkNTQ3ZDgg
+MTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQorKysgYi9kcml2ZXJzL3Nj
+c2kvdWZzL3Vmc2hjZC5jDQpAQCAtNDI5OCw3ICs0Mjk4LDcgQEAgaW50IHVmc2hjZF9oYmFfZW5h
+YmxlKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogCSAqIGluc3RydWN0aW9uIG1pZ2h0IGJlIHJlYWQg
+YmFjay4NCiAJICogVGhpcyBkZWxheSBjYW4gYmUgY2hhbmdlZCBiYXNlZCBvbiB0aGUgY29udHJv
+bGxlci4NCiAJICovDQotCXVmc2hjZF93YWl0X3VzKDEwMDAsIDEwMCwgdHJ1ZSk7DQorCXVmc2hj
+ZF93YWl0X3VzKGhiYS0+aGJhX2VuYWJsZV9kZWxheV91cywgMTAwLCB0cnVlKTsNCiANCiAJLyog
+d2FpdCBmb3IgdGhlIGhvc3QgY29udHJvbGxlciB0byBjb21wbGV0ZSBpbml0aWFsaXphdGlvbiAq
+Lw0KIAlyZXRyeSA9IDEwOw0KQEAgLTg0MTgsNiArODQxOCw3IEBAIGludCB1ZnNoY2RfaW5pdChz
+dHJ1Y3QgdWZzX2hiYSAqaGJhLCB2b2lkIF9faW9tZW0gKm1taW9fYmFzZSwgdW5zaWduZWQgaW50
+IGlycSkNCiANCiAJaGJhLT5tbWlvX2Jhc2UgPSBtbWlvX2Jhc2U7DQogCWhiYS0+aXJxID0gaXJx
+Ow0KKwloYmEtPmhiYV9lbmFibGVfZGVsYXlfdXMgPSAxMDAwOw0KIA0KIAllcnIgPSB1ZnNoY2Rf
+aGJhX2luaXQoaGJhKTsNCiAJaWYgKGVycikNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZz
+L3Vmc2hjZC5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KaW5kZXggNDY4M2U3YmY2NjQw
+Li4yNjlkZGI5MmJiNTUgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQor
+KysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQpAQCAtNjUzLDYgKzY1Myw3IEBAIHN0cnVj
+dCB1ZnNfaGJhIHsNCiAJdTMyIGVoX2ZsYWdzOw0KIAl1MzIgaW50cl9tYXNrOw0KIAl1MTYgZWVf
+Y3RybF9tYXNrOw0KKwl1MTYgaGJhX2VuYWJsZV9kZWxheV91czsNCiAJYm9vbCBpc19wb3dlcmVk
+Ow0KIA0KIAkvKiBXb3JrIFF1ZXVlcyAqLw0KLS0gDQoyLjE4LjANCg==
 
