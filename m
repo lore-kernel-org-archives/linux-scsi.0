@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F0CC4CECE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:20:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB75C4CECE
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:20:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E3DB206E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:20:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7F9A206FA
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:20:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mSbvR0cM"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IQWvaI4+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728052AbgCLPUf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 11:20:35 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:38812 "EHLO
+        id S1728132AbgCLPUm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 11:20:42 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:38970 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728029AbgCLPUb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 11:20:31 -0400
+        with ESMTP id S1728112AbgCLPUm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 11:20:42 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=QvMQLjuSv5HMu6N+XQOVgojR6iA9M1m6CyN7oo0sbVQ=; b=mSbvR0cMZ2/ScyBNyYRxyW+DQO
-        tnBQrrHCRKwCt+C4Q+Zyzyd0Lnhd48uZi5XH4rLxAi/MsORoI9kiQOenjdwOy8+EFg+5lgUXoAuqy
-        1HAsYP07LU7yktpAH0ViGU/ceBOacC4WHWoI/SNNu7byDxvYIacN+bJfL0iEpf1m3ClftH/SFalY2
-        o63tGfeua4pUkNbdhRgdrhoRVAsLGn/Y4ogP2iDDcawj8AjiwwmQj9H3AJ6pSutpUHJKdZUYFXX2d
-        LgdsKc+f+kbcCGiIfQ6AvBcMiS7/mlGoXtBwuzO/c5e8BKgYbMtc3XTGjxYqDqyxOxzIYhytDKlVK
-        eD19xxew==;
+        bh=n13Q6DLqRjyLux3UpI7BbD9kN5e1dnMfZqd8xPQBgkw=; b=IQWvaI4+Bct4NMigql+B/eJSEK
+        aX53IxEH4gx6dsMqP2L52p4RIMRj1Pm2qVOv46QF/aKxlfRM2g+fcdxDMP5oy1nfQowK/tzRPgshF
+        ufbPU74k0+E1fKbnd4D+Xv/4DyPSIsMCMv2PwyBu3FBczKhhbpi7TiGy+qWhpxy7JTnJS3jHI1+z1
+        m8u4nTBjpWpvlWFtjQp5fvF4oMzfDm5giiTJrXF/7zxMg1v2+PNUB9+kPJKg8pkLsTQIDKS6mwyE+
+        y99kneMSa/GQJ7BtSBGp303nV278ST23bvJKrs/stswHGTAPbC8DDEbiDBesF/aR1HS8MQRz7reX7
+        Ml/xQ+wQ==;
 Received: from [2001:4bb8:184:5cad:8026:d98c:a056:3e33] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jCPdO-0007yx-Mo; Thu, 12 Mar 2020 15:20:31 +0000
+        id 1jCPdZ-00083n-9a; Thu, 12 Mar 2020 15:20:41 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org,
         reiserfs-devel@vger.kernel.org
-Subject: [PATCH 17/21] block: move struct partition out of genhd.h
-Date:   Thu, 12 Mar 2020 16:19:35 +0100
-Message-Id: <20200312151939.645254-18-hch@lst.de>
+Subject: [PATCH 21/21] block: merge partition-generic.c and check.c
+Date:   Thu, 12 Mar 2020 16:19:39 +0100
+Message-Id: <20200312151939.645254-22-hch@lst.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200312151939.645254-1-hch@lst.de>
 References: <20200312151939.645254-1-hch@lst.de>
@@ -53,353 +53,449 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-struct partition is the on-disk format of a MSDOS partition table entry.
-Move it out of genhd.h into a new msdos_partition.h header and give it
-a msdos_ prefix to avoid confusion.
-Also move the magic number from block/partitions/msdos.h to the new
-header so that it can be used by the SCSI drivers looking at the DOS
-partition tables.
+Merge block/partition-generic.c and block/partitions/check.c into
+a single block/partitions/core.c as the content is closely related
+and both files are tiny.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partitions/ldm.c          |  6 +++---
- block/partitions/msdos.c        | 28 ++++++++++++++--------------
- block/partitions/msdos.h        |  8 --------
- drivers/scsi/BusLogic.c         |  8 +++++---
- drivers/scsi/aacraid/linit.c    |  7 ++++---
- drivers/scsi/scsi_debug.c       |  5 +++--
- drivers/scsi/scsicam.c          |  3 ++-
- include/linux/genhd.h           | 13 -------------
- include/linux/msdos_partition.h | 20 ++++++++++++++++++++
- 9 files changed, 51 insertions(+), 47 deletions(-)
- delete mode 100644 block/partitions/msdos.h
- create mode 100644 include/linux/msdos_partition.h
+ block/Makefile                                |   3 +-
+ block/partitions/Makefile                     |   3 +-
+ block/partitions/check.c                      | 179 ------------------
+ block/partitions/check.h                      |   5 -
+ .../core.c}                                   | 178 +++++++++++++++--
+ 5 files changed, 166 insertions(+), 202 deletions(-)
+ delete mode 100644 block/partitions/check.c
+ rename block/{partition-generic.c => partitions/core.c} (77%)
 
-diff --git a/block/partitions/ldm.c b/block/partitions/ldm.c
-index a2d97ee1908c..6fdfcb40c537 100644
---- a/block/partitions/ldm.c
-+++ b/block/partitions/ldm.c
-@@ -14,10 +14,10 @@
- #include <linux/stringify.h>
- #include <linux/kernel.h>
- #include <linux/uuid.h>
-+#include <linux/msdos_partition.h>
+diff --git a/block/Makefile b/block/Makefile
+index 1a43750f4b01..206b96e9387f 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -8,8 +8,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-sysfs.o \
+ 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
+ 			blk-lib.o blk-mq.o blk-mq-tag.o blk-stat.o \
+ 			blk-mq-sysfs.o blk-mq-cpumap.o blk-mq-sched.o ioctl.o \
+-			genhd.o partition-generic.o ioprio.o \
+-			badblocks.o partitions/ blk-rq-qos.o
++			genhd.o ioprio.o badblocks.o partitions/ blk-rq-qos.o
  
- #include "ldm.h"
- #include "check.h"
--#include "msdos.h"
+ obj-$(CONFIG_BOUNCE)		+= bounce.o
+ obj-$(CONFIG_BLK_SCSI_REQUEST)	+= scsi_ioctl.o
+diff --git a/block/partitions/Makefile b/block/partitions/Makefile
+index 2f276b677c81..a7f05cdb02a8 100644
+--- a/block/partitions/Makefile
++++ b/block/partitions/Makefile
+@@ -3,8 +3,7 @@
+ # Makefile for the linux kernel.
+ #
  
- /*
-  * ldm_debug/info/error/crit - Output an error message
-@@ -493,7 +493,7 @@ static bool ldm_validate_partition_table(struct parsed_partitions *state)
- {
- 	Sector sect;
- 	u8 *data;
--	struct partition *p;
-+	struct msdos_partition *p;
- 	int i;
- 	bool result = false;
- 
-@@ -508,7 +508,7 @@ static bool ldm_validate_partition_table(struct parsed_partitions *state)
- 	if (*(__le16*) (data + 0x01FE) != cpu_to_le16 (MSDOS_LABEL_MAGIC))
- 		goto out;
- 
--	p = (struct partition*)(data + 0x01BE);
-+	p = (struct msdos_partition *)(data + 0x01BE);
- 	for (i = 0; i < 4; i++, p++)
- 		if (SYS_IND (p) == LDM_PARTITION) {
- 			result = true;
-diff --git a/block/partitions/msdos.c b/block/partitions/msdos.c
-index c572022f3781..88ee5ee7f442 100644
---- a/block/partitions/msdos.c
-+++ b/block/partitions/msdos.c
-@@ -20,9 +20,9 @@
-  *  Re-organised Feb 1998 Russell King
-  */
- #include <linux/msdos_fs.h>
-+#include <linux/msdos_partition.h>
- 
- #include "check.h"
--#include "msdos.h"
- #include "efi.h"
- 
- /*
-@@ -34,17 +34,17 @@
- 
- #define SYS_IND(p)	get_unaligned(&p->sys_ind)
- 
--static inline sector_t nr_sects(struct partition *p)
-+static inline sector_t nr_sects(struct msdos_partition *p)
- {
- 	return (sector_t)get_unaligned_le32(&p->nr_sects);
- }
- 
--static inline sector_t start_sect(struct partition *p)
-+static inline sector_t start_sect(struct msdos_partition *p)
- {
- 	return (sector_t)get_unaligned_le32(&p->start_sect);
- }
- 
--static inline int is_extended_partition(struct partition *p)
-+static inline int is_extended_partition(struct msdos_partition *p)
- {
- 	return (SYS_IND(p) == DOS_EXTENDED_PARTITION ||
- 		SYS_IND(p) == WIN98_EXTENDED_PARTITION ||
-@@ -67,7 +67,7 @@ msdos_magic_present(unsigned char *p)
- #define AIX_LABEL_MAGIC4	0xC1
- static int aix_magic_present(struct parsed_partitions *state, unsigned char *p)
- {
--	struct partition *pt = (struct partition *) (p + 0x1be);
-+	struct msdos_partition *pt = (struct msdos_partition *) (p + 0x1be);
- 	Sector sect;
- 	unsigned char *d;
- 	int slot, ret = 0;
-@@ -121,7 +121,7 @@ static void parse_extended(struct parsed_partitions *state,
- 			   sector_t first_sector, sector_t first_size,
- 			   u32 disksig)
- {
--	struct partition *p;
-+	struct msdos_partition *p;
- 	Sector sect;
- 	unsigned char *data;
- 	sector_t this_sector, this_size;
-@@ -145,7 +145,7 @@ static void parse_extended(struct parsed_partitions *state,
- 		if (!msdos_magic_present(data + 510))
- 			goto done;
- 
--		p = (struct partition *) (data + 0x1be);
-+		p = (struct msdos_partition *) (data + 0x1be);
- 
- 		/*
- 		 * Usually, the first entry is the real data partition,
-@@ -402,14 +402,14 @@ static void parse_minix(struct parsed_partitions *state,
- #ifdef CONFIG_MINIX_SUBPARTITION
- 	Sector sect;
- 	unsigned char *data;
--	struct partition *p;
-+	struct msdos_partition *p;
- 	int i;
- 
- 	data = read_part_sector(state, offset, &sect);
- 	if (!data)
- 		return;
- 
--	p = (struct partition *)(data + 0x1be);
-+	p = (struct msdos_partition *)(data + 0x1be);
- 
- 	/* The first sector of a Minix partition can have either
- 	 * a secondary MBR describing its subpartitions, or
-@@ -453,7 +453,7 @@ int msdos_partition(struct parsed_partitions *state)
- 	sector_t sector_size = bdev_logical_block_size(state->bdev) / 512;
- 	Sector sect;
- 	unsigned char *data;
--	struct partition *p;
-+	struct msdos_partition *p;
- 	struct fat_boot_sector *fb;
- 	int slot;
- 	u32 disksig;
-@@ -487,7 +487,7 @@ int msdos_partition(struct parsed_partitions *state)
- 	 * partition table. Reject this in case the boot indicator
- 	 * is not 0 or 0x80.
- 	 */
--	p = (struct partition *) (data + 0x1be);
-+	p = (struct msdos_partition *) (data + 0x1be);
- 	for (slot = 1; slot <= 4; slot++, p++) {
- 		if (p->boot_ind != 0 && p->boot_ind != 0x80) {
- 			/*
-@@ -509,7 +509,7 @@ int msdos_partition(struct parsed_partitions *state)
- 	}
- 
- #ifdef CONFIG_EFI_PARTITION
--	p = (struct partition *) (data + 0x1be);
-+	p = (struct msdos_partition *) (data + 0x1be);
- 	for (slot = 1 ; slot <= 4 ; slot++, p++) {
- 		/* If this is an EFI GPT disk, msdos should ignore it. */
- 		if (SYS_IND(p) == EFI_PMBR_OSTYPE_EFI_GPT) {
-@@ -518,7 +518,7 @@ int msdos_partition(struct parsed_partitions *state)
- 		}
- 	}
- #endif
--	p = (struct partition *) (data + 0x1be);
-+	p = (struct msdos_partition *) (data + 0x1be);
- 
- 	disksig = le32_to_cpup((__le32 *)(data + 0x1b8));
- 
-@@ -565,7 +565,7 @@ int msdos_partition(struct parsed_partitions *state)
- 	strlcat(state->pp_buf, "\n", PAGE_SIZE);
- 
- 	/* second pass - output for each on a separate line */
--	p = (struct partition *) (0x1be + data);
-+	p = (struct msdos_partition *) (0x1be + data);
- 	for (slot = 1 ; slot <= 4 ; slot++, p++) {
- 		unsigned char id = SYS_IND(p);
- 		int n;
-diff --git a/block/partitions/msdos.h b/block/partitions/msdos.h
+-obj-$(CONFIG_BLOCK) := check.o
+-
++obj-$(CONFIG_BLOCK) += core.o
+ obj-$(CONFIG_ACORN_PARTITION) += acorn.o
+ obj-$(CONFIG_AMIGA_PARTITION) += amiga.o
+ obj-$(CONFIG_ATARI_PARTITION) += atari.o
+diff --git a/block/partitions/check.c b/block/partitions/check.c
 deleted file mode 100644
-index 123e666bb932..000000000000
---- a/block/partitions/msdos.h
+index 944c478b6f0b..000000000000
+--- a/block/partitions/check.c
 +++ /dev/null
-@@ -1,8 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
+@@ -1,179 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
 -/*
-- *  fs/partitions/msdos.h
+- *  fs/partitions/check.c
+- *
+- *  Code extracted from drivers/block/genhd.c
+- *  Copyright (C) 1991-1998  Linus Torvalds
+- *  Re-organised Feb 1998 Russell King
+- *
+- *  We now have independent partition support from the
+- *  block drivers, which allows all the partition code to
+- *  be grouped in one location, and it to be mostly self
+- *  contained.
+- *
+- *  Added needed MAJORS for new pairs, {hdi,hdj}, {hdk,hdl}
 - */
 -
--#define MSDOS_LABEL_MAGIC		0xAA55
+-#include <linux/slab.h>
+-#include <linux/vmalloc.h>
+-#include <linux/ctype.h>
+-#include <linux/genhd.h>
 -
+-#include "check.h"
 -
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 3170b295a5da..186259417449 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -36,6 +36,7 @@
- #include <linux/jiffies.h>
- #include <linux/dma-mapping.h>
- #include <linux/slab.h>
-+#include <linux/msdos_partition.h>
- #include <scsi/scsicam.h>
+-static int (*check_part[])(struct parsed_partitions *) = {
+-	/*
+-	 * Probe partition formats with tables at disk address 0
+-	 * that also have an ADFS boot block at 0xdc0.
+-	 */
+-#ifdef CONFIG_ACORN_PARTITION_ICS
+-	adfspart_check_ICS,
+-#endif
+-#ifdef CONFIG_ACORN_PARTITION_POWERTEC
+-	adfspart_check_POWERTEC,
+-#endif
+-#ifdef CONFIG_ACORN_PARTITION_EESOX
+-	adfspart_check_EESOX,
+-#endif
+-
+-	/*
+-	 * Now move on to formats that only have partition info at
+-	 * disk address 0xdc0.  Since these may also have stale
+-	 * PC/BIOS partition tables, they need to come before
+-	 * the msdos entry.
+-	 */
+-#ifdef CONFIG_ACORN_PARTITION_CUMANA
+-	adfspart_check_CUMANA,
+-#endif
+-#ifdef CONFIG_ACORN_PARTITION_ADFS
+-	adfspart_check_ADFS,
+-#endif
+-
+-#ifdef CONFIG_CMDLINE_PARTITION
+-	cmdline_partition,
+-#endif
+-#ifdef CONFIG_EFI_PARTITION
+-	efi_partition,		/* this must come before msdos */
+-#endif
+-#ifdef CONFIG_SGI_PARTITION
+-	sgi_partition,
+-#endif
+-#ifdef CONFIG_LDM_PARTITION
+-	ldm_partition,		/* this must come before msdos */
+-#endif
+-#ifdef CONFIG_MSDOS_PARTITION
+-	msdos_partition,
+-#endif
+-#ifdef CONFIG_OSF_PARTITION
+-	osf_partition,
+-#endif
+-#ifdef CONFIG_SUN_PARTITION
+-	sun_partition,
+-#endif
+-#ifdef CONFIG_AMIGA_PARTITION
+-	amiga_partition,
+-#endif
+-#ifdef CONFIG_ATARI_PARTITION
+-	atari_partition,
+-#endif
+-#ifdef CONFIG_MAC_PARTITION
+-	mac_partition,
+-#endif
+-#ifdef CONFIG_ULTRIX_PARTITION
+-	ultrix_partition,
+-#endif
+-#ifdef CONFIG_IBM_PARTITION
+-	ibm_partition,
+-#endif
+-#ifdef CONFIG_KARMA_PARTITION
+-	karma_partition,
+-#endif
+-#ifdef CONFIG_SYSV68_PARTITION
+-	sysv68_partition,
+-#endif
+-	NULL
+-};
+-
+-static struct parsed_partitions *allocate_partitions(struct gendisk *hd)
+-{
+-	struct parsed_partitions *state;
+-	int nr;
+-
+-	state = kzalloc(sizeof(*state), GFP_KERNEL);
+-	if (!state)
+-		return NULL;
+-
+-	nr = disk_max_parts(hd);
+-	state->parts = vzalloc(array_size(nr, sizeof(state->parts[0])));
+-	if (!state->parts) {
+-		kfree(state);
+-		return NULL;
+-	}
+-
+-	state->limit = nr;
+-
+-	return state;
+-}
+-
+-void free_partitions(struct parsed_partitions *state)
+-{
+-	vfree(state->parts);
+-	kfree(state);
+-}
+-
+-struct parsed_partitions *
+-check_partition(struct gendisk *hd, struct block_device *bdev)
+-{
+-	struct parsed_partitions *state;
+-	int i, res, err;
+-
+-	state = allocate_partitions(hd);
+-	if (!state)
+-		return NULL;
+-	state->pp_buf = (char *)__get_free_page(GFP_KERNEL);
+-	if (!state->pp_buf) {
+-		free_partitions(state);
+-		return NULL;
+-	}
+-	state->pp_buf[0] = '\0';
+-
+-	state->bdev = bdev;
+-	disk_name(hd, 0, state->name);
+-	snprintf(state->pp_buf, PAGE_SIZE, " %s:", state->name);
+-	if (isdigit(state->name[strlen(state->name)-1]))
+-		sprintf(state->name, "p");
+-
+-	i = res = err = 0;
+-	while (!res && check_part[i]) {
+-		memset(state->parts, 0, state->limit * sizeof(state->parts[0]));
+-		res = check_part[i++](state);
+-		if (res < 0) {
+-			/* We have hit an I/O error which we don't report now.
+-		 	* But record it, and let the others do their job.
+-		 	*/
+-			err = res;
+-			res = 0;
+-		}
+-
+-	}
+-	if (res > 0) {
+-		printk(KERN_INFO "%s", state->pp_buf);
+-
+-		free_page((unsigned long)state->pp_buf);
+-		return state;
+-	}
+-	if (state->access_beyond_eod)
+-		err = -ENOSPC;
+-	if (err)
+-	/* The partition is unrecognized. So report I/O errors if there were any */
+-		res = err;
+-	if (res) {
+-		strlcat(state->pp_buf,
+-			" unable to read partition table\n", PAGE_SIZE);
+-		printk(KERN_INFO "%s", state->pp_buf);
+-	}
+-
+-	free_page((unsigned long)state->pp_buf);
+-	free_partitions(state);
+-	return ERR_PTR(res);
+-}
+diff --git a/block/partitions/check.h b/block/partitions/check.h
+index 23e7adb79617..f845355489ec 100644
+--- a/block/partitions/check.h
++++ b/block/partitions/check.h
+@@ -23,11 +23,6 @@ struct parsed_partitions {
+ 	char *pp_buf;
+ };
  
- #include <asm/dma.h>
-@@ -3410,9 +3411,10 @@ static int blogic_diskparam(struct scsi_device *sdev, struct block_device *dev,
- 	   a partition table entry whose end_head matches one of the
- 	   standard BusLogic geometry translations (64/32, 128/32, or 255/63).
- 	 */
--	if (*(unsigned short *) (buf + 64) == 0xAA55) {
--		struct partition *part1_entry = (struct partition *) buf;
--		struct partition *part_entry = part1_entry;
-+	if (*(unsigned short *) (buf + 64) == MSDOS_LABEL_MAGIC) {
-+		struct msdos_partition *part1_entry =
-+				(struct msdos_partition *)buf;
-+		struct msdos_partition *part_entry = part1_entry;
- 		int saved_cyl = diskparam->cylinders, part_no;
- 		unsigned char part_end_head = 0, part_end_sector = 0;
- 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index ee6bc2f9b80a..0443b74390cf 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -33,6 +33,7 @@
- #include <linux/syscalls.h>
- #include <linux/delay.h>
- #include <linux/kthread.h>
-+#include <linux/msdos_partition.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -328,9 +329,9 @@ static int aac_biosparm(struct scsi_device *sdev, struct block_device *bdev,
- 	buf = scsi_bios_ptable(bdev);
- 	if (!buf)
- 		return 0;
--	if(*(__le16 *)(buf + 0x40) == cpu_to_le16(0xaa55)) {
--		struct partition *first = (struct partition * )buf;
--		struct partition *entry = first;
-+	if (*(__le16 *)(buf + 0x40) == cpu_to_le16(MSDOS_LABEL_MAGIC)) {
-+		struct msdos_partition *first = (struct msdos_partition *)buf;
-+		struct msdos_partition *entry = first;
- 		int saved_cylinders = param->cylinders;
- 		int num;
- 		unsigned char end_head, end_sec;
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 44cb054d5e66..4c6c448dc2df 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -38,6 +38,7 @@
- #include <linux/hrtimer.h>
- #include <linux/uuid.h>
- #include <linux/t10-pi.h>
-+#include <linux/msdos_partition.h>
- 
- #include <net/checksum.h>
- 
-@@ -4146,7 +4147,7 @@ static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
- static void __init sdebug_build_parts(unsigned char *ramp,
- 				      unsigned long store_size)
- {
--	struct partition *pp;
-+	struct msdos_partition *pp;
- 	int starts[SDEBUG_MAX_PARTS + 2];
- 	int sectors_per_part, num_sectors, k;
- 	int heads_by_sects, start_sec, end_sec;
-@@ -4171,7 +4172,7 @@ static void __init sdebug_build_parts(unsigned char *ramp,
- 
- 	ramp[510] = 0x55;	/* magic partition markings */
- 	ramp[511] = 0xAA;
--	pp = (struct partition *)(ramp + 0x1be);
-+	pp = (struct msdos_partition *)(ramp + 0x1be);
- 	for (k = 0; starts[k + 1]; ++k, ++pp) {
- 		start_sec = starts[k];
- 		end_sec = starts[k + 1] - 1;
-diff --git a/drivers/scsi/scsicam.c b/drivers/scsi/scsicam.c
-index 665d7db2f94c..682cf08ab041 100644
---- a/drivers/scsi/scsicam.c
-+++ b/drivers/scsi/scsicam.c
-@@ -17,6 +17,7 @@
- #include <linux/genhd.h>
- #include <linux/kernel.h>
- #include <linux/blkdev.h>
-+#include <linux/msdos_partition.h>
- #include <asm/unaligned.h>
- 
- #include <scsi/scsicam.h>
-@@ -61,7 +62,7 @@ bool scsi_partsize(struct block_device *bdev, sector_t capacity, int geom[3])
- {
- 	int cyl, ext_cyl, end_head, end_cyl, end_sector;
- 	unsigned int logical_end, physical_end, ext_physical_end;
--	struct partition *p, *largest = NULL;
-+	struct msdos_partition *p, *largest = NULL;
- 	void *buf;
- 	int ret = false;
- 
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 30e0f17cd5ff..81f21a7ad6f9 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -70,19 +70,6 @@ enum {
+-void free_partitions(struct parsed_partitions *state);
+-
+-struct parsed_partitions *
+-check_partition(struct gendisk *, struct block_device *);
+-
+ typedef struct {
+ 	struct page *v;
+ } Sector;
+diff --git a/block/partition-generic.c b/block/partitions/core.c
+similarity index 77%
+rename from block/partition-generic.c
+rename to block/partitions/core.c
+index febfb8e96abb..682fe445c3ab 100644
+--- a/block/partition-generic.c
++++ b/block/partitions/core.c
+@@ -1,27 +1,177 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
+- *  Code extracted from drivers/block/genhd.c
+- *  Copyright (C) 1991-1998  Linus Torvalds
+- *  Re-organised Feb 1998 Russell King
+- *
+- *  We now have independent partition support from the
+- *  block drivers, which allows all the partition code to
+- *  be grouped in one location, and it to be mostly self
+- *  contained.
++ * Copyright (C) 1991-1998  Linus Torvalds
++ * Re-organised Feb 1998 Russell King
+  */
+-
+-#include <linux/init.h>
+-#include <linux/module.h>
  #include <linux/fs.h>
- #include <linux/workqueue.h>
+ #include <linux/slab.h>
+-#include <linux/kmod.h>
+ #include <linux/ctype.h>
+ #include <linux/genhd.h>
++#include <linux/vmalloc.h>
+ #include <linux/blktrace_api.h>
+ #include <linux/raid/detect.h>
+-#include "blk.h"
++#include "../blk.h"
++#include "check.h"
++
++static int (*check_part[])(struct parsed_partitions *) = {
++	/*
++	 * Probe partition formats with tables at disk address 0
++	 * that also have an ADFS boot block at 0xdc0.
++	 */
++#ifdef CONFIG_ACORN_PARTITION_ICS
++	adfspart_check_ICS,
++#endif
++#ifdef CONFIG_ACORN_PARTITION_POWERTEC
++	adfspart_check_POWERTEC,
++#endif
++#ifdef CONFIG_ACORN_PARTITION_EESOX
++	adfspart_check_EESOX,
++#endif
++
++	/*
++	 * Now move on to formats that only have partition info at
++	 * disk address 0xdc0.  Since these may also have stale
++	 * PC/BIOS partition tables, they need to come before
++	 * the msdos entry.
++	 */
++#ifdef CONFIG_ACORN_PARTITION_CUMANA
++	adfspart_check_CUMANA,
++#endif
++#ifdef CONFIG_ACORN_PARTITION_ADFS
++	adfspart_check_ADFS,
++#endif
++
++#ifdef CONFIG_CMDLINE_PARTITION
++	cmdline_partition,
++#endif
++#ifdef CONFIG_EFI_PARTITION
++	efi_partition,		/* this must come before msdos */
++#endif
++#ifdef CONFIG_SGI_PARTITION
++	sgi_partition,
++#endif
++#ifdef CONFIG_LDM_PARTITION
++	ldm_partition,		/* this must come before msdos */
++#endif
++#ifdef CONFIG_MSDOS_PARTITION
++	msdos_partition,
++#endif
++#ifdef CONFIG_OSF_PARTITION
++	osf_partition,
++#endif
++#ifdef CONFIG_SUN_PARTITION
++	sun_partition,
++#endif
++#ifdef CONFIG_AMIGA_PARTITION
++	amiga_partition,
++#endif
++#ifdef CONFIG_ATARI_PARTITION
++	atari_partition,
++#endif
++#ifdef CONFIG_MAC_PARTITION
++	mac_partition,
++#endif
++#ifdef CONFIG_ULTRIX_PARTITION
++	ultrix_partition,
++#endif
++#ifdef CONFIG_IBM_PARTITION
++	ibm_partition,
++#endif
++#ifdef CONFIG_KARMA_PARTITION
++	karma_partition,
++#endif
++#ifdef CONFIG_SYSV68_PARTITION
++	sysv68_partition,
++#endif
++	NULL
++};
++
++static struct parsed_partitions *allocate_partitions(struct gendisk *hd)
++{
++	struct parsed_partitions *state;
++	int nr;
  
--struct partition {
--	unsigned char boot_ind;		/* 0x80 - active */
--	unsigned char head;		/* starting head */
--	unsigned char sector;		/* starting sector */
--	unsigned char cyl;		/* starting cylinder */
--	unsigned char sys_ind;		/* What partition type */
--	unsigned char end_head;		/* end head */
--	unsigned char end_sector;	/* end sector */
--	unsigned char end_cyl;		/* end cylinder */
--	__le32 start_sect;	/* starting sector counting from 0 */
--	__le32 nr_sects;		/* nr of sectors in partition */
--} __attribute__((packed));
--
- struct disk_stats {
- 	u64 nsecs[NR_STAT_GROUPS];
- 	unsigned long sectors[NR_STAT_GROUPS];
-diff --git a/include/linux/msdos_partition.h b/include/linux/msdos_partition.h
-new file mode 100644
-index 000000000000..a8e2c1b4bc66
---- /dev/null
-+++ b/include/linux/msdos_partition.h
-@@ -0,0 +1,20 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LINUX_MSDOS_PARTITION_H
-+#define _LINUX_MSDOS_PARTITION_H
+-#include "partitions/check.h"
++	state = kzalloc(sizeof(*state), GFP_KERNEL);
++	if (!state)
++		return NULL;
 +
-+#define MSDOS_LABEL_MAGIC		0xAA55
++	nr = disk_max_parts(hd);
++	state->parts = vzalloc(array_size(nr, sizeof(state->parts[0])));
++	if (!state->parts) {
++		kfree(state);
++		return NULL;
++	}
 +
-+struct msdos_partition {
-+	u8 boot_ind;		/* 0x80 - active */
-+	u8 head;		/* starting head */
-+	u8 sector;		/* starting sector */
-+	u8 cyl;			/* starting cylinder */
-+	u8 sys_ind;		/* What partition type */
-+	u8 end_head;		/* end head */
-+	u8 end_sector;		/* end sector */
-+	u8 end_cyl;		/* end cylinder */
-+	__le32 start_sect;	/* starting sector counting from 0 */
-+	__le32 nr_sects;	/* nr of sectors in partition */
-+} __packed;
++	state->limit = nr;
 +
-+#endif /* LINUX_MSDOS_PARTITION_H */
++	return state;
++}
++
++static void free_partitions(struct parsed_partitions *state)
++{
++	vfree(state->parts);
++	kfree(state);
++}
++
++static struct parsed_partitions *check_partition(struct gendisk *hd,
++		struct block_device *bdev)
++{
++	struct parsed_partitions *state;
++	int i, res, err;
++
++	state = allocate_partitions(hd);
++	if (!state)
++		return NULL;
++	state->pp_buf = (char *)__get_free_page(GFP_KERNEL);
++	if (!state->pp_buf) {
++		free_partitions(state);
++		return NULL;
++	}
++	state->pp_buf[0] = '\0';
++
++	state->bdev = bdev;
++	disk_name(hd, 0, state->name);
++	snprintf(state->pp_buf, PAGE_SIZE, " %s:", state->name);
++	if (isdigit(state->name[strlen(state->name)-1]))
++		sprintf(state->name, "p");
++
++	i = res = err = 0;
++	while (!res && check_part[i]) {
++		memset(state->parts, 0, state->limit * sizeof(state->parts[0]));
++		res = check_part[i++](state);
++		if (res < 0) {
++			/*
++			 * We have hit an I/O error which we don't report now.
++			 * But record it, and let the others do their job.
++			 */
++			err = res;
++			res = 0;
++		}
++
++	}
++	if (res > 0) {
++		printk(KERN_INFO "%s", state->pp_buf);
++
++		free_page((unsigned long)state->pp_buf);
++		return state;
++	}
++	if (state->access_beyond_eod)
++		err = -ENOSPC;
++	/*
++	 * The partition is unrecognized. So report I/O errors if there were any
++	 */
++	if (err)
++		res = err;
++	if (res) {
++		strlcat(state->pp_buf,
++			" unable to read partition table\n", PAGE_SIZE);
++		printk(KERN_INFO "%s", state->pp_buf);
++	}
++
++	free_page((unsigned long)state->pp_buf);
++	free_partitions(state);
++	return ERR_PTR(res);
++}
+ 
+ static ssize_t part_partition_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
 -- 
 2.24.1
 
