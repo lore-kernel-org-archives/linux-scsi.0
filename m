@@ -2,75 +2,83 @@ Return-Path: <SRS0=tebG=45=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D61E7C10DCE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:43:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D686C2BB1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 16:25:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEC7F2071C
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:43:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584027803;
-	bh=VQtgky7PW1tvUs1l8QX/WLz12evFl2QLUdddE9kEICg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=xna6ldq833n6LHf1NJA5Iy2V8H2iEyTSQoGSM3BwQYrfRP4ypEgAGc9roxCFVG54J
-	 hLBMdHfJdetrkIl+71kmud468fVGF+WcvDAVULpFkWIYekjhG4a2fl7rNfsco97Bw7
-	 PZsQEqRkzgx0uYYgdEwfcojVXEYV9IxfzU2AB0mE=
+	by mail.kernel.org (Postfix) with ESMTP id 0FF1420663
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 16:25:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727698AbgCLPnX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 11:43:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52054 "EHLO mail.kernel.org"
+        id S1727468AbgCLQZJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 12:25:09 -0400
+Received: from mga04.intel.com ([192.55.52.120]:7804 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727240AbgCLPnW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Mar 2020 11:43:22 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA917206E7;
-        Thu, 12 Mar 2020 15:43:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584027802;
-        bh=VQtgky7PW1tvUs1l8QX/WLz12evFl2QLUdddE9kEICg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=yufD4+sbXQycOX49/e6v2hru1yblfC0agjLh+4R34+qGLX11eDg39p1t15UjxdZ6N
-         GNUgsYTKL68U596iK/7PrGwtGz6o11L4L8kl4vkyJ6BNZnrZQtLQJeyTEdZcD2DYvX
-         shaqLiEWxtKdCTE2YpSMpC1jMb6GLUt8MTeqeaBs=
-Date:   Thu, 12 Mar 2020 08:43:20 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v8 00/11] Inline Encryption Support
-Message-ID: <20200312154320.GA6470@sol.localdomain>
-References: <20200312080253.3667-1-satyat@google.com>
+        id S1727228AbgCLQZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Mar 2020 12:25:09 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2020 09:25:09 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,545,1574150400"; 
+   d="scan'208";a="322522522"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by orsmga001.jf.intel.com with ESMTP; 12 Mar 2020 09:25:05 -0700
+Received: from andy by smile with local (Exim 4.93)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1jCQdv-0092ut-3b; Thu, 12 Mar 2020 18:25:07 +0200
+Date:   Thu, 12 Mar 2020 18:25:07 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-nvme@lists.infradead.org, Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        linux-arch@vger.kernel.org
+Subject: Re: [PATCH v1] asm-generic: Provide generic {get, put}_unaligned_{l,
+ b}e24()
+Message-ID: <20200312162507.GF1922688@smile.fi.intel.com>
+References: <20200312113941.81162-1-andriy.shevchenko@linux.intel.com>
+ <efe5daa3-8e37-101a-9203-676be33eb934@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200312080253.3667-1-satyat@google.com>
+In-Reply-To: <efe5daa3-8e37-101a-9203-676be33eb934@acm.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 01:02:42AM -0700, Satya Tangirala wrote:
-> This patch series adds support for Inline Encryption to the block layer,
-> UFS, fscrypt, f2fs and ext4.
+On Thu, Mar 12, 2020 at 08:18:07AM -0700, Bart Van Assche wrote:
+> On 2020-03-12 04:39, Andy Shevchenko wrote:
+> > There are users in kernel that duplicate {get,put}_unaligned_{l,b}e24()
+> > implementation. Provide generic helpers once for all.
 > 
+> Hi Andy,
+> 
+> Thanks for having done this work. In case you would not yet have noticed
+> the patch series that I posted some time ago but for which I did not
+> have the time to continue working on it, please take a look at
+> https://lore.kernel.org/lkml/20191028200700.213753-1-bvanassche@acm.org/.
 
-This patch series can also be retrieved from
+Can you send a new version?
 
-	Repo: https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git
-	Tag: inline-encryption-v8
+Also, consider to use byteshift to avoid this limitation:
+"Only use get_unaligned_be24() if reading p - 1 is allowed."
 
-I based it on v5.6-rc2 (same base commit as v7) since it still applies cleanly
-to it.  You can see what changed by:
 
-	git diff inline-encryption-v7..inline-encryption-v8
+-- 
+With Best Regards,
+Andy Shevchenko
 
-- Eric
+
