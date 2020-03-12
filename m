@@ -2,83 +2,143 @@ Return-Path: <SRS0=tebG=45=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D686C2BB1D
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 16:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90539C2BB1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 17:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FF1420663
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 16:25:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6435120737
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 17:13:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584033233;
+	bh=BPG48TPqtRCN1POin+ar/Y8OdH+YM9+i/QbSi/sR7Do=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=WMzoHcBfixFAd+n23AQqc8jVMTHaztTREkkmGouIJzn5163DwVJ5c93cPGtIVktgr
+	 GS9QrKXgMHR7AdazB/0UW65zsSpl4aYVoN1dnK6aPHLolmkuGd5RlDLWmZtk0riB1M
+	 783NhmXy107to4EpCbbIQA+AMnmvycGGcV7rC6MA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727468AbgCLQZJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 12:25:09 -0400
-Received: from mga04.intel.com ([192.55.52.120]:7804 "EHLO mga04.intel.com"
+        id S1726414AbgCLRNx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 13:13:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50848 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727228AbgCLQZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Mar 2020 12:25:09 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Mar 2020 09:25:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,545,1574150400"; 
-   d="scan'208";a="322522522"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
-  by orsmga001.jf.intel.com with ESMTP; 12 Mar 2020 09:25:05 -0700
-Received: from andy by smile with local (Exim 4.93)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1jCQdv-0092ut-3b; Thu, 12 Mar 2020 18:25:07 +0200
-Date:   Thu, 12 Mar 2020 18:25:07 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
-        linux-nvme@lists.infradead.org, Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        linux-arch@vger.kernel.org
-Subject: Re: [PATCH v1] asm-generic: Provide generic {get, put}_unaligned_{l,
- b}e24()
-Message-ID: <20200312162507.GF1922688@smile.fi.intel.com>
-References: <20200312113941.81162-1-andriy.shevchenko@linux.intel.com>
- <efe5daa3-8e37-101a-9203-676be33eb934@acm.org>
+        id S1726299AbgCLRNw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Mar 2020 13:13:52 -0400
+Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 73573206F1;
+        Thu, 12 Mar 2020 17:13:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584033231;
+        bh=BPG48TPqtRCN1POin+ar/Y8OdH+YM9+i/QbSi/sR7Do=;
+        h=From:To:Cc:Subject:Date:From;
+        b=2B8O2BW6Ry+GQJme51DprU73qgUTwaumfQ0PlOUup5JRm9w2MxT/GimYgcPvyB8u+
+         RjU3MdET32B8RRvb8j6PMNN3A9Xu0HrDBbSXIqiTtDVYCQRgANKxoioElpWlOSEh2U
+         CGNUuot008Ss+7rqKmkRQyYoDNSr4fCLSueEAPiw=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Andy Gross <agross@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Satya Tangirala <satyat@google.com>
+Subject: [RFC PATCH v3 0/4] Inline crypto support on DragonBoard 845c
+Date:   Thu, 12 Mar 2020 10:12:55 -0700
+Message-Id: <20200312171259.151442-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <efe5daa3-8e37-101a-9203-676be33eb934@acm.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 08:18:07AM -0700, Bart Van Assche wrote:
-> On 2020-03-12 04:39, Andy Shevchenko wrote:
-> > There are users in kernel that duplicate {get,put}_unaligned_{l,b}e24()
-> > implementation. Provide generic helpers once for all.
-> 
-> Hi Andy,
-> 
-> Thanks for having done this work. In case you would not yet have noticed
-> the patch series that I posted some time ago but for which I did not
-> have the time to continue working on it, please take a look at
-> https://lore.kernel.org/lkml/20191028200700.213753-1-bvanassche@acm.org/.
+Hello,
 
-Can you send a new version?
+This patchset implements UFS inline crypto support on the DragonBoard
+845c, using the Qualcomm Inline Crypto Engine (ICE) that's present on
+the Snapdragon 845 SoC.
 
-Also, consider to use byteshift to avoid this limitation:
-"Only use get_unaligned_be24() if reading p - 1 is allowed."
+This is based on top of the patchset "[PATCH v8 00/11] Inline Encryption
+Support" by Satya Tangirala, which adds support for the UFS standard
+inline crypto, the block layer changes needed to use inline crypto, and
+support for inline crypto in fscrypt (ext4 and f2fs encryption).  Link:
+https://lore.kernel.org/r/20200312080253.3667-1-satyat@google.com
 
+This new patchset is mostly a RFC showing hardware inline crypto working
+on a publicly available development board that runs the mainline Linux
+kernel.  While patches 1-2 could be applied now, patches 3-4 depend on
+the main "Inline Encryption Support" patchset being merged first.
+
+Most of the logic needed to use ICE is already handled by ufshcd-crypto
+and the blk-crypto framework, which are introduced by the "Inline
+Encryption Support" patchset.  Therefore, this new patchset just adds
+the vendor-specific parts.  I also only implemented support for version
+3 of the ICE hardware, which seems to be easier to use than older
+versions; and for now I only implemented UFS support, not eMMC.  (Note
+that unlike UFS, the eMMC crypto standard hasn't yet published, and I
+haven't yet found any upstream SoC that supports eMMC crypto.)
+
+Due to these factors and others, I was able to greatly simplify the
+driver from the vendor's original.  It works fine in testing with
+fscrypt and with a blk-crypto self-test I'm also working on.
+
+This driver also works nearly as-is on Snapdragon 765 and Snapdragon
+865, which are very recent SoCs, having just been announced in Dec 2019
+(though these newer SoCs currently lack upstream kernel support).
+
+This patchset is also available in git at:
+    Repo: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
+    Tag: db845c-crypto-v3
+
+Changed v2 => v3:
+    - Rebased onto the v8 inline encryption patchset.  Now the driver
+      has to opt into inline crypto support rather than opting out.
+    - Switched qcom_scm_ice_set_key() to use dma_alloc_coherent()
+      so that we can reliably zeroing the key without assuming that
+      bounce buffers aren't used.  Also added a comment.
+    - Made the key_size and data_unit_size arguments to
+      qcom_scm_ice_set_key() be 'u32' instead of 'int'.
+
+Changed v1 => v2:
+    - Rebased onto the v7 inline encryption patchset.
+    - Account for all the recent qcom_scm changes.
+    - Don't ignore errors from ->program_key().
+    - Don't dereference NULL hba->vops.
+    - Dropped the patch that added UFSHCD_QUIRK_BROKEN_CRYPTO, as this
+      flag is now included in the main inline encryption patchset.
+    - Many other cleanups.
+
+Eric Biggers (4):
+  firmware: qcom_scm: Add support for programming inline crypto keys
+  arm64: dts: sdm845: add Inline Crypto Engine registers and clock
+  scsi: ufs: add program_key() variant op
+  scsi: ufs-qcom: add Inline Crypto Engine support
+
+ MAINTAINERS                          |   2 +-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi |  13 +-
+ drivers/firmware/qcom_scm.c          | 101 +++++++++++
+ drivers/firmware/qcom_scm.h          |   4 +
+ drivers/scsi/ufs/Kconfig             |   1 +
+ drivers/scsi/ufs/Makefile            |   4 +-
+ drivers/scsi/ufs/ufs-qcom-ice.c      | 244 +++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.c          |  12 +-
+ drivers/scsi/ufs/ufs-qcom.h          |  27 +++
+ drivers/scsi/ufs/ufshcd-crypto.c     |  33 ++--
+ drivers/scsi/ufs/ufshcd.h            |   3 +
+ include/linux/qcom_scm.h             |  19 +++
+ 12 files changed, 444 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
 
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.25.1
 
