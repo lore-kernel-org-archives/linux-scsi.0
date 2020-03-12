@@ -2,384 +2,104 @@ Return-Path: <SRS0=tebG=45=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CF5C10DCE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:20:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C557BC2BB1D
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:21:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19EFA20674
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:20:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Za8E3LC1"
+	by mail.kernel.org (Postfix) with ESMTP id 9B80920739
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 15:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727982AbgCLPUl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 11:20:41 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:38884 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727770AbgCLPUj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 11:20:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=jg5Ikjka+2a5oT8ZR/+QyqBsLnDSjPYKLVigMGA6FAo=; b=Za8E3LC12qGkc4+Mjqnns8zSqi
-        SW9tLFxOJ6wyopYr+Y60TxuT0TbFDa9NrucHKKlAXz5Kp6Q2D0Y8sM1xHi5X+/Drua2dd4rcZTTPU
-        6XvznsB2SalaqWsiLx719Kf6ZuxBRCuiH3OoiZk5j7PIsd9OjW5RvmMHaGJDIxlhgRJ+7ajWo1Vm0
-        BjpGeh6cETNEya3036xQq6FnsXBgQrITJBNWoh+TGHQ1eBbZ7hiTgXU5MK90aw6zMo4nlpfJvYL5M
-        dXbtDLjWvzBDHerJjbJEzwNjckuq677L0Ea5arHfubFB8hyQvwIN8RhHVp3ON+527VW9U5FVweetz
-        yosO9Nsw==;
-Received: from [2001:4bb8:184:5cad:8026:d98c:a056:3e33] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jCPdW-00081c-Nk; Thu, 12 Mar 2020 15:20:39 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org
-Subject: [PATCH 20/21] block: move the various x86 Unix label formats out of genhd.h
-Date:   Thu, 12 Mar 2020 16:19:38 +0100
-Message-Id: <20200312151939.645254-21-hch@lst.de>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200312151939.645254-1-hch@lst.de>
-References: <20200312151939.645254-1-hch@lst.de>
+        id S1727859AbgCLPVO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 11:21:14 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:33040 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727481AbgCLPVO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 11:21:14 -0400
+Received: by mail-pj1-f66.google.com with SMTP id dw20so786151pjb.0;
+        Thu, 12 Mar 2020 08:21:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=KTSXYITnm1/WH2ZYXdKY58PQDpfbcjgvILt8IUd6Gv8=;
+        b=txOfn6HwNPsQib243OpzDfGuSGY6p9smMxYoA3ddljytArdiD0er4BnNFxU8ruoUIh
+         WbsncdiMSheep5ugCIJ+EoSiLXH4hq9YSHQdmB8ApO3dqMnkQQffpA6jdhCP4/TWKQ0y
+         cUbwl3126ld/OGB7Il5oedflpH0XZSHqB2dWOxPrJeectnqAXqVpjowJLjwsEqblrLN1
+         1pzYwMyOCmTwUwNkt+uolnzFF/+Lt3vuiCymVrYRoghko9Lubh8UTk0x9Jltx/AcCs2x
+         S4I366lcIADP+mLrndXp92ZNId4ygyTAKScxRFSFdBoPMHiAJjyo0m+Sw/iTHmeHzSv+
+         gX5A==
+X-Gm-Message-State: ANhLgQ2EGL8BTUTw/ixh1SMTfmkQtX5B3+VySNjO/m5UZPAKdzQuhIbT
+        z840xjuPCZOK+a4MNfd4t/5mxNP9a5g=
+X-Google-Smtp-Source: ADFU+vt8U8p/BnVf1oBclHSd/EQvbH2de32xIyr1ct/abNcEZlkhcdyMK106Jk58dEvrKu4oTeyjQQ==
+X-Received: by 2002:a17:90a:dac6:: with SMTP id g6mr4774863pjx.30.1584026472679;
+        Thu, 12 Mar 2020 08:21:12 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:7dc2:675a:7f2a:2f89? ([2601:647:4000:d7:7dc2:675a:7f2a:2f89])
+        by smtp.gmail.com with ESMTPSA id b133sm54297412pga.43.2020.03.12.08.21.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Mar 2020 08:21:11 -0700 (PDT)
+Subject: Re: [PATCH v1] asm-generic: Provide generic {get, put}_unaligned_{l,
+ b}e24()
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        linux-nvme@lists.infradead.org, Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        linux-arch@vger.kernel.org
+References: <20200312113941.81162-1-andriy.shevchenko@linux.intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <4c81594e-6b30-d1ff-31f6-0d8cfbf5ba3c@acm.org>
+Date:   Thu, 12 Mar 2020 08:21:10 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200312113941.81162-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-All these are just used in block/partitions/msdos.c, so move them out of the
-genhd.h driver included by every driver.
+On 2020-03-12 04:39, Andy Shevchenko wrote:
+> +static inline u32 get_unaligned_be24(const u8 *buf)
+> +{
+> +	return (u32)p[0] << 16 | (u32)p[1] << 8 | (u32)p[2];
+> +}
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/partitions/msdos.c | 125 ++++++++++++++++++++++++++++++++++
- include/linux/genhd.h    | 143 ---------------------------------------
- 2 files changed, 125 insertions(+), 143 deletions(-)
+The argument is called 'buf' and the function body dereferences a
+pointer called 'p'. Does this even compile?
 
-diff --git a/block/partitions/msdos.c b/block/partitions/msdos.c
-index e44e2f0a02cc..8f2fcc080264 100644
---- a/block/partitions/msdos.c
-+++ b/block/partitions/msdos.c
-@@ -18,6 +18,12 @@
-  *  Check partition table on IDE disks for common CHS translations
-  *
-  *  Re-organised Feb 1998 Russell King
-+ *
-+ *  BSD disklabel support by Yossi Gottlieb <yogo@math.tau.ac.il>
-+ *  updated by Marc Espie <Marc.Espie@openbsd.org>
-+ *
-+ *  Unixware slices support by Andrzej Krzysztofowicz <ankry@mif.pg.gda.pl>
-+ *  and Krzysztof G. Baranowski <kgb@knm.org.pl>
-  */
- #include <linux/msdos_fs.h>
- #include <linux/msdos_partition.h>
-@@ -215,6 +221,30 @@ static void parse_extended(struct parsed_partitions *state,
- 	put_dev_sector(sect);
- }
- 
-+#define SOLARIS_X86_NUMSLICE	16
-+#define SOLARIS_X86_VTOC_SANE	(0x600DDEEEUL)
-+
-+struct solaris_x86_slice {
-+	__le16 s_tag;		/* ID tag of partition */
-+	__le16 s_flag;		/* permission flags */
-+	__le32 s_start;		/* start sector no of partition */
-+	__le32 s_size;		/* # of blocks in partition */
-+};
-+
-+struct solaris_x86_vtoc {
-+	unsigned int v_bootinfo[3];	/* info needed by mboot */
-+	__le32 v_sanity;		/* to verify vtoc sanity */
-+	__le32 v_version;		/* layout version */
-+	char	v_volume[8];		/* volume name */
-+	__le16	v_sectorsz;		/* sector size in bytes */
-+	__le16	v_nparts;		/* number of partitions */
-+	unsigned int v_reserved[10];	/* free space */
-+	struct solaris_x86_slice
-+		v_slice[SOLARIS_X86_NUMSLICE]; /* slice headers */
-+	unsigned int timestamp[SOLARIS_X86_NUMSLICE]; /* timestamp */
-+	char	v_asciilabel[128];	/* for compatibility */
-+};
-+
- /* james@bpgc.com: Solaris has a nasty indicator: 0x82 which also
-    indicates linux swap.  Be careful before believing this is Solaris. */
- 
-@@ -270,6 +300,54 @@ static void parse_solaris_x86(struct parsed_partitions *state,
- #endif
- }
- 
-+/* check against BSD src/sys/sys/disklabel.h for consistency */
-+#define BSD_DISKMAGIC	(0x82564557UL)	/* The disk magic number */
-+#define BSD_MAXPARTITIONS	16
-+#define OPENBSD_MAXPARTITIONS	16
-+#define BSD_FS_UNUSED		0 /* disklabel unused partition entry ID */
-+struct bsd_disklabel {
-+	__le32	d_magic;		/* the magic number */
-+	__s16	d_type;			/* drive type */
-+	__s16	d_subtype;		/* controller/d_type specific */
-+	char	d_typename[16];		/* type name, e.g. "eagle" */
-+	char	d_packname[16];		/* pack identifier */
-+	__u32	d_secsize;		/* # of bytes per sector */
-+	__u32	d_nsectors;		/* # of data sectors per track */
-+	__u32	d_ntracks;		/* # of tracks per cylinder */
-+	__u32	d_ncylinders;		/* # of data cylinders per unit */
-+	__u32	d_secpercyl;		/* # of data sectors per cylinder */
-+	__u32	d_secperunit;		/* # of data sectors per unit */
-+	__u16	d_sparespertrack;	/* # of spare sectors per track */
-+	__u16	d_sparespercyl;		/* # of spare sectors per cylinder */
-+	__u32	d_acylinders;		/* # of alt. cylinders per unit */
-+	__u16	d_rpm;			/* rotational speed */
-+	__u16	d_interleave;		/* hardware sector interleave */
-+	__u16	d_trackskew;		/* sector 0 skew, per track */
-+	__u16	d_cylskew;		/* sector 0 skew, per cylinder */
-+	__u32	d_headswitch;		/* head switch time, usec */
-+	__u32	d_trkseek;		/* track-to-track seek, usec */
-+	__u32	d_flags;		/* generic flags */
-+#define NDDATA 5
-+	__u32	d_drivedata[NDDATA];	/* drive-type specific information */
-+#define NSPARE 5
-+	__u32	d_spare[NSPARE];	/* reserved for future use */
-+	__le32	d_magic2;		/* the magic number (again) */
-+	__le16	d_checksum;		/* xor of data incl. partitions */
-+
-+			/* filesystem and partition information: */
-+	__le16	d_npartitions;		/* number of partitions in following */
-+	__le32	d_bbsize;		/* size of boot area at sn0, bytes */
-+	__le32	d_sbsize;		/* max size of fs superblock, bytes */
-+	struct	bsd_partition {		/* the partition table */
-+		__le32	p_size;		/* number of sectors in partition */
-+		__le32	p_offset;	/* starting sector */
-+		__le32	p_fsize;	/* filesystem basic fragment size */
-+		__u8	p_fstype;	/* filesystem type, see below */
-+		__u8	p_frag;		/* filesystem fragments per block */
-+		__le16	p_cpg;		/* filesystem cylinders per group */
-+	} d_partitions[BSD_MAXPARTITIONS];	/* actually may be more */
-+};
-+
- #if defined(CONFIG_BSD_DISKLABEL)
- /*
-  * Create devices for BSD partitions listed in a disklabel, under a
-@@ -354,6 +432,51 @@ static void parse_openbsd(struct parsed_partitions *state,
- #endif
- }
- 
-+#define UNIXWARE_DISKMAGIC     (0xCA5E600DUL)	/* The disk magic number */
-+#define UNIXWARE_DISKMAGIC2    (0x600DDEEEUL)	/* The slice table magic nr */
-+#define UNIXWARE_NUMSLICE      16
-+#define UNIXWARE_FS_UNUSED     0		/* Unused slice entry ID */
-+
-+struct unixware_slice {
-+	__le16   s_label;	/* label */
-+	__le16   s_flags;	/* permission flags */
-+	__le32   start_sect;	/* starting sector */
-+	__le32   nr_sects;	/* number of sectors in slice */
-+};
-+
-+struct unixware_disklabel {
-+	__le32	d_type;			/* drive type */
-+	__le32	d_magic;		/* the magic number */
-+	__le32	d_version;		/* version number */
-+	char	d_serial[12];		/* serial number of the device */
-+	__le32	d_ncylinders;		/* # of data cylinders per device */
-+	__le32	d_ntracks;		/* # of tracks per cylinder */
-+	__le32	d_nsectors;		/* # of data sectors per track */
-+	__le32	d_secsize;		/* # of bytes per sector */
-+	__le32	d_part_start;		/* # of first sector of this partition*/
-+	__le32	d_unknown1[12];		/* ? */
-+	__le32	d_alt_tbl;		/* byte offset of alternate table */
-+	__le32	d_alt_len;		/* byte length of alternate table */
-+	__le32	d_phys_cyl;		/* # of physical cylinders per device */
-+	__le32	d_phys_trk;		/* # of physical tracks per cylinder */
-+	__le32	d_phys_sec;		/* # of physical sectors per track */
-+	__le32	d_phys_bytes;		/* # of physical bytes per sector */
-+	__le32	d_unknown2;		/* ? */
-+	__le32	d_unknown3;		/* ? */
-+	__le32	d_pad[8];		/* pad */
-+
-+	struct unixware_vtoc {
-+		__le32	v_magic;		/* the magic number */
-+		__le32	v_version;		/* version number */
-+		char	v_name[8];		/* volume name */
-+		__le16	v_nslices;		/* # of slices */
-+		__le16	v_unknown1;		/* ? */
-+		__le32	v_reserved[10];		/* reserved */
-+		struct unixware_slice
-+			v_slice[UNIXWARE_NUMSLICE];	/* slice headers */
-+	} vtoc;
-+};  /* 408 */
-+
- /*
-  * Create devices for Unixware partitions listed in a disklabel, under a
-  * dos-like partition. See parse_extended() for more information.
-@@ -397,6 +520,8 @@ static void parse_unixware(struct parsed_partitions *state,
- #endif
- }
- 
-+#define MINIX_NR_SUBPARTITIONS  4
-+
- /*
-  * Minix 2.0.0/2.0.2 subpartition support.
-  * Anand Krishnamurthy <anandk@wiproge.med.ge.com>
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index df809e91ad99..21178f7b379c 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -424,149 +424,6 @@ static inline void set_capacity(struct gendisk *disk, sector_t size)
- 	disk->part0.nr_sects = size;
- }
- 
--#ifdef CONFIG_SOLARIS_X86_PARTITION
--
--#define SOLARIS_X86_NUMSLICE	16
--#define SOLARIS_X86_VTOC_SANE	(0x600DDEEEUL)
--
--struct solaris_x86_slice {
--	__le16 s_tag;		/* ID tag of partition */
--	__le16 s_flag;		/* permission flags */
--	__le32 s_start;		/* start sector no of partition */
--	__le32 s_size;		/* # of blocks in partition */
--};
--
--struct solaris_x86_vtoc {
--	unsigned int v_bootinfo[3];	/* info needed by mboot (unsupported) */
--	__le32 v_sanity;		/* to verify vtoc sanity */
--	__le32 v_version;		/* layout version */
--	char	v_volume[8];		/* volume name */
--	__le16	v_sectorsz;		/* sector size in bytes */
--	__le16	v_nparts;		/* number of partitions */
--	unsigned int v_reserved[10];	/* free space */
--	struct solaris_x86_slice
--		v_slice[SOLARIS_X86_NUMSLICE]; /* slice headers */
--	unsigned int timestamp[SOLARIS_X86_NUMSLICE]; /* timestamp (unsupported) */
--	char	v_asciilabel[128];	/* for compatibility */
--};
--
--#endif /* CONFIG_SOLARIS_X86_PARTITION */
--
--#ifdef CONFIG_BSD_DISKLABEL
--/*
-- * BSD disklabel support by Yossi Gottlieb <yogo@math.tau.ac.il>
-- * updated by Marc Espie <Marc.Espie@openbsd.org>
-- */
--
--/* check against BSD src/sys/sys/disklabel.h for consistency */
--
--#define BSD_DISKMAGIC	(0x82564557UL)	/* The disk magic number */
--#define BSD_MAXPARTITIONS	16
--#define OPENBSD_MAXPARTITIONS	16
--#define BSD_FS_UNUSED		0	/* disklabel unused partition entry ID */
--struct bsd_disklabel {
--	__le32	d_magic;		/* the magic number */
--	__s16	d_type;			/* drive type */
--	__s16	d_subtype;		/* controller/d_type specific */
--	char	d_typename[16];		/* type name, e.g. "eagle" */
--	char	d_packname[16];			/* pack identifier */ 
--	__u32	d_secsize;		/* # of bytes per sector */
--	__u32	d_nsectors;		/* # of data sectors per track */
--	__u32	d_ntracks;		/* # of tracks per cylinder */
--	__u32	d_ncylinders;		/* # of data cylinders per unit */
--	__u32	d_secpercyl;		/* # of data sectors per cylinder */
--	__u32	d_secperunit;		/* # of data sectors per unit */
--	__u16	d_sparespertrack;	/* # of spare sectors per track */
--	__u16	d_sparespercyl;		/* # of spare sectors per cylinder */
--	__u32	d_acylinders;		/* # of alt. cylinders per unit */
--	__u16	d_rpm;			/* rotational speed */
--	__u16	d_interleave;		/* hardware sector interleave */
--	__u16	d_trackskew;		/* sector 0 skew, per track */
--	__u16	d_cylskew;		/* sector 0 skew, per cylinder */
--	__u32	d_headswitch;		/* head switch time, usec */
--	__u32	d_trkseek;		/* track-to-track seek, usec */
--	__u32	d_flags;		/* generic flags */
--#define NDDATA 5
--	__u32	d_drivedata[NDDATA];	/* drive-type specific information */
--#define NSPARE 5
--	__u32	d_spare[NSPARE];	/* reserved for future use */
--	__le32	d_magic2;		/* the magic number (again) */
--	__le16	d_checksum;		/* xor of data incl. partitions */
--
--			/* filesystem and partition information: */
--	__le16	d_npartitions;		/* number of partitions in following */
--	__le32	d_bbsize;		/* size of boot area at sn0, bytes */
--	__le32	d_sbsize;		/* max size of fs superblock, bytes */
--	struct	bsd_partition {		/* the partition table */
--		__le32	p_size;		/* number of sectors in partition */
--		__le32	p_offset;	/* starting sector */
--		__le32	p_fsize;	/* filesystem basic fragment size */
--		__u8	p_fstype;	/* filesystem type, see below */
--		__u8	p_frag;		/* filesystem fragments per block */
--		__le16	p_cpg;		/* filesystem cylinders per group */
--	} d_partitions[BSD_MAXPARTITIONS];	/* actually may be more */
--};
--
--#endif	/* CONFIG_BSD_DISKLABEL */
--
--#ifdef CONFIG_UNIXWARE_DISKLABEL
--/*
-- * Unixware slices support by Andrzej Krzysztofowicz <ankry@mif.pg.gda.pl>
-- * and Krzysztof G. Baranowski <kgb@knm.org.pl>
-- */
--
--#define UNIXWARE_DISKMAGIC     (0xCA5E600DUL)	/* The disk magic number */
--#define UNIXWARE_DISKMAGIC2    (0x600DDEEEUL)	/* The slice table magic nr */
--#define UNIXWARE_NUMSLICE      16
--#define UNIXWARE_FS_UNUSED     0		/* Unused slice entry ID */
--
--struct unixware_slice {
--	__le16   s_label;	/* label */
--	__le16   s_flags;	/* permission flags */
--	__le32   start_sect;	/* starting sector */
--	__le32   nr_sects;	/* number of sectors in slice */
--};
--
--struct unixware_disklabel {
--	__le32   d_type;               	/* drive type */
--	__le32   d_magic;                /* the magic number */
--	__le32   d_version;              /* version number */
--	char    d_serial[12];           /* serial number of the device */
--	__le32   d_ncylinders;           /* # of data cylinders per device */
--	__le32   d_ntracks;              /* # of tracks per cylinder */
--	__le32   d_nsectors;             /* # of data sectors per track */
--	__le32   d_secsize;              /* # of bytes per sector */
--	__le32   d_part_start;           /* # of first sector of this partition */
--	__le32   d_unknown1[12];         /* ? */
-- 	__le32	d_alt_tbl;              /* byte offset of alternate table */
-- 	__le32	d_alt_len;              /* byte length of alternate table */
-- 	__le32	d_phys_cyl;             /* # of physical cylinders per device */
-- 	__le32	d_phys_trk;             /* # of physical tracks per cylinder */
-- 	__le32	d_phys_sec;             /* # of physical sectors per track */
-- 	__le32	d_phys_bytes;           /* # of physical bytes per sector */
-- 	__le32	d_unknown2;             /* ? */
--	__le32   d_unknown3;             /* ? */
--	__le32	d_pad[8];               /* pad */
--
--	struct unixware_vtoc {
--		__le32	v_magic;		/* the magic number */
--		__le32	v_version;		/* version number */
--		char	v_name[8];		/* volume name */
--		__le16	v_nslices;		/* # of slices */
--		__le16	v_unknown1;		/* ? */
--		__le32	v_reserved[10];		/* reserved */
--		struct unixware_slice
--			v_slice[UNIXWARE_NUMSLICE];	/* slice headers */
--	} vtoc;
--
--};  /* 408 */
--
--#endif /* CONFIG_UNIXWARE_DISKLABEL */
--
--#ifdef CONFIG_MINIX_SUBPARTITION
--#   define MINIX_NR_SUBPARTITIONS  4
--#endif /* CONFIG_MINIX_SUBPARTITION */
--
- #define ADDPART_FLAG_NONE	0
- #define ADDPART_FLAG_RAID	1
- #define ADDPART_FLAG_WHOLEDISK	2
--- 
-2.24.1
-
+Bart.
