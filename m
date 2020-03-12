@@ -2,171 +2,120 @@ Return-Path: <SRS0=tebG=45=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1DA8C1975A
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 17:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C915C10DCE
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 17:45:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DE9A2071B
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 17:35:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="CPhWUCVv"
+	by mail.kernel.org (Postfix) with ESMTP id 2BFCB206F1
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Mar 2020 17:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726512AbgCLRfG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 13:35:06 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:40020 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726385AbgCLRfF (ORCPT
+        id S1726390AbgCLRpU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 13:45:20 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56748 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726362AbgCLRpU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Mar 2020 13:35:05 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584034505; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=JqD3oxXgpm5gEOCIMzEhLs3L1rpyh7voYQV1LqU4Ak4=; b=CPhWUCVvXp3fNUxRStGEjbj57Jl6cgAyAzyxGMd+Scpgvi9SNBD2Ib0hj8fLZp+60TeGjr14
- H+twQ6VjBVEoG1WG2Fpo2XTd1JR9X4a7SR7PDDl744spbKY4QFcRJ1iHWpkgvFSk2roWf9yr
- 07XFKR+DIPrFSw4pO7YUoEuk/+s=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e6a72c1.7f1ae47630a0-smtp-out-n02;
- Thu, 12 Mar 2020 17:34:57 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A9DC0C43637; Thu, 12 Mar 2020 17:34:57 +0000 (UTC)
-Received: from [10.46.161.159] (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A1C67C433CB;
-        Thu, 12 Mar 2020 17:34:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A1C67C433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v2 3/8] scsi: ufs: use an enum for host capabilities
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
-        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-References: <20200312110908.14895-1-stanley.chu@mediatek.com>
- <20200312110908.14895-4-stanley.chu@mediatek.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <f86de852-6379-fa77-eac0-b4fa3610ed28@codeaurora.org>
-Date:   Thu, 12 Mar 2020 10:34:55 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        Thu, 12 Mar 2020 13:45:20 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02CHiLVH143119
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2020 13:45:19 -0400
+Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2yqsrbr0yw-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2020 13:45:18 -0400
+Received: from localhost
+        by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
+        Thu, 12 Mar 2020 17:45:17 -0000
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
+        by e06smtp07.uk.ibm.com (192.168.101.137) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Thu, 12 Mar 2020 17:45:15 -0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 02CHjDhV51576896
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Mar 2020 17:45:13 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 711C052057;
+        Thu, 12 Mar 2020 17:45:13 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 2D2305204E;
+        Thu, 12 Mar 2020 17:45:13 +0000 (GMT)
+From:   Steffen Maier <maier@linux.ibm.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Subject: [PATCH 00/10] zfcp features for v5.7
+Date:   Thu, 12 Mar 2020 18:44:55 +0100
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20200312110908.14895-4-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+x-cbid: 20031217-0028-0000-0000-000003E3C2C3
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 20031217-0029-0000-0000-000024A90B25
+Message-Id: <20200312174505.51294-1-maier@linux.ibm.com>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-03-12_11:2020-03-11,2020-03-12 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
+ impostorscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
+ suspectscore=0 priorityscore=1501 spamscore=0 mlxscore=0 phishscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2003120090
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/12/2020 4:09 AM, Stanley Chu wrote:
-> Use an enum to specify the host capabilities instead of #defines inside the
-> structure definition.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> Reviewed-by: Can Guo <cang@codeaurora.org>
-> ---
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
->   drivers/scsi/ufs/ufshcd.h | 65 ++++++++++++++++++++++-----------------
->   1 file changed, 37 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 5cf79d2319a6..fec004cd8054 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -501,6 +501,43 @@ enum ufshcd_quirks {
->   	UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		= 1 << 5,
->   };
->   
-> +enum ufshcd_caps {
-> +	/* Allow dynamic clk gating */
-> +	UFSHCD_CAP_CLK_GATING				= 1 << 0,
-> +
-> +	/* Allow hiberb8 with clk gating */
-> +	UFSHCD_CAP_HIBERN8_WITH_CLK_GATING		= 1 << 1,
-> +
-> +	/* Allow dynamic clk scaling */
-> +	UFSHCD_CAP_CLK_SCALING				= 1 << 2,
-> +
-> +	/* Allow auto bkops to enabled during runtime suspend */
-> +	UFSHCD_CAP_AUTO_BKOPS_SUSPEND			= 1 << 3,
-> +
-> +	/*
-> +	 * This capability allows host controller driver to use the UFS HCI's
-> +	 * interrupt aggregation capability.
-> +	 * CAUTION: Enabling this might reduce overall UFS throughput.
-> +	 */
-> +	UFSHCD_CAP_INTR_AGGR				= 1 << 4,
-> +
-> +	/*
-> +	 * This capability allows the device auto-bkops to be always enabled
-> +	 * except during suspend (both runtime and suspend).
-> +	 * Enabling this capability means that device will always be allowed
-> +	 * to do background operation when it's active but it might degrade
-> +	 * the performance of ongoing read/write operations.
-> +	 */
-> +	UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND = 1 << 5,
-> +
-> +	/*
-> +	 * This capability allows host controller driver to automatically
-> +	 * enable runtime power management by itself instead of waiting
-> +	 * for userspace to control the power management.
-> +	 */
-> +	UFSHCD_CAP_RPM_AUTOSUSPEND			= 1 << 6,
-> +};
-> +
->   /**
->    * struct ufs_hba - per adapter private structure
->    * @mmio_base: UFSHCI base register address
-> @@ -653,34 +690,6 @@ struct ufs_hba {
->   	struct ufs_clk_gating clk_gating;
->   	/* Control to enable/disable host capabilities */
->   	u32 caps;
-> -	/* Allow dynamic clk gating */
-> -#define UFSHCD_CAP_CLK_GATING	(1 << 0)
-> -	/* Allow hiberb8 with clk gating */
-> -#define UFSHCD_CAP_HIBERN8_WITH_CLK_GATING (1 << 1)
-> -	/* Allow dynamic clk scaling */
-> -#define UFSHCD_CAP_CLK_SCALING	(1 << 2)
-> -	/* Allow auto bkops to enabled during runtime suspend */
-> -#define UFSHCD_CAP_AUTO_BKOPS_SUSPEND (1 << 3)
-> -	/*
-> -	 * This capability allows host controller driver to use the UFS HCI's
-> -	 * interrupt aggregation capability.
-> -	 * CAUTION: Enabling this might reduce overall UFS throughput.
-> -	 */
-> -#define UFSHCD_CAP_INTR_AGGR (1 << 4)
-> -	/*
-> -	 * This capability allows the device auto-bkops to be always enabled
-> -	 * except during suspend (both runtime and suspend).
-> -	 * Enabling this capability means that device will always be allowed
-> -	 * to do background operation when it's active but it might degrade
-> -	 * the performance of ongoing read/write operations.
-> -	 */
-> -#define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 5)
-> -	/*
-> -	 * This capability allows host controller driver to automatically
-> -	 * enable runtime power management by itself instead of waiting
-> -	 * for userspace to control the power management.
-> -	 */
-> -#define UFSHCD_CAP_RPM_AUTOSUSPEND (1 << 6)
->   
->   	struct devfreq *devfreq;
->   	struct ufs_clk_scaling clk_scaling;
-> 
+Martin, James,
 
+one small zfcp fix and 2 features for v5.7.
+Patches apply to Martin's 5.7/scsi-queue or James' misc branch.
+
+Patch 1 is a small preventive fix with locking for point-to-point.
+
+Patches 2..4 is a feature to expose fabric_name in fc_host sysfs.
+
+Patches 5..8 is a feature to provide user information on the state of
+the otherwise transparent IBM Fibre Channel Endpoint Security.
+Patches 9..10 is a feature to add new recovery and corresponding
+kernel messages related to IBM Fibre Channel Endpoint Security.
+[http://www.redbooks.ibm.com/redpieces/abstracts/sg248455.html?Open]
+
+
+Jens Remus (6):
+  zfcp: auto variables for dereferenced structs in open port handler
+  zfcp: report FC Endpoint Security in sysfs
+  zfcp: log FC Endpoint Security of connections
+  zfcp: trace FC Endpoint Security of FCP devices and connections
+  zfcp: enhance handling of FC Endpoint Security errors
+  zfcp: log FC Endpoint Security errors
+
+Steffen Maier (4):
+  zfcp: fix missing erp_lock in port recovery trigger for point-to-point
+  zfcp: expose fabric name as common fc_host sysfs attribute
+  zfcp: wire previously driver-specific sysfs attributes also to fc_host
+  zfcp: fix fc_host attributes that should be unknown on local link down
+
+ drivers/s390/scsi/zfcp_dbf.c   |  44 ++++-
+ drivers/s390/scsi/zfcp_dbf.h   |  32 +++-
+ drivers/s390/scsi/zfcp_def.h   |   6 +-
+ drivers/s390/scsi/zfcp_erp.c   |   2 +-
+ drivers/s390/scsi/zfcp_ext.h   |  12 +-
+ drivers/s390/scsi/zfcp_fsf.c   | 290 ++++++++++++++++++++++++++++++---
+ drivers/s390/scsi/zfcp_fsf.h   |  23 ++-
+ drivers/s390/scsi/zfcp_scsi.c  |   5 +
+ drivers/s390/scsi/zfcp_sysfs.c |  70 +++++++-
+ 9 files changed, 449 insertions(+), 35 deletions(-)
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.17.1
+
