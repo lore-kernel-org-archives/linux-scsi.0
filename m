@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5556DC10DCE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 09:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04ED9C10DCE
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 09:25:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D2B320746
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 09:15:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9B122074A
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 09:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726443AbgCMJPj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Mar 2020 05:15:39 -0400
-Received: from mga11.intel.com ([192.55.52.93]:30207 "EHLO mga11.intel.com"
+        id S1726377AbgCMJZZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Mar 2020 05:25:25 -0400
+Received: from mga01.intel.com ([192.55.52.88]:64731 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726393AbgCMJPj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Mar 2020 05:15:39 -0400
+        id S1726055AbgCMJZZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Mar 2020 05:25:25 -0400
 X-Amp-Result: UNKNOWN
 X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Mar 2020 02:15:39 -0700
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Mar 2020 02:25:24 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.70,548,1574150400"; 
-   d="scan'208";a="289975041"
+   d="scan'208";a="322739613"
 Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
-  by FMSMGA003.fm.intel.com with ESMTP; 13 Mar 2020 02:15:35 -0700
+  by orsmga001.jf.intel.com with ESMTP; 13 Mar 2020 02:25:20 -0700
 Received: from andy by smile with local (Exim 4.93)
         (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1jCgPp-009E2m-CA; Fri, 13 Mar 2020 11:15:37 +0200
-Date:   Fri, 13 Mar 2020 11:15:37 +0200
+        id 1jCgZG-009E8T-Bc; Fri, 13 Mar 2020 11:25:22 +0200
+Date:   Fri, 13 Mar 2020 11:25:22 +0200
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -48,7 +48,7 @@ Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [PATCH v2 3/5] treewide: Consolidate
  {get,put}_unaligned_[bl]e24() definitions
-Message-ID: <20200313091537.GQ1922688@smile.fi.intel.com>
+Message-ID: <20200313092522.GR1922688@smile.fi.intel.com>
 References: <20200313023718.21830-1-bvanassche@acm.org>
  <20200313023718.21830-4-bvanassche@acm.org>
 MIME-Version: 1.0
@@ -66,13 +66,6 @@ On Thu, Mar 12, 2020 at 07:37:16PM -0700, Bart Van Assche wrote:
 > put_unaligned_le24() definitions from various drivers into
 > include/linux/unaligned/generic.h. Add a put_unaligned_be24()
 > implementation.
-
-Thank you!
-My comments below.
-
-After addressing,
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-
 > 
 > Cc: Christoph Hellwig <hch@lst.de>
 > Cc: Keith Busch <kbusch@kernel.org>
@@ -86,6 +79,10 @@ Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 > Cc: H. Peter Anvin <hpa@zytor.com>
 > Cc: Andrew Morton <akpm@linux-foundation.org>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+
+Btw, Greg  gave Ack to my patch, I think it applies here as well (for USB)
+because the change is basically the same.
+
 > ---
 >  drivers/nvme/host/rdma.c                     |  8 ----
 >  drivers/nvme/target/rdma.c                   |  6 ---
@@ -197,40 +194,25 @@ Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 > +}
 > +
 > +static inline void __put_unaligned_be24(u32 val, u8 *p)
-
-	const u32 val
-
 > +{
 > +	*p++ = val >> 16;
 > +	*p++ = val >> 8;
 > +	*p++ = val;
 > +}
 > +
-
 > +static inline void put_unaligned_be24(u32 val, void *p)
-
-Ditto.
-
 > +{
 > +	__put_unaligned_be24(val, p);
 > +}
 > +
-
 > +static inline void __put_unaligned_le24(u32 val, u8 *p)
-
-Ditto.
-
 > +{
 > +	*p++ = val;
 > +	*p++ = val >> 8;
 > +	*p++ = val >> 16;
 > +}
 > +
-
 > +static inline void put_unaligned_le24(u32 val, void *p)
-
-Ditto.
-
 > +{
 > +	__put_unaligned_le24(val, p);
 > +}
