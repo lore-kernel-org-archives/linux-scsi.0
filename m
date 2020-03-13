@@ -2,100 +2,108 @@ Return-Path: <SRS0=Yi3m=46=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DE4C10DCE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 15:36:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DE26C2BB1D
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 16:33:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0741F206B7
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 15:36:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="ojazE4xK"
+	by mail.kernel.org (Postfix) with ESMTP id 7F88C206E7
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 16:33:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726591AbgCMPg5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Mar 2020 11:36:57 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:55256 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726475AbgCMPg5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Mar 2020 11:36:57 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id CC5DE4128A;
-        Fri, 13 Mar 2020 15:36:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1584113814;
-         x=1585928215; bh=gP7ojruYoiAL+Yk42QW6bWroZK1gTrJhbb4XV8iCKWM=; b=
-        ojazE4xK3HEocyrXpQgJ2ywxbQSWMsCoPlm9WtPmKBebnmJZK4adcNSPhyhMYQzQ
-        Q40/4D+MjMINFed9SepOwdwaI+UyR8MWiT6qr9Y9PwZqkOmorNRRfFXCwgfpYefv
-        8D3X6x53hOk9cEV8nzFt20yTG0Wi+Dee7lgip6OoEpk=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id W_IyDtFbsZmG; Fri, 13 Mar 2020 18:36:54 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id B5DD74128F;
-        Fri, 13 Mar 2020 18:36:52 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 13
- Mar 2020 18:36:52 +0300
-Date:   Fri, 13 Mar 2020 18:36:52 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     <mwilck@suse.com>
-CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v2 3/3] scsi: qla2xxx: set UNLOADING before waiting for
- session deletion
-Message-ID: <20200313153652.GB42639@SPB-NB-133.local>
-References: <20200205214422.3657-1-mwilck@suse.com>
- <20200205214422.3657-4-mwilck@suse.com>
+        id S1726952AbgCMQdb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Mar 2020 12:33:31 -0400
+Received: from mga02.intel.com ([134.134.136.20]:45298 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726406AbgCMQdb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Mar 2020 12:33:31 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Mar 2020 09:33:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.70,549,1574150400"; 
+   d="scan'208";a="235370978"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by fmsmga007.fm.intel.com with ESMTP; 13 Mar 2020 09:33:27 -0700
+Received: from andy by smile with local (Exim 4.93)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1jCnFY-009Iu7-V1; Fri, 13 Mar 2020 18:33:28 +0200
+Date:   Fri, 13 Mar 2020 18:33:28 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@fb.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Harvey Harrison <harvey.harrison@gmail.com>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 3/5] treewide: Consolidate
+ {get,put}_unaligned_[bl]e24() definitions
+Message-ID: <20200313163328.GY1922688@smile.fi.intel.com>
+References: <20200313023718.21830-1-bvanassche@acm.org>
+ <20200313023718.21830-4-bvanassche@acm.org>
+ <20200313091537.GQ1922688@smile.fi.intel.com>
+ <615a0134-26ab-6591-632f-bf85d26ed60b@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200205214422.3657-4-mwilck@suse.com>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+In-Reply-To: <615a0134-26ab-6591-632f-bf85d26ed60b@acm.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Feb 05, 2020 at 10:44:22PM +0100, mwilck@suse.com wrote:
-> From: Martin Wilck <mwilck@suse.com>
+On Fri, Mar 13, 2020 at 07:54:49AM -0700, Bart Van Assche wrote:
+> On 2020-03-13 02:15, Andy Shevchenko wrote:
+> > On Thu, Mar 12, 2020 at 07:37:16PM -0700, Bart Van Assche wrote:
+> >> +static inline void __put_unaligned_be24(u32 val, u8 *p)
+> > 
+> > 	const u32 val
 > 
-> The purpose of the UNLOADING flag is to avoid port login procedures
-> to continue when a controller is in the process of shutting down.
-> It makes sense to set this flag before starting session teardown.
-> The only operations that must be able to continue are LOGO, PRLO,
-> and the like.
+> Hi Andy,
 > 
-> Furthermore, use atomic test_and_set_bit() to avoid the shutdown
-> being run multiple times in parallel. In qla2x00_disable_board_on_pci_error(),
-> the test for UNLOADING is postponed until after the check for an already
-> disabled PCI board.
+> Thanks for the review. The above suggestion surprises me: as far as I
+> can tell almost nobody declares function arguments that are passed by
+> value as 'const' in the Linux kernel:
 > 
-> Signed-off-by: Martin Wilck <mwilck@suse.com>
-> ---
->  drivers/scsi/qla2xxx/qla_os.c | 25 +++++++++++--------------
->  1 file changed, 11 insertions(+), 14 deletions(-)
+> $ git grep -nH '(const[^\*,]*,' | wc -l
+>    1065
 > 
+> That number is negligible compared to the number of function declarations:
+> 
+> $ git grep -nH '(.*);$' | wc -l
+> 2692721
 
-Hi Martin,
+It's a surprising "argument".
+If 100500 do worse it doesn't mean 3000 shouldn't do it better.
+And of course first grep is incomplete and second one too broad.
 
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Just for (generic) headers:
 
-Thanks,
-Roman
+$ git grep -n '[a-z_0-9]([^)]*\bconst [^)]\+)' -- include | wc -l
+4342
+
+$ git grep -n '[a-z_0-9]([^)]\+)' -- include | wc -l
+69672
+
+~6% in headers. I don't think it's negligible.
+
+You have at least two advantages on this:
+a) we really don't modify the content of the input value;
+b) it will be consistent with the rest of consolidated helpers.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
