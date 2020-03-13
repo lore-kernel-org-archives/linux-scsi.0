@@ -2,144 +2,106 @@ Return-Path: <SRS0=Yi3m=46=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 799B4C4CECE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 08:24:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5476C10DCE
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 08:50:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FDBE2074B
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 08:24:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584087840;
-	bh=ETyKrmP0hGRDdxES6XCncS3YWPghJvpIb0l2B7LnEqU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=mghe5f+nPbfGDkiXtiPuIh0Ch4UOL0TKPhhTZPgKaQpGutYvoC5PNXgKx5pGHVqIi
-	 onsqqC20t7XDSGHKjIvOfdgXJAxlEd5be9hi284mSHDWOYBELFC3+env1SPjqyLggR
-	 1mKRT4565Fx0H/ajcKCYnYXy3L1mDUghbt0bAUaw=
+	by mail.kernel.org (Postfix) with ESMTP id ABBFF206FA
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 08:50:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="au43QZOq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726462AbgCMIX7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Mar 2020 04:23:59 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:33260 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726310AbgCMIX7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Mar 2020 04:23:59 -0400
-Received: by mail-ed1-f66.google.com with SMTP id z65so10906380ede.0;
-        Fri, 13 Mar 2020 01:23:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=4tR4fgeFAv7oNvf3SR9Y+PFPOqEFlOUKa/4AnEg5Ajc=;
-        b=lPnKSzEIuQVqXhQnKtAbEt+yIyxl5IuPZOnlE67J7SO9QzsxMklKlQyoLEzzIZdOtY
-         7co7Dz0V/7gt3xAXjaHKtERQI85u/4ikQX8ClUk8RbU7nnZtoXx/LfoJ8zXDGpcNW/yw
-         XnuVIEwAb6p0CuBwGGdjzxpPL8VQKwL4E6do2ZOnboQ5bvwJnQ2RCAbKyiMmb7UVx3Hx
-         OherazbC1cnS3XAjTJhchGuAvheF6SEi5EeRdI+b2xDKkmMfRUt7PcfKHeCxNUK4vYjg
-         2oW4ARz3j/FWsdvLoLN+3nXmfhRiO8nxCkGAJeafQyhCwSU3YrpKBW8rgdj38MO/gsrD
-         d+yA==
-X-Gm-Message-State: ANhLgQ3Q300fru7nTNjXRiP+Yd3VpR4Q9uSuinKyAMXSLAvVqoVvk0bo
-        EnItPK+h3McFLd1/JVxWAyM=
-X-Google-Smtp-Source: ADFU+vtDIGMumVvwsMfchwX0nbGRN7NDG8oDGe83g2SJLn6cIBS7QBe76XzUd1cuNOlmNMvjAs4hEw==
-X-Received: by 2002:a17:906:689:: with SMTP id u9mr10624912ejb.78.1584087837029;
-        Fri, 13 Mar 2020 01:23:57 -0700 (PDT)
-Received: from pi3 ([194.230.155.125])
-        by smtp.googlemail.com with ESMTPSA id ck21sm1816975ejb.51.2020.03.13.01.23.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Mar 2020 01:23:56 -0700 (PDT)
-Date:   Fri, 13 Mar 2020 09:23:54 +0100
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-To:     Alim Akhtar <alim.akhtar@gmail.com>
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        robh+dt <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>
-Subject: Re: [PATCH 0/5] exynos-ufs: Add support for UFS HCI
-Message-ID: <20200313082354.GA7381@pi3>
-References: <CGME20200306151019epcas5p11f5fcf849ece9a808396d9aa3a65410d@epcas5p1.samsung.com>
- <20200306150529.3370-1-alim.akhtar@samsung.com>
- <CAGOxZ50_XwsQ68gqGf1=S=WJJ-pc10h2_J8B4zzU7OMbgJna9A@mail.gmail.com>
+        id S1726365AbgCMIuI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Mar 2020 04:50:08 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41522 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726216AbgCMIuI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Mar 2020 04:50:08 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02D8jT30017982;
+        Fri, 13 Mar 2020 01:50:04 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=F5Lcai2V9t98plhQB8kkTdft3mUjbBtXT6o298kgdpE=;
+ b=au43QZOqNK6Es3Mf3iKN16AOMI+NnZoQGvJ5xFcMl3GO4FlR/uMKmKlkELzZSQFm+65e
+ ViARs6SRQ2RLiC+denMKztYn6HyRvuoTtGRXt+Kx9kUMjnw/Aq0GCsAV2ZC19OIPfhu3
+ ZZStKQwjBv98p9e+XO9oOxZ9pSyCN2jLi3F+oAAQTPZ75o9dxvPhvCAbx6tD0d2a6Rx1
+ 8dMM8uB5eJcij8Vc8bZ5eUmdEPAaPcFi7xQnGlArNXynFKZe3GAOpJe1T+zM6XIU7GhW
+ VeDl6f3X/AfE4YNROjW2F/7jBOJ/44ddsNVj4Y0X3bjWvqT2J1OMJtxSsOfQgK67lv/a IA== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2yqt7t338r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 13 Mar 2020 01:50:04 -0700
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 13 Mar
+ 2020 01:50:03 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 13 Mar 2020 01:50:03 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 5E4F93F7062;
+        Fri, 13 Mar 2020 01:50:02 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 02D8o2rb003848;
+        Fri, 13 Mar 2020 01:50:02 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 02D8o2ek003826;
+        Fri, 13 Mar 2020 01:50:02 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>, <emilne@redhat.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH] qla2xxx: Fix I/Os being passed down when FC device is being deleted.
+Date:   Fri, 13 Mar 2020 01:50:01 -0700
+Message-ID: <20200313085001.3781-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <CAGOxZ50_XwsQ68gqGf1=S=WJJ-pc10h2_J8B4zzU7OMbgJna9A@mail.gmail.com>
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
+ definitions=2020-03-13_04:2020-03-11,2020-03-13 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 13, 2020 at 06:24:17AM +0530, Alim Akhtar wrote:
-> Ping!!!
+From: Arun Easi <aeasi@marvell.com>
 
-Hi,
+I/Os could be passed down while the device FC SCSI device is being deleted.
+This would result in unnecessary delay of I/O and driver messages (when
+extended logging is set).
 
-Please use the get_maintainers script to get list of Cc addresses. The
-DTS patch for example misses the samsung-soc mailing list therefore it
-is not in the patchwork. Patches to ARM/ARM64 Samsung SoC tree go from
-patchwork:
-https://patchwork.kernel.org/project/linux-samsung-soc/list/
+Signed-off-by: Arun Easi <aeasi@marvell.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Best regards,
-Krzysztof
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index b520a98..7a94e11 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -864,7 +864,7 @@ void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
+ 		goto qc24_fail_command;
+ 	}
+ 
+-	if (atomic_read(&fcport->state) != FCS_ONLINE) {
++	if (atomic_read(&fcport->state) != FCS_ONLINE || fcport->deleted) {
+ 		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD ||
+ 			atomic_read(&base_vha->loop_state) == LOOP_DEAD) {
+ 			ql_dbg(ql_dbg_io, vha, 0x3005,
+@@ -946,7 +946,7 @@ void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
+ 		goto qc24_fail_command;
+ 	}
+ 
+-	if (atomic_read(&fcport->state) != FCS_ONLINE) {
++	if (atomic_read(&fcport->state) != FCS_ONLINE || fcport->deleted) {
+ 		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD ||
+ 			atomic_read(&base_vha->loop_state) == LOOP_DEAD) {
+ 			ql_dbg(ql_dbg_io, vha, 0x3077,
+-- 
+1.8.3.1
 
-> 
-> 
-> On Fri, Mar 6, 2020 at 8:40 PM Alim Akhtar <alim.akhtar@samsung.com> wrote:
-> >
-> > This patch-set introduces UFS (Universal Flash Storage) host controller support
-> > for Samsung family SoC. Mostly, it consists of UFS PHY and host specific driver.
-> >
-> > patch 1/5: define devicetree bindings for UFS PHY
-> > patch 2/5: Adds UFS PHY driver
-> > patch 3/5: define devicetree bindings for UFS HCI
-> > patch 4/5: Adds Samsung UFS HCI driver
-> > patch 5/5: Enabled UFS on exynos7 platform
-> >
-> > Note: This series is based on Linux-5.6-rc2
-> >       In past there was couple of attempt to upstream this driver, but
-> >       it didn't went upstream for some or other reason.
-> >
-> > Alim Akhtar (5):
-> >   dt-bindings: phy: Document Samsung UFS PHY bindings
-> >   phy: samsung-ufs: add UFS PHY driver for samsung SoC
-> >   Documentation: devicetree: ufs: Add DT bindings for exynos UFS host
-> >     controller
-> >   scsi: ufs-exynos: add UFS host support for Exynos SoCs
-> >   arm64: dts: Add node for ufs exynos7
-> >
-> >  .../bindings/phy/samsung,ufs-phy.yaml         |   60 +
-> >  .../devicetree/bindings/ufs/ufs-exynos.txt    |  104 ++
-> >  .../boot/dts/exynos/exynos7-espresso.dts      |   16 +
-> >  arch/arm64/boot/dts/exynos/exynos7.dtsi       |   56 +-
-> >  drivers/phy/samsung/Kconfig                   |    9 +
-> >  drivers/phy/samsung/Makefile                  |    1 +
-> >  drivers/phy/samsung/phy-exynos7-ufs.h         |   85 +
-> >  drivers/phy/samsung/phy-samsung-ufs.c         |  311 ++++
-> >  drivers/phy/samsung/phy-samsung-ufs.h         |  100 ++
-> >  drivers/scsi/ufs/Kconfig                      |   12 +
-> >  drivers/scsi/ufs/Makefile                     |    1 +
-> >  drivers/scsi/ufs/ufs-exynos.c                 | 1399 +++++++++++++++++
-> >  drivers/scsi/ufs/ufs-exynos.h                 |  268 ++++
-> >  drivers/scsi/ufs/unipro.h                     |   41 +
-> >  include/linux/phy/phy-samsung-ufs.h           |   70 +
-> >  15 files changed, 2531 insertions(+), 2 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-> >  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
-> >  create mode 100644 drivers/phy/samsung/phy-exynos7-ufs.h
-> >  create mode 100644 drivers/phy/samsung/phy-samsung-ufs.c
-> >  create mode 100644 drivers/phy/samsung/phy-samsung-ufs.h
-> >  create mode 100644 drivers/scsi/ufs/ufs-exynos.c
-> >  create mode 100644 drivers/scsi/ufs/ufs-exynos.h
-> >  create mode 100644 include/linux/phy/phy-samsung-ufs.h
-> >
-> > --
-> > 2.17.1
-> >
-> 
-> 
-> --
-> Regards,
-> Alim
