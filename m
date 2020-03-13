@@ -2,139 +2,143 @@ Return-Path: <SRS0=Yi3m=46=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C18C10DCE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 14:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1D0AC10DCE
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 14:45:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 931A4206FA
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 14:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 754BB206FA
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 14:45:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584110704;
+	bh=WdFv2gQlv7nTeMNZuL05RFAyNdL9qkEWV9UYdOnc75Y=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:List-ID:From;
+	b=VodXR/OTd2UOCohaWTiki2Uuf2oXurjgqraT4rERuINfTDMaS99CJn+K53vOOqAox
+	 ObsNxvzJMgq5PfjdaxsolXNX6ndB58JZjm0wYBdVxLemsZ0a4ySHK9c5Okcs3pUqKq
+	 Jm0uJinRu89vlSJ+xyXXFiTXXIECjjJxzbxQlDpI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726481AbgCMOoS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Mar 2020 10:44:18 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:40880 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgCMOoS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Mar 2020 10:44:18 -0400
-Received: by mail-pf1-f193.google.com with SMTP id l184so5333683pfl.7
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Mar 2020 07:44:16 -0700 (PDT)
+        id S1726481AbgCMOpE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Mar 2020 10:45:04 -0400
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:37015 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726436AbgCMOpD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Mar 2020 10:45:03 -0400
+Received: by mail-lj1-f193.google.com with SMTP id r24so10826600ljd.4
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Mar 2020 07:45:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:in-reply-to:references:date:message-id
+         :mime-version;
+        bh=zVJiEyQwMquLoYw8fQkdRceUbhA2Hi0rvdjcWfvwzGU=;
+        b=JB4hJWX6LE4F1cNPKxpsZZMh8sTLImvr7sL1YZNtxjJyJV7lHwVrZTy7sz3mYy3Wv9
+         LcZJ3Yi/5/TlBk+/jQR4cLUDshQfmGGcIl6HDQVnuYm8Yb3W9j9QNpT9E0b1P9Les/UX
+         xR1NXgsQS9T6DbM3Sy3SvApPiCzjfRzydsLwO4PoRgr3ydXJ2HJsEy/26drwC44ShwxT
+         7hHJYqwkanTNsC+vRZHfJtVMywAwvpkKx9m9Sed3Nhzadf6tr1VYfnJoxAtAKpNS2nao
+         ywFu5CBLyxRKoCAR3xgu+MeDwbZmACAOcfdkPbGrstS9tFzlPcrkr2CwnrpC6N7uKnsu
+         JeFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=OenbLq0rz9jOfLGpuXm6ZF1/ixCgqIJE2NQxATS07Ls=;
-        b=QlXqhGUvsDTCj/VbOupR2DvKsdjP/bEE7o/4ITB+GuBdsOII461oIMlP2/dR5Du+Ps
-         xL142+1k+6NssOTNCYGlDC2BZsKRLjfjR81M1tNjI73mqDRuaeCkuQGO87fCh0ERpGYx
-         zgBvNxC6/ZEP/NW55c63YDn67jljsWQmfqs5shoJh30x6hd3/CnqN/WXt2P5+tKR7S59
-         QUnDQNmyn7/D7KNIPwcndGsmdltcUbPgt5KFKmsqpuCyj68jBP/gXmdoWBwfzXO3zx+X
-         JlyHe9J+S6hEakpQc+CK98sAh1VlbAPtX0BHu2MRc07kDAxaqaJwpwKq08ub7cuR2wQ5
-         O3rw==
-X-Gm-Message-State: ANhLgQ3vKzaATJQtiCEK6V+tM4fG33yGzkSL9zv2zgHDiyd+hI4yUN0C
-        UNRq5qeDX0LzgDdgXjUOjuQ=
-X-Google-Smtp-Source: ADFU+vvWDjXwWK0Zp9lLjxOf+oXEQ3PysyhWzdP37Tw56JCzR7m0QQ4JnaUWuO2uGgMRpnhK6c3Llg==
-X-Received: by 2002:a62:31c3:: with SMTP id x186mr2591142pfx.5.1584110655337;
-        Fri, 13 Mar 2020 07:44:15 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:4927:51b8:6d1e:6c02? ([2601:647:4000:d7:4927:51b8:6d1e:6c02])
-        by smtp.gmail.com with ESMTPSA id j5sm18458929pfe.32.2020.03.13.07.44.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 13 Mar 2020 07:44:14 -0700 (PDT)
-Subject: Re: [PATCH] qla2xxx: Fix I/Os being passed down when FC device is
- being deleted.
-To:     "Ewan D. Milne" <emilne@redhat.com>,
-        Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20200313085001.3781-1-njavali@marvell.com>
- <6240fa5ec0069c7695ba763f371036e526efff77.camel@redhat.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <65771e71-f461-98b1-5cd6-9663bf607b07@acm.org>
-Date:   Fri, 13 Mar 2020 07:44:11 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        h=x-gm-message-state:sender:from:to:cc:subject:in-reply-to:references
+         :date:message-id:mime-version;
+        bh=zVJiEyQwMquLoYw8fQkdRceUbhA2Hi0rvdjcWfvwzGU=;
+        b=HGE3iqLB2N7tPUluahwf9N3DV1cP+ad8YojxUmLMCcl4vsPUDa0pnPoZxusCSdg2XI
+         MlZjShd/NiFpaBxsARFozyrAbHnu987lChMrAac3pf1622mQAQRGb2GcN8ze55MYnhY9
+         FBMl0yM5IP4XgOXa/UJXJ+vhkLHz0/DxtTi6ipYJsPau0bWhC4eKdlajtAThpHqL+F7J
+         a8P3aqNF7xIZe+J5D4E4VRo5Ms8vDv8fyJW3ElbQqR3zffN8BTpbTQRGZPbfPFqGi/hF
+         DhFDDx/xKympU5Uti85KFBB1S32csAzonUU5CPrtUCCykBKo94iW+0L0P5TO5GTgid4Z
+         5+VQ==
+X-Gm-Message-State: ANhLgQ2MIaBm/FXei4Y8R1X4FukjQ/bKc2J+g389Qyy5om8PLF6asjK4
+        vYM5ZodjwtUybw0oYj+pUvQ=
+X-Google-Smtp-Source: ADFU+vuqzMtFVe8z4+tD9uGDTHoRE/CS5Y7UXBPWb/6L00Ytxjc2o/kTYfRZAsja5nip2rha3ouoHg==
+X-Received: by 2002:a05:651c:1058:: with SMTP id x24mr4637946ljm.248.1584110701613;
+        Fri, 13 Mar 2020 07:45:01 -0700 (PDT)
+Received: from saruman (88-113-215-213.elisa-laajakaista.fi. [88.113.215.213])
+        by smtp.gmail.com with ESMTPSA id x13sm16936098lfq.97.2020.03.13.07.45.00
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 13 Mar 2020 07:45:00 -0700 (PDT)
+From:   Felipe Balbi <balbi@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@fb.com>,
+        Harvey Harrison <harvey.harrison@gmail.com>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 3/5] treewide: Consolidate {get,put}_unaligned_[bl]e24() definitions
+In-Reply-To: <20200313023718.21830-4-bvanassche@acm.org>
+References: <20200313023718.21830-1-bvanassche@acm.org> <20200313023718.21830-4-bvanassche@acm.org>
+Date:   Fri, 13 Mar 2020 16:44:56 +0200
+Message-ID: <87v9n8fh5j.fsf@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <6240fa5ec0069c7695ba763f371036e526efff77.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-13 07:09, Ewan D. Milne wrote:
-> On Fri, 2020-03-13 at 01:50 -0700, Nilesh Javali wrote:
->> From: Arun Easi <aeasi@marvell.com>
->>
->> I/Os could be passed down while the device FC SCSI device is being deleted.
->> This would result in unnecessary delay of I/O and driver messages (when
->> extended logging is set).
->>
->> Signed-off-by: Arun Easi <aeasi@marvell.com>
->> ---
->>  drivers/scsi/qla2xxx/qla_os.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->> index b520a98..7a94e11 100644
->> --- a/drivers/scsi/qla2xxx/qla_os.c
->> +++ b/drivers/scsi/qla2xxx/qla_os.c
->> @@ -864,7 +864,7 @@ void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
->>  		goto qc24_fail_command;
->>  	}
->>  
->> -	if (atomic_read(&fcport->state) != FCS_ONLINE) {
->> +	if (atomic_read(&fcport->state) != FCS_ONLINE || fcport->deleted) {
->>  		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD ||
->>  			atomic_read(&base_vha->loop_state) == LOOP_DEAD) {
->>  			ql_dbg(ql_dbg_io, vha, 0x3005,
->> @@ -946,7 +946,7 @@ void qla2xxx_qpair_sp_compl(srb_t *sp, int res)
->>  		goto qc24_fail_command;
->>  	}
->>  
->> -	if (atomic_read(&fcport->state) != FCS_ONLINE) {
->> +	if (atomic_read(&fcport->state) != FCS_ONLINE || fcport->deleted) {
->>  		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD ||
->>  			atomic_read(&base_vha->loop_state) == LOOP_DEAD) {
->>  			ql_dbg(ql_dbg_io, vha, 0x3077,
-> 
-> This fixes an easily reproducible problem and should
-> be considered for -stable.  It generally happens with
-> extended driver logging enabled though.
-> 
-> Fixes: a8a12eb1920c ("scsi: qla2xxx: Remove defer flag to indicate immeadiate port loss")
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hi Ewan,
+Bart Van Assche <bvanassche@acm.org> writes:
 
-That commit ID does not exist. Did you perhaps want to refer to
-3c75ad1d87c7 ("scsi: qla2xxx: Remove defer flag to indicate immeadiate
-port loss") # v5.6-rc1?
+> Move the get_unaligned_be24(), get_unaligned_le24() and
+> put_unaligned_le24() definitions from various drivers into
+> include/linux/unaligned/generic.h. Add a put_unaligned_be24()
+> implementation.
+>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Keith Busch <kbusch@kernel.org>
+> Cc: Sagi Grimberg <sagi@grimberg.me>
+> Cc: Jens Axboe <axboe@fb.com>
+> Cc: Felipe Balbi <balbi@kernel.org>
+> Cc: Harvey Harrison <harvey.harrison@gmail.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Ingo Molnar <mingo@kernel.org>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: H. Peter Anvin <hpa@zytor.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/nvme/host/rdma.c                     |  8 ----
+>  drivers/nvme/target/rdma.c                   |  6 ---
+>  drivers/usb/gadget/function/f_mass_storage.c |  1 +
+>  drivers/usb/gadget/function/storage_common.h |  5 ---
 
-Thanks,
+for drivers/usb/gadget:
 
-Bart.
+Acked-by: Felipe Balbi <balbi@kernel.org>
+
+=2D-=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAl5rnGgACgkQzL64meEa
+mQaWmg//a+dj07jIlxYYNBoC7+XeZAov8dJbiuTF6daxD/2VivdQ3RAz/EfberYb
+Kd0S+JwxdEC7tRCMn4SJxL81AwYO7yxHSj3qqSB179zJ06YKz8hzAHjkA4VBfXFx
+738oz8Y8EQ3Nw2OldmgngnUMbAaDN5greF4gM7av/7LL4+ouBLrkC0ObqYFFen8W
+eRhHW6guFTI76yLBPTrVaaO65LurHJoXXBgY3WZ/EaFDr5nfykEaZrZwr70Lne3y
+kZMNbNetEt/uJostri+inBo+acXasLjIA6jQmDqgkOMDvwOr7AsfhFDmzlngB3m9
+m8J1bm+fSSnhGv7wrXkTj7O3Ayt2DIr5/HeYy/vqvYhSdPQpkrLkysKYh9a5Pstb
+zlLq30m5V24bABw/9EjP/09JbrWpi9l/aNde8TaFiruMyYryQ8D2bvI0WDdULHDQ
+ASuiAfe6md299FXG/LqPOafACF/fHOlnYak7mPCPgcqPdvFOlixj1CkJ5Mf6BINF
+QgIXPj2aRGGgk4OUqmkA89S/cXJVIHWM+4YE1t6oZjtNtIMA1c9F6vv8Nj/djGha
+zyoeezF4K+GOfL8MO46OvJMwARGyIFhl+UHcXZzoHobbEtPIXI9eaeM9gaK4GQcf
+bb83rKnXvoq3jGaM04RC9DNsYfRZWCBLzqPmIhNdCEvndvsOrFI=
+=uz0E
+-----END PGP SIGNATURE-----
+--=-=-=--
