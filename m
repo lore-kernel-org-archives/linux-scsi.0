@@ -2,132 +2,97 @@ Return-Path: <SRS0=Yi3m=46=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD033C2BB1D
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 00:54:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F141BC10DCE
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 02:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B622120724
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 00:54:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U51NKX5Y"
+	by mail.kernel.org (Postfix) with ESMTP id C7DF420716
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Mar 2020 02:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726986AbgCMAy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Mar 2020 20:54:57 -0400
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:35729 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726620AbgCMAy4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 20:54:56 -0400
-Received: by mail-vs1-f68.google.com with SMTP id m9so5056494vso.2;
-        Thu, 12 Mar 2020 17:54:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rpSdT3coCHP/ZOncgVyzEi26Ip6gZfmV5Ehd2LJuS98=;
-        b=U51NKX5YvgpXhwF3sD8sQdMxvnkeZ8nWJbYaTHy2741bS/1qA1G7qs45vuLdrN0IZJ
-         CsWeAyq7LDQ+IlJ2GVfhVk060RH0LDPMSpLgBbT7OI70xEQGzQqNfiUY98fb6xv+o4rX
-         pMiLS0f4FA3JkSc+OjoVQYsIlHgLAESMHsE9zWTk5fC6P6RspghhcUtXYQPLQyxWZRIk
-         7SFlATZabNF6PXawxPmCvo1uD/AUk/jb+FtZUdyy02v1aD5fs8UvYcR7vUFiHLV0vEUp
-         XafsqffAe2Qj4tnGtZZlGgzNhpH2cWMSGAPH6as0WXzdLqib/QauGHV0aPKDIeFNrmK8
-         dsjw==
+        id S1726331AbgCMCh2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Mar 2020 22:37:28 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:35736 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726299AbgCMCh2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Mar 2020 22:37:28 -0400
+Received: by mail-pg1-f195.google.com with SMTP id 7so4087899pgr.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2020 19:37:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=rpSdT3coCHP/ZOncgVyzEi26Ip6gZfmV5Ehd2LJuS98=;
-        b=ldLxDuMtQX8qUbE44qSLuex5m2+wQkpPIknP37+qE4n0BZ2xAP92THLctb7vQ5Bda7
-         SqbYy9+EHdF/BN2Y7dSNwgeHR/9SCVsVvZ9wsj6Q6VgX7fK+1SGAgH0myuURJkJ8+6XL
-         3ewt2ftods+NZ+nVrA44D4l3CV+4z15h1yoNJLhuTkxOLSVvr0wSgHQGfxTVm9sIjjt7
-         33Nf4S+gQCdBG3lVgQq773IFajqRNT9jfZ9oiGAcJ2OoyOXL1oHgfL7eI5SC4DcKxots
-         vkzq0qEg6djNIMhQvnZPbv/sTQCXKiwatmmx5pWublu43qFg7g+wvNvq2XzxTnmUURmG
-         ARRg==
-X-Gm-Message-State: ANhLgQ3ZwY0+UD5JtI9blxoLkeiEaRVge7u+uUOLcQq6VXj1i+zOL+d7
-        tvSa0yFFqRp/+OGdhcedVK+mfgDDJSMjg26vXA8=
-X-Google-Smtp-Source: ADFU+vstfEVVNoaWK6nVnl9WOsHYQYiMsIvEB24vHZ2mqKTMO6kzIQQLjUhLx2U0OlcrMCCjINBAvIyRgYUTUjlPBoU=
-X-Received: by 2002:a67:eb91:: with SMTP id e17mr3115816vso.179.1584060893760;
- Thu, 12 Mar 2020 17:54:53 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ePyHsGwqntgv85tsborhI1nEEgiY54kTJ+2PGy3/CNg=;
+        b=rIa16tSWZYJaC1YkudWcDAtZtipclgVSFZgw6N1tC6S9wW0//5rZzav1ZfFCIB1lIW
+         cik6taoPFLGZvGWspZPafaW9hP++uIdEnn18vl6OC3vSdLcuGQWwiuLHdcvB0qZRrpB7
+         jaITKGKnKjer9EEE31QXiUMZW8QzrmqKIlNChek+ibVFHQstJVrCf4M8GEYVH/QnmZDK
+         wbRDnOvdc/BKNJpGS2oRxWEGHYVPgeHkW49vxlECR2GkNvaqX/lE3hLiN6m4RD6JHy43
+         AlMW4owk3C1iQHU8Sqt60JAnkz7nUF7782YeS4R3bIlNRV1S4DagL8EYRjll33PzUBGk
+         WlJQ==
+X-Gm-Message-State: ANhLgQ31yY/y5GZIVYY6svdWcrsLWopAjPXgJ/P0jcUMsHvSlMAlu2rP
+        +n69U1njNUk6ZFJBfs0wp4Q=
+X-Google-Smtp-Source: ADFU+vvrRdWG2aqVUK6UoJFTE82jy1kdY33eSJ9OpyvRD4BBn51BXR5PngyXEmekyM9gwmy724qkhw==
+X-Received: by 2002:aa7:83d7:: with SMTP id j23mr10749084pfn.77.1584067046694;
+        Thu, 12 Mar 2020 19:37:26 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7dc2:675a:7f2a:2f89])
+        by smtp.gmail.com with ESMTPSA id o129sm3123516pfb.61.2020.03.12.19.37.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Mar 2020 19:37:25 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/5] Consolidate {get,put}_unaligned_[bl]e24() definitions
+Date:   Thu, 12 Mar 2020 19:37:13 -0700
+Message-Id: <20200313023718.21830-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <CGME20200306151019epcas5p11f5fcf849ece9a808396d9aa3a65410d@epcas5p1.samsung.com>
- <20200306150529.3370-1-alim.akhtar@samsung.com>
-In-Reply-To: <20200306150529.3370-1-alim.akhtar@samsung.com>
-From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Fri, 13 Mar 2020 06:24:17 +0530
-Message-ID: <CAGOxZ50_XwsQ68gqGf1=S=WJJ-pc10h2_J8B4zzU7OMbgJna9A@mail.gmail.com>
-Subject: Re: [PATCH 0/5] exynos-ufs: Add support for UFS HCI
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     "robh+dt" <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Krzysztof Kozlowski <krzk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ping!!!
+Hi Martin,
 
+This patch series moves the existing {get,put}_unaligned_[bl]e24() definitions
+into include/linux/unaligned/generic.h and also replaces some open-coded
+implementations of these functions with calls to these functions. Please
+consider this patch series for kernel version v5.7.
 
-On Fri, Mar 6, 2020 at 8:40 PM Alim Akhtar <alim.akhtar@samsung.com> wrote:
->
-> This patch-set introduces UFS (Universal Flash Storage) host controller support
-> for Samsung family SoC. Mostly, it consists of UFS PHY and host specific driver.
->
-> patch 1/5: define devicetree bindings for UFS PHY
-> patch 2/5: Adds UFS PHY driver
-> patch 3/5: define devicetree bindings for UFS HCI
-> patch 4/5: Adds Samsung UFS HCI driver
-> patch 5/5: Enabled UFS on exynos7 platform
->
-> Note: This series is based on Linux-5.6-rc2
->       In past there was couple of attempt to upstream this driver, but
->       it didn't went upstream for some or other reason.
->
-> Alim Akhtar (5):
->   dt-bindings: phy: Document Samsung UFS PHY bindings
->   phy: samsung-ufs: add UFS PHY driver for samsung SoC
->   Documentation: devicetree: ufs: Add DT bindings for exynos UFS host
->     controller
->   scsi: ufs-exynos: add UFS host support for Exynos SoCs
->   arm64: dts: Add node for ufs exynos7
->
->  .../bindings/phy/samsung,ufs-phy.yaml         |   60 +
->  .../devicetree/bindings/ufs/ufs-exynos.txt    |  104 ++
->  .../boot/dts/exynos/exynos7-espresso.dts      |   16 +
->  arch/arm64/boot/dts/exynos/exynos7.dtsi       |   56 +-
->  drivers/phy/samsung/Kconfig                   |    9 +
->  drivers/phy/samsung/Makefile                  |    1 +
->  drivers/phy/samsung/phy-exynos7-ufs.h         |   85 +
->  drivers/phy/samsung/phy-samsung-ufs.c         |  311 ++++
->  drivers/phy/samsung/phy-samsung-ufs.h         |  100 ++
->  drivers/scsi/ufs/Kconfig                      |   12 +
->  drivers/scsi/ufs/Makefile                     |    1 +
->  drivers/scsi/ufs/ufs-exynos.c                 | 1399 +++++++++++++++++
->  drivers/scsi/ufs/ufs-exynos.h                 |  268 ++++
->  drivers/scsi/ufs/unipro.h                     |   41 +
->  include/linux/phy/phy-samsung-ufs.h           |   70 +
->  15 files changed, 2531 insertions(+), 2 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
->  create mode 100644 drivers/phy/samsung/phy-exynos7-ufs.h
->  create mode 100644 drivers/phy/samsung/phy-samsung-ufs.c
->  create mode 100644 drivers/phy/samsung/phy-samsung-ufs.h
->  create mode 100644 drivers/scsi/ufs/ufs-exynos.c
->  create mode 100644 drivers/scsi/ufs/ufs-exynos.h
->  create mode 100644 include/linux/phy/phy-samsung-ufs.h
->
-> --
-> 2.17.1
->
+Thanks,
 
+Bart.
 
---
-Regards,
-Alim
+Changes compared to v1:
+- Left out the drivers/iio, arm/ecard, IB/qib and ASoC/fsl_spdif patches.
+- Dropped the sign_extend_24_to_32(), get_unaligned_signed_be24() and
+  get_unaligned_signed_le24() functions.
+- See also
+  https://lore.kernel.org/lkml/20191028200700.213753-1-bvanassche@acm.org/.
+
+Bart Van Assche (5):
+  linux/unaligned/byteshift.h: Remove superfluous casts
+  c6x: Include <linux/unaligned/generic.h> instead of duplicating it
+  treewide: Consolidate {get,put}_unaligned_[bl]e24() definitions
+  scsi/st: Use get_unaligned_be24() and sign_extend32()
+  scsi/trace: Use get_unaligned_be24()
+
+ arch/c6x/include/asm/unaligned.h             | 65 +-------------------
+ drivers/nvme/host/rdma.c                     |  8 ---
+ drivers/nvme/target/rdma.c                   |  6 --
+ drivers/scsi/scsi_trace.c                    |  6 +-
+ drivers/scsi/st.c                            |  4 +-
+ drivers/usb/gadget/function/f_mass_storage.c |  1 +
+ drivers/usb/gadget/function/storage_common.h |  5 --
+ include/linux/unaligned/be_byteshift.h       |  6 +-
+ include/linux/unaligned/generic.h            | 46 ++++++++++++++
+ include/linux/unaligned/le_byteshift.h       |  6 +-
+ include/target/target_core_backend.h         |  6 --
+ 11 files changed, 58 insertions(+), 101 deletions(-)
+
