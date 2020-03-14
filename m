@@ -2,184 +2,183 @@ Return-Path: <SRS0=ks1E=5A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45243C0044D
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 01:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 354AAC1975A
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 02:10:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D1E12076A
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 01:31:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0046A20773
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 02:10:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G6Ap19A2"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="d4whsut4";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="HMJvo6W0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727303AbgCOBbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 14 Mar 2020 21:31:03 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:31131 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727201AbgCOBbD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 14 Mar 2020 21:31:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1584235862;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=8CoCO9BuyBEqvya4HXtKrOYdV1k6uEasDFwQvH0OSFY=;
-        b=G6Ap19A2auvfl6ez1xdcmCuz6vliRH9eAuy7vMzivmo/8u76QUteceWBtt7ix66zgGHnrR
-        kxO64FnDokJlSbs8YbCu0/p5eNC8CeLAPho7Jjt7aoVysyQJ2lCmhOkUvB3wjCX8SpdGCp
-        GKvKufcdLq5wyZZsW8nQZZ83RMUSAv0=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-203-mVcR2dqKPWizJBGm_jYRiw-1; Sat, 14 Mar 2020 17:30:04 -0400
-X-MC-Unique: mVcR2dqKPWizJBGm_jYRiw-1
-Received: by mail-qt1-f198.google.com with SMTP id d6so12402334qtn.2
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Mar 2020 14:30:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:mime-version
-         :content-transfer-encoding;
-        bh=8CoCO9BuyBEqvya4HXtKrOYdV1k6uEasDFwQvH0OSFY=;
-        b=ZPlP50M2pjOHQHAS61qNcM9soT5o7ehXvMbvoJAjVuDA+zCQhvSKacMuN2lt54kaQr
-         aBSqNpmIYG2P7y7BCGjx0aCmCDS4pO/zORKeX613czN0w/8AE4hFM17+Qy7UzebfXzYL
-         GXBHHepzkK/TCYPq3EKeZGPGV2HvJyAkvsZInXsfPzuG6QP3m9Kjbc+GgV+dzdVqGvlJ
-         fwFwdjVUQ9jbYxJkFxnWDlEHxSVuq+OKIlowRiT2zyk0T6hOoiFOTOLOo6rT+rHc+Al2
-         aI6t2idO+5AC8FeFp0hbHyYIwI6VsEohb4m6t0LJ3rndHnIJZ4ipEoArZCAxzs6QlIqv
-         bIvA==
-X-Gm-Message-State: ANhLgQ2ohtKQNqQ99dFGdQXVswLxIDNifZd4H780Vf9iDS/GS4QT+2Xb
-        xYUjMTsxJZyBciWSwOVmqAaKcihXtoxv7jykCF9wz2EL8WkNJRlNYmvEfNnXUXbCTIqPEE7ZN7+
-        iC6/wzuWLryfRHjJTMOaH3g==
-X-Received: by 2002:a37:e47:: with SMTP id 68mr19006889qko.17.1584221403749;
-        Sat, 14 Mar 2020 14:30:03 -0700 (PDT)
-X-Google-Smtp-Source: ADFU+vvjuBBhQnSSAQJ+lHpYB4VtMAI5AzGTFEGz6x2A/AuiKNu/LQLlUeUxMBnLiVarSP8wOZWR8w==
-X-Received: by 2002:a37:e47:: with SMTP id 68mr19006878qko.17.1584221403364;
-        Sat, 14 Mar 2020 14:30:03 -0700 (PDT)
-Received: from loberhel7laptop ([2600:6c64:4e80:f1:2941:4bf6:8ce7:6ce9])
-        by smtp.gmail.com with ESMTPSA id a15sm5646320qko.122.2020.03.14.14.30.01
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 14 Mar 2020 14:30:02 -0700 (PDT)
-Message-ID: <88bab94d2fd72f3145835b4518bc63dda587add6.camel@redhat.com>
-Subject: commit ab118da4c10a70b8437f5c90ab77adae1835963e causes ib_srpt to
- fail connections served by target LIO
-From:   Laurence Oberman <loberman@redhat.com>
-To:     rdmadev <rdma-dev-team@redhat.com>, linux-rdma@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "Van Assche, Bart" <bvanassche@acm.org>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Leon Romanovsky <leonro@mellanox.com>
-Cc:     Rupesh Girase <rgirase@redhat.com>
-Date:   Sat, 14 Mar 2020 17:30:00 -0400
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1727524AbgCOCKL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 14 Mar 2020 22:10:11 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:37354 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726699AbgCOCKK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Mar 2020 22:10:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1584238210; x=1615774210;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=5ffzs/j17EKw3jqq5Jg4iahkqMhMTWcgIy4/HKUbCt0=;
+  b=d4whsut4xlQdGSZ6wJQhDxTTl0oJJN6MTgbPNilz1/KnnnJy+3s5TX9g
+   GG3YkAN2GLJZAb15r4zbFUTCkPIkn0bvQtHEC+CXywTsg/ChjZUh4WqGY
+   30xt0oK7of3WYG3ZSl11gN6w8ekfkQFC+u0s60ohP+Q/XbKg151D1smJg
+   +lAEK+OMEN4BRsQWNEJjS7t4Wxw+wOf0Tq8ceTNukuhTI0rHGFGX6cHCS
+   1/sQFd6cVH6HZxk3laxOZT3X58ZmCZb1zpbmUPtcpOSnLWk83MaTYxf1I
+   roJac1vS6MTXGbR66xFaVgYiby76jJAVprWsh+xK6P52br+9wD1imeWDp
+   g==;
+IronPort-SDR: hGpCbq1j3xPCOVsqmeXkHSrrxQ3t2WpqhMK/aEU2d53gjlnoiKdKG+prZXbPWdobYG0Bu0XAa8
+ hdwwVEPSHVwv+u9EiULSpOefAGkpo/TnTbdnIGor7Po8tylAUVKeOvr6qWFBhOoPqF4hqWg8Wg
+ eKiICgSNVSoQgcY0eF9O0lmGA/2yOJ5MPhmQCmFIFE7GsCiM3xUynlMoHYyoJE90hWRGLbRCai
+ CJMF5lzgG17acBoz42VhaFkED9IVHmkJLnS/s81vHxAZZiinyAgXsCxzb2lpyIN2NXEzOMEqCK
+ L8U=
+X-IronPort-AV: E=Sophos;i="5.70,552,1574092800"; 
+   d="scan'208";a="132919508"
+Received: from mail-co1nam04lp2054.outbound.protection.outlook.com (HELO NAM04-CO1-obe.outbound.protection.outlook.com) ([104.47.45.54])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Mar 2020 17:47:06 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dWDCP9lFZ+IhcQnJU9WN9dt19kUZz2dA0R9eODx5C1V587zOV09ZkmIyGkYtHGVc0+A4i9Ka75EU1joq7pDqtWO9KgGL3jsNtQyKKkf3pBYo+ZRf2SrI4caXw3L081u+HWPWmdUWu3qjo7EZs5P9+sa63j4lXnsu+tGSDgYTESm6xU+6wgDnwT2/L4cHbAMvgiSuJA1wjuyf8J4QZXqDXpIESWIsJeWExLf3/Z37UiarU85RLCiViiEB8jDbwxpnYNjfy7S4xsiUDKyQuEuDU1bptei4FlRhDXUZBXzp5mhtOladHrwfhdyG0LgO2QU53XzJroqUab7uG/5VSN3qKg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=aNjOe4QFYL4DkY9KX/Fj1W3iiZnHL7bjGaLr0pDt4Dk=;
+ b=T6oR7rZrU5j9OIOR3tcNqqgdW/cTBxK6/1kMU4uU2E4dbG9wK28QcU7eN4j1TNtr6kzOK7bw41wO4mpEHtvH0s+Mezxp7xXW1GAyv2L4H8zaNwMKLpMImAMdQ7AtCw4lI/TreKcBL/9GSAsjiIlYya+xLlACzI1p8pojF+f4q8RrLAkI6MGVM/m2ldAbtxTfKJ18noAAGuwjVKYx0cnEM9uiHlmSs0nTINgVtENjPSfnxiVQE/aEp2tI/Qn3fxjy9KYf5QX5vAj9b1DpFCj/MZ+OTHmNSGjZQ5uQY7EYTWwKeBCFIbji7XO4/EQCzHnMk7a62kKk6xxW1pF78cfLMw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=aNjOe4QFYL4DkY9KX/Fj1W3iiZnHL7bjGaLr0pDt4Dk=;
+ b=HMJvo6W0ixVzsojGWVh4Kf5nhQev/AFuRR7OlrWwtzK8YI7UY7E/kSOmp0HjLxOBMykneq1H56NuYEjiP5iJ7ukgDuQukMdXQlNVhYDI9hO99hcpELatJLzck9e8ehFDiaAmpgReFOidaS8p55ETmGxzfAxeD6q4EByN8WXRboI=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB3888.namprd04.prod.outlook.com (2603:10b6:805:50::26) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2793.16; Sat, 14 Mar
+ 2020 09:47:02 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::3877:5e49:6cdd:c8b]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::3877:5e49:6cdd:c8b%5]) with mapi id 15.20.2814.021; Sat, 14 Mar 2020
+ 09:47:01 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+CC:     "beanhuo@micron.com" <beanhuo@micron.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>
+Subject: RE: [PATCH v4 0/8] scsi: ufs: some cleanups and make the delay for
+ host enabling customizable
+Thread-Topic: [PATCH v4 0/8] scsi: ufs: some cleanups and make the delay for
+ host enabling customizable
+Thread-Index: AQHV+RX9jRrM0tPTvUyCj9SJPGT/n6hH2KzA
+Date:   Sat, 14 Mar 2020 09:47:01 +0000
+Message-ID: <SN6PR04MB4640CB68C9FBD3702A30CE60FCFB0@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200313090103.15390-1-stanley.chu@mediatek.com>
+In-Reply-To: <20200313090103.15390-1-stanley.chu@mediatek.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Avri.Altman@wdc.com; 
+x-originating-ip: [2a00:a040:188:9241:146e:dac0:a78:a147]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: cf60fd2d-018c-4d7c-0053-08d7c7fca588
+x-ms-traffictypediagnostic: SN6PR04MB3888:
+x-microsoft-antispam-prvs: <SN6PR04MB388884A49096928D9C0AB07FFCFB0@SN6PR04MB3888.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-forefront-prvs: 034215E98F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(396003)(366004)(376002)(39860400002)(346002)(199004)(2906002)(5660300002)(478600001)(52536014)(8676002)(54906003)(110136005)(316002)(186003)(8936002)(81166006)(86362001)(81156014)(7416002)(7696005)(33656002)(4326008)(66946007)(76116006)(6506007)(55016002)(66476007)(66446008)(9686003)(66556008)(71200400001)(64756008);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR04MB3888;H:SN6PR04MB4640.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: MTlegNq6FYpA5UUlB2BHKQI7OyoC2Um5sRs2tMZisW1c0uKo9hGxYhg5iuahGqbon63e4ruXnm18KMkHSXXN0EG2SqrpOrf5VasM0DGUL1kRl6QVVqZ4jfPq70pysxUPEkKxU4FyiF0W6JNQwtrsSIVvemx8BR04M8993Synuy7WUpXWz8MzfgaSpTfANMOBRRQG55+qRSUwagxhKeJJhX7l1twQdBFHJNrQFD16y9lBcoNAnHf7TL5qqMjYnklljNc8R5Gifa45sg5bHswKuoV8e+PtjIFWE8HDJgVspR0kaUz83htZT1Kx9UvAPEaT41EZMsWgPF5KgFDv9fwJt7glZeLdybnKcbs1rNjAIOSvOLKOlrGjTyBdljGtsNHcshOPbGpQXGac7fE3ql931SI1qrEl9SeOwmgLexp6P4TSqIuCSkXHhGtGJ7SPl9RN
+x-ms-exchange-antispam-messagedata: +pLH3gVuV7sE9tz4NXeE7bsnt59xOVTJhTo+tPMxEJgxU/6pEih8aXamGQ2zrgagVyjRL22hg7t097SgiEka0irBC1hqr9lUn5zjULfbxhB2xF31IqdV36fr0+HxxmnUkbMHf3CdeCMTIwbA6RY+Kz41WtmeAJB+r3B2JBmau5xtLdm0XwARZV2pDaGX9naMWrp+owmSViz5rZHNhPQrkw==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cf60fd2d-018c-4d7c-0053-08d7c7fca588
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Mar 2020 09:47:01.7525
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: ndJJzruuu5o/qYz3VTOcgtcNnsPgE9pENeLhaLCShyxuULgasTCz0o1ckGdgPcDpYmq7G+RtW4MiFbp7AIPdGw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB3888
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Bart, Leon and Max
+Looks good to me.
+Thanks,
+Avri
 
-Max had reached out to me to test a new set of patches for SRQ.
-I had not tested upstream ib_srpt on an LIO target for quite a while,
-only ib_srp client tests had been run of late.
-During a baseline test before applying Max's patches it was apparent
-that something had broken ib_srpt connections within LIO target since
-5.5.
-
-Note thet ib_srp client connectivity with the commit functions fine, 
-it's just the target that breaks with this commit.
-
-After a long bisect this is the commit that seems to break it.
-While it's not directly code in ib_srpt, its code in mlx5 vport
-ethernet connectivity that then breaks ib_srpt connectivity over mlx5
-IB RDMA with LIO.
-
-I will let Leon and others decide but reverting the below commit allows
-SRP connectivity to an LIO target to work again.
-
-Max, I will test your new patches once we have a decision on this.
-
-Client
-Linux ibclient.lab.eng.bos.redhat.com 5.6.0-rc5+ #1 SMP Thu Mar 12
-16:58:19 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
-
-Server with reverted commit
-Linux fedstorage.bos.redhat.com 5.6.0-rc5+ #1 SMP Sat Mar 14 16:39:35
-EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
-
-commit ab118da4c10a70b8437f5c90ab77adae1835963e
-Author: Leon Romanovsky <leonro@mellanox.com>
-Date:   Wed Nov 13 12:03:47 2019 +0200
-
-    net/mlx5: Don't write read-only fields in MODIFY_HCA_VPORT_CONTEXT
-command
-    
-    The MODIFY_HCA_VPORT_CONTEXT uses field_selector to mask fields
-needed
-    to be written, other fields are required to be zero according to
-the
-    HW specification. The supported fields are controlled by bitfield
-    and limited to vport state, node and port GUIDs.
-    
-    Signed-off-by: Leon Romanovsky <leonro@mellanox.com>
-    Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
-
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
-b/drivers/net/ethernet/mellanox/mlx5
-index 30f7848..1faac31f 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/vport.c
-@@ -1064,26 +1064,13 @@ int mlx5_core_modify_hca_vport_context(struct
-mlx5_core_dev *dev,
- 
-        ctx = MLX5_ADDR_OF(modify_hca_vport_context_in, in,
-hca_vport_context);
-        MLX5_SET(hca_vport_context, ctx, field_select, req-
->field_select);
--       MLX5_SET(hca_vport_context, ctx, sm_virt_aware, req-
->sm_virt_aware);
--       MLX5_SET(hca_vport_context, ctx, has_smi, req->has_smi);
--       MLX5_SET(hca_vport_context, ctx, has_raw, req->has_raw);
--       MLX5_SET(hca_vport_context, ctx, vport_state_policy, req-
->policy);
--       MLX5_SET(hca_vport_context, ctx, port_physical_state, req-
->phys_state);
--       MLX5_SET(hca_vport_context, ctx, vport_state, req-
->vport_state);
--       MLX5_SET64(hca_vport_context, ctx, port_guid, req->port_guid);
--       MLX5_SET64(hca_vport_context, ctx, node_guid, req->node_guid);
--       MLX5_SET(hca_vport_context, ctx, cap_mask1, req->cap_mask1);
--       MLX5_SET(hca_vport_context, ctx, cap_mask1_field_select, req-
->cap_mask1_perm);
--       MLX5_SET(hca_vport_context, ctx, cap_mask2, req->cap_mask2);
--       MLX5_SET(hca_vport_context, ctx, cap_mask2_field_select, req-
->cap_mask2_perm);
--       MLX5_SET(hca_vport_context, ctx, lid, req->lid);
--       MLX5_SET(hca_vport_context, ctx, init_type_reply, req-
->init_type_reply);
--       MLX5_SET(hca_vport_context, ctx, lmc, req->lmc);
--       MLX5_SET(hca_vport_context, ctx, subnet_timeout, req-
->subnet_timeout);
--       MLX5_SET(hca_vport_context, ctx, sm_lid, req->sm_lid);
--       MLX5_SET(hca_vport_context, ctx, sm_sl, req->sm_sl);
--       MLX5_SET(hca_vport_context, ctx, qkey_violation_counter, req-
->qkey_violation_counter);
--       MLX5_SET(hca_vport_context, ctx, pkey_violation_counter, req-
->pkey_violation_counter);
-+       if (req->field_select & MLX5_HCA_VPORT_SEL_STATE_POLICY)
-+               MLX5_SET(hca_vport_context, ctx, vport_state_policy,
-+                        req->policy);
-+       if (req->field_select & MLX5_HCA_VPORT_SEL_PORT_GUID)
-+               MLX5_SET64(hca_vport_context, ctx, port_guid, req-
->port_guid);
-+       if (req->field_select & MLX5_HCA_VPORT_SEL_NODE_GUID)
-+               MLX5_SET64(hca_vport_context, ctx, node_guid, req-
->node_guid);
-        err = mlx5_cmd_exec(dev, in, in_sz, out, sizeof(out));
- ex:
-        kfree(in);
- 
-
+=20
+>=20
+> Hi,
+>=20
+> This patchset applies some driver cleanups and performance improvement
+> in ufs host drivers by making the delay for host enabling customizable
+> according to vendors' requirements.
+>=20
+> v3 -> v4
+>         - Collect review tags in v2
+>         - In patch #8, fix incorrect condition of customized delay for ho=
+st
+> enabling
+>=20
+> v2 -> v3
+>         - Remove /arch/arm64/configs/defconfig chnage because it is for l=
+ocal
+> test only
+>=20
+> v1 -> v2
+>         - Add patch #1 "scsi: ufs: fix uninitialized tx_lanes in
+> ufshcd_disable_tx_lcc"
+>         - Remove struct ufs_init_prefetch in patch #2 "scsi: ufs: remove
+> init_prefetch_data in struct ufs_hba"
+>         - Introduce common delay function in patch #4
+>         - Replace all delay places by common delay function in ufs-mediat=
+ek in
+> patch #5
+>         - Use common delay function instead for host enabling delay in pa=
+tch #6
+>         - Add patch #7 "scsi: ufs: make HCE polling more compact to impro=
+ve
+> initializatoin latency"
+>         - In patch #8, customize the delay in ufs_mtk_hce_enable_notify
+> callback instead of ufs_mtk_init (Avri)
+>=20
+>  drivers/scsi/ufs/ufs-mediatek.c | 64 ++++++++++++++++-----------
+>  drivers/scsi/ufs/ufs-mediatek.h |  1 +
+>  drivers/scsi/ufs/ufshcd.c       | 47 +++++++++++---------
+>  drivers/scsi/ufs/ufshcd.h       | 78 ++++++++++++++++-----------------
+>  4 files changed, 106 insertions(+), 84 deletions(-)
+>=20
+> --
+> 2.18.0
