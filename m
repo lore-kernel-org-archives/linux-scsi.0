@@ -2,407 +2,304 @@ Return-Path: <SRS0=ks1E=5A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB8A0C10F29
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 18:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E5CC18E5B
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 18:38:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 730DD206B1
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 18:36:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M28jGrQW"
+	by mail.kernel.org (Postfix) with ESMTP id AF1E720724
+	for <linux-scsi@archiver.kernel.org>; Sun, 15 Mar 2020 18:38:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584297537;
+	bh=yUyEe7jl1Hda7My1Plde2EvqqY+GsrqTpCi9dXbNxWA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=CSeNdYFo7MKQhvqR6jNPJIwIp8o0MpBu1mzyY+1rv9hTsKH4pMCVJMipyBv4ipjxw
+	 +aNo+6w9VAgPX9VMN+JGip09LN7AmNu6JkP0oX330H2kPX8UyLYCGWcOKczGbyXBqn
+	 snYvRCeOz5MYn84ojo8e2yJwksHmedb3Up47q2ws=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728310AbgCOSg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Mar 2020 14:36:29 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:37217 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727399AbgCOSg3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Mar 2020 14:36:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1584297387;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=jraVrUBAI4D3MXQsq3TmgeIZw7JcaGlpDsWUNKo06Fs=;
-        b=M28jGrQWc8Gqhn1FKCllBRDTyV12hUIh/ZOuBErGoruFGUo++IfoT0tFpuYQMgQEMavBXd
-        8kAvXfJzoVLowp13AYr4fJIQ8MLdzV6T81JF/dX+1bsrTtAYHh2ANhuBo+njwCyAs3qfH8
-        V9GInntM4UoE1i5THnMPAr5yKgOa/OM=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-61-CctG6Gy1OlS4GobhLLjUcg-1; Sun, 15 Mar 2020 14:36:24 -0400
-X-MC-Unique: CctG6Gy1OlS4GobhLLjUcg-1
-Received: by mail-qk1-f200.google.com with SMTP id m6so15164380qkm.2
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Mar 2020 11:36:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=jraVrUBAI4D3MXQsq3TmgeIZw7JcaGlpDsWUNKo06Fs=;
-        b=JjcDuxHKWsoPtZQEn4bb+x53KnVTFDeCacN4u+5O7vTmiP/Hd1m/Qvkts5WCxF1S6f
-         uVOKp/FzxoAkeMMM3zMlpb4taKcEygj8uguTgef6HmQUtC5JdpsK3nkbIew307+2T5dj
-         XHNUCwfi94t5G5C4nBQIDvul5h8p2oQLkICziDAceC14HtoQrNDD5wClv4nwPbZ0UEJo
-         kztu76x1SuRECD31IOIdJAd12zQPAlQleO/PQgsXVFI+LQLMWZFJw1Olsh4pb6s9Uchy
-         mm6KcoYMIxvB/BY4+rs9hnoNTfHoJMLdrQS0a0IlG7Yp6N0MM9f/deSt9x7pEMsWL9CD
-         cu+w==
-X-Gm-Message-State: ANhLgQ2dmWkivfBVeYZcrC7YHG8IPN7fkWjHOBpDUi7I9rbpXnTpeDGU
-        i6p/BIoaqDXUdSAhAhOVABPtC2AAFwpQ1QHGxSAvuMVS5w+A2CtpvEad7t3CmU0Vy3Im9OMq3Jr
-        WRAONV1G45u7B8E3f5NUzxA==
-X-Received: by 2002:ac8:4d97:: with SMTP id a23mr22290644qtw.176.1584297383581;
-        Sun, 15 Mar 2020 11:36:23 -0700 (PDT)
-X-Google-Smtp-Source: ADFU+vunsX0q3xmZdLOAEoyGAmZ0EIoG3NKStfcrN0CnQx5lBeaC5IN6/COGh9OcvTSt8SN+PM05CQ==
-X-Received: by 2002:ac8:4d97:: with SMTP id a23mr22290621qtw.176.1584297383173;
-        Sun, 15 Mar 2020 11:36:23 -0700 (PDT)
-Received: from loberhel7laptop ([2600:6c64:4e80:f1:2941:4bf6:8ce7:6ce9])
-        by smtp.gmail.com with ESMTPSA id r29sm12550925qkk.85.2020.03.15.11.36.22
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 15 Mar 2020 11:36:22 -0700 (PDT)
-Message-ID: <8695fb0f34588616aded629127cc3fa2799fa7cb.camel@redhat.com>
-Subject: Re: commit ab118da4c10a70b8437f5c90ab77adae1835963e causes ib_srpt
- to fail connections served by target LIO
-From:   Laurence Oberman <loberman@redhat.com>
-To:     Max Gurtovoy <maxg@mellanox.com>,
-        rdmadev <rdma-dev-team@redhat.com>, linux-rdma@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "Van Assche, Bart" <bvanassche@acm.org>,
-        Leon Romanovsky <leonro@mellanox.com>
-Cc:     Rupesh Girase <rgirase@redhat.com>
-Date:   Sun, 15 Mar 2020 14:36:21 -0400
-In-Reply-To: <6d5415e3-9314-331a-fade-7593c6a27290@mellanox.com>
-References: <88bab94d2fd72f3145835b4518bc63dda587add6.camel@redhat.com>
-         <0bef0089-0c46-8fb7-9e44-61654c641cbd@mellanox.com>
-         <e57c1763dd99ea958c9834a53ae5688a775c9444.camel@redhat.com>
-         <6d5415e3-9314-331a-fade-7593c6a27290@mellanox.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1728922AbgCOSi5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 15 Mar 2020 14:38:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56912 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728289AbgCOSi5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 15 Mar 2020 14:38:57 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D1F23206B1;
+        Sun, 15 Mar 2020 18:38:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584297536;
+        bh=yUyEe7jl1Hda7My1Plde2EvqqY+GsrqTpCi9dXbNxWA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jXUvLLDFZmrcPU5pNFp2HZIUVFvFqaO65XP03BvEjSVESbNelERLk7TQoQcPYKbgT
+         Mhca0LLZo0yypo+AbZZcnBnALHhH6NPRf5NqwIP/id5mJIhZyQZiawfRC7FrpIFMTi
+         xttDljYze+VWT8uLPHbYH67LH0QXu8LYn7o73h5c=
+Date:   Sun, 15 Mar 2020 11:38:54 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v8 07/11] scsi: ufs: Add inline encryption support to UFS
+Message-ID: <20200315183854.GD1055@sol.localdomain>
+References: <20200312080253.3667-1-satyat@google.com>
+ <20200312080253.3667-8-satyat@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200312080253.3667-8-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2020-03-15 at 20:20 +0200, Max Gurtovoy wrote:
-> On 3/15/2020 7:59 PM, Laurence Oberman wrote:
-> > On Sun, 2020-03-15 at 18:47 +0200, Max Gurtovoy wrote:
-> > > On 3/14/2020 11:30 PM, Laurence Oberman wrote:
-> > > > Hello Bart, Leon and Max
-> > > 
-> > > Hi Laurence,
-> > > 
-> > > thanks for the great analysis and the fast response !!
-> > > 
-> > > > Max had reached out to me to test a new set of patches for SRQ.
-> > > > I had not tested upstream ib_srpt on an LIO target for quite a
-> > > > while,
-> > > > only ib_srp client tests had been run of late.
-> > > > During a baseline test before applying Max's patches it was
-> > > > apparent
-> > > > that something had broken ib_srpt connections within LIO target
-> > > > since
-> > > > 5.5.
-> > > > 
-> > > > Note thet ib_srp client connectivity with the commit functions
-> > > > fine,
-> > > > it's just the target that breaks with this commit.
-> > > > 
-> > > > After a long bisect this is the commit that seems to break it.
-> > > > While it's not directly code in ib_srpt, its code in mlx5 vport
-> > > > ethernet connectivity that then breaks ib_srpt connectivity
-> > > > over
-> > > > mlx5
-> > > > IB RDMA with LIO.
-> > > 
-> > > I was able to connect in loopback and also from remote initiator
-> > > with
-> > > this commit.
-> > > 
-> > > So I'm not sure that this commit is broken.
-> > > 
-> > > I used Bart's scripts to configure the target and to connect to
-> > > it
-> > > in
-> > > loopback (after some modifications for the updated
-> > > kernel/sysfs/configfs
-> > > interface).
-> > > 
-> > > I did see an issue to connect from remote initiator, but after
-> > > reloading
-> > > openibd in the initiator side I was able to connect.
-> > > 
-> > > So I suspect you had the same issue - that also should be
-> > > debugged.
-> > > 
-> > > > I will let Leon and others decide but reverting the below
-> > > > commit
-> > > > allows
-> > > > SRP connectivity to an LIO target to work again.
-> > > 
-> > > I added prints to "mlx5_core_modify_hca_vport_context" function
-> > > and
-> > > found that we don't call it in "pure" mlx5 mode with PFs.
-> > > 
-> > > Maybe you can try it too...
-> > > 
-> > > I was able to check my patches on my system and I'll send them
-> > > soon.
-> > > 
-> > > Thanks again Laurence and Bart.
-> > > 
-> > > > Max, I will test your new patches once we have a decision on
-> > > > this.
-> > > > 
-> > > > Client
-> > > > Linux ibclient.lab.eng.bos.redhat.com 5.6.0-rc5+ #1 SMP Thu Mar
-> > > > 12
-> > > > 16:58:19 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
-> > > > 
-> > > > Server with reverted commit
-> > > > Linux fedstorage.bos.redhat.com 5.6.0-rc5+ #1 SMP Sat Mar 14
-> > > > 16:39:35
-> > > > EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
-> > > > 
-> > > > commit ab118da4c10a70b8437f5c90ab77adae1835963e
-> > > > Author: Leon Romanovsky <leonro@mellanox.com>
-> > > > Date:   Wed Nov 13 12:03:47 2019 +0200
-> > > > 
-> > > >       net/mlx5: Don't write read-only fields in
-> > > > MODIFY_HCA_VPORT_CONTEXT
-> > > > command
-> > > >       
-> > > >       The MODIFY_HCA_VPORT_CONTEXT uses field_selector to mask
-> > > > fields
-> > > > needed
-> > > >       to be written, other fields are required to be zero
-> > > > according
-> > > > to
-> > > > the
-> > > >       HW specification. The supported fields are controlled by
-> > > > bitfield
-> > > >       and limited to vport state, node and port GUIDs.
-> > > >       
-> > > >       Signed-off-by: Leon Romanovsky <leonro@mellanox.com>
-> > > >       Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
-> > > > 
-> > > > diff --git a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
-> > > > b/drivers/net/ethernet/mellanox/mlx5
-> > > > index 30f7848..1faac31f 100644
-> > > > --- a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
-> > > > +++ b/drivers/net/ethernet/mellanox/mlx5/core/vport.c
-> > > > @@ -1064,26 +1064,13 @@ int
-> > > > mlx5_core_modify_hca_vport_context(struct
-> > > > mlx5_core_dev *dev,
-> > > >    
-> > > >           ctx = MLX5_ADDR_OF(modify_hca_vport_context_in, in,
-> > > > hca_vport_context);
-> > > >           MLX5_SET(hca_vport_context, ctx, field_select, req-
-> > > > > field_select);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, sm_virt_aware, req-
-> > > > > sm_virt_aware);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, has_smi, req-
-> > > > >has_smi);
-> > > > -       MLX5_SET(hca_vport_context, ctx, has_raw, req-
-> > > > >has_raw);
-> > > > -       MLX5_SET(hca_vport_context, ctx, vport_state_policy,
-> > > > req-
-> > > > > policy);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, port_physical_state,
-> > > > req-
-> > > > > phys_state);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, vport_state, req-
-> > > > > vport_state);
-> > > > 
-> > > > -       MLX5_SET64(hca_vport_context, ctx, port_guid, req-
-> > > > > port_guid);
-> > > > 
-> > > > -       MLX5_SET64(hca_vport_context, ctx, node_guid, req-
-> > > > > node_guid);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, cap_mask1, req-
-> > > > > cap_mask1);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx,
-> > > > cap_mask1_field_select,
-> > > > req-
-> > > > > cap_mask1_perm);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, cap_mask2, req-
-> > > > > cap_mask2);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx,
-> > > > cap_mask2_field_select,
-> > > > req-
-> > > > > cap_mask2_perm);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, lid, req->lid);
-> > > > -       MLX5_SET(hca_vport_context, ctx, init_type_reply, req-
-> > > > > init_type_reply);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, lmc, req->lmc);
-> > > > -       MLX5_SET(hca_vport_context, ctx, subnet_timeout, req-
-> > > > > subnet_timeout);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx, sm_lid, req->sm_lid);
-> > > > -       MLX5_SET(hca_vport_context, ctx, sm_sl, req->sm_sl);
-> > > > -       MLX5_SET(hca_vport_context, ctx,
-> > > > qkey_violation_counter,
-> > > > req-
-> > > > > qkey_violation_counter);
-> > > > 
-> > > > -       MLX5_SET(hca_vport_context, ctx,
-> > > > pkey_violation_counter,
-> > > > req-
-> > > > > pkey_violation_counter);
-> > > > 
-> > > > +       if (req->field_select &
-> > > > MLX5_HCA_VPORT_SEL_STATE_POLICY)
-> > > > +               MLX5_SET(hca_vport_context, ctx,
-> > > > vport_state_policy,
-> > > > +                        req->policy);
-> > > > +       if (req->field_select & MLX5_HCA_VPORT_SEL_PORT_GUID)
-> > > > +               MLX5_SET64(hca_vport_context, ctx, port_guid,
-> > > > req-
-> > > > > port_guid);
-> > > > 
-> > > > +       if (req->field_select & MLX5_HCA_VPORT_SEL_NODE_GUID)
-> > > > +               MLX5_SET64(hca_vport_context, ctx, node_guid,
-> > > > req-
-> > > > > node_guid);
-> > > > 
-> > > >           err = mlx5_cmd_exec(dev, in, in_sz, out,
-> > > > sizeof(out));
-> > > >    ex:
-> > > >           kfree(in);
-> > > >    
-> > > > 
-> > 
-> > Hi Max
-> > Re:
-> > 
-> > "
-> > So I'm not sure that this commit is broken.
-> > ..
-> > ..
-> > I added prints to "mlx5_core_modify_hca_vport_context" function and
-> > found that we don't call it in "pure" mlx5 mode with PFs.
-> > 
-> > Maybe you can try it too...
-> > "
-> > 
-> > The thing is without this commit we connect immediately, no delay
-> > no
-> > issue and I am changing nothing else other than reverting here.
-> > 
-> > So this clearly has a bearing directly on the functionality.
-> > 
-> > I will look at adding more debug, but with this commit in there is
-> > nor
-> > evidence even of an attempt to connect and fail.
-> > 
-> > Its silently faling.
+On Thu, Mar 12, 2020 at 01:02:49AM -0700, Satya Tangirala wrote:
+> Wire up ufshcd.c with the UFS Crypto API, the block layer inline
+> encryption additions and the keyslot manager.
 > 
-> please send me all the configuration steps you run after booting the 
-> target + steps in the initiator (can be also in attached file).
+> Signed-off-by: Satya Tangirala <satyat@google.com>
+> ---
+>  drivers/scsi/ufs/ufshcd-crypto.c | 27 +++++++++++++++
+>  drivers/scsi/ufs/ufshcd-crypto.h | 14 ++++++++
+>  drivers/scsi/ufs/ufshcd.c        | 59 +++++++++++++++++++++++++++++---
+>  drivers/scsi/ufs/ufshcd.h        |  8 +++++
+>  4 files changed, 103 insertions(+), 5 deletions(-)
 > 
-> I'll try to follow this.
-> 
-> Btw, did you try loopback initiator ?
-> 
-> -Max.
-> 
-> 
-> > 
-> > Regards
-> > Laurence
-> > 
-> > 
-> > 
-> > 
-> 
-> 
+> diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
+> index 8b6f7c83f77f..37254472326a 100644
+> --- a/drivers/scsi/ufs/ufshcd-crypto.c
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.c
+> @@ -368,3 +368,30 @@ void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
+>  {
+>  	blk_ksm_destroy(&hba->ksm);
+>  }
+> +
+> +int ufshcd_prepare_lrbp_crypto(struct ufs_hba *hba,
+> +			       struct scsi_cmnd *cmd,
+> +			       struct ufshcd_lrb *lrbp)
+> +{
+> +	struct request *rq = cmd->request;
+> +	struct bio_crypt_ctx *bc = rq->crypt_ctx;
+> +	unsigned int slot_idx = blk_ksm_get_slot_idx(rq->crypt_keyslot);
+> +
+> +	lrbp->crypto_enable = false;
+> +
+> +	if (WARN_ON(!(hba->caps & UFSHCD_CAP_CRYPTO))) {
+> +		/*
+> +		 * Upper layer asked us to do inline encryption
+> +		 * but that isn't enabled, so we fail this request.
+> +		 */
+> +		return -EINVAL;
+> +	}
+> +	if (!ufshcd_keyslot_valid(hba, slot_idx))
+> +		return -EINVAL;
+> +
+> +	lrbp->crypto_enable = true;
+> +	lrbp->crypto_key_slot = slot_idx;
+> +	lrbp->data_unit_num = bc->bc_dun[0];
+> +
+> +	return 0;
+> +}
+> diff --git a/drivers/scsi/ufs/ufshcd-crypto.h b/drivers/scsi/ufs/ufshcd-crypto.h
+> index 8270c0c5081a..c76f93ede51c 100644
+> --- a/drivers/scsi/ufs/ufshcd-crypto.h
+> +++ b/drivers/scsi/ufs/ufshcd-crypto.h
+> @@ -16,6 +16,15 @@ static inline bool ufshcd_hba_is_crypto_supported(struct ufs_hba *hba)
+>  	return hba->crypto_capabilities.reg_val != 0;
+>  }
+>  
+> +int ufshcd_prepare_lrbp_crypto(struct ufs_hba *hba,
+> +			       struct scsi_cmnd *cmd,
+> +			       struct ufshcd_lrb *lrbp);
+> +
+> +static inline bool ufshcd_lrbp_crypto_enabled(struct ufshcd_lrb *lrbp)
+> +{
+> +	return lrbp->crypto_enable;
+> +}
+> +
+>  void ufshcd_crypto_enable(struct ufs_hba *hba);
+>  
+>  void ufshcd_crypto_disable(struct ufs_hba *hba);
+> @@ -49,6 +58,11 @@ static inline void ufshcd_crypto_setup_rq_keyslot_manager(struct ufs_hba *hba,
+>  static inline void ufshcd_crypto_destroy_keyslot_manager(struct ufs_hba *hba)
+>  { }
+>  
+> +static inline bool ufshcd_lrbp_crypto_enabled(struct ufshcd_lrb *lrbp)
+> +{
+> +	return false;
+> +}
+> +
+>  #endif /* CONFIG_SCSI_UFS_CRYPTO */
+>  
+>  #endif /* _UFSHCD_CRYPTO_H */
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 825d9eb34f10..3a19966dbee9 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -47,6 +47,7 @@
+>  #include "unipro.h"
+>  #include "ufs-sysfs.h"
+>  #include "ufs_bsg.h"
+> +#include "ufshcd-crypto.h"
+>  
+>  #define CREATE_TRACE_POINTS
+>  #include <trace/events/ufs.h>
+> @@ -816,7 +817,14 @@ static void ufshcd_enable_run_stop_reg(struct ufs_hba *hba)
+>   */
+>  static inline void ufshcd_hba_start(struct ufs_hba *hba)
+>  {
+> -	ufshcd_writel(hba, CONTROLLER_ENABLE, REG_CONTROLLER_ENABLE);
+> +	u32 val = CONTROLLER_ENABLE;
+> +
+> +	if (ufshcd_hba_is_crypto_supported(hba)) {
+> +		ufshcd_crypto_enable(hba);
+> +		val |= CRYPTO_GENERAL_ENABLE;
+> +	}
+> +
+> +	ufshcd_writel(hba, val, REG_CONTROLLER_ENABLE);
+>  }
+>  
+>  /**
+> @@ -2192,9 +2200,23 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+>  		dword_0 |= UTP_REQ_DESC_INT_CMD;
+>  
+>  	/* Transfer request descriptor header fields */
+> +	if (ufshcd_lrbp_crypto_enabled(lrbp)) {
+> +#ifdef CONFIG_SCSI_UFS_CRYPTO
+> +		dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
+> +		dword_0 |= lrbp->crypto_key_slot;
+> +		req_desc->header.dword_1 =
+> +			cpu_to_le32(lower_32_bits(lrbp->data_unit_num));
+> +		req_desc->header.dword_3 =
+> +			cpu_to_le32(upper_32_bits(lrbp->data_unit_num));
+> +#endif /* CONFIG_SCSI_UFS_CRYPTO */
+> +	} else {
+> +		/* dword_1 and dword_3 are reserved, hence they are set to 0 */
+> +		req_desc->header.dword_1 = 0;
+> +		req_desc->header.dword_3 = 0;
+> +	}
+> +
+>  	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+> -	/* dword_1 is reserved, hence it is set to 0 */
+> -	req_desc->header.dword_1 = 0;
+> +
+>  	/*
+>  	 * assigning invalid value for command status. Controller
+>  	 * updates OCS on command completion, with the command
+> @@ -2202,8 +2224,6 @@ static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp,
+>  	 */
+>  	req_desc->header.dword_2 =
+>  		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
+> -	/* dword_3 is reserved, hence it is set to 0 */
+> -	req_desc->header.dword_3 = 0;
+>  
+>  	req_desc->prd_table_length = 0;
+>  }
+> @@ -2437,6 +2457,20 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>  	lrbp->task_tag = tag;
+>  	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+>  	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+> +
+> +#ifdef CONFIG_SCSI_UFS_CRYPTO
+> +	if (cmd->request->crypt_keyslot) {
+> +		err = ufshcd_prepare_lrbp_crypto(hba, cmd, lrbp);
+> +		if (err) {
+> +			lrbp->cmd = NULL;
+> +			ufshcd_release(hba);
+> +			goto out;
+> +		}
+> +	} else {
+> +		lrbp->crypto_enable = false;
+> +	}
+> +#endif
+> +
+>  	lrbp->req_abort_skip = false;
+>  
+>  	ufshcd_comp_scsi_upiu(hba, lrbp);
+> @@ -2470,6 +2504,9 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
+>  	lrbp->task_tag = tag;
+>  	lrbp->lun = 0; /* device management cmd is not specific to any LUN */
+>  	lrbp->intr_cmd = true; /* No interrupt aggregation */
+> +#ifdef CONFIG_SCSI_UFS_CRYPTO
+> +	lrbp->crypto_enable = false; /* No crypto operations */
+> +#endif
+>  	hba->dev_cmd.type = cmd_type;
+>  
+>  	return ufshcd_comp_devman_upiu(hba, lrbp);
 
-Hi Max
+This is all much more complicated than needed.
 
-Did not try loopback because here we have actual physical connectity as
-that is what our customers use.
+- We don't need the 'crypto_enable' field.  Just make 'crypto_key_slot' an int
+  and use 'crypto_key_slot = -1' instead.
 
-Connected back to back with MLX5 cx4 HCA dual ports at EDR 100
-Thi sis my standard configuration used for all upstream and Red Hat
-kernel testing.
+- ufshcd_lrbp_crypto_enabled() isn't needed since it's only used in one place
+  which uses an ifdef anyway.  It can simply check crypto_key_slot >= 0.
 
-Reboot server and client and then first prepare server
+- The checks in ufshcd_prepare_lrbp_crypto() are unneeded, as the block layer
+  already ensures that a valid keyslot is provided.
 
-Server
-----------
+So for the per-command code, all we actually need is:
 
-the prepare.sh script run is after boot on the server
+#ifdef CONFIG_SCSI_UFS_CRYPTO
+static inline void ufshcd_prepare_lrbp_crypto(struct scsi_cmnd *cmd,
+                                              struct ufshcd_lrb *lrbp)
+{       
+        struct request *rq = cmd->request; 
+        
+        if (rq->crypt_keyslot) {
+                lrbp->crypto_key_slot = blk_ksm_get_slot_idx(rq->crypt_keyslot);
+                lrbp->data_unit_num = rq->crypt_ctx->bc_dun[0];
+        } else {
+                lrbp->crypto_key_slot = -1;
+        }
+}                              
+...
+#else
+static inline void ufshcd_prepare_lrbp_crypto(struct scsi_cmnd *cmd,
+                                              struct ufshcd_lrb *lrbp)
+{       
+}                              
+...
+#endif
 
+Then in ufshcd_queuecommand():
 
-#!/bin/bash
-./load_modules.sh
-./create_ramdisk.sh
-targetcli restoreconfig
-# Set the srp_sq_size
-for i in
-/sys/kernel/config/target/srpt/0xfe800000000000007cfe900300726e4e
-/sys/kernel/config/target/srpt/0xfe800000000000007cfe900300726e4f
-do 
-	echo 16384 > $i/tpgt_1/attrib/srp_sq_size
-done
+	...
 
-[root@fedstorage ~]# cat load_modules.sh 
-#!/bin/bash
-modprobe mlx5_ib
-modprobe ib_srpt
-modprobe ib_srp
-modprobe ib_umad
+        lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+        lrbp->req_abort_skip = false;
 
-[root@fedstorage ~]# cat ./create_ramdisk.sh
-#!/bin/bash
-mount -t tmpfs -o size=130g tmpfs /mnt
-cd /mnt
-for i in `seq 1 30`; do dd if=/dev/zero of=block-$i bs=1024k count=4000
-; done
+        ufshcd_prepare_lrbp_crypto(cmd, lrbp);
 
+        ufshcd_comp_scsi_upiu(hba, lrbp);
 
+	...
 
-Client
---------
+Then in ufshcd_prepare_req_desc_hdr():
 
-Once server is ready
+        u32 dword_1 = 0;
+        u32 dword_3 = 0;
 
-Run ./start_opensm.sh on client (I sont use the SM on a switch as we
-are back to back)
+	...
 
-[root@ibclient ~]# cat ./start_opensm.sh 
-#!/bin/bash
-rmmod ib_srpt
-opensm -F opensm.1.conf &
-opensm -F opensm.2.conf &
+#ifdef CONFIG_SCSI_UFS_CRYPTO
+        if (lrbp->crypto_key_slot >= 0) {
+                dword_0 |= UTP_REQ_DESC_CRYPTO_ENABLE_CMD;
+                dword_0 |= lrbp->crypto_key_slot;
+                dword_1 = lower_32_bits(lrbp->data_unit_num);
+                dword_3 = upper_32_bits(lrbp->data_unit_num);
+        }
+#endif
 
-I will semail the conf only to you as well as the targecli config as th
-eout is long.
-
-
-Then run start_srp.sh
-
-[root@ibclient ~]# cat ./start_srp.sh 
-run_srp_daemon  -V -f /etc/ddn/srp_daemon.conf -R 30 -T 10 -t 7000
--ance -i mlx5_0 -p 1 1>/root/srp1.log 2>&1 &
-run_srp_daemon  -V -f /etc/ddn/srp_daemon.conf -R 30 -T 10 -t 7000
--ance -i mlx5_1 -p 1 1>/root/srp2.log 2>&1 &
-
-[root@ibclient ~]# cat /etc/ddn/srp_daemon.conf
-a      queue_size=128,max_cmd_per_lun=32,max_sect=32768
-
-
-
-
-
+	req_desc->header.dword_0 = cpu_to_le32(dword_0);
+	req_desc->header.dword_1 = cpu_to_le32(dword_1);
+	...
+	req_desc->header.dword_2 =
+		cpu_to_le32(OCS_INVALID_COMMAND_STATUS);
+	req_desc->header.dword_3 = cpu_to_le32(dword_3);
