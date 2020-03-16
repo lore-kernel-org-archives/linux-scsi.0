@@ -2,105 +2,71 @@ Return-Path: <SRS0=cHy8=5B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79523C1975A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:10:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5A53C0044D
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50B0E2071C
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:10:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="exWBVc2r"
+	by mail.kernel.org (Postfix) with ESMTP id 83CC020658
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:10:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729827AbgCPHKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Mar 2020 03:10:01 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:34278 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729776AbgCPHKB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Mar 2020 03:10:01 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584342600; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=KJZiL0sdohMQeVpJmkN38lZ6qU33N/oMM0pvgkF9gnc=;
- b=exWBVc2rvsptixYx81mXjnzIUSsYxXbOki4OtT8fPNSy22G1YZofY058j73321qWtMNYn02s
- RI1hYFGeUnDkyncpuF01gye5jifXF9LX+/5n3q4vUNSTj4TwgIFkp9Fw+475uRhv0FC1jByR
- SJJv+Hay2uwIM+yvUjxzXXfUEA4=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e6f2647.7fec271ead18-smtp-out-n02;
- Mon, 16 Mar 2020 07:09:59 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3E808C44792; Mon, 16 Mar 2020 07:09:57 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5390EC433D2;
-        Mon, 16 Mar 2020 07:09:56 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Mon, 16 Mar 2020 15:09:56 +0800
+        id S1729883AbgCPHKR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Mar 2020 03:10:17 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:12763 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728302AbgCPHKR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2020 03:10:17 -0400
+IronPort-SDR: fsv5aapoqoBhKXcbtM2Nc2YkZ+mN4E4fPdQaBiyhl8V5sBFbiinIwN/xXqAQqmd+RzdOo1TDc5
+ tIG5avrm5qhX5w2+2b2VnD7Jg4qFY7aPfJcZx1HyqpOcjSQT95kQy1dfMZMnmDlwO6L9eMTkVo
+ zgSbcH3MTUCOfa87GEm4ZR7SIxJt48ouFG0gKS55ms8Yx0ZLvhFk6A6fVs+7mmiujniSQJZcGA
+ J5yZ7dvEha8XhcMEwuVLn8tKXW3D1hp70fwub+cJ26TU8ygDS/2uBQ83X9BucZadNhHxcrh+R5
+ vyA=
+X-IronPort-AV: E=Sophos;i="5.70,559,1574150400"; 
+   d="scan'208";a="28595121"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 16 Mar 2020 00:06:21 -0700
+Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 16 Mar 2020 00:06:21 -0700
+Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
+        id 339AE3A63; Mon, 16 Mar 2020 00:06:21 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        andy.teng@mediatek.com, jejb@linux.ibm.com,
-        chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com,
-        linux-kernel@vger.kernel.org, avri.altman@wdc.com,
-        martin.peter~sen@oracle.com, linux-mediatek@lists.infradead.org,
-        peter.wang@mediatek.com, alim.akhtar@samsung.com,
-        matthias.bgg@gmail.com, asutoshd@codeaurora.org,
-        linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
-Subject: Re: [PATCH v5 2/8] scsi: ufs: remove init_prefetch_data in struct
- ufs_hba
-In-Reply-To: <1584342487.14250.11.camel@mtksdccf07>
-References: <20200316034218.11914-1-stanley.chu@mediatek.com>
- <20200316034218.11914-3-stanley.chu@mediatek.com>
- <51fde835f4f03fcca6e83ba6d3579f2e@codeaurora.org>
- <1584342487.14250.11.camel@mtksdccf07>
-Message-ID: <29d75c7ff1a5c7fb54ee145049daa5da@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Subject: [PATCH v4 0/2] UFS driver general fixes bundle 2
+Date:   Mon, 16 Mar 2020 00:06:09 -0700
+Message-Id: <1584342373-10282-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
+This bundle includes 2 general fixes for UFS driver.
 
-On 2020-03-16 15:08, Stanley Chu wrote:
-> Hi Can,
-> 
-> On Mon, 2020-03-16 at 14:25 +0800, Can Guo wrote:
->> On 2020-03-16 11:42, Stanley Chu wrote:
->> > Struct init_prefetch_data currently is used privately in
->> > ufshcd_init_icc_levels(), thus it can be removed from struct ufs_hba.
->> >
->> > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
->> > Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
->> > Reviewed-by: Avri Altman <avri.altman@wdc.com>
->> 
->> Hi Stanley,
->> 
->> Earlier, I have one similar patch for this, but it does more than 
->> this.
->> Please check the mail I just sent.
->> 
->> Thanks,
->> Can Guo.
-> 
-> OK! Thanks to remind me this. Then I can drop this cleanup patch #2 in
-> its series to not conflict with your proposed one.
-> 
-> Thanks,
-> Stanley Chu
+Changes since v3:
+- Removed trivial spaces in comments
 
-Sure, thank you for your quick response.
+Changes since v2:
+- Rebased on 5.7/scsi-queue and fixed minor conflicts
 
-Best regards,
-Can Guo
+Changes since v1:
+- Fixed minor typo
+
+Can Guo (1):
+  scsi: ufs: Do not rely on prefetched data
+
+Subhash Jadavani (1):
+  scsi: ufs: Clean up ufshcd_scale_clks() and clock scaling error out
+    path
+
+ drivers/scsi/ufs/ufshcd.c | 100 +++++++++++++++++++++++++++++-----------------
+ drivers/scsi/ufs/ufshcd.h |  11 -----
+ 2 files changed, 64 insertions(+), 47 deletions(-)
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
