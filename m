@@ -2,653 +2,996 @@ Return-Path: <SRS0=cHy8=5B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B382AC2BB1D
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 21:23:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7318C2BB1D
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 23:46:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8804D20719
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 21:23:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2CD0206E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 23:46:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="ZvHJUFmc"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pna7qjHv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732625AbgCPVXh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Mar 2020 17:23:37 -0400
-Received: from mail-eopbgr60066.outbound.protection.outlook.com ([40.107.6.66]:42870
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732567AbgCPVXh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Mar 2020 17:23:37 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZXnepZIwExEzqJzQGiF+KQINx6r9IUGtnNhjNIX+sLW+ibKefEZO+Jw7cOth8zRlA/jMS2i77wP+83eSg41Oxv06cmPpE0IDdX0iSTTPmyVuYNkbob6Bu45ri7zVWuYzjddy2Rb14Dl984maQ2DN+lolWorzu5AIvo0uPpBRG5xspOTrKPjQZWhhYs9OLzAnhoaZ/fQ4f24af+iM7fcDOrobbFIanWqsqtx+Rvy6olFK1Fx9cCYw0HnlszONg2tr+zZjISsZEn5LNQLwpMY/SGcgfLPIlNCBR6wrAhnJZSQT94ZbVfIo7nELb1IDZLJbC6zAnxF+VbcDKB87ly70gg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Z5VAPnTpHTIo1Y9fZ+5KwdodHbNfF2pwtdsrNoLsZNs=;
- b=UaZFaVqXtmIIxIueukH3NG3qWKiQIacla4qRU8uGNKf3ZH8bfh3eHLgIPo3mxb1toMQSgW/ynk6n1yyhCmI2DjAWie65yZvCwhuJVbqfm9kuNvFfwPLxE50zXQ9jTq4kJ2TIX22wE53giHom3vr9imtFqYhLAKaGsJN93vttEBRfAfAv/uIyre5ZVI2XfapLtCMCQsZ09+9MWKAX1dLBewTQY/cxM/fQutLzhC3gzdCHNABdI53PJepnl5H/HhJ7c9iKlh4xZ/+yrnECgmlq2KGkHTGYjsyMwGjxlA0ASYELLFVQnWi/8aiuGgXMol6teyAL5gov6J9XR/T9oyi62Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 193.47.165.251) smtp.rcpttodomain=redhat.com smtp.mailfrom=mellanox.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=mellanox.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Z5VAPnTpHTIo1Y9fZ+5KwdodHbNfF2pwtdsrNoLsZNs=;
- b=ZvHJUFmcz2BGNdqWmKpDlR33PK21Iw7U3/AO7dovK1aFliM3bCKn7E2dNnl3q3G2JUKgRwmSex1x+waRAiwmrRT6muc1D1aWh9vJF1p4iR0xQRTjBhlcGYvwmWtSrosgNA0ndan5YV7C1gcvt3ltC/vze1vRoIvY7GAkcsNHs2o=
-Received: from DB8PR09CA0028.eurprd09.prod.outlook.com (2603:10a6:10:a0::41)
- by DB7PR05MB4218.eurprd05.prod.outlook.com (2603:10a6:5:1f::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2814.14; Mon, 16 Mar
- 2020 21:23:27 +0000
-Received: from DB5EUR03FT031.eop-EUR03.prod.protection.outlook.com
- (2603:10a6:10:a0:cafe::47) by DB8PR09CA0028.outlook.office365.com
- (2603:10a6:10:a0::41) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2814.16 via Frontend
- Transport; Mon, 16 Mar 2020 21:23:27 +0000
-Authentication-Results: spf=pass (sender IP is 193.47.165.251)
- smtp.mailfrom=mellanox.com; redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=pass action=none header.from=mellanox.com;
-Received-SPF: Pass (protection.outlook.com: domain of mellanox.com designates
- 193.47.165.251 as permitted sender) receiver=protection.outlook.com;
- client-ip=193.47.165.251; helo=mtlcas13.mtl.com;
-Received: from mtlcas13.mtl.com (193.47.165.251) by
- DB5EUR03FT031.mail.protection.outlook.com (10.152.20.142) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.2814.13 via Frontend Transport; Mon, 16 Mar 2020 21:23:27 +0000
-Received: from MTLCAS13.mtl.com (10.0.8.78) by mtlcas13.mtl.com (10.0.8.78)
- with Microsoft SMTP Server (TLS) id 15.0.1178.4; Mon, 16 Mar 2020 23:23:26
- +0200
-Received: from MTLCAS01.mtl.com (10.0.8.71) by MTLCAS13.mtl.com (10.0.8.78)
- with Microsoft SMTP Server (TLS) id 15.0.1178.4 via Frontend Transport; Mon,
- 16 Mar 2020 23:23:26 +0200
-Received: from [172.27.0.66] (172.27.0.66) by MTLCAS01.mtl.com (10.0.8.71)
- with Microsoft SMTP Server (TLS) id 14.3.468.0; Mon, 16 Mar 2020 23:22:53
- +0200
-Subject: Re: commit ab118da4c10a70b8437f5c90ab77adae1835963e causes ib_srpt to
- fail connections served by target LIO
-To:     Laurence Oberman <loberman@redhat.com>,
-        Leon Romanovsky <leonro@mellanox.com>
-CC:     rdmadev <rdma-dev-team@redhat.com>, <linux-rdma@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "Van Assche, Bart" <bvanassche@acm.org>,
-        Rupesh Girase <rgirase@redhat.com>
-References: <88bab94d2fd72f3145835b4518bc63dda587add6.camel@redhat.com>
- <0bef0089-0c46-8fb7-9e44-61654c641cbd@mellanox.com>
- <e57c1763dd99ea958c9834a53ae5688a775c9444.camel@redhat.com>
- <6d5415e3-9314-331a-fade-7593c6a27290@mellanox.com>
- <8695fb0f34588616aded629127cc3fa2799fa7cb.camel@redhat.com>
- <918bc803-41d6-6eea-34e2-9e40f959a982@mellanox.com>
- <2a04cd1d66e6bc2edb96231b47499f4c1450e592.camel@redhat.com>
- <327df8af71afab4a2f9b6da804218d5a94cf6020.camel@redhat.com>
- <20200316072140.GD8510@unreal> <20200316073002.GE8510@unreal>
- <2e0bf1fb747a41ea817aaaa141e3410ced078548.camel@redhat.com>
-From:   Max Gurtovoy <maxg@mellanox.com>
-Message-ID: <c6581b28-469b-8efb-b5b4-526f6c39ddc9@mellanox.com>
-Date:   Mon, 16 Mar 2020 23:22:53 +0200
+        id S1732933AbgCPXqM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Mar 2020 19:46:12 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:13576 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732842AbgCPXqM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Mar 2020 19:46:12 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1584402370; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=QMWBcPTAmVmJ/FNCGGfUCtypb9h4vyvjMsrxHp0Wri4=; b=pna7qjHvacudIevs9qA+mEAohaVjbNQjyQZ7IB3wa0LhmcjFTv26kS8Kr5PE9EUIPppvGyYp
+ Sv3wDz/p7R1aQ8CDil3gJeYLOwJy5eV5dP8WXYCBMDdAzE3lJjXzJPmKhthOyRxhuJRqXpfM
+ B7VP3rctQuR6eH239RlHUxMuZU8=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e700fb2.7f607d05de30-smtp-out-n02;
+ Mon, 16 Mar 2020 23:45:54 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4B956C44788; Mon, 16 Mar 2020 23:45:54 +0000 (UTC)
+Received: from [192.168.8.111] (cpe-70-95-153-89.san.res.rr.com [70.95.153.89])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8B056C433CB;
+        Mon, 16 Mar 2020 23:45:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8B056C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [<RFC PATCH v1> 1/2] scsi: ufs: add write booster feature support
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "subhashj@codeaurora.org" <subhashj@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
+        "vinholikatti@gmail.com" <vinholikatti@gmail.com>,
+        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <cover.1582330473.git.asutoshd@codeaurora.org>
+ <0eb182e6731bc4ce0c1d6a97f102155d7186520f.1582330473.git.asutoshd@codeaurora.org>
+ <MN2PR04MB69913E95017D4D865297AE9EFCEF0@MN2PR04MB6991.namprd04.prod.outlook.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <bb07c606-d4e9-370e-fd67-74d5db66b13c@codeaurora.org>
+Date:   Mon, 16 Mar 2020 16:45:47 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <2e0bf1fb747a41ea817aaaa141e3410ced078548.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <MN2PR04MB69913E95017D4D865297AE9EFCEF0@MN2PR04MB6991.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-X-Originating-IP: [172.27.0.66]
-X-EOPAttributedMessage: 0
-X-MS-Office365-Filtering-HT: Tenant
-X-Forefront-Antispam-Report: CIP:193.47.165.251;IPV:;CTRY:IL;EFV:NLI;SFV:NSPM;SFS:(10009020)(4636009)(346002)(376002)(396003)(39860400002)(136003)(199004)(46966005)(5660300002)(4326008)(26005)(70206006)(31686004)(31696002)(478600001)(110136005)(316002)(8936002)(81156014)(8676002)(81166006)(2616005)(30864003)(86362001)(6636002)(2906002)(186003)(54906003)(16526019)(70586007)(336012)(16576012)(356004)(53546011)(47076004)(36756003)(3940600001);DIR:OUT;SFP:1101;SCL:1;SRVR:DB7PR05MB4218;H:mtlcas13.mtl.com;FPR:;SPF:Pass;LANG:en;PTR:InfoDomainNonexistent;A:1;
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6201294d-68f3-4520-b8a4-08d7c9f044ab
-X-MS-TrafficTypeDiagnostic: DB7PR05MB4218:
-X-Microsoft-Antispam-PRVS: <DB7PR05MB421894F3488B393AA28B3BB9B6F90@DB7PR05MB4218.eurprd05.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-Forefront-PRVS: 03449D5DD1
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: dEwxVHV9ZPV1yce6eC19QZfH+VW7ZSIsghjsqGsv8ttsC0UTD71ioGuagEvEJdajnbfmt8JnFo88Zi85DOTLzhMi0hjzcdHH/3Ae07kO2ohz920Pff8eArEMrri0f6Tx5hTradvtFiJvTdyINMqo/iqr/bN2QKku/PDRZKc5G+OlelLOvN5bbsc1nGeJpp92y3DGXop7CXizaE/gzB+V7W0TD8FVHfyPF27vklBU0L5D+qlJtBxsUWhXilQgc99XIzhjylTmN3RuxZA9479RXotbNXgV47UDmRHV4v2vr4Yzg9xIdDD+t9WW0pE+Wsrr7ufDJnnwT172SKVGk+1mbBHDaVYirGo4TXxWEaU6xUkb+Ez/ni5zGeudeeb9/MagF2qWdAu4XXtianE0RyRQeffOgtOUP0rKVPKl/z+P3jZbqCrCKC2c2YBn/twBY1z3jFBTQrMvn2shlEMDgfU6xH6WQH/18H4+O2jJTbWWTcJqGG2nYvHR02VKTZY42D4j3jkRzNqTtJYVot/JjR8cNe/nWld8z9LsAgHcBNQ3/zg=
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2020 21:23:27.3930
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6201294d-68f3-4520-b8a4-08d7c9f044ab
-X-MS-Exchange-CrossTenant-Id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=a652971c-7d2e-4d9b-a6a4-d149256f461b;Ip=[193.47.165.251];Helo=[mtlcas13.mtl.com]
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR05MB4218
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 3/16/2020 9:18 PM, Laurence Oberman wrote:
-> On Mon, 2020-03-16 at 09:30 +0200, Leon Romanovsky wrote:
->> On Mon, Mar 16, 2020 at 09:21:40AM +0200, Leon Romanovsky wrote:
->>> On Sun, Mar 15, 2020 at 05:56:17PM -0400, Laurence Oberman wrote:
->>>> On Sun, 2020-03-15 at 17:01 -0400, Laurence Oberman wrote:
->>>>> On Sun, 2020-03-15 at 22:40 +0200, Max Gurtovoy wrote:
->>>>>> On 3/15/2020 8:36 PM, Laurence Oberman wrote:
->>>>>>> On Sun, 2020-03-15 at 20:20 +0200, Max Gurtovoy wrote:
->>>>>>>> On 3/15/2020 7:59 PM, Laurence Oberman wrote:
->>>>>>>>> On Sun, 2020-03-15 at 18:47 +0200, Max Gurtovoy wrote:
->>>>>>>>>> On 3/14/2020 11:30 PM, Laurence Oberman wrote:
->>>>>>>>>>> Hello Bart, Leon and Max
->>>>>>>>>> Hi Laurence,
->>>>>>>>>>
->>>>>>>>>> thanks for the great analysis and the fast response
->>>>>>>>>> !!
->>>>>>>>>>
->>>>>>>>>>> Max had reached out to me to test a new set of
->>>>>>>>>>> patches
->>>>>>>>>>> for
->>>>>>>>>>> SRQ.
->>>>>>>>>>> I had not tested upstream ib_srpt on an LIO target
->>>>>>>>>>> for
->>>>>>>>>>> quite a
->>>>>>>>>>> while,
->>>>>>>>>>> only ib_srp client tests had been run of late.
->>>>>>>>>>> During a baseline test before applying Max's
->>>>>>>>>>> patches it
->>>>>>>>>>> was
->>>>>>>>>>> apparent
->>>>>>>>>>> that something had broken ib_srpt connections
->>>>>>>>>>> within LIO
->>>>>>>>>>> target
->>>>>>>>>>> since
->>>>>>>>>>> 5.5.
->>>>>>>>>>>
->>>>>>>>>>> Note thet ib_srp client connectivity with the
->>>>>>>>>>> commit
->>>>>>>>>>> functions
->>>>>>>>>>> fine,
->>>>>>>>>>> it's just the target that breaks with this commit.
->>>>>>>>>>>
->>>>>>>>>>> After a long bisect this is the commit that seems
->>>>>>>>>>> to
->>>>>>>>>>> break
->>>>>>>>>>> it.
->>>>>>>>>>> While it's not directly code in ib_srpt, its code
->>>>>>>>>>> in mlx5
->>>>>>>>>>> vport
->>>>>>>>>>> ethernet connectivity that then breaks ib_srpt
->>>>>>>>>>> connectivity
->>>>>>>>>>> over
->>>>>>>>>>> mlx5
->>>>>>>>>>> IB RDMA with LIO.
->>>>>>>>>> I was able to connect in loopback and also from
->>>>>>>>>> remote
->>>>>>>>>> initiator
->>>>>>>>>> with
->>>>>>>>>> this commit.
->>>>>>>>>>
->>>>>>>>>> So I'm not sure that this commit is broken.
->>>>>>>>>>
->>>>>>>>>> I used Bart's scripts to configure the target and to
->>>>>>>>>> connect
->>>>>>>>>> to
->>>>>>>>>> it
->>>>>>>>>> in
->>>>>>>>>> loopback (after some modifications for the updated
->>>>>>>>>> kernel/sysfs/configfs
->>>>>>>>>> interface).
->>>>>>>>>>
->>>>>>>>>> I did see an issue to connect from remote initiator,
->>>>>>>>>> but
->>>>>>>>>> after
->>>>>>>>>> reloading
->>>>>>>>>> openibd in the initiator side I was able to connect.
->>>>>>>>>>
->>>>>>>>>> So I suspect you had the same issue - that also
->>>>>>>>>> should be
->>>>>>>>>> debugged.
->>>>>>>>>>
->>>>>>>>>>> I will let Leon and others decide but reverting the
->>>>>>>>>>> below
->>>>>>>>>>> commit
->>>>>>>>>>> allows
->>>>>>>>>>> SRP connectivity to an LIO target to work again.
->>>>>>>>>> I added prints to
->>>>>>>>>> "mlx5_core_modify_hca_vport_context"
->>>>>>>>>> function
->>>>>>>>>> and
->>>>>>>>>> found that we don't call it in "pure" mlx5 mode with
->>>>>>>>>> PFs.
->>>>>>>>>>
->>>>>>>>>> Maybe you can try it too...
->>>>>>>>>>
->>>>>>>>>> I was able to check my patches on my system and I'll
->>>>>>>>>> send
->>>>>>>>>> them
->>>>>>>>>> soon.
->>>>>>>>>>
->>>>>>>>>> Thanks again Laurence and Bart.
->>>>>>>>>>
->>>>>>>>>>> Max, I will test your new patches once we have a
->>>>>>>>>>> decision
->>>>>>>>>>> on
->>>>>>>>>>> this.
->>>>>>>>>>>
->>>>>>>>>>> Client
->>>>>>>>>>> Linux ibclient.lab.eng.bos.redhat.com 5.6.0-rc5+ #1
->>>>>>>>>>> SMP
->>>>>>>>>>> Thu
->>>>>>>>>>> Mar
->>>>>>>>>>> 12
->>>>>>>>>>> 16:58:19 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
->>>>>>>>>>>
->>>>>>>>>>> Server with reverted commit
->>>>>>>>>>> Linux fedstorage.bos.redhat.com 5.6.0-rc5+ #1 SMP
->>>>>>>>>>> Sat Mar
->>>>>>>>>>> 14
->>>>>>>>>>> 16:39:35
->>>>>>>>>>> EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
->>>>>>>>>>>
->>>>>>>>>>> commit ab118da4c10a70b8437f5c90ab77adae1835963e
->>>>>>>>>>> Author: Leon Romanovsky <leonro@mellanox.com>
->>>>>>>>>>> Date:   Wed Nov 13 12:03:47 2019 +0200
->>>>>>>>>>>
->>>>>>>>>>>         net/mlx5: Don't write read-only fields in
->>>>>>>>>>> MODIFY_HCA_VPORT_CONTEXT
->>>>>>>>>>> command
->>>>>>>>>>>
->>>>>>>>>>>         The MODIFY_HCA_VPORT_CONTEXT uses
->>>>>>>>>>> field_selector
->>>>>>>>>>> to
->>>>>>>>>>> mask
->>>>>>>>>>> fields
->>>>>>>>>>> needed
->>>>>>>>>>>         to be written, other fields are required to
->>>>>>>>>>> be
->>>>>>>>>>> zero
->>>>>>>>>>> according
->>>>>>>>>>> to
->>>>>>>>>>> the
->>>>>>>>>>>         HW specification. The supported fields are
->>>>>>>>>>> controlled by
->>>>>>>>>>> bitfield
->>>>>>>>>>>         and limited to vport state, node and port
->>>>>>>>>>> GUIDs.
->>>>>>>>>>>
->>>>>>>>>>>         Signed-off-by: Leon Romanovsky <
->>>>>>>>>>> leonro@mellanox.com>
->>>>>>>>>>>         Signed-off-by: Saeed Mahameed <
->>>>>>>>>>> saeedm@mellanox.com
->>>>>>>>>>> diff --git
->>>>>>>>>>> a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->>>>>>>>>>> b/drivers/net/ethernet/mellanox/mlx5
->>>>>>>>>>> index 30f7848..1faac31f 100644
->>>>>>>>>>> ---
->>>>>>>>>>> a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->>>>>>>>>>> +++
->>>>>>>>>>> b/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->>>>>>>>>>> @@ -1064,26 +1064,13 @@ int
->>>>>>>>>>> mlx5_core_modify_hca_vport_context(struct
->>>>>>>>>>> mlx5_core_dev *dev,
->>>>>>>>>>>
->>>>>>>>>>>             ctx =
->>>>>>>>>>> MLX5_ADDR_OF(modify_hca_vport_context_in,
->>>>>>>>>>> in,
->>>>>>>>>>> hca_vport_context);
->>>>>>>>>>>             MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> field_select,
->>>>>>>>>>> req-
->>>>>>>>>>>> field_select);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> sm_virt_aware,
->>>>>>>>>>> req-
->>>>>>>>>>>> sm_virt_aware);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, has_smi,
->>>>>>>>>>> req-
->>>>>>>>>>>> has_smi);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, has_raw,
->>>>>>>>>>> req-
->>>>>>>>>>>> has_raw);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> vport_state_policy,
->>>>>>>>>>> req-
->>>>>>>>>>>> policy);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> port_physical_state,
->>>>>>>>>>> req-
->>>>>>>>>>>> phys_state);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> vport_state,
->>>>>>>>>>> req-
->>>>>>>>>>>> vport_state);
->>>>>>>>>>> -       MLX5_SET64(hca_vport_context, ctx,
->>>>>>>>>>> port_guid,
->>>>>>>>>>> req-
->>>>>>>>>>>> port_guid);
->>>>>>>>>>> -       MLX5_SET64(hca_vport_context, ctx,
->>>>>>>>>>> node_guid,
->>>>>>>>>>> req-
->>>>>>>>>>>> node_guid);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, cap_mask1,
->>>>>>>>>>> req-
->>>>>>>>>>>> cap_mask1);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> cap_mask1_field_select,
->>>>>>>>>>> req-
->>>>>>>>>>>> cap_mask1_perm);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, cap_mask2,
->>>>>>>>>>> req-
->>>>>>>>>>>> cap_mask2);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> cap_mask2_field_select,
->>>>>>>>>>> req-
->>>>>>>>>>>> cap_mask2_perm);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, lid, req-
->>>>>>>>>>>> lid);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> init_type_reply,
->>>>>>>>>>> req-
->>>>>>>>>>>> init_type_reply);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, lmc, req-
->>>>>>>>>>>> lmc);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> subnet_timeout,
->>>>>>>>>>> req-
->>>>>>>>>>>> subnet_timeout);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, sm_lid,
->>>>>>>>>>> req-
->>>>>>>>>>>> sm_lid);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx, sm_sl,
->>>>>>>>>>> req-
->>>>>>>>>>>> sm_sl);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> qkey_violation_counter,
->>>>>>>>>>> req-
->>>>>>>>>>>> qkey_violation_counter);
->>>>>>>>>>> -       MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> pkey_violation_counter,
->>>>>>>>>>> req-
->>>>>>>>>>>> pkey_violation_counter);
->>>>>>>>>>> +       if (req->field_select &
->>>>>>>>>>> MLX5_HCA_VPORT_SEL_STATE_POLICY)
->>>>>>>>>>> +               MLX5_SET(hca_vport_context, ctx,
->>>>>>>>>>> vport_state_policy,
->>>>>>>>>>> +                        req->policy);
->>>>>>>>>>> +       if (req->field_select &
->>>>>>>>>>> MLX5_HCA_VPORT_SEL_PORT_GUID)
->>>>>>>>>>> +               MLX5_SET64(hca_vport_context, ctx,
->>>>>>>>>>> port_guid,
->>>>>>>>>>> req-
->>>>>>>>>>>> port_guid);
->>>>>>>>>>> +       if (req->field_select &
->>>>>>>>>>> MLX5_HCA_VPORT_SEL_NODE_GUID)
->>>>>>>>>>> +               MLX5_SET64(hca_vport_context, ctx,
->>>>>>>>>>> node_guid,
->>>>>>>>>>> req-
->>>>>>>>>>>> node_guid);
->>>>>>>>>>>             err = mlx5_cmd_exec(dev, in, in_sz, out,
->>>>>>>>>>> sizeof(out));
->>>>>>>>>>>      ex:
->>>>>>>>>>>             kfree(in);
->>>>>>>>>>>
->>>>>>>>>>>
->>>>>>>>> Hi Max
->>>>>>>>> Re:
->>>>>>>>>
->>>>>>>>> "
->>>>>>>>> So I'm not sure that this commit is broken.
->>>>>>>>> ..
->>>>>>>>> ..
->>>>>>>>> I added prints to "mlx5_core_modify_hca_vport_context"
->>>>>>>>> function
->>>>>>>>> and
->>>>>>>>> found that we don't call it in "pure" mlx5 mode with
->>>>>>>>> PFs.
->>>>>>>>>
->>>>>>>>> Maybe you can try it too...
->>>>>>>>> "
->>>>>>>>>
->>>>>>>>> The thing is without this commit we connect
->>>>>>>>> immediately, no
->>>>>>>>> delay
->>>>>>>>> no
->>>>>>>>> issue and I am changing nothing else other than
->>>>>>>>> reverting
->>>>>>>>> here.
->>>>>>>>>
->>>>>>>>> So this clearly has a bearing directly on the
->>>>>>>>> functionality.
->>>>>>>>>
->>>>>>>>> I will look at adding more debug, but with this commit
->>>>>>>>> in
->>>>>>>>> there
->>>>>>>>> is
->>>>>>>>> nor
->>>>>>>>> evidence even of an attempt to connect and fail.
->>>>>>>>>
->>>>>>>>> Its silently faling.
->>>>>>>> please send me all the configuration steps you run after
->>>>>>>> booting
->>>>>>>> the
->>>>>>>> target + steps in the initiator (can be also in attached
->>>>>>>> file).
->>>>>>>>
->>>>>>>> I'll try to follow this.
->>>>>>>>
->>>>>>>> Btw, did you try loopback initiator ?
->>>>>>>>
->>>>>>>> -Max.
->>>>>>>>
->>>>>>>>
->>>>>>>>> Regards
->>>>>>>>> Laurence
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>
->>>>>>> Hi Max
->>>>>>>
->>>>>>> Did not try loopback because here we have actual physical
->>>>>>> connectity as
->>>>>>> that is what our customers use.
->>>>>>>
->>>>>>> Connected back to back with MLX5 cx4 HCA dual ports at EDR
->>>>>>> 100
->>>>>>> Thi sis my standard configuration used for all upstream and
->>>>>>> Red
->>>>>>> Hat
->>>>>>> kernel testing.
->>>>>>>
->>>>>>> Reboot server and client and then first prepare server
->>>>>>>
->>>>>>> Server
->>>>>>> ----------
->>>>>>>
->>>>>>> the prepare.sh script run is after boot on the server
->>>>>>>
->>>>>>>
->>>>>>> #!/bin/bash
->>>>>>> ./load_modules.sh
->>>>>>> ./create_ramdisk.sh
->>>>>>> targetcli restoreconfig
->>>>>>> # Set the srp_sq_size
->>>>>>> for i in
->>>>>>> /sys/kernel/config/target/srpt/0xfe800000000000007cfe900300
->>>>>>> 726e4e
->>>>>>> /sys/kernel/config/target/srpt/0xfe800000000000007cfe900300
->>>>>>> 726e4f
->>>>>>> do
->>>>>>> 	echo 16384 > $i/tpgt_1/attrib/srp_sq_size
->>>>>>> done
->>>>>>>
->>>>>>> [root@fedstorage ~]# cat load_modules.sh
->>>>>>> #!/bin/bash
->>>>>>> modprobe mlx5_ib
->>>>>>> modprobe ib_srpt
->>>>>>> modprobe ib_srp
->>>>>>> modprobe ib_umad
->>>>>>>
->>>>>>> [root@fedstorage ~]# cat ./create_ramdisk.sh
->>>>>>> #!/bin/bash
->>>>>>> mount -t tmpfs -o size=130g tmpfs /mnt
->>>>>>> cd /mnt
->>>>>>> for i in `seq 1 30`; do dd if=/dev/zero of=block-$i
->>>>>>> bs=1024k
->>>>>>> count=4000
->>>>>>> ; done
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> Client
->>>>>>> --------
->>>>>>>
->>>>>>> Once server is ready
->>>>>>>
->>>>>>> Run ./start_opensm.sh on client (I sont use the SM on a
->>>>>>> switch as
->>>>>>> we
->>>>>>> are back to back)
->>>>>>>
->>>>>>> [root@ibclient ~]# cat ./start_opensm.sh
->>>>>>> #!/bin/bash
->>>>>>> rmmod ib_srpt
->>>>>>> opensm -F opensm.1.conf &
->>>>>>> opensm -F opensm.2.conf &
->>>>>>>
->>>>>>> I will semail the conf only to you as well as the targecli
->>>>>>> config
->>>>>>> as th
->>>>>>> eout is long.
->>>>>>>
->>>>>>>
->>>>>>> Then run start_srp.sh
->>>>>>>
->>>>>>> [root@ibclient ~]# cat ./start_srp.sh
->>>>>>> run_srp_daemon  -V -f /etc/ddn/srp_daemon.conf -R 30 -T 10
->>>>>>> -t
->>>>>>> 7000
->>>>>>> -ance -i mlx5_0 -p 1 1>/root/srp1.log 2>&1 &
->>>>>>> run_srp_daemon  -V -f /etc/ddn/srp_daemon.conf -R 30 -T 10
->>>>>>> -t
->>>>>>> 7000
->>>>>>> -ance -i mlx5_1 -p 1 1>/root/srp2.log 2>&1 &
->>>>>>>
->>>>>>> [root@ibclient ~]# cat /etc/ddn/srp_daemon.conf
->>>>>>> a      queue_size=128,max_cmd_per_lun=32,max_sect=32768
->>>>>>>
->>>>>>>
->>>>>> I see that you're link is IB.
->>>>>>
->>>>>> I was working on RoCE link layer with rdma_cm.
->>>>>>
->>>>>> I'll try to find some free IB setup tomorrow in my lab..
->>>>>>
->>>>>> Can you try login using rdma_cm ? need to load ib_ipoib for
->>>>>> that in
->>>>>> IB
->>>>>> network.
->>>>>>
->>>>>> I'm trying to understand whether it's related to the link
->>>>>> layer.
->>>>>>
->>>>>> p.s. I think the target configuration file didn't arrive.
->>>>>>
->>>>>>>
->>>>>>
->>>>> Max,
->>>>>
->>>>> Yes, I am, working primarily with SCSI over RDMA Protocol with
->>>>> Infiniband HCA's in IB mode.
->>>>> I am not using ROCE.
->>>>>
->>>>> Also lets not forget this is a target only issue, the latest
->>>>> 5.6
->>>>> kernel
->>>>> runs untouched with no issues on the initiator when the target
->>>>> runs
->>>>> either 5.4 or 5.6 with the revert.
->>>>> It would run fine with the target on 5.5 as well if I reverted
->>>>> the
->>>>> commit on 5.5 too.
->>>>>
->>>>> I am not able at this time to switch these adapters to Ethernet
->>>>> mode
->>>>> and ROCE
->>>>>
->>>>> The weird thing is the failure is completely silent so
->>>>> something in
->>>>> the
->>>>> Link layer with IB has to failing early.
->>>>> Thje other strange observation is that the IB interfaces come
->>>>> up with
->>>>> no issue.
->>>>> I will try add some debug after reboot into the failing kernel.
->>>>>
->>>>> Regards
->>>>> Laurence
->>>>>
->>>>>
->>>>>
->>>> Max,
->>>> Rupesh in cc here will be testing latest upstream on a
->>>> client/server
->>>> configuration with ROCE and report back here on if he sees a
->>>> similar
->>>> issue with the LIO target with that commit.
->>>>
->>>> I will continue working on the IB srpt issue by adding some
->>>> debug.
->>>>
->>>> If you think about anything related to the commit let me know.
->>> Laurence,
->>>
->>> As I said above, the most chances are that I removed some RW
->>> initialization that wasn't protected by field_select and wasn't
->>> marked in our PRM as RW field.
->>>
->>> The question is which one.
->> I think that I know what is missing.
->> Can you please try this patch?
->>
->> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->> b/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->> index 1faac31f74d0..23f879da9104 100644
->> --- a/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->> +++ b/drivers/net/ethernet/mellanox/mlx5/core/vport.c
->> @@ -1071,6 +1071,9 @@ int mlx5_core_modify_hca_vport_context(struct
->> mlx5_core_dev *dev,
->>                  MLX5_SET64(hca_vport_context, ctx, port_guid, req-
->>> port_guid);
->>          if (req->field_select & MLX5_HCA_VPORT_SEL_NODE_GUID)
->>                  MLX5_SET64(hca_vport_context, ctx, node_guid, req-
->>> node_guid);
->> +       MLX5_SET(hca_vport_context, ctx, cap_mask1, req->cap_mask1);
->> +       MLX5_SET(hca_vport_context, ctx, cap_mask1_field_select,
->> +                req->cap_mask1_perm);
->>          err = mlx5_cmd_exec(dev, in, in_sz, out, sizeof(out));
->>   ex:
->>          kfree(in);
+On 2/23/2020 1:03 AM, Avri Altman wrote:
+> Hi,
 >>
 >>
->>> Thanks
->>>
->>>> Regards
->>>> Laurence
->>>>
+> Maybe add few words explaining what this feature is all about.
+> 
+>> Write Booster enable: SW will enable the feature
+>> when clocks are scaled up.
+>> Once clocks and gear are scaled up,
+>> SW will set “fWriteBoosterEn” flag
+>> before exiting from ufshcd_devfreq_scale() function.
 >>
-> Leon,
->
-> That patch does resolve the issue.
-> Tested with CX4 with mlx5 with SRP over IB to LIO target.
-> Please add a fixes to that commit tag with this one when you send it.
+>> Write Booster disable: SW will disable the feature,
+>> when clocks are scaled down. Once clocks and gear
+>> are scaled down, SW will clear “fWriteBoosterEn” flag
+>> before exiting from ufshcd_devfreq_scale() function.
+> At this point I am not convinced that all readers are interesting which flag does what.
+> Maybe just saying that you are intending to use the clock scaling mechanism to set WB on/off,
+> Which is, IMHO, an excellent design choice.
+> Also here is a good place to explain that although it is not lun-specific and will turn WB on for reads as well,
+> It is a second order miss and has negligible impact of the overall performance.
+> 
+> Before the next paragraph you need to explain about the various WB buffer flush options -
+> Not all readers are familiar with the latest spec to its details.
+> 
+>>
+>> Write Booster Buffer flush will be enabled in following cases:
+>>   1. During runtime suspend, driver would query
+>>      bAvailableWriteBoosterBufferSize attribute and enable the
+>>      Write Booster Buffer Flush if less than 30% Write Booster
+>>      Buffer is available.
+> Again, just explain why make your flush part of the power management flow,
+> Without the gory details of the exact attribute, etc.
+> 
+>>
+>> Write Booster Buffer flush will be disabled in following case:
+>> During runtime suspend, if available buffer size is >30%,
+>> then Write Booster Flush will be stopped by
+>> clearing fWriteBoosterBufferFlushEn flag.
+>>
+> 
+> And here a word of the various user space configuration option,
+> Although I would look for ways to minimize the exposure of the WB driver,
+> To the way the platform vendor provision its device.
+>   
+>> In non-reduction case, during runtime-suspend,
+>> dCurrentWriteBoosterBufferSize attribute would determine
+>> if flush is possible.
+>> If this value is > 0 and availBuf is less
+>> than 30% then flush is needed and vcc needs to be ON.
+>>
+>> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+>> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> 
+> For RFC its fine, but when you'll send it for review,
+> This patch should be divided into 4-5 patches, minimum.
+> 
 
-Great Laurence !
+Looking at the number of comments, I'll send out another v2 RFC before 
+sending out a patchset.
 
-thanks for the effort.
+>> ---
+>>   drivers/scsi/ufs/ufs-sysfs.c |  41 ++++++-
+>>   drivers/scsi/ufs/ufs.h       |  61 ++++++++-
+>>   drivers/scsi/ufs/ufshcd.c    | 286
+>> ++++++++++++++++++++++++++++++++++++++++++-
+>>   drivers/scsi/ufs/ufshcd.h    |   9 ++
+>>   4 files changed, 390 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+>> index dbdf8b0..4505e27 100644
+>> --- a/drivers/scsi/ufs/ufs-sysfs.c
+>> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+>> @@ -274,6 +274,10 @@ UFS_DEVICE_DESC_PARAM(device_version,
+>> _DEV_VER, 2);
+>>   UFS_DEVICE_DESC_PARAM(number_of_secure_wpa, _NUM_SEC_WPA, 1);
+>>   UFS_DEVICE_DESC_PARAM(psa_max_data_size, _PSA_MAX_DATA, 4);
+>>   UFS_DEVICE_DESC_PARAM(psa_state_timeout, _PSA_TMT, 1);
+>> +UFS_DEVICE_DESC_PARAM(ext_feature_sup, _EXT_UFS_FEATURE_SUP, 4);
+>> +UFS_DEVICE_DESC_PARAM(wb_presv_us_en, _WB_US_RED_EN, 1);
+>> +UFS_DEVICE_DESC_PARAM(wb_type, _WB_TYPE, 1);
+>> +UFS_DEVICE_DESC_PARAM(wb_shared_alloc_units,
+>> _WB_SHARED_ALLOC_UNITS, 4);
+>>
+>>   static struct attribute *ufs_sysfs_device_descriptor[] = {
+>>          &dev_attr_device_type.attr,
+>> @@ -302,6 +306,10 @@ static struct attribute
+>> *ufs_sysfs_device_descriptor[] = {
+>>          &dev_attr_number_of_secure_wpa.attr,
+>>          &dev_attr_psa_max_data_size.attr,
+>>          &dev_attr_psa_state_timeout.attr,
+>> +       &dev_attr_ext_feature_sup.attr,
+>> +       &dev_attr_wb_presv_us_en.attr,
+>> +       &dev_attr_wb_type.attr,
+>> +       &dev_attr_wb_shared_alloc_units.attr,
+>>          NULL,
+>>   };
+>>
+>> @@ -371,6 +379,12 @@
+>> UFS_GEOMETRY_DESC_PARAM(enh4_memory_max_alloc_units,
+>>          _ENM4_MAX_NUM_UNITS, 4);
+>>
+>> UFS_GEOMETRY_DESC_PARAM(enh4_memory_capacity_adjustment_factor,
+>>          _ENM4_CAP_ADJ_FCTR, 2);
+>> +UFS_GEOMETRY_DESC_PARAM(wb_max_alloc_units,
+>> _WB_MAX_ALLOC_UNITS, 4);
+>> +UFS_GEOMETRY_DESC_PARAM(wb_max_wb_luns, _WB_MAX_WB_LUNS,
+>> 1);
+>> +UFS_GEOMETRY_DESC_PARAM(wb_buff_cap_adj, _WB_BUFF_CAP_ADJ,
+>> 1);
+>> +UFS_GEOMETRY_DESC_PARAM(wb_sup_red_type, _WB_SUP_RED_TYPE,
+>> 1);
+>> +UFS_GEOMETRY_DESC_PARAM(wb_sup_wb_type, _WB_SUP_WB_TYPE, 1);
+>> +
+>>
+>>   static struct attribute *ufs_sysfs_geometry_descriptor[] = {
+>>          &dev_attr_raw_device_capacity.attr,
+>> @@ -402,6 +416,11 @@ static struct attribute
+>> *ufs_sysfs_geometry_descriptor[] = {
+>>          &dev_attr_enh3_memory_capacity_adjustment_factor.attr,
+>>          &dev_attr_enh4_memory_max_alloc_units.attr,
+>>          &dev_attr_enh4_memory_capacity_adjustment_factor.attr,
+>> +       &dev_attr_wb_max_alloc_units.attr,
+>> +       &dev_attr_wb_max_wb_luns.attr,
+>> +       &dev_attr_wb_buff_cap_adj.attr,
+>> +       &dev_attr_wb_sup_red_type.attr,
+>> +       &dev_attr_wb_sup_wb_type.attr,
+>>          NULL,
+>>   };
+>>
+>> @@ -608,7 +627,7 @@ static ssize_t _name##_show(struct device *dev,
+>> \
+>>          if (ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,         \
+>>                  QUERY_FLAG_IDN##_uname, &flag))                         \
+>>                  return -EINVAL;                                         \
+>> -       return sprintf(buf, "%s\n", flag ? "true" : "false");           \
+>> +       return snprintf(buf, PAGE_SIZE, "%s\n", flag ? "true" : "false"); \
+> This should be sent as a separate bug fix - not as part of the WB series
+> 
+>>   }                                                                      \
+>>   static DEVICE_ATTR_RO(_name)
+>>
+>> @@ -620,6 +639,9 @@ UFS_FLAG(life_span_mode_enable,
+>> _LIFE_SPAN_MODE_ENABLE);
+>>   UFS_FLAG(phy_resource_removal, _FPHYRESOURCEREMOVAL);
+>>   UFS_FLAG(busy_rtc, _BUSY_RTC);
+>>   UFS_FLAG(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
+>> +UFS_FLAG(wb_enable, _WB_EN);
+>> +UFS_FLAG(wb_flush_en, _WB_BUFF_FLUSH_EN);
+>> +UFS_FLAG(wb_flush_during_h8, _WB_BUFF_FLUSH_DURING_HIBERN8);
+>>
+>>   static struct attribute *ufs_sysfs_device_flags[] = {
+>>          &dev_attr_device_init.attr,
+>> @@ -630,6 +652,9 @@ static struct attribute *ufs_sysfs_device_flags[] = {
+>>          &dev_attr_phy_resource_removal.attr,
+>>          &dev_attr_busy_rtc.attr,
+>>          &dev_attr_disable_fw_update.attr,
+>> +       &dev_attr_wb_enable.attr,
+>> +       &dev_attr_wb_flush_en.attr,
+>> +       &dev_attr_wb_flush_during_h8.attr,
+>>          NULL,
+>>   };
+>>
+>> @@ -647,7 +672,7 @@ static ssize_t _name##_show(struct device *dev,
+>> \
+>>          if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,         \
+>>                  QUERY_ATTR_IDN##_uname, 0, 0, &value))                  \
+>>                  return -EINVAL;                                         \
+>> -       return sprintf(buf, "0x%08X\n", value);                         \
+>> +       return snprintf(buf, PAGE_SIZE, "0x%08X\n", value);             \
+> ditto
+> 
+>>   }                                                                      \
+>>   static DEVICE_ATTR_RO(_name)
+>>
+>> @@ -667,6 +692,11 @@ UFS_ATTRIBUTE(exception_event_status,
+>> _EE_STATUS);
+>>   UFS_ATTRIBUTE(ffu_status, _FFU_STATUS);
+>>   UFS_ATTRIBUTE(psa_state, _PSA_STATE);
+>>   UFS_ATTRIBUTE(psa_data_size, _PSA_DATA_SIZE);
+>> +UFS_ATTRIBUTE(wb_flush_status, _WB_FLUSH_STATUS);
+>> +UFS_ATTRIBUTE(wb_avail_buf, _AVAIL_WB_BUFF_SIZE);
+>> +UFS_ATTRIBUTE(wb_life_time_est, _WB_BUFF_LIFE_TIME_EST);
+>> +UFS_ATTRIBUTE(wb_cur_buf, _CURR_WB_BUFF_SIZE);
+>> +
+>>
+>>   static struct attribute *ufs_sysfs_attributes[] = {
+>>          &dev_attr_boot_lun_enabled.attr,
+>> @@ -685,6 +715,10 @@ static struct attribute *ufs_sysfs_attributes[] = {
+>>          &dev_attr_ffu_status.attr,
+>>          &dev_attr_psa_state.attr,
+>>          &dev_attr_psa_data_size.attr,
+>> +       &dev_attr_wb_flush_status.attr,
+>> +       &dev_attr_wb_avail_buf.attr,
+>> +       &dev_attr_wb_life_time_est.attr,
+>> +       &dev_attr_wb_cur_buf.attr,
+>>          NULL,
+>>   };
+>>
+>> @@ -736,6 +770,8 @@ UFS_UNIT_DESC_PARAM(provisioning_type,
+>> _PROVISIONING_TYPE, 1);
+>>   UFS_UNIT_DESC_PARAM(physical_memory_resourse_count,
+>> _PHY_MEM_RSRC_CNT, 8);
+>>   UFS_UNIT_DESC_PARAM(context_capabilities, _CTX_CAPABILITIES, 2);
+>>   UFS_UNIT_DESC_PARAM(large_unit_granularity, _LARGE_UNIT_SIZE_M1,
+>> 1);
+>> +UFS_UNIT_DESC_PARAM(wb_buf_alloc_units, _WB_BUF_ALLOC_UNITS,
+>> 4);
+>> +
+>>
+>>   static struct attribute *ufs_sysfs_unit_descriptor[] = {
+>>          &dev_attr_boot_lun_id.attr,
+>> @@ -751,6 +787,7 @@ static struct attribute *ufs_sysfs_unit_descriptor[] =
+>> {
+>>          &dev_attr_physical_memory_resourse_count.attr,
+>>          &dev_attr_context_capabilities.attr,
+>>          &dev_attr_large_unit_granularity.attr,
+>> +       &dev_attr_wb_buf_alloc_units.attr,
+>>          NULL,
+>>   };
+> 
+> You might want to consider exposing the clock scaling governor attribute here as well,
+> Because
+> a) we should do that already as it control an essential part of the ufs driver, and
+> b) it control WB now as well
+> 
+Which clock scaling governor attributes are you alluding to so that 
+we're on the same page.
 
-Eventually it was helpful that we both run on different link layers :)
+>>
+>> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+>> index 990cb48..ffc4e18 100644
+>> --- a/drivers/scsi/ufs/ufs.h
+>> +++ b/drivers/scsi/ufs/ufs.h
+>> @@ -63,6 +63,7 @@
+>>   #define UFS_UPIU_MAX_UNIT_NUM_ID       0x7F
+>>   #define UFS_MAX_LUNS           (SCSI_W_LUN_BASE +
+>> UFS_UPIU_MAX_UNIT_NUM_ID)
+>>   #define UFS_UPIU_WLUN_ID       (1 << 7)
+>> +#define UFS_UPIU_MAX_GENERAL_LUN       8
+> Are you using this for “LU dedicated buffer" case?
+> In that case maybe MAX_DEDICATED_BUFFERS?
+> 
+Currently, in LU dedicated buffer case, only 1 WB buffer can be 
+supported. In the current code, I use it to check if WB is configured in 
+at least 1 Lun.
+>>
+>>   /* Well known logical unit id in LUN field of UPIU */
+>>   enum {
+>> @@ -140,6 +141,9 @@ enum flag_idn {
+>>          QUERY_FLAG_IDN_BUSY_RTC                         = 0x09,
+>>          QUERY_FLAG_IDN_RESERVED3                        = 0x0A,
+>>          QUERY_FLAG_IDN_PERMANENTLY_DISABLE_FW_UPDATE    = 0x0B,
+>> +       QUERY_FLAG_IDN_WB_EN                            = 0x0E,
+>> +       QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN                 = 0x0F,
+>> +       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
+>>   };
+>>
+>>   /* Attribute idn for Query requests */
+>> @@ -168,6 +172,10 @@ enum attr_idn {
+>>          QUERY_ATTR_IDN_PSA_STATE                = 0x15,
+>>          QUERY_ATTR_IDN_PSA_DATA_SIZE            = 0x16,
+>>          QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME = 0x17,
+>> +       QUERY_ATTR_IDN_WB_FLUSH_STATUS          = 0x1C,
+>> +       QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+>> +       QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+>> +       QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+>>   };
+>>
+>>   /* Descriptor idn for Query requests */
+>> @@ -191,7 +199,7 @@ enum desc_header_offset {
+>>   };
+>>
+>>   enum ufs_desc_def_size {
+>> -       QUERY_DESC_DEVICE_DEF_SIZE              = 0x40,
+>> +       QUERY_DESC_DEVICE_DEF_SIZE              = 0x59,
+>>          QUERY_DESC_CONFIGURATION_DEF_SIZE       = 0x90,
+>>          QUERY_DESC_UNIT_DEF_SIZE                = 0x23,
+>>          QUERY_DESC_INTERCONNECT_DEF_SIZE        = 0x06,
+>> @@ -219,6 +227,7 @@ enum unit_desc_param {
+>>          UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT        = 0x18,
+>>          UNIT_DESC_PARAM_CTX_CAPABILITIES        = 0x20,
+>>          UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1      = 0x22,
+>> +       UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS      = 0x29,
+>>   };
+> We should really come up with a way to avoid this annoying habit of jedec to keep changing the descriptor sizes.
+> But this is out of scope of this patchset.
+> 
+Yeah - now I use the 0x59 as one of the checks for WB support. I guess, 
+I can just check the version to be 3.1 and if so, check for WB 
+configuration.
+
+>>
+>>   /* Device descriptor parameters offsets in bytes*/
+>> @@ -258,6 +267,10 @@ enum device_desc_param {
+>>          DEVICE_DESC_PARAM_PSA_MAX_DATA          = 0x25,
+>>          DEVICE_DESC_PARAM_PSA_TMT               = 0x29,
+>>          DEVICE_DESC_PARAM_PRDCT_REV             = 0x2A,
+>> +       DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP   = 0x4F,
+>> +       DEVICE_DESC_PARAM_WB_US_RED_EN          = 0x53,
+>> +       DEVICE_DESC_PARAM_WB_TYPE               = 0x54,
+>> +       DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS = 0x55,
+>>   };
+>>
+>>   /* Interconnect descriptor parameters offsets in bytes*/
+>> @@ -302,6 +315,11 @@ enum geometry_desc_param {
+>>          GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS  = 0x3E,
+>>          GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR   = 0x42,
+>>          GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE    = 0x44,
+>> +       GEOMETRY_DESC_PARAM_WB_MAX_ALLOC_UNITS  = 0x4F,
+>> +       GEOMETRY_DESC_PARAM_WB_MAX_WB_LUNS      = 0x53,
+>> +       GEOMETRY_DESC_PARAM_WB_BUFF_CAP_ADJ     = 0x54,
+>> +       GEOMETRY_DESC_PARAM_WB_SUP_RED_TYPE     = 0x55,
+>> +       GEOMETRY_DESC_PARAM_WB_SUP_WB_TYPE      = 0x56,
+>>   };
+>>
+>>   /* Health descriptor parameters offsets in bytes*/
+>> @@ -333,6 +351,11 @@ enum {
+>>          UFSHCD_AMP              = 3,
+>>   };
+>>
+>> +/* Possible values for dExtendedUFSFeaturesSupport */
+>> +enum {
+>> +       UFS_DEV_WRITE_BOOSTER_SUP       = BIT(8),
+>> +};
+>> +
+>>   #define POWER_DESC_MAX_SIZE                    0x62
+>>   #define POWER_DESC_MAX_ACTV_ICC_LVLS           16
+>>
+>> @@ -447,6 +470,38 @@ enum ufs_dev_pwr_mode {
+>>          UFS_POWERDOWN_PWR_MODE  = 3,
+>>   };
+>>
+>> +enum ufs_dev_wb_buf_avail_size {
+>> +       UFS_WB_0_PERCENT_BUF_REMAIN = 0x0,
+>> +       UFS_WB_10_PERCENT_BUF_REMAIN = 0x1,
+>> +       UFS_WB_20_PERCENT_BUF_REMAIN = 0x2,
+>> +       UFS_WB_30_PERCENT_BUF_REMAIN = 0x3,
+>> +       UFS_WB_40_PERCENT_BUF_REMAIN = 0x4,
+>> +       UFS_WB_50_PERCENT_BUF_REMAIN = 0x5,
+>> +       UFS_WB_60_PERCENT_BUF_REMAIN = 0x6,
+>> +       UFS_WB_70_PERCENT_BUF_REMAIN = 0x7,
+>> +       UFS_WB_80_PERCENT_BUF_REMAIN = 0x8,
+>> +       UFS_WB_90_PERCENT_BUF_REMAIN = 0x9,
+>> +       UFS_WB_100_PERCENT_BUF_REMAIN = 0xA,
+>> +};
+> Why do need all this?
+> Just define the threshold you need.
+Ok.
+
+> 
+>> +
+>> +enum ufs_dev_wb_buf_life_time_est {
+>> +       UFS_WB_0_10_PERCENT_USED = 0x1,
+>> +       UFS_WB_10_20_PERCENT_USED = 0x2,
+>> +       UFS_WB_20_30_PERCENT_USED = 0x3,
+>> +       UFS_WB_30_40_PERCENT_USED = 0x4,
+>> +       UFS_WB_40_50_PERCENT_USED = 0x5,
+>> +       UFS_WB_50_60_PERCENT_USED = 0x6,
+>> +       UFS_WB_60_70_PERCENT_USED = 0x7,
+>> +       UFS_WB_70_80_PERCENT_USED = 0x8,
+>> +       UFS_WB_80_90_PERCENT_USED = 0x9,
+>> +       UFS_WB_90_100_PERCENT_USED = 0xA,
+>> +       UFS_WB_MAX_USED = 0xB,
+>> +};
+> Here also.
+Ok.
+> 
+> 
+>> +
+>> +enum ufs_dev_wb_buf_user_cap_config {
+>> +       UFS_WB_BUFF_PRESERVE_USER_SPACE = 1,
+>> +       UFS_WB_BUFF_USER_SPACE_RED_EN = 2,
+>> +};
+>>   /**
+>>    * struct utp_cmd_rsp - Response UPIU structure
+>>    * @residual_transfer_count: Residual transfer count DW-3
+>> @@ -537,6 +592,10 @@ struct ufs_dev_info {
+>>          u8 *model;
+>>          u16 wspecversion;
+>>          u32 clk_gating_wait_us;
+>> +       u32 d_ext_ufs_feature_sup;
+>> +       u8 b_wb_buffer_type;
+>> +       bool wb_config_lun;
+>> +       bool keep_vcc_on;
+> doc please - proper struct doc this time
+I didn't understand this comment. What exactly should I change/add here?
+> 
+>>   };
+>>
+>>   /**
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index f4aa10f..4cc1fb4 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -47,6 +47,7 @@
+>>   #include "unipro.h"
+>>   #include "ufs-sysfs.h"
+>>   #include "ufs_bsg.h"
+>> +#include <linux/blkdev.h>
+>>
+>>   #define CREATE_TRACE_POINTS
+>>   #include <trace/events/ufs.h>
+>> @@ -263,6 +264,13 @@ static int ufshcd_scale_clks(struct ufs_hba *hba,
+>> bool scale_up);
+>>   static irqreturn_t ufshcd_intr(int irq, void *__hba);
+>>   static int ufshcd_change_power_mode(struct ufs_hba *hba,
+>>                               struct ufs_pa_layer_attr *pwr_mode);
+>> +static bool ufshcd_wb_sup(struct ufs_hba *hba);
+>> +static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
+>> +static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
+>> +static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
+>> +static bool ufshcd_wb_is_buf_flush_needed(struct ufs_hba *hba);
+>> +static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool
+>> set);
+>> +
+>>   static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
+>>   {
+>>          return tag >= 0 && tag < hba->nutrs;
+>> @@ -284,6 +292,38 @@ static inline void ufshcd_disable_irq(struct ufs_hba
+>> *hba)
+>>          }
+>>   }
+>>
+>> +static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba)
+>> +{
+>> +       /*
+>> +        * Query dAvailableWriteBoosterBufferSize attribute and enable
+>> +        * the Write BoosterBuffer Flush if only 30% Write Booster
+>> +        * Buffer is available.
+>> +        * In reduction case, flush only if 10% is available
+>> +        */
+>> +       if (ufshcd_wb_is_buf_flush_needed(hba))
+>> +               ufshcd_wb_buf_flush_enable(hba);
+>> +       else
+>> +               ufshcd_wb_buf_flush_disable(hba);
+>> +}
+> There are voices calling to set flush on hibernate on init, and never touch it again.
+> I think you need, both in your commit log, and here as well,
+> add a comment explaining why toggling is even needed.
+Yes - I heard those voices too :) I'll change this.
+> 
+>> +
+>> +static inline void ufshcd_wb_config(struct ufs_hba *hba)
+>> +{
+>> +       int ret;
+>> +
+>> +       if (!ufshcd_wb_sup(hba))
+>> +               return;
+>> +
+>> +       ret = ufshcd_wb_ctrl(hba, true);
+>> +       if (ret)
+>> +               dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__, ret);
+>> +       else
+>> +               dev_info(hba->dev, "%s: Write Booster Configured\n", __func__);
+>> +       ret = ufshcd_wb_toggle_flush_during_h8(hba, true);
+>> +       if (ret)
+>> +               dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
+>> +                       __func__, ret);
+>> +}
+>> +
+>>   static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
+>>   {
+>>          if (atomic_dec_and_test(&hba->scsi_block_reqs_cnt))
+>> @@ -1139,6 +1179,8 @@ static int ufshcd_devfreq_scale(struct ufs_hba
+>> *hba, bool scale_up)
+>>          }
+>>
+>>          ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
+>> +       /* Enable Write Booster if we have scaled up else disable it */
+>> +       ufshcd_wb_ctrl(hba, scale_up);
+>>
+>>   out:
+>>          ufshcd_clock_scaling_unprepare(hba);
+>> @@ -4572,6 +4614,37 @@ static int ufshcd_get_lu_wp(struct ufs_hba *hba,
+>>          return ret;
+>>   }
+>>
+>> +/*
+>> + * ufshcd_get_wb_alloc_units - returns
+>> "dLUNumWriteBoosterBufferAllocUnits"
+>> + * @hba: per-adapter instance
+>> + * @lun: UFS device lun id
+>> + * @d_lun_wbb_au: pointer to buffer to hold the LU's alloc units info
+>> + *
+>> + * Returns 0 in case of success and d_lun_wbb_au would be returned
+>> + * Returns -ENOTSUPP if reading d_lun_wbb_au is not supported.
+>> + * Returns -EINVAL in case of invalid parameters passed to this function.
+>> + */
+>> +static int ufshcd_get_wb_alloc_units(struct ufs_hba *hba,
+>> +                           u8 lun,
+>> +                           u8 *d_lun_wbb_au)
+>> +{
+>> +       int ret;
+>> +
+>> +       if (!d_lun_wbb_au)
+>> +               ret = -EINVAL;
+>> +
+>> +       /* WB can be supported only from LU0..LU7 */
+>> +       else if (lun >= UFS_UPIU_MAX_GENERAL_LUN)
+>> +               ret = -ENOTSUPP;
+>> +       else
+>> +               ret = ufshcd_read_unit_desc_param(hba,
+>> +                                         lun,
+>> +                                         UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS,
+>> +                                         d_lun_wbb_au,
+>> +                                         sizeof(*d_lun_wbb_au));
+>> +       return ret;
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_get_lu_power_on_wp_status - get LU's power on write protect
+>>    * status
+>> @@ -5194,6 +5267,165 @@ static void
+>> ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
+>>                                  __func__, err);
+>>   }
+>>
+>> +static bool ufshcd_wb_sup(struct ufs_hba *hba)
+>> +{
+>> +       return ((hba->dev_info.d_ext_ufs_feature_sup &
+>> +                  UFS_DEV_WRITE_BOOSTER_SUP) &&
+>> +                 (hba->dev_info.b_wb_buffer_type
+>> +                  || hba->dev_info.wb_config_lun));
+>> +}
+>> +
+>> +static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
+>> +{
+>> +       int ret;
+>> +       enum query_opcode opcode;
+>> +
+>> +       if (!ufshcd_wb_sup(hba))
+>> +               return 0;
+>> +
+>> +       if (enable)
+>> +               opcode = UPIU_QUERY_OPCODE_SET_FLAG;
+>> +       else
+>> +               opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
+> If already wb_enabled is enabled/disabled no point to send the query request
+True. I'll add a check before sending the query request.
+
+> 
+>> +
+>> +       ret = ufshcd_query_flag_retry(hba, opcode,
+>> +                                     QUERY_FLAG_IDN_WB_EN, NULL);
+> If we are in a non-shared-buffer mode - you need to send the flag to the applicable lun.
+> WB introduces the first not-device-level flags.
+> Need to adjust ufshcd_query_flag for it - in a preparatory patch...
+Ok. This current patch didn't support dedicated buffer mode. It 
+supported only shared-buffer mode. I'll add a comment clarifying that.
+I'll add the dedicated buffer mode support at a later stage, not with 
+this series.
+
+> 
+> Same goes to the rest of your code that query flags and attributes
+> 
+Explained in the comment above.
+>> +       if (ret) {
+>> +               dev_err(hba->dev, "%s write booster %s failed %d\n",
+>> +                       __func__, enable ? "enable" : "disable", ret);
+>> +               return ret;
+>> +       }
+>> +
+>> +       hba->wb_enabled = enable;
+>> +       dev_dbg(hba->dev, "%s write booster %s %d\n",
+>> +                       __func__, enable ? "enable" : "disable", ret);
+>> +
+>> +       return ret;
+>> +}
+>> +
+>> +static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+>> +{
+>> +       int val;
+>> +
+>> +       if (set)
+>> +               val =  UPIU_QUERY_OPCODE_SET_FLAG;
+>> +       else
+>> +               val = UPIU_QUERY_OPCODE_CLEAR_FLAG;
+>> +
+>> +       return ufshcd_query_flag_retry(hba, val,
+>> +                              QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8,
+>> +                                      NULL);
+>> +}
+>> +
+>> +static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba)
+>> +{
+>> +       int ret;
+>> +
+>> +       if (!ufshcd_wb_sup(hba) || hba->wb_buf_flush_enabled)
+>> +               return 0;
+>> +
+>> +       ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+>> +                                     QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
+>> +       if (ret)
+>> +               dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
+>> +                       __func__, ret);
+>> +       else
+>> +               hba->wb_buf_flush_enabled = true;
+>> +
+>> +       dev_dbg(hba->dev, "WB - Flush enabled: %d\n", ret);
+>> +       return ret;
+>> +}
+>> +
+>> +static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba)
+>> +{
+>> +       int ret;
+>> +
+>> +       if (!ufshcd_wb_sup(hba) || !hba->wb_buf_flush_enabled)
+>> +               return 0;
+>> +
+>> +       ret = ufshcd_query_flag_retry(hba,
+>> UPIU_QUERY_OPCODE_CLEAR_FLAG,
+>> +                                     QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
+>> +       if (ret) {
+>> +               dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
+>> +                       __func__, ret);
+>> +       } else {
+>> +               hba->wb_buf_flush_enabled = false;
+>> +               dev_dbg(hba->dev, "WB - Flush disabled: %d\n", ret);
+>> +       }
+>> +
+>> +       return ret;
+>> +}
+>> +
+>> +static bool ufshcd_wb_is_buf_flush_needed(struct ufs_hba *hba)
+>> +{
+>> +       int ret;
+>> +       u32 cur_buf, status, avail_buf;
+>> +
+>> +       if (!ufshcd_wb_sup(hba))
+>> +               return false;
+>> +
+>> +       ret = ufshcd_query_attr_retry(hba,
+>> UPIU_QUERY_OPCODE_READ_ATTR,
+>> +                                     QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE,
+>> +                                     0, 0, &avail_buf);
+>> +       if (ret) {
+>> +               dev_warn(hba->dev, "%s dAvailableWriteBoosterBufferSize read
+>> failed %d\n",
+>> +                        __func__, ret);
+>> +               return false;
+>> +       }
+>> +
+>> +       ret = ufshcd_vops_get_user_cap_mode(hba);
+>> +       if (ret <= 0) {
+>> +               dev_dbg(hba->dev, "Get user-cap reduction mode: failed: %d\n",
+>> +                       ret);
+>> +               /* Most commonly used */
+>> +               ret = UFS_WB_BUFF_PRESERVE_USER_SPACE;
+>> +       }
+> Not sure I understand how flush is related to the reduced/non-reduced buffer config?
+Its not. Current code distinguishes both the buffer configs to check for 
+current_buffer capacity (dCurrentWriteBoosterBufferSize).
+In case of user-space reduction config, there's no need to check the 
+current buffer capacity.
+> 
+>> +
+>> +       hba->dev_info.keep_vcc_on = false;
+>> +       if (ret == UFS_WB_BUFF_USER_SPACE_RED_EN) {
+>> +               if (avail_buf <= UFS_WB_10_PERCENT_BUF_REMAIN) {
+>> +                       hba->dev_info.keep_vcc_on = true;
+>> +                       return true;
+>> +               }
+>> +               return false;
+>> +       } else if (ret == UFS_WB_BUFF_PRESERVE_USER_SPACE) {
+>> +               ret = ufshcd_query_attr_retry(hba,
+>> UPIU_QUERY_OPCODE_READ_ATTR,
+>> +                                             QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE,
+>> +                                             0, 0, &cur_buf);
+>> +               if (ret) {
+>> +                       dev_err(hba->dev, "%s dCurWriteBoosterBufferSize read failed
+>> %d\n",
+>> +                                __func__, ret);
+>> +                       return false;
+>> +               }
+>> +
+>> +               if (!cur_buf) {
+>> +                       dev_info(hba->dev, "dCurWBBuf: %d WB disabled until free-
+>> space is available\n",
+>> +                                cur_buf);
+>> +                       return false;
+>> +               }
+>> +
+>> +               ret = ufshcd_get_ee_status(hba, &status);
+> Responding to urgent flush exception event, should you decide to add it,
+> Should be done as part of ufshcd_exception_event_handler, and not here.
+> 
+This code checks for the exception status because its being invoked from 
+suspend. I think its a good practice to proactively check for the ee 
+status here and keep the vcc on if the device needs it.
+
+>> +               if (ret) {
+>> +                       dev_err(hba->dev, "%s: failed to get exception status %d\n",
+>> +                               __func__, ret);
+>> +                       if (avail_buf < UFS_WB_40_PERCENT_BUF_REMAIN) {
+>> +                               hba->dev_info.keep_vcc_on = true;
+>> +                               return true;
+>> +                       }
+>> +                       return false;
+>> +               }
+>> +
+>> +               status &= hba->ee_ctrl_mask;
+>> +
+>> +               if ((status & MASK_EE_URGENT_BKOPS) ||
+>> +                   (avail_buf < UFS_WB_40_PERCENT_BUF_REMAIN)) {
+>> +                       hba->dev_info.keep_vcc_on = true;
+>> +                       return true;
+>> +               }
+>> +       }
+>> +       return false;
+> This function follow some wired logic, that needs to be further explained
+> 
+This is what it tries to achieve:
+Invoked from suspend:
+  Check the avail_buf status:
+	If preserve_user_space enabled:
+		Check for current_buf status:
+	If cur_buf == 0:
+		Return - No point enabling flush, since it can't flush
+	Check if there's a bkops exception || if the avail_buf < 40%:
+		keep_vcc_on = true
+This is to achieve the delicate balance between power and performance.
+
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_exception_event_handler - handle exceptions raised by device
+>>    * @work: pointer to work data
+>> @@ -6629,7 +6861,8 @@ static int ufs_get_device_desc(struct ufs_hba
+>> *hba)
+>>          int err;
+>>          size_t buff_len;
+>>          u8 model_index;
+>> -       u8 *desc_buf;
+>> +       u8 *desc_buf, wb_buf[4];
+>> +       u32 lun, res;
+>>          struct ufs_dev_info *dev_info = &hba->dev_info;
+>>
+>>          buff_len = max_t(size_t, hba->desc_size.dev_desc,
+>> @@ -6660,6 +6893,40 @@ static int ufs_get_device_desc(struct ufs_hba
+>> *hba)
+>>                                        desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
+>>
+>>          model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+>> +       /* Enable WB only for UFS-3.1 OR if desc len >= 0x59 */
+>> +       if (dev_info->wspecversion >= 0x310) {
+>> +               hba->dev_info.d_ext_ufs_feature_sup =
+>> +                       desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP]
+>> +                                                               << 24 |
+>> +                       desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 1]
+>> +                                                               << 16 |
+>> +                       desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 2]
+>> +                                                               << 8 |
+>> +                       desc_buf[DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 3];
+>> +
+>> +               hba->dev_info.b_wb_buffer_type =
+>> +                       desc_buf[DEVICE_DESC_PARAM_WB_TYPE];
+>> +
+>> +               if (hba->dev_info.b_wb_buffer_type)
+>> +                       goto skip_unit_desc;
+> Comment please, e.g.:
+> /* bWriteBoosterBufferType indicates that the WB buffer is configured as a shared buffer mode */
+> And instead the goto pack iterating the unit descriptors in a helper?Sure. I'll try and rework and reword this.
+
+> 
+>> +
+>> +               hba->dev_info.wb_config_lun = false;
+>> +               for (lun = 0; lun < UFS_UPIU_MAX_GENERAL_LUN; lun++) {
+>> +                       memset(wb_buf, 0, sizeof(wb_buf));
+>> +                       err = ufshcd_get_wb_alloc_units(hba, lun, wb_buf);
+>> +                       if (err)
+>> +                               break;
+>> +
+>> +                       res = wb_buf[0] << 24 | wb_buf[1] << 16 |
+>> +                               wb_buf[2] << 8 | wb_buf[3];
+>> +                       if (res) {
+>> +                               hba->dev_info.wb_config_lun = true;
+>> +                               break;
+> Maybe you want to be aware which luns has a WB buffer, and of its WB buffer size.
+> And as the clock scaling mechanism is unware of which writes goes to which lun,
+> Explain that as well.
+> 
+This series doesn't support per lun WB buffer configuration.
+But yes, I can explain that here.
+
+>> +                       }
+>> +               }
+>> +       }
+>> +
+>> +skip_unit_desc:
+>>          err = ufshcd_read_string_desc(hba, model_index,
+>>                                        &dev_info->model, SD_ASCII_STD);
+>>          if (err < 0) {
+>> @@ -7162,6 +7429,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
+>> bool async)
+>>
+>>          /* set the state as operational after switching to desired gear */
+>>          hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+>> +       ufshcd_wb_config(hba);
+> Enabling WB regardless of clock scaling on init?
+> Why not just ufshcd_wb_toggle_flush_during_h8()
+I'll look into this. Thanks!
+
+> 
+>>
+>>          /* Enable Auto-Hibernate if configured */
+>>          ufshcd_auto_hibern8_enable(hba);
+>> @@ -7823,12 +8091,16 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba
+>> *hba)
+>>           *
+>>           * Ignore the error returned by ufshcd_toggle_vreg() as device is anyway
+>>           * in low power state which would save some power.
+>> +        *
+>> +        * If Write Booster is enabled and the device needs to flush the WB
+>> +        * buffer OR if bkops status is urgent for WB, keep Vcc on.
+> I am not sure that you want to entail WB and bkops together in the same patch.
+> If you are changing the logic of this function with respect of bkops -
+> Do that In a separate patch, not related to WB.
+> 
+I think it's kinda related, with WB some of the device's bkops would be 
+related to WB as well. Can you please confirm to me if that's not the case.
+I was told that's the case though.
+
+>>           */
+>>          if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba) &&
+>>              !hba->dev_info.is_lu_power_on_wp) {
+>>                  ufshcd_setup_vreg(hba, false);
+>>          } else if (!ufshcd_is_ufs_dev_active(hba)) {
+>> -               ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
+>> +               if (!hba->dev_info.keep_vcc_on)
+>> +                       ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
+>>                  if (!ufshcd_is_link_active(hba)) {
+>>                          ufshcd_config_vreg_lpm(hba, hba->vreg_info.vccq);
+>>                          ufshcd_config_vreg_lpm(hba, hba->vreg_info.vccq2);
+>> @@ -7952,11 +8224,16 @@ static int ufshcd_suspend(struct ufs_hba *hba,
+>> enum ufs_pm_op pm_op)
+>>                          /* make sure that auto bkops is disabled */
+>>                          ufshcd_disable_auto_bkops(hba);
+>>                  }
+>> +               ufshcd_wb_toggle_flush(hba);
+>> +       } else if (!ufshcd_is_runtime_pm(pm_op)) {
+>> +               ufshcd_wb_buf_flush_disable(hba);
+>> +               hba->dev_info.keep_vcc_on = false;
+>>          }
+>>
+>>          if ((req_dev_pwr_mode != hba->curr_dev_pwr_mode) &&
+>> -            ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
+>> -              !ufshcd_is_runtime_pm(pm_op))) {
+>> +           ((ufshcd_is_runtime_pm(pm_op) && (!hba->auto_bkops_enabled)
+>> +             && !hba->wb_buf_flush_enabled) ||
+>> +            !ufshcd_is_runtime_pm(pm_op))) {
+>>                  /* ensure that bkops is disabled */
+>>                  ufshcd_disable_auto_bkops(hba);
+>>                  ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
+>> @@ -8078,6 +8355,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
+>> enum ufs_pm_op pm_op)
+>>                          goto vendor_suspend;
+>>          }
+>>
+>> +       ufshcd_wb_buf_flush_disable(hba);
+>>          if (!ufshcd_is_ufs_dev_active(hba)) {
+>>                  ret = ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);
+>>                  if (ret)
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 8f516b2..6f36ff3 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -327,6 +327,7 @@ struct ufs_hba_variant_ops {
+>>          void    (*dbg_register_dump)(struct ufs_hba *hba);
+>>          int     (*phy_initialization)(struct ufs_hba *);
+>>          void    (*device_reset)(struct ufs_hba *hba);
+>> +       u32     (*get_user_cap_mode)(struct ufs_hba *hba);
+> Make the name indicate that this is WB related?
+> 
+Ok.
+>>   };
+>>
+>>   /* clock gating state  */
+>> @@ -731,6 +732,8 @@ struct ufs_hba {
+>>
+>>          struct device           bsg_dev;
+>>          struct request_queue    *bsg_queue;
+>> +       bool wb_buf_flush_enabled;
+>> +       bool wb_enabled;
+>>   };
+>>
+>>   /* Returns true if clocks can be gated. Otherwise false */
+>> @@ -1123,4 +1126,10 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned
+>> int scsi_lun)
+>>   int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+>>                       const char *prefix);
+>>
+>> +static inline unsigned int ufshcd_vops_get_user_cap_mode(struct ufs_hba
+>> *hba)
+>> +{
+>> +       if (hba->vops && hba->vops->get_user_cap_mode)
+>> +               return hba->vops->get_user_cap_mode(hba);
+>> +       return 0;
+>> +}
+>>   #endif /* End of Header */
+>> --
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+>> Linux Foundation Collaborative Project.
+> 
+> 
+> Thanks,
+> Avri
+> 
 
 
->
-> Reviewed-by: Laurence Oberman <loberman@redhat.com>
-> Tested-by:   Laurence Oberman <loberman@redhat.com>
->
-> Thanks very much
-> Laurence
->
->
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
