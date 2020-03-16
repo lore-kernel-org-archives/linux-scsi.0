@@ -2,186 +2,220 @@ Return-Path: <SRS0=JOtj=5D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8357C5ACD6
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 11:18:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC07BC10DCE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 18:22:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8EBC20784
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 11:18:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="jE/y5/rr"
+	by mail.kernel.org (Postfix) with ESMTP id D528D2077E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 18:22:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727813AbgCRLSL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Mar 2020 07:18:11 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:46618 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727794AbgCRLSI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 07:18:08 -0400
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200318111806epoutp01ab6f5e474e1e771e402b90c198c122a6~9YeaTyTxQ2379423794epoutp01X
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2020 11:18:06 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200318111806epoutp01ab6f5e474e1e771e402b90c198c122a6~9YeaTyTxQ2379423794epoutp01X
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1584530286;
-        bh=QSwap29dffjiAFMYZwi5uQktsX9rEC0TxACpkot0PIU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jE/y5/rrhtRzRri2B6KJUMiz9y+UeOyGBGjESBbfg7NKuBnbLelPzoeO/uPBE7vfL
-         hg1pJtR07n/MAU6sC6Jj2gCFjwxxv6SzaVrEqmPGaekYSOmbKsBewmVFt2P5Zhd8BE
-         YD7yqOvE1vU5jLD0YTDm9yI81/2GCDfOBJ9mGpoQ=
-Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20200318111805epcas5p1f6310151d1e5b6fddbda3c901e790e80~9YeZfPmPb3101931019epcas5p1Y;
-        Wed, 18 Mar 2020 11:18:05 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        84.4C.04782.D63027E5; Wed, 18 Mar 2020 20:18:05 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200318111805epcas5p3e68724d923a07ddd80a45e3316292940~9YeZK2i4_1474914749epcas5p38;
-        Wed, 18 Mar 2020 11:18:05 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200318111805epsmtrp26a258907d0da3a0d87085279c4fb4acd~9YeZJ5e7Z3128231282epsmtrp2x;
-        Wed, 18 Mar 2020 11:18:05 +0000 (GMT)
-X-AuditID: b6c32a49-89bff700000012ae-eb-5e72036d85e8
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FD.AD.04158.D63027E5; Wed, 18 Mar 2020 20:18:05 +0900 (KST)
-Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
-        [107.108.73.139]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200318111803epsmtip2cf132877222eaf72216367fd9edd656b~9YeXbqW7A0257602576epsmtip2e;
-        Wed, 18 Mar 2020 11:18:03 +0000 (GMT)
-From:   Alim Akhtar <alim.akhtar@samsung.com>
-To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v2 1/5] dt-bindings: phy: Document Samsung UFS PHY bindings
-Date:   Wed, 18 Mar 2020 16:41:40 +0530
-Message-Id: <20200318111144.39525-2-alim.akhtar@samsung.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200318111144.39525-1-alim.akhtar@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprIKsWRmVeSWpSXmKPExsWy7bCmlm4uc1GcwZcWU4sH87axWbz8eZXN
-        4tP6ZawW84+cY7U4f34Du8XNLUdZLDY9vsZqcXnXHDaLGef3MVl0X9/BZrH8+D8mi9a9R9gt
-        lm69yejA63G5r5fJY9OqTjaPzUvqPVpO7mfx+Pj0FotH35ZVjB6fN8l5tB/oZgrgiOKySUnN
-        ySxLLdK3S+DKeLRvC3PBRf6KD6svsTQw/ufuYuTkkBAwkVg54RdzFyMXh5DAbkaJTRuOMUE4
-        nxglnqycwAJSJSTwjVHi8HVvmI4TN6+zQhTtZZS4cesjO4TTwiTx4O55ZpAqNgFtibvTtzCB
-        2CICARKX3h9kAyliFpjHJLHoUQ9YQljAW6J962+wFSwCqhJNfRvAmnkFbCQeHbjDArFOXmL1
-        hgNgcU4BW4m/d1sZQQZJCNxnk1j5bw4bRJGLxO0PR5khbGGJV8e3sEPYUhKf3+0FquEAsrMl
-        enYZQ4RrJJbOOwY1317iwJU5LCAlzAKaEut36YOEmQX4JHp/P2GC6OSV6GgTgqhWlWh+dxWq
-        U1piYnc3K4TtIfHozQFoME5glDi26zT7BEbZWQhTFzAyrmKUTC0ozk1PLTYtMMxLLdcrTswt
-        Ls1L10vOz93ECE4oWp47GGed8znEKMDBqMTDy7GhIE6INbGsuDL3EKMEB7OSCO/iwvw4Id6U
-        xMqq1KL8+KLSnNTiQ4zSHCxK4ryTWK/GCAmkJ5akZqemFqQWwWSZODilGhgXOPjodTp7ZO8N
-        ZeV3k36o1fB9i/6y2m+S/7/dVmPzyXm1g/3xr5cB0e4y5oIWQgpee8462iwzU+5pkJnbsHOu
-        TGX8MRu7bU1Tdsha237KmD+74FDw/c45u9l3rTncMD3D+l3woguvPk570clneOH7JG7BBRmp
-        UwX4/7T85OBWXbLqz4XQlDtKLMUZiYZazEXFiQBKruV5JAMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrILMWRmVeSWpSXmKPExsWy7bCSvG4uc1GcwdYZChYP5m1js3j58yqb
-        xaf1y1gt5h85x2px/vwGdoubW46yWGx6fI3V4vKuOWwWM87vY7Lovr6DzWL58X9MFq17j7Bb
-        LN16k9GB1+NyXy+Tx6ZVnWwem5fUe7Sc3M/i8fHpLRaPvi2rGD0+b5LzaD/QzRTAEcVlk5Ka
-        k1mWWqRvl8CV8WjfFuaCi/wVH1ZfYmlg/M/dxcjJISFgInHi5nXWLkYuDiGB3YwSv89cZINI
-        SEtc3ziBHcIWllj57zk7RFETk8TvjmdMIAk2AW2Ju9O3gNkiAkES99asBZvELLCKSaKz9ywj
-        SEJYwFuifetvFhCbRUBVoqlvAzOIzStgI/HowB0WiA3yEqs3HACLcwrYSvy92wrWKwRUc2zy
-        L5YJjHwLGBlWMUqmFhTnpucWGxYY5aWW6xUn5haX5qXrJefnbmIEB7SW1g7GEyfiDzEKcDAq
-        8fAmbCqIE2JNLCuuzD3EKMHBrCTCu7gwP06INyWxsiq1KD++qDQntfgQozQHi5I4r3z+sUgh
-        gfTEktTs1NSC1CKYLBMHp1QDY5ewtTB/pe3RnTbbTpQcqHz7k6+7qdinNkbkTcRxjv99mREf
-        01z3Hdt3Trp0+aId3d6Fni8ZxPtYF8xn6WG+nzBDrpw3SebSuha5JoO1Jedf3v6SmK36hTNi
-        sqDB8g6nvtt/0vb/nRW3SL6354+Ne6aUXUlnZcv8hb6HWPpNpwgdKBR2N+xUYinOSDTUYi4q
-        TgQAr9/R/2QCAAA=
-X-CMS-MailID: 20200318111805epcas5p3e68724d923a07ddd80a45e3316292940
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200318111805epcas5p3e68724d923a07ddd80a45e3316292940
-References: <20200318111144.39525-1-alim.akhtar@samsung.com>
-        <CGME20200318111805epcas5p3e68724d923a07ddd80a45e3316292940@epcas5p3.samsung.com>
+        id S1726930AbgCRSWQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Mar 2020 14:22:16 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:11629 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726735AbgCRSWQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 14:22:16 -0400
+IronPort-SDR: PtQYAqYmSU0V13VozZJzT3/D/k3Aw4DWrLHK9jvJkfDjc7Uk3homh3/D233H7+zWukP/i0yQKL
+ wp/+b68cT7IFCY38LwOmf1gwPpR8cnMHcgIzjLAbe//7kaVpbnS4xtArEuE7JhZZaX9g2rYbtx
+ cOZWUXGZkvFoFmSfrF2hQi7wRmUwSTcNsIB28g9c9J9L/Dekjuu0TSwiqAb6HuutnC5F6qW3iU
+ yHzocVmXAsSGvKRiqwL15u0/S+I1fN0VxBbaPPBmP5TV64ejczCwQ47DCSau5WTT/Ra6MkYzcu
+ /Z0=
+X-IronPort-AV: E=Sophos;i="5.70,559,1574150400"; 
+   d="scan'208";a="46713605"
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by labrats.qualcomm.com with ESMTP; 16 Mar 2020 00:06:27 -0700
+Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
+  by ironmsg01-sd.qualcomm.com with ESMTP; 16 Mar 2020 00:06:25 -0700
+Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
+        id CC1EC3A63; Mon, 16 Mar 2020 00:06:25 -0700 (PDT)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 1/2] scsi: ufs: Clean up ufshcd_scale_clks() and clock scaling error out path
+Date:   Mon, 16 Mar 2020 00:06:10 -0700
+Message-Id: <1584342373-10282-2-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1584342373-10282-1-git-send-email-cang@codeaurora.org>
+References: <1584342373-10282-1-git-send-email-cang@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch documents Samsung UFS PHY device tree bindings
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
----
- .../bindings/phy/samsung,ufs-phy.yaml         | 62 +++++++++++++++++++
- 1 file changed, 62 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+This change introduces a func ufshcd_set_clk_freq() to explicitly
+set clock frequency so that it can be used in reset_and_resotre path and
+in ufshcd_scale_clks(). Meanwhile, this change cleans up the clock scaling
+error out path.
 
-diff --git a/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-new file mode 100644
-index 000000000000..df54129004e9
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-@@ -0,0 +1,62 @@
-+# SPDX-License-Identifier: (GPL-2.0)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/phy/samsung,ufs-phy.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2a2a63b..63aaa88f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -855,28 +855,29 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
+ 		return false;
+ }
+ 
+-static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
++/**
++ * ufshcd_set_clk_freq - set UFS controller clock frequencies
++ * @hba: per adapter instance
++ * @scale_up: If True, set max possible frequency othewise set low frequency
++ *
++ * Returns 0 if successful
++ * Returns < 0 for any other errors
++ */
++static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+ {
+ 	int ret = 0;
+ 	struct ufs_clk_info *clki;
+ 	struct list_head *head = &hba->clk_list_head;
+-	ktime_t start = ktime_get();
+-	bool clk_state_changed = false;
+ 
+ 	if (list_empty(head))
+ 		goto out;
+ 
+-	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
+-	if (ret)
+-		return ret;
+-
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
+ 			if (scale_up && clki->max_freq) {
+ 				if (clki->curr_freq == clki->max_freq)
+ 					continue;
+ 
+-				clk_state_changed = true;
+ 				ret = clk_set_rate(clki->clk, clki->max_freq);
+ 				if (ret) {
+ 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+@@ -895,7 +896,6 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 				if (clki->curr_freq == clki->min_freq)
+ 					continue;
+ 
+-				clk_state_changed = true;
+ 				ret = clk_set_rate(clki->clk, clki->min_freq);
+ 				if (ret) {
+ 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+@@ -914,13 +914,36 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 				clki->name, clk_get_rate(clki->clk));
+ 	}
+ 
++out:
++	return ret;
++}
 +
-+title: Samsung SoC series UFS PHY Device Tree Bindings
++/**
++ * ufshcd_scale_clks - scale up or scale down UFS controller clocks
++ * @hba: per adapter instance
++ * @scale_up: True if scaling up and false if scaling down
++ *
++ * Returns 0 if successful
++ * Returns < 0 for any other errors
++ */
++static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
++{
++	int ret = 0;
 +
-+maintainers:
-+  - Alim Akhtar <alim.akhtar@samsung.com>
++	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
++	if (ret)
++		return ret;
 +
-+properties:
-+  "#phy-cells":
-+    const: 0
++	ret = ufshcd_set_clk_freq(hba, scale_up);
++	if (ret)
++		return ret;
 +
-+  compatible:
-+    enum:
-+      - samsung,exynos7-ufs-phy
-+
-+  reg:
-+    maxItems: 1
-+    description: PHY base register address
-+
-+  reg-names:
-+    items:
-+      - const: phy-pma
-+
-+  clocks:
-+    items:
-+      - description: PLL reference clock
-+      - description: Referencec clock parrent
-+
-+  clock-names:
-+    items:
-+      - const: ref_clk_parent
-+      - const: ref_clk
-+
-+required:
-+  - "#phy-cells"
-+  - compatible
-+  - reg
-+  - reg-names
-+  - clocks
-+  - clock-names
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/exynos7-clk.h>
-+
-+    ufs_phy: ufs-phy@0x15571800 {
-+        compatible = "samsung,exynos7-ufs-phy";
-+        reg = <0x15571800 0x240>;
-+        reg-names = "phy-pma";
-+        samsung,pmu-syscon = <&pmu_system_controller>;
-+        #phy-cells = <0>;
-+        clocks = <&clock_fsys1 MOUT_FSYS1_PHYCLK_SEL1>,
-+                 <&clock_top1 CLK_SCLK_PHY_FSYS1_26M>;
-+        clock-names = "ref_clk_parent",
-+                      "ref_clk";
-+    };
-+
-+...
+ 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
++	if (ret) {
++		ufshcd_set_clk_freq(hba, !scale_up);
++		return ret;
++	}
+ 
+-out:
+-	if (clk_state_changed)
+-		trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
+-			(scale_up ? "up" : "down"),
+-			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+ 	return ret;
+ }
+ 
+@@ -1106,35 +1129,36 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 
+ 	ret = ufshcd_clock_scaling_prepare(hba);
+ 	if (ret)
+-		return ret;
++		goto out;
+ 
+ 	/* scale down the gear before scaling down clocks */
+ 	if (!scale_up) {
+ 		ret = ufshcd_scale_gear(hba, false);
+ 		if (ret)
+-			goto out;
++			goto clk_scaling_unprepare;
+ 	}
+ 
+ 	ret = ufshcd_scale_clks(hba, scale_up);
+-	if (ret) {
+-		if (!scale_up)
+-			ufshcd_scale_gear(hba, true);
+-		goto out;
+-	}
++	if (ret)
++		goto scale_up_gear;
+ 
+ 	/* scale up the gear after scaling up clocks */
+ 	if (scale_up) {
+ 		ret = ufshcd_scale_gear(hba, true);
+ 		if (ret) {
+ 			ufshcd_scale_clks(hba, false);
+-			goto out;
++			goto clk_scaling_unprepare;
+ 		}
+ 	}
+ 
+-	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
++	goto clk_scaling_unprepare;
+ 
+-out:
++scale_up_gear:
++	if (!scale_up)
++		ufshcd_scale_gear(hba, true);
++clk_scaling_unprepare:
+ 	ufshcd_clock_scaling_unprepare(hba);
++out:
+ 	ufshcd_release(hba);
+ 	return ret;
+ }
+@@ -6251,7 +6275,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	/* scale up clocks to max frequency before full reinitialization */
+-	ufshcd_scale_clks(hba, true);
++	ufshcd_set_clk_freq(hba, true);
+ 
+ 	err = ufshcd_hba_enable(hba);
+ 	if (err)
 -- 
-2.17.1
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
