@@ -2,83 +2,184 @@ Return-Path: <SRS0=cHy8=5B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E5AC3F2CE
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 08:53:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61437C0044D
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 08:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19CB820719
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 08:53:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 220B02071C
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 08:57:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="owCX1E0+"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="KQmPVVAk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730263AbgCPIxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Mar 2020 04:53:14 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:1469 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730131AbgCPIxO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2020 04:53:14 -0400
-X-UUID: 074085e7c02947b4a58726eba5f43dfe-20200316
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Pe2ICmxiDGZfXw8Ju8bu2oy7yN84cTxQ4OAqo9x25H8=;
-        b=owCX1E0+QaZZ9JzzjJR0CXeiGkDPkdRE3+nX35TGNeJZsNhF7CjPp6g7fEwOoiWHt/qWS5dB+vuFfSs7NIBs3+NLA8plRQjNX3h6Y/67w4XFPGXwxkb+sz0NIbII1roZ9UP9U3i+2qwjPor6p/ZTTRLOTZ9+EtVDmAFbRNmVYpM=;
-X-UUID: 074085e7c02947b4a58726eba5f43dfe-20200316
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1666673453; Mon, 16 Mar 2020 16:53:07 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 16 Mar 2020 16:50:13 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 16 Mar 2020 16:53:52 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.peter~sen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v6 1/7] scsi: ufs: fix uninitialized tx_lanes in ufshcd_disable_tx_lcc()
-Date:   Mon, 16 Mar 2020 16:52:57 +0800
-Message-ID: <20200316085303.20350-2-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20200316085303.20350-1-stanley.chu@mediatek.com>
-References: <20200316085303.20350-1-stanley.chu@mediatek.com>
+        id S1730247AbgCPI5L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Mar 2020 04:57:11 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:36208 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730152AbgCPI5K (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Mar 2020 04:57:10 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1584349029; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=ijq3uor9SMJb3ExZBsPo87hwudJNjl8YhdOh+sCNnWA=;
+ b=KQmPVVAkFqnuXQR1/vIqhLmiYOQOlpWfxKG0/ErcyD+/PTo4hwZyiDa2wpB8e3LAzsDwFeH+
+ XF5wCMxZu+ioXaF1O2BEqdDb31/wO9M6SFZvd1Rf71MpBi6XmH51I8AKAjoFPsQYRyIgcYoJ
+ lP3Z5RNx5jFxx2Rve0MX1Y2JxbE=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e6f3f56.7fe344735f80-smtp-out-n04;
+ Mon, 16 Mar 2020 08:56:54 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6E05EC4478F; Mon, 16 Mar 2020 08:56:52 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 37B92C433CB;
+        Mon, 16 Mar 2020 08:56:51 +0000 (UTC)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: F3751F886D718EC3FA56A4ABBA8D56BA2D38AB9B8567EA112E77272E6AD0D5362000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 16 Mar 2020 16:56:51 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, martin.peter~sen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        beanhuo@micron.com, asutoshd@codeaurora.org,
+        matthias.bgg@gmail.com, bvanassche@acm.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
+Subject: Re: [PATCH v6 3/7] scsi: ufs: introduce common delay function
+In-Reply-To: <20200316085303.20350-4-stanley.chu@mediatek.com>
+References: <20200316085303.20350-1-stanley.chu@mediatek.com>
+ <20200316085303.20350-4-stanley.chu@mediatek.com>
+Message-ID: <19f7e050d992c67e363d6d582393c5a0@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SW4gdWZzaGNkX2Rpc2FibGVfdHhfbGNjKCksIGlmIHVmc2hjZF9kbWVfZ2V0KCkgb3IgdWZzaGNk
-X2RtZV9wZWVyX2dldCgpDQpnZXQgZmFpbCwgdW5pbml0aWFsaXplZCB2YXJpYWJsZSAidHhfbGFu
-ZXMiIG1heSBiZSB1c2VkIGFzIHVuZXhwZWN0ZWQgbGFuZQ0KSUQgZm9yIERNRSBjb25maWd1cmF0
-aW9uLg0KDQpGaXggdGhpcyBpc3N1ZSBieSBpbml0aWFsaXppbmcgInR4X2xhbmVzIi4NCg0KU2ln
-bmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1lZGlhdGVrLmNvbT4NClJldmll
-d2VkLWJ5OiBBc3V0b3NoIERhcyA8YXN1dG9zaGRAY29kZWF1cm9yYS5vcmc+DQpSZXZpZXdlZC1i
-eTogQXZyaSBBbHRtYW4gPGF2cmkuYWx0bWFuQHdkYy5jb20+DQpSZXZpZXdlZC1ieTogQ2FuIEd1
-byA8Y2FuZ0Bjb2RlYXVyb3JhLm9yZz4NCi0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMg
-fCAyICstDQogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pDQoN
-CmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vm
-cy91ZnNoY2QuYw0KaW5kZXggNTY5OGYxMTY0YTVlLi4zMTRlODA4YjBkNGUgMTAwNjQ0DQotLS0g
-YS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
-ZC5jDQpAQCAtNDMxNSw3ICs0MzE1LDcgQEAgRVhQT1JUX1NZTUJPTF9HUEwodWZzaGNkX2hiYV9l
-bmFibGUpOw0KIA0KIHN0YXRpYyBpbnQgdWZzaGNkX2Rpc2FibGVfdHhfbGNjKHN0cnVjdCB1ZnNf
-aGJhICpoYmEsIGJvb2wgcGVlcikNCiB7DQotCWludCB0eF9sYW5lcywgaSwgZXJyID0gMDsNCisJ
-aW50IHR4X2xhbmVzID0gMCwgaSwgZXJyID0gMDsNCiANCiAJaWYgKCFwZWVyKQ0KIAkJdWZzaGNk
-X2RtZV9nZXQoaGJhLCBVSUNfQVJHX01JQihQQV9DT05ORUNURURUWERBVEFMQU5FUyksDQotLSAN
-CjIuMTguMA0K
+On 2020-03-16 16:52, Stanley Chu wrote:
+> Introduce common delay function to collect all delay requirements
+> to simplify driver and take choices of udelay and usleep_range into
+> consideration.
+> 
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
 
+Reviewed-by: Can Guo <cang@codeaurora.org>
+
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 27 ++++++++++++++++++---------
+>  drivers/scsi/ufs/ufshcd.h |  1 +
+>  2 files changed, 19 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 314e808b0d4e..9fea346f7d22 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -597,6 +597,18 @@ static void ufshcd_print_pwr_info(struct ufs_hba 
+> *hba)
+>  		 hba->pwr_info.hs_rate);
+>  }
+> 
+> +void ufshcd_wait_us(unsigned long us, unsigned long tolerance, bool 
+> can_sleep)
+> +{
+> +	if (!us)
+> +		return;
+> +
+> +	if (us < 10 || !can_sleep)
+> +		udelay(us);
+> +	else
+> +		usleep_range(us, us + tolerance);
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_wait_us);
+> +
+>  /*
+>   * ufshcd_wait_for_register - wait for register value to change
+>   * @hba - per-adapter interface
+> @@ -620,10 +632,7 @@ int ufshcd_wait_for_register(struct ufs_hba *hba,
+> u32 reg, u32 mask,
+>  	val = val & mask;
+> 
+>  	while ((ufshcd_readl(hba, reg) & mask) != val) {
+> -		if (can_sleep)
+> -			usleep_range(interval_us, interval_us + 50);
+> -		else
+> -			udelay(interval_us);
+> +		ufshcd_wait_us(interval_us, 50, can_sleep);
+>  		if (time_after(jiffies, timeout)) {
+>  			if ((ufshcd_readl(hba, reg) & mask) != val)
+>  				err = -ETIMEDOUT;
+> @@ -3565,7 +3574,7 @@ static inline void
+> ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
+>  	}
+> 
+>  	/* allow sleep for extra 50us if needed */
+> -	usleep_range(min_sleep_time_us, min_sleep_time_us + 50);
+> +	ufshcd_wait_us(min_sleep_time_us, 50, true);
+>  }
+> 
+>  /**
+> @@ -4289,7 +4298,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
+>  	 * instruction might be read back.
+>  	 * This delay can be changed based on the controller.
+>  	 */
+> -	usleep_range(1000, 1100);
+> +	ufshcd_wait_us(1000, 100, true);
+> 
+>  	/* wait for the host controller to complete initialization */
+>  	retry = 10;
+> @@ -4301,7 +4310,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
+>  				"Controller enable failed\n");
+>  			return -EIO;
+>  		}
+> -		usleep_range(5000, 5100);
+> +		ufshcd_wait_us(5000, 100, true);
+>  	}
+> 
+>  	/* enable UIC related interrupts */
+> @@ -6224,7 +6233,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>  			reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>  			if (reg & (1 << tag)) {
+>  				/* sleep for max. 200us to stabilize */
+> -				usleep_range(100, 200);
+> +				ufshcd_wait_us(100, 100, true);
+>  				continue;
+>  			}
+>  			/* command completed already */
+> @@ -7786,7 +7795,7 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba 
+> *hba)
+>  	 */
+>  	if (!ufshcd_is_link_active(hba) &&
+>  	    hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM)
+> -		usleep_range(2000, 2100);
+> +		ufshcd_wait_us(2000, 100, true);
+> 
+>  	/*
+>  	 * If UFS device is either in UFS_Sleep turn off VCC rail to save 
+> some
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 52425371082a..842f0223f5e5 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -792,6 +792,7 @@ int ufshcd_init(struct ufs_hba * , void __iomem *
+> , unsigned int);
+>  int ufshcd_make_hba_operational(struct ufs_hba *hba);
+>  void ufshcd_remove(struct ufs_hba *);
+>  int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+> +void ufshcd_wait_us(unsigned long us, unsigned long tolerance, bool 
+> can_sleep);
+>  int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+>  				u32 val, unsigned long interval_us,
+>  				unsigned long timeout_ms, bool can_sleep);
