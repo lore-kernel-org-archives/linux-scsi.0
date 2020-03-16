@@ -2,81 +2,105 @@ Return-Path: <SRS0=cHy8=5B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B70C3F2CE
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79523C1975A
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:10:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5373820658
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:08:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50B0E2071C
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Mar 2020 07:10:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="BpGDmAXQ"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="exWBVc2r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729861AbgCPHIT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Mar 2020 03:08:19 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:45759 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728302AbgCPHIT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Mar 2020 03:08:19 -0400
-X-UUID: 8a90e77ca46c45f0900eeb67382c4134-20200316
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=dau95JaNBGsRunTGBlpYGDM3JLIWHp3+4y4tNiux/2U=;
-        b=BpGDmAXQShE3p/Mx8LKdOiQqUicz4QnmplojYZIxOeNrkR811wDSTmULr7hR3BaU6XsbhvpfEfDFXbgQgRBSivkElfFnZPEq1JfZMcyuSZCfrq8YplhJslOemcJOGinVkbCxZmWGi9OHWMXY7oaeda19he2Lv1JE/i9ViCW+mLU=;
-X-UUID: 8a90e77ca46c45f0900eeb67382c4134-20200316
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1014602838; Mon, 16 Mar 2020 15:08:13 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 16 Mar 2020 15:05:15 +0800
-Received: from [172.21.84.99] (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 16 Mar 2020 15:07:28 +0800
-Message-ID: <1584342487.14250.11.camel@mtksdccf07>
+        id S1729827AbgCPHKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Mar 2020 03:10:01 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:34278 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729776AbgCPHKB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Mar 2020 03:10:01 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1584342600; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=KJZiL0sdohMQeVpJmkN38lZ6qU33N/oMM0pvgkF9gnc=;
+ b=exWBVc2rvsptixYx81mXjnzIUSsYxXbOki4OtT8fPNSy22G1YZofY058j73321qWtMNYn02s
+ RI1hYFGeUnDkyncpuF01gye5jifXF9LX+/5n3q4vUNSTj4TwgIFkp9Fw+475uRhv0FC1jByR
+ SJJv+Hay2uwIM+yvUjxzXXfUEA4=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e6f2647.7fec271ead18-smtp-out-n02;
+ Mon, 16 Mar 2020 07:09:59 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 3E808C44792; Mon, 16 Mar 2020 07:09:57 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5390EC433D2;
+        Mon, 16 Mar 2020 07:09:56 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 16 Mar 2020 15:09:56 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     bvanassche@acm.org, linux-scsi@vger.kernel.org,
+        andy.teng@mediatek.com, jejb@linux.ibm.com,
+        chun-hung.wu@mediatek.com, kuohong.wang@mediatek.com,
+        linux-kernel@vger.kernel.org, avri.altman@wdc.com,
+        martin.peter~sen@oracle.com, linux-mediatek@lists.infradead.org,
+        peter.wang@mediatek.com, alim.akhtar@samsung.com,
+        matthias.bgg@gmail.com, asutoshd@codeaurora.org,
+        linux-arm-kernel@lists.infradead.org, beanhuo@micron.com
 Subject: Re: [PATCH v5 2/8] scsi: ufs: remove init_prefetch_data in struct
  ufs_hba
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <andy.teng@mediatek.com>, <jejb@linux.ibm.com>,
-        <chun-hung.wu@mediatek.com>, <kuohong.wang@mediatek.com>,
-        <linux-kernel@vger.kernel.org>, <avri.altman@wdc.com>,
-        <martin.peter~sen@oracle.com>,
-        <linux-mediatek@lists.infradead.org>, <peter.wang@mediatek.com>,
-        <alim.akhtar@samsung.com>, <matthias.bgg@gmail.com>,
-        <asutoshd@codeaurora.org>, <linux-arm-kernel@lists.infradead.org>,
-        <beanhuo@micron.com>
-Date:   Mon, 16 Mar 2020 15:08:07 +0800
-In-Reply-To: <51fde835f4f03fcca6e83ba6d3579f2e@codeaurora.org>
+In-Reply-To: <1584342487.14250.11.camel@mtksdccf07>
 References: <20200316034218.11914-1-stanley.chu@mediatek.com>
-         <20200316034218.11914-3-stanley.chu@mediatek.com>
-         <51fde835f4f03fcca6e83ba6d3579f2e@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-MIME-Version: 1.0
-X-TM-SNTS-SMTP: 91130EEECD614F04B26B8D968427210292287D7953CE94BE6ED417119E909D972000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+ <20200316034218.11914-3-stanley.chu@mediatek.com>
+ <51fde835f4f03fcca6e83ba6d3579f2e@codeaurora.org>
+ <1584342487.14250.11.camel@mtksdccf07>
+Message-ID: <29d75c7ff1a5c7fb54ee145049daa5da@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQ2FuLA0KDQpPbiBNb24sIDIwMjAtMDMtMTYgYXQgMTQ6MjUgKzA4MDAsIENhbiBHdW8gd3Jv
-dGU6DQo+IE9uIDIwMjAtMDMtMTYgMTE6NDIsIFN0YW5sZXkgQ2h1IHdyb3RlOg0KPiA+IFN0cnVj
-dCBpbml0X3ByZWZldGNoX2RhdGEgY3VycmVudGx5IGlzIHVzZWQgcHJpdmF0ZWx5IGluDQo+ID4g
-dWZzaGNkX2luaXRfaWNjX2xldmVscygpLCB0aHVzIGl0IGNhbiBiZSByZW1vdmVkIGZyb20gc3Ry
-dWN0IHVmc19oYmEuDQo+ID4gDQo+ID4gU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5s
-ZXkuY2h1QG1lZGlhdGVrLmNvbT4NCj4gPiBSZXZpZXdlZC1ieTogQXN1dG9zaCBEYXMgPGFzdXRv
-c2hkQGNvZGVhdXJvcmEub3JnPg0KPiA+IFJldmlld2VkLWJ5OiBBdnJpIEFsdG1hbiA8YXZyaS5h
-bHRtYW5Ad2RjLmNvbT4NCj4gDQo+IEhpIFN0YW5sZXksDQo+IA0KPiBFYXJsaWVyLCBJIGhhdmUg
-b25lIHNpbWlsYXIgcGF0Y2ggZm9yIHRoaXMsIGJ1dCBpdCBkb2VzIG1vcmUgdGhhbiB0aGlzLg0K
-PiBQbGVhc2UgY2hlY2sgdGhlIG1haWwgSSBqdXN0IHNlbnQuDQo+IA0KPiBUaGFua3MsDQo+IENh
-biBHdW8uDQoNCk9LISBUaGFua3MgdG8gcmVtaW5kIG1lIHRoaXMuIFRoZW4gSSBjYW4gZHJvcCB0
-aGlzIGNsZWFudXAgcGF0Y2ggIzIgaW4NCml0cyBzZXJpZXMgdG8gbm90IGNvbmZsaWN0IHdpdGgg
-eW91ciBwcm9wb3NlZCBvbmUuDQoNClRoYW5rcywNClN0YW5sZXkgQ2h1DQoNCg0K
+Hi Stanley,
 
+On 2020-03-16 15:08, Stanley Chu wrote:
+> Hi Can,
+> 
+> On Mon, 2020-03-16 at 14:25 +0800, Can Guo wrote:
+>> On 2020-03-16 11:42, Stanley Chu wrote:
+>> > Struct init_prefetch_data currently is used privately in
+>> > ufshcd_init_icc_levels(), thus it can be removed from struct ufs_hba.
+>> >
+>> > Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+>> > Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+>> > Reviewed-by: Avri Altman <avri.altman@wdc.com>
+>> 
+>> Hi Stanley,
+>> 
+>> Earlier, I have one similar patch for this, but it does more than 
+>> this.
+>> Please check the mail I just sent.
+>> 
+>> Thanks,
+>> Can Guo.
+> 
+> OK! Thanks to remind me this. Then I can drop this cleanup patch #2 in
+> its series to not conflict with your proposed one.
+> 
+> Thanks,
+> Stanley Chu
+
+Sure, thank you for your quick response.
+
+Best regards,
+Can Guo
