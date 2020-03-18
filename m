@@ -6,102 +6,180 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3D1C10DCE
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 06:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B53B2C10DCE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 06:53:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B33CF20768
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 06:41:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DDBA2076C
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 06:53:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Z5QxTJS7"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wf1Xi31S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726871AbgCRGlm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Mar 2020 02:41:42 -0400
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:36617 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726586AbgCRGlm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 02:41:42 -0400
-Received: by mail-oi1-f195.google.com with SMTP id k18so24648704oib.3
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2020 23:41:41 -0700 (PDT)
+        id S1727043AbgCRGxJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Mar 2020 02:53:09 -0400
+Received: from mail-qv1-f66.google.com ([209.85.219.66]:34948 "EHLO
+        mail-qv1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727004AbgCRGxI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 02:53:08 -0400
+Received: by mail-qv1-f66.google.com with SMTP id q73so2897659qvq.2
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2020 23:53:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=hM0cpXp7RSKNn1lZVtejbipEk/jiFWNrNvwo++TDYOo=;
-        b=Z5QxTJS7anNzaITsd+QcGv7EiJD1BqTar8NM5zTYDnngRB3NdZePyzWf+FEnamM1Qz
-         baEp2FDaUDFVEiNnjLZ5SmpW86e8lfYcavpCiIvockHYpEt666YmvpA6TiJY4Fk/F9Jg
-         7C7hOdqyzsCnxHze7gsInIxlK0oJY5iIz/0L0=
+        bh=WzwK1BObMe5QMhBnmi4AcZZcP1CODxNL9nxwEfiMr0g=;
+        b=Wf1Xi31Sw55Mx8Qt35MG7CT5SeFtcPwIUMB8t9bMZc3toaq8slbJX8xQo/EJAFQPyJ
+         fitU2zOY1RnYn3xIl/A2gKYwPNWzH4lTvp981B7Q3GcrIfC3chezzTz8Fm1UDnfDcaH9
+         I5cDLbJ+8Sn0VtHDWsEzYwf7XpvbE9EAnjGQU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=hM0cpXp7RSKNn1lZVtejbipEk/jiFWNrNvwo++TDYOo=;
-        b=Is9I8pEv6p6pbT1d4WS5u3xKr/ma/qIysCTAGWsQ7NtJ3/oBZGLx0hEy/TgQtGk7W8
-         m6fAge1bvYd09yEjhYyrMCsllYKMJYzVYH6A41H2d7hv/pmt9ygJ8zQMG8Hfe+wUL/xL
-         WuyrIns/4ppk40VAqXVzYpSeOaXT7v3NdRRvyRi7cNS376u74YJ4+P7qUEbwBvL8ciGa
-         LYnFLTpfi+0YeYHxJHrgJu4W1k7RxsVrhKsFRcyfUhs8drrjhiZdSjg0zkkWizWbyIJQ
-         JubVLzIlZQ/VlaGSYE/mhViCV1g/X3u8Cw/CnYoAb6vwVbjd4NuM8EBjnkZ1F6qJQWp4
-         iW4g==
-X-Gm-Message-State: ANhLgQ02lwCOAy+trdP1UKTW9SaAMRNcqJD44TQNxcYVGQwSxv/nimMg
-        UVyCnXbebd8nSXVVQ6SDdOHhLnzw5PT035d0DyLt9Q==
-X-Google-Smtp-Source: ADFU+vtwJS/04e/sPRotCIfgO5c8RWhXtXX4RMO+Aniq2R5Pxlfx07gegMaHzJ0Nd4Oydw5aCjPc3VkCtiMQTmvFn2Q=
-X-Received: by 2002:aca:ab4b:: with SMTP id u72mr2136672oie.26.1584513701482;
- Tue, 17 Mar 2020 23:41:41 -0700 (PDT)
+        bh=WzwK1BObMe5QMhBnmi4AcZZcP1CODxNL9nxwEfiMr0g=;
+        b=B5E8chM8itShuCKl2KH0aqLGzRmgnI4aaP3wcxI/q4FAojFlcJP8sjDV7nX7/6/8Ay
+         fBxrRkSTQ9HBpqZvTgKrS+20Dufa3YtcgYtepGg8/kM4Q5YlDcoHMR/5B1RPOFI+wfNj
+         V9EBgmKp8oe1kazT0AefCexZvOizjh/2c+7JjvSvVF5ozp0FYEYRXLl0XbdcS7N6OVAJ
+         FEsnQ1EesyCYcU+jlhlQtYIpvPG2zNOYn4CiUCWXS2E4B+QxBCVEB3gZ1fkZMbkjNW4T
+         IH1euIFF/OwXmYvvo2645bNsg1LEZCnAChx/kINzruK5ojPQghDURmc3uC+2xNqAIvpz
+         NLSQ==
+X-Gm-Message-State: ANhLgQ2E+b0IpkZgTqaUXmSGh/IpUy+oZE4soHo/VQqQ44VumSXie4n/
+        EAwLGRbiKxmS6eM+qwxgsQPEe7AdwUbVDC/CQRcpCg==
+X-Google-Smtp-Source: ADFU+vueNnvjLRNtiqr4Q5BQ5BkEVUejXGBfmaYsn/LoB1bwU4HLlMoOF9pfAfLxR+b3CclP6JkCcv3vJTO7PZXAWIU=
+X-Received: by 2002:ad4:4421:: with SMTP id e1mr2607486qvt.193.1584514387552;
+ Tue, 17 Mar 2020 23:53:07 -0700 (PDT)
 MIME-Version: 1.0
-References: <1584001735-22719-1-git-send-email-sreekanth.reddy@broadcom.com> <20200317223026.0B8E020752@mail.kernel.org>
-In-Reply-To: <20200317223026.0B8E020752@mail.kernel.org>
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Date:   Wed, 18 Mar 2020 12:11:29 +0530
-Message-ID: <CAK=zhgoabpaMCfJ6WOqzwnzRhDNwHwL=se=bj7_vAz0NKr1UJw@mail.gmail.com>
-Subject: Re: [PATCH v1] mpt3sas: Fix kernel panic observed on soft HBA unplug
-To:     Sasha Levin <sashal@kernel.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+References: <1581416293-41610-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1581416293-41610-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20200225184202.GC6261@infradead.org> <CAK=zhgoR0k+eoEMNznMGCF21eQMKT2UJ5vufCho4dXfHNFFV3g@mail.gmail.com>
+ <CAK=zhgpXF=qcwhwpzsx44GDEJxFXLcZFSgO9cAXL8p2GjU0KoQ@mail.gmail.com> <CA+RiK67RquZitjQrh=yGcdunAOZaOhS90xGk3Mco2rm-ZHrEYA@mail.gmail.com>
+In-Reply-To: <CA+RiK67RquZitjQrh=yGcdunAOZaOhS90xGk3Mco2rm-ZHrEYA@mail.gmail.com>
+From:   Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Date:   Wed, 18 Mar 2020 12:23:59 +0530
+Message-ID: <CA+RiK66=-8fqjvQPO1tX-P-G7cpuCmFSxOsb95MnkL4CueB9PA@mail.gmail.com>
+Subject: Re: [PATCH 4/5] mpt3sas: Handle RDPQ DMA allocation in same 4g region
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        stable@vger.kernel.org
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 18, 2020 at 4:00 AM Sasha Levin <sashal@kernel.org> wrote:
->
-> Hi
->
-> [This is an automated email]
->
-> This commit has been processed because it contains a -stable tag.
-> The stable tag indicates that it's relevant for the following trees: all
->
-> The bot has tested the following trees: v5.5.9, v5.4.25, v4.19.109, v4.14.173, v4.9.216, v4.4.216.
->
-> v5.5.9: Build OK!
-> v5.4.25: Build OK!
-> v4.19.109: Build OK!
-> v4.14.173: Build OK!
-> v4.9.216: Failed to apply! Possible dependencies:
->     c666d3be99c0 ("scsi: mpt3sas: wait for and flush running commands on shutdown/unload")
->
-> v4.4.216: Failed to apply! Possible dependencies:
->     96902835e7e2 ("mpt3sas: Eliminate conditional locking in mpt3sas_scsih_issue_tm()")
->     98c56ad32c33 ("mpt3sas: Eliminate dead sleep_flag code")
->     c666d3be99c0 ("scsi: mpt3sas: wait for and flush running commands on shutdown/unload")
->
->
-> NOTE: The patch will not be queued to stable trees until it is upstream.
->
-> How should we proceed with this patch?
+Hi Christoph,
 
-This fix patch is applicable only for below stable kernels,
-v5.5.9, v5.4.25, v4.19.109, v4.14.173
+We will simplify the logic as below, let us know your comments.
 
-Please let me know if I need to resend this patch by specifying the
-list of stable kernels on those this patch is applicable?
+#use one dma pool for RDPQ's, thus removes the logic of using second
+dma pool with align.
+The requirement is, RDPQ memory blocks starting & end address should
+have the same
+higher 32 bit address.
+
+1) At driver load, set DMA Mask to 64 and allocate memory for RDPQ's.
+
+2) Check if allocated resources are in the same 4GB range.
+
+3) If #2 is true, continue with 64 bit DMA and go to #6
+
+4) If #2 is false, then free all the resources from #1.
+
+5) Set DMA mask to 32 and allocate RDPQ's.
+
+6) Proceed with driver loading and other allocations.
 
 Thanks,
-Sreekanth
+Suganath
 
+
+On Wed, Mar 18, 2020 at 12:21 PM Suganath Prabu Subramani
+<suganath-prabu.subramani@broadcom.com> wrote:
 >
-> --
-> Thanks
-> Sasha
+> Hi Christoph,
+>
+> We will simplify the logic as below, let us know your comments.
+>
+> #use one dma pool for RDPQ's, thus removes the logic of using second dma pool with align.
+> The requirement is, RDPQ memory blocks starting & end address should have the same
+> higher 32 bit address.
+>
+> 1) At driver load, set DMA Mask to 64 and allocate memory for RDPQ's.
+>
+> 2) Check if allocated resources are in the same 4GB range.
+>
+> 3) If #2 is true, continue with 64 bit DMA and go to #6
+>
+> 4) If #2 is false, then free all the resources from #1.
+>
+> 5) Set DMA mask to 32 and allocate RDPQ's.
+>
+> 6) Proceed with driver loading and other allocations.
+>
+> Thanks,
+> Suganath
+>
+> On Thu, Mar 5, 2020 at 2:40 PM Sreekanth Reddy <sreekanth.reddy@broadcom.com> wrote:
+>>
+>> Hi,
+>>
+>> Any update over my previous reply?
+>>
+>> Thanks,
+>> Sreekanth
+>>
+>> On Thu, Feb 27, 2020 at 6:11 PM Sreekanth Reddy
+>> <sreekanth.reddy@broadcom.com> wrote:
+>> >
+>> > On Wed, Feb 26, 2020 at 12:12 AM Christoph Hellwig <hch@infradead.org> wrote:
+>> > >
+>> > > On Tue, Feb 11, 2020 at 05:18:12AM -0500, suganath-prabu.subramani@broadcom.com wrote:
+>> > > > From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+>> > > >
+>> > > > For INVADER_SERIES each set of 8 reply queues (0 - 7, 8 - 15,..)and
+>> > > > VENTURA_SERIES each set of 16 reply queues (0 - 15, 16 - 31,..)should
+>> > > > be within 4 GB boundary.Driver uses limitation of VENTURA_SERIES
+>> > > > to manage INVADER_SERIES as well. So here driver is allocating the DMA
+>> > > > able memory for RDPQ's accordingly.
+>> > > >
+>> > > > For RDPQ buffers, driver creates two separate pci pool.
+>> > > > "reply_post_free_dma_pool" and "reply_post_free_dma_pool_align"
+>> > > > First driver tries allocating memory from the pool
+>> > > > "reply_post_free_dma_pool", if the requested allocation are
+>> > > > within same 4gb region then proceeds for next allocations.
+>> > > > If not, allocates from reply_post_free_dma_pool_align which is
+>> > > > size aligned and if success, it will always meet same 4gb region
+>> > > > requirement
+>> > >
+>> > > I don't fully understand the changelog here, and how having two
+>> > > dma pools including one aligned is all that good.
+>> >
+>> > The requirement is that driver needs a set of memory blocks of size
+>> > ~106 KB and this block should not cross the 4gb boundary (i.e.
+>> > starting & end address of this block should have the same higher 32
+>> > bit address). So what we are doing is that first we allocate a block
+>> > from generic pool 'reply_post_free_dma_pool' and we check whether this
+>> > block cross the 4gb boundary or not, if it is yes then we free this
+>> > block and we try to allocate block once gain from pool
+>> > 'reply_post_free_dma_pool_align' where we alignment of this pool is
+>> > set to power of two from block size. Hoping that second time
+>> > allocation block will not cross the 4 gb boundary.
+>> >
+>> > Is there any interface or API which make sures that it always
+>> > allocates the required size memory block and also satisfies 4bg
+>> > boundary condtion?
+>> >
+>> > >
+>> > > Why not do a single dma_alloc_coherent and then subdvide it given
+>> > > that all the allocations from the DMA pool seem to happen at HBA
+>> > > initialization time anyway, invalidating the need for the dynamic
+>> > > nature of the dma pools.
+>> >
+>> > we need 8 blocks of block size ~106 KB, so total will be ~848 KB and
+>> > most of the times we may not get this much size continuous single
+>> > block memory and also this block should satisfy the 4gb boundary
+>> > requirement. And hence driver is allocating each block individually.
+>> >
+>> > Regards,
+>> > Sreekanth
