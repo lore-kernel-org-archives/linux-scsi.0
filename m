@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5080EC4332B
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 21:01:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23512C4332E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 21:03:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23FDE208FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 21:01:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC09B20409
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 21:02:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584565265;
-	bh=4/QgQEeTLg2cONn6lXbKFlYdnrgyJb7/r7FCCAFagzs=;
+	s=default; t=1584565380;
+	bh=QwssEJY9YhkmdjyuruQXGe5BxtQkNAjH9XpgNWCscko=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Qp7ZytVFZfeg0mwaHWElpwU2EGAPpY8em2QvrKmk8mocWoNyWHe/m1G1P6ZRCmgRx
-	 ZC1VkEcGW45YaXFrDUnKBNT/2+/zE+k0J5fXJz7iC4FOyymEC+f8QpQktyZxDkzd5f
-	 iP7phKoH48F5W1w5/IVgjU1W+Wk2VLM4gHP8EJYw=
+	b=NEOwviWlCc5DSE26VavOlHsw+wK04RmsuThMbr1V7be6WvC1wXQR7oNcfuPnzcDQv
+	 WKHb85CbKnq0JWwmoQm0bCzqdTbnWOkvhFuwOXEY98im5nQGx4acyVL4Anz6Pr+RH9
+	 BW/ZGtdVxeMygo1azPAv0FrR1mTEJX5Q+BGpwB2U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728828AbgCRVBA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Mar 2020 17:01:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57230 "EHLO mail.kernel.org"
+        id S1728281AbgCRVCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Mar 2020 17:02:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56296 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728594AbgCRU4X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Mar 2020 16:56:23 -0400
+        id S1728453AbgCRUzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Mar 2020 16:55:47 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EE618208E0;
-        Wed, 18 Mar 2020 20:56:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0DC30208CA;
+        Wed, 18 Mar 2020 20:55:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584564982;
-        bh=4/QgQEeTLg2cONn6lXbKFlYdnrgyJb7/r7FCCAFagzs=;
+        s=default; t=1584564946;
+        bh=QwssEJY9YhkmdjyuruQXGe5BxtQkNAjH9XpgNWCscko=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cvjZGCYB1zVmAJJhHvxSySAohONjZRFMHcHkktRE1JWRy0+ooZKcUPJCbEdPAna53
-         o51dccRhDXqEto3ZfZr8PoDZS1dSyCRHR/lYVWM00HoUJQqVwJgHQNsrE981jKaU8z
-         IBN6QVjHWyUNHEzFa8XfCNscGMiBhkgu/qVLTZvM=
+        b=DjX3ctxqLrBZHbWDqJIUKIvjPEJwJ1Kmg3wpZXXgYV95IdeXpF8rPpR8WzZ1acjwZ
+         ULDV+2qCQvHrezSaos5pyRO7KhidOAmujnBt84pB87A/0ML5eljrSZj7An0Vuw9U9J
+         RhDuQbq2uS9I4/nTeTIAaPbDbSlzhFi2F7xf17Bs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wen Xiong <wenxiong@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 23/28] scsi: ipr: Fix softlockup when rescanning devices in petitboot
-Date:   Wed, 18 Mar 2020 16:55:50 -0400
-Message-Id: <20200318205555.17447-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 31/37] scsi: ipr: Fix softlockup when rescanning devices in petitboot
+Date:   Wed, 18 Mar 2020 16:55:03 -0400
+Message-Id: <20200318205509.17053-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200318205555.17447-1-sashal@kernel.org>
-References: <20200318205555.17447-1-sashal@kernel.org>
+In-Reply-To: <20200318205509.17053-1-sashal@kernel.org>
+References: <20200318205509.17053-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -118,10 +118,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 35d54ee1c5c74..b172f0a020834 100644
+index 271990bc065b9..1b04a8223eb01 100644
 --- a/drivers/scsi/ipr.c
 +++ b/drivers/scsi/ipr.c
-@@ -9962,6 +9962,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+@@ -9958,6 +9958,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
  	ioa_cfg->max_devs_supported = ipr_max_devs;
  
  	if (ioa_cfg->sis64) {
@@ -129,7 +129,7 @@ index 35d54ee1c5c74..b172f0a020834 100644
  		host->max_id = IPR_MAX_SIS64_TARGETS_PER_BUS;
  		host->max_lun = IPR_MAX_SIS64_LUNS_PER_TARGET;
  		if (ipr_max_devs > IPR_MAX_SIS64_DEVS)
-@@ -9970,6 +9971,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+@@ -9966,6 +9967,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
  					   + ((sizeof(struct ipr_config_table_entry64)
  					       * ioa_cfg->max_devs_supported)));
  	} else {
@@ -137,7 +137,7 @@ index 35d54ee1c5c74..b172f0a020834 100644
  		host->max_id = IPR_MAX_NUM_TARGETS_PER_BUS;
  		host->max_lun = IPR_MAX_NUM_LUNS_PER_TARGET;
  		if (ipr_max_devs > IPR_MAX_PHYSICAL_DEVS)
-@@ -9979,7 +9981,6 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+@@ -9975,7 +9977,6 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
  					       * ioa_cfg->max_devs_supported)));
  	}
  
@@ -146,10 +146,10 @@ index 35d54ee1c5c74..b172f0a020834 100644
  	host->max_cmd_len = IPR_MAX_CDB_LEN;
  	host->can_queue = ioa_cfg->max_cmds;
 diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index 085e6c90f9e6a..89b36987ff309 100644
+index f6baa23513139..9fbcdc283cdbb 100644
 --- a/drivers/scsi/ipr.h
 +++ b/drivers/scsi/ipr.h
-@@ -1306,6 +1306,7 @@ struct ipr_resource_entry {
+@@ -1313,6 +1313,7 @@ struct ipr_resource_entry {
  #define IPR_ARRAY_VIRTUAL_BUS			0x1
  #define IPR_VSET_VIRTUAL_BUS			0x2
  #define IPR_IOAFP_VIRTUAL_BUS			0x3
