@@ -2,93 +2,160 @@ Return-Path: <SRS0=JOtj=5D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A29C5ACD6
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 10:40:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD63C5ACD6
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 11:18:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57C892076D
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 10:40:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E970D2076D
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 11:18:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="UETJou+u"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="oaMDPKKL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727843AbgCRKk6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Mar 2020 06:40:58 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:26755 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727041AbgCRKkZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 06:40:25 -0400
-X-UUID: 144ed3a2e99943cea7df75856fb379ab-20200318
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=6CR+BpbbxcrWvJuUIoPEHgkb6Ulk4lyekUc8d6UiinI=;
-        b=UETJou+uMeWp+FRI1wXr4nEq/XZdiDcGwvQs3c2dqk04hEC6QoFSHH9UPORF8WPmGFkBUVHXMvb/3PCj9HEX0vzhanU4NXX2L1ZTmp43xXgrqPPFxzpG4HmyReZZkg6qvLcvH3E79tO612PeLGFw5wgdvm1Ka7b00OS0BN1DJNc=;
-X-UUID: 144ed3a2e99943cea7df75856fb379ab-20200318
-Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 575688551; Wed, 18 Mar 2020 18:40:21 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Wed, 18 Mar 2020 18:39:50 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Wed, 18 Mar 2020 18:40:31 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.peter~sen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <bvanassche@acm.org>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v7 5/7] scsi: ufs: allow customized delay for host enabling
-Date:   Wed, 18 Mar 2020 18:40:14 +0800
-Message-ID: <20200318104016.28049-6-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20200318104016.28049-1-stanley.chu@mediatek.com>
-References: <20200318104016.28049-1-stanley.chu@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1727799AbgCRLSJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Mar 2020 07:18:09 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:13841 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726550AbgCRLSI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 07:18:08 -0400
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200318111804epoutp0320a1474d01ada251f8c5f3a09eae694e~9YeYYx-Tm3126531265epoutp03A
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2020 11:18:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200318111804epoutp0320a1474d01ada251f8c5f3a09eae694e~9YeYYx-Tm3126531265epoutp03A
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1584530284;
+        bh=55cxe52jChgOZW7Na66AxnLPO88pMONYr5hUMEzlyDM=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=oaMDPKKL/6Qw8rtF4vKUJIjBi1PZ/zCtx/d8I1oNP3DACaM3xULUiJMAIGgwPb26g
+         amuCJF6l5Zqd34UMPRIxFeNmjQP/RpSH6k00SOwRW8hYT3rcwQgLRXfF8UECxwDgfj
+         GlpHGXpgMuxPV3z8MxiXkO93d/uNlR/puOWGk3O4=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20200318111804epcas5p12c1e516f5788d702bafd5cfef625aece~9YeX1y3xi2459224592epcas5p1D;
+        Wed, 18 Mar 2020 11:18:04 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        86.4E.04736.C63027E5; Wed, 18 Mar 2020 20:18:04 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200318111803epcas5p3f1ce09223a1cf97e813b3cbf0c9ba29f~9YeXUaULi1553915539epcas5p3x;
+        Wed, 18 Mar 2020 11:18:03 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200318111803epsmtrp1d819d26f04ff4b971c65d48a2dca626e~9YeXSkOvn1841218412epsmtrp1r;
+        Wed, 18 Mar 2020 11:18:03 +0000 (GMT)
+X-AuditID: b6c32a4b-ae3ff70000001280-f8-5e72036c817e
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1D.AD.04158.B63027E5; Wed, 18 Mar 2020 20:18:03 +0900 (KST)
+Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
+        [107.108.73.139]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200318111801epsmtip295cf5d0f2af25c47a04135612fbdd8d3~9YeVmZZIm0257602576epsmtip2d;
+        Wed, 18 Mar 2020 11:18:01 +0000 (GMT)
+From:   Alim Akhtar <alim.akhtar@samsung.com>
+To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
+        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
+        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v2 0/5] exynos-ufs: Add support for UFS HCI
+Date:   Wed, 18 Mar 2020 16:41:39 +0530
+Message-Id: <20200318111144.39525-1-alim.akhtar@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphleLIzCtJLcpLzFFi42LZdlhTQzeHuSjO4NQEVosH87axWbz8eZXN
+        4tP6ZawW84+cY7U4f34Du8XNLUdZLDY9vsZqcXnXHDaLGef3MVl0X9/BZrH8+D8mi9a9R9gt
+        lm69yejA63G5r5fJY9OqTjaPzUvqPVpO7mfx+Pj0FotH35ZVjB6fN8l5tB/oZgrgiOKySUnN
+        ySxLLdK3S+DKmLNgLWPBcuGKvY8/MDYw3uHrYuTkkBAwkTjY94Wti5GLQ0hgN6PE9ClTWSCc
+        T4wSfx6fYgepEhL4xigxZWklTMemNZuYIIr2Mkp87f7DDuG0MEnc+X2IFaSKTUBb4u70LUwg
+        tohAgMSl9wfBdjALzGOSWPSoBywhLGAt0bLjANgKFgFViafb54DFeQVsJFrnTmGCWCcvsXrD
+        AWaQZgmBE2wS0z/vZoZIuEjM2XSPFcIWlnh1fAs7hC0l8bK/DcjmALKzJXp2GUOEaySWzjvG
+        AmHbSxy4MocFpIRZQFNi/S59kDCzAJ9E7+8nTBCdvBIdbUIQ1aoSze+uQnVKS0zs7oZa6iEx
+        Z+FUVkgAxUqsu76AcQKjzCyEoQsYGVcxSqYWFOempxabFhjnpZbrFSfmFpfmpesl5+duYgSn
+        DS3vHYybzvkcYhTgYFTi4eXYUBAnxJpYVlyZe4hRgoNZSYR3cWF+nBBvSmJlVWpRfnxRaU5q
+        8SFGaQ4WJXHeSaxXY4QE0hNLUrNTUwtSi2CyTBycUg2MzMd0jqSvF0rfzbKz8MKpd04XtZfm
+        KGfHN0iz8IpMcFrwwUl7Sar6dP4jF7e/fvtUfU9ozdKjNtF3S+aesPVj7Uz/qar1XcWqV9mD
+        9YrKneDjN6QrshSN9nk//6KyJVj4Ko+Jjvpj00ki2RuXHDv+du6L35M5BctUFdN3czhkXV51
+        +lvHhkfPlFiKMxINtZiLihMBJS2GGRcDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrBLMWRmVeSWpSXmKPExsWy7bCSvG42c1GcQfsNJYsH87axWbz8eZXN
+        4tP6ZawW84+cY7U4f34Du8XNLUdZLDY9vsZqcXnXHDaLGef3MVl0X9/BZrH8+D8mi9a9R9gt
+        lm69yejA63G5r5fJY9OqTjaPzUvqPVpO7mfx+Pj0FotH35ZVjB6fN8l5tB/oZgrgiOKySUnN
+        ySxLLdK3S+DKmLNgLWPBcuGKvY8/MDYw3uHrYuTkkBAwkdi0ZhNTFyMXh5DAbkaJXa2fmSES
+        0hLXN05gh7CFJVb+ew5mCwk0MUls3pYCYrMJaEvcnb6FCcQWEQiSuLdmLSvIIGaBVUwSnb1n
+        GUESwgLWEi07DoA1swioSjzdPgesgVfARqJ17hQmiAXyEqs3HGCewMizgJFhFaNkakFxbnpu
+        sWGBUV5quV5xYm5xaV66XnJ+7iZGcHhqae1gPHEi/hCjAAejEg9vwqaCOCHWxLLiytxDjBIc
+        zEoivIsL8+OEeFMSK6tSi/Lji0pzUosPMUpzsCiJ88rnH4sUEkhPLEnNTk0tSC2CyTJxcEo1
+        MMpHb3998r34xbcZof8+G8zmk3KXLf7Ya3XqS+3Hc5kBpj0Xpl1WF7ppmPPoZJvv0cyiyxLr
+        WoozHzj8nPzaI8Lv7HGXIxr2jXps29y1XxdM+fpmjY16aCrX432MrJN39rHcXMqv/djU/T9D
+        ZFLjXUabaJb3Zyft7tkWcmXaSZYHhycecHz8I1yJpTgj0VCLuag4EQC/yPmiSwIAAA==
+X-CMS-MailID: 20200318111803epcas5p3f1ce09223a1cf97e813b3cbf0c9ba29f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200318111803epcas5p3f1ce09223a1cf97e813b3cbf0c9ba29f
+References: <CGME20200318111803epcas5p3f1ce09223a1cf97e813b3cbf0c9ba29f@epcas5p3.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Q3VycmVudGx5IGEgMSBtcyBkZWxheSBpcyBhcHBsaWVkIGJlZm9yZSBwb2xsaW5nIENPTlRST0xM
-RVJfRU5BQkxFDQpiaXQuIFRoaXMgZGVsYXkgbWF5IG5vdCBiZSByZXF1aXJlZCBvciBjYW4gYmUg
-Y2hhbmdlZCBpbiBkaWZmZXJlbnQNCmNvbnRyb2xsZXJzLiBNYWtlIHRoZSBkZWxheSBhcyBhIGNo
-YW5nZWFibGUgdmFsdWUgaW4gc3RydWN0IHVmc19oYmEgdG8NCmFsbG93IGl0IGN1c3RvbWl6ZWQg
-YnkgdmVuZG9ycy4NCg0KU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1l
-ZGlhdGVrLmNvbT4NClJldmlld2VkLWJ5OiBBdnJpIEFsdG1hbiA8YXZyaS5hbHRtYW5Ad2RjLmNv
-bT4NClJldmlld2VkLWJ5OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJvcmEub3JnPg0KLS0tDQogZHJp
-dmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8IDMgKystDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2Qu
-aCB8IDEgKw0KIDIgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0p
-DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3Np
-L3Vmcy91ZnNoY2QuYw0KaW5kZXggYTQyYTg0MTY0ZGVjLi5jNWVlNzdhNWJmYzcgMTAwNjQ0DQot
-LS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vm
-c2hjZC5jDQpAQCAtNDMwMSw3ICs0MzAxLDcgQEAgaW50IHVmc2hjZF9oYmFfZW5hYmxlKHN0cnVj
-dCB1ZnNfaGJhICpoYmEpDQogCSAqIGluc3RydWN0aW9uIG1pZ2h0IGJlIHJlYWQgYmFjay4NCiAJ
-ICogVGhpcyBkZWxheSBjYW4gYmUgY2hhbmdlZCBiYXNlZCBvbiB0aGUgY29udHJvbGxlci4NCiAJ
-ICovDQotCXVzbGVlcF9yYW5nZSgxMDAwLCAxMTAwKTsNCisJdWZzaGNkX2RlbGF5X3VzKGhiYS0+
-aGJhX2VuYWJsZV9kZWxheV91cywgMTAwKTsNCiANCiAJLyogd2FpdCBmb3IgdGhlIGhvc3QgY29u
-dHJvbGxlciB0byBjb21wbGV0ZSBpbml0aWFsaXphdGlvbiAqLw0KIAlyZXRyeSA9IDEwOw0KQEAg
-LTg0MjQsNiArODQyNCw3IEBAIGludCB1ZnNoY2RfaW5pdChzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB2
-b2lkIF9faW9tZW0gKm1taW9fYmFzZSwgdW5zaWduZWQgaW50IGlycSkNCiANCiAJaGJhLT5tbWlv
-X2Jhc2UgPSBtbWlvX2Jhc2U7DQogCWhiYS0+aXJxID0gaXJxOw0KKwloYmEtPmhiYV9lbmFibGVf
-ZGVsYXlfdXMgPSAxMDAwOw0KIA0KIAllcnIgPSB1ZnNoY2RfaGJhX2luaXQoaGJhKTsNCiAJaWYg
-KGVycikNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oIGIvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnNoY2QuaA0KaW5kZXggOWExNGZmM2Q1ZjhiLi5mYTgxZGFjOWFlNWEgMTAwNjQ0
-DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQorKysgYi9kcml2ZXJzL3Njc2kvdWZz
-L3Vmc2hjZC5oDQpAQCAtNjYzLDYgKzY2Myw3IEBAIHN0cnVjdCB1ZnNfaGJhIHsNCiAJdTMyIGVo
-X2ZsYWdzOw0KIAl1MzIgaW50cl9tYXNrOw0KIAl1MTYgZWVfY3RybF9tYXNrOw0KKwl1MTYgaGJh
-X2VuYWJsZV9kZWxheV91czsNCiAJYm9vbCBpc19wb3dlcmVkOw0KIAlzdHJ1Y3QgdWZzX2luaXRf
-cHJlZmV0Y2ggaW5pdF9wcmVmZXRjaF9kYXRhOw0KIA0KLS0gDQoyLjE4LjANCg==
+This patch-set introduces UFS (Universal Flash Storage) host controller support
+for Samsung family SoC. Mostly, it consists of UFS PHY and host specific driver.
+
+- Changes since v1:
+* fixed make dt_binding_check error as pointed by Rob
+* Addressed Krzysztof's review comments
+* Added Reviewed-by tags
+
+ 
+patch 1/5: define devicetree bindings for UFS PHY
+patch 2/5: Adds UFS PHY driver
+patch 3/5: define devicetree bindings for UFS HCI 
+patch 4/5: Adds Samsung UFS HCI driver
+patch 5/5: Enabled UFS on exynos7 platform
+
+Note: This series is based on Linux-5.6-rc2 
+      In past there was couple of attempt to upstream this driver, but
+      it didn't went upstream for some or other reason.
+
+
+Alim Akhtar (5):
+  dt-bindings: phy: Document Samsung UFS PHY bindings
+  phy: samsung-ufs: add UFS PHY driver for samsung SoC
+  Documentation: devicetree: ufs: Add DT bindings for exynos UFS host
+    controller
+  scsi: ufs-exynos: add UFS host support for Exynos SoCs
+  arm64: dts: Add node for ufs exynos7
+
+ .../bindings/phy/samsung,ufs-phy.yaml         |   62 +
+ .../devicetree/bindings/ufs/ufs-exynos.txt    |  104 ++
+ .../boot/dts/exynos/exynos7-espresso.dts      |   16 +
+ arch/arm64/boot/dts/exynos/exynos7.dtsi       |   44 +-
+ drivers/phy/samsung/Kconfig                   |    9 +
+ drivers/phy/samsung/Makefile                  |    1 +
+ drivers/phy/samsung/phy-exynos7-ufs.h         |   85 +
+ drivers/phy/samsung/phy-samsung-ufs.c         |  311 ++++
+ drivers/phy/samsung/phy-samsung-ufs.h         |  100 ++
+ drivers/scsi/ufs/Kconfig                      |   12 +
+ drivers/scsi/ufs/Makefile                     |    1 +
+ drivers/scsi/ufs/ufs-exynos.c                 | 1399 +++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos.h                 |  268 ++++
+ drivers/scsi/ufs/unipro.h                     |   41 +
+ include/linux/phy/phy-samsung-ufs.h           |   70 +
+ 15 files changed, 2521 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ create mode 100644 drivers/phy/samsung/phy-exynos7-ufs.h
+ create mode 100644 drivers/phy/samsung/phy-samsung-ufs.c
+ create mode 100644 drivers/phy/samsung/phy-samsung-ufs.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.h
+ create mode 100644 include/linux/phy/phy-samsung-ufs.h
+
+-- 
+2.17.1
 
