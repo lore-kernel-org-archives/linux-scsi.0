@@ -2,220 +2,161 @@ Return-Path: <SRS0=JOtj=5D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC07BC10DCE
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 18:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF024C4332D
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 20:57:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D528D2077E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 18:22:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 960B9208E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 20:57:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584565021;
+	bh=hkxNcg/79RZUrIF0LmkAbhCdyGUHXAfcHDI/kypsLlY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=o4MASUT84cPfvjl48leYcJ0h3rVE70KmG517MDETIz2YOphi51/ntVfu7yACfLypp
+	 BHTtzOdh2uaGKGnkG2KscvKyyQca+20OL5iIwd+q8i6z+mVLmP2M9mj3YVdJOxpTSz
+	 HD8uO9koL+Mt5JK7eAWltaFF6licAvaeWAFymoRg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbgCRSWQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Mar 2020 14:22:16 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:11629 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726735AbgCRSWQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Mar 2020 14:22:16 -0400
-IronPort-SDR: PtQYAqYmSU0V13VozZJzT3/D/k3Aw4DWrLHK9jvJkfDjc7Uk3homh3/D233H7+zWukP/i0yQKL
- wp/+b68cT7IFCY38LwOmf1gwPpR8cnMHcgIzjLAbe//7kaVpbnS4xtArEuE7JhZZaX9g2rYbtx
- cOZWUXGZkvFoFmSfrF2hQi7wRmUwSTcNsIB28g9c9J9L/Dekjuu0TSwiqAb6HuutnC5F6qW3iU
- yHzocVmXAsSGvKRiqwL15u0/S+I1fN0VxBbaPPBmP5TV64ejczCwQ47DCSau5WTT/Ra6MkYzcu
- /Z0=
-X-IronPort-AV: E=Sophos;i="5.70,559,1574150400"; 
-   d="scan'208";a="46713605"
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by labrats.qualcomm.com with ESMTP; 16 Mar 2020 00:06:27 -0700
-Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
-  by ironmsg01-sd.qualcomm.com with ESMTP; 16 Mar 2020 00:06:25 -0700
-Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
-        id CC1EC3A63; Mon, 16 Mar 2020 00:06:25 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 1/2] scsi: ufs: Clean up ufshcd_scale_clks() and clock scaling error out path
-Date:   Mon, 16 Mar 2020 00:06:10 -0700
-Message-Id: <1584342373-10282-2-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1584342373-10282-1-git-send-email-cang@codeaurora.org>
-References: <1584342373-10282-1-git-send-email-cang@codeaurora.org>
+        id S1728754AbgCRU47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Mar 2020 16:56:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58424 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728742AbgCRU47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Mar 2020 16:56:59 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D1748208E0;
+        Wed, 18 Mar 2020 20:56:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584565018;
+        bh=hkxNcg/79RZUrIF0LmkAbhCdyGUHXAfcHDI/kypsLlY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=zmZ/ss7Kaf2/3Pe/oH9eJH3yy1+5c6cyupMaiNWKptWbsqyjUqd8qpGY8N8IVnKlg
+         tKxFGKna9vVgBCisZg2IDEjVvBqyTlPlJeXNtebV9V5vxt5cujoRRnyJqpz9hCk6ki
+         +NoqvmW6UYav4cUeKE4kUugulDFBAiUxArYd1u9A=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Wen Xiong <wenxiong@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 08/12] scsi: ipr: Fix softlockup when rescanning devices in petitboot
+Date:   Wed, 18 Mar 2020 16:56:44 -0400
+Message-Id: <20200318205648.17937-8-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200318205648.17937-1-sashal@kernel.org>
+References: <20200318205648.17937-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Subhash Jadavani <subhashj@codeaurora.org>
+From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-This change introduces a func ufshcd_set_clk_freq() to explicitly
-set clock frequency so that it can be used in reset_and_resotre path and
-in ufshcd_scale_clks(). Meanwhile, this change cleans up the clock scaling
-error out path.
+[ Upstream commit 394b61711f3ce33f75bf70a3e22938464a13b3ee ]
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+When trying to rescan disks in petitboot shell, we hit the following
+softlockup stacktrace:
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2a2a63b..63aaa88f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -855,28 +855,29 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
- 		return false;
- }
+Kernel panic - not syncing: System is deadlocked on memory
+[  241.223394] CPU: 32 PID: 693 Comm: sh Not tainted 5.4.16-openpower1 #1
+[  241.223406] Call Trace:
+[  241.223415] [c0000003f07c3180] [c000000000493fc4] dump_stack+0xa4/0xd8 (unreliable)
+[  241.223432] [c0000003f07c31c0] [c00000000007d4ac] panic+0x148/0x3cc
+[  241.223446] [c0000003f07c3260] [c000000000114b10] out_of_memory+0x468/0x4c4
+[  241.223461] [c0000003f07c3300] [c0000000001472b0] __alloc_pages_slowpath+0x594/0x6d8
+[  241.223476] [c0000003f07c3420] [c00000000014757c] __alloc_pages_nodemask+0x188/0x1a4
+[  241.223492] [c0000003f07c34a0] [c000000000153e10] alloc_pages_current+0xcc/0xd8
+[  241.223508] [c0000003f07c34e0] [c0000000001577ac] alloc_slab_page+0x30/0x98
+[  241.223524] [c0000003f07c3520] [c0000000001597fc] new_slab+0x138/0x40c
+[  241.223538] [c0000003f07c35f0] [c00000000015b204] ___slab_alloc+0x1e4/0x404
+[  241.223552] [c0000003f07c36c0] [c00000000015b450] __slab_alloc+0x2c/0x48
+[  241.223566] [c0000003f07c36f0] [c00000000015b754] kmem_cache_alloc_node+0x9c/0x1b4
+[  241.223582] [c0000003f07c3760] [c000000000218c48] blk_alloc_queue_node+0x34/0x270
+[  241.223599] [c0000003f07c37b0] [c000000000226574] blk_mq_init_queue+0x2c/0x78
+[  241.223615] [c0000003f07c37e0] [c0000000002ff710] scsi_mq_alloc_queue+0x28/0x70
+[  241.223631] [c0000003f07c3810] [c0000000003005b8] scsi_alloc_sdev+0x184/0x264
+[  241.223647] [c0000003f07c38a0] [c000000000300ba0] scsi_probe_and_add_lun+0x288/0xa3c
+[  241.223663] [c0000003f07c3a00] [c000000000301768] __scsi_scan_target+0xcc/0x478
+[  241.223679] [c0000003f07c3b20] [c000000000301c64] scsi_scan_channel.part.9+0x74/0x7c
+[  241.223696] [c0000003f07c3b70] [c000000000301df4] scsi_scan_host_selected+0xe0/0x158
+[  241.223712] [c0000003f07c3bd0] [c000000000303f04] store_scan+0x104/0x114
+[  241.223727] [c0000003f07c3cb0] [c0000000002d5ac4] dev_attr_store+0x30/0x4c
+[  241.223741] [c0000003f07c3cd0] [c0000000001dbc34] sysfs_kf_write+0x64/0x78
+[  241.223756] [c0000003f07c3cf0] [c0000000001da858] kernfs_fop_write+0x170/0x1b8
+[  241.223773] [c0000003f07c3d40] [c0000000001621fc] __vfs_write+0x34/0x60
+[  241.223787] [c0000003f07c3d60] [c000000000163c2c] vfs_write+0xa8/0xcc
+[  241.223802] [c0000003f07c3db0] [c000000000163df4] ksys_write+0x70/0xbc
+[  241.223816] [c0000003f07c3e20] [c00000000000b40c] system_call+0x5c/0x68
+
+As a part of the scan process Linux will allocate and configure a
+scsi_device for each target to be scanned. If the device is not present,
+then the scsi_device is torn down. As a part of scsi_device teardown a
+workqueue item will be scheduled and the lockups we see are because there
+are 250k workqueue items to be processed.  Accoding to the specification of
+SIS-64 sas controller, max_channel should be decreased on SIS-64 adapters
+to 4.
+
+The patch fixes softlockup issue.
+
+Thanks for Oliver Halloran's help with debugging and explanation!
+
+Link: https://lore.kernel.org/r/1583510248-23672-1-git-send-email-wenxiong@linux.vnet.ibm.com
+Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ipr.c | 3 ++-
+ drivers/scsi/ipr.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 2f61d8cd58828..c321d73f602d7 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -9730,6 +9730,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+ 	ioa_cfg->max_devs_supported = ipr_max_devs;
  
--static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
-+/**
-+ * ufshcd_set_clk_freq - set UFS controller clock frequencies
-+ * @hba: per adapter instance
-+ * @scale_up: If True, set max possible frequency othewise set low frequency
-+ *
-+ * Returns 0 if successful
-+ * Returns < 0 for any other errors
-+ */
-+static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
- {
- 	int ret = 0;
- 	struct ufs_clk_info *clki;
- 	struct list_head *head = &hba->clk_list_head;
--	ktime_t start = ktime_get();
--	bool clk_state_changed = false;
- 
- 	if (list_empty(head))
- 		goto out;
- 
--	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
--	if (ret)
--		return ret;
--
- 	list_for_each_entry(clki, head, list) {
- 		if (!IS_ERR_OR_NULL(clki->clk)) {
- 			if (scale_up && clki->max_freq) {
- 				if (clki->curr_freq == clki->max_freq)
- 					continue;
- 
--				clk_state_changed = true;
- 				ret = clk_set_rate(clki->clk, clki->max_freq);
- 				if (ret) {
- 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-@@ -895,7 +896,6 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 				if (clki->curr_freq == clki->min_freq)
- 					continue;
- 
--				clk_state_changed = true;
- 				ret = clk_set_rate(clki->clk, clki->min_freq);
- 				if (ret) {
- 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-@@ -914,13 +914,36 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 				clki->name, clk_get_rate(clki->clk));
+ 	if (ioa_cfg->sis64) {
++		host->max_channel = IPR_MAX_SIS64_BUSES;
+ 		host->max_id = IPR_MAX_SIS64_TARGETS_PER_BUS;
+ 		host->max_lun = IPR_MAX_SIS64_LUNS_PER_TARGET;
+ 		if (ipr_max_devs > IPR_MAX_SIS64_DEVS)
+@@ -9738,6 +9739,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+ 					   + ((sizeof(struct ipr_config_table_entry64)
+ 					       * ioa_cfg->max_devs_supported)));
+ 	} else {
++		host->max_channel = IPR_VSET_BUS;
+ 		host->max_id = IPR_MAX_NUM_TARGETS_PER_BUS;
+ 		host->max_lun = IPR_MAX_NUM_LUNS_PER_TARGET;
+ 		if (ipr_max_devs > IPR_MAX_PHYSICAL_DEVS)
+@@ -9747,7 +9749,6 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+ 					       * ioa_cfg->max_devs_supported)));
  	}
  
-+out:
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_scale_clks - scale up or scale down UFS controller clocks
-+ * @hba: per adapter instance
-+ * @scale_up: True if scaling up and false if scaling down
-+ *
-+ * Returns 0 if successful
-+ * Returns < 0 for any other errors
-+ */
-+static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
-+{
-+	int ret = 0;
-+
-+	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
-+	if (ret)
-+		return ret;
-+
-+	ret = ufshcd_set_clk_freq(hba, scale_up);
-+	if (ret)
-+		return ret;
-+
- 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
-+	if (ret) {
-+		ufshcd_set_clk_freq(hba, !scale_up);
-+		return ret;
-+	}
+-	host->max_channel = IPR_VSET_BUS;
+ 	host->unique_id = host->host_no;
+ 	host->max_cmd_len = IPR_MAX_CDB_LEN;
+ 	host->can_queue = ioa_cfg->max_cmds;
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index a34c7a5a995e4..9c82ea000c117 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -1301,6 +1301,7 @@ struct ipr_resource_entry {
+ #define IPR_ARRAY_VIRTUAL_BUS			0x1
+ #define IPR_VSET_VIRTUAL_BUS			0x2
+ #define IPR_IOAFP_VIRTUAL_BUS			0x3
++#define IPR_MAX_SIS64_BUSES			0x4
  
--out:
--	if (clk_state_changed)
--		trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
--			(scale_up ? "up" : "down"),
--			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 	return ret;
- }
- 
-@@ -1106,35 +1129,36 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 
- 	ret = ufshcd_clock_scaling_prepare(hba);
- 	if (ret)
--		return ret;
-+		goto out;
- 
- 	/* scale down the gear before scaling down clocks */
- 	if (!scale_up) {
- 		ret = ufshcd_scale_gear(hba, false);
- 		if (ret)
--			goto out;
-+			goto clk_scaling_unprepare;
- 	}
- 
- 	ret = ufshcd_scale_clks(hba, scale_up);
--	if (ret) {
--		if (!scale_up)
--			ufshcd_scale_gear(hba, true);
--		goto out;
--	}
-+	if (ret)
-+		goto scale_up_gear;
- 
- 	/* scale up the gear after scaling up clocks */
- 	if (scale_up) {
- 		ret = ufshcd_scale_gear(hba, true);
- 		if (ret) {
- 			ufshcd_scale_clks(hba, false);
--			goto out;
-+			goto clk_scaling_unprepare;
- 		}
- 	}
- 
--	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
-+	goto clk_scaling_unprepare;
- 
--out:
-+scale_up_gear:
-+	if (!scale_up)
-+		ufshcd_scale_gear(hba, true);
-+clk_scaling_unprepare:
- 	ufshcd_clock_scaling_unprepare(hba);
-+out:
- 	ufshcd_release(hba);
- 	return ret;
- }
-@@ -6251,7 +6275,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
- 	/* scale up clocks to max frequency before full reinitialization */
--	ufshcd_scale_clks(hba, true);
-+	ufshcd_set_clk_freq(hba, true);
- 
- 	err = ufshcd_hba_enable(hba);
- 	if (err)
+ #define IPR_GET_RES_PHYS_LOC(res) \
+ 	(((res)->bus << 24) | ((res)->target << 8) | (res)->lun)
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.20.1
 
