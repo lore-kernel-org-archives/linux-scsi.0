@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF024C4332D
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 20:57:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02DAFC4332E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 20:59:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 960B9208E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 20:57:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7103216FD
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Mar 2020 20:59:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584565021;
-	bh=hkxNcg/79RZUrIF0LmkAbhCdyGUHXAfcHDI/kypsLlY=;
+	s=default; t=1584565185;
+	bh=6FyjFPVM5uZqq6mM2zPHBnfpu1B7rfoRHO7+zdywet4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=o4MASUT84cPfvjl48leYcJ0h3rVE70KmG517MDETIz2YOphi51/ntVfu7yACfLypp
-	 BHTtzOdh2uaGKGnkG2KscvKyyQca+20OL5iIwd+q8i6z+mVLmP2M9mj3YVdJOxpTSz
-	 HD8uO9koL+Mt5JK7eAWltaFF6licAvaeWAFymoRg=
+	b=XElN5mpRtwuxMWf4C/3l6RIVWrjXnABNa+Vp80xAAh80wk08EIpnxoS7kQtRyPntY
+	 jMZ0u5Wm9SkmsrIDT7PnsxOVRHZhp0B9GGBUFSSvD909k+YXiJMp5D5pl+ylftPLn1
+	 wsnXXRUUqstDRCEZsdduGC9Zz+7LOLBd6J+rsN1w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728754AbgCRU47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:56:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58424 "EHLO mail.kernel.org"
+        id S1726954AbgCRU4q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Mar 2020 16:56:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57926 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728742AbgCRU47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Mar 2020 16:56:59 -0400
+        id S1728672AbgCRU4n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Mar 2020 16:56:43 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D1748208E0;
-        Wed, 18 Mar 2020 20:56:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4DA9220A8B;
+        Wed, 18 Mar 2020 20:56:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584565018;
-        bh=hkxNcg/79RZUrIF0LmkAbhCdyGUHXAfcHDI/kypsLlY=;
+        s=default; t=1584565003;
+        bh=6FyjFPVM5uZqq6mM2zPHBnfpu1B7rfoRHO7+zdywet4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zmZ/ss7Kaf2/3Pe/oH9eJH3yy1+5c6cyupMaiNWKptWbsqyjUqd8qpGY8N8IVnKlg
-         tKxFGKna9vVgBCisZg2IDEjVvBqyTlPlJeXNtebV9V5vxt5cujoRRnyJqpz9hCk6ki
-         +NoqvmW6UYav4cUeKE4kUugulDFBAiUxArYd1u9A=
+        b=grIOw11vm6cz8V3TYEUNu1YrWoE4AcHmg1TRjDd34z2ct1VJzKBoaq3caNS3TyvWU
+         qOyl/cUMHpNSTqZRRzUgBMvVDxdyxsi1Qym/P2WsWMk6HhBLFnmGCYXwmyY5ZNxY3S
+         /1JUQaGCmhT6XyUYEpUSau+GwsyJgyDcm8hS+KNk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wen Xiong <wenxiong@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 08/12] scsi: ipr: Fix softlockup when rescanning devices in petitboot
-Date:   Wed, 18 Mar 2020 16:56:44 -0400
-Message-Id: <20200318205648.17937-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 11/15] scsi: ipr: Fix softlockup when rescanning devices in petitboot
+Date:   Wed, 18 Mar 2020 16:56:25 -0400
+Message-Id: <20200318205629.17750-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200318205648.17937-1-sashal@kernel.org>
-References: <20200318205648.17937-1-sashal@kernel.org>
+In-Reply-To: <20200318205629.17750-1-sashal@kernel.org>
+References: <20200318205629.17750-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -118,10 +118,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 2f61d8cd58828..c321d73f602d7 100644
+index c5bc41d97f84b..7760b9a1e0aea 100644
 --- a/drivers/scsi/ipr.c
 +++ b/drivers/scsi/ipr.c
-@@ -9730,6 +9730,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+@@ -9818,6 +9818,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
  	ioa_cfg->max_devs_supported = ipr_max_devs;
  
  	if (ioa_cfg->sis64) {
@@ -129,7 +129,7 @@ index 2f61d8cd58828..c321d73f602d7 100644
  		host->max_id = IPR_MAX_SIS64_TARGETS_PER_BUS;
  		host->max_lun = IPR_MAX_SIS64_LUNS_PER_TARGET;
  		if (ipr_max_devs > IPR_MAX_SIS64_DEVS)
-@@ -9738,6 +9739,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+@@ -9826,6 +9827,7 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
  					   + ((sizeof(struct ipr_config_table_entry64)
  					       * ioa_cfg->max_devs_supported)));
  	} else {
@@ -137,7 +137,7 @@ index 2f61d8cd58828..c321d73f602d7 100644
  		host->max_id = IPR_MAX_NUM_TARGETS_PER_BUS;
  		host->max_lun = IPR_MAX_NUM_LUNS_PER_TARGET;
  		if (ipr_max_devs > IPR_MAX_PHYSICAL_DEVS)
-@@ -9747,7 +9749,6 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
+@@ -9835,7 +9837,6 @@ static void ipr_init_ioa_cfg(struct ipr_ioa_cfg *ioa_cfg,
  					       * ioa_cfg->max_devs_supported)));
  	}
  
@@ -146,10 +146,10 @@ index 2f61d8cd58828..c321d73f602d7 100644
  	host->max_cmd_len = IPR_MAX_CDB_LEN;
  	host->can_queue = ioa_cfg->max_cmds;
 diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index a34c7a5a995e4..9c82ea000c117 100644
+index 8995053d01b3f..5b2388266c4c3 100644
 --- a/drivers/scsi/ipr.h
 +++ b/drivers/scsi/ipr.h
-@@ -1301,6 +1301,7 @@ struct ipr_resource_entry {
+@@ -1306,6 +1306,7 @@ struct ipr_resource_entry {
  #define IPR_ARRAY_VIRTUAL_BUS			0x1
  #define IPR_VSET_VIRTUAL_BUS			0x2
  #define IPR_IOAFP_VIRTUAL_BUS			0x3
