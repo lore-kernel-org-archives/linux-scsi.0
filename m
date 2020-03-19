@@ -2,93 +2,89 @@ Return-Path: <SRS0=Qc7/=5E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0E4C4332B
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 04:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A400C4332D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62AC22071C
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 04:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1768320724
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="iSq9LPsJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726151AbgCSE3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Mar 2020 00:29:37 -0400
-Received: from mail-pl1-f182.google.com ([209.85.214.182]:36339 "EHLO
-        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725817AbgCSE3h (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2020 00:29:37 -0400
-Received: by mail-pl1-f182.google.com with SMTP id g2so499474plo.3;
-        Wed, 18 Mar 2020 21:29:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=rFmth4wVLXPIQ4vkrsLqpNTYU2zcLktLeNqddkrmIRw=;
-        b=t3H2o/TfdyX84ESADYxtRYMaWScrUSbcPF+COGJt/yTYB3JTnGRYPpmWLHRSfrgDeC
-         vbjdlwDPpGUyeRUn3yml21VCElOCXagxFA5Y/Zo97yg8Q/rCffQ0u6kZbASe4okP0sxo
-         edVXqgSKOKkNBdaVCjWUh1uV0tHEFWwoW+c1DNP9ID4Yncb7cisOnA/u7mdfV6P5rW81
-         gItwz0qRxlIPDv/dUYaQBxnv9BXidR9CQqJyZ/vbp94vgA/b9CQ3Bpse9RG6+AmrLI5S
-         3Gx8iNUuxPIOJlZctmOHYJaB8TnwneD3GBxrLcNtCj8xIZLi2Ru16kq1C8giDKDFwaka
-         lcmQ==
-X-Gm-Message-State: ANhLgQ2mOIgsjaBgErUj/7jR4LZLndbhMFzoVJilc01PaQXC6f+1+E+k
-        Vqzu0zNDA8VkMZokc2AmDjjJJu9Gpls=
-X-Google-Smtp-Source: ADFU+vtZBHclJF8Ci1JCtaMOJVJbfE3BByT3WHDZ2kfUSg37S24K2Daw+575AO4BaaoS6IixYntEow==
-X-Received: by 2002:a17:902:207:: with SMTP id 7mr1740171plc.216.1584592175785;
-        Wed, 18 Mar 2020 21:29:35 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:84b7:c685:175f:6f9b? ([2601:647:4000:d7:84b7:c685:175f:6f9b])
-        by smtp.gmail.com with ESMTPSA id u18sm561455pfl.40.2020.03.18.21.29.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Mar 2020 21:29:34 -0700 (PDT)
-Subject: Re: [PATCH] scsi: target: core: add task tag to trace events
-To:     Viacheslav Dubeyko <slava@dubeyko.com>,
-        target-devel@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, linux@yadro.com, v.dubeiko@yadro.com,
-        rostedt@goodmis.org, mingo@redhat.com, r.bolshakov@yadro.com,
-        k.shelekhin@yadro.com
-References: <226e01deaa9baf46d6ff3b8698bc9fe881f7dfc1.camel@dubeyko.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <42e02192-4c5a-e19e-a02d-ede3974c18ed@acm.org>
-Date:   Wed, 18 Mar 2020 21:29:33 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1726151AbgCSIiS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Mar 2020 04:38:18 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:5530 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725601AbgCSIiS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Mar 2020 04:38:18 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02J8V4bT008482;
+        Thu, 19 Mar 2020 01:38:13 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=1Z6Ia0UzAKdYBJT6Yh8nDKDd6H2LXGeO33yf+RmJ8FQ=;
+ b=iSq9LPsJxMy3lkt05euiV5ohlR/D19SEwSdEwMu4/NqPyuz2CHUfs28GPq+IvtFxcfgS
+ IXKICEo2yHJAsgQtRGth/wlFVA0sJ8esUvQr8DCnAGu+gHGOuF1nXfiL2IRxA4e8Reh9
+ hz2ol1DsrvJMS1vwgRuyLWjk9Vow5fI+Yvp99B4b3elErKgGm0+4sHqdRIUc/z7uw7nz
+ 1E4SHn6he1xE4ojnq08mKpsESfh0b3METxWvq6IGxEUwIbRlR+DNBENCOELG+hH/m1Bx
+ EhzFlXgtjf8dR5CwKwnIpMdb2mvRAO3Kfzoupx3WQ2j/K9+fw8kWzmkhakptruhUQURg xg== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2yu8pqpxyb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 19 Mar 2020 01:38:13 -0700
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 19 Mar
+ 2020 01:38:12 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 19 Mar 2020 01:38:11 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 0F6853F7040;
+        Thu, 19 Mar 2020 01:38:12 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 02J8cBjo019534;
+        Thu, 19 Mar 2020 01:38:11 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 02J8cBfA019533;
+        Thu, 19 Mar 2020 01:38:11 -0700
+From:   Manish Rangankar <mrangankar@marvell.com>
+To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
+        <cleech@redhat.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH 0/2] Add MFW recovery and PCI Shutdown handler.
+Date:   Thu, 19 Mar 2020 01:38:09 -0700
+Message-ID: <20200319083811.19499-1-mrangankar@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <226e01deaa9baf46d6ff3b8698bc9fe881f7dfc1.camel@dubeyko.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
+ definitions=2020-03-19_01:2020-03-18,2020-03-18 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-16 06:07, Viacheslav Dubeyko wrote:
-> Trace events target_sequencer_start and target_cmd_complete
-> (include/trace/events/target.h) are ready to show NAA identifier,
-> LUN ID, and many other important command details in the system log:
+Hi Martin,
 
-Reviewed-by: Bart van Assche <bvanassche@acm.org>
+Please apply the following patches to the scsi tree at your
+earliest convenience.
+
+Manish Rangankar (2):
+  qedi: Add MFW error recovery process.
+  qedi: Add PCI shutdown handler support.
+
+ drivers/scsi/qedi/qedi.h       |   3 ++
+ drivers/scsi/qedi/qedi_gbl.h   |   1 +
+ drivers/scsi/qedi/qedi_iscsi.c |  18 +++++++
+ drivers/scsi/qedi/qedi_iscsi.h |   1 +
+ drivers/scsi/qedi/qedi_main.c  | 104 ++++++++++++++++++++++++++++++++---------
+ 5 files changed, 104 insertions(+), 23 deletions(-)
+
+-- 
+1.8.3.1
+
