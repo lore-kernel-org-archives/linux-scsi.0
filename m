@@ -2,116 +2,134 @@ Return-Path: <SRS0=Qc7/=5E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F03F0C4332D
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 21:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA30C4332B
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 22:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD2902072D
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 21:10:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AEE6206D7
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 22:49:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="alNFm6x1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbgCSVK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Mar 2020 17:10:29 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:46462 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725787AbgCSVK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Mar 2020 17:10:29 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id B3BD5204153
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2020 22:10:25 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id jWFHN3gJH0Cw for <linux-scsi@vger.kernel.org>;
-        Thu, 19 Mar 2020 22:10:20 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 6DB3420414B
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2020 22:10:20 +0100 (CET)
-Reply-To: dgilbert@interlog.com
-To:     SCSI development list <linux-scsi@vger.kernel.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] smp_utils-0.99 available
-Message-ID: <53caf1f9-83ea-966f-9a0b-e7ec95b387b1@interlog.com>
-Date:   Thu, 19 Mar 2020 17:10:19 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1727500AbgCSWtI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Mar 2020 18:49:08 -0400
+Received: from gateway32.websitewelcome.com ([192.185.145.115]:26107 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726663AbgCSWtI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Mar 2020 18:49:08 -0400
+X-Greylist: delayed 1412 seconds by postgrey-1.27 at vger.kernel.org; Thu, 19 Mar 2020 18:49:07 EDT
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id 8FB6C17F1E3
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2020 17:25:35 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id F3bbjZEMS8vkBF3bbjQG6Y; Thu, 19 Mar 2020 17:25:35 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Type:MIME-Version:Message-ID:Subject:
+        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=TL6TVrB3e/45SD3ES0SlXrCS9Eof0rSqhEbtuxxX0x8=; b=alNFm6x1iNM37ziy9M+QKtKG7v
+        uLOAGBZq2cjGF2t9Bq0aV0HHx5vOnX/eamgh1v+JKST0U+F6zxQAYEt0S/p6uVtCt7rFPmuGT0guC
+        5zGYp/EaHyrT1FcNCRDgGs2geqaMmJIoG4Yqa6s1I2LZ+ZN0EuxPIxj7meKVKdnkVrFtV36VU7nqW
+        JzDqaju2felTxZPBWkZntMVDOaFoxTPUijloYULUTi6+1T16stQ3+YOFyNx5LK+fqsywCkwrQ/35U
+        ICQwfGd3V36Qs9eFOyMMdmhz8oTqtj6+6fo9m4xXpo9woCOtco4JjyI1m8pfVab1TFbzqaMKyqdJ4
+        1vzluDzg==;
+Received: from cablelink-189-218-116-241.hosts.intercable.net ([189.218.116.241]:53902 helo=embeddedor)
+        by gator4166.hostgator.com with esmtpa (Exim 4.92)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1jF3ba-002549-1L; Thu, 19 Mar 2020 17:25:34 -0500
+Date:   Thu, 19 Mar 2020 17:25:33 -0500
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Chaitra P B <chaitra.basappa@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH][next] message: fusion: mptsas.h: Replace zero-length array
+ with flexible-array member
+Message-ID: <20200319222533.GA20577@embeddedor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 189.218.116.241
+X-Source-L: No
+X-Exim-ID: 1jF3ba-002549-1L
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: cablelink-189-218-116-241.hosts.intercable.net (embeddedor) [189.218.116.241]:53902
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 23
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-smp_utils is a package of command line utilities for invoking SMP functions
-to monitor and manage SAS expanders. SMP is the Serial Attached SCSI (SAS)
-Serial Management Protocol. A SAS Host Bus Adapter (HBA) includes a SMP
-initiator (along with SSP and STP initiators). A SAS expander contains a
-SMP target. Most SAS HBAs have a SMP pass through interface that can be
-used to send SMP requests and receive the responses. This package is
-designed to work with the Linux kernel (lk) 2.6, 3, 4 and 5 series;
-FreeBSD 9.0 (and later) and recent Solaris versions.
+The current codebase makes use of the zero-length array language
+extension to the C90 standard, but the preferred mechanism to declare
+variable-length types such as these ones is a flexible array member[1][2],
+introduced in C99:
 
-Three interfaces are available for Linux: "sgv4", "mptctl" and "aac".
-The "sgv4" interface uses the bsg driver. The "aac" interface requires
-a recent aacraid driver and firmware in the controller.
+struct foo {
+        int stuff;
+        struct boo array[];
+};
 
-The SAS-4 standard is broken into two parts. The latest freely accessible
-electrical and physical part is sas410b.pdf . The upper layers are found in
-the "SAS Protocol Layer" (SPL) document: spl5r09.pdf . Both pdfs can
-be found at https://www.t10.org/ .
+By making use of the mechanism above, we will get a compiler warning
+in case the flexible array does not occur last in the structure, which
+will help us prevent some kind of undefined behavior bugs from being
+inadvertently introduced[3] to the codebase from now on.
 
-These utilities should be SAS-4 ready. SAS-4's baud rate of 22.5 Gbps is
-referred to as "G5" in SPL. Note that some SAS specific utilities required
-for SAS management can be found in other packages. For example the sdparm
-utility (package name: sdparm) lists SAS VPD pages (e.g. Protocol Specific
-LU/Port pages) and accesses SAS mode pages (e.g. select wide port
-connections with the "Shared Port Control" mode page). The sg_logs utility
-in sg3_utils decodes several SAS specific log pages.
+Also, notice that, dynamic memory allocations won't be affected by
+this change:
 
-For an overview, examples and downloads of smp_utils see:
-http://sg.danny.cz/sg/smp_utils.html
+"Flexible array members have incomplete type, and so the sizeof operator
+may not be applied. As a quirk of the original implementation of
+zero-length arrays, sizeof evaluates to zero."[1]
 
+This issue was found with the help of Coccinelle.
 
-Changelog for smp_utils-0.99 [20200305] [svn: r171]
-   - smp_discover(_list): add --dsn option to show
-     device slot number in single line per phy summary
-     - attached SAS device type, word SAS added (spl4r01)
-     - add SAS connector types, shared with NVMe (ses3r8)
-     - add buffered phy burst size field (spl4r07)
-     - add attached apta capable field
-     - update phy capabilities decode (spl5r02)
-     - use Report general to get number phys rather
-       than loop until an error occurs
-   - smp_rep_general: add extended fairness field
-     - add initial time to delay expander forward open
-       indication field
-     - add external port field (spl5r02)
-   - smp_phy_test: change default linkrate from 3 to 6 Gbps
-     which is value 0xa
-   - smp_conf_phy_event: fix file pointer leak
-   - add G5 (22.5 Gbps for SAS-4) settings [spl4r06]
-   - convert many two valued ints to bools
-   - smp_lib:
-     - add smp_get_connector_type_str(), smp_get_num_nomult()
-       and smp_get_llnum_nomult()
-     - add dStrHexErr() and dStrHexStr()
-     - add hex2stdout, hex2stderr and hex2str
-     - add smp_is_big_endian(), smp_all_zeros() and
-       smp_all_ffs()
-     - add sg_unaligned.h and sg_pr2serr.h headers
-     - change connector name: 'SAS SlimLine' to 'SlimSAS'
-   - sync with spl5r08
-   - cleanup configure.ac + Makefile.am
-   - update BSD license from 3 to 2 clause aka FreeBSD
-     license (without reference to FreeBSD project)
-   - debian: bump compat file contents from 7 to 10
+[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+[2] https://github.com/KSPP/linux/issues/21
+[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
 
-Changelog for smp_utils-0.98 [20140526] [svn:r138]
-....
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/message/fusion/mptsas.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
+index c396483d3624..e35b13891fe4 100644
+--- a/drivers/message/fusion/mptsas.h
++++ b/drivers/message/fusion/mptsas.h
+@@ -110,7 +110,7 @@ struct fw_event_work {
+ 	MPT_ADAPTER	*ioc;
+ 	u32			event;
+ 	u8			retries;
+-	char			event_data[0] __aligned(4);
++	char			event_data[] __aligned(4);
+ };
+ 
+ struct mptsas_discovery_event {
+-- 
+2.23.0
 
-Doug Gilbert
