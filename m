@@ -2,226 +2,148 @@ Return-Path: <SRS0=Qc7/=5E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B11AEC4332D
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AF6C4332E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 09:29:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A0F720724
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="K2I/HtzA"
+	by mail.kernel.org (Postfix) with ESMTP id 82E5420767
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 09:29:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726785AbgCSIiZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Mar 2020 04:38:25 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:32580 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725601AbgCSIiZ (ORCPT
+        id S1726063AbgCSJ3a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Mar 2020 05:29:30 -0400
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:10943
+        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725767AbgCSJ3a (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Mar 2020 04:38:25 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02J8V4bV008482;
-        Thu, 19 Mar 2020 01:38:20 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=0ICKFoMKe8BCdolMWqr5gcBFn5r6HFU5u4Qos2tlV8A=;
- b=K2I/HtzAzqZmWEt7lAhKHKSeZrSUQ7qLOrE3DTa1mjYoesopWjwBhAeCHKWNptMXf3Tn
- c1Rt0k3TLBM1/RVUvpEUzrTE//G6ZFSBoDrM7rWqavzMYERCP7PY85uYBS42AjqoOUKk
- locUai904CtVmIIqCyg9v9oAtb8W34Mx79FaQeLF7swNUCsLn37zwssuGaES9e4MDUSi
- k7bFaP+x2TozOLhaCsmqeV5/cJwpBXSaZSKUbTqxSHeE4dQsOPLfMXHOg1poG4/tDRmY
- ukbmfVSFmV8fvPeRaJlstwhwokIuFmClOz4x7vLter0ObvSvUVw+gkDvCceMW6mmSWqV bw== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2yu8pqpxyt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 19 Mar 2020 01:38:19 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 19 Mar
- 2020 01:38:18 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 19 Mar 2020 01:38:18 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 6F63E3F703F;
-        Thu, 19 Mar 2020 01:38:18 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 02J8cIjY019542;
-        Thu, 19 Mar 2020 01:38:18 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 02J8cISc019541;
-        Thu, 19 Mar 2020 01:38:18 -0700
-From:   Manish Rangankar <mrangankar@marvell.com>
-To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
-        <cleech@redhat.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 2/2] qedi: Add PCI shutdown handler support.
-Date:   Thu, 19 Mar 2020 01:38:11 -0700
-Message-ID: <20200319083811.19499-3-mrangankar@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200319083811.19499-1-mrangankar@marvell.com>
-References: <20200319083811.19499-1-mrangankar@marvell.com>
+        Thu, 19 Mar 2020 05:29:30 -0400
+X-IronPort-AV: E=Sophos;i="5.70,571,1574118000"; 
+   d="scan'208";a="342902958"
+Received: from abo-173-121-68.mrs.modulonet.fr (HELO hadrien) ([85.68.121.173])
+  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Mar 2020 10:29:26 +0100
+Date:   Thu, 19 Mar 2020 10:29:26 +0100 (CET)
+From:   Julia Lawall <julia.lawall@inria.fr>
+X-X-Sender: jll@hadrien
+To:     Alim Akhtar <alim.akhtar@samsung.com>
+cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] scsi: ufs-exynos: add UFS host support for Exynos
+ SoCs
+Message-ID: <alpine.DEB.2.21.2003191028360.3010@hadrien>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
- definitions=2020-03-19_01:2020-03-18,2020-03-18 signatures=0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add PCI shutdown handler support for supporting
-wake-on-lan feature.
+Perhaps this is intentional, but please check lines 931-935.
 
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+julia
+
+---------- Forwarded message ----------
+Date: Thu, 19 Mar 2020 09:31:14 +0800
+From: kbuild test robot <lkp@intel.com>
+To: kbuild@lists.01.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH v2 4/5] scsi: ufs-exynos: add UFS host support for Exynos
+    SoCs
+
+CC: kbuild-all@lists.01.org
+In-Reply-To: <20200318111144.39525-5-alim.akhtar@samsung.com>
+References: <20200318111144.39525-5-alim.akhtar@samsung.com>
+TO: Alim Akhtar <alim.akhtar@samsung.com>
+CC: robh+dt@kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
+
+Hi Alim,
+
+I love your patch! Perhaps something to improve:
+
+[auto build test WARNING on phy/next]
+[also build test WARNING on scsi/for-next robh/for-next mkp-scsi/for-next v5.6-rc6 next-20200318]
+[if your patch is applied to the wrong git tree, please drop us a note to help
+improve the system. BTW, we also suggest to use '--base' option to specify the
+base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+
+url:    https://github.com/0day-ci/linux/commits/Alim-Akhtar/exynos-ufs-Add-support-for-UFS-HCI/20200319-022156
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
+:::::: branch date: 7 hours ago
+:::::: commit date: 7 hours ago
+
+If you fix the issue, kindly add following tag
+Reported-by: kbuild test robot <lkp@intel.com>
+Reported-by: Julia Lawall <julia.lawall@lip6.fr>
+
+>> drivers/scsi/ufs/ufs-exynos.c:931:8-10: WARNING: possible condition with no effect (if == else)
+
+# https://github.com/0day-ci/linux/commit/a0a2731081dba4edfad146c501203adb97d5947b
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout a0a2731081dba4edfad146c501203adb97d5947b
+vim +931 drivers/scsi/ufs/ufs-exynos.c
+
+a0a2731081dba4 Alim Akhtar 2020-03-18  898
+a0a2731081dba4 Alim Akhtar 2020-03-18  899  static void exynos_ufs_specify_pwr_mode(struct device_node *np,
+a0a2731081dba4 Alim Akhtar 2020-03-18  900  				struct exynos_ufs *ufs)
+a0a2731081dba4 Alim Akhtar 2020-03-18  901  {
+a0a2731081dba4 Alim Akhtar 2020-03-18  902  	struct uic_pwr_mode *pwr = &ufs->pwr_req;
+a0a2731081dba4 Alim Akhtar 2020-03-18  903  	const char *str = NULL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  904
+a0a2731081dba4 Alim Akhtar 2020-03-18  905  	if (!of_property_read_string(np, "ufs,pwr-attr-mode", &str)) {
+a0a2731081dba4 Alim Akhtar 2020-03-18  906  		if (!strncmp(str, "FAST", sizeof("FAST")))
+a0a2731081dba4 Alim Akhtar 2020-03-18  907  			pwr->mode = FAST_MODE;
+a0a2731081dba4 Alim Akhtar 2020-03-18  908  		else if (!strncmp(str, "SLOW", sizeof("SLOW")))
+a0a2731081dba4 Alim Akhtar 2020-03-18  909  			pwr->mode = SLOW_MODE;
+a0a2731081dba4 Alim Akhtar 2020-03-18  910  		else if (!strncmp(str, "FAST_auto", sizeof("FAST_auto")))
+a0a2731081dba4 Alim Akhtar 2020-03-18  911  			pwr->mode = FASTAUTO_MODE;
+a0a2731081dba4 Alim Akhtar 2020-03-18  912  		else if (!strncmp(str, "SLOW_auto", sizeof("SLOW_auto")))
+a0a2731081dba4 Alim Akhtar 2020-03-18  913  			pwr->mode = SLOWAUTO_MODE;
+a0a2731081dba4 Alim Akhtar 2020-03-18  914  		else
+a0a2731081dba4 Alim Akhtar 2020-03-18  915  			pwr->mode = FAST_MODE;
+a0a2731081dba4 Alim Akhtar 2020-03-18  916  	} else {
+a0a2731081dba4 Alim Akhtar 2020-03-18  917  		pwr->mode = FAST_MODE;
+a0a2731081dba4 Alim Akhtar 2020-03-18  918  	}
+a0a2731081dba4 Alim Akhtar 2020-03-18  919
+a0a2731081dba4 Alim Akhtar 2020-03-18  920  	if (of_property_read_u32(np, "ufs,pwr-attr-lane", &pwr->lane))
+a0a2731081dba4 Alim Akhtar 2020-03-18  921  		pwr->lane = 1;
+a0a2731081dba4 Alim Akhtar 2020-03-18  922
+a0a2731081dba4 Alim Akhtar 2020-03-18  923  	if (of_property_read_u32(np, "ufs,pwr-attr-gear", &pwr->gear))
+a0a2731081dba4 Alim Akhtar 2020-03-18  924  		pwr->gear = 1;
+a0a2731081dba4 Alim Akhtar 2020-03-18  925
+a0a2731081dba4 Alim Akhtar 2020-03-18  926  	if (IS_UFS_PWR_MODE_HS(pwr->mode)) {
+a0a2731081dba4 Alim Akhtar 2020-03-18  927  		if (!of_property_read_string(np,
+a0a2731081dba4 Alim Akhtar 2020-03-18  928  					"ufs,pwr-attr-hs-series", &str)) {
+a0a2731081dba4 Alim Akhtar 2020-03-18  929  			if (!strncmp(str, "HS_rate_b", sizeof("HS_rate_b")))
+a0a2731081dba4 Alim Akhtar 2020-03-18  930  				pwr->hs_series = PA_HS_MODE_B;
+a0a2731081dba4 Alim Akhtar 2020-03-18 @931  			else if (!strncmp(str, "HS_rate_a",
+a0a2731081dba4 Alim Akhtar 2020-03-18  932  					sizeof("HS_rate_a")))
+a0a2731081dba4 Alim Akhtar 2020-03-18  933  				pwr->hs_series = PA_HS_MODE_A;
+a0a2731081dba4 Alim Akhtar 2020-03-18  934  			else
+a0a2731081dba4 Alim Akhtar 2020-03-18  935  				pwr->hs_series = PA_HS_MODE_A;
+a0a2731081dba4 Alim Akhtar 2020-03-18  936  		} else {
+a0a2731081dba4 Alim Akhtar 2020-03-18  937  			pwr->hs_series = PA_HS_MODE_A;
+a0a2731081dba4 Alim Akhtar 2020-03-18  938  		}
+a0a2731081dba4 Alim Akhtar 2020-03-18  939  	}
+a0a2731081dba4 Alim Akhtar 2020-03-18  940
+a0a2731081dba4 Alim Akhtar 2020-03-18  941  	if (of_property_read_u32_array(
+a0a2731081dba4 Alim Akhtar 2020-03-18  942  		np, "ufs,pwr-local-l2-timer", pwr->l_l2_timer, 3)) {
+a0a2731081dba4 Alim Akhtar 2020-03-18  943  		pwr->l_l2_timer[0] = FC0PROTTIMEOUTVAL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  944  		pwr->l_l2_timer[1] = TC0REPLAYTIMEOUTVAL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  945  		pwr->l_l2_timer[2] = AFC0REQTIMEOUTVAL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  946  	}
+a0a2731081dba4 Alim Akhtar 2020-03-18  947
+a0a2731081dba4 Alim Akhtar 2020-03-18  948  	if (of_property_read_u32_array(
+a0a2731081dba4 Alim Akhtar 2020-03-18  949  		np, "ufs,pwr-remote-l2-timer", pwr->r_l2_timer, 3)) {
+a0a2731081dba4 Alim Akhtar 2020-03-18  950  		pwr->r_l2_timer[0] = FC0PROTTIMEOUTVAL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  951  		pwr->r_l2_timer[1] = TC0REPLAYTIMEOUTVAL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  952  		pwr->r_l2_timer[2] = AFC0REQTIMEOUTVAL;
+a0a2731081dba4 Alim Akhtar 2020-03-18  953  	}
+a0a2731081dba4 Alim Akhtar 2020-03-18  954  }
+a0a2731081dba4 Alim Akhtar 2020-03-18  955
+
 ---
- drivers/scsi/qedi/qedi.h       |  2 ++
- drivers/scsi/qedi/qedi_gbl.h   |  1 +
- drivers/scsi/qedi/qedi_iscsi.c | 18 ++++++++++++++++++
- drivers/scsi/qedi/qedi_iscsi.h |  1 +
- drivers/scsi/qedi/qedi_main.c  | 19 +++++++++++++++++--
- 5 files changed, 39 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qedi/qedi.h b/drivers/scsi/qedi/qedi.h
-index 812e368..9498279 100644
---- a/drivers/scsi/qedi/qedi.h
-+++ b/drivers/scsi/qedi/qedi.h
-@@ -36,6 +36,7 @@
-  */
- #define QEDI_MODE_NORMAL	0
- #define QEDI_MODE_RECOVERY	1
-+#define QEDI_MODE_SHUTDOWN	2
- 
- #define ISCSI_WQE_SET_PTU_INVALIDATE	1
- #define QEDI_MAX_ISCSI_TASK		4096
-@@ -278,6 +279,7 @@ struct qedi_ctx {
- #define QEDI_IOTHREAD_WAKE	2
- #define QEDI_IN_RECOVERY	5
- #define QEDI_IN_OFFLINE		6
-+#define QEDI_IN_SHUTDOWN	7
- 
- 	u8 mac[ETH_ALEN];
- 	u32 src_ip[4];
-diff --git a/drivers/scsi/qedi/qedi_gbl.h b/drivers/scsi/qedi/qedi_gbl.h
-index 8ba7c77..116645c 100644
---- a/drivers/scsi/qedi/qedi_gbl.h
-+++ b/drivers/scsi/qedi/qedi_gbl.h
-@@ -73,5 +73,6 @@ void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
- void qedi_clearsq(struct qedi_ctx *qedi,
- 		  struct qedi_conn *qedi_conn,
- 		  struct iscsi_task *task);
-+void qedi_clear_session_ctx(struct iscsi_cls_session *cls_sess);
- 
- #endif
-diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 8829880..1f4a5fb 100644
---- a/drivers/scsi/qedi/qedi_iscsi.c
-+++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -392,6 +392,7 @@ static int qedi_conn_bind(struct iscsi_cls_session *cls_session,
- 
- 	qedi_ep->conn = qedi_conn;
- 	qedi_conn->ep = qedi_ep;
-+	qedi_conn->iscsi_ep = ep;
- 	qedi_conn->iscsi_conn_id = qedi_ep->iscsi_cid;
- 	qedi_conn->fw_cid = qedi_ep->fw_cid;
- 	qedi_conn->cmd_cleanup_req = 0;
-@@ -782,6 +783,9 @@ static int qedi_task_xmit(struct iscsi_task *task)
- 	struct qedi_cmd *cmd = task->dd_data;
- 	struct scsi_cmnd *sc = task->sc;
- 
-+	if (test_bit(QEDI_IN_SHUTDOWN, &qedi_conn->qedi->flags))
-+		return -ENODEV;
-+
- 	cmd->state = 0;
- 	cmd->task = NULL;
- 	cmd->use_slowpath = false;
-@@ -1596,6 +1600,20 @@ void qedi_process_iscsi_error(struct qedi_endpoint *ep,
- 		qedi_start_conn_recovery(qedi_conn->qedi, qedi_conn);
- }
- 
-+void qedi_clear_session_ctx(struct iscsi_cls_session *cls_sess)
-+{
-+	struct iscsi_session *session = cls_sess->dd_data;
-+	struct iscsi_conn *conn = session->leadconn;
-+	struct qedi_conn *qedi_conn = conn->dd_data;
-+
-+	if (iscsi_is_session_online(cls_sess))
-+		qedi_ep_disconnect(qedi_conn->iscsi_ep);
-+
-+	qedi_conn_destroy(qedi_conn->cls_conn);
-+
-+	qedi_session_destroy(cls_sess);
-+}
-+
- void qedi_process_tcp_error(struct qedi_endpoint *ep,
- 			    struct iscsi_eqe_data *data)
- {
-diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
-index 67c3b73..39dc27c 100644
---- a/drivers/scsi/qedi/qedi_iscsi.h
-+++ b/drivers/scsi/qedi/qedi_iscsi.h
-@@ -149,6 +149,7 @@ struct qedi_conn {
- 	struct iscsi_cls_conn *cls_conn;
- 	struct qedi_ctx *qedi;
- 	struct qedi_endpoint *ep;
-+	struct iscsi_endpoint *iscsi_ep;
- 	struct list_head active_cmd_list;
- 	spinlock_t list_lock;		/* internal conn lock */
- 	u32 active_cmd_count;
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index cfa705a..b995b19 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -2344,7 +2344,11 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 	struct qedi_ctx *qedi = pci_get_drvdata(pdev);
- 	int rval;
- 
--	if (mode == QEDI_MODE_NORMAL) {
-+	if (mode == QEDI_MODE_SHUTDOWN)
-+		iscsi_host_for_each_session(qedi->shost,
-+					    qedi_clear_session_ctx);
-+
-+	if (mode == QEDI_MODE_NORMAL || mode == QEDI_MODE_SHUTDOWN) {
- 		if (qedi->tmf_thread) {
- 			flush_workqueue(qedi->tmf_thread);
- 			destroy_workqueue(qedi->tmf_thread);
-@@ -2384,7 +2388,7 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 
- 	qedi_destroy_fp(qedi);
- 
--	if (mode == QEDI_MODE_NORMAL) {
-+	if (mode == QEDI_MODE_NORMAL || mode == QEDI_MODE_SHUTDOWN) {
- 		qedi_release_cid_que(qedi);
- 		qedi_cm_free_mem(qedi);
- 		qedi_free_uio(qedi->udev);
-@@ -2404,6 +2408,16 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 	}
- }
- 
-+static void qedi_shutdown(struct pci_dev *pdev)
-+{
-+	struct qedi_ctx *qedi = pci_get_drvdata(pdev);
-+
-+	QEDI_ERR(&qedi->dbg_ctx, "%s: Shutdown qedi\n", __func__);
-+	if (test_and_set_bit(QEDI_IN_SHUTDOWN, &qedi->flags))
-+		return;
-+	__qedi_remove(pdev, QEDI_MODE_SHUTDOWN);
-+}
-+
- static int __qedi_probe(struct pci_dev *pdev, int mode)
- {
- 	struct qedi_ctx *qedi;
-@@ -2740,6 +2754,7 @@ static void qedi_remove(struct pci_dev *pdev)
- 	.id_table = qedi_pci_tbl,
- 	.probe = qedi_probe,
- 	.remove = qedi_remove,
-+	.shutdown = qedi_shutdown,
- };
- 
- static int __init qedi_init(void)
--- 
-1.8.3.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
