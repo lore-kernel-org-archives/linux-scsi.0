@@ -7,59 +7,59 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F897C4332D
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B11AEC4332D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 008E02072C
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A0F720724
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 08:38:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="M79tHUyw"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="K2I/HtzA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726658AbgCSIiW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Mar 2020 04:38:22 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:26314 "EHLO
+        id S1726785AbgCSIiZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Mar 2020 04:38:25 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:32580 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725601AbgCSIiW (ORCPT
+        by vger.kernel.org with ESMTP id S1725601AbgCSIiZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Mar 2020 04:38:22 -0400
+        Thu, 19 Mar 2020 04:38:25 -0400
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02J8V4SX008475;
-        Thu, 19 Mar 2020 01:38:16 -0700
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02J8V4bV008482;
+        Thu, 19 Mar 2020 01:38:20 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=p0gv7ic0VhK3kivEsIXMeT6WmN16eSW61+y+6kuOc5Y=;
- b=M79tHUywJX77I3Gtc9rTsEL30n0oYMzY+Jz+9Ny39IUgjZhZhx7D2FfO4G+q67VqbLez
- w9AU2Ac2Rn4mvxyseoPeVQ0rfeWQ5VHAX3iG0ereCnETwEfbYnVGGSgFuvJ3fpCZp/F2
- wqsZ5b1eX/qCTHsrKo1YRgCcI/BDb72yE/2kJ+Xi+dsjh0i57Gll38bgJuEGIvpU+a2i
- Tbsn4yRp+pulgNS9IlX+5K77nucsPvzcOJTbbiY7DHTDKhsSHDbmm1RUHiazmAggbxSI
- X84XJa+sB68SIGerWVPCo4ONZtCcSEb8hltC3CJEesNNd7OD7sduGPyOpRh2O/7orENU MQ== 
+ content-type; s=pfpt0818; bh=0ICKFoMKe8BCdolMWqr5gcBFn5r6HFU5u4Qos2tlV8A=;
+ b=K2I/HtzAzqZmWEt7lAhKHKSeZrSUQ7qLOrE3DTa1mjYoesopWjwBhAeCHKWNptMXf3Tn
+ c1Rt0k3TLBM1/RVUvpEUzrTE//G6ZFSBoDrM7rWqavzMYERCP7PY85uYBS42AjqoOUKk
+ locUai904CtVmIIqCyg9v9oAtb8W34Mx79FaQeLF7swNUCsLn37zwssuGaES9e4MDUSi
+ k7bFaP+x2TozOLhaCsmqeV5/cJwpBXSaZSKUbTqxSHeE4dQsOPLfMXHOg1poG4/tDRmY
+ ukbmfVSFmV8fvPeRaJlstwhwokIuFmClOz4x7vLter0ObvSvUVw+gkDvCceMW6mmSWqV bw== 
 Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2yu8pqpxyj-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 2yu8pqpxyt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 19 Mar 2020 01:38:16 -0700
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by SC-EXCH03.marvell.com
+        Thu, 19 Mar 2020 01:38:19 -0700
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
  (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 19 Mar
- 2020 01:38:15 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 19 Mar 2020 01:38:15 -0700
+ 2020 01:38:18 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 19 Mar 2020 01:38:18 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 38BDF3F704A;
-        Thu, 19 Mar 2020 01:38:15 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 6F63E3F703F;
+        Thu, 19 Mar 2020 01:38:18 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 02J8cFRb019538;
-        Thu, 19 Mar 2020 01:38:15 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 02J8cIjY019542;
+        Thu, 19 Mar 2020 01:38:18 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 02J8cFMB019537;
-        Thu, 19 Mar 2020 01:38:15 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 02J8cISc019541;
+        Thu, 19 Mar 2020 01:38:18 -0700
 From:   Manish Rangankar <mrangankar@marvell.com>
 To:     <martin.petersen@oracle.com>, <lduncan@suse.com>,
         <cleech@redhat.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 1/2] qedi: Add MFW error recovery process.
-Date:   Thu, 19 Mar 2020 01:38:10 -0700
-Message-ID: <20200319083811.19499-2-mrangankar@marvell.com>
+Subject: [PATCH 2/2] qedi: Add PCI shutdown handler support.
+Date:   Thu, 19 Mar 2020 01:38:11 -0700
+Message-ID: <20200319083811.19499-3-mrangankar@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200319083811.19499-1-mrangankar@marvell.com>
 References: <20200319083811.19499-1-mrangankar@marvell.com>
@@ -72,190 +72,156 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch adds the mfw error recovery process in the qedi driver.
-The process includes a partial/customized driver unload and load
-to reset context by preserving active iSCSI session kernel state.
+Add PCI shutdown handler support for supporting
+wake-on-lan feature.
 
 Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qedi/qedi.h      |  1 +
- drivers/scsi/qedi/qedi_main.c | 87 ++++++++++++++++++++++++++++++++-----------
- 2 files changed, 66 insertions(+), 22 deletions(-)
+ drivers/scsi/qedi/qedi.h       |  2 ++
+ drivers/scsi/qedi/qedi_gbl.h   |  1 +
+ drivers/scsi/qedi/qedi_iscsi.c | 18 ++++++++++++++++++
+ drivers/scsi/qedi/qedi_iscsi.h |  1 +
+ drivers/scsi/qedi/qedi_main.c  | 19 +++++++++++++++++--
+ 5 files changed, 39 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qedi/qedi.h b/drivers/scsi/qedi/qedi.h
-index 9513fd3..812e368 100644
+index 812e368..9498279 100644
 --- a/drivers/scsi/qedi/qedi.h
 +++ b/drivers/scsi/qedi/qedi.h
-@@ -331,6 +331,7 @@ struct qedi_ctx {
- 	u16 ll2_mtu;
+@@ -36,6 +36,7 @@
+  */
+ #define QEDI_MODE_NORMAL	0
+ #define QEDI_MODE_RECOVERY	1
++#define QEDI_MODE_SHUTDOWN	2
  
- 	struct workqueue_struct *dpc_wq;
-+	struct delayed_work recovery_work;
+ #define ISCSI_WQE_SET_PTU_INVALIDATE	1
+ #define QEDI_MAX_ISCSI_TASK		4096
+@@ -278,6 +279,7 @@ struct qedi_ctx {
+ #define QEDI_IOTHREAD_WAKE	2
+ #define QEDI_IN_RECOVERY	5
+ #define QEDI_IN_OFFLINE		6
++#define QEDI_IN_SHUTDOWN	7
  
- 	spinlock_t task_idx_lock;	/* To protect gbl context */
- 	s32 last_tidx_alloc;
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index acb930b..cfa705a 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -58,6 +58,7 @@
- static void qedi_reset_uio_rings(struct qedi_uio_dev *udev);
- static void qedi_ll2_free_skbs(struct qedi_ctx *qedi);
- static struct nvm_iscsi_block *qedi_get_nvram_block(struct qedi_ctx *qedi);
-+static void qedi_recovery_handler(struct work_struct *work);
+ 	u8 mac[ETH_ALEN];
+ 	u32 src_ip[4];
+diff --git a/drivers/scsi/qedi/qedi_gbl.h b/drivers/scsi/qedi/qedi_gbl.h
+index 8ba7c77..116645c 100644
+--- a/drivers/scsi/qedi/qedi_gbl.h
++++ b/drivers/scsi/qedi/qedi_gbl.h
+@@ -73,5 +73,6 @@ void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
+ void qedi_clearsq(struct qedi_ctx *qedi,
+ 		  struct qedi_conn *qedi_conn,
+ 		  struct iscsi_task *task);
++void qedi_clear_session_ctx(struct iscsi_cls_session *cls_sess);
  
- static int qedi_iscsi_event_cb(void *context, u8 fw_event_code, void *fw_handle)
- {
-@@ -1113,6 +1114,20 @@ static void qedi_get_protocol_tlv_data(void *dev, void *data)
- 	return;
+ #endif
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 8829880..1f4a5fb 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -392,6 +392,7 @@ static int qedi_conn_bind(struct iscsi_cls_session *cls_session,
+ 
+ 	qedi_ep->conn = qedi_conn;
+ 	qedi_conn->ep = qedi_ep;
++	qedi_conn->iscsi_ep = ep;
+ 	qedi_conn->iscsi_conn_id = qedi_ep->iscsi_cid;
+ 	qedi_conn->fw_cid = qedi_ep->fw_cid;
+ 	qedi_conn->cmd_cleanup_req = 0;
+@@ -782,6 +783,9 @@ static int qedi_task_xmit(struct iscsi_task *task)
+ 	struct qedi_cmd *cmd = task->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
++	if (test_bit(QEDI_IN_SHUTDOWN, &qedi_conn->qedi->flags))
++		return -ENODEV;
++
+ 	cmd->state = 0;
+ 	cmd->task = NULL;
+ 	cmd->use_slowpath = false;
+@@ -1596,6 +1600,20 @@ void qedi_process_iscsi_error(struct qedi_endpoint *ep,
+ 		qedi_start_conn_recovery(qedi_conn->qedi, qedi_conn);
  }
  
-+static void qedi_schedule_recovery_handler(void *dev)
++void qedi_clear_session_ctx(struct iscsi_cls_session *cls_sess)
 +{
-+	struct qedi_ctx *qedi = dev;
-+
-+	QEDI_ERR(&qedi->dbg_ctx, "Recovery handler scheduled.\n");
-+
-+	if (test_and_set_bit(QEDI_IN_RECOVERY, &qedi->flags))
-+		return;
-+
-+	atomic_set(&qedi->link_state, QEDI_LINK_DOWN);
-+
-+	schedule_delayed_work(&qedi->recovery_work, 0);
-+}
-+
- static void qedi_link_update(void *dev, struct qed_link_output *link)
- {
- 	struct qedi_ctx *qedi = (struct qedi_ctx *)dev;
-@@ -1130,6 +1145,7 @@ static void qedi_link_update(void *dev, struct qed_link_output *link)
- static struct qed_iscsi_cb_ops qedi_cb_ops = {
- 	{
- 		.link_update =		qedi_link_update,
-+		.schedule_recovery_handler = qedi_schedule_recovery_handler,
- 		.get_protocol_tlv_data = qedi_get_protocol_tlv_data,
- 		.get_generic_tlv_data = qedi_get_generic_tlv_data,
- 	}
-@@ -2328,16 +2344,18 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 	struct qedi_ctx *qedi = pci_get_drvdata(pdev);
- 	int rval;
- 
--	if (qedi->tmf_thread) {
--		flush_workqueue(qedi->tmf_thread);
--		destroy_workqueue(qedi->tmf_thread);
--		qedi->tmf_thread = NULL;
--	}
-+	if (mode == QEDI_MODE_NORMAL) {
-+		if (qedi->tmf_thread) {
-+			flush_workqueue(qedi->tmf_thread);
-+			destroy_workqueue(qedi->tmf_thread);
-+			qedi->tmf_thread = NULL;
-+		}
- 
--	if (qedi->offload_thread) {
--		flush_workqueue(qedi->offload_thread);
--		destroy_workqueue(qedi->offload_thread);
--		qedi->offload_thread = NULL;
-+		if (qedi->offload_thread) {
-+			flush_workqueue(qedi->offload_thread);
-+			destroy_workqueue(qedi->offload_thread);
-+			qedi->offload_thread = NULL;
-+		}
- 	}
- 
- #ifdef CONFIG_DEBUG_FS
-@@ -2353,8 +2371,7 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 		qedi_ops->ll2->stop(qedi->cdev);
- 	}
- 
--	if (mode == QEDI_MODE_NORMAL)
--		qedi_free_iscsi_pf_param(qedi);
-+	qedi_free_iscsi_pf_param(qedi);
- 
- 	rval = qedi_ops->common->update_drv_state(qedi->cdev, false);
- 	if (rval)
-@@ -2373,9 +2390,6 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 		qedi_free_uio(qedi->udev);
- 		qedi_free_itt(qedi);
- 
--		iscsi_host_remove(qedi->shost);
--		iscsi_host_free(qedi->shost);
--
- 		if (qedi->ll2_recv_thread) {
- 			kthread_stop(qedi->ll2_recv_thread);
- 			qedi->ll2_recv_thread = NULL;
-@@ -2384,6 +2398,9 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
- 
- 		if (qedi->boot_kset)
- 			iscsi_boot_destroy_kset(qedi->boot_kset);
-+
-+		iscsi_host_remove(qedi->shost);
-+		iscsi_host_free(qedi->shost);
- 	}
- }
- 
-@@ -2435,14 +2452,12 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 		  qedi->dev_info.common.num_hwfns,
- 		  qedi_ops->common->get_affin_hwfn_idx(qedi->cdev));
- 
--	if (mode != QEDI_MODE_RECOVERY) {
--		rc = qedi_set_iscsi_pf_param(qedi);
--		if (rc) {
--			rc = -ENOMEM;
--			QEDI_ERR(&qedi->dbg_ctx,
--				 "Set iSCSI pf param fail\n");
--			goto free_host;
--		}
-+	rc = qedi_set_iscsi_pf_param(qedi);
-+	if (rc) {
-+		rc = -ENOMEM;
-+		QEDI_ERR(&qedi->dbg_ctx,
-+			 "Set iSCSI pf param fail\n");
-+		goto free_host;
- 	}
- 
- 	qedi_ops->common->update_pf_params(qedi->cdev, &qedi->pf_params);
-@@ -2633,6 +2648,8 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 			goto free_cid_que;
- 		}
- 
-+		INIT_DELAYED_WORK(&qedi->recovery_work, qedi_recovery_handler);
-+
- 		/* F/w needs 1st task context memory entry for performance */
- 		set_bit(QEDI_RESERVE_TASK_ID, qedi->task_idx_map);
- 		atomic_set(&qedi->num_offloads, 0);
-@@ -2673,6 +2690,32 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 	return rc;
- }
- 
-+static void qedi_mark_conn_recovery(struct iscsi_cls_session *cls_session)
-+{
-+	struct iscsi_session *session = cls_session->dd_data;
++	struct iscsi_session *session = cls_sess->dd_data;
 +	struct iscsi_conn *conn = session->leadconn;
 +	struct qedi_conn *qedi_conn = conn->dd_data;
 +
-+	iscsi_conn_failure(qedi_conn->cls_conn->dd_data, ISCSI_ERR_CONN_FAILED);
++	if (iscsi_is_session_online(cls_sess))
++		qedi_ep_disconnect(qedi_conn->iscsi_ep);
++
++	qedi_conn_destroy(qedi_conn->cls_conn);
++
++	qedi_session_destroy(cls_sess);
 +}
 +
-+static void qedi_recovery_handler(struct work_struct *work)
-+{
-+	struct qedi_ctx *qedi =
-+			container_of(work, struct qedi_ctx, recovery_work.work);
-+
-+	iscsi_host_for_each_session(qedi->shost, qedi_mark_conn_recovery);
-+
-+	/* Call common_ops->recovery_prolog to allow the MFW to quiesce
-+	 * any PCI transactions.
-+	 */
-+	qedi_ops->common->recovery_prolog(qedi->cdev);
-+
-+	__qedi_remove(qedi->pdev, QEDI_MODE_RECOVERY);
-+	__qedi_probe(qedi->pdev, QEDI_MODE_RECOVERY);
-+	clear_bit(QEDI_IN_RECOVERY, &qedi->flags);
-+}
-+
- static int qedi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ void qedi_process_tcp_error(struct qedi_endpoint *ep,
+ 			    struct iscsi_eqe_data *data)
  {
- 	return __qedi_probe(pdev, QEDI_MODE_NORMAL);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
+index 67c3b73..39dc27c 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.h
++++ b/drivers/scsi/qedi/qedi_iscsi.h
+@@ -149,6 +149,7 @@ struct qedi_conn {
+ 	struct iscsi_cls_conn *cls_conn;
+ 	struct qedi_ctx *qedi;
+ 	struct qedi_endpoint *ep;
++	struct iscsi_endpoint *iscsi_ep;
+ 	struct list_head active_cmd_list;
+ 	spinlock_t list_lock;		/* internal conn lock */
+ 	u32 active_cmd_count;
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index cfa705a..b995b19 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2344,7 +2344,11 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
+ 	struct qedi_ctx *qedi = pci_get_drvdata(pdev);
+ 	int rval;
+ 
+-	if (mode == QEDI_MODE_NORMAL) {
++	if (mode == QEDI_MODE_SHUTDOWN)
++		iscsi_host_for_each_session(qedi->shost,
++					    qedi_clear_session_ctx);
++
++	if (mode == QEDI_MODE_NORMAL || mode == QEDI_MODE_SHUTDOWN) {
+ 		if (qedi->tmf_thread) {
+ 			flush_workqueue(qedi->tmf_thread);
+ 			destroy_workqueue(qedi->tmf_thread);
+@@ -2384,7 +2388,7 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
+ 
+ 	qedi_destroy_fp(qedi);
+ 
+-	if (mode == QEDI_MODE_NORMAL) {
++	if (mode == QEDI_MODE_NORMAL || mode == QEDI_MODE_SHUTDOWN) {
+ 		qedi_release_cid_que(qedi);
+ 		qedi_cm_free_mem(qedi);
+ 		qedi_free_uio(qedi->udev);
+@@ -2404,6 +2408,16 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
+ 	}
+ }
+ 
++static void qedi_shutdown(struct pci_dev *pdev)
++{
++	struct qedi_ctx *qedi = pci_get_drvdata(pdev);
++
++	QEDI_ERR(&qedi->dbg_ctx, "%s: Shutdown qedi\n", __func__);
++	if (test_and_set_bit(QEDI_IN_SHUTDOWN, &qedi->flags))
++		return;
++	__qedi_remove(pdev, QEDI_MODE_SHUTDOWN);
++}
++
+ static int __qedi_probe(struct pci_dev *pdev, int mode)
+ {
+ 	struct qedi_ctx *qedi;
+@@ -2740,6 +2754,7 @@ static void qedi_remove(struct pci_dev *pdev)
+ 	.id_table = qedi_pci_tbl,
+ 	.probe = qedi_probe,
+ 	.remove = qedi_remove,
++	.shutdown = qedi_shutdown,
+ };
+ 
+ static int __init qedi_init(void)
 -- 
 1.8.3.1
 
