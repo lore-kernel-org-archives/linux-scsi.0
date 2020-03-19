@@ -2,148 +2,79 @@ Return-Path: <SRS0=Qc7/=5E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AF6C4332E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 09:29:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 557C3C4332B
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 10:33:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82E5420767
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 09:29:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24C2620757
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 10:33:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fqbeo36M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726063AbgCSJ3a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Mar 2020 05:29:30 -0400
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:10943
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725767AbgCSJ3a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Mar 2020 05:29:30 -0400
-X-IronPort-AV: E=Sophos;i="5.70,571,1574118000"; 
-   d="scan'208";a="342902958"
-Received: from abo-173-121-68.mrs.modulonet.fr (HELO hadrien) ([85.68.121.173])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Mar 2020 10:29:26 +0100
-Date:   Thu, 19 Mar 2020 10:29:26 +0100 (CET)
-From:   Julia Lawall <julia.lawall@inria.fr>
-X-X-Sender: jll@hadrien
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] scsi: ufs-exynos: add UFS host support for Exynos
- SoCs
-Message-ID: <alpine.DEB.2.21.2003191028360.3010@hadrien>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        id S1727015AbgCSKdn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Mar 2020 06:33:43 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:37282 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726589AbgCSKdn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2020 06:33:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=cHEIfPKeH9omjNt+0k991N/wm6h5xTiMPSj7a3ocvkk=; b=fqbeo36MCxVADWcrpk/D9GeNit
+        YSF85PIZ5pZRnh/gMtR2c79Jsb8L7YhvvN64lZ60kOxZfWWSJ6Ae7O7AhkL3Ayjae3KYft2zXedIR
+        fNP+IugcEnmbNPTGciEn4qpUnj9OXjNyaCy7HO5i7Tky2zl+Ayw3wB4suhJF04W2+8RWQ7KuGpZAg
+        UJRxkefSD6ewnGd+iAQwAMtrwc9GVUoW5gZ/n8IDzmU5MBqMX2hMy7c+8sJXOpCVTfBuF7DEYMNPF
+        DEC44x4DgN1K7/3nnWxzQZlc3UczWGFRgrmw9tLdY3dxsXFsfrVkzF/N7t0J1mofyKqstCyOChcH9
+        kcg8bDNQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jEsUg-0001WX-9j; Thu, 19 Mar 2020 10:33:42 +0000
+Date:   Thu, 19 Mar 2020 03:33:42 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-fscrypt@vger.kernel.org" <linux-fscrypt@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Andy Gross <agross@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Satya Tangirala <satyat@google.com>
+Subject: Re: [RFC PATCH v3 4/4] scsi: ufs-qcom: add Inline Crypto Engine
+ support
+Message-ID: <20200319103342.GB30601@infradead.org>
+References: <20200312171259.151442-1-ebiggers@kernel.org>
+ <20200312171259.151442-5-ebiggers@kernel.org>
+ <BY5PR02MB65778B0D07AA92F6AB5E39E8FFFD0@BY5PR02MB6577.namprd02.prod.outlook.com>
+ <20200312190541.GB6470@sol.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200312190541.GB6470@sol.localdomain>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Perhaps this is intentional, but please check lines 931-935.
+On Thu, Mar 12, 2020 at 12:05:41PM -0700, Eric Biggers wrote:
+> Of course, if someone actually posts patches to support hardware that diverges
+> from the UFS standard in new and "exciting" ways (whether it's another vendor's
+> hardware or future Qualcomm hardware) then they'll need to post any variant
+> operation(s) they need.  They need to be targetted to only the specific quirk(s)
+> needed, so that drivers don't have to unnecessarily re-implement stuff.
 
-julia
-
----------- Forwarded message ----------
-Date: Thu, 19 Mar 2020 09:31:14 +0800
-From: kbuild test robot <lkp@intel.com>
-To: kbuild@lists.01.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH v2 4/5] scsi: ufs-exynos: add UFS host support for Exynos
-    SoCs
-
-CC: kbuild-all@lists.01.org
-In-Reply-To: <20200318111144.39525-5-alim.akhtar@samsung.com>
-References: <20200318111144.39525-5-alim.akhtar@samsung.com>
-TO: Alim Akhtar <alim.akhtar@samsung.com>
-CC: robh+dt@kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
-
-Hi Alim,
-
-I love your patch! Perhaps something to improve:
-
-[auto build test WARNING on phy/next]
-[also build test WARNING on scsi/for-next robh/for-next mkp-scsi/for-next v5.6-rc6 next-20200318]
-[if your patch is applied to the wrong git tree, please drop us a note to help
-improve the system. BTW, we also suggest to use '--base' option to specify the
-base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
-
-url:    https://github.com/0day-ci/linux/commits/Alim-Akhtar/exynos-ufs-Add-support-for-UFS-HCI/20200319-022156
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
-:::::: branch date: 7 hours ago
-:::::: commit date: 7 hours ago
-
-If you fix the issue, kindly add following tag
-Reported-by: kbuild test robot <lkp@intel.com>
-Reported-by: Julia Lawall <julia.lawall@lip6.fr>
-
->> drivers/scsi/ufs/ufs-exynos.c:931:8-10: WARNING: possible condition with no effect (if == else)
-
-# https://github.com/0day-ci/linux/commit/a0a2731081dba4edfad146c501203adb97d5947b
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout a0a2731081dba4edfad146c501203adb97d5947b
-vim +931 drivers/scsi/ufs/ufs-exynos.c
-
-a0a2731081dba4 Alim Akhtar 2020-03-18  898
-a0a2731081dba4 Alim Akhtar 2020-03-18  899  static void exynos_ufs_specify_pwr_mode(struct device_node *np,
-a0a2731081dba4 Alim Akhtar 2020-03-18  900  				struct exynos_ufs *ufs)
-a0a2731081dba4 Alim Akhtar 2020-03-18  901  {
-a0a2731081dba4 Alim Akhtar 2020-03-18  902  	struct uic_pwr_mode *pwr = &ufs->pwr_req;
-a0a2731081dba4 Alim Akhtar 2020-03-18  903  	const char *str = NULL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  904
-a0a2731081dba4 Alim Akhtar 2020-03-18  905  	if (!of_property_read_string(np, "ufs,pwr-attr-mode", &str)) {
-a0a2731081dba4 Alim Akhtar 2020-03-18  906  		if (!strncmp(str, "FAST", sizeof("FAST")))
-a0a2731081dba4 Alim Akhtar 2020-03-18  907  			pwr->mode = FAST_MODE;
-a0a2731081dba4 Alim Akhtar 2020-03-18  908  		else if (!strncmp(str, "SLOW", sizeof("SLOW")))
-a0a2731081dba4 Alim Akhtar 2020-03-18  909  			pwr->mode = SLOW_MODE;
-a0a2731081dba4 Alim Akhtar 2020-03-18  910  		else if (!strncmp(str, "FAST_auto", sizeof("FAST_auto")))
-a0a2731081dba4 Alim Akhtar 2020-03-18  911  			pwr->mode = FASTAUTO_MODE;
-a0a2731081dba4 Alim Akhtar 2020-03-18  912  		else if (!strncmp(str, "SLOW_auto", sizeof("SLOW_auto")))
-a0a2731081dba4 Alim Akhtar 2020-03-18  913  			pwr->mode = SLOWAUTO_MODE;
-a0a2731081dba4 Alim Akhtar 2020-03-18  914  		else
-a0a2731081dba4 Alim Akhtar 2020-03-18  915  			pwr->mode = FAST_MODE;
-a0a2731081dba4 Alim Akhtar 2020-03-18  916  	} else {
-a0a2731081dba4 Alim Akhtar 2020-03-18  917  		pwr->mode = FAST_MODE;
-a0a2731081dba4 Alim Akhtar 2020-03-18  918  	}
-a0a2731081dba4 Alim Akhtar 2020-03-18  919
-a0a2731081dba4 Alim Akhtar 2020-03-18  920  	if (of_property_read_u32(np, "ufs,pwr-attr-lane", &pwr->lane))
-a0a2731081dba4 Alim Akhtar 2020-03-18  921  		pwr->lane = 1;
-a0a2731081dba4 Alim Akhtar 2020-03-18  922
-a0a2731081dba4 Alim Akhtar 2020-03-18  923  	if (of_property_read_u32(np, "ufs,pwr-attr-gear", &pwr->gear))
-a0a2731081dba4 Alim Akhtar 2020-03-18  924  		pwr->gear = 1;
-a0a2731081dba4 Alim Akhtar 2020-03-18  925
-a0a2731081dba4 Alim Akhtar 2020-03-18  926  	if (IS_UFS_PWR_MODE_HS(pwr->mode)) {
-a0a2731081dba4 Alim Akhtar 2020-03-18  927  		if (!of_property_read_string(np,
-a0a2731081dba4 Alim Akhtar 2020-03-18  928  					"ufs,pwr-attr-hs-series", &str)) {
-a0a2731081dba4 Alim Akhtar 2020-03-18  929  			if (!strncmp(str, "HS_rate_b", sizeof("HS_rate_b")))
-a0a2731081dba4 Alim Akhtar 2020-03-18  930  				pwr->hs_series = PA_HS_MODE_B;
-a0a2731081dba4 Alim Akhtar 2020-03-18 @931  			else if (!strncmp(str, "HS_rate_a",
-a0a2731081dba4 Alim Akhtar 2020-03-18  932  					sizeof("HS_rate_a")))
-a0a2731081dba4 Alim Akhtar 2020-03-18  933  				pwr->hs_series = PA_HS_MODE_A;
-a0a2731081dba4 Alim Akhtar 2020-03-18  934  			else
-a0a2731081dba4 Alim Akhtar 2020-03-18  935  				pwr->hs_series = PA_HS_MODE_A;
-a0a2731081dba4 Alim Akhtar 2020-03-18  936  		} else {
-a0a2731081dba4 Alim Akhtar 2020-03-18  937  			pwr->hs_series = PA_HS_MODE_A;
-a0a2731081dba4 Alim Akhtar 2020-03-18  938  		}
-a0a2731081dba4 Alim Akhtar 2020-03-18  939  	}
-a0a2731081dba4 Alim Akhtar 2020-03-18  940
-a0a2731081dba4 Alim Akhtar 2020-03-18  941  	if (of_property_read_u32_array(
-a0a2731081dba4 Alim Akhtar 2020-03-18  942  		np, "ufs,pwr-local-l2-timer", pwr->l_l2_timer, 3)) {
-a0a2731081dba4 Alim Akhtar 2020-03-18  943  		pwr->l_l2_timer[0] = FC0PROTTIMEOUTVAL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  944  		pwr->l_l2_timer[1] = TC0REPLAYTIMEOUTVAL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  945  		pwr->l_l2_timer[2] = AFC0REQTIMEOUTVAL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  946  	}
-a0a2731081dba4 Alim Akhtar 2020-03-18  947
-a0a2731081dba4 Alim Akhtar 2020-03-18  948  	if (of_property_read_u32_array(
-a0a2731081dba4 Alim Akhtar 2020-03-18  949  		np, "ufs,pwr-remote-l2-timer", pwr->r_l2_timer, 3)) {
-a0a2731081dba4 Alim Akhtar 2020-03-18  950  		pwr->r_l2_timer[0] = FC0PROTTIMEOUTVAL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  951  		pwr->r_l2_timer[1] = TC0REPLAYTIMEOUTVAL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  952  		pwr->r_l2_timer[2] = AFC0REQTIMEOUTVAL;
-a0a2731081dba4 Alim Akhtar 2020-03-18  953  	}
-a0a2731081dba4 Alim Akhtar 2020-03-18  954  }
-a0a2731081dba4 Alim Akhtar 2020-03-18  955
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+I think the only sane answer is that we only support hardware upstream
+that conforms to the standard and we skip all that bullshit.  The whole
+point of the standard is that things just work, and we should not give
+vendors a wild card to come up with bullshit like the interfaces handled
+in this patchset.
