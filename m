@@ -1,135 +1,100 @@
-Return-Path: <SRS0=Qc7/=5E=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=SK/U=5F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA30C4332B
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 22:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7AE6C43333
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Mar 2020 00:21:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8AEE6206D7
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Mar 2020 22:49:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="alNFm6x1"
+	by mail.kernel.org (Postfix) with ESMTP id 8F3A62076C
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Mar 2020 00:21:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584663714;
+	bh=JOFW0NHtW4ZUJ1TUB8kyFXIrkQlxTzvn2FHFdNi15/Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=mce/Ek2BWkVuneMbJc22vsYUkd+cT5sZ7Uc80kl6yExOPACBosayfvTfkuhCg6ye2
+	 eYe+PH34PlBLPkggYn5xf40WXyfaohharlMU4y2o5axOE4GtknzZoAJ99xiI/nA3X/
+	 Pb03L8Si/IbQcXiD7vRTb+czJb6Y3z2fzvAomjdY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727500AbgCSWtI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Mar 2020 18:49:08 -0400
-Received: from gateway32.websitewelcome.com ([192.185.145.115]:26107 "EHLO
-        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726663AbgCSWtI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Mar 2020 18:49:08 -0400
-X-Greylist: delayed 1412 seconds by postgrey-1.27 at vger.kernel.org; Thu, 19 Mar 2020 18:49:07 EDT
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway32.websitewelcome.com (Postfix) with ESMTP id 8FB6C17F1E3
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2020 17:25:35 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id F3bbjZEMS8vkBF3bbjQG6Y; Thu, 19 Mar 2020 17:25:35 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Type:MIME-Version:Message-ID:Subject:
-        Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=TL6TVrB3e/45SD3ES0SlXrCS9Eof0rSqhEbtuxxX0x8=; b=alNFm6x1iNM37ziy9M+QKtKG7v
-        uLOAGBZq2cjGF2t9Bq0aV0HHx5vOnX/eamgh1v+JKST0U+F6zxQAYEt0S/p6uVtCt7rFPmuGT0guC
-        5zGYp/EaHyrT1FcNCRDgGs2geqaMmJIoG4Yqa6s1I2LZ+ZN0EuxPIxj7meKVKdnkVrFtV36VU7nqW
-        JzDqaju2felTxZPBWkZntMVDOaFoxTPUijloYULUTi6+1T16stQ3+YOFyNx5LK+fqsywCkwrQ/35U
-        ICQwfGd3V36Qs9eFOyMMdmhz8oTqtj6+6fo9m4xXpo9woCOtco4JjyI1m8pfVab1TFbzqaMKyqdJ4
-        1vzluDzg==;
-Received: from cablelink-189-218-116-241.hosts.intercable.net ([189.218.116.241]:53902 helo=embeddedor)
-        by gator4166.hostgator.com with esmtpa (Exim 4.92)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1jF3ba-002549-1L; Thu, 19 Mar 2020 17:25:34 -0500
-Date:   Thu, 19 Mar 2020 17:25:33 -0500
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Chaitra P B <chaitra.basappa@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH][next] message: fusion: mptsas.h: Replace zero-length array
- with flexible-array member
-Message-ID: <20200319222533.GA20577@embeddedor.com>
+        id S1727202AbgCTAVw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Mar 2020 20:21:52 -0400
+Received: from mail-il1-f193.google.com ([209.85.166.193]:38828 "EHLO
+        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726663AbgCTAVv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Mar 2020 20:21:51 -0400
+Received: by mail-il1-f193.google.com with SMTP id p1so4054353ils.5;
+        Thu, 19 Mar 2020 17:21:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=FNX6oJTq7J+/RlIA0O/fMH+A64Z+Gex/rEUfT2IWpQ4=;
+        b=IxJadD6okQwVJF0USZvfFi0IWnWAga5zo/DJyVSfFzdgBWOVickbFwRNMrtXsx3UyU
+         DjzwKW3F9fVs4ieqq5+ImhlFi9xuwQtmh4zxyGOwMh/9XFPN7gvawGlVviyLDA5lAidg
+         BDgvjwanKHlF/VAR7U3i+65nnqy3lhJgvE52AdqruyGCv85w9kycYRJqQzjHV7Lf5Oz5
+         GWXn/FuSpJDV6QKX18jcaf/jY3e7mnqMtc15O3J4QbUjsN7ex3ka135WFSU5r3Oz+vrA
+         dNbtn1xEtKw2OCKijbyn6yCKnrGYQAftUBvvcnMvw4IPB4CJPfIBoSc+Bmsr1CxGfBY2
+         jZoA==
+X-Gm-Message-State: ANhLgQ1eZT4mAYcDB9U6pBz6AE33XTfrNYzSettBzART9I55rLSqRJzj
+        dWrPQJrJHuIwFEvn6orBow==
+X-Google-Smtp-Source: ADFU+vuWqcE4xeIgd8bciqMNI9OIj6xfhQTbXQpazdl4HeI9o71TkgH6pZjD9kWRH/39xisTogRLwg==
+X-Received: by 2002:a05:6e02:e81:: with SMTP id t1mr5969536ilj.226.1584663710753;
+        Thu, 19 Mar 2020 17:21:50 -0700 (PDT)
+Received: from rob-hp-laptop ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id r9sm1280333ioa.44.2020.03.19.17.21.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Mar 2020 17:21:50 -0700 (PDT)
+Received: (nullmailer pid 12090 invoked by uid 1000);
+        Fri, 20 Mar 2020 00:21:47 -0000
+Date:   Thu, 19 Mar 2020 18:21:47 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Alim Akhtar <alim.akhtar@samsung.com>
+Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        linux-scsi@vger.kernel.org, krzk@kernel.org, avri.altman@wdc.com,
+        martin.petersen@oracle.com, kwmad.kim@samsung.com,
+        stanley.chu@mediatek.com, cang@codeaurora.org,
+        linux-samsung-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: Re: [PATCH v3 1/5] dt-bindings: phy: Document Samsung UFS PHY
+ bindings
+Message-ID: <20200320002147.GA11283@bogus>
+References: <20200319150031.11024-1-alim.akhtar@samsung.com>
+ <CGME20200319150703epcas5p2d917898f6f1e0554cb978a70a34ee507@epcas5p2.samsung.com>
+ <20200319150031.11024-2-alim.akhtar@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.218.116.241
-X-Source-L: No
-X-Exim-ID: 1jF3ba-002549-1L
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: cablelink-189-218-116-241.hosts.intercable.net (embeddedor) [189.218.116.241]:53902
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 23
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+In-Reply-To: <20200319150031.11024-2-alim.akhtar@samsung.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The current codebase makes use of the zero-length array language
-extension to the C90 standard, but the preferred mechanism to declare
-variable-length types such as these ones is a flexible array member[1][2],
-introduced in C99:
+On Thu, 19 Mar 2020 20:30:27 +0530, Alim Akhtar wrote:
+> This patch documents Samsung UFS PHY device tree bindings
+> 
+> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> ---
+>  .../bindings/phy/samsung,ufs-phy.yaml         | 62 +++++++++++++++++++
+>  1 file changed, 62 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> 
 
-struct foo {
-        int stuff;
-        struct boo array[];
-};
+My bot found errors running 'make dt_binding_check' on your patch:
 
-By making use of the mechanism above, we will get a compiler warning
-in case the flexible array does not occur last in the structure, which
-will help us prevent some kind of undefined behavior bugs from being
-inadvertently introduced[3] to the codebase from now on.
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/phy/samsung,ufs-phy.example.dt.yaml: example-0: 'ufs-phy@0x15571800' does not match any of the regexes: '.*-names$', '.*-supply$', '^#.*-cells$', '^#[a-zA-Z0-9,+\\-._]{0,63}$', '^[a-zA-Z][a-zA-Z0-9,+\\-._]{0,63}$', '^[a-zA-Z][a-zA-Z0-9,+\\-._]{0,63}@[0-9a-fA-F]+(,[0-9a-fA-F]+)*$', '^__.*__$', 'pinctrl-[0-9]+'
 
-Also, notice that, dynamic memory allocations won't be affected by
-this change:
+See https://patchwork.ozlabs.org/patch/1258280
 
-"Flexible array members have incomplete type, and so the sizeof operator
-may not be applied. As a quirk of the original implementation of
-zero-length arrays, sizeof evaluates to zero."[1]
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure dt-schema is up to date:
 
-This issue was found with the help of Coccinelle.
+pip3 install git+https://github.com/devicetree-org/dt-schema.git@master --upgrade
 
-[1] https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
-[2] https://github.com/KSPP/linux/issues/21
-[3] commit 76497732932f ("cxgb3/l2t: Fix undefined behaviour")
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/message/fusion/mptsas.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/message/fusion/mptsas.h b/drivers/message/fusion/mptsas.h
-index c396483d3624..e35b13891fe4 100644
---- a/drivers/message/fusion/mptsas.h
-+++ b/drivers/message/fusion/mptsas.h
-@@ -110,7 +110,7 @@ struct fw_event_work {
- 	MPT_ADAPTER	*ioc;
- 	u32			event;
- 	u8			retries;
--	char			event_data[0] __aligned(4);
-+	char			event_data[] __aligned(4);
- };
- 
- struct mptsas_discovery_event {
--- 
-2.23.0
-
+Please check and re-submit.
