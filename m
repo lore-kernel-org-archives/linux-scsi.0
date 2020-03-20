@@ -2,176 +2,345 @@ Return-Path: <SRS0=SK/U=5F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C8BC4332B
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Mar 2020 14:24:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2C97C4332B
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Mar 2020 15:11:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9710F2072D
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Mar 2020 14:24:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9E1A2078A
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Mar 2020 15:11:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584717082;
+	bh=wPIgZHlHXIpvX7rbWR9bBXdthfipdOWJrHs3flWe2dg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=JzmL2bB8lFD5fqNO4wMX5bU4pubR5DunDkiPLoRcMsigK0+AWEJgato3ob/YUHRmj
+	 n3pMkPpwfAjgaNulUAODKxZTJycmW1NaM1rJ+gVjFSRtiUCz4G3iZyQRnAmCPlGiQG
+	 3NEd7UvpLdwM2aL2lk6Yn5wDXLUx5eua+S5G3odM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727351AbgCTOYv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Mar 2020 10:24:51 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:9007 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727128AbgCTOYv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Mar 2020 10:24:51 -0400
-IronPort-SDR: KXdCz/c+E28b++i04tbA1hUhmr2u6IKKr5IZwp6u4IxBjC473fkiz0MWcWHndlUWrI1e79BTHc
- UyXOqZCo8OVhVBxaD6+c3QIMD4BliWknc5YczJ8vcYt3GkOpy3eLgwam1RPjwhIAVrkdUE5OIu
- z1KK5bIlt4MBTP3Titq9LF3yidFqqRxXgWRTps3LoeyMJpilLocIsB+tHWPNoUH+ZUtu6xeGVl
- AjUOokmAvdm4ZNsT2LyHtV1Bd52TPOximN2EtsP2d5NjRGIrQhHhc5vFV6mRx5biMjqr7FTqq8
- ZCY=
-X-IronPort-AV: E=Sophos;i="5.70,559,1574150400"; 
-   d="scan'208";a="28594805"
-Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
-  by labrats.qualcomm.com with ESMTP; 15 Mar 2020 23:21:12 -0700
-Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
-  by ironmsg05-sd.qualcomm.com with ESMTP; 15 Mar 2020 23:21:11 -0700
-Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
-        id A00EA3A61; Sun, 15 Mar 2020 23:21:11 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1727426AbgCTPLI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Mar 2020 11:11:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56054 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727401AbgCTPLH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 20 Mar 2020 11:11:07 -0400
+Received: from mail.kernel.org (ip5f5ad4e9.dynamic.kabel-deutschland.de [95.90.212.233])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A4A622076E;
+        Fri, 20 Mar 2020 15:11:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584717066;
+        bh=wPIgZHlHXIpvX7rbWR9bBXdthfipdOWJrHs3flWe2dg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tdeBs9eHiGwMvjF82a2CVzT9xi8PtrAbwc5pkRONZ3Z5ptdlWgjU1n4VkU7m49VX0
+         r2w+CcJcrLX2XFku9R2PhaMoyhuCFiy/QlcAdojG9ypNIBN+s0jJ0YQ9Ta9uoPRRuC
+         zthMoq13v0KsDaQDfceTTfODcKCAHBeB+I/WUKKM=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jFJIe-000ukg-JM; Fri, 20 Mar 2020 16:11:04 +0100
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Vinod Koul <vkoul@kernel.org>, Tyler Hicks <code@tyhicks.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/2] scsi: ufs: Do not rely on prefetched data
-Date:   Sun, 15 Mar 2020 23:20:52 -0700
-Message-Id: <1584339655-20337-3-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1584339655-20337-1-git-send-email-cang@codeaurora.org>
-References: <1584339655-20337-1-git-send-email-cang@codeaurora.org>
+        Harry Wei <harryxiyou@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Madhuparna Bhowmik <madhuparnabhowmik04@gmail.com>,
+        Matthias Maennich <maennich@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
+        Luca Ceresoli <luca@lucaceresoli.net>,
+        Ricardo Ribalda Delgado <ribalda@kernel.org>,
+        Jacopo Mondi <jacopo@jmondi.org>, dmaengine@vger.kernel.org,
+        ecryptfs@vger.kernel.org, netdev@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH v2 1/2] docs: prevent warnings due to autosectionlabel
+Date:   Fri, 20 Mar 2020 16:11:02 +0100
+Message-Id: <2bffb91e4a63d41bf5fae1c23e1e8b3bba0b8806.1584716446.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <cover.1584716446.git.mchehab+huawei@kernel.org>
+References: <cover.1584716446.git.mchehab+huawei@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We were setting bActiveICCLevel attribute for UFS device only once but
-type of this attribute has changed from persistent to volatile since UFS
-device specification v2.1. This attribute is set to the default value after
-power cycle or hardware reset event. It isn't safe to rely on prefetched
-data (only used for bActiveICCLevel attribute now). Hence this change
-removes the code related to data prefetching and set this parameter on
-every attempt to probe the UFS device.
+Changeset 58ad30cf91f0 ("docs: fix reference to core-api/namespaces.rst")
+enabled a new feature at Sphinx: it will now generate index for each
+document title, plus to each chapter inside it.
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
+There's a drawback, though: one document cannot have two sections
+with the same name anymore.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 63aaa88f..99c7fca 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6458,11 +6458,12 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
- 	return icc_level;
- }
+A followup patch will change the logic of autosectionlabel to
+avoid most creating references for every single section title,
+but still we need to be able to reference the chapters inside
+a document.
+
+There are a few places where there are two chapters with the
+same name. This patch renames one of the chapters, in order to
+avoid symbol conflict within the same document.
+
+PS.: as I don't speach Chinese, I had some help from a friend
+(Wen Liu) at the Chinese translation for "publishing patches"
+for this document:
+
+	Documentation/translations/zh_CN/process/5.Posting.rst
+
+Fixes: 58ad30cf91f0 ("docs: fix reference to core-api/namespaces.rst")
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/driver-api/80211/mac80211-advanced.rst  |  8 ++++----
+ Documentation/driver-api/dmaengine/index.rst          |  4 ++--
+ Documentation/filesystems/ecryptfs.rst                | 11 +++++------
+ Documentation/kernel-hacking/hacking.rst              |  4 ++--
+ Documentation/media/kapi/v4l2-controls.rst            |  8 ++++----
+ Documentation/networking/snmp_counter.rst             |  4 ++--
+ Documentation/powerpc/ultravisor.rst                  |  4 ++--
+ Documentation/security/siphash.rst                    |  8 ++++----
+ Documentation/target/tcmu-design.rst                  |  6 +++---
+ .../translations/zh_CN/process/5.Posting.rst          |  2 +-
+ Documentation/x86/intel-iommu.rst                     |  3 ++-
+ 11 files changed, 31 insertions(+), 31 deletions(-)
+
+diff --git a/Documentation/driver-api/80211/mac80211-advanced.rst b/Documentation/driver-api/80211/mac80211-advanced.rst
+index 9f1c5bb7ac35..24cb64b3b715 100644
+--- a/Documentation/driver-api/80211/mac80211-advanced.rst
++++ b/Documentation/driver-api/80211/mac80211-advanced.rst
+@@ -272,8 +272,8 @@ STA information lifetime rules
+ .. kernel-doc:: net/mac80211/sta_info.c
+    :doc: STA information lifetime rules
  
--static void ufshcd_init_icc_levels(struct ufs_hba *hba)
-+static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
- {
- 	int ret;
- 	int buff_len = hba->desc_size.pwr_desc;
- 	u8 *desc_buf;
-+	u32 icc_level;
+-Aggregation
+-===========
++Aggregation Functions
++=====================
  
- 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
- 	if (!desc_buf)
-@@ -6477,20 +6478,17 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
- 		goto out;
- 	}
+ .. kernel-doc:: net/mac80211/sta_info.h
+    :functions: sta_ampdu_mlme
+@@ -284,8 +284,8 @@ Aggregation
+ .. kernel-doc:: net/mac80211/sta_info.h
+    :functions: tid_ampdu_rx
  
--	hba->init_prefetch_data.icc_level =
--			ufshcd_find_max_sup_active_icc_level(hba,
--			desc_buf, buff_len);
--	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
--			__func__, hba->init_prefetch_data.icc_level);
-+	icc_level = ufshcd_find_max_sup_active_icc_level(hba, desc_buf,
-+							 buff_len);
-+	dev_dbg(hba->dev, "%s: setting icc_level 0x%x", __func__, icc_level);
+-Synchronisation
+-===============
++Synchronisation Functions
++=========================
  
- 	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
--		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
--		&hba->init_prefetch_data.icc_level);
-+		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0, &icc_level);
+ TBD
  
- 	if (ret)
- 		dev_err(hba->dev,
- 			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
--			__func__, hba->init_prefetch_data.icc_level , ret);
-+			__func__, icc_level, ret);
+diff --git a/Documentation/driver-api/dmaengine/index.rst b/Documentation/driver-api/dmaengine/index.rst
+index b9df904d0a79..bdc45d8b4cfb 100644
+--- a/Documentation/driver-api/dmaengine/index.rst
++++ b/Documentation/driver-api/dmaengine/index.rst
+@@ -5,8 +5,8 @@ DMAEngine documentation
+ DMAEngine documentation provides documents for various aspects of DMAEngine
+ framework.
  
- out:
- 	kfree(desc_buf);
-@@ -6996,8 +6994,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- {
- 	int ret;
+-DMAEngine documentation
+------------------------
++DMAEngine development documentation
++-----------------------------------
  
--	ufshcd_init_icc_levels(hba);
--
- 	/* Add required well known logical units to scsi mid layer */
- 	ret = ufshcd_scsi_add_wlus(hba);
- 	if (ret)
-@@ -7095,6 +7091,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
- 		}
- 	}
+ This book helps with DMAengine internal APIs and guide for DMAEngine device
+ driver writers.
+diff --git a/Documentation/filesystems/ecryptfs.rst b/Documentation/filesystems/ecryptfs.rst
+index 7236172300ef..1f2edef4c57a 100644
+--- a/Documentation/filesystems/ecryptfs.rst
++++ b/Documentation/filesystems/ecryptfs.rst
+@@ -30,13 +30,12 @@ Userspace requirements include:
+ - Libgcrypt
  
-+	/*
-+	 * bActiveICCLevel is volatile for UFS device (as per latest v2.1 spec)
-+	 * and for removable UFS card as well, hence always set the parameter.
-+	 * Note: Error handler may issue the device reset hence resetting
-+	 *       bActiveICCLevel as well so it is always safe to set this here.
-+	 */
-+	ufshcd_set_active_icc_lvl(hba);
-+
- 	/* set the state as operational after switching to desired gear */
- 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
  
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index d45a044..5652d39 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -404,15 +404,6 @@ struct ufs_clk_scaling {
- 	bool is_suspended;
- };
+-Notes
+-=====
++.. note::
  
--/**
-- * struct ufs_init_prefetch - contains data that is pre-fetched once during
-- * initialization
-- * @icc_level: icc level which was read during initialization
-- */
--struct ufs_init_prefetch {
--	u32 icc_level;
--};
--
- #define UFS_ERR_REG_HIST_LENGTH 8
- /**
-  * struct ufs_err_reg_hist - keeps history of errors
-@@ -544,7 +535,6 @@ enum ufshcd_quirks {
-  * @intr_mask: Interrupt Mask Bits
-  * @ee_ctrl_mask: Exception event control mask
-  * @is_powered: flag to check if HBA is powered
-- * @init_prefetch_data: data pre-fetched during initialization
-  * @eh_work: Worker to handle UFS errors that require s/w attention
-  * @eeh_work: Worker to handle exception events
-  * @errors: HBA errors
-@@ -632,7 +622,6 @@ struct ufs_hba {
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask;
- 	bool is_powered;
--	struct ufs_init_prefetch init_prefetch_data;
+-In the beta/experimental releases of eCryptfs, when you upgrade
+-eCryptfs, you should copy the files to an unencrypted location and
+-then copy the files back into the new eCryptfs mount to migrate the
+-files.
++   In the beta/experimental releases of eCryptfs, when you upgrade
++   eCryptfs, you should copy the files to an unencrypted location and
++   then copy the files back into the new eCryptfs mount to migrate the
++   files.
  
- 	/* Work Queues */
- 	struct work_struct eh_work;
+ 
+ Mount-wide Passphrase
+diff --git a/Documentation/kernel-hacking/hacking.rst b/Documentation/kernel-hacking/hacking.rst
+index d707a0a61cc9..eed2136d847f 100644
+--- a/Documentation/kernel-hacking/hacking.rst
++++ b/Documentation/kernel-hacking/hacking.rst
+@@ -601,7 +601,7 @@ Defined in ``include/linux/export.h``
+ 
+ This is the variant of `EXPORT_SYMBOL()` that allows specifying a symbol
+ namespace. Symbol Namespaces are documented in
+-:ref:`Documentation/core-api/symbol-namespaces.rst <Symbol Namespaces>`
++:doc:`../core-api/symbol-namespaces`
+ 
+ :c:func:`EXPORT_SYMBOL_NS_GPL()`
+ --------------------------------
+@@ -610,7 +610,7 @@ Defined in ``include/linux/export.h``
+ 
+ This is the variant of `EXPORT_SYMBOL_GPL()` that allows specifying a symbol
+ namespace. Symbol Namespaces are documented in
+-:ref:`Documentation/core-api/symbol-namespaces.rst <Symbol Namespaces>`
++:doc:`../core-api/symbol-namespaces`
+ 
+ Routines and Conventions
+ ========================
+diff --git a/Documentation/media/kapi/v4l2-controls.rst b/Documentation/media/kapi/v4l2-controls.rst
+index b20800cae3f2..5129019afb49 100644
+--- a/Documentation/media/kapi/v4l2-controls.rst
++++ b/Documentation/media/kapi/v4l2-controls.rst
+@@ -291,8 +291,8 @@ and QUERYMENU. And G/S_CTRL as well as G/TRY/S_EXT_CTRLS are automatically suppo
+    In practice the basic usage as described above is sufficient for most drivers.
+ 
+ 
+-Inheriting Controls
+--------------------
++Inheriting Sub-device Controls
++------------------------------
+ 
+ When a sub-device is registered with a V4L2 driver by calling
+ v4l2_device_register_subdev() and the ctrl_handler fields of both v4l2_subdev
+@@ -757,8 +757,8 @@ attempting to find another control from the same handler will deadlock.
+ It is recommended not to use this function from inside the control ops.
+ 
+ 
+-Inheriting Controls
+--------------------
++Preventing Controls inheritance
++-------------------------------
+ 
+ When one control handler is added to another using v4l2_ctrl_add_handler, then
+ by default all controls from one are merged to the other. But a subdev might
+diff --git a/Documentation/networking/snmp_counter.rst b/Documentation/networking/snmp_counter.rst
+index 38a4edc4522b..10e11099e74a 100644
+--- a/Documentation/networking/snmp_counter.rst
++++ b/Documentation/networking/snmp_counter.rst
+@@ -908,8 +908,8 @@ A TLP probe packet is sent.
+ 
+ A packet loss is detected and recovered by TLP.
+ 
+-TCP Fast Open
+-=============
++TCP Fast Open description
++=========================
+ TCP Fast Open is a technology which allows data transfer before the
+ 3-way handshake complete. Please refer the `TCP Fast Open wiki`_ for a
+ general description.
+diff --git a/Documentation/powerpc/ultravisor.rst b/Documentation/powerpc/ultravisor.rst
+index 363736d7fd36..df136c8f91fa 100644
+--- a/Documentation/powerpc/ultravisor.rst
++++ b/Documentation/powerpc/ultravisor.rst
+@@ -8,8 +8,8 @@ Protected Execution Facility
+ .. contents::
+     :depth: 3
+ 
+-Protected Execution Facility
+-############################
++Introduction
++############
+ 
+     Protected Execution Facility (PEF) is an architectural change for
+     POWER 9 that enables Secure Virtual Machines (SVMs). DD2.3 chips
+diff --git a/Documentation/security/siphash.rst b/Documentation/security/siphash.rst
+index 9965821ab333..4eba68cdf0a1 100644
+--- a/Documentation/security/siphash.rst
++++ b/Documentation/security/siphash.rst
+@@ -128,8 +128,8 @@ then when you can be absolutely certain that the outputs will never be
+ transmitted out of the kernel. This is only remotely useful over `jhash` as a
+ means of mitigating hashtable flooding denial of service attacks.
+ 
+-Generating a key
+-================
++Generating a HalfSipHash key
++============================
+ 
+ Keys should always be generated from a cryptographically secure source of
+ random numbers, either using get_random_bytes or get_random_once:
+@@ -139,8 +139,8 @@ get_random_bytes(&key, sizeof(key));
+ 
+ If you're not deriving your key from here, you're doing it wrong.
+ 
+-Using the functions
+-===================
++Using the HalfSipHash functions
++===============================
+ 
+ There are two variants of the function, one that takes a list of integers, and
+ one that takes a buffer::
+diff --git a/Documentation/target/tcmu-design.rst b/Documentation/target/tcmu-design.rst
+index a7b426707bf6..e47047e32e27 100644
+--- a/Documentation/target/tcmu-design.rst
++++ b/Documentation/target/tcmu-design.rst
+@@ -5,7 +5,7 @@ TCM Userspace Design
+ 
+ .. Contents:
+ 
+-   1) TCM Userspace Design
++   1) Design
+      a) Background
+      b) Benefits
+      c) Design constraints
+@@ -23,8 +23,8 @@ TCM Userspace Design
+    3) A final note
+ 
+ 
+-TCM Userspace Design
+-====================
++Design
++======
+ 
+ TCM is another name for LIO, an in-kernel iSCSI target (server).
+ Existing TCM targets run in the kernel.  TCMU (TCM in Userspace)
+diff --git a/Documentation/translations/zh_CN/process/5.Posting.rst b/Documentation/translations/zh_CN/process/5.Posting.rst
+index 41aba21ff050..9ff9945f918c 100644
+--- a/Documentation/translations/zh_CN/process/5.Posting.rst
++++ b/Documentation/translations/zh_CN/process/5.Posting.rst
+@@ -5,7 +5,7 @@
+ 
+ .. _cn_development_posting:
+ 
+-发送补丁
++发布补丁
+ ========
+ 
+ 迟早，当您的工作准备好提交给社区进行审查，并最终包含到主线内核中时。不出所料，
+diff --git a/Documentation/x86/intel-iommu.rst b/Documentation/x86/intel-iommu.rst
+index 9dae6b47e398..099f13d51d5f 100644
+--- a/Documentation/x86/intel-iommu.rst
++++ b/Documentation/x86/intel-iommu.rst
+@@ -95,9 +95,10 @@ and any RMRR's processed::
+ When DMAR is enabled for use, you will notice..
+ 
+ PCI-DMA: Using DMAR IOMMU
++-------------------------
+ 
+ Fault reporting
+----------------
++^^^^^^^^^^^^^^^
+ 
+ ::
+ 
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.24.1
 
