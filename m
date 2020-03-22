@@ -2,108 +2,119 @@ Return-Path: <SRS0=LJp0=5H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D828DC4332B
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 18:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42151C54FCE
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 18:13:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A99C32072E
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 18:13:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B6532072E
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 18:13:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i4RdENhe"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K0CT3qbf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726470AbgCVSNN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Mar 2020 14:13:13 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:37669 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725785AbgCVSNN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2020 14:13:13 -0400
-Received: by mail-pg1-f194.google.com with SMTP id a32so5961165pga.4
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2020 11:13:11 -0700 (PDT)
+        id S1726666AbgCVSNO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Mar 2020 14:13:14 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:33628 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726583AbgCVSNO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2020 14:13:14 -0400
+Received: by mail-pg1-f193.google.com with SMTP id d17so5390263pgo.0
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2020 11:13:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=LP6plaTFmbxwhZbpmYS2FxepZz3RjZKJhbCfGyu9744=;
-        b=i4RdENhecBtX3L+q44L4Lv0vVcH0qqy3/gPlOsoT1yAm8iKRoYVMwyc2N98FP90NiU
-         nq2vGM/wibd++2GFyYtiy1YiXzluTzjP5Pi4yOQns5mRl10Nvn6NPuFQAJmDw4HHR2rF
-         Wtm2ei0W19b+4q4dKZGUB9IvPgPQ5LfPau/uuCGidUDoWz7VRie/2sZm2Ly8WEvmNQ2S
-         aCCuS8LAZ8tGPGr6Axrf7oz1TWupnJ1RJNKdeKnI6phkSb9wST4ns5GidfEqJUXnK/Yp
-         PwS9Zq1fT+lHB3wD2BA7WfqQA2o8NbaEwGg9vlagaHz+al28HxdYt0H58kWVBT1IjuQh
-         S1Iw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=pLMLROrENPd34rTAROkJXBNsOaa33tIBqLfgYXpPJM0=;
+        b=K0CT3qbf8dG7O6K7eNN38t8eqsTYZIDJXsHtT9tC3GrtK54YOU/xBC1OL43Hk62qwQ
+         w70jVXkBbv1IxES7NObo2BuTJkJ5STU5xXx2/4baQ9m34copxqCoNEzw17ni3k9GNsAH
+         WpvCqqY5jEyDKLDY7kgKl+D1jBNxY53yNFsYyANDKHQRJgZJyoGYOBe3oOIcbKuQ6Otz
+         pU5v7IkxctmNw6HAJJhu6JgRe8P3e94gozoXgLmSDjA4utz+2kd3w+V/Ni3ZEW38188d
+         U2xrMhRKgqd/z4gTbjskPP8pNgJ6GYlh+tBoHoMZJSaRZind4qXHGBz74lN9xzah72HQ
+         CNYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=LP6plaTFmbxwhZbpmYS2FxepZz3RjZKJhbCfGyu9744=;
-        b=md5StU2yiO5TvPen75hOYA9HppBZ8YSvgOjiruFqUDdUDDBGtZPwsQaQ7GbHQk2aLF
-         sTKEL/hEAKsR/LYRtZ6j59Eoa4RH0e8x37vJhQMk3GesfkpW6t6I44x9/OZidxZtASD1
-         fTp1LJFtBez2cqDHtDPdzDM6XYa4QD3/jaYhX3ccnJ9yv1GPz3N90J3nFwyKWQwAMW9L
-         J2xvV84N1PrdsPR4qLQ/O3kCoNL+IxD3gOK/C14dYQoMS567q8LxALHrD3+IKY3t51WB
-         15H8dhHyqjl3MtSbloWK8b1SdKddkVlc+x6neZHBVq65tTq7KRYYS1y6HfUGMXIpx975
-         ObIw==
-X-Gm-Message-State: ANhLgQ0qRoNy9cY3QsPFwTiDLv7M2NOQREKCK0xB2stis6j5oNFUQZdB
-        wDsYFDhygfwm3WAhd2v0bbGlD249
-X-Google-Smtp-Source: ADFU+vs3GgjHawk8fuWuA8q1NpJe6uCvtP7Rl3QShS/cl7YAsPPI2Ke+gcPuLfzOxG/gqH0NKVr3Ag==
-X-Received: by 2002:aa7:8bdc:: with SMTP id s28mr19156227pfd.110.1584900790403;
-        Sun, 22 Mar 2020 11:13:10 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=pLMLROrENPd34rTAROkJXBNsOaa33tIBqLfgYXpPJM0=;
+        b=YHaOhxXZEvQ3p7D4b0lKVfjNW0MmVkU+5Hc243CKajz0W7nbnj6ch/EqSFVWm1Ae2w
+         RGt2c9xarcjPkH1O+xXq+bCOMIfwherceQ4sNuHWni6xygXEb5C/Cc91vSZ6Jgp71g44
+         0d9m8skIH7ofAai/DEitQiSSe7DFYdXXwWHtV8A8cJZvvezmp4rNUJCkLsbZHhJaTmZ9
+         dTpIrkd8JppZKtRIpkHDk/gmlxdeOMIQ1Aj9YAJdhxw/2Sjy8brbq+lAJMsyix7t3qC0
+         3R7gK9exneKYCy9JqkrOQlGLsMWaWUQygLQVpYMpBbwVX/i816Rg+MbpzGxt2t0FxsRE
+         cKjg==
+X-Gm-Message-State: ANhLgQ2v10cmRxwB41Vi4AyCJORcJFBo8H+ysxvyICLDgFDuTDFLgU17
+        kG8U7DkrcBL0lC99kfcbS6T0AolM
+X-Google-Smtp-Source: ADFU+vtWS2znAjaC1zDdkQVyZGWRlehImO5Y8b60Ni8Fa+tGq7iOF77CzmvPW4sSyIyPaXcPvcluzQ==
+X-Received: by 2002:a63:4282:: with SMTP id p124mr19096240pga.59.1584900791806;
+        Sun, 22 Mar 2020 11:13:11 -0700 (PDT)
 Received: from localhost.localdomain.localdomain (ip68-5-146-102.oc.oc.cox.net. [68.5.146.102])
-        by smtp.gmail.com with ESMTPSA id bt19sm1331657pjb.3.2020.03.22.11.13.09
+        by smtp.gmail.com with ESMTPSA id bt19sm1331657pjb.3.2020.03.22.11.13.10
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 22 Mar 2020 11:13:09 -0700 (PDT)
+        Sun, 22 Mar 2020 11:13:11 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 00/12] lpfc: Update lpfc to revision 12.8.0.0
-Date:   Sun, 22 Mar 2020 11:12:52 -0700
-Message-Id: <20200322181304.37655-1-jsmart2021@gmail.com>
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH 01/12] lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
+Date:   Sun, 22 Mar 2020 11:12:53 -0700
+Message-Id: <20200322181304.37655-2-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200322181304.37655-1-jsmart2021@gmail.com>
+References: <20200322181304.37655-1-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update lpfc to revision 12.8.0.0
+The following kasan bug was called out:
+ BUG: KASAN: slab-out-of-bounds in lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ Read of size 2 at addr ffff889fc7c50a22 by task lpfc_worker_3/6676
+ ...
+ Call Trace:
+ dump_stack+0x96/0xe0
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ print_address_description.constprop.6+0x1b/0x220
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ __kasan_report.cold.9+0x37/0x7c
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ kasan_report+0xe/0x20
+ lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ lpfc_sli_def_mbox_cmpl+0x334/0x430 [lpfc]
+ ...
 
-Patch set contains mainly fixes, a change to QD default, and a few
-cleanups.
+When processing the completion of a "Reg Rpi" login mailbox command in
+lpfc_sli_def_mbox_cmpl, a call may be made to lpfc_unreg_login. The vpi
+is extracted from the completing mailbox context and passed as an input
+for the next. However, the vpi stored in the mailbox command context is
+an absolute vpi, which for SLI4 represents both base + offset.  When used
+with a non-zero base component, (function id > 0) this results in an
+out-of-range access beyond the allocated  phba->vpi_ids array.
 
-The patches were cut against Martin's 5.7/scsi-queue tree
+Fix by subtracting the function's base value to get an accurate vpi number.
 
--- james
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-James Smart (12):
-  lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
-  lpfc: Fix lockdep error - register non-static key
-  lpfc: Fix lpfc overwrite of sg_cnt field in nvmefc_tgt_fcp_req
-  lpfc: Fix scsi host template for SLI3 vports
-  lpfc: Fix crash after handling a pci error.
-  lpfc: Fix update of wq consumer index in lpfc_sli4_wq_release
-  lpfc: Fix crash in target side cable pulls hitting WAIT_FOR_UNREG
-  lpfc: Fix erroneous cpu limit of 128 on I/O statistics
-  lpfc: Change default SCSI LUN QD to 64
-  lpfc: Make debugfs ktime stats generic for NVME and SCSI
-  lpfc: Remove prototype FIPS/DSS options from SLI-3
-  lpfc: Update lpfc version to 12.8.0.0
-
- drivers/scsi/lpfc/lpfc.h         |  25 ++-
- drivers/scsi/lpfc/lpfc_attr.c    |  71 +--------
- drivers/scsi/lpfc/lpfc_crtn.h    |   3 +-
- drivers/scsi/lpfc/lpfc_debugfs.c | 333 ++++++++++++++++++++++++++-------------
- drivers/scsi/lpfc/lpfc_debugfs.h |   3 +-
- drivers/scsi/lpfc/lpfc_hw.h      |  20 +--
- drivers/scsi/lpfc/lpfc_init.c    | 106 +++++++++----
- drivers/scsi/lpfc/lpfc_mbox.c    |   2 -
- drivers/scsi/lpfc/lpfc_nvme.c    | 147 ++++-------------
- drivers/scsi/lpfc/lpfc_nvmet.c   |  62 ++++----
- drivers/scsi/lpfc/lpfc_scsi.c    |  90 +++--------
- drivers/scsi/lpfc/lpfc_sli.c     |  47 ++----
- drivers/scsi/lpfc/lpfc_sli.h     |   2 +-
- drivers/scsi/lpfc/lpfc_sli4.h    |  19 ++-
- drivers/scsi/lpfc/lpfc_version.h |   2 +-
- 15 files changed, 441 insertions(+), 491 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 0b26b5c0527e..4fc14bebb76e 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2511,6 +2511,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	    !pmb->u.mb.mbxStatus) {
+ 		rpi = pmb->u.mb.un.varWords[0];
+ 		vpi = pmb->u.mb.un.varRegLogin.vpi;
++		if (phba->sli_rev == LPFC_SLI_REV4)
++			vpi -= phba->sli4_hba.max_cfg_param.vpi_base;
+ 		lpfc_unreg_login(phba, vpi, rpi, pmb);
+ 		pmb->vport = vport;
+ 		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
 -- 
 2.16.4
 
