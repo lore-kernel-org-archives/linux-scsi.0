@@ -2,337 +2,118 @@ Return-Path: <SRS0=LJp0=5H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96983C54FCF
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 18:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65549C4332B
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 19:45:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 662B620736
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 18:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AAAB20719
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 19:45:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UKqxlNzd"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RFem7Y9P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726875AbgCVSN3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Mar 2020 14:13:29 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:46565 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726814AbgCVSN2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2020 14:13:28 -0400
-Received: by mail-pl1-f195.google.com with SMTP id r3so4865241pls.13
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2020 11:13:26 -0700 (PDT)
+        id S1726710AbgCVTpe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Mar 2020 15:45:34 -0400
+Received: from mail-wm1-f51.google.com ([209.85.128.51]:40399 "EHLO
+        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726623AbgCVTpe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2020 15:45:34 -0400
+Received: by mail-wm1-f51.google.com with SMTP id a81so6591516wmf.5
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2020 12:45:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=fwQfyMKgHF9RKZHHHiEqMFe1K1blMgXsyQbhJ74yi7k=;
-        b=UKqxlNzd+jOWSJVClLuBW/M1/rfCdGJQxgxAC5Iza7z90CcJiBZICcl1R101LBbL9U
-         NYkl/oBKJ4Otvmohcn7o8jGdyJCX4NAnMPFcfi1rgiU7SKqMASFivOz2eF8DHF94Ak68
-         5++otS88scj2XzrtQM0xUqy94amq2aYWGWj4hMfD1Y4Ea6URJqWtSrkrHvmJIm0iodi4
-         FxWEUycBxWcLG+Cte/CI3EvwJ0WbmRo21VmkDHhVfRgPrPpWMqc5uB+c7l/QDOT8Yy/3
-         O6rMexgBq6TCc8/k6OSOY2L3ac0tZXP2Xv2fw39XyVQn9JJ0ZB2FovKjpYQyLRlgRGig
-         q/EA==
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=YHrGFzzsOtst6yc/sBRhUb3pRpwcF9AlxtJsYrak3Ac=;
+        b=RFem7Y9POtmFEHbrmqUURUW5CEx8KLKL0+ArklN7xIQ6BzjluleawaaPsWRrZKdSmC
+         785npWIZyFJuoFVv3bK3SBzmwIPOVcxBWZdb/kRXyBQZh9SYY8XG/MVeePQbwohZYGDV
+         4wl50ZHRh5JjzorgeMPamSjU5tNaw8KmEN4iXzsnxY/gHXEUVqFMlQmhE/XL7dWKgvOM
+         jmguh7nsh60CE7X1Ql4oBI98FME5IZMZp1bhwcEC5eqeJP8nuFLgYOXFA1Qqwqap4GYQ
+         rB3H6SIgYCRNszSUz/4ijr2ZhlP8cwd/wrIykzzQvk6fddZoNanJODzhfJbScXvU8NSe
+         Hh8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=fwQfyMKgHF9RKZHHHiEqMFe1K1blMgXsyQbhJ74yi7k=;
-        b=ek8Dq4HzlW/iWVplKxZLj3IzOMerqj3xRijrGdG+tdbIWg6mVTIKptHqNOXry7PW2H
-         xksf6wMvJY++cFeRj6jfjrEMQ1GUryY7+NA4s+1FCorQi01aXJ7l1k7MZFLwKR7ZGk1V
-         rwmR7yafmsJ5FchyMjrQGUYvbvbGdBtg2wqfsd+17ggBY8Vwge/1bMbeCynrGqBpPwPS
-         x6Mm9GuWj98bQWbEDZIW9XsFVR3aOKpKWH5DgDcfL9Z80nwsNs+mZaj55HL74Hb7zzuV
-         xQiaP+siSS7w1zvIhsHex2I9GbHVzUJu2LLGwAheZHN6Y0IiAzBChjLvKK1zAjPdnuL9
-         6r4g==
-X-Gm-Message-State: ANhLgQ0S7ZMbAJcZJtgX/qqmRTvi1ggc9MupUk9BBQoR6uJGJvA2y3xG
-        g9oeVtmmmbGT592Ia/6lRzA/m3QK
-X-Google-Smtp-Source: ADFU+vuEziegu5JurSK75sn59qQp7VwS/DgGJ5xz2MzCzh/D7CDG4lKsZkRf/qQBasgyZ8VIUiA0Mw==
-X-Received: by 2002:a17:902:b90c:: with SMTP id bf12mr9165826plb.152.1584900805249;
-        Sun, 22 Mar 2020 11:13:25 -0700 (PDT)
-Received: from localhost.localdomain.localdomain (ip68-5-146-102.oc.oc.cox.net. [68.5.146.102])
-        by smtp.gmail.com with ESMTPSA id bt19sm1331657pjb.3.2020.03.22.11.13.24
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 22 Mar 2020 11:13:24 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 11/12] lpfc: Remove prototype FIPS/DSS options from SLI-3
-Date:   Sun, 22 Mar 2020 11:13:03 -0700
-Message-Id: <20200322181304.37655-12-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200322181304.37655-1-jsmart2021@gmail.com>
-References: <20200322181304.37655-1-jsmart2021@gmail.com>
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=YHrGFzzsOtst6yc/sBRhUb3pRpwcF9AlxtJsYrak3Ac=;
+        b=g4w5beJJ9Jka27oCtMHE2Vc+pzpMflfIzHP0xuLDMtQ5ig3meRtu08ISY9vWledkTx
+         nK7oC88RvYyjXeugo81vg0+HIXrfc9hv3ASx/IrupkTRzvk5DAvO0FIn+J6VkZ4VRQL7
+         kAeC/za5AKgUGvrAg03CCrc8r7mkJ27y1ZPfew9G6EKp9fJxUOMCTrtQWRaLS2gz8dfL
+         KvkJkaue1WFbb7NmfbZcNRDdNYy2o+2ofEh/U1mhT3C/VeKwab+Pk/HowEzbV5aGHhDw
+         v8ZMSL4zKBECQ3JRD0PzVYwatFTsHgcs3VeeE4mTZynablCdOytAhhS6UpfHmbMDnp00
+         aLsA==
+X-Gm-Message-State: ANhLgQ1wpmMY1WqkgzPwnZAWPJzz3BkZy5DZHg+txdtq9TAOwUuLj0wi
+        l+KOQXBUUfL2w+VZdVaNmazTdFzV
+X-Google-Smtp-Source: ADFU+vubEocEEhIWB+ihDaXgwD8AgeFPkohiBTK4BtSFHkkiOsCX985rf+lU6Bh4wUSa6rElbvDDbw==
+X-Received: by 2002:a1c:f60d:: with SMTP id w13mr23731639wmc.171.1584906332623;
+        Sun, 22 Mar 2020 12:45:32 -0700 (PDT)
+Received: from ?IPv6:2001:871:25b:80aa:d968:6ff0:1ba6:31eb? (dynamic-2jo7hd4gpbva0jmajv-pd01.res.v6.highway.a1.net. [2001:871:25b:80aa:d968:6ff0:1ba6:31eb])
+        by smtp.gmail.com with ESMTPSA id t12sm3227651wrm.0.2020.03.22.12.45.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 22 Mar 2020 12:45:31 -0700 (PDT)
+Subject: Re: Invalid optimal transfer size 33553920 accepted when
+ physical_block_size 512
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <33fb522e-4f61-1b76-914f-c9e6a3553c9b@gmail.com>
+ <yq1o8sowfzn.fsf@oracle.com> <accd7d25-ee35-11b9-e49b-76e20d9550f2@gmail.com>
+ <yq1pnd4tbxm.fsf@oracle.com>
+Cc:     linux-scsi@vger.kernel.org
+From:   Bernhard Sulzer <micraft.b@gmail.com>
+Message-ID: <1eb896cd-2be1-4225-88d8-5ee590fe063b@gmail.com>
+Date:   Sun, 22 Mar 2020 20:45:31 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
+MIME-Version: 1.0
+In-Reply-To: <yq1pnd4tbxm.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During code review, identified dss feature that was a prototype only
-and was never productized in SLI3. They shouldn't be there and prevents
-reuse of the command areas.
+>>      # sg_readcap -l /dev/sdc
+>>      Read Capacity results:
+>>         Protection: prot_en=0, p_type=0, p_i_exponent=0
+>>         Logical block provisioning: lbpme=0, lbprz=0
+>>         Last LBA=15628053166 (0x3a3812aae), Number of logical
+>> blocks=15628053167
+>>         Logical block length=512 bytes
+>>         Logical blocks per physical block exponent=3 [so physical block
+>> length=4096 bytes]
+>>         Lowest aligned LBA=0
+>>      Hence:
+>>         Device size: 8001563221504 bytes, 7630885.3 MiB, 8001.56 GB, 8.00 TB
+> Please send me the output of:
+>
+> # sg_readcap /dev/sdc
+>
+> (i.e. without the -l from the previous run).
+>
+> I am very puzzled as to why we end up in the older capacity code for a
+> device this big (8TB).
+>
 
-Remove any code in the driver to deal with dss, including code to deal
-with fips, which is associated with the dss feature.
+Here you go:
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/lpfc/lpfc.h      |  9 ++----
- drivers/scsi/lpfc/lpfc_attr.c | 69 -------------------------------------------
- drivers/scsi/lpfc/lpfc_hw.h   | 20 ++++---------
- drivers/scsi/lpfc/lpfc_mbox.c |  2 --
- drivers/scsi/lpfc/lpfc_sli.c  | 17 -----------
- 5 files changed, 8 insertions(+), 109 deletions(-)
+# sg_readcap /dev/sdc
+READ CAPACITY (10) indicates device capacity too large
+   now trying 16 byte cdb variant
+Read Capacity results:
+    Protection: prot_en=0, p_type=0, p_i_exponent=0
+    Logical block provisioning: lbpme=0, lbprz=0
+    Last LBA=15628053166 (0x3a3812aae), Number of logical blocks=15628053167
+    Logical block length=512 bytes
+    Logical blocks per physical block exponent=3 [so physical block 
+length=4096 bytes]
+    Lowest aligned LBA=0
+Hence:
+    Device size: 8001563221504 bytes, 7630885.3 MiB, 8001.56 GB, 8.00 TB
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 747eda6ff8a4..8e2a356911a9 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -207,8 +207,7 @@ typedef struct lpfc_vpd {
- 	} rev;
- 	struct {
- #ifdef __BIG_ENDIAN_BITFIELD
--		uint32_t rsvd3  :19;  /* Reserved                             */
--		uint32_t cdss	: 1;  /* Configure Data Security SLI          */
-+		uint32_t rsvd3  :20;  /* Reserved                             */
- 		uint32_t rsvd2	: 3;  /* Reserved                             */
- 		uint32_t cbg	: 1;  /* Configure BlockGuard                 */
- 		uint32_t cmv	: 1;  /* Configure Max VPIs                   */
-@@ -230,8 +229,7 @@ typedef struct lpfc_vpd {
- 		uint32_t cmv	: 1;  /* Configure Max VPIs                   */
- 		uint32_t cbg	: 1;  /* Configure BlockGuard                 */
- 		uint32_t rsvd2	: 3;  /* Reserved                             */
--		uint32_t cdss	: 1;  /* Configure Data Security SLI          */
--		uint32_t rsvd3  :19;  /* Reserved                             */
-+		uint32_t rsvd3  :20;  /* Reserved                             */
- #endif
- 	} sli3Feat;
- } lpfc_vpd_t;
-@@ -887,7 +885,6 @@ struct lpfc_hba {
- #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
- #define LPFC_DELAY_INIT_LINK              1	/* layered driver hold off */
- #define LPFC_DELAY_INIT_LINK_INDEFINITELY 2	/* wait, manual intervention */
--	uint32_t cfg_enable_dss;
- 	uint32_t cfg_fdmi_on;
- #define LPFC_FDMI_NO_SUPPORT	0	/* FDMI not supported */
- #define LPFC_FDMI_SUPPORT	1	/* FDMI supported? */
-@@ -1156,8 +1153,6 @@ struct lpfc_hba {
- 	uint32_t iocb_cnt;
- 	uint32_t iocb_max;
- 	atomic_t sdev_cnt;
--	uint8_t fips_spec_rev;
--	uint8_t fips_level;
- 	spinlock_t devicelock;	/* lock for luns list */
- 	mempool_t *device_data_mem_pool;
- 	struct list_head luns;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index ba786d08de01..4901ebdd561d 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2230,66 +2230,6 @@ lpfc_poll_store(struct device *dev, struct device_attribute *attr,
- 	return strlen(buf);
- }
- 
--/**
-- * lpfc_fips_level_show - Return the current FIPS level for the HBA
-- * @dev: class unused variable.
-- * @attr: device attribute, not used.
-- * @buf: on return contains the module description text.
-- *
-- * Returns: size of formatted string.
-- **/
--static ssize_t
--lpfc_fips_level_show(struct device *dev,  struct device_attribute *attr,
--		     char *buf)
--{
--	struct Scsi_Host  *shost = class_to_shost(dev);
--	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
--	struct lpfc_hba   *phba = vport->phba;
--
--	return scnprintf(buf, PAGE_SIZE, "%d\n", phba->fips_level);
--}
--
--/**
-- * lpfc_fips_rev_show - Return the FIPS Spec revision for the HBA
-- * @dev: class unused variable.
-- * @attr: device attribute, not used.
-- * @buf: on return contains the module description text.
-- *
-- * Returns: size of formatted string.
-- **/
--static ssize_t
--lpfc_fips_rev_show(struct device *dev,  struct device_attribute *attr,
--		   char *buf)
--{
--	struct Scsi_Host  *shost = class_to_shost(dev);
--	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
--	struct lpfc_hba   *phba = vport->phba;
--
--	return scnprintf(buf, PAGE_SIZE, "%d\n", phba->fips_spec_rev);
--}
--
--/**
-- * lpfc_dss_show - Return the current state of dss and the configured state
-- * @dev: class converted to a Scsi_host structure.
-- * @attr: device attribute, not used.
-- * @buf: on return contains the formatted text.
-- *
-- * Returns: size of formatted string.
-- **/
--static ssize_t
--lpfc_dss_show(struct device *dev, struct device_attribute *attr,
--	      char *buf)
--{
--	struct Scsi_Host *shost = class_to_shost(dev);
--	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
--	struct lpfc_hba   *phba = vport->phba;
--
--	return scnprintf(buf, PAGE_SIZE, "%s - %sOperational\n",
--			(phba->cfg_enable_dss) ? "Enabled" : "Disabled",
--			(phba->sli3_options & LPFC_SLI3_DSS_ENABLED) ?
--				"" : "Not ");
--}
--
- /**
-  * lpfc_sriov_hw_max_virtfn_show - Return maximum number of virtual functions
-  * @dev: class converted to a Scsi_host structure.
-@@ -2705,9 +2645,6 @@ static DEVICE_ATTR(max_xri, S_IRUGO, lpfc_max_xri_show, NULL);
- static DEVICE_ATTR(used_xri, S_IRUGO, lpfc_used_xri_show, NULL);
- static DEVICE_ATTR(npiv_info, S_IRUGO, lpfc_npiv_info_show, NULL);
- static DEVICE_ATTR_RO(lpfc_temp_sensor);
--static DEVICE_ATTR_RO(lpfc_fips_level);
--static DEVICE_ATTR_RO(lpfc_fips_rev);
--static DEVICE_ATTR_RO(lpfc_dss);
- static DEVICE_ATTR_RO(lpfc_sriov_hw_max_virtfn);
- static DEVICE_ATTR(protocol, S_IRUGO, lpfc_sli4_protocol_show, NULL);
- static DEVICE_ATTR(lpfc_xlane_supported, S_IRUGO, lpfc_oas_supported_show,
-@@ -6251,9 +6188,6 @@ struct device_attribute *lpfc_hba_attrs[] = {
- 	&dev_attr_pt,
- 	&dev_attr_txq_hw,
- 	&dev_attr_txcmplq_hw,
--	&dev_attr_lpfc_fips_level,
--	&dev_attr_lpfc_fips_rev,
--	&dev_attr_lpfc_dss,
- 	&dev_attr_lpfc_sriov_hw_max_virtfn,
- 	&dev_attr_protocol,
- 	&dev_attr_lpfc_xlane_supported,
-@@ -6289,8 +6223,6 @@ struct device_attribute *lpfc_vport_attrs[] = {
- 	&dev_attr_lpfc_max_scsicmpl_time,
- 	&dev_attr_lpfc_stat_data_ctrl,
- 	&dev_attr_lpfc_static_vport,
--	&dev_attr_lpfc_fips_level,
--	&dev_attr_lpfc_fips_rev,
- 	NULL,
- };
- 
-@@ -7399,7 +7331,6 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
- 	lpfc_delay_discovery_init(phba, lpfc_delay_discovery);
- 	lpfc_sli_mode_init(phba, lpfc_sli_mode);
--	phba->cfg_enable_dss = 1;
- 	lpfc_enable_mds_diags_init(phba, lpfc_enable_mds_diags);
- 	lpfc_ras_fwlog_buffsize_init(phba, lpfc_ras_fwlog_buffsize);
- 	lpfc_ras_fwlog_level_init(phba, lpfc_ras_fwlog_level);
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index ae51c0dbba0a..c20034b3101c 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -3262,8 +3262,7 @@ typedef struct {
- #endif
- 
- #ifdef __BIG_ENDIAN_BITFIELD
--	uint32_t rsvd1     : 19;  /* Reserved                             */
--	uint32_t cdss      :  1;  /* Configure Data Security SLI          */
-+	uint32_t rsvd1     : 20;  /* Reserved                             */
- 	uint32_t casabt    :  1;  /* Configure async abts status notice   */
- 	uint32_t rsvd2     :  2;  /* Reserved                             */
- 	uint32_t cbg       :  1;  /* Configure BlockGuard                 */
-@@ -3287,12 +3286,10 @@ typedef struct {
- 	uint32_t cbg       :  1;  /* Configure BlockGuard                 */
- 	uint32_t rsvd2     :  2;  /* Reserved                             */
- 	uint32_t casabt    :  1;  /* Configure async abts status notice   */
--	uint32_t cdss      :  1;  /* Configure Data Security SLI          */
--	uint32_t rsvd1     : 19;  /* Reserved                             */
-+	uint32_t rsvd1     : 20;  /* Reserved                             */
- #endif
- #ifdef __BIG_ENDIAN_BITFIELD
--	uint32_t rsvd3     : 19;  /* Reserved                             */
--	uint32_t gdss      :  1;  /* Configure Data Security SLI          */
-+	uint32_t rsvd3     : 20;  /* Reserved                             */
- 	uint32_t gasabt    :  1;  /* Grant async abts status notice       */
- 	uint32_t rsvd4     :  2;  /* Reserved                             */
- 	uint32_t gbg       :  1;  /* Grant BlockGuard                     */
-@@ -3316,8 +3313,7 @@ typedef struct {
- 	uint32_t gbg       :  1;  /* Grant BlockGuard                     */
- 	uint32_t rsvd4     :  2;  /* Reserved                             */
- 	uint32_t gasabt    :  1;  /* Grant async abts status notice       */
--	uint32_t gdss      :  1;  /* Configure Data Security SLI          */
--	uint32_t rsvd3     : 19;  /* Reserved                             */
-+	uint32_t rsvd3     : 20;  /* Reserved                             */
- #endif
- 
- #ifdef __BIG_ENDIAN_BITFIELD
-@@ -3339,15 +3335,11 @@ typedef struct {
- 	uint32_t rsvd6;           /* Reserved                             */
- 
- #ifdef __BIG_ENDIAN_BITFIELD
--	uint32_t fips_rev   : 3;   /* FIPS Spec Revision                   */
--	uint32_t fips_level : 4;   /* FIPS Level                           */
--	uint32_t sec_err    : 9;   /* security crypto error                */
-+	uint32_t rsvd7      : 16;
- 	uint32_t max_vpi    : 16;  /* Max number of virt N-Ports           */
- #else	/*  __LITTLE_ENDIAN */
- 	uint32_t max_vpi    : 16;  /* Max number of virt N-Ports           */
--	uint32_t sec_err    : 9;   /* security crypto error                */
--	uint32_t fips_level : 4;   /* FIPS Level                           */
--	uint32_t fips_rev   : 3;   /* FIPS Spec Revision                   */
-+	uint32_t rsvd7      : 16;
- #endif
- 
- } CONFIG_PORT_VAR;
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index d1773c01d2b3..e35b52b66d6c 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -1299,8 +1299,6 @@ lpfc_config_port(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	if (phba->sli_rev == LPFC_SLI_REV3 && phba->vpd.sli3Feat.cerbm) {
- 		if (phba->cfg_enable_bg)
- 			mb->un.varCfgPort.cbg = 1; /* configure BlockGuard */
--		if (phba->cfg_enable_dss)
--			mb->un.varCfgPort.cdss = 1; /* Configure Security */
- 		mb->un.varCfgPort.cerbm = 1; /* Request HBQs */
- 		mb->un.varCfgPort.ccrp = 1; /* Command Ring Polling */
- 		mb->un.varCfgPort.max_hbq = lpfc_sli_hbq_count();
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 52ccaebd6f2c..b6fb665e6ec4 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5032,23 +5032,6 @@ lpfc_sli_config_port(struct lpfc_hba *phba, int sli_mode)
- 
- 		} else
- 			phba->max_vpi = 0;
--		phba->fips_level = 0;
--		phba->fips_spec_rev = 0;
--		if (pmb->u.mb.un.varCfgPort.gdss) {
--			phba->sli3_options |= LPFC_SLI3_DSS_ENABLED;
--			phba->fips_level = pmb->u.mb.un.varCfgPort.fips_level;
--			phba->fips_spec_rev = pmb->u.mb.un.varCfgPort.fips_rev;
--			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--					"2850 Security Crypto Active. FIPS x%d "
--					"(Spec Rev: x%d)",
--					phba->fips_level, phba->fips_spec_rev);
--		}
--		if (pmb->u.mb.un.varCfgPort.sec_err) {
--			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--					"2856 Config Port Security Crypto "
--					"Error: x%x ",
--					pmb->u.mb.un.varCfgPort.sec_err);
--		}
- 		if (pmb->u.mb.un.varCfgPort.gerbm)
- 			phba->sli3_options |= LPFC_SLI3_HBQ_ENABLED;
- 		if (pmb->u.mb.un.varCfgPort.gcrp)
--- 
-2.16.4
+Hope this helps to solve it
 
