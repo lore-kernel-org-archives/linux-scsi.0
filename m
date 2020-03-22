@@ -2,118 +2,206 @@ Return-Path: <SRS0=LJp0=5H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65549C4332B
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 19:45:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD1EC1975A
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 20:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AAAB20719
-	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 19:45:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29D7A2072D
+	for <linux-scsi@archiver.kernel.org>; Sun, 22 Mar 2020 20:57:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RFem7Y9P"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gzgTZP3F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726710AbgCVTpe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Mar 2020 15:45:34 -0400
-Received: from mail-wm1-f51.google.com ([209.85.128.51]:40399 "EHLO
-        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726623AbgCVTpe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2020 15:45:34 -0400
-Received: by mail-wm1-f51.google.com with SMTP id a81so6591516wmf.5
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2020 12:45:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=YHrGFzzsOtst6yc/sBRhUb3pRpwcF9AlxtJsYrak3Ac=;
-        b=RFem7Y9POtmFEHbrmqUURUW5CEx8KLKL0+ArklN7xIQ6BzjluleawaaPsWRrZKdSmC
-         785npWIZyFJuoFVv3bK3SBzmwIPOVcxBWZdb/kRXyBQZh9SYY8XG/MVeePQbwohZYGDV
-         4wl50ZHRh5JjzorgeMPamSjU5tNaw8KmEN4iXzsnxY/gHXEUVqFMlQmhE/XL7dWKgvOM
-         jmguh7nsh60CE7X1Ql4oBI98FME5IZMZp1bhwcEC5eqeJP8nuFLgYOXFA1Qqwqap4GYQ
-         rB3H6SIgYCRNszSUz/4ijr2ZhlP8cwd/wrIykzzQvk6fddZoNanJODzhfJbScXvU8NSe
-         Hh8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=YHrGFzzsOtst6yc/sBRhUb3pRpwcF9AlxtJsYrak3Ac=;
-        b=g4w5beJJ9Jka27oCtMHE2Vc+pzpMflfIzHP0xuLDMtQ5ig3meRtu08ISY9vWledkTx
-         nK7oC88RvYyjXeugo81vg0+HIXrfc9hv3ASx/IrupkTRzvk5DAvO0FIn+J6VkZ4VRQL7
-         kAeC/za5AKgUGvrAg03CCrc8r7mkJ27y1ZPfew9G6EKp9fJxUOMCTrtQWRaLS2gz8dfL
-         KvkJkaue1WFbb7NmfbZcNRDdNYy2o+2ofEh/U1mhT3C/VeKwab+Pk/HowEzbV5aGHhDw
-         v8ZMSL4zKBECQ3JRD0PzVYwatFTsHgcs3VeeE4mTZynablCdOytAhhS6UpfHmbMDnp00
-         aLsA==
-X-Gm-Message-State: ANhLgQ1wpmMY1WqkgzPwnZAWPJzz3BkZy5DZHg+txdtq9TAOwUuLj0wi
-        l+KOQXBUUfL2w+VZdVaNmazTdFzV
-X-Google-Smtp-Source: ADFU+vubEocEEhIWB+ihDaXgwD8AgeFPkohiBTK4BtSFHkkiOsCX985rf+lU6Bh4wUSa6rElbvDDbw==
-X-Received: by 2002:a1c:f60d:: with SMTP id w13mr23731639wmc.171.1584906332623;
-        Sun, 22 Mar 2020 12:45:32 -0700 (PDT)
-Received: from ?IPv6:2001:871:25b:80aa:d968:6ff0:1ba6:31eb? (dynamic-2jo7hd4gpbva0jmajv-pd01.res.v6.highway.a1.net. [2001:871:25b:80aa:d968:6ff0:1ba6:31eb])
-        by smtp.gmail.com with ESMTPSA id t12sm3227651wrm.0.2020.03.22.12.45.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 22 Mar 2020 12:45:31 -0700 (PDT)
-Subject: Re: Invalid optimal transfer size 33553920 accepted when
- physical_block_size 512
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+        id S1726781AbgCVU5L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 22 Mar 2020 16:57:11 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:53098 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726756AbgCVU5L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Mar 2020 16:57:11 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02MKrqPw102776;
+        Sun, 22 Mar 2020 20:57:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=FIwVyqu4c48RFy3+kJD6Xa8k36ombPE0nFDJc1eVHs0=;
+ b=gzgTZP3Fda3Ww+EWIz/r6A4rqVXdLFmlo6pOy7IwHNDw8o4qMbb8/1sX4QSdkrM8SSfg
+ Mid8FgkIyuuiD/VT5r1jyo/vYBLSlHCUc/thlvgU9bN2xODT1jqZKMGmNayvALVmu+MV
+ jH32RSn37aJy97FkYG/XsNusy+N98+E00saV3gZk9CL0TS92xwOrXFpKFgxjhW2CrCXA
+ GfV2unmCh/Nbv1VrOTEZz6ecGqnZpd9fcHS9lWn28JaTyYbCrQL5W9dxkqOg0E1RUmJm
+ QUxpo0VvEf677YmO9AmZ3urxVommtpav5EQP+FARs/yCMw11C//3R8aXadsfo9qeCSHq 7A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2ywabquqgf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 22 Mar 2020 20:57:09 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02MKrDVR020791;
+        Sun, 22 Mar 2020 20:57:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2ywvqp249d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 22 Mar 2020 20:57:08 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02MKv7jw029870;
+        Sun, 22 Mar 2020 20:57:07 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 22 Mar 2020 13:57:07 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bernhard Sulzer <micraft.b@gmail.com>
+Subject: [PATCH] scsi: sd: Optimal I/O size should be a multiple of reported granularity
+Date:   Sun, 22 Mar 2020 16:57:06 -0400
+Message-Id: <20200322205706.1593-1-martin.petersen@oracle.com>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <33fb522e-4f61-1b76-914f-c9e6a3553c9b@gmail.com>
 References: <33fb522e-4f61-1b76-914f-c9e6a3553c9b@gmail.com>
- <yq1o8sowfzn.fsf@oracle.com> <accd7d25-ee35-11b9-e49b-76e20d9550f2@gmail.com>
- <yq1pnd4tbxm.fsf@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-From:   Bernhard Sulzer <micraft.b@gmail.com>
-Message-ID: <1eb896cd-2be1-4225-88d8-5ee590fe063b@gmail.com>
-Date:   Sun, 22 Mar 2020 20:45:31 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <yq1pnd4tbxm.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9568 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ suspectscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003220127
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9568 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
+ lowpriorityscore=0 malwarescore=0 phishscore=0 priorityscore=1501
+ clxscore=1015 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003220127
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>      # sg_readcap -l /dev/sdc
->>      Read Capacity results:
->>         Protection: prot_en=0, p_type=0, p_i_exponent=0
->>         Logical block provisioning: lbpme=0, lbprz=0
->>         Last LBA=15628053166 (0x3a3812aae), Number of logical
->> blocks=15628053167
->>         Logical block length=512 bytes
->>         Logical blocks per physical block exponent=3 [so physical block
->> length=4096 bytes]
->>         Lowest aligned LBA=0
->>      Hence:
->>         Device size: 8001563221504 bytes, 7630885.3 MiB, 8001.56 GB, 8.00 TB
-> Please send me the output of:
->
-> # sg_readcap /dev/sdc
->
-> (i.e. without the -l from the previous run).
->
-> I am very puzzled as to why we end up in the older capacity code for a
-> device this big (8TB).
->
+Commit a83da8a4509d ("scsi: sd: Optimal I/O size should be a multiple of
+physical block size") validated the reported optimal I/O size against the
+physical block size to overcome problems with devices reporting nonsensical
+transfer sizes.
 
-Here you go:
+However, some devices claim conformity to older SCSI versions that predate
+the physical block size being reported. Other devices do not report a
+physical block size at all. We need to be able to validate the optimal I/O
+size on those devices as well.
 
-# sg_readcap /dev/sdc
-READ CAPACITY (10) indicates device capacity too large
-   now trying 16 byte cdb variant
-Read Capacity results:
-    Protection: prot_en=0, p_type=0, p_i_exponent=0
-    Logical block provisioning: lbpme=0, lbprz=0
-    Last LBA=15628053166 (0x3a3812aae), Number of logical blocks=15628053167
-    Logical block length=512 bytes
-    Logical blocks per physical block exponent=3 [so physical block 
-length=4096 bytes]
-    Lowest aligned LBA=0
-Hence:
-    Device size: 8001563221504 bytes, 7630885.3 MiB, 8001.56 GB, 8.00 TB
+Many devices report an OPTIMAL TRANSFER LENGTH GRANULARITY in the same VPD
+page as the OPTIMAL TRANSFER LENGTH. Use this value to validate the optimal
+I/O size. Also check that the reported granularity is a multiple of the
+physical block size, if supported.
 
-Hope this helps to solve it
+Link: https://lore.kernel.org/r/33fb522e-4f61-1b76-914f-c9e6a3553c9b@gmail.com
+Reported-by: Bernhard Sulzer <micraft.b@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c | 43 +++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/sd.h |  1 +
+ 2 files changed, 40 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8ca9299ffd36..e41f8eb00787 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2858,7 +2858,6 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+  */
+ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ {
+-	unsigned int sector_sz = sdkp->device->sector_size;
+ 	const int vpd_len = 64;
+ 	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
+ 
+@@ -2867,9 +2866,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	    scsi_get_vpd_page(sdkp->device, 0xb0, buffer, vpd_len))
+ 		goto out;
+ 
+-	blk_queue_io_min(sdkp->disk->queue,
+-			 get_unaligned_be16(&buffer[6]) * sector_sz);
+-
++	sdkp->min_xfer_blocks = get_unaligned_be16(&buffer[6]);
+ 	sdkp->max_xfer_blocks = get_unaligned_be32(&buffer[8]);
+ 	sdkp->opt_xfer_blocks = get_unaligned_be32(&buffer[12]);
+ 
+@@ -3036,6 +3033,29 @@ static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		sdkp->security = 1;
+ }
+ 
++static bool sd_validate_min_xfer_size(struct scsi_disk *sdkp)
++{
++	struct scsi_device *sdp = sdkp->device;
++	unsigned int min_xfer_bytes =
++		logical_to_bytes(sdp, sdkp->min_xfer_blocks);
++
++	if (sdkp->min_xfer_blocks == 0)
++		return false;
++
++	if (min_xfer_bytes & (sdkp->physical_block_size - 1)) {
++		sd_first_printk(KERN_WARNING, sdkp,
++				"Preferred minimum I/O size %u bytes not a " \
++				"multiple of physical block size (%u bytes)\n",
++				min_xfer_bytes, sdkp->physical_block_size);
++		sdkp->min_xfer_blocks = 0;
++		return false;
++	}
++
++	sd_first_printk(KERN_INFO, sdkp, "Preferred minimum I/O size %u bytes\n",
++			min_xfer_bytes);
++	return true;
++}
++
+ /*
+  * Determine the device's preferred I/O size for reads and writes
+  * unless the reported value is unreasonably small, large, not a
+@@ -3047,6 +3067,8 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
+ 	struct scsi_device *sdp = sdkp->device;
+ 	unsigned int opt_xfer_bytes =
+ 		logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
++	unsigned int min_xfer_bytes =
++		logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+ 
+ 	if (sdkp->opt_xfer_blocks == 0)
+ 		return false;
+@@ -3083,6 +3105,15 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
+ 		return false;
+ 	}
+ 
++	if (min_xfer_bytes && opt_xfer_bytes & (min_xfer_bytes - 1)) {
++		sd_first_printk(KERN_WARNING, sdkp,
++				"Optimal transfer size %u bytes not a " \
++				"multiple of preferred minimum block " \
++				"size (%u bytes)\n",
++				opt_xfer_bytes, min_xfer_bytes);
++		return false;
++	}
++
+ 	sd_first_printk(KERN_INFO, sdkp, "Optimal transfer size %u bytes\n",
+ 			opt_xfer_bytes);
+ 	return true;
+@@ -3166,6 +3197,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
+ 	q->limits.max_dev_sectors = logical_to_sectors(sdp, dev_max);
+ 
++	if (sd_validate_min_xfer_size(sdkp))
++		blk_queue_io_min(sdkp->disk->queue,
++				 logical_to_bytes(sdp, sdkp->min_xfer_blocks));
++
+ 	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+ 		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
+ 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 50fff0bf8c8e..7efdcb103c2a 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -82,6 +82,7 @@ struct scsi_disk {
+ #endif
+ 	atomic_t	openers;
+ 	sector_t	capacity;	/* size in logical blocks */
++	u32		min_xfer_blocks;
+ 	u32		max_xfer_blocks;
+ 	u32		opt_xfer_blocks;
+ 	u32		max_ws_blocks;
+-- 
+2.24.1
 
