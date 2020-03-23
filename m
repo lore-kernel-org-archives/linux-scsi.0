@@ -2,257 +2,92 @@ Return-Path: <SRS0=XP5+=5I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A566EC54FCE
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Mar 2020 16:54:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8606DC54FCE
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Mar 2020 16:55:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79ADB20714
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Mar 2020 16:54:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 536EF20714
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Mar 2020 16:55:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="xvQuDWUK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727714AbgCWQya (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Mar 2020 12:54:30 -0400
-Received: from mx2.suse.de ([195.135.220.15]:50726 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727657AbgCWQy3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Mar 2020 12:54:29 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 37902B1BF;
-        Mon, 23 Mar 2020 16:54:26 +0000 (UTC)
-From:   David Disseldorp <ddiss@suse.de>
-To:     target-devel@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        bvanassche@acm.org, David Disseldorp <ddiss@suse.de>
-Subject: [RFC PATCH 3/5] scsi: target: avoid per-loop XCOPY buffer allocations
-Date:   Mon, 23 Mar 2020 17:54:08 +0100
-Message-Id: <20200323165410.24423-4-ddiss@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200323165410.24423-1-ddiss@suse.de>
-References: <20200323165410.24423-1-ddiss@suse.de>
+        id S1727644AbgCWQzf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Mar 2020 12:55:35 -0400
+Received: from mail-pl1-f169.google.com ([209.85.214.169]:35125 "EHLO
+        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727570AbgCWQzf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Mar 2020 12:55:35 -0400
+Received: by mail-pl1-f169.google.com with SMTP id g6so6164031plt.2
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2020 09:55:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=mFFLdkROuGzrX7CaN7iaKQtgyU9352EW9LOMMGLduh0=;
+        b=xvQuDWUK4rppNtIXMkhgKlBEq7tXEVsdIK0ASlHSgXnCp63TynMj/BSxfgxNatZGE4
+         hqYSR8fD0EMOESlN7IaxTzPFTksKxokG9SR+skwxywHSZSuczsAAnV9ob47XTgd++pDm
+         /JyN115oAoDDmdme+LwUAy8/etuWG2uvIhXxt0qK5D2VurNIC1XZnoQK0+5wSwb3gOP8
+         BIyoMiadjG/BKoMmdzCTbOQdSx7xXyZDkopdjvsZTf6tGlMmaG3meWzY3ERya7eDqkZ2
+         6hpCIcQ+yWWyT/Zh6uGtaxTy5Sgqvt6gbv+s4gHCHIwqwfKkt5O5oucDfb3CwmEvrMJP
+         DPYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=mFFLdkROuGzrX7CaN7iaKQtgyU9352EW9LOMMGLduh0=;
+        b=BYmCTrK6ucJdzCJTs4Cg7yvOexOfieDSxBm+40SH2rdDk3C1hPRe/DSDflLXghGq9u
+         g4pTOO+fhzIsMy8Ghr/p373QvXh3w1hjVvq1bn5qZm3/nwGXB41fltmKP7thHeQ0DXRq
+         5Ij+SkwBGl2UUViuVYQfg4U5/p3Ip8+N4/40//4KaIOXysqnlKrlsL93Gi3RxNKtOm9Y
+         sYZtUYxVxS3mHqCkwD7NBLfvJz1ysVnsPYXwD0MwqdfXl/j4HYBH2OgtlDw/c6Yzm85w
+         79gbaWD3woo08Fupv3cmWqF2KYQCoihlXpk0TT8x/N4sMLfNmNKFtz3Hmftj3P14vJw7
+         RWSA==
+X-Gm-Message-State: ANhLgQ2IarrUkEwPAZMYnMCWOCGJ0TbFUfUTcIu8KLY8zn8SpmPeynl3
+        lQHqn88YKfyPeKDyWUrS4FzwYQ==
+X-Google-Smtp-Source: ADFU+vuYepzjMGiCUsHvUENLWjzFpios4va2+xolhoUb5eHRh6FDeKvuNbWj1Ly2VgD2e/ww5OX2lQ==
+X-Received: by 2002:a17:902:a603:: with SMTP id u3mr17911749plq.105.1584982532060;
+        Mon, 23 Mar 2020 09:55:32 -0700 (PDT)
+Received: from [192.168.1.188] ([66.219.217.145])
+        by smtp.gmail.com with ESMTPSA id nu13sm112828pjb.22.2020.03.23.09.55.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 Mar 2020 09:55:31 -0700 (PDT)
+Subject: Re: cleanup the partitioning code
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org,
+        reiserfs-devel@vger.kernel.org
+References: <20200312151939.645254-1-hch@lst.de>
+ <20200323165234.GA29925@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <7b7eb188-441a-b503-d526-f5bc029891fc@kernel.dk>
+Date:   Mon, 23 Mar 2020 10:55:29 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
+MIME-Version: 1.0
+In-Reply-To: <20200323165234.GA29925@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The main target_xcopy_do_work() loop unnecessarily allocates an I/O
-buffer with each synchronous READ / WRITE pair. This commit
-significantly reduces allocations by reusing the XCOPY I/O buffer when
-possible.
+On 3/23/20 10:52 AM, Christoph Hellwig wrote:
+> ping?
+> 
+> On Thu, Mar 12, 2020 at 04:19:18PM +0100, Christoph Hellwig wrote:
+>> Hi Jens,
+>>
+>> this series cleans up the partitioning code.
+> ---end quoted text---
 
-Signed-off-by: David Disseldorp <ddiss@suse.de>
----
- drivers/target/target_core_xcopy.c | 95 +++++++++++++++-----------------------
- drivers/target/target_core_xcopy.h |  1 +
- 2 files changed, 39 insertions(+), 57 deletions(-)
+I did take a look, looks fine to me. Doesn't apply to the 5.7/block
+branch though, I'll take a look in a bit, probably an easy reject.
 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 66b68295c50f..e9c50766d4fc 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -499,7 +499,6 @@ void target_xcopy_release_pt(void)
-  * @cdb:	 SCSI CDB to be copied into @xpt_cmd.
-  * @remote_port: If false, use the LUN through which the XCOPY command has
-  *		 been received. If true, use @se_dev->xcopy_lun.
-- * @alloc_mem:	 Whether or not to allocate an SGL list.
-  *
-  * Set up a SCSI command (READ or WRITE) that will be used to execute an
-  * XCOPY command.
-@@ -509,12 +508,11 @@ static int target_xcopy_setup_pt_cmd(
- 	struct xcopy_op *xop,
- 	struct se_device *se_dev,
- 	unsigned char *cdb,
--	bool remote_port,
--	bool alloc_mem)
-+	bool remote_port)
- {
- 	struct se_cmd *cmd = &xpt_cmd->se_cmd;
- 	sense_reason_t sense_rc;
--	int ret = 0, rc;
-+	int ret = 0;
- 
- 	/*
- 	 * Setup LUN+port to honor reservations based upon xop->op_origin for
-@@ -536,36 +534,21 @@ static int target_xcopy_setup_pt_cmd(
- 		goto out;
- 	}
- 
--	if (alloc_mem) {
--		rc = target_alloc_sgl(&cmd->t_data_sg, &cmd->t_data_nents,
--				      cmd->data_length, false, false);
--		if (rc < 0) {
--			ret = rc;
--			goto out;
--		}
--		/*
--		 * Set this bit so that transport_free_pages() allows the
--		 * caller to release SGLs + physical memory allocated by
--		 * transport_generic_get_mem()..
--		 */
--		cmd->se_cmd_flags |= SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
--	} else {
--		/*
--		 * Here the previously allocated SGLs for the internal READ
--		 * are mapped zero-copy to the internal WRITE.
--		 */
--		sense_rc = transport_generic_map_mem_to_cmd(cmd,
--					xop->xop_data_sg, xop->xop_data_nents,
--					NULL, 0);
--		if (sense_rc) {
--			ret = -EINVAL;
--			goto out;
--		}
--
--		pr_debug("Setup PASSTHROUGH_NOALLOC t_data_sg: %p t_data_nents:"
--			 " %u\n", cmd->t_data_sg, cmd->t_data_nents);
-+	/*
-+	 * Here the previously allocated SGLs for the XCOPY are mapped zero-copy
-+	 * to the internal READ or WRITE.
-+	 */
-+	sense_rc = transport_generic_map_mem_to_cmd(cmd,
-+				xop->xop_data_sg, xop->xop_data_nents,
-+				NULL, 0);
-+	if (sense_rc) {
-+		ret = -EINVAL;
-+		goto out;
- 	}
- 
-+	pr_debug("Setup PASSTHROUGH_NOALLOC t_data_sg: %p t_data_nents:"
-+		 " %u\n", cmd->t_data_sg, cmd->t_data_nents);
-+
- 	return 0;
- 
- out:
-@@ -626,15 +609,13 @@ static int target_xcopy_read_source(
- 	xop->src_pt_cmd = xpt_cmd;
- 
- 	rc = target_xcopy_setup_pt_cmd(xpt_cmd, xop, src_dev, &cdb[0],
--				remote_port, true);
-+				remote_port);
- 	if (rc < 0) {
- 		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
- 		transport_generic_free_cmd(se_cmd, 0);
- 		return rc;
- 	}
- 
--	xop->xop_data_sg = se_cmd->t_data_sg;
--	xop->xop_data_nents = se_cmd->t_data_nents;
- 	pr_debug("XCOPY-READ: Saved xop->xop_data_sg: %p, num: %u for READ"
- 		" memory\n", xop->xop_data_sg, xop->xop_data_nents);
- 
-@@ -644,12 +625,6 @@ static int target_xcopy_read_source(
- 		transport_generic_free_cmd(se_cmd, 0);
- 		return rc;
- 	}
--	/*
--	 * Clear off the allocated t_data_sg, that has been saved for
--	 * zero-copy WRITE submission reuse in struct xcopy_op..
--	 */
--	se_cmd->t_data_sg = NULL;
--	se_cmd->t_data_nents = 0;
- 
- 	return 0;
- }
-@@ -688,19 +663,9 @@ static int target_xcopy_write_destination(
- 	xop->dst_pt_cmd = xpt_cmd;
- 
- 	rc = target_xcopy_setup_pt_cmd(xpt_cmd, xop, dst_dev, &cdb[0],
--				remote_port, false);
-+				remote_port);
- 	if (rc < 0) {
--		struct se_cmd *src_cmd = &xop->src_pt_cmd->se_cmd;
- 		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
--		/*
--		 * If the failure happened before the t_mem_list hand-off in
--		 * target_xcopy_setup_pt_cmd(), Reset memory + clear flag so that
--		 * core releases this memory on error during X-COPY WRITE I/O.
--		 */
--		src_cmd->se_cmd_flags &= ~SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
--		src_cmd->t_data_sg = xop->xop_data_sg;
--		src_cmd->t_data_nents = xop->xop_data_nents;
--
- 		transport_generic_free_cmd(se_cmd, 0);
- 		return rc;
- 	}
-@@ -708,7 +673,6 @@ static int target_xcopy_write_destination(
- 	rc = target_xcopy_issue_pt_cmd(xpt_cmd);
- 	if (rc < 0) {
- 		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
--		se_cmd->se_cmd_flags &= ~SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
- 		transport_generic_free_cmd(se_cmd, 0);
- 		return rc;
- 	}
-@@ -724,7 +688,7 @@ static void target_xcopy_do_work(struct work_struct *work)
- 	sector_t src_lba, dst_lba, end_lba;
- 	unsigned int max_sectors;
- 	int rc = 0;
--	unsigned short nolb, cur_nolb, max_nolb, copied_nolb = 0;
-+	unsigned short nolb, max_nolb, copied_nolb = 0;
- 
- 	if (target_parse_xcopy_cmd(xop) != TCM_NO_SENSE)
- 		goto err_free;
-@@ -754,7 +718,24 @@ static void target_xcopy_do_work(struct work_struct *work)
- 			(unsigned long long)src_lba, (unsigned long long)dst_lba);
- 
- 	while (src_lba < end_lba) {
--		cur_nolb = min(nolb, max_nolb);
-+		unsigned short cur_nolb = min(nolb, max_nolb);
-+		u32 cur_bytes = cur_nolb * src_dev->dev_attrib.block_size;
-+
-+		if (cur_bytes != xop->xop_data_bytes) {
-+			/*
-+			 * (Re)allocate a buffer large enough to hold the XCOPY
-+			 * I/O size, which can be reused each read / write loop.
-+			 */
-+			target_free_sgl(xop->xop_data_sg, xop->xop_data_nents);
-+			rc = target_alloc_sgl(&xop->xop_data_sg,
-+					      &xop->xop_data_nents,
-+					      cur_bytes,
-+					      false, false);
-+			if (rc < 0) {
-+				goto out;
-+			}
-+			xop->xop_data_bytes = cur_bytes;
-+		}
- 
- 		pr_debug("target_xcopy_do_work: Calling read src_dev: %p src_lba: %llu,"
- 			" cur_nolb: %hu\n", src_dev, (unsigned long long)src_lba, cur_nolb);
-@@ -785,12 +766,11 @@ static void target_xcopy_do_work(struct work_struct *work)
- 		nolb -= cur_nolb;
- 
- 		transport_generic_free_cmd(&xop->src_pt_cmd->se_cmd, 0);
--		xop->dst_pt_cmd->se_cmd.se_cmd_flags &= ~SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
--
- 		transport_generic_free_cmd(&xop->dst_pt_cmd->se_cmd, 0);
- 	}
- 
- 	xcopy_pt_undepend_remotedev(xop);
-+	target_free_sgl(xop->xop_data_sg, xop->xop_data_nents);
- 	kfree(xop);
- 
- 	pr_debug("target_xcopy_do_work: Final src_lba: %llu, dst_lba: %llu\n",
-@@ -804,6 +784,7 @@ static void target_xcopy_do_work(struct work_struct *work)
- 
- out:
- 	xcopy_pt_undepend_remotedev(xop);
-+	target_free_sgl(xop->xop_data_sg, xop->xop_data_nents);
- 
- err_free:
- 	kfree(xop);
-diff --git a/drivers/target/target_core_xcopy.h b/drivers/target/target_core_xcopy.h
-index 0840b03e8faa..9558974185ea 100644
---- a/drivers/target/target_core_xcopy.h
-+++ b/drivers/target/target_core_xcopy.h
-@@ -39,6 +39,7 @@ struct xcopy_op {
- 	struct xcopy_pt_cmd *src_pt_cmd;
- 	struct xcopy_pt_cmd *dst_pt_cmd;
- 
-+	u32 xop_data_bytes;
- 	u32 xop_data_nents;
- 	struct scatterlist *xop_data_sg;
- 	struct work_struct xop_work;
 -- 
-2.16.4
+Jens Axboe
 
