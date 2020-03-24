@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6925EC54FD4
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8599C54FD5
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41AE320788
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFC8520788
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="cWLriwVB"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fjoAv1Ny"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728368AbgCXPZW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Mar 2020 11:25:22 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:39883 "EHLO
+        id S1728392AbgCXPZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Mar 2020 11:25:24 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:39918 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727487AbgCXPZT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 11:25:19 -0400
+        with ESMTP id S1728382AbgCXPZX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 11:25:23 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585063519; x=1616599519;
+  t=1585063523; x=1616599523;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=hO0jQxdyY1ykEreRRj8II7pjB7WCTRWEQg4KbI4Pvtc=;
-  b=cWLriwVBfELFAkD141F5vNvkuNXWkBVFMkW3XMk3uEv0xpl/5DMnI63W
-   8dl5W1bJTGVcqYVyEyzrj/stk6AAzNH1MpT0qYbriM+6jee6eCnwIkGx6
-   iDgcfUAQcKCRkk4FcmDqVN6JZ3P3MO5pEUp5bDhwlq30UiWw2lI6BZbSY
-   k6fa0d5moCviPX58KTFq0d09ROi35D5fJI4W4xubQSB2km3CGgxq9WQXz
-   zv9w/D1AiVmvZg8/C6QwvpwPou6ZozX997+xyJAnZg8lIL3OxxKQ+iKIE
-   w3XC+0x8hC2VmQ2emHmUXx2M+ydg1DFPkhm0k8MfN2c5QNM3HMTeliO/i
-   Q==;
-IronPort-SDR: WfnNw6PPIuvRd/mgKwb6yjpkhNbMHYR5GFzkrIznR+W7zOms4kTac1B296+Fb/RIlFWaCwdNhQ
- p57Z9vVMDzPCxNZ4GL6e1Qhfn/zemJjlp6qgFw4bCPzfsjQwXy2NK0MX2Y20l4gk2PuYd7ixKB
- x+sEzFsed2uQ4fs+utOuejHxOmQVkoA1Gc1DFZbq0XmF6pMTrlj/EkdIH3/fL5sVJCcR1sX+iG
- LDj6vI+Hb4XaMwymi8So+FtoWNOU+RYsaLKpj7y0SbS7d1slsirwQT1ThDAWF/DJWiINymTT3f
- ReE=
+  bh=fTqS72FG2poimYVMP6gAUybV97UDe9Ks0Wcf5ugxdUU=;
+  b=fjoAv1Ny9o/OcQGtf8lVcmuBOtYzTjyFXwmd4wScGoJYIo6pvIjGiOJl
+   NkJL6I1ZIAbsdbYYxI1GpDCDVrKN++cEZdDgO4CnUjJugjF3yuI7XiJp1
+   6SBxWxlrGgxJaaJsGDJjT7SgGYiggXaxIcJMRcB0Q4bXEG8HrAl9HgTFu
+   jrIkg0jzIqOWTDO5TpdzF/fhrvFTa2OJFrpQbx1cPQ0MWGS7zdPhoSMTj
+   gFRe4JweofVPmkeTKu5ihQUYE+Ol0C9pkVsxSk3r4wOYC+w6n9hFhIy5i
+   223nS/5WOEc2nkizWx6sJkvECrc/Q323SayyxB4tD5Qzg2iXxUsEEtxu6
+   A==;
+IronPort-SDR: bSK6L61rEzeHmsOjCE0dmDRVFyisQQNFel8v9UX7bkjk4MgDdMRzlb/nwqQbiyhW0Kc3RK/vCd
+ zrAPnNtPaJVAQxVznosiu/tQFHKFuDIH1E1lNi5Wpaw+pYp0YtXVnr6YsAzwg4CPYurFrWSs1L
+ VU0WGIIZW18TUR5wTWL0QKXUl3RkMpTVeXS1AvCnpEM4a10Retd7f9YnGW81IBy4wyxPVo6NX3
+ qbmireWJ7eTK0XIFSNDXjz5GoHtJA/mpKMDEgRtci9YyN5Nwiw1aRQnt+8anlm7WuSuBIAZWsS
+ bHg=
 X-IronPort-AV: E=Sophos;i="5.72,300,1580745600"; 
-   d="scan'208";a="133371576"
+   d="scan'208";a="133371583"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2020 23:25:19 +0800
-IronPort-SDR: WWpjSMZZoWzzKZW0IQ+TCyDg2omaca46y5jjfP3lBl8OHffYlNCz4rhc5pTJDJnJ2rE9FT6fyW
- jpQ5hL/PFHP4y1PQqZp9GQQ/xdVH2tFmJ2cD+9qTrn5ptyzHT0IImV3ER70gEVngq+1LbpxgBU
- 4VjVVU++qqi77Z47TZ42gO9vqpiTCFvTknd0PbgW4w+3jwgwwDDu0jlOKC+pXESw2sR4+9wzZE
- xz6xuKGaDfgQPY5IyJ7z6hWJ60LjEWJMJS31j1zHYeI7X2aT1lCnlny+m7cIy5FaZgBMJs8qtk
- HNnIyRKQCdJYUSaAIGw0NDWp
+  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2020 23:25:23 +0800
+IronPort-SDR: X1o71N4n80ftIgsch9VLDSX6aKV3D9K6l+2gekEua9LVrwqUxXOn+aoYGywDkTlf1A/zbKdvX+
+ dWYkOOgnDGMVqzav0KepMOsTidZLrw7ckl/CBmpYqa3+6Zqf1gTTBpCQg3bsqAkxZa1O0v2vyV
+ EBJdKwmX67XUcXA/mgacNpcVTIpCUQw3TbOeM9Xa0BVvf/5n+Hoq+cKEB/pHKDaEYKiS/ICgWD
+ awCUrPaA2BeQYseICs2ivIKmMtti4uOWHgYugcyKNMiMxy0T86ROwhCPABBdtI8kx3HpNguV+m
+ 2ACHAPUd6xBYOoiSyvTBWTNF
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2020 08:16:59 -0700
-IronPort-SDR: XCLj1ehrmkKP2P+4XHF3fFv62rWJGw/Ioa9KEigVv+fSruv/NJkWgvS/TMvhEndhDcM6OKSLnj
- dfqj/ChL54Fw5VDdc55NlLYXTgRo8JdPbiY/RoYNwkDozEbKZtvOQrExRuWANstC2LoDmmVuMu
- W8jFZI/SKAe6wDOlZH3smGWpEXQtfE7J49AF86bPJVlYeMsfGY6Hz8s8MdRVbzhTpBty+3oqZ8
- NEuur91ZHAvzDP8p5CUYxRUl0IbwqMjSTErWNOsgCQBSK7N9LcqUSmf2L9b8jLjDIuRxcRJyqa
- 29w=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2020 08:17:02 -0700
+IronPort-SDR: sD4BI3QHBKZZN62acfiUB0ZP1phm3rdJgPzLOJzFeCW5gQKPLTdd/CntC1CoH+V3MdcJqA9TUN
+ CWJFbiQcI5Cvl6AYn3t7pCAzKAvTk8sQEVan6LvpGwOSQTR15xBhMhony6keZHMUBHqXncBYKP
+ z3beFUJo+hEaXKWUGA70rvlWNYyvVPFWEIiOpT6MQCI3UkpttHWj/ZWTrd2It6gE8epVXVx6gQ
+ ntwa0j7hlZG5UGhcsdPEsDhH0WsgiNpkDEWXl5H4b5llMvv+nttOyxn6OoHIAr6wMHB5umA4UH
+ S1Q=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Mar 2020 08:25:17 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 24 Mar 2020 08:25:21 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -68,11 +68,10 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v2 09/11] null_blk: Support REQ_OP_ZONE_APPEND
-Date:   Wed, 25 Mar 2020 00:24:52 +0900
-Message-Id: <20200324152454.4954-10-johannes.thumshirn@wdc.com>
+Subject: [PATCH v2 11/11] zonefs: use zone-append for sequential zones
+Date:   Wed, 25 Mar 2020 00:24:54 +0900
+Message-Id: <20200324152454.4954-12-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200324152454.4954-1-johannes.thumshirn@wdc.com>
 References: <20200324152454.4954-1-johannes.thumshirn@wdc.com>
@@ -83,121 +82,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
-
-Support REQ_OP_ZONE_APPEND requests for zone mode null_blk devices.
-Use the internally tracked zone write pointer position as the actual
-write position, which is returned using the command request __sector
-field in the case of an mq device and using the command BIO sector in
-the case of a BIO device. Since the write position is used for data copy
-in the case of a memory backed device, reverse the order in which
-null_handle_zoned() and null_handle_memory_backed() are called to ensure
-that null_handle_memory_backed() sees the correct write position for
-REQ_OP_ZONE_APPEND operations.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/block/null_blk_main.c  |  9 +++++---
- drivers/block/null_blk_zoned.c | 38 +++++++++++++++++++++++++++-------
- 2 files changed, 37 insertions(+), 10 deletions(-)
+ fs/zonefs/super.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
-index 3e45e3640c12..5492f1e49eee 100644
---- a/drivers/block/null_blk_main.c
-+++ b/drivers/block/null_blk_main.c
-@@ -1300,12 +1300,15 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd, sector_t sector,
- 			goto out;
+diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+index 69aee3dfb660..d08d715c99de 100644
+--- a/fs/zonefs/super.c
++++ b/fs/zonefs/super.c
+@@ -628,12 +628,17 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
+ 		goto inode_unlock;
  	}
  
-+	if (dev->zoned) {
-+		cmd->error = null_handle_zoned(cmd, op, sector, nr_sectors);
-+		if (cmd->error != BLK_STS_OK)
-+			goto out;
-+	}
-+
- 	if (dev->memory_backed)
- 		cmd->error = null_handle_memory_backed(cmd, op);
- 
--	if (!cmd->error && dev->zoned)
--		cmd->error = null_handle_zoned(cmd, op, sector, nr_sectors);
--
- out:
- 	nullb_complete_cmd(cmd);
- 	return BLK_STS_OK;
-diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
-index 8259f3212a28..f20be7b91b9f 100644
---- a/drivers/block/null_blk_zoned.c
-+++ b/drivers/block/null_blk_zoned.c
-@@ -67,13 +67,22 @@ int null_init_zoned_dev(struct nullb_device *dev, struct request_queue *q)
- 
- int null_register_zoned_dev(struct nullb *nullb)
- {
-+	struct nullb_device *dev = nullb->dev;
- 	struct request_queue *q = nullb->q;
- 
--	if (queue_is_mq(q))
--		return blk_revalidate_disk_zones(nullb->disk);
-+	if (queue_is_mq(q)) {
-+		int ret = blk_revalidate_disk_zones(nullb->disk);
-+
-+		if (ret)
-+			return ret;
-+	} else {
-+		blk_queue_chunk_sectors(q, dev->zone_size_sects);
-+		q->nr_zones = blkdev_nr_zones(nullb->disk);
-+	}
- 
--	blk_queue_chunk_sectors(q, nullb->dev->zone_size_sects);
--	q->nr_zones = blkdev_nr_zones(nullb->disk);
-+	blk_queue_max_zone_append_sectors(q,
-+			min_t(sector_t, q->limits.max_hw_sectors,
-+			      dev->zone_size_sects));
- 
- 	return 0;
- }
-@@ -133,7 +142,7 @@ size_t null_zone_valid_read_len(struct nullb *nullb,
- }
- 
- static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
--		     unsigned int nr_sectors)
-+				    unsigned int nr_sectors, bool append)
- {
- 	struct nullb_device *dev = cmd->nq->dev;
- 	unsigned int zno = null_zone_no(dev, sector);
-@@ -148,7 +157,20 @@ static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
- 	case BLK_ZONE_COND_IMP_OPEN:
- 	case BLK_ZONE_COND_EXP_OPEN:
- 	case BLK_ZONE_COND_CLOSED:
--		/* Writes must be at the write pointer position */
-+		/*
-+		 * Regular writes must be at the write pointer position.
-+		 * Zone append writes are automatically issued at the write
-+		 * pointer and the position returned using the request or BIO
-+		 * sector.
-+		 */
-+		if (append) {
-+			sector = zone->wp;
-+			if (cmd->bio)
-+				cmd->bio->bi_iter.bi_sector = sector;
-+			else
-+				cmd->rq->__sector = sector;
+-	/* Enforce sequential writes (append only) in sequential zones */
+ 	mutex_lock(&zi->i_truncate_mutex);
+-	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ && iocb->ki_pos != zi->i_wpoffset) {
+-		mutex_unlock(&zi->i_truncate_mutex);
+-		ret = -EINVAL;
+-		goto inode_unlock;
++	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ) {
++		/* Enforce sequential writes (append only) */
++		if (iocb->ki_pos != zi->i_wpoffset) {
++			mutex_unlock(&zi->i_truncate_mutex);
++			ret = -EINVAL;
++			goto inode_unlock;
 +		}
-+
- 		if (sector != zone->wp)
- 			return BLK_STS_IOERR;
++		/* Use zone append for sync write */
++		if (is_sync_kiocb(iocb))
++			iocb->ki_flags |= IOCB_ZONE_APPEND;
+ 	}
+ 	mutex_unlock(&zi->i_truncate_mutex);
  
-@@ -228,7 +250,9 @@ blk_status_t null_handle_zoned(struct nullb_cmd *cmd, enum req_opf op,
- {
- 	switch (op) {
- 	case REQ_OP_WRITE:
--		return null_zone_write(cmd, sector, nr_sectors);
-+		return null_zone_write(cmd, sector, nr_sectors, false);
-+	case REQ_OP_ZONE_APPEND:
-+		return null_zone_write(cmd, sector, nr_sectors, true);
- 	case REQ_OP_ZONE_RESET:
- 	case REQ_OP_ZONE_RESET_ALL:
- 	case REQ_OP_ZONE_OPEN:
 -- 
 2.24.1
 
