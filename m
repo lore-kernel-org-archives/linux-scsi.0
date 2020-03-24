@@ -2,171 +2,126 @@ Return-Path: <SRS0=zrch=5J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8658DC43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57FC3C43331
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:50:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D10120836
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:41:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B1B720774
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:50:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ncaTsK1B"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vyCLMxsm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728133AbgCXPlc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Mar 2020 11:41:32 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55998 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727510AbgCXPlc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 11:41:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yRyMm7QNGa1QxyqAit0ud9YfLLzAXR0cCnyVzb5F8I8=; b=ncaTsK1BPjoxPIAZ6eyo+jvHwE
-        7uAo4fj8KfRTyNga+ATC0T0xGPy736fZ8Yc8Ofzd6t9j4ZrkcA664IFJtQvy9Vtol7N8JFThDuA0R
-        gbuEFl2WddJh4s/W0CfrCFFoIxgehbcEZLo0Xu48NyXsGXV3XkF1ly3M4NAn/dGczyrq6nGWZigKw
-        g6n94oeHiFm8oj4rMJhKqfajfwfeX88RrzV7kagZRqdD6TWTrgYS6lKhxfmUOn7IMwa70M2k6luCT
-        o0/rBE3zPHMt+K5zakWYPCWobpQ4Yb3Fvu4Gxq9ercdFi0q+huSSwV3pRIKGVo0bSEA+XAzNREjnw
-        6z7ZVe2A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGlgJ-0002uc-6w; Tue, 24 Mar 2020 15:41:31 +0000
-Date:   Tue, 24 Mar 2020 08:41:31 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 10/11] iomap: Add support for zone append writes
-Message-ID: <20200324154131.GA32087@infradead.org>
-References: <20200324152454.4954-1-johannes.thumshirn@wdc.com>
- <20200324152454.4954-11-johannes.thumshirn@wdc.com>
+        id S1727847AbgCXPuA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Mar 2020 11:50:00 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:53868 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726915AbgCXPuA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 11:50:00 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02OFnDc1141498;
+        Tue, 24 Mar 2020 15:49:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=GicSy3c2iWgzistQTNRNF7Jq/HJK4u2N+F2RC2dFlbU=;
+ b=vyCLMxsmWaPkG98eG7UYv/y3MbYlOYnTMp33MXSrpKyFXQm66MBKKj5kNZpNcx4TnjDW
+ XS46jNYER3aHO+A6wOTZmisMhQx7xJeVPIFjLCvDdrDoHNfGdm/Odjz8uvZxFkSunatQ
+ EVY3adss9Zlm5mJmJM8tLmFcvpeW5Qtk7cKwGrrDJ7v6gy+n5bRYk8wQMDnHoOF9O/HA
+ 0anbBWrVN8IfeDn9rVk8QTB+Fgk07KFXpLcdsSeTkaFia4GHjfUFPf6NO/jovZmcN/WP
+ cAkEU/iAX8sHSOhIn3vTPdh9pKGHyBAtfvSFmOVlQqXWElrboE7p4FoXQUht/L/EdJuv 0A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2ywabr550a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Mar 2020 15:49:56 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02OFlrcd182872;
+        Tue, 24 Mar 2020 15:47:55 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2yxw92v9gm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Mar 2020 15:47:55 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02OFlmDQ013618;
+        Tue, 24 Mar 2020 15:47:48 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 24 Mar 2020 08:47:48 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bryan Gurney <bgurney@redhat.com>,
+        Bernhard Sulzer <micraft.b@gmail.com>
+Subject: [PATCH] scsi: sd: Fix optimal I/O size for devices that change reported values
+Date:   Tue, 24 Mar 2020 11:47:47 -0400
+Message-Id: <20200324154747.29295-1-martin.petersen@oracle.com>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <4f6eb89d-57e4-a229-2e95-29fe4a691381@gmail.com>
+References: <4f6eb89d-57e4-a229-2e95-29fe4a691381@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200324152454.4954-11-johannes.thumshirn@wdc.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9570 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 bulkscore=0
+ adultscore=0 mlxscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003240086
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9570 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
+ lowpriorityscore=0 malwarescore=0 phishscore=0 priorityscore=1501
+ clxscore=1011 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003240086
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Mar 25, 2020 at 12:24:53AM +0900, Johannes Thumshirn wrote:
-> @@ -39,6 +40,7 @@ struct iomap_dio {
->  			struct task_struct	*waiter;
->  			struct request_queue	*last_queue;
->  			blk_qc_t		cookie;
-> +			sector_t		sector;
->  		} submit;
->  
->  		/* used for aio completion: */
-> @@ -151,6 +153,9 @@ static void iomap_dio_bio_end_io(struct bio *bio)
->  	if (bio->bi_status)
->  		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
->  
-> +	if (dio->flags & IOMAP_DIO_ZONE_APPEND)
-> +		dio->submit.sector = bio->bi_iter.bi_sector;
+Some USB bridge devices will return a default set of characteristics during
+initialization. And then, once an attached drive has spun up, substitute
+the actual parameters reported by the drive. According to the SCSI spec,
+the device should return a UNIT ATTENTION in case any reported parameters
+change. But in this case the change is made silently after a small window
+where default values are reported.
 
-The submit member in struct iomap_dio is for submit-time information,
-while this is used in the completion path..
+Commit a83da8a4509d ("scsi: sd: Optimal I/O size should be a multiple of
+physical block size") validated the reported optimal I/O size against the
+physical block size to overcome problems with devices reporting nonsensical
+transfer sizes. However, this validation did not account for the fact that
+aforementioned devices will return default values during a brief window
+during spin-up. The subsequent change in reported characteristics would
+invalidate the checking that had previously been performed.
 
->  		nr_pages = iov_iter_npages(dio->submit.iter, BIO_MAX_PAGES);
->  		iomap_dio_submit_bio(dio, iomap, bio);
-> +
-> +		/*
-> +		 * Issuing multiple BIOs for a large zone append write can
-> +		 * result in reordering of the write fragments and to data
-> +		 * corruption. So always stop after the first BIO is issued.
-> +		 */
-> +		if (zone_append)
-> +			break;
+Unset a previously configured optimal I/O size should the sanity checking
+fail on subsequent revalidate attempts.
 
-At least for a normal file system that is absolutely not true.  If
-zonefs is so special it might be better of just using a slightly tweaked
-copy of blkdev_direct_IO rather than using iomap.
+Link: https://lore.kernel.org/r/33fb522e-4f61-1b76-914f-c9e6a3553c9b@gmail.com
+Cc: Bryan Gurney <bgurney@redhat.com>
+Reported-by: Bernhard Sulzer <micraft.b@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> @@ -446,6 +486,11 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		flags |= IOMAP_WRITE;
->  		dio->flags |= IOMAP_DIO_WRITE;
->  
-> +		if (iocb->ki_flags & IOCB_ZONE_APPEND) {
-> +			flags |= IOMAP_ZONE_APPEND;
-> +			dio->flags |= IOMAP_DIO_ZONE_APPEND;
-> +		}
-> +
->  		/* for data sync or sync, we need sync completion processing */
->  		if (iocb->ki_flags & IOCB_DSYNC)
->  			dio->flags |= IOMAP_DIO_NEED_SYNC;
-> @@ -516,6 +561,15 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  			iov_iter_revert(iter, pos - dio->i_size);
->  			break;
->  		}
-> +
-> +		/*
-> +		 * Zone append writes cannot be split and be shorted. Break
-> +		 * here to let the user know instead of sending more IOs which
-> +		 * could get reordered and corrupt the written data.
-> +		 */
-> +		if (flags & IOMAP_ZONE_APPEND)
-> +			break;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8ca9299ffd36..2710a0e5ae6d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3169,9 +3169,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+ 		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
+ 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
+-	} else
++	} else {
++		q->limits.io_opt = 0;
+ 		rw_max = min_not_zero(logical_to_sectors(sdp, dev_max),
+ 				      (sector_t)BLK_DEF_MAX_SECTORS);
++	}
+ 
+ 	/* Do not exceed controller limit */
+ 	rw_max = min(rw_max, queue_max_hw_sectors(q));
+-- 
+2.24.1
 
-But that isn't what we do here.  You exit after a single apply iteration
-which is perfectly fine - at at least for a normal file system, zonefs
-is rather weird.
-
-> +
->  	} while ((count = iov_iter_count(iter)) > 0);
->  	blk_finish_plug(&plug);
->  
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 3cd4fe6b845e..aa4ad705e549 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -314,6 +314,7 @@ enum rw_hint {
->  #define IOCB_SYNC		(1 << 5)
->  #define IOCB_WRITE		(1 << 6)
->  #define IOCB_NOWAIT		(1 << 7)
-> +#define IOCB_ZONE_APPEND	(1 << 8)
-
-I don't think the iocb is the right interface for passing this
-kind of information.  We currently pass a bool wait to iomap_dio_rw
-which really should be flags.  I have a pending patch for that.
-
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 8b09463dae0d..16c17a79e53d 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -68,7 +68,6 @@ struct vm_fault;
->   */
->  #define IOMAP_F_PRIVATE		0x1000
->  
-> -
-
-Spurious whitespace change.
-
->  /*
->   * Magic value for addr:
->   */
-> @@ -95,6 +94,17 @@ iomap_sector(struct iomap *iomap, loff_t pos)
->  	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
->  }
->  
-> +/*
-> + * Flags for iomap_begin / iomap_end.  No flag implies a read.
-> + */
-> +#define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
-> +#define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
-> +#define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
-> +#define IOMAP_FAULT		(1 << 3) /* mapping for page fault */
-> +#define IOMAP_DIRECT		(1 << 4) /* direct I/O */
-> +#define IOMAP_NOWAIT		(1 << 5) /* do not block */
-> +#define IOMAP_ZONE_APPEND	(1 << 6) /* Use zone append for writes */
-
-Why is this moved around?
