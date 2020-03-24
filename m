@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73365C54EEB
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADB72C4332B
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:47:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41F1A20724
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:47:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C19E20735
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:47:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="T/R64aAP"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bXJRFSqC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727553AbgCXHrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Mar 2020 03:47:52 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55272 "EHLO
+        id S1727557AbgCXHry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Mar 2020 03:47:54 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:55290 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727380AbgCXHrw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 03:47:52 -0400
+        with ESMTP id S1727380AbgCXHry (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 03:47:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=wBJnVPAawoSGW8xbPdOwFEQHqM7UVMcAa/6Rnl6uUxo=; b=T/R64aAPg3Q59uGQy1u9gg44E7
-        VdU5ErHzsCecHw44HuuVPnSnVWAmHSt2Rlbn/J76G+bQGlw7xr6NC40UO/gdaaCe0nh1F8fCQOVsP
-        Gw0Uz0Uo900Pka3iAecf5+uX4CEd/s7X4Q1xm06YNidKSskN3AU1xpjs1FIyxNhWKyu6pr9Y06sJ1
-        2pMDL1rU8nZ96+YeRri0Y9IIV396zew7PYz41X2OoErgc+WXPsLTaZ8BywQCVlCGNNjy/dHWpS3Rr
-        E4NZ5WfrA7m1t0Yv5dr7eZ9DGjHul2hpTFQn5qCocWDu5VF8PqsC0xcfF6bR1sB/tcVUSQPHT27hx
-        o3M1wWtQ==;
+        bh=Pr/RehRPh8nFjGKjHemQk7hDj8UU9w6ywzXadoPeoUo=; b=bXJRFSqChPaWB9F1oMcZ3p2vgk
+        DkbJU+4bWGiIi9O0DPcjaWIUb9KKBIF+vrzotnKajiSovFENLf+19X5LKMyBbeb20MhZkkibUL9hO
+        hYIX6xDSK3pHa0XiWqmTwzbFgcZNcRmkV3UgrnCDl66ZXOAwdEb3NhInBcZEi8ESOGcbFG89MgGtK
+        zdPFBPbmeuyAYgq+/5V8+yx/+MracnStxpljGQffq8S6Hiz0Xti/fq63x9SvPqA+NivJfsHQtMd9t
+        5T+XzfOSoOs+X1jsSuRw1WS/i0utAZtQoulL05ZFBkfNowz4xP0Rl7pr85B1jBPduJvoon1CJLtwH
+        z/c3+Khw==;
 Received: from [2001:4bb8:18c:2a9e:999c:283e:b14a:9189] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jGeHv-0001B2-Hr; Tue, 24 Mar 2020 07:47:51 +0000
+        id 1jGeHx-0001BP-VD; Tue, 24 Mar 2020 07:47:54 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
         linux-scsi@vger.kernel.org, reiserfs-devel@vger.kernel.org
-Subject: [PATCH 13/21] block: remove block/partitions/karma.h
-Date:   Tue, 24 Mar 2020 08:25:22 +0100
-Message-Id: <20200324072530.544483-14-hch@lst.de>
+Subject: [PATCH 14/21] block: remove block/partitions/osf.h
+Date:   Tue, 24 Mar 2020 08:25:23 +0100
+Message-Id: <20200324072530.544483-15-hch@lst.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200324072530.544483-1-hch@lst.de>
 References: <20200324072530.544483-1-hch@lst.de>
@@ -52,43 +52,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Just move the single define to block/partitions/karma.c.
+Just move the single define to block/partitions/osf.c.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/partitions/karma.c | 3 ++-
- block/partitions/karma.h | 6 ------
- 2 files changed, 2 insertions(+), 7 deletions(-)
- delete mode 100644 block/partitions/karma.h
+ block/partitions/osf.c | 2 +-
+ block/partitions/osf.h | 7 -------
+ 2 files changed, 1 insertion(+), 8 deletions(-)
+ delete mode 100644 block/partitions/osf.h
 
-diff --git a/block/partitions/karma.c b/block/partitions/karma.c
-index 59812d705c3d..4d93512f4bd4 100644
---- a/block/partitions/karma.c
-+++ b/block/partitions/karma.c
-@@ -8,9 +8,10 @@
+diff --git a/block/partitions/osf.c b/block/partitions/osf.c
+index 4b873973d6c0..84560d0765ed 100644
+--- a/block/partitions/osf.c
++++ b/block/partitions/osf.c
+@@ -9,9 +9,9 @@
   */
  
  #include "check.h"
--#include "karma.h"
- #include <linux/compiler.h>
+-#include "osf.h"
  
-+#define KARMA_LABEL_MAGIC		0xAB56
-+
- int karma_partition(struct parsed_partitions *state)
+ #define MAX_OSF_PARTITIONS 18
++#define DISKLABELMAGIC (0x82564557UL)
+ 
+ int osf_partition(struct parsed_partitions *state)
  {
- 	int i;
-diff --git a/block/partitions/karma.h b/block/partitions/karma.h
+diff --git a/block/partitions/osf.h b/block/partitions/osf.h
 deleted file mode 100644
-index 1b5eec57ee0c..000000000000
---- a/block/partitions/karma.h
+index 80a58c382b3f..000000000000
+--- a/block/partitions/osf.h
 +++ /dev/null
-@@ -1,6 +0,0 @@
+@@ -1,7 +0,0 @@
 -/* SPDX-License-Identifier: GPL-2.0 */
 -/*
-- *  fs/partitions/karma.h
+- *  fs/partitions/osf.h
 - */
 -
--#define KARMA_LABEL_MAGIC		0xAB56
+-#define DISKLABELMAGIC (0x82564557UL)
+-
 -- 
 2.25.1
 
