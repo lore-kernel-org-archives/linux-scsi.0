@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80EF8C54FD5
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE620C54FD0
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 597DC2076F
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6D872076F
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 15:25:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HSoefu5M"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="CoiGN8lK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728333AbgCXPZO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Mar 2020 11:25:14 -0400
+        id S1728348AbgCXPZT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Mar 2020 11:25:19 -0400
 Received: from esa4.hgst.iphmx.com ([216.71.154.42]:39883 "EHLO
         esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727487AbgCXPZN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 11:25:13 -0400
+        with ESMTP id S1727487AbgCXPZS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Mar 2020 11:25:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585063513; x=1616599513;
+  t=1585063517; x=1616599517;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=wowatp8PN3iR/trDrof+MFQ0lADDim1HmYmnYYeViYA=;
-  b=HSoefu5M/PB+17VnVxj/C7Nlfmq+pO6IiVtDyG8Bx/SFQGw6qdqm/+rR
-   MANaN65vCV/pfkP+LrPS0qTk+5ZObA8glPOf+IaPqSbH+IKcy7F/bv1Yh
-   VM4tCsTjIwuki1MDDZRw2EbIIpBjWGE2fHx4mTz8X4W2EdCXg+xfy06H+
-   MpFSPTfwlnQls0jl8/+10wvf6CPJBlS8UCsOOvS92yR3IprTFbECLest8
-   LhynKl+nKVXQ4F8gEBdvlzQP2SzMiBqKw1uzFJ9nPmxxCQJ56TZEk09Oy
-   s5rPdn5L7/KsRjl6T2XOJ0kuKSbh2VEULQwCqWo6kka1Yr8h45qtlTkXR
-   w==;
-IronPort-SDR: ebDtFcIdoZOiZyZGbauG8hx9487PDIifKeFlU45aGTHtwnIxXPwTn45MGghnC8Uzsrsfy+YuQi
- jHd0n1SVOlIDo0nCFVYVDny84z79XaVFg5j7C136pcncxrEcE6HNXr2WAE/Jfwqpyqk7OnFJUE
- 4cP3Dt5k7QwRfVLiP9vjbAQdoJxaeo4GGAf47iBhp+4PQp0O03xhF6nOU7V9DRTG7re5aJ5Qg1
- zGrftu+aNKgo2MH+0EPHww5jrbTLwP8LAZPdqsEtiBEFc97wYefpD8aDsDItuTXstILA3l/jpT
- Vgo=
+  bh=0x46aiJQVLk+zdk3MjudKqj10oWp8p31iapMZu1OrXo=;
+  b=CoiGN8lKREfURFg24MBDMHH1b1ko0JIgPK/NVYegxHNQ215zHc41d7Jy
+   peFSgsJidO8HhN5TnxYJYoaMS1cSwpJ+3wFSi+I97LdTKorkySUDInIly
+   qYR8cKK3NDLwGcAQ7GjPJ/hOSzRt/+id/uHF8q0rK8FM8iq9JUuuv9em4
+   v4b1g9MAHNqUD2HjhCQNhyxwyMiBBaAnIMK1rgzWR5ABfP8C4Us+NVKzn
+   VM5Cvl6ZztlhBZvrJcJlnA29BTVxtRL2MbztDliHKdn4pdS0YVyNCRxXR
+   D8Eom21ujEtSh3TUt8mnYxe1MpvbRraRgs+tl7WfPZur8fnd2FyfEVhRa
+   g==;
+IronPort-SDR: G/M0yoI5fUTbTc6jX9f3vrz3mrJAWcCInzccTAS5SD4ydp6paU9X++uvPfLTCQ3+ahHSfdCdp4
+ 2z8xW0BhvyhvMe9mPC1sUTfyOygggVMhILEJ53rXkDfYjxz5OCix6CF5RGrSFsAH1mL9nI9HV/
+ gycNEV94ueC2Zubq4If4SMLNLNeaa1eJOH9nrdMsO19gs3UmR5LJ2PaiYdLAkgSY4Oespaexbt
+ 01jXOfhhSVUMZcuZ15hfMxLqXbKMCnvZPOe/Utpkv0a7QB3olT+TEvgmZUKeMRv6IoO5jXen4H
+ tH0=
 X-IronPort-AV: E=Sophos;i="5.72,300,1580745600"; 
-   d="scan'208";a="133371567"
+   d="scan'208";a="133371573"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2020 23:25:13 +0800
-IronPort-SDR: ILThR9WHTspidE5Awl16Xv96F+dIpNdSs+xSAkqhJDIv2HEUMXXqHfHy1JGUIBLivQuZjNl8Ch
- ILdcY6CxrG2MPcTtYDxKfgRbkVXiAHtsHiyINR/w+5fyG0+3erqWTJomvFOeessFG11U4j06cP
- pXQWyghpoz/cfnpPuc8QRv2zajsI/R4yPJTheDKBMmBaNfW1zezdOfiH6CJIu7ErThus96aTys
- McogKaViQ92Fk57mdYrY2flPurYpW7ki0qWNL5q1MQ7fkXseoPixFE9NKT5kd2wpCrBvY1Y4jC
- IUZE5SYJAfJtjc46auzQZML6
+  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2020 23:25:17 +0800
+IronPort-SDR: OFdjeG/L2N6VIMrcSbNCquh+meUhMLeGl08r+8jnaR1mmV4+1mI1NlFLzKl+HJGHEgMO0zJmSj
+ ubSKqUZ8u6u5gAwoGCtV1K8iibCIKCAKqwcrK/Sf3pM5St3WsV6Z28o75CCSA+/YVW4vILHrHR
+ 6vwraSdw+nL9nLVqFvl2VUbeAr5n1Mg3GTwyNAG7LFX9NISyg28Ln4W5V4fxzXJal9OzgZvW+f
+ bdcplzN6OxQ9RQ8NaWk6SaDboFEWQ8KxgXhQa8JMK8nx0p2s0ykttq82XK/8b3Hp0foazObK7c
+ LE7lnjHq6TasUjNZ+99VSD0N
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2020 08:16:53 -0700
-IronPort-SDR: 16a3S0cX1zSIb7q4kjWjGUJBDoXZzt/KMiMrpoWZ3c98zf9ofYgapgkTvA3gdeCztuv5GY4V9+
- ZblMnaP+4BtK52KappDlvydD/VZw5qbfxpNVuWGTpV47j0j2I6NDqM4R45gncBdLpD+6laJ49X
- GkbViFBkrpf5y+CgcC+l0AVj84TxcOeCh0nTL19cNsKKkhaXU3nqnzU1c5b6yk8H1IqFtyuYys
- rmVY1qnM0lGBINgP9/ZPzykrimIw6ner//kNL/Z8PeyH4t9NsFj/5Jrc6dzo76n115wub5E2jB
- PEM=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2020 08:16:57 -0700
+IronPort-SDR: tGwLEnSY2HwNg2JENZJxRSGxZDqUSupaAnmcpYuMPP0LOImzt0tckFXZry+8i9aO/bjIytgRMF
+ xReVUv9osGlfJPZ1N3nLEO7BIPdLd/ZwCwfM4r7jMyp5Jpj/JSVXGTRRkZnLCnkEmVvB8zY6Yc
+ /VrcAeW4WfsDe+jnkd9yjW4dgG/0y8chKQZ7g4RFPU7kCitUglGAPSjEOMqCnZk1dhg19l9iZF
+ v0E08skxo5FB99/Aky2mY4Lxsmpbw3m4K84grDiImWtILa/1K5YCW0K26/SWl3adOLWBeJJdGg
+ t0w=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 24 Mar 2020 08:25:11 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 24 Mar 2020 08:25:15 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -68,10 +68,11 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v2 06/11] scsi: sd_zbc: factor out sanity checks for zoned commands
-Date:   Wed, 25 Mar 2020 00:24:49 +0900
-Message-Id: <20200324152454.4954-7-johannes.thumshirn@wdc.com>
+Subject: [PATCH v2 08/11] null_blk: Cleanup zoned device initialization
+Date:   Wed, 25 Mar 2020 00:24:51 +0900
+Message-Id: <20200324152454.4954-9-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200324152454.4954-1-johannes.thumshirn@wdc.com>
 References: <20200324152454.4954-1-johannes.thumshirn@wdc.com>
@@ -82,72 +83,163 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Factor sanity checks for zoned commands from sd_zbc_setup_zone_mgmt_cmnd().
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-This will help with the introduction of an emulated ZONE_APPEND command.
+Move all zoned mode related code from null_blk_main.c to
+null_blk_zoned.c, avoiding an ugly #ifdef in the process.
+Rename null_zone_init() into null_init_zoned_dev(), null_zone_exit()
+into null_free_zoned_dev() and add the new function
+null_register_zoned_dev() to finalize the zoned dev setup before
+add_disk().
 
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/sd_zbc.c | 36 +++++++++++++++++++++++++-----------
- 1 file changed, 25 insertions(+), 11 deletions(-)
+ drivers/block/null_blk.h       | 14 ++++++++++----
+ drivers/block/null_blk_main.c  | 26 ++++++--------------------
+ drivers/block/null_blk_zoned.c | 21 +++++++++++++++++++--
+ 3 files changed, 35 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index f45c22b09726..ee156fbf3780 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -209,6 +209,26 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 	return ret;
+diff --git a/drivers/block/null_blk.h b/drivers/block/null_blk.h
+index 62b660821dbc..2874463f1d42 100644
+--- a/drivers/block/null_blk.h
++++ b/drivers/block/null_blk.h
+@@ -86,8 +86,9 @@ struct nullb {
+ };
+ 
+ #ifdef CONFIG_BLK_DEV_ZONED
+-int null_zone_init(struct nullb_device *dev);
+-void null_zone_exit(struct nullb_device *dev);
++int null_init_zoned_dev(struct nullb_device *dev, struct request_queue *q);
++int null_register_zoned_dev(struct nullb *nullb);
++void null_free_zoned_dev(struct nullb_device *dev);
+ int null_report_zones(struct gendisk *disk, sector_t sector,
+ 		      unsigned int nr_zones, report_zones_cb cb, void *data);
+ blk_status_t null_handle_zoned(struct nullb_cmd *cmd,
+@@ -96,12 +97,17 @@ blk_status_t null_handle_zoned(struct nullb_cmd *cmd,
+ size_t null_zone_valid_read_len(struct nullb *nullb,
+ 				sector_t sector, unsigned int len);
+ #else
+-static inline int null_zone_init(struct nullb_device *dev)
++static inline int null_init_zoned_dev(struct nullb_device *dev,
++				      struct request_queue *q)
+ {
+ 	pr_err("CONFIG_BLK_DEV_ZONED not enabled\n");
+ 	return -EINVAL;
+ }
+-static inline void null_zone_exit(struct nullb_device *dev) {}
++static inline int null_register_zoned_dev(struct nullb *nullb)
++{
++	return -ENODEV;
++}
++static inline void null_free_zoned_dev(struct nullb_device *dev) {}
+ static inline blk_status_t null_handle_zoned(struct nullb_cmd *cmd,
+ 					     enum req_opf op, sector_t sector,
+ 					     sector_t nr_sectors)
+diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
+index e9d66cc0d6b9..3e45e3640c12 100644
+--- a/drivers/block/null_blk_main.c
++++ b/drivers/block/null_blk_main.c
+@@ -580,7 +580,7 @@ static void null_free_dev(struct nullb_device *dev)
+ 	if (!dev)
+ 		return;
+ 
+-	null_zone_exit(dev);
++	null_free_zoned_dev(dev);
+ 	badblocks_exit(&dev->badblocks);
+ 	kfree(dev);
+ }
+@@ -1605,19 +1605,11 @@ static int null_gendisk_register(struct nullb *nullb)
+ 	disk->queue		= nullb->q;
+ 	strncpy(disk->disk_name, nullb->disk_name, DISK_NAME_LEN);
+ 
+-#ifdef CONFIG_BLK_DEV_ZONED
+ 	if (nullb->dev->zoned) {
+-		if (queue_is_mq(nullb->q)) {
+-			int ret = blk_revalidate_disk_zones(disk);
+-			if (ret)
+-				return ret;
+-		} else {
+-			blk_queue_chunk_sectors(nullb->q,
+-					nullb->dev->zone_size_sects);
+-			nullb->q->nr_zones = blkdev_nr_zones(disk);
+-		}
++		int ret = null_register_zoned_dev(nullb);
++		if (ret)
++			return ret;
+ 	}
+-#endif
+ 
+ 	add_disk(disk);
+ 	return 0;
+@@ -1795,14 +1787,9 @@ static int null_add_dev(struct nullb_device *dev)
+ 	}
+ 
+ 	if (dev->zoned) {
+-		rv = null_zone_init(dev);
++		rv = null_init_zoned_dev(dev, nullb->q);
+ 		if (rv)
+ 			goto out_cleanup_blk_queue;
+-
+-		nullb->q->limits.zoned = BLK_ZONED_HM;
+-		blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, nullb->q);
+-		blk_queue_required_elevator_features(nullb->q,
+-						ELEVATOR_F_ZBD_SEQ_WRITE);
+ 	}
+ 
+ 	nullb->q->queuedata = nullb;
+@@ -1831,8 +1818,7 @@ static int null_add_dev(struct nullb_device *dev)
+ 
+ 	return 0;
+ out_cleanup_zone:
+-	if (dev->zoned)
+-		null_zone_exit(dev);
++	null_free_zoned_dev(dev);
+ out_cleanup_blk_queue:
+ 	blk_cleanup_queue(nullb->q);
+ out_cleanup_tags:
+diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
+index ed34785dd64b..8259f3212a28 100644
+--- a/drivers/block/null_blk_zoned.c
++++ b/drivers/block/null_blk_zoned.c
+@@ -10,7 +10,7 @@ static inline unsigned int null_zone_no(struct nullb_device *dev, sector_t sect)
+ 	return sect >> ilog2(dev->zone_size_sects);
  }
  
-+static blk_status_t sd_zbc_cmnd_checks(struct scsi_cmnd *cmd)
-+{
-+	struct request *rq = cmd->request;
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-+	sector_t sector = blk_rq_pos(rq);
+-int null_zone_init(struct nullb_device *dev)
++int null_init_zoned_dev(struct nullb_device *dev, struct request_queue *q)
+ {
+ 	sector_t dev_size = (sector_t)dev->size * 1024 * 1024;
+ 	sector_t sector = 0;
+@@ -58,10 +58,27 @@ int null_zone_init(struct nullb_device *dev)
+ 		sector += dev->zone_size_sects;
+ 	}
+ 
++	q->limits.zoned = BLK_ZONED_HM;
++	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
++	blk_queue_required_elevator_features(q, ELEVATOR_F_ZBD_SEQ_WRITE);
 +
-+	if (!sd_is_zoned(sdkp))
-+		/* Not a zoned device */
-+		return BLK_STS_IOERR;
-+
-+	if (sdkp->device->changed)
-+		return BLK_STS_IOERR;
-+
-+	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
-+		/* Unaligned request */
-+		return BLK_STS_IOERR;
-+
-+	return BLK_STS_OK;
++	return 0;
 +}
 +
- /**
-  * sd_zbc_setup_zone_mgmt_cmnd - Prepare a zone ZBC_OUT command. The operations
-  *			can be RESET WRITE POINTER, OPEN, CLOSE or FINISH.
-@@ -223,20 +243,14 @@ blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
- 					 unsigned char op, bool all)
++int null_register_zoned_dev(struct nullb *nullb)
++{
++	struct request_queue *q = nullb->q;
++
++	if (queue_is_mq(q))
++		return blk_revalidate_disk_zones(nullb->disk);
++
++	blk_queue_chunk_sectors(q, nullb->dev->zone_size_sects);
++	q->nr_zones = blkdev_nr_zones(nullb->disk);
++
+ 	return 0;
+ }
+ 
+-void null_zone_exit(struct nullb_device *dev)
++void null_free_zoned_dev(struct nullb_device *dev)
  {
- 	struct request *rq = cmd->request;
--	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	sector_t sector = blk_rq_pos(rq);
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
- 	sector_t block = sectors_to_logical(sdkp->device, sector);
-+	blk_status_t ret;
- 
--	if (!sd_is_zoned(sdkp))
--		/* Not a zoned device */
--		return BLK_STS_IOERR;
--
--	if (sdkp->device->changed)
--		return BLK_STS_IOERR;
--
--	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
--		/* Unaligned request */
--		return BLK_STS_IOERR;
-+	ret = sd_zbc_cmnd_checks(cmd);
-+	if (ret != BLK_STS_OK)
-+		return ret;
- 
- 	cmd->cmd_len = 16;
- 	memset(cmd->cmnd, 0, cmd->cmd_len);
+ 	kvfree(dev->zones);
+ }
 -- 
 2.24.1
 
