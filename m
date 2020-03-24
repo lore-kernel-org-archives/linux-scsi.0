@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F70CC4332B
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:53:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03739C4332B
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:59:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E3552074D
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:53:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C66D920735
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Mar 2020 07:59:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727380AbgCXHxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Mar 2020 03:53:17 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:59460 "EHLO huawei.com"
+        id S1727440AbgCXH7P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Mar 2020 03:59:15 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:37416 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727561AbgCXHxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Mar 2020 03:53:17 -0400
-Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id AA77646081E544C8350C;
-        Tue, 24 Mar 2020 15:53:00 +0800 (CST)
+        id S1725905AbgCXH7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Mar 2020 03:59:15 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 6FFC32BC9E3E2CCB20DC;
+        Tue, 24 Mar 2020 15:59:11 +0800 (CST)
 Received: from [10.173.221.252] (10.173.221.252) by smtp.huawei.com
- (10.3.19.203) with Microsoft SMTP Server (TLS) id 14.3.487.0; Tue, 24 Mar
- 2020 15:52:50 +0800
+ (10.3.19.208) with Microsoft SMTP Server (TLS) id 14.3.487.0; Tue, 24 Mar
+ 2020 15:59:00 +0800
 To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>
-CC:     <linfeilong@huawei.com>, <liuzhiqiang26@huawei.com>
+        <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
+        liuzhiqiang <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>
 From:   Wu Bo <wubo40@huawei.com>
-Subject: PATCH] iscsi:report unbind session event when the target has been
+Subject: [PATCH] iscsi:report unbind session event when the target has been
  removed
-Message-ID: <4eab1771-2cb3-8e79-b31c-923652340e99@huawei.com>
-Date:   Tue, 24 Mar 2020 15:52:41 +0800
+Message-ID: <7cce97f2-4dab-5105-a477-8869d5a4f150@huawei.com>
+Date:   Tue, 24 Mar 2020 15:58:50 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.2.0
 MIME-Version: 1.0
@@ -60,7 +60,8 @@ The kernel status has been logged out and the event will not be sent again.
 
 when iscsid restart done. logout session again report error:
 #iscsiadm -m node iqn.xxxxx -p xx.xx.xx.xx -u
-Logging out of session [sid: 6, target: iqn.xxxxx, portal: xx.xx.xx.xx,3260]
+Logging out of session [sid: 6, target: iqn.xxxxx, portal: 
+xx.xx.xx.xx,3260]
 iscsiadm: Could not logout of [sid: 6, target: iscsiadm -m node 
 iqn.xxxxx, portal: xx.xx.xx.xx,3260].
 iscsiadm: initiator reported error (9 - internal error)
@@ -96,6 +97,5 @@ work_struct *work)
          iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
          ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
   }
---
+-- 
 1.8.3.1
-
