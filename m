@@ -2,121 +2,221 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FF61C1975A
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 17:20:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 489E2C2D0E7
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 17:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5EE1620772
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 17:20:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26A922077D
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 17:50:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727357AbgCYRUC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 13:20:02 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55368 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727320AbgCYRUB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Mar 2020 13:20:01 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 14F99AC22;
-        Wed, 25 Mar 2020 17:20:00 +0000 (UTC)
-Message-ID: <4fb2d29be88dbef2050cf51210d8e4e14a4b8ac2.camel@suse.com>
-Subject: Re: [PATCH v2 1/3] scsi: qla2xxx: avoid sending mailbox commands if
- firmware is stopped
-From:   Martin Wilck <mwilck@suse.com>
-To:     Arun Easi <aeasi@marvell.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org
-Date:   Wed, 25 Mar 2020 18:20:02 +0100
-In-Reply-To: <dfbd88461ef4b5f56a83db7095c6e3f36b5a485e.camel@suse.com>
-References: <20200205214422.3657-1-mwilck@suse.com>
-         <20200205214422.3657-2-mwilck@suse.com>
-         <alpine.LRH.2.21.9999.2003241648560.12727@irv1user01.caveonetworks.com>
-         <dfbd88461ef4b5f56a83db7095c6e3f36b5a485e.camel@suse.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.34.4 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1728257AbgCYRuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 13:50:22 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:10957 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728247AbgCYRuV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 13:50:21 -0400
+IronPort-SDR: 8VjKLx+JsMa/Of+DSfvflWJoMagIr+MOQ7Wz6+QQYPXON4uQURvzqRis0G4xyWrM0wlYducT5e
+ 5xOcGX+qYSD6TV/F5zdhi3854l91Y46crqgv88ymGUi0Ac+SYB/0hVWV3YRJtE5QjCOIWAe3Sd
+ Ey4Q17OzoNB/HdOPLjH39gZ6pEEeoHG1W+RR9EKV2+7pD0UKIdpwmQLQpD9LnEVaBI1MPv8S+2
+ Dyj1PVF3xh/GWRNdvn/eZtKe2RSJGUpMposOOyepkbilmBcKG7T/MmBeec6knWbUeE2nFbAWJh
+ 97I=
+X-IronPort-AV: E=Sophos;i="5.72,303,1580803200"; 
+   d="scan'208";a="28615551"
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by labrats.qualcomm.com with ESMTP; 25 Mar 2020 02:24:53 -0700
+Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
+  by ironmsg05-sd.qualcomm.com with ESMTP; 25 Mar 2020 02:24:51 -0700
+Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
+        id C62C73A9C; Wed, 25 Mar 2020 02:24:51 -0700 (PDT)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Subhash Jadavani <subhashj@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v5 1/2] scsi: ufs: Clean up ufshcd_scale_clks() and clock scaling error out path
+Date:   Wed, 25 Mar 2020 02:23:38 -0700
+Message-Id: <1585128220-26128-2-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1585128220-26128-1-git-send-email-cang@codeaurora.org>
+References: <1585128220-26128-1-git-send-email-cang@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-03-25 at 17:28 +0100, Martin Wilck wrote:
-> On Tue, 2020-03-24 at 16:51 -0700, Arun Easi wrote:
-> > On Wed, 5 Feb 2020, 1:44pm, mwilck@suse.com wrote:
-> > 
-> > > From: Martin Wilck <mwilck@suse.com>
-> > > 
-> > > Since commit 45235022da99 ("scsi: qla2xxx: Fix driver unload by
-> > > shutting down chip"),
-> > > it is possible that FC commands are scheduled after the adapter
-> > > firmware
-> > > has been shut down. IO sent to the firmware in this situation
-> > > hangs
-> > > indefinitely. Avoid this for the LOGO code path that is typically
-> > > taken
-> > > when adapters are shut down.
-> > > 
-> > > Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by
-> > > shutting
-> > > down chip")
-> > > Signed-off-by: Martin Wilck <mwilck@suse.com>
-> > > Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-> > > ---
-> > >  drivers/scsi/qla2xxx/qla_mbx.c | 3 +++
-> > >  drivers/scsi/qla2xxx/qla_os.c  | 3 +++
-> > >  2 files changed, 6 insertions(+)
-> > > 
-> > > [...]
-> > > --- a/drivers/scsi/qla2xxx/qla_os.c
-> > > +++ b/drivers/scsi/qla2xxx/qla_os.c
-> > > @@ -4878,6 +4878,9 @@ qla2x00_post_work(struct scsi_qla_host
-> > > *vha,
-> > > struct qla_work_evt *e)
-> > >  	unsigned long flags;
-> > >  	bool q = false;
-> > >  
-> > > +	if (!vha->hw->flags.fw_started)
-> > > +		return QLA_FUNCTION_FAILED;
-> > > +
-> > 
-> > I'd probably not do it here; rather in qla2x00_get_sp() 
-> > /qla2x00_start_sp()/ qla2xxx_get_qpair_sp() time. Not all works are
-> > for 
-> > posting to firmware (QLA_EVT_IDC_ACK, QLA_EVT_UNMAP etc.).
-> 
-> qla81xx_idc_ack() calls qla2x00_mailbox_command(), which should be
-> avoided IMO. But I'll review the various cases and re-post the patch.
+From: Subhash Jadavani <subhashj@codeaurora.org>
 
-Thinking about it once more, the approach is racy. 
+This change introduces a func ufshcd_set_clk_freq() to explicitly
+set clock frequency so that it can be used in reset_and_resotre path and
+in ufshcd_scale_clks(). Meanwhile, this change cleans up the clock scaling
+error out path.
 
-qla2x00_try_stop_firmware() can be called any time, and it sets
-fw_started = 0 *after* actually stopping the firmware. Even if we check
-fw_started, the firwmare might be stopped between our check and our
-actual mailbox / FW register access, and we'd end up hanging.
+Fixes: a3cd5ec55f6c ("scsi: ufs: add load based scaling of UFS gear")
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 68 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 46 insertions(+), 22 deletions(-)
 
-At least the check should be as close as possible to the actual FW
-access, e.g. in qla2x00_mailbox_command(), or before writing to the
-request queue registers in qla2x00_start_sp() etc.
-
-Perhaps the (!fw_started) condition should be treated like
-ABORT_ISP_ACTIVE in qla2x00_mailbox_command, i.e. execute only if
-is_rom_cmd() returns true?
-
-I can re-post, but I feel this should really be done by someone who
-knows exactly how the firmware operates, IOW Marvell staff.
-
-Regards
-Martin
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2a2a63b..9c26f82 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -855,28 +855,29 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
+ 		return false;
+ }
+ 
+-static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
++/**
++ * ufshcd_set_clk_freq - set UFS controller clock frequencies
++ * @hba: per adapter instance
++ * @scale_up: If True, set max possible frequency othewise set low frequency
++ *
++ * Returns 0 if successful
++ * Returns < 0 for any other errors
++ */
++static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
+ {
+ 	int ret = 0;
+ 	struct ufs_clk_info *clki;
+ 	struct list_head *head = &hba->clk_list_head;
+-	ktime_t start = ktime_get();
+-	bool clk_state_changed = false;
+ 
+ 	if (list_empty(head))
+ 		goto out;
+ 
+-	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
+-	if (ret)
+-		return ret;
+-
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
+ 			if (scale_up && clki->max_freq) {
+ 				if (clki->curr_freq == clki->max_freq)
+ 					continue;
+ 
+-				clk_state_changed = true;
+ 				ret = clk_set_rate(clki->clk, clki->max_freq);
+ 				if (ret) {
+ 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+@@ -895,7 +896,6 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 				if (clki->curr_freq == clki->min_freq)
+ 					continue;
+ 
+-				clk_state_changed = true;
+ 				ret = clk_set_rate(clki->clk, clki->min_freq);
+ 				if (ret) {
+ 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
+@@ -914,13 +914,40 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 				clki->name, clk_get_rate(clki->clk));
+ 	}
+ 
++out:
++	return ret;
++}
++
++/**
++ * ufshcd_scale_clks - scale up or scale down UFS controller clocks
++ * @hba: per adapter instance
++ * @scale_up: True if scaling up and false if scaling down
++ *
++ * Returns 0 if successful
++ * Returns < 0 for any other errors
++ */
++static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
++{
++	int ret = 0;
++
++	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, PRE_CHANGE);
++	if (ret)
++		return ret;
++
++	ret = ufshcd_set_clk_freq(hba, scale_up);
++	if (ret)
++		return ret;
++
+ 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
++	if (ret) {
++		ufshcd_set_clk_freq(hba, !scale_up);
++		return ret;
++	}
+ 
+-out:
+-	if (clk_state_changed)
+-		trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
++	trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
+ 			(scale_up ? "up" : "down"),
+ 			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
++
+ 	return ret;
+ }
+ 
+@@ -1106,35 +1133,32 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
+ 
+ 	ret = ufshcd_clock_scaling_prepare(hba);
+ 	if (ret)
+-		return ret;
++		goto out;
+ 
+ 	/* scale down the gear before scaling down clocks */
+ 	if (!scale_up) {
+ 		ret = ufshcd_scale_gear(hba, false);
+ 		if (ret)
+-			goto out;
++			goto out_unprepare;
+ 	}
+ 
+ 	ret = ufshcd_scale_clks(hba, scale_up);
+ 	if (ret) {
+ 		if (!scale_up)
+ 			ufshcd_scale_gear(hba, true);
+-		goto out;
++		goto out_unprepare;
+ 	}
+ 
+ 	/* scale up the gear after scaling up clocks */
+ 	if (scale_up) {
+ 		ret = ufshcd_scale_gear(hba, true);
+-		if (ret) {
++		if (ret)
+ 			ufshcd_scale_clks(hba, false);
+-			goto out;
+-		}
+ 	}
+ 
+-	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
+-
+-out:
++out_unprepare:
+ 	ufshcd_clock_scaling_unprepare(hba);
++out:
+ 	ufshcd_release(hba);
+ 	return ret;
+ }
+@@ -6251,7 +6275,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	/* scale up clocks to max frequency before full reinitialization */
+-	ufshcd_scale_clks(hba, true);
++	ufshcd_set_clk_freq(hba, true);
+ 
+ 	err = ufshcd_hba_enable(hba);
+ 	if (err)
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
