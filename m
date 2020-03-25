@@ -2,143 +2,220 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB22C43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56E62C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:36:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 260252070A
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:34:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2174720775
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:36:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="U4k7tWsb"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="t1sHG7PC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727399AbgCYVef (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 17:34:35 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64906 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726081AbgCYVef (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Mar 2020 17:34:35 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02PLKvaY002972;
-        Wed, 25 Mar 2020 14:34:34 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0818; bh=bwMyfCcgAdZO0JgUtzsgaFfRBLN5gxgWu3nwI0u2H18=;
- b=U4k7tWsbK1mVYJONDBDukWNvahG9j8VPcHYLo3RngI11zXpUfl24WGGGscFfTnLiohEp
- hd3Ly9Ut71LOP7EpkokdpLCFMZvA2sfcVKfgIAxWcEA+I1zad8sb55UGZy7uFR0GqLOH
- czCvtwpF1ZrTpLQWFVnNwXgllgVkvq6iDcS2jvI/7uYW3gxPt+RuhtM/k3HUdyT9rxyC
- F3EIdjgFwE81whZI+4oiap4OB4kH66XKf7Y57mZmEQtu+Lvn1RyVj5+wUTYWi33bnX4M
- +e82kyQoIIEcs1USkw9s/7JitEowyocPCRPFiCDCvHPVtLP6xaXuoR4Mdzc8ZvZcuNqq 0A== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 300bpcrwq7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 25 Mar 2020 14:34:34 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 25 Mar
- 2020 14:34:32 -0700
-Received: from SC-EXCH03.marvell.com (10.93.176.83) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 25 Mar
- 2020 14:34:31 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 25 Mar 2020 14:34:31 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 8E1BD3F703F;
-        Wed, 25 Mar 2020 14:34:31 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 02PLYU42019099;
-        Wed, 25 Mar 2020 14:34:31 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Wed, 25 Mar 2020 14:34:30 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Ondrej Zary <linux@zary.sk>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: Re: NULL pointer dereference in qla24xx_abort_command
-In-Reply-To: <202003251906.40982.linux@zary.sk>
-Message-ID: <alpine.LRH.2.21.9999.2003251431090.28238@irv1user01.caveonetworks.com>
-References: <202003251906.40982.linux@zary.sk>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        id S1727466AbgCYVgM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 17:36:12 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:40644 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726947AbgCYVgM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 17:36:12 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02PLXeTW183191
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2020-01-29; bh=Y2GFMKI+pT6USKJMSjRhzafY23i4iwlzpBAukn3eFLQ=;
+ b=t1sHG7PCh4PI4lxCPz8cFvBincJckD12bqWdZFy7hKUhaKk+lcqfG/I9B50ssCo+Zi1T
+ tRXF9nvWky/iiNoqmfSngx8f63mTXFDBkLXq4Ufj46SEjJCzAO5+W6y9YifFrji24d8m
+ pYRfCFJox+g1B2zxdoHKeuGxKYT3No886c4DU7zrRJAD+cmn4jDCdQXKVgMHbjqQz8Qz
+ 85S++O3H+TlY+ZPkpk60wcgt0Xl4Z+mP97kWTY8807A0EPQazJg0XSLpcM71PTdp5ZrG
+ ojAgstrf76u1Os1DlSxpTFknRGrmNugj4GIfFVbwv7wTomgsiiJZ92aDYLvq/ePvrTm8 OA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2ywabrca5t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:11 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02PLVu4e035489
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:10 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 3006r79vfa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:10 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02PLa9vp000998
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:09 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 25 Mar 2020 14:36:08 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: core: Make MODE SENSE DBD a boolean
+Date:   Wed, 25 Mar 2020 17:36:08 -0400
+Message-Id: <20200325213608.6843-1-martin.petersen@oracle.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
- definitions=2020-03-25_11:2020-03-24,2020-03-25 signatures=0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9571 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=1
+ phishscore=0 spamscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003250166
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9571 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1
+ lowpriorityscore=0 malwarescore=0 phishscore=0 priorityscore=1501
+ clxscore=1015 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003250166
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 25 Mar 2020, 11:06am, Ondrej Zary wrote:
+The scsi_mode_sense() function has an argument called 'dbd' but
+confusingly this is used to specify the entire second byte of the CDB
+and not just the DBD bit.
 
-> Hi Himanshu,
-> could you please look into this bug?
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__www.spinics.net_lists_linux-2Dscsi_msg138637.html&d=DwICAg&c=nKjWec2b6R0mOyPaz7xtfQ&r=XB49zT5-k3oWvfMuBJCeRK5Sk6o3bkGM6ewB3QuTOME&m=ezZ2dt9wVYnM-c6jJKx9bPQ0-7vbSf5HQ0bGqri_iNE&s=wriOIaA9pVuKVrGPMvcZstNdYbzcZgFVw_OKiM0idIg&e= 
-> 
-> [2076301.849762] BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
-> [2076301.850021] PGD 0 P4D 0
-> [2076301.850109] Oops: 0002 [#1] SMP PTI
-> [2076301.850219] CPU: 4 PID: 18992 Comm: kworker/u16:1 Not tainted 4.19.0-8-amd64 #1 Debian 4.19.98-1
-> [2076301.850478] Hardware name: Dell Inc. PowerEdge 2950/0JR815, BIOS 2.7.0 10/30/2010
-> [2076301.850720] Workqueue: scsi_tmf_4 scmd_eh_abort_handler [scsi_mod]
-> [2076301.850936] RIP: 0010:qla24xx_async_abort_cmd+0x1b/0x250 [qla2xxx]
-> [2076301.851130] Code: e9 19 ff ff ff 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 41 57 41 56 41 55 41 54 55 53 4c 8b 6f 28 4c 8b 7f 20 4c 8b 77 48 <f0> 41 ff 46 04 0f a
-> e f0 41 f6 46 24 04 74 17 f0 41 ff 4e 04 bd 02
-> [2076301.851663] RSP: 0018:ffffa10f8bbe7da8 EFLAGS: 00010293
-> [2076301.851820] RAX: 0000000000000800 RBX: ffff8ab8ddd197a8 RCX: 0000000000000070
-> [2076301.852036] RDX: ffff8ab8de4a8388 RSI: 0000000000000001 RDI: ffff8ab8799b8c40
-> [2076301.852253] RBP: ffff8ab8dc96c480 R08: ffffffffc03b7860 R09: 0000000000000000
-> [2076301.852469] R10: 8080808080808080 R11: 0000000000000010 R12: ffff8ab8dea00000
-> [2076301.852686] R13: ffff8ab8ddd197a8 R14: 0000000000000000 R15: ffff8ab8dd632000
-> [2076301.852902] FS:  0000000000000000(0000) GS:ffff8ab8e7b00000(0000) knlGS:0000000000000000
-> [2076301.853142] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [2076301.853320] CR2: 0000000000000004 CR3: 00000002203dc000 CR4: 00000000000006e0
-> [2076301.853536] Call Trace:
-> [2076301.853632]  qla24xx_abort_command+0x218/0x2d0 [qla2xxx]
-> [2076301.853799]  ? __switch_to_asm+0x41/0x70
-> [2076301.853924]  ? __switch_to_asm+0x35/0x70
-> [2076301.854056]  qla2xxx_eh_abort+0x117/0x310 [qla2xxx]
-> [2076301.854209]  scmd_eh_abort_handler+0x85/0x220 [scsi_mod]
-> [2076301.854375]  process_one_work+0x1a7/0x3a0
-> [2076301.854506]  worker_thread+0x30/0x390
-> [2076301.854628]  ? create_worker+0x1a0/0x1a0
-> [2076301.854753]  kthread+0x112/0x130
-> [2076301.854859]  ? kthread_bind+0x30/0x30
-> [2076301.854980]  ret_from_fork+0x35/0x40
-> [2076301.855095] Modules linked in: loop ipmi_ssif radeon coretemp ttm drm_kms_helper drm kvm i2c_algo_bit i5000_edac iTCO_wdt sg iTCO_vendor_support irqbypass evdev i5k_
-> amb serio_raw joydev ipmi_si rng_core pcc_cpufreq dcdbas pcspkr ipmi_devintf acpi_cpufreq ipmi_msghandler button ext4 crc16 mbcache jbd2 crc32c_generic fscrypto ecb crypt
-> o_simd cryptd glue_helper aes_x86_64 dm_service_time dm_multipath dm_mod scsi_dh_rdac scsi_dh_emc scsi_dh_alua uas usb_storage hid_generic usbhid hid sr_mod cdrom ses enc
-> losure sd_mod scsi_transport_sas ata_generic qla2xxx ata_piix nvme_fc ehci_pci nvme_fabrics libata uhci_hcd psmouse ehci_hcd nvme_core megaraid_sas usbcore scsi_transport
-> _fc lpc_ich mfd_core scsi_mod usb_common bnx2
-> [2076301.856887] CR2: 0000000000000004
-> [2076301.856999] ---[ end trace e9083db8fb76e126 ]---
-> [2076301.857151] RIP: 0010:qla24xx_async_abort_cmd+0x1b/0x250 [qla2xxx]
-> [2076301.857345] Code: e9 19 ff ff ff 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 41 57 41 56 41 55 41 54 55 53 4c 8b 6f 28 4c 8b 7f 20 4c 8b 77 48 <f0> 41 ff 46 04 0f a
-> e f0 41 f6 46 24 04 74 17 f0 41 ff 4e 04 bd 02
-> [2076301.857878] RSP: 0018:ffffa10f8bbe7da8 EFLAGS: 00010293
-> [2076301.858035] RAX: 0000000000000800 RBX: ffff8ab8ddd197a8 RCX: 0000000000000070
-> [2076301.858251] RDX: ffff8ab8de4a8388 RSI: 0000000000000001 RDI: ffff8ab8799b8c40
-> [2076301.858467] RBP: ffff8ab8dc96c480 R08: ffffffffc03b7860 R09: 0000000000000000
-> [2076301.869384] R10: 8080808080808080 R11: 0000000000000010 R12: ffff8ab8dea00000
-> [2076301.880412] R13: ffff8ab8ddd197a8 R14: 0000000000000000 R15: ffff8ab8dd632000
-> [2076301.891483] FS:  0000000000000000(0000) GS:ffff8ab8e7b00000(0000) knlGS:0000000000000000
-> [2076301.902490] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [2076301.913344] CR2: 0000000000000004 CR3: 00000002203dc000 CR4: 00000000000006e0
-> [2077225.259348] mysqld[2155]: segfault at 0 ip 000056409366ad93 sp 00007fa049514450 error 6 in mysqld[564092eb2000+805000]
-> [2077225.270564] Code: c7 45 00 00 00 00 00 8b 7d cc 4c 89 e2 4c 89 f6 e8 62 81 84 ff 49 89 c7 49 39 c4 0f 84 f6 00 00 00 e8 e1 1c 00 00 41 8b 4d 00 <89> 08 85 c9 74 37 4
-> 9 83 ff ff 0f 84 9d 00 00 00 f6 c3 06 75 28 4d
-> 
-> 
-> 
+Several callers assumed that 'dbd' was a flag and passed in a value of
+1 instead of the required 8 to disable fetching block descriptors.
+The invalid value of 1 was subsequently masked off by the function and
+was not actually passed on to the device.
 
-Ondrej,
+Turn the 'dbd' argument into a boolean and fix all callers.
 
-Could you pick up the latest upstream kernel and retry your test (even if 
-it takes longer to reproduce)? That way we do not need to spend time on an 
-issue that may have already been fixed.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/scsi_lib.c           |  7 ++++---
+ drivers/scsi/scsi_transport_sas.c |  2 +-
+ drivers/scsi/sd.c                 | 14 +++++++-------
+ drivers/scsi/sr.c                 |  2 +-
+ include/scsi/scsi_device.h        |  2 +-
+ 5 files changed, 14 insertions(+), 13 deletions(-)
 
-Regards,
--Arun
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 47835c4b4ee0..acbbdb022a45 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2085,7 +2085,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
+  *	issued) if successful.
+  */
+ int
+-scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
++scsi_mode_sense(struct scsi_device *sdev, bool dbd, int modepage,
+ 		  unsigned char *buffer, int len, int timeout, int retries,
+ 		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
+ {
+@@ -2098,8 +2098,9 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 	memset(data, 0, sizeof(*data));
+ 	memset(&cmd[0], 0, 12);
+ 
+-	dbd = sdev->set_dbd_for_ms ? 8 : dbd;
+-	cmd[1] = dbd & 0x18;	/* allows DBD and LLBA bits */
++	dbd = sdev->set_dbd_for_ms ? true : dbd;
++	if (dbd)
++		cmd[1] = 1 << 3; /* DBD bit */
+ 	cmd[2] = modepage;
+ 
+ 	/* caller might not be interested in sense, but we need it */
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 182fd25c7c43..0547ccd81e84 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1234,7 +1234,7 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+-	res = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
++	res = scsi_mode_sense(sdev, true, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
+ 			      &mode_data, NULL);
+ 
+ 	error = -EINVAL;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8ca9299ffd36..6093c1fc1d70 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -193,7 +193,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
+ 		return count;
+ 	}
+ 
+-	if (scsi_mode_sense(sdp, 0x08, 8, buffer, sizeof(buffer), SD_TIMEOUT,
++	if (scsi_mode_sense(sdp, true, 8, buffer, sizeof(buffer), SD_TIMEOUT,
+ 			    SD_MAX_RETRIES, &data, NULL))
+ 		return -EINVAL;
+ 	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
+@@ -2561,7 +2561,7 @@ sd_print_capacity(struct scsi_disk *sdkp,
+ 
+ /* called with buffer of length 512 */
+ static inline int
+-sd_do_mode_sense(struct scsi_device *sdp, int dbd, int modepage,
++sd_do_mode_sense(struct scsi_device *sdp, bool dbd, int modepage,
+ 		 unsigned char *buffer, int len, struct scsi_mode_data *data,
+ 		 struct scsi_sense_hdr *sshdr)
+ {
+@@ -2639,7 +2639,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	int len = 0, res;
+ 	struct scsi_device *sdp = sdkp->device;
+ 
+-	int dbd;
++	bool dbd;
+ 	int modepage;
+ 	int first_len;
+ 	struct scsi_mode_data data;
+@@ -2662,14 +2662,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 			modepage = 0x3F;
+ 			if (sdp->use_192_bytes_for_3f)
+ 				first_len = 192;
+-			dbd = 0;
++			dbd = false;
+ 		}
+ 	} else if (sdp->type == TYPE_RBC) {
+ 		modepage = 6;
+-		dbd = 8;
++		dbd = true;
+ 	} else {
+ 		modepage = 8;
+-		dbd = 0;
++		dbd = true;
+ 	}
+ 
+ 	/* cautiously ask */
+@@ -2823,7 +2823,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	if (sdkp->protection_type == 0)
+ 		return;
+ 
+-	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
++	res = scsi_mode_sense(sdp, true, 0x0a, buffer, 36, SD_TIMEOUT,
+ 			      SD_MAX_RETRIES, &data, &sshdr);
+ 
+ 	if (!scsi_status_is_good(res) || !data.header_length ||
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index fe0e1c721a99..f31a946b7cd5 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -936,7 +936,7 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+ 
+ 	/* ask for mode page 0x2a */
+-	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
++	rc = scsi_mode_sense(cd->device, false, 0x2a, buffer, ms_len,
+ 			     SR_TIMEOUT, 3, &data, NULL);
+ 
+ 	if (!scsi_status_is_good(rc) || data.length > ms_len ||
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index c3cba2aaf934..853082b7bcf6 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -397,7 +397,7 @@ extern int scsi_track_queue_full(struct scsi_device *, int);
+ 
+ extern int scsi_set_medium_removal(struct scsi_device *, char);
+ 
+-extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
++extern int scsi_mode_sense(struct scsi_device *sdev, bool dbd, int modepage,
+ 			   unsigned char *buffer, int len, int timeout,
+ 			   int retries, struct scsi_mode_data *data,
+ 			   struct scsi_sense_hdr *);
+-- 
+2.24.1
+
