@@ -2,141 +2,121 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCFB6C54FD0
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 10:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C724C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 10:57:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A599120775
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 10:35:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5B1C20722
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 10:57:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Gyt+bSba";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="b1K9pa5R"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aCer+8D3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726239AbgCYKf3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 06:35:29 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:36954 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726043AbgCYKf2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 06:35:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585132528; x=1616668528;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=rrfGE4IxY3QorCLnRn3OK8tHM1DOT7w1F38wK9QZZoo=;
-  b=Gyt+bSbashToXYNcgsA4VKB5lili4OgTeBN4ad/FB8x9LyoxjI0LILLf
-   hYkWaXZhZz9PAbp0YozhUG82fcFEiVfwM2rcHuQfeijeR1CzjT0S8MmHj
-   4n6/iVeA/lNPbyY+R5hQFwGiPVGWF9S5MROr9i66pc1c8DKUWXkLksrNB
-   YjWemdyV0rTAU03t2u5zTSwSPCl8s2heTwKruU7b+6+jfoaAmtA/WVI+v
-   z5twz710KPPwXA0nqi/76tl9u5MQYGWq9XlCVCQpv9B1Fj8IwUFrIkXnV
-   N5upKWFKhmDlJ41cvZ54ckn8oV4e7NMESgh0btmA0lP08sVuEo7yD/m+A
-   Q==;
-IronPort-SDR: 028tIME4P4A91LDFA1Snoj/M5OMG3THg7Q1n+kW4VCwmm4qsoLL+Z/NdSD1H9IwSOemheuBIRU
- PeBEqLI7F+MQL20+YV1pOQRD/p9GsoAQH2gGli8J/ec7PxbIBz7kTviN4ZqmCct65pT3zEm3yp
- G6g0rt3iSOhf2XKm/Xqx3k1A1yN1Fc98cas+YJc0X0x0mocAAKl6uGBVDTZxIE35QTX0a3qqGi
- epSznSMzC+gtpxCpzE6aMwH2VQYHTP7pJCJueGVdI0XMfI1O6Ev1/cdJ+dtZeHZh35ZZ3KhRiK
- j1c=
-X-IronPort-AV: E=Sophos;i="5.72,304,1580745600"; 
-   d="scan'208";a="133457816"
-Received: from mail-mw2nam12lp2047.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.47])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Mar 2020 18:35:27 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TQ+0hZBxP5GKpoIeVPMKJCE/RFyGuDUG7DmtUyA4/ObdDFm9RBi6i0IY8PrcnXW5Gx69is7is+iCMiyBzMtT8oqRbqEnu5zLDL5uRJJcjEYHdFHhAyOw95IgrXmI/9SNkbA0Ipp13p0cSGwDLy+NtlK5Z2oJyRAw1pu8EqvtkcKLh/0AOvL4jjDRDrClwnOXRZmqzTwRErIkRssd1fRgMpzr+C6zB0hOe0DSM7Je2KM7xsk+k0lVx92UMUh91m2YUyJKAM7hZhXfTHYEXJdVeZ4oXjIXA5KC8O5bzxtvRoXov/KAxkrh90AdB1Il9Y0rWhNGAMGdkzKToazesHUYkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rrfGE4IxY3QorCLnRn3OK8tHM1DOT7w1F38wK9QZZoo=;
- b=nrgatWIb0OeSnClCDx2NI1jTLTD4ye5fdjU9d1nRuBXC+1JDQWSUXz4Lv6JVNwsmeLejIJXpqO2WKwHCbGyuuTc7owF7r8uIm5lI9KNLD6MUyjpRu0hTNtgeII8j1CNTqOaN/B57dKK5icH7cC0ugZqr1pl49TL4esDDXCtisPaW2OOp554lakuOlI3Quts5dkYan/f9h9WaLYVrxD5hVVMtsQ7FRZ8Mtp+KXjkhJShwkJusV5kVIRSl/HyzyrPOoT+168wlouGhwwXqqY1TS5jW52/APQYZ4oeWdPs+gM+Fznk43TZmI9iHNgPfvgfJYmPO3H+qd5Y++FbOycVR/w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rrfGE4IxY3QorCLnRn3OK8tHM1DOT7w1F38wK9QZZoo=;
- b=b1K9pa5R1O9YmbQUq/6Ly2fOgUEYdXTL9xKiyZiMcieLBikRFTTUUj7cYFtr6bmkeMXnwD9DRQMUF42FwUMJxbdo1fdvmu2HfQp6c8e9Pa/dccxFzVdJkjRljB5BxvwR2Kv4WZcU5eOE5BKNVnIoDcp1dvSyA2QuBWBRVp6KsGU=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4205.namprd04.prod.outlook.com (2603:10b6:805:30::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2835.23; Wed, 25 Mar
- 2020 10:35:25 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b%5]) with mapi id 15.20.2835.021; Wed, 25 Mar 2020
- 10:35:25 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Asutosh Das <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     Nitin Rawat <nitirawa@codeaurora.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [<PATCH v1> 1/1] scsi: ufs: Resume ufs host before accessing ufs
- device
-Thread-Topic: [<PATCH v1> 1/1] scsi: ufs: Resume ufs host before accessing ufs
- device
-Thread-Index: AQHWAiX76v6XYayaoECpa027xlsTV6hZGZBg
-Date:   Wed, 25 Mar 2020 10:35:25 +0000
-Message-ID: <SN6PR04MB46402A704738FEC5C09FC140FCCE0@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <f712a4f7bdb0ae32e0d83634731e7aaa1b3a6cdd.1585009663.git.asutoshd@codeaurora.org>
-In-Reply-To: <f712a4f7bdb0ae32e0d83634731e7aaa1b3a6cdd.1585009663.git.asutoshd@codeaurora.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [77.138.4.172]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 0e6417b1-efa2-4aa9-ad57-08d7d0a83aec
-x-ms-traffictypediagnostic: SN6PR04MB4205:
-x-microsoft-antispam-prvs: <SN6PR04MB4205A0994B40B4F059C5777EFCCE0@SN6PR04MB4205.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:383;
-x-forefront-prvs: 0353563E2B
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(346002)(39860400002)(376002)(366004)(396003)(110136005)(6506007)(54906003)(52536014)(26005)(5660300002)(316002)(33656002)(8676002)(7696005)(478600001)(81166006)(81156014)(4326008)(66556008)(9686003)(8936002)(76116006)(66476007)(55016002)(86362001)(66946007)(64756008)(66446008)(4744005)(186003)(71200400001)(7416002)(2906002);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR04MB4205;H:SN6PR04MB4640.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: QmDaU0ZeWDQ13xyNqARVhYdYC6r+N/looz1v2nwlSQ2sDPLUNQsPfdi3IJ9LSIB9Z5+ohG5IwPBAusVtDSOKpo20/w5zQe+yBrFjHqmlVeW/OsfSFJ0B8ZVksJ1KQ0zmPfnd/ghw1Hf3J8G/jK6oKVKJDCFI1t/o28d+aHIwiRYObqoeMTKXtBZdEus5H8i+ARJyhMr86yLvPpU23GiO3qR5rl73oHOa0h46mz6Vh38ganjG9LWQuPsDBMPE37X0+56wryjjuFXebpevv8pIt9Hd9SEnSyDTygdJ7X4rW7Ul08CVhND6A22MDiaF4pDaDVr79E/2lHIf9FdeGxTNaGVGj761y+0UKw3fiEj/UIPb46AY8Kqj379Jqobw94eiZRIqO93tMmcEmsX4JBMgXLI3Rsu0Rn52Y7vdhWcazlcx23/SUbrptcpiSVkRzDFt
-x-ms-exchange-antispam-messagedata: jykmL3ax5pszMWQlypUSoewEu7h7+SX3XQXJXFPcXGInvkYg/EML8QrXMFYM6LMVR71ErlWldybS/F6U7y/M92yTtQcJkB747s9Uwe4I7deL22uPD5tEqm/pchNvaSR3S4bNVZrHeI0XdjKI3AgjPg==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726206AbgCYK52 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 06:57:28 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:49772 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726103AbgCYK52 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 06:57:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=zS+6qmfI2uhjCN3mq/MjMldCAfvPw1O3Uog8YjIUp/c=; b=aCer+8D33FJWT/fvt43yWfDGGd
+        OdAut3frFd/7SG+rIkuT4Ih7Rrs2QfDMsBbmvEGPe3Ar4O0G+4/sGjtWKpzGZLl7VSdoR1rOfkPbz
+        28QoX5Z0gUVSCg5L7+UFqZPWyiPS8spATJ0Fs8djQJBuff4xw2k7zjWURqPh3cbV1Atw1ilpgQ082
+        E6q56yt/lRv6TQturqCn+PyBWI/njBQ5bigcIYIitBWAkvXBaCla7f83Afo1fByKXwLlydDKMvYGS
+        5sN4RB5GHLlaEWL9ltKPgigeXibqZtpd1owOfoIcWLST0ZobtpDuT7wkyDuuuQx9RjbiVW12x7Jbn
+        hVL1Vorg==;
+Received: from 213-225-10-87.nat.highway.a1.net ([213.225.10.87] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jH3ip-00073g-Rh; Wed, 25 Mar 2020 10:57:20 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     oliver@neukum.org, aliakc@web.de, lenehan@twibble.org
+Cc:     dc395x@twibble.org, linux-scsi@vger.kernel.org
+Subject: [PATCH] dc395x: remove dc395x_bios_param
+Date:   Wed, 25 Mar 2020 11:55:05 +0100
+Message-Id: <20200325105505.1028582-1-hch@lst.de>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e6417b1-efa2-4aa9-ad57-08d7d0a83aec
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Mar 2020 10:35:25.6729
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: s105PrPC3fAoc0mRuVwVKw9X0OjDq5/ystKIjIc2e+esQu3uifpEuuHmnDkgImbEvXr49MZJWpchOLGuF+r/Gw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4205
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->=20
-> From: Nitin Rawat <nitirawa@codeaurora.org>
->=20
-> As a part of sysfs reading of descriptors/attributes/flags,
-> query commands should only be executed when hba's
-> power runtime status is active.
-> To guarantee this, add pm_runtime_get/put_sync()
-> to those paths where query commands are sent.
->=20
-> Signed-off-by: Nitin Rawat <nitirawa@codeaurora.org>
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+dc395x_bios_param was only different from the default when the
+CONFIG_SCSI_DC395x_TRMS1040_TRADMAP symbol is true, but that symbol
+doesn't exist in the Kconfig system and thus can't be set.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/dc395x.c | 34 ----------------------------------
+ 1 file changed, 34 deletions(-)
+
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 13fbb2eab842..e95f5b3bef4d 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -61,7 +61,6 @@
+ #include <asm/io.h>
+ 
+ #include <scsi/scsi.h>
+-#include <scsi/scsicam.h>	/* needed for scsicam_bios_param */
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+@@ -1053,38 +1052,6 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd, void (*done)(struct s
+ 
+ static DEF_SCSI_QCMD(dc395x_queue_command)
+ 
+-/*
+- * Return the disk geometry for the given SCSI device.
+- */
+-static int dc395x_bios_param(struct scsi_device *sdev,
+-		struct block_device *bdev, sector_t capacity, int *info)
+-{
+-#ifdef CONFIG_SCSI_DC395x_TRMS1040_TRADMAP
+-	int heads, sectors, cylinders;
+-	struct AdapterCtlBlk *acb;
+-	int size = capacity;
+-
+-	dprintkdbg(DBG_0, "dc395x_bios_param..............\n");
+-	acb = (struct AdapterCtlBlk *)sdev->host->hostdata;
+-	heads = 64;
+-	sectors = 32;
+-	cylinders = size / (heads * sectors);
+-
+-	if ((acb->gmode2 & NAC_GREATER_1G) && (cylinders > 1024)) {
+-		heads = 255;
+-		sectors = 63;
+-		cylinders = size / (heads * sectors);
+-	}
+-	geom[0] = heads;
+-	geom[1] = sectors;
+-	geom[2] = cylinders;
+-	return 0;
+-#else
+-	return scsicam_bios_param(bdev, capacity, info);
+-#endif
+-}
+-
+-
+ static void dump_register_info(struct AdapterCtlBlk *acb,
+ 		struct DeviceCtlBlk *dcb, struct ScsiReqBlk *srb)
+ {
+@@ -4622,7 +4589,6 @@ static struct scsi_host_template dc395x_driver_template = {
+ 	.show_info              = dc395x_show_info,
+ 	.name                   = DC395X_BANNER " " DC395X_VERSION,
+ 	.queuecommand           = dc395x_queue_command,
+-	.bios_param             = dc395x_bios_param,
+ 	.slave_alloc            = dc395x_slave_alloc,
+ 	.slave_destroy          = dc395x_slave_destroy,
+ 	.can_queue              = DC395x_MAX_CAN_QUEUE,
+-- 
+2.25.1
 
