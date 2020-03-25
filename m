@@ -2,102 +2,144 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BEBC54FD0
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 15:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD1C1C54FCF
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 16:24:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7504120740
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 15:40:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A86FC20772
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 16:24:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="1JyTDKPi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QbiuNsU9";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="JvVvXJlm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727868AbgCYPkt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 11:40:49 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:51667 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727811AbgCYPkt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 11:40:49 -0400
-Received: by mail-pj1-f66.google.com with SMTP id w9so1187717pjh.1
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 08:40:48 -0700 (PDT)
+        id S1727845AbgCYQYK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 12:24:10 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:23348 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727386AbgCYQYJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 12:24:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1585153449; x=1616689449;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=nEzd5oJhug7Jwx0NvWzMWqoR1WZl8Z18RwOJ+q1i8y0=;
+  b=QbiuNsU9hZL8MVt7LDczmd41gAdC4GdKG6fT0YbACInB3tyyGVCdawZ3
+   em3PU7gRmG7b7bOk8uAIp3Ma31I346gyYyRAjkcctfhDPFcUdZTzrw0J2
+   zbBngWHOCe1fERm4boE8pZmHJBM1QiiBzq81EiGjZerDOM5Obv8VuTnXf
+   sMmIXn2xkdx9QRYMxdu1TiZDuMiYiAbbSwzszRq7UqadyLVr3Cgi/EbZD
+   ur3KzDXs+3cF//mVbIWNjKZp7hVER2/W2fTIgupBnp0ypojPT6+YfWJ+S
+   06JW33eqhBNSkbjZMslAGrmFkS4U4IGLLIrhrhHhEtiXyMahUqVbr3VYc
+   Q==;
+IronPort-SDR: di97H+1McoR3IrkT0qGBQt8Ut6u7z+bqrqaPDD3YlVRk9Z9Z2lwgQJPNrLV2IoaxbgJIwIZUGQ
+ WqqVgKdPhHz6wJ0WSC/RnLhR5JDTIHX+i/b2q2NWDtVXayCuQ1fRV4bDhSwlCeIqtJcVldiBTA
+ z+QoRAXzE8Gn5m9WRV+OPDlyHeUJFWmxZPSOOO99ytP8IgTHzczKijJihpYN0KvZicJDRiwAus
+ HEi290Z3NIJh85pW6QyIbWxtFDXWYhYWxgr3VOvCT2NoIJ8JWrBjkzxgiYufXWX6oEaAEMmCN2
+ 5Sk=
+X-IronPort-AV: E=Sophos;i="5.72,304,1580745600"; 
+   d="scan'208";a="137865847"
+Received: from mail-sn1nam04lp2057.outbound.protection.outlook.com (HELO NAM04-SN1-obe.outbound.protection.outlook.com) ([104.47.44.57])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Mar 2020 00:24:08 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OyMo61kp52C4OH+MzmAX/EPzNuNMFfuHvnoxDgPeifosSoX4JY2kwbKlplkxBl1gxE7jec972C1tXjw/npZkazkEmsmf1fkgZL2qrRxdsKEMSuWJGeKgOKHx45y20v4O3pGQ9q8tutRm0/IJ8nDA60zb/9NikSBUM9bxo9jAi0afwHyO+p4at1EDXmSfOqv2ZoeLfMIqJeDYI71d0Gta5XLobnc2t2GB1qvStiwkhgu9KKN0ImCwHYaJNx123CbFRtO583zf9vuznJtQ14g61AESfU/M5hTzuowhvsZwMKdasOSvFLNlXcLvD/pCacJjgHrjbsvFeXOhYrrD1LQwqQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3vkxQaYPjMcWuUuTM4hP2zzHCGrwhBDyr5aSbrY9H38=;
+ b=ZYHnXo0x9pRlvF3aDnBkHIIo0qOM1kBfD4TsMuyjUi69rbUZWWorOsglEEagnovdGNQFQh68wDK+4koEY4oIL/KkNpxwSmmijdgbuetseBrvHgavEXjg+F19nXdHZ4gp49XxeY8tY4oIob7AAy699KbczS6eDYdxkw3plyAVZJlky0u5APq5hcVDsvqlP1PQau6uwk7eBAG2WBfdna2IHAsMnAy4WoIGQCfLO17ULMkJcwdDm7Z74llhXBjbBQmRVdJFVP/FbaHLZcjQ1M0LnLT7AlxOdSzdknKiqp0beumQ6wVqktJXeyYwENOvhZA7OHAmfUCbsR4+eFBufnsHmA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=VJQwrHc5KYK1Moq3YLhA+cPCCwDV01vQIttVxXnXwtc=;
-        b=1JyTDKPiJO30x26Vu1Vfe2MkHut80Eu7Wdc4i8X+qy6dwmGmseVAFDQ6WszS+sKQ2G
-         JGg7ozTNVg/8hbbXyrmJcMb34TSODC1+oR+UUqOhQNnDwVgsxbZM13xKBFAXwnURMDYh
-         VedK/p7dYdTAin6MFLxB5cx80u2rLqPr8EJYYYnyIMtaWe4Ifxdsqq8qgR3BE78h6jsM
-         bAM98SrCRGfZBjL5yHHGuhvvmLqXIHS9zxoC9cz11gN+PHCiyFUcxDuH0PzZozte/Sri
-         CTONI7IyWiE6+Tvq3jj4sHaGO8jtye+9L1Mz8y6kR4ovsdNjyaSl5RDhXCUS0bpG5v8v
-         4WVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VJQwrHc5KYK1Moq3YLhA+cPCCwDV01vQIttVxXnXwtc=;
-        b=pSeBGbhN/jeSGa8YWRBfjV1KVmEhQMsMwUhVjziiRCnjV1AtZU+OtAm/uwWCF61hi6
-         oipvN8sEkMhzCI2q07GgHxKj8y23l/cUmCVp78b0xOPreEzq1Dy4GAv5AjtmG8sk7oQt
-         /V80YcEsn79We8R4PW1z0Q9Y+PM05UB+iJCTY0up4aJf9BJ090+k1cr3apI+2CbZeHmi
-         bLwspWYxQo6oblAucaHxpcN56385mI9FVMIX4WCFeG4Ora762iZgsD8XkA1fQ+odL8P3
-         wB8wqbO4fVXLcUJKR3LhS0uT10wAp5NzdtFWy9MD3n/4x7UOTuqlQso6jCzjOiTY0Lkx
-         i9nQ==
-X-Gm-Message-State: ANhLgQ1muHOJqwwdQRgACHBM1b5O3QqBJPztmpwNYv4pTFnFUC0BnsKC
-        LjMXLol95kE3fZj3f1qP4Y5Pug==
-X-Google-Smtp-Source: ADFU+vt11pwSKIyZE73gAeB7bBFUnxt1iyuPeAwqagoBJzJF0qoXWAvo44C06Qoa0vIxZF23n5jzXw==
-X-Received: by 2002:a17:902:9a46:: with SMTP id x6mr3879020plv.80.1585150847821;
-        Wed, 25 Mar 2020 08:40:47 -0700 (PDT)
-Received: from [192.168.1.188] ([66.219.217.145])
-        by smtp.gmail.com with ESMTPSA id g2sm11445369pfh.193.2020.03.25.08.40.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Mar 2020 08:40:46 -0700 (PDT)
-Subject: Re: [PATCH v2 01/11] block: factor out requeue handling from dispatch
- code
-To:     Christoph Hellwig <hch@infradead.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc:     linux-block <linux-block@vger.kernel.org>,
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3vkxQaYPjMcWuUuTM4hP2zzHCGrwhBDyr5aSbrY9H38=;
+ b=JvVvXJlmWRGUNsZKYHrffFzNVCtRCNtFtugsmgqVbcIysTKoSrkcFqH26LyDQCSDQQdgIs23GJUNMOKhsRHEZBZzbpAgbxNFzcgdoGRD4ZLQ68LisHoeKNqAJ/L+qvsd3JxYZiDCDESVFpOctefBkv+KNRnVAABKc8LVMtcgpfU=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3710.namprd04.prod.outlook.com
+ (2603:10b6:803:43::19) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2835.22; Wed, 25 Mar
+ 2020 16:24:07 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2835.023; Wed, 25 Mar 2020
+ 16:24:07 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Jens Axboe <axboe@kernel.dk>
+CC:     "hch@infradead.org" <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
         Damien Le Moal <Damien.LeMoal@wdc.com>,
         Keith Busch <kbusch@kernel.org>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 03/11] block: Introduce REQ_OP_ZONE_APPEND
+Thread-Topic: [PATCH v2 03/11] block: Introduce REQ_OP_ZONE_APPEND
+Thread-Index: AQHWAfBskP1byqASXU26hlsR5DkSLQ==
+Date:   Wed, 25 Mar 2020 16:24:07 +0000
+Message-ID: <SN4PR0401MB35981508ACB7533C8516E9989BCE0@SN4PR0401MB3598.namprd04.prod.outlook.com>
 References: <20200324152454.4954-1-johannes.thumshirn@wdc.com>
- <20200324152454.4954-2-johannes.thumshirn@wdc.com>
- <20200325084030.GB11943@infradead.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <defdc64c-a83b-509d-c7d6-c8aae0cbd4a7@kernel.dk>
-Date:   Wed, 25 Mar 2020 09:40:44 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-MIME-Version: 1.0
-In-Reply-To: <20200325084030.GB11943@infradead.org>
-Content-Type: text/plain; charset=utf-8
+ <20200324152454.4954-4-johannes.thumshirn@wdc.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 15dcdb5c-aaa0-4538-2ec3-08d7d0d8f150
+x-ms-traffictypediagnostic: SN4PR0401MB3710:
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SN4PR0401MB3710B8EB95518B43DF033B569BCE0@SN4PR0401MB3710.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:4125;
+x-forefront-prvs: 0353563E2B
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(346002)(39860400002)(376002)(366004)(396003)(9686003)(2906002)(86362001)(6506007)(316002)(54906003)(33656002)(4326008)(53546011)(55016002)(26005)(6916009)(7696005)(186003)(66476007)(52536014)(66946007)(71200400001)(66556008)(8676002)(8936002)(66446008)(5660300002)(91956017)(81156014)(81166006)(478600001)(4744005)(76116006)(64756008);DIR:OUT;SFP:1102;SCL:1;SRVR:SN4PR0401MB3710;H:SN4PR0401MB3598.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: tNhGvDnYqxzvbIqiLb2gls/A+OMy+mwje1J2JnCK2FSnK90aGKfBk5m+4xiH93kOC/oZgDv/yfooaVt4oEO0Ba1LFhjcBvOf+4ui5qtkNc7Vph8gsRtJUC133GyBmDx1EOJZ5M8MlODm6e6DLs+3zLKBXfJ9hGqYeZLiuGKuKl97Hg3++BLj/fbU6W6Hi4GCBMM8LnXYUWXD3gPlxd+eEH9Ib3jyhr9ch8nd3Y/L9Kq0XsNeBvEy0I8qHIpDq6vdg4XZ6Ug3toU5/lAnw8holb/0Cvsbhu+l7mbRZyf+Yy9InDrqgwbcCZbCk4DyvA5XzPkM4CV0bincXe2j748Pb2hAc8orKx0hUHESPlBCUp9GeNfYGQ2F7mlHBWNTPzkGnkhWepURU0yHKE6Dy3JhB7MCNrVi9pEONMXX1DJZ8UmIT/Hd/L/QWN3MA3C2rNl3
+x-ms-exchange-antispam-messagedata: O4HIxgO7mq0DIE4nqHTFb4StemvRhCwt0/c5vAGNgNJfFF4mqUIrDTP71n5BT8FjJ2lKRGnigUZMTJFUDz9sj7MKal0GB/H/soG93WKe3VwXHbOj+3ZhOAkU7qBeK1TEIVe+0e9G67sWm7D/5+yBCw==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 15dcdb5c-aaa0-4538-2ec3-08d7d0d8f150
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Mar 2020 16:24:07.5422
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 8r5JY2HAqKHZ2Pyg3YDzmWDOGSbLIWIbQdy6ReMXSg++twviaTyPPpFBTIgyQhCBWt8Ou5gEQhP6MqobHOaZf2Q65FkwGcZ4rNUPS9o/iDI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3710
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/25/20 2:40 AM, Christoph Hellwig wrote:
-> On Wed, Mar 25, 2020 at 12:24:44AM +0900, Johannes Thumshirn wrote:
->> Factor out the requeue handling from the dispatch code, this will make
->> subsequent addition of different requeueing schemes easier.
->>
->> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Jens, can you pick this up?  I think it already is a nice improvement
-> even without the rest of the series.
-
-Sure, applied for 5.7.
-
--- 
-Jens Axboe
-
+On 24/03/2020 16:25, Johannes Thumshirn wrote:=0A=
+> +static inline bool bio_can_zone_append(struct bio *bio, unsigned len)=0A=
+> +{=0A=
+> +	struct request_queue *q =3D bio->bi_disk->queue;=0A=
+> +	unsigned int max_append_sectors =3D queue_max_zone_append_sectors(q);=
+=0A=
+> +=0A=
+> +	if (WARN_ON_ONCE(!max_append_sectors))=0A=
+> +		return false;=0A=
+> +=0A=
+> +	if (((bio->bi_iter.bi_size + len) >> 9) > max_append_sectors)=0A=
+> +		return false;=0A=
+> +=0A=
+> +	if (bio->bi_vcnt >=3D q->limits.max_segments)=0A=
+> +		return false;=0A=
+> +=0A=
+> +	return true;=0A=
+> +}=0A=
+=0A=
+That return values need to be reversed as well...=0A=
