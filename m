@@ -2,47 +2,73 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3F50C2D0E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 18:06:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E78FBC2D0E5
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 18:20:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD93120774
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 18:06:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB5CB2074D
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 18:20:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727541AbgCYSGo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 14:06:44 -0400
-Received: from hosting.gsystem.sk ([212.5.213.30]:43372 "EHLO
+        id S1727006AbgCYSUK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 14:20:10 -0400
+Received: from hosting.gsystem.sk ([212.5.213.30]:43494 "EHLO
         hosting.gsystem.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727006AbgCYSGo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 14:06:44 -0400
+        with ESMTP id S1727236AbgCYSUK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 14:20:10 -0400
 Received: from [192.168.0.2] (188-167-68-178.dynamic.chello.sk [188.167.68.178])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 80D267A0255;
-        Wed, 25 Mar 2020 19:06:43 +0100 (CET)
-From:   Ondrej Zary <linux@zary.sk>
-To:     hmadhani@marvell.com
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 76D197A0255;
+        Wed, 25 Mar 2020 19:20:08 +0100 (CET)
+To:     Arun Easi <aeasi@marvell.com>
 Subject: NULL pointer dereference in qla24xx_abort_command
-Date:   Wed, 25 Mar 2020 19:06:40 +0100
-User-Agent: KMail/1.9.10
-Cc:     linux-scsi@vger.kernel.org
+Cc:     Quinn Tran <qutran@marvell.com>, linux-scsi@vger.kernel.org
+Content-Disposition: inline
+From:   Ondrej Zary <linux@zary.sk>
+Date:   Wed, 25 Mar 2020 19:20:04 +0100
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202003251906.40982.linux@zary.sk>
+Message-Id: <202003251920.05154.linux@zary.sk>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Himanshu,
-could you please look into this bug?
+Hello,
+could someone at Marvell please look into this bug?
 https://www.spinics.net/lists/linux-scsi/msg138637.html
+
+I'm trying to get a reply from someone at QLogic/Cavium/Marvell using
+various e-mail addresses but haven't been successful for a month.
+
+Himanshu Madhani's mailbox (as listed in MAINTAINERS) does not work:
+hmadhani@marvell.com<mailto:hmadhani@marvell.com>
+The recipient's mailbox is full and can't accept messages now. Please try resending your message later, or contact the recipient directly.
+
+Maybe this patch should be applied?
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 110678d9698b..13a6c1d3d381 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13715,9 +13715,8 @@ S:      Maintained
+ F:     drivers/scsi/qla1280.[ch]
+
+ QLOGIC QLA2XXX FC-SCSI DRIVER
+-M:     hmadhani@marvell.com
+ L:     linux-scsi@vger.kernel.org
+-S:     Supported
++S:     Orphan
+ F:     Documentation/scsi/LICENSE.qla2xxx
+ F:     drivers/scsi/qla2xxx/
+
+
+
 
 [2076301.849762] BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
 [2076301.850021] PGD 0 P4D 0
