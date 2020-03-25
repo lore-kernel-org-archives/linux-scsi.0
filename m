@@ -2,156 +2,127 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6835C43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 23:19:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 417D2C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 23:35:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 719732076A
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 23:19:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 126E42073E
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 23:35:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="OGI6d0XY";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ZG31uReT"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="krV/xpfP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727536AbgCYXTD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 19:19:03 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:16884 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727389AbgCYXTC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 19:19:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585178342; x=1616714342;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=IVlV+CmZxrd9kBtUBLuclg5Vz4jmgAF9GBLThA0axoQ=;
-  b=OGI6d0XYHuak6pLBHDeR0fwOHCRjChPF/1wI3p10A1Eh7/wcRGz+co0J
-   Q3mkoFyBOtE/BJRmfMYG+iZ1JXRlQlpYUc5bp4nkhT73b8mRfG0VEhqKy
-   j0hAx3NQkRohWWJEfj0g1GOL6LeRqo6X4TtW2Nh6ghFXGkhyYIaqMS2Uk
-   pW7VQVwyJMtGVWbeDoI6eQIpS3tyzw9uWA5TOjrLBqP7SuFHEqMJ2XtGK
-   w1CuQnt9WdeXtpdk3VmYwUdFbd36l1FGszGY5RM046237XmCqI88xpFex
-   AmO+uPMyiqKp+phSH+HLsuI9p2DhVD52vEXQdJGqu5s5A54OA6HhAXNV+
-   g==;
-IronPort-SDR: u6ND7yk97Jawc4pIbDZFI33TpyG/X+1jutlTa7kioOm43gwm+w0jniogSKxFpYN+faG1otxoe8
- QvIPzzNEGvPs7ccQYhb79Eou+s+jo/hA9bSy+9ir7giEtG1bZqh/poPu6OTqhGHUDqkkJXhDkO
- Ju1rEOXaKV3mX9SAotnYQUKF2fZS1hVrgLP9FgaORK2hxH9L7myCaEwaQ9CkbjfJDmfTm3iK55
- FuR8jfPn+OwVlN/apDyKoeuq5q6lQG+JgC0KDb2qNZlTg9IbgTv1odHxiehKXmLF+GqjEisVOZ
- LnU=
-X-IronPort-AV: E=Sophos;i="5.72,306,1580745600"; 
-   d="scan'208";a="134953997"
-Received: from mail-bn7nam10lp2104.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.104])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Mar 2020 07:19:00 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PnRKRyf54VbMv9+YrIDQAK6BtG929K0IYtnJbgm/5w8OVAi09fntEjPb/ogE/okiAr/dLy/IfFXpCX+ZA6BkXf0c7z487nrroMgW5bVMZHteVDOBgJPH5CXFva+rzae9sFzC/OOo74+aNni3wqjnW26JEf6I3rG8llyxmNdDrr96LNzVYp0J6rHfp96ZHYS2zFlSU4i1WfcxqSi5q91XdJwyEoGx+suoKvDLrFT+uRVgap+pmoEoquDpWju3JJ2woLS3V1gmjX18CrLK840sVbfFBWVXaD94XUuORECxHOuA3Ju5PLlOhJMMh0SWLPZGIYWuQpVsrgLK/oOWmdH0lQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IVlV+CmZxrd9kBtUBLuclg5Vz4jmgAF9GBLThA0axoQ=;
- b=GTX68yM6uzvi2coxS3CPB5KZndjikQ7QPDk5aPbT2IBmJBBrrh0vbQxApSm/PLaY5wz603yI7N55Bazgw5erq1EN54Tln8YxQsIiaoN+S1ygiRRnW4HMV1lWAWMzQ88NhJSg5h2q4lp5NlYfVfpH9cfgu7GMSxIchdT9xM0u7rHLm3iPHylivF2Ls9OSRr+jXfrKwwtJPo+rv1z18Zh+xSdQJCjV1BSn85A20ktG8VWgVmaZYR2PSNzAJchev1J8RpPVcRl7XJsAGQB6WyhoiWs1NWEhv8jI619gJ+AV9wJo9ebeb43QgHENMD2GS0xMW72z9adXyuoZes6aherMGg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IVlV+CmZxrd9kBtUBLuclg5Vz4jmgAF9GBLThA0axoQ=;
- b=ZG31uReTnHqvoWv6P6POM8D8FuvsO6zlcdmKQ4No4XlLBWT29dLepGcO19YyjqcVQWqWv5ItT17HBjmdn+RE8mZWuD5NzrZAyVpx3MBYvrAxK0sUJTYegG4rYNbXxeA8vHhRX7gHSxHKVoU2KqBVbxD1I9Woh2DSVcfQD5252uY=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4446.namprd04.prod.outlook.com (2603:10b6:805:3c::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2835.15; Wed, 25 Mar
- 2020 23:18:59 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b%5]) with mapi id 15.20.2835.025; Wed, 25 Mar 2020
- 23:18:59 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Can Guo <cang@codeaurora.org>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
-        "hongwus@codeaurora.org" <hongwus@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>
-CC:     Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 1/1] scsi: ufs: Enable block layer runtime PM for
- well-known logical units
-Thread-Topic: [PATCH v3 1/1] scsi: ufs: Enable block layer runtime PM for
- well-known logical units
-Thread-Index: AQHWApnW8d/lojckW0+fOnV7WNzy26hZ8Txw
-Date:   Wed, 25 Mar 2020 23:18:59 +0000
-Message-ID: <SN6PR04MB464005D38551AFBCBBA72E2BFCCE0@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <1585136153-24852-1-git-send-email-cang@codeaurora.org>
-In-Reply-To: <1585136153-24852-1-git-send-email-cang@codeaurora.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [2a00:a040:188:9241:9963:f968:2096:7a55]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 086dd241-ce40-4bda-9d89-08d7d112e5eb
-x-ms-traffictypediagnostic: SN6PR04MB4446:
-x-microsoft-antispam-prvs: <SN6PR04MB444627B0B719443E066C8D0AFCCE0@SN6PR04MB4446.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-forefront-prvs: 0353563E2B
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(136003)(396003)(376002)(366004)(346002)(71200400001)(478600001)(66446008)(66476007)(52536014)(66556008)(186003)(64756008)(8936002)(2906002)(4744005)(33656002)(9686003)(316002)(55016002)(86362001)(5660300002)(81156014)(66946007)(81166006)(76116006)(7696005)(4326008)(54906003)(110136005)(6506007)(7416002)(8676002);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR04MB4446;H:SN6PR04MB4640.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: RBO6UV67KIAGw6gPq/1/7PHPobPyA/lHhefHFYjGYztVUuxnPg6keOPGCV4W/I/PfXqvkTWx2ZmY7yImg93AoS8LfKsyAsNd6M2VeO+EsDldHSmuxxLiIs6mG0DQLj4SuPnRvxdoCMi74j+Ci8DuJCSZSlXjAgMPE12jWJxp07/z4I3TcMzXCQg257UucxFC6QFmroC/6gpiVyU3iZvG/z7rRsWSzarvbzpv7xX+GvfqI64Ok4wP6fAj+VuZYvVF34PRVmBPwSQi+Xaa2o6IcBNeptSusPfYwYUzJ75jSGNpHyLHpvMAifiO39e7qkSvadTz/gO8957GucOEXaiDURgNipW1BlvMVHBq/kTu4AqBmlyCYThT9BaUqBd2lBHC0xoZi1Ex2DOEPy9N+LC+fSQZ6GKHGC1DGTuYDK9B9btjWCR2TMH3d3YfFDo0Ut2c
-x-ms-exchange-antispam-messagedata: elMZs2baHWTiQEZnrG2mbS7nt77Uo+fIRCoBKxy6V/g/9xsf4aFf2tgYNVGGyhu2CdX+hdwux2RGwi+0/KPG9BaHBPFpj39S4t5dntZOBVhVD3SusOf9+CntgkmsBmO9hP4qz9WF1e3YFEpWEU73pFaPCcbO2MfAmjKgLRgR+a+RedOf+OUkJGG/l54uZEqJikhvm9xh7xwL4zKp7ba9ug==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727525AbgCYXf1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 19:35:27 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43986 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726970AbgCYXf1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Mar 2020 19:35:27 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02PNUGOe021630;
+        Wed, 25 Mar 2020 16:35:18 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0818; bh=vKIrRuyDs1pF5iwAHpO9yAFTHZUL0PMbI004wPrDAhc=;
+ b=krV/xpfPTHzGsq6uduoOzYPYGePqnLmbB+oRe8tLV6zdCzNRJJPf0e2g64X+XGvY7fse
+ ByLA/JCkyAj/PwQhRn9WTkzHKMXAFQkEEGcRHqnGqtcnaSDlrGdO13hhz11QgdwhPyQ8
+ 3ukD6n5eLb5ijJPx853tfrASD3OmkHEpaN0cQgHAA/FE9zccaTbQnfEXGU4oAJ3vo8aT
+ RgGwvL6zFkmNl+hmLiwJ0NGKthc6xHILYwBO0hpDoWWzW3Gq6qQl5VUxGjnUG0XXxTaQ
+ zEUUkCufinKTXAkpsfP1XiIh5H69yWLwDyYfaELQWJwBHf6uLTvQnsL64cfAguqeyoSU jg== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 2ywg9ntvt3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 25 Mar 2020 16:35:17 -0700
+Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 25 Mar
+ 2020 16:35:15 -0700
+Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 25 Mar 2020 16:35:15 -0700
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id 07B653F7041;
+        Wed, 25 Mar 2020 16:35:16 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 02PNZFq3029820;
+        Wed, 25 Mar 2020 16:35:15 -0700
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Wed, 25 Mar 2020 16:35:15 -0700
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     Martin Wilck <mwilck@suse.com>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        "James Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: Re: [EXT] Re: [PATCH v2 1/3] scsi: qla2xxx: avoid sending mailbox
+ commands if firmware is stopped
+In-Reply-To: <86e85687933f6875ab75f927981fc43a9a257b74.camel@suse.com>
+Message-ID: <alpine.LRH.2.21.9999.2003251615200.12727@irv1user01.caveonetworks.com>
+References: <20200205214422.3657-1-mwilck@suse.com>
+  <20200205214422.3657-2-mwilck@suse.com>
+  <alpine.LRH.2.21.9999.2003241648560.12727@irv1user01.caveonetworks.com>
+  <dfbd88461ef4b5f56a83db7095c6e3f36b5a485e.camel@suse.com>
+  <4fb2d29be88dbef2050cf51210d8e4e14a4b8ac2.camel@suse.com>
+  <940e20ba5d117b6fd181e0acdac14b7682ff2d64.camel@suse.com>
+  <alpine.LRH.2.21.9999.2003251506260.12727@irv1user01.caveonetworks.com>
+ <86e85687933f6875ab75f927981fc43a9a257b74.camel@suse.com>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 086dd241-ce40-4bda-9d89-08d7d112e5eb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Mar 2020 23:18:59.1503
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Qw6R05iSUujVU4q0RtLd4qMc/863z7h/iPYkDI+Gj7lA3/tIW91ghxvcE1/ap6blIUEN9ivOw+d/2xbKbVmG0w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4446
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
+ definitions=2020-03-25_13:2020-03-24,2020-03-25 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=20
->=20
-> Block layer RPM is enabled for the genernal UFS SCSI devices when they ar=
-e
-> probed by their driver. However block layer RPM is not enabled for UFS
-> well-known SCSI devices.
->=20
-> As UFS SCSI devices have their corresponding BSG char devices, accessing
-> a BSG char device via IOCTL may send requests to its corresponding SCSI
-> device through its request queue. If BSG IOCTL sends a request to a
-> well-known SCSI device when hba is not runtime active, due to block layer
-> RPM is not eanbled for the well-known SCSI devices, hba, which is at the
-> top of a scsi device's parent chain, shall not be resumed, then unexpecte=
-d
-> error would happen.
->=20
-> This change enables block layer RPM for the well-known SCSI devices, so
-> that block layer can handle RPM for the well-known SCSI devices just like
-> for the general SCSI devices.
->=20
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+On Wed, 25 Mar 2020, 3:41pm, Martin Wilck wrote:
+
+>
+> ----------------------------------------------------------------------
+> On Wed, 2020-03-25 at 15:13 -0700, Arun Easi wrote:
+> > On Wed, 25 Mar 2020, 11:21am, Martin Wilck wrote:
+> > 
+> > > On Wed, 2020-03-25 at 18:20 +0100, Martin Wilck wrote:
+> > > > Perhaps the (!fw_started) condition should be treated like
+> > > > ABORT_ISP_ACTIVE in qla2x00_mailbox_command, i.e. execute only if
+> > > > is_rom_cmd() returns true?
+> > > 
+> > > No, this won't be sufficient, as e.g. MBC_IOCB_COMMAND_A64 is in
+> > > rom_cmds[], but has been found to hang (this is why I had the hunk
+> > > in
+> > > qla24xx_fabric_logout()). The list of mailbox commands
+> > > that must be passed on when the FW is stopped has to be shorter
+> > > than
+> > > rom_cmds[].
+> > > 
+> > 
+> > With your patch 2/3, where UNLOADING is set prior to the reset of 
+> > chip, in place this issue should be largely addressed. Basically, 
+> > paths that send out request to wire check UNLOADING bit (if any path 
+> > is missing that, should add the check) before sending it out.
+> > 
+> > Now with UNLOADING set (with your patch 2/3), chip reset, and all 
+> > outstanding command's completion called (qla2x00_abort_isp_cleanup) I 
+> > see less chance of anything being sent out. If you see any issue with 
+> > your patches 1 & 2 (addressing my comments) applied, let me know and 
+> > we can tackle then. How about that?
+> 
+> It sounds like a plan. Although it means that I just wasted time trying
+> to figure out which mailbox commands need to be processed even if the
+> firmware is down :-)
+> 
+
+I hope it was not too much time. On the plus side, you know the mailbox 
+path very well now. :)
+
+Regards,
+-Arun
