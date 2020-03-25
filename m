@@ -2,247 +2,188 @@ Return-Path: <SRS0=ycLx=5L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 337AFC43331
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 01:44:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C991C2D0E7
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 01:57:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0000620719
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 01:44:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7015A20714
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 01:57:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727598AbgCZBoP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 21:44:15 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:40889 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727575AbgCZBoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Mar 2020 21:44:15 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 2337B20418E;
-        Thu, 26 Mar 2020 02:44:12 +0100 (CET)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id L7oZ6p0MtNvF; Thu, 26 Mar 2020 02:44:05 +0100 (CET)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 20089204179;
-        Thu, 26 Mar 2020 02:44:04 +0100 (CET)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v2] scsi: core: Make MODE SENSE DBD a boolean
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <116e8e24-d442-6239-b401-dd3145f4e8e8@acm.org>
- <20200325222416.5094-1-martin.petersen@oracle.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <257ddb5a-87f3-9e27-8f9a-d647483528ab@interlog.com>
-Date:   Wed, 25 Mar 2020 21:44:00 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-MIME-Version: 1.0
-In-Reply-To: <20200325222416.5094-1-martin.petersen@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+        id S1727593AbgCZB5x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 21:57:53 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:22961 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727595AbgCZB5x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 21:57:53 -0400
+IronPort-SDR: yZMJ6JjWQeGjfBCABy+Mg6DVJ764FG52ODPBJkbYnHraKNtEFvS856oOvJZjeH2dcWncTAr2Ep
+ GTZ6cjf7NqfdT3wvzW8ZtkkUgC/sAFNoo/pdj6QwbakHh94+gF6oo/5Lvxb8J0O/RrXL5jqKAq
+ 4lU/7nXepRcyFB37dofXjLc2egmEUxP+wu54a2gQIf3mzTZJ6r0t1YbRWSNfPiGBroXK/wdN5F
+ 7QX4Rc7ld2tRUxzCXcYavUsz1lpjWwERRiG493Pwi3f8YBe7tRjMuMTu9KCLX284WWqgWJGaM4
+ 0Sc=
+X-IronPort-AV: E=Sophos;i="5.72,303,1580803200"; 
+   d="scan'208";a="28615552"
+Received: from unknown (HELO ironmsg05-sd.qualcomm.com) ([10.53.140.145])
+  by labrats.qualcomm.com with ESMTP; 25 Mar 2020 02:25:00 -0700
+Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
+  by ironmsg05-sd.qualcomm.com with ESMTP; 25 Mar 2020 02:24:59 -0700
+Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
+        id A873A3A9C; Wed, 25 Mar 2020 02:24:59 -0700 (PDT)
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH v5 2/2] scsi: ufs: Do not rely on prefetched data
+Date:   Wed, 25 Mar 2020 02:23:39 -0700
+Message-Id: <1585128220-26128-3-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1585128220-26128-1-git-send-email-cang@codeaurora.org>
+References: <1585128220-26128-1-git-send-email-cang@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-03-25 6:24 p.m., Martin K. Petersen wrote:
-> The scsi_mode_sense() function has an argument called 'dbd' but
-> confusingly this is used to specify the entire second byte of the CDB
-> and not just the DBD bit.
-> 
-> Several callers assumed that 'dbd' was a flag and passed in a value of
-> 1 instead of the required 8 to disable fetching block descriptors.
-> The invalid value of 1 was subsequently masked off by the function and
-> was not actually passed on to the device.
-> 
-> Turn the 'dbd' argument into a boolean and fix all callers.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> ---
-> 
-> v2:	Fix conversion error spotted by Bart
-> ---
->   drivers/scsi/scsi_lib.c           |  7 ++++---
->   drivers/scsi/scsi_transport_sas.c |  2 +-
->   drivers/scsi/sd.c                 | 14 +++++++-------
->   drivers/scsi/sr.c                 |  2 +-
->   include/scsi/scsi_device.h        |  2 +-
->   5 files changed, 14 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 47835c4b4ee0..acbbdb022a45 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2085,7 +2085,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
->    *	issued) if successful.
->    */
->   int
-> -scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-> +scsi_mode_sense(struct scsi_device *sdev, bool dbd, int modepage,
->   		  unsigned char *buffer, int len, int timeout, int retries,
->   		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
->   {
-> @@ -2098,8 +2098,9 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
->   	memset(data, 0, sizeof(*data));
->   	memset(&cmd[0], 0, 12);
->   
-> -	dbd = sdev->set_dbd_for_ms ? 8 : dbd;
-> -	cmd[1] = dbd & 0x18;	/* allows DBD and LLBA bits */
-> +	dbd = sdev->set_dbd_for_ms ? true : dbd;
-> +	if (dbd)
-> +		cmd[1] = 1 << 3; /* DBD bit */
->   	cmd[2] = modepage;
->   
->   	/* caller might not be interested in sense, but we need it */
+We were setting bActiveICCLevel attribute for UFS device only once but
+type of this attribute has changed from persistent to volatile since UFS
+device specification v2.1. This attribute is set to the default value after
+power cycle or hardware reset event. It isn't safe to rely on prefetched
+data (only used for bActiveICCLevel attribute now). Hence this change
+removes the code related to data prefetching and set this parameter on
+every attempt to probe the UFS device.
 
-I think scsi_mode_sense() needs looking at. It says this in its header:
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Tested-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 26 +++++++++++++++-----------
+ drivers/scsi/ufs/ufshcd.h | 11 -----------
+ 2 files changed, 15 insertions(+), 22 deletions(-)
 
-*      @dbd:   set if mode sense will allow block descriptors to be returned
-
-which is a worry when you consider that DBD bit means "DISABLE block
-descriptors" [spc6r01.pdf chapter 6.14.1]. If the caller wants block
-descriptors (i.e. dbd=0 (or false)) then they really should set the
-LLBA bit or they will be truncating any LBAs (in the returned block
-descriptors) greater than 2**32-1 to the lower 32 bits. However only
-the MODE SENSE(10) command has the LLBA bit. So if MODE SENSE(10)
-fails and you leave the LLBA bit set and switch to MODE SENSE(6) then
-the device server is within its rights to say: WTF is bit 4 in
-byte 1 set? Hence ==> illegal request.
-
-Assuming MODE SENSE(10) is supported and DBD=0, then setting
-the LLBA bit in the cdb should be okay, because the caller should be
-looking at the LONGLBA bit in the "mode parameter header(10)"
-[chapter 7.5.6 in the same document] that tells them how to decode
-the returned block descriptors.
-If MODE SENSE(10) is not supported and the code falls back to
-MODE SENSE(6) then a heuristic is needed by the caller to work out
-how to decode the response. And that comment about the return
-value doesn't help.
-
-That function is just badly designed and does not allow for subpages.
-Can it be thrown out?
-The caller should be told which MODE SENSE command worked (if any)
-and be given the whole data-in buffer. Then another function that
-calls the the first one and implies DBD=1 could return the part of
-the data-in buffer that contains one or more mode pages. Plural
-because modepage could be 0x3f and/or subpage could be 0xff which
-are wildcards.
-
-Suggestion:
-
-int
-scsi_mode_sense10_6(struct scsi_device *sdev, bool dbd, int modepage,
-		int subpage, u8 *b, int len, int timeout, int retries,
-                 bool *did_ms10, bool *truncated,
-		struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr);
-
-int
-scsi_get_mode_pages(struct scsi_device *sdev, int modepage, int subpage,
-		u8 *b, int len, bool *truncated);
-
-Doug Gilbert
-
-> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-> index 182fd25c7c43..0547ccd81e84 100644
-> --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -1234,7 +1234,7 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
->   	if (!buffer)
->   		return -ENOMEM;
->   
-> -	res = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
-> +	res = scsi_mode_sense(sdev, true, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
->   			      &mode_data, NULL);
->   
->   	error = -EINVAL;
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 8ca9299ffd36..7f7b0ba8c3d8 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -193,7 +193,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
->   		return count;
->   	}
->   
-> -	if (scsi_mode_sense(sdp, 0x08, 8, buffer, sizeof(buffer), SD_TIMEOUT,
-> +	if (scsi_mode_sense(sdp, true, 8, buffer, sizeof(buffer), SD_TIMEOUT,
->   			    SD_MAX_RETRIES, &data, NULL))
->   		return -EINVAL;
->   	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
-> @@ -2561,7 +2561,7 @@ sd_print_capacity(struct scsi_disk *sdkp,
->   
->   /* called with buffer of length 512 */
->   static inline int
-> -sd_do_mode_sense(struct scsi_device *sdp, int dbd, int modepage,
-> +sd_do_mode_sense(struct scsi_device *sdp, bool dbd, int modepage,
->   		 unsigned char *buffer, int len, struct scsi_mode_data *data,
->   		 struct scsi_sense_hdr *sshdr)
->   {
-> @@ -2639,7 +2639,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
->   	int len = 0, res;
->   	struct scsi_device *sdp = sdkp->device;
->   
-> -	int dbd;
-> +	bool dbd;
->   	int modepage;
->   	int first_len;
->   	struct scsi_mode_data data;
-> @@ -2662,14 +2662,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
->   			modepage = 0x3F;
->   			if (sdp->use_192_bytes_for_3f)
->   				first_len = 192;
-> -			dbd = 0;
-> +			dbd = false;
->   		}
->   	} else if (sdp->type == TYPE_RBC) {
->   		modepage = 6;
-> -		dbd = 8;
-> +		dbd = true;
->   	} else {
->   		modepage = 8;
-> -		dbd = 0;
-> +		dbd = false;
->   	}
->   
->   	/* cautiously ask */
-> @@ -2823,7 +2823,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
->   	if (sdkp->protection_type == 0)
->   		return;
->   
-> -	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
-> +	res = scsi_mode_sense(sdp, true, 0x0a, buffer, 36, SD_TIMEOUT,
->   			      SD_MAX_RETRIES, &data, &sshdr);
->   
->   	if (!scsi_status_is_good(res) || !data.header_length ||
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index fe0e1c721a99..f31a946b7cd5 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -936,7 +936,7 @@ static void get_capabilities(struct scsi_cd *cd)
->   	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
->   
->   	/* ask for mode page 0x2a */
-> -	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
-> +	rc = scsi_mode_sense(cd->device, false, 0x2a, buffer, ms_len,
->   			     SR_TIMEOUT, 3, &data, NULL);
->   
->   	if (!scsi_status_is_good(rc) || data.length > ms_len ||
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index c3cba2aaf934..853082b7bcf6 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -397,7 +397,7 @@ extern int scsi_track_queue_full(struct scsi_device *, int);
->   
->   extern int scsi_set_medium_removal(struct scsi_device *, char);
->   
-> -extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-> +extern int scsi_mode_sense(struct scsi_device *sdev, bool dbd, int modepage,
->   			   unsigned char *buffer, int len, int timeout,
->   			   int retries, struct scsi_mode_data *data,
->   			   struct scsi_sense_hdr *);
-> 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 9c26f82..b747c17 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6458,11 +6458,12 @@ static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
+ 	return icc_level;
+ }
+ 
+-static void ufshcd_init_icc_levels(struct ufs_hba *hba)
++static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
+ {
+ 	int ret;
+ 	int buff_len = hba->desc_size.pwr_desc;
+ 	u8 *desc_buf;
++	u32 icc_level;
+ 
+ 	desc_buf = kmalloc(buff_len, GFP_KERNEL);
+ 	if (!desc_buf)
+@@ -6477,20 +6478,17 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	hba->init_prefetch_data.icc_level =
+-			ufshcd_find_max_sup_active_icc_level(hba,
+-			desc_buf, buff_len);
+-	dev_dbg(hba->dev, "%s: setting icc_level 0x%x",
+-			__func__, hba->init_prefetch_data.icc_level);
++	icc_level = ufshcd_find_max_sup_active_icc_level(hba, desc_buf,
++							 buff_len);
++	dev_dbg(hba->dev, "%s: setting icc_level 0x%x", __func__, icc_level);
+ 
+ 	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+-		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0,
+-		&hba->init_prefetch_data.icc_level);
++		QUERY_ATTR_IDN_ACTIVE_ICC_LVL, 0, 0, &icc_level);
+ 
+ 	if (ret)
+ 		dev_err(hba->dev,
+ 			"%s: Failed configuring bActiveICCLevel = %d ret = %d",
+-			__func__, hba->init_prefetch_data.icc_level , ret);
++			__func__, icc_level, ret);
+ 
+ out:
+ 	kfree(desc_buf);
+@@ -6996,8 +6994,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ {
+ 	int ret;
+ 
+-	ufshcd_init_icc_levels(hba);
+-
+ 	/* Add required well known logical units to scsi mid layer */
+ 	ret = ufshcd_scsi_add_wlus(hba);
+ 	if (ret)
+@@ -7095,6 +7091,14 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
+ 		}
+ 	}
+ 
++	/*
++	 * bActiveICCLevel is volatile for UFS device (as per latest v2.1 spec)
++	 * and for removable UFS card as well, hence always set the parameter.
++	 * Note: Error handler may issue the device reset hence resetting
++	 * bActiveICCLevel as well so it is always safe to set this here.
++	 */
++	ufshcd_set_active_icc_lvl(hba);
++
+ 	/* set the state as operational after switching to desired gear */
+ 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index d45a044..5652d39 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -404,15 +404,6 @@ struct ufs_clk_scaling {
+ 	bool is_suspended;
+ };
+ 
+-/**
+- * struct ufs_init_prefetch - contains data that is pre-fetched once during
+- * initialization
+- * @icc_level: icc level which was read during initialization
+- */
+-struct ufs_init_prefetch {
+-	u32 icc_level;
+-};
+-
+ #define UFS_ERR_REG_HIST_LENGTH 8
+ /**
+  * struct ufs_err_reg_hist - keeps history of errors
+@@ -544,7 +535,6 @@ enum ufshcd_quirks {
+  * @intr_mask: Interrupt Mask Bits
+  * @ee_ctrl_mask: Exception event control mask
+  * @is_powered: flag to check if HBA is powered
+- * @init_prefetch_data: data pre-fetched during initialization
+  * @eh_work: Worker to handle UFS errors that require s/w attention
+  * @eeh_work: Worker to handle exception events
+  * @errors: HBA errors
+@@ -632,7 +622,6 @@ struct ufs_hba {
+ 	u32 intr_mask;
+ 	u16 ee_ctrl_mask;
+ 	bool is_powered;
+-	struct ufs_init_prefetch init_prefetch_data;
+ 
+ 	/* Work Queues */
+ 	struct work_struct eh_work;
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
