@@ -2,220 +2,97 @@ Return-Path: <SRS0=rA/a=5K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56E62C43331
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:36:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 282C3C43331
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:45:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2174720775
-	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:36:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="t1sHG7PC"
+	by mail.kernel.org (Postfix) with ESMTP id 056D72076A
+	for <linux-scsi@archiver.kernel.org>; Wed, 25 Mar 2020 21:45:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727466AbgCYVgM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Mar 2020 17:36:12 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:40644 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726947AbgCYVgM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 17:36:12 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02PLXeTW183191
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2020-01-29; bh=Y2GFMKI+pT6USKJMSjRhzafY23i4iwlzpBAukn3eFLQ=;
- b=t1sHG7PCh4PI4lxCPz8cFvBincJckD12bqWdZFy7hKUhaKk+lcqfG/I9B50ssCo+Zi1T
- tRXF9nvWky/iiNoqmfSngx8f63mTXFDBkLXq4Ufj46SEjJCzAO5+W6y9YifFrji24d8m
- pYRfCFJox+g1B2zxdoHKeuGxKYT3No886c4DU7zrRJAD+cmn4jDCdQXKVgMHbjqQz8Qz
- 85S++O3H+TlY+ZPkpk60wcgt0Xl4Z+mP97kWTY8807A0EPQazJg0XSLpcM71PTdp5ZrG
- ojAgstrf76u1Os1DlSxpTFknRGrmNugj4GIfFVbwv7wTomgsiiJZ92aDYLvq/ePvrTm8 OA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2ywabrca5t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02PLVu4e035489
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:10 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 3006r79vfa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:10 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02PLa9vp000998
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 21:36:09 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Mar 2020 14:36:08 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: core: Make MODE SENSE DBD a boolean
-Date:   Wed, 25 Mar 2020 17:36:08 -0400
-Message-Id: <20200325213608.6843-1-martin.petersen@oracle.com>
-X-Mailer: git-send-email 2.24.1
+        id S1727374AbgCYVpw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 25 Mar 2020 17:45:52 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:41199 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727355AbgCYVpw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Mar 2020 17:45:52 -0400
+Received: by mail-pf1-f193.google.com with SMTP id z65so1712335pfz.8
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2020 14:45:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=6Mrb68AsDC5Y3REFPmFQ//CFUeI4klCwnFm4RhDjoYc=;
+        b=AbUwTP838BxwNZtKKDHElak5+7i3MYkp58dQICnnifLSNlTBDi2ha+93vDnU22ygt8
+         b+0Gxrevt2eu7sxnvFp5zPB1uYZiYe5+PPaazT45NQ7qPwKzhrCRmrk6DzY9//srr0Zp
+         YMcCkbiLIy4V7q1gSZ9cbw5iQUfNW5OMXVRfgs3D+GeE/8GMu6ZSw214Sl3eRcLFVGy1
+         afiXxvbyF1os8SRof+DfSMdBmwnNvUatwcTnrXTlpr0jNLGXFxaTg4Taln9h7T7dRqmb
+         FdUlf/swRzAPiebVDSvS5Gvbyqmv35dWgjsrgs3u7UVbwbEFruaBDSZQl6MeDzjqpl3n
+         r8Lg==
+X-Gm-Message-State: ANhLgQ38Puldkdrf9QDWBn14zfz8XwSm72yxM2yPbF7BpWCzgHL9wUe6
+        /1HDeF5w+CLRqXWXsdJQ7zxF6hP9rZU=
+X-Google-Smtp-Source: ADFU+vuI8XZDBVJSo9Qii6qLeBzDRmLctf3Z495ubYVFfgWy7o20pi7CAGARFsPaS2EWaKsG2r8UDQ==
+X-Received: by 2002:a65:67c7:: with SMTP id b7mr5152564pgs.345.1585172750533;
+        Wed, 25 Mar 2020 14:45:50 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:2855:6197:3dfe:ba2? ([2601:647:4000:d7:2855:6197:3dfe:ba2])
+        by smtp.gmail.com with ESMTPSA id e4sm88185pgc.60.2020.03.25.14.45.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Mar 2020 14:45:49 -0700 (PDT)
+Subject: Re: [PATCH] scsi: core: Make MODE SENSE DBD a boolean
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20200325213608.6843-1-martin.petersen@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <116e8e24-d442-6239-b401-dd3145f4e8e8@acm.org>
+Date:   Wed, 25 Mar 2020 14:45:48 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9571 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=1
- phishscore=0 spamscore=0 mlxscore=0 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003250166
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9571 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1
- lowpriorityscore=0 malwarescore=0 phishscore=0 priorityscore=1501
- clxscore=1015 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003250166
+In-Reply-To: <20200325213608.6843-1-martin.petersen@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The scsi_mode_sense() function has an argument called 'dbd' but
-confusingly this is used to specify the entire second byte of the CDB
-and not just the DBD bit.
+On 2020-03-25 14:36, Martin K. Petersen wrote:
+>  	} else {
+>  		modepage = 8;
+> -		dbd = 0;
+> +		dbd = true;
+>  	}
 
-Several callers assumed that 'dbd' was a flag and passed in a value of
-1 instead of the required 8 to disable fetching block descriptors.
-The invalid value of 1 was subsequently masked off by the function and
-was not actually passed on to the device.
+Is this change on purpose? If so, please mention this as an intended
+behavior change in the commit message.
 
-Turn the 'dbd' argument into a boolean and fix all callers.
+Thanks,
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/scsi/scsi_lib.c           |  7 ++++---
- drivers/scsi/scsi_transport_sas.c |  2 +-
- drivers/scsi/sd.c                 | 14 +++++++-------
- drivers/scsi/sr.c                 |  2 +-
- include/scsi/scsi_device.h        |  2 +-
- 5 files changed, 14 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 47835c4b4ee0..acbbdb022a45 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2085,7 +2085,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
-  *	issued) if successful.
-  */
- int
--scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-+scsi_mode_sense(struct scsi_device *sdev, bool dbd, int modepage,
- 		  unsigned char *buffer, int len, int timeout, int retries,
- 		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
- {
-@@ -2098,8 +2098,9 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 	memset(data, 0, sizeof(*data));
- 	memset(&cmd[0], 0, 12);
- 
--	dbd = sdev->set_dbd_for_ms ? 8 : dbd;
--	cmd[1] = dbd & 0x18;	/* allows DBD and LLBA bits */
-+	dbd = sdev->set_dbd_for_ms ? true : dbd;
-+	if (dbd)
-+		cmd[1] = 1 << 3; /* DBD bit */
- 	cmd[2] = modepage;
- 
- 	/* caller might not be interested in sense, but we need it */
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 182fd25c7c43..0547ccd81e84 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1234,7 +1234,7 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
- 	if (!buffer)
- 		return -ENOMEM;
- 
--	res = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
-+	res = scsi_mode_sense(sdev, true, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
- 			      &mode_data, NULL);
- 
- 	error = -EINVAL;
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8ca9299ffd36..6093c1fc1d70 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -193,7 +193,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 		return count;
- 	}
- 
--	if (scsi_mode_sense(sdp, 0x08, 8, buffer, sizeof(buffer), SD_TIMEOUT,
-+	if (scsi_mode_sense(sdp, true, 8, buffer, sizeof(buffer), SD_TIMEOUT,
- 			    SD_MAX_RETRIES, &data, NULL))
- 		return -EINVAL;
- 	len = min_t(size_t, sizeof(buffer), data.length - data.header_length -
-@@ -2561,7 +2561,7 @@ sd_print_capacity(struct scsi_disk *sdkp,
- 
- /* called with buffer of length 512 */
- static inline int
--sd_do_mode_sense(struct scsi_device *sdp, int dbd, int modepage,
-+sd_do_mode_sense(struct scsi_device *sdp, bool dbd, int modepage,
- 		 unsigned char *buffer, int len, struct scsi_mode_data *data,
- 		 struct scsi_sense_hdr *sshdr)
- {
-@@ -2639,7 +2639,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 	int len = 0, res;
- 	struct scsi_device *sdp = sdkp->device;
- 
--	int dbd;
-+	bool dbd;
- 	int modepage;
- 	int first_len;
- 	struct scsi_mode_data data;
-@@ -2662,14 +2662,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 			modepage = 0x3F;
- 			if (sdp->use_192_bytes_for_3f)
- 				first_len = 192;
--			dbd = 0;
-+			dbd = false;
- 		}
- 	} else if (sdp->type == TYPE_RBC) {
- 		modepage = 6;
--		dbd = 8;
-+		dbd = true;
- 	} else {
- 		modepage = 8;
--		dbd = 0;
-+		dbd = true;
- 	}
- 
- 	/* cautiously ask */
-@@ -2823,7 +2823,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	if (sdkp->protection_type == 0)
- 		return;
- 
--	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
-+	res = scsi_mode_sense(sdp, true, 0x0a, buffer, 36, SD_TIMEOUT,
- 			      SD_MAX_RETRIES, &data, &sshdr);
- 
- 	if (!scsi_status_is_good(res) || !data.header_length ||
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index fe0e1c721a99..f31a946b7cd5 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -936,7 +936,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
- 
- 	/* ask for mode page 0x2a */
--	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
-+	rc = scsi_mode_sense(cd->device, false, 0x2a, buffer, ms_len,
- 			     SR_TIMEOUT, 3, &data, NULL);
- 
- 	if (!scsi_status_is_good(rc) || data.length > ms_len ||
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index c3cba2aaf934..853082b7bcf6 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -397,7 +397,7 @@ extern int scsi_track_queue_full(struct scsi_device *, int);
- 
- extern int scsi_set_medium_removal(struct scsi_device *, char);
- 
--extern int scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-+extern int scsi_mode_sense(struct scsi_device *sdev, bool dbd, int modepage,
- 			   unsigned char *buffer, int len, int timeout,
- 			   int retries, struct scsi_mode_data *data,
- 			   struct scsi_sense_hdr *);
--- 
-2.24.1
-
+Bart.
