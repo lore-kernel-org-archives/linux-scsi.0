@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 594ACC2D0ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 22:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95738C43331
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 22:15:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CA332073E
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 22:15:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 713F920774
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 22:15:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727548AbgCZWPN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Mar 2020 18:15:13 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56066 "EHLO mx2.suse.de"
+        id S1727585AbgCZWPP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Mar 2020 18:15:15 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56088 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726296AbgCZWPN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Mar 2020 18:15:13 -0400
+        id S1727547AbgCZWPO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Mar 2020 18:15:14 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id C772BADC8;
-        Thu, 26 Mar 2020 22:15:11 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 15914AE87;
+        Thu, 26 Mar 2020 22:15:13 +0000 (UTC)
 From:   David Disseldorp <ddiss@suse.de>
 To:     target-devel@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         bvanassche@acm.org, David Disseldorp <ddiss@suse.de>
-Subject: [PATCH v2 2/5] scsi: target: drop xcopy DISK BLOCK LENGTH debug
-Date:   Thu, 26 Mar 2020 23:15:02 +0100
-Message-Id: <20200326221505.5303-3-ddiss@suse.de>
+Subject: [PATCH v2 4/5] scsi: target: increase XCOPY I/O size
+Date:   Thu, 26 Mar 2020 23:15:04 +0100
+Message-Id: <20200326221505.5303-5-ddiss@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200326221505.5303-1-ddiss@suse.de>
 References: <20200326221505.5303-1-ddiss@suse.de>
@@ -37,45 +37,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The DISK BLOCK LENGTH field is carried with XCOPY target descriptors on
-the wire, but is currently unmarshalled during 0x02 segment descriptor
-passing. The unmarshalled value is currently unused, so drop it.
+The I/O size is already bound by dev_attrib.hw_max_sectors, so increase
+the hardcoded XCOPY_MAX_SECTORS maximum to improve performance against
+backstores with high-latency.
 
 Signed-off-by: David Disseldorp <ddiss@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/target/target_core_xcopy.c | 5 -----
- drivers/target/target_core_xcopy.h | 1 -
- 2 files changed, 6 deletions(-)
+ drivers/target/target_core_xcopy.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 7e5b13da0c20..66b68295c50f 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -315,11 +315,6 @@ static int target_xcopy_parse_segdesc_02(struct se_cmd *se_cmd, struct xcopy_op
- 		xop->nolb, (unsigned long long)xop->src_lba,
- 		(unsigned long long)xop->dst_lba);
- 
--	if (dc != 0) {
--		xop->dbl = get_unaligned_be24(&desc[29]);
--
--		pr_debug("XCOPY seg desc 0x02: DC=1 w/ dbl: %u\n", xop->dbl);
--	}
- 	return 0;
- }
- 
 diff --git a/drivers/target/target_core_xcopy.h b/drivers/target/target_core_xcopy.h
-index 26ba4c3c9cff..0840b03e8faa 100644
+index 9558974185ea..f1aaf7140798 100644
 --- a/drivers/target/target_core_xcopy.h
 +++ b/drivers/target/target_core_xcopy.h
-@@ -35,7 +35,6 @@ struct xcopy_op {
- 	unsigned short stdi;
- 	unsigned short dtdi;
- 	unsigned short nolb;
--	unsigned int dbl;
+@@ -5,7 +5,7 @@
+ #define XCOPY_TARGET_DESC_LEN		32
+ #define XCOPY_SEGMENT_DESC_LEN		28
+ #define XCOPY_NAA_IEEE_REGEX_LEN	16
+-#define XCOPY_MAX_SECTORS		1024
++#define XCOPY_MAX_SECTORS		4096
  
- 	struct xcopy_pt_cmd *src_pt_cmd;
- 	struct xcopy_pt_cmd *dst_pt_cmd;
+ /*
+  * SPC4r37 6.4.6.1
 -- 
 2.16.4
 
