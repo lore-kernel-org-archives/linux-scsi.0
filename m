@@ -2,98 +2,62 @@ Return-Path: <SRS0=ycLx=5L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E24C2D0E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 07:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA51C2D0E8
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 07:28:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 259BE207FC
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 07:08:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A1CD207FC
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 07:28:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="zM0EQ/dB"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V0vHn+A2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727887AbgCZHIg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Mar 2020 03:08:36 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56940 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726359AbgCZHIf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Mar 2020 03:08:35 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02Q710pv017922;
-        Thu, 26 Mar 2020 00:08:34 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=7gGr11O9pJ8x+bhlsX0sq/SG/BniIeMo/dlvqZux8FM=;
- b=zM0EQ/dBKmFioJ3D6szG1DL5tyIq/lDZDIv8sJhAV8Oud8VYrLS63l4Dcro0qdTXUGYO
- pfbvDDHw/072M1swaltZw+XEZruHTRsWG8iHZXHdY9dtjyMFTRRl7ZpfO7eCdBE6VxI7
- wSHBWpgVbYU01pFqeTArO+rFkLDEZr4hDMkqpJtdtbUkRrcjepfbt8zWBdDeZeLDHTPR
- lsZxkVip7KsNLPKz8w66fr9+QlhAaDY5I8AxPYyjVdwq9nFPU+Q54Faq9PGsnE+v6+tL
- f8MRW88+GiDs5Zm7uRSkMRH2vH/WqpaXc7SqJk/52LbFI7R8UaaKY1ERhwoD7IHPWI2d mw== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 300bpctndt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 26 Mar 2020 00:08:34 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 26 Mar
- 2020 00:08:32 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 26 Mar 2020 00:08:31 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 3707C3F7041;
-        Thu, 26 Mar 2020 00:08:32 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 02Q78WnB025561;
-        Thu, 26 Mar 2020 00:08:32 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 02Q78Wl6025559;
-        Thu, 26 Mar 2020 00:08:32 -0700
-From:   Saurav Kashyap <skashyap@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
-        <linux-scsi@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH 8/8] qedf: Update the driver version to 8.42.3.5.
-Date:   Thu, 26 Mar 2020 00:08:06 -0700
-Message-ID: <20200326070806.25493-9-skashyap@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200326070806.25493-1-skashyap@marvell.com>
-References: <20200326070806.25493-1-skashyap@marvell.com>
+        id S1727611AbgCZH2B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Mar 2020 03:28:01 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:53922 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726279AbgCZH2B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2020 03:28:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=AkT8/91l+j+rVYMFjJ1Rzawa6WWiXPYVgzf8wiv5/pY=; b=V0vHn+A2ysHs311rJuV2ZZ01BL
+        hNVkehijtTGJqy61Dr76fEA6gLsgx8uAylzZ+WqnQ6U82oIYmUveFpmQkXlzGKGC0T+dVN+neCXJB
+        A8+VLWSztdHfwQdea7tNFqb35sQaR2JO+OScJ4Y9fTeIvikjbnoUrumYE//ZLp/yEQjYe8U+ZVOEL
+        RxiZkQv6dhXH87bjC36LgjBUd6YKe+qz8IvpWBti4/TFvNJDg3fca9+eb3CGcbtcu6Uw6Gz+YJopB
+        XJXyscrgMdbXwbeFEZCOlo2qSfWq9zwtryNWZFK3Et+XX2P0OZd4gIQJs6pjSsiv/zajDBWfyrd8t
+        YVfQzceA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jHMvo-0006z5-DI; Thu, 26 Mar 2020 07:28:00 +0000
+Date:   Thu, 26 Mar 2020 00:28:00 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] block: all zones zone management operations
+Message-ID: <20200326072800.GA21082@infradead.org>
+References: <20200326043012.600187-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
- definitions=2020-03-25_15:2020-03-24,2020-03-25 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200326043012.600187-1-damien.lemoal@wdc.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-- Update version to 8.42.3.5.
+On Thu, Mar 26, 2020 at 01:30:12PM +0900, Damien Le Moal wrote:
+> Similarly to the zone write pointer reset operation (REQ_OP_ZONE_RESET),
+> the zone open, close and finish operations can operate on all zones of a
+> ZBC or ZAC SMR disk by setting the all bit of the command. Compared to a
+> loop issuing a request for every zone of the device, the device based
+> processing of an all zone operation is several orders of magnitude
+> faster.
 
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
----
- drivers/scsi/qedf/qedf_version.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qedf/qedf_version.h b/drivers/scsi/qedf/qedf_version.h
-index b0e37af..7661a5d 100644
---- a/drivers/scsi/qedf/qedf_version.h
-+++ b/drivers/scsi/qedf/qedf_version.h
-@@ -4,9 +4,9 @@
-  *  Copyright (c) 2016-2018 Cavium Inc.
-  */
- 
--#define QEDF_VERSION		"8.42.3.0"
-+#define QEDF_VERSION		"8.42.3.5"
- #define QEDF_DRIVER_MAJOR_VER		8
- #define QEDF_DRIVER_MINOR_VER		42
- #define QEDF_DRIVER_REV_VER		3
--#define QEDF_DRIVER_ENG_VER		0
-+#define QEDF_DRIVER_ENG_VER		5
- 
--- 
-1.8.3.1
-
+What is the point?  None of these actually seem like remotely useful
+operations.  Why would I ever want to open or finish all zones?
