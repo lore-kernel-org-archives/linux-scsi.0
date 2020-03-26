@@ -2,62 +2,89 @@ Return-Path: <SRS0=ycLx=5L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA51C2D0E8
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 07:28:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8C1C2D0E7
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 08:17:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A1CD207FC
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 07:28:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 058D22070A
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 08:17:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V0vHn+A2"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="ZSxbNEfk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727611AbgCZH2B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Mar 2020 03:28:01 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53922 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726279AbgCZH2B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2020 03:28:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AkT8/91l+j+rVYMFjJ1Rzawa6WWiXPYVgzf8wiv5/pY=; b=V0vHn+A2ysHs311rJuV2ZZ01BL
-        hNVkehijtTGJqy61Dr76fEA6gLsgx8uAylzZ+WqnQ6U82oIYmUveFpmQkXlzGKGC0T+dVN+neCXJB
-        A8+VLWSztdHfwQdea7tNFqb35sQaR2JO+OScJ4Y9fTeIvikjbnoUrumYE//ZLp/yEQjYe8U+ZVOEL
-        RxiZkQv6dhXH87bjC36LgjBUd6YKe+qz8IvpWBti4/TFvNJDg3fca9+eb3CGcbtcu6Uw6Gz+YJopB
-        XJXyscrgMdbXwbeFEZCOlo2qSfWq9zwtryNWZFK3Et+XX2P0OZd4gIQJs6pjSsiv/zajDBWfyrd8t
-        YVfQzceA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jHMvo-0006z5-DI; Thu, 26 Mar 2020 07:28:00 +0000
-Date:   Thu, 26 Mar 2020 00:28:00 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Damien Le Moal <damien.lemoal@wdc.com>
-Cc:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] block: all zones zone management operations
-Message-ID: <20200326072800.GA21082@infradead.org>
-References: <20200326043012.600187-1-damien.lemoal@wdc.com>
+        id S1727736AbgCZIRT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Mar 2020 04:17:19 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:5186 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727682AbgCZIRT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2020 04:17:19 -0400
+X-UUID: 8c21512c61704ae4a13ac9883f90b28b-20200326
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=TUh0oyKKWlFuiaOE7fmc1z5kxisyWDAyryXR2g5CLqg=;
+        b=ZSxbNEfk+E6+9b+mtfqZnBwGGFQR00xv7n/73tjl5DCwvKyO1JRIBr6Aump8Q3sEXInsOmEQcS/qgAaVLPVtys+A2IijjwDaQB1TrUSBaODJlCx1fCwPIJUqezfTVbGy39LRXUb5l/sa4PrPykaZdp5ED4GXAp89Tloed+Snjyo=;
+X-UUID: 8c21512c61704ae4a13ac9883f90b28b-20200326
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1873759620; Thu, 26 Mar 2020 16:17:15 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs06n1.mediatek.inc (172.21.101.129) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Thu, 26 Mar 2020 16:17:13 +0800
+Received: from [172.21.84.99] (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 26 Mar 2020 16:17:14 +0800
+Message-ID: <1585210634.4609.1.camel@mtksdccf07>
+Subject: Re: [PATCH v4 1/1] scsi: ufs: Enable block layer runtime PM for
+ well-known logical units
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Can Guo <cang@codeaurora.org>
+CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
+        <hongwus@codeaurora.org>, <rnayak@codeaurora.org>,
+        <linux-scsi@vger.kernel.org>, <kernel-team@android.com>,
+        <saravanak@google.com>, <salyzyn@google.com>,
+        "Alim Akhtar" <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "Bart Van Assche" <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        "open list" <linux-kernel@vger.kernel.org>
+Date:   Thu, 26 Mar 2020 16:17:14 +0800
+In-Reply-To: <1585185003-31156-1-git-send-email-cang@codeaurora.org>
+References: <1585185003-31156-1-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200326043012.600187-1-damien.lemoal@wdc.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 01:30:12PM +0900, Damien Le Moal wrote:
-> Similarly to the zone write pointer reset operation (REQ_OP_ZONE_RESET),
-> the zone open, close and finish operations can operate on all zones of a
-> ZBC or ZAC SMR disk by setting the all bit of the command. Compared to a
-> loop issuing a request for every zone of the device, the device based
-> processing of an all zone operation is several orders of magnitude
-> faster.
+SGkgQ2FuLA0KDQpPbiBXZWQsIDIwMjAtMDMtMjUgYXQgMTg6MDkgLTA3MDAsIENhbiBHdW8gd3Jv
+dGU6DQo+IEJsb2NrIGxheWVyIFJQTSBpcyBlbmFibGVkIGZvciB0aGUgZ2VuZXJuYWwgVUZTIFND
+U0kgZGV2aWNlcyB3aGVuIHRoZXkgYXJlDQo+IHByb2JlZCBieSB0aGVpciBkcml2ZXIuIEhvd2V2
+ZXIgYmxvY2sgbGF5ZXIgUlBNIGlzIG5vdCBlbmFibGVkIGZvciBVRlMNCj4gd2VsbC1rbm93biBT
+Q1NJIGRldmljZXMuDQo+IA0KPiBBcyBVRlMgU0NTSSBkZXZpY2VzIGhhdmUgdGhlaXIgY29ycmVz
+cG9uZGluZyBCU0cgY2hhciBkZXZpY2VzLCBhY2Nlc3NpbmcNCj4gYSBCU0cgY2hhciBkZXZpY2Ug
+dmlhIElPQ1RMIG1heSBzZW5kIHJlcXVlc3RzIHRvIGl0cyBjb3JyZXNwb25kaW5nIFNDU0kNCj4g
+ZGV2aWNlIHRocm91Z2ggaXRzIHJlcXVlc3QgcXVldWUuIElmIEJTRyBJT0NUTCBzZW5kcyBhIHJl
+cXVlc3QgdG8gYQ0KPiB3ZWxsLWtub3duIFNDU0kgZGV2aWNlIHdoZW4gaGJhIGlzIG5vdCBydW50
+aW1lIGFjdGl2ZSwgZHVlIHRvIGJsb2NrIGxheWVyDQo+IFJQTSBpcyBub3QgZWFuYmxlZCBmb3Ig
+dGhlIHdlbGwta25vd24gU0NTSSBkZXZpY2VzLCBoYmEsIHdoaWNoIGlzIGF0IHRoZQ0KPiB0b3Ag
+b2YgYSBzY3NpIGRldmljZSdzIHBhcmVudCBjaGFpbiwgc2hhbGwgbm90IGJlIHJlc3VtZWQsIHRo
+ZW4gdW5leHBlY3RlZA0KPiBlcnJvciB3b3VsZCBoYXBwZW4uDQo+IA0KPiBUaGlzIGNoYW5nZSBl
+bmFibGVzIGJsb2NrIGxheWVyIFJQTSBmb3IgdGhlIHdlbGwta25vd24gU0NTSSBkZXZpY2VzLCBz
+bw0KPiB0aGF0IGJsb2NrIGxheWVyIGNhbiBoYW5kbGUgUlBNIGZvciB0aGUgd2VsbC1rbm93biBT
+Q1NJIGRldmljZXMganVzdCBsaWtlDQo+IGZvciB0aGUgZ2VuZXJhbCBTQ1NJIGRldmljZXMuDQo+
+IA0KPiBTaWduZWQtb2ZmLWJ5OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJvcmEub3JnPg0KPiBSZXZp
+ZXdlZC1ieTogQXZyaSBBbHRtYW4gPGF2cmkuYWx0bWFuQHdkYy5jb20+DQoNCkxvb2tzIGdvb2Qh
+DQpUaGFua3MgdG8gbWFrZSBSUE0gZm9yIFVGUyBjb21wbGV0ZWQhDQoNClJldmlld2VkLWJ5OiBT
+dGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KDQo=
 
-What is the point?  None of these actually seem like remotely useful
-operations.  Why would I ever want to open or finish all zones?
