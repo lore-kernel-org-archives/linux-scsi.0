@@ -2,113 +2,111 @@ Return-Path: <SRS0=ycLx=5L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A2DC2D0E7
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 05:24:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A162EC2D0EC
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 05:45:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A4D320772
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 05:24:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kYebTwTS"
+	by mail.kernel.org (Postfix) with ESMTP id 7A33A20838
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Mar 2020 05:45:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585201540;
+	bh=YSqEiV8Q0V/gweaU5BWxLVtMdrabOmhnkS6bhf78yJk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ENh8OrXWEPJYfTFIMMKaoOfAitV6hNIusE4LnnxDACt0RUOkY6N6H25nxFnHjn4UU
+	 iqIWvM+4g16/w0fzN6F+TsORF7MSR7WdwlSRXWmwS/mFb3wyF1uuDrdpXgSwIDxHsL
+	 6wY4ojY413kbRB/BFVyydi2JL51E/v2sWY3rp1sc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726038AbgCZFYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Mar 2020 01:24:53 -0400
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:45857 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725854AbgCZFYx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Mar 2020 01:24:53 -0400
-Received: by mail-lj1-f196.google.com with SMTP id t17so5050647ljc.12;
-        Wed, 25 Mar 2020 22:24:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=4hbK2sRM/2qMEKEHr0VWPHZaJTVVsh6dWgl4zgMyPS0=;
-        b=kYebTwTSauykNnNwPDIaR0e714W4pjqSWUVoYl/taMGLuW8PJqu4mQILu2jdcVdAFu
-         tu6XQleXoMcB2KY+Q3sOGT08pGSr/EwgaNAQD6hwC52+Z2cgQofwKeILQvMOxs6/IlHt
-         CVFSX+P2rjyxsTebqgxwqBLlQ3jHJmekEG7PPnUU0oO0NDC/5yuP2fgoYJcCrlyo9tGM
-         30HgWZfnywzyRTyGtYNlq7AfQrvutsBUQC5tTRuBJuiv2PB/1GKlg0fOGzM7+c4WqeSy
-         cn+OGctE0eCoNSKkDRe0L2+BKFQdlbTZkdb80bCovw3lTXulCEk6ejeG1uIMHV5/AaWR
-         xNqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=4hbK2sRM/2qMEKEHr0VWPHZaJTVVsh6dWgl4zgMyPS0=;
-        b=aejgWiPmQ32eBy8VZ1Jlgjty2Hviv4P1w02CWzOdOIVTUpsxTcKQgY+fZj9hYvsJoS
-         y/+sj6lP2Rl74w51JAUoXRwTQNMx3HFhdKOxevC883+N1VcSgzudprm/FWvBXYvm6JKN
-         GLXj7K801W93Udf4Jk588KLsqs8sHStBK98Wd9C9D+NEqAS9adnbUZCH/6YWOh8CPt1W
-         edEA/9C+DwKNSLNvK/P/rQwhdAhKAtKp1GIN/++crTykO6Og/2+gVxps4MamsiGbJK0g
-         JRdqNKBOoKLkDOArxDpwWBVK/P1fryjPRzkt2+PYmSMN+wnyNUTj/XSjeor9lxpIeEnt
-         5e5g==
-X-Gm-Message-State: AGi0PuaZXhVE1R3nKb+NlncqJxBoYDvr7QIZ797IaYnhzLjUVmfkXA6H
-        agIk3Rso/nTj6G9s8BMrhS7ZzUBEUancJ+tH7iI=
-X-Google-Smtp-Source: APiQypIQ5SmKAhPmnjecjvJJ+j5FWIBWG9xir1DQ52pJQ0B/2Ro+U/3nSyLENlT561UgtzUE0EfcRjzAAOjQpBfAnxE=
-X-Received: by 2002:a2e:9a52:: with SMTP id k18mr3852346ljj.242.1585200288942;
- Wed, 25 Mar 2020 22:24:48 -0700 (PDT)
+        id S1727689AbgCZFpj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Mar 2020 01:45:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43146 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726259AbgCZFpj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Mar 2020 01:45:39 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3BD722070A;
+        Thu, 26 Mar 2020 05:45:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585201538;
+        bh=YSqEiV8Q0V/gweaU5BWxLVtMdrabOmhnkS6bhf78yJk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RPY4OHuDLW8zJQHKTlA+e6EKMRnhN4YdbX1yCtrF70JzGjUeavucVWe5Z66JFcmcf
+         IG/D2dv9WHdysNOPX0U9tTAu5sced/R0W0jXjk8eSoodeyTQSTpn2MBQ3MM6bJ+5ZQ
+         9pOAVQflwj7dde/PKK4vYjBZ+2dULFF5I7aYdVrE=
+Date:   Wed, 25 Mar 2020 22:45:36 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v9 09/11] fscrypt: add inline encryption support
+Message-ID: <20200326054536.GD858@sol.localdomain>
+References: <20200326030702.223233-1-satyat@google.com>
+ <20200326030702.223233-10-satyat@google.com>
 MIME-Version: 1.0
-From:   Kyungtae Kim <kt0755@gmail.com>
-Date:   Thu, 26 Mar 2020 01:24:37 -0400
-Message-ID: <CAEAjamtSvxgNYqjN1NPrgM=NmcTUKoQdq+y1+Pf-8JJWH6Airg@mail.gmail.com>
-Subject: memory leak in scsi_init_io
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     Dave Tian <dave.jing.tian@gmail.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200326030702.223233-10-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We report a bug (in linux-5.5.13) found by FuzzUSB (a modified version
-of syzkaller)
+On Wed, Mar 25, 2020 at 08:07:00PM -0700, Satya Tangirala wrote:
+> +/* Enable inline encryption for this file if supported. */
+> +void fscrypt_select_encryption_impl(struct fscrypt_info *ci)
+> +{
+> +	const struct inode *inode = ci->ci_inode;
+> +	struct super_block *sb = inode->i_sb;
+> +
+> +	/* The file must need contents encryption, not filenames encryption */
+> +	if (!fscrypt_needs_contents_encryption(inode))
+> +		return;
+> +
+> +	/* blk-crypto must implement the needed encryption algorithm */
+> +	if (ci->ci_mode->blk_crypto_mode == BLK_ENCRYPTION_MODE_INVALID)
+> +		return;
+> +
+> +	/* The filesystem must be mounted with -o inlinecrypt */
+> +	if (!(sb->s_flags & SB_INLINECRYPT))
+> +		return;
+> +
+> +	ci->ci_inlinecrypt = true;
+> +}
 
-A memory buffer (i.e., struct scatterlist) is allocated, and not freed properly.
-(not sure about the point where the allocated memory region is leaking.)
+A bug I came across last week when writing a new test is that '-o inlinecrypt'
+can break some fscrypt settings because it enables blk-crypto even when
+CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK is unset and the hardware doesn't support
+the algorithm.  For example, adding '-o inlinecrypt' can make Adiantum-encrypted
+files stop working, due to the hardware only supporting AES-XTS.
 
-==================================================================
-BUG: memory leak
-unreferenced object 0xffff88805b337280 (size 256):
-  comm "syz-executor.6", pid 5934, jiffies 4295016561 (age 16.340s)
-  hex dump (first 32 bytes):
-    00 46 5f 01 00 ea ff ff 00 00 00 00 00 10 00 00  .F_.............
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<000000006305194b>] kmemleak_alloc_recursive
-2/./include/linux/kmemleak.h:43 [inline]
-    [<000000006305194b>] slab_post_alloc_hook 2/mm/slab.h:586 [inline]
-    [<000000006305194b>] slab_alloc_node 2/mm/slub.c:2767 [inline]
-    [<000000006305194b>] slab_alloc 2/mm/slub.c:2775 [inline]
-    [<000000006305194b>] kmem_cache_alloc+0x165/0x340 2/mm/slub.c:2780
-    [<000000003f20764c>] mempool_alloc_slab+0x44/0x70 2/mm/mempool.c:513
-    [<00000000561f62bb>] mempool_alloc+0x145/0x370 2/mm/mempool.c:393
-    [<00000000322111ed>] sg_pool_alloc+0xe6/0x1a0 2/lib/sg_pool.c:67
-    [<00000000b72ca391>] __sg_alloc_table+0xb0/0x370 2/lib/scatterlist.c:302
-    [<00000000c61ae208>] sg_alloc_table_chained+0x6c/0x1c0 2/lib/sg_pool.c:132
-    [<00000000cd52be39>] scsi_init_sgtable
-2/drivers/scsi/scsi_lib.c:990 [inline]
-    [<00000000cd52be39>] scsi_init_io+0x10e/0x340 2/drivers/scsi/scsi_lib.c:1025
-    [<000000004dccec43>] sd_setup_read_write_cmnd
-2/drivers/scsi/sd.c:1174 [inline]
-    [<000000004dccec43>] sd_init_command+0xbdc/0x3400 2/drivers/scsi/sd.c:1290
-    [<00000000644825df>] scsi_setup_fs_cmnd
-2/drivers/scsi/scsi_lib.c:1211 [inline]
-    [<00000000644825df>] scsi_setup_cmnd 2/drivers/scsi/scsi_lib.c:1229 [inline]
-    [<00000000644825df>] scsi_mq_prep_fn 2/drivers/scsi/scsi_lib.c:1603 [inline]
-    [<00000000644825df>] scsi_queue_rq+0xf18/0x2a30
-2/drivers/scsi/scsi_lib.c:1671
-    [<00000000d4c4c1c8>] blk_mq_dispatch_rq_list+0xa6e/0x1870
-2/block/blk-mq.c:1238
-    [<00000000e1d472b3>] blk_mq_do_dispatch_sched+0x198/0x3f0
-2/block/blk-mq-sched.c:115
-    [<000000002542d635>] blk_mq_sched_dispatch_requests+0x39a/0x600
-2/block/blk-mq-sched.c:211
-    [<000000000ffcbd69>] __blk_mq_run_hw_queue+0x12b/0x250 2/block/blk-mq.c:1368
-    [<000000001cbeb84f>] __blk_mq_delay_run_hw_queue+0x467/0x4f0
-2/block/blk-mq.c:1436
-    [<000000003a7eefb7>] blk_mq_run_hw_queue+0x178/0x320 2/block/blk-mq.c:1473
-    [<00000000bf63d47b>] blk_mq_get_tag+0x583/0xa00 2/block/blk-mq-tag.c:139
-==================================================================
+That's undesirable.  Adding '-o inlinecrypt' should just make inline encryption
+be used where it can, and not break anything.
+
+To fix this, we should make fscrypt_select_encryption_impl() only set
+->ci_inlinecrypt if either blk-crypto-fallback is enabled or if all the
+filesystem's devices support the algorithm.
+
+In v7+ of this patchset, this is a bit tricky because now
+blk_ksm_crypto_key_supported() takes in a 'struct blk_crypto_key', which
+fscrypt_select_encryption_impl() doesn't have available yet.  Perhaps make
+blk_ksm_crypto_key_supported() a wrapper around a function like
+blk_ksm_crypto_setting_supported() that takes a new struct:
+
+	struct blk_crypto_setting {
+	        enum blk_crypto_mode_num crypto_mode;
+		unsigned int data_unit_size;
+		unsigned int dun_bytes;
+	};
+
+Then maybe add blk_crypto_setting_supported() which returns true if either
+blk_ksm_crypto_key_supported() *or* blk-crypto-fallback is enabled.
+
+- Eric
