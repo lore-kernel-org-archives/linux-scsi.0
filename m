@@ -2,62 +2,62 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB7EC2D0F0
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50206C2D0E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BBF2321556
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 269932072F
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="axQxFPWR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="J8VvgXQ7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727850AbgC0QuZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 12:50:25 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:2564 "EHLO
+        id S1727889AbgC0Quf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:50:35 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:2607 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726900AbgC0QuX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 12:50:23 -0400
+        with ESMTP id S1727883AbgC0Qud (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 12:50:33 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585327822; x=1616863822;
+  t=1585327833; x=1616863833;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=EPr2SzSUKNC8Hgcg5K/bHK+2y5HKhjTakUPPF8D8d4g=;
-  b=axQxFPWRpcGnP6CawVqbvB8utDuUu0r2VO1e4UU+JEJpDs/GVko574PE
-   MJnKzzJc0SfgcEqAeog0wCFuFu7jlb8kvC9HwwYZ2A3KjH6VVIwaxkv0f
-   JzflpbeX8H87//WKMU5Uazx5tyITHuGBcthD4SX0maOCBPo/gq9cy+fQT
-   /LGG2QtKL/L7HCKViLMiRV+hVulwQjCV61qcWtdA9WBv3pGnTyBF+I1TT
-   xZ+Eup9aOrJ07/gEB5XBzyJeFIkkRorPAAupxGQ4iknlnK8QUyOfgCGLf
-   KEoEl4yHFghaUhnTmDmwyFHCiMb2syU4ewelmSmfpIVmJokOh4WZzpwIR
-   A==;
-IronPort-SDR: jLxhnTGlebUN89e+7ad6pNC0YG6PBeuYhzmDDFGB36uo7NO7D+RG+c6EMizFLE9a4DtfCuh5E/
- +kNYqY35zLzr5AUvGqlLf7hDsP9Ugt8X2ereeQOhEfEc7vX/oWvh/2CRWhEu7U85MWVp0qP0aG
- FMQdnry/F07ASfnrAL42Uy6XWpLizGNYWasC3S38cYmV+c9jv902V86zNF7pt28o2USwDNuMHy
- E/eP7NhsSpPFvO3SydHcSbhfyC0bXmzs7pEXE5pODyn+kayFFe6xoiMDKmvewuXkjK5pmWJDRY
- F8o=
+  bh=hfSaALAwOkEjkHXBUzEOgrr3qDzp+TUzOjdfRsri0lw=;
+  b=J8VvgXQ7PnoiAQ+dVO11KF8EExAH5V9W5TiTPD4rnvdXTnRSdDKB9IOh
+   AxZiQFPqqsKFN2HzISknpGc9jloCWyWmPxjqMVI87JlPfvBhh4aUzddZi
+   /MXVEJY7Z2fhN5PngfS/DX73bYngiY/IyB04W3BaEpzLu9XnyrpjwqFsY
+   aixd9w0U8AUySyYRWxsp6Ty5PA9KBM7/y2PJQRp+65+TCc3BnFEkmVpSH
+   Fgw1EDAjZZEpHXDwlY/LMq+ANCAaWcgpuQVFAhXvGq8aa+iXt2+WsoPe4
+   /ZzITbSfgeREDfcJZvtwW7URL0CgPPO6NhJh+txD/1Lix1aEXG34GqNe0
+   w==;
+IronPort-SDR: 6WkaZyBbAUyhL9plfPI2jYA5vGnZQk5urjLrw2UbzSa84390Dl9FRHzLkCSMsVVR4g9lpRifhL
+ INEXOIr8SixmJpsfQSxDLfGxlukiy1RmuR/faHMlBQL/mKTIL4uouJUNEQThaM8VnrBu8txy8r
+ ExWIGn/Ek3N8dQnt5CMplnwuTcMCIKa1uJAVF7bghceqKMtV98hO5i7HKexBG4gBNxKIPHZOuj
+ 2iBa98VW9u1Zbe+BRh0CLUcFb6SgRzSdQfjDKBbqzy8EPalrVRc8IRbO1J7HuPkvA0Yi5XgF/8
+ XcU=
 X-IronPort-AV: E=Sophos;i="5.72,313,1580745600"; 
-   d="scan'208";a="242210442"
+   d="scan'208";a="242210468"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2020 00:50:22 +0800
-IronPort-SDR: KYl1HfwKShOB6oduRhRnMv7QYZoTI5MY98XV7jqJbOsNJSHP/iAnGQOmWLLQk1FpEjsNDFDbv4
- QZ6CcQwKe5mI63wySsiPjtIbmHyvpAgWWyBehu/u05X+UDxxfQMCfR7p0D+nuMwLc5uj8Q89lF
- 7q6QqHQuSG21TJKKvZXiLgmXDetneUo0tFEaeroIhFJTuLQ9QEloh5p+tLXHb/Y0/s1h5WdYiG
- 5yNBomE0ybgjwKH0W+KKgYNYZVD//XDzOFVBbhSntsUTE7Q5EOspHqVfNsrojFqTaIUYJvYxOw
- 2KwdSgb1tGdNdM4quOnEz3My
+  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2020 00:50:33 +0800
+IronPort-SDR: UDzevWbbLOHJGhB4aUVSd9wtEvasaZ30b920BYOTNr1kBwr8WUZ8R8ui2qooQ4zXotpdveypPc
+ xs5jskTf56tzDLfv7M3WKlRJ8brIiyYGCHjqbQR6A30GjdTacUPv804TQKEeUKGEQz5we67j69
+ EruTGjlD401E+3VTI8DXqKdsXall1KS8FaTl4/ORYAxtU+ZLvbyFgW0TrAadMNmRXh6na66Q6I
+ zyWppcumzw5tic5IxtWIyjuPAKvfR+32MuMrt3dJPqL17VHMdenmMhcnrN0vXx+9epI3tXXczm
+ QKyM5mLOrBjdPPdULyIFwMbJ
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2020 09:41:57 -0700
-IronPort-SDR: AnBM3QJBFDNMLPGhRMtQbQ1CUjtHaYIex9GJfxM9C7xAUafNNJPtMDslcoPS11Xo91VLuy4q51
- 9OPM+iaGDC1tPZU+I2W8vdRTzPpmc8UQNKTo1HhLt7ZJAfxl5JDrT3zW7l3LW3JIzbLaa08itX
- TcPMwD7bSiXdnFs3HqJKcXraEA5qHfZgZ6MqxJgvC79TmX1cAyA2VEo5STVpPVyv/MqRFghfDO
- ZaEQAmdfkrTQe9F+ya3F6JzaDXgYTIBPPjhkWUoB4w8o7MAQw2wnsJRJZCldE6ifMvzTR1B6so
- G2k=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2020 09:42:07 -0700
+IronPort-SDR: Ee5vfifK/q6CaWhGLfVLdauIISNxd9ua1WXrJsCuI2uHvPqEegQll2GsmXVhlsgZpHP0TI0kC3
+ 5gbSXgVenN1zVYKFhJqp3ZF07eG3UPIv9Y75wj2tJJFc5G18y9NutvGuaIK7jO4g49O2GHQSTK
+ qCDfeKeg2eV86Jy6CH6I34n3m72IrHyXY/ZotO0dcafc4A5VbeeAYmzujmBlGsmnXI8m85ceHu
+ 96VwWL3CwMvDrBtbICkY7KG/GzqjpQlu5WF93lRrr0RWDzWkoGglfJfYsy65Tc8e40pfJXyvXf
+ tgg=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2020 09:50:21 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2020 09:50:32 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -68,9 +68,9 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v3 03/10] block: introduce blk_req_zone_write_trylock
-Date:   Sat, 28 Mar 2020 01:50:05 +0900
-Message-Id: <20200327165012.34443-4-johannes.thumshirn@wdc.com>
+Subject: [PATCH v3 09/10] block: export bio_release_pages and bio_iov_iter_get_pages
+Date:   Sat, 28 Mar 2020 01:50:11 +0900
+Message-Id: <20200327165012.34443-10-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
 References: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
@@ -81,49 +81,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Export bio_release_pages and bio_iov_iter_get_pages, so it can be used
+from modular code.
+
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/blk-zoned.c      | 14 ++++++++++++++
- include/linux/blkdev.h |  1 +
- 2 files changed, 15 insertions(+)
+ block/bio.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 9d30a4115dbc..3de463a15901 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -50,6 +50,20 @@ bool blk_req_needs_zone_write_lock(struct request *rq)
+diff --git a/block/bio.c b/block/bio.c
+index aee214db92d3..023ad8bd26c7 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -998,6 +998,7 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
+ 		put_page(bvec->bv_page);
+ 	}
  }
- EXPORT_SYMBOL_GPL(blk_req_needs_zone_write_lock);
++EXPORT_SYMBOL(bio_release_pages);
  
-+bool blk_req_zone_write_trylock(struct request *rq)
-+{
-+	unsigned int zno = blk_rq_zone_no(rq);
-+
-+	if (test_and_set_bit(zno, rq->q->seq_zones_wlock))
-+		return false;
-+
-+	WARN_ON_ONCE(rq->rq_flags & RQF_ZONE_WRITE_LOCKED);
-+	rq->rq_flags |= RQF_ZONE_WRITE_LOCKED;
-+
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(blk_req_zone_write_trylock);
-+
- void __blk_req_zone_write_lock(struct request *rq)
+ static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
  {
- 	if (WARN_ON_ONCE(test_and_set_bit(blk_rq_zone_no(rq),
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 50e9b140cad7..2187d3778eba 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1737,6 +1737,7 @@ extern int bdev_write_page(struct block_device *, sector_t, struct page *,
+@@ -1111,6 +1112,7 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 		bio_set_flag(bio, BIO_NO_PAGE_REF);
+ 	return bio->bi_vcnt ? 0 : ret;
+ }
++EXPORT_SYMBOL(bio_iov_iter_get_pages);
  
- #ifdef CONFIG_BLK_DEV_ZONED
- bool blk_req_needs_zone_write_lock(struct request *rq);
-+bool blk_req_zone_write_trylock(struct request *rq);
- void __blk_req_zone_write_lock(struct request *rq);
- void __blk_req_zone_write_unlock(struct request *rq);
- 
+ static void submit_bio_wait_endio(struct bio *bio)
+ {
 -- 
 2.24.1
 
