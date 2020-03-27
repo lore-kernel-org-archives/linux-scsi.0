@@ -2,107 +2,141 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A41D9C2D0E5
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:05:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16DA7C2D0ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:05:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79E81206F2
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:05:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0A3420838
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:05:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="x4GRhdLT"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tJHUKbZB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727718AbgC0RFH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 13:05:07 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36902 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726333AbgC0RFG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 13:05:06 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RGrUN7167850;
-        Fri, 27 Mar 2020 17:04:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=2uSk5OmF7Is8u+ylzJyfXZPzvaBYULTp/WZBWkL3rbo=;
- b=x4GRhdLT20y/KfX33gRdU9TWV63b9LlKIKi007etL+l23nhyRDc/1A0pQcAiSlecM+5h
- EnvTwNGd/j6GozwGvLETzWjZHxub7Hh6Gd4mQGum2lRMCP53bWsl0p0PE424sMLGdqtr
- vYw+uVckIktqjGt6wQUXKeRhseWQRo9UsfJIXYhGv07YiBVyUAwH9GDwllU196WTTysc
- vy3AV8YFvVTdnw/YBIDMzYUUkGJMRYP8jSD00T3X9jS929M0tGE9Kzp0Wp/dP6ikl+b1
- RgC9/0to3zQlwrsk3/JxGTRqAuxeJri8mcsnUX++AbBAHGUHYuc5zbk+wIlyffCOJ7PR 2w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 301459c9e8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Mar 2020 17:04:43 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RGr57S113183;
-        Fri, 27 Mar 2020 17:04:42 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 30073h7308-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Mar 2020 17:04:42 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02RH4c6j005514;
-        Fri, 27 Mar 2020 17:04:39 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 27 Mar 2020 10:04:38 -0700
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        saravanak@google.com, salyzyn@google.com,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: Re: [PATCH v6 1/2] scsi: ufs: Clean up ufshcd_scale_clks() and clock scaling error out path
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1585214742-5466-1-git-send-email-cang@codeaurora.org>
-        <1585214742-5466-2-git-send-email-cang@codeaurora.org>
-Date:   Fri, 27 Mar 2020 13:04:33 -0400
-In-Reply-To: <1585214742-5466-2-git-send-email-cang@codeaurora.org> (Can Guo's
-        message of "Thu, 26 Mar 2020 02:25:40 -0700")
-Message-ID: <yq1imipbufy.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727677AbgC0RFg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 13:05:36 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:44206 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727254AbgC0RFf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 13:05:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=nQwtzNXpf86itTjaB1edkzN5h3XvovjaCziQk9DtCjM=; b=tJHUKbZBjsey04PmV3H0dCje7e
+        bYKkkq6017QpkZgT1ElJKViJOrTCd7UCVOEZRVRF6tPwwlnll/gKoVxqCy/1XMb/AHQaUrLBj/NC3
+        tBw4POPUFD3N/CFouNP73J5J5wYWrOGmz+YqLJ3hKO5+/AhYSOTmdJvvjogLQxzbSLqpgAoASBzgI
+        QqiQJeYh+w/7R4WbwSgVu5ZYKTZyajcVh058adQbz/pv1GRD16BS0VUde8wkrh3+gCs0MZljoIzIM
+        GJQRxIF3ZihKK2bgZ2ln/osQrAbO/suKfl6oWss51RtXITpHhUsGodIPRNRreKE0Y8uC8VX9l0j3a
+        LhqGwHBg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jHsQI-0002G0-5a; Fri, 27 Mar 2020 17:05:34 +0000
+Date:   Fri, 27 Mar 2020 10:05:34 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Satya Tangirala <satyat@google.com>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v9 02/11] block: Inline encryption support for blk-mq
+Message-ID: <20200327170534.GB24682@infradead.org>
+References: <20200326030702.223233-1-satyat@google.com>
+ <20200326030702.223233-3-satyat@google.com>
+ <20200326200511.GA186343@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003270146
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- priorityscore=1501 bulkscore=0 lowpriorityscore=0 mlxlogscore=999
- adultscore=0 suspectscore=0 impostorscore=0 mlxscore=0 spamscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003270146
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200326200511.GA186343@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Thu, Mar 26, 2020 at 01:05:11PM -0700, Eric Biggers wrote:
+> > +{
+> > +	int i = 0;
+> > +	unsigned int inc = bytes >> bc->bc_key->data_unit_size_bits;
+> > +
+> > +	while (i < BLK_CRYPTO_DUN_ARRAY_SIZE) {
+> > +		if (bc->bc_dun[i] + inc != next_dun[i])
+> > +			return false;
+> > +		/*
+> > +		 * If addition of inc to the current entry caused an overflow,
+> > +		 * then we have to carry "1" for the next entry - so inc
+> > +		 * needs to be "1" for the next loop iteration). Otherwise,
+> > +		 * we need inc to be 0 for the next loop iteration. Since
+> > +		 * overflow can be determined by (bc->bc_dun[i] + inc)  < inc
+> > +		 * we can do the following.
+> > +		 */
+> > +		inc = ((bc->bc_dun[i] + inc)  < inc);
+> > +		i++;
+> > +	}
+> 
+> This comment is verbose but doesn't really explain what's going on.
+> I think it would be much more useful to add comments like:
 
-Can,
+Also the code is still weird.  Odd double whitespaces, expression that
+evaluate to bool.
 
-> This change introduces a func ufshcd_set_clk_freq() to explicitly set
-> clock frequency so that it can be used in reset_and_resotre path and
-> in ufshcd_scale_clks(). Meanwhile, this change cleans up the clock
-> scaling error out path.
+> 
+> 		/*
+> 		 * If the addition in this limb overflowed, then the carry bit
+> 		 * into the next limb is 1.  Else the carry bit is 0.
+> 		 */
+> 		inc = ((bc->bc_dun[i] + inc)  < inc);
 
-Applied to 5.7/scsi-queue, thanks!
+		if (bc->bc_dun[i] + carry < carry)
+			carry = 1;
+		else
+			carry = 0;
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> 
+> > +blk_status_t __blk_crypto_init_request(struct request *rq,
+> > +				       const struct blk_crypto_key *key)
+> > +{
+> > +	return blk_ksm_get_slot_for_key(rq->q->ksm, key, &rq->crypt_keyslot);
+> > +}
+> 
+> The comment of this function seems outdated.  All it does it get a keyslot, but
+> the comment talks about initializing "crypto fields" (plural).
+
+This is a classic case where I think the top of the function comment
+is entirely useless. If there is a single caller in core code and the
+function is completely trivial, there really is no point in a multi-line
+comment.  Comment should explain something unexpected or non-trivial,
+while much of the comments in this series are just boilerplate making
+the code harder to read.
+
+> >  	blk_queue_bounce(q, &bio);
+> >  	__blk_queue_split(q, &bio, &nr_segs);
+> > @@ -2002,6 +2006,14 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+> >  
+> >  	cookie = request_to_qc_t(data.hctx, rq);
+> >  
+> > +	ret = blk_crypto_init_request(rq, bio_crypt_key(bio));
+> > +	if (ret != BLK_STS_OK) {
+> > +		bio->bi_status = ret;
+> > +		bio_endio(bio);
+> > +		blk_mq_free_request(rq);
+> > +		return BLK_QC_T_NONE;
+> > +	}
+> > +
+> >  	blk_mq_bio_to_request(rq, bio, nr_segs);
+> 
+> Wouldn't it make a lot more sense to do blk_crypto_init_request() after
+> blk_mq_bio_to_request() rather than before?
+> 
+> I.e., initialize request::crypt_ctx first, *then* get the keyslot.  Not the
+> other way around.
+> 
+> That would allow removing the second argument to blk_crypto_init_request() and
+> removing bio_crypt_key().  blk_crypto_init_request() would only need to take in
+> the struct request.
+
+And we can fail just the request on an error, so yes this doesn't
+seem too bad.
