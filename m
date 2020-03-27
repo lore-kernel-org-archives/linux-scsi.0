@@ -2,93 +2,149 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0DEC43331
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 18:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 537D0C2D0E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 19:11:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9166D20B1F
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 18:20:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C2522072F
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 19:11:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kVzonrBi"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="VD/Wg3nP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727252AbgC0SUc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 14:20:32 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34306 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726540AbgC0SUc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 14:20:32 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RIAaXf100426;
-        Fri, 27 Mar 2020 18:20:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=EdOLzWPiCxlbqU1h3Lsc8gB9qOBQStI4WKDUvuf9c6Y=;
- b=kVzonrBiTPwHTWx7PicDR4CdnQnwHGqy8ceLvwkWR8VjngvGIjSp1O+hnG1D5BznOdGe
- APTw0sqpo53Amth4zi8iHcfiQC2Lq6W7cUGrxSgeODTLbfS+74gseE7O3DstVHkTqpyi
- lO7IHPbRDJv4c8I9hFZ3bERKvlpUM+iQXWmeJEJFjEGcpIuVT7IfV5eMBGPll2iBl++j
- 6AUMWdYHzJTIerA+OJnNd0nBoUfWJ3b7DtykmoQnOKhMWPoI3c2yzomCOUXqDHW0pzd1
- 4hHNJyHSKTflwFkWpJ2IxMBzYJkBjvbcMtxU/4pa4k98dRMA3a068+5md2G3DymdhYKX qg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 3019vebrjm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Mar 2020 18:20:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RI75bH110324;
-        Fri, 27 Mar 2020 18:18:28 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 30073hcq0y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Mar 2020 18:18:28 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02RIISQg030736;
-        Fri, 27 Mar 2020 18:18:28 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 27 Mar 2020 11:18:27 -0700
-To:     Saurav Kashyap <skashyap@marvell.com>
-Cc:     <martin.petersen@oracle.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 0/3] bnx2fc: General updates.
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200327054849.15947-1-skashyap@marvell.com>
-Date:   Fri, 27 Mar 2020 14:18:25 -0400
-In-Reply-To: <20200327054849.15947-1-skashyap@marvell.com> (Saurav Kashyap's
-        message of "Thu, 26 Mar 2020 22:48:46 -0700")
-Message-ID: <yq1wo75acge.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726959AbgC0TLq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 15:11:46 -0400
+Received: from mout.gmx.net ([212.227.15.19]:53755 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726738AbgC0TLq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Mar 2020 15:11:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1585336295;
+        bh=8Whm2odb9cru4oSy8Pr/kzkWaqvGlKuhyfmTgrfLl/E=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=VD/Wg3nPoxEFI9hCPI4+GHYlntpnHzdigoRNMe/hkXeno74XNieAT1M6QJnzypvae
+         Sd8O+vou8wVg9eWZBYdFtQJ8Ds0hlzCXsaALeuv90hDMFx0PPz+b/OdPCLAW7Z1dxg
+         ya9thv6nTcUNy+DVSv3dqQ4fHi1dpBq+TLNb5WX8=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from localhost.localdomain ([82.19.195.159]) by mail.gmx.com
+ (mrgmx004 [212.227.17.184]) with ESMTPSA (Nemesis) id
+ 1MkYXs-1jec5B02qE-00m0tJ; Fri, 27 Mar 2020 20:11:35 +0100
+From:   Alex Dewar <alex.dewar@gmx.co.uk>
+Cc:     alex.dewar@gmx.co.uk, Martin Petersen <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: aic7xxx: Remove more FreeBSD-specific code from aic7xxx_core.c
+Date:   Fri, 27 Mar 2020 19:11:02 +0000
+Message-Id: <20200327191102.78554-1-alex.dewar@gmx.co.uk>
+X-Mailer: git-send-email 2.26.0
+In-Reply-To: <yq15zepbsve.fsf@oracle.com>
+References: <yq15zepbsve.fsf@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=899 adultscore=0
- suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003270152
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0 phishscore=0
- clxscore=1011 adultscore=0 spamscore=0 malwarescore=0 mlxlogscore=957
- lowpriorityscore=0 bulkscore=0 priorityscore=1501 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2003270152
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:rQ/y2c9OY/H+OTBiKokF//EIecEuAFClMr6MRPBTWLTEDKo3x5G
+ yKN17Vuquz3ReulJpC6ta/o65LDPLkR7L3fe/H2qHdYuvUf9PXOeDW/ODB0xUFO4cwiUtaY
+ 30DqzvJMVPGCVnP5h8lXtKz9NmfOnX1a65asCOwmoIYdKsg1kv5ndC7/0OawevHAdRX/29d
+ kk62uCpi6qfpW6Ye17+7Q==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:mVp+m6YWQVo=:0SNnI+n3n0XQJu4myjt0EK
+ 1QZIOXuRZPiVpDKQQyTTBW4gHKQudcEuHRmDoUzkWHSRL81T+OXrTIFT/iNzhUO7k/C5On7b6
+ nPxkdyo1uqvx3j0AXa8g4wElKafKDjX6rhcKXvMq6AFv0OQH1ybJSgHWoW+e3WcM4GyuJnfcc
+ +e2OqLnulCHIBRMSkhbaP0/MBOEXLK1NisSh7TGJ7z97yy01gUxIjrEQuVuvmamDNCJnl0XU+
+ nfkReh/fDIE0E4yAzUMCnE8r6IoXYLmtv5K72rxFwHuOcgwvveulNQORv6mG4tR8FmxmL3zdf
+ MXlmdUC/xVeLyaDzj79VS/7WKs7CAcG08S37DcL2GB6r9oW1ofTrdjvT17vJ6FXMXXxcdgBx4
+ SuCTetLOMucGe6KSklCWAo73AloeQE5YMHIcwcJStX+Lmfw0khqJbDC04ymSH6r3R4cdP6/bu
+ WtAjaL3JWMqxvRDoesrzZYOTBOwGXD5egL7QCf8+FvD6IOnahkQ/0FoghF6ynJmVxk0hN7n9B
+ YxG96nXyp9UsInRCAUIQkn2WGi2sD36QuDlr0EOoKWz0g/ToNFWsSFOrKbRp12IcG3MAW/owh
+ 2vX//UGEOy1lPq8UoRR3DDdCJU30VHp8Xc999nCRHs7+pscJowyqY+3Sumbe++0sekr5Xsta4
+ NLD7Ca5AWYcndS88HEn9CFr/OHSKagRM1gcaMv6RkK5cJ9QW+7cVWzFnpOTOHbW1UamW8LkQu
+ wO4/PGRavRvYDAn51SnuSPOD3A0qbG75q/kqsrGn7me+InPukIzZITyDADQIbazHWPqUT2jMQ
+ pVcxyA6ebkuj+4YoGmC3yeY7tyapKx64pGMvNwHT7erQFL+SLYwN3KDIDFq9CeSwST+q9LHiE
+ /OyTMDDoE2e55AtqAW3h8cbO/8qdmdTwYgYMzzD/8eoNmGT5eLpHhDzny5wjM4+IsIYKuzI3m
+ VeCw/JNcM3CLob2AD7RqBm7dokGk6Jj33N0KwO2PCIUctrk1QYdys/ha+yCZV5VkT1xbddprw
+ Z5w3xqf7o1rwdl+jnddm4QKdHx7Ibpf6PyifaCnCx2z1MFRg1wyIc8TQnSPOyAsKZ+1F5maxy
+ 3ZnudH7VOsk4vXAS6cUS/UM/sGpgJC1DGkHw2ct+ybLKWCcr0Nl+U1rQDH54lD2EY+v/YAnN4
+ khxRgV7/C1aQjNxqhVGWBVYD3mSugZstLph01a/10346CIwb6U5Bf2waOIqsH7bCRpT5Fz+B1
+ al9LJEyj/k8Cu+6UD
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Remove additional code for FreeBSD in aic7xxx_core.c, which is unneeded
+since commit cca6cb8ad7a8 ("scsi: aic7xxx: Fix build using bare-metal
+toolchain").
 
-Saurav,
+Suggested-by: Martin Petersen <martin.petersen@oracle.com>
+Signed-off-by: Alex Dewar <alex.dewar@gmx.co.uk>
+=2D--
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 23 -----------------------
+ 1 file changed, 23 deletions(-)
 
-> Kindly apply this series to scsi tree at your earliest convenience.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/ai=
+c7xxx_core.c
+index 4190a025381a..84fc499cb1e6 100644
+=2D-- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -1834,21 +1834,6 @@ ahc_handle_scsiint(struct ahc_softc *ahc, u_int int=
+stat)
+ 				printerror =3D 0;
+ 			} else if (ahc_sent_msg(ahc, AHCMSG_1B,
+ 						MSG_BUS_DEV_RESET, TRUE)) {
+-#ifdef __FreeBSD__
+-				/*
+-				 * Don't mark the user's request for this BDR
+-				 * as completing with CAM_BDR_SENT.  CAM3
+-				 * specifies CAM_REQ_CMP.
+-				 */
+-				if (scb !=3D NULL
+-				 && scb->io_ctx->ccb_h.func_code=3D=3D XPT_RESET_DEV
+-				 && ahc_match_scb(ahc, scb, target, channel,
+-						  CAM_LUN_WILDCARD,
+-						  SCB_LIST_NULL,
+-						  ROLE_INITIATOR)) {
+-					ahc_set_transaction_status(scb, CAM_REQ_CMP);
+-				}
+-#endif
+ 				ahc_compile_devinfo(&devinfo,
+ 						    initiator_role_id,
+ 						    target,
+@@ -4399,22 +4384,16 @@ ahc_alloc(void *platform_arg, char *name)
+ 	struct  ahc_softc *ahc;
+ 	int	i;
 
-Applied to 5.7/scsi-queue, thanks.
+-#ifndef	__FreeBSD__
+ 	ahc =3D kmalloc(sizeof(*ahc), GFP_ATOMIC);
+ 	if (!ahc) {
+ 		printk("aic7xxx: cannot malloc softc!\n");
+ 		kfree(name);
+ 		return NULL;
+ 	}
+-#else
+-	ahc =3D device_get_softc((device_t)platform_arg);
+-#endif
+ 	memset(ahc, 0, sizeof(*ahc));
+ 	ahc->seep_config =3D kmalloc(sizeof(*ahc->seep_config), GFP_ATOMIC);
+ 	if (ahc->seep_config =3D=3D NULL) {
+-#ifndef	__FreeBSD__
+ 		kfree(ahc);
+-#endif
+ 		kfree(name);
+ 		return (NULL);
+ 	}
+@@ -4540,9 +4519,7 @@ ahc_free(struct ahc_softc *ahc)
+ 		kfree(ahc->name);
+ 	if (ahc->seep_config !=3D NULL)
+ 		kfree(ahc->seep_config);
+-#ifndef __FreeBSD__
+ 	kfree(ahc);
+-#endif
+ 	return;
+ }
 
-Patch #1 had several indentation issues which I fixed up.
+=2D-
+2.26.0
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
