@@ -2,153 +2,166 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B360BC2D0ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:13:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A844C2D0ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:14:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F33F2072F
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:13:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FC532073B
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:14:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="c6dI0zM6";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Th4GkxY6"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GeUZKv4u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbgC0RN6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 13:13:58 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:4843 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726275AbgC0RN6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 13:13:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585329237; x=1616865237;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=2aW2Jvn/aHbWpbHtvfFNSSzRSsATzWVSffSB9vGDcw4=;
-  b=c6dI0zM6Y3m4rT4hVJDgNScdYnIST09K+OLHXC5/j4ymIgxGig6jovPB
-   JDlUsnvW4fnUnjRE4/7ANFSXQ62AsQldn0SmiI1rhAcMlZTZoy9jWL0nI
-   gpes3WsCLnGYHVAFRUPmDqJFi6XEvm+GqIlUL+VrSVFiod6msPRuEQg2Z
-   tCHgCnhdQZo6TaatK+ip7r6Fec1hr2XHyA0dPPKR5C0NhfuiPiYboSfIS
-   w2oQEvrmPLA8UgpOtfWI9ChBW8gzq4AcIBZfE5rUBSPrtYC/YUA/yVO5b
-   YsHErIMpOLl/A88pd7fhJvWIpdo7PcQa29JqcwIewv7GKrBAfXSgsCHyH
-   A==;
-IronPort-SDR: T3jkIWjrjKOumaQfcsFgWXJr1K1R964ra91in0HwJp+mU8lMfhVuqZYuGbyo89tiBQz3MeQgBY
- zJaGeL3lGXaHo7BI2KG7X416uVhCeGv5xcwaQEUaeoziqtV098LC+r213I63mYIo1DA2i3RNmF
- sUdXByhMwCH4ivvVLxUdk9jjlZt5YviZ2VrmpHcUBi4YxlnDOu59S1dp1HFc/V4mDX/d9okwCP
- ZQi2ufqVpVsrblpOydedhqcpPlqepJngwJ/gvgdwOUWMQYUbQ7q8UuONoBp8QKLAo8KiGBYaHz
- mIk=
-X-IronPort-AV: E=Sophos;i="5.72,313,1580745600"; 
-   d="scan'208";a="242212168"
-Received: from mail-dm6nam11lp2169.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.169])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2020 01:13:56 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WkhvAcL6JsbZtbVS4f5fIPwUgZBl7ZlbJJ0jlB2zGTiU4gR64TqC1E1dmiqlq5lBx0f+ePG2voMkIZ1zbUWsBFr5XrEoQNSBpzl2tg0gT0ZnLEYbHApuphnDnUZT59xV8MTozm89bSyq9E5itxbz21fCkILfnpNKAH491s1+SktyeIMnGfQkQ17tiB0xi8cHm3GR79XnJs0Iw+ARe/x5WM1sKrng/UmewUrrWXUXASGOJpvP5Sl8wRBpi8eZiHQF/M0X0jCajod5hpJJd5P1GmkBxErF/LLrJJP0Wf3/08fTi+3yxAt1dgqacZIC4zutnH2iRVL5q/Otr6ZCJzrRMw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SriTB4QRIQ1/f1BA3a7yWcxMUk1Q4WOMjrJFKFXJnOw=;
- b=Ff3uPVA7bHkVAtnVKBURI/wh590OXXMZFeoPPOy6ggWweEHUPfVcTuCCSt3JamO1QHhgnNGwaS1BIkMd7+9ihKIvW+NBqYCgfP8OQ+wD9QqGRZIhkDe45UtFBu9fdc2sP08o+pHGyQ7dzrRQ9SzaZCQmJEd5c42d084FL2AaI4gYaEcLIwOn2yMNmz6x1bty56SrqoSfoCHGHVjaUxwp5+5RfpUwSi13QFeU/IVATwRH2kXa+iYVooMI2imF0MXjrMk5f8e0M4kCzUwO/CinVQSL3M3he3J/70vYUNsaslMb/VkaQHbHbhiaOQAeCe6BVXYxwvVpcmB8KQ1wU1krHQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SriTB4QRIQ1/f1BA3a7yWcxMUk1Q4WOMjrJFKFXJnOw=;
- b=Th4GkxY634abie7Qfjk6q6R5/jC6uPvy29E+IWeVa2bpg48rd8g/2AbIsslqKi3d0yuwmDTdkxoY5E6JMcI6OsysvSkOGX/X+TXtjzNzRyL76WTBU2AlvsZAfBD+PpEnyp1L9RFUr3F+cexPxYm5rrT36rl10Nryt6bccRw3Z5A=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3581.namprd04.prod.outlook.com
- (2603:10b6:803:46::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2856.19; Fri, 27 Mar
- 2020 17:13:55 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2856.019; Fri, 27 Mar 2020
- 17:13:55 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     "hch@infradead.org" <hch@infradead.org>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v3 09/10] block: export bio_release_pages and
- bio_iov_iter_get_pages
-Thread-Topic: [PATCH v3 09/10] block: export bio_release_pages and
- bio_iov_iter_get_pages
-Thread-Index: AQHWBFfaQ4zF+g4aQ0WlR0YuAT3fbg==
-Date:   Fri, 27 Mar 2020 17:13:55 +0000
-Message-ID: <SN4PR0401MB35981511B1C7A22E055F80F29BCC0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
- <20200327165012.34443-10-johannes.thumshirn@wdc.com>
- <20200327170716.GA11524@infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: c2ab24f9-9170-4937-51ea-08d7d2723af7
-x-ms-traffictypediagnostic: SN4PR0401MB3581:
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN4PR0401MB358199002FF19DA81DB224899BCC0@SN4PR0401MB3581.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1107;
-x-forefront-prvs: 0355F3A3AE
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(39860400002)(346002)(366004)(396003)(376002)(136003)(53546011)(6506007)(71200400001)(66946007)(66556008)(64756008)(7696005)(478600001)(66446008)(86362001)(316002)(66476007)(76116006)(52536014)(5660300002)(54906003)(91956017)(2906002)(4744005)(9686003)(33656002)(81156014)(8676002)(186003)(81166006)(55016002)(6916009)(8936002)(26005)(4326008);DIR:OUT;SFP:1102;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: oWuT4nsxLKq0gT+viAJmIFlW1Pm2gXoVyhtDA6rVuFjiENYqvOSb1L8TBFdTv5XJkhYR5SIN8+9SdJy97miNnYEjvB3lcArzb3F0Zd3w353nxPRR6Q9QTXMED+Kbb1objCrnpyg82IkPEIJdWBcHbhCCtyMIbreaxgLSE2IWqTEYTgzgMHWIFntESdnrVk6Dtmg6IRWJe0OeVWzRLEFdH3nwbRVnGQMR5da09L6CXrewqQStWhhbYIeI+TDZNIzo2uWyvlf/curSfTR6xuipx4bMzC9SkfZBY6NXkGIZynjjKATVyfYEAiljtJY6FwbKbgzdkVg1DezUbuFph/h0GzUWxZVzZyJQSNk8PmBy8Ns6laWZlzZGQ0Z/tBGnU6mlUZL8sls3G8Kr395DyTIl2tIoWz7Y0Y48sJi23ly9e/EOLinoXc0VtrtIsc4WIRR/
-x-ms-exchange-antispam-messagedata: YwE0axh84Cehu2obYq+taYrzWtrgzRdsVSvXebNyTkbrppDVK/F+8rv6Ze54fTzsz2W1Bz2hENKvoJNqEvba3VVS/fbyfEiwagOQVsaPr4W7puQ7PB/b+flWoyGbxJx6HJfPWrQ8U+sniR+hZl4pNA==
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c2ab24f9-9170-4937-51ea-08d7d2723af7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Mar 2020 17:13:55.2766
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: sytMe2mgxt6gczC8T9czE78BEShI9r5+uhzC8ZZyMDgHXYEJoj4IWqfIjAv78c99C17gL/266w9+1vbFGH7NZv5tEFtfJ+PPFVEcvEo4BTo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3581
+        id S1726698AbgC0ROP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 13:14:15 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:47564 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727473AbgC0ROP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 13:14:15 -0400
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200327171413epoutp0365e0cf89981d226704024e4d1563abdf~AOI6OBmlk1864018640epoutp03V
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2020 17:14:13 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200327171413epoutp0365e0cf89981d226704024e4d1563abdf~AOI6OBmlk1864018640epoutp03V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1585329253;
+        bh=HUdcqKZsLPveKDiPJtPprbc+ufYhRwknzSlEiKJ+2+Y=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=GeUZKv4uyeH2fqUYVVysQoj5uXMLHn2MYEc3pM+RwnEDGuNwx0cYMBhO7h7rsrYki
+         yGugSf1eyiePnNpcLN7GAogwoNYBb5GMWZf3/d2UUP2sLwpv+xeRwyTCB/TG1fzqKC
+         pAnOleWWyc+5N99J76vf2K/fsdIvYQNb6yk/PDfw=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20200327171413epcas5p244d575053adb248b70ef41362404a8b7~AOI5m6gOH1294012940epcas5p2h;
+        Fri, 27 Mar 2020 17:14:13 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A6.4F.04778.4643E7E5; Sat, 28 Mar 2020 02:14:12 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200327171411epcas5p17f4457f9fd61800257607059b9506fb2~AOI4bOrYF3139031390epcas5p1s;
+        Fri, 27 Mar 2020 17:14:11 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200327171411epsmtrp1cfa33d9a0beee8ebaac5dc1f3d715a61~AOI4aXG_r0124901249epsmtrp1J;
+        Fri, 27 Mar 2020 17:14:11 +0000 (GMT)
+X-AuditID: b6c32a4a-353ff700000012aa-b6-5e7e3464e4bc
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        FD.3E.04158.3643E7E5; Sat, 28 Mar 2020 02:14:11 +0900 (KST)
+Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
+        [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200327171409epsmtip11bf4df68a2f039d21812dc58c656a1f4~AOI2lVx3V0050600506epsmtip1i;
+        Fri, 27 Mar 2020 17:14:09 +0000 (GMT)
+From:   Alim Akhtar <alim.akhtar@samsung.com>
+To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
+        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
+        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v4 0/5] exynos-ufs: Add support for UFS HCI
+Date:   Fri, 27 Mar 2020 22:36:33 +0530
+Message-Id: <20200327170638.17670-1-alim.akhtar@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpileLIzCtJLcpLzFFi42LZdlhTXTfFpC7OYG2LrcWDedvYLF7+vMpm
+        8Wn9MlaL+UfOsVqcP7+B3eLmlqMsFpseX2O1uLxrDpvFjPP7mCy6r+9gs1h+/B+TReveI+wW
+        S7feZHTg9bjc18vksWlVJ5vH5iX1Hi0n97N4fHx6i8Wjb8sqRo/Pm+Q82g90MwVwRHHZpKTm
+        ZJalFunbJXBlzO+azlYwS6Ti5uZnzA2MB/m7GDk5JARMJLasWcPexcjFISSwm1Hi8YubjCAJ
+        IYFPjBKzHqhBJL4xSuw78pwdpmP1753sEEV7GSU6rqRDFLUwSRz784YZJMEmoC1xd/oWJhBb
+        RCBA4tL7g2wgRcwC85gkFj3qAUsIC1hL9B/6wAZiswioStw8/h9sNa+AjcS8H3dYIbbJS6ze
+        cIAZpFlC4AibxPFfV4CaOYAcF4nT84whaoQlXh3fAnWdlMTL/jZ2iJJsiZ5dUCU1EkvnHWOB
+        sO0lDlyZwwJSwiygKbF+lz5ImFmAT6L39xOo4bwSHW1CENWqEs3vrkJ1SktM7O6GOsxD4vi/
+        l8yQYIiV2LvjJcsERplZCEMXMDKuYpRMLSjOTU8tNi0wykst1ytOzC0uzUvXS87P3cQIThla
+        XjsYl53zOcQowMGoxMO74mptnBBrYllxZe4hRgkOZiUR3qeRNXFCvCmJlVWpRfnxRaU5qcWH
+        GKU5WJTEeSexXo0REkhPLEnNTk0tSC2CyTJxcEo1ME41SfcIXZN0zITzhoX6nC8tM0407e12
+        e6kYKJVnYMin62r2pPxOQpbzh2TZ4vywt0ZxzQ1fnGT4v++eeyB5ckLxs7tdr45eff5g1Z7M
+        61F8XJEz7ffeXql469futuIH0Vt+bmV7duu86fMtjHZdP7amzQidsLPjdUu95Y/7M+X1PzcZ
+        1rg9mqLEUpyRaKjFXFScCAD1WVKuFQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrJLMWRmVeSWpSXmKPExsWy7bCSnG6ySV2cwekL+hYP5m1js3j58yqb
+        xaf1y1gt5h85x2px/vwGdoubW46yWGx6fI3V4vKuOWwWM87vY7Lovr6DzWL58X9MFq17j7Bb
+        LN16k9GB1+NyXy+Tx6ZVnWwem5fUe7Sc3M/i8fHpLRaPvi2rGD0+b5LzaD/QzRTAEcVlk5Ka
+        k1mWWqRvl8CVMb9rOlvBLJGKm5ufMTcwHuTvYuTkkBAwkVj9eyd7FyMXh5DAbkaJP3tvMUEk
+        pCWub5zADmELS6z89xyqqIlJYvX0x2BFbALaEnenbwGzRQSCJO6tWcsKUsQssIpJorP3LCNI
+        QljAWqL/0Ac2EJtFQFXi5vH/YHFeARuJeT/usEJskJdYveEA8wRGngWMDKsYJVMLinPTc4sN
+        C4zyUsv1ihNzi0vz0vWS83M3MYIDVEtrB+OJE/GHGAU4GJV4eFdcrY0TYk0sK67MPcQowcGs
+        JML7NLImTog3JbGyKrUoP76oNCe1+BCjNAeLkjivfP6xSCGB9MSS1OzU1ILUIpgsEwenVAOj
+        8izNLPbt56LfNE5gm+Kx4uIfcf7nfgmBP030lL5dzr9b+75KYY2ogAJTvEZwbbfYu+aEG7mS
+        Aiuub2g6tXQ+T8VfB77I/4ofZ9+6e8HR79AtBs3emiymhIr3CRvDpvulRQteVjsb7JivMc/g
+        t+Z2k+0r0xVOeQQoZwl+fLrh/LcfjEdZc3yUWIozEg21mIuKEwEBvsv+TAIAAA==
+X-CMS-MailID: 20200327171411epcas5p17f4457f9fd61800257607059b9506fb2
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200327171411epcas5p17f4457f9fd61800257607059b9506fb2
+References: <CGME20200327171411epcas5p17f4457f9fd61800257607059b9506fb2@epcas5p1.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 27/03/2020 18:07, Christoph Hellwig wrote:=0A=
-> On Sat, Mar 28, 2020 at 01:50:11AM +0900, Johannes Thumshirn wrote:=0A=
->> +EXPORT_SYMBOL(bio_release_pages);=0A=
->>   =0A=
->>   static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *=
-iter)=0A=
->>   {=0A=
->> @@ -1111,6 +1112,7 @@ int bio_iov_iter_get_pages(struct bio *bio, struct=
- iov_iter *iter)=0A=
->>   		bio_set_flag(bio, BIO_NO_PAGE_REF);=0A=
->>   	return bio->bi_vcnt ? 0 : ret;=0A=
->>   }=0A=
->> +EXPORT_SYMBOL(bio_iov_iter_get_pages);=0A=
-> =0A=
-> EXPORT_SYMBOL_GPL, please.=0A=
-> =0A=
-=0A=
-Sure, only for bio_iov_iter_get_pages or bio_release_pages as well?=0A=
-=0A=
-I couldn't find a clear pattern in block/bio.c, it's _GPL 7 times vs 28 =0A=
-times without _GPL.=0A=
-=0A=
--- =0A=
-Johannes Thumshirn=0A=
-System Software Group=0A=
-=0A=
-Western Digital=AE=0A=
+This patch-set introduces UFS (Universal Flash Storage) host controller support
+for Samsung family SoC. Mostly, it consists of UFS PHY and host specific driver.
+
+- Changes since v3:
+* Addressed Kishon's and Avir's review comments
+* fixed make dt_binding_check error as pointed by Rob 
+
+- Changes since v2:
+* fixed build warning by kbuild test robot 
+* Added Reported-by tags
+
+- Changes since v1:
+* fixed make dt_binding_check error as pointed by Rob
+* Addressed Krzysztof's review comments
+* Added Reviewed-by tags
+
+ 
+patch 1/5: define devicetree bindings for UFS PHY
+patch 2/5: Adds UFS PHY driver
+patch 3/5: define devicetree bindings for UFS HCI 
+patch 4/5: Adds Samsung UFS HCI driver
+patch 5/5: Enabled UFS on exynos7 platform
+
+Note: This series is based on Linux-5.6-rc6 (commit: fb33c6510d55)
+
+
+Alim Akhtar (5):
+  dt-bindings: phy: Document Samsung UFS PHY bindings
+  phy: samsung-ufs: add UFS PHY driver for samsung SoC
+  Documentation: devicetree: ufs: Add DT bindings for exynos UFS host
+    controller
+  scsi: ufs-exynos: add UFS host support for Exynos SoCs
+  arm64: dts: Add node for ufs exynos7
+
+ .../bindings/phy/samsung,ufs-phy.yaml         |   62 +
+ .../devicetree/bindings/ufs/ufs-exynos.txt    |  104 ++
+ .../boot/dts/exynos/exynos7-espresso.dts      |   16 +
+ arch/arm64/boot/dts/exynos/exynos7.dtsi       |   44 +-
+ drivers/phy/samsung/Kconfig                   |    9 +
+ drivers/phy/samsung/Makefile                  |    1 +
+ drivers/phy/samsung/phy-exynos7-ufs.h         |   85 +
+ drivers/phy/samsung/phy-samsung-ufs.c         |  311 ++++
+ drivers/phy/samsung/phy-samsung-ufs.h         |  100 ++
+ drivers/scsi/ufs/Kconfig                      |   12 +
+ drivers/scsi/ufs/Makefile                     |    1 +
+ drivers/scsi/ufs/ufs-exynos.c                 | 1399 +++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos.h                 |  268 ++++
+ drivers/scsi/ufs/unipro.h                     |   41 +
+ include/linux/phy/phy-samsung-ufs.h           |   70 +
+ 15 files changed, 2521 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ create mode 100644 drivers/phy/samsung/phy-exynos7-ufs.h
+ create mode 100644 drivers/phy/samsung/phy-samsung-ufs.c
+ create mode 100644 drivers/phy/samsung/phy-samsung-ufs.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.h
+ create mode 100644 include/linux/phy/phy-samsung-ufs.h
+
+-- 
+2.17.1
+
