@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F01B7C2D0ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C34EC2D0EE
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C40BB20857
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6ADF220857
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727706AbgC0Qrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 12:47:52 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41726 "EHLO mx2.suse.de"
+        id S1727725AbgC0Qrx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:47:53 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41712 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727549AbgC0Qrw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Mar 2020 12:47:52 -0400
+        id S1727287AbgC0Qrx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Mar 2020 12:47:53 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 3B04EADE3;
-        Fri, 27 Mar 2020 16:47:51 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id E4059ADD6;
+        Fri, 27 Mar 2020 16:47:50 +0000 (UTC)
 From:   mwilck@suse.com
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Arun Easi <aeasi@marvell.com>, Quinn Tran <qutran@marvell.com>,
@@ -32,9 +32,9 @@ Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
         James Bottomley <jejb@linux.vnet.ibm.com>,
         Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
         Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v3 2/5] scsi: qla2xxx: check UNLOADING before posting async work
-Date:   Fri, 27 Mar 2020 17:47:08 +0100
-Message-Id: <20200327164711.5358-3-mwilck@suse.com>
+Subject: [PATCH v3 1/5] scsi: qla2xxx: set UNLOADING before waiting for session deletion
+Date:   Fri, 27 Mar 2020 17:47:07 +0100
+Message-Id: <20200327164711.5358-2-mwilck@suse.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200327164711.5358-1-mwilck@suse.com>
 References: <20200327164711.5358-1-mwilck@suse.com>
@@ -47,38 +47,86 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Martin Wilck <mwilck@suse.com>
 
-qlt_free_session_done() tries to post async PRLO / LOGO, and
-waits for the completion of these async commands. If UNLOADING
-is set, this is doomed to timeout, because the async logout
-command will never complete.
+The purpose of the UNLOADING flag is to avoid port login procedures
+to continue when a controller is in the process of shutting down.
+It makes sense to set this flag before starting session teardown.
 
-The only way to avoid waiting pointlessly is to fail posting
-these commands in the first place if the driver is in UNLOADING state.
-In general, posting any command should be avoided when the driver
-is UNLOADING.
-
-With this patch, "rmmod qla2xxx" completes without noticeable delay.
+Furthermore, use atomic test_and_set_bit() to avoid the shutdown
+being run multiple times in parallel. In qla2x00_disable_board_on_pci_error(),
+the test for UNLOADING is postponed until after the check for an already
+disabled PCI board.
 
 Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
 Signed-off-by: Martin Wilck <mwilck@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c | 32 ++++++++++++++------------------
+ 1 file changed, 14 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index ce0dabb..eb25cf5 100644
+index d9072ea..ce0dabb 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4933,6 +4933,9 @@ int qla2x00_post_async_##name##_work(		\
- {						\
- 	struct qla_work_evt *e;			\
- 						\
-+	if (test_bit(UNLOADING, &vha->dpc_flags)) \
-+		return QLA_FUNCTION_FAILED;	\
-+						\
- 	e = qla2x00_alloc_work(vha, type);	\
- 	if (!e)					\
- 		return QLA_FUNCTION_FAILED;	\
+@@ -3732,6 +3732,13 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	}
+ 	qla2x00_wait_for_hba_ready(base_vha);
+ 
++	/*
++	 * if UNLOADING flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
++
+ 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+ 	    IS_QLA28XX(ha)) {
+ 		if (ha->flags.fw_started)
+@@ -3750,15 +3757,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
+-
+ 	qla_nvme_delete(base_vha);
+ 
+ 	dma_free_coherent(&ha->pdev->dev,
+@@ -6628,13 +6626,6 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 	struct pci_dev *pdev = ha->pdev;
+ 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+ 
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+ 	ql_log(ql_log_warn, base_vha, 0x015b,
+ 	    "Disabling adapter.\n");
+ 
+@@ -6645,9 +6636,14 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	qla2x00_wait_for_sess_deletion(base_vha);
++	/*
++	 * if UNLOADING flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
+ 
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
++	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+ 	qla2x00_delete_all_vps(ha, base_vha);
+ 
 -- 
 2.25.1
 
