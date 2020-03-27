@@ -2,142 +2,93 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A91AFC2D0E7
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 09:53:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5C3C2D0E8
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 09:53:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8071D20716
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 09:53:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 638E020717
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 09:53:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="X3vePnOg"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QBzBkwQX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726133AbgC0JxJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 05:53:09 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:43773 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726096AbgC0JxJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 05:53:09 -0400
-Received: by mail-wr1-f68.google.com with SMTP id m11so4722342wrx.10
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2020 02:53:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=nGE3jUS7mJMmKSh14Ouz5xS6ONRyETt8E6L1noBcP0c=;
-        b=X3vePnOg3dl+w4Ufwf1TdXU0v03Y1Vy+KhHZQbkdEfpAVsnmreDfPcPnK3KGGEqTSF
-         OEwQ/PQncRyyOw32YvyMj1+176NgebxLijedP/1/gL3ZAqRDWgJJ1tgUxIvM6kNCoQ3h
-         SXTscbXwzGxK0YAJ5dAy4jwfUcu+Z045ryFmY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=nGE3jUS7mJMmKSh14Ouz5xS6ONRyETt8E6L1noBcP0c=;
-        b=diLTX4R3WGogbCUqVu/HfB8dex4FOmbZ5sWAq/eOo9jgZ/Ltz+t22BfSkgyATu5mTT
-         yVw9s9mPpVHgobrPTlBFKKWWHgZgDxNbVnNCTWb7FXODy7ShJVTXYbHcdO1SHd7/tfvV
-         pZP0Mkn3JMciEybRR0bKLtjSsByROF1r7vukkO64YmXgGRB4q0iii8/Pwj+HF5NWu9wz
-         2vQm0GtpOxu/QXOYj+w/iXpIoJlNJbiz0lD/ada/nzKze9XcMA5vV4Qo2a0WI4TivC+N
-         9uPTyZZunjJlLJWpBRhfi9m2IElzzho0Vy4st7G8s5hDAKyH1PEpY7qOmfHeIDHDnMAy
-         8rXg==
-X-Gm-Message-State: ANhLgQ3KHrDDRDOruwARjEHpIUe3y8PkW6icAh9ouGeoVhZBMGaktkjC
-        +HPQ7hVJ8Go6879sA4zr1gDghw==
-X-Google-Smtp-Source: ADFU+vth/i6ss9n9Xc8K7b8bZ/4r30Eq+N8qC8hdBzWPhOWRXrIH5ocBOgjwEX5rgyx81u4qrD9pVA==
-X-Received: by 2002:adf:9526:: with SMTP id 35mr15031929wrs.164.1585302787996;
-        Fri, 27 Mar 2020 02:53:07 -0700 (PDT)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id b187sm7436029wmb.42.2020.03.27.02.53.04
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 27 Mar 2020 02:53:07 -0700 (PDT)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, stable@vger.kernel.org,
-        amit@kernel.org, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2] mpt3sas: Fix kernel panic observed on soft HBA unplug
-Date:   Fri, 27 Mar 2020 05:52:43 -0400
-Message-Id: <1585302763-23007-1-git-send-email-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1726742AbgC0Jxl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 05:53:41 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:59386 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726193AbgC0Jxj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 05:53:39 -0400
+X-UUID: 70eaafd801424d35bd9649492b8e195f-20200327
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=w7oxstLD2GuzbIKhk9bnNyPTXe7NJEzoA3j++6T3ySo=;
+        b=QBzBkwQXBm+f4vWbHIUUJNPHiM0p45Rf3xbEmIWcq/q5qROZnBPQEEW6wwhI2OtSln95CMXADkIoMFuKW/0LE+enzWxMPDZ7Y44H9V2jjECgPsaMmFPKtxBwqmhACoVc9ryqQ9WWl9+QjmFp0g+H+RUlYP217Ui31S/fGgTfEfY=;
+X-UUID: 70eaafd801424d35bd9649492b8e195f-20200327
+Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 304698118; Fri, 27 Mar 2020 17:53:33 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Fri, 27 Mar 2020 17:53:30 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 27 Mar 2020 17:53:30 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v3 1/2] scsi: ufs: export ufshcd_link_recovery for vendor's error recovery
+Date:   Fri, 27 Mar 2020 17:53:28 +0800
+Message-ID: <20200327095329.10083-2-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200327095329.10083-1-stanley.chu@mediatek.com>
+References: <20200327095329.10083-1-stanley.chu@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-TM-SNTS-SMTP: E08D348CC037095C24DB8AD27AA26EF5FAEBA49D95044037708CACD30FC09F102000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Generic protection fault type kernel panic is observed when user
-performs soft(ordered) HBA unplug operation while IOs are running
-on drives connected to HBA.
-
-When user performs ordered HBA removal operation then kernel calls
-PCI device's .remove() call back function where driver is flushing out
-all the outstanding SCSI IO commands with DID_NO_CONNECT host byte and
-also un-maps sg buffers allocated for these IO commands.
-But in the ordered HBA removal case (unlike of real HBA hot unplug)
-HBA device is still alive and hence HBA hardware is performing the
-DMA operations to those buffers on the system memory which are already
-unmapped while flushing out the outstanding SCSI IO commands
-and this leads to Kernel panic.
-
-This bug got introduced from below commit,
-commit c666d3be99c000bb889a33353e9be0fa5808d3de
-("scsi: mpt3sas: wait for and flush running commands on shutdown/unload")
-
-Fix:
-Don't flush out the outstanding IOs from .remove() path in case of
-ordered HBA removal since HBA will be still alive in this case and
-it can complete the outstanding IOs. Flush out the outstanding IOs
-only in case of 'physical HBA hot unplug' where their won't be any
-communication with the HBA.
-
-During shutdown also it is possible that HBA hardware can perform
-DMA operations on those outstanding IO buffers which are completed
-with DID_NO_CONNECT by the driver from .shutdown(). So same above fix
-is applied in shutdown path as well.
-
-In Summary it is always safe to drop the outstanding commands when HBA
-is inaccessible. Such as when permanent PCI failure happens, HBA is
-in non-operational state and when someone does the real HBA hot unplug
-operation. Since driver knows that HBA is inaccessible during these
-cases, so it is always safe to drop the outstanding commands instead
-of waiting for SCSI error recovery to kicks start and clear these
-outstanding commands.
-
-Cc: stable@vger.kernel.org #v4.14.174+
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
-v1:
-    Update the patch description.
-v2:
-    Update the patch description by adding summary paragraph.
-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 778d5e6..04a40af 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -9908,8 +9908,8 @@ static void scsih_remove(struct pci_dev *pdev)
- 
- 	ioc->remove_host = 1;
- 
--	mpt3sas_wait_for_commands_to_complete(ioc);
--	_scsih_flush_running_cmds(ioc);
-+	if (!pci_device_is_present(pdev))
-+		_scsih_flush_running_cmds(ioc);
- 
- 	_scsih_fw_event_cleanup_queue(ioc);
- 
-@@ -9992,8 +9992,8 @@ static void scsih_remove(struct pci_dev *pdev)
- 
- 	ioc->remove_host = 1;
- 
--	mpt3sas_wait_for_commands_to_complete(ioc);
--	_scsih_flush_running_cmds(ioc);
-+	if (!pci_device_is_present(pdev))
-+		_scsih_flush_running_cmds(ioc);
- 
- 	_scsih_fw_event_cleanup_queue(ioc);
- 
--- 
-1.8.3.1
+ZXhwb3J0IHVmc2hjZF9saW5rX3JlY292ZXJ5IHRvIGFsbG93IHZlbmRvcnMgdG8gcmVjb3ZlciBm
+YWlsZWQgbGluaw0KaW4gdmVuZG9yJ3MgY2FsbGJhY2tzLg0KDQpTaWduZWQtb2ZmLWJ5OiBTdGFu
+bGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KUmV2aWV3ZWQtYnk6IEF2cmkgQWx0
+bWFuIDxhdnJpLmFsdG1hbkB3ZGMuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2Qu
+YyB8IDMgKystDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCB8IDEgKw0KIDIgZmlsZXMgY2hh
+bmdlZCwgMyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2
+ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KaW5kZXgg
+YjQyOTRiMmM2ZjRhLi4yMjc2NjBhMWE0NDYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZz
+L3Vmc2hjZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQpAQCAtMzc1Niw3ICsz
+NzU2LDcgQEAgc3RhdGljIGludCB1ZnNoY2RfdWljX2NoYW5nZV9wd3JfbW9kZShzdHJ1Y3QgdWZz
+X2hiYSAqaGJhLCB1OCBtb2RlKQ0KIAlyZXR1cm4gcmV0Ow0KIH0NCiANCi1zdGF0aWMgaW50IHVm
+c2hjZF9saW5rX3JlY292ZXJ5KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQoraW50IHVmc2hjZF9saW5r
+X3JlY292ZXJ5KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogew0KIAlpbnQgcmV0Ow0KIAl1bnNpZ25l
+ZCBsb25nIGZsYWdzOw0KQEAgLTM3ODMsNiArMzc4Myw3IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2xp
+bmtfcmVjb3Zlcnkoc3RydWN0IHVmc19oYmEgKmhiYSkNCiANCiAJcmV0dXJuIHJldDsNCiB9DQor
+RVhQT1JUX1NZTUJPTF9HUEwodWZzaGNkX2xpbmtfcmVjb3ZlcnkpOw0KIA0KIHN0YXRpYyBpbnQg
+X191ZnNoY2RfdWljX2hpYmVybjhfZW50ZXIoc3RydWN0IHVmc19oYmEgKmhiYSkNCiB7DQpkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCBiL2RyaXZlcnMvc2NzaS91ZnMvdWZz
+aGNkLmgNCmluZGV4IDlmMTU3NmJiZmM1MC4uYjdiZDgxNzk1YzI0IDEwMDY0NA0KLS0tIGEvZHJp
+dmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0K
+QEAgLTc5NSw2ICs3OTUsNyBAQCBpbnQgdWZzaGNkX2FsbG9jX2hvc3Qoc3RydWN0IGRldmljZSAq
+LCBzdHJ1Y3QgdWZzX2hiYSAqKik7DQogdm9pZCB1ZnNoY2RfZGVhbGxvY19ob3N0KHN0cnVjdCB1
+ZnNfaGJhICopOw0KIGludCB1ZnNoY2RfaGJhX2VuYWJsZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKTsN
+CiBpbnQgdWZzaGNkX2luaXQoc3RydWN0IHVmc19oYmEgKiAsIHZvaWQgX19pb21lbSAqICwgdW5z
+aWduZWQgaW50KTsNCitpbnQgdWZzaGNkX2xpbmtfcmVjb3Zlcnkoc3RydWN0IHVmc19oYmEgKmhi
+YSk7DQogaW50IHVmc2hjZF9tYWtlX2hiYV9vcGVyYXRpb25hbChzdHJ1Y3QgdWZzX2hiYSAqaGJh
+KTsNCiB2b2lkIHVmc2hjZF9yZW1vdmUoc3RydWN0IHVmc19oYmEgKik7DQogaW50IHVmc2hjZF91
+aWNfaGliZXJuOF9leGl0KHN0cnVjdCB1ZnNfaGJhICpoYmEpOw0KLS0gDQoyLjE4LjANCg==
 
