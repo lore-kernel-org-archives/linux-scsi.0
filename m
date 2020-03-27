@@ -2,42 +2,75 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C36B6C2D0EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9BA1C43331
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A00E120B80
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9785C206E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ErzSBswD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727751AbgC0Qrz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 12:47:55 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41790 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727716AbgC0Qry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Mar 2020 12:47:54 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id E9056AED8;
-        Fri, 27 Mar 2020 16:47:51 +0000 (UTC)
-From:   mwilck@suse.com
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arun Easi <aeasi@marvell.com>, Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>
-Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        James Bottomley <jejb@linux.vnet.ibm.com>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v3 4/5] scsi: qla2xxx: avoid sending iocbs when firmware is stopped
-Date:   Fri, 27 Mar 2020 17:47:10 +0100
-Message-Id: <20200327164711.5358-5-mwilck@suse.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200327164711.5358-1-mwilck@suse.com>
-References: <20200327164711.5358-1-mwilck@suse.com>
+        id S1727798AbgC0QuT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:50:19 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:2564 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727666AbgC0QuS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 12:50:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1585327818; x=1616863818;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=oVftKbwfnWY4xe1eo0bpwRwBmp1J09p+gkHG1l+XKYA=;
+  b=ErzSBswDNKkrxoO4iecb1mRMP6fKV/FyElh63sCNWcc2AJG7P09as45x
+   TV8TsAs9+yOmpng3w/yCRY44lHyNQdV8HZmnB/gKxPOYuZMpXFEDZZIXQ
+   n4AWY4xxKnSNPvQMW1PgXqKpKMXQs+hIJOtIyvUo4Zk9mhK+TC+IqQ/BZ
+   ZxxflytPIIlIxFhd+wfM68CFbTxTc6TxhUKjojGNJM4aevXoOo4dgnWz2
+   I8ujQq16UfKUgvhVAE332IguOD9OudChcUsS613IfDxWYfEt6FQ1mC670
+   Uw6A9KKAmMJ1+oiJ8M9+2Kv/iC5kDBoE05BTwJS8oukdQuId0GIrxI8TA
+   A==;
+IronPort-SDR: iLrtkVQphOYLb/b4mySNdoqgKC1d8dRLRKoXcPK0LAqt1m9U26VBKv7cXVdJARaeBsRfURjoxu
+ AvLLD0naEeRAle6eNj1Xtl5UZ4BcqlWGeSfCAesr8khSP/OwEmDm3aLFL0ofRRwoy8aS+L2TiH
+ clq4CfoIz0CpxbsblSCb7yeXegdJJFvkDBqsPihqhnryDMOWUKUmAmHU8NDGpthq0qPO35uvK8
+ wYQBToai8hefpXm1Fwp7VF4O1AU0jam8x1Uuy1y8btTv3+ptdj8Prcob35DSYUypDrTmhC1Vi9
+ KA4=
+X-IronPort-AV: E=Sophos;i="5.72,313,1580745600"; 
+   d="scan'208";a="242210429"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2020 00:50:17 +0800
+IronPort-SDR: pHMRElGYoE+EyGfEl1NKDyzsPWRwPB9M4NP/VR9m2ZAQFwYRBGa55PT+xSGgP8kwMlLItPzeLX
+ dOSbjTKYRJuqk89F7TjZAOGIdEI1P7koYHlVJ+NqWrv9vDEaHz+d/3A676DksI778lqQP9/r/j
+ OupQMbYjD6B2fFMQoEj7mRXRokgiXIpPdrGTRx7azchfJVxxq8HQiSPh1C1t7DDFGm459ktFim
+ A0UNxvDhUGiUkFen5HzA3rEQ46WOyrVVbUA+Z9fCKUo+/ek4R14OuAMAXGfVZLmuHh0DBvt/XO
+ 4gHmZp+R0pBfLSC58CdwkP/q
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2020 09:41:51 -0700
+IronPort-SDR: UNR1/lS7I37Z4IVey3UuPUL58K4ZEXjy+aXG+HsnSoPLpVzB2HinMLDFDHofH9xyxeTjRDK1i4
+ Aw+G7rol0KyTVgW5VjrYiUwdFgi+8QctcXlWPb9JkjhIsa9xysavsRxNZO8Zh5HMsRS0TqWQPT
+ 6YNwkbaFRM57z+fuZP/yyHD6KlGf2BlZRVoaIhCI8jkqCllH1DOgXjR4BE1of7aEw2tVaGHCK1
+ yT3SyI513XnHjPHFOA8TSep1WMyeF0sK1SkWB6naroYkrmRjvMeTI9gBnibJ5X+S6YlbKFSejL
+ 8Mo=
+WDCIronportException: Internal
+Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2020 09:50:16 -0700
+From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v3 00/10] Introduce Zone Append for writing to zoned block devices
+Date:   Sat, 28 Mar 2020 01:50:02 +0900
+Message-Id: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -45,125 +78,99 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+The upcoming NVMe ZNS Specification will define a new type of write
+command for zoned block devices, zone append.
 
-Since commit 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip"),
-it is possible that FC commands are scheduled after the adapter firmware
-has been shut down. IO sent to the firmware in this situation hangs.
-Avoid starting iocbs in this situation.
+When when writing to a zoned block device using zone append, the start
+sector of the write is pointing at the start LBA of the zone to write to.
+Upon completion the block device will respond with the position the data
+has been placed in the zone. This from a high level perspective can be
+seen like a file system's block allocator, where the user writes to a
+file and the file-system takes care of the data placement on the device.
 
-Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/qla2xxx/qla_inline.h |  3 +++
- drivers/scsi/qla2xxx/qla_iocb.c   | 23 +++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_nvme.c   |  3 +++
- 3 files changed, 29 insertions(+)
+In order to fully exploit the new zone append command in file-systems and
+other interfaces above the block layer, we choose to emulate zone append
+in SCSI and null_blk. This way we can have a single write path for both
+file-systems and other interfaces above the block-layer, like io_uring on
+zoned block devices, without having to care too much about the underlying
+characteristics of the device itself.
 
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index 364b3db..f4352f1 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -322,6 +322,9 @@ qla_83xx_start_iocbs(struct qla_qpair *qpair)
- {
- 	struct req_que *req = qpair->req;
- 
-+	if (!qpair->vha->hw->flags.fw_started)
-+		return;
-+
- 	req->ring_index++;
- 	if (req->ring_index == req->length) {
- 		req->ring_index = 0;
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 182bd68c..587ba35 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -459,6 +459,9 @@ qla2x00_start_iocbs(struct scsi_qla_host *vha, struct req_que *req)
- 	struct qla_hw_data *ha = vha->hw;
- 	device_reg_t *reg = ISP_QUE_REG(ha, req->id);
- 
-+	if (!ha->flags.fw_started)
-+		return;
-+
- 	if (IS_P3P_TYPE(ha)) {
- 		qla82xx_start_iocbs(vha);
- 	} else {
-@@ -1603,6 +1606,9 @@ qla24xx_start_scsi(srb_t *sp)
- 	struct scsi_qla_host *vha = sp->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 
-+	if (!ha->flags.fw_started)
-+		return QLA_FUNCTION_FAILED;
-+
- 	/* Setup device pointers. */
- 	req = vha->req;
- 
-@@ -1740,6 +1746,9 @@ qla24xx_dif_start_scsi(srb_t *sp)
- 
- #define QDSS_GOT_Q_SPACE	BIT_0
- 
-+	if (!ha->flags.fw_started)
-+		return QLA_FUNCTION_FAILED;
-+
- 	/* Only process protection or >16 cdb in this routine */
- 	if (scsi_get_prot_op(cmd) == SCSI_PROT_NORMAL) {
- 		if (cmd->cmd_len <= 16)
-@@ -1921,6 +1930,9 @@ qla2xxx_start_scsi_mq(srb_t *sp)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_qpair *qpair = sp->qpair;
- 
-+	if (!ha->flags.fw_started)
-+		return QLA_FUNCTION_FAILED;
-+
- 	/* Acquire qpair specific lock */
- 	spin_lock_irqsave(&qpair->qp_lock, flags);
- 
-@@ -2062,6 +2074,11 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
- 
- #define QDSS_GOT_Q_SPACE	BIT_0
- 
-+	if (!ha->flags.fw_started) {
-+		cmd->result = DID_NO_CONNECT << 16;
-+		return QLA_FUNCTION_FAILED;
-+	}
-+
- 	/* Check for host side state */
- 	if (!qpair->online) {
- 		cmd->result = DID_NO_CONNECT << 16;
-@@ -3224,6 +3241,9 @@ qla82xx_start_scsi(srb_t *sp)
- 	struct req_que *req = NULL;
- 	struct rsp_que *rsp = NULL;
- 
-+	if (!ha->flags.fw_started)
-+		return QLA_FUNCTION_FAILED;
-+
- 	/* Setup device pointers. */
- 	reg = &ha->iobase->isp82;
- 	cmd = GET_CMD_SP(sp);
-@@ -3676,6 +3696,9 @@ qla2x00_start_sp(srb_t *sp)
- 	void *pkt;
- 	unsigned long flags;
- 
-+	if (!ha->flags.fw_started)
-+		return QLA_FUNCTION_FAILED;
-+
- 	spin_lock_irqsave(qp->qp_lock_ptr, flags);
- 	pkt = __qla2x00_alloc_iocbs(sp->qpair, sp);
- 	if (!pkt) {
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 84e2a980..4f36e73 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -369,6 +369,9 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
- 	struct nvmefc_fcp_req *fd = nvme->u.nvme.desc;
- 	uint32_t        rval = QLA_SUCCESS;
- 
-+	if (!ha->flags.fw_started)
-+		return QLA_FUNCTION_FAILED;
-+
- 	/* Setup qpair pointers */
- 	req = qpair->req;
- 	tot_dsds = fd->sg_cnt;
+The emulation works by providing a cache of each zone's write pointer, so
+zone append issued to the disk can be translated to a write with a
+starting LBA of the write pointer. This LBA is used as input zone number
+for the write pointer lookup in the zone write pointer offset cache and
+the cached offset is then added to the LBA to get the actual position to
+write the data. In SCSI we then turn the REQ_OP_ZONE_APPEND request into a
+WRITE(16) command. Upon successful completion of the WRITE(16), the cache
+will be updated to the new write pointer location and the written sector
+will be noted in the request. On error the cache entry will be marked as
+invalid and on the next write an update of the write pointer will be
+scheduled, before issuing the actual write.
+
+In order to reduce memory consumption, the only cached item is the offset
+of the write pointer from the start of the zone, everything else can be
+calculated. On an example drive with 52156 zones, the additional memory
+consumption of the cache is thus 52156 * 4 = 208624 Bytes or 51 4k Byte
+pages. The performance impact is neglectable for a spinning drive.
+
+For null_blk the emulation is way simpler, as null_blk's zoned block
+device emulation support already caches the write pointer position, so we
+only need to report the position back to the upper layers. Additional
+caching is not needed here.
+
+Furthermore we have converted zonefs to run use ZONE_APPEND for synchronous
+direct I/Os.
+
+The series is based on Jens' for-next branch, with HEAD == 1385d15e8a0d
+("libata: remove references to ATA_DEBUG")
+
+Changes since v2:
+- Remove iomap implementation and directly issue zone-appends from within
+  zonefs (Christoph)
+- Drop already merged patch
+- Rebase onto new for-next branch
+
+Changes since v1:
+- Too much to mention, treat as a completely new series.
+
+Damien Le Moal (3):
+  block: Introduce zone write pointer offset caching
+  null_blk: Cleanup zoned device initialization
+  null_blk: Support REQ_OP_ZONE_APPEND
+
+Johannes Thumshirn (6):
+  block: provide fallbacks for blk_queue_zone_is_seq and
+    blk_queue_zone_no
+  block: introduce blk_req_zone_write_trylock
+  scsi: sd_zbc: factor out sanity checks for zoned commands
+  scsi: sd_zbc: emulate ZONE_APPEND commands
+  block: export bio_release_pages and bio_iov_iter_get_pages
+  zonefs: use REQ_OP_ZONE_APPEND for sync DIO
+
+Keith Busch (1):
+  block: Introduce REQ_OP_ZONE_APPEND
+
+ block/bio.c                    |  74 ++++++-
+ block/blk-core.c               |  52 +++++
+ block/blk-map.c                |   2 +-
+ block/blk-mq.c                 |  27 +++
+ block/blk-settings.c           |  19 ++
+ block/blk-sysfs.c              |  15 +-
+ block/blk-zoned.c              |  93 ++++++++-
+ block/blk.h                    |   4 +-
+ drivers/block/null_blk.h       |  14 +-
+ drivers/block/null_blk_main.c  |  35 ++--
+ drivers/block/null_blk_zoned.c |  51 ++++-
+ drivers/scsi/scsi_lib.c        |   1 +
+ drivers/scsi/sd.c              |  28 ++-
+ drivers/scsi/sd.h              |  36 +++-
+ drivers/scsi/sd_zbc.c          | 352 +++++++++++++++++++++++++++++++--
+ fs/zonefs/super.c              |  92 ++++++++-
+ include/linux/bio.h            |  22 +--
+ include/linux/blk_types.h      |  14 ++
+ include/linux/blkdev.h         |  42 +++-
+ 19 files changed, 877 insertions(+), 96 deletions(-)
+
 -- 
-2.25.1
+2.24.1
 
