@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C4BCC2D0F4
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99D53C2BA12
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 529EF20BED
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71AC421556
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:50:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Fvvg6Wq3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="OGO8glJW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727896AbgC0Quf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 12:50:35 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:2590 "EHLO
+        id S1727898AbgC0Quh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:50:37 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:2612 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727143AbgC0Quc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 12:50:32 -0400
+        with ESMTP id S1727895AbgC0Quf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 12:50:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585327831; x=1616863831;
+  t=1585327835; x=1616863835;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=hO0jQxdyY1ykEreRRj8II7pjB7WCTRWEQg4KbI4Pvtc=;
-  b=Fvvg6Wq3LFdh1FVdar/um968xP5LWue7cGT4WU2Kpo0d1HT7D4J/prIu
-   2X69zAeXiNWJup/tE8INcg+rLJfBYV0Sc8cc6WCZU0xqQjxi783YeTXyb
-   ubHFrmNewDADxWqgEOOyTwky1zq27lIIzvVIjvCehFI/zN+IAb1KRDsuT
-   7Qn4LE2bL0fXq2oxiUFenTmOamCLP4fkj3lomSyJeyQncCByuMmiNG9cP
-   W1WrtRjpEqn41Wazu7aJspHbBSvB4/fI0d9p82d/2hCDEIk3+mKSCLWBB
-   2Crburp1iqQ1yGwBgBYrYDeJaYgZa//sKs4+feQ4s1sTxgJ/IAn18fvD0
-   Q==;
-IronPort-SDR: 6ojcjvAcJP2ROpkA6X/49GYhpjXTvWlUF9BpcTqI1/q2Yy43LnV+7il6zDRBW1ckKK5h643/M7
- gzvNmfWK8l5HOxvdd8NJffiA9YmnEXwbQSU/QIi9IQxeSpHPmCR+7ZWTg7daWsfHezhRkidnsr
- VzcXf9hRpKJczRO6cQYXrDMyk/3ZnErxXP1XYHHvtRJ3nYPavHL1EKPC2PgimrIJz5ogU3gTCb
- EhKDnHDna4hg9jIIDS08/1nHnOm5BVFaRyvo72c3f5JsM8eoF8UXMCJ6NT2zdpbPNMIluUaqqt
- K6k=
+  bh=kLz9W2yxC9sEv7xBmU0z7qzPmrIvu5rxo6K0NTo1D9s=;
+  b=OGO8glJW9+JJB/P8BRjmDI6iiGbuwuJiXBUVL4+e1K+k7FSSPSXtyMc4
+   ZpslqYh2jo3g/XMN3aq0Aqgci7vNH0nO9fIA51joab9R9iOqNtVsqA0V3
+   8yKdU9q+AdYG9OXXk/bGyupRIoOaP95w4gIgRakL+Lej32tT8nVfrlmy+
+   cxvk7DZhEqk92NehDXnT5NVigHA81mDzV96WjEY6acCFhAVAbeeLLJZDf
+   6h7xHTAoL9Yov+THofuX0u14/DbRZtFBIPINLSe8U9xuhmBTY9+5gXXu6
+   NesDZaKIdZImOvi6pl9ZEVGLjcefkQyTAvNdESNjFp/SUqP3FbMEITYu/
+   w==;
+IronPort-SDR: GF1L5EmPqGHR1AEmqtWVvqyhXDE7cBp2vJuGxyT38I5+pL6ADZpWYZ2BM7GnBed9tvuyu4GW9a
+ 3DbnvDuJJhsLIi8k5Dp1dyG9WGWvH0NLv+U0pe99lnTf72WaIRZdIja10acSZFfx0LElGpNzHT
+ uvJuuL6W1fiTTpu3OvnJwdwiXTKMqSZCbGUtpho2XEA7/mXLmM+AJ7WAhKGLSqygNtFZG1tm1p
+ eLEuQq5h/jZi8M8wtQ85wkjyMsRyKyeWJH9MAy3UyE4uPh+23STX5qxrfJr+mLvL/uP/WyGExL
+ CoI=
 X-IronPort-AV: E=Sophos;i="5.72,313,1580745600"; 
-   d="scan'208";a="242210464"
+   d="scan'208";a="242210473"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2020 00:50:31 +0800
-IronPort-SDR: nImQ9MOv7Yf2kqrr8jY/Lkj4DMhgyz1/i02jveD5DFpfq9l1n4Bdt9s0CJD81EJTLJ7hkCJ3M4
- tG54qh2HVCdQKXKWIwT7TnjLQFZrlZ+2M4UAvnaiiPT/O2xegGb/h3CR7LcNg1/p76CjhAeJji
- IZmBpaPVGYVa2OY1ybyPmNjzHggAW1psCk4RKXIf06bdr0YaqovozrYvEC5BbTw2y6hoWITLS0
- fHN5wTgEycoeu2whLOQ6Bv3b/2hp7YJfBHPHnEV15eZaXMCIFarKgzciX6jGP0CanljY7+wurJ
- +jTixZ9w0ZhHcqWOHYodxecC
+  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2020 00:50:34 +0800
+IronPort-SDR: 9NtglhQzS8gDEJTSKZlIop1m6T9WGe2sprqR2x9G7AZQEgj12yEpPwa1pG4FeBhpdjiKVnd9mA
+ kURuKdzauhC/F3VgApjjgJmgblw2Ek3vWJe0LVjMezCaLK/Rj3kJGB6f8V4Aq/VAUPUzlZkgGu
+ /wbihKREARgR8hgJdYhHhdo5D++S31i/yBRO2X9fpXpvJ+TC5+m4lN9UETwuvH/lEoj5KdQ6FX
+ rXvKchylPKpF3eHkWUnLpO1H1Jok15RMq3Fsd/qNz3EOilve6dTUGC8Zuisp0AGitGLwUzJS4Z
+ 2OheP3cmg0bpB1kH2zCX6d7o
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2020 09:42:06 -0700
-IronPort-SDR: +9zzBPz4Bn4fJLPecXnXfgyKkwnWCJxaZlTi8TTgKmcTfEmrSgfRhKFxFwnn4Q7QWDyIgjQjSW
- YVQeNVeLA6P8CW6nNGEJoqVfHI6K5nkd4A2nJlvl+SWDKEQJE1icsKBK/v87qaNvIANdDAxltU
- +fzR9IWVZajbJhVLmqANQDnaD8M0efFX415jZKgb9BOYPnrMJcmte6MpI5ve4kEqQflkabm6ZA
- agsyo0xDG1gIykx/ElD3o2B3UeereFVaGOFhbsmvQz+KeHGUgv7PH1wcd/7EamMuSGTUo9neWX
- gbs=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2020 09:42:09 -0700
+IronPort-SDR: XNNOh8DsM4jnUZAsOUigEwHLWFZVgBnFTrTEh3NvmJF181kMsfLAVAdOwjS1nV2nnuxck7SD+0
+ 9aVWMPWWboVJgXZ3KNQpsO9s0DRrpmxvtxu6OAlLWP6hSpOAbzGm3GsHvm+/0EjOvuV5PKohmw
+ yi0tnn4KvHJXh1YJh85QswrS+bYAyCY/T2mT/kV3D6Pf7MMnsncKQbOVzWdj6+YR00FG5HXZBJ
+ KsTUQRLkFP+FOU7Q9eTBYNKYrwENJAC4TZe4ijKGAVhzCyEnZxytem6lFT8aA0RxXTyG+DX7fD
+ xSo=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2020 09:50:30 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2020 09:50:33 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -67,11 +67,10 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v3 08/10] null_blk: Support REQ_OP_ZONE_APPEND
-Date:   Sat, 28 Mar 2020 01:50:10 +0900
-Message-Id: <20200327165012.34443-9-johannes.thumshirn@wdc.com>
+Subject: [PATCH v3 10/10] zonefs: use REQ_OP_ZONE_APPEND for sync DIO
+Date:   Sat, 28 Mar 2020 01:50:12 +0900
+Message-Id: <20200327165012.34443-11-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
 References: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
@@ -82,121 +81,144 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+Synchronous direct I/O to a sequential write only zone can be issued using
+the new REQ_OP_ZONE_APPEND request operation. As dispatching multiple
+BIOs can potentially result in reordering, we cannot support asynchronous
+IO via this interface.
 
-Support REQ_OP_ZONE_APPEND requests for zone mode null_blk devices.
-Use the internally tracked zone write pointer position as the actual
-write position, which is returned using the command request __sector
-field in the case of an mq device and using the command BIO sector in
-the case of a BIO device. Since the write position is used for data copy
-in the case of a memory backed device, reverse the order in which
-null_handle_zoned() and null_handle_memory_backed() are called to ensure
-that null_handle_memory_backed() sees the correct write position for
-REQ_OP_ZONE_APPEND operations.
+We also can only dispatch up to queue_max_zone_append_sectors() via the
+new zone-append method and have to return a short write back to user-space
+in case an IO larger than queue_max_zone_append_sectors() has been issued.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/block/null_blk_main.c  |  9 +++++---
- drivers/block/null_blk_zoned.c | 38 +++++++++++++++++++++++++++-------
- 2 files changed, 37 insertions(+), 10 deletions(-)
+ fs/zonefs/super.c | 92 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 90 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/null_blk_main.c b/drivers/block/null_blk_main.c
-index 3e45e3640c12..5492f1e49eee 100644
---- a/drivers/block/null_blk_main.c
-+++ b/drivers/block/null_blk_main.c
-@@ -1300,12 +1300,15 @@ static blk_status_t null_handle_cmd(struct nullb_cmd *cmd, sector_t sector,
- 			goto out;
+diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+index 69aee3dfb660..b5432861d62e 100644
+--- a/fs/zonefs/super.c
++++ b/fs/zonefs/super.c
+@@ -20,6 +20,7 @@
+ #include <linux/mman.h>
+ #include <linux/sched/mm.h>
+ #include <linux/crc32.h>
++#include <linux/task_io_accounting_ops.h>
+ 
+ #include "zonefs.h"
+ 
+@@ -582,6 +583,89 @@ static const struct iomap_dio_ops zonefs_write_dio_ops = {
+ 	.end_io			= zonefs_file_write_dio_end_io,
+ };
+ 
++static void zonefs_zone_append_bio_endio(struct bio *bio)
++{
++	struct task_struct *waiter = bio->bi_private;
++
++	WRITE_ONCE(bio->bi_private, NULL);
++	blk_wake_io_task(waiter);
++
++	bio_release_pages(bio, false);
++	bio_put(bio);
++}
++
++static ssize_t zonefs_file_dio_append(struct kiocb *iocb, struct iov_iter *from)
++{
++	struct inode *inode = file_inode(iocb->ki_filp);
++	struct zonefs_inode_info *zi = ZONEFS_I(inode);
++	struct block_device *bdev = inode->i_sb->s_bdev;
++	ssize_t ret = 0;
++	ssize_t size;
++	struct bio *bio;
++	unsigned max;
++	int nr_pages;
++	blk_qc_t qc;
++
++	nr_pages = iov_iter_npages(from, BIO_MAX_PAGES);
++	if (!nr_pages)
++		return 0;
++
++	max = queue_max_zone_append_sectors(bdev_get_queue(bdev)) << 9;
++	max = ALIGN_DOWN(max, inode->i_sb->s_blocksize);
++	iov_iter_truncate(from, max);
++
++	bio = bio_alloc_bioset(GFP_NOFS, nr_pages, &fs_bio_set);
++	if (!bio)
++		return -ENOMEM;
++
++	bio_set_dev(bio, bdev);
++	bio->bi_iter.bi_sector = zi->i_zsector;
++	bio->bi_write_hint = iocb->ki_hint;
++	bio->bi_private = current;
++	bio->bi_end_io = zonefs_zone_append_bio_endio;
++	bio->bi_ioprio = iocb->ki_ioprio;
++	bio->bi_opf = REQ_OP_ZONE_APPEND | REQ_SYNC | REQ_IDLE;
++	if (iocb->ki_flags & IOCB_DSYNC)
++		bio->bi_opf |= REQ_FUA;
++
++	ret = bio_iov_iter_get_pages(bio, from);
++	if (unlikely(ret)) {
++		bio->bi_status = BLK_STS_IOERR;
++		bio_endio(bio);
++		return ret;
++	}
++	size = bio->bi_iter.bi_size;
++	task_io_account_write(ret);
++
++	if (iocb->ki_flags & IOCB_HIPRI)
++		bio_set_polled(bio, iocb);
++
++	bio_get(bio);
++	qc = submit_bio(bio);
++	for (;;) {
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		if (!READ_ONCE(bio->bi_private))
++			break;
++		if (!(iocb->ki_flags & IOCB_HIPRI) ||
++		    !blk_poll(bdev_get_queue(bdev), qc, true))
++			io_schedule();
++	}
++	__set_current_state(TASK_RUNNING);
++
++	if (unlikely(bio->bi_status))
++		ret = blk_status_to_errno(bio->bi_status);
++
++	bio_put(bio);
++
++	zonefs_file_write_dio_end_io(iocb, size, ret, 0);
++	if (ret >= 0) {
++		iocb->ki_pos += size;
++		return size;
++	}
++
++	return ret;
++}
++
+ /*
+  * Handle direct writes. For sequential zone files, this is the only possible
+  * write path. For these files, check that the user is issuing writes
+@@ -599,6 +683,7 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
+ 	struct super_block *sb = inode->i_sb;
+ 	size_t count;
+ 	ssize_t ret;
++	bool sync = is_sync_kiocb(iocb);
+ 
+ 	/*
+ 	 * For async direct IOs to sequential zone files, refuse IOCB_NOWAIT
+@@ -637,8 +722,11 @@ static ssize_t zonefs_file_dio_write(struct kiocb *iocb, struct iov_iter *from)
  	}
+ 	mutex_unlock(&zi->i_truncate_mutex);
  
-+	if (dev->zoned) {
-+		cmd->error = null_handle_zoned(cmd, op, sector, nr_sectors);
-+		if (cmd->error != BLK_STS_OK)
-+			goto out;
-+	}
-+
- 	if (dev->memory_backed)
- 		cmd->error = null_handle_memory_backed(cmd, op);
- 
--	if (!cmd->error && dev->zoned)
--		cmd->error = null_handle_zoned(cmd, op, sector, nr_sectors);
--
- out:
- 	nullb_complete_cmd(cmd);
- 	return BLK_STS_OK;
-diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
-index 8259f3212a28..f20be7b91b9f 100644
---- a/drivers/block/null_blk_zoned.c
-+++ b/drivers/block/null_blk_zoned.c
-@@ -67,13 +67,22 @@ int null_init_zoned_dev(struct nullb_device *dev, struct request_queue *q)
- 
- int null_register_zoned_dev(struct nullb *nullb)
- {
-+	struct nullb_device *dev = nullb->dev;
- 	struct request_queue *q = nullb->q;
- 
--	if (queue_is_mq(q))
--		return blk_revalidate_disk_zones(nullb->disk);
-+	if (queue_is_mq(q)) {
-+		int ret = blk_revalidate_disk_zones(nullb->disk);
-+
-+		if (ret)
-+			return ret;
-+	} else {
-+		blk_queue_chunk_sectors(q, dev->zone_size_sects);
-+		q->nr_zones = blkdev_nr_zones(nullb->disk);
-+	}
- 
--	blk_queue_chunk_sectors(q, nullb->dev->zone_size_sects);
--	q->nr_zones = blkdev_nr_zones(nullb->disk);
-+	blk_queue_max_zone_append_sectors(q,
-+			min_t(sector_t, q->limits.max_hw_sectors,
-+			      dev->zone_size_sects));
- 
- 	return 0;
- }
-@@ -133,7 +142,7 @@ size_t null_zone_valid_read_len(struct nullb *nullb,
- }
- 
- static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
--		     unsigned int nr_sectors)
-+				    unsigned int nr_sectors, bool append)
- {
- 	struct nullb_device *dev = cmd->nq->dev;
- 	unsigned int zno = null_zone_no(dev, sector);
-@@ -148,7 +157,20 @@ static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
- 	case BLK_ZONE_COND_IMP_OPEN:
- 	case BLK_ZONE_COND_EXP_OPEN:
- 	case BLK_ZONE_COND_CLOSED:
--		/* Writes must be at the write pointer position */
-+		/*
-+		 * Regular writes must be at the write pointer position.
-+		 * Zone append writes are automatically issued at the write
-+		 * pointer and the position returned using the request or BIO
-+		 * sector.
-+		 */
-+		if (append) {
-+			sector = zone->wp;
-+			if (cmd->bio)
-+				cmd->bio->bi_iter.bi_sector = sector;
-+			else
-+				cmd->rq->__sector = sector;
-+		}
-+
- 		if (sector != zone->wp)
- 			return BLK_STS_IOERR;
- 
-@@ -228,7 +250,9 @@ blk_status_t null_handle_zoned(struct nullb_cmd *cmd, enum req_opf op,
- {
- 	switch (op) {
- 	case REQ_OP_WRITE:
--		return null_zone_write(cmd, sector, nr_sectors);
-+		return null_zone_write(cmd, sector, nr_sectors, false);
-+	case REQ_OP_ZONE_APPEND:
-+		return null_zone_write(cmd, sector, nr_sectors, true);
- 	case REQ_OP_ZONE_RESET:
- 	case REQ_OP_ZONE_RESET_ALL:
- 	case REQ_OP_ZONE_OPEN:
+-	ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops,
+-			   &zonefs_write_dio_ops, is_sync_kiocb(iocb));
++	if (sync && zi->i_ztype == ZONEFS_ZTYPE_SEQ)
++		ret = zonefs_file_dio_append(iocb, from);
++	else
++		ret = iomap_dio_rw(iocb, from, &zonefs_iomap_ops,
++				   &zonefs_write_dio_ops, sync);
+ 	if (zi->i_ztype == ZONEFS_ZTYPE_SEQ &&
+ 	    (ret > 0 || ret == -EIOCBQUEUED)) {
+ 		if (ret > 0)
 -- 
 2.24.1
 
