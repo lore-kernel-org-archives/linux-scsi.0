@@ -2,92 +2,171 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=BAD_ENC_HEADER,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2062DC2D0ED
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60D5CC2D0E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:19:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA7B620578
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:16:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37C2D2076B
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:19:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="cROZyjoc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KfSj33LL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727716AbgC0RQn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 13:16:43 -0400
-Received: from mout.gmx.net ([212.227.17.20]:33723 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727548AbgC0RQm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Mar 2020 13:16:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1585329388;
-        bh=F140ojBXoucs6WYh/Mh3CeabfwV2ZTlkn+dqg0CjeTc=;
-        h=X-UI-Sender-Class:In-Reply-To:Date:Cc:Subject:From:To;
-        b=cROZyjoc7se7OTRWLuN4wADlHdBXg9feY3C8jGMy6tkAjneLvJ+n7/voz7mC4RqPX
-         1Y7y/UPahJFgCVUdccjB56oUz9I2aXRd9o9TKd3VOuwVuBORI3J9e0vrvKjsrh9FWa
-         bf9bUWn9/smImsQpLz0/yGoRxQ0iex7eBOcUcFrA=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from localhost ([82.19.195.159]) by mail.gmx.com (mrgmx104
- [212.227.17.174]) with ESMTPSA (Nemesis) id 1MFKKX-1j2iIf1hpx-00FjTl; Fri, 27
- Mar 2020 18:16:28 +0100
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Originaldate: Fri Mar 27, 2020 at 12:58 PM
-Originalfrom: "Martin K. Petersen" <martin.petersen@oracle.com>
-Original: =?utf-8?q?=0D=0AAlex,=0D=0A=0D=0A>_The_file_aic79xx
- =5Fcore.c_still_contai?= =?utf-8?q?ns_some_FreeBSD-specific
- =0D=0A>_code/macro_guards,=0D=0A=0D=0Aa?= =?utf-8?q?ic7xxx
- =5Fcore.c_needs_the_same_change.=0D=0A=0D=0A--_=0D=0AMart?=
- =?utf-8?q?in_K._Petersen=09Oracle_Linux_Engineering=0D=0A?=
-In-Reply-To: <yq1mu81buq1.fsf@oracle.com>
-Date:   Fri, 27 Mar 2020 17:16:27 +0000
-Cc:     "Hannes Reinecke" <hare@suse.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] scsi: aic7xxx: aic97xx: Remove FreeBSD-specific code
-From:   "Alex Dewar" <alex.dewar@gmx.co.uk>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Message-Id: <C1LSD6B3VFZC.1DFOPBCI28S9R@lenovo-laptop>
-X-Provags-ID: V03:K1:KGsm8ZzzltZqZBeDUKv3O0D2sJ+IUVTp5IngY7BJ8YVgzn9r1/S
- 6K21T+ltwNE4O9cAxIn0+9UVo+10dkOO0Nsfo+SOja/lyrZlrZYQaYnfq0nCA1ULA5Avw4E
- meJMEwVuzzwuwuqsXC1nHbVRDAsyz7Ff2dlrxvL6OA7CuiqgEKO6OTq/GrdzTenxkHcSkSQ
- D/uPxCy+q8/lcNHeTxKRQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:GgfZigbU5h8=:YGt7wknhZnplb2Pas79uig
- NNGu33q4O7hWw3tvYJE9vAMEeiM2dLLIyEu9ow6JUjdjmc4qZEqRgS1j34TaXw8YpNCguTxRE
- Bqm+bgKHL6D96PVRO5hNUYIpNWHypDGE9H2x/xMNinsIewZAoF04z08qCOTIHUe8Zu4E08eTA
- 9iDYICCa78aCTc0Q52onZ5rf614itEOySAFMKfDNfBiekY239R2HC5P/t8USkq462o6bTQkqW
- gpGPtAW94R0Iwqovo1DTA+xwHL2NTpJoRnB7AFl6ilREVcaT9//1kG9Cy7R/7wVmDm6Pwqgz/
- 8gHxrrEPA2j1fF7TOTLStwEL00j/kb920kPbiWWbxa3k6f+/QEvN+0bkMvkUdc1w4xvb39VrX
- bRPFUZWUlQ3RsdIy7q8xqQbB3rHHW19giUE+ImgRIOF8+JaF2c4R15GWOK4S/iBcn4Mne6iC2
- f5mJ7hdjxB4k4dsOUQCjPSZPC4SKOz/aYVUqQDuZASnR1yF2KVXmVtW/zJq8yg5v9O7ETFO2V
- gUIYccnC552juF+ukSRu7woHtsCdXVQZTbGLKZMrHdEnsv/DzdiTjta/fb0WtQ0zBFi6Mpuw+
- q87dSawgYJbmbihb8boRq8xQ+RG8f8zjt8nN6UhKekFez8q7v7z2ovJpdFlwKi5poqGYl2IUw
- GUjDeiUQAoUwu4NFDUsNZ2DcrOrc/fmMlqmAEs74u4/WRbh/fuSCxSaVriGa5gmvHF1s4BLQA
- z9Fq8pdmfVRxBiWASTf9OXt1OYudLzToulBD9cojTkvzsm1kNlXniGSlCrfZNA/GmMiGhIZgN
- S10/Agn7Z4cjLLbQHycvqJN076Fcau1nDoyi5uIkbyibWdXn7STlCqt3gmDoX8qaaYYYfvHLf
- mrgUZP8PkdaQRewbnMGg9NxivZDtZ6pbY4G+BTUyPIik8dLBMyW8T8H/ABxMc6X4tsO0J5MKz
- 2cA0s6/E8e0lEQN9zLrHqoLW0MjSWR+8DVGJ4D1kyvHeVg92Vi/efO2YAN4o3SfBq+noAuLPF
- XaEcuVKYRg2RwSpRV7ZW6p5VslxMrv488DNbytmOnM5i6Z6+qLjniyg0LFxpZ7lSBm0jhtGEV
- QdM3fas5MYsqhpI+BmEabqO6V2rJJHIrDfx38IiRH4FEYe4AojoZPF8Ywx0LxxUSL7McFx8xf
- p+tGUsVjSAuNCyPny+/wkhxsmJ3fZO9Sb2Gy1dWGBvqmZD25KJKTs2cQQQGM0f9Abh3hW8Jn6
- JmmaNSAhNOSbWPGbM
+        id S1726770AbgC0RTG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 13:19:06 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42232 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726515AbgC0RTG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 13:19:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=pmoPc0t0rO7dKiZX8bkxD81FxQnQZxtzBtxiWnWoIco=; b=KfSj33LLKULI6TqjSZXIDA4xpZ
+        aKDU1684S2fu+GP3SHEY5FbSWhwRyOwWYql/bw+OCgfJMRq/UrAZ/FHjAQJHtagnlbrnjCT7qUqZI
+        7MklHb6bqLvl57nDGRaxWhS7i33YQgGyLPx+Bj9LL3G5naaB4AKlfI/M4MnqBE2BIXcKydPU2qbS5
+        p6PPPPXSvjHSFShFmHuUvv9782ASi1bkHwaWw/tNfwayL/iiuo1dvK/tyqprYuYg0iAifkiHdKETE
+        REv7RVRCChXPByCWtab2MmFqxneYCRMM34m+WETr4Qh/oLpC/Ey0LwGvHnzAlm4XVRX0iWC2BEh46
+        xCgB++ow==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jHsdM-000286-Lz; Fri, 27 Mar 2020 17:19:04 +0000
+Date:   Fri, 27 Mar 2020 10:19:04 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v3 02/10] block: Introduce REQ_OP_ZONE_APPEND
+Message-ID: <20200327171904.GD11524@infradead.org>
+References: <20200327165012.34443-1-johannes.thumshirn@wdc.com>
+ <20200327165012.34443-3-johannes.thumshirn@wdc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200327165012.34443-3-johannes.thumshirn@wdc.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri Mar 27, 2020 at 12:58 PM, Martin K. Petersen wrote:
->
->
-> Alex,
->
->
-> > The file aic79xx_core.c still contains some FreeBSD-specific
-> > code/macro guards,
->
->
-> aic7xxx_core.c needs the same change.
->
-Thanks for the feedback. I'll stick this in a v2.
+> +/**
+> + * bio_full - check if the bio is full
+> + * @bio:	bio to check
+> + * @len:	length of one segment to be added
+> + *
+> + * Return true if @bio is full and one segment with @len bytes can't be
+> + * added to the bio, otherwise return false
+> + */
+> +bool bio_full(struct bio *bio, unsigned len)
+> +{
+> +	if (bio->bi_vcnt >= bio->bi_max_vecs)
+> +		return true;
+> +
+> +	if (bio->bi_iter.bi_size > UINT_MAX - len)
+> +		return true;
+> +
+> +	if (bio_op(bio) == REQ_OP_ZONE_APPEND)
+> +		return bio_can_zone_append(bio, len);
+> +
+> +	return false;
+> +}
+
+If you need to move bio_full out of line that should be a separate
+prep patch.  But I'd rather unshare a little more code rather than
+spreading zone append conditionals over lots of fast path functions.
+
+> +static bool bio_try_merge_zone_append_page(struct bio *bio, struct page *page,
+> +					   unsigned int len, unsigned int off)
+> +{
+> +	struct request_queue *q = bio->bi_disk->queue;
+> +	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> +	unsigned long mask = queue_segment_boundary(q);
+> +	phys_addr_t addr1 = page_to_phys(bv->bv_page) + bv->bv_offset;
+> +	phys_addr_t addr2 = page_to_phys(page) + off + len - 1;
+> +
+> +	if ((addr1 | mask) != (addr2 | mask))
+> +		return false;
+> +	if (bv->bv_len + len > queue_max_segment_size(q))
+> +		return false;
+> +	return true;
+> +}
+
+This seems to be identical to bio_try_merge_pc_page, except for not
+passing an explicit queue argument, and for not calling
+__bio_try_merge_page.  I'd rather factor out a new
+__bio_can_merge_pc_page or similar helper in a prep patch and use
+that in both functions.
+
+>  /**
+>   * __bio_try_merge_page - try appending data to an existing bvec.
+>   * @bio: destination bio
+> @@ -856,6 +911,12 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
+>  	if (bio->bi_vcnt > 0) {
+>  		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+>  
+> +		if (bio_op(bio) == REQ_OP_ZONE_APPEND) {
+> +			if (!bio_try_merge_zone_append_page(bio, page, len,
+> +							    off))
+> +				return false;
+> +		}
+> +
+>  		if (page_is_mergeable(bv, page, len, off, same_page)) {
+>  			if (bio->bi_iter.bi_size > UINT_MAX - len)
+>  				return false;
+
+I'd rather have a separare __bio_try_merge_append_page helper to avoid
+the conditional in __bio_try_merge_page.
+
+> @@ -916,6 +977,7 @@ int bio_add_page(struct bio *bio, struct page *page,
+>  	if (!__bio_try_merge_page(bio, page, len, offset, &same_page)) {
+>  		if (bio_full(bio, len))
+>  			return 0;
+> +
+>  		__bio_add_page(bio, page, len, offset);
+>  	}
+>  	return len;
+> @@ -948,7 +1010,7 @@ static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
+>  
+>  	len = min_t(size_t, bv->bv_len - iter->iov_offset, iter->count);
+>  	size = bio_add_page(bio, bv->bv_page, len,
+> -				bv->bv_offset + iter->iov_offset);
+> +			    bv->bv_offset + iter->iov_offset);
+
+Spurious whitespace changes.
+
+>  	if (unlikely(size != len))
+>  		return -EINVAL;
+>  	iov_iter_advance(iter, size);
+> @@ -1448,7 +1510,7 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
+>   */
+>  struct bio *bio_map_user_iov(struct request_queue *q,
+>  			     struct iov_iter *iter,
+> -			     gfp_t gfp_mask)
+> +			     gfp_t gfp_mask, unsigned int op)
+
+Why do we need to pass the op here? bio_map_user_iov is only used
+for SG_IO passthrough.
+
+>  				if (!__bio_add_pc_page(q, bio, page, n, offs,
+> -						&same_page)) {
+> +						       &same_page)) {
+
+Spurious whitespace change.
+
+>  extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+>  			   unsigned int, unsigned int);
+> +
+
+Spurious whitespace change.
+
+> +static inline unsigned int queue_max_zone_append_sectors(const struct request_queue *q)
+
+This adds an overly long line.
