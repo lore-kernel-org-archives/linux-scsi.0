@@ -2,147 +2,93 @@ Return-Path: <SRS0=+SnX=5M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E58EC43331
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0DEC43331
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 18:20:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8E8520714
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 17:57:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9166D20B1F
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 18:20:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="aipLD54O"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kVzonrBi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727125AbgC0R5m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 13:57:42 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:22684 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726770AbgC0R5m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Mar 2020 13:57:42 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02RHsho8022676;
-        Fri, 27 Mar 2020 10:57:39 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0818; bh=aP0hdURuNiCq721uoVPQfCzmJYvlMPW5b5MENKqoA68=;
- b=aipLD54OhVBZ+sQCRAEmaOCJVR+dby68oeW4ctuL7O54GRrUWCBY6JZGyuNeMbECPGJH
- B9e63ISI+UajnGga4UaUcJKPJUHJkMklE6LdDycG1HFx98XuT0atxul4UBIzJxH+OYjx
- JAI7K9f6rnwOjJPBXMVLOyAZrXudOIy/cNzrzq6Gk1jltHL3Djx57sb4nRmmZKR5riWx
- LV1dvUdoEP53u3vqMoTRGPAqpS02q1kz3V8H/2pZFQeR8C0GuTUvuyAcH5u6+qVubG11
- prVQG9lHQeSWaYSHSWbtHjM+fR4NiKf4Is/SugMHK4BZbcdEXxwfMTJxSM5L1s27EQvD Ng== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2ywg9p3xpn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 27 Mar 2020 10:57:39 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 27 Mar
- 2020 10:57:38 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 27 Mar
- 2020 10:57:37 -0700
-Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 27 Mar 2020 10:57:37 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 4B5313F703F;
-        Fri, 27 Mar 2020 10:57:37 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 02RHvaXL029579;
-        Fri, 27 Mar 2020 10:57:36 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Fri, 27 Mar 2020 10:57:36 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Quinn Tran <qutran@marvell.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [EXT] Re: [PATCH v3 0/6] Fix qla2xxx endianness annotations
-In-Reply-To: <yq17dz6ed94.fsf@oracle.com>
-Message-ID: <alpine.LRH.2.21.9999.2003271054190.12727@irv1user01.caveonetworks.com>
-References: <20200305045431.30061-1-bvanassche@acm.org>
- <yq17dz6ed94.fsf@oracle.com>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        id S1727252AbgC0SUc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 14:20:32 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34306 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726540AbgC0SUc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Mar 2020 14:20:32 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RIAaXf100426;
+        Fri, 27 Mar 2020 18:20:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=EdOLzWPiCxlbqU1h3Lsc8gB9qOBQStI4WKDUvuf9c6Y=;
+ b=kVzonrBiTPwHTWx7PicDR4CdnQnwHGqy8ceLvwkWR8VjngvGIjSp1O+hnG1D5BznOdGe
+ APTw0sqpo53Amth4zi8iHcfiQC2Lq6W7cUGrxSgeODTLbfS+74gseE7O3DstVHkTqpyi
+ lO7IHPbRDJv4c8I9hFZ3bERKvlpUM+iQXWmeJEJFjEGcpIuVT7IfV5eMBGPll2iBl++j
+ 6AUMWdYHzJTIerA+OJnNd0nBoUfWJ3b7DtykmoQnOKhMWPoI3c2yzomCOUXqDHW0pzd1
+ 4hHNJyHSKTflwFkWpJ2IxMBzYJkBjvbcMtxU/4pa4k98dRMA3a068+5md2G3DymdhYKX qg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 3019vebrjm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 27 Mar 2020 18:20:29 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02RI75bH110324;
+        Fri, 27 Mar 2020 18:18:28 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 30073hcq0y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 27 Mar 2020 18:18:28 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 02RIISQg030736;
+        Fri, 27 Mar 2020 18:18:28 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 27 Mar 2020 11:18:27 -0700
+To:     Saurav Kashyap <skashyap@marvell.com>
+Cc:     <martin.petersen@oracle.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 0/3] bnx2fc: General updates.
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20200327054849.15947-1-skashyap@marvell.com>
+Date:   Fri, 27 Mar 2020 14:18:25 -0400
+In-Reply-To: <20200327054849.15947-1-skashyap@marvell.com> (Saurav Kashyap's
+        message of "Thu, 26 Mar 2020 22:48:46 -0700")
+Message-ID: <yq1wo75acge.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
- definitions=2020-03-27_06:2020-03-27,2020-03-27 signatures=0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=899 adultscore=0
+ suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2003270152
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9573 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0 phishscore=0
+ clxscore=1011 adultscore=0 spamscore=0 malwarescore=0 mlxlogscore=957
+ lowpriorityscore=0 bulkscore=0 priorityscore=1501 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003270152
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 26 Mar 2020, 7:35pm, Martin K. Petersen wrote:
 
->
-> Arun, Quinn: This series still needs review.
-> 
-> Thanks!
+Saurav,
 
-Hi Martin,
+> Kindly apply this series to scsi tree at your earliest convenience.
 
-Yes, we will provide a review. As this is a big change, we would need some 
-more time for the review and testing.
+Applied to 5.7/scsi-queue, thanks.
 
-I had some early thoughts on the series, I will take another look at it 
-and respond.
+Patch #1 had several indentation issues which I fixed up.
 
-Regards,
--Arun
-
-> 
-> > This patch series fixes the endianness annotations in the qla2xxx
-> > driver.  Please consider this patch series for the v5.7 kernel.
-> >
-> > Thanks,
-> >
-> > Bart.
-> >
-> > Changes compared to v2:
-> > - Removed one BUILD_BUG_ON() statement.
-> >
-> > Changes compared to v1:
-> > - Left out the raw_smp_processor_id() patch because it may take time to achieve
-> >   agreement about this patch.
-> > - Added three patches to this series: two patches for verifying structure size
-> >   at compile time and one patch for changing function names from upper case to
-> >   lower case.
-> >
-> > Bart Van Assche (6):
-> >   qla2xxx: Sort BUILD_BUG_ON() statements alphabetically
-> >   qla2xxx: Add more BUILD_BUG_ON() statements
-> >   qla2xxx: Fix endianness annotations in header files
-> >   qla2xxx: Fix endianness annotations in source files
-> >   qla2xxx: Fix the code that reads from mailbox registers
-> >   qla2xxx: Change {RD,WRT}_REG_*() function names from upper case into
-> >     lower case
-> >
-> >  drivers/scsi/qla2xxx/qla_attr.c    |   3 +-
-> >  drivers/scsi/qla2xxx/qla_bsg.c     |   4 +-
-> >  drivers/scsi/qla2xxx/qla_dbg.c     | 672 +++++++++++++-------------
-> >  drivers/scsi/qla2xxx/qla_dbg.h     | 442 ++++++++---------
-> >  drivers/scsi/qla2xxx/qla_def.h     | 711 ++++++++++++++-------------
-> >  drivers/scsi/qla2xxx/qla_fw.h      | 738 ++++++++++++++---------------
-> >  drivers/scsi/qla2xxx/qla_init.c    | 279 +++++------
-> >  drivers/scsi/qla2xxx/qla_inline.h  |   8 +-
-> >  drivers/scsi/qla2xxx/qla_iocb.c    | 121 ++---
-> >  drivers/scsi/qla2xxx/qla_isr.c     | 217 +++++----
-> >  drivers/scsi/qla2xxx/qla_mbx.c     | 111 +++--
-> >  drivers/scsi/qla2xxx/qla_mr.c      | 111 +++--
-> >  drivers/scsi/qla2xxx/qla_mr.h      |  32 +-
-> >  drivers/scsi/qla2xxx/qla_nvme.c    |  12 +-
-> >  drivers/scsi/qla2xxx/qla_nvme.h    |  46 +-
-> >  drivers/scsi/qla2xxx/qla_nx.c      | 161 +++----
-> >  drivers/scsi/qla2xxx/qla_nx.h      |  36 +-
-> >  drivers/scsi/qla2xxx/qla_nx2.c     |  12 +-
-> >  drivers/scsi/qla2xxx/qla_os.c      | 128 +++--
-> >  drivers/scsi/qla2xxx/qla_sup.c     | 345 +++++++-------
-> >  drivers/scsi/qla2xxx/qla_target.c  |  84 ++--
-> >  drivers/scsi/qla2xxx/qla_target.h  | 208 ++++----
-> >  drivers/scsi/qla2xxx/qla_tmpl.c    |  12 +-
-> >  drivers/scsi/qla2xxx/tcm_qla2xxx.c |  14 +
-> >  24 files changed, 2317 insertions(+), 2190 deletions(-)
-> 
-> 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
