@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D653C2D0ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C36B6C2D0EF
 	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17AC420857
+	by mail.kernel.org (Postfix) with ESMTP id A00E120B80
 	for <linux-scsi@archiver.kernel.org>; Fri, 27 Mar 2020 16:47:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727750AbgC0Qry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Mar 2020 12:47:54 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41800 "EHLO mx2.suse.de"
+        id S1727751AbgC0Qrz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Mar 2020 12:47:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41790 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727718AbgC0Qry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1727716AbgC0Qry (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 27 Mar 2020 12:47:54 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 3CF96AFCF;
-        Fri, 27 Mar 2020 16:47:52 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id E9056AED8;
+        Fri, 27 Mar 2020 16:47:51 +0000 (UTC)
 From:   mwilck@suse.com
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Arun Easi <aeasi@marvell.com>, Quinn Tran <qutran@marvell.com>,
@@ -32,9 +32,9 @@ Cc:     Roman Bolshakov <r.bolshakov@yadro.com>,
         James Bottomley <jejb@linux.vnet.ibm.com>,
         Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
         Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v3 5/5] scsi: qla2xxx: only send certain mailbox commands to stopped firmware
-Date:   Fri, 27 Mar 2020 17:47:11 +0100
-Message-Id: <20200327164711.5358-6-mwilck@suse.com>
+Subject: [PATCH v3 4/5] scsi: qla2xxx: avoid sending iocbs when firmware is stopped
+Date:   Fri, 27 Mar 2020 17:47:10 +0100
+Message-Id: <20200327164711.5358-5-mwilck@suse.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200327164711.5358-1-mwilck@suse.com>
 References: <20200327164711.5358-1-mwilck@suse.com>
@@ -47,85 +47,123 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Martin Wilck <mwilck@suse.com>
 
-Since commit 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting
-down chip"), it is possible that FC commands are scheduled after the
-adapter firmware has been shut down. IO sent to the firmware in this
-situation may hang. Only certain mailbox commands should be sent in
-this situation.
+Since commit 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip"),
+it is possible that FC commands are scheduled after the adapter firmware
+has been shut down. IO sent to the firmware in this situation hangs.
+Avoid starting iocbs in this situation.
 
-This patch identifies the mailbox commands sent during adapter
-initialization (before QLA_FW_STARTED() is called) and allows only
-these to be sent to the firmware in stopped state.
-
+Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
 Signed-off-by: Martin Wilck <mwilck@suse.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 46 ++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+ drivers/scsi/qla2xxx/qla_inline.h |  3 +++
+ drivers/scsi/qla2xxx/qla_iocb.c   | 23 +++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_nvme.c   |  3 +++
+ 3 files changed, 29 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 9fd83d1..4a9a583 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -77,6 +77,45 @@ static int is_rom_cmd(uint16_t cmd)
- 	return 0;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index 364b3db..f4352f1 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -322,6 +322,9 @@ qla_83xx_start_iocbs(struct qla_qpair *qpair)
+ {
+ 	struct req_que *req = qpair->req;
  
-+/*
-+ * Mailbox commands that must (and can) be sent to the Firmware
-+ * even if it isn't running. IOW, commands that are sent before
-+ * QLA_FW_STARTED() is called.
-+ */
-+static uint16_t fw_stopped_cmds[] = {
-+	MBC_EXECUTE_FIRMWARE,
-+	MBC_READ_RAM_WORD,
-+	MBC_MAILBOX_REGISTER_TEST,
-+	MBC_VERIFY_CHECKSUM,
-+	MBC_GET_FIRMWARE_VERSION,
-+	MBC_LOAD_RISC_RAM,
-+	MBC_LOAD_RISC_RAM_EXTENDED,
-+	MBC_WRITE_RAM_WORD_EXTENDED,
-+	MBC_READ_RAM_EXTENDED,
-+	MBC_GET_ADAPTER_LOOP_ID,
-+	MBC_GET_SET_ZIO_THRESHOLD,
-+	MBC_GET_FIRMWARE_OPTION,
-+	MBC_GET_MEM_OFFLOAD_CNTRL_STAT,
-+	MBC_SET_FIRMWARE_OPTION,
-+	MBC_GET_RESOURCE_COUNTS,
-+	MBC_INITIALIZE_FIRMWARE,
-+	MBC_TRACE_CONTROL,
-+	MBC_READ_SFP,
-+	MBC_MID_INITIALIZE_FIRMWARE,
-+	MBC_FLASH_ACCESS_CTRL,
-+};
++	if (!qpair->vha->hw->flags.fw_started)
++		return;
 +
-+static bool must_send_if_fw_stopped(uint16_t cmd)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(fw_stopped_cmds); i++) {
-+		if (fw_stopped_cmds[i] == cmd)
-+			return true;
-+	}
-+	return false;
-+}
-+
- /*
-  * qla2x00_mailbox_command
-  *	Issue mailbox command and waits for completion.
-@@ -169,6 +208,13 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 		return QLA_FUNCTION_TIMEOUT;
- 	}
+ 	req->ring_index++;
+ 	if (req->ring_index == req->length) {
+ 		req->ring_index = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 182bd68c..587ba35 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -459,6 +459,9 @@ qla2x00_start_iocbs(struct scsi_qla_host *vha, struct req_que *req)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	device_reg_t *reg = ISP_QUE_REG(ha, req->id);
  
-+	if (!ha->flags.fw_started && !must_send_if_fw_stopped(mcp->mb[0])) {
-+		ql_log(ql_log_info, vha, 0x1006,
-+		       "Cmd 0x%x skipped with timeout since FW is stopped\n",
-+		       mcp->mb[0]);
-+		return QLA_FUNCTION_TIMEOUT;
++	if (!ha->flags.fw_started)
++		return;
++
+ 	if (IS_P3P_TYPE(ha)) {
+ 		qla82xx_start_iocbs(vha);
+ 	} else {
+@@ -1603,6 +1606,9 @@ qla24xx_start_scsi(srb_t *sp)
+ 	struct scsi_qla_host *vha = sp->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	/* Setup device pointers. */
+ 	req = vha->req;
+ 
+@@ -1740,6 +1746,9 @@ qla24xx_dif_start_scsi(srb_t *sp)
+ 
+ #define QDSS_GOT_Q_SPACE	BIT_0
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	/* Only process protection or >16 cdb in this routine */
+ 	if (scsi_get_prot_op(cmd) == SCSI_PROT_NORMAL) {
+ 		if (cmd->cmd_len <= 16)
+@@ -1921,6 +1930,9 @@ qla2xxx_start_scsi_mq(srb_t *sp)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_qpair *qpair = sp->qpair;
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	/* Acquire qpair specific lock */
+ 	spin_lock_irqsave(&qpair->qp_lock, flags);
+ 
+@@ -2062,6 +2074,11 @@ qla2xxx_dif_start_scsi_mq(srb_t *sp)
+ 
+ #define QDSS_GOT_Q_SPACE	BIT_0
+ 
++	if (!ha->flags.fw_started) {
++		cmd->result = DID_NO_CONNECT << 16;
++		return QLA_FUNCTION_FAILED;
 +	}
 +
- 	atomic_inc(&ha->num_pend_mbx_stage1);
- 	/*
- 	 * Wait for active mailbox commands to finish by waiting at most tov
+ 	/* Check for host side state */
+ 	if (!qpair->online) {
+ 		cmd->result = DID_NO_CONNECT << 16;
+@@ -3224,6 +3241,9 @@ qla82xx_start_scsi(srb_t *sp)
+ 	struct req_que *req = NULL;
+ 	struct rsp_que *rsp = NULL;
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	/* Setup device pointers. */
+ 	reg = &ha->iobase->isp82;
+ 	cmd = GET_CMD_SP(sp);
+@@ -3676,6 +3696,9 @@ qla2x00_start_sp(srb_t *sp)
+ 	void *pkt;
+ 	unsigned long flags;
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	spin_lock_irqsave(qp->qp_lock_ptr, flags);
+ 	pkt = __qla2x00_alloc_iocbs(sp->qpair, sp);
+ 	if (!pkt) {
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 84e2a980..4f36e73 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -369,6 +369,9 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
+ 	struct nvmefc_fcp_req *fd = nvme->u.nvme.desc;
+ 	uint32_t        rval = QLA_SUCCESS;
+ 
++	if (!ha->flags.fw_started)
++		return QLA_FUNCTION_FAILED;
++
+ 	/* Setup qpair pointers */
+ 	req = qpair->req;
+ 	tot_dsds = fd->sg_cnt;
 -- 
 2.25.1
 
