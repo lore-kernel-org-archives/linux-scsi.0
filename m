@@ -2,169 +2,561 @@ Return-Path: <SRS0=+9Kw=5P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12274C2D0EB
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 11:04:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E170EC2D0EC
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 13:42:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D31E020675
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 11:04:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A09C2073B
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 13:42:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="fVB3p8t5";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="envbXg4C"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wnmX6JYT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729577AbgC3LEo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Mar 2020 07:04:44 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25490 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729254AbgC3LEo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Mar 2020 07:04:44 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02UB0BZR000758;
-        Mon, 30 Mar 2020 04:04:41 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=sZw9+cqqE3+wPK1L5BxYzy6zCF3bNHmdvEW32DbYd68=;
- b=fVB3p8t54+Lmnh6a+qw0fgf8OCJBEw3BhLs6cPbUbRxmZm7a4kKKjxZStrk40hKwSOtI
- p173D8Tb8yqw4OywShINAdHborhT4eJoIF2j7/rq/4mY5ALZSWa9JeRUXRbfeeoQiLOH
- uWk4pdQnviNVLu5GGhwKjl6EpiepG1zNEh1K61Zy34s81aMcuHW3uW/C705DoKacHfqp
- U0lp6RVsszFFJIkOu+dbaR/vhinFYPEvKEtSWkEsq4kFFwTrBixXq59CHobN80pKEzNC
- U4+k9e3VEGBk7Jm0YO1y5lmSJEhm2H46a3xh81s+oHIipmdM+rNGmuOJyzrm8POVi7Xc +w== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 30263kdrqp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 30 Mar 2020 04:04:41 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 30 Mar
- 2020 04:04:39 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 30 Mar
- 2020 04:04:38 -0700
-Received: from NAM04-CO1-obe.outbound.protection.outlook.com (104.47.45.51) by
- SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Mon, 30 Mar 2020 04:04:38 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZovJc6xJNA3cII/IgGyPRvvZit9IFNoq0dFVHfntvxUG4VgdhJAm6/lup6yudSr9Go/H0P6wkaX+aVRq8QZxBqOwR1hVv2XkQPac4efGHFfnIVyznEWCH0juMrdPTxrm/pykwRf6gbANN+luUyPKi5nwKP1sIRTYogwqeJ7g2slL/ysc+oCgNHIedMQqm71iZSX2h8hLq5Ph07JsH+sOD5O3CfIzqfiB/hTSVPlF59RnvBARfNfNTjdxgFwVwqSYooLFh6d1PN1xGLiPUSa05m7Sop8zkEyUfkucvQ3i6T6JcgFZRLaF8U94bPwiIq3oIDIYQHOhLh/aiUgumrzw0Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sZw9+cqqE3+wPK1L5BxYzy6zCF3bNHmdvEW32DbYd68=;
- b=SdPrIowGy+xQY+A3PwROPkdIF772sziKDPFR6vn8D5Q/d0iKAUsRbI2nMNyoguadZLZxY/UfLKL3U8d4Pw2BtvjXAOFn8L+2UVgSQxqo4TJDFSXOKsMlVEiLp9QyGwk0hZPjnClQTn3u/e4EIvnzITFsjxSPUpe3jXMpRMoJ1MpMXyCBQCJo0fxzjII5PPa4YWwadNS8eMKA9wUb5ozrF3swTKNyoDE2oXmx7ZclTgsggRErSA37a/QlC4rDu+HTMsD9g0wJc7OVlmAe5t/CGeL1dvkaXXSX4vPBfVeZDEA9+YTnRVEHp4xeu6xLVvPJ9W+U4M7NU0tXIIKioscQmQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sZw9+cqqE3+wPK1L5BxYzy6zCF3bNHmdvEW32DbYd68=;
- b=envbXg4C/bBs+WhJoPSPgraV4TlfXzCy+DEOY1Sdq/Ia7QcvJ2wrjlXJTR5Ma/suzeO7H+5ESVv9urYOvKVoNmyfEi+J30i/Sy+jF8DCyDQWWImHc16FvB030brs/uUH/BrGiq5ScjqUmsMuyIqxw6X85g1u3LaYYj1ugljxiG8=
-Received: from MN2PR18MB2527.namprd18.prod.outlook.com (2603:10b6:208:103::10)
- by MN2PR18MB2957.namprd18.prod.outlook.com (2603:10b6:208:3c::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2856.20; Mon, 30 Mar
- 2020 11:04:36 +0000
-Received: from MN2PR18MB2527.namprd18.prod.outlook.com
- ([fe80::1c1e:d0bc:4cbb:313f]) by MN2PR18MB2527.namprd18.prod.outlook.com
- ([fe80::1c1e:d0bc:4cbb:313f%5]) with mapi id 15.20.2856.019; Mon, 30 Mar 2020
- 11:04:36 +0000
-From:   Saurav Kashyap <skashyap@marvell.com>
-To:     Leon Romanovsky <leon@kernel.org>
-CC:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Javed Hasan <jhasan@marvell.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [EXT] Re: [PATCH v2 8/8] qedf: Update the driver version to
- 8.42.3.5.
-Thread-Topic: [EXT] Re: [PATCH v2 8/8] qedf: Update the driver version to
- 8.42.3.5.
-Thread-Index: AQHWBlzN85ZXE53mFUuRoKceb8d54KhgvguAgAA7D2A=
-Date:   Mon, 30 Mar 2020 11:04:36 +0000
-Message-ID: <MN2PR18MB2527831D6825442A2DB3A5A2D2CB0@MN2PR18MB2527.namprd18.prod.outlook.com>
-References: <20200330063034.27309-1-skashyap@marvell.com>
- <20200330063034.27309-9-skashyap@marvell.com>
- <20200330073237.GI2454444@unreal>
-In-Reply-To: <20200330073237.GI2454444@unreal>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [114.143.185.87]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 2da2c45d-487e-4c89-f2af-08d7d49a2260
-x-ms-traffictypediagnostic: MN2PR18MB2957:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB29575843225AD637B6259231D2CB0@MN2PR18MB2957.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6108;
-x-forefront-prvs: 0358535363
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR18MB2527.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10009020)(4636009)(136003)(346002)(376002)(366004)(396003)(39850400004)(33656002)(86362001)(55016002)(966005)(4326008)(76116006)(66476007)(64756008)(66946007)(66556008)(66446008)(478600001)(316002)(52536014)(53546011)(6506007)(7696005)(186003)(6916009)(9686003)(26005)(5660300002)(54906003)(8936002)(71200400001)(19627235002)(81166006)(81156014)(8676002)(2906002)(15650500001);DIR:OUT;SFP:1101;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: J/4PZNOgamgxk8dW8Xao9j7VPBqcAaDE9gH1yo948s7vs7ZBYtYa/nJtwP+CPL/gfeUg3/qF4S5lVJ+U+ViL1K5Fkp8MqS7n5u6u2OEMYsFpo7JuzETWCc3vbucDvLr+i3jjwAjpejXVzT3b0JrywScTAxtOj6UcZfOqF2FXU5rXCWy1xiidHvdFr3t5K2BzieQftlpQ6B30zhH/fmNB2Mcq7OlTgxcrIiVZa4jtDg3OLMlPjMFlU/r5ilc9d6F55bKEIeDfjCriA7uQyGejx0lV2vYVefP54EMSAqBZWoYIzJ3KYwkPZcJR0OofN85ay+vDOcjmTFbWHpggTKavEJuy2udYdxkt8NJcVHBvya+Ey8F1P86KcwA0NxAyVbxt63rHLHENzjpnWAgGpx4MrMeaj106YHOl3s0Ui1Z5frZjrUVKbyWpOdjz2k9aLG6FvfW7juTbQCvrJV5aCzYisXObUvrITq4qz0JGrbOZA8F04ESy43m7wkBapNhVD4ILX/9YlfhPmmXV+yqeZqVw9A==
-x-ms-exchange-antispam-messagedata: Q5gKOZWR8Yhj7Q//dJUtmkOQPaCQP32UQIj42p8AvzBO7EP+KSMTRLBw90mmGl2WqWtVQeRfJ+eSxBFfcLzsMVPoW/G/3xlcHH/8bl0CSEr/h4Jmzky/CucVOMjqdbalSquPCttF/mSD3clJVICvmw==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1728152AbgC3Nmb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Mar 2020 09:42:31 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:40622 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727276AbgC3Nma (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2020 09:42:30 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02UDdVpV026345;
+        Mon, 30 Mar 2020 13:42:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : references : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=gQZVqlDbUAjuE8G92B/oIl0MmSF3PnzEAjeEyw4xMuc=;
+ b=wnmX6JYTWd227i0kyDpK/hgFJJHQ2sVtV94Nk2DLfcK77ex8zbICUKLgIdv/WT41ViDC
+ Gg9kmEgIoPKLsNSiwlhZn9i3aAvf59iMcZlNw18emHpllmTmyWtxVLc18c8+ketRMqTg
+ 5ClHaqz8aWqyf99Pjvxri6Yv+iZPcpRgB06mA5xk9hvZ/yq9veV/j2DrObmKcuUSWuA8
+ 5MfnA/+ryy0satWH6CDk3iNTo1Ll8ParIFSGV463W9J7YO40fNTy/PguKqQZkciVA9HY
+ he4msq7K+tAzLXyNKHnvyd03tybZIV9CiTnx3mt3VbSRhzRX+aKm9lKthRudeJx3/Tqh Sw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 303ceusqnk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 Mar 2020 13:42:28 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 02UDan57121017;
+        Mon, 30 Mar 2020 13:42:28 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 302g2bw15m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 Mar 2020 13:42:28 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 02UDgRGi029701;
+        Mon, 30 Mar 2020 13:42:27 GMT
+Received: from [192.168.1.16] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 30 Mar 2020 06:42:26 -0700
+Subject: Re: [PATCH 1/3] qla2xxx: Fix MPI failure AEN (8200) handling.
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+References: <20200327102730.22351-1-njavali@marvell.com>
+ <20200327102730.22351-2-njavali@marvell.com>
+ <78be501b-2032-6b6d-25ad-ea3d6b1ba28e@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <2c1af2ed-fcb3-f80a-c68b-594f1bc4ed9d@oracle.com>
+Date:   Mon, 30 Mar 2020 08:42:25 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2da2c45d-487e-4c89-f2af-08d7d49a2260
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Mar 2020 11:04:36.2575
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qGSired4rj/VUQhAwG/fviO2gazzeEXjnD2d061QX/mmghF/b/7wyfI6hsXic3XJ2VPKChh46ImWvGtuJg87Nw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2957
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.645
- definitions=2020-03-30_01:2020-03-27,2020-03-30 signatures=0
+In-Reply-To: <78be501b-2032-6b6d-25ad-ea3d6b1ba28e@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9575 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ adultscore=0 phishscore=0 bulkscore=0 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003300130
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9575 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
+ clxscore=1015 phishscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ suspectscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2003300130
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Leon,
+On 3/27/2020 9:20 AM, Himanshu Madhani wrote:
+> On 3/27/2020 5:27 AM, Nilesh Javali wrote:
+>> From: Arun Easi <aeasi@marvell.com>
+>>
+>> Today, upon an MPI failure AEN, on top of collecting an MPI dump, a
+>> regular firmware dump is also taken and the chip reset. This is
+>> disruptive to IOs and not required. So, make the firmware dump
+>> collection, followed by chip reset optional (not done by default).
+>>
+>> Firmware dump buffer and MPI dump buffer are independent of each
+>> other with this change and each can have dump that was taken at two
+>> different times for two different issues. The MPI dump is saved in a
+>> separate buffer and is retrieved differently from firmware dump.
+>>
+>> To collect full dump on MPI failure AEN, a module parameter is
+>> introduced:
+>>      ql2xfulldump_on_mpifail (default: 0)
+>>
+>> Signed-off-by: Arun Easi <aeasi@marvell.com>
+>> Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+>> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+>> ---
+>>   drivers/scsi/qla2xxx/qla_attr.c |  30 +++++++-
+>>   drivers/scsi/qla2xxx/qla_def.h  |  13 +++-
+>>   drivers/scsi/qla2xxx/qla_gbl.h  |   3 +
+>>   drivers/scsi/qla2xxx/qla_init.c |   2 +
+>>   drivers/scsi/qla2xxx/qla_isr.c  |  54 ++++++++++-----
+>>   drivers/scsi/qla2xxx/qla_os.c   |   6 ++
+>>   drivers/scsi/qla2xxx/qla_tmpl.c | 118 ++++++++++++++++++++++++++------
+>>   7 files changed, 185 insertions(+), 41 deletions(-)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_attr.c 
+>> b/drivers/scsi/qla2xxx/qla_attr.c
+>> index 97cabd7e0014..3a5f6f27587e 100644
+>> --- a/drivers/scsi/qla2xxx/qla_attr.c
+>> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+>> @@ -26,7 +26,8 @@ qla2x00_sysfs_read_fw_dump(struct file *filp, struct 
+>> kobject *kobj,
+>>       struct qla_hw_data *ha = vha->hw;
+>>       int rval = 0;
+>> -    if (!(ha->fw_dump_reading || ha->mctp_dump_reading))
+>> +    if (!(ha->fw_dump_reading || ha->mctp_dump_reading ||
+>> +          ha->mpi_fw_dump_reading))
+>>           return 0;
+>>       mutex_lock(&ha->optrom_mutex);
+>> @@ -42,6 +43,10 @@ qla2x00_sysfs_read_fw_dump(struct file *filp, 
+>> struct kobject *kobj,
+>>       } else if (ha->mctp_dumped && ha->mctp_dump_reading) {
+>>           rval = memory_read_from_buffer(buf, count, &off, ha->mctp_dump,
+>>               MCTP_DUMP_SIZE);
+>> +    } else if (ha->mpi_fw_dumped && ha->mpi_fw_dump_reading) {
+>> +        rval = memory_read_from_buffer(buf, count, &off,
+>> +                           ha->mpi_fw_dump,
+>> +                           ha->mpi_fw_dump_len);
+>>       } else if (ha->fw_dump_reading) {
+>>           rval = memory_read_from_buffer(buf, count, &off, ha->fw_dump,
+>>                       ha->fw_dump_len);
+>> @@ -103,7 +108,6 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, 
+>> struct kobject *kobj,
+>>               qla82xx_set_reset_owner(vha);
+>>               qla8044_idc_unlock(ha);
+>>           } else {
+>> -            ha->fw_dump_mpi = 1;
+>>               qla2x00_system_error(vha);
+>>           }
+>>           break;
+>> @@ -137,6 +141,22 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, 
+>> struct kobject *kobj,
+>>                   vha->host_no);
+>>           }
+>>           break;
+>> +    case 8:
+>> +        if (!ha->mpi_fw_dump_reading)
+>> +            break;
+>> +        ql_log(ql_log_info, vha, 0x70e7,
+>> +               "MPI firmware dump cleared on (%ld).\n", vha->host_no);
+>> +        ha->mpi_fw_dump_reading = 0;
+>> +        ha->mpi_fw_dumped = 0;
+>> +        break;
+>> +    case 9:
+>> +        if (ha->mpi_fw_dumped && !ha->mpi_fw_dump_reading) {
+>> +            ha->mpi_fw_dump_reading = 1;
+>> +            ql_log(ql_log_info, vha, 0x70e8,
+>> +                   "Raw MPI firmware dump ready for read on (%ld).\n",
+>> +                   vha->host_no);
+>> +        }
+>> +        break;
+>>       }
+>>       return count;
+>>   }
+>> @@ -706,7 +726,8 @@ qla2x00_sysfs_write_reset(struct file *filp, 
+>> struct kobject *kobj,
+>>           scsi_unblock_requests(vha->host);
+>>           break;
+>>       case 0x2025d:
+>> -        if (!IS_QLA81XX(ha) && !IS_QLA83XX(ha))
+>> +        if (!IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
+>> +            !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
+>>               return -EPERM;
+>>           ql_log(ql_log_info, vha, 0x706f,
+>> @@ -724,6 +745,8 @@ qla2x00_sysfs_write_reset(struct file *filp, 
+>> struct kobject *kobj,
+>>               qla83xx_idc_audit(vha, IDC_AUDIT_TIMESTAMP);
+>>               qla83xx_idc_unlock(vha, 0);
+>>               break;
+>> +        } else if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+>> +            qla27xx_reset_mpi(vha);
+>>           } else {
+>>               /* Make sure FC side is not in reset */
+>>               WARN_ON_ONCE(qla2x00_wait_for_hba_online(vha) !=
+>> @@ -737,6 +760,7 @@ qla2x00_sysfs_write_reset(struct file *filp, 
+>> struct kobject *kobj,
+>>               scsi_unblock_requests(vha->host);
+>>               break;
+>>           }
+>> +        break;
+>>       case 0x2025e:
+>>           if (!IS_P3P_TYPE(ha) || vha != base_vha) {
+>>               ql_log(ql_log_info, vha, 0x7071,
+>> diff --git a/drivers/scsi/qla2xxx/qla_def.h 
+>> b/drivers/scsi/qla2xxx/qla_def.h
+>> index 47c7a56438b5..daa9e936887b 100644
+>> --- a/drivers/scsi/qla2xxx/qla_def.h
+>> +++ b/drivers/scsi/qla2xxx/qla_def.h
+>> @@ -3223,6 +3223,7 @@ struct isp_operations {
+>>           uint32_t);
+>>       void (*fw_dump) (struct scsi_qla_host *, int);
+>> +    void (*mpi_fw_dump)(struct scsi_qla_host *, int);
+>>       int (*beacon_on) (struct scsi_qla_host *);
+>>       int (*beacon_off) (struct scsi_qla_host *);
+>> @@ -3748,6 +3749,11 @@ struct qlt_hw_data {
+>>   #define LEAK_EXCHG_THRESH_HOLD_PERCENT 75    /* 75 percent */
+>> +struct qla_hw_data_stat {
+>> +    u32 num_fw_dump;
+>> +    u32 num_mpi_reset;
+>> +};
+>> +
+>>   /*
+>>    * Qlogic host adapter specific data structure.
+>>   */
+>> @@ -4230,7 +4236,6 @@ struct qla_hw_data {
+>>       uint32_t    fw_dump_len;
+>>       u32        fw_dump_alloc_len;
+>>       bool        fw_dumped;
+>> -    bool        fw_dump_mpi;
+>>       unsigned long    fw_dump_cap_flags;
+>>   #define RISC_PAUSE_CMPL        0
+>>   #define DMA_SHUTDOWN_CMPL    1
+>> @@ -4241,6 +4246,10 @@ struct qla_hw_data {
+>>   #define ISP_MBX_RDY        6
+>>   #define ISP_SOFT_RESET_CMPL    7
+>>       int        fw_dump_reading;
+>> +    void        *mpi_fw_dump;
+>> +    u32        mpi_fw_dump_len;
+>> +    int        mpi_fw_dump_reading:1;
+>> +    int        mpi_fw_dumped:1;
+>>       int        prev_minidump_failed;
+>>       dma_addr_t    eft_dma;
+>>       void        *eft;
+>> @@ -4454,6 +4463,8 @@ struct qla_hw_data {
+>>       uint16_t last_zio_threshold;
+>>   #define DEFAULT_ZIO_THRESHOLD 5
+>> +
+>> +    struct qla_hw_data_stat stat;
+>>   };
+>>   struct active_regions {
+>> diff --git a/drivers/scsi/qla2xxx/qla_gbl.h 
+>> b/drivers/scsi/qla2xxx/qla_gbl.h
+>> index 1b93f5b4d77d..b20c5fa122fb 100644
+>> --- a/drivers/scsi/qla2xxx/qla_gbl.h
+>> +++ b/drivers/scsi/qla2xxx/qla_gbl.h
+>> @@ -173,6 +173,7 @@ extern int ql2xenablemsix;
+>>   extern int qla2xuseresexchforels;
+>>   extern int ql2xexlogins;
+>>   extern int ql2xdifbundlinginternalbuffers;
+>> +extern int ql2xfulldump_on_mpifail;
+>>   extern int qla2x00_loop_reset(scsi_qla_host_t *);
+>>   extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+>> @@ -645,6 +646,7 @@ extern void qla82xx_fw_dump(scsi_qla_host_t *, int);
+>>   extern void qla8044_fw_dump(scsi_qla_host_t *, int);
+>>   extern void qla27xx_fwdump(scsi_qla_host_t *, int);
+>> +extern void qla27xx_mpi_fwdump(scsi_qla_host_t *, int);
+>>   extern ulong qla27xx_fwdt_calculate_dump_size(struct scsi_qla_host 
+>> *, void *);
+>>   extern int qla27xx_fwdt_template_valid(void *);
+>>   extern ulong qla27xx_fwdt_template_size(void *);
+>> @@ -933,5 +935,6 @@ extern void qla24xx_process_purex_list(struct 
+>> purex_list *);
+>>   /* nvme.c */
+>>   void qla_nvme_unregister_remote_port(struct fc_port *fcport);
+>> +void qla27xx_reset_mpi(scsi_qla_host_t *vha);
+>>   void qla_handle_els_plogi_done(scsi_qla_host_t *vha, struct 
+>> event_arg *ea);
+>>   #endif /* _QLA_GBL_H */
+>> diff --git a/drivers/scsi/qla2xxx/qla_init.c 
+>> b/drivers/scsi/qla2xxx/qla_init.c
+>> index 5b2deaa730bf..3e9b7a079554 100644
+>> --- a/drivers/scsi/qla2xxx/qla_init.c
+>> +++ b/drivers/scsi/qla2xxx/qla_init.c
+>> @@ -3339,6 +3339,8 @@ qla2x00_alloc_fw_dump(scsi_qla_host_t *vha)
+>>                       dump_size / 1024);
+>>                   if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+>> +                    ha->mpi_fw_dump = (char *)fw_dump +
+>> +                        ha->fwdt[1].dump_size;
+>>                       mutex_unlock(&ha->optrom_mutex);
+>>                       return;
+>>                   }
+>> diff --git a/drivers/scsi/qla2xxx/qla_isr.c 
+>> b/drivers/scsi/qla2xxx/qla_isr.c
+>> index 8d7a905f6247..1cd9d3773cd3 100644
+>> --- a/drivers/scsi/qla2xxx/qla_isr.c
+>> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+>> @@ -757,6 +757,39 @@ qla2x00_find_fcport_by_nportid(scsi_qla_host_t 
+>> *vha, port_id_t *id,
+>>       return NULL;
+>>   }
+>> +/* Shall be called only on supported adapters. */
+>> +static void
+>> +qla27xx_handle_8200_aen(scsi_qla_host_t *vha, uint16_t *mb)
+>> +{
+>> +    struct qla_hw_data *ha = vha->hw;
+>> +    bool reset_isp_needed = 0;
+>> +
+>> +    ql_log(ql_log_warn, vha, 0x02f0,
+>> +           "MPI Heartbeat stop. MPI reset is%s needed. "
+>> +           "MB0[%xh] MB1[%xh] MB2[%xh] MB3[%xh]\n",
+>> +           mb[0] & BIT_8 ? "" : " not",
+>> +           mb[0], mb[1], mb[2], mb[3]);
+>> +
+>> +    if ((mb[1] & BIT_8) == 0)
+>> +        return;
+>> +
+>> +    ql_log(ql_log_warn, vha, 0x02f1,
+>> +           "MPI Heartbeat stop. FW dump needed\n");
+>> +
+>> +    if (ql2xfulldump_on_mpifail) {
+>> +        ha->isp_ops->fw_dump(vha, 1);
+>> +        reset_isp_needed = 1;
+>> +    }
+>> +
+>> +    ha->isp_ops->mpi_fw_dump(vha, 1);
+>> +
+>> +    if (reset_isp_needed) {
+>> +        vha->hw->flags.fw_init_done = 0;
+>> +        set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+>> +        qla2xxx_wake_dpc(vha);
+>> +    }
+>> +}
+>> +
+>>   /**
+>>    * qla2x00_async_event() - Process aynchronous events.
+>>    * @vha: SCSI driver HA context
+>> @@ -872,9 +905,9 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct 
+>> rsp_que *rsp, uint16_t *mb)
+>>                   "ISP System Error - mbx1=%xh mbx2=%xh mbx3=%xh.\n ",
+>>                   mb[1], mb[2], mb[3]);
+>> -        ha->fw_dump_mpi =
+>> -            (IS_QLA27XX(ha) || IS_QLA28XX(ha)) &&
+>> -            RD_REG_WORD(&reg24->mailbox7) & BIT_8;
+>> +            if ((IS_QLA27XX(ha) || IS_QLA28XX(ha)) &&
+>> +               RD_REG_WORD(&reg24->mailbox7) & BIT_8)
+>> +                ha->isp_ops->mpi_fw_dump(vha, 1);
+>>           ha->isp_ops->fw_dump(vha, 1);
+>>           ha->flags.fw_init_done = 0;
+>>           QLA_FW_STOPPED(ha);
+>> @@ -1375,20 +1408,7 @@ qla2x00_async_event(scsi_qla_host_t *vha, 
+>> struct rsp_que *rsp, uint16_t *mb)
+>>       case MBA_IDC_AEN:
+>>           if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
+>> -            ha->flags.fw_init_done = 0;
+>> -            ql_log(ql_log_warn, vha, 0xffff,
+>> -                "MPI Heartbeat stop. Chip reset needed. MB0[%xh] 
+>> MB1[%xh] MB2[%xh] MB3[%xh]\n",
+>> -                mb[0], mb[1], mb[2], mb[3]);
+>> -
+>> -            if ((mb[1] & BIT_8) ||
+>> -                (mb[2] & BIT_8)) {
+>> -                ql_log(ql_log_warn, vha, 0xd013,
+>> -                    "MPI Heartbeat stop. FW dump needed\n");
+>> -                ha->fw_dump_mpi = 1;
+>> -                ha->isp_ops->fw_dump(vha, 1);
+>> -            }
+>> -            set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+>> -            qla2xxx_wake_dpc(vha);
+>> +            qla27xx_handle_8200_aen(vha, mb);
+>>           } else if (IS_QLA83XX(ha)) {
+>>               mb[4] = RD_REG_WORD(&reg24->mailbox4);
+>>               mb[5] = RD_REG_WORD(&reg24->mailbox5);
+>> diff --git a/drivers/scsi/qla2xxx/qla_os.c 
+>> b/drivers/scsi/qla2xxx/qla_os.c
+>> index 3e65b8e9ed47..5ad320f81140 100644
+>> --- a/drivers/scsi/qla2xxx/qla_os.c
+>> +++ b/drivers/scsi/qla2xxx/qla_os.c
+>> @@ -35,6 +35,11 @@ static int apidev_major;
+>>    */
+>>   struct kmem_cache *srb_cachep;
+>> +int ql2xfulldump_on_mpifail;
+>> +module_param(ql2xfulldump_on_mpifail, int, S_IRUGO | S_IWUSR);
+>> +MODULE_PARM_DESC(ql2xfulldump_on_mpifail,
+>> +         "Set this to take full dump on MPI hang.");
+>> +
+>>   /*
+>>    * CT6 CTX allocation cache
+>>    */
+>> @@ -2518,6 +2523,7 @@ static struct isp_operations qla27xx_isp_ops = {
+>>       .read_nvram        = NULL,
+>>       .write_nvram        = NULL,
+>>       .fw_dump        = qla27xx_fwdump,
+>> +    .mpi_fw_dump        = qla27xx_mpi_fwdump,
+>>       .beacon_on        = qla24xx_beacon_on,
+>>       .beacon_off        = qla24xx_beacon_off,
+>>       .beacon_blink        = qla83xx_beacon_blink,
+>> diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c 
+>> b/drivers/scsi/qla2xxx/qla_tmpl.c
+>> index 6aeb1c3fb7a8..deb490cb90f0 100644
+>> --- a/drivers/scsi/qla2xxx/qla_tmpl.c
+>> +++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+>> @@ -12,6 +12,33 @@
+>>   #define IOBASE(vha)    IOBAR(ISPREG(vha))
+>>   #define INVALID_ENTRY ((struct qla27xx_fwdt_entry 
+>> *)0xffffffffffffffffUL)
+>> +/* hardware_lock assumed held. */
+>> +static void
+>> +qla27xx_write_remote_reg(struct scsi_qla_host *vha,
+>> +             u32 addr, u32 data)
+>> +{
+>> +    char *reg = (char *)ISPREG(vha);
+>> +
+>> +    ql_dbg(ql_dbg_misc, vha, 0xd300,
+>> +           "%s: addr/data = %xh/%xh\n", __func__, addr, data);
+>> +
+>> +    WRT_REG_DWORD(reg + IOBASE(vha), 0x40);
+>> +    WRT_REG_DWORD(reg + 0xc4, data);
+>> +    WRT_REG_DWORD(reg + 0xc0, addr);
+>> +}
+>> +
+>> +void
+>> +qla27xx_reset_mpi(scsi_qla_host_t *vha)
+>> +{
+>> +    ql_dbg(ql_dbg_misc + ql_dbg_verbose, vha, 0xd301,
+>> +           "Entered %s.\n", __func__);
+>> +
+>> +    qla27xx_write_remote_reg(vha, 0x104050, 0x40004);
+>> +    qla27xx_write_remote_reg(vha, 0x10405c, 0x4);
+>> +
+>> +    vha->hw->stat.num_mpi_reset++;
+>> +}
+>> +
+>>   static inline void
+>>   qla27xx_insert16(uint16_t value, void *buf, ulong *len)
+>>   {
+>> @@ -997,6 +1024,62 @@ qla27xx_fwdt_template_valid(void *p)
+>>       return true;
+>>   }
+>> +void
+>> +qla27xx_mpi_fwdump(scsi_qla_host_t *vha, int hardware_locked)
+>> +{
+>> +    ulong flags = 0;
+>> +    bool need_mpi_reset = 1;
+>> +
+>> +#ifndef __CHECKER__
+>> +    if (!hardware_locked)
+>> +        spin_lock_irqsave(&vha->hw->hardware_lock, flags);
+>> +#endif
+>> +    if (!vha->hw->mpi_fw_dump) {
+>> +        ql_log(ql_log_warn, vha, 0x02f3, "-> mpi_fwdump no buffer\n");
+>> +    } else if (vha->hw->mpi_fw_dumped) {
+>> +        ql_log(ql_log_warn, vha, 0x02f4,
+>> +               "-> MPI firmware already dumped (%p) -- ignoring 
+>> request\n",
+>> +               vha->hw->mpi_fw_dump);
+>> +    } else {
+>> +        struct fwdt *fwdt = &vha->hw->fwdt[1];
+>> +        ulong len;
+>> +        void *buf = vha->hw->mpi_fw_dump;
+>> +
+>> +        ql_log(ql_log_warn, vha, 0x02f5, "-> fwdt1 running...\n");
+>> +        if (!fwdt->template) {
+>> +            ql_log(ql_log_warn, vha, 0x02f6,
+>> +                   "-> fwdt1 no template\n");
+>> +            goto bailout;
+>> +        }
+>> +        len = qla27xx_execute_fwdt_template(vha, fwdt->template, buf);
+>> +        if (len == 0) {
+>> +            goto bailout;
+>> +        } else if (len != fwdt->dump_size) {
+>> +            ql_log(ql_log_warn, vha, 0x02f7,
+>> +                   "-> fwdt1 fwdump residual=%+ld\n",
+>> +                   fwdt->dump_size - len);
+>> +        } else {
+>> +            need_mpi_reset = 0;
+>> +        }
+>> +
+>> +        vha->hw->mpi_fw_dump_len = len;
+>> +        vha->hw->mpi_fw_dumped = 1;
+>> +
+>> +        ql_log(ql_log_warn, vha, 0x02f8,
+>> +               "-> MPI firmware dump saved to buffer (%lu/%p)\n",
+>> +               vha->host_no, vha->hw->mpi_fw_dump);
+>> +        qla2x00_post_uevent_work(vha, QLA_UEVENT_CODE_FW_DUMP);
+>> +    }
+>> +
+>> +bailout:
+>> +    if (need_mpi_reset)
+>> +        qla27xx_reset_mpi(vha);
+>> +#ifndef __CHECKER__
+>> +    if (!hardware_locked)
+>> +        spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+>> +#endif
+>> +}
+>> +
+>>   void
+>>   qla27xx_fwdump(scsi_qla_host_t *vha, int hardware_locked)
+>>   {
+>> @@ -1015,30 +1098,26 @@ qla27xx_fwdump(scsi_qla_host_t *vha, int 
+>> hardware_locked)
+>>               vha->hw->fw_dump);
+>>       } else {
+>>           struct fwdt *fwdt = vha->hw->fwdt;
+>> -        uint j;
+>>           ulong len;
+>>           void *buf = vha->hw->fw_dump;
+>>           uint count = vha->hw->fw_dump_mpi ? 2 : 1;
+>> -        for (j = 0; j < count; j++, fwdt++, buf += len) {
+>> -            ql_log(ql_log_warn, vha, 0xd011,
+>> -                "-> fwdt%u running...\n", j);
+>> -            if (!fwdt->template) {
+>> -                ql_log(ql_log_warn, vha, 0xd012,
+>> -                    "-> fwdt%u no template\n", j);
+>> -                break;
+>> -            }
+>> -            len = qla27xx_execute_fwdt_template(vha,
+>> -                fwdt->template, buf);
+>> -            if (len == 0) {
+>> -                goto bailout;
+>> -            } else if (len != fwdt->dump_size) {
+>> -                ql_log(ql_log_warn, vha, 0xd013,
+>> -                    "-> fwdt%u fwdump residual=%+ld\n",
+>> -                    j, fwdt->dump_size - len);
+>> -            }
+>> +        ql_log(ql_log_warn, vha, 0xd011, "-> fwdt0 running...\n");
+>> +        if (!fwdt->template) {
+>> +            ql_log(ql_log_warn, vha, 0xd012,
+>> +                   "-> fwdt0 no template\n");
+>> +            goto bailout;
+>>           }
+>> -        vha->hw->fw_dump_len = buf - (void *)vha->hw->fw_dump;
+>> +        len = qla27xx_execute_fwdt_template(vha, fwdt->template, buf);
+>> +        if (len == 0) {
+>> +            goto bailout;
+>> +        } else if (len != fwdt->dump_size) {
+>> +            ql_log(ql_log_warn, vha, 0xd013,
+>> +                   "-> fwdt0 fwdump residual=%+ld\n",
+>> +                fwdt->dump_size - len);
+>> +        }
+>> +
+>> +        vha->hw->fw_dump_len = len;
+>>           vha->hw->fw_dumped = 1;
+>>           ql_log(ql_log_warn, vha, 0xd015,
+>> @@ -1048,7 +1127,6 @@ qla27xx_fwdump(scsi_qla_host_t *vha, int 
+>> hardware_locked)
+>>       }
+>>   bailout:
+>> -    vha->hw->fw_dump_mpi = 0;
+>>   #ifndef __CHECKER__
+>>       if (!hardware_locked)
+>>           spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+>>
+> 
+> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-> -----Original Message-----
-> From: Leon Romanovsky <leon@kernel.org>
-> Sent: Monday, March 30, 2020 1:03 PM
-> To: Saurav Kashyap <skashyap@marvell.com>
-> Cc: martin.petersen@oracle.com; GR-QLogic-Storage-Upstream <GR-QLogic-
-> Storage-Upstream@marvell.com>; linux-scsi@vger.kernel.org; Javed Hasan
-> <jhasan@marvell.com>; netdev@vger.kernel.org
-> Subject: [EXT] Re: [PATCH v2 8/8] qedf: Update the driver version to 8.42=
-.3.5.
->=20
-> External Email
->=20
-> ----------------------------------------------------------------------
-> On Sun, Mar 29, 2020 at 11:30:34PM -0700, Saurav Kashyap wrote:
-> > - Update version to 8.42.3.5.
-> >
-> > Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-> > ---
-> >  drivers/scsi/qedf/qedf_version.h | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
->=20
-> NAK, please delete this version and not update.
->=20
-> For rationale, take a look here.
-> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-
-> 3A__lore.kernel.org_ksummit-2Ddiscuss_CA-2B55aFx9A-
-> 3D5cc0QZ7CySC4F2K7eYaEfzkdYEc9JaNgCcV25-3Drg-
-> 40mail.gmail.com_&d=3DDwIBAg&c=3DnKjWec2b6R0mOyPaz7xtfQ&r=3DZHZbmY_L
-> bM3DUZK_BDO1OITP3ot_Vkb_5w-gas5TBMQ&m=3Dwvdgi6kwJlIOn1Gwy-
-> tbE4Mg_iT5XW1DB7POPjKNALs&s=3DiAYLw5KnzDLbtgJ4Mlr8IQhGhD_5peOEw
-> wI35EWImM4&e=3D
->=20
-> Thanks
+Nilesh,
 
-Thanks for the feedback, will submit v3 soon.
+FYI, I have reviewed 1/3 as well so please go ahead add my reviewed-by tag.
 
 Thanks,
-~Saurav
+- Himanshu
