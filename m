@@ -2,96 +2,129 @@ Return-Path: <SRS0=+9Kw=5P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF922C43331
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 13:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D1FC2D0EC
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 14:49:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B58C20780
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 13:43:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 577F72073B
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 14:49:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="UBWR7VA4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728322AbgC3NnF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Mar 2020 09:43:05 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2617 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728301AbgC3NnE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Mar 2020 09:43:04 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 4BE4F118960F3A97A5F9;
-        Mon, 30 Mar 2020 14:43:03 +0100 (IST)
-Received: from [127.0.0.1] (10.47.8.155) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 30 Mar
- 2020 14:43:01 +0100
-Subject: Re: [PATCH RFC v2 12/24] hpsa: use reserved commands
-To:     Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <bvanassche@acm.org>,
-        <hch@infradead.org>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <virtualization@lists.linux-foundation.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-13-git-send-email-john.garry@huawei.com>
- <20200311081059.GC31504@ming.t460p>
- <a76ab13a-85a3-0d88-595f-af13ef1b3fe3@huawei.com>
- <881b6a9b-2137-946f-a900-5c4e6cf1fe37@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <c3f5c030-d735-c730-6ff9-19cb1cb50fe8@huawei.com>
-Date:   Mon, 30 Mar 2020 14:42:45 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1728441AbgC3Ott (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Mar 2020 10:49:49 -0400
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:52586 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728159AbgC3Ots (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2020 10:49:48 -0400
+Received: by mail-pj1-f65.google.com with SMTP id ng8so7682184pjb.2
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2020 07:49:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=EuYDssEB7evYPsaury7cjtqe0bY7Z307ltbStlf8RcQ=;
+        b=UBWR7VA4YVLrQ4url646yT9vaphZOdutTIcpjIf1GGc5cotZ+uLa+tx6myCbsioNFX
+         sYlHMeHc7+D13OD7Mj6fe2dZeZWYErqeEBHVOGbey2hnrkH2b9scF5mD0xZZX4I1HTx9
+         gnHhtytjx3/ylt0WG5LnhKfBzOMRRjqSBwvm0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=EuYDssEB7evYPsaury7cjtqe0bY7Z307ltbStlf8RcQ=;
+        b=uJ4OTsFxlxzTsMPTlEHX+PKUkLdy1HAFY8Lz9/TnZ6MrDBKuzIUvf8MYnbphddUD/Z
+         mi5FBViGCje5Kg6joOyvWdUIHnK/NcN+nXBbwyvPHgBabbPozGulC8y6ezAyEnl5fKC2
+         qgX8g6Tg72KNzL7nF27zWHWep+0mbWkW6K2JKDlFUC5v7EHcxaEn73LErTglkvB8wOXK
+         JyGHvMZWXlGAYTcRJ0NfdIZ/Hb02ynGDPjqcRMYEOwEjME4ImDYbBGh7OrY86FJRlmfU
+         5HrqA4eKFCdIB62DfyD8qkElhE7nONzu/08E3wiKni8IGliGeGz8ei2cPJU5+8y6Lq/X
+         AemA==
+X-Gm-Message-State: ANhLgQ03cWpc629g01Df+NXtQQGE/RuR3Z23fVT11swsikQPI8PTbfQ+
+        P+sGWfikgHuIVHz0fDxht3F1Yw==
+X-Google-Smtp-Source: ADFU+vtMF+C5nJkLwJJYZ4lY+Y0gDiTaA2EAiSmNSROpCrQpUyOrjK9YEVRtmJDI6+R7RJoZyMiZtQ==
+X-Received: by 2002:a17:90a:b391:: with SMTP id e17mr16921059pjr.55.1585579788020;
+        Mon, 30 Mar 2020 07:49:48 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
+        by smtp.gmail.com with ESMTPSA id y198sm1460972pfg.123.2020.03.30.07.49.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Mar 2020 07:49:47 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-block@vger.kernel.org, groeck@chromium.org,
+        paolo.valente@linaro.org, linux-scsi@vger.kernel.org,
+        sqazi@google.com, Douglas Anderson <dianders@chromium.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] blk-mq: In blk_mq_dispatch_rq_list() "no budget" is a reason to kick
+Date:   Mon, 30 Mar 2020 07:49:05 -0700
+Message-Id: <20200330074856.1.I1f95c459e51962b8d2c83e869913b6befda2255c@changeid>
+X-Mailer: git-send-email 2.26.0.rc2.310.g2932bb562d-goog
+In-Reply-To: <20200330144907.13011-1-dianders@chromium.org>
+References: <20200330144907.13011-1-dianders@chromium.org>
 MIME-Version: 1.0
-In-Reply-To: <881b6a9b-2137-946f-a900-5c4e6cf1fe37@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.8.155]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/03/2020 09:48, Hannes Reinecke wrote:
-> On 3/17/20 10:38 AM, John Garry wrote:
->> On 11/03/2020 08:10, Ming Lei wrote:
->>>> ands(struct ctlr_info *h)
->>>> @@ -5803,6 +5803,7 @@ static int hpsa_scsi_host_alloc(struct 
->>>> ctlr_info *h)
->>>>       sh->max_lun = HPSA_MAX_LUN;
->>>>       sh->max_id = HPSA_MAX_LUN;
->>>>       sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
->>>> +    sh->nr_reserved_cmds = HPSA_NRESERVED_CMDS;
->>> Now .nr_reserved_cmds has been passed to blk-mq, you need to increase
->>> sh->can_queue to h->nr_cmds, because .can_queue is the whole queue depth
->>> (include the part of reserved tags), otherwise, IO tags will be
->>> decreased.
->>>
->>
->> Sounds correct.
->>
-> I will have having a look at the patchset; I thought I did a patch to 
-> modify .can_queue so that it would cover only the usable tags, not the 
-> reserved ones.
-> 
+In blk_mq_dispatch_rq_list(), if blk_mq_sched_needs_restart() returns
+true and the driver returns BLK_STS_RESOURCE then we'll kick the
+queue.  However, there's another case where we might need to kick it.
+If we were unable to get budget we can be in much the same state as
+when the driver returns BLK_STS_RESOURCE, so we should treat it the
+same.
 
-To me, it makes sense to leave .can_queue unmodified, carry it down to 
-blk-mq and allow blk_mq_init_bitmap_tags() find the queue depth:
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+---
 
-static struct blk_mq_tags *blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
-   int node, int alloc_policy)
-{
-	unsigned int depth = tags->nr_tags - tags->nr_reserved_tags; *
-	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
+ block/blk-mq.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-	if (bt_alloc(&tags->bitmap_tags, depth, round_robin, node))
-		goto free_tags;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index d92088dec6c3..2cd8d2b49ff4 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1189,6 +1189,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 	bool no_tag = false;
+ 	int errors, queued;
+ 	blk_status_t ret = BLK_STS_OK;
++	bool no_budget_avail = false;
+ 
+ 	if (list_empty(list))
+ 		return false;
+@@ -1205,8 +1206,10 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 		rq = list_first_entry(list, struct request, queuelist);
+ 
+ 		hctx = rq->mq_hctx;
+-		if (!got_budget && !blk_mq_get_dispatch_budget(hctx))
++		if (!got_budget && !blk_mq_get_dispatch_budget(hctx)) {
++			no_budget_avail = true;
+ 			break;
++		}
+ 
+ 		if (!blk_mq_get_driver_tag(rq)) {
+ 			/*
+@@ -1311,13 +1314,15 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+ 		 *
+ 		 * If driver returns BLK_STS_RESOURCE and SCHED_RESTART
+ 		 * bit is set, run queue after a delay to avoid IO stalls
+-		 * that could otherwise occur if the queue is idle.
++		 * that could otherwise occur if the queue is idle.  We'll do
++		 * similar if we couldn't get budget and SCHED_RESTART is set.
+ 		 */
+ 		needs_restart = blk_mq_sched_needs_restart(hctx);
+ 		if (!needs_restart ||
+ 		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
+ 			blk_mq_run_hw_queue(hctx, true);
+-		else if (needs_restart && (ret == BLK_STS_RESOURCE))
++		else if (needs_restart && (ret == BLK_STS_RESOURCE ||
++					   no_budget_avail))
+ 			blk_mq_delay_run_hw_queue(hctx, BLK_MQ_RESOURCE_DELAY);
+ 
+ 		blk_mq_update_dispatch_busy(hctx, true);
+-- 
+2.26.0.rc2.310.g2932bb562d-goog
 
-Cheers,
-John
