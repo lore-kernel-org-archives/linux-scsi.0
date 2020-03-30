@@ -2,158 +2,99 @@ Return-Path: <SRS0=+9Kw=5P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF3CC43331
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 17:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 846E3C43331
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 17:08:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5884420776
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 17:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5310120780
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Mar 2020 17:08:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="UmWRnJSH"
+	dkim=pass (2048-bit key) header.d=blockbridge-com.20150623.gappssmtp.com header.i=@blockbridge-com.20150623.gappssmtp.com header.b="Ad+nBNSp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730224AbgC3RA7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Mar 2020 13:00:59 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:57437 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728075AbgC3RA6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Mar 2020 13:00:58 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1585587658; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=1d8KTbgt/iCLQW3VVzDGNmfmBuqcJpPIW3cjwTeucPA=; b=UmWRnJSHCSIBhZwAi/eXK+T4ZJ/Jn7sTca/MMRgO/9ng3/HFVTxyvVyAqjLnez03ON9Wv93R
- ToKN+ySpGNTK9JnR3A9nkcPXZI/xuM6wa5KiR9otu+r1vXbugKjKjBGzipe78XgXIBLy7xKk
- VMu1s0gc2xATjh7WuHRHdUzt4Zs=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e8225b3.7f655d9d99d0-smtp-out-n01;
- Mon, 30 Mar 2020 17:00:35 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C3157C43637; Mon, 30 Mar 2020 17:00:35 +0000 (UTC)
-Received: from [192.168.8.111] (cpe-70-95-153-89.san.res.rr.com [70.95.153.89])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 795AAC433D2;
-        Mon, 30 Mar 2020 17:00:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 795AAC433D2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 1/1] scsi: ufs: set device as active power mode after
- resetting device
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
-        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-References: <20200327095835.10293-1-stanley.chu@mediatek.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <ae5747c1-fd33-2588-b838-d88d21bcb267@codeaurora.org>
-Date:   Mon, 30 Mar 2020 10:00:32 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        id S1730237AbgC3RIU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Mar 2020 13:08:20 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:41850 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729821AbgC3RIU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Mar 2020 13:08:20 -0400
+Received: by mail-ot1-f67.google.com with SMTP id f52so18846850otf.8
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2020 10:08:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=blockbridge-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=KzOIcpQMGry/S7KX/3i7FgRktSaDHF+E1Qb4eqLRCuI=;
+        b=Ad+nBNSpjurCoWqj//saej4OFOKjZlYLa0jKuodco+te+2JVG/IANMC0ikGvaZGOg9
+         ehwwvhE5XhgZpWyO0m9adpKNM4PYIQaxkbNUEHZf9Sy3sOzUQ88RnOSIl5hXYIu3symh
+         2Yzv1I0vyFWGAEfDUG0zNQuf98O4BdjfDYJTUE7jFws0nGCYTn19Is7qyYIL5hrqRWgt
+         rDx0G/o8YABjNrEhlFc6aY35c65jRO4QjO7+cJG871TLgXoTAxgN9C6wlTwv1MsBDXlg
+         15QEJSRz69OeHuBm6MfshBiN30xhgVlJOeAU0T4Ra+XlpoI1qPuQCkRPGdDJyx4JBLRA
+         whtg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=KzOIcpQMGry/S7KX/3i7FgRktSaDHF+E1Qb4eqLRCuI=;
+        b=DCkbVlPyWMdkJrx32Im3nT+NckoWHGSw4utvOtvL+KRbAamvUb4NcUYDgPwlQ0ltsh
+         +oV1xCBcr29wLKbEwjRowMlAxueXiXLUQwjbl/ROLPAoXbPSFN0AOGVJY/QAUbCztszp
+         4pKFX6oL6zssR0mc28ESZdG1UB+yVNmP2UcloFh4UfiGkq61BPLheCWW9eK2HPyVmWxs
+         hGHL4gY1BFBz+mRjgnAxGO7DT+BB8OtNCt5acvwQg2HQ4jBSE/vbfeJwbcL94R2uvAhQ
+         s8o+5Lj4Iw8ksW1xQxPO12fzl8SL3N8uuF2rzdBrJDpu5mQckG+hJ/nChWy/1SpQLri+
+         YliA==
+X-Gm-Message-State: ANhLgQ0yPCiIJ0H0QbDoX+MlQ/TrYmMwXCYZrnTBrEKuirYHlZFmQuL5
+        Mlbdhsp7tWifxlm3TllEQn8c0so5kyozT22dZpHvHQ==
+X-Google-Smtp-Source: ADFU+vsZduY51eDd7FS9ubS+PNYEHKDob0M//Wghi65nlZ5LqUBQIcY9bjjm+Kk1UD2LVIpEBTaw7W/SLGM8xpAsD6U=
+X-Received: by 2002:a9d:6ad8:: with SMTP id m24mr126508otq.66.1585588099575;
+ Mon, 30 Mar 2020 10:08:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200327095835.10293-1-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <CAAFE1beMkvyRctGqpffd3o_QtDH0CrmQSb=fV4GzqMUXWzPyOw@mail.gmail.com>
+ <20191203005849.GB25002@ming.t460p> <CAAFE1bcG8c1Q3iwh-LUjruBMAuFTJ4qWxNGsnhfKvGWHNLAeEQ@mail.gmail.com>
+ <20191203031444.GB6245@ming.t460p> <CAAFE1besnb=HV4C_buORYpWbkXecmtybwX8d_Ka2NsKmiym53w@mail.gmail.com>
+ <CAAFE1bfpUWCZrtR8v3S++0-+gi8DJ79X3e0XqDe93i8nuGTnNg@mail.gmail.com>
+ <20191203124558.GA22805@ming.t460p> <CAAFE1bfB2Km+e=T0ahwq0r9BQrBMnSguQQ+y=yzYi3tursS+TQ@mail.gmail.com>
+ <20191204010529.GA3910@ming.t460p> <CAAFE1bcJmRP5OSu=5asNTpvkF=kjEZu=GafaS9h52776tVgpPA@mail.gmail.com>
+ <20191204230225.GA26189@ming.t460p> <d9d39d10-d3f3-f2d8-b32e-96896ba0cdb2@grimberg.me>
+ <CAAFE1beqFBQS_zVYEXFTD2qu8PAF9hBSW4j1k9ZD6MhU_gWg5Q@mail.gmail.com> <d2f633f1-57ef-4618-c3a6-c5ff0afead5b@grimberg.me>
+In-Reply-To: <d2f633f1-57ef-4618-c3a6-c5ff0afead5b@grimberg.me>
+From:   Stephen Rust <srust@blockbridge.com>
+Date:   Mon, 30 Mar 2020 13:08:37 -0400
+Message-ID: <CAAFE1bdAbKfqbf05pKBcMUj+58fijDMT-8WBSuwiKk2Bmm4v2w@mail.gmail.com>
+Subject: Re: Data corruption in kernel 5.1+ with iSER attached ramdisk
+To:     Sagi Grimberg <sagi@grimberg.me>
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Rob Townley <rob.townley@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        target-devel@vger.kernel.org, Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Max Gurtovoy <maxg@mellanox.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Sagi,
 
-On 3/27/2020 2:58 AM, Stanley Chu wrote:
-> Currently ufshcd driver assumes that bInitPowerMode parameter
-> is not changed by any vendors thus device power mode can be set as
-> "Active" during initialization.
-> 
-> According to UFS JEDEC specification, device power mode shall be
-> "Active" after HW Reset is triggered if the bInitPowerMode parameter
-> in Device Descriptor is default value.
-> 
-> By above description, we can set device power mode as "Active" after
-> device reset is triggered by vendor's callback. With this change,
-> the link startup performance can be improved in some cases
-> by not setting link_startup_again as true in ufshcd_link_startup().
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
+> Sorry for the late reply, lost track of this.
 
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+No problem!
 
->   drivers/scsi/ufs/ufshcd.c | 13 -------------
->   drivers/scsi/ufs/ufshcd.h | 14 ++++++++++++++
->   2 files changed, 14 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 227660a1a446..f0a35b289b7c 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -171,19 +171,6 @@ enum {
->   #define ufshcd_clear_eh_in_progress(h) \
->   	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
->   
-> -#define ufshcd_set_ufs_dev_active(h) \
-> -	((h)->curr_dev_pwr_mode = UFS_ACTIVE_PWR_MODE)
-> -#define ufshcd_set_ufs_dev_sleep(h) \
-> -	((h)->curr_dev_pwr_mode = UFS_SLEEP_PWR_MODE)
-> -#define ufshcd_set_ufs_dev_poweroff(h) \
-> -	((h)->curr_dev_pwr_mode = UFS_POWERDOWN_PWR_MODE)
-> -#define ufshcd_is_ufs_dev_active(h) \
-> -	((h)->curr_dev_pwr_mode == UFS_ACTIVE_PWR_MODE)
-> -#define ufshcd_is_ufs_dev_sleep(h) \
-> -	((h)->curr_dev_pwr_mode == UFS_SLEEP_PWR_MODE)
-> -#define ufshcd_is_ufs_dev_poweroff(h) \
-> -	((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
-> -
->   struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
->   	{UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
->   	{UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index b7bd81795c24..7a9d1d170719 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -129,6 +129,19 @@ enum uic_link_state {
->   #define ufshcd_set_link_hibern8(hba) ((hba)->uic_link_state = \
->   				    UIC_LINK_HIBERN8_STATE)
->   
-> +#define ufshcd_set_ufs_dev_active(h) \
-> +	((h)->curr_dev_pwr_mode = UFS_ACTIVE_PWR_MODE)
-> +#define ufshcd_set_ufs_dev_sleep(h) \
-> +	((h)->curr_dev_pwr_mode = UFS_SLEEP_PWR_MODE)
-> +#define ufshcd_set_ufs_dev_poweroff(h) \
-> +	((h)->curr_dev_pwr_mode = UFS_POWERDOWN_PWR_MODE)
-> +#define ufshcd_is_ufs_dev_active(h) \
-> +	((h)->curr_dev_pwr_mode == UFS_ACTIVE_PWR_MODE)
-> +#define ufshcd_is_ufs_dev_sleep(h) \
-> +	((h)->curr_dev_pwr_mode == UFS_SLEEP_PWR_MODE)
-> +#define ufshcd_is_ufs_dev_poweroff(h) \
-> +	((h)->curr_dev_pwr_mode == UFS_POWERDOWN_PWR_MODE)
-> +
->   /*
->    * UFS Power management levels.
->    * Each level is in increasing order of power savings.
-> @@ -1091,6 +1104,7 @@ static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
->   {
->   	if (hba->vops && hba->vops->device_reset) {
->   		hba->vops->device_reset(hba);
-> +		ufshcd_set_ufs_dev_active(hba);
->   		ufshcd_update_reg_hist(&hba->ufs_stats.dev_reset, 0);
->   	}
->   }
-> 
+> Can you try attached patch and see if it solves your issue?
+> WARNING: very lightly tested...
 
+I have run our tests against this patch and it is working well for our
+"basic" testing as well. The test case that previously failed, now
+passes with this patch. So that's encouraging! Thanks for the quick
+response and quick patch.
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+One question we had is regarding the hard coded header length: What
+happens if the initiator sends an extended CDB, like a WRITE32? Are
+there any concerns with an additional header segment (AHS)?
+
+Thanks again,
+Steve
