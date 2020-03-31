@@ -2,161 +2,256 @@ Return-Path: <SRS0=Uiav=5Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A346C2D0EE
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 16:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23CEBC43331
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 18:06:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4029212CC
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 16:23:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFDC22054F
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 18:06:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PGbHZFmN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730902AbgCaQXN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Mar 2020 12:23:13 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:17526 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730560AbgCaQXM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Mar 2020 12:23:12 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02VG40AU077003
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2020 12:23:12 -0400
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3043g7c05y-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2020 12:23:11 -0400
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <maier@linux.ibm.com>;
-        Tue, 31 Mar 2020 17:22:57 +0100
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
-        by e06smtp01.uk.ibm.com (192.168.101.131) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Tue, 31 Mar 2020 17:22:54 +0100
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 02VGN5Vp55574590
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 31 Mar 2020 16:23:05 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F341FA4054;
-        Tue, 31 Mar 2020 16:23:04 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 86E80A405B;
-        Tue, 31 Mar 2020 16:23:04 +0000 (GMT)
-Received: from oc4120165700.ibm.com (unknown [9.145.128.27])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 31 Mar 2020 16:23:04 +0000 (GMT)
-Subject: Re: [RFC PATCH v1 27/50] drivers/s390/scsi/zcsp_fc.c: Use
- prandom_u32_max() for backoff
-To:     Benjamin Block <bblock@linux.ibm.com>,
-        George Spelvin <lkml@sdf.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <202003281643.02SGhHN7015213@sdf.org>
- <20200331161321.GB17507@t480-pf1aa2c2>
-From:   Steffen Maier <maier@linux.ibm.com>
-Date:   Tue, 31 Mar 2020 18:23:04 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
-MIME-Version: 1.0
-In-Reply-To: <20200331161321.GB17507@t480-pf1aa2c2>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-x-cbid: 20033116-4275-0000-0000-000003B706AB
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 20033116-4276-0000-0000-000038CC5709
-Message-Id: <bf41ae18-aba4-5315-e22b-67a6873eb459@linux.ibm.com>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
- definitions=2020-03-31_05:2020-03-31,2020-03-31 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- spamscore=0 malwarescore=0 mlxlogscore=999 impostorscore=0 clxscore=1015
- phishscore=0 adultscore=0 lowpriorityscore=0 bulkscore=0 mlxscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2003310144
+        id S1726548AbgCaSGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Mar 2020 14:06:17 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:50190 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726199AbgCaSGQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2020 14:06:16 -0400
+Received: by mail-wm1-f67.google.com with SMTP id t128so3588706wma.0
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2020 11:06:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=rdHIFzp6WyS0NijgnSKxc0qBm0w7b6RkFiTqIi5G0RI=;
+        b=PGbHZFmNgek1IF9cb9XkbLzdCxHpn4Gh5pLqY2lNXlPYj2wgdW2tpOyQfxRW+lADlM
+         BMGcDDbQ2/yv6YArqmRRlo7X7B7yryVBNiJbkHmb2bDeEO64PVl/wdpd5zGAvGkTqhtq
+         uYAw9gYLQAyVV8jj+4SPAqa6Ydz5DH9zM2nwcHPyYJq6Qk8Td29I8douEblKObLiexak
+         x1MpLaxLZjIScdnqlbeK0d8rCrxP/0iKBBR2PkGXXWziupX0gRV3DYVXQH+S2RMUoBpJ
+         PSLt9c3LjYT3vExYUvVEmcbD97MSoJhpftyBhiRnQgNH2lIEG+9mHNLTrHR4WN4G/HS7
+         ObIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=rdHIFzp6WyS0NijgnSKxc0qBm0w7b6RkFiTqIi5G0RI=;
+        b=Qew2EQ9RbV887zRRQi9Z13+RNBZKobon4Wzgd6oJnpB7lSneMtRiOPEvgEvezwKwPD
+         CW6d+wYGKp1CTJzM+bHvF6MtKBDxSvTXyNCfaXmMF4122fp7YD9/sPSKsJEfneZeRK7o
+         LoEfq0VENsyKs3c1kOsxHtYOKe3J6Q8kGJiokqABtVRZM8QKq4SBZN7dPHjO4Dg5ilRX
+         sPWhWHUgtHWUtQbxfjcsV1qKISUcBH0L4YgHTJDBLD6oseJimN1BJZYoGtq2c8/fheoh
+         XuOsen+k71zLX9ECByDTuz7Icq5cmIZhu4m2PNGI2Q/tKjoQubSOUxDF5zTeF+iVugIA
+         3+1A==
+X-Gm-Message-State: AGi0Puaw0WHkfu3iGfksoX7AtpjDTYbr5PjMAnYxlKx+YjGmbfz6WWve
+        JM2Qlq89bn41EJzbOZPy6bAnSQ==
+X-Google-Smtp-Source: APiQypID0x6nOClfq+P0TTy8TSQdW9f1BCd93MzMM1F4FQaFe2EeZjymclbKAMKVAxxzX94LrjBXSQ==
+X-Received: by 2002:a05:600c:21d4:: with SMTP id x20mr23109wmj.77.1585677972371;
+        Tue, 31 Mar 2020 11:06:12 -0700 (PDT)
+Received: from [192.168.0.102] ([84.33.138.35])
+        by smtp.gmail.com with ESMTPSA id y11sm4580878wmi.13.2020.03.31.11.06.10
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 31 Mar 2020 11:06:11 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Subject: Re: [PATCH 2/2] scsi: core: Fix stall if two threads request budget
+ at the same time
+From:   Paolo Valente <paolo.valente@linaro.org>
+In-Reply-To: <20200331014109.GA20230@ming.t460p>
+Date:   Tue, 31 Mar 2020 20:07:35 +0200
+Cc:     Douglas Anderson <dianders@chromium.org>,
+        Jens Axboe <axboe@kernel.dk>, jejb@linux.ibm.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        Guenter Roeck <groeck@chromium.org>,
+        linux-scsi@vger.kernel.org, sqazi@google.com,
+        linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <D38AB98D-7F6A-4C61-8A8F-C22C53671AC8@linaro.org>
+References: <20200330144907.13011-1-dianders@chromium.org>
+ <20200330074856.2.I28278ef8ea27afc0ec7e597752a6d4e58c16176f@changeid>
+ <20200331014109.GA20230@ming.t460p>
+To:     Ming Lei <ming.lei@redhat.com>
+X-Mailer: Apple Mail (2.3445.104.11)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/31/20 6:13 PM, Benjamin Block wrote:
-> On Fri, Nov 29, 2019 at 03:39:41PM -0500, George Spelvin wrote:
->> We don't need crypto-grade random numbers for randomized backoffs.
->>
->> (We could skip the if() if we wanted to rely on the undocumented fact
->> that prandom_u32_max(0) always returns 0.  That would be a net time
->> saving it port_scan_backoff == 0 is rare; if it's common, the if()
->> is false often enough to pay for itself. Not sure which applies here.)
->>
->> Signed-off-by: George Spelvin <lkml@sdf.org>
->> Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
->> Cc: Vasily Gorbik <gor@linux.ibm.com>
->> Cc: Christian Borntraeger <borntraeger@de.ibm.com>
->> Cc: linux-s390@vger.kernel.org
+
+
+> Il giorno 31 mar 2020, alle ore 03:41, Ming Lei <ming.lei@redhat.com> =
+ha scritto:
+>=20
+> On Mon, Mar 30, 2020 at 07:49:06AM -0700, Douglas Anderson wrote:
+>> It is possible for two threads to be running
+>> blk_mq_do_dispatch_sched() at the same time with the same "hctx".
+>> This is because there can be more than one caller to
+>> __blk_mq_run_hw_queue() with the same "hctx" and hctx_lock() doesn't
+>> prevent more than one thread from entering.
+>>=20
+>> If more than one thread is running blk_mq_do_dispatch_sched() at the
+>> same time with the same "hctx", they may have contention acquiring
+>> budget.  The blk_mq_get_dispatch_budget() can eventually translate
+>> into scsi_mq_get_budget().  If the device's "queue_depth" is 1 (not
+>> uncommon) then only one of the two threads will be the one to
+>> increment "device_busy" to 1 and get the budget.
+>>=20
+>> The losing thread will break out of blk_mq_do_dispatch_sched() and
+>> will stop dispatching requests.  The assumption is that when more
+>> budget is available later (when existing transactions finish) the
+>> queue will be kicked again, perhaps in scsi_end_request().
+>>=20
+>> The winning thread now has budget and can go on to call
+>> dispatch_request().  If dispatch_request() returns NULL here then we
+>> have a potential problem.  Specifically we'll now call
+>=20
+> I guess this problem should be BFQ specific. Now there is definitely
+> requests in BFQ queue wrt. this hctx. However, looks this request is
+> only available from another loser thread, and it won't be retrieved in
+> the winning thread via e->type->ops.dispatch_request().
+>=20
+> Just wondering why BFQ is implemented in this way?
+>=20
+
+BFQ inherited this powerful non-working scheme from CFQ, some age ago.
+
+In more detail: if BFQ has at least one non-empty internal queue, then
+is says of course that there is work to do.  But if the currently
+in-service queue is empty, and is expected to receive new I/O, then
+BFQ plugs I/O dispatch to enforce service guarantees for the
+in-service queue, i.e., BFQ responds NULL to a dispatch request.
+
+It would be very easy to change bfq_has_work so that it returns false
+in case the in-service queue is empty, even if there is I/O
+backlogged.  My only concern is: since everything has worked with the
+current scheme for probably 15 years, are we sure that everything is
+still ok after we change this scheme?
+
+I'm confident it would be ok, because a timer fires if the in-service
+queue does not receive any I/O for too long, and the handler of the
+timer invokes blk_mq_run_hw_queues().
+
+Looking forward to your feedback before proposing a change,
+Paolo
+
+>> blk_mq_put_dispatch_budget() which translates into
+>> scsi_mq_put_budget().  That will mark the device as no longer busy =
+but
+>> doesn't do anything to kick the queue.  This violates the assumption
+>> that the queue would be kicked when more budget was available.
+>>=20
+>> Pictorially:
+>>=20
+>> Thread A                          Thread B
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> blk_mq_get_dispatch_budget() =3D> 1
+>> dispatch_request() =3D> NULL
+>>                                  blk_mq_get_dispatch_budget() =3D> 0
+>>                                  // because Thread A marked
+>>                                  // "device_busy" in scsi_device
+>> blk_mq_put_dispatch_budget()
+>>=20
+>> The above case was observed in reboot tests and caused a task to hang
+>> forever waiting for IO to complete.  Traces showed that in fact two
+>> tasks were running blk_mq_do_dispatch_sched() at the same time with
+>> the same "hctx".  The task that got the budget did in fact see
+>> dispatch_request() return NULL.  Both tasks returned and the system
+>> went on for several minutes (until the hung task delay kicked in)
+>> without the given "hctx" showing up again in traces.
+>>=20
+>> Let's attempt to fix this problem by detecting budget contention.  If
+>> we're in the SCSI code's put_budget() function and we saw that =
+someone
+>> else might have wanted the budget we got then we'll kick the queue.
+>>=20
+>> The mechanism of kicking due to budget contention has the potential =
+to
+>> overcompensate and kick the queue more than strictly necessary, but =
+it
+>> shouldn't hurt.
+>>=20
+>> Signed-off-by: Douglas Anderson <dianders@chromium.org>
 >> ---
->>   drivers/s390/scsi/zfcp_fc.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Hello George,
-> 
-> it would be nice, if you could address the mails to the
-> driver-maintainers (`scripts/get_maintainer.pl drivers/s390/scsi/zfcp_fc.c`
-> will tell you that this is me and Steffen); I'd certainly have noticed
-> it earlier then :-).
-> 
->>
->> diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
->> index b018b61bd168e..d24cafe02708f 100644
->> --- a/drivers/s390/scsi/zfcp_fc.c
->> +++ b/drivers/s390/scsi/zfcp_fc.c
->> @@ -48,7 +48,7 @@ unsigned int zfcp_fc_port_scan_backoff(void)
->>   {
->>   	if (!port_scan_backoff)
->>   		return 0;
->> -	return get_random_int() % port_scan_backoff;
->> +	return prandom_u32_max(port_scan_backoff);
-
-Reviewed-by: Steffen Maier <maier@linux.ibm.com>
-
-> 
-> I think the change is fine. You are right, we don't need a crypto nonce
-> here.
-> 
-> I think I'd let the zero-check stand as is, because the internal
-> behaviour of prandom_u32_max() is, as you say, undocumented. This is not
-> a performance critical code-path for us anyway.
-
-yes, let's keep the extra check as it's intentional and documented user 
-interface for zfcp, so better be explicit
-
-> 
->>   }
->>   
->>   static void zfcp_fc_port_scan_time(struct zfcp_adapter *adapter)
->> -- 
->> 2.26.0
->>
-> 
-> Steffen, do you have any objections? Otherwise I can queue this up -
-> minus the somewhat mangled subject - for when we send something next time.
-> 
-
-
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+>>=20
+>> drivers/scsi/scsi_lib.c    | 27 ++++++++++++++++++++++++---
+>> drivers/scsi/scsi_scan.c   |  1 +
+>> include/scsi/scsi_device.h |  2 ++
+>> 3 files changed, 27 insertions(+), 3 deletions(-)
+>>=20
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 610ee41fa54c..0530da909995 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -344,6 +344,21 @@ static void scsi_dec_host_busy(struct Scsi_Host =
+*shost, struct scsi_cmnd *cmd)
+>> 	rcu_read_unlock();
+>> }
+>>=20
+>> +static void scsi_device_dec_busy(struct scsi_device *sdev)
+>> +{
+>> +	bool was_contention;
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&sdev->budget_lock, flags);
+>> +	atomic_dec(&sdev->device_busy);
+>> +	was_contention =3D sdev->budget_contention;
+>> +	sdev->budget_contention =3D false;
+>> +	spin_unlock_irqrestore(&sdev->budget_lock, flags);
+>> +
+>> +	if (was_contention)
+>> +		blk_mq_run_hw_queues(sdev->request_queue, true);
+>> +}
+>> +
+>> void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd =
+*cmd)
+>> {
+>> 	struct Scsi_Host *shost =3D sdev->host;
+>> @@ -354,7 +369,7 @@ void scsi_device_unbusy(struct scsi_device *sdev, =
+struct scsi_cmnd *cmd)
+>> 	if (starget->can_queue > 0)
+>> 		atomic_dec(&starget->target_busy);
+>>=20
+>> -	atomic_dec(&sdev->device_busy);
+>> +	scsi_device_dec_busy(sdev);
+>> }
+>>=20
+>> static void scsi_kick_queue(struct request_queue *q)
+>> @@ -1624,16 +1639,22 @@ static void scsi_mq_put_budget(struct =
+blk_mq_hw_ctx *hctx)
+>> 	struct request_queue *q =3D hctx->queue;
+>> 	struct scsi_device *sdev =3D q->queuedata;
+>>=20
+>> -	atomic_dec(&sdev->device_busy);
+>> +	scsi_device_dec_busy(sdev);
+>> }
+>>=20
+>> static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
+>> {
+>> 	struct request_queue *q =3D hctx->queue;
+>> 	struct scsi_device *sdev =3D q->queuedata;
+>> +	unsigned long flags;
+>>=20
+>> -	if (scsi_dev_queue_ready(q, sdev))
+>> +	spin_lock_irqsave(&sdev->budget_lock, flags);
+>> +	if (scsi_dev_queue_ready(q, sdev)) {
+>> +		spin_unlock_irqrestore(&sdev->budget_lock, flags);
+>> 		return true;
+>> +	}
+>> +	sdev->budget_contention =3D true;
+>> +	spin_unlock_irqrestore(&sdev->budget_lock, flags);
+>=20
+> No, it really hurts performance by adding one per-sdev spinlock in =
+fast path,
+> and we actually tried to kill the atomic variable of =
+'sdev->device_busy'
+> for high performance HBA.
+>=20
+> Thanks,
+> Ming
 
