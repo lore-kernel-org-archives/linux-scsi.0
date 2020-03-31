@@ -2,283 +2,160 @@ Return-Path: <SRS0=Uiav=5Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7BD4C43331
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 04:05:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D0FC2D0E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 04:12:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAB7B20776
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 04:05:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 489BD2072D
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Mar 2020 04:12:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ceYFV2uo"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="VyKORPRg";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="KXWnfK1P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726303AbgCaEFi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Mar 2020 00:05:38 -0400
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:34023 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726001AbgCaEFi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Mar 2020 00:05:38 -0400
-Received: by mail-vs1-f66.google.com with SMTP id b5so12664901vsb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2020 21:05:35 -0700 (PDT)
+        id S1726216AbgCaEMH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Mar 2020 00:12:07 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:3964 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725809AbgCaEMH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 31 Mar 2020 00:12:07 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 02V4C57L009813;
+        Mon, 30 Mar 2020 21:12:05 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=ItjujfmcJOYtI394FMK1EyUcOLAKQWUY13hrMsm8ezU=;
+ b=VyKORPRgEYeY4R5e0ec1rafusishMKrCcIfDN1VwByNnpXjx822QoPjEI4d4lFlx0q8a
+ ODpEPSi+WRxfTzqs9AwLprk40n2kpoYvYz+THGiJ/zoCY88HM2ytbJrPir/DWQfwWp4N
+ LU/BdnesLZ5vnWPR4Jn7ckp92ejLTqHKB9BallckCFV3FbuKavX2OD3IH5VFQXkPOOKY
+ WhJXuPkSs6t5vHTKlFsLI//tfUMAEfZ/8nNMnR5WvSDs4mvudD/lHOsxzxQmIc4Ut9G2
+ je8fzWmf81NuWuC6xnxEPJ9+h6RrzMruI6mBM1ZqP4KT7Ixp0396fyg4HvnLW0TWrISU EA== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3023xp1cap-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 30 Mar 2020 21:12:05 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 30 Mar
+ 2020 21:12:04 -0700
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (104.47.55.100)
+ by SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Mon, 30 Mar 2020 21:12:04 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=K4GLE1y7LXagwBKqDDKveiW5eXx0TbzHGp2A1ZyNJh1FaJZcl/kXGOuLm7q+Jst/p1xxG8dC2VOgU8E1aCwMsqGjeXIB0YX9Bq9VvubqGLMH6W+n7ORM+d7zDWUkM7UsOIsI2AnGZ6PzQFxgUdN3IdFXzAm4ehzndrlDqNQBxlaK1Hj/qfv9s7YbdxM+b6eXnzu36ICebunkQfKuRuM+tXbBdhiFGa+2EaVQrOppkGbKG+6r8paGa5+koNeLu3ciMTT45F0BpowEoQJQcjasPFMW86XwrGSBo5EzHWKD0V/dM+4jmAZlhKjvJSaaa2XOzz3x6W3KhSDK2TvSCFriKw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ItjujfmcJOYtI394FMK1EyUcOLAKQWUY13hrMsm8ezU=;
+ b=agJWlMZq+ne12lo9xwV6KHTeoVpISIIye4cI3RmaqKILi+2LeLGe0UHfCSS2QxbqLR4d4ce0XctV+KAMRKtmSfShRscwvSBJJBAKVeXzreF8ZEFYqFf80yrtpl+YcCYHpaFlkhwYhEMknfcS+q2KTzXBCPsIDP1J47aIoRrDLZxXhljs40AxJy9zcmRXbVIPxIZ+Bt6sIgP/LloQ8iweE8vivA70sSKEp8ZToMh3+lZs3+Ngf8WrzMCN+Bsm6AQhSqji1fTFO5pNfaAoRH5+hhi7CEt64h6vEebShzWe13nfqIJsVS3BX+G2OoNqbyuZ8Oi4Xz+Dc6d/UDeD+7VAxw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Zke5yRW+ArGpRV56Byz8cgdPZDWiQ7bt+lqoUYmEskc=;
-        b=ceYFV2uoQr0mS2GX/LNa0KtgNEbRuaubbuTOCl8Wvye7sSyixJMXwo4LrJbxQ6j5HA
-         nJHMc6TUDu6dDEvnxKlOYZtoYGKF+0k0/H+rm6A4YhCYnsVMn2LvYoJ/xrmy6gqZ3tLm
-         vJgfKGExX9svErzZItdo/o5AEMLyrbPy2L/Ls=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Zke5yRW+ArGpRV56Byz8cgdPZDWiQ7bt+lqoUYmEskc=;
-        b=cK3p/PAQY8BZPggVCZSKbTO3tFMQxEAPMKHoh+frtWWelcWJJTfuEOVHR1aVIebP7c
-         F7G+vbygP2nnc/p+tMlEaXQJjSrtC4EMlA+VnG2rJa21thorkpz164b5v2tV/tnAhjU+
-         IiycdD9m8+FDxCr8++jp9FFQRdpVWSxTvPAoun70iEIdkFZOJ0scSJLzaPjn4CZe28Rr
-         5kTqeo3xpGBIKmmnXzXWVW0SYfq2gsfENksIyK/9xHQOlQjPnFg35YgUrzCRT/oWoax+
-         4EGi2DvBupvKXeT/14oD0HHUnuIcSdgGx00w9a+A/Qx/XIpDNno2bhInJPgUFMphv9yo
-         IWrw==
-X-Gm-Message-State: AGi0PuaT6HQQ6BMjFOSIbI8uq3RpttuYNdQfExjzUfPu/dl1EOlvnegJ
-        hIXIYnx5ud/fhY9zMBuXVl071AlEetg=
-X-Google-Smtp-Source: APiQypK/WWDSwMocT6vb+N87AgVF2SxLLB/nUU5AIh/qhzQCmBfUpuVpTwb56ie3OweuZqj2xE57SQ==
-X-Received: by 2002:a67:a409:: with SMTP id n9mr11418539vse.18.1585627533958;
-        Mon, 30 Mar 2020 21:05:33 -0700 (PDT)
-Received: from mail-vk1-f175.google.com (mail-vk1-f175.google.com. [209.85.221.175])
-        by smtp.gmail.com with ESMTPSA id l17sm5850469vsq.28.2020.03.30.21.05.32
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Mar 2020 21:05:32 -0700 (PDT)
-Received: by mail-vk1-f175.google.com with SMTP id p123so5356161vkg.1
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2020 21:05:32 -0700 (PDT)
-X-Received: by 2002:a1f:a244:: with SMTP id l65mr10199156vke.34.1585627532149;
- Mon, 30 Mar 2020 21:05:32 -0700 (PDT)
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ItjujfmcJOYtI394FMK1EyUcOLAKQWUY13hrMsm8ezU=;
+ b=KXWnfK1POAbmWn1IRHJLzVm8a8fSTq+miwWfYBnK0rh41ErAsoLajTjYZtUQqCTmbp1pwl8Py09jtgPcnTf6REuNm5ShfjiBE9YhrdCwjvMgSwZCf/xiPMMUQaG+3KCPe7Ls/WgPXsiYkNVS2dYdN9soZAp2KlNeAeMxIyOYmX8=
+Received: from MN2PR18MB2527.namprd18.prod.outlook.com (2603:10b6:208:103::10)
+ by MN2PR18MB3230.namprd18.prod.outlook.com (2603:10b6:208:15a::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2856.20; Tue, 31 Mar
+ 2020 04:12:00 +0000
+Received: from MN2PR18MB2527.namprd18.prod.outlook.com
+ ([fe80::1c1e:d0bc:4cbb:313f]) by MN2PR18MB2527.namprd18.prod.outlook.com
+ ([fe80::1c1e:d0bc:4cbb:313f%5]) with mapi id 15.20.2856.019; Tue, 31 Mar 2020
+ 04:12:00 +0000
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     David Miller <davem@davemloft.net>
+CC:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Javed Hasan <jhasan@marvell.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [EXT] Re: [PATCH v2 0/8] qed/qedf: Firmware recovery, bw update
+ and misc fixes.
+Thread-Topic: [EXT] Re: [PATCH v2 0/8] qed/qedf: Firmware recovery, bw update
+ and misc fixes.
+Thread-Index: AQHWBly7iBKGh4xMPEqEG3AaTWjYKqhhX+4AgAC3sYA=
+Date:   Tue, 31 Mar 2020 04:12:00 +0000
+Message-ID: <MN2PR18MB25272DAB6C57C9AA9A6AB856D2C80@MN2PR18MB2527.namprd18.prod.outlook.com>
+References: <20200330063034.27309-1-skashyap@marvell.com>
+ <20200330.101202.660829992934953878.davem@davemloft.net>
+In-Reply-To: <20200330.101202.660829992934953878.davem@davemloft.net>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [114.143.185.87]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: d0f068b6-dead-46dd-d013-08d7d529a902
+x-ms-traffictypediagnostic: MN2PR18MB3230:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MN2PR18MB32302B826AF40D7CCF7C9E64D2C80@MN2PR18MB3230.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3276;
+x-forefront-prvs: 0359162B6D
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR18MB2527.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10009020)(4636009)(39860400002)(346002)(396003)(366004)(376002)(136003)(81166006)(81156014)(8676002)(76116006)(66946007)(2906002)(15650500001)(316002)(4326008)(52536014)(33656002)(6916009)(8936002)(478600001)(186003)(54906003)(9686003)(71200400001)(66446008)(86362001)(6506007)(7696005)(55016002)(66476007)(64756008)(66556008)(5660300002)(26005)(53546011);DIR:OUT;SFP:1101;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: xliOC4KynZBpZe/X7aDmn9oRWV+v5aNaumvJ/KbaDc6ixJf9QUpyZ6hVJSmV3V/ybUkDpI2f4iHWRj6m0aDaAENnppyBIfA1DodPFAW+KveCyFTms/HJdd2/CjQFCJvmuqc/MOtFO65kYY+A1A+0C7c4BIwp1Ud+XpP2D3q60SDbTDxUukOcMUFnofjN5qN0TE5dR095yg1R0wSOtKZYk6BX4R5GJ5p6wB0A+oqpbiU5Ngtnf2DiRsylZkRYFkqcBfYsTUZ9jgts6FCqL3lv3b8LVWYtX63WpAxTFGph3XivhU3VqwEJ9lKQGB1zpkiD7c/iZk6O2XB/QwpazQYCRJRRS6/BOBT8M1sw2VmJrY/lzJotClzfCMZih4OC4VoVZY7UB0i536mpe/5KET6yeiwAlixYd0QoDC58DvQR9+JahJ6CkRAzMqqLggtNHfux
+x-ms-exchange-antispam-messagedata: pezXp1VdbuHoZE5WMPwroWI+poZixgih13HUEBtVRlS4sP5grZ7z66LSyCZ0kLIHwP73cXSiRnCW935l+PBTmBE1CKw8e7oOrW/PwhEiPr+qG0+eOV8+2z3WN+ZYs8p9F/PrjS9vftpocah1F/t3ew==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20200330144907.13011-1-dianders@chromium.org> <20200330074856.2.I28278ef8ea27afc0ec7e597752a6d4e58c16176f@changeid>
- <20200331014109.GA20230@ming.t460p> <CAD=FV=V-6kFD2Nso+8YGpx5atDpkegBH+7JH9YZ70gPAs84FOw@mail.gmail.com>
- <20200331025828.GB20230@ming.t460p>
-In-Reply-To: <20200331025828.GB20230@ming.t460p>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Mon, 30 Mar 2020 21:05:20 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=Urdjs23t_J=GruoM_42rV94oXMiqTn0w3u4DR50zpb4Q@mail.gmail.com>
-Message-ID: <CAD=FV=Urdjs23t_J=GruoM_42rV94oXMiqTn0w3u4DR50zpb4Q@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: core: Fix stall if two threads request budget
- at the same time
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, Guenter Roeck <groeck@chromium.org>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        linux-scsi@vger.kernel.org, Salman Qazi <sqazi@google.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-CrossTenant-Network-Message-Id: d0f068b6-dead-46dd-d013-08d7d529a902
+X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Mar 2020 04:12:00.0774
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: daiKub53B1k2GD5KUVoXAlEGgn/GRZE+P84gSoQdCCvgD1t2r3+5Kqkg7SH1WXwmC/CGkntxU35N+KdNE2wciQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3230
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-03-31_01:2020-03-30,2020-03-31 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Hi David,
 
-On Mon, Mar 30, 2020 at 7:58 PM Ming Lei <ming.lei@redhat.com> wrote:
->
-> On Mon, Mar 30, 2020 at 07:15:54PM -0700, Doug Anderson wrote:
-> > Hi,
-> >
-> > On Mon, Mar 30, 2020 at 6:41 PM Ming Lei <ming.lei@redhat.com> wrote:
-> > >
-> > > On Mon, Mar 30, 2020 at 07:49:06AM -0700, Douglas Anderson wrote:
-> > > > It is possible for two threads to be running
-> > > > blk_mq_do_dispatch_sched() at the same time with the same "hctx".
-> > > > This is because there can be more than one caller to
-> > > > __blk_mq_run_hw_queue() with the same "hctx" and hctx_lock() doesn't
-> > > > prevent more than one thread from entering.
-> > > >
-> > > > If more than one thread is running blk_mq_do_dispatch_sched() at the
-> > > > same time with the same "hctx", they may have contention acquiring
-> > > > budget.  The blk_mq_get_dispatch_budget() can eventually translate
-> > > > into scsi_mq_get_budget().  If the device's "queue_depth" is 1 (not
-> > > > uncommon) then only one of the two threads will be the one to
-> > > > increment "device_busy" to 1 and get the budget.
-> > > >
-> > > > The losing thread will break out of blk_mq_do_dispatch_sched() and
-> > > > will stop dispatching requests.  The assumption is that when more
-> > > > budget is available later (when existing transactions finish) the
-> > > > queue will be kicked again, perhaps in scsi_end_request().
-> > > >
-> > > > The winning thread now has budget and can go on to call
-> > > > dispatch_request().  If dispatch_request() returns NULL here then we
-> > > > have a potential problem.  Specifically we'll now call
-> > >
-> > > I guess this problem should be BFQ specific. Now there is definitely
-> > > requests in BFQ queue wrt. this hctx. However, looks this request is
-> > > only available from another loser thread, and it won't be retrieved in
-> > > the winning thread via e->type->ops.dispatch_request().
-> > >
-> > > Just wondering why BFQ is implemented in this way?
-> >
-> > Paolo can maybe comment why.
-> >
-> > ...but even if BFQ wanted to try to change this, I think it's
-> > impossible to fully close the race.  There is no locking between the
-> > call to has_work() and dispatch_request() and there can be two (or
-> > more) threads running the code at the same time.  Without some type of
-> > locking I think it will always be possible for dispatch_request() to
-> > return NULL.  Are we OK with code that works most of the time but
-> > still has a race?  ...or did I misunderstand how this all works?
->
-> Wrt. dispatching requests from hctx->dispatch, there is really one
-> race given scsi's run queue from scsi_end_request() may not see
-> that request. Looks that is what the patch 1 is addressing.
+> -----Original Message-----
+> From: David Miller <davem@davemloft.net>
+> Sent: Monday, March 30, 2020 10:42 PM
+> To: Saurav Kashyap <skashyap@marvell.com>
+> Cc: martin.petersen@oracle.com; GR-QLogic-Storage-Upstream <GR-QLogic-
+> Storage-Upstream@marvell.com>; linux-scsi@vger.kernel.org; Javed Hasan
+> <jhasan@marvell.com>; netdev@vger.kernel.org
+> Subject: [EXT] Re: [PATCH v2 0/8] qed/qedf: Firmware recovery, bw update
+> and misc fixes.
+>=20
+> External Email
+>=20
+> ----------------------------------------------------------------------
+>=20
+> You add the new qed_bw_update() function but nothing invokes it.
+>=20
+> Remove this from the patch series until you are submitting changes
+> that actually use the function.
 
-OK, at least I got something right.  ;-)
+qedf driver does use this call, I have submitted following patches. The pat=
+ch "Implement callback for bw_update" uses functionality
+exposed by qed. Its patch number 4 in the series.
 
+Saurav Kashyap (4):
+  qedf: Keep track of num of pending flogi.
+  qedf: Implement callback for bw_update.
+  qedf: Get dev info after updating the params.
+  qedf: Update the driver version to 8.42.3.5.
 
-> However, for this issue, there isn't race, given when we get budget,
-> the request isn't dequeued from BFQ yet. If budget is assigned
-> successfully, either the request is dispatched to LLD successfully,
-> or STS_RESOURCE is triggered, or running out of driver tag, run queue
-> is guaranteed to be started for handling another dispatch path
-> which running out of budget.
->
-> That is why I raise the question why BFQ dispatches request in this way.
+Sudarsana Reddy Kalluru (1):
+  qed: Send BW update notifications to the protocol drivers.
 
-Ah, I _think_ I see what you mean.  So there should be no race because
-the "has_work" is just a hint?  It's assumed that whichever task gets
-the budget will be able to dispatch all the work that's there.  Is
-that right?
-
-
-> > > > blk_mq_put_dispatch_budget() which translates into
-> > > > scsi_mq_put_budget().  That will mark the device as no longer busy but
-> > > > doesn't do anything to kick the queue.  This violates the assumption
-> > > > that the queue would be kicked when more budget was available.
-> > > >
-> > > > Pictorially:
-> > > >
-> > > > Thread A                          Thread B
-> > > > ================================= ==================================
-> > > > blk_mq_get_dispatch_budget() => 1
-> > > > dispatch_request() => NULL
-> > > >                                   blk_mq_get_dispatch_budget() => 0
-> > > >                                   // because Thread A marked
-> > > >                                   // "device_busy" in scsi_device
-> > > > blk_mq_put_dispatch_budget()
-> > > >
-> > > > The above case was observed in reboot tests and caused a task to hang
-> > > > forever waiting for IO to complete.  Traces showed that in fact two
-> > > > tasks were running blk_mq_do_dispatch_sched() at the same time with
-> > > > the same "hctx".  The task that got the budget did in fact see
-> > > > dispatch_request() return NULL.  Both tasks returned and the system
-> > > > went on for several minutes (until the hung task delay kicked in)
-> > > > without the given "hctx" showing up again in traces.
-> > > >
-> > > > Let's attempt to fix this problem by detecting budget contention.  If
-> > > > we're in the SCSI code's put_budget() function and we saw that someone
-> > > > else might have wanted the budget we got then we'll kick the queue.
-> > > >
-> > > > The mechanism of kicking due to budget contention has the potential to
-> > > > overcompensate and kick the queue more than strictly necessary, but it
-> > > > shouldn't hurt.
-> > > >
-> > > > Signed-off-by: Douglas Anderson <dianders@chromium.org>
-> > > > ---
-> > > >
-> > > >  drivers/scsi/scsi_lib.c    | 27 ++++++++++++++++++++++++---
-> > > >  drivers/scsi/scsi_scan.c   |  1 +
-> > > >  include/scsi/scsi_device.h |  2 ++
-> > > >  3 files changed, 27 insertions(+), 3 deletions(-)
-> > > >
-> > > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > > index 610ee41fa54c..0530da909995 100644
-> > > > --- a/drivers/scsi/scsi_lib.c
-> > > > +++ b/drivers/scsi/scsi_lib.c
-> > > > @@ -344,6 +344,21 @@ static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-> > > >       rcu_read_unlock();
-> > > >  }
-> > > >
-> > > > +static void scsi_device_dec_busy(struct scsi_device *sdev)
-> > > > +{
-> > > > +     bool was_contention;
-> > > > +     unsigned long flags;
-> > > > +
-> > > > +     spin_lock_irqsave(&sdev->budget_lock, flags);
-> > > > +     atomic_dec(&sdev->device_busy);
-> > > > +     was_contention = sdev->budget_contention;
-> > > > +     sdev->budget_contention = false;
-> > > > +     spin_unlock_irqrestore(&sdev->budget_lock, flags);
-> > > > +
-> > > > +     if (was_contention)
-> > > > +             blk_mq_run_hw_queues(sdev->request_queue, true);
-> > > > +}
-> > > > +
-> > > >  void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
-> > > >  {
-> > > >       struct Scsi_Host *shost = sdev->host;
-> > > > @@ -354,7 +369,7 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
-> > > >       if (starget->can_queue > 0)
-> > > >               atomic_dec(&starget->target_busy);
-> > > >
-> > > > -     atomic_dec(&sdev->device_busy);
-> > > > +     scsi_device_dec_busy(sdev);
-> > > >  }
-> > > >
-> > > >  static void scsi_kick_queue(struct request_queue *q)
-> > > > @@ -1624,16 +1639,22 @@ static void scsi_mq_put_budget(struct blk_mq_hw_ctx *hctx)
-> > > >       struct request_queue *q = hctx->queue;
-> > > >       struct scsi_device *sdev = q->queuedata;
-> > > >
-> > > > -     atomic_dec(&sdev->device_busy);
-> > > > +     scsi_device_dec_busy(sdev);
-> > > >  }
-> > > >
-> > > >  static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
-> > > >  {
-> > > >       struct request_queue *q = hctx->queue;
-> > > >       struct scsi_device *sdev = q->queuedata;
-> > > > +     unsigned long flags;
-> > > >
-> > > > -     if (scsi_dev_queue_ready(q, sdev))
-> > > > +     spin_lock_irqsave(&sdev->budget_lock, flags);
-> > > > +     if (scsi_dev_queue_ready(q, sdev)) {
-> > > > +             spin_unlock_irqrestore(&sdev->budget_lock, flags);
-> > > >               return true;
-> > > > +     }
-> > > > +     sdev->budget_contention = true;
-> > > > +     spin_unlock_irqrestore(&sdev->budget_lock, flags);
-> > >
-> > > No, it really hurts performance by adding one per-sdev spinlock in fast path,
-> > > and we actually tried to kill the atomic variable of 'sdev->device_busy'
-> > > for high performance HBA.
-> >
-> > It might be slow, but correctness trumps speed, right?  I tried to do
->
-> Correctness doesn't have to cause performance regression, does it?
-
-I guess what I'm saying is that if there is a choice between the two
-we have to choose correctness.  If there is a bug and we don't know of
-any way to fix it other than with a fix that regresses performance
-then we have to regress performance.  I wasn't able to find a way to
-fix the bug (as I understood it) without regressing performance, but
-I'd be happy if someone else could come up with a way.
-
-
-> > this with a 2nd atomic and without the spinlock but I kept having a
-> > hole one way or the other.  I ended up just trying to keep the
-> > spinlock section as small as possible.
-> >
-> > If you know of a way to get rid of the spinlock that still makes the
-> > code correct, I'd be super interested!  :-)  I certainly won't claim
-> > that it's impossible to do, only that I didn't manage to come up with
-> > a way.
->
-> As I mentioned, if BFQ doesn't dispatch request in this special way,
-> there isn't such race.
-
-OK, so I guess this puts it in Paolo's court then.  I'm about done for
-the evening, but maybe he can comment on it or come up with a fix?
-
--Doug
+Thanks,
+~Saurav
