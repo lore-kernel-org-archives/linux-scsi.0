@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B5EC43331
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 17:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1194C43331
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 17:12:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56C06206E9
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 17:04:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FA1820719
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 17:12:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="m6eZD4lA"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="SO9XJ0cc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732288AbgDARE2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Apr 2020 13:04:28 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24698 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727541AbgDARE1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2020 13:04:27 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 031Goc79029912;
-        Wed, 1 Apr 2020 10:04:03 -0700
+        id S1732491AbgDARM5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Apr 2020 13:12:57 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47630 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726445AbgDARM4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Apr 2020 13:12:56 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 031H9adh030504;
+        Wed, 1 Apr 2020 10:12:44 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
  cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0818; bh=DDmB4BlH7i+xRFcs6qsmghF9VoYni7F3NM6DuiHZdd4=;
- b=m6eZD4lAKCFmph5GS9Ur/VBRhouEFgElToRtMU8J46G2ofUhJVSK64+Xx2LkoCVzFKiQ
- N4MOueTMQMc1NQiMBLoSNCTyqD3M/aYHPoUTm7633cZ7jEYPd4PresSxe49OwaEuTdkk
- ejAkEphp9DTgf5DrEmnM4pQyGUoB+9cDDTU87NnRLCsr2mVj4e1XuMfM1LGzyqv+wzvy
- eVdNS3p4qD/ddLUwHwMWRR9JCxZ/JbFgJ2KoCu6tj8s/uCxyYHJ+PKuecCWukWo497bM
- 0oz9JQDrB18jcix1GCg1CLQwh9dtaCG+IEGfS1PeV4QwO046BTd1SJWAVK+02g4fxYEI QA== 
+ content-type; s=pfpt0818; bh=JtyEZ8KPf7pW3KsuhyczQJ2ndYqR/DLwexHAjuvJ8GM=;
+ b=SO9XJ0cce92I05An+afR/Dv8EO866EMcHGIvhnge/cnhgkW9cf7a8P6ZIvYgUpohDkjr
+ 0wx/WcfYJzUOxClqIOX4lrbfFuUWiPUoy2vn4LQPC0QSmpiRwU8lA/C3aREIfa7Dq9KN
+ HHVBOPb7IFYTmr/+0qhTmxgqngt84IiMOFoofsckcC98Tt6iFvL8wS1K8Jo2SUpwmNsA
+ wopQcugzsy6L2FX3FLptJuyDV+tdyUox6ZnvQtEcc5amerMlnwFpWw3CbSyCJf6DbTCg
+ 5IlSWWNgYxDGDkrmflll1Zj74bDD/S1VdlM8dLdEFi7LhcRjbwdbBJF3bZoEHM7I3KZa zg== 
 Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3046h5xd0u-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 304855nyep-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 01 Apr 2020 10:04:03 -0700
+        Wed, 01 Apr 2020 10:12:44 -0700
 Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
  (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 1 Apr
- 2020 10:04:00 -0700
+ 2020 10:12:42 -0700
 Received: from maili.marvell.com (10.93.176.43) by SC-EXCH01.marvell.com
  (10.93.176.81) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 1 Apr 2020 10:04:00 -0700
+ Transport; Wed, 1 Apr 2020 10:12:42 -0700
 Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 1D82E3F703F;
-        Wed,  1 Apr 2020 10:04:01 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id E13883F703F;
+        Wed,  1 Apr 2020 10:12:42 -0700 (PDT)
 Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 031H40J8011398;
-        Wed, 1 Apr 2020 10:04:00 -0700
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 031HCgPv014016;
+        Wed, 1 Apr 2020 10:12:42 -0700
 X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Wed, 1 Apr 2020 10:04:00 -0700
+Date:   Wed, 1 Apr 2020 10:12:42 -0700
 From:   Arun Easi <aeasi@marvell.com>
 X-X-Sender: aeasi@irv1user01.caveonetworks.com
 To:     Martin Wilck <mwilck@suse.com>
@@ -60,12 +60,12 @@ CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Bart Van Assche <Bart.VanAssche@sandisk.com>,
         "James Bottomley" <jejb@linux.vnet.ibm.com>,
         Hannes Reinecke <hare@suse.de>, <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v3 2/5] scsi: qla2xxx: check UNLOADING before posting
- async work
-In-Reply-To: <20200327164711.5358-3-mwilck@suse.com>
-Message-ID: <alpine.LRH.2.21.9999.2004011002190.12727@irv1user01.caveonetworks.com>
+Subject: Re: [EXT] [PATCH v3 3/5] Revert "scsi: qla2xxx: Fix unbound sleep
+ in fcport delete path."
+In-Reply-To: <20200327164711.5358-4-mwilck@suse.com>
+Message-ID: <alpine.LRH.2.21.9999.2004011007350.12727@irv1user01.caveonetworks.com>
 References: <20200327164711.5358-1-mwilck@suse.com>
- <20200327164711.5358-3-mwilck@suse.com>
+ <20200327164711.5358-4-mwilck@suse.com>
 User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="US-ASCII"
@@ -78,47 +78,57 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Fri, 27 Mar 2020, 9:47am, mwilck@suse.com wrote:
 
+> External Email
+> 
+> ----------------------------------------------------------------------
 > From: Martin Wilck <mwilck@suse.com>
 > 
-> qlt_free_session_done() tries to post async PRLO / LOGO, and
-> waits for the completion of these async commands. If UNLOADING
-> is set, this is doomed to timeout, because the async logout
-> command will never complete.
+> This reverts commit c3b6a1d397420a0fdd97af2f06abfb78adc370df.
+> Aborting the sleep was risky, because after return from
+> qlt_free_session_done() the driver starts freeing resources,
+> which is dangerous while we know that there's pending IO.
 > 
-> The only way to avoid waiting pointlessly is to fail posting
-> these commands in the first place if the driver is in UNLOADING state.
-> In general, posting any command should be avoided when the driver
-> is UNLOADING.
+> The previous patch "scsi: qla2xxx: check UNLOADING before posting async
+> work" avoids sending this IO in the first place, and thus obsoletes
+> the dangerous timeout.
 > 
-> With this patch, "rmmod qla2xxx" completes without noticeable delay.
-> 
-> Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
 > Signed-off-by: Martin Wilck <mwilck@suse.com>
 > ---
->  drivers/scsi/qla2xxx/qla_os.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  drivers/scsi/qla2xxx/qla_target.c | 4 ----
+>  1 file changed, 4 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index ce0dabb..eb25cf5 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -4933,6 +4933,9 @@ int qla2x00_post_async_##name##_work(		\
->  {						\
->  	struct qla_work_evt *e;			\
->  						\
-> +	if (test_bit(UNLOADING, &vha->dpc_flags)) \
-> +		return QLA_FUNCTION_FAILED;	\
-> +						\
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index 622e733..eec1338 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -1019,7 +1019,6 @@ void qlt_free_session_done(struct work_struct *work)
+>  
+>  	if (logout_started) {
+>  		bool traced = false;
+> -		u16 cnt = 0;
+>  
+>  		while (!READ_ONCE(sess->logout_completed)) {
+>  			if (!traced) {
+> @@ -1029,9 +1028,6 @@ void qlt_free_session_done(struct work_struct *work)
+>  				traced = true;
+>  			}
+>  			msleep(100);
+> -			cnt++;
+> -			if (cnt > 200)
+> -				break;
 
-Martin,
+By taking this code out, it would leave a stuck FC target delete thread 
+and thus preventing the module unload itself, in case of a bug in this 
+logic (which was seen in some instances).
 
-Could you move this check to qla2x00_alloc_work() so that other callers of 
-qla2x00_alloc_work() can also benefit.
+How about increasing the wait time to say 25 seconds (typical worst case 
+is 2 * RA_TOV = 20 seconds) and then alerting user with a "WARN", but 
+still break out?
 
 Regards,
 -Arun
 
->  	e = qla2x00_alloc_work(vha, type);	\
->  	if (!e)					\
->  		return QLA_FUNCTION_FAILED;	\
+>  		}
+>  
+>  		ql_dbg(ql_dbg_disc, vha, 0xf087,
 > 
