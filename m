@@ -2,64 +2,82 @@ Return-Path: <SRS0=ctNG=5R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A621C2D0F2
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 09:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD9F3C43331
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 13:42:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED7FE2077D
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 09:33:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96F952073B
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Apr 2020 13:42:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732110AbgDAJdT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Apr 2020 05:33:19 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48922 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727541AbgDAJdS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Apr 2020 05:33:18 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 70130AD94;
-        Wed,  1 Apr 2020 09:33:17 +0000 (UTC)
-Date:   Wed, 1 Apr 2020 11:33:17 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.com>,
-        Saurav Kashyap <skashyap@marvell.com>
-Subject: Re: [PATCH] scsi: qedf: Simplify mutex_unlock() usage
-Message-ID: <20200401093317.khs3lvjljv7cveey@beryllium.lan>
-References: <20200401090120.24958-1-dwagner@suse.de>
+        id S1732548AbgDANmd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Apr 2020 09:42:33 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:12665 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732396AbgDANmd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 1 Apr 2020 09:42:33 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 30379F39C9E5CA655059;
+        Wed,  1 Apr 2020 21:42:25 +0800 (CST)
+Received: from huawei.com (10.175.124.28) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Wed, 1 Apr 2020
+ 21:42:14 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>
+CC:     <linux-scsi@vger.kernel.org>, Jason Yan <yanaijie@huawei.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: remove show_use_blk_mq()
+Date:   Wed, 1 Apr 2020 21:40:49 +0800
+Message-ID: <20200401134049.9352-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.17.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200401090120.24958-1-dwagner@suse.de>
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.28]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 01, 2020 at 11:01:20AM +0200, Daniel Wagner wrote:
-> --- a/drivers/scsi/qedf/qedf_els.c
-> +++ b/drivers/scsi/qedf/qedf_els.c
-> @@ -388,12 +388,11 @@ void qedf_restart_rport(struct qedf_rport *fcport)
->  		mutex_lock(&lport->disc.disc_mutex);
->  		/* Recreate the rport and log back in */
->  		rdata = fc_rport_create(lport, port_id);
-> +		mutex_unlock(&lport->disc.disc_mutex);
->  		if (rdata) {
-> -			mutex_unlock(&lport->disc.disc_mutex);
->  			fc_rport_login(rdata);
->  			fcport->rdata = rdata;
->  		} else {
-> -			mutex_unlock(&lport->disc.disc_mutex);
->  			fcport->rdata = NULL;
->  		}
->  	}
+This code is useless now so remove it.
 
-Looking at it again, I think we could even do
+Cc: Ewan D. Milne <emilne@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: John Garry <john.garry@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/scsi_sysfs.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-	mutex_unlock(&lport->disc.disc_mutex);
-	if (rdata)
-		fc_rport_login(rdata);
-	fcport->rdata = rdata;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 163dbcb741c1..6480e27982ab 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -386,15 +386,7 @@ show_host_busy(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ static DEVICE_ATTR(host_busy, S_IRUGO, show_host_busy, NULL);
+ 
+-static ssize_t
+-show_use_blk_mq(struct device *dev, struct device_attribute *attr, char *buf)
+-{
+-	return sprintf(buf, "1\n");
+-}
+-static DEVICE_ATTR(use_blk_mq, S_IRUGO, show_use_blk_mq, NULL);
+-
+ static struct attribute *scsi_sysfs_shost_attrs[] = {
+-	&dev_attr_use_blk_mq.attr,
+ 	&dev_attr_unique_id.attr,
+ 	&dev_attr_host_busy.attr,
+ 	&dev_attr_cmd_per_lun.attr,
+-- 
+2.17.2
+
