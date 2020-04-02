@@ -2,160 +2,196 @@ Return-Path: <SRS0=+0y/=5S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C2AAC2BA12
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Apr 2020 15:08:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CD1BC43331
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Apr 2020 15:52:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 677FF206CC
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Apr 2020 15:08:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C932D20737
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Apr 2020 15:52:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VOSnjOU3"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="hnUfbYNS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389192AbgDBPI1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Apr 2020 11:08:27 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:45548 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388871AbgDBPI0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2020 11:08:26 -0400
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200402150821epoutp03516b7a8f59fda00d788abe255c771263~CCSuZVCBe1292712927epoutp03h
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2020 15:08:21 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200402150821epoutp03516b7a8f59fda00d788abe255c771263~CCSuZVCBe1292712927epoutp03h
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1585840101;
-        bh=6n/U4UXr1sadm5NpMP9GqwT5rx5fOlWjC/IaV5L6yFI=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=VOSnjOU3F90aQgXc10Zr3lnSf7D5vupy1FNDL5CHZ9DimK21wm1JldHQrPtSZZo05
-         ILBvL3TWhlFsabG3rJydz27e4qqmZNp5PIidZ2ZBA+MkcgysDec8AWLn8azUPFw/lv
-         UD6SrBHMU3HG22/MYJzVDgFHYrabT4pTypeswQ5s=
-Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20200402150820epcas5p3de6c9f31537388707edabd8a4a12df73~CCStqQfdI3224332243epcas5p3p;
-        Thu,  2 Apr 2020 15:08:20 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        54.91.04782.4EFF58E5; Fri,  3 Apr 2020 00:08:20 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200402150820epcas5p1d7438cd324271c43d54bd446e239f108~CCStIGjxQ2767827678epcas5p1g;
-        Thu,  2 Apr 2020 15:08:20 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200402150820epsmtrp26e18ee8b63dda67bfd570c016d798f08~CCStHTQBJ2842128421epsmtrp2Z;
-        Thu,  2 Apr 2020 15:08:20 +0000 (GMT)
-X-AuditID: b6c32a49-89bff700000012ae-a1-5e85ffe49d7c
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E8.1F.04024.4EFF58E5; Fri,  3 Apr 2020 00:08:20 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.108.234.165]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200402150817epsmtip2bc01951f013328dcb2a8973e30a4a8cd~CCSqSFhsN0906209062epsmtip2I;
-        Thu,  2 Apr 2020 15:08:17 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Avri Altman'" <Avri.Altman@wdc.com>, <robh+dt@kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-Cc:     <krzk@kernel.org>, <martin.petersen@oracle.com>,
-        <kwmad.kim@samsung.com>, <stanley.chu@mediatek.com>,
-        <cang@codeaurora.org>, <linux-samsung-soc@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-In-Reply-To: <SN6PR04MB4640B92BC9EA5CFEB74BE5EAFCCD0@SN6PR04MB4640.namprd04.prod.outlook.com>
-Subject: RE: [PATCH v4 4/5] scsi: ufs-exynos: add UFS host support for
- Exynos SoCs
-Date:   Thu, 2 Apr 2020 20:38:15 +0530
-Message-ID: <000001d60900$8b6f5e70$a24e1b50$@samsung.com>
+        id S2389458AbgDBPwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Apr 2020 11:52:05 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:37054 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389241AbgDBPwF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Apr 2020 11:52:05 -0400
+Received: by mail-pj1-f66.google.com with SMTP id k3so1667149pjj.2
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Apr 2020 08:52:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=53EevbSsJHKTeq9s0IC3tQ9L0J1W+vMWAqSDuwkHqVk=;
+        b=hnUfbYNShzJoidHGNUR989NwioR4qzZOhooPJ+fqHC852NAHPbteoeLIrFP+9Abvrk
+         kd9cMxkNIU0dKxnPV58SMtnHXcdQZVtnYDxUQkMJcQfnxwQ6PqdbnrlIg+4+MBZWAG75
+         7cG/w/cTwSUkBBeHfCHcBSR0ayXe+nF5HX/oI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=53EevbSsJHKTeq9s0IC3tQ9L0J1W+vMWAqSDuwkHqVk=;
+        b=sT8DKnmjWPsR30lhnqEbtfTbPeab1dqq08VxLeGYBWQMy7NnHtHBiAQL0sd0rKsAr8
+         O2CwYbhadpn93WQ0OqIBDCO3LPKAo+1eJHvCe9u81JgiokhIU6M75ffJUNVGoAaD80kl
+         L5FpcXmm+uma7XyOR7Cg1/pipqQhs8W3ATGyO1xjtW3E0dFJVy3S64RCeAdnFz/7Ao/q
+         Mh3f7GellEeNRwW5hT60SOY9+dyXi6slCyzG1QXp8/CXL83woBVMkOufHMdonqX9Lb4O
+         3FWI3rpP1Zljk8L6bImxqXAxgSsye/rsNvU5km+qElWDnppA7po/sfYOX7Mp+SUZhK0O
+         g5CA==
+X-Gm-Message-State: AGi0PuaCUgKvibD2PfNqB4tzXrFr1Ea//in/91wesuZ5ZXIQRw8jBfCg
+        2ipesYIH4HfR15yQx7B4HyJPDQ==
+X-Google-Smtp-Source: APiQypIEEhOEPCQbbgYFfbiYTmmYZHjny8hB9JCWz1W4N8EfmbXxbelQJ90O7FdrjCwpWqdOWigUaQ==
+X-Received: by 2002:a17:902:449:: with SMTP id 67mr3383633ple.339.1585842723755;
+        Thu, 02 Apr 2020 08:52:03 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
+        by smtp.gmail.com with ESMTPSA id x68sm2578815pfb.5.2020.04.02.08.52.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Apr 2020 08:52:02 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     paolo.valente@linaro.org, sqazi@google.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Ming Lei <ming.lei@redhat.com>, groeck@chromium.org,
+        Douglas Anderson <dianders@chromium.org>,
+        Ajay Joshi <ajay.joshi@wdc.com>, Arnd Bergmann <arnd@arndb.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Hou Tao <houtao1@huawei.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/2] blk-mq: Fix two causes of IO stalls found in reboot testing
+Date:   Thu,  2 Apr 2020 08:51:28 -0700
+Message-Id: <20200402155130.8264-1-dianders@chromium.org>
+X-Mailer: git-send-email 2.26.0.rc2.310.g2932bb562d-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKI+vJzlUBp7WIi19k8pRZBKIHK2gGl+w7dArc8+ogCfXKHn6bJNFzg
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrEKsWRmVeSWpSXmKPExsWy7bCmlu6T/61xBh/nGFq8/HmVzeLT+mWs
-        FvOPnGO1OH9+A7vFzS1HWSw2Pb7GanF51xw2ixnn9zFZdF/fwWax/Pg/JovWvUfYLZZuvcno
-        wONxua+XyWPTqk42j81L6j1aTu5n8fj49BaLR9+WVYwenzfJebQf6GYK4IjisklJzcksSy3S
-        t0vgyliw2LngOU/F1Jf3mBsYV3F1MXJySAiYSOxZ9YKpi5GLQ0hgN6PE6h332SGcT4wS5589
-        ZwGpEhL4xigxfakqTEfn/l6oor2MEu+/voFy3jBKLJqzjxWkik1AV2LH4jY2EFtEoFZi8eQO
-        VpAiZpCx3/ZOBhvLKRAr8fPJNEYQW1ggROLG6+VgzSwCKhKrHt9iBrF5BSwl9i+7wAphC0qc
-        nPkErJdZQFti2cLXzBAnKUj8fLqMFWKZm8T7exOYIGrEJY7+7GEGWSwhsIxd4tO1dawQDS4S
-        lzadY4SwhSVeHd/CDmFLSXx+txfoag4gO1uiZ5cxRLhGYum8YywQtr3EgStzWEBKmAU0Jdbv
-        0odYxSfR+/sJE0Qnr0RHmxBEtapE87urUJ3SEhO7u6EO8JD423uIaQKj4iwkj81C8tgsJA/M
-        Qli2gJFlFaNkakFxbnpqsWmBYV5quV5xYm5xaV66XnJ+7iZGcErT8tzBOOuczyFGAQ5GJR5e
-        hoOtcUKsiWXFlbmHGCU4mJVEeB1nAIV4UxIrq1KL8uOLSnNSiw8xSnOwKInzTmK9GiMkkJ5Y
-        kpqdmlqQWgSTZeLglGpgDOdqszdfoWPp0h3DErrd+tVh3pR3G/m6YrX91nXt7MvcpeFblaNZ
-        s9jcaMN574ipu8S44meWpm0te7XQ/+qFuWfrvnsd/3f+74Nj4r/2/97Iozo5+k/RqSMZonuq
-        +7u5eCJPz2/pnvxm/5/7HMnXOvpaKib9rPoQabrr5JTnR4o+TvFzcd70QYmlOCPRUIu5qDgR
-        AF51hTZlAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrFIsWRmVeSWpSXmKPExsWy7bCSvO6T/61xBi3nuS1e/rzKZvFp/TJW
-        i/lHzrFanD+/gd3i5pajLBabHl9jtbi8aw6bxYzz+5gsuq/vYLNYfvwfk0Xr3iPsFku33mR0
-        4PG43NfL5LFpVSebx+Yl9R4tJ/ezeHx8eovFo2/LKkaPz5vkPNoPdDMFcERx2aSk5mSWpRbp
-        2yVwZTSe7GcrOMpT8enmN/YGxg6uLkZODgkBE4nO/b3sXYxcHEICuxklpq94ywKRkJa4vnEC
-        O4QtLLHy33OooleMEms6TjOBJNgEdCV2LG5jA0mICDQySiz+t4QRxGEW+MUo8WTtQyaIlglM
-        En8vLmUEaeEUiJX4+WQamC0sECTx/8RGNhCbRUBFYtXjW8wgNq+ApcT+ZRdYIWxBiZMzn4Dd
-        xCygLfH05lM4e9nC18wQ9ylI/Hy6DKxeRMBN4v29CUwQNeISR3/2ME9gFJ6FZNQsJKNmIRk1
-        C0nLAkaWVYySqQXFuem5xYYFhnmp5XrFibnFpXnpesn5uZsYwTGqpbmD8fKS+EOMAhyMSjy8
-        DAdb44RYE8uKK3MPMUpwMCuJ8DrOAArxpiRWVqUW5ccXleakFh9ilOZgURLnfZp3LFJIID2x
-        JDU7NbUgtQgmy8TBKdXAmMgiJcbzOX79dEt9Z8O3K5LP/Y+z3OGR8khQxdOunufQouN7LiZ3
-        OrQcm14nurfNs/xx4owcp52dnacO9uRXehVP+N/n1hC4OXq/auNPtuZJk8QOHtHWf/dr25Rn
-        8gzzr004/uqL0r1wj3RzsU79HQENrm7rzy2OerWQ042573KEtN/WaoYYJZbijERDLeai4kQA
-        sutWFs0CAAA=
-X-CMS-MailID: 20200402150820epcas5p1d7438cd324271c43d54bd446e239f108
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200327171420epcas5p490e1e6d090a540eaf050e0728a39ba25
-References: <20200327170638.17670-1-alim.akhtar@samsung.com>
-        <CGME20200327171420epcas5p490e1e6d090a540eaf050e0728a39ba25@epcas5p4.samsung.com>
-        <20200327170638.17670-5-alim.akhtar@samsung.com>
-        <SN6PR04MB4640B92BC9EA5CFEB74BE5EAFCCD0@SN6PR04MB4640.namprd04.prod.outlook.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri
+While doing reboot testing, I found that occasionally my device would
+trigger the hung task detector.  Many tasks were stuck waiting for the
+a blkdev mutex, but at least one task in the system was always sitting
+waiting for IO to complete (and holding the blkdev mutex).  One
+example of a task that was just waiting for its IO to complete on one
+reboot:
 
-> -----Original Message-----
-> From: Avri Altman <Avri.Altman=40wdc.com>
-> Sent: 28 March 2020 16:58
-> To: Alim Akhtar <alim.akhtar=40samsung.com>; robh+dt=40kernel.org;
-> devicetree=40vger.kernel.org; linux-scsi=40vger.kernel.org
-> Cc: krzk=40kernel.org; martin.petersen=40oracle.com; kwmad.kim=40samsung.=
-com;
-> stanley.chu=40mediatek.com; cang=40codeaurora.org; linux-samsung-
-> soc=40vger.kernel.org; linux-arm-kernel=40lists.infradead.org; linux-
-> kernel=40vger.kernel.org
-> Subject: RE: =5BPATCH v4 4/5=5D scsi: ufs-exynos: add UFS host support fo=
-r Exynos
-> SoCs
->=20
-> Hi,
->=20
-> > +
-> > +long exynos_ufs_calc_time_cntr(struct exynos_ufs *ufs, long period) =
-=7B
-> > +       const int precise =3D 10;
-> > +       long pclk_rate =3D ufs->pclk_rate;
-> > +       long clk_period, fraction;
-> > +
-> > +       clk_period =3D UNIPRO_PCLK_PERIOD(ufs);
-> > +       fraction =3D ((NSEC_PER_SEC % pclk_rate) * precise) / pclk_rate=
-;
-> > +
-> > +       return (period * precise) / ((clk_period * precise) +
-> > +fraction); =7D
-> This helper essentially calculates a factor f, and returns period x f.
-> Why not do that regardless of period?
->=20
-The period can be different for different timing attributes, so this helper=
- function takes the period and returns the timer counter value based on the=
- pclk_rate.=20
+ udevd           D    0  2177    306 0x00400209
+ Call trace:
+  __switch_to+0x15c/0x17c
+  __schedule+0x6e0/0x928
+  schedule+0x8c/0xbc
+  schedule_timeout+0x9c/0xfc
+  io_schedule_timeout+0x24/0x48
+  do_wait_for_common+0xd0/0x160
+  wait_for_completion_io_timeout+0x54/0x74
+  blk_execute_rq+0x9c/0xd8
+  __scsi_execute+0x104/0x198
+  scsi_test_unit_ready+0xa0/0x154
+  sd_check_events+0xb4/0x164
+  disk_check_events+0x58/0x154
+  disk_clear_events+0x74/0x110
+  check_disk_change+0x28/0x6c
+  sd_open+0x5c/0x130
+  __blkdev_get+0x20c/0x3d4
+  blkdev_get+0x74/0x170
+  blkdev_open+0x94/0xa8
+  do_dentry_open+0x268/0x3a0
+  vfs_open+0x34/0x40
+  path_openat+0x39c/0xdf4
+  do_filp_open+0x90/0x10c
+  do_sys_open+0x150/0x3c8
+  ...
 
-> > +extern long exynos_ufs_calc_time_cntr(struct exynos_ufs *, long);
-> Why this factor needed to be exported?
-Yes, not needed, will correct this in next version, which I am planning to =
-post soon.
-Thanks for your time and review, let me know if you have more inputs.
+I've reproduced this on two systems: one boots from an internal UFS
+disk and one from eMMC.  Each has a card reader attached via USB with
+an SD card plugged in.  On the USB-attached SD card is a disk with 12
+partitions (a Chrome OS test image), if it matters.  The system
+doesn't do much with the USB disk other than probe it (it's plugged in
+my system to help me recover).
+
+From digging, I believe that there are two separate but related
+issues.  Both issues relate to the SCSI code saying that there is no
+budget.
+
+I have done testing with only one or the other of the two patches in
+this series and found that I could still encounter hung tasks if only
+one of the two patches was applied.  This deserves a bit of
+explanation.  To me, it's fairly obvious that the first fix wouldn't
+fix the problems talked about in the second patch.  However, it's less
+obvious why the second patch doesn't fix the problems in
+blk_mq_dispatch_rq_list().  It turns out that it _almost_ does
+(problems become much more rare), but I did manage to get a single
+trace where the "kick" scheduled by the second patch happened really
+quickly.  The scheduled kick then ran and found nothing to do.  This
+happened in parallel to a task running in blk_mq_dispatch_rq_list()
+which hadn't gotten around to splicing the list back into
+hctx->dispatch.  This is why we need both fixes or a heavier hammer
+where we always kick whenever two threads request budget at the same
+time.
+
+Most of my testing has been atop Chrome OS 5.4's kernel tree which
+currently has v5.4.28 merged in.  The Chrome OS 5.4 tree also has a
+patch by Salman Qazi, namely ("block: Limit number of items taken from
+the I/O scheduler in one go").  Reverting that patch didn't make the
+hung tasks go away, so I kept it in for most of my testing.
+
+I have also done some testing on mainline Linux (git describe says I'm
+on v5.6-rc7-227-gf3e69428b5e2) even without Salman's patch.  I found
+that I could reproduce the problems there and that traces looked about
+the same as I saw on the downstream branch.  These patches were also
+confirmed to fix the problems on mainline.
+
+Chrome OS is currently setup to use the BFQ scheduler and I found that
+I couldn't reproduce the problems without BFQ.  As discussed in the
+second patch this is believed to be because BFQ sometimes returns
+"true" from has_work() but then NULL from dispatch_request().
+
+I'll insert my usual caveat that I'm sending patches to code that I
+know very little about.  If I'm making a total bozo patch here, please
+help me figure out how I should fix the problems I found in a better
+way.
+
+If you want to see a total ridiculous amount of chatter where I
+stumbled around a whole bunch trying to figure out what was wrong and
+how to fix it, feel free to read <https://crbug.com/1061950>.  I
+promise it will make your eyes glaze over right away if this cover
+letter didn't already do that.  Specifically comment 79 in that bug
+includes a link to my ugly prototype of making BFQ's has_work() more
+exact (I only managed it by actually defining _both_ an exact and
+inexact function to avoid circular locking problems when it was called
+directly from blk_mq_hctx_has_pending()).  Comment 79 also has more
+thoughts about alternatives considered.
+
+I don't know if these fixes represent a regression of some sort or are
+new.  As per above I could only reproduce with BFQ enabled which makes
+it nearly impossible to go too far back with this.  I haven't listed
+any "Fixes" tags here, but if someone felt it was appropriate to
+backport this to some stable trees that seems like it'd be nice.
+Presumably at least 5.4 stable would make sense.
+
+Thanks to Salman Qazi, Paolo Valente, and Guenter Roeck who spent a
+bunch of time helping me trawl through some of this code and reviewing
+early versions of this patch.
+
+Changes in v2:
+- Replace ("scsi: core: Fix stall...") w/ ("blk-mq: Rerun dispatch...")
+
+Douglas Anderson (2):
+  blk-mq: In blk_mq_dispatch_rq_list() "no budget" is a reason to kick
+  blk-mq: Rerun dispatching in the case of budget contention
+
+ block/blk-mq-sched.c   | 26 ++++++++++++++++++++++++--
+ block/blk-mq.c         | 14 +++++++++++---
+ include/linux/blkdev.h |  2 ++
+ 3 files changed, 37 insertions(+), 5 deletions(-)
+
+-- 
+2.26.0.rc2.310.g2932bb562d-goog
 
