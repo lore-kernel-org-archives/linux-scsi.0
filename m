@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA146C2D0E8
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 12:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A7CC2BA18
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 12:10:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B097220659
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 12:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0079820721
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 12:10:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="lI07sJUs"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="MSZDoL8S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403882AbgDCMKI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Apr 2020 08:10:08 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18252 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728149AbgDCMKH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2020 08:10:07 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 033C1WnJ020012;
-        Fri, 3 Apr 2020 05:10:06 -0700
+        id S2403896AbgDCMKQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Apr 2020 08:10:16 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:6052 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728175AbgDCMKQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2020 08:10:16 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 033C0Fo1011752;
+        Fri, 3 Apr 2020 05:10:14 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=nHVnZAkGjwhXrL8d4bc64Ctkm8kDGblmwH/Pb8ZFUk4=;
- b=lI07sJUsPKe7PfX6bVlwPBkRBvsl2SEuBjXH713pMKPiSmRZB0pZyjjlbax+cvatK7bv
- vjQvB+xN9WxigsFfWnebW/7WfxpWXzlFKGXZVmXzsCItlXZSz3AZzwgLq5HpBDbFnAs1
- /k1za+ieVLwl8lfcNkPlECnivROMealLzsvVxZz5cXZrBcG8QGmIVMf7dUU2u1UROZWA
- EQyDc2za4y+Cduttx6X2OfZo10es80EFj09sQc+iiItgOW7iJrbdFHD6cJ+B/u4zKFLg
- ag+tS5Qbjj1EyVedWlIhFuWSvyOdcCrjSkaFi68OjS/942Flf7l6u0qDkbSpoiLAUPp3 8Q== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3046h66sx5-1
+ content-type; s=pfpt0818; bh=zM4RrSO2DvizfKXmC6pIIS8Jn6nIkU2uKlXMEB2FSnE=;
+ b=MSZDoL8SlncRT5FlwKrp/jDWpDnwBxl6JiT79XyL0R9DhWuGNr4zsnQ7XXDxzN1l/D8v
+ mmlqik2eLfF4Zmv+nnTxFp75ifL77tmgFvBANhwUCtoogke4Ww0eCc4RGv4G7RtQTym7
+ bCKOjKhBSdGu8eWGtAbDuCBdV1V3v7jMv+qbXonID+YHe5kPZXjnudpb2pBmIt3KCHwy
+ aeCZQQSAAWb71sFEMJa4H6EXMGT2EbPYY4s2fbmnjCX7fhZGKeoncGQicwyfIltwiNWR
+ Ck9D02oFsla+uEE0ffLMZ+kM9Ce+eOsJ6RiDohG8LX7R6TsDdAPzfjJOnXkJXHx/rTTe Bg== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 304855xgsm-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 03 Apr 2020 05:10:06 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 3 Apr
- 2020 05:10:04 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 3 Apr 2020 05:10:04 -0700
+        Fri, 03 Apr 2020 05:10:14 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 3 Apr
+ 2020 05:10:10 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 3 Apr 2020 05:10:10 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 2F9413F7040;
-        Fri,  3 Apr 2020 05:10:04 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 8D74A3F7043;
+        Fri,  3 Apr 2020 05:10:10 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 033CA4Zx002554;
-        Fri, 3 Apr 2020 05:10:04 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 033CAAhN002562;
+        Fri, 3 Apr 2020 05:10:10 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 033CA4WK002473;
-        Fri, 3 Apr 2020 05:10:04 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 033CAAZh002561;
+        Fri, 3 Apr 2020 05:10:10 -0700
 From:   Saurav Kashyap <skashyap@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
         <linux-scsi@vger.kernel.org>, <jhasan@marvell.com>,
         <netdev@vger.kernel.org>
-Subject: [PATCH v3 2/7] qedf: Fix for the deviations from the SAM-4 spec.
-Date:   Fri, 3 Apr 2020 05:09:52 -0700
-Message-ID: <20200403120957.2431-3-skashyap@marvell.com>
+Subject: [PATCH v3 4/7] qedf: Implement callback for bw_update.
+Date:   Fri, 3 Apr 2020 05:09:54 -0700
+Message-ID: <20200403120957.2431-5-skashyap@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20200403120957.2431-1-skashyap@marvell.com>
 References: <20200403120957.2431-1-skashyap@marvell.com>
@@ -71,123 +71,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
-
-- Upper limit for retry delay(QEDF_RETRY_DELAY_MAX)
-  increased from 20 sec to 1 min.
-- Log an event/message indicating throttling of I/O
-  for the target and include scope and retry delay
-  time returned by the target and the driver enforced delay.
-- Synchronizing the update of the fcport->retry_delay_timestamp
-  between qedf_queuecommand() and qedf_scsi_completion().
+This is extension of bw common callback provided by qed.
+This is called whenever there is a change in the BW.
 
 Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
 ---
- drivers/scsi/qedf/qedf.h    |  2 +-
- drivers/scsi/qedf/qedf_io.c | 47 +++++++++++++++++++++++++++++++++++----------
- 2 files changed, 38 insertions(+), 11 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
-index 042ebf6..aaa2ac9 100644
---- a/drivers/scsi/qedf/qedf.h
-+++ b/drivers/scsi/qedf/qedf.h
-@@ -470,7 +470,7 @@ static inline void qedf_stop_all_io(struct qedf_ctx *qedf)
- extern uint qedf_io_tracing;
- extern uint qedf_stop_io_on_error;
- extern uint qedf_link_down_tmo;
--#define QEDF_RETRY_DELAY_MAX		20 /* 2 seconds */
-+#define QEDF_RETRY_DELAY_MAX		600 /* 60 seconds */
- extern bool qedf_retry_delay;
- extern uint qedf_debug;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index ee468102..ba66216 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -509,6 +509,32 @@ static void qedf_update_link_speed(struct qedf_ctx *qedf,
+ 	fc_host_supported_speeds(lport->host) = lport->link_supported_speeds;
+ }
  
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index e749a2d..f0f455e 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -1021,14 +1021,18 @@ int qedf_post_io_req(struct qedf_rport *fcport, struct qedf_ioreq *io_req)
- 	atomic_inc(&fcport->ios_to_queue);
- 
- 	if (fcport->retry_delay_timestamp) {
-+		/* Take fcport->rport_lock for resetting the delay_timestamp */
-+		spin_lock_irqsave(&fcport->rport_lock, flags);
- 		if (time_after(jiffies, fcport->retry_delay_timestamp)) {
- 			fcport->retry_delay_timestamp = 0;
- 		} else {
-+			spin_unlock_irqrestore(&fcport->rport_lock, flags);
- 			/* If retry_delay timer is active, flow off the ML */
- 			rc = SCSI_MLQUEUE_TARGET_BUSY;
- 			atomic_dec(&fcport->ios_to_queue);
- 			goto exit_qcmd;
- 		}
-+		spin_unlock_irqrestore(&fcport->rport_lock, flags);
- 	}
- 
- 	io_req = qedf_alloc_cmd(fcport, QEDF_SCSI_CMD);
-@@ -1134,6 +1138,8 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 	int refcount;
- 	u16 scope, qualifier = 0;
- 	u8 fw_residual_flag = 0;
-+	unsigned long flags = 0;
-+	u16 chk_scope = 0;
- 
- 	if (!io_req)
- 		return;
-@@ -1267,16 +1273,8 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 				/* Lower 14 bits */
- 				qualifier = fcp_rsp->retry_delay_timer & 0x3FFF;
- 
--				if (qedf_retry_delay &&
--				    scope > 0 && qualifier > 0 &&
--				    qualifier <= 0x3FEF) {
--					/* Check we don't go over the max */
--					if (qualifier > QEDF_RETRY_DELAY_MAX)
--						qualifier =
--						    QEDF_RETRY_DELAY_MAX;
--					fcport->retry_delay_timestamp =
--					    jiffies + (qualifier * HZ / 10);
--				}
-+				if (qedf_retry_delay)
-+					chk_scope = 1;
- 				/* Record stats */
- 				if (io_req->cdb_status ==
- 				    SAM_STAT_TASK_SET_FULL)
-@@ -1287,6 +1285,35 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 		}
- 		if (io_req->fcp_resid)
- 			scsi_set_resid(sc_cmd, io_req->fcp_resid);
++static void qedf_bw_update(void *dev)
++{
++	struct qedf_ctx *qedf = (struct qedf_ctx *)dev;
++	struct qed_link_output link;
 +
-+		if (chk_scope == 1)
-+			if ((scope == 1 || scope == 2) &&
-+			    (qualifier > 0 && qualifier <= 0x3FEF)) {
-+				/* Check we don't go over the max */
-+				if (qualifier > QEDF_RETRY_DELAY_MAX) {
-+					qualifier = QEDF_RETRY_DELAY_MAX;
-+					QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_IO,
-+						  "qualifier = %d\n",
-+						  (fcp_rsp->retry_delay_timer &
-+						  0x3FFF));
-+				}
-+				QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_IO,
-+					  "Scope = %d and qualifier = %d",
-+					  scope, qualifier);
-+				/*  Take fcport->rport_lock to
-+				 *  update the retry_delay_timestamp
-+				 */
-+				spin_lock_irqsave(&fcport->rport_lock, flags);
-+				fcport->retry_delay_timestamp =
-+					jiffies + (qualifier * HZ / 10);
-+				spin_unlock_irqrestore(&fcport->rport_lock,
-+						       flags);
++	/* Get the latest status of the link */
++	qed_ops->common->get_link(qedf->cdev, &link);
 +
-+			} else {
-+				QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_IO,
-+					  "combination of scope = %d and qualifier = %d is not handled in qedf.\n",
-+					  scope, qualifier);
-+			}
- 		break;
- 	default:
- 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_IO, "fcp_status=%d.\n",
++	if (test_bit(QEDF_UNLOADING, &qedf->flags)) {
++		QEDF_ERR(&qedf->dbg_ctx,
++			 "Ignore link update, driver getting unload.\n");
++		return;
++	}
++
++	if (link.link_up) {
++		if (atomic_read(&qedf->link_state) == QEDF_LINK_UP)
++			qedf_update_link_speed(qedf, &link);
++		else
++			QEDF_ERR(&qedf->dbg_ctx,
++				 "Ignore bw update, link is down.\n");
++
++	} else {
++		QEDF_ERR(&qedf->dbg_ctx, "link_up is not set.\n");
++	}
++}
++
+ static void qedf_link_update(void *dev, struct qed_link_output *link)
+ {
+ 	struct qedf_ctx *qedf = (struct qedf_ctx *)dev;
+@@ -635,6 +661,7 @@ static u32 qedf_get_login_failures(void *cookie)
+ static struct qed_fcoe_cb_ops qedf_cb_ops = {
+ 	{
+ 		.link_update = qedf_link_update,
++		.bw_update = qedf_bw_update,
+ 		.dcbx_aen = qedf_dcbx_handler,
+ 		.get_generic_tlv_data = qedf_get_generic_tlv_data,
+ 		.get_protocol_tlv_data = qedf_get_protocol_tlv_data,
 -- 
 1.8.3.1
 
