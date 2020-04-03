@@ -2,117 +2,110 @@ Return-Path: <SRS0=YASp=5T=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 351B3C2BA1A
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 10:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE789C43331
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 12:10:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B49E208E4
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 10:13:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2BA120721
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 12:10:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="RubCzKkl"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="iUPrG7K6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390640AbgDCKNU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Apr 2020 06:13:20 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:56746 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390591AbgDCKNO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2020 06:13:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1585908794; x=1617444794;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zp8Fvp7+ys681iufOgo7VTs31ay4WvSMoXUToPrkYmw=;
-  b=RubCzKklemnx+1oQQEjYk9psfOHosBg/BYnEspjNQKULRjm32/POjtlJ
-   a6qEhAA1GmWj1+t9GczMhHJvzXL1YJ7iHP3WGgKLQW8EmmNVsP6LN1R/s
-   1OVyuG8ddtcdtRlbHl+fTt197JaDTGXYJ0PkAWPQ7oIA17KJtiqOT1F2u
-   fb1JSVlijnCQw+KQ4mUhfC3qYxYYgklosN4p8ZOJtorgemGVyDhKT+Vqx
-   bGIOrGKW8tVAOTEzBXnXyuVAlrhFuRd1ymCqk4dPeHU0qvhiMqbD7HZVd
-   k+Ds7Gl5txTNKGjz00gCiUob202rgQonZa7I8T2GLpndW6IUQZFpaRqJJ
-   A==;
-IronPort-SDR: ZQB0f32jAYhL8euGmv5e9341re0Zr+VYi5snnNFWMS1hkMEgF+HZcIolvQy9JYMe3dMXz2aHoR
- rGTwl4IA5vY5Eq4tNENVTwMvOaITxWCxWOeFo8BOqMzu9ubnEpyeh7aZtGaDxACC80x0kxcNI5
- mav7ZMLCOB2vrYGUCAymmB0hap3PKIJHrnoPp+SSge5qg+8qYg8SOCDIkYTj1EqMpmZJh1uatc
- Mx38sbZzDucdkprGeoRlV4KB5bQIkz4ya1xA6LTyYzSx3vbp9yxjybMb2Ju4VarmZ7vYGxdWK1
- peU=
-X-IronPort-AV: E=Sophos;i="5.72,339,1580745600"; 
-   d="scan'208";a="135956047"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Apr 2020 18:13:14 +0800
-IronPort-SDR: 8yQQSnkT3vsn/DFd06LClb6c9hXvJ5Llf6jaH6U7u56/4gbVKhjaipt/3gEJAcXAVXI33Kq2eb
- k00BykAjkhWJCf7Mskg3wqblPi0MmfruFV7w/531FF7n0/O2yDoYk/LtEkbFYYlEW8nrt+EAdk
- 77yO8O6HAcng3BTTjTrn8hAmHvGe5DxgK1HCtH5OeVaYTP8h+3GigK8N4Ir6rIheycKKnwQUvn
- fbhFZRO218ul5dbipSnlomDYiUjabSPEm+2q7ryeViSDF3APbypPT+YqIQcP7TNwQDCguekpfg
- e1n9KKvmOy6QvsKb6lU3UfLL
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2020 03:04:03 -0700
-IronPort-SDR: P1V+9SY1KgNIdJZX3X4r2ZiRz03o+myYlHzqTVlimbyPBwOGrAinoCJOENjjGrk93yOsrUZky9
- rphgK14sabn0grbQIAnNiG+OSYBecY6F5EBRjK4ESD8DMi3X73Ac1MXAn91YBid6ZC+kVdWpaa
- 2HjueYdp6S5/89Fcjd9+obHP+cILfpEokLiL6erFMPtiW8yR4NMKjGjYSQG2ALbyJ6PV1gJ7OI
- nL+SoWFpZafQPTFAawUjKcXeXZx72gaV29DznXLmQ1mXL6wQneAT51TH4n++C+dVkPhQTB9+rz
- 5+E=
-WDCIronportException: Internal
-Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 03 Apr 2020 03:13:10 -0700
-From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v4 09/10] block: export bio_release_pages and bio_iov_iter_get_pages
-Date:   Fri,  3 Apr 2020 19:12:49 +0900
-Message-Id: <20200403101250.33245-10-johannes.thumshirn@wdc.com>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200403101250.33245-1-johannes.thumshirn@wdc.com>
-References: <20200403101250.33245-1-johannes.thumshirn@wdc.com>
+        id S2390880AbgDCMKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Apr 2020 08:10:01 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:13194 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728149AbgDCMKB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Apr 2020 08:10:01 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 033C1IgD019931;
+        Fri, 3 Apr 2020 05:10:00 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=fRaZruGGDWLtejOLJXgU2iAFBH6q0SkL+iIka5gHwjE=;
+ b=iUPrG7K62Z7UM7wMunKC/jaJTLB1Op7g985Uw9qN+g75hcZvi7b2l0LR/hNj6C5s9zuc
+ ldarRBP/59ISB5uumROfEdLDtF8gYcRTpebfLfawwoz+UN7HzsDPRjg0fZ74UiaplG2h
+ FtaaBTb5CvN/6jBwLwsS6XjMa12uO7onCKeh74xIeaPJyYFFD83qmxgsgyKXGq/7y6Cv
+ G1rb5pQXaT5e10gGgcAS/v+/dja4emkiBQ6O1OBYSJy9O0OYq+FQmKBV67nWGGmcWpdY
+ HWjYDcQj/gg6ZQ4aeTo1zstnQs3L9RzgNwyTj6bMzQAyT3UhfRPyZMqU+DaaUyxkxj2R vA== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 3046h66swt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 03 Apr 2020 05:09:59 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 3 Apr
+ 2020 05:09:57 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 3 Apr 2020 05:09:58 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id A67A43F703F;
+        Fri,  3 Apr 2020 05:09:57 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 033C9vWv002466;
+        Fri, 3 Apr 2020 05:09:57 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 033C9vnO002465;
+        Fri, 3 Apr 2020 05:09:57 -0700
+From:   Saurav Kashyap <skashyap@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
+        <linux-scsi@vger.kernel.org>, <jhasan@marvell.com>,
+        <netdev@vger.kernel.org>
+Subject: [PATCH v3 0/7] qed/qedf: Firmware recovery, bw update and misc fixes.
+Date:   Fri, 3 Apr 2020 05:09:50 -0700
+Message-ID: <20200403120957.2431-1-skashyap@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-04-03_07:2020-04-02,2020-04-03 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Export bio_release_pages and bio_iov_iter_get_pages, so they can be used
-from modular code.
+Hi Martin,
 
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Kindly apply this series to scsi tree at your earliest convenience.
 
----
-Changes to v3:
-- Use EXPORT_SYMBOL_GPL
----
- block/bio.c | 2 ++
- 1 file changed, 2 insertions(+)
+v2->v3
+ - Removed version update patch.
 
-diff --git a/block/bio.c b/block/bio.c
-index e8c9273884a6..7819b01d269c 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -929,6 +929,7 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
- 		put_page(bvec->bv_page);
- 	}
- }
-+EXPORT_SYMBOL_GPL(bio_release_pages);
- 
- static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
- {
-@@ -1050,6 +1051,7 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 		bio_set_flag(bio, BIO_NO_PAGE_REF);
- 	return bio->bi_vcnt ? 0 : ret;
- }
-+EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
- 
- static void submit_bio_wait_endio(struct bio *bio)
- {
+v1->v2
+ - Function qedf_schedule_recovery_handler marked static
+ - Function qedf_recovery_handler marked static
+
+Thanks,
+~Saurav 
+
+Chad Dupuis (2):
+  qedf: Add schedule recovery handler.
+  qedf: Fix crash when MFW calls for protocol stats while function is
+    still probing.
+
+Javed Hasan (1):
+  qedf: Fix for the deviations from the SAM-4 spec.
+
+Saurav Kashyap (3):
+  qedf: Keep track of num of pending flogi.
+  qedf: Implement callback for bw_update.
+  qedf: Get dev info after updating the params.
+
+Sudarsana Reddy Kalluru (1):
+  qed: Send BW update notifications to the protocol drivers.
+
+ drivers/net/ethernet/qlogic/qed/qed.h      |   1 +
+ drivers/net/ethernet/qlogic/qed/qed_main.c |   9 ++
+ drivers/scsi/qedf/qedf.h                   |   6 +-
+ drivers/scsi/qedf/qedf_io.c                |  47 +++++++---
+ drivers/scsi/qedf/qedf_main.c              | 135 ++++++++++++++++++++++++++++-
+ include/linux/qed/qed_if.h                 |   1 +
+ 6 files changed, 184 insertions(+), 15 deletions(-)
+
 -- 
-2.24.1
+1.8.3.1
 
