@@ -4,125 +4,177 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC19C2BA15
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 16:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 026BAC2BA15
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 16:47:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92FCB206F8
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 16:38:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C67032073B
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Apr 2020 16:47:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="dOImOGuo"
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="SNCFkrIf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728381AbgDCQiq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Apr 2020 12:38:46 -0400
-Received: from mout.gmx.net ([212.227.15.18]:35189 "EHLO mout.gmx.net"
+        id S2404111AbgDCQrb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Apr 2020 12:47:31 -0400
+Received: from mout.gmx.net ([212.227.15.15]:47233 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728337AbgDCQiq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Apr 2020 12:38:46 -0400
+        id S2403971AbgDCQra (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Apr 2020 12:47:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1585931790;
-        bh=E98VMExRB5iPNCFhVMy63LXkoHnjMzBitrH5WXG7qiM=;
+        s=badeba3b8450; t=1585932436;
+        bh=qJteazr5M6rwWKSsYgV4eOwWceCPewIZnI3tMHV1Y2I=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-        b=dOImOGuozI8DMcj7GtfGcJ+2x3A02rIMtx66rq0AVmXN7E4q7CI/da7CkeWOTKWum
-         IycbGLyWDsRfecjtP1NLyNzrqfNeeoMqQRrzmNqHx+QgXw5fwKZt2L5sbN7VItYE1V
-         XWz13lrkuz9UmUFYTqce0CgpC7APcPwy3VaVQJy8=
+        b=SNCFkrIfIPOKdBTGy463Mce00xt08x4XosNguyLfOuH4tEKBw4R0TR+wrU+++L4tD
+         EM1m61pKA5ox4h01dU0rkFgxpLNuZQJkHngSj7+RK9xb01skBMBioJhNczQpAyMg3h
+         0FqiGkqwu78EfNXzEKaucp6sp1v6wN9vKAbZ+MGc=
 X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
 Received: from localhost.localdomain ([82.19.195.159]) by mail.gmx.com
- (mrgmx005 [212.227.17.184]) with ESMTPSA (Nemesis) id
- 1MowKi-1iz57o1gsA-00qRcY; Fri, 03 Apr 2020 18:36:30 +0200
+ (mrgmx004 [212.227.17.184]) with ESMTPSA (Nemesis) id
+ 1My36T-1j7ZPv0LdP-00zYMG; Fri, 03 Apr 2020 18:47:16 +0200
 From:   Alex Dewar <alex.dewar@gmx.co.uk>
 To:     alex.dewar@gmx.co.uk
 Cc:     Hannes Reinecke <hare@suse.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: aic7xxx: Use kzalloc() instead of kmalloc()+memset()
-Date:   Fri,  3 Apr 2020 17:36:10 +0100
-Message-Id: <20200403163611.46756-1-alex.dewar@gmx.co.uk>
+Subject: [PATCH] scsi: aic7xxx: Remove unnecessary NULL checks before kfree
+Date:   Fri,  3 Apr 2020 17:47:11 +0100
+Message-Id: <20200403164712.49579-1-alex.dewar@gmx.co.uk>
 X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:fS9C2WUq6W0A/oQG43z3dHsTrS5lIbhUpgQbXvGZQ/vrI87kJb+
- Fdbs4xZkNzfKzc9fcfh9QJa86SXvrj2f2gsHnDtyPcIdsEkzKAIfzVj63JcKL6XrCx551MV
- uhg2dQ32m10T5TByu8cWyWyJwfBI8H6HYI8yUc8zhZ9G4BdPiipDJm3vVRUKlR4LsrVK8T0
- +hP/W1B7p8JaaUTzOCseg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:sDaxh1hmY2Q=:mMPhVPCYFTWiYQV81XN19Z
- r+E9A2Wi3YqJoLIa6dZAwSHRMmBR7ja8qLFTL3eiwl03AcMj20Z00pllIz7kXqAPa1YxnhaTj
- Jif44E1Ua43OynP2NUymyzSoPcE/N0OKuhkpI2kVYn2JvlifA5RogLYIWz07alohAxXx+rq9I
- ukvmuV+JjS3J7qSU3hWehV6sGIa48qOoFNz0zx+eoxJBeS0WjhUcsHTe8SdeUBYLrP4VzPEAo
- YISb5mqEyqIMLS2Cf6Ps42HXQulX/HdC1LsfTs+FKF4oQZ03Kq6qU0hs1KN+ZA/d3c6YPWQ28
- d8fM2cFSziPbJhz6qzHwKf+Mzm7xZ9t0S5FpUbSXMi1kIN2J8QATlZ+NV1fEbNlk88cBhIfkm
- 8pj+XFRkaxI4D2TCwyOz0eKj4f75udBO6nam23LAOn5JxBHHG+EzgTDMPP7O9/AHBGlZwmI7f
- g3l4u42r/TdXdOk1XYo6xlCz1FuiF7ABhwK5RiuoRzmaJAKo7KPszXe8G6lhl4VRu9zyC0w94
- mI4Xa7gEwopzA9Pjy7FXc49gGq/ayNZ2qms+LuW/C5yslKqRwJeyiovV/+VgV9MXSxOD83gWj
- +ixfacN00iqSK1dodIzEQ7K6oTyq0eghQZTxWXbU2+8l3bv3pWr7sx6wv81CL2BHc460nXiqY
- XF0w2r/6I7FtR0RCvZ3MMXrBhj27x6AguVTNvG0spFbZL8bnabrC1QW8Fut0h00BOOWuU2peM
- xaGLFweLKhU5nZNhh8elyCeFElw6laK7HhO3ZkLqQ+PD2GAZtF/MBCUJYkxBtWXW47lgLnb/7
- 8hr0H+Mge/jN/qz69FKGri6fdExkdt8plOsG7MOGgRsKWZQVkTBMNZt79LxGdlFQzRrJDCOBL
- yMk0Z3pGDS8Fs7tPWY+9asCEGGD8Zd2j7yVC/Uu2X7l6Uaji41b68eAOeXdj8Pn1QhECEypMu
- LH0IRiwMoBS+OWMynA7jyRZsuKvTwf0E0Lhg1UW1LiN95nwOFOAe6h/YZWkTYmF5u4pUnM1l7
- TtRQpd48VL/BoGfvj0NhKJ5954hwkNLPj0G2Yj6efT5qVLN7h+5/z/aSM4uMoRvGuTZ16Y2Iz
- 8xv7dY3XoIL9kjqWxV1v+CIRlxJqRF7Y0hyymNZSXFUreoMYyVUZ1qKuq/HST76gIbR+WzjFs
- 2/YDUXDkRposv74bOG3vr8d3/8NsqFAtsFDqWsoSp3I/qLWwPgyYroqWQM5LQeLwffvY0nBQr
- fOSiBQolfKVH0t1mD
+X-Provags-ID: V03:K1:fnsZtus8vNbCBY2l68QzfmvYtczTkefNM+aGSl3RyTk2e+DXBXk
+ wEDRz6OgFRCXEdrv+NpkHLVjRaws1mylcq9DNiGDqApMnkLPDY9Xe1XFC3C0EqOqp1Sq0Yn
+ c9Y9MpdbNlPbl0iViUnwHMAmHxgiR53ZguiJ754BSO6bKjeuH2DOvJ3pSnSsP+HjNAMmI4m
+ ZIeh6YgE37FR9L2n0NwMA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:ek0cCF4NXEU=:OcYrwIpjcMVElXigWXJWip
+ 2LmcqvXH2HTV18sVTxm+bUojVhC/yMR786lpck4U3mwgoLRaavWHssi6SQNiRGNrk2hzNmyfP
+ SCGMQHM3oUTJ4LgIeELHNe87NJ5VPYWrwW33yj2XaxEtPqpnujLNb4qjEv9FQS7K92Wustngx
+ DUUkyCAXwcF2SooL+LhnjUkBgrme2WqvgOn+Ntsr/NF/BSJVRp8TkMHkZALah9kq2dMs3SRfk
+ +uYseCckrbaukq/cRVSegMeYKbXyu/aYoB/2L5dQSZN6V31/c4LZjz6u1z/OPpA6a/J9PsYSr
+ wBQpDTVEapNve6oDzXZYVabAjmoBwZDYlhu0heRjuf9JMdemUpNFBpEV7lOUQPNoIZEL6jcSB
+ D7hpsHLBxtMHymYwhZFqk/iUXLHMy79ce9BqkHKIZDM3IRnOnIhYn1QEKNo5GH1uuHju0yGtp
+ MBRuslXnoRcLMHqn3ezPBoyeRH9WVA8f5FgqEHnqn52b78MHTLSDpm0BIOe0zPCfJLHKwjoyh
+ L4qIfIKht9faa0PPdbiGxVGQDRnrH8y+V8ZZ8eQuudMxLEAStQkepNAvgKJa1hhGJVxgxm1dO
+ Q3kZfVHx8pVakqxUv2sNLXCqy76w/fbq7zROR9RFbKwWnUPvh74f/yvEWXVCQJ/ayU5pCApBG
+ 2ohv2yPIH5EruD+SnGqsIOXiyTpOpZBHJFdQ2JKOjmBVdU+JZ5R3pahqjmGnUXSRW26DcMS5W
+ hEL+TEtA2+RnatpiwaKoOA1Gxy2vvUEex4R0T94FtpPWp36D1KV8ozZP9yhEDlXmLwMa7nQ8u
+ jq6K6vVunjBk+Y5Y/pDeGvoWPIT6p+TQ2j06ElZXM9Ps2o0PgMW59/I5ehPl+NiuBDslIXSbn
+ ijEZVAJ+3ladYgmVHtlokZM24G3DOs4u0owzJIS8+XzF7xOSW8z5V9aQBQ4XaOWvP7ErTaehj
+ Qyfv6C2ZP2EMmyxoQK+v2haoqT0t3KfDHvT5DYIkzRhmGBJlaIIxGXG1TuIft5oBVDzslDxJ1
+ xfHFuuLS1+CtyFZB4VTmTuZR4Dq5m6riROkjO1W0z/bn8qIfkiyVApkJOb4B/wiesXmvvUhcT
+ lv1E3Wmyl1+VGQbtUEI91bYbiLBPUAKKHlh6qWX6VSEW27A0ZvXOky0mDdnr3WqKbd08y4s69
+ ffQL36CJ5eUvBMhiKV2R/cLOQTbWM0d5ZmM6/z/mt9FohgBpg51AnX3PzKaO1nZZUCdGuxREM
+ FDTg/vPs1/7GsYeJ1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are a couple of places where kzalloc() could be used directly
-instead of calling kmalloc() then memset(). Replace them.
+There are a number of places in the aic7xxx driver where a NULL check is
+performed before a kfree(). However, kfree() already performs NULL checks
+so this is unnecessary. Remove the checks.
+
+Issue identified with Coccinelle.
 
 Signed-off-by: Alex Dewar <alex.dewar@gmx.co.uk>
 =2D--
- drivers/scsi/aic7xxx/aic79xx_core.c | 3 +--
- drivers/scsi/aic7xxx/aic7xxx_core.c | 4 ++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c | 15 +++++----------
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 15 +++++----------
+ 2 files changed, 10 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/ai=
 c79xx_core.c
-index a336a458c978..c38163707259 100644
+index a336a458c978..72eaad4aef9c 100644
 =2D-- a/drivers/scsi/aic7xxx/aic79xx_core.c
 +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -6054,14 +6054,13 @@ ahd_alloc(void *platform_arg, char *name)
+@@ -3662,8 +3662,7 @@ ahd_free_tstate(struct ahd_softc *ahd, u_int scsi_id=
+, char channel, int force)
+ 		return;
+
+ 	tstate =3D ahd->enabled_targets[scsi_id];
+-	if (tstate !=3D NULL)
+-		kfree(tstate);
++	kfree(tstate);
+ 	ahd->enabled_targets[scsi_id] =3D NULL;
+ }
+ #endif
+@@ -6120,8 +6119,7 @@ ahd_set_unit(struct ahd_softc *ahd, int unit)
+ void
+ ahd_set_name(struct ahd_softc *ahd, char *name)
  {
- 	struct  ahd_softc *ahd;
+-	if (ahd->name !=3D NULL)
+-		kfree(ahd->name);
++	kfree(ahd->name);
+ 	ahd->name =3D name;
+ }
 
--	ahd =3D kmalloc(sizeof(*ahd), GFP_ATOMIC);
-+	ahd =3D kzalloc(sizeof(*ahd), GFP_ATOMIC);
- 	if (!ahd) {
- 		printk("aic7xxx: cannot malloc softc!\n");
- 		kfree(name);
- 		return NULL;
+@@ -6182,12 +6180,9 @@ ahd_free(struct ahd_softc *ahd)
+ 		kfree(ahd->black_hole);
  	}
-
--	memset(ahd, 0, sizeof(*ahd));
- 	ahd->seep_config =3D kmalloc(sizeof(*ahd->seep_config), GFP_ATOMIC);
- 	if (ahd->seep_config =3D=3D NULL) {
- 		kfree(ahd);
+ #endif
+-	if (ahd->name !=3D NULL)
+-		kfree(ahd->name);
+-	if (ahd->seep_config !=3D NULL)
+-		kfree(ahd->seep_config);
+-	if (ahd->saved_stack !=3D NULL)
+-		kfree(ahd->saved_stack);
++	kfree(ahd->name);
++	kfree(ahd->seep_config);
++	kfree(ahd->saved_stack);
+ 	kfree(ahd);
+ 	return;
+ }
 diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/ai=
 c7xxx_core.c
-index 84fc499cb1e6..36a7ea1ba7da 100644
+index 84fc499cb1e6..5a10feea17fe 100644
 =2D-- a/drivers/scsi/aic7xxx/aic7xxx_core.c
 +++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -4384,13 +4384,13 @@ ahc_alloc(void *platform_arg, char *name)
- 	struct  ahc_softc *ahc;
- 	int	i;
+@@ -2178,8 +2178,7 @@ ahc_free_tstate(struct ahc_softc *ahc, u_int scsi_id=
+, char channel, int force)
+ 	if (channel =3D=3D 'B')
+ 		scsi_id +=3D 8;
+ 	tstate =3D ahc->enabled_targets[scsi_id];
+-	if (tstate !=3D NULL)
+-		kfree(tstate);
++	kfree(tstate);
+ 	ahc->enabled_targets[scsi_id] =3D NULL;
+ }
+ #endif
+@@ -4453,8 +4452,7 @@ ahc_set_unit(struct ahc_softc *ahc, int unit)
+ void
+ ahc_set_name(struct ahc_softc *ahc, char *name)
+ {
+-	if (ahc->name !=3D NULL)
+-		kfree(ahc->name);
++	kfree(ahc->name);
+ 	ahc->name =3D name;
+ }
 
--	ahc =3D kmalloc(sizeof(*ahc), GFP_ATOMIC);
-+	ahc =3D kzalloc(sizeof(*ahc), GFP_ATOMIC);
- 	if (!ahc) {
- 		printk("aic7xxx: cannot malloc softc!\n");
- 		kfree(name);
- 		return NULL;
+@@ -4515,10 +4513,8 @@ ahc_free(struct ahc_softc *ahc)
+ 		kfree(ahc->black_hole);
  	}
--	memset(ahc, 0, sizeof(*ahc));
-+
- 	ahc->seep_config =3D kmalloc(sizeof(*ahc->seep_config), GFP_ATOMIC);
- 	if (ahc->seep_config =3D=3D NULL) {
- 		kfree(ahc);
+ #endif
+-	if (ahc->name !=3D NULL)
+-		kfree(ahc->name);
+-	if (ahc->seep_config !=3D NULL)
+-		kfree(ahc->seep_config);
++	kfree(ahc->name);
++	kfree(ahc->seep_config);
+ 	kfree(ahc);
+ 	return;
+ }
+@@ -4927,8 +4923,7 @@ ahc_fini_scbdata(struct ahc_softc *ahc)
+ 	case 0:
+ 		break;
+ 	}
+-	if (scb_data->scbarray !=3D NULL)
+-		kfree(scb_data->scbarray);
++	kfree(scb_data->scbarray);
+ }
+
+ static void
 =2D-
 2.26.0
 
