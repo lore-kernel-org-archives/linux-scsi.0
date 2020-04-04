@@ -2,189 +2,378 @@ Return-Path: <SRS0=8r17=5U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B0B9C2BA17
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 11:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE164C2BA15
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 18:15:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 726DD20719
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 11:15:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73905206F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 18:15:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="jNWrS2na"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gcR7MzQi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726121AbgDDLPx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Apr 2020 07:15:53 -0400
-Received: from mout.web.de ([212.227.17.12]:55557 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725943AbgDDLPw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 4 Apr 2020 07:15:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1585998895;
-        bh=XaTOEXnC3yHGMSOTnTJjcLY1jIeKJX78T/9fo8XYUog=;
-        h=X-UI-Sender-Class:Cc:Subject:From:To:Date;
-        b=jNWrS2naAasfW/j5mHa8mPmQsq+o3j+ZO3O0ZMeIC3L2EKVUsKN12PLEzdd2YqphA
-         PpDItuSqOycM1hEf9U8VdlytOVtVcAkiu/+ThTcOThnxculrvv4Yy1bbTuhg4LQmuj
-         fNSU+H1CqypKNYBf14RjKko784GSuB5jStCH2xQ8=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.3] ([93.132.181.229]) by smtp.web.de (mrweb101
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0MHXxg-1jJZlS2wkG-003MqF; Sat, 04
- Apr 2020 13:14:54 +0200
-Cc:     linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: Remove unnecessary calls to memset after
- dma_alloc_coherent
-From:   Markus Elfring <Markus.Elfring@web.de>
-Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
- 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 FEE=
-To:     Alex Dewar <alex.dewar@gmx.co.uk>,
-        Allison Randal <allison@lohutok.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Chaitra Basappa <chaitra.basappa@broadcom.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        "James E. J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Richard Fontana <rfontana@redhat.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-scsi@vger.kernel.org, aacraid@microsemi.com,
-        MPT-FusionLinux.pdl@broadcom.com
-Message-ID: <e2401a31-e9fd-e849-e27c-6e079f5556d2@web.de>
-Date:   Sat, 4 Apr 2020 13:14:52 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        id S1726248AbgDDSPg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Apr 2020 14:15:36 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:11134 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726207AbgDDSPf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2020 14:15:35 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200404181532epoutp02994a3c11838c54a63662d7e1ee1ff604~CsIubTiBQ2494724947epoutp02X
+        for <linux-scsi@vger.kernel.org>; Sat,  4 Apr 2020 18:15:32 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200404181532epoutp02994a3c11838c54a63662d7e1ee1ff604~CsIubTiBQ2494724947epoutp02X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1586024132;
+        bh=5vYBTyXJGbsgswvWHnueDWMawgGk8MDBr++Km8ix618=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=gcR7MzQixVCL18k/zM4KdFp8AzEGryIxas4uKiMbPQFq2b5AQ+ByPLQu2K6eMgau1
+         VSyBM2Vq5dthbDO/jWkc0Fse68Lw8JswjE8oYxa8QQ3qAc2SXIDocuIydRhtDyca0B
+         J9bxbjiVrH0Vyo52ZR2hoITbGum4Wwd9KXWvfZsc=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20200404181531epcas5p37481dfbbb374b8cf2ea49f348516bd81~CsItGROYB1302713027epcas5p3a;
+        Sat,  4 Apr 2020 18:15:31 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        38.80.04778.2CEC88E5; Sun,  5 Apr 2020 03:15:30 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200404181530epcas5p1626022d953c9c694e69052fb429c0d91~CsIsg2WRr0733107331epcas5p1e;
+        Sat,  4 Apr 2020 18:15:30 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200404181530epsmtrp11ac5d7ef78b5f851f96ffd73a63961f5~CsIsf58U21392013920epsmtrp1P;
+        Sat,  4 Apr 2020 18:15:30 +0000 (GMT)
+X-AuditID: b6c32a4a-33bff700000012aa-39-5e88cec24485
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        BA.EC.04158.2CEC88E5; Sun,  5 Apr 2020 03:15:30 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200404181527epsmtip2f06f15a94d9e2fb82b2be6eab1a2e0d6~CsIpZwkk50776007760epsmtip2T;
+        Sat,  4 Apr 2020 18:15:26 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     =?utf-8?Q?'Pawe=C5=82_Chmiel'?= <pawel.mikolaj.chmiel@gmail.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+Cc:     <krzk@kernel.org>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
+        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+In-Reply-To: <1182150aff8140a82af17979a09c81676c719e2f.camel@gmail.com>
+Subject: RE: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
+Date:   Sat, 4 Apr 2020 23:45:24 +0530
+Message-ID: <000001d60aad$05e7b6e0$11b724a0$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:4dgcvqMPX/wM1DiRFLqWvWQRTYFDe0QbQ9Ckgj7kvxX4veaGUHi
- tASOrG9BqrzzkXdMd8xrBAcZ5zGv7yeBj7jRfzZvPNFMCoruY+nt5liQ7vupveqfKiv0obp
- xeCbAfX3M8ZSGFpdt8IkvzcXw75IsoJPTPQEcatpmJa+vB7uEf6ka50FQ7RueRAuyrfWjxB
- YJ+lhQf/DearDdLdnJe+Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:5lfCi9erITk=:6h6u3PvMeSNFVZD1LHtvP5
- wvLNnZCI4+2aARVbQ+JVU9j4LT6uTvt098vkadL0SJHp7rsuNda7BmLb8/+4+OTbFUpqhHZq5
- YKvQmQlX0QB8fDAwoZc2b4mqCwE0rFUoqvA8Hu/N7cazgLQ/Cdq3Jvy/ufZlEKcerGwyHd1xY
- d50BY3FicNPCfJWwEcyQq2x90+45O2PTIliaIA0guOlwZWovUIeIqnC2luVITGzEIr0K3GbQ4
- R14g8Jd9jIIXJSzkAw33sKVOWnp5tmK8mXh3gYlDgYNioRPoy1jwUd1XEp0pXCFG8Env9CjJr
- tvSU+BU6XZ9hXAz7cPZFzPiZ+YKo4GjnyFCm6xWZheKk2BLsAl9un82cMQOr41Saa1piMjtfn
- Rfg5FRaNblmDIrE6EQHDD5XCyFI/spomZioXNYyHQ/2+EhT/YvtTiVsgmSQq0eqOGFyOC+iG4
- ZjyZ4wYunC3FCowKdwavEpVuiUmbNe/dmCtPBPEF0OpZQlIMuOnv8jpVeOIOpvuasOhI+n+Ui
- gyZ4kJL0brxbCL4vZUiNA2oK/l0kSGSX44PBxkwRFmkhLG5o5P1RxJNxTH7I8IefSRRYcZ7Tt
- RPRr8Ql/z5nl7UXijFsq80a2KfkGh4Rs0n4BcaL17gOsym/7SRfpd//UtuMCejlAUBfVrgXfl
- 4y4w0pBOkcOpCTTIPZ13C0memndX8ls4nc8w+d0rmArd+LTIx2x48FQw+Eaa99bPA1V3cgwOl
- DXZoe+M9PAozTmKISXbQQey0YUknyIZKpvRq8XVc1zFrpmXhXY+r4VGqgsf/AIKBsPUI9yOIW
- dEJSFlrUxXO7ssFSw8I7NH7QssKL+qN9RLlLqDTMC1RXAcUPvXTnfIsE7x3rBdiOtkCtSezXt
- +4/n4kO2l8n0sfxdVwatNkHV5gHs1WwIYF4wK68u0x6sObLXHlXuA+T8MAM3yUrmGXvosfkr6
- tZZmLvLrAbypxCdbCkCFJqVjA4IXrk9+tqME5H+g8bI5Ux9YfaUs6+Od91WBaMW9EExYv80pr
- Wl02QkJl0Cj32jrhKb0tBYk2697b3mfwDlNM99DJTEQ7tV0/AF+WPTFIaJ+58YKSFSo2ZHlU3
- WzXB1LHrnzgQq9/8FxY0MFnnth0Lm4iMPvf8yh6dvRQ1EZo121zV4X41/YfHOeKi2i+zPwZ8r
- EK7sfW/h0jqWNbPkh3f1MKOvSdqf8N3oEt6QtHSaQM6oOyp9JsE8rD3hH/sTXtriwoIBEcvS+
- WkGCzagVWtsNs0mXj
+Content-Type: multipart/mixed;
+        boundary="----=_NextPart_000_0001_01D60ADB.1FA12B60"
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKI+vJzlUBp7WIi19k8pRZBKIHK2gKUSzVAA7h3SyUCe2DDmwIWY0ZDAq0rcFAB9QhIPQKG0ufBpnMjnJA=
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SWUwTURSGc2emMwNSMxaDR4iKFeMWFrdkNKg1UZy4JLzogxi0yhURKLUF
+        t7g0ApVSqKgYsaJClGqKBkTEgiCksj5YFAQDCSoKKrhDNFaI2nZqwtt3zvn/s9xclpQV0oFs
+        gioVa1TKJDntS1U9XjA/1O7Iio3Ibub5IWcXzY+UWST8tUaHhG9vL2f4nsomiq942y3hO2sK
+        ab6g/RHBG1/YaP5myx+C/9ViIvnMukaGL7nfgxRSodOUSwjV5j5GqLAaaOHejZNCRls9JXwf
+        7KUEU6UVCaMVM4XTDUYi2me7b2QcTko4iDXhq3f57stwlpDqR/nosOV1A6ND1jyUjXxY4JZB
+        ce1jiZtl3EMEtiZFNvJ18QiCK086GTH4iWCodoT67/h88w0hFuoQnNKX02LwCUHd+HvCraK5
+        ULBd13sKUzkzgvRWncdCcgYCbl/LJ90qH24DmL4aPNP9OQX036r3uCkuBGrv6Dx5KbcCHB2d
+        pMhToO3SgGcPktsKBeUF3p2CwTlocelZ17TdUGvaK0qmQZMzh3TPBe4lA5c/2L36dTBaWEaI
+        7A/DLZWMyIEwdEbPuPsAlwg5NUvF9DEoudrsta6BhueF3hUmQ+7YACHKpZCll4mSuZD+pcsr
+        D4KzRqNEZAGqSp9637qXhI4fAXko2DzhMPOEw8wTLhB5EViKP7qYdfECKKsJF9MKMBv6aZFn
+        Q76xnxF5FQx3pzNFiLWi6VitTY7H2uXqJSp8KEyrTNamqeLD9qQkVyDPP1240YYsjs12xLFI
+        7iflL2TFyiTKg9ojyXYU4ur1prz0KQqkVCkqLJ8qXVuQGSuTximPHMWalJ2atCSstaMglpJP
+        k56TdO2QcfHKVJyIsRpr/lcJ1idQhyInzbLhsqiAix2K9aveNXefH2sNGW/5PDBaQu7debUn
+        KjNnRlHVyldpa04oMN13/64ab5lyftvvM/tnmv+GSm2anuHqA0FxMZvWOebsiW7MiKWsx+d9
+        y382ubHBkO0XY+kbx21j3c8H8aUH+GTEUPVbXdIyp/8smbpYP7p9hmVxnZzS7lMuXkhqtMp/
+        SIh8+a8DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrAIsWRmVeSWpSXmKPExsWy7bCSvO6hcx1xBjO+C1i8/HmVzeLT+mWs
+        FvOPnGO1OH9+A7vFzS1HWSw2Pb7GanF51xw2ixnn9zFZdF/fwWax/Pg/Josfx/uYLVr3HmG3
+        WLr1JqMDr8flvl4mj52z7rJ7bFrVyeaxeUm9R8vJ/SweH5/eYvHo27KK0ePzJjmP9gPdTAGc
+        UVw2Kak5mWWpRfp2CVwZ9391sRXMLKzYPOUJSwPjxdguRk4OCQETibfLHzGB2EICuxklNizW
+        h4hLS1zfOIEdwhaWWPnvOZDNBVTzilHi3rPrbCAJNgFdiR2L29hAEiICcxgllnxtAZvELDCZ
+        SWLpTX6IjjPMEi+fXQBLcAq4S/S972QFsYUFHCQertgPFmcRUJHYs7YBLM4rYClx7tJlZghb
+        UOLkzCcsEENDJWZsmMECcZKCxM+ny4DqOYA2J0ns6UuDKBGXOPqzh3kCo9AsJN2zkHTPQlIG
+        YWtLPL35lAXGXrbwNVTcSWLtvGPMqOIcQLa9xI+DDgsYOVYxSqYWFOem5xYbFhjlpZbrFSfm
+        Fpfmpesl5+duYgTHvZbWDsYTJ+IPMQpwMCrx8FpM7YgTYk0sK67MPcSoAjTq0YbVFxilWPLy
+        81KVRHgdZ7TGCfGmJFZWpRblxxeV5qQWH2KU5mBREueVzz8WKSSQnliSmp2aWpBaBJNl4uCU
+        amBc8HPeUk4jFkX3KZNOnfi8617pdH0tydMz/iyS59svJ2vSc7nPasXpan+bZUwq7htmr1hf
+        e7nOe76EXPCsnyx1J4JTPBckz/t7q7Fn4YO2Be3hj8q2bEl5dZIxQlM4JNDs36odLvseb8s8
+        47jlicZZv/9aJu+bxOc6BiscT1t0J3oZT7vHiaO7lViKMxINtZiLihMBUFGz4QMDAAA=
+X-CMS-MailID: 20200404181530epcas5p1626022d953c9c694e69052fb429c0d91
+X-Msg-Generator: CA
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200327171423epcas5p485d227f19e45999ad9b42b21d2864e4a
+References: <20200327170638.17670-1-alim.akhtar@samsung.com>
+        <CGME20200327171423epcas5p485d227f19e45999ad9b42b21d2864e4a@epcas5p4.samsung.com>
+        <20200327170638.17670-6-alim.akhtar@samsung.com>
+        <ac67cfc3736cf50c716b823a59af878d59b7198f.camel@gmail.com>
+        <000801d60516$823fd890$86bf89b0$@samsung.com>
+        <838a17416b4ed59903ae153e09842ac62584616f.camel@gmail.com>
+        <002e01d605df$af658440$0e308cc0$@samsung.com>
+        <1182150aff8140a82af17979a09c81676c719e2f.camel@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> dma_alloc_coherent() now zeroes memory after allocation, so additional
-> calls to memset() afterwards are unnecessary. Remove them.
+This is a multipart message in MIME format.
 
-I suggest to reconsider the distribution of recipients also for this patch
-according to the fields =E2=80=9CCc=E2=80=9D and =E2=80=9CTo=E2=80=9D.
+------=_NextPart_000_0001_01D60ADB.1FA12B60
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
+Hi Pawel,
 
-=E2=80=A6
-> +++ b/drivers/scsi/dpt_i2o.c
-=E2=80=A6
-> @@ -3067,13 +3064,12 @@ static int adpt_i2o_build_sys_table(void)
->  	sys_tbl_len =3D sizeof(struct i2o_sys_tbl) +	// Header + IOPs
->  				(hba_count) * sizeof(struct i2o_sys_tbl_entry);
->
-> -	sys_tbl =3D dma_alloc_coherent(&pHba->pDev->dev,
-> -				sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
-> +	sys_tbl =3D dma_alloc_coherent(&pHba->pDev->dev, sys_tbl_len,
-> +				     &sys_tbl_pa, GFP_KERNEL);
->  	if (!sys_tbl) {
-=E2=80=A6
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -244,28 +244,22 @@ static int mvs_alloc(struct mvs_info *mvi, struct =
-Scsi_Host *shost)
-=E2=80=A6
-> -	mvi->slot =3D dma_alloc_coherent(mvi->dev,
-> -				       sizeof(*mvi->slot) * slot_nr,
-> +	mvi->slot =3D dma_alloc_coherent(mvi->dev, sizeof(*mvi->slot) * slot_n=
-r,
->  				       &mvi->slot_dma, GFP_KERNEL);
->  	if (!mvi->slot)
-=E2=80=A6
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -79,7 +79,7 @@ qla24xx_process_abts(struct scsi_qla_host *vha, void *=
-pkt)
->  	    (uint8_t *)abts, sizeof(*abts));
->
->  	rsp_els =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*rsp_els), &dma,
-> -	    GFP_KERNEL);
-> +				     GFP_KERNEL);
->  	if (!rsp_els) {
-=E2=80=A6
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -4887,15 +4887,13 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *=
-vha)
->  	    "Entered %s.\n", __func__);
->
->  	els_cmd_map =3D dma_alloc_coherent(&ha->pdev->dev, ELS_CMD_MAP_SIZE,
-> -	    &els_cmd_map_dma, GFP_KERNEL);
-> +					 &els_cmd_map_dma, GFP_KERNEL);
->  	if (!els_cmd_map) {
-=E2=80=A6
+> -----Original Message-----
+> From: Pawe=C5=82=20Chmiel=20<pawel.mikolaj.chmiel=40gmail.com>=0D=0A>=20S=
+ent:=2003=20April=202020=2022:22=0D=0A>=20To:=20Alim=20Akhtar=20<alim.akhta=
+r=40samsung.com>;=20robh+dt=40kernel.org;=0D=0A>=20devicetree=40vger.kernel=
+.org;=20linux-scsi=40vger.kernel.org=0D=0A>=20Cc:=20krzk=40kernel.org;=20av=
+ri.altman=40wdc.com;=20martin.petersen=40oracle.com;=0D=0A>=20kwmad.kim=40s=
+amsung.com;=20stanley.chu=40mediatek.com;=0D=0A>=20cang=40codeaurora.org;=
+=20linux-samsung-soc=40vger.kernel.org;=20linux-arm-=0D=0A>=20kernel=40list=
+s.infradead.org;=20linux-kernel=40vger.kernel.org=0D=0A>=20Subject:=20Re:=
+=20=5BPATCH=20v4=205/5=5D=20arm64:=20dts:=20Add=20node=20for=20ufs=20exynos=
+7=0D=0A>=20=0D=0A>=20Hi=20Alim=0D=0A>=20=0D=0A>=20Looking=20at=20vendor=20s=
+ources,=20my=20device=20is=20using=20the=20same=20gpios=20for=0D=0A>=20urfs=
+_rst_n=20and=20ufs_refclk_out=20like=20Espresso=20(with=20one=20difference=
+=20-=0D=0A>=20ufs_rst_n=20shouldn't=20be=20pulled=20up).=0D=0A>=20=0D=0A>=
+=20About=20regulators=20(it=20would=20be=20easier=20if=20dts=20would=20have=
+=20all=20regulators).=0D=0A>=20It's=20also=20using=20s2mps15=20as=20Espress=
+o,=20but=20it=20vendor=20dts=20had=20only=208=20(of=0D=0A>=2010=20possible=
+=20bucks,=20one=20missing=20was=20for=20UFS)=20and=2014=20ldos=20(of=2027=
+=0D=0A>=20possible),=20where=20almost=20all=20rails=20are=20connected=20to=
+=20something.=0D=0A>=20=0D=0A>=20I'm=20wondering=20how=20it's=20working=20o=
+n=20Espresso,=20because=20when=20adding=20correct=0D=0A>=20regulators=20for=
+=20ufs=20(vccq=20=3D=20buck10=20from=20s2mps15,=20always=20enabled=20for=0D=
+=0A>=20testing=20plus=20vccq2=20and=20vccq=20=3D=20two=20regulators=20enabl=
+ed=20by=20one=20gpio,=0D=0A>=20enabled=20at=20boot=20by=20firmware),=20ufs=
+=20wasn't=20still=20working=20because=20it=20was=0D=0A>=20then=20failing=20=
+at=20defer=20probe=20(s2mps15=20was=20probed=20after=20ufs)=0D=0A>=20=0D=0A=
+>=20=5B=20=20=20=200.962482=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_get_=
+vreg:=20vccq=20get=0D=0A>=20failed,=20err=3D-517=0D=0A>=0D=0AAs=20I=20said,=
+=20this=20is=20very=20specific=20to=20the=20board,=20on=20Espresso=20we=20h=
+ave=20LDO12=20connected=20to=20UFS_RESETn.=0D=0AEither=20make=20all=20of=20=
+them=20as=20always-on,=20or=20just=20disabled=20s2mps15=20=0D=0A(default=20=
+voltage=20supply=20should=20be=20ok,=20unless=20bootloader=20on=20your=20bo=
+ard=20does=20have=20messed=20too=20much=20with=20PMIC)=0D=0A=20=0D=0A>=20Af=
+ter=20that=20boot=20would=20just=20stop/hang.=0D=0A>=20=0D=0A>=20After=20ma=
+king=20a=20=22dirty=20fix=22=20by=20making=20s2mps15=20regulator=20driver=
+=20use=0D=0A>=20subsys_initcall=20(like=20in=20vendor=20sources)=20and=20uf=
+s=20late_initcall=20(to=20give=0D=0A>=20it=20more=20time=20to=20setup=20and=
+=20get=20it=20working=20and=20solve=20it=20later),=0D=0A>=20i=20had=20to=20=
+mark=20following=20clocks=20as=20CLK_IGNORE_UNUSED=20to=20be=20able=20to=20=
+bring=0D=0A>=20link=20up=20(it=20replicates=20setting=20done=20by=20vendor=
+=20kernel,=20which=20enables=0D=0A>=20them=20on=20boot):=0D=0A>=20-=20=22ph=
+yclk_ufs20_rx1_symbol_user=22=0D=0A>=20-=20=22phyclk_ufs20_rx0_symbol_user=
+=22=0D=0A>=20-=20=22phyclk_ufs20_tx0_symbol_user=22=0D=0A>=20=0D=0AComing=
+=20to=20these=20clocks,=20all=20these=20are=20supplied=20by=20default,=20my=
+=20best=20guess=20is=20since=20you=20are=20using=20an=20actual=20product=20=
+(S6=20edge),=20they=20might=20have=20optimized=20for=20power=20saving=20=0D=
+=0AAnd=20most=20likely=20all=20clock=20might=20be=20=20gated=20initially.=
+=20In=20my=20case=20all=20are=20set=20to=20default.=0D=0AI=20have=20attache=
+d=20a=20small=20change=20in=20the=20exynos7=20dts=20and=20phy=20driver=20cl=
+ock=20handling,=20please=20try=20this=20attached=20patch=20and=20let=20me=
+=20know=20if=20this=20helps=20in=20removing=20some=20of=20your=20hacks.=0D=
+=0AIn=20the=20later=20SoCs=20these=20clocks=20are=20not=20in=20this=20form,=
+=20so=20I=20didn't=20included=20in=20my=20current=20patch=20set,=20If=20thi=
+s=20works=20for=20your,=20will=20add=20as=20an=20optional=20for=20exynos7/7=
+420.=0D=0AI=20also=20assume=20you=20are=20using=20clk-exynos7.c=20and=20my=
+=20posted=20ufs=20driver.=0D=0A=0D=0A>=20Now=20it's=20able=20to=20bring=20b=
+oth=20device=20and=20link,=20but=20it=20fails=20at=0D=0A>=20ufshcd_uic_chan=
+ge_pwr_mode.=0D=0A>=20=0D=0ACan=20you=20please=20use=20the=20exact=20ufs=20=
+and=20ufs-phy=20device=20node=20as=20in=20my=20patch?=0D=0A=0D=0A>=20=5B=20=
+=20=20=201.411547=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_init_clocks:=
+=20clk:=0D=0A>=20core_clk,=20rate:=20100000000=0D=0A>=20=5B=20=20=20=201.41=
+9698=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_init_clocks:=20clk:=0D=0A>=
+=20sclk_unipro_main,=20rate:=20167000000=0D=0A>=20=5B=20=20=20=201.428550=
+=5D=20exynos-ufshc=2015570000.ufs:=20__ufshcd_setup_clocks:=20clk:=0D=0A>=
+=20core_clk=20enabled=0D=0A>=20=5B=20=20=20=201.436200=5D=20exynos-ufshc=20=
+15570000.ufs:=20__ufshcd_setup_clocks:=20clk:=0D=0A>=20sclk_unipro_main=20e=
+nabled=0D=0A>=20=5B=20=20=20=201.445704=5D=20scsi=20host0:=20ufshcd=0D=0A>=
+=20=5B=20=20=20=201.465684=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_print=
+_pwr_info:=5BRX,=0D=0A>=20TX=5D:=20gear=3D=5B1,=201=5D,=20lane=5B1,=201=5D,=
+=20pwr=5BSLOWAUTO_MODE,=20SLOWAUTO_MODE=5D,=20rate=0D=0A>=20=3D=0D=0A>=200=
+=0D=0A>=20=5B=20=20=20=202.023699=5D=20exynos-ufshc=2015570000.ufs:=20dme-s=
+et:=20attr-id=200xd041=20val=0D=0A>=200x1fff=20error=20code=201=0D=0A>=20=
+=5B=20=20=20=202.023846=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr=
+-id=200xd041=20val=0D=0A>=200x1fff=20failed=200=20retries=0D=0A>=20=5B=20=
+=20=20=202.024025=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=20=
+0xd042=20val=0D=0A>=200xffff=20error=20code=201=0D=0A>=20=5B=20=20=20=202.0=
+25457=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd042=20val=
+=0D=0A>=200xffff=20failed=200=20retries=0D=0A>=20=5B=20=20=20=202.033777=5D=
+=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd043=20val=0D=0A>=
+=200x7fff=20error=20code=201=0D=0A>=20=5B=20=20=20=202.041607=5D=20exynos-u=
+fshc=2015570000.ufs:=20dme-set:=20attr-id=200xd043=20val=0D=0A>=200x7fff=20=
+failed=200=20retries=0D=0A>=20=5B=20=20=20=202.067809=5D=20exynos-ufshc=201=
+5570000.ufs:=20pwr=20ctrl=20cmd=200x2=20failed,=20host=0D=0A>=20upmcrs:0x5=
+=0D=0A>=20=5B=20=20=20=202.067953=5D=20exynos-ufshc=2015570000.ufs:=20UFS=
+=20Host=20state=3D0=0D=0A>=20=5B=20=20=20=202.068056=5D=20exynos-ufshc=2015=
+570000.ufs:=20outstanding=20reqs=3D0x0=0D=0A>=20tasks=3D0x0=0D=0A>=20=5B=20=
+=20=20=202.068759=5D=20exynos-ufshc=2015570000.ufs:=20saved_err=3D0x0,=0D=
+=0A>=20saved_uic_err=3D0x0=0D=0A>=20=5B=20=20=20=202.075368=5D=20exynos-ufs=
+hc=2015570000.ufs:=20Device=20power=20mode=3D1,=20UIC=20link=0D=0A>=20state=
+=3D1=0D=0A>=20=5B=20=20=20=202.082392=5D=20exynos-ufshc=2015570000.ufs:=20P=
+M=20in=20progress=3D0,=20sys.=0D=0A>=20suspended=3D0=0D=0A>=20=5B=20=20=20=
+=202.089158=5D=20exynos-ufshc=2015570000.ufs:=20Auto=20BKOPS=3D0,=20Host=20=
+self-=0D=0A>=20block=3D0=0D=0A>=20=5B=20=20=20=202.095667=5D=20exynos-ufshc=
+=2015570000.ufs:=20Clk=20gate=3D1=0D=0A>=20=5B=20=20=20=202.100354=5D=20exy=
+nos-ufshc=2015570000.ufs:=20error=20handling=20flags=3D0x0,=0D=0A>=20req.=
+=20abort=20count=3D0=0D=0A>=20=5B=20=20=20=202.107987=5D=20exynos-ufshc=201=
+5570000.ufs:=20Host=20capabilities=3D0x383ff0f,=0D=0A>=20caps=3D0x0=0D=0A>=
+=20=5B=20=20=20=202.115018=5D=20exynos-ufshc=2015570000.ufs:=20quirks=3D0x7=
+80,=20dev.=0D=0A>=20quirks=3D0xc4=0D=0A>=20=5B=20=20=20=202.121443=5D=20exy=
+nos-ufshc=2015570000.ufs:=20ufshcd_print_pwr_info:=5BRX,=0D=0A>=20TX=5D:=20=
+gear=3D=5B1,=201=5D,=20lane=5B1,=201=5D,=20pwr=5BSLOWAUTO_MODE,=20SLOWAUTO_=
+MODE=5D,=20rate=0D=0A>=20=3D=0D=0A>=200=0D=0A>=20=5B=20=20=20=202.133960=5D=
+=20host_regs:=2000000000:=200383ff0f=2000000000=2000000200=2000000000=0D=0A=
+>=20=5B=20=20=20=202.140268=5D=20host_regs:=2000000010:=2000000101=2000007f=
+ce=2000000000=2000000000=0D=0A>=20=5B=20=20=20=202.146604=5D=20host_regs:=
+=2000000020:=2000000000=2000030a75=2000000000=2000000000=0D=0A>=20=5B=20=20=
+=20=202.152940=5D=20host_regs:=2000000030:=200000050f=2000000000=2080000010=
+=2000000000=0D=0A>=20=5B=20=20=20=202.159271=5D=20host_regs:=2000000040:=20=
+00000000=2000000000=2000000000=2000000000=0D=0A>=20=5B=20=20=20=202.165609=
+=5D=20host_regs:=2000000050:=20f9587000=2000000000=2000000000=2000000000=0D=
+=0A>=20=5B=20=20=20=202.171944=5D=20host_regs:=2000000060:=2000000001=20000=
+00000=2000000000=2000000000=0D=0A>=20=5B=20=20=20=202.178278=5D=20host_regs=
+:=2000000070:=20f958a000=2000000000=2000000000=2000000000=0D=0A>=20=5B=20=
+=20=20=202.184609=5D=20host_regs:=2000000080:=2000000001=2000000000=2000000=
+000=2000000000=0D=0A>=20=5B=20=20=20=202.190945=5D=20host_regs:=2000000090:=
+=2000000002=2015710000=2000000000=2000000000=0D=0A>=20=5B=20=20=20=202.1972=
+82=5D=20exynos-ufshc=2015570000.ufs:=20hba->ufs_version=20=3D=200x200,=0D=
+=0A>=20hba->capabilities=20=3D=200x383ff0f=0D=0A>=20=5B=20=20=20=202.205869=
+=5D=20exynos-ufshc=2015570000.ufs:=20hba->outstanding_reqs=20=3D=200x0,=0D=
+=0A>=20hba->outstanding_tasks=20=3D=200x0=0D=0A>=20=5B=20=20=20=202.214636=
+=5D=20exynos-ufshc=2015570000.ufs:=20last_hibern8_exit_tstamp=20at=200=0D=
+=0A>=20us,=20hibern8_exit_cnt=20=3D=200=0D=0A>=20=5B=20=20=20=202.223141=5D=
+=20exynos-ufshc=2015570000.ufs:=20No=20record=20of=20pa_err=0D=0A>=20=5B=20=
+=20=20=202.228606=5D=20exynos-ufshc=2015570000.ufs:=20No=20record=20of=20dl=
+_err=0D=0A>=20=5B=20=20=20=202.234071=5D=20exynos-ufshc=2015570000.ufs:=20N=
+o=20record=20of=20nl_err=0D=0A>=20=5B=20=20=20=202.239540=5D=20exynos-ufshc=
+=2015570000.ufs:=20No=20record=20of=20tl_err=0D=0A>=20=5B=20=20=20=202.2450=
+07=5D=20exynos-ufshc=2015570000.ufs:=20No=20record=20of=20dme_err=0D=0A>=20=
+=5B=20=20=20=202.250558=5D=20exynos-ufshc=2015570000.ufs:=20No=20record=20o=
+f=20auto_hibern8_err=0D=0A>=20=5B=20=20=20=202.256895=5D=20exynos-ufshc=201=
+5570000.ufs:=20No=20record=20of=20fatal_err=0D=0A>=20=5B=20=20=20=202.26262=
+4=5D=20exynos-ufshc=2015570000.ufs:=20No=20record=20of=0D=0A>=20link_startu=
+p_fail=0D=0A>=20=5B=20=20=20=202.269044=5D=20exynos-ufshc=2015570000.ufs:=
+=20No=20record=20of=20resume_fail=0D=0A>=20=5B=20=20=20=202.274942=5D=20exy=
+nos-ufshc=2015570000.ufs:=20No=20record=20of=20suspend_fail=0D=0A>=20=5B=20=
+=20=20=202.280931=5D=20exynos-ufshc=2015570000.ufs:=20No=20record=20of=20de=
+v_reset=0D=0A>=20=5B=20=20=20=202.286659=5D=20exynos-ufshc=2015570000.ufs:=
+=20No=20record=20of=20host_reset=0D=0A>=20=5B=20=20=20=202.292475=5D=20exyn=
+os-ufshc=2015570000.ufs:=20No=20record=20of=20task_abort=0D=0A>=20=5B=20=20=
+=20=202.298290=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_change_power_mode=
+:=0D=0A>=20power=20mode=20change=20failed=205=0D=0A>=20=5B=20=20=20=202.306=
+619=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_probe_hba:=20Failed=0D=0A>=
+=20setting=20power=20mode,=20err=20=3D=205=0D=0A>=20=5B=20=20=20=202.315144=
+=5D=20exynos-ufshc=2015570000.ufs:=20__ufshcd_setup_clocks:=20clk:=0D=0A>=
+=20core_clk=20disabled=0D=0A>=20=0D=0A>=20And=20here=20boot=20would=20just=
+=20stop/hang.=0D=0A>=20=0D=0A>=20Thanks=20for=20all=20hints.=0D=0A>=20=0D=
+=0A>=20>=0D=0A>=20>=0D=0A>=20>=20>=20>=20>=20Also=20looking=20at=20clk-exyn=
+os7=20driver=20seems=20to=20confirm=20this.=0D=0A>=20>=20>=20>=20>=0D=0A>=
+=20>=20>=20>=20>=20>=20+=09=09=7D;=0D=0A>=20>=20>=20>=20>=20>=20+=0D=0A>=20=
+>=20>=20>=20>=20>=20=20=09=09usbdrd_phy:=20phy=4015500000=20=7B=0D=0A>=20>=
+=20>=20>=20>=20>=20=20=09=09=09compatible=20=3D=20=22samsung,exynos7-usbdrd=
+-phy=22;=0D=0A>=20>=20>=20>=20>=20>=20=20=09=09=09reg=20=3D=20<0x15500000=
+=200x100>;=0D=0A>=20>=0D=0A>=20>=0D=0A=0D=0A=0D=0A
+------=_NextPart_000_0001_01D60ADB.1FA12B60
+Content-Type: application/octet-stream; name="ufs_phy_clk.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="ufs_phy_clk.patch"
 
-I find it safer to integrate such source code reformattings by
-another update step which will be separated from the proposed deletion
-of unwanted function calls.
+ZGlmZiAtLWdpdCBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvZXh5bm9zL2V4eW5vczcuZHRzaSBiL2Fy
+Y2gvYXJtNjQvYm9vdC9kdHMvZXh5bm9zL2V4eW5vczcuZHRzaQppbmRleCBhOTUzMWM0YmYyMmYu
+LjlhNGRkOWFlNWNkZiAxMDA2NDQKLS0tIGEvYXJjaC9hcm02NC9ib290L2R0cy9leHlub3MvZXh5
+bm9zNy5kdHNpCisrKyBiL2FyY2gvYXJtNjQvYm9vdC9kdHMvZXh5bm9zL2V4eW5vczcuZHRzaQpA
+QCAtNjY1LDkgKzY2NSwxNCBAQAogCQkJcmVnLW5hbWVzID0gInBoeS1wbWEiOwogCQkJc2Ftc3Vu
+ZyxwbXUtc3lzY29uID0gPCZwbXVfc3lzdGVtX2NvbnRyb2xsZXI+OwogCQkJI3BoeS1jZWxscyA9
+IDwwPjsKLQkJCWNsb2NrcyA9IDwmY2xvY2tfZnN5czEgTU9VVF9GU1lTMV9QSFlDTEtfU0VMMT4s
+Ci0JCQkJPCZjbG9ja190b3AxIENMS19TQ0xLX1BIWV9GU1lTMV8yNk0+OwotCQkJY2xvY2stbmFt
+ZXMgPSAicmVmX2Nsa19wYXJlbnQiLCAicmVmX2NsayI7CisJCQljbG9ja3MgPSA8JmNsb2NrX3Rv
+cDEgRE9VVF9TQ0xLX1BIWV9GU1lTMV8yNk0+LAorCQkJCSA8JmNsb2NrX2ZzeXMxIFNDTEtfQ09N
+Qk9fUEhZX0VNQkVEREVEXzI2TT4sCisJCQkJIDwmY2xvY2tfZnN5czEgUEhZQ0xLX1VGUzIwX1JY
+MV9TWU1CT0xfVVNFUj4sCisJCQkJIDwmY2xvY2tfZnN5czEgUEhZQ0xLX1VGUzIwX1JYMF9TWU1C
+T0xfVVNFUj4sCisJCQkJIDwmY2xvY2tfZnN5czEgUEhZQ0xLX1VGUzIwX1RYMF9TWU1CT0xfVVNF
+Uj47CisJCQljbG9jay1uYW1lcyA9ICJyZWZfY2xrX3BhcmVudCIsICJyZWZfY2xrIiwKKwkJCQkJ
+InJ4MV9zeW1ib2xfY2xrIiwgInJ4MF9zeW1ib2xfY2xrIiwKKwkJCQkJInR4MF9zeW1ib2xfY2xr
+IjsKIAkJfTsKIAogCQl1c2JkcmRfcGh5OiBwaHlAMTU1MDAwMDAgewpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9waHkvc2Ftc3VuZy9waHktc2Ftc3VuZy11ZnMuYyBiL2RyaXZlcnMvcGh5L3NhbXN1bmcv
+cGh5LXNhbXN1bmctdWZzLmMKaW5kZXggNTcyZTQwZTcyNzc2Li4yZDVkY2Q2NzA5MjcgMTAwNjQ0
+Ci0tLSBhL2RyaXZlcnMvcGh5L3NhbXN1bmcvcGh5LXNhbXN1bmctdWZzLmMKKysrIGIvZHJpdmVy
+cy9waHkvc2Ftc3VuZy9waHktc2Ftc3VuZy11ZnMuYwpAQCAtMTM2LDkgKzEzNiw2MyBAQCBpbnQg
+c2Ftc3VuZ191ZnNfcGh5X2NhbGlicmF0ZShzdHJ1Y3QgcGh5ICpwaHkpCiAJcmV0dXJuIGVycjsK
+IH0KIAorc3RhdGljIGludCBzYW1zdW5nX3Vmc19waHlfc3ltYm9sX2Nsa19pbml0KHN0cnVjdCBz
+YW1zdW5nX3Vmc19waHkgKnBoeSkKK3sKKwlzdHJ1Y3QgY2xrICpjbGs7CisJaW50IHJldCA9IDA7
+CisKKwljbGsgPSBkZXZtX2Nsa19nZXQocGh5LT5kZXYsICJ0eDBfc3ltYm9sX2NsayIpOworCWlm
+IChJU19FUlIoY2xrKSkgeworCQlkZXZfZXJyKHBoeS0+ZGV2LCAiZmFpbGVkIHRvIGdldCB0eDBf
+c3ltYm9sX2NsayBjbG9ja1xuIik7CisJCWdvdG8gb3V0OworCX0gZWxzZSB7CisJCXBoeS0+dHgw
+X3N5bWJvbF9jbGsgPSBjbGs7CisJfQorCisJY2xrID0gZGV2bV9jbGtfZ2V0KHBoeS0+ZGV2LCAi
+cngwX3N5bWJvbF9jbGsiKTsKKwlpZiAoSVNfRVJSKGNsaykpIHsKKwkJZGV2X2VycihwaHktPmRl
+diwgImZhaWxlZCB0byBnZXQgcngwX3N5bWJvbF9jbGsgY2xvY2tcbiIpOworCQlnb3RvIG91dDsK
+Kwl9IGVsc2UgeworCQlwaHktPnJ4MF9zeW1ib2xfY2xrID0gY2xrOworCX0KKworCWNsayA9IGRl
+dm1fY2xrX2dldChwaHktPmRldiwgInJ4MV9zeW1ib2xfY2xrIik7CisJaWYgKElTX0VSUihjbGsp
+KSB7CisJCWRldl9lcnIocGh5LT5kZXYsICJmYWlsZWQgdG8gZ2V0IHJ4MV9zeW1ib2xfY2xrIGNs
+b2NrXG4iKTsKKwkJZ290byBvdXQ7CisJfSBlbHNlIHsKKwkJcGh5LT5yeDFfc3ltYm9sX2NsayA9
+IGNsazsKKwl9CisKKwlyZXQgPSBjbGtfcHJlcGFyZV9lbmFibGUocGh5LT50eDBfc3ltYm9sX2Ns
+ayk7CisJaWYgKHJldCkgeworCQlkZXZfZXJyKHBoeS0+ZGV2LCAiJXM6IHR4MF9zeW1ib2xfY2xr
+IGVuYWJsZSBmYWlsZWQgJWRcbiIsCisJCQkJX19mdW5jX18sIHJldCk7CisJCWdvdG8gb3V0Owor
+CX0KKwlyZXQgPSBjbGtfcHJlcGFyZV9lbmFibGUocGh5LT5yeDBfc3ltYm9sX2Nsayk7CisJaWYg
+KHJldCkgeworCQlkZXZfZXJyKHBoeS0+ZGV2LCAiJXM6IHJ4MF9zeW1ib2xfY2xrIGVuYWJsZSBm
+YWlsZWQgJWRcbiIsCisJCQkJX19mdW5jX18sIHJldCk7CisJCWdvdG8gb3V0OworCX0KKwlyZXQg
+PSBjbGtfcHJlcGFyZV9lbmFibGUocGh5LT5yeDFfc3ltYm9sX2Nsayk7CisJaWYgKHJldCkgewor
+CQlkZXZfZXJyKHBoeS0+ZGV2LCAiJXM6IHJ4MV9zeW1ib2xfY2xrIGVuYWJsZSBmYWlsZWQgJWRc
+biIsCisJCQkJX19mdW5jX18sIHJldCk7CisJCWdvdG8gb3V0OworCX0KK291dDoKKwlyZXR1cm4g
+cmV0OworfQorCiBzdGF0aWMgaW50IHNhbXN1bmdfdWZzX3BoeV9jbGtzX2luaXQoc3RydWN0IHNh
+bXN1bmdfdWZzX3BoeSAqcGh5KQogewogCXN0cnVjdCBjbGsgKmNoaWxkLCAqcGFyZW50OworCXUz
+MiBwaHlfY2xrX3JhdGUsIHBoeV9wYXJlbnRfcmF0ZTsKKwlpbnQgcmV0OworCiAKIAljaGlsZCA9
+IGRldm1fY2xrX2dldChwaHktPmRldiwgInJlZl9jbGsiKTsKIAlpZiAoSVNfRVJSKGNoaWxkKSkK
+QEAgLTE0NiwxOCArMjAwLDMyIEBAIHN0YXRpYyBpbnQgc2Ftc3VuZ191ZnNfcGh5X2Nsa3NfaW5p
+dChzdHJ1Y3Qgc2Ftc3VuZ191ZnNfcGh5ICpwaHkpCiAJZWxzZQogCQlwaHktPnJlZl9jbGsgPSBj
+aGlsZDsKIAorCXJldCA9IGNsa19wcmVwYXJlX2VuYWJsZShwaHktPnJlZl9jbGspOworCWlmIChy
+ZXQpIHsKKwkJZGV2X2VycihwaHktPmRldiwgIiVzOiByZWZfY2xrIGVuYWJsZSBmYWlsZWQgJWRc
+biIsCisJCQkJX19mdW5jX18sIHJldCk7CisJCXJldHVybiByZXQ7CisJfQorCisJcGh5X2Nsa19y
+YXRlID0gY2xrX2dldF9yYXRlKGNoaWxkKTsKKwlkZXZfaW5mbyhwaHktPmRldiwgIk1QSFkgcmVm
+X2Nsa19yYXRlID0gJWRcbiIsIHBoeV9jbGtfcmF0ZSk7CisKIAlwYXJlbnQgPSBkZXZtX2Nsa19n
+ZXQocGh5LT5kZXYsICJyZWZfY2xrX3BhcmVudCIpOwogCWlmIChJU19FUlIocGFyZW50KSkKIAkJ
+ZGV2X2VycihwaHktPmRldiwgImZhaWxlZCB0byBnZXQgcmVmX2Nsa19wYXJlbnQgY2xvY2tcbiIp
+OwogCWVsc2UKIAkJcGh5LT5yZWZfY2xrX3BhcmVudCA9IHBhcmVudDsKIAorCXBoeV9wYXJlbnRf
+cmF0ZSA9IGNsa19nZXRfcmF0ZShwYXJlbnQpOworCWRldl9pbmZvKHBoeS0+ZGV2LCAiTVBIWSBy
+ZWZfcGFyZW50X2Nsa19yYXRlID0gJWRcbiIsIHBoeV9wYXJlbnRfcmF0ZSk7CisKIAlyZXR1cm4g
+Y2xrX3NldF9wYXJlbnQoY2hpbGQsIHBhcmVudCk7CiB9CiAKIHN0YXRpYyBpbnQgc2Ftc3VuZ191
+ZnNfcGh5X2luaXQoc3RydWN0IHBoeSAqcGh5KQogewogCXN0cnVjdCBzYW1zdW5nX3Vmc19waHkg
+Kl9waHkgPSBnZXRfc2Ftc3VuZ191ZnNfcGh5KHBoeSk7CisJaW50IHJldDsKIAogCV9waHktPmxh
+bmVfY250ID0gcGh5LT5hdHRycy5idXNfd2lkdGg7CiAJX3BoeS0+dWZzX3BoeV9zdGF0ZSA9IENG
+R19QUkVfSU5JVDsKQEAgLTE2Nyw3ICsyMzUsMTMgQEAgc3RhdGljIGludCBzYW1zdW5nX3Vmc19w
+aHlfaW5pdChzdHJ1Y3QgcGh5ICpwaHkpCiAJX3BoeS0+aXNfcHJlX3BtYyA9IGZhbHNlOwogCV9w
+aHktPmlzX3Bvc3RfcG1jID0gZmFsc2U7CiAKLQlzYW1zdW5nX3Vmc19waHlfY2xrc19pbml0KF9w
+aHkpOworCXJldCA9IHNhbXN1bmdfdWZzX3BoeV9zeW1ib2xfY2xrX2luaXQoX3BoeSk7CisJaWYg
+KHJldCkKKwkJZGV2X2VycihfcGh5LT5kZXYsICJmYWlsZWQgdG8gc2V0IHVmcyBwaHkgc3ltYm9s
+IGNsb2Nrc1xuIik7CisKKwlyZXQgPSBzYW1zdW5nX3Vmc19waHlfY2xrc19pbml0KF9waHkpOwor
+CWlmICghcmV0KQorCQlkZXZfZXJyKF9waHktPmRldiwgImZhaWxlZCB0byBzZXQgdWZzIHBoeSAg
+Y2xvY2tzXG4iKTsKIAogCXNhbXN1bmdfdWZzX3BoeV9jYWxpYnJhdGUocGh5KTsKIApAQCAtMTc3
+LDE0ICsyNTEsNiBAQCBzdGF0aWMgaW50IHNhbXN1bmdfdWZzX3BoeV9pbml0KHN0cnVjdCBwaHkg
+KnBoeSkKIHN0YXRpYyBpbnQgc2Ftc3VuZ191ZnNfcGh5X3Bvd2VyX29uKHN0cnVjdCBwaHkgKnBo
+eSkKIHsKIAlzdHJ1Y3Qgc2Ftc3VuZ191ZnNfcGh5ICpfcGh5ID0gZ2V0X3NhbXN1bmdfdWZzX3Bo
+eShwaHkpOwotCWludCByZXQ7Ci0KLQlyZXQgPSBjbGtfcHJlcGFyZV9lbmFibGUoX3BoeS0+cmVm
+X2Nsayk7Ci0JaWYgKHJldCkgewotCQlkZXZfZXJyKF9waHktPmRldiwgIiVzOiByZWZfY2xrIGVu
+YWJsZSBmYWlsZWQgJWRcbiIsCi0JCQkJX19mdW5jX18sIHJldCk7Ci0JCXJldHVybiByZXQ7Ci0J
+fQogCiAJc2Ftc3VuZ191ZnNfcGh5X2N0cmxfaXNvbChfcGh5LCBmYWxzZSk7CiAJcmV0dXJuIDA7
+CmRpZmYgLS1naXQgYS9kcml2ZXJzL3BoeS9zYW1zdW5nL3BoeS1zYW1zdW5nLXVmcy5oIGIvZHJp
+dmVycy9waHkvc2Ftc3VuZy9waHktc2Ftc3VuZy11ZnMuaAppbmRleCA5NzFkNjdhZTdmODAuLjI3
+ZGMxYjU3MzQ2OSAxMDA2NDQKLS0tIGEvZHJpdmVycy9waHkvc2Ftc3VuZy9waHktc2Ftc3VuZy11
+ZnMuaAorKysgYi9kcml2ZXJzL3BoeS9zYW1zdW5nL3BoeS1zYW1zdW5nLXVmcy5oCkBAIC0xMTAs
+NiArMTEwLDkgQEAgc3RydWN0IHNhbXN1bmdfdWZzX3BoeSB7CiAJc3RydWN0IHJlZ21hcCAqcmVn
+X3BtdTsKIAlzdHJ1Y3QgY2xrICpyZWZfY2xrOwogCXN0cnVjdCBjbGsgKnJlZl9jbGtfcGFyZW50
+OworCXN0cnVjdCBjbGsgKnR4MF9zeW1ib2xfY2xrOworCXN0cnVjdCBjbGsgKnJ4MF9zeW1ib2xf
+Y2xrOworCXN0cnVjdCBjbGsgKnJ4MV9zeW1ib2xfY2xrOwogCWNvbnN0IHN0cnVjdCBzYW1zdW5n
+X3Vmc19waHlfZHJ2ZGF0YSAqZHJ2ZGF0YTsKIAlzdHJ1Y3Qgc2Ftc3VuZ191ZnNfcGh5X2NmZyAq
+KmNmZzsKIAljb25zdCBzdHJ1Y3QgcG11X2lzb2wgKmlzb2w7Cg==
 
-Regards,
-Markus
+------=_NextPart_000_0001_01D60ADB.1FA12B60--
+
