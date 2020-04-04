@@ -5,40 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB40C2BA18
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 09:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B0B9C2BA17
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 11:15:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0ADA4206C3
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 09:00:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 726DD20719
+	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 11:15:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="CWwAiRbS"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="jNWrS2na"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725962AbgDDJAr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Apr 2020 05:00:47 -0400
-Received: from mout.web.de ([217.72.192.78]:47967 "EHLO mout.web.de"
+        id S1726121AbgDDLPx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Apr 2020 07:15:53 -0400
+Received: from mout.web.de ([212.227.17.12]:55557 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725837AbgDDJAr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 4 Apr 2020 05:00:47 -0400
+        id S1725943AbgDDLPw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 4 Apr 2020 07:15:52 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1585990808;
-        bh=6AZNLBH442OJ8odjJvTTvY0h4k6dpRK0RBQlSly1moE=;
-        h=X-UI-Sender-Class:To:Cc:Subject:From:Date;
-        b=CWwAiRbS5oMBV7raoZQUBcLgFaDdoagCNIO4MF5k4X5QWwMD82+bqY26t5Eindwzd
-         1zOFHMnSy5WlfdOsb9qUamIqpMX610aRV4vF/4tlAcOZFi2dhFkb13mR38gNI9m+QH
-         4VFQonBOAvhY0IkQQT9/T+FRuIR4+OPX+JW86F5E=
+        s=dbaedf251592; t=1585998895;
+        bh=XaTOEXnC3yHGMSOTnTJjcLY1jIeKJX78T/9fo8XYUog=;
+        h=X-UI-Sender-Class:Cc:Subject:From:To:Date;
+        b=jNWrS2naAasfW/j5mHa8mPmQsq+o3j+ZO3O0ZMeIC3L2EKVUsKN12PLEzdd2YqphA
+         PpDItuSqOycM1hEf9U8VdlytOVtVcAkiu/+ThTcOThnxculrvv4Yy1bbTuhg4LQmuj
+         fNSU+H1CqypKNYBf14RjKko784GSuB5jStCH2xQ8=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.3] ([93.132.181.229]) by smtp.web.de (mrweb102
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0M89z3-1j7ojZ1egD-00vkAy; Sat, 04
- Apr 2020 11:00:08 +0200
-To:     Alex Dewar <alex.dewar@gmx.co.uk>, Hannes Reinecke <hare@suse.com>,
-        "James E. J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
+Received: from [192.168.1.3] ([93.132.181.229]) by smtp.web.de (mrweb101
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 0MHXxg-1jJZlS2wkG-003MqF; Sat, 04
+ Apr 2020 13:14:54 +0200
 Cc:     linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: aic7xxx: Remove unnecessary NULL checks before
- kfree
+Subject: Re: [PATCH] scsi: Remove unnecessary calls to memset after
+ dma_alloc_coherent
 From:   Markus Elfring <Markus.Elfring@web.de>
 Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  mQINBFg2+xABEADBJW2hoUoFXVFWTeKbqqif8VjszdMkriilx90WB5c0ddWQX14h6w5bT/A8
@@ -83,57 +79,112 @@ Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
  x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
  pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
-Message-ID: <f90372e4-f0f7-7775-5144-0d3684116be1@web.de>
-Date:   Sat, 4 Apr 2020 11:00:07 +0200
+To:     Alex Dewar <alex.dewar@gmx.co.uk>,
+        Allison Randal <allison@lohutok.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Chaitra Basappa <chaitra.basappa@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        "James E. J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Richard Fontana <rfontana@redhat.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-scsi@vger.kernel.org, aacraid@microsemi.com,
+        MPT-FusionLinux.pdl@broadcom.com
+Message-ID: <e2401a31-e9fd-e849-e27c-6e079f5556d2@web.de>
+Date:   Sat, 4 Apr 2020 13:14:52 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:vZGcnRyqXOMIW9kJ5OPJxCBJCj/uHsX7pcmL2u8A0L1gUeRAbkg
- n+AQFwA1ngD/SO91jLCDlZ0Giau0UpFSYC1SMlFl/zZ0UoJnQm7PJrmvp6S/1Fj102xlDoh
- 2N+xmnECXcaKOYYxPDvHoHVlCbJ9jlcr6kLcBrQxPN7ooQOfws8nV/RuLBlnYNEzZs0ws09
- XeIa72DGpsezllVtNIuJQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:51lskV8xcJM=:XlJVRhoVzCYSkiJDjTD8P0
- i3VKTJoPM741eK0WVFNHqlLroLONDPehrlE50iJ65+vVJcnI4ZQr+5Lv/lErHx9xauawys5g/
- uDrxHfFtub8oM8RNdRVZE+1uo3MJNCZQcXJNzozRx6jLSPpW2mQg21jKjHQpepTRIh/QFzEAz
- qb2BApTrwkSTqxU3mve6a8qbRJg75ug0pgAMVAsW52wou4PR2c2CrohynsauvVzAdIjfVc3D5
- bAiA3kqTlFOdy1X+QjTZ6u53pqxRjKLZi+FMK9pZdmpclOpGa7p2iu/W6Uj844SoPps+ISxfU
- oLMvxBXRvPTs6E9LFTqiBNHSY/dbn7k0LdOvpf4hQdekdFz+BjDFRU9loa/ZcbGeVYBH97DBx
- CV1qxX508f8JOI7+3OdKxGNXW9kiWNbuM2bTGsMq1E6u18TyMl7HfVh6WpCD+MTUX6cEIGluu
- Ex0KK96hDFttoE1iNyD/dVIiVjN1yvviBth9/ek/QrdBzjPQLZZjmJVrtarJYaSMQ2AqgM1Ta
- dluMhzbFJUMcY1HO8gL1hQnptXHXPPE6Ec3CQyEIYv4bGj+iKzs7WNSEBYmYkoqcMZcsPSM7S
- Y1Mm05ccClfnG/Cv5UiTFdGxSzivyZy1XGuDtCcZ9DIi7NDTuy+pGJAW1jn7HqGYM3BZOB5Gs
- p/dn8071hhzBXrZ8qzEPhNyl3gfEFudcm9YAiZrmx81tn/UBPg+0E/9NSiiKoKW12r5Q9FVO3
- 0eC3MnpmvU9AEXnycs4Mx30UQyzm7YqytDAy0c0e3RSAxP2omb9NdxJPPU1IOGTptoCdO2FAe
- 04fSM7FDGhCkSg8aI4eR4+DmhOpVvoukZccvmATXHOZCg1c4PcvZ/irVS6yTJve6yhziGntrg
- OjXy+maB21atz1t+OoIRqb9qFQuolWpXt3fAU4OHBTYPCU73MIMeYYiQwhp6eWUz1Fc4VOJCe
- jtSRXAlmsvWuO1670ZtNHtOcLv5j2PWK0pLEQvVDUqOhuC9xkg7NNiy6ODfhj8pltqbpKoGq1
- uFpDm1ef6fzS3iRy/WrDhy8Ierva0XWMTw6SP+PKPjckgTBJQl3qwKhUw1yYaPpXzjn9IiuFI
- 3UnD7ewioBxSAN/7+iJq6gnvCMDD67dPH5Vz4sckyt5ptYy4X7DNcD0OwwGglo4ETVu8rQWhY
- JJkLknpGxlSschFRbbK45xBOVY/+FkMzGDQo8uGLO4FzlT3uqQ+5bWRqj7KHvLoOYh51uXpVh
- sbeUakNxEruhMah8s
+X-Provags-ID: V03:K1:4dgcvqMPX/wM1DiRFLqWvWQRTYFDe0QbQ9Ckgj7kvxX4veaGUHi
+ tASOrG9BqrzzkXdMd8xrBAcZ5zGv7yeBj7jRfzZvPNFMCoruY+nt5liQ7vupveqfKiv0obp
+ xeCbAfX3M8ZSGFpdt8IkvzcXw75IsoJPTPQEcatpmJa+vB7uEf6ka50FQ7RueRAuyrfWjxB
+ YJ+lhQf/DearDdLdnJe+Q==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:5lfCi9erITk=:6h6u3PvMeSNFVZD1LHtvP5
+ wvLNnZCI4+2aARVbQ+JVU9j4LT6uTvt098vkadL0SJHp7rsuNda7BmLb8/+4+OTbFUpqhHZq5
+ YKvQmQlX0QB8fDAwoZc2b4mqCwE0rFUoqvA8Hu/N7cazgLQ/Cdq3Jvy/ufZlEKcerGwyHd1xY
+ d50BY3FicNPCfJWwEcyQq2x90+45O2PTIliaIA0guOlwZWovUIeIqnC2luVITGzEIr0K3GbQ4
+ R14g8Jd9jIIXJSzkAw33sKVOWnp5tmK8mXh3gYlDgYNioRPoy1jwUd1XEp0pXCFG8Env9CjJr
+ tvSU+BU6XZ9hXAz7cPZFzPiZ+YKo4GjnyFCm6xWZheKk2BLsAl9un82cMQOr41Saa1piMjtfn
+ Rfg5FRaNblmDIrE6EQHDD5XCyFI/spomZioXNYyHQ/2+EhT/YvtTiVsgmSQq0eqOGFyOC+iG4
+ ZjyZ4wYunC3FCowKdwavEpVuiUmbNe/dmCtPBPEF0OpZQlIMuOnv8jpVeOIOpvuasOhI+n+Ui
+ gyZ4kJL0brxbCL4vZUiNA2oK/l0kSGSX44PBxkwRFmkhLG5o5P1RxJNxTH7I8IefSRRYcZ7Tt
+ RPRr8Ql/z5nl7UXijFsq80a2KfkGh4Rs0n4BcaL17gOsym/7SRfpd//UtuMCejlAUBfVrgXfl
+ 4y4w0pBOkcOpCTTIPZ13C0memndX8ls4nc8w+d0rmArd+LTIx2x48FQw+Eaa99bPA1V3cgwOl
+ DXZoe+M9PAozTmKISXbQQey0YUknyIZKpvRq8XVc1zFrpmXhXY+r4VGqgsf/AIKBsPUI9yOIW
+ dEJSFlrUxXO7ssFSw8I7NH7QssKL+qN9RLlLqDTMC1RXAcUPvXTnfIsE7x3rBdiOtkCtSezXt
+ +4/n4kO2l8n0sfxdVwatNkHV5gHs1WwIYF4wK68u0x6sObLXHlXuA+T8MAM3yUrmGXvosfkr6
+ tZZmLvLrAbypxCdbCkCFJqVjA4IXrk9+tqME5H+g8bI5Ux9YfaUs6+Od91WBaMW9EExYv80pr
+ Wl02QkJl0Cj32jrhKb0tBYk2697b3mfwDlNM99DJTEQ7tV0/AF+WPTFIaJ+58YKSFSo2ZHlU3
+ WzXB1LHrnzgQq9/8FxY0MFnnth0Lm4iMPvf8yh6dvRQ1EZo121zV4X41/YfHOeKi2i+zPwZ8r
+ EK7sfW/h0jqWNbPkh3f1MKOvSdqf8N3oEt6QtHSaQM6oOyp9JsE8rD3hH/sTXtriwoIBEcvS+
+ WkGCzagVWtsNs0mXj
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> There are a number of places in the aic7xxx driver where a NULL check is
-> performed before a kfree(). However, kfree() already performs NULL check=
-s
-> so this is unnecessary. Remove the checks.
+> dma_alloc_coherent() now zeroes memory after allocation, so additional
+> calls to memset() afterwards are unnecessary. Remove them.
 
 I suggest to reconsider the distribution of recipients also for this patch
 according to the fields =E2=80=9CCc=E2=80=9D and =E2=80=9CTo=E2=80=9D.
 
 
-Do you find a previous update suggestion like =E2=80=9CSCSI-aic7...: Delet=
-e unnecessary
-checks before the function call "kfree"=E2=80=9D interesting?
-https://lore.kernel.org/linux-scsi/54D3E057.9030600@users.sourceforge.net/
-https://lore.kernel.org/patchwork/patch/540593/
-https://lkml.org/lkml/2015/2/5/650
+=E2=80=A6
+> +++ b/drivers/scsi/dpt_i2o.c
+=E2=80=A6
+> @@ -3067,13 +3064,12 @@ static int adpt_i2o_build_sys_table(void)
+>  	sys_tbl_len =3D sizeof(struct i2o_sys_tbl) +	// Header + IOPs
+>  				(hba_count) * sizeof(struct i2o_sys_tbl_entry);
+>
+> -	sys_tbl =3D dma_alloc_coherent(&pHba->pDev->dev,
+> -				sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
+> +	sys_tbl =3D dma_alloc_coherent(&pHba->pDev->dev, sys_tbl_len,
+> +				     &sys_tbl_pa, GFP_KERNEL);
+>  	if (!sys_tbl) {
+=E2=80=A6
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -244,28 +244,22 @@ static int mvs_alloc(struct mvs_info *mvi, struct =
+Scsi_Host *shost)
+=E2=80=A6
+> -	mvi->slot =3D dma_alloc_coherent(mvi->dev,
+> -				       sizeof(*mvi->slot) * slot_nr,
+> +	mvi->slot =3D dma_alloc_coherent(mvi->dev, sizeof(*mvi->slot) * slot_n=
+r,
+>  				       &mvi->slot_dma, GFP_KERNEL);
+>  	if (!mvi->slot)
+=E2=80=A6
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -79,7 +79,7 @@ qla24xx_process_abts(struct scsi_qla_host *vha, void *=
+pkt)
+>  	    (uint8_t *)abts, sizeof(*abts));
+>
+>  	rsp_els =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*rsp_els), &dma,
+> -	    GFP_KERNEL);
+> +				     GFP_KERNEL);
+>  	if (!rsp_els) {
+=E2=80=A6
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -4887,15 +4887,13 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t *=
+vha)
+>  	    "Entered %s.\n", __func__);
+>
+>  	els_cmd_map =3D dma_alloc_coherent(&ha->pdev->dev, ELS_CMD_MAP_SIZE,
+> -	    &els_cmd_map_dma, GFP_KERNEL);
+> +					 &els_cmd_map_dma, GFP_KERNEL);
+>  	if (!els_cmd_map) {
+=E2=80=A6
+
+I find it safer to integrate such source code reformattings by
+another update step which will be separated from the proposed deletion
+of unwanted function calls.
 
 Regards,
 Markus
