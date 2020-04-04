@@ -2,156 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6870ECAAD3
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 17:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6865AECAAD3
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 19:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231733AbiIERkx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Sep 2022 13:40:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46836 "EHLO
+        id S231710AbiIETNL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Sep 2022 15:13:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231500AbiIERkw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 13:40:52 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47C4828704
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Sep 2022 10:40:51 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id q15so9115711pfn.11
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Sep 2022 10:40:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=rPEqF/kCJ1Ce5s+YMC4wzaNAHEIxIfz6CvorWqdp7RA=;
-        b=WdkmDL+IC+SkCs7mujG+hRn45TN29/qwzchq5zX/YXf8GtaSCNwjehbRZmxO426TIg
-         KAfgS69Z7tVFuWzcSpD8u8bb0/VimovAHu9mj9PXbWamaZrigA4J4Fs7GbFzFfKoHk19
-         O9zSsl5N+PN6jA12dir7gmDyMA1rDx2IiEaWNInMzG1WhacmUrQJL3pnt5QOX8AGbhk7
-         7nkM/oAH0TbJT90Ow2pe5WfBlYiTaFZQpRC9NcEtq95vOGJe0ngpgXBiHEWRBPYyfhJs
-         JuZZNA74Am3me23ef/M4hY5FyTY20CyRxu0vOgiPOHEfXHUx4ATtw07VdPw2vD7xIwgk
-         tkIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=rPEqF/kCJ1Ce5s+YMC4wzaNAHEIxIfz6CvorWqdp7RA=;
-        b=j6d3FDnrWig0iBj1OQWIPLCFMqv6kN5qT/6N6KxI91mf5ltmvE7s3PNWg5V556iN2Q
-         FLp3/TRS6ZHHifcIQMf90rjZQ6l5i51Z6YWhG7GdKCpE7zWdi+ZIMWI8E7eAiFPqUp6t
-         2h61J80NbN0V28TKMUUcMnU49T13a6hTXmYZduONlgK1KKWsoSJXFcCSpiAUBWs8OvvR
-         nMTQl3NOTsomoc6o1s25rgo5xgjc3KGmZBfPicWKv7g14QD7TOPdnUPb9E0D/PLeDuo2
-         BZlkMuZ3zJx7O0le7Mphh/RyKrD6WPjorp6wXa+M0sHT8pHvCSFFaXw9SVRwgP/m5X8C
-         G4uA==
-X-Gm-Message-State: ACgBeo0zethFkpZMwY0fevGwEdQxliOZfsuZxP37mENy1QeJzZ5o5Tev
-        nbDTas78KfJVz1HkeuF+F5E=
-X-Google-Smtp-Source: AA6agR4kxW+YBcBeY7g1Py6WZQVR4yhIY1nlkESKtJFWHhfTvFSyXTv2QkXv4K2A+H2ascHC2oI1XA==
-X-Received: by 2002:a05:6a00:c96:b0:52e:979c:dd63 with SMTP id a22-20020a056a000c9600b0052e979cdd63mr51824766pfv.50.1662399650741;
-        Mon, 05 Sep 2022 10:40:50 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id j6-20020a170902c08600b0016d1f474653sm7843455pld.52.2022.09.05.10.40.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Sep 2022 10:40:49 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date:   Mon, 5 Sep 2022 10:40:47 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Mike Christie <michael.christie@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        John Garry <john.garry@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v5 2/4] scsi: core: Make sure that hosts outlive targets
-Message-ID: <20220905173905.GA3405134@roeck-us.net>
-References: <20220728221851.1822295-1-bvanassche@acm.org>
- <20220728221851.1822295-3-bvanassche@acm.org>
+        with ESMTP id S229866AbiIETNK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 15:13:10 -0400
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1552D3719C;
+        Mon,  5 Sep 2022 12:13:09 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id AB87744AB8;
+        Mon,  5 Sep 2022 19:13:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received:received; s=mta-01; t=1662405186; x=
+        1664219587; bh=BKc/e2IBxlGsSoQLXTxX0s+zvYDvnyxpjcYaKmUaYLU=; b=U
+        RSMQ3lkqz3ebJISYsN5e+jC+9Tr4c7ZSMegoVJVr1eYcl4+iU51/dSgQzzlG0tJb
+        owlop1e+rOV5FOTr57xEX78qHUKo2WDyE7U/N+34SLp5kzXnyQsjv/1hMhmwR+bZ
+        3SG/dS0iqTNFtE+t5S8Z9pVnlRbyRMf8gcOecemLPQ=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id S2lJAsb4BCjl; Mon,  5 Sep 2022 22:13:06 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 5FABB44ACB;
+        Mon,  5 Sep 2022 22:07:37 +0300 (MSK)
+Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
+ T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Mon, 5 Sep 2022 22:07:37 +0300
+Received: from NB-591.corp.yadro.com (10.199.18.20) by
+ T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.2.1118.9; Mon, 5 Sep 2022 22:07:36 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH] scsi: target: core: Add a way to hide a port group
+Date:   Sat, 4 Apr 2020 13:48:52 +0300
+Message-ID: <20220905190731.16992-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220728221851.1822295-3-bvanassche@acm.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.18.20]
+X-ClientProxiedBy: T-EXCH-02.corp.yadro.com (172.17.10.102) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 28, 2022 at 03:18:49PM -0700, Bart Van Assche wrote:
-> From: Ming Lei <ming.lei@redhat.com>
-> 
-> Fix the race conditions between SCSI LLD kernel module unloading and SCSI
-> device and target removal by making sure that SCSI hosts are destroyed after
-> all associated target and device objects have been freed.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.garry@huawei.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> [ bvanassche: Reworked Ming's patch and split it ]
+From: Roman Bolshakov <r.bolshakov@yadro.com>
 
-I know this has been reported before, but it is still seen in the
-upstream kernel, so:
+Default target port group is always returned in the list of port groups,
+even if the behaviour is unwanted, i.e. it has no members and
+non-default port groups are primary port groups.
 
-This patch results in a deadlock if a USB storage device is removed.
+A new port group attribute - "hidden" can be used to hide empty port
+groups with no ports in REPORT TARGET PORT GROUPS, including default
+target port group:
 
-[   29.291148] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[   29.300064] ci_hdrc ci_hdrc.1: remove, state 4
-[   29.300317] usb usb2: USB disconnect, device number 1
-[   29.305090] ci_hdrc ci_hdrc.1: USB bus 2 deregistered
-[   29.307052] ci_hdrc ci_hdrc.0: remove, state 1
-[   29.307214] usb usb1: USB disconnect, device number 1
-[   29.307321] usb 1-1: USB disconnect, device number 2
-[   29.344575] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-[   29.345323] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-[   63.358569] INFO: task init:347 blocked for more than 30 seconds.
-[   63.358928]       Tainted: G        W        N 6.0.0-rc4-00017-gcec18aa4b63a #1
-[   63.359200] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[   63.359600] task:init            state:D stack:    0 pid:  347 ppid:     1 flags:0x00000000
-[   63.360104]  __schedule from schedule+0x60/0xbc
-[   63.360368]  schedule from scsi_remove_host+0x154/0x1c0
-[   63.360602]  scsi_remove_host from usb_stor_disconnect+0x4c/0xac
-[   63.360852]  usb_stor_disconnect from usb_unbind_interface+0x74/0x268
-[   63.361100]  usb_unbind_interface from device_release_driver_internal+0x1a0/0x22c
-[   63.361383]  device_release_driver_internal from bus_remove_device+0xcc/0xfc
-[   63.361651]  bus_remove_device from device_del+0x16c/0x3f8
-[   63.361877]  device_del from usb_disable_device+0xcc/0x178
-[   63.362097]  usb_disable_device from usb_disconnect+0xd0/0x230
-[   63.362325]  usb_disconnect from usb_disconnect+0x9c/0x230
-[   63.362536]  usb_disconnect from usb_remove_hcd+0xd0/0x16c
-[   63.362741]  usb_remove_hcd from host_stop+0x38/0xa8
-[   63.362946]  host_stop from ci_hdrc_remove+0x44/0x120
-[   63.363148]  ci_hdrc_remove from platform_remove+0x20/0x4c
-[   63.363367]  platform_remove from device_release_driver_internal+0x1a0/0x22c
-[   63.363635]  device_release_driver_internal from bus_remove_device+0xcc/0xfc
-[   63.363897]  bus_remove_device from device_del+0x16c/0x3f8
-[   63.364117]  device_del from platform_device_del.part.0+0x10/0x74
-[   63.364353]  platform_device_del.part.0 from platform_device_unregister+0x18/0x24
-[   63.364623]  platform_device_unregister from ci_hdrc_remove_device+0xc/0x20
-[   63.364886]  ci_hdrc_remove_device from ci_hdrc_imx_remove+0x28/0x110
-[   63.365131]  ci_hdrc_imx_remove from device_shutdown+0x174/0x250
-[   63.365372]  device_shutdown from __do_sys_reboot+0x124/0x270
-[   63.365616]  __do_sys_reboot from ret_fast_syscall+0x0/0x1c
-[   63.365849] Exception stack(0xd1859fa8 to 0xd1859ff0)
-[   63.366054] 9fa0:                   01234567 000c623f fee1dead 28121969 01234567 00000000
-[   63.366343] 9fc0: 01234567 000c623f 00000001 00000058 000d85c0 00000000 00000000 00000000
-[   63.366620] 9fe0: 000d8298 bef49de4 000918bc b6e8cedc
-[   63.366881] INFO: lockdep is turned off.
-[   63.367069] Kernel panic - not syncing: hung_task: blocked tasks
+  echo 1 > $DEVICE/alua/default_tg_pt_gp/hidden
 
-I understand that it looks like the problem is caused by the shutdown
-function in the imx driver calling remove_device, but that is not really
-the problem.
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
 
-As can be seen in the backtrace, usb_stor_disconnect() calls
-scsi_remove_host(). Thanks to this patch, scsi_remove_host() now
-waits for the scsi release function to be called. However,
-usb_stor_disconnect() only calls release_everything() and with it
-scsi_host_put() _after_ scsi_remove_host() has returned. Since
-scsi_remove_host() now waits for the resource which is released
-by calling scsi_host_put(), this causes a deadlock.
+The patch is intended for 6.1/scsi-queue branch.
 
-If my analysis is correct, any USB storage device removal should
-result in the deadlock. My analysis may of course be wrong. If so,
-please let me know what I missed.
+---
+ drivers/target/target_core_alua.c     |  8 ++++++++
+ drivers/target/target_core_configfs.c | 29 +++++++++++++++++++++++++++
+ include/target/target_core_base.h     |  1 +
+ 3 files changed, 38 insertions(+)
 
-Thanks,
-Guenter
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index fb91423a4e2e..dbf9a950d01b 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -164,6 +164,8 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
+ 	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
+ 	list_for_each_entry(tg_pt_gp, &dev->t10_alua.tg_pt_gps_list,
+ 			tg_pt_gp_list) {
++		if (tg_pt_gp->tg_pt_gp_hidden && !tg_pt_gp->tg_pt_gp_members)
++			continue;
+ 		/*
+ 		 * Check if the Target port group and Target port descriptor list
+ 		 * based on tg_pt_gp_members count will fit into the response payload.
+@@ -308,6 +310,12 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
+ 		rc = TCM_UNSUPPORTED_SCSI_OPCODE;
+ 		goto out;
+ 	}
++	if (l_tg_pt_gp->tg_pt_gp_hidden && !tg_pt_gp->tg_pt_gp_members) {
++		spin_unlock(&l_lun->lun_tg_pt_gp_lock);
++		pr_err("Unable to change state for hidden port group with no members\n");
++		rc = TCM_INVALID_CDB_FIELD;
++		goto out;
++	}
+ 	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
+ 	rcu_read_unlock();
+ 
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 416514c5c7ac..7c0e42e782de 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -3029,6 +3029,33 @@ static ssize_t target_tg_pt_gp_preferred_store(struct config_item *item,
+ 	return core_alua_store_preferred_bit(to_tg_pt_gp(item), page, count);
+ }
+ 
++static ssize_t target_tg_pt_gp_hidden_show(struct config_item *item,
++					   char *page)
++{
++	return sysfs_emit(page, "%d\n", to_tg_pt_gp(item)->tg_pt_gp_hidden);
++}
++
++static ssize_t target_tg_pt_gp_hidden_store(struct config_item *item,
++					    const char *page, size_t count)
++{
++	struct t10_alua_tg_pt_gp *tg_pt_gp = to_tg_pt_gp(item);
++	int tmp, ret;
++
++	ret = kstrtoint(page, 0, &tmp);
++	if (ret < 0) {
++		pr_err("Unable to extract hidden flag: %d\n", ret);
++		return ret;
++	}
++
++	if (tmp != 0 && tmp != 1) {
++		pr_err("Illegal value for hidden flag: %d\n", tmp);
++		return -EINVAL;
++	}
++	tg_pt_gp->tg_pt_gp_hidden = tmp;
++
++	return count;
++}
++
+ static ssize_t target_tg_pt_gp_tg_pt_gp_id_show(struct config_item *item,
+ 		char *page)
+ {
+@@ -3115,6 +3142,7 @@ CONFIGFS_ATTR(target_tg_pt_gp_, alua_support_standby);
+ CONFIGFS_ATTR(target_tg_pt_gp_, alua_support_active_optimized);
+ CONFIGFS_ATTR(target_tg_pt_gp_, alua_support_active_nonoptimized);
+ CONFIGFS_ATTR(target_tg_pt_gp_, alua_write_metadata);
++CONFIGFS_ATTR(target_tg_pt_gp_, hidden);
+ CONFIGFS_ATTR(target_tg_pt_gp_, nonop_delay_msecs);
+ CONFIGFS_ATTR(target_tg_pt_gp_, trans_delay_msecs);
+ CONFIGFS_ATTR(target_tg_pt_gp_, implicit_trans_secs);
+@@ -3138,6 +3166,7 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
+ 	&target_tg_pt_gp_attr_trans_delay_msecs,
+ 	&target_tg_pt_gp_attr_implicit_trans_secs,
+ 	&target_tg_pt_gp_attr_preferred,
++	&target_tg_pt_gp_attr_hidden,
+ 	&target_tg_pt_gp_attr_tg_pt_gp_id,
+ 	&target_tg_pt_gp_attr_members,
+ 	NULL,
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 8c920456edd9..28cce4ed3f0e 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -297,6 +297,7 @@ struct t10_alua_tg_pt_gp {
+ 	int	tg_pt_gp_trans_delay_msecs;
+ 	int	tg_pt_gp_implicit_trans_secs;
+ 	int	tg_pt_gp_pref;
++	int	tg_pt_gp_hidden;
+ 	int	tg_pt_gp_write_metadata;
+ 	u32	tg_pt_gp_members;
+ 	int	tg_pt_gp_alua_access_state;
+-- 
+2.25.1
+
