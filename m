@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EC9BC2BA19
-	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 22:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 382D9C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 23:13:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A380206F8
-	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 22:59:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03F0220678
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 23:13:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727509AbgDEW7N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 5 Apr 2020 18:59:13 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:37760 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726887AbgDEW7N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2020 18:59:13 -0400
-Received: by mail-pf1-f195.google.com with SMTP id u65so6642189pfb.4
-        for <linux-scsi@vger.kernel.org>; Sun, 05 Apr 2020 15:59:13 -0700 (PDT)
+        id S1727509AbgDEXNr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 5 Apr 2020 19:13:47 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:37638 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726887AbgDEXNr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2020 19:13:47 -0400
+Received: by mail-pl1-f196.google.com with SMTP id x1so5176748plm.4
+        for <linux-scsi@vger.kernel.org>; Sun, 05 Apr 2020 16:13:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=Cu0K+RAxDn64fQ9+VF/JwBGSpcWi63gyVFtcSmWZZbU=;
-        b=XNb0IOodayS1ngOGvx26RPHP+RSv23Y1IHlItE/FfAwoQ4TA0B50QbmeZi7LDDCjsX
-         0oBrXxC6KZg/R982t2KL4mD9PH6bPCgsOKJFk64Tk6xML3JUl5oa2tUj7tRKPcVJyUyB
-         rNEnxhqD3deqskZbQAjqqrTweYYXLpoCxfm+6N2sxQ75i80xSQsSfglUOyywCCfH8bA5
-         g7c5vIYgVkxz3I1UNUnD0HZ2pV2JYGuHV1+XKciiN6X3SdhfjXOIgm0/HkbVewrSaC8k
-         6KBBvBKPkam6OfqxJp5sgqZ7Z7unXD+FgO9uipCbiDQfOcn2uVLeWoCZoB8nFd68Y2y8
-         aLyw==
-X-Gm-Message-State: AGi0PuYjM+bEZt35ctJtDhq6wfg3wifLzCTgXujGwejIa2ZtabNjpE8f
-        if/gi2Rp2MJfz0wavMjsaPo=
-X-Google-Smtp-Source: APiQypLOx0ekWVCJmeynZrlLPGeLwq2D8YvQyMNuAOJIH6BhAiNZoGImv9iO7dRpwuJL1/CeEfrnWw==
-X-Received: by 2002:a63:5d42:: with SMTP id o2mr18009831pgm.265.1586127552416;
-        Sun, 05 Apr 2020 15:59:12 -0700 (PDT)
+        bh=0xq5JalltONl9PizfeV42lmM2AY/Ve5nHbOH//HbKF8=;
+        b=XZR1yNmvvByUavcS2I/wFpV35Ujgphd4qM1DR+ROzW093ZP6rnUJ/u+MRkFFm4HZLn
+         hFqNgUhyW1X87Wklskjuevj/MG+YP3HiRlj2sFLWM4qN7FRwyMFzI/Ano12Fgb0m7E4F
+         BNSyUJWdRUZEy3CA+RH0LHXP3XJywKo/XCnqSvjD9guAlWwj62rzWYgjenyCVp98kby2
+         Oo2AxMJNLXD22Gojt/M380QcHHeasJyV2WtkexF1oEFg99bj/mha7XX4tBtRcoRPFipI
+         L3+/DEgtSwOuehV+nFk2DHVoaT9nM571jiJo1Rle7xzLg6Ehn3f0+tj5SVrvNmrLcYyB
+         KxHg==
+X-Gm-Message-State: AGi0PuampIIh18EMZLz1r4he9JOXeZ+NFiIZFgBerv+biaf4SFkDPhKk
+        LdWPqHteTw7KYlsuxRoXejI=
+X-Google-Smtp-Source: APiQypLGtV1JVvJ/WQkxkgzHmLY4yPVyj5HRw/6OEHAdLvEKC+/f7W3zQzKmEgkg1y9VP0yrF0qAKw==
+X-Received: by 2002:a17:90b:254:: with SMTP id fz20mr23245223pjb.27.1586128426125;
+        Sun, 05 Apr 2020 16:13:46 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7d7b:4f16:40c2:d1f9])
-        by smtp.gmail.com with ESMTPSA id r59sm10947626pjb.45.2020.04.05.15.59.10
+        by smtp.gmail.com with ESMTPSA id q7sm10319084pfc.166.2020.04.05.16.13.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 05 Apr 2020 15:59:11 -0700 (PDT)
+        Sun, 05 Apr 2020 16:13:45 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -50,9 +50,9 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Martin Wilck <mwilck@suse.com>,
         Daniel Wagner <dwagner@suse.de>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH] qla2xxx: Split qla2x00_configure_local_loop()
-Date:   Sun,  5 Apr 2020 15:59:05 -0700
-Message-Id: <20200405225905.17171-1-bvanassche@acm.org>
+Subject: [PATCH] qla2xxx: Increase the size of struct qla_fcp_prio_cfg to FCP_PRIO_CFG_SIZE
+Date:   Sun,  5 Apr 2020 16:13:39 -0700
+Message-Id: <20200405231339.29612-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.26.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -61,9 +61,16 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The size of the function qla2x00_configure_local_loop() hurts its
-readability. Hence split that function. This patch does not change
-any functionality.
+This patch fixes the following Coverity complaint without changing any
+functionality:
+
+CID 337793 (#1 of 1): Wrong size argument (SIZEOF_MISMATCH)
+suspicious_sizeof: Passing argument ha->fcp_prio_cfg of type
+struct qla_fcp_prio_cfg * and argument 32768UL to function memset is
+suspicious because a multiple of sizeof (struct qla_fcp_prio_cfg) /*48*/
+is expected.
+
+memset(ha->fcp_prio_cfg, 0, FCP_PRIO_CFG_SIZE);
 
 Cc: Nilesh Javali <njavali@marvell.com>
 Cc: Himanshu Madhani <hmadhani@marvell.com>
@@ -73,123 +80,34 @@ Cc: Daniel Wagner <dwagner@suse.de>
 Cc: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 92 ++++++++++++++++++---------------
- 1 file changed, 50 insertions(+), 42 deletions(-)
+ drivers/scsi/qla2xxx/qla_fw.h | 3 ++-
+ drivers/scsi/qla2xxx/qla_os.c | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 5b2deaa730bf..80390d3f3236 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5081,6 +5081,54 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 	return (rval);
- }
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index f9bad5bd7198..647e67c6ba5e 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -2217,8 +2217,9 @@ struct qla_fcp_prio_cfg {
+ #define FCP_PRIO_ATTR_PERSIST   0x2
+ 	uint8_t  reserved;      /* Reserved for future use          */
+ #define FCP_PRIO_CFG_HDR_SIZE   0x10
+-	struct qla_fcp_prio_entry entry[1];     /* fcp priority entries  */
++	struct qla_fcp_prio_entry entry[1023]; /* fcp priority entries  */
+ #define FCP_PRIO_CFG_ENTRY_SIZE 0x20
++	uint8_t  reserved2[16];
+ };
  
-+static int qla2x00_configure_n2n_loop(scsi_qla_host_t *vha)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	unsigned long flags;
-+	fc_port_t *fcport;
-+	int rval;
-+
-+	if (test_and_clear_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags)) {
-+		/* borrowing */
-+		u32 *bp, sz;
-+
-+		memset(ha->init_cb, 0, ha->init_cb_size);
-+		sz = min_t(int, sizeof(struct els_plogi_payload),
-+			   ha->init_cb_size);
-+		rval = qla24xx_get_port_login_templ(vha, ha->init_cb_dma,
-+						    ha->init_cb, sz);
-+		if (rval == QLA_SUCCESS) {
-+			__be32 *q = &ha->plogi_els_payld.data[0];
-+
-+			bp = (uint32_t *)ha->init_cb;
-+			cpu_to_be32_array(q, bp, sz / 4);
-+			memcpy(bp, q, sizeof(ha->plogi_els_payld.data));
-+		} else {
-+			ql_dbg(ql_dbg_init, vha, 0x00d1,
-+			       "PLOGI ELS param read fail.\n");
-+			goto skip_login;
-+		}
-+	}
-+
-+	list_for_each_entry(fcport, &vha->vp_fcports, list) {
-+		if (fcport->n2n_flag) {
-+			qla24xx_fcport_handle_login(vha, fcport);
-+			return QLA_SUCCESS;
-+		}
-+	}
-+
-+skip_login:
-+	spin_lock_irqsave(&vha->work_lock, flags);
-+	vha->scan.scan_retry++;
-+	spin_unlock_irqrestore(&vha->work_lock, flags);
-+
-+	if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
-+		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
-+		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
-+	}
-+	return QLA_FUNCTION_FAILED;
-+}
-+
- /*
-  * qla2x00_configure_local_loop
-  *	Updates Fibre Channel Device Database with local loop devices.
-@@ -5098,7 +5146,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 	int		found_devs;
- 	int		found;
- 	fc_port_t	*fcport, *new_fcport;
--
- 	uint16_t	index;
- 	uint16_t	entries;
- 	struct gid_list_info *gid;
-@@ -5108,47 +5155,8 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
- 	unsigned long flags;
+ #define FCP_PRIO_CFG_SIZE       (32*1024) /* fcp prio data per port*/
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d9072ea7c42b..784f3e553f15 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -7840,6 +7840,7 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
+ 	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
+ 	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
++	BUILD_BUG_ON(sizeof(struct qla_fcp_prio_cfg) != FCP_PRIO_CFG_SIZE);
  
- 	/* Inititae N2N login. */
--	if (N2N_TOPO(ha)) {
--		if (test_and_clear_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags)) {
--			/* borrowing */
--			u32 *bp, sz;
--
--			memset(ha->init_cb, 0, ha->init_cb_size);
--			sz = min_t(int, sizeof(struct els_plogi_payload),
--			    ha->init_cb_size);
--			rval = qla24xx_get_port_login_templ(vha,
--			    ha->init_cb_dma, (void *)ha->init_cb, sz);
--			if (rval == QLA_SUCCESS) {
--				__be32 *q = &ha->plogi_els_payld.data[0];
--
--				bp = (uint32_t *)ha->init_cb;
--				cpu_to_be32_array(q, bp, sz / 4);
--
--				memcpy(bp, q, sizeof(ha->plogi_els_payld.data));
--			} else {
--				ql_dbg(ql_dbg_init, vha, 0x00d1,
--				    "PLOGI ELS param read fail.\n");
--				goto skip_login;
--			}
--		}
--
--		list_for_each_entry(fcport, &vha->vp_fcports, list) {
--			if (fcport->n2n_flag) {
--				qla24xx_fcport_handle_login(vha, fcport);
--				return QLA_SUCCESS;
--			}
--		}
--skip_login:
--		spin_lock_irqsave(&vha->work_lock, flags);
--		vha->scan.scan_retry++;
--		spin_unlock_irqrestore(&vha->work_lock, flags);
--
--		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
--			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
--			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
--		}
--		return QLA_FUNCTION_FAILED;
--	}
-+	if (N2N_TOPO(ha))
-+		return qla2x00_configure_n2n_loop(vha);
- 
- 	found_devs = 0;
- 	new_fcport = NULL;
+ 	/* Allocate cache for SRBs. */
+ 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
