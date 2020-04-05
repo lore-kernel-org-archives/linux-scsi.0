@@ -1,353 +1,354 @@
-Return-Path: <SRS0=8r17=5U=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=3U4t=5V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A98FC2BA1B
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 20:26:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1552BC2BA18
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 01:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0478520738
-	for <linux-scsi@archiver.kernel.org>; Sat,  4 Apr 2020 20:26:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0F982082F
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 01:49:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LkEmvca1"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="st23JvmL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726388AbgDDUZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Apr 2020 16:25:59 -0400
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:39925 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726327AbgDDUZ7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2020 16:25:59 -0400
-Received: by mail-lj1-f194.google.com with SMTP id i20so10514916ljn.6;
-        Sat, 04 Apr 2020 13:25:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=n4pelmtIyoJHvDX3Q/UVqNyxbrAhxCLbA7gwQ3NZ48w=;
-        b=LkEmvca1OMEmAKmB5UfZWyijauLiFLMLEae78Kie/t0Y69ZeptRHjqglAffV+POM+1
-         aeTBYJTFjLXSDm6cykiPafFtRGVy6AUlmjGJU5FG4G4B96JCvwnP9Ey34dA3wmk8M0xL
-         F9uc/fyKW/fIebq9oHBEFoaHK4BLWPHtuStmoZQzyXyqiKYq3G1y9e0vGBjq2ED97Ykz
-         3pEOucm3lyNjmKnacG5VruHA2bCK27cutn8jyiS1xbhQMHEqNqLqmrfSEYZww4RUTmQC
-         M4pFD7Kc3fkDxVj5lIo2dM9GuZ/QMgK4EPN53l5ovlaH/WQjVedhwItyAzzcR7murudt
-         8wGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=n4pelmtIyoJHvDX3Q/UVqNyxbrAhxCLbA7gwQ3NZ48w=;
-        b=fs1hWG662TEUzb2hNvRXapv2xcObjYz6HI891u/ihWwswfbD4BbWvbZWkqOKOTo1oc
-         4Y3u7EUeE/7qe+YxYPLzrXpKH69Y372FAdnL6iB7BPY+hMMXwdMMpKsKlQsTFy9T+AEC
-         23r5aMjTn3nrEC+5ggiipK2eNheQY3GpujNMD+6BevQZSGbmsKi1FXd6GbicjImlK6gE
-         Z8CPzG6VUS6TGHLupf47z63aVFhQn7o1PQHoV23hY7hqsNCDecZTS6MUGR7g0IPvPynf
-         XjmklW55R4dOMPKIcob4kxHI3nVPEd26Fv0EPrgOVB5tdWSRCpPwHHlNtFZfwLiRWk/G
-         enbA==
-X-Gm-Message-State: AGi0PuYw/uQbVh5sVPCHDQ7XsKMqu/oQS86kLEPV9L5l+kcxZ9oYS+8L
-        5H9ye/Q445Rb3w2W0tOLwRg=
-X-Google-Smtp-Source: APiQypLOWv2KLPf7kNCAcIbB2e7fgMQc6s46qZpFgVGEm8Yq0Lqqi1VBWPfBSJ7Vx32GsgzWEf8/7g==
-X-Received: by 2002:a2e:b6c2:: with SMTP id m2mr8158552ljo.59.1586031952613;
-        Sat, 04 Apr 2020 13:25:52 -0700 (PDT)
-Received: from pablo-laptop ([2a02:a315:5445:5300:95b9:c293:40ef:8bdd])
-        by smtp.googlemail.com with ESMTPSA id f6sm8701869lfm.40.2020.04.04.13.25.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Apr 2020 13:25:52 -0700 (PDT)
-Message-ID: <58f2996c7dfe70b226c5cafbd94d7b02a314d77a.camel@gmail.com>
-Subject: Re: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
-From:   =?UTF-8?Q?Pawe=C5=82?= Chmiel <pawel.mikolaj.chmiel@gmail.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>, robh+dt@kernel.org,
-        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Date:   Sat, 04 Apr 2020 22:25:50 +0200
-In-Reply-To: <17aa7c13a0f5a183158829e9b9af85537a740846.camel@gmail.com>
-References: <20200327170638.17670-1-alim.akhtar@samsung.com>
-         <CGME20200327171423epcas5p485d227f19e45999ad9b42b21d2864e4a@epcas5p4.samsung.com>
-         <20200327170638.17670-6-alim.akhtar@samsung.com>
-         <ac67cfc3736cf50c716b823a59af878d59b7198f.camel@gmail.com>
-         <000801d60516$823fd890$86bf89b0$@samsung.com>
-         <838a17416b4ed59903ae153e09842ac62584616f.camel@gmail.com>
-         <002e01d605df$af658440$0e308cc0$@samsung.com>
-         <1182150aff8140a82af17979a09c81676c719e2f.camel@gmail.com>
-         <000001d60aad$05e7b6e0$11b724a0$@samsung.com>
-         <17aa7c13a0f5a183158829e9b9af85537a740846.camel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.1-2 
+        id S1726406AbgDEBtF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 4 Apr 2020 21:49:05 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:51761 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726258AbgDEBtF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2020 21:49:05 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200405014900epoutp011a634442a69fecfb56b697f8f03e12f7~CyUqHqfjY2546125461epoutp01E
+        for <linux-scsi@vger.kernel.org>; Sun,  5 Apr 2020 01:49:00 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200405014900epoutp011a634442a69fecfb56b697f8f03e12f7~CyUqHqfjY2546125461epoutp01E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1586051340;
+        bh=QuHHLyqI5mlnWKAmpGQxZaOlWKX35casRNTu16k2i9Q=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=st23JvmLfZ5o2Pk7FODZWvBzs1SPgwl7wDuHuB7WrOi0XnsMKWk85OcoYY6or/pfN
+         yl46sjDQoHoP2Ldo0Ht7AbuE1s6LGDPGgjYEYxwcVqChGMKuqMSv7+9qDcNd65TMw3
+         iI8G65vBn1DnvY8nNFh9Ec6LLENuGNsjml/lF82U=
+Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20200405014859epcas5p23d607fab10620f995cc2fcfb8e1fb1d6~CyUotIvGx1573515735epcas5p20;
+        Sun,  5 Apr 2020 01:48:59 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        52.E7.04782.B09398E5; Sun,  5 Apr 2020 10:48:59 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200405014858epcas5p1b1c595090bd46bffee0553c2ce0a293c~CyUnvudph2877728777epcas5p1Y;
+        Sun,  5 Apr 2020 01:48:58 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200405014858epsmtrp27a940d6eefebd4d656bbab74b37f76f0~CyUnu1ymb0899108991epsmtrp2c;
+        Sun,  5 Apr 2020 01:48:58 +0000 (GMT)
+X-AuditID: b6c32a49-8b3ff700000012ae-c2-5e89390bd906
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B5.45.04024.909398E5; Sun,  5 Apr 2020 10:48:57 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200405014854epsmtip251fc67341e66344a8d8becb9ad53d7a0~CyUkkaGdu2376123761epsmtip2S;
+        Sun,  5 Apr 2020 01:48:54 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     =?utf-8?Q?'Pawe=C5=82_Chmiel'?= <pawel.mikolaj.chmiel@gmail.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+Cc:     <krzk@kernel.org>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
+        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+In-Reply-To: <58f2996c7dfe70b226c5cafbd94d7b02a314d77a.camel@gmail.com>
+Subject: RE: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
+Date:   Sun, 5 Apr 2020 07:18:52 +0530
+Message-ID: <000001d60aec$5ef39670$1cdac350$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKI+vJzlUBp7WIi19k8pRZBKIHK2gKUSzVAA7h3SyUCe2DDmwIWY0ZDAq0rcFAB9QhIPQKG0ufBAwBREpECkZKiVQH+4tvspjcbxFA=
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Se0hTcRTudx/b3Wp2W4tOC8qGlg98REVX6GEgeQupiJAM0YZeNHQqu2kZ
+        RpJazalpZdmyzHwkqzTWsmW+MOcjSis1HxQqKplG+CCbBD22a+R/33fO951zvh8/CpcPkkrq
+        RNxJThunjlWJpET1S3c3r6V+ujDfllcS5st8j4iZqSonmaLmDpLp7HwsZvrNVoIxjXwgma6a
+        QhFT0FmPMfpei4i53/oLY2ytOTiTUdcsZsqe9iN/GduVk42xzw2fxKzJqBOxT0rPsentDQQ7
+        PTZAsDlmI2JnTevYi4167JDkmHRHJBd7IonT+uw6Lo3+2BeZcEOHTs9MZqJU1JaBMpGEAnor
+        XLVeJjKRlJLTLxDYfkzhAplBcNE2IRLIHIJ716uwf5bR93WY0KhD8K54hBTIVwTnp8yOwSLa
+        CywlFxx2BW1AkNaW6rDgtA6Dh0XXcLtKQgfC97k3jrkraX8Yrmj4iymKoF2ge26fvSyj/WDY
+        bMQEvALab44SdozTnlBePIkLJznD/Fg5accKOgmaS54hQbMarPNZjkBAm8SQNV5DCIYAGKjW
+        LTzBSphoNYsFrITZb3Ui+w1Ax0BWzRahnAJld1oWrLuhsbuQsEtw2h2qanyEVU6Q/XMUE5wy
+        uHRBLqhdIe1bz4JzLeTp9aSAWah+8JbMRRsMi4IZFgUzLApg+L/sLiKMaA2XwGuiOH5bwuY4
+        7pQ3r9bwiXFR3hHxGhNyfDuPfRZk6AhqQjSFVMtkTP6lMDmpTuKTNU0IKFylkO0pyAiTyyLV
+        yWc4bXy4NjGW45vQWopQrZZdIXtC5XSU+iQXw3EJnPZfF6MkylREDqbtdd6e73rQavUsTHa3
+        tOQdCPitKHavlLt18wMDy/dXtzdpsqOTpj8k3pr6WlsZrAgbLDm6ri/4dm6OMlfqwy8JHQlp
+        O1LmVBESXhCRst6Wz4WOdRrTnV7XbyjfWVuITykt0S6PZLDxbKDS0v855PCQ77hNP1Qa5D/c
+        u2nVoIrgo9WbPXAtr/4D18/30HIDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrIIsWRmVeSWpSXmKPExsWy7bCSvC6XZWecwTkbi5c/r7JZfFq/jNVi
+        /pFzrBbnz29gt7i55SiLxabH11gtLu+aw2Yx4/w+Jovu6zvYLJYf/8dk8eN4H7NF694j7BZL
+        t95kdOD1uNzXy+Sxc9Zddo9NqzrZPDYvqfdoObmfxePj01ssHn1bVjF6fN4k59F+oJspgDOK
+        yyYlNSezLLVI3y6BK2PWhhcsBbNjKl7cf8LUwPjPvYuRk0NCwETiyaW9TF2MXBxCArsZJbb3
+        b2eDSEhLXN84gR3CFpZY+e85O0TRK0aJezcugBWxCehK7FjcxgaSEBGYwyix5GsLE0iCWWAy
+        k8TSm/wQHR9YJM52rgUbxSngLvH121mwImEBB4mHK/YD2RwcLAIqEle+eYKEeQUsJR5uWcUE
+        YQtKnJz5hAViprbE05tP4exlC18zQ1ynIPHz6TJWEFtEoEziyOLtjBA14hJHf/YwT2AUnoVk
+        1Cwko2YhGTULScsCRpZVjJKpBcW56bnFhgWGeanlesWJucWleel6yfm5mxjBEauluYPx8pL4
+        Q4wCHIxKPLwWUzvihFgTy4orcw8xSnAwK4nwOs5ojRPiTUmsrEotyo8vKs1JLT7EKM3BoiTO
+        +zTvWKSQQHpiSWp2ampBahFMlomDU6qBUdDlz5et3WFylxb9bv7+7LS3Z02deN+Tzhff53W+
+        O7/d84SvGaeMa9STeg457nKWZfw1i+Y9/lzh/dr66LQLYdWeex59jqmqLHG8U+/m91D3f8vl
+        O/wVDr/PufLFZTnteGViYPTyQAwn2925Rm8CJU7u2BW17OuCdSpr33vt/csjbSnSF35FRYml
+        OCPRUIu5qDgRAEdZSOTUAgAA
+X-CMS-MailID: 20200405014858epcas5p1b1c595090bd46bffee0553c2ce0a293c
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200327171423epcas5p485d227f19e45999ad9b42b21d2864e4a
+References: <20200327170638.17670-1-alim.akhtar@samsung.com>
+        <CGME20200327171423epcas5p485d227f19e45999ad9b42b21d2864e4a@epcas5p4.samsung.com>
+        <20200327170638.17670-6-alim.akhtar@samsung.com>
+        <ac67cfc3736cf50c716b823a59af878d59b7198f.camel@gmail.com>
+        <000801d60516$823fd890$86bf89b0$@samsung.com>
+        <838a17416b4ed59903ae153e09842ac62584616f.camel@gmail.com>
+        <002e01d605df$af658440$0e308cc0$@samsung.com>
+        <1182150aff8140a82af17979a09c81676c719e2f.camel@gmail.com>
+        <000001d60aad$05e7b6e0$11b724a0$@samsung.com>
+        <17aa7c13a0f5a183158829e9b9af85537a740846.camel@gmail.com>
+        <58f2996c7dfe70b226c5cafbd94d7b02a314d77a.camel@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2020-04-04 at 21:33 +0200, Paweł Chmiel wrote:
-> On Sat, 2020-04-04 at 23:45 +0530, Alim Akhtar wrote:
-> Hi Alim,
-> > Hi Pawel,
-> > 
-> > > -----Original Message-----
-> > > From: Paweł Chmiel <pawel.mikolaj.chmiel@gmail.com>
-> > > Sent: 03 April 2020 22:22
-> > > To: Alim Akhtar <alim.akhtar@samsung.com>; robh+dt@kernel.org;
-> > > devicetree@vger.kernel.org; linux-scsi@vger.kernel.org
-> > > Cc: krzk@kernel.org; avri.altman@wdc.com; martin.petersen@oracle.com;
-> > > kwmad.kim@samsung.com; stanley.chu@mediatek.com;
-> > > cang@codeaurora.org; linux-samsung-soc@vger.kernel.org; linux-arm-
-> > > kernel@lists.infradead.org; linux-kernel@vger.kernel.org
-> > > Subject: Re: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
-> > > 
-> > > Hi Alim
-> > > 
-> > > Looking at vendor sources, my device is using the same gpios for
-> > > urfs_rst_n and ufs_refclk_out like Espresso (with one difference -
-> > > ufs_rst_n shouldn't be pulled up).
-> > > 
-> > > About regulators (it would be easier if dts would have all regulators).
-> > > It's also using s2mps15 as Espresso, but it vendor dts had only 8 (of
-> > > 10 possible bucks, one missing was for UFS) and 14 ldos (of 27
-> > > possible), where almost all rails are connected to something.
-> > > 
-> > > I'm wondering how it's working on Espresso, because when adding correct
-> > > regulators for ufs (vccq = buck10 from s2mps15, always enabled for
-> > > testing plus vccq2 and vccq = two regulators enabled by one gpio,
-> > > enabled at boot by firmware), ufs wasn't still working because it was
-> > > then failing at defer probe (s2mps15 was probed after ufs)
-> > > 
-> > > [    0.962482] exynos-ufshc 15570000.ufs: ufshcd_get_vreg: vccq get
-> > > failed, err=-517
-> > > 
-> > As I said, this is very specific to the board, on Espresso we have LDO12 connected to UFS_RESETn.
-> > Either make all of them as always-on, or just disabled s2mps15 
-> > (default voltage supply should be ok, unless bootloader on your board does have messed too much with PMIC)
-> >  
-> > > After that boot would just stop/hang.
-> > > 
-> > > After making a "dirty fix" by making s2mps15 regulator driver use
-> > > subsys_initcall (like in vendor sources) and ufs late_initcall (to give
-> > > it more time to setup and get it working and solve it later),
-> > > i had to mark following clocks as CLK_IGNORE_UNUSED to be able to bring
-> > > link up (it replicates setting done by vendor kernel, which enables
-> > > them on boot):
-> > > - "phyclk_ufs20_rx1_symbol_user"
-> > > - "phyclk_ufs20_rx0_symbol_user"
-> > > - "phyclk_ufs20_tx0_symbol_user"
-> > > 
-> > Coming to these clocks, all these are supplied by default, my best guess is since you are using an actual product (S6 edge), they might have optimized for power saving 
-> > And most likely all clock might be  gated initially. In my case all are set to default.
-> > I have attached a small change in the exynos7 dts and phy driver clock handling, please try this attached patch and let me know if this helps in removing some of your hacks.
-> > In the later SoCs these clocks are not in this form, so I didn't included in my current patch set, If this works for your, will add as an optional for exynos7/7420.
-> > I also assume you are using clk-exynos7.c and my posted ufs driver.
-> Yes, i'm using clk-exynos7 (and other exynos7 drivers/dts/etc).
-> It would be great if someone could say how exynos7 and exynos7420 are
-> similar. For now it looks like that only difference is that exynos7 has
-> only 4 cores (a57) where 7420 has 4xa53 + 4xa57.
-> It would be very valuable information for me so i could know how much i
-> could reuse my device.
-> > > Now it's able to bring both device and link, but it fails at
-> > > ufshcd_uic_change_pwr_mode.
-> > > 
-> > Can you please use the exact ufs and ufs-phy device node as in my patch?
-> With Your patch + removed my changes to clocks (removed fix for wrong
-> clock order in dts + removed CLK_IGNORE_UNUSED from symbol clocks in
-> clk-exynos7) it's finally able to detect my UFS device!! 
-> 
-> (but of fails later...with constant error spam in kernel log).
-> 
-> [    1.383481] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: Unable
-> to find vdd-hba-supply regulator, assuming enabled
-> [    1.390060] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: unable
-> to find vcc-max-microamp
-> [    1.398465] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: unable
-> to find vccq-max-microamp
-> [    1.406968] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: unable
-> to find vccq2-max-microamp
-> [    1.415569] exynos-ufshc 15570000.ufs: ufshcd_init_clocks: clk:
-> core_clk, rate: 100000000
-> [    1.423715] exynos-ufshc 15570000.ufs: ufshcd_init_clocks: clk:
-> sclk_unipro_main, rate: 167000000
-> [    1.432569] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
-> core_clk enabled
-> [    1.440205] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
-> sclk_unipro_main enabled
-> [    1.449613] scsi host0: ufshcd
-> [    1.452179] samsung-ufs-phy 15571800.ufs-phy: MPHY ref_clk_rate =
-> 26000000
-> [    1.458448] samsung-ufs-phy 15571800.ufs-phy: MPHY
-> ref_parent_clk_rate = 26000000
-> [    1.487288] exynos-ufshc 15570000.ufs: ufshcd_print_pwr_info:[RX,
-> TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate =
-> 0
-> [    2.025569] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd041 val
-> 0x1fff error code 1
-> [    2.025715] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd041 val
-> 0x1fff failed 0 retries
-> [    2.025880] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd042 val
-> 0xffff error code 1
-> [    2.027354] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd042 val
-> 0xffff failed 0 retries
-> [    2.035583] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd043 val
-> 0x7fff error code 1
-> [    2.043465] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd043 val
-> 0x7fff failed 0 retries
-> [    2.054049] exynos-ufshc 15570000.ufs: Power mode change 0 : Fast
-> series_B G_2 L_2
-> [    2.059261] exynos-ufshc 15570000.ufs: ufshcd_print_pwr_info:[RX,
-> TX]: gear=[2, 2], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
-> [    2.071307] exynos-ufshc 15570000.ufs: ufshcd_init_icc_levels:
-> setting icc_level 0x0
-> [    2.081624] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
-> activate tcq with queue depth 1
-> [    2.087576] scsi 0:0:0:49488: scsi_add_lun: correcting incorrect
-> peripheral device type 0x0 for W-LUN 0x            c150hN
-> [    2.098400] scsi 0:0:0:49488: Well-known LUN    SAMSUNG  KLUBG4G1BD-
-> E0B1  0200 PQ: 0 ANSI: 6
-> [    2.107585] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
-> activate tcq with queue depth 16
-> [    2.115588] scsi 0:0:0:49476: scsi_add_lun: correcting incorrect
-> peripheral device type 0x0 for W-LUN 0x            c144hN
-> [    2.126519] scsi 0:0:0:49476: Well-known LUN    SAMSUNG  KLUBG4G1BD-
-> E0B1  0200 PQ: 0 ANSI: 6
-> [    2.135534] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
-> activate tcq with queue depth 1
-> [    2.143612] scsi 0:0:0:49456: scsi_add_lun: correcting incorrect
-> peripheral device type 0x0 for W-LUN 0x            c130hN
-> [    2.154543] scsi 0:0:0:49456: Well-known LUN    SAMSUNG  KLUBG4G1BD-
-> E0B1  0200 PQ: 0 ANSI: 6
-> [    2.163597] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
-> activate tcq with queue depth 16
-> [    2.171721] scsi 0:0:0:0: Direct-Access     SAMSUNG  KLUBG4G1BD-
-> E0B1  0200 PQ: 0 ANSI: 6
-> [    2.180352] exynos-ufshc 15570000.ufs: OCS error from controller = 7
-> for tag 0
-> [    2.186921] host_regs: 00000000: 0383ff0f 00000000 00000200 00000000
-> [    2.193230] host_regs: 00000010: 00000101 00007fce 00000c96 00000000
-> [    2.199565] host_regs: 00000020: 00000000 00030e75 00000000 00000000
-> [    2.205899] host_regs: 00000030: 0000010f 00000000 80000010 00000000
-> [    2.212234] host_regs: 00000040: 00000000 00000000 00000000 00000000
-> [    2.218568] host_regs: 00000050: f8d64000 00000000 00000000 00000000
-> [    2.224903] host_regs: 00000060: 00000001 00000000 00000000 00000000
-> [    2.231237] host_regs: 00000070: f8da2000 00000000 00000000 00000000
-> [    2.237572] host_regs: 00000080: 00000001 00000000 00000000 00000000
-> [    2.243907] host_regs: 00000090: 00000002 95190000 00000000 00000000
-> [    2.250242] exynos-ufshc 15570000.ufs: hba->ufs_version = 0x200,
-> hba->capabilities = 0x383ff0f
-> 
-> Full bootlog 
-> https://gist.github.com/PabloPL/0bcb24492f4ab6e9703c2a4ea20ceb18
-> kernel source: https://github.com/PabloPL/linux/tree/ufs-mainline
-> dts file: exynos7-zeroflt.dts (it should be zerolt, but will be
-> fixed/changed later).
+Hi Pawel,
 
-Actually, after waiting enough time (about 15 or even more sec of that
-error "spam"), was able to mount partitions and manipulate files there.
-
-So for me the only issue to solve are defered probe when regulators are
-not yet found (for example when pmic is probed after ufs) and not sure
-what about that errors (despite working ufs).
-
-Thanks for all
-> 
-> Thanks
-> > > [    1.411547] exynos-ufshc 15570000.ufs: ufshcd_init_clocks: clk:
-> > > core_clk, rate: 100000000
-> > > [    1.419698] exynos-ufshc 15570000.ufs: ufshcd_init_clocks: clk:
-> > > sclk_unipro_main, rate: 167000000
-> > > [    1.428550] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
-> > > core_clk enabled
-> > > [    1.436200] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
-> > > sclk_unipro_main enabled
-> > > [    1.445704] scsi host0: ufshcd
-> > > [    1.465684] exynos-ufshc 15570000.ufs: ufshcd_print_pwr_info:[RX,
-> > > TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate
-> > > =
-> > > 0
-> > > [    2.023699] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd041 val
-> > > 0x1fff error code 1
-> > > [    2.023846] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd041 val
-> > > 0x1fff failed 0 retries
-> > > [    2.024025] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd042 val
-> > > 0xffff error code 1
-> > > [    2.025457] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd042 val
-> > > 0xffff failed 0 retries
-> > > [    2.033777] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd043 val
-> > > 0x7fff error code 1
-> > > [    2.041607] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd043 val
-> > > 0x7fff failed 0 retries
-> > > [    2.067809] exynos-ufshc 15570000.ufs: pwr ctrl cmd 0x2 failed, host
-> > > upmcrs:0x5
-> > > [    2.067953] exynos-ufshc 15570000.ufs: UFS Host state=0
-> > > [    2.068056] exynos-ufshc 15570000.ufs: outstanding reqs=0x0
-> > > tasks=0x0
-> > > [    2.068759] exynos-ufshc 15570000.ufs: saved_err=0x0,
-> > > saved_uic_err=0x0
-> > > [    2.075368] exynos-ufshc 15570000.ufs: Device power mode=1, UIC link
-> > > state=1
-> > > [    2.082392] exynos-ufshc 15570000.ufs: PM in progress=0, sys.
-> > > suspended=0
-> > > [    2.089158] exynos-ufshc 15570000.ufs: Auto BKOPS=0, Host self-
-> > > block=0
-> > > [    2.095667] exynos-ufshc 15570000.ufs: Clk gate=1
-> > > [    2.100354] exynos-ufshc 15570000.ufs: error handling flags=0x0,
-> > > req. abort count=0
-> > > [    2.107987] exynos-ufshc 15570000.ufs: Host capabilities=0x383ff0f,
-> > > caps=0x0
-> > > [    2.115018] exynos-ufshc 15570000.ufs: quirks=0x780, dev.
-> > > quirks=0xc4
-> > > [    2.121443] exynos-ufshc 15570000.ufs: ufshcd_print_pwr_info:[RX,
-> > > TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE], rate
-> > > =
-> > > 0
-> > > [    2.133960] host_regs: 00000000: 0383ff0f 00000000 00000200 00000000
-> > > [    2.140268] host_regs: 00000010: 00000101 00007fce 00000000 00000000
-> > > [    2.146604] host_regs: 00000020: 00000000 00030a75 00000000 00000000
-> > > [    2.152940] host_regs: 00000030: 0000050f 00000000 80000010 00000000
-> > > [    2.159271] host_regs: 00000040: 00000000 00000000 00000000 00000000
-> > > [    2.165609] host_regs: 00000050: f9587000 00000000 00000000 00000000
-> > > [    2.171944] host_regs: 00000060: 00000001 00000000 00000000 00000000
-> > > [    2.178278] host_regs: 00000070: f958a000 00000000 00000000 00000000
-> > > [    2.184609] host_regs: 00000080: 00000001 00000000 00000000 00000000
-> > > [    2.190945] host_regs: 00000090: 00000002 15710000 00000000 00000000
-> > > [    2.197282] exynos-ufshc 15570000.ufs: hba->ufs_version = 0x200,
-> > > hba->capabilities = 0x383ff0f
-> > > [    2.205869] exynos-ufshc 15570000.ufs: hba->outstanding_reqs = 0x0,
-> > > hba->outstanding_tasks = 0x0
-> > > [    2.214636] exynos-ufshc 15570000.ufs: last_hibern8_exit_tstamp at 0
-> > > us, hibern8_exit_cnt = 0
-> > > [    2.223141] exynos-ufshc 15570000.ufs: No record of pa_err
-> > > [    2.228606] exynos-ufshc 15570000.ufs: No record of dl_err
-> > > [    2.234071] exynos-ufshc 15570000.ufs: No record of nl_err
-> > > [    2.239540] exynos-ufshc 15570000.ufs: No record of tl_err
-> > > [    2.245007] exynos-ufshc 15570000.ufs: No record of dme_err
-> > > [    2.250558] exynos-ufshc 15570000.ufs: No record of auto_hibern8_err
-> > > [    2.256895] exynos-ufshc 15570000.ufs: No record of fatal_err
-> > > [    2.262624] exynos-ufshc 15570000.ufs: No record of
-> > > link_startup_fail
-> > > [    2.269044] exynos-ufshc 15570000.ufs: No record of resume_fail
-> > > [    2.274942] exynos-ufshc 15570000.ufs: No record of suspend_fail
-> > > [    2.280931] exynos-ufshc 15570000.ufs: No record of dev_reset
-> > > [    2.286659] exynos-ufshc 15570000.ufs: No record of host_reset
-> > > [    2.292475] exynos-ufshc 15570000.ufs: No record of task_abort
-> > > [    2.298290] exynos-ufshc 15570000.ufs: ufshcd_change_power_mode:
-> > > power mode change failed 5
-> > > [    2.306619] exynos-ufshc 15570000.ufs: ufshcd_probe_hba: Failed
-> > > setting power mode, err = 5
-> > > [    2.315144] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
-> > > core_clk disabled
-> > > 
-> > > And here boot would just stop/hang.
-> > > 
-> > > Thanks for all hints.
-> > > 
-> > > > > > > Also looking at clk-exynos7 driver seems to confirm this.
-> > > > > > > 
-> > > > > > > > +		};
-> > > > > > > > +
-> > > > > > > >  		usbdrd_phy: phy@15500000 {
-> > > > > > > >  			compatible = "samsung,exynos7-usbdrd-phy";
-> > > > > > > >  			reg = <0x15500000 0x100>;
-
+> -----Original Message-----
+> From: Pawe=C5=82=20Chmiel=20<pawel.mikolaj.chmiel=40gmail.com>=0D=0A>=20S=
+ent:=2005=20April=202020=2001:56=0D=0A>=20To:=20Alim=20Akhtar=20<alim.akhta=
+r=40samsung.com>;=20robh+dt=40kernel.org;=0D=0A>=20devicetree=40vger.kernel=
+.org;=20linux-scsi=40vger.kernel.org=0D=0A>=20Cc:=20krzk=40kernel.org;=20av=
+ri.altman=40wdc.com;=20martin.petersen=40oracle.com;=0D=0A>=20kwmad.kim=40s=
+amsung.com;=20stanley.chu=40mediatek.com;=0D=0A>=20cang=40codeaurora.org;=
+=20linux-samsung-soc=40vger.kernel.org;=20linux-arm-=0D=0A>=20kernel=40list=
+s.infradead.org;=20linux-kernel=40vger.kernel.org=0D=0A>=20Subject:=20Re:=
+=20=5BPATCH=20v4=205/5=5D=20arm64:=20dts:=20Add=20node=20for=20ufs=20exynos=
+7=0D=0A>=20=0D=0A>=20On=20Sat,=202020-04-04=20at=2021:33=20+0200,=20Pawe=C5=
+=82=20Chmiel=20wrote:=0D=0A>=20>=20On=20Sat,=202020-04-04=20at=2023:45=20+0=
+530,=20Alim=20Akhtar=20wrote:=0D=0A>=20>=20Hi=20Alim,=0D=0A>=20>=20>=20Hi=
+=20Pawel,=0D=0A>=20>=20>=0D=0A>=20>=20>=20>=20-----Original=20Message-----=
+=0D=0A>=20>=20>=20>=20From:=20Pawe=C5=82=20Chmiel=20<pawel.mikolaj.chmiel=
+=40gmail.com>=0D=0A>=20>=20>=20>=20Sent:=2003=20April=202020=2022:22=0D=0A>=
+=20>=20>=20>=20To:=20Alim=20Akhtar=20<alim.akhtar=40samsung.com>;=20robh+dt=
+=40kernel.org;=0D=0A>=20>=20>=20>=20devicetree=40vger.kernel.org;=20linux-s=
+csi=40vger.kernel.org=0D=0A>=20>=20>=20>=20Cc:=20krzk=40kernel.org;=20avri.=
+altman=40wdc.com;=0D=0A>=20>=20>=20>=20martin.petersen=40oracle.com;=20kwma=
+d.kim=40samsung.com;=0D=0A>=20>=20>=20>=20stanley.chu=40mediatek.com;=20can=
+g=40codeaurora.org;=0D=0A>=20>=20>=20>=20linux-samsung-soc=40vger.kernel.or=
+g;=20linux-arm-=0D=0A>=20>=20>=20>=20kernel=40lists.infradead.org;=20linux-=
+kernel=40vger.kernel.org=0D=0A>=20>=20>=20>=20Subject:=20Re:=20=5BPATCH=20v=
+4=205/5=5D=20arm64:=20dts:=20Add=20node=20for=20ufs=20exynos7=0D=0A>=20>=20=
+>=20>=0D=0A>=20>=20>=20>=20Hi=20Alim=0D=0A>=20>=20>=20>=0D=0A>=20>=20>=20>=
+=20Looking=20at=20vendor=20sources,=20my=20device=20is=20using=20the=20same=
+=20gpios=20for=0D=0A>=20>=20>=20>=20urfs_rst_n=20and=20ufs_refclk_out=20lik=
+e=20Espresso=20(with=20one=20difference=20-=0D=0A>=20>=20>=20>=20ufs_rst_n=
+=20shouldn't=20be=20pulled=20up).=0D=0A>=20>=20>=20>=0D=0A>=20>=20>=20>=20A=
+bout=20regulators=20(it=20would=20be=20easier=20if=20dts=20would=20have=20a=
+ll=20regulators).=0D=0A>=20>=20>=20>=20It's=20also=20using=20s2mps15=20as=
+=20Espresso,=20but=20it=20vendor=20dts=20had=20only=208=0D=0A>=20>=20>=20>=
+=20(of=0D=0A>=20>=20>=20>=2010=20possible=20bucks,=20one=20missing=20was=20=
+for=20UFS)=20and=2014=20ldos=20(of=2027=0D=0A>=20>=20>=20>=20possible),=20w=
+here=20almost=20all=20rails=20are=20connected=20to=20something.=0D=0A>=20>=
+=20>=20>=0D=0A>=20>=20>=20>=20I'm=20wondering=20how=20it's=20working=20on=
+=20Espresso,=20because=20when=20adding=0D=0A>=20>=20>=20>=20correct=20regul=
+ators=20for=20ufs=20(vccq=20=3D=20buck10=20from=20s2mps15,=20always=0D=0A>=
+=20>=20>=20>=20enabled=20for=20testing=20plus=20vccq2=20and=20vccq=20=3D=20=
+two=20regulators=20enabled=0D=0A>=20>=20>=20>=20by=20one=20gpio,=20enabled=
+=20at=20boot=20by=20firmware),=20ufs=20wasn't=20still=0D=0A>=20>=20>=20>=20=
+working=20because=20it=20was=20then=20failing=20at=20defer=20probe=20(s2mps=
+15=20was=0D=0A>=20>=20>=20>=20probed=20after=20ufs)=0D=0A>=20>=20>=20>=0D=
+=0A>=20>=20>=20>=20=5B=20=20=20=200.962482=5D=20exynos-ufshc=2015570000.ufs=
+:=20ufshcd_get_vreg:=20vccq=20get=0D=0A>=20>=20>=20>=20failed,=20err=3D-517=
+=0D=0A>=20>=20>=20>=0D=0A>=20>=20>=20As=20I=20said,=20this=20is=20very=20sp=
+ecific=20to=20the=20board,=20on=20Espresso=20we=20have=20LDO12=0D=0A>=20con=
+nected=20to=20UFS_RESETn.=0D=0A>=20>=20>=20Either=20make=20all=20of=20them=
+=20as=20always-on,=20or=20just=20disabled=20s2mps15=0D=0A>=20>=20>=20(defau=
+lt=20voltage=20supply=20should=20be=20ok,=20unless=20bootloader=20on=20your=
+=0D=0A>=20>=20>=20board=20does=20have=20messed=20too=20much=20with=20PMIC)=
+=0D=0A>=20>=20>=0D=0A>=20>=20>=20>=20After=20that=20boot=20would=20just=20s=
+top/hang.=0D=0A>=20>=20>=20>=0D=0A>=20>=20>=20>=20After=20making=20a=20=22d=
+irty=20fix=22=20by=20making=20s2mps15=20regulator=20driver=20use=0D=0A>=20>=
+=20>=20>=20subsys_initcall=20(like=20in=20vendor=20sources)=20and=20ufs=20l=
+ate_initcall=20(to=0D=0A>=20>=20>=20>=20give=20it=20more=20time=20to=20setu=
+p=20and=20get=20it=20working=20and=20solve=20it=20later),=0D=0A>=20>=20>=20=
+>=20i=20had=20to=20mark=20following=20clocks=20as=20CLK_IGNORE_UNUSED=20to=
+=20be=20able=20to=0D=0A>=20>=20>=20>=20bring=20link=20up=20(it=20replicates=
+=20setting=20done=20by=20vendor=20kernel,=20which=0D=0A>=20>=20>=20>=20enab=
+les=20them=20on=20boot):=0D=0A>=20>=20>=20>=20-=20=22phyclk_ufs20_rx1_symbo=
+l_user=22=0D=0A>=20>=20>=20>=20-=20=22phyclk_ufs20_rx0_symbol_user=22=0D=0A=
+>=20>=20>=20>=20-=20=22phyclk_ufs20_tx0_symbol_user=22=0D=0A>=20>=20>=20>=
+=0D=0A>=20>=20>=20Coming=20to=20these=20clocks,=20all=20these=20are=20suppl=
+ied=20by=20default,=20my=20best=0D=0A>=20>=20>=20guess=20is=20since=20you=
+=20are=20using=20an=20actual=20product=20(S6=20edge),=20they=20might=20have=
+=0D=0A>=20optimized=20for=20power=20saving=20And=20most=20likely=20all=20cl=
+ock=20might=20be=20=20gated=20initially.=20In=0D=0A>=20my=20case=20all=20ar=
+e=20set=20to=20default.=0D=0A>=20>=20>=20I=20have=20attached=20a=20small=20=
+change=20in=20the=20exynos7=20dts=20and=20phy=20driver=20clock=0D=0A>=20han=
+dling,=20please=20try=20this=20attached=20patch=20and=20let=20me=20know=20i=
+f=20this=20helps=20in=20removing=0D=0A>=20some=20of=20your=20hacks.=0D=0A>=
+=20>=20>=20In=20the=20later=20SoCs=20these=20clocks=20are=20not=20in=20this=
+=20form,=20so=20I=20didn't=20included=20in=20my=0D=0A>=20current=20patch=20=
+set,=20If=20this=20works=20for=20your,=20will=20add=20as=20an=20optional=20=
+for=0D=0A>=20exynos7/7420.=0D=0A>=20>=20>=20I=20also=20assume=20you=20are=
+=20using=20clk-exynos7.c=20and=20my=20posted=20ufs=20driver.=0D=0A>=20>=20Y=
+es,=20i'm=20using=20clk-exynos7=20(and=20other=20exynos7=20drivers/dts/etc)=
+.=0D=0A>=20>=20It=20would=20be=20great=20if=20someone=20could=20say=20how=
+=20exynos7=20and=20exynos7420=20are=0D=0A>=20>=20similar.=20For=20now=20it=
+=20looks=20like=20that=20only=20difference=20is=20that=20exynos7=0D=0A>=20>=
+=20has=20only=204=20cores=20(a57)=20where=207420=20has=204xa53=20+=204xa57.=
+=0D=0A>=20>=20It=20would=20be=20very=20valuable=20information=20for=20me=20=
+so=20i=20could=20know=20how=20much=0D=0A>=20>=20i=20could=20reuse=20my=20de=
+vice.=0D=0A>=20>=20>=20>=20Now=20it's=20able=20to=20bring=20both=20device=
+=20and=20link,=20but=20it=20fails=20at=0D=0A>=20>=20>=20>=20ufshcd_uic_chan=
+ge_pwr_mode.=0D=0A>=20>=20>=20>=0D=0A>=20>=20>=20Can=20you=20please=20use=
+=20the=20exact=20ufs=20and=20ufs-phy=20device=20node=20as=20in=20my=20patch=
+?=0D=0A>=20>=20With=20Your=20patch=20+=20removed=20my=20changes=20to=20cloc=
+ks=20(removed=20fix=20for=20wrong=0D=0A>=20>=20clock=20order=20in=20dts=20+=
+=20removed=20CLK_IGNORE_UNUSED=20from=20symbol=20clocks=20in=0D=0A>=20>=20c=
+lk-exynos7)=20it's=20finally=20able=20to=20detect=20my=20UFS=20device=21=21=
+=0D=0A>=20>=0D=0A=0D=0AWow,=20great=20to=20know=20that=20UFS=20device=20sta=
+rted=20working=20for=20you=20on=20S6.=0D=0A=0D=0A>=20>=20(but=20of=20fails=
+=20later...with=20constant=20error=20spam=20in=20kernel=20log).=0D=0A>=20>=
+=0D=0A>=20>=20=5B=20=20=20=201.383481=5D=20exynos-ufshc=2015570000.ufs:=20u=
+fshcd_populate_vreg:=20Unable=0D=0A>=20>=20to=20find=20vdd-hba-supply=20reg=
+ulator,=20assuming=20enabled=0D=0A>=20>=20=5B=20=20=20=201.390060=5D=20exyn=
+os-ufshc=2015570000.ufs:=20ufshcd_populate_vreg:=20unable=0D=0A>=20>=20to=
+=20find=20vcc-max-microamp=0D=0A>=20>=20=5B=20=20=20=201.398465=5D=20exynos=
+-ufshc=2015570000.ufs:=20ufshcd_populate_vreg:=20unable=0D=0A>=20>=20to=20f=
+ind=20vccq-max-microamp=0D=0A>=20>=20=5B=20=20=20=201.406968=5D=20exynos-uf=
+shc=2015570000.ufs:=20ufshcd_populate_vreg:=20unable=0D=0A>=20>=20to=20find=
+=20vccq2-max-microamp=0D=0A>=20>=20=5B=20=20=20=201.415569=5D=20exynos-ufsh=
+c=2015570000.ufs:=20ufshcd_init_clocks:=20clk:=0D=0A>=20>=20core_clk,=20rat=
+e:=20100000000=0D=0A>=20>=20=5B=20=20=20=201.423715=5D=20exynos-ufshc=20155=
+70000.ufs:=20ufshcd_init_clocks:=20clk:=0D=0A>=20>=20sclk_unipro_main,=20ra=
+te:=20167000000=0D=0A>=20>=20=5B=20=20=20=201.432569=5D=20exynos-ufshc=2015=
+570000.ufs:=20__ufshcd_setup_clocks:=20clk:=0D=0A>=20>=20core_clk=20enabled=
+=0D=0A>=20>=20=5B=20=20=20=201.440205=5D=20exynos-ufshc=2015570000.ufs:=20_=
+_ufshcd_setup_clocks:=20clk:=0D=0A>=20>=20sclk_unipro_main=20enabled=0D=0A>=
+=20>=20=5B=20=20=20=201.449613=5D=20scsi=20host0:=20ufshcd=0D=0A>=20>=20=5B=
+=20=20=20=201.452179=5D=20samsung-ufs-phy=2015571800.ufs-phy:=20MPHY=20ref_=
+clk_rate=20=3D=0D=0A>=20>=2026000000=0D=0A>=20>=20=5B=20=20=20=201.458448=
+=5D=20samsung-ufs-phy=2015571800.ufs-phy:=20MPHY=0D=0A>=20>=20ref_parent_cl=
+k_rate=20=3D=2026000000=0D=0A>=20>=20=5B=20=20=20=201.487288=5D=20exynos-uf=
+shc=2015570000.ufs:=20ufshcd_print_pwr_info:=5BRX,=0D=0A>=20>=20TX=5D:=20ge=
+ar=3D=5B1,=201=5D,=20lane=5B1,=201=5D,=20pwr=5BSLOWAUTO_MODE,=20SLOWAUTO_MO=
+DE=5D,=0D=0A>=20rate=0D=0A>=20>=20=3D=0D=0A>=20>=200=0D=0A>=20>=20=5B=20=20=
+=20=202.025569=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd=
+041=20val=0D=0A>=20>=200x1fff=20error=20code=201=0D=0A>=20>=20=5B=20=20=20=
+=202.025715=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd041=
+=20val=0D=0A>=20>=200x1fff=20failed=200=20retries=0D=0A>=20>=20=5B=20=20=20=
+=202.025880=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd042=
+=20val=0D=0A>=20>=200xffff=20error=20code=201=0D=0A>=20>=20=5B=20=20=20=202=
+.027354=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd042=20v=
+al=0D=0A>=20>=200xffff=20failed=200=20retries=0D=0A>=20>=20=5B=20=20=20=202=
+.035583=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd043=20v=
+al=0D=0A>=20>=200x7fff=20error=20code=201=0D=0A>=20>=20=5B=20=20=20=202.043=
+465=5D=20exynos-ufshc=2015570000.ufs:=20dme-set:=20attr-id=200xd043=20val=
+=0D=0A>=20>=200x7fff=20failed=200=20retries=0D=0A>=20>=20=5B=20=20=20=202.0=
+54049=5D=20exynos-ufshc=2015570000.ufs:=20Power=20mode=20change=200=20:=20F=
+ast=0D=0A>=20>=20series_B=20G_2=20L_2=0D=0A>=20>=20=5B=20=20=20=202.059261=
+=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_print_pwr_info:=5BRX,=0D=0A>=20=
+>=20TX=5D:=20gear=3D=5B2,=202=5D,=20lane=5B2,=202=5D,=20pwr=5BFAST=20MODE,=
+=20FAST=20MODE=5D,=20rate=20=3D=202=0D=0A>=20>=20=5B=20=20=20=202.071307=5D=
+=20exynos-ufshc=2015570000.ufs:=20ufshcd_init_icc_levels:=0D=0A>=20>=20sett=
+ing=20icc_level=200x0=0D=0A>=20>=20=5B=20=20=20=202.081624=5D=20exynos-ufsh=
+c=2015570000.ufs:=20ufshcd_set_queue_depth:=0D=0A>=20>=20activate=20tcq=20w=
+ith=20queue=20depth=201=0D=0A>=20>=20=5B=20=20=20=202.087576=5D=20scsi=200:=
+0:0:49488:=20scsi_add_lun:=20correcting=20incorrect=0D=0A>=20>=20peripheral=
+=20device=20type=200x0=20for=20W-LUN=200x=20=20=20=20=20=20=20=20=20=20=20=
+=20c150hN=0D=0A>=20>=20=5B=20=20=20=202.098400=5D=20scsi=200:0:0:49488:=20W=
+ell-known=20LUN=20=20=20=20SAMSUNG=20=20KLUBG4G1BD-=0D=0A>=20>=20E0B1=20=20=
+0200=20PQ:=200=20ANSI:=206=0D=0A>=20>=20=5B=20=20=20=202.107585=5D=20exynos=
+-ufshc=2015570000.ufs:=20ufshcd_set_queue_depth:=0D=0A>=20>=20activate=20tc=
+q=20with=20queue=20depth=2016=0D=0A>=20>=20=5B=20=20=20=202.115588=5D=20scs=
+i=200:0:0:49476:=20scsi_add_lun:=20correcting=20incorrect=0D=0A>=20>=20peri=
+pheral=20device=20type=200x0=20for=20W-LUN=200x=20=20=20=20=20=20=20=20=20=
+=20=20=20c144hN=0D=0A>=20>=20=5B=20=20=20=202.126519=5D=20scsi=200:0:0:4947=
+6:=20Well-known=20LUN=20=20=20=20SAMSUNG=20=20KLUBG4G1BD-=0D=0A>=20>=20E0B1=
+=20=200200=20PQ:=200=20ANSI:=206=0D=0A>=20>=20=5B=20=20=20=202.135534=5D=20=
+exynos-ufshc=2015570000.ufs:=20ufshcd_set_queue_depth:=0D=0A>=20>=20activat=
+e=20tcq=20with=20queue=20depth=201=0D=0A>=20>=20=5B=20=20=20=202.143612=5D=
+=20scsi=200:0:0:49456:=20scsi_add_lun:=20correcting=20incorrect=0D=0A>=20>=
+=20peripheral=20device=20type=200x0=20for=20W-LUN=200x=20=20=20=20=20=20=20=
+=20=20=20=20=20c130hN=0D=0A>=20>=20=5B=20=20=20=202.154543=5D=20scsi=200:0:=
+0:49456:=20Well-known=20LUN=20=20=20=20SAMSUNG=20=20KLUBG4G1BD-=0D=0A>=20>=
+=20E0B1=20=200200=20PQ:=200=20ANSI:=206=0D=0A>=20>=20=5B=20=20=20=202.16359=
+7=5D=20exynos-ufshc=2015570000.ufs:=20ufshcd_set_queue_depth:=0D=0A>=20>=20=
+activate=20tcq=20with=20queue=20depth=2016=0D=0A>=20>=20=5B=20=20=20=202.17=
+1721=5D=20scsi=200:0:0:0:=20Direct-Access=20=20=20=20=20SAMSUNG=20=20KLUBG4=
+G1BD-=0D=0A>=20>=20E0B1=20=200200=20PQ:=200=20ANSI:=206=0D=0A>=20>=20=5B=20=
+=20=20=202.180352=5D=20exynos-ufshc=2015570000.ufs:=20OCS=20error=20from=20=
+controller=20=3D=207=0D=0A>=20>=20for=20tag=200=0D=0A>=20>=20=5B=20=20=20=
+=202.186921=5D=20host_regs:=2000000000:=200383ff0f=2000000000=2000000200=20=
+00000000=0D=0A>=20>=20=5B=20=20=20=202.193230=5D=20host_regs:=2000000010:=
+=2000000101=2000007fce=2000000c96=2000000000=0D=0A>=20>=20=5B=20=20=20=202.=
+199565=5D=20host_regs:=2000000020:=2000000000=2000030e75=2000000000=2000000=
+000=0D=0A>=20>=20=5B=20=20=20=202.205899=5D=20host_regs:=2000000030:=200000=
+010f=2000000000=2080000010=2000000000=0D=0A>=20>=20=5B=20=20=20=202.212234=
+=5D=20host_regs:=2000000040:=2000000000=2000000000=2000000000=2000000000=0D=
+=0A>=20>=20=5B=20=20=20=202.218568=5D=20host_regs:=2000000050:=20f8d64000=
+=2000000000=2000000000=2000000000=0D=0A>=20>=20=5B=20=20=20=202.224903=5D=
+=20host_regs:=2000000060:=2000000001=2000000000=2000000000=2000000000=0D=0A=
+>=20>=20=5B=20=20=20=202.231237=5D=20host_regs:=2000000070:=20f8da2000=2000=
+000000=2000000000=2000000000=0D=0A>=20>=20=5B=20=20=20=202.237572=5D=20host=
+_regs:=2000000080:=2000000001=2000000000=2000000000=2000000000=0D=0A>=20>=
+=20=5B=20=20=20=202.243907=5D=20host_regs:=2000000090:=2000000002=209519000=
+0=2000000000=2000000000=0D=0A>=20>=20=5B=20=20=20=202.250242=5D=20exynos-uf=
+shc=2015570000.ufs:=20hba->ufs_version=20=3D=200x200,=0D=0A>=20>=20hba->cap=
+abilities=20=3D=200x383ff0f=0D=0A>=20>=0D=0A>=20>=20Full=20bootlog=0D=0A>=
+=20>=20https://protect2.fireeye.com/url?k=3Dedbae146-b069b8f8-edbb6a09-0cc4=
+7a31=0D=0A>=20>=20ba82-=0D=0A>=208b13b1e4caed34d7&q=3D1&u=3Dhttps%3A%2F%2Fg=
+ist.github.com%2FPabloPL%2F=0D=0A>=20>=200bcb24492f4ab6e9703c2a4ea20ceb18=
+=20kernel=20source:=0D=0A>=20>=20https://protect2.fireeye.com/url?k=3D75038=
+dec-28d0d452-750206a3-0cc47a31=0D=0A>=20>=20ba82-=0D=0A>=204c366bec6fc01e64=
+&q=3D1&u=3Dhttps%3A%2F%2Fgithub.com%2FPabloPL%2Flinux=0D=0A>=20>=20%2Ftree%=
+2Fufs-mainline=20dts=20file:=20exynos7-zeroflt.dts=20(it=20should=20be=0D=
+=0A>=20>=20zerolt,=20but=20will=20be=20fixed/changed=20later).=0D=0A>=20=0D=
+=0A>=20Actually,=20after=20waiting=20enough=20time=20(about=2015=20or=20eve=
+n=20more=20sec=20of=20that=20error=0D=0A>=20=22spam=22),=20was=20able=20to=
+=20mount=20partitions=20and=20manipulate=20files=20there.=0D=0A>=20=0D=0AYo=
+u=20need=20below=20patch=20and=20=20a=20change=20in=20the=20ufs=20driver:=
+=0D=0Ahttps://www.spinics.net/lists/linux-scsi/msg138501.html=0D=0A=0D=0AAn=
+d=0D=0A=0D=0Adiff=20--git=20a/drivers/scsi/ufs/ufs-exynos.c=20b/drivers/scs=
+i/ufs/ufs-exynos.c=0D=0Aindex=20ce2c3d674e4b..c6332deff03a=20100644=0D=0A--=
+-=20a/drivers/scsi/ufs/ufs-exynos.c=0D=0A+++=20b/drivers/scsi/ufs/ufs-exyno=
+s.c=0D=0A=40=40=20-1359,7=20+1359,8=20=40=40=20struct=20exynos_ufs_drv_data=
+=20exynos_ufs_drvs=20=3D=20=7B=0D=0A=20=20=20=20=20=20=20=20.quirks=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=3D=20UFSHCD_QUIRK_PRDT_BYTE_G=
+RAN=20=7C=0D=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR=
+=20=7C=0D=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20UFSHCI_QUIRK_BROKEN_HCE=20=7C=0D=0A-=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR,=0D=0A+=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR=20=7C=0D=0A+=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR,=0D=0A=20=20=20=20=20=20=20=
+=20.opts=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=3D=20EXYN=
+OS_UFS_OPT_HAS_APB_CLK_CTRL=20=7C=0D=0A=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20EXYNOS_UF=
+S_OPT_BROKEN_AUTO_CLK_CTRL=20=7C=0D=0A=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20EXYNOS_UF=
+S_OPT_BROKEN_RX_SEL_IDX,=0D=0A=0D=0A>=20So=20for=20me=20the=20only=20issue=
+=20to=20solve=20are=20defered=20probe=20when=20regulators=20are=20not=20yet=
+=0D=0A>=20found=20(for=20example=20when=20pmic=20is=20probed=20after=20ufs)=
+=20and=20not=20sure=20what=20about=20that=0D=0A>=20errors=20(despite=20work=
+ing=20ufs).=0D=0A>=20=0D=0AThe=20error=20will=20go=20away=20with=20the=20ab=
+ove=20changes,=20about=20regulators,=20you=20need=20to=20figure=20it=20out,=
+=20as=20I=20am=20not=20aware=20of=20Galaxy=20S6=20PMIC=20schemes.=0D=0AI=20=
+also=20seek=20your=20Tested-by=20tag=20on=20these=20patches=20.=0D=0A=0D=0A=
+>=20Thanks=20for=20all=0D=0A=0D=0AThanks=20for=20helping=20in=20testing.=0D=
+=0A>=20>=0D=0A>=20>=20Thanks=0D=0A=0D=0A=0D=0A
