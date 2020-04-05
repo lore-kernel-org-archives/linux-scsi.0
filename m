@@ -2,224 +2,324 @@ Return-Path: <SRS0=3U4t=5V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD40C2BA1B
-	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 02:02:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E02F8C2BA1A
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 08:11:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99D5D2070E
-	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 02:02:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586052134;
-	bh=owsYX0CKuVeeqB/rvClTpw5x1mx6Zy5Im9lldwCC0DQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=tvYTgvCioSz2RQpdr9CI4XJQijpOi9jy7xUsBSNmrCywYgWhzPo7gs7KEHrL1RJ9G
-	 cnpBvNWEEPcwDD/uTg89nTObxsO927Djd93gMPR/klB6i24aAH5Fo4ZPOmMOuxfx42
-	 DgohbIquBlXL0meFE0Lc6mv30Fvib5OID4u/sVQI=
+	by mail.kernel.org (Postfix) with ESMTP id 9D88320780
+	for <linux-scsi@archiver.kernel.org>; Sun,  5 Apr 2020 08:11:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l1ID+gkX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbgDECCM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 4 Apr 2020 22:02:12 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:32781 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726307AbgDECCM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Apr 2020 22:02:12 -0400
-Received: by mail-io1-f67.google.com with SMTP id o127so11993786iof.0;
-        Sat, 04 Apr 2020 19:02:11 -0700 (PDT)
+        id S1726407AbgDEILL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 5 Apr 2020 04:11:11 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:37796 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726390AbgDEILK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Apr 2020 04:11:10 -0400
+Received: by mail-lf1-f68.google.com with SMTP id t11so9233565lfe.4;
+        Sun, 05 Apr 2020 01:11:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=oNb5v/JEVQtuTn+Z8yj4a1y6rZZiHkDPS2eZvhDzEcU=;
+        b=l1ID+gkXoXk8kEwhxh/5AqNOJ+yVC3Z1bUgzRb9A0ZPfGWpAZ+lMP0rNiiXdUv0CGP
+         UM8Iv0ZX7UaZFmvsqvs9+HHx0yRxWfLMPolL+Iqhwo6i+OuQYZo/jvt8Hip3cRCCXZr+
+         kHGuTpG9oAcHNsnlAN3qxLzKhobyY7nNfZpxeZ7awsFi3H1K/03+1aK2E2WOMo9GTsS1
+         nmWuTrzfVZa2yFjFg5mGdO7skz9jCBiL5VlES0zYH8oLvgJtZAi7iBWMOWGRwWrm9T98
+         UHxoBbs9uQVSwXKEyvWj46wn5/IvFCBxwrjj+kkHXzSoZ1EzGwCmN4xswmdjQXK+AWAx
+         NGFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=4KE1ajm7Pr9JZRShONsIYV51HCcbzA2Ep3Y98R0uXF0=;
-        b=p2kaPmcAldHpOL99t6U+L1FwDAnTlKtTVOZUQPej+Za9wQAKU6qrbVZcKuRsYqLoy7
-         78HNHhRcQ3zoDHbUSSZF2+zjqwMlGRsWx6qWtUpStydriP31CVqTMHVvxZBFl3NQUg86
-         Uq/d7rR2NTOFVqnbyXoUa8CDrSb5+rz7hoO5z7lW5tYjyxTgzHbd8ZnB4x21eRgdNX6E
-         Lm3++nASJe4mt3q0km/0uSVB18rtOgCRifDji4wlapIGHeHTw9FiO9serZ20mDlry10h
-         4du+fHR3+/9GlHGAAe3dbsRhYPaQK9x+THWqvN4P0xz6Zlb5m2dvI4Og7WR5ynCd83Hx
-         em9w==
-X-Gm-Message-State: AGi0PubRbhCNjYaz8HnpuyocGDUkznu8dMYpq4Uwf3AOtF1mUwuZEDqw
-        PekQwGA2xQPjJGcpiucfqw==
-X-Google-Smtp-Source: APiQypJBAkbiTizGN9DKt26SkLi+oMNVXz4uYVjtoFP0Ee1EplO0IkrN+ydU296Tom/Bm7vDZfPvpA==
-X-Received: by 2002:a05:6638:155:: with SMTP id y21mr713152jao.79.1586052130726;
-        Sat, 04 Apr 2020 19:02:10 -0700 (PDT)
-Received: from rob-hp-laptop ([64.188.179.250])
-        by smtp.gmail.com with ESMTPSA id r10sm3871386iom.42.2020.04.04.19.02.09
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=oNb5v/JEVQtuTn+Z8yj4a1y6rZZiHkDPS2eZvhDzEcU=;
+        b=iWlUh8Cf7drHMnHoOW0/xKtMrN9XdPQoJtLLaINHtcOw23DRHvH3uOxomoChCGTCxp
+         UMza0GZKpv0JR5G0mx4v4Vr9ad5+6uTKXCdpqNBJocBM1bOw6G6A6xs+bGlglVGbp0y9
+         hUW/KxVBQbz5WejqIQvA0oGS4ntA6153RhuQXLEY8NJ5hfER5WJbUnjaN9Rx8r7jWi7O
+         tCMalzprYJTYUb/5NhHr+xiAA5dNODDKFp8CPAX1ISNYT0iAxcuiIukKzCs5er+tkH1s
+         Rvp2RNtw1Bs9rkVNMfBeGi33AZI0qgzFgrvanyihZ2pSJHEsSNu879s/WdB1OfvIC34k
+         X2kg==
+X-Gm-Message-State: AGi0PubBeCI0FJujaIA6ylFcIQw8Xu0/UhhYo4mG+bkvzRG1wUvqUhZF
+        k0ouvMA+9TXTH90j6PSl/2lxWOon
+X-Google-Smtp-Source: APiQypJgmXpH5wr5JUKJWKrpxZ3B/kXgTNDx95RVlsH/xHTsjXWjIq9HfiniFpB+2kDCHjNa/EVOYQ==
+X-Received: by 2002:a19:9109:: with SMTP id t9mr6569014lfd.10.1586074264489;
+        Sun, 05 Apr 2020 01:11:04 -0700 (PDT)
+Received: from pablo-laptop ([2a02:a315:5445:5300:81e7:24d:4826:7491])
+        by smtp.googlemail.com with ESMTPSA id z23sm7894833ljz.52.2020.04.05.01.11.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Apr 2020 19:02:10 -0700 (PDT)
-Received: (nullmailer pid 536 invoked by uid 1000);
-        Sun, 05 Apr 2020 02:02:08 -0000
-Date:   Sat, 4 Apr 2020 20:02:08 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
-        krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
+        Sun, 05 Apr 2020 01:11:03 -0700 (PDT)
+Message-ID: <1207f5d5b8fd4a60d6835ca8baca7c8547635bbc.camel@gmail.com>
+Subject: Re: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
+From:   =?UTF-8?Q?Pawe=C5=82?= Chmiel <pawel.mikolaj.chmiel@gmail.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>, robh+dt@kernel.org,
+        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
         kwmad.kim@samsung.com, stanley.chu@mediatek.com,
         cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 3/5] Documentation: devicetree: ufs: Add DT bindings
- for exynos UFS host controller
-Message-ID: <20200405020208.GA22609@bogus>
+Date:   Sun, 05 Apr 2020 10:11:02 +0200
+In-Reply-To: <000001d60aec$5ef39670$1cdac350$@samsung.com>
 References: <20200327170638.17670-1-alim.akhtar@samsung.com>
- <CGME20200327171418epcas5p4b85bea273e17c05a7edca58f528c435a@epcas5p4.samsung.com>
- <20200327170638.17670-4-alim.akhtar@samsung.com>
+         <CGME20200327171423epcas5p485d227f19e45999ad9b42b21d2864e4a@epcas5p4.samsung.com>
+         <20200327170638.17670-6-alim.akhtar@samsung.com>
+         <ac67cfc3736cf50c716b823a59af878d59b7198f.camel@gmail.com>
+         <000801d60516$823fd890$86bf89b0$@samsung.com>
+         <838a17416b4ed59903ae153e09842ac62584616f.camel@gmail.com>
+         <002e01d605df$af658440$0e308cc0$@samsung.com>
+         <1182150aff8140a82af17979a09c81676c719e2f.camel@gmail.com>
+         <000001d60aad$05e7b6e0$11b724a0$@samsung.com>
+         <17aa7c13a0f5a183158829e9b9af85537a740846.camel@gmail.com>
+         <58f2996c7dfe70b226c5cafbd94d7b02a314d77a.camel@gmail.com>
+         <000001d60aec$5ef39670$1cdac350$@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.1-2 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200327170638.17670-4-alim.akhtar@samsung.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Mar 27, 2020 at 10:36:36PM +0530, Alim Akhtar wrote:
-> This adds Exynos Universal Flash Storage (UFS) Host Controller DT bindings.
-
-Why the inconsistent subject. 'dt-bindings: ...' please.
-
+On Sun, 2020-04-05 at 07:18 +0530, Alim Akhtar wrote:
+Hi Alim
+> Hi Pawel,
 > 
-> Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> ---
->  .../devicetree/bindings/ufs/ufs-exynos.txt    | 104 ++++++++++++++++++
->  1 file changed, 104 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
-
-Use DT schema format. Not sure why you'd do that for one and not the 
-other...
-
+> > -----Original Message-----
+> > From: Paweł Chmiel <pawel.mikolaj.chmiel@gmail.com>
+> > Sent: 05 April 2020 01:56
+> > To: Alim Akhtar <alim.akhtar@samsung.com>; robh+dt@kernel.org;
+> > devicetree@vger.kernel.org; linux-scsi@vger.kernel.org
+> > Cc: krzk@kernel.org; avri.altman@wdc.com; martin.petersen@oracle.com;
+> > kwmad.kim@samsung.com; stanley.chu@mediatek.com;
+> > cang@codeaurora.org; linux-samsung-soc@vger.kernel.org; linux-arm-
+> > kernel@lists.infradead.org; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
+> > 
+> > On Sat, 2020-04-04 at 21:33 +0200, Paweł Chmiel wrote:
+> > > On Sat, 2020-04-04 at 23:45 +0530, Alim Akhtar wrote:
+> > > Hi Alim,
+> > > > Hi Pawel,
+> > > > 
+> > > > > -----Original Message-----
+> > > > > From: Paweł Chmiel <pawel.mikolaj.chmiel@gmail.com>
+> > > > > Sent: 03 April 2020 22:22
+> > > > > To: Alim Akhtar <alim.akhtar@samsung.com>; robh+dt@kernel.org;
+> > > > > devicetree@vger.kernel.org; linux-scsi@vger.kernel.org
+> > > > > Cc: krzk@kernel.org; avri.altman@wdc.com;
+> > > > > martin.petersen@oracle.com; kwmad.kim@samsung.com;
+> > > > > stanley.chu@mediatek.com; cang@codeaurora.org;
+> > > > > linux-samsung-soc@vger.kernel.org; linux-arm-
+> > > > > kernel@lists.infradead.org; linux-kernel@vger.kernel.org
+> > > > > Subject: Re: [PATCH v4 5/5] arm64: dts: Add node for ufs exynos7
+> > > > > 
+> > > > > Hi Alim
+> > > > > 
+> > > > > Looking at vendor sources, my device is using the same gpios for
+> > > > > urfs_rst_n and ufs_refclk_out like Espresso (with one difference -
+> > > > > ufs_rst_n shouldn't be pulled up).
+> > > > > 
+> > > > > About regulators (it would be easier if dts would have all regulators).
+> > > > > It's also using s2mps15 as Espresso, but it vendor dts had only 8
+> > > > > (of
+> > > > > 10 possible bucks, one missing was for UFS) and 14 ldos (of 27
+> > > > > possible), where almost all rails are connected to something.
+> > > > > 
+> > > > > I'm wondering how it's working on Espresso, because when adding
+> > > > > correct regulators for ufs (vccq = buck10 from s2mps15, always
+> > > > > enabled for testing plus vccq2 and vccq = two regulators enabled
+> > > > > by one gpio, enabled at boot by firmware), ufs wasn't still
+> > > > > working because it was then failing at defer probe (s2mps15 was
+> > > > > probed after ufs)
+> > > > > 
+> > > > > [    0.962482] exynos-ufshc 15570000.ufs: ufshcd_get_vreg: vccq get
+> > > > > failed, err=-517
+> > > > > 
+> > > > As I said, this is very specific to the board, on Espresso we have LDO12
+> > connected to UFS_RESETn.
+> > > > Either make all of them as always-on, or just disabled s2mps15
+> > > > (default voltage supply should be ok, unless bootloader on your
+> > > > board does have messed too much with PMIC)
+> > > > 
+> > > > > After that boot would just stop/hang.
+> > > > > 
+> > > > > After making a "dirty fix" by making s2mps15 regulator driver use
+> > > > > subsys_initcall (like in vendor sources) and ufs late_initcall (to
+> > > > > give it more time to setup and get it working and solve it later),
+> > > > > i had to mark following clocks as CLK_IGNORE_UNUSED to be able to
+> > > > > bring link up (it replicates setting done by vendor kernel, which
+> > > > > enables them on boot):
+> > > > > - "phyclk_ufs20_rx1_symbol_user"
+> > > > > - "phyclk_ufs20_rx0_symbol_user"
+> > > > > - "phyclk_ufs20_tx0_symbol_user"
+> > > > > 
+> > > > Coming to these clocks, all these are supplied by default, my best
+> > > > guess is since you are using an actual product (S6 edge), they might have
+> > optimized for power saving And most likely all clock might be  gated initially. In
+> > my case all are set to default.
+> > > > I have attached a small change in the exynos7 dts and phy driver clock
+> > handling, please try this attached patch and let me know if this helps in removing
+> > some of your hacks.
+> > > > In the later SoCs these clocks are not in this form, so I didn't included in my
+> > current patch set, If this works for your, will add as an optional for
+> > exynos7/7420.
+> > > > I also assume you are using clk-exynos7.c and my posted ufs driver.
+> > > Yes, i'm using clk-exynos7 (and other exynos7 drivers/dts/etc).
+> > > It would be great if someone could say how exynos7 and exynos7420 are
+> > > similar. For now it looks like that only difference is that exynos7
+> > > has only 4 cores (a57) where 7420 has 4xa53 + 4xa57.
+> > > It would be very valuable information for me so i could know how much
+> > > i could reuse my device.
+> > > > > Now it's able to bring both device and link, but it fails at
+> > > > > ufshcd_uic_change_pwr_mode.
+> > > > > 
+> > > > Can you please use the exact ufs and ufs-phy device node as in my patch?
+> > > With Your patch + removed my changes to clocks (removed fix for wrong
+> > > clock order in dts + removed CLK_IGNORE_UNUSED from symbol clocks in
+> > > clk-exynos7) it's finally able to detect my UFS device!!
+> > > 
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-exynos.txt b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
-> new file mode 100644
-> index 000000000000..08e2d1497b1b
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-exynos.txt
-> @@ -0,0 +1,104 @@
-> +* Exynos Universal Flash Storage (UFS) Host Controller
-> +
-> +UFSHC nodes are defined to describe on-chip UFS host controllers.
-> +Each UFS controller instance should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible name, contains "samsung,exynos7-ufs"
-> +- interrupts        : <interrupt mapping for UFS host controller IRQ>
-> +- reg               : Should contain HCI, vendor specific, UNIPRO and
-> +		      UFS protector address space
-> +- reg-names	    : "hci", "vs_hci", "unipro", "ufsp";
-> +
-> +Optional properties:
-> +- vdd-hba-supply        : phandle to UFS host controller supply regulator node
-> +- vcc-supply            : phandle to VCC supply regulator node
-> +- vccq-supply           : phandle to VCCQ supply regulator node
-> +- vccq2-supply          : phandle to VCCQ2 supply regulator node
-> +- vcc-supply-1p8        : For embedded UFS devices, valid VCC range is 1.7-1.95V
-> +                          or 2.7-3.6V. This boolean property when set, specifies
-> +			  to use low voltage range of 1.7-1.95V. Note for external
-> +			  UFS cards this property is invalid and valid VCC range is
-> +			  always 2.7-3.6V.
-
-The supply for vcc-supply should be restricted to the valid range and 
-this is not needed.
-
-> +- vcc-max-microamp      : specifies max. load that can be drawn from vcc supply
-> +- vccq-max-microamp     : specifies max. load that can be drawn from vccq supply
-> +- vccq2-max-microamp    : specifies max. load that can be drawn from vccq2 supply
-
-How is this information useful?
-
-> +- <name>-fixed-regulator : boolean property specifying that <name>-supply is a fixed regulator
-
-No need for this. Look up the phandle and check supply's node if you 
-want to know this.
-
-> +
-> +- clocks                : List of phandle and clock specifier pairs
-> +- clock-names           : List of clock input name strings sorted in the same
-> +                          order as the clocks property.
-> +			  "core", "sclk_unipro_main", "ref" and ref_parent
-> +
-> +- freq-table-hz		: Array of <min max> operating frequencies stored in the same
-> +			  order as the clocks property. If this property is not
-> +			  defined or a value in the array is "0" then it is assumed
-> +			  that the frequency is set by the parent clock or a
-> +			  fixed rate clock source.
-> +- pclk-freq-avail-range : specifies available frequency range(min/max) for APB clock
-> +- ufs,pwr-attr-mode : specifies mode value for power mode change, possible values are
-> +			"FAST", "SLOW", "FAST_auto" and "SLOW_auto"
-
-Anything before the ',' is considered a vendor prefix and 'ufs' is not a 
-vendor.
-
-If these are standard UFS properties, then they should be documented in 
-a common UFS binding. On the flip side, none of the other UFS bindings 
-have needed these properties, so why do you?
-
-> +- ufs,pwr-attr-lane : specifies lane count value for power mode change
-> +		      allowed values are 1 or 2
-> +- ufs,pwr-attr-gear : specifies gear count value for power mode change
-> +		      allowed values are 1 or 2
-> +- ufs,pwr-attr-hs-series : specifies HS rate series for power mode change
-> +			   can be one of "HS_rate_b" or "HS_rate_a"
-> +- ufs,pwr-local-l2-timer : specifies array of local UNIPRO L2 timer values
-> +			   3 timers supported
-> +			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
-> +- ufs,pwr-remote-l2-timer : specifies array of remote UNIPRO L2 timer values
-> +			   3 timers supported
-> +			   <FC0ProtectionTimeOutVal,TC0ReplayTimeOutVal, AFC0ReqTimeOutVal>
-> +- ufs-rx-adv-fine-gran-sup_en : specifies support of fine granularity of MPHY,
-> +			      this is a boolean property.
-> +- ufs-rx-adv-fine-gran-step : specifies granularity steps of MPHY,
-> +			      allowed step size is 0 to 3
-> +- ufs-rx-adv-min-activate-time-cap : specifies rx advanced minimum activate time of MPHY
-> +				     range is 1 to 9
-> +- ufs-pa-granularity : specifies Granularity for PA_TActivate and PA_Hibern8Time
-> +- ufs-pa-tacctivate : specifies time to wake-up remote M-RX
-> +- ufs-pa-hibern8time : specifies minimum time to wait in HIBERN8 state
-> +
-> +Note: If above properties are not defined it can be assumed that the supply
-> +regulators or clocks are always on.
-> +
-> +Example:
-> +	ufshc@0x15570000 {
-> +		compatible = "samsung,exynos7-ufs";
-> +		reg = <0x15570000 0x100>,
-> +		      <0x15570100 0x100>,
-> +		      <0x15571000 0x200>,
-> +		      <0x15572000 0x300>;
-> +		reg-names = "hci", "vs_hci", "unipro", "ufsp";
-> +		interrupts = <0 200 0>;
-> +
-> +		vdd-hba-supply = <&xxx_reg0>;
-> +		vdd-hba-fixed-regulator;
-> +		vcc-supply = <&xxx_reg1>;
-> +		vcc-supply-1p8;
-> +		vccq-supply = <&xxx_reg2>;
-> +		vccq2-supply = <&xxx_reg3>;
-> +		vcc-max-microamp = 500000;
-> +		vccq-max-microamp = 200000;
-> +		vccq2-max-microamp = 200000;
-> +
-> +		clocks = <&core 0>, <&ref 0>, <&iface 0>;
-> +		clock-names = "core", "sclk_unipro_main", "ref", "ref_parent";
-> +		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>, <0 0>;
-> +
-> +		pclk-freq-avail-range = <70000000 133000000>;
-> +
-> +		ufs,pwr-attr-mode = "FAST";
-> +		ufs,pwr-attr-lane = <2>;
-> +		ufs,pwr-attr-gear = <2>;
-> +		ufs,pwr-attr-hs-series = "HS_rate_b";
-> +		ufs,pwr-local-l2-timer = <8000 28000 20000>;
-> +		ufs,pwr-remote-l2-timer = <12000 32000 16000>;
-> +		ufs-rx-adv-fine-gran-sup_en = <1>;
-> +		ufs-rx-adv-fine-gran-step = <3>;
-> +		ufs-rx-adv-min-activate-time-cap = <9>;
-> +		ufs-pa-granularity = <6>;
-> +		ufs-pa-tacctivate = <6>;
-> +		ufs-pa-hibern8time = <20>;
-> +	};
-> -- 
-> 2.17.1
+> Wow, great to know that UFS device started working for you on S6.
 > 
+> > > (but of fails later...with constant error spam in kernel log).
+> > > 
+> > > [    1.383481] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: Unable
+> > > to find vdd-hba-supply regulator, assuming enabled
+> > > [    1.390060] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: unable
+> > > to find vcc-max-microamp
+> > > [    1.398465] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: unable
+> > > to find vccq-max-microamp
+> > > [    1.406968] exynos-ufshc 15570000.ufs: ufshcd_populate_vreg: unable
+> > > to find vccq2-max-microamp
+> > > [    1.415569] exynos-ufshc 15570000.ufs: ufshcd_init_clocks: clk:
+> > > core_clk, rate: 100000000
+> > > [    1.423715] exynos-ufshc 15570000.ufs: ufshcd_init_clocks: clk:
+> > > sclk_unipro_main, rate: 167000000
+> > > [    1.432569] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
+> > > core_clk enabled
+> > > [    1.440205] exynos-ufshc 15570000.ufs: __ufshcd_setup_clocks: clk:
+> > > sclk_unipro_main enabled
+> > > [    1.449613] scsi host0: ufshcd
+> > > [    1.452179] samsung-ufs-phy 15571800.ufs-phy: MPHY ref_clk_rate =
+> > > 26000000
+> > > [    1.458448] samsung-ufs-phy 15571800.ufs-phy: MPHY
+> > > ref_parent_clk_rate = 26000000
+> > > [    1.487288] exynos-ufshc 15570000.ufs: ufshcd_print_pwr_info:[RX,
+> > > TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE],
+> > rate
+> > > =
+> > > 0
+> > > [    2.025569] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd041 val
+> > > 0x1fff error code 1
+> > > [    2.025715] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd041 val
+> > > 0x1fff failed 0 retries
+> > > [    2.025880] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd042 val
+> > > 0xffff error code 1
+> > > [    2.027354] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd042 val
+> > > 0xffff failed 0 retries
+> > > [    2.035583] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd043 val
+> > > 0x7fff error code 1
+> > > [    2.043465] exynos-ufshc 15570000.ufs: dme-set: attr-id 0xd043 val
+> > > 0x7fff failed 0 retries
+> > > [    2.054049] exynos-ufshc 15570000.ufs: Power mode change 0 : Fast
+> > > series_B G_2 L_2
+> > > [    2.059261] exynos-ufshc 15570000.ufs: ufshcd_print_pwr_info:[RX,
+> > > TX]: gear=[2, 2], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
+> > > [    2.071307] exynos-ufshc 15570000.ufs: ufshcd_init_icc_levels:
+> > > setting icc_level 0x0
+> > > [    2.081624] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
+> > > activate tcq with queue depth 1
+> > > [    2.087576] scsi 0:0:0:49488: scsi_add_lun: correcting incorrect
+> > > peripheral device type 0x0 for W-LUN 0x            c150hN
+> > > [    2.098400] scsi 0:0:0:49488: Well-known LUN    SAMSUNG  KLUBG4G1BD-
+> > > E0B1  0200 PQ: 0 ANSI: 6
+> > > [    2.107585] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
+> > > activate tcq with queue depth 16
+> > > [    2.115588] scsi 0:0:0:49476: scsi_add_lun: correcting incorrect
+> > > peripheral device type 0x0 for W-LUN 0x            c144hN
+> > > [    2.126519] scsi 0:0:0:49476: Well-known LUN    SAMSUNG  KLUBG4G1BD-
+> > > E0B1  0200 PQ: 0 ANSI: 6
+> > > [    2.135534] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
+> > > activate tcq with queue depth 1
+> > > [    2.143612] scsi 0:0:0:49456: scsi_add_lun: correcting incorrect
+> > > peripheral device type 0x0 for W-LUN 0x            c130hN
+> > > [    2.154543] scsi 0:0:0:49456: Well-known LUN    SAMSUNG  KLUBG4G1BD-
+> > > E0B1  0200 PQ: 0 ANSI: 6
+> > > [    2.163597] exynos-ufshc 15570000.ufs: ufshcd_set_queue_depth:
+> > > activate tcq with queue depth 16
+> > > [    2.171721] scsi 0:0:0:0: Direct-Access     SAMSUNG  KLUBG4G1BD-
+> > > E0B1  0200 PQ: 0 ANSI: 6
+> > > [    2.180352] exynos-ufshc 15570000.ufs: OCS error from controller = 7
+> > > for tag 0
+> > > [    2.186921] host_regs: 00000000: 0383ff0f 00000000 00000200 00000000
+> > > [    2.193230] host_regs: 00000010: 00000101 00007fce 00000c96 00000000
+> > > [    2.199565] host_regs: 00000020: 00000000 00030e75 00000000 00000000
+> > > [    2.205899] host_regs: 00000030: 0000010f 00000000 80000010 00000000
+> > > [    2.212234] host_regs: 00000040: 00000000 00000000 00000000 00000000
+> > > [    2.218568] host_regs: 00000050: f8d64000 00000000 00000000 00000000
+> > > [    2.224903] host_regs: 00000060: 00000001 00000000 00000000 00000000
+> > > [    2.231237] host_regs: 00000070: f8da2000 00000000 00000000 00000000
+> > > [    2.237572] host_regs: 00000080: 00000001 00000000 00000000 00000000
+> > > [    2.243907] host_regs: 00000090: 00000002 95190000 00000000 00000000
+> > > [    2.250242] exynos-ufshc 15570000.ufs: hba->ufs_version = 0x200,
+> > > hba->capabilities = 0x383ff0f
+> > > 
+> > > Full bootlog
+> > > https://protect2.fireeye.com/url?k=edbae146-b069b8f8-edbb6a09-0cc47a31
+> > > ba82-
+> > 8b13b1e4caed34d7&q=1&u=https%3A%2F%2Fgist.github.com%2FPabloPL%2F
+> > > 0bcb24492f4ab6e9703c2a4ea20ceb18 kernel source:
+> > > https://protect2.fireeye.com/url?k=75038dec-28d0d452-750206a3-0cc47a31
+> > > ba82-
+> > 4c366bec6fc01e64&q=1&u=https%3A%2F%2Fgithub.com%2FPabloPL%2Flinux
+> > > %2Ftree%2Fufs-mainline dts file: exynos7-zeroflt.dts (it should be
+> > > zerolt, but will be fixed/changed later).
+> > 
+> > Actually, after waiting enough time (about 15 or even more sec of that error
+> > "spam"), was able to mount partitions and manipulate files there.
+> > 
+> You need below patch and  a change in the ufs driver:
+> https://www.spinics.net/lists/linux-scsi/msg138501.html
+> 
+> And
+> 
+> diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+> index ce2c3d674e4b..c6332deff03a 100644
+> --- a/drivers/scsi/ufs/ufs-exynos.c
+> +++ b/drivers/scsi/ufs/ufs-exynos.c
+> @@ -1359,7 +1359,8 @@ struct exynos_ufs_drv_data exynos_ufs_drvs = {
+>         .quirks                 = UFSHCD_QUIRK_PRDT_BYTE_GRAN |
+>                                   UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR |
+>                                   UFSHCI_QUIRK_BROKEN_HCE |
+> -                                 UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR,
+> +                                 UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR |
+> +                                 UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR,
+>         .opts                   = EXYNOS_UFS_OPT_HAS_APB_CLK_CTRL |
+>                                   EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL |
+>                                   EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX,
+> 
+> > So for me the only issue to solve are defered probe when regulators are not yet
+> > found (for example when pmic is probed after ufs) and not sure what about that
+> > errors (despite working ufs).
+> > 
+> The error will go away with the above changes, about regulators, you need to figure it out, as I am not aware of Galaxy S6 PMIC schemes.
+> I also seek your Tested-by tag on these patches .
+Checked with those two patches applied, error is gone.
+You can add my Tested-by: Paweł Chmiel <pawel.mikolaj.chmiel@gmail.com>
+to all patches.
+
+Thanks
+> 
+> > Thanks for all
+> 
+> Thanks for helping in testing.
+> > > Thanks
+> 
+> 
+
