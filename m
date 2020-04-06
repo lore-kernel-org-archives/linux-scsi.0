@@ -2,147 +2,376 @@ Return-Path: <SRS0=wQ7u=5W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CEEC2BA19
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 14:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F793C2BA1A
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 19:55:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 584EA23109
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 14:55:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2640E20672
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 19:55:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wIzsjJgl"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="faml8ktX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728799AbgDFOzR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Apr 2020 10:55:17 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:55736 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728766AbgDFOzR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2020 10:55:17 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036Elg5L002425;
-        Mon, 6 Apr 2020 14:54:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=MER3BEmFq/xOfB6kIYr8DVoPJGODRlwFWSm09txw+Hc=;
- b=wIzsjJglYz3ErrCofcAOtPHS1Tdadozco5Q0Sv/vbuG8yCI4hPLXISVfO1bXISUg9ibr
- y+/XPrhZfzxMEI23pWY/zrYgEmoKuGLMEb7RpwRDWqnYMQboc61y5yXCCVwiQLbxrpaz
- cc4v9rDPyXJGw8M68wyKcmMfyglm4bdi3mf7Oc7ClceprXTTgSx5vmW3hBqf4h0fcMIV
- SFljKwWjCVBJFdee5+20cgRAGJbvxhOaMITHVKidGJg23IcOVQRyTenRL7bXBCNzX9zI
- xvMlK3yyKvtumqHtERpDcctGMI8gsUX9RkcdrQMziARzPDwhiAQ+BOXvutTB0s+rcoQw ug== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 306j6m7bgu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 06 Apr 2020 14:54:20 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036EmQeV048653;
-        Mon, 6 Apr 2020 14:54:19 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 30839q7y83-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 06 Apr 2020 14:54:19 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 036EsHUi029617;
-        Mon, 6 Apr 2020 14:54:17 GMT
-Received: from [192.168.1.24] (/70.114.128.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 06 Apr 2020 07:54:17 -0700
-Subject: Re: [PATCH] qla2xxx: Increase the size of struct qla_fcp_prio_cfg to
- FCP_PRIO_CFG_SIZE
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-References: <20200405231339.29612-1-bvanassche@acm.org>
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <db86fed4-e326-8d88-5b38-4ef723b7ebc6@oracle.com>
-Date:   Mon, 6 Apr 2020 09:54:15 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.6.0
-MIME-Version: 1.0
-In-Reply-To: <20200405231339.29612-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1726287AbgDFTy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Apr 2020 15:54:56 -0400
+Received: from mail-mw2nam12on2124.outbound.protection.outlook.com ([40.107.244.124]:36861
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725895AbgDFTy4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Apr 2020 15:54:56 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Y246/UzEp+8x8ho/8K0taEXJzp3ZX3HYz1leTvoyyxDsTHjrnpM7oRoXDZR0g9F/bumkAg3R1LnwSjD+avOJAaZKWWxLEQVouXZCapKEzVZga3QZlns+4CqMW9AgcmA43ZyYvVYMLRudM1UtMU6cYe8xxfDq27z32LdFmM+j08I0I9JmnyJ3R7jZGzPN/nuuMbn64f0q6m5yQtEKe9hkgGOZz+GcdKZaS3iMO1z6yJaL2oCSNOXyxH/LOamReDfz9VSmbyZVYVLmOg3GWLaFDLOpLRgUm+EV7d9KDHB1UGgJRZyRUQq3yTlY85OnNR4B32iqUf7omPv7jb6PcT/qkA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=geYO94/PK6asAmXIj/Pf/JA+/q10GabkU+nwPkhbASA=;
+ b=kgdDHfcknW6isoXQfch5Ic9HCbURsXw/VlujDjtdlYbqTyYRyHVNIFxCSSsduZgLRIHAu8dH5Nv/xdw9xrjkPLuOp3yrP3dNVQj7uAi0N3hLPWHjUs/hpEnRH+TRAEUsLR/0r+QVUn5UwGsr7ph820XLo7xB2wKG6ERhNAGyQpBePjhv8DyuEpJJG9TNgzgT0LKEJZx6GYx6Ar4AduD5bnHyzG+Eb2/KUcUrP9F0HMZXdqT//exadk63z9ZfcSirl+hZEpkBN2+vOq5dRXPXc6L9Sv7RMzkd3VqGLbRZh/2d+DsOoiO8FQb6QqNqDBCwl9fayKmCDx6yhscug7MZIQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=geYO94/PK6asAmXIj/Pf/JA+/q10GabkU+nwPkhbASA=;
+ b=faml8ktXWRv9Tpgvfr0DlR1wcHQIk7TU+DEIwmPNCyD+KuXcTIhgR5yMHjhO65vX0eLRkr3BAQ8OQJdpxW55mLzzrF94j1xDD+Ehp/jRH6PrNKwOxyE2ql8pcq4yEiXS+aj8NshelmaeizNggj5pYxNWqBvGrwyp4Lc47KLexuc=
+Received: from BN8PR21MB1155.namprd21.prod.outlook.com (2603:10b6:408:73::10)
+ by BN8PR21MB1298.namprd21.prod.outlook.com (2603:10b6:408:a3::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2900.4; Mon, 6 Apr
+ 2020 19:54:47 +0000
+Received: from BN8PR21MB1155.namprd21.prod.outlook.com
+ ([fe80::d11:18b7:289c:ea17]) by BN8PR21MB1155.namprd21.prod.outlook.com
+ ([fe80::d11:18b7:289c:ea17%6]) with mapi id 15.20.2900.012; Mon, 6 Apr 2020
+ 19:54:46 +0000
+From:   Long Li <longli@microsoft.com>
+To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Boqun Feng <boqun.feng@gmail.com>,
+        vkuznets <vkuznets@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
+ interrupt is re-assigned
+Thread-Topic: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
+ interrupt is re-assigned
+Thread-Index: AQHWC6i+EppuRPIzmUWsHp6UWcZ3DKhscw0Q
+Date:   Mon, 6 Apr 2020 19:54:46 +0000
+Message-ID: <BN8PR21MB1155C78AAC02D02EA7A7841DCEC20@BN8PR21MB1155.namprd21.prod.outlook.com>
+References: <20200406001514.19876-1-parri.andrea@gmail.com>
+ <20200406001514.19876-12-parri.andrea@gmail.com>
+In-Reply-To: <20200406001514.19876-12-parri.andrea@gmail.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9582 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
- mlxscore=0 mlxlogscore=999 bulkscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004060123
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9582 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 spamscore=0
- priorityscore=1501 suspectscore=0 lowpriorityscore=0 malwarescore=0
- impostorscore=0 mlxscore=0 phishscore=0 adultscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004060123
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=longli@microsoft.com; 
+x-originating-ip: [2001:4898:80e8:0:edee:db5c:c6fe:798]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 9ea7ba7b-72be-4ecd-2999-08d7da645ba3
+x-ms-traffictypediagnostic: BN8PR21MB1298:|BN8PR21MB1298:|BN8PR21MB1298:
+x-ms-exchange-transport-forked: True
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <BN8PR21MB1298DA60E660DD81C9D8FB32CEC20@BN8PR21MB1298.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 0365C0E14B
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR21MB1155.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(346002)(396003)(136003)(366004)(39860400002)(376002)(6506007)(52536014)(8676002)(81156014)(54906003)(316002)(81166006)(55016002)(7696005)(8936002)(82950400001)(82960400001)(9686003)(478600001)(10290500003)(86362001)(5660300002)(66446008)(66946007)(76116006)(33656002)(2906002)(186003)(8990500004)(110136005)(4326008)(66556008)(71200400001)(66476007)(64756008);DIR:OUT;SFP:1102;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: iYdTw9uZConV56qHPwyT7PMKJBkx7mhpxeXt74udfFWItSjNfymsksTORnyOIEvqOweGIgake4CAHLtq56u+zZFl858ie2uDsEHsp0F8RGjfP6Zq93XVTLJ/H/a7F+yWUxIhdCTKBm2I2Q3OmsG/iPrqYIKxlzbQzE7BSVb2DdJj92eaQSlYu2Do8OgFwianVc59/hUeK5svsh3FvexBu0ETOnicwsWZvpvGytorJN8RLmr/53OCAPV0Rt7esTSmWg0+2frQbZdsOLuIavEpRgRsBS0XptNIdo7DgZrJIdbGVPZMZ2EeKiE/TTOScymzGUK06qFAd2d4YdWPoC3A3rLJgwJJf42MHSxeHqsY3pWg/zWDMRDObSlrFXb1UZVjoAkf2Ygp3ynJr6mCdZbFNe2n1R5ln7Gi0gjyqtt0oZgMU4mBnin7z7z6sN5xgqqk
+x-ms-exchange-antispam-messagedata: vm4fmT3Qb8TH05uHx7FMtrXJ2JwiqDOgzinE7jbLqeO6OnyIB1wXicBgV3RGlzn0uWVqowDzr18nbfJ02VVRrE8JxjO/yjBD+cdvgSY7PjCgpxvuWsZKD8KqnX3R2xpyIIEzSvfXR8TrULUGwmXagL8eFt+2Kh+yWhUOxz0uJ0A6yCGpP6WMMD65lMzcxvjguGL33Mg6Z0tdqjIK7ApvLg==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9ea7ba7b-72be-4ecd-2999-08d7da645ba3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Apr 2020 19:54:46.2040
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Qj37cmWdhYe2V2q1zFBhKjKzwLAF6PwcSHAN1olWP2QCDCQZeLqCl52ofeJPLVyAxV5k8NtEkmrVsDKKN/6juA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR21MB1298
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/5/20 6:13 PM, Bart Van Assche wrote:
-> This patch fixes the following Coverity complaint without changing any
-> functionality:
-> 
-> CID 337793 (#1 of 1): Wrong size argument (SIZEOF_MISMATCH)
-> suspicious_sizeof: Passing argument ha->fcp_prio_cfg of type
-> struct qla_fcp_prio_cfg * and argument 32768UL to function memset is
-> suspicious because a multiple of sizeof (struct qla_fcp_prio_cfg) /*48*/
-> is expected.
-> 
-> memset(ha->fcp_prio_cfg, 0, FCP_PRIO_CFG_SIZE);
-> 
-> Cc: Nilesh Javali <njavali@marvell.com>
-> Cc: Himanshu Madhani <hmadhani@marvell.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/qla2xxx/qla_fw.h | 3 ++-
->   drivers/scsi/qla2xxx/qla_os.c | 1 +
->   2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-> index f9bad5bd7198..647e67c6ba5e 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw.h
-> @@ -2217,8 +2217,9 @@ struct qla_fcp_prio_cfg {
->   #define FCP_PRIO_ATTR_PERSIST   0x2
->   	uint8_t  reserved;      /* Reserved for future use          */
->   #define FCP_PRIO_CFG_HDR_SIZE   0x10
-> -	struct qla_fcp_prio_entry entry[1];     /* fcp priority entries  */
-> +	struct qla_fcp_prio_entry entry[1023]; /* fcp priority entries  */
->   #define FCP_PRIO_CFG_ENTRY_SIZE 0x20
-> +	uint8_t  reserved2[16];
->   };
->   
->   #define FCP_PRIO_CFG_SIZE       (32*1024) /* fcp prio data per port*/
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index d9072ea7c42b..784f3e553f15 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -7840,6 +7840,7 @@ qla2x00_module_init(void)
->   	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
->   	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
->   	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
-> +	BUILD_BUG_ON(sizeof(struct qla_fcp_prio_cfg) != FCP_PRIO_CFG_SIZE);
->   
->   	/* Allocate cache for SRBs. */
->   	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
-> 
+>Subject: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
+>interrupt is re-assigned
+>
+>For each storvsc_device, storvsc keeps track of the channel target CPUs
+>associated to the device (alloced_cpus) and it uses this information to fi=
+ll a
+>"cache" (stor_chns) mapping CPU->channel according to a certain heuristic.
+>Update the alloced_cpus mask and the stor_chns array when a channel of the
+>storvsc device is re-assigned to a different CPU.
+>
+>Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+>Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+>Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+>Cc: <linux-scsi@vger.kernel.org>
+>---
+> drivers/hv/vmbus_drv.c     |  4 ++
+> drivers/scsi/storvsc_drv.c | 95 ++++++++++++++++++++++++++++++++++---
+>-
+> include/linux/hyperv.h     |  3 ++
+> 3 files changed, 94 insertions(+), 8 deletions(-)
+>
+>diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c index
+>0f204640c50c2..f0be41bfcbf57 100644
+>--- a/drivers/hv/vmbus_drv.c
+>+++ b/drivers/hv/vmbus_drv.c
+>@@ -1750,6 +1750,10 @@ static ssize_t target_cpu_store(struct
+>vmbus_channel *channel,
+> 	 * in on a CPU that is different from the channel target_cpu value.
+> 	 */
+>
+>+	if (channel->change_target_cpu_callback)
+>+		(*channel->change_target_cpu_callback)(channel,
+>+				channel->target_cpu, target_cpu);
+>+
+> 	channel->target_cpu =3D target_cpu;
+> 	channel->target_vp =3D hv_cpu_number_to_vp_number(target_cpu);
+> 	channel->numa_node =3D cpu_to_node(target_cpu); diff --git
+>a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
+>fb41636519ee8..a680592b9d32a 100644
+>--- a/drivers/scsi/storvsc_drv.c
+>+++ b/drivers/scsi/storvsc_drv.c
+>@@ -621,6 +621,63 @@ static inline struct storvsc_device
+>*get_in_stor_device(
+>
+> }
+>
+>+void storvsc_change_target_cpu(struct vmbus_channel *channel, u32 old,
+>+u32 new) {
+>+	struct storvsc_device *stor_device;
+>+	struct vmbus_channel *cur_chn;
+>+	bool old_is_alloced =3D false;
+>+	struct hv_device *device;
+>+	unsigned long flags;
+>+	int cpu;
+>+
+>+	device =3D channel->primary_channel ?
+>+			channel->primary_channel->device_obj
+>+				: channel->device_obj;
+>+	stor_device =3D get_out_stor_device(device);
+>+	if (!stor_device)
+>+		return;
+>+
+>+	/* See storvsc_do_io() -> get_og_chn(). */
+>+	spin_lock_irqsave(&device->channel->lock, flags);
+>+
+>+	/*
+>+	 * Determines if the storvsc device has other channels assigned to
+>+	 * the "old" CPU to update the alloced_cpus mask and the stor_chns
+>+	 * array.
+>+	 */
+>+	if (device->channel !=3D channel && device->channel->target_cpu =3D=3D
+>old) {
+>+		cur_chn =3D device->channel;
+>+		old_is_alloced =3D true;
+>+		goto old_is_alloced;
+>+	}
+>+	list_for_each_entry(cur_chn, &device->channel->sc_list, sc_list) {
+>+		if (cur_chn =3D=3D channel)
+>+			continue;
+>+		if (cur_chn->target_cpu =3D=3D old) {
+>+			old_is_alloced =3D true;
+>+			goto old_is_alloced;
+>+		}
+>+	}
+>+
+>+old_is_alloced:
+>+	if (old_is_alloced)
+>+		WRITE_ONCE(stor_device->stor_chns[old], cur_chn);
+>+	else
+>+		cpumask_clear_cpu(old, &stor_device->alloced_cpus);
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+If the old cpu is not allocated, is it still necessary to do a cpumask_clea=
+r_cpu?
 
--- 
-Himanshu
+>+
+>+	/* "Flush" the stor_chns array. */
+>+	for_each_possible_cpu(cpu) {
+>+		if (stor_device->stor_chns[cpu] && !cpumask_test_cpu(
+>+					cpu, &stor_device->alloced_cpus))
+>+			WRITE_ONCE(stor_device->stor_chns[cpu], NULL);
+>+	}
+>+
+>+	WRITE_ONCE(stor_device->stor_chns[new], channel);
+>+	cpumask_set_cpu(new, &stor_device->alloced_cpus);
+>+
+>+	spin_unlock_irqrestore(&device->channel->lock, flags); }
+>+
+> static void handle_sc_creation(struct vmbus_channel *new_sc)  {
+> 	struct hv_device *device =3D new_sc->primary_channel->device_obj;
+>@@ -648,6 +705,8 @@ static void handle_sc_creation(struct vmbus_channel
+>*new_sc)
+> 		return;
+> 	}
+>
+>+	new_sc->change_target_cpu_callback =3D storvsc_change_target_cpu;
+>+
+> 	/* Add the sub-channel to the array of available channels. */
+> 	stor_device->stor_chns[new_sc->target_cpu] =3D new_sc;
+> 	cpumask_set_cpu(new_sc->target_cpu, &stor_device-
+>>alloced_cpus); @@ -876,6 +935,8 @@ static int storvsc_channel_init(struct
+>hv_device *device, bool is_fc)
+> 	if (stor_device->stor_chns =3D=3D NULL)
+> 		return -ENOMEM;
+>
+>+	device->channel->change_target_cpu_callback =3D
+>+storvsc_change_target_cpu;
+>+
+> 	stor_device->stor_chns[device->channel->target_cpu] =3D device-
+>>channel;
+> 	cpumask_set_cpu(device->channel->target_cpu,
+> 			&stor_device->alloced_cpus);
+>@@ -1248,8 +1309,10 @@ static struct vmbus_channel *get_og_chn(struct
+>storvsc_device *stor_device,
+> 	const struct cpumask *node_mask;
+> 	int num_channels, tgt_cpu;
+>
+>-	if (stor_device->num_sc =3D=3D 0)
+>+	if (stor_device->num_sc =3D=3D 0) {
+>+		stor_device->stor_chns[q_num] =3D stor_device->device-
+>>channel;
+> 		return stor_device->device->channel;
+>+	}
+>
+> 	/*
+> 	 * Our channel array is sparsley populated and we @@ -1258,7 +1321,6
+>@@ static struct vmbus_channel *get_og_chn(struct storvsc_device
+>*stor_device,
+> 	 * The strategy is simple:
+> 	 * I. Ensure NUMA locality
+> 	 * II. Distribute evenly (best effort)
+>-	 * III. Mapping is persistent.
+> 	 */
+>
+> 	node_mask =3D cpumask_of_node(cpu_to_node(q_num));
+>@@ -1268,8 +1330,10 @@ static struct vmbus_channel *get_og_chn(struct
+>storvsc_device *stor_device,
+> 		if (cpumask_test_cpu(tgt_cpu, node_mask))
+> 			num_channels++;
+> 	}
+>-	if (num_channels =3D=3D 0)
+>+	if (num_channels =3D=3D 0) {
+>+		stor_device->stor_chns[q_num] =3D stor_device->device-
+>>channel;
+> 		return stor_device->device->channel;
+>+	}
+>
+> 	hash_qnum =3D q_num;
+> 	while (hash_qnum >=3D num_channels)
+>@@ -1295,6 +1359,7 @@ static int storvsc_do_io(struct hv_device *device,
+> 	struct storvsc_device *stor_device;
+> 	struct vstor_packet *vstor_packet;
+> 	struct vmbus_channel *outgoing_channel, *channel;
+>+	unsigned long flags;
+> 	int ret =3D 0;
+> 	const struct cpumask *node_mask;
+> 	int tgt_cpu;
+>@@ -1308,10 +1373,11 @@ static int storvsc_do_io(struct hv_device *device,
+>
+> 	request->device  =3D device;
+> 	/*
+>-	 * Select an an appropriate channel to send the request out.
+>+	 * Select an appropriate channel to send the request out.
+> 	 */
+>-	if (stor_device->stor_chns[q_num] !=3D NULL) {
+>-		outgoing_channel =3D stor_device->stor_chns[q_num];
+>+	/* See storvsc_change_target_cpu(). */
+>+	outgoing_channel =3D READ_ONCE(stor_device->stor_chns[q_num]);
+>+	if (outgoing_channel !=3D NULL) {
+> 		if (outgoing_channel->target_cpu =3D=3D q_num) {
+> 			/*
+> 			 * Ideally, we want to pick a different channel if @@ -
+>1324,7 +1390,10 @@ static int storvsc_do_io(struct hv_device *device,
+> 					continue;
+> 				if (tgt_cpu =3D=3D q_num)
+> 					continue;
+>-				channel =3D stor_device->stor_chns[tgt_cpu];
+>+				channel =3D READ_ONCE(
+>+					stor_device->stor_chns[tgt_cpu]);
+>+				if (channel =3D=3D NULL)
+>+					continue;
+> 				if (hv_get_avail_to_write_percent(
+> 							&channel->outbound)
+> 						> ring_avail_percent_lowater)
+>{
+>@@ -1350,7 +1419,10 @@ static int storvsc_do_io(struct hv_device *device,
+> 			for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
+> 				if (cpumask_test_cpu(tgt_cpu, node_mask))
+> 					continue;
+>-				channel =3D stor_device->stor_chns[tgt_cpu];
+>+				channel =3D READ_ONCE(
+>+					stor_device->stor_chns[tgt_cpu]);
+>+				if (channel =3D=3D NULL)
+>+					continue;
+> 				if (hv_get_avail_to_write_percent(
+> 							&channel->outbound)
+> 						> ring_avail_percent_lowater)
+>{
+>@@ -1360,7 +1432,14 @@ static int storvsc_do_io(struct hv_device *device,
+> 			}
+> 		}
+> 	} else {
+>+		spin_lock_irqsave(&device->channel->lock, flags);
+>+		outgoing_channel =3D stor_device->stor_chns[q_num];
+>+		if (outgoing_channel !=3D NULL) {
+>+			spin_unlock_irqrestore(&device->channel->lock,
+>flags);
+
+Checking outgoing_channel again seems unnecessary. Why not just call get_og=
+_chn()?
+
+>+			goto found_channel;
+>+		}
+> 		outgoing_channel =3D get_og_chn(stor_device, q_num);
+>+		spin_unlock_irqrestore(&device->channel->lock, flags);
+> 	}
+
+With device->channel->lock, now we have one more lock on the I/O issuing pa=
+th. It doesn't seem optimal as you are trying to protect the code in storvs=
+c_change_target_cpu(), this doesn't need to block concurrent I/O issuers. M=
+aybe moving to RCU is a better approach?
+
+Thanks,
+Long
+
+
+>
+> found_channel:
+>diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h index
+>edfcd42319ef3..9018b89614b78 100644
+>--- a/include/linux/hyperv.h
+>+++ b/include/linux/hyperv.h
+>@@ -773,6 +773,9 @@ struct vmbus_channel {
+> 	void (*onchannel_callback)(void *context);
+> 	void *channel_callback_context;
+>
+>+	void (*change_target_cpu_callback)(struct vmbus_channel *channel,
+>+			u32 old, u32 new);
+>+
+> 	/*
+> 	 * Synchronize channel scheduling and channel removal; see the inline
+> 	 * comments in vmbus_chan_sched() and vmbus_reset_channel_cb().
+>--
+>2.24.0
+
