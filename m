@@ -2,151 +2,227 @@ Return-Path: <SRS0=wQ7u=5W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B47DC2BA1E
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 09:05:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B176C2BA19
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 14:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0634206B8
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 09:05:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04BAB2465E
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 14:41:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I8HX3mSK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbgDFJFl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Apr 2020 05:05:41 -0400
-Received: from mx2.suse.de ([195.135.220.15]:33358 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726622AbgDFJFk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Apr 2020 05:05:40 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 732E3AB5F;
-        Mon,  6 Apr 2020 09:05:37 +0000 (UTC)
-Subject: Re: [PATCH RFC v2 02/24] scsi: allocate separate queue for reserved
- commands
-To:     Christoph Hellwig <hch@infradead.org>,
-        John Garry <john.garry@huawei.com>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        ming.lei@redhat.com, bvanassche@acm.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        Hannes Reinecke <hare@suse.com>
-References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-3-git-send-email-john.garry@huawei.com>
- <20200310183243.GA14549@infradead.org>
- <79cf4341-f2a2-dcc9-be0d-2efc6e83028a@huawei.com>
- <20200311062228.GA13522@infradead.org>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <b5a63725-722b-8ccd-3867-6db192a248a4@suse.de>
-Date:   Mon, 6 Apr 2020 11:05:34 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1728702AbgDFOk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Apr 2020 10:40:59 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:59990 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728699AbgDFOk7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2020 10:40:59 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036EdpXM187560;
+        Mon, 6 Apr 2020 14:39:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=fvjfAcxSmjfvmMnmTgeQhsmcQElp1Ta9apy7mifMz8o=;
+ b=I8HX3mSK4d2k2gG93C7MTbYrLeXBvXtlWpNXkuZ8xH/uBPRsA8YCJKSmz59D1g/NmGoK
+ c+C0whbnNCq3CQuJnCssNU3nIT0tAOqn+oWYBPMkH+nt/TxTcyu5sL6WD7q4zM5DmHNl
+ 9f8ISxhroLj+qDj8g7k+dGhC+FVPIYk6UNfcsNssrIRqmam2AMmOL/UOhYiPovnpAoL8
+ vaEa1YRmCaqxcLL/Tvwpx7REslrwnX67rrpPbSi9JWrmXKcdgbbxY3ZY3Uu231mUjrWk
+ 8opNwD2jez4gu6iUDsRHzQeliUcjVjzVtYsKEBbVQEwH5V3jyakvIZKPJjakYKpbC4zt 7w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 306hnqy97w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 06 Apr 2020 14:39:51 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 036Ecjdi054425;
+        Mon, 6 Apr 2020 14:39:48 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 3073sq23ta-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 06 Apr 2020 14:39:48 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 036Edk0q025386;
+        Mon, 6 Apr 2020 14:39:46 GMT
+Received: from [192.168.1.24] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 06 Apr 2020 07:39:46 -0700
+Subject: Re: [PATCH] qla2xxx: Split qla2x00_configure_local_loop()
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200405225905.17171-1-bvanassche@acm.org>
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <05b77d71-970a-7049-029f-52d9e78e2c9a@oracle.com>
+Date:   Mon, 6 Apr 2020 09:39:43 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200311062228.GA13522@infradead.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20200405225905.17171-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9582 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 spamscore=0
+ malwarescore=0 suspectscore=0 adultscore=0 bulkscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004060121
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9582 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 adultscore=0
+ priorityscore=1501 mlxscore=0 malwarescore=0 mlxlogscore=999
+ lowpriorityscore=0 spamscore=0 impostorscore=0 suspectscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004060121
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/11/20 7:22 AM, Christoph Hellwig wrote:
-> On Tue, Mar 10, 2020 at 09:08:56PM +0000, John Garry wrote:
->> On 10/03/2020 18:32, Christoph Hellwig wrote:
->>> On Wed, Mar 11, 2020 at 12:25:28AM +0800, John Garry wrote:
->>>> From: Hannes Reinecke <hare@suse.com>
->>>>
->>>> Allocate a separate 'reserved_cmd_q' for sending reserved commands.
->>>
->>> Why?  Reserved command specifically are not in any way tied to queues.
->>> .
->>>
->>
->> So the v1 series used a combination of the sdev queue and the per-host
->> reserved_cmd_q. Back then you questioned using the sdev queue for virtio
->> scsi, and the unconfirmed conclusion was to use a common per-host q. This is
->> the best link I can find now:
->>
->> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg83177.html
+On 4/5/20 5:59 PM, Bart Van Assche wrote:
+> The size of the function qla2x00_configure_local_loop() hurts its
+> readability. Hence split that function. This patch does not change
+> any functionality.
 > 
-> That was just a question on why virtio uses the per-device tags, which
-> didn't look like it made any sense.  What I'm worried about here is
-> mixing up the concept of reserved tags in the tagset, and queues to use
-> them.  Note that we already have the scsi_get_host_dev to allocate
-> a scsi_device and thus a request_queue for the host itself.  That seems
-> like the better interface to use a tag for a host wide command vs
-> introducing a parallel path.
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Himanshu Madhani <hmadhani@marvell.com>
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/qla2xxx/qla_init.c | 92 ++++++++++++++++++---------------
+>   1 file changed, 50 insertions(+), 42 deletions(-)
 > 
-Thinking about it some more, I don't think that scsi_get_host_dev() is
-the best way of handling it.
-Problem is that it'll create a new scsi_device with <hostno:this_id:0>,
-which will then show up via eg 'lsscsi'.
-This would be okay if 'this_id' would have been defined by the driver;
-sadly, most drivers which are affected here do set 'this_id' to -1.
-So we wouldn't have a nice target ID to allocate the device from, let
-alone the problem that we would have to emulate a complete scsi device
-with all required minimal command support etc.
-And I'm not quite sure how well that would play with the exising SCSI
-host template; the device we'll be allocating would have basically
-nothing in common with the 'normal' SCSI devices.
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 5b2deaa730bf..80390d3f3236 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -5081,6 +5081,54 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
+>   	return (rval);
+>   }
+>   
+> +static int qla2x00_configure_n2n_loop(scsi_qla_host_t *vha)
+> +{
+> +	struct qla_hw_data *ha = vha->hw;
+> +	unsigned long flags;
+> +	fc_port_t *fcport;
+> +	int rval;
+> +
+> +	if (test_and_clear_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags)) {
+> +		/* borrowing */
+> +		u32 *bp, sz;
+> +
+> +		memset(ha->init_cb, 0, ha->init_cb_size);
+> +		sz = min_t(int, sizeof(struct els_plogi_payload),
+> +			   ha->init_cb_size);
+> +		rval = qla24xx_get_port_login_templ(vha, ha->init_cb_dma,
+> +						    ha->init_cb, sz);
+> +		if (rval == QLA_SUCCESS) {
+> +			__be32 *q = &ha->plogi_els_payld.data[0];
+> +
+> +			bp = (uint32_t *)ha->init_cb;
+> +			cpu_to_be32_array(q, bp, sz / 4);
+> +			memcpy(bp, q, sizeof(ha->plogi_els_payld.data));
+> +		} else {
+> +			ql_dbg(ql_dbg_init, vha, 0x00d1,
+> +			       "PLOGI ELS param read fail.\n");
+> +			goto skip_login;
+> +		}
+> +	}
+> +
+> +	list_for_each_entry(fcport, &vha->vp_fcports, list) {
+> +		if (fcport->n2n_flag) {
+> +			qla24xx_fcport_handle_login(vha, fcport);
+> +			return QLA_SUCCESS;
+> +		}
+> +	}
+> +
+> +skip_login:
+> +	spin_lock_irqsave(&vha->work_lock, flags);
+> +	vha->scan.scan_retry++;
+> +	spin_unlock_irqrestore(&vha->work_lock, flags);
+> +
+> +	if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
+> +		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+> +		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+> +	}
+> +	return QLA_FUNCTION_FAILED;
+> +}
+> +
+>   /*
+>    * qla2x00_configure_local_loop
+>    *	Updates Fibre Channel Device Database with local loop devices.
+> @@ -5098,7 +5146,6 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+>   	int		found_devs;
+>   	int		found;
+>   	fc_port_t	*fcport, *new_fcport;
+> -
+>   	uint16_t	index;
+>   	uint16_t	entries;
+>   	struct gid_list_info *gid;
+> @@ -5108,47 +5155,8 @@ qla2x00_configure_local_loop(scsi_qla_host_t *vha)
+>   	unsigned long flags;
+>   
+>   	/* Inititae N2N login. */
+> -	if (N2N_TOPO(ha)) {
+> -		if (test_and_clear_bit(N2N_LOGIN_NEEDED, &vha->dpc_flags)) {
+> -			/* borrowing */
+> -			u32 *bp, sz;
+> -
+> -			memset(ha->init_cb, 0, ha->init_cb_size);
+> -			sz = min_t(int, sizeof(struct els_plogi_payload),
+> -			    ha->init_cb_size);
+> -			rval = qla24xx_get_port_login_templ(vha,
+> -			    ha->init_cb_dma, (void *)ha->init_cb, sz);
+> -			if (rval == QLA_SUCCESS) {
+> -				__be32 *q = &ha->plogi_els_payld.data[0];
+> -
+> -				bp = (uint32_t *)ha->init_cb;
+> -				cpu_to_be32_array(q, bp, sz / 4);
+> -
+> -				memcpy(bp, q, sizeof(ha->plogi_els_payld.data));
+> -			} else {
+> -				ql_dbg(ql_dbg_init, vha, 0x00d1,
+> -				    "PLOGI ELS param read fail.\n");
+> -				goto skip_login;
+> -			}
+> -		}
+> -
+> -		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+> -			if (fcport->n2n_flag) {
+> -				qla24xx_fcport_handle_login(vha, fcport);
+> -				return QLA_SUCCESS;
+> -			}
+> -		}
+> -skip_login:
+> -		spin_lock_irqsave(&vha->work_lock, flags);
+> -		vha->scan.scan_retry++;
+> -		spin_unlock_irqrestore(&vha->work_lock, flags);
+> -
+> -		if (vha->scan.scan_retry < MAX_SCAN_RETRIES) {
+> -			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+> -			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+> -		}
+> -		return QLA_FUNCTION_FAILED;
+> -	}
+> +	if (N2N_TOPO(ha))
+> +		return qla2x00_configure_n2n_loop(vha);
+>   
+>   	found_devs = 0;
+>   	new_fcport = NULL;
+> 
 
-What we could do, though, is to try it the other way round:
-Lift the request queue from scsi_get_host_dev() into the scsi host
-itself, so that scsi_get_host_dev() can use that queue, but we also
-would be able to use it without a SCSI device attached.
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+-- Himanshu
