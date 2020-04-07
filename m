@@ -2,107 +2,157 @@ Return-Path: <SRS0=qNH0=5X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E9AC2BB55
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 15:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A24F7C2BB55
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 16:02:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EE882078C
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 15:55:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 783802076E
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 16:02:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="UNqco5YJ"
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="Jl8BqXl7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727867AbgDGPzK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Apr 2020 11:55:10 -0400
-Received: from mout.gmx.net ([212.227.15.18]:41155 "EHLO mout.gmx.net"
+        id S1727933AbgDGQCq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Apr 2020 12:02:46 -0400
+Received: from mout.gmx.net ([212.227.17.20]:49349 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727751AbgDGPzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Apr 2020 11:55:09 -0400
+        id S1726889AbgDGQCp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Apr 2020 12:02:45 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1586274896;
-        bh=Y8CqZtz4ZQRui/81eNNZ4TzaarQvXmyN232y605+P9A=;
+        s=badeba3b8450; t=1586275336;
+        bh=MjED2rL8qFcaewF1yuTCY8oY81g21cBSfIGHWAJZhMU=;
         h=X-UI-Sender-Class:Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=UNqco5YJjj80TjB5wUg4dOMO5e6ss+DUzeQ1yF4sPyNVmplnmXKjH0t7GuSpYPN3C
-         46A0o/EI1wxDODDHE+BbWw19OPPsihMwQG53wdtnTBHS4WIj+Tqo6F2P8CbpMKKC5+
-         PcOxQCa35fG7Ir+1roGUm7N5biraogjz61DTJOQQ=
+        b=Jl8BqXl73a3riwsYbnv+x7UmfvkDw9tKZL2TNz/DJ0vFDfMaN2+x19lbN9xx87+lC
+         3+ZL2kMK+WiwDySFJZjTn3TmI3NAhZWNhxh0yMPypCuDv1dcm6cPNINx9XNyuxNGul
+         rH8nkZklPVh2RmUjRZp9o9qblbOHX95hYR+B1LCE=
 X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from lenovo-laptop ([82.19.195.159]) by mail.gmx.com (mrgmx004
- [212.227.17.184]) with ESMTPSA (Nemesis) id 1M2O2W-1jJ6jh3gZ4-003xIe; Tue, 07
- Apr 2020 17:54:56 +0200
-Date:   Tue, 7 Apr 2020 16:54:53 +0100
+Received: from lenovo-laptop ([82.19.195.159]) by mail.gmx.com (mrgmx105
+ [212.227.17.174]) with ESMTPSA (Nemesis) id 1N1wll-1jB2250hY1-012FWj; Tue, 07
+ Apr 2020 18:02:16 +0200
+Date:   Tue, 7 Apr 2020 17:02:13 +0100
 From:   Alex Dewar <alex.dewar@gmx.co.uk>
 To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     Qiujun Huang <hqjagain@gmail.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+Cc:     Allison Randal <allison@lohutok.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Chaitra Basappa <chaitra.basappa@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "James E. J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: aic7xxx: Remove null pointer checks before kfree()
-Message-ID: <20200407155453.sosj4brsw6r7fnot@lenovo-laptop>
-References: <72bc89d5-cf50-3f3a-41e0-b46b134e754d@web.de>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Richard Fontana <rfontana@redhat.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-scsi@vger.kernel.org, aacraid@microsemi.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: Remove unnecessary calls to memset after
+ dma_alloc_coherent
+Message-ID: <20200407160213.qh64de6ebrj7qkmx@lenovo-laptop>
+References: <e2401a31-e9fd-e849-e27c-6e079f5556d2@web.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <72bc89d5-cf50-3f3a-41e0-b46b134e754d@web.de>
-X-Provags-ID: V03:K1:DRRYbwkGmYsREHIOQQ6uPlqCNtM02NmcNjBlpaZ90sJF1rM80yD
- e6ihZf4UqFhDcC/0GKnGcIGdGicWIbcwH50hoPPm68oO/1GIkkY8/wL6swu9SaoQHlsP6gd
- VsgZ6OaQUaVOWzKlt1b5GzLN8gyd4EbO8/stVkQkAIe0NM8a/YnchitewJpWmVSMYt6+FUz
- g6WBqlo1KbyQPLwKvrEuQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:3n0zuGOgyNY=:CeZhKBZNkmIH8o8ERdVx8w
- yAJNkOcj0WwBjV5YyMFrzIxnlBd1PUx0nKGN9mjQH9+ZLTCmd/DIK/RMNCm080Qc60iU45TMo
- 7A/YH6OYNTxIhvPjE3QNdWji1ogSiGnR6FkkOhzNOnXRpERIGLCLYDdhRcZQG9YxP4GO4tu/q
- Fg/MDID8Ea16ZOsd1tynnFJDZsyDMUoWwwqWw1QQLct3YHleAkM0oRgm/+17gCaJyc9ZSH+d6
- je6u0z7Q54AH/kKvgMYwk4ycLTOn5NgmGIiCZoI6AIYSPMTQGsS9Nyfl6Nz8zbnukWK5mtLTA
- bj8fqyn2M6lQEurtMFvczN454ditDio9rvbIMv1GO1eH14nMsgTIPwKUUN8l4+se8JPwVBqV2
- xeZul3eEh7YI0VTfFfqCfQYv3dTqPOvbxzTNkCnUm1T30ZQAxAB99EwNxEWRGzEhfda4p6e0k
- 9F4vVjY2goQNmcOLRb0oXWEXegudfQtYU+0kKSOVRJyxCKLUiVZENmtpC//HxqK7n4VhVBHI1
- TqW4KK44FltpBa+CtWee/q08s7/G8bwvAC7u5+qtchjAt7xZtYDzjakneeQNpGyYSTIcLj5WZ
- 5BBoAh7ErtUgOXHmMvPK8e5W3jTOQl6wx67zBjz1h/wlWym81vtHYAnMrZB7q3UR8ohYa/+bE
- j5MqL3QYgH8r+dbjTYIyXFqdM8AxpLn+5kWR/uO957zxI2Hvss0XN1wRsfGuFAL1bKU0JPmVb
- zPCDS8cOY42japw/qLEnVW6d2vR5v0Eyju5sdcN8F0wdI1VthlZE2OaosZPEdnjG/SvSxstll
- 6bGhk0vpAFyuxhPIknln6SAqOs8BxjZRbt4wl5WE5I3SIqpCiEJJRGZRzu1B184z9tBZ9aVRK
- M0wSbBM3R938190r+zeahYBrw5VbZ9+EunLEEYWPigsT3mpnJhH62FKbd170CdNvFkZRPmP9a
- YW+GUdc+VEXczdusxzvuEOmZNo/AUrbQDwUbU6sJ9jM70VHKPerhs7Jt6vhJKmcNiihZ2dE0K
- ZFY8QMMqRqBl3izHcVsX4WBnXp9RkmTO3TpjRJ1ImNOD9SD7yvI9QA0ZBKyTYsJpT2PMO3ctQ
- WAMb0o8aUGHdHK6U4g88cXMPpg/DoNoLGcY8bSBPUlFcWXSiQght345P98gW2clhiDzZdycTM
- AdUpLwupL08mJdFrczskJmOlg2VwyX2ghQJtjY3+PX0KeSiQER5lUKF+tO8hkSzmDEDKdPxz0
- 21NGO6xZJUEDN3NOP
+In-Reply-To: <e2401a31-e9fd-e849-e27c-6e079f5556d2@web.de>
+X-Provags-ID: V03:K1:d/rbaoVneuFo0laPsfO0MaLfxIn2+jKJUs/i7ZOLORm+LfbBtQT
+ ESuMc1oTz+fMZ0oStoWZwfeViYqrbeO1LXx1GGgpaEVPnqsXdzsBP1CCn5fNSGlUyZljOui
+ I7fgj9QWPd7jJBqYvNLWXFsWvl2e2GA/b/izskTEJrxpVWWfI/dvT66HeAuXqJJEoWAwBWc
+ jebJmfW9Kw6uZBru7hWMA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:U2Pjpg2Ki7w=:xq6163nCcOwVZqGtXA1HMf
+ 19/Gs5h+3UI36/aBiaBU1kuksy+wup06rLtbVmc5WwxmfLOYa99iZHzKR77kev6SwPaMOnf/5
+ gyQJ2ZHoFnzVuAkgIB4AA0Ddz+Egx6RS7JGbLkoEmd6dDu1KnS5TAEDxko2eNMA/EojMz/Rq8
+ nEBeKbpf0mtSuVqb5v3BM4IqKZ8IGWRUhSs7U9OYEXUS2TLPUWLZ6eGeT+J0WSJo8ZL4sEVYq
+ lMmuzOXowBoWvVsv8G6jGuvzupEfa1iEb8CVK5FIXTcP+GmbLrqNKyoI2mFt9IFAbhjpPm92s
+ JoWRcvh4wpQAeDq/0cs7PycSMpvvSVM1MxkylDZaeVr+8uBaqbhc9sAy8JlBlJeEAF+u1TDIJ
+ YvZ7vttcV/EiFjAi1RSy4MM4WbTATmAS5TK2XvKM2kq3RzLJDaZQ9R9Ih5b6/ln83Gmun3Bwj
+ w917gxTNOlglO8uETEOIRSydDoio5a0xWEZz7jELD/+xPPDP8lRqfl9Io/7f3Y3UhjksL+EMG
+ Ear5+fdik64Jksxf89roRGribeIswgpWy3uRU4aeQL8rNqJZPRlxnoiGdaTDowt4zYG2v4v+X
+ y8sxAZq1dRQWSQEjq1V0u5ckgIDkKlfJeivxKd/K2mWLlO0OCnCYyKcIBpHZI3BCDgyqTCRGw
+ GviZQW73dh2jkjG/xyanglkDtGbqy4dYjOb8XFSZS9w+cN5tx7gkz5P4RvStdA63mfV9tiLhQ
+ Ub5RUHfXr9E9bNmYwRSBdlF1PGkEkAY765SL3J4PFJqeKVs00z0SRSdL3AJPZg7YlUDIwrdMp
+ M4/KAFkk50NkU/AmGF8ROcfm858qfZtYTaN6ZPqF1uSYXu2D6nOMKE3e3tiyTjfannSXer6hw
+ ysT9Hwdl/g46QipspSaTNFAZUsW/P+8V4mjOdzi3vzx9wv82cHpJAaClCqHAZv4ZWJN338IFw
+ Nkgspk0qtotriu5gwEaJsm6l1wZYIXQurHkHXl5qRWVtVrKDBHM5VkcrERXbDdVqPrlAqmPPm
+ b4RsFafzc8NkynJrJhD60LW4E6cli01gC5F9gGfd6yeFGheimpNcUtqtoP8OAge2GnpH+ohne
+ 3R/CqDXTi26RVR9IzGv2uAsfSRWiYhY9yaitv/VIiqPai8vxdHCTK4BJ6YUkO3EQq/sz9/qfi
+ +afwyyOiaN+FTiEEN/FgmPUa14e6fuJ08jHShjGl8Vmhflh8gMXL8/SXk01mM8856ZH1uP1v7
+ YUw3hrs2eYKFne8Sc
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Markus,
-
-On Sun, Apr 05, 2020 at 10:02:47PM +0200, Markus Elfring wrote:
-> > NULL check before kfree is unnecessary so remove it.
+On Sat, Apr 04, 2020 at 01:14:52PM +0200, Markus Elfring wrote:
+> > dma_alloc_coherent() now zeroes memory after allocation, so additional
+> > calls to memset() afterwards are unnecessary. Remove them.
 >
-> I hope that you would like to take another update suggestion into accoun=
-t
-> (besides a typo correction for your commit message).
-> https://lore.kernel.org/patchwork/patch/1220189/
-> https://lore.kernel.org/linux-scsi/20200403164712.49579-1-alex.dewar@gmx=
-.co.uk/
+> I suggest to reconsider the distribution of recipients also for this pat=
+ch
+> according to the fields =E2=80=9CCc=E2=80=9D and =E2=80=9CTo=E2=80=9D.
 
-I'm not sure I understand the relevance. Are you saying I should
-reference this other patch?
-
+Thanks. I'll do this in a v2/RESEND.
 >
-> Do you find a previous update suggestion like =E2=80=9CSCSI-aic7...: Del=
-ete unnecessary
-> checks before the function call "kfree"=E2=80=9D also interesting?
-> https://lore.kernel.org/linux-scsi/54D3E057.9030600@users.sourceforge.ne=
-t/
-> https://lore.kernel.org/patchwork/patch/540593/
-> https://lkml.org/lkml/2015/2/5/650
 >
+> =E2=80=A6
+> > +++ b/drivers/scsi/dpt_i2o.c
+> =E2=80=A6
+> > @@ -3067,13 +3064,12 @@ static int adpt_i2o_build_sys_table(void)
+> >  	sys_tbl_len =3D sizeof(struct i2o_sys_tbl) +	// Header + IOPs
+> >  				(hba_count) * sizeof(struct i2o_sys_tbl_entry);
+> >
+> > -	sys_tbl =3D dma_alloc_coherent(&pHba->pDev->dev,
+> > -				sys_tbl_len, &sys_tbl_pa, GFP_KERNEL);
+> > +	sys_tbl =3D dma_alloc_coherent(&pHba->pDev->dev, sys_tbl_len,
+> > +				     &sys_tbl_pa, GFP_KERNEL);
+> >  	if (!sys_tbl) {
+> =E2=80=A6
+> > +++ b/drivers/scsi/mvsas/mv_init.c
+> > @@ -244,28 +244,22 @@ static int mvs_alloc(struct mvs_info *mvi, struc=
+t Scsi_Host *shost)
+> =E2=80=A6
+> > -	mvi->slot =3D dma_alloc_coherent(mvi->dev,
+> > -				       sizeof(*mvi->slot) * slot_nr,
+> > +	mvi->slot =3D dma_alloc_coherent(mvi->dev, sizeof(*mvi->slot) * slot=
+_nr,
+> >  				       &mvi->slot_dma, GFP_KERNEL);
+> >  	if (!mvi->slot)
+> =E2=80=A6
+> > +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> > @@ -79,7 +79,7 @@ qla24xx_process_abts(struct scsi_qla_host *vha, void=
+ *pkt)
+> >  	    (uint8_t *)abts, sizeof(*abts));
+> >
+> >  	rsp_els =3D dma_alloc_coherent(&ha->pdev->dev, sizeof(*rsp_els), &dm=
+a,
+> > -	    GFP_KERNEL);
+> > +				     GFP_KERNEL);
+> >  	if (!rsp_els) {
+> =E2=80=A6
+> > +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> > @@ -4887,15 +4887,13 @@ qla25xx_set_els_cmds_supported(scsi_qla_host_t=
+ *vha)
+> >  	    "Entered %s.\n", __func__);
+> >
+> >  	els_cmd_map =3D dma_alloc_coherent(&ha->pdev->dev, ELS_CMD_MAP_SIZE,
+> > -	    &els_cmd_map_dma, GFP_KERNEL);
+> > +					 &els_cmd_map_dma, GFP_KERNEL);
+> >  	if (!els_cmd_map) {
+> =E2=80=A6
+>
+> I find it safer to integrate such source code reformattings by
+> another update step which will be separated from the proposed deletion
+> of unwanted function calls.
 
-Thanks for the reference. I'll mention it in the commit if I do a v2.
+Good point. This whitespace was autoformatted by Coccinelle, probably
+due to my bad SmPL skills.
 
 Best,
 Alex
 
+
+>
 > Regards,
 > Markus
