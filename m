@@ -2,183 +2,136 @@ Return-Path: <SRS0=qNH0=5X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E284C2BB55
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 11:14:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81C11C2BB54
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 11:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4448D2078C
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 11:14:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QC5f1Wgd"
+	by mail.kernel.org (Postfix) with ESMTP id 5FE3D20731
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 11:54:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728304AbgDGLOs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Apr 2020 07:14:48 -0400
-Received: from mail-qk1-f196.google.com ([209.85.222.196]:45507 "EHLO
-        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728121AbgDGLOs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2020 07:14:48 -0400
-Received: by mail-qk1-f196.google.com with SMTP id o18so1129604qko.12
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Apr 2020 04:14:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=AxGDTBKx0oR0ZEuQlfMPILDmojf+k4jktn+uJ+gBQcA=;
-        b=QC5f1Wgd8SpqgnsofxUlKaMX0JYVS6adFdSVh2LduuU0dkTn0XYacyzYTDpllD1zbb
-         wDj+bc3KOoqCP5wb/WB+n97nYBaBtv7m6P8XENQlEGfKPa12Zqpkha4O5jg/bFGACgSU
-         MklP2zuBOOwn6Kb1krF0ul87B7Kc7WPvOOUk8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=AxGDTBKx0oR0ZEuQlfMPILDmojf+k4jktn+uJ+gBQcA=;
-        b=aNkBAVQ28n5WrKkWyWoL2cx96Gt0mU0jC8VjgQ0zUJZ4rYpyIg1buPj4/0q+WF8X9B
-         laeq6BNFsGg1ASMB3+DPt8+kdrLResSoRsf9FOc3kOqvyQuRhhssa/r4qYBKG+FBovDM
-         E2DmLXoQkNGyiSWMLaTwyIIF+rBW3tXE3p4dCFMwr+itFbVbTeRJmCPtPDoxSQ1f5SoO
-         IvknUoQ/lFkB16wuw5GITLHI/qN5n2ZQBhz5cmKjjdyPQlEqdpCGCo8cLrku8x+DtElt
-         0joNIo3a21RrMYoShc+m0yeEsb1b8GtYX9sALbcYKzbdgMVKiEAo+2m2jotiwI4wcepM
-         wlGQ==
-X-Gm-Message-State: AGi0PuYx/hFqIuqGIZay/qFghKQn7M67yNVMTo3GHAN311zBud3pRMUS
-        MmCYWMzt72O9cQmuUBaa4MUfzrsgVWq6GjPxvU+nyw==
-X-Google-Smtp-Source: APiQypLNNmE+wIvFexkkU6ncMpEp9ywJ1yjH90oGL9WqPLVeb0/FxG/z17rc6SNK34oTIMiaGfPos41/9reSqbKjE7I=
-X-Received: by 2002:a37:8c06:: with SMTP id o6mr1534526qkd.27.1586258086378;
- Tue, 07 Apr 2020 04:14:46 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1583409280-158604-1-git-send-email-john.garry@huawei.com> <1583409280-158604-9-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1583409280-158604-9-git-send-email-john.garry@huawei.com>
-MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQLPD/Iw6Rn2DAIn/TfwmBaZDWGoTwIxkurkpmnnpIA=
-Date:   Tue, 7 Apr 2020 16:44:42 +0530
-Message-ID: <a1f0399e2e85b2244a9ae40e4a2f1089@mail.gmail.com>
-Subject: RE: [PATCH RFC v6 08/10] megaraid_sas: switch fusion adapters to MQ
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.de,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        hch@infradead.org,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-Cc:     chenxiang66@hisilicon.com, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
+        id S1728492AbgDGLyy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Apr 2020 07:54:54 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2635 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726562AbgDGLyy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Apr 2020 07:54:54 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 159A3B05CDA06F27F690;
+        Tue,  7 Apr 2020 12:54:52 +0100 (IST)
+Received: from [127.0.0.1] (10.210.168.238) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 7 Apr 2020
+ 12:54:50 +0100
+Subject: Re: [PATCH RFC v2 02/24] scsi: allocate separate queue for reserved
+ commands
+To:     Hannes Reinecke <hare@suse.de>,
+        Christoph Hellwig <hch@infradead.org>
+CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <bvanassche@acm.org>, <linux-block@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <virtualization@lists.linux-foundation.org>,
+        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
         Hannes Reinecke <hare@suse.com>
-Content-Type: text/plain; charset="UTF-8"
+References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
+ <1583857550-12049-3-git-send-email-john.garry@huawei.com>
+ <20200310183243.GA14549@infradead.org>
+ <79cf4341-f2a2-dcc9-be0d-2efc6e83028a@huawei.com>
+ <20200311062228.GA13522@infradead.org>
+ <b5a63725-722b-8ccd-3867-6db192a248a4@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <9c6ced82-b3f1-9724-b85e-d58827f1a4a4@huawei.com>
+Date:   Tue, 7 Apr 2020 12:54:29 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <b5a63725-722b-8ccd-3867-6db192a248a4@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.168.238]
+X-ClientProxiedBy: lhreml738-chm.china.huawei.com (10.201.108.188) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -373,24 +373,24 @@ megasas_get_msix_index(struct megasas_instance
-> *instance,  {
->  	int sdev_busy;
->
-> -	/* nr_hw_queue = 1 for MegaRAID */
-> -	struct blk_mq_hw_ctx *hctx =
-> -		scmd->device->request_queue->queue_hw_ctx[0];
-> +	struct blk_mq_hw_ctx *hctx = scmd->request->mq_hctx;
+On 06/04/2020 10:05, Hannes Reinecke wrote:
+> On 3/11/20 7:22 AM, Christoph Hellwig wrote:
+>> On Tue, Mar 10, 2020 at 09:08:56PM +0000, John Garry wrote:
+>>> On 10/03/2020 18:32, Christoph Hellwig wrote:
+>>>> On Wed, Mar 11, 2020 at 12:25:28AM +0800, John Garry wrote:
+>>>>> From: Hannes Reinecke <hare@suse.com>
+>>>>>
+>>>>> Allocate a separate 'reserved_cmd_q' for sending reserved commands.
+>>>>
+>>>> Why?  Reserved command specifically are not in any way tied to queues.
+>>>> .
+>>>>
+>>>
+>>> So the v1 series used a combination of the sdev queue and the per-host
+>>> reserved_cmd_q. Back then you questioned using the sdev queue for virtio
+>>> scsi, and the unconfirmed conclusion was to use a common per-host q. This is
+>>> the best link I can find now:
+>>>
+>>> https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg83177.html
+>>
+>> That was just a question on why virtio uses the per-device tags, which
+>> didn't look like it made any sense.  What I'm worried about here is
+>> mixing up the concept of reserved tags in the tagset, and queues to use
+>> them.  Note that we already have the scsi_get_host_dev to allocate
+>> a scsi_device and thus a request_queue for the host itself.  That seems
+>> like the better interface to use a tag for a host wide command vs
+>> introducing a parallel path.
+>>
+> Thinking about it some more, I don't think that scsi_get_host_dev() is
+> the best way of handling it.
+> Problem is that it'll create a new scsi_device with <hostno:this_id:0>,
+> which will then show up via eg 'lsscsi'.
 
-Hi John,
+are you sure? Doesn't this function just allocate the sdev, but do 
+nothing with it, like probing it?
 
-There is one outstanding patch which will eventually remove device_busy
-from sdev. To fix this interface, we may have to track per scsi device
-outstanding within a driver.
-For my testing I used below since we still have below interface available.
+I bludgeoned it in here for PoC:
 
-        sdev_busy = atomic_read(&scmd->device->device_busy);
+https://github.com/hisilicon/kernel-dev/commit/ef0ae8540811e32776f64a5b42bd76cbed17ba47
 
-We have done some level of testing to know performance impact on SAS SSDs
-and HDD setup. Here is my finding -
-My testing used - Two socket Intel Skylake/Lewisburg/Purley
-Output of numactl --hardware
+And then still:
 
-available: 2 nodes (0-1)
-node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 36 37 38 39 40 41
-42 43 44 45 46 47 48 49 50 51 52 53
-node 0 size: 31820 MB
-node 0 free: 21958 MB
-node 1 cpus: 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 54 55
-56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71
-node 1 size: 32247 MB
-node 1 free: 21068 MB
-node distances:
-node   0   1
-  0:  10  21
-  1:  21  10
+john@ubuntu:~$ lsscsi
+[0:0:0:0] disk SEAGATE  ST2000NM0045  N004  /dev/sda
+[0:0:1:0] disk SEAGATE  ST2000NM0045  N004  /dev/sdb
+[0:0:2:0] disk ATASAMSUNG HM320JI  0_01  /dev/sdc
+[0:0:3:0] disk SEAGATE  ST1000NM0023  0006  /dev/sdd
+[0:0:4:0] enclosu HUAWEIExpander 12Gx16  128-
+john@ubuntu:~$
 
+Some proper plumbing would be needed, though.
 
-64 HDD setup -
+> This would be okay if 'this_id' would have been defined by the driver;
+> sadly, most drivers which are affected here do set 'this_id' to -1.
+> So we wouldn't have a nice target ID to allocate the device from, let
+> alone the problem that we would have to emulate a complete scsi device
+> with all required minimal command support etc.
+> And I'm not quite sure how well that would play with the exising SCSI
+> host template; the device we'll be allocating would have basically
+> nothing in common with the 'normal' SCSI devices.
+> 
+> What we could do, though, is to try it the other way round:
+> Lift the request queue from scsi_get_host_dev() into the scsi host
+> itself, so that scsi_get_host_dev() can use that queue, but we also
+> would be able to use it without a SCSI device attached.
 
-With higher QD and io schedulder = mq-deadline, shared host tag is not
-scaling well. If I use ioscheduler = none, I can see consistent 2.0M IOPs.
-This issue is seen only with RFC. Without RFC mq-deadline scales up to
-2.0M IOPS.
+wouldn't that limit 1x scsi device per host, not that I know if any more 
+would ever be required? But it does still seem better to use the request 
+queue in the scsi device.
 
-Perf Top result of RFC - (IOPS = 1.4M IOPS)
+> 
 
-   78.20%  [kernel]        [k] native_queued_spin_lock_slowpath
-     1.46%  [kernel]        [k] sbitmap_any_bit_set
-     1.14%  [kernel]        [k] blk_mq_run_hw_queue
-     0.90%  [kernel]        [k] _mix_pool_bytes
-     0.63%  [kernel]        [k] _raw_spin_lock
-     0.57%  [kernel]        [k] blk_mq_run_hw_queues
-     0.56%  [megaraid_sas]  [k] complete_cmd_fusion
-     0.54%  [megaraid_sas]  [k] megasas_build_and_issue_cmd_fusion
-     0.50%  [kernel]        [k] dd_has_work
-     0.38%  [kernel]        [k] _raw_spin_lock_irqsave
-     0.36%  [kernel]        [k] gup_pgd_range
-     0.35%  [megaraid_sas]  [k] megasas_build_ldio_fusion
-     0.31%  [kernel]        [k] io_submit_one
-     0.29%  [kernel]        [k] hctx_lock
-     0.26%  [kernel]        [k] try_to_grab_pending
-     0.24%  [kernel]        [k] scsi_queue_rq
-     0.22%  fio             [.] __fio_gettime
-     0.22%  [kernel]        [k] insert_work
-     0.20%  [kernel]        [k] native_irq_return_iret
-
-Perf top without RFC driver - (IOPS = 2.0 M IOPS)
-
-    58.40%  [kernel]          [k] native_queued_spin_lock_slowpath
-     2.06%  [kernel]          [k] _mix_pool_bytes
-     1.38%  [kernel]          [k] _raw_spin_lock_irqsave
-     0.97%  [kernel]          [k] _raw_spin_lock
-     0.91%  [kernel]          [k] scsi_queue_rq
-     0.82%  [kernel]          [k] __sbq_wake_up
-     0.77%  [kernel]          [k] _raw_spin_unlock_irqrestore
-     0.74%  [kernel]          [k] scsi_mq_get_budget
-     0.61%  [kernel]          [k] gup_pgd_range
-     0.58%  [kernel]          [k] aio_complete_rw
-     0.52%  [kernel]          [k] elv_rb_add
-     0.50%  [kernel]          [k] llist_add_batch
-     0.50%  [kernel]          [k] native_irq_return_iret
-     0.48%  [kernel]          [k] blk_rq_map_sg
-     0.48%  fio               [.] __fio_gettime
-     0.47%  [kernel]          [k] blk_mq_get_tag
-     0.44%  [kernel]          [k] blk_mq_dispatch_rq_list
-     0.40%  fio               [.] io_u_queued_complete
-     0.39%  fio               [.] get_io_u
-
-
-If you want me to test any top up patch, please let me know.  BTW, we also
-wants to provide module parameter for user to switch back to older
-nr_hw_queue = 1 mode. I will work on that part.
-
-24 SSD setup -
-
-I am able to see performance using RFC and without RFC is almost same.
-There is one specific drop, but that is generic kernel issue. Not related
-to RFC.
-We can discuss this issue separately. -
-
-5.6 kernel is not able to scale very well if there is heavy outstanding
-from application.
-Example -
-24 SSD setup and BS = 8K QD = 128 gives 1.73M IOPs which is h/w max, but
-at QD = 256 it gives 1.4M IOPs. It looks like there are some overhead  of
-finding free tags at sdev or shost level which leads drops in IOPs.
-
-Kashyap
+cheers,
+John
