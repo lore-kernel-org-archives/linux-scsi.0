@@ -1,377 +1,261 @@
-Return-Path: <SRS0=wQ7u=5W=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=qNH0=5X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F793C2BA1A
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 19:55:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D9DC2BB1D
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 00:28:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2640E20672
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Apr 2020 19:55:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A83CC20787
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 00:28:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="faml8ktX"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ZdaPh6nx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726287AbgDFTy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Apr 2020 15:54:56 -0400
-Received: from mail-mw2nam12on2124.outbound.protection.outlook.com ([40.107.244.124]:36861
-        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725895AbgDFTy4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Apr 2020 15:54:56 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y246/UzEp+8x8ho/8K0taEXJzp3ZX3HYz1leTvoyyxDsTHjrnpM7oRoXDZR0g9F/bumkAg3R1LnwSjD+avOJAaZKWWxLEQVouXZCapKEzVZga3QZlns+4CqMW9AgcmA43ZyYvVYMLRudM1UtMU6cYe8xxfDq27z32LdFmM+j08I0I9JmnyJ3R7jZGzPN/nuuMbn64f0q6m5yQtEKe9hkgGOZz+GcdKZaS3iMO1z6yJaL2oCSNOXyxH/LOamReDfz9VSmbyZVYVLmOg3GWLaFDLOpLRgUm+EV7d9KDHB1UGgJRZyRUQq3yTlY85OnNR4B32iqUf7omPv7jb6PcT/qkA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=geYO94/PK6asAmXIj/Pf/JA+/q10GabkU+nwPkhbASA=;
- b=kgdDHfcknW6isoXQfch5Ic9HCbURsXw/VlujDjtdlYbqTyYRyHVNIFxCSSsduZgLRIHAu8dH5Nv/xdw9xrjkPLuOp3yrP3dNVQj7uAi0N3hLPWHjUs/hpEnRH+TRAEUsLR/0r+QVUn5UwGsr7ph820XLo7xB2wKG6ERhNAGyQpBePjhv8DyuEpJJG9TNgzgT0LKEJZx6GYx6Ar4AduD5bnHyzG+Eb2/KUcUrP9F0HMZXdqT//exadk63z9ZfcSirl+hZEpkBN2+vOq5dRXPXc6L9Sv7RMzkd3VqGLbRZh/2d+DsOoiO8FQb6QqNqDBCwl9fayKmCDx6yhscug7MZIQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=geYO94/PK6asAmXIj/Pf/JA+/q10GabkU+nwPkhbASA=;
- b=faml8ktXWRv9Tpgvfr0DlR1wcHQIk7TU+DEIwmPNCyD+KuXcTIhgR5yMHjhO65vX0eLRkr3BAQ8OQJdpxW55mLzzrF94j1xDD+Ehp/jRH6PrNKwOxyE2ql8pcq4yEiXS+aj8NshelmaeizNggj5pYxNWqBvGrwyp4Lc47KLexuc=
-Received: from BN8PR21MB1155.namprd21.prod.outlook.com (2603:10b6:408:73::10)
- by BN8PR21MB1298.namprd21.prod.outlook.com (2603:10b6:408:a3::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2900.4; Mon, 6 Apr
- 2020 19:54:47 +0000
-Received: from BN8PR21MB1155.namprd21.prod.outlook.com
- ([fe80::d11:18b7:289c:ea17]) by BN8PR21MB1155.namprd21.prod.outlook.com
- ([fe80::d11:18b7:289c:ea17%6]) with mapi id 15.20.2900.012; Mon, 6 Apr 2020
- 19:54:46 +0000
-From:   Long Li <longli@microsoft.com>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Boqun Feng <boqun.feng@gmail.com>,
-        vkuznets <vkuznets@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
- interrupt is re-assigned
-Thread-Topic: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
- interrupt is re-assigned
-Thread-Index: AQHWC6i+EppuRPIzmUWsHp6UWcZ3DKhscw0Q
-Date:   Mon, 6 Apr 2020 19:54:46 +0000
-Message-ID: <BN8PR21MB1155C78AAC02D02EA7A7841DCEC20@BN8PR21MB1155.namprd21.prod.outlook.com>
-References: <20200406001514.19876-1-parri.andrea@gmail.com>
- <20200406001514.19876-12-parri.andrea@gmail.com>
-In-Reply-To: <20200406001514.19876-12-parri.andrea@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=longli@microsoft.com; 
-x-originating-ip: [2001:4898:80e8:0:edee:db5c:c6fe:798]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 9ea7ba7b-72be-4ecd-2999-08d7da645ba3
-x-ms-traffictypediagnostic: BN8PR21MB1298:|BN8PR21MB1298:|BN8PR21MB1298:
-x-ms-exchange-transport-forked: True
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <BN8PR21MB1298DA60E660DD81C9D8FB32CEC20@BN8PR21MB1298.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 0365C0E14B
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR21MB1155.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(346002)(396003)(136003)(366004)(39860400002)(376002)(6506007)(52536014)(8676002)(81156014)(54906003)(316002)(81166006)(55016002)(7696005)(8936002)(82950400001)(82960400001)(9686003)(478600001)(10290500003)(86362001)(5660300002)(66446008)(66946007)(76116006)(33656002)(2906002)(186003)(8990500004)(110136005)(4326008)(66556008)(71200400001)(66476007)(64756008);DIR:OUT;SFP:1102;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: iYdTw9uZConV56qHPwyT7PMKJBkx7mhpxeXt74udfFWItSjNfymsksTORnyOIEvqOweGIgake4CAHLtq56u+zZFl858ie2uDsEHsp0F8RGjfP6Zq93XVTLJ/H/a7F+yWUxIhdCTKBm2I2Q3OmsG/iPrqYIKxlzbQzE7BSVb2DdJj92eaQSlYu2Do8OgFwianVc59/hUeK5svsh3FvexBu0ETOnicwsWZvpvGytorJN8RLmr/53OCAPV0Rt7esTSmWg0+2frQbZdsOLuIavEpRgRsBS0XptNIdo7DgZrJIdbGVPZMZ2EeKiE/TTOScymzGUK06qFAd2d4YdWPoC3A3rLJgwJJf42MHSxeHqsY3pWg/zWDMRDObSlrFXb1UZVjoAkf2Ygp3ynJr6mCdZbFNe2n1R5ln7Gi0gjyqtt0oZgMU4mBnin7z7z6sN5xgqqk
-x-ms-exchange-antispam-messagedata: vm4fmT3Qb8TH05uHx7FMtrXJ2JwiqDOgzinE7jbLqeO6OnyIB1wXicBgV3RGlzn0uWVqowDzr18nbfJ02VVRrE8JxjO/yjBD+cdvgSY7PjCgpxvuWsZKD8KqnX3R2xpyIIEzSvfXR8TrULUGwmXagL8eFt+2Kh+yWhUOxz0uJ0A6yCGpP6WMMD65lMzcxvjguGL33Mg6Z0tdqjIK7ApvLg==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726575AbgDGA2d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Apr 2020 20:28:33 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:42095 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726426AbgDGA2c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2020 20:28:32 -0400
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200407002829epoutp0259a9d848456a27536077ff2e911df359~DYg7lJEmw2335223352epoutp028
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Apr 2020 00:28:29 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200407002829epoutp0259a9d848456a27536077ff2e911df359~DYg7lJEmw2335223352epoutp028
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1586219309;
+        bh=kYk8Hja5i9axWYkSYRQNU8uWD4EAZdAI2RMgv2nSU+I=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=ZdaPh6nxjKQ4tbeI2RddahsdKtWisZw9Z5zwmAuz6igAPL/JPdZBRT3JO/Y2v+lDN
+         kURHZIx/nMqA/pyMfPYkEGLL5er1I10NULXV+PsWzgd846W5DWvSNt7wxoR1ReNahk
+         d3rNhtkV0G9oSKrzyAHVWKHyzRwHK08rjt3iVB9A=
+Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20200407002829epcas5p1eeda5f53dde4d0759e2c87506cb60524~DYg7JAQJD2710727107epcas5p1v;
+        Tue,  7 Apr 2020 00:28:29 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        82.3F.04782.D29CB8E5; Tue,  7 Apr 2020 09:28:29 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200407002827epcas5p32458e0a4063aa41afb9ef95030724c53~DYg5caoo51090110901epcas5p3j;
+        Tue,  7 Apr 2020 00:28:27 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200407002827epsmtrp254a304db95ebcc55170af7ba6c73c89f~DYg5asa_51303013030epsmtrp2m;
+        Tue,  7 Apr 2020 00:28:27 +0000 (GMT)
+X-AuditID: b6c32a49-89bff700000012ae-0a-5e8bc92db9f4
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2C.A2.04158.B29CB8E5; Tue,  7 Apr 2020 09:28:27 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200407002824epsmtip1ede61960b9b3fd8c9cb1e5b97448dc25~DYg2ZBaig2114921149epsmtip1D;
+        Tue,  7 Apr 2020 00:28:24 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Rob Herring'" <robh@kernel.org>
+Cc:     <devicetree@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <krzk@kernel.org>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
+        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+In-Reply-To: <20200405015416.GA16616@bogus>
+Subject: RE: [PATCH v4 1/5] dt-bindings: phy: Document Samsung UFS PHY
+ bindings
+Date:   Tue, 7 Apr 2020 05:58:21 +0530
+Message-ID: <006401d60c73$7486ec20$5d94c460$@samsung.com>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9ea7ba7b-72be-4ecd-2999-08d7da645ba3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Apr 2020 19:54:46.2040
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Qj37cmWdhYe2V2q1zFBhKjKzwLAF6PwcSHAN1olWP2QCDCQZeLqCl52ofeJPLVyAxV5k8NtEkmrVsDKKN/6juA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR21MB1298
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKI+vJzlUBp7WIi19k8pRZBKIHK2gGQnU/1Ag9B/DgCQMO8c6bX6iwg
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA01SaUhUYRTlm7f4NCeeT8HrCFZTRipqVtKLNPsR8iILi4Io0YZ8qLg2z9GU
+        IqvB1HHEhCwnUaPUMnMZNZdyYcplwpTUMVyKTIco0kghN9rGN5H/zv3OOd+5By6FMUOEjIpJ
+        SOaVCYo4OWmHP33h4entbdSE73w0xLCfl00kO19bQbClLwcIdnCwzoYda+zGWf30KMEOtxWT
+        7J3BDgmredtCspW9vyTs7+ctNmx50xg6aM8N52klnL4qm+QaHlzh1MZOnPtuHse5vMYqxC3o
+        3bgbXRpJKHXGLiCSj4tJ4ZW+B87ZRde/1pBJDfKLtwYKiAzUJ8tBthTQe6DuvYnMQXYUQz9D
+        MDOxZB3mESy1vrEOPxA0P6zE/1k0tfesRDuCvvmrhDh8RdCxsrKmImlvaLmfSVqwE+0O13Qf
+        cIsIo3slMJ01LrEQtrQXGPU/MQt2pI/DYuHCXwNF4fQ2GPuYbIFSeh/os3ZZFFLaAYxFM2vf
+        Y/QmaJ4txsSFNsOyuYIQo4Kh01xv1ThD93IuZokFusYGSu9mINFwCKrLRq1mR/jS22gjYhks
+        zLWvrQB0LOS27RafL0F5SY+1fBB0jRTjFglGe0Btm68YtRG0qzMS0SmFrExGVLvD9TmT1ekK
+        NzUaQsQctGv7sHy0RbeumG5dMd26Arr/YWUIr0IufJIQH8UL/kl+CXyqj6CIF1QJUT7nE+P1
+        aO3SPA+3IN1AiAHRFJLbS0/basIZQpEipMUbEFCY3Ekq02aHM9JIRVo6r0yMUKrieMGAXClc
+        7iwtIExhDB2lSOZjeT6JV/5jJZStLAOlnbx8KrjNrH2HJmPUGzLcBoy9txdHvXakKx8/MeRP
+        7E0cOevwbapkvja9zP9Tmqu6KGyVSO83aAOQ6kiXS35stz3aGqhfYl+tMCamuDHk6KpjaoMZ
+        6bUdROt2xRQTXHjMPrCeU9Ush9b3qIXZ/gvZs02T6rwTQREpePXgfjkuRCv8PDGloPgDpvJd
+        9mUDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCIsWRmVeSWpSXmKPExsWy7bCSnK72ye44g6ZuWYuXP6+yWXxav4zV
+        Yv6Rc6wW589vYLe4ueUoi8Wmx9dYLS7vmsNmMeP8PiaL7us72CyWH//HZPF/zw52i6VbbzI6
+        8Hhc7utl8ti0qpPNY/OSeo+Wk/tZPD4+vcXi0bdlFaPH501yHu0HupkCOKK4bFJSczLLUov0
+        7RK4Mjae7WYr2KxUMfXcJNYGxhNSXYycHBICJhLd6xeygdhCArsZJd4uVIeIS0tc3ziBHcIW
+        llj57zmQzQVU84pRYuXyaSwgCTYBXYkdi9vAmkUEVCWaZj1gASliFrjMJHHkzQs2iI57jBK3
+        755iBaniFNCWOLnpLzOILSzgL9Hz8RljFyMHB4uAisTNRyUgJq+ApcSmDiOQCl4BQYmTM5+w
+        gISZBfQk2jYygoSZBeQltr+dwwxxm4LEz6fLWCFOcJPY/3QjC0SNuMTRnz3MExiFZyGZNAth
+        0iwkk2Yh6VjAyLKKUTK1oDg3PbfYsMAoL7Vcrzgxt7g0L10vOT93EyM4LrW0djCeOBF/iFGA
+        g1GJh5eBvTtOiDWxrLgy9xCjBAezkgivVG9nnBBvSmJlVWpRfnxRaU5q8SFGaQ4WJXFe+fxj
+        kUIC6YklqdmpqQWpRTBZJg5OqQbGZrPzdQ+luA8G/jlsrvKQoYJD8NHOQwmKL6wLK5Pizy7u
+        Mjv4gv9wxZylNa32d78x3td/eGz7d4acoFU3otm7D4S28PMmNIYayxmybrVgdMxi+6/m5vDb
+        NV+yvaMiT2ZJwNf4VYnuXqctYsyv/DTzOsCWxxto8mb7mtieVf3LtKOszjTPT1RiKc5INNRi
+        LipOBACcpHwYxwIAAA==
+X-CMS-MailID: 20200407002827epcas5p32458e0a4063aa41afb9ef95030724c53
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200327171414epcas5p1460e932c0bc98f31ebdd115218b4fd49
+References: <20200327170638.17670-1-alim.akhtar@samsung.com>
+        <CGME20200327171414epcas5p1460e932c0bc98f31ebdd115218b4fd49@epcas5p1.samsung.com>
+        <20200327170638.17670-2-alim.akhtar@samsung.com>
+        <20200405015416.GA16616@bogus>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->Subject: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
->interrupt is re-assigned
->
->For each storvsc_device, storvsc keeps track of the channel target CPUs
->associated to the device (alloced_cpus) and it uses this information to fi=
-ll a
->"cache" (stor_chns) mapping CPU->channel according to a certain heuristic.
->Update the alloced_cpus mask and the stor_chns array when a channel of the
->storvsc device is re-assigned to a different CPU.
->
->Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
->Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
->Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
->Cc: <linux-scsi@vger.kernel.org>
->---
-> drivers/hv/vmbus_drv.c     |  4 ++
-> drivers/scsi/storvsc_drv.c | 95 ++++++++++++++++++++++++++++++++++---
->-
-> include/linux/hyperv.h     |  3 ++
-> 3 files changed, 94 insertions(+), 8 deletions(-)
->
->diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c index
->0f204640c50c2..f0be41bfcbf57 100644
->--- a/drivers/hv/vmbus_drv.c
->+++ b/drivers/hv/vmbus_drv.c
->@@ -1750,6 +1750,10 @@ static ssize_t target_cpu_store(struct
->vmbus_channel *channel,
-> 	 * in on a CPU that is different from the channel target_cpu value.
-> 	 */
->
->+	if (channel->change_target_cpu_callback)
->+		(*channel->change_target_cpu_callback)(channel,
->+				channel->target_cpu, target_cpu);
->+
-> 	channel->target_cpu =3D target_cpu;
-> 	channel->target_vp =3D hv_cpu_number_to_vp_number(target_cpu);
-> 	channel->numa_node =3D cpu_to_node(target_cpu); diff --git
->a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c index
->fb41636519ee8..a680592b9d32a 100644
->--- a/drivers/scsi/storvsc_drv.c
->+++ b/drivers/scsi/storvsc_drv.c
->@@ -621,6 +621,63 @@ static inline struct storvsc_device
->*get_in_stor_device(
->
-> }
->
->+void storvsc_change_target_cpu(struct vmbus_channel *channel, u32 old,
->+u32 new) {
->+	struct storvsc_device *stor_device;
->+	struct vmbus_channel *cur_chn;
->+	bool old_is_alloced =3D false;
->+	struct hv_device *device;
->+	unsigned long flags;
->+	int cpu;
->+
->+	device =3D channel->primary_channel ?
->+			channel->primary_channel->device_obj
->+				: channel->device_obj;
->+	stor_device =3D get_out_stor_device(device);
->+	if (!stor_device)
->+		return;
->+
->+	/* See storvsc_do_io() -> get_og_chn(). */
->+	spin_lock_irqsave(&device->channel->lock, flags);
->+
->+	/*
->+	 * Determines if the storvsc device has other channels assigned to
->+	 * the "old" CPU to update the alloced_cpus mask and the stor_chns
->+	 * array.
->+	 */
->+	if (device->channel !=3D channel && device->channel->target_cpu =3D=3D
->old) {
->+		cur_chn =3D device->channel;
->+		old_is_alloced =3D true;
->+		goto old_is_alloced;
->+	}
->+	list_for_each_entry(cur_chn, &device->channel->sc_list, sc_list) {
->+		if (cur_chn =3D=3D channel)
->+			continue;
->+		if (cur_chn->target_cpu =3D=3D old) {
->+			old_is_alloced =3D true;
->+			goto old_is_alloced;
->+		}
->+	}
->+
->+old_is_alloced:
->+	if (old_is_alloced)
->+		WRITE_ONCE(stor_device->stor_chns[old], cur_chn);
->+	else
->+		cpumask_clear_cpu(old, &stor_device->alloced_cpus);
+Hi Rob,
 
-If the old cpu is not allocated, is it still necessary to do a cpumask_clea=
-r_cpu?
+> -----Original Message-----
+> From: Rob Herring <robh@kernel.org>
+> Sent: 05 April 2020 07:24
+> To: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: devicetree@vger.kernel.org; linux-scsi@vger.kernel.org;
+krzk@kernel.org;
+> avri.altman@wdc.com; martin.petersen@oracle.com;
+> kwmad.kim@samsung.com; stanley.chu@mediatek.com;
+> cang@codeaurora.org; linux-samsung-soc@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH v4 1/5] dt-bindings: phy: Document Samsung UFS PHY
+> bindings
+> 
+> On Fri, Mar 27, 2020 at 10:36:34PM +0530, Alim Akhtar wrote:
+> > This patch documents Samsung UFS PHY device tree bindings
+> >
+> > Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+> > ---
+> >  .../bindings/phy/samsung,ufs-phy.yaml         | 67 +++++++++++++++++++
+> >  1 file changed, 67 insertions(+)
+> >  create mode 100644
+> > Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> >
+> > diff --git
+> > a/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> > b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> > new file mode 100644
+> > index 000000000000..41ba481ecc76
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> > @@ -0,0 +1,67 @@
+> > +# SPDX-License-Identifier: (GPL-2.0)
+> 
+> Dual license new bindings:
+> 
+> (GPL-2.0-only OR BSD-2-Clause)
+> 
+Sure will update.
 
->+
->+	/* "Flush" the stor_chns array. */
->+	for_each_possible_cpu(cpu) {
->+		if (stor_device->stor_chns[cpu] && !cpumask_test_cpu(
->+					cpu, &stor_device->alloced_cpus))
->+			WRITE_ONCE(stor_device->stor_chns[cpu], NULL);
->+	}
->+
->+	WRITE_ONCE(stor_device->stor_chns[new], channel);
->+	cpumask_set_cpu(new, &stor_device->alloced_cpus);
->+
->+	spin_unlock_irqrestore(&device->channel->lock, flags); }
->+
-> static void handle_sc_creation(struct vmbus_channel *new_sc)  {
-> 	struct hv_device *device =3D new_sc->primary_channel->device_obj;
->@@ -648,6 +705,8 @@ static void handle_sc_creation(struct vmbus_channel
->*new_sc)
-> 		return;
-> 	}
->
->+	new_sc->change_target_cpu_callback =3D storvsc_change_target_cpu;
->+
-> 	/* Add the sub-channel to the array of available channels. */
-> 	stor_device->stor_chns[new_sc->target_cpu] =3D new_sc;
-> 	cpumask_set_cpu(new_sc->target_cpu, &stor_device-
->>alloced_cpus); @@ -876,6 +935,8 @@ static int storvsc_channel_init(struct
->hv_device *device, bool is_fc)
-> 	if (stor_device->stor_chns =3D=3D NULL)
-> 		return -ENOMEM;
->
->+	device->channel->change_target_cpu_callback =3D
->+storvsc_change_target_cpu;
->+
-> 	stor_device->stor_chns[device->channel->target_cpu] =3D device-
->>channel;
-> 	cpumask_set_cpu(device->channel->target_cpu,
-> 			&stor_device->alloced_cpus);
->@@ -1248,8 +1309,10 @@ static struct vmbus_channel *get_og_chn(struct
->storvsc_device *stor_device,
-> 	const struct cpumask *node_mask;
-> 	int num_channels, tgt_cpu;
->
->-	if (stor_device->num_sc =3D=3D 0)
->+	if (stor_device->num_sc =3D=3D 0) {
->+		stor_device->stor_chns[q_num] =3D stor_device->device-
->>channel;
-> 		return stor_device->device->channel;
->+	}
->
-> 	/*
-> 	 * Our channel array is sparsley populated and we @@ -1258,7 +1321,6
->@@ static struct vmbus_channel *get_og_chn(struct storvsc_device
->*stor_device,
-> 	 * The strategy is simple:
-> 	 * I. Ensure NUMA locality
-> 	 * II. Distribute evenly (best effort)
->-	 * III. Mapping is persistent.
-> 	 */
->
-> 	node_mask =3D cpumask_of_node(cpu_to_node(q_num));
->@@ -1268,8 +1330,10 @@ static struct vmbus_channel *get_og_chn(struct
->storvsc_device *stor_device,
-> 		if (cpumask_test_cpu(tgt_cpu, node_mask))
-> 			num_channels++;
-> 	}
->-	if (num_channels =3D=3D 0)
->+	if (num_channels =3D=3D 0) {
->+		stor_device->stor_chns[q_num] =3D stor_device->device-
->>channel;
-> 		return stor_device->device->channel;
->+	}
->
-> 	hash_qnum =3D q_num;
-> 	while (hash_qnum >=3D num_channels)
->@@ -1295,6 +1359,7 @@ static int storvsc_do_io(struct hv_device *device,
-> 	struct storvsc_device *stor_device;
-> 	struct vstor_packet *vstor_packet;
-> 	struct vmbus_channel *outgoing_channel, *channel;
->+	unsigned long flags;
-> 	int ret =3D 0;
-> 	const struct cpumask *node_mask;
-> 	int tgt_cpu;
->@@ -1308,10 +1373,11 @@ static int storvsc_do_io(struct hv_device *device,
->
-> 	request->device  =3D device;
-> 	/*
->-	 * Select an an appropriate channel to send the request out.
->+	 * Select an appropriate channel to send the request out.
-> 	 */
->-	if (stor_device->stor_chns[q_num] !=3D NULL) {
->-		outgoing_channel =3D stor_device->stor_chns[q_num];
->+	/* See storvsc_change_target_cpu(). */
->+	outgoing_channel =3D READ_ONCE(stor_device->stor_chns[q_num]);
->+	if (outgoing_channel !=3D NULL) {
-> 		if (outgoing_channel->target_cpu =3D=3D q_num) {
-> 			/*
-> 			 * Ideally, we want to pick a different channel if @@ -
->1324,7 +1390,10 @@ static int storvsc_do_io(struct hv_device *device,
-> 					continue;
-> 				if (tgt_cpu =3D=3D q_num)
-> 					continue;
->-				channel =3D stor_device->stor_chns[tgt_cpu];
->+				channel =3D READ_ONCE(
->+					stor_device->stor_chns[tgt_cpu]);
->+				if (channel =3D=3D NULL)
->+					continue;
-> 				if (hv_get_avail_to_write_percent(
-> 							&channel->outbound)
-> 						> ring_avail_percent_lowater)
->{
->@@ -1350,7 +1419,10 @@ static int storvsc_do_io(struct hv_device *device,
-> 			for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
-> 				if (cpumask_test_cpu(tgt_cpu, node_mask))
-> 					continue;
->-				channel =3D stor_device->stor_chns[tgt_cpu];
->+				channel =3D READ_ONCE(
->+					stor_device->stor_chns[tgt_cpu]);
->+				if (channel =3D=3D NULL)
->+					continue;
-> 				if (hv_get_avail_to_write_percent(
-> 							&channel->outbound)
-> 						> ring_avail_percent_lowater)
->{
->@@ -1360,7 +1432,14 @@ static int storvsc_do_io(struct hv_device *device,
-> 			}
-> 		}
-> 	} else {
->+		spin_lock_irqsave(&device->channel->lock, flags);
->+		outgoing_channel =3D stor_device->stor_chns[q_num];
->+		if (outgoing_channel !=3D NULL) {
->+			spin_unlock_irqrestore(&device->channel->lock,
->flags);
+> > +%YAML 1.2
+> > +---
+> > +$id:
+> > +https://protect2.fireeye.com/url?k=91cb53a2-cc1b5b6e-91cad8ed-000babf
+> > +f3793-
+> 448c7d85bdf69f5a&q=1&u=http%3A%2F%2Fdevicetree.org%2Fschemas%2F
+> > +phy%2Fsamsung%2Cufs-phy.yaml%23
+> > +$schema:
+> > +https://protect2.fireeye.com/url?k=a8ce57c7-f51e5f0b-a8cfdc88-000babf
+> > +f3793-fbe649ab0853d701&q=1&u=http%3A%2F%2Fdevicetree.org%2Fmeta-
+> schem
+> > +as%2Fcore.yaml%23
+> > +
+> > +title: Samsung SoC series UFS PHY Device Tree Bindings
+> > +
+> > +maintainers:
+> > +  - Alim Akhtar <alim.akhtar@samsung.com>
+> > +
+> > +properties:
+> > +  "#phy-cells":
+> > +    const: 0
+> > +
+> > +  compatible:
+> > +    enum:
+> > +      - samsung,exynos7-ufs-phy
+> > +
+> > +  reg:
+> > +    maxItems: 1
+> > +    description: PHY base register address
+> > +
+> > +  reg-names:
+> > +    items:
+> > +      - const: phy-pma
+> > +
+> > +  clocks:
+> > +    items:
+> > +      - description: PLL reference clock
+> > +      - description: Referencec clock parrent
+> > +
+> > +  clock-names:
+> > +    items:
+> > +      - const: ref_clk_parent
+> > +      - const: ref_clk
+> 
+> Doesn't match what 'clocks' says.
+> 
+Will correct.
 
-Checking outgoing_channel again seems unnecessary. Why not just call get_og=
-_chn()?
+> Also, why do you need the parent in DT? Just use clk_get_parent(). DT
+should
+> reflect actual h/w clock connections (not what the driver happens to
+need).
+> Also, there's the assigned-clocks binding.
+> 
+Some of the platform deviates from the normal clock trees and need to force
+a different parent. To get such parent added this.
+I will explore a bit more on this, and check about assigned-clocks binding.
+This is also an optional clock, so will change accordingly
 
->+			goto found_channel;
->+		}
-> 		outgoing_channel =3D get_og_chn(stor_device, q_num);
->+		spin_unlock_irqrestore(&device->channel->lock, flags);
-> 	}
+> > +
+> > +  samsung,pmu-syscon:
+> > +    $ref: '/schemas/types.yaml#/definitions/phandle'
+> > +    description: phandle for PMU system controller interface, used to
+> > +                 control pmu registers for power isolation
+> 
+> We have a binding for power domains. Use that for power isolation.
+> 
+Let me have a look on that, if power domains bindings can be use here, this
+is same way other Exynos binding is defined w.r.t. pmu-syscon.
 
-With device->channel->lock, now we have one more lock on the I/O issuing pa=
-th. It doesn't seem optimal as you are trying to protect the code in storvs=
-c_change_target_cpu(), this doesn't need to block concurrent I/O issuers. M=
-aybe moving to RCU is a better approach?
-
-Thanks,
-Long
-
-
->
-> found_channel:
->diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h index
->edfcd42319ef3..9018b89614b78 100644
->--- a/include/linux/hyperv.h
->+++ b/include/linux/hyperv.h
->@@ -773,6 +773,9 @@ struct vmbus_channel {
-> 	void (*onchannel_callback)(void *context);
-> 	void *channel_callback_context;
->
->+	void (*change_target_cpu_callback)(struct vmbus_channel *channel,
->+			u32 old, u32 new);
->+
-> 	/*
-> 	 * Synchronize channel scheduling and channel removal; see the inline
-> 	 * comments in vmbus_chan_sched() and vmbus_reset_channel_cb().
->--
->2.24.0
+> > +
+> > +required:
+> > +  - "#phy-cells"
+> > +  - compatible
+> > +  - reg
+> > +  - reg-names
+> > +  - clocks
+> > +  - clock-names
+> > +  - samsung,pmu-syscon
+> > +
+> > +examples:
+> > +  - |
+> > +    #include <dt-bindings/clock/exynos7-clk.h>
+> > +
+> > +    ufs_phy: ufs-phy@15571800 {
+> > +        compatible = "samsung,exynos7-ufs-phy";
+> > +        reg = <0x15571800 0x240>;
+> > +        reg-names = "phy-pma";
+> > +        samsung,pmu-syscon = <&pmu_system_controller>;
+> > +        #phy-cells = <0>;
+> > +        clocks = <&clock_fsys1 MOUT_FSYS1_PHYCLK_SEL1>,
+> > +                 <&clock_top1 CLK_SCLK_PHY_FSYS1_26M>;
+> > +        clock-names = "ref_clk_parent",
+> > +                      "ref_clk";
+> > +    };
+> > +...
+> >
+> > base-commit: fb33c6510d5595144d585aa194d377cf74d31911
+> > --
+> > 2.17.1
+> >
 
