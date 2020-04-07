@@ -2,98 +2,107 @@ Return-Path: <SRS0=qNH0=5X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 304EBC2BA2B
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 15:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E9AC2BB55
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 15:55:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11C352074F
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 15:20:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EE882078C
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 15:55:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="UNqco5YJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729407AbgDGPUB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Apr 2020 11:20:01 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2638 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728917AbgDGPUB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Apr 2020 11:20:01 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id 5EA12238EC4E6DA72243;
-        Tue,  7 Apr 2020 16:19:59 +0100 (IST)
-Received: from [127.0.0.1] (10.210.168.238) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 7 Apr 2020
- 16:19:57 +0100
-Subject: Re: [PATCH RFC v2 02/24] scsi: allocate separate queue for reserved
- commands
-To:     Hannes Reinecke <hare@suse.de>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <virtualization@lists.linux-foundation.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-3-git-send-email-john.garry@huawei.com>
- <20200310183243.GA14549@infradead.org>
- <79cf4341-f2a2-dcc9-be0d-2efc6e83028a@huawei.com>
- <20200311062228.GA13522@infradead.org>
- <b5a63725-722b-8ccd-3867-6db192a248a4@suse.de>
- <9c6ced82-b3f1-9724-b85e-d58827f1a4a4@huawei.com>
- <39bc2d82-2676-e329-5d32-8acb99b0a204@suse.de>
- <20ebe296-9e57-b3e3-21b3-63a09ce86036@huawei.com>
- <dcfba0ea-4ba5-4e4f-150d-24bd4fe11cdd@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <38c1592d-c90a-d6ca-1e7e-e8cc665aaf22@huawei.com>
-Date:   Tue, 7 Apr 2020 16:19:35 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1727867AbgDGPzK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Apr 2020 11:55:10 -0400
+Received: from mout.gmx.net ([212.227.15.18]:41155 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727751AbgDGPzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Apr 2020 11:55:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1586274896;
+        bh=Y8CqZtz4ZQRui/81eNNZ4TzaarQvXmyN232y605+P9A=;
+        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=UNqco5YJjj80TjB5wUg4dOMO5e6ss+DUzeQ1yF4sPyNVmplnmXKjH0t7GuSpYPN3C
+         46A0o/EI1wxDODDHE+BbWw19OPPsihMwQG53wdtnTBHS4WIj+Tqo6F2P8CbpMKKC5+
+         PcOxQCa35fG7Ir+1roGUm7N5biraogjz61DTJOQQ=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from lenovo-laptop ([82.19.195.159]) by mail.gmx.com (mrgmx004
+ [212.227.17.184]) with ESMTPSA (Nemesis) id 1M2O2W-1jJ6jh3gZ4-003xIe; Tue, 07
+ Apr 2020 17:54:56 +0200
+Date:   Tue, 7 Apr 2020 16:54:53 +0100
+From:   Alex Dewar <alex.dewar@gmx.co.uk>
+To:     Markus Elfring <Markus.Elfring@web.de>
+Cc:     Qiujun Huang <hqjagain@gmail.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+        "James E. J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: aic7xxx: Remove null pointer checks before kfree()
+Message-ID: <20200407155453.sosj4brsw6r7fnot@lenovo-laptop>
+References: <72bc89d5-cf50-3f3a-41e0-b46b134e754d@web.de>
 MIME-Version: 1.0
-In-Reply-To: <dcfba0ea-4ba5-4e4f-150d-24bd4fe11cdd@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.168.238]
-X-ClientProxiedBy: lhreml738-chm.china.huawei.com (10.201.108.188) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <72bc89d5-cf50-3f3a-41e0-b46b134e754d@web.de>
+X-Provags-ID: V03:K1:DRRYbwkGmYsREHIOQQ6uPlqCNtM02NmcNjBlpaZ90sJF1rM80yD
+ e6ihZf4UqFhDcC/0GKnGcIGdGicWIbcwH50hoPPm68oO/1GIkkY8/wL6swu9SaoQHlsP6gd
+ VsgZ6OaQUaVOWzKlt1b5GzLN8gyd4EbO8/stVkQkAIe0NM8a/YnchitewJpWmVSMYt6+FUz
+ g6WBqlo1KbyQPLwKvrEuQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:3n0zuGOgyNY=:CeZhKBZNkmIH8o8ERdVx8w
+ yAJNkOcj0WwBjV5YyMFrzIxnlBd1PUx0nKGN9mjQH9+ZLTCmd/DIK/RMNCm080Qc60iU45TMo
+ 7A/YH6OYNTxIhvPjE3QNdWji1ogSiGnR6FkkOhzNOnXRpERIGLCLYDdhRcZQG9YxP4GO4tu/q
+ Fg/MDID8Ea16ZOsd1tynnFJDZsyDMUoWwwqWw1QQLct3YHleAkM0oRgm/+17gCaJyc9ZSH+d6
+ je6u0z7Q54AH/kKvgMYwk4ycLTOn5NgmGIiCZoI6AIYSPMTQGsS9Nyfl6Nz8zbnukWK5mtLTA
+ bj8fqyn2M6lQEurtMFvczN454ditDio9rvbIMv1GO1eH14nMsgTIPwKUUN8l4+se8JPwVBqV2
+ xeZul3eEh7YI0VTfFfqCfQYv3dTqPOvbxzTNkCnUm1T30ZQAxAB99EwNxEWRGzEhfda4p6e0k
+ 9F4vVjY2goQNmcOLRb0oXWEXegudfQtYU+0kKSOVRJyxCKLUiVZENmtpC//HxqK7n4VhVBHI1
+ TqW4KK44FltpBa+CtWee/q08s7/G8bwvAC7u5+qtchjAt7xZtYDzjakneeQNpGyYSTIcLj5WZ
+ 5BBoAh7ErtUgOXHmMvPK8e5W3jTOQl6wx67zBjz1h/wlWym81vtHYAnMrZB7q3UR8ohYa/+bE
+ j5MqL3QYgH8r+dbjTYIyXFqdM8AxpLn+5kWR/uO957zxI2Hvss0XN1wRsfGuFAL1bKU0JPmVb
+ zPCDS8cOY42japw/qLEnVW6d2vR5v0Eyju5sdcN8F0wdI1VthlZE2OaosZPEdnjG/SvSxstll
+ 6bGhk0vpAFyuxhPIknln6SAqOs8BxjZRbt4wl5WE5I3SIqpCiEJJRGZRzu1B184z9tBZ9aVRK
+ M0wSbBM3R938190r+zeahYBrw5VbZ9+EunLEEYWPigsT3mpnJhH62FKbd170CdNvFkZRPmP9a
+ YW+GUdc+VEXczdusxzvuEOmZNo/AUrbQDwUbU6sJ9jM70VHKPerhs7Jt6vhJKmcNiihZ2dE0K
+ ZFY8QMMqRqBl3izHcVsX4WBnXp9RkmTO3TpjRJ1ImNOD9SD7yvI9QA0ZBKyTYsJpT2PMO3ctQ
+ WAMb0o8aUGHdHK6U4g88cXMPpg/DoNoLGcY8bSBPUlFcWXSiQght345P98gW2clhiDzZdycTM
+ AdUpLwupL08mJdFrczskJmOlg2VwyX2ghQJtjY3+PX0KeSiQER5lUKF+tO8hkSzmDEDKdPxz0
+ 21NGO6xZJUEDN3NOP
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>>
->>
->> FWIW, the only other driver (gdth) which I see uses this API has 
->> this_id = -1 in the scsi host template.
->>
->>> But alright, I'll give it a go; let's see what I'll end up with.
->>
->> note: If we want a fixed scsi_device per host, calling 
->> scsi_mq_setup_tags() -> scsi_get_host_dev() will fail as shost state 
->> is not running. Maybe we need to juggle some things there to provide a 
->> generic solution.
->>
-> It might even get worse, as during device setup things like 
-> 'slave_alloc' etc is getting called, which has a fair chance of getting 
-> confused for non-existing devices.
-> Cf qla2xxx:qla2xx_slave_alloc() is calling starget_to_rport(), which 
-> will get us a nice oops when accessing a target which is _not_ the child 
-> of a fc remote port.
+Markus,
 
-Yes, something similar happens for libsas [hence my hack], where 
-sas_alloc_target()->sas_find_dev_by_rphy() fails as it cannot handle 
-rphy for scsi host as parent properly.
+On Sun, Apr 05, 2020 at 10:02:47PM +0200, Markus Elfring wrote:
+> > NULL check before kfree is unnecessary so remove it.
+>
+> I hope that you would like to take another update suggestion into accoun=
+t
+> (besides a typo correction for your commit message).
+> https://lore.kernel.org/patchwork/patch/1220189/
+> https://lore.kernel.org/linux-scsi/20200403164712.49579-1-alex.dewar@gmx=
+.co.uk/
 
-> And this is why I'm not utterly keen on this approach; auditing all 
-> these callbacks is _not_ fun.
-> 
+I'm not sure I understand the relevance. Are you saying I should
+reference this other patch?
 
-Understood. And if you can't test them, then a change like this is too 
-risky for those drivers.
+>
+> Do you find a previous update suggestion like =E2=80=9CSCSI-aic7...: Del=
+ete unnecessary
+> checks before the function call "kfree"=E2=80=9D also interesting?
+> https://lore.kernel.org/linux-scsi/54D3E057.9030600@users.sourceforge.ne=
+t/
+> https://lore.kernel.org/patchwork/patch/540593/
+> https://lkml.org/lkml/2015/2/5/650
+>
 
-Cheers,
-John
+Thanks for the reference. I'll mention it in the commit if I do a v2.
+
+Best,
+Alex
+
+> Regards,
+> Markus
