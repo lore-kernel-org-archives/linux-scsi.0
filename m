@@ -2,260 +2,203 @@ Return-Path: <SRS0=qNH0=5X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D9DC2BB1D
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 00:28:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D85A7C2BA2B
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 00:36:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A83CC20787
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 00:28:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A460220692
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Apr 2020 00:36:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ZdaPh6nx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rJmOYMk+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726575AbgDGA2d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Apr 2020 20:28:33 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:42095 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726426AbgDGA2c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2020 20:28:32 -0400
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200407002829epoutp0259a9d848456a27536077ff2e911df359~DYg7lJEmw2335223352epoutp028
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Apr 2020 00:28:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200407002829epoutp0259a9d848456a27536077ff2e911df359~DYg7lJEmw2335223352epoutp028
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1586219309;
-        bh=kYk8Hja5i9axWYkSYRQNU8uWD4EAZdAI2RMgv2nSU+I=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=ZdaPh6nxjKQ4tbeI2RddahsdKtWisZw9Z5zwmAuz6igAPL/JPdZBRT3JO/Y2v+lDN
-         kURHZIx/nMqA/pyMfPYkEGLL5er1I10NULXV+PsWzgd846W5DWvSNt7wxoR1ReNahk
-         d3rNhtkV0G9oSKrzyAHVWKHyzRwHK08rjt3iVB9A=
-Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20200407002829epcas5p1eeda5f53dde4d0759e2c87506cb60524~DYg7JAQJD2710727107epcas5p1v;
-        Tue,  7 Apr 2020 00:28:29 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        82.3F.04782.D29CB8E5; Tue,  7 Apr 2020 09:28:29 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200407002827epcas5p32458e0a4063aa41afb9ef95030724c53~DYg5caoo51090110901epcas5p3j;
-        Tue,  7 Apr 2020 00:28:27 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200407002827epsmtrp254a304db95ebcc55170af7ba6c73c89f~DYg5asa_51303013030epsmtrp2m;
-        Tue,  7 Apr 2020 00:28:27 +0000 (GMT)
-X-AuditID: b6c32a49-89bff700000012ae-0a-5e8bc92db9f4
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        2C.A2.04158.B29CB8E5; Tue,  7 Apr 2020 09:28:27 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.108.234.165]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200407002824epsmtip1ede61960b9b3fd8c9cb1e5b97448dc25~DYg2ZBaig2114921149epsmtip1D;
-        Tue,  7 Apr 2020 00:28:24 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Rob Herring'" <robh@kernel.org>
-Cc:     <devicetree@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <krzk@kernel.org>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
-        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-In-Reply-To: <20200405015416.GA16616@bogus>
-Subject: RE: [PATCH v4 1/5] dt-bindings: phy: Document Samsung UFS PHY
- bindings
-Date:   Tue, 7 Apr 2020 05:58:21 +0530
-Message-ID: <006401d60c73$7486ec20$5d94c460$@samsung.com>
+        id S1726332AbgDGAgE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Apr 2020 20:36:04 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:53694 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726254AbgDGAgE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Apr 2020 20:36:04 -0400
+Received: by mail-wm1-f65.google.com with SMTP id d77so23501wmd.3;
+        Mon, 06 Apr 2020 17:36:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=nIShw3NNsfoTaVz57iQn1zL763NO9aGMj000S0eJNTA=;
+        b=rJmOYMk+WQ1kV6LbDBBa0CvZNi8fnUkjMq1S5G3B4OJ/6Cakg9+yWCRU6bSmdQ1Vh7
+         ddcbKh/U7tZodu+kgm7b1/w+0DMyjyvwgNfweqwfRAlF5RbGP9pWhZMOH6foxB3V4Qn3
+         yyuvpM6RFRn3yLHi9J01KPikXffj+ZczFrRPgmFTu3AYFk9zy+sZn9o3RxXRl60SJAFv
+         pARdnhA1/XzI+NHEcCid7HUqIqVk/4pYw6Np7anavJRpsTvFyl3hdkvP8GHlfAonLn6l
+         pBPFbUP1OgY3MUXOqQ319SlG+zxtsLxJcf99ZxYXtMHoKtIHd663BHdGd7LQtntfW0xl
+         cB1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=nIShw3NNsfoTaVz57iQn1zL763NO9aGMj000S0eJNTA=;
+        b=kmXPVVjoO7SPkr7KtrLyzspKimjvQlDdPi1RJD5O/LTU+JplXHd8YBIgebgvgNCCPN
+         247NmykXQy4EkmBKFmdCPPofIwCIBmudoW0HYs9btrppJt8QVKyhxaxGYEE30uRnkfmy
+         Tpcm94TCUN+JZlxlQLxI/MmkFHLNHLkyvVykEaA/L1FvPWmSjXD5iXhi/R8KKhM/Oqv3
+         6MwVOszYnulfWAGqCyIjgECuV4chWeZGeaApA66ddXd2Qer1vygsQkHzxetjV1VkO4v/
+         AwirYYGjCSLjz5mA7DxYygc7XymWSUiTxVUIIZiwZO/JoSUN1JuoFvIRxDKnVNphVAQS
+         TfWg==
+X-Gm-Message-State: AGi0PuYqkHi25tcZ8dKWOWSjQaAbRIeEwXoiXjr8DF2pahvayeYQGQXa
+        gz7kxPJLdGs9g6R6XNVxDyQdeFsCVbXv8RuK
+X-Google-Smtp-Source: APiQypKiDdxZ4F0SxKsFg4pauRejuRDw2aemVtDkOGE5pOhVLWMEuBBEG9wGmF8Vmj7fQhrNTpo+1w==
+X-Received: by 2002:a05:600c:2245:: with SMTP id a5mr1685444wmm.171.1586219759442;
+        Mon, 06 Apr 2020 17:35:59 -0700 (PDT)
+Received: from andrea ([86.61.236.197])
+        by smtp.gmail.com with ESMTPSA id c17sm23169529wrp.28.2020.04.06.17.35.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Apr 2020 17:35:58 -0700 (PDT)
+Date:   Tue, 7 Apr 2020 02:35:52 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Long Li <longli@microsoft.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Boqun Feng <boqun.feng@gmail.com>,
+        vkuznets <vkuznets@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
+ interrupt is re-assigned
+Message-ID: <20200407003459.GA7776@andrea>
+References: <20200406001514.19876-1-parri.andrea@gmail.com>
+ <20200406001514.19876-12-parri.andrea@gmail.com>
+ <BN8PR21MB1155C78AAC02D02EA7A7841DCEC20@BN8PR21MB1155.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKI+vJzlUBp7WIi19k8pRZBKIHK2gGQnU/1Ag9B/DgCQMO8c6bX6iwg
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA01SaUhUYRTlm7f4NCeeT8HrCFZTRipqVtKLNPsR8iILi4Io0YZ8qLg2z9GU
-        IqvB1HHEhCwnUaPUMnMZNZdyYcplwpTUMVyKTIco0kghN9rGN5H/zv3OOd+5By6FMUOEjIpJ
-        SOaVCYo4OWmHP33h4entbdSE73w0xLCfl00kO19bQbClLwcIdnCwzoYda+zGWf30KMEOtxWT
-        7J3BDgmredtCspW9vyTs7+ctNmx50xg6aM8N52klnL4qm+QaHlzh1MZOnPtuHse5vMYqxC3o
-        3bgbXRpJKHXGLiCSj4tJ4ZW+B87ZRde/1pBJDfKLtwYKiAzUJ8tBthTQe6DuvYnMQXYUQz9D
-        MDOxZB3mESy1vrEOPxA0P6zE/1k0tfesRDuCvvmrhDh8RdCxsrKmImlvaLmfSVqwE+0O13Qf
-        cIsIo3slMJ01LrEQtrQXGPU/MQt2pI/DYuHCXwNF4fQ2GPuYbIFSeh/os3ZZFFLaAYxFM2vf
-        Y/QmaJ4txsSFNsOyuYIQo4Kh01xv1ThD93IuZokFusYGSu9mINFwCKrLRq1mR/jS22gjYhks
-        zLWvrQB0LOS27RafL0F5SY+1fBB0jRTjFglGe0Btm68YtRG0qzMS0SmFrExGVLvD9TmT1ekK
-        NzUaQsQctGv7sHy0RbeumG5dMd26Arr/YWUIr0IufJIQH8UL/kl+CXyqj6CIF1QJUT7nE+P1
-        aO3SPA+3IN1AiAHRFJLbS0/basIZQpEipMUbEFCY3Ekq02aHM9JIRVo6r0yMUKrieMGAXClc
-        7iwtIExhDB2lSOZjeT6JV/5jJZStLAOlnbx8KrjNrH2HJmPUGzLcBoy9txdHvXakKx8/MeRP
-        7E0cOevwbapkvja9zP9Tmqu6KGyVSO83aAOQ6kiXS35stz3aGqhfYl+tMCamuDHk6KpjaoMZ
-        6bUdROt2xRQTXHjMPrCeU9Ush9b3qIXZ/gvZs02T6rwTQREpePXgfjkuRCv8PDGloPgDpvJd
-        9mUDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCIsWRmVeSWpSXmKPExsWy7bCSnK72ye44g6ZuWYuXP6+yWXxav4zV
-        Yv6Rc6wW589vYLe4ueUoi8Wmx9dYLS7vmsNmMeP8PiaL7us72CyWH//HZPF/zw52i6VbbzI6
-        8Hhc7utl8ti0qpPNY/OSeo+Wk/tZPD4+vcXi0bdlFaPH501yHu0HupkCOKK4bFJSczLLUov0
-        7RK4Mjae7WYr2KxUMfXcJNYGxhNSXYycHBICJhLd6xeygdhCArsZJd4uVIeIS0tc3ziBHcIW
-        llj57zmQzQVU84pRYuXyaSwgCTYBXYkdi9vAmkUEVCWaZj1gASliFrjMJHHkzQs2iI57jBK3
-        755iBaniFNCWOLnpLzOILSzgL9Hz8RljFyMHB4uAisTNRyUgJq+ApcSmDiOQCl4BQYmTM5+w
-        gISZBfQk2jYygoSZBeQltr+dwwxxm4LEz6fLWCFOcJPY/3QjC0SNuMTRnz3MExiFZyGZNAth
-        0iwkk2Yh6VjAyLKKUTK1oDg3PbfYsMAoL7Vcrzgxt7g0L10vOT93EyM4LrW0djCeOBF/iFGA
-        g1GJh5eBvTtOiDWxrLgy9xCjBAezkgivVG9nnBBvSmJlVWpRfnxRaU5q8SFGaQ4WJXFe+fxj
-        kUIC6YklqdmpqQWpRTBZJg5OqQbGZrPzdQ+luA8G/jlsrvKQoYJD8NHOQwmKL6wLK5Pizy7u
-        Mjv4gv9wxZylNa32d78x3td/eGz7d4acoFU3otm7D4S28PMmNIYayxmybrVgdMxi+6/m5vDb
-        NV+yvaMiT2ZJwNf4VYnuXqctYsyv/DTzOsCWxxto8mb7mtieVf3LtKOszjTPT1RiKc5INNRi
-        LipOBACcpHwYxwIAAA==
-X-CMS-MailID: 20200407002827epcas5p32458e0a4063aa41afb9ef95030724c53
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200327171414epcas5p1460e932c0bc98f31ebdd115218b4fd49
-References: <20200327170638.17670-1-alim.akhtar@samsung.com>
-        <CGME20200327171414epcas5p1460e932c0bc98f31ebdd115218b4fd49@epcas5p1.samsung.com>
-        <20200327170638.17670-2-alim.akhtar@samsung.com>
-        <20200405015416.GA16616@bogus>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <BN8PR21MB1155C78AAC02D02EA7A7841DCEC20@BN8PR21MB1155.namprd21.prod.outlook.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Rob,
-
-> -----Original Message-----
-> From: Rob Herring <robh@kernel.org>
-> Sent: 05 April 2020 07:24
-> To: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: devicetree@vger.kernel.org; linux-scsi@vger.kernel.org;
-krzk@kernel.org;
-> avri.altman@wdc.com; martin.petersen@oracle.com;
-> kwmad.kim@samsung.com; stanley.chu@mediatek.com;
-> cang@codeaurora.org; linux-samsung-soc@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH v4 1/5] dt-bindings: phy: Document Samsung UFS PHY
-> bindings
-> 
-> On Fri, Mar 27, 2020 at 10:36:34PM +0530, Alim Akhtar wrote:
-> > This patch documents Samsung UFS PHY device tree bindings
+> >@@ -621,6 +621,63 @@ static inline struct storvsc_device
+> >*get_in_stor_device(
 > >
-> > Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> > ---
-> >  .../bindings/phy/samsung,ufs-phy.yaml         | 67 +++++++++++++++++++
-> >  1 file changed, 67 insertions(+)
-> >  create mode 100644
-> > Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> > }
 > >
-> > diff --git
-> > a/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-> > b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-> > new file mode 100644
-> > index 000000000000..41ba481ecc76
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-> > @@ -0,0 +1,67 @@
-> > +# SPDX-License-Identifier: (GPL-2.0)
+> >+void storvsc_change_target_cpu(struct vmbus_channel *channel, u32 old,
+> >+u32 new) {
+> >+	struct storvsc_device *stor_device;
+> >+	struct vmbus_channel *cur_chn;
+> >+	bool old_is_alloced = false;
+> >+	struct hv_device *device;
+> >+	unsigned long flags;
+> >+	int cpu;
+> >+
+> >+	device = channel->primary_channel ?
+> >+			channel->primary_channel->device_obj
+> >+				: channel->device_obj;
+> >+	stor_device = get_out_stor_device(device);
+> >+	if (!stor_device)
+> >+		return;
+> >+
+> >+	/* See storvsc_do_io() -> get_og_chn(). */
+> >+	spin_lock_irqsave(&device->channel->lock, flags);
+> >+
+> >+	/*
+> >+	 * Determines if the storvsc device has other channels assigned to
+> >+	 * the "old" CPU to update the alloced_cpus mask and the stor_chns
+> >+	 * array.
+> >+	 */
+> >+	if (device->channel != channel && device->channel->target_cpu ==
+> >old) {
+> >+		cur_chn = device->channel;
+> >+		old_is_alloced = true;
+> >+		goto old_is_alloced;
+> >+	}
+> >+	list_for_each_entry(cur_chn, &device->channel->sc_list, sc_list) {
+> >+		if (cur_chn == channel)
+> >+			continue;
+> >+		if (cur_chn->target_cpu == old) {
+> >+			old_is_alloced = true;
+> >+			goto old_is_alloced;
+> >+		}
+> >+	}
+> >+
+> >+old_is_alloced:
+> >+	if (old_is_alloced)
+> >+		WRITE_ONCE(stor_device->stor_chns[old], cur_chn);
+> >+	else
+> >+		cpumask_clear_cpu(old, &stor_device->alloced_cpus);
 > 
-> Dual license new bindings:
-> 
-> (GPL-2.0-only OR BSD-2-Clause)
-> 
-Sure will update.
+> If the old cpu is not allocated, is it still necessary to do a cpumask_clear_cpu?
 
-> > +%YAML 1.2
-> > +---
-> > +$id:
-> > +https://protect2.fireeye.com/url?k=91cb53a2-cc1b5b6e-91cad8ed-000babf
-> > +f3793-
-> 448c7d85bdf69f5a&q=1&u=http%3A%2F%2Fdevicetree.org%2Fschemas%2F
-> > +phy%2Fsamsung%2Cufs-phy.yaml%23
-> > +$schema:
-> > +https://protect2.fireeye.com/url?k=a8ce57c7-f51e5f0b-a8cfdc88-000babf
-> > +f3793-fbe649ab0853d701&q=1&u=http%3A%2F%2Fdevicetree.org%2Fmeta-
-> schem
-> > +as%2Fcore.yaml%23
-> > +
-> > +title: Samsung SoC series UFS PHY Device Tree Bindings
-> > +
-> > +maintainers:
-> > +  - Alim Akhtar <alim.akhtar@samsung.com>
-> > +
-> > +properties:
-> > +  "#phy-cells":
-> > +    const: 0
-> > +
-> > +  compatible:
-> > +    enum:
-> > +      - samsung,exynos7-ufs-phy
-> > +
-> > +  reg:
-> > +    maxItems: 1
-> > +    description: PHY base register address
-> > +
-> > +  reg-names:
-> > +    items:
-> > +      - const: phy-pma
-> > +
-> > +  clocks:
-> > +    items:
-> > +      - description: PLL reference clock
-> > +      - description: Referencec clock parrent
-> > +
-> > +  clock-names:
-> > +    items:
-> > +      - const: ref_clk_parent
-> > +      - const: ref_clk
-> 
-> Doesn't match what 'clocks' says.
-> 
-Will correct.
+AFAICT, this really depends on how much we "believe" in the current
+heuristic (as implemented by get_og_chn()):  ;-)
 
-> Also, why do you need the parent in DT? Just use clk_get_parent(). DT
-should
-> reflect actual h/w clock connections (not what the driver happens to
-need).
-> Also, there's the assigned-clocks binding.
-> 
-Some of the platform deviates from the normal clock trees and need to force
-a different parent. To get such parent added this.
-I will explore a bit more on this, and check about assigned-clocks binding.
-This is also an optional clock, so will change accordingly
+The cpumask_clear_cpu() (and the below, dependent "flush" as well)
+are intended to re-initialize alloced_cpus and stor_chns in order
+for get_og_chn() to re-process/update them.
 
-> > +
-> > +  samsung,pmu-syscon:
-> > +    $ref: '/schemas/types.yaml#/definitions/phandle'
-> > +    description: phandle for PMU system controller interface, used to
-> > +                 control pmu registers for power isolation
-> 
-> We have a binding for power domains. Use that for power isolation.
-> 
-Let me have a look on that, if power domains bindings can be use here, this
-is same way other Exynos binding is defined w.r.t. pmu-syscon.
+Also, notice that (both in the current code and after this series)
+alloced_cpus can't be offlined and get_og_chn() does rely on this
+property (cf., e.g., the loop/check over alloced_cpus/node_mask).
 
-> > +
-> > +required:
-> > +  - "#phy-cells"
-> > +  - compatible
-> > +  - reg
-> > +  - reg-names
-> > +  - clocks
-> > +  - clock-names
-> > +  - samsung,pmu-syscon
-> > +
-> > +examples:
-> > +  - |
-> > +    #include <dt-bindings/clock/exynos7-clk.h>
-> > +
-> > +    ufs_phy: ufs-phy@15571800 {
-> > +        compatible = "samsung,exynos7-ufs-phy";
-> > +        reg = <0x15571800 0x240>;
-> > +        reg-names = "phy-pma";
-> > +        samsung,pmu-syscon = <&pmu_system_controller>;
-> > +        #phy-cells = <0>;
-> > +        clocks = <&clock_fsys1 MOUT_FSYS1_PHYCLK_SEL1>,
-> > +                 <&clock_top1 CLK_SCLK_PHY_FSYS1_26M>;
-> > +        clock-names = "ref_clk_parent",
-> > +                      "ref_clk";
-> > +    };
-> > +...
-> >
-> > base-commit: fb33c6510d5595144d585aa194d377cf74d31911
-> > --
-> > 2.17.1
-> >
+I suspect that giving up on this invariant/property would require
+a certain amount of re-design in the heuristic/code in question...
 
+
+> >@@ -1360,7 +1432,14 @@ static int storvsc_do_io(struct hv_device *device,
+> > 			}
+> > 		}
+> > 	} else {
+> >+		spin_lock_irqsave(&device->channel->lock, flags);
+> >+		outgoing_channel = stor_device->stor_chns[q_num];
+> >+		if (outgoing_channel != NULL) {
+> >+			spin_unlock_irqrestore(&device->channel->lock,
+> >flags);
+> 
+> Checking outgoing_channel again seems unnecessary. Why not just call get_og_chn()?
+
+target_cpu_store() might have changed stor_chns (and alloced_cpus)
+in the meantime (but before we've acquired the device's lock): the
+double check is to make sure we have a "consistent"/an up-to-date
+view of stor_chns and alloced_cpus.
+
+
+> 
+> >+			goto found_channel;
+> >+		}
+> > 		outgoing_channel = get_og_chn(stor_device, q_num);
+> >+		spin_unlock_irqrestore(&device->channel->lock, flags);
+> > 	}
+> 
+> With device->channel->lock, now we have one more lock on the I/O issuing path. It doesn't seem optimal as you are trying to protect the code in storvsc_change_target_cpu(), this doesn't need to block concurrent I/O issuers. Maybe moving to RCU is a better approach?
+
+I don't see this as a problem (*and I've validated such conclusion
+in experiments, where the "patched kernel" was sometimes performing
+slighlty better than the "unpatched kernel" and sometimes slightly
+worse...):
+
+On the one hand, the stor_chns array "stabilizes" quite early after
+system initialization in "normal" (i.e., common) situations (i.e.,
+no channel reassignments, no device hotplugs...); IOW, get_og_chn()
+really represents the "rare and slow" path here (but not that slow!
+after all...).  Furthermore, notice that even in those "rare cases"
+the number of "contending" channels is limited to at most 1 per 4
+CPUs IIRC (alloced_cpus is "sparsely populated"...).
+
+The latencies of the RCU grace period (in the order of milliseconds)
+would be a major concern for the adoption of RCU here (at least, if
+we continue to consider get_og_chn() as an "updater").  I'm afraid
+that this could be "too slow" even for our slow path...  ;-/
+
+What am I missing?  ;-)
+
+Thanks,
+  Andrea
