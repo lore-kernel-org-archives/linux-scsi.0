@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE37C2BA80
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 13:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 031E7C2BA80
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 13:47:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ACA892082D
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 13:47:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD6DD20CC7
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 13:47:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="nYbm4n2k"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Y06ssb8q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727706AbgDHNrh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Apr 2020 09:47:37 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:28358 "EHLO
+        id S1729283AbgDHNrn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Apr 2020 09:47:43 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:55211 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729266AbgDHNrg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2020 09:47:36 -0400
+        by vger.kernel.org with ESMTP id S1728143AbgDHNrm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2020 09:47:42 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586353656; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1586353662; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=DslXPf5pjYfWLJo/qreZEBdWGoHpjeFCF0E2+e8EWKY=; b=nYbm4n2kUxbELWCbJt3TZalnp5G8lgDfynzIQ04ghzCz3wyKANiodndZ8kP8FeH8C7gixoar
- ULprwCHg5eRpwT17qaia/EA/5/KV1t71+7MYI45EQycm9FSlI8gYxBSy75FIAW3CS/cCrwun
- 8+LA2B8b/1OPu37HI8WTosRs8Gg=
+ bh=22ArIKazcYpmZZi/7PHkEImvJYVgzB4jNd5w/bYJj6g=; b=Y06ssb8q8Ic72V33H588aH+cL6ZXDxgaYgSrW3oL1QiSg76+oAInXuv+UXXyTmvOnSZE19cE
+ DRTknp5DyDCZ83vmm72WRb8eQJTzq15LCjGxMmHy2uGLs6p25jnqCHbqbhGC9ZsikpHls6rB
+ k6X3+e6+/6kN5I++eVYxWhO6GK0=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e8dd5f8.7f9ddcd40618-smtp-out-n01;
- Wed, 08 Apr 2020 13:47:36 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e8dd5fc.7f8fbbcd0730-smtp-out-n05;
+ Wed, 08 Apr 2020 13:47:40 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B1CA8C58A2E; Wed,  8 Apr 2020 13:47:34 +0000 (UTC)
+        id 59F3BC00448; Wed,  8 Apr 2020 13:47:39 +0000 (UTC)
 Received: from blr-ubuntu-173.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rnayak)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 24CAAC4478C;
-        Wed,  8 Apr 2020 13:47:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 24CAAC4478C
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2CA77C44798;
+        Wed,  8 Apr 2020 13:47:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2CA77C44798
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rnayak@codeaurora.org
 From:   Rajendra Nayak <rnayak@codeaurora.org>
@@ -54,9 +54,9 @@ Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         Asutosh Das <asutoshd@codeaurora.org>,
         Subhash Jadavani <subhashj@codeaurora.org>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 06/21] scsi: ufs: Add support to manage multiple power domains in ufshcd-pltfrm
-Date:   Wed,  8 Apr 2020 19:16:32 +0530
-Message-Id: <1586353607-32222-7-git-send-email-rnayak@codeaurora.org>
+Subject: [PATCH 07/21] scsi: ufs: Add support for specifying OPP tables in DT
+Date:   Wed,  8 Apr 2020 19:16:33 +0530
+Message-Id: <1586353607-32222-8-git-send-email-rnayak@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1586353607-32222-1-git-send-email-rnayak@codeaurora.org>
 References: <1586353607-32222-1-git-send-email-rnayak@codeaurora.org>
@@ -65,8 +65,11 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Some UFS devices need to manage multiple powerdomains. Add support for
-it as part of the ufshcd-pltfrm driver.
+Some platforms like qualcomms sdm845 SoC have a need to set
+a performance state of a power domain for UFS along with
+setting the clock rate. Add support for passing this freq/perf state
+tuple from DT as an OPP table. Modify the driver to read the OPP
+table and register with OPP layer.
 
 Signed-off-by: Rajendra Nayak <rnayak@codeaurora.org>
 Cc: Alim Akhtar <alim.akhtar@samsung.com>
@@ -75,126 +78,44 @@ Cc: Asutosh Das <asutoshd@codeaurora.org>
 Cc: Subhash Jadavani <subhashj@codeaurora.org>
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/ufs/ufshcd-pltfrm.c | 58 ++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/ufs/ufshcd.h        |  3 +++
- 2 files changed, 59 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index 76f9be7..d40b4a7 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -34,8 +34,10 @@
-  */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e04e8b8..172c6fe 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -883,6 +883,16 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 	if (ret)
+ 		return ret;
  
- #include <linux/platform_device.h>
-+#include <linux/pm_domain.h>
- #include <linux/pm_runtime.h>
- #include <linux/of.h>
-+#include <linux/pm_opp.h>
- 
- #include "ufshcd.h"
- #include "ufshcd-pltfrm.h"
-@@ -282,6 +284,44 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
- 	}
- }
- 
-+static int ufshcd_attach_pds(struct device *dev, struct ufs_hba *hba, int num_pds)
-+{
-+	struct opp_table *opp;
-+	struct device **opp_virt_dev;
-+	const char *opp_pds[] = { "rpmh_pd", NULL };
-+
-+	if (num_pds > 2)
-+		return -EINVAL;
-+
-+	/* Attach the power domain for on/off control */
-+	hba->gdsc_virt_dev = dev_pm_domain_attach_by_name(dev, "gdsc_pd");
-+	if (IS_ERR(hba->gdsc_virt_dev))
-+		return PTR_ERR(hba->gdsc_virt_dev);
-+
-+	device_link_add(dev, hba->gdsc_virt_dev, DL_FLAG_RPM_ACTIVE |
-+			DL_FLAG_PM_RUNTIME | DL_FLAG_STATELESS);
-+
-+
-+	/* Attach the power domain for setting performance state */
-+	opp = dev_pm_opp_attach_genpd(dev, opp_pds, &opp_virt_dev);
-+	if (IS_ERR(opp))
-+		return PTR_ERR(opp);
-+	else if (opp_virt_dev) {
-+		hba->opp_virt_dev = *opp_virt_dev;
-+
-+		device_link_add(dev, hba->opp_virt_dev, DL_FLAG_RPM_ACTIVE |
-+				DL_FLAG_PM_RUNTIME | DL_FLAG_STATELESS);
++	if (hba->opp_virt_dev) {
++		struct dev_pm_opp *opp;
++		unsigned long freq = scale_up ? INT_MAX : 0;
++		if (scale_up)
++			opp = dev_pm_opp_find_freq_floor(hba->dev, &freq);
++		else
++			opp = dev_pm_opp_find_freq_ceil(hba->dev, &freq);
++		dev_pm_opp_set_rate(hba->dev, dev_pm_opp_get_freq(opp));
 +	}
 +
-+	return 0;
-+}
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
+ 			if (scale_up && clki->max_freq) {
+@@ -1339,8 +1349,11 @@ static int ufshcd_devfreq_init(struct ufs_hba *hba)
+ 		return 0;
+ 
+ 	clki = list_first_entry(clk_list, struct ufs_clk_info, list);
+-	dev_pm_opp_add(hba->dev, clki->min_freq, 0);
+-	dev_pm_opp_add(hba->dev, clki->max_freq, 0);
 +
-+static void ufshcd_detach_pds(struct ufs_hba *hba)
-+{
-+	dev_pm_domain_detach(hba->gdsc_virt_dev, false);
-+	dev_pm_domain_detach(hba->opp_virt_dev, false);
-+}
-+
- /**
-  * ufshcd_get_pwr_dev_param - get finally agreed attributes for
-  *                            power mode change
-@@ -391,7 +431,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- {
- 	struct ufs_hba *hba;
- 	void __iomem *mmio_base;
--	int irq, err;
-+	int irq, err, num_pds;
- 	struct device *dev = &pdev->dev;
- 
- 	mmio_base = devm_platform_ioremap_resource(pdev, 0);
-@@ -429,10 +469,21 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 
- 	ufshcd_init_lanes_per_dir(hba);
- 
-+	num_pds = of_count_phandle_with_args(dev->of_node, "power-domains",
-+					     "#power-domain-cells");
-+	if (num_pds > 1) {
-+		err = ufshcd_attach_pds(&pdev->dev, hba, num_pds);
-+		if (err) {
-+			dev_err(&pdev->dev, "%s: attach of power domains failed %d\n",
-+				__func__, err);
-+			goto dealloc_host;
-+		}
++	if (dev_pm_opp_of_add_table(hba->dev)) {
++		dev_pm_opp_add(hba->dev, clki->min_freq, 0);
++		dev_pm_opp_add(hba->dev, clki->max_freq, 0);
 +	}
-+
- 	err = ufshcd_init(hba, mmio_base, irq);
- 	if (err) {
- 		dev_err(dev, "Initialization failed\n");
--		goto dealloc_host;
-+		goto detach_pds;
- 	}
  
- 	platform_set_drvdata(pdev, hba);
-@@ -442,6 +493,9 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
- 
- 	return 0;
- 
-+detach_pds:
-+	if (num_pds > 1)
-+		ufshcd_detach_pds(hba);
- dealloc_host:
- 	ufshcd_dealloc_host(hba);
- out:
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index dd1ee27..ed3fbad 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -612,6 +612,9 @@ struct ufs_hba {
- 	struct Scsi_Host *host;
- 	struct device *dev;
- 	struct request_queue *cmd_queue;
-+	struct device *gdsc_virt_dev;
-+	struct device *opp_virt_dev;
-+
- 	/*
- 	 * This field is to keep a reference to "scsi_device" corresponding to
- 	 * "UFS device" W-LU.
+ 	ufshcd_vops_config_scaling_param(hba, &ufs_devfreq_profile,
+ 					 gov_data);
 -- 
 QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
 of Code Aurora Forum, hosted by The Linux Foundation
