@@ -2,260 +2,349 @@ Return-Path: <SRS0=Y1+o=5Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-11.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE11BC2D0EC
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 03:06:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDE55C2D0F4
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 03:57:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BAF02072A
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 03:06:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 881042076E
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 03:57:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WQaJu5dX"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Oh01RCGB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726475AbgDHDGt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Apr 2020 23:06:49 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:28976 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726464AbgDHDGs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2020 23:06:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586315207;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=5yeSyrhzFUknRYXWKSA7RZGwrbGN9UTmgmY3Cbd81n0=;
-        b=WQaJu5dX3nFb6D0vjTBPLu6FTg3GiHEaHIR/1lay7anvyfbjw+y1YuZAZMc8ONjuZhfp2l
-        6Q9+LLE3ybVLLyVUnqa5I7t//Lk/kYb1ImzQuBdCh7Sevu2HoGZWtEGrq3A78smi5vZbsn
-        nlEip/86DU0XaWLIxflmiqSVHJ/pP1A=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-350-uwpOH7cfOnGRc8lpdjvWEQ-1; Tue, 07 Apr 2020 23:06:40 -0400
-X-MC-Unique: uwpOH7cfOnGRc8lpdjvWEQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D156E801E5C;
-        Wed,  8 Apr 2020 03:06:38 +0000 (UTC)
-Received: from localhost.localdomain (ovpn-8-28.pek2.redhat.com [10.72.8.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0D48C60BFB;
-        Wed,  8 Apr 2020 03:06:29 +0000 (UTC)
-Date:   Wed, 8 Apr 2020 11:06:25 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Doug Anderson <dianders@chromium.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Salman Qazi <sqazi@google.com>,
-        Gwendal Grignou <gwendal@chromium.org>,
-        Guenter Roeck <groeck@chromium.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 3/4] blk-mq: Rerun dispatching in the case of budget
- contention
-Message-ID: <20200408030625.GC337494@localhost.localdomain>
-References: <20200407220005.119540-1-dianders@chromium.org>
- <20200407145906.v3.3.I28278ef8ea27afc0ec7e597752a6d4e58c16176f@changeid>
- <20200408020936.GB337494@localhost.localdomain>
- <CAD=FV=WY8sTZQq3NtNe4Ux-C0Q0JOR4V1Z+cjVvj791rFDL+=Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAD=FV=WY8sTZQq3NtNe4Ux-C0Q0JOR4V1Z+cjVvj791rFDL+=Q@mail.gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+        id S1726555AbgDHD5B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Apr 2020 23:57:01 -0400
+Received: from mail-pl1-f202.google.com ([209.85.214.202]:52600 "EHLO
+        mail-pl1-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726477AbgDHD5A (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Apr 2020 23:57:00 -0400
+Received: by mail-pl1-f202.google.com with SMTP id 64so4047075plf.19
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Apr 2020 20:57:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=9G7huHvXbN+owR80fofzQMdUofPMyPJRcmk26v8oOQ0=;
+        b=Oh01RCGBC/H59G8arKrwARm+MB/hIdqDyLID+NoDL0Y9lU3EoII7PNLYnqIUlMuIG9
+         IBZfurGe0O+Qpkj4Huo4LZpoRryf7GeGgEPMjhy95fUjMURULURFNFjoeLfKlbz9YkRR
+         JGlXHjjdAoOLZ2bPb+PHzM1WuQ+pJ1NOuMhtvyKX38DpJzSXnKxF0ohnnqkVi9BUbDQu
+         F5lLjfzjJ1XorkbOPh8OKwSBcXF5mC7qhjze9mImeD5puX6QHgM75U4g1JY6rcPhs6PU
+         An6TrjmiLXR8sQUYzwZ42X8ECs+6q5jgRMkYdkmQpGhYWuZsWNXUIRZmBwWE+RpNDys8
+         n2gA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=9G7huHvXbN+owR80fofzQMdUofPMyPJRcmk26v8oOQ0=;
+        b=e2rlQKUd2loiSUjOm9k8B236MwLaFmR1/J/6gKcLgLT80fkw3iloOSjr4N2UEP1ltw
+         JyYDkNRWgWEjGcLNddUnTJHx3LdCRvfjr0oIPidyvLPZQQQv7yEcU4t0/qMMZwpR7Ytp
+         wtZLr4YJFbHI8Rmzl6No2iMKYjsqD8oP6BltxEjQS1PBzb564Qgcp7QhJHNHHHabGF74
+         AKD2jrM6SYMfJ+QsdG9p23m/gtS5HWL7DEGvl0XDaIej36gTu19MJo50Gd4BpC5fvUOT
+         C9jgUIfJUdkYmMgwgbxvjqBr/3FOjegO6ozb2wy780Jr/iq5bsrjamocdxZxAl7muAU0
+         veVQ==
+X-Gm-Message-State: AGi0PuaDZdf758zYypjfdsmnSvE8IIfBz90aG+iSrp6Tt3x2BkH6lNiY
+        GnHbEZtjFQXzE3lZEWpztC8s+MBSTUc=
+X-Google-Smtp-Source: APiQypIncWtgOxWC1FZs2afRE/uoqYcRavud+ChrhXsGdGfJlZzzY6oDMP8VIxhwlCWI1gn8D02WxufjvkU=
+X-Received: by 2002:a63:2254:: with SMTP id t20mr5287423pgm.121.1586318219555;
+ Tue, 07 Apr 2020 20:56:59 -0700 (PDT)
+Date:   Tue,  7 Apr 2020 20:56:42 -0700
+Message-Id: <20200408035654.247908-1-satyat@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.26.0.110.g2183baf09c-goog
+Subject: [PATCH v10 00/12] Inline Encryption Support
+From:   Satya Tangirala <satyat@google.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
+Cc:     Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 07, 2020 at 07:17:49PM -0700, Doug Anderson wrote:
-> Hi,
-> 
-> On Tue, Apr 7, 2020 at 7:09 PM Ming Lei <ming.lei@redhat.com> wrote:
-> >
-> > On Tue, Apr 07, 2020 at 03:00:04PM -0700, Douglas Anderson wrote:
-> > > If ever a thread running blk-mq code tries to get budget and fails it
-> > > immediately stops doing work and assumes that whenever budget is freed
-> > > up that queues will be kicked and whatever work the thread was trying
-> > > to do will be tried again.
-> > >
-> > > One path where budget is freed and queues are kicked in the normal
-> > > case can be seen in scsi_finish_command().  Specifically:
-> > > - scsi_finish_command()
-> > >   - scsi_device_unbusy()
-> > >     - # Decrement "device_busy", AKA release budget
-> > >   - scsi_io_completion()
-> > >     - scsi_end_request()
-> > >       - blk_mq_run_hw_queues()
-> > >
-> > > The above is all well and good.  The problem comes up when a thread
-> > > claims the budget but then releases it without actually dispatching
-> > > any work.  Since we didn't schedule any work we'll never run the path
-> > > of finishing work / kicking the queues.
-> > >
-> > > This isn't often actually a problem which is why this issue has
-> > > existed for a while and nobody noticed.  Specifically we only get into
-> > > this situation when we unexpectedly found that we weren't going to do
-> > > any work.  Code that later receives new work kicks the queues.  All
-> > > good, right?
-> > >
-> > > The problem shows up, however, if timing is just wrong and we hit a
-> > > race.  To see this race let's think about the case where we only have
-> > > a budget of 1 (only one thread can hold budget).  Now imagine that a
-> > > thread got budget and then decided not to dispatch work.  It's about
-> > > to call put_budget() but then the thread gets context switched out for
-> > > a long, long time.  While in this state, any and all kicks of the
-> > > queue (like the when we received new work) will be no-ops because
-> > > nobody can get budget.  Finally the thread holding budget gets to run
-> > > again and returns.  All the normal kicks will have been no-ops and we
-> > > have an I/O stall.
-> > >
-> > > As you can see from the above, you need just the right timing to see
-> > > the race.  To start with, the only case it happens if we thought we
-> > > had work, actually managed to get the budget, but then actually didn't
-> > > have work.  That's pretty rare to start with.  Even then, there's
-> > > usually a very small amount of time between realizing that there's no
-> > > work and putting the budget.  During this small amount of time new
-> > > work has to come in and the queue kick has to make it all the way to
-> > > trying to get the budget and fail.  It's pretty unlikely.
-> > >
-> > > One case where this could have failed is illustrated by an example of
-> > > threads running blk_mq_do_dispatch_sched():
-> > >
-> > > * Threads A and B both run has_work() at the same time with the same
-> > >   "hctx".  Imagine has_work() is exact.  There's no lock, so it's OK
-> > >   if Thread A and B both get back true.
-> > > * Thread B gets interrupted for a long time right after it decides
-> > >   that there is work.  Maybe its CPU gets an interrupt and the
-> > >   interrupt handler is slow.
-> > > * Thread A runs, get budget, dispatches work.
-> > > * Thread A's work finishes and budget is released.
-> > > * Thread B finally runs again and gets budget.
-> > > * Since Thread A already took care of the work and no new work has
-> > >   come in, Thread B will get NULL from dispatch_request().  I believe
-> > >   this is specifically why dispatch_request() is allowed to return
-> > >   NULL in the first place if has_work() must be exact.
-> > > * Thread B will now be holding the budget and is about to call
-> > >   put_budget(), but hasn't called it yet.
-> > > * Thread B gets interrupted for a long time (again).  Dang interrupts.
-> > > * Now Thread C (maybe with a different "hctx" but the same queue)
-> > >   comes along and runs blk_mq_do_dispatch_sched().
-> > > * Thread C won't do anything because it can't get budget.
-> >
-> > Thread C will re-run queue in this case:
-> >
-> > Just thought scsi_mq_get_budget() does handle the case via re-run queue:
-> >
-> >         if (atomic_read(&sdev->device_busy) == 0 && !scsi_device_blocked(sdev))
-> >                 blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
-> >
-> > So looks no such race.
-> 
-> Thread B is holding budget and hasn't released it yet, right?  In the
-> context of scsi, that means "device_busy >= 1", right?  So how can the
-> code you point at help us?  When Thread C reads "device_busy" it will
-> be 1 and that code won't run.  What did I miss?
+This patch series adds support for Inline Encryption to the block layer,
+UFS, fscrypt, f2fs and ext4.
 
-Oh, this is my fault, sorry for the noise.
+Note that the patches in this series for the block layer (i.e. patches 1, 2,
+3, 4 and 5) can be applied independently of the subsequent patches in this
+series.
 
-> 
-> 
-> > > * Finally Thread B will run again and put the budget without kicking
-> > >   any queues.
-> > >
-> > > Even though the example above is with blk_mq_do_dispatch_sched() I
-> > > believe the race is possible any time someone is holding budget but
-> > > doesn't do work.
-> > >
-> > > Unfortunately, the unlikely has become more likely if you happen to be
-> > > using the BFQ I/O scheduler.  BFQ, by design, sometimes returns "true"
-> > > for has_work() but then NULL for dispatch_request() and stays in this
-> > > state for a while (currently up to 9 ms).  Suddenly you only need one
-> > > race to hit, not two races in a row.  With my current setup this is
-> > > easy to reproduce in reboot tests and traces have actually shown that
-> > > we hit a race similar to the one describe above.
-> > >
-> > > In theory we could choose to just fix blk_mq_do_dispatch_sched() to
-> > > kick the queues when it puts budget.  That would fix the BFQ case and
-> > > one could argue that all the other cases are just theoretical.  While
-> > > that is true, for all the other cases it should be very uncommon to
-> > > run into the case where we need put_budget().  Having an extra queue
-> > > kick for safety there shouldn't affect much and keeps the race at bay.
-> > >
-> > > One last note is that (at least in the SCSI case) budget is shared by
-> > > all "hctx"s that have the same queue.  Thus we need to make sure to
-> > > kick the whole queue, not just re-run dispatching on a single "hctx".
-> > >
-> > > Signed-off-by: Douglas Anderson <dianders@chromium.org>
-> > > ---
-> > >
-> > > Changes in v3:
-> > > - Always kick when putting the budget.
-> > > - Delay blk_mq_do_dispatch_sched() kick by 3 ms for inexact has_work().
-> > > - Totally rewrote commit message.
-> > >
-> > > Changes in v2:
-> > > - Replace ("scsi: core: Fix stall...") w/ ("blk-mq: Rerun dispatch...")
-> > >
-> > >  block/blk-mq.h | 14 +++++++++++++-
-> > >  1 file changed, 13 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/block/blk-mq.h b/block/blk-mq.h
-> > > index 10bfdfb494fa..1270505367ab 100644
-> > > --- a/block/blk-mq.h
-> > > +++ b/block/blk-mq.h
-> > > @@ -180,12 +180,24 @@ unsigned int blk_mq_in_flight(struct request_queue *q, struct hd_struct *part);
-> > >  void blk_mq_in_flight_rw(struct request_queue *q, struct hd_struct *part,
-> > >                        unsigned int inflight[2]);
-> > >
-> > > +#define BLK_MQ_BUDGET_DELAY  3               /* ms units */
-> > > +
-> > >  static inline void blk_mq_put_dispatch_budget(struct blk_mq_hw_ctx *hctx)
-> > >  {
-> > >       struct request_queue *q = hctx->queue;
-> > >
-> > > -     if (q->mq_ops->put_budget)
-> > > +     if (q->mq_ops->put_budget) {
-> > >               q->mq_ops->put_budget(hctx);
-> > > +
-> > > +             /*
-> > > +              * The only time we call blk_mq_put_dispatch_budget() is if
-> > > +              * we released the budget without dispatching.  Holding the
-> > > +              * budget could have blocked any "hctx"s with the same queue
-> > > +              * and if we didn't dispatch then there's no guarantee anyone
-> > > +              * will kick the queue.  Kick it ourselves.
-> > > +              */
-> > > +             blk_mq_delay_run_hw_queues(q, BLK_MQ_BUDGET_DELAY);
-> >
-> > No, please don't do that un-conditionally we just need to re-run queue
-> > when there has work to do.
-> 
-> ...what function would you like me to call to check?  The code you
+Inline Encryption hardware allows software to specify an encryption context
+(an encryption key, crypto algorithm, data unit num, data unit size, etc.)
+along with a data transfer request to a storage device, and the inline
+encryption hardware will use that context to en/decrypt the data. The
+inline encryption hardware is part of the storage device, and it
+conceptually sits on the data path between system memory and the storage
+device. Inline Encryption hardware has become increasingly common, and we
+want to support it in the kernel.
 
-At least we only need to call it in blk_mq_do_dispatch_sched() and
-blk_mq_do_dispatch_ctx(), in which no request is dequeued yet. Other
-callers can handle the run queue cause request has been there.
+Inline Encryption hardware implementations often function around the
+concept of a limited number of "keyslots", which can hold an encryption
+context each. The storage device can be directed to en/decrypt any
+particular request with the encryption context stored in any particular
+keyslot.
 
-> wrote in response to v2 only checked work for the given "hctx".  What
-> about other "hctx" that are part of the same "queue".  Are we
-> guaranteed that has_work() returns the same value for all "hctx"s on
-> the same "queue"?
+Patch 1 documents the whole series.
 
-In theory has_work() should return ture when there is work associated with
-this hctx. However, some schedulers put all requests in global scheduler
-queue instead of per-hctx, then this scheduler's
-has_work() returns true when there is any request in scheduler queue.
+Patch 2 introduces a Keyslot Manager to efficiently manage keyslots.
+The keyslot manager also functions as the interface that blk-crypto
+(introduced in Patch 3), will use to program keys into inline encryption
+hardware. For more information on the Keyslot Manager, refer to
+documentation found in block/keyslot-manager.c and linux/keyslot-manager.h.
 
-> If so, why doesn't has_work() take the "queue" as a
-> parameter?
+Patch 3 adds the block layer changes for inline encryption support. It
+introduces struct bio_crypt_ctx, and a ptr to one in struct bio, which
+allows struct bio to represent an encryption context that can be passed
+down the storage stack from the filesystem layer to the storage driver.
 
-In theory has_work() needs to be checked before run queue, however this
-code path should be called very unusually, so it is fine to just run all
-hctxs.
+Patch 4 precludes inline encryption support in a device whenever it
+supports blk-integrity, because there is currently no known hardware that
+supports both features, and it is not completely straightfoward to support
+both of them properly, and doing it improperly might result in leaks of
+information about the plaintext.
 
-Thanks,
-Ming
+Patch 5 introduces blk-crypto-fallback - a kernel crypto API fallback for
+blk-crypto to use when inline encryption hardware isn't present. This
+allows filesystems to specify encryption contexts for bios without
+having to worry about whether the underlying hardware has inline
+encryption support, and allows for testing without real hardware inline
+encryption support. This fallback is separately configurable from
+blk-crypto, and can be disabled if desired while keeping inline
+encryption support. It may also be possible to remove file content
+en/decryption from fscrypt and simply use blk-crypto-fallback in a future
+patch. For more details on blk-crypto and the fallback, refer to
+Documentation/block/inline-encryption.rst.
+
+Patches 6-8 add support for inline encryption into the UFS driver according
+to the JEDEC UFS HCI v2.1 specification. Inline encryption support for
+other drivers (like eMMC) may be added in the same way - the device driver
+should set up a Keyslot Manager in the device's request_queue (refer to
+the UFS crypto additions in ufshcd-crypto.c and ufshcd.c for an example).
+
+Patch 9 adds the SB_INLINECRYPT mount flag to the fs layer, which filesystems
+must set to indicate that they want to use blk-crypto for en/decryption of
+file contents.
+
+Patch 10 adds support to fscrypt - to use inline encryption with fscrypt,
+the filesystem must be mounted with '-o inlinecrypt' - when this option is
+specified, the contents of any AES-256-XTS encrypted file will be
+encrypted using blk-crypto.
+
+Patches 11 and 12 add support to f2fs and ext4 respectively, so that we have
+a complete stack that can make use of inline encryption.
+
+The patches were tested running kvm-xfstests, by specifying the introduced
+"inlinecrypt" mount option, so that en/decryption happens with the
+blk-crypto fallback. The patches were also tested on a Pixel 4 with UFS
+hardware that has support for inline encryption.
+
+There have been a few patch sets addressing Inline Encryption Support in
+the past. Briefly, this patch set differs from those as follows:
+
+1) "crypto: qce: ice: Add support for Inline Crypto Engine"
+is specific to certain hardware, while our patch set's Inline
+Encryption support for UFS is implemented according to the JEDEC UFS
+specification.
+
+2) "scsi: ufs: UFS Host Controller crypto changes" registers inline
+encryption support as a kernel crypto algorithm. Our patch views inline
+encryption as being fundamentally different from a generic crypto
+provider (in that inline encryption is tied to a device), and so does
+not use the kernel crypto API to represent inline encryption hardware.
+
+3) "scsi: ufs: add real time/inline crypto support to UFS HCD" requires
+the device mapper to work - our patch does not.
+
+Changes v9 => v10:
+ - Incorporate Eric's fix for allowing en/decryption to happen as usual via
+   fscrypt in the case that hardware doesn't support the desired crypto
+   configuration, but blk-crypto-fallback is disabled. (Introduce
+   struct blk_crypto_config and blk_crypto_config_supported for fscrypt
+   to call, to check that either blk-crypto-fallback is enabled or the
+   device supports the crypto configuration).
+ - Update docs
+ - Lots of cleanups
+
+Changes v8 => v9:
+ - Don't open code bio_has_crypt_ctx into callers of blk-crypto functions.
+ - Lots of cleanups
+
+Changes v7 => v8:
+ - Pass a struct blk_ksm_keyslot * around instead of slot numbers which
+   simplifies some functions and passes around arguments with better types
+ - Make bios with no encryption context avoid making calls into blk-crypto
+   by checking for the presence of bi_crypt_context before making the call
+ - Make blk-integrity preclude inline encryption support at probe time
+ - Many many cleanups
+
+Changes v6 => v7:
+ - Keyslot management is now done on a per-request basis rather than a
+   per-bio basis.
+ - Storage drivers can now specify the maximum number of bytes they
+   can accept for the data unit number (DUN) for each crypto algorithm,
+   and upper layers can specify the minimum number of bytes of DUN they
+   want with the blk_crypto_key they send with the bio - a driver is
+   only considered to support a blk_crypto_key if the driver supports at
+   least as many DUN bytes as the upper layer wants. This is necessary
+   because storage drivers may not support as many bytes as the
+   algorithm specification dictates (for e.g. UFS only supports 8 byte
+   DUNs for AES-256-XTS, even though the algorithm specification
+   says DUNs are 16 bytes long).
+ - Introduce SB_INLINECRYPT to keep track of whether inline encryption
+   is enabled for a filesystem (instead of using an fscrypt_operation).
+ - Expose keyslot manager declaration and embed it within ufs_hba to
+   clean up code.
+ - Make blk-crypto preclude blk-integrity.
+ - Some bug fixes
+ - Introduce UFSHCD_QUIRK_BROKEN_CRYPTO for UFS drivers that don't
+   support inline encryption (yet)
+
+Changes v5 => v6:
+ - Blk-crypto's kernel crypto API fallback is no longer restricted to
+   8-byte DUNs. It's also now separately configurable from blk-crypto, and
+   can be disabled entirely, while still allowing the kernel to use inline
+   encryption hardware. Further, struct bio_crypt_ctx takes up less space,
+   and no longer contains the information needed by the crypto API
+   fallback - the fallback allocates the required memory when necessary.
+ - Blk-crypto now supports all file content encryption modes supported by
+   fscrypt.
+ - Fixed bio merging logic in blk-merge.c
+ - Fscrypt now supports inline encryption with the direct key policy, since
+   blk-crypto now has support for larger DUNs.
+ - Keyslot manager now uses a hashtable to lookup which keyslot contains
+   any particular key (thanks Eric!)
+ - Fscrypt support for inline encryption now handles filesystems with
+   multiple underlying block devices (thanks Eric!)
+ - Numerous cleanups
+
+Changes v4 => v5:
+ - The fscrypt patch has been separated into 2. The first adds support
+   for the IV_INO_LBLK_64 policy (which was called INLINE_CRYPT_OPTIMIZED
+   in past versions of this series). This policy is now purely an on disk
+   format, and doesn't dictate whether blk-crypto is used for file content
+   encryption or not. Instead, this is now decided based on the
+   "inlinecrypt" mount option.
+ - Inline crypto key eviction is now handled by blk-crypto instead of
+   fscrypt.
+ - More refactoring.
+
+Changes v3 => v4:
+ - Fixed the issue with allocating crypto_skcipher in
+   blk_crypto_keyslot_program.
+ - bio_crypto_alloc_ctx is now mempool backed.
+ - In f2fs, a bio's bi_crypt_context is now set up when the
+   bio is allocated, rather than just before the bio is
+   submitted - this fixes bugs in certain cases, like when an
+   encrypted block is being moved without decryption.
+ - Lots of refactoring and cleanup of blk-crypto - thanks Eric!
+
+Changes v2 => v3:
+ - Overhauled keyslot manager's get keyslot logic and optimized LRU.
+ - Block crypto en/decryption fallback now supports data unit sizes
+   that divide the bvec length (instead of requiring each bvec's length
+   to be the same as the data unit size).
+ - fscrypt master key is now keyed additionally by super_block and
+   ci_ctfm != NULL.
+ - all references of "hw encryption" are replaced by inline encryption.
+ - address various other review comments from Eric.
+
+Changes v1 => v2:
+ - Block layer and UFS changes are split into 3 patches each.
+ - We now only have a ptr to a struct bio_crypt_ctx in struct bio, instead
+   of the struct itself.
+ - struct bio_crypt_ctx no longer has flags.
+ - blk-crypto now correctly handles the case when it fails to init
+   (because of insufficient memory), but kernel continues to boot.
+ - ufshcd-crypto now works on big endian cpus.
+ - Many cleanups.
+
+
+
+Eric Biggers (1):
+  ext4: add inline encryption support
+
+Satya Tangirala (11):
+  Documentation: Document the blk-crypto framework
+  block: Keyslot Manager for Inline Encryption
+  block: Inline encryption support for blk-mq
+  block: Make blk-integrity preclude hardware inline encryption
+  block: blk-crypto-fallback for Inline Encryption
+  scsi: ufs: UFS driver v2.1 spec crypto additions
+  scsi: ufs: UFS crypto API
+  scsi: ufs: Add inline encryption support to UFS
+  fs: introduce SB_INLINECRYPT
+  fscrypt: add inline encryption support
+  f2fs: add inline encryption support
+
+ Documentation/admin-guide/ext4.rst        |   6 +
+ Documentation/block/index.rst             |   1 +
+ Documentation/block/inline-encryption.rst | 260 +++++++++
+ Documentation/filesystems/f2fs.rst        |   7 +-
+ block/Kconfig                             |  17 +
+ block/Makefile                            |   2 +
+ block/bio-integrity.c                     |   3 +
+ block/bio.c                               |   6 +
+ block/blk-core.c                          |  20 +-
+ block/blk-crypto-fallback.c               | 655 ++++++++++++++++++++++
+ block/blk-crypto-internal.h               | 192 +++++++
+ block/blk-crypto.c                        | 423 ++++++++++++++
+ block/blk-integrity.c                     |   7 +
+ block/blk-map.c                           |   1 +
+ block/blk-merge.c                         |  11 +
+ block/blk-mq.c                            |  13 +
+ block/blk.h                               |   4 +
+ block/bounce.c                            |   2 +
+ block/keyslot-manager.c                   | 397 +++++++++++++
+ drivers/md/dm.c                           |   3 +
+ drivers/scsi/ufs/Kconfig                  |   9 +
+ drivers/scsi/ufs/Makefile                 |   1 +
+ drivers/scsi/ufs/ufshcd-crypto.c          | 226 ++++++++
+ drivers/scsi/ufs/ufshcd-crypto.h          |  60 ++
+ drivers/scsi/ufs/ufshcd.c                 |  46 +-
+ drivers/scsi/ufs/ufshcd.h                 |  24 +
+ drivers/scsi/ufs/ufshci.h                 |  67 ++-
+ fs/buffer.c                               |   7 +-
+ fs/crypto/Kconfig                         |   6 +
+ fs/crypto/Makefile                        |   1 +
+ fs/crypto/bio.c                           |  50 ++
+ fs/crypto/crypto.c                        |   2 +-
+ fs/crypto/fname.c                         |   4 +-
+ fs/crypto/fscrypt_private.h               | 120 +++-
+ fs/crypto/inline_crypt.c                  | 365 ++++++++++++
+ fs/crypto/keyring.c                       |   4 +-
+ fs/crypto/keysetup.c                      |  92 ++-
+ fs/crypto/keysetup_v1.c                   |  16 +-
+ fs/ext4/inode.c                           |   4 +-
+ fs/ext4/page-io.c                         |   6 +-
+ fs/ext4/readpage.c                        |  11 +-
+ fs/ext4/super.c                           |   9 +
+ fs/f2fs/compress.c                        |   2 +-
+ fs/f2fs/data.c                            |  68 ++-
+ fs/f2fs/super.c                           |  32 ++
+ fs/proc_namespace.c                       |   1 +
+ include/linux/blk-crypto.h                | 124 ++++
+ include/linux/blk_types.h                 |   6 +
+ include/linux/blkdev.h                    |  41 ++
+ include/linux/fs.h                        |   1 +
+ include/linux/fscrypt.h                   |  57 ++
+ include/linux/keyslot-manager.h           | 107 ++++
+ 52 files changed, 3509 insertions(+), 90 deletions(-)
+ create mode 100644 Documentation/block/inline-encryption.rst
+ create mode 100644 block/blk-crypto-fallback.c
+ create mode 100644 block/blk-crypto-internal.h
+ create mode 100644 block/blk-crypto.c
+ create mode 100644 block/keyslot-manager.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h
+ create mode 100644 fs/crypto/inline_crypt.c
+ create mode 100644 include/linux/blk-crypto.h
+ create mode 100644 include/linux/keyslot-manager.h
+
+-- 
+2.26.0.110.g2183baf09c-goog
 
