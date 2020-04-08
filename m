@@ -2,218 +2,152 @@ Return-Path: <SRS0=Y1+o=5Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3E2C2D0EA
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 09:59:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9DD1C2D0EA
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 11:31:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A44E620747
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 09:59:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A34420787
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 11:31:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Q7CTnj5I"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="CUjV2UXX";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="fLR6Auzs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727648AbgDHJ77 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Apr 2020 05:59:59 -0400
-Received: from mail-qv1-f47.google.com ([209.85.219.47]:34916 "EHLO
-        mail-qv1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727427AbgDHJ77 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2020 05:59:59 -0400
-Received: by mail-qv1-f47.google.com with SMTP id q73so3325177qvq.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2020 02:59:57 -0700 (PDT)
+        id S1728494AbgDHLbK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Apr 2020 07:31:10 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:30448 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728395AbgDHLbK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2020 07:31:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1586345469; x=1617881469;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=s8Od6HuOqJRH2e1KQYgwS0rapvcqd+JsTqpGypOgvyk=;
+  b=CUjV2UXXmAUI5o2iZkzFXIjF+nPIcDQGkbyzZScJiE4GTKgYJcE03uRq
+   hDMN2cfoJ5/wGDGrw4G77LiEr0ADN/lho6Max3fDcgDQxCIPBeU6y+XXi
+   ObvFNoKDi12Lflz/JEhl3pSFGBcGzRtmaLSCmFMv5yLTvJX8Zh3pDDqb4
+   4dI9TdNi85yr9MnH+FxRDct76pKLOuISeknbJCH7EMKaDdfVUR6Z6UNmS
+   IYORN42wAQ5sxJy4zpm9l6JLWVHrni6VQuWAS92kWygwZ5eXgzWHsOWbd
+   fXUypCpCYt5IY5l4c6n8hAz8G+QsVIOSQ8Ikifl8AK8oXYMUbdQkoDE+d
+   A==;
+IronPort-SDR: RzHuu9U6KT1mLZ+h36mPU80+O6GTXywusHX3Js2RQuOYXAre2sXth8dKqv9+fSow0Y6UeaNO9j
+ fN+FodHDy1Am/cbGlf7KbIOdHw61OAxG89qBlmsW+m6U1dhwYmF0wG8I6+rZAVBxbOIy7lcUxS
+ kmNS4Tt+I0EfWCdw1JK6TN7m9xSgNQZhDkxSbOYlzrEz75XRQTlJJAhL3FmY9yrrqNPoHC/TY+
+ S0L5ZvpE5SQeo9TIcNB/If0/5Xqtvp+iQsQ7SqYIdT9Vmt9VT7cj0hwNeq6PuvOGcPT+wi7Zli
+ A68=
+X-IronPort-AV: E=Sophos;i="5.72,358,1580745600"; 
+   d="scan'208";a="134862325"
+Received: from mail-dm6nam12lp2170.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.170])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Apr 2020 19:31:08 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kgEl7v2OLPQmlDVZ/ArBgrdxrb635D0liqrlt5CstMqy6+K0fmx8xsZdYjNEUZJSucGrhvNqZYemISatSXH+/NV+C/+e1Bff5v92ciqic060LvidwHyMdprG+reRQek2iBi/FOIQU1QEYwfAel3b5JjMDkdPiPKC/eN3TvSgGZNJD6nHYfKdT1ZBU4VJiHkkVYPvJqIijAlv6YhyOiKSVRY47XcrnbHuMJ7uTmx5BhK8mF1mJBC7KDIYopJtUNY+usuT5pLqWsWOktuRGpkAStWfQ4ypuiQciWiphgQ6avVZ27zImMR8+BuMYkxsH9fObRHlmDK1DlPbQ9c6udYPYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=f5GLmLALAFNl4lRFYyuEB//H2ciSGl7yuedSid0WeCQ=;
+ b=W8kd8BvPBsu5cDBN2psZQ4e7UlBHh6DJxSGYEiTpDkHDsGjflR+IFS/OOjuD/A93e5LB2j7e6feUfCvWQoSChu25sucxkmLCvdm77vKqJVPh1QbrOGQzQJZLN/n25C4rUuqp+xmfFrWlQkUBP+rAL+fdkM37GHBPQOyXdhpq6ezZyU5Kfn8TeQDNk+kXTOaj+LMKF+YBNKA1/2sKR8H3rXyUxbcROSOU9BXjfw9zwcJap8EuFFEA9QRw5qyJx055FPGUDsvH8Ic7+/j8B/b9yzozAsNCNHK9rHMvRwWi6ruXvXniec8upg2yV+hX5pvQusaKnHGoN5viZjuWLwMTcA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=nPlQhBEB+7aVYwEYBOTaGBDVlulI0AdQp3gmPCZo/vA=;
-        b=Q7CTnj5IWnm380WPCcbj98FzWsRFGN2fAjjQ5cO5I/fMlUubsaDvkkM8LL3a+lB79M
-         sxls6Byjna9HibkMyb6//5GN4LsIpl+Qayn5XtJNp9zgynWmv76E8vYa5i2RFp1N/1m0
-         6PaCQX4IkrGxbFZkCkZ8SZoy2PkEogTOVkkc8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=nPlQhBEB+7aVYwEYBOTaGBDVlulI0AdQp3gmPCZo/vA=;
-        b=FOl46MM72LjrxdVv4pMjEOs4A3RL+qaHloyBjmw2uefjwypaun2vbO4hoSDZ3RP4TD
-         3uAaMeqIbaxIqMzdqkOuz4RB0YzX3mi1beUWpwcKl29/j8h+1q6pCDe+Sv8cF6OpWyy2
-         QmYSbT9M+4efiudnxCLKmvPHsWlKMjzQJreUgJu3pKFe26CB0l4n6l37o9TaxtzQj/rX
-         wGImOxTq54yocxSO42pAQw6MfnU05mFmm7iIT26RdKKFXpTqS5MsSYQlTcvCbKBfFulm
-         MZY+pzi1AaRO0Oo/FqN1XVtZ9Oh+bcJImBZfK5fEk9sT1alEU9OYnq5yjtstg2gWEhZ7
-         2D2A==
-X-Gm-Message-State: AGi0PuYinNHxYDo+6F5j7YRm53iOTYiUR0tyvk+zSrJ+hkbTm8JELQV/
-        bSSLgW0hqZGsEB0YJqj7XxP7O6rt1uC3HBNo6ZgI0g==
-X-Google-Smtp-Source: APiQypICmBQYOzHQx1B4peqgkoW9B1M3uws/RIWCVgrouvZ4UsocRu3k0emWF2RxhJpNTJ8hgiMFrdzWAyWqxSmPer8=
-X-Received: by 2002:a05:6214:364:: with SMTP id t4mr6723487qvu.124.1586339996950;
- Wed, 08 Apr 2020 02:59:56 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1583409280-158604-1-git-send-email-john.garry@huawei.com>
- <1583409280-158604-9-git-send-email-john.garry@huawei.com>
- <a1f0399e2e85b2244a9ae40e4a2f1089@mail.gmail.com> <f839f040-8bf4-cf83-7670-dfc208b77326@huawei.com>
-In-Reply-To: <f839f040-8bf4-cf83-7670-dfc208b77326@huawei.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=f5GLmLALAFNl4lRFYyuEB//H2ciSGl7yuedSid0WeCQ=;
+ b=fLR6AuzsQcFAKXLoHdSaTldi5bhXIkjqbgmqPADSmEYq0475T3seGFADFR8G+SDpAk4uIgVh1wfjhF9OQDw6MTld3zitO9RpzRgsAzRuXzBjipcUsdC2txINS9Hv7is4J5IVJlRuUAIOPny5iVy/pYFCpXBAGvLHTHUsob5uIdI=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3535.namprd04.prod.outlook.com
+ (2603:10b6:803:4e::25) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2878.21; Wed, 8 Apr
+ 2020 11:31:07 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2878.018; Wed, 8 Apr 2020
+ 11:31:07 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     "hch@infradead.org" <hch@infradead.org>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v4 02/10] block: Introduce REQ_OP_ZONE_APPEND
+Thread-Topic: [PATCH v4 02/10] block: Introduce REQ_OP_ZONE_APPEND
+Thread-Index: AQHWCaB3XVR5tZX3y0yqP4hTKj1cDg==
+Date:   Wed, 8 Apr 2020 11:31:07 +0000
+Message-ID: <SN4PR0401MB3598C36B5B5720892032E0519BC00@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200403101250.33245-1-johannes.thumshirn@wdc.com>
+ <20200403101250.33245-3-johannes.thumshirn@wdc.com>
+ <20200407164817.GA13893@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 63391ed0-703a-4dd2-6330-08d7dbb0549b
+x-ms-traffictypediagnostic: SN4PR0401MB3535:
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SN4PR0401MB3535058F255BE0AD46D2B61D9BC00@SN4PR0401MB3535.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
+x-forefront-prvs: 0367A50BB1
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(396003)(136003)(366004)(376002)(346002)(39860400002)(2906002)(186003)(81156014)(86362001)(76116006)(66556008)(5660300002)(7696005)(8676002)(316002)(66476007)(91956017)(66446008)(81166007)(53546011)(64756008)(8936002)(33656002)(6506007)(55016002)(26005)(4326008)(66946007)(4744005)(54906003)(6916009)(9686003)(478600001)(52536014)(71200400001);DIR:OUT;SFP:1102;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: N6J0FPdW1t/PdERnxWGF+cYPm036K1dxB7X2m2BCn3RKzUfnsYtJt9opxPjxAbUmwODKcy8NJyoNwFeXK0wvVXETfLjC2Y7X1xQ0kN0WMfDiFlZBpEEtwMNWzeqseQNCeVlOr9aTVIFMj92iGaM7PcEWCdRKO9U3+RoyqMgihxtDt57hXzF23UNbS2+8/S5g3glB1sLjyulno1he7P99I52FrGpZ1pLlUTluh+jwbQ8rkjBbdoertqOgRkMgZRBDtyaSnPnThAYp2ef1PQ4VVWmEQa6e+c4OqBBWpXgE6SsorSIaEQ79lHXpgreA3IcxWwRUYjyrjcQMbLwa99UaSnxeQ4VEWqYWe/ST3xrrKR7NuAZqYF7re8httJcYy/1IBscndVym0rOVZDlGLbWWD+ea8mb9Oc1+9tZNeHkquVb4doI5pYnsqNazOIPFX2bt
+x-ms-exchange-antispam-messagedata: PfWMAPhN0QrsLc2FeNkGEhRjWtUjJj/qCU5RGm8IcFNUBuThG0p1kT+wsdEDT/6MaOdN31KK7eeXFKH+lmhWLfkShcG7ZzEh/Qk8epMUdC+DcRIQWz5wyzqcnxG7Vdjs4BCHsW+J9gXmxv681ROfaQ==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQLPD/Iw6Rn2DAIn/TfwmBaZDWGoTwIxkurkAqxUgoEByxhGKKZHrWyA
-Date:   Wed, 8 Apr 2020 15:29:54 +0530
-Message-ID: <7cac3eb9fd79b5b988e25da542305b35@mail.gmail.com>
-Subject: RE: [PATCH RFC v6 08/10] megaraid_sas: switch fusion adapters to MQ
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.de,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        hch@infradead.org,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-Cc:     chenxiang66@hisilicon.com, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
-        Hannes Reinecke <hare@suse.com>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 63391ed0-703a-4dd2-6330-08d7dbb0549b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Apr 2020 11:31:07.5081
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 1QTWxXczqg86WQHm4KiQ4EB5+TOHWk35KDa2uxz9g79exTBPZG1iX4LdNUeTpBPi7tAY0LpIbgXuRtcZ4R4zeJEGGGml/iRai0gCQxRgYV4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3535
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Hi Kashyap,
->
-> >
-> > There is one outstanding patch which will eventually remove
-> > device_busy from sdev. To fix this interface, we may have to track per
-> > scsi device outstanding within a driver.
-> > For my testing I used below since we still have below interface
-> > available.
-> >
-> >          sdev_busy = atomic_read(&scmd->device->device_busy);
->
-> So please confirm that this is your change in megasas_get_msix_index():
->
-> - sdev_busy = atomic_read(&hctx->nr_active);
-> + sdev_busy = atomic_read(&scmd->device->device_busy);
-
-That  is correct.
-
->
-> >
-> > We have done some level of testing to know performance impact on SAS
-> > SSDs and HDD setup. Here is my finding - My testing used - Two socket
-> > Intel Skylake/Lewisburg/Purley Output of numactl --hardware
-> >
-> > available: 2 nodes (0-1)
-> > node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 36 37 38 39
-> > 40 41
-> > 42 43 44 45 46 47 48 49 50 51 52 53
-> > node 0 size: 31820 MB
-> > node 0 free: 21958 MB
-> > node 1 cpus: 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 54
-> > 55
-> > 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 node 1 size: 32247 MB
-> > node 1 free: 21068 MB node distances:
-> > node   0   1
-> >    0:  10  21
-> >    1:  21  10
-> >
-> >
-> > 64 HDD setup -
-> >
-> > With higher QD
->
-> what's OD?
->
-> > and io schedulder = mq-deadline, shared host tag is not scaling well.
-> > If I use ioscheduler = none, I can see consistent 2.0M IOPs.
-> > This issue is seen only with RFC. Without RFC mq-deadline scales up to
-> > 2.0M IOPS.
->
-> I didn't try any scheduler. I can have a look at that.
->
-> >
-> > Perf Top result of RFC - (IOPS = 1.4M IOPS)
-> >
-> >     78.20%  [kernel]        [k] native_queued_spin_lock_slowpath
-> >       1.46%  [kernel]        [k] sbitmap_any_bit_set
-> >       1.14%  [kernel]        [k] blk_mq_run_hw_queue
-> >       0.90%  [kernel]        [k] _mix_pool_bytes
-> >       0.63%  [kernel]        [k] _raw_spin_lock
-> >       0.57%  [kernel]        [k] blk_mq_run_hw_queues
-> >       0.56%  [megaraid_sas]  [k] complete_cmd_fusion
-> >       0.54%  [megaraid_sas]  [k] megasas_build_and_issue_cmd_fusion
-> >       0.50%  [kernel]        [k] dd_has_work
-> >       0.38%  [kernel]        [k] _raw_spin_lock_irqsave
-> >       0.36%  [kernel]        [k] gup_pgd_range
-> >       0.35%  [megaraid_sas]  [k] megasas_build_ldio_fusion
-> >       0.31%  [kernel]        [k] io_submit_one
-> >       0.29%  [kernel]        [k] hctx_lock
-> >       0.26%  [kernel]        [k] try_to_grab_pending
-> >       0.24%  [kernel]        [k] scsi_queue_rq
-> >       0.22%  fio             [.] __fio_gettime
-> >       0.22%  [kernel]        [k] insert_work
-> >       0.20%  [kernel]        [k] native_irq_return_iret
-> >
-> > Perf top without RFC driver - (IOPS = 2.0 M IOPS)
-> >
-> >      58.40%  [kernel]          [k] native_queued_spin_lock_slowpath
-> >       2.06%  [kernel]          [k] _mix_pool_bytes
-> >       1.38%  [kernel]          [k] _raw_spin_lock_irqsave
-> >       0.97%  [kernel]          [k] _raw_spin_lock
-> >       0.91%  [kernel]          [k] scsi_queue_rq
-> >       0.82%  [kernel]          [k] __sbq_wake_up
-> >       0.77%  [kernel]          [k] _raw_spin_unlock_irqrestore
-> >       0.74%  [kernel]          [k] scsi_mq_get_budget
-> >       0.61%  [kernel]          [k] gup_pgd_range
-> >       0.58%  [kernel]          [k] aio_complete_rw
-> >       0.52%  [kernel]          [k] elv_rb_add
-> >       0.50%  [kernel]          [k] llist_add_batch
-> >       0.50%  [kernel]          [k] native_irq_return_iret
-> >       0.48%  [kernel]          [k] blk_rq_map_sg
-> >       0.48%  fio               [.] __fio_gettime
-> >       0.47%  [kernel]          [k] blk_mq_get_tag
-> >       0.44%  [kernel]          [k] blk_mq_dispatch_rq_list
-> >       0.40%  fio               [.] io_u_queued_complete
-> >       0.39%  fio               [.] get_io_u
-> >
-> >
-> > If you want me to test any top up patch, please let me know.  BTW, we
-> > also wants to provide module parameter for user to switch back to
-> > older nr_hw_queue = 1 mode. I will work on that part.
->
-> ok, but I would just like to reiterate the point that you will not see the
-> full
-> benefit of blk-mq draining hw queues for cpu hotplug since you hide hw
-> queues from blk-mq.
-
-Agree. We have done  minimal testing using this RFC. We want to ACK this RFC
-as long as primary performance goal is achieved.
-
-We have done full testing on nr_hw_queue =1 (and that is what customer is
-using) so we at least want to give that interface available for customer for
-some time (assuming they may find some performance gap between two interface
-which we may not have encountered during smoke testing.).
-Over a period of time, if nr_hw_queue = N works for (Broadcom will conduct
-full performance once RFC is committed in upstream) all the IO profiles, we
-will share the information with customer about benefit of using nr_hw_queues
-=  N.
-
-Kashyap
-
->
-> >
-> > 24 SSD setup -
-> >
-> > I am able to see performance using RFC and without RFC is almost same.
-> > There is one specific drop, but that is generic kernel issue. Not
-> > related to RFC.
-> > We can discuss this issue separately. -
-> >
-> > 5.6 kernel is not able to scale very well if there is heavy
-> > outstanding from application.
-> > Example -
-> > 24 SSD setup and BS = 8K QD = 128 gives 1.73M IOPs which is h/w max,
-> > but at QD = 256 it gives 1.4M IOPs. It looks like there are some
-> > overhead  of finding free tags at sdev or shost level which leads drops
-> > in
-> IOPs.
-> >
->
-> Thanks for testing,
-> John
->
-> >
+On 07/04/2020 18:48, Christoph Hellwig wrote:=0A=
+>> @@ -927,6 +970,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio,=
+ struct iov_iter *iter)=0A=
+>>   	ssize_t size, left;=0A=
+>>   	unsigned len, i;=0A=
+>>   	size_t offset;=0A=
+>> +	unsigned op =3D bio_op(bio);=0A=
+>>   =0A=
+>>   	/*=0A=
+>>   	 * Move page array up in the allocated memory for the bio vecs as far=
+ as=0A=
+>> @@ -944,13 +988,20 @@ static int __bio_iov_iter_get_pages(struct bio *bi=
+o, struct iov_iter *iter)=0A=
+>>   		struct page *page =3D pages[i];=0A=
+>>   =0A=
+>>   		len =3D min_t(size_t, PAGE_SIZE - offset, left);=0A=
+>> +		if (op =3D=3D REQ_OP_ZONE_APPEND) {=0A=
+>> +			int ret;=0A=
+>>   =0A=
+>> +			ret =3D bio_add_append_page(bio, page, len, offset);=0A=
+>> +			if (ret !=3D len)=0A=
+>> +				return -EINVAL;=0A=
+> =0A=
+> I think zone append needs the same try to merge logic to deal with=0A=
+> page refcounts doesn't it?=0A=
+> =0A=
+=0A=
+Sure, no big deal=0A=
