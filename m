@@ -2,226 +2,145 @@ Return-Path: <SRS0=Y1+o=5Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6C8BC2BA1A
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 14:55:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4398FC2BA1A
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 15:04:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 742222076D
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 14:55:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AAD220820
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Apr 2020 15:04:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lgHZaM1I"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="aL8VsGju"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728049AbgDHOzD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Apr 2020 10:55:03 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:52913 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727612AbgDHOzD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2020 10:55:03 -0400
-Received: by mail-wm1-f65.google.com with SMTP id t203so189160wmt.2;
-        Wed, 08 Apr 2020 07:55:00 -0700 (PDT)
+        id S1728533AbgDHPEg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Apr 2020 11:04:36 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:34097 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727800AbgDHPEg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Apr 2020 11:04:36 -0400
+Received: by mail-pl1-f195.google.com with SMTP id a23so2608663plm.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2020 08:04:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=eqji3GggMd6mxpW0TE6SzKWwdrrjp/EvnXcz0aQAtA8=;
-        b=lgHZaM1I7OM9+9LZmn6HR7lZZvQMUfSLOXaRuaEPkynxzspeTI7WqeeAHVjeLtwSkP
-         12vIwbX0+D61NiCOjh0ZzHkKK60Di2nWKndMFExzsCEUxoikNi6CciC5NIznsK1D9Fq8
-         dcvFHPn8lKRBZk0y4py9JmR4Te+IL8O+Y9KoyNiV6dGBQCcHMCDCiVQtYh2wiKqysj+Z
-         RBEuJuC2gS5CR0xG1ETo2iOsmSSlRhi9UIIPtygUtWIOwCQXxiYyOzJ4aOB6g7yB0BV3
-         lfw/7DpBOxOy5Tig62Ow20v/op3EDG4LNbVvz2u22NSrWiBIKPXf0D13ZTCocC7G/QQE
-         t8Gw==
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=99bGb9kPLJIKPGAYnWeUQM+upQBOmhTKAuXfLDA02as=;
+        b=aL8VsGjuULtKfOLQ4xJAOYPOZmY0Fm4LmPDtmN2EaK+l6PCc9odZkH+cahGM56TX7V
+         RRRVicea4VeZOdbhSkDKFRCH58KpGUJ7CNOXzRWeuJNXr7aH2Mg1BkRpLSkVcDhAuWap
+         3QS1w5M7oxl5CLQ+/jYNLGia4XietUIz9CYHU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=eqji3GggMd6mxpW0TE6SzKWwdrrjp/EvnXcz0aQAtA8=;
-        b=qI2wMiWLxD2EHBUQZYRx0ukbekGglzHO/8F+i2lPVibQZrt5MhWwzYeNiSLWyyERE0
-         vKcKDzaQbC8UKGO38LPpWxOnsUU90NOCKzZLbNcZSzT11qexRnG3ccMcCbTWVag3YAOB
-         8POvbTgn8ORkX9s22H24Imp8DHPpi7cyza/t5m2W8I0LGzspn7IhoSP3E+rALOsgO0EA
-         ACWX9bgzrfeOPm25lB7wfmM3doWC4GW+0TMuXCKolEXsR42tlzSQwb6Ux17+e/SMoaD+
-         yFEsliW8Gny0s/jFc+FgPT9ixh8vb88MNzPB7MygswQKDRvlwfN5MHZAmQEJsIoBrQOD
-         DI7Q==
-X-Gm-Message-State: AGi0PuZ8h6NiMKKmm0Yi0bD6FQ0gwUW0aRUEVF620SKR2nxLhVtncYX8
-        IZrBnveFviMGOa5MjrEaSVI=
-X-Google-Smtp-Source: APiQypKXWmo5ypjf3eIzrBOMxGZUGhMZl5+z6eHY5fbmJgyYixLqw3zjlkOyG4WOcSACqFyeqF4QLQ==
-X-Received: by 2002:a7b:c0cb:: with SMTP id s11mr5359458wmh.180.1586357699908;
-        Wed, 08 Apr 2020 07:54:59 -0700 (PDT)
-Received: from andrea ([86.61.236.197])
-        by smtp.gmail.com with ESMTPSA id y22sm286179wma.0.2020.04.08.07.54.58
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=99bGb9kPLJIKPGAYnWeUQM+upQBOmhTKAuXfLDA02as=;
+        b=MwgQxqBq7deci+MpWpQQS0oiIqPnH4+mmzMWkMcLBi1c4esQ70U4NpiGUyhAwLjou7
+         tWcJod/nxDWeCmYcNzbs/lwfgubi8hnbVnWi4UZpWb4hg/0TZsO46Gq+YXgau5ywNkWP
+         hoZ0olBnENoqUbvl34FMN3v6ZEOGu9/xFUarvvTsm3O2j8jqcMzyLgXIpu2cF5n7RANU
+         FmnV9c3KJnXEJxz8Br1zNqVwaiwBvPJ/CKNjWS3AtqZ/BXBs8JHBFKpgdCZ//qgQMjJ1
+         HiB707Z7hDI3w8jTwyD5iKVXW48MXOyQdL8KNgkfP/UKTMQXil+kUkfiz/N0nMgH8zqk
+         foyA==
+X-Gm-Message-State: AGi0PubIadf6jHcEujrjkKfzfioxaUyb3nSmKBedBHmnJieni3ZCEkpF
+        DIJIpZtcjxrMCZwLh0pLaaUeJA==
+X-Google-Smtp-Source: APiQypLwTROlMgk5kYCTxCFF56//DDLXDI3u7/I38vnrWOWWHtwiZKkjylcUiWynghi29M6bg7W1mQ==
+X-Received: by 2002:a17:90a:178e:: with SMTP id q14mr208304pja.132.1586358273435;
+        Wed, 08 Apr 2020 08:04:33 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
+        by smtp.gmail.com with ESMTPSA id d85sm1468083pfd.157.2020.04.08.08.04.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Apr 2020 07:54:59 -0700 (PDT)
-Date:   Wed, 8 Apr 2020 16:54:53 +0200
-From:   Andrea Parri <parri.andrea@gmail.com>
-To:     Long Li <longli@microsoft.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Boqun Feng <boqun.feng@gmail.com>,
-        vkuznets <vkuznets@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
- interrupt is re-assigned
-Message-ID: <20200408145453.GA26362@andrea>
-References: <20200406001514.19876-1-parri.andrea@gmail.com>
- <20200406001514.19876-12-parri.andrea@gmail.com>
- <BN8PR21MB1155C78AAC02D02EA7A7841DCEC20@BN8PR21MB1155.namprd21.prod.outlook.com>
- <20200407003459.GA7776@andrea>
- <BN8PR21MB1155E335C1E390964C08B6E3CEC00@BN8PR21MB1155.namprd21.prod.outlook.com>
+        Wed, 08 Apr 2020 08:04:32 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     paolo.valente@linaro.org, groeck@chromium.org,
+        Gwendal Grignou <gwendal@chromium.org>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Ming Lei <ming.lei@redhat.com>, sqazi@google.com,
+        Douglas Anderson <dianders@chromium.org>,
+        =?UTF-8?q?Andr=C3=A9=20Almeida?= <andrealmeid@collabora.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        John Garry <john.garry@huawei.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Sagi Grimberg <sagi@grimberg.me>, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 2/4] blk-mq: Add blk_mq_delay_run_hw_queues() API call
+Date:   Wed,  8 Apr 2020 08:04:00 -0700
+Message-Id: <20200408080255.v4.2.I4c665d70212a5b33e103fec4d5019a59b4c05577@changeid>
+X-Mailer: git-send-email 2.26.0.292.g33ef6b2f38-goog
+In-Reply-To: <20200408150402.21208-1-dianders@chromium.org>
+References: <20200408150402.21208-1-dianders@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BN8PR21MB1155E335C1E390964C08B6E3CEC00@BN8PR21MB1155.namprd21.prod.outlook.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 08, 2020 at 02:25:52AM +0000, Long Li wrote:
-> >Subject: Re: [PATCH 11/11] scsi: storvsc: Re-init stor_chns when a channel
-> >interrupt is re-assigned
-> >
-> >> >@@ -621,6 +621,63 @@ static inline struct storvsc_device
-> >> >*get_in_stor_device(
-> >> >
-> >> > }
-> >> >
-> >> >+void storvsc_change_target_cpu(struct vmbus_channel *channel, u32
-> >> >+old,
-> >> >+u32 new) {
-> >> >+	struct storvsc_device *stor_device;
-> >> >+	struct vmbus_channel *cur_chn;
-> >> >+	bool old_is_alloced = false;
-> >> >+	struct hv_device *device;
-> >> >+	unsigned long flags;
-> >> >+	int cpu;
-> >> >+
-> >> >+	device = channel->primary_channel ?
-> >> >+			channel->primary_channel->device_obj
-> >> >+				: channel->device_obj;
-> >> >+	stor_device = get_out_stor_device(device);
-> >> >+	if (!stor_device)
-> >> >+		return;
-> >> >+
-> >> >+	/* See storvsc_do_io() -> get_og_chn(). */
-> >> >+	spin_lock_irqsave(&device->channel->lock, flags);
-> >> >+
-> >> >+	/*
-> >> >+	 * Determines if the storvsc device has other channels assigned to
-> >> >+	 * the "old" CPU to update the alloced_cpus mask and the stor_chns
-> >> >+	 * array.
-> >> >+	 */
-> >> >+	if (device->channel != channel && device->channel->target_cpu ==
-> >> >old) {
-> >> >+		cur_chn = device->channel;
-> >> >+		old_is_alloced = true;
-> >> >+		goto old_is_alloced;
-> >> >+	}
-> >> >+	list_for_each_entry(cur_chn, &device->channel->sc_list, sc_list) {
-> >> >+		if (cur_chn == channel)
-> >> >+			continue;
-> >> >+		if (cur_chn->target_cpu == old) {
-> >> >+			old_is_alloced = true;
-> >> >+			goto old_is_alloced;
-> >> >+		}
-> >> >+	}
-> >> >+
-> >> >+old_is_alloced:
-> >> >+	if (old_is_alloced)
-> >> >+		WRITE_ONCE(stor_device->stor_chns[old], cur_chn);
-> >> >+	else
-> >> >+		cpumask_clear_cpu(old, &stor_device->alloced_cpus);
-> >>
-> >> If the old cpu is not allocated, is it still necessary to do a cpumask_clear_cpu?
-> >
-> >AFAICT, this really depends on how much we "believe" in the current heuristic
-> >(as implemented by get_og_chn()):  ;-)
-> >
-> >The cpumask_clear_cpu() (and the below, dependent "flush" as well) are
-> >intended to re-initialize alloced_cpus and stor_chns in order for get_og_chn()
-> >to re-process/update them.
-> >
-> >Also, notice that (both in the current code and after this series) alloced_cpus
-> >can't be offlined and get_og_chn() does rely on this property (cf., e.g., the
-> >loop/check over alloced_cpus/node_mask).
-> >
-> >I suspect that giving up on this invariant/property would require a certain
-> >amount of re-design in the heuristic/code in question...
-> >
-> >
-> >> >@@ -1360,7 +1432,14 @@ static int storvsc_do_io(struct hv_device
-> >*device,
-> >> > 			}
-> >> > 		}
-> >> > 	} else {
-> >> >+		spin_lock_irqsave(&device->channel->lock, flags);
-> >> >+		outgoing_channel = stor_device->stor_chns[q_num];
-> >> >+		if (outgoing_channel != NULL) {
-> >> >+			spin_unlock_irqrestore(&device->channel->lock,
-> >> >flags);
-> >>
-> >> Checking outgoing_channel again seems unnecessary. Why not just call
-> >get_og_chn()?
-> >
-> >target_cpu_store() might have changed stor_chns (and alloced_cpus) in the
-> >meantime (but before we've acquired the device's lock): the double check is
-> >to make sure we have a "consistent"/an up-to-date view of stor_chns and
-> >alloced_cpus.
-> >
-> >
-> >>
-> >> >+			goto found_channel;
-> >> >+		}
-> >> > 		outgoing_channel = get_og_chn(stor_device, q_num);
-> >> >+		spin_unlock_irqrestore(&device->channel->lock, flags);
-> >> > 	}
-> >>
-> >> With device->channel->lock, now we have one more lock on the I/O issuing
-> >path. It doesn't seem optimal as you are trying to protect the code in
-> >storvsc_change_target_cpu(), this doesn't need to block concurrent I/O
-> >issuers. Maybe moving to RCU is a better approach?
-> >
-> >I don't see this as a problem (*and I've validated such conclusion in
-> >experiments, where the "patched kernel" was sometimes performing slighlty
-> >better than the "unpatched kernel" and sometimes slightly
-> >worse...):
-> >
-> >On the one hand, the stor_chns array "stabilizes" quite early after system
-> >initialization in "normal" (i.e., common) situations (i.e., no channel
-> >reassignments, no device hotplugs...); IOW, get_og_chn() really represents
-> >the "rare and slow" path here (but not that slow!
-> >after all...).  Furthermore, notice that even in those "rare cases"
-> >the number of "contending" channels is limited to at most 1 per 4 CPUs IIRC
-> >(alloced_cpus is "sparsely populated"...).
-> 
-> Yes I realized it is on the slow path. There is no need to optimize locks.
-> 
-> Reviewed-by; Long Li <longli@microsoft.com>
+We have:
+* blk_mq_run_hw_queue()
+* blk_mq_delay_run_hw_queue()
+* blk_mq_run_hw_queues()
 
-Thanks for the review, Long.  I've added the tag.
+...but not blk_mq_delay_run_hw_queues(), presumably because nobody
+needed it before now.  Since we need it for a later patch in this
+series, add it.
 
-  Andrea
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+---
 
+Changes in v4: None
+Changes in v3:
+- ("blk-mq: Add blk_mq_delay_run_hw_queues() API call") new for v3
 
-> 
-> >
-> >The latencies of the RCU grace period (in the order of milliseconds) would be a
-> >major concern for the adoption of RCU here (at least, if we continue to
-> >consider get_og_chn() as an "updater").  I'm afraid that this could be "too
-> >slow" even for our slow path...  ;-/
-> >
-> >What am I missing?  ;-)
-> >
-> >Thanks,
-> >  Andrea
+Changes in v2: None
+
+ block/blk-mq.c         | 19 +++++++++++++++++++
+ include/linux/blk-mq.h |  1 +
+ 2 files changed, 20 insertions(+)
+
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 2cd8d2b49ff4..ea0cd970a3ff 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1537,6 +1537,25 @@ void blk_mq_run_hw_queues(struct request_queue *q, bool async)
+ }
+ EXPORT_SYMBOL(blk_mq_run_hw_queues);
+ 
++/**
++ * blk_mq_delay_run_hw_queues - Run all hardware queues asynchronously.
++ * @q: Pointer to the request queue to run.
++ * @msecs: Microseconds of delay to wait before running the queues.
++ */
++void blk_mq_delay_run_hw_queues(struct request_queue *q, unsigned long msecs)
++{
++	struct blk_mq_hw_ctx *hctx;
++	int i;
++
++	queue_for_each_hw_ctx(q, hctx, i) {
++		if (blk_mq_hctx_stopped(hctx))
++			continue;
++
++		blk_mq_delay_run_hw_queue(hctx, msecs);
++	}
++}
++EXPORT_SYMBOL(blk_mq_delay_run_hw_queues);
++
+ /**
+  * blk_mq_queue_stopped() - check whether one or more hctxs have been stopped
+  * @q: request queue.
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 11cfd6470b1a..405f8c196517 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -503,6 +503,7 @@ void blk_mq_unquiesce_queue(struct request_queue *q);
+ void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs);
+ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
+ void blk_mq_run_hw_queues(struct request_queue *q, bool async);
++void blk_mq_delay_run_hw_queues(struct request_queue *q, unsigned long msecs);
+ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
+ 		busy_tag_iter_fn *fn, void *priv);
+ void blk_mq_tagset_wait_completed_request(struct blk_mq_tag_set *tagset);
+-- 
+2.26.0.292.g33ef6b2f38-goog
+
