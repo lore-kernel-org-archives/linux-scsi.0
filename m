@@ -7,51 +7,41 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE6CC2BB86
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 14:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9744C2BB55
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 14:27:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A10920A8B
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 14:07:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9559215A4
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 14:27:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="JO4QoKUJ"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="H9MzFTTW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727041AbgDIOHP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Apr 2020 10:07:15 -0400
-Received: from mout.web.de ([212.227.15.3]:34897 "EHLO mout.web.de"
+        id S1727611AbgDIO1b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Apr 2020 10:27:31 -0400
+Received: from mout.web.de ([212.227.15.4]:43311 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726552AbgDIOHP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Apr 2020 10:07:15 -0400
+        id S1727115AbgDIO1b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Apr 2020 10:27:31 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1586441207;
-        bh=q6JT9BUFhZEDTkjJ5O6J5v2MmnwuAEBNOmdPwgmth44=;
+        s=dbaedf251592; t=1586442426;
+        bh=QfnV65nsvDrIJ2FKo6om5JqVuDjj2mBOGH72nZKKcTs=;
         h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=JO4QoKUJL1tQAShFsyB81ZnvI7u+Pl/cX8UC8f+FrPMDcZR2zH+SapWIsgIwf1Wra
-         CfqQRF95AwulT/tocwQYzjFBjDTAs9TajTunYXQc4ihfc58bvpEJ8jeAI+Na/tyGOT
-         gD3DI4clYya3cjjyECr+esU04ifNAtCWIpo67J58=
+        b=H9MzFTTWuUYTUxHpFp4DsPydA0qaRXfspbonOb3mPK9wYItHiHBsgPoNq8RfvU6QD
+         IjOV550w+5YyWdOGrVfH8Nul9wCgt9nWdiT1z8bAjoineyH+xh0lCyjSV3TQ2i20w4
+         yNMmHyajIuoqZa7pa0Rjv4kAQSfwlbvvWgfkaeZ4=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.3] ([93.133.77.56]) by smtp.web.de (mrweb001
- [213.165.67.108]) with ESMTPSA (Nemesis) id 0Letkl-1iwX840MpD-00qh8K; Thu, 09
- Apr 2020 16:06:47 +0200
-Subject: Re: [PATCH] scsi: Remove unnecessary calls to memset after
- dma_alloc_coherent
+Received: from [192.168.1.3] ([93.133.77.56]) by smtp.web.de (mrweb003
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0LnS3i-1io2Kq0QLW-00haJI; Thu, 09
+ Apr 2020 16:27:06 +0200
+Subject: Re: scsi: aic7xxx: Remove null pointer checks before kfree()
 To:     Alex Dewar <alex.dewar@gmx.co.uk>, linux-scsi@vger.kernel.org
-Cc:     Allison Randal <allison@lohutok.net>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Julia Lawall <julia.lawall@inria.fr>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
         "James E. J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Richard Fontana <rfontana@redhat.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Thomas Gleixner <tglx@linutronix.de>, aacraid@microsemi.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-kernel@vger.kernel.org
-References: <e2401a31-e9fd-e849-e27c-6e079f5556d2@web.de>
- <20200407160213.qh64de6ebrj7qkmx@lenovo-laptop>
- <807090f6-f2ee-0e5b-6e35-b0c148c7a22f@web.de>
- <20200409114218.5muicchv37ulrjxf@medion>
+        Qiujun Huang <hqjagain@gmail.com>
+References: <72bc89d5-cf50-3f3a-41e0-b46b134e754d@web.de>
+ <20200407155453.sosj4brsw6r7fnot@lenovo-laptop>
+ <99c64c9f-0a9f-aafb-2e32-da7e026f9940@web.de>
+ <20200409114813.g3k4phoguduz6pw2@medion>
 From:   Markus Elfring <Markus.Elfring@web.de>
 Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  mQINBFg2+xABEADBJW2hoUoFXVFWTeKbqqif8VjszdMkriilx90WB5c0ddWQX14h6w5bT/A8
@@ -96,49 +86,69 @@ Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
  x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
  pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
-Message-ID: <099aaf53-739c-568d-df7c-e9a2d56a07fd@web.de>
-Date:   Thu, 9 Apr 2020 16:06:44 +0200
+Message-ID: <cd462354-a14c-ddb2-c728-17a6073a5de0@web.de>
+Date:   Thu, 9 Apr 2020 16:27:04 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200409114218.5muicchv37ulrjxf@medion>
+In-Reply-To: <20200409114813.g3k4phoguduz6pw2@medion>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:JusyzVvIVIWSc70UAc19taj5ysYDY1sU8dM0OVZBrI4gtlxZfCn
- 9vA50+xURZCL+aiQrvlqBBSICvJh8oOfL9pQ5rLlnterYcCFdh/gYOyPvocESFI7dwLrR2M
- qt7zvopWRmad98G6wDWkoGi7k1DX2R3Y1SoM0tSxyZhmtTtlUJJAuf4j6j19v3jjAZyRwXm
- Bk1B23gQcqn8i/RrI8DFg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:MuJKtknjxMQ=:csZJiCPDXi62HwHssdk5iF
- 3HTHF71SG1oJ3VBOzcARhPB44oGe/OaysXvh7GtTErLNY0TXdswsYcx9eI4bJnw2MoIfobqhH
- HdBi3EtLgRyCDYhmsSAaDNksBNB3fv1iivVP9gRGgk+aaGwn+7vt1NNxKN2lUrsOwIta1g8ly
- mMySnM7HVyg/16vrWwxb5gNHdi1TpMuFGsMBrbf8HOntyh9+2TMetm32o9b2pbCkWKTmGoGg3
- GkTpPMRhPaAV14MpBPQM7PTK7NwpbWOAmYOJZ/IuwEUIK/ggfEOcM8Zi+vitrl5Qizxm3B0Mr
- 9HYsDxYJX/NKnqqtHHGfMoNsMhA5pUqYysZTc4Y93Rd6Ufxpa7gMugtTT0V2oywpFgRZ+gZIb
- 1i7v+XeEghbx5+GX1ti1yDWSL3mQ9bgbdOrDd8bNmha1S0Ks/NUaOZyJrHODBDsxW2y1LTtJI
- 7+mBvfWZLJqlck+5BP+hTgKkuu3220ajc7JVakIkfGfouXvk9WSHHlHvImHPd4Cjn9ZIQVO7k
- ncMcEtJVPyQ+DOMUDdsFh1JyqmahUMjRyTeQlj+ICGbdEa9OXlEqCQAN08rjWuMy8j61T5QG1
- WqE7jatsJKNK0aEBPimTNQQ8Oc9dL5iZs6+RgU7YWdQ6lU5pE9rwVlw80WKhQRal4jPtnGaeT
- P47MDwObKbhi9gcuXI2KHEiJN6bgyIbDttC4v1KyJRAexctQ7yOYjmu+G+bviHG1GJ+bxPmeW
- ruUops+N9hIWG3qH3xTGkTijx0wpyGNsoBzNDzsYKMzGpAMRfkyZM/WufUp28RKBz6hKeOTb/
- x1LZIATtP+/2vafh3reicT/EC2v1vboBDcRt89inR8IeRvcN/yt3PQ2au3oqHxS6UHyeb3bXt
- 896LZnvsd8c4m1Fbm5y4UdtK8vXEPC9MzPC8akdExtPb86o7ABMT9aPSFyK/uUvs7jWMw/IfL
- Tguh98eflUH3Nnv9JRi4Qe7fVfJwCtrajXJl7MyftIJVlh7+TpxfBwGIRvJ+w8aUV1HvNcg9N
- FndsYZC6pGutBHagws5/+7X2TaQA6G6AwgL3LOPJMNVC5LYz9gbE+V5jeEuc/Gu0dzNRaYxRf
- BXmF0vYOkGqC/MijpCT2qwoYZxr6MlPzOGmqflGG6qDHVMmrR1mar4MVGbnkjVCwRotY5TtaC
- 2uJGhfmlBrzFuYwHxSbU03FcpVZg6gLYKITXz2+1Ro3w5WfbMcG3/fHZ/7W/DAHTn2RU/zM0r
- mG+nUSNVuPhaJ1jgb
+X-Provags-ID: V03:K1:md2EG9/IGImBIHkso25YHvrHzRidOUFA/3StYUH4m3q8NSmIf9G
+ yXqZu4zCBznGnfsKroEbErRQr/jXgpVmz2dE8Sre9KKMD3Up8HIFl2+8icdgKotTu87Huti
+ JMoBTwBCIs5VZ/hhC8IfpBxXahDgo4Kleco8D268SiCVgk60hCY1VUN911hJIam4yWJa/mT
+ jW+bQL28/A9KZYO8CGiJA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:2jZv9P+yO4U=:zLPcwtGopv/vSYxSpTO7tm
+ Lhf0nXEmq1+2YVh2LmTHtpKHLX32x2QWdLvWPnFJfJWTL0O8yw8ZG/JI2u/dyJB17HwcPPPtV
+ unNrfbF3LbpDCiHJwJVtwRW0XOJCsxecmUzRFHPs7/T2Q57tzrfTHAWa0vLOQrZMw8RnnJ3cD
+ LHHl5YDDLVTr6AGwPaKrW0TmO+ars8QqHYmYjKoOihGaxOSZq8u6dji/VlvSItzj9k1Uj719o
+ IGShKiax2X+ziUlvuIh4XOaZX8bRgSowBI5/9tJ9qNhy0NuNfDV3IEywLJvyfzgKo/7tf+1+A
+ oK61ivO+TrICBeYkT95+lBTHIl2GtfCPKNzWIVF2gCP6pCHSra6ebnPtCasnSKasjuG+iqBxc
+ 9IPrT7Zx68tnr56xIS35aYIqBCffh73q8W0+J0FqDfPbNLt8xiH21o+R9JLwn8F1D3HtgT5Yw
+ US8ELAuUdDXMOpNSk/eNTPuAGpBR0aw4gnDR7jgP1wpjjAMSf8G8RFcgDb/4tW6yH9sAUiItW
+ zP13EPwOqqpWJfg9kgvLkiN2H/KTgCL3HgqDjCgkzD5QyeNKFyTBZploYkdPr3vBV6f5JZgKn
+ egMXTc/wC4uUlq7jE5r7Lmg9MaA87OhPiBDKuWmifZs/bdVCfQkWXTJeQutr39qEUVT+BTbzI
+ 5qqIaodNH0ecQ2ckBwojss2VUqi0sVxTjjrPX0BfvQYWqekX0dnIVsds8WgeOSEiyPypLWLgy
+ cNGxt7A7xD76PXRGFYUMlzLf26Y40f5LCc26ThoLBw2yAbiHwkMjEVkwagE8YBmr3K4viX+ey
+ RZKjEPEFMUEmP9eC/K6Z04Fx+W4k5TEK+LWuAr8EBfE1AcOrWDUSDjmynPRjK67kFI2BtihXL
+ xWzyaOzNZNaRpAjhEN9X1mvYnYktNgrZCw0YrQt+BHd4a4MbzCgewAFaMNdyBMxBVDerzA6yp
+ b5K/lvrSk+XkprbZRl4zLmtqvLTm9ADq692U0p96XbBIRyqYc1Rp1eomkiTKtrxVNdf2oFPVl
+ l2Tzxn/rRV0yZbw379ZwzAgxKOoBWo9BgI3YPcufZhunnooERU7V7r4oNCfqR6egzdPDFTNgK
+ HjmFOLImkMV8GVOBfGrA8AAq4P6NUu9sNRDiENPKofer1JCRLkCW5W+ZO/DvpZodFbSejuYw9
+ /L9Acsj8/rFfehP0spzwmfM/KfTL+mFVvkZgYI6mOI1PpD14DkboUwIbJ/hTlanlqSqqPm5Oz
+ MlvsjaOWe+rHMBLjz
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->> * Would you like to extend your skills in corresponding areas anyhow?
->
-> Sure, I'd love to. Are there any resources you'd recommend?
+> The thing is that this seems like an obvious improvement
 
-How helpful do you find the available software documentation
-(and other communication interfaces)?
+Such a view can be promising.
+
+
+> (albeit not a terribly critical one).
+
+The prioritisation influences change integration considerably.
+
+
+> It reduces SLoC and removes an unnecessary check.
+
+I hope that such goals will be reconsidered also for this software module.
+
+
+> AFAICS the patch you mention wasn't rejected on technical grounds,
+> but simply wasn't picked up.
+
+The usual factors were involved for free software development.
+
+
+> If there is a reason why this change isn't warranted
+> then I'd like to know why so I can send better patches in future :-)
+
+I hope that also your change interests can increase chances for
+software evolution in desired directions.
+With which delays will specific improvements be achieved?
 
 Regards,
 Markus
