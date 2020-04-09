@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE0AC38A2C
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 16:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 655C3C38A2B
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 16:54:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E86820753
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 16:54:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E34C20771
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 16:54:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iJLQiagG"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Q20SdBk4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727824AbgDIQyK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Apr 2020 12:54:10 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24715 "EHLO
+        id S1727883AbgDIQyL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Apr 2020 12:54:11 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24729 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727235AbgDIQyH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2020 12:54:07 -0400
+        with ESMTP id S1727833AbgDIQyL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2020 12:54:11 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586451247; x=1617987247;
+  t=1586451251; x=1617987251;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=q++7tLiMOyjklktmG5UM9qExxC1QYLaiR3sPHhtXviQ=;
-  b=iJLQiagGiYDY5NYzRSfWltaFaj9UmEfVL58I3l2kZ3AKyx+8YTlSGxIh
-   jyafYE189o+FhiKjyKPgna8h9dYeVaAltJnSjHD/pDu5AEU8YRrlk9Db3
-   A/DiFM3oKmYIgCYCA+0V7g+y1zO2WnUiCAd5DTuEaj/ChKhFBJLZJPLvD
-   AqXzXesaARtsaZIGV4u/HQUrVff+D5LmNkZso/1MA6DfrUqh0DpbqP9uD
-   b0qdVkQapvyGIaGLAPsRHaEfKgzq82hykmnsAS1FpmBt84tHKFdf0Trx7
-   UCn3ylb0f5vmQ4CdXJQ9x+bX4I/VwUTexLII/0fsc+EQMwnheuDqaaoRQ
-   Q==;
-IronPort-SDR: HXPaPfkK95IBcn6lbT98CIrqVtLGfKXa0/iXI+S08PcfqJ0Dy/n6wOM3GMj4zuD2yKCV9lL0xv
- LzkgN9L4264gZhPF1J73TrUNM+CzZeFVph2hq/QlNYTT6kLp6xTkmySKZfnVeTomxN5aUvGwue
- eN4Y3K0iQZRw62MoZkOw1HNjaktXRiDSB4+qDmlG90fwTDfLliUqvl/9s8qrnrlyLM0lUc7oL6
- AQk1uKRy0/sidFkbUFp2MvKoo4SJlHSaTxEjzJ4ODARiM0UaW8OoMDPlECO4Kp46r3NOr5R5xi
- oK4=
+  bh=m2H27AoyUGGLJggOB8uvDrziXzXN6LJ8DBjwSQ16qmI=;
+  b=Q20SdBk4jpmaIKPfX1ICGCnPCua9NTDTxNNECHSuWT36mUSjLMnSb79n
+   l1Wc1VoUoqb98CcVT0pWPm261wka8hL4ubDaGu19ve6j2esMUIcgl4uns
+   JYZu1YEvDP5zMMb6g+Y8t99RW9xCDsowvx/sA9re+NJuqhn9QmipaXhGy
+   eNuRfouAripObrjM47e7rFAicNlAAH7EOzcQL1pZhVxDDO/rwDwTshsK1
+   RV1hTR9MiozMrz+0kPcKS5SS57Ngd8+Q7hRfqXw3ssEzPJy10MXbc71/+
+   s8c+aR7JIohRy2GY/TqTf5rhJkGSe6NAyCTGJJHlJ+LNnJE1QW7dprBw2
+   g==;
+IronPort-SDR: zM1fCOD9dnRO3UprufNMoahnReA4gLhdcuA5rMLAzH1pjuv500d6B1iEisuXuXJAQX2MEOcumx
+ iGIr7AmvKA8+Y/uwjqZh1hSP5gLu+A3z2NtVJ/b2tm73dBcscbe3tf8IEVhykyHiZq/xbHSeOs
+ 3cXWuDF+eJMY8a6XH9g3SsX+H/RNAaiaZ/8gbmKj9nH1rfptzHa5bUkgEqAcZ44YJEY3GJPZLt
+ us5HisYWRvigCHn7NnLt5ZvnO6b6GofIt9OI5C2vy38341qlqKlD20epwLM8MUOuClaBKRdvxo
+ /IM=
 X-IronPort-AV: E=Sophos;i="5.72,363,1580745600"; 
-   d="scan'208";a="136423697"
+   d="scan'208";a="136423701"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Apr 2020 00:54:07 +0800
-IronPort-SDR: Fau621jWYy6tQZ7S25GWwtivGduaB8ZHT3i9AhgIdDOkBVU2emVvyQ+s3wPi/tLYuJaUoEXQEV
- XVhte+26SNYRnwId/HG66MydHFCzEm6ET2zuemrPE9UTkykv63aFjgWmy2aOKIEUlsVyvvIG66
- 44YK7Rsq+fiDK8KPqds/hKg0F5Tsgc9U9tFHhcLEl97Ig4HBog7N/SUxTj8pr45Waf8MhAuNaa
- 6zkkH0sbZ8WeGC2EmjkZPN8gDDcy/A25SBF7YXI7LoaVHFbJviY2hc8cjtsfgSvuGxPjvWTaIH
- HS1KDqSxEUImH20I5QXdrbxn
+  by ob1.hgst.iphmx.com with ESMTP; 10 Apr 2020 00:54:11 +0800
+IronPort-SDR: qvZoN5aKpXNgvAdscjuduLUZcLFw+wJGZATcyKeex54xI5lcwyAmUDYIQ0r8Z21/R/y0UmhxFS
+ q0hD+4SYj/JRQtWO7YrW41RGp4cdgWMPcqXChbv/nsfGa8gmbhq23TKOkYL5TE5N2xXo1J8eq8
+ zpCfuuhOhJCN+nTBqZ9gItC7Za4YdHOO/r9l8wAJzXpG3hky2gRJmbMMiD4SyDjnRvDmTLOhlW
+ EwAreL/ANcGI/+NOxdYg2UtwWO0YnnNeN6s2TXJOm+tdChXU5wvBuD0TF5w/K99Zh1wyhn6cd9
+ G32nTfuzUv9nPS/gcyd2YtpT
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2020 09:44:46 -0700
-IronPort-SDR: oeDJliF9+Gc5BrpOJzUUaj+cFpnU6A2fmoukfsV4u746HazOKY4LIbyIk6CW4GEAV0Irfz9M9c
- Eche1Dn4C4/sBkgNa9sYfR77o403hL9EfEcEyQnhlwoxompSuMI6OLUgdmmKJXkSm5Df0aIgKV
- uC8pL6ubm7PnEySMqdITeKxiAUSObR5EWJbKpaKeFNpI8OHnhoYUfp9BJU0bXHHhitvYFmfAHH
- FU7UyRV38Wwcdxie5LACm7TW5dgFYu/xWIGbsXRk+6xvNX0xKnRAIgGjSe6Ca8PgHVBTMB/zUW
- d8I=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2020 09:44:49 -0700
+IronPort-SDR: 5pX8gF8H4vB3FMyhSxzOcaqEhHy3IdhGh1UbbO9QqTwt3KALxUz1DKq63lPwt7XIQP4IYCjjMM
+ /ynGbEXHHteuX2TMbkdF3lee5PP6D5e2XSsYRUB+wn3i61HGjqmDbwuFqSeecxkZDpgtxi/T3h
+ lkqg/NiaOcKr1eRmwbTmbsoZQinvTNYLE4fOlLB29lzY1vrw9dfq4rnk0DHoBpvKo5sNK/reYe
+ GZl+iOVBIB+dIX0Zbnqj7uSTBHESFJ9TOkJPjMq3YrJyRsIlwCJwJ8fe0U4dH0AKI5smmirE2v
+ mBo=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 09 Apr 2020 09:54:06 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 09 Apr 2020 09:54:09 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -67,10 +67,12 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Christoph Hellwig <hch@lst.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v5 06/10] scsi: export scsi_mq_free_sgtables
-Date:   Fri, 10 Apr 2020 01:53:48 +0900
-Message-Id: <20200409165352.2126-7-johannes.thumshirn@wdc.com>
+Subject: [PATCH v5 08/10] null_blk: Support REQ_OP_ZONE_APPEND
+Date:   Fri, 10 Apr 2020 01:53:50 +0900
+Message-Id: <20200409165352.2126-9-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
 References: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
@@ -81,72 +83,96 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_mq_free_sgtables is used to free the sg_tables, uninitialize the
-command and delete it from the command list.
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-Export this function so it can be used from modular code to free the
-memory allocated by scsi_init_io() if the caller of scsi_init_io() needs
-to do error recovery.
+Support REQ_OP_ZONE_APPEND requests for null_blk devices with zoned
+mode enabled. Use the internally tracked zone write pointer position
+as the actual write position and return it using the command request
+__sector field in the case of an mq device and using the command BIO
+sector in the case of a BIO device.
 
-While we're at it, rename scsi_mq_free_sgtables() to scsi_free_sgtables().
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-
 ---
-Changes to v4:
-- Export scsi_mq_free_sgtables() instead of scsi_mq_uninit_cmnd()
----
- drivers/scsi/scsi_lib.c  | 7 ++++---
- include/scsi/scsi_cmnd.h | 1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/block/null_blk_zoned.c | 39 +++++++++++++++++++++++++++-------
+ 1 file changed, 31 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ea327f320b7f..b6b3ccd366da 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -548,7 +548,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
- 	}
- }
+diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
+index c60b19432a2e..b664be0bbb5e 100644
+--- a/drivers/block/null_blk_zoned.c
++++ b/drivers/block/null_blk_zoned.c
+@@ -67,13 +67,22 @@ int null_init_zoned_dev(struct nullb_device *dev, struct request_queue *q)
  
--static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
-+void scsi_free_sgtables(struct scsi_cmnd *cmd)
+ int null_register_zoned_dev(struct nullb *nullb)
  {
- 	if (cmd->sdb.table.nents)
- 		sg_free_table_chained(&cmd->sdb.table,
-@@ -557,10 +557,11 @@ static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
- 		sg_free_table_chained(&cmd->prot_sdb->table,
- 				SCSI_INLINE_PROT_SG_CNT);
- }
-+EXPORT_SYMBOL_GPL(scsi_free_sgtables);
++	struct nullb_device *dev = nullb->dev;
+ 	struct request_queue *q = nullb->q;
  
- static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+-	if (queue_is_mq(q))
+-		return blk_revalidate_disk_zones(nullb->disk);
++	if (queue_is_mq(q)) {
++		int ret = blk_revalidate_disk_zones(nullb->disk);
++
++		if (ret)
++			return ret;
++	} else {
++		blk_queue_chunk_sectors(q, dev->zone_size_sects);
++		q->nr_zones = blkdev_nr_zones(nullb->disk);
++	}
+ 
+-	blk_queue_chunk_sectors(q, nullb->dev->zone_size_sects);
+-	q->nr_zones = blkdev_nr_zones(nullb->disk);
++	blk_queue_max_zone_append_sectors(q,
++			min_t(sector_t, q->limits.max_hw_sectors,
++			      dev->zone_size_sects));
+ 
+ 	return 0;
+ }
+@@ -133,7 +142,7 @@ size_t null_zone_valid_read_len(struct nullb *nullb,
+ }
+ 
+ static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+-		     unsigned int nr_sectors)
++				    unsigned int nr_sectors, bool append)
  {
--	scsi_mq_free_sgtables(cmd);
-+	scsi_free_sgtables(cmd);
- 	scsi_uninit_cmd(cmd);
- 	scsi_del_cmd_from_list(cmd);
- }
-@@ -1060,7 +1061,7 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
+ 	struct nullb_device *dev = cmd->nq->dev;
+ 	unsigned int zno = null_zone_no(dev, sector);
+@@ -151,9 +160,21 @@ static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+ 	case BLK_ZONE_COND_IMP_OPEN:
+ 	case BLK_ZONE_COND_EXP_OPEN:
+ 	case BLK_ZONE_COND_CLOSED:
+-		/* Writes must be at the write pointer position */
+-		if (sector != zone->wp)
++		/*
++		 * Regular writes must be at the write pointer position.
++		 * Zone append writes are automatically issued at the write
++		 * pointer and the position returned using the request or BIO
++		 * sector.
++		 */
++		if (append) {
++			sector = zone->wp;
++			if (cmd->bio)
++				cmd->bio->bi_iter.bi_sector = sector;
++			else
++				cmd->rq->__sector = sector;
++		} else if (sector != zone->wp) {
+ 			return BLK_STS_IOERR;
++		}
  
- 	return BLK_STS_OK;
- out_free_sgtables:
--	scsi_mq_free_sgtables(cmd);
-+	scsi_free_sgtables(cmd);
- 	return ret;
- }
- EXPORT_SYMBOL(scsi_init_io);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index a2849bb9cd19..a6383ced6156 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -167,6 +167,7 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- extern void scsi_kunmap_atomic_sg(void *virt);
- 
- extern blk_status_t scsi_init_io(struct scsi_cmnd *cmd);
-+extern void scsi_free_sgtables(struct scsi_cmnd *cmd);
- 
- #ifdef CONFIG_SCSI_DMA
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ 		if (zone->cond != BLK_ZONE_COND_EXP_OPEN)
+ 			zone->cond = BLK_ZONE_COND_IMP_OPEN;
+@@ -232,7 +253,9 @@ blk_status_t null_handle_zoned(struct nullb_cmd *cmd, enum req_opf op,
+ {
+ 	switch (op) {
+ 	case REQ_OP_WRITE:
+-		return null_zone_write(cmd, sector, nr_sectors);
++		return null_zone_write(cmd, sector, nr_sectors, false);
++	case REQ_OP_ZONE_APPEND:
++		return null_zone_write(cmd, sector, nr_sectors, true);
+ 	case REQ_OP_ZONE_RESET:
+ 	case REQ_OP_ZONE_RESET_ALL:
+ 	case REQ_OP_ZONE_OPEN:
 -- 
 2.24.1
 
