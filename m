@@ -2,117 +2,122 @@ Return-Path: <SRS0=DEWY=5Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85272C3815B
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 16:54:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21C7AC2BB55
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 17:07:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57D5B20768
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 16:54:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED90420678
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Apr 2020 17:07:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="pJUC/xHp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W4cuyUmn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728079AbgDIQyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Apr 2020 12:54:15 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24729 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727833AbgDIQyM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2020 12:54:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586451253; x=1617987253;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/sRG9rMebxTyOpqZFaCW5QMmTu1k57daJpfK2lPqV/s=;
-  b=pJUC/xHpcA/zW+qNMNfcAnpBYYy09YhIaX9gXBabQm3cKPz5Dc9cBE6v
-   42LRdRPeAjI+8ymOrnaZmwFIoFU/qPu0k3mOLzcrECNRnN5bzjhHV826l
-   Fn/sXo4UtLKwrUHxQBsMYqIDFKoewqYjiLijEaG82DuUT9ggfXXom/Tnr
-   aSSun8UMB2DCHUpQv85EBj+IP5eyhtQFsIzNOgv623ppC4UYVfG3MP29b
-   aShOkIsXfRzqfCGSa/fD1vojV30BKIOBj68GyojgyO8KY4saTONhkUOhG
-   9v9Pjrna4N84H9w73PzxrUUlYUiKlff7Me9/qmUjhDhJLV0JcXIuv4UeE
-   Q==;
-IronPort-SDR: JpJzgSpXMOnlBRGxOlnI2pjAkP4Gr3ztYQtS9GQ5u+IKl8qs58SAGLdd8tTlHAVbNiS1vWVQy5
- xfrz14mUboOv0DihoNcbscH0tjiW9iQs1PUvAbV9oT7SI2uUfJM4vtJp51weNiD3+3w/C2SSCo
- 3KzaToR8LBl22eGehkr2ikfzJT9C9IuhjH53uOwTPRRcZ55CnlwxXmxdnkcBm4xzFrjtRFdgxH
- qc4oFiNEk8yWR29nEgT+tMTcGEqa58ngp+sjcHbgvsvtm1q+L46ADkQZBYyYXzhsOEWTsFwp3I
- uKQ=
-X-IronPort-AV: E=Sophos;i="5.72,363,1580745600"; 
-   d="scan'208";a="136423704"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Apr 2020 00:54:12 +0800
-IronPort-SDR: Ysbjm7qAmDkeleE6S0UKxmDUf1V1fRbfXcd++0JhIboOIbivGRgmjsstU2tkvTyh2+jFEYH3z1
- wSO0deiuJH7sILaT8YLJ6yf+3O2k+9YV0OkTV45oDKM2xt1b3SbVRQxUKZ5PTdpJ0bPhvNbJrR
- gCQfPBXuP5FzqsHSlAxDYMXNmIaksPB/fh/sUi8ua/bVFetBrDltnmMGY3KUrT3kS1r/4L18fh
- f8CzzLwXyrNsgYnOlxyIGzD33eLBRvWGtNmhnAsChrkXoSa+281Rqoj+G1v2fjeOzf2fmJVlv6
- C/krBgJqitnfdEhKtBS/4tOM
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2020 09:44:51 -0700
-IronPort-SDR: UBm2dceu86+lz/v4VdnpD6uza7DWaf+8fpqQvoDbkFJ1hfxOv63LEO/+YtKHrT19g66e3vj/h6
- g0Ozg029H6TaiPi3EJN3TdKe85GKGUi1TIwaClgrzbkgT0IbJKedmLvX7HHhhZ4NM65SxzUGEv
- xoT7h6qR9a4rTP0u9EY5awEiKBsX6dQTrA+ovckynLS8CAPET+nUf7Gpj4+Upmp1tDl0vFvsJ0
- iJV94j3XgxUqV5vdREn24AKngyCg+cq9eC+lmur+znCoa9lCdVs5clAelb+7iTQk40KSvXYiOc
- n3g=
-WDCIronportException: Internal
-Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip02.wdc.com with ESMTP; 09 Apr 2020 09:54:11 -0700
-From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v5 09/10] block: export bio_release_pages and bio_iov_iter_get_pages
-Date:   Fri, 10 Apr 2020 01:53:51 +0900
-Message-Id: <20200409165352.2126-10-johannes.thumshirn@wdc.com>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
-References: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1728035AbgDIRHM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Apr 2020 13:07:12 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:52112 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728028AbgDIRHM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Apr 2020 13:07:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1586452031;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=f8hRg5EYNwvd8gy24wDwcLfYiAk7Uf7td7X5fprQc0g=;
+        b=W4cuyUmnrHIGL3v2T9+u7YjyI2N0E7dDj9UAjfXkAVupOKjOvhzjxP78BVzp35bEnwjo2X
+        atER6l5c+XRCh+qriqYFdtYK3kMByKXZksy1BclT4GtTNizEE8MsGF92bTQhBj4wAEaorY
+        vb4FNbRvJ3ghFis2lcBTZ1G2g6lDp8s=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-226-wbcQ8QmgNVGmmCDUvSS3tA-1; Thu, 09 Apr 2020 13:07:08 -0400
+X-MC-Unique: wbcQ8QmgNVGmmCDUvSS3tA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0D58F18AB2CF;
+        Thu,  9 Apr 2020 17:07:07 +0000 (UTC)
+Received: from ovpn-113-89.phx2.redhat.com (ovpn-113-89.phx2.redhat.com [10.3.113.89])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 626165D9CA;
+        Thu,  9 Apr 2020 17:07:06 +0000 (UTC)
+Message-ID: <1b1be267b80404dc8ca5a14b3e26710c53f50fb4.camel@redhat.com>
+Subject: Re: [PATCH] scsi: core: Rate limit "rejecting I/O" messages
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     Joe Perches <joe@perches.com>, Daniel Wagner <dwagner@suse.de>,
+        linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Date:   Thu, 09 Apr 2020 13:07:05 -0400
+In-Reply-To: <2de69a35463317f5eca2ce665b0ee8b90b8c717b.camel@perches.com>
+References: <20200408171012.76890-1-dwagner@suse.de>
+         <120ce7f4cd1fd070e1f7c353223c21b8e4f29337.camel@redhat.com>
+         <2de69a35463317f5eca2ce665b0ee8b90b8c717b.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Export bio_release_pages and bio_iov_iter_get_pages, so they can be used
-from modular code.
+On Wed, 2020-04-08 at 12:49 -0700, Joe Perches wrote:
+> 
+> Could add a ratelimit_state to struct scsi_device.
+> 
+> Something like:
+> ---
+>  drivers/scsi/scsi_scan.c   | 2 ++
+>  include/scsi/scsi_device.h | 2 ++
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index f2437a..938c83f 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -279,6 +279,8 @@ static struct scsi_device *scsi_alloc_sdev(struct
+> scsi_target *starget,
+>  	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?
+>  					sdev->host->cmd_per_lun : 1);
+>  
+> +	ratelimit_state_init(&sdev->rs, DEFAULT_RATELIMIT_INTERVAL,
+> +			     DEFAULT_RATELIMIT_BURST);
+>  	scsi_sysfs_device_initialize(sdev);
+>  
+>  	if (shost->hostt->slave_alloc) {
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index c3cba2..2600de7 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -8,6 +8,7 @@
+>  #include <linux/blkdev.h>
+>  #include <scsi/scsi.h>
+>  #include <linux/atomic.h>
+> +#include <linux/ratelimit.h>
+>  
+>  struct device;
+>  struct request_queue;
+> @@ -233,6 +234,7 @@ struct scsi_device {
+>  	struct mutex		state_mutex;
+>  	enum scsi_device_state sdev_state;
+>  	struct task_struct	*quiesced_by;
+> +	struct ratelimit_state	rs;
+>  	unsigned long		sdev_data[];
+>  } __attribute__((aligned(sizeof(unsigned long))));
+>  
 
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+We could but in our experience this may not work well enough.  We do
+wants to see the message when the device goes offline, so we can look
+at logs from SAN failures to see when that happened, but logging more
+than one message per device is worthless.  And there can be *LOTS*
+of LUNs behind targets that go away.  Hundreds.  Thousands, even.
 
----
-Changes to v3:
-- Use EXPORT_SYMBOL_GPL
----
- block/bio.c | 2 ++
- 1 file changed, 2 insertions(+)
+I keep getting crash dumps with nothing useful in the dmesg buffer.
+And we see a lot of serial console lockups.
 
-diff --git a/block/bio.c b/block/bio.c
-index 689f31357d30..4029a48f3828 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -934,6 +934,7 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
- 		put_page(bvec->bv_page);
- 	}
- }
-+EXPORT_SYMBOL_GPL(bio_release_pages);
- 
- static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
- {
-@@ -1061,6 +1062,7 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 		bio_set_flag(bio, BIO_NO_PAGE_REF);
- 	return bio->bi_vcnt ? 0 : ret;
- }
-+EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
- 
- static void submit_bio_wait_endio(struct bio *bio)
- {
--- 
-2.24.1
+-Ewan
 
