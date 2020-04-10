@@ -2,119 +2,131 @@ Return-Path: <SRS0=e6eI=52=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8320C2BA2B
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:43:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E0DCC2BB55
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:46:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C375207FF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:43:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05780206F7
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:46:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GL11riiR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="SRjP3OC/";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="lvKQ2BxK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725993AbgDJHnJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Apr 2020 03:43:09 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:43173 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbgDJHnJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2020 03:43:09 -0400
-Received: by mail-wr1-f66.google.com with SMTP id i10so1340676wrv.10;
-        Fri, 10 Apr 2020 00:43:07 -0700 (PDT)
+        id S1726626AbgDJHqI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Apr 2020 03:46:08 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:30321 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725776AbgDJHqI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2020 03:46:08 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1586504769; x=1618040769;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=dZQhcacGwMzOWD605Bx6kYNDh3/zLHzyvmtwjZsxmEA=;
+  b=SRjP3OC/udRd9QcWuDD2Ee2x0VX3ndj2AiIrXkr6WadaUxpE6VPXnHGC
+   84+MTA74f1Tz7ql4LrzLWvFJlcfXT6WL2Q5mHkGB67rKZTPVWhq7uXIAu
+   ESHpt/3SFUXkD6ACOwadMbrDIJbTOy/aCqNHi+f6cz9jH8LqqPAzmsH7d
+   45q0sCGRIjK9CJxeXda0jxNMPJZrE6I9eYsdWN2WGqlNoYntxhpZOozer
+   pNrT1O11UwFdadBDlfpiAXeTHfY8cJrBFvOXklHy7ZOGTDq5fczLMkBL+
+   JVuQC3vjgeuHKB5zEumSaE+5vclnVWXwJzsJ3qKynK5hbNeNkHT8B5Auk
+   A==;
+IronPort-SDR: pwEJLjuZ1JabbKkVgi3FLTiPTrpm8Xr/jnb7iHgXgL9gHZK/Y1doEfi00Drja9r6E6NS+lD8iY
+ 7xilqr6e3WFfj1NUCe6VEx7DfZjQ3WKlPJYbrQ0ISwQBtluOLEBSxZAaFeNrD+m06RQBx+JkkE
+ IWIKvt3WSeSdq3bRG/QkESAoodgrzhR+lLfOuK8otQ7Xpjmb+3Gw6wSmSRHUrbezCYoPOAI0RR
+ LO8o+DwT7T6phhtu4uguWUYjM4Mnobin9sEJiJytYG5YBPxLvDK9uReoklUBDmewqjR9PmWIOT
+ 0W8=
+X-IronPort-AV: E=Sophos;i="5.72,366,1580745600"; 
+   d="scan'208";a="135349005"
+Received: from mail-mw2nam10lp2105.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.105])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Apr 2020 15:46:08 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jolfeZpFERTmKUUkU7zjhmudlYPY/y/VpTPUt5ob2rj+o57CFkX32vwe1K2H4nmmbzOTb8TA9UH/gn7QwUT2ew0N0h/6nR3kcFl6KinNMDy2V/1B8KnuVJ6SB9/tKW2VK0XGvO9Uuv/72LmqzmqXuz/nXGaAjEObF4q59j0wXiRdGQQXzlzJYPO5YAJ5rEJdt1i75Z6qXW9nSmqqejP+0uRmQjMyAZlm3sMX4WoZTGzCZEVXsGTTQ3IxTHiqZtIH+qXrJKtS4/JJVpxFRFYFyTWYqK9NpD9Z3XuY8r4+017EtH9/YgeR3iz4zz5Srrem5ERU/r9AhfiLILDOzDSXJw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dZQhcacGwMzOWD605Bx6kYNDh3/zLHzyvmtwjZsxmEA=;
+ b=IQz/HxKvX4ID+VoNIf5owgzj0I7XsjkMTQbzqAeXpWZG6iAE7Q2AkIjq9tmP6XvsevdgtJk84n3UF5+eAEyLAaCd1UqxPsxl0+77vqIn8g18cSNv3EWnr33hQmYsn6Igtn1LzUyeIXrRgh8hXiEhqqBtNux6GBCdfoSmmtR0JGoY21toSt90cot9fmrJJNal0FomneWOvB9tr2o91oKwTlJuWZyDaEugtDiWQ2uoDOTBVKBm03i+ufJGBR/MV+vQHtQC/1DfpA+IJ2Cj9ppytnEjdGWKZmP2uT1dkXYP3ITxblxdZP95uB0InG+xwEQC2BQT3CgA6NJxjEOu5RRcOw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DdhRWr7RsOKQvHwCgSBBLi8gM1dHAA9wTw27kVS8RCY=;
-        b=GL11riiR6JKzgFqjfc2m6/o18aBY6UqRXHLanEuHWgJGVirm5iQ+x+pyzQSP71PfPe
-         o8v8kxGZfXybXC4cDQjrHbhOUcai3GR5m9pIzIMYhZwuZWsOi3WMB44b+RC1A4tad58O
-         ZWvASmxAEHDhnZrlVEnA8Ct1LzIOTL464v6A+3sXqW+h2XVoj5r2PyosiAWlyV8HQGxf
-         d/+XQz2AoqgxZ+6Cy7jjFvjXEiRqJ2GxS7mWZQmD31L9Lorp3ivB6brewkAkkOFLbcss
-         2OCwHHAOAcTeiJNyoee8g2OegeX+TPQFS/ZnWDd2+6DjB05kCLNhDijOwRzS77DtVia4
-         4iPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=DdhRWr7RsOKQvHwCgSBBLi8gM1dHAA9wTw27kVS8RCY=;
-        b=N573hNYYj/DaQcFhCeOlSpRm7QMFu4ORGNE6UPMfq2eSd+CaYHBni37N1OW9XaFqGi
-         WIbE9WWySlikzo+VZtZzGLwgtBcCNTcumfegxqv/4fnDpCjM/M/j+yaGyN6Ug5uFRv1V
-         wiZaEV8Nv1E7gQ1aIXSPQEGv8b7c343sFmJAYN2yr7xFOpjF2HyQVUVwxbKZN4Vb4Dvv
-         lQ0S1pWgkLurCDnK5FrPfPUNM96itWFXDrKjHAEbb8KFGv8RCprYD0iUzHEVBcCBOn7e
-         xeedB4JP0adJqZ+3vWEKuzo950ksE+N9f9AUaoKcvjH9MLXjasbL9zkds+vzmvziawH1
-         vJTg==
-X-Gm-Message-State: AGi0PuZuaB5cJwG2aCiaScedoBhqrIeuwSAFNAxHhRBe80/0kyN3MViq
-        IZYHIFPdtg57S1rLPluChGaqUdIqRgN7kXmaNlM=
-X-Google-Smtp-Source: APiQypIb4DAqUusLFSZ/BUD0r1CXQqqi1SsGbfhzFHHqTDK11XaFJbyVz6mhTDSGe9DpIXAlQnb18NjPY+9uKKU5224=
-X-Received: by 2002:a5d:4d51:: with SMTP id a17mr3294961wru.317.1586504586346;
- Fri, 10 Apr 2020 00:43:06 -0700 (PDT)
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dZQhcacGwMzOWD605Bx6kYNDh3/zLHzyvmtwjZsxmEA=;
+ b=lvKQ2BxKE4uQ6j2UpS2c7vRI7ZpXBuEPKA5XOFHsqZ50Ofg2lGISaX25IGqO9ham7YG4/vQSvuIVHCZVBxV/AP2b3LbJnCneVbEYbruoJEbyDzvOV5IFP2wLuR+5DUkqwKmRtGv5NSqdWkNZiVfnlqzLIy8s6eXDbG2lYpS6ghg=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3662.namprd04.prod.outlook.com
+ (2603:10b6:803:47::23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2878.21; Fri, 10 Apr
+ 2020 07:46:06 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2878.018; Fri, 10 Apr 2020
+ 07:46:05 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     "hch@infradead.org" <hch@infradead.org>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v5 06/10] scsi: export scsi_mq_free_sgtables
+Thread-Topic: [PATCH v5 06/10] scsi: export scsi_mq_free_sgtables
+Thread-Index: AQHWDo99gjY+dyj3x0GZvCC3NTR+YA==
+Date:   Fri, 10 Apr 2020 07:46:05 +0000
+Message-ID: <SN4PR0401MB35983474DAAD4C0A988AD9E09BDE0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
+ <20200409165352.2126-7-johannes.thumshirn@wdc.com>
+ <20200410055834.GA4791@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 9f519bc8-12ac-4c21-9176-08d7dd23399a
+x-ms-traffictypediagnostic: SN4PR0401MB3662:
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SN4PR0401MB366270C4691E8FA639295A8F9BDE0@SN4PR0401MB3662.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-forefront-prvs: 0369E8196C
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(136003)(376002)(346002)(396003)(366004)(39860400002)(66476007)(66556008)(64756008)(66946007)(33656002)(76116006)(316002)(81156014)(91956017)(6506007)(66446008)(5660300002)(6916009)(8676002)(54906003)(8936002)(53546011)(4326008)(26005)(478600001)(2906002)(186003)(558084003)(9686003)(86362001)(55016002)(71200400001)(52536014)(7696005);DIR:OUT;SFP:1102;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: Gf+CqdMwrhezq0+XyGXdkKztdZk9ESsHIAjiSrhG2Anb7+kYlCIqv01sEWd1WRhM5jzVDafWxRlyN3AuFdfZTi5ghVBbF09Yv4hcknVNeh3LI25O6ycaleaOuj5cOIHJgGbbedWae8co0QxNJMkJbwncme6Xbt4x+V6HkwKmI4dNXg30zNViJk8Twdaq+f/o2F5mScP5LhITZj3pZuqnwCWLQWaxoDppGhWnYfLsnkX2b55NU6umVcMos+LLTNCuFD4VeFRA4ZRAnzot3PgvGbim9Pwjxqxw+6LU4qBRtoqEG99752TjNiPuXdq7xsdi+Ie38Awifzkq/fHZF2CgE/wja6IfGGV2LfOH4VxydEH3ja+Nd6CWQ9Trz78YlPtcMnS0xyiEd/LnohP5XUk6cCzmkR1AhB6Gv9VhJEAbqSLnFoBfn65CqzMcqh7126BR
+x-ms-exchange-antispam-messagedata: QqdGCn4bQQtSLHQgiI2982d+BP+BFvZnTO+Cut2qPArJQxw/bchOx7hPabCS5zOrfcJztTdiuRr1vfV/9CialiwKHVpJgkT1/vvq0TMBEfHBsP/kq7xWc0ehubyUeWQvZyhx4eEzK3fLg4b/ArUZCw==
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <HK0P153MB0273A1B109CE3A33F0984D34BFDE0@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
-In-Reply-To: <HK0P153MB0273A1B109CE3A33F0984D34BFDE0@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
-From:   Ming Lei <tom.leiming@gmail.com>
-Date:   Fri, 10 Apr 2020 15:42:55 +0800
-Message-ID: <CACVXFVO5Ni531JO+62CW4pV2y6gT98_8G=jiCJCZoqjkUBmo9Q@mail.gmail.com>
-Subject: Re: SCSI low level driver: how to prevent I/O upon hibernation?
-To:     Dexuan Cui <decui@microsoft.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        Long Li <longli@microsoft.com>, vkuznets <vkuznets@redhat.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Olaf Hering <olaf@aepfle.de>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9f519bc8-12ac-4c21-9176-08d7dd23399a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Apr 2020 07:46:05.5150
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: deHcrvpaNn3GHKpe3C2Lc4252pQ14Q7i6zJb/kWAkj+astnCOihlRRyTPu8/aLXyNGm6A/sIgduqpQwuuEk9oxGWbyekucnLrSHFqSltwQw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3662
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Dexuan,
-
-On Fri, Apr 10, 2020 at 1:44 PM Dexuan Cui <decui@microsoft.com> wrote:
->
-> Hi all,
-> Can you please recommend the standard way to prevent the upper layer SCSI
-> driver from submitting new I/O requests when the system is doing hibernation?
->
-> Actually I already asked the question on 5/30 last year:
-> https://marc.info/?l=linux-scsi&m=155918927116283&w=2
-> and I thought all the sdevs are suspended and resumed automatically in
-> drivers/scsi/scsi_pm.c, and the low level SCSI adapter driver (i.e. hv_storvsc)
-> only needs to suspend/resume the state of the adapter itself. However, it looks
-> this is not true, because today I got such a panic in a v5.6 Linux VM running on
-> Hyper-V: the 'suspend' part of the hibernation process finished without any
-> issue, but when the VM was trying to resume back from the 'new' kernel to the
-> 'old' kernel, these events happened:
->
-> 1. the new kernel loaded the saved state from disk to memory.
->
-> 2. the new kernel quiesced the devices, including the SCSI DVD device
-> controlled by the hv_storvsc low level SCSI driver, i.e.
-> drivers/scsi/storvsc_drv.c: storvsc_suspend() was called and the related vmbus
-> ringbuffer was freed.
->
-> 3. However, disk_events_workfn() -> ... -> cdrom_check_events() -> ...
->    -> scsi_queue_rq() -> ... -> storvsc_queuecommand() was still trying to
-> submit I/O commands to the freed vmbus ringbuffer, and as a result, a NULL
-> pointer dereference panic happened.
-
-Last time I replied to you in above link:
-
-"scsi_device_quiesce() has been called by scsi_dev_type_suspend() to prevent
-any non-pm request from entering queue."
-
-That meant no any normal FS request can enter scsi queue after suspend, however
-request with BLK_MQ_REQ_PREEMPT is still allowed to be queued to LLD
-after suspend.
-
-So you can't free related vmbus ringbuffer cause  BLK_MQ_REQ_PREEMPT request
-is still to be handled.
-
-Thanks,
-Ming Lei
+On 10/04/2020 07:58, Christoph Hellwig wrote:=0A=
+> Looks good, althrough we really don't need the extern for the=0A=
+> prototype in the header (that also applies to a few other patches in=0A=
+> the series):=0A=
+=0A=
+I know but all prototypes have an 'extern' prefix so I did to match the =0A=
+style of the file.=0A=
