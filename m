@@ -2,119 +2,119 @@ Return-Path: <SRS0=e6eI=52=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4DCDC2BB85
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:23:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8320C2BA2B
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:43:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C027214DB
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:23:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C375207FF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Apr 2020 07:43:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VKdxF/N3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GL11riiR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725893AbgDJHXz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Apr 2020 03:23:55 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:57084 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbgDJHXz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2020 03:23:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=pwGUM0zdAck10dQ3/49UHLyFEOFG8ji5ZKBbl+Vxo6s=; b=VKdxF/N3TYIzZ8sepAsoBcg83n
-        Ob4wKA8YvlyH1KYHoHZpsmEq6hDte59CpT3lbwjUivhGQe0UmN5E3RlVnY4nJbzz8VAnedvIKDU4v
-        TP0gl+YWattpdSUbLVCIA0MEA14KcL4DU6wmZwwNlfyZRiTCRy+Zcl/VcR0TEEpp4m7msChWynQdL
-        dgb6/jAFyolgRetIUA74Q/sEZMEftRk+0AuDrqiXdGOcuXDIzZ/P0Kf/39GL2aXoBeH29xJRHLp4E
-        fn4nJH/JNqoLNuWHT28KyI7YKOr7TRIXeTBp/6NbaKSzHchKyaQG5j7j4BnaD60jpD3VnqnofQ4SJ
-        SYrF81PA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jMo14-0007fC-GD; Fri, 10 Apr 2020 07:23:54 +0000
-Date:   Fri, 10 Apr 2020 00:23:54 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v5 07/10] scsi: sd_zbc: emulate ZONE_APPEND commands
-Message-ID: <20200410072354.GB13404@infradead.org>
-References: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
- <20200409165352.2126-8-johannes.thumshirn@wdc.com>
+        id S1725993AbgDJHnJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Apr 2020 03:43:09 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:43173 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725776AbgDJHnJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Apr 2020 03:43:09 -0400
+Received: by mail-wr1-f66.google.com with SMTP id i10so1340676wrv.10;
+        Fri, 10 Apr 2020 00:43:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=DdhRWr7RsOKQvHwCgSBBLi8gM1dHAA9wTw27kVS8RCY=;
+        b=GL11riiR6JKzgFqjfc2m6/o18aBY6UqRXHLanEuHWgJGVirm5iQ+x+pyzQSP71PfPe
+         o8v8kxGZfXybXC4cDQjrHbhOUcai3GR5m9pIzIMYhZwuZWsOi3WMB44b+RC1A4tad58O
+         ZWvASmxAEHDhnZrlVEnA8Ct1LzIOTL464v6A+3sXqW+h2XVoj5r2PyosiAWlyV8HQGxf
+         d/+XQz2AoqgxZ+6Cy7jjFvjXEiRqJ2GxS7mWZQmD31L9Lorp3ivB6brewkAkkOFLbcss
+         2OCwHHAOAcTeiJNyoee8g2OegeX+TPQFS/ZnWDd2+6DjB05kCLNhDijOwRzS77DtVia4
+         4iPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=DdhRWr7RsOKQvHwCgSBBLi8gM1dHAA9wTw27kVS8RCY=;
+        b=N573hNYYj/DaQcFhCeOlSpRm7QMFu4ORGNE6UPMfq2eSd+CaYHBni37N1OW9XaFqGi
+         WIbE9WWySlikzo+VZtZzGLwgtBcCNTcumfegxqv/4fnDpCjM/M/j+yaGyN6Ug5uFRv1V
+         wiZaEV8Nv1E7gQ1aIXSPQEGv8b7c343sFmJAYN2yr7xFOpjF2HyQVUVwxbKZN4Vb4Dvv
+         lQ0S1pWgkLurCDnK5FrPfPUNM96itWFXDrKjHAEbb8KFGv8RCprYD0iUzHEVBcCBOn7e
+         xeedB4JP0adJqZ+3vWEKuzo950ksE+N9f9AUaoKcvjH9MLXjasbL9zkds+vzmvziawH1
+         vJTg==
+X-Gm-Message-State: AGi0PuZuaB5cJwG2aCiaScedoBhqrIeuwSAFNAxHhRBe80/0kyN3MViq
+        IZYHIFPdtg57S1rLPluChGaqUdIqRgN7kXmaNlM=
+X-Google-Smtp-Source: APiQypIb4DAqUusLFSZ/BUD0r1CXQqqi1SsGbfhzFHHqTDK11XaFJbyVz6mhTDSGe9DpIXAlQnb18NjPY+9uKKU5224=
+X-Received: by 2002:a5d:4d51:: with SMTP id a17mr3294961wru.317.1586504586346;
+ Fri, 10 Apr 2020 00:43:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200409165352.2126-8-johannes.thumshirn@wdc.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <HK0P153MB0273A1B109CE3A33F0984D34BFDE0@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <HK0P153MB0273A1B109CE3A33F0984D34BFDE0@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+From:   Ming Lei <tom.leiming@gmail.com>
+Date:   Fri, 10 Apr 2020 15:42:55 +0800
+Message-ID: <CACVXFVO5Ni531JO+62CW4pV2y6gT98_8G=jiCJCZoqjkUBmo9Q@mail.gmail.com>
+Subject: Re: SCSI low level driver: how to prevent I/O upon hibernation?
+To:     Dexuan Cui <decui@microsoft.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        Long Li <longli@microsoft.com>, vkuznets <vkuznets@redhat.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Olaf Hering <olaf@aepfle.de>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +	spin_lock_bh(&sdkp->zones_wp_ofst_lock);
-> +
-> +	wp_ofst = sdkp->zones_wp_ofst[zno];
-> +	if (wp_ofst == SD_ZBC_UPDATING_WP_OFST) {
-> +		/* Write pointer offset update in progress: ask for a requeue */
-> +		ret = BLK_STS_RESOURCE;
-> +		goto err;
-> +	}
-> +
-> +	if (wp_ofst == SD_ZBC_INVALID_WP_OFST) {
-> +		/* Invalid write pointer offset: trigger an update from disk */
-> +		ret = sd_zbc_update_wp_ofst(sdkp, zno);
-> +		goto err;
-> +	}
+Hello Dexuan,
 
-Maybe I'm a little too clever for my own sake, but what about something
-like:
+On Fri, Apr 10, 2020 at 1:44 PM Dexuan Cui <decui@microsoft.com> wrote:
+>
+> Hi all,
+> Can you please recommend the standard way to prevent the upper layer SCSI
+> driver from submitting new I/O requests when the system is doing hibernation?
+>
+> Actually I already asked the question on 5/30 last year:
+> https://marc.info/?l=linux-scsi&m=155918927116283&w=2
+> and I thought all the sdevs are suspended and resumed automatically in
+> drivers/scsi/scsi_pm.c, and the low level SCSI adapter driver (i.e. hv_storvsc)
+> only needs to suspend/resume the state of the adapter itself. However, it looks
+> this is not true, because today I got such a panic in a v5.6 Linux VM running on
+> Hyper-V: the 'suspend' part of the hibernation process finished without any
+> issue, but when the VM was trying to resume back from the 'new' kernel to the
+> 'old' kernel, these events happened:
+>
+> 1. the new kernel loaded the saved state from disk to memory.
+>
+> 2. the new kernel quiesced the devices, including the SCSI DVD device
+> controlled by the hv_storvsc low level SCSI driver, i.e.
+> drivers/scsi/storvsc_drv.c: storvsc_suspend() was called and the related vmbus
+> ringbuffer was freed.
+>
+> 3. However, disk_events_workfn() -> ... -> cdrom_check_events() -> ...
+>    -> scsi_queue_rq() -> ... -> storvsc_queuecommand() was still trying to
+> submit I/O commands to the freed vmbus ringbuffer, and as a result, a NULL
+> pointer dereference panic happened.
 
-	spin_lock_bh(&sdkp->zones_wp_ofst_lock);
-	switch (wp_ofst) {
-	case SD_ZBC_INVALID_WP_OFST:
-		if (scsi_device_get(sdkp->device)) {
-			ret = BLK_STS_IOERR;
-			break;
-		}
-		sdkp->zones_wp_ofst[zno] = SD_ZBC_UPDATING_WP_OFST;
-		schedule_work(&sdkp->zone_wp_ofst_work);
-		/*FALLTHRU*/
-	case SD_ZBC_UPDATING_WP_OFST:
-		ret = BLK_STS_DEV_RESOURCE;
-		break;
-	default:
-		wp_ofst = sectors_to_logical(sdkp->device, wp_ofst);
-		if (wp_ofst + nr_blocks > sdkp->zone_blocks) {
-			ret = BLK_STS_IOERR;
-			break;
-		}
+Last time I replied to you in above link:
 
-		*lba += wp_ofst;
-	}
-	spin_unlock_bh(&sdkp->zones_wp_ofst_lock);
-	if (ret)
-		blk_req_zone_write_unlock(rq);
-	return ret;
-}
+"scsi_device_quiesce() has been called by scsi_dev_type_suspend() to prevent
+any non-pm request from entering queue."
 
->  	int result = cmd->result;
-> @@ -294,7 +543,18 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
->  		 * so be quiet about the error.
->  		 */
->  		rq->rq_flags |= RQF_QUIET;
-> +		goto unlock_zone;
->  	}
-> +
-> +	if (sd_zbc_need_zone_wp_update(rq))
-> +		good_bytes = sd_zbc_zone_wp_update(cmd, good_bytes);
-> +
-> +
-> +unlock_zone:
+That meant no any normal FS request can enter scsi queue after suspend, however
+request with BLK_MQ_REQ_PREEMPT is still allowed to be queued to LLD
+after suspend.
 
-why not use a good old "else if" here?
+So you can't free related vmbus ringbuffer cause  BLK_MQ_REQ_PREEMPT request
+is still to be handled.
+
+Thanks,
+Ming Lei
