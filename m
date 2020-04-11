@@ -4,52 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F06C2BBC7
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:29:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16D39C2BBFD
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:34:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E6B9206E9
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:29:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6EFD2051A
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:34:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647788;
-	bh=pUt5lpDgGxoy7XzYt9wec0y/SdJ1EdBeAIyJGVOl62I=;
+	s=default; t=1586648086;
+	bh=5dpFX36ulwAFfK6+EtSvRlqV9/JL9zotlrJl7FJdqqQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=g6N1tNz1Equ0EiyhThYl1hbsnI9HagqhNFkD1j90ZDnx8Tyviqq7KDFses/Lnf1Mb
-	 qv9Fc9nGPtrD1Zb7zOkzAfmw0Ty7Acl/O4pYU/QICHXDoYq3tQOP+LBsmbKC2N0ipN
-	 +GMx7ndia05ZpfIGYfH/n1H/xSJdoNUstfEDQPG8=
+	b=UvVJPgGU2sX0tf551367mmxWOyF2ZqjbC4ATUQiwKmqKhC+FzaCOCfbN9BiDZDHaZ
+	 0ND7B70zYe3dmxeTnaQatxdle16E3KKnzT7HUqkJCjs8xiUzoF4kFVUz/BERXrtH8u
+	 +OPbT3jnrFObjbAjRwgQRYl9snarFaB6mXZqfjTc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729451AbgDKX3r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:29:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49830 "EHLO mail.kernel.org"
+        id S1729160AbgDKXJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:09:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729712AbgDKXKx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:10:53 -0400
+        id S1729148AbgDKXJO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:09:14 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9DAB22166E;
-        Sat, 11 Apr 2020 23:10:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A31AE214D8;
+        Sat, 11 Apr 2020 23:09:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646653;
-        bh=pUt5lpDgGxoy7XzYt9wec0y/SdJ1EdBeAIyJGVOl62I=;
+        s=default; t=1586646554;
+        bh=5dpFX36ulwAFfK6+EtSvRlqV9/JL9zotlrJl7FJdqqQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h2pDYOxwDQZAUAC/SgL3G+5QRquuWLzgzkjmwhivukAvTdgPc1ZB7X5zZ39R+fM7t
-         u3YQQllp5AGvKZPVoA7uU74BMfO7H7TeRkT45c1+NzBxu5YiDdrrYV9wr/K84R2/8h
-         cEYIpgCAiiomoarw0xJ7qqNdv6w6QAM1lpRO0+Kc=
+        b=xLvBJ9Xr/ZlEGLjCogjYXNy3+/S0ZIQN/lXmDr2fJqF7h8zyIaV72p9CDasdfZVAY
+         9bA0Kl2JebKaITrvK8I/pv1JBFm2MQiF7ms/YoF8HeURGf3YyfKnI9wn/7K78ZVPpa
+         pSwWJIECkpZyIPSi4Rg9z37ZX8Njey3VLg9nPh9g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 056/108] scsi: lpfc: Fix RQ buffer leakage when no IOCBs available
-Date:   Sat, 11 Apr 2020 19:08:51 -0400
-Message-Id: <20200411230943.24951-56-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 104/121] scsi: qla2xxx: Fix control flags for login/logout IOCB
+Date:   Sat, 11 Apr 2020 19:06:49 -0400
+Message-Id: <20200411230706.23855-104-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230943.24951-1-sashal@kernel.org>
-References: <20200411230943.24951-1-sashal@kernel.org>
+In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
+References: <20200411230706.23855-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,56 +58,67 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Himanshu Madhani <hmadhani@marvell.com>
 
-[ Upstream commit 39c4f1a965a9244c3ba60695e8ff8da065ec6ac4 ]
+[ Upstream commit 419ae5fe73e50084fa794934fb62fab34f564b7c ]
 
-The driver is occasionally seeing the following SLI Port error, requiring
-reset and reinit:
+This patch fixes control flag options for login/logout IOCB.
 
- Port Status Event: ... error 1=0x52004a01, error 2=0x218
-
-The failure means an RQ timeout. That is, the adapter had received
-asynchronous receive frames, ran out of buffer slots to place the frames,
-and the driver did not replenish the buffer slots before a timeout
-occurred. The driver should not be so slow in replenishing buffers that a
-timeout can occur.
-
-When the driver received all the frames of a sequence, it allocates an IOCB
-to put the frames in. In a situation where there was no IOCB available for
-the frame of a sequence, the RQ buffer corresponding to the first frame of
-the sequence was not returned to the FW. Eventually, with enough traffic
-encountering the situation, the timeout occurred.
-
-Fix by releasing the buffer back to firmware whenever there is no IOCB for
-the first frame.
-
-[mkp: typo]
-
-Link: https://lore.kernel.org/r/20200128002312.16346-2-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20200212214436.25532-23-hmadhani@marvell.com
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/qla2xxx/qla_iocb.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index e2cec1f6e659b..acd151f99c786 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -17711,6 +17711,10 @@ lpfc_prep_seq(struct lpfc_vport *vport, struct hbq_dmabuf *seq_dmabuf)
- 			list_add_tail(&iocbq->list, &first_iocbq->list);
- 		}
- 	}
-+	/* Free the sequence's header buffer */
-+	if (!first_iocbq)
-+		lpfc_in_buf_free(vport->phba, &seq_dmabuf->dbuf);
-+
- 	return first_iocbq;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 8b050f0b43330..b0e1bf9abe218 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2362,6 +2362,8 @@ qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
+ 	struct srb_iocb *lio = &sp->u.iocb_cmd;
  
+ 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
++	logio->control_flags = cpu_to_le16(LCF_COMMAND_PLOGI);
++
+ 	if (lio->u.logio.flags & SRB_LOGIN_PRLI_ONLY) {
+ 		logio->control_flags = cpu_to_le16(LCF_COMMAND_PRLI);
+ 	} else {
+@@ -2912,7 +2914,6 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	sp->fcport = fcport;
+ 
+ 	elsio->timeout = qla2x00_els_dcmd2_iocb_timeout;
+-	init_completion(&elsio->u.els_plogi.comp);
+ 	if (wait)
+ 		sp->flags = SRB_WAKEUP_ON_COMP;
+ 
+@@ -2922,7 +2923,7 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	elsio->u.els_plogi.tx_size = elsio->u.els_plogi.rx_size = DMA_POOL_SIZE;
+ 
+ 	ptr = elsio->u.els_plogi.els_plogi_pyld =
+-	    dma_alloc_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
++	    dma_alloc_coherent(&ha->pdev->dev, elsio->u.els_plogi.tx_size,
+ 		&elsio->u.els_plogi.els_plogi_pyld_dma, GFP_KERNEL);
+ 
+ 	if (!elsio->u.els_plogi.els_plogi_pyld) {
+@@ -2931,7 +2932,7 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	}
+ 
+ 	resp_ptr = elsio->u.els_plogi.els_resp_pyld =
+-	    dma_alloc_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
++	    dma_alloc_coherent(&ha->pdev->dev, elsio->u.els_plogi.rx_size,
+ 		&elsio->u.els_plogi.els_resp_pyld_dma, GFP_KERNEL);
+ 
+ 	if (!elsio->u.els_plogi.els_resp_pyld) {
+@@ -2955,6 +2956,7 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld,
+ 	    sizeof(*elsio->u.els_plogi.els_plogi_pyld));
+ 
++	init_completion(&elsio->u.els_plogi.comp);
+ 	rval = qla2x00_start_sp(sp);
+ 	if (rval != QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
 -- 
 2.20.1
 
