@@ -7,49 +7,53 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53911C2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 615C4C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:43:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 299C6206E9
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AF23206E9
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:43:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648247;
-	bh=Vd95vQOwscdWE6+Vi7H8ELtfYUnIdEjwXMsOTm5pwDE=;
+	s=default; t=1586648580;
+	bh=0go0yJt6cQE8yciLIioduH6bZbOdpupXHF1LgaHvoGc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Y65VvIx0itHl6Ue3JqWPolZp/sAO5rbFxa+I7As+L9MvNPpK/4nUI32HoAfLg8qt/
-	 pP8iEONz8KRxLM1xbhkAUX7aQK04GEMzncqNHALqsFvijCc2pnXKDlllH+CjS/TFYo
-	 P6JA7Gl40ZDOveMnYKXG7MGpAm6+dEpux0/GP4O8=
+	b=TohEJ+jvk7QDHSNlFKVnl6o9qu6NLb17faBVrpvEip8WbkIdiXbF6Gy561RVJ7+ns
+	 m7JVWVp4MVw7D68D25TEtigauidPkTqfGZt3spd5aYU9mky4Ipin6yq+uFKanc4RKa
+	 5Y+pNRaAy1UO+SPLgaomD4HBn8wrZ8VRgOp5zs5M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729448AbgDKXhV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:37:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45258 "EHLO mail.kernel.org"
+        id S1729059AbgDKXmx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:42:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41908 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728905AbgDKXIY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:08:24 -0400
+        id S1728433AbgDKXG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:06:29 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A2AAA21835;
-        Sat, 11 Apr 2020 23:08:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D63A520708;
+        Sat, 11 Apr 2020 23:06:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646504;
-        bh=Vd95vQOwscdWE6+Vi7H8ELtfYUnIdEjwXMsOTm5pwDE=;
+        s=default; t=1586646390;
+        bh=0go0yJt6cQE8yciLIioduH6bZbOdpupXHF1LgaHvoGc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=geGnlvOihA26tUr3YyRDnCjcpI1pMjJO8sh167bZ1dCBkjNnNrnWKq+rlnnKt0/os
-         BONuEjykE0Ee8I7yiYXwgCdUe2RCLqtAEEhMxQuEz2XmLKfRw0VrFrGB1DBbDIlv9e
-         od9aw8zTSfCBkPYArYq6wD6DpglYhQNnVlYKok38=
+        b=U7x79t9DRX3kEv51Q48FK83g4y9M6GB7xqZpW763n0PkPaEC0zpgAZeRigxhMVQjo
+         OtoKVM7e2SHI4fzgYgTyfj14bB3u0fhVHKLC+JSflnhwtVSJcEi/MGWOQN98zgVjn4
+         TUHorDm34RH057+EG9QoMjk/XPZ9GBf3e6+FPnBg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 064/121] scsi: lpfc: Fix RQ buffer leakage when no IOCBs available
-Date:   Sat, 11 Apr 2020 19:06:09 -0400
-Message-Id: <20200411230706.23855-64-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.6 129/149] scsi: ufs: Fix ufshcd_hold() caused scheduling while atomic
+Date:   Sat, 11 Apr 2020 19:03:26 -0400
+Message-Id: <20200411230347.22371-129-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
-References: <20200411230706.23855-1-sashal@kernel.org>
+In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
+References: <20200411230347.22371-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,56 +63,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Can Guo <cang@codeaurora.org>
 
-[ Upstream commit 39c4f1a965a9244c3ba60695e8ff8da065ec6ac4 ]
+[ Upstream commit c63d6099a7959ecc919b2549dc6b71f53521f819 ]
 
-The driver is occasionally seeing the following SLI Port error, requiring
-reset and reinit:
+The async version of ufshcd_hold(async == true), which is only called in
+queuecommand path as for now, is expected to work in atomic context, thus
+it should not sleep or schedule out. When it runs into the condition that
+clocks are ON but link is still in hibern8 state, it should bail out
+without flushing the clock ungate work.
 
- Port Status Event: ... error 1=0x52004a01, error 2=0x218
-
-The failure means an RQ timeout. That is, the adapter had received
-asynchronous receive frames, ran out of buffer slots to place the frames,
-and the driver did not replenish the buffer slots before a timeout
-occurred. The driver should not be so slow in replenishing buffers that a
-timeout can occur.
-
-When the driver received all the frames of a sequence, it allocates an IOCB
-to put the frames in. In a situation where there was no IOCB available for
-the frame of a sequence, the RQ buffer corresponding to the first frame of
-the sequence was not returned to the FW. Eventually, with enough traffic
-encountering the situation, the timeout occurred.
-
-Fix by releasing the buffer back to firmware whenever there is no IOCB for
-the first frame.
-
-[mkp: typo]
-
-Link: https://lore.kernel.org/r/20200128002312.16346-2-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Fixes: f2a785ac2312 ("scsi: ufshcd: Fix race between clk scaling and ungate work")
+Link: https://lore.kernel.org/r/1581392451-28743-6-git-send-email-cang@codeaurora.org
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 625c046ac4efa..6d0496980d4e8 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -17941,6 +17941,10 @@ lpfc_prep_seq(struct lpfc_vport *vport, struct hbq_dmabuf *seq_dmabuf)
- 			list_add_tail(&iocbq->list, &first_iocbq->list);
- 		}
- 	}
-+	/* Free the sequence's header buffer */
-+	if (!first_iocbq)
-+		lpfc_in_buf_free(vport->phba, &seq_dmabuf->dbuf);
-+
- 	return first_iocbq;
- }
- 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 2d705694636c2..682f85f800d0f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1518,6 +1518,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		if (ufshcd_can_hibern8_during_gating(hba) &&
+ 		    ufshcd_is_link_hibern8(hba)) {
++			if (async) {
++				rc = -EAGAIN;
++				hba->clk_gating.active_reqs--;
++				break;
++			}
+ 			spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 			flush_work(&hba->clk_gating.ungate_work);
+ 			spin_lock_irqsave(hba->host->host_lock, flags);
 -- 
 2.20.1
 
