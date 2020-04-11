@@ -7,46 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B800C2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B08C2BBFD
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E139A216FD
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 978CD21973
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646550;
-	bh=wOm6rMiOMk63monrsQgu+88dDlJcauWZEKzEvhYOGQ0=;
+	s=default; t=1586646559;
+	bh=fDSd34PBPzhwVwoX+CKkeAQM9GR8iiPfzQBw9iG9avU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=G/qGsOORvk2d7WyvrWVawQjoMb0/TSMp1YReJ0aWFg7lbrFqO+nB/qWmoTqJ8gg88
-	 ZOIYOl8JbQSvZBfiprC62czlRgXW7P/J57ZddN9opOykpoz6EQGfZO0sYAVmqKAg1w
-	 GRj80dgWGpkEwc713ABMY5vx9BwnZ4+pHB/3QrAk=
+	b=ffrw+q77gLQ0/5XyaBEytjCo+wLFkDv9q43U63n4I+UODBxKDRMRBzjKhcMNtqX2v
+	 BsP+HMWKVxEc7i7Zt93xgaEtya6nxpXZJ00501RRRHot0rZ5Q99zPe0nDLUdwrpT4v
+	 4kCJmJrD7dgJtJbRQDcT//kY9QswErC8dSpNdXRg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729128AbgDKXJJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:09:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46670 "EHLO mail.kernel.org"
+        id S1728252AbgDKXJS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:09:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46884 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729121AbgDKXJI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:09:08 -0400
+        id S1729173AbgDKXJR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:09:17 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B783B217D8;
-        Sat, 11 Apr 2020 23:09:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D3E9D216FD;
+        Sat, 11 Apr 2020 23:09:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646548;
-        bh=wOm6rMiOMk63monrsQgu+88dDlJcauWZEKzEvhYOGQ0=;
+        s=default; t=1586646557;
+        bh=fDSd34PBPzhwVwoX+CKkeAQM9GR8iiPfzQBw9iG9avU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qL+rYk7urz6E8Blqi5Hx4y/MB5TcQCDX6qb1qR/RYGRmeDVAS098s0wGQrIVh66jk
-         k7YHL5r7xq2/2G4tH0lHAft2Iv+Vps9m4c6WM1dl1YWXTRqOCtGAVdQGuZ0CO2lh71
-         NvdebVG6D1Kv5CryQNdDJm4Vk18df0QmItXx5Y8g=
+        b=lUOP8I9zyt6LFl6ykkxhAXmN/qorCdARVvJcPDqYmB5CxiGGS70OWNveJ2NcD2iy3
+         SHmo5ja9q4RZMd/lXEQJWpIJp7HUEzPCojJrZnrESGNGev7QCbmQlPm5u1oYenhRZ2
+         Q1DBgRZdmAMKPztU0bDY+nKWXKtm6JLpcuUGojrg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michael Hernandez <mhernandez@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 099/121] scsi: qla2xxx: Return appropriate failure through BSG Interface
-Date:   Sat, 11 Apr 2020 19:06:44 -0400
-Message-Id: <20200411230706.23855-99-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.5 106/121] scsi: ufs: Fix ufshcd_hold() caused scheduling while atomic
+Date:   Sat, 11 Apr 2020 19:06:51 -0400
+Message-Id: <20200411230706.23855-106-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
 References: <20200411230706.23855-1-sashal@kernel.org>
@@ -59,88 +63,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Michael Hernandez <mhernandez@marvell.com>
+From: Can Guo <cang@codeaurora.org>
 
-[ Upstream commit 1b81e7f3019d632a707e07927e946ffbbc102910 ]
+[ Upstream commit c63d6099a7959ecc919b2549dc6b71f53521f819 ]
 
-This patch ensures flash updates API calls return possible failure
-status through BSG interface to the application.
+The async version of ufshcd_hold(async == true), which is only called in
+queuecommand path as for now, is expected to work in atomic context, thus
+it should not sleep or schedule out. When it runs into the condition that
+clocks are ON but link is still in hibern8 state, it should bail out
+without flushing the clock ungate work.
 
-Link: https://lore.kernel.org/r/20200226224022.24518-7-hmadhani@marvell.com
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Michael Hernandez <mhernandez@marvell.com>
+Fixes: f2a785ac2312 ("scsi: ufshcd: Fix race between clk scaling and ungate work")
+Link: https://lore.kernel.org/r/1581392451-28743-6-git-send-email-cang@codeaurora.org
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |  9 +++++++--
- drivers/scsi/qla2xxx/qla_sup.c | 13 ++++++++-----
- 2 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index cbaf178fc9796..f06e499796976 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -1505,10 +1505,15 @@ qla2x00_update_optrom(struct bsg_job *bsg_job)
- 	    bsg_job->request_payload.sg_cnt, ha->optrom_buffer,
- 	    ha->optrom_region_size);
- 
--	ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
-+	rval = ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
- 	    ha->optrom_region_start, ha->optrom_region_size);
- 
--	bsg_reply->result = DID_OK;
-+	if (rval) {
-+		bsg_reply->result = -EINVAL;
-+		rval = -EINVAL;
-+	} else {
-+		bsg_reply->result = DID_OK;
-+	}
- 	vfree(ha->optrom_buffer);
- 	ha->optrom_buffer = NULL;
- 	ha->optrom_state = QLA_SWAITING;
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index bbe90354f49b0..07f0d8669806d 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -2686,7 +2686,7 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
- 	uint32_t sec_mask, rest_addr, fdata;
- 	void *optrom = NULL;
- 	dma_addr_t optrom_dma;
--	int rval;
-+	int rval, ret;
- 	struct secure_flash_update_block *sfub;
- 	dma_addr_t sfub_dma;
- 	uint32_t offset = faddr << 2;
-@@ -2942,11 +2942,12 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
- write_protect:
- 	ql_log(ql_log_warn + ql_dbg_verbose, vha, 0x7095,
- 	    "Protect flash...\n");
--	rval = qla24xx_protect_flash(vha);
--	if (rval) {
-+	ret = qla24xx_protect_flash(vha);
-+	if (ret) {
- 		qla81xx_fac_semaphore_access(vha, FAC_SEMAPHORE_UNLOCK);
- 		ql_log(ql_log_warn, vha, 0x7099,
- 		    "Failed protect flash\n");
-+		rval = QLA_COMMAND_ERROR;
- 	}
- 
- 	if (reset_to_rom == true) {
-@@ -2954,10 +2955,12 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
- 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
- 		qla2xxx_wake_dpc(vha);
- 
--		rval = qla2x00_wait_for_hba_online(vha);
--		if (rval != QLA_SUCCESS)
-+		ret = qla2x00_wait_for_hba_online(vha);
-+		if (ret != QLA_SUCCESS) {
- 			ql_log(ql_log_warn, vha, 0xffff,
- 			    "Adapter did not come out of reset\n");
-+			rval = QLA_COMMAND_ERROR;
-+		}
- 	}
- 
- done:
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 5340a980d24b8..04f161b50660a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1542,6 +1542,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		if (ufshcd_can_hibern8_during_gating(hba) &&
+ 		    ufshcd_is_link_hibern8(hba)) {
++			if (async) {
++				rc = -EAGAIN;
++				hba->clk_gating.active_reqs--;
++				break;
++			}
+ 			spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 			flush_work(&hba->clk_gating.ungate_work);
+ 			spin_lock_irqsave(hba->host->host_lock, flags);
 -- 
 2.20.1
 
