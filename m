@@ -7,45 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2438C2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E22A5C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B66E321744
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B68A921744
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646389;
-	bh=l0fFTNJtxod3pYGpCsxpnMquGUX0NKnpAKROwSU37T4=;
+	s=default; t=1586646395;
+	bh=Nfe9w6MmF3w6Ne3snw4ketatwqXeyWFrfrZSpGBMIIA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0g/qZLGasM+kQbf4gxwOVA6udKYxijtsSp3F8gA1VmqT7yYecfrJaFDS/7UHdozpM
-	 3qxVIZXnbKLvWmGZAuN+3LHP6IUu/m9kmLDHAg8RrG93AxoNQ1+jbnw0Zwck7yEYEz
-	 a9TGvxkU2In54U/QPNm3xwptWsRorJ5LP+ODd8ag=
+	b=E9Y8Efkli0B38Ksx29FFh18Dvr+dD8DKeRkJRQWs0TemJxxNcmFMKptjBuJLMHiKB
+	 bSPQ9r8GthJSDhLJaLXUVkpSgS2FrbLmJCXkNz+/DDWM8hetTEX3OI0BsyNjtZtoEO
+	 buIaMXLTmwuQ/pxf+ABlSe6Rcve8NFSO6xhQqZko=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728415AbgDKXG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:06:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41790 "EHLO mail.kernel.org"
+        id S1728447AbgDKXGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:06:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41954 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728408AbgDKXG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:06:27 -0400
+        id S1728441AbgDKXGc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:06:32 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 99CEA2166E;
-        Sat, 11 Apr 2020 23:06:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BE9F8217D8;
+        Sat, 11 Apr 2020 23:06:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646387;
-        bh=l0fFTNJtxod3pYGpCsxpnMquGUX0NKnpAKROwSU37T4=;
+        s=default; t=1586646392;
+        bh=Nfe9w6MmF3w6Ne3snw4ketatwqXeyWFrfrZSpGBMIIA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v4SDCmHAFnwmmrZyuPlSu8nfAX4iah91eF/s2gwJte3dZrkLfiMTJp1a2NKzIi2g6
-         AsjufiXhRfgkXbBP0KR9D76zPnSlVxMR5ZdjF5rNrrlEtTYEpxwec/WPRwFFqyppK9
-         LMhW6L52WKHbKvlNYPeUKmy1AlB1o2QgbB21hODI=
+        b=p7R4GX/aytF7UmCZo4OY1nWDd0eSyqsTWjVbQwrOPIDFN+tmaKjGc4PhoXQ569hDO
+         Ym7/PdMHYZsIN7O2b/88heQmZQo3S+5Cv3/xWPZ1D6gy9Z56CuP3FlaM758n+jInzt
+         Bwl3S9zOPdYZRwjNzMXUI5/eRZ7jjlwbFHtbm4AA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 127/149] scsi: qla2xxx: Fix control flags for login/logout IOCB
-Date:   Sat, 11 Apr 2020 19:03:24 -0400
-Message-Id: <20200411230347.22371-127-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.6 131/149] scsi: ufs: ufs-mediatek: ensure UniPro is not powered down before linkup
+Date:   Sat, 11 Apr 2020 19:03:28 -0400
+Message-Id: <20200411230347.22371-131-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -58,67 +62,80 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <hmadhani@marvell.com>
+From: Stanley Chu <stanley.chu@mediatek.com>
 
-[ Upstream commit 419ae5fe73e50084fa794934fb62fab34f564b7c ]
+[ Upstream commit 7742ca797aa79f280853ffd3e7d2e2af3cd317a5 ]
 
-This patch fixes control flag options for login/logout IOCB.
+MediaTek Chipsets can enter proprietary UniPro low-power mode during
+suspend while link is in hibern8 state. Make sure leaving low-power mode
+before every link startup to prevent lockup in any possible error recovery
+path.
 
-Link: https://lore.kernel.org/r/20200212214436.25532-23-hmadhani@marvell.com
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+At the same time, re-factor related funcitons to improve code readability.
+
+Link: https://lore.kernel.org/r/20200129105251.12466-2-stanley.chu@mediatek.com
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/ufs/ufs-mediatek.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 47bf60a9490a0..86881d68af19b 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2362,6 +2362,8 @@ qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 	struct srb_iocb *lio = &sp->u.iocb_cmd;
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index 53eae5fe2ade2..7ac838cc15d16 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -30,6 +30,11 @@
+ #define ufs_mtk_device_reset_ctrl(high, res) \
+ 	ufs_mtk_smc(UFS_MTK_SIP_DEVICE_RESET, high, res)
  
- 	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
-+	logio->control_flags = cpu_to_le16(LCF_COMMAND_PLOGI);
++#define ufs_mtk_unipro_powerdown(hba, powerdown) \
++	ufshcd_dme_set(hba, \
++		       UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0), \
++		       powerdown)
 +
- 	if (lio->u.logio.flags & SRB_LOGIN_PRLI_ONLY) {
- 		logio->control_flags = cpu_to_le16(LCF_COMMAND_PRLI);
- 	} else {
-@@ -2939,7 +2941,6 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	sp->fcport = fcport;
+ static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
+ {
+ 	u32 tmp;
+@@ -290,6 +295,8 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
+ 	int ret;
+ 	u32 tmp;
  
- 	elsio->timeout = qla2x00_els_dcmd2_iocb_timeout;
--	init_completion(&elsio->u.els_plogi.comp);
- 	if (wait)
- 		sp->flags = SRB_WAKEUP_ON_COMP;
++	ufs_mtk_unipro_powerdown(hba, 0);
++
+ 	/* disable deep stall */
+ 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
+ 	if (ret)
+@@ -390,9 +397,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
+ 	if (err)
+ 		return err;
  
-@@ -2949,7 +2950,7 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	elsio->u.els_plogi.tx_size = elsio->u.els_plogi.rx_size = DMA_POOL_SIZE;
+-	err = ufshcd_dme_set(hba,
+-			     UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
+-			     0);
++	err = ufs_mtk_unipro_powerdown(hba, 0);
+ 	if (err)
+ 		return err;
  
- 	ptr = elsio->u.els_plogi.els_plogi_pyld =
--	    dma_alloc_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
-+	    dma_alloc_coherent(&ha->pdev->dev, elsio->u.els_plogi.tx_size,
- 		&elsio->u.els_plogi.els_plogi_pyld_dma, GFP_KERNEL);
+@@ -413,14 +418,10 @@ static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
+ {
+ 	int err;
  
- 	if (!elsio->u.els_plogi.els_plogi_pyld) {
-@@ -2958,7 +2959,7 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
+-	err = ufshcd_dme_set(hba,
+-			     UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
+-			     1);
++	err = ufs_mtk_unipro_powerdown(hba, 1);
+ 	if (err) {
+ 		/* Resume UniPro state for following error recovery */
+-		ufshcd_dme_set(hba,
+-			       UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
+-			       0);
++		ufs_mtk_unipro_powerdown(hba, 0);
+ 		return err;
  	}
  
- 	resp_ptr = elsio->u.els_plogi.els_resp_pyld =
--	    dma_alloc_coherent(&ha->pdev->dev, DMA_POOL_SIZE,
-+	    dma_alloc_coherent(&ha->pdev->dev, elsio->u.els_plogi.rx_size,
- 		&elsio->u.els_plogi.els_resp_pyld_dma, GFP_KERNEL);
- 
- 	if (!elsio->u.els_plogi.els_resp_pyld) {
-@@ -2982,6 +2983,7 @@ qla24xx_els_dcmd2_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	    (uint8_t *)elsio->u.els_plogi.els_plogi_pyld,
- 	    sizeof(*elsio->u.els_plogi.els_plogi_pyld));
- 
-+	init_completion(&elsio->u.els_plogi.comp);
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS) {
- 		rval = QLA_FUNCTION_FAILED;
 -- 
 2.20.1
 
