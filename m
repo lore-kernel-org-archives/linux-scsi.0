@@ -4,52 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC99C2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A4F2C2BBFD
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:27:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 58E152166E
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:24:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A93320787
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:27:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647441;
-	bh=aPR6JnV80W6jMfT+P0tgcfXPTc+gmbOeuqux2AaIGuw=;
+	s=default; t=1586647666;
+	bh=ho6xW5LnUsPUHxq7naO9jAI6CQcQutScrcuiYHWJ5o4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=um/PL99u0ILBsmcrSd6vbJZvCAMxd6Y5EHATNc8KZgob1SzypWNB9hP6FAA1Bu+W2
-	 q0+n/qbOmPm/ZZGw9NirhlLnwbBQTll0N5YasRIsbcvLcPHagyLRHhC5eH8fd7RlyU
-	 fsy7uY+iBowI8iYG5J98pnvg2sFIov4F0TMShtac=
+	b=082kOCg740J8mbczQcfxWmy4f4T6ByJkhtODsivNvb6/KlDJpdGvFA6n6JDEo2DcP
+	 aevmiMp0mZwXdH5SRn1x9gl24kqkO8hiCD+l3G52Q+JmfR6YulOdn2MzISk6t+qDqW
+	 ExyggejN6zK9KKuzaoBKgR6myEvdsLDqH0OcXWT8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730626AbgDKXXu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:23:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53278 "EHLO mail.kernel.org"
+        id S1729979AbgDKXLl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:11:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51392 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730251AbgDKXMs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:12:48 -0400
+        id S1729581AbgDKXLl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:11:41 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9D8DB21835;
-        Sat, 11 Apr 2020 23:12:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 486FA20757;
+        Sat, 11 Apr 2020 23:11:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646768;
-        bh=aPR6JnV80W6jMfT+P0tgcfXPTc+gmbOeuqux2AaIGuw=;
+        s=default; t=1586646701;
+        bh=ho6xW5LnUsPUHxq7naO9jAI6CQcQutScrcuiYHWJ5o4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ejIxKBhqhBFFyX0LiRr7h7i29gRGzLhjUCbEnXIppj1zw9938XnNhKZ8BAZplCiWg
-         QLj0BC1r+h4kb6lAyjS427TC4WKHJyDvrdRLUJsoTWaKlcgc23Lv11PD1bpuh9jA01
-         tpT5Mco10TsDyrc4Fg2UT28BuKufD9wu7wYPU/ic=
+        b=EfyXq7Mp4B1nj+2mUMtVG4294cfaGVTtrTJTgkT8+oByvRiGjog7OLTC68luDf9rA
+         UT0qtfE1hYxPICY9s4FEkFZD/MEx0NTtoZHivs8ljtJifFZzoBZwokDDZZ6TJCKXKe
+         ml7bQqJU2A7jFMQrEylbQ1SlG2nyBhiWVg1jvzWE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Can Guo <cang@codeaurora.org>, Hongwu Su <hongwus@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 37/66] scsi: lpfc: Fix RQ buffer leakage when no IOCBs available
-Date:   Sat, 11 Apr 2020 19:11:34 -0400
-Message-Id: <20200411231203.25933-37-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 094/108] scsi: ufs: Fix ufshcd_hold() caused scheduling while atomic
+Date:   Sat, 11 Apr 2020 19:09:29 -0400
+Message-Id: <20200411230943.24951-94-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411231203.25933-1-sashal@kernel.org>
-References: <20200411231203.25933-1-sashal@kernel.org>
+In-Reply-To: <20200411230943.24951-1-sashal@kernel.org>
+References: <20200411230943.24951-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,56 +63,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Can Guo <cang@codeaurora.org>
 
-[ Upstream commit 39c4f1a965a9244c3ba60695e8ff8da065ec6ac4 ]
+[ Upstream commit c63d6099a7959ecc919b2549dc6b71f53521f819 ]
 
-The driver is occasionally seeing the following SLI Port error, requiring
-reset and reinit:
+The async version of ufshcd_hold(async == true), which is only called in
+queuecommand path as for now, is expected to work in atomic context, thus
+it should not sleep or schedule out. When it runs into the condition that
+clocks are ON but link is still in hibern8 state, it should bail out
+without flushing the clock ungate work.
 
- Port Status Event: ... error 1=0x52004a01, error 2=0x218
-
-The failure means an RQ timeout. That is, the adapter had received
-asynchronous receive frames, ran out of buffer slots to place the frames,
-and the driver did not replenish the buffer slots before a timeout
-occurred. The driver should not be so slow in replenishing buffers that a
-timeout can occur.
-
-When the driver received all the frames of a sequence, it allocates an IOCB
-to put the frames in. In a situation where there was no IOCB available for
-the frame of a sequence, the RQ buffer corresponding to the first frame of
-the sequence was not returned to the FW. Eventually, with enough traffic
-encountering the situation, the timeout occurred.
-
-Fix by releasing the buffer back to firmware whenever there is no IOCB for
-the first frame.
-
-[mkp: typo]
-
-Link: https://lore.kernel.org/r/20200128002312.16346-2-jsmart2021@gmail.com
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Fixes: f2a785ac2312 ("scsi: ufshcd: Fix race between clk scaling and ungate work")
+Link: https://lore.kernel.org/r/1581392451-28743-6-git-send-email-cang@codeaurora.org
+Reviewed-by: Hongwu Su <hongwus@codeaurora.org>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Can Guo <cang@codeaurora.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a801917d3c193..c7ba7ea93eed0 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -17411,6 +17411,10 @@ lpfc_prep_seq(struct lpfc_vport *vport, struct hbq_dmabuf *seq_dmabuf)
- 			list_add_tail(&iocbq->list, &first_iocbq->list);
- 		}
- 	}
-+	/* Free the sequence's header buffer */
-+	if (!first_iocbq)
-+		lpfc_in_buf_free(vport->phba, &seq_dmabuf->dbuf);
-+
- 	return first_iocbq;
- }
- 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d9ea0ae4f374f..5582fbcfd7395 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1539,6 +1539,11 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		if (ufshcd_can_hibern8_during_gating(hba) &&
+ 		    ufshcd_is_link_hibern8(hba)) {
++			if (async) {
++				rc = -EAGAIN;
++				hba->clk_gating.active_reqs--;
++				break;
++			}
+ 			spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 			flush_work(&hba->clk_gating.ungate_work);
+ 			spin_lock_irqsave(hba->host->host_lock, flags);
 -- 
 2.20.1
 
