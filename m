@@ -7,45 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE20EC2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2DFC2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E77F20787
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:34:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D73420936
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648092;
-	bh=GoiEiaxMkSmC3deUYvrLpIzfI0ZOZrg8e1NxkKqlHEk=;
+	s=default; t=1586648101;
+	bh=lQRj8VNsJOOF8DfDzvqCyTjDoXlEsrTKzjTgMDofYVU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mYFfIj7Llgi/UNmLKpKU0jydiIISvalv/P7/2twz1BPAuXFf/aPMDgHDE+PJfDz+i
-	 YkCMmkshzg9ddMuFIfN4NTPV/p0nvIaRenuvBLEsrzKKpPJqQzmjHfGcsLZPI6OeAi
-	 udKCHGZO0Xa57m8Su6B0azTOHOAGW9+4+YO3N954=
+	b=gtsFdYFPwPkWx96Oc0JvGRcPjvRWE+L9fhChPTxo7wWD8WPjj13BkPHeYWp69jrdK
+	 d72oOVChUS6hd6UO5/9QpJqgdO0a2Ko4SmoS2+SluesQMLC2qr5T1hgLOwpV4Rizd0
+	 KtISY8IpJoQe64k/swStjoQ4upVto4/i9vuWcuUQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727664AbgDKXev (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:34:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46798 "EHLO mail.kernel.org"
+        id S1729146AbgDKXe7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:34:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46718 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729146AbgDKXJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:09:13 -0400
+        id S1729127AbgDKXJJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:09:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 987C520787;
-        Sat, 11 Apr 2020 23:09:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D6479218AC;
+        Sat, 11 Apr 2020 23:09:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646553;
-        bh=GoiEiaxMkSmC3deUYvrLpIzfI0ZOZrg8e1NxkKqlHEk=;
+        s=default; t=1586646549;
+        bh=lQRj8VNsJOOF8DfDzvqCyTjDoXlEsrTKzjTgMDofYVU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B5EJwZPf0t4bDPt6ANKQRrTP6M//gkj0Rv0GfqFcE/xjKyh3wDOz7mDO6/OJifpPK
-         MgUvWJmobwukLr2bfpUYwgvlsbT//QbTqTahO6omhpFBNDRlATSV8PSt/YxpntLDBY
-         l97L1RbZeGDB9DqtVOD0BjhH1b5ZQ2BoHjJlJ43I=
+        b=UuL2ZBlyiMMxtLPrbvDSfpgUcjF79k4iFWKIV1BxEp4yLfbBfcoOQjqbBRiBKgI6c
+         t8Pbu4uuRpARHFlTJAjeYlfRQw3+a/P8Nf4VirfBGhZlFnD2OKpJwRcOnjLcOy7gj+
+         wHQOwWpLjKzKb2fLVIQFPKmckwsHze6x34O0vgpQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 103/121] scsi: qla2xxx: Add fixes for mailbox command
-Date:   Sat, 11 Apr 2020 19:06:48 -0400
-Message-Id: <20200411230706.23855-103-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 100/121] scsi: qla2xxx: fix FW resource count values
+Date:   Sat, 11 Apr 2020 19:06:45 -0400
+Message-Id: <20200411230706.23855-100-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
 References: <20200411230706.23855-1-sashal@kernel.org>
@@ -58,47 +59,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Himanshu Madhani <hmadhani@marvell.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit 345f574dac85276d1471492c6e90c57e3f90a4f3 ]
+[ Upstream commit ce1ee122e0f048fc67c1259489f0802a28049bfd ]
 
-This patch fixes:
+This patch fixes issue where current and original exchanges count
+were swapped for intiator and targets.
 
-- qla2x00_issue_iocb_timeout will now return if chip is down
+Also fix IOCB count for current and original which were swapped.
 
-- only check for sp->qpair in abort handling
-
-Link: https://lore.kernel.org/r/20200212214436.25532-24-hmadhani@marvell.com
+Link: https://lore.kernel.org/r/20200226224022.24518-9-hmadhani@marvell.com
 Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_dfs.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 9e09964f5c0e4..f0846ce0c4da4 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1405,6 +1405,9 @@ qla2x00_issue_iocb_timeout(scsi_qla_host_t *vha, void *buffer,
- 	mbx_cmd_t	mc;
- 	mbx_cmd_t	*mcp = &mc;
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 0a6fb359f4d5e..e62b2115235e1 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -134,11 +134,11 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
+ 	} else {
+ 		seq_puts(s, "FW Resource count\n\n");
+ 		seq_printf(s, "Original TGT exchg count[%d]\n", mb[1]);
+-		seq_printf(s, "current TGT exchg count[%d]\n", mb[2]);
+-		seq_printf(s, "original Initiator Exchange count[%d]\n", mb[3]);
+-		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[6]);
+-		seq_printf(s, "Original IOCB count[%d]\n", mb[7]);
+-		seq_printf(s, "Current IOCB count[%d]\n", mb[10]);
++		seq_printf(s, "Current TGT exchg count[%d]\n", mb[2]);
++		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[3]);
++		seq_printf(s, "Original Initiator Exchange count[%d]\n", mb[6]);
++		seq_printf(s, "Current IOCB count[%d]\n", mb[7]);
++		seq_printf(s, "Original IOCB count[%d]\n", mb[10]);
+ 		seq_printf(s, "MAX VP count[%d]\n", mb[11]);
+ 		seq_printf(s, "MAX FCF count[%d]\n", mb[12]);
+ 		seq_printf(s, "Current free pageable XCB buffer cnt[%d]\n",
+@@ -149,7 +149,6 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
+ 		    mb[22]);
+ 		seq_printf(s, "Original Target fast XCB buffer cnt[%d]\n",
+ 		    mb[23]);
+-
+ 	}
  
-+	if (qla2x00_chip_is_down(vha))
-+		return QLA_INVALID_COMMAND;
-+
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1038,
- 	    "Entered %s.\n", __func__);
- 
-@@ -1475,7 +1478,7 @@ qla2x00_abort_command(srb_t *sp)
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x103b,
- 	    "Entered %s.\n", __func__);
- 
--	if (vha->flags.qpairs_available && sp->qpair)
-+	if (sp->qpair)
- 		req = sp->qpair->req;
- 	else
- 		req = vha->req;
+ 	return 0;
 -- 
 2.20.1
 
