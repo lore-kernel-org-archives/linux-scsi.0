@@ -4,55 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E22A5C2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B800C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B68A921744
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E139A216FD
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:09:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646395;
-	bh=Nfe9w6MmF3w6Ne3snw4ketatwqXeyWFrfrZSpGBMIIA=;
+	s=default; t=1586646550;
+	bh=wOm6rMiOMk63monrsQgu+88dDlJcauWZEKzEvhYOGQ0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=E9Y8Efkli0B38Ksx29FFh18Dvr+dD8DKeRkJRQWs0TemJxxNcmFMKptjBuJLMHiKB
-	 bSPQ9r8GthJSDhLJaLXUVkpSgS2FrbLmJCXkNz+/DDWM8hetTEX3OI0BsyNjtZtoEO
-	 buIaMXLTmwuQ/pxf+ABlSe6Rcve8NFSO6xhQqZko=
+	b=G/qGsOORvk2d7WyvrWVawQjoMb0/TSMp1YReJ0aWFg7lbrFqO+nB/qWmoTqJ8gg88
+	 ZOIYOl8JbQSvZBfiprC62czlRgXW7P/J57ZddN9opOykpoz6EQGfZO0sYAVmqKAg1w
+	 GRj80dgWGpkEwc713ABMY5vx9BwnZ4+pHB/3QrAk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728447AbgDKXGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:06:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41954 "EHLO mail.kernel.org"
+        id S1729128AbgDKXJJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:09:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46670 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728441AbgDKXGc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:06:32 -0400
+        id S1729121AbgDKXJI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:09:08 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BE9F8217D8;
-        Sat, 11 Apr 2020 23:06:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B783B217D8;
+        Sat, 11 Apr 2020 23:09:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646392;
-        bh=Nfe9w6MmF3w6Ne3snw4ketatwqXeyWFrfrZSpGBMIIA=;
+        s=default; t=1586646548;
+        bh=wOm6rMiOMk63monrsQgu+88dDlJcauWZEKzEvhYOGQ0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=p7R4GX/aytF7UmCZo4OY1nWDd0eSyqsTWjVbQwrOPIDFN+tmaKjGc4PhoXQ569hDO
-         Ym7/PdMHYZsIN7O2b/88heQmZQo3S+5Cv3/xWPZ1D6gy9Z56CuP3FlaM758n+jInzt
-         Bwl3S9zOPdYZRwjNzMXUI5/eRZ7jjlwbFHtbm4AA=
+        b=qL+rYk7urz6E8Blqi5Hx4y/MB5TcQCDX6qb1qR/RYGRmeDVAS098s0wGQrIVh66jk
+         k7YHL5r7xq2/2G4tH0lHAft2Iv+Vps9m4c6WM1dl1YWXTRqOCtGAVdQGuZ0CO2lh71
+         NvdebVG6D1Kv5CryQNdDJm4Vk18df0QmItXx5Y8g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
+Cc:     Michael Hernandez <mhernandez@marvell.com>,
+        Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.6 131/149] scsi: ufs: ufs-mediatek: ensure UniPro is not powered down before linkup
-Date:   Sat, 11 Apr 2020 19:03:28 -0400
-Message-Id: <20200411230347.22371-131-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 099/121] scsi: qla2xxx: Return appropriate failure through BSG Interface
+Date:   Sat, 11 Apr 2020 19:06:44 -0400
+Message-Id: <20200411230706.23855-99-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
-References: <20200411230347.22371-1-sashal@kernel.org>
+In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
+References: <20200411230706.23855-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -62,80 +59,88 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Stanley Chu <stanley.chu@mediatek.com>
+From: Michael Hernandez <mhernandez@marvell.com>
 
-[ Upstream commit 7742ca797aa79f280853ffd3e7d2e2af3cd317a5 ]
+[ Upstream commit 1b81e7f3019d632a707e07927e946ffbbc102910 ]
 
-MediaTek Chipsets can enter proprietary UniPro low-power mode during
-suspend while link is in hibern8 state. Make sure leaving low-power mode
-before every link startup to prevent lockup in any possible error recovery
-path.
+This patch ensures flash updates API calls return possible failure
+status through BSG interface to the application.
 
-At the same time, re-factor related funcitons to improve code readability.
-
-Link: https://lore.kernel.org/r/20200129105251.12466-2-stanley.chu@mediatek.com
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Link: https://lore.kernel.org/r/20200226224022.24518-7-hmadhani@marvell.com
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
+Signed-off-by: Michael Hernandez <mhernandez@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufs-mediatek.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c |  9 +++++++--
+ drivers/scsi/qla2xxx/qla_sup.c | 13 ++++++++-----
+ 2 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 53eae5fe2ade2..7ac838cc15d16 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -30,6 +30,11 @@
- #define ufs_mtk_device_reset_ctrl(high, res) \
- 	ufs_mtk_smc(UFS_MTK_SIP_DEVICE_RESET, high, res)
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index cbaf178fc9796..f06e499796976 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1505,10 +1505,15 @@ qla2x00_update_optrom(struct bsg_job *bsg_job)
+ 	    bsg_job->request_payload.sg_cnt, ha->optrom_buffer,
+ 	    ha->optrom_region_size);
  
-+#define ufs_mtk_unipro_powerdown(hba, powerdown) \
-+	ufshcd_dme_set(hba, \
-+		       UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0), \
-+		       powerdown)
-+
- static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
- {
- 	u32 tmp;
-@@ -290,6 +295,8 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
- 	int ret;
- 	u32 tmp;
+-	ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
++	rval = ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
+ 	    ha->optrom_region_start, ha->optrom_region_size);
  
-+	ufs_mtk_unipro_powerdown(hba, 0);
-+
- 	/* disable deep stall */
- 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(VS_SAVEPOWERCONTROL), &tmp);
- 	if (ret)
-@@ -390,9 +397,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
- 	if (err)
- 		return err;
- 
--	err = ufshcd_dme_set(hba,
--			     UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
--			     0);
-+	err = ufs_mtk_unipro_powerdown(hba, 0);
- 	if (err)
- 		return err;
- 
-@@ -413,14 +418,10 @@ static int ufs_mtk_link_set_lpm(struct ufs_hba *hba)
- {
- 	int err;
- 
--	err = ufshcd_dme_set(hba,
--			     UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
--			     1);
-+	err = ufs_mtk_unipro_powerdown(hba, 1);
- 	if (err) {
- 		/* Resume UniPro state for following error recovery */
--		ufshcd_dme_set(hba,
--			       UIC_ARG_MIB_SEL(VS_UNIPROPOWERDOWNCONTROL, 0),
--			       0);
-+		ufs_mtk_unipro_powerdown(hba, 0);
- 		return err;
+-	bsg_reply->result = DID_OK;
++	if (rval) {
++		bsg_reply->result = -EINVAL;
++		rval = -EINVAL;
++	} else {
++		bsg_reply->result = DID_OK;
++	}
+ 	vfree(ha->optrom_buffer);
+ 	ha->optrom_buffer = NULL;
+ 	ha->optrom_state = QLA_SWAITING;
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index bbe90354f49b0..07f0d8669806d 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -2686,7 +2686,7 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 	uint32_t sec_mask, rest_addr, fdata;
+ 	void *optrom = NULL;
+ 	dma_addr_t optrom_dma;
+-	int rval;
++	int rval, ret;
+ 	struct secure_flash_update_block *sfub;
+ 	dma_addr_t sfub_dma;
+ 	uint32_t offset = faddr << 2;
+@@ -2942,11 +2942,12 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ write_protect:
+ 	ql_log(ql_log_warn + ql_dbg_verbose, vha, 0x7095,
+ 	    "Protect flash...\n");
+-	rval = qla24xx_protect_flash(vha);
+-	if (rval) {
++	ret = qla24xx_protect_flash(vha);
++	if (ret) {
+ 		qla81xx_fac_semaphore_access(vha, FAC_SEMAPHORE_UNLOCK);
+ 		ql_log(ql_log_warn, vha, 0x7099,
+ 		    "Failed protect flash\n");
++		rval = QLA_COMMAND_ERROR;
  	}
  
+ 	if (reset_to_rom == true) {
+@@ -2954,10 +2955,12 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
+ 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+ 		qla2xxx_wake_dpc(vha);
+ 
+-		rval = qla2x00_wait_for_hba_online(vha);
+-		if (rval != QLA_SUCCESS)
++		ret = qla2x00_wait_for_hba_online(vha);
++		if (ret != QLA_SUCCESS) {
+ 			ql_log(ql_log_warn, vha, 0xffff,
+ 			    "Adapter did not come out of reset\n");
++			rval = QLA_COMMAND_ERROR;
++		}
+ 	}
+ 
+ done:
 -- 
 2.20.1
 
