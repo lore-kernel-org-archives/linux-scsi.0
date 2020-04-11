@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2DFC2BA19
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 816C0C2BBC7
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:36:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D73420936
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5788120787
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:36:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648101;
-	bh=lQRj8VNsJOOF8DfDzvqCyTjDoXlEsrTKzjTgMDofYVU=;
+	s=default; t=1586648175;
+	bh=gS+SOyMmGhSQIgcbDhXLl7pJ3+Mv/SjIIVp6L2hA/WQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=gtsFdYFPwPkWx96Oc0JvGRcPjvRWE+L9fhChPTxo7wWD8WPjj13BkPHeYWp69jrdK
-	 d72oOVChUS6hd6UO5/9QpJqgdO0a2Ko4SmoS2+SluesQMLC2qr5T1hgLOwpV4Rizd0
-	 KtISY8IpJoQe64k/swStjoQ4upVto4/i9vuWcuUQ=
+	b=ABg9HjyqEpRuL2L8r/416rUJQhziPTSRXL0Y67twbs3Lku1od9FikELUbL3RHEJlq
+	 9fETEtS4u4E+akCJQ0b08wUFupvXH6FPqc82J0gPKP68PhSNYyOlPbxSOXw2N0oZ3h
+	 ne4ArysC72kQ9fxr7WiF0YPI/SpI/GWtSFv/Z6hI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729146AbgDKXe7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:34:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46718 "EHLO mail.kernel.org"
+        id S1729000AbgDKXIp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:08:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45972 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729127AbgDKXJJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:09:09 -0400
+        id S1728995AbgDKXIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:08:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D6479218AC;
-        Sat, 11 Apr 2020 23:09:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 273D8218AC;
+        Sat, 11 Apr 2020 23:08:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646549;
-        bh=lQRj8VNsJOOF8DfDzvqCyTjDoXlEsrTKzjTgMDofYVU=;
+        s=default; t=1586646524;
+        bh=gS+SOyMmGhSQIgcbDhXLl7pJ3+Mv/SjIIVp6L2hA/WQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UuL2ZBlyiMMxtLPrbvDSfpgUcjF79k4iFWKIV1BxEp4yLfbBfcoOQjqbBRiBKgI6c
-         t8Pbu4uuRpARHFlTJAjeYlfRQw3+a/P8Nf4VirfBGhZlFnD2OKpJwRcOnjLcOy7gj+
-         wHQOwWpLjKzKb2fLVIQFPKmckwsHze6x34O0vgpQ=
+        b=K3AcBff9JEgWjAf/oEU5PLRJ4ZfGcHOhSZqb8wm9HS4ro6m9YageDb50vOa7rqL/D
+         FkJH6h7/WRH52+FdYYcLx/FXvpJ1tSZlh1RK7+mkZ/kkhk1NqSlSmSSoaUfFskwxPb
+         Ak1VVjBzMT2LwC/eD1q9d/zhcrEbnYalcqNepfEE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     "Ewan D. Milne" <emilne@redhat.com>,
+        Bart van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 100/121] scsi: qla2xxx: fix FW resource count values
-Date:   Sat, 11 Apr 2020 19:06:45 -0400
-Message-Id: <20200411230706.23855-100-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 080/121] scsi: core: avoid repetitive logging of device offline messages
+Date:   Sat, 11 Apr 2020 19:06:25 -0400
+Message-Id: <20200411230706.23855-80-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
 References: <20200411230706.23855-1-sashal@kernel.org>
@@ -59,53 +59,70 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-[ Upstream commit ce1ee122e0f048fc67c1259489f0802a28049bfd ]
+[ Upstream commit b0962c53bde9a485c8ebc401fa1dbe821a76bc3e ]
 
-This patch fixes issue where current and original exchanges count
-were swapped for intiator and targets.
+Large queues of I/O to offline devices that are eventually submitted when
+devices are unblocked result in a many repeated "rejecting I/O to offline
+device" messages.  These messages can fill up the dmesg buffer in crash
+dumps so no useful prior messages remain.  In addition, if a serial console
+is used, the flood of messages can cause a hard lockup in the console code.
 
-Also fix IOCB count for current and original which were swapped.
+Introduce a flag indicating the message has already been logged for the
+device, and reset the flag when scsi_device_set_state() changes the device
+state.
 
-Link: https://lore.kernel.org/r/20200226224022.24518-9-hmadhani@marvell.com
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
+Link: https://lore.kernel.org/r/20200311143930.20674-1-emilne@redhat.com
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_lib.c    | 8 ++++++--
+ include/scsi/scsi_device.h | 3 +++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 0a6fb359f4d5e..e62b2115235e1 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -134,11 +134,11 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 	} else {
- 		seq_puts(s, "FW Resource count\n\n");
- 		seq_printf(s, "Original TGT exchg count[%d]\n", mb[1]);
--		seq_printf(s, "current TGT exchg count[%d]\n", mb[2]);
--		seq_printf(s, "original Initiator Exchange count[%d]\n", mb[3]);
--		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[6]);
--		seq_printf(s, "Original IOCB count[%d]\n", mb[7]);
--		seq_printf(s, "Current IOCB count[%d]\n", mb[10]);
-+		seq_printf(s, "Current TGT exchg count[%d]\n", mb[2]);
-+		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[3]);
-+		seq_printf(s, "Original Initiator Exchange count[%d]\n", mb[6]);
-+		seq_printf(s, "Current IOCB count[%d]\n", mb[7]);
-+		seq_printf(s, "Original IOCB count[%d]\n", mb[10]);
- 		seq_printf(s, "MAX VP count[%d]\n", mb[11]);
- 		seq_printf(s, "MAX FCF count[%d]\n", mb[12]);
- 		seq_printf(s, "Current free pageable XCB buffer cnt[%d]\n",
-@@ -149,7 +149,6 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 		    mb[22]);
- 		seq_printf(s, "Original Target fast XCB buffer cnt[%d]\n",
- 		    mb[23]);
--
- 	}
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 3e7a45d0dacad..22bc288750f28 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1240,8 +1240,11 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+ 		 * commands.  The device must be brought online
+ 		 * before trying any recovery commands.
+ 		 */
+-		sdev_printk(KERN_ERR, sdev,
+-			    "rejecting I/O to offline device\n");
++		if (!sdev->offline_already) {
++			sdev->offline_already = true;
++			sdev_printk(KERN_ERR, sdev,
++				    "rejecting I/O to offline device\n");
++		}
+ 		return BLK_STS_IOERR;
+ 	case SDEV_DEL:
+ 		/*
+@@ -2338,6 +2341,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		break;
  
+ 	}
++	sdev->offline_already = false;
+ 	sdev->sdev_state = state;
  	return 0;
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 3ed836db53069..3812b93347247 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -203,6 +203,9 @@ struct scsi_device {
+ 	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
+ 	unsigned rpm_autosuspend:1;	/* Enable runtime autosuspend at device
+ 					 * creation time */
++
++	bool offline_already;		/* Device offline message logged */
++
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
 -- 
 2.20.1
 
