@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA496C2BBFD
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 678B8C352BE
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 81A1321775
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3082220787
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:06:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646359;
-	bh=uNaYKRqofACkx4pbgLvm7Di+W4B87DTqrRdNFyHkkVE=;
+	s=default; t=1586646388;
+	bh=GoiEiaxMkSmC3deUYvrLpIzfI0ZOZrg8e1NxkKqlHEk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WHwhPVqkMyCNh7phcKs13MpGrgA4zuVCfCnUUhlbLTMd+5+SR4f0ZO24Q7rAjzGoV
-	 pYVzVQddPtOR9krgCq8TSkSm9cW5fVMZA+K1QpQv/gYvS21GyHV6OTgtU+453NlTtO
-	 dFVxOcfMzYLgtCZwtoqphvQedQwgN/Wxrxm3xO7g=
+	b=KjRJHAQVn0HeMxJiDKdzK7fafvOC5TpYtApBwdNeGwSiBbKRRoDQzimrnVX4uJNc/
+	 Zkjm4uH0j0mFYGvMa6GURxvrLksZceoAShptYr+hsBoolib6x4dj3yrknC4rSlTU11
+	 sqW5yaKY9MX7M72F9xUqJvjPcM2LlXs9buufQpgw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728171AbgDKXFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:05:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40620 "EHLO mail.kernel.org"
+        id S1728409AbgDKXG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:06:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41746 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728162AbgDKXFx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:05:53 -0400
+        id S1728398AbgDKXG0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:06:26 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id ABFC920CC7;
-        Sat, 11 Apr 2020 23:05:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 87C1720787;
+        Sat, 11 Apr 2020 23:06:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646353;
-        bh=uNaYKRqofACkx4pbgLvm7Di+W4B87DTqrRdNFyHkkVE=;
+        s=default; t=1586646386;
+        bh=GoiEiaxMkSmC3deUYvrLpIzfI0ZOZrg8e1NxkKqlHEk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d2mxoqOgGUHgfEoKAsHzGOfvImatIY3DJKlfRI9mqSTDZLnZTl8ZMc+PvMZwZYLcs
-         zi1l1MhENh+ThgOPLLq7kUL3PEgsC6WXgDsdb90oXaORUZvx3t+27Ra6RgD08XXaqA
-         AlGkrqQGl0Cey5StUDLFqYHdh1ejJEx+wzrNrSiQ=
+        b=vJh2Pm38SNZp7Q/nBWEoAUa+KwKr7TDIbvcuibrRlGi5WKjsO31IHhmjipKaYQHP8
+         NtD/ukNcwykOHNHSbmgiqIZQlnEAjdBWK1BBUKZ5DQ1a+yxgR1KcusU93o+eD7hGBD
+         elxvxdcEuZOpF1C4KRPJHgyuWBtG2vAFwEy6Jhzc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Ewan D. Milne" <emilne@redhat.com>,
-        Bart van Assche <bvanassche@acm.org>,
+Cc:     Himanshu Madhani <hmadhani@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 100/149] scsi: core: avoid repetitive logging of device offline messages
-Date:   Sat, 11 Apr 2020 19:02:57 -0400
-Message-Id: <20200411230347.22371-100-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.6 126/149] scsi: qla2xxx: Add fixes for mailbox command
+Date:   Sat, 11 Apr 2020 19:03:23 -0400
+Message-Id: <20200411230347.22371-126-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -59,70 +58,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+From: Himanshu Madhani <hmadhani@marvell.com>
 
-[ Upstream commit b0962c53bde9a485c8ebc401fa1dbe821a76bc3e ]
+[ Upstream commit 345f574dac85276d1471492c6e90c57e3f90a4f3 ]
 
-Large queues of I/O to offline devices that are eventually submitted when
-devices are unblocked result in a many repeated "rejecting I/O to offline
-device" messages.  These messages can fill up the dmesg buffer in crash
-dumps so no useful prior messages remain.  In addition, if a serial console
-is used, the flood of messages can cause a hard lockup in the console code.
+This patch fixes:
 
-Introduce a flag indicating the message has already been logged for the
-device, and reset the flag when scsi_device_set_state() changes the device
-state.
+- qla2x00_issue_iocb_timeout will now return if chip is down
 
-Link: https://lore.kernel.org/r/20200311143930.20674-1-emilne@redhat.com
-Reviewed-by: Bart van Assche <bvanassche@acm.org>
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+- only check for sp->qpair in abort handling
+
+Link: https://lore.kernel.org/r/20200212214436.25532-24-hmadhani@marvell.com
+Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_lib.c    | 8 ++++++--
- include/scsi/scsi_device.h | 3 +++
- 2 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 610ee41fa54cb..a45e7289dbbe7 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1240,8 +1240,11 @@ scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 		 * commands.  The device must be brought online
- 		 * before trying any recovery commands.
- 		 */
--		sdev_printk(KERN_ERR, sdev,
--			    "rejecting I/O to offline device\n");
-+		if (!sdev->offline_already) {
-+			sdev->offline_already = true;
-+			sdev_printk(KERN_ERR, sdev,
-+				    "rejecting I/O to offline device\n");
-+		}
- 		return BLK_STS_IOERR;
- 	case SDEV_DEL:
- 		/*
-@@ -2340,6 +2343,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 9e09964f5c0e4..f0846ce0c4da4 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1405,6 +1405,9 @@ qla2x00_issue_iocb_timeout(scsi_qla_host_t *vha, void *buffer,
+ 	mbx_cmd_t	mc;
+ 	mbx_cmd_t	*mcp = &mc;
  
- 	}
-+	sdev->offline_already = false;
- 	sdev->sdev_state = state;
- 	return 0;
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index f8312a3e5b429..cd9656ff3c43c 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -204,6 +204,9 @@ struct scsi_device {
- 	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
- 	unsigned rpm_autosuspend:1;	/* Enable runtime autosuspend at device
- 					 * creation time */
++	if (qla2x00_chip_is_down(vha))
++		return QLA_INVALID_COMMAND;
 +
-+	bool offline_already;		/* Device offline message logged */
-+
- 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1038,
+ 	    "Entered %s.\n", __func__);
  
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+@@ -1475,7 +1478,7 @@ qla2x00_abort_command(srb_t *sp)
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x103b,
+ 	    "Entered %s.\n", __func__);
+ 
+-	if (vha->flags.qpairs_available && sp->qpair)
++	if (sp->qpair)
+ 		req = sp->qpair->req;
+ 	else
+ 		req = vha->req;
 -- 
 2.20.1
 
