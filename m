@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE35C2BBC7
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63339C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:23:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13D742084D
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:23:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FD0F20787
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Apr 2020 23:23:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647380;
-	bh=Oao4RgPcy2O10lDM921sA0JLlS9HRv7oxiB/C9Hl8Q8=;
+	s=default; t=1586647408;
+	bh=PQqtnbp5qUAkfc8PiIsECN0aQG6tr/+c68pEp+7GFyA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VsKfezg+Q3sVsQ/N0jZxuOp+z+H/sXHR6Un3Z1jSFZKeWDvCOZmxK/+UQK01AfSMq
-	 qlyFfsZ4oMe8ZZ+8GfOfquHpgPMJxvi+UNFCK5a0r56YQOP3GfV8u+D5RjA4UtzHVn
-	 YnwV9kskVOgUjhNGvmfkDKGQorzhbpO8YRuevvKA=
+	b=fK7Xw3abyMn36R8JkkqjzPuxYVNGwrJ7qk6HaRozYwtr+V7d3ru5Q7AkvY9fqPhvQ
+	 OkonYIh18Atx30pOu8chZSIE7w9Z6MMKy4IXfntfwAizdzZ/9yS6GcI91krhgqlvbw
+	 GQj+/4y/5NsGMW9HcRNSpCnDpOUPLw7snF6W8E+s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728397AbgDKXNK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:13:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54058 "EHLO mail.kernel.org"
+        id S1730493AbgDKXX0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 19:23:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53678 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730345AbgDKXNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:13:09 -0400
+        id S1729288AbgDKXM5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:12:57 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3C75421835;
-        Sat, 11 Apr 2020 23:13:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 136712166E;
+        Sat, 11 Apr 2020 23:12:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646790;
-        bh=Oao4RgPcy2O10lDM921sA0JLlS9HRv7oxiB/C9Hl8Q8=;
+        s=default; t=1586646777;
+        bh=PQqtnbp5qUAkfc8PiIsECN0aQG6tr/+c68pEp+7GFyA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bvEMgHrNwbZus9izZ1iiPiFF4HfRmwi9zjPYv2shTC/fcAX1TeCcou2NyJxjJ9lkf
-         OVaes0ieGQoD6f4+LLW1jdQUnyPoLr+JqorekFsTQBvEXlsusRHfoqkytH/m0iDK+V
-         2WSmxssRPBr9FgdDidCp7WndWQN00p0Sdaelni7s=
+        b=w2X4+s4K61EZuxNYU/VJYZQ5XrNbl2uv3vJH9QFv7E6oo8+FifBBSYT4pE0Mqb2Ik
+         zJycWU4FppHAFQaa4eWZqaZWQGMtFPMHl/Vw+bcTFgbPdcaHdy7/VzZzNxZa6v2UUR
+         uku21wXMvGbqyyj+n5NXHzXGYDwgUWeD/IJAhNBI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <hmadhani@marvell.com>,
+Cc:     Sagar Biradar <Sagar.Biradar@microchip.com>,
+        Balsundar P <balsundar.p@microsemi.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 54/66] scsi: qla2xxx: fix FW resource count values
-Date:   Sat, 11 Apr 2020 19:11:51 -0400
-Message-Id: <20200411231203.25933-54-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 44/66] scsi: aacraid: Disabling TM path and only processing IOP reset
+Date:   Sat, 11 Apr 2020 19:11:41 -0400
+Message-Id: <20200411231203.25933-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411231203.25933-1-sashal@kernel.org>
 References: <20200411231203.25933-1-sashal@kernel.org>
@@ -59,53 +59,124 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Sagar Biradar <Sagar.Biradar@microchip.com>
 
-[ Upstream commit ce1ee122e0f048fc67c1259489f0802a28049bfd ]
+[ Upstream commit bef18d308a2215eff8c3411a23d7f34604ce56c3 ]
 
-This patch fixes issue where current and original exchanges count
-were swapped for intiator and targets.
+Fixes the occasional adapter panic when sg_reset is issued with -d, -t, -b
+and -H flags.  Removal of command type HBA_IU_TYPE_SCSI_TM_REQ in
+aac_hba_send since iu_type, request_id and fib_flags are not populated.
+Device and target reset handlers are made to send TMF commands only when
+reset_state is 0.
 
-Also fix IOCB count for current and original which were swapped.
-
-Link: https://lore.kernel.org/r/20200226224022.24518-9-hmadhani@marvell.com
-Signed-off-by: Himanshu Madhani <hmadhani@marvell.com>
-Signed-off-by: Quinn Tran <qutran@marvell.com>
+Link: https://lore.kernel.org/r/1581553771-25796-1-git-send-email-Sagar.Biradar@microchip.com
+Reviewed-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+Signed-off-by: Sagar Biradar <Sagar.Biradar@microchip.com>
+Signed-off-by: Balsundar P <balsundar.p@microsemi.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_dfs.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/aacraid/commsup.c |  2 +-
+ drivers/scsi/aacraid/linit.c   | 34 +++++++++++++++++++++++++---------
+ 2 files changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 0b190082aa8d9..4c917e43509a5 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -136,11 +136,11 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 	} else {
- 		seq_puts(s, "FW Resource count\n\n");
- 		seq_printf(s, "Original TGT exchg count[%d]\n", mb[1]);
--		seq_printf(s, "current TGT exchg count[%d]\n", mb[2]);
--		seq_printf(s, "original Initiator Exchange count[%d]\n", mb[3]);
--		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[6]);
--		seq_printf(s, "Original IOCB count[%d]\n", mb[7]);
--		seq_printf(s, "Current IOCB count[%d]\n", mb[10]);
-+		seq_printf(s, "Current TGT exchg count[%d]\n", mb[2]);
-+		seq_printf(s, "Current Initiator Exchange count[%d]\n", mb[3]);
-+		seq_printf(s, "Original Initiator Exchange count[%d]\n", mb[6]);
-+		seq_printf(s, "Current IOCB count[%d]\n", mb[7]);
-+		seq_printf(s, "Original IOCB count[%d]\n", mb[10]);
- 		seq_printf(s, "MAX VP count[%d]\n", mb[11]);
- 		seq_printf(s, "MAX FCF count[%d]\n", mb[12]);
- 		seq_printf(s, "Current free pageable XCB buffer cnt[%d]\n",
-@@ -151,7 +151,6 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 		    mb[22]);
- 		seq_printf(s, "Original Target fast XCB buffer cnt[%d]\n",
- 		    mb[23]);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index b7588de4484e5..4cb6ee6e1212e 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -743,7 +743,7 @@ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 		hbacmd->request_id =
+ 			cpu_to_le32((((u32)(fibptr - dev->fibs)) << 2) + 1);
+ 		fibptr->flags |= FIB_CONTEXT_FLAG_SCSI_CMD;
+-	} else if (command != HBA_IU_TYPE_SCSI_TM_REQ)
++	} else
+ 		return -EINVAL;
+ 
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 1046947064a0b..0142547aaadd2 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -736,7 +736,11 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 		status = aac_hba_send(HBA_IU_TYPE_SCSI_TM_REQ, fib,
+ 				  (fib_callback) aac_hba_callback,
+ 				  (void *) cmd);
 -
++		if (status != -EINPROGRESS) {
++			aac_fib_complete(fib);
++			aac_fib_free(fib);
++			return ret;
++		}
+ 		/* Wait up to 15 secs for completion */
+ 		for (count = 0; count < 15; ++count) {
+ 			if (cmd->SCp.sent_command) {
+@@ -915,11 +919,11 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 
+ 	info = &aac->hba_map[bus][cid];
+ 
+-	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
+-	    info->reset_state > 0)
++	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
++	 !(info->reset_state > 0)))
+ 		return FAILED;
+ 
+-	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++	pr_err("%s: Host device reset request. SCSI hang ?\n",
+ 	       AAC_DRIVERNAME);
+ 
+ 	fib = aac_fib_alloc(aac);
+@@ -934,7 +938,12 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 	status = aac_hba_send(command, fib,
+ 			      (fib_callback) aac_tmf_callback,
+ 			      (void *) info);
+-
++	if (status != -EINPROGRESS) {
++		info->reset_state = 0;
++		aac_fib_complete(fib);
++		aac_fib_free(fib);
++		return ret;
++	}
+ 	/* Wait up to 15 seconds for completion */
+ 	for (count = 0; count < 15; ++count) {
+ 		if (info->reset_state == 0) {
+@@ -973,11 +982,11 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 
+ 	info = &aac->hba_map[bus][cid];
+ 
+-	if (info->devtype != AAC_DEVTYPE_NATIVE_RAW &&
+-	    info->reset_state > 0)
++	if (!(info->devtype == AAC_DEVTYPE_NATIVE_RAW &&
++	 !(info->reset_state > 0)))
+ 		return FAILED;
+ 
+-	pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++	pr_err("%s: Host target reset request. SCSI hang ?\n",
+ 	       AAC_DRIVERNAME);
+ 
+ 	fib = aac_fib_alloc(aac);
+@@ -994,6 +1003,13 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 			      (fib_callback) aac_tmf_callback,
+ 			      (void *) info);
+ 
++	if (status != -EINPROGRESS) {
++		info->reset_state = 0;
++		aac_fib_complete(fib);
++		aac_fib_free(fib);
++		return ret;
++	}
++
+ 	/* Wait up to 15 seconds for completion */
+ 	for (count = 0; count < 15; ++count) {
+ 		if (info->reset_state <= 0) {
+@@ -1046,7 +1062,7 @@ static int aac_eh_bus_reset(struct scsi_cmnd* cmd)
+ 		}
  	}
  
- 	return 0;
+-	pr_err("%s: Host adapter reset request. SCSI hang ?\n", AAC_DRIVERNAME);
++	pr_err("%s: Host bus reset request. SCSI hang ?\n", AAC_DRIVERNAME);
+ 
+ 	/*
+ 	 * Check the health of the controller
 -- 
 2.20.1
 
