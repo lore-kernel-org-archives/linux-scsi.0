@@ -2,293 +2,416 @@ Return-Path: <SRS0=2Pbo=54=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B4AEC2D0EC
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 03:33:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EDA5C2BB85
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 03:33:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 035FB2073E
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 03:33:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 312B120739
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 03:33:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UfEqjB23"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U4ONihMm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726847AbgDLDdM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Apr 2020 23:33:12 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:44084 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726818AbgDLDdL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Apr 2020 23:33:11 -0400
-Received: by mail-pg1-f196.google.com with SMTP id n13so2921413pgp.11
-        for <linux-scsi@vger.kernel.org>; Sat, 11 Apr 2020 20:33:11 -0700 (PDT)
+        id S1726880AbgDLDdO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Apr 2020 23:33:14 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:34847 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726818AbgDLDdO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Apr 2020 23:33:14 -0400
+Received: by mail-pf1-f194.google.com with SMTP id a13so2998869pfa.2
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Apr 2020 20:33:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=AtKKoeTd7u4T+aN6O1A3JfYtPF04+IdexdVwAFkbgCY=;
-        b=UfEqjB239uA81YMZVddnnRDywkPOjh+wxWUw3k2cSrJ3SepLBm0ugerCl/Ze/iwO1c
-         kqxwpSgdEU7Ab3XsA3M+/Z5xm4rPVRNRx4eD1qfog0jf1ZCvVDzBrJ8E1V1F7thFec6I
-         bF3rAieITClvab4par6I5SXcYc9dvyCVsAuDpX0d+dZz6KVxvRhhLhSwri/wuL+2XaJZ
-         ssMu4BfrwMGvpf4W7w3h71gj5W7Izwzs5PMA3PbvCZD4yzbd4JypDwNqZo+IE1fkBb7q
-         9tGKg+ADWAmAwLkI1jxnHmf9h/JxJl975c2FneUtBRZXwTUNRANCIM+ioCkQ2LXrmKZS
-         z3Wg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=uHUZ5YyxEo/2ve5B9awSZSTbBr3CkgkN0IcwB+EPZN0=;
+        b=U4ONihMmUtXICHs1gg/0b59FQf2rEiSPOBRnON3EPF3Rx7Vs9D3mOkJT1Mg4hRjLI8
+         2wHmmqw04cmevTlLRvX/wXqCeTFQJWSMsEcyrXdU2aZuIcW91+XFtIj2qLjYnAQUvQ0W
+         rWPQ9AUIGNb0Onbd9PjLKPSzCt2rj6s71QQMP5PDPZs/ujr7VgQo9yYVA07fbkKfRzwV
+         UsKRp7cYnA6/rRxnMVPOgW/ocr3wBFrNRlGnha//OgHQEIHUHXU262CrdUubmlGhBov2
+         Oo4EkbjPGy0UlRJ6+iDg9WuCv38o3M4F8IPsY6QL1Cn9nqEttgeqhJlbke7ws7Qmp0AW
+         OKFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=AtKKoeTd7u4T+aN6O1A3JfYtPF04+IdexdVwAFkbgCY=;
-        b=lBv4FhLcBzNLHKbY/JhZufINrPI/PSiSorZW7R1s0zUdicuQtu16J+Q7YooMSYXRlY
-         8YznayehcGqKivsAFcI5WxS0uLD5AAHRRN266x+iy58nny1f6gF9K/Tx4Tko6a9hhxqp
-         p9Yij3NWmrUMJAqE67K4B/5EPgv60estbXouebR5AO23EVplCgLiMTZONQ20SoKy9q2B
-         NSsG0VtjxcqT6sYz8b5v9nJ8eVvnYaH4vqSgh4PwLSwbglm8RtBpk607Fr5NWkMB+6PT
-         9KBJL+FdmWk2gZ0yaHUl31uHlTJsMznU5CC38PaILNxhW4caqyvPkQUr9PvdbXpVerbK
-         qM8w==
-X-Gm-Message-State: AGi0Puaj8VHF1WeL0qv+5KzM/vSyWpPaOhRVVQ/gIi32sHC9t968oAVT
-        6Ks8Z7DJwjkKESSZM0HESXc+vyJc
-X-Google-Smtp-Source: APiQypKihoMyAd8Tzy7R1br5dQ/eZ5x+S7CHHG5Ugf718ZjGynpfsNg7aaZztiW0zr0fl1e2MEXx1Q==
-X-Received: by 2002:a62:83c3:: with SMTP id h186mr12161873pfe.4.1586662389999;
-        Sat, 11 Apr 2020 20:33:09 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=uHUZ5YyxEo/2ve5B9awSZSTbBr3CkgkN0IcwB+EPZN0=;
+        b=uZ5fZLgkhBZkfmHeTxM9HGDlcjHgte903aMsZGFVi/teqHFmmfY4yLZy+ptUsylkxb
+         ksgC+ZGwNZEVMxK+SF++pQjpOHWze6/VBbM6+PziN2XtVqJxJeKMbZ/uTG/YiA0sLruv
+         NWX+s/0EbNbGAPXy+7NbH5ge3JiTY5nKQFOEtkDQfNGtLM3AS+qg0LF1061pQvR4vBe/
+         EUFDslG4wXfb2r0/n5n5596sB1iRKowZWU7k0lFrUgcBeHBf/gy7h5b0vNzACpG7jpcr
+         N/6KrWoMcVGpatBJTSB2xyLevzEi/y80+VGku76PsRxMG329ToaEsEvEWxOfx80JPa32
+         wM1w==
+X-Gm-Message-State: AGi0PuaUohsC1FozgpUrA4x3+3UUbdMK4WvN7bP9WgUOku03chI7MIC8
+        99RpEHvE1AaM6ww3vnuoYu6ZTtO0
+X-Google-Smtp-Source: APiQypI7OdNrezUib44XgxwhsZJ0EVcFe//OLe+6NRLOpP109gGRwemcGlq2H0AG8HQQTACDv4q3Yg==
+X-Received: by 2002:a63:1e43:: with SMTP id p3mr11584728pgm.422.1586662391755;
+        Sat, 11 Apr 2020 20:33:11 -0700 (PDT)
 Received: from localhost.localdomain.localdomain (ip68-5-146-102.oc.oc.cox.net. [68.5.146.102])
-        by smtp.gmail.com with ESMTPSA id i4sm5614694pjg.4.2020.04.11.20.33.08
+        by smtp.gmail.com with ESMTPSA id i4sm5614694pjg.4.2020.04.11.20.33.10
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 11 Apr 2020 20:33:09 -0700 (PDT)
+        Sat, 11 Apr 2020 20:33:11 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     dwagner@suse.de, maier@linux.ibm.com, bvanassche@acm.org,
         herbszt@gmx.de, natechancellor@gmail.com, rdunlap@infradead.org,
-        hare@suse.de, James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 00/31] [NEW] efct: Broadcom (Emulex) FC Target driver
-Date:   Sat, 11 Apr 2020 20:32:32 -0700
-Message-Id: <20200412033303.29574-1-jsmart2021@gmail.com>
+        hare@suse.de, James Smart <jsmart2021@gmail.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: [PATCH v3 01/31] elx: libefc_sli: SLI-4 register offsets and field definitions
+Date:   Sat, 11 Apr 2020 20:32:33 -0700
+Message-Id: <20200412033303.29574-2-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200412033303.29574-1-jsmart2021@gmail.com>
+References: <20200412033303.29574-1-jsmart2021@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch set is a request to incorporate the new Broadcom
-(Emulex) FC target driver, efct, into the kernel source tree.
+This is the initial patch for the new Emulex target mode SCSI
+driver sources.
 
-The driver source has been Announced a couple of times, the last
-version on 12/20/2019. The driver has been hosted on gitlab for
-review has had contributions from the community.
-  gitlab (git@gitlab.com:jsmart/efct-Emulex_FC_Target.git)
+This patch:
+- Creates the new Emulex source level directory drivers/scsi/elx
+  and adds the directory to the MAINTAINERS file.
+- Creates the first library subdirectory drivers/scsi/elx/libefc_sli.
+  This library is a SLI-4 interface library.
+- Starts the population of the libefc_sli library with definitions
+  of SLI-4 hardware register offsets and definitions.
 
-The driver integrates into the source tree at the (new) drivers/scsi/elx
-subdirectory.
+Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
-The driver consists of the following components:
-- A libefc_sli subdirectory: This subdirectory contains a library that
-  encapsulates common definitions and routines for an Emulex SLI-4
-  adapter.
-- A libefc subdirectory: This subdirectory contains a library of
-  common routines. Of major import is a number of routines that
-  implement a FC Discovery engine for target mode.
-- An efct subdirectory: This subdirectory contains the efct target
-  mode device driver. The driver utilizes the above librarys and
-  plugs into the SCSI LIO interfaces. The driver is SCSI only at
-  this time.
-
-The patches populate the libraries and device driver and can only
-be compiled as a complete set.
-
-This driver is completely independent from the lpfc device driver
-and there is no overlap on PCI ID's.
-
-The patches have been cut against the 5.7/scsi-queue branch.
-
-Thank you to those that have contributed to the driver in the past.
-
-Review comments welcome!
-
--- james
-
-
-V2 modifications:
-
-Contains the following modifications based on prior review comments:
-  Indentation/Alignment/Spacing changes
-  Comments: format cleanup; removed obvious or unnecessary comments;
-    Added comments for clarity.
-  Headers use #ifndef comparing for prior inclusion
-  Cleanup structure names (remove _s suffix)
-  Encapsulate use of macro arguments
-  Refactor to remove static function declarations for static local routines
-  Removed unused variables
-  Fix SLI4_INTF_VALID_MASK for 32bits
-  Ensure no BIT() use
-  Use __ffs() in page count macro
-  Reorg to move field defines out of structure definition
-  Commonize command building routines to reduce duplication
-  LIO interface:
-    Removed scsi initiator includes
-    Cleaned up interface defines
-    Removed lio WWN version attribute.
-    Expanded macros within logging macros
-    Cleaned up lio state setting macro
-    Remove __force use
-    Modularized session debugfs code so can be easily replaced.
-    Cleaned up abort task handling. Return after initiating.
-    Modularized where possible to reduce duplication
-    Convert from kthread to workqueue use
-    Remove unused macros
-  Add missing TARGET_CORE build attribute
-  Fix kbuild test robot warnings
-
-  Comments not addressed:
-    Use of __packed: not believed necessary
-    Session debugfs code remains. There is not yet a common lio
-      mechanism to replace with.
-
-V3 modifications:
-  Changed anonymous enums to named enums
-  Split gaint enums into multiple enums
-  Use defines to spell out _MASK values directly
-  Changed multiple #defines to named enums and a few vice versa cases
-    for consistency
-  Added Link Speed support for up to 128G
-  Removed efc_assert define. Replaced with WARN_ON.
-  Returned defined return values EFC_SUCCESS & EFC_FAIL
-  Added return values for routines returning more than those 2 values
-  Reduction of calling arguments in various routines.
-  Expanded dump type and status handling
-  Fixed locking in discovery handling routines.
-  Fixed line formatting length and indentation issues.
-  Removed code that was not used.
-  Removed Sparse Vector APIs and structures. Use xarray api instead.
-  Changed node pool creation. Use mempool and allocate dma memory when
-    required
-  Bug Fix: Send LS_RJT for non FCP PRLIs
-  Removed Queue topology string and parsing routines and rework queue
-    creation. Adapter configuration is implicitly known by the driver
-  Used request_threaded_irq instead of using our thread
-  Reworked efct_device_attach function to use if statements and gotos
-  Changed efct_fw_reset, removed accessing other port
-  Convert to used pci_alloc_irq_vectors api
-  Removed proc interface.
-  Changed assertion log messages.
-  Unified log message using cmd_name
-  Removed DIF related code which is not used
-  Removed SCSI get property
-  Incorporated LIO interface review comments
-  Reworked xxx_reg_vpi/vfi routines
-  Use SPDX license in elx/Makefile
-  Many more small changes.
-  
-
-James Smart (31):
-  elx: libefc_sli: SLI-4 register offsets and field definitions
-  elx: libefc_sli: SLI Descriptors and Queue entries
-  elx: libefc_sli: Data structures and defines for mbox commands
-  elx: libefc_sli: queue create/destroy/parse routines
-  elx: libefc_sli: Populate and post different WQEs
-  elx: libefc_sli: bmbx routines and SLI config commands
-  elx: libefc_sli: APIs to setup SLI library
-  elx: libefc: Generic state machine framework
-  elx: libefc: Emulex FC discovery library APIs and definitions
-  elx: libefc: FC Domain state machine interfaces
-  elx: libefc: SLI and FC PORT state machine interfaces
-  elx: libefc: Remote node state machine interfaces
-  elx: libefc: Fabric node state machine interfaces
-  elx: libefc: FC node ELS and state handling
-  elx: efct: Data structures and defines for hw operations
-  elx: efct: Driver initialization routines
-  elx: efct: Hardware queues creation and deletion
-  elx: efct: RQ buffer, memory pool allocation and deallocation APIs
-  elx: efct: Hardware IO and SGL initialization
-  elx: efct: Hardware queues processing
-  elx: efct: Unsolicited FC frame processing routines
-  elx: efct: Extended link Service IO handling
-  elx: efct: SCSI IO handling routines
-  elx: efct: LIO backend interface routines
-  elx: efct: Hardware IO submission routines
-  elx: efct: link statistics and SFP data
-  elx: efct: xport and hardware teardown routines
-  elx: efct: Firmware update, async link processing
-  elx: efct: scsi_transport_fc host interface support
-  elx: efct: Add Makefile and Kconfig for efct driver
-  elx: efct: Tie into kernel Kconfig and build process
-
- MAINTAINERS                            |    8 +
- drivers/scsi/Kconfig                   |    2 +
- drivers/scsi/Makefile                  |    1 +
- drivers/scsi/elx/Kconfig               |    9 +
- drivers/scsi/elx/Makefile              |   18 +
- drivers/scsi/elx/efct/efct_driver.c    |  856 +++++
- drivers/scsi/elx/efct/efct_driver.h    |  142 +
- drivers/scsi/elx/efct/efct_els.c       | 1928 +++++++++++
- drivers/scsi/elx/efct/efct_els.h       |  133 +
- drivers/scsi/elx/efct/efct_hw.c        | 5347 +++++++++++++++++++++++++++++++
- drivers/scsi/elx/efct/efct_hw.h        |  864 +++++
- drivers/scsi/elx/efct/efct_hw_queues.c |  765 +++++
- drivers/scsi/elx/efct/efct_io.c        |  198 ++
- drivers/scsi/elx/efct/efct_io.h        |  191 ++
- drivers/scsi/elx/efct/efct_lio.c       | 1840 +++++++++++
- drivers/scsi/elx/efct/efct_lio.h       |  178 +
- drivers/scsi/elx/efct/efct_scsi.c      | 1192 +++++++
- drivers/scsi/elx/efct/efct_scsi.h      |  235 ++
- drivers/scsi/elx/efct/efct_unsol.c     |  813 +++++
- drivers/scsi/elx/efct/efct_unsol.h     |   49 +
- drivers/scsi/elx/efct/efct_xport.c     | 1310 ++++++++
- drivers/scsi/elx/efct/efct_xport.h     |  201 ++
- drivers/scsi/elx/include/efc_common.h  |   43 +
- drivers/scsi/elx/libefc/efc.h          |   72 +
- drivers/scsi/elx/libefc/efc_device.c   | 1672 ++++++++++
- drivers/scsi/elx/libefc/efc_device.h   |   72 +
- drivers/scsi/elx/libefc/efc_domain.c   | 1109 +++++++
- drivers/scsi/elx/libefc/efc_domain.h   |   52 +
- drivers/scsi/elx/libefc/efc_fabric.c   | 1759 ++++++++++
- drivers/scsi/elx/libefc/efc_fabric.h   |  116 +
- drivers/scsi/elx/libefc/efc_lib.c      |   41 +
- drivers/scsi/elx/libefc/efc_node.c     | 1196 +++++++
- drivers/scsi/elx/libefc/efc_node.h     |  183 ++
- drivers/scsi/elx/libefc/efc_sm.c       |   61 +
- drivers/scsi/elx/libefc/efc_sm.h       |  209 ++
- drivers/scsi/elx/libefc/efc_sport.c    |  846 +++++
- drivers/scsi/elx/libefc/efc_sport.h    |   52 +
- drivers/scsi/elx/libefc/efclib.h       |  640 ++++
- drivers/scsi/elx/libefc_sli/sli4.c     | 5523 ++++++++++++++++++++++++++++++++
- drivers/scsi/elx/libefc_sli/sli4.h     | 4133 ++++++++++++++++++++++++
- 40 files changed, 34059 insertions(+)
- create mode 100644 drivers/scsi/elx/Kconfig
- create mode 100644 drivers/scsi/elx/Makefile
- create mode 100644 drivers/scsi/elx/efct/efct_driver.c
- create mode 100644 drivers/scsi/elx/efct/efct_driver.h
- create mode 100644 drivers/scsi/elx/efct/efct_els.c
- create mode 100644 drivers/scsi/elx/efct/efct_els.h
- create mode 100644 drivers/scsi/elx/efct/efct_hw.c
- create mode 100644 drivers/scsi/elx/efct/efct_hw.h
- create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.c
- create mode 100644 drivers/scsi/elx/efct/efct_io.c
- create mode 100644 drivers/scsi/elx/efct/efct_io.h
- create mode 100644 drivers/scsi/elx/efct/efct_lio.c
- create mode 100644 drivers/scsi/elx/efct/efct_lio.h
- create mode 100644 drivers/scsi/elx/efct/efct_scsi.c
- create mode 100644 drivers/scsi/elx/efct/efct_scsi.h
- create mode 100644 drivers/scsi/elx/efct/efct_unsol.c
- create mode 100644 drivers/scsi/elx/efct/efct_unsol.h
- create mode 100644 drivers/scsi/elx/efct/efct_xport.c
- create mode 100644 drivers/scsi/elx/efct/efct_xport.h
- create mode 100644 drivers/scsi/elx/include/efc_common.h
- create mode 100644 drivers/scsi/elx/libefc/efc.h
- create mode 100644 drivers/scsi/elx/libefc/efc_device.c
- create mode 100644 drivers/scsi/elx/libefc/efc_device.h
- create mode 100644 drivers/scsi/elx/libefc/efc_domain.c
- create mode 100644 drivers/scsi/elx/libefc/efc_domain.h
- create mode 100644 drivers/scsi/elx/libefc/efc_fabric.c
- create mode 100644 drivers/scsi/elx/libefc/efc_fabric.h
- create mode 100644 drivers/scsi/elx/libefc/efc_lib.c
- create mode 100644 drivers/scsi/elx/libefc/efc_node.c
- create mode 100644 drivers/scsi/elx/libefc/efc_node.h
- create mode 100644 drivers/scsi/elx/libefc/efc_sm.c
- create mode 100644 drivers/scsi/elx/libefc/efc_sm.h
- create mode 100644 drivers/scsi/elx/libefc/efc_sport.c
- create mode 100644 drivers/scsi/elx/libefc/efc_sport.h
- create mode 100644 drivers/scsi/elx/libefc/efclib.h
+---
+v3:
+  Changed anonymous enums to named.
+  SLI defines to spell out _MASK value directly.
+  Changed multiple #defines to named enums for consistency.
+  SLI4_REG_MAX to SLI4_REG_UNKNOWN
+---
+ MAINTAINERS                        |   8 ++
+ drivers/scsi/elx/libefc_sli/sli4.c |  26 ++++
+ drivers/scsi/elx/libefc_sli/sli4.h | 252 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 286 insertions(+)
  create mode 100644 drivers/scsi/elx/libefc_sli/sli4.c
  create mode 100644 drivers/scsi/elx/libefc_sli/sli4.h
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7bd5e23648b1..a7381c0088e4 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6223,6 +6223,14 @@ W:	http://www.broadcom.com
+ S:	Supported
+ F:	drivers/scsi/lpfc/
+ 
++EMULEX/BROADCOM EFCT FC/FCOE SCSI TARGET DRIVER
++M:	James Smart <james.smart@broadcom.com>
++M:	Ram Vegesna <ram.vegesna@broadcom.com>
++L:	linux-scsi@vger.kernel.org
++W:	http://www.broadcom.com
++S:	Supported
++F:	drivers/scsi/elx/
++
+ ENE CB710 FLASH CARD READER DRIVER
+ M:	Michał Mirosław <mirq-linux@rere.qmqm.pl>
+ S:	Maintained
+diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
+new file mode 100644
+index 000000000000..29d33becd334
+--- /dev/null
++++ b/drivers/scsi/elx/libefc_sli/sli4.c
+@@ -0,0 +1,26 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
++ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++ */
++
++/**
++ * All common (i.e. transport-independent) SLI-4 functions are implemented
++ * in this file.
++ */
++#include "sli4.h"
++
++struct sli4_asic_entry_t {
++	u32 rev_id;
++	u32 family;
++};
++
++static struct sli4_asic_entry_t sli4_asic_table[] = {
++	{ SLI4_ASIC_REV_B0, SLI4_ASIC_GEN_5},
++	{ SLI4_ASIC_REV_D0, SLI4_ASIC_GEN_5},
++	{ SLI4_ASIC_REV_A3, SLI4_ASIC_GEN_6},
++	{ SLI4_ASIC_REV_A0, SLI4_ASIC_GEN_6},
++	{ SLI4_ASIC_REV_A1, SLI4_ASIC_GEN_6},
++	{ SLI4_ASIC_REV_A3, SLI4_ASIC_GEN_6},
++	{ SLI4_ASIC_REV_A1, SLI4_ASIC_GEN_7},
++};
+diff --git a/drivers/scsi/elx/libefc_sli/sli4.h b/drivers/scsi/elx/libefc_sli/sli4.h
+new file mode 100644
+index 000000000000..1fad48643f94
+--- /dev/null
++++ b/drivers/scsi/elx/libefc_sli/sli4.h
+@@ -0,0 +1,252 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
++ * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
++ *
++ */
++
++/*
++ * All common SLI-4 structures and function prototypes.
++ */
++
++#ifndef _SLI4_H
++#define _SLI4_H
++
++#include <linux/pci.h>
++#include <linux/delay.h>
++#include "scsi/fc/fc_els.h"
++#include "scsi/fc/fc_fs.h"
++#include "../include/efc_common.h"
++
++/*************************************************************************
++ * Common SLI-4 register offsets and field definitions
++ */
++
++/* SLI_INTF - SLI Interface Definition Register */
++#define SLI4_INTF_REG			0x0058
++enum sli4_intf {
++	SLI4_INTF_REV_SHIFT		= 4,
++	SLI4_INTF_REV_MASK		= 0xF0,
++
++	SLI4_INTF_REV_S3		= 0x30,
++	SLI4_INTF_REV_S4		= 0x40,
++
++	SLI4_INTF_FAMILY_SHIFT		= 8,
++	SLI4_INTF_FAMILY_MASK		= 0x0F00,
++
++	SLI4_FAMILY_CHECK_ASIC_TYPE	= 0x0F00,
++
++	SLI4_INTF_IF_TYPE_SHIFT		= 12,
++	SLI4_INTF_IF_TYPE_MASK		= 0xF000,
++
++	SLI4_INTF_IF_TYPE_2		= 0x2000,
++	SLI4_INTF_IF_TYPE_6		= 0x6000,
++
++	SLI4_INTF_VALID_SHIFT		= 29,
++	SLI4_INTF_VALID_MASK		= 0xE0000000,
++
++	SLI4_INTF_VALID_VALUE		= 0xC0000000,
++};
++
++/* ASIC_ID - SLI ASIC Type and Revision Register */
++#define SLI4_ASIC_ID_REG	0x009c
++enum sli4_asic {
++	SLI4_ASIC_GEN_SHIFT	= 8,
++	SLI4_ASIC_GEN_MASK	= 0xFF00,
++	SLI4_ASIC_GEN_5		= 0x0B00,
++	SLI4_ASIC_GEN_6		= 0x0C00,
++	SLI4_ASIC_GEN_7		= 0x0D00,
++};
++
++enum sli4_acic_revisions {
++	SLI4_ASIC_REV_A0 = 0x00,
++	SLI4_ASIC_REV_A1 = 0x01,
++	SLI4_ASIC_REV_A2 = 0x02,
++	SLI4_ASIC_REV_A3 = 0x03,
++	SLI4_ASIC_REV_B0 = 0x10,
++	SLI4_ASIC_REV_B1 = 0x11,
++	SLI4_ASIC_REV_B2 = 0x12,
++	SLI4_ASIC_REV_C0 = 0x20,
++	SLI4_ASIC_REV_C1 = 0x21,
++	SLI4_ASIC_REV_C2 = 0x22,
++	SLI4_ASIC_REV_D0 = 0x30,
++};
++
++/* BMBX - Bootstrap Mailbox Register */
++#define SLI4_BMBX_REG		0x0160
++enum sli4_bmbx {
++	SLI4_BMBX_MASK_HI	= 0x3,
++	SLI4_BMBX_MASK_LO	= 0xf,
++	SLI4_BMBX_RDY		= (1 << 0),
++	SLI4_BMBX_HI		= (1 << 1),
++	SLI4_BMBX_SIZE		= 256,
++};
++
++#define SLI4_BMBX_WRITE_HI(r) \
++	((upper_32_bits(r) & ~SLI4_BMBX_MASK_HI) | SLI4_BMBX_HI)
++#define SLI4_BMBX_WRITE_LO(r) \
++	(((upper_32_bits(r) & SLI4_BMBX_MASK_HI) << 30) | \
++	 (((r) & ~SLI4_BMBX_MASK_LO) >> 2))
++
++/* SLIPORT_CONTROL - SLI Port Control Register */
++#define SLI4_PORT_CTRL_REG	0x0408
++enum sli4_port_ctrl {
++	SLI4_PORT_CTRL_IP	= (1 << 27),
++	SLI4_PORT_CTRL_IDIS	= (1 << 22),
++	SLI4_PORT_CTRL_FDD	= (1 << 31),
++};
++
++/* SLI4_SLIPORT_ERROR - SLI Port Error Register */
++#define SLI4_PORT_ERROR1	0x040c
++#define SLI4_PORT_ERROR2	0x0410
++
++/* EQCQ_DOORBELL - EQ and CQ Doorbell Register */
++#define SLI4_EQCQ_DB_REG	0x120
++enum sli4_eqcq_e {
++	SLI4_EQ_ID_LO_MASK	= 0x01FF,
++
++	SLI4_CQ_ID_LO_MASK	= 0x03FF,
++
++	SLI4_EQCQ_CI_EQ		= 0x0200,
++
++	SLI4_EQCQ_QT_EQ		= 0x00000400,
++	SLI4_EQCQ_QT_CQ		= 0x00000000,
++
++	SLI4_EQCQ_ID_HI_SHIFT	= 11,
++	SLI4_EQCQ_ID_HI_MASK	= 0xF800,
++
++	SLI4_EQCQ_NUM_SHIFT	= 16,
++	SLI4_EQCQ_NUM_MASK	= 0x1FFF0000,
++
++	SLI4_EQCQ_ARM		= 0x20000000,
++	SLI4_EQCQ_UNARM		= 0x00000000,
++};
++
++#define SLI4_EQ_DOORBELL(n, id, a) \
++	(((id) & SLI4_EQ_ID_LO_MASK) | SLI4_EQCQ_QT_EQ | \
++	 ((((id) >> 9) << SLI4_EQCQ_ID_HI_SHIFT) & SLI4_EQCQ_ID_HI_MASK) | \
++	 (((n) << SLI4_EQCQ_NUM_SHIFT) & SLI4_EQCQ_NUM_MASK) | \
++	 (a) | SLI4_EQCQ_CI_EQ)
++
++#define SLI4_CQ_DOORBELL(n, id, a) \
++	(((id) & SLI4_CQ_ID_LO_MASK) | SLI4_EQCQ_QT_CQ | \
++	 ((((id) >> 10) << SLI4_EQCQ_ID_HI_SHIFT) & SLI4_EQCQ_ID_HI_MASK) | \
++	 (((n) << SLI4_EQCQ_NUM_SHIFT) & SLI4_EQCQ_NUM_MASK) | (a))
++
++/* EQ_DOORBELL - EQ Doorbell Register for IF_TYPE = 6*/
++#define SLI4_IF6_EQ_DB_REG	0x120
++enum sli4_eq_e {
++	SLI4_IF6_EQ_ID_MASK	= 0x0FFF,
++
++	SLI4_IF6_EQ_NUM_SHIFT	= 16,
++	SLI4_IF6_EQ_NUM_MASK	= 0x1FFF0000,
++};
++
++#define SLI4_IF6_EQ_DOORBELL(n, id, a) \
++	(((id) & SLI4_IF6_EQ_ID_MASK) | \
++	 (((n) << SLI4_IF6_EQ_NUM_SHIFT) & SLI4_IF6_EQ_NUM_MASK) | (a))
++
++/* CQ_DOORBELL - CQ Doorbell Register for IF_TYPE = 6 */
++#define SLI4_IF6_CQ_DB_REG	0xC0
++enum sli4_cq_e {
++	SLI4_IF6_CQ_ID_MASK	= 0xFFFF,
++
++	SLI4_IF6_CQ_NUM_SHIFT	= 16,
++	SLI4_IF6_CQ_NUM_MASK	= 0x1FFF0000,
++};
++
++#define SLI4_IF6_CQ_DOORBELL(n, id, a) \
++	(((id) & SLI4_IF6_CQ_ID_MASK) | \
++	 (((n) << SLI4_IF6_CQ_NUM_SHIFT) & SLI4_IF6_CQ_NUM_MASK) | (a))
++
++/* MQ_DOORBELL - MQ Doorbell Register */
++#define SLI4_MQ_DB_REG		0x0140
++#define SLI4_IF6_MQ_DB_REG	0x0160
++enum sli4_mq_e {
++	SLI4_MQ_ID_MASK		= 0xFFFF,
++
++	SLI4_MQ_NUM_SHIFT	= 16,
++	SLI4_MQ_NUM_MASK	= 0x3FFF0000,
++};
++
++#define SLI4_MQ_DOORBELL(n, i) \
++	(((i) & SLI4_MQ_ID_MASK) | \
++	 (((n) << SLI4_MQ_NUM_SHIFT) & SLI4_MQ_NUM_MASK))
++
++/* RQ_DOORBELL - RQ Doorbell Register */
++#define SLI4_RQ_DB_REG		0x0a0
++#define SLI4_IF6_RQ_DB_REG	0x0080
++enum sli4_rq_e {
++	SLI4_RQ_DB_ID_MASK	= 0xFFFF,
++
++	SLI4_RQ_DB_NUM_SHIFT	= 16,
++	SLI4_RQ_DB_NUM_MASK	= 0x3FFF0000,
++};
++
++#define SLI4_RQ_DOORBELL(n, i) \
++	(((i) & SLI4_RQ_DB_ID_MASK) | \
++	 (((n) << SLI4_RQ_DB_NUM_SHIFT) & SLI4_RQ_DB_NUM_MASK))
++
++/* WQ_DOORBELL - WQ Doorbell Register */
++#define SLI4_IO_WQ_DB_REG	0x040
++#define SLI4_IF6_WQ_DB_REG	0x040
++enum sli4_wq_e {
++	SLI4_WQ_ID_MASK		= 0xFFFF,
++
++	SLI4_WQ_IDX_SHIFT	= 16,
++	SLI4_WQ_IDX_MASK	= 0xFF0000,
++
++	SLI4_WQ_NUM_SHIFT	= 24,
++	SLI4_WQ_NUM_MASK	= 0x0FF00000,
++};
++
++#define SLI4_WQ_DOORBELL(n, x, i) \
++	(((i) & SLI4_WQ_ID_MASK) | \
++	 (((x) << SLI4_WQ_IDX_SHIFT) & SLI4_WQ_IDX_MASK) | \
++	 (((n) << SLI4_WQ_NUM_SHIFT) & SLI4_WQ_NUM_MASK))
++
++/* SLIPORT_SEMAPHORE - SLI Port Host and Port Status Register */
++#define SLI4_PORT_SEMP_REG		0x0400
++enum sli4_port_sem_e {
++	SLI4_PORT_SEMP_ERR_MASK		= 0xF000,
++	SLI4_PORT_SEMP_UNRECOV_ERR	= 0xF000,
++};
++
++/* SLIPORT_STATUS - SLI Port Status Register */
++#define SLI4_PORT_STATUS_REGOFF		0x0404
++enum sli4_port_status {
++	SLI4_PORT_STATUS_FDP		= (1 << 21),
++	SLI4_PORT_STATUS_RDY		= (1 << 23),
++	SLI4_PORT_STATUS_RN		= (1 << 24),
++	SLI4_PORT_STATUS_DIP		= (1 << 25),
++	SLI4_PORT_STATUS_OTI		= (1 << 29),
++	SLI4_PORT_STATUS_ERR		= (1 << 31),
++};
++
++#define SLI4_PHYDEV_CTRL_REG		0x0414
++#define SLI4_PHYDEV_CTRL_FRST		(1 << 1)
++#define SLI4_PHYDEV_CTRL_DD		(1 << 2)
++
++/* Register name enums */
++enum sli4_regname_en {
++	SLI4_REG_BMBX,
++	SLI4_REG_EQ_DOORBELL,
++	SLI4_REG_CQ_DOORBELL,
++	SLI4_REG_RQ_DOORBELL,
++	SLI4_REG_IO_WQ_DOORBELL,
++	SLI4_REG_MQ_DOORBELL,
++	SLI4_REG_PHYSDEV_CONTROL,
++	SLI4_REG_PORT_CONTROL,
++	SLI4_REG_PORT_ERROR1,
++	SLI4_REG_PORT_ERROR2,
++	SLI4_REG_PORT_SEMAPHORE,
++	SLI4_REG_PORT_STATUS,
++	SLI4_REG_UNKWOWN			/* must be last */
++};
++
++struct sli4_reg {
++	u32	rset;
++	u32	off;
++};
++
++#endif /* !_SLI4_H */
 -- 
 2.16.4
 
