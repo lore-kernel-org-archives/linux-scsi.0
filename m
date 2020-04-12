@@ -2,289 +2,289 @@ Return-Path: <SRS0=2Pbo=54=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1997C2BBFD
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 12:43:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 386FAC2BA2B
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 15:33:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA5A9206E9
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 12:43:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kJ+496Ig";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="dpyvLMJG"
+	by mail.kernel.org (Postfix) with ESMTP id 057BE206C0
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Apr 2020 15:33:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726843AbgDLMnJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 12 Apr 2020 08:43:09 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:30156 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725903AbgDLMnJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Apr 2020 08:43:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586695388; x=1618231388;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=ofgcsPUkUOrLNBw7zZlKop2j/AAuyowMH/feYE+2AxU=;
-  b=kJ+496IgQzVLDqvK1MbKwLHK2LteUmhc+qzpCa/o6gMW+LQChmyvr/9+
-   HVRpnX4Dvi/9LV2T8NTuFEeAOWUeI6Qwh3bKMgXWYkXvUwPQalFFYopuO
-   CQ6DBXtMi0/FVWcU+TVdXVzpY5CvnBWTKYwhHI/nA/9RiEhq8pOW0o2X3
-   b4Qw4B5HsQAHW33A7ODIjK0/5pg3AAYs65McjnLT5t1opN6w0yJok3MPA
-   StaGt1c0hyzbApsn/zATnL+QjzgMhhlsd7pVwPZsvPIE4cxWclXvR+Zd4
-   PfbFuelbH/Wn/+2/m4v1MPjxDAlMB0fGB3JzyWbpZSmBGXAHRaF1sqka1
-   Q==;
-IronPort-SDR: DLSojU76x+COXJxcFqRsTle2vKd5UfiWxjsezrjwZNqto2thqtLcKfDK+XPx0spN/41lPqh9oK
- omkIbqNIr9rquw1nG7Ns4c+Cm1tdgHreYR8ywKmwtBjFB64StbbYqR1dd7Q2AdofrSUplK7/Km
- 7+8WrWyjNEbArLkI7hQEolG7VzwLU0naILlfwbQZTBPlAZXX3NbAQwUXs9U300+YsHtAaweOjr
- qKjhBLtqhiVSvJWcFIOGaa31Ruhbz40idybqS4+BVj0vNCPv6dWFJv6NiWM0fObEAvptEUeX5+
- 2Q4=
-X-IronPort-AV: E=Sophos;i="5.72,374,1580745600"; 
-   d="scan'208";a="135155359"
-Received: from mail-co1nam11lp2177.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.177])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Apr 2020 20:43:07 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cl+HA8jec2mG4PM/G6PEEB5DqlmiWXCMEgAhoAkz5tUaHfo0D9ID/hVQVJ4+Ku9vYufZUsrEf322jlP2hF5zySVZ0hPwsjuW7/kAwAx3eFwWKixIBmc8KqJe3hk8uY8pJKLjh7dXpx0+ITGFRQ8lWNcTRn1ciJuSIDg3Kifr+ggwlAL2w2fcf7ASsOn7pspgsGEaB29b18RqhdiwtiZ4c3nCJAJVWBa6hQmnYC6o7zE1mIorGqK8B3WSR68H+RnFdYRMawdVUbcwFf6frPMA6vHYYekYB0nPbz0Cg6mhLkTamWjPZB3dLKcK0BAxBrY5PCLwpIyvzb8eYni3EkxBOA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zNHEgWnuOe8sF8sYAuxXue1Y0L5gwWhRdOKvl8YvrHM=;
- b=nRzzluLzpvaLAFxr/1nOZqIfbPk8o5xCjJukcgdy4wI9OWCDCKVPLORzwF71Z1cyrFT95HntBXyPC+M2EBGrnLCNtdgvJ1PHzI3s+7aPqV7aglgBVlO1hsTyyIPCuosHNhPddrS0fDWXoEbFVibkMxZbFUahGh9+iw745IOGnbK7hkx8ft3m2pVf9y5uTEl6OfuAYYSKSyT6400He+yz8pRv7TVXb0hkWoSM1l9P15gARLN7rU3Q5H6l6DWjGI3wl88ney1ovA5cyOF7nLW8te3HtGVgVEpAlAHyx9YvLR+hbA/sDYbA5iK5YhH6Y//TPDem+qhUHSbfjRXEtPH0GQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zNHEgWnuOe8sF8sYAuxXue1Y0L5gwWhRdOKvl8YvrHM=;
- b=dpyvLMJGsKtLw7jepukx+kqEPb/zIUMuzFCBQa4dT+p49T4Si8+vVMV4/L49Az7XQaThsgv4q3g4V/kLwJdamTfANEcNJNK+r1mdLSXjqdHrcBmu7jr6Iqbw5hxCozRPaN8+OeWTUErgpYQe6j5ZvgCMvlIkr1Y3gA7Jux9+fNk=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4207.namprd04.prod.outlook.com (2603:10b6:805:32::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2900.26; Sun, 12 Apr
- 2020 12:43:03 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b%5]) with mapi id 15.20.2900.015; Sun, 12 Apr 2020
- 12:43:03 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Asutosh Das <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1 1/3] scsi: ufs: add write booster feature support
-Thread-Topic: [PATCH v1 1/3] scsi: ufs: add write booster feature support
-Thread-Index: AQHWDe+W7UlEmvGhl0KH0X2uPaojCKh1ZZgw
-Date:   Sun, 12 Apr 2020 12:43:03 +0000
-Message-ID: <SN6PR04MB4640E5A6BAAD89DDC3F2FFE0FCDC0@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <cover.1586374414.git.asutoshd@codeaurora.org>
- <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
-In-Reply-To: <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 7815af7d-9aeb-46d1-8ebe-08d7dedf0ae7
-x-ms-traffictypediagnostic: SN6PR04MB4207:
-x-microsoft-antispam-prvs: <SN6PR04MB4207FF4D9876AACF9985514CFCDC0@SN6PR04MB4207.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4714;
-x-forefront-prvs: 0371762FE7
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(346002)(136003)(376002)(396003)(366004)(39860400002)(54906003)(186003)(33656002)(8676002)(6506007)(81156014)(71200400001)(8936002)(110136005)(7696005)(478600001)(2906002)(26005)(52536014)(55016002)(7416002)(66946007)(66476007)(66556008)(4326008)(64756008)(66446008)(76116006)(9686003)(86362001)(316002)(5660300002);DIR:OUT;SFP:1102;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: akrARh80V2aff4XkROrfNC+G3qXScBZ5v6po2Y8Lmx06uJhE0QpHLKDMA0jDdqcWUWkBR0KXg3mRrcGvKVf3KeCWqLQmc+E0ZUqFvW1S3aqoERrLWB1GtJF9mj7VztRA4NQGWwAIEY1pqLfgZAzFDpLOGudmAgB/6jtUdOTdfFxQFEnSBxEE3hw/68fjy8M2OEyLTwrLiIsS5xouZqGWJaL5enMBgo4rlxF+HOEMfNgcgLb73yE914/MIoCgFsEeI1vD5tIpkJycgGEEajnuQ2mQ/OCRvLrdGfst4zI9aCCjrpGQsdR8+IiOP+LoC/SxkpSWPxSPDlTrKSfjrG7dQCfswTgspXkq7NNpd2PlukycjV0uMkwmN40ekANoIn1cRv1bedc2C4JxuWrEdZ1kJqLHt3wFnm/BxBhkvlH0yDkYXg/dSLYUcNWliO0Oy8qY
-x-ms-exchange-antispam-messagedata: AbjWdcFook4ubuaxrEEHHV9Ec/cXGx2gCCNkbxRA9O9tXeECg2Gvy57JBRR+mP5q9bdGyh1sVccG5RIcI6g7V2jiyoixk/igafpNETxGBYEdrS5ttJXRjPRzx1cTT3OOh1qdjYy7zH2V3H1c9Oav9g==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727063AbgDLPdR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Apr 2020 11:33:17 -0400
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:22480 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726843AbgDLPdQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 12 Apr 2020 11:33:16 -0400
+X-IronPort-AV: E=Sophos;i="5.72,374,1580770800"; 
+   d="scan'208";a="444884873"
+Received: from abo-173-121-68.mrs.modulonet.fr (HELO hadrien) ([85.68.121.173])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Apr 2020 17:33:14 +0200
+Date:   Sun, 12 Apr 2020 17:33:13 +0200 (CEST)
+From:   Julia Lawall <julia.lawall@inria.fr>
+X-X-Sender: jll@hadrien
+To:     James Smart <jsmart2021@gmail.com>
+cc:     linux-scsi@vger.kernel.org, dwagner@suse.de, maier@linux.ibm.com,
+        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
+        rdunlap@infradead.org, hare@suse.de,
+        James Smart <jsmart2021@gmail.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>, kbuild@lists.01.org
+Subject: [PATCH] elx: efct: fix zalloc-simple.cocci warnings
+Message-ID: <alpine.DEB.2.21.2004121731450.2419@hadrien>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7815af7d-9aeb-46d1-8ebe-08d7dedf0ae7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Apr 2020 12:43:03.6496
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: uYCAlYnpLNN5igPgxNcQ2D5BY0b9e4Q+PrJV8dksLLRmHGeut4ZfjImMIe2mvQp067CJ1u396YfPYfJV6xNutA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4207
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+From: kbuild test robot <lkp@intel.com>
 
->=20
->  enum ufs_desc_def_size {
-> -       QUERY_DESC_DEVICE_DEF_SIZE              =3D 0x40,
-> +       QUERY_DESC_DEVICE_DEF_SIZE              =3D 0x59,
->         QUERY_DESC_CONFIGURATION_DEF_SIZE       =3D 0x90,
->         QUERY_DESC_UNIT_DEF_SIZE                =3D 0x23,
-Might as well update the unit descriptor size - its 0x2D now,
-As you are adding its new fields
+Use kzalloc instead of kmalloc/memset.
 
->         QUERY_DESC_INTERCONNECT_DEF_SIZE        =3D 0x06,
-> @@ -219,6 +226,7 @@ enum unit_desc_param {
->         UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT        =3D 0x18,
->         UNIT_DESC_PARAM_CTX_CAPABILITIES        =3D 0x20,
->         UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1      =3D 0x22,
-> +       UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS      =3D 0x29,
->  };
->=20
->  /* Device descriptor parameters offsets in bytes*/
-> @@ -258,6 +266,9 @@ enum device_desc_param {
->         DEVICE_DESC_PARAM_PSA_MAX_DATA          =3D 0x25,
->         DEVICE_DESC_PARAM_PSA_TMT               =3D 0x29,
->         DEVICE_DESC_PARAM_PRDCT_REV             =3D 0x2A,
-> +       DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP   =3D 0x4F,
-DEVICE_DESC_PARAM_WB_USER_TYPE               =3D 0x53,
+Generated by: scripts/coccinelle/api/alloc/zalloc-simple.cocci
 
-> +       DEVICE_DESC_PARAM_WB_TYPE               =3D 0x54,
-> +       DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS =3D 0x55,
->  };
->=20
+CC: James Smart <jsmart2021@gmail.com>
+Signed-off-by: kbuild test robot <lkp@intel.com>
+Signed-off-by: Julia Lawall <julia.lawall@inria.fr>
+---
 
+url:    https://github.com/0day-ci/linux/commits/James-Smart/efct-Broadcom-Emulex-FC-Target-driver/20200412-114125
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+:::::: branch date: 4 hours ago
+:::::: commit date: 4 hours ago
 
-> +enum ufs_dev_wb_buf_user_cap_config {
-> +       UFS_WB_BUFF_PRESERVE_USER_SPACE =3D 1,
-> +       UFS_WB_BUFF_USER_SPACE_RED_EN =3D 2,
-> +};
-Maybe better to follow the spec here:
-Reduced - 0
-Preserve - 1
+ efct_hw.c |   61 +++++++++++++++++--------------------------------------------
+ 1 file changed, 17 insertions(+), 44 deletions(-)
 
-> +static inline void ufshcd_wb_config(struct ufs_hba *hba)
-> +{
-> +       int ret;
-> +
-> +       if (!ufshcd_wb_sup(hba))
-> +               return;
-> +
-> +       ret =3D ufshcd_wb_ctrl(hba, true);
-Why are you setting WB on init?
+--- a/drivers/scsi/elx/efct/efct_hw.c
++++ b/drivers/scsi/elx/efct/efct_hw.c
+@@ -529,15 +529,12 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 		}
 
-> +       if (ret)
-> +               dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__,=
- ret);
-> +       else
-> +               dev_info(hba->dev, "%s: Write Booster Configured\n", __fu=
-nc__);
-> +       ret =3D ufshcd_wb_toggle_flush_during_h8(hba, true);
-> +       if (ret)
-> +               dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\=
-n",
-> +                       __func__, ret);
-> +       ufshcd_wb_toggle_flush(hba, true);
-Why set explicit flush on init?
+ 		/* Create WQE buffs for IO */
+-		hw->wqe_buffs = kmalloc((hw->config.n_io *
+-					     hw->sli.wqe_size),
+-					     GFP_ATOMIC);
++		hw->wqe_buffs = kzalloc((hw->config.n_io * hw->sli.wqe_size),
++					GFP_ATOMIC);
+ 		if (!hw->wqe_buffs) {
+ 			kfree(hw->io);
+ 			return EFCT_HW_RTN_NO_MEMORY;
+ 		}
+-		memset(hw->wqe_buffs, 0, (hw->config.n_io *
+-					hw->sli.wqe_size));
 
+ 	} else {
+ 		/* re-use existing IOs, including SGLs */
+@@ -3119,11 +3116,9 @@ efct_hw_get_sfp(struct efct_hw *hw, u16
+ 	struct efc_dma *dma;
 
-> +
-> +
-> +static bool ufshcd_wb_keep_vcc_on(struct ufs_hba *hba)
-> +{
-> +       int ret;
-> +       u32 cur_buf, avail_buf;
-> +
-> +       if (!ufshcd_wb_sup(hba))
-> +               return false;
-> +       /*
-> +        * The ufs device needs the vcc to be ON to flush.
-> +        * With user-space reduction enabled, it's enough to enable flush
-> +        * by checking only the available buffer. The threshold
-> +        * defined here is > 90% full.
-> +        * With user-space preserved enabled, the current-buffer
-> +        * should be checked too because the wb buffer size can reduce
-> +        * when disk tends to be full. This info is provided by current
-> +        * buffer (dCurrentWriteBoosterBufferSize). There's no point in
-> +        * keeping vcc on when current buffer is empty.
-> +        */
-> +       ret =3D ufshcd_query_attr_retry(hba,
-> UPIU_QUERY_OPCODE_READ_ATTR,
-> +                                     QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE,
-> +                                     0, 0, &avail_buf);
-> +       if (ret) {
-> +               dev_warn(hba->dev, "%s dAvailableWriteBoosterBufferSize r=
-ead
-> failed %d\n",
-> +                        __func__, ret);
-> +               return false;
-> +       }
-> +
-> +       ret =3D ufshcd_vops_get_user_cap_mode(hba);
-The Preserve User Space mode should be read from -=20
-bWriteBoosterBufferPreserveUserSpaceEn of the device descriptor - 0ffset 0x=
-53.
-The driver should have no judgement here.
-Based on what is configured, better to attach a helper pointer that will pe=
-rform the below check,
-e.g. ufshcd_wb_preserve_keep_vcc_on() and ufshcd_wb_reduced_keep_vcc_on().
-Which will simplify the logic here and make it much more readable.
-This makes the preparations you made for ufshcd_vops_get_user_cap_mode,
-and your second patch unneeded.
+ 	/* mbxdata holds the header of the command */
+-	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	mbxdata = kzalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
+ 	if (!mbxdata)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+-
+-	memset(mbxdata, 0, SLI4_BMBX_SIZE);
+ 	/*
+ 	 * cb_arg holds the data that will be passed to the callback on
+ 	 * completion
+@@ -3226,12 +3221,10 @@ efct_hw_get_temperature(struct efct_hw *
+ 	struct efct_hw_temp_cb_arg *cb_arg;
+ 	u8 *mbxdata;
 
+-	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	mbxdata = kzalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
+ 	if (!mbxdata)
+ 		return EFCT_HW_RTN_NO_MEMORY;
 
->  /**
->   * ufshcd_exception_event_handler - handle exceptions raised by device
->   * @work: pointer to work data
-> @@ -6632,6 +6829,28 @@ static int ufs_get_device_desc(struct ufs_hba
-> *hba)
->                                       desc_buf[DEVICE_DESC_PARAM_SPEC_VER=
- + 1];
->=20
->         model_index =3D desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
-> +       /* Enable WB only for UFS-3.1 */
-> +       if (dev_info->wspecversion >=3D 0x310) {
-> +               hba->dev_info.d_ext_ufs_feature_sup =3D
-> +                       get_unaligned_be32(desc_buf +
-> +                               DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
-> +               /*
-> +                * WB may be supported but not configured while provision=
-ing.
-> +                * The spec says, in dedicated wb buffer mode,
-> +                * a max of 1 lun would have wb buffer configured.
-> +                * Now only shared buffer mode is supported.
-> +                */
-> +               hba->dev_info.b_wb_buffer_type =3D
-> +                       desc_buf[DEVICE_DESC_PARAM_WB_TYPE];
-> +
-> +               if (!hba->dev_info.b_wb_buffer_type)
-> +                       goto skip_alloc_unit;
-> +               hba->dev_info.d_wb_alloc_units =3D
-> +                       get_unaligned_be32(desc_buf +
-> +                               DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
-> +       }
-Maybe pack the above code in a wb_probe() designated helper,
-which will establish if WB is supported or not.
-If one of your validation tests fails, maybe you can just=20
-hba->caps &=3D ~UFSHCD_CAP_WB_EN;
-which will further simplify your ufshcd_wb_sup()
+-	memset(mbxdata, 0, SLI4_BMBX_SIZE);
+-
+ 	cb_arg = kmalloc(sizeof(*cb_arg), GFP_KERNEL);
+ 	if (!cb_arg) {
+ 		kfree(mbxdata);
+@@ -3382,12 +3375,10 @@ efct_hw_get_link_stats(struct efct_hw *h
+ 	struct efct_hw_link_stat_cb_arg *cb_arg;
+ 	u8 *mbxdata;
 
-=20
->         if ((req_dev_pwr_mode !=3D hba->curr_dev_pwr_mode) &&
-> -            ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) |=
-|
-> -              !ufshcd_is_runtime_pm(pm_op))) {
-> +           ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
-> +            !ufshcd_is_runtime_pm(pm_op))) {
-Redundant space removal
+-	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	mbxdata = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!mbxdata)
+ 		return EFCT_HW_RTN_NO_MEMORY;
 
+-	memset(mbxdata, 0, SLI4_BMBX_SIZE);
+-
+ 	cb_arg = kmalloc(sizeof(*cb_arg), GFP_ATOMIC);
+ 	if (!cb_arg) {
+ 		kfree(mbxdata);
+@@ -3481,12 +3472,10 @@ efct_hw_get_host_stats(struct efct_hw *h
+ 	struct efct_hw_host_stat_cb_arg *cb_arg;
+ 	u8 *mbxdata;
 
+-	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	mbxdata = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!mbxdata)
+ 		return EFCT_HW_RTN_NO_MEMORY;
 
-Thanks,
-Avri
+-	memset(mbxdata, 0, SLI4_BMBX_SIZE);
+-
+ 	cb_arg = kmalloc(sizeof(*cb_arg), GFP_ATOMIC);
+ 	if (!cb_arg) {
+ 		kfree(mbxdata);
+@@ -3879,11 +3868,10 @@ efct_hw_async_call(struct efct_hw *hw,
+ 	 * we need this to be persistent as the mbox cmd submission may be
+ 	 * queued and executed later execution.
+ 	 */
+-	ctx = kmalloc(sizeof(*ctx), GFP_ATOMIC);
++	ctx = kzalloc(sizeof(*ctx), GFP_ATOMIC);
+ 	if (!ctx)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(ctx, 0, sizeof(*ctx));
+ 	ctx->callback = callback;
+ 	ctx->arg = arg;
+
+@@ -3974,14 +3962,13 @@ efct_hw_port_free_unreg_vpi(struct efc_s
+
+ 	/* Allocate memory and send unreg_vpi */
+ 	if (!data) {
+-		data = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++		data = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 		if (!data) {
+ 			efct_hw_port_free_resources(sport,
+ 						    EFC_HW_PORT_FREE_FAIL,
+ 						    data);
+ 			return;
+ 		}
+-		memset(data, 0, SLI4_BMBX_SIZE);
+ 	}
+
+ 	rc = sli_cmd_unreg_vpi(&hw->sli, data, SLI4_BMBX_SIZE,
+@@ -4178,12 +4165,11 @@ efct_hw_port_alloc(struct efc *efc, stru
+ 	}
+
+ 	if (domain) {
+-		cmd = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++		cmd = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 		if (!cmd) {
+ 			rc = EFCT_HW_RTN_NO_MEMORY;
+ 			goto efct_hw_port_alloc_out;
+ 		}
+-		memset(cmd, 0, SLI4_BMBX_SIZE);
+
+ 		/*
+ 		 * If the WWPN is NULL, fetch the default
+@@ -4260,11 +4246,10 @@ efct_hw_port_attach(struct efc *efc, str
+ 		return EFCT_HW_RTN_ERROR;
+ 	}
+
+-	buf = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	buf = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!buf)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(buf, 0, SLI4_BMBX_SIZE);
+ 	sport->fc_id = fc_id;
+
+ 	rc = sli_cmd_reg_vpi(&hw->sli, buf, SLI4_BMBX_SIZE, sport->fc_id,
+@@ -4506,12 +4491,10 @@ efct_hw_domain_alloc(struct efc *efc, st
+ 		return EFCT_HW_RTN_ERROR;
+ 	}
+
+-	cmd = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	cmd = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!cmd)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(cmd, 0, SLI4_BMBX_SIZE);
+-
+ 	/* allocate memory for the service parameters */
+ 	domain->dma.size = 112;
+ 	domain->dma.virt = dma_alloc_coherent(&efct->pcidev->dev,
+@@ -4592,11 +4575,10 @@ efct_hw_domain_attach(struct efc *efc,
+ 		return EFCT_HW_RTN_ERROR;
+ 	}
+
+-	buf = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	buf = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!buf)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(buf, 0, SLI4_BMBX_SIZE);
+ 	domain->sport->fc_id = fc_id;
+
+ 	rc = sli_cmd_reg_vfi(&hw->sli, buf, SLI4_BMBX_SIZE, domain->indicator,
+@@ -4824,11 +4806,9 @@ efct_hw_node_attach(struct efc *efc, str
+ 		return EFCT_HW_RTN_ERROR;
+ 	}
+
+-	buf = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	buf = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!buf)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+-
+-	memset(buf, 0, SLI4_BMBX_SIZE);
+ 	/*
+ 	 * If the attach count is non-zero, this RPI has already been reg'd.
+ 	 * Otherwise, register the RPI
+@@ -5000,11 +4980,10 @@ efct_hw_node_detach(struct efc *efc, str
+ 		if (!rnode->attached)
+ 			return EFCT_HW_RTN_SUCCESS_SYNC;
+
+-		buf = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++		buf = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 		if (!buf)
+ 			return EFCT_HW_RTN_NO_MEMORY;
+
+-		memset(buf, 0, SLI4_BMBX_SIZE);
+ 		count = atomic_sub_return(1, &hw->rpi_ref[index].rpi_count);
+ 		count++;
+ 		if (count <= 1) {
+@@ -5093,12 +5072,10 @@ efct_hw_node_free_all(struct efct_hw *hw
+ 		return EFCT_HW_RTN_ERROR;
+ 	}
+
+-	buf = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
++	buf = kzalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+ 	if (!buf)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(buf, 0, SLI4_BMBX_SIZE);
+-
+ 	if (!sli_cmd_unreg_rpi(&hw->sli, buf, SLI4_BMBX_SIZE, 0xffff,
+ 			      SLI_RSRC_FCFI, U32_MAX))
+ 		rc = efct_hw_command(hw, buf, EFCT_CMD_NOWAIT,
+@@ -5159,12 +5136,10 @@ efct_hw_get_nvparms(struct efct_hw *hw,
+ 	enum efct_hw_rtn rc = EFCT_HW_RTN_SUCCESS;
+
+ 	/* mbxdata holds the header of the command */
+-	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	mbxdata = kzalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
+ 	if (!mbxdata)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(mbxdata, 0, SLI4_BMBX_SIZE);
+-
+ 	/*
+ 	 * cb_arg holds the data that will be passed to the callback on
+ 	 * completion
+@@ -5303,12 +5278,10 @@ efct_hw_firmware_write_sli4_intf_2(struc
+ 	struct efct_hw_fw_wr_cb_arg *cb_arg;
+ 	int noc = 0;
+
+-	mbxdata = kmalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
++	mbxdata = kzalloc(SLI4_BMBX_SIZE, GFP_KERNEL);
+ 	if (!mbxdata)
+ 		return EFCT_HW_RTN_NO_MEMORY;
+
+-	memset(mbxdata, 0, SLI4_BMBX_SIZE);
+-
+ 	cb_arg = kmalloc(sizeof(*cb_arg), GFP_KERNEL);
+ 	if (!cb_arg) {
+ 		kfree(mbxdata);
