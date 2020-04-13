@@ -2,139 +2,105 @@ Return-Path: <SRS0=9ymf=55=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 539E3C2BA2B
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 21:53:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 764DAC2BA2B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 22:15:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D2DD20732
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 21:53:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YiSTF1it"
+	by mail.kernel.org (Postfix) with ESMTP id 5ADCB20735
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 22:15:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389332AbgDMVxi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Apr 2020 17:53:38 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:47126 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2389285AbgDMVwp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Apr 2020 17:52:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586814763;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wxqewLP4iDn0WQn56N4JoZnVO/VnkSCHun6WFS8TA58=;
-        b=YiSTF1itxBYaI5wO7TETGkIrXeUy0/LoIQiEcy0yHumBGtM7y7vGK0BTK2iA+/5YtSFH3M
-        Avs7PzTwX2BPPsVBWyUAm82FkGAXby4fAu8PPiA0mSHIhVnopp13nPjzlntDXtjpLzyiiF
-        du4UJa47mfgu+2257AjBKlpKj4wgUCw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-238-R_QYnAHVPD67nMQL-Amo0w-1; Mon, 13 Apr 2020 17:52:38 -0400
-X-MC-Unique: R_QYnAHVPD67nMQL-Amo0w-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F1B928018AA;
-        Mon, 13 Apr 2020 21:52:32 +0000 (UTC)
-Received: from llong.remote.csb (ovpn-115-28.rdu2.redhat.com [10.10.115.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id AB5E15C1B2;
-        Mon, 13 Apr 2020 21:52:24 +0000 (UTC)
-Subject: Re: [PATCH 2/2] crypto: Remove unnecessary memzero_explicit()
-To:     Joe Perches <joe@perches.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>
-Cc:     linux-mm@kvack.org, keyrings@vger.kernel.org,
-        linux-kernel@vger.kernel.org, x86@kernel.org,
-        linux-crypto@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-References: <20200413211550.8307-1-longman@redhat.com>
- <20200413211550.8307-3-longman@redhat.com>
- <efd6ceb1f182aa7364e9706422768a1c1335aee4.camel@perches.com>
-From:   Waiman Long <longman@redhat.com>
-Organization: Red Hat
-Message-ID: <7e13a94b-2e92-850f-33f7-0f42cfcd9009@redhat.com>
-Date:   Mon, 13 Apr 2020 17:52:24 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S2389505AbgDMWPu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Apr 2020 18:15:50 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:42126 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727871AbgDMWPt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Apr 2020 18:15:49 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id D5E8520425A;
+        Tue, 14 Apr 2020 00:15:45 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id bXtObVqnq5wF; Tue, 14 Apr 2020 00:15:40 +0200 (CEST)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 0C172204155;
+        Tue, 14 Apr 2020 00:15:38 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH] scsi: sg: fix memory leak in sg_build_indirect
+To:     Li Bin <huawei.libin@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xiexiuqi@huawei.com
+References: <1586777552-17524-1-git-send-email-huawei.libin@huawei.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <8a11ba5c-3836-0d95-7f70-7dc32bda95c1@interlog.com>
+Date:   Mon, 13 Apr 2020 18:15:29 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <efd6ceb1f182aa7364e9706422768a1c1335aee4.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1586777552-17524-1-git-send-email-huawei.libin@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/13/20 5:31 PM, Joe Perches wrote:
-> On Mon, 2020-04-13 at 17:15 -0400, Waiman Long wrote:
->> Since kfree_sensitive() will do an implicit memzero_explicit(), there
->> is no need to call memzero_explicit() before it. Eliminate those
->> memzero_explicit() and simplify the call sites.
-> 2 bits of trivia:
->
->> diff --git a/drivers/crypto/allwinner/sun8i-ce/sun8i-ce-cipher.c b/drivers/crypto/allwinner/sun8i-ce/sun8i-ce-cipher.c
-> []
->> @@ -391,10 +388,7 @@ int sun8i_ce_aes_setkey(struct crypto_skcipher *tfm, const u8 *key,
->>  		dev_dbg(ce->dev, "ERROR: Invalid keylen %u\n", keylen);
->>  		return -EINVAL;
->>  	}
->> -	if (op->key) {
->> -		memzero_explicit(op->key, op->keylen);
->> -		kfree(op->key);
->> -	}
->> +	kfree_sensitive(op->key);
->>  	op->keylen = keylen;
->>  	op->key = kmemdup(key, keylen, GFP_KERNEL | GFP_DMA);
->>  	if (!op->key)
-> It might be a defect to set op->keylen before the kmemdup succeeds.
-It could be. I can move it down after the op->key check.
->> @@ -416,10 +410,7 @@ int sun8i_ce_des3_setkey(struct crypto_skcipher *tfm, const u8 *key,
->>  	if (err)
->>  		return err;
->>  
->> -	if (op->key) {
->> -		memzero_explicit(op->key, op->keylen);
->> -		kfree(op->key);
->> -	}
->> +	free_sensitive(op->key, op->keylen);
-> Why not kfree_sensitive(op->key) ?
+On 2020-04-13 7:32 a.m., Li Bin wrote:
+> Fix a memory leak when there have failed, that we should free the pages
+> under the condition rem_sz > 0.
 
-Oh, it is a bug. I will send out v2 to fix that.
+May I paraphrase the above:
+"Fix a memory leak that occurs when alloc_pages() succeeds several
+  times before failing. This condition is noticed when rem_sz > 0."
 
-Thanks for spotting it.
+> 
+> Signed-off-by: Li Bin <huawei.libin@huawei.com>
+> ---
+>   drivers/scsi/sg.c | 6 +++++-
+>   1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 4e6af592..8441ac5 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -1959,8 +1959,12 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
 
-Cheers,
-Longman
+It is the sg_build_indirect() function not sg_compat_ioctl() as suggested
+above by git. Can be get a replacement for git :-)
+
+>   			 k, rem_sz));
+>   
+>   	schp->bufflen = blk_size;
+> -	if (rem_sz > 0)	/* must have failed */
+> +	if (rem_sz > 0)	{ /* must have failed */
+> +		for (i = 0; i < k; i++)
+> +			__free_pages(schp->pages[i], order);
+> +
+>   		return -ENOMEM;
+
+It is easier, and less code, to replace 'return -ENOMEM'; with
+'goto out'. Or even simpler:
+
+     if (likely(rem_sz == 0))
+	return 0;
+out:
+      ........
+
+Doug Gilbert
 
 
->
->
+BTW I spotted this one during the sg driver rewrite and fixed it.
+Note that this bug and several others like it won't be fixed by
+me while the sg driver rewrite is pending.
+
+> +	}
+>   	return 0;
+>   out:
+>   	for (i = 0; i < k; i++)
+> 
 
