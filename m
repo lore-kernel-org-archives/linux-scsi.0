@@ -7,75 +7,75 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC530C2BA2B
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 23:00:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFBDC2BA2B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 23:03:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F22F20739
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 23:00:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAA6920692
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 23:03:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wMVfsKne"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F7rD2y9d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389816AbgDMXAD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Apr 2020 19:00:03 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:57552 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728050AbgDMXAA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2020 19:00:00 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DMmbHX186888;
-        Mon, 13 Apr 2020 22:59:55 GMT
+        id S2389879AbgDMXDG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Apr 2020 19:03:06 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58186 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389875AbgDMXDE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2020 19:03:04 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DMnJnc035709;
+        Mon, 13 Apr 2020 23:02:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : references : date : in-reply-to : message-id : mime-version :
  content-type; s=corp-2020-01-29;
- bh=DW0a2ib7coI9d+ysr13ixCmPaadlmvTxaylaCDc7ezg=;
- b=wMVfsKnewosVmTOB0ZFdjlZ229pe6QpBiRCe1w50Z0vb1SfBCPXSyxHJ/OxMJnEG04yX
- i8MzzHDfPTeAIQlyiaDHuZMuTICE4Td+p+Y5fPdLm8MhIYttt4zYepxbPZkmEGIktRnr
- ZORriOgSVxKF5XWdNLP5wqs697gxAXcFTWCC93MI7h+LvH4ejnsnjD7iwZA/J9T7EEJ5
- t0qb8cQECnigT5gb0S3Uft+6wEiytpyzXUaqGO1kkX4FypNdSeIyseBfeZeSdAOXBooP
- 6u42wIrt5JA48kebyv8dwAnkBD4agovHhMamoPXJ0/eR1LP+rq5Mi61eacrOI29214e/ lA== 
+ bh=dSxlQbv0ZCH1aNETMVihcrGeIuEKPspk1KdSE1a/O1c=;
+ b=F7rD2y9dUsNgJHmHSX36F09zo2hNN8e/zL79dGDtJWtJn87GagFX+UgTYsyJPCXDi990
+ b+QNGkF6MM8gH3z5IXD2NcInpfaJoYf66FeGVFCs6MbYeA1OCnwGaKTC/fiZe3YRp9p0
+ 2XVwkzFxskKZ0MtqbqW7AOqjNogtVFoBUjG6Ym4hxa94hwN6fIC+AslQ7YfgSV+73KFf
+ k6RAlbPuXVQFRGeYCjMbN52iE4WcoXzwC9FiOhMKjpvoLbBAY/bFXBVZQcQYxra/HBfz
+ X2eZY2I1BLihESG7mvwPZrnbryGZrthKmYGpABbleJsQnxWqIdjBZTS2HzUdpJUujUFE NA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 30b5ar1a3k-1
+        by userp2120.oracle.com with ESMTP id 30b6hph9b3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Apr 2020 22:59:55 +0000
+        Mon, 13 Apr 2020 23:02:59 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DMh4uH188683;
-        Mon, 13 Apr 2020 22:57:54 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 30cta8amb7-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DMh4x4188734;
+        Mon, 13 Apr 2020 23:00:59 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 30cta8av46-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Apr 2020 22:57:54 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03DMvrUx020829;
-        Mon, 13 Apr 2020 22:57:53 GMT
+        Mon, 13 Apr 2020 23:00:59 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03DN0uAE016448;
+        Mon, 13 Apr 2020 23:00:56 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Apr 2020 15:57:53 -0700
+        with ESMTP ; Mon, 13 Apr 2020 16:00:56 -0700
 To:     Douglas Gilbert <dgilbert@interlog.com>
 Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         jejb@linux.vnet.ibm.com, hare@suse.de, Damien.LeMoal@wdc.com
-Subject: Re: [PATCH v4 06/14] scsi_debug: implement pre-fetch commands
+Subject: Re: [PATCH v4 07/14] scsi_debug: expand zbc support
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
 References: <20200225062351.21267-1-dgilbert@interlog.com>
-        <20200225062351.21267-7-dgilbert@interlog.com>
-Date:   Mon, 13 Apr 2020 18:57:51 -0400
-In-Reply-To: <20200225062351.21267-7-dgilbert@interlog.com> (Douglas Gilbert's
-        message of "Tue, 25 Feb 2020 01:23:43 -0500")
-Message-ID: <yq1eesrvvrk.fsf@oracle.com>
+        <20200225062351.21267-8-dgilbert@interlog.com>
+Date:   Mon, 13 Apr 2020 19:00:53 -0400
+In-Reply-To: <20200225062351.21267-8-dgilbert@interlog.com> (Douglas Gilbert's
+        message of "Tue, 25 Feb 2020 01:23:44 -0500")
+Message-ID: <yq1a73fvvmi.fsf@oracle.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- spamscore=0 adultscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ spamscore=0 adultscore=0 mlxscore=0 phishscore=0 mlxlogscore=971
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2004130165
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0
- clxscore=1015 priorityscore=1501 malwarescore=0 phishscore=0 spamscore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004130165
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
+ mlxlogscore=999 clxscore=1015 mlxscore=0 phishscore=0 suspectscore=0
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004130165
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -84,18 +84,12 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Doug,
 
-> Many disks implement the SCSI PRE-FETCH commands. One use case might
-> be a disk-to-disk compare, say between disks A and B.  Then this
-> sequence of commands might be used: PRE-FETCH(from B, IMMED),
-> READ(from A), VERIFY (BYTCHK=1 on B with data returned from READ). The
-> PRE-FETCH (which returns quickly due to the IMMED) fetches the data
-> from the media into B's cache which should speed the trailing VERIFY
-> command.  The next chunk of the compare might be done in parallel,
-> with A and B reversed.
+> The ZBC standard "piggy-backs" on many, but not all, of the facilities
+> in SBC. Add those ZBC mode pages (plus mode parameter block
+> descriptors (e.g. "WP")) and VPD pages in common with SBC. Add ZBC
+> specific VPD page.
 
-Minor nit: I agree with the code and the use case. But the commit
-description should reflect what the code actually does (not much in the
-absence of cache, etc.)
+Also OK. Would benefit from a Reviewed-by: from Damien.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
