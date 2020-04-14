@@ -6,67 +6,67 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30633C2BA19
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 09:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D730C2BA19
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 10:19:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 035672076A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 09:43:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BB8120732
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 10:19:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="efDzL6FO";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="VuUvP7+f"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="oU0jmWRj";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="vmtJ8ar2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437724AbgDNJnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 05:43:31 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:7220 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728305AbgDNJna (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 05:43:30 -0400
+        id S2438260AbgDNKS6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 06:18:58 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:56921 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2438250AbgDNKSo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 06:18:44 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586857409; x=1618393409;
+  t=1586859530; x=1618395530;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=JjsN3/wDeOAyq1yPI6OtF5dwC+PNpCu8yaV+QrrPX/0=;
-  b=efDzL6FOBrYfikYxdWiUvpq1o2waWC9sCwTD3HG+VhG88t7OLFeb1hGk
-   9VSZmjCinlsDq033afYwlDhQDK8qzDq/fTXIEkheQaE/36N3b5e5yjjib
-   tg8XrYAp6L0ZYqaPj5PH82K28rq02T990pnStglqccfEhHNxzgtZghjrR
-   VvBrSrc4CSXGRZnYkxwpi70Uym/d8V9c37LcSLeojCfs2D/Sv427GM9cZ
-   KD20zGOz7WKPD1AURwjsgXtctx+TqLP20JE89BwPDvAi5lBOMD9VTKmYj
-   DYiH0OG7GdslKmENfXVavC+vx0b5HBjqP2A7/7jawXNDiwcKrCndR2ZYH
+  bh=6bQZL4TPPaXzlnUHM2wHkTgMubteEFsRfrzlhl75zUQ=;
+  b=oU0jmWRjD+vcy7KaRp4vONYTdsf8AoM7/i1D/C5sal/AvnVpzaDlhrnK
+   0gxYr47qY4hUbNc+SgePyUHPKBwLJ+DWSTahM1EOLr5baK1pDhtCMLKNT
+   sdXODVRZkrIC8x3v4IG1rnylkUx41jSFlsCm8B8nrC190EEZNiGArT8vS
+   DUuNZSunK1FA98Uolk6N30Xhc3AyaI4fAaMShGYZqE4N+o5OwgLs1RV5P
+   zUDyASE185ukFsSQ4wtcSiy7DiDPnjVfXpUzRcP+uRUIRGm/5A11f63Ld
+   tNb0E5OPQ2fA8LPLUAwpFJO6P02ohX835hbjY3DEh+TWphxxJJeAhM+vR
    Q==;
-IronPort-SDR: rII4rSEb0I+aAp3NbKD1NOALIdPL81VhpsTpIscT0uGxg3uJECOfLxVlA+fIKwM0rPSex7Iq5T
- TcS4Mp58Z7XjMoM6zxYFF3k6A2LtfFwd0JxbnNmJsWnLPo6xUIBQoI0HOMGi+jWQWUdHV+OZRY
- WCG93bKkNlnVsCiG4wHEDA01uv7ZlKlJCnyVcZ8dM5wUrDXFoLZKgaJ87FL4iuPwKNfthAgsm2
- d1KhK34RzDXKkmryrRGqamRzuNyw6KpvI9PqKzzRK3A+/pn7LUycAFX0/lGJV6QkRLmfsW/OKA
- M/I=
+IronPort-SDR: 5MItCoTVDGNjn+9pl6H9cBLNBQCqa1ouHwAuFmX4M8C8ij1K8tWL90S89AvBx2Fg87mfwyYa4q
+ i8R0nnztTn6vPIXQGFhA4PJ4z9PI1hI6juEAP1G4l642Q/PECP7g1FgpV3nxKFdMFXGyzZkQ2M
+ wdiubQU+Fg6N6NYJCiGOcknYl/18mu/a9L7omYTLDFBV8uJK2UdBAE4/1onXY+izsJfZGBHtAZ
+ Z9YJrmKIAiHMG0EbN5936tT/b6FXABeeQSIKM83dx2Sks3BkNFMGCtym/L/906bFWuDB72Iaya
+ +lU=
 X-IronPort-AV: E=Sophos;i="5.72,382,1580745600"; 
-   d="scan'208";a="135291567"
-Received: from mail-bn7nam10lp2103.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.103])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Apr 2020 17:43:27 +0800
+   d="scan'208";a="237701901"
+Received: from mail-mw2nam10lp2109.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.109])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Apr 2020 18:18:48 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=k1dFlYbODlH+crIheZmpZNOdFUQPpngTJtAhhfnjsdis19t11j8EwamJUepbfwvZGAjs1IvE5+e3IQx/1+qw3RxWK4eB8emVBZ4H8GBq6l7RaJJGUMTJIxWtiY2cVbsp07Cd9tXvvllh8dlLJqxUOK32aXzsBFnLLjdfyvFC+1wtYvdQoVvvPOi4vkfmufdiyxad5l4l99kq8VEYy/5xdIa0PI64gYgdQvoB3aXclylAKpaxHtyLz2bNfDB0lgl40z6xXLRPM36uhtJOFc4o9hdpVmes67MC8Qd0U7AX5FdsnF2zdzxkWu3JzSDS7QtnlXIErDYVGexxVK0XPurxMw==
+ b=j92pJaitgoEqYyRjWkFuM9rXuMMLCmckESHXdfu1AJYPqk6Xw84YV205Q1Dad5jcxuSOMB/ncuq+MkImigF/rOIQYeW/auAm4lDR+fjutHOuYM68ZgWaRJV09nS/E6gX2rPZq9aA2o/ojlwrq4HkhrpkF0U+XgRn0rHp+P1tlL2Otd2ltXbe9JjyNvVrVFdfBEjQ3c/kyTyhD1MR2udeZL4q3VZnghWR+qZXOSNxjeyfwkItCZccMq00MUjo3H4ZaBiHIefV2/5OKBWKa2dM0vzMuqXFoPVZx40941EfzqjyHnV/meNfCwKEG8/cUTES4/5wjLpa0i2m8+bcyBdMLg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UX2geM4plNo0WUYz3sfatTXLsFFeVjCMOZE/Z97rs2s=;
- b=lw56IkCjwN9Y3c1Kzx7/a+NCOdjwuRpF1P7Ob6g0dn7XoiEipojUjtBEBdJji5VL4XfNEm+LS8UYX2UP+V6RhWomqIVZn3gQV30GIrCBpECYXImYPStNBAxrPNBABwCvN/C/my4V1RfqYyhIDmZSe9Ko5agErxn6FV+i/bNBniihWWbqn1jgPv6JAAEd5etapcbI1ISaZKnRKvtGlBFIAnfe0APAEMX6jLc/N5Uudk1NHMx00zDE2IA7gBs80te5XkpgKeqep/KElogdEz+o1WHTbe1Vb3WeghzhZ2/uava6weV7thXifJa1ckbqJpz79NTr4RCmnxQHpqyOLpFJ/Q==
+ bh=Fu4ealQwv9/uIhIXmON2xgvkgrM2Li50pWzEUqeBOqg=;
+ b=HgzL8M2RJdv61KKcHm6TdWWJP8VJZXJClRjEG3bA7mkWaKFvi2B2ufmApyG1WSmWZsyB120IVLi7NMuQya43NVDtyIvy8RTDqqvgGyonOjoipdDWsNb8iOHBOPU+0g0PkCtahKS09DOCNRU63X0kqOQq+QDLn2wZoiLq7TRnUq0HaKe5m9MADIqk0X1DrfUBl3uyoiuuQvsEt3cqHVzN5MNXD2ijZYzA/wsGyBoQQXOtuNiOvmPO2tcnOmTE3r0BS5wxhijXyjhpmlHJlJJ3m1ZAkvDuLyZV+B9Gj+aIvg9p9fiB5YhgKpndqj0CwwOOIpWXkg4CaI/YhFUf3Y099Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UX2geM4plNo0WUYz3sfatTXLsFFeVjCMOZE/Z97rs2s=;
- b=VuUvP7+fy03vIpbYHmMmtaF0qU3ZJ8gs4boEKYXlojS77lSNxRtFAjTIMX2/liywCdanWTPAi/d0X/JdWRWMEC5cO/6hpIirdnFNiyucX1EqWPYPtLfwaJ8Y8+CYNrdu080JM9vsEpfwiBT5N3aXdTSZ6zGADcEtGap1pPBVZms=
+ bh=Fu4ealQwv9/uIhIXmON2xgvkgrM2Li50pWzEUqeBOqg=;
+ b=vmtJ8ar26NbRoBhnXsAhFcGDZ7BEIvVDdq+oLwRWUvUIUFmZdB3JQZTx51905bj7Gxv26EET3obV8l92dlZ3/8yJ16PW4BwVHyF+UDex7LxTKLOFSFVQIwAsAOIvU+DCvMO0GXtKuAgpgrJQPH8uXPIdqK29NSpG5v+HKt0Pe6A=
 Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3679.namprd04.prod.outlook.com
- (2603:10b6:803:46::15) with Microsoft SMTP Server (version=TLS1_2,
+ (2603:10b6:803:47::21) by SN4PR0401MB3648.namprd04.prod.outlook.com
+ (2603:10b6:803:46::29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2900.26; Tue, 14 Apr
- 2020 09:43:25 +0000
+ 2020 10:18:40 +0000
 Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
  ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
  ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2900.028; Tue, 14 Apr 2020
- 09:43:24 +0000
+ 10:18:40 +0000
 From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
 To:     "hch@infradead.org" <hch@infradead.org>
 CC:     Jens Axboe <axboe@kernel.dk>,
@@ -76,14 +76,14 @@ CC:     Jens Axboe <axboe@kernel.dk>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v5 02/10] block: Introduce REQ_OP_ZONE_APPEND
-Thread-Topic: [PATCH v5 02/10] block: Introduce REQ_OP_ZONE_APPEND
-Thread-Index: AQHWDo95jboc2AavX0GtjTYeYQHkkg==
-Date:   Tue, 14 Apr 2020 09:43:24 +0000
-Message-ID: <SN4PR0401MB3598F69EFD255EAA28374D979BDA0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Subject: Re: [PATCH v5 07/10] scsi: sd_zbc: emulate ZONE_APPEND commands
+Thread-Topic: [PATCH v5 07/10] scsi: sd_zbc: emulate ZONE_APPEND commands
+Thread-Index: AQHWDo9/7/TsxA+1IEecB4cF8olDQw==
+Date:   Tue, 14 Apr 2020 10:18:40 +0000
+Message-ID: <SN4PR0401MB35984EF882B0E43E73CEE4729BDA0@SN4PR0401MB3598.namprd04.prod.outlook.com>
 References: <20200409165352.2126-1-johannes.thumshirn@wdc.com>
- <20200409165352.2126-3-johannes.thumshirn@wdc.com>
- <20200410071045.GA13404@infradead.org>
+ <20200409165352.2126-8-johannes.thumshirn@wdc.com>
+ <20200410072354.GB13404@infradead.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -93,65 +93,103 @@ authentication-results: spf=none (sender IP is )
 x-originating-ip: [129.253.240.72]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: cf27e5f5-7462-4782-6110-08d7e058470c
-x-ms-traffictypediagnostic: SN4PR0401MB3679:
+x-ms-office365-filtering-correlation-id: fd21b817-2bad-41a2-c6e4-08d7e05d33f4
+x-ms-traffictypediagnostic: SN4PR0401MB3648:
 x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN4PR0401MB367989E492CFC20772E28A459BDA0@SN4PR0401MB3679.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <SN4PR0401MB36480650FE73913416AC2C1E9BDA0@SN4PR0401MB3648.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-ms-oob-tlc-oobclassifiers: OLM:6790;
 x-forefront-prvs: 0373D94D15
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(346002)(376002)(366004)(39860400002)(136003)(396003)(76116006)(91956017)(6916009)(86362001)(8676002)(316002)(478600001)(26005)(81156014)(4326008)(53546011)(66556008)(71200400001)(64756008)(66446008)(8936002)(7696005)(66946007)(33656002)(54906003)(66476007)(9686003)(5660300002)(52536014)(186003)(6506007)(55016002)(2906002);DIR:OUT;SFP:1102;
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(376002)(396003)(366004)(346002)(39860400002)(136003)(7696005)(2906002)(53546011)(6506007)(54906003)(81156014)(52536014)(55016002)(8676002)(6916009)(478600001)(33656002)(5660300002)(66946007)(71200400001)(8936002)(186003)(316002)(66556008)(66446008)(9686003)(64756008)(76116006)(91956017)(26005)(66476007)(86362001)(4326008);DIR:OUT;SFP:1102;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: RQxn9A9+04HYlW9fvbAa5+DOPqyq5Kxep6G8OVTe7LDy7btwhQXLqaQ707NiJIhbKTY2B0Gky/L0Zrh1rHgy/ju4v5vYWLeSCFnowtAZgesvCnrMfGqZXFF60dZW5Ld8VpwfcWq3FDZAhdQLMIwuLYW0ZfrEjSuFVcWZjUr+D8nejVQo70C1kqlMzcuK3r8j98w5wyvBPNY7jmUAnZw1ytXCbOJmPsrFPMkz/ZPX6Xjm9gsLC8vLnkuHY7AyNFJxOSNpcH0q/L7+sDZd0XiSy4kOMyVccqkXXZLYmYCkDVQK7dYRJod35b3fjgpxn3pv7NHzs/KTNo7GcQpzHbhWtATf7ExciZAZEzV2JXIPYHamH4uHYqZEbfzU1yw6M7kC1hqX8NsZEsHjsMfaMo4m2Q91Xc9vyK+FJGr2FgRW80ABnuYQvgqFGXfzRJ2Lt8bs
-x-ms-exchange-antispam-messagedata: mpfYElbOit1kzuDzp2K2wf32NGwrTcaO/o6ikPMgrPnCzWjeCM8Vo1wUlltWbW6IvDlg57xbUY3litWURBSyFukBXhdVVPJtFuFvAUL4hPz30rRz4Q3MlMPGwcmQejCIYhw/HidvtbotXd0EK2tngw==
+x-microsoft-antispam-message-info: cWXZPNkTGxJwDoQhK0hTTUoWKAJRQIzJfAIO42d41nXJSqA5xe0wGvj+iCdXLq32+ESPEhLzXkeF9ZQIZkk9+hzI3j3aYGErFRwvoRvdhSqOVZ8z6gBqGXr2VADp3A5nRJko8aTrCJwlLGW214Xm5ExfzUrPnUi4IfRp9w6kVH0rh9vseqBbEnetwvxM/KpC4X7XAh8q8WDkHcJQTynHOldDeA30/icw2nXk0xzHizU2pvRhODugnmWFNx8jYkmXvprRBwZgopiTxcjS4NeTvIgu2pGJqaGkuj81Xnj8XcV8TTBygjtkVa+qf8eZdQP7UiQsLXzG6rO1Pa/ADURIbLz0YB518IhwKxYCFGPAHWWzfMWDqUgvbUKlqnsNkTx7FOwQLTAejTIdJuSalANilLdBvmdXNdWwFVC/yBLhGFtLpK1fq4tw1B0xYHkBOZw4
+x-ms-exchange-antispam-messagedata: WYsqsz58kUQXBpiNxc+JVJDFTbbCuR83uws8XAH6qdQjOVy4iGcUzYovn/2pQ1lrUWzcE9hTy/xHTHlnq9yEl0gmGjuznRuht1ixStvN/0OjjR9rcpg4pZsolNdQqEKtiFt+esMtYxDXAGo2UJaK4A==
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cf27e5f5-7462-4782-6110-08d7e058470c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Apr 2020 09:43:24.8862
+X-MS-Exchange-CrossTenant-Network-Message-Id: fd21b817-2bad-41a2-c6e4-08d7e05d33f4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Apr 2020 10:18:40.2665
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: GgpQjTADOxybuxNyEmbmwxQfwmaZ6Rsf1A2x6yP1fUoj//Wf4Qq9sNt2hBafWHXUUB9x+S2Ls4k+J5IksUJqXj/qdfo2I4RamuHQLRaWHi4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3679
+X-MS-Exchange-CrossTenant-userprincipalname: bx/5qmfuwEw1Qnxv5FLFLiNun/246LyvK4iG2kLqRT00Xr3TtiMD7JjqbW+ejMPl86L5bWzOPtiCY78ihZVQEUC/Pl3vsdNn/2D1g6Flpd4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3648
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/04/2020 09:10, Christoph Hellwig wrote:=0A=
-> -/**=0A=
-> - *	__bio_add_pc_page	- attempt to add page to passthrough bio=0A=
-> - *	@q: the target queue=0A=
-> - *	@bio: destination bio=0A=
-> - *	@page: page to add=0A=
-> - *	@len: vec entry length=0A=
-> - *	@offset: vec entry offset=0A=
-> - *	@same_page: return if the merge happen inside the same page=0A=
-> - *=0A=
-> - *	Attempt to add a page to the bio_vec maplist. This can fail for a=0A=
-> - *	number of reasons, such as the bio being full or target block device=
+On 10/04/2020 09:23, Christoph Hellwig wrote:=0A=
+>> +	spin_lock_bh(&sdkp->zones_wp_ofst_lock);=0A=
+>> +=0A=
+>> +	wp_ofst =3D sdkp->zones_wp_ofst[zno];=0A=
+>> +	if (wp_ofst =3D=3D SD_ZBC_UPDATING_WP_OFST) {=0A=
+>> +		/* Write pointer offset update in progress: ask for a requeue */=0A=
+>> +		ret =3D BLK_STS_RESOURCE;=0A=
+>> +		goto err;=0A=
+>> +	}=0A=
+>> +=0A=
+>> +	if (wp_ofst =3D=3D SD_ZBC_INVALID_WP_OFST) {=0A=
+>> +		/* Invalid write pointer offset: trigger an update from disk */=0A=
+>> +		ret =3D sd_zbc_update_wp_ofst(sdkp, zno);=0A=
+>> +		goto err;=0A=
+>> +	}=0A=
+> =0A=
+> Maybe I'm a little too clever for my own sake, but what about something=
 =0A=
-> - *	limitations. The target block device must allow bio's up to PAGE_SIZE=
-,=0A=
-> - *	so it is always possible to add a single page to an empty bio.=0A=
-> - *=0A=
-> - *	This should only be used by passthrough bios.=0A=
-> +/*=0A=
-> + * Add a page to a bio while respecting the hardware max_sectors, max_se=
-gment=0A=
-> + * and gap limitations.=0A=
->    */=0A=
-> -static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,=
+> like:=0A=
+> =0A=
+> 	spin_lock_bh(&sdkp->zones_wp_ofst_lock);=0A=
+> 	switch (wp_ofst) {=0A=
+> 	case SD_ZBC_INVALID_WP_OFST:=0A=
+> 		if (scsi_device_get(sdkp->device)) {=0A=
+> 			ret =3D BLK_STS_IOERR;=0A=
+> 			break;=0A=
+> 		}=0A=
+> 		sdkp->zones_wp_ofst[zno] =3D SD_ZBC_UPDATING_WP_OFST;=0A=
+> 		schedule_work(&sdkp->zone_wp_ofst_work);=0A=
+> 		/*FALLTHRU*/=0A=
+> 	case SD_ZBC_UPDATING_WP_OFST:=0A=
+> 		ret =3D BLK_STS_DEV_RESOURCE;=0A=
+> 		break;=0A=
+> 	default:=0A=
+> 		wp_ofst =3D sectors_to_logical(sdkp->device, wp_ofst);=0A=
+> 		if (wp_ofst + nr_blocks > sdkp->zone_blocks) {=0A=
+> 			ret =3D BLK_STS_IOERR;=0A=
+> 			break;=0A=
+> 		}=0A=
+> =0A=
+> 		*lba +=3D wp_ofst;=0A=
+> 	}=0A=
+> 	spin_unlock_bh(&sdkp->zones_wp_ofst_lock);=0A=
+> 	if (ret)=0A=
+> 		blk_req_zone_write_unlock(rq);=0A=
+> 	return ret;=0A=
+> }=0A=
 =0A=
-> +static int bio_add_hw_page(struct request_queue *q, struct bio *bio,=0A=
->   		struct page *page, unsigned int len, unsigned int offset,=0A=
-> -		bool *same_page)=0A=
-> +		unsigned int max_sectors, bool *same_page)=0A=
+This indeed looks cleaner, I'll throw it into testing.=0A=
 =0A=
-Should I split that rename into a prep patch and if yes add you as the =0A=
-author?=0A=
+> =0A=
+>>   	int result =3D cmd->result;=0A=
+>> @@ -294,7 +543,18 @@ void sd_zbc_complete(struct scsi_cmnd *cmd, unsigne=
+d int good_bytes,=0A=
+>>   		 * so be quiet about the error.=0A=
+>>   		 */=0A=
+>>   		rq->rq_flags |=3D RQF_QUIET;=0A=
+>> +		goto unlock_zone;=0A=
+>>   	}=0A=
+>> +=0A=
+>> +	if (sd_zbc_need_zone_wp_update(rq))=0A=
+>> +		good_bytes =3D sd_zbc_zone_wp_update(cmd, good_bytes);=0A=
+>> +=0A=
+>> +=0A=
+>> +unlock_zone:=0A=
+> =0A=
+> why not use a good old "else if" here?=0A=
+> =0A=
+=0A=
+Done=0A=
