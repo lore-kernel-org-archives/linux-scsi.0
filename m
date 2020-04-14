@@ -2,137 +2,105 @@ Return-Path: <SRS0=dx4r=56=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D10C2BB1D
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:14:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1579BC2BBFD
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B90B206E9
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:14:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wDmJnJuz"
+	by mail.kernel.org (Postfix) with ESMTP id F3A58206E9
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:17:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405831AbgDNGOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 02:14:42 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:53304 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2405818AbgDNGOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Apr 2020 02:14:41 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586844881; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=rzOJ+bED0a6EYmTfUhJM8iFUhrBMPXOs94qxa4YgxsM=;
- b=wDmJnJuzHiJ/dSYctKVqwMZ0tGnfDI06gU14t7M3kPwZU5HJ9EBo6KvjW+FPDfm1G55filEk
- /IGyakGLb3SaBEo1EszBrpAcd7Of+hKRYpKFlCcZeMfXPlmPBXXXHeFQncfYoDpmrF31qUZw
- +Eh726UMG0clMxX1rOksKMxjaNo=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e9554c3.7f51e41080a0-smtp-out-n02;
- Tue, 14 Apr 2020 06:14:27 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7D691C43636; Tue, 14 Apr 2020 06:14:26 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9BCA5C433CB;
-        Tue, 14 Apr 2020 06:14:25 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 14 Apr 2020 14:14:25 +0800
+        id S2405844AbgDNGQ6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 02:16:58 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:4045 "EHLO
+        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405829AbgDNGQ5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 02:16:57 -0400
+IronPort-SDR: GF+nhx7pQG5Eg2UGkLUudbnUbCQzLoEq+k3j4XEYypW5RCLFBgcA1kgW9dhsR/G1jrHiUQ2pfu
+ y4tcVGbk6/oBJWG/HWuxHpiLGKh9Ujh2QzIpFKwO4FTUc9if6Jr1WeBNWUL8yJBUeC7UTcoM4I
+ EU3QbUOhpMpT4IGo408k+3dMtD18YNm202DnGiZZMz/bjvXUZXWPNiP6Af9mYJeKv8p8sA8IAg
+ RkJvlbQEnfZRQhOTMM1/o3dSLhfBAtguxNZPkYk9V2FZOW2VIEAUIFEJj87g44rsDN4GvnGP68
+ L2Y=
+X-IronPort-AV: E=Sophos;i="5.72,381,1580803200"; 
+   d="scan'208";a="46834943"
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by labrats.qualcomm.com with ESMTP; 13 Apr 2020 23:14:56 -0700
+Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
+  by ironmsg03-sd.qualcomm.com with ESMTP; 13 Apr 2020 23:14:54 -0700
+Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
+        id CE87E3B21; Mon, 13 Apr 2020 23:14:54 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
         saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
-        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/1] scsi: pm: Balance pm_only counter of request queue
- during system resume
-In-Reply-To: <1586841875-15667-1-git-send-email-cang@codeaurora.org>
-References: <1586841875-15667-1-git-send-email-cang@codeaurora.org>
-Message-ID: <9603edb9d1ae2c81dfd0a14bce4c6ce8@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: [PATCH v2 1/1] scsi: ufs: full reinit upon resume if link was off
+Date:   Mon, 13 Apr 2020 23:14:48 -0700
+Message-Id: <1586844892-22720-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Loop more...
+From: Asutosh Das <asutoshd@codeaurora.org>
 
-On 2020-04-14 13:24, Can Guo wrote:
-> During system resume, scsi_resume_device() decreases a request queue's
-> pm_only counter if the scsi device was quiesced before. But after that,
-> if the scsi device's RPM status is RPM_SUSPENDED, the pm_only counter 
-> is
-> still held (non-zero). Current scsi resume hook only sets the RPM 
-> status
-> of the scsi device and its request queue to RPM_ACTIVE, but leaves the
-> pm_only counter unchanged. This may make the request queue's pm_only
-> counter remain non-zero after resume hook returns, hence those who are
-> waiting on the mq_freeze_wq would never be woken up. Fix this by 
-> calling
-> blk_post_runtime_resume() if pm_only is non-zero to balance the pm_only
-> counter which is held by the scsi device's RPM ops.
-> 
-> (struct request_queue)0xFFFFFF815B69E938
-> 	pm_only = (counter = 2),
-> 	rpm_status = 0,
-> 	dev = 0xFFFFFF815B0511A0,
-> 
-> ((struct device)0xFFFFFF815B0511A0)).power
-> 	is_suspended = FALSE,
-> 	runtime_status = RPM_ACTIVE,
-> 
-> (struct scsi_device)0xffffff815b051000
-> 	request_queue = 0xFFFFFF815B69E938,
-> 	sdev_state = SDEV_RUNNING,
-> 	quiesced_by = 0x0,
-> 
-> B::v.f_/task_0xFFFFFF810C246940
-> -000|__switch_to(prev = 0xFFFFFF810C246940, next = 0xFFFFFF80A49357C0)
-> -001|context_switch(inline)
-> -001|__schedule(?)
-> -002|schedule()
-> -003|blk_queue_enter(q = 0xFFFFFF815B69E938, flags = 0)
-> -004|generic_make_request(?)
-> -005|submit_bio(bio = 0xFFFFFF80A8195B80)
-> 
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> 
-> Change since v1:
-> - Added more debugging context info
-> 
-> ---
->  drivers/scsi/scsi_pm.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index 3717eea..4804029 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -93,8 +93,10 @@ static int scsi_dev_type_resume(struct device *dev,
->  		 */
->  		if (!err && scsi_is_sdev_device(dev)) {
->  			struct scsi_device *sdev = to_scsi_device(dev);
-> -
-> -			blk_set_runtime_active(sdev->request_queue);
-> +			if (blk_queue_pm_only(sdev->request_queue))
-> +				blk_post_runtime_resume(sdev->request_queue, 0);
-> +			else
-> +				blk_set_runtime_active(sdev->request_queue);
->  		}
->  	}
+During suspend, if the link is put to off, it would require
+a full initialization during resume. This patch resets and
+restores both the host and the card during initialization,
+otherwise, host only reset and restore may fail occasionally.
+
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+
+Change since v1:
+- Incorporated Alim's comments.
+
+---
+ drivers/scsi/ufs/ufshcd.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 64e42ef..90313c8 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8048,9 +8048,13 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		else
+ 			goto vendor_suspend;
+ 	} else if (ufshcd_is_link_off(hba)) {
+-		ret = ufshcd_host_reset_and_restore(hba);
+ 		/*
+-		 * ufshcd_host_reset_and_restore() should have already
++		 * A full initialization of the host and the device is
++		 * required since the link was put to off during suspend.
++		 */
++		ret = ufshcd_reset_and_restore(hba);
++		/*
++		 * ufshcd_reset_and_restore() should have already
+ 		 * set the link state as active
+ 		 */
+ 		if (ret || !ufshcd_is_link_active(hba))
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+
