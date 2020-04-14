@@ -1,109 +1,137 @@
-Return-Path: <SRS0=9ymf=55=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=dx4r=56=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1,
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2667C2BA2B
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 23:21:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A70C2BB86
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 00:30:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99ED420735
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Apr 2020 23:21:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C030F20656
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 00:30:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pnKtmjhu"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PMRE9MFB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389972AbgDMXV5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Apr 2020 19:21:57 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45582 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727839AbgDMXV4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2020 19:21:56 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DNIfDN044324;
-        Mon, 13 Apr 2020 23:21:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=gjFUs2CQ2NtV7bGfeeoxiPt6CPePudDY7PXqZGQ3ewY=;
- b=pnKtmjhu3RWO0Lba6fiqFIhDoHPBJNQ678NZR8U5z/PbRfelN5Veoxu5jHTW4ATg8dYO
- ELOHr4pMJndWtbd22sUxGo9niW2rlJUHCsMayLIJhz4cWDp4T+euIPHUghZNJ69byJiC
- PrRBmi72C1ENgUOLFQ+qwf8WdDpvRs64A7OA6IzDf14UHGqAbAmY43EqXTuMPtgvs2lG
- 657F6dbyc+dQlNdB6jh1HGdvAbPcrzxrUbNiVeCdvj4Xqnxc0vCPb0UUMRsEdaNElRyF
- Gli5LWVSbl6vgqxEi+LjKSlzLCP2g0zHoOXxqIRilNDwH+QW5QQIXxHf27QjJp2C70KV Jw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 30b5ar1c0c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Apr 2020 23:21:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03DNBtZx153537;
-        Mon, 13 Apr 2020 23:19:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 30bqpdth9g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Apr 2020 23:19:50 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03DNJnsc029294;
-        Mon, 13 Apr 2020 23:19:49 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Apr 2020 16:19:49 -0700
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, Damien.LeMoal@wdc.com
-Subject: Re: [PATCH v4 00/14] scsi_debug: host managed ZBC + doublestore
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200225062351.21267-1-dgilbert@interlog.com>
-Date:   Mon, 13 Apr 2020 19:19:47 -0400
-In-Reply-To: <20200225062351.21267-1-dgilbert@interlog.com> (Douglas Gilbert's
-        message of "Tue, 25 Feb 2020 01:23:37 -0500")
-Message-ID: <yq1mu7fug6k.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S2390494AbgDNAaR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Apr 2020 20:30:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390460AbgDNAaB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2020 20:30:01 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDD38C00860C
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Apr 2020 17:30:00 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id a13so5300505pfa.2
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Apr 2020 17:30:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=GtP40NBc6K+wY7TevCqJVJVyGGxw6eyhk3x6njvRZbI=;
+        b=PMRE9MFBjRNguCLZJxvQ0tC6cbj5HN/L0mNJHOjg1H5naWvyPaji8Uw6CjXqOQ2azW
+         MhWs/LuNrHlvICFisvb7Cy6SJ3VKQrmiHJlokad5hGoOXcGXzDY3vorrrgpyAZrAVUDE
+         dUN76VdbMCLvs9G10TRyVoj/R2uKEUPKhrkRhwWPh9Qq6Oj8zqhrDAXwnWHye+K8R3ym
+         lDZQumSHVx6+RupP9U0o1EyjztcXPr7zTXefIIyzd+nYkxQBJg3bKkumuWN4k6N/hrZC
+         eN210smaNX58gX6QVglgalvDGfi5xzWfnOSt7/cWPG1d3xQeaexIo7gZ03EO3NRYAH/8
+         2wUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version;
+        bh=GtP40NBc6K+wY7TevCqJVJVyGGxw6eyhk3x6njvRZbI=;
+        b=MgUXUMz3+dz0TtQh+UBSpawrUEo7QXmhmKHW2wUxYLRc7Gv3/qTQg8schD3appKqb1
+         vakufEuxsjQnUwPAYp8FvudsY8EcO3PqmYHXrdRNcF8sFXjYnXGxIP2txyo3GsEL8erb
+         CTbt6m3H/ta5aIyz3FHOqXYTE4KGAp0sB5txsdtjK9ZkpO9tFdSzhPM6IBWHqkeggYaN
+         7DycZnI7ktcNKldxYeKqH9214gb/412dT1/f3X8warUFTGYy4rMiBO8wE2R6Kwpb5oEf
+         5OSj7uzTZ6lsqwLUQdbCT7piRk6Bgkj1yjBHAVIevMEbfTnIrqzN2hvDkTnRHqpkh4nl
+         yU5g==
+X-Gm-Message-State: AGi0PuYLWPS4AaKusVxznGZNxL+3QpixKhMcU46rs2RWq2LhvvXcCwPk
+        khxvlkZQGOJukjKzjWVtZCwV9g==
+X-Google-Smtp-Source: APiQypL5W5g7xmsU3GZXO1UecYYPwVLK1dPD412glciRM3pdZ8NSkRu/LjnNHn8Pg6Fxg4L/cgCpIw==
+X-Received: by 2002:a62:dd48:: with SMTP id w69mr10144721pff.86.1586824199909;
+        Mon, 13 Apr 2020 17:29:59 -0700 (PDT)
+Received: from [2620:15c:17:3:3a5:23a7:5e32:4598] ([2620:15c:17:3:3a5:23a7:5e32:4598])
+        by smtp.gmail.com with ESMTPSA id g11sm10055136pjs.17.2020.04.13.17.29.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Apr 2020 17:29:59 -0700 (PDT)
+Date:   Mon, 13 Apr 2020 17:29:58 -0700 (PDT)
+From:   David Rientjes <rientjes@google.com>
+X-X-Sender: rientjes@chino.kir.corp.google.com
+To:     Waiman Long <longman@redhat.com>
+cc:     Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Joe Perches <joe@perches.com>,
+        Matthew Wilcox <willy@infradead.org>, linux-mm@kvack.org,
+        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
+        x86@kernel.org, linux-crypto@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
+        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
+        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
+        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
+        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
+        linux-integrity@vger.kernel.org
+Subject: Re: [PATCH 1/2] mm, treewide: Rename kzfree() to kfree_sensitive()
+In-Reply-To: <20200413211550.8307-2-longman@redhat.com>
+Message-ID: <alpine.DEB.2.21.2004131729410.260270@chino.kir.corp.google.com>
+References: <20200413211550.8307-1-longman@redhat.com> <20200413211550.8307-2-longman@redhat.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- adultscore=0 bulkscore=0 spamscore=0 suspectscore=0 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004130167
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0
- clxscore=1015 priorityscore=1501 malwarescore=0 phishscore=0 spamscore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004130168
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Mon, 13 Apr 2020, Waiman Long wrote:
 
-Evening Doug!
+> As said by Linus:
+> 
+>   A symmetric naming is only helpful if it implies symmetries in use.
+>   Otherwise it's actively misleading.
+> 
+>   In "kzalloc()", the z is meaningful and an important part of what the
+>   caller wants.
+> 
+>   In "kzfree()", the z is actively detrimental, because maybe in the
+>   future we really _might_ want to use that "memfill(0xdeadbeef)" or
+>   something. The "zero" part of the interface isn't even _relevant_.
+> 
+> The main reason that kzfree() exists is to clear sensitive information
+> that should not be leaked to other future users of the same memory
+> objects.
+> 
+> Rename kzfree() to kfree_sensitive() to follow the example of the
+> recently added kvfree_sensitive() and make the intention of the API
+> more explicit. In addition, memzero_explicit() is used to clear the
+> memory to make sure that it won't get optimized away by the compiler.
+> 
+> The renaming is done by using the command sequence:
+> 
+>   git grep -w --name-only kzfree |\
+>   xargs sed -i 's/\bkzfree\b/kfree_sensitive/'
+> 
+> followed by some editing of the kfree_sensitive() kerneldoc and the
+> use of memzero_explicit() instead of memset().
+> 
+> Suggested-by: Joe Perches <joe@perches.com>
+> Signed-off-by: Waiman Long <longman@redhat.com>
 
-> The major addition is support for host-managed ZBC devices.  The bulk
-> of the work in this area was done by Damien Le Moal.  It allows ZBC
-> devices with a mix of conventional and "sequential write required"
-> zones to be specified.
-
-[...]
-
-> The lower numbered patches in this set contain various measures to
-> improve the speed and usefulness of this driver.  It is being used to
-> test the rewrite of the SCSI generic (sg) driver which is still
-> underway.
-
-These really should be separate series. One for the ZBC stuff (which
-generally looks OK), one for the backing store enablement, and maybe one
-for the general improvements that do not have other dependencies.
-
-It's much more manageable for reviewers when things come in smaller
-batches. Once a posted series has been merged, you can rebase your
-working tree and submit the next batch of 5-10 patches.
-
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Acked-by: David Rientjes <rientjes@google.com>
