@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F0FAC2BBFD
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 05:15:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7879EC352B6
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 05:15:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE08420767
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 05:15:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 548BC2072D
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 05:15:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TjF2actZ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VDIp57gc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405438AbgDNFPf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 01:15:35 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:33140 "EHLO
+        id S2405437AbgDNFPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 01:15:38 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48081 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2405411AbgDNFP1 (ORCPT
+        with ESMTP id S2405430AbgDNFP1 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 01:15:27 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586841323;
+        s=mimecast20190719; t=1586841326;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7VwMTKqOzHnCA6UBUgaaMtG4wgfOijE7wLGj2kCnXFo=;
-        b=TjF2actZjIJtvC58ek9JvjzGm07NxbbKpnUP90krWgIVLfW3+rwUMvT7w22NuoBbPgEBX6
-        kExDy0T9wKlGoPZQUl7rlMD/KhWxRlGOfJBZoo32iL2gt6GfQKfBnB+a9JL9lYspSNPbiF
-        zb1v+yLCujwijpKngXPGOT0GkeWwurU=
+        bh=HgylyiXuCyaASLokyVSMljvarr8J73Mrn4Pi2Q7txUc=;
+        b=VDIp57gc7ZUJ/OnORWZsSRej9PQA2CpO7roNRKbpkKSCzXLdS0h8madEQ2WqK16G7fmOzm
+        UmAE5OA5mMbHt7l225ly4TADNyOcL8MO2kx6lCWHMNR3qnZz9PaV6WcMkgyTyI5pzr11JD
+        NurFmtEfZSz9sCVZMgBL99WbYXuHFs0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-312-8Mgbf4rwNSazxXsbe69TNw-1; Tue, 14 Apr 2020 01:15:19 -0400
-X-MC-Unique: 8Mgbf4rwNSazxXsbe69TNw-1
+ us-mta-240-iUdCFH_dNtmF2hMJ9kXc8w-1; Tue, 14 Apr 2020 01:15:22 -0400
+X-MC-Unique: iUdCFH_dNtmF2hMJ9kXc8w-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EBC6013F7;
-        Tue, 14 Apr 2020 05:15:17 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1DA49800D53;
+        Tue, 14 Apr 2020 05:15:21 +0000 (UTC)
 Received: from rh2.redhat.com (ovpn-112-105.rdu2.redhat.com [10.10.112.105])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 17D4D1001DDE;
-        Tue, 14 Apr 2020 05:15:16 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3BBD51000325;
+        Tue, 14 Apr 2020 05:15:20 +0000 (UTC)
 From:   Mike Christie <mchristi@redhat.com>
 To:     jsmart2021@gmail.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         nab@linux-iscsi.org
 Cc:     Mike Christie <mchristi@redhat.com>
-Subject: [RFC PATCH 1/5] target: add sysfs support
-Date:   Tue, 14 Apr 2020 00:15:10 -0500
-Message-Id: <20200414051514.7296-2-mchristi@redhat.com>
+Subject: [RFC PATCH 4/5] iscsi target: use session sysfs helpers
+Date:   Tue, 14 Apr 2020 00:15:13 -0500
+Message-Id: <20200414051514.7296-5-mchristi@redhat.com>
 In-Reply-To: <20200414051514.7296-1-mchristi@redhat.com>
 References: <20200414051514.7296-1-mchristi@redhat.com>
 MIME-Version: 1.0
@@ -61,259 +61,193 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-configfs does not work well when the kernel is initiating the creation
-of an object we want to export info for and the objects above/below it
-are created by the user. There are races/bugs like seen with this patch
-and the issue the original bug was trying to fix:
-
-commit f19e4ed1e1edbfa3c9ccb9fed17759b7d6db24c6
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Thu Aug 29 23:13:30 2019 -0400
-
-    configfs_register_group() shouldn't be (and isn't) called in
-rmdirable parts
-
-The problem is that for many drivers like qla2xxx, iscsi, etc, session
-creation is done by the kernel when there is a login initiated by an
-initiator, but we need a common way to export the systems sessions so
-tools like targetcli can report basic info like what initaitors are
-logged in and daemons like tcmu-runner can track sessions for load
-balancing and PGRs.
-
-This patch begins to add a sysfs interface that will initially be used
-to export LIO's sessions. The general layout will mirror the lio
-configfs tree:
-
-target_core/
-`-- $fabric_driver
-    `-- target_name
-        |-- tpgt_1
-        |   `-- sessions
-        `-- tpgt_2
-            `-- sessions
-
-iscsi example:
-target_core/
-`-- iscsi
-    `-- iqn.1999-09.com.lio:tgt1
-        |-- tpgt_1
-        |   `-- sessions
-        `-- tpgt_2
-            `-- sessions
-
-This initial patch adds only adds the upper layer dirs above the
-sessions.
+The iscsi target login process breaks up session allocation and
+registration, so it does not use target_setup_session like every one
+else. This converts iscsi to use the session sysfs helpers and drops its
+session id to use the common one.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_configfs.c        | 21 ++++++++++++++++++
- drivers/target/target_core_fabric_configfs.c | 32 ++++++++++++++++++++++=
-++++++
- drivers/target/target_core_internal.h        |  1 +
- include/target/target_core_base.h            |  4 ++++
- 4 files changed, 58 insertions(+)
+ drivers/target/iscsi/iscsi_target.c          |  4 ++--
+ drivers/target/iscsi/iscsi_target_configfs.c |  4 +---
+ drivers/target/iscsi/iscsi_target_login.c    | 16 ++--------------
+ drivers/target/iscsi/iscsi_target_nego.c     | 20 ++++++++++++++++----
+ drivers/target/iscsi/iscsi_target_stat.c     |  3 +--
+ include/target/iscsi/iscsi_target_core.h     |  2 --
+ 6 files changed, 22 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-index ff82b21f..3fd08c5 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -63,6 +63,8 @@
- 	pr_debug("Setup generic %s\n", __stringify(_name));		\
- }
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
+scsi_target.c
+index 59379d6..e8ea597 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -49,7 +49,6 @@
+ static DEFINE_MUTEX(np_lock);
 =20
-+static struct kobject *tcm_core_kobj;
-+
- extern struct t10_alua_lu_gp *default_lu_gp;
+ static struct idr tiqn_idr;
+-DEFINE_IDA(sess_ida);
+ struct mutex auth_id_lock;
 =20
- static LIST_HEAD(g_tf_list);
-@@ -245,6 +247,11 @@ static struct config_group *target_core_register_fab=
-ric(
- 	}
- 	pr_debug("Target_Core_ConfigFS: REGISTER -> Located fabric:"
- 			" %s\n", tf->tf_ops->fabric_name);
-+
-+	tf->kobj =3D kobject_create_and_add(name, tcm_core_kobj);
-+	if (!tf->kobj)
-+		goto dec_tf;
+ struct iscsit_global *iscsit_global;
+@@ -4359,6 +4358,8 @@ int iscsit_close_session(struct iscsi_session *sess=
+)
+ 	iscsit_stop_time2retain_timer(sess);
+ 	spin_unlock_bh(&se_tpg->session_lock);
+=20
++	target_sysfs_remove_session(sess->se_sess);
 +
  	/*
- 	 * On a successful target_core_get_fabric() look, the returned
- 	 * struct target_fabric_configfs *tf will contain a usage reference.
-@@ -261,6 +268,10 @@ static struct config_group *target_core_register_fab=
-ric(
- 	pr_debug("Target_Core_ConfigFS: REGISTER -> Allocated Fabric: %s\n",
- 		 config_item_name(&tf->tf_group.cg_item));
- 	return &tf->tf_group;
-+
-+dec_tf:
-+	atomic_dec(&tf->tf_access_cnt);
-+	return ERR_PTR(-EINVAL);
- }
+ 	 * transport_deregister_session_configfs() will clear the
+ 	 * struct se_node_acl->nacl_sess pointer now as a iscsi_np process cont=
+ext
+@@ -4403,7 +4404,6 @@ int iscsit_close_session(struct iscsi_session *sess=
+)
+ 	pr_debug("Decremented number of active iSCSI Sessions on"
+ 		" iSCSI TPG: %hu to %u\n", tpg->tpgt, tpg->nsessions);
 =20
- /*
-@@ -283,6 +294,9 @@ static void target_core_deregister_fabric(
- 	pr_debug("Target_Core_ConfigFS: DEREGISTER -> Releasing ci"
- 			" %s\n", config_item_name(item));
+-	ida_free(&sess_ida, sess->session_index);
+ 	kfree(sess->sess_ops);
+ 	sess->sess_ops =3D NULL;
+ 	spin_unlock_bh(&se_tpg->session_lock);
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/targe=
+t/iscsi/iscsi_target_configfs.c
+index 0fa1d57..e9e06bb 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -1344,9 +1344,7 @@ static int iscsi_get_cmd_state(struct se_cmd *se_cm=
+d)
 =20
-+	kobject_del(tf->kobj);
-+	kobject_put(tf->kobj);
-+
- 	configfs_remove_default_groups(&tf->tf_group);
- 	config_item_put(item);
- }
-@@ -3538,6 +3552,10 @@ static int __init target_core_init_configfs(void)
-=20
- 	target_init_dbroot();
-=20
-+	tcm_core_kobj =3D kobject_create_and_add("target_core", NULL);
-+	if (!tcm_core_kobj)
-+		goto out;
-+
- 	return 0;
-=20
- out:
-@@ -3555,6 +3573,9 @@ static int __init target_core_init_configfs(void)
-=20
- static void __exit target_core_exit_configfs(void)
+ static u32 lio_sess_get_index(struct se_session *se_sess)
  {
-+	kobject_del(tcm_core_kobj);
-+	kobject_put(tcm_core_kobj);
-+
- 	configfs_remove_default_groups(&alua_lu_gps_group);
- 	configfs_remove_default_groups(&alua_group);
- 	configfs_remove_default_groups(&target_core_hbagroup);
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/targe=
-t/target_core_fabric_configfs.c
-index ee85602..4d208e4 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -838,6 +838,14 @@ static struct config_group *target_fabric_make_tpg(
- 	if (!se_tpg || IS_ERR(se_tpg))
- 		return ERR_PTR(-EINVAL);
-=20
-+	se_tpg->kobj =3D kobject_create_and_add(name, wwn->kobj);
-+	if (!se_tpg->kobj)
-+		goto drop_tpg;
-+
-+	se_tpg->sessions_kobj =3D kobject_create_and_add("sessions", se_tpg->ko=
-bj);
-+	if (!se_tpg->sessions_kobj)
-+		goto del_tpg_kobj;
-+
- 	config_group_init_type_name(&se_tpg->tpg_group, name,
- 			&tf->tf_tpg_base_cit);
-=20
-@@ -872,6 +880,13 @@ static struct config_group *target_fabric_make_tpg(
- 			&se_tpg->tpg_group);
-=20
- 	return &se_tpg->tpg_group;
-+
-+del_tpg_kobj:
-+	kobject_del(se_tpg->kobj);
-+	kobject_put(se_tpg->kobj);
-+drop_tpg:
-+	tf->tf_ops->fabric_drop_tpg(se_tpg);
-+	return ERR_PTR(-EINVAL);
+-	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
+-
+-	return sess->session_index;
++	return se_sess->sid;
  }
 =20
- static void target_fabric_drop_tpg(
-@@ -881,6 +896,12 @@ static void target_fabric_drop_tpg(
- 	struct se_portal_group *se_tpg =3D container_of(to_config_group(item),
- 				struct se_portal_group, tpg_group);
+ static u32 lio_sess_get_initiator_sid(
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/i=
+scsi/iscsi_target_login.c
+index 731ee67..619ea09 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -257,7 +257,6 @@ static int iscsi_login_zero_tsih_s1(
+ {
+ 	struct iscsi_session *sess =3D NULL;
+ 	struct iscsi_login_req *pdu =3D (struct iscsi_login_req *)buf;
+-	int ret;
 =20
-+	kobject_del(se_tpg->sessions_kobj);
-+	kobject_put(se_tpg->sessions_kobj);
+ 	sess =3D kzalloc(sizeof(struct iscsi_session), GFP_KERNEL);
+ 	if (!sess) {
+@@ -291,15 +290,6 @@ static int iscsi_login_zero_tsih_s1(
+ 	timer_setup(&sess->time2retain_timer,
+ 		    iscsit_handle_time2retain_timeout, 0);
+=20
+-	ret =3D ida_alloc(&sess_ida, GFP_KERNEL);
+-	if (ret < 0) {
+-		pr_err("Session ID allocation failed %d\n", ret);
+-		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+-				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+-		goto free_sess;
+-	}
+-
+-	sess->session_index =3D ret;
+ 	sess->creation_time =3D get_jiffies_64();
+ 	/*
+ 	 * The FFP CmdSN window values will be allocated from the TPG's
+@@ -313,7 +303,7 @@ static int iscsi_login_zero_tsih_s1(
+ 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
+ 		pr_err("Unable to allocate memory for"
+ 				" struct iscsi_sess_ops.\n");
+-		goto free_id;
++		goto free_ops;
+ 	}
+=20
+ 	sess->se_sess =3D transport_alloc_session(TARGET_PROT_NORMAL);
+@@ -327,8 +317,6 @@ static int iscsi_login_zero_tsih_s1(
+=20
+ free_ops:
+ 	kfree(sess->sess_ops);
+-free_id:
+-	ida_free(&sess_ida, sess->session_index);
+ free_sess:
+ 	kfree(sess);
+ 	conn->sess =3D NULL;
+@@ -1183,8 +1171,8 @@ void iscsi_target_login_sess_out(struct iscsi_conn =
+*conn,
+ 	if (!zero_tsih || !conn->sess)
+ 		goto old_sess_out;
+=20
++	target_sysfs_remove_session(conn->sess->se_sess);
+ 	transport_free_session(conn->sess->se_sess);
+-	ida_free(&sess_ida, conn->sess->session_index);
+ 	kfree(conn->sess->sess_ops);
+ 	kfree(conn->sess);
+ 	conn->sess =3D NULL;
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/is=
+csi/iscsi_target_nego.c
+index 685d771..17e12f3 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -1260,11 +1260,23 @@ int iscsi_target_locate_portal(
+ 	tag_size =3D sizeof(struct iscsi_cmd) + conn->conn_transport->priv_size=
+;
+=20
+ 	ret =3D transport_alloc_session_tags(sess->se_sess, tag_num, tag_size);
+-	if (ret < 0) {
+-		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
+-				    ISCSI_LOGIN_STATUS_NO_RESOURCES);
+-		ret =3D -1;
++	if (ret < 0)
++		goto return_oom;
 +
-+	kobject_del(se_tpg->kobj);
-+	kobject_put(se_tpg->kobj);
++	if (conn->tpg !=3D iscsit_global->discovery_tpg) {
++		ret =3D target_sysfs_add_session(&conn->tpg->tpg_se_tpg,
++						sess->se_sess, NULL);
++		if (ret)
++			/* tags and nacl released when session is freed */
++			goto return_oom;
+ 	}
 +
- 	configfs_remove_default_groups(&se_tpg->tpg_group);
- 	config_item_put(item);
- }
-@@ -927,6 +948,7 @@ static struct config_group *target_fabric_make_wwn(
- 	struct target_fabric_configfs *tf =3D container_of(group,
- 				struct target_fabric_configfs, tf_group);
- 	struct se_wwn *wwn;
-+	int ret;
-=20
- 	if (!tf->tf_ops->fabric_make_wwn) {
- 		pr_err("tf->tf_ops.fabric_make_wwn is NULL\n");
-@@ -938,6 +960,9 @@ static struct config_group *target_fabric_make_wwn(
- 		return ERR_PTR(-EINVAL);
-=20
- 	wwn->wwn_tf =3D tf;
-+	wwn->kobj =3D kobject_create_and_add(name, tf->kobj);
-+	if (!wwn->kobj)
-+		goto drop_wwn;
-=20
- 	config_group_init_type_name(&wwn->wwn_group, name, &tf->tf_tpg_cit);
-=20
-@@ -947,7 +972,12 @@ static struct config_group *target_fabric_make_wwn(
-=20
- 	if (tf->tf_ops->add_wwn_groups)
- 		tf->tf_ops->add_wwn_groups(wwn);
++	goto out;
 +
- 	return &wwn->wwn_group;
-+
-+drop_wwn:
-+	tf->tf_ops->fabric_drop_wwn(wwn);
-+	return ERR_PTR(ret);
- }
++return_oom:
++	iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++			    ISCSI_LOGIN_STATUS_NO_RESOURCES);
++	ret =3D -1;
+ out:
+ 	kfree(tmpbuf);
+ 	return ret;
+diff --git a/drivers/target/iscsi/iscsi_target_stat.c b/drivers/target/is=
+csi/iscsi_target_stat.c
+index 35e75a3..8167fdc 100644
+--- a/drivers/target/iscsi/iscsi_target_stat.c
++++ b/drivers/target/iscsi/iscsi_target_stat.c
+@@ -630,8 +630,7 @@ static ssize_t iscsi_stat_sess_indx_show(struct confi=
+g_item *item, char *page)
+ 	if (se_sess) {
+ 		sess =3D se_sess->fabric_sess_ptr;
+ 		if (sess)
+-			ret =3D snprintf(page, PAGE_SIZE, "%u\n",
+-					sess->session_index);
++			ret =3D snprintf(page, PAGE_SIZE, "%u\n", se_sess->sid);
+ 	}
+ 	spin_unlock_bh(&se_nacl->nacl_sess_lock);
 =20
- static void target_fabric_drop_wwn(
-@@ -957,6 +987,8 @@ static void target_fabric_drop_wwn(
- 	struct se_wwn *wwn =3D container_of(to_config_group(item),
- 				struct se_wwn, wwn_group);
-=20
-+	kobject_del(wwn->kobj);
-+	kobject_put(wwn->kobj);
- 	configfs_remove_default_groups(&wwn->wwn_group);
- 	config_item_put(item);
- }
-diff --git a/drivers/target/target_core_internal.h b/drivers/target/targe=
-t_core_internal.h
-index 8533444..16ae020 100644
---- a/drivers/target/target_core_internal.h
-+++ b/drivers/target/target_core_internal.h
-@@ -27,6 +27,7 @@ struct target_backend {
- struct target_fabric_configfs {
- 	atomic_t		tf_access_cnt;
- 	struct list_head	tf_list;
-+	struct kobject		*kobj;
- 	struct config_group	tf_group;
- 	struct config_group	tf_disc_group;
- 	const struct target_core_fabric_ops *tf_ops;
-diff --git a/include/target/target_core_base.h b/include/target/target_co=
-re_base.h
-index 6d4a694..9d38b53 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -8,6 +8,7 @@
- #include <linux/percpu-refcount.h>
- #include <linux/semaphore.h>     /* struct semaphore */
- #include <linux/completion.h>
-+#include <linux/kobject.h>
-=20
- #define TARGET_CORE_VERSION		"v5.0"
-=20
-@@ -890,6 +891,8 @@ struct se_portal_group {
- 	/* Pointer to $FABRIC_MOD dependent code */
- 	const struct target_core_fabric_ops *se_tpg_tfo;
- 	struct se_wwn		*se_tpg_wwn;
-+	struct kobject		*kobj;
-+	struct kobject		*sessions_kobj;
- 	struct config_group	tpg_group;
- 	struct config_group	tpg_lun_group;
- 	struct config_group	tpg_np_group;
-@@ -928,6 +931,7 @@ struct se_wwn {
- 	void			*priv;
- 	struct config_group	wwn_group;
- 	struct config_group	fabric_stat_group;
-+	struct kobject		*kobj;
- };
-=20
- static inline void atomic_inc_mb(atomic_t *v)
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/is=
+csi/iscsi_target_core.h
+index 591cd9e..443c5af 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -657,8 +657,6 @@ struct iscsi_session {
+ 	/* LIO specific session ID */
+ 	u32			sid;
+ 	char			auth_type[8];
+-	/* unique within the target */
+-	int			session_index;
+ 	/* Used for session reference counting */
+ 	int			session_usage_count;
+ 	int			session_waiting_on_uc;
 --=20
 1.8.3.1
 
