@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B50C5C2BBFD
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0421C2BBFD
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:06:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91ADE2072D
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:05:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FDB220735
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:06:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405747AbgDNGFq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 02:05:46 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44042 "EHLO mx2.suse.de"
+        id S2405750AbgDNGGb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 02:06:31 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44280 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405711AbgDNGFq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Apr 2020 02:05:46 -0400
+        id S2405711AbgDNGGa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Apr 2020 02:06:30 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 50D37AD23;
-        Tue, 14 Apr 2020 06:05:43 +0000 (UTC)
-Subject: Re: [PATCH 02/10] sbitmap: add helpers for updating allocation hint
+        by mx2.suse.de (Postfix) with ESMTP id 0C17BAB3D;
+        Tue, 14 Apr 2020 06:06:28 +0000 (UTC)
+Subject: Re: [PATCH 03/10] sbitmap: remove sbitmap_clear_bit_unlock
 To:     Ming Lei <ming.lei@redhat.com>,
         James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org,
@@ -39,14 +39,14 @@ Cc:     Omar Sandoval <osandov@fb.com>,
         "Ewan D . Milne" <emilne@redhat.com>,
         Bart Van Assche <bart.vanassche@wdc.com>
 References: <20200211121135.30064-1-ming.lei@redhat.com>
- <20200211121135.30064-3-ming.lei@redhat.com>
+ <20200211121135.30064-4-ming.lei@redhat.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <6217456a-0acf-f752-6dbb-5a29468a9465@suse.de>
-Date:   Tue, 14 Apr 2020 08:05:42 +0200
+Message-ID: <f22b61b0-a93a-fb06-02ef-4ce229bdcf70@suse.de>
+Date:   Tue, 14 Apr 2020 08:06:25 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200211121135.30064-3-ming.lei@redhat.com>
+In-Reply-To: <20200211121135.30064-4-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -56,10 +56,7 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2/11/20 1:11 PM, Ming Lei wrote:
-> Add helpers for updating allocation hint, so that we can
-> avoid to duplicate code.
-> 
-> Prepare for moving allocation hint into sbitmap.
+> No one uses this helper any more, so kill it.
 > 
 > Cc: Omar Sandoval <osandov@fb.com>
 > Cc: Sathya Prakash <sathya.prakash@broadcom.com>
@@ -73,8 +70,8 @@ On 2/11/20 1:11 PM, Ming Lei wrote:
 > Cc: Bart Van Assche <bart.vanassche@wdc.com>
 > Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->   lib/sbitmap.c | 93 ++++++++++++++++++++++++++++++---------------------
->   1 file changed, 54 insertions(+), 39 deletions(-)
+>   include/linux/sbitmap.h | 6 ------
+>   1 file changed, 6 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
