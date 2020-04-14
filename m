@@ -2,117 +2,87 @@ Return-Path: <SRS0=dx4r=56=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 121FBC2BB85
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 18:27:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A08BDC2BB85
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 18:45:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9FA02078A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 18:27:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="evzNfjaB"
+	by mail.kernel.org (Postfix) with ESMTP id 800ED2074D
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 18:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503967AbgDNS1n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 14:27:43 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:60890 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2503911AbgDNS1G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Apr 2020 14:27:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1586888825;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TLv7+DlAPTIRbMlPGq/MKTxn9g95YUGNwTJol6ZbUDE=;
-        b=evzNfjaBoC6wCoS1V+bzcOYtHbD9SzXUS83ZXqorselZop7fMYVcJA2XhtVcujpFYBL4ZR
-        tfmaAyfvPWvASv2oK5uwpQSjcj3C1oCqIsgQPNL61hTJ/MHoA/ncXstn457cJWAIA7hwex
-        B+PnsH/bRW41yP4beWIBSvT1KRsWynM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-449-lrwga1poPzOYOa4E2pXY4A-1; Tue, 14 Apr 2020 14:27:01 -0400
-X-MC-Unique: lrwga1poPzOYOa4E2pXY4A-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E975D13FA;
-        Tue, 14 Apr 2020 18:26:55 +0000 (UTC)
-Received: from llong.remote.csb (ovpn-118-173.rdu2.redhat.com [10.10.118.173])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 936D410013A1;
-        Tue, 14 Apr 2020 18:26:48 +0000 (UTC)
-Subject: Re: [PATCH 1/2] mm, treewide: Rename kzfree() to kfree_sensitive()
-To:     dsterba@suse.cz, Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-crypto@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-References: <20200413211550.8307-1-longman@redhat.com>
- <20200413211550.8307-2-longman@redhat.com>
- <20200414124854.GQ5920@twin.jikos.cz>
-From:   Waiman Long <longman@redhat.com>
-Organization: Red Hat
-Message-ID: <3d8c80cb-68e5-9211-9eda-bc343ed7d894@redhat.com>
-Date:   Tue, 14 Apr 2020 14:26:48 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S2504299AbgDNSpP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 14:45:15 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:45529 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2504293AbgDNSpN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Apr 2020 14:45:13 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id E9ED72041CF;
+        Tue, 14 Apr 2020 20:45:10 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id g5dzQnLMwoIU; Tue, 14 Apr 2020 20:45:05 +0200 (CEST)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 08CA2204154;
+        Tue, 14 Apr 2020 20:45:03 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH] scsi:sg: add sg_remove_request in sg_write
+To:     Wu Bo <wubo40@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liuzhiqiang26@huawei.com, linfeilong@huawei.com
+References: <610618d9-e983-fd56-ed0f-639428343af7@huawei.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <4ece8e46-f9e4-e582-157a-7ab0268c04aa@interlog.com>
+Date:   Tue, 14 Apr 2020 14:44:51 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200414124854.GQ5920@twin.jikos.cz>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <610618d9-e983-fd56-ed0f-639428343af7@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/14/20 8:48 AM, David Sterba wrote:
-> On Mon, Apr 13, 2020 at 05:15:49PM -0400, Waiman Long wrote:
->>  fs/btrfs/ioctl.c                              |  2 +-
->
->> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
->> index 40b729dce91c..eab3f8510426 100644
->> --- a/fs/btrfs/ioctl.c
->> +++ b/fs/btrfs/ioctl.c
->> @@ -2691,7 +2691,7 @@ static int btrfs_ioctl_get_subvol_info(struct file *file, void __user *argp)
->>  	btrfs_put_root(root);
->>  out_free:
->>  	btrfs_free_path(path);
->> -	kzfree(subvol_info);
->> +	kfree_sensitive(subvol_info);
-> This is not in a sensitive context so please switch it to plain kfree.
-> With that you have my acked-by. Thanks.
->
-Thanks for letting me know about. I think I will send it out as a
-separate patch.
+On 2020-04-13 10:13 p.m., Wu Bo wrote:
+> From: Wu Bo <wubo40@huawei.com>
+> 
+> If the __copy_from_user function return failed,
+> it should call sg_remove_request in sg_write.
 
-Cheers,
-Longman
+This is a fix.
+
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+> Signed-off-by: Wu Bo <wubo40@huawei.com>
+> ---
+>   drivers/scsi/sg.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index 4e6af59..ff3f532 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -685,8 +685,10 @@ static int get_sg_io_pack_id(int *pack_id, void __user 
+> *buf, size_t count)
+>          hp->flags = input_size; /* structure abuse ... */
+>          hp->pack_id = old_hdr.pack_id;
+>          hp->usr_ptr = NULL;
+> -       if (copy_from_user(cmnd, buf, cmd_size))
+> +       if (copy_from_user(cmnd, buf, cmd_size)) {
+> +               sg_remove_request(sfp, srp);
+>                  return -EFAULT;
+> +       }
+>          /*
+>           * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
+>           * but is is possible that the app intended SG_DXFER_TO_DEV, because there
+> -- 
+> 1.8.3.1
+> 
 
