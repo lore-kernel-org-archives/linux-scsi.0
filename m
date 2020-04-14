@@ -2,292 +2,137 @@ Return-Path: <SRS0=dx4r=56=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D4AC2BB1D
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D10C2BB1D
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:14:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 486352076A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:08:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B90B206E9
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 06:14:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=c-s.fr header.i=@c-s.fr header.b="swLCNyX7"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wDmJnJuz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405792AbgDNGIo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 02:08:44 -0400
-Received: from pegase1.c-s.fr ([93.17.236.30]:51680 "EHLO pegase1.c-s.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405711AbgDNGIj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Apr 2020 02:08:39 -0400
-Received: from localhost (mailhub1-int [192.168.12.234])
-        by localhost (Postfix) with ESMTP id 491Zmc64yLz9txkH;
-        Tue, 14 Apr 2020 08:08:32 +0200 (CEST)
-Authentication-Results: localhost; dkim=pass
-        reason="1024-bit key; insecure key"
-        header.d=c-s.fr header.i=@c-s.fr header.b=swLCNyX7; dkim-adsp=pass;
-        dkim-atps=neutral
-X-Virus-Scanned: Debian amavisd-new at c-s.fr
-Received: from pegase1.c-s.fr ([192.168.12.234])
-        by localhost (pegase1.c-s.fr [192.168.12.234]) (amavisd-new, port 10024)
-        with ESMTP id 4yni2YpdXT3P; Tue, 14 Apr 2020 08:08:32 +0200 (CEST)
-Received: from messagerie.si.c-s.fr (messagerie.si.c-s.fr [192.168.25.192])
-        by pegase1.c-s.fr (Postfix) with ESMTP id 491Zmc4L0Rz9txkG;
-        Tue, 14 Apr 2020 08:08:32 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=c-s.fr; s=mail;
-        t=1586844512; bh=AyML/oaUiIiNPJKHTIdsIrbz6fYQpNyy/73cMAJtVGI=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=swLCNyX719PsbdWXJyAjua3tpVkuZHN/PgaRAzIUI6j3FuSDm374UPnlGZYSrGzxT
-         ndt6dm09KOl8ksmzmfqqYKRuIRIOuM5gK03jv/9oM2sodvHG7ZsAdW0K43bNG1m7AR
-         C9uF0GCYNnsgDDdT0CCsxA/cfFfbv77mzxAhptqM=
-Received: from localhost (localhost [127.0.0.1])
-        by messagerie.si.c-s.fr (Postfix) with ESMTP id 5B4A48B77D;
-        Tue, 14 Apr 2020 08:08:33 +0200 (CEST)
-X-Virus-Scanned: amavisd-new at c-s.fr
-Received: from messagerie.si.c-s.fr ([127.0.0.1])
-        by localhost (messagerie.si.c-s.fr [127.0.0.1]) (amavisd-new, port 10023)
-        with ESMTP id IsbJC8uJ2iOV; Tue, 14 Apr 2020 08:08:33 +0200 (CEST)
-Received: from [192.168.4.90] (unknown [192.168.4.90])
-        by messagerie.si.c-s.fr (Postfix) with ESMTP id 997728B752;
-        Tue, 14 Apr 2020 08:08:30 +0200 (CEST)
-Subject: Re: [PATCH v2 2/2] crypto: Remove unnecessary memzero_explicit()
-To:     Waiman Long <longman@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>
-Cc:     linux-mm@kvack.org, keyrings@vger.kernel.org,
-        linux-kernel@vger.kernel.org, x86@kernel.org,
-        linux-crypto@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-References: <20200413211550.8307-1-longman@redhat.com>
- <20200413222846.24240-1-longman@redhat.com>
-From:   Christophe Leroy <christophe.leroy@c-s.fr>
-Message-ID: <eca85e0b-0af3-c43a-31e4-bd5c3f519798@c-s.fr>
-Date:   Tue, 14 Apr 2020 08:08:22 +0200
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S2405831AbgDNGOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 02:14:42 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:53304 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2405818AbgDNGOl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Apr 2020 02:14:41 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1586844881; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=rzOJ+bED0a6EYmTfUhJM8iFUhrBMPXOs94qxa4YgxsM=;
+ b=wDmJnJuzHiJ/dSYctKVqwMZ0tGnfDI06gU14t7M3kPwZU5HJ9EBo6KvjW+FPDfm1G55filEk
+ /IGyakGLb3SaBEo1EszBrpAcd7Of+hKRYpKFlCcZeMfXPlmPBXXXHeFQncfYoDpmrF31qUZw
+ +Eh726UMG0clMxX1rOksKMxjaNo=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e9554c3.7f51e41080a0-smtp-out-n02;
+ Tue, 14 Apr 2020 06:14:27 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 7D691C43636; Tue, 14 Apr 2020 06:14:26 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9BCA5C433CB;
+        Tue, 14 Apr 2020 06:14:25 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <20200413222846.24240-1-longman@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: fr
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 14 Apr 2020 14:14:25 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/1] scsi: pm: Balance pm_only counter of request queue
+ during system resume
+In-Reply-To: <1586841875-15667-1-git-send-email-cang@codeaurora.org>
+References: <1586841875-15667-1-git-send-email-cang@codeaurora.org>
+Message-ID: <9603edb9d1ae2c81dfd0a14bce4c6ce8@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Loop more...
 
-
-Le 14/04/2020 à 00:28, Waiman Long a écrit :
-> Since kfree_sensitive() will do an implicit memzero_explicit(), there
-> is no need to call memzero_explicit() before it. Eliminate those
-> memzero_explicit() and simplify the call sites. For better correctness,
-> the setting of keylen is also moved down after the key pointer check.
+On 2020-04-14 13:24, Can Guo wrote:
+> During system resume, scsi_resume_device() decreases a request queue's
+> pm_only counter if the scsi device was quiesced before. But after that,
+> if the scsi device's RPM status is RPM_SUSPENDED, the pm_only counter 
+> is
+> still held (non-zero). Current scsi resume hook only sets the RPM 
+> status
+> of the scsi device and its request queue to RPM_ACTIVE, but leaves the
+> pm_only counter unchanged. This may make the request queue's pm_only
+> counter remain non-zero after resume hook returns, hence those who are
+> waiting on the mq_freeze_wq would never be woken up. Fix this by 
+> calling
+> blk_post_runtime_resume() if pm_only is non-zero to balance the pm_only
+> counter which is held by the scsi device's RPM ops.
 > 
-> Signed-off-by: Waiman Long <longman@redhat.com>
+> (struct request_queue)0xFFFFFF815B69E938
+> 	pm_only = (counter = 2),
+> 	rpm_status = 0,
+> 	dev = 0xFFFFFF815B0511A0,
+> 
+> ((struct device)0xFFFFFF815B0511A0)).power
+> 	is_suspended = FALSE,
+> 	runtime_status = RPM_ACTIVE,
+> 
+> (struct scsi_device)0xffffff815b051000
+> 	request_queue = 0xFFFFFF815B69E938,
+> 	sdev_state = SDEV_RUNNING,
+> 	quiesced_by = 0x0,
+> 
+> B::v.f_/task_0xFFFFFF810C246940
+> -000|__switch_to(prev = 0xFFFFFF810C246940, next = 0xFFFFFF80A49357C0)
+> -001|context_switch(inline)
+> -001|__schedule(?)
+> -002|schedule()
+> -003|blk_queue_enter(q = 0xFFFFFF815B69E938, flags = 0)
+> -004|generic_make_request(?)
+> -005|submit_bio(bio = 0xFFFFFF80A8195B80)
+> 
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> 
+> Change since v1:
+> - Added more debugging context info
+> 
 > ---
->   .../allwinner/sun8i-ce/sun8i-ce-cipher.c      | 19 +++++-------------
->   .../allwinner/sun8i-ss/sun8i-ss-cipher.c      | 20 +++++--------------
->   drivers/crypto/amlogic/amlogic-gxl-cipher.c   | 12 +++--------
->   drivers/crypto/inside-secure/safexcel_hash.c  |  3 +--
->   4 files changed, 14 insertions(+), 40 deletions(-)
+>  drivers/scsi/scsi_pm.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/crypto/allwinner/sun8i-ce/sun8i-ce-cipher.c b/drivers/crypto/allwinner/sun8i-ce/sun8i-ce-cipher.c
-> index aa4e8fdc2b32..8358fac98719 100644
-> --- a/drivers/crypto/allwinner/sun8i-ce/sun8i-ce-cipher.c
-> +++ b/drivers/crypto/allwinner/sun8i-ce/sun8i-ce-cipher.c
-> @@ -366,10 +366,7 @@ void sun8i_ce_cipher_exit(struct crypto_tfm *tfm)
->   {
->   	struct sun8i_cipher_tfm_ctx *op = crypto_tfm_ctx(tfm);
->   
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> +	kfree_sensitive(op->key);
->   	crypto_free_sync_skcipher(op->fallback_tfm);
->   	pm_runtime_put_sync_suspend(op->ce->dev);
->   }
-> @@ -391,14 +388,11 @@ int sun8i_ce_aes_setkey(struct crypto_skcipher *tfm, const u8 *key,
->   		dev_dbg(ce->dev, "ERROR: Invalid keylen %u\n", keylen);
->   		return -EINVAL;
->   	}
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> -	op->keylen = keylen;
-> +	kfree_sensitive(op->key);
->   	op->key = kmemdup(key, keylen, GFP_KERNEL | GFP_DMA);
->   	if (!op->key)
->   		return -ENOMEM;
-> +	op->keylen = keylen;
-
-Does it matter at all to ensure op->keylen is not set when of->key is 
-NULL ? I'm not sure.
-
-But if it does, then op->keylen should be set to 0 when freeing op->key.
-
->   
->   	crypto_sync_skcipher_clear_flags(op->fallback_tfm, CRYPTO_TFM_REQ_MASK);
->   	crypto_sync_skcipher_set_flags(op->fallback_tfm, tfm->base.crt_flags & CRYPTO_TFM_REQ_MASK);
-> @@ -416,14 +410,11 @@ int sun8i_ce_des3_setkey(struct crypto_skcipher *tfm, const u8 *key,
->   	if (err)
->   		return err;
->   
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> -	op->keylen = keylen;
-> +	kfree_sensitive(op->key);
->   	op->key = kmemdup(key, keylen, GFP_KERNEL | GFP_DMA);
->   	if (!op->key)
->   		return -ENOMEM;
-> +	op->keylen = keylen;
-
-Same comment as above.
-
->   
->   	crypto_sync_skcipher_clear_flags(op->fallback_tfm, CRYPTO_TFM_REQ_MASK);
->   	crypto_sync_skcipher_set_flags(op->fallback_tfm, tfm->base.crt_flags & CRYPTO_TFM_REQ_MASK);
-> diff --git a/drivers/crypto/allwinner/sun8i-ss/sun8i-ss-cipher.c b/drivers/crypto/allwinner/sun8i-ss/sun8i-ss-cipher.c
-> index 5246ef4f5430..0495fbc27fcc 100644
-> --- a/drivers/crypto/allwinner/sun8i-ss/sun8i-ss-cipher.c
-> +++ b/drivers/crypto/allwinner/sun8i-ss/sun8i-ss-cipher.c
-> @@ -249,7 +249,6 @@ static int sun8i_ss_cipher(struct skcipher_request *areq)
->   			offset = areq->cryptlen - ivsize;
->   			if (rctx->op_dir & SS_DECRYPTION) {
->   				memcpy(areq->iv, backup_iv, ivsize);
-> -				memzero_explicit(backup_iv, ivsize);
->   				kfree_sensitive(backup_iv);
->   			} else {
->   				scatterwalk_map_and_copy(areq->iv, areq->dst, offset,
-> @@ -367,10 +366,7 @@ void sun8i_ss_cipher_exit(struct crypto_tfm *tfm)
->   {
->   	struct sun8i_cipher_tfm_ctx *op = crypto_tfm_ctx(tfm);
->   
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> +	kfree_sensitive(op->key);
->   	crypto_free_sync_skcipher(op->fallback_tfm);
->   	pm_runtime_put_sync(op->ss->dev);
->   }
-> @@ -392,14 +388,11 @@ int sun8i_ss_aes_setkey(struct crypto_skcipher *tfm, const u8 *key,
->   		dev_dbg(ss->dev, "ERROR: Invalid keylen %u\n", keylen);
->   		return -EINVAL;
->   	}
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> -	op->keylen = keylen;
-> +	kfree_sensitive(op->key);
->   	op->key = kmemdup(key, keylen, GFP_KERNEL | GFP_DMA);
->   	if (!op->key)
->   		return -ENOMEM;
-> +	op->keylen = keylen;
-
-Same comment as above.
-
->   
->   	crypto_sync_skcipher_clear_flags(op->fallback_tfm, CRYPTO_TFM_REQ_MASK);
->   	crypto_sync_skcipher_set_flags(op->fallback_tfm, tfm->base.crt_flags & CRYPTO_TFM_REQ_MASK);
-> @@ -418,14 +411,11 @@ int sun8i_ss_des3_setkey(struct crypto_skcipher *tfm, const u8 *key,
->   		return -EINVAL;
->   	}
->   
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> -	op->keylen = keylen;
-> +	kfree_sensitive(op->key);
->   	op->key = kmemdup(key, keylen, GFP_KERNEL | GFP_DMA);
->   	if (!op->key)
->   		return -ENOMEM;
-> +	op->keylen = keylen;
-
-Same comment as above.
-
->   
->   	crypto_sync_skcipher_clear_flags(op->fallback_tfm, CRYPTO_TFM_REQ_MASK);
->   	crypto_sync_skcipher_set_flags(op->fallback_tfm, tfm->base.crt_flags & CRYPTO_TFM_REQ_MASK);
-> diff --git a/drivers/crypto/amlogic/amlogic-gxl-cipher.c b/drivers/crypto/amlogic/amlogic-gxl-cipher.c
-> index fd1269900d67..6aa9ce7bbbd4 100644
-> --- a/drivers/crypto/amlogic/amlogic-gxl-cipher.c
-> +++ b/drivers/crypto/amlogic/amlogic-gxl-cipher.c
-> @@ -341,10 +341,7 @@ void meson_cipher_exit(struct crypto_tfm *tfm)
->   {
->   	struct meson_cipher_tfm_ctx *op = crypto_tfm_ctx(tfm);
->   
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> +	kfree_sensitive(op->key);
->   	crypto_free_sync_skcipher(op->fallback_tfm);
->   }
->   
-> @@ -368,14 +365,11 @@ int meson_aes_setkey(struct crypto_skcipher *tfm, const u8 *key,
->   		dev_dbg(mc->dev, "ERROR: Invalid keylen %u\n", keylen);
->   		return -EINVAL;
->   	}
-> -	if (op->key) {
-> -		memzero_explicit(op->key, op->keylen);
-> -		kfree(op->key);
-> -	}
-> -	op->keylen = keylen;
-> +	kfree_sensitive(op->key);
->   	op->key = kmemdup(key, keylen, GFP_KERNEL | GFP_DMA);
->   	if (!op->key)
->   		return -ENOMEM;
-> +	op->keylen = keylen;
-
-Same comment as above.
-
->   
->   	return crypto_sync_skcipher_setkey(op->fallback_tfm, key, keylen);
->   }
-> diff --git a/drivers/crypto/inside-secure/safexcel_hash.c b/drivers/crypto/inside-secure/safexcel_hash.c
-> index 43962bc709c6..4a2d162914de 100644
-> --- a/drivers/crypto/inside-secure/safexcel_hash.c
-> +++ b/drivers/crypto/inside-secure/safexcel_hash.c
-> @@ -1081,8 +1081,7 @@ static int safexcel_hmac_init_pad(struct ahash_request *areq,
->   		}
->   
->   		/* Avoid leaking */
-> -		memzero_explicit(keydup, keylen);
-> -		kfree(keydup);
-> +		kfree_sensitive(keydup);
->   
->   		if (ret)
->   			return ret;
-> 
-
-
-Christophe
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index 3717eea..4804029 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -93,8 +93,10 @@ static int scsi_dev_type_resume(struct device *dev,
+>  		 */
+>  		if (!err && scsi_is_sdev_device(dev)) {
+>  			struct scsi_device *sdev = to_scsi_device(dev);
+> -
+> -			blk_set_runtime_active(sdev->request_queue);
+> +			if (blk_queue_pm_only(sdev->request_queue))
+> +				blk_post_runtime_resume(sdev->request_queue, 0);
+> +			else
+> +				blk_set_runtime_active(sdev->request_queue);
+>  		}
+>  	}
