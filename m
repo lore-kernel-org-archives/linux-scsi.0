@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F54C3815B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 07:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42ACFC2BA19
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 07:43:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7A4B206B6
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 07:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 229CD2072D
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 07:43:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="X0Bk9CN4"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aah8AlFD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406855AbgDNHnH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 03:43:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60016 "EHLO
+        id S2406866AbgDNHnP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 03:43:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406817AbgDNHmm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 03:42:42 -0400
+        with ESMTP id S2406802AbgDNHmg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 03:42:36 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBBBAC0A3BDC;
-        Tue, 14 Apr 2020 00:42:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42536C0A3BE2;
+        Tue, 14 Apr 2020 00:42:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Yiy8HJ7iOwaoJyA/zpGe+vmz7/rFgb15yfB26Pd2AAk=; b=X0Bk9CN4NH773w+2a78oEd4rpM
-        +SL28rISDg+cfceSGsopIatlo+81L/abpNwJFwf9YrLCSNGEzEub+xkHzeVD+UDVDn8eLlUsUSBrj
-        yVSIZ5VNqA3oA71Owh6jvyttZtNpF8yQjQgAhLvtAiRe2rYNCaXTryqxGrfu+ejtKWAoy0q5Of2c4
-        hDp5gXxZ8nspHvoxjVwAzbHo4Mbrw2UXXct68Y6fPXJ+8asYsWLdrYKYlDN//PKOT5V18iEoI2WA0
-        IrXK8UoGAFxi4yBG6kShibj4MTEtQMCEIJYli7xeGBpflqG/LFN5p+zxkZGegbCwkid4XVyvgzaLq
-        jO47Xg3Q==;
+        bh=NAIt5oTU1BTGIn6G50o3gY9uHzLMJtJBa12r7DtM3UI=; b=aah8AlFDeQ2I5GtgiyQIPyzdbJ
+        F2daZihSc+Z6UypPCUCwGv1BUh3YPZFsZl3CkxPd9zaDUGgAf51462yRBtlXgL6indxaCCuTYvmV7
+        sDSjk3GptQv0AEn645tLZd/iOEErRckzWdwTWKEJP0ZclyaqJtagrXcf0p0h7NZvNOX7pChgQV74v
+        /QlCBEgfVAhBDXYWkUrtqPjEm21FBA+6NFAx7Y1MrWOtA21m37v3Es/6IixeeY3w/hnJh4Ndz0xJZ
+        rLcVXrAb/S1AxbNjhOX8kliok3PKQl4e50IwgmcPEKaAeHe3N4LHcpQZw9YvazvAJGVqIM8CzF2dA
+        jdPXoSbg==;
 Received: from [2001:4bb8:180:384b:4c21:af7:dd95:e552] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jOGDM-00079P-Az; Tue, 14 Apr 2020 07:42:36 +0000
+        id 1jOGDG-00076C-Mo; Tue, 14 Apr 2020 07:42:31 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 3/5] scsi: merge scsi_init_sgtable into scsi_init_io
-Date:   Tue, 14 Apr 2020 09:42:23 +0200
-Message-Id: <20200414074225.332324-4-hch@lst.de>
+Subject: [PATCH 1/5] block: remove RQF_COPY_USER
+Date:   Tue, 14 Apr 2020 09:42:21 +0200
+Message-Id: <20200414074225.332324-2-hch@lst.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200414074225.332324-1-hch@lst.de>
 References: <20200414074225.332324-1-hch@lst.de>
@@ -55,85 +55,100 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_init_io is the only caller of scsi_init_sgtable.  Merge the two
-function to make upcoming changes a little easier.
+The RQF_COPY_USER is set for bio where the passthrough request mapping
+helpers decided that bounce buffering is required.  It is then used to
+pad scatterlist for drivers that required it.  But given that
+non-passthrough requests are per definition aligned, and directly mapped
+pass-through request must be aligned it is not actually required at all.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_lib.c | 46 ++++++++++++++++-------------------------
- 1 file changed, 18 insertions(+), 28 deletions(-)
+ block/blk-map.c        | 9 +--------
+ block/blk-merge.c      | 3 +--
+ block/blk-mq-debugfs.c | 1 -
+ include/linux/blkdev.h | 2 --
+ 4 files changed, 2 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 47835c4b4ee0..274dd3ffa66b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -978,30 +978,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		scsi_io_completion_action(cmd, result);
- }
+diff --git a/block/blk-map.c b/block/blk-map.c
+index b72c361911a4..b6fa343fea9f 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -654,8 +654,6 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 			bio = rq->bio;
+ 	} while (iov_iter_count(&i));
  
--static blk_status_t scsi_init_sgtable(struct request *req,
--		struct scsi_data_buffer *sdb)
--{
--	int count;
--
--	/*
--	 * If sg table allocation fails, requeue request later.
--	 */
--	if (unlikely(sg_alloc_table_chained(&sdb->table,
--			blk_rq_nr_phys_segments(req), sdb->table.sgl,
--			SCSI_INLINE_SG_CNT)))
--		return BLK_STS_RESOURCE;
--
--	/* 
--	 * Next, walk the list, and fill in the addresses and sizes of
--	 * each segment.
--	 */
--	count = blk_rq_map_sg(req->q, req, sdb->table.sgl);
--	BUG_ON(count > sdb->table.nents);
--	sdb->table.nents = count;
--	sdb->length = blk_rq_payload_bytes(req);
--	return BLK_STS_OK;
--}
--
- /*
-  * Function:    scsi_init_io()
-  *
-@@ -1017,17 +993,31 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
+-	if (!bio_flagged(bio, BIO_USER_MAPPED))
+-		rq->rq_flags |= RQF_COPY_USER;
+ 	return 0;
+ 
+ unmap_rq:
+@@ -731,7 +729,6 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
  {
- 	struct request *rq = cmd->request;
- 	blk_status_t ret;
-+	int count;
+ 	int reading = rq_data_dir(rq) == READ;
+ 	unsigned long addr = (unsigned long) kbuf;
+-	int do_copy = 0;
+ 	struct bio *bio, *orig_bio;
+ 	int ret;
  
- 	if (WARN_ON_ONCE(!blk_rq_nr_phys_segments(rq)))
- 		return BLK_STS_IOERR;
+@@ -740,8 +737,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	if (!len || !kbuf)
+ 		return -EINVAL;
  
--	ret = scsi_init_sgtable(rq, &cmd->sdb);
--	if (ret)
--		return ret;
-+	/*
-+	 * If sg table allocation fails, requeue request later.
-+	 */
-+	if (unlikely(sg_alloc_table_chained(&cmd->sdb.table,
-+			blk_rq_nr_phys_segments(rq), cmd->sdb.table.sgl,
-+			SCSI_INLINE_SG_CNT)))
-+		return BLK_STS_RESOURCE;
-+
-+	/*
-+	 * Next, walk the list, and fill in the addresses and sizes of
-+	 * each segment.
-+	 */
-+	count = blk_rq_map_sg(rq->q, rq, cmd->sdb.table.sgl);
-+	BUG_ON(count > cmd->sdb.table.nents);
-+	cmd->sdb.table.nents = count;
-+	cmd->sdb.length = blk_rq_payload_bytes(rq);
+-	do_copy = !blk_rq_aligned(q, addr, len) || object_is_on_stack(kbuf);
+-	if (do_copy)
++	if (!blk_rq_aligned(q, addr, len) || object_is_on_stack(kbuf))
+ 		bio = bio_copy_kern(q, kbuf, len, gfp_mask, reading);
+ 	else
+ 		bio = bio_map_kern(q, kbuf, len, gfp_mask);
+@@ -752,9 +748,6 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 	bio->bi_opf &= ~REQ_OP_MASK;
+ 	bio->bi_opf |= req_op(rq);
  
- 	if (blk_integrity_rq(rq)) {
- 		struct scsi_data_buffer *prot_sdb = cmd->prot_sdb;
--		int ivecs, count;
-+		int ivecs;
+-	if (do_copy)
+-		rq->rq_flags |= RQF_COPY_USER;
+-
+ 	orig_bio = bio;
+ 	ret = blk_rq_append_bio(rq, &bio);
+ 	if (unlikely(ret)) {
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 1534ed736363..99c9759f3a8a 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -532,8 +532,7 @@ int blk_rq_map_sg(struct request_queue *q, struct request *rq,
+ 	else if (rq->bio)
+ 		nsegs = __blk_bios_map_sg(q, rq->bio, sglist, &sg);
  
- 		if (WARN_ON_ONCE(!prot_sdb)) {
- 			/*
+-	if (unlikely(rq->rq_flags & RQF_COPY_USER) &&
+-	    (blk_rq_bytes(rq) & q->dma_pad_mask)) {
++	if (blk_rq_bytes(rq) && (blk_rq_bytes(rq) & q->dma_pad_mask)) {
+ 		unsigned int pad_len =
+ 			(q->dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
+ 
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index b3f2ba483992..96b7a35c898a 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -292,7 +292,6 @@ static const char *const rqf_name[] = {
+ 	RQF_NAME(MQ_INFLIGHT),
+ 	RQF_NAME(DONTPREP),
+ 	RQF_NAME(PREEMPT),
+-	RQF_NAME(COPY_USER),
+ 	RQF_NAME(FAILED),
+ 	RQF_NAME(QUIET),
+ 	RQF_NAME(ELVPRIV),
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 32868fbedc9e..76da162b6ae9 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -82,8 +82,6 @@ typedef __u32 __bitwise req_flags_t;
+ /* set for "ide_preempt" requests and also for requests for which the SCSI
+    "quiesce" state must be ignored. */
+ #define RQF_PREEMPT		((__force req_flags_t)(1 << 8))
+-/* contains copies of user pages */
+-#define RQF_COPY_USER		((__force req_flags_t)(1 << 9))
+ /* vaguely specified driver internal error.  Ignored by the block layer */
+ #define RQF_FAILED		((__force req_flags_t)(1 << 10))
+ /* don't warn about errors */
 -- 
 2.25.1
 
