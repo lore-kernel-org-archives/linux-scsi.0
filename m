@@ -2,92 +2,79 @@ Return-Path: <SRS0=dx4r=56=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DCE7C2BA2B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 01:59:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10893C2BB86
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 02:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BE5E20692
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 01:59:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qypbwXhy"
+	by mail.kernel.org (Postfix) with ESMTP id EA17C20732
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 02:13:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403904AbgDNB7d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Apr 2020 21:59:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:38144 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727867AbgDNB7b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Apr 2020 21:59:31 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03E1wWIQ128662;
-        Tue, 14 Apr 2020 01:59:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=Pss09eBJvBQFMkNBerzkwr8grKGZSCPuJdKRQI0iY6I=;
- b=qypbwXhyoF8mF6bYdiGH8RRqpTWteyQuD7lBD8vZAAo22kvgrfv7itVr3il+4kWa8T4F
- EpZcJxT00ZWVeJYS4daY1f34mCijuzcnvc+tmJDS3IDtbEJyscb+pcqjF/6vdBvB7vE/
- a9T12H29lFnElAL8qH8+fv35VrINVn5cKoz/nFiahHL9p2t4FbhorlGTrFV9GUFnHoJZ
- pPSndRos+SqqlqJ3CiCaLHcwPzYbRPOmWOpd6bh/YGsHkafFOskjwjZHXQjMdJdbdeUS
- bJ054h7FrUN2XrzFrMCu/aIW077b4VdHVioVqIQxZbK0wPk89kIGMrv0NwZzsOQLyYDL jg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 30b5ar1pya-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Apr 2020 01:59:20 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03E1vgrQ090924;
-        Tue, 14 Apr 2020 01:59:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 30bqcfyvg2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Apr 2020 01:59:19 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03E1xHAk026817;
-        Tue, 14 Apr 2020 01:59:17 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Apr 2020 18:59:17 -0700
-To:     Li Bin <huawei.libin@huawei.com>
-Cc:     <dgilbert@interlog.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <xiexiuqi@huawei.com>
-Subject: Re: [PATCH] scsi: sg: add sg_remove_request in sg_common_write
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <1586777361-17339-1-git-send-email-huawei.libin@huawei.com>
-Date:   Mon, 13 Apr 2020 21:59:14 -0400
-In-Reply-To: <1586777361-17339-1-git-send-email-huawei.libin@huawei.com> (Li
-        Bin's message of "Mon, 13 Apr 2020 19:29:21 +0800")
-Message-ID: <yq1a73eu8st.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S2403998AbgDNCNn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Apr 2020 22:13:43 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2367 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2403967AbgDNCNl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Apr 2020 22:13:41 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id A6650673AB8245D8F5B5;
+        Tue, 14 Apr 2020 10:13:37 +0800 (CST)
+Received: from [127.0.0.1] (10.173.221.252) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Tue, 14 Apr 2020
+ 10:13:29 +0800
+To:     Doug Gilbert <dgilbert@interlog.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>
+From:   Wu Bo <wubo40@huawei.com>
+Subject: [PATCH] scsi:sg: add sg_remove_request in sg_write
+Message-ID: <610618d9-e983-fd56-ed0f-639428343af7@huawei.com>
+Date:   Tue, 14 Apr 2020 10:13:28 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=923
- bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004140014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9590 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0
- clxscore=1011 priorityscore=1501 malwarescore=0 phishscore=0 spamscore=0
- mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004140014
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.173.221.252]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Wu Bo <wubo40@huawei.com>
 
-Li,
+If the __copy_from_user function return failed,
+it should call sg_remove_request in sg_write.
 
-> If the dxfer_len is greater than 256M that the request is invalid,
-> it should call sg_remove_request in sg_common_write.
+Signed-off-by: Wu Bo <wubo40@huawei.com>
+---
+  drivers/scsi/sg.c | 4 +++-
+  1 file changed, 3 insertions(+), 1 deletion(-)
 
-Applied to 5.7/scsi-fixes with a tweak to the commit description. Thanks!
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 4e6af59..ff3f532 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -685,8 +685,10 @@ static int get_sg_io_pack_id(int *pack_id, void 
+__user *buf, size_t count)
+         hp->flags = input_size; /* structure abuse ... */
+         hp->pack_id = old_hdr.pack_id;
+         hp->usr_ptr = NULL;
+-       if (copy_from_user(cmnd, buf, cmd_size))
++       if (copy_from_user(cmnd, buf, cmd_size)) {
++               sg_remove_request(sfp, srp);
+                 return -EFAULT;
++       }
+         /*
+          * SG_DXFER_TO_FROM_DEV is functionally equivalent to 
+SG_DXFER_FROM_DEV,
+          * but is is possible that the app intended SG_DXFER_TO_DEV, 
+because there
+--
+1.8.3.1
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
