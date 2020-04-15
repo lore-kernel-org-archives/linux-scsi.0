@@ -2,149 +2,112 @@ Return-Path: <SRS0=9vL1=57=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17ED7C2BB1D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:10:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7EEC2BB1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE09320732
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:10:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pWHC5/B7"
+	by mail.kernel.org (Postfix) with ESMTP id F1A40206D5
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392859AbgDOCKt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 22:10:49 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:52852 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392857AbgDOCKq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 22:10:46 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03F2AfBW123270;
-        Wed, 15 Apr 2020 02:10:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=/o9xCxgZCh0gGnKFd0ytwjAncqwC3n/gIciqWKHLsqU=;
- b=pWHC5/B7xEUUJp3Nban6uPx+zY8P3gpv5yCUHLseKLHpJmeXmKPJSwfBL26TU8uosdiQ
- BzcagCumBvcJ+GOcCOnAs7nvXgN8fDvlg+q/qEWmoRKQmhHO+l8woNinwyOIP0gDvP4x
- 2qc7MQfpDxxmzM+yQCa+qhabMNCrIsKEfqxtzVzqnbNNIUaGQwi7yeKfbdW4t3IoA2gk
- xrkt/BFFNPDfKv3f1BNr5bZGA5ZMGLmBvIzql6XiIdCmdUnO64B67vvbiIL640v4sFCK
- CCp5DZKH2SXtRdWkaNUUVBIOT5nfHCaj6r+qgtSQikoHFnnRTg/QiF+EXjWHsG73puwe NQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 30dn9cgpf4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Apr 2020 02:10:41 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03F27tAv097694;
-        Wed, 15 Apr 2020 02:10:40 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30dn98j1sq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Apr 2020 02:10:40 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03F2AcY5030241;
-        Wed, 15 Apr 2020 02:10:39 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Apr 2020 19:10:38 -0700
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com, hare@suse.de, Damien.LeMoal@wdc.com
-Subject: Re: [PATCH v4 09/14] scsi_debug: add zbc parameter
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200225062351.21267-1-dgilbert@interlog.com>
-        <20200225062351.21267-10-dgilbert@interlog.com>
-Date:   Tue, 14 Apr 2020 22:10:36 -0400
-In-Reply-To: <20200225062351.21267-10-dgilbert@interlog.com> (Douglas
-        Gilbert's message of "Tue, 25 Feb 2020 01:23:46 -0500")
-Message-ID: <yq1lfmxpkgz.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S2392958AbgDOCXM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 22:23:12 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:52303 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731321AbgDOCXG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 22:23:06 -0400
+Received: by mail-pj1-f66.google.com with SMTP id ng8so6143657pjb.2;
+        Tue, 14 Apr 2020 19:23:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=K0/ZtYveb0WSnWgjE0GmECpyrbEo9Oi4rVOpH9N3mVA=;
+        b=jzz+01IkP9JxidYMdpLsPj1rr3//hjnIjEJSGjDSbJub/9Y+daqlteBcH4yvwhFU75
+         RUDUuNmuovZduys16Z/vMnNlqivERdm9ONCjv5I99b8Q9oszcZ1yyQtcLLDFDFI6YTWv
+         YgjiWobv0utDFPfOq6aLxSm4t/QqLVkSFmoYcksWzoBlVxhuuaKTdIJkyKV5/7eHyDa8
+         0Xi9cm5tDQtk3O2yMPjOnawZlAFBIaeyMumDRL+n5j73D0hD8F4f/wtHVt45FNLZCfPr
+         KNxQTByLh4QMo+iPa6kT326Q6jNE4/InQZ07W104iqDzFS2FsvoUWzaDwjVm9uqaL4SY
+         9s2g==
+X-Gm-Message-State: AGi0PuaemndXX0haD/05iPsutN5kbZBSYPjdM+2bqb1KyHecweaQT1DO
+        VPV7RK9EqGwOwMhkCRQc6kpxxfhVWf0=
+X-Google-Smtp-Source: APiQypLs6Wyc7OpCheIVQfNewQIiwgqjHmKh8mY3DRWN4k1duJVybQJo/imlvRj+eEYpru8Y0JTVkQ==
+X-Received: by 2002:a17:902:8c88:: with SMTP id t8mr2745910plo.176.1586917385875;
+        Tue, 14 Apr 2020 19:23:05 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:3d9e:6f43:1883:92f0? ([2601:647:4000:d7:3d9e:6f43:1883:92f0])
+        by smtp.gmail.com with ESMTPSA id v24sm12158318pfm.94.2020.04.14.19.23.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Apr 2020 19:23:04 -0700 (PDT)
+Subject: Re: [RFC PATCH 1/5] target: add sysfs support
+To:     Mike Christie <mchristi@redhat.com>, jsmart2021@gmail.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, nab@linux-iscsi.org
+References: <20200414051514.7296-1-mchristi@redhat.com>
+ <20200414051514.7296-2-mchristi@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <b6b87cff-c359-b7f6-ffd0-ff5b49dccbb8@acm.org>
+Date:   Tue, 14 Apr 2020 19:23:03 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 bulkscore=0
- spamscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004150013
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0
- lowpriorityscore=0 impostorscore=0 malwarescore=0 bulkscore=0
- priorityscore=1501 spamscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004150013
+In-Reply-To: <20200414051514.7296-2-mchristi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-04-13 22:15, Mike Christie wrote:
+> target_core/
+> `-- $fabric_driver
+>     `-- target_name
+>         |-- tpgt_1
+>         |   `-- sessions
+>         `-- tpgt_2
+>             `-- sessions
+> 
+> iscsi example:
+> target_core/
+> `-- iscsi
+>     `-- iqn.1999-09.com.lio:tgt1
+>         |-- tpgt_1
+>         |   `-- sessions
+>         `-- tpgt_2
+>             `-- sessions
 
-Doug,
+After the SCSI target core was added to the kernel tree an NVMe target
+core was added. How about using the name "scsi_target" for the top-level
+directory instead of "target_core" to prevent confusion with the NVMe
+target?
 
-Forgot to comment on this:
+Thanks,
 
-> +MODULE_PARM_DESC(zbc, "'none' [0]; 'aware' [1]; 'managed' [2] (def=0). Can have 'host_' prefix");
-
-[...]
-
-> +static int sdeb_zbc_model_str(const char *cp)
-> +{
-> +	int res = -EINVAL;
-> +
-> +	if (isalpha(cp[0])) {
-> +		if (strstr(cp, "none"))
-> +			res = BLK_ZONED_NONE;
-> +		else if (strstr(cp, "aware"))
-> +			res = BLK_ZONED_HA;
-> +		else if (strstr(cp, "managed"))
-> +			res = BLK_ZONED_HM;
-> +	} else {
-> +		int n, ret;
-> +
-> +		ret = kstrtoint(cp, 0, &n);
-> +		if (ret)
-> +			return ret;
-> +		if (n >= 0 || n <= 2)
-> +			res = n;
-> +	}
-> +	return res;
-> +}
-> +
-> +static ssize_t zbc_show(struct device_driver *ddp, char *buf)
-> +{
-> +	switch (sdeb_zbc_model) {
-> +	case BLK_ZONED_NONE:	/* 0 */
-> +		return scnprintf(buf, PAGE_SIZE, "none\n");
-> +	case BLK_ZONED_HA:	/* 1, not yet supported */
-> +		return scnprintf(buf, PAGE_SIZE, "host_aware\n");
-> +	case BLK_ZONED_HM:	/* 2 */
-> +		return scnprintf(buf, PAGE_SIZE, "host_managed\n");
-> +	default:
-> +		return scnprintf(buf, PAGE_SIZE, "unknown_zbc_model [0x%x]\n",
-> +				 (unsigned int)sdeb_zbc_model);
-> +	}
-> +}
-
-static const char *zbc_model[] = {
-	[BLK_ZONED_NONE] = "none",
-	[BLK_ZONED_HA]   = "host_aware",
-	[BLK_ZONED_HM]   = "host_managed",
-};
-
-[...]
-
-And then in parameter parsing you can do:
-
-	sdeb_zbc_model = sysfs_match_string(zbc_model, buf);
-	if (sdeb_zbc_model < 0)
-		return -EINVAL;
-
-zbc_show() can go away and you can do:
-
-	pr_info(".... %s\n", zbc_model[sdeb_zbc_model]);
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
