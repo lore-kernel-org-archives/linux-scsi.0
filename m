@@ -6,47 +6,47 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D7EEC2BB1D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CF6C2BB1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:30:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1A40206D5
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:23:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BFBB20737
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:30:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392958AbgDOCXM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 22:23:12 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:52303 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731321AbgDOCXG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 22:23:06 -0400
-Received: by mail-pj1-f66.google.com with SMTP id ng8so6143657pjb.2;
-        Tue, 14 Apr 2020 19:23:06 -0700 (PDT)
+        id S2387802AbgDOCab (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 22:30:31 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34651 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729186AbgDOCa0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 22:30:26 -0400
+Received: by mail-pl1-f193.google.com with SMTP id a23so711788plm.1;
+        Tue, 14 Apr 2020 19:30:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=K0/ZtYveb0WSnWgjE0GmECpyrbEo9Oi4rVOpH9N3mVA=;
-        b=jzz+01IkP9JxidYMdpLsPj1rr3//hjnIjEJSGjDSbJub/9Y+daqlteBcH4yvwhFU75
-         RUDUuNmuovZduys16Z/vMnNlqivERdm9ONCjv5I99b8Q9oszcZ1yyQtcLLDFDFI6YTWv
-         YgjiWobv0utDFPfOq6aLxSm4t/QqLVkSFmoYcksWzoBlVxhuuaKTdIJkyKV5/7eHyDa8
-         0Xi9cm5tDQtk3O2yMPjOnawZlAFBIaeyMumDRL+n5j73D0hD8F4f/wtHVt45FNLZCfPr
-         KNxQTByLh4QMo+iPa6kT326Q6jNE4/InQZ07W104iqDzFS2FsvoUWzaDwjVm9uqaL4SY
-         9s2g==
-X-Gm-Message-State: AGi0PuaemndXX0haD/05iPsutN5kbZBSYPjdM+2bqb1KyHecweaQT1DO
-        VPV7RK9EqGwOwMhkCRQc6kpxxfhVWf0=
-X-Google-Smtp-Source: APiQypLs6Wyc7OpCheIVQfNewQIiwgqjHmKh8mY3DRWN4k1duJVybQJo/imlvRj+eEYpru8Y0JTVkQ==
-X-Received: by 2002:a17:902:8c88:: with SMTP id t8mr2745910plo.176.1586917385875;
-        Tue, 14 Apr 2020 19:23:05 -0700 (PDT)
+        bh=YQZHyePF+6j26BRIml82egHgGBTgMnsKmOETdnWup7g=;
+        b=PKoqCRrVeLDhASeRwfTe0ykNXIA9jtad5NM9Y706hOmRVgbhtSuy1q8dyDXBPsejEG
+         +bWhxsCj3fLXmOV12B8CA9qyT60S2IJZclXZdb+w6T2V/dw7sjyWSq2ps6qblGWWhlWS
+         T1TtW9VSJUhdtrDosyGNGqKNVI2kSYrmLeVhnvYt3DMKjHjUTdcwddy23YEUbUftxZ0f
+         /e9wkEbqSi2EqBT23y/RgeQQxYz8gueYVdKyC1UgmEUCh5nd2/fyJzPGW/x6Ee6YF4ga
+         XKJUpBQFP3cRJb9hZ52LFlre5/hw9IjwVTcCFkzFoD0AoYEAXwJ7+76B4yp39Puken9o
+         291A==
+X-Gm-Message-State: AGi0PuYoaPPnsL6hari6GTdVeVBvfRkYirr9Sk/70iAoY7nWolgY5SKD
+        aoL2haS0qEjTjG3TAQ3X2To=
+X-Google-Smtp-Source: APiQypJRUFERYBe9V2BYDvjopeuL57TsOJM31eVaKMTUG3plWE1uO8KvnPgS0OMKSmXaHeVCCRggtA==
+X-Received: by 2002:a17:90a:4809:: with SMTP id a9mr3502672pjh.73.1586917823617;
+        Tue, 14 Apr 2020 19:30:23 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:3d9e:6f43:1883:92f0? ([2601:647:4000:d7:3d9e:6f43:1883:92f0])
-        by smtp.gmail.com with ESMTPSA id v24sm12158318pfm.94.2020.04.14.19.23.04
+        by smtp.gmail.com with ESMTPSA id q201sm12417021pfq.32.2020.04.14.19.30.21
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Apr 2020 19:23:04 -0700 (PDT)
-Subject: Re: [RFC PATCH 1/5] target: add sysfs support
+        Tue, 14 Apr 2020 19:30:21 -0700 (PDT)
+Subject: Re: [RFC PATCH 2/5] target: add sysfs session helper functions
 To:     Mike Christie <mchristi@redhat.com>, jsmart2021@gmail.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, nab@linux-iscsi.org
 References: <20200414051514.7296-1-mchristi@redhat.com>
- <20200414051514.7296-2-mchristi@redhat.com>
+ <20200414051514.7296-3-mchristi@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -71,12 +71,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <b6b87cff-c359-b7f6-ffd0-ff5b49dccbb8@acm.org>
-Date:   Tue, 14 Apr 2020 19:23:03 -0700
+Message-ID: <20ecaf0e-698c-fb9c-26fd-a1f2dc79392e@acm.org>
+Date:   Tue, 14 Apr 2020 19:30:20 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200414051514.7296-2-mchristi@redhat.com>
+In-Reply-To: <20200414051514.7296-3-mchristi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -86,27 +86,37 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-04-13 22:15, Mike Christie wrote:
-> target_core/
-> `-- $fabric_driver
->     `-- target_name
->         |-- tpgt_1
->         |   `-- sessions
->         `-- tpgt_2
->             `-- sessions
-> 
-> iscsi example:
-> target_core/
-> `-- iscsi
->     `-- iqn.1999-09.com.lio:tgt1
->         |-- tpgt_1
->         |   `-- sessions
->         `-- tpgt_2
->             `-- sessions
+> @@ -537,8 +538,15 @@ void transport_deregister_session_configfs(struct se_session *se_sess)
+>  }
+>  EXPORT_SYMBOL(transport_deregister_session_configfs);
+>  
+> +
 
-After the SCSI target core was added to the kernel tree an NVMe target
-core was added. How about using the name "scsi_target" for the top-level
-directory instead of "target_core" to prevent confusion with the NVMe
-target?
+A single blank line is probably sufficient here?
+
+>  void transport_free_session(struct se_session *se_sess)
+>  {
+> +	kobject_put(&se_sess->kobj);
+> +}
+> +EXPORT_SYMBOL(transport_free_session);
+> +
+> +void __target_free_session(struct se_session *se_sess)
+> +{
+>  	struct se_node_acl *se_nacl = se_sess->se_node_acl;
+>  
+>  	/*
+> @@ -582,7 +590,6 @@ void transport_free_session(struct se_session *se_sess)
+>  	percpu_ref_exit(&se_sess->cmd_count);
+>  	kmem_cache_free(se_sess_cache, se_sess);
+>  }
+> -EXPORT_SYMBOL(transport_free_session);
+
+Does this patch defer execution of the code inside
+transport_free_session() from when transport_free_session() is called to
+when the last reference to a session is dropped? Can that have
+unintended side effects? How about keeping most of the code that occurs
+in transport_free_session() in that function and only freeing the memory
+associated with the session if the last reference is dropped?
 
 Thanks,
 
