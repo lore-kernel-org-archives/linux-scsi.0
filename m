@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8EAC2BA19
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 12:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 242FBC38A29
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 12:50:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1EF7206A2
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 12:49:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 086CA206D5
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 12:50:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S370356AbgDOMtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Apr 2020 08:49:43 -0400
-Received: from mx2.suse.de ([195.135.220.15]:33164 "EHLO mx2.suse.de"
+        id S370411AbgDOMuW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Apr 2020 08:50:22 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33558 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S370368AbgDOMtj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Apr 2020 08:49:39 -0400
+        id S370405AbgDOMuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Apr 2020 08:50:20 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 24C47AC44;
-        Wed, 15 Apr 2020 12:49:37 +0000 (UTC)
-Subject: Re: [PATCH v3 07/31] elx: libefc_sli: APIs to setup SLI library
+        by mx2.suse.de (Postfix) with ESMTP id 1CCCDAF21;
+        Wed, 15 Apr 2020 12:50:18 +0000 (UTC)
+Subject: Re: [PATCH v3 10/31] elx: libefc: FC Domain state machine interfaces
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     dwagner@suse.de, maier@linux.ibm.com, bvanassche@acm.org,
         herbszt@gmx.de, natechancellor@gmail.com, rdunlap@infradead.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20200412033303.29574-1-jsmart2021@gmail.com>
- <20200412033303.29574-8-jsmart2021@gmail.com>
+ <20200412033303.29574-11-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <50a8fa4b-c688-a84d-a043-9a5216511edc@suse.de>
-Date:   Wed, 15 Apr 2020 14:49:35 +0200
+Message-ID: <237d9a7a-1898-3218-8df5-e855bab213dd@suse.de>
+Date:   Wed, 15 Apr 2020 14:50:17 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200412033303.29574-8-jsmart2021@gmail.com>
+In-Reply-To: <20200412033303.29574-11-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -45,27 +45,39 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/12/20 5:32 AM, James Smart wrote:
-> This patch continues the libefc_sli SLI-4 library population.
+> This patch continues the libefc library population.
 > 
-> This patch adds APIS to initialize the library, initialize
-> the SLI Port, reset firmware, terminate the SLI Port, and
-> terminate the library.
+> This patch adds library interface definitions for:
+> - FC Domain registration, allocation and deallocation sequence
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > 
 > ---
 > v3:
->    Changed some function types to bool.
->    Return defined return values EFC_SUCCESS/FAIL
->    Defined dump types SLI4_FUNC_DESC_DUMP, SLI4_CHIP_LEVEL_DUMP.
->    Defined dump status return values for sli_dump_is_ready().
->    Formatted function defines to use 80 character length.
+>    Acquire efc->lock in efc_domain_cb to protect all the domain state
+>      transitions.
+>    Removed efc_assert and used WARN_ON.
+>    Note: Re: Locking:
+>      efc->lock is a global per port lock which is used to synchronize and
+>      serialize all the state machine event processing. As there is a
+>      single EQ all the events are serialized. This lock will protect the
+>      sport list, sport, node list, node, and vport list. All the libefc
+>      APIs called by the driver will take this lock internally.
+>   Note: Re: "It would even simplify the code, as several cases can be
+>        collapsed into one ..."
+>      The Hardware events cannot be collapsed as each events is different
+>      from State Machine events. The code present looks more readable than
+>      a mapping array in this case.
 > ---
->   drivers/scsi/elx/libefc_sli/sli4.c | 1202 ++++++++++++++++++++++++++++++++++++
->   drivers/scsi/elx/libefc_sli/sli4.h |  434 +++++++++++++
->   2 files changed, 1636 insertions(+)
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>   drivers/scsi/elx/libefc/efc_domain.c | 1109 ++++++++++++++++++++++++++++++++++
+>   drivers/scsi/elx/libefc/efc_domain.h |   52 ++
+>   2 files changed, 1161 insertions(+)
+>   create mode 100644 drivers/scsi/elx/libefc/efc_domain.c
+>   create mode 100644 drivers/scsi/elx/libefc/efc_domain.h
+>
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
