@@ -2,1673 +2,966 @@ Return-Path: <SRS0=9vL1=57=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B802BC2BA19
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 14:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8177C3815B
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 15:38:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F2EB208FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 14:34:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BB1220767
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 15:38:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394156AbgDOOeh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Apr 2020 10:34:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48922 "EHLO mx2.suse.de"
+        id S1414781AbgDOPiT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Apr 2020 11:38:19 -0400
+Received: from mx2.suse.de ([195.135.220.15]:50334 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2394148AbgDOOe1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Apr 2020 10:34:27 -0400
+        id S1414731AbgDOPiJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Apr 2020 11:38:09 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 92BEAAC6D;
-        Wed, 15 Apr 2020 14:34:20 +0000 (UTC)
-Date:   Wed, 15 Apr 2020 16:34:20 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com,
-        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
-        rdunlap@infradead.org, hare@suse.de,
+        by mx2.suse.de (Postfix) with ESMTP id 5A026ABCF;
+        Wed, 15 Apr 2020 15:38:04 +0000 (UTC)
+Subject: Re: [PATCH v3 11/31] elx: libefc: SLI and FC PORT state machine
+ interfaces
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     dwagner@suse.de, maier@linux.ibm.com, bvanassche@acm.org,
+        herbszt@gmx.de, natechancellor@gmail.com, rdunlap@infradead.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: Re: [PATCH v3 05/31] elx: libefc_sli: Populate and post different
- WQEs
-Message-ID: <20200415143420.wus5dfqhjuxxbpqn@carbon>
 References: <20200412033303.29574-1-jsmart2021@gmail.com>
- <20200412033303.29574-6-jsmart2021@gmail.com>
+ <20200412033303.29574-12-jsmart2021@gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <630c8f13-884b-9f0d-429f-8a4a5cd0d515@suse.de>
+Date:   Wed, 15 Apr 2020 17:38:03 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200412033303.29574-6-jsmart2021@gmail.com>
+In-Reply-To: <20200412033303.29574-12-jsmart2021@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 11, 2020 at 08:32:37PM -0700, James Smart wrote:
-> This patch continues the libefc_sli SLI-4 library population.
+On 4/12/20 5:32 AM, James Smart wrote:
+> This patch continues the libefc library population.
 > 
-> This patch adds service routines to create different WQEs and adds
-> APIs to issue iread, iwrite, treceive, tsend and other work queue
-> entries.
+> This patch adds library interface definitions for:
+> - SLI and FC port (aka n_port_id) registration, allocation and
+>    deallocation.
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > 
 > ---
 > v3:
->   Return defined return values EFC_SUCCESS/FAIL
->   Removed HLM argument for WQE calls.
->   Reduced args for sli_fcp_treceive64_wqe(),
->     sli_fcp_cont_treceive64_wqe(), sli_fcp_trsp64_wqe(). Defined new
->     structure sli_fcp_tgt_params.
->   Removed sli_fc_process_link_state function which was not used for FC.
+>    Acquire efc->lock in efc_lport_cb to protect all the port state
+>      transitions.
+>    Add vport_lock to protect vport_list access.
+>    Fixed vport_sport allocation race.
+>    Reworked on vport code.
 > ---
->  drivers/scsi/elx/libefc_sli/sli4.c | 1565 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 1565 insertions(+)
+>   drivers/scsi/elx/libefc/efc_sport.c | 846 ++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/elx/libefc/efc_sport.h |  52 +++
+>   2 files changed, 898 insertions(+)
+>   create mode 100644 drivers/scsi/elx/libefc/efc_sport.c
+>   create mode 100644 drivers/scsi/elx/libefc/efc_sport.h
 > 
-> diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
-> index 224a06610c78..0365d7943468 100644
-> --- a/drivers/scsi/elx/libefc_sli/sli4.c
-> +++ b/drivers/scsi/elx/libefc_sli/sli4.c
-> @@ -1538,3 +1538,1568 @@ sli_cq_parse(struct sli4 *sli4, struct sli4_queue *cq, u8 *cqe,
->  
->  	return rc;
->  }
+> diff --git a/drivers/scsi/elx/libefc/efc_sport.c b/drivers/scsi/elx/libefc/efc_sport.c
+> new file mode 100644
+> index 000000000000..99f5213e0902
+> --- /dev/null
+> +++ b/drivers/scsi/elx/libefc/efc_sport.c
+> @@ -0,0 +1,846 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
 > +
-> +/* Write an ABORT_WQE work queue entry */
+> +/*
+> + * Details SLI port (sport) functions.
+> + */
+> +
+> +#include "efc.h"
+> +
+> +/* HW sport callback events from the user driver */
 > +int
-> +sli_abort_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +	      enum sli4_abort_type type, bool send_abts, u32 ids,
-> +	      u32 mask, u16 tag, u16 cq_id)
+> +efc_lport_cb(void *arg, int event, void *data)
 > +{
-> +	struct sli4_abort_wqe	*abort = buf;
-
-Why not just a space instead of a tab?
-
+> +	struct efc *efc = arg;
+> +	struct efc_sli_port *sport = data;
+> +	enum efc_sm_event sm_event = EFC_EVT_LAST;
+> +	unsigned long flags = 0;
 > +
-> +	memset(buf, 0, size);
-
-Is 'size' expected to be equal to the size of 'struct sli4_abort_wqe'?
-Or could it be bigger? In case 'size' can be bigger than 'abort', do
-you need to clear the complete buffer, or would it be enough to clear
-only the size of 'abort'?
-
-> +
-> +	switch (type) {
-> +	case SLI_ABORT_XRI:
-> +		abort->criteria = SLI4_ABORT_CRITERIA_XRI_TAG;
-> +		if (mask) {
-> +			efc_log_warn(sli4, "%#x aborting XRI %#x warning non-zero mask",
-> +				mask, ids);
-> +			mask = 0;
-> +		}
+> +	switch (event) {
+> +	case EFC_HW_PORT_ALLOC_OK:
+> +		sm_event = EFC_EVT_SPORT_ALLOC_OK;
 > +		break;
-> +	case SLI_ABORT_ABORT_ID:
-> +		abort->criteria = SLI4_ABORT_CRITERIA_ABORT_TAG;
+> +	case EFC_HW_PORT_ALLOC_FAIL:
+> +		sm_event = EFC_EVT_SPORT_ALLOC_FAIL;
 > +		break;
-> +	case SLI_ABORT_REQUEST_ID:
-> +		abort->criteria = SLI4_ABORT_CRITERIA_REQUEST_TAG;
+> +	case EFC_HW_PORT_ATTACH_OK:
+> +		sm_event = EFC_EVT_SPORT_ATTACH_OK;
 > +		break;
-> +	default:
-> +		efc_log_info(sli4, "unsupported type %#x\n", type);
-> +		return EFC_FAIL;
-> +	}
-> +
-> +	abort->ia_ir_byte |= send_abts ? 0 : 1;
-> +
-> +	/* Suppress ABTS retries */
-> +	abort->ia_ir_byte |= SLI4_ABRT_WQE_IR;
-> +
-> +	abort->t_mask = cpu_to_le32(mask);
-> +	abort->t_tag  = cpu_to_le32(ids);
-> +	abort->command = SLI4_WQE_ABORT;
-> +	abort->request_tag = cpu_to_le16(tag);
-> +
-> +	abort->dw10w0_flags = cpu_to_le16(SLI4_ABRT_WQE_QOSD);
-> +
-> +	abort->cq_id = cpu_to_le16(cq_id);
-> +	abort->cmdtype_wqec_byte |= SLI4_CMD_ABORT_WQE;
-> +
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write an ELS_REQUEST64_WQE work queue entry */
-> +int
-> +sli_els_request64_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		      struct efc_dma *sgl,
-> +		      u8 req_type, u32 req_len, u32 max_rsp_len,
-> +		      u8 timeout, u16 xri, u16 tag,
-> +		      u16 cq_id, u16 rnodeindicator, u16 sportindicator,
-> +		      bool rnodeattached, u32 rnode_fcid, u32 sport_fcid)
-> +{
-> +	struct sli4_els_request64_wqe	*els = buf;
-
-And here as well, a tab and the following decleration use a space.
-
-> +	struct sli4_sge *sge = sgl->virt;
-> +	bool is_fabric = false;
-> +	struct sli4_bde *bptr;
-> +
-> +	memset(buf, 0, size);
-
-The same question as above about the size.
-
-> +
-> +	bptr = &els->els_request_payload;
-> +	if (sli4->sgl_pre_registered) {
-> +		els->qosd_xbl_hlm_iod_dbde_wqes &= ~SLI4_REQ_WQE_XBL;
-> +
-> +		els->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_REQ_WQE_DBDE;
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				    (req_len & SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.data.low  = sge[0].buffer_address_low;
-> +		bptr->u.data.high = sge[0].buffer_address_high;
-> +	} else {
-> +		els->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_REQ_WQE_XBL;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BLP << BDE_TYPE_SHIFT) |
-> +				    ((2 * sizeof(struct sli4_sge)) &
-> +				     SLI4_BDE_MASK_BUFFER_LEN));
-> +		bptr->u.blp.low  = cpu_to_le32(lower_32_bits(sgl->phys));
-> +		bptr->u.blp.high = cpu_to_le32(upper_32_bits(sgl->phys));
-> +	}
-> +
-> +	els->els_request_payload_length = cpu_to_le32(req_len);
-> +	els->max_response_payload_length = cpu_to_le32(max_rsp_len);
-> +
-> +	els->xri_tag = cpu_to_le16(xri);
-> +	els->timer = timeout;
-> +	els->class_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +
-> +	els->command = SLI4_WQE_ELS_REQUEST64;
-> +
-> +	els->request_tag = cpu_to_le16(tag);
-> +
-> +	els->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_REQ_WQE_IOD;
-> +
-> +	els->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_REQ_WQE_QOSD;
-> +
-> +	/* figure out the ELS_ID value from the request buffer */
-> +
-> +	switch (req_type) {
-> +	case ELS_LOGO:
-> +		els->cmdtype_elsid_byte |=
-> +			SLI4_ELS_REQUEST64_LOGO << SLI4_REQ_WQE_ELSID_SHFT;
-> +		if (rnodeattached) {
-> +			els->ct_byte |= (SLI4_GENERIC_CONTEXT_RPI <<
-> +					 SLI4_REQ_WQE_CT_SHFT);
-
-The brackets are not needed.
-
-> +			els->context_tag = cpu_to_le16(rnodeindicator);
-> +		} else {
-> +			els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_VPI << SLI4_REQ_WQE_CT_SHFT;
-> +			els->context_tag =
-> +				cpu_to_le16(sportindicator);
-> +		}
-> +		if (rnode_fcid == FC_FID_FLOGI)
-> +			is_fabric = true;
+> +	case EFC_HW_PORT_ATTACH_FAIL:
+> +		sm_event = EFC_EVT_SPORT_ATTACH_FAIL;
 > +		break;
-> +	case ELS_FDISC:
-> +		if (rnode_fcid == FC_FID_FLOGI)
-> +			is_fabric = true;
-> +		if (sport_fcid == 0) {
-> +			els->cmdtype_elsid_byte |=
-> +			SLI4_ELS_REQUEST64_FDISC << SLI4_REQ_WQE_ELSID_SHFT;
-> +			is_fabric = true;
-> +		} else {
-> +			els->cmdtype_elsid_byte |=
-> +			SLI4_ELS_REQUEST64_OTHER << SLI4_REQ_WQE_ELSID_SHFT;
-> +		}
-> +		els->ct_byte |= (SLI4_GENERIC_CONTEXT_VPI <<
-> +				 SLI4_REQ_WQE_CT_SHFT);
-
-Brakets are not needed
-
-> +		els->context_tag = cpu_to_le16(sportindicator);
-> +		els->sid_sp_dword |= cpu_to_le32(1 << SLI4_REQ_WQE_SP_SHFT);
+> +	case EFC_HW_PORT_FREE_OK:
+> +		sm_event = EFC_EVT_SPORT_FREE_OK;
 > +		break;
-> +	case ELS_FLOGI:
-> +		els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_VPI << SLI4_REQ_WQE_CT_SHFT;
-> +		els->context_tag = cpu_to_le16(sportindicator);
-> +		/*
-> +		 * Set SP here ... we haven't done a REG_VPI yet
-> +		 * need to maybe not set this when we have
-> +		 * completed VFI/VPI registrations ...
-> +		 *
-> +		 * Use the FC_ID of the SPORT if it has been allocated,
-> +		 * otherwise use an S_ID of zero.
-> +		 */
-> +		els->sid_sp_dword |= cpu_to_le32(1 << SLI4_REQ_WQE_SP_SHFT);
-> +		if (sport_fcid != U32_MAX)
-> +			els->sid_sp_dword |= cpu_to_le32(sport_fcid);
-> +		break;
-> +	case ELS_PLOGI:
-> +		els->cmdtype_elsid_byte |=
-> +			SLI4_ELS_REQUEST64_PLOGI << SLI4_REQ_WQE_ELSID_SHFT;
-> +		els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_VPI << SLI4_REQ_WQE_CT_SHFT;
-> +		els->context_tag = cpu_to_le16(sportindicator);
-> +		break;
-> +	case ELS_SCR:
-> +		els->cmdtype_elsid_byte |=
-> +			SLI4_ELS_REQUEST64_OTHER << SLI4_REQ_WQE_ELSID_SHFT;
-> +		els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_VPI << SLI4_REQ_WQE_CT_SHFT;
-> +		els->context_tag = cpu_to_le16(sportindicator);
+> +	case EFC_HW_PORT_FREE_FAIL:
+> +		sm_event = EFC_EVT_SPORT_FREE_FAIL;
 > +		break;
 > +	default:
-> +		els->cmdtype_elsid_byte |=
-> +			SLI4_ELS_REQUEST64_OTHER << SLI4_REQ_WQE_ELSID_SHFT;
-> +		if (rnodeattached) {
-> +			els->ct_byte |= (SLI4_GENERIC_CONTEXT_RPI <<
-> +					 SLI4_REQ_WQE_CT_SHFT);
-> +			els->context_tag = cpu_to_le16(sportindicator);
-> +		} else {
-> +			els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_VPI << SLI4_REQ_WQE_CT_SHFT;
-> +			els->context_tag =
-> +				cpu_to_le16(sportindicator);
-> +		}
-> +		break;
+> +		efc_log_err(efc, "unknown event %#x\n", event);
+> +		return EFC_FAIL;
 > +	}
 > +
-> +	if (is_fabric)
-> +		els->cmdtype_elsid_byte |= SLI4_ELS_REQUEST64_CMD_FABRIC;
-> +	else
-> +		els->cmdtype_elsid_byte |= SLI4_ELS_REQUEST64_CMD_NON_FABRIC;
+> +	efc_log_debug(efc, "sport event: %s\n", efc_sm_event_name(sm_event));
 > +
-> +	els->cq_id = cpu_to_le16(cq_id);
-> +
-> +	if (((els->ct_byte & SLI4_REQ_WQE_CT) >> SLI4_REQ_WQE_CT_SHFT) !=
-> +					SLI4_GENERIC_CONTEXT_RPI)
-> +		els->remote_id_dword = cpu_to_le32(rnode_fcid);
-> +
-> +	if (((els->ct_byte & SLI4_REQ_WQE_CT) >> SLI4_REQ_WQE_CT_SHFT) ==
-> +					SLI4_GENERIC_CONTEXT_VPI)
-> +		els->temporary_rpi = cpu_to_le16(rnodeindicator);
+> +	spin_lock_irqsave(&efc->lock, flags);
+> +	efc_sm_post_event(&sport->sm, sm_event, NULL);
+> +	spin_unlock_irqrestore(&efc->lock, flags);
 > +
 > +	return EFC_SUCCESS;
 > +}
 > +
-> +/* Write an FCP_ICMND64_WQE work queue entry */
-> +int
-> +sli_fcp_icmnd64_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		    struct efc_dma *sgl, u16 xri, u16 tag,
-> +		    u16 cq_id, u32 rpi, u32 rnode_fcid, u8 timeout)
+> +struct efc_sli_port *
+> +efc_sport_alloc(struct efc_domain *domain, uint64_t wwpn, uint64_t wwnn,
+> +		u32 fc_id, bool enable_ini, bool enable_tgt)
 > +{
-> +	struct sli4_fcp_icmnd64_wqe *icmnd = buf;
-> +	struct sli4_sge *sge = NULL;
-> +	struct sli4_bde *bptr;
-> +	u32 len;
+> +	struct efc_sli_port *sport;
 > +
-> +	memset(buf, 0, size);
+> +	if (domain->efc->enable_ini)
+> +		enable_ini = 0;
 > +
-> +	if (!sgl || !sgl->virt) {
-> +		efc_log_err(sli4, "bad parameter sgl=%p virt=%p\n",
-> +		       sgl, sgl ? sgl->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +	sge = sgl->virt;
-> +	bptr = &icmnd->bde;
-> +	if (sli4->sgl_pre_registered) {
-> +		icmnd->qosd_xbl_hlm_iod_dbde_wqes &= ~SLI4_ICMD_WQE_XBL;
-> +
-> +		icmnd->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_ICMD_WQE_DBDE;
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				    (le32_to_cpu(sge[0].buffer_length) &
-> +				     SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.data.low  = sge[0].buffer_address_low;
-> +		bptr->u.data.high = sge[0].buffer_address_high;
-> +	} else {
-> +		icmnd->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_ICMD_WQE_XBL;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BLP << BDE_TYPE_SHIFT) |
-> +				    (sgl->size & SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.blp.low  = cpu_to_le32(lower_32_bits(sgl->phys));
-> +		bptr->u.blp.high = cpu_to_le32(upper_32_bits(sgl->phys));
-> +	}
-> +
-> +	len = le32_to_cpu(sge[0].buffer_length) +
-> +	      le32_to_cpu(sge[1].buffer_length);
-> +	icmnd->payload_offset_length = cpu_to_le16(len);
-> +	icmnd->xri_tag = cpu_to_le16(xri);
-> +	icmnd->context_tag = cpu_to_le16(rpi);
-> +	icmnd->timer = timeout;
-> +
-> +	/* WQE word 4 contains read transfer length */
-> +	icmnd->class_pu_byte |= 2 << SLI4_ICMD_WQE_PU_SHFT;
-> +	icmnd->class_pu_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	icmnd->command = SLI4_WQE_FCP_ICMND64;
-> +	icmnd->dif_ct_bs_byte |=
-> +		SLI4_GENERIC_CONTEXT_RPI << SLI4_ICMD_WQE_CT_SHFT;
-> +
-> +	icmnd->abort_tag = cpu_to_le32(xri);
-> +
-> +	icmnd->request_tag = cpu_to_le16(tag);
-> +	icmnd->len_loc1_byte |= SLI4_ICMD_WQE_LEN_LOC_BIT1;
-> +	icmnd->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_ICMD_WQE_LEN_LOC_BIT2;
-> +	icmnd->cmd_type_byte |= SLI4_CMD_FCP_ICMND64_WQE;
-> +	icmnd->cq_id = cpu_to_le16(cq_id);
-> +
-> +	return  EFC_SUCCESS;
-> +}
-> +
-> +/* Write an FCP_IREAD64_WQE work queue entry */
-> +int
-> +sli_fcp_iread64_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		    struct efc_dma *sgl, u32 first_data_sge,
-> +		    u32 xfer_len, u16 xri, u16 tag,
-> +		    u16 cq_id, u32 rpi, u32 rnode_fcid,
-> +		    u8 dif, u8 bs, u8 timeout)
-> +{
-> +	struct sli4_fcp_iread64_wqe *iread = buf;
-> +	struct sli4_sge *sge = NULL;
-> +	struct sli4_bde *bptr;
-> +	u32 sge_flags, len;
-> +
-> +	memset(buf, 0, size);
-> +
-> +	if (!sgl || !sgl->virt) {
-> +		efc_log_err(sli4, "bad parameter sgl=%p virt=%p\n",
-> +		       sgl, sgl ? sgl->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +
-> +	sge = sgl->virt;
-> +	bptr = &iread->bde;
-> +	if (sli4->sgl_pre_registered) {
-> +		iread->qosd_xbl_hlm_iod_dbde_wqes &= ~SLI4_IR_WQE_XBL;
-> +
-> +		iread->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IR_WQE_DBDE;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				    (le32_to_cpu(sge[0].buffer_length) &
-> +				     SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.blp.low  = sge[0].buffer_address_low;
-> +		bptr->u.blp.high = sge[0].buffer_address_high;
-> +	} else {
-> +		iread->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IR_WQE_XBL;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BLP << BDE_TYPE_SHIFT) |
-> +				    (sgl->size & SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.blp.low  =
-> +				cpu_to_le32(lower_32_bits(sgl->phys));
-> +		bptr->u.blp.high =
-> +				cpu_to_le32(upper_32_bits(sgl->phys));
-> +
-> +		/*
-> +		 * fill out fcp_cmnd buffer len and change resp buffer to be of
-> +		 * type "skip" (note: response will still be written to sge[1]
-> +		 * if necessary)
-> +		 */
-> +		len = le32_to_cpu(sge[0].buffer_length);
-> +		iread->fcp_cmd_buffer_length = cpu_to_le16(len);
-> +
-> +		sge_flags = le32_to_cpu(sge[1].dw2_flags);
-> +		sge_flags &= (~SLI4_SGE_TYPE_MASK);
-> +		sge_flags |= (SLI4_SGE_TYPE_SKIP << SLI4_SGE_TYPE_SHIFT);
-> +		sge[1].dw2_flags = cpu_to_le32(sge_flags);
-> +	}
-> +
-> +	len = le32_to_cpu(sge[0].buffer_length) +
-> +	      le32_to_cpu(sge[1].buffer_length);
-> +	iread->payload_offset_length = cpu_to_le16(len);
-> +	iread->total_transfer_length = cpu_to_le32(xfer_len);
-> +
-> +	iread->xri_tag = cpu_to_le16(xri);
-> +	iread->context_tag = cpu_to_le16(rpi);
-> +
-> +	iread->timer = timeout;
-> +
-> +	/* WQE word 4 contains read transfer length */
-> +	iread->class_pu_byte |= 2 << SLI4_IR_WQE_PU_SHFT;
-> +	iread->class_pu_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	iread->command = SLI4_WQE_FCP_IREAD64;
-> +	iread->dif_ct_bs_byte |=
-> +		SLI4_GENERIC_CONTEXT_RPI << SLI4_IR_WQE_CT_SHFT;
-> +	iread->dif_ct_bs_byte |= dif;
-> +	iread->dif_ct_bs_byte  |= bs << SLI4_IR_WQE_BS_SHFT;
-> +
-> +	iread->abort_tag = cpu_to_le32(xri);
-> +
-> +	iread->request_tag = cpu_to_le16(tag);
-> +	iread->len_loc1_byte |= SLI4_IR_WQE_LEN_LOC_BIT1;
-> +	iread->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IR_WQE_LEN_LOC_BIT2;
-> +	iread->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IR_WQE_IOD;
-> +	iread->cmd_type_byte |= SLI4_CMD_FCP_IREAD64_WQE;
-> +	iread->cq_id = cpu_to_le16(cq_id);
-> +
-> +	if (sli4->perf_hint) {
-> +		bptr = &iread->first_data_bde;
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +			  (le32_to_cpu(sge[first_data_sge].buffer_length) &
-> +			     SLI4_BDE_MASK_BUFFER_LEN));
-> +		bptr->u.data.low =
-> +			sge[first_data_sge].buffer_address_low;
-> +		bptr->u.data.high =
-> +			sge[first_data_sge].buffer_address_high;
-> +	}
-> +
-> +	return  EFC_SUCCESS;
-> +}
-> +
-> +/* Write an FCP_IWRITE64_WQE work queue entry */
-> +int
-> +sli_fcp_iwrite64_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		     struct efc_dma *sgl,
-> +		     u32 first_data_sge, u32 xfer_len,
-> +		     u32 first_burst, u16 xri, u16 tag,
-> +		     u16 cq_id, u32 rpi,
-> +		     u32 rnode_fcid,
-> +		     u8 dif, u8 bs, u8 timeout)
-> +{
-> +	struct sli4_fcp_iwrite64_wqe *iwrite = buf;
-> +	struct sli4_sge *sge = NULL;
-> +	struct sli4_bde *bptr;
-> +	u32 sge_flags, min, len;
-> +
-> +	memset(buf, 0, size);
-> +
-> +	if (!sgl || !sgl->virt) {
-> +		efc_log_err(sli4, "bad parameter sgl=%p virt=%p\n",
-> +		       sgl, sgl ? sgl->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +	sge = sgl->virt;
-> +	bptr = &iwrite->bde;
-> +	if (sli4->sgl_pre_registered) {
-> +		iwrite->qosd_xbl_hlm_iod_dbde_wqes &= ~SLI4_IWR_WQE_XBL;
-> +
-> +		iwrite->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IWR_WQE_DBDE;
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				     (le32_to_cpu(sge[0].buffer_length) &
-> +				      SLI4_BDE_MASK_BUFFER_LEN));
-> +		bptr->u.data.low  = sge[0].buffer_address_low;
-> +		bptr->u.data.high = sge[0].buffer_address_high;
-> +	} else {
-> +		iwrite->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IWR_WQE_XBL;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				    (sgl->size & SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.blp.low  =
-> +			cpu_to_le32(lower_32_bits(sgl->phys));
-> +		bptr->u.blp.high =
-> +			cpu_to_le32(upper_32_bits(sgl->phys));
-> +
-> +		/*
-> +		 * fill out fcp_cmnd buffer len and change resp buffer to be of
-> +		 * type "skip" (note: response will still be written to sge[1]
-> +		 * if necessary)
-> +		 */
-> +		len = le32_to_cpu(sge[0].buffer_length);
-> +		iwrite->fcp_cmd_buffer_length = cpu_to_le16(len);
-> +		sge_flags = le32_to_cpu(sge[1].dw2_flags);
-> +		sge_flags &= ~SLI4_SGE_TYPE_MASK;
-> +		sge_flags |= (SLI4_SGE_TYPE_SKIP << SLI4_SGE_TYPE_SHIFT);
-> +		sge[1].dw2_flags = cpu_to_le32(sge_flags);
-> +	}
-> +
-> +	len = le32_to_cpu(sge[0].buffer_length) +
-> +	      le32_to_cpu(sge[1].buffer_length);
-> +	iwrite->payload_offset_length = cpu_to_le16(len);
-> +	iwrite->total_transfer_length = cpu_to_le16(xfer_len);
-> +	min = (xfer_len < first_burst) ? xfer_len : first_burst;
-> +	iwrite->initial_transfer_length = cpu_to_le16(min);
-> +
-> +	iwrite->xri_tag = cpu_to_le16(xri);
-> +	iwrite->context_tag = cpu_to_le16(rpi);
-> +
-> +	iwrite->timer = timeout;
-> +	/* WQE word 4 contains read transfer length */
-> +	iwrite->class_pu_byte |= 2 << SLI4_IWR_WQE_PU_SHFT;
-> +	iwrite->class_pu_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	iwrite->command = SLI4_WQE_FCP_IWRITE64;
-> +	iwrite->dif_ct_bs_byte |=
-> +			SLI4_GENERIC_CONTEXT_RPI << SLI4_IWR_WQE_CT_SHFT;
-> +	iwrite->dif_ct_bs_byte |= dif;
-> +	iwrite->dif_ct_bs_byte |= bs << SLI4_IWR_WQE_BS_SHFT;
-> +
-> +	iwrite->abort_tag = cpu_to_le32(xri);
-> +
-> +	iwrite->request_tag = cpu_to_le16(tag);
-> +	iwrite->len_loc1_byte |= SLI4_IWR_WQE_LEN_LOC_BIT1;
-> +	iwrite->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_IWR_WQE_LEN_LOC_BIT2;
-> +	iwrite->cmd_type_byte |= SLI4_CMD_FCP_IWRITE64_WQE;
-> +	iwrite->cq_id = cpu_to_le16(cq_id);
-> +
-> +	if (sli4->perf_hint) {
-> +		bptr = &iwrite->first_data_bde;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +			 (le32_to_cpu(sge[first_data_sge].buffer_length) &
-> +			     SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.data.low =
-> +			sge[first_data_sge].buffer_address_low;
-> +		bptr->u.data.high =
-> +			sge[first_data_sge].buffer_address_high;
-> +	}
-> +
-> +	return  EFC_SUCCESS;
-> +}
-> +
-> +/* Write an FCP_TRECEIVE64_WQE work queue entry */
-> +int
-> +sli_fcp_treceive64_wqe(struct sli4 *sli, void *buf,
-> +		       struct efc_dma *sgl,
-> +		       u32 first_data_sge,
-> +		       u32 xfer_len, u16 xri, u16 tag,
-> +		       u16 cq_id, u32 rpi, u32 rnode_fcid, u8 dif, u8 bs,
-> +		       struct sli_fcp_tgt_params *params)
-> +{
-> +	struct sli4_fcp_treceive64_wqe *trecv = buf;
-> +	struct sli4_fcp_128byte_wqe *trecv_128 = buf;
-> +	struct sli4_sge *sge = NULL;
-> +	struct sli4_bde *bptr;
-> +
-> +	memset(buf, 0, sli->wqe_size);
-> +
-> +	if (!sgl || !sgl->virt) {
-> +		efc_log_err(sli, "bad parameter sgl=%p virt=%p\n",
-> +		       sgl, sgl ? sgl->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +	sge = sgl->virt;
-> +	bptr = &trecv->bde;
-> +	if (sli->sgl_pre_registered) {
-> +		trecv->qosd_xbl_hlm_iod_dbde_wqes &= ~SLI4_TRCV_WQE_XBL;
-> +
-> +		trecv->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_TRCV_WQE_DBDE;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				    (le32_to_cpu(sge[0].buffer_length)
-> +					& SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.data.low  = sge[0].buffer_address_low;
-> +		bptr->u.data.high = sge[0].buffer_address_high;
-> +
-> +		trecv->payload_offset_length = sge[0].buffer_length;
-> +	} else {
-> +		trecv->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_TRCV_WQE_XBL;
-> +
-> +		/* if data is a single physical address, use a BDE */
-> +		if (!dif && xfer_len <= le32_to_cpu(sge[2].buffer_length)) {
-> +			trecv->qosd_xbl_hlm_iod_dbde_wqes |=
-> +							SLI4_TRCV_WQE_DBDE;
-> +			bptr->bde_type_buflen =
-> +			      cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +					  (le32_to_cpu(sge[2].buffer_length)
-> +					  & SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +			bptr->u.data.low =
-> +				sge[2].buffer_address_low;
-> +			bptr->u.data.high =
-> +				sge[2].buffer_address_high;
-> +		} else {
-> +			bptr->bde_type_buflen =
-> +				cpu_to_le32((BDE_TYPE_BLP << BDE_TYPE_SHIFT) |
-> +				(sgl->size & SLI4_BDE_MASK_BUFFER_LEN));
-> +			bptr->u.blp.low =
-> +				cpu_to_le32(lower_32_bits(sgl->phys));
-> +			bptr->u.blp.high =
-> +				cpu_to_le32(upper_32_bits(sgl->phys));
+> +	/* Return a failure if this sport has already been allocated */
+> +	if (wwpn != 0) {
+> +		sport = efc_sport_find_wwn(domain, wwnn, wwpn);
+> +		if (sport) {
+> +			efc_log_err(domain->efc,
+> +				    "Failed: SPORT %016llX %016llX already allocated\n",
+> +				    wwnn, wwpn);
+> +			return NULL;
 > +		}
 > +	}
 > +
-> +	trecv->relative_offset = cpu_to_le32(params->offset);
-> +
-> +	if (params->flags & SLI4_IO_CONTINUATION)
-> +		trecv->eat_xc_ccpe |= SLI4_TRCV_WQE_XC;
-> +
-> +	trecv->xri_tag = cpu_to_le16(xri);
-> +
-> +	trecv->context_tag = cpu_to_le16(rpi);
-> +
-> +	/* WQE uses relative offset */
-> +	trecv->class_ar_pu_byte |= 1 << SLI4_TRCV_WQE_PU_SHFT;
-> +
-> +	if (params->flags & SLI4_IO_AUTO_GOOD_RESPONSE)
-> +		trecv->class_ar_pu_byte |= SLI4_TRCV_WQE_AR;
-> +
-> +	trecv->command = SLI4_WQE_FCP_TRECEIVE64;
-> +	trecv->class_ar_pu_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	trecv->dif_ct_bs_byte |=
-> +		SLI4_GENERIC_CONTEXT_RPI << SLI4_TRCV_WQE_CT_SHFT;
-> +	trecv->dif_ct_bs_byte |= bs << SLI4_TRCV_WQE_BS_SHFT;
-> +
-> +	trecv->remote_xid = cpu_to_le16(params->ox_id);
-> +
-> +	trecv->request_tag = cpu_to_le16(tag);
-> +
-> +	trecv->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_TRCV_WQE_IOD;
-> +
-> +	trecv->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_TRCV_WQE_LEN_LOC_BIT2;
-> +
-> +	trecv->cmd_type_byte |= SLI4_CMD_FCP_TRECEIVE64_WQE;
-> +
-> +	trecv->cq_id = cpu_to_le16(cq_id);
-> +
-> +	trecv->fcp_data_receive_length = cpu_to_le32(xfer_len);
-> +
-> +	if (sli->perf_hint) {
-> +		bptr = &trecv->first_data_bde;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +			    (le32_to_cpu(sge[first_data_sge].buffer_length) &
-> +			     SLI4_BDE_MASK_BUFFER_LEN));
-> +		bptr->u.data.low =
-> +			sge[first_data_sge].buffer_address_low;
-> +		bptr->u.data.high =
-> +			sge[first_data_sge].buffer_address_high;
-> +	}
-> +
-> +	/* The upper 7 bits of csctl is the priority */
-> +	if (params->cs_ctl & SLI4_MASK_CCP) {
-> +		trecv->eat_xc_ccpe |= SLI4_TRCV_WQE_CCPE;
-> +		trecv->ccp = (params->cs_ctl & SLI4_MASK_CCP);
-> +	}
-> +
-> +	if (params->app_id && sli->wqe_size == SLI4_WQE_EXT_BYTES &&
-> +	    !(trecv->eat_xc_ccpe & SLI4_TRSP_WQE_EAT)) {
-> +		trecv->lloc1_appid |= SLI4_TRCV_WQE_APPID;
-> +		trecv->qosd_xbl_hlm_iod_dbde_wqes |= SLI4_TRCV_WQE_WQES;
-> +		trecv_128->dw[31] = params->app_id;
-> +	}
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write an FCP_CONT_TRECEIVE64_WQE work queue entry */
-> +int
-> +sli_fcp_cont_treceive64_wqe(struct sli4 *sli, void *buf,
-> +			    struct efc_dma *sgl, u32 first_data_sge,
-> +			    u32 xfer_len, u16 xri, u16 sec_xri, u16 tag,
-> +			    u16 cq_id, u32 rpi, u32 rnode_fcid, u8 dif, u8 bs,
-> +			    struct sli_fcp_tgt_params *params)
-> +{
-> +	int rc;
-> +
-> +	rc = sli_fcp_treceive64_wqe(sli, buf, sgl, first_data_sge,
-> +				    xfer_len, xri, tag, cq_id,
-> +				    rpi, rnode_fcid, dif, bs, params);
-> +	if (rc == 0) {
-
-	if (rc == EFC_SUCCESS)
-
-> +		struct sli4_fcp_treceive64_wqe *trecv = buf;
-> +
-> +		trecv->command = SLI4_WQE_FCP_CONT_TRECEIVE64;
-> +		trecv->dword5.sec_xri_tag = cpu_to_le16(sec_xri);
-> +	}
-> +	return rc;
-> +}
-> +
-> +/* Write an FCP_TRSP64_WQE work queue entry */
-> +int
-> +sli_fcp_trsp64_wqe(struct sli4 *sli4, void *buf, struct efc_dma *sgl,
-> +		   u32 rsp_len, u16 xri, u16 tag, u16 cq_id, u32 rpi,
-> +		   u32 rnode_fcid, u8 port_owned,
-> +		   struct sli_fcp_tgt_params *params)
-> +{
-> +	struct sli4_fcp_trsp64_wqe *trsp = buf;
-> +	struct sli4_fcp_128byte_wqe *trsp_128 = buf;
-> +	struct sli4_bde *bptr;
-> +
-> +	memset(buf, 0, sli4->wqe_size);
-> +
-> +	if (params->flags & SLI4_IO_AUTO_GOOD_RESPONSE) {
-> +		trsp->class_ag_byte |= SLI4_TRSP_WQE_AG;
-> +	} else {
-> +		struct sli4_sge	*sge = sgl->virt;
-> +
-> +		if (sli4->sgl_pre_registered || port_owned)
-> +			trsp->qosd_xbl_hlm_dbde_wqes |= SLI4_TRSP_WQE_DBDE;
-> +		else
-> +			trsp->qosd_xbl_hlm_dbde_wqes |= SLI4_TRSP_WQE_XBL;
-> +		bptr = &trsp->bde;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				     (le32_to_cpu(sge[0].buffer_length) &
-> +				      SLI4_BDE_MASK_BUFFER_LEN));
-> +		bptr->u.data.low  = sge[0].buffer_address_low;
-> +		bptr->u.data.high = sge[0].buffer_address_high;
-> +
-> +		trsp->fcp_response_length = cpu_to_le32(rsp_len);
-> +	}
-> +
-> +	if (params->flags & SLI4_IO_CONTINUATION)
-> +		trsp->eat_xc_ccpe |= SLI4_TRSP_WQE_XC;
-> +
-> +	trsp->xri_tag = cpu_to_le16(xri);
-> +	trsp->rpi = cpu_to_le16(rpi);
-> +
-> +	trsp->command = SLI4_WQE_FCP_TRSP64;
-> +	trsp->class_ag_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +
-> +	trsp->remote_xid = cpu_to_le16(params->ox_id);
-> +	trsp->request_tag = cpu_to_le16(tag);
-> +	if (params->flags & SLI4_IO_DNRX)
-> +		trsp->ct_dnrx_byte |= SLI4_TRSP_WQE_DNRX;
-> +	else
-> +		trsp->ct_dnrx_byte &= ~SLI4_TRSP_WQE_DNRX;
-> +
-> +	trsp->lloc1_appid |= 0x1;
-> +	trsp->cq_id = cpu_to_le16(cq_id);
-> +	trsp->cmd_type_byte = SLI4_CMD_FCP_TRSP64_WQE;
-> +
-> +	/* The upper 7 bits of csctl is the priority */
-> +	if (params->cs_ctl & SLI4_MASK_CCP) {
-> +		trsp->eat_xc_ccpe |= SLI4_TRSP_WQE_CCPE;
-> +		trsp->ccp = (params->cs_ctl & SLI4_MASK_CCP);
-> +	}
-> +
-> +	if (params->app_id && sli4->wqe_size == SLI4_WQE_EXT_BYTES &&
-> +	    !(trsp->eat_xc_ccpe & SLI4_TRSP_WQE_EAT)) {
-> +		trsp->lloc1_appid |= SLI4_TRSP_WQE_APPID;
-> +		trsp->qosd_xbl_hlm_dbde_wqes |= SLI4_TRSP_WQE_WQES;
-> +		trsp_128->dw[31] = params->app_id;
-> +	}
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write an FCP_TSEND64_WQE work queue entry */
-> +int
-> +sli_fcp_tsend64_wqe(struct sli4 *sli4, void *buf, struct efc_dma *sgl,
-> +		    u32 first_data_sge, u32 xfer_len, u16 xri, u16 tag,
-> +		    u16 cq_id, u32 rpi, u32 rnode_fcid, u8 dif, u8 bs,
-> +		    struct sli_fcp_tgt_params *params)
-> +{
-> +	struct sli4_fcp_tsend64_wqe *tsend = buf;
-> +	struct sli4_fcp_128byte_wqe *tsend_128 = buf;
-> +	struct sli4_sge *sge = NULL;
-> +	struct sli4_bde *bptr;
-> +
-> +	memset(buf, 0, sli4->wqe_size);
-> +
-> +	if (!sgl || !sgl->virt) {
-> +		efc_log_err(sli4, "bad parameter sgl=%p virt=%p\n",
-> +		       sgl, sgl ? sgl->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +	sge = sgl->virt;
-> +
-> +	bptr = &tsend->bde;
-> +	if (sli4->sgl_pre_registered) {
-> +		tsend->ll_qd_xbl_hlm_iod_dbde &= ~SLI4_TSEND_WQE_XBL;
-> +
-> +		tsend->ll_qd_xbl_hlm_iod_dbde |= SLI4_TSEND_WQE_DBDE;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				   (le32_to_cpu(sge[2].buffer_length) &
-> +				    SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		/* TSEND64_WQE specifies first two SGE are skipped (3rd is
-> +		 * valid)
-> +		 */
-> +		bptr->u.data.low  = sge[2].buffer_address_low;
-> +		bptr->u.data.high = sge[2].buffer_address_high;
-> +	} else {
-> +		tsend->ll_qd_xbl_hlm_iod_dbde |= SLI4_TSEND_WQE_XBL;
-> +
-> +		/* if data is a single physical address, use a BDE */
-> +		if (!dif && xfer_len <= le32_to_cpu(sge[2].buffer_length)) {
-> +			tsend->ll_qd_xbl_hlm_iod_dbde |= SLI4_TSEND_WQE_DBDE;
-> +
-> +			bptr->bde_type_buflen =
-> +			    cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +					(le32_to_cpu(sge[2].buffer_length) &
-> +					SLI4_BDE_MASK_BUFFER_LEN));
-> +			/*
-> +			 * TSEND64_WQE specifies first two SGE are skipped
-> +			 * (i.e. 3rd is valid)
-> +			 */
-> +			bptr->u.data.low =
-> +				sge[2].buffer_address_low;
-> +			bptr->u.data.high =
-> +				sge[2].buffer_address_high;
-> +		} else {
-> +			bptr->bde_type_buflen =
-> +				cpu_to_le32((BDE_TYPE_BLP << BDE_TYPE_SHIFT) |
-> +					    (sgl->size &
-> +					     SLI4_BDE_MASK_BUFFER_LEN));
-> +			bptr->u.blp.low =
-> +				cpu_to_le32(lower_32_bits(sgl->phys));
-> +			bptr->u.blp.high =
-> +				cpu_to_le32(upper_32_bits(sgl->phys));
-> +		}
-> +	}
-> +
-> +	tsend->relative_offset = cpu_to_le32(params->offset);
-> +
-> +	if (params->flags & SLI4_IO_CONTINUATION)
-> +		tsend->dw10byte2 |= SLI4_TSEND_XC;
-> +
-> +	tsend->xri_tag = cpu_to_le16(xri);
-> +
-> +	tsend->rpi = cpu_to_le16(rpi);
-> +	/* WQE uses relative offset */
-> +	tsend->class_pu_ar_byte |= 1 << SLI4_TSEND_WQE_PU_SHFT;
-> +
-> +	if (params->flags & SLI4_IO_AUTO_GOOD_RESPONSE)
-> +		tsend->class_pu_ar_byte |= SLI4_TSEND_WQE_AR;
-> +
-> +	tsend->command = SLI4_WQE_FCP_TSEND64;
-> +	tsend->class_pu_ar_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	tsend->ct_byte |= SLI4_GENERIC_CONTEXT_RPI << SLI4_TSEND_CT_SHFT;
-> +	tsend->ct_byte |= dif;
-> +	tsend->ct_byte |= bs << SLI4_TSEND_BS_SHFT;
-> +
-> +	tsend->remote_xid = cpu_to_le16(params->ox_id);
-> +
-> +	tsend->request_tag = cpu_to_le16(tag);
-> +
-> +	tsend->ll_qd_xbl_hlm_iod_dbde |= SLI4_TSEND_LEN_LOC_BIT2;
-> +
-> +	tsend->cq_id = cpu_to_le16(cq_id);
-> +
-> +	tsend->cmd_type_byte |= SLI4_CMD_FCP_TSEND64_WQE;
-> +
-> +	tsend->fcp_data_transmit_length = cpu_to_le32(xfer_len);
-> +
-> +	if (sli4->perf_hint) {
-> +		bptr = &tsend->first_data_bde;
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +			    (le32_to_cpu(sge[first_data_sge].buffer_length) &
-> +			     SLI4_BDE_MASK_BUFFER_LEN));
-> +		bptr->u.data.low =
-> +			sge[first_data_sge].buffer_address_low;
-> +		bptr->u.data.high =
-> +			sge[first_data_sge].buffer_address_high;
-> +	}
-> +
-> +	/* The upper 7 bits of csctl is the priority */
-> +	if (params->cs_ctl & SLI4_MASK_CCP) {
-> +		tsend->dw10byte2 |= SLI4_TSEND_CCPE;
-> +		tsend->ccp = (params->cs_ctl & SLI4_MASK_CCP);
-> +	}
-> +
-> +	if (params->app_id && sli4->wqe_size == SLI4_WQE_EXT_BYTES &&
-> +	    !(tsend->dw10byte2 & SLI4_TSEND_EAT)) {
-> +		tsend->dw10byte0 |= SLI4_TSEND_APPID_VALID;
-> +		tsend->ll_qd_xbl_hlm_iod_dbde |= SLI4_TSEND_WQES;
-> +		tsend_128->dw[31] = params->app_id;
-> +	}
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write a GEN_REQUEST64 work queue entry */
-> +int
-> +sli_gen_request64_wqe(struct sli4 *sli4, void *buf, struct efc_dma *sgl,
-> +		      u32 req_len, u32 max_rsp_len, u16 xri, u16 tag,
-> +		      u16 cq_id, u32 rnode_fcid, u16 rnodeindicator,
-> +		      struct sli_ct_params *params)
-> +{
-> +	struct sli4_gen_request64_wqe	*gen = buf;
-> +	struct sli4_sge *sge = NULL;
-> +	struct sli4_bde *bptr;
-> +
-> +	memset(buf, 0, sli4->wqe_size);
-> +
-> +	if (!sgl || !sgl->virt) {
-> +		efc_log_err(sli4, "bad parameter sgl=%p virt=%p\n",
-> +		       sgl, sgl ? sgl->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +	sge = sgl->virt;
-> +	bptr = &gen->bde;
-> +
-> +	if (sli4->sgl_pre_registered) {
-> +		gen->dw10flags1 &= ~SLI4_GEN_REQ64_WQE_XBL;
-> +
-> +		gen->dw10flags1 |= SLI4_GEN_REQ64_WQE_DBDE;
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +				    (req_len & SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.data.low  = sge[0].buffer_address_low;
-> +		bptr->u.data.high = sge[0].buffer_address_high;
-> +	} else {
-> +		gen->dw10flags1 |= SLI4_GEN_REQ64_WQE_XBL;
-> +
-> +		bptr->bde_type_buflen =
-> +			cpu_to_le32((BDE_TYPE_BLP << BDE_TYPE_SHIFT) |
-> +				    ((2 * sizeof(struct sli4_sge)) &
-> +				     SLI4_BDE_MASK_BUFFER_LEN));
-> +
-> +		bptr->u.blp.low =
-> +			cpu_to_le32(lower_32_bits(sgl->phys));
-> +		bptr->u.blp.high =
-> +			cpu_to_le32(upper_32_bits(sgl->phys));
-> +	}
-> +
-> +	gen->request_payload_length = cpu_to_le32(req_len);
-> +	gen->max_response_payload_length = cpu_to_le32(max_rsp_len);
-> +
-> +	gen->df_ctl = params->df_ctl;
-> +	gen->type = params->type;
-> +	gen->r_ctl = params->r_ctl;
-> +
-> +	gen->xri_tag = cpu_to_le16(xri);
-> +
-> +	gen->ct_byte = SLI4_GENERIC_CONTEXT_RPI << SLI4_GEN_REQ64_CT_SHFT;
-> +	gen->context_tag = cpu_to_le16(rnodeindicator);
-> +
-> +	gen->class_byte = SLI4_GENERIC_CLASS_CLASS_3;
-> +
-> +	gen->command = SLI4_WQE_GEN_REQUEST64;
-> +
-> +	gen->timer = params->timeout;
-> +
-> +	gen->request_tag = cpu_to_le16(tag);
-> +
-> +	gen->dw10flags1 |= SLI4_GEN_REQ64_WQE_IOD;
-> +
-> +	gen->dw10flags0 |= SLI4_GEN_REQ64_WQE_QOSD;
-> +
-> +	gen->cmd_type_byte = SLI4_CMD_GEN_REQUEST64_WQE;
-> +
-> +	gen->cq_id = cpu_to_le16(cq_id);
-> +
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write a SEND_FRAME work queue entry */
-> +int
-> +sli_send_frame_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		   u8 sof, u8 eof, u32 *hdr,
-> +			struct efc_dma *payload, u32 req_len,
-> +			u8 timeout, u16 xri, u16 req_tag)
-> +{
-> +	struct sli4_send_frame_wqe *sf = buf;
-> +
-> +	memset(buf, 0, size);
-> +
-> +	sf->dw10flags1 |= SLI4_SF_WQE_DBDE;
-> +	sf->bde.bde_type_buflen = cpu_to_le32(req_len &
-> +					      SLI4_BDE_MASK_BUFFER_LEN);
-> +	sf->bde.u.data.low =
-> +		cpu_to_le32(lower_32_bits(payload->phys));
-> +	sf->bde.u.data.high =
-> +		cpu_to_le32(upper_32_bits(payload->phys));
-> +
-> +	/* Copy FC header */
-> +	sf->fc_header_0_1[0] = cpu_to_le32(hdr[0]);
-> +	sf->fc_header_0_1[1] = cpu_to_le32(hdr[1]);
-> +	sf->fc_header_2_5[0] = cpu_to_le32(hdr[2]);
-> +	sf->fc_header_2_5[1] = cpu_to_le32(hdr[3]);
-> +	sf->fc_header_2_5[2] = cpu_to_le32(hdr[4]);
-> +	sf->fc_header_2_5[3] = cpu_to_le32(hdr[5]);
-> +
-> +	sf->frame_length = cpu_to_le32(req_len);
-> +
-> +	sf->xri_tag = cpu_to_le16(xri);
-> +	sf->dw7flags0 &= ~SLI4_SF_PU;
-> +	sf->context_tag = 0;
-> +
-> +	sf->ct_byte &= ~SLI4_SF_CT;
-> +	sf->command = SLI4_WQE_SEND_FRAME;
-> +	sf->dw7flags0 |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	sf->timer = timeout;
-> +
-> +	sf->request_tag = cpu_to_le16(req_tag);
-> +	sf->eof = eof;
-> +	sf->sof = sof;
-> +
-> +	sf->dw10flags1 &= ~SLI4_SF_QOSD;
-> +	sf->dw10flags0 |= SLI4_SF_LEN_LOC_BIT1;
-> +	sf->dw10flags2 &= ~SLI4_SF_XC;
-> +
-> +	sf->dw10flags1 |= SLI4_SF_XBL;
-> +
-> +	sf->cmd_type_byte |= SLI4_CMD_SEND_FRAME_WQE;
-> +	sf->cq_id = cpu_to_le16(0xffff);
-> +
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write an XMIT_BLS_RSP64_WQE work queue entry */
-> +int
-> +sli_xmit_bls_rsp64_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		       struct sli_bls_payload *payload, u16 xri,
-> +		       u16 tag, u16 cq_id,
-> +		       bool rnodeattached, u16 rnodeindicator,
-> +		       u16 sportindicator, u32 rnode_fcid,
-> +		       u32 sport_fcid, u32 s_id)
-> +{
-> +	struct sli4_xmit_bls_rsp_wqe *bls = buf;
-> +	u32 dw_ridflags = 0;
+> +	sport = kzalloc(sizeof(*sport), GFP_ATOMIC);
+> +	if (!sport)
+> +		return sport;
+> +
+> +	sport->efc = domain->efc;
+> +	snprintf(sport->display_name, sizeof(sport->display_name), "------");
+> +	sport->domain = domain;
+> +	xa_init(&sport->lookup);
+> +	sport->instance_index = domain->sport_instance_count++;
+> +	INIT_LIST_HEAD(&sport->node_list);
+> +	sport->sm.app = sport;
+> +	sport->enable_ini = enable_ini;
+> +	sport->enable_tgt = enable_tgt;
+> +	sport->enable_rscn = (sport->enable_ini ||
+> +			(sport->enable_tgt && enable_target_rscn(sport->efc)));
+> +
+> +	/* Copy service parameters from domain */
+> +	memcpy(sport->service_params, domain->service_params,
+> +		sizeof(struct fc_els_flogi));
+> +
+> +	/* Update requested fc_id */
+> +	sport->fc_id = fc_id;
+> +
+> +	/* Update the sport's service parameters for the new wwn's */
+> +	sport->wwpn = wwpn;
+> +	sport->wwnn = wwnn;
+> +	snprintf(sport->wwnn_str, sizeof(sport->wwnn_str), "%016llX", wwnn);
 > +
 > +	/*
-> +	 * Callers can either specify RPI or S_ID, but not both
+> +	 * if this is the "first" sport of the domain,
+> +	 * then make it the "phys" sport
 > +	 */
-> +	if (rnodeattached && s_id != U32_MAX) {
-> +		efc_log_info(sli4, "S_ID specified for attached remote node %d\n",
-> +			rnodeindicator);
-> +		return EFC_FAIL;
-> +	}
+> +	if (list_empty(&domain->sport_list))
+> +		domain->sport = sport;
 > +
-> +	memset(buf, 0, size);
+> +	INIT_LIST_HEAD(&sport->list_entry);
+> +	list_add_tail(&sport->list_entry, &domain->sport_list);
 > +
-> +	if (payload->type == SLI4_SLI_BLS_ACC) {
-> +		bls->payload_word0 =
-> +			cpu_to_le32((payload->u.acc.seq_id_last << 16) |
-> +				    (payload->u.acc.seq_id_validity << 24));
-> +		bls->high_seq_cnt = payload->u.acc.high_seq_cnt;
-> +		bls->low_seq_cnt = payload->u.acc.low_seq_cnt;
-> +	} else if (payload->type == SLI4_SLI_BLS_RJT) {
-> +		bls->payload_word0 =
-> +				cpu_to_le32(*((u32 *)&payload->u.rjt));
-> +		dw_ridflags |= SLI4_BLS_RSP_WQE_AR;
-> +	} else {
-> +		efc_log_info(sli4, "bad BLS type %#x\n", payload->type);
-> +		return EFC_FAIL;
-> +	}
+> +	efc_log_debug(domain->efc, "[%s] allocate sport\n",
+> +		      sport->display_name);
 > +
-> +	bls->ox_id = payload->ox_id;
-> +	bls->rx_id = payload->rx_id;
-> +
-> +	if (rnodeattached) {
-> +		bls->dw8flags0 |=
-> +		SLI4_GENERIC_CONTEXT_RPI << SLI4_BLS_RSP_WQE_CT_SHFT;
-> +		bls->context_tag = cpu_to_le16(rnodeindicator);
-> +	} else {
-> +		bls->dw8flags0 |=
-> +		SLI4_GENERIC_CONTEXT_VPI << SLI4_BLS_RSP_WQE_CT_SHFT;
-> +		bls->context_tag = cpu_to_le16(sportindicator);
-> +
-> +		if (s_id != U32_MAX)
-> +			bls->local_n_port_id_dword |=
-> +				cpu_to_le32(s_id & 0x00ffffff);
-> +		else
-> +			bls->local_n_port_id_dword |=
-> +				cpu_to_le32(sport_fcid & 0x00ffffff);
-> +
-> +		dw_ridflags = (dw_ridflags & ~SLI4_BLS_RSP_RID) |
-> +			       (rnode_fcid & SLI4_BLS_RSP_RID);
-> +
-> +		bls->temporary_rpi = cpu_to_le16(rnodeindicator);
-> +	}
-> +
-> +	bls->xri_tag = cpu_to_le16(xri);
-> +
-> +	bls->dw8flags1 |= SLI4_GENERIC_CLASS_CLASS_3;
-> +
-> +	bls->command = SLI4_WQE_XMIT_BLS_RSP;
-> +
-> +	bls->request_tag = cpu_to_le16(tag);
-> +
-> +	bls->dw11flags1 |= SLI4_BLS_RSP_WQE_QOSD;
-> +
-> +	bls->remote_id_dword = cpu_to_le32(dw_ridflags);
-> +	bls->cq_id = cpu_to_le16(cq_id);
-> +
-> +	bls->dw12flags0 |= SLI4_CMD_XMIT_BLS_RSP64_WQE;
-> +
-> +	return EFC_SUCCESS;
+> +	return sport;
 > +}
-> +
-> +/* Write a XMIT_ELS_RSP64_WQE work queue entry */
-> +int
-> +sli_xmit_els_rsp64_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		       struct efc_dma *rsp, u32 rsp_len,
-> +				u16 xri, u16 tag, u16 cq_id,
-> +				u16 ox_id, u16 rnodeindicator,
-> +				u16 sportindicator,
-> +				bool rnodeattached, u32 rnode_fcid,
-> +				u32 flags, u32 s_id)
-> +{
-> +	struct sli4_xmit_els_rsp64_wqe *els = buf;
-> +
-> +	memset(buf, 0, size);
-> +
-> +	if (sli4->sgl_pre_registered)
-> +		els->flags2 |= SLI4_ELS_DBDE;
-> +	else
-> +		els->flags2 |= SLI4_ELS_XBL;
-> +
-> +	els->els_response_payload.bde_type_buflen =
-> +		cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +			    (rsp_len & SLI4_BDE_MASK_BUFFER_LEN));
-> +	els->els_response_payload.u.data.low =
-> +		cpu_to_le32(lower_32_bits(rsp->phys));
-> +	els->els_response_payload.u.data.high =
-> +		cpu_to_le32(upper_32_bits(rsp->phys));
-> +
-> +	els->els_response_payload_length = cpu_to_le32(rsp_len);
-> +
-> +	els->xri_tag = cpu_to_le16(xri);
-> +
-> +	els->class_byte |= SLI4_GENERIC_CLASS_CLASS_3;
-> +
-> +	els->command = SLI4_WQE_ELS_RSP64;
-> +
-> +	els->request_tag = cpu_to_le16(tag);
-> +
-> +	els->ox_id = cpu_to_le16(ox_id);
-> +
-> +	els->flags2 |= (SLI4_ELS_IOD & SLI4_ELS_REQUEST64_DIR_WRITE);
 
-Brakets not needed.
+This function requires locking, so please add locking annotations to it.
 
 > +
-> +	els->flags2 |= SLI4_ELS_QOSD;
-> +
-> +	if (flags & SLI4_IO_CONTINUATION)
-> +		els->flags3 |= SLI4_ELS_XC;
-> +
-> +	if (rnodeattached) {
-> +		els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_RPI << SLI4_ELS_CT_OFFSET;
-> +		els->context_tag = cpu_to_le16(rnodeindicator);
-> +	} else {
-> +		els->ct_byte |=
-> +			SLI4_GENERIC_CONTEXT_VPI << SLI4_ELS_CT_OFFSET;
-> +		els->context_tag = cpu_to_le16(sportindicator);
-> +		els->rid_dw = cpu_to_le32(rnode_fcid & SLI4_ELS_RID);
-> +		els->temporary_rpi = cpu_to_le16(rnodeindicator);
-> +		if (s_id != U32_MAX) {
-> +			els->sid_dw |= cpu_to_le32(SLI4_ELS_SP |
-> +						   (s_id & SLI4_ELS_SID));
-> +		}
-> +	}
-> +
-> +	els->cmd_type_wqec = SLI4_ELS_REQUEST64_CMD_GEN;
-> +
-> +	els->cq_id = cpu_to_le16(cq_id);
-> +
-> +	return EFC_SUCCESS;
-> +}
-> +
-> +/* Write a XMIT_SEQUENCE64 work queue entry */
-> +int
-> +sli_xmit_sequence64_wqe(struct sli4 *sli4, void *buf,
-> +			struct efc_dma *payload, u32 payload_len,
-> +			u16 xri, u16 tag, u32 rnode_fcid,
-> +			u16 rnodeindicator, struct sli_ct_params *params)
+> +void
+> +efc_sport_free(struct efc_sli_port *sport)
 > +{
-> +	struct sli4_xmit_sequence64_wqe *xmit = buf;
+> +	struct efc_domain *domain;
 > +
-> +	memset(buf, 0, sli4->wqe_size);
+> +	if (!sport)
+> +		return;
 > +
-> +	if (!payload || !payload->virt) {
-> +		efc_log_err(sli4, "bad parameter sgl=%p virt=%p\n",
-> +		       payload, payload ? payload->virt : NULL);
-> +		return EFC_FAIL;
-> +	}
-> +
-> +	if (sli4->sgl_pre_registered)
-> +		xmit->dw10w0 |= cpu_to_le16(SLI4_SEQ_WQE_DBDE);
-> +	else
-> +		xmit->dw10w0 |= cpu_to_le16(SLI4_SEQ_WQE_XBL);
-> +
-> +	xmit->bde.bde_type_buflen =
-> +		cpu_to_le32((BDE_TYPE_BDE_64 << BDE_TYPE_SHIFT) |
-> +			(payload_len & SLI4_BDE_MASK_BUFFER_LEN));
-> +	xmit->bde.u.data.low  =
-> +			cpu_to_le32(lower_32_bits(payload->phys));
-> +	xmit->bde.u.data.high =
-> +			cpu_to_le32(upper_32_bits(payload->phys));
-> +	xmit->sequence_payload_len = cpu_to_le32(payload_len);
-> +
-> +	xmit->remote_n_port_id_dword |= cpu_to_le32(rnode_fcid & 0x00ffffff);
-> +
-> +	xmit->relative_offset = 0;
-> +
-> +	/* sequence initiative - this matches what is seen from
-> +	 * FC switches in response to FCGS commands
+> +	domain = sport->domain;
+> +	efc_log_debug(domain->efc, "[%s] free sport\n", sport->display_name);
+> +	list_del(&sport->list_entry);
+> +	/*
+> +	 * if this is the physical sport,
+> +	 * then clear it out of the domain
 > +	 */
-> +	xmit->dw5flags0 &= (~SLI4_SEQ_WQE_SI);
-> +	xmit->dw5flags0 &= (~SLI4_SEQ_WQE_FT);/* force transmit */
-> +	xmit->dw5flags0 &= (~SLI4_SEQ_WQE_XO);/* exchange responder */
-> +	xmit->dw5flags0 |= SLI4_SEQ_WQE_LS;/* last in seqence */
-> +	xmit->df_ctl = params->df_ctl;
-> +	xmit->type = params->type;
-> +	xmit->r_ctl = params->r_ctl;
+> +	if (sport == domain->sport)
+> +		domain->sport = NULL;
 > +
-> +	xmit->xri_tag = cpu_to_le16(xri);
-> +	xmit->context_tag = cpu_to_le16(rnodeindicator);
+> +	xa_destroy(&sport->lookup);
+> +	xa_erase(&domain->lookup, sport->fc_id);
 > +
-> +	xmit->dw7flags0 &= (~SLI4_SEQ_WQE_DIF);
-> +	xmit->dw7flags0 |=
-> +		SLI4_GENERIC_CONTEXT_RPI << SLI4_SEQ_WQE_CT_SHIFT;
-> +	xmit->dw7flags0 &= (~SLI4_SEQ_WQE_BS);
+> +	if (list_empty(&domain->sport_list))
+> +		efc_domain_post_event(domain, EFC_EVT_ALL_CHILD_NODES_FREE,
+> +				      NULL);
 > +
-> +	xmit->command = SLI4_WQE_XMIT_SEQUENCE64;
-> +	xmit->dw7flags1 |= SLI4_GENERIC_CLASS_CLASS_3;
-> +	xmit->dw7flags1 &= (~SLI4_SEQ_WQE_PU);
-> +	xmit->timer = params->timeout;
-> +
-> +	xmit->abort_tag = 0;
-> +	xmit->request_tag = cpu_to_le16(tag);
-> +	xmit->remote_xid = cpu_to_le16(params->ox_id);
-> +
-> +	xmit->dw10w0 |=
-> +	cpu_to_le16(SLI4_ELS_REQUEST64_DIR_READ << SLI4_SEQ_WQE_IOD_SHIFT);
-> +
-> +	xmit->cmd_type_wqec_byte |= SLI4_CMD_XMIT_SEQUENCE64_WQE;
-> +
-> +	xmit->dw10w0 |= cpu_to_le16(2 << SLI4_SEQ_WQE_LEN_LOC_SHIFT);
-> +
-> +	xmit->cq_id = cpu_to_le16(0xFFFF);
-> +
-> +	return EFC_SUCCESS;
+> +	kfree(sport);
 > +}
 > +
-> +/* Write a REQUEUE_XRI_WQE work queue entry */
-> +int
-> +sli_requeue_xri_wqe(struct sli4 *sli4, void *buf, size_t size,
-> +		    u16 xri, u16 tag, u16 cq_id)
+I would have expected the ports to be reference counted, seeing that 
+they are (probably) accessed by structures with vastly different 
+lifetime rules.
+It also would allow for a more dynamic port deletion, as you wouldn't 
+need to lock the entire function, only when removing it from the list.
+
+Have you considered that?
+
+> +void
+> +efc_sport_force_free(struct efc_sli_port *sport)
 > +{
-> +	struct sli4_requeue_xri_wqe *requeue = buf;
+> +	struct efc_node *node;
+> +	struct efc_node *next;
 > +
-> +	memset(buf, 0, size);
+> +	/* shutdown sm processing */
+> +	efc_sm_disable(&sport->sm);
 > +
-> +	requeue->command = SLI4_WQE_REQUEUE_XRI;
-> +	requeue->xri_tag = cpu_to_le16(xri);
-> +	requeue->request_tag = cpu_to_le16(tag);
-> +	requeue->flags2 |= cpu_to_le16(SLI4_REQU_XRI_WQE_XC);
-> +	requeue->flags1 |= cpu_to_le16(SLI4_REQU_XRI_WQE_QOSD);
-> +	requeue->cq_id = cpu_to_le16(cq_id);
-> +	requeue->cmd_type_wqec_byte = SLI4_CMD_REQUEUE_XRI_WQE;
-> +	return EFC_SUCCESS;
+> +	list_for_each_entry_safe(node, next, &sport->node_list, list_entry) {
+> +		efc_node_force_free(node);
+> +	}
+> +
+> +	efc_sport_free(sport);
 > +}
 > +
-> +/* Process an asynchronous Link Attention event entry */
-> +int
-> +sli_fc_process_link_attention(struct sli4 *sli4, void *acqe)
+
+See? That's what I mean.
+You have event processing for that port, and additional nodes attached 
+to it. If all of them would be properly reference counted you could do 
+away with this function ...
+
+> +/* Find a SLI port object, given an FC_ID */
+> +struct efc_sli_port *
+> +efc_sport_find(struct efc_domain *domain, u32 d_id)
 > +{
-> +	struct sli4_link_attention *link_attn = acqe;
-> +	struct sli4_link_event event = { 0 };
-> +
-> +	efc_log_info(sli4, "link=%d attn_type=%#x top=%#x speed=%#x pfault=%#x\n",
-> +		link_attn->link_number, link_attn->attn_type,
-> +		      link_attn->topology, link_attn->port_speed,
-> +		      link_attn->port_fault);
-> +	efc_log_info(sli4, "shared_lnk_status=%#x logl_lnk_speed=%#x evttag=%#x\n",
-> +		link_attn->shared_link_status,
-> +		      le16_to_cpu(link_attn->logical_link_speed),
-> +		      le32_to_cpu(link_attn->event_tag));
-> +
-> +	if (!sli4->link)
-> +		return EFC_FAIL;
-> +
-> +	event.medium   = SLI_LINK_MEDIUM_FC;
-> +
-> +	switch (link_attn->attn_type) {
-> +	case LINK_ATTN_TYPE_LINK_UP:
-> +		event.status = SLI_LINK_STATUS_UP;
-> +		break;
-> +	case LINK_ATTN_TYPE_LINK_DOWN:
-> +		event.status = SLI_LINK_STATUS_DOWN;
-> +		break;
-> +	case LINK_ATTN_TYPE_NO_HARD_ALPA:
-> +		efc_log_info(sli4, "attn_type: no hard alpa\n");
-> +		event.status = SLI_LINK_STATUS_NO_ALPA;
-> +		break;
-> +	default:
-> +		efc_log_info(sli4, "attn_type: unknown\n");
-> +		break;
-> +	}
-> +
-> +	switch (link_attn->event_type) {
-> +	case FC_EVENT_LINK_ATTENTION:
-> +		break;
-> +	case FC_EVENT_SHARED_LINK_ATTENTION:
-> +		efc_log_info(sli4, "event_type: FC shared link event\n");
-> +		break;
-> +	default:
-> +		efc_log_info(sli4, "event_type: unknown\n");
-> +		break;
-> +	}
-> +
-> +	switch (link_attn->topology) {
-> +	case LINK_ATTN_P2P:
-> +		event.topology = SLI_LINK_TOPO_NPORT;
-> +		break;
-> +	case LINK_ATTN_FC_AL:
-> +		event.topology = SLI_LINK_TOPO_LOOP;
-> +		break;
-> +	case LINK_ATTN_INTERNAL_LOOPBACK:
-> +		efc_log_info(sli4, "topology Internal loopback\n");
-> +		event.topology = SLI_LINK_TOPO_LOOPBACK_INTERNAL;
-> +		break;
-> +	case LINK_ATTN_SERDES_LOOPBACK:
-> +		efc_log_info(sli4, "topology serdes loopback\n");
-> +		event.topology = SLI_LINK_TOPO_LOOPBACK_EXTERNAL;
-> +		break;
-> +	default:
-> +		efc_log_info(sli4, "topology: unknown\n");
-> +		break;
-> +	}
-> +
-> +	event.speed = link_attn->port_speed * 1000;
-> +
-> +	sli4->link(sli4->link_arg, (void *)&event);
-> +
-> +	return EFC_SUCCESS;
+> +	return xa_load(&domain->lookup, d_id);
 > +}
 > +
-> +/* Parse an FC work queue CQ entry */
-> +int
-> +sli_fc_cqe_parse(struct sli4 *sli4, struct sli4_queue *cq,
-> +		 u8 *cqe, enum sli4_qentry *etype, u16 *r_id)
+
+Does it need to be locked? If so please add locking annotations.
+
+> +/* Find a SLI port, given the WWNN and WWPN */
+> +struct efc_sli_port *
+> +efc_sport_find_wwn(struct efc_domain *domain, uint64_t wwnn, uint64_t wwpn)
 > +{
-> +	u8 code = cqe[SLI4_CQE_CODE_OFFSET];
+> +	struct efc_sli_port *sport = NULL;
+> +
+> +	list_for_each_entry(sport, &domain->sport_list, list_entry) {
+> +		if (sport->wwnn == wwnn && sport->wwpn == wwpn)
+> +			return sport;
+> +	}
+> +	return NULL;
+> +}
+> +
+
+Same here, only this definitely needs locking.
+And, actually, reference counting is definitely something I would 
+consider here.
+
+> +/* External call to request an attach for a sport, given an FC_ID */
+> +int
+> +efc_sport_attach(struct efc_sli_port *sport, u32 fc_id)
+> +{
 > +	int rc;
+> +	struct efc_node *node;
+> +	struct efc *efc = sport->efc;
 > +
-> +	switch (code) {
-> +	case SLI4_CQE_CODE_WORK_REQUEST_COMPLETION:
-> +	{
-> +		struct sli4_fc_wcqe *wcqe = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_WQ;
-> +		*r_id = le16_to_cpu(wcqe->request_tag);
-> +		rc = wcqe->status;
-> +
-> +		/* Flag errors except for FCP_RSP_FAILURE */
-> +		if (rc && rc != SLI4_FC_WCQE_STATUS_FCP_RSP_FAILURE) {
-> +			efc_log_info(sli4, "WCQE: status=%#x hw_status=%#x tag=%#x\n",
-> +				wcqe->status, wcqe->hw_status,
-> +				le16_to_cpu(wcqe->request_tag));
-> +			efc_log_info(sli4, "w1=%#x w2=%#x xb=%d\n",
-> +				le32_to_cpu(wcqe->wqe_specific_1),
-> +				     le32_to_cpu(wcqe->wqe_specific_2),
-> +				     (wcqe->flags & SLI4_WCQE_XB));
-> +			efc_log_info(sli4, "      %08X %08X %08X %08X\n",
-> +				((u32 *)cqe)[0],
-> +				     ((u32 *)cqe)[1],
-> +				     ((u32 *)cqe)[2],
-> +				     ((u32 *)cqe)[3]);
-> +		}
-> +
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_RQ_ASYNC:
-> +	{
-> +		struct sli4_fc_async_rcqe *rcqe = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_RQ;
-> +		*r_id = le16_to_cpu(rcqe->fcfi_rq_id_word) & SLI4_RACQE_RQ_ID;
-> +		rc = rcqe->status;
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_RQ_ASYNC_V1:
-> +	{
-> +		struct sli4_fc_async_rcqe_v1 *rcqe = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_RQ;
-> +		*r_id = le16_to_cpu(rcqe->rq_id);
-> +		rc = rcqe->status;
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_OPTIMIZED_WRITE_CMD:
-> +	{
-> +		struct sli4_fc_optimized_write_cmd_cqe *optcqe = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_OPT_WRITE_CMD;
-> +		*r_id = le16_to_cpu(optcqe->rq_id);
-> +		rc = optcqe->status;
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_OPTIMIZED_WRITE_DATA:
-> +	{
-> +		struct sli4_fc_optimized_write_data_cqe *dcqe = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_OPT_WRITE_DATA;
-> +		*r_id = le16_to_cpu(dcqe->xri);
-> +		rc = dcqe->status;
-> +
-> +		/* Flag errors */
-> +		if (rc != SLI4_FC_WCQE_STATUS_SUCCESS) {
-> +			efc_log_info(sli4, "Optimized DATA CQE: status=%#x\n",
-> +				dcqe->status);
-> +			efc_log_info(sli4, "hstat=%#x xri=%#x dpl=%#x w3=%#x xb=%d\n",
-> +				dcqe->hw_status, le16_to_cpu(dcqe->xri),
-> +				le32_to_cpu(dcqe->total_data_placed),
-> +				((u32 *)cqe)[3],
-> +				(dcqe->flags & SLI4_OCQE_XB));
-> +		}
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_RQ_COALESCING:
-> +	{
-> +		struct sli4_fc_coalescing_rcqe *rcqe = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_RQ;
-> +		*r_id = le16_to_cpu(rcqe->rq_id);
-> +		rc = rcqe->status;
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_XRI_ABORTED:
-> +	{
-> +		struct sli4_fc_xri_aborted_cqe *xa = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_XABT;
-> +		*r_id = le16_to_cpu(xa->xri);
-> +		rc = EFC_SUCCESS;
-> +		break;
-> +	}
-> +	case SLI4_CQE_CODE_RELEASE_WQE: {
-> +		struct sli4_fc_wqec *wqec = (void *)cqe;
-> +
-> +		*etype = SLI_QENTRY_WQ_RELEASE;
-> +		*r_id = le16_to_cpu(wqec->wq_id);
-> +		rc = EFC_SUCCESS;
-> +		break;
-> +	}
-> +	default:
-> +		efc_log_info(sli4, "CQE completion code %d not handled\n",
-> +			code);
-> +		*etype = SLI_QENTRY_MAX;
-> +		*r_id = U16_MAX;
-> +		rc = -EINVAL;
+> +	/* Set our lookup */
+> +	rc = xa_err(xa_store(&sport->domain->lookup, fc_id, sport, GFP_ATOMIC));
+> +	if (rc) {
+> +		efc_log_err(efc, "Sport lookup store failed: %d\n", rc);
+> +		return rc;
 > +	}
 > +
-> +	return rc;
-> +}
+> +	/* Update our display_name */
+> +	efc_node_fcid_display(fc_id, sport->display_name,
+> +			      sizeof(sport->display_name));
 > +
-> +u32
-> +sli_fc_response_length(struct sli4 *sli4, u8 *cqe)
-> +{
-> +	struct sli4_fc_wcqe *wcqe = (void *)cqe;
+> +	list_for_each_entry(node, &sport->node_list, list_entry) {
+> +		efc_node_update_display_name(node);
+> +	}
 > +
-> +	return le32_to_cpu(wcqe->wqe_specific_1);
-> +}
+> +	efc_log_debug(sport->efc, "[%s] attach sport: fc_id x%06x\n",
+> +		      sport->display_name, fc_id);
 > +
-> +u32
-> +sli_fc_io_length(struct sli4 *sli4, u8 *cqe)
-> +{
-> +	struct sli4_fc_wcqe *wcqe = (void *)cqe;
-> +
-> +	return le32_to_cpu(wcqe->wqe_specific_1);
-> +}
-> +
-> +int
-> +sli_fc_els_did(struct sli4 *sli4, u8 *cqe, u32 *d_id)
-> +{
-> +	struct sli4_fc_wcqe *wcqe = (void *)cqe;
-> +
-> +	*d_id = 0;
-> +
-> +	if (wcqe->status)
+> +	rc = efc->tt.hw_port_attach(efc, sport, fc_id);
+> +	if (rc != EFC_HW_RTN_SUCCESS) {
+> +		efc_log_err(sport->efc,
+> +			    "efc_hw_port_attach failed: %d\n", rc);
 > +		return EFC_FAIL;
-> +	*d_id = le32_to_cpu(wcqe->wqe_specific_2) & 0x00ffffff;
+> +	}
 > +	return EFC_SUCCESS;
 > +}
 > +
-> +u32
-> +sli_fc_ext_status(struct sli4 *sli4, u8 *cqe)
+> +static void
+> +efc_sport_shutdown(struct efc_sli_port *sport)
 > +{
-> +	struct sli4_fc_wcqe *wcqe = (void *)cqe;
-> +	u32	mask;
+> +	struct efc *efc = sport->efc;
+> +	struct efc_node *node;
+> +	struct efc_node *node_next;
 > +
-> +	switch (wcqe->status) {
-> +	case SLI4_FC_WCQE_STATUS_FCP_RSP_FAILURE:
-> +		mask = U32_MAX;
-> +		break;
-> +	case SLI4_FC_WCQE_STATUS_LOCAL_REJECT:
-> +	case SLI4_FC_WCQE_STATUS_CMD_REJECT:
-> +		mask = 0xff;
-> +		break;
-> +	case SLI4_FC_WCQE_STATUS_NPORT_RJT:
-> +	case SLI4_FC_WCQE_STATUS_FABRIC_RJT:
-> +	case SLI4_FC_WCQE_STATUS_NPORT_BSY:
-> +	case SLI4_FC_WCQE_STATUS_FABRIC_BSY:
-> +	case SLI4_FC_WCQE_STATUS_LS_RJT:
-> +		mask = U32_MAX;
-> +		break;
-> +	case SLI4_FC_WCQE_STATUS_DI_ERROR:
-> +		mask = U32_MAX;
-> +		break;
-> +	default:
-> +		mask = 0;
+> +	list_for_each_entry_safe(node, node_next,
+> +					&sport->node_list, list_entry) {
+> +		if (!(node->rnode.fc_id == FC_FID_FLOGI && sport->is_vport)) {
+> +			efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
+> +			continue;
+> +		}
+> +
+> +		/*
+> +		 * If this is a vport, logout of the fabric
+> +		 * controller so that it deletes the vport
+> +		 * on the switch.
+> +		 */
+> +		/* if link is down, don't send logo */
+> +		if (efc->link_status == EFC_LINK_STATUS_DOWN) {
+> +			efc_node_post_event(node, EFC_EVT_SHUTDOWN, NULL);
+> +		} else {
+> +			efc_log_debug(efc,
+> +				      "[%s] sport shutdown vport, sending logo to node\n",
+> +				      node->display_name);
+> +
+> +			if (efc->tt.els_send(efc, node, ELS_LOGO,
+> +					     EFC_FC_FLOGI_TIMEOUT_SEC,
+> +					EFC_FC_ELS_DEFAULT_RETRIES)) {
+> +				/* sent LOGO, wait for response */
+> +				efc_node_transition(node,
+> +						    __efc_d_wait_logo_rsp,
+> +						     NULL);
+> +				continue;
+> +			}
+> +
+> +			/*
+> +			 * failed to send LOGO,
+> +			 * go ahead and cleanup node anyways
+> +			 */
+> +			node_printf(node, "Failed to send LOGO\n");
+> +			efc_node_post_event(node,
+> +					    EFC_EVT_SHUTDOWN_EXPLICIT_LOGO,
+> +					    NULL);
+> +		}
 > +	}
-> +
-> +	return le32_to_cpu(wcqe->wqe_specific_2) & mask;
 > +}
 > +
-> +/* Retrieve the RQ index from the completion */
-> +int
-> +sli_fc_rqe_rqid_and_index(struct sli4 *sli4, u8 *cqe,
-> +			  u16 *rq_id, u32 *index)
+> +/* Clear the sport reference in the vport specification */
+> +static void
+> +efc_vport_link_down(struct efc_sli_port *sport)
 > +{
-> +	struct sli4_fc_async_rcqe *rcqe = (void *)cqe;
-> +	struct sli4_fc_async_rcqe_v1 *rcqe_v1 = (void *)cqe;
-> +	int rc = EFC_FAIL;
-> +	u8 code = 0;
-> +	u16 rq_element_index;
+> +	struct efc *efc = sport->efc;
+> +	struct efc_vport_spec *vport;
 > +
-> +	*rq_id = 0;
-> +	*index = U32_MAX;
-> +
-> +	code = cqe[SLI4_CQE_CODE_OFFSET];
-> +
-> +	if (code == SLI4_CQE_CODE_RQ_ASYNC) {
-> +		*rq_id = le16_to_cpu(rcqe->fcfi_rq_id_word) & SLI4_RACQE_RQ_ID;
-> +		rq_element_index =
-> +		le16_to_cpu(rcqe->rq_elmt_indx_word) & SLI4_RACQE_RQ_EL_INDX;
-> +		*index = rq_element_index;
-> +		if (rcqe->status == SLI4_FC_ASYNC_RQ_SUCCESS) {
-> +			rc = EFC_SUCCESS;
-> +		} else {
-> +			rc = rcqe->status;
-> +			efc_log_info(sli4, "status=%02x (%s) rq_id=%d\n",
-> +				rcqe->status,
-> +				sli_fc_get_status_string(rcqe->status),
-> +				le16_to_cpu(rcqe->fcfi_rq_id_word) &
-> +				SLI4_RACQE_RQ_ID);
-> +
-> +			efc_log_info(sli4, "pdpl=%x sof=%02x eof=%02x hdpl=%x\n",
-> +				le16_to_cpu(rcqe->data_placement_length),
-> +				rcqe->sof_byte, rcqe->eof_byte,
-> +				rcqe->hdpl_byte & SLI4_RACQE_HDPL);
+> +	list_for_each_entry(vport, &efc->vport_list, list_entry) {
+> +		if (vport->sport == sport) {
+> +			vport->sport = NULL;
+> +			break;
 > +		}
-> +	} else if (code == SLI4_CQE_CODE_RQ_ASYNC_V1) {
-> +		*rq_id = le16_to_cpu(rcqe_v1->rq_id);
-> +		rq_element_index =
-> +			(le16_to_cpu(rcqe_v1->rq_elmt_indx_word) &
-> +			 SLI4_RACQE_RQ_EL_INDX);
-> +		*index = rq_element_index;
-> +		if (rcqe_v1->status == SLI4_FC_ASYNC_RQ_SUCCESS) {
-> +			rc = EFC_SUCCESS;
-> +		} else {
-> +			rc = rcqe_v1->status;
-> +			efc_log_info(sli4, "status=%02x (%s) rq_id=%d, index=%x\n",
-> +				rcqe_v1->status,
-> +				sli_fc_get_status_string(rcqe_v1->status),
-> +				le16_to_cpu(rcqe_v1->rq_id), rq_element_index);
-> +
-> +			efc_log_info(sli4, "pdpl=%x sof=%02x eof=%02x hdpl=%x\n",
-> +				le16_to_cpu(rcqe_v1->data_placement_length),
-> +			rcqe_v1->sof_byte, rcqe_v1->eof_byte,
-> +			rcqe_v1->hdpl_byte & SLI4_RACQE_HDPL);
-> +		}
-> +	} else if (code == SLI4_CQE_CODE_OPTIMIZED_WRITE_CMD) {
-> +		struct sli4_fc_optimized_write_cmd_cqe *optcqe = (void *)cqe;
-> +
-> +		*rq_id = le16_to_cpu(optcqe->rq_id);
-> +		*index = le16_to_cpu(optcqe->w1) & SLI4_OCQE_RQ_EL_INDX;
-> +		if (optcqe->status == SLI4_FC_ASYNC_RQ_SUCCESS) {
-> +			rc = EFC_SUCCESS;
-> +		} else {
-> +			rc = optcqe->status;
-> +			efc_log_info(sli4, "stat=%02x (%s) rqid=%d, idx=%x pdpl=%x\n",
-> +				optcqe->status,
-> +				sli_fc_get_status_string(optcqe->status),
-> +				le16_to_cpu(optcqe->rq_id), *index,
-> +				le16_to_cpu(optcqe->data_placement_length));
-> +
-> +			efc_log_info(sli4, "hdpl=%x oox=%d agxr=%d xri=0x%x rpi=%x\n",
-> +				(optcqe->hdpl_vld & SLI4_OCQE_HDPL),
-> +				(optcqe->flags1 & SLI4_OCQE_OOX),
-> +				(optcqe->flags1 & SLI4_OCQE_AGXR), optcqe->xri,
-> +				le16_to_cpu(optcqe->rpi));
-> +		}
-> +	} else if (code == SLI4_CQE_CODE_RQ_COALESCING) {
-> +		struct sli4_fc_coalescing_rcqe	*rcqe = (void *)cqe;
-> +		u16 rq_element_index =
-> +				(le16_to_cpu(rcqe->rq_elmt_indx_word) &
-> +				 SLI4_RCQE_RQ_EL_INDX);
-> +
-> +		*rq_id = le16_to_cpu(rcqe->rq_id);
-> +		if (rcqe->status == SLI4_FC_COALESCE_RQ_SUCCESS) {
-> +			*index = rq_element_index;
-> +			rc = EFC_SUCCESS;
-> +		} else {
-> +			*index = U32_MAX;
-> +			rc = rcqe->status;
-> +
-> +			efc_log_info(sli4, "stat=%02x (%s) rq_id=%d, idx=%x\n",
-> +				rcqe->status,
-> +				sli_fc_get_status_string(rcqe->status),
-> +				le16_to_cpu(rcqe->rq_id), rq_element_index);
-> +			efc_log_info(sli4, "rq_id=%#x sdpl=%x\n",
-> +				le16_to_cpu(rcqe->rq_id),
-> +		    le16_to_cpu(rcqe->sequence_reporting_placement_length));
-> +		}
-> +	} else {
-> +		*index = U32_MAX;
-> +
-> +		rc = rcqe->status;
-> +
-> +		efc_log_info(sli4, "status=%02x rq_id=%d, index=%x pdpl=%x\n",
-> +			rcqe->status,
-> +		le16_to_cpu(rcqe->fcfi_rq_id_word) & SLI4_RACQE_RQ_ID,
-> +		(le16_to_cpu(rcqe->rq_elmt_indx_word) & SLI4_RACQE_RQ_EL_INDX),
-> +		le16_to_cpu(rcqe->data_placement_length));
-> +		efc_log_info(sli4, "sof=%02x eof=%02x hdpl=%x\n",
-> +			rcqe->sof_byte, rcqe->eof_byte,
-> +			rcqe->hdpl_byte & SLI4_RACQE_HDPL);
 > +	}
+> +}
+> +
+> +static void *
+> +__efc_sport_common(const char *funcname, struct efc_sm_ctx *ctx,
+> +		   enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc_domain *domain = sport->domain;
+> +	struct efc *efc = sport->efc;
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_ENTER:
+> +	case EFC_EVT_REENTER:
+> +	case EFC_EVT_EXIT:
+> +	case EFC_EVT_ALL_CHILD_NODES_FREE:
+> +		break;
+> +	case EFC_EVT_SPORT_ATTACH_OK:
+> +			efc_sm_transition(ctx, __efc_sport_attached, NULL);
+> +		break;
+> +	case EFC_EVT_SHUTDOWN: {
+> +		int node_list_empty;
+> +
+> +		/* Flag this sport as shutting down */
+> +		sport->shutting_down = true;
+> +
+> +		if (sport->is_vport)
+> +			efc_vport_link_down(sport);
+> +
+> +		node_list_empty = list_empty(&sport->node_list);
+> +
+> +		if (node_list_empty) {
+> +			/* Remove the sport from the domain's lookup table */
+> +			xa_erase(&domain->lookup, sport->fc_id);
+> +			efc_sm_transition(ctx, __efc_sport_wait_port_free,
+> +					  NULL);
+> +			if (efc->tt.hw_port_free(efc, sport)) {
+> +				efc_log_test(sport->efc,
+> +					     "efc_hw_port_free failed\n");
+> +				/* Not much we can do, free the sport anyways */
+> +				efc_sport_free(sport);
+> +			}
+> +		} else {
+> +			/* sm: node list is not empty / shutdown nodes */
+> +			efc_sm_transition(ctx,
+> +					  __efc_sport_wait_shutdown, NULL);
+> +			efc_sport_shutdown(sport);
+> +		}
+> +		break;
+> +	}
+> +	default:
+> +		efc_log_test(sport->efc, "[%s] %-20s %-20s not handled\n",
+> +			     sport->display_name, funcname,
+> +			     efc_sm_event_name(evt));
+> +		break;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +/* SLI port state machine: Physical sport allocated */
+> +void *
+> +__efc_sport_allocated(struct efc_sm_ctx *ctx,
+> +		      enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc_domain *domain = sport->domain;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	/* the physical sport is attached */
+> +	case EFC_EVT_SPORT_ATTACH_OK:
+> +		WARN_ON(sport != domain->sport);
+> +		efc_sm_transition(ctx, __efc_sport_attached, NULL);
+> +		break;
+> +
+> +	case EFC_EVT_SPORT_ALLOC_OK:
+> +		/* ignore */
+> +		break;
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +/* SLI port state machine: Handle initial virtual port events */
+> +void *
+> +__efc_sport_vport_init(struct efc_sm_ctx *ctx,
+> +		       enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc *efc = sport->efc;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_ENTER: {
+> +		__be64 be_wwpn = cpu_to_be64(sport->wwpn);
+> +
+> +		if (sport->wwpn == 0)
+> +			efc_log_debug(efc, "vport: letting f/w select WWN\n");
+> +
+> +		if (sport->fc_id != U32_MAX) {
+> +			efc_log_debug(efc, "vport: hard coding port id: %x\n",
+> +				      sport->fc_id);
+> +		}
+> +
+> +		efc_sm_transition(ctx, __efc_sport_vport_wait_alloc, NULL);
+> +		/* If wwpn is zero, then we'll let the f/w */
+> +		if (efc->tt.hw_port_alloc(efc, sport, sport->domain,
+> +					  sport->wwpn == 0 ? NULL :
+> +					  (uint8_t *)&be_wwpn)) {
+> +			efc_log_err(efc, "Can't allocate port\n");
+> +			break;
+> +		}
+> +
+> +		break;
+> +	}
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +/**
+> + * SLI port state machine:
+> + * Wait for the HW SLI port allocation to complete
+> + */
+> +void *
+> +__efc_sport_vport_wait_alloc(struct efc_sm_ctx *ctx,
+> +			     enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc *efc = sport->efc;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_SPORT_ALLOC_OK: {
+> +		struct fc_els_flogi *sp;
+> +		struct efc_node *fabric;
+> +
+> +		sp = (struct fc_els_flogi *)sport->service_params;
+> +		/*
+> +		 * If we let f/w assign wwn's,
+> +		 * then sport wwn's with those returned by hw
+> +		 */
+> +		if (sport->wwnn == 0) {
+> +			sport->wwnn = be64_to_cpu(sport->sli_wwnn);
+> +			sport->wwpn = be64_to_cpu(sport->sli_wwpn);
+> +			snprintf(sport->wwnn_str, sizeof(sport->wwnn_str),
+> +				 "%016llX", sport->wwpn);
+> +		}
+> +
+> +		/* Update the sport's service parameters */
+> +		sp->fl_wwpn = cpu_to_be64(sport->wwpn);
+> +		sp->fl_wwnn = cpu_to_be64(sport->wwnn);
+> +
+> +		/*
+> +		 * if sport->fc_id is uninitialized,
+> +		 * then request that the fabric node use FDISC
+> +		 * to find an fc_id.
+> +		 * Otherwise we're restoring vports, or we're in
+> +		 * fabric emulation mode, so attach the fc_id
+> +		 */
+> +		if (sport->fc_id == U32_MAX) {
+> +			fabric = efc_node_alloc(sport, FC_FID_FLOGI, false,
+> +						false);
+> +			if (!fabric) {
+> +				efc_log_err(efc, "efc_node_alloc() failed\n");
+> +				return NULL;
+> +			}
+> +			efc_node_transition(fabric, __efc_vport_fabric_init,
+> +					    NULL);
+> +		} else {
+> +			snprintf(sport->wwnn_str, sizeof(sport->wwnn_str),
+> +				 "%016llX", sport->wwpn);
+> +			efc_sport_attach(sport, sport->fc_id);
+> +		}
+> +		efc_sm_transition(ctx, __efc_sport_vport_allocated, NULL);
+> +		break;
+> +	}
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +/**
+> + * SLI port state machine: virtual sport allocated.
+> + *
+> + * This state is entered after the sport is allocated;
+> + * it then waits for a fabric node
+> + * FDISC to complete, which requests a sport attach.
+> + * The sport attach complete is handled in this state.
+> + */
+> +
+> +void *
+> +__efc_sport_vport_allocated(struct efc_sm_ctx *ctx,
+> +			    enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc *efc = sport->efc;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_SPORT_ATTACH_OK: {
+> +		struct efc_node *node;
+> +
+> +		/* Find our fabric node, and forward this event */
+> +		node = efc_node_find(sport, FC_FID_FLOGI);
+> +		if (!node) {
+> +			efc_log_test(efc, "can't find node %06x\n",
+> +				     FC_FID_FLOGI);
+> +			break;
+> +		}
+> +		/* sm: / forward sport attach to fabric node */
+> +		efc_node_post_event(node, evt, NULL);
+> +		efc_sm_transition(ctx, __efc_sport_attached, NULL);
+> +		break;
+> +	}
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +static void
+> +efc_vport_update_spec(struct efc_sli_port *sport)
+> +{
+> +	struct efc *efc = sport->efc;
+> +	struct efc_vport_spec *vport;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&efc->vport_lock, flags);
+> +	list_for_each_entry(vport, &efc->vport_list, list_entry) {
+> +		if (vport->sport == sport) {
+> +			vport->wwnn = sport->wwnn;
+> +			vport->wwpn = sport->wwpn;
+> +			vport->tgt_data = sport->tgt_data;
+> +			vport->ini_data = sport->ini_data;
+> +			break;
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&efc->vport_lock, flags);
+> +}
+> +
+> +/* State entered after the sport attach has completed */
+> +void *
+> +__efc_sport_attached(struct efc_sm_ctx *ctx,
+> +		     enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc *efc = sport->efc;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_ENTER: {
+> +		struct efc_node *node;
+> +
+> +		efc_log_debug(efc,
+> +			      "[%s] SPORT attached WWPN %016llX WWNN %016llX\n",
+> +			      sport->display_name,
+> +			      sport->wwpn, sport->wwnn);
+> +
+> +		list_for_each_entry(node, &sport->node_list, list_entry) {
+> +			efc_node_update_display_name(node);
+> +		}
+> +
+> +		sport->tgt_id = sport->fc_id;
+> +
+> +		efc->tt.new_sport(efc, sport);
+> +
+> +		/*
+> +		 * Update the vport (if its not the physical sport)
+> +		 * parameters
+> +		 */
+> +		if (sport->is_vport)
+> +			efc_vport_update_spec(sport);
+> +		break;
+> +	}
+> +
+> +	case EFC_EVT_EXIT:
+> +		efc_log_debug(efc,
+> +			      "[%s] SPORT deattached WWPN %016llX WWNN %016llX\n",
+> +			      sport->display_name,
+> +			      sport->wwpn, sport->wwnn);
+> +
+> +		efc->tt.del_sport(efc, sport);
+> +		break;
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +
+> +/* SLI port state machine: Wait for the node shutdowns to complete */
+> +void *
+> +__efc_sport_wait_shutdown(struct efc_sm_ctx *ctx,
+> +			  enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +	struct efc_domain *domain = sport->domain;
+> +	struct efc *efc = sport->efc;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_SPORT_ALLOC_OK:
+> +	case EFC_EVT_SPORT_ALLOC_FAIL:
+> +	case EFC_EVT_SPORT_ATTACH_OK:
+> +	case EFC_EVT_SPORT_ATTACH_FAIL:
+> +		/* ignore these events - just wait for the all free event */
+> +		break;
+> +
+> +	case EFC_EVT_ALL_CHILD_NODES_FREE: {
+> +		/*
+> +		 * Remove the sport from the domain's
+> +		 * sparse vector lookup table
+> +		 */
+> +		xa_erase(&domain->lookup, sport->fc_id);
+> +		efc_sm_transition(ctx, __efc_sport_wait_port_free, NULL);
+> +		if (efc->tt.hw_port_free(efc, sport)) {
+> +			efc_log_err(sport->efc, "efc_hw_port_free failed\n");
+> +			/* Not much we can do, free the sport anyways */
+> +			efc_sport_free(sport);
+> +		}
+> +		break;
+> +	}
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +/* SLI port state machine: Wait for the HW's port free to complete */
+> +void *
+> +__efc_sport_wait_port_free(struct efc_sm_ctx *ctx,
+> +			   enum efc_sm_event evt, void *arg)
+> +{
+> +	struct efc_sli_port *sport = ctx->app;
+> +
+> +	sport_sm_trace(sport);
+> +
+> +	switch (evt) {
+> +	case EFC_EVT_SPORT_ATTACH_OK:
+> +		/* Ignore as we are waiting for the free CB */
+> +		break;
+> +	case EFC_EVT_SPORT_FREE_OK: {
+> +		/* All done, free myself */
+> +		/* sm: / efc_sport_free */
+> +		efc_sport_free(sport);
+> +		break;
+> +	}
+> +	default:
+> +		__efc_sport_common(__func__, ctx, evt, arg);
+> +		return NULL;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +static int
+> +efc_vport_sport_alloc(struct efc_domain *domain, struct efc_vport_spec *vport)
+> +{
+> +	struct efc_sli_port *sport;
+> +
+> +	sport = efc_sport_alloc(domain, vport->wwpn,
+> +				vport->wwnn, vport->fc_id,
+> +				vport->enable_ini,
+> +				vport->enable_tgt);
+> +	vport->sport = sport;
+> +	if (!sport)
+> +		return EFC_FAIL;
+> +
+> +	sport->is_vport = true;
+> +	sport->tgt_data = vport->tgt_data;
+> +	sport->ini_data = vport->ini_data;
+> +
+> +	efc_sm_transition(&sport->sm, __efc_sport_vport_init, NULL);
+> +
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +/* Use the vport specification to find the associated vports and start them */
+> +int
+> +efc_vport_start(struct efc_domain *domain)
+> +{
+> +	struct efc *efc = domain->efc;
+> +	struct efc_vport_spec *vport;
+> +	struct efc_vport_spec *next;
+> +	int rc = EFC_SUCCESS;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&efc->vport_lock, flags);
+> +	list_for_each_entry_safe(vport, next, &efc->vport_list, list_entry) {
+> +		if (!vport->sport) {
+> +			if (efc_vport_sport_alloc(domain, vport))
+> +				rc = EFC_FAIL;
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&efc->vport_lock, flags);
 > +
 > +	return rc;
 > +}
-> -- 
-> 2.16.4
-> 
-> 
+> +
+> +/* Allocate a new virtual SLI port */
+> +int
+> +efc_sport_vport_new(struct efc_domain *domain, uint64_t wwpn, uint64_t wwnn,
+> +		    u32 fc_id, bool ini, bool tgt, void *tgt_data,
+> +		    void *ini_data)
+> +{
+> +	struct efc *efc = domain->efc;
+> +	struct efc_vport_spec *vport;
+> +	int rc = EFC_SUCCESS;
+> +	unsigned long flags = 0;
+> +
+> +	if (ini && domain->efc->enable_ini == 0) {
+> +		efc_log_debug(efc,
+> +			     "driver initiator functionality not enabled\n");
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	if (tgt && domain->efc->enable_tgt == 0) {
+> +		efc_log_debug(efc,
+> +			     "driver target functionality not enabled\n");
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	/*
+> +	 * Create a vport spec if we need to recreate
+> +	 * this vport after a link up event
+> +	 */
+> +	vport = efc_vport_create_spec(domain->efc, wwnn, wwpn, fc_id, ini, tgt,
+> +					tgt_data, ini_data);
+> +	if (!vport) {
+> +		efc_log_err(efc, "failed to create vport object entry\n");
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	spin_lock_irqsave(&efc->lock, flags);
+> +	rc = efc_vport_sport_alloc(domain, vport);
+> +	spin_unlock_irqrestore(&efc->lock, flags);
+> +
+> +	return rc;
+> +}
+> +
+> +/* Remove a previously-allocated virtual port */
+> +int
+> +efc_sport_vport_del(struct efc *efc, struct efc_domain *domain,
+> +		    u64 wwpn, uint64_t wwnn)
+> +{
+> +	struct efc_sli_port *sport;
+> +	int found = 0;
+> +	struct efc_vport_spec *vport;
+> +	struct efc_vport_spec *next;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&efc->vport_lock, flags);
+> +	/* walk the efc_vport_list and remove from there */
+> +	list_for_each_entry_safe(vport, next, &efc->vport_list, list_entry) {
+> +		if (vport->wwpn == wwpn && vport->wwnn == wwnn) {
+> +			list_del(&vport->list_entry);
+> +			kfree(vport);
+> +			break;
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&efc->vport_lock, flags);
+> +
+> +	if (!domain) {
+> +		/* No domain means no sport to look for */
+> +		return EFC_SUCCESS;
+> +	}
+> +
+> +	spin_lock_irqsave(&efc->lock, flags);
+> +	list_for_each_entry(sport, &domain->sport_list, list_entry) {
+> +		if (sport->wwpn == wwpn && sport->wwnn == wwnn) {
+> +			found = 1;
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (found) {
+> +		/* Shutdown this SPORT */
+> +		efc_sm_post_event(&sport->sm, EFC_EVT_SHUTDOWN, NULL);
+> +	}
+> +	spin_unlock_irqrestore(&efc->lock, flags);
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +/* Force free all saved vports */
+> +void
+> +efc_vport_del_all(struct efc *efc)
+> +{
+> +	struct efc_vport_spec *vport;
+> +	struct efc_vport_spec *next;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&efc->vport_lock, flags);
+> +	list_for_each_entry_safe(vport, next, &efc->vport_list, list_entry) {
+> +		list_del(&vport->list_entry);
+> +		kfree(vport);
+> +	}
+> +	spin_unlock_irqrestore(&efc->vport_lock, flags);
+> +}
+> +
+> +/**
+> + * Create a saved vport entry.
+> + *
+> + * A saved vport entry is added to the vport list,
+> + * which is restored following a link up.
+> + * This function is used to allow vports to be created the first time
+> + * the link comes up without having to go through the ioctl() API.
+> + */
+> +
+> +struct efc_vport_spec *
+> +efc_vport_create_spec(struct efc *efc, uint64_t wwnn, uint64_t wwpn,
+> +		      u32 fc_id, bool enable_ini,
+> +		      bool enable_tgt, void *tgt_data, void *ini_data)
+> +{
+> +	struct efc_vport_spec *vport;
+> +	unsigned long flags = 0;
+> +
+> +	/*
+> +	 * walk the efc_vport_list and return failure
+> +	 * if a valid(vport with non zero WWPN and WWNN) vport entry
+> +	 * is already created
+> +	 */
+> +	spin_lock_irqsave(&efc->vport_lock, flags);
+> +	list_for_each_entry(vport, &efc->vport_list, list_entry) {
+> +		if ((wwpn && vport->wwpn == wwpn) &&
+> +		    (wwnn && vport->wwnn == wwnn)) {
+> +			efc_log_err(efc,
+> +				"Failed: VPORT %016llX %016llX already allocated\n",
+> +				wwnn, wwpn);
+> +			spin_unlock_irqrestore(&efc->vport_lock, flags);
+> +			return NULL;
+> +		}
+> +	}
+> +
+> +	vport = kzalloc(sizeof(*vport), GFP_ATOMIC);
+> +	if (!vport) {
+> +		spin_unlock_irqrestore(&efc->vport_lock, flags);
+> +		return NULL;
+> +	}
+> +
+> +	vport->wwnn = wwnn;
+> +	vport->wwpn = wwpn;
+> +	vport->fc_id = fc_id;
+> +	vport->enable_tgt = enable_tgt;
+> +	vport->enable_ini = enable_ini;
+> +	vport->tgt_data = tgt_data;
+> +	vport->ini_data = ini_data;
+> +
+> +	INIT_LIST_HEAD(&vport->list_entry);
+> +	list_add_tail(&vport->list_entry, &efc->vport_list);
+> +	spin_unlock_irqrestore(&efc->vport_lock, flags);
+> +	return vport;
 
-Thanks,
-Daniel
+As mentioned: please add locking annotations to make it clear which 
+functions require locking.
+
+And I'm not sure if reference counting the ports wouldn't be a better 
+idea; I can't really see how you would ensure that the port is valid if 
+it's being used by temporary structures like FC commands.
+The only _safe_ way would be to always access the ports under a lock, 
+but that would lead to heavy contention.
+
+But I'll check the remaining patches.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
