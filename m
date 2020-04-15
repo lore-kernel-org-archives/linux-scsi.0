@@ -3,139 +3,88 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C1C1C2BB85
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 05:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABA01C2BB85
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 08:08:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4AED7206A2
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 05:01:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A6692078A
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 08:08:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg-org.20150623.gappssmtp.com header.i=@cmpxchg-org.20150623.gappssmtp.com header.b="Tcxzc6xC"
+	dkim=pass (2048-bit key) header.d=bytedance-com.20150623.gappssmtp.com header.i=@bytedance-com.20150623.gappssmtp.com header.b="Mwr3Hvke"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393199AbgDOFBi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Apr 2020 01:01:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35212 "EHLO
+        id S2635623AbgDOIId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Apr 2020 04:08:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393196AbgDOFBM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2020 01:01:12 -0400
-Received: from mail-qv1-xf43.google.com (mail-qv1-xf43.google.com [IPv6:2607:f8b0:4864:20::f43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0558DC03C1AB
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2020 22:01:10 -0700 (PDT)
-Received: by mail-qv1-xf43.google.com with SMTP id s3so1075363qvk.12
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2020 22:01:09 -0700 (PDT)
+        with ESMTP id S2635622AbgDOII3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2020 04:08:29 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 346CCC061A0F
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2020 01:08:29 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id p8so1153189pgi.5
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2020 01:08:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ef3HLI/XX5ogd42JRuoGnEbb/Ln3ZxgvuLj5jaeUWkI=;
-        b=Tcxzc6xC3iVTZShTUf3CIv3N8B5ZyCbru12fLV5+tpVooL5/Bo3MM2R4w1+y/qKNnw
-         9lu0zJBRs+VK1Bc14YzwiZC+K/efs95VT8GzxaoJoz3t2WhfDZxWX+BgsMNU20r8wRPv
-         WS98QN/V8NZIzymtO0juNqdA9Tg6/2OTyjU7Zm1KL9ejebzf7wo1d0uOEsRrlg17M8fg
-         qYmffi6H6MwGLJe4epZjwPPvjWIdIXS0xtejpuhYYUqQSrz2GfoywvJh6tC6sCJVyKe7
-         xzOQhWdIv/o82YQJCk9DtMPUw2B8iLWuNwugd4l1OepDEbLixuOHRPHRALsrInJO+Rsn
-         o1og==
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id;
+        bh=+bfCUElRvrAPmVBMOIFVDlt70V4vk+GeakY9Soaqik4=;
+        b=Mwr3Hvke6qkKUwkMlQdwOAG6l4hEG8IUaQT8lKi9QtS/7ixwoIDtc2/o/EGhm8o1+G
+         ffQsggJMg40osVmaehwNNr1jJH3WgruBdIOXIqOPMj/olcmiV3tqlntckVM8+IAIPjob
+         tmhBqcecPBM8zZaPNGHlLhJcVbgVHRCiNzsRZs5Y0JB2tMJJlKjSidGoo5f7DHFREfX1
+         8tFaLxTTXsNDhMZmCJtYbEiQyKEV7W1ShFtnVmPaKAVwtuEpso+uDwjFPgwRRfF1ldPH
+         QjgAfZDiHUl38xmwIdTdQtdquGvI+KVG6GLxsMYMw6vBcvtjNco1Tyr1/XuPmA/Dknq8
+         4IzA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ef3HLI/XX5ogd42JRuoGnEbb/Ln3ZxgvuLj5jaeUWkI=;
-        b=VqSkqWOvAQH8W9KwzRaZ1RKZifcZeGUwJR5du7YMNWQR3nfLbS7VLSBXNYioEjpACe
-         9TNqJ6ZWLrdSm4rlCChS8MFcqLU1cVoogcWnpcP4PiOI2WFaaLB4xyCipJE2cQr6i1Z7
-         v3LFaNvB6x45g2QgePblL93W0/B1T/Ou6PFylMAX1E6zq5IVX86/DyQ+6bi8PLAGv8dO
-         N7rAQwyz50qrywIXgSD9DsVVoPf5Qvm2yxkKtx2rlacAV0PSSnWpDUZXcNHXKxXMrvba
-         qwWqZuohmUdUIal7Dy9S4C51/FzuwYM5xwRXT+grs4MTSUscJc49oiAAQ9tsbbX6DED+
-         9OQQ==
-X-Gm-Message-State: AGi0PuZCrnVgQ8jsseNA7IRNY/8F9E258Acd908wW+rGj0dFcmXWF2Gi
-        EAcNmNiCfuUVJW72jN+j/Hig+w==
-X-Google-Smtp-Source: APiQypJRjg+PyUSZjrIkjpxdMfgyPb9bMEWnffTFRMxoE1aQMUITXzNurR0P/0BN6q0H0W5xTyhSBA==
-X-Received: by 2002:a0c:e88d:: with SMTP id b13mr3243342qvo.245.1586926868219;
-        Tue, 14 Apr 2020 22:01:08 -0700 (PDT)
-Received: from localhost ([2620:10d:c091:480::e623])
-        by smtp.gmail.com with ESMTPSA id 10sm6168833qtp.4.2020.04.14.22.01.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2020 22:01:07 -0700 (PDT)
-Date:   Wed, 15 Apr 2020 01:01:06 -0400
-From:   Johannes Weiner <hannes@cmpxchg.org>
-To:     Waiman Long <longman@redhat.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-crypto@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-Subject: Re: [PATCH 1/2] mm, treewide: Rename kzfree() to kfree_sensitive()
-Message-ID: <20200415050106.GA154671@cmpxchg.org>
-References: <20200413211550.8307-1-longman@redhat.com>
- <20200413211550.8307-2-longman@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200413211550.8307-2-longman@redhat.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=+bfCUElRvrAPmVBMOIFVDlt70V4vk+GeakY9Soaqik4=;
+        b=Y6u2L1hOpCQFNDV/3J45ZQhVvMiPAUmm10rm6vJpfsUSRUyOINSz7g61fExRdpdcOf
+         WVyDLHWAkv98e+owwjur/T+2sZm3I2GG4LGpaIwOC1ukAKwamw/oGaWYlXXZaTuG2pP8
+         mBuKj3I/Zz2175gGRT3ruuqvuyaXKi7d/45csYSUEKG3irPxpyTqtDZjOBMhH6pjsOwV
+         DQK6YUDngQ1oyJofa/rR0ovjecyFjwABd+yeZK1LTuX5Ix5/Bsi6xPY6LsKx/gP5brt4
+         RSZgigewE9j3RVG8BoJVfD4wrc89QM0f8kdzLA0WTPN8KPbZfUDR5vI7cB957uvvOTZQ
+         91NQ==
+X-Gm-Message-State: AGi0Puaek3GkW9yGWTxzKbhhEWOtCS3U7QEWrrkduFbiy42fmXYzEBMv
+        d0Sg22fddlJ1OrsZx5JNoGHLiA==
+X-Google-Smtp-Source: APiQypLA+zObXCwcyxRLpX0xYKZ0QrTtTQgGwaLvCZmvVMaN7u2DLkzEEmaxprqIkFAH+QdfFH02Og==
+X-Received: by 2002:a63:d10f:: with SMTP id k15mr24329834pgg.73.1586938108742;
+        Wed, 15 Apr 2020 01:08:28 -0700 (PDT)
+Received: from debian.bytedance.net ([61.120.150.75])
+        by smtp.gmail.com with ESMTPSA id c10sm10020576pfc.23.2020.04.15.01.08.26
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 15 Apr 2020 01:08:28 -0700 (PDT)
+From:   Pu Hou <houpu@bytedance.com>
+To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     mchristi@redhat.com, Pu Hou <houpu@bytedance.com>
+Subject: [PATCH 0/2] iscsi-target: fix login error when receiving is too fast
+Date:   Wed, 15 Apr 2020 04:08:17 -0400
+Message-Id: <20200415080819.27327-1-houpu@bytedance.com>
+X-Mailer: git-send-email 2.11.0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 05:15:49PM -0400, Waiman Long wrote:
-> As said by Linus:
-> 
->   A symmetric naming is only helpful if it implies symmetries in use.
->   Otherwise it's actively misleading.
+Hi,
+We encountered "iSCSI Login negotiation failed" several times.
+After enable debug log in iscsi_target_nego.c of iSCSI target.
+Error shows:
+  "Got LOGIN_FLAGS_READ_ACTIVE=1, conn: xxxxxxxxxx >>>>"
 
-As the btrfs example proves - people can be tempted by this false
-symmetry to pair kzalloc with kzfree, which isn't what we wanted.
+Patch 1 is trying to fix this problem. Please see comment in patch 1
+for details.
 
->   In "kzalloc()", the z is meaningful and an important part of what the
->   caller wants.
-> 
->   In "kzfree()", the z is actively detrimental, because maybe in the
->   future we really _might_ want to use that "memfill(0xdeadbeef)" or
->   something. The "zero" part of the interface isn't even _relevant_.
-> 
-> The main reason that kzfree() exists is to clear sensitive information
-> that should not be leaked to other future users of the same memory
-> objects.
-> 
-> Rename kzfree() to kfree_sensitive() to follow the example of the
-> recently added kvfree_sensitive() and make the intention of the API
-> more explicit. In addition, memzero_explicit() is used to clear the
-> memory to make sure that it won't get optimized away by the compiler.
-> 
-> The renaming is done by using the command sequence:
-> 
->   git grep -w --name-only kzfree |\
->   xargs sed -i 's/\bkzfree\b/kfree_sensitive/'
-> 
-> followed by some editing of the kfree_sensitive() kerneldoc and the
-> use of memzero_explicit() instead of memset().
-> 
-> Suggested-by: Joe Perches <joe@perches.com>
-> Signed-off-by: Waiman Long <longman@redhat.com>
+Pu Hou (2):
+  iscsi-target: fix login error when receiving is too fast
+  iscsi-target: Fix inconsistent debug message in
+    __iscsi_target_sk_check_close
 
-Looks good to me. Thanks for fixing this very old mistake.
+ drivers/target/iscsi/iscsi_target_nego.c | 31 ++++++++++++++++++++++++++-----
+ include/target/iscsi/iscsi_target_core.h |  1 +
+ 2 files changed, 27 insertions(+), 5 deletions(-)
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+-- 
+2.11.0
+
