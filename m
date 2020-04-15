@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD191C2BB55
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 13:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A32C2BB55
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 13:26:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89B7820575
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 13:25:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8D1720575
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 13:26:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LR5wpxHd"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BXqV4ofF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2636090AbgDONZu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Apr 2020 09:25:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57142 "EHLO
+        id S2636105AbgDON0A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Apr 2020 09:26:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2636099AbgDONZq (ORCPT
+        by vger.kernel.org with ESMTP id S2636100AbgDONZt (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Apr 2020 09:25:46 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABD10C061A0C
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2020 06:25:46 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id np9so6760306pjb.4
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2020 06:25:46 -0700 (PDT)
+        Wed, 15 Apr 2020 09:25:49 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7665CC061A0C
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2020 06:25:49 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id 201so31741pfv.2
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2020 06:25:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=a/CWPPj4MI+kHBELayo3V/QyFpobDIWGzFV3aDT8VfQ=;
-        b=LR5wpxHd4G+gJRYQqdT7vdsj9OnFWFuWGeP0yn3SWC3kjRp/M8rAJ9hW+AhilIjIyz
-         c2LxL2OfD367P8AzaeIifCZeK0JMnEoeoQPNCTsSc+7iAUMf7QCfm6aLDsYHEjtRTUcQ
-         XTGESrXyizhk1V+h2hOue0dUtQiE3+cEJgu+Y=
+        bh=a2Gcyt2zwERLVsg6RPGuiJE6CP/cWE63hYsQKWCW1ao=;
+        b=BXqV4ofFVhVJFUKww4RTson2lu9JKdQpqNdKOgG+JxrqMHkVqt84lQNuXMYErT7jaL
+         /vSaVL7amxOxvU90H7FHqZiMpqOb05l3M7obyRYR3t8Mvp1Pm9KHSYmXlibu0SmqkR82
+         5N2D7J5qruSc8pvx7vZvlDqRW8LFt4hmpz3mM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=a/CWPPj4MI+kHBELayo3V/QyFpobDIWGzFV3aDT8VfQ=;
-        b=SEhPAACSrxTyq5VqffANKHfBKM221kubEztb7oetjcA5KT/ILBx/8Ph9bbu/gx27OB
-         iW1p/S6k2r4zNiQA7jbxXGNV9fagrU0tty4C7ajjwdlk/1HNWUflI7awj1f4+2HpzJvv
-         Pr0CgGvYIRRC5FtBXun2eMzHj+Uy6vs+qzzRmdfZQtIZX2of3juB00PhSJeZlWuVRNrN
-         /MJigLQxYEF2fkCdH//PoFlRG2QALV9GvY/MV+TgHmwXIOcIYlLZE/dYsRwMfh2C64XE
-         DbfikCzRdt5q8xgJjN70wo+GeIAkbc03gK/kilGVHPEJnNfeEXsra/C+dDVaO3m5KbjM
-         +VBA==
-X-Gm-Message-State: AGi0PuZ40XklQ0uZylntIh15o+xgvlNSD45K6bcWZkGwMauJ4PJVGwQ1
-        0TFe6O95o6t1FySdQ+xi1AwR0fbcCQm0MrbbgnqYMGmppa5CayVKA0AeryGJz2krISaCS/ANgSQ
-        Q+njqD349B42BPXJ3qa6sSxPzdZDXBUKf79WoUncm429pREy4foXVc/q785asLykVltOlCYiNoT
-        VEeFWQnzyB0+jW9A9Rbzg8
-X-Google-Smtp-Source: APiQypImjpCEa/WtMJCTEuYWeSZtYTLaGZAKfBCUyKfB+moMxmjH4f5zSReDX7r6IOFhvibgnXjDng==
-X-Received: by 2002:a17:902:ba89:: with SMTP id k9mr4846263pls.199.1586957145727;
-        Wed, 15 Apr 2020 06:25:45 -0700 (PDT)
+        bh=a2Gcyt2zwERLVsg6RPGuiJE6CP/cWE63hYsQKWCW1ao=;
+        b=LTQM4X6NvhIyVI5GzP5Pigy1xP7TjKOWYXsdkV5hrrNO9Wm6ScmN9Je5OohKDAOC9J
+         SO/XB8xREqjyHu/Tn2yidNhyxxyz9Q0b3Oi7Fxfhv62FvjiFFP0FKni7l3rRDUCTt62n
+         vggQmgkA5S8PCadRB7myX5BRjq1v6NxvZcqxpAcPS4a65fLJ78weaHusOztfzwTJAWL1
+         4xVy9IbSPRd5y+bSI+jemY73oQsQO+JDnFy/Ovf9cXiz0ct6SZKXLK9DMJtdBAjtdZWG
+         d5TZbomTh5DB2qFPvWUyrSLeKS6KTsuw2ALxnHgdlBVDr9+St9SuvxRdxhzxc+hT1bO2
+         RcQw==
+X-Gm-Message-State: AGi0Pubgik4YpPsq+V73QSp0R8d3LgKZ4MbF/LXjSDgnz3jtUxYbxFFS
+        b3a+wYFgRTLWPmJQ+fx9fkXRdcGXXAw4/Tk27HgQoiTXyTS4sxidbJ5zLCkHNan/UTXVbw3/IDS
+        qPp1/PELMdVnwEgNKUE/FrAESJtsB5Rckey1BDCn1P52yqtnW5kHPkVuT+xmZJKD31orakb0wkO
+        ILOqTMi9J3m9/pqBZVuccj
+X-Google-Smtp-Source: APiQypIbw5tkFAwp9HaabXM/ZwhpwSHFdAJVF4XwiZ5WZI8UgF1UzzjNOi3hcgGrPBN0abxQOXZC+A==
+X-Received: by 2002:a65:4b8d:: with SMTP id t13mr7522927pgq.388.1586957148529;
+        Wed, 15 Apr 2020 06:25:48 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id x186sm13715556pfb.151.2020.04.15.06.25.43
+        by smtp.gmail.com with ESMTPSA id x186sm13715556pfb.151.2020.04.15.06.25.46
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 15 Apr 2020 06:25:45 -0700 (PDT)
+        Wed, 15 Apr 2020 06:25:47 -0700 (PDT)
 From:   Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     hch@infradead.org, Sathya.Prakash@broadcom.com,
         sreekanth.reddy@broadcom.com,
         Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [v1 2/5] mpt3sas: Rename function name is_MSB_are_same
-Date:   Wed, 15 Apr 2020 09:25:22 -0400
-Message-Id: <1586957125-19460-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [v1 3/5] mpt3sas: Separate out RDPQ allocation to new function.
+Date:   Wed, 15 Apr 2020 09:25:23 -0400
+Message-Id: <1586957125-19460-4-git-send-email-suganath-prabu.subramani@broadcom.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1586957125-19460-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1586957125-19460-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -74,45 +74,118 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-Renamed is_MSB_are_same() to mpt3sas_check_same_4gb_region()
-for better readability.
+For readability separate out RDPQ allocations to new function
+base_alloc_rdpq_dma_pool().
 
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 85 ++++++++++++++++++++++---------------
+ 1 file changed, 51 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 8e937c8..7f7b5af 100644
+index 7f7b5af..27c829e 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4920,7 +4920,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+@@ -4944,6 +4944,55 @@ mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
  }
  
  /**
-- * is_MSB_are_same - checks whether all reply queues in a set are
-+ * mpt3sas_check_same_4gb_region - checks whether all reply queues in a set are
-  *	having same upper 32bits in their base memory address.
-  * @reply_pool_start_address: Base address of a reply queue set
-  * @pool_sz: Size of single Reply Descriptor Post Queues pool size
-@@ -4930,7 +4930,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
-  */
++ * base_alloc_rdpq_dma_pool - Allocating DMA'able memory
++ *                     for reply queues.
++ * @ioc: per adapter object
++ * @sz: DMA Pool size
++ * Return: 0 for success, non-zero for failure.
++ */
++static int
++base_alloc_rdpq_dma_pool(struct MPT3SAS_ADAPTER *ioc, int sz)
++{
++	int i;
++
++	ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
++	    (ioc->reply_queue_count):1,
++	    sizeof(struct reply_post_struct), GFP_KERNEL);
++
++	if (!ioc->reply_post) {
++		ioc_err(ioc, "reply_post_free pool: kcalloc failed\n");
++		return -ENOMEM;
++	}
++	ioc->reply_post_free_dma_pool = dma_pool_create("reply_post_free pool",
++			&ioc->pdev->dev, sz, 16, 0);
++	if (!ioc->reply_post_free_dma_pool) {
++		ioc_err(ioc, "reply_post_free pool: dma_pool_create failed\n");
++		return -ENOMEM;
++	}
++	i = 0;
++	do {
++		ioc->reply_post[i].reply_post_free =
++			dma_pool_zalloc(ioc->reply_post_free_dma_pool,
++				GFP_KERNEL,
++				&ioc->reply_post[i].reply_post_free_dma);
++		if (!ioc->reply_post[i].reply_post_free) {
++			ioc_err(ioc, "reply_post_free pool: dma_pool_alloc failed\n");
++			return -ENOMEM;
++		}
++		dinitprintk(ioc,
++			ioc_info(ioc, "reply post free pool (0x%p): depth(%d),"
++			    "element_size(%d), pool_size(%d kB)\n",
++			    ioc->reply_post[i].reply_post_free,
++			    ioc->reply_post_queue_depth, 8, sz / 1024));
++		dinitprintk(ioc,
++			ioc_info(ioc, "reply_post_free_dma = (0x%llx)\n",
++			    (u64)ioc->reply_post[i].reply_post_free_dma));
++
++	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
++	return 0;
++}
++
++/**
+  * _base_allocate_memory_pools - allocate start of day memory pools
+  * @ioc: per adapter object
+  *
+@@ -5118,41 +5167,9 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	sz = reply_post_free_sz;
+ 	if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
+ 		sz *= ioc->reply_queue_count;
+-
+-	ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
+-	    (ioc->reply_queue_count):1,
+-	    sizeof(struct reply_post_struct), GFP_KERNEL);
+-
+-	if (!ioc->reply_post) {
+-		ioc_err(ioc, "reply_post_free pool: kcalloc failed\n");
++	if (base_alloc_rdpq_dma_pool(ioc, sz))
+ 		goto out;
+-	}
+-	ioc->reply_post_free_dma_pool = dma_pool_create("reply_post_free pool",
+-	    &ioc->pdev->dev, sz, 16, 0);
+-	if (!ioc->reply_post_free_dma_pool) {
+-		ioc_err(ioc, "reply_post_free pool: dma_pool_create failed\n");
+-		goto out;
+-	}
+-	i = 0;
+-	do {
+-		ioc->reply_post[i].reply_post_free =
+-		    dma_pool_zalloc(ioc->reply_post_free_dma_pool,
+-		    GFP_KERNEL,
+-		    &ioc->reply_post[i].reply_post_free_dma);
+-		if (!ioc->reply_post[i].reply_post_free) {
+-			ioc_err(ioc, "reply_post_free pool: dma_pool_alloc failed\n");
+-			goto out;
+-		}
+-		dinitprintk(ioc,
+-			    ioc_info(ioc, "reply post free pool (0x%p): depth(%d), element_size(%d), pool_size(%d kB)\n",
+-				     ioc->reply_post[i].reply_post_free,
+-				     ioc->reply_post_queue_depth,
+-				     8, sz / 1024));
+-		dinitprintk(ioc,
+-			    ioc_info(ioc, "reply_post_free_dma = (0x%llx)\n",
+-				     (u64)ioc->reply_post[i].reply_post_free_dma));
+-		total_sz += sz;
+-	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
++	total_sz += sz * (!ioc->rdpq_array_enable ? 1 : ioc->reply_queue_count);
  
- static int
--is_MSB_are_same(long reply_pool_start_address, u32 pool_sz)
-+mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
- {
- 	long reply_pool_end_address;
- 
-@@ -5382,7 +5382,7 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	 * Actual requirement is not alignment, but we need start and end of
- 	 * DMA address must have same upper 32 bit address.
- 	 */
--	if (!is_MSB_are_same((long)ioc->sense, sz)) {
-+	if (!mpt3sas_check_same_4gb_region((long)ioc->sense, sz)) {
- 		//Release Sense pool & Reallocate
- 		dma_pool_free(ioc->sense_dma_pool, ioc->sense, ioc->sense_dma);
- 		dma_pool_destroy(ioc->sense_dma_pool);
+ 	ioc->scsiio_depth = ioc->hba_queue_depth -
+ 	    ioc->hi_priority_depth - ioc->internal_depth;
 -- 
 1.8.3.1
 
