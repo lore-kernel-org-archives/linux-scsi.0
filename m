@@ -1,98 +1,95 @@
-Return-Path: <SRS0=dx4r=56=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=9vL1=57=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E7B6C352BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 19:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85E6EC2BB1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 01:18:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 382852076B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Apr 2020 19:57:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61E3C20784
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 01:18:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S/fPuJfr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2505286AbgDNT5C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 15:57:02 -0400
-Received: from smtprelay0211.hostedemail.com ([216.40.44.211]:34122 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2505250AbgDNTz5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Apr 2020 15:55:57 -0400
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave04.hostedemail.com (Postfix) with ESMTP id D5D591802CCB4;
-        Tue, 14 Apr 2020 19:47:05 +0000 (UTC)
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay06.hostedemail.com (Postfix) with ESMTP id 9E3611802B57F;
-        Tue, 14 Apr 2020 19:47:05 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: coal59_5a1e7cc02a463
-X-Filterd-Recvd-Size: 2796
-Received: from XPS-9350.home (unknown [47.151.136.130])
-        (Authenticated sender: joe@perches.com)
-        by omf07.hostedemail.com (Postfix) with ESMTPA;
-        Tue, 14 Apr 2020 19:46:59 +0000 (UTC)
-Message-ID: <2a58f592879cf67b4c6b8e859ce87e1f9652902a.camel@perches.com>
-Subject: Re: [PATCH v2 2/2] crypto: Remove unnecessary memzero_explicit()
-From:   Joe Perches <joe@perches.com>
-To:     Waiman Long <longman@redhat.com>,
-        Michal =?ISO-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-Cc:     Christophe Leroy <christophe.leroy@c-s.fr>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-crypto@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-Date:   Tue, 14 Apr 2020 12:44:49 -0700
-In-Reply-To: <578fe9b6-1ccd-2698-60aa-96c3f2dd2c31@redhat.com>
-References: <20200413211550.8307-1-longman@redhat.com>
-         <20200413222846.24240-1-longman@redhat.com>
-         <eca85e0b-0af3-c43a-31e4-bd5c3f519798@c-s.fr>
-         <e194a51f-a5e5-a557-c008-b08cac558572@redhat.com>
-         <20200414191601.GZ25468@kitsune.suse.cz>
-         <578fe9b6-1ccd-2698-60aa-96c3f2dd2c31@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.34.1-2 
+        id S2392468AbgDOBSl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 21:18:41 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:44032 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392461AbgDOBSf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 21:18:35 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03F1Eo7M069531;
+        Wed, 15 Apr 2020 01:18:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=V+FGQ+Fp0ENCqGAxNIY9AUsRPmrf+3JeOdO7ro1QI18=;
+ b=S/fPuJfr5OwO+QZS2ihclKnrLDCuTIUxMOp12UfyrmSXy+7qB+ebQoHrr1bwtdgkvc3O
+ 8NGPXclIqZ405TpmkDwVwcPwU3ya3WcIMRoMFPbIIFtmOlAup6jRENFeTeKNGbzqV1eh
+ YuCL5WD8abIDwTcatZmlNEN0hpbXMHPAZK3L38q5A71NNi9pEFl5CfloljaYOQw5ej6F
+ Fj/VqvlaF4D5m6DND6A1q5G8GFYDC4h/xzIDxODgybRbNYl0iqe3OohQCC9FdcSJiQgE
+ Ez9FBYiWFJCRAkbesW9zHbXVjMFO9zqYR4CedqOEgOphnO47/BuVKaYe9E85D4nO4lL1 SA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 30dn95gjjd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Apr 2020 01:18:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03F1CxFm020563;
+        Wed, 15 Apr 2020 01:18:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 30dn8sd7aj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Apr 2020 01:18:23 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03F1IKVS031963;
+        Wed, 15 Apr 2020 01:18:21 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 14 Apr 2020 18:18:20 -0700
+To:     Wu Bo <wubo40@huawei.com>
+Cc:     Doug Gilbert <dgilbert@interlog.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>
+Subject: Re: [PATCH] scsi:sg: add sg_remove_request in sg_write
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <610618d9-e983-fd56-ed0f-639428343af7@huawei.com>
+Date:   Tue, 14 Apr 2020 21:18:18 -0400
+In-Reply-To: <610618d9-e983-fd56-ed0f-639428343af7@huawei.com> (Wu Bo's
+        message of "Tue, 14 Apr 2020 10:13:28 +0800")
+Message-ID: <yq1pnc9r1gl.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=854 suspectscore=0
+ bulkscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004150005
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9591 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1015
+ malwarescore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ mlxscore=0 phishscore=0 spamscore=0 impostorscore=0 suspectscore=0
+ mlxlogscore=929 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004150005
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-04-14 at 15:37 -0400, Waiman Long wrote:
-> OK, I can change it to clear the key length when the allocation failed
-> which isn't likely.
 
+Wu,
 
-Perhaps:
+> If the __copy_from_user function return failed, it should call
+> sg_remove_request in sg_write.
 
-	kfree_sensitive(op->key);
-	op->key = NULL;
-	op->keylen = 0;
+Applied to 5.7/scsi-fixes (by hand, another mangled patch). Thanks.
 
-but I don't know that it impacts any possible state.
-
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
