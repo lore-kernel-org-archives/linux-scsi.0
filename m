@@ -6,47 +6,47 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CF6C2BB1D
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 208FAC2BB1D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:37:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BFBB20737
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:30:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BE2A2076C
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 02:37:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387802AbgDOCab (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Apr 2020 22:30:31 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:34651 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729186AbgDOCa0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 22:30:26 -0400
-Received: by mail-pl1-f193.google.com with SMTP id a23so711788plm.1;
-        Tue, 14 Apr 2020 19:30:24 -0700 (PDT)
+        id S2407909AbgDOCht (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Apr 2020 22:37:49 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:36872 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728267AbgDOChp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Apr 2020 22:37:45 -0400
+Received: by mail-pf1-f195.google.com with SMTP id u65so874265pfb.4;
+        Tue, 14 Apr 2020 19:37:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=YQZHyePF+6j26BRIml82egHgGBTgMnsKmOETdnWup7g=;
-        b=PKoqCRrVeLDhASeRwfTe0ykNXIA9jtad5NM9Y706hOmRVgbhtSuy1q8dyDXBPsejEG
-         +bWhxsCj3fLXmOV12B8CA9qyT60S2IJZclXZdb+w6T2V/dw7sjyWSq2ps6qblGWWhlWS
-         T1TtW9VSJUhdtrDosyGNGqKNVI2kSYrmLeVhnvYt3DMKjHjUTdcwddy23YEUbUftxZ0f
-         /e9wkEbqSi2EqBT23y/RgeQQxYz8gueYVdKyC1UgmEUCh5nd2/fyJzPGW/x6Ee6YF4ga
-         XKJUpBQFP3cRJb9hZ52LFlre5/hw9IjwVTcCFkzFoD0AoYEAXwJ7+76B4yp39Puken9o
-         291A==
-X-Gm-Message-State: AGi0PuYoaPPnsL6hari6GTdVeVBvfRkYirr9Sk/70iAoY7nWolgY5SKD
-        aoL2haS0qEjTjG3TAQ3X2To=
-X-Google-Smtp-Source: APiQypJRUFERYBe9V2BYDvjopeuL57TsOJM31eVaKMTUG3plWE1uO8KvnPgS0OMKSmXaHeVCCRggtA==
-X-Received: by 2002:a17:90a:4809:: with SMTP id a9mr3502672pjh.73.1586917823617;
-        Tue, 14 Apr 2020 19:30:23 -0700 (PDT)
+        bh=wi9n/7TB/CrHDW9WwPbuYbUp+wS6cFvuD8C9bxDQizI=;
+        b=HAo6VilqNggJsuea1dr5sh6hNwrvqJIdoErtS/9HanKSgICfO0wHYMI0b1O7U08nXd
+         cK/hM9w5hqfgDBRfybqGu+NWCMBwnn+2mQVf9SZYyMx4j6U69dyqgr95l+kMEyJOednf
+         Z0bFyxT8DXY1yGtqi2q5IdO+aQ8e++XjpXdcz60X2J1saOEM/bLMwfuq3EvXYGNUoBtr
+         ly1n8UkmICSoY+ZEkGKyZ1soSqL2Rjqs3nPLAvXgzdj3s2nIinrEz1qyXomKU657AKWE
+         kiuhfwIBJtEmzBpILOwTFyN2125ZlVKjq9act9C2VI5wpxPj0cMkNuiigHfcQ/pB9VKX
+         zGew==
+X-Gm-Message-State: AGi0PuaHTDpqShhv+WtgO+H63PaaFZu0rK8p5HbIuxVkW0hVj++iEgsY
+        abEFD0JV4qUph5kk1HPS0h8=
+X-Google-Smtp-Source: APiQypLaglm2Z1/4KaHHV7rHSYq5HP8TdHUROYLztC5IsA4T6PAp0KMKO9oO/Yu3CHiDgqEou7KI1g==
+X-Received: by 2002:a62:3487:: with SMTP id b129mr26012805pfa.150.1586918264478;
+        Tue, 14 Apr 2020 19:37:44 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:3d9e:6f43:1883:92f0? ([2601:647:4000:d7:3d9e:6f43:1883:92f0])
-        by smtp.gmail.com with ESMTPSA id q201sm12417021pfq.32.2020.04.14.19.30.21
+        by smtp.gmail.com with ESMTPSA id 63sm12336804pfe.96.2020.04.14.19.37.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Apr 2020 19:30:21 -0700 (PDT)
-Subject: Re: [RFC PATCH 2/5] target: add sysfs session helper functions
+        Tue, 14 Apr 2020 19:37:43 -0700 (PDT)
+Subject: Re: [RFC PATCH 3/5] target: add target_setup_session sysfs support
 To:     Mike Christie <mchristi@redhat.com>, jsmart2021@gmail.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org, nab@linux-iscsi.org
 References: <20200414051514.7296-1-mchristi@redhat.com>
- <20200414051514.7296-3-mchristi@redhat.com>
+ <20200414051514.7296-4-mchristi@redhat.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -71,12 +71,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <20ecaf0e-698c-fb9c-26fd-a1f2dc79392e@acm.org>
-Date:   Tue, 14 Apr 2020 19:30:20 -0700
+Message-ID: <0267ebe3-8168-ef02-b414-6d14a756277b@acm.org>
+Date:   Tue, 14 Apr 2020 19:37:42 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200414051514.7296-3-mchristi@redhat.com>
+In-Reply-To: <20200414051514.7296-4-mchristi@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -86,37 +86,20 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-04-13 22:15, Mike Christie wrote:
-> @@ -537,8 +538,15 @@ void transport_deregister_session_configfs(struct se_session *se_sess)
->  }
->  EXPORT_SYMBOL(transport_deregister_session_configfs);
->  
-> +
+>  struct se_session *target_setup_session(struct se_portal_group *,
+>  		unsigned int, unsigned int, enum target_prot_op prot_op,
+> -		const char *, void *,
+> -		int (*callback)(struct se_portal_group *,
+> -				struct se_session *, void *));
+> +		const char *, struct attribute_group *, void *,
+> +		int (*setup_cb)(struct se_portal_group *,
+> +				struct se_session *, void *),
+> +		void (*free_cb)(struct se_session *));
 
-A single blank line is probably sufficient here?
-
->  void transport_free_session(struct se_session *se_sess)
->  {
-> +	kobject_put(&se_sess->kobj);
-> +}
-> +EXPORT_SYMBOL(transport_free_session);
-> +
-> +void __target_free_session(struct se_session *se_sess)
-> +{
->  	struct se_node_acl *se_nacl = se_sess->se_node_acl;
->  
->  	/*
-> @@ -582,7 +590,6 @@ void transport_free_session(struct se_session *se_sess)
->  	percpu_ref_exit(&se_sess->cmd_count);
->  	kmem_cache_free(se_sess_cache, se_sess);
->  }
-> -EXPORT_SYMBOL(transport_free_session);
-
-Does this patch defer execution of the code inside
-transport_free_session() from when transport_free_session() is called to
-when the last reference to a session is dropped? Can that have
-unintended side effects? How about keeping most of the code that occurs
-in transport_free_session() in that function and only freeing the memory
-associated with the session if the last reference is dropped?
+The argument list of target_setup_session() is getting really long. How
+about moving the attribute_group, setup_cb and free_cb arguments into
+struct target_core_fabric_ops? Would that make it easier to extend
+session sysfs attribute support in the future?
 
 Thanks,
 
