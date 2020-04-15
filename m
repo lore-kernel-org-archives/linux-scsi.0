@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C781C2BB85
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 09:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8CFC2BA19
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 09:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0333F206E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 09:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09F2D20768
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Apr 2020 09:07:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Hlt8zOFT"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="VzG2zTyE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393893AbgDOJG4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Apr 2020 05:06:56 -0400
+        id S2408266AbgDOJHC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Apr 2020 05:07:02 -0400
 Received: from esa6.hgst.iphmx.com ([216.71.154.45]:19515 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393857AbgDOJF3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2020 05:05:29 -0400
+        with ESMTP id S2393851AbgDOJFZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Apr 2020 05:05:25 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1586941529; x=1618477529;
+  t=1586941525; x=1618477525;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Mbrcp3ypiorlyjCGTv6YLqgtm02r3Gc8tme5xzZKrHA=;
-  b=Hlt8zOFTKECAXP+pTq5rs7Qsx20qHGysccv0vKpC6SMybLu3iOKOlwqP
-   GOOBdxvlsgejeEpvT8nKjfKGuLes/1mOWN0YaSP3be3X2Nk/51ktzBClU
-   JYbgY1Mht+Z92zMae21x7WiPZuVGkoJfwQ0vqTQH+mxMEs3/bi25gcx63
-   j19OuD2XWoexu6MDBQpsODy3rQXzetHiWsW8Lp/u3FpuyQxoDQUNC88od
-   XnXz/iavxR6uTJISGyd9ROCIE8ol1in6Tsi0gAvLUbUJDx+NxOjokBx2e
-   7//r0WBLB6mCz1X+QOmNbqUGCPXzDUb5EuNzhAcdXJnlb9oU3QQkBaXDW
-   g==;
-IronPort-SDR: E9WNweG6Ez8pX76lV9DDNCMF8Py418pYm3MGGNyJ9jMBXHR1Yc4QCCxKDHrPzaJXHtJI8cYXQ1
- Wjv/yz7VOr7NiA5rQxCz/3JQsHzUOnTOYlxFfG2x5HLnPyr9HRA8xj8+R73WaVocc3GGpCMQje
- hPURLG1K52RVL4PaHDyREUPLd4zEiMz1fkZPiMbjKnreXn0xsjJvduiv7ihepjoc3YiyLIMhDx
- FLM76UeB3Ger58jmFLC3TpfRfrOyXgI+kcSFGta7UeDsLudlFSQqFFACluY9QjBrW50sN+aO5I
- Do0=
+  bh=AP8UZmn5ljqVZ4+z4DUJXnQSKmNe/BWD06zNOt2Hu9Q=;
+  b=VzG2zTyEH0GwwOBlMjZKkeBHggWi0fNag6mpeDoYL1jni6lvRfhG8/TW
+   HfS284lcQUUfFUgdxKudXkndtFBJZUhSYstwfDETMvMHRxYWZ2BkntAG2
+   MvSX4+qt+dieyo6W4XgjgGZgzZN7XNOlIJZf19eL/nDjKHvbeh36AFw2C
+   T9v/R0prza9EI70l6qVCqWwUaaPQLeFg4aLz3pvajmaNcOhesb/2vbGep
+   CeaW1GhNwpzWNSwPyqtqLkt8FEk1WNDCTpLPhpiNlty5CKsoyzm9Off2F
+   1xlKJG+xE7N/1HNJdUHbTYcWHwbDRxoM5880ttl4W3tQivgjhkiL01bYT
+   Q==;
+IronPort-SDR: BoaS3ax6/BkDT9G2wTVXayM6EDiVoqcPXACFJCFmwvsvGI6b553jijofHGfjT/2tdI6A4o/133
+ 0wO+u/kbc4T0fsk+6UQpD3GLVhWLIkc7LZd21F38R/iYYPmbrbnhzaWUTkoSc0Jn4y0YNlwc2D
+ 6lviQSrz/2KlAhSflQ3pWbaiYINoC7Mrf2zZGZoQLzmaBWToQ2ynUN3Cj447TuLCuLc6cGu6BL
+ tFKSmFj4vU8RSrm9o29qbC2SSNp3I4qSMflWqyDBcw30bJDhfhpnMTVVrrLqqmbSGIqAMRnjzD
+ mRU=
 X-IronPort-AV: E=Sophos;i="5.72,386,1580745600"; 
-   d="scan'208";a="136802978"
+   d="scan'208";a="136802968"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Apr 2020 17:05:28 +0800
-IronPort-SDR: qHMoKFGiOwTaHdIWlC6DzyyN6mryQ9srUt4qWUTGWtGJdCgF75VfiTyVzBbcyubcNJvqrPDvY0
- CYevue9OTLVJdVKostY7TXrkargyjjrCAgEThor0SIXOS1rFUSJks79Hb492z2VYolO3Za1FiD
- W7IDowOu/A225Tr7MulWmtRSuVArmlCoVroLVRliTGsfscX1dPSXP0D05Ck8PycLuX2uqPkdoh
- iUz5RjgpKahqbUOH5tdOoN2jdnmefE83/mPRa/PbYA1VIi3At0zmtUoyYV7K50aTZ9cXFRZM3S
- AIPLQH31MKug004W5ccTFoze
+  by ob1.hgst.iphmx.com with ESMTP; 15 Apr 2020 17:05:24 +0800
+IronPort-SDR: B0d7AqiFS1GjREfoaSJb+RXjmNj0AWJA1Gy8aev2xHiTtcM722UQhRfBpNAYBXU2Jy2qe2Vl89
+ T8S0bG5/TZrORrvMMvRjoRSJDNI2ZBZpCX9QWY70BWkXX7JJcNkHz7mmPhPbp6IJilj3RnghVU
+ TljiHPtxmNJm458dxPA0GJGrkGYQpCftHD9H3bycmUUcfNfNFh+JKz2I+e9Uj29U3Na1knqHHw
+ WNIrv8se6LYgj1ZifLfocK+wgwOb8PuQGdcNcPSpcXMvYXE+YXpJKyddI80g0woqeJ8bW4sbL2
+ MDHDnhSgQF6WJfV06Jdvbmlz
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2020 01:56:30 -0700
-IronPort-SDR: ZoFjElupDOGkSKXbyWTOSQa3q808I+jY4LULt5ezK58+5mY7bDBe8lKPuvf3R2vayQcZrGHOL7
- Ve3pVA0yHTFILWAVtqKmWhuwJoXpevC+/qYq56NO0LoOGQ7oslQEBil3OUHcLuteqVIHiOq9+/
- LPy+UOdPadliLku1JkLZKtN+Rr42v6zNsFeN7tl4uXidxyGFjvnswq6JPLb+I3w1yXN17nAN/N
- GLbNWryOjNbC4WNfuHoqL3ZUmOlw9MRjBeiKmVpq8LifPVD2LRulCJiWxBNy4fHNkddla3us2J
- xcY=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Apr 2020 01:56:26 -0700
+IronPort-SDR: G1Az18EKRNd2RXo6CTVI1cHv05AAeOwFl453t9yBSflSgNJ2NdQ+zDYEfF3dY/55pMrCpQ1uZs
+ yKOOGouhzkCtzkficmwp3HTbQ7Q7RavJnD6YchgCuPPV6ZncXuwdI6obYc+BcTjnfWfPlCKifl
+ V6lel/CKL4CFt/pcNwf2cyYbkhV8FWZx3tCq5PvaQJnqUNh8oKY8IjpJ8A3WVWHlEX8Wf9XwRp
+ MWk5r9Vg2rW6VGDyv6OIPaZm045/i/wYuPgwUrxXhDRWh9qVlTkWvTHtCHPfupF3RzIp08ZPRK
+ wjc=
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip01.wdc.com with ESMTP; 15 Apr 2020 02:05:27 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 15 Apr 2020 02:05:23 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -67,11 +67,10 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v6 03/11] block: rename __bio_add_pc_page to bio_add_hw_page
-Date:   Wed, 15 Apr 2020 18:05:05 +0900
-Message-Id: <20200415090513.5133-4-johannes.thumshirn@wdc.com>
+Subject: [PATCH v6 01/11] scsi: free sgtables in case command setup fails
+Date:   Wed, 15 Apr 2020 18:05:03 +0900
+Message-Id: <20200415090513.5133-2-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200415090513.5133-1-johannes.thumshirn@wdc.com>
 References: <20200415090513.5133-1-johannes.thumshirn@wdc.com>
@@ -82,160 +81,82 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+In case scsi_setup_fs_cmnd() fails we're not freeing the sgtables
+allocated by scsi_init_io(), thus we leak the allocated memory.
 
-Rename __bio_add_pc_page() to bio_add_hw_page() and explicitly pass in a
-max_sectors argument.
+So free the sgtables allocated by scsi_init_io() in case
+scsi_setup_fs_cmnd() fails.
 
-This max_sectors argument can be used to specify constraints from the
-hardware.
+Technically scsi_setup_scsi_cmnd() does not suffer from this problem, as
+it can only fail if scsi_init_io() fails, so it does not have sgtables
+allocated. But to maintain symmetry and as a measure of defensive
+programming, free the sgtables on scsi_setup_scsi_cmnd() failure as well.
+scsi_mq_free_sgtables() has safeguards against double-freeing of memory so
+this is safe to do.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-[ jth: rebased and made public for blk-map.c ]
+While we're at it, rename scsi_mq_free_sgtables() to scsi_free_sgtables().
+
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/bio.c     | 60 +++++++++++++++++++++++++++----------------------
- block/blk-map.c |  5 +++--
- block/blk.h     |  4 ++--
- 3 files changed, 38 insertions(+), 31 deletions(-)
+ drivers/scsi/scsi_lib.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 21cbaa6a1c20..0f0e337e46b4 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -748,9 +748,14 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 	return true;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 47835c4b4ee0..ad97369ffabd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -548,7 +548,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
+ 	}
  }
  
--static bool bio_try_merge_pc_page(struct request_queue *q, struct bio *bio,
--		struct page *page, unsigned len, unsigned offset,
--		bool *same_page)
-+/*
-+ * Try to merge a page into a segment, while obeying the hardware segment
-+ * size limit.  This is not for normal read/write bios, but for passthrough
-+ * or Zone Append operations that we can't split.
-+ */
-+static bool bio_try_merge_hw_seg(struct request_queue *q, struct bio *bio,
-+				 struct page *page, unsigned len,
-+				 unsigned offset, bool *same_page)
+-static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
++static void scsi_free_sgtables(struct scsi_cmnd *cmd)
  {
- 	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
- 	unsigned long mask = queue_segment_boundary(q);
-@@ -764,39 +769,24 @@ static bool bio_try_merge_pc_page(struct request_queue *q, struct bio *bio,
- 	return __bio_try_merge_page(bio, page, len, offset, same_page);
+ 	if (cmd->sdb.table.nents)
+ 		sg_free_table_chained(&cmd->sdb.table,
+@@ -560,7 +560,7 @@ static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
+ 
+ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ {
+-	scsi_mq_free_sgtables(cmd);
++	scsi_free_sgtables(cmd);
+ 	scsi_uninit_cmd(cmd);
  }
  
--/**
-- *	__bio_add_pc_page	- attempt to add page to passthrough bio
-- *	@q: the target queue
-- *	@bio: destination bio
-- *	@page: page to add
-- *	@len: vec entry length
-- *	@offset: vec entry offset
-- *	@same_page: return if the merge happen inside the same page
-- *
-- *	Attempt to add a page to the bio_vec maplist. This can fail for a
-- *	number of reasons, such as the bio being full or target block device
-- *	limitations. The target block device must allow bio's up to PAGE_SIZE,
-- *	so it is always possible to add a single page to an empty bio.
-- *
-- *	This should only be used by passthrough bios.
-+/*
-+ * Add a page to a bio while respecting the hardware max_sectors, max_segment
-+ * and gap limitations.
-  */
--int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
-+int bio_add_hw_page(struct request_queue *q, struct bio *bio,
- 		struct page *page, unsigned int len, unsigned int offset,
--		bool *same_page)
-+		unsigned int max_sectors, bool *same_page)
+@@ -1059,7 +1059,7 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
+ 
+ 	return BLK_STS_OK;
+ out_free_sgtables:
+-	scsi_mq_free_sgtables(cmd);
++	scsi_free_sgtables(cmd);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(scsi_init_io);
+@@ -1190,6 +1190,7 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
+ 		struct request *req)
  {
- 	struct bio_vec *bvec;
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
++	blk_status_t ret;
  
--	/*
--	 * cloned bio must not modify vec list
--	 */
--	if (unlikely(bio_flagged(bio, BIO_CLONED)))
-+	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
- 		return 0;
+ 	if (!blk_rq_bytes(req))
+ 		cmd->sc_data_direction = DMA_NONE;
+@@ -1199,9 +1200,14 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
+ 		cmd->sc_data_direction = DMA_FROM_DEVICE;
  
--	if (((bio->bi_iter.bi_size + len) >> 9) > queue_max_hw_sectors(q))
-+	if (((bio->bi_iter.bi_size + len) >> 9) > max_sectors)
- 		return 0;
- 
- 	if (bio->bi_vcnt > 0) {
--		if (bio_try_merge_pc_page(q, bio, page, len, offset, same_page))
-+		if (bio_try_merge_hw_seg(q, bio, page, len, offset, same_page))
- 			return len;
- 
- 		/*
-@@ -823,11 +813,27 @@ int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 	return len;
+ 	if (blk_rq_is_scsi(req))
+-		return scsi_setup_scsi_cmnd(sdev, req);
++		ret = scsi_setup_scsi_cmnd(sdev, req);
+ 	else
+-		return scsi_setup_fs_cmnd(sdev, req);
++		ret = scsi_setup_fs_cmnd(sdev, req);
++
++	if (ret != BLK_STS_OK)
++		scsi_free_sgtables(cmd);
++
++	return ret;
  }
  
-+/**
-+ * bio_add_pc_page	- attempt to add page to passthrough bio
-+ * @q: the target queue
-+ * @bio: destination bio
-+ * @page: page to add
-+ * @len: vec entry length
-+ * @offset: vec entry offset
-+ *
-+ * Attempt to add a page to the bio_vec maplist. This can fail for a
-+ * number of reasons, such as the bio being full or target block device
-+ * limitations. The target block device must allow bio's up to PAGE_SIZE,
-+ * so it is always possible to add a single page to an empty bio.
-+ *
-+ * This should only be used by passthrough bios.
-+ */
- int bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 		struct page *page, unsigned int len, unsigned int offset)
- {
- 	bool same_page = false;
--	return __bio_add_pc_page(q, bio, page, len, offset, &same_page);
-+	return bio_add_hw_page(q, bio, page, len, offset,
-+			queue_max_hw_sectors(q), &same_page);
- }
- EXPORT_SYMBOL(bio_add_pc_page);
- 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index b72c361911a4..f36ff496a761 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -257,6 +257,7 @@ static struct bio *bio_copy_user_iov(struct request_queue *q,
- static struct bio *bio_map_user_iov(struct request_queue *q,
- 		struct iov_iter *iter, gfp_t gfp_mask)
- {
-+	unsigned int max_sectors = queue_max_hw_sectors(q);
- 	int j;
- 	struct bio *bio;
- 	int ret;
-@@ -294,8 +295,8 @@ static struct bio *bio_map_user_iov(struct request_queue *q,
- 				if (n > bytes)
- 					n = bytes;
- 
--				if (!__bio_add_pc_page(q, bio, page, n, offs,
--						&same_page)) {
-+				if (!bio_add_hw_page(q, bio, page, n, offs,
-+						     max_sectors, &same_page)) {
- 					if (same_page)
- 						put_page(page);
- 					break;
-diff --git a/block/blk.h b/block/blk.h
-index 0a94ec68af32..ba31511c5243 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -484,8 +484,8 @@ static inline void part_nr_sects_write(struct hd_struct *part, sector_t size)
- 
- struct request_queue *__blk_alloc_queue(int node_id);
- 
--int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
-+int bio_add_hw_page(struct request_queue *q, struct bio *bio,
- 		struct page *page, unsigned int len, unsigned int offset,
--		bool *same_page);
-+		unsigned int max_sectors, bool *same_page);
- 
- #endif /* BLK_INTERNAL_H */
+ static blk_status_t
 -- 
 2.24.1
 
