@@ -2,104 +2,327 @@ Return-Path: <SRS0=iRB6=6A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48810C2BB85
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 10:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EE8C2BB55
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 11:32:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F15A2051A
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 10:06:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 973A3208E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 11:32:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="F382OoCn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504669AbgDPKGB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Apr 2020 06:06:01 -0400
-Received: from mga02.intel.com ([134.134.136.20]:38870 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2504378AbgDPKFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Apr 2020 06:05:54 -0400
-IronPort-SDR: bzu0HXqmTP3+zqUhauTmrfsa9nt1lFXliZt+g1E3dCLfiV+ZCxJSjA1epdpmxEtxuxmnwjidTC
- +xbK+Vpcje3w==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2020 03:05:53 -0700
-IronPort-SDR: RjBv+uX+qdBSawkGTFreimgV4amAPsx7yEe1IJ3aQIXgdP4x219JR8hl3o9eqO/hwoAVeQq9M9
- UXTLT5nwMsgA==
-X-IronPort-AV: E=Sophos;i="5.72,390,1580803200"; 
-   d="scan'208";a="427781153"
-Received: from ellenfax-mobl2.ger.corp.intel.com (HELO localhost) ([10.249.44.122])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2020 03:05:42 -0700
-From:   Jani Nikula <jani.nikula@linux.intel.com>
-To:     Jonathan Corbet <corbet@lwn.net>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        linux-kernel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Madhuparna Bhowmik <madhuparnabhowmik04@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Ricardo Ribalda Delgado <ribalda@kernel.org>,
-        Luca Ceresoli <luca@lucaceresoli.net>,
-        dmaengine@vger.kernel.org, Matthias Maennich <maennich@google.com>,
-        Harry Wei <harryxiyou@gmail.com>, x86@kernel.org,
-        ecryptfs@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
-        target-devel@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
-        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Jacopo Mondi <jacopo@jmondi.org>,
-        Tyler Hicks <code@tyhicks.com>, Vinod Koul <vkoul@kernel.org>,
-        Alex Shi <alex.shi@linux.alibaba.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, linux-scsi@vger.kernel.org,
-        Michael Ellerman <mpe@ellerman.id.au>, netdev@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linuxppc-dev@lists.ozlabs.org, Borislav Petkov <bp@alien8.de>
-Subject: Re: [PATCH v2 0/2] Don't generate thousands of new warnings when building docs
-In-Reply-To: <20200320171020.78f045c5@lwn.net>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-References: <cover.1584716446.git.mchehab+huawei@kernel.org> <20200320171020.78f045c5@lwn.net>
-Date:   Thu, 16 Apr 2020 13:05:39 +0300
-Message-ID: <87a73b4ufg.fsf@intel.com>
+        id S2633318AbgDPLbo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Apr 2020 07:31:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37550 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2506318AbgDPLbb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2020 07:31:31 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C7A1C061A0C
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2020 04:31:30 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id f3so20687097ioj.1
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2020 04:31:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mUSnG0Ya6qMFU5CuR5R18Syz+9lEY5xc41Z0O54p8tg=;
+        b=F382OoCnA4w62U1Dq4fSZpfkLv//mcRvaH8mgN/rBTMxmvPk/iu0BSX44SHPJ1Ctur
+         G9YKMENtgTo5KpUi+umuELacsnn98BvX/BU6lpfMPVIvtFrparCNmRSCDJgTI/WK5Q4W
+         aLZu7Zy6JQ9wTjGa7POQRD+KSlmkM3RR1MyyId1yUMXJYZCYCR9e/ye4bWPXfM0CDq4i
+         li3pFQVVIlTrJAWDS2AMVhnsGwr/kIwW037O4UCQYuuMaAQJx1ZdT5hUtPvAuvQ2nGOt
+         OBXyfN5LWKwN7tGOW2b5rz/r4C0ue+sZLq+7BYIW2WIOfvNHilIsNvy8qnAyUVMajCHE
+         I3yg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=mUSnG0Ya6qMFU5CuR5R18Syz+9lEY5xc41Z0O54p8tg=;
+        b=Hwrqva7qR2Bjlnp6fTqff7HaLphyK20MroKGClhskmr4lzgxhcQcDNp/5kjMkBxvdE
+         pDGf90LjWivkjwEscvEvN7o9UvKPZt3l9pz/sBa5Y/DKocaedx2h5X2evuaQ2UFBw2g9
+         1KwydUMJE0VC8D7+rV/DHEefhu7cZ7m6MJ6vwzSdaYhYmfVaKeolfHu6VHmODlREqy0Q
+         XpuUNbguWYgngI3FS9K0y1UxEliGAd0psp+zOfdT1f3BXAvCzq/dQRVOSXTqyphlJSAv
+         X3nX65QFdtDDaOU6WsiBa00Tte9xdeWD3v0jihp0fP6nASUDE8oKuurhDOdMj0uaV1Yx
+         CHWg==
+X-Gm-Message-State: AGi0PuYTtV3+8ubTZzflZL1dvnDLNOHNbhs3skQCEcq9ktihqvtd45uU
+        oTr6CpfMBBzzBDBDSdNPAp7HCHQG3Jeg3sYZbiNtYg==
+X-Google-Smtp-Source: APiQypKLBcdIq/FcUcVRffs67E5KMJOQisScjOUqEnecHX4Vv5fMFFhEZqkXzFtgyRvnjayqqhiX/tKJjjh8Cq6UPY0=
+X-Received: by 2002:a02:a517:: with SMTP id e23mr29269786jam.56.1587036689424;
+ Thu, 16 Apr 2020 04:31:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20200413094938.6182-1-deepak.ukey@microchip.com> <20200413094938.6182-2-deepak.ukey@microchip.com>
+In-Reply-To: <20200413094938.6182-2-deepak.ukey@microchip.com>
+From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Date:   Thu, 16 Apr 2020 13:31:18 +0200
+Message-ID: <CAMGffEnsrmvBKLnVJei+wkp=N3nOFhqGkZoLDkb4WM6Np-N+qA@mail.gmail.com>
+Subject: Re: [PATCH 1/3] pm80xx : Support for get phy profile functionality.
+To:     Deepak Ukey <deepak.ukey@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>,
+        Jinpu Wang <jinpu.wang@profitbricks.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>, dpf@google.com,
+        yuuzheng@google.com, Vikram Auradkar <auradkar@google.com>,
+        vishakhavc@google.com, bjashnani@google.com,
+        Radha Ramachandran <radha@google.com>, akshatzen@google.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 20 Mar 2020, Jonathan Corbet <corbet@lwn.net> wrote:
-> On Fri, 20 Mar 2020 16:11:01 +0100
-> Mauro Carvalho Chehab <mchehab+huawei@kernel.org> wrote:
+On Mon, Apr 13, 2020 at 11:40 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
 >
->> This small series address a regression caused by a new patch at
->> docs-next (and at linux-next).
+> From: Viswas G <Viswas.G@microchip.com>
 >
-> I don't know how I missed that mess, sorry.  I plead distracting times or
-> something like that.  Heck, I think I'll blame everything on the plague
-> for at least the next few weeks.
+> Added the support to get the phy profile which gives information
+> about the phy states, port and errors on phy.
 >
-> Anyway, I've applied this, thanks for cleaning it up.
+> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
 
-There's still more fallout from the autosectionlabel extension
-introduced in 58ad30cf91f0 ("docs: fix reference to
-core-api/namespaces.rst"), e.g. in i915.rst.
+Hi,
 
-The biggest trouble is, if you have headings in kernel-doc comments,
-Sphinx is unable pinpoint where the dupes are. For example:
+I failed to find where do you initialize the phyprofile_completion,
+did I miss something?
 
- Documentation/gpu/i915.rst:610: WARNING: duplicate label gpu/i915:layout, other instance in
- Documentation/gpu/i915.rst
+Thanks!
+Jinpu
 
-However there is no "layout" label in i915.rst. The one being warned
-about I can dig into based on the line number, but not the second
-one. You have to resort to grepping the source. And avoiding duplicate
-subsection headings in completely isolated places is a minefield.
-
-BR,
-Jani.
-
-
--- 
-Jani Nikula, Intel Open Source Graphics Center
+> ---
+>  drivers/scsi/pm8001/pm8001_ctl.h  | 27 +++++++++++++
+>  drivers/scsi/pm8001/pm8001_init.c |  1 +
+>  drivers/scsi/pm8001/pm8001_sas.c  |  1 +
+>  drivers/scsi/pm8001/pm8001_sas.h  |  5 +++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  | 82 ++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/pm8001/pm80xx_hwi.h  |  2 +
+>  6 files changed, 116 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
+> index d0d43a250b9e..5a1cbd54164c 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.h
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.h
+> @@ -41,6 +41,33 @@
+>  #ifndef PM8001_CTL_H_INCLUDED
+>  #define PM8001_CTL_H_INCLUDED
+>
+> +struct phy_profile {
+> +       char            phy_id;
+> +       unsigned int    phy_state:4;
+> +       unsigned int    nlr:4;
+> +       unsigned int    plr:4;
+> +       unsigned int    reserved1:12;
+> +       unsigned char   port_id;
+> +       unsigned int    prts:4;
+> +       unsigned int    reserved2:20;
+> +} __packed;
+> +
+> +struct phy_errcnt {
+> +       unsigned int    InvalidDword;
+> +       unsigned int    runningDisparityError;
+> +       unsigned int    codeViolation;
+> +       unsigned int    LossOfSyncDW;
+> +       unsigned int    phyResetProblem;
+> +       unsigned int    inboundCRCError;
+> +};
+> +
+> +struct phy_prof_resp {
+> +       union {
+> +               struct phy_profile status;
+> +               struct phy_errcnt errcnt;
+> +       } phy;
+> +};
+> +
+>  #define IOCTL_BUF_SIZE         4096
+>  #define HEADER_LEN                     28
+>  #define SIZE_OFFSET                    16
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index a8f5344fdfda..68005d0cb33d 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -502,6 +502,7 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
+>         else
+>                 pm8001_ha->iomb_size = IOMB_SIZE_SPC;
+>
+> +       pm8001_ha->phyprofile_completion = NULL;
+>  #ifdef PM8001_USE_TASKLET
+>         /* Tasklet for non msi-x interrupt handler */
+>         if ((!pdev->msix_cap || !pci_msi_enabled())
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index b7cbc312843e..3a69d8d1d52e 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -283,6 +283,7 @@ int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
+>         * is empirically about all it takes) */
+>         if (time < HZ)
+>                 return 0;
+> +
+>         /* Wait for discovery to finish */
+>         sas_drain_work(ha);
+>         return 1;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index ae7ba9b3c4bc..cba4e9b95c58 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -56,6 +56,7 @@
+>  #include <scsi/sas_ata.h>
+>  #include <linux/atomic.h>
+>  #include "pm8001_defs.h"
+> +#include "pm8001_ctl.h"
+>
+>  #define DRV_NAME               "pm80xx"
+>  #define DRV_VERSION            "0.1.39"
+> @@ -244,6 +245,8 @@ struct pm8001_dispatch {
+>         int (*sas_diag_execute_req)(struct pm8001_hba_info *pm8001_ha,
+>                 u32 state);
+>         int (*sas_re_init_req)(struct pm8001_hba_info *pm8001_ha);
+> +       int (*get_phy_profile_req)(struct pm8001_hba_info *pm8001_ha,
+> +               int phy, int page);
+>  };
+>
+>  struct pm8001_chip_info {
+> @@ -561,6 +564,8 @@ struct pm8001_hba_info {
+>         u32                     reset_in_progress;
+>         u32                     non_fatal_count;
+>         u32                     non_fatal_read_length;
+> +       struct completion       *phyprofile_completion;
+> +       struct phy_prof_resp    phy_profile_resp;
+>  };
+>
+>  struct pm8001_work {
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 4d205ebaee87..0f4f18b0e480 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3792,7 +3792,6 @@ static int mpi_set_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
+>         PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
+>                         "SET CONTROLLER RESP: status 0x%x qlfr_pgcd 0x%x\n",
+>                         status, err_qlfr_pgcd));
+> -
+>         return 0;
+>  }
+>
+> @@ -3818,9 +3817,59 @@ static int mpi_get_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
+>  static int mpi_get_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
+>                         void *piomb)
+>  {
+> +       u32 tag, page_code;
+> +       struct phy_profile *phy_profile, *phy_prof;
+> +       struct phy_errcnt *phy_err, *phy_err_cnt;
+> +       struct get_phy_profile_resp *pPayload =
+> +               (struct get_phy_profile_resp *)(piomb + 4);
+> +       u32 status = le32_to_cpu(pPayload->status);
+> +
+> +       page_code = (u8)((pPayload->ppc_phyid & 0xFF00) >> 8);
+> +
+>         PM8001_MSG_DBG(pm8001_ha,
+> -                       pm8001_printk(" pm80xx_addition_functionality\n"));
+> +               pm8001_printk(" pm80xx_addition_functionality\n"));
+> +       if (status) {
+> +               /* status is FAILED */
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
+> +                       "mpiGetPhyProfileReq failed  with status 0x%08x\n",
+> +                       status));
+> +       }
+>
+> +       tag = le32_to_cpu(pPayload->tag);
+> +       if (pm8001_ha->phyprofile_completion != NULL) {
+> +               if (status) {
+> +                       /* signal fail status */
+> +                       memset(&pm8001_ha->phy_profile_resp, 0xff,
+> +                                       sizeof(pm8001_ha->phy_profile_resp));
+> +               } else if (page_code == SAS_PHY_GENERAL_STATUS_PAGE) {
+> +                       phy_profile =
+> +                       (struct phy_profile *)&pm8001_ha->phy_profile_resp;
+> +                       phy_prof =
+> +                       (struct phy_profile *)pPayload->ppc_specific_rsp;
+> +                       phy_profile->phy_id = le32_to_cpu(phy_prof->phy_id);
+> +                       phy_profile->phy_state =
+> +                                       le32_to_cpu(phy_prof->phy_state);
+> +                       phy_profile->plr = le32_to_cpu(phy_prof->plr);
+> +                       phy_profile->nlr = le32_to_cpu(phy_prof->nlr);
+> +                       phy_profile->port_id = le32_to_cpu(phy_prof->port_id);
+> +                       phy_profile->prts = le32_to_cpu(phy_prof->prts);
+> +               } else if (page_code == SAS_PHY_ERR_COUNTERS_PAGE) {
+> +                       phy_err =
+> +                       (struct phy_errcnt *)&pm8001_ha->phy_profile_resp;
+> +                       phy_err_cnt =
+> +                       (struct phy_errcnt *)pPayload->ppc_specific_rsp;
+> +                       phy_err->InvalidDword =
+> +                       le32_to_cpu(phy_err_cnt->InvalidDword);
+> +                       phy_err->runningDisparityError =
+> +                       le32_to_cpu(phy_err_cnt->runningDisparityError);
+> +                       phy_err->LossOfSyncDW =
+> +                       le32_to_cpu(phy_err_cnt->LossOfSyncDW);
+> +                       phy_err->phyResetProblem =
+> +                       le32_to_cpu(phy_err_cnt->phyResetProblem);
+> +               }
+> +               complete(pm8001_ha->phyprofile_completion);
+> +       }
+> +       pm8001_tag_free(pm8001_ha, tag);
+>         return 0;
+>  }
+>
+> @@ -5013,6 +5062,34 @@ pm80xx_chip_isr(struct pm8001_hba_info *pm8001_ha, u8 vec)
+>         return IRQ_HANDLED;
+>  }
+>
+> +int pm8001_chip_get_phy_profile(struct pm8001_hba_info *pm8001_ha,
+> +               int phy_id, int page_code)
+> +{
+> +
+> +       u32 tag;
+> +       struct get_phy_profile_req payload;
+> +       struct inbound_queue_table *circularQ;
+> +       int rc, ppc_phyid;
+> +       u32 opc = OPC_INB_GET_PHY_PROFILE;
+> +
+> +       memset(&payload, 0, sizeof(payload));
+> +
+> +       rc = pm8001_tag_alloc(pm8001_ha, &tag);
+> +       if (rc)
+> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid tag\n"));
+> +
+> +       circularQ = &pm8001_ha->inbnd_q_tbl[0];
+> +
+> +       payload.tag = cpu_to_le32(tag);
+> +       ppc_phyid = (page_code & 0xFF)  << 8 | (phy_id & 0xFF);
+> +       payload.ppc_phyid = cpu_to_le32(ppc_phyid);
+> +
+> +       pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
+> +                       sizeof(payload), 0);
+> +
+> +       return rc;
+> +}
+> +
+>  void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
+>         u32 operation, u32 phyid, u32 length, u32 *buf)
+>  {
+> @@ -5113,4 +5190,5 @@ const struct pm8001_dispatch pm8001_80xx_dispatch = {
+>         .set_nvmd_req           = pm8001_chip_set_nvmd_req,
+>         .fw_flash_update_req    = pm8001_chip_fw_flash_update_req,
+>         .set_dev_state_req      = pm8001_chip_set_dev_state_req,
+> +       .get_phy_profile_req    = pm8001_chip_get_phy_profile,
+>  };
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+> index 701951a0f715..b5119c5479da 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+> @@ -175,7 +175,9 @@
+>  #define PHY_STOP_ERR_DEVICE_ATTACHED   0x1046
+>
+>  /* phy_profile */
+> +#define SAS_PHY_ERR_COUNTERS_PAGE      0x01
+>  #define SAS_PHY_ANALOG_SETTINGS_PAGE   0x04
+> +#define SAS_PHY_GENERAL_STATUS_PAGE    0x05
+>  #define PHY_DWORD_LENGTH               0xC
+>
+>  /* Thermal related */
+> --
+> 2.16.3
+>
