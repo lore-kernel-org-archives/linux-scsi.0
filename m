@@ -2,327 +2,1591 @@ Return-Path: <SRS0=iRB6=6A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EE8C2BB55
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 11:32:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0634C2BB55
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 11:41:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 973A3208E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 11:32:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="F382OoCn"
+	by mail.kernel.org (Postfix) with ESMTP id A0DE721D94
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 11:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2633318AbgDPLbo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Apr 2020 07:31:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37550 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2506318AbgDPLbb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Apr 2020 07:31:31 -0400
-Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C7A1C061A0C
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2020 04:31:30 -0700 (PDT)
-Received: by mail-io1-xd43.google.com with SMTP id f3so20687097ioj.1
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2020 04:31:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=mUSnG0Ya6qMFU5CuR5R18Syz+9lEY5xc41Z0O54p8tg=;
-        b=F382OoCnA4w62U1Dq4fSZpfkLv//mcRvaH8mgN/rBTMxmvPk/iu0BSX44SHPJ1Ctur
-         G9YKMENtgTo5KpUi+umuELacsnn98BvX/BU6lpfMPVIvtFrparCNmRSCDJgTI/WK5Q4W
-         aLZu7Zy6JQ9wTjGa7POQRD+KSlmkM3RR1MyyId1yUMXJYZCYCR9e/ye4bWPXfM0CDq4i
-         li3pFQVVIlTrJAWDS2AMVhnsGwr/kIwW037O4UCQYuuMaAQJx1ZdT5hUtPvAuvQ2nGOt
-         OBXyfN5LWKwN7tGOW2b5rz/r4C0ue+sZLq+7BYIW2WIOfvNHilIsNvy8qnAyUVMajCHE
-         I3yg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mUSnG0Ya6qMFU5CuR5R18Syz+9lEY5xc41Z0O54p8tg=;
-        b=Hwrqva7qR2Bjlnp6fTqff7HaLphyK20MroKGClhskmr4lzgxhcQcDNp/5kjMkBxvdE
-         pDGf90LjWivkjwEscvEvN7o9UvKPZt3l9pz/sBa5Y/DKocaedx2h5X2evuaQ2UFBw2g9
-         1KwydUMJE0VC8D7+rV/DHEefhu7cZ7m6MJ6vwzSdaYhYmfVaKeolfHu6VHmODlREqy0Q
-         XpuUNbguWYgngI3FS9K0y1UxEliGAd0psp+zOfdT1f3BXAvCzq/dQRVOSXTqyphlJSAv
-         X3nX65QFdtDDaOU6WsiBa00Tte9xdeWD3v0jihp0fP6nASUDE8oKuurhDOdMj0uaV1Yx
-         CHWg==
-X-Gm-Message-State: AGi0PuYTtV3+8ubTZzflZL1dvnDLNOHNbhs3skQCEcq9ktihqvtd45uU
-        oTr6CpfMBBzzBDBDSdNPAp7HCHQG3Jeg3sYZbiNtYg==
-X-Google-Smtp-Source: APiQypKLBcdIq/FcUcVRffs67E5KMJOQisScjOUqEnecHX4Vv5fMFFhEZqkXzFtgyRvnjayqqhiX/tKJjjh8Cq6UPY0=
-X-Received: by 2002:a02:a517:: with SMTP id e23mr29269786jam.56.1587036689424;
- Thu, 16 Apr 2020 04:31:29 -0700 (PDT)
+        id S2633909AbgDPLll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Apr 2020 07:41:41 -0400
+Received: from mx2.suse.de ([195.135.220.15]:59202 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2506494AbgDPLkx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Apr 2020 07:40:53 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id DCB78AED9;
+        Thu, 16 Apr 2020 11:40:47 +0000 (UTC)
+Date:   Thu, 16 Apr 2020 13:40:47 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com,
+        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
+        rdunlap@infradead.org, hare@suse.de,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: Re: [PATCH v3 23/31] elx: efct: SCSI IO handling routines
+Message-ID: <20200416114047.c422b7yvcuppd47d@carbon>
+References: <20200412033303.29574-1-jsmart2021@gmail.com>
+ <20200412033303.29574-24-jsmart2021@gmail.com>
 MIME-Version: 1.0
-References: <20200413094938.6182-1-deepak.ukey@microchip.com> <20200413094938.6182-2-deepak.ukey@microchip.com>
-In-Reply-To: <20200413094938.6182-2-deepak.ukey@microchip.com>
-From:   Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date:   Thu, 16 Apr 2020 13:31:18 +0200
-Message-ID: <CAMGffEnsrmvBKLnVJei+wkp=N3nOFhqGkZoLDkb4WM6Np-N+qA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] pm80xx : Support for get phy profile functionality.
-To:     Deepak Ukey <deepak.ukey@microchip.com>
-Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
-        Vasanthalakshmi.Tharmarajan@microchip.com,
-        Viswas G <Viswas.G@microchip.com>,
-        Jinpu Wang <jinpu.wang@profitbricks.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>, dpf@google.com,
-        yuuzheng@google.com, Vikram Auradkar <auradkar@google.com>,
-        vishakhavc@google.com, bjashnani@google.com,
-        Radha Ramachandran <radha@google.com>, akshatzen@google.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200412033303.29574-24-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 11:40 AM Deepak Ukey <deepak.ukey@microchip.com> wrote:
->
-> From: Viswas G <Viswas.G@microchip.com>
->
-> Added the support to get the phy profile which gives information
-> about the phy states, port and errors on phy.
->
-> Signed-off-by: Deepak Ukey <deepak.ukey@microchip.com>
-> Signed-off-by: Viswas G <Viswas.G@microchip.com>
-> Signed-off-by: Radha Ramachandran <radha@google.com>
-
-Hi,
-
-I failed to find where do you initialize the phyprofile_completion,
-did I miss something?
-
-Thanks!
-Jinpu
-
+On Sat, Apr 11, 2020 at 08:32:55PM -0700, James Smart wrote:
+> This patch continues the efct driver population.
+> 
+> This patch adds driver definitions for:
+> Routines for SCSI transport IO alloc, build and send IO.
+> 
+> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> 
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.h  | 27 +++++++++++++
->  drivers/scsi/pm8001/pm8001_init.c |  1 +
->  drivers/scsi/pm8001/pm8001_sas.c  |  1 +
->  drivers/scsi/pm8001/pm8001_sas.h  |  5 +++
->  drivers/scsi/pm8001/pm80xx_hwi.c  | 82 ++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/pm8001/pm80xx_hwi.h  |  2 +
->  6 files changed, 116 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.h b/drivers/scsi/pm8001/pm8001_ctl.h
-> index d0d43a250b9e..5a1cbd54164c 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.h
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.h
-> @@ -41,6 +41,33 @@
->  #ifndef PM8001_CTL_H_INCLUDED
->  #define PM8001_CTL_H_INCLUDED
->
-> +struct phy_profile {
-> +       char            phy_id;
-> +       unsigned int    phy_state:4;
-> +       unsigned int    nlr:4;
-> +       unsigned int    plr:4;
-> +       unsigned int    reserved1:12;
-> +       unsigned char   port_id;
-> +       unsigned int    prts:4;
-> +       unsigned int    reserved2:20;
-> +} __packed;
+> v3:
+>   Removed DIF related code which is not used.
+>   Removed SCSI get property.
+> ---
+>  drivers/scsi/elx/efct/efct_scsi.c | 1192 +++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/elx/efct/efct_scsi.h |  235 ++++++++
+>  2 files changed, 1427 insertions(+)
+>  create mode 100644 drivers/scsi/elx/efct/efct_scsi.c
+>  create mode 100644 drivers/scsi/elx/efct/efct_scsi.h
+> 
+> diff --git a/drivers/scsi/elx/efct/efct_scsi.c b/drivers/scsi/elx/efct/efct_scsi.c
+> new file mode 100644
+> index 000000000000..c299eadbc492
+> --- /dev/null
+> +++ b/drivers/scsi/elx/efct/efct_scsi.c
+> @@ -0,0 +1,1192 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
 > +
-> +struct phy_errcnt {
-> +       unsigned int    InvalidDword;
-> +       unsigned int    runningDisparityError;
-> +       unsigned int    codeViolation;
-> +       unsigned int    LossOfSyncDW;
-> +       unsigned int    phyResetProblem;
-> +       unsigned int    inboundCRCError;
-> +};
+> +#include "efct_driver.h"
+> +#include "efct_els.h"
+> +#include "efct_hw.h"
 > +
-> +struct phy_prof_resp {
-> +       union {
-> +               struct phy_profile status;
-> +               struct phy_errcnt errcnt;
-> +       } phy;
-> +};
+> +#define enable_tsend_auto_resp(efct)	1
+> +#define enable_treceive_auto_resp(efct)	0
 > +
->  #define IOCTL_BUF_SIZE         4096
->  #define HEADER_LEN                     28
->  #define SIZE_OFFSET                    16
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index a8f5344fdfda..68005d0cb33d 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -502,6 +502,7 @@ static struct pm8001_hba_info *pm8001_pci_alloc(struct pci_dev *pdev,
->         else
->                 pm8001_ha->iomb_size = IOMB_SIZE_SPC;
->
-> +       pm8001_ha->phyprofile_completion = NULL;
->  #ifdef PM8001_USE_TASKLET
->         /* Tasklet for non msi-x interrupt handler */
->         if ((!pdev->msix_cap || !pci_msi_enabled())
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-> index b7cbc312843e..3a69d8d1d52e 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -283,6 +283,7 @@ int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
->         * is empirically about all it takes) */
->         if (time < HZ)
->                 return 0;
+> +#define SCSI_IOFMT "[%04x][i:%04x t:%04x h:%04x]"
 > +
->         /* Wait for discovery to finish */
->         sas_drain_work(ha);
->         return 1;
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index ae7ba9b3c4bc..cba4e9b95c58 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -56,6 +56,7 @@
->  #include <scsi/sas_ata.h>
->  #include <linux/atomic.h>
->  #include "pm8001_defs.h"
-> +#include "pm8001_ctl.h"
->
->  #define DRV_NAME               "pm80xx"
->  #define DRV_VERSION            "0.1.39"
-> @@ -244,6 +245,8 @@ struct pm8001_dispatch {
->         int (*sas_diag_execute_req)(struct pm8001_hba_info *pm8001_ha,
->                 u32 state);
->         int (*sas_re_init_req)(struct pm8001_hba_info *pm8001_ha);
-> +       int (*get_phy_profile_req)(struct pm8001_hba_info *pm8001_ha,
-> +               int phy, int page);
->  };
->
->  struct pm8001_chip_info {
-> @@ -561,6 +564,8 @@ struct pm8001_hba_info {
->         u32                     reset_in_progress;
->         u32                     non_fatal_count;
->         u32                     non_fatal_read_length;
-> +       struct completion       *phyprofile_completion;
-> +       struct phy_prof_resp    phy_profile_resp;
->  };
->
->  struct pm8001_work {
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-> index 4d205ebaee87..0f4f18b0e480 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-> @@ -3792,7 +3792,6 @@ static int mpi_set_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
->         PM8001_MSG_DBG(pm8001_ha, pm8001_printk(
->                         "SET CONTROLLER RESP: status 0x%x qlfr_pgcd 0x%x\n",
->                         status, err_qlfr_pgcd));
-> -
->         return 0;
->  }
->
-> @@ -3818,9 +3817,59 @@ static int mpi_get_controller_config_resp(struct pm8001_hba_info *pm8001_ha,
->  static int mpi_get_phy_profile_resp(struct pm8001_hba_info *pm8001_ha,
->                         void *piomb)
->  {
-> +       u32 tag, page_code;
-> +       struct phy_profile *phy_profile, *phy_prof;
-> +       struct phy_errcnt *phy_err, *phy_err_cnt;
-> +       struct get_phy_profile_resp *pPayload =
-> +               (struct get_phy_profile_resp *)(piomb + 4);
-> +       u32 status = le32_to_cpu(pPayload->status);
+> +#define scsi_io_printf(io, fmt, ...) \
+> +	efc_log_debug(io->efct, "[%s]" SCSI_IOFMT fmt, \
+> +		io->node->display_name, io->instance_index,\
+> +		io->init_task_tag, io->tgt_task_tag, io->hw_tag, ##__VA_ARGS__)
 > +
-> +       page_code = (u8)((pPayload->ppc_phyid & 0xFF00) >> 8);
+> +#define EFCT_LOG_ENABLE_SCSI_TRACE(efct)                \
+> +		(((efct) != NULL) ? (((efct)->logmask & (1U << 2)) != 0) : 0)
 > +
->         PM8001_MSG_DBG(pm8001_ha,
-> -                       pm8001_printk(" pm80xx_addition_functionality\n"));
-> +               pm8001_printk(" pm80xx_addition_functionality\n"));
-> +       if (status) {
-> +               /* status is FAILED */
-> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk(
-> +                       "mpiGetPhyProfileReq failed  with status 0x%08x\n",
-> +                       status));
-> +       }
->
-> +       tag = le32_to_cpu(pPayload->tag);
-> +       if (pm8001_ha->phyprofile_completion != NULL) {
-> +               if (status) {
-> +                       /* signal fail status */
-> +                       memset(&pm8001_ha->phy_profile_resp, 0xff,
-> +                                       sizeof(pm8001_ha->phy_profile_resp));
-> +               } else if (page_code == SAS_PHY_GENERAL_STATUS_PAGE) {
-> +                       phy_profile =
-> +                       (struct phy_profile *)&pm8001_ha->phy_profile_resp;
-> +                       phy_prof =
-> +                       (struct phy_profile *)pPayload->ppc_specific_rsp;
-> +                       phy_profile->phy_id = le32_to_cpu(phy_prof->phy_id);
-> +                       phy_profile->phy_state =
-> +                                       le32_to_cpu(phy_prof->phy_state);
-> +                       phy_profile->plr = le32_to_cpu(phy_prof->plr);
-> +                       phy_profile->nlr = le32_to_cpu(phy_prof->nlr);
-> +                       phy_profile->port_id = le32_to_cpu(phy_prof->port_id);
-> +                       phy_profile->prts = le32_to_cpu(phy_prof->prts);
-> +               } else if (page_code == SAS_PHY_ERR_COUNTERS_PAGE) {
-> +                       phy_err =
-> +                       (struct phy_errcnt *)&pm8001_ha->phy_profile_resp;
-> +                       phy_err_cnt =
-> +                       (struct phy_errcnt *)pPayload->ppc_specific_rsp;
-> +                       phy_err->InvalidDword =
-> +                       le32_to_cpu(phy_err_cnt->InvalidDword);
-> +                       phy_err->runningDisparityError =
-> +                       le32_to_cpu(phy_err_cnt->runningDisparityError);
-> +                       phy_err->LossOfSyncDW =
-> +                       le32_to_cpu(phy_err_cnt->LossOfSyncDW);
-> +                       phy_err->phyResetProblem =
-> +                       le32_to_cpu(phy_err_cnt->phyResetProblem);
-> +               }
-> +               complete(pm8001_ha->phyprofile_completion);
-> +       }
-> +       pm8001_tag_free(pm8001_ha, tag);
->         return 0;
->  }
->
-> @@ -5013,6 +5062,34 @@ pm80xx_chip_isr(struct pm8001_hba_info *pm8001_ha, u8 vec)
->         return IRQ_HANDLED;
->  }
->
-> +int pm8001_chip_get_phy_profile(struct pm8001_hba_info *pm8001_ha,
-> +               int phy_id, int page_code)
+> +#define scsi_io_trace(io, fmt, ...) \
+> +	do { \
+> +		if (EFCT_LOG_ENABLE_SCSI_TRACE(io->efct)) \
+> +			scsi_io_printf(io, fmt, ##__VA_ARGS__); \
+> +	} while (0)
+> +
+> +/* Enable the SCSI and Transport IO allocations */
+> +void
+> +efct_scsi_io_alloc_enable(struct efc *efc, struct efc_node *node)
 > +{
+> +	unsigned long flags = 0;
 > +
-> +       u32 tag;
-> +       struct get_phy_profile_req payload;
-> +       struct inbound_queue_table *circularQ;
-> +       int rc, ppc_phyid;
-> +       u32 opc = OPC_INB_GET_PHY_PROFILE;
-> +
-> +       memset(&payload, 0, sizeof(payload));
-> +
-> +       rc = pm8001_tag_alloc(pm8001_ha, &tag);
-> +       if (rc)
-> +               PM8001_FAIL_DBG(pm8001_ha, pm8001_printk("Invalid tag\n"));
-> +
-> +       circularQ = &pm8001_ha->inbnd_q_tbl[0];
-> +
-> +       payload.tag = cpu_to_le32(tag);
-> +       ppc_phyid = (page_code & 0xFF)  << 8 | (phy_id & 0xFF);
-> +       payload.ppc_phyid = cpu_to_le32(ppc_phyid);
-> +
-> +       pm8001_mpi_build_cmd(pm8001_ha, circularQ, opc, &payload,
-> +                       sizeof(payload), 0);
-> +
-> +       return rc;
+> +	spin_lock_irqsave(&node->active_ios_lock, flags);
+> +		node->io_alloc_enabled = true;
+
+no need to indent
+
+> +	spin_unlock_irqrestore(&node->active_ios_lock, flags);
 > +}
 > +
->  void mpi_set_phy_profile_req(struct pm8001_hba_info *pm8001_ha,
->         u32 operation, u32 phyid, u32 length, u32 *buf)
->  {
-> @@ -5113,4 +5190,5 @@ const struct pm8001_dispatch pm8001_80xx_dispatch = {
->         .set_nvmd_req           = pm8001_chip_set_nvmd_req,
->         .fw_flash_update_req    = pm8001_chip_fw_flash_update_req,
->         .set_dev_state_req      = pm8001_chip_set_dev_state_req,
-> +       .get_phy_profile_req    = pm8001_chip_get_phy_profile,
->  };
-> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-> index 701951a0f715..b5119c5479da 100644
-> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
-> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-> @@ -175,7 +175,9 @@
->  #define PHY_STOP_ERR_DEVICE_ATTACHED   0x1046
->
->  /* phy_profile */
-> +#define SAS_PHY_ERR_COUNTERS_PAGE      0x01
->  #define SAS_PHY_ANALOG_SETTINGS_PAGE   0x04
-> +#define SAS_PHY_GENERAL_STATUS_PAGE    0x05
->  #define PHY_DWORD_LENGTH               0xC
->
->  /* Thermal related */
-> --
-> 2.16.3
->
+> +/* Disable the SCSI and Transport IO allocations */
+> +void
+> +efct_scsi_io_alloc_disable(struct efc *efc, struct efc_node *node)
+> +{
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&node->active_ios_lock, flags);
+> +		node->io_alloc_enabled = false;
+
+no need to indent
+
+> +	spin_unlock_irqrestore(&node->active_ios_lock, flags);
+> +}
+> +
+> +struct efct_io *
+> +efct_scsi_io_alloc(struct efc_node *node, enum efct_scsi_io_role role)
+> +{
+> +	struct efct *efct;
+> +	struct efc *efcp;
+> +	struct efct_xport *xport;
+> +	struct efct_io *io;
+> +	unsigned long flags = 0;
+> +
+> +	efcp = node->efc;
+> +	efct = efcp->base;
+> +
+> +	xport = efct->xport;
+> +
+> +	spin_lock_irqsave(&node->active_ios_lock, flags);
+> +
+> +		if (!node->io_alloc_enabled) {
+> +			spin_unlock_irqrestore(&node->active_ios_lock, flags);
+> +			return NULL;
+> +		}
+> +
+> +		io = efct_io_pool_io_alloc(efct->xport->io_pool);
+> +		if (!io) {
+> +			atomic_add_return(1, &xport->io_alloc_failed_count);
+> +			spin_unlock_irqrestore(&node->active_ios_lock, flags);
+> +			return NULL;
+> +		}
+> +
+> +		/* initialize refcount */
+> +		kref_init(&io->ref);
+> +		io->release = _efct_scsi_io_free;
+> +
+> +		if (io->hio) {
+> +			efc_log_err(efct,
+> +				     "assertion failed: io->hio is not NULL\n");
+> +			spin_unlock_irqrestore(&node->active_ios_lock, flags);
+> +			return NULL;
+> +		}
+> +
+> +		/* set generic fields */
+> +		io->efct = efct;
+> +		io->node = node;
+> +
+> +		/* set type and name */
+> +		io->io_type = EFCT_IO_TYPE_IO;
+> +		io->display_name = "scsi_io";
+> +
+> +		switch (role) {
+> +		case EFCT_SCSI_IO_ROLE_ORIGINATOR:
+> +			io->cmd_ini = true;
+> +			io->cmd_tgt = false;
+> +			break;
+> +		case EFCT_SCSI_IO_ROLE_RESPONDER:
+> +			io->cmd_ini = false;
+> +			io->cmd_tgt = true;
+> +			break;
+> +		}
+> +
+> +		/* Add to node's active_ios list */
+> +		INIT_LIST_HEAD(&io->list_entry);
+> +		list_add_tail(&io->list_entry, &node->active_ios);
+
+no need to indent
+
+> +
+> +	spin_unlock_irqrestore(&node->active_ios_lock, flags);
+> +
+> +	return io;
+> +}
+> +
+> +void
+> +_efct_scsi_io_free(struct kref *arg)
+> +{
+> +	struct efct_io *io = container_of(arg, struct efct_io, ref);
+> +	struct efct *efct = io->efct;
+> +	struct efc_node *node = io->node;
+> +	int send_empty_event;
+> +	unsigned long flags = 0;
+> +
+> +	scsi_io_trace(io, "freeing io 0x%p %s\n", io, io->display_name);
+> +
+> +	if (io->io_free) {
+> +		efc_log_err(efct, "IO already freed.\n");
+> +		return;
+> +	}
+> +
+> +	spin_lock_irqsave(&node->active_ios_lock, flags);
+> +		list_del(&io->list_entry);
+> +		send_empty_event = (!node->io_alloc_enabled) &&
+> +					list_empty(&node->active_ios);
+
+no need to indent
+
+> +	spin_unlock_irqrestore(&node->active_ios_lock, flags);
+> +
+> +	if (send_empty_event)
+> +		efc_scsi_io_list_empty(node->efc, node);
+> +
+> +	io->node = NULL;
+> +	efct_io_pool_io_free(efct->xport->io_pool, io);
+> +}
+> +
+> +void
+> +efct_scsi_io_free(struct efct_io *io)
+> +{
+> +	scsi_io_trace(io, "freeing io 0x%p %s\n", io, io->display_name);
+> +	WARN_ON(refcount_read(&io->ref.refcount) != 0);
+> +	kref_put(&io->ref, io->release);
+> +}
+> +
+> +static void
+> +efct_target_io_cb(struct efct_hw_io *hio, struct efc_remote_node *rnode,
+> +		  u32 length, int status, u32 ext_status, void *app)
+> +{
+> +	struct efct_io *io = app;
+> +	struct efct *efct;
+> +	enum efct_scsi_io_status scsi_stat = EFCT_SCSI_STATUS_GOOD;
+> +
+> +	if (!io || !io->efct) {
+> +		pr_err("%s: IO can not be NULL\n", __func__);
+> +		return;
+> +	}
+> +
+> +	scsi_io_trace(io, "status x%x ext_status x%x\n", status, ext_status);
+> +
+> +	efct = io->efct;
+> +
+> +	io->transferred += length;
+> +
+> +	/* Call target server completion */
+> +	if (io->scsi_tgt_cb) {
+
+move the following part into a function
+
+> +		efct_scsi_io_cb_t cb = io->scsi_tgt_cb;
+> +		u32 flags = 0;
+> +
+> +		/* Clear the callback before invoking the callback */
+> +		io->scsi_tgt_cb = NULL;
+> +
+> +		/* if status was good, and auto-good-response was set,
+> +		 * then callback target-server with IO_CMPL_RSP_SENT,
+> +		 * otherwise send IO_CMPL
+> +		 */
+> +		if (status == 0 && io->auto_resp)
+> +			flags |= EFCT_SCSI_IO_CMPL_RSP_SENT;
+> +		else
+> +			flags |= EFCT_SCSI_IO_CMPL;
+> +
+> +		switch (status) {
+> +		case SLI4_FC_WCQE_STATUS_SUCCESS:
+> +			scsi_stat = EFCT_SCSI_STATUS_GOOD;
+> +			break;
+> +		case SLI4_FC_WCQE_STATUS_DI_ERROR:
+> +			if (ext_status & SLI4_FC_DI_ERROR_GE)
+> +				scsi_stat = EFCT_SCSI_STATUS_DIF_GUARD_ERR;
+> +			else if (ext_status & SLI4_FC_DI_ERROR_AE)
+> +				scsi_stat = EFCT_SCSI_STATUS_DIF_APP_TAG_ERROR;
+> +			else if (ext_status & SLI4_FC_DI_ERROR_RE)
+> +				scsi_stat = EFCT_SCSI_STATUS_DIF_REF_TAG_ERROR;
+> +			else
+> +				scsi_stat = EFCT_SCSI_STATUS_DIF_UNKNOWN_ERROR;
+> +			break;
+> +		case SLI4_FC_WCQE_STATUS_LOCAL_REJECT:
+> +			switch (ext_status) {
+> +			case SLI4_FC_LOCAL_REJECT_INVALID_RELOFFSET:
+> +			case SLI4_FC_LOCAL_REJECT_ABORT_REQUESTED:
+> +				scsi_stat = EFCT_SCSI_STATUS_ABORTED;
+> +				break;
+> +			case SLI4_FC_LOCAL_REJECT_INVALID_RPI:
+> +				scsi_stat = EFCT_SCSI_STATUS_NEXUS_LOST;
+> +				break;
+> +			case SLI4_FC_LOCAL_REJECT_NO_XRI:
+> +				scsi_stat = EFCT_SCSI_STATUS_NO_IO;
+> +				break;
+> +			default:
+> +				/*we have seen 0x0d(TX_DMA_FAILED err)*/
+> +				scsi_stat = EFCT_SCSI_STATUS_ERROR;
+> +				break;
+> +			}
+> +			break;
+> +
+> +		case SLI4_FC_WCQE_STATUS_TARGET_WQE_TIMEOUT:
+> +			/* target IO timed out */
+> +			scsi_stat = EFCT_SCSI_STATUS_TIMEDOUT_AND_ABORTED;
+> +			break;
+> +
+> +		case SLI4_FC_WCQE_STATUS_SHUTDOWN:
+> +			/* Target IO cancelled by HW */
+> +			scsi_stat = EFCT_SCSI_STATUS_SHUTDOWN;
+> +			break;
+> +
+> +		default:
+> +			scsi_stat = EFCT_SCSI_STATUS_ERROR;
+> +			break;
+> +		}
+> +
+> +		cb(io, scsi_stat, flags, io->scsi_tgt_cb_arg);
+> +	}
+> +	efct_scsi_check_pending(efct);
+> +}
+> +
+> +static int
+> +efct_scsi_build_sgls(struct efct_hw *hw, struct efct_hw_io *hio,
+> +		struct efct_scsi_sgl *sgl, u32 sgl_count,
+> +		enum efct_hw_io_type type)
+> +{
+> +	int rc;
+> +	u32 i;
+> +	struct efct *efct = hw->os;
+> +
+> +	/* Initialize HW SGL */
+> +	rc = efct_hw_io_init_sges(hw, hio, type);
+> +	if (rc) {
+> +		efc_log_err(efct, "efct_hw_io_init_sges failed: %d\n", rc);
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	for (i = 0; i < sgl_count; i++) {
+> +
+> +		/* Add data SGE */
+> +		rc = efct_hw_io_add_sge(hw, hio,
+> +				sgl[i].addr, sgl[i].len);
+
+fits on one line
+
+> +		if (rc) {
+> +			efc_log_err(efct,
+> +					"add sge failed cnt=%d rc=%d\n",
+> +					sgl_count, rc);
+> +			return rc;
+> +		}
+> +	}
+> +
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +static void efc_log_sgl(struct efct_io *io)
+> +{
+> +	struct efct_hw_io *hio = io->hio;
+> +	struct sli4_sge *data = NULL;
+> +	u32 *dword = NULL;
+> +	u32 i;
+> +	u32 n_sge;
+> +
+> +	scsi_io_trace(io, "def_sgl at 0x%x 0x%08x\n",
+> +		      upper_32_bits(hio->def_sgl.phys),
+> +		      lower_32_bits(hio->def_sgl.phys));
+> +	n_sge = (hio->sgl == &hio->def_sgl ?
+> +			hio->n_sge : hio->def_sgl_count);
+
+fits on one line
+
+> +	for (i = 0, data = hio->def_sgl.virt; i < n_sge; i++, data++) {
+> +		dword = (u32 *)data;
+> +
+> +		scsi_io_trace(io, "SGL %2d 0x%08x 0x%08x 0x%08x 0x%08x\n",
+> +			      i, dword[0], dword[1], dword[2], dword[3]);
+> +
+> +		if (dword[2] & (1U << 31))
+> +			break;
+> +	}
+> +
+> +}
+> +
+> +static int
+> +efct_scsi_check_pending_async_cb(struct efct_hw *hw, int status,
+> +				 u8 *mqe, void *arg)
+> +{
+> +	struct efct_io *io = arg;
+> +
+> +	if (io) {
+> +		if (io->hw_cb) {
+> +			efct_hw_done_t cb = io->hw_cb;
+> +
+> +			io->hw_cb = NULL;
+> +			(cb)(io->hio, NULL, 0,
+> +			 SLI4_FC_WCQE_STATUS_DISPATCH_ERROR, 0, io);
+> +		}
+> +	}
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +static int
+> +efct_scsi_io_dispatch_hw_io(struct efct_io *io, struct efct_hw_io *hio)
+> +{
+> +	int rc = 0;
+
+EFC_SUCCESS ?
+
+> +	struct efct *efct = io->efct;
+> +
+> +	/* Got a HW IO;
+> +	 * update ini/tgt_task_tag with HW IO info and dispatch
+> +	 */
+> +	io->hio = hio;
+> +	if (io->cmd_tgt)
+> +		io->tgt_task_tag = hio->indicator;
+> +	else if (io->cmd_ini)
+> +		io->init_task_tag = hio->indicator;
+> +	io->hw_tag = hio->reqtag;
+> +
+> +	hio->eq = io->hw_priv;
+> +
+> +	/* Copy WQ steering */
+> +	switch (io->wq_steering) {
+> +	case EFCT_SCSI_WQ_STEERING_CLASS >> EFCT_SCSI_WQ_STEERING_SHIFT:
+> +		hio->wq_steering = EFCT_HW_WQ_STEERING_CLASS;
+> +		break;
+> +	case EFCT_SCSI_WQ_STEERING_REQUEST >> EFCT_SCSI_WQ_STEERING_SHIFT:
+> +		hio->wq_steering = EFCT_HW_WQ_STEERING_REQUEST;
+> +		break;
+> +	case EFCT_SCSI_WQ_STEERING_CPU >> EFCT_SCSI_WQ_STEERING_SHIFT:
+> +		hio->wq_steering = EFCT_HW_WQ_STEERING_CPU;
+> +		break;
+> +	}
+> +
+> +	switch (io->io_type) {
+> +	case EFCT_IO_TYPE_IO:
+> +		rc = efct_scsi_build_sgls(&efct->hw, io->hio,
+> +					  io->sgl, io->sgl_count, io->hio_type);
+> +		if (rc)
+> +			break;
+> +
+> +		if (EFCT_LOG_ENABLE_SCSI_TRACE(efct))
+> +			efc_log_sgl(io);
+> +
+> +		if (io->app_id)
+> +			io->iparam.fcp_tgt.app_id = io->app_id;
+> +
+> +		rc = efct_hw_io_send(&io->efct->hw, io->hio_type, io->hio,
+> +				     io->wire_len, &io->iparam,
+> +				     &io->node->rnode, io->hw_cb, io);
+> +		break;
+> +	case EFCT_IO_TYPE_ELS:
+> +	case EFCT_IO_TYPE_CT:
+> +		rc = efct_hw_srrs_send(&efct->hw, io->hio_type, io->hio,
+> +				       &io->els_req, io->wire_len,
+> +			&io->els_rsp, &io->node->rnode, &io->iparam,
+> +			io->hw_cb, io);
+> +		break;
+> +	case EFCT_IO_TYPE_CT_RESP:
+> +		rc = efct_hw_srrs_send(&efct->hw, io->hio_type, io->hio,
+> +				       &io->els_rsp, io->wire_len,
+> +			NULL, &io->node->rnode, &io->iparam,
+> +			io->hw_cb, io);
+> +		break;
+> +	case EFCT_IO_TYPE_BLS_RESP:
+> +		/* no need to update tgt_task_tag for BLS response since
+> +		 * the RX_ID will be specified by the payload, not the XRI
+> +		 */
+> +		rc = efct_hw_srrs_send(&efct->hw, io->hio_type, io->hio,
+> +				       NULL, 0, NULL, &io->node->rnode,
+> +			&io->iparam, io->hw_cb, io);
+> +		break;
+> +	default:
+> +		scsi_io_printf(io, "Unknown IO type=%d\n", io->io_type);
+> +		rc = -1;
+
+error code
+
+> +		break;
+> +	}
+> +	return rc;
+> +}
+> +
+> +static int
+> +efct_scsi_io_dispatch_no_hw_io(struct efct_io *io)
+> +{
+> +	int rc;
+> +
+> +	switch (io->io_type) {
+> +	case EFCT_IO_TYPE_ABORT: {
+> +		struct efct_hw_io *hio_to_abort = NULL;
+> +
+> +		hio_to_abort = io->io_to_abort->hio;
+> +
+> +		if (!hio_to_abort) {
+> +			/*
+> +			 * If "IO to abort" does not have an
+> +			 * associated HW IO, immediately make callback with
+> +			 * success. The command must have been sent to
+> +			 * the backend, but the data phase has not yet
+> +			 * started, so we don't have a HW IO.
+> +			 *
+> +			 * Note: since the backend shims should be
+> +			 * taking a reference on io_to_abort, it should not
+> +			 * be possible to have been completed and freed by
+> +			 * the backend before the abort got here.
+> +			 */
+> +			scsi_io_printf(io, "IO: not active\n");
+> +			((efct_hw_done_t)io->hw_cb)(io->hio, NULL, 0,
+> +					SLI4_FC_WCQE_STATUS_SUCCESS, 0, io);
+> +			rc = 0;
+
+same as in above function
+
+
+> +		} else {
+> +			/* HW IO is valid, abort it */
+> +			scsi_io_printf(io, "aborting\n");
+> +			rc = efct_hw_io_abort(&io->efct->hw, hio_to_abort,
+> +					      io->send_abts, io->hw_cb, io);
+> +			if (rc) {
+> +				int status = SLI4_FC_WCQE_STATUS_SUCCESS;
+> +
+> +				if (rc != EFCT_HW_RTN_IO_NOT_ACTIVE &&
+> +				    rc != EFCT_HW_RTN_IO_ABORT_IN_PROGRESS) {
+> +					status = -1;
+> +					scsi_io_printf(io,
+> +						       "Failed to abort IO: status=%d\n",
+> +						rc);
+> +				}
+> +				((efct_hw_done_t)io->hw_cb)(io->hio,
+> +						NULL, 0, status, 0, io);
+> +				rc = 0;
+> +			}
+> +		}
+> +
+> +		break;
+> +	}
+> +	default:
+> +		scsi_io_printf(io, "Unknown IO type=%d\n", io->io_type);
+> +		rc = -1;
+> +		break;
+> +	}
+> +	return rc;
+> +}
+> +
+> +/**
+> + * Check for pending IOs to dispatch.
+> + *
+> + * If there are IOs on the pending list, and a HW IO is available, then
+> + * dispatch the IOs.
+> + */
+
+proper kerneldoc style?
+
+> +void
+> +efct_scsi_check_pending(struct efct *efct)
+> +{
+> +	struct efct_xport *xport = efct->xport;
+> +	struct efct_io *io = NULL;
+> +	struct efct_hw_io *hio;
+> +	int status;
+> +	int count = 0;
+> +	int dispatch;
+> +	unsigned long flags = 0;
+> +
+> +	/* Guard against recursion */
+> +	if (atomic_add_return(1, &xport->io_pending_recursing)) {
+> +		/* This function is already running.  Decrement and return. */
+> +		atomic_sub_return(1, &xport->io_pending_recursing);
+> +		return;
+> +	}
+> +
+> +	do {
+> +		spin_lock_irqsave(&xport->io_pending_lock, flags);
+> +		status = 0;
+> +		hio = NULL;
+> +		if (!list_empty(&xport->io_pending_list)) {
+> +			io = list_first_entry(&xport->io_pending_list,
+> +					      struct efct_io,
+> +					      io_pending_link);
+> +		}
+> +		if (io) {
+
+Couldn't this part of the above if body? Could be io == NULL when
+popped from the list?
+
+> +			list_del(&io->io_pending_link);
+
+This says no
+
+> +			if (io->io_type == EFCT_IO_TYPE_ABORT) {
+> +				hio = NULL;
+> +			} else {
+> +				hio = efct_hw_io_alloc(&efct->hw);
+> +				if (!hio) {
+> +					/*
+> +					 * No HW IO available.Put IO back on
+> +					 * the front of pending list
+> +					 */
+> +					list_add(&xport->io_pending_list,
+> +						 &io->io_pending_link);
+> +					io = NULL;
+> +				} else {
+> +					hio->eq = io->hw_priv;
+> +				}
+> +			}
+> +		}
+> +		/* Must drop the lock before dispatching the IO */
+> +		spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +
+> +		if (io) {
+> +			count++;
+> +
+> +			/*
+> +			 * We pulled an IO off the pending list,
+> +			 * and either got an HW IO or don't need one
+> +			 */
+> +			atomic_sub_return(1, &xport->io_pending_count);
+> +			if (!hio)
+> +				status = efct_scsi_io_dispatch_no_hw_io(io);
+> +			else
+> +				status = efct_scsi_io_dispatch_hw_io(io, hio);
+> +			if (status) {
+> +				/*
+> +				 * Invoke the HW callback, but do so in the
+> +				 * separate execution context,provided by the
+> +				 * NOP mailbox completion processing context
+> +				 * by using efct_hw_async_call()
+> +				 */
+> +				if (efct_hw_async_call(&efct->hw,
+> +					       efct_scsi_check_pending_async_cb,
+> +					io)) {
+> +					efc_log_test(efct,
+> +						      "call hw async failed\n");
+> +				}
+> +			}
+> +		}
+> +	} while (io);
+
+This function is a bit long, I think it would be good to split it up.
+
+> +
+> +	/*
+> +	 * If nothing was removed from the list,
+> +	 * we might be in a case where we need to abort an
+> +	 * active IO and the abort is on the pending list.
+> +	 * Look for an abort we can dispatch.
+> +	 */
+> +	if (count == 0) {
+> +		dispatch = 0;
+> +
+> +		spin_lock_irqsave(&xport->io_pending_lock, flags);
+> +		list_for_each_entry(io, &xport->io_pending_list,
+> +				    io_pending_link) {
+> +			if (io->io_type == EFCT_IO_TYPE_ABORT) {
+> +				if (io->io_to_abort->hio) {
+> +					/* This IO has a HW IO, so it is
+> +					 * active.  Dispatch the abort.
+> +					 */
+> +					dispatch = 1;
+> +				} else {
+> +					/* Leave this abort on the pending
+> +					 * list and keep looking
+> +					 */
+> +					dispatch = 0;
+> +				}
+> +			}
+> +			if (dispatch) {
+> +				list_del(&io->io_pending_link);
+> +				atomic_sub_return(1, &xport->io_pending_count);
+> +				break;
+> +			}
+> +		}
+> +		spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +
+> +		if (dispatch) {
+> +			status = efct_scsi_io_dispatch_no_hw_io(io);
+> +			if (status) {
+> +				if (efct_hw_async_call(&efct->hw,
+> +					       efct_scsi_check_pending_async_cb,
+> +					io)) {
+> +					efc_log_test(efct,
+> +						      "call to hw async failed\n");
+> +				}
+> +			}
+> +		}
+> +	}
+> +
+> +	atomic_sub_return(1, &xport->io_pending_recursing);
+> +}
+> +
+> +/**
+> + * An IO is dispatched:
+> + * - if the pending list is not empty, add IO to pending list
+> + *   and call a function to process the pending list.
+> + * - if pending list is empty, try to allocate a HW IO. If none
+> + *   is available, place this IO at the tail of the pending IO
+> + *   list.
+> + * - if HW IO is available, attach this IO to the HW IO and
+> + *   submit it.
+> + */
+
+proper kerneldoc style?
+
+> +int
+> +efct_scsi_io_dispatch(struct efct_io *io, void *cb)
+> +{
+> +	struct efct_hw_io *hio;
+> +	struct efct *efct = io->efct;
+> +	struct efct_xport *xport = efct->xport;
+> +	unsigned long flags = 0;
+> +
+> +	io->hw_cb = cb;
+> +
+> +	/*
+> +	 * if this IO already has a HW IO, then this is either
+> +	 * not the first phase of the IO. Send it to the HW.
+> +	 */
+> +	if (io->hio)
+> +		return efct_scsi_io_dispatch_hw_io(io, io->hio);
+> +
+> +	/*
+> +	 * We don't already have a HW IO associated with the IO. First check
+> +	 * the pending list. If not empty, add IO to the tail and process the
+> +	 * pending list.
+> +	 */
+> +	spin_lock_irqsave(&xport->io_pending_lock, flags);
+> +		if (!list_empty(&xport->io_pending_list)) {
+> +			/*
+> +			 * If this is a low latency request,
+> +			 * the put at the front of the IO pending
+> +			 * queue, otherwise put it at the end of the queue.
+> +			 */
+> +			if (io->low_latency) {
+> +				INIT_LIST_HEAD(&io->io_pending_link);
+> +				list_add(&xport->io_pending_list,
+> +					 &io->io_pending_link);
+> +			} else {
+> +				INIT_LIST_HEAD(&io->io_pending_link);
+> +				list_add_tail(&io->io_pending_link,
+> +					      &xport->io_pending_list);
+> +			}
+> +			spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +			atomic_add_return(1, &xport->io_pending_count);
+> +			atomic_add_return(1, &xport->io_total_pending);
+> +
+> +			/* process pending list */
+> +			efct_scsi_check_pending(efct);
+> +			return EFC_SUCCESS;
+> +		}
+
+no need to indent
+
+> +	spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +
+> +	/*
+> +	 * We don't have a HW IO associated with the IO and there's nothing
+> +	 * on the pending list. Attempt to allocate a HW IO and dispatch it.
+> +	 */
+> +	hio = efct_hw_io_alloc(&io->efct->hw);
+> +	if (!hio) {
+> +		/* Couldn't get a HW IO. Save this IO on the pending list */
+> +		spin_lock_irqsave(&xport->io_pending_lock, flags);
+> +		INIT_LIST_HEAD(&io->io_pending_link);
+> +		list_add_tail(&io->io_pending_link, &xport->io_pending_list);
+> +		spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +
+> +		atomic_add_return(1, &xport->io_total_pending);
+> +		atomic_add_return(1, &xport->io_pending_count);
+> +		return EFC_SUCCESS;
+> +	}
+> +
+> +	/* We successfully allocated a HW IO; dispatch to HW */
+> +	return efct_scsi_io_dispatch_hw_io(io, hio);
+> +}
+> +
+> +/**
+> + * An Abort IO is dispatched:
+> + * - if the pending list is not empty, add IO to pending list
+> + *   and call a function to process the pending list.
+> + * - if pending list is empty, send abort to the HW.
+> + */
+
+not proper kerneldoc style
+
+> +
+> +int
+> +efct_scsi_io_dispatch_abort(struct efct_io *io, void *cb)
+> +{
+> +	struct efct *efct = io->efct;
+> +	struct efct_xport *xport = efct->xport;
+> +	unsigned long flags = 0;
+> +
+> +	io->hw_cb = cb;
+> +
+> +	/*
+> +	 * For aborts, we don't need a HW IO, but we still want
+> +	 * to pass through the pending list to preserve ordering.
+> +	 * Thus, if the pending list is not empty, add this abort
+> +	 * to the pending list and process the pending list.
+> +	 */
+> +	spin_lock_irqsave(&xport->io_pending_lock, flags);
+> +		if (!list_empty(&xport->io_pending_list)) {
+> +			INIT_LIST_HEAD(&io->io_pending_link);
+> +			list_add_tail(&io->io_pending_link,
+> +				      &xport->io_pending_list);
+> +			spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +			atomic_add_return(1, &xport->io_pending_count);
+> +			atomic_add_return(1, &xport->io_total_pending);
+> +
+> +			/* process pending list */
+> +			efct_scsi_check_pending(efct);
+> +			return EFC_SUCCESS;
+> +		}
+
+no need to indent
+
+> +	spin_unlock_irqrestore(&xport->io_pending_lock, flags);
+> +
+> +	/* nothing on pending list, dispatch abort */
+> +	return efct_scsi_io_dispatch_no_hw_io(io);
+> +}
+> +
+> +static inline int
+> +efct_scsi_xfer_data(struct efct_io *io, u32 flags,
+> +	struct efct_scsi_sgl *sgl, u32 sgl_count, u64 xwire_len,
+> +	enum efct_hw_io_type type, int enable_ar,
+> +	efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	struct efct *efct;
+> +	size_t residual = 0;
+> +
+> +	io->sgl_count = sgl_count;
+> +
+> +	efct = io->efct;
+> +
+> +	scsi_io_trace(io, "%s wire_len %llu\n",
+> +		      (type == EFCT_HW_IO_TARGET_READ) ? "send" : "recv",
+> +		      xwire_len);
+> +
+> +	io->hio_type = type;
+> +
+> +	io->scsi_tgt_cb = cb;
+> +	io->scsi_tgt_cb_arg = arg;
+> +
+> +	residual = io->exp_xfer_len - io->transferred;
+> +	io->wire_len = (xwire_len < residual) ? xwire_len : residual;
+> +	residual = (xwire_len - io->wire_len);
+> +
+> +	memset(&io->iparam, 0, sizeof(io->iparam));
+> +	io->iparam.fcp_tgt.ox_id = io->init_task_tag;
+> +	io->iparam.fcp_tgt.offset = io->transferred;
+> +	io->iparam.fcp_tgt.cs_ctl = io->cs_ctl;
+> +	io->iparam.fcp_tgt.timeout = io->timeout;
+> +
+> +	/* if this is the last data phase and there is no residual, enable
+> +	 * auto-good-response
+> +	 */
+> +	if (enable_ar && (flags & EFCT_SCSI_LAST_DATAPHASE) &&
+> +	    residual == 0 &&
+> +		((io->transferred + io->wire_len) == io->exp_xfer_len) &&
+> +		(!(flags & EFCT_SCSI_NO_AUTO_RESPONSE))) {
+
+This should be reformated in a proper way.
+
+> +		io->iparam.fcp_tgt.flags |= SLI4_IO_AUTO_GOOD_RESPONSE;
+> +		io->auto_resp = true;
+> +	} else {
+> +		io->auto_resp = false;
+> +	}
+> +
+> +	/* save this transfer length */
+> +	io->xfer_req = io->wire_len;
+> +
+> +	/* Adjust the transferred count to account for overrun
+> +	 * when the residual is calculated in efct_scsi_send_resp
+> +	 */
+> +	io->transferred += residual;
+> +
+> +	/* Adjust the SGL size if there is overrun */
+> +
+> +	if (residual) {
+> +		struct efct_scsi_sgl  *sgl_ptr = &io->sgl[sgl_count - 1];
+> +
+> +		while (residual) {
+> +			size_t len = sgl_ptr->len;
+> +
+> +			if (len > residual) {
+> +				sgl_ptr->len = len - residual;
+> +				residual = 0;
+> +			} else {
+> +				sgl_ptr->len = 0;
+> +				residual -= len;
+> +				io->sgl_count--;
+> +			}
+> +			sgl_ptr--;
+> +		}
+> +	}
+> +
+> +	/* Set latency and WQ steering */
+> +	io->low_latency = (flags & EFCT_SCSI_LOW_LATENCY) != 0;
+> +	io->wq_steering = (flags & EFCT_SCSI_WQ_STEERING_MASK) >>
+> +				EFCT_SCSI_WQ_STEERING_SHIFT;
+> +	io->wq_class = (flags & EFCT_SCSI_WQ_CLASS_MASK) >>
+> +				EFCT_SCSI_WQ_CLASS_SHIFT;
+> +
+> +	if (efct->xport) {
+> +		struct efct_xport *xport = efct->xport;
+> +
+> +		if (type == EFCT_HW_IO_TARGET_READ) {
+> +			xport->fcp_stats.input_requests++;
+> +			xport->fcp_stats.input_bytes += xwire_len;
+> +		} else if (type == EFCT_HW_IO_TARGET_WRITE) {
+> +			xport->fcp_stats.output_requests++;
+> +			xport->fcp_stats.output_bytes += xwire_len;
+> +		}
+> +	}
+> +	return efct_scsi_io_dispatch(io, efct_target_io_cb);
+> +}
+> +
+> +int
+> +efct_scsi_send_rd_data(struct efct_io *io, u32 flags,
+> +	struct efct_scsi_sgl *sgl, u32 sgl_count, u64 len,
+> +	efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	return efct_scsi_xfer_data(io, flags, sgl, sgl_count,
+> +				 len, EFCT_HW_IO_TARGET_READ,
+> +				 enable_tsend_auto_resp(io->efct), cb, arg);
+> +}
+> +
+> +int
+> +efct_scsi_recv_wr_data(struct efct_io *io, u32 flags,
+> +	struct efct_scsi_sgl *sgl, u32 sgl_count, u64 len,
+> +	efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	return efct_scsi_xfer_data(io, flags, sgl, sgl_count, len,
+> +				 EFCT_HW_IO_TARGET_WRITE,
+> +				 enable_treceive_auto_resp(io->efct), cb, arg);
+> +}
+> +
+> +int
+> +efct_scsi_send_resp(struct efct_io *io, u32 flags,
+> +		    struct efct_scsi_cmd_resp *rsp,
+> +		   efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	struct efct *efct;
+> +	int residual;
+> +	bool auto_resp = true;		/* Always try auto resp */
+> +	u8 scsi_status = 0;
+> +	u16 scsi_status_qualifier = 0;
+> +	u8 *sense_data = NULL;
+> +	u32 sense_data_length = 0;
+> +
+> +	efct = io->efct;
+> +
+> +	if (rsp) {
+> +		scsi_status = rsp->scsi_status;
+> +		scsi_status_qualifier = rsp->scsi_status_qualifier;
+> +		sense_data = rsp->sense_data;
+> +		sense_data_length = rsp->sense_data_length;
+> +		residual = rsp->residual;
+> +	} else {
+> +		residual = io->exp_xfer_len - io->transferred;
+> +	}
+> +
+> +	io->wire_len = 0;
+> +	io->hio_type = EFCT_HW_IO_TARGET_RSP;
+> +
+> +	io->scsi_tgt_cb = cb;
+> +	io->scsi_tgt_cb_arg = arg;
+> +
+> +	memset(&io->iparam, 0, sizeof(io->iparam));
+> +	io->iparam.fcp_tgt.ox_id = io->init_task_tag;
+> +	io->iparam.fcp_tgt.offset = 0;
+> +	io->iparam.fcp_tgt.cs_ctl = io->cs_ctl;
+> +	io->iparam.fcp_tgt.timeout = io->timeout;
+> +
+> +	/* Set low latency queueing request */
+> +	io->low_latency = (flags & EFCT_SCSI_LOW_LATENCY) != 0;
+> +	io->wq_steering = (flags & EFCT_SCSI_WQ_STEERING_MASK) >>
+> +				EFCT_SCSI_WQ_STEERING_SHIFT;
+> +	io->wq_class = (flags & EFCT_SCSI_WQ_CLASS_MASK) >>
+> +				EFCT_SCSI_WQ_CLASS_SHIFT;
+> +
+> +	if (scsi_status != 0 || residual || sense_data_length) {
+> +		struct fcp_resp_with_ext *fcprsp = io->rspbuf.virt;
+> +		u8 *sns_data = io->rspbuf.virt + sizeof(*fcprsp);
+> +
+> +		if (!fcprsp) {
+> +			efc_log_err(efct, "NULL response buffer\n");
+> +			return EFC_FAIL;
+> +		}
+> +
+> +		auto_resp = false;
+> +
+> +		memset(fcprsp, 0, sizeof(*fcprsp));
+> +
+> +		io->wire_len += sizeof(*fcprsp);
+> +
+> +		fcprsp->resp.fr_status = scsi_status;
+> +		fcprsp->resp.fr_retry_delay =
+> +			cpu_to_be16(scsi_status_qualifier);
+> +
+> +		/* set residual status if necessary */
+> +		if (residual != 0) {
+> +			/* FCP: if data transferred is less than the
+> +			 * amount expected, then this is an underflow.
+> +			 * If data transferred would have been greater
+> +			 * than the amount expected this is an overflow
+> +			 */
+> +			if (residual > 0) {
+> +				fcprsp->resp.fr_flags |= FCP_RESID_UNDER;
+> +				fcprsp->ext.fr_resid =	cpu_to_be32(residual);
+> +			} else {
+> +				fcprsp->resp.fr_flags |= FCP_RESID_OVER;
+> +				fcprsp->ext.fr_resid = cpu_to_be32(-residual);
+> +			}
+> +		}
+> +
+> +		if (EFCT_SCSI_SNS_BUF_VALID(sense_data) && sense_data_length) {
+> +			if (sense_data_length > SCSI_SENSE_BUFFERSIZE) {
+> +				efc_log_err(efct, "Sense exceeds max size.\n");
+> +				return EFC_FAIL;
+> +			}
+> +
+> +			fcprsp->resp.fr_flags |= FCP_SNS_LEN_VAL;
+> +			memcpy(sns_data, sense_data, sense_data_length);
+> +			fcprsp->ext.fr_sns_len = cpu_to_be32(sense_data_length);
+> +			io->wire_len += sense_data_length;
+> +		}
+> +
+> +		io->sgl[0].addr = io->rspbuf.phys;
+> +		//io->sgl[0].dif_addr = 0;
+
+debug left over
+
+> +		io->sgl[0].len = io->wire_len;
+> +		io->sgl_count = 1;
+> +	}
+> +
+> +	if (auto_resp)
+> +		io->iparam.fcp_tgt.flags |= SLI4_IO_AUTO_GOOD_RESPONSE;
+> +
+> +	return efct_scsi_io_dispatch(io, efct_target_io_cb);
+> +}
+> +
+> +static int
+> +efct_target_bls_resp_cb(struct efct_hw_io *hio,
+> +			struct efc_remote_node *rnode,
+> +	u32 length, int status, u32 ext_status, void *app)
+> +{
+> +	struct efct_io *io = app;
+> +	struct efct *efct;
+> +	enum efct_scsi_io_status bls_status;
+> +
+> +	efct = io->efct;
+> +
+> +	/* BLS isn't really a "SCSI" concept, but use SCSI status */
+> +	if (status) {
+> +		io_error_log(io, "s=%#x x=%#x\n", status, ext_status);
+> +		bls_status = EFCT_SCSI_STATUS_ERROR;
+> +	} else {
+> +		bls_status = EFCT_SCSI_STATUS_GOOD;
+> +	}
+> +
+> +	if (io->bls_cb) {
+> +		efct_scsi_io_cb_t bls_cb = io->bls_cb;
+> +		void *bls_cb_arg = io->bls_cb_arg;
+> +
+> +		io->bls_cb = NULL;
+> +		io->bls_cb_arg = NULL;
+> +
+> +		/* invoke callback */
+> +		bls_cb(io, bls_status, 0, bls_cb_arg);
+> +	}
+> +
+> +	efct_scsi_check_pending(efct);
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +static int
+> +efct_target_send_bls_resp(struct efct_io *io,
+> +			  efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	int rc;
+> +	struct fc_ba_acc *acc;
+> +
+> +	/* fill out IO structure with everything needed to send BA_ACC */
+> +	memset(&io->iparam, 0, sizeof(io->iparam));
+> +	io->iparam.bls.ox_id = io->init_task_tag;
+> +	io->iparam.bls.rx_id = io->abort_rx_id;
+> +
+> +	acc = (void *)io->iparam.bls.payload;
+> +
+> +	memset(io->iparam.bls.payload, 0,
+> +	       sizeof(io->iparam.bls.payload));
+> +	acc->ba_ox_id = cpu_to_be16(io->iparam.bls.ox_id);
+> +	acc->ba_rx_id = cpu_to_be16(io->iparam.bls.rx_id);
+> +	acc->ba_high_seq_cnt = cpu_to_be16(U16_MAX);
+> +
+> +	/* generic io fields have already been populated */
+> +
+> +	/* set type and BLS-specific fields */
+> +	io->io_type = EFCT_IO_TYPE_BLS_RESP;
+> +	io->display_name = "bls_rsp";
+> +	io->hio_type = EFCT_HW_BLS_ACC;
+> +	io->bls_cb = cb;
+> +	io->bls_cb_arg = arg;
+> +
+> +	/* dispatch IO */
+> +	rc = efct_scsi_io_dispatch(io, efct_target_bls_resp_cb);
+> +	return rc;
+> +}
+> +
+> +int
+> +efct_scsi_send_tmf_resp(struct efct_io *io,
+> +			enum efct_scsi_tmf_resp rspcode,
+> +			u8 addl_rsp_info[3],
+> +			efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	int rc = -1;
+
+again the error code topic.
+
+> +	struct fcp_resp_with_ext *fcprsp = NULL;
+> +	struct fcp_resp_rsp_info *rspinfo = NULL;
+> +	u8 fcp_rspcode;
+> +
+> +	io->wire_len = 0;
+> +
+> +	switch (rspcode) {
+> +	case EFCT_SCSI_TMF_FUNCTION_COMPLETE:
+> +		fcp_rspcode = FCP_TMF_CMPL;
+> +		break;
+> +	case EFCT_SCSI_TMF_FUNCTION_SUCCEEDED:
+> +	case EFCT_SCSI_TMF_FUNCTION_IO_NOT_FOUND:
+> +		fcp_rspcode = FCP_TMF_CMPL;
+> +		break;
+> +	case EFCT_SCSI_TMF_FUNCTION_REJECTED:
+> +		fcp_rspcode = FCP_TMF_REJECTED;
+> +		break;
+> +	case EFCT_SCSI_TMF_INCORRECT_LOGICAL_UNIT_NUMBER:
+> +		fcp_rspcode = FCP_TMF_INVALID_LUN;
+> +		break;
+> +	case EFCT_SCSI_TMF_SERVICE_DELIVERY:
+> +		fcp_rspcode = FCP_TMF_FAILED;
+> +		break;
+> +	default:
+> +		fcp_rspcode = FCP_TMF_REJECTED;
+> +		break;
+> +	}
+> +
+> +	io->hio_type = EFCT_HW_IO_TARGET_RSP;
+> +
+> +	io->scsi_tgt_cb = cb;
+> +	io->scsi_tgt_cb_arg = arg;
+> +
+> +	if (io->tmf_cmd == EFCT_SCSI_TMF_ABORT_TASK) {
+> +		rc = efct_target_send_bls_resp(io, cb, arg);
+> +		return rc;
+> +	}
+> +
+> +	/* populate the FCP TMF response */
+> +	fcprsp = io->rspbuf.virt;
+> +	memset(fcprsp, 0, sizeof(*fcprsp));
+> +
+> +	fcprsp->resp.fr_flags |= FCP_SNS_LEN_VAL;
+> +
+> +	rspinfo = io->rspbuf.virt + sizeof(*fcprsp);
+> +	if (addl_rsp_info) {
+> +		memcpy(rspinfo->_fr_resvd, addl_rsp_info,
+> +		       sizeof(rspinfo->_fr_resvd));
+> +	}
+> +	rspinfo->rsp_code = fcp_rspcode;
+> +
+> +	io->wire_len = sizeof(*fcprsp) + sizeof(*rspinfo);
+> +
+> +	fcprsp->ext.fr_rsp_len = cpu_to_be32(sizeof(*rspinfo));
+> +
+> +	io->sgl[0].addr = io->rspbuf.phys;
+> +	io->sgl[0].dif_addr = 0;
+> +	io->sgl[0].len = io->wire_len;
+> +	io->sgl_count = 1;
+> +
+> +	memset(&io->iparam, 0, sizeof(io->iparam));
+> +	io->iparam.fcp_tgt.ox_id = io->init_task_tag;
+> +	io->iparam.fcp_tgt.offset = 0;
+> +	io->iparam.fcp_tgt.cs_ctl = io->cs_ctl;
+> +	io->iparam.fcp_tgt.timeout = io->timeout;
+> +
+> +	rc = efct_scsi_io_dispatch(io, efct_target_io_cb);
+> +
+> +	return rc;
+> +}
+> +
+> +static int
+> +efct_target_abort_cb(struct efct_hw_io *hio,
+> +		     struct efc_remote_node *rnode,
+> +		     u32 length, int status,
+> +		     u32 ext_status, void *app)
+> +{
+> +	struct efct_io *io = app;
+> +	struct efct *efct;
+> +	enum efct_scsi_io_status scsi_status;
+> +
+> +	efct = io->efct;
+> +
+> +	if (io->abort_cb) {
+
+I would move follwing part again into new function.
+
+> +		efct_scsi_io_cb_t abort_cb = io->abort_cb;
+> +		void *abort_cb_arg = io->abort_cb_arg;
+> +
+> +		io->abort_cb = NULL;
+> +		io->abort_cb_arg = NULL;
+> +
+> +		switch (status) {
+> +		case SLI4_FC_WCQE_STATUS_SUCCESS:
+> +			scsi_status = EFCT_SCSI_STATUS_GOOD;
+> +			break;
+> +		case SLI4_FC_WCQE_STATUS_LOCAL_REJECT:
+> +			switch (ext_status) {
+> +			case SLI4_FC_LOCAL_REJECT_NO_XRI:
+> +				scsi_status = EFCT_SCSI_STATUS_NO_IO;
+> +				break;
+> +			case SLI4_FC_LOCAL_REJECT_ABORT_IN_PROGRESS:
+> +				scsi_status =
+> +					EFCT_SCSI_STATUS_ABORT_IN_PROGRESS;
+> +				break;
+> +			default:
+> +				/*we have seen 0x15 (abort in progress)*/
+> +				scsi_status = EFCT_SCSI_STATUS_ERROR;
+> +				break;
+> +			}
+> +			break;
+> +		case SLI4_FC_WCQE_STATUS_FCP_RSP_FAILURE:
+> +			scsi_status = EFCT_SCSI_STATUS_CHECK_RESPONSE;
+> +			break;
+> +		default:
+> +			scsi_status = EFCT_SCSI_STATUS_ERROR;
+> +			break;
+> +		}
+> +		/* invoke callback */
+> +		abort_cb(io->io_to_abort, scsi_status, 0, abort_cb_arg);
+> +	}
+> +
+> +	/* done with IO to abort,efct_ref_get(): efct_scsi_tgt_abort_io() */
+> +	kref_put(&io->io_to_abort->ref, io->io_to_abort->release);
+> +
+> +	efct_io_pool_io_free(efct->xport->io_pool, io);
+> +
+> +	efct_scsi_check_pending(efct);
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +int
+> +efct_scsi_tgt_abort_io(struct efct_io *io, efct_scsi_io_cb_t cb, void *arg)
+> +{
+> +	struct efct *efct;
+> +	struct efct_xport *xport;
+> +	int rc;
+> +	struct efct_io *abort_io = NULL;
+> +
+> +	efct = io->efct;
+> +	xport = efct->xport;
+> +
+> +	/* take a reference on IO being aborted */
+> +	if ((kref_get_unless_zero(&io->ref) == 0)) {
+
+the double brackets are not needed
+
+> +		/* command no longer active */
+> +		scsi_io_printf(io, "command no longer active\n");
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	/*
+> +	 * allocate a new IO to send the abort request. Use efct_io_alloc()
+> +	 * directly, as we need an IO object that will not fail allocation
+> +	 * due to allocations being disabled (in efct_scsi_io_alloc())
+> +	 */
+> +	abort_io = efct_io_pool_io_alloc(efct->xport->io_pool);
+> +	if (!abort_io) {
+> +		atomic_add_return(1, &xport->io_alloc_failed_count);
+> +		kref_put(&io->ref, io->release);
+> +		return EFC_FAIL;
+> +	}
+> +
+> +	/* Save the target server callback and argument */
+> +	/* set generic fields */
+> +	abort_io->cmd_tgt = true;
+> +	abort_io->node = io->node;
+> +
+> +	/* set type and abort-specific fields */
+> +	abort_io->io_type = EFCT_IO_TYPE_ABORT;
+> +	abort_io->display_name = "tgt_abort";
+> +	abort_io->io_to_abort = io;
+> +	abort_io->send_abts = false;
+> +	abort_io->abort_cb = cb;
+> +	abort_io->abort_cb_arg = arg;
+> +
+> +	/* now dispatch IO */
+> +	rc = efct_scsi_io_dispatch_abort(abort_io, efct_target_abort_cb);
+> +	if (rc)
+> +		kref_put(&io->ref, io->release);
+> +	return rc;
+> +}
+> +
+> +void
+> +efct_scsi_io_complete(struct efct_io *io)
+> +{
+> +	if (io->io_free) {
+> +		efc_log_test(io->efct,
+> +			      "Got completion for non-busy io with tag 0x%x\n",
+> +		    io->tag);
+
+code aligment
+
+> +		return;
+> +	}
+> +
+> +	scsi_io_trace(io, "freeing io 0x%p %s\n", io, io->display_name);
+> +	kref_put(&io->ref, io->release);
+> +}
+> diff --git a/drivers/scsi/elx/efct/efct_scsi.h b/drivers/scsi/elx/efct/efct_scsi.h
+> new file mode 100644
+> index 000000000000..28204c5fde69
+> --- /dev/null
+> +++ b/drivers/scsi/elx/efct/efct_scsi.h
+> @@ -0,0 +1,235 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * Copyright (C) 2019 Broadcom. All Rights Reserved. The term
+> + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
+> + */
+> +
+> +#if !defined(__EFCT_SCSI_H__)
+> +#define __EFCT_SCSI_H__
+> +#include <scsi/scsi_host.h>
+> +#include <scsi/scsi_transport_fc.h>
+> +
+> +/* efct_scsi_rcv_cmd() efct_scsi_rcv_tmf() flags */
+> +#define EFCT_SCSI_CMD_DIR_IN		(1 << 0)
+> +#define EFCT_SCSI_CMD_DIR_OUT		(1 << 1)
+> +#define EFCT_SCSI_CMD_SIMPLE		(1 << 2)
+> +#define EFCT_SCSI_CMD_HEAD_OF_QUEUE	(1 << 3)
+> +#define EFCT_SCSI_CMD_ORDERED		(1 << 4)
+> +#define EFCT_SCSI_CMD_UNTAGGED		(1 << 5)
+> +#define EFCT_SCSI_CMD_ACA		(1 << 6)
+> +#define EFCT_SCSI_FIRST_BURST_ERR	(1 << 7)
+> +#define EFCT_SCSI_FIRST_BURST_ABORTED	(1 << 8)
+> +
+> +/* efct_scsi_send_rd_data/recv_wr_data/send_resp flags */
+> +#define EFCT_SCSI_LAST_DATAPHASE	(1 << 0)
+> +#define EFCT_SCSI_NO_AUTO_RESPONSE	(1 << 1)
+> +#define EFCT_SCSI_LOW_LATENCY		(1 << 2)
+> +
+> +#define EFCT_SCSI_SNS_BUF_VALID(sense)	((sense) && \
+> +			(0x70 == (((const u8 *)(sense))[0] & 0x70)))
+> +
+> +#define EFCT_SCSI_WQ_STEERING_SHIFT	16
+> +#define EFCT_SCSI_WQ_STEERING_MASK	(0xf << EFCT_SCSI_WQ_STEERING_SHIFT)
+> +#define EFCT_SCSI_WQ_STEERING_CLASS	(0 << EFCT_SCSI_WQ_STEERING_SHIFT)
+> +#define EFCT_SCSI_WQ_STEERING_REQUEST	(1 << EFCT_SCSI_WQ_STEERING_SHIFT)
+> +#define EFCT_SCSI_WQ_STEERING_CPU	(2 << EFCT_SCSI_WQ_STEERING_SHIFT)
+> +
+> +#define EFCT_SCSI_WQ_CLASS_SHIFT		(20)
+> +#define EFCT_SCSI_WQ_CLASS_MASK		(0xf << EFCT_SCSI_WQ_CLASS_SHIFT)
+> +#define EFCT_SCSI_WQ_CLASS(x)		((x & EFCT_SCSI_WQ_CLASS_MASK) << \
+> +						EFCT_SCSI_WQ_CLASS_SHIFT)
+> +
+> +#define EFCT_SCSI_WQ_CLASS_LOW_LATENCY	1
+> +
+> +struct efct_scsi_cmd_resp {
+> +	u8 scsi_status;			/* SCSI status */
+
+kerneldoc
+
+> +	u16 scsi_status_qualifier;	/* SCSI status qualifier */
+> +	/* pointer to response data buffer */
+> +	u8 *response_data;
+> +	/* length of response data buffer (bytes) */
+> +	u32 response_data_length;
+> +	u8 *sense_data;		/* pointer to sense data buffer */
+> +	/* length of sense data buffer (bytes) */
+> +	u32 sense_data_length;
+> +	/* command residual (not used for target), positive value
+> +	 * indicates an underflow, negative value indicates overflow
+> +	 */
+> +	int residual;
+> +	/* Command response length received in wcqe */
+> +	u32 response_wire_length;
+> +};
+> +
+> +struct efct_vport {
+> +	struct efct		*efct;
+> +	bool			is_vport;
+> +	struct fc_host_statistics fc_host_stats;
+> +	struct Scsi_Host	*shost;
+> +	struct fc_vport		*fc_vport;
+> +	u64			npiv_wwpn;
+> +	u64			npiv_wwnn;
+> +};
+> +
+> +/* Status values returned by IO callbacks */
+> +enum efct_scsi_io_status {
+> +	EFCT_SCSI_STATUS_GOOD = 0,
+> +	EFCT_SCSI_STATUS_ABORTED,
+> +	EFCT_SCSI_STATUS_ERROR,
+> +	EFCT_SCSI_STATUS_DIF_GUARD_ERR,
+> +	EFCT_SCSI_STATUS_DIF_REF_TAG_ERROR,
+> +	EFCT_SCSI_STATUS_DIF_APP_TAG_ERROR,
+> +	EFCT_SCSI_STATUS_DIF_UNKNOWN_ERROR,
+> +	EFCT_SCSI_STATUS_PROTOCOL_CRC_ERROR,
+> +	EFCT_SCSI_STATUS_NO_IO,
+> +	EFCT_SCSI_STATUS_ABORT_IN_PROGRESS,
+> +	EFCT_SCSI_STATUS_CHECK_RESPONSE,
+> +	EFCT_SCSI_STATUS_COMMAND_TIMEOUT,
+> +	EFCT_SCSI_STATUS_TIMEDOUT_AND_ABORTED,
+> +	EFCT_SCSI_STATUS_SHUTDOWN,
+> +	EFCT_SCSI_STATUS_NEXUS_LOST,
+> +};
+> +
+> +struct efct_io;
+> +struct efc_node;
+> +struct efc_domain;
+> +struct efc_sli_port;
+> +
+> +/* Callback used by send_rd_data(), recv_wr_data(), send_resp() */
+> +typedef int (*efct_scsi_io_cb_t)(struct efct_io *io,
+> +				    enum efct_scsi_io_status status,
+> +				    u32 flags, void *arg);
+> +
+> +/* Callback used by send_rd_io(), send_wr_io() */
+> +typedef int (*efct_scsi_rsp_io_cb_t)(struct efct_io *io,
+> +			enum efct_scsi_io_status status,
+> +			struct efct_scsi_cmd_resp *rsp,
+> +			u32 flags, void *arg);
+> +
+> +/* efct_scsi_cb_t flags */
+> +#define EFCT_SCSI_IO_CMPL		(1 << 0)
+> +/* IO completed, response sent */
+> +#define EFCT_SCSI_IO_CMPL_RSP_SENT	(1 << 1)
+> +#define EFCT_SCSI_IO_ABORTED		(1 << 2)
+> +
+> +/* efct_scsi_recv_tmf() request values */
+> +enum efct_scsi_tmf_cmd {
+> +	EFCT_SCSI_TMF_ABORT_TASK = 1,
+> +	EFCT_SCSI_TMF_QUERY_TASK_SET,
+> +	EFCT_SCSI_TMF_ABORT_TASK_SET,
+> +	EFCT_SCSI_TMF_CLEAR_TASK_SET,
+> +	EFCT_SCSI_TMF_QUERY_ASYNCHRONOUS_EVENT,
+> +	EFCT_SCSI_TMF_LOGICAL_UNIT_RESET,
+> +	EFCT_SCSI_TMF_CLEAR_ACA,
+> +	EFCT_SCSI_TMF_TARGET_RESET,
+> +};
+> +
+> +/* efct_scsi_send_tmf_resp() response values */
+> +enum efct_scsi_tmf_resp {
+> +	EFCT_SCSI_TMF_FUNCTION_COMPLETE = 1,
+> +	EFCT_SCSI_TMF_FUNCTION_SUCCEEDED,
+> +	EFCT_SCSI_TMF_FUNCTION_IO_NOT_FOUND,
+> +	EFCT_SCSI_TMF_FUNCTION_REJECTED,
+> +	EFCT_SCSI_TMF_INCORRECT_LOGICAL_UNIT_NUMBER,
+> +	EFCT_SCSI_TMF_SERVICE_DELIVERY,
+> +};
+> +
+> +struct efct_scsi_sgl {
+> +	uintptr_t	addr;
+> +	uintptr_t	dif_addr;
+> +	size_t		len;
+> +};
+> +
+> +/* Return values for calls from base driver to libefc */
+> +#define EFCT_SCSI_CALL_COMPLETE	0 /* All work is done */
+> +#define EFCT_SCSI_CALL_ASYNC	1 /* Work will be completed asynchronously */
+> +
+> +enum efct_scsi_io_role {
+> +	EFCT_SCSI_IO_ROLE_ORIGINATOR,
+> +	EFCT_SCSI_IO_ROLE_RESPONDER,
+> +};
+> +
+> +void efct_scsi_io_alloc_enable(struct efc *efc, struct efc_node *node);
+> +void efct_scsi_io_alloc_disable(struct efc *efc, struct efc_node *node);
+> +extern struct efct_io *
+> +efct_scsi_io_alloc(struct efc_node *node, enum efct_scsi_io_role);
+> +void efct_scsi_io_free(struct efct_io *io);
+> +struct efct_io *efct_io_get_instance(struct efct *efct, u32 index);
+> +
+> +int efct_scsi_tgt_driver_init(void);
+> +int efct_scsi_tgt_driver_exit(void);
+> +int efct_scsi_tgt_new_device(struct efct *efct);
+> +int efct_scsi_tgt_del_device(struct efct *efct);
+> +int
+> +efct_scsi_tgt_new_domain(struct efc *efc, struct efc_domain *domain);
+> +void
+> +efct_scsi_tgt_del_domain(struct efc *efc, struct efc_domain *domain);
+> +int
+> +efct_scsi_tgt_new_sport(struct efc *efc, struct efc_sli_port *sport);
+> +void
+> +efct_scsi_tgt_del_sport(struct efc *efc, struct efc_sli_port *sport);
+> +int
+> +efct_scsi_validate_initiator(struct efc *efc, struct efc_node *node);
+> +int
+> +efct_scsi_new_initiator(struct efc *efc, struct efc_node *node);
+> +
+> +enum efct_scsi_del_initiator_reason {
+> +	EFCT_SCSI_INITIATOR_DELETED,
+> +	EFCT_SCSI_INITIATOR_MISSING,
+> +};
+> +
+> +extern int
+> +efct_scsi_del_initiator(struct efc *efc, struct efc_node *node,
+> +			int reason);
+
+extern not needed
+
+> +extern int
+> +efct_scsi_recv_cmd(struct efct_io *io, uint64_t lun, u8 *cdb,
+> +		   u32 cdb_len, u32 flags);
+> +extern int
+> +efct_scsi_recv_tmf(struct efct_io *tmfio, u32 lun,
+> +		   enum efct_scsi_tmf_cmd cmd, struct efct_io *abortio,
+> +		  u32 flags);
+> +
+> +extern int
+> +efct_scsi_send_rd_data(struct efct_io *io, u32 flags,
+> +		      struct efct_scsi_sgl *sgl, u32 sgl_count,
+> +		      u64 wire_len, efct_scsi_io_cb_t cb, void *arg);
+> +extern int
+> +efct_scsi_recv_wr_data(struct efct_io *io, u32 flags,
+> +		      struct efct_scsi_sgl *sgl, u32 sgl_count,
+> +		      u64 wire_len, efct_scsi_io_cb_t cb, void *arg);
+> +extern int
+> +efct_scsi_send_resp(struct efct_io *io, u32 flags,
+> +		    struct efct_scsi_cmd_resp *rsp, efct_scsi_io_cb_t cb,
+> +		   void *arg);
+> +extern int
+> +efct_scsi_send_tmf_resp(struct efct_io *io,
+> +			enum efct_scsi_tmf_resp rspcode,
+> +		       u8 addl_rsp_info[3],
+> +		       efct_scsi_io_cb_t cb, void *arg);
+> +extern int
+> +efct_scsi_tgt_abort_io(struct efct_io *io, efct_scsi_io_cb_t cb, void *arg);
+> +
+> +void efct_scsi_io_complete(struct efct_io *io);
+> +
+> +int efct_scsi_reg_fc_transport(void);
+> +int efct_scsi_release_fc_transport(void);
+> +int efct_scsi_new_device(struct efct *efct);
+> +int efct_scsi_del_device(struct efct *efct);
+> +void _efct_scsi_io_free(struct kref *arg);
+> +
+> +int efct_scsi_send_tmf(struct efc_node *node,
+> +		       struct efct_io *io,
+> +		       struct efct_io *io_to_abort, u32 lun,
+> +		       enum efct_scsi_tmf_cmd tmf,
+> +		       struct efct_scsi_sgl *sgl,
+> +		       u32 sgl_count, u32 len,
+> +		       efct_scsi_rsp_io_cb_t cb, void *arg);
+> +
+> +extern int
+> +efct_scsi_del_vport(struct efct *efct, struct Scsi_Host *shost);
+> +extern struct efct_vport *
+> +efct_scsi_new_vport(struct efct *efct, struct device *dev);
+> +
+> +int efct_scsi_io_dispatch(struct efct_io *io, void *cb);
+> +int efct_scsi_io_dispatch_abort(struct efct_io *io, void *cb);
+> +void efct_scsi_check_pending(struct efct *efct);
+> +
+> +#endif /* __EFCT_SCSI_H__ */
+> -- 
+> 2.16.4
+> 
+> 
+
+Thanks,
+Daniel
