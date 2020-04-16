@@ -2,424 +2,641 @@ Return-Path: <SRS0=iRB6=6A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1767AC352BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 12:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4D70C2BB55
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 12:45:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D761421D79
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 12:43:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mOC5HdcW"
+	by mail.kernel.org (Postfix) with ESMTP id 8E4AB21D91
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 12:45:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2636053AbgDPMnt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Apr 2020 08:43:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48834 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2636050AbgDPMnk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Apr 2020 08:43:40 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CCC3C061A0C;
-        Thu, 16 Apr 2020 05:43:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=D6vCmziEMOD7AhQkTcvNdY75KfTbXSNrl5iIJsq0plc=; b=mOC5HdcWr6W0OBVrlD6zSDGQJb
-        /nIsD71HDrETQ7m+lyHUbThknQ8A7IkVyp/ecADUowSkEht9GUtsRf+/sKIpMCtcynPMUkDhywSMs
-        7/ixDcaq0CpuNRyd8pGzwAzZ7gMHxH89le9GHmtJ47v79lqNO+NrYZiU5efPIjmTtP1evnEuvwpda
-        PaxJow5G9ZobIG7iPCeRLcI3G61ebn0qQwjT3ZdJvYtMitxTb2TTVaYrAZCwy/HtRFhlzhQRhBe3e
-        9uQbh80qTmENdyX9+OAcLbFY2qMsrLVTi9l74ZQ7b+28hR8knWY4RtysJM+vIYl/8WovwIFNrriKD
-        0w9rTATg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jP3rm-0001C0-5n; Thu, 16 Apr 2020 12:43:38 +0000
-Date:   Thu, 16 Apr 2020 05:43:38 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v6 08/11] scsi: sd_zbc: emulate ZONE_APPEND commands
-Message-ID: <20200416124338.GC23647@infradead.org>
-References: <20200415090513.5133-1-johannes.thumshirn@wdc.com>
- <20200415090513.5133-9-johannes.thumshirn@wdc.com>
+        id S2636174AbgDPMpA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Apr 2020 08:45:00 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55560 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2894376AbgDPMoe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Apr 2020 08:44:34 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 5A4B2ABAD;
+        Thu, 16 Apr 2020 12:44:31 +0000 (UTC)
+Date:   Thu, 16 Apr 2020 14:44:31 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com,
+        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
+        rdunlap@infradead.org, hare@suse.de,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+Subject: Re: [PATCH v3 25/31] elx: efct: Hardware IO submission routines
+Message-ID: <20200416124431.dez65wq4znc63mpk@carbon>
+References: <20200412033303.29574-1-jsmart2021@gmail.com>
+ <20200412033303.29574-26-jsmart2021@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200415090513.5133-9-johannes.thumshirn@wdc.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200412033303.29574-26-jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 15, 2020 at 06:05:10PM +0900, Johannes Thumshirn wrote:
-> Emulate ZONE_APPEND for SCSI disks using a regular WRITE(16) command
-> with a start LBA set to the target zone write pointer position.
+On Sat, Apr 11, 2020 at 08:32:57PM -0700, James Smart wrote:
+> This patch continues the efct driver population.
 > 
-> In order to always know the write pointer position of a sequential write
-> zone, the write pointer of all zones is tracked using an array of 32bits
-> zone write pointer offset attached to the scsi disk structure. Each
-> entry of the array indicate a zone write pointer position relative to
-> the zone start sector. The write pointer offsets are maintained in sync
-> with the device as follows:
-> 1) the write pointer offset of a zone is reset to 0 when a
->    REQ_OP_ZONE_RESET command completes.
-> 2) the write pointer offset of a zone is set to the zone size when a
->    REQ_OP_ZONE_FINISH command completes.
-> 3) the write pointer offset of a zone is incremented by the number of
->    512B sectors written when a write, write same or a zone append
->    command completes.
-> 4) the write pointer offset of all zones is reset to 0 when a
->    REQ_OP_ZONE_RESET_ALL command completes.
+> This patch adds driver definitions for:
+> Routines that write IO to Work queue, send SRRs and raw frames.
 > 
-> Since the block layer does not write lock zones for zone append
-> commands, to ensure a sequential ordering of the regular write commands
-> used for the emulation, the target zone of a zone append command is
-> locked when the function sd_zbc_prepare_zone_append() is called from
-> sd_setup_read_write_cmnd(). If the zone write lock cannot be obtained
-> (e.g. a zone append is in-flight or a regular write has already locked
-> the zone), the zone append command dispatching is delayed by returning
-> BLK_STS_ZONE_RESOURCE.
+> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
 > 
-> To avoid the need for write locking all zones for REQ_OP_ZONE_RESET_ALL
-> requests, use a spinlock to protect accesses and modifications of the
-> zone write pointer offsets. This spinlock is initialized from sd_probe()
-> using the new function sd_zbc_init().
-> 
-> Co-developed-by: Damien Le Moal <Damien.LeMoal@wdc.com>
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/scsi/sd.c     |  24 +++-
->  drivers/scsi/sd.h     |  43 +++++-
->  drivers/scsi/sd_zbc.c | 323 ++++++++++++++++++++++++++++++++++++++++--
->  3 files changed, 370 insertions(+), 20 deletions(-)
+> v3:
+>   Reduced arguments for sli_fcp_tsend64_wqe(), sli_fcp_trsp64_wqe(),
+>   sli_fcp_treceive64_wqe() calls
+> ---
+>  drivers/scsi/elx/efct/efct_hw.c | 519 ++++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/elx/efct/efct_hw.h |  19 ++
+>  2 files changed, 538 insertions(+)
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index a793cb08d025..66ff5f04c0ce 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1206,6 +1206,12 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
->  		}
->  	}
+> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+> index fd3c2dec3ef6..26dd9bd1eeef 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.c
+> +++ b/drivers/scsi/elx/efct/efct_hw.c
+> @@ -2516,3 +2516,522 @@ efct_hw_flush(struct efct_hw *hw)
 >  
-> +	if (req_op(rq) == REQ_OP_ZONE_APPEND) {
-> +		ret = sd_zbc_prepare_zone_append(cmd, &lba, nr_blocks);
-> +		if (ret)
-> +			return ret;
+>  	return EFC_SUCCESS;
+>  }
+> +
+> +int
+> +efct_hw_wq_write(struct hw_wq *wq, struct efct_hw_wqe *wqe)
+> +{
+> +	int rc = 0;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&wq->queue->lock, flags);
+> +	if (!list_empty(&wq->pending_list)) {
+> +		INIT_LIST_HEAD(&wqe->list_entry);
+> +		list_add_tail(&wqe->list_entry, &wq->pending_list);
+> +		wq->wq_pending_count++;
+> +		while ((wq->free_count > 0) &&
+> +		       ((wqe = list_first_entry(&wq->pending_list,
+> +					struct efct_hw_wqe, list_entry))
+> +			 != NULL)) {
+
+The condition is a hard to read. It be good to restructure it.
+
+And maybe moving the body into new function, so the functions code is
+not crawling down the right border.
+
+> +			list_del(&wqe->list_entry);
+> +			rc = _efct_hw_wq_write(wq, wqe);
+> +			if (rc < 0)
+> +				break;
+> +			if (wqe->abort_wqe_submit_needed) {
+> +				wqe->abort_wqe_submit_needed = false;
+> +				sli_abort_wqe(&wq->hw->sli,
+> +					      wqe->wqebuf,
+> +					      wq->hw->sli.wqe_size,
+> +					      SLI_ABORT_XRI,
+> +					      wqe->send_abts, wqe->id,
+> +					      0, wqe->abort_reqtag,
+> +					      SLI4_CQ_DEFAULT);
+> +
+> +				INIT_LIST_HEAD(&wqe->list_entry);
+> +				list_add_tail(&wqe->list_entry,
+> +					      &wq->pending_list);
+> +				wq->wq_pending_count++;
+> +			}
+> +		}
+> +	} else {
+> +		if (wq->free_count > 0) {
+> +			rc = _efct_hw_wq_write(wq, wqe);
+> +		} else {
+> +			INIT_LIST_HEAD(&wqe->list_entry);
+> +			list_add_tail(&wqe->list_entry, &wq->pending_list);
+> +			wq->wq_pending_count++;
+> +		}
 > +	}
 > +
->  	fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
->  	dix = scsi_prot_sg_count(cmd);
->  	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
-> @@ -1287,6 +1293,7 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
->  		return sd_setup_flush_cmnd(cmd);
->  	case REQ_OP_READ:
->  	case REQ_OP_WRITE:
-> +	case REQ_OP_ZONE_APPEND:
->  		return sd_setup_read_write_cmnd(cmd);
->  	case REQ_OP_ZONE_RESET:
->  		return sd_zbc_setup_zone_mgmt_cmnd(cmd, ZO_RESET_WRITE_POINTER,
-> @@ -2055,7 +2062,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  
->   out:
->  	if (sd_is_zoned(sdkp))
-> -		sd_zbc_complete(SCpnt, good_bytes, &sshdr);
-> +		good_bytes = sd_zbc_complete(SCpnt, good_bytes, &sshdr);
->  
->  	SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
->  					   "sd_done: completed %d of %d bytes\n",
-> @@ -3372,6 +3379,10 @@ static int sd_probe(struct device *dev)
->  	sdkp->first_scan = 1;
->  	sdkp->max_medium_access_timeouts = SD_MAX_MEDIUM_TIMEOUTS;
->  
-> +	error = sd_zbc_init_disk(sdkp);
-> +	if (error)
-> +		goto out_free_index;
+> +	spin_unlock_irqrestore(&wq->queue->lock, flags);
 > +
->  	sd_revalidate_disk(gd);
->  
->  	gd->flags = GENHD_FL_EXT_DEVT;
-> @@ -3409,6 +3420,7 @@ static int sd_probe(struct device *dev)
->   out_put:
->  	put_disk(gd);
->   out_free:
-> +	sd_zbc_release_disk(sdkp);
->  	kfree(sdkp);
->   out:
->  	scsi_autopm_put_device(sdp);
-> @@ -3485,6 +3497,8 @@ static void scsi_disk_release(struct device *dev)
->  	put_disk(disk);
->  	put_device(&sdkp->device->sdev_gendev);
->  
-> +	sd_zbc_release_disk(sdkp);
-> +
->  	kfree(sdkp);
->  }
->  
-> @@ -3665,19 +3679,19 @@ static int __init init_sd(void)
->  	if (!sd_page_pool) {
->  		printk(KERN_ERR "sd: can't init discard page pool\n");
->  		err = -ENOMEM;
-> -		goto err_out_ppool;
-> +		goto err_out_cdb_pool;
->  	}
->  
->  	err = scsi_register_driver(&sd_template.gendrv);
->  	if (err)
-> -		goto err_out_driver;
-> +		goto err_out_ppool;
->  
->  	return 0;
->  
-> -err_out_driver:
-> +err_out_ppool:
->  	mempool_destroy(sd_page_pool);
->  
-> -err_out_ppool:
-> +err_out_cdb_pool:
->  	mempool_destroy(sd_cdb_pool);
->  
->  err_out_cache:
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index 50fff0bf8c8e..6009311105ef 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -79,6 +79,12 @@ struct scsi_disk {
->  	u32		zones_optimal_open;
->  	u32		zones_optimal_nonseq;
->  	u32		zones_max_open;
-> +	u32		*zones_wp_ofst;
-> +	spinlock_t	zones_wp_ofst_lock;
-> +	u32		*rev_wp_ofst;
-> +	struct mutex	rev_mutex;
-> +	struct work_struct zone_wp_ofst_work;
-> +	char		*zone_wp_update_buf;
->  #endif
->  	atomic_t	openers;
->  	sector_t	capacity;	/* size in logical blocks */
-> @@ -207,17 +213,35 @@ static inline int sd_is_zoned(struct scsi_disk *sdkp)
->  
->  #ifdef CONFIG_BLK_DEV_ZONED
->  
-> +int sd_zbc_init_disk(struct scsi_disk *sdkp);
-> +void sd_zbc_release_disk(struct scsi_disk *sdkp);
->  extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
->  extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
->  blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
->  					 unsigned char op, bool all);
-> -extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
-> -			    struct scsi_sense_hdr *sshdr);
-> +unsigned int sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
-> +			     struct scsi_sense_hdr *sshdr);
->  int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
->  		unsigned int nr_zones, report_zones_cb cb, void *data);
->  
-> +blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
-> +				        unsigned int nr_blocks);
-> +
->  #else /* CONFIG_BLK_DEV_ZONED */
->  
-> +static inline int sd_zbc_init(void)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline int sd_zbc_init_disk(struct scsi_disk *sdkp)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline void sd_zbc_exit(void) {}
-> +static inline void sd_zbc_release_disk(struct scsi_disk *sdkp) {}
-> +
->  static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
->  				    unsigned char *buf)
->  {
-> @@ -233,9 +257,18 @@ static inline blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
->  	return BLK_STS_TARGET;
->  }
->  
-> -static inline void sd_zbc_complete(struct scsi_cmnd *cmd,
-> -				   unsigned int good_bytes,
-> -				   struct scsi_sense_hdr *sshdr) {}
-> +static inline unsigned int sd_zbc_complete(struct scsi_cmnd *cmd,
-> +			unsigned int good_bytes, struct scsi_sense_hdr *sshdr)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd,
-> +						      sector_t *lba,
-> +						      unsigned int nr_blocks)
-> +{
-> +	return BLK_STS_TARGET;
-> +}
->  
->  #define sd_zbc_report_zones NULL
->  
-> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> index ee156fbf3780..91002720c66c 100644
-> --- a/drivers/scsi/sd_zbc.c
-> +++ b/drivers/scsi/sd_zbc.c
-> @@ -11,6 +11,7 @@
->  #include <linux/blkdev.h>
->  #include <linux/vmalloc.h>
->  #include <linux/sched/mm.h>
-> +#include <linux/mutex.h>
->  
->  #include <asm/unaligned.h>
->  
-> @@ -19,11 +20,36 @@
->  
->  #include "sd.h"
->  
-> +static unsigned int sd_zbc_get_zone_wp_ofst(struct blk_zone *zone)
-> +{
-> +	if (zone->type == ZBC_ZONE_TYPE_CONV)
-> +		return 0;
-> +
-> +	switch (zone->cond) {
-> +	case BLK_ZONE_COND_IMP_OPEN:
-> +	case BLK_ZONE_COND_EXP_OPEN:
-> +	case BLK_ZONE_COND_CLOSED:
-> +		return zone->wp - zone->start;
-> +	case BLK_ZONE_COND_FULL:
-> +		return zone->len;
-> +	case BLK_ZONE_COND_EMPTY:
-> +	case BLK_ZONE_COND_OFFLINE:
-> +	case BLK_ZONE_COND_READONLY:
-> +	default:
-> +		/*
-> +		 * Offline and read-only zones do not have a valid
-> +		 * write pointer. Use 0 as for an empty zone.
-> +		 */
-> +		return 0;
-> +	}
-> +}
-> +
->  static int sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
->  			       unsigned int idx, report_zones_cb cb, void *data)
->  {
->  	struct scsi_device *sdp = sdkp->device;
->  	struct blk_zone zone = { 0 };
-> +	int ret;
->  
->  	zone.type = buf[0] & 0x0f;
->  	zone.cond = (buf[1] >> 4) & 0xf;
-> @@ -39,7 +65,14 @@ static int sd_zbc_parse_report(struct scsi_disk *sdkp, u8 *buf,
->  	    zone.cond == ZBC_ZONE_COND_FULL)
->  		zone.wp = zone.start + zone.len;
->  
-> -	return cb(&zone, idx, data);
-> +	ret = cb(&zone, idx, data);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (sdkp->rev_wp_ofst)
-> +		sdkp->rev_wp_ofst[idx] = sd_zbc_get_zone_wp_ofst(&zone);
-> +
-> +	return 0;
->  }
->  
->  /**
-> @@ -229,6 +262,116 @@ static blk_status_t sd_zbc_cmnd_checks(struct scsi_cmnd *cmd)
->  	return BLK_STS_OK;
->  }
->  
-> +#define SD_ZBC_INVALID_WP_OFST	(~0u)
-> +#define SD_ZBC_UPDATING_WP_OFST	(SD_ZBC_INVALID_WP_OFST - 1)
-> +
-> +static int sd_zbc_update_wp_ofst_cb(struct blk_zone *zone, unsigned int idx,
-> +				    void *data)
-> +{
-> +	struct scsi_disk *sdkp = data;
-> +
-> +	lockdep_assert_held(&sdkp->zones_wp_ofst_lock);
-> +
-> +	sdkp->zones_wp_ofst[idx] = sd_zbc_get_zone_wp_ofst(zone);
-> +
-> +	return 0;
-> +}
-> +
-> +static void sd_zbc_update_wp_ofst_workfn(struct work_struct *work)
-> +{
-> +	struct scsi_disk *sdkp;
-> +	unsigned int zno;
-> +	int ret;
-> +
-> +	sdkp = container_of(work, struct scsi_disk, zone_wp_ofst_work);
-> +
-> +	spin_lock_bh(&sdkp->zones_wp_ofst_lock);
-> +	for (zno = 0; zno < sdkp->nr_zones; zno++) {
-> +		if (sdkp->zones_wp_ofst[zno] != SD_ZBC_UPDATING_WP_OFST)
-> +			continue;
-> +
-> +		spin_unlock_bh(&sdkp->zones_wp_ofst_lock);
-> +		ret = sd_zbc_do_report_zones(sdkp, sdkp->zone_wp_update_buf,
-> +					     SD_BUF_SIZE,
-> +					     zno * sdkp->zone_blocks, true);
-> +		spin_lock_bh(&sdkp->zones_wp_ofst_lock);
-> +		if (!ret)
-> +			sd_zbc_parse_report(sdkp, sdkp->zone_wp_update_buf + 64,
-> +					    zno, sd_zbc_update_wp_ofst_cb,
-> +					    sdkp);
-> +	}
-> +	spin_unlock_bh(&sdkp->zones_wp_ofst_lock);
-> +
-> +	scsi_device_put(sdkp->device);
+> +	return rc;
 > +}
 > +
 > +/**
-> + * sd_zbc_prepare_zone_append() - Prepare an emulated ZONE_APPEND command.
-> + * @cmd: the command to setup
-> + * @lba: the LBA to patch
-> + * @nr_blocks: the number of LBAs to be written
-> + *
-> + * Called from sd_setup_read_write_cmnd() for REQ_OP_ZONE_APPEND.
-> + * @sd_zbc_prepare_zone_append() handles the necessary zone wrote locking and
-> + * patching of the lba for an emulated ZONE_APPEND command.
-> + *
-> + * In case the cached write pointer offset is %SD_ZBC_INVALID_WP_OFST it will
-> + * schedule a REPORT ZONES command and return BLK_STS_IOERR.
+> + * This routine supports communication sequences consisting of a single
+> + * request and single response between two endpoints. Examples include:
+> + *  - Sending an ELS request.
+> + *  - Sending an ELS response - To send an ELS response, the caller must provide
+> + * the OX_ID from the received request.
+> + *  - Sending a FC Common Transport (FC-CT) request - To send a FC-CT request,
+> + * the caller must provide the R_CTL, TYPE, and DF_CTL
+> + * values to place in the FC frame header.
 > + */
-> +blk_status_t sd_zbc_prepare_zone_append(struct scsi_cmnd *cmd, sector_t *lba,
-> +					unsigned int nr_blocks)
+
+This is not proper kerneldoc style
+
+> +enum efct_hw_rtn
+> +efct_hw_srrs_send(struct efct_hw *hw, enum efct_hw_io_type type,
+> +		  struct efct_hw_io *io,
+> +		  struct efc_dma *send, u32 len,
+> +		  struct efc_dma *receive, struct efc_remote_node *rnode,
+> +		  union efct_hw_io_param_u *iparam,
+> +		  efct_hw_srrs_cb_t cb, void *arg)
 > +{
-> +	struct request *rq = cmd->request;
-> +	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> +	unsigned int wp_ofst, zno = blk_rq_zone_no(rq);
-> +	blk_status_t ret;
+> +	struct sli4_sge	*sge = NULL;
+> +	enum efct_hw_rtn	rc = EFCT_HW_RTN_SUCCESS;
+> +	u16	local_flags = 0;
+> +	u32 sge0_flags;
+> +	u32 sge1_flags;
 > +
-> +	ret = sd_zbc_cmnd_checks(cmd);
-> +	if (ret != BLK_STS_OK)
-> +		return ret;
+> +	if (!io || !rnode || !iparam) {
+> +		pr_err("bad parm hw=%p io=%p s=%p r=%p rn=%p iparm=%p\n",
+> +			hw, io, send, receive, rnode, iparam);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
 > +
-> +	if (!blk_rq_zone_is_seq(rq))
-> +		return BLK_STS_IOERR;
+> +	if (hw->state != EFCT_HW_STATE_ACTIVE) {
+> +		efc_log_test(hw->os,
+> +			      "cannot send SRRS, HW state=%d\n", hw->state);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
 > +
-> +	/* Unlock of the write lock will happen in sd_zbc_complete() */
-> +	if (!blk_req_zone_write_trylock(rq))
-> +		return BLK_STS_ZONE_RESOURCE;
+> +	io->rnode = rnode;
+> +	io->type  = type;
+> +	io->done = cb;
+> +	io->arg  = arg;
 > +
-> +	spin_lock_bh(&sdkp->zones_wp_ofst_lock);
-> +	wp_ofst = sdkp->zones_wp_ofst[zno];
-> +	switch (wp_ofst) {
-> +	case SD_ZBC_INVALID_WP_OFST:
+> +	sge = io->sgl->virt;
+> +
+> +	/* clear both SGE */
+> +	memset(io->sgl->virt, 0, 2 * sizeof(struct sli4_sge));
+> +
+> +	sge0_flags = le32_to_cpu(sge[0].dw2_flags);
+> +	sge1_flags = le32_to_cpu(sge[1].dw2_flags);
+> +	if (send) {
+> +		sge[0].buffer_address_high =
+> +			cpu_to_le32(upper_32_bits(send->phys));
+> +		sge[0].buffer_address_low  =
+> +			cpu_to_le32(lower_32_bits(send->phys));
+> +
+> +		sge0_flags |= (SLI4_SGE_TYPE_DATA << SLI4_SGE_TYPE_SHIFT);
+> +
+> +		sge[0].buffer_length = cpu_to_le32(len);
+> +	}
+> +
+> +	if (type == EFCT_HW_ELS_REQ || type == EFCT_HW_FC_CT) {
+> +		sge[1].buffer_address_high =
+> +			cpu_to_le32(upper_32_bits(receive->phys));
+> +		sge[1].buffer_address_low  =
+> +			cpu_to_le32(lower_32_bits(receive->phys));
+> +
+> +		sge1_flags |= (SLI4_SGE_TYPE_DATA << SLI4_SGE_TYPE_SHIFT);
+> +		sge1_flags |= SLI4_SGE_LAST;
+> +
+> +		sge[1].buffer_length = cpu_to_le32(receive->size);
+> +	} else {
+> +		sge0_flags |= SLI4_SGE_LAST;
+> +	}
+> +
+> +	sge[0].dw2_flags = cpu_to_le32(sge0_flags);
+> +	sge[1].dw2_flags = cpu_to_le32(sge1_flags);
+> +
+> +	switch (type) {
+> +	case EFCT_HW_ELS_REQ:
+> +		if (!send ||
+
+Move the switch into a new function and just call it when 'if (send)'
+
+
+> +		    sli_els_request64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					  hw->sli.wqe_size, io->sgl,
+> +					*((u8 *)send->virt),
+> +					len, receive->size,
+> +					iparam->els.timeout,
+> +					io->indicator, io->reqtag,
+> +					SLI4_CQ_DEFAULT, rnode->indicator,
+> +					rnode->sport->indicator,
+> +					rnode->attached, rnode->fc_id,
+> +					rnode->sport->fc_id)) {
+> +			efc_log_err(hw->os, "REQ WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	case EFCT_HW_ELS_RSP:
+> +		if (!send ||
+> +		    sli_xmit_els_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					   hw->sli.wqe_size, send, len,
+> +					io->indicator, io->reqtag,
+> +					SLI4_CQ_DEFAULT, iparam->els.ox_id,
+> +					rnode->indicator,
+> +					rnode->sport->indicator,
+> +					rnode->attached, rnode->fc_id,
+> +					local_flags, U32_MAX)) {
+> +			efc_log_err(hw->os, "RSP WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	case EFCT_HW_ELS_RSP_SID:
+> +		if (!send ||
+> +		    sli_xmit_els_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					   hw->sli.wqe_size, send, len,
+> +					io->indicator, io->reqtag,
+> +					SLI4_CQ_DEFAULT,
+> +					iparam->els.ox_id,
+> +					rnode->indicator,
+> +					rnode->sport->indicator,
+> +					rnode->attached, rnode->fc_id,
+> +					local_flags, iparam->els.s_id)) {
+> +			efc_log_err(hw->os, "RSP (SID) WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	case EFCT_HW_FC_CT:
+> +		if (!send ||
+> +		    sli_gen_request64_wqe(&hw->sli, io->wqe.wqebuf, io->sgl,
+> +					len, receive->size, io->indicator,
+> +					io->reqtag, SLI4_CQ_DEFAULT,
+> +					rnode->fc_id, rnode->indicator,
+> +					&iparam->fc_ct)) {
+> +			efc_log_err(hw->os, "GEN WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	case EFCT_HW_FC_CT_RSP:
+> +		if (!send ||
+> +		    sli_xmit_sequence64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					    io->sgl, len, io->indicator,
+> +					    io->reqtag, rnode->fc_id,
+> +					    rnode->indicator, &iparam->fc_ct)) {
+> +			efc_log_err(hw->os, "XMIT SEQ WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	case EFCT_HW_BLS_ACC:
+> +	case EFCT_HW_BLS_RJT:
+> +	{
+> +		struct sli_bls_payload	bls;
+> +
+> +		if (type == EFCT_HW_BLS_ACC) {
+> +			bls.type = SLI4_SLI_BLS_ACC;
+> +			memcpy(&bls.u.acc, iparam->bls.payload,
+> +			       sizeof(bls.u.acc));
+> +		} else {
+> +			bls.type = SLI4_SLI_BLS_RJT;
+> +			memcpy(&bls.u.rjt, iparam->bls.payload,
+> +			       sizeof(bls.u.rjt));
+> +		}
+> +
+> +		bls.ox_id = cpu_to_le16(iparam->bls.ox_id);
+> +		bls.rx_id = cpu_to_le16(iparam->bls.rx_id);
+> +
+> +		if (sli_xmit_bls_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					   hw->sli.wqe_size, &bls,
+> +					io->indicator, io->reqtag,
+> +					SLI4_CQ_DEFAULT,
+> +					rnode->attached,
+> +					rnode->indicator,
+> +					rnode->sport->indicator,
+> +					rnode->fc_id, rnode->sport->fc_id,
+> +					U32_MAX)) {
+> +			efc_log_err(hw->os, "XMIT_BLS_RSP64 WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	}
+> +	case EFCT_HW_BLS_ACC_SID:
+> +	{
+> +		struct sli_bls_payload	bls;
+> +
+> +		bls.type = SLI4_SLI_BLS_ACC;
+> +		memcpy(&bls.u.acc, iparam->bls.payload,
+> +		       sizeof(bls.u.acc));
+> +
+> +		bls.ox_id = cpu_to_le16(iparam->bls.ox_id);
+> +		bls.rx_id = cpu_to_le16(iparam->bls.rx_id);
+> +
+> +		if (sli_xmit_bls_rsp64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					   hw->sli.wqe_size, &bls,
+> +					io->indicator, io->reqtag,
+> +					SLI4_CQ_DEFAULT,
+> +					rnode->attached,
+> +					rnode->indicator,
+> +					rnode->sport->indicator,
+> +					rnode->fc_id, rnode->sport->fc_id,
+> +					iparam->bls.s_id)) {
+> +			efc_log_err(hw->os, "XMIT_BLS_RSP64 WQE SID error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	}
+> +	default:
+> +		efc_log_err(hw->os, "bad SRRS type %#x\n", type);
+> +		rc = EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	if (rc == EFCT_HW_RTN_SUCCESS) {
+> +
+> +		io->xbusy = true;
+> +
 > +		/*
-> +		 * We are about to schedule work to update a zone write pointer offset,
-> +		 * which will cause the zone append command to be requeued. So make
+> +		 * Add IO to active io wqe list before submitting, in case the
+> +		 * wcqe processing preempts this thread.
+> +		 */
+> +		io->wq->use_count++;
+> +		rc = efct_hw_wq_write(io->wq, &io->wqe);
+> +		if (rc >= 0) {
+> +			/* non-negative return is success */
+> +			rc = 0;
+> +		} else {
+> +			/* failed to write wqe, remove from active wqe list */
+> +			efc_log_err(hw->os,
+> +				     "sli_queue_write failed: %d\n", rc);
+> +			io->xbusy = false;
+> +		}
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +/**
+> + * Send a read, write, or response IO.
+> + *
+> + * This routine supports sending a higher-level IO (for example, FCP) between
+> + * two endpoints as a target or initiator. Examples include:
+> + *  - Sending read data and good response (target).
+> + *  - Sending a response (target with no data or after receiving write data).
+> + *  .
+> + * This routine assumes all IOs use the SGL associated with the HW IO. Prior to
+> + * calling this routine, the data should be loaded using efct_hw_io_add_sge().
+> + */
 
-This adds two lines > 80 chars.
+Not proper kerneldoc style
 
-Otherwise this looks good:
+> +enum efct_hw_rtn
+> +efct_hw_io_send(struct efct_hw *hw, enum efct_hw_io_type type,
+> +		struct efct_hw_io *io,
+> +		u32 len, union efct_hw_io_param_u *iparam,
+> +		struct efc_remote_node *rnode, void *cb, void *arg)
+> +{
+> +	enum efct_hw_rtn	rc = EFCT_HW_RTN_SUCCESS;
+> +	u32	rpi;
+> +	bool send_wqe = true;
+> +
+> +	if (!io || !rnode || !iparam) {
+> +		pr_err("bad parm hw=%p io=%p iparam=%p rnode=%p\n",
+> +			hw, io, iparam, rnode);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	if (hw->state != EFCT_HW_STATE_ACTIVE) {
+> +		efc_log_err(hw->os, "cannot send IO, HW state=%d\n",
+> +			     hw->state);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	rpi = rnode->indicator;
+> +
+> +	/*
+> +	 * Save state needed during later stages
+> +	 */
+> +	io->rnode = rnode;
+> +	io->type  = type;
+> +	io->done  = cb;
+> +	io->arg   = arg;
+> +
+> +	/*
+> +	 * Format the work queue entry used to send the IO
+> +	 */
+> +	switch (type) {
+> +	case EFCT_HW_IO_TARGET_WRITE: {
+> +		u16 flags = iparam->fcp_tgt.flags;
+> +		struct fcp_txrdy *xfer = io->xfer_rdy.virt;
+> +
+> +		/*
+> +		 * Fill in the XFER_RDY for IF_TYPE 0 devices
+> +		 */
+> +		xfer->ft_data_ro = cpu_to_be32(iparam->fcp_tgt.offset);
+> +		xfer->ft_burst_len = cpu_to_be32(len);
+> +
+> +		if (io->xbusy)
+> +			flags |= SLI4_IO_CONTINUATION;
+> +		else
+> +			flags &= ~SLI4_IO_CONTINUATION;
+> +
+> +		io->tgt_wqe_timeout = iparam->fcp_tgt.timeout;
+> +
+> +		if (sli_fcp_treceive64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					   &io->def_sgl, io->first_data_sge,
+> +					   len, io->indicator, io->reqtag,
+> +					   SLI4_CQ_DEFAULT, rpi, rnode->fc_id,
+> +					   0, 0, &iparam->fcp_tgt)) {
+> +			efc_log_err(hw->os, "TRECEIVE WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	}
+> +	case EFCT_HW_IO_TARGET_READ: {
+> +		u16 flags = iparam->fcp_tgt.flags;
+> +
+> +		if (io->xbusy)
+> +			flags |= SLI4_IO_CONTINUATION;
+> +		else
+> +			flags &= ~SLI4_IO_CONTINUATION;
+> +
+> +		io->tgt_wqe_timeout = iparam->fcp_tgt.timeout;
+> +
+> +		if (sli_fcp_tsend64_wqe(&hw->sli, io->wqe.wqebuf,
+> +					&io->def_sgl, io->first_data_sge,
+> +					len, io->indicator, io->reqtag,
+> +					SLI4_CQ_DEFAULT, rpi, rnode->fc_id,
+> +					0, 0, &iparam->fcp_tgt)) {
+> +			efc_log_err(hw->os, "TSEND WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +		break;
+> +	}
+> +	case EFCT_HW_IO_TARGET_RSP: {
+> +		u16 flags = iparam->fcp_tgt.flags;
+> +
+> +		if (io->xbusy)
+> +			flags |= SLI4_IO_CONTINUATION;
+> +		else
+> +			flags &= ~SLI4_IO_CONTINUATION;
+> +
+> +		io->tgt_wqe_timeout = iparam->fcp_tgt.timeout;
+> +
+> +		if (sli_fcp_trsp64_wqe(&hw->sli, io->wqe.wqebuf,
+> +				       &io->def_sgl, len, io->indicator,
+> +				       io->reqtag, SLI4_CQ_DEFAULT, rpi,
+> +				       rnode->fc_id, 0, &iparam->fcp_tgt)) {
+> +			efc_log_err(hw->os, "TRSP WQE error\n");
+> +			rc = EFCT_HW_RTN_ERROR;
+> +		}
+> +
+> +		break;
+> +	}
+> +	default:
+> +		efc_log_err(hw->os, "unsupported IO type %#x\n", type);
+> +		rc = EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	if (send_wqe && rc == EFCT_HW_RTN_SUCCESS) {
+> +
+> +		io->xbusy = true;
+> +
+> +		/*
+> +		 * Add IO to active io wqe list before submitting, in case the
+> +		 * wcqe processing preempts this thread.
+> +		 */
+> +		hw->tcmd_wq_submit[io->wq->instance]++;
+> +		io->wq->use_count++;
+> +		rc = efct_hw_wq_write(io->wq, &io->wqe);
+> +		if (rc >= 0) {
+> +			/* non-negative return is success */
+> +			rc = 0;
+> +		} else {
+> +			/* failed to write wqe, remove from active wqe list */
+> +			efc_log_err(hw->os,
+> +				     "sli_queue_write failed: %d\n", rc);
+> +			io->xbusy = false;
+> +		}
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +/**
+> + * Send a raw frame
+> + *
+> + * Using the SEND_FRAME_WQE, a frame consisting of header and payload is sent.
+> + */
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+kerneldoc
+
+> +enum efct_hw_rtn
+> +efct_hw_send_frame(struct efct_hw *hw, struct fc_frame_header *hdr,
+> +		   u8 sof, u8 eof, struct efc_dma *payload,
+> +		   struct efct_hw_send_frame_context *ctx,
+> +		   void (*callback)(void *arg, u8 *cqe, int status),
+> +		   void *arg)
+> +{
+> +	int rc;
+> +	struct efct_hw_wqe *wqe;
+> +	u32 xri;
+> +	struct hw_wq *wq;
+> +
+> +	wqe = &ctx->wqe;
+> +
+> +	/* populate the callback object */
+> +	ctx->hw = hw;
+> +
+> +	/* Fetch and populate request tag */
+> +	ctx->wqcb = efct_hw_reqtag_alloc(hw, callback, arg);
+> +	if (!ctx->wqcb) {
+> +		efc_log_err(hw->os, "can't allocate request tag\n");
+> +		return EFCT_HW_RTN_NO_RESOURCES;
+> +	}
+> +
+> +	wq = hw->hw_wq[0];
+> +
+> +	/* Set XRI and RX_ID in the header based on which WQ, and which
+> +	 * send_frame_io we are using
+> +	 */
+> +	xri = wq->send_frame_io->indicator;
+> +
+> +	/* Build the send frame WQE */
+> +	rc = sli_send_frame_wqe(&hw->sli, wqe->wqebuf,
+> +				hw->sli.wqe_size, sof, eof,
+> +				(u32 *)hdr, payload, payload->len,
+> +				EFCT_HW_SEND_FRAME_TIMEOUT, xri,
+> +				ctx->wqcb->instance_index);
+> +	if (rc) {
+> +		efc_log_err(hw->os, "sli_send_frame_wqe failed: %d\n",
+> +			     rc);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	/* Write to WQ */
+> +	rc = efct_hw_wq_write(wq, wqe);
+> +	if (rc) {
+> +		efc_log_err(hw->os, "efct_hw_wq_write failed: %d\n", rc);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
+> +
+> +	wq->use_count++;
+> +
+> +	return EFCT_HW_RTN_SUCCESS;
+> +}
+> +
+> +u32
+> +efct_hw_io_get_count(struct efct_hw *hw,
+> +		     enum efct_hw_io_count_type io_count_type)
+> +{
+> +	struct efct_hw_io *io = NULL;
+> +	u32 count = 0;
+> +	unsigned long flags = 0;
+> +
+> +	spin_lock_irqsave(&hw->io_lock, flags);
+> +
+> +	switch (io_count_type) {
+> +	case EFCT_HW_IO_INUSE_COUNT:
+> +		list_for_each_entry(io, &hw->io_inuse, list_entry) {
+> +			count = count + 1;
+> +		}
+> +		break;
+> +	case EFCT_HW_IO_FREE_COUNT:
+> +		list_for_each_entry(io, &hw->io_free, list_entry) {
+> +			count = count + 1;
+> +		}
+> +		break;
+> +	case EFCT_HW_IO_WAIT_FREE_COUNT:
+> +		list_for_each_entry(io, &hw->io_wait_free, list_entry) {
+> +			count = count + 1;
+> +		}
+> +		break;
+> +	case EFCT_HW_IO_N_TOTAL_IO_COUNT:
+> +		count = hw->config.n_io;
+> +		break;
+> +	}
+> +
+> +	spin_unlock_irqrestore(&hw->io_lock, flags);
+> +
+> +	return count;
+> +}
+> diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
+> index b427a4eda5a3..36a832f32616 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.h
+> +++ b/drivers/scsi/elx/efct/efct_hw.h
+> @@ -714,4 +714,23 @@ efct_hw_process(struct efct_hw *hw, u32 vector, u32 max_isr_time_msec);
+>  extern int
+>  efct_hw_queue_hash_find(struct efct_queue_hash *hash, u16 id);
+>  
+> +int efct_hw_wq_write(struct hw_wq *wq, struct efct_hw_wqe *wqe);
+> +enum efct_hw_rtn
+> +efct_hw_send_frame(struct efct_hw *hw, struct fc_frame_header *hdr,
+> +		   u8 sof, u8 eof, struct efc_dma *payload,
+> +		struct efct_hw_send_frame_context *ctx,
+> +		void (*callback)(void *arg, u8 *cqe, int status),
+> +		void *arg);
+> +typedef int(*efct_hw_srrs_cb_t)(struct efct_hw_io *io,
+> +				struct efc_remote_node *rnode, u32 length,
+> +				int status, u32 ext_status, void *arg);
+> +extern enum efct_hw_rtn
+> +efct_hw_srrs_send(struct efct_hw *hw, enum efct_hw_io_type type,
+> +		  struct efct_hw_io *io,
+> +		  struct efc_dma *send, u32 len,
+> +		  struct efc_dma *receive, struct efc_remote_node *rnode,
+> +		  union efct_hw_io_param_u *iparam,
+> +		  efct_hw_srrs_cb_t cb,
+> +		  void *arg);
+> +
+>  #endif /* __EFCT_H__ */
+> -- 
+> 2.16.4
+> 
+
+Thanks,
+Daniel
