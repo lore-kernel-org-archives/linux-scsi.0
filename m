@@ -6,37 +6,36 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA90DC2BA2B
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 07:24:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35590C2BA2B
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 07:32:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC840206D5
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 07:24:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 175FF2078B
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 07:32:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438733AbgDPHYf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Apr 2020 03:24:35 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55556 "EHLO mx2.suse.de"
+        id S2439268AbgDPHcw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Apr 2020 03:32:52 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58170 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2438711AbgDPHYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Apr 2020 03:24:32 -0400
+        id S2438944AbgDPHcs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Apr 2020 03:32:48 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 71F5EAD08;
-        Thu, 16 Apr 2020 07:24:28 +0000 (UTC)
-Subject: Re: [PATCH v3 18/31] elx: efct: RQ buffer, memory pool allocation and
- deallocation APIs
+        by mx2.suse.de (Postfix) with ESMTP id 069E4AD08;
+        Thu, 16 Apr 2020 07:32:45 +0000 (UTC)
+Subject: Re: [PATCH v3 19/31] elx: efct: Hardware IO and SGL initialization
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     dwagner@suse.de, maier@linux.ibm.com, bvanassche@acm.org,
         herbszt@gmx.de, natechancellor@gmail.com, rdunlap@infradead.org,
         Ram Vegesna <ram.vegesna@broadcom.com>
 References: <20200412033303.29574-1-jsmart2021@gmail.com>
- <20200412033303.29574-19-jsmart2021@gmail.com>
+ <20200412033303.29574-20-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <f9aa3ecc-5d59-e3ce-57d7-f7aceb460679@suse.de>
-Date:   Thu, 16 Apr 2020 09:24:26 +0200
+Message-ID: <f39bc2d6-bae6-bda7-a913-90a1a28cb17b@suse.de>
+Date:   Thu, 16 Apr 2020 09:32:44 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200412033303.29574-19-jsmart2021@gmail.com>
+In-Reply-To: <20200412033303.29574-20-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -49,388 +48,146 @@ On 4/12/20 5:32 AM, James Smart wrote:
 > This patch continues the efct driver population.
 > 
 > This patch adds driver definitions for:
-> RQ data buffer allocation and deallocate.
-> Memory pool allocation and deallocation APIs.
-> Mailbox command submission and completion routines.
+> Routines to create IO interfaces (wqs, etc), SGL initialization,
+> and configure hardware features.
 > 
 > Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > 
 > ---
 > v3:
->    efct_utils.c file is removed. Replaced efct_pool, efct_varray and
->    efct_array with other alternatives.
+>    Request tag pool(reqtag_pool) handling fuctions.
 > ---
->   drivers/scsi/elx/efct/efct_hw.c | 375 ++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/elx/efct/efct_hw.h |   7 +
->   2 files changed, 382 insertions(+)
+>   drivers/scsi/elx/efct/efct_hw.c | 657 ++++++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/elx/efct/efct_hw.h |  42 +++
+>   2 files changed, 699 insertions(+)
 > 
 > diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-> index 21fcaf7b3d2b..3e9906749da2 100644
+> index 3e9906749da2..892493a3a35e 100644
 > --- a/drivers/scsi/elx/efct/efct_hw.c
 > +++ b/drivers/scsi/elx/efct/efct_hw.c
-> @@ -1114,3 +1114,378 @@ efct_get_wwpn(struct efct_hw *hw)
->   	memcpy(p, sli->wwpn, sizeof(p));
->   	return get_unaligned_be64(p);
->   }
-> +
-> +/*
-> + * An efct_hw_rx_buffer_t array is allocated,
-> + * along with the required DMA mem
-> + */
-> +static struct efc_hw_rq_buffer *
-> +efct_hw_rx_buffer_alloc(struct efct_hw *hw, u32 rqindex, u32 count,
-> +			u32 size)
-> +{
-> +	struct efct *efct = hw->os;
-> +	struct efc_hw_rq_buffer *rq_buf = NULL;
-> +	struct efc_hw_rq_buffer *prq;
-> +	u32 i;
-> +
-> +	if (count != 0) {
-> +		rq_buf = kmalloc_array(count, sizeof(*rq_buf), GFP_ATOMIC);
-> +		if (!rq_buf)
-> +			return NULL;
-> +		memset(rq_buf, 0, sizeof(*rq_buf) * count);
-> +
-> +		for (i = 0, prq = rq_buf; i < count; i ++, prq++) {
-> +			prq->rqindex = rqindex;
-> +			prq->dma.size = size;
-> +			prq->dma.virt = dma_alloc_coherent(&efct->pcidev->dev,
-> +							   prq->dma.size,
-> +							   &prq->dma.phys,
-> +							   GFP_DMA);
-> +			if (!prq->dma.virt) {
-> +				efc_log_err(hw->os, "DMA allocation failed\n");
-> +				kfree(rq_buf);
-> +				rq_buf = NULL;
-> +				break;
-> +			}
-> +		}
-> +	}
-> +	return rq_buf;
-> +}
-> +
-> +static void
-> +efct_hw_rx_buffer_free(struct efct_hw *hw,
-> +		       struct efc_hw_rq_buffer *rq_buf,
-> +			u32 count)
-> +{
-> +	struct efct *efct = hw->os;
-> +	u32 i;
-> +	struct efc_hw_rq_buffer *prq;
-> +
-> +	if (rq_buf) {
-> +		for (i = 0, prq = rq_buf; i < count; i++, prq++) {
-> +			dma_free_coherent(&efct->pcidev->dev,
-> +					  prq->dma.size, prq->dma.virt,
-> +					  prq->dma.phys);
-> +			memset(&prq->dma, 0, sizeof(struct efc_dma));
-> +		}
-> +
-> +		kfree(rq_buf);
-> +	}
-> +}
-> +
+[ .. ]
 > +enum efct_hw_rtn
-> +efct_hw_rx_allocate(struct efct_hw *hw)
+> +efct_hw_io_abort(struct efct_hw *hw, struct efct_hw_io *io_to_abort,
+> +		 bool send_abts, void *cb, void *arg)
 > +{
-> +	struct efct *efct = hw->os;
-> +	u32 i;
-> +	int rc = EFCT_HW_RTN_SUCCESS;
-> +	u32 rqindex = 0;
-> +	struct hw_rq *rq;
-> +	u32 hdr_size = EFCT_HW_RQ_SIZE_HDR;
-> +	u32 payload_size = hw->config.rq_default_buffer_size;
-> +
-> +	rqindex = 0;
-> +
-> +	for (i = 0; i < hw->hw_rq_count; i++) {
-> +		rq = hw->hw_rq[i];
-> +
-> +		/* Allocate header buffers */
-> +		rq->hdr_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
-> +						      rq->entry_count,
-> +						      hdr_size);
-> +		if (!rq->hdr_buf) {
-> +			efc_log_err(efct,
-> +				     "efct_hw_rx_buffer_alloc hdr_buf failed\n");
-> +			rc = EFCT_HW_RTN_ERROR;
-> +			break;
-> +		}
-> +
-> +		efc_log_debug(hw->os,
-> +			       "rq[%2d] rq_id %02d header  %4d by %4d bytes\n",
-> +			      i, rq->hdr->id, rq->entry_count, hdr_size);
-> +
-> +		rqindex++;
-> +
-> +		/* Allocate payload buffers */
-> +		rq->payload_buf = efct_hw_rx_buffer_alloc(hw, rqindex,
-> +							  rq->entry_count,
-> +							  payload_size);
-> +		if (!rq->payload_buf) {
-> +			efc_log_err(efct,
-> +				     "efct_hw_rx_buffer_alloc fb_buf failed\n");
-> +			rc = EFCT_HW_RTN_ERROR;
-> +			break;
-> +		}
-> +		efc_log_debug(hw->os,
-> +			       "rq[%2d] rq_id %02d default %4d by %4d bytes\n",
-> +			      i, rq->data->id, rq->entry_count, payload_size);
-> +		rqindex++;
-> +	}
-> +
-> +	return rc ? EFCT_HW_RTN_ERROR : EFCT_HW_RTN_SUCCESS;
-> +}
-> +
-> +/* Post the RQ data buffers to the chip */
-> +enum efct_hw_rtn
-> +efct_hw_rx_post(struct efct_hw *hw)
-> +{
-> +	u32 i;
-> +	u32 idx;
-> +	u32 rq_idx;
-> +	int rc = 0;
-> +
-> +	if (!hw->seq_pool) {
-> +		u32 count = 0;
-> +
-> +		for (i = 0; i < hw->hw_rq_count; i++)
-> +			count += hw->hw_rq[i]->entry_count;
-> +
-> +		hw->seq_pool = kmalloc_array(count,
-> +				sizeof(struct efc_hw_sequence),	GFP_KERNEL);
-> +		if (!hw->seq_pool)
-> +			return EFCT_HW_RTN_NO_MEMORY;
-> +	}
-> +
-> +	/*
-> +	 * In RQ pair mode, we MUST post the header and payload buffer at the
-> +	 * same time.
-> +	 */
-> +	for (rq_idx = 0, idx = 0; rq_idx < hw->hw_rq_count; rq_idx++) {
-> +		struct hw_rq *rq = hw->hw_rq[rq_idx];
-> +
-> +		for (i = 0; i < rq->entry_count - 1; i++) {
-> +			struct efc_hw_sequence *seq;
-> +
-> +			seq = hw->seq_pool + idx * sizeof(*seq);
-> +			if (!seq) {
-> +				rc = -1;
-> +				break;
-> +			}
-> +			idx++;
-> +			seq->header = &rq->hdr_buf[i];
-> +			seq->payload = &rq->payload_buf[i];
-> +			rc = efct_hw_sequence_free(hw, seq);
-> +			if (rc)
-> +				break;
-> +		}
-> +		if (rc)
-> +			break;
-> +	}
-> +
-> +	if (rc && hw->seq_pool)
-> +		kfree(hw->seq_pool);
-> +
-> +	return rc;
-> +}
-> +
-> +void
-> +efct_hw_rx_free(struct efct_hw *hw)
-> +{
-> +	struct hw_rq *rq;
-> +	u32 i;
-> +
-> +	/* Free hw_rq buffers */
-> +	for (i = 0; i < hw->hw_rq_count; i++) {
-> +		rq = hw->hw_rq[i];
-> +		if (rq) {
-> +			efct_hw_rx_buffer_free(hw, rq->hdr_buf,
-> +					       rq->entry_count);
-> +			rq->hdr_buf = NULL;
-> +			efct_hw_rx_buffer_free(hw, rq->payload_buf,
-> +					       rq->entry_count);
-> +			rq->payload_buf = NULL;
-> +		}
-> +	}
-> +}
-> +
-> +static int
-> +efct_hw_cmd_submit_pending(struct efct_hw *hw)
-> +{
-> +	struct efct_command_ctx *ctx = NULL;
-> +	int rc = 0;
-> +
-> +	/* Assumes lock held */
-> +
-
-So make it a regular lockdep annotation then.
-
-> +	/* Only submit MQE if there's room */
-> +	while (hw->cmd_head_count < (EFCT_HW_MQ_DEPTH - 1) &&
-> +	       !list_empty(&hw->cmd_pending))  > +		ctx = list_first_entry(&hw->cmd_pending,
-> +				       struct efct_command_ctx, list_entry);
-> +		if (!ctx)
-> +			break;
-> +
-
-Seeing that you always check for !ctx you might as well drop the 
-'!list_empty' condition from the while() statement.
-
-> +		list_del(&ctx->list_entry);
-> +
-
-And it might even be better to use 'list_for_each_entry_safe()' here
-
-> +		INIT_LIST_HEAD(&ctx->list_entry);
-> +		list_add_tail(&ctx->list_entry, &hw->cmd_head);
-> +		hw->cmd_head_count++;
-> +		if (sli_mq_write(&hw->sli, hw->mq, ctx->buf) < 0) {
-> +			efc_log_test(hw->os,
-> +				      "sli_queue_write failed: %d\n", rc);
-> +			rc = -1;
-> +			break;
-> +		}
-
-and break here for the 'cmd_head_count' condition.
-
-> +	}
-> +	return rc;
-> +}
-> +
-> +/*
-> + * Send a mailbox command to the hardware, and either wait for a completion
-> + * (EFCT_CMD_POLL) or get an optional asynchronous completion (EFCT_CMD_NOWAIT).
-> + */
-> +enum efct_hw_rtn
-> +efct_hw_command(struct efct_hw *hw, u8 *cmd, u32 opts, void *cb, void *arg)
-> +{
-> +	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
+> +	enum sli4_abort_type atype = SLI_ABORT_MAX;
+> +	u32 id = 0, mask = 0;
+> +	enum efct_hw_rtn rc = EFCT_HW_RTN_SUCCESS;
+> +	struct hw_wq_callback *wqcb;
 > +	unsigned long flags = 0;
-> +	void *bmbx = NULL;
 > +
-> +	/*
-> +	 * If the chip is in an error state (UE'd) then reject this mailbox
-> +	 *  command.
-> +	 */
-> +	if (sli_fw_error_status(&hw->sli) > 0) {
-> +		efc_log_crit(hw->os,
-> +			      "Chip is in an error state - reset needed\n");
-> +		efc_log_crit(hw->os,
-> +			      "status=%#x error1=%#x error2=%#x\n",
-> +			sli_reg_read_status(&hw->sli),
-> +			sli_reg_read_err1(&hw->sli),
-> +			sli_reg_read_err2(&hw->sli));
-> +
+> +	if (!io_to_abort) {
+> +		efc_log_err(hw->os,
+> +			     "bad parameter hw=%p io=%p\n",
+> +			    hw, io_to_abort);
 > +		return EFCT_HW_RTN_ERROR;
 > +	}
 > +
-> +	if (opts == EFCT_CMD_POLL) {
-> +		spin_lock_irqsave(&hw->cmd_lock, flags);
-> +		bmbx = hw->sli.bmbx.virt;
+> +	if (hw->state != EFCT_HW_STATE_ACTIVE) {
+> +		efc_log_err(hw->os, "cannot send IO abort, HW state=%d\n",
+> +			     hw->state);
+> +		return EFCT_HW_RTN_ERROR;
+> +	}
 > +
-> +		memset(bmbx, 0, SLI4_BMBX_SIZE);
-> +		memcpy(bmbx, cmd, SLI4_BMBX_SIZE);
+> +	/* take a reference on IO being aborted */
+> +	if (kref_get_unless_zero(&io_to_abort->ref) == 0) {
+> +		/* command no longer active */
+> +		efc_log_test(hw->os,
+> +			      "io not active xri=0x%x tag=0x%x\n",
+> +			     io_to_abort->indicator, io_to_abort->reqtag);
+> +		return EFCT_HW_RTN_IO_NOT_ACTIVE;
+> +	}
 > +
-> +		if (sli_bmbx_command(&hw->sli) == 0) {
-> +			rc = EFCT_HW_RTN_SUCCESS;
-> +			memcpy(cmd, bmbx, SLI4_BMBX_SIZE);
+> +	/* Must have a valid WQ reference */
+> +	if (!io_to_abort->wq) {
+> +		efc_log_test(hw->os, "io_to_abort xri=0x%x not active on WQ\n",
+> +			      io_to_abort->indicator);
+> +		/* efct_ref_get(): same function */
+> +		kref_put(&io_to_abort->ref, io_to_abort->release);
+> +		return EFCT_HW_RTN_IO_NOT_ACTIVE;
+> +	}
+> +
+> +	/*
+> +	 * Validation checks complete; now check to see if already being
+> +	 * aborted
+> +	 */
+> +	spin_lock_irqsave(&hw->io_abort_lock, flags);
+> +	if (io_to_abort->abort_in_progress) {
+> +		spin_unlock_irqrestore(&hw->io_abort_lock, flags);
+> +		/* efct_ref_get(): same function */
+> +		kref_put(&io_to_abort->ref, io_to_abort->release);
+> +		efc_log_debug(hw->os,
+> +			       "io already being aborted xri=0x%x tag=0x%x\n",
+> +			      io_to_abort->indicator, io_to_abort->reqtag);
+> +		return EFCT_HW_RTN_IO_ABORT_IN_PROGRESS;
+> +	}
+> +
+> +	/*
+> +	 * This IO is not already being aborted. Set flag so we won't try to
+> +	 * abort it again. After all, we only have one abort_done callback.
+> +	 */
+> +	io_to_abort->abort_in_progress = true;
+> +	spin_unlock_irqrestore(&hw->io_abort_lock, flags);
+> +
+> +	/*
+> +	 * If we got here, the possibilities are:
+> +	 * - host owned xri
+> +	 *	- io_to_abort->wq_index != U32_MAX
+> +	 *		- submit ABORT_WQE to same WQ
+> +	 * - port owned xri:
+> +	 *	- rxri: io_to_abort->wq_index == U32_MAX
+> +	 *		- submit ABORT_WQE to any WQ
+> +	 *	- non-rxri
+> +	 *		- io_to_abort->index != U32_MAX
+> +	 *			- submit ABORT_WQE to same WQ
+> +	 *		- io_to_abort->index == U32_MAX
+> +	 *			- submit ABORT_WQE to any WQ
+> +	 */
+> +	io_to_abort->abort_done = cb;
+> +	io_to_abort->abort_arg  = arg;
+> +
+> +	atype = SLI_ABORT_XRI;
+> +	id = io_to_abort->indicator;
+> +
+> +	/* Allocate a request tag for the abort portion of this IO */
+> +	wqcb = efct_hw_reqtag_alloc(hw, efct_hw_wq_process_abort, io_to_abort);
+> +	if (!wqcb) {
+> +		efc_log_err(hw->os, "can't allocate request tag\n");
+> +		return EFCT_HW_RTN_NO_RESOURCES;
+> +	}
+> +	io_to_abort->abort_reqtag = wqcb->instance_index;
+> +
+> +	/*
+> +	 * If the wqe is on the pending list, then set this wqe to be
+> +	 * aborted when the IO's wqe is removed from the list.
+> +	 */
+> +	if (io_to_abort->wq) {
+> +		spin_lock_irqsave(&io_to_abort->wq->queue->lock, flags);
+> +		if (io_to_abort->wqe.list_entry.next) {
+> +			io_to_abort->wqe.abort_wqe_submit_needed = true;
+> +			io_to_abort->wqe.send_abts = send_abts;
+> +			io_to_abort->wqe.id = id;
+> +			io_to_abort->wqe.abort_reqtag =
+> +						 io_to_abort->abort_reqtag;
+> +			spin_unlock_irqrestore(&io_to_abort->wq->queue->lock,
+> +					       flags);
+> +			return EFC_SUCCESS;
 > +		}
-> +		spin_unlock_irqrestore(&hw->cmd_lock, flags);
-
-See? You even _have_ a preallocated mailbox.
-So you could use that to facilitate the loop topology detection I've 
-commented on in an earlier patch.
-
-> +	} else if (opts == EFCT_CMD_NOWAIT) {
-> +		struct efct_command_ctx	*ctx = NULL;
-> +
-> +		ctx = kmalloc(sizeof(*ctx), GFP_ATOMIC);
-> +		if (!ctx)
-> +			return EFCT_HW_RTN_NO_RESOURCES;
-> +
-> +		memset(ctx, 0, sizeof(struct efct_command_ctx));
-> +
-
-But now you go and spoil it all again.
-At the very least use a mempool here; not sure how frequent these calls 
-are, but we're talking to the hardware here, so I assume it'll happen 
-more than just once.
-
-> +		if (hw->state != EFCT_HW_STATE_ACTIVE) {
-> +			efc_log_err(hw->os,
-> +				     "Can't send command, HW state=%d\n",
-> +				    hw->state);
-> +			kfree(ctx);
-> +			return EFCT_HW_RTN_ERROR;
-> +		}
-> +
-> +		if (cb) {
-> +			ctx->cb = cb;
-> +			ctx->arg = arg;
-> +		}
-> +		ctx->buf = cmd;
-> +		ctx->ctx = hw;
-> +
-> +		spin_lock_irqsave(&hw->cmd_lock, flags);
-> +
-> +			/* Add to pending list */
-> +			INIT_LIST_HEAD(&ctx->list_entry);
-> +			list_add_tail(&ctx->list_entry, &hw->cmd_pending);
-> +
-> +			/* Submit as much of the pending list as we can */
-> +			if (efct_hw_cmd_submit_pending(hw) == 0)
-> +				rc = EFCT_HW_RTN_SUCCESS;
-> +
-
-Indentation?
-
-> +		spin_unlock_irqrestore(&hw->cmd_lock, flags);
+> +		spin_unlock_irqrestore(&io_to_abort->wq->queue->lock, flags);
 > +	}
 > +
-> +	return rc;
-> +}
-> +
-> +static int
-> +efct_hw_command_process(struct efct_hw *hw, int status, u8 *mqe,
-> +			size_t size)
-> +{
-> +	struct efct_command_ctx *ctx = NULL;
-> +	unsigned long flags = 0;
-> +
-> +	spin_lock_irqsave(&hw->cmd_lock, flags);
-> +	if (!list_empty(&hw->cmd_head)) {
-> +		ctx = list_first_entry(&hw->cmd_head,
-> +				       struct efct_command_ctx, list_entry);
-> +		list_del(&ctx->list_entry);
-> +	}
-> +	if (!ctx) {
-> +		efc_log_err(hw->os, "no command context?!?\n");
-> +		spin_unlock_irqrestore(&hw->cmd_lock, flags);
-> +		return EFC_FAIL;
-> +	}
-> +
-> +	hw->cmd_head_count--;
-> +
-> +	/* Post any pending requests */
-> +	efct_hw_cmd_submit_pending(hw);
-> +
-> +	spin_unlock_irqrestore(&hw->cmd_lock, flags);
-> +
-> +	if (ctx->cb) {
-> +		if (ctx->buf)
-> +			memcpy(ctx->buf, mqe, size);
-> +
-> +		ctx->cb(hw, status, ctx->buf, ctx->arg);
-> +	}
-> +
-> +	memset(ctx, 0, sizeof(struct efct_command_ctx));
-> +	kfree(ctx);
-> +
-memset() before kfree() is pointless.
-Use KASAN et al if you suspect memory issues.
+> +	if (sli_abort_wqe(&hw->sli, io_to_abort->wqe.wqebuf,
+> +			  hw->sli.wqe_size, atype, send_abts, id, mask,
+> +			  io_to_abort->abort_reqtag, SLI4_CQ_DEFAULT)) {
+
+Wouldn't it be better if we were to pass the 'wqe' directly here?
+That would cut down on the number of arguments required, and make the 
+function more readable.
+Not to mention that we'll be more efficient if we manage to cut down the 
+number of arguments to '4' or even less, as then we wouldn't need to 
+pass arguments on the stack.
+
 
 Cheers,
 
