@@ -2,111 +2,244 @@ Return-Path: <SRS0=iRB6=6A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 255B4C352BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 09:41:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BAE0C2BB85
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 09:45:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F419421BE5
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 09:41:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cogentembedded-com.20150623.gappssmtp.com header.i=@cogentembedded-com.20150623.gappssmtp.com header.b="LkCIZDut"
+	by mail.kernel.org (Postfix) with ESMTP id 6F8E421D79
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Apr 2020 09:45:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503955AbgDPJlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Apr 2020 05:41:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48588 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2503879AbgDPJla (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Apr 2020 05:41:30 -0400
-Received: from mail-lj1-x242.google.com (mail-lj1-x242.google.com [IPv6:2a00:1450:4864:20::242])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D06C5C061A0C
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2020 02:41:29 -0700 (PDT)
-Received: by mail-lj1-x242.google.com with SMTP id q22so7140556ljg.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2020 02:41:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cogentembedded-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=urM8neQX7XsUTgvN1mrENHwP+WlS7ZzAFP+q6PzZXxo=;
-        b=LkCIZDutBrmDDKbUVTx2RtnA6XlHaVRydug3tKtMGC/HBlSKGXhT3gxXsv1XDdqIgN
-         1Af0eq2RPSv2eZUjuHTRB0Vqus6MdxswJ+cBWh4Ud4MrHWa5Hj88CmEJ9XIAJNBxg/Ag
-         l9fgrjpEhR4V/Hf40go+zO6kaklUdxIxSDCAZyHFM/XtyJd/ptPj7r1INASbv4P1Sshr
-         uJMqDkCZAKFQcrcfxPFEFvWOmsM0VjLEdJH44oUkx6pUG46neTnQ0xzusRPeh0k7oXMr
-         awyTJr9EiWUeV1oA010X5B+z8ErNQD2JSVPfLH6Fmz9q1ot0B9Wa3J+0z97UZf+2Zvys
-         YC4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=urM8neQX7XsUTgvN1mrENHwP+WlS7ZzAFP+q6PzZXxo=;
-        b=EwVhKuMVkXNgQDhd0hwJDXMt3J3xD59e11QMhQj7MmBpp17fg1qSlsCiWOrCiWmPQ/
-         e8egzUG708a6DXazK7QVZzn+f5sndbQHmpFkzBSKNZDsX1G/X9tAawb20wcPWAT8P1OZ
-         /V9WYcPfRQhXvfobXXL/4Sfymh8ERnaGohwWz4Y+0aQSLQFDVQblZ8WavA6P9jarVcKZ
-         6aU+qwkNsVpOJREx35pKC/NR0CDtLuGZISpufq81IMjtY8pQPivB6gvN4QNHaRL0VWgR
-         fPbcu66gU3NYCATPiHeZX1mCbCxJfsXQaQLMkEL1ed8GrZI1zoaHZeBXPD2KCW7s68i+
-         KNMw==
-X-Gm-Message-State: AGi0PuZdFq5CNHy+UHgA5yFh8wdV5SoUtuD+0Mr9ufPvkzVuf0qTeRGb
-        OnF6Il4O4W2s8IVvoTGly24F5ZImK+dSgw==
-X-Google-Smtp-Source: APiQypKCWCQ7+XVN1MizcqzPTxJU9XTQdBUO0O1evVS+6FDwdvxHe2dONv4OvKW2qsggO3FwfQs3Cg==
-X-Received: by 2002:a2e:8884:: with SMTP id k4mr6006110lji.267.1587030088374;
-        Thu, 16 Apr 2020 02:41:28 -0700 (PDT)
-Received: from ?IPv6:2a00:1fa0:4832:17d6:f588:52ab:5d6a:f5f3? ([2a00:1fa0:4832:17d6:f588:52ab:5d6a:f5f3])
-        by smtp.gmail.com with ESMTPSA id b28sm14789625lfo.46.2020.04.16.02.41.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Apr 2020 02:41:27 -0700 (PDT)
-Subject: Re: [PATCH v4 9/9] qedf: Get dev info after updating the params.
-To:     Saurav Kashyap <skashyap@marvell.com>, martin.petersen@oracle.com
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        jhasan@marvell.com, netdev@vger.kernel.org
-References: <20200416084314.18851-1-skashyap@marvell.com>
- <20200416084314.18851-10-skashyap@marvell.com>
-From:   Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <76d84546-1587-41dd-647a-0fbbc581a086@cogentembedded.com>
-Date:   Thu, 16 Apr 2020 12:41:16 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S2441114AbgDPJph (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Apr 2020 05:45:37 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41182 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2503878AbgDPJpf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Apr 2020 05:45:35 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id CD914AD49;
+        Thu, 16 Apr 2020 09:45:32 +0000 (UTC)
+Subject: Re: [PATCH v3 27/31] elx: efct: xport and hardware teardown routines
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
+Cc:     dwagner@suse.de, maier@linux.ibm.com, bvanassche@acm.org,
+        herbszt@gmx.de, natechancellor@gmail.com, rdunlap@infradead.org,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+References: <20200412033303.29574-1-jsmart2021@gmail.com>
+ <20200412033303.29574-28-jsmart2021@gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <ed6af3fe-7848-7e3b-466d-3b59cef55829@suse.de>
+Date:   Thu, 16 Apr 2020 11:45:30 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200416084314.18851-10-skashyap@marvell.com>
+In-Reply-To: <20200412033303.29574-28-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello!
-
-On 16.04.2020 11:43, Saurav Kashyap wrote:
-
-> An update to pf params can change the devinfo, get
-> an updated device information.
+On 4/12/20 5:32 AM, James Smart wrote:
+> This patch continues the efct driver population.
 > 
-> Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+> This patch adds driver definitions for:
+> Routines to detach xport and hardware objects.
+> 
+> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> 
 > ---
->   drivers/scsi/qedf/qedf_main.c | 7 +++++++
->   1 file changed, 7 insertions(+)
+> v3:
+>     Removed old patch 28 and merged with 27
+> ---
+>   drivers/scsi/elx/efct/efct_hw.c    | 333 +++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/elx/efct/efct_hw.h    |  31 ++++
+>   drivers/scsi/elx/efct/efct_xport.c | 291 ++++++++++++++++++++++++++++++++
+>   3 files changed, 655 insertions(+)
 > 
-> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-> index 52673b4..dc5ac55 100644
-> --- a/drivers/scsi/qedf/qedf_main.c
-> +++ b/drivers/scsi/qedf/qedf_main.c
-> @@ -3332,6 +3332,13 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
->   	}
->   	qed_ops->common->update_pf_params(qedf->cdev, &qedf->pf_params);
+> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+> index ca2fd237c7d6..a007ca98895d 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.c
+> +++ b/drivers/scsi/elx/efct/efct_hw.c
+> @@ -3503,3 +3503,336 @@ efct_hw_get_host_stats(struct efct_hw *hw, u8 cc,
 >   
-> +	/* Learn information crucial for qedf to progress */
-> +	rc = qed_ops->fill_dev_info(qedf->cdev, &qedf->dev_info);
-> +	if (rc) {
-> +		QEDF_ERR(&qedf->dbg_ctx, "Failed to dev info.\n");
+>   	return rc;
+>   }
+> +
+> +static int
+> +efct_hw_cb_port_control(struct efct_hw *hw, int status, u8 *mqe,
+> +			void  *arg)
+> +{
+> +	kfree(mqe);
+> +	return EFC_SUCCESS;
+> +}
+> +
+> +/* Control a port (initialize, shutdown, or set link configuration) */
+> +enum efct_hw_rtn
+> +efct_hw_port_control(struct efct_hw *hw, enum efct_hw_port ctrl,
+> +		     uintptr_t value,
+> +		void (*cb)(int status, uintptr_t value, void *arg),
+> +		void *arg)
+> +{
+> +	enum efct_hw_rtn rc = EFCT_HW_RTN_ERROR;
+> +
+> +	switch (ctrl) {
+> +	case EFCT_HW_PORT_INIT:
+> +	{
+> +		u8	*init_link;
+> +		u32 speed = 0;
+> +		u8 reset_alpa = 0;
+> +
+> +		u8	*cfg_link;
+> +
+> +		cfg_link = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+> +		if (!cfg_link)
+> +			return EFCT_HW_RTN_NO_MEMORY;
+> +
 
-    "to fill dev info", perhaps?
+Use the predefined mailbox buffer?
+Or a memory pool?
 
-[...]
+> +		if (!sli_cmd_config_link(&hw->sli, cfg_link,
+> +					SLI4_BMBX_SIZE))
+> +			rc = efct_hw_command(hw, cfg_link,
+> +					     EFCT_CMD_NOWAIT,
+> +					     efct_hw_cb_port_control,
+> +					     NULL);
+> +
+> +		if (rc != EFCT_HW_RTN_SUCCESS) {
+> +			kfree(cfg_link);
+> +			efc_log_err(hw->os, "CONFIG_LINK failed\n");
+> +			break;
+> +		}
+> +		speed = hw->config.speed;
+> +		reset_alpa = (u8)(value & 0xff);
+> +
+> +		/* Allocate a new buffer for the init_link command */
+> +		init_link = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+> +		if (!init_link)
+> +			return EFCT_HW_RTN_NO_MEMORY;
+> +
+> +		rc = EFCT_HW_RTN_ERROR;
+> +		if (!sli_cmd_init_link(&hw->sli, init_link, SLI4_BMBX_SIZE,
+> +				      speed, reset_alpa))
+> +			rc = efct_hw_command(hw, init_link, EFCT_CMD_NOWAIT,
+> +					     efct_hw_cb_port_control, NULL);
+> +		/* Free buffer on error, since no callback is coming */
+> +		if (rc != EFCT_HW_RTN_SUCCESS) {
+> +			kfree(init_link);
+> +			efc_log_err(hw->os, "INIT_LINK failed\n");
+> +		}
+> +		break;
+> +	}
+> +	case EFCT_HW_PORT_SHUTDOWN:
+> +	{
+> +		u8	*down_link;
+> +
+> +		down_link = kmalloc(SLI4_BMBX_SIZE, GFP_ATOMIC);
+> +		if (!down_link)
+> +			return EFCT_HW_RTN_NO_MEMORY;
+> +
 
-MBR, Sergei
+Same here.
+
+> +		if (!sli_cmd_down_link(&hw->sli, down_link, SLI4_BMBX_SIZE))
+> +			rc = efct_hw_command(hw, down_link, EFCT_CMD_NOWAIT,
+> +					     efct_hw_cb_port_control, NULL);
+> +		/* Free buffer on error, since no callback is coming */
+> +		if (rc != EFCT_HW_RTN_SUCCESS) {
+> +			kfree(down_link);
+> +			efc_log_err(hw->os, "DOWN_LINK failed\n");
+> +		}
+> +		break;
+> +	}
+> +	default:
+> +		efc_log_test(hw->os, "unhandled control %#x\n", ctrl);
+> +		break;
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +enum efct_hw_rtn
+> +efct_hw_teardown(struct efct_hw *hw)
+> +{
+> +	u32	i = 0;
+> +	u32	iters = 10;
+> +	u32	max_rpi;
+> +	u32 destroy_queues;
+> +	u32 free_memory;
+> +	struct efc_dma *dma;
+> +	struct efct *efct = hw->os;
+> +
+> +	destroy_queues = (hw->state == EFCT_HW_STATE_ACTIVE);
+> +	free_memory = (hw->state != EFCT_HW_STATE_UNINITIALIZED);
+> +
+> +	/* Cancel Sliport Healthcheck */
+> +	if (hw->sliport_healthcheck) {
+> +		hw->sliport_healthcheck = 0;
+> +		efct_hw_config_sli_port_health_check(hw, 0, 0);
+> +	}
+> +
+> +	if (hw->state != EFCT_HW_STATE_QUEUES_ALLOCATED) {
+> +		hw->state = EFCT_HW_STATE_TEARDOWN_IN_PROGRESS;
+> +
+> +		efct_hw_flush(hw);
+> +
+> +		/*
+> +		 * If there are outstanding commands, wait for them to complete
+> +		 */
+> +		while (!list_empty(&hw->cmd_head) && iters) {
+> +			mdelay(10);
+> +			efct_hw_flush(hw);
+> +			iters--;
+> +		}
+> +
+> +		if (list_empty(&hw->cmd_head))
+> +			efc_log_debug(hw->os,
+> +				       "All commands completed on MQ queue\n");
+> +		else
+> +			efc_log_debug(hw->os,
+> +				       "Some cmds still pending on MQ queue\n");
+> +
+> +		/* Cancel any remaining commands */
+> +		efct_hw_command_cancel(hw);
+> +	} else {
+> +		hw->state = EFCT_HW_STATE_TEARDOWN_IN_PROGRESS;
+> +	}
+> +
+> +	max_rpi = hw->sli.qinfo.max_qcount[SLI_RSRC_RPI];
+> +	if (hw->rpi_ref) {
+> +		for (i = 0; i < max_rpi; i++) {
+> +			u32 count;
+> +
+> +			count = atomic_read(&hw->rpi_ref[i].rpi_count);
+> +			if (count)
+> +				efc_log_debug(hw->os,
+> +					       "non-zero ref [%d]=%d\n",
+> +					       i, count);
+
+Ho-hum. So you have a non-zero refcount and _still_ free the structure?
+That smells fishy ...
+
+> +		}
+> +		kfree(hw->rpi_ref);
+> +		hw->rpi_ref = NULL;
+> +	}
+> +
+
+Please use proper refcounting here.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
