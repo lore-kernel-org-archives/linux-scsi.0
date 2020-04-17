@@ -2,56 +2,56 @@ Return-Path: <SRS0=7BVi=6B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7347C38A2F
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 12:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 808ADC38A29
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 12:16:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9852820644
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 12:16:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6093620644
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 12:16:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="D3VezgGN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="k1rJxI3X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728606AbgDQMQH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Apr 2020 08:16:07 -0400
+        id S1728524AbgDQMQC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Apr 2020 08:16:02 -0400
 Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50643 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728498AbgDQMQF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 08:16:05 -0400
+        with ESMTP id S1728307AbgDQMP7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 08:15:59 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587125766; x=1618661766;
+  t=1587125761; x=1618661761;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=wu0Wqu+uMy68Ptkn8zi6Jwl5CpiQBAeDUJahmaTNaQQ=;
-  b=D3VezgGN0I2BroMEOG8FJZSmi0f/8wQaTPZXGl2V6zOxiZ+dGLjRoVy6
-   ahmTC6zcLnfI7O1+H8OlhiZDwsmBc/D71lYH4X5AwuLyOG+zOptv9zaBE
-   yiLl2TRnoM9JJaWNerDherkvirjzV9W131DJ5+Ybl79ZEdnWzV133MiwS
-   0tPx2Oz+0OvvlmYVWGeH6VwuFAO4CB0WREtRxGrG2YgvakO7YY2OitAo8
-   9AZBZPVvfTD1JsM5i6VS61ZZLggDuV9zRnUXXr2nflK/S5c0c2LODYaP8
-   md1082xMJf+zqbrf46XJb/PbajgKFHn6ymT5Gl3tt9nsLNZBG20x+vdls
-   A==;
-IronPort-SDR: 5BH0guw+k6zsRlaHYa306+C6M/f8TdGyvcvwQfP0kAeBYqUtnyXbmcvFfrO6MRfd0jZyc+0gxD
- xh7LTJCrnQ9LJlfPj92/T4mvu+nkSLm8HLt4Np+De8cvV1TNtSfaPxWgSeOzaWINwEi2YjAOMh
- pcYImtEKLiXCKhEZE84W+flN33YFQByTjZvr1cyL3x84u70g69SaoAcD9iBxfdDZu08cFCyfUO
- fzqyxHbp/gqzSeA7GDqWJozZJIfJgeQ3mAFav1EL84VszeV3wSuBRI4XOUeuTypHA+t1lV9lMz
- SxA=
+  bh=af+TpmrNaP6opwMEPh6jKrw6Bxfh1IsevFX/PW8xfPo=;
+  b=k1rJxI3XnEdr/6iX0iiw7HW1lT1xop1JToB4jfJPrZKsZL6084iOGPQp
+   bX6UlUu5mlCTrcptejcVkdonNd1PM/IjFB2S6NLH7NNaDG3sN9Zf9FsI0
+   4cTvdS8X+9tWv4++3xSAucxQgszpQfraJJGdCWhc2aPOOSlpQwz3lN/HS
+   T1ygK3jOEhD2hlhrgkO86ataVT7Z67aKRxQMbGsTIj9C7/YA/QuETLiTs
+   Bj6RZSDh8wjNguBeRYiZmdRO2j7pNXsko32MIrcPk4xZF4EFu3HZj5zpL
+   wJdJjdN+Qu/+IprIBqdquBI21CHmof7DH6fixITRVzTVTBWziUdpHp9OK
+   w==;
+IronPort-SDR: 2NxYaZNOOMxf+C1aWYvlE7cMmPwDxW9D91TsOYnQ3lbppxnxbZCTn3aeHrd9z9vQYZ9zZpRWLB
+ kUhx2P++lEzk7YDCLLSHyfB9IdCHDfHDnjgHCxDVLf65IfbceDUDbTFYDvupvr68Zpa9Lg93fx
+ 2R/M6MBSpgLIxhjMz+X2Jv7/591Hwy/1LFHzvOwj4wX5TuLQPuxeUNNhB+h/ggmQY8zhdCW8LK
+ EFo5DIRd84EIMrKTWYszUVGQb/T15BMJkpGFu98BjHaSOC6auZt7J9rxT2SLkQeon2ZRJQdgkT
+ fJ0=
 X-IronPort-AV: E=Sophos;i="5.72,394,1580745600"; 
-   d="scan'208";a="237989230"
+   d="scan'208";a="237989218"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Apr 2020 20:16:06 +0800
-IronPort-SDR: vu+A0NBNbckmURYsv86L1YvQ9FNYQkUV/2hScAgYeWSEE6VE2MZUzD18DnEIxD4MwHqL30Zb+x
- 6FUiwA2PqJ5RE12sgHpPJf4kystidZAiY=
+  by ob1.hgst.iphmx.com with ESMTP; 17 Apr 2020 20:16:01 +0800
+IronPort-SDR: KsXl1vBG+6ZBip9e3uAPneaPVddJ0Jx1jxSmQ5t4ouCv/lZuyW8ZcOdjPjyBTkiUZ96WhoYSLw
+ VK8s7nfBLv90FX8wW7uwu+ON8L8lAoEwQ=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2020 05:07:03 -0700
-IronPort-SDR: mDs4uGOoMXkJQVh/tpaLkYkTxzbG6jdIAJMpKKxIoZcS71rHDAg34MmcG7sTdZZhhnT3EDiU5W
- uCyKuejXQ0pA==
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2020 05:06:57 -0700
+IronPort-SDR: tSViJ805KU4pd2c4z3dOxyqqjih10k5hKp/Krbbs/A3O3yBitmqV/5GkKBdY3iQkcRuGGUBnRK
+ ifgealMRFGCw==
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip01.wdc.com with ESMTP; 17 Apr 2020 05:16:03 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 17 Apr 2020 05:15:57 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -62,10 +62,11 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
         Daniel Wagner <dwagner@suse.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v7 10/11] block: export bio_release_pages and bio_iov_iter_get_pages
-Date:   Fri, 17 Apr 2020 21:15:35 +0900
-Message-Id: <20200417121536.5393-11-johannes.thumshirn@wdc.com>
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v7 07/11] scsi: sd_zbc: factor out sanity checks for zoned commands
+Date:   Fri, 17 Apr 2020 21:15:32 +0900
+Message-Id: <20200417121536.5393-8-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
 References: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
@@ -76,34 +77,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Export bio_release_pages and bio_iov_iter_get_pages, so they can be used
-from modular code.
+Factor sanity checks for zoned commands from sd_zbc_setup_zone_mgmt_cmnd().
+
+This will help with the introduction of an emulated ZONE_APPEND command.
 
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bio.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/sd_zbc.c | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 97baadc6d964..baa37d936d67 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -942,6 +942,7 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
- 		put_page(bvec->bv_page);
- 	}
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index f45c22b09726..ee156fbf3780 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -209,6 +209,26 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
+ 	return ret;
  }
-+EXPORT_SYMBOL_GPL(bio_release_pages);
  
- static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
++static blk_status_t sd_zbc_cmnd_checks(struct scsi_cmnd *cmd)
++{
++	struct request *rq = cmd->request;
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	sector_t sector = blk_rq_pos(rq);
++
++	if (!sd_is_zoned(sdkp))
++		/* Not a zoned device */
++		return BLK_STS_IOERR;
++
++	if (sdkp->device->changed)
++		return BLK_STS_IOERR;
++
++	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
++		/* Unaligned request */
++		return BLK_STS_IOERR;
++
++	return BLK_STS_OK;
++}
++
+ /**
+  * sd_zbc_setup_zone_mgmt_cmnd - Prepare a zone ZBC_OUT command. The operations
+  *			can be RESET WRITE POINTER, OPEN, CLOSE or FINISH.
+@@ -223,20 +243,14 @@ blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
+ 					 unsigned char op, bool all)
  {
-@@ -1105,6 +1106,7 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 		bio_set_flag(bio, BIO_NO_PAGE_REF);
- 	return bio->bi_vcnt ? 0 : ret;
- }
-+EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
+ 	struct request *rq = cmd->request;
+-	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 	sector_t sector = blk_rq_pos(rq);
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
+ 	sector_t block = sectors_to_logical(sdkp->device, sector);
++	blk_status_t ret;
  
- static void submit_bio_wait_endio(struct bio *bio)
- {
+-	if (!sd_is_zoned(sdkp))
+-		/* Not a zoned device */
+-		return BLK_STS_IOERR;
+-
+-	if (sdkp->device->changed)
+-		return BLK_STS_IOERR;
+-
+-	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
+-		/* Unaligned request */
+-		return BLK_STS_IOERR;
++	ret = sd_zbc_cmnd_checks(cmd);
++	if (ret != BLK_STS_OK)
++		return ret;
+ 
+ 	cmd->cmd_len = 16;
+ 	memset(cmd->cmnd, 0, cmd->cmd_len);
 -- 
 2.24.1
 
