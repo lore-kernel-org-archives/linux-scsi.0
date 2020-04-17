@@ -2,150 +2,155 @@ Return-Path: <SRS0=7BVi=6B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B10C38A2B
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 17:48:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA30C3815B
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 17:51:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEDD422242
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 17:48:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E88A220780
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 17:51:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="MF8+ckPN";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ts1BlNwd"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UZ3unsIV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730063AbgDQRsY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Apr 2020 13:48:24 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:19423 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729736AbgDQRsX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 13:48:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587145702; x=1618681702;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=adV8Gpr8MHweAYhq9tiHEXkdyPEny8cb3eGRce2pzfw=;
-  b=MF8+ckPNL23/FmazpAz2Xah4UptofCUgw6URCNUROoYyS2Wu1wy4ahy3
-   COh6yghUTRDp5kY5zlQn7ww3GJTAvwcvsSyauAQizpc4DuwvGO9/4kLEb
-   nK69532No46LDcR3pnFKqm6o/Ql3js3MtBguoqBfeUE/zI7KWerlwhEe/
-   lpOEapB2KiIdhmuT8ud4hpNMfFNBw9vzkG0OQGxhp2SdsBMsGHPXY6PIA
-   RSw0AYJcTFORW7GDFCvMl+Vg/YgPNLDyudNTLdXoFzPEpGPMQOeoH7/ZW
-   EzE4paYVqRLU2y9VpY/mTjxU1DJxSdgPP35Ni6gz8f/aXWEJSmBjGWF4u
-   A==;
-IronPort-SDR: f1adXbzvecV6U5jHIWZZS5T1yk1nU3gNVVH5XcQLocgZPeBG9HwJTPy4FOrCV8fE7/IcZo4D0A
- 6b95FELRW25bgHWArws6ZzQO0tOAnoTFetVvEnn0iVgTCV9vB3d+NiqddEENQ9BvNI5bJcJq6L
- 42Zdql4zMnsavO0ltYjOEQ3WAUXVcWSadNSGUxNJUa3n+vbRUHKREBLJfYm5iKK+ovYJ4239yh
- Kn0nUTX+hOTUVW8eR7SAWfJJAb2iugMnSfHgGeegCWIa9Zo/RhVlPnb6s6x6ApStPE1mGAStxa
- aiM=
-X-IronPort-AV: E=Sophos;i="5.72,395,1580745600"; 
-   d="scan'208";a="244253074"
-Received: from mail-dm6nam11lp2172.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.172])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Apr 2020 01:48:21 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fb3S0Fg/7DhJG7SzKhLl4RF/aqtsqYv7iiB+8S5myRS4YZFD/k2nWBklUxH3FUjXmWrQcdUF7LmDjoKDzTM2tbWr4KdM/6TcaUsijUb1+FdJXazhX+Znu8tMCQ5vdmuSRU6grcseBPWTQZ45L1fLiCKBA0G08wjIp2R31EsQPAaJ7XkHUsMFstw6qTZ7pGOLFcBLk+sz4Nw7qx3zUUNkeAPZGcDq1PLMDyu0pvelKgr4fyM4sgS3fvPtSa2gpjJay1AS3eBTJiBpF3GOIl+FsbR2KLuaTlyJFGP0ngb7QmuA30dNGICvvHK/0oVlTIQ25G1+NKuKHfdvNAkSmaFAKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NI+8VuiSZQPh23FSjynwla8g8vjLDcUKZXNngAV3RgY=;
- b=I638cBDH27CBDXmOq0s02c0A2BcjGOyLpSf7eiAYsETfC3tUT+9rmf33a1pImnxdxzjq5WjJ/1q4b+bhwzLoIW7KyNjjbBI1Lc4/oFD+lhLru4cpxIddHXH6YunBOuS9IAeD4cscjtp924iG4L5IljGFrEPKpawLZqCTf3ND6DUzgNVl9u+BiUKedj09Sx1lmOKTYfVxjdWPsTMmA9w/Gzbqp952Y41SXOOKHIPn3rMvkbYxZQD8PrmSZMbB6p2AmG8FXvhmhba3qb15sMBIZzcc3qltV5AO86Hf/zSHWJVU4vAEx3wPaFD9A/Y0iQOIeMsHkCsPFSyVcd/zP9//Mw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NI+8VuiSZQPh23FSjynwla8g8vjLDcUKZXNngAV3RgY=;
- b=ts1BlNwd4te2xHQXSVTy1MTL45WlyPHspGKOamm0Fp3Uekox8yNjdXnuKitj96jNgcZZqnKKjW6lBB0HuVOKOxlSYumZmqSpKzHaNj/U/LNUJo4VVCmhd4Rcd5oOJxLtrRvLibWS9U24lNUlyFS7wVpogIKPLCmsswJyUIoB2+A=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3615.namprd04.prod.outlook.com
- (2603:10b6:803:47::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.27; Fri, 17 Apr
- 2020 17:48:20 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2921.027; Fri, 17 Apr 2020
- 17:48:20 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        "hch@infradead.org" <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Daniel Wagner <dwagner@suse.de>
-Subject: Re: [PATCH v7 00/11] Introduce Zone Append for writing to zoned block
- devices
-Thread-Topic: [PATCH v7 00/11] Introduce Zone Append for writing to zoned
- block devices
-Thread-Index: AQHWFLHx0jzddk9TS0yhYXDfmQ7NPQ==
-Date:   Fri, 17 Apr 2020 17:48:20 +0000
-Message-ID: <SN4PR0401MB3598F054B867C929827E23F49BD90@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
- <20200417160326.GK5187@mit.edu>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: cdf777e4-6a62-4e4f-aed6-08d7e2f7847f
-x-ms-traffictypediagnostic: SN4PR0401MB3615:
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN4PR0401MB36155C9879E21FF34998C8F99BD90@SN4PR0401MB3615.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-forefront-prvs: 0376ECF4DD
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(376002)(396003)(136003)(366004)(39860400002)(346002)(9686003)(5660300002)(186003)(4326008)(33656002)(8936002)(53546011)(66946007)(478600001)(2906002)(71200400001)(7696005)(81156014)(316002)(6506007)(76116006)(66476007)(26005)(91956017)(6916009)(66446008)(64756008)(55016002)(54906003)(86362001)(8676002)(66556008)(52536014);DIR:OUT;SFP:1102;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: /MyVk1Xr4TNOBmlrS2wgEN9T6ayoPVwJR4BgpwHEjrUkNlNZ+G2JkW5TpFApTnHvGoi0qQ9SpKEJtFSHiAMWWRZ6Txps0ZDpXak9ERID+WyluHEjf4kHm7JFREuaXVT6348IuGm1gaqn9DkHOdJbx6QUnFBexmA3oRiuxSagFLYorG64mfssrPHN3djBfgmcqbf/4sX9oL9mptAtZYAUIQEJi4ZcwOD6dvSQHX/x3/QgeVxvvcLhxCKJEI5mplOx5LiRTNBS9C9AtIQQTQaOyI7LiAomV2zDEZQWIl8tJVkohj8K2084+6KgReODZctaTwJxyXjUVaiYk5Wf02S759dhqzCJNjmhFDxFwghamBW96FRtotFmaZvYhOKipelGzc/uZ/ySNqPLtjCtx3H0YNNJiMMT0K7XzyOabaQpxDm00C9oFLre4JI1VjLJ+gN9
-x-ms-exchange-antispam-messagedata: KdQHw4/Q/YAq0F3dTXNG8WRqt+uC1XNDqgpdBW9XKPs/N18SPnCd0Qjfia8o05A9/+CuphPVDQ7BwNUkiplq5qRkVsmedeyoP1Hic7ryA9ubP/z04xkU9u6SBZFVeob4HoOPdj7iv62DtgSsp5zZWA==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1730178AbgDQRvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Apr 2020 13:51:42 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:64544 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729980AbgDQRvm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 13:51:42 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200417175138epoutp0385e1e590356a4775b6f2b18ad3641f18~GrMkW_ukV1631216312epoutp03K
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2020 17:51:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200417175138epoutp0385e1e590356a4775b6f2b18ad3641f18~GrMkW_ukV1631216312epoutp03K
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1587145898;
+        bh=5M0OCrAJ3y02bHrC5ozbdimkBCaWSGf/3thZkN8c9Lk=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=UZ3unsIVZCBTJOASRfkUcowPJpuDyqa6uMNwKWzdG4JU8kAAd4a6WcjGHA+07oioZ
+         NN8NEZaRsLk/gN1DBMLZYCj74Az7uLe/3/2udU+O6+o6hb40sraM9dGXgfbCepUzvw
+         oP0NEuK+Pahriautys2cnapFnM2hZfo01Qp31xHg=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20200417175137epcas5p10a40555709962fba229aae6b2fd9db07~GrMj2iz862056520565epcas5p1Z;
+        Fri, 17 Apr 2020 17:51:37 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        BF.3A.04736.9ACE99E5; Sat, 18 Apr 2020 02:51:37 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20200417175137epcas5p4820ca1b230480b0d5f780cdbc0972d15~GrMjK1C2X2922329223epcas5p4N;
+        Fri, 17 Apr 2020 17:51:37 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200417175137epsmtrp258288b66028d4eff60b1c16d083ebed7~GrMjKB-hn0836108361epsmtrp2E;
+        Fri, 17 Apr 2020 17:51:37 +0000 (GMT)
+X-AuditID: b6c32a4b-ae3ff70000001280-21-5e99eca912b1
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        21.70.04024.8ACE99E5; Sat, 18 Apr 2020 02:51:36 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200417175133epsmtip2df47cad995363cfd7906f70373bd2a42~GrMf0gnPq1190511905epsmtip2O;
+        Fri, 17 Apr 2020 17:51:33 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Christoph Hellwig'" <hch@infradead.org>
+Cc:     <robh@kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <linux-kernel@vger.kernel.org>,
+        <krzk@kernel.org>, <kwmad.kim@samsung.com>, <avri.altman@wdc.com>,
+        <cang@codeaurora.org>, "'Seungwon Jeon'" <essuuj@gmail.com>,
+        <stanley.chu@mediatek.com>, <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <20200413133926.GA29228@infradead.org>
+Subject: RE: [PATCH v5 4/5] scsi: ufs-exynos: add UFS host support for
+ Exynos SoCs
+Date:   Fri, 17 Apr 2020 23:21:31 +0530
+Message-ID: <018c01d614e0$d6f971f0$84ec55d0$@samsung.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cdf777e4-6a62-4e4f-aed6-08d7e2f7847f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Apr 2020 17:48:20.2422
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jr7mA1IK6sbWD/DTx3LPdNgiKVem/GFITTN5oYhH+xm5NNvdIDnDCesNjzRAqVlEDQa1n6OvL2+j4UBX5f2VSMgiOjXYns4/3c+hThoVuC0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3615
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHr+Y8xYXIsvNQeqORDaXjXFCUqCgIAvgGXAbEacNoBTCAGfwGKzB3uAp+278eoAf9z0A==
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUhTYRiGeXfO2Y6r2XFJPipYjQwUTEOD0wd9QNip/BEkRZLmaicTdY2d
+        tBlRYrWmm+sDCV3iV2uWBLq55rJsa2VqZQapaVk/StPKRC0EyzK3o+S/636f++Z+HnhJTPqZ
+        CCHTlSdYtVKeKROKccfjiMio2yOlKTGfbTH0l6luIT1RZyHoiicvCbrmlVlAP79cLaA7O+tF
+        dJ+9Badtn3oI+nVTmZAu6XwooPVvnEK6pvWvgJ554BTRN+/2oa3+zGtjkYC5Z3ovYhpuRTK2
+        2gIh02A+y5xvd+HM+OBbnDHaaxHzwxbGXHTrBXvESeJNCjYzPYdVR29OFR/TmtswlUWs6Wmr
+        RHnITRYiPxKoOGi1OvFCJCal1H0Eo7oSxIsJBJZrYwQvJhG0OIvRfKRr2jU3aEaQ33F9LjKC
+        4FLFOO51CakocN7QCr0cOMsdVcM+E0blYzBtKxV5B35ULMzkuXympVQiuPq7fIxT4aB1FPnq
+        JNR6qH9lFfEcAO2lA74CjFoOjd/LMH6lFTA1aCH4sn0w9MeOeE8QtEwZMG8xUA9F8PTct1lB
+        zortUNB2mM8uha+tdhHPIfBjtFnIWzLA0BTLP5+Gm+VPcZ63gLurDPdaMCoC6pqi+SZ/KPo9
+        IOCTEtBppbw7HM6Nds8lQ+GKXk/wzIBr+CN+Ga00LbjLtOAu04L9Tf/LKhFei4JZFZeVxnLr
+        VLFK9uQaTp7FZSvT1hw5nmVDvt8XuduJbC8TPIgikWyxRGcsTZES8hwuN8uDgMRkgZJH8bNP
+        EoU89xSrPn5InZ3Jch4USuKyIMlVovuglEqTn2AzWFbFquenAtIvJA+lbquJ0Jz5pXWP/exb
+        Vt+jUNiP7qSje8s69ir2J1zyrx56Z9++MSFZVz5tmJyyxsXrHGquuNw68DV7R7CxtcV95W9s
+        mCPkU8LeAhsV8KL5xhn9BSzzmaStarzxbe+qxNUHzBJLEnGxf1ehY9EH3QZDTIfGfmeif4fG
+        M3jk25LBZBnOHZOvjcTUnPwfI/0/xnkDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBIsWRmVeSWpSXmKPExsWy7bCSvO7KNzPjDLYoWLz8eZXN4tP6ZawW
+        84+cY7VYfmEJk8XpCYuYLM6f38BucXPLURaLTY+vsVpc3jWHzWLG+X1MFt3Xd7BZLD/+j8ni
+        /54d7BZLt95kdODzuNzXy+Sxc9Zddo/NK7Q8Nq3qZPPYvKTeo+XkfhaPj09vsXj0bVnF6PF5
+        k5xH+4FupgCuKC6blNSczLLUIn27BK6MtiUnmAuWcVVcO7GAsYHxAEcXIyeHhICJxJU/+1m7
+        GLk4hAR2M0p8a2pnhkhIS1zfOIEdwhaWWPnvOTtE0StGiY8nF4Ml2AR0JXYsbmMDsUWA7LML
+        XzCCFDELTGCWOHFvJgtIQkhgF5PE4mdlIDangLHE/4b9YA3CAkES/3segtksAqoSbdt6GUFs
+        XgFLiQ0XNrJD2IISJ2c+AZrDATRUT6JtI1gJs4C8xPa3c6AOVZD4+XQZK8QNYRLP/26BqhGX
+        OPqzh3kCo/AsJJNmIUyahWTSLCQdCxhZVjFKphYU56bnFhsWGOallusVJ+YWl+al6yXn525i
+        BMevluYOxstL4g8xCnAwKvHwGvTMjBNiTSwrrsw9xCjBwawkwnvQDSjEm5JYWZValB9fVJqT
+        WnyIUZqDRUmc92nesUghgfTEktTs1NSC1CKYLBMHp1QD4+pTsW/fRD4OucqypTHFwWRm95uJ
+        Sjl+E2pjSzxv7yn3+8j+tMj9WvCpU3tMCmd82hymUqIuOq9q1yuBAulz85TUtF4fktgspyt2
+        921N0p/Z13LvZHs7TIn+2CsR+mHS3I0Zh3nWJ2+d9ONenGdK0MPdAnUOH1q3+h0TutSyoaA1
+        ROb/1tR2ISWW4oxEQy3mouJEAHqeWkDbAgAA
+X-CMS-MailID: 20200417175137epcas5p4820ca1b230480b0d5f780cdbc0972d15
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200412074218epcas5p3ef7973c8a47533a15a359b069da8003c
+References: <20200412073159.37747-1-alim.akhtar@samsung.com>
+        <CGME20200412074218epcas5p3ef7973c8a47533a15a359b069da8003c@epcas5p3.samsung.com>
+        <20200412073159.37747-5-alim.akhtar@samsung.com>
+        <20200412080947.GA6524@infradead.org>
+        <000001d610e6$e8b11450$ba133cf0$@samsung.com>
+        <20200413133926.GA29228@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 17/04/2020 18:04, Theodore Y. Ts'o wrote:=0A=
-> What sort of reordering can take place due to I/O schedulers and or=0A=
-> racing write appends from different CPU's?  Is it purely the=0A=
-> userspace's responsibility to avoid racings writes to a particular=0A=
-> zone?=0A=
-=0A=
-For normal writes (i.e.: REQ_OP_WRITE) the zone will be locked by the =0A=
-I/O scheduler (namely mq-deadline as it's currently the one which does =0A=
-have support for zoned block devices). For REQ_OP_ZONE_APPEND we have a =0A=
-trylock scheme in the SCSI emulation of ZONE_APPEND, which is fine, as =0A=
-SCSI disks are single queue only.=0A=
-=0A=
-A scenario that can of cause happen is concurring REQ_OP_ZONE_APPEND =0A=
-writes from different CPUs to the same zone. This is fine *iff* the sum =0A=
-of all writes stays within the free space of the zone. If one if the =0A=
-writes will cross a zone boundary it'll get EIO, obviously.=0A=
-=0A=
-For "userspace's responsibility", I'd re-phrase this as "a consumer's =0A=
-responsibility", as we don't have an interface which aims at user-space =0A=
-yet. The only consumer this series implements is zonefs, although we did =
-=0A=
-have an AIO implementation for early testing and io_uring shouldn't be =0A=
-too hard to implement.=0A=
+Hi Christoph,
+Thanks for your feedback.
+
+> -----Original Message-----
+> From: 'Christoph Hellwig' <hch@infradead.org>
+> Sent: 13 April 2020 19:09
+> To: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: 'Christoph Hellwig' <hch@infradead.org>; robh@kernel.org;
+> devicetree@vger.kernel.org; linux-scsi@vger.kernel.org; linux-samsung-
+> soc@vger.kernel.org; martin.petersen@oracle.com; linux-
+> kernel@vger.kernel.org; krzk@kernel.org; kwmad.kim@samsung.com;
+> avri.altman@wdc.com; cang@codeaurora.org; 'Seungwon Jeon'
+> <essuuj@gmail.com>; stanley.chu@mediatek.com; linux-arm-
+> kernel@lists.infradead.org
+> Subject: Re: [PATCH v5 4/5] scsi: ufs-exynos: add UFS host support for
+Exynos
+> SoCs
+> 
+> On Sun, Apr 12, 2020 at 09:54:53PM +0530, Alim Akhtar wrote:
+> > > So this doesn't actually require the various removed or not added
+> > > quirks
+> > after
+> > > all?
+> > This driver is actual consumer of those quirks, so those are still
+needed.
+> > On Martin's 5.7/scsi-queue need to revert " 492001990f64 scsi: ufshcd:
+> > remove unused quirks"
+> 
+> No. You need to include one patch per quirk in your series to add them
+back.
+Sure, will send the updated version soon.
+
+> Please also follow all proper kernel style guidelines, as the old code
+didn't
+> always follow the proper style.
+
+
+
