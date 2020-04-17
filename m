@@ -2,56 +2,56 @@ Return-Path: <SRS0=7BVi=6B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 356AEC3A5A0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D92DC3A5A9
 	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 12:16:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0951120644
+	by mail.kernel.org (Postfix) with ESMTP id 5641321D94
 	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 12:16:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="aHG/oPob"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="FcY4zKbs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728281AbgDQMPz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Apr 2020 08:15:55 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50633 "EHLO
+        id S1728444AbgDQMQA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Apr 2020 08:16:00 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50643 "EHLO
         esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727877AbgDQMPv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 08:15:51 -0400
+        with ESMTP id S1727845AbgDQMP5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 08:15:57 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587125754; x=1618661754;
+  t=1587125759; x=1618661759;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ceyolFZjLog0R1cfXQxBGYFTm4zf9Qbi2FXx+cpH/5o=;
-  b=aHG/oPobWwj7mZpX2Jp+lc45w/F29H2q0J/RCedGTiJDKkdL59pmRHxE
-   NQ6JGZKMj/sU562pehTJTK/InhcDpFAodxG74uI5o84/hkynXLBA8IFK9
-   5Py1yYocK//QdeIim1HOSjBgHwH9NXhBr7BVG4zVUlXBn0ws2KNsKzup3
-   LAGDYrnQcAA4YL9++HVwFUTFpuZPJid/KoMX9HFwlJawt4ZJvCuXZnNSS
-   ZVrOvhVorDNXVZoNVO7wuWRX8xL/yYlv4rHxhorQ3VUOz96kyswvFQKv5
-   0Pnv1UdbBK+M6X0FoO0OhAkDQze94+doI5oxS17f+jjdxPIIWOZ9GYEMw
-   w==;
-IronPort-SDR: 8SE/wQ+SGag4IMolWorO+Xt+LJ2mal9rwvozkIUEVZI96KyiweFouAMr7Sr6tBw59sqUHJoxuz
- egJdlGNj54OwO8aW0FLkBZ8L2sOyjBXrPoat8ynWl6aq0aOID2jPWXmA3BX4El7nqKUykcIkbC
- yfxbIbcdHa8PlIrt4YXF5bMgFYBM7pXenXBcIz3iw2YEEj5/ufiyWKCk1gN/Gil5EjqIGAEeN3
- D8fRHfrGS5XfUH6LLoqytWaF4LwVGVSDvnPt+n/Hm5bB/Debg9FOZBQQNFQOGz0jQ5OtP2iJzh
- 4TU=
+  bh=wi1qv7z0Mg6tQsAx0kXU9eGu+szpv/+bHam7HZYDstw=;
+  b=FcY4zKbsuFmVRfZUfDLIPCPFVesIfbC0ihMrF8djVE2E3U+aWEzH1ptG
+   ySNISdDnba1/dlj60K2iGvRbH4KGufDTc1riIEN3cKBH9nT5693jeEa0E
+   Ut73cSXnkQPlmzwVQg6Cb8Sepr0T9+qdC3fd1cQYSHWF5DGLqcU08T9Y0
+   c6mST9hgXzNy6/zRKiPc3NJSvdyKGgwydokbHxkjEFyVObodTUCl6UJVG
+   n9r8DWwHS/3rJaI01L4Fy72kdnsK4KmEU15fHKVUK9N0SNiaMVEkQLdZt
+   ZvgaZV0cv2d3QzkNrfQpSybk5hYqbRKCRX1KlsCLnnGlnmPPrS0mNUjgy
+   A==;
+IronPort-SDR: OEYkZ3Mixop9Kl/UfunnbmjW0T5N6IsFoKBpE1y8bBLeSYjpepqSfzWsodU8loTlQqs51SlL1v
+ RepzYLEUKj9jLxrinGvMM3o+vlRc511hxAnlccojPZey/1nfmKs0JaxQZ0Rq2Y9zfh2dtCq0PA
+ v10uBBeZU6x91h3iNHg0IAYjS7pR/wrEnD7JfAJS011FTHx9L249aK8rW/efJ/jJXRkbfCGF2d
+ dMW3zJsilXoZWI3QyfaR2vz2G61b50pe+tuhRP1WydoCWZW3WgK0OuEKJntdU01uCUDWyTrM7x
+ 9XE=
 X-IronPort-AV: E=Sophos;i="5.72,394,1580745600"; 
-   d="scan'208";a="237989195"
+   d="scan'208";a="237989215"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Apr 2020 20:15:53 +0800
-IronPort-SDR: WxwblZyb4NlFLrUOv7fBCfmYSWqXCoR+6ukuaTElagah8sOIkBw0Z8rjcHTmv44bZfNKbx25Wj
- B/qi2jXA+dEOJE2FA4Nb0u3K9Veiq48co=
+  by ob1.hgst.iphmx.com with ESMTP; 17 Apr 2020 20:15:59 +0800
+IronPort-SDR: 5ocKAeeR/mSqEjHT5L6HdGrdEBubaDX77siPr6WRqeOgiCow9t2ik0v5oWAG+ZIVydGNwHajay
+ 4BRLIWAOLECswwasn2pxO0nGpKnNbOalA=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2020 05:06:50 -0700
-IronPort-SDR: 3tK8s3qpnLpBEcAo/uYZ8yEk/WXWF2+n3DPD+A8HLWM9lWuqR5Vq5GuhzOYwlJWcn28ds/Zr1v
- ZfufQRzb5yuA==
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Apr 2020 05:06:55 -0700
+IronPort-SDR: 9iiCa8u2QcickQQvQ4MFcxhGYorKDNNEVOgdFs2maaFi1LJFWgpo/baiZo16U9jPE/WyAJHnx0
+ eAZhJuKGJg8A==
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip01.wdc.com with ESMTP; 17 Apr 2020 05:15:50 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 17 Apr 2020 05:15:56 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -62,11 +62,11 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
         Daniel Wagner <dwagner@suse.de>,
-        Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH v7 03/11] block: rename __bio_add_pc_page to bio_add_hw_page
-Date:   Fri, 17 Apr 2020 21:15:28 +0900
-Message-Id: <20200417121536.5393-4-johannes.thumshirn@wdc.com>
+Subject: [PATCH v7 06/11] block: Modify revalidate zones
+Date:   Fri, 17 Apr 2020 21:15:31 +0900
+Message-Id: <20200417121536.5393-7-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
 References: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
@@ -77,161 +77,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-Rename __bio_add_pc_page() to bio_add_hw_page() and explicitly pass in a
-max_sectors argument.
+Modify the interface of blk_revalidate_disk_zones() to add an optional
+driver callback function that a driver can use to extend processing
+done during zone revalidation. The callback, if defined, is executed
+with the device request queue frozen, after all zones have been
+inspected.
 
-This max_sectors argument can be used to specify constraints from the
-hardware.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-[ jth: rebased and made public for blk-map.c ]
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
 ---
- block/bio.c     | 60 +++++++++++++++++++++++++++----------------------
- block/blk-map.c |  5 +++--
- block/blk.h     |  4 ++--
- 3 files changed, 38 insertions(+), 31 deletions(-)
+ block/blk-zoned.c              | 9 ++++++++-
+ drivers/block/null_blk_zoned.c | 2 +-
+ include/linux/blkdev.h         | 3 ++-
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 21cbaa6a1c20..0f0e337e46b4 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -748,9 +748,14 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 	return true;
- }
- 
--static bool bio_try_merge_pc_page(struct request_queue *q, struct bio *bio,
--		struct page *page, unsigned len, unsigned offset,
--		bool *same_page)
-+/*
-+ * Try to merge a page into a segment, while obeying the hardware segment
-+ * size limit.  This is not for normal read/write bios, but for passthrough
-+ * or Zone Append operations that we can't split.
-+ */
-+static bool bio_try_merge_hw_seg(struct request_queue *q, struct bio *bio,
-+				 struct page *page, unsigned len,
-+				 unsigned offset, bool *same_page)
- {
- 	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
- 	unsigned long mask = queue_segment_boundary(q);
-@@ -764,39 +769,24 @@ static bool bio_try_merge_pc_page(struct request_queue *q, struct bio *bio,
- 	return __bio_try_merge_page(bio, page, len, offset, same_page);
- }
- 
--/**
-- *	__bio_add_pc_page	- attempt to add page to passthrough bio
-- *	@q: the target queue
-- *	@bio: destination bio
-- *	@page: page to add
-- *	@len: vec entry length
-- *	@offset: vec entry offset
-- *	@same_page: return if the merge happen inside the same page
-- *
-- *	Attempt to add a page to the bio_vec maplist. This can fail for a
-- *	number of reasons, such as the bio being full or target block device
-- *	limitations. The target block device must allow bio's up to PAGE_SIZE,
-- *	so it is always possible to add a single page to an empty bio.
-- *
-- *	This should only be used by passthrough bios.
-+/*
-+ * Add a page to a bio while respecting the hardware max_sectors, max_segment
-+ * and gap limitations.
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index c822cfa7a102..23831fa8701d 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -471,14 +471,19 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ /**
+  * blk_revalidate_disk_zones - (re)allocate and initialize zone bitmaps
+  * @disk:	Target disk
++ * @update_driver_data:	Callback to update driver data on the frozen disk
+  *
+  * Helper function for low-level device drivers to (re) allocate and initialize
+  * a disk request queue zone bitmaps. This functions should normally be called
+  * within the disk ->revalidate method for blk-mq based drivers.  For BIO based
+  * drivers only q->nr_zones needs to be updated so that the sysfs exposed value
+  * is correct.
++ * If the @update_driver_data callback function is not NULL, the callback is
++ * executed with the device request queue frozen after all zones have been
++ * checked.
   */
--int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
-+int bio_add_hw_page(struct request_queue *q, struct bio *bio,
- 		struct page *page, unsigned int len, unsigned int offset,
--		bool *same_page)
-+		unsigned int max_sectors, bool *same_page)
+-int blk_revalidate_disk_zones(struct gendisk *disk)
++int blk_revalidate_disk_zones(struct gendisk *disk,
++			      void (*update_driver_data)(struct gendisk *disk))
  {
- 	struct bio_vec *bvec;
+ 	struct request_queue *q = disk->queue;
+ 	struct blk_revalidate_zone_args args = {
+@@ -512,6 +517,8 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 		q->nr_zones = args.nr_zones;
+ 		swap(q->seq_zones_wlock, args.seq_zones_wlock);
+ 		swap(q->conv_zones_bitmap, args.conv_zones_bitmap);
++		if (update_driver_data)
++			update_driver_data(disk);
+ 		ret = 0;
+ 	} else {
+ 		pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
+index 9e4bcdad1a80..46641df2e58e 100644
+--- a/drivers/block/null_blk_zoned.c
++++ b/drivers/block/null_blk_zoned.c
+@@ -73,7 +73,7 @@ int null_register_zoned_dev(struct nullb *nullb)
+ 	struct request_queue *q = nullb->q;
  
--	/*
--	 * cloned bio must not modify vec list
--	 */
--	if (unlikely(bio_flagged(bio, BIO_CLONED)))
-+	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
- 		return 0;
+ 	if (queue_is_mq(q))
+-		return blk_revalidate_disk_zones(nullb->disk);
++		return blk_revalidate_disk_zones(nullb->disk, NULL);
  
--	if (((bio->bi_iter.bi_size + len) >> 9) > queue_max_hw_sectors(q))
-+	if (((bio->bi_iter.bi_size + len) >> 9) > max_sectors)
- 		return 0;
+ 	blk_queue_chunk_sectors(q, nullb->dev->zone_size_sects);
+ 	q->nr_zones = blkdev_nr_zones(nullb->disk);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 0797d1e81802..132de24180ad 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -362,7 +362,8 @@ unsigned int blkdev_nr_zones(struct gendisk *disk);
+ extern int blkdev_zone_mgmt(struct block_device *bdev, enum req_opf op,
+ 			    sector_t sectors, sector_t nr_sectors,
+ 			    gfp_t gfp_mask);
+-extern int blk_revalidate_disk_zones(struct gendisk *disk);
++int blk_revalidate_disk_zones(struct gendisk *disk,
++			      void (*update_driver_data)(struct gendisk *disk));
  
- 	if (bio->bi_vcnt > 0) {
--		if (bio_try_merge_pc_page(q, bio, page, len, offset, same_page))
-+		if (bio_try_merge_hw_seg(q, bio, page, len, offset, same_page))
- 			return len;
- 
- 		/*
-@@ -823,11 +813,27 @@ int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 	return len;
- }
- 
-+/**
-+ * bio_add_pc_page	- attempt to add page to passthrough bio
-+ * @q: the target queue
-+ * @bio: destination bio
-+ * @page: page to add
-+ * @len: vec entry length
-+ * @offset: vec entry offset
-+ *
-+ * Attempt to add a page to the bio_vec maplist. This can fail for a
-+ * number of reasons, such as the bio being full or target block device
-+ * limitations. The target block device must allow bio's up to PAGE_SIZE,
-+ * so it is always possible to add a single page to an empty bio.
-+ *
-+ * This should only be used by passthrough bios.
-+ */
- int bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 		struct page *page, unsigned int len, unsigned int offset)
- {
- 	bool same_page = false;
--	return __bio_add_pc_page(q, bio, page, len, offset, &same_page);
-+	return bio_add_hw_page(q, bio, page, len, offset,
-+			queue_max_hw_sectors(q), &same_page);
- }
- EXPORT_SYMBOL(bio_add_pc_page);
- 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index b72c361911a4..f36ff496a761 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -257,6 +257,7 @@ static struct bio *bio_copy_user_iov(struct request_queue *q,
- static struct bio *bio_map_user_iov(struct request_queue *q,
- 		struct iov_iter *iter, gfp_t gfp_mask)
- {
-+	unsigned int max_sectors = queue_max_hw_sectors(q);
- 	int j;
- 	struct bio *bio;
- 	int ret;
-@@ -294,8 +295,8 @@ static struct bio *bio_map_user_iov(struct request_queue *q,
- 				if (n > bytes)
- 					n = bytes;
- 
--				if (!__bio_add_pc_page(q, bio, page, n, offs,
--						&same_page)) {
-+				if (!bio_add_hw_page(q, bio, page, n, offs,
-+						     max_sectors, &same_page)) {
- 					if (same_page)
- 						put_page(page);
- 					break;
-diff --git a/block/blk.h b/block/blk.h
-index 0a94ec68af32..ba31511c5243 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -484,8 +484,8 @@ static inline void part_nr_sects_write(struct hd_struct *part, sector_t size)
- 
- struct request_queue *__blk_alloc_queue(int node_id);
- 
--int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
-+int bio_add_hw_page(struct request_queue *q, struct bio *bio,
- 		struct page *page, unsigned int len, unsigned int offset,
--		bool *same_page);
-+		unsigned int max_sectors, bool *same_page);
- 
- #endif /* BLK_INTERNAL_H */
+ extern int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
+ 				     unsigned int cmd, unsigned long arg);
 -- 
 2.24.1
 
