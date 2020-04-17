@@ -2,58 +2,83 @@ Return-Path: <SRS0=7BVi=6B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,TVD_RCVD_SPACE_BRACKET,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BFC7C2BB55
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 07:09:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71637C352BE
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 07:42:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 575DD206D5
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 07:09:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 508C220857
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 07:42:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728883AbgDQHJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:09:51 -0400
-Received: from baliza.dreformarra.com ([134.73.232.212]:3034 "HELO
-        elitetorrent1.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1728414AbgDQHJu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 03:09:50 -0400
-Received: from [184.69.250.35] by relay-x.misswldrs.com with SMTP; Thu, 16 Apr 2020 19:51:04 -1100
-Received: from mail.webhostings4u.com ([139.120.64.234]) by qnx.mdrost.com with NNFMP; Thu, 16 Apr 2020 19:41:49 -1100
-Received: from mmx09.tilkbans.com ([Thu, 16 Apr 2020 19:27:01 -1100])
-        by smtp.endend.nl with ASMTP; Thu, 16 Apr 2020 19:27:01 -1100
-Message-ID: <C59EC4E8.80BE2406@elitetorrent1.com>
-Date:   Thu, 16 Apr 2020 19:23:19 -1100
-From:   "elitetorrent1.com" <info@elitetorrent1.com>
-User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; fr; rv:1.8.1.16) Gecko/20080707 Thunderbird/2.0.0.16
+        id S1728485AbgDQHmc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Apr 2020 03:42:32 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52670 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725768AbgDQHmc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Apr 2020 03:42:32 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id CCB5DAECE;
+        Fri, 17 Apr 2020 07:42:29 +0000 (UTC)
+Date:   Fri, 17 Apr 2020 09:42:28 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH v6 04/11] block: Introduce REQ_OP_ZONE_APPEND
+Message-ID: <20200417074228.jxqk2znfqjfhrwf2@carbon>
+References: <20200415090513.5133-1-johannes.thumshirn@wdc.com>
+ <20200415090513.5133-5-johannes.thumshirn@wdc.com>
 MIME-Version: 1.0
-To:     <linux-assembly@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-msdos@vger.kernel.org>, <linux-raid@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-Subject: Download latest movies from elitetorrent1.com
-Content-Type: text/plain;
-        charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200415090513.5133-5-johannes.thumshirn@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Apr 15, 2020 at 06:05:06PM +0900, Johannes Thumshirn wrote:
+> @@ -1206,6 +1219,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+>  	bool no_tag = false;
+>  	int errors, queued;
+>  	blk_status_t ret = BLK_STS_OK;
+> +	LIST_HEAD(zone_list);
+>  
+>  	if (list_empty(list))
+>  		return false;
+> @@ -1264,6 +1278,16 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
+>  		if (ret == BLK_STS_RESOURCE || ret == BLK_STS_DEV_RESOURCE) {
+>  			blk_mq_handle_dev_resource(rq, list);
+>  			break;
+> +		} else if (ret == BLK_STS_ZONE_RESOURCE) {
+> +			/*
+> +			 * Move the request to zone_list and keep going through
+> +			 * the dispatch list to find more requests the drive can
+> +			 * accept.
+> +			 */
+> +			blk_mq_handle_zone_resource(rq, &zone_list);
+> +			if (list_empty(list))
+> +				break;
+> +			continue;
+>  		}
 
-While sitting home during the lock out, why not watch some nice movies. 
+Stupid question. At the end of this function I see:
 
-All for free, makes sense?
+	/*
+	 * If the host/device is unable to accept more work, inform the
+	 * caller of that.
+	 */
+	if (ret == BLK_STS_RESOURCE || ret == BLK_STS_DEV_RESOURCE)
+		return false;
 
-visit us now
-https://elitetorrent1.com/
-
-
-
-
-
-Unsubscribe from our database here
-https://forms.icann.org/en/resources/compliance/complaints/registrars/stand
-ards-complaint-form
-
+Why is BLK_STS_ZONE_RESOURCE missing?
 
