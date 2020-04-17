@@ -2,95 +2,125 @@ Return-Path: <SRS0=7BVi=6B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFA2C3815B
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 18:20:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE6A1C38A29
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 21:29:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1B77220771
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 18:20:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC9E32137B
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Apr 2020 21:29:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="G3XC6I1a"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iTI07E8S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730762AbgDQSUl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Apr 2020 14:20:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43056 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730256AbgDQSUk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Apr 2020 14:20:40 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89116C061A0C;
-        Fri, 17 Apr 2020 11:20:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
-        Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=JQ5dwC8H6/aiyaSgobgQiiIuDhCA2QJElFHLNREcZsU=; b=G3XC6I1aPH4y/3BSP7CGlyxMNl
-        XnddDYFKR2DIsV862VDMk7ZN2xjYSaJq8YYxVfDwuRBoEQvNRZ7Hx53Xz7bXex4Q4mahdcgZhFSS8
-        mP4UTEf0wT+96OmFBsuaucuVyY/+TiHLf5UKXUdaI8OWsVwBsq2HrW4Ve+elYiGSCEt106E2omVsJ
-        eSvcb1UsDrnMdZIqtu8dPg3Cnqg2uDeqKCEPF7dp7TWoJFvlsRYDel3HOFMmUKg6m6Z8uMgQ5SfzY
-        cLMfydzvRiTWymmAnOQwEJP4IHJ5TtjWagulgj4ahR5Rn7H+hF+HivVAIaAD4rJ6t3nCsz5ZgPu/Y
-        ZFSDwr5w==;
-Received: from [2601:1c0:6280:3f0::19c2]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jPVbT-0001kx-2U; Fri, 17 Apr 2020 18:20:39 +0000
-Subject: Re: [PATCH v6 09/10] scsi: ufs-exynos: add UFS host support for
- Exynos SoCs
-To:     Alim Akhtar <alim.akhtar@samsung.com>, robh@kernel.org
-Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
-        krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <20200417175944.47189-1-alim.akhtar@samsung.com>
- <CGME20200417181024epcas5p4231ae3dd2598155854e9b7ee52438bcb@epcas5p4.samsung.com>
- <20200417175944.47189-10-alim.akhtar@samsung.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <c0760af4-6867-87f6-4abb-cb4079a7c982@infradead.org>
-Date:   Fri, 17 Apr 2020 11:20:35 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        id S1728152AbgDQV3H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Apr 2020 17:29:07 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:60018 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726129AbgDQV3H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Apr 2020 17:29:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03HLIKgx016831;
+        Fri, 17 Apr 2020 21:28:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=ioRkr8UA3rZ8RZNxmbnIqzvkarX1kRih80H9E5siYQU=;
+ b=iTI07E8SKS/cBHsKrg5tZlQLT9iHVI+NR5dxIsbDtQCck1/9gnMODqglqUNpzBEsDVm9
+ I1FVDOieQodR6VHpWQEEGEK2250hSV75EOMAzz0dikSQ+WCXYBkfEPGFsf7ADHCKHpS4
+ cXn11G0+Q9kH/IpCohMpxatnZD6zsJS9o2e68FDp6m3l/fbzzFgj7Zqt1/Qg6ocqLD4z
+ Ged0iMLBzfMP0OwbQuHE1bSZF2nxV/mb7qmHKk7uYaQ9VhM9vP7tKRXte6O7Yi6IUxxs
+ KyEqaOJSJzZQ3J9U5vWxhRvGg3qxSFv6M1cH8Rmhx9/qBiZ2/5RTZ5UQisUzJubp8Qlj oQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 30dn961bvg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Apr 2020 21:28:45 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03HLDKOp100481;
+        Fri, 17 Apr 2020 21:26:44 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 30dn92860j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Apr 2020 21:26:44 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03HLQftr025383;
+        Fri, 17 Apr 2020 21:26:41 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 17 Apr 2020 14:26:41 -0700
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Venkat Gopalakrishnan <venkatg@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC
+        support)
+Subject: Re: [PATCH v2 1/1] scsi: ufs: full reinit upon resume if link was off
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <1586844892-22720-1-git-send-email-cang@codeaurora.org>
+Date:   Fri, 17 Apr 2020 17:26:37 -0400
+In-Reply-To: <1586844892-22720-1-git-send-email-cang@codeaurora.org> (Can
+        Guo's message of "Mon, 13 Apr 2020 23:14:48 -0700")
+Message-ID: <yq1d085olbm.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <20200417175944.47189-10-alim.akhtar@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9594 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 adultscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004170155
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9594 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1015
+ malwarescore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ mlxscore=0 phishscore=0 spamscore=0 impostorscore=0 suspectscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004170155
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/17/20 10:59 AM, Alim Akhtar wrote:
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index e2005aeddc2d..cc7e29c8c24f 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -160,3 +160,15 @@ config SCSI_UFS_BSG
->  
->  	  Select this if you need a bsg device node for your UFS controller.
->  	  If unsure, say N.
-> +
-> +config SCSI_UFS_EXYNOS
-> +	bool "EXYNOS specific hooks to UFS controller platform driver"
-> +	depends on SCSI_UFSHCD_PLATFORM && ARCH_EXYNOS || COMPILE_TEST
 
-"&&" has higher precedence than "||", so I'm thinking that line should be
+Can,
 
-+	depends on SCSI_UFSHCD_PLATFORM && (ARCH_EXYNOS || COMPILE_TEST)
+> During suspend, if the link is put to off, it would require a full
+> initialization during resume. This patch resets and restores both the
+> host and the card during initialization, otherwise, host only reset
+> and restore may fail occasionally.
 
-> +	select PHY_SAMSUNG_UFS
-> +	help
-> +	  This selects the EXYNOS specific additions to UFSHCD platform driver.
-> +	  UFS host on EXYNOS includes HCI and UNIPRO layer, and associates with
-> +	  UFS-PHY driver.
-> +
-> +	  Select this if you have UFS host controller on EXYNOS chipset.
-> +	  If unsure, say N.
+Applied to 5.8/scsi-queue, thanks!
 
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+> Acked-by: Stanley Chu <stanley.chu@mediatek.com>
+>
+> Change since v1:
+> - Incorporated Alim's comments.
+>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+
+Don't forget to put the changelog after the "---" separator.
 
 -- 
-~Randy
-
+Martin K. Petersen	Oracle Linux Engineering
