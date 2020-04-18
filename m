@@ -4,47 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E3BC352BE
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:53:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92829C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:55:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D77072223D
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:53:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 730962223D
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:55:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GwZqVX1h"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZSd4gPvR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727878AbgDRSxI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 14:53:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43050 "EHLO
+        id S1727902AbgDRSzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 14:55:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725824AbgDRSxI (ORCPT
+        by vger.kernel.org with ESMTP id S1726307AbgDRSzm (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 14:53:08 -0400
+        Sat, 18 Apr 2020 14:55:42 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31F51C061A0C;
-        Sat, 18 Apr 2020 11:53:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 147D7C061A0C;
+        Sat, 18 Apr 2020 11:55:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
         Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=KGgaI7/aF8gM/DdPVeh3iRDUqP5nlN3BG5/ZUjntmeQ=; b=GwZqVX1hBQ8NWcNug1tIYKrz4R
-        U2IRF1+FEjojk+ZQVifHKsqFCF+H1fiJMydhq8YjDjbW9KtWGwn3olr7vK/HGNSu1WehIvKQtWosh
-        BMoPriJK/H+0lffwLs5E6nvv2/JNTOwtoaK7zBEb/dn8JEcPRvepUcxaZHR8H7DkIeSlWVcUS1WWV
-        CVUMlz5qooHHwL7XywdUi73jCtHRZnEwK1/5MDK68fwQFNLP2YhETImwB/mvOFWt+m48ND+munIaR
-        O+7wJI5R8Vlj3BiAZo2gPs9W/wVQEXfyqPWT2fnEqJLIFpbeht4HH8Yn4gA8r97+CDZtM4p+B4qCJ
-        wy6wnDqA==;
+        bh=Fw5l4YeyjM9q5bGtc9HETB0eI3KSL+di5A5JibSeUVA=; b=ZSd4gPvRX+1EcEyWBtmo2xeq+k
+        YGKz4bmzRQ0lBLMGURF5oh6CYWK4W10L7kKdDnAI5hJvRsl3/cWENuwUZYgrll4QOeY8IG2KAIwKm
+        DmODoHeVwqhNbpPD2mueD4eauFer8yFIuqk42bawnd9he64bV/jQfHVxkRxNmOAMcICHspMdvF49L
+        mwjxdxSsr1vLxgUV9OSBDAPsxY5sxHKI3ovi3k6+D0MPLbEOgd5u2ipYWdww6+1xj13RRsP3BbZTP
+        5/uu3l5yRFjedkT+1vldVo7jjG4LvH/c3xDAix8dZm74bZ5+P4Sk4RUlA1MpmcdYVcPWYAQRtLCOh
+        CMd3C1UQ==;
 Received: from [2601:1c0:6280:3f0::19c2]
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jPsaQ-0005zR-VX; Sat, 18 Apr 2020 18:53:07 +0000
-Subject: Re: [PATCH 7/9] drivers/base: fix empty-body warnings in
- devcoredump.c
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
+        id 1jPscv-0000Nr-Nv; Sat, 18 Apr 2020 18:55:41 +0000
+Subject: Re: [PATCH 2/9] fs: fix empty-body warning in posix_acl.c
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Andrew Morton <akpm@linux-foundation.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         linux-input@vger.kernel.org, Jaroslav Kysela <perex@perex.cz>,
         Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
@@ -52,24 +50,26 @@ Cc:     linux-kernel@vger.kernel.org,
         linux-usb@vger.kernel.org,
         "J. Bruce Fields" <bfields@fieldses.org>,
         Chuck Lever <chuck.lever@oracle.com>,
-        linux-nfs@vger.kernel.org,
+        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
         Johannes Berg <johannes@sipsolutions.net>,
         Dan Williams <dan.j.williams@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org,
+        Dave Jiang <dave.jiang@intel.com>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        target-devel <target-devel@vger.kernel.org>,
         Zzy Wysm <zzy@zzywysm.com>
 References: <20200418184111.13401-1-rdunlap@infradead.org>
- <20200418184111.13401-8-rdunlap@infradead.org>
- <20200418185033.GQ5820@bombadil.infradead.org>
+ <20200418184111.13401-3-rdunlap@infradead.org>
+ <CAHk-=wjSzuTyyBkmMDG4fx_sXzLJsh+9Xk-ubgbpJzJq_kzPsA@mail.gmail.com>
 From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <b88d6f8b-e6af-7071-cefa-dc12e79116b6@infradead.org>
-Date:   Sat, 18 Apr 2020 11:53:05 -0700
+Message-ID: <722a746a-1438-60e3-04b2-c13eda2ad168@infradead.org>
+Date:   Sat, 18 Apr 2020 11:55:38 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200418185033.GQ5820@bombadil.infradead.org>
+In-Reply-To: <CAHk-=wjSzuTyyBkmMDG4fx_sXzLJsh+9Xk-ubgbpJzJq_kzPsA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,32 +78,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/18/20 11:50 AM, Matthew Wilcox wrote:
-> On Sat, Apr 18, 2020 at 11:41:09AM -0700, Randy Dunlap wrote:
->> @@ -294,11 +295,11 @@ void dev_coredumpm(struct device *dev, s
->>  
->>  	if (sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
->>  			      "failing_device"))
->> -		/* nothing - symlink will be missing */;
->> +		do_empty(); /* nothing - symlink will be missing */
->>  
->>  	if (sysfs_create_link(&dev->kobj, &devcd->devcd_dev.kobj,
->>  			      "devcoredump"))
->> -		/* nothing - symlink will be missing */;
->> +		do_empty(); /* nothing - symlink will be missing */
->>  
->>  	INIT_DELAYED_WORK(&devcd->del_wk, devcd_del);
->>  	schedule_delayed_work(&devcd->del_wk, DEVCD_TIMEOUT);
+On 4/18/20 11:53 AM, Linus Torvalds wrote:
+> On Sat, Apr 18, 2020 at 11:41 AM Randy Dunlap <rdunlap@infradead.org> wrote:
+>>
+>> Fix gcc empty-body warning when -Wextra is used:
 > 
-> Could just remove the 'if's?
+> Please don't do this.
 > 
-> +	sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
-> +			"failing_device");
+> First off, "do_empty()" adds nothing but confusion. Now it
+> syntactically looks like it does something, and it's a new pattern to
+> everybody. I've never seen it before.
 > 
+> Secondly, even if we were to do this, then the patch would be wrong:
+> 
+>>         if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED)
+>> -               /* fall through */ ;
+>> +               do_empty(); /* fall through */
+> 
+> That comment made little sense before, but it makes _no_ sense now.
+> 
+> What fall-through? I'm guessing it meant to say "nothing", and
+> somebody was confused. With "do_empty()", it's even more confusing.
+> 
+> Thirdly, there's a *reason* why "-Wextra" isn't used.
+> 
+> The warnings enabled by -Wextra are usually complete garbage, and
+> trying to fix them often makes the code worse. Exactly like here.
 
-OK.
+OK, no problem.  That's why PATCH 0/9 says RFC.
 
-thanks.
+Oops. Crap. It was *supposed* to say RFC. :(
+
 -- 
 ~Randy
 
