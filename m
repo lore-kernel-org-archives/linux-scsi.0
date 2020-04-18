@@ -2,41 +2,42 @@ Return-Path: <SRS0=0GAJ=6C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03FE5C352BE
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:41:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00BDBC3A5A0
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:42:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7A142223D
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:41:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D28D8221E9
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:42:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XCwSjlVe"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j5q/SQ1+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727946AbgDRSlV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 14:41:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41194 "EHLO
+        id S1728175AbgDRSl7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 14:41:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726320AbgDRSlR (ORCPT
+        by vger.kernel.org with ESMTP id S1727936AbgDRSlV (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 14:41:17 -0400
+        Sat, 18 Apr 2020 14:41:21 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90C78C061A41;
-        Sat, 18 Apr 2020 11:41:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65C45C061A0C;
+        Sat, 18 Apr 2020 11:41:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=d5zfrylOKoUmkiJ/VV8Fl3fzLkxXbmDEJr/3MIsevyo=; b=XCwSjlVez+qHxOPmcyTIK6oiMp
-        olawr70vtpi0V1QI9XKQUEdNlzc7gZtydJwYjHnNgNwCiR0Y8ytqLU1885mYKcfU2nNRcSQ+hBEej
-        MiJH64ZiTrBz5h80SHKV7B2XhV/8NA5dx2/XMstBP2kRcY+jAyFTPEP07dibSEvWPpw6URRhjEARq
-        GsW6VSkFXNXfFpWKtacsKtxhxuNePEr2gYhZGljGT1rr1HkTT8hxKqdKHdiJLDwOvTjuHdAESVOeL
-        NqEnuUJjyC5UmLntvc7lJwAg8Acv/O1w1fMRoAZtCHCPa4lyuiz4kTPN/HiIYqU17pqZ6fxYiBEQ9
-        d15hNa1Q==;
+        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
+        To:From:Sender:Reply-To:Content-ID:Content-Description;
+        bh=RAwgh7dK6Aq2GUmD2z2q67RSpKe0Qba5fsNnenVzxMI=; b=j5q/SQ1+k3/+/NWSTV/WCIkHyr
+        zch6FAcwYZsrW1PmSwaW8sUH6ZWeOC45ea2Cw5ovOtRwJLJOkQhRg13tWis5r+icV/DhjmdEjwv79
+        s2h+fCIcRl3RnLCdtSGFczimDTd9m/8AzLPWV2hp+UzgF8z2XnH0R/f/a5DQg9nNd3Y73Ad9ZrO4P
+        SE8YtJq+oauVuVNS6MyEi2RLVp6TVtw40sWJHw1JEOXlVu7aGBz0X1bug3Vw49BLE3fO57MGGN/q0
+        Pmq5oXAMF6sIRcv8GgeZALDInNNSJ4NKJzYxSO84gAsonX87pABbmdSy94HL9m+wa0jkyxTrzud66
+        2h6YWfaA==;
 Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jPsOv-0007rZ-9I; Sat, 18 Apr 2020 18:41:13 +0000
+        id 1jPsP3-0007rZ-5p; Sat, 18 Apr 2020 18:41:21 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -59,10 +60,12 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         Zzy Wysm <zzy@zzywysm.com>
-Subject: [RFC PATCH 0/9] fix -Wempty-body build warnings
-Date:   Sat, 18 Apr 2020 11:41:02 -0700
-Message-Id: <20200418184111.13401-1-rdunlap@infradead.org>
+Subject: [PATCH 8/9] dax: fix empty-body warnings in bus.c
+Date:   Sat, 18 Apr 2020 11:41:10 -0700
+Message-Id: <20200418184111.13401-9-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200418184111.13401-1-rdunlap@infradead.org>
+References: <20200418184111.13401-1-rdunlap@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -71,53 +74,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+Fix gcc empty-body warning when -Wextra is used:
 
-When -Wextra is used, gcc emits many warnings about an empty 'if' or
-'else' body, like this:
+../drivers/dax/bus.c:93:27: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+../drivers/dax/bus.c:98:29: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
 
-../fs/posix_acl.c: In function ‘get_acl’:
-../fs/posix_acl.c:127:22: warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
-   /* fall through */ ;
-                      ^
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: linux-nvdimm@lists.01.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ drivers/dax/bus.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-To quieten these warnings, add a new macro "do_empty()".
-I originally wanted to use do_nothing(), but that's already in use.
-
-It would sorta be nice if "fallthrough" could be coerced for this
-instead of using something like do_empty().
-
-Or should we just use "{}" in place of ";"?
-This causes some odd coding style issue IMO. E.g., see this change:
-
-original:
- 	if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED)
-		/* fall through */ ;
-
-with new macro:
- 	if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED)
-		do_empty(); /* fall through */
-
-using {}:
- 	if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED)
-		{} /* fall through */
-or
-		{ /* fall through */ }
-or even
- 	if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED) {
-		/* fall through */ }
-or
- 	if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED) {
-		} /* fall through */
-
-
- drivers/base/devcoredump.c         |    5 +++--
- drivers/dax/bus.c                  |    5 +++--
- drivers/input/mouse/synaptics.c    |    3 ++-
- drivers/target/target_core_pscsi.c |    3 ++-
- drivers/usb/core/sysfs.c           |    2 +-
- fs/nfsd/nfs4state.c                |    3 ++-
- fs/posix_acl.c                     |    2 +-
- include/linux/kernel.h             |    8 ++++++++
- sound/drivers/vx/vx_core.c         |    3 ++-
- 9 files changed, 24 insertions(+), 10 deletions(-)
+--- linux-next-20200417.orig/drivers/dax/bus.c
++++ linux-next-20200417/drivers/dax/bus.c
+@@ -2,6 +2,7 @@
+ /* Copyright(c) 2017-2018 Intel Corporation. All rights reserved. */
+ #include <linux/memremap.h>
+ #include <linux/device.h>
++#include <linux/kernel.h>
+ #include <linux/mutex.h>
+ #include <linux/list.h>
+ #include <linux/slab.h>
+@@ -90,12 +91,12 @@ static ssize_t do_id_store(struct device
+ 			} else
+ 				rc = -ENOMEM;
+ 		} else
+-			/* nothing to remove */;
++			do_empty(); /* nothing to remove */
+ 	} else if (action == ID_REMOVE) {
+ 		list_del(&dax_id->list);
+ 		kfree(dax_id);
+ 	} else
+-		/* dax_id already added */;
++		do_empty(); /* dax_id already added */
+ 	mutex_unlock(&dax_bus_lock);
+ 
+ 	if (rc < 0)
