@@ -2,118 +2,135 @@ Return-Path: <SRS0=0GAJ=6C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB126C3A5A9
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 19:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D059FC352BE
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 19:16:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9334820776
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 19:13:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pbh2gwHB"
+	by mail.kernel.org (Postfix) with ESMTP id B1593221E9
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 19:16:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587237381;
+	bh=nJnKcpqe99fN65NLQUHGPXgQLocTjwSyWw16Krxp1pM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=k/KzedzIYDUAvYii+WzIT/1lSa+7IznoT8TdDBa1iy/r6thRhAMEO2ngp3wzHD5WP
+	 7AOa7TgEz2jBIeDS/AMNo1lPCjBefmoSYOJtl4feFPb39R9znXvAm9rPEnzzk4M5d2
+	 Az/s8PhZTfIXYv/+W90CLU704ryUV9cm7qDmbQ/g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728017AbgDRTNl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 15:13:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46180 "EHLO
+        id S1728119AbgDRTQV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 15:16:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726751AbgDRTNl (ORCPT
+        by vger.kernel.org with ESMTP id S1728107AbgDRTQU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 15:13:41 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00C8AC061A0C;
-        Sat, 18 Apr 2020 12:13:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=1Xuy0hbaik5jnBw+JX74GiEbxwfdlzrwJ6CXAcCNKJ0=; b=Pbh2gwHBC+0n9j0XheYbIXwFQj
-        DLH/6PgobmCWmxlogha43zhUGSOtU89tXwjVH0o1Rho/S2T2EjJTPG70nmSsvSMvvLuonOlXdkiEF
-        yGJpGvfRz2PkLCG7L7Uy3m9lgzRa8kBf6U42WpkqqxMc3bt3hK4TRhmhD0zC1q2wsbCa9130nX/Tr
-        BTyG4Wi0/MtCFbctxHGNP3IoIr9AwF92URUTCaCCqCq81Wkivc6Os9SxUDznfhAgxmUgbP9sTqTjg
-        OQaGKDbNC89jhx9AoLbm18DH/xji73LaoYjLqiNC454x2nCt2c/0XKhdkme0M37SQxFbl37OzjXm7
-        wpboRveg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jPsuI-0002hx-99; Sat, 18 Apr 2020 19:13:38 +0000
-Date:   Sat, 18 Apr 2020 12:13:38 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Joe Perches <joe@perches.com>
-Cc:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
+        Sat, 18 Apr 2020 15:16:20 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 962D9C061A0F
+        for <linux-scsi@vger.kernel.org>; Sat, 18 Apr 2020 12:16:19 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id n17so4293919ejh.7
+        for <linux-scsi@vger.kernel.org>; Sat, 18 Apr 2020 12:16:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=M5L2K70fxOQxP+uWdRM/yMA+3xinlowUvRSVTNSTLNw=;
+        b=VUI+VnT1NDQO7RfejypC/A0x1WOF6JlDgQOx4uVj0o8myo36afYqYoAB1bDh9hMclE
+         y2579x/RBIr7L8eyYz+tWMdcXNGl1k4dVtK8zltRzr1OvNlhqXGfw7OPYoGf+9sgrfJ0
+         nPVwr3eWFbVskZYoGSYtK1N/R40NufLSxc2Ks=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=M5L2K70fxOQxP+uWdRM/yMA+3xinlowUvRSVTNSTLNw=;
+        b=C7DEHIM9E/P8wPgRmrFGKjrKokCToXU/M4tSApHhPFi+S2mp40NOqdh9TjyEQLJF57
+         aIN6FebpxyOtmXxhzSx30Ayx21UhhbqMa9o4Df8XJs1d1hJ2vYYoHMZwTYFYN0kswgw+
+         IczYp+FrZTyJmY8KkdPQ6h5fLQ8Kc73QENRQ6X+YUSiTybn7zMKSh4k7TBtUIGPexhqm
+         mObYog+f3UxMsbPyVHgnTOB5z0NbBn1BDgTx5qotA1vs94wUvzPmb/t5sf7g1KT8a51T
+         ZVmDF1TyQ9mqRWQJ7n//SVgACt72z3FlOG1dR11vUJZnDypLum/eEqXCtEtA7MG4QMf1
+         cMUg==
+X-Gm-Message-State: AGi0PuZj/UKjsxcFCX/C9QDXKu7w01H9A9/mD2GxLh0+zNrKzuBqV361
+        AOsKCJvWoECscV5jA5lZau4UbR0LKxs=
+X-Google-Smtp-Source: APiQypLvYMQhpiD57Buttwu18R27xDdy375YZGYPfQygJG4CfAmNoffrbqHLv9TFyduVBEkwcaZhRg==
+X-Received: by 2002:a17:906:c839:: with SMTP id dd25mr8762729ejb.164.1587237377893;
+        Sat, 18 Apr 2020 12:16:17 -0700 (PDT)
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com. [209.85.208.45])
+        by smtp.gmail.com with ESMTPSA id b13sm3498640eje.13.2020.04.18.12.16.14
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 18 Apr 2020 12:16:17 -0700 (PDT)
+Received: by mail-ed1-f45.google.com with SMTP id e5so4076561edq.5
+        for <linux-scsi@vger.kernel.org>; Sat, 18 Apr 2020 12:16:14 -0700 (PDT)
+X-Received: by 2002:a2e:1418:: with SMTP id u24mr5613429ljd.265.1587237373258;
+ Sat, 18 Apr 2020 12:16:13 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200418184111.13401-1-rdunlap@infradead.org> <20200418184111.13401-8-rdunlap@infradead.org>
+ <20200418185033.GQ5820@bombadil.infradead.org> <b88d6f8b-e6af-7071-cefa-dc12e79116b6@infradead.org>
+ <d018321b0f281ff29efb04dd1496c8e6499812fb.camel@perches.com>
+In-Reply-To: <d018321b0f281ff29efb04dd1496c8e6499812fb.camel@perches.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sat, 18 Apr 2020 12:15:57 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wi4QU90W1j1VVUrqdrkrq-0XPA06sjGUm-g1VHRB-35YA@mail.gmail.com>
+Message-ID: <CAHk-=wi4QU90W1j1VVUrqdrkrq-0XPA06sjGUm-g1VHRB-35YA@mail.gmail.com>
+Subject: Re: [PATCH 7/9] drivers/base: fix empty-body warnings in devcoredump.c
+To:     Joe Perches <joe@perches.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Rafael Wysocki <rafael@kernel.org>
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Andrew Morton <akpm@linux-foundation.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         linux-input@vger.kernel.org, Jaroslav Kysela <perex@perex.cz>,
         Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-usb@vger.kernel.org,
         "J. Bruce Fields" <bfields@fieldses.org>,
         Chuck Lever <chuck.lever@oracle.com>,
-        linux-nfs@vger.kernel.org,
+        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
         Johannes Berg <johannes@sipsolutions.net>,
         Dan Williams <dan.j.williams@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org,
+        Dave Jiang <dave.jiang@intel.com>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        target-devel <target-devel@vger.kernel.org>,
         Zzy Wysm <zzy@zzywysm.com>
-Subject: Re: [PATCH 7/9] drivers/base: fix empty-body warnings in
- devcoredump.c
-Message-ID: <20200418191338.GR5820@bombadil.infradead.org>
-References: <20200418184111.13401-1-rdunlap@infradead.org>
- <20200418184111.13401-8-rdunlap@infradead.org>
- <20200418185033.GQ5820@bombadil.infradead.org>
- <b88d6f8b-e6af-7071-cefa-dc12e79116b6@infradead.org>
- <d018321b0f281ff29efb04dd1496c8e6499812fb.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d018321b0f281ff29efb04dd1496c8e6499812fb.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 18, 2020 at 11:55:05AM -0700, Joe Perches wrote:
-> On Sat, 2020-04-18 at 11:53 -0700, Randy Dunlap wrote:
-> > On 4/18/20 11:50 AM, Matthew Wilcox wrote:
-> > > On Sat, Apr 18, 2020 at 11:41:09AM -0700, Randy Dunlap wrote:
-> > > > @@ -294,11 +295,11 @@ void dev_coredumpm(struct device *dev, s
-> > > >  
-> > > >  	if (sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
-> > > >  			      "failing_device"))
-> > > > -		/* nothing - symlink will be missing */;
-> > > > +		do_empty(); /* nothing - symlink will be missing */
-> > > >  
-> > > >  	if (sysfs_create_link(&dev->kobj, &devcd->devcd_dev.kobj,
-> > > >  			      "devcoredump"))
-> > > > -		/* nothing - symlink will be missing */;
-> > > > +		do_empty(); /* nothing - symlink will be missing */
-> > > >  
-> > > >  	INIT_DELAYED_WORK(&devcd->del_wk, devcd_del);
-> > > >  	schedule_delayed_work(&devcd->del_wk, DEVCD_TIMEOUT);
-> > > 
-> > > Could just remove the 'if's?
-> > > 
-> > > +	sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
-> > > +			"failing_device");
-> > > 
-> > 
-> > OK.
-> 
+On Sat, Apr 18, 2020 at 11:57 AM Joe Perches <joe@perches.com> wrote:
+>
 > sysfs_create_link is __must_check
 
-Oh, I missed the declaration -- I just saw the definition.  This is a
-situation where __must_check hurts us and it should be removed.
+The way to handle __must_check if you really really don't want to test
+and have good reasons is
 
-Or this code is wrong and it should be
+ (a) add a big comment about why this case ostensibly doesn't need the check
 
-	WARN(sysfs_create_link(&devcd->devcd_dev.kobj, &dev->kobj,
-			"failing_device");
+ (b) cast a test of it to '(void)' or something (I guess we could add
+a helper for this). So something like
 
-like drivers/pci/controller/vmd.c and drivers/i2c/i2c-mux.c
+        /* We will always clean up, we don't care whether this fails
+or succeeds */
+        (void)!!sysfs_create_link(...)
 
-Either way, the do_empty() construct feels like the wrong way of covering
-up the warning.
+There are other alternatives (like using WARN_ON_ONCE() instead, for
+example). So it depends on the code. Which is why that comment is
+important to show why the code chose that option.
+
+However, I wonder if in this case we should just remove the
+__must_check. Greg? It goes back a long long time.
+
+Particularly for the "nowarn" version of that function. I'm not seeing
+why you'd have to care, particularly if you don't even care about the
+link already existing..
+
+            Linus
