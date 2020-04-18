@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF233C38A29
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE643C38A29
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:55:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB8422072B
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A237206D6
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:55:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587221604;
-	bh=3mZ81gq8PWCZ3W48CpsOWJmMFYDfG86U7IZ7TY1medI=;
+	s=default; t=1587221728;
+	bh=jLQjo7sVMrW78vbiNqRpHkEm3YVGC3+qwmWujhDT2RA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mk7a90p+bPubFv91J6WPIR0mUJBYK725pznJulzNNR+NHLla2UhDFUhlqA+DI9zQV
-	 H/SSDEbJKydas2MWYvfVneuyyhN4CeYB553a0frENC8N30Y6JpZva68fIaLCUw2Z7u
-	 QRo7TTPfYcgI1N27XP6b2FTpN5YGR5YoHLYxNtM4=
+	b=1AEBAeifceJUQURm5dNcZcwweAaRJlpZhCU/PlsET1M8Ns+HP+VEvbS6VWQ0nhwBM
+	 3FJGt4t/pYcAQNKVVk1T/+9rMKuVyp1z7r/d0DubKjysuZv6azUNgJDw3eWu9wx71w
+	 BjihyuU6fiWe4IzVLs6VYejbPu0jsM2IzApcIKy0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728341AbgDROxK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:53:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51776 "EHLO mail.kernel.org"
+        id S1727811AbgDROlN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:41:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49922 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728229AbgDROmD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:42:03 -0400
+        id S1727773AbgDROlJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:41:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9915922244;
-        Sat, 18 Apr 2020 14:42:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B9D9E22245;
+        Sat, 18 Apr 2020 14:41:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587220922;
-        bh=3mZ81gq8PWCZ3W48CpsOWJmMFYDfG86U7IZ7TY1medI=;
+        s=default; t=1587220868;
+        bh=jLQjo7sVMrW78vbiNqRpHkEm3YVGC3+qwmWujhDT2RA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fENDGD46+vIel6E1B+DQWIjfIctsiAnj/CNnrlJaGgi8y7hdOCYi7AgctJZp2S/dI
-         u1FA5+DE/3nPzcPacHkUxSRC7rmF8nLD8dl3Aap8iFxIMOyCpMX0Vd8vaUY21G/aVb
-         L0oCHNY2IHUY36FwH3mIX5O+3odw/CuF+oTv1ehE=
+        b=G90+x+DRTgSAPiMWvId7MNTvLfEz+KhgwO33G5Q7CrOnKvCn4/PbhzgyZV0DP8cfB
+         FoCrJPh+YlIW6PgK0cOCqafzXMZ23UOwUQ7RyTIBEDzp6LgbLHE+dHOEaSd7CoXGhi
+         uk4q7WWgRGLHdGHv/BHcnNEHSiZDX/Ws88pJ1+Ks=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     Wu Bo <wubo40@huawei.com>, Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 60/78] scsi: mpt3sas: Fix kernel panic observed on soft HBA unplug
-Date:   Sat, 18 Apr 2020 10:40:29 -0400
-Message-Id: <20200418144047.9013-60-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 17/78] scsi: iscsi: Report unbind session event when the target has been removed
+Date:   Sat, 18 Apr 2020 10:39:46 -0400
+Message-Id: <20200418144047.9013-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418144047.9013-1-sashal@kernel.org>
 References: <20200418144047.9013-1-sashal@kernel.org>
@@ -59,78 +59,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: Wu Bo <wubo40@huawei.com>
 
-[ Upstream commit cc41f11a21a51d6869d71e525a7264c748d7c0d7 ]
+[ Upstream commit 13e60d3ba287d96eeaf1deaadba51f71578119a3 ]
 
-Generic protection fault type kernel panic is observed when user performs
-soft (ordered) HBA unplug operation while IOs are running on drives
-connected to HBA.
+If the daemon is restarted or crashes while logging out of a session, the
+unbind session event sent by the kernel is not processed and is lost.  When
+the daemon starts again, the session can't be unbound because the daemon is
+waiting for the event message. However, the kernel has already logged out
+and the event will not be resent.
 
-When user performs ordered HBA removal operation, the kernel calls PCI
-device's .remove() call back function where driver is flushing out all the
-outstanding SCSI IO commands with DID_NO_CONNECT host byte and also unmaps
-sg buffers allocated for these IO commands.
+When iscsid restart is complete, logout session reports error:
 
-However, in the ordered HBA removal case (unlike of real HBA hot removal),
-HBA device is still alive and hence HBA hardware is performing the DMA
-operations to those buffers on the system memory which are already unmapped
-while flushing out the outstanding SCSI IO commands and this leads to
-kernel panic.
+Logging out of session [sid: 6, target: iqn.xxxxx, portal: xx.xx.xx.xx,3260]
+iscsiadm: Could not logout of [sid: 6, target: iscsiadm -m node iqn.xxxxx, portal: xx.xx.xx.xx,3260].
+iscsiadm: initiator reported error (9 - internal error)
+iscsiadm: Could not logout of all requested sessions
 
-Don't flush out the outstanding IOs from .remove() path in case of ordered
-removal since HBA will be still alive in this case and it can complete the
-outstanding IOs. Flush out the outstanding IOs only in case of 'physical
-HBA hot unplug' where there won't be any communication with the HBA.
+Make sure the unbind event is emitted.
 
-During shutdown also it is possible that HBA hardware can perform DMA
-operations on those outstanding IO buffers which are completed with
-DID_NO_CONNECT by the driver from .shutdown(). So same above fix is applied
-in shutdown path as well.
+[mkp: commit desc and applied by hand since patch was mangled]
 
-It is safe to drop the outstanding commands when HBA is inaccessible such
-as when permanent PCI failure happens, when HBA is in non-operational
-state, or when someone does a real HBA hot unplug operation. Since driver
-knows that HBA is inaccessible during these cases, it is safe to drop the
-outstanding commands instead of waiting for SCSI error recovery to kick in
-and clear these outstanding commands.
-
-Link: https://lore.kernel.org/r/1585302763-23007-1-git-send-email-sreekanth.reddy@broadcom.com
-Fixes: c666d3be99c0 ("scsi: mpt3sas: wait for and flush running commands on shutdown/unload")
-Cc: stable@vger.kernel.org #v4.14.174+
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Link: https://lore.kernel.org/r/4eab1771-2cb3-8e79-b31c-923652340e99@huawei.com
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Wu Bo <wubo40@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index c8e512ba6d398..aff630fccb07e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -9747,8 +9747,8 @@ static void scsih_remove(struct pci_dev *pdev)
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 271afea654e2b..a5c78b38d3022 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2012,7 +2012,7 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 	if (session->target_id == ISCSI_MAX_TARGET) {
+ 		spin_unlock_irqrestore(&session->lock, flags);
+ 		mutex_unlock(&ihost->mutex);
+-		return;
++		goto unbind_session_exit;
+ 	}
  
- 	ioc->remove_host = 1;
+ 	target_id = session->target_id;
+@@ -2024,6 +2024,8 @@ static void __iscsi_unbind_session(struct work_struct *work)
+ 		ida_simple_remove(&iscsi_sess_ida, target_id);
  
--	mpt3sas_wait_for_commands_to_complete(ioc);
--	_scsih_flush_running_cmds(ioc);
-+	if (!pci_device_is_present(pdev))
-+		_scsih_flush_running_cmds(ioc);
- 
- 	_scsih_fw_event_cleanup_queue(ioc);
- 
-@@ -9831,8 +9831,8 @@ scsih_shutdown(struct pci_dev *pdev)
- 
- 	ioc->remove_host = 1;
- 
--	mpt3sas_wait_for_commands_to_complete(ioc);
--	_scsih_flush_running_cmds(ioc);
-+	if (!pci_device_is_present(pdev))
-+		_scsih_flush_running_cmds(ioc);
- 
- 	_scsih_fw_event_cleanup_queue(ioc);
- 
+ 	scsi_remove_target(&session->dev);
++
++unbind_session_exit:
+ 	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
+ }
 -- 
 2.20.1
 
