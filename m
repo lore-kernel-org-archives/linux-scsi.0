@@ -6,84 +6,103 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8094DC38A30
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 21:45:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A64C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 22:21:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E6C621D79
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 21:45:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0166721BE5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 22:21:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728097AbgDRVpj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 17:45:39 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:38158 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726734AbgDRVpi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Apr 2020 17:45:38 -0400
-Received: by mail-pf1-f195.google.com with SMTP id y25so2989933pfn.5;
-        Sat, 18 Apr 2020 14:45:37 -0700 (PDT)
+        id S1728083AbgDRWUg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 18:20:36 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:46297 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726887AbgDRWUg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Apr 2020 18:20:36 -0400
+Received: by mail-pf1-f194.google.com with SMTP id 145so743880pfw.13;
+        Sat, 18 Apr 2020 15:20:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=2AAPHCGhMy5VItzDoJpxjkkLgCbtnvq0NCPyMd1E3BM=;
-        b=tb9w/aQcuIm+0H/4IB8P1JfP8dzvcMYzC2nTShSWZbbymfI5hwqylHw3zUyz7hMOU9
-         BhDRRZxAW3DiYaC0Mv/77BqJTDOCHg1Nbdyznm70qb1w0G/zGJb16c/jdb0qXp32BhU8
-         sEMPVuN2Rr/bGMCpTHVqBAAjdyhnDfQ05AO0TDqRUA87sJ5tYvekuonYc3aa93Qo5ktb
-         8IWry/hGxr/++//XND9hisg75fnNBZn9TCwjy5JLO/G3pG0Eh+vq3Pmq4VIo817x0E/R
-         NeJaJeGxrADRAIrcc03aWXFC3XfHSiL/MkSjzyiAUYSCBka1LFHSz4Dhrj78moVEqELg
-         Kjfw==
-X-Gm-Message-State: AGi0PubeOUT9PDcKto4lxHx4CMMyxd+q5x1GXfPdvMIE0nsPUGMLS6e9
-        07nfeQn89axrEnS5wMgwdCY=
-X-Google-Smtp-Source: APiQypLlj3kmCKoHewkm1Hz+20vdn1A4jy5H9lZfMxh2Nxs40ZEubwdTcclJQ0Z2AlahHID9agkJEg==
-X-Received: by 2002:aa7:9a52:: with SMTP id x18mr9614111pfj.139.1587246336719;
-        Sat, 18 Apr 2020 14:45:36 -0700 (PDT)
-Received: from [100.124.15.238] ([104.129.198.228])
-        by smtp.gmail.com with ESMTPSA id i73sm13635656pfe.80.2020.04.18.14.45.34
+        bh=5lJaFjYcZIrKINzwKQy1R3xgWxtfsMwR6sB1R/eMtwU=;
+        b=GjZJrC0w+HohLd06wIREdhZ5S2II2IlUAHtUR5RSTVKVhzT2l/MFN2Xxe79rOclr5J
+         IBTtFUU+VIxsbMyHHWdNizreUTWuSddFOeEnNdiou/0xrgXMLCY3QazeCgfs0JVnRb69
+         8hCfPhfxmNQzkZrBP3djaKjyrnXIN2bLDdYozW4EMEtGc5MmTJoWGPODb1jZBgIzj2T+
+         biODDUBe6wsuae9PA4nf/GAOJxzCmendk0xrPybcBUpjsoA4ypDjpu0CbTUHajS798gO
+         nptb9zDqeKr83hjWPb3wSM1w1oaCD8d01QgnXruCumFY3F507czKaFJ3zIO7cHjtSxrQ
+         78gg==
+X-Gm-Message-State: AGi0Pub4CgPoKDOIF6X+ENsYYRrxC0YWZVDKj8Nvh/uT09i69AHWCtSG
+        zAM0O+F6hpr/F4KumLomSEiMCfgq9Xw=
+X-Google-Smtp-Source: APiQypKrKkW1CP9zvg0HpaxgHFnkJUL1mC4k4+CRal+TZ48iPbm1ertqTrjT7jN+bYBQFGm5GWkzYw==
+X-Received: by 2002:a63:554b:: with SMTP id f11mr3245678pgm.343.1587248435352;
+        Sat, 18 Apr 2020 15:20:35 -0700 (PDT)
+Received: from [100.124.15.238] ([104.129.198.61])
+        by smtp.gmail.com with ESMTPSA id b189sm14519134pfb.163.2020.04.18.15.20.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 18 Apr 2020 14:45:35 -0700 (PDT)
-Subject: Re: [PATCH v7 11/11] zonefs: use REQ_OP_ZONE_APPEND for sync DIO
-To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Daniel Wagner <dwagner@suse.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>
-References: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
- <20200417121536.5393-12-johannes.thumshirn@wdc.com>
+        Sat, 18 Apr 2020 15:20:34 -0700 (PDT)
+Subject: Re: [RFC PATCH 1/9] kernel.h: add do_empty() macro
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel@vger.kernel.org,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        linux-input@vger.kernel.org, Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        linux-nfs@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        Zzy Wysm <zzy@zzywysm.com>
+References: <20200418184111.13401-1-rdunlap@infradead.org>
+ <20200418184111.13401-2-rdunlap@infradead.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <8d7c021f-d518-b6e4-7308-daaf9a1c7992@acm.org>
-Date:   Sat, 18 Apr 2020 14:45:32 -0700
+Message-ID: <f097242a-1bf0-218b-4890-3ee82c5a0a23@acm.org>
+Date:   Sat, 18 Apr 2020 15:20:31 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <20200417121536.5393-12-johannes.thumshirn@wdc.com>
+In-Reply-To: <20200418184111.13401-2-rdunlap@infradead.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/17/20 5:15 AM, Johannes Thumshirn wrote:
-> Synchronous direct I/O to a sequential write only zone can be issued using
-> the new REQ_OP_ZONE_APPEND request operation. As dispatching multiple
-> BIOs can potentially result in reordering, we cannot support asynchronous
-> IO via this interface.
-> 
-> We also can only dispatch up to queue_max_zone_append_sectors() via the
-> new zone-append method and have to return a short write back to user-space
-> in case an IO larger than queue_max_zone_append_sectors() has been issued.
+On 4/18/20 11:41 AM, Randy Dunlap wrote:
+> --- linux-next-20200327.orig/include/linux/kernel.h
+> +++ linux-next-20200327/include/linux/kernel.h
+> @@ -40,6 +40,14 @@
+>   #define READ			0
+>   #define WRITE			1
+>   
+> +/*
+> + * When using -Wextra, an "if" statement followed by an empty block
+> + * (containing only a ';'), produces a warning from gcc:
+> + * warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
+> + * Replace the empty body with do_empty() to silence this warning.
+> + */
+> +#define do_empty()		do { } while (0)
+> +
+>   /**
+>    * ARRAY_SIZE - get the number of elements in array @arr
+>    * @arr: array to be sized
 
-Is this patch the only patch that adds a user space interface through 
-which REQ_OP_ZONE_APPEND operations can be submitted? Has it been 
-considered to make it possible to submit REQ_OP_ZONE_APPEND operations 
-through the asynchronous I/O mechanism?
+I'm less than enthusiast about introducing a new macro to suppress 
+"empty body" warnings. Anyone who encounters code in which this macro is 
+used will have to look up the definition of this macro to learn what it 
+does. Has it been considered to suppress empty body warnings by changing 
+the empty bodies from ";" into "{}"?
 
 Thanks,
 
