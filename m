@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCDD4C3A5A0
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B29C38A2F
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:14:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DE182076A
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:14:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2AFC2076A
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:14:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587219256;
-	bh=zxMAMCUGege0v8kJLkpgkDzKu7rKYEby4bGm0U/va+I=;
+	s=default; t=1587219263;
+	bh=UhO+c8x0n3sXediqtPcDrQZozTjEpSVLq5Vr1OpONAg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RZcjKbShgDKXsyWK6qcWGbHJYSzRiDmvaMFR67C4gTc2AHmvaejImS+IPWGDdsh87
-	 LVLfkpwCv+vFYpYTsqQ2atyWLm2gpIdgZkbFzTBMOSUGjPiWlyrRb4U5A10mb7nIKH
-	 blNRtxUatbj7gi/m59W/rpVpzybG/8uwA659PDvs=
+	b=pgECGLDMIzF7CqzFNLf/0gCtd60OBmSxcugXZzKP5pvHCOT6kCYyEqS9N/x4GHQrI
+	 309X1texlBsCGLe9u/Mb+CbbItFavmmZU36phpf+xTWpSl5zcuZ8/9m7U8SOD+KOUJ
+	 dfZKMi3/DgGs+p5DiLLOjkjluKcErwIpK84BMqP8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728055AbgDROOE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:14:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36838 "EHLO mail.kernel.org"
+        id S1727824AbgDROOX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:14:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726416AbgDROJZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:09:25 -0400
+        id S1726160AbgDROJV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:09:21 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 73C4722244;
-        Sat, 18 Apr 2020 14:09:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A6A0021D79;
+        Sat, 18 Apr 2020 14:09:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587218965;
-        bh=zxMAMCUGege0v8kJLkpgkDzKu7rKYEby4bGm0U/va+I=;
+        s=default; t=1587218960;
+        bh=UhO+c8x0n3sXediqtPcDrQZozTjEpSVLq5Vr1OpONAg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B8w0MxMpFI8w6ILcyWO/RI23kuxoQZZcDLuWLgsFGcM1M3+GdqAiSMcb1ll8LEJoi
-         GM5SkLtfIvZqffa1w/v/ZKopfjcnSD9Gy9ZZvTNDTpFBU+9AINx3xwuLhTIDwdz7Co
-         RFQ1aft3o61fbW27CHu/Xxz+WijRI9lqLhOjFW+c=
+        b=BGrFudvbpnisReOHoc4zPVZvELZJP02Dqad/6Y7AaOkbcZ8U+kLEueOrlvhBIgeJx
+         B6t4KoOqrRfxct+s+YEjPwGyZ24VpVsfw4V8KoZGx4uq7Lxthq4xYUccZ/Az3/s/8C
+         H6co/Flsg58sVzliw9oCOd0AWcMDs5+NPrXdt+XY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Saurav Kashyap <skashyap@marvell.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 12/75] scsi: libfc: If PRLI rejected, move rport to PLOGI state
-Date:   Sat, 18 Apr 2020 10:08:07 -0400
-Message-Id: <20200418140910.8280-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 08/75] scsi: lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
+Date:   Sat, 18 Apr 2020 10:08:03 -0400
+Message-Id: <20200418140910.8280-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418140910.8280-1-sashal@kernel.org>
 References: <20200418140910.8280-1-sashal@kernel.org>
@@ -59,43 +59,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 45e544bfdab2014d11c7595b8ccc3c4715a09015 ]
+[ Upstream commit 38503943c89f0bafd9e3742f63f872301d44cbea ]
 
-If PRLI reject code indicates "rejected status", move rport state machine
-back to PLOGI state.
+The following kasan bug was called out:
 
-Link: https://lore.kernel.org/r/20200327060208.17104-2-skashyap@marvell.com
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+ BUG: KASAN: slab-out-of-bounds in lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ Read of size 2 at addr ffff889fc7c50a22 by task lpfc_worker_3/6676
+ ...
+ Call Trace:
+ dump_stack+0x96/0xe0
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ print_address_description.constprop.6+0x1b/0x220
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ __kasan_report.cold.9+0x37/0x7c
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ kasan_report+0xe/0x20
+ lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ lpfc_sli_def_mbox_cmpl+0x334/0x430 [lpfc]
+ ...
+
+When processing the completion of a "Reg Rpi" login mailbox command in
+lpfc_sli_def_mbox_cmpl, a call may be made to lpfc_unreg_login. The vpi is
+extracted from the completing mailbox context and passed as an input for
+the next. However, the vpi stored in the mailbox command context is an
+absolute vpi, which for SLI4 represents both base + offset.  When used with
+a non-zero base component, (function id > 0) this results in an
+out-of-range access beyond the allocated phba->vpi_ids array.
+
+Fix by subtracting the function's base value to get an accurate vpi number.
+
+Link: https://lore.kernel.org/r/20200322181304.37655-2-jsmart2021@gmail.com
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_rport.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index da6e97d8dc3bb..6bb8917b99a19 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -1208,9 +1208,15 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		rjt = fc_frame_payload_get(fp, sizeof(*rjt));
- 		if (!rjt)
- 			FC_RPORT_DBG(rdata, "PRLI bad response\n");
--		else
-+		else {
- 			FC_RPORT_DBG(rdata, "PRLI ELS rejected, reason %x expl %x\n",
- 				     rjt->er_reason, rjt->er_explan);
-+			if (rjt->er_reason == ELS_RJT_UNAB &&
-+			    rjt->er_explan == ELS_EXPL_PLOGI_REQD) {
-+				fc_rport_enter_plogi(rdata);
-+				goto out;
-+			}
-+		}
- 		fc_rport_error_retry(rdata, FC_EX_ELS_RJT);
- 	}
- 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 625c046ac4efa..993b1056beb83 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2511,6 +2511,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	    !pmb->u.mb.mbxStatus) {
+ 		rpi = pmb->u.mb.un.varWords[0];
+ 		vpi = pmb->u.mb.un.varRegLogin.vpi;
++		if (phba->sli_rev == LPFC_SLI_REV4)
++			vpi -= phba->sli4_hba.max_cfg_param.vpi_base;
+ 		lpfc_unreg_login(phba, vpi, rpi, pmb);
+ 		pmb->vport = vport;
+ 		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
 -- 
 2.20.1
 
