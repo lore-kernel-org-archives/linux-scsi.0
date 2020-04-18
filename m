@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75AECC3A5A0
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:41:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12653C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:41:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 546332223D
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:41:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7119221E9
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 18:41:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="px+muzAC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pyHV1Yju"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727837AbgDRSlT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 14:41:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41188 "EHLO
+        id S1727985AbgDRSlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 14:41:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725824AbgDRSlR (ORCPT
+        by vger.kernel.org with ESMTP id S1726408AbgDRSlS (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 14:41:17 -0400
+        Sat, 18 Apr 2020 14:41:18 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80B19C061A0C;
-        Sat, 18 Apr 2020 11:41:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917EFC0610D6;
+        Sat, 18 Apr 2020 11:41:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
         To:From:Sender:Reply-To:Content-ID:Content-Description;
-        bh=SGvFqJlge/g9dh6ag6oSj2PmPKQuD0q8zfCwNpSxj1k=; b=px+muzACVI4ZR8Qma6/M2w08SW
-        hySuB9tKA02KzaeL7Bz0hXOlFit5cPmIV408Ey2/X6DSkMu6cgZOGJNeXNArmsoAsUoc5WLXe/hw7
-        PUb7y3czjGD9CQNnzOug4xBpyyS7F1rtcwnMYwldVZcEKIxxjt8fEjtiOCtqBiv/YhL1hpiEkcC32
-        +Ial0oM3ilDiy7b15NOERaI8soL0uKgf7Q1zCQdIIn1pdo7wE4v1udirhHNffI5G2FWCaDzt7pqmn
-        Os3cuV4r/Vol0BRefFeWzgu2YZhyihiwy2DDv2Uyg5GiuU2bN2PxS+V9KP2uy1ZGZchyZTVXk6HhJ
-        OTstc49w==;
+        bh=8++U0J0JftLda//wkFlmbDic7vW6wvPQj9vRP451qyE=; b=pyHV1YjuYgoOSvT5iNE2Y7QesB
+        NXrQxVgUayq4HjgeqKsk2tapY3tZ0T5adrg2tRGVb9UDxjDW8Ymr23ZQvkVi+4TN/ycZwkIUkaudG
+        oGMqI5Zd6s+C1gyru6NOrS5ZFX1JqPWuYEb45qk0a5RAHpEztnjpgk8xMtaZ2YEB2mXtj14HUzOUk
+        LVAd8pg4/P6e1JpzKE3ulBSzOtFhS8JXHt+oL461ce4TL035IHm65XTXUhN54RnOcQ2jZv7YhSCS+
+        V6nVFKIksP8CDgK7V6ubm5iolAEN2qiHG681gjIL3NBvd9hAfq4bMBMyPZ7R3p3jHd0ZxUtJLl1rc
+        SIUUC5lg==;
 Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jPsOy-0007rZ-2e; Sat, 18 Apr 2020 18:41:16 +0000
+        id 1jPsP0-0007rZ-CC; Sat, 18 Apr 2020 18:41:18 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -60,9 +60,9 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         Zzy Wysm <zzy@zzywysm.com>
-Subject: [PATCH 3/9] input: fix empty-body warning in synaptics.c
-Date:   Sat, 18 Apr 2020 11:41:05 -0700
-Message-Id: <20200418184111.13401-4-rdunlap@infradead.org>
+Subject: [PATCH 5/9] usb: fix empty-body warning in sysfs.c
+Date:   Sat, 18 Apr 2020 11:41:07 -0700
+Message-Id: <20200418184111.13401-6-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200418184111.13401-1-rdunlap@infradead.org>
 References: <20200418184111.13401-1-rdunlap@infradead.org>
@@ -76,36 +76,28 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fix gcc empty-body warning when -Wextra is used:
 
-../drivers/input/mouse/synaptics.c: In function ‘synaptics_process_packet’:
-../drivers/input/mouse/synaptics.c:1106:6: warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
-      ;   /* Nothing, treat a pen as a single finger */
-      ^
+../drivers/usb/core/sysfs.c: In function ‘usb_create_sysfs_intf_files’:
+../drivers/usb/core/sysfs.c:1266:3: warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
+   ; /* We don't actually care if the function fails. */
+   ^
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: linux-input@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/input/mouse/synaptics.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/usb/core/sysfs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- linux-next-20200327.orig/drivers/input/mouse/synaptics.c
-+++ linux-next-20200327/drivers/input/mouse/synaptics.c
-@@ -20,6 +20,7 @@
-  * Trademarks are the property of their respective owners.
-  */
+--- linux-next-20200327.orig/drivers/usb/core/sysfs.c
++++ linux-next-20200327/drivers/usb/core/sysfs.c
+@@ -1263,7 +1263,7 @@ void usb_create_sysfs_intf_files(struct
+ 	if (!alt->string && !(udev->quirks & USB_QUIRK_CONFIG_INTF_STRINGS))
+ 		alt->string = usb_cache_string(udev, alt->desc.iInterface);
+ 	if (alt->string && device_create_file(&intf->dev, &dev_attr_interface))
+-		;	/* We don't actually care if the function fails. */
++		do_empty(); /* We don't actually care if the function fails. */
+ 	intf->sysfs_files_created = 1;
+ }
  
-+#include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/delay.h>
- #include <linux/dmi.h>
-@@ -1103,7 +1104,7 @@ static void synaptics_process_packet(str
- 				break;
- 			case 2:
- 				if (SYN_MODEL_PEN(info->model_id))
--					;   /* Nothing, treat a pen as a single finger */
-+					do_empty(); /* Nothing, treat a pen as a single finger */
- 				break;
- 			case 4 ... 15:
- 				if (SYN_CAP_PALMDETECT(info->capabilities))
