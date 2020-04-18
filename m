@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1BD4C38A29
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:42:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6115C38A2F
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:43:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E51F22240
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:42:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A781622244
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:43:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587220955;
-	bh=qNus+Aotl4Ykw5mSaayfce2H6rMn0LHCUbNcuJPfFkU=;
+	s=default; t=1587220997;
+	bh=PqxfRo3S7O7cb2pVeZtRdeQxVAfzEQvCA3RDsdW1uqk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=m0tg1/vhnAXNt0NhaVtljMtMi9wRo5SuIuxZVnoU/Ic+7YPML3vXpsqF2XsZFeOHw
-	 IwSzMXHfJt+UwxSBE6mRG7iLm6HWURlGDnYnqVbp99WFNcnIajAfx/k2hEXAZ7nA+6
-	 odHsoKWxfCqJ4sw5PO622FWecDfgxkwScCfvwEWs=
+	b=PrckyhSjHI7GKs+YV/4p4tr+yLL5Gv5JgYKdZdGjVZunwh7v/R2g2Z3H0ZF1/tMWJ
+	 IT3KyjDItTr7pKBUlS2fn6Wo3gA9UqNo+cPibTCkd/Ej4I7Jdiw4XwdwsahNDdtr8g
+	 X09+h/rBM1LgbNBQOIgd+IKIsdOT+s3Srp6+2U7U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728374AbgDROmf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:42:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52692 "EHLO mail.kernel.org"
+        id S1728537AbgDROnR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:43:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54150 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728370AbgDROme (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:42:34 -0400
+        id S1728526AbgDROnQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:43:16 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 395E421D79;
-        Sat, 18 Apr 2020 14:42:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CD50A22252;
+        Sat, 18 Apr 2020 14:43:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587220954;
-        bh=qNus+Aotl4Ykw5mSaayfce2H6rMn0LHCUbNcuJPfFkU=;
+        s=default; t=1587220995;
+        bh=PqxfRo3S7O7cb2pVeZtRdeQxVAfzEQvCA3RDsdW1uqk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZkwMqLhgyJKqaSg2BMl9Uz8Mw1/Ko0JpqMaUrx8q23J6jSIL5dppqTGVs+gOjQEzz
-         Jm95AeENO0KRkKUyyV15VwY9zcAVkhoGR1BSbZVdj2e+DvHgBs/lbtUSsdGOK/yMGQ
-         +9KT+6CcpxTukLxTYPo1hQWnVd4Wm6nIiUHBYWvs=
+        b=tl46rJbf6EqhpIgAJ3RdXa/vCGZJYZW+InXa6zLA5s5kcqAdZz+vi+QfxfokVKdSR
+         wEqAZGoDJn9QD/+lwe/LYj1xGX9js/gFeyJkLzFrxpll4f8RrHWdC5voSEws2SW8PB
+         TXiWfSwk3K3Zdm8REOHOP3QiqWsoI3QihYMGCnhw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 05/47] scsi: lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
-Date:   Sat, 18 Apr 2020 10:41:45 -0400
-Message-Id: <20200418144227.9802-5-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 38/47] scsi: mpt3sas: Fix kernel panic observed on soft HBA unplug
+Date:   Sat, 18 Apr 2020 10:42:18 -0400
+Message-Id: <20200418144227.9802-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418144227.9802-1-sashal@kernel.org>
 References: <20200418144227.9802-1-sashal@kernel.org>
@@ -59,60 +59,78 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-[ Upstream commit 38503943c89f0bafd9e3742f63f872301d44cbea ]
+[ Upstream commit cc41f11a21a51d6869d71e525a7264c748d7c0d7 ]
 
-The following kasan bug was called out:
+Generic protection fault type kernel panic is observed when user performs
+soft (ordered) HBA unplug operation while IOs are running on drives
+connected to HBA.
 
- BUG: KASAN: slab-out-of-bounds in lpfc_unreg_login+0x7c/0xc0 [lpfc]
- Read of size 2 at addr ffff889fc7c50a22 by task lpfc_worker_3/6676
- ...
- Call Trace:
- dump_stack+0x96/0xe0
- ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
- print_address_description.constprop.6+0x1b/0x220
- ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
- ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
- __kasan_report.cold.9+0x37/0x7c
- ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
- kasan_report+0xe/0x20
- lpfc_unreg_login+0x7c/0xc0 [lpfc]
- lpfc_sli_def_mbox_cmpl+0x334/0x430 [lpfc]
- ...
+When user performs ordered HBA removal operation, the kernel calls PCI
+device's .remove() call back function where driver is flushing out all the
+outstanding SCSI IO commands with DID_NO_CONNECT host byte and also unmaps
+sg buffers allocated for these IO commands.
 
-When processing the completion of a "Reg Rpi" login mailbox command in
-lpfc_sli_def_mbox_cmpl, a call may be made to lpfc_unreg_login. The vpi is
-extracted from the completing mailbox context and passed as an input for
-the next. However, the vpi stored in the mailbox command context is an
-absolute vpi, which for SLI4 represents both base + offset.  When used with
-a non-zero base component, (function id > 0) this results in an
-out-of-range access beyond the allocated phba->vpi_ids array.
+However, in the ordered HBA removal case (unlike of real HBA hot removal),
+HBA device is still alive and hence HBA hardware is performing the DMA
+operations to those buffers on the system memory which are already unmapped
+while flushing out the outstanding SCSI IO commands and this leads to
+kernel panic.
 
-Fix by subtracting the function's base value to get an accurate vpi number.
+Don't flush out the outstanding IOs from .remove() path in case of ordered
+removal since HBA will be still alive in this case and it can complete the
+outstanding IOs. Flush out the outstanding IOs only in case of 'physical
+HBA hot unplug' where there won't be any communication with the HBA.
 
-Link: https://lore.kernel.org/r/20200322181304.37655-2-jsmart2021@gmail.com
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+During shutdown also it is possible that HBA hardware can perform DMA
+operations on those outstanding IO buffers which are completed with
+DID_NO_CONNECT by the driver from .shutdown(). So same above fix is applied
+in shutdown path as well.
+
+It is safe to drop the outstanding commands when HBA is inaccessible such
+as when permanent PCI failure happens, when HBA is in non-operational
+state, or when someone does a real HBA hot unplug operation. Since driver
+knows that HBA is inaccessible during these cases, it is safe to drop the
+outstanding commands instead of waiting for SCSI error recovery to kick in
+and clear these outstanding commands.
+
+Link: https://lore.kernel.org/r/1585302763-23007-1-git-send-email-sreekanth.reddy@broadcom.com
+Fixes: c666d3be99c0 ("scsi: mpt3sas: wait for and flush running commands on shutdown/unload")
+Cc: stable@vger.kernel.org #v4.14.174+
+Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a801917d3c193..a56a939792ac1 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2472,6 +2472,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	    !pmb->u.mb.mbxStatus) {
- 		rpi = pmb->u.mb.un.varWords[0];
- 		vpi = pmb->u.mb.un.varRegLogin.vpi;
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			vpi -= phba->sli4_hba.max_cfg_param.vpi_base;
- 		lpfc_unreg_login(phba, vpi, rpi, pmb);
- 		pmb->vport = vport;
- 		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index d3c944d997039..5a5e5c3da6571 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -9841,8 +9841,8 @@ static void scsih_remove(struct pci_dev *pdev)
+ 
+ 	ioc->remove_host = 1;
+ 
+-	mpt3sas_wait_for_commands_to_complete(ioc);
+-	_scsih_flush_running_cmds(ioc);
++	if (!pci_device_is_present(pdev))
++		_scsih_flush_running_cmds(ioc);
+ 
+ 	_scsih_fw_event_cleanup_queue(ioc);
+ 
+@@ -9919,8 +9919,8 @@ scsih_shutdown(struct pci_dev *pdev)
+ 
+ 	ioc->remove_host = 1;
+ 
+-	mpt3sas_wait_for_commands_to_complete(ioc);
+-	_scsih_flush_running_cmds(ioc);
++	if (!pci_device_is_present(pdev))
++		_scsih_flush_running_cmds(ioc);
+ 
+ 	_scsih_fw_event_cleanup_queue(ioc);
+ 
 -- 
 2.20.1
 
