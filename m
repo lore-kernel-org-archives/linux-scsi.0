@@ -4,81 +4,83 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ACBAC38A2B
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 06:40:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23ED6C2BA19
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 07:09:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 717712223F
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 06:40:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06C93221EA
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 07:09:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725914AbgDRGkM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 02:40:12 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2406 "EHLO huawei.com"
+        id S1725887AbgDRHJW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 03:09:22 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:49104 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725843AbgDRGkM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 02:40:12 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id D6F06816B32B16D00841;
-        Sat, 18 Apr 2020 14:40:08 +0800 (CST)
-Received: from huawei.com (10.175.124.28) by DGGEMS414-HUB.china.huawei.com
- (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Sat, 18 Apr 2020
- 14:39:59 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <agross@kernel.org>, <bjorn.andersson@linaro.org>,
-        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <p.zabel@pengutronix.de>, <cang@codeaurora.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     Jason Yan <yanaijie@huawei.com>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH] scsi: ufs-qcom: remove unneeded variable 'ret'
-Date:   Sat, 18 Apr 2020 15:06:25 +0800
-Message-ID: <20200418070625.11756-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.21.1
+        id S1725843AbgDRHJV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 03:09:21 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 4C9D525A497137A7456F;
+        Sat, 18 Apr 2020 15:09:18 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
+ 14.3.487.0; Sat, 18 Apr 2020 15:09:08 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     YueHaibing <yuehaibing@huawei.com>, <linux-scsi@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH -next] scsi: bfa: Remove set but not used variable 'fchs'
+Date:   Sat, 18 Apr 2020 07:10:57 +0000
+Message-ID: <20200418071057.96699-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.124.28]
+Content-Transfer-Encoding: 7BIT
+X-Originating-IP: [10.175.113.25]
 X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following coccicheck warning:
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-drivers/scsi/ufs/ufs-qcom.c:575:5-8: Unneeded variable: "ret". Return
-"0" on line 590
+drivers/scsi/bfa/bfa_svc.c: In function 'uf_recv':
+drivers/scsi/bfa/bfa_svc.c:5520:17: warning:
+ variable 'fchs' set but not used [-Wunused-but-set-variable]
+  struct fchs_s *fchs;
+                 ^
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/bfa/bfa_svc.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 19aa5c44e0da..701e9184adff 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -572,7 +572,6 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	struct phy *phy = host->generic_phy;
--	int ret = 0;
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index d8a9e40fa257..0b7d2e8f4a66 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -5517,7 +5517,6 @@ uf_recv(struct bfa_s *bfa, struct bfi_uf_frm_rcvd_s *m)
+ 	struct bfa_uf_s *uf = &ufm->uf_list[uf_tag];
+ 	struct bfa_uf_buf_s *uf_buf;
+ 	uint8_t *buf;
+-	struct fchs_s *fchs;
  
- 	if (ufs_qcom_is_link_off(hba)) {
- 		/*
-@@ -587,7 +586,7 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ufs_qcom_disable_lane_clks(host);
- 	}
+ 	uf_buf = (struct bfa_uf_buf_s *)
+ 			bfa_mem_get_dmabuf_kva(ufm, uf_tag, uf->pb_len);
+@@ -5526,8 +5525,6 @@ uf_recv(struct bfa_s *bfa, struct bfi_uf_frm_rcvd_s *m)
+ 	m->frm_len = be16_to_cpu(m->frm_len);
+ 	m->xfr_len = be16_to_cpu(m->xfr_len);
  
--	return ret;
-+	return 0;
- }
+-	fchs = (struct fchs_s *)uf_buf;
+-
+ 	list_del(&uf->qe);	/* dequeue from posted queue */
  
- static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
--- 
-2.21.1
+ 	uf->data_ptr = buf;
+
+
+
+
 
