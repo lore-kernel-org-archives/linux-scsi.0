@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15EF9C38A29
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:55:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3186CC38A29
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:56:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF3D8206D6
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:55:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1099F206D6
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:56:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587221754;
-	bh=Mdw7Him3EymDcdIY7gAAk8w+vDf/GjKNRMZsatnbAuY=;
+	s=default; t=1587221765;
+	bh=lkc0eqrv/NtbeoveeQDCwrHDxqsfFolHHHhsAt1a5gI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=f5uBetG2rjBd5m4iiRcNdzKd89v84+78gT4ih7bvUUe4XUJjNQgBLpnKXnEdcakII
-	 13xPDE0S4xtYQGFlYR/pD8KW/xHcJKGDFXwEmUCwAwM5rl2fa6rzLDGpVwm6dyHOGX
-	 2rM9YDL4q53K4Yk54VFghoAqLa3fcPherD3ppDI4=
+	b=cZ7aGLGTguHUoWtGeQMMZcA2LfBhH7S9MVcgnrqkLWPb4VAO66A4bP7NRmiEjl9R/
+	 NfKTvV5/niM306rmYobV3sYCp7a4zCO2yL3VFIFVMIiFS4WYlPSto+3GPt2Qd0X9qC
+	 5EFE6rZC7DKT2CSS7defwRZ0BMDuz/zPCUlcLTwA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728149AbgDROzx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:55:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49600 "EHLO mail.kernel.org"
+        id S1728568AbgDRO4B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:56:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49544 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726829AbgDROk7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:40:59 -0400
+        id S1726823AbgDROk6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:40:58 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3E3CB22260;
-        Sat, 18 Apr 2020 14:40:58 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 168D622245;
+        Sat, 18 Apr 2020 14:40:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587220859;
-        bh=Mdw7Him3EymDcdIY7gAAk8w+vDf/GjKNRMZsatnbAuY=;
+        s=default; t=1587220857;
+        bh=lkc0eqrv/NtbeoveeQDCwrHDxqsfFolHHHhsAt1a5gI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2bui66LWaOOdDNSxb1B78BTRiN08hljw/sQI/BU6T7cJn/wrhQSDA2zp3+baXbZcY
-         CZMGfBHkpOmhd2p0x/FY9wNz7Vp7jgCBimzSTnyOuXDaH6QbHVfQTDLm0LNNd7yhVt
-         CgWLgDwa9AA9WkPsWewFtboQwuJ2hYB0FH6PO8rc=
+        b=rtaOxR1CmJ2ulrpMyMzpijqh74EcD0YRyuuJI+1Sl7lH3E9HTpm7QaQIrxjtYFvAA
+         tThXFvATSzp1x/DMJVS5g8cuTomzcRfwoSBisImtMpD0jmC28GP0kei2Zv5sSKta5h
+         B81OEqDpR6HQITEkTm+2yUZOdy1XcWM3c3jNdrmg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 09/78] scsi: lpfc: Fix crash after handling a pci error
-Date:   Sat, 18 Apr 2020 10:39:38 -0400
-Message-Id: <20200418144047.9013-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 08/78] scsi: lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
+Date:   Sat, 18 Apr 2020 10:39:37 -0400
+Message-Id: <20200418144047.9013-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418144047.9013-1-sashal@kernel.org>
 References: <20200418144047.9013-1-sashal@kernel.org>
@@ -61,43 +61,58 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 4cd70891308dfb875ef31060c4a4aa8872630a2e ]
+[ Upstream commit 38503943c89f0bafd9e3742f63f872301d44cbea ]
 
-Injecting EEH on a 32GB card is causing kernel oops
+The following kasan bug was called out:
 
-The pci error handler is doing an IO flush and the offline code is also
-doing an IO flush. When the 1st flush is complete the hdwq is destroyed
-(freed), yet the second flush accesses the hdwq and crashes.
+ BUG: KASAN: slab-out-of-bounds in lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ Read of size 2 at addr ffff889fc7c50a22 by task lpfc_worker_3/6676
+ ...
+ Call Trace:
+ dump_stack+0x96/0xe0
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ print_address_description.constprop.6+0x1b/0x220
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ __kasan_report.cold.9+0x37/0x7c
+ ? lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ kasan_report+0xe/0x20
+ lpfc_unreg_login+0x7c/0xc0 [lpfc]
+ lpfc_sli_def_mbox_cmpl+0x334/0x430 [lpfc]
+ ...
 
-Added a check in lpfc_sli4_fush_io_rings to check both the HBA_IOQ_FLUSH
-flag and the hdwq pointer to see if it is already set and not already
-freed.
+When processing the completion of a "Reg Rpi" login mailbox command in
+lpfc_sli_def_mbox_cmpl, a call may be made to lpfc_unreg_login. The vpi is
+extracted from the completing mailbox context and passed as an input for
+the next. However, the vpi stored in the mailbox command context is an
+absolute vpi, which for SLI4 represents both base + offset.  When used with
+a non-zero base component, (function id > 0) this results in an
+out-of-range access beyond the allocated phba->vpi_ids array.
 
-Link: https://lore.kernel.org/r/20200322181304.37655-6-jsmart2021@gmail.com
+Fix by subtracting the function's base value to get an accurate vpi number.
+
+Link: https://lore.kernel.org/r/20200322181304.37655-2-jsmart2021@gmail.com
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8836c5682c8d5..4e04270cc5c4f 100644
+index e2cec1f6e659b..8836c5682c8d5 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -4012,6 +4012,11 @@ lpfc_sli_flush_io_rings(struct lpfc_hba *phba)
- 	struct lpfc_iocbq *piocb, *next_iocb;
- 
- 	spin_lock_irq(&phba->hbalock);
-+	if (phba->hba_flag & HBA_IOQ_FLUSH ||
-+	    !phba->sli4_hba.hdwq) {
-+		spin_unlock_irq(&phba->hbalock);
-+		return;
-+	}
- 	/* Indicate the I/O queues are flushed */
- 	phba->hba_flag |= HBA_IOQ_FLUSH;
- 	spin_unlock_irq(&phba->hbalock);
+@@ -2480,6 +2480,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	    !pmb->u.mb.mbxStatus) {
+ 		rpi = pmb->u.mb.un.varWords[0];
+ 		vpi = pmb->u.mb.un.varRegLogin.vpi;
++		if (phba->sli_rev == LPFC_SLI_REV4)
++			vpi -= phba->sli4_hba.max_cfg_param.vpi_base;
+ 		lpfc_unreg_login(phba, vpi, rpi, pmb);
+ 		pmb->vport = vport;
+ 		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
 -- 
 2.20.1
 
