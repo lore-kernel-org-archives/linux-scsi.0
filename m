@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA567C38A29
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:51:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D1DC3A5A9
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:51:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81CB621D6C
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:51:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 174FA22202
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587221485;
-	bh=/yBA27/kqdiy37hk84WYeY9GxI6HtW+l5MdCsPRFJ34=;
+	s=default; t=1587221510;
+	bh=alrppeDGtdJ/68U1a2YlDgsH2GpV/782XOpad2V7sEU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Q1LOiV4sWhWGPAsm1AIYgm0PitF6hVRY1aggrBhwrOVzVDIssga4l5lt+PSBl/0g0
-	 a0zxtY9Afgr9caOOGdRHz7gG0CT2ify1iPQKnUpw9suQUvt4ntJoMnWxj9LCmy4TNU
-	 RatJZyOeif4TrkWh9QRvDMg6n9P6fpR1wePltXqI=
+	b=L7UTASBD5dLWtwdQtRMIcjTU5W1bjI9hKqosrsg1UPwHyxJkyjd7KoRQrXE7PuQgW
+	 ZNQnGOc0UoyrPOvTC61CYE9uWYGfNh6fjcbhw7rXVeidp7C8fUmel1xiH9KcBM41ws
+	 Hm0tmT/S7966+/PJsd8fmUnfAWaRVWxgMpk8icEw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728402AbgDROmn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:42:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52958 "EHLO mail.kernel.org"
+        id S1728686AbgDROvt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:51:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52720 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728397AbgDROmm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:42:42 -0400
+        id S1728375AbgDROmf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:42:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 39B4922262;
-        Sat, 18 Apr 2020 14:42:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 616B821974;
+        Sat, 18 Apr 2020 14:42:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587220961;
-        bh=/yBA27/kqdiy37hk84WYeY9GxI6HtW+l5MdCsPRFJ34=;
+        s=default; t=1587220955;
+        bh=alrppeDGtdJ/68U1a2YlDgsH2GpV/782XOpad2V7sEU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GXTYdjFwTyBGkrhDfy51XgW7A+/p4vDq8g2ds3IQMf6aVzccMFEkO76VDPswTG24T
-         AL867xS88JCjuwPVsyrDLxpbBbkI93NYw8mzu/yZT3WeSQd6s67YRu8LpkO75LvVdl
-         2YVDFAtXA6YXgjpJHT4tK30fi+1pyaCB7N5dPj5c=
+        b=iZVRGld3f1FyfV3UVvs0YlqjBcxuojF0UzQYIOwhAOAuhBXypBOSGWzuMrDP+MRj8
+         skEfvCpyMACG7hmIVEt3/kfeIE5yAeT6sTj1UIFgr9wGmquqUbSIdEQjpOiwoTGk8n
+         6T/vs19kZYAVmLGZAHUwfvpodC5MxzIG25m5kdtM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wu Bo <wubo40@huawei.com>, Lee Duncan <lduncan@suse.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 11/47] scsi: iscsi: Report unbind session event when the target has been removed
-Date:   Sat, 18 Apr 2020 10:41:51 -0400
-Message-Id: <20200418144227.9802-11-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 06/47] scsi: lpfc: Fix crash in target side cable pulls hitting WAIT_FOR_UNREG
+Date:   Sat, 18 Apr 2020 10:41:46 -0400
+Message-Id: <20200418144227.9802-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418144227.9802-1-sashal@kernel.org>
 References: <20200418144227.9802-1-sashal@kernel.org>
@@ -59,58 +59,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Wu Bo <wubo40@huawei.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 13e60d3ba287d96eeaf1deaadba51f71578119a3 ]
+[ Upstream commit 807e7353d8a7105ce884d22b0dbc034993c6679c ]
 
-If the daemon is restarted or crashes while logging out of a session, the
-unbind session event sent by the kernel is not processed and is lost.  When
-the daemon starts again, the session can't be unbound because the daemon is
-waiting for the event message. However, the kernel has already logged out
-and the event will not be resent.
+Kernel is crashing with the following stacktrace:
 
-When iscsid restart is complete, logout session reports error:
+  BUG: unable to handle kernel NULL pointer dereference at
+    00000000000005bc
+  IP: lpfc_nvme_register_port+0x1a8/0x3a0 [lpfc]
+  ...
+  Call Trace:
+  lpfc_nlp_state_cleanup+0x2b2/0x500 [lpfc]
+  lpfc_nlp_set_state+0xd7/0x1a0 [lpfc]
+  lpfc_cmpl_prli_prli_issue+0x1f7/0x450 [lpfc]
+  lpfc_disc_state_machine+0x7a/0x1e0 [lpfc]
+  lpfc_cmpl_els_prli+0x16f/0x1e0 [lpfc]
+  lpfc_sli_sp_handle_rspiocb+0x5b2/0x690 [lpfc]
+  lpfc_sli_handle_slow_ring_event_s4+0x182/0x230 [lpfc]
+  lpfc_do_work+0x87f/0x1570 [lpfc]
+  kthread+0x10d/0x130
+  ret_from_fork+0x35/0x40
 
-Logging out of session [sid: 6, target: iqn.xxxxx, portal: xx.xx.xx.xx,3260]
-iscsiadm: Could not logout of [sid: 6, target: iscsiadm -m node iqn.xxxxx, portal: xx.xx.xx.xx,3260].
-iscsiadm: initiator reported error (9 - internal error)
-iscsiadm: Could not logout of all requested sessions
+During target side fault injections, it is possible to hit the
+NLP_WAIT_FOR_UNREG case in lpfc_nvme_remoteport_delete. A prior commit
+fixed a rebind and delete race condition, but called lpfc_nlp_put
+unconditionally. This triggered a deletion and the crash.
 
-Make sure the unbind event is emitted.
+Fix by movng nlp_put to inside the NLP_WAIT_FOR_UNREG case, where the nlp
+will be being unregistered/removed. Leave the reference if the flag isn't
+set.
 
-[mkp: commit desc and applied by hand since patch was mangled]
-
-Link: https://lore.kernel.org/r/4eab1771-2cb3-8e79-b31c-923652340e99@huawei.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Wu Bo <wubo40@huawei.com>
+Link: https://lore.kernel.org/r/20200322181304.37655-8-jsmart2021@gmail.com
+Fixes: b15bd3e6212e ("scsi: lpfc: Fix nvme remoteport registration race conditions")
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_nvme.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index c0fb9e7890807..04d095488c764 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2010,7 +2010,7 @@ static void __iscsi_unbind_session(struct work_struct *work)
- 	if (session->target_id == ISCSI_MAX_TARGET) {
- 		spin_unlock_irqrestore(&session->lock, flags);
- 		mutex_unlock(&ihost->mutex);
--		return;
-+		goto unbind_session_exit;
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 6c355d87c709d..57f0cee8e1319 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -342,13 +342,15 @@ lpfc_nvme_remoteport_delete(struct nvme_fc_remote_port *remoteport)
+ 	if (ndlp->upcall_flags & NLP_WAIT_FOR_UNREG) {
+ 		ndlp->nrport = NULL;
+ 		ndlp->upcall_flags &= ~NLP_WAIT_FOR_UNREG;
+-	}
+-	spin_unlock_irq(&vport->phba->hbalock);
++		spin_unlock_irq(&vport->phba->hbalock);
  
- 	target_id = session->target_id;
-@@ -2022,6 +2022,8 @@ static void __iscsi_unbind_session(struct work_struct *work)
- 		ida_simple_remove(&iscsi_sess_ida, target_id);
+-	/* Remove original register reference. The host transport
+-	 * won't reference this rport/remoteport any further.
+-	 */
+-	lpfc_nlp_put(ndlp);
++		/* Remove original register reference. The host transport
++		 * won't reference this rport/remoteport any further.
++		 */
++		lpfc_nlp_put(ndlp);
++	} else {
++		spin_unlock_irq(&vport->phba->hbalock);
++	}
  
- 	scsi_remove_target(&session->dev);
-+
-+unbind_session_exit:
- 	iscsi_session_event(session, ISCSI_KEVENT_UNBIND_SESSION);
- 	ISCSI_DBG_TRANS_SESSION(session, "Completed target removal\n");
- }
+  rport_err:
+ 	return;
 -- 
 2.20.1
 
