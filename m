@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F5BC3A5A0
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 13:50:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFAD7C38A30
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 13:51:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D184A2054F
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 13:50:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C05D5214AF
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 13:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587217805;
-	bh=LVsekz8INTXKUjpo9fil8pH2pEYtmSNN2pVUrHyIdXc=;
+	s=default; t=1587217867;
+	bh=bNVdSBgTrAiEhSZBP78RjqSO2iW2UM/yNJ3jlJzalm4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ERhlnsxiHgjOEljpPJdP27Uf24qXu2jcBogCeDnWIR7Vc7exnB3CyZjFZYaXTsnDs
-	 HPDTliVMzu13gDvc3zRIxiCUWk2opZyWbmv2RGk6elgsFYeKnHnmkveDgjBUHCsQL3
-	 pKEz5xOO+hAzKzZOFSd9YyTX3uxNxJ0vbXgM5BDQ=
+	b=qkfgnu3rXpPBBUyfBy2nrEccP1ZIk2jj8EOeCP3gviVLkWYAQnolchd8lDgutFqtJ
+	 5XPcBogKUVz+wiStMk5KGzl+6kLF1fVdYt+w9Sj5Dfr7+3r95xhbQHWWp2fWeREeSs
+	 gLHQzLorQfzSyfwF+62t1nuk9qDnEMLZAiPL9fTw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726919AbgDRNuE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 09:50:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56970 "EHLO mail.kernel.org"
+        id S1726470AbgDRNvH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 09:51:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56206 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726860AbgDRNtm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 09:49:42 -0400
+        id S1726778AbgDRNtU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 09:49:20 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD11022240;
-        Sat, 18 Apr 2020 13:49:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AE6C3214AF;
+        Sat, 18 Apr 2020 13:49:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587217781;
-        bh=LVsekz8INTXKUjpo9fil8pH2pEYtmSNN2pVUrHyIdXc=;
+        s=default; t=1587217759;
+        bh=bNVdSBgTrAiEhSZBP78RjqSO2iW2UM/yNJ3jlJzalm4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EDrVrIhxnxJqrg75eqzSZcJv/yWIbZYiWjHKKKKKHA6IocMlw7eSErKckhJOZjb8y
-         frrufM715uyqoNeCDJp2IpnXCttrS2ww63LVJ9K06ys7jAboCnTVmzl/PXX3e/SzC6
-         ZGw58QBNkOYWZ8fT43liedB1bLkQDV6fqct45uQA=
+        b=iQ87l6nvehYlrY1OTspbMSj6Too27+G9UBUx0/10MmpPFnQ1WTzqWK2/ws7H+Ezg5
+         Gp+paEe0257SWiEhVYtx6nUIdRtj7dvMboQ1uhL72O88LaWt3n0o+ZahVIH8IlasxU
+         0n8DX5txU/Gw99r4mhFE5smFqopfWWdbg+uoFv1c=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 69/73] scsi: mpt3sas: Fix kernel panic observed on soft HBA unplug
-Date:   Sat, 18 Apr 2020 09:48:11 -0400
-Message-Id: <20200418134815.6519-69-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 50/73] scsi: lpfc: Fix lockdep error - register non-static key
+Date:   Sat, 18 Apr 2020 09:47:52 -0400
+Message-Id: <20200418134815.6519-50-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200418134815.6519-1-sashal@kernel.org>
 References: <20200418134815.6519-1-sashal@kernel.org>
@@ -59,78 +59,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit cc41f11a21a51d6869d71e525a7264c748d7c0d7 ]
+[ Upstream commit f861f596714bed06069f1109b89e51f3855c4ddf ]
 
-Generic protection fault type kernel panic is observed when user performs
-soft (ordered) HBA unplug operation while IOs are running on drives
-connected to HBA.
+The following lockdep error was reported when unloading the lpfc driver:
 
-When user performs ordered HBA removal operation, the kernel calls PCI
-device's .remove() call back function where driver is flushing out all the
-outstanding SCSI IO commands with DID_NO_CONNECT host byte and also unmaps
-sg buffers allocated for these IO commands.
+  INFO: trying to register non-static key.
+  the code is fine but needs lockdep annotation.
+  turning off the locking correctness validator.
+  ...
+  Call Trace:
+  dump_stack+0x96/0xe0
+  register_lock_class+0x8b8/0x8c0
+  ? lockdep_hardirqs_on+0x190/0x280
+  ? is_dynamic_key+0x150/0x150
+  ? wait_for_completion_interruptible+0x2a0/0x2a0
+  ? wake_up_q+0xd0/0xd0
+  __lock_acquire+0xda/0x21a0
+  ? register_lock_class+0x8c0/0x8c0
+  ? synchronize_rcu_expedited+0x500/0x500
+  ? __call_rcu+0x850/0x850
+  lock_acquire+0xf3/0x1f0
+  ? del_timer_sync+0x5/0xb0
+  del_timer_sync+0x3c/0xb0
+  ? del_timer_sync+0x5/0xb0
+  lpfc_pci_remove_one.cold.102+0x8b7/0x935 [lpfc]
+  ...
 
-However, in the ordered HBA removal case (unlike of real HBA hot removal),
-HBA device is still alive and hence HBA hardware is performing the DMA
-operations to those buffers on the system memory which are already unmapped
-while flushing out the outstanding SCSI IO commands and this leads to
-kernel panic.
+Unloading the driver resulted in a call to del_timer_sync for the
+cpuhp_poll_timer. However the call to setup the timer had never been made,
+so the timer structures used by lockdep checking were not initialized.
 
-Don't flush out the outstanding IOs from .remove() path in case of ordered
-removal since HBA will be still alive in this case and it can complete the
-outstanding IOs. Flush out the outstanding IOs only in case of 'physical
-HBA hot unplug' where there won't be any communication with the HBA.
+Unconditionally call setup_timer for the cpuhp_poll_timer during driver
+initialization. Calls to start the timer remain "as needed".
 
-During shutdown also it is possible that HBA hardware can perform DMA
-operations on those outstanding IO buffers which are completed with
-DID_NO_CONNECT by the driver from .shutdown(). So same above fix is applied
-in shutdown path as well.
-
-It is safe to drop the outstanding commands when HBA is inaccessible such
-as when permanent PCI failure happens, when HBA is in non-operational
-state, or when someone does a real HBA hot unplug operation. Since driver
-knows that HBA is inaccessible during these cases, it is safe to drop the
-outstanding commands instead of waiting for SCSI error recovery to kick in
-and clear these outstanding commands.
-
-Link: https://lore.kernel.org/r/1585302763-23007-1-git-send-email-sreekanth.reddy@broadcom.com
-Fixes: c666d3be99c0 ("scsi: mpt3sas: wait for and flush running commands on shutdown/unload")
-Cc: stable@vger.kernel.org #v4.14.174+
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Link: https://lore.kernel.org/r/20200322181304.37655-3-jsmart2021@gmail.com
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 5 ++---
+ drivers/scsi/lpfc/lpfc_sli.c  | 6 ++----
+ 2 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index c597d544eb392..a8ec1caf9c77c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -9908,8 +9908,8 @@ static void scsih_remove(struct pci_dev *pdev)
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index d2bbcf8cae4c3..48fde2b1ebbab 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11203,11 +11203,9 @@ static void lpfc_cpuhp_add(struct lpfc_hba *phba)
  
- 	ioc->remove_host = 1;
+ 	rcu_read_lock();
  
--	mpt3sas_wait_for_commands_to_complete(ioc);
--	_scsih_flush_running_cmds(ioc);
-+	if (!pci_device_is_present(pdev))
-+		_scsih_flush_running_cmds(ioc);
+-	if (!list_empty(&phba->poll_list)) {
+-		timer_setup(&phba->cpuhp_poll_timer, lpfc_sli4_poll_hbtimer, 0);
++	if (!list_empty(&phba->poll_list))
+ 		mod_timer(&phba->cpuhp_poll_timer,
+ 			  jiffies + msecs_to_jiffies(LPFC_POLL_HB));
+-	}
  
- 	_scsih_fw_event_cleanup_queue(ioc);
+ 	rcu_read_unlock();
  
-@@ -9992,8 +9992,8 @@ scsih_shutdown(struct pci_dev *pdev)
+@@ -13173,6 +13171,7 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	lpfc_sli4_ras_setup(phba);
  
- 	ioc->remove_host = 1;
+ 	INIT_LIST_HEAD(&phba->poll_list);
++	timer_setup(&phba->cpuhp_poll_timer, lpfc_sli4_poll_hbtimer, 0);
+ 	cpuhp_state_add_instance_nocalls(lpfc_cpuhp_state, &phba->cpuhp);
  
--	mpt3sas_wait_for_commands_to_complete(ioc);
--	_scsih_flush_running_cmds(ioc);
-+	if (!pci_device_is_present(pdev))
-+		_scsih_flush_running_cmds(ioc);
+ 	return 0;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index de97727458fc7..396e24764a1b1 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -14457,12 +14457,10 @@ static inline void lpfc_sli4_add_to_poll_list(struct lpfc_queue *eq)
+ {
+ 	struct lpfc_hba *phba = eq->phba;
  
- 	_scsih_fw_event_cleanup_queue(ioc);
+-	if (list_empty(&phba->poll_list)) {
+-		timer_setup(&phba->cpuhp_poll_timer, lpfc_sli4_poll_hbtimer, 0);
+-		/* kickstart slowpath processing for this eq */
++	/* kickstart slowpath processing if needed */
++	if (list_empty(&phba->poll_list))
+ 		mod_timer(&phba->cpuhp_poll_timer,
+ 			  jiffies + msecs_to_jiffies(LPFC_POLL_HB));
+-	}
  
+ 	list_add_rcu(&eq->_poll_list, &phba->poll_list);
+ 	synchronize_rcu();
 -- 
 2.20.1
 
