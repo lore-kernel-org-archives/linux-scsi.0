@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130AAC38A29
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB6FC38A29
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:49:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E912F21BE5
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB1FE2072B
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 14:49:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587221247;
-	bh=VRbuhqsaG714iS2RnLYCQRuT3hk409iW9Hd2N+ezko4=;
+	s=default; t=1587221359;
+	bh=idX8PmflZUNNSTk/f1mwjwKr28IodT3JvA4+evJUmNk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MhcDtTiGbeWi74JCUmf7h5flQUyTsz/Mq8cZVkqhLpsYukJc39pfoU5Ji1sxmGtm8
-	 gnr/bznBCI5skFgeRAe6CWUYrH3TfMxjqO8Yd5mEj11qADl4DUvnjhzlF6gC1+n+7r
-	 w154VACcHasuwsjRpY8X4UmMn8wIO6srETTi0eUA=
+	b=K0O2TUPeKoMiM60ruUjTndb5J2TNm4K8X243wHiteZUcHyBdoYLa7ACv4e5+MhOI5
+	 /CctIWNLnzQBZSocIixW9AoVC4Eiyg0cF+yJeJT2OwABgvG8GBVR599dyTsQHnYgQw
+	 1DxO/ut5uKiMPUQEyeW51iAZ7pH8ZJNpthMuDUwk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728757AbgDROrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 10:47:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55714 "EHLO mail.kernel.org"
+        id S1726903AbgDROnf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:43:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54762 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728738AbgDROoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 18 Apr 2020 10:44:10 -0400
+        id S1728606AbgDROne (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:43:34 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 06DEA21D82;
-        Sat, 18 Apr 2020 14:44:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9EE472072B;
+        Sat, 18 Apr 2020 14:43:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587221049;
-        bh=VRbuhqsaG714iS2RnLYCQRuT3hk409iW9Hd2N+ezko4=;
+        s=default; t=1587221013;
+        bh=idX8PmflZUNNSTk/f1mwjwKr28IodT3JvA4+evJUmNk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SGnjdxY95HeK/GPgdOvrmkDWZNnAAPaJF4RqFwoXJtW24Nsppn0wOEfIU1n/XUp8e
-         hW9qa5XLEekpE3871vsMG9y/G+Og8XbWCyVdE4Y7g0S85jHAzTj9kZWjxUhAl9N56a
-         3FAMT64scNd7rehKC9dlFiqFHM6BixhfriCDNsJM=
+        b=kGcsDg2D7lpO0p9uBmpYIpZ0AqrVazSYX5Fdl18ByeIofQiCNzuZ3MFThjGTZPnyB
+         R1fMnN+X7tb3+UvWv6NAhjWe68I6RbGR5gZlpR3+5fRjlJIxrq0jU2c9ObIcMTvHgt
+         bztkEjlhyPHoEHEQFy6ekNa8mrqTg2RF+WrYzNgQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 03/23] scsi: lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
-Date:   Sat, 18 Apr 2020 10:43:45 -0400
-Message-Id: <20200418144405.10565-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/28] scsi: lpfc: Fix kasan slab-out-of-bounds error in lpfc_unreg_login
+Date:   Sat, 18 Apr 2020 10:43:04 -0400
+Message-Id: <20200418144328.10265-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200418144405.10565-1-sashal@kernel.org>
-References: <20200418144405.10565-1-sashal@kernel.org>
+In-Reply-To: <20200418144328.10265-1-sashal@kernel.org>
+References: <20200418144328.10265-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -101,10 +101,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index cbe808e83f477..1c34dc3355498 100644
+index d8e0ba68879c3..480d2d467f7a6 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2210,6 +2210,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+@@ -2271,6 +2271,8 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
  	    !pmb->u.mb.mbxStatus) {
  		rpi = pmb->u.mb.un.varWords[0];
  		vpi = pmb->u.mb.un.varRegLogin.vpi;
