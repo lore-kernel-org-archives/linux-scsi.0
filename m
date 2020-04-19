@@ -2,43 +2,42 @@ Return-Path: <SRS0=TURL=6D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B83D4C38A2F
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 06:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DF94C38A29
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 08:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A1D222240
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 06:04:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587276251;
-	bh=agNi+92Rk4VTgZzA3ehgkSQ9y4v1a+tAYpxKg5s3wAQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=oCsh9Dx+o+KQoPRmKubr0MeESJkYqaflccQkAG++kuSwGY2fyTvGXLFzom8mayotz
-	 xgzQxqJ4xKN/SR3ElDEJj/DjYIrGxXSSkLys5ZXzvWe66wig1pE33WavhwzT9zH5Ek
-	 4/vK1DXVh1TaiIXII+7w6dWloqpaNwuseD6BPfPo=
+	by mail.kernel.org (Postfix) with ESMTP id 70D892145D
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 08:15:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pvwx1GcX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726081AbgDSGEI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Apr 2020 02:04:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60428 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725914AbgDSGEH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 19 Apr 2020 02:04:07 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 413BA2076A;
-        Sun, 19 Apr 2020 06:04:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587276247;
-        bh=agNi+92Rk4VTgZzA3ehgkSQ9y4v1a+tAYpxKg5s3wAQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=2a4P62AV1qdwRJhSwItZe45Wmyq7eJCSCexW9g0a3N4ujoGZ8gNWS52E9mXAEcDMu
-         MVTzEtKlOCze+k1ZHx9ZbgImXxdUJq4+HCQIb6h6A/d0jQvRT8FYmdVneCtPIDW3ea
-         oBSwXeCSPEAnzjcpBuad/kRHbvJ+xX2EHIlpiMHI=
-Date:   Sun, 19 Apr 2020 08:04:04 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+        id S1726012AbgDSIPy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Apr 2020 04:15:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53146 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725446AbgDSIPy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 19 Apr 2020 04:15:54 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4604DC061A0C;
+        Sun, 19 Apr 2020 01:15:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=5ESkbM+8vdIgFeaQKLQyxVIJU96HxbIdvJ6LQfSPcow=; b=pvwx1GcXIeC3t5uPawsWBkdVHQ
+        iiXxl+0atw1Ow7dCeTaEPlV5pGZmU5NeEHgiD6GauX1slXAECXQsFNE9NMWu2519ywz/b+wff/WOX
+        TMC/+MPMdjO3TT0Rftrna/Ci0Cahq1lB09MN0hgPjg6UlZQSvFQvI8Hl6eF9ZnaIwxOSfJg5ri8Io
+        KIuagSQHqNGIuLyx0OKk7Kr7BqpWFvOxOSCJWQS71I0fmCgMrFQjcaFVpza7oTJ7VbiVVU4LRpdAF
+        8xATbPDeZWMvxCY4UHfmtjy1TJqqQqEx8Dbn+J6I61UlAQZJU8HDszvtYFjQWk5yWngyPZTufulmD
+        TFNoMHog==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jQ57G-0008EZ-Na; Sun, 19 Apr 2020 08:15:50 +0000
+Date:   Sun, 19 Apr 2020 01:15:50 -0700
+From:   Christoph Hellwig <hch@infradead.org>
 To:     Randy Dunlap <rdunlap@infradead.org>
 Cc:     linux-kernel@vger.kernel.org,
         Linus Torvalds <torvalds@linux-foundation.org>,
@@ -48,6 +47,7 @@ Cc:     linux-kernel@vger.kernel.org,
         Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         linux-input@vger.kernel.org, Jaroslav Kysela <perex@perex.cz>,
         Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-usb@vger.kernel.org,
         "J. Bruce Fields" <bfields@fieldses.org>,
         Chuck Lever <chuck.lever@oracle.com>,
@@ -59,45 +59,32 @@ Cc:     linux-kernel@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
         Zzy Wysm <zzy@zzywysm.com>
-Subject: Re: [PATCH 7/9] drivers/base: fix empty-body warnings in
- devcoredump.c
-Message-ID: <20200419060404.GB3535909@kroah.com>
+Subject: Re: [PATCH 8/9] dax: fix empty-body warnings in bus.c
+Message-ID: <20200419081550.GA22341@infradead.org>
 References: <20200418184111.13401-1-rdunlap@infradead.org>
- <20200418184111.13401-8-rdunlap@infradead.org>
- <20200419060247.GA3535909@kroah.com>
+ <20200418184111.13401-9-rdunlap@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200419060247.GA3535909@kroah.com>
+In-Reply-To: <20200418184111.13401-9-rdunlap@infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Apr 19, 2020 at 08:02:47AM +0200, Greg Kroah-Hartman wrote:
-> On Sat, Apr 18, 2020 at 11:41:09AM -0700, Randy Dunlap wrote:
-> > Fix gcc empty-body warning when -Wextra is used:
-> > 
-> > ../drivers/base/devcoredump.c:297:42: warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
-> > ../drivers/base/devcoredump.c:301:42: warning: suggest braces around empty body in an ‘if’ statement [-Wempty-body]
-> > 
-> > Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Cc: Linus Torvalds <torvalds@linux-foundation.org>
-> > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > ---
-> >  drivers/base/devcoredump.c |    5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > --- linux-next-20200417.orig/drivers/base/devcoredump.c
-> > +++ linux-next-20200417/drivers/base/devcoredump.c
-> > @@ -9,6 +9,7 @@
-> >   *
-> >   * Author: Johannes Berg <johannes@sipsolutions.net>
-> >   */
-> > +#include <linux/kernel.h>
-> 
-> Why the need for this .h file being added for reformatting the code?
+On Sat, Apr 18, 2020 at 11:41:10AM -0700, Randy Dunlap wrote:
+>  				rc = -ENOMEM;
+>  		} else
+> -			/* nothing to remove */;
+> +			do_empty(); /* nothing to remove */
+>  	} else if (action == ID_REMOVE) {
+>  		list_del(&dax_id->list);
+>  		kfree(dax_id);
+>  	} else
+> -		/* dax_id already added */;
+> +		do_empty(); /* dax_id already added */
 
-Ah, the function you add, nevermind, need more coffee...
+This is just nasty.  Please just always turn this bogus warning off
+as the existing code is a perfectly readable idiom while the new code
+is just nasty crap for no good reason at all.
