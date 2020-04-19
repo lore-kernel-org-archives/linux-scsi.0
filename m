@@ -2,114 +2,68 @@ Return-Path: <SRS0=TURL=6D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED1BC3A5A9
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 12:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6798C38A30
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 16:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E3C321744
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 12:03:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587297794;
-	bh=x2vOiaCnxxSwfQdLjmqVJM8lbr3nu9ilx4uLADcHgbI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=MiKG/li7FedHfuNcAClwNGYldXg3RBt87tnc/YSP4o/YHqo6xaPabQXAGNFgqJiek
-	 wbXXIog2zV2IxJ4DPyKBhDi5RxNFEtDveAo+hNywbuNFhRU+4upE2ifNCzaEa6xwbw
-	 ZmTpxJ0gR7c/GrnkASRtr8YC3GghEjZMzxUy6QSY=
+	by mail.kernel.org (Postfix) with ESMTP id 8CA7721974
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 16:31:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725991AbgDSMDJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Apr 2020 08:03:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46508 "EHLO mail.kernel.org"
+        id S1726616AbgDSQbX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Apr 2020 12:31:23 -0400
+Received: from mx2.suse.de ([195.135.220.15]:35264 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725841AbgDSMDJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 19 Apr 2020 08:03:09 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EEB2F21841;
-        Sun, 19 Apr 2020 12:03:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587297788;
-        bh=x2vOiaCnxxSwfQdLjmqVJM8lbr3nu9ilx4uLADcHgbI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BQIo366fubUyRRR8gy2ghwhRQu0Kwnh4p0dbM2JbxKVFUDW8yZ1SDgiYSl5JqwVeR
-         wZ5SL8Ku8jXAHvkI6SEOWx2BKIwYfUnNkbRnpiO/xRR81S6FYbEAx2Q4OceLmb8Ctn
-         LwJSFTVsq/8XLc3RC94BktgRcZXJ/hdv3QPM50lA=
-Date:   Sun, 19 Apr 2020 14:03:04 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Joe Perches <joe@perches.com>, Rafael Wysocki <rafael@kernel.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-input@vger.kernel.org, Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
-        linux-usb@vger.kernel.org,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        target-devel <target-devel@vger.kernel.org>,
-        Zzy Wysm <zzy@zzywysm.com>
-Subject: Re: [PATCH 7/9] drivers/base: fix empty-body warnings in
- devcoredump.c
-Message-ID: <20200419120304.GA3668771@kroah.com>
-References: <20200418184111.13401-1-rdunlap@infradead.org>
- <20200418184111.13401-8-rdunlap@infradead.org>
- <20200418185033.GQ5820@bombadil.infradead.org>
- <b88d6f8b-e6af-7071-cefa-dc12e79116b6@infradead.org>
- <d018321b0f281ff29efb04dd1496c8e6499812fb.camel@perches.com>
- <CAHk-=wi4QU90W1j1VVUrqdrkrq-0XPA06sjGUm-g1VHRB-35YA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wi4QU90W1j1VVUrqdrkrq-0XPA06sjGUm-g1VHRB-35YA@mail.gmail.com>
+        id S1726157AbgDSQbW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 19 Apr 2020 12:31:22 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 815D9AEA7;
+        Sun, 19 Apr 2020 16:31:20 +0000 (UTC)
+From:   David Disseldorp <ddiss@suse.de>
+To:     target-devel@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        bvanassche@acm.org, David Disseldorp <ddiss@suse.de>
+Subject: [PATCH] scsi: target/iblock: fix WRITE SAME zeroing
+Date:   Sun, 19 Apr 2020 18:31:09 +0200
+Message-Id: <20200419163109.11689-1-ddiss@suse.de>
+X-Mailer: git-send-email 2.16.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Apr 18, 2020 at 12:15:57PM -0700, Linus Torvalds wrote:
-> On Sat, Apr 18, 2020 at 11:57 AM Joe Perches <joe@perches.com> wrote:
-> >
-> > sysfs_create_link is __must_check
-> 
-> The way to handle __must_check if you really really don't want to test
-> and have good reasons is
-> 
->  (a) add a big comment about why this case ostensibly doesn't need the check
-> 
->  (b) cast a test of it to '(void)' or something (I guess we could add
-> a helper for this). So something like
-> 
->         /* We will always clean up, we don't care whether this fails
-> or succeeds */
->         (void)!!sysfs_create_link(...)
-> 
-> There are other alternatives (like using WARN_ON_ONCE() instead, for
-> example). So it depends on the code. Which is why that comment is
-> important to show why the code chose that option.
-> 
-> However, I wonder if in this case we should just remove the
-> __must_check. Greg? It goes back a long long time.
+SBC4 specifies that WRITE SAME requests with the UNMAP bit set to zero
+"shall perform the specified write operation to each LBA specified by
+the command".
+2237498f0b5c modified the iblock backend to call blkdev_issue_zeroout()
+when handling WRITE SAME requests with UNMAP=0 and a zero data segment.
+The iblock blkdev_issue_zeroout() call incorrectly provides a flags
+parameter of 0 (bool false), instead of BLKDEV_ZERO_NOUNMAP. The bool
+false parameter reflects the blkdev_issue_zeroout() API prior to
+ee472d835c264, which was merged shortly before 2237498f0b5c.
 
-Yeah, maybe it is time to remove it, the gyrations people go through to
-remove the warning when they "know" they are doing it right feels pretty
-bad compared to forcing people to check things for "normal" calls to the
-function.
+Fixes: 2237498f0b5c ("target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout")
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+---
+ drivers/target/target_core_iblock.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 51ffd5c002de..1c181d31f4c8 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -432,7 +432,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+ 				target_to_linux_sector(dev, cmd->t_task_lba),
+ 				target_to_linux_sector(dev,
+ 					sbc_get_write_same_sectors(cmd)),
+-				GFP_KERNEL, false);
++				GFP_KERNEL, BLKDEV_ZERO_NOUNMAP);
+ 	if (ret)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
+-- 
+2.16.4
 
-greg k-h
