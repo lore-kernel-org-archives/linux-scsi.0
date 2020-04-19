@@ -1,182 +1,307 @@
-Return-Path: <SRS0=0GAJ=6C=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=TURL=6D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB7B7C4CC77
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 22:37:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C58CDC38A29
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 05:02:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A2A521BE5
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Apr 2020 22:37:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="x2TF6WJw"
+	by mail.kernel.org (Postfix) with ESMTP id 9F7DD21744
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Apr 2020 05:02:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728088AbgDRWhI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Apr 2020 18:37:08 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:36466 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726887AbgDRWhI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Apr 2020 18:37:08 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03IMWJax025251;
-        Sat, 18 Apr 2020 22:35:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=zK4gJmDAQjm6odpqw+dWgt3X8Z8VkPHJX9eb1aKLC5g=;
- b=x2TF6WJw26JFS9DnzG1jjX7fP7mK0Gmueyj0VEUPz5H83bvjFEEwlne4gN+tk9eBscUm
- 90ro37TBLrsx8aoPw+tGrpex6qPRAvhSHvbeBXswEwzL2kVQ3pz78kuJncF1HNoWMT2j
- QRoWUa/r0eaCnaztQlQ4n8h/igTGoktprS0Lj0IKrdFzvtpr1o3bwUEpjem5uQioamKj
- 82bJVWqQoP+zfd1SQ+rPmWEF1NJGwV8Sey/KtKrs2TWKmazxhP9idWtuAFq86C+upl5u
- lJ2ZrAZYW+xzqm4vONNeX03aSz20xUVcvYXQ9z+0XJHfCyxQGRNSSE1mtNbDXfldBK+t HA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30fsgkj1d6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 18 Apr 2020 22:35:49 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03IMXRJG022075;
-        Sat, 18 Apr 2020 22:33:49 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 30fqkadq8j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 18 Apr 2020 22:33:49 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03IMXbL4005563;
-        Sat, 18 Apr 2020 22:33:41 GMT
-Received: from anon-dhcp-153.1015granger.net (/68.61.232.219)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 18 Apr 2020 15:33:37 -0700
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Subject: Re: [PATCH 6/9] nfsd: fix empty-body warning in nfs4state.c
-From:   Chuck Lever <chuck.lever@oracle.com>
-In-Reply-To: <c838fc1d-3973-9cd8-ecc6-8739af514dd0@infradead.org>
-Date:   Sat, 18 Apr 2020 18:33:35 -0400
-Cc:     Trond Myklebust <trondmy@hammerspace.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        Bruce Fields <bfields@fieldses.org>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        "zzy@zzywysm.com" <zzy@zzywysm.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "vishal.l.verma@intel.com" <vishal.l.verma@intel.com>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        "perex@perex.cz" <perex@perex.cz>,
-        "dave.jiang@intel.com" <dave.jiang@intel.com>,
-        "tiwai@suse.com" <tiwai@suse.com>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <B4067786-F04F-4CE5-B84B-DE5BB0890529@oracle.com>
-References: <20200418184111.13401-1-rdunlap@infradead.org>
- <20200418184111.13401-7-rdunlap@infradead.org>
- <CDCF7717-7CBC-47CA-9E83-3A18ECB3AB89@oracle.com>
- <d2e2f7967804446a825ec0ff61095e6640b5a968.camel@hammerspace.com>
- <c838fc1d-3973-9cd8-ecc6-8739af514dd0@infradead.org>
-To:     Randy Dunlap <rdunlap@infradead.org>
-X-Mailer: Apple Mail (2.3445.104.11)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9595 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- spamscore=0 mlxscore=0 malwarescore=0 phishscore=0 bulkscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004180188
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9595 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
- lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
- spamscore=0 bulkscore=0 phishscore=0 suspectscore=0 impostorscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004180188
+        id S1725964AbgDSFCe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Apr 2020 01:02:34 -0400
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:38198 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725763AbgDSFCe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Apr 2020 01:02:34 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: tonyk)
+        with ESMTPSA id 611582A03DF
+From:   =?UTF-8?q?Andr=C3=A9=20Almeida?= <andrealmeid@collabora.com>
+To:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     kernel@collabora.com, martin.petersen@oracle.com,
+        jejb@linux.ibm.com,
+        =?UTF-8?q?Andr=C3=A9=20Almeida?= <andrealmeid@collabora.com>
+Subject: [RESEND PATCH v2] scsi: core: Change function comments to kernel-doc style
+Date:   Sun, 19 Apr 2020 02:01:48 -0300
+Message-Id: <20200419050148.33371-1-andrealmeid@collabora.com>
+X-Mailer: git-send-email 2.26.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Despite of functions being documented, they are not in the kernel-doc
+specification, and could not be included in kernel documentation. Change
+the style of functions comments to be compliant to the kernel-doc style.
+When the function comment is outdated, update then.
 
+Signed-off-by: André Almeida <andrealmeid@collabora.com>
+---
+Hello,
 
-> On Apr 18, 2020, at 6:32 PM, Randy Dunlap <rdunlap@infradead.org> =
-wrote:
->=20
-> On 4/18/20 3:28 PM, Trond Myklebust wrote:
->> On Sat, 2020-04-18 at 14:45 -0400, Chuck Lever wrote:
->>>> On Apr 18, 2020, at 2:41 PM, Randy Dunlap <rdunlap@infradead.org>
->>>> wrote:
->>>>=20
->>>> Fix gcc empty-body warning when -Wextra is used:
->>>>=20
->>>> ../fs/nfsd/nfs4state.c:3898:3: warning: suggest braces around empty
->>>> body in an =E2=80=98else=E2=80=99 statement [-Wempty-body]
->>>>=20
->>>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
->>>> Cc: Linus Torvalds <torvalds@linux-foundation.org>
->>>> Cc: Andrew Morton <akpm@linux-foundation.org>
->>>> Cc: "J. Bruce Fields" <bfields@fieldses.org>
->>>> Cc: Chuck Lever <chuck.lever@oracle.com>
->>>> Cc: linux-nfs@vger.kernel.org
->>>=20
->>> I have a patch in my queue that addresses this particular warning,
->>> but your change works for me too.
->>>=20
->>> Acked-by: Chuck Lever <chuck.lever@oracle.com>
->>>=20
->>> Unless Bruce objects.
->>>=20
->>>=20
->>>> ---
->>>> fs/nfsd/nfs4state.c |    3 ++-
->>>> 1 file changed, 2 insertions(+), 1 deletion(-)
->>>>=20
->>>> --- linux-next-20200417.orig/fs/nfsd/nfs4state.c
->>>> +++ linux-next-20200417/fs/nfsd/nfs4state.c
->>>> @@ -34,6 +34,7 @@
->>>>=20
->>>> #include <linux/file.h>
->>>> #include <linux/fs.h>
->>>> +#include <linux/kernel.h>
->>>> #include <linux/slab.h>
->>>> #include <linux/namei.h>
->>>> #include <linux/swap.h>
->>>> @@ -3895,7 +3896,7 @@ nfsd4_setclientid(struct svc_rqst *rqstp
->>>> 		copy_clid(new, conf);
->>>> 		gen_confirm(new, nn);
->>>> 	} else /* case 4 (new client) or cases 2, 3 (client reboot): */
->>>> -		;
->>>> +		do_empty();
->>=20
->> Urgh... This is just for documentation purposes anyway, so why not =
-just
->> turn it all into a comment by moving the 'else' into the comment =
-field?
->>=20
->> i.e.
->> 	} /* else case 4 (.... */
->>=20
->> 	new->cl_minorversion =3D 0;
->>>> 	gen_callback(new, setclid, rqstp);
->>>> 	add_to_unconfirmed(new);
->=20
-> Like I said earlier, since Chuck has a patch that addresses this,
-> let's just go with that.
+This v2 is from a commit originally from this serie:
+https://patchwork.kernel.org/patch/11141867/
 
-I'll post that patch for review as part of my NFSD for-5.8 patches.
+This patched was tested with kernel-doc script and the HTML output was
+verified as well.
 
+Thanks,
+	André
 
---
-Chuck Lever
+Changes from v1:
+- Update "midlevel queue" to "scheduler queue". This seems to be the
+correct term after following the call stack until reach a call to
+blk_mq_sched_requeue_request().
+- Update names of functions at scsi_io_completion() comment.
+- Remove duplicated comment at scsi_io_completion().
+---
+ drivers/scsi/scsi_lib.c | 169 +++++++++++++++-------------------------
+ 1 file changed, 62 insertions(+), 107 deletions(-)
 
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 47835c4b4ee0..8e5195816150 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -202,24 +202,17 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
+ 	blk_mq_requeue_request(cmd->request, true);
+ }
+ 
+-/*
+- * Function:    scsi_queue_insert()
+- *
+- * Purpose:     Insert a command in the midlevel queue.
+- *
+- * Arguments:   cmd    - command that we are adding to queue.
+- *              reason - why we are inserting command to queue.
+- *
+- * Lock status: Assumed that lock is not held upon entry.
++/**
++ * scsi_queue_insert - Reinsert a command in the scheduler queue.
++ * @cmd:    command that we are adding to queue.
++ * @reason: why we are inserting command to queue.
+  *
+- * Returns:     Nothing.
++ * We do this for one of two cases. Either the host is busy and it cannot accept
++ * any more commands for the time being, or the device returned QUEUE_FULL and
++ * can accept no more commands.
+  *
+- * Notes:       We do this for one of two cases.  Either the host is busy
+- *              and it cannot accept any more commands for the time being,
+- *              or the device returned QUEUE_FULL and can accept no more
+- *              commands.
+- * Notes:       This could be called either from an interrupt context or a
+- *              normal process context.
++ * Context: This could be called either from an interrupt context or a normal
++ * process context.
+  */
+ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ {
+@@ -301,16 +294,12 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ }
+ EXPORT_SYMBOL(__scsi_execute);
+ 
+-/*
+- * Function:    scsi_init_cmd_errh()
+- *
+- * Purpose:     Initialize cmd fields related to error handling.
+- *
+- * Arguments:   cmd	- command that is ready to be queued.
++/**
++ * scsi_init_cmd_errh - Initialize cmd fields related to error handling.
++ * @cmd:  command that is ready to be queued.
+  *
+- * Notes:       This function has the job of initializing a number of
+- *              fields related to error handling.   Typically this will
+- *              be called once for each command, as required.
++ * This function has the job of initializing a number of fields related to error
++ * handling. Typically this will be called once for each command, as required.
+  */
+ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ {
+@@ -496,17 +485,11 @@ static void scsi_starved_list_run(struct Scsi_Host *shost)
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+-/*
+- * Function:   scsi_run_queue()
+- *
+- * Purpose:    Select a proper request queue to serve next
+- *
+- * Arguments:  q       - last request's queue
+- *
+- * Returns:     Nothing
++/**
++ * scsi_run_queue - Select a proper request queue to serve next.
++ * @q:  last request's queue
+  *
+- * Notes:      The previous command was completely finished, start
+- *             a new one if possible.
++ * The previous command was completely finished, start a new one if possible.
+  */
+ static void scsi_run_queue(struct request_queue *q)
+ {
+@@ -896,34 +879,27 @@ static int scsi_io_completion_nz_result(struct scsi_cmnd *cmd, int result,
+ 	return result;
+ }
+ 
+-/*
+- * Function:    scsi_io_completion()
+- *
+- * Purpose:     Completion processing for block device I/O requests.
+- *
+- * Arguments:   cmd   - command that is finished.
+- *
+- * Lock status: Assumed that no lock is held upon entry.
+- *
+- * Returns:     Nothing
+- *
+- * Notes:       We will finish off the specified number of sectors.  If we
+- *		are done, the command block will be released and the queue
+- *		function will be goosed.  If we are not done then we have to
+- *		figure out what to do next:
+- *
+- *		a) We can call scsi_requeue_command().  The request
+- *		   will be unprepared and put back on the queue.  Then
+- *		   a new command will be created for it.  This should
+- *		   be used if we made forward progress, or if we want
+- *		   to switch from READ(10) to READ(6) for example.
+- *
+- *		b) We can call __scsi_queue_insert().  The request will
+- *		   be put back on the queue and retried using the same
+- *		   command as before, possibly after a delay.
+- *
+- *		c) We can call scsi_end_request() with blk_stat other than
+- *		   BLK_STS_OK, to fail the remainder of the request.
++/**
++ * scsi_io_completion - Completion processing for SCSI commands.
++ * @cmd:	command that is finished.
++ * @good_bytes:	number of processed bytes.
++ *
++ * We will finish off the specified number of sectors. If we are done, the
++ * command block will be released and the queue function will be goosed. If we
++ * are not done then we have to figure out what to do next:
++ *
++ *   a) We can call scsi_io_completion_reprep().  The request
++ *	will be unprepared and put back on the queue.  Then
++ *	a new command will be created for it.  This should
++ *	be used if we made forward progress, or if we want
++ *	to switch from READ(10) to READ(6) for example.
++ *
++ *   b) We can call scsi_io_completion_action().  The request will
++ *	be put back on the queue and retried using the same
++ *	command as before, possibly after a delay.
++ *
++ *   c) We can call scsi_end_request() with blk_stat other than
++ *	BLK_STS_OK, to fail the remainder of the request.
+  */
+ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ {
+@@ -951,8 +927,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		blk_rq_sectors(req), good_bytes));
+ 
+ 	/*
+-	 * Next deal with any sectors which we were able to correctly
+-	 * handle. Failed, zero length commands always need to drop down
++	 * Failed, zero length commands always need to drop down
+ 	 * to retry code. Fast path should return in this block.
+ 	 */
+ 	if (likely(blk_rq_bytes(req) > 0 || blk_stat == BLK_STS_OK)) {
+@@ -1002,16 +977,14 @@ static blk_status_t scsi_init_sgtable(struct request *req,
+ 	return BLK_STS_OK;
+ }
+ 
+-/*
+- * Function:    scsi_init_io()
+- *
+- * Purpose:     SCSI I/O initialize function.
+- *
+- * Arguments:   cmd   - Command descriptor we wish to initialize
++/**
++ * scsi_init_io - SCSI I/O initialize function.
++ * @cmd:  command descriptor we wish to initialize
+  *
+- * Returns:     BLK_STS_OK on success
+- *		BLK_STS_RESOURCE if the failure is retryable
+- *		BLK_STS_IOERR if the failure is fatal
++ * Returns:
++ * * BLK_STS_OK       - on success
++ * * BLK_STS_RESOURCE - if the failure is retryable
++ * * BLK_STS_IOERR    - if the failure is fatal
+  */
+ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
+ {
+@@ -1921,21 +1894,13 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
+ }
+ EXPORT_SYMBOL_GPL(scsi_device_from_queue);
+ 
+-/*
+- * Function:    scsi_block_requests()
+- *
+- * Purpose:     Utility function used by low-level drivers to prevent further
+- *		commands from being queued to the device.
+- *
+- * Arguments:   shost       - Host in question
+- *
+- * Returns:     Nothing
+- *
+- * Lock status: No locks are assumed held.
++/**
++ * scsi_block_requests - Utility function used by low-level drivers to prevent
++ * further commands from being queued to the device.
++ * @shost:  host in question
+  *
+- * Notes:       There is no timer nor any other means by which the requests
+- *		get unblocked other than the low-level driver calling
+- *		scsi_unblock_requests().
++ * There is no timer nor any other means by which the requests get unblocked
++ * other than the low-level driver calling scsi_unblock_requests().
+  */
+ void scsi_block_requests(struct Scsi_Host *shost)
+ {
+@@ -1943,25 +1908,15 @@ void scsi_block_requests(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_block_requests);
+ 
+-/*
+- * Function:    scsi_unblock_requests()
+- *
+- * Purpose:     Utility function used by low-level drivers to allow further
+- *		commands from being queued to the device.
+- *
+- * Arguments:   shost       - Host in question
+- *
+- * Returns:     Nothing
+- *
+- * Lock status: No locks are assumed held.
+- *
+- * Notes:       There is no timer nor any other means by which the requests
+- *		get unblocked other than the low-level driver calling
+- *		scsi_unblock_requests().
+- *
+- *		This is done as an API function so that changes to the
+- *		internals of the scsi mid-layer won't require wholesale
+- *		changes to drivers that use this feature.
++/**
++ * scsi_unblock_requests - Utility function used by low-level drivers to allow
++ * further commands from being queued to the device.
++ * @shost:  host in question
++ *
++ * There is no timer nor any other means by which the requests get unblocked
++ * other than the low-level driver calling scsi_unblock_requests(). This is done
++ * as an API function so that changes to the internals of the scsi mid-layer
++ * won't require wholesale changes to drivers that use this feature.
+  */
+ void scsi_unblock_requests(struct Scsi_Host *shost)
+ {
+-- 
+2.26.1
 
