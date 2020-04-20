@@ -2,143 +2,235 @@ Return-Path: <SRS0=Uzsj=6E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 843F7C3815B
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 10:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF009C3A5A0
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 14:45:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F668206B9
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 10:46:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8BBF2082E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 14:45:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="pj50cOud";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="kJwzyT3H"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="GSK5KUoS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbgDTKqd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Apr 2020 06:46:33 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:39578 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725865AbgDTKqc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2020 06:46:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587379592; x=1618915592;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=WesWpgnwluaT1A3i8S/Vtx+Pq+BHytHqxQ45Pt2LfDE=;
-  b=pj50cOud6Xa3feU9E5QzBLuxgo0fDQmy/0t4WRayj6/BA3PTqzeCfFb/
-   mEcmdZGRop2GQR8x1Y79kmxYATmBUmPkX/xoO94j+sWDHkaj71NRO6ejw
-   SE/PR7QGmSweMwsQBELdiEzp7GNoz5Kitv4zSsjJENawKUJ0j8/1rAeLV
-   nLO8XxkdA5zAqJTtR/NJASOgS49aUy5md7Rv7zONGftsrnPCgU6jIe5Zh
-   XgJbpprjnKWKH0Cn2ERsb9efuf37A42aro/JJkDhQNdggQtmOQLhKFv2Z
-   qfO0ratpX/MCKkWJqmUI49J9L4PNfSyW5ZiAt+efsxhN6s4tvYAewDvAu
-   w==;
-IronPort-SDR: Z4OWQCng631NLMqKzqt9Uh249dIOzrpBzp2MzCVsYSWb1bBaxtjp3LqVXdAocZaps/rFGMFbv0
- NtJrg//N++fua4JdHJINtcVPA5omsvy5lQq3kfJ+e9mnFPnM5OiALVPJ+zZ+DoMwfeKFhPkB47
- 3D9ngnLzhcUeAuiw/xayGzMzgyeJEH+45tZ0xSviN8IedNZ77xl+gDAqADitVYNM/pPz6G40db
- 7e/yFd4wjvXD8kJ06FfKJA9L4LPYrR3KefBygzG7nIYozOEPt0xz8TUUfczboV/N6YBPaO9z99
- Wag=
-X-IronPort-AV: E=Sophos;i="5.72,406,1580745600"; 
-   d="scan'208";a="136010138"
-Received: from mail-co1nam11lp2169.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.169])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Apr 2020 18:46:22 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CXCcnv/UfCNYBHO+Rm9qHPhe2/TRGsHL2iAfVmMR+EdUuBUul3BI2hVK0fDm8A8yo4RnKdGnMzQAqDccva/w/0rrfbt/+jVp5fDE/NrQEUcjDoFh9zGvXjqRGdbJ/a16z+f04SRd4mZnNJj3HHFZLKjoH1iSITV4cjkjLQ6n7X2F+Vn8OXt2995fwn2stJ/9/Lqa1p5U+2PGuuSeeFP7vxpHGhBVJJ2oUD0hWlWTNsLtIJGtfpWRvdSqzr1q54s2F/CVz9QEekZJ1OpEw3t5FlLy9W/Me9oqa1fg4XFOmexXtVDMjw0yn9J/KlR91Jrb5mZZ/l74i/g+nG+VrTlarg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1Dm4Okxwmld26ng7ZdQb0wwSZF6YUAaBIVSgOMQ5DI4=;
- b=fJ3eDtJTmmbAcyfoCHbjdRu2TSVmB/8GEBR9KrofjPZdmqtFfklnUDmKAJJx9PWXKd/1gZ3boFSXyy/49+CbGtNQfrv87uD1tr5EK2CgGpFWAsaSBTBNPN5p3JDUjA6nv2+oBrmkyvrfIFgv39c5rs4oN8m6xGBWN2qWKYRSuY7QhMEr3d0pN24mLcYLfJdOStDspO6yrij0NOGFd7VbawNSg8LuLK+8CRaEaB1vcIsUpI7fsFIwPag9D2kBjVNdX62noIJ873302UWShDyRtWvUc8/PVKyAUoYBL2yc6sknT5AgU+2hIHiZ5BXzR/isTjtmZe6LnU7063/gTbMvRQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1726968AbgDTOp4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Apr 2020 10:45:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51900 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725971AbgDTOpz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Apr 2020 10:45:55 -0400
+Received: from mail-vs1-xe44.google.com (mail-vs1-xe44.google.com [IPv6:2607:f8b0:4864:20::e44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD810C061A0C
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 07:45:55 -0700 (PDT)
+Received: by mail-vs1-xe44.google.com with SMTP id 1so6122305vsl.9
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 07:45:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1Dm4Okxwmld26ng7ZdQb0wwSZF6YUAaBIVSgOMQ5DI4=;
- b=kJwzyT3H979CnRncQcvrcvr760qqu5ir8Nmpny44Rr2TnBTWuQOFetS9z4KHSP6bz0or3Sq1YtcFTYbDDfWygYSTiSv57bb4o1TbX8aPHF+aCfZNlBjDK2ylI3B1APKOC8aeD2tCwIGfNlwgLkmmiLv45rwskXTqneYPAPi2mRI=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3630.namprd04.prod.outlook.com
- (2603:10b6:803:47::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.27; Mon, 20 Apr
- 2020 10:46:21 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2921.027; Mon, 20 Apr 2020
- 10:46:21 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-CC:     "hch@infradead.org" <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Daniel Wagner <dwagner@suse.de>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v7 01/11] scsi: free sgtables in case command setup fails
-Thread-Topic: [PATCH v7 01/11] scsi: free sgtables in case command setup fails
-Thread-Index: AQHWFLHyAOekOpGZiECrfGFghLCsTQ==
-Date:   Mon, 20 Apr 2020 10:46:21 +0000
-Message-ID: <SN4PR0401MB3598B2774CD52FAB68C726249BD40@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
- <20200417121536.5393-2-johannes.thumshirn@wdc.com>
- <de79e1ab-0407-205e-3272-532f0484b49f@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Johannes.Thumshirn@wdc.com; 
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 48878d3c-0127-4124-900f-08d7e518108f
-x-ms-traffictypediagnostic: SN4PR0401MB3630:
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN4PR0401MB363005E876573EBCDADD8A429BD40@SN4PR0401MB3630.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-forefront-prvs: 03793408BA
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(376002)(136003)(39860400002)(346002)(396003)(366004)(91956017)(8936002)(81156014)(8676002)(76116006)(66946007)(66476007)(9686003)(52536014)(26005)(6506007)(186003)(4326008)(33656002)(86362001)(53546011)(66446008)(64756008)(66556008)(55016002)(7416002)(2906002)(478600001)(4744005)(316002)(54906003)(110136005)(7696005)(71200400001)(5660300002);DIR:OUT;SFP:1102;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ZS9Q8G6ZF3SfP9VGNRcNchGl1FBMCNgUYsPUVA+nHhm/GzS8A4w5DFoJvXBXhw/S8t8hWQMOD7r+kvosnfDdo4q5cFuICSaMWg4REjVtP60OhcGG96nDpNv8yWM78UwevECVbnzQUlqRA9fDJNfBFDA0V7CxuAGD7owBkP432pFXy4UdV/T5Rl6FwbiSEbxI07A1xh4sGHblEcVVQJ5ZMd6GGOL+hmYelCXmj6N67S/xIyBLNebUE9Ie57g2R9bUnOM92lUb3QCqBruwVKKm4T07xuZX6ZrxfHT0s2yhE28t+pgPyZbUpFaLvXzJOBmEUw1e1TodYgttBATIN1E1MG5MzIAcqFF1sgfXKyeGwvRvxi6uReJvQZlRiE5xLhoO8hHicmCrqF6D1vWBzFmArUb2GnL2ZYxjV1l5Qz0jAux0/AH6O/tqBsv8KZ58kuGz
-x-ms-exchange-antispam-messagedata: Dd81dMhXzktCbWred1zjuDD8dRFN6RZMSt/QXvClH8N9VTI4mirS9QFY9lhjYzY/KIQC2tbOAlLJRzSAWEPVKj9uHUFngP1omV7lwo642L0En+VQPU8JemuZwZkYVCnvgf0SLVEUOnKmvwNqer+Mqg==
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=AeiRaVP6V0jAzRbDBlTgc5wh5zJsytFh4SoKUqnITyc=;
+        b=GSK5KUoSJoDO1XqdCdR8d6YuCWxE67mEUc7Vu2T1YDbVOym9NV3sHBxQ49JYbMaqdf
+         ZsZSyXSX+W0dP8zjVeL82VYK+swT4pEPohrMfEW9UBb/kWcFVr6fmtS3ZIukGilfKwY7
+         BHGp2skzEMRnvsum7erA5ive6o3gNlONGZ7G4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=AeiRaVP6V0jAzRbDBlTgc5wh5zJsytFh4SoKUqnITyc=;
+        b=bs5OA6EKk7FpWT54fTTMlk5Bj01OZ0Iz6U1bBeQ2x76WCWiA26vxTpZYefwR8FcOrm
+         oGij85qkqz0/Gnx18oZmMRa3ezpxB+BpxYlyIqqK2gTx//tNld7zgfcDahOWkKWW8zxm
+         TfJDzIKhiv4+icG31kLe6oK7haB7RIG3cNjLJWkSJDhIPh4hhE6pPf179eaX1dSzYrmT
+         Jmw3yEcu5g85jLFJfAvq1WbD3M2QhuaaZvRl8mh7S/7DdswR+TrprrcKuFRlF+fomoUP
+         rS1sBaKWDT1P57qthaHYCpxCRzruXJEbuEuUnJk42pmoQEtKF1JSgB7haqspHvG/c4sp
+         yNiQ==
+X-Gm-Message-State: AGi0PubDh4ylx1efw9HAaEb1zRPr16L1fvrpDg1yyHYzDqS79OzjLfB9
+        XW3+wrAc5Kp99jVNtyJIHCuRjiLCNV8=
+X-Google-Smtp-Source: APiQypL8rkLSUFPOqSvUOmaoxjTUPoXVOES9wwyFI1we89Cn+IjXeMBB8CJNVMfJkuhp9uayWbaloQ==
+X-Received: by 2002:a67:d18e:: with SMTP id w14mr12240841vsi.138.1587393954382;
+        Mon, 20 Apr 2020 07:45:54 -0700 (PDT)
+Received: from mail-ua1-f52.google.com (mail-ua1-f52.google.com. [209.85.222.52])
+        by smtp.gmail.com with ESMTPSA id y17sm270365vsj.30.2020.04.20.07.45.53
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Apr 2020 07:45:53 -0700 (PDT)
+Received: by mail-ua1-f52.google.com with SMTP id x18so3709209uap.8
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 07:45:53 -0700 (PDT)
+X-Received: by 2002:a9f:27ca:: with SMTP id b68mr8211458uab.8.1587393952755;
+ Mon, 20 Apr 2020 07:45:52 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 48878d3c-0127-4124-900f-08d7e518108f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Apr 2020 10:46:21.4088
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: LHGFwGH+PWypcKFTtSKfiFiPuPKpFDyOMdVT/UWJ7Yfy/vY++n09jhOoOpg0SKms6Krp8ICPZ6T/ySvcESGQ62tFgu2pSCR4sTP/bWMugB4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3630
+References: <20200408150402.21208-1-dianders@chromium.org>
+In-Reply-To: <20200408150402.21208-1-dianders@chromium.org>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Mon, 20 Apr 2020 07:45:41 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=Upkdz_7TG8gde9jC+iWBFHckVf3yZe5Zyz9gq27Ys0GQ@mail.gmail.com>
+Message-ID: <CAD=FV=Upkdz_7TG8gde9jC+iWBFHckVf3yZe5Zyz9gq27Ys0GQ@mail.gmail.com>
+Subject: Re: [PATCH v4 0/4] blk-mq: Fix two causes of IO stalls found in
+ reboot testing
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Paolo Valente <paolo.valente@linaro.org>,
+        Guenter Roeck <groeck@chromium.org>,
+        Gwendal Grignou <gwendal@chromium.org>,
+        linux-scsi@vger.kernel.org,
+        linux-block <linux-block@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Salman Qazi <sqazi@google.com>,
+        =?UTF-8?Q?Andr=C3=A9_Almeida?= <andrealmeid@collabora.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        John Garry <john.garry@huawei.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 18/04/2020 18:02, Bart Van Assche wrote:=0A=
-> How about adding __must_check to scsi_setup_fs_cmnd()?=0A=
-=0A=
-I'm actually not sure if __must_check helps us anything given that with =0A=
-this patch applied:=0A=
-=0A=
-johannes@redsun60:linux(zone-append-wip)$ git --no-pager grep -n \=0A=
-                                        scsi_setup_fs_cmnd drivers/scsi=0A=
-drivers/scsi/scsi_lib.c:1173:=0A=
-static blk_status_t scsi_setup_fs_cmnd(struct scsi_device *sdev,=0A=
-drivers/scsi/scsi_lib.c:1205:=0A=
-ret =3D scsi_setup_fs_cmnd(sdev, req);=0A=
-=0A=
-there's only one caller of scsi_setup_fs_cmnd(), in the same file, 32 =0A=
-lines below the implementation.=0A=
-=0A=
-I do agree about the Link or an eventual Cc: stable, but I think Martin =0A=
-or Jens can add this when applying the patch.=0A=
+Hi Jens,
+
+On Wed, Apr 8, 2020 at 8:35 AM Douglas Anderson <dianders@chromium.org> wrote:
+>
+> While doing reboot testing, I found that occasionally my device would
+> trigger the hung task detector.  Many tasks were stuck waiting for the
+> a blkdev mutex, but at least one task in the system was always sitting
+> waiting for IO to complete (and holding the blkdev mutex).  One
+> example of a task that was just waiting for its IO to complete on one
+> reboot:
+>
+>  udevd           D    0  2177    306 0x00400209
+>  Call trace:
+>   __switch_to+0x15c/0x17c
+>   __schedule+0x6e0/0x928
+>   schedule+0x8c/0xbc
+>   schedule_timeout+0x9c/0xfc
+>   io_schedule_timeout+0x24/0x48
+>   do_wait_for_common+0xd0/0x160
+>   wait_for_completion_io_timeout+0x54/0x74
+>   blk_execute_rq+0x9c/0xd8
+>   __scsi_execute+0x104/0x198
+>   scsi_test_unit_ready+0xa0/0x154
+>   sd_check_events+0xb4/0x164
+>   disk_check_events+0x58/0x154
+>   disk_clear_events+0x74/0x110
+>   check_disk_change+0x28/0x6c
+>   sd_open+0x5c/0x130
+>   __blkdev_get+0x20c/0x3d4
+>   blkdev_get+0x74/0x170
+>   blkdev_open+0x94/0xa8
+>   do_dentry_open+0x268/0x3a0
+>   vfs_open+0x34/0x40
+>   path_openat+0x39c/0xdf4
+>   do_filp_open+0x90/0x10c
+>   do_sys_open+0x150/0x3c8
+>   ...
+>
+> I've reproduced this on two systems: one boots from an internal UFS
+> disk and one from eMMC.  Each has a card reader attached via USB with
+> an SD card plugged in.  On the USB-attached SD card is a disk with 12
+> partitions (a Chrome OS test image), if it matters.  The system
+> doesn't do much with the USB disk other than probe it (it's plugged in
+> my system to help me recover).
+>
+> From digging, I believe that there are two separate but related
+> issues.  Both issues relate to the SCSI code saying that there is no
+> budget.
+>
+> I have done testing with only one or the other of the two patches in
+> this series and found that I could still encounter hung tasks if only
+> one of the two patches was applied.  This deserves a bit of
+> explanation.  To me, it's fairly obvious that the first fix wouldn't
+> fix the problems talked about in the second patch.  However, it's less
+> obvious why the second patch doesn't fix the problems in
+> blk_mq_dispatch_rq_list().  It turns out that it _almost_ does
+> (problems become much more rare), but I did manage to get a single
+> trace where the "kick" scheduled by the second patch happened really
+> quickly.  The scheduled kick then ran and found nothing to do.  This
+> happened in parallel to a task running in blk_mq_dispatch_rq_list()
+> which hadn't gotten around to splicing the list back into
+> hctx->dispatch.  This is why we need both fixes.
+>
+> Most of my testing has been atop Chrome OS 5.4's kernel tree which
+> currently has v5.4.30 merged in.  The Chrome OS 5.4 tree also has a
+> patch by Salman Qazi, namely ("block: Limit number of items taken from
+> the I/O scheduler in one go").  Reverting that patch didn't make the
+> hung tasks go away, so I kept it in for most of my testing.
+>
+> I have also done some testing on mainline Linux (most on what git
+> describe calls v5.6-rc7-227-gf3e69428b5e2) even without Salman's
+> patch.  I found that I could reproduce the problems there and that
+> traces looked about the same as I saw on the downstream branch.  These
+> patches were also confirmed to fix the problems on mainline.
+>
+> Chrome OS is currently setup to use the BFQ scheduler and I found that
+> I couldn't reproduce the problems without BFQ.  As discussed in the
+> second patch this is believed to be because BFQ sometimes returns
+> "true" from has_work() but then NULL from dispatch_request().
+>
+> I'll insert my usual caveat that I'm sending patches to code that I
+> know very little about.  If I'm making a total bozo patch here, please
+> help me figure out how I should fix the problems I found in a better
+> way.
+>
+> If you want to see a total ridiculous amount of chatter where I
+> stumbled around a whole bunch trying to figure out what was wrong and
+> how to fix it, feel free to read <https://crbug.com/1061950>.  I
+> promise it will make your eyes glaze over right away if this cover
+> letter didn't already do that.  Specifically comment 79 in that bug
+> includes a link to my ugly prototype of making BFQ's has_work() more
+> exact (I only managed it by actually defining _both_ an exact and
+> inexact function to avoid circular locking problems when it was called
+> directly from blk_mq_hctx_has_pending()).  Comment 79 also has more
+> thoughts about alternatives considered.
+>
+> I don't know if these fixes represent a regression of some sort or are
+> new.  As per above I could only reproduce with BFQ enabled which makes
+> it nearly impossible to go too far back with this.  I haven't listed
+> any "Fixes" tags here, but if someone felt it was appropriate to
+> backport this to some stable trees that seems like it'd be nice.
+> Presumably at least 5.4 stable would make sense.
+>
+> Thanks to Salman Qazi, Paolo Valente, and Guenter Roeck who spent a
+> bunch of time helping me trawl through some of this code and reviewing
+> early versions of this patch.
+>
+> Changes in v4:
+> - Only kick in blk_mq_do_dispatch_ctx() / blk_mq_do_dispatch_sched().
+>
+> Changes in v3:
+> - Note why blk_mq_dispatch_rq_list() change is needed.
+> - ("blk-mq: Add blk_mq_delay_run_hw_queues() API call") new for v3
+> - Always kick when putting the budget.
+> - Delay blk_mq_do_dispatch_sched() kick by 3 ms for inexact has_work().
+> - Totally rewrote commit message.
+> - ("Revert "scsi: core: run queue...") new for v3.
+>
+> Changes in v2:
+> - Replace ("scsi: core: Fix stall...") w/ ("blk-mq: Rerun dispatch...")
+>
+> Douglas Anderson (4):
+>   blk-mq: In blk_mq_dispatch_rq_list() "no budget" is a reason to kick
+>   blk-mq: Add blk_mq_delay_run_hw_queues() API call
+>   blk-mq: Rerun dispatching in the case of budget contention
+>   Revert "scsi: core: run queue if SCSI device queue isn't ready and
+>     queue is idle"
+>
+>  block/blk-mq-sched.c    | 18 ++++++++++++++++++
+>  block/blk-mq.c          | 30 +++++++++++++++++++++++++++---
+>  drivers/scsi/scsi_lib.c |  7 +------
+>  include/linux/blk-mq.h  |  1 +
+>  4 files changed, 47 insertions(+), 9 deletions(-)
+
+Is there anything blocking this series from landing?  All has been
+quiet for a while.  All the patches have Ming's review and the SCSI
+patch has Martin's Ack.  This seems like a great time to get it into
+linux-next so it can get a whole bunch of testing before the next
+merge window.
+
+Thanks!
+
+
+-Doug
