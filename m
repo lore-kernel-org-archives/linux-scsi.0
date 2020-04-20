@@ -2,72 +2,104 @@ Return-Path: <SRS0=Uzsj=6E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C73FC3815B
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 18:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4880DC3815B
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 19:14:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A5D62078C
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 18:41:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29778208FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 19:14:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EggJ7WeH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726736AbgDTSlM convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Apr 2020 14:41:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49356 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725613AbgDTSlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Apr 2020 14:41:12 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 206123] aacraid ( PM8068) and iommu=nobypass Frozen PHB error 
- on ppc64
-Date:   Mon, 20 Apr 2020 18:41:11 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: cam@neo-zeon.de
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-206123-11613-LpSTRAGJcr@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-206123-11613@https.bugzilla.kernel.org/>
-References: <bug-206123-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1725896AbgDTTOi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Apr 2020 15:14:38 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48737 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726234AbgDTTOi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Apr 2020 15:14:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587410077;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=AWPQPemEiXAldj4riWWQN4HHZ1o7zuh/QiWWkjzHWX8=;
+        b=EggJ7WeHnVLC1C330xxegg797grVDZiMakG2Kd9lhdEvJyYAbdvxYBAWayo5MgjvdrCUh4
+        ZYv1T+xYfglkxsABGNwn3V5jO5vEfdFgVlSTTpPgiPF2vGdFTGYKXntF4WMmuPWTT5sKwa
+        GKOrRHzJ2rgyDcPqPZ8sMJ7sIekMVIE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-84-O32jnMDDPvSD0EBdrea1SA-1; Mon, 20 Apr 2020 15:14:31 -0400
+X-MC-Unique: O32jnMDDPvSD0EBdrea1SA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 323A11084430;
+        Mon, 20 Apr 2020 19:14:30 +0000 (UTC)
+Received: from rh2.redhat.com (ovpn-118-198.rdu2.redhat.com [10.10.118.198])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4FE9FA18B7;
+        Mon, 20 Apr 2020 19:14:29 +0000 (UTC)
+From:   Mike Christie <mchristi@redhat.com>
+To:     jsmart2021@gmail.com, bvanassche@acm.org,
+        bstroesser@ts.fujitsu.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: RFC PATCH 00/12] target: add sysfs support
+Date:   Mon, 20 Apr 2020 14:14:14 -0500
+Message-Id: <20200420191426.17055-1-mchristi@redhat.com>
 MIME-Version: 1.0
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=206123
+The following patches made over Linus's current tree allow lio to
+export info about structs that the kernel initiates creation of
+via events like initiator login where there is no user interaction
+like a mkdir. These patches specificially focus on the
+I_T_nexus/session but could be used for other objects if we want.
 
-Cameron (cam@neo-zeon.de) changed:
+Why sysfs when we have configfs?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |cam@neo-zeon.de
+I started with configfs and hit bugs like:
 
---- Comment #5 from Cameron (cam@neo-zeon.de) ---
-Bug 207359 may potentially be a duplicate of this one so perhaps some of the
-info there could be useful.
+commit cc57c07343bd071cdf1915a91a24ab7d40c9b590
+Author: Mike Christie <mchristi@redhat.com>
+Date:   Sun Jul 15 18:16:17 2018 -0500
 
-(In reply to Oliver O'Halloran from comment #4)
-> A TCE fault makes more sense given that it doesn't happen when bypass is
-> enabled. I'm leaning towards this being a driver bug, but it could be a
-> powerpc IOMMU specific issue. I'll investigate.
+    configfs: fix registered group removal
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+but it turns out that bug was not really a bug and was just how
+configfs was meant to work. It seems it was not meant to be used
+where the kernel initiates creation of dirs/files as a result of
+some internal action. It's more geared to the user initiating
+the creation, and my patch just lead to other bugs and was
+reverted:
+
+commit f19e4ed1e1edbfa3c9ccb9fed17759b7d6db24c6
+Author: Al Viro <viro@zeniv.linux.org.uk>
+Date:   Thu Aug 29 23:13:30 2019 -0400
+
+    configfs_register_group() shouldn't be (and isn't) called in
+rmdirable parts
+
+So to export the session info we have debugfs, sysfs, ioctl,
+netlink, etc. sysfs just seemed like a decent fit since one of the
+primary users is rtslib and it already has lots of file/dir
+handling code.
+
+V2:
+- rename top level dir to scsi_target
+- Fix extra newline
+- Copy data that's exported to sysfs so we do not have to worry about
+configfs and sysfs refcounts.
+- Export session info needed for tracking sessions in userspace and
+handling commands like PGRs there (still needs a way to notify userspace
+when sessions are added/deleted, but that will be a different set since
+the focus is different).
+
+
+
