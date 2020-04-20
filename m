@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6865AECAAD3
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 19:13:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69514ECAAD5
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Sep 2022 19:13:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231710AbiIETNL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Sep 2022 15:13:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59080 "EHLO
+        id S231783AbiIETNY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Sep 2022 15:13:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229866AbiIETNK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 15:13:10 -0400
+        with ESMTP id S229866AbiIETNW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2022 15:13:22 -0400
 Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1552D3719C;
-        Mon,  5 Sep 2022 12:13:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEAC43719C;
+        Mon,  5 Sep 2022 12:13:21 -0700 (PDT)
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id AB87744AB8;
-        Mon,  5 Sep 2022 19:13:07 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id A245D44B7E;
+        Mon,  5 Sep 2022 19:13:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received:received; s=mta-01; t=1662405186; x=
-        1664219587; bh=BKc/e2IBxlGsSoQLXTxX0s+zvYDvnyxpjcYaKmUaYLU=; b=U
-        RSMQ3lkqz3ebJISYsN5e+jC+9Tr4c7ZSMegoVJVr1eYcl4+iU51/dSgQzzlG0tJb
-        owlop1e+rOV5FOTr57xEX78qHUKo2WDyE7U/N+34SLp5kzXnyQsjv/1hMhmwR+bZ
-        3SG/dS0iqTNFtE+t5S8Z9pVnlRbyRMf8gcOecemLPQ=
+        :received:received:received:received; s=mta-01; t=1662405199; x=
+        1664219600; bh=XL5F/oXsCoOIFfj/qDCbchJ8n++/oI50YVboIcVfVwA=; b=e
+        x1pCervQlljPeTHbkC6USo9AGqiSuDyGkiPu7PW3bLbA32dpuIjAAMflJDDY7wE/
+        XQZBg3Xfm58AR6KPHgy6n2oCLxqYamKf9TC55ZFEwI0j/fX0znbxkzK2XlWv9dNo
+        wiOng1iUq7lPWo5hPT/WwNN3/nepi6ErbFAiyasTRc=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id S2lJAsb4BCjl; Mon,  5 Sep 2022 22:13:06 +0300 (MSK)
+        with ESMTP id ZPEhrgu8W1FC; Mon,  5 Sep 2022 22:13:19 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (T-EXCH-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 5FABB44ACB;
-        Mon,  5 Sep 2022 22:07:37 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 3F28944B1C;
+        Mon,  5 Sep 2022 22:10:03 +0300 (MSK)
 Received: from T-EXCH-08.corp.yadro.com (172.17.11.58) by
  T-EXCH-02.corp.yadro.com (172.17.10.102) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Mon, 5 Sep 2022 22:07:37 +0300
+ 15.1.669.32; Mon, 5 Sep 2022 22:10:03 +0300
 Received: from NB-591.corp.yadro.com (10.199.18.20) by
  T-EXCH-08.corp.yadro.com (172.17.11.58) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.1118.9; Mon, 5 Sep 2022 22:07:36 +0300
+ 15.2.1118.9; Mon, 5 Sep 2022 22:09:54 +0300
 From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
 To:     Martin Petersen <martin.petersen@oracle.com>,
         <target-devel@vger.kernel.org>
 CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH] scsi: target: core: Add a way to hide a port group
-Date:   Sat, 4 Apr 2020 13:48:52 +0300
-Message-ID: <20220905190731.16992-1-d.bogdanov@yadro.com>
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH] scsi: target: core: Set MULTIP bit in INQUIRY
+Date:   Mon, 20 Apr 2020 03:18:45 +0300
+Message-ID: <20220905190947.17349-1-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -62,122 +62,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Roman Bolshakov <r.bolshakov@yadro.com>
+SAM-5 4.8.3 (SCSI target device with multiple SCSI ports structure)
+obligates to set MULTIP bit when there's multiple SCSI target ports:
 
-Default target port group is always returned in the list of port groups,
-even if the behaviour is unwanted, i.e. it has no members and
-non-default port groups are primary port groups.
+> Each device server shall indicate the presence of multiple SCSI target
+> ports by setting the MULTIP bit to one in its standard INQUIRY data
+> (see SPC-4).
 
-A new port group attribute - "hidden" can be used to hide empty port
-groups with no ports in REPORT TARGET PORT GROUPS, including default
-target port group:
-
-  echo 1 > $DEVICE/alua/default_tg_pt_gp/hidden
+The change sets MULTIP bit automatically to indicate the presence of
+multiple SCSI target ports within standard inquiry response data if
+there are multiple target ports in all target port groups of the
+se_device.
 
 Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
-
 The patch is intended for 6.1/scsi-queue branch.
-
 ---
- drivers/target/target_core_alua.c     |  8 ++++++++
- drivers/target/target_core_configfs.c | 29 +++++++++++++++++++++++++++
- include/target/target_core_base.h     |  1 +
- 3 files changed, 38 insertions(+)
+ drivers/target/target_core_spc.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index fb91423a4e2e..dbf9a950d01b 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -164,6 +164,8 @@ target_emulate_report_target_port_groups(struct se_cmd *cmd)
- 	spin_lock(&dev->t10_alua.tg_pt_gps_lock);
- 	list_for_each_entry(tg_pt_gp, &dev->t10_alua.tg_pt_gps_list,
- 			tg_pt_gp_list) {
-+		if (tg_pt_gp->tg_pt_gp_hidden && !tg_pt_gp->tg_pt_gp_members)
-+			continue;
- 		/*
- 		 * Check if the Target port group and Target port descriptor list
- 		 * based on tg_pt_gp_members count will fit into the response payload.
-@@ -308,6 +310,12 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
- 		rc = TCM_UNSUPPORTED_SCSI_OPCODE;
- 		goto out;
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index c14441c89bed..32fb38ce98f4 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -75,6 +75,8 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 	struct se_portal_group *tpg = lun->lun_tpg;
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_session *sess = cmd->se_sess;
++	struct se_lun *tmp_lun;
++	size_t dev_ports = 0;
+ 
+ 	/* Set RMB (removable media) for tape devices */
+ 	if (dev->transport->get_device_type(dev) == TYPE_TAPE)
+@@ -115,6 +117,20 @@ spc_emulate_inquiry_std(struct se_cmd *cmd, unsigned char *buf)
+ 			buf[5] |= 0x1;
  	}
-+	if (l_tg_pt_gp->tg_pt_gp_hidden && !tg_pt_gp->tg_pt_gp_members) {
-+		spin_unlock(&l_lun->lun_tg_pt_gp_lock);
-+		pr_err("Unable to change state for hidden port group with no members\n");
-+		rc = TCM_INVALID_CDB_FIELD;
-+		goto out;
-+	}
- 	valid_states = l_tg_pt_gp->tg_pt_gp_alua_supported_states;
- 	rcu_read_unlock();
  
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 416514c5c7ac..7c0e42e782de 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3029,6 +3029,33 @@ static ssize_t target_tg_pt_gp_preferred_store(struct config_item *item,
- 	return core_alua_store_preferred_bit(to_tg_pt_gp(item), page, count);
- }
++	spin_lock(&dev->se_port_lock);
++	list_for_each_entry(tmp_lun, &dev->dev_sep_list, lun_dev_link) {
++		dev_ports++;
++		/* Exact number of ports does not matter for MULTIP bit */
++		if (dev_ports > 1)
++			break;
++	}
++	spin_unlock(&dev->se_port_lock);
++	/*
++	 * Set MULTIP bit to indicate presence of multiple SCSI target ports
++	 */
++	if (dev_ports > 1)
++		buf[6] |= 0x10;
++
+ 	buf[7] = 0x2; /* CmdQue=1 */
  
-+static ssize_t target_tg_pt_gp_hidden_show(struct config_item *item,
-+					   char *page)
-+{
-+	return sysfs_emit(page, "%d\n", to_tg_pt_gp(item)->tg_pt_gp_hidden);
-+}
-+
-+static ssize_t target_tg_pt_gp_hidden_store(struct config_item *item,
-+					    const char *page, size_t count)
-+{
-+	struct t10_alua_tg_pt_gp *tg_pt_gp = to_tg_pt_gp(item);
-+	int tmp, ret;
-+
-+	ret = kstrtoint(page, 0, &tmp);
-+	if (ret < 0) {
-+		pr_err("Unable to extract hidden flag: %d\n", ret);
-+		return ret;
-+	}
-+
-+	if (tmp != 0 && tmp != 1) {
-+		pr_err("Illegal value for hidden flag: %d\n", tmp);
-+		return -EINVAL;
-+	}
-+	tg_pt_gp->tg_pt_gp_hidden = tmp;
-+
-+	return count;
-+}
-+
- static ssize_t target_tg_pt_gp_tg_pt_gp_id_show(struct config_item *item,
- 		char *page)
- {
-@@ -3115,6 +3142,7 @@ CONFIGFS_ATTR(target_tg_pt_gp_, alua_support_standby);
- CONFIGFS_ATTR(target_tg_pt_gp_, alua_support_active_optimized);
- CONFIGFS_ATTR(target_tg_pt_gp_, alua_support_active_nonoptimized);
- CONFIGFS_ATTR(target_tg_pt_gp_, alua_write_metadata);
-+CONFIGFS_ATTR(target_tg_pt_gp_, hidden);
- CONFIGFS_ATTR(target_tg_pt_gp_, nonop_delay_msecs);
- CONFIGFS_ATTR(target_tg_pt_gp_, trans_delay_msecs);
- CONFIGFS_ATTR(target_tg_pt_gp_, implicit_trans_secs);
-@@ -3138,6 +3166,7 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
- 	&target_tg_pt_gp_attr_trans_delay_msecs,
- 	&target_tg_pt_gp_attr_implicit_trans_secs,
- 	&target_tg_pt_gp_attr_preferred,
-+	&target_tg_pt_gp_attr_hidden,
- 	&target_tg_pt_gp_attr_tg_pt_gp_id,
- 	&target_tg_pt_gp_attr_members,
- 	NULL,
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 8c920456edd9..28cce4ed3f0e 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -297,6 +297,7 @@ struct t10_alua_tg_pt_gp {
- 	int	tg_pt_gp_trans_delay_msecs;
- 	int	tg_pt_gp_implicit_trans_secs;
- 	int	tg_pt_gp_pref;
-+	int	tg_pt_gp_hidden;
- 	int	tg_pt_gp_write_metadata;
- 	u32	tg_pt_gp_members;
- 	int	tg_pt_gp_alua_access_state;
+ 	/*
 -- 
 2.25.1
 
