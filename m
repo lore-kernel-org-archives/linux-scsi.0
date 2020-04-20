@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C594C3A5A0
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 16:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E34C54FD0
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 16:25:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C4BF20775
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 16:25:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8319320857
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Apr 2020 16:25:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="oLc3AJ2z"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="bf9D+rR4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726972AbgDTQZZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Apr 2020 12:25:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39438 "EHLO
+        id S1729431AbgDTQZj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Apr 2020 12:25:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725958AbgDTQZY (ORCPT
+        by vger.kernel.org with ESMTP id S1728932AbgDTQZ2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Apr 2020 12:25:24 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97D22C061A10
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 09:25:24 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id n24so4115996plp.13
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 09:25:24 -0700 (PDT)
+        Mon, 20 Apr 2020 12:25:28 -0400
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5301EC061A41
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 09:25:28 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id t4so4118622plq.12
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2020 09:25:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=5/HuxgmmHlqReW6h8RDiDPaUU+foeFL9gMHI9mR80zQ=;
-        b=oLc3AJ2zDSkJUS41so2hjSzJWNKd+wQTQRY105W2+x1kDo67B9HBOmeWMj71MixgMx
-         Or9Sk5sj3rNm2US+gKQTp3Pa4AgxhFV4SqxT7+A6HxzfaKFMFsWyQbXAeSfmPoABqpNl
-         Co26ffksskFcKs3YvP8b3uw/2SKxJVLuMvcn8=
+        bh=Eeish4b0dApiVROXwgSxWPD6R6u9/nVb7Rxz/mEcfI0=;
+        b=bf9D+rR4RVTl/d8EDJ4rebre5pMf0BlvggkGCYG0ek5YLxATE4clEcjGna06GBTP4w
+         7KzCuHcuZ4k5557dVd5iFpPPe7uodJpjSNuvWbApzF0x+2rntuS/MOdDuyErz1u4A38e
+         nV17RYe/ZjPw4XBZPZnhY2nMCMYSjEly/8cGI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5/HuxgmmHlqReW6h8RDiDPaUU+foeFL9gMHI9mR80zQ=;
-        b=b6Tmg2ww1j/6K+kGdIxZhFWWCmKd9Vph5vMlOlGPqo8cAlV73qrxnqDm8VnArqYXU2
-         FcnafoEFWbBzuV8HvwHNxDIo/KBCmIX8aaW1Go24p9TODFBEufwSTAJQSfPTK6iHl+nb
-         7l+9qFfEfzyd6U2k/31kZeSY/bL7cq1v73erCY3Lr1Dbe9HEbDRniGCWKfh0MHVL87cV
-         i19n81If7TDxp+nJeSgp5dbzBjWYXVgTHqi2dxLXwhpIO9rbQT3Fv6cmApG+VEwCQFAc
-         ckowRHLc4AX9Worx4qpirHvfg1lGpnWttDi4iXjZL+6f+JtLDJWhqN41JySD1kcx+RdE
-         Q2+Q==
-X-Gm-Message-State: AGi0PuZNVnY53dx7t767sfpfoZUDO3y49Ug7+5Nk79V/Y2zCK3jGt3Bt
-        pfyMS0kZhAXVL0k07NPHYMSNiw==
-X-Google-Smtp-Source: APiQypKpCrNnEeTYcINBy79o3eKcejCinyX6OW/b2TJcQxL+18Xe1Dv9nBf3MYUu730zR6e0r+X2hA==
-X-Received: by 2002:a17:90a:710a:: with SMTP id h10mr213647pjk.152.1587399924208;
-        Mon, 20 Apr 2020 09:25:24 -0700 (PDT)
+        bh=Eeish4b0dApiVROXwgSxWPD6R6u9/nVb7Rxz/mEcfI0=;
+        b=hJVCoSK73BeWyJo7zY8cjnahmmpUw6QyYKpMM0M91KXtJ2iyLgUfW2vOb7z813vB3b
+         9jBYYEpkJxzWcjIye9V9LNnCTPIQqStuQs/sDT8jKoG4Pd1XP9eVU2MrGMMdKg6Cyxdj
+         AEe+DZCPWs5ImNu0+iwm/uQuaPeLLvQ8snlAevf7eE8dWR3W9XFd6YzL3Y8tnyyJA5yw
+         73F+JtX+eQVh+9zpkygywl+MCMCi65RN8yeHoHuDjzmakMhTzUEZ2CfXeA4CdBu8An56
+         Q4k1PpIUeddqTgvkmWX8Y7mhRHpIKb3KZh0ok/14m2WKmnpZuHZw/WbNy0SLn92bxAmg
+         jbVg==
+X-Gm-Message-State: AGi0PuZ30+lnivmaNssjVqZGsOGkxwGhS4vhL1NU2wQOpO4yA91uNSsJ
+        VpSasSUvbPFT/uXrtO/XkcQr6g==
+X-Google-Smtp-Source: APiQypJ2um6WEi/dNweSMis0tXgK55PhuM1j2i0i3wYSHB8seu03qmbLpIwN83SaTaH9ExAeqMD74Q==
+X-Received: by 2002:a17:90a:1955:: with SMTP id 21mr193496pjh.25.1587399927822;
+        Mon, 20 Apr 2020 09:25:27 -0700 (PDT)
 Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id p64sm93150pjp.7.2020.04.20.09.25.23
+        by smtp.gmail.com with ESMTPSA id p64sm93150pjp.7.2020.04.20.09.25.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Apr 2020 09:25:23 -0700 (PDT)
+        Mon, 20 Apr 2020 09:25:27 -0700 (PDT)
 From:   Douglas Anderson <dianders@chromium.org>
 To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>,
@@ -62,9 +62,9 @@ Cc:     linux-scsi@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>,
         Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
         paolo.valente@linaro.org, Douglas Anderson <dianders@chromium.org>,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v5 1/4] blk-mq: In blk_mq_dispatch_rq_list() "no budget" is a reason to kick
-Date:   Mon, 20 Apr 2020 09:24:51 -0700
-Message-Id: <20200420092357.v5.1.I1f95c459e51962b8d2c83e869913b6befda2255c@changeid>
+Subject: [PATCH v5 4/4] Revert "scsi: core: run queue if SCSI device queue isn't ready and queue is idle"
+Date:   Mon, 20 Apr 2020 09:24:54 -0700
+Message-Id: <20200420092357.v5.4.I630e6ca4cdcf9ab13ea899274745f9e3174eb12b@changeid>
 X-Mailer: git-send-email 2.26.1.301.g55bc3eb7cb9-goog
 In-Reply-To: <20200420162454.48679-1-dianders@chromium.org>
 References: <20200420162454.48679-1-dianders@chromium.org>
@@ -75,74 +75,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In blk_mq_dispatch_rq_list(), if blk_mq_sched_needs_restart() returns
-true and the driver returns BLK_STS_RESOURCE then we'll kick the
-queue.  However, there's another case where we might need to kick it.
-If we were unable to get budget we can be in much the same state as
-when the driver returns BLK_STS_RESOURCE, so we should treat it the
-same.
+This reverts commit 7e70aa789d4a0c89dbfbd2c8a974a4df717475ec.
 
-It should be noted that even if we add a whole bunch of extra kicking
-to the queue in other patches this patch is still important.
-Specifically any kicking that happened before we re-spliced leftover
-requests into 'hctx->dispatch' wouldn't have found any work, so we
-really need to make sure we kick ourselves after we've done the
-splicing.
+Now that we have the patches ("blk-mq: In blk_mq_dispatch_rq_list()
+"no budget" is a reason to kick") and ("blk-mq: Rerun dispatching in
+the case of budget contention") we should no longer need the fix in
+the SCSI code.  Revert it, resolving conflicts with other patches that
+have touched this code.
+
+With this revert (and the two new patches) I can run the script that
+was in commit 7e70aa789d4a ("scsi: core: run queue if SCSI device
+queue isn't ready and queue is idle") in a loop with no failure.  If I
+do this revert without the two new patches I can easily get a failure.
 
 Signed-off-by: Douglas Anderson <dianders@chromium.org>
 Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
 
-Changes in v5:
-- Rebase atop commit 5fe56de799ad ("...Put driver tag...when no budget")
-
+Changes in v5: None
 Changes in v4: None
 Changes in v3:
-- Note why blk_mq_dispatch_rq_list() change is needed.
+- ("Revert "scsi: core: run queue...") new for v3.
 
 Changes in v2: None
 
- block/blk-mq.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_lib.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index a7785df2c944..1c4bedf500c5 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1206,6 +1206,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
- 	bool no_tag = false;
- 	int errors, queued;
- 	blk_status_t ret = BLK_STS_OK;
-+	bool no_budget_avail = false;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 47835c4b4ee0..ea18f618dc66 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1610,12 +1610,7 @@ static bool scsi_mq_get_budget(struct blk_mq_hw_ctx *hctx)
+ 	struct request_queue *q = hctx->queue;
+ 	struct scsi_device *sdev = q->queuedata;
  
- 	if (list_empty(list))
- 		return false;
-@@ -1224,6 +1225,7 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
- 		hctx = rq->mq_hctx;
- 		if (!got_budget && !blk_mq_get_dispatch_budget(hctx)) {
- 			blk_mq_put_driver_tag(rq);
-+			no_budget_avail = true;
- 			break;
- 		}
+-	if (scsi_dev_queue_ready(q, sdev))
+-		return true;
+-
+-	if (atomic_read(&sdev->device_busy) == 0 && !scsi_device_blocked(sdev))
+-		blk_mq_delay_run_hw_queue(hctx, SCSI_QUEUE_DELAY);
+-	return false;
++	return scsi_dev_queue_ready(q, sdev);
+ }
  
-@@ -1320,13 +1322,15 @@ bool blk_mq_dispatch_rq_list(struct request_queue *q, struct list_head *list,
- 		 *
- 		 * If driver returns BLK_STS_RESOURCE and SCHED_RESTART
- 		 * bit is set, run queue after a delay to avoid IO stalls
--		 * that could otherwise occur if the queue is idle.
-+		 * that could otherwise occur if the queue is idle.  We'll do
-+		 * similar if we couldn't get budget and SCHED_RESTART is set.
- 		 */
- 		needs_restart = blk_mq_sched_needs_restart(hctx);
- 		if (!needs_restart ||
- 		    (no_tag && list_empty_careful(&hctx->dispatch_wait.entry)))
- 			blk_mq_run_hw_queue(hctx, true);
--		else if (needs_restart && (ret == BLK_STS_RESOURCE))
-+		else if (needs_restart && (ret == BLK_STS_RESOURCE ||
-+					   no_budget_avail))
- 			blk_mq_delay_run_hw_queue(hctx, BLK_MQ_RESOURCE_DELAY);
- 
- 		blk_mq_update_dispatch_busy(hctx, true);
+ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
 -- 
 2.26.1.301.g55bc3eb7cb9-goog
 
