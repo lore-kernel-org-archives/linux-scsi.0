@@ -8,61 +8,62 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEDF3C55184
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 16:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF09C54FCC
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 16:57:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BD002071C
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 16:56:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67A812070B
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 16:57:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aJCwEkkT"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OoQpa52k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729538AbgDUQ41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 12:56:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43140 "EHLO
+        id S1729630AbgDUQ5B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 12:57:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729522AbgDUQ4U (ORCPT
+        by vger.kernel.org with ESMTP id S1729626AbgDUQ46 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 12:56:20 -0400
-Received: from mail-vs1-xe43.google.com (mail-vs1-xe43.google.com [IPv6:2607:f8b0:4864:20::e43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D537C061A41;
-        Tue, 21 Apr 2020 09:56:20 -0700 (PDT)
-Received: by mail-vs1-xe43.google.com with SMTP id o3so8888093vsd.4;
-        Tue, 21 Apr 2020 09:56:20 -0700 (PDT)
+        Tue, 21 Apr 2020 12:56:58 -0400
+Received: from mail-ua1-x943.google.com (mail-ua1-x943.google.com [IPv6:2607:f8b0:4864:20::943])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 941D7C061A41;
+        Tue, 21 Apr 2020 09:56:58 -0700 (PDT)
+Received: by mail-ua1-x943.google.com with SMTP id v24so5331446uak.0;
+        Tue, 21 Apr 2020 09:56:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=37fOrxE1fKmyrZcZ9uj9U00yYV6qcOdwlC6FHpWLz5o=;
-        b=aJCwEkkTS7Lf+D5PtLNfxTG06ZCZMDnPCk2mronKD6jrzO3Pswn7YY1gtpWoVzO3IL
-         F36IrlqgVicFqfIITTdcnj62P2dkVycu/TZrL51HyFU0l0BsX1x1LGxaIDT6IztoovH6
-         bh4EwbmXnBInbOmk2EBYO7cApQ3YNW23VPmCqcUglyV1mFZoD0ZH/XADATAupn44qJy7
-         DPFFErwP6gc1INmcHzDV0iZrrHvLu4aSktpONVbLZtk/ulBon2tTEnpUmd4TX0zkFZcq
-         oq0vPn06xkcepeP2I1GOQ4wXJP/R8gURQ43Ri211jz/dNwRKmp7bZZ6o5uTYsfDvEUGN
-         wIlQ==
+         :cc;
+        bh=+roaZY0aQq5IerWYrtAtqtTIyLi3/oukkignYdqQ2gM=;
+        b=OoQpa52k6Fd4P7opyBenigG8zgeRF6Am+UbnctENdxTHpjt3uX/wsSqtr+hw2usoNW
+         +wzlwcoFKjhAphlxohZZ7wpwF5Qrc9fV8XHooELQipt2XAUOhINX8t+af9K/NAe/1ouI
+         9B5rYdBhepuERj8H1W00szQjqhiZ71Zijh3deNhrAUcIYTzkpt3TrImmmRojGpU7e4I5
+         dlqQFXd3nIKJ1xY2u/LfU+WMZ3ldnJh6TD+T0KVTo0n8k6aPAK9y7J8ulWGGHuYr6+/U
+         +AeUSSRpOYhzyNyrNpH11Hnjn80OeP68bBoIu46OSmWBeuBfK0PCUDwO6ffn01bzJe6L
+         Z6kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=37fOrxE1fKmyrZcZ9uj9U00yYV6qcOdwlC6FHpWLz5o=;
-        b=cp6SM6RFoueFJSZFI+6EGBbIHmRsi5qeM8GL1JFajpXiZ0A6mIvgt6ckf8QoSoo+//
-         MxnolvD6lKG7A+ldisMGychkUYv8fGenRnb/6qz5mhi9qMjrQ779tBTo4VISDBEWIDOl
-         5tOPa0d9MJ0uXsXtmhmG+Y2pqTkabjlcL3fUzDF1sQ119TqQykPdvRhUIRRYhy/HI9eG
-         gEnQiMr8ftN8i2mVNzn2cpy6FW2RQGW4oUZNSK4z3qdW2Pv/uoBdaChB/y15AQHfbLLI
-         kJvQDCq8P59J5rKvc2/QBv5aOef6LGedvFaRoG8ez3ovdK2q0QaCZgbrVHAozxIM2QMe
-         15vQ==
-X-Gm-Message-State: AGi0PubxRa2O7n+CWpdmxDQLPWpu9QdSnfRzBIlKWXaGSY6JaKKoEkbd
-        kbHVYdhAARr3mgQ4RDTK890z/bu9LKT3ppEoEow=
-X-Google-Smtp-Source: APiQypIY18Sf6NoiOtOYbIxR9HPlyKzHoHfzV8rfCvZ4e9oUlqLt/eeDj+mCotV8G5ALwPIda1o4A6En/JPCDyZus3w=
-X-Received: by 2002:a67:2dcb:: with SMTP id t194mr10831926vst.136.1587488178955;
- Tue, 21 Apr 2020 09:56:18 -0700 (PDT)
+         :message-id:subject:to:cc;
+        bh=+roaZY0aQq5IerWYrtAtqtTIyLi3/oukkignYdqQ2gM=;
+        b=ZMHPaVMc0e54MdxNEz/TU58/sgorpLt0Umfqmfnc7GMvJst+Kz7bFnydjn+f02zXhh
+         polU8T7NuUOyIlK1VXmrMFTJKrANbMue+VDI5WjFgMsshZvee2YMGHy14GRTeb/Kptmj
+         qxz+6seBgK/yauFNegb7vZpRIJYQ3PMI4ek1/FENCLrlhebNQ6c6q5ebVASSUP/SPIlA
+         nS7EYXPgeYDc/dE7ITxu+ak0oTDByfJ9LcUMKPQNRaj4Gs/K9OlVMtcYF1URofKD3fT8
+         6h6d3Y3p4C0d/YXyqb7myqWJkDAYSgDVMgNHlJq9pvnk0bY2jnDG5QqnnozSZFYKmqzr
+         uEJw==
+X-Gm-Message-State: AGi0Pua2E7QoLUScFQvx6vdM4/UELyE6aY8HINm9HZy7RwU0Srx2Z4EO
+        63kTv8KXcskxT6Mt7gGQGxPFH+PEhDmL3fEDa7o=
+X-Google-Smtp-Source: APiQypIpbVZ62pOPQuT8rk9YlJ0othDRtz8/TGgGxaOQSXcQd4x9m2DNm9aXz3E3Sig+Sy4/vsuBK0ISisEBtxdsnGY=
+X-Received: by 2002:ab0:7298:: with SMTP id w24mr13269756uao.95.1587488217689;
+ Tue, 21 Apr 2020 09:56:57 -0700 (PDT)
 MIME-Version: 1.0
-References: <CGME20200417181018epcas5p1e51c7ca0fe81df16554548df5b82e3e4@epcas5p1.samsung.com>
- <20200417175944.47189-1-alim.akhtar@samsung.com> <20200417175944.47189-7-alim.akhtar@samsung.com>
-In-Reply-To: <20200417175944.47189-7-alim.akhtar@samsung.com>
+References: <CGME20200417181022epcas5p1f83138da6e76ff0917de88e913ef8e32@epcas5p1.samsung.com>
+ <20200417175944.47189-1-alim.akhtar@samsung.com> <20200417175944.47189-9-alim.akhtar@samsung.com>
+In-Reply-To: <20200417175944.47189-9-alim.akhtar@samsung.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Tue, 21 Apr 2020 22:25:43 +0530
-Message-ID: <CAGOxZ51jnbnHjVDQitbvSkrPH2=OdBKQHPnnT8yr+nKARud-WQ@mail.gmail.com>
-Subject: Re: [PATCH v6 06/10] dt-bindings: phy: Document Samsung UFS PHY bindings
+Date:   Tue, 21 Apr 2020 22:26:21 +0530
+Message-ID: <CAGOxZ52mQ=H5DR7nWJY3RMBuJMr9SXERukJs1UK_Wr1XHP9TZg@mail.gmail.com>
+Subject: Re: [PATCH v6 08/10] dt-bindings: ufs: Add DT binding documentation
+ for ufs
 To:     Alim Akhtar <alim.akhtar@samsung.com>
 Cc:     robh <robh@kernel.org>, devicetree@vger.kernel.org,
         linux-scsi@vger.kernel.org, Krzysztof Kozlowski <krzk@kernel.org>,
@@ -75,110 +76,122 @@ Cc:     robh <robh@kernel.org>, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Rob
-Request you to comment on this dt-bindings documentation.
+Request to comment on this dt-bindings documentation.
 Thanks
 
-On Fri, Apr 17, 2020 at 11:43 PM Alim Akhtar <alim.akhtar@samsung.com> wrot=
-e:
+On Fri, Apr 17, 2020 at 11:41 PM Alim Akhtar <alim.akhtar@samsung.com> wrote:
 >
-> This patch documents Samsung UFS PHY device tree bindings
+> This patch adds DT binding for samsung ufs hci
 >
 > Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> Tested-by: Pawe=C5=82 Chmiel <pawel.mikolaj.chmiel@gmail.com>
 > ---
->  .../bindings/phy/samsung,ufs-phy.yaml         | 74 +++++++++++++++++++
->  1 file changed, 74 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy=
-.yaml
+>  .../bindings/ufs/samsung,exynos-ufs.yaml      | 93 +++++++++++++++++++
+>  1 file changed, 93 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
 >
-> diff --git a/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml b=
-/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
+> diff --git a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
 > new file mode 100644
-> index 000000000000..352d5dda320d
+> index 000000000000..954338b7f37d
 > --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
-> @@ -0,0 +1,74 @@
+> +++ b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
+> @@ -0,0 +1,93 @@
 > +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
 > +%YAML 1.2
 > +---
-> +$id: http://devicetree.org/schemas/phy/samsung,ufs-phy.yaml#
+> +$id: http://devicetree.org/schemas/ufs/samsung,exynos-ufs.yaml#
 > +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > +
-> +title: Samsung SoC series UFS PHY Device Tree Bindings
+> +title: Samsung SoC series UFS host controller Device Tree Bindings
 > +
 > +maintainers:
 > +  - Alim Akhtar <alim.akhtar@samsung.com>
 > +
+> +description: |
+> +  Each Samsung UFS host controller instance should have its own node.
+> +  This binding define Samsung specific binding other then what is used
+> +  in the common ufshcd bindings
+> +  [1] Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +
 > +properties:
-> +  "#phy-cells":
-> +    const: 0
 > +
 > +  compatible:
 > +    enum:
-> +      - samsung,exynos7-ufs-phy
+> +      - samsung,exynos7-ufs
 > +
 > +  reg:
-> +    maxItems: 1
-> +    description: PHY base register address
+> +    items:
+> +     - description: HCI register
+> +     - description: vendor specific register
+> +     - description: unipro register
+> +     - description: UFS protector register
 > +
 > +  reg-names:
 > +    items:
-> +      - const: phy-pma
+> +      - const: hci
+> +      - const: vs_hci
+> +      - const: unipro
+> +      - const: ufsp
 > +
 > +  clocks:
+> +    maxItems: 2
 > +    items:
-> +      - description: PLL reference clock
-> +      - description: symbol clock for input symbol ( rx0-ch0 symbol cloc=
-k)
-> +      - description: symbol clock for input symbol ( rx1-ch1 symbol cloc=
-k)
-> +      - description: symbol clock for output symbol ( tx0 symbol clock)
+> +      - description: ufs link core clock
+> +      - description: unipro main clock
 > +
 > +  clock-names:
+> +    maxItems: 2
 > +    items:
-> +      - const: ref_clk
-> +      - const: rx1_symbol_clk
-> +      - const: rx0_symbol_clk
-> +      - const: tx0_symbol_clk
+> +      - const: core_clk
+> +      - const: sclk_unipro_main
 > +
-> +  samsung,pmu-syscon:
-> +    $ref: '/schemas/types.yaml#/definitions/phandle'
-> +    description: phandle for PMU system controller interface, used to
-> +                 control pmu registers bits for ufs m-phy
+> +  interrupts:
+> +    items:
+> +      - description: interrupt signal for various ufshc status
+> +
+> +  phys:
+> +    maxItems: 1
+> +    description:
+> +      phandle of the ufs phy node
+> +
+> +  phy-names:
+> +      const: ufs-phy
 > +
 > +required:
-> +  - "#phy-cells"
 > +  - compatible
 > +  - reg
-> +  - reg-names
+> +  - interrupts
+> +  - phys
+> +  - phy-names
 > +  - clocks
 > +  - clock-names
-> +  - samsung,pmu-syscon
 > +
 > +examples:
 > +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
 > +    #include <dt-bindings/clock/exynos7-clk.h>
 > +
-> +    ufs_phy: ufs-phy@15571800 {
-> +        compatible =3D "samsung,exynos7-ufs-phy";
-> +        reg =3D <0x15571800 0x240>;
-> +        reg-names =3D "phy-pma";
-> +        samsung,pmu-syscon =3D <&pmu_system_controller>;
-> +        #phy-cells =3D <0>;
-> +        clocks =3D <&clock_fsys1 SCLK_COMBO_PHY_EMBEDDED_26M>,
-> +                 <&clock_fsys1 PHYCLK_UFS20_RX1_SYMBOL_USER>,
-> +                 <&clock_fsys1 PHYCLK_UFS20_RX0_SYMBOL_USER>,
-> +                 <&clock_fsys1 PHYCLK_UFS20_TX0_SYMBOL_USER>;
-> +        clock-names =3D "ref_clk", "rx1_symbol_clk",
-> +                      "rx0_symbol_clk", "tx0_symbol_clk";
-> +
+> +    ufs: ufs@15570000 {
+> +       compatible = "samsung,exynos7-ufs";
+> +       reg = <0x15570000 0x100>,
+> +             <0x15570100 0x100>,
+> +             <0x15571000 0x200>,
+> +             <0x15572000 0x300>;
+> +       reg-names = "hci", "vs_hci", "unipro", "ufsp";
+> +       interrupts = <GIC_SPI 200 IRQ_TYPE_LEVEL_HIGH>;
+> +       clocks = <&clock_fsys1 ACLK_UFS20_LINK>,
+> +                <&clock_fsys1 SCLK_UFSUNIPRO20_USER>;
+> +       clock-names = "core_clk", "sclk_unipro_main";
+> +       pinctrl-names = "default";
+> +       pinctrl-0 = <&ufs_rst_n &ufs_refclk_out>;
+> +       pclk-freq-avail-range = <70000000 133000000>;
+> +       phys = <&ufs_phy>;
+> +       phy-names = "ufs-phy";
 > +    };
 > +...
 > --
@@ -186,6 +199,6 @@ k)
 >
 
 
---=20
+-- 
 Regards,
 Alim
