@@ -2,123 +2,177 @@ Return-Path: <SRS0=Tsb4=6F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B6BFC54FC9
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 14:59:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5773C54FC9
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 15:14:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23966206D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 14:59:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="r4SZPjnS"
+	by mail.kernel.org (Postfix) with ESMTP id A8CD1206A5
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 15:14:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728786AbgDUO7j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 10:59:39 -0400
-Received: from mail1.bemta26.messagelabs.com ([85.158.142.112]:42376 "EHLO
-        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728676AbgDUO7i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 10:59:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1587481176; i=@ts.fujitsu.com;
-        bh=s1QordmBGN62hiqd69tB3FP9yhyhlyPezd/i2GKz6ks=;
-        h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=r4SZPjnS+DLTC6vXVJtnmdlLLPcAKnUVwm/kHOR6JpAkRj6Wo2JzgYe8Z7UejHrLK
-         rejLZmL8PYHcMVrXgNX7SNBsIilbOotCVR0EDAkwb0u4U2oZ7lgYIU8uW3GmLAVeiR
-         PQHIQrDtNp78pWccrD7OYaKR5egvcDMhBDHl5f8+UUgjo3HGCniC1TFgpT0UzlJVcK
-         h0FnXNiI5nRNZO6n42ebeW+KlvWjGGDjLjrOz197EYOQxwr1nO3p2tddnpdU5MFWvg
-         SrJrLowBegQWk9ARd0lG6zn12sAGB5f0qmt6ni1ZHUGD6bH6b0HPBWAqE5hzoGTY1x
-         PDNPqM4xOcHOA==
-Received: from [100.113.6.250] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-1.bemta.az-b.eu-central-1.aws.symcld.net id 23/52-32019-75A0F9E5; Tue, 21 Apr 2020 14:59:35 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDIsWRWlGSWpSXmKPExsViZ8MxVTeca36
-  cwZJ2JYtpH34yW6xY8J7Rovv6DjaL5cf/MVmsP7KB0aJ16VsmBzaPy1e8PXbOusvu8fHpLRaP
-  9/uusnl83iQXwBrFmpmXlF+RwJox7fdMtoKJ3BXPbp5nb2DczNnFyMUhJDCLUWLqnVksXYycH
-  MICoRJ9v28ygiREBLYzSvxdvI8VJCEkkCbxcV4TO4jNJmAgsWLSfbAGXgFHiZlXvjGC2CwCqh
-  ITz7aB1YsKhEu82PKHFaJGUOLkzCdg9ZwClhLLl35mBrGZBcwk5m1+CGWLS9x6Mp8JwpaX2P5
-  2DvMERt5ZSNpnIWmZhaRlFpKWBYwsqxgtk4oy0zNKchMzc3QNDQx0DQ2NdU11DY0t9RKrdJP0
-  Ukt1k1PzSooSgbJ6ieXFesWVuck5KXp5qSWbGIGBnlLI2r2D8dPa93qHGCU5mJREeavOz4sT4
-  kvKT6nMSCzOiC8qzUktPsQow8GhJMH7k3V+nJBgUWp6akVaZg4w6mDSEhw8SiK8LJxAad7igs
-  Tc4sx0iNQpRkUpcd5HHEAJAZBERmkeXBss0i8xykoJ8zIyMDAI8RSkFuVmlqDKv2IU52BUEuY
-  NApnCk5lXAjf9FdBiJqDF+aazQRaXJCKkpBqYHIK+OX+P2fr+n5HphcuWmm2vNjDbr3soMIWd
-  pzUjqq79Wti+TuMNF/d/275ALjJ9o/a2o+U6T1a8TnHPmfphx86u76Yf/mwTZy1cPU/+8PYlL
-  CHXi35MtZho0sZ99TanucScOXKm17xfRfatb1314+K2dTw86peuN/uU5k+aL5X6XMb5SN4GRT
-  2FHbejJRP/xNWeKQmeJC54/87POwpitkKiWdcCOS7M3ei+8PbtU3Hmas+lBRWVW7+tnTvz44a
-  bUxUkv34/+WL2GUeNL4VsKeozvVKzVvzk/XmiTmju268abK9q7p7Z8iBi2iGjKlvd01zRiYGR
-  10K6WI1meh9f8lglfnqRwKFlQq9mGdycWq7EUpyRaKjFXFScCAASs/HGbwMAAA==
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-2.tower-238.messagelabs.com!1587481175!799734!1
-X-Originating-IP: [62.60.8.149]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 28977 invoked from network); 21 Apr 2020 14:59:35 -0000
-Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
-  by server-2.tower-238.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 21 Apr 2020 14:59:35 -0000
-Received: from [172.17.80.59] ([172.17.80.59])
-        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with ESMTP id 03LEwhbl019952;
-        Tue, 21 Apr 2020 15:58:55 +0100
-Subject: Re: [RFC PATCH 04/12] target: use tpid in
- target_stat_iport_port_ident_show
-To:     Mike Christie <mchristi@redhat.com>, jsmart2021@gmail.com,
-        bvanassche@acm.org, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20200420191426.17055-1-mchristi@redhat.com>
- <20200420191426.17055-5-mchristi@redhat.com>
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Message-ID: <be44ad27-76fe-156f-6f48-11d522212db1@ts.fujitsu.com>
-Date:   Tue, 21 Apr 2020 16:58:38 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.1.0
+        id S1725902AbgDUPOh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 11:14:37 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:41919 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725613AbgDUPOh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Apr 2020 11:14:37 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 6D98D204248;
+        Tue, 21 Apr 2020 17:14:34 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id j4IuVgwgzRQ5; Tue, 21 Apr 2020 17:14:32 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 96A32204177;
+        Tue, 21 Apr 2020 17:14:31 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        Damien.LeMoal@wdc.com
+Subject: [PATCH v5 1/8] scsi_debug: randomize command completion time
+Date:   Tue, 21 Apr 2020 11:14:17 -0400
+Message-Id: <20200421151424.32668-2-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.26.1
+In-Reply-To: <20200421151424.32668-1-dgilbert@interlog.com>
+References: <20200421151424.32668-1-dgilbert@interlog.com>
 MIME-Version: 1.0
-In-Reply-To: <20200420191426.17055-5-mchristi@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/20/20 21:14, Mike Christie wrote:
-> diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-> index 237309d..cc9c966 100644
-> --- a/drivers/target/target_core_stat.c
-> +++ b/drivers/target/target_core_stat.c
-> @@ -1309,8 +1309,8 @@ static ssize_t target_stat_iport_port_ident_show(struct config_item *item,
->   	struct se_node_acl *nacl = lacl->se_lun_nacl;
->   	struct se_session *se_sess;
->   	struct se_portal_group *tpg;
-> +	char *session_id = NULL;
->   	ssize_t ret;
-> -	unsigned char buf[64];
->   
->   	spin_lock_irq(&nacl->nacl_sess_lock);
->   	se_sess = nacl->nacl_sess;
-> @@ -1319,13 +1319,13 @@ static ssize_t target_stat_iport_port_ident_show(struct config_item *item,
->   		return -ENODEV;
->   	}
->   
-> +	session_id = transport_id_get_sid(se_sess->tpid);
-> +	if (!session_id)
-> +		session_id = "";
->   	tpg = nacl->se_tpg;
->   	/* scsiAttIntrPortName+scsiAttIntrPortIdentifier */
-> -	memset(buf, 0, 64);
-> -	if (tpg->se_tpg_tfo->sess_get_initiator_sid != NULL)
-> -		tpg->se_tpg_tfo->sess_get_initiator_sid(se_sess, buf, 64);
-> -
-> -	ret = snprintf(page, PAGE_SIZE, "%s+i+%s\n", nacl->initiatorname, buf);
-> +	ret = snprintf(page, PAGE_SIZE, "%s+i+%s\n", nacl->initiatorname,
-> +		       session_id);
->   	spin_unlock_irq(&nacl->nacl_sess_lock);
->   	return ret;
->   }
-> 
-AFAICS, after the change "struct se_portal_group tpg" is no longer
-necessary and can be removed completely.
+Add a new command line option (e.g. random=1) and sysfs attribute
+that causes subsequent command completion times to be between the
+current command delay setting and 0. A unformily distributed 32
+bit, kernel provided integer is used for this purpose.
+
+Since the existing 'delay' whose units are jiffies (typically
+milliseconds) and 'ndelay' (units: nanoseconds) options (and sysfs
+attributes) span a range greater than 32 bits, some scaling is
+required.
+
+The purpose of this patch is to widen the range of testing cases
+that are visited in long running tests. Put simply: rarely struct
+race conditions are more likely to be found when this facility is
+used.
+
+The default is the previous case in which all command completions
+were roughly equal to (if not, slightly longer) than the value
+given by the 'delay' or 'ndelay' settings (or their defaults).
+This option's default is equivalent to setting 'random=0' .
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 42 ++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 4c6c448dc2df..d54ef83c78d8 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -39,6 +39,7 @@
+ #include <linux/uuid.h>
+ #include <linux/t10-pi.h>
+ #include <linux/msdos_partition.h>
++#include <linux/random.h>
+ 
+ #include <net/checksum.h>
+ 
+@@ -126,6 +127,7 @@ static const char *sdebug_version_date = "20190125";
+ #define DEF_PHYSBLK_EXP 0
+ #define DEF_OPT_XFERLEN_EXP 0
+ #define DEF_PTYPE   TYPE_DISK
++#define DEF_RANDOM false
+ #define DEF_REMOVABLE false
+ #define DEF_SCSI_LEVEL   7    /* INQUIRY, byte2 [6->SPC-4; 7->SPC-5] */
+ #define DEF_SECTOR_SIZE 512
+@@ -656,6 +658,7 @@ static unsigned int sdebug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
+ static unsigned int sdebug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
+ static unsigned int sdebug_write_same_length = DEF_WRITESAME_LENGTH;
+ static int sdebug_uuid_ctl = DEF_UUID_CTL;
++static bool sdebug_random = DEF_RANDOM;
+ static bool sdebug_removable = DEF_REMOVABLE;
+ static bool sdebug_clustering;
+ static bool sdebug_host_lock = DEF_HOST_LOCK;
+@@ -4355,9 +4358,21 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 		ktime_t kt;
+ 
+ 		if (delta_jiff > 0) {
+-			kt = ns_to_ktime((u64)delta_jiff * (NSEC_PER_SEC / HZ));
+-		} else
+-			kt = ndelay;
++			u64 ns = jiffies_to_nsecs(delta_jiff);
++
++			if (sdebug_random && ns < U32_MAX) {
++				ns = prandom_u32_max((u32)ns);
++			} else if (sdebug_random) {
++				ns >>= 12;	/* scale to 4 usec precision */
++				if (ns < U32_MAX)	/* over 4 hours max */
++					ns = prandom_u32_max((u32)ns);
++				ns <<= 12;
++			}
++			kt = ns_to_ktime(ns);
++		} else {	/* ndelay has a 4.2 second max */
++			kt = sdebug_random ? prandom_u32_max((u32)ndelay) :
++					     (u32)ndelay;
++		}
+ 		if (!sd_dp->init_hrt) {
+ 			sd_dp->init_hrt = true;
+ 			sqcp->sd_dp = sd_dp;
+@@ -4452,6 +4467,7 @@ module_param_named(opts, sdebug_opts, int, S_IRUGO | S_IWUSR);
+ module_param_named(physblk_exp, sdebug_physblk_exp, int, S_IRUGO);
+ module_param_named(opt_xferlen_exp, sdebug_opt_xferlen_exp, int, S_IRUGO);
+ module_param_named(ptype, sdebug_ptype, int, S_IRUGO | S_IWUSR);
++module_param_named(random, sdebug_random, bool, S_IRUGO | S_IWUSR);
+ module_param_named(removable, sdebug_removable, bool, S_IRUGO | S_IWUSR);
+ module_param_named(scsi_level, sdebug_scsi_level, int, S_IRUGO);
+ module_param_named(sector_size, sdebug_sector_size, int, S_IRUGO);
+@@ -4512,6 +4528,7 @@ MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err...
+ MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
+ MODULE_PARM_DESC(opt_xferlen_exp, "optimal transfer length granularity exponent (def=physblk_exp)");
+ MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
++MODULE_PARM_DESC(random, "If set, uniformly randomize command duration between 0 and delay_in_ns");
+ MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
+ MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=7[SPC-5])");
+ MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
+@@ -5102,6 +5119,24 @@ static ssize_t map_show(struct device_driver *ddp, char *buf)
+ }
+ static DRIVER_ATTR_RO(map);
+ 
++static ssize_t random_show(struct device_driver *ddp, char *buf)
++{
++	return scnprintf(buf, PAGE_SIZE, "%d\n", (int)sdebug_random);
++}
++
++static ssize_t random_store(struct device_driver *ddp, const char *buf,
++			    size_t count)
++{
++	int n;
++
++	if (count > 0 && kstrtoint(buf, 10, &n) == 0 && n >= 0) {
++		sdebug_random = (n > 0);
++		return count;
++	}
++	return -EINVAL;
++}
++static DRIVER_ATTR_RW(random);
++
+ static ssize_t removable_show(struct device_driver *ddp, char *buf)
+ {
+ 	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_removable ? 1 : 0);
+@@ -5212,6 +5247,7 @@ static struct attribute *sdebug_drv_attrs[] = {
+ 	&driver_attr_guard.attr,
+ 	&driver_attr_ato.attr,
+ 	&driver_attr_map.attr,
++	&driver_attr_random.attr,
+ 	&driver_attr_removable.attr,
+ 	&driver_attr_host_lock.attr,
+ 	&driver_attr_ndelay.attr,
+-- 
+2.26.1
+
