@@ -2,245 +2,165 @@ Return-Path: <SRS0=Tsb4=6F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62AD0C55182
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 20:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFBAC54FC9
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 20:34:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 401BC206B8
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 20:01:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B13320724
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 20:34:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="aCxtKpIP"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B6gZ0zqQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726245AbgDUUBo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 16:01:44 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:60965 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726160AbgDUUBn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 16:01:43 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1587499302; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=0UuX/wSK45nkB5sU+cHphiivnPfpWOi1oe6fznQzbCU=; b=aCxtKpIP5uOs7HhiXbpr9XFhDc4rNrXHshBc8DSu5+MarsqIfK9AC5cL4qvZL9PzRNpmZXuT
- QF0cYb95yBEFUdkWbRwL47MIuoFJJ6TN6DG3A8RZyAbfnYCdtmf8TKofaSOpOuMyFrH0dnKM
- sELKZnv6do0eeLZzeIEfsODXHO0=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e9f5101.7f0d00545180-smtp-out-n04;
- Tue, 21 Apr 2020 20:01:05 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5DE0AC44793; Tue, 21 Apr 2020 20:01:03 +0000 (UTC)
-Received: from [192.168.8.111] (cpe-70-95-153-89.san.res.rr.com [70.95.153.89])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 21053C432C2;
-        Tue, 21 Apr 2020 20:01:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 21053C432C2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 1/3] scsi: ufs: add write booster feature support
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1586374414.git.asutoshd@codeaurora.org>
- <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
- <SN6PR04MB4640E5A6BAAD89DDC3F2FFE0FCDC0@SN6PR04MB4640.namprd04.prod.outlook.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <87344180-7da6-ee3a-3503-39a64a41d552@codeaurora.org>
-Date:   Tue, 21 Apr 2020 13:01:00 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
-MIME-Version: 1.0
-In-Reply-To: <SN6PR04MB4640E5A6BAAD89DDC3F2FFE0FCDC0@SN6PR04MB4640.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726151AbgDUUeF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 16:34:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48788 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726106AbgDUUeF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2020 16:34:05 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F520C0610D5
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 13:34:03 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id t63so4848720wmt.3
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 13:34:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=dMhy4XhiaOE9F6l2AbqQKjFrndmPnIE3rO6F1lB/E6g=;
+        b=B6gZ0zqQeraknsdm1bJ2y+IK0QjLXmUpJblAxn2FisGa3ca2aO4ZRLYthD7xL9tLr7
+         /alBIiqd66Gpz7f5A6dH8UVxcYtbwAYrU2FJG7UthfCtBK54S1EGzj5I3+zJ2roMEhsY
+         J0eQikvQx3DFPQMM6lf/TxUAuLp/Bvr73Qra8AWvL2S2j/uGkZV5vCH0YJG8v5uMUyj4
+         vvnMUXqwW5hiK8X2JzLhX4b5JA2P16N8yEc/BqCB7itC5M8k9s23yX5U1rj1iiAnHp9D
+         YHFn469QN0fKgJmpXsSynOe7JsLZT465sIu2YGUstQA3VaBgEATqYx3/Bx34QRWzVXqk
+         n0fw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=dMhy4XhiaOE9F6l2AbqQKjFrndmPnIE3rO6F1lB/E6g=;
+        b=N3U1VzXcGLgJsq5XFW71GrmmhIHFl1IBshqDCw4XYCh+mAH3GnV7SwIoj9Lx+CXwSC
+         B1pyAMccvH2TM0Cu1lZLm8cCv7cs0qJgC6mFr4y6X42NyAkH5KFmiGwMUJhdjt3w2er6
+         6KoG9hSyB497s66vFKazpAOVaRf6fVYV6Vv8se2UZVeeMg4FsifJ0LcQCNJHPqsoWYb8
+         S7tG7NpmLSQ/Y0Di/h2gnjxQ8akNHN8IsN2seWmJZfWW2Pp2cVg95iEcMEPRu2p0YnqV
+         VCE0Ggi5Si7sWs3Ea+/AUw7KHzANrLOB4gWGFprItNT0XayBD3+UltWjnxPJ8I7Ssu1k
+         HEXA==
+X-Gm-Message-State: AGi0PuYsZ4ftLbgqQJb5lMN9R1vCgkDtlGQsYNl/6dAxXdqghnsrCohd
+        33fZw63BgepJka4dHG7J8JKn5Pi+
+X-Google-Smtp-Source: APiQypKZuhyRuIJ6jpjVGMoqKX4jIsuUwByhJdIk2mC4Rr9u7fe6pErdnUVFoDbg2luKX83Zn+tzVw==
+X-Received: by 2002:a1c:bb08:: with SMTP id l8mr7315015wmf.168.1587501241937;
+        Tue, 21 Apr 2020 13:34:01 -0700 (PDT)
+Received: from localhost.localdomain.localdomain (ip68-5-146-102.oc.oc.cox.net. [68.5.146.102])
+        by smtp.gmail.com with ESMTPSA id m1sm5194205wro.64.2020.04.21.13.33.59
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 21 Apr 2020 13:34:01 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v2] lpfc: remove duplicate unloading checks
+Date:   Tue, 21 Apr 2020 13:33:54 -0700
+Message-Id: <20200421203354.49420-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.16.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/12/2020 5:43 AM, Avri Altman wrote:
-> Hi,
-> 
->>
->>   enum ufs_desc_def_size {
->> -       QUERY_DESC_DEVICE_DEF_SIZE              = 0x40,
->> +       QUERY_DESC_DEVICE_DEF_SIZE              = 0x59,
->>          QUERY_DESC_CONFIGURATION_DEF_SIZE       = 0x90,
->>          QUERY_DESC_UNIT_DEF_SIZE                = 0x23,
-> Might as well update the unit descriptor size - its 0x2D now,
-> As you are adding its new fields
-> 
->>          QUERY_DESC_INTERCONNECT_DEF_SIZE        = 0x06,
->> @@ -219,6 +226,7 @@ enum unit_desc_param {
->>          UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT        = 0x18,
->>          UNIT_DESC_PARAM_CTX_CAPABILITIES        = 0x20,
->>          UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1      = 0x22,
->> +       UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS      = 0x29,
->>   };
->>
->>   /* Device descriptor parameters offsets in bytes*/
->> @@ -258,6 +266,9 @@ enum device_desc_param {
->>          DEVICE_DESC_PARAM_PSA_MAX_DATA          = 0x25,
->>          DEVICE_DESC_PARAM_PSA_TMT               = 0x29,
->>          DEVICE_DESC_PARAM_PRDCT_REV             = 0x2A,
->> +       DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP   = 0x4F,
-> DEVICE_DESC_PARAM_WB_USER_TYPE               = 0x53,
-> 
->> +       DEVICE_DESC_PARAM_WB_TYPE               = 0x54,
->> +       DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS = 0x55,
->>   };
->>
-> 
-> 
->> +enum ufs_dev_wb_buf_user_cap_config {
->> +       UFS_WB_BUFF_PRESERVE_USER_SPACE = 1,
->> +       UFS_WB_BUFF_USER_SPACE_RED_EN = 2,
->> +};
-> Maybe better to follow the spec here:
-> Reduced - 0
-> Preserve - 1
->
-I don't think these enums would be needed. Let me check and remove these 
-otherwise.
-  >> +static inline void ufshcd_wb_config(struct ufs_hba *hba)
->> +{
->> +       int ret;
->> +
->> +       if (!ufshcd_wb_sup(hba))
->> +               return;
->> +
->> +       ret = ufshcd_wb_ctrl(hba, true);
-> Why are you setting WB on init?
-During init the clocks are scaled-up. Hence, WB is set at init.
-It gets disabled when the clocks are scaled down, which is almost 
-immediate anyway.
+During code reviews several instances of duplicate module unloading checks
+were found.
 
-> 
->> +       if (ret)
->> +               dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__, ret);
->> +       else
->> +               dev_info(hba->dev, "%s: Write Booster Configured\n", __func__);
->> +       ret = ufshcd_wb_toggle_flush_during_h8(hba, true);
->> +       if (ret)
->> +               dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
->> +                       __func__, ret);
->> +       ufshcd_wb_toggle_flush(hba, true);
-> Why set explicit flush on init?
-The design is to enable flush and let the device handle flush when DB's 
-are empty on its own. Hence I'm setting flush at init itself.
-> 
-> 
->> +
->> +
->> +static bool ufshcd_wb_keep_vcc_on(struct ufs_hba *hba)
->> +{
->> +       int ret;
->> +       u32 cur_buf, avail_buf;
->> +
->> +       if (!ufshcd_wb_sup(hba))
->> +               return false;
->> +       /*
->> +        * The ufs device needs the vcc to be ON to flush.
->> +        * With user-space reduction enabled, it's enough to enable flush
->> +        * by checking only the available buffer. The threshold
->> +        * defined here is > 90% full.
->> +        * With user-space preserved enabled, the current-buffer
->> +        * should be checked too because the wb buffer size can reduce
->> +        * when disk tends to be full. This info is provided by current
->> +        * buffer (dCurrentWriteBoosterBufferSize). There's no point in
->> +        * keeping vcc on when current buffer is empty.
->> +        */
->> +       ret = ufshcd_query_attr_retry(hba,
->> UPIU_QUERY_OPCODE_READ_ATTR,
->> +                                     QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE,
->> +                                     0, 0, &avail_buf);
->> +       if (ret) {
->> +               dev_warn(hba->dev, "%s dAvailableWriteBoosterBufferSize read
->> failed %d\n",
->> +                        __func__, ret);
->> +               return false;
->> +       }
->> +
->> +       ret = ufshcd_vops_get_user_cap_mode(hba);
-> The Preserve User Space mode should be read from -
-> bWriteBoosterBufferPreserveUserSpaceEn of the device descriptor - 0ffset 0x53.
-> The driver should have no judgement here.
-> Based on what is configured, better to attach a helper pointer that will perform the below check,
-> e.g. ufshcd_wb_preserve_keep_vcc_on() and ufshcd_wb_reduced_keep_vcc_on().
-> Which will simplify the logic here and make it much more readable.
-> This makes the preparations you made for ufshcd_vops_get_user_cap_mode,
-> and your second patch unneeded.
-Thanks, that makes sense.
-> 
-> 
->>   /**
->>    * ufshcd_exception_event_handler - handle exceptions raised by device
->>    * @work: pointer to work data
->> @@ -6632,6 +6829,28 @@ static int ufs_get_device_desc(struct ufs_hba
->> *hba)
->>                                        desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
->>
->>          model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
->> +       /* Enable WB only for UFS-3.1 */
->> +       if (dev_info->wspecversion >= 0x310) {
->> +               hba->dev_info.d_ext_ufs_feature_sup =
->> +                       get_unaligned_be32(desc_buf +
->> +                               DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
->> +               /*
->> +                * WB may be supported but not configured while provisioning.
->> +                * The spec says, in dedicated wb buffer mode,
->> +                * a max of 1 lun would have wb buffer configured.
->> +                * Now only shared buffer mode is supported.
->> +                */
->> +               hba->dev_info.b_wb_buffer_type =
->> +                       desc_buf[DEVICE_DESC_PARAM_WB_TYPE];
->> +
->> +               if (!hba->dev_info.b_wb_buffer_type)
->> +                       goto skip_alloc_unit;
->> +               hba->dev_info.d_wb_alloc_units =
->> +                       get_unaligned_be32(desc_buf +
->> +                               DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
->> +       }
-> Maybe pack the above code in a wb_probe() designated helper,
-> which will establish if WB is supported or not.
-> If one of your validation tests fails, maybe you can just
-> hba->caps &= ~UFSHCD_CAP_WB_EN;
-> which will further simplify your ufshcd_wb_sup()
-> 
-Good idea.
->   
->>          if ((req_dev_pwr_mode != hba->curr_dev_pwr_mode) &&
->> -            ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
->> -              !ufshcd_is_runtime_pm(pm_op))) {
->> +           ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
->> +            !ufshcd_is_runtime_pm(pm_op))) {
-> Redundant space removal
-> 
-> 
-> 
-> Thanks,
-> Avri
-> 
+Remove the duplicate checks.
 
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 
+---
+v2: reworked lpfc_els.c mod to keep check prior to locks
+---
+ drivers/scsi/lpfc/lpfc_els.c   | 10 ++--------
+ drivers/scsi/lpfc/lpfc_nvme.c  |  5 -----
+ drivers/scsi/lpfc/lpfc_nvmet.c | 11 -----------
+ 3 files changed, 2 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 80d1e661b0d4..565a21401660 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -7936,19 +7936,13 @@ lpfc_els_timeout_handler(struct lpfc_vport *vport)
+ 	if (unlikely(!pring))
+ 		return;
+ 
+-	if ((phba->pport->load_flag & FC_UNLOADING))
++	if (phba->pport->load_flag & FC_UNLOADING)
+ 		return;
++
+ 	spin_lock_irq(&phba->hbalock);
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		spin_lock(&pring->ring_lock);
+ 
+-	if ((phba->pport->load_flag & FC_UNLOADING)) {
+-		if (phba->sli_rev == LPFC_SLI_REV4)
+-			spin_unlock(&pring->ring_lock);
+-		spin_unlock_irq(&phba->hbalock);
+-		return;
+-	}
+-
+ 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
+ 		cmd = &piocb->iocb;
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index a45936e08031..12d2b2775773 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1491,11 +1491,6 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+ 
+ 	phba = vport->phba;
+ 
+-	if (vport->load_flag & FC_UNLOADING) {
+-		ret = -ENODEV;
+-		goto out_fail;
+-	}
+-
+ 	if (unlikely(vport->load_flag & FC_UNLOADING)) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_IOERR,
+ 				 "6124 Fail IO, Driver unload\n");
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index 565419bf8d74..5f5aecea5b55 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -841,9 +841,6 @@ lpfc_nvmet_xmt_ls_rsp(struct nvmet_fc_target_port *tgtport,
+ 	struct ulp_bde64 bpl;
+ 	int rc;
+ 
+-	if (phba->pport->load_flag & FC_UNLOADING)
+-		return -ENODEV;
+-
+ 	if (phba->pport->load_flag & FC_UNLOADING)
+ 		return -ENODEV;
+ 
+@@ -938,11 +935,6 @@ lpfc_nvmet_xmt_fcp_op(struct nvmet_fc_target_port *tgtport,
+ 		goto aerr;
+ 	}
+ 
+-	if (phba->pport->load_flag & FC_UNLOADING) {
+-		rc = -ENODEV;
+-		goto aerr;
+-	}
+-
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	if (ctxp->ts_cmd_nvme) {
+ 		if (rsp->op == NVMET_FCOP_RSP)
+@@ -1062,9 +1054,6 @@ lpfc_nvmet_xmt_fcp_abort(struct nvmet_fc_target_port *tgtport,
+ 	struct lpfc_queue *wq;
+ 	unsigned long flags;
+ 
+-	if (phba->pport->load_flag & FC_UNLOADING)
+-		return;
+-
+ 	if (phba->pport->load_flag & FC_UNLOADING)
+ 		return;
+ 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.16.4
+
