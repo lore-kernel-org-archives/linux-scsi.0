@@ -5,113 +5,101 @@ X-Spam-Level:
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C06E9C55182
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 07:51:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52FBDC2BA19
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 07:54:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9976A2074B
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 07:51:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18BAD2084D
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 07:54:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="tc+aNwHb"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="tRoD2Ib1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728040AbgDUHvq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 03:51:46 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:61372 "EHLO
+        id S1727114AbgDUHyj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 03:54:39 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:63101 "EHLO
         mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728003AbgDUHvp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2020 03:51:45 -0400
+        with ESMTP id S1726106AbgDUHyj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2020 03:54:39 -0400
 Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200421075142epoutp031238095e2d5584ed007cac042271c5fc~Hxl5k_Ysn2615226152epoutp03V
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:51:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200421075142epoutp031238095e2d5584ed007cac042271c5fc~Hxl5k_Ysn2615226152epoutp03V
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200421075435epoutp030cc4356ccbb9815a31ba6e9d7351d779~Hxoa0fb0o2874928749epoutp03Q
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:54:35 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200421075435epoutp030cc4356ccbb9815a31ba6e9d7351d779~Hxoa0fb0o2874928749epoutp03Q
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1587455502;
-        bh=+r0OP1H3iJ44Yz3O1PgyXWJYbt9pTQXZ6pMxnxpslHo=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=tc+aNwHbhc5m520XsNZCCWwXswXTwjyTiTN9lZcj8u0NxzHu7Zodv9SqtpFmvlTJl
-         pRZxf4MrunXrM81McOBZSaKFVzK9aI+o7OMuDe1Z5VjpRiFcC6Nzj/Ri2iZKvKDQXl
-         jXYfwzrhVvP0HLi0GxLexhZV9EW/+lBV+m5UXXjo=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        s=mail20170921; t=1587455675;
+        bh=iqpueYG4ts/r2whsv03bNtMq34F7oa+gBIlQq6viqd8=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=tRoD2Ib10jmu49a9NR8q8epsMBH+VoTrDC3XP3Y+uEndNISiquni6kRLOs2i/fA81
+         v7CwNLPkUYcLksLD6gJbmOXVGZsZOG76rEtaXkWPbh9x1tApPGvfVebGjhvZuOeSJg
+         D/Sb3186Rt+RVd6TfyqaQg+qK4gtyYrdt+kY6Jco=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
         epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20200421075141epcas2p26f29dddc42c4d73a3ea0956a97df7ab4~Hxl5GNyE53196431964epcas2p2W;
-        Tue, 21 Apr 2020 07:51:41 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.40.183]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 495wkL0ZTlzMqYkx; Tue, 21 Apr
-        2020 07:51:38 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        47.A7.04704.906AE9E5; Tue, 21 Apr 2020 16:51:37 +0900 (KST)
+        20200421075435epcas2p212505e2be729bd9c529efc5c08d68502~Hxoanfr842404824048epcas2p2O
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:54:35 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.189]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 495wnh4H8TzMqYkk for
+        <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:54:32 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        02.3E.04393.7B6AE9E5; Tue, 21 Apr 2020 16:54:31 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
         epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200421075137epcas2p23b692423ff31029ea79b968eb9ade7e7~Hxl1AlqPN2296922969epcas2p2v;
-        Tue, 21 Apr 2020 07:51:37 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+        20200421075431epcas2p265c1d8adfa91233eced14c549563927a~HxoXFxWmR2404824048epcas2p2G
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:54:31 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200421075137epsmtrp208a3eb3131f654d1b32a91bb3d91cacf~Hxl0-mDAR2553125531epsmtrp2f;
-        Tue, 21 Apr 2020 07:51:37 +0000 (GMT)
-X-AuditID: b6c32a46-829ff70000001260-63-5e9ea609547f
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        D6.04.04158.906AE9E5; Tue, 21 Apr 2020 16:51:37 +0900 (KST)
-Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip2.samsung.com
+        20200421075431epsmtrp2c36dfef0d476dc37e30d4126c1a67050~HxoXFIEIY2697826978epsmtrp2C
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:54:31 +0000 (GMT)
+X-AuditID: b6c32a47-67fff70000001129-95-5e9ea6b78199
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        01.07.04024.7B6AE9E5; Tue, 21 Apr 2020 16:54:31 +0900 (KST)
+Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip1.samsung.com
         (KnoxPortal) with ESMTPA id
-        20200421075137epsmtip2c02987a134833b7748371740e790f9a9~Hxl0vZmL70218802188epsmtip2a;
-        Tue, 21 Apr 2020 07:51:37 +0000 (GMT)
+        20200421075431epsmtip124a6ea17919d60b9ff69afde893f49de~HxoW7WkCK0525005250epsmtip1y
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 07:54:31 +0000 (GMT)
 From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
-To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
-        "'Alim Akhtar'" <alim.akhtar@samsung.com>, <robh@kernel.org>,
-        <cpgs@samsung.com>
-Cc:     <devicetree@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <krzk@kernel.org>, <martin.petersen@oracle.com>,
-        <cang@codeaurora.org>, <linux-samsung-soc@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
+To:     <linux-scsi@vger.kernel.org>
 In-Reply-To: <SN6PR04MB46408CF4DD05DB9B48DFE412FCD40@SN6PR04MB4640.namprd04.prod.outlook.com>
 Subject: RE: [PATCH v6 05/10] scsi: ufs: add quirk to fix abnormal ocs fatal
  error
-Date:   Tue, 21 Apr 2020 16:51:37 +0900
-Message-ID: <062001d617b1$af5f0aa0$0e1d1fe0$@samsung.com>
+Date:   Tue, 21 Apr 2020 16:54:31 +0900
+Message-ID: <062101d617b2$1721ffd0$4565ff70$@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQJQDPill8kAmUENoj8JBCZ49rLenQIFk/WPAcfxkaoBmLD4p6dkF1Qg
+Thread-Index: AQJQDPill8kAmUENoj8JBCZ49rLenQIFk/WPAcfxkaoBmLD4p6dkGFQA
 Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0hTcRTH+e1ud1u1uk2zw6IY1x6ombvLratpT5FVQlJB9NSbuzhrr3a3
-        yCBcBb4qs6SwWZYaGgvTVsmwlLBIwspAy4qe5MqKCrUstaw7b5H/fc/v+zm/c87vIcOUt3GV
-        LMvqZB1Wxkzi48QNNyN00fLq8q2a0x8S6FflDTj9fvAhTvfVVUvo9y0R9Jlb9yV0e3u9lPa9
-        eSShOxpP4XRpe7OIPtjlx+ma1hER/fu6X7pkgqGj6LDI4PMW4IbL53IMvYGnYkPRFS8y9Ptm
-        GPJuHBSlSjeaE0wsY2QdataaYTNmWTMTyVVr05an6fQaKpqKoxeQaitjYRPJpJTU6OQsM98n
-        qd7FmF38UirDcWTMogSHzeVk1SYb50wkWbvRbKco+zyOsXAua+a8DJslntJotDqeTDeb3vSe
-        ldhrpu/uPjAsdqPGsEIklwERCy/7KvFCNE6mJPwIvtc/x4OGkuhD4PcZBWMAwUjrbdG/jH1H
-        azDBaELw7UuJRAh6EHy5/gIFKZyIghOvr0mCOpTYC96yQhSEMGIQQfdwAAsacmIL1FZdHoVC
-        iHXQNRAQB7WYmAWedxXSoFYQcTBQuR8JejLcOdk9ymB8geqKj5jQkhoGA9V/iyXDhXs/cIEJ
-        hbKC3NFWgSiXQuepr/wMMj5Igv6u2UJuCHxovSIVtAr6Pzfhgs6B5uNuiZB7CEGgeQQJxnzw
-        vM1DwX0wIgLqGmOELcPh1lOxQCjAfWlYKrQwEfJv/pIKiALyc5UCEg5Dx0pQMQr3jBnMM2Yw
-        z5gBPP9rnUViLwpj7Zwlk+W0du3Yy/ah0TccmexH5+6ntCBChsgJivqw8q1KCbOLy7a0IJBh
-        ZKiCjuSXFEYmew/rsKU5XGaWa0E6/tyPYqopGTb+R1idaZROq9dr4nS0Tq+lyakK3/gnm5VE
-        JuNkd7CsnXX8yxPJ5Co3qo1vmxN5917JJO2a1rb17xrKVEsPrTrwePWG9KHU/tLZ7thl8rZP
-        v857P+oLVkY7V8zYsvhnTlxhnv9VzNUl25J2zpzS+7ItvtOuTqwzXZy0+Nm1hVTs5O1z04s3
-        7XZWpTTpiaGon9lLHxyZP9zjMhYvqGjPLavtnkblF/XsKR3K10eYSDFnYqhIzMExfwA1kHzU
-        2QMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrIIsWRmVeSWpSXmKPExsWy7bCSvC7nsnlxBi2XxS0ezNvGZvHy51U2
-        i0/rl7FavDykaTH/yDlWi/PnN7BbbHp8jdXi8q45bBYzzu9jsui+voPNYvnxf0wW//fsYHfg
-        8bjc18vksWlVJ5vH5iX1Hh+f3mLx6NuyitHj8yY5j/YD3UwB7FFcNimpOZllqUX6dglcGUef
-        Fxa8kKlY1XuEpYHxq2gXIyeHhICJROPE5cwgtpDAbkaJTa+VIOKSEid2PmeEsIUl7rccYe1i
-        5AKqecYocen+NrAGNgFtiWkPd4MlRAQaGSV2N8xgBHGYBRqZJBac6IdqmcAkcfJKFwtIC6dA
-        rMTaxZuBEhwcwgJBEtNOh4OEWQRUJWY9X8gOYvMKWEp8W9TECGELSpyc+QSslRloW+/DVkYY
-        e9nC18wQ5ylI/Hy6jBXEFhFwk1h99gcbRI2IxOzONuYJjMKzkIyahWTULCSjZiFpWcDIsopR
-        MrWgODc9t9iwwCgvtVyvODG3uDQvXS85P3cTIzgitbR2MJ44EX+IUYCDUYmHd4PYvDgh1sSy
-        4srcQ4wSHMxKIrwWWkAh3pTEyqrUovz4otKc1OJDjNIcLErivPL5xyKFBNITS1KzU1MLUotg
-        skwcnFINjKbdtqoXtJZVLPOu7V5xecvG3Yobg3Z7Lg2t0TfPPKm1lmu3o3YP5zXVI74bFvyc
-        9D/9dNo59hdWE4X6F2pKpz57XTs7taxiQfXGxd9/PEiMkz6u9XPhQ8YchgNvnsksXGfyutKG
-        zcAnR+186toNNYX3HiSkdc54WOzAf3RyxZQdX+xnNs0y+aXEUpyRaKjFXFScCABRJ6a3xAIA
-        AA==
-X-CMS-MailID: 20200421075137epcas2p23b692423ff31029ea79b968eb9ade7e7
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrCKsWRmVeSWpSXmKPExsWy7bCmhe72ZfPiDHbvNbfovr6DzYHR4/Mm
+        uQDGqBybjNTElNQihdS85PyUzLx0WyXv4HjneFMzA0NdQ0sLcyWFvMTcVFslF58AXbfMHKCh
+        SgpliTmlQKGAxOJiJX07m6L80pJUhYz84hJbpdSClJwCQ8MCveLE3OLSvHS95PxcK0MDAyNT
+        oMqEnIzLl1azFayUrXjS/JulgXGXWBcjJ4eEgInEgw/dLF2MXBxCAjsYJXZOXcwK4Uxmkpi/
+        fR2UM51JonvdEnaYlqedk6Fa9jJK9DWeZoJwOpkkdr26wgRSxSagLTHt4W5WEFtEQEHib9sh
+        ZhCbUyBWYu3izWBxYYEQievfnrKA2CwCqhKvN95nBLF5BSwlTtz+zwJhC0qcnPkEzGYGmrls
+        4WtmiCsUJH4+XQY1303ifNdFqBoRidmdbcwgB0kI9LBJvF27mwmiwUXi261nULawxKvjW6De
+        kZL4/G4vG4RdL7FvagMrVDOjxNN9/xghEsYSs561A9kcQBs0Jdbv0gcxJQSUJY7cgtrLJ9Fx
+        +C87RJhXoqNNCKJRWeLXpMlQQyQlZt68A7XVQ2L+0VnsExgVZyH5chaSL2ch+WYWwt4FjCyr
+        GMVSC4pz01OLjQqMkWN7EyM4xWm572Dcds7nEKMAB6MSD+8GsXlxQqyJZcWVuYcYJTiYlUR4
+        LbSAQrwpiZVVqUX58UWlOanFhxhNgZEwkVlKNDkfmH7zSuINTY3MzAwsTS1MzYwslMR5N3Hf
+        jBESSE8sSc1OTS1ILYLpY+LglGpgbFJ32RKca27c2fI3eJ/UU0dd8cOCHpemP5yYz3nK1fv7
+        ac8Nai7n85+p7NfzEGC9LLP395qpUvvX3N5VcSv634F9v//YHJiSwFBvFvz/cW/DrZV+bhfS
+        u1avY7S1Ej3JdTrx1+WwYHvuGLG0bcGf3baKCD1b77nH6pOhvr+xY03Sb4bixbfuKbEUZyQa
+        ajEXFScCAM33CrCHAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrILMWRmVeSWpSXmKPExsWy7bCSnO72ZfPiDC40S1l0X9/B5sDo8XmT
+        XABjFJdNSmpOZllqkb5dAldG57VjTAWvZCpW9R5haWD8KtrFyMkhIWAi8bRzMksXIxeHkMBu
+        RonH/7vZIBKSEid2PmeEsIUl7rccYQWxhQTamSQ2LEsFsdkEtCWmPdwNFhcRUJD423aIGWLQ
+        BCaJk1e6WEASnAKxEmsXbwYq4uAQFgiSmHY6HCTMIqAq8XrjfbD5vAKWEidu/2eBsAUlTs58
+        AmYzA83vfdjKCGMvW/iaGeIeBYmfT5dB7XWTON91EapeRGJ2ZxvzBEahWUhGzUIyahaSUbOQ
+        tCxgZFnFKJlaUJybnltsWGCYl1quV5yYW1yal66XnJ+7iREc0FqaOxgvL4k/xCjAwajEw7tB
+        bF6cEGtiWXFl7iFGCQ5mJRFeCy2gEG9KYmVValF+fFFpTmrxIUZpDhYlcd6neccihQTSE0tS
+        s1NTC1KLYLJMHJxSDYxiBZJ8PBMd7Jc+ixUtvfImmOeoRse2p1f/e1hW+EkkWTOLbXE/Ze77
+        9TqbY+e0v2Kt8zNnBlXHTNrlrPP0/S1ju10LE/YUaFWZMmselijOPvKNL9+1cKo6k2en8PtH
+        b6/IZKrpfE70/ndkzmYO406xAIZZKmvCDngEXg+saVEpV1128+j3m0osxRmJhlrMRcWJAGPR
+        iGhkAgAA
+X-CMS-MailID: 20200421075431epcas2p265c1d8adfa91233eced14c549563927a
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
@@ -124,8 +112,6 @@ Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
-
-
 
 > -----Original Message-----
 > From: Avri Altman <Avri.Altman=40wdc.com>
@@ -212,6 +198,7 @@ s
 > >  enum ufshcd_caps =7B
 > > --
 > > 2.17.1
+
 Avri
 
 As specified in the spec, OCS isn't supposed to refer to the contents of RE=
