@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E044C55189
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 21:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62AF9C5518F
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 21:53:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B76720735
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 21:53:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BA0F20735
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 21:53:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726509AbgDUVx4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 17:53:56 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:43213 "EHLO smtp.infotech.no"
+        id S1726484AbgDUVxs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 17:53:48 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:43152 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726503AbgDUVxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 17:53:55 -0400
+        id S1726474AbgDUVxr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Apr 2020 17:53:47 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 3DB092041B2;
-        Tue, 21 Apr 2020 23:53:53 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id EE98A2041CE;
+        Tue, 21 Apr 2020 23:53:45 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id RlXBi7O+5Xqc; Tue, 21 Apr 2020 23:53:51 +0200 (CEST)
+        with ESMTP id VvaysF0nrmYI; Tue, 21 Apr 2020 23:53:44 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 0C6DA20414E;
-        Tue, 21 Apr 2020 23:53:47 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 5302120419B;
+        Tue, 21 Apr 2020 23:53:39 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v9 40/40] sg: bump version to 4.0.09
-Date:   Tue, 21 Apr 2020 17:52:58 -0400
-Message-Id: <20200421215258.14348-41-dgilbert@interlog.com>
+Subject: [PATCH v9 32/40] sg: add some __must_hold macros
+Date:   Tue, 21 Apr 2020 17:52:50 -0400
+Message-Id: <20200421215258.14348-33-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200421215258.14348-1-dgilbert@interlog.com>
 References: <20200421215258.14348-1-dgilbert@interlog.com>
@@ -44,69 +44,67 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that the sg version 4 interface is supported:
-  - with ioctl(SG_IO) for synchronous/blocking use
-  - with ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE) for
-    async/non-blocking use
-Plus new ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3)
-potentially replace write() and read() for the sg
-version 3 interface. Bump major driver version number
-from 3 to 4.
+In the case of sg_wait_open_event() which calls mutex_unlock on
+sdp->open_rel_lock and later calls mutex_lock on the same
+lock; this macro is needed to stop sparse complaining. In
+other cases it is a reminder to the coder (a precondition).
 
-The main new feature is the removal of the fixed 16 element
-array of requests per file descriptor. It is replaced by
-a xarray (eXtensible array) in their parent which is a
-sg_fd object (i.e. a file descriptor). The sg_request
-objects are not freed until the owning file descriptor is
-closed; instead these objects are re-used when multiple
-commands are sent to the same file descriptor.
-
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 11 ++++++-----
- include/uapi/scsi/sg.h |  4 ++--
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/scsi/sg.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ba9f08b932a5..2bc51c0a7c97 100644
+index 46767be49cc1..ab76150b12b4 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -7,13 +7,14 @@
-  *
-  * Original driver (sg.c):
-  *        Copyright (C) 1992 Lawrence Foard
-- * Version 2 and 3 extensions to driver:
-- *        Copyright (C) 1998 - 2019 Douglas Gilbert
-+ * Version 2, 3 and 4 extensions to driver:
-+ *        Copyright (C) 1998 - 2020 Douglas Gilbert
-+ *
+@@ -375,6 +375,7 @@ sg_check_file_access(struct file *filp, const char *caller)
+ 
+ static int
+ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
++		__must_hold(sdp->open_rel_lock)
+ {
+ 	int res = 0;
+ 
+@@ -1739,6 +1740,7 @@ sg_ctl_sg_io(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
   */
+ static int
+ sg_set_reserved_sz(struct sg_fd *sfp, int want_rsv_sz)
++		__must_hold(sfp->f_mutex)
+ {
+ 	bool use_new_srp = false;
+ 	int res = 0;
+@@ -3712,12 +3714,12 @@ sg_remove_sfp(struct kref *kref)
  
--static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
--#define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
--static char *sg_version_date = "20190606";
-+static int sg_version_num = 40009;  /* [x]xyyzz where [x] empty when x=0 */
-+#define SG_VERSION_STR "4.0.09"		/* [x]x.[y]y.zz */
-+static char *sg_version_date = "20200415";
+ static int
+ sg_idr_max_id(int id, void *p, void *data)
++		__must_hold(sg_index_lock)
+ {
+ 	int *k = data;
  
- #include <linux/module.h>
+ 	if (*k < id)
+ 		*k = id;
+-
+ 	return 0;
+ }
  
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index cbade2870355..947073ef26dc 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -12,9 +12,9 @@
-  *   Copyright (C) 1992 Lawrence Foard
-  *
-  * Later extensions (versions 2, 3 and 4) to driver:
-- *   Copyright (C) 1998 - 2018 Douglas Gilbert
-+ *   Copyright (C) 1998 - 2020 Douglas Gilbert
-  *
-- * Version 4.0.11 (20190502)
-+ * Version 4.0.11 (20200124)
-  *  This version is for Linux 4 and 5 series kernels.
-  *
-  * Documentation
+@@ -4020,6 +4022,7 @@ sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
+ /* Writes debug info for one sg_request in obp buffer */
+ static int
+ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
++		__must_hold(sfp->srp_arr.xa_lock)
+ {
+ 	bool is_v3v4, v4, is_dur;
+ 	int n = 0;
+@@ -4122,6 +4125,7 @@ sg_proc_debug_fd(struct sg_fd *fp, char *obp, int len, unsigned long idx)
+ /* Writes debug info for one sg device (including its sg fds) in obp buffer */
+ static int
+ sg_proc_debug_sdev(struct sg_device *sdp, char *obp, int len, int *fd_counterp)
++		__must_hold(sg_index_lock)
+ {
+ 	int n = 0;
+ 	int my_count = 0;
 -- 
 2.26.1
 
