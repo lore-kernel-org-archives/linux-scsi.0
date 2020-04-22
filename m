@@ -1,543 +1,158 @@
-Return-Path: <SRS0=Tsb4=6F=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A35C2BA19
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 22:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B61EC2BA19
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 00:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4EAF206D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Apr 2020 22:54:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5557120747
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 00:18:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="iYrM4AFh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726386AbgDUWyk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 18:54:40 -0400
-Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:25516 "EHLO
-        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725850AbgDUWyj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 18:54:39 -0400
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 21 Apr 2020 15:54:38 -0700
-Received: from asutoshd-linux1.qualcomm.com ([10.46.160.39])
-  by ironmsg02-sd.qualcomm.com with ESMTP; 21 Apr 2020 15:54:37 -0700
-Received: by asutoshd-linux1.qualcomm.com (Postfix, from userid 92687)
-        id 4720A20A3C; Tue, 21 Apr 2020 15:54:37 -0700 (PDT)
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     cang@codeaurora.org, martin.petersen@oracle.com,
-        Avri.Altman@wdc.com, linux-scsi@vger.kernel.org
-Cc:     Asutosh Das <asutoshd@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 1/3] scsi: ufs: add write booster feature support
-Date:   Tue, 21 Apr 2020 15:54:16 -0700
-Message-Id: <6519cd576299d5881129b0e48870a53a0afc7835.1587509578.git.asutoshd@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1586374414.git.asutoshd@codeaurora.org>
-References: <cover.1586374414.git.asutoshd@codeaurora.org>
+        id S1726173AbgDVASD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 20:18:03 -0400
+Received: from mail-dm6nam10on2133.outbound.protection.outlook.com ([40.107.93.133]:6881
+        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726039AbgDVASC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Apr 2020 20:18:02 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mFoDcc7DQDzJzNWArBiNmmAKmQ0+0T8BM7DO9UhCzZW5aNfnW6e3M/NSNBUBndJrtlQFnYvoiU1oMImD8Wjt2kn4+VgJQAm26iAJsKZCOVIzE6NOn2Km7Ssi0Ickg/BQhggZJ2tB+z7okIQg/Y4CisZux0pUnDG8jgoFeb9hRnFixzwASgq/sNMHQHV9hr48ouJ4oTAwjmXUjYOecBCst5Ilannre4iTdrGiXKF8mBFZztSAa5XEpQzYiyQ9Gh1x29RU6QqstMlAJOuyHxLUHE9r5xEzi6ys5rIZxIGhZTl65N8I1ePqgE0WgBFWMn3+l4p8ei/qQRsl82zGW0HGfQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=E4caw7Xgo2COSQKj4uL05+8SqQMchdBV2Ke6WgO2PPA=;
+ b=PdYk2z8mosJINY4fF6PfYDwUGQS2eS31xY7DeMdVaDbFi7uXucJxOoEaduchmO/dk1e07w7TzqteMbO/Kq4e5cBtro34djvtVp0cpsrRluq8QjLqzKIhd6hAxTYlGMpu/Jqk2C0DShkVriBFaTIEGfUB8z7eg/l0+mp94QQcLqsyehriiJeBjyyASbj7FjSDLG8IUSagTZK5SlmvvQAn5O6qaSnYNm80iYgcj2fftPN296VivWRQzEDfEgGS9ABVlIPV8m9Q4pASUW1eGLRHFb3M6kF0QH6AGuCFUDAgz3hvCu7Mi9lNeEabUZUH5+unujmnt4tAzKQr6WA9hqX0JQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=E4caw7Xgo2COSQKj4uL05+8SqQMchdBV2Ke6WgO2PPA=;
+ b=iYrM4AFhpvfGTQEYU5OgY4wSxnGFYT8BlZsGeLkSuvNK3GePxDLZ7+gzLJ1KKrJgwT1S11LMhmD9fTAUWmmfgcc9H95p+DK9eWb/bbu6i8pPeFpXTDdU8A18inUb7Gkgr5rTip4h3vkQcNDl1YXAvV7YGqlDrj80mgOWTi06png=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=decui@microsoft.com; 
+Received: from BN6PR21MB0161.namprd21.prod.outlook.com (2603:10b6:404:94::7)
+ by BN6PR21MB0849.namprd21.prod.outlook.com (2603:10b6:404:9e::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.3; Wed, 22 Apr
+ 2020 00:17:59 +0000
+Received: from BN6PR21MB0161.namprd21.prod.outlook.com
+ ([fe80::171:e82f:b9f2:3a68]) by BN6PR21MB0161.namprd21.prod.outlook.com
+ ([fe80::171:e82f:b9f2:3a68%13]) with mapi id 15.20.2958.001; Wed, 22 Apr 2020
+ 00:17:59 +0000
+From:   Dexuan Cui <decui@microsoft.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hch@lst.de, bvanassche@acm.org, hare@suse.de,
+        mikelley@microsoft.com, longli@microsoft.com, ming.lei@redhat.com
+Cc:     linux-hyperv@vger.kernel.org, wei.liu@kernel.org,
+        sthemmin@microsoft.com, haiyangz@microsoft.com, kys@microsoft.com,
+        Dexuan Cui <decui@microsoft.com>
+Subject: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
+Date:   Tue, 21 Apr 2020 17:17:24 -0700
+Message-Id: <1587514644-47058-1-git-send-email-decui@microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
+Reply-To: decui@microsoft.com
+Content-Type: text/plain
+X-ClientProxiedBy: MWHPR03CA0015.namprd03.prod.outlook.com
+ (2603:10b6:300:117::25) To BN6PR21MB0161.namprd21.prod.outlook.com
+ (2603:10b6:404:94::7)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net (13.77.154.182) by MWHPR03CA0015.namprd03.prod.outlook.com (2603:10b6:300:117::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2937.13 via Frontend Transport; Wed, 22 Apr 2020 00:17:57 +0000
+X-Mailer: git-send-email 1.8.3.1
+X-Originating-IP: [13.77.154.182]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: 8fa28811-c28d-42cf-d9e4-08d7e6529ca2
+X-MS-TrafficTypeDiagnostic: BN6PR21MB0849:|BN6PR21MB0849:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BN6PR21MB0849E96B26A84333FCFDC13CBFD20@BN6PR21MB0849.namprd21.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Forefront-PRVS: 03818C953D
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN6PR21MB0161.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(136003)(376002)(346002)(366004)(396003)(966005)(8676002)(107886003)(956004)(2616005)(2906002)(16526019)(81156014)(8936002)(186003)(26005)(6486002)(5660300002)(478600001)(6506007)(52116002)(6512007)(316002)(10290500003)(7416002)(6666004)(66556008)(86362001)(3450700001)(66476007)(36756003)(66946007)(82950400001)(82960400001)(4326008)(921003);DIR:OUT;SFP:1102;
+Received-SPF: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 2ZgYcfz9929uv7+8xzbBpV+16JywUNYH8rMjdV/b4RcEKlHtjXN8yWkt55uYO+PhajEL1tiY9XvwAZ4rvBNhU/Ue8qLRHOTOzldooj4RbM+nmaaUYA+t33T7FWfeumK4TEfVTqw0Mgfqs4OkGdn/D1kohvjcWXK6O1gpqR028AG7X3d11IHTM6nKffOthLV4FahmWfctLrNjfLEeHVG91N4WE0A2/964NUDIENoySHi0olnlxi29FbidXrNWsJ9XHFHXPgAlMWCUoN3F0ISG9AZ2STTCsDgLjsq/VtjTAOWasc00mKhTTs4ZfL0WBN3ynAiSYQkStLheIWnh4kYRRZlS7+zreQmcO4cCFcUQXSi3mMRIjG/FX3eIBmb44uK+0/rW3u7TQGYuS+5BcwODvm/QnRB5TlYplZzJYmO1757h/EFJ6T+erTnu4kzQmAEKI0pru2QnUMGbbW7ezRhQ+M5QLGqJ++/IeE/nWG3gIXo1XJDEA8l+sMYjIjP5tuj0N1Cj4vjFusdQz105fwzVczafgjkw6y0EKMbVjEx+IC/SUEGG3yKyjd7fcnZUAuYu
+X-MS-Exchange-AntiSpam-MessageData: kQV/kEjx9fe/dEJjC7zZyAp4s29ymf+liRUNj7xaS8tUFk7nUcG20iZPV/9jUUezSjOlChp0LxqQjIK1JyIiLGnomfzj93oMJPv6PPxiL5VxEr+7Ip9zeWb12c/LiZ/J7fEeUSjOdxA5tdT0dDvccydoBIQB/FiagBGQU3vVFaHvBZlv6EdXMNR/Oqx32cjJVPoXuKvGbv4bUKModlSyN+8tSnPFmkAhxXwZufavySyE0hbAEpNy4PHG4xytzdkwXyhoO+zFQBXcZUfkaFLWQgmY3oQ0DrNyV0carub8E8QeBxOj+3+3oEGdn0MYdGVz0QhbpXP8BJoUi5/qf+rFCDCLHxzZ3xVsQs9bsrP+p1DElkltniDhdtWONZKprITWUBqoATJeDiDtD3Otw2d79XI9sMPWQCiBIdCR67EGN7WlhnB648NzrY8xSlyCyQXQruR9ujCU5EAU+NZ/CRkpvN5QLYa12nrG8IFhzmD+bMwX6/4/9XXC3Gc7yBO2l1lhFYAyetlTyBQwSKd+hdK600VwbTrw+7pQQjapJhLT61epupam2b+NDeDvX8MrPPcFzDxfIcjoVkWzGFyZYdOTH34YTcoXpQT45klfOi2vJGXgmHyRYMGF3AvYkD+qN1GFnKFk0ibOUmMxtyX/YkMjAQGo8O9960byhseJ2fSQp0/vOYbmXw2/lfVNSuFWuNCOo7qeM07Z67c63ShjpvBN8zRFzwHEvZGgnWaOsgmm3yBu3H2HGv9zL8PtdqIvjM219mAKo47VA1BXxuKicUUGQH5q5NJhtNQEe7y2PdRaIGo=
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8fa28811-c28d-42cf-d9e4-08d7e6529ca2
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Apr 2020 00:17:59.1437
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WyYNYErjZBpFSJXChEtxLe8xBSHSgljRnWEEBoMIdRmIlDos4kQiF1sxmyGXzbSrHQHItmVfrNtcXUEvPltN7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR21MB0849
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The write performance of TLC NAND is considerably
-lower than SLC NAND. Using SLC NAND as a WriteBooster
-Buffer enables the write request to be processed with
-lower latency and improves the overall write performance.
+During hibernation, the sdevs are suspended automatically in
+drivers/scsi/scsi_pm.c before storvsc_suspend(), so after
+storvsc_suspend(), there is no disk I/O from the file systems, but there
+can still be disk I/O from the kernel space, e.g. disk_check_events() ->
+sr_block_check_events() -> cdrom_check_events() can still submit I/O
+to the storvsc driver, which causes a paic of NULL pointer dereference,
+since storvsc has closed the vmbus channel in storvsc_suspend(): refer
+to the below links for more info:
+  https://lkml.org/lkml/2020/4/10/47
+  https://lkml.org/lkml/2020/4/17/1103
 
-Adds support for shared-buffer mode WriteBooster.
+Fix the panic by blocking/unblocking all the I/O queues properly.
 
-WriteBooster enable: SW enables it when clocks are
-scaled up, thus it's enabled only in high load conditions.
+Note: this patch depends on another patch "scsi: core: Allow the state
+change from SDEV_QUIESCE to SDEV_BLOCK" (refer to the second link above).
 
-WriteBooster disable: SW will disable the feature,
-when clocks are scaled down. Thus writes would go as normal
-writes.
-
-To keep the endurance of the WriteBooster Buffer at a
-maximum, this load based toggling is adopted.
-
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+Fixes: 56fb10585934 ("scsi: storvsc: Add the support of hibernation")
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
 ---
- drivers/scsi/ufs/ufs.h    |  31 +++++-
- drivers/scsi/ufs/ufshcd.c | 248 +++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ufs/ufshcd.h |  14 +++
- 3 files changed, 288 insertions(+), 5 deletions(-)
+ drivers/scsi/storvsc_drv.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 990cb48..d77512d 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -140,6 +140,9 @@ enum flag_idn {
- 	QUERY_FLAG_IDN_BUSY_RTC				= 0x09,
- 	QUERY_FLAG_IDN_RESERVED3			= 0x0A,
- 	QUERY_FLAG_IDN_PERMANENTLY_DISABLE_FW_UPDATE	= 0x0B,
-+	QUERY_FLAG_IDN_WB_EN                            = 0x0E,
-+	QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN                 = 0x0F,
-+	QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
- };
- 
- /* Attribute idn for Query requests */
-@@ -168,6 +171,10 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
- 	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
- 	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
-+	QUERY_ATTR_IDN_WB_FLUSH_STATUS	        = 0x1C,
-+	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
-+	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
-+	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
- };
- 
- /* Descriptor idn for Query requests */
-@@ -191,9 +198,9 @@ enum desc_header_offset {
- };
- 
- enum ufs_desc_def_size {
--	QUERY_DESC_DEVICE_DEF_SIZE		= 0x40,
-+	QUERY_DESC_DEVICE_DEF_SIZE		= 0x59,
- 	QUERY_DESC_CONFIGURATION_DEF_SIZE	= 0x90,
--	QUERY_DESC_UNIT_DEF_SIZE		= 0x23,
-+	QUERY_DESC_UNIT_DEF_SIZE		= 0x2D,
- 	QUERY_DESC_INTERCONNECT_DEF_SIZE	= 0x06,
- 	QUERY_DESC_GEOMETRY_DEF_SIZE		= 0x48,
- 	QUERY_DESC_POWER_DEF_SIZE		= 0x62,
-@@ -219,6 +226,7 @@ enum unit_desc_param {
- 	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
- 	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
- 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
-+	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
- };
- 
- /* Device descriptor parameters offsets in bytes*/
-@@ -258,6 +266,10 @@ enum device_desc_param {
- 	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
- 	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
- 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
-+	DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP	= 0x4F,
-+	DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN	= 0x53,
-+	DEVICE_DESC_PARAM_WB_TYPE		= 0x54,
-+	DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS = 0x55,
- };
- 
- /* Interconnect descriptor parameters offsets in bytes*/
-@@ -333,6 +345,11 @@ enum {
- 	UFSHCD_AMP		= 3,
- };
- 
-+/* Possible values for dExtendedUFSFeaturesSupport */
-+enum {
-+	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
-+};
-+
- #define POWER_DESC_MAX_SIZE			0x62
- #define POWER_DESC_MAX_ACTV_ICC_LVLS		16
- 
-@@ -447,6 +464,11 @@ enum ufs_dev_pwr_mode {
- 	UFS_POWERDOWN_PWR_MODE	= 3,
- };
- 
-+enum ufs_dev_wb_buf_avail_size {
-+	UFS_WB_10_PERCENT_BUF_REMAIN = 0x1,
-+	UFS_WB_40_PERCENT_BUF_REMAIN = 0x4,
-+};
-+
- /**
-  * struct utp_cmd_rsp - Response UPIU structure
-  * @residual_transfer_count: Residual transfer count DW-3
-@@ -537,6 +559,11 @@ struct ufs_dev_info {
- 	u8 *model;
- 	u16 wspecversion;
- 	u32 clk_gating_wait_us;
-+	u32 d_ext_ufs_feature_sup;
-+	u8 b_wb_buffer_type;
-+	u32 d_wb_alloc_units;
-+	bool keep_vcc_on;
-+	u8 b_presrv_uspc_en;
- };
- 
- /**
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7d1fa13..053975c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -48,6 +48,8 @@
- #include "unipro.h"
- #include "ufs-sysfs.h"
- #include "ufs_bsg.h"
-+#include <asm/unaligned.h>
-+#include <linux/blkdev.h>
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/ufs.h>
-@@ -251,6 +253,13 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up);
- static irqreturn_t ufshcd_intr(int irq, void *__hba);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
-+static bool ufshcd_wb_sup(struct ufs_hba *hba);
-+static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
-+static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
-+static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-+static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set);
-+static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
-+
- static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
- {
- 	return tag >= 0 && tag < hba->nutrs;
-@@ -272,6 +281,25 @@ static inline void ufshcd_disable_irq(struct ufs_hba *hba)
- 	}
- }
- 
-+static inline void ufshcd_wb_config(struct ufs_hba *hba)
-+{
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index fb41636519ee..fd51d2f03778 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1948,6 +1948,11 @@ static int storvsc_suspend(struct hv_device *hv_dev)
+ 	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
+ 	struct Scsi_Host *host = stor_device->host;
+ 	struct hv_host_device *host_dev = shost_priv(host);
 +	int ret;
 +
-+	if (!ufshcd_wb_sup(hba))
-+		return;
-+
-+	ret = ufshcd_wb_ctrl(hba, true);
++	ret = scsi_host_block(host);
 +	if (ret)
-+		dev_err(hba->dev, "%s: Enable WB failed: %d\n", __func__, ret);
-+	else
-+		dev_info(hba->dev, "%s: Write Booster Configured\n", __func__);
-+	ret = ufshcd_wb_toggle_flush_during_h8(hba, true);
-+	if (ret)
-+		dev_err(hba->dev, "%s: En WB flush during H8: failed: %d\n",
-+			__func__, ret);
-+	ufshcd_wb_toggle_flush(hba, true);
-+}
-+
- static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
- {
- 	if (atomic_dec_and_test(&hba->scsi_block_reqs_cnt))
-@@ -1154,6 +1182,13 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up)
- 			ufshcd_scale_clks(hba, false);
- 	}
- 
-+	/* Enable Write Booster if we have scaled up else disable it */
-+	if (!ret) {
-+		up_write(&hba->clk_scaling_lock);
-+		ufshcd_wb_ctrl(hba, scale_up);
-+		down_write(&hba->clk_scaling_lock);
-+	}
-+
- out_unprepare:
- 	ufshcd_clock_scaling_unprepare(hba);
- out:
-@@ -5161,6 +5196,164 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
- 				__func__, err);
- }
- 
-+static bool ufshcd_wb_sup(struct ufs_hba *hba)
-+{
-+	return ufshcd_is_wb_allowed(hba);
-+}
-+
-+static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
-+{
-+	int ret;
-+	enum query_opcode opcode;
-+
-+	if (!ufshcd_wb_sup(hba))
-+		return 0;
-+
-+	if (!(enable ^ hba->wb_enabled))
-+		return 0;
-+	if (enable)
-+		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
-+	else
-+		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-+
-+	ret = ufshcd_query_flag_retry(hba, opcode,
-+				      QUERY_FLAG_IDN_WB_EN, NULL);
-+	if (ret) {
-+		dev_err(hba->dev, "%s write booster %s failed %d\n",
-+			__func__, enable ? "enable" : "disable", ret);
 +		return ret;
-+	}
+ 
+ 	storvsc_wait_to_drain(stor_device);
+ 
+@@ -1968,10 +1973,15 @@ static int storvsc_suspend(struct hv_device *hv_dev)
+ 
+ static int storvsc_resume(struct hv_device *hv_dev)
+ {
++	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
++	struct Scsi_Host *host = stor_device->host;
+ 	int ret;
+ 
+ 	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
+ 				     hv_dev_is_fc(hv_dev));
++	if (!ret)
++		ret = scsi_host_unblock(host, SDEV_RUNNING);
 +
-+	hba->wb_enabled = enable;
-+	dev_dbg(hba->dev, "%s write booster %s %d\n",
-+			__func__, enable ? "enable" : "disable", ret);
-+
-+	return ret;
-+}
-+
-+static int ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
-+{
-+	int val;
-+
-+	if (set)
-+		val =  UPIU_QUERY_OPCODE_SET_FLAG;
-+	else
-+		val = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-+
-+	return ufshcd_query_flag_retry(hba, val,
-+			       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8,
-+				       NULL);
-+}
-+
-+static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable)
-+{
-+	if (enable)
-+		ufshcd_wb_buf_flush_enable(hba);
-+	else
-+		ufshcd_wb_buf_flush_disable(hba);
-+
-+}
-+
-+static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba)
-+{
-+	int ret;
-+
-+	if (!ufshcd_wb_sup(hba) || hba->wb_buf_flush_enabled)
-+		return 0;
-+
-+	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-+				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
-+	if (ret)
-+		dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
-+			__func__, ret);
-+	else
-+		hba->wb_buf_flush_enabled = true;
-+
-+	dev_dbg(hba->dev, "WB - Flush enabled: %d\n", ret);
-+	return ret;
-+}
-+
-+static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba)
-+{
-+	int ret;
-+
-+	if (!ufshcd_wb_sup(hba) || !hba->wb_buf_flush_enabled)
-+		return 0;
-+
-+	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-+				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
-+	if (ret) {
-+		dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
-+			 __func__, ret);
-+	} else {
-+		hba->wb_buf_flush_enabled = false;
-+		dev_dbg(hba->dev, "WB - Flush disabled: %d\n", ret);
-+	}
-+
-+	return ret;
-+}
-+
-+static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
-+						u32 avail_buf)
-+{
-+	u32 cur_buf;
-+	int ret;
-+
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+					      QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE,
-+					      0, 0, &cur_buf);
-+	if (ret) {
-+		dev_err(hba->dev, "%s dCurWriteBoosterBufferSize read failed %d\n",
-+			__func__, ret);
-+		return false;
-+	}
-+
-+	if (!cur_buf) {
-+		dev_info(hba->dev, "dCurWBBuf: %d WB disabled until free-space is available\n",
-+			 cur_buf);
-+		return false;
-+	}
-+	/* Let it continue to flush when >60% full */
-+	if (avail_buf < UFS_WB_40_PERCENT_BUF_REMAIN)
-+		return true;
-+
-+	return false;
-+}
-+
-+static bool ufshcd_wb_keep_vcc_on(struct ufs_hba *hba)
-+{
-+	int ret;
-+	u32 avail_buf;
-+
-+	if (!ufshcd_wb_sup(hba))
-+		return false;
-+	/*
-+	 * The ufs device needs the vcc to be ON to flush.
-+	 * With user-space reduction enabled, it's enough to enable flush
-+	 * by checking only the available buffer. The threshold
-+	 * defined here is > 90% full.
-+	 * With user-space preserved enabled, the current-buffer
-+	 * should be checked too because the wb buffer size can reduce
-+	 * when disk tends to be full. This info is provided by current
-+	 * buffer (dCurrentWriteBoosterBufferSize). There's no point in
-+	 * keeping vcc on when current buffer is empty.
-+	 */
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+				      QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE,
-+				      0, 0, &avail_buf);
-+	if (ret) {
-+		dev_warn(hba->dev, "%s dAvailableWriteBoosterBufferSize read failed %d\n",
-+			 __func__, ret);
-+		return false;
-+	}
-+
-+	if (!hba->dev_info.b_presrv_uspc_en &&
-+	    (avail_buf <= UFS_WB_10_PERCENT_BUF_REMAIN))
-+		return true;
-+
-+	return ufshcd_wb_presrv_usrspc_keep_vcc_on(hba, avail_buf);
-+}
-+
- /**
-  * ufshcd_exception_event_handler - handle exceptions raised by device
-  * @work: pointer to work data
-@@ -6603,6 +6796,33 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
  	return ret;
  }
  
-+static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
-+{
-+	hba->dev_info.d_ext_ufs_feature_sup =
-+		get_unaligned_be32(desc_buf +
-+				   DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
-+	/*
-+	 * WB may be supported but not configured while provisioning.
-+	 * The spec says, in dedicated wb buffer mode,
-+	 * a max of 1 lun would have wb buffer configured.
-+	 * Now only shared buffer mode is supported.
-+	 */
-+	hba->dev_info.b_wb_buffer_type =
-+		desc_buf[DEVICE_DESC_PARAM_WB_TYPE];
-+
-+	hba->dev_info.d_wb_alloc_units =
-+		get_unaligned_be32(desc_buf +
-+				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
-+	hba->dev_info.b_presrv_uspc_en =
-+		desc_buf[DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN];
-+
-+	if (!((hba->dev_info.d_ext_ufs_feature_sup &
-+		 UFS_DEV_WRITE_BOOSTER_SUP) &&
-+		hba->dev_info.b_wb_buffer_type &&
-+	      hba->dev_info.d_wb_alloc_units))
-+		hba->caps &= ~UFSHCD_CAP_WB_EN;
-+}
-+
- static int ufs_get_device_desc(struct ufs_hba *hba)
- {
- 	int err;
-@@ -6639,6 +6859,11 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
- 
- 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
-+
-+	/* Enable WB only for UFS-3.1 */
-+	if (dev_info->wspecversion >= 0x310)
-+		ufshcd_wb_probe(hba, desc_buf);
-+
- 	err = ufshcd_read_string_desc(hba, model_index,
- 				      &dev_info->model, SD_ASCII_STD);
- 	if (err < 0) {
-@@ -7149,6 +7374,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
- 	/* set the state as operational after switching to desired gear */
- 	hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 
-+	ufshcd_wb_config(hba);
- 	/* Enable Auto-Hibernate if configured */
- 	ufshcd_auto_hibern8_enable(hba);
- 
-@@ -7809,12 +8035,16 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
- 	 *
- 	 * Ignore the error returned by ufshcd_toggle_vreg() as device is anyway
- 	 * in low power state which would save some power.
-+	 *
-+	 * If Write Booster is enabled and the device needs to flush the WB
-+	 * buffer OR if bkops status is urgent for WB, keep Vcc on.
- 	 */
- 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba) &&
- 	    !hba->dev_info.is_lu_power_on_wp) {
- 		ufshcd_setup_vreg(hba, false);
- 	} else if (!ufshcd_is_ufs_dev_active(hba)) {
--		ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
-+		if (!hba->dev_info.keep_vcc_on)
-+			ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
- 		if (!ufshcd_is_link_active(hba)) {
- 			ufshcd_config_vreg_lpm(hba, hba->vreg_info.vccq);
- 			ufshcd_config_vreg_lpm(hba, hba->vreg_info.vccq2);
-@@ -7938,11 +8168,23 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			/* make sure that auto bkops is disabled */
- 			ufshcd_disable_auto_bkops(hba);
- 		}
-+		/*
-+		 * With wb enabled, if the bkops is enabled or if the
-+		 * configured WB type is 70% full, keep vcc ON
-+		 * for the device to flush the wb buffer
-+		 */
-+		if ((hba->auto_bkops_enabled && ufshcd_wb_sup(hba)) ||
-+		    ufshcd_wb_keep_vcc_on(hba))
-+			hba->dev_info.keep_vcc_on = true;
-+		else
-+			hba->dev_info.keep_vcc_on = false;
-+	} else if (!ufshcd_is_runtime_pm(pm_op)) {
-+		hba->dev_info.keep_vcc_on = false;
- 	}
- 
- 	if ((req_dev_pwr_mode != hba->curr_dev_pwr_mode) &&
--	     ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
--	       !ufshcd_is_runtime_pm(pm_op))) {
-+	    ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
-+	    !ufshcd_is_runtime_pm(pm_op))) {
- 		/* ensure that bkops is disabled */
- 		ufshcd_disable_auto_bkops(hba);
- 		ret = ufshcd_set_dev_pwr_mode(hba, req_dev_pwr_mode);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 6ffc08a..056537e 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -555,6 +555,13 @@ enum ufshcd_caps {
- 	 * for userspace to control the power management.
- 	 */
- 	UFSHCD_CAP_RPM_AUTOSUSPEND			= 1 << 6,
-+
-+	/*
-+	 * This capability allows the host controller driver to turn-on
-+	 * WriteBooster, if the underlying device supports it and is
-+	 * provisioned to be used. This would increase the write performance.
-+	 */
-+	UFSHCD_CAP_WB_EN				= 1 << 7,
- };
- 
- /**
-@@ -727,6 +734,8 @@ struct ufs_hba {
- 
- 	struct device		bsg_dev;
- 	struct request_queue	*bsg_queue;
-+	bool wb_buf_flush_enabled;
-+	bool wb_enabled;
- };
- 
- /* Returns true if clocks can be gated. Otherwise false */
-@@ -775,6 +784,11 @@ static inline bool ufshcd_is_auto_hibern8_enabled(struct ufs_hba *hba)
- 	return FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit) ? true : false;
- }
- 
-+static inline bool ufshcd_is_wb_allowed(struct ufs_hba *hba)
-+{
-+	return hba->caps & UFSHCD_CAP_WB_EN;
-+}
-+
- #define ufshcd_writel(hba, val, reg)	\
- 	writel((val), (hba)->mmio_base + (reg))
- #define ufshcd_readl(hba, reg)	\
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.19.1
 
