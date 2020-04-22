@@ -4,120 +4,96 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E95ADC38A30
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:39:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D4AC38A30
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:41:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C014220706
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:39:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 127B220706
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:41:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N5vel+ov"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CaoCHjKH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726041AbgDVGjH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 02:39:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57236 "EHLO
+        id S1726495AbgDVGlf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 02:41:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725308AbgDVGjH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 02:39:07 -0400
+        with ESMTP id S1726337AbgDVGlf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 02:41:35 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3254AC03C1A6
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 23:39:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B343C03C1A6
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 23:41:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=DJskjLLll3RrRgyRSd8BJD57+3yri98TRvEr9dSIZbY=; b=N5vel+ov1hDI8Hhe7zXwR6BZdW
-        kMU3wovo9UR3BEei5L3cerAzlt0AJ242tUh553CJLgAHCb0QgpgX7NzKga4LV/rL/77aFQRjjCf1h
-        F6L67zCHo1qWpoG1x5CNpaG5sjO7Zi5cmzeqixhh8yDYlWmLMiO34L7935NU72x69nMR/pQELggeq
-        JE2/1zFcs/bsiW7JmxSMKaOV6HMNqLLzKxKQGU+QXb/7NraqFieN46e5qWjRhl6L09Fo0udmeCwTp
-        5ltpdJLb1ANOPiQRW47KEaU/BUHFsZYzomO0ECFwY1IvOAcs+GdQoI3pMhax57aurbJDRxGTzCzfl
-        XlxSTe8g==;
+        bh=48xeBD0AwCWycumkaGGb59oiWIEe+R1hegkYmaSser8=; b=CaoCHjKHoFz86BFqQ6g/KIyYJP
+        0VOR1GHTxgkcNzwHgWVLY1b5fEMSXnmyETABeLZFfp8cRQk7rp6s7KU3iMhiFNYKwLtkm5dBcWrS8
+        dN6yTXNopZ3QJoTjga8o18HLKwbZtRL7jHfXxId+qu+EwgdOhSx/V2gV/SyT7vqWAGHLygD2W2dKN
+        ZK+rVFz39PqjU5jHFJmqWNXajJR4udmam3FyjH8PhKaZJAEWVkYGB7ylM1xTfqfQSk4pZudcrIwzK
+        FXUitpC7iR0wGZY1OzykcCc4MyLnz9TtxW/WmsxLPg7h05Sjwoq89y9Sh5WaLlPI5WRpqfFieo0bX
+        A4JBx1bw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jR92J-0000xT-1k; Wed, 22 Apr 2020 06:39:07 +0000
-Date:   Tue, 21 Apr 2020 23:39:07 -0700
+        id 1jR94h-0003wI-BU; Wed, 22 Apr 2020 06:41:35 +0000
+Date:   Tue, 21 Apr 2020 23:41:35 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 Cc:     linux-scsi@vger.kernel.org, hch@infradead.org,
         Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com
-Subject: Re: [v1 3/5] mpt3sas: Separate out RDPQ allocation to new function.
-Message-ID: <20200422063907.GD20318@infradead.org>
+Subject: Re: [v1 4/5] mpt3sas: Handle RDPQ DMA allocation in same 4G region
+Message-ID: <20200422064135.GE20318@infradead.org>
 References: <1586957125-19460-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1586957125-19460-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1586957125-19460-5-git-send-email-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1586957125-19460-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1586957125-19460-5-git-send-email-suganath-prabu.subramani@broadcom.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 15, 2020 at 09:25:23AM -0400, Suganath Prabu wrote:
+On Wed, Apr 15, 2020 at 09:25:24AM -0400, Suganath Prabu wrote:
 > From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > 
-> For readability separate out RDPQ allocations to new function
-> base_alloc_rdpq_dma_pool().
+> For INVADER_SERIES each set of 8 reply queues (0 - 7, 8 - 15,..) and
+> VENTURA_SERIES each set of 16 reply queues (0 - 15, 16 - 31,..) should
+> be within 4 GB boundary. Driver uses limitation of VENTURA_SERIES to
+> manage INVADER_SERIES as well. So here driver is allocating the DMA able
+> memory for RDPQ's accordingly.
+> 
+> 1) At driver load, set DMA Mask to 64 and allocate memory for RDPQ's.
+> 2) Check if allocated resources for RDPQ are in the same 4GB range.
+> 3) If #2 is true, continue with 64 bit DMA and go to #6
+> 4) If #2 is false, then free all the resources from #1.
+> 5) Set DMA mask to 32 and allocate RDPQ's.
+> 6) Proceed with driver loading and other allocations
+> ---
+> v1 Change log:
+> 1) Use one dma pool for RDPQ's, thus removes the logic of using second
+> dma pool with align.
 > 
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 85 ++++++++++++++++++++++---------------
->  1 file changed, 51 insertions(+), 34 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 153 +++++++++++++++++++++++++-----------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h |   1 +
+>  2 files changed, 107 insertions(+), 47 deletions(-)
 > 
 > diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 7f7b5af..27c829e 100644
+> index 27c829e..add23d7 100644
 > --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 > +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -4944,6 +4944,55 @@ mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
->  }
+> @@ -3345,7 +3345,6 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
 >  
->  /**
-> + * base_alloc_rdpq_dma_pool - Allocating DMA'able memory
-> + *                     for reply queues.
-> + * @ioc: per adapter object
-> + * @sz: DMA Pool size
-> + * Return: 0 for success, non-zero for failure.
-> + */
-> +static int
-> +base_alloc_rdpq_dma_pool(struct MPT3SAS_ADAPTER *ioc, int sz)
-> +{
-> +	int i;
-> +
-> +	ioc->reply_post = kcalloc((ioc->rdpq_array_enable) ?
-> +	    (ioc->reply_queue_count):1,
-> +	    sizeof(struct reply_post_struct), GFP_KERNEL);
+>  	pci_set_master(pdev);
+>  
+> -
+>  	if (_base_config_dma_addressing(ioc, pdev) != 0) {
 
-Odd use of whitespaces.  Also this would benefit from a little
-untangling as well:
+Unrelated spurious whitespace change.
 
-	int count = ioc->rdpq_array_enable ? ioc->reply_queue_count : 1;
+Otherwise looks good:
 
-	ioc->reply_post = kcalloc(count, sizeof(struct reply_post_struct),
-			GFP_KERNEL);
-> +
-> +	if (!ioc->reply_post) {
-> +		ioc_err(ioc, "reply_post_free pool: kcalloc failed\n");
-> +		return -ENOMEM;
-> +	}
-> +	ioc->reply_post_free_dma_pool = dma_pool_create("reply_post_free pool",
-> +			&ioc->pdev->dev, sz, 16, 0);
-> +	if (!ioc->reply_post_free_dma_pool) {
-> +		ioc_err(ioc, "reply_post_free pool: dma_pool_create failed\n");
-> +		return -ENOMEM;
-
-We normally don't print error messages for memory allocation failures,
-as the allocator already prints one including a stack trace.
-
-Same for additional allocations below.
-
-> +	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
-
-no need for the inner braces.
-
-> +	total_sz += sz * (!ioc->rdpq_array_enable ? 1 : ioc->reply_queue_count);
-
-	if (ioc->rdpq_array_enable)
-		total_sz += sz * ioc->reply_queue_count;
-	else
-		total_sz += sz;
+Reviewed-by: Christoph Hellwig <hch@lst.de>
