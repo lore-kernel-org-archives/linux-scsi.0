@@ -6,154 +6,135 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB4D6C55185
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 18:01:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4579C55185
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 18:59:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F2832082E
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 18:01:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8587121582
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 18:59:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="IPfU4yf1"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g4L0VzqW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726540AbgDVSBx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 14:01:53 -0400
-Received: from mail-eopbgr1320094.outbound.protection.outlook.com ([40.107.132.94]:27520
-        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726154AbgDVSBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Apr 2020 14:01:52 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=d2E2zHlqQRStBHoXs81kSiK/FAoxzMQpQCB3VogSfRo6gsFtq7h1kHzilH0HpS5dqWTDDAMGvRpKvgogI7Nqi3gnxuUFEQuiNVqunbYEN3XiV79B1ybxNDUVS5D00N0HqfAUeVUBkG8qYkqH/xBUOqBPeLmmZ8rN5nhRz5SpiG17mA+OHxh/UaZvJZ/J60lNLjFTFYKZgGj3haFZ9CP17mTUY3goi0Lr9coNLiHQ/Vk/6zvZd/ayhjVUkyqf1x5XI1cu0RtFUG1go1yLrnBih2rJtaZG6KZN7UDXXVB3EkW/jY2kS2s+bIMQPHuBTeVbu0PTMqWbNukSHkbDKVGuDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CC/qWeAtGErnkWKpFYPQl8OHH2WdVAPY/Vf43+Mkq/o=;
- b=VBIYFkiaE1L5mbOxsTQ2eexhmT6D/Ovsq7mFg6aN/dtB0EHCEFSFv51xaMTjOJRh6uKXnHGoNe++5+i/w3o0A6QgJdnszxtMMIKofjyuEcWQB8Oc8dsax6oYE9WC8Fmvq4RRleTrK1WiTYrBhCRSY+RgjKZWXIB6QBMIR7UpW8y0V0VNKrWZFPeHI9/pT+KXK/iiKj/OOz1a1cCNnp39lbeZoXIkVRrqpnfVvh5KJ4Gt72CjBw+mp2ZfQNQWoq8MfPyshSxlSg0m1UWo5mZa+4ItxYcsa35sUNE6oJtfybgkO6mqJBAEgTBPSaAUirivIQfZeBvyTDupkdSElH2BnQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CC/qWeAtGErnkWKpFYPQl8OHH2WdVAPY/Vf43+Mkq/o=;
- b=IPfU4yf1MaHYAoG3aCgkjT8mUJZlYwC8eJQMbe/hqru1ACsk42bWzx6ixNluQ74qiqIUDTOMCzcOX9GI330h+weQrErJAusmpRc9y8iDAvc3th+B90cv6wWemV1GXPi4CMrGINrcpWWPEdqimvsDoDZ3/ZvtyORzC41Mwbeg9uA=
-Received: from HK0P153MB0273.APCP153.PROD.OUTLOOK.COM (2603:1096:203:b2::12)
- by HK0P153MB0147.APCP153.PROD.OUTLOOK.COM (2603:1096:203:1a::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.3; Wed, 22 Apr
- 2020 18:01:38 +0000
-Received: from HK0P153MB0273.APCP153.PROD.OUTLOOK.COM
- ([fe80::2d07:e045:9d5b:898a]) by HK0P153MB0273.APCP153.PROD.OUTLOOK.COM
- ([fe80::2d07:e045:9d5b:898a%2]) with mapi id 15.20.2958.008; Wed, 22 Apr 2020
- 18:01:37 +0000
-From:   Dexuan Cui <decui@microsoft.com>
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     "Paul E. McKenney" <paulmck@kernel.org>,
-        Josh Triplett <josh@joshtriplett.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "hare@suse.de" <hare@suse.de>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Long Li <longli@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: RE: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-Thread-Topic: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-Thread-Index: AQHWGEVb6DFeJK2tFE2eFTHRpRyDH6iEXZcAgAArmvCAAAOn4IAAUhWAgACLYPA=
-Date:   Wed, 22 Apr 2020 18:01:36 +0000
-Message-ID: <HK0P153MB027315BB6DD813888E073664BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
-References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
- <20200422012814.GB299948@T590>
- <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
- <20200422020134.GC299948@T590> <20200422030807.GK17661@paulmck-ThinkPad-P72>
- <20200422041629.GE299948@T590>
- <HK0P153MB0273CF2901E193C03C934A47BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
- <20200422092351.GF299948@T590>
-In-Reply-To: <20200422092351.GF299948@T590>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=decui@microsoft.com;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-04-22T18:01:33.3288494Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
- Information Protection;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=5a78e7ce-7376-4fa2-a226-987ad21aa83b;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=decui@microsoft.com; 
-x-originating-ip: [2601:600:a280:7f70:25e7:ea9a:b4e5:a1f6]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: c71d91af-fa71-4ab1-4d6b-08d7e6e733f8
-x-ms-traffictypediagnostic: HK0P153MB0147:|HK0P153MB0147:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <HK0P153MB0147E5D5C656B68D3110F4FBBFD20@HK0P153MB0147.APCP153.PROD.OUTLOOK.COM>
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-forefront-prvs: 03818C953D
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HK0P153MB0273.APCP153.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(376002)(39860400002)(346002)(136003)(396003)(366004)(81156014)(54906003)(71200400001)(82960400001)(8936002)(8676002)(6916009)(9686003)(316002)(2906002)(186003)(52536014)(5660300002)(10290500003)(6506007)(4744005)(66446008)(64756008)(66556008)(66476007)(66946007)(7696005)(55016002)(478600001)(7416002)(82950400001)(76116006)(86362001)(33656002)(8990500004)(4326008);DIR:OUT;SFP:1102;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: QD4fTLL2nYsBX4uyNo5Ie05t8KabPlD59e9iLeIoqiumwNBka23ZgbOUQdy3QJBS5N6dT8Ka+GS8DFbaoth40tXqjMJcF3a80uRa1rWGLCvtdXHBTjVuP1zmio1ePYHLViv/CGq1DPXpM7qYmAW0D1icM1fjGkw5r+bGPgRzFrVjBNgzmMfi27OAULSWdUYlMZqZHoyg8vNQZlmsoDI2eXRZ2ReK8zt/hFzhUx5mAG2EcROPwxoS1RS65gaJZKjKsJIMDh87zNkyNaI1u21um3AJi0QHo0P0OTRcZ0bcRl04x6VpGrfgxNlZCB/CBf/5BEFqHYTPf8Pm38NyiQ2hP7lC6XocHTaXmX3E8HBvaj258u4sR0Pky25ndbSe/z1ZX4AejRteSoXibHb5Fn4IbeTjgwDyO9jk228Vr4OcvgMeoZnD5uylrRD7UiIT8Xk3
-x-ms-exchange-antispam-messagedata: orcnkWWvAsVDFWOW6f9Rf84QCt7izfp8hh++QSMhdrXNL4setBLZtBDOl6sL+iGuf70WCBbbhYss+oPvpTPSNO+UkaqXY2KmgGFoPBfCe6nGTgW4zJF/D+BfWy0UDDKeX+b1cPpn5aJKhEkTTOvAe4AxF/qQCB/WtL4ZcDobxVjsRqizDEHALGfiqYVycBbnozT/rTmVjo0sa348Q0qsivpmO1M05QB2Kz8fWSETtUEL1D1nhgAsUDlmffB/0WaUVpfrB1YVqqyq400TFYCcTRpZWe+52M3HuoI4D+Eeyq5rvgWcJUqcplJAfA+pb+ZTRWt6Z19R7Tvvg59nTvA1ZWP2kkzkxu0lNlmNiR957KYjZDuboZ4Gml7VQzRva97UgsN7qHtI9l0S1hIF3ar0zdaq39tGJPQ47vF5cRoLakAOc/jX/P/vKT7XqZ2xeNamuTUlF0U4OHM1yi09vu/YbjK/s1Pm8FPNfR2kWLMxl8kPjg34GsiMVFft7CgNwUyzogWCtbPPSPYajGiWotpQi/qOLP0R3qgElPqsS6LTgOew6KNEN2Gi2VpGBbcwf8seY2poGN597JMskDlRKXmL9qhQgeaGa0WWhgNvzhrkjBOMhX1J/ViBwi8TzXS1+VVL+8zSM0/kffOrvv9eQaNw30Ev0e3uzueqP9+nw1MUI2IyEGBtc2ipvHRU/kCdNguYc3Fy3B26lVxsmoCI+2/yTtCiJq85e4arCcjhbKloNUez/jJJD5rjAvbPZVh1L3KDB8O1koAHyrU8Xd1+eAAAeG3XHcVzhjjZvYOth54ybXId6ZULAqpAmDX2VMoC2w/pnMWOYmFWvNvp7p3b78BpExhhdig0wkmPmncM4F1OwYs=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726201AbgDVS7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 14:59:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726071AbgDVS7h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 14:59:37 -0400
+Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1325C03C1AA
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 11:59:36 -0700 (PDT)
+Received: by mail-qt1-x82b.google.com with SMTP id w29so2631058qtv.3
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 11:59:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=bkZx7Nn/MX4VkYJQu5Mqwo+vKhA4GY0PpBTuq+eQ0nM=;
+        b=g4L0VzqWQ3NSDcX4XRf8yJloIa1g618mJr9LIbXI9uSOVwfmguc5B6wFli38Ky2t9/
+         DY562mQB/De86OsKiAO2OomrUEPrjtnHk2aQ5RAuJECJPL/VZNb07YUj1cSr9yblAVuR
+         UF2Dd3+z/K6Rla7P3iMaNe3LUbf5hdenTrB30=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=bkZx7Nn/MX4VkYJQu5Mqwo+vKhA4GY0PpBTuq+eQ0nM=;
+        b=fh0unmkURGW2wvE7eSad3BaoDtEMdWDhwtetVFj31WuuT2kv194KMjdula84m9cjxc
+         tAVxG1x+FZHVFhpCXDSjZ68yIFZwIQA7a7ryYJpFvaUoCtnjHogecy/nAtShEto1bB/9
+         g3srXLWSpI5Fh2oz1F3dTX+GeR0hDBKTupiqiJBENKBX9G1Dj4rjbX1LT0kgR9nTkRdB
+         Nfa7ulLR+JkU/4iDo/ubQKwDPMRohOF9zWeiNxGROaYmUSIHkH5MHD934FSOoJTFht2b
+         e4VBPZSaZy/7XzbiTydSNUMZCoXZuQufxAKJcIhUXPpFOoEko/znvp4XOKPGcDpKeh/s
+         IJ3w==
+X-Gm-Message-State: AGi0PuYftDuBumk8tbuyY34EBzAitq/re7d2P3D03BUmjf4IpGKCq4/n
+        kAvhxCo3EBCJsnxIwwPqRBh35d5Qs0PUWNQzEeaKhQ==
+X-Google-Smtp-Source: APiQypJS+OWzM+NdWoOCbWiDOu2FTpT3eVNdfMPDNL6ZL0pLfBn/I0gfAn9RMK9Q/LZiW+y2kFg50JJ3iu5jM/aF3CA=
+X-Received: by 2002:aed:34a5:: with SMTP id x34mr74313qtd.216.1587581975830;
+ Wed, 22 Apr 2020 11:59:35 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <1583409280-158604-1-git-send-email-john.garry@huawei.com>
+ <1583409280-158604-9-git-send-email-john.garry@huawei.com>
+ <a1f0399e2e85b2244a9ae40e4a2f1089@mail.gmail.com> <f839f040-8bf4-cf83-7670-dfc208b77326@huawei.com>
+ <7cac3eb9fd79b5b988e25da542305b35@mail.gmail.com> <40faaef8-8bfc-639f-747f-cacd4e61464f@huawei.com>
+ <7b8c79b0453722023c6c7d53cd24441d@mail.gmail.com> <b759a8ed-09ba-bfe8-8916-c05ab9671cbf@huawei.com>
+In-Reply-To: <b759a8ed-09ba-bfe8-8916-c05ab9671cbf@huawei.com>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c71d91af-fa71-4ab1-4d6b-08d7e6e733f8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Apr 2020 18:01:36.3628
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 1pm0CdwY+O7sr5YGCUzkyXVYRUUU4ZSogpJttWtBzzlMxKyA0Bmr5ZQWLlsSew7Y5oma54zMgMtp6d0s9lbeaA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HK0P153MB0147
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQLPD/Iw6Rn2DAIn/TfwmBaZDWGoTwIxkurkAqxUgoEByxhGKAL7c9G/AhAFW6UBYJrDDwOh6RKhpg3WcoA=
+Date:   Thu, 23 Apr 2020 00:29:32 +0530
+Message-ID: <260c5decdb38db9f74994988ce7fcaf1@mail.gmail.com>
+Subject: RE: [PATCH RFC v6 08/10] megaraid_sas: switch fusion adapters to MQ
+To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.de,
+        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
+        hch@infradead.org,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+Cc:     chenxiang66@hisilicon.com, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
+        Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> From: Ming Lei <ming.lei@redhat.com>
-> Sent: Wednesday, April 22, 2020 2:24 AM
-> > ...
-> > storvsc_suspend() -> scsi_host_block() is only called in the hibernatio=
-n
-> > path, which is not a hot path at all, so IMHO we don't really care if i=
-t
-> > takes 10ms or 100ms or even 1s. :-)  BTW, in my test, typically the
->=20
-> Are you sure the 'we' can cover all users?
+>
+> So I tested this on hisi_sas with x12 SAS SSDs, and performance with "mq-
+> deadline" is comparable with "none" @ ~ 2M IOPs. But after a while
+> performance drops alot, to maybe 700K IOPS. Do you have a similar
+> experience?
 
-I actully only meant I don't have any performance concern in this path
-storvsc_suspend() -> scsi_host_block()  :-)
+I am using mq-deadline only for HDD. I have not tried on SSD since it is not
+useful scheduler for SSDs.
 
-Thanks for your effort to improve the scsi_host_block() API in the patch
-[PATCH] scsi: avoid to run synchronize_rcu for each device in scsi_host_blo=
-ck.
-=20
-> > scsi_host_block() here takes about 3ms in my 40-vCPU VM.
->=20
-> If more LUNs are added, the time should be increased proportionallly,
-> that is why I think scsi_host_block() is bad.
->=20
+I noticed that when I used mq-deadline, performance drop starts if I have
+more number of drives.
+I am running <fio> script which has 64 Drives, 64 thread and all treads are
+bound to local numa node which has 36 logical cores.
+I noticed that lock contention is in " dd_dispatch_request". I am not sure
+why there is a no penalty of same lock in nr_hw_queue  = 1 mode.
+
+static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+{
+        struct deadline_data *dd = hctx->queue->elevator->elevator_data;
+        struct request *rq;
+
+        spin_lock(&dd->lock);
+        rq = __dd_dispatch_request(dd);
+        spin_unlock(&dd->lock);
+
+        return rq;
+}
+
+Here is perf report -
+
+-    1.04%     0.99%  kworker/18:1H+k  [kernel.vmlinux]  [k]
+native_queued_spin_lock_slowpath
+     0.99% ret_from_fork
+    -   kthread
+      - worker_thread
+         - 0.98% process_one_work
+            - 0.98% __blk_mq_run_hw_queue
+               - blk_mq_sched_dispatch_requests
+                  - 0.98% blk_mq_do_dispatch_sched
+                     - 0.97% dd_dispatch_request
+                        + 0.97% queued_spin_lock_slowpath
++    1.04%     0.00%  kworker/18:1H+k  [kernel.vmlinux]  [k]
+queued_spin_lock_slowpath
++    1.03%     0.95%  kworker/19:1H-k  [kernel.vmlinux]  [k]
+native_queued_spin_lock_slowpath
++    1.03%     0.00%  kworker/19:1H-k  [kernel.vmlinux]  [k]
+queued_spin_lock_slowpath
++    1.02%     0.97%  kworker/20:1H+k  [kernel.vmlinux]  [k]
+native_queued_spin_lock_slowpath
++    1.02%     0.00%  kworker/20:1H+k  [kernel.vmlinux]  [k]
+queued_spin_lock_slowpath
++    1.01%     0.96%  kworker/21:1H+k  [kernel.vmlinux]  [k]
+native_queued_spin_lock_slowpath
+
+
+>
+> Anyway, I'll have a look.
+>
 > Thanks,
-> Ming
-
-FWIW, if the time increases linearly against the number of the LUNs, it
-looks typically it's still fast enough for storvsc_suspend().
-
-Thanks,
--- Dexuan
+> John
