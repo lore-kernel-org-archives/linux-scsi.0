@@ -6,67 +6,67 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97D59C55186
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:30:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3469C5518A
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:35:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D9CB20781
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:30:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CABD72073A
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:35:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="LE3Fzdw5";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Kfd8kDLl"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="jGXtLpkb";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="FFqSxCdv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730891AbgDVKa2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 06:30:28 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:42326 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728657AbgDVK26 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 06:28:58 -0400
+        id S1731386AbgDVKfg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 06:35:36 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:2815 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731381AbgDVKfc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 06:35:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587551338; x=1619087338;
+  t=1587551732; x=1619087732;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=DGf7G5RE1rVwKwWmuAnWNKUHNUHFVsH7GZDeqXLbxtY=;
-  b=LE3Fzdw5UIbq+QCwjczFgZ2hKpFv6Y3lf85QU5yUkn3nXM40HHLD3OJe
-   jTc1DntkFDccTuGr7RsHgVBdGW+oE9EZ/g9fRXWrturdmFkUgt0MhyQJu
-   VNS+lWPaXhAXViQOz5co6jEmx8vwlOY2yD3HfI40Hyj7Iakr+pLYtOQaJ
-   WF9aTxq9JzmytRmuiwZKsGh0FQgfPgTS65KZtJsxna+u9GCK7dVB6I+Wa
-   +2bOA4Y9mU4Kq0ddk+VOwNbBZUg3OSSShVEjEopmUk93OhMrA1Haz/Ptq
-   j9TiW99Qb5fcahJixACi5XOKW5NmCcj/Y76inhHqsAI337z0EjTpO2DPa
-   Q==;
-IronPort-SDR: cZupk81fYqPvqluZYMr8vz9fDtWDUx40uVVZS5gpshixcvLgfl62i2avHoVUTSjsOZKlZePCD3
- +SOs/Axqdz+BYI96UC7t/QbZYFuxA3zX1tLqkeryMpJDdR7hP5glCUGfi/RdLPi3Mg/1OOX9T5
- ucViJ4ZWjcVBn549N1exZKlOVTYJDnTL0s2d0NtkhXQmyfeUV169Z0eONg9g2GyXfOOmQuWIKI
- ZteyNoIoHFvQBPnl1YBQMxQvjJDfef496+ZGQZqaKfqc3NPnszjs6c7jIABHlGlZKDQEmFPshI
- T0U=
+  bh=MdrS2JP0e0emC0iygxoUjItHdbhZL0AN0RAyFpbOMIo=;
+  b=jGXtLpkbQsa9oZwx2TlCglccH4eLx1bysv5AKLfsx1FnBCb16pRBdlIO
+   mAtr+Mu6HrmY73RaO8ZJumCR+R7GgFB+Z5q7nSNMCXqwh7laJJ27QdGjY
+   gNxIYjmzA1uvksGgh4d21C+Kr8T1xNkWGghkUQS1GIISP1tGIxZBe7/VV
+   UrEyKFEvpBIx1dPg8uaZzTJaBLxDwh/RgcQXikVjysQDWIgRuT+0SlDIn
+   +qib5beCTm2RIB3pQ3cJW0bsD9E8+TWZQAMwtjjH3kVsKUx2hKGq9SMEB
+   Q5tzN13VkxtQezs0809txMbviOy7VnxbCMQkT055TZUxEGUFqicIXlm56
+   A==;
+IronPort-SDR: CV3UUf1sWeOfwluMsbMlr/xFgtEozRMtmoSmenfK/hhYIPVuHX5+bVaLTp8hIepz9WsJAAFvyV
+ moulelecz0j2zZg0te11F+TGwEbg2tnUiomaENO2HJbXwNDJHJNoMeO3OfjTbe3QutbkHGaV6u
+ JSvZ0Pq5gxbhsj3uDKr8Xxy78xiCBUpaSfApfxMbmuyYDUKMyK864z1h0hUWPHwoWUXNW4JkLI
+ wD6lEAN8deV/Ef9G9C1+RExkAsDRnJcMotUITns2CTF+ewt6tdOXVUht9w2ioXLqyJewoK+mvC
+ ZG0=
 X-IronPort-AV: E=Sophos;i="5.72,413,1580745600"; 
-   d="scan'208";a="135870967"
-Received: from mail-bn8nam11lp2171.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.171])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Apr 2020 18:28:56 +0800
+   d="scan'208";a="137300294"
+Received: from mail-cys01nam02lp2059.outbound.protection.outlook.com (HELO NAM02-CY1-obe.outbound.protection.outlook.com) ([104.47.37.59])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Apr 2020 18:35:31 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=I2VR49Rw/g8urjkZ+lhi5uWscaMZyQ7OitXqObDifrNiuOxx4UZg+1YPWjM3Pqb1IjV9V+tjrdKdXlxFz7s3RD+WcdsnYRVXt0fL+uSvizOHd9PbRfUkaawt7t/iwi98XOyNTrraqgnwykHHx/EPhgwyTXAdvN8jtttzV4CayTxJrKx5jBxzFPS92+TaqYVHyx1FLe//Mk6eKdqL/GqqO8IKY74Cw7UOwndWdQWr030ShIMIWI2Mtn3Ke3ETQoBln4PHQN+mDKkvepAZbINeSHHruoS6dhS0jEfoEXM80a9XX7vRYQbsxKGVzgSDLT8jLMGgaFCwxO00Fn7p+qubsw==
+ b=mrLqFrunRvFSEbXo0iwzPLwZYmZnSNpNr89kUDib1MAfqYe1piBv34nibaip0QcfBUdC+AQogRSMHRol/zJgP+/eEfEop/n9Fd4YwKkA4PaBD1T0KwWYoC8qgPqx1/lj3OxpxjH7Es6ljAMesZwWgBaLUVm1hSDY0nkqnEUaQ454xKm1WOx6+liRHrBWdb9u+Izfdml6M/3uYlZnnBVrEr+r5PKIiJgmuthn4kDXkCmcnqyffcXV3quAygDyFO1TN3BJC0o/KeKHFCIMYGpS5PmNHf3L8rYYaCf90coh05ysJpL+onRRWR9qOqxdbd8PL5nJzuUZ+Xann7npeOgUng==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1zwQDOrHT5IqUmw8PktNp+2qNxp1DCFK5A9tzpVucU8=;
- b=aGzYbS0xXNRHmhdidfzXRvNrM5QRhmFXu6D/y75CFZHH8Nh0nnPLxyrKHkHxqXdVHWR7KClnCgIORc8xnA5nncU9IYiF5KC317KJ/6pbCue7szgxlL61FsY4ISvQihJMAQ5aiQD7PeKuURLNtxv5thcWz/O5yqZPnHPDRcASzSXirEsOKy0IHxmx+RmfJU2C4h+xVZIYH/Q6vx5I1Bjdrl61uxyNoWcpFjCH22fGa8cOkiiCbChGXXo9ZvFzpa1WuBu6cPVnE4tiGppSWVy3Mk40Fxe8VBsZ1rH8z4di/aYpydEvwQU3wNastJTgF3QdkERu95ZZbkfORpnUdO+1lw==
+ bh=bQHKrUYqInIdoHSn5IvHnZwZu6R8f2ANu7K/ZctM1rI=;
+ b=Txq52ZmWyIW9sCNj/QodSYa+z276/qK6Sioq8tUKBhWF7jFIiGXajL8v8WLF5ZZqdHG48Q1NkUcf6kMY4YcQQ6RoA2JCM6xjZUqntBr3Cx0rO5iDqC1uaSCFwsn088u9RJyIPxnR4JCSU5tTNSIladJ2jbB8Nr+5ygLFm11WhyOqUZ30lu5PwFO07oZhG+otddWNCUaXcHyM82oVJBQOOGLTdQfa/XfEKhctW+75iBG8aY2RmR1ySG/s1ZE5DR/MELhcGCQUTIZQ5MGEjoq2Kc9QX7p1yYe4xePB4ji1Jd+OZwBzAvLfNrwHfJ9LwAibXJR5IPinXaywVOzKEMT1hw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1zwQDOrHT5IqUmw8PktNp+2qNxp1DCFK5A9tzpVucU8=;
- b=Kfd8kDLl5H1edRM556V2N+nTHjuyz8l3enBmY673Gl6LtKGyhuVpkAWrgrPct/e6TO3Dgz9HW+hNNi4nwwQ1HrzBXjjOzz9tDQbFsP0eQfNIfevkrt6oHmmZ14qJJwUwExh+Jsbj/dtddjnPRkoPmc70FZFNZdUsCG6zthhiC1M=
+ bh=bQHKrUYqInIdoHSn5IvHnZwZu6R8f2ANu7K/ZctM1rI=;
+ b=FFqSxCdvOI7x3mOwjGQVgiHZqwSBb9tz7IWzvFyZMTxdxGa4FImW7BqZxw2DFwYE6X2uua7cZ6sRg7JuF+3rfxO3F1Ajfm6xwZObOwjyRcj92S1dQ9mQXTq5kmsbQu6aUz4sAoeSQLc754ns982ZerduHADEdaW8rNsaYNuUNWg=
 Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4976.namprd04.prod.outlook.com (2603:10b6:805:92::15) with
+ by SN6PR04MB3839.namprd04.prod.outlook.com (2603:10b6:805:3f::31) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.25; Wed, 22 Apr
- 2020 10:28:55 +0000
+ 2020 10:35:29 +0000
 Received: from SN6PR04MB4640.namprd04.prod.outlook.com
  ([fe80::3877:5e49:6cdd:c8b]) by SN6PR04MB4640.namprd04.prod.outlook.com
  ([fe80::3877:5e49:6cdd:c8b%5]) with mapi id 15.20.2937.012; Wed, 22 Apr 2020
- 10:28:55 +0000
+ 10:35:29 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
 To:     Asutosh Das <asutoshd@codeaurora.org>,
         "cang@codeaurora.org" <cang@codeaurora.org>,
@@ -84,9 +84,9 @@ CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
 Subject: RE: [PATCH v2 1/3] scsi: ufs: add write booster feature support
 Thread-Topic: [PATCH v2 1/3] scsi: ufs: add write booster feature support
-Thread-Index: AQHWGC/ZP5mEb4mHQU6B/JvojeGq46iE7Pyw
-Date:   Wed, 22 Apr 2020 10:28:55 +0000
-Message-ID: <SN6PR04MB4640D6EFA64A15E3624E081EFCD20@SN6PR04MB4640.namprd04.prod.outlook.com>
+Thread-Index: AQHWGC/ZP5mEb4mHQU6B/JvojeGq46iE8eUA
+Date:   Wed, 22 Apr 2020 10:35:29 +0000
+Message-ID: <SN6PR04MB4640895F87719D8B04D0F74EFCD20@SN6PR04MB4640.namprd04.prod.outlook.com>
 References: <cover.1586374414.git.asutoshd@codeaurora.org>
  <6519cd576299d5881129b0e48870a53a0afc7835.1587509578.git.asutoshd@codeaurora.org>
 In-Reply-To: <6519cd576299d5881129b0e48870a53a0afc7835.1587509578.git.asutoshd@codeaurora.org>
@@ -99,48 +99,44 @@ authentication-results: spf=none (sender IP is )
 x-originating-ip: [212.25.79.133]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: c3cf105f-9c93-4dfd-7d81-08d7e6a7f5a8
-x-ms-traffictypediagnostic: SN6PR04MB4976:
-x-microsoft-antispam-prvs: <SN6PR04MB49766E3E6DF4E68CABFA3AD0FCD20@SN6PR04MB4976.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: dee2446c-0967-4f6a-9c4c-08d7e6a8e0b5
+x-ms-traffictypediagnostic: SN6PR04MB3839:
+x-microsoft-antispam-prvs: <SN6PR04MB38393317710B3147EC98C2E2FCD20@SN6PR04MB3839.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1360;
+x-ms-oob-tlc-oobclassifiers: OLM:8273;
 x-forefront-prvs: 03818C953D
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(366004)(376002)(396003)(346002)(136003)(39860400002)(7416002)(186003)(5660300002)(71200400001)(4326008)(7696005)(33656002)(86362001)(66946007)(9686003)(66446008)(6506007)(55016002)(66556008)(64756008)(66476007)(8936002)(2906002)(8676002)(54906003)(76116006)(52536014)(110136005)(478600001)(316002)(4744005)(81156014)(26005);DIR:OUT;SFP:1102;
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(39860400002)(346002)(136003)(396003)(366004)(376002)(66446008)(64756008)(81156014)(8936002)(55016002)(316002)(7696005)(110136005)(6506007)(26005)(4744005)(54906003)(8676002)(52536014)(2906002)(66556008)(71200400001)(186003)(4326008)(5660300002)(86362001)(478600001)(9686003)(66946007)(76116006)(33656002)(66476007)(7416002);DIR:OUT;SFP:1102;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 55gXcnvdAh7NKzQmXcXtNUzrU5+rN1zp6L2E8nDF8A+G9dopDY49naNDD4TSeO3GMvpM5rJYjZn3ZVFIaK/wPklrJ6CgCeo/yAw52Z6nRPhmmxCqAZpzvvSwg3PqnDiCu//OeMV9NK6tb/fyxNrPiMtjg7C4e/k0oHZGr88dPLC6zb8ygiM4C8KuhrFYo1N20vHBxlkhD7hdzbVUJzlDTWhASpK9R1m7HSn2NbpsvU78nqtfafHEjDsHeypXzOmDluM/cTNHuKkfKyYtSh2pSBHe9DXm2gL6nFRkHFLI7zYLiRDtVmto91NNQOdVNAcytt44upUfSkm6CVlzzjxOj7u6Hxwgmv6MOa0dDuZkmbdNjz13axd+2Y8dzPPtvmZwoWg8WbwDztEPnanPkrCeR4wNhcj889+urLO3iBllDX0JQlDyJnv4C4zh3gOizn42
-x-ms-exchange-antispam-messagedata: 4nfPs5C70exH9WG7KeO/6TsXKJm0AZmAVsM9cLKa445Zr1SnuRkVDqJdqm/kf9K1FuNNknDqcMpysj9tqkGX23mNVKPyW6d9kG7pn1dlbTF9uOAgBuxVkeTS04NtyX9/zXbs4uIPV8OVy1GDvzpv9Q==
+x-microsoft-antispam-message-info: YqvxcmwJ0X67fQfqAK52bKSyRcPmOYAt56XzqTWcfS8Xv3TJKAZA0PAwaMLQkrCTykHvtOEIIy7lyqVQSJKXTYBzO0ca92d5Thcwy2MzmWshAWZZRfq7NZwJRbDdnqQOPhA77Dd1ffRROpOD5WTgGDC+koCN93id9xqvCGbS4QmRSzGkAIyB63Uf590PA74La0Noat6ROuMRAz4bsnCLx7uHBYyWXqtP94gmLDUzvd6EqG6T04FbV1xcZjPmy1M5Piuw8psvdPcT84TJZRfEu5cDwpkoMvY5cYPEUNj/zzirZONAgrpjJ//kF5sRTmcWbblDACO1nyoCEsGIVjApbd7Vu6cnmH6MHA5wGqwHapGTrjGnvFyS4F6Xa7nazFh0sugDnNTteYIVgJ4wc2A7pr/rwuVx7qxZkAzN43iYNWOJqQKa3gFmDe83aBpbNaJd
+x-ms-exchange-antispam-messagedata: vocKJWG7JMIcLmlSE+shZlqIvxxNhTPXM/xBqdUOMd8xERfE36UOMbC0nt7q4tViybIg6R00QzlkD1XWK+G6vXxLdyXuwrK/YRFzzF54hSxac+97fwqRWBj8ksU1+k8bvNc50ywJQy+0mQCqWZHrHw==
 x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c3cf105f-9c93-4dfd-7d81-08d7e6a7f5a8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Apr 2020 10:28:55.0432
+X-MS-Exchange-CrossTenant-Network-Message-Id: dee2446c-0967-4f6a-9c4c-08d7e6a8e0b5
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Apr 2020 10:35:29.3847
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: m69WzyV+LXf3VRNxvVdjSTHq9Z7mRxdRLGclxcSb7j+zC3UDqM53xiocGOm+EzzJzvcX3eh2L+zo1/89HMmqvA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4976
+X-MS-Exchange-CrossTenant-userprincipalname: +v7hzeZIhnqfljXX7Y1Qn2llxJ8A5RMNAquaPX7ue/amETBjzwJRF3ajc3hWlBTv/e1FsEq82qvcZbnYhgBlCg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB3839
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-> +
-> +       if (!hba->dev_info.b_presrv_uspc_en &&
-> +           (avail_buf <=3D UFS_WB_10_PERCENT_BUF_REMAIN))
-> +               return true;
-If you are in reduced mode, but avail_buf > 10%,
-you still get into ufshcd_wb_presrv_usrspc_keep_vcc_on(),
-Which you don't want.
-
-> +
-> +       return ufshcd_wb_presrv_usrspc_keep_vcc_on(hba, avail_buf);
-> +}
-> +
+> +       /* Enable Write Booster if we have scaled up else disable it */
+> +       if (!ret) {
+> +               up_write(&hba->clk_scaling_lock);
+> +               ufshcd_wb_ctrl(hba, scale_up);
+> +               down_write(&hba->clk_scaling_lock);
+> +       }
+Maybe add "goto out_unprepare" if ufshcd_scale_gear() in the clause above,
+Instead of checking !ret, to follow the function flow.
 
 Thanks,
 Avri
+
