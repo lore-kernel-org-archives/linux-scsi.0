@@ -2,96 +2,223 @@ Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CEEC54FCB
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 16:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B874C54FCB
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 17:18:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EA2C21473
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 16:52:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56F8C2082E
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 17:18:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MPWYytcJ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="erCruCHk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726421AbgDVQwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 12:52:50 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:53922 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726057AbgDVQwt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 12:52:49 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MGmd5l016472;
-        Wed, 22 Apr 2020 16:52:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=uN5oDoUrcSMXIH61koWBoMIDGKR2buXMUx19bspQ1oo=;
- b=MPWYytcJ+VM4418fwagvj05fFjlsdTb/u802H/MTeykMuLSyw94i2PeGCxgHvwcpZahk
- OJSwpUxeNqxOl7EMfXniOjCAQ9sNQr5j1QXdtO7noxNDwO6iVcj1s5xiXdrsAr0cfSLb
- 0bZ1MOr82T23dUuJ8/vHaC3LtiII8hbg5WFtEjBnFID+WSdso9rKGK8+QpyAe6quEf2f
- XcqSSh0MOito4B1p2Uf5TQg6Z4628ixSIG/wlQ+YTim08Sgsi7i0l+HCtKM0VdY18RtW
- b3hDLCBmusHfm90zNNJ+mGkGfyv/FhlMLJdRgeolIFZJIHT4DqYKQvWuD07XtMXoHdRg Fg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 30fsgm42et-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Apr 2020 16:52:44 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03MGlWb9022322;
-        Wed, 22 Apr 2020 16:50:44 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 30gb9314qk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Apr 2020 16:50:44 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03MGogxR021350;
-        Wed, 22 Apr 2020 16:50:43 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 22 Apr 2020 09:50:42 -0700
-To:     Douglas Gilbert <dgilbert@interlog.com>
-Cc:     Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 7/7] scsi_debug: implement zbc host-aware emulation
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200422104221.378203-1-damien.lemoal@wdc.com>
-        <20200422104221.378203-8-damien.lemoal@wdc.com>
-        <7a673425-195a-bd5f-bcf9-66e2c6cdb3fc@interlog.com>
-Date:   Wed, 22 Apr 2020 12:50:40 -0400
-In-Reply-To: <7a673425-195a-bd5f-bcf9-66e2c6cdb3fc@interlog.com> (Douglas
-        Gilbert's message of "Wed, 22 Apr 2020 12:46:13 -0400")
-Message-ID: <yq1eesfh3bz.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726605AbgDVRST (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 13:18:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43800 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726363AbgDVRSS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Apr 2020 13:18:18 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8475C03C1A9
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 10:18:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=NzRYI7AyZ6i+iYzXbZlq4sHy/wUTqDJ9zYOSP0XPrAU=; b=erCruCHkJRLMLb4AKyrQYojUJT
+        2F7DArvzD4CI+5Ttd/ibWjMIbKVI0a1LTkf/mGG4jabOJ0VxjsMtQvkjp1u27fmG2ayMIFZXPZh/A
+        Q1PQNKuCsg6OaYdPW1BTnKTAOz9LsddMZLDBw60dnLd/fX972ibVa7TiEx7XNN0PQqcsoZkVfzGmp
+        U34ljC/+VHfBXd091SNUjZnUWjnEkYMu4q1wsDvQZbN90LlaC6z4fLTHH0/xxFTEKcYMH9O4y0ht5
+        idXrHAdpz/6ixjcEv5EGO+rV0MpgtJlkzkmAYMYnqz6WcuSkdyM6ttRsGI8dVZoGiKT1tEcjyPD01
+        0ZPsQDbw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jRJ0s-0000nN-HS; Wed, 22 Apr 2020 17:18:18 +0000
+Date:   Wed, 22 Apr 2020 10:18:18 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash Veerichetty <Sathya.Prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [v1 1/5] mpt3sas: Don't change the dma coherent mask after
+ allocations
+Message-ID: <20200422171818.GA19176@infradead.org>
+References: <1586957125-19460-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1586957125-19460-2-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <20200422063427.GB20318@infradead.org>
+ <CA+RiK67m6Uk=QLppNcO23C4CnbSO483uwowTg0ZPZ9oRLxOsew@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=933 adultscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 phishscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004220126
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9599 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
- lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
- spamscore=0 bulkscore=0 phishscore=0 suspectscore=0 impostorscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004220126
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+RiK67m6Uk=QLppNcO23C4CnbSO483uwowTg0ZPZ9oRLxOsew@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Apr 22, 2020 at 02:49:42PM +0530, Suganath Prabu Subramani wrote:
+> Hi Christoph,
+> 
+> Your original patch always set the dma coherent mask to 32bit.
+> But in this patch set, we first set the dma coherent to 64bit, if RDPQ
+> pools crosses
+> the 4gb boundary then we change it to 32 bit.
+> Like your original patch we will simplify.
 
-Doug,
+This is however missing most of the cleanups.  Also the is_dma_32bit
+flag is unused in this patch.  So I don't think it should be added
+here, but only when used.  It should then also use a bool type
+and be named use_32bit_dma.
 
-> To see a disk is ZBC host-aware it needs access to the Block Device
-> Characteristics VPD page, but as far as I can see that is not loaded
-> into sysfs at this time. Hannes?
+When reworking your patch using all criteria I still end up with
+something looking a lot like my original one, with the only big
+difference that is also forces a 32-bit DMA streaming mask for
+all the limited devices, which actually looks wrong to me:
 
-That's coming in my sd fixes series later today. Made a ton of changes
-in this area.
+---
+From 5253b88eba38dbf50cbbe5f34c8f5b4c345cca57 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Wed, 22 Apr 2020 19:18:00 +0200
+Subject: mpt3sas: don't change the dma coherent mask after allocations
 
+The DMA layer does not allow changing the DMA coherent mask after
+there are outstanding allocations.  Stop doing that and always
+use a 32-bit coherent DMA mask in mpt3sas.
+
+Reported-by: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 71 ++++++++---------------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h |  2 -
+ 2 files changed, 20 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 663782bb790d..3072599a187a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2806,55 +2806,33 @@ _base_build_sg_ieee(struct MPT3SAS_ADAPTER *ioc, void *psge,
+ static int
+ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ {
+-	u64 required_mask, coherent_mask;
+ 	struct sysinfo s;
+-	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
+-	int dma_mask = (ioc->hba_mpi_version_belonged > MPI2_VERSION) ? 63 : 64;
+-
+-	if (ioc->is_mcpu_endpoint)
+-		goto try_32bit;
++	int dma_bits;
+ 
+-	required_mask = dma_get_required_mask(&pdev->dev);
+-	if (sizeof(dma_addr_t) == 4 || required_mask == 32)
+-		goto try_32bit;
+-
+-	if (ioc->dma_mask)
+-		coherent_mask = DMA_BIT_MASK(dma_mask);
++	if (ioc->is_mcpu_endpoint || sizeof(dma_addr_t) == 4 ||
++	    dma_get_required_mask(&pdev->dev) <= DMA_BIT_MASK(32))
++		dma_bits = 32;
++	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
++	else if (ioc->hba_mpi_version_belonged > MPI2_VERSION)
++		dma_bits = 63;
+ 	else
+-		coherent_mask = DMA_BIT_MASK(32);
+-
+-	if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(dma_mask)) ||
+-	    dma_set_coherent_mask(&pdev->dev, coherent_mask))
+-		goto try_32bit;
++		dma_bits = 64;
+ 
+-	ioc->base_add_sg_single = &_base_add_sg_single_64;
+-	ioc->sge_size = sizeof(Mpi2SGESimple64_t);
+-	ioc->dma_mask = dma_mask;
+-	goto out;
+-
+- try_32bit:
+-	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
++	if (dma_set_mask_and_coherent(&pdev->dev, dma_bits))
+ 		return -ENODEV;
+ 
+-	ioc->base_add_sg_single = &_base_add_sg_single_32;
+-	ioc->sge_size = sizeof(Mpi2SGESimple32_t);
+-	ioc->dma_mask = 32;
+- out:
+-	si_meminfo(&s);
+-	ioc_info(ioc, "%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
+-		 ioc->dma_mask, convert_to_kb(s.totalram));
+-
+-	return 0;
+-}
+-
+-static int
+-_base_change_consistent_dma_mask(struct MPT3SAS_ADAPTER *ioc,
+-				      struct pci_dev *pdev)
+-{
+-	if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(ioc->dma_mask))) {
+-		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
+-			return -ENODEV;
++	if (dma_bits > 32) {
++		ioc->base_add_sg_single = &_base_add_sg_single_64;
++		ioc->sge_size = sizeof(Mpi2SGESimple64_t);
++	} else {
++		ioc->base_add_sg_single = &_base_add_sg_single_32;
++		ioc->sge_size = sizeof(Mpi2SGESimple32_t);
+ 	}
++
++	si_meminfo(&s);
++	ioc_info(ioc,
++		"%d BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (%ld kB)\n",
++		dma_bits, convert_to_kb(s.totalram));
+ 	return 0;
+ }
+ 
+@@ -5169,14 +5147,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		total_sz += sz;
+ 	} while (ioc->rdpq_array_enable && (++i < ioc->reply_queue_count));
+ 
+-	if (ioc->dma_mask > 32) {
+-		if (_base_change_consistent_dma_mask(ioc, ioc->pdev) != 0) {
+-			ioc_warn(ioc, "no suitable consistent DMA mask for %s\n",
+-				 pci_name(ioc->pdev));
+-			goto out;
+-		}
+-	}
+-
+ 	ioc->scsiio_depth = ioc->hba_queue_depth -
+ 	    ioc->hi_priority_depth - ioc->internal_depth;
+ 
+@@ -7158,7 +7128,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	ioc->smp_affinity_enable = smp_affinity_enable;
+ 
+ 	ioc->rdpq_array_enable_assigned = 0;
+-	ioc->dma_mask = 0;
+ 	if (ioc->is_aero_ioc)
+ 		ioc->base_readl = &_base_readl_aero;
+ 	else
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index e7197150721f..caae04086539 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1026,7 +1026,6 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+  * @ir_firmware: IR firmware present
+  * @bars: bitmask of BAR's that must be configured
+  * @mask_interrupts: ignore interrupt
+- * @dma_mask: used to set the consistent dma mask
+  * @pci_access_mutex: Mutex to synchronize ioctl, sysfs show path and
+  *			pci resource handling
+  * @fault_reset_work_q_name: fw fault work queue
+@@ -1205,7 +1204,6 @@ struct MPT3SAS_ADAPTER {
+ 	u8		ir_firmware;
+ 	int		bars;
+ 	u8		mask_interrupts;
+-	int		dma_mask;
+ 
+ 	/* fw fault handler */
+ 	char		fault_reset_work_q_name[20];
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.26.1
+
