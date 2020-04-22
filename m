@@ -2,100 +2,114 @@ Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99658C55186
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B41BFC5518C
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:48:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A73A20656
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A6FD2076E
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 10:48:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="idoqdcZW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VqKoE9f3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730202AbgDVKnH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 06:43:07 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:22889 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731741AbgDVKmX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 06:42:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587552143; x=1619088143;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=QubTP+unc8Z3+EyBN9AchL+VXItpLJCAI2qP6lRVFbs=;
-  b=idoqdcZWBb/QNkYmVWi5GrOSqxip0oPzvoRBIMAEqEXUFHn/xySyYeSH
-   qU2sgUE9Gyyc2Wd+yrScCDyY4yPSwNLXvhUHXUtt8L/4ZpZfi+o/AnRP+
-   XYcY+7CfbDBEPO4+jD0B17kH0ZdrpoBm+pejHn54l/mYC4e6duWXsJP3T
-   E+GW0AkzWGMq+WWNXYBPaEoIV5gWCAx0MU1TbEoh7+0JEN/Qpf/y1/YDB
-   1p9c2nhln+J4sGSEJlqawhGr6lutPdjPXmZbzglYF87q5DksQY6IkJCUW
-   RIFQIAVX+tPAe4tBVO/8Udnb7cQrbCT0+i9u/yVizSwhzVjUu6hyjl/7Y
-   A==;
-IronPort-SDR: gx6f5SbwlKLGoZMCOHWfstZpAsfCYw3P5Ar0GH3NDBI+ia9lBe04l8LtfrBLpNCPZMIDqXzWv1
- W9tsog8/xDmwBMYBnTI/vE8XFMjkRgNz7zKDsxoMNpaIbVUPtV0Cj2XIVbFMyLCE6KIDk8LkJe
- 7q/I1WPfR9oBfk+z6n0WTZPzHEQDvVZ9PqflQhakSZrqvoEEyfAEkVl8vwc1ZlqtZFcMDxIv4h
- Le8qUy9mnH4hPI5SmvvbRuJgXXFUMLyIqj16ztR8VfHNniDRAuzrQ3U9oAeCmesdytNqRTtQY5
- fGs=
-X-IronPort-AV: E=Sophos;i="5.72,414,1580745600"; 
-   d="scan'208";a="140230017"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Apr 2020 18:42:23 +0800
-IronPort-SDR: 2kHXPhNCvToAedQ8Z9O9vmus5Cwwv4vTUOtxetHM+d7pIatcbSRaGf2XVp1tN+KSptUfZSOV/q
- DSmPp5uI1HtnEJ7qfjD+4PjlFpY/eOnKA=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2020 03:33:12 -0700
-IronPort-SDR: GAt+pDGQAozB+wIyqJwDap8xZwvJoRED21jPldw2WjqZAp0sNX1L13waHJMHji1Ty8Ml8ToeVt
- iBg/GMaHYBhA==
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 22 Apr 2020 03:42:21 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     linux-scsi@vger.kernel.org,
+        id S1732032AbgDVKsG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 06:48:06 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:41631 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729600AbgDVKOy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 06:14:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587550493;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=R6sdZCQAxQf83Mu3PKMcKS1ipiSEkhOFY9DlQfL3c5s=;
+        b=VqKoE9f3v9DxW1jMyNuwSPVjJQwWwCvLYjrCFsGY6yZhhBiGQVJ3jbzZbVWo1WmrF9rw1w
+        W9RXGO26TMrGftcf3xiKsOqL32SC1zUrUmSHKQGVi/A8ODCdCQMIn9SJEgVv8fPVW/pfhm
+        j4jf6Zztoaz3h/58LI2+Z6OSapbPhFg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-401-g51FBZSCPoysjz4ugZogXQ-1; Wed, 22 Apr 2020 06:14:49 -0400
+X-MC-Unique: g51FBZSCPoysjz4ugZogXQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4BB388017FD;
+        Wed, 22 Apr 2020 10:14:48 +0000 (UTC)
+Received: from localhost (ovpn-8-28.pek2.redhat.com [10.72.8.28])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C40EF3A0;
+        Wed, 22 Apr 2020 10:14:44 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH 0/7] scsi_debug: Add ZBC support
-Date:   Wed, 22 Apr 2020 19:42:14 +0900
-Message-Id: <20200422104221.378203-1-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.25.3
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Dexuan Cui <decui@microsoft.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: avoid to run synchronize_rcu for each device in scsi_host_block
+Date:   Wed, 22 Apr 2020 18:14:33 +0800
+Message-Id: <20200422101433.321581-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is the second part of the scsi_debug updates implementing ZBC
-support on top of Doug "per_host_store+random parameters, compare" patch
-series.
+scsi_host_block() calls scsi_internal_device_block() for each
+scsi_device, and scsi_internal_device_block() calls
+blk_mq_quiesce_queue() for each LUN. However synchronize_rcu is
+run from blk_mq_quiesce_queue().
 
-The ZBC emulation implemented allows to emulate both host-managed and
-host-aware disks with configurable zone size, number of conventional
-zones znd maximum number of open zones. One feature missing is the
-emulation of ZBC RC_BASIS which changes the behavior of the READ
-CAPACITY command. This is however not a critical point for testing as,
-to my knowledge, there are no disks using RC_BASIS on the market today.
-RC_BASIS emulation can thus be added as a later patch.
+This way may become unnecessary slow in case of lots of LUNs.
 
-The emulated devices, both host-aware and host-managed, pass libzbc ZBC
-conformance tests (SG interface) as well as zonefs tests (block layer
-interface).
+So use scsi_internal_device_block() to implement scsi_host_block(),
+and just run once synchronize_rcu() because scsi never supports
+tagset of BLK_MQ_F_BLOCKING.
 
-Damien Le Moal (4):
-  scsi_debug: add zone_max_open module parameter
-  scsi_debug: add zone_nr_conv module parameter
-  scsi_debug: add zone_size_mb module parameter
-  scsi_debug: implement zbc host-aware emulation
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Dexuan Cui <decui@microsoft.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-Douglas Gilbert (3):
-  scsi_debug: add zbc mode and VPD pages
-  scsi_debug: add zbc zone commands
-  scsi_debug: add zbc module parameter
-
- drivers/scsi/scsi_debug.c | 1016 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 993 insertions(+), 23 deletions(-)
-
--- 
-2.25.3
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 47835c4b4ee0..089ac92ac6c3 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2841,11 +2841,22 @@ scsi_host_block(struct Scsi_Host *shost)
+ 	struct scsi_device *sdev;
+ 	int ret =3D 0;
+=20
++	/*
++	 * Call scsi_internal_device_block_nowait then we can avoid to
++	 * run synchronize_rcu() one time for every LUN.
++	 */
+ 	shost_for_each_device(sdev, shost) {
+-		ret =3D scsi_internal_device_block(sdev);
++		mutex_lock(&sdev->state_mutex);
++		ret =3D scsi_internal_device_block_nowait(sdev);
++		mutex_unlock(&sdev->state_mutex);
+ 		if (ret)
+ 			break;
+ 	}
++
++	WARN_ON_ONCE(shost->tag_set.flags & BLK_MQ_F_BLOCKING);
++
++	if (!ret)
++		synchronize_rcu();
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(scsi_host_block);
+--=20
+2.25.2
 
