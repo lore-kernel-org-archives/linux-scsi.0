@@ -4,51 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B70C55189
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0718C2BA19
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:06:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9329620784
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:02:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C605206D5
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:06:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T45njJZG"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ObH0SMRv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726386AbgDVCCD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 22:02:03 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:23534 "EHLO
+        id S1726337AbgDVCGs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 22:06:48 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:45332 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726324AbgDVCCD (ORCPT
+        by vger.kernel.org with ESMTP id S1725912AbgDVCGr (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 22:02:03 -0400
+        Tue, 21 Apr 2020 22:06:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587520921;
+        s=mimecast20190719; t=1587521206;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=EgRJrbHiIYx7tqQv75AnFSUU4SNz3Vc//pk52VU28Sc=;
-        b=T45njJZGH1vbDQ7kcC/feqENQl5z/xQvoYnC9vQ8VoBfxUHrjtY7VG0oALx6au2mRArJl5
-        x7WU1ZTiBfiOcujeup68od0LBmLWRxJgKt/DpdaWmpk8kYZOFdU21oV0ySe4JYDwayuOxU
-        +7T3t5T5+B8jkG7rK9i7b3N+N9PdU9U=
+        bh=o5mZ9zdvVkLzXY5CfBsci5sqeOqS3/3iD+lA0IRj/2o=;
+        b=ObH0SMRvNvKH/r+6cm384tl+POrIifCzbSoUG7J18vG1gE+3x4fBdt/8cqq9q2xURvdwo+
+        6bhkSrgC4uHvrMJWd4vlb4rJvkYPK2gUw39C20Zu6lwGIvket051obz7bAUR9sG7g1bRgt
+        fn41sLHN786Pv9p0anx8htcGmy96wbQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-157-w_qjtyPLMe2kyULFcRKRCA-1; Tue, 21 Apr 2020 22:01:56 -0400
-X-MC-Unique: w_qjtyPLMe2kyULFcRKRCA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-484-uK28SCOCNgy8aHnax1t1AA-1; Tue, 21 Apr 2020 22:06:43 -0400
+X-MC-Unique: uK28SCOCNgy8aHnax1t1AA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 840088024D4;
-        Wed, 22 Apr 2020 02:01:53 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AE5E018C43C1;
+        Wed, 22 Apr 2020 02:06:41 +0000 (UTC)
 Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5E28926578;
-        Wed, 22 Apr 2020 02:01:39 +0000 (UTC)
-Date:   Wed, 22 Apr 2020 10:01:34 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C797A58;
+        Wed, 22 Apr 2020 02:06:31 +0000 (UTC)
+Date:   Wed, 22 Apr 2020 10:06:25 +0800
 From:   Ming Lei <ming.lei@redhat.com>
-To:     Dexuan Cui <decui@microsoft.com>,
-        "Paul E. McKenney" <paulmck@kernel.org>,
-        Josh Triplett <josh@joshtriplett.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Dexuan Cui <decui@microsoft.com>
 Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
@@ -62,9 +59,9 @@ Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "wei.liu@kernel.org" <wei.liu@kernel.org>,
         Stephen Hemminger <sthemmin@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>, linux-pm@vger.kernel.org
+        KY Srinivasan <kys@microsoft.com>
 Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-Message-ID: <20200422020134.GC299948@T590>
+Message-ID: <20200422020625.GD299948@T590>
 References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
  <20200422012814.GB299948@T590>
  <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
@@ -72,7 +69,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -161,13 +158,9 @@ On Wed, Apr 22, 2020 at 01:48:25AM +0000, Dexuan Cui wrote:
 > be too much I/O from the kernel space, so IMO scsi_host_block() should be
 > pretty fast here. 
 
-I guess it depends on RCU's implementation, so CC RCU guys.
+Forget to mention, I guess that storvsc_suspend() may be called from runtime
+PM path, at that time, the whole system is running, and RCU can't be quick.
 
-Hello Paul & Josh,
-
-Could you clarify that if sysnchronize_rcu becomes quickly during
-system suspend?
-
-Thanks,
+Thanks, 
 Ming
 
