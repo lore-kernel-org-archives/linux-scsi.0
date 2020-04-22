@@ -2,191 +2,168 @@ Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A273C55181
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 04:16:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC11C55181
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 04:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 121BE20747
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 04:16:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B949E20706
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 04:20:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fVhtmjb9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FEUJhBRp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725924AbgDVEQx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 00:16:53 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:43390 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725835AbgDVEQx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 00:16:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587529011;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=p9oZHlLxelAK0c0X/Rqg4X+RsMzY/HC92T0R43tToZQ=;
-        b=fVhtmjb9wmYxA8Ma17QWmLlRDQ8BoGAXMKO1lpzmtDvgD71kkCCoEu1hD4lXNW9GVvPVvV
-        ASBKRYSEV0J9X51WY9B5+IHlFvgBiiDg+9iOOEkojKYn6iYwkqM7AZe51jIO+BYfmlJ7eB
-        Hk6nu/4qfP7Y11y0ZYFvP+xj94vJJXA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-243-h3LPJ81NPFiow1jgO2OA6g-1; Wed, 22 Apr 2020 00:16:49 -0400
-X-MC-Unique: h3LPJ81NPFiow1jgO2OA6g-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0C02B107ACC4;
-        Wed, 22 Apr 2020 04:16:46 +0000 (UTC)
-Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D35EDB3A76;
-        Wed, 22 Apr 2020 04:16:34 +0000 (UTC)
-Date:   Wed, 22 Apr 2020 12:16:29 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     "Paul E. McKenney" <paulmck@kernel.org>
-Cc:     Dexuan Cui <decui@microsoft.com>,
-        Josh Triplett <josh@joshtriplett.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "hare@suse.de" <hare@suse.de>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Long Li <longli@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>, linux-pm@vger.kernel.org
-Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-Message-ID: <20200422041629.GE299948@T590>
-References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
- <20200422012814.GB299948@T590>
- <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
- <20200422020134.GC299948@T590>
- <20200422030807.GK17661@paulmck-ThinkPad-P72>
+        id S1726442AbgDVEUL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 00:20:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35840 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726495AbgDVEUK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Apr 2020 00:20:10 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25AAEC061BD3
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 21:20:10 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id t16so421657plo.7
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2020 21:20:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=JW2eNpKYuEq3jYF+Ms+xkZoI4S/Xm4L9Thu6ePp2gao=;
+        b=FEUJhBRpDO4SQoyn2cKuwis5a/YXcS4cNJ6EK0wJrq7DXsmuN5k533j5xa9jhk7wy7
+         wp35dCXmBPeX5oVdDSdprrVrivXBdviinB/nu/nGjDotLpTTdv7tf4HK1lDde6+UyjZS
+         MpNUmsyiyPWYr85B5Y5XHfW6gZW3DGv5v7IEZBCHII6OLmAtlT4D1S7jkG0gCDkzIL9w
+         Lpni0bq/zqvr2ZbLYXIqCMZEXnp0oolDMZhiIJkIVRd7W4h53g67zB2eiAaOy3/VP1Uh
+         DIpxOprjvfBdsUuAWtrLnxVG4l1t1uc4HFq4avHoNsvV/kW1W2VOeLKHmLmrJHMxiyO6
+         8h+Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=JW2eNpKYuEq3jYF+Ms+xkZoI4S/Xm4L9Thu6ePp2gao=;
+        b=ToccD4bEFr4VBlDNCk12P9TzjMX+fjhfrQ2vn/GQKKF6mPO9b98JmsYVE+2+uwUIdK
+         D1GUKjTaG9pIPoSsTz48fX3Hmr5bg4OLkKyNBaBj+YM8L1tKpEpaBwH1UZboBjcz7uQO
+         wnpMQdMwBBXsB67YDvZisoqZfH4rTDz87FVoqZJHCJc2ZkUa9Ac6BcaFruTGg8qHlo5K
+         6SKMnPrft9V+TDMYRqd2wQB/9Hq7uqaXIHc7HYdpzH2PRu1GRCiRF9/LgSVAJLfLUxp9
+         pl/e8HRR+9Ogzs9/eJ2BJDudVXV33py4AKH5s4QUwHWD0Ydee7ohOzizo2Jo/K9nVz3q
+         j/Cg==
+X-Gm-Message-State: AGi0PubsldxxAN8O8u7kaC/lBarrhqo9mpqkdLH6cLYP6tCBAkwC0kwp
+        a318tCtLoYPgOCGItrMlhP8=
+X-Google-Smtp-Source: APiQypK50elLw1RYPaPRjd8+2Yh9GKfajj8xOjHZ1S8i7FTIDGYnFTNL4ZAistImE/5/MMbDqjvVZw==
+X-Received: by 2002:a17:902:6ac9:: with SMTP id i9mr25721245plt.35.1587529209576;
+        Tue, 21 Apr 2020 21:20:09 -0700 (PDT)
+Received: from [10.230.185.141] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id i15sm3720035pgj.30.2020.04.21.21.20.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 21 Apr 2020 21:20:08 -0700 (PDT)
+Subject: Re: [PATCH v3 24/31] elx: efct: LIO backend interface routines
+To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+Cc:     dwagner@suse.de, maier@linux.ibm.com, herbszt@gmx.de,
+        natechancellor@gmail.com, rdunlap@infradead.org, hare@suse.de,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+References: <20200412033303.29574-1-jsmart2021@gmail.com>
+ <20200412033303.29574-25-jsmart2021@gmail.com>
+ <dc132a7c-0d82-7439-dad0-c35a6acab1f7@acm.org>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <cc3a75d6-3208-f450-dfd5-eaa218b0975b@gmail.com>
+Date:   Tue, 21 Apr 2020 21:20:05 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200422030807.GK17661@paulmck-ThinkPad-P72>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <dc132a7c-0d82-7439-dad0-c35a6acab1f7@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 21, 2020 at 08:08:07PM -0700, Paul E. McKenney wrote:
-> On Wed, Apr 22, 2020 at 10:01:34AM +0800, Ming Lei wrote:
-> > On Wed, Apr 22, 2020 at 01:48:25AM +0000, Dexuan Cui wrote:
-> > > > From: Ming Lei <ming.lei@redhat.com>
-> > > > Sent: Tuesday, April 21, 2020 6:28 PM
-> > > > To: Dexuan Cui <decui@microsoft.com>
-> > > > 
-> > > > On Tue, Apr 21, 2020 at 05:17:24PM -0700, Dexuan Cui wrote:
-> > > > > During hibernation, the sdevs are suspended automatically in
-> > > > > drivers/scsi/scsi_pm.c before storvsc_suspend(), so after
-> > > > > storvsc_suspend(), there is no disk I/O from the file systems, but there
-> > > > > can still be disk I/O from the kernel space, e.g. disk_check_events() ->
-> > > > > sr_block_check_events() -> cdrom_check_events() can still submit I/O
-> > > > > to the storvsc driver, which causes a paic of NULL pointer dereference,
-> > > > > since storvsc has closed the vmbus channel in storvsc_suspend(): refer
-> > > > > to the below links for more info:
-> > > > >
-> > > > > Fix the panic by blocking/unblocking all the I/O queues properly.
-> > > > >
-> > > > > Note: this patch depends on another patch "scsi: core: Allow the state
-> > > > > change from SDEV_QUIESCE to SDEV_BLOCK" (refer to the second link
-> > > > above).
-> > > > >
-> > > > > Fixes: 56fb10585934 ("scsi: storvsc: Add the support of hibernation")
-> > > > > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > > > > ---
-> > > > >  drivers/scsi/storvsc_drv.c | 10 ++++++++++
-> > > > >  1 file changed, 10 insertions(+)
-> > > > >
-> > > > > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > > > > index fb41636519ee..fd51d2f03778 100644
-> > > > > --- a/drivers/scsi/storvsc_drv.c
-> > > > > +++ b/drivers/scsi/storvsc_drv.c
-> > > > > @@ -1948,6 +1948,11 @@ static int storvsc_suspend(struct hv_device
-> > > > *hv_dev)
-> > > > >  	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
-> > > > >  	struct Scsi_Host *host = stor_device->host;
-> > > > >  	struct hv_host_device *host_dev = shost_priv(host);
-> > > > > +	int ret;
-> > > > > +
-> > > > > +	ret = scsi_host_block(host);
-> > > > > +	if (ret)
-> > > > > +		return ret;
-> > > > >
-> > > > >  	storvsc_wait_to_drain(stor_device);
-> > > > >
-> > > > > @@ -1968,10 +1973,15 @@ static int storvsc_suspend(struct hv_device
-> > > > *hv_dev)
-> > > > >
-> > > > >  static int storvsc_resume(struct hv_device *hv_dev)
-> > > > >  {
-> > > > > +	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
-> > > > > +	struct Scsi_Host *host = stor_device->host;
-> > > > >  	int ret;
-> > > > >
-> > > > >  	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
-> > > > >  				     hv_dev_is_fc(hv_dev));
-> > > > > +	if (!ret)
-> > > > > +		ret = scsi_host_unblock(host, SDEV_RUNNING);
-> > > > > +
-> > > > >  	return ret;
-> > > > >  }
-> > > > 
-> > > > scsi_host_block() is actually too heavy for just avoiding
-> > > > scsi internal command, which can be done simply by one atomic
-> > > > variable.
-> > > > 
-> > > > Not mention scsi_host_block() is implemented too clumsy because
-> > > > nr_luns * synchronize_rcu() are required in scsi_host_block(),
-> > > > which should have been optimized to just one.
-> > > > 
-> > > > Also scsi_device_quiesce() is heavy too, still takes 2
-> > > > synchronize_rcu() for one LUN.
-> > > > 
-> > > > That is said SCSI suspend may take (3 * nr_luns) sysnchronize_rcu() in
-> > > > case that the HBA's suspend handler needs scsi_host_block().
-> > > > 
-> > > > Thanks,
-> > > > Ming
-> > > 
-> > > When we're in storvsc_suspend(), all the userspace processes have been
-> > > frozen and all the file systems have been flushed, and there should not
-> > > be too much I/O from the kernel space, so IMO scsi_host_block() should be
-> > > pretty fast here. 
-> > 
-> > I guess it depends on RCU's implementation, so CC RCU guys.
-> > 
-> > Hello Paul & Josh,
-> > 
-> > Could you clarify that if sysnchronize_rcu becomes quickly during
-> > system suspend?
+On 4/11/2020 9:57 PM, Bart Van Assche wrote:
+> On 2020-04-11 20:32, James Smart wrote:
+>> +	return EFC_SUCCESS;
+>> +}
 > 
-> Once you have all but one CPU offlined, it becomes extremely fast, as
-> in roughly a no-op (which is an idea of Josh's from back in the day).
-> But if there is more than one CPU online, then synchronize_rcu() still
-> takes on the order of several to several tens of jiffies.
+> Redefining 0 is unusual in the Linux kernel. I prefer to see "return 0;"
+> instead of "return ${DRIVER_NAME}_SUCCESS;".
+
+Well, seems we have two different opinions. Prior v2 reviews wanted a 
+consistent EFC_XXX set of enums for return codes.
+
+I think it's very odd to return 0, and EFC_xxx elsewhere.  The issue I 
+have with "we all know how to interpret 0" - I don't agree.  0 doesn't 
+always mean success. It's implicitly an assumption to believe 0 means 
+success.
+
+I'd like to stay with EFC_SUCCESS for consistency.
+
 > 
-> So, yes, in some portions of system suspend, synchronize_rcu() becomes
-> very fast indeed.
+...
+> This is one of the most unfriendly debugfs data formats I have seen so
+> far: information about all sessions is dumped into one huge debugfs
+> attribute.
+> 
+> Is information about active sessions useful for other LIO target
+> drivers? Wasn't it promised that this functionality would be moved into
+> the LIO core instead of defining it for the efct driver only?
 
-Hi Paul,
+We will remove the debugfs code. We will look to utilize Mike's patches 
+for session info.
 
-Thanks for your clarification.
+> 
+>> +static int efct_debugfs_session_open(struct inode *inode, struct file *filp)
+>> +{
+>> +	struct efct_lio_sport *sport = inode->i_private;
+>> +	int size = 17 * PAGE_SIZE; /* 34 byte per session*2048 sessions */
+>> +
+>> +	if (!(filp->f_mode & FMODE_READ)) {
+>> +		filp->private_data = sport;
+>> +		return EFC_SUCCESS;
+>> +	}
+>> +
+>> +	filp->private_data = kmalloc(size, GFP_KERNEL);
+>> +	if (!filp->private_data)
+>> +		return -ENOMEM;
+>> +
+>> +	memset(filp->private_data, 0, size);
+>> +	efct_lio_tgt_session_data(sport->efct, sport->wwpn, filp->private_data,
+>> +				  size);
+>> +	return EFC_SUCCESS;
+>> +}
+> 
+> kmalloc() + memset() can be changed into kzalloc().
+> 
+> The above code allocates 68 KB physically contiguous memory? Kernel code
+> should not rely on higher order page allocations unless there is no
+> other choice.
+> 
+> Additionally, I see that the amount of memory allocated is independent
+> of the number of sessions. I think there are better approaches.
 
-In system suspend path, device is suspended before suspend_disable_secondary_cpus(), 
-so I guess synchronize_rcu() is not quick enough even though user space
-processes and some kernel threads are frozen.
+Yes. Will address it.
 
-Thanks,
-Ming
 
+> 
+>> +
+>> +	lio_wq = create_singlethread_workqueue("efct_lio_worker");
+>> +	if (!lio_wq) {
+>> +		efc_log_err(efct, "workqueue create failed\n");
+>> +		return -ENOMEM;
+>> +	}
+> 
+> Is any work queued onto lio_wq that needs to be serialized against other
+> work queued onto the same queue? If not, can one of the system
+> workqueues be used, e.g. system_wq?
+> 
+
+We are using "lio_wq" here to call the LIO backed during creation or 
+deletion of sessions. LIO api's target_remove_session/ 
+target_setup_session are blocking calls so we don't want to process them 
+in the interrupt thread. "lio_wq" is used for these two events only and 
+this brings the serialization to session management as we create single 
+threaded work queue.
+
+-- James
