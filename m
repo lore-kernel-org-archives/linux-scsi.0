@@ -2,165 +2,84 @@ Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0718C2BA19
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:06:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57363C54FD0
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:51:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C605206D5
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:06:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ObH0SMRv"
+	by mail.kernel.org (Postfix) with ESMTP id 3AD0920722
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 02:51:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726337AbgDVCGs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 22:06:48 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:45332 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725912AbgDVCGr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 22:06:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587521206;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=o5mZ9zdvVkLzXY5CfBsci5sqeOqS3/3iD+lA0IRj/2o=;
-        b=ObH0SMRvNvKH/r+6cm384tl+POrIifCzbSoUG7J18vG1gE+3x4fBdt/8cqq9q2xURvdwo+
-        6bhkSrgC4uHvrMJWd4vlb4rJvkYPK2gUw39C20Zu6lwGIvket051obz7bAUR9sG7g1bRgt
-        fn41sLHN786Pv9p0anx8htcGmy96wbQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-484-uK28SCOCNgy8aHnax1t1AA-1; Tue, 21 Apr 2020 22:06:43 -0400
-X-MC-Unique: uK28SCOCNgy8aHnax1t1AA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AE5E018C43C1;
-        Wed, 22 Apr 2020 02:06:41 +0000 (UTC)
-Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C797A58;
-        Wed, 22 Apr 2020 02:06:31 +0000 (UTC)
-Date:   Wed, 22 Apr 2020 10:06:25 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Dexuan Cui <decui@microsoft.com>
-Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "hare@suse.de" <hare@suse.de>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Long Li <longli@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>
-Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-Message-ID: <20200422020625.GD299948@T590>
-References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
- <20200422012814.GB299948@T590>
- <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+        id S1726424AbgDVCvN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 22:51:13 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2829 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726389AbgDVCvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Apr 2020 22:51:13 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 5EDFA9E2B7CFECE1E29E;
+        Wed, 22 Apr 2020 10:51:11 +0800 (CST)
+Received: from linux-lmwb.huawei.com (10.175.103.112) by
+ DGGEMS411-HUB.china.huawei.com (10.3.19.211) with Microsoft SMTP Server id
+ 14.3.487.0; Wed, 22 Apr 2020 10:51:01 +0800
+From:   Zou Wei <zou_wei@huawei.com>
+To:     <aacraid@microsemi.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Zou Wei <zou_wei@huawei.com>
+Subject: [PATCH -next] scsi: aacraid: Use memdup_user() as a cleanup
+Date:   Wed, 22 Apr 2020 10:57:12 +0800
+Message-ID: <1587524232-118733-1-git-send-email-zou_wei@huawei.com>
+X-Mailer: git-send-email 2.6.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain
+X-Originating-IP: [10.175.103.112]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 22, 2020 at 01:48:25AM +0000, Dexuan Cui wrote:
-> > From: Ming Lei <ming.lei@redhat.com>
-> > Sent: Tuesday, April 21, 2020 6:28 PM
-> > To: Dexuan Cui <decui@microsoft.com>
-> > 
-> > On Tue, Apr 21, 2020 at 05:17:24PM -0700, Dexuan Cui wrote:
-> > > During hibernation, the sdevs are suspended automatically in
-> > > drivers/scsi/scsi_pm.c before storvsc_suspend(), so after
-> > > storvsc_suspend(), there is no disk I/O from the file systems, but there
-> > > can still be disk I/O from the kernel space, e.g. disk_check_events() ->
-> > > sr_block_check_events() -> cdrom_check_events() can still submit I/O
-> > > to the storvsc driver, which causes a paic of NULL pointer dereference,
-> > > since storvsc has closed the vmbus channel in storvsc_suspend(): refer
-> > > to the below links for more info:
-> > >
-> > > Fix the panic by blocking/unblocking all the I/O queues properly.
-> > >
-> > > Note: this patch depends on another patch "scsi: core: Allow the state
-> > > change from SDEV_QUIESCE to SDEV_BLOCK" (refer to the second link
-> > above).
-> > >
-> > > Fixes: 56fb10585934 ("scsi: storvsc: Add the support of hibernation")
-> > > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > > ---
-> > >  drivers/scsi/storvsc_drv.c | 10 ++++++++++
-> > >  1 file changed, 10 insertions(+)
-> > >
-> > > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> > > index fb41636519ee..fd51d2f03778 100644
-> > > --- a/drivers/scsi/storvsc_drv.c
-> > > +++ b/drivers/scsi/storvsc_drv.c
-> > > @@ -1948,6 +1948,11 @@ static int storvsc_suspend(struct hv_device
-> > *hv_dev)
-> > >  	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
-> > >  	struct Scsi_Host *host = stor_device->host;
-> > >  	struct hv_host_device *host_dev = shost_priv(host);
-> > > +	int ret;
-> > > +
-> > > +	ret = scsi_host_block(host);
-> > > +	if (ret)
-> > > +		return ret;
-> > >
-> > >  	storvsc_wait_to_drain(stor_device);
-> > >
-> > > @@ -1968,10 +1973,15 @@ static int storvsc_suspend(struct hv_device
-> > *hv_dev)
-> > >
-> > >  static int storvsc_resume(struct hv_device *hv_dev)
-> > >  {
-> > > +	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
-> > > +	struct Scsi_Host *host = stor_device->host;
-> > >  	int ret;
-> > >
-> > >  	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
-> > >  				     hv_dev_is_fc(hv_dev));
-> > > +	if (!ret)
-> > > +		ret = scsi_host_unblock(host, SDEV_RUNNING);
-> > > +
-> > >  	return ret;
-> > >  }
-> > 
-> > scsi_host_block() is actually too heavy for just avoiding
-> > scsi internal command, which can be done simply by one atomic
-> > variable.
-> > 
-> > Not mention scsi_host_block() is implemented too clumsy because
-> > nr_luns * synchronize_rcu() are required in scsi_host_block(),
-> > which should have been optimized to just one.
-> > 
-> > Also scsi_device_quiesce() is heavy too, still takes 2
-> > synchronize_rcu() for one LUN.
-> > 
-> > That is said SCSI suspend may take (3 * nr_luns) sysnchronize_rcu() in
-> > case that the HBA's suspend handler needs scsi_host_block().
-> > 
-> > Thanks,
-> > Ming
-> 
-> When we're in storvsc_suspend(), all the userspace processes have been
-> frozen and all the file systems have been flushed, and there should not
-> be too much I/O from the kernel space, so IMO scsi_host_block() should be
-> pretty fast here. 
+Fix coccicheck warning which recommends to use memdup_user().
 
-Forget to mention, I guess that storvsc_suspend() may be called from runtime
-PM path, at that time, the whole system is running, and RCU can't be quick.
+This patch fixes the following coccicheck warnings:
 
-Thanks, 
-Ming
+drivers/scsi/aacraid/commctrl.c:516:15-22: WARNING opportunity for memdup_user
+
+Fixes: 4645df1035b3 ("[PATCH] aacraid: swapped kmalloc args.")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Zou Wei <zou_wei@huawei.com>
+---
+ drivers/scsi/aacraid/commctrl.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index ffe41bc..1ce1620 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -513,17 +513,9 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 		goto cleanup;
+ 	}
+ 
+-	user_srbcmd = kmalloc(fibsize, GFP_KERNEL);
+-	if (!user_srbcmd) {
+-		dprintk((KERN_DEBUG"aacraid: Could not make a copy of the srb\n"));
+-		rcode = -ENOMEM;
+-		goto cleanup;
+-	}
+-	if(copy_from_user(user_srbcmd, user_srb,fibsize)){
+-		dprintk((KERN_DEBUG"aacraid: Could not copy srb from user\n"));
+-		rcode = -EFAULT;
+-		goto cleanup;
+-	}
++	user_srbcmd = memdup_user(user_srb, fibsize);
++	if (IS_ERR(user_srbcmd))
++		return PTR_ERR(user_srbcmd);
+ 
+ 	flags = user_srbcmd->flags; /* from user in cpu order */
+ 	switch (flags & (SRB_DataIn | SRB_DataOut)) {
+-- 
+2.6.2
 
