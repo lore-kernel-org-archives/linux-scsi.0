@@ -2,134 +2,178 @@ Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64ADCC55189
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 09:24:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3F8C55189
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 09:35:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3ADE420735
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 09:24:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDD182076B
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 09:35:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="grApRieN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TXFsXmPa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725968AbgDVJYQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 05:24:16 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:42373 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725810AbgDVJYQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 05:24:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587547454;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DMhA18q5o54p19fFpaLKF4OTjlHgtCkpRiehNkdmtk0=;
-        b=grApRieNK+OmW+Ph9h2tR9zU0uKExcWmmISzc/RrgOUdVjDeysh8DaWsu+FczjWWILTAPj
-        WIzMeEmSv0ZlCUw1vFqJ3GxVNUuoG4yjZ7fkrmNMYqjutoOIvIUTxPBxLB0L7SPmoT9jIe
-        BuntuwErSvNNbVZzI/ZjHmqtDlZ+J5g=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-47-bYl2gzczORKSGHhwjavuQw-1; Wed, 22 Apr 2020 05:24:10 -0400
-X-MC-Unique: bYl2gzczORKSGHhwjavuQw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1503B8017FC;
-        Wed, 22 Apr 2020 09:24:08 +0000 (UTC)
-Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7B2FFB3A8F;
-        Wed, 22 Apr 2020 09:23:56 +0000 (UTC)
-Date:   Wed, 22 Apr 2020 17:23:51 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Dexuan Cui <decui@microsoft.com>
-Cc:     "Paul E. McKenney" <paulmck@kernel.org>,
-        Josh Triplett <josh@joshtriplett.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "hare@suse.de" <hare@suse.de>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Long Li <longli@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-Message-ID: <20200422092351.GF299948@T590>
-References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
- <20200422012814.GB299948@T590>
- <HK0P153MB0273B954294B331E20AACB41BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
- <20200422020134.GC299948@T590>
- <20200422030807.GK17661@paulmck-ThinkPad-P72>
- <20200422041629.GE299948@T590>
- <HK0P153MB0273CF2901E193C03C934A47BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+        id S1726189AbgDVJfD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 05:35:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56230 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725912AbgDVJfC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Apr 2020 05:35:02 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2263C03C1A8;
+        Wed, 22 Apr 2020 02:35:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=xcFiTZSrglcMD8nwtpbYfjiJzGQ3uCCaDpM9G1wNLKM=; b=TXFsXmPaYrp/VOshmRq5oS5gpB
+        mH8EcHlmIZWR7Ds6MAyC3WNS9aJnVXMn5IBRQHmpHDNAaqgSJtN3Y5dM+5jCkkUPU9VIPuHBa0J5w
+        hVKMsEVfCMpOpt19u+puh31aNERk7mTEFexQ19XaWimZfLH1XSuJzkCOFd8jnMoINlW6iJf4GKT1E
+        RtHfgCVYHHVVqS8qCgihDk98Z9DjyOAtOR0VdaskIIHBcg2iEBSQciGxpj3KTviLZLUNBiSzLB8Bz
+        rcSYZiir5vXAA7VR8XsKJrTJqgSaZLCmWDx5eJUt+HUGpWpvnk6yp4wwRd0E7ZzdRp1l60YO9hHcs
+        lXmKpV8A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jRBmY-0006Xx-9a; Wed, 22 Apr 2020 09:35:02 +0000
+Date:   Wed, 22 Apr 2020 02:35:02 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v10 03/12] block: Inline encryption support for blk-mq
+Message-ID: <20200422093502.GB12290@infradead.org>
+References: <20200408035654.247908-1-satyat@google.com>
+ <20200408035654.247908-4-satyat@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <HK0P153MB0273CF2901E193C03C934A47BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20200408035654.247908-4-satyat@google.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Apr 22, 2020 at 04:58:14AM +0000, Dexuan Cui wrote:
-> > From: Ming Lei <ming.lei@redhat.com>
-> > Sent: Tuesday, April 21, 2020 9:16 PM
-> > ...
-> > > > > When we're in storvsc_suspend(), all the userspace processes have been
-> > > > > frozen and all the file systems have been flushed, and there should not
-> > > > > be too much I/O from the kernel space, so IMO scsi_host_block() should
-> > be
-> > > > > pretty fast here.
-> > > >
-> > > > I guess it depends on RCU's implementation, so CC RCU guys.
-> > > >
-> > > > Hello Paul & Josh,
-> > > >
-> > > > Could you clarify that if sysnchronize_rcu becomes quickly during
-> > > > system suspend?
-> > >
-> > > Once you have all but one CPU offlined, it becomes extremely fast, as
-> > > in roughly a no-op (which is an idea of Josh's from back in the day).
-> > > But if there is more than one CPU online, then synchronize_rcu() still
-> > > takes on the order of several to several tens of jiffies.
-> > >
-> > > So, yes, in some portions of system suspend, synchronize_rcu() becomes
-> > > very fast indeed.
-> > 
-> > Hi Paul,
-> > 
-> > Thanks for your clarification.
-> > 
-> > In system suspend path, device is suspended before
-> > suspend_disable_secondary_cpus(),
-> > so I guess synchronize_rcu() is not quick enough even though user space
-> > processes and some kernel threads are frozen.
-> > 
-> > Thanks,
-> > Ming
-> 
-> storvsc_suspend() -> scsi_host_block() is only called in the hibernation
-> path, which is not a hot path at all, so IMHO we don't really care if it
-> takes 10ms or 100ms or even 1s. :-)  BTW, in my test, typically the
+> +/**
+> + * __blk_crypto_bio_prep - Prepare bio for inline encryption
+> + *
+> + * @bio_ptr: pointer to original bio pointer
+> + *
+> + * Succeeds if the bio doesn't have inline encryption enabled or if the bio
+> + * crypt context provided for the bio is supported by the underlying device's
+> + * inline encryption hardware. Ends the bio with error otherwise.
+> + *
+> + * Caller must ensure bio has bio_crypt_ctx.
+> + *
+> + * Return: true on success; false on error (and bio->bi_status will be set
+> + *	   appropriately, and bio_endio() will have been called so bio
+> + *	   submission should abort).
+> + */
+> +bool __blk_crypto_bio_prep(struct bio **bio_ptr)
+> +{
+> +	struct bio *bio = *bio_ptr;
 
-Are you sure the 'we' can cover all users?
+Why is the bio passed by references?  As far as I can see it is never
+changed.
 
-> scsi_host_block() here takes about 3ms in my 40-vCPU VM.
+> +
+> +	/* Error if bio has no data. */
+> +	if (WARN_ON_ONCE(!bio_has_data(bio)))
+> +		goto fail;
+> +
+> +	if (!bio_crypt_check_alignment(bio))
+> +		goto fail;
+> +
+> +	/*
+> +	 * Success if device supports the encryption context, and blk-integrity
+> +	 * isn't supported by device/is turned off.
+> +	 */
+> +	if (!blk_ksm_crypto_cfg_supported(bio->bi_disk->queue->ksm,
+> +				&bio->bi_crypt_context->bc_key->crypto_cfg)) {
 
-If more LUNs are added, the time should be increased proportionallly,
-that is why I think scsi_host_block() is bad.
+The indentation here looks odd.
 
+> +		bio->bi_status = BLK_STS_NOTSUPP;
+> +		goto fail;
+> +	}
+> +
+> +	return true;
+> +fail:
+> +	bio_endio(*bio_ptr);
 
-Thanks,
-Ming
+This seems to fail to set a status for the bio_has_data case,
+and setting the status for bio_crypt_check_alignment should be moved
+to here, where we also end the IO.
 
+> + * __blk_crypto_rq_bio_prep - Prepare a request when its first bio is inserted
+> + *
+> + * @rq: The request to prepare
+> + * @bio: The first bio being inserted into the request
+> + *
+> + * Frees the bio crypt context in the request's old rq->crypt_ctx, if any, and
+> + * moves the bio crypt context of the bio into the request's rq->crypt_ctx.
+> + */
+> +void __blk_crypto_rq_bio_prep(struct request *rq, struct bio *bio)
+> +{
+> +	mempool_free(rq->crypt_ctx, bio_crypt_ctx_pool);
+> +	rq->crypt_ctx = bio->bi_crypt_context;
+> +	bio->bi_crypt_context = NULL;
+> +}
+
+This seems to be called in case of the both the initial request
+creation and merging a bio into the request (although only the
+front merge and not the back merge, which seems weird).
+
+But even then the behvior seems odd as bio->bi_crypt_context becomes
+NULL as soon as the bio is attached to a request, which seems like
+a somewhat dangerous condition.  Maybe it works, but is it really worth
+saving a little memory?  Why not just propagate the context of the first
+bio to the request, and free them when the bio is completed?
+
+Why do we always take the context from the bio instead of keeping
+the one in the request?  After all we merge the bio into the request.
+
+> +void __blk_crypto_rq_prep_clone(struct request *dst, struct request *src)
+> +{
+> +	dst->crypt_ctx = src->crypt_ctx;
+
+Probably worth just open coding in the only caller..
+
+> +
+> +/**
+> + * __blk_crypto_insert_cloned_request - Prepare a cloned request to be inserted
+> + *					into a request queue.
+> + * @rq: the request being queued
+> + *
+> + * Return: BLK_STS_OK on success, nonzero on error.
+> + */
+> +blk_status_t __blk_crypto_insert_cloned_request(struct request *rq)
+> +{
+> +	return blk_crypto_init_request(rq);
+
+Same.
+
+>  	__blk_queue_split(q, &bio, &nr_segs);
+> @@ -2011,6 +2015,15 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+>  
+>  	blk_mq_bio_to_request(rq, bio, nr_segs);
+>  
+> +	ret = blk_crypto_init_request(rq);
+> +	if (ret != BLK_STS_OK) {
+> +		bio->bi_status = ret;
+> +		bio_endio(bio);
+> +		blk_mq_free_request(rq);
+> +		return BLK_QC_T_NONE;
+> +	}
+
+Didn't Eric have a comment last round that we shoul dtry this before
+attaching the bio to simplify error handling?
+
+> +#define BLK_CRYPTO_DUN_ARRAY_SIZE	(BLK_CRYPTO_MAX_IV_SIZE/sizeof(u64))
+
+Please use whitespace before and after operators.
