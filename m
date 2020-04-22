@@ -2,40 +2,40 @@ Return-Path: <SRS0=1vX0=6G=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B58F3C5518B
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:54:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA26C5518E
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:55:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 928E620747
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:54:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC9B6206D9
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:55:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uA+B5OdC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fthiscYY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726008AbgDVGyP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 02:54:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59574 "EHLO
+        id S1726071AbgDVGzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 02:55:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725786AbgDVGyP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 02:54:15 -0400
+        with ESMTP id S1725810AbgDVGzl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 02:55:41 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C985C03C1A6;
-        Tue, 21 Apr 2020 23:54:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8436C03C1A6;
+        Tue, 21 Apr 2020 23:55:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PPZ4h2g1T5oHvKPAYnNLCJiwA+6mBi/YDgQyauKaszE=; b=uA+B5OdCZI47BRrAhfT/13mIKQ
-        tcepQX5mWIn1Y1cEAeGW+MeiXS3dc/+mQmnvDGpF3/MtB7lTDahF03J4+v1e9QCo5UVk+EVRbTw3S
-        xsQkC2wUOAwqKEQn+LF3rYpjdi8CqpQ22CdGp28zJGe3BfiCAisIDCL9+eVulZmyXhH7ffc+xRREo
-        wBdn5UWxKVS3lxdoTU+ggRZWXetaZZVUUBDGgOVan9WZ9hAR3GAk6Q+3PI275OtXqRSZJgbfUy2Q4
-        RhwdqKFLaI7rXULSE49yznfQH6iMjawCrlWwO3LHXhh+V9ln/XQyWZ6FLmViomNojEt+YuDPJUfDq
-        cLPnmVfw==;
+        bh=toV+NSb+8ljlbY2El040Sc4yeZwXLdJCYA1mR+KrkrA=; b=fthiscYYhphnRfRvDZfoBTzzZr
+        2CHK6PnfeHNXf6TfkzAy8RFdhlYqp91JZ7edAdhlPssXhal8EW7q4TQapKjDoKnKgUadIs8XYIgB/
+        DUtvpa6o8pWCUMaNbuU9xuiRurXQn6xv/WRwnajyMtzMQU5QxknQn7mqbtq5cIwNCx26Ghvur1EKg
+        yIw/wtLoXrUYLVxh6IPjHoJO1R3zPUUveqY14RNCuMvC15fHZlqpV69kTFNC7psHtvThUB68YRwdB
+        kg/m1x2ajTf8fehVqkeQyvNuAUPHMdY6Kd5Ll5E/YK1+UKbszzEJ9WcqbRmV2Ka6+oF2CTzLtZiRa
+        u84qKNXA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jR9Gw-0004PS-1b; Wed, 22 Apr 2020 06:54:14 +0000
-Date:   Tue, 21 Apr 2020 23:54:14 -0700
+        id 1jR9IL-0007dV-6c; Wed, 22 Apr 2020 06:55:41 +0000
+Date:   Tue, 21 Apr 2020 23:55:41 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Alim Akhtar <alim.akhtar@samsung.com>
 Cc:     robh@kernel.org, devicetree@vger.kernel.org,
@@ -44,52 +44,29 @@ Cc:     robh@kernel.org, devicetree@vger.kernel.org,
         stanley.chu@mediatek.com, cang@codeaurora.org,
         linux-samsung-soc@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 04/10] scsi: ufs: introduce
- UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
-Message-ID: <20200422065414.GK20318@infradead.org>
+Subject: Re: [PATCH v6 05/10] scsi: ufs: add quirk to fix abnormal ocs fatal
+ error
+Message-ID: <20200422065541.GL20318@infradead.org>
 References: <20200417175944.47189-1-alim.akhtar@samsung.com>
- <CGME20200417181014epcas5p1343bc81fb246133cc332d3fc7a394c15@epcas5p1.samsung.com>
- <20200417175944.47189-5-alim.akhtar@samsung.com>
+ <CGME20200417181016epcas5p2ee7ac86d743ceee9076690dc5b1e2f08@epcas5p2.samsung.com>
+ <20200417175944.47189-6-alim.akhtar@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200417175944.47189-5-alim.akhtar@samsung.com>
+In-Reply-To: <20200417175944.47189-6-alim.akhtar@samsung.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Apr 17, 2020 at 11:29:38PM +0530, Alim Akhtar wrote:
-> Some UFS host controllers may think granularities of PRDT length and
-> offset as bytes, not double words.
+On Fri, Apr 17, 2020 at 11:29:39PM +0530, Alim Akhtar wrote:
+> From: Kiwoong Kim <kwmad.kim@samsung.com>
 > 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 30 +++++++++++++++++++++++-------
->  drivers/scsi/ufs/ufshcd.h |  6 ++++++
->  2 files changed, 29 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ee30ed6cc805..b32fcedcdcb9 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2151,8 +2151,14 @@ static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->  		return sg_segments;
->  
->  	if (sg_segments) {
-> -		lrbp->utr_descriptor_ptr->prd_table_length =
-> -			cpu_to_le16((u16)sg_segments);
-> +
-> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
-> +			lrbp->utr_descriptor_ptr->prd_table_length =
-> +				cpu_to_le16((u16)(sg_segments *
-> +					sizeof(struct ufshcd_sg_entry)));
-> +		else
-> +			lrbp->utr_descriptor_ptr->prd_table_length =
-> +				cpu_to_le16((u16) (sg_segments));
+> Some architectures determines if fatal error for OCS
+> occurrs to check status in response upiu. This patch
+> is to prevent from reporting command results with that.
 
-No double words here.  "Normal" UFS uses the actual segment count,
-while Samsumg uses bytes.  Also no need fo the u16 count in
-either the old or new version.
+What does "Some architectures" mean?  All this seems to be about
+error propagation to the SCSI midlyaer, so this sounds rather
+strange.
