@@ -6,84 +6,69 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B54EC54FCC
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:43:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4CD3C38A30
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:44:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A83A206E9
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:43:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1D322070B
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 06:44:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gb7ek6Yt"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NQJRNZk+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726599AbgDVGnh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 02:43:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57928 "EHLO
+        id S1726431AbgDVGog (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 02:44:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726041AbgDVGng (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 02:43:36 -0400
+        with ESMTP id S1726041AbgDVGof (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 02:44:35 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A861DC03C1A6;
-        Tue, 21 Apr 2020 23:43:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC103C03C1A6;
+        Tue, 21 Apr 2020 23:44:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=n7bSWCy+yjEVd5/eEit7zxHT7ampFTjRw0vL4VxyfNM=; b=Gb7ek6Ytu/i+eVBcw6iQxNRQEX
-        lFgqHAf+9baTdGXdabiAr/PxaKU/oTW7Od3ihMdBHDjmsw2H9DdSVYQ4FcFp/AXzBP9uD0vzsacV/
-        tapmfrVksjcwdz0iIZuA5IBGrntQKC4uadFOFu+jhE2oUFc5Y8eNtHx8OPg8ZOGvMM5H8XOFUjtYb
-        jnV/wJiasU6SV/kWNNNaYsCWbiJMLiM6eA8QR1Tyjvqq3D/oU/b1o+4SsGGVGBp0y5/Uswp+dlj1Z
-        K7xwQEHwC3D/bE1rZnu8fqFKkgIFx9hPGXQSQ3wxr3r/2mZXpv9GXLabkoKPcyLT6Yw6wjLd+2wkO
-        UKrLSXjQ==;
+        bh=R3Wcm6CbR/G6SLD4XVnk7GpiQZBdrcFoabboLjiCXlQ=; b=NQJRNZk+/BeYMRqupYqT78Xm3c
+        lUHnX1+AoijrHjRNNPRMqd69eOFSctktIO/ZIi232xkEOjE7IKKc3qy/cDK6GKxexH6xqtHuGC8Wj
+        Qf+1BoxBR5jrLE8abr6u4QZ7Tg8SXsjoyID0NawIg+a995SvhAeciWRQh7MGc1knkwEd4L2SrwP7w
+        dSUNSgSynR4vKot2UhL11knNyxFmtrA9PZspvbvAJGO6WClEg9BOm57RRiE3fxqo3gqiP2FWBvPwg
+        G9uWfO08I77P5IXANZE9CvFR676D7PN9EZvqEem9VMFMZfNOwwnoIPzF3IiwXBWcWu/HtQMjcBuWy
+        qQSzRiQg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jR96S-0004JA-9L; Wed, 22 Apr 2020 06:43:24 +0000
-Date:   Tue, 21 Apr 2020 23:43:24 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     huobean@gmail.com
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] UFS Host Performance Booster (HPB v1.0) driver
-Message-ID: <20200422064324.GF20318@infradead.org>
-References: <20200416203126.1210-1-beanhuo@micron.com>
+        id 1jR97X-0004Z0-Bx; Wed, 22 Apr 2020 06:44:31 +0000
+Date:   Tue, 21 Apr 2020 23:44:31 -0700
+From:   "hch@infradead.org" <hch@infradead.org>
+To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
+        "hch@infradead.org" <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
+        Daniel Wagner <dwagner@suse.de>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v7 01/11] scsi: free sgtables in case command setup fails
+Message-ID: <20200422064431.GG20318@infradead.org>
+References: <20200417121536.5393-1-johannes.thumshirn@wdc.com>
+ <20200417121536.5393-2-johannes.thumshirn@wdc.com>
+ <de79e1ab-0407-205e-3272-532f0484b49f@acm.org>
+ <SN4PR0401MB3598B2774CD52FAB68C726249BD40@SN4PR0401MB3598.namprd04.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200416203126.1210-1-beanhuo@micron.com>
+In-Reply-To: <SN4PR0401MB3598B2774CD52FAB68C726249BD40@SN4PR0401MB3598.namprd04.prod.outlook.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 16, 2020 at 10:31:21PM +0200, huobean@gmail.com wrote:
-> From: Bean Huo <beanhuo@micron.com>
+On Mon, Apr 20, 2020 at 10:46:21AM +0000, Johannes Thumshirn wrote:
+> On 18/04/2020 18:02, Bart Van Assche wrote:
+> > How about adding __must_check to scsi_setup_fs_cmnd()?
 > 
-> Hi,
-> I disclose my development/changes on UFS HPB (UFS Host Performance Booster) to
-> the community, as this would enable more UFS developers to test and start an
-> iterative review and update process.
-> 
-> The HPB is defined in Jedec Standard Universal Flash (UFS) Host Performance
-> Booster (HPB) Extension Version 1.0, which is designed to improve  read
-> performance by utilizing the host side memory. Based on our testing, the HPB
-> can increase the random read performance by up to about 46% in the random read.
-> 
-> The original HPB driver is from [1]. Based on it, I did optimizations,
-> simplifications, fixed reliability issues, implemented HPB host control mode
-> and make it much more readable. which's pushed to here [2] as V1.
-> 
-> To avoid touching the traditional SCSI core, the HPB driver in this series HPB
-> patch chooses to develop under SCSI sub-system layer, and sits the same layer
-> with UFSHCD. At the same time, to minimize changes to UFSHCD driver, the HPB
-> driver submits its HPB READ BUFFER and HPB WRITE BUFFER requests to the scsi
-> device->request_queueu to execute, rather than that directly go through
-> raw UPIU request path.
+> I'm actually not sure if __must_check helps us anything given that with 
+> this patch applied:
 
-This feature is completley broken, and rather dangerous due to feeding
-"physical" addresses looked up by the host in.  I do not think we should
-support something that broken in Linux.
-
-Independent of that using two requests in the I/O path is not going
-to fly either.  The whole thing seems like an exercise in benchmarketing.
+It doesn't.  __must_check on static functions with a single caller does
+not make any sense.
