@@ -4,137 +4,135 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B8DC2BA19
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 01:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95999C55186
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 01:28:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7EA442070B
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 01:04:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73A4F20724
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Apr 2020 01:28:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hVPS2ujs"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KZbmgCN3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbgDVBEB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Apr 2020 21:04:01 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:39662 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726055AbgDVBEA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Apr 2020 21:04:00 -0400
+        id S1726173AbgDVB2i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Apr 2020 21:28:38 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:25639 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726024AbgDVB2h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Apr 2020 21:28:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587517438;
+        s=mimecast20190719; t=1587518916;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=neoNO/lAbBJQ6VnOBxXRvj3nh9UxKhbN/pnaBOuFds4=;
-        b=hVPS2ujsLfeYYiTGvUjXRhs9ga1/039mofhHdw6DOqsYqhKkmWZaQbATOYKFICgXq5eaw5
-        devk7eh4rgLKiL3LDuxLjmhUsN8sPyL1DnD5SI7lbIUmc6msJNRxHBXnyCyu/PLxnnemJY
-        7uEy/t4dDi4g7P/a+uq7Wo20nDzPGZk=
+        bh=4ZNdcG+TmbSTCG4vzT43nnQ/z4sik6/PtNUHfENZbww=;
+        b=KZbmgCN3uw4VDmOInzLmuPTyyl/VAd3N+MI9PflCNr259xm4yUXML4K+HnnNxuEKhn086Q
+        C0Qd8shSqqGpXzFzUM8qZXLoCi7/N/0/2lYMFXfPQjZovpkx6y4riNmzblR8ViB8/cyq4T
+        kwI8DTz8wdP7V87T19V56U8ZAV66HGU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-377-u6QiRpBCNzG1JNIuwfz6eg-1; Tue, 21 Apr 2020 21:03:54 -0400
-X-MC-Unique: u6QiRpBCNzG1JNIuwfz6eg-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-457-j52Xm2bOMByNiHx8lGjYwg-1; Tue, 21 Apr 2020 21:28:32 -0400
+X-MC-Unique: j52Xm2bOMByNiHx8lGjYwg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 55BF28018A4;
-        Wed, 22 Apr 2020 01:03:53 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 15EF2800D5B;
+        Wed, 22 Apr 2020 01:28:30 +0000 (UTC)
 Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5E15D19757;
-        Wed, 22 Apr 2020 01:03:44 +0000 (UTC)
-Date:   Wed, 22 Apr 2020 09:03:38 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4818EB3A7E;
+        Wed, 22 Apr 2020 01:28:19 +0000 (UTC)
+Date:   Wed, 22 Apr 2020 09:28:14 +0800
 From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: put hot fields of scsi_host_template into one
- cacheline
-Message-ID: <20200422010338.GA299948@T590>
-References: <20200421124952.297448-1-ming.lei@redhat.com>
- <367d58f7-722d-16db-3e90-50dc9fd4e078@huawei.com>
+To:     Dexuan Cui <decui@microsoft.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hch@lst.de, bvanassche@acm.org, hare@suse.de,
+        mikelley@microsoft.com, longli@microsoft.com,
+        linux-hyperv@vger.kernel.org, wei.liu@kernel.org,
+        sthemmin@microsoft.com, haiyangz@microsoft.com, kys@microsoft.com
+Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
+Message-ID: <20200422012814.GB299948@T590>
+References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <367d58f7-722d-16db-3e90-50dc9fd4e078@huawei.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <1587514644-47058-1-git-send-email-decui@microsoft.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 21, 2020 at 04:16:52PM +0100, John Garry wrote:
-> On 21/04/2020 13:49, Ming Lei wrote:
-> > The following three fields of scsi_host_template are referenced in
-> > scsi IO submission path, so put them together into one cacheline:
-> > 
-> > - cmd_size
-> > - queuecommand
-> > - commit_rqs
-> > 
-> > Cc: Bart Van Assche <bvanassche@acm.org>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: John Garry <john.garry@huawei.com>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >   include/scsi/scsi_host.h | 67 +++++++++++++++++++++-------------------
-> >   1 file changed, 35 insertions(+), 32 deletions(-)
-> > 
-> > diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> > index 822e8cda8d9b..959dc5160f72 100644
-> > --- a/include/scsi/scsi_host.h
-> > +++ b/include/scsi/scsi_host.h
-> > @@ -33,37 +33,12 @@ struct scsi_host_template {
-> >   	struct module *module;
-> >   	const char *name;
-> > -	/*
-> > -	 * The info function will return whatever useful information the
-> > -	 * developer sees fit.  If not provided, then the name field will
-> > -	 * be used instead.
-> > -	 *
-> > -	 * Status: OPTIONAL
-> > -	 */
-> > -	const char *(* info)(struct Scsi_Host *);
-> > +	/* Put hot fields together in same cacheline */
-> >   	/*
-> > -	 * Ioctl interface
-> > -	 *
-> > -	 * Status: OPTIONAL
-> > -	 */
-> > -	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
-> > -		     void __user *arg);
-> > -
-> > -
-> > -#ifdef CONFIG_COMPAT
-> > -	/*
-> > -	 * Compat handler. Handle 32bit ABI.
-> > -	 * When unknown ioctl is passed return -ENOIOCTLCMD.
-> > -	 *
-> > -	 * Status: OPTIONAL
-> > +	 * Additional per-command data allocated for the driver.
-> >   	 */
-> > -	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
-> > -			    void __user *arg);
-> > -#endif
-> > -
-> > -	int (*init_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
-> > -	int (*exit_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
+On Tue, Apr 21, 2020 at 05:17:24PM -0700, Dexuan Cui wrote:
+> During hibernation, the sdevs are suspended automatically in
+> drivers/scsi/scsi_pm.c before storvsc_suspend(), so after
+> storvsc_suspend(), there is no disk I/O from the file systems, but there
+> can still be disk I/O from the kernel space, e.g. disk_check_events() ->
+> sr_block_check_events() -> cdrom_check_events() can still submit I/O
+> to the storvsc driver, which causes a paic of NULL pointer dereference,
+> since storvsc has closed the vmbus channel in storvsc_suspend(): refer
+> to the below links for more info:
+>   https://lkml.org/lkml/2020/4/10/47
+>   https://lkml.org/lkml/2020/4/17/1103
 > 
-> Should new member .init_cmd_priv be included also in the "hot" group? Even
-> if NULL generally, we still have to load that from memory to know it (is
-> NULL) in scsi_mq_init_request() and scsi_init_command() [which are fastpath,
-> right?]
+> Fix the panic by blocking/unblocking all the I/O queues properly.
+> 
+> Note: this patch depends on another patch "scsi: core: Allow the state
+> change from SDEV_QUIESCE to SDEV_BLOCK" (refer to the second link above).
+> 
+> Fixes: 56fb10585934 ("scsi: storvsc: Add the support of hibernation")
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index fb41636519ee..fd51d2f03778 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1948,6 +1948,11 @@ static int storvsc_suspend(struct hv_device *hv_dev)
+>  	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
+>  	struct Scsi_Host *host = stor_device->host;
+>  	struct hv_host_device *host_dev = shost_priv(host);
+> +	int ret;
+> +
+> +	ret = scsi_host_block(host);
+> +	if (ret)
+> +		return ret;
+>  
+>  	storvsc_wait_to_drain(stor_device);
+>  
+> @@ -1968,10 +1973,15 @@ static int storvsc_suspend(struct hv_device *hv_dev)
+>  
+>  static int storvsc_resume(struct hv_device *hv_dev)
+>  {
+> +	struct storvsc_device *stor_device = hv_get_drvdata(hv_dev);
+> +	struct Scsi_Host *host = stor_device->host;
+>  	int ret;
+>  
+>  	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
+>  				     hv_dev_is_fc(hv_dev));
+> +	if (!ret)
+> +		ret = scsi_host_unblock(host, SDEV_RUNNING);
+> +
+>  	return ret;
+>  }
 
-scsi_mq_init_request() is called via ->init_request(), which is oneshot
-initialization.
+scsi_host_block() is actually too heavy for just avoiding
+scsi internal command, which can be done simply by one atomic
+variable.
 
-scsi_init_command() is in fast path, but it is called from
-scsi_mq_prep_fn() directly, so it isn't related with ->init_request().
+Not mention scsi_host_block() is implemented too clumsy because
+nr_luns * synchronize_rcu() are required in scsi_host_block(),
+which should have been optimized to just one.
 
+Also scsi_device_quiesce() is heavy too, still takes 2
+synchronize_rcu() for one LUN.
 
-Thanks, 
+That is said SCSI suspend may take (3 * nr_luns) sysnchronize_rcu() in
+case that the HBA's suspend handler needs scsi_host_block().
+
+Thanks,
 Ming
 
