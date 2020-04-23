@@ -2,146 +2,128 @@ Return-Path: <SRS0=QYJt=6H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BCAC55186
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 14:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73CA2C54FD0
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 15:31:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DA94214AF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 14:49:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5319E21582
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 15:31:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eaJRMiMp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728816AbgDWOtH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Apr 2020 10:49:07 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58852 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728397AbgDWOtG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Apr 2020 10:49:06 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 3A8A9ABB2;
-        Thu, 23 Apr 2020 14:49:03 +0000 (UTC)
-Subject: Re: [PATCH RFC v2 02/24] scsi: allocate separate queue for reserved
- commands
-To:     John Garry <john.garry@huawei.com>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        ming.lei@redhat.com, bvanassche@acm.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        Hannes Reinecke <hare@suse.com>
-References: <1583857550-12049-1-git-send-email-john.garry@huawei.com>
- <1583857550-12049-3-git-send-email-john.garry@huawei.com>
- <20200310183243.GA14549@infradead.org>
- <79cf4341-f2a2-dcc9-be0d-2efc6e83028a@huawei.com>
- <20200311062228.GA13522@infradead.org>
- <b5a63725-722b-8ccd-3867-6db192a248a4@suse.de>
- <9c6ced82-b3f1-9724-b85e-d58827f1a4a4@huawei.com>
- <39bc2d82-2676-e329-5d32-8acb99b0a204@suse.de>
- <20200407163033.GA26568@infradead.org>
- <ae3b498b-aea8-dc09-53b8-9e160effc681@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <a0316b0b-a24c-7d0c-df17-0573593e2a11@suse.de>
-Date:   Thu, 23 Apr 2020 16:49:00 +0200
+        id S1729247AbgDWPbo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 11:31:44 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:58991 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729081AbgDWPbn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Apr 2020 11:31:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1587655902;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zNIQh0ll+orShoex0gyZ4gPW1qdjmjrr035iiXUT4Rw=;
+        b=eaJRMiMpHfY52gj+qcU+pm4YQyIzZasQw7h1Jt9S5PdsEoos5AqVnYoEZBcPBxZe+XsfyL
+        N82latIpaOeJsAbP6i/O7w1KwB6rtN+sYLeSbLG7iJHxRL+dXAOyUGkMMZbAdvfAxI9I3f
+        OhIehJvxx7v0GoX47/7uLwBorH3jckc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-286-1fMKn55HMAWFYXHWwcoRTQ-1; Thu, 23 Apr 2020 11:31:40 -0400
+X-MC-Unique: 1fMKn55HMAWFYXHWwcoRTQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6BF9B107ACF3;
+        Thu, 23 Apr 2020 15:31:39 +0000 (UTC)
+Received: from [10.10.119.77] (ovpn-119-77.rdu2.redhat.com [10.10.119.77])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9FA2C5D714;
+        Thu, 23 Apr 2020 15:31:38 +0000 (UTC)
+Subject: Re: [External] Re: [PATCH 1/2] iscsi-target: fix login error when
+ receiving is too fast
+To:     Hou Pu <houpu@bytedance.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+References: <20200415080819.27327-1-houpu@bytedance.com>
+ <20200415080819.27327-2-houpu@bytedance.com>
+ <54e574b1-10b4-4385-11fb-773ef152fc2c@redhat.com>
+ <CAO9YExv2kWp=x+mMaWeOrYmu4c6gTu0PeBSkOwHgr7ZW9MywSg@mail.gmail.com>
+From:   Mike Christie <mchristi@redhat.com>
+Message-ID: <53fa9766-21ea-72ad-818c-61e895e919ae@redhat.com>
+Date:   Thu, 23 Apr 2020 10:31:38 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <ae3b498b-aea8-dc09-53b8-9e160effc681@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAO9YExv2kWp=x+mMaWeOrYmu4c6gTu0PeBSkOwHgr7ZW9MywSg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/23/20 4:13 PM, John Garry wrote:
-> On 07/04/2020 17:30, Christoph Hellwig wrote:
->> On Tue, Apr 07, 2020 at 04:00:10PM +0200, Hannes Reinecke wrote:
->>> My concern is this:
->>>
->>> struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
->>> {
->>>     [ .. ]
->>>     starget = scsi_alloc_target(&shost->shost_gendev, 0, 
->>> shost->this_id);
->>>     [ .. ]
->>>
->>> and we have typically:
->>>
->>> drivers/scsi/hisi_sas/hisi_sas_v3_hw.c: .this_id                = -1,
->>>
->>> It's _very_ uncommon to have a negative number as the SCSI target 
->>> device; in
->>> fact, it _is_ an unsigned int already.
->>>
->>> But alright, I'll give it a go; let's see what I'll end up with.
+On 4/22/20 11:24 PM, Hou Pu wrote:
+>>> +     /*
+>>> +      * LOGIN_FLAGS_READ_ACTIVE is cleared so that sk_data_ready
+>>> +      * could be trigger again after this.
+>>> +      *
+>>> +      * LOGIN_FLAGS_WRITE_ACTIVE is cleared after we successfully
+>>> +      * processing a login pdu. So that sk_state_chage could do login
 >>
->> But this shouldn't be exposed anywhere.  And I prefer that over having
->> magic requests/scsi_cmnd that do not have a valid ->device pointer.
->> .
+>> I think we need to drop "ing" from processing and do:
+>>
+>> process a login pdu, so that sk_state_chage could do login
+>>
+> Sure. Thanks for helping me with my language. ^-^
+> Will change this in v2.
 >>
 > 
-> (just looking at this again)
+>>> diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+>>> index 591cd9e4692c..0c2dfc81bf8b 100644
+>>> --- a/include/target/iscsi/iscsi_target_core.h
+>>> +++ b/include/target/iscsi/iscsi_target_core.h
+>>> @@ -570,6 +570,7 @@ struct iscsi_conn {
+>>>  #define LOGIN_FLAGS_CLOSED           2
+>>>  #define LOGIN_FLAGS_READY            4
+>>>  #define LOGIN_FLAGS_INITIAL_PDU              8
+>>> +#define LOGIN_FLAGS_WRITE_ACTIVE     12
+>>
+>> 12 works but seems odd. The current code uses test/set/clear_bit, so we
+>> want these to be:
+>>
+>> #define LOGIN_FLAGS_CLOSED 0
+>> #define LOGIN_FLAGS_READY 1
+>> #define LOGIN_FLAGS_INITIAL_PDU 2
+>> #define LOGIN_FLAGS_WRITE_ACTIVE 3
+>>
+>> right?
+>>
+> Yes, it is a little odd. What about this? I also changed the order of them
+> to be in sequence that happened.
 > 
-> Hi Christoph,
+> --- a/include/target/iscsi/iscsi_target_core.h
+> +++ b/include/target/iscsi/iscsi_target_core.h
+> @@ -566,10 +566,11 @@ struct iscsi_conn {
+>         struct socket           *sock;
+>         void                    (*orig_data_ready)(struct sock *);
+>         void                    (*orig_state_change)(struct sock *);
+> -#define LOGIN_FLAGS_READ_ACTIVE                1
+> -#define LOGIN_FLAGS_CLOSED             2
+> -#define LOGIN_FLAGS_READY              4
+> -#define LOGIN_FLAGS_INITIAL_PDU                8
+> +#define LOGIN_FLAGS_READY              0
+> +#define LOGIN_FLAGS_INITIAL_PDU                1
+> +#define LOGIN_FLAGS_READ_ACTIVE                2
+> +#define LOGIN_FLAGS_WRITE_ACTIVE       3
+> +#define LOGIN_FLAGS_CLOSED             4
 > 
-> So how would this look added in scsi_lib.c:
-> 
-> struct scsi_cmnd *scsi_get_reserved_cmd(struct Scsi_Host *shost)
-> {
->      struct scsi_cmnd *scmd;
->      struct request *rq;
->      struct scsi_device *sdev = scsi_get_host_dev(shost);
-> 
->      if (!sdev)
->          return NULL;
-> 
->      rq = blk_mq_alloc_request(sdev->request_queue,
->                    REQ_OP_DRV_OUT | REQ_NOWAIT,
->                    BLK_MQ_REQ_RESERVED);
->      if (IS_ERR(rq)) // fix tidy-up
->          return NULL;
->      WARN_ON(rq->tag == -1);
->      scmd = blk_mq_rq_to_pdu(rq);
->      scmd->request = rq;
->      scmd->device = sdev;
-> 
->      return scmd;
-> }
-> EXPORT_SYMBOL_GPL(scsi_get_reserved_cmd);
-> 
-> void scsi_put_reserved_cmd(struct scsi_cmnd *scmd)
-> {
->      struct request *rq = blk_mq_rq_from_pdu(scmd);
-> 
->      if (blk_mq_rq_is_reserved(rq)) {
->          struct scsi_device *sdev = scmd->device;
->          blk_mq_free_request(rq);
->          scsi_free_host_dev(sdev);
->      }
-> }
-> EXPORT_SYMBOL_GPL(scsi_put_reserved_cmd);
-> 
-> Not sure if we want a static scsi_device per host, or alloc and free 
-> dynamically.
-> 
-> (@Hannes, I also have some proper patches for libsas if you want to add it)
-> 
-Hold your horses.
-I'm currently preparing a patchset implementing things by improving the 
-current scsi_get_host_dev() etc.
 
-RFC should be ready by the end of the week.
+Looks ok to me.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
