@@ -2,125 +2,110 @@ Return-Path: <SRS0=QYJt=6H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FB7C55185
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 02:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79E50C55191
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 02:50:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFF8B2080D
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 02:07:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 519962075A
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 02:50:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hfBWywL/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kR+yMa8p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726054AbgDWCHa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 22:07:30 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:53524 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726002AbgDWCHa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Apr 2020 22:07:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587607649;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=//7YW1x3+JgMEWAUDpLNrKAjc3EeAPwNIBGi1cqkx4U=;
-        b=hfBWywL/wN3sIv+6/d/4wdsEIYtvvLSKhi6OKQjiJRhaEM5SP7H2ByHtJ8pno9VkOqnUN4
-        357J/X9mMJ4G5v48ROhcbpYL1dnJtYW6xv/tmYRCG6fLTZW6weOrfgJ0YEq4n1oWng/ry0
-        nOA/XQfHuJOWnZ6wnqwKXGjYTQfYNSU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-215-8b0ZtdvCOOatEGRgozBDIQ-1; Wed, 22 Apr 2020 22:07:25 -0400
-X-MC-Unique: 8b0ZtdvCOOatEGRgozBDIQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BD6A48015CE;
-        Thu, 23 Apr 2020 02:07:23 +0000 (UTC)
-Received: from localhost (ovpn-8-30.pek2.redhat.com [10.72.8.30])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6FA575C290;
-        Thu, 23 Apr 2020 02:07:20 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Dexuan Cui <decui@microsoft.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH V2] scsi: avoid to run synchronize_rcu for each device in scsi_host_block
-Date:   Thu, 23 Apr 2020 10:07:13 +0800
-Message-Id: <20200423020713.332743-1-ming.lei@redhat.com>
+        id S1726271AbgDWCuM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Apr 2020 22:50:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47894 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726002AbgDWCuL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Apr 2020 22:50:11 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58BA3C03C1AA
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 19:50:10 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id y6so1792235pjc.4
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 19:50:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ErA85lbtaZU/aGpQlQnpee7uHma/eeIm2x66Q+hpSAk=;
+        b=kR+yMa8ptwXjarA7wFgTcxicOGOEklw0FJdQqVtVI4mUrlUSKrV/BHbcyXw1C6J7Zr
+         +12FO55YsVZ3pp6H1PKx0NrqkLrK2vooCX7PLZcmg0wBx9v8AjalZg4s808FJv08io60
+         h/dYqA5BnxUucc6hUVh3hxJM7ZNc2bAjp3vu7cGJgGk/VCRAVD0e71IsN3t4rcaS76UM
+         9azYk6pyH+tyiEWvkDUFHo4M40GC1km9bsI3jmnmztF5XCnwj91Ya+PFkF1hHKDf3q6f
+         ufemipYeLMf9oX1w5g9TV4eNWcF7ajgCZ7wWTBUfR0NeIqU2zUuowLQgZ3gvWhDVgk9s
+         N9mA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ErA85lbtaZU/aGpQlQnpee7uHma/eeIm2x66Q+hpSAk=;
+        b=fbVOB6p524XRsCbDxX+W4aB6aCoqR/Ip4k3CkbYZtAQVi/6zkZM+MyMOjbFreJAvQn
+         Ahy566nQ4+QS0P7Q0Ks3TiWGp/qhHtyVGmSqR63X+NI84wxvcGJtg9mmOC/EfHwJoNlP
+         oO3FnZ95QuxEpWTzMTvLLEX4NieTSw9uN52i0SSbiNYxMZQjSmuWcnQQi11SeyFlGj9x
+         ARlYUbqcYKt4c+JPxwKx/Avm7l9yXweWdcNaHr0P/UWte5QqctgXQJlnB3B4P846xbC3
+         rGDub9eWb3BKhcxiDVu91wovfUzzj7B5A7Jr/k4m5Oi8HHxs9ur3LUOFs9dCuvNw9Wkr
+         licg==
+X-Gm-Message-State: AGi0PubcnCS3OEKSmxJYpBRP1+Z6BlQFsC4Y18gXGj3tTn+zCoabUFOY
+        nIfvLuFfBOZo8PmlV3RvpjQ=
+X-Google-Smtp-Source: APiQypK2g0HlbV697c1ngA9uSzmHy+29Q2zY9ke2w/ulHrUOrHmSXM0pn5sUuTq2O/S/n40rF/47iQ==
+X-Received: by 2002:a17:90a:cb0b:: with SMTP id z11mr1884454pjt.62.1587610209677;
+        Wed, 22 Apr 2020 19:50:09 -0700 (PDT)
+Received: from [10.230.185.141] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 185sm967798pfv.9.2020.04.22.19.50.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Apr 2020 19:50:08 -0700 (PDT)
+Subject: Re: [PATCH v3 14/31] elx: libefc: FC node ELS and state handling
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com,
+        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
+        rdunlap@infradead.org, hare@suse.de,
+        Ram Vegesna <ram.vegesna@broadcom.com>
+References: <20200412033303.29574-1-jsmart2021@gmail.com>
+ <20200412033303.29574-15-jsmart2021@gmail.com>
+ <20200415185603.hoaap564jde4v6bt@carbon>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <d18094a8-32c2-f024-db46-7cec0cd21754@gmail.com>
+Date:   Wed, 22 Apr 2020 19:50:06 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20200415185603.hoaap564jde4v6bt@carbon>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_host_block() calls scsi_internal_device_block() for each
-scsi_device, and scsi_internal_device_block() calls
-blk_mq_quiesce_queue() for each LUN. However synchronize_rcu is
-run from blk_mq_quiesce_queue().
+On 4/15/2020 11:56 AM, Daniel Wagner wrote:
+...
+>> +	switch (evt) {
+>> +	case EFC_EVT_ENTER:
+>> +		efc_node_hold_frames(node);
+>> +		/* Fall through */
+> 
+> 		fallthrough;
+> 
 
-This way may become unnecessary slow in case of lots of LUNs.
+Actually the patches that went in for -Wimplicit-fallthrough wants
+/* fall through */
 
-Use scsi_internal_device_block_nowait() to implement scsi_host_block(),
-so it is enough to run synchronize_rcu() once since scsi never
-supports blk-mq's BLK_MQ_F_BLOCKING.
 
-Cc: Steffen Maier <maier@linux.ibm.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Dexuan Cui <decui@microsoft.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
-V2:
-	- fix commit log as pointed by Steffen
-	- add comment on BLK_MQ_F_BLOCKING as suggested by Bart
+Other comments are fine and we'll address them.
+BTW: Same goes for comments on patches 3, 7, 8, 9, 10, and 11.
 
- drivers/scsi/scsi_lib.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+> 
+> I run out of steam and thus stop here...
+> 
+> Thanks,
+> Daniel
+> 
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 47835c4b4ee0..86007a523145 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2841,11 +2841,26 @@ scsi_host_block(struct Scsi_Host *shost)
- 	struct scsi_device *sdev;
- 	int ret =3D 0;
-=20
-+	/*
-+	 * Call scsi_internal_device_block_nowait then we can avoid to
-+	 * run synchronize_rcu() for each LUN
-+	 */
- 	shost_for_each_device(sdev, shost) {
--		ret =3D scsi_internal_device_block(sdev);
-+		mutex_lock(&sdev->state_mutex);
-+		ret =3D scsi_internal_device_block_nowait(sdev);
-+		mutex_unlock(&sdev->state_mutex);
- 		if (ret)
- 			break;
- 	}
-+
-+	/*
-+	 * SCSI never enables blk-mq's BLK_MQ_F_BLOCKING, so run
-+	 * synchronize_rcu() once is enough
-+	 */
-+	WARN_ON_ONCE(shost->tag_set.flags & BLK_MQ_F_BLOCKING);
-+
-+	if (!ret)
-+		synchronize_rcu();
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(scsi_host_block);
---=20
-2.25.2
+I understand. Regardless, thank you for the time and effort on this.
 
+-- james
