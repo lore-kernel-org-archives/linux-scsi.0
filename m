@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1083FC55194
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C837C2BA19
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:15:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E184920736
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:15:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A78B2173E
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:15:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WGzxE2p2"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HMYkd2oX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726942AbgDWHPE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726932AbgDWHPE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 23 Apr 2020 03:15:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60690 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726894AbgDWHPD (ORCPT
+        with ESMTP id S1726893AbgDWHPD (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 03:15:03 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D05F9C08C5F2;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD2FDC03C1AF;
         Thu, 23 Apr 2020 00:15:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
-        To:From:Sender:Reply-To:Content-ID:Content-Description;
-        bh=pVfzOqYHU5JU1YOfTs8v0Ll0TIqB5Hqqb6N6/6zrKBE=; b=WGzxE2p2lq93RMCLAz2RmqCzpo
-        YKBJag0vWPLwjQPlpKNU9ch3wT5kJX+yWbwU0TVSwNNlxtYQT/7LSlqOtYCjHOobLHwQiajfOeB3n
-        t2Pvc13Fd1xsFnzrdI7Ien5+BVZsNFLVSItM6qfrmUwJE991/KjW/DzKT+g60zrtbVetHelU5Fml+
-        AiFdL6WfBXtinIfd5H1CZ/N73ik3DaigugYdC0hq8Tbu9vI0VNI12qMb0wTwOXFmMMv3sFa47Hjeo
-        3Vrrf3KUFrsXAz1cGNrt0Cl1/gB2kNSGge4G4uymWPZPbyTD/aQSPQXsqPJSQavpjWzSrafauYtDa
-        CK+v+E1g==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=Mh613tpjoy++kAkUXdryfrHzj3ksrol0w05jql2WKzM=; b=HMYkd2oX9nw0uax3+s1rVqBifg
+        8cx3PT/VSvkiAw3cR25Okvr6Zru/Gc45R5ptoBz8aGyNTx1D/k2PwetCUTQsxPxFDEezPtPm6uZKI
+        4FKwn9ZfjdWFV30xoAXgp9PtlI3Yt8U9ac8Ua+kvSY8LTI+y9WTYIsjX+7TX1LsjR1xG3YSVUoZg8
+        Q+yW261wbWu+0rA9phtBaSTp2JUUe3CTFVyLPBIlCLmMYm18VwagLy+JZ+n8+TiBMHDTvJ+jhib5x
+        FVGsKrlSJ968TdM3Axvy8uydRA0DYhC7lFuWHzbfYIjLhQ3WMXUwHAC6wzql9GeUYNZxXVCYRwiYQ
+        9qAUTpEg==;
 Received: from [2001:4bb8:188:40ac:46e:e5e4:1e64:2584] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jRW4J-0008T2-Hs; Thu, 23 Apr 2020 07:14:44 +0000
+        id 1jRW4X-000074-DT; Thu, 23 Apr 2020 07:14:57 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/7] ide-cd: rename cdrom_read_tocentry
-Date:   Thu, 23 Apr 2020 09:12:19 +0200
-Message-Id: <20200423071224.500849-3-hch@lst.de>
+Subject: [PATCH 7/7] udf: stop using ioctl_by_bdev
+Date:   Thu, 23 Apr 2020 09:12:24 +0200
+Message-Id: <20200423071224.500849-8-hch@lst.de>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200423071224.500849-1-hch@lst.de>
 References: <20200423071224.500849-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
@@ -58,74 +57,72 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Give the cdrom_read_tocentry function and ide_ prefix to not conflict
-with the soon to be added generic function.
+Instead just call the CD-ROM layer functionality directly.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ide/ide-cd.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ fs/udf/lowlevel.c | 29 +++++++++++++----------------
+ 1 file changed, 13 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 40e124eb918a..7f17f8303988 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1034,8 +1034,8 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
- 	return 0;
+diff --git a/fs/udf/lowlevel.c b/fs/udf/lowlevel.c
+index 5c7ec121990d..f1094cdcd6cd 100644
+--- a/fs/udf/lowlevel.c
++++ b/fs/udf/lowlevel.c
+@@ -27,41 +27,38 @@
+ 
+ unsigned int udf_get_last_session(struct super_block *sb)
+ {
++	struct cdrom_device_info *cdi = disk_to_cdi(sb->s_bdev->bd_disk);
+ 	struct cdrom_multisession ms_info;
+-	unsigned int vol_desc_start;
+-	struct block_device *bdev = sb->s_bdev;
+-	int i;
+ 
+-	vol_desc_start = 0;
+-	ms_info.addr_format = CDROM_LBA;
+-	i = ioctl_by_bdev(bdev, CDROMMULTISESSION, (unsigned long)&ms_info);
++	if (!cdi) {
++		udf_debug("CDROMMULTISESSION not supported.\n");
++		return 0;
++	}
+ 
+-	if (i == 0) {
++	ms_info.addr_format = CDROM_LBA;
++	if (cdrom_multisession(cdi, &ms_info) == 0) {
+ 		udf_debug("XA disk: %s, vol_desc_start=%d\n",
+ 			  ms_info.xa_flag ? "yes" : "no", ms_info.addr.lba);
+ 		if (ms_info.xa_flag) /* necessary for a valid ms_info.addr */
+-			vol_desc_start = ms_info.addr.lba;
+-	} else {
+-		udf_debug("CDROMMULTISESSION not supported: rc=%d\n", i);
++			return ms_info.addr.lba;
+ 	}
+-	return vol_desc_start;
++	return 0;
  }
  
--static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
--				int format, char *buf, int buflen)
-+static int ide_cdrom_read_tocentry(ide_drive_t *drive, int trackno,
-+		int msf_flag, int format, char *buf, int buflen)
+ unsigned long udf_get_last_block(struct super_block *sb)
  {
- 	unsigned char cmd[BLK_MAX_CDB];
+ 	struct block_device *bdev = sb->s_bdev;
++	struct cdrom_device_info *cdi = disk_to_cdi(bdev->bd_disk);
+ 	unsigned long lblock = 0;
  
-@@ -1104,7 +1104,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
- 				     sectors_per_frame << SECTOR_SHIFT);
+ 	/*
+-	 * ioctl failed or returned obviously bogus value?
++	 * The cdrom layer call failed or returned obviously bogus value?
+ 	 * Try using the device size...
+ 	 */
+-	if (ioctl_by_bdev(bdev, CDROM_LAST_WRITTEN, (unsigned long) &lblock) ||
+-	    lblock == 0)
++	if (!cdi || cdrom_get_last_written(cdi, &lblock) || lblock == 0)
+ 		lblock = i_size_read(bdev->bd_inode) >> sb->s_blocksize_bits;
  
- 	/* first read just the header, so we know how long the TOC is */
--	stat = cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
-+	stat = ide_cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
- 				    sizeof(struct atapi_toc_header));
- 	if (stat)
- 		return stat;
-@@ -1121,7 +1121,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
- 		ntracks = MAX_TRACKS;
- 
- 	/* now read the whole schmeer */
--	stat = cdrom_read_tocentry(drive, toc->hdr.first_track, 1, 0,
-+	stat = ide_cdrom_read_tocentry(drive, toc->hdr.first_track, 1, 0,
- 				  (char *)&toc->hdr,
- 				   sizeof(struct atapi_toc_header) +
- 				   (ntracks + 1) *
-@@ -1141,7 +1141,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
- 		 * Heiko Eißfeldt.
- 		 */
- 		ntracks = 0;
--		stat = cdrom_read_tocentry(drive, CDROM_LEADOUT, 1, 0,
-+		stat = ide_cdrom_read_tocentry(drive, CDROM_LEADOUT, 1, 0,
- 					   (char *)&toc->hdr,
- 					   sizeof(struct atapi_toc_header) +
- 					   (ntracks + 1) *
-@@ -1181,7 +1181,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
- 
- 	if (toc->hdr.first_track != CDROM_LEADOUT) {
- 		/* read the multisession information */
--		stat = cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
-+		stat = ide_cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
- 					   sizeof(ms_tmp));
- 		if (stat)
- 			return stat;
-@@ -1195,7 +1195,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
- 
- 	if (drive->atapi_flags & IDE_AFLAG_TOCADDR_AS_BCD) {
- 		/* re-read multisession information using MSF format */
--		stat = cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
-+		stat = ide_cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
- 					   sizeof(ms_tmp));
- 		if (stat)
- 			return stat;
+ 	if (lblock)
+ 		return lblock - 1;
+-	else
+-		return 0;
++	return 0;
+ }
 -- 
 2.26.1
 
