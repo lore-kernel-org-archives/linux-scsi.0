@@ -2,175 +2,122 @@ Return-Path: <SRS0=QYJt=6H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55770C2BA19
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 08:30:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CB2CC55192
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 11:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 275142084D
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 08:30:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E941520787
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 11:01:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="iWUWkooL";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="iRHALg23"
+	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="3LWhmyAd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726579AbgDWIaV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Apr 2020 04:30:21 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:3624 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725854AbgDWIaV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 04:30:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1587630620; x=1619166620;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=Sy5sPReWK+YXkr8gYodgYARY2x6WnqWPef2AtNqJ2ik=;
-  b=iWUWkooLYQUyrMpsbngkYVGqVKofqPGufRR3GlRzYo1UR3t6Prth64/9
-   dTawReaFrhp1X+raQmea6csmoMFpg/zBnOuUX3ScWP5MV1VvCF62GlgIx
-   U2YEn/zToNfsSsX6Zky/t3PlarUFbA8eDYQ90A64FpfjNnzwZB2r4gsO5
-   rkr9LdKe1GkUUSMT3FhjuzE8dCeFUMW69C0U2JW8MCQPRGeqg6u0YMGTi
-   s6tJq1Gki4322ro7uQmHODlJTikl6Nd3aHtqay0MIuRDXXTUWr+iN//0z
-   wVrhmDZtHTmz9PfuMVGwDyuosgMTTaijUkhDDwtcT5Q4OOsL0h8/zDlKD
-   w==;
-IronPort-SDR: CyiStv7WixoUP/DutPSq1bJNMCe53rvELxqYG0K/n7wrAQTjccIje04gihKcvO3XJriLt2M3GL
- BWrCHssuFyk1CiL/cK1JqZ2WCzDXew1hRcaiO3AHzYfyCkBJFykHel2rv9KoWlN3g94WkwDSGN
- /9zYIefLZ1zici/QTo1YFS39uk+HW2sBDb8mH+uKnHDi7LVbisElODr+jGk3oqO5BbOtFBBIFb
- Mm8GIrUPUoS9cSom8MmOJ7kY9VlwU862KyFK5tkyCvFicoZETn2Fgw3sQcaXr1qO7BidH3JWQQ
- 5q0=
-X-IronPort-AV: E=Sophos;i="5.73,306,1583164800"; 
-   d="scan'208";a="140311717"
-Received: from mail-co1nam11lp2175.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.175])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Apr 2020 16:30:20 +0800
+        id S1727884AbgDWLBQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 07:01:16 -0400
+Received: from mail-bn7nam10on2080.outbound.protection.outlook.com ([40.107.92.80]:17345
+        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727077AbgDWLBQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Apr 2020 07:01:16 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FtBajpWerem9GJHP91wY/BBbk1lY0UmIT3nMQI4E2flotRMDukKqAI84nrm8ge9RCxoNH4nkmjIlpRi71RqTjmPeenCOUqX2bWkEsG19J7DEUr2nfBSf4LWSu1pd47IfvqnWX8z9fhGAU/hxTqcgT8PicT9iz6WHblz5sw8MjW2wAMo36uzs4GZ3P4/JpOo7x8HeXWG2NgrAJk99prIJ8pVgpDZbu9wjFITYWwkH0jBEBel456a1wrsZ+GuIAA4wRct1UwqPR/37Fj6s3z8PAHJ9+ZmvRaT1mqt6UC39ymC6+WJE3p/FkgoisV8Ns20V+dEgjEI2teSF1Rny8GYLDA==
+ b=X4SFvZKJX9Fe4FC3TujIx6cnLD+j45Mzt3Cxd847MCe4KZpWxtUcxkEA3GFR51FUj6dMVAIJfxyKiO3mXGeDGifYtpRyhgR1PYjXxRlmDCGjujEO0JmJsd5QetMMetmNkLmCN3BMrauDP2q1TJsA7CNWvGVpJhbjhNWz9//ixd76w2J4ITT+/969NH7AN85BCM0LayZHpDz+pEUN8mHTqPOtwyHbTfsj3VaX/CtvtoFuDq5aqDAcBeutWiIU8WVrdk003aHo9GvlkmGxej5pNLZ3B6vbiQ5Lu1ImjtLMFGlDyVdgRmnvjzbXlv3O/oi21jnwIGD+ech8X52dFqAV6w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r8S05JhXeOJ1nWk7IWsOYG+Wixn9CymYOdItZRwT768=;
- b=bXmJPD72VsGVdvhOCffkDsfyNGXbMpUfWlIxeugl1AjfooQ4IERPxJjxmDLd3dt0hEOnAxiaPpA/M7cGe+ILWEWmaOG3c9A0RxPVIBNPfF10qi+Q24MT5fBThXAArhywf213cGpzlzI7+d+EHEelbDaWNjVFDzdnfufmwj1ASsjCP4RwdRNTJiNDmyGAvtbci44w4HV8rTreR4zR9ghwv5AMIzr/YIPle8w3CQuCgfLvQxK/4MNtmqpiAV3bRbv07eUM1H5kn90viEpkznFdMTv1LVZiVX2OhIFs5VMIqAYBPmBGj2qJolfQaCEiVbvh5RlXqxqlkCQvyjMKThBkOw==
+ bh=yJ4U99gAUOUWEHNnqYQflPG9AN59kkYzX/pF9tQ60uY=;
+ b=jM04M9ucICDpnTeATJjLPUZ2RLuhhI7yAte/85EHHur9wocV3nC/N0nEyBMnN1Snzv1edj5rBsatL85Xv4EjKGQzq+hZqofdjdvORx4eygIXDxBPsBJMv8clyUuya60WEA0mwwNrMz+X/vWOsIztNRp5rlLZq0BEzH2iJ05Fz13drOUXGSv4gItA1s/f+YG8B3zq8GOlQgM7XkJNfYVX4USyAcDiocPySh9oRsxoyU9pjjJ7/fHQL1v7+9PK6bykOQtrsY0JHUHd1Y4PIi+vGpVohrlh8UfR21ceNri99zFfAV2WUBclOhZEkBmYBHr+hhWuMXs3tAm0PY6AiGkN1g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
+ dkim=pass header.d=micron.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r8S05JhXeOJ1nWk7IWsOYG+Wixn9CymYOdItZRwT768=;
- b=iRHALg23+S950wFMEHWpP+ImrVAOIOXgLjb8NQo/mUsYVDtmwRtRfEqo1e4QW+8pBH6WWgtWWxl0i40nTsi/VTYavREVZjwJk/fWDoHLK5Sp+DWos9Fb3pEIGbYdz2h04rtVIlE9gXRTnbDxN1/LREnQ/sm4AmFAI8iTrnK2joE=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4975.namprd04.prod.outlook.com (2603:10b6:805:95::31) with
+ bh=yJ4U99gAUOUWEHNnqYQflPG9AN59kkYzX/pF9tQ60uY=;
+ b=3LWhmyAdeYTywsKa2X5FX1vP9v/CG7GplTNPybNRvlgmB4ZizGCM9/u+/F1F38gsZ2FD/U3o8Uw/+lXA4qUTO5WgKDEu+0AckamrVShazNxHfb22wPUTBGwSUk1z/yJbmucVBAt1lswi1gWYsqdJcpbvMv4c1x3fixHctYCJPCw=
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com (2603:10b6:408:35::23)
+ by BN7PR08MB4114.namprd08.prod.outlook.com (2603:10b6:406:84::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.29; Thu, 23 Apr
- 2020 08:30:18 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::3877:5e49:6cdd:c8b%5]) with mapi id 15.20.2937.012; Thu, 23 Apr 2020
- 08:30:18 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Asutosh Das <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2937.13; Thu, 23 Apr
+ 2020 11:01:13 +0000
+Received: from BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::5dbb:4fb8:f0ca:6988]) by BN7PR08MB5684.namprd08.prod.outlook.com
+ ([fe80::5dbb:4fb8:f0ca:6988%6]) with mapi id 15.20.2921.030; Thu, 23 Apr 2020
+ 11:01:12 +0000
+From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Subject: RE: [PATCH v3 0/3] WriteBooster Feature Support 
-Thread-Topic: [PATCH v3 0/3] WriteBooster Feature Support 
-Thread-Index: AQHWGUlr4ghcvY4/XEil4SAh+bHwQQ==
-Date:   Thu, 23 Apr 2020 08:30:18 +0000
-Message-ID: <SN6PR04MB464010AD6356D306EBCE3E5FFCD30@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <cover.1586374414.git.asutoshd@codeaurora.org>
-In-Reply-To: <cover.1586374414.git.asutoshd@codeaurora.org>
-Accept-Language: en-US
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [EXT] Re: [PATCH v2 1/5] scsi; ufs: add device descriptor for
+ Host Performance Booster
+Thread-Topic: [EXT] Re: [PATCH v2 1/5] scsi; ufs: add device descriptor for
+ Host Performance Booster
+Thread-Index: AQHWGPtnA7Fw8mUJC0qjkFZon51x26iGiptQ
+Date:   Thu, 23 Apr 2020 11:01:12 +0000
+Message-ID: <BN7PR08MB568449A01D10F89B5C7F0E8BDBD30@BN7PR08MB5684.namprd08.prod.outlook.com>
+References: <20200416203126.1210-1-beanhuo@micron.com>
+ <20200416203126.1210-2-beanhuo@micron.com>
+ <6e092ac1-7e7d-3f12-8c81-b88369f1f621@acm.org>
+In-Reply-To: <6e092ac1-7e7d-3f12-8c81-b88369f1f621@acm.org>
+Accept-Language: en-150, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
+x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLWJjNmZmNGE2LTg1NTEtMTFlYS04YjkyLWRjNzE5NjFmOWRkM1xhbWUtdGVzdFxiYzZmZjRhOC04NTUxLTExZWEtOGI5Mi1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9Ijc1NiIgdD0iMTMyMzIxMTMyNjk4NzgwMzQxIiBoPSJIUGw4dUhXQXl6aGtUL2NDd2ROMDQyVU5JQkk9IiBpZD0iIiBibD0iMCIgYm89IjEiIGNpPSJjQUFBQUVSSFUxUlNSVUZOQ2dVQUFIQUFBQUMxd3NsK1hobldBYlNFMzFuTjBuUTh0SVRmV2MzU2REd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFCQUFBQVM2dEFnQUFBQUFBQUFBQUFBQUFBQUE9PSIvPjwvbWV0YT4=
+x-dg-rorf: true
 authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Avri.Altman@wdc.com; 
-x-originating-ip: [212.25.79.133]
+ smtp.mailfrom=beanhuo@micron.com; 
+x-originating-ip: [165.225.81.109]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 051a45d0-5ecf-4bf6-2fdc-08d7e7608e19
-x-ms-traffictypediagnostic: SN6PR04MB4975:
-x-microsoft-antispam-prvs: <SN6PR04MB49754ACFFE091A1475739C33FCD30@SN6PR04MB4975.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4714;
+x-ms-office365-filtering-correlation-id: 62c352ea-7149-4c18-1639-08d7e775a314
+x-ms-traffictypediagnostic: BN7PR08MB4114:|BN7PR08MB4114:|BN7PR08MB4114:
+x-microsoft-antispam-prvs: <BN7PR08MB4114691746692365AB3D1E0EDBD30@BN7PR08MB4114.namprd08.prod.outlook.com>
+x-ms-exchange-transport-forked: True
+x-ms-oob-tlc-oobclassifiers: OLM:4502;
 x-forefront-prvs: 03827AF76E
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(4636009)(346002)(376002)(366004)(39860400002)(396003)(136003)(86362001)(71200400001)(316002)(4743002)(7696005)(76116006)(478600001)(6506007)(52536014)(4326008)(55016002)(26005)(8936002)(186003)(66946007)(33656002)(9686003)(5660300002)(66476007)(81156014)(110136005)(2906002)(64756008)(66556008)(8676002)(66446008);DIR:OUT;SFP:1102;
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN7PR08MB5684.namprd08.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(376002)(39860400002)(346002)(136003)(396003)(366004)(55016002)(76116006)(26005)(66556008)(4326008)(478600001)(7696005)(33656002)(52536014)(66446008)(66946007)(53546011)(64756008)(55236004)(6506007)(2906002)(7416002)(66476007)(8676002)(81156014)(8936002)(316002)(186003)(9686003)(110136005)(5660300002)(86362001)(71200400001)(4744005)(54906003)(921003);DIR:OUT;SFP:1101;
+received-spf: None (protection.outlook.com: micron.com does not designate
+ permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 4npKjbA7TAZheaL90CYz6cE1qzk4vs87TbHFZwXB9JbhhBdAyCp4BHkWujSLI5E5mGESjX0wZ/VBLMgaPvbSl5fIQzQsqEW0wQaUiP2+rRR8ZuTrcdpYlP1K5Pp4V8mq0fDg4l3HJRRDYgjHFMZusIvrO11an+AuIHg1SOq60+RV1YMKkl2iUWEwrftF+3NUYrXL59vn2AIr4YOve5X9et3++3yc2grBzVT3fxOK18Om+/sidUtSbP8IzkTuQAyQEs6vsOukcYBp60/VoGvoJcgcp918HA8hf8fKsqAx/z3a9kPkXi+EctcquKX38N9xOlCaxL396iSkMhqJTwX9vJnS7+BmSpgCpAHNNcmCmqE1RcdbJqULuUpQklyIe11mFtCGemCI2NKjUVfVfRnw0H9sLWQsqmnr782dg0KLDti5TIkvatQImngr4UljOByl
-x-ms-exchange-antispam-messagedata: V7DLiLQ2mTwdK1K3lBgkbzkBAV6VbYNUw5l58IHCcRhFsKdRpeFJKsS1BZoK8ln5WAWuELcMdg4FFaTDEiO38KHOq3R6DRDDW3rX7ZgILm6D1O2XJsY3+dfA+rYzDOcq/kgXqB0JW6dulbbpTyNT9Q==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+x-microsoft-antispam-message-info: s6M+DVL3EM3l6NGEUNsHu9VmcunIs5zTIH36rEYf+CllKuuMEhxDWEKDlrGNoYzhnTmqjqCZgqQXRF96wh/oWLk6PeMcof4Dipl0S+Cd3/5jKzpy/K+PY7psjjSZjIO6jiNMh3hiwDgC/dLAYX9RvVoBZ7o4E8NuXeppoafZ9k93a0KqE3Xqzr6Zns/sosz9aNaS4zDM9SVx6ksCsXRG0iYmu4V/nRH9DBsyihqK8dBVNDkIPbhHg4C6rbu9ooiDe+MGy0Xxce31iJ+fb7WOOVFFVQIlLkfM86nal6zlN4R6RHTRnq/Vob1CNpcadOqB+gdZM01CD8ZTCsaCV+vXzRMC8ZvP23QlPZSO+rdKiX6rn1GNTA2s9X2RKuZHsLcTKhb4lb4O6zKerISMgYbrOfFQHSfmDRUAp3cGmV3J7+oypDpSLEB+bVU/s5CmTFhMxUk2gKKJIZqOTaG15KSmiavc0v3bL1vZYF4TRn0dpsE=
+x-ms-exchange-antispam-messagedata: py9EXmJ2IdqN8WELAjekg8CcBit0t2F2hap1x/5CyNgF7zRa+SXjTzdHqUiyr1WQTSzoVlEut2PRyvY5XepVAXznDFNJgcKtWvxcHWtpRcKtIKjDUlLJWBceWjO8OhmlBdWIGhECtCHh23R7SOF6VMKGJsA1SF9vn6NbF71ZN2YUSvL2K/kloctJdrfINQqlsTHVS0nMPwQSPPVsNdVHsH/bX3FNYpHXSRSc2ZQP+/O4+IoF5OxNmo2+H0/ewMZ2ZM5vqIHTfW1DAzUWssPDv76hJxNoD66TGLI74Dx92pkoMuri/z9t5nzOrnm5yQdQ5WZ+r5V8luVRoek9kcBd92BPVtEIYItLeG5lQpLiiCaFG0szfdOQ1U9BSPVa4KtFSs6m2D5QfCg1XmXn4B9cBov+3Buu4VcVFeU/1DlcuBdU5bh+AvDf9PqWr70aVw6Id7M1WsGSbxbiP9cZuaMxOmDW3QVnYuFRmC3saSLLMnT4BPG1AAnuhYBqxzNaoPdvaqpp80TPNXldz2EG+L9B0HJoyI/dMTAtYfnNB8whIDibt02DDOL/t/XYeyjee6I4l6ggeL/Cq1JP4JjFQWAb8fEYNKobegkBGZcAKFmL+EpVw+LuKjFP6Xjvg/l3hIvQvtuzwspuCtRgOXDbJN1YqoVEd0R2eMw88Q/38Ct45hYEMpq/Rkme+VQi8Sa5ypRDZYAZdBuYmtQGp1gT4KvSIuQ8Yf2d8kS70qok91OWFmMx4qlmLQHI5TpprPyfTE9yHRBF/HWUglutjKhU0LNsPfeZYfe/7e/80taN4yQZWVU=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 051a45d0-5ecf-4bf6-2fdc-08d7e7608e19
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Apr 2020 08:30:18.2306
+X-OriginatorOrg: micron.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 62c352ea-7149-4c18-1639-08d7e775a314
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Apr 2020 11:01:12.7048
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: MKT74dsAxPBfN0EsAFodg8RMnU4cRjOX54tjspGNxSybQhEjHYUSPgwaaRUSynCQvqOFJ/9NJGgvub1VC9Kd2A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4975
+X-MS-Exchange-CrossTenant-userprincipalname: y108IAjNDUXtdxNTr/h2mhyE1SfSy87FnL7Y68asXrRddsxtquTvpFszNh52dLVJ2tb9u5ROygQPP6ba0XE38g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4114
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good.
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-
-Thanks,
-Avri
-
-> v2 -> v3:
-> - Addressed Comments on refactoring
-> - Corrected the commit message
->=20
-> v1 -> v2:
-> - Refactor WriteBooster initialization, introduce ufshcd_wb_probe()
-> - Refactor ufshcd_wb_keep_vcc_on() and introduce a new function
->   ufshcd_wb_presrv_usrspc_keep_vcc_on()
-> - Get the WriteBooster configuration by reading
->   bWriteBoosterBufferPreserveUserSpaceEn
->=20
-> RFC -> v1:
-> - Added platform capability for WriteBooster
->=20
-> RFC-:
-> v1 -> v2:
-> - Addressed comments on v1
->=20
-> - Supports shared buffer mode only
->=20
-> - Didn't use exception event as suggested.
->   The reason being while testing I saw that the WriteBooster
->   available buffer remains at 0x1 for a longer time if flush is
->   enabled all the time as compared to an event-based enablement.
->   This essentially means that writes go to the WriteBooster buffer
->   more. Spec says that the if flush is enabled, the device would
->   flush when it sees the command queue empty. So I guess that'd trigger
->   flush more than an event based approach.
->   Anyway the Vcc would be turned-off during system suspend, so flush
->   would stop anyway.
->   In this patchset, I never turn-off flush.
->   Hence the RFC.
->=20
-> Asutosh Das (3):
->   scsi: ufs: add write booster feature support
->   ufs-qcom: scsi: configure write booster type
->   ufs: sysfs: add sysfs entries for write booster
->=20
->  drivers/scsi/ufs/ufs-qcom.c  |   8 ++
->  drivers/scsi/ufs/ufs-sysfs.c |  39 ++++++-
->  drivers/scsi/ufs/ufs.h       |  37 ++++++-
->  drivers/scsi/ufs/ufshcd.c    | 241
-> ++++++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/ufs/ufshcd.h    |  43 ++++++++
->  5 files changed, 362 insertions(+), 6 deletions(-)
->=20
-> --
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux Foundation Collaborative Project.
-
+SGkgQmFydA0KVGhhbmtzIHlvdXIgcmV2aWV3LCBJIHdpbGwgdGFrZSB5b3VyIHN1Z2dlc3Rpb25z
+IGluIG5leHQgdmVyc2lvbiBkZXZlbG9wbWVudC4NClRoYW5rcywNCg0KQmVhbg0KDQo+IA0KPiBP
+biA0LzE2LzIwIDE6MzEgUE0sIGh1b2JlYW5AZ21haWwuY29tIHdyb3RlOg0KPiA+ICsJaWYgKGRl
+c2NfYnVmW0RFVklDRV9ERVNDX1BBUkFNX1VGU19GRUFUXSAmIDB4ODApIHsNCj4gDQo+IFBsZWFz
+ZSBpbnRyb2R1Y2UgYSBzeW1ib2xpYyBuYW1lIGluc3RlYWQgb2YgdXNpbmcgdGhlIG51bWJlciAw
+eDgwIGRpcmVjdGx5Lg0KPiANCj4gPiArCQloYmEtPmRldl9pbmZvLmhwYl9jb250cm9sX21vZGUg
+PQ0KPiA+ICsJCQlkZXNjX2J1ZltERVZJQ0VfREVTQ19QQVJBTV9IUEJfQ1RSTF9NT0RFXTsNCj4g
+PiArCQloYmEtPmRldl9pbmZvLmhwYl92ZXIgPQ0KPiA+ICsJCQkodTE2KSAoZGVzY19idWZbREVW
+SUNFX0RFU0NfUEFSQU1fSFBCX1ZFUl0gPDwgOCkNCj4gfA0KPiA+ICsJCQlkZXNjX2J1ZltERVZJ
+Q0VfREVTQ19QQVJBTV9IUEJfVkVSICsgMV07DQo+IA0KPiBQbGVhc2UgdXNlIGdldF91bmFsaWdu
+ZWRfYmUxNigpIGluc3RlYWQgb2Ygb3Blbi1jb2RpbmcgaXQuDQo+IA0KPiBUaGFua3MsDQo+IA0K
+PiBCYXJ0Lg0K
