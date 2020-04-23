@@ -6,194 +6,156 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD8AEC54FD0
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 16:32:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7048C54FCB
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 16:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A543821556
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 16:32:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBD2620728
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 16:37:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729480AbgDWQcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Apr 2020 12:32:39 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2091 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729423AbgDWQcj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Apr 2020 12:32:39 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 751AA79CD0BB64364E6E;
-        Thu, 23 Apr 2020 17:32:35 +0100 (IST)
-Received: from [127.0.0.1] (10.47.5.255) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 23 Apr
- 2020 17:32:33 +0100
-Subject: Re: [PATCH RFC v6 08/10] megaraid_sas: switch fusion adapters to MQ
-From:   John Garry <john.garry@huawei.com>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>, <hare@suse.de>,
-        <don.brace@microsemi.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>, <hch@infradead.org>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-CC:     <chenxiang66@hisilicon.com>, <linux-block@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <esc.storagedev@microsemi.com>,
-        Hannes Reinecke <hare@suse.com>
-References: <1583409280-158604-1-git-send-email-john.garry@huawei.com>
- <1583409280-158604-9-git-send-email-john.garry@huawei.com>
- <a1f0399e2e85b2244a9ae40e4a2f1089@mail.gmail.com>
- <f839f040-8bf4-cf83-7670-dfc208b77326@huawei.com>
- <7cac3eb9fd79b5b988e25da542305b35@mail.gmail.com>
- <40faaef8-8bfc-639f-747f-cacd4e61464f@huawei.com>
- <7b8c79b0453722023c6c7d53cd24441d@mail.gmail.com>
- <b759a8ed-09ba-bfe8-8916-c05ab9671cbf@huawei.com>
- <260c5decdb38db9f74994988ce7fcaf1@mail.gmail.com>
- <380d3bf2-67ee-a09a-3098-51b24b98f912@huawei.com>
-Message-ID: <e0c5a076-9fe5-4401-fd41-97f457888ad3@huawei.com>
-Date:   Thu, 23 Apr 2020 17:31:56 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1729675AbgDWQhg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 12:37:36 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:41200 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729446AbgDWQhg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 12:37:36 -0400
+Received: by mail-pl1-f194.google.com with SMTP id d24so2556392pll.8;
+        Thu, 23 Apr 2020 09:37:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=br9/LwqtnbGmKBWFw4TNRCW1diyiAINb0Mjvmd0b2kg=;
+        b=UdSwy1MgeNNsav1aTRPwhMDgfk31r4tbUhvv+5LfXeTuEdZCVJ8I55tumpEUn1t7pU
+         4eLfATvcLHq9wTgqtpRVq8wNa4Ea8GDKns5K7zYH6KkdJnbTX0A8g+hYtXs9egyRcgv1
+         m9ISaz1v8mWr4ZYc6HhpoqCX4RjGQeBtz0b16nykl0pzNt4aYuiSeG1bruBVns/LmptD
+         ka8wUFu1QLO0ElKvjgLjQcLoxtR85ITjlO2r8fFLW4Rts4KzTZDbrcaE/xYAPwApllOj
+         lX+ktgaKa9kIz1LIjWVy5mSyizMoIlDs9YLwQz2R0Sgul/JtMcppI8DHLgzH47nm3+yU
+         fGQA==
+X-Gm-Message-State: AGi0PuYIlCochgUk9ehOniWlm+6HBMf+3bnZzjQop+8hTE11au4IlRlv
+        dsw8hmzhLpWsqLu+1oG8zpg=
+X-Google-Smtp-Source: APiQypLppeneOJYmadAENAmOGLqG9q7ggz3SIM23BMCXkROCwJMeo+psXucBZUDdztyAKgvEOmJHkg==
+X-Received: by 2002:a17:902:b709:: with SMTP id d9mr4486836pls.118.1587659854793;
+        Thu, 23 Apr 2020 09:37:34 -0700 (PDT)
+Received: from [100.124.9.89] ([104.129.198.55])
+        by smtp.gmail.com with ESMTPSA id c3sm2975513pfa.160.2020.04.23.09.37.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Apr 2020 09:37:33 -0700 (PDT)
+Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
+To:     Dexuan Cui <decui@microsoft.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Long Li <longli@microsoft.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        Balsundar P <Balsundar.P@microchip.com>
+Cc:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>
+References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
+ <1b6de3b0-4e0c-4b46-df1a-db531bd2c888@acm.org>
+ <HK0P153MB027395755C14233F09A8F352BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+ <c55d643c-c13f-70f1-7a44-608f94fbfd5f@acm.org>
+ <HK0P153MB02737524F120829405C6DE68BFD30@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <ade7f096-4a09-4d4e-753a-f9e4acb7b550@acm.org>
+Date:   Thu, 23 Apr 2020 09:37:31 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <380d3bf2-67ee-a09a-3098-51b24b98f912@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <HK0P153MB02737524F120829405C6DE68BFD30@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.5.255]
-X-ClientProxiedBy: lhreml722-chm.china.huawei.com (10.201.108.73) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 4/23/20 12:04 AM, Dexuan Cui wrote:
+> It looks the sd suspend callbacks are only for the I/O from the disk, e.g.
+> from the file system that lives in some partition of some disk.
 > 
->>> So I tested this on hisi_sas with x12 SAS SSDs, and performance with 
->>> "mq-
->>> deadline" is comparable with "none" @ ~ 2M IOPs. But after a while
->>> performance drops alot, to maybe 700K IOPS. Do you have a similar
->>> experience?
->>
->> I am using mq-deadline only for HDD. I have not tried on SSD since it 
->> is not
->> useful scheduler for SSDs.
->>
+> The panic I'm seeing is not from sd. I think it's from a kernel thread
+> that tries to detect the status of the SCSI CDROM. This is the snipped
+> messages (the full version is at https://lkml.org/lkml/2020/4/10/47): here
+> the suspend callbacks of the sd, sr and scsi_bus_type.pm have been called,
+> and later the storvsc LLD's suspend callback is also called, but
+> sr_block_check_events() can still try to submit SCSI commands to storvsc:
 > 
-> I ask as I only have SAS SSDs to test.
+> [   11.668741] sr 0:0:0:1: bus quiesce
+> [   11.668804] sd 0:0:0:0: bus quiesce
+> [   11.698082] scsi target0:0:0: bus quiesce
+> [   11.703296] scsi host0: bus quiesce
+> [   11.781730] hv_storvsc bf78936f-7d8f-45ce-ab03-6c341452e55d: noirq bus quiesce
+> [   11.796479] hv_netvsc dda5a2be-b8b8-4237-b330-be8a516a72c0: noirq bus quiesce
+> [   11.804042] BUG: kernel NULL pointer dereference, address: 0000000000000090
+> [   11.804996] Workqueue: events_freezable_power_ disk_events_workfn
+> [   11.804996] RIP: 0010:storvsc_queuecommand+0x261/0x714 [hv_storvsc]
+> [   11.804996] Call Trace:
+> [   11.804996]  scsi_queue_rq+0x593/0xa10
+> [   11.804996]  blk_mq_dispatch_rq_list+0x8d/0x510
+> [   11.804996]  blk_mq_sched_dispatch_requests+0xed/0x170
+> [   11.804996]  __blk_mq_run_hw_queue+0x55/0x110
+> [   11.804996]  __blk_mq_delay_run_hw_queue+0x141/0x160
+> [   11.804996]  blk_mq_sched_insert_request+0xc3/0x170
+> [   11.804996]  blk_execute_rq+0x4b/0xa0
+> [   11.804996]  __scsi_execute+0xeb/0x250
+> [   11.804996]  sr_check_events+0x9f/0x270 [sr_mod]
+> [   11.804996]  cdrom_check_events+0x1a/0x30 [cdrom]
+> [   11.804996]  sr_block_check_events+0xcc/0x110 [sr_mod]
+> [   11.804996]  disk_check_events+0x68/0x160
+> [   11.804996]  process_one_work+0x20c/0x3d0
+> [   11.804996]  worker_thread+0x2d/0x3e0
+> [   11.804996]  kthread+0x10c/0x130
+> [   11.804996]  ret_from_fork+0x35/0x40
 > 
->> I noticed that when I used mq-deadline, performance drop starts if I have
->> more number of drives.
->> I am running <fio> script which has 64 Drives, 64 thread and all 
->> treads are
->> bound to local numa node which has 36 logical cores.
->> I noticed that lock contention is in " dd_dispatch_request". I am not 
->> sure
->> why there is a no penalty of same lock in nr_hw_queue  = 1 mode.
+> It looks the issue is: scsi_bus_freeze() -> ... -> scsi_dev_type_suspend ->
+> scsi_device_quiesce() does not guarantee the device is totally quiescent:
+
+During hibernation processes are frozen before devices are quiesced. 
+freeze_processes() calls try_to_freeze_tasks() and that function in turn 
+calls freeze_workqueues_begin() and freeze_workqueues_busy(). 
+freeze_workqueues_busy() freezes all freezable workqueues including 
+system_freezable_power_efficient_wq, the workqueue from which 
+check_events functions are called. Some time after freezable workqueues 
+are frozen dpm_suspend(PMSG_FREEZE) is called. That last call triggers 
+the pm_ops.freeze callbacks, including the pm_ops.freeze callbacks 
+defined in the SCSI core.
+
+The above trace seems to indicate that freezing workqueues has not 
+happened before devices were frozen. How about doing the following to 
+retrieve more information about what is going on?
+* Enable CONFIG_PM_DEBUG in the kernel configuration.
+* Run echo 1 > /sys/power/pm_print_times and echo 1 > 
+/sys/power/pm_debug_messages before hibernation starts.
+
+>> Documentation/driver-api/device_link.rst: "By default, the driver core
+>> only enforces dependencies between devices that are borne out of a
+>> parent/child relationship within the device hierarchy: When suspending,
+>> resuming or shutting down the system, devices are ordered based on this
+>> relationship, i.e. children are always suspended before their parent,
+>> and the parent is always resumed before its children." Is there a single
+>> storvsc_drv instance for all SCSI devices supported by storvsc_drv? Has
+>> it been considered to make storvsc_drv the parent device of all SCSI
+>> devices created by the storvsc driver?
 > 
-> So this could be just pre-existing issue of exposing multiple queues for 
-> SCSI HBAs combined with mq-deadline iosched. I mean, that's really the 
-> only significant change in this series, apart from the shared sbitmap, 
-> and, at this point, I don't think that is the issue.
-
-As an experiment, I modified hisi_sas mainline driver to expose hw 
-queues and manage tags itself, and I see the same issue I mentioned:
-
-Jobs: 12 (f=12): [R(12)] [14.8% done] [7592MB/0KB/0KB /s] [1943K/0/0 
-iops] [eta
-Jobs: 12 (f=12): [R(12)] [16.4% done] [7949MB/0KB/0KB /s] [2035K/0/0 
-iops] [eta
-Jobs: 12 (f=12): [R(12)] [18.0% done] [7940MB/0KB/0KB /s] [2033K/0/0 
-iops] [eta
-Jobs: 12 (f=12): [R(12)] [19.7% done] [7984MB/0KB/0KB /s] [2044K/0/0 
-iops] [eta
-Jobs: 12 (f=12): [R(12)] [21.3% done] [7984MB/0KB/0KB /s] [2044K/0/0 
-iops] [eta
-Jobs: 12 (f=12): [R(12)] [23.0% done] [2964MB/0KB/0KB /s] [759K/0/0 
-iops] [eta 0
-Jobs: 12 (f=12): [R(12)] [24.6% done] [2417MB/0KB/0KB /s] [619K/0/0 
-iops] [eta 0
-Jobs: 12 (f=12): [R(12)] [26.2% done] [2909MB/0KB/0KB /s] [745K/0/0 
-iops] [eta 0
-Jobs: 12 (f=12): [R(12)] [27.9% done] [2366MB/0KB/0KB /s] [606K/0/0 
-iops] [eta 0
-
-The odd time I see "sched: RT throttling activated" around the time the 
-throughput falls. I think issue is the per-queue threaded irq threaded 
-handlers consuming too many cycles. With "none" io scheduler, IOPS is 
-flat at around 2M.
-
+> Yes, I think so:
 > 
->>
->> static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
->> {
->>          struct deadline_data *dd = hctx->queue->elevator->elevator_data;
->>          struct request *rq;
->>
->>          spin_lock(&dd->lock);
+> root@localhost:~# ls -rtl  /sys/bus/vmbus/devices/9be03cb2-d37b-409f-b09b-81059b4f6943/host3/target3:0:0/3:0:0:0/driver
+> lrwxrwxrwx 1 root root 0 Apr 22 01:10 /sys/bus/vmbus/devices/9be03cb2-d37b-409f-b09b-81059b4f6943/host3/target3:0:0/3:0:0:0/driver -> ../../../../../../../../../../bus/scsi/drivers/sd
 > 
-> So if multiple hctx's are accessing this lock, then much contention 
-> possible.
+> Here the driver of /sys/bus/vmbus/devices/9be03cb2-d37b-409f-b09b-81059b4f6943
+> is storvsc, which creates host3/target3:0:0/3:0:0:0.
 > 
->>          rq = __dd_dispatch_request(dd);
->>          spin_unlock(&dd->lock);
->>
->>          return rq;
->> }
->>
->> Here is perf report -
->>
->> -    1.04%     0.99%  kworker/18:1H+k  [kernel.vmlinux]  [k]
->> native_queued_spin_lock_slowpath
->>       0.99% ret_from_fork
->>      -   kthread
->>        - worker_thread
->>           - 0.98% process_one_work
->>              - 0.98% __blk_mq_run_hw_queue
->>                 - blk_mq_sched_dispatch_requests
->>                    - 0.98% blk_mq_do_dispatch_sched
->>                       - 0.97% dd_dispatch_request
->>                          + 0.97% queued_spin_lock_slowpath
->> +    1.04%     0.00%  kworker/18:1H+k  [kernel.vmlinux]  [k]
->> queued_spin_lock_slowpath
->> +    1.03%     0.95%  kworker/19:1H-k  [kernel.vmlinux]  [k]
->> native_queued_spin_lock_slowpath
->> +    1.03%     0.00%  kworker/19:1H-k  [kernel.vmlinux]  [k]
->> queued_spin_lock_slowpath
->> +    1.02%     0.97%  kworker/20:1H+k  [kernel.vmlinux]  [k]
->> native_queued_spin_lock_slowpath
->> +    1.02%     0.00%  kworker/20:1H+k  [kernel.vmlinux]  [k]
->> queued_spin_lock_slowpath
->> +    1.01%     0.96%  kworker/21:1H+k  [kernel.vmlinux]  [k]
->> native_queued_spin_lock_slowpath
->>
-> 
-> I'll try to capture a perf report and compare to mine.
+> So it looks there is no ordering issue.
 
-Mine is spending a huge amount of time (circa 33% on a cpu servicing 
-completion irqs) in mod_delayed_work_on():
+Right, I had overlooked the code in storvsc_probe() that associates SCSI 
+devices with storvsc_drv.
 
---79.89%--sas_scsi_task_done |
-    |--76.72%--scsi_mq_done
-    |    |
-    |     --76.53%--blk_mq_complete_request
-    |    |
-    |    |--74.81%--scsi_softirq_done
-    |    |    |
-    |    |     --73.91%--scsi_finish_command
-    |    |    |
-    |    |    |--72.11%--scsi_io_completion
-    |    |    |    |
-    |    |    |     --71.89%--scsi_end_request
-    |    |    |    |
-    |    |    |    |--40.82%--blk_mq_run_hw_queues
-    |    |    |    |    |
-    |    |    |    |    |--35.86%--blk_mq_run_hw_queue
-    |    |    |    |    |    |
-    |    |    |    |    |     --33.59%--__blk_mq_delay_run_hw_queue
-    |    |    |    |    |    |
-    |    |    |    |    |     --33.38%--kblockd_mod_delayed_work_on
-    |    |    |    |    |          |
-    |    |    |    |    |                --33.31%--mod_delayed_work_on
-
-hmmmm...
-
-Thanks,
-John
+Bart.
