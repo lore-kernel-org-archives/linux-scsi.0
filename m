@@ -6,69 +6,66 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7048C54FCB
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 16:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F076C55191
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 17:57:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBD2620728
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 16:37:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0A7420781
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 17:57:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729675AbgDWQhg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Apr 2020 12:37:36 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:41200 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729446AbgDWQhg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 12:37:36 -0400
-Received: by mail-pl1-f194.google.com with SMTP id d24so2556392pll.8;
-        Thu, 23 Apr 2020 09:37:35 -0700 (PDT)
+        id S1730011AbgDWR5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 13:57:25 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:38270 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729991AbgDWR5X (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 13:57:23 -0400
+Received: by mail-pf1-f194.google.com with SMTP id y25so3336085pfn.5;
+        Thu, 23 Apr 2020 10:57:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=br9/LwqtnbGmKBWFw4TNRCW1diyiAINb0Mjvmd0b2kg=;
-        b=UdSwy1MgeNNsav1aTRPwhMDgfk31r4tbUhvv+5LfXeTuEdZCVJ8I55tumpEUn1t7pU
-         4eLfATvcLHq9wTgqtpRVq8wNa4Ea8GDKns5K7zYH6KkdJnbTX0A8g+hYtXs9egyRcgv1
-         m9ISaz1v8mWr4ZYc6HhpoqCX4RjGQeBtz0b16nykl0pzNt4aYuiSeG1bruBVns/LmptD
-         ka8wUFu1QLO0ElKvjgLjQcLoxtR85ITjlO2r8fFLW4Rts4KzTZDbrcaE/xYAPwApllOj
-         lX+ktgaKa9kIz1LIjWVy5mSyizMoIlDs9YLwQz2R0Sgul/JtMcppI8DHLgzH47nm3+yU
-         fGQA==
-X-Gm-Message-State: AGi0PuYIlCochgUk9ehOniWlm+6HBMf+3bnZzjQop+8hTE11au4IlRlv
-        dsw8hmzhLpWsqLu+1oG8zpg=
-X-Google-Smtp-Source: APiQypLppeneOJYmadAENAmOGLqG9q7ggz3SIM23BMCXkROCwJMeo+psXucBZUDdztyAKgvEOmJHkg==
-X-Received: by 2002:a17:902:b709:: with SMTP id d9mr4486836pls.118.1587659854793;
-        Thu, 23 Apr 2020 09:37:34 -0700 (PDT)
-Received: from [100.124.9.89] ([104.129.198.55])
-        by smtp.gmail.com with ESMTPSA id c3sm2975513pfa.160.2020.04.23.09.37.32
+        bh=daGbqtibwc35BdsMcdFSyIPRGTwwJ3IBA05IlTqZ6d8=;
+        b=I43wCRcz1amw60Iwve4JvxqA0ScjeazRbVV66+rZ9KoEKP6dec+I/ctur/ENwEayQd
+         ndcOGMM5kAKgqghrlaS7J9HvQVJYjAy6nidPGH5+8Dr9GqpLdGOWWNOWRG5S1K62wF39
+         efmwdmjlWalGp5CC0Y3eZARAOGixD6hQFYzX9CD+fhMRAlz7FYpb9xXhkltcEW5cbiAJ
+         LnXnYTzvYGCXOkIn1bWLcztwpbhL8esRb3nFngfUt9O5vsZFtptGjOOadslo9gRc1jhE
+         qmD8qLMnsdn0j+1dKjipqtS4MNfhQF5xefV+z4pymKvXML8QU6OlrbLmo898Gs+WwKmn
+         dj4Q==
+X-Gm-Message-State: AGi0PuaVsQ1z841mO2Aeug2Xdv2fvlfqXjJ2oyJA5aErp+r4wu0b8zYr
+        BWnKiu3Iiy8bnNp5Y4Z++Ez18SGX1ZI=
+X-Google-Smtp-Source: APiQypJ55IrIhgkLR0B2lVLW2yZ5mX8SXZEg7Y6hVIE2B8F13QM14Fh+Px7JmoDMASkcC5LEUuMrEw==
+X-Received: by 2002:a63:1e0f:: with SMTP id e15mr4904610pge.240.1587664642229;
+        Thu, 23 Apr 2020 10:57:22 -0700 (PDT)
+Received: from [100.124.9.89] ([104.129.198.56])
+        by smtp.gmail.com with ESMTPSA id w185sm2622217pgb.12.2020.04.23.10.57.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Apr 2020 09:37:33 -0700 (PDT)
-Subject: Re: [PATCH] scsi: storvsc: Fix a panic in the hibernation procedure
-To:     Dexuan Cui <decui@microsoft.com>,
+        Thu, 23 Apr 2020 10:57:20 -0700 (PDT)
+Subject: Re: [EXT] Re: [PATCH v2 1/5] scsi; ufs: add device descriptor for
+ Host Performance Booster
+To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Long Li <longli@microsoft.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        Balsundar P <Balsundar.P@microchip.com>
-Cc:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>
-References: <1587514644-47058-1-git-send-email-decui@microsoft.com>
- <1b6de3b0-4e0c-4b46-df1a-db531bd2c888@acm.org>
- <HK0P153MB027395755C14233F09A8F352BFD20@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
- <c55d643c-c13f-70f1-7a44-608f94fbfd5f@acm.org>
- <HK0P153MB02737524F120829405C6DE68BFD30@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20200416203126.1210-1-beanhuo@micron.com>
+ <20200416203126.1210-2-beanhuo@micron.com>
+ <6e092ac1-7e7d-3f12-8c81-b88369f1f621@acm.org>
+ <BN7PR08MB568449A01D10F89B5C7F0E8BDBD30@BN7PR08MB5684.namprd08.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ade7f096-4a09-4d4e-753a-f9e4acb7b550@acm.org>
-Date:   Thu, 23 Apr 2020 09:37:31 -0700
+Message-ID: <2625027d-8d98-3f30-93d4-dc1c39a434f1@acm.org>
+Date:   Thu, 23 Apr 2020 10:57:17 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.6.0
 MIME-Version: 1.0
-In-Reply-To: <HK0P153MB02737524F120829405C6DE68BFD30@HK0P153MB0273.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <BN7PR08MB568449A01D10F89B5C7F0E8BDBD30@BN7PR08MB5684.namprd08.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,85 +74,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/23/20 12:04 AM, Dexuan Cui wrote:
-> It looks the sd suspend callbacks are only for the I/O from the disk, e.g.
-> from the file system that lives in some partition of some disk.
-> 
-> The panic I'm seeing is not from sd. I think it's from a kernel thread
-> that tries to detect the status of the SCSI CDROM. This is the snipped
-> messages (the full version is at https://lkml.org/lkml/2020/4/10/47): here
-> the suspend callbacks of the sd, sr and scsi_bus_type.pm have been called,
-> and later the storvsc LLD's suspend callback is also called, but
-> sr_block_check_events() can still try to submit SCSI commands to storvsc:
-> 
-> [   11.668741] sr 0:0:0:1: bus quiesce
-> [   11.668804] sd 0:0:0:0: bus quiesce
-> [   11.698082] scsi target0:0:0: bus quiesce
-> [   11.703296] scsi host0: bus quiesce
-> [   11.781730] hv_storvsc bf78936f-7d8f-45ce-ab03-6c341452e55d: noirq bus quiesce
-> [   11.796479] hv_netvsc dda5a2be-b8b8-4237-b330-be8a516a72c0: noirq bus quiesce
-> [   11.804042] BUG: kernel NULL pointer dereference, address: 0000000000000090
-> [   11.804996] Workqueue: events_freezable_power_ disk_events_workfn
-> [   11.804996] RIP: 0010:storvsc_queuecommand+0x261/0x714 [hv_storvsc]
-> [   11.804996] Call Trace:
-> [   11.804996]  scsi_queue_rq+0x593/0xa10
-> [   11.804996]  blk_mq_dispatch_rq_list+0x8d/0x510
-> [   11.804996]  blk_mq_sched_dispatch_requests+0xed/0x170
-> [   11.804996]  __blk_mq_run_hw_queue+0x55/0x110
-> [   11.804996]  __blk_mq_delay_run_hw_queue+0x141/0x160
-> [   11.804996]  blk_mq_sched_insert_request+0xc3/0x170
-> [   11.804996]  blk_execute_rq+0x4b/0xa0
-> [   11.804996]  __scsi_execute+0xeb/0x250
-> [   11.804996]  sr_check_events+0x9f/0x270 [sr_mod]
-> [   11.804996]  cdrom_check_events+0x1a/0x30 [cdrom]
-> [   11.804996]  sr_block_check_events+0xcc/0x110 [sr_mod]
-> [   11.804996]  disk_check_events+0x68/0x160
-> [   11.804996]  process_one_work+0x20c/0x3d0
-> [   11.804996]  worker_thread+0x2d/0x3e0
-> [   11.804996]  kthread+0x10c/0x130
-> [   11.804996]  ret_from_fork+0x35/0x40
-> 
-> It looks the issue is: scsi_bus_freeze() -> ... -> scsi_dev_type_suspend ->
-> scsi_device_quiesce() does not guarantee the device is totally quiescent:
+On 4/23/20 4:01 AM, Bean Huo (beanhuo) wrote:
+> Thanks your review, I will take your suggestions in next version development.
 
-During hibernation processes are frozen before devices are quiesced. 
-freeze_processes() calls try_to_freeze_tasks() and that function in turn 
-calls freeze_workqueues_begin() and freeze_workqueues_busy(). 
-freeze_workqueues_busy() freezes all freezable workqueues including 
-system_freezable_power_efficient_wq, the workqueue from which 
-check_events functions are called. Some time after freezable workqueues 
-are frozen dpm_suspend(PMSG_FREEZE) is called. That last call triggers 
-the pm_ops.freeze callbacks, including the pm_ops.freeze callbacks 
-defined in the SCSI core.
+Hi Bean,
 
-The above trace seems to indicate that freezing workqueues has not 
-happened before devices were frozen. How about doing the following to 
-retrieve more information about what is going on?
-* Enable CONFIG_PM_DEBUG in the kernel configuration.
-* Run echo 1 > /sys/power/pm_print_times and echo 1 > 
-/sys/power/pm_debug_messages before hibernation starts.
+Please make sure that the issues raised by Christoph are addressed 
+before reposting this series.
 
->> Documentation/driver-api/device_link.rst: "By default, the driver core
->> only enforces dependencies between devices that are borne out of a
->> parent/child relationship within the device hierarchy: When suspending,
->> resuming or shutting down the system, devices are ordered based on this
->> relationship, i.e. children are always suspended before their parent,
->> and the parent is always resumed before its children." Is there a single
->> storvsc_drv instance for all SCSI devices supported by storvsc_drv? Has
->> it been considered to make storvsc_drv the parent device of all SCSI
->> devices created by the storvsc driver?
-> 
-> Yes, I think so:
-> 
-> root@localhost:~# ls -rtl  /sys/bus/vmbus/devices/9be03cb2-d37b-409f-b09b-81059b4f6943/host3/target3:0:0/3:0:0:0/driver
-> lrwxrwxrwx 1 root root 0 Apr 22 01:10 /sys/bus/vmbus/devices/9be03cb2-d37b-409f-b09b-81059b4f6943/host3/target3:0:0/3:0:0:0/driver -> ../../../../../../../../../../bus/scsi/drivers/sd
-> 
-> Here the driver of /sys/bus/vmbus/devices/9be03cb2-d37b-409f-b09b-81059b4f6943
-> is storvsc, which creates host3/target3:0:0/3:0:0:0.
-> 
-> So it looks there is no ordering issue.
+Additionally, I think the following two call chains are deadlock-prone 
+and should be addressed:
 
-Right, I had overlooked the code in storvsc_probe() that associates SCSI 
-devices with storvsc_drv.
+ufshcd_queuecommand()
+-> ufshcd_comp_scsi_upiu()
+   -> ufshpb_prep_fn()
+     -> schedule_work(&hpb->ufshpb_req_work)
+       -> ufshpb_req_workq_fn()
+         -> ufshpb_subregion_activate()
+           -> ufshpb_subregion_l2p_load()
+             -> ufshpb_l2p_load_req()
+               -> blk_execute_rq_nowait()
+
+ufshcd_queuecommand()
+-> ufshcd_comp_scsi_upiu()
+   -> ufshpb_prep_fn()
+     -> schedule_work(&hpb->ufshpb_req_work)
+       -> ufshpb_req_workq_fn()
+         -> ufshpb_subregion_activate()
+         -> ufshpb_region_deactivate()
+           -> ufshpb_execute_cmd()
+             -> scsi_execute()
+
+I don't know any other block or SCSI driver that calls blk_execute_rq*() 
+or scsi_execute() from inside its .queue_rq() callback to queue requests 
+onto the same request queue (the device mapper requeues requests onto a 
+lower level request queue).
+
+Thanks,
 
 Bart.
