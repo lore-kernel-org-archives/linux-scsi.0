@@ -2,82 +2,64 @@ Return-Path: <SRS0=QYJt=6H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D0D8C2BA19
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:49:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ECECC2BA19
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:54:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B56A20781
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:49:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E398214AF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:54:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FSebLIKP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726692AbgDWHtP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Apr 2020 03:49:15 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36728 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726905AbgDWHtP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Apr 2020 03:49:15 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D19A8AF48;
-        Thu, 23 Apr 2020 07:49:13 +0000 (UTC)
-Date:   Thu, 23 Apr 2020 09:49:13 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com,
-        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
-        rdunlap@infradead.org, hare@suse.de,
-        Ram Vegesna <ram.vegesna@broadcom.com>
-Subject: Re: [PATCH v3 12/31] elx: libefc: Remote node state machine
- interfaces
-Message-ID: <20200423074913.izb2hdqmamopnrg2@beryllium.lan>
-References: <20200412033303.29574-1-jsmart2021@gmail.com>
- <20200412033303.29574-13-jsmart2021@gmail.com>
- <20200415181904.3v5efamjwjcvs53i@carbon>
- <21b21290-2a46-9326-83a2-bf35aad477b5@gmail.com>
+        id S1726192AbgDWHyC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 03:54:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38564 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725562AbgDWHyB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 03:54:01 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA8E6C03C1AB
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2020 00:54:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=NGPx8xb6hDkHvxSYJGXaVanlC7ZJ5J2zgnFMdX5VNPY=; b=FSebLIKPPiv1BKvTRuS4ZVLPQG
+        5f/AlsFFxCp27lOocej4PSTFLgjkTNG3BWPW5LEbxnmAxtT98HcKYO2NDVHlsHSYc0T8RVyhi3Xar
+        WacIlRdt/kLo+hM0HcQWJ1JbMumQxRNfEaf7iTr7QVZHqrsJfITmzhqy95ZqR1fky8st0C5sy75mj
+        ArI8D6lqWTFvcG1ZafyY4SN4FvTcLBj5+1WNFDG1gPvYy0bQenvMLn22mdRSMAPLZPGgBzk2YnH2w
+        QJZFV821T0CpcT2Rp95DdUpHfBDpF8OJDmgm+Xn+yZ6V9Mt3jVxwHarbDXO1ovJMIe5tbKoA2Vqmx
+        VAaYJCPw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jRWgL-0000zI-IX; Thu, 23 Apr 2020 07:54:01 +0000
+Date:   Thu, 23 Apr 2020 00:54:01 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Cc:     linux-scsi@vger.kernel.org, hch@infradead.org,
+        Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com
+Subject: Re: [v2 3/5] mpt3sas: Separate out RDPQ allocation to new function.
+Message-ID: <20200423075401.GA5229@infradead.org>
+References: <1587626596-1044-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1587626596-1044-4-git-send-email-suganath-prabu.subramani@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <21b21290-2a46-9326-83a2-bf35aad477b5@gmail.com>
+In-Reply-To: <1587626596-1044-4-git-send-email-suganath-prabu.subramani@broadcom.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi James,
-
-On Wed, Apr 22, 2020 at 06:32:09PM -0700, James Smart wrote:
-> On 4/15/2020 11:19 AM, Daniel Wagner wrote:
-> > > +void
-> > > +efc_node_transition(struct efc_node *node,
-> > > +		    void *(*state)(struct efc_sm_ctx *,
-> > > +				   enum efc_sm_event, void *), void *data)
-> > > +{
-> > > +	struct efc_sm_ctx *ctx = &node->sm;
-> > > +
-> > > +	if (ctx->current_state == state) {
-> > > +		efc_node_post_event(node, EFC_EVT_REENTER, data);
-> > > +	} else {
-> > > +		efc_node_post_event(node, EFC_EVT_EXIT, data);
-> > > +		ctx->current_state = state;
-> > > +		efc_node_post_event(node, EFC_EVT_ENTER, data);
-> > > +	}
-> > 
-> > Why does efc_node_transition not need to take the efc->lock as in
-> > efc_remote_node_cb? How are the state machine state transitions
-> > serialized?
+On Thu, Apr 23, 2020 at 03:23:14AM -0400, Suganath Prabu wrote:
+> For readability separate out RDPQ allocations to new function
+> base_alloc_rdpq_dma_pool().
 > 
-> efc_remote_node_cb is a callback called from outside the statemachine, so it
-> needs to take the lock.   efc_node_transition is called from within the
-> statemachine, after the lock is taken. In general the lock is taken upon
-> entering the statemachine and released before exiting. There isn't granular
-> locking within the statemachine.
+> Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 
-Thanks for explaining. I find such short explanation extremly helpful
-when looking at code. It might be obvious but not for everyone :)
+Looks good,
 
-Could you add this as comment somehwere?
-
-Thanks,
-Daniel
+Reviewed-by: Christoph Hellwig <hch@lst.de>
