@@ -2,150 +2,94 @@ Return-Path: <SRS0=QYJt=6H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFCB2C55194
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:15:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12138C54FD0
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:23:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B05F121569
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:15:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCBE620736
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 07:23:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZIQHeFRV"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NzHffN96"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727020AbgDWHPp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Apr 2020 03:15:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60696 "EHLO
+        id S1726254AbgDWHXp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 03:23:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726898AbgDWHPD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 03:15:03 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2354C08ED7D;
-        Thu, 23 Apr 2020 00:15:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=5AB5dfD4cOF4go8VoQp19niQnty9MJDxRJIwxRQua1k=; b=ZIQHeFRVnZ/TGoQeogHVuqeF70
-        t21obQAG75Qh1GK1ZDq3vVljmPlTlcEuk20o6JVUxRAmflu95wpoYzdOH+0GCw6XkEUKRgjz6Ox3Q
-        WRZvJ/MsCYuTVva3PnBu04/nFetQZxsmF9ws6fDnhsQnjYAF+vK3tpcu+gmhs+i3vVSBnLQM8HmPd
-        YUYpt/CaS9xf9aRnRTbXJPmv2h+ZKUXfvgGbHEkzSS0uJf5sKkG4f1kR2Us+vwIJGcX4No3WVcRvt
-        XSk29fFAvbfAfvzSXOWcJXo9RqHpwuE+goxmmIC9JTLT+Llf8gx55y3USQpntStdShV3YJ1T8DIxo
-        DUWDB50g==;
-Received: from [2001:4bb8:188:40ac:46e:e5e4:1e64:2584] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jRW4P-0008VP-MG; Thu, 23 Apr 2020 07:14:50 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
-        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/7] cdrom: factor out a cdrom_multisession helper
-Date:   Thu, 23 Apr 2020 09:12:21 +0200
-Message-Id: <20200423071224.500849-5-hch@lst.de>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <20200423071224.500849-1-hch@lst.de>
-References: <20200423071224.500849-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        with ESMTP id S1725562AbgDWHXp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Apr 2020 03:23:45 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01130C03C1AB
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2020 00:23:45 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id 188so5247777wmc.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2020 00:23:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=DyYca2JKsEwk62uzP3wkNMhI1zOC/JE0y8i4FRmxdvY=;
+        b=NzHffN96BpvUMAglOnq262gd3iC5Nzw/v5sLIj2TANBirc3+Wp6IqdhPGOJw/m/sFh
+         hV53bOdIizUbu7NgoyoooiEbqXQO+7rqVOspFpS//G5fGff/inHeqMrsfb4s2cScUTuM
+         I6k5itm4Sy3iLlSN3YcCeVbPiZG4Ngv+/958M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=DyYca2JKsEwk62uzP3wkNMhI1zOC/JE0y8i4FRmxdvY=;
+        b=T15Z9F/3KibmnhQn8kJ0n3BloFaLRQ+tKg1GnJCKWJkSC+nFjMPYfy6OPL6olZLxkJ
+         sCxq9kLwKfe95l0qWcG/jtuO2Xokwc6xwpZD5LHBi1R8R7z6QyvLY2slj7C0a5RBNds8
+         CEqBfjrLOeKrmVwr5gGOu0pGfTfFKXIo7c/tToOCwI1TL+KPuhvivvPlUqteX2mx6bXk
+         /vq300hc3KBqf0oEohQqtkDcuynZxvCS5Y+RcfxVM2mnpCMna7leoJcE7jaUEmmseGFj
+         KlpOfJVbBHb5sNxgvgnTAXOJwGlPd2HHLvGpNSYT/8b716aslSeS86R7kly9cml7O1Tr
+         J3wA==
+X-Gm-Message-State: AGi0PubmQxyJzonD/6FcgIV+NJyCD85aj8gOybrEmnY80fv7p312Ydus
+        rXkgQUNDS0+bbirrPFAqHFKsXRrH86cx1psh9zClkBlZrJ8cQ7Ql5JBY9MrQjN9iyMGfAcEWDIP
+        3W0hBEP+BkO2E8zv89HmfMLKfn2UOcXuWMzKAQTWmJoI3wafZKRFUKj66ZA+DpZ6uebVjudb6ut
+        k1PaITnspqmf+hEDRNK5EX
+X-Google-Smtp-Source: APiQypKnzqIZczZas4KF9+0uduN5PzeeLqpK555ukZ9V35laLtmhb93LNfF32IH10YpawUcAhEz/Gg==
+X-Received: by 2002:a7b:c390:: with SMTP id s16mr2512035wmj.14.1587626623222;
+        Thu, 23 Apr 2020 00:23:43 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id l4sm2336130wrw.25.2020.04.23.00.23.40
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 23 Apr 2020 00:23:42 -0700 (PDT)
+From:   Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     hch@infradead.org, Sathya.Prakash@broadcom.com,
+        sreekanth.reddy@broadcom.com,
+        Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Subject: [v2 0/5] mpt3sas: Fix changing coherent mask after allocation
+Date:   Thu, 23 Apr 2020 03:23:11 -0400
+Message-Id: <1587626596-1044-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Factor out a version of the CDROMMULTISESSION: ioctl handler that can
-be called directly from kernel space.
+* Set the coherent dma mask to 64 bit and then allocate RDPQ pools,
+make sure that each of the RDPQ pools satisfies the 4gb boundary
+restriction. if any of the RDPQ pool doesn't satisfies this
+restriction then deallocate the pools and reallocate them after
+changing the coherent dma mask to 32 bit.
+* With this there is no need to change DMA coherent
+mask when there are outstanding allocations in mpt3sas.
+* Code-Refactoring
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/cdrom/cdrom.c | 41 +++++++++++++++++++++++++----------------
- include/linux/cdrom.h |  2 ++
- 2 files changed, 27 insertions(+), 16 deletions(-)
+Suganath Prabu (5):
+  mpt3sas: don't change the dma coherent mask after allocations
+  mpt3sas: Rename function name is_MSB_are_same
+  mpt3sas: Separate out RDPQ allocation to new function.
+  mpt3sas: Handle RDPQ DMA allocation in same 4G region
+  mpt3sas: Update mpt3sas version to 33.101.00.00
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index c91d1e138214..06896c07b133 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2295,37 +2295,46 @@ static int cdrom_read_cdda(struct cdrom_device_info *cdi, __u8 __user *ubuf,
- 	return cdrom_read_cdda_old(cdi, ubuf, lba, nframes);	
- }
- 
--static int cdrom_ioctl_multisession(struct cdrom_device_info *cdi,
--		void __user *argp)
-+int cdrom_multisession(struct cdrom_device_info *cdi,
-+		struct cdrom_multisession *info)
- {
--	struct cdrom_multisession ms_info;
- 	u8 requested_format;
- 	int ret;
- 
--	cd_dbg(CD_DO_IOCTL, "entering CDROMMULTISESSION\n");
--
- 	if (!(cdi->ops->capability & CDC_MULTI_SESSION))
- 		return -ENOSYS;
- 
--	if (copy_from_user(&ms_info, argp, sizeof(ms_info)))
--		return -EFAULT;
--
--	requested_format = ms_info.addr_format;
-+	requested_format = info->addr_format;
- 	if (requested_format != CDROM_MSF && requested_format != CDROM_LBA)
- 		return -EINVAL;
--	ms_info.addr_format = CDROM_LBA;
-+	info->addr_format = CDROM_LBA;
- 
--	ret = cdi->ops->get_last_session(cdi, &ms_info);
--	if (ret)
--		return ret;
-+	ret = cdi->ops->get_last_session(cdi, info);
-+	if (!ret)
-+		sanitize_format(&info->addr, &info->addr_format,
-+				requested_format);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(cdrom_multisession);
- 
--	sanitize_format(&ms_info.addr, &ms_info.addr_format, requested_format);
-+static int cdrom_ioctl_multisession(struct cdrom_device_info *cdi,
-+		void __user *argp)
-+{
-+	struct cdrom_multisession info;
-+	int ret;
-+
-+	cd_dbg(CD_DO_IOCTL, "entering CDROMMULTISESSION\n");
- 
--	if (copy_to_user(argp, &ms_info, sizeof(ms_info)))
-+	if (copy_from_user(&info, argp, sizeof(info)))
-+		return -EFAULT;
-+	ret = cdrom_multisession(cdi, &info);
-+	if (ret)
-+		return ret;
-+	if (copy_to_user(argp, &info, sizeof(info)))
- 		return -EFAULT;
- 
- 	cd_dbg(CD_DO_IOCTL, "CDROMMULTISESSION successful\n");
--	return 0;
-+	return ret;
- }
- 
- static int cdrom_ioctl_eject(struct cdrom_device_info *cdi)
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index 008c4d79fa33..8543fa59da72 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -94,6 +94,8 @@ struct cdrom_device_ops {
- 			       struct packet_command *);
- };
- 
-+int cdrom_multisession(struct cdrom_device_info *cdi,
-+		struct cdrom_multisession *info);
- int cdrom_read_tocentry(struct cdrom_device_info *cdi,
- 		struct cdrom_tocentry *entry);
- 
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 256 +++++++++++++++++++++---------------
+ drivers/scsi/mpt3sas/mpt3sas_base.h |   9 +-
+ 2 files changed, 154 insertions(+), 111 deletions(-)
+
 -- 
-2.26.1
+1.8.3.1
 
+Thanks,
+Suganath
