@@ -2,120 +2,139 @@ Return-Path: <SRS0=QYJt=6H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 266F4C2BA19
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 03:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CFC6C2BA19
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 04:24:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA3962075A
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 03:37:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3739B2075A
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Apr 2020 04:24:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ieh1p164"
+	dkim=pass (2048-bit key) header.d=bytedance-com.20150623.gappssmtp.com header.i=@bytedance-com.20150623.gappssmtp.com header.b="uyZ024KU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726562AbgDWDhl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Apr 2020 23:37:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55232 "EHLO
+        id S1726166AbgDWEYn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Apr 2020 00:24:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726002AbgDWDhl (ORCPT
+        by vger.kernel.org with ESMTP id S1726078AbgDWEYm (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Apr 2020 23:37:41 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB3DC03C1AA
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 20:37:40 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id gr25so3581462ejb.10
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 20:37:40 -0700 (PDT)
+        Thu, 23 Apr 2020 00:24:42 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3BCC03C1AE
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 21:24:40 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id x18so5150988wrq.2
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2020 21:24:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=kLsNei33jFWZmv/gpscLu4TxLvMHNm85q5v6xyqw1vc=;
-        b=Ieh1p164Q1u+vD+7MhZElRhjlVLAkYmUaeTPR0A2xTTfwYxmQZVAhszbStxrIC5xQb
-         VzqcZLLh80nsU4sXFd64M1/NJHL1hsrDjYqD2uXpZ0Mq93FGZZxcJYUgjRJZN3iAXlUP
-         PFQq7sAJMkFNef+ACiBaoypkA87TPPJ2NEIxQR+1HXzLluX3vTQ2h2l28N1hqBzBh8WB
-         AU3tyhdk1FbrpYItA1IAC1O43xOgd8hEnT9k5KZUEpq5Sn39piVjAH5Pe5DnkyGa6TIS
-         H8ED2w9h5ckmBCsIrpXQtUkeYKZ6D+VGUbB/e3dT9iwFbqMAFzo5cKHx/pXC3DSxtkS7
-         RrGg==
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=yoKoc1x3BmhWfv5xtnmkSfyZUB4n6vZHsSH2ElNirok=;
+        b=uyZ024KU6rq0ZpfTCb+oFhzZK/QNTtyXSZ9f4b0dJWwzMNPSjsCkuRHE2ndsOFUBNA
+         wz8qbs+XYwwYZCcyEtN1Cma2pogeMlS7MuBq/jc4AFDChaWvbpMLWvv9Zpf7MoFzjoc5
+         pUJejdE+cNEqpo2GrxRShCrjQSHgthY5r2WQbH0ymnqQdk4XFVRpPC2vMdqcfKk0TR2V
+         gzN1e2ErNg3KdqI7YE8HoBFfD0OkYYQJg2d8fLqBlZouu0JYCYZT3z6m6yzahGseDQnd
+         8fOjH8Y3xRicNJ+AYKX3R8obLrE6bM89Okkj5//nyQvCt1Pl2lY7rxcBfGYKWyFI9JP9
+         5exw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=kLsNei33jFWZmv/gpscLu4TxLvMHNm85q5v6xyqw1vc=;
-        b=OcbNYr72mizblpIFq4VCOFoDEXB+pwA7+0jHkEIN1b4UH7SD2NS0S7weR3mVtS9e+O
-         z5OchaTEHDVLBzpFEcB6toYt8h2MoKHJSoyfvJnUIC5yX8GkRgu+D0I0Am23V8S/8Sy4
-         Vgmr1Fg/RjsR9Y5QtEF8fIKnEkGC8Pe5H8f3soMo+WdhvhzVU3QcTxZ6rBx38L1r7aGH
-         DEXFT677qgTPD9x1n/NEg/GWtXYHrH/9OqI2BMaGRgQOeFZGNZ3XX300+kb5+p6Oopnu
-         OfFRs2vy5ejEn+TLhts5iPA7h0srGYj1HRf1Vm4mioAbgRWJ7+yAk4GPouAmaPLDGpjc
-         0hrw==
-X-Gm-Message-State: AGi0PuYosiFTKWJLqnW/Hu7aMZdnATKGoeCbnY8AnMc9hlX9RB54WMhP
-        vU3OEYFxC8vzaUiWupulyFY=
-X-Google-Smtp-Source: APiQypJcNdV+0aqOPO0/rpK3V/Jlh6L1ODUBbiyHJ+JlWck9OcG4YRIFNiEqEo3z4tsXAfGyfF0pWA==
-X-Received: by 2002:a17:906:340a:: with SMTP id c10mr1131640ejb.218.1587613059486;
-        Wed, 22 Apr 2020 20:37:39 -0700 (PDT)
-Received: from [192.168.1.237] (ip68-5-146-102.oc.oc.cox.net. [68.5.146.102])
-        by smtp.gmail.com with ESMTPSA id ch5sm283511ejb.60.2020.04.22.20.37.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Apr 2020 20:37:38 -0700 (PDT)
-Subject: Re: [PATCH v3 25/31] elx: efct: Hardware IO submission routines
-To:     Daniel Wagner <dwagner@suse.de>, Hannes Reinecke <hare@suse.de>
-Cc:     linux-scsi@vger.kernel.org, maier@linux.ibm.com,
-        bvanassche@acm.org, herbszt@gmx.de, natechancellor@gmail.com,
-        rdunlap@infradead.org, Ram Vegesna <ram.vegesna@broadcom.com>
-References: <20200412033303.29574-1-jsmart2021@gmail.com>
- <20200412033303.29574-26-jsmart2021@gmail.com>
- <1af2f44d-ede4-bdd8-5812-9d4526a1f9b5@suse.de>
- <20200416124505.cqqkotnsjhlpkhp3@carbon>
-From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <4c92dd2e-2045-0c89-7386-26610b2dc884@gmail.com>
-Date:   Wed, 22 Apr 2020 20:37:34 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=yoKoc1x3BmhWfv5xtnmkSfyZUB4n6vZHsSH2ElNirok=;
+        b=hSj4NMWqf8A2uCombLdDmPaSkLVMl9OqCKcEtcCR9pdyD6QKfZOZePsIEQLptVpfSt
+         2W17us6k6sD1MxgcRz63ATkCT49azKyMKA05c0Z6dpSCbtxk1ixXG1PvVev2JkZ+ufR/
+         1N7CqU4Ho1RKP7tn5xGwARXqXj5afOaX2ezUo8SKIXEoXg4WTN9uqVmM0tpwPe2DtzIH
+         oTagHdP0zU/t+J4EFPTwBWk3M+myrShQybVSEHfSlvp+e2dIMPZ+aojjsoTFlfEZoEXk
+         BatuZpTmUGYyS1KlAnqPpOfAaWrjK2uyEtzV//8RpNdvoKxzZY66Qr7+ZXokLIBRuGKt
+         c0Kg==
+X-Gm-Message-State: AGi0PuYbzr9T15nHFUlQTaodjMshc6T93DY1/boAHAwcLpqPqSZ2ihc9
+        yB0mGvvu0zdCPUZ77y1Vs+deXO6cX5SG8QF80S3/ag==
+X-Google-Smtp-Source: APiQypK8FnYOyS/1mCFY0CAunNStVW+7O7ABY6wHWrqUOLY5jAEtYKr1g0x4rtqg/aTWAwIGDQRLXpI/r4ecJF1VlZY=
+X-Received: by 2002:adf:ce0a:: with SMTP id p10mr2465532wrn.89.1587615879638;
+ Wed, 22 Apr 2020 21:24:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200416124505.cqqkotnsjhlpkhp3@carbon>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20200415080819.27327-1-houpu@bytedance.com> <20200415080819.27327-2-houpu@bytedance.com>
+ <54e574b1-10b4-4385-11fb-773ef152fc2c@redhat.com>
+In-Reply-To: <54e574b1-10b4-4385-11fb-773ef152fc2c@redhat.com>
+From:   Hou Pu <houpu@bytedance.com>
+Date:   Thu, 23 Apr 2020 12:24:28 +0800
+Message-ID: <CAO9YExv2kWp=x+mMaWeOrYmu4c6gTu0PeBSkOwHgr7ZW9MywSg@mail.gmail.com>
+Subject: Re: [External] Re: [PATCH 1/2] iscsi-target: fix login error when
+ receiving is too fast
+To:     Mike Christie <mchristi@redhat.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/16/2020 5:45 AM, Daniel Wagner wrote:
-> On Thu, Apr 16, 2020 at 10:10:18AM +0200, Hannes Reinecke wrote:
->>> +	switch (type) {
->>> +	case EFCT_HW_ELS_REQ:
->>> +		if (!send ||
->>> +		    sli_els_request64_wqe(&hw->sli, io->wqe.wqebuf,
->>> +					  hw->sli.wqe_size, io->sgl,
->>> +					*((u8 *)send->virt),
->>> +					len, receive->size,
->>> +					iparam->els.timeout,
->>> +					io->indicator, io->reqtag,
->>> +					SLI4_CQ_DEFAULT, rnode->indicator,
->>> +					rnode->sport->indicator,
->>> +					rnode->attached, rnode->fc_id,
->>> +					rnode->sport->fc_id)) {
->>> +			efc_log_err(hw->os, "REQ WQE error\n");
->>> +			rc = EFCT_HW_RTN_ERROR;
->>> +		}
->>> +		break;
->>
->> I did mention several times that I'm not a big fan of overly long argument
->> lists.
->> Can't you pass in 'io' and 'rnode' directly and cut down on the number of
->> arguments?
-> 
-> Yes, please!
-> 
+> > +     /*
+> > +      * LOGIN_FLAGS_READ_ACTIVE is cleared so that sk_data_ready
+> > +      * could be trigger again after this.
+> > +      *
+> > +      * LOGIN_FLAGS_WRITE_ACTIVE is cleared after we successfully
+> > +      * processing a login pdu. So that sk_state_chage could do login
+>
+> I think we need to drop "ing" from processing and do:
+>
+> process a login pdu, so that sk_state_chage could do login
+>
+Sure. Thanks for helping me with my language. ^-^
+Will change this in v2.
+>
 
-Agree, and agree with both Hannes' and your comments on this patch.
+> > diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+> > index 591cd9e4692c..0c2dfc81bf8b 100644
+> > --- a/include/target/iscsi/iscsi_target_core.h
+> > +++ b/include/target/iscsi/iscsi_target_core.h
+> > @@ -570,6 +570,7 @@ struct iscsi_conn {
+> >  #define LOGIN_FLAGS_CLOSED           2
+> >  #define LOGIN_FLAGS_READY            4
+> >  #define LOGIN_FLAGS_INITIAL_PDU              8
+> > +#define LOGIN_FLAGS_WRITE_ACTIVE     12
+>
+> 12 works but seems odd. The current code uses test/set/clear_bit, so we
+> want these to be:
+>
+> #define LOGIN_FLAGS_CLOSED 0
+> #define LOGIN_FLAGS_READY 1
+> #define LOGIN_FLAGS_INITIAL_PDU 2
+> #define LOGIN_FLAGS_WRITE_ACTIVE 3
+>
+> right?
+>
+Yes, it is a little odd. What about this? I also changed the order of them
+to be in sequence that happened.
 
-Daniel - also agree with your comments on patches 16 through 23.
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -566,10 +566,11 @@ struct iscsi_conn {
+        struct socket           *sock;
+        void                    (*orig_data_ready)(struct sock *);
+        void                    (*orig_state_change)(struct sock *);
+-#define LOGIN_FLAGS_READ_ACTIVE                1
+-#define LOGIN_FLAGS_CLOSED             2
+-#define LOGIN_FLAGS_READY              4
+-#define LOGIN_FLAGS_INITIAL_PDU                8
++#define LOGIN_FLAGS_READY              0
++#define LOGIN_FLAGS_INITIAL_PDU                1
++#define LOGIN_FLAGS_READ_ACTIVE                2
++#define LOGIN_FLAGS_WRITE_ACTIVE       3
++#define LOGIN_FLAGS_CLOSED             4
 
-Thanks
+Thanks,
+Hou
 
--- james
-
+> 2, 4, 8 was probably from a time we set the bits our self like:
+>
+> login_flags |= LOGIN_FLAGS_CLOSED;
+>
+>
+> >       unsigned long           login_flags;
+> >       struct delayed_work     login_work;
+> >       struct iscsi_login      *login;
+> >
+>
