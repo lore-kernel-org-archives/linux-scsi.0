@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 233DEC54FCB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FA6C54FD0
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB3F620767
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E82E2087E
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="NqyydDht"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="hK8sgt3x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726942AbgDXLhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726933AbgDXLhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 24 Apr 2020 07:37:25 -0400
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:43924 "EHLO
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:43916 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726844AbgDXLhY (ORCPT
+        by vger.kernel.org with ESMTP id S1726831AbgDXLhY (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 24 Apr 2020 07:37:24 -0400
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 98D04C0338;
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 77B99C00E0;
         Fri, 24 Apr 2020 11:37:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1587728243; bh=JwK+rd4eKzzIt8cqna9j4dEcQEMTpAfxKj9SeaP4h+M=;
+        t=1587728243; bh=hFru8LZBc46qgU3/SBVkJocidWlFzfoaiEu/7j+x3SY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=NqyydDhtrljf3bMIYvUQ6b17IC1XCLqf3U6t24PPt54usJ65miUylB47+4ANFUlHp
-         XDwOKb/jN2c+YFmlgsavE8W7L/X2qW9rRnKsRQwxYAzdbrta/UMXNNjbY62cRepuTT
-         pRddVaKyPgmlP+gBYCFIcgFd9MNrFDPiH+usqz8Ok2YgssFCr46vGx8v6APuCs+Wik
-         iw64HcpYm/UpAfTiUQPK9kIsi+Cmg+Nw+e3ViX2/MRBr8RHI9icrS9aglkbPPt2PU9
-         nwKmx0WHixLRVyvCwk9y0dsYlSCHPLymOn5nqGH8wUkRN+FgPhilJ0C/6/NxSlwvn2
-         dIQ7Yj6j1JEig==
+        b=hK8sgt3xWQn3prukyE5/jXSGyK1iZrqIYE/e37JJLV3/s0S7798AzSFJHr65Lh45u
+         LGfal4VByg2s+4Sc4Cm24rG4A3j83qqlbMuZ4H5sQisH+kp/PqHpQcvyzYYPmL+fer
+         FoLjP89/TWHG7wh6kd7FCpj5oo4tpV0sSlKHGP95PosLkbwpA+Byk6PZ8G5XWewtjh
+         ujiWxXWqhCPNWffeCwf3AOAFB2A3W6qKkc9eSaNJK0FVW4F2+V3TIgb0W9pbTcZcRi
+         I1w+iabg36zNfnZ5idEwX/LRGGGVwcrTna+bXRNfP/HZoPZZGk4gZNHrfwgu63EX9Q
+         Ntin1YN9UQNcw==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 530F8A0067;
+        by mailhost.synopsys.com (Postfix) with ESMTP id 32736A005C;
         Fri, 24 Apr 2020 11:37:21 +0000 (UTC)
 From:   Jose Abreu <Jose.Abreu@synopsys.com>
 To:     linux-scsi@vger.kernel.org
@@ -50,9 +50,9 @@ Cc:     Joao Pinto <Joao.Pinto@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] scsi: ufs: tc-dwc-pci: Use PDI ID to match Test Chip type
-Date:   Fri, 24 Apr 2020 13:36:58 +0200
-Message-Id: <8427c06b92bae656ab3ef75c7edc980900cdf075.1587727756.git.Jose.Abreu@synopsys.com>
+Subject: [PATCH 1/5] scsi: ufs: Allow UFS 3.0 as a valid version
+Date:   Fri, 24 Apr 2020 13:36:56 +0200
+Message-Id: <5c4281080538b74ca39cedb9112ffe71bf7a80b5.1587727756.git.Jose.Abreu@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1587727756.git.Jose.Abreu@synopsys.com>
 References: <cover.1587727756.git.Jose.Abreu@synopsys.com>
@@ -63,10 +63,10 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In preparation for the addition of new Test Chips, we re-arrange the
-initialization sequence so that we rely on PCI ID to match for given
-Test Chip type.
+Add a define for UFS version 3.0 and do not print an error message upon
+probe when using this version.
 
+Signed-off-by: Joao Lima <Joao.Lima@synopsys.com>
 Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
 
 ---
@@ -79,127 +79,36 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 ---
- drivers/scsi/ufs/tc-dwc-pci.c | 68 ++++++++++++++++++++++++++++---------------
- 1 file changed, 44 insertions(+), 24 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 3 ++-
+ drivers/scsi/ufs/ufshci.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/tc-dwc-pci.c b/drivers/scsi/ufs/tc-dwc-pci.c
-index aeb11f7f0c91..74a2d80d32bd 100644
---- a/drivers/scsi/ufs/tc-dwc-pci.c
-+++ b/drivers/scsi/ufs/tc-dwc-pci.c
-@@ -14,6 +14,11 @@
- #include <linux/pci.h>
- #include <linux/pm_runtime.h>
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 7d1fa1349d40..2e5c200e915b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -8441,7 +8441,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
+ 	    (hba->ufs_version != UFSHCI_VERSION_11) &&
+ 	    (hba->ufs_version != UFSHCI_VERSION_20) &&
+-	    (hba->ufs_version != UFSHCI_VERSION_21))
++	    (hba->ufs_version != UFSHCI_VERSION_21) &&
++	    (hba->ufs_version != UFSHCI_VERSION_30))
+ 		dev_err(hba->dev, "invalid UFS version 0x%x\n",
+ 			hba->ufs_version);
  
-+struct tc_dwc_data {
-+	struct ufs_hba_variant_ops ops;
-+	int (*setup)(struct pci_dev *pdev, struct tc_dwc_data *data);
-+};
-+
- /* Test Chip type expected values */
- #define TC_G210_20BIT 20
- #define TC_G210_40BIT 40
-@@ -23,6 +28,20 @@ static int tc_type = TC_G210_INV;
- module_param(tc_type, int, 0);
- MODULE_PARM_DESC(tc_type, "Test Chip Type (20 = 20-bit, 40 = 40-bit)");
- 
-+static int tc_dwc_g210_set_config(struct pci_dev *pdev, struct tc_dwc_data *data)
-+{
-+	if (tc_type == TC_G210_20BIT) {
-+		data->ops.phy_initialization = tc_dwc_g210_config_20_bit;
-+	} else if (tc_type == TC_G210_40BIT) {
-+		data->ops.phy_initialization = tc_dwc_g210_config_40_bit;
-+	} else {
-+		dev_err(&pdev->dev, "test chip version not specified\n");
-+		return -EPERM;
-+	}
-+
-+	return 0;
-+}
-+
- static int tc_dwc_pci_suspend(struct device *dev)
- {
- 	return ufshcd_system_suspend(dev_get_drvdata(dev));
-@@ -48,14 +67,6 @@ static int tc_dwc_pci_runtime_idle(struct device *dev)
- 	return ufshcd_runtime_idle(dev_get_drvdata(dev));
- }
- 
--/*
-- * struct ufs_hba_dwc_vops - UFS DWC specific variant operations
-- */
--static struct ufs_hba_variant_ops tc_dwc_pci_hba_vops = {
--	.name                   = "tc-dwc-pci",
--	.link_startup_notify	= ufshcd_dwc_link_startup_notify,
--};
--
- /**
-  * tc_dwc_pci_shutdown - main function to put the controller in reset state
-  * @pdev: pointer to PCI device handle
-@@ -89,22 +100,11 @@ static void tc_dwc_pci_remove(struct pci_dev *pdev)
- static int
- tc_dwc_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
--	struct ufs_hba *hba;
-+	struct tc_dwc_data *data = (struct tc_dwc_data *)id->driver_data;
- 	void __iomem *mmio_base;
-+	struct ufs_hba *hba;
- 	int err;
- 
--	/* Check Test Chip type and set the specific setup routine */
--	if (tc_type == TC_G210_20BIT) {
--		tc_dwc_pci_hba_vops.phy_initialization =
--						tc_dwc_g210_config_20_bit;
--	} else if (tc_type == TC_G210_40BIT) {
--		tc_dwc_pci_hba_vops.phy_initialization =
--						tc_dwc_g210_config_40_bit;
--	} else {
--		dev_err(&pdev->dev, "test chip version not specified\n");
--		return -EPERM;
--	}
--
- 	err = pcim_enable_device(pdev);
- 	if (err) {
- 		dev_err(&pdev->dev, "pcim_enable_device failed\n");
-@@ -127,7 +127,16 @@ tc_dwc_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return err;
- 	}
- 
--	hba->vops = &tc_dwc_pci_hba_vops;
-+	/* Check Test Chip type and set the specific setup routine */
-+	if (data && data->setup) {
-+		err = data->setup(pdev, data);
-+		if (err)
-+			return err;
-+	} else {
-+		return -ENOENT;
-+	}
-+
-+	hba->vops = &data->ops;
- 
- 	err = ufshcd_init(hba, mmio_base, pdev->irq);
- 	if (err) {
-@@ -150,9 +159,20 @@ static const struct dev_pm_ops tc_dwc_pci_pm_ops = {
- 	.runtime_idle    = tc_dwc_pci_runtime_idle,
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index c2961d37cc1c..f2ee81669b00 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -104,6 +104,7 @@ enum {
+ 	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
+ 	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
+ 	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
++	UFSHCI_VERSION_30 = 0x00000300, /* 3.0 */
  };
  
-+static struct tc_dwc_data tc_dwc_g210_data = {
-+	.setup = tc_dwc_g210_set_config,
-+	.ops = {
-+		.name = "tc-dwc-g210-pci",
-+		.link_startup_notify = ufshcd_dwc_link_startup_notify,
-+	},
-+};
-+
-+#define PCI_DEVICE_ID_SYNOPSYS_TC_G210_1	0xB101
-+#define PCI_DEVICE_ID_SYNOPSYS_TC_G210_2	0xB102
-+
- static const struct pci_device_id tc_dwc_pci_tbl[] = {
--	{ PCI_VENDOR_ID_SYNOPSYS, 0xB101, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
--	{ PCI_VENDOR_ID_SYNOPSYS, 0xB102, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-+	{ PCI_DEVICE_DATA(SYNOPSYS, TC_G210_1, &tc_dwc_g210_data) },
-+	{ PCI_DEVICE_DATA(SYNOPSYS, TC_G210_2, &tc_dwc_g210_data) },
- 	{ }	/* terminate list */
- };
- 
+ /*
 -- 
 2.7.4
 
