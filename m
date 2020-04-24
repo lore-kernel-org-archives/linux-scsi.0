@@ -2,182 +2,166 @@ Return-Path: <SRS0=qHBX=6I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC308C54FCB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD446C54FCB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8291120736
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:08:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BF5720728
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:10:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="SigemGgj"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="iCslNW/Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726954AbgDXMIl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 08:08:41 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:64428 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726699AbgDXMIj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2020 08:08:39 -0400
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200424120836epoutp04ced134145995a302cf644141d4afb195~IwCD5O7Qq2603226032epoutp04D
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2020 12:08:36 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200424120836epoutp04ced134145995a302cf644141d4afb195~IwCD5O7Qq2603226032epoutp04D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1587730116;
-        bh=o1x/o0p5cvyo45FmR0LMyR4pPuLuODzDC+UZIaiwx+E=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=SigemGgjqFrsZJj+ae53HYfpBTMnpCXnwHVvOK73JS8LgFM4eOPCboVyPxmtaqzwf
-         ZEl1wIaeo2FZxVC9dOlBPS+dSWUE3eZNCaH5mgTk4d7p+2DJxr7Q/ZiEv+CfmbarM1
-         eTm+8Qxfq2PwUGqyKf1jjBPeJKbmgpop6YoU9PZ4=
-Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20200424120835epcas5p33b278b327be39a86415aead0e725f1f8~IwCDGCcZo2936429364epcas5p3_;
-        Fri, 24 Apr 2020 12:08:35 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        DC.1A.10083.3C6D2AE5; Fri, 24 Apr 2020 21:08:35 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200424120834epcas5p1b4c375c70425bc4079bb315c446e9a75~IwCCQbf9_2514025140epcas5p1S;
-        Fri, 24 Apr 2020 12:08:34 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200424120834epsmtrp2d2981f23801ee38612ae82ddd43cad33~IwCCPhDbO1612216122epsmtrp2P;
-        Fri, 24 Apr 2020 12:08:34 +0000 (GMT)
-X-AuditID: b6c32a4a-875ff70000002763-38-5ea2d6c3f2f1
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        CD.3C.18461.2C6D2AE5; Fri, 24 Apr 2020 21:08:34 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.111.84.49]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200424120833epsmtip21c2f1f8c0a5ba202b3d368ef22d10be2~IwCA9uyT31554615546epsmtip2T;
-        Fri, 24 Apr 2020 12:08:33 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Jose Abreu'" <Jose.Abreu@synopsys.com>,
-        <linux-scsi@vger.kernel.org>
-Cc:     "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        "'Joao Lima'" <Joao.Lima@synopsys.com>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        <linux-kernel@vger.kernel.org>
-In-Reply-To: <5c4281080538b74ca39cedb9112ffe71bf7a80b5.1587727756.git.Jose.Abreu@synopsys.com>
-Subject: RE: [PATCH 1/5] scsi: ufs: Allow UFS 3.0 as a valid version
-Date:   Fri, 24 Apr 2020 17:38:31 +0530
-Message-ID: <000601d61a31$13fe2230$3bfa6690$@samsung.com>
+        id S1726698AbgDXMKd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Apr 2020 08:10:33 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:53476 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726289AbgDXMKc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Apr 2020 08:10:32 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 9371C4C080;
+        Fri, 24 Apr 2020 12:10:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-transfer-encoding:mime-version:x-mailer:content-type
+        :content-type:date:date:from:from:subject:subject:message-id
+        :received:received:received; s=mta-01; t=1587730223; x=
+        1589544624; bh=7atcya4pCa6zDN4hwfAta045DHU6Vxnbpr78eI3E7WY=; b=i
+        CslNW/ZqT+D8crZdvS8NCYvwHLWkciFsMKdwwa7tEjBeTvaYBiaZlNDmbVGCST8F
+        920mv2NEDXnUn/rFFK8HwXzqP/kISVf7Ia8gAgIW9r3fQbZdgkweHt5fZXPTfpKd
+        o2pr+zHljnH7oJYU7MD4xy0P2/fbPtrai5PRjIA7Pc=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id KsYONklkbxuY; Fri, 24 Apr 2020 15:10:23 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id A1E384C079;
+        Fri, 24 Apr 2020 15:10:22 +0300 (MSK)
+Received: from vdubeyko-laptop (10.199.0.202) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 24
+ Apr 2020 15:10:23 +0300
+Message-ID: <1d7b21bf9f7676643239eb3d60eaca7cfa505cf0.camel@yadro.com>
+Subject: [PATCH 1/3] scsi: qla2xxx: Fix warning after FC target reset
+From:   Viacheslav Dubeyko <v.dubeiko@yadro.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <hmadhani@marvell.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <linux@yadro.com>,
+        <r.bolshakov@yadro.com>, <slava@dubeyko.com>
+Date:   Fri, 24 Apr 2020 15:10:22 +0300
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQE+XL6e14367+A9KP/ZE9gmmc/2FgMEZj+1AnyNmNCpi6BGEA==
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHKsWRmVeSWpSXmKPExsWy7bCmhu7ha4viDG4vVLR4+fMqm8WiG9uY
-        LLZclbX48egos8W9Px9YLS7vmsNm0X19B5vF8uP/mBw4PCYsOsDo8fHpLRaPLfs/M3p83iTn
-        0X6gmymANYrLJiU1J7MstUjfLoErY/71M8wF/cIV919uZ2tg/MDfxcjJISFgIvHl2GS2LkYu
-        DiGB3YwSHVumsEA4nxglZj9fwgrhfGOUWPr5GwtMy+M985lBbCGBvYwSzzfKQBS9YpQ4eeIS
-        E0iCTUBXYsfiNjYQW0TAS+LehYmMIEXMAq1MEhOXHgUay8HBKRAn0bfLC6RGWMBF4s3pyawg
-        NouAqsTyI/fAFvAKWEpsm/KeFcIWlDg58wnYEcwC8hLb385hhjhIQeLn02VgI0UEnCQ27oiG
-        KBGXOPqzhxlkrYTAQg6Js192skPUu0j83/Ia6hlhiVfHt0DFpSQ+v9vLBjJHQiBbomeXMUS4
-        RmLpvGNQ5fYSB67MYQEpYRbQlFi/Sx9iFZ9E7+8nTBCdvBIdbUIQ1aoSze+uQnVKS0zs7maF
-        sD0kbszZyzaBUXEWkr9mIflrFpIHZiEsW8DIsopRMrWgODc9tdi0wCgvtVyvODG3uDQvXS85
-        P3cTIzgVaXntYFx2zucQowAHoxIPL8OhRXFCrIllxZW5hxglOJiVRHhjSoBCvCmJlVWpRfnx
-        RaU5qcWHGKU5WJTEeSexXo0REkhPLEnNTk0tSC2CyTJxcEo1MNaz9XZ6StR0hE7WWt+jw63J
-        utb20qXd+U12yrI/PrPtYQ+4Mal+ioTL5ABmY45rxeo3k+4lBtasbRTcpdxzO802JMt/k+b7
-        G5e1NE9U8JXyaHybvlzX8LtX0qm3UsEft0aFbtmy1aZDbFvQgcXrwxky5uQUJirfEDO9tnfG
-        9SO/s36wn884qcRSnJFoqMVcVJwIANPxW4xBAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmplkeLIzCtJLcpLzFFi42LZdlhJXvfQtUVxBrOaNSxe/rzKZrHoxjYm
-        iy1XZS1+PDrKbHHvzwdWi8u75rBZdF/fwWax/Pg/JgcOjwmLDjB6fHx6i8Vjy/7PjB6fN8l5
-        tB/oZgpgjeKySUnNySxLLdK3S+DKmH/9DHNBv3DF/Zfb2RoYP/B3MXJySAiYSDzeM5+5i5GL
-        Q0hgN6PEjO4zrBAJaYnrGyewQ9jCEiv/PWeHKHrBKNH8cDdYgk1AV2LH4jY2EFtEwEdi2fuL
-        YJOYBTqZJF7OmQQ19h6jxLN1n4E6ODg4BeIk+nZ5gTQIC7hIvDk9GWwbi4CqxPIj95hBbF4B
-        S4ltU96zQtiCEidnPmEBaWUW0JNo28gIEmYWkJfY/nYOM8RxChI/ny5jBSkREXCS2LgjGqJE
-        XOLozx7mCYzCs5AMmoUwaBaSQbOQdCxgZFnFKJlaUJybnltsWGCYl1quV5yYW1yal66XnJ+7
-        iREcU1qaOxi3r/qgd4iRiYPxEKMEB7OSCG9MyaI4Id6UxMqq1KL8+KLSnNTiQ4zSHCxK4rw3
-        ChfGCQmkJ5akZqemFqQWwWSZODilGpiqWdbMUluhlz3h8yfNq+byGQV/rTMnK+3UX6YRL18Z
-        Yllr+l13zYNHSSvUppx+yrRBo2iNxBaL/UXb/AMup3+r89u6PsNBvExs7T1lrfhdheavFpWe
-        eWC52kLMeOG5GUZzni61+/Et7VuWSO2Tc6vYlrHlKh+8dfyU/91za8W5328Juff2kK8yu5yj
-        9L6UrJA13r1Sfcsf7piezO0+fc/EzsoJTZ85n9sbaf6XvlfEvfr5Y61ZuaekWVy8pxu9jMmP
-        0tVY+muitgLDkUfFf0p/7qorP7pnvbfaB/8zHI6lvZnCrrYGYdd0+NkemWjLlfxOy9CqjFa7
-        njBpw7odS4rUb6y1nnXoyIJn7Kn3VTcpsRRnJBpqMRcVJwIAUGAlMhgDAAA=
-X-CMS-MailID: 20200424120834epcas5p1b4c375c70425bc4079bb315c446e9a75
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200424113726epcas5p2fe5c92ba9ad04d909e45c4a600ead28e
-References: <cover.1587727756.git.Jose.Abreu@synopsys.com>
-        <CGME20200424113726epcas5p2fe5c92ba9ad04d909e45c4a600ead28e@epcas5p2.samsung.com>
-        <5c4281080538b74ca39cedb9112ffe71bf7a80b5.1587727756.git.Jose.Abreu@synopsys.com>
+X-Originating-IP: [10.199.0.202]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Jose,
+From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+Date: Fri, 10 Apr 2020 11:07:08 +0300
+Subject: [PATCH 1/3] scsi: qla2xxx: Fix warning after FC target reset
 
-> -----Original Message-----
-> From: Jose Abreu <Jose.Abreu@synopsys.com>
-> Sent: 24 April 2020 17:07
-> To: linux-scsi@vger.kernel.org
-> Cc: Joao Pinto <Joao.Pinto@synopsys.com>; Jose Abreu
-> <Jose.Abreu@synopsys.com>; Joao Lima <Joao.Lima@synopsys.com>; Alim
-> Akhtar <alim.akhtar@samsung.com>; Avri Altman <avri.altman@wdc.com>;
-> James E.J. Bottomley <jejb@linux.ibm.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>; linux-kernel@vger.kernel.org
-> Subject: [PATCH 1/5] scsi: ufs: Allow UFS 3.0 as a valid version
-> 
-> Add a define for UFS version 3.0 and do not print an error message upon
-probe
-> when using this version.
-> 
-> Signed-off-by: Joao Lima <Joao.Lima@synopsys.com>
-> Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
-> 
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Currently, FC target reset finishes with the warning
+message.
 
-> ---
-> Cc: Joao Lima <Joao.Lima@synopsys.com>
-> Cc: Jose Abreu <Jose.Abreu@synopsys.com>
-> Cc: Alim Akhtar <alim.akhtar@samsung.com>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/scsi/ufs/ufshcd.c | 3 ++-
->  drivers/scsi/ufs/ufshci.h | 1 +
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-> 7d1fa1349d40..2e5c200e915b 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8441,7 +8441,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem
-> *mmio_base, unsigned int irq)
->  	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
->  	    (hba->ufs_version != UFSHCI_VERSION_11) &&
->  	    (hba->ufs_version != UFSHCI_VERSION_20) &&
-> -	    (hba->ufs_version != UFSHCI_VERSION_21))
-> +	    (hba->ufs_version != UFSHCI_VERSION_21) &&
-> +	    (hba->ufs_version != UFSHCI_VERSION_30))
->  		dev_err(hba->dev, "invalid UFS version 0x%x\n",
->  			hba->ufs_version);
-> 
-> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h index
-> c2961d37cc1c..f2ee81669b00 100644
-> --- a/drivers/scsi/ufs/ufshci.h
-> +++ b/drivers/scsi/ufs/ufshci.h
-> @@ -104,6 +104,7 @@ enum {
->  	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
->  	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
->  	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
-> +	UFSHCI_VERSION_30 = 0x00000300, /* 3.0 */
->  };
-> 
->  /*
-> --
-> 2.7.4
+[84010.596893] ------------[ cut here ]------------
+[84010.596917] WARNING: CPU: 238 PID: 279973 at ../drivers/scsi/qla2xxx/qla_target.c:6644 qlt_enable_vha+0x1d0/0x260 [qla2xxx]
+[84010.596918] Modules linked in: vrf af_packet 8021q garp mrp stp llc netlink_diag target_tatlin_tblock(OEX) dm_ec(OEX) ttln_rdma(OEX) dm_frontend(OEX) nvme_rdma nvmet tcm_qla2xxx iscsi_target_mod target_core_mod at24 nvmem_core pnv_php ipmi_watchdog ipmi_ssif vmx_crypto gf128mul crct10dif_vpmsum qla2xxx rpcrdma nvme_fc powernv_flash(X) nvme_fabrics uio_pdrv_genirq mtd rtc_opal(X) ibmpowernv(X) opal_prd(X) uio scsi_transport_fc i2c_opal(X) ses enclosure ipmi_poweroff ast i2c_algo_bit ttm bmc_mcu(OEX) drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm drm_panel_orientation_quirks agpgart nfsd auth_rpcgss nfs_acl ipmi_powernv(X) lockd ipmi_devintf ipmi_msghandler grace dummy ext4 crc16 jbd2 mbcache sd_mod rdma_ucm ib_iser rdma_cm ib_umad iw_cm ib_ipoib libiscsi scsi_transport_iscsi ib_cm
+[84010.596975]  configfs mlx5_ib ib_uverbs ib_core mlx5_core crc32c_vpmsum xhci_pci xhci_hcd mpt3sas(OEX) tg3 usbcore mlxfw tls raid_class libphy scsi_transport_sas devlink ptp pps_core nvme nvme_core sunrpc dm_mirror dm_region_hash dm_log sg dm_multipath dm_mod scsi_dh_rdac scsi_dh_emc scsi_dh_alua scsi_mod autofs4
+[84010.597001] Supported: Yes, External
+[84010.597004] CPU: 238 PID: 279973 Comm: bash Tainted: G           OE      4.12.14-197.29-default #1 SLE15-SP1
+[84010.597006] task: c000000a104c0000 task.stack: c000000b52188000
+[84010.597007] NIP: d00000001ffd7f78 LR: d00000001ffd7f6c CTR: c0000000001676c0
+[84010.597008] REGS: c000000b5218b910 TRAP: 0700   Tainted: G           OE       (4.12.14-197.29-default)
+[84010.597008] MSR: 900000010282b033 <SF,HV,VEC,VSX,EE,FP,ME,IR,DR,RI,LE,TM[E]>
+[84010.597015]   CR: 48242424  XER: 00000000
+[84010.597016] CFAR: d00000001ff45d08 SOFTE: 1
+               GPR00: d00000001ffd7f6c c000000b5218bb90 d00000002001b228 0000000000000102
+               GPR04: 0000000000000001 0000000000000001 00013d91ed0a5e2d 0000000000000000
+               GPR08: c000000007793300 0000000000000000 0000000000000000 c000000a086e7818
+               GPR12: 0000000000002200 c000000007793300 0000000000000000 000000012bc937c0
+               GPR16: 000000012bbf7ed0 0000000000000000 000000012bc3dd10 0000000000000000
+               GPR20: 000000012bc4db28 0000010036442810 000000012bc97828 000000012bc96c70
+               GPR24: 00000100365b1550 0000000000000000 00000100363f3d80 c000000be20d3080
+               GPR28: c000000bda7eae00 c000000be20db7e8 c000000be20d3778 c000000be20db7e8
+[84010.597042] NIP [d00000001ffd7f78] qlt_enable_vha+0x1d0/0x260 [qla2xxx]
+[84010.597051] LR [d00000001ffd7f6c] qlt_enable_vha+0x1c4/0x260 [qla2xxx]
+[84010.597051] Call Trace:
+[84010.597061] [c000000b5218bb90] [d00000001ffd7f6c] qlt_enable_vha+0x1c4/0x260 [qla2xxx] (unreliable)
+[84010.597064] [c000000b5218bc20] [d000000009820b6c] tcm_qla2xxx_tpg_enable_store+0xc4/0x130 [tcm_qla2xxx]
+[84010.597067] [c000000b5218bcb0] [d0000000185d0e68] configfs_write_file+0xd0/0x190 [configfs]
+[84010.597072] [c000000b5218bd00] [c0000000003d0edc] __vfs_write+0x3c/0x1e0
+[84010.597074] [c000000b5218bd90] [c0000000003d2ea8] vfs_write+0xd8/0x220
+[84010.597076] [c000000b5218bde0] [c0000000003d4ddc] SyS_write+0x6c/0x110
+[84010.597079] [c000000b5218be30] [c00000000000b188] system_call+0x3c/0x130
+[84010.597080] Instruction dump:
+[84010.597082] 7d0050a8 7d084b78 7d0051ad 40c2fff4 7fa3eb78 4bf73965 60000000 7fa3eb78
+[84010.597086] 4bf6dcd9 60000000 2fa30000 419eff40 <0fe00000> 4bffff38 e95f0058 a12a0180
+[84010.597090] ---[ end trace e32abaf6e6fee826 ]---
+
+It is possible to use such path with the goal
+to reproduce the issue:
+
+echo 0x7fffffff > /sys/module/qla2xxx/parameters/logging
+modprobe target_core_mod
+modprobe tcm_qla2xxx
+mkdir /sys/kernel/config/target/qla2xxx
+mkdir /sys/kernel/config/target/qla2xxx/<port-name>
+mkdir /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1
+echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+echo 0 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+
+SYSTEM START
+kernel: pid 327:drivers/scsi/qla2xxx/qla_init.c:2174 qla2x00_initialize_adapter(): vha->flags.online 0x0
+<...>
+kernel: pid 327:drivers/scsi/qla2xxx/qla_os.c:3444 qla2x00_probe_one(): vha->flags.online 0x1
+
+echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:86:a6:2a/tpgt_1/enable
+kernel: pid 348:drivers/scsi/qla2xxx/qla_init.c:6641 qla2x00_abort_isp_cleanup(): vha->flags.online 0x0, ISP_ABORT_NEEDED 0x0
+<...>
+kernel: pid 348:drivers/scsi/qla2xxx/qla_init.c:6998 qla2x00_restart_isp(): vha->flags.online 0x0
+
+echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:86:a6:2a/tpgt_1/enable
+kernel: pid 348:drivers/scsi/qla2xxx/qla_init.c:6641 qla2x00_abort_isp_cleanup(): vha->flags.online 0x0, ISP_ABORT_NEEDED 0x0
+<...>
+kernel: pid 1404:drivers/scsi/qla2xxx/qla_os.c:1107 qla2x00_wait_for_hba_online(): base_vha->flags.online 0x0
+
+echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:86:a6:2a/tpgt_1/enable
+kernel: pid 1404:drivers/scsi/qla2xxx/qla_os.c:1107 qla2x00_wait_for_hba_online(): base_vha->flags.online 0x0
+kernel: -----------[ cut here ]-----------
+kernel: WARNING: CPU: 1 PID: 1404 at drivers/scsi/qla2xxx/qla_target.c:6654 qlt_enable_vha+0x1e0/0x280 [qla2xxx]
+
+The issue takes place because no real ISP reset is executed.
+The qla2x00_abort_isp(scsi_qla_host_t *vha) method expects that
+vha->flags.online will be not zero for ISP reset procedure.
+This patch sets vha->flags.online to 1 before calling
+->abort_isp() for starting the ISP reset.
+
+Signed-off-by: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d9072ea7c42b..0a2286e324af 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -6872,6 +6872,7 @@ qla2x00_do_dpc(void *data)
+ 
+ 			if (do_reset && !(test_and_set_bit(ABORT_ISP_ACTIVE,
+ 			    &base_vha->dpc_flags))) {
++				base_vha->flags.online = 1;
+ 				ql_dbg(ql_dbg_dpc, base_vha, 0x4007,
+ 				    "ISP abort scheduled.\n");
+ 				if (ha->isp_ops->abort_isp(base_vha)) {
+-- 
+2.17.1
 
 
