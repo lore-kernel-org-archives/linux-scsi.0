@@ -2,122 +2,116 @@ Return-Path: <SRS0=qHBX=6I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A75C54FCB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 22:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8EC2C54FCB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 22:23:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E714B21556
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 22:22:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9946C20706
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 22:23:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="slvaJ6Ja";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="lE4oJgKp"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rRlwzi4l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726124AbgDXWWm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 18:22:42 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59062 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725874AbgDXWWm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Apr 2020 18:22:42 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 52AB78EE157;
-        Fri, 24 Apr 2020 15:22:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1587766961;
-        bh=MUa5hmhvIZ06LZY7X1HZZ/vqw6X/xHhf88NvO1fE3f8=;
-        h=Subject:From:To:Cc:Date:From;
-        b=slvaJ6JayPB6lYhkgB+ViOlraQMB92BXOn2g/ig5z+v6682bAaN2E4VKbPiX34MN7
-         RYr6t8qbN2nqLBsM377uEetxJbiXUC0SWeS/sAwiPph/Yz3l/cKPOqaIjd/mbY0O7V
-         a9xpw7g6HCXTgjlGU/Jl2nWA+Ht0jgMIqd3EQpYQ=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id n3gvE-JkSEaR; Fri, 24 Apr 2020 15:22:40 -0700 (PDT)
-Received: from [153.66.254.194] (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 53DC88EE0C9;
-        Fri, 24 Apr 2020 15:22:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1587766959;
-        bh=MUa5hmhvIZ06LZY7X1HZZ/vqw6X/xHhf88NvO1fE3f8=;
-        h=Subject:From:To:Cc:Date:From;
-        b=lE4oJgKptWhM+ZFgpL9mRgu/DiT3MP1qGuTwaCWxpGAGqyVuY67k/vSM2gukl6arh
-         PpxpgfeZLxggEZTtQAdYgkgqOlMWZsYvNr3WWwXE5aY8Y1h5iKTRmIwD8lMwbk71XB
-         HwzBjTltuZZBYDOJTXtSaToVj9bb99x9TnJOp8Zw=
-Message-ID: <1587766958.4513.19.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.7-rc2
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Fri, 24 Apr 2020 15:22:38 -0700
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1726070AbgDXWXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Apr 2020 18:23:41 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58318 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726022AbgDXWXl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2020 18:23:41 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OMJBcj111441;
+        Fri, 24 Apr 2020 22:23:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=4burvc8rRyQM6v4gBy1cG+9OCDe7C9ocHkSwXVo8RKg=;
+ b=rRlwzi4lL4gkbydgSn/Gv3CfCf9yMhD3eEhQab8tuJ8DBI3FJAd2LvJ8HVhwv7CBtVZY
+ lpcuruXNifmtOBR65yjA1JRcqhQPI4C2kuwXh5nDqRMYZjv2Na72CIxEVqR8voxUlHDQ
+ G8kB8uau4Q57xmbyO9d/Zrzx5nsk4hZ475rF5L1//XuVNR20tnOZsMjNFPbXWXnHZr+i
+ vZBs4mziTqwEFP6aJEb8GtZl0hfmCLA8nYjHfyJ1HPYPJ5xBZaH1eDh48++/zw4Qbn/u
+ LM0HU7Qdes2upnvJYDaI5KXGVTt22oXFy/JNBIUAwseNOCmEq4KYTLcN6frUQdo77VhC 1A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 30k7qe9819-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Apr 2020 22:23:32 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03OMIQ88001213;
+        Fri, 24 Apr 2020 22:23:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 30gb1qq4en-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Apr 2020 22:23:32 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03OMNSG9028406;
+        Fri, 24 Apr 2020 22:23:29 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 24 Apr 2020 15:23:28 -0700
+To:     Zou Wei <zou_wei@huawei.com>
+Cc:     <aacraid@microsemi.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next] scsi: aacraid: Use memdup_user() as a cleanup
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <1587524232-118733-1-git-send-email-zou_wei@huawei.com>
+Date:   Fri, 24 Apr 2020 18:23:26 -0400
+In-Reply-To: <1587524232-118733-1-git-send-email-zou_wei@huawei.com> (Zou
+        Wei's message of "Wed, 22 Apr 2020 10:57:12 +0800")
+Message-ID: <yq1wo64bk0x.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 spamscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004240167
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9601 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 lowpriorityscore=0
+ priorityscore=1501 suspectscore=0 mlxlogscore=999 phishscore=0
+ impostorscore=0 mlxscore=0 clxscore=1011 malwarescore=0 adultscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004240167
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Two minor fixes one to update a Kconfig reference and the other to fix
-an unreleased resource on an error path in sg.
 
-The patch is available here:
+Zou,
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+> index ffe41bc..1ce1620 100644
+> --- a/drivers/scsi/aacraid/commctrl.c
+> +++ b/drivers/scsi/aacraid/commctrl.c
+> @@ -513,17 +513,9 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+>  		goto cleanup;
+>  	}
+>  
+> -	user_srbcmd = kmalloc(fibsize, GFP_KERNEL);
+> -	if (!user_srbcmd) {
+> -		dprintk((KERN_DEBUG"aacraid: Could not make a copy of the srb\n"));
+> -		rcode = -ENOMEM;
+> -		goto cleanup;
+> -	}
+> -	if(copy_from_user(user_srbcmd, user_srb,fibsize)){
+> -		dprintk((KERN_DEBUG"aacraid: Could not copy srb from user\n"));
+> -		rcode = -EFAULT;
+> -		goto cleanup;
+> -	}
+> +	user_srbcmd = memdup_user(user_srb, fibsize);
+> +	if (IS_ERR(user_srbcmd))
+> +		return PTR_ERR(user_srbcmd);
+>  
+>  	flags = user_srbcmd->flags; /* from user in cpu order */
+>  	switch (flags & (SRB_DataIn | SRB_DataOut)) {
 
-The short changelog is:
+This is not equivalent, is it? The original code does a goto cleanup;
+whereas your patch returns on error.
 
-Diego Elio Pettenò (1):
-      scsi: Update referenced link to cdrtools
-
-Wu Bo (1):
-      scsi: sg: add sg_remove_request in sg_write
-
-And the diffstat:
-
- drivers/scsi/Kconfig | 2 +-
- drivers/scsi/sg.c    | 4 +++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
-
-With full diff below
-
-James
-
----
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 17feff174f57..2017c43dac1b 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -127,7 +127,7 @@ config CHR_DEV_SG
- 
- 	  For scanners, look at SANE (<http://www.sane-project.org/>). For CD
- 	  writer software look at Cdrtools
--	  (<http://cdrecord.berlios.de/private/cdrecord.html>)
-+	  (<http://cdrtools.sourceforge.net/>)
- 	  and for burning a "disk at once": CDRDAO
- 	  (<http://cdrdao.sourceforge.net/>). Cdparanoia is a high
- 	  quality digital reader of audio CDs (<http://www.xiph.org/paranoia/>).
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 9c0ee192f0f9..20472aaaf630 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -685,8 +685,10 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	hp->flags = input_size;	/* structure abuse ... */
- 	hp->pack_id = old_hdr.pack_id;
- 	hp->usr_ptr = NULL;
--	if (copy_from_user(cmnd, buf, cmd_size))
-+	if (copy_from_user(cmnd, buf, cmd_size)) {
-+		sg_remove_request(sfp, srp);
- 		return -EFAULT;
-+	}
- 	/*
- 	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
- 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
