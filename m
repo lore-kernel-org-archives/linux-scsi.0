@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF7DC54FCB
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E28D8C54FCB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:30:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C083320700
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:29:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEDBD20736
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:30:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587731347;
-	bh=qlK1Qsg9nh837m7uoLR3xqSQhl2zVHgNEkg9ggYtcJ4=;
+	s=default; t=1587731428;
+	bh=S1pFrNshqtwbqsTvzoUTRMylnIQecyR9t7n1Hbdwejo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vkas8v6Xxkrc7oIqFW6v63S32hPurkopS5blHSdvHkOznMJcxRfADhaS+sO2mWalj
-	 pOgG+5yO/rOsXuA12wfGKyda4wBZQrY1rdmCzsA3i3VeQ/9KXJQ0k+m/7upv3rDB8w
-	 EO21sn47dRZUI3lF/y1xHJwvaF40762US+Zuv9JI=
+	b=R/SETUWTvqmhHQx87f/bPd9dllsVKALOhZTfVFb9uAPBZRUQDqjZo3OSWmeWUOsNk
+	 FMBza0yrmwi81zwQcRCIuOuCO5Rv7FEVRup5Olop1l6Veisv8S1J6EAf/ZFwN11xbg
+	 nTBfS3vcqQ8JNzmtx8xBk5PiOEt06nMzc5DQl994=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728811AbgDXM3F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 08:29:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54388 "EHLO mail.kernel.org"
+        id S1727784AbgDXMa1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Apr 2020 08:30:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53632 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728240AbgDXMYG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Apr 2020 08:24:06 -0400
+        id S1728078AbgDXMXj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Apr 2020 08:23:39 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DB7522166E;
-        Fri, 24 Apr 2020 12:24:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1F08F2087E;
+        Fri, 24 Apr 2020 12:23:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587731045;
-        bh=qlK1Qsg9nh837m7uoLR3xqSQhl2zVHgNEkg9ggYtcJ4=;
+        s=default; t=1587731018;
+        bh=S1pFrNshqtwbqsTvzoUTRMylnIQecyR9t7n1Hbdwejo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KmQtl6v1Yz8OAdxE5dKT0FlhqEQzFNuZb7afU9jD4lQMjd7p3ymacscHNoDn2rw/t
-         /DC0mleRnt+DGisnrjcKg3r6y6wWFbwxnDAue/s6ZJGMKw2WaLilPcgQYfRGTpELU1
-         VqiY/fmruISKrv08IUR22d4ZqrxnD+SRV3BWwPkw=
+        b=cQfxMZlbvXroH8O3UPdy0BQmrClM2x3H5t35RKVA2kx/Imv14xp9YAnVLJTq5fhwS
+         Mmj/h+3DY7qIk/jiIzLZ6//vw96HPe1dRuD479vkC+72fdp5/r7yH3NL7Zl1PXufyC
+         0lQgZA3VtKWHBdYcf1tQKtjjQ7yJYbne0guL4xg8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
@@ -45,12 +45,12 @@ Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 08/18] scsi: target: tcmu: reset_ring should reset TCMU_DEV_BIT_BROKEN
-Date:   Fri, 24 Apr 2020 08:23:45 -0400
-Message-Id: <20200424122355.10453-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 13/26] scsi: target: tcmu: reset_ring should reset TCMU_DEV_BIT_BROKEN
+Date:   Fri, 24 Apr 2020 08:23:10 -0400
+Message-Id: <20200424122323.10194-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200424122355.10453-1-sashal@kernel.org>
-References: <20200424122355.10453-1-sashal@kernel.org>
+In-Reply-To: <20200424122323.10194-1-sashal@kernel.org>
+References: <20200424122323.10194-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -84,10 +84,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 7ee0a75ce4526..eff1e36ca03c2 100644
+index 35be1be87d2a1..9425354aef99c 100644
 --- a/drivers/target/target_core_user.c
 +++ b/drivers/target/target_core_user.c
-@@ -2067,6 +2067,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+@@ -2073,6 +2073,7 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
  	mb->cmd_tail = 0;
  	mb->cmd_head = 0;
  	tcmu_flush_dcache_range(mb, sizeof(*mb));
