@@ -2,149 +2,123 @@ Return-Path: <SRS0=qHBX=6I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD4EC54FD0
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD6BC54FD0
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:56:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 987C320767
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:39:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IIWQoebz"
+	by mail.kernel.org (Postfix) with ESMTP id 428802084D
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726707AbgDXLjT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 07:39:19 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:45445 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726247AbgDXLjT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Apr 2020 07:39:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1587728358;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=xxxLi1TfzeYigzHm669zYEJS2CbEA2mBx6261qZIdqE=;
-        b=IIWQoebzFuuECrAK8b7BGI8YfcvVhezSluusIeSeewdFEJ8LHYQu11IuS8N9Dm5RPtxuaR
-        3F0kSsbGFXa41eqf6MY4bYAM4sRh3ruxhbwhLBHknHrRZAcI65dVfkJkS8GkKjCEsZtvx1
-        knZK5wS/GS8J28SLufUT9IyXac89qqw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-10-0lCv8dA9MfeVZnUkf7QdLw-1; Fri, 24 Apr 2020 07:39:16 -0400
-X-MC-Unique: 0lCv8dA9MfeVZnUkf7QdLw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9BC8C100AA23;
-        Fri, 24 Apr 2020 11:39:15 +0000 (UTC)
-Received: from nangaparbat.redhat.com (unknown [10.40.194.154])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 31E3E605CF;
-        Fri, 24 Apr 2020 11:39:13 +0000 (UTC)
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH] target: iscsi: remove the iscsi_data_count structure
-Date:   Fri, 24 Apr 2020 13:39:13 +0200
-Message-Id: <20200424113913.17237-1-mlombard@redhat.com>
+        id S1726770AbgDXL4F convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Apr 2020 07:56:05 -0400
+Received: from mga11.intel.com ([192.55.52.93]:23711 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726668AbgDXL4F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Apr 2020 07:56:05 -0400
+IronPort-SDR: NBE/w8AKVRFuvbQKW1c50tyEo8Kcw/lIgYlg/m1ebOfdV0nIbPrfAKn1In0tamM9sthIdhEsxE
+ sdnVvMyBgKew==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2020 04:56:05 -0700
+IronPort-SDR: MXUKIbeMU1jiZqsaGhX5fvVBvt08G2gRDR49XH6QtXN1ekKYDFmyLOCLDtIy3Phkd1T/y6zTJt
+ bne+C5Mk4N3Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,311,1583222400"; 
+   d="scan'208";a="245215736"
+Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
+  by orsmga007.jf.intel.com with ESMTP; 24 Apr 2020 04:56:04 -0700
+Received: from lcsmsx601.ger.corp.intel.com (10.109.210.10) by
+ FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Fri, 24 Apr 2020 04:56:00 -0700
+Received: from hasmsx602.ger.corp.intel.com (10.184.107.142) by
+ LCSMSX601.ger.corp.intel.com (10.109.210.10) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Fri, 24 Apr 2020 14:55:57 +0300
+Received: from hasmsx602.ger.corp.intel.com ([10.184.107.142]) by
+ HASMSX602.ger.corp.intel.com ([10.184.107.142]) with mapi id 15.01.1713.004;
+ Fri, 24 Apr 2020 14:55:57 +0300
+From:   "Winkler, Tomas" <tomas.winkler@intel.com>
+To:     Jose Abreu <Jose.Abreu@synopsys.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     Joao Pinto <Joao.Pinto@synopsys.com>,
+        Joao Lima <Joao.Lima@synopsys.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
+Thread-Topic: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
+Thread-Index: AQHWGizUo6qBFQEMn0y8MY3DRjEwoqiIKdoA
+Date:   Fri, 24 Apr 2020 11:55:57 +0000
+Message-ID: <a8a9d40b0bef460c8e593e0add88094d@intel.com>
+References: <cover.1587727756.git.Jose.Abreu@synopsys.com>
+ <9b5c2d47997629c55ac14ce594771e9e8f254c74.1587727756.git.Jose.Abreu@synopsys.com>
+In-Reply-To: <9b5c2d47997629c55ac14ce594771e9e8f254c74.1587727756.git.Jose.Abreu@synopsys.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-reaction: no-action
+dlp-version: 11.2.0.6
+x-originating-ip: [10.184.70.1]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch removes the iscsi_data_count structure and the
-iscsit_do_rx_data() function because they are used only by rx_data()
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/target/iscsi/iscsi_target_util.c | 30 +++++-------------------
- include/target/iscsi/iscsi_target_core.h | 10 --------
- 2 files changed, 6 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/is=
-csi/iscsi_target_util.c
-index fae85bfd790e..25677e2865be 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -1236,18 +1236,20 @@ void iscsit_print_session_params(struct iscsi_ses=
-sion *sess)
- 	iscsi_dump_sess_ops(sess->sess_ops);
- }
-=20
--static int iscsit_do_rx_data(
-+int rx_data(
- 	struct iscsi_conn *conn,
--	struct iscsi_data_count *count)
-+	struct kvec *iov,
-+	int iov_count,
-+	int data)
- {
--	int data =3D count->data_length, rx_loop =3D 0, total_rx =3D 0;
-+	int rx_loop =3D 0, total_rx =3D 0;
- 	struct msghdr msg;
-=20
- 	if (!conn || !conn->sock || !conn->conn_ops)
- 		return -1;
-=20
- 	memset(&msg, 0, sizeof(struct msghdr));
--	iov_iter_kvec(&msg.msg_iter, READ, count->iov, count->iov_count, data);
-+	iov_iter_kvec(&msg.msg_iter, READ, iov, iov_count, data);
-=20
- 	while (msg_data_left(&msg)) {
- 		rx_loop =3D sock_recvmsg(conn->sock, &msg, MSG_WAITALL);
-@@ -1264,26 +1266,6 @@ static int iscsit_do_rx_data(
- 	return total_rx;
- }
-=20
--int rx_data(
--	struct iscsi_conn *conn,
--	struct kvec *iov,
--	int iov_count,
--	int data)
--{
--	struct iscsi_data_count c;
--
--	if (!conn || !conn->sock || !conn->conn_ops)
--		return -1;
--
--	memset(&c, 0, sizeof(struct iscsi_data_count));
--	c.iov =3D iov;
--	c.iov_count =3D iov_count;
--	c.data_length =3D data;
--	c.type =3D ISCSI_RX_DATA;
--
--	return iscsit_do_rx_data(conn, &c);
--}
--
- int tx_data(
- 	struct iscsi_conn *conn,
- 	struct kvec *iov,
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/is=
-csi/iscsi_target_core.h
-index a49d37140a64..c2de9274c57a 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -301,16 +301,6 @@ struct iscsi_queue_req {
- 	struct list_head	qr_list;
- };
-=20
--struct iscsi_data_count {
--	int			data_length;
--	int			sync_and_steering;
--	enum data_count_type	type;
--	u32			iov_count;
--	u32			ss_iov_count;
--	u32			ss_marker_count;
--	struct kvec		*iov;
--};
--
- struct iscsi_param_list {
- 	bool			iser;
- 	struct list_head	param_list;
---=20
-2.25.3
+> 
+> Newer Test Chips boards have MSI support. It does no harm to try to request it
+> as the function will fallback to legacy interrupts if MSI is not supported.
+> 
+> Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
+> 
+> ---
+> Cc: Joao Lima <Joao.Lima@synopsys.com>
+> Cc: Jose Abreu <Jose.Abreu@synopsys.com>
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  drivers/scsi/ufs/tc-dwc-pci.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/tc-dwc-pci.c b/drivers/scsi/ufs/tc-dwc-pci.c index
+> 74a2d80d32bd..e0a880cbbe68 100644
+> --- a/drivers/scsi/ufs/tc-dwc-pci.c
+> +++ b/drivers/scsi/ufs/tc-dwc-pci.c
+> @@ -136,9 +136,15 @@ tc_dwc_pci_probe(struct pci_dev *pdev, const struct
+> pci_device_id *id)
+>  		return -ENOENT;
+>  	}
+> 
+> +	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
+PCI_IRQ_LEGACY | PCI_IRQ_MSI , is enough  you don't have MSIX
+> +	if (err < 0) {
+> +		dev_err(&pdev->dev, "Allocation failed\n");
+> +		return err;
+> +	}
+> +
+Where do you call pci_free_irq_vectors() ? 
+>  	hba->vops = &data->ops;
+> 
+> -	err = ufshcd_init(hba, mmio_base, pdev->irq);
+> +	err = ufshcd_init(hba, mmio_base, pci_irq_vector(pdev, 0));
+>  	if (err) {
+>  		dev_err(&pdev->dev, "Initialization failed\n");
+>  		return err;
+> --
+> 2.7.4
 
