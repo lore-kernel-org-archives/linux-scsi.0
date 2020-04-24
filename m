@@ -7,71 +7,71 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE884C54FD0
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8DF6C54FCB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:08:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8888C20736
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:03:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0D9120776
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 12:08:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="SPsdmaTQ";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="FUYXGW/j"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="gUmMSvEE";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="eJ8XdRpO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726753AbgDXMC7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 08:02:59 -0400
-Received: from smtprelay-out1.synopsys.com ([149.117.73.133]:42402 "EHLO
+        id S1726895AbgDXMId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Apr 2020 08:08:33 -0400
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:44760 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726289AbgDXMC7 (ORCPT
+        by vger.kernel.org with ESMTP id S1726699AbgDXMIc (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Apr 2020 08:02:59 -0400
+        Fri, 24 Apr 2020 08:08:32 -0400
 Received: from mailhost.synopsys.com (badc-mailhost2.synopsys.com [10.192.0.18])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 4465440409;
-        Fri, 24 Apr 2020 12:02:58 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 6DDF3C033A;
+        Fri, 24 Apr 2020 12:08:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1587729778; bh=YZTSLrq/PcXCbmRZ0KpkQqv8RCyn0Qwc22iyOjYFDCw=;
+        t=1587730111; bh=OjRBBrKUEqS3V7tLF2nS+bk4t3bXk24laE631iWStXA=;
         h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=SPsdmaTQ61Oi8ImgsBNb27xwNDIp0IoV+onFwnaWV09Dxja8kwlZhKRwU0Tx26HLE
-         fuUMOdmavO6F8s+ojKcW/0I4tqXcD63JKQGLjdjHcafIGpnJ0w6wWTTeMW2qvDrzmg
-         0czsnaTXiPuo77D3vRmLkZO4oIWFK3iHTRPLDV6SgQIgkgxDFUQDoMOqjmxsUKxIIW
-         YGsqovMtRjsxbvRAeb1Xto3KsXMXOv4HFmjZowJjVzF36PkquyS5MKqszZCM5uyEAn
-         ClI+n+XIyCW/Wn8Fv1A8q7Dt2UH1cZppxza2bVm3hc0FWsTcGhYymclXAz/7wza5+g
-         wS258zUwT78RQ==
+        b=gUmMSvEEkLCi1bi58bnSXy1415oRKg7lSfG2UPWsv9W+K+R/TVPA0teCLpG/bqlQY
+         GqljLnE3zBWuq8E3oBBjPXH3qQPm65eOeugd0yt1F9rPrhzk4yQIR3BwkvGkFpFm50
+         q3Et3vsp/CaR1PyJ5/rnV+VFjfSg0xUQfrll6hBNRkZ+Mqc7pqVTMVi3nOvOwt0IOc
+         n0otmE3FY/qrTGfndGujvGOzPxXMr/lu3cBnOAyEBiGg0d+A96XFjtqJgk5mOaDBbH
+         6Nx58K0LaBeXDgygXN2U9GnGc6Xe4Z1+dSOlC0L8DGs9O3xnDyxSwd5noHGY9C8Hj1
+         d55k+GQjC3y8w==
 Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 98C07A0067;
-        Fri, 24 Apr 2020 12:02:48 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id C7C87A0067;
+        Fri, 24 Apr 2020 12:08:21 +0000 (UTC)
 Received: from US01HYBRID2.internal.synopsys.com (10.15.246.24) by
  US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Fri, 24 Apr 2020 05:02:14 -0700
-Received: from NAM04-SN1-obe.outbound.protection.outlook.com (10.202.3.67) by
+ (TLS) id 14.3.408.0; Fri, 24 Apr 2020 05:08:13 -0700
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (10.202.3.67) by
  mrs.synopsys.com (10.15.246.24) with Microsoft SMTP Server (TLS) id
- 14.3.487.0; Fri, 24 Apr 2020 05:02:13 -0700
+ 14.3.487.0; Fri, 24 Apr 2020 05:08:13 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Lk9fYGgS2CDu0j/ppD4cNVDAHryaLsYQigqdUjPYDR633gs9VKq/XduYWseJj5G1Q1oLoRnoQFNXk0UJ5+uav5TqVdzZ+ggcmTSVs6oiaTVRjsoIOiVj5Gq/vGa/1libXEM8QHCRZ7wgN78NzLcXLP3w7eFtgjetTV5NypTQACHjSw20UK8+0WQfLCIF1c91aIfjBkbt5kk/jo6Sc4lqLIIGj7Jc8FoVX9vZyIxO9wPu0pHlmt+0YpsJZaYFvywuTOO/cyhDlLYPLxb74aIXZFcjDSISkYVqEOOF99YvMu7s8ojQR1sRLfBsXeXgAGYrr5hjVpbDI9WVMXtGeKUjdg==
+ b=mSZ0CD3BMBHsmXItdwI/kcoshCW+2A+2aCrdogOlkhJeGTna+a9OtdtDOdR5c18ejnOO7rIkkNwcA/rO1ke8YSVf4EXBZQrA3xczWcQ4Qo92KWAjEFnOyKnobvoizwtur4KE1CjnUFn8fpdBYKpGeuksn57DPwRKdNFTDAsaTSIY3TntNlo1LvPY2R4ES9aduGYOJ5SP8ukIcrc5lgLwksW8vTjqmwz3yjMSod6CVwdCraT67dp2VVqD4Cq7bIUCEEffyHBHoIgDrSB4Q7TMKGHn91GQzdKlwzLQfAhFAYyniHVBepQHhR9luVs/iPP+UZqPGmquJTq/lJzOVOCn6g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oUfEINpY3GPWtAO7w4Rtg0ntnqYE357ydip7Hu9tykg=;
- b=oRdxeY++zrKV07m5j2JjCSKZVcQ9wnh8V6L/4yoaKC/Y358gLYksPwbPTCtMEaoVWyZNeqeF6poMYFCSsraRPHR3BNbXf94uspdrmF61xddf8HmYGQp16jIIazS/oSztK7mEUiRsvoLasM4ESgdHLJ7jajXZOqHDM4aAH46ydF6DhWucYdYqAauSECFL/90NMNFMNOKi+pl2gaNuUzN7h4+pa9RAUFGEIXf0beo/4CRPU5RpBDhn5f29N31oZJnzHc+aCWpm2D7WdiM8w1dD0zlCiDhOF3JxoJBSj0MvWw0AOVtyjeNoP+KsTUdamNWpfSK91IjQ+Km1LWqk/Mufbw==
+ bh=i3ZFceULi3fEFKfUt5WrDLtezCMiyrCH1UghAsPZOck=;
+ b=hzMSrRafL+y1aHg3tkYKOwXo48+Rfw+jPh89B0hyV7kjqGUspLUNY8FH3KEZf9FJ9WMWotbfAg4ZAdpGbLPiSyoAbQrfJpR8764w8cMEdo55haXDkUIH3sdE2f2dvNuRu1PPEGHRfCOJnL+MG5SSDRzYqBJidiOJS3J2KjhSW6PxROLj8wKovF9jCzuuflPHdO8R46KMeRZ1r4PFYYCAanXG/H7qDNHywqQsNx0zxWmeT4UeWrzV9sha5iEoD+py5F6fwpp4QwMMTZoX/OMAqFsh7Kmj3xllhuA1XBtAGwWRnPRFiWK5FKR/QDPTEMeXy5JyvMwOkTvvzx38HJpgeA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=synopsys.com; dmarc=pass action=none header.from=synopsys.com;
  dkim=pass header.d=synopsys.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=synopsys.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oUfEINpY3GPWtAO7w4Rtg0ntnqYE357ydip7Hu9tykg=;
- b=FUYXGW/jccFFO7adYrV+s0s0mEWwKjemJz+7hX7S5Mv9hDgFHJQMDOlekVmGxRo4MHHZSVoT2Q0zwwJRbG4EaxPpetBK2w9QlOcQ1VMKQPBzftVOEtiIShdkGMgQ4tWZ5er9dzJgDX162DCGHOVUCX3QzGnrOBGMxxHpYlutTA8=
+ bh=i3ZFceULi3fEFKfUt5WrDLtezCMiyrCH1UghAsPZOck=;
+ b=eJ8XdRpONpfgpI3C9RmpUL/PRSfPfMZbzk1eHfTGFGSdZgvprOg+LqwjPp41ZLjouFJkEiSgNl94SB8Phtag46rmaxrO3lk9U15HZLRB89N1DSGsLH7z6bc+KlZBML3h8k8PHE+58UWfMotY3BgFtQRqGykF9BbvILmkSs7gHoI=
 Received: from BN8PR12MB3266.namprd12.prod.outlook.com (2603:10b6:408:6e::17)
- by BN8PR12MB3620.namprd12.prod.outlook.com (2603:10b6:408:49::27) with
+ by BN8PR12MB2978.namprd12.prod.outlook.com (2603:10b6:408:42::30) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2937.13; Fri, 24 Apr
- 2020 12:02:12 +0000
+ 2020 12:08:11 +0000
 Received: from BN8PR12MB3266.namprd12.prod.outlook.com
  ([fe80::651e:afe5:d0fb:def4]) by BN8PR12MB3266.namprd12.prod.outlook.com
  ([fe80::651e:afe5:d0fb:def4%3]) with mapi id 15.20.2921.030; Fri, 24 Apr 2020
- 12:02:12 +0000
+ 12:08:11 +0000
 From:   Jose Abreu <Jose.Abreu@synopsys.com>
 To:     "Winkler, Tomas" <tomas.winkler@intel.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
@@ -82,15 +82,17 @@ CC:     Joao Pinto <Joao.Pinto@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
-Thread-Topic: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
-Thread-Index: AQHWGizLweIWC0leREOPucyddXRWn6iIKkeAgAAAomA=
-Date:   Fri, 24 Apr 2020 12:02:12 +0000
-Message-ID: <BN8PR12MB326683F270F887D309490462D3D00@BN8PR12MB3266.namprd12.prod.outlook.com>
+Subject: RE: [PATCH 3/5] scsi: ufs: tc-dwc-pci: Use PDI ID to match Test Chip
+ type
+Thread-Topic: [PATCH 3/5] scsi: ufs: tc-dwc-pci: Use PDI ID to match Test Chip
+ type
+Thread-Index: AQHWGizL85eiXEn8NkKQ2LMZaAyhmKiIK5CAgAAAxWA=
+Date:   Fri, 24 Apr 2020 12:08:11 +0000
+Message-ID: <BN8PR12MB32662BD6478A0FCF0F29353AD3D00@BN8PR12MB3266.namprd12.prod.outlook.com>
 References: <cover.1587727756.git.Jose.Abreu@synopsys.com>
- <9b5c2d47997629c55ac14ce594771e9e8f254c74.1587727756.git.Jose.Abreu@synopsys.com>
- <a8a9d40b0bef460c8e593e0add88094d@intel.com>
-In-Reply-To: <a8a9d40b0bef460c8e593e0add88094d@intel.com>
+ <8427c06b92bae656ab3ef75c7edc980900cdf075.1587727756.git.Jose.Abreu@synopsys.com>
+ <a0656591acea47e2b6765d2411f0a362@intel.com>
+In-Reply-To: <a0656591acea47e2b6765d2411f0a362@intel.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -99,30 +101,30 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=joabreu@synopsys.com; 
 x-originating-ip: [198.182.37.200]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 71bdfd06-91e9-4556-d003-08d7e84752c4
-x-ms-traffictypediagnostic: BN8PR12MB3620:
+x-ms-office365-filtering-correlation-id: 971e6b69-78f9-4264-74ef-08d7e84828d3
+x-ms-traffictypediagnostic: BN8PR12MB2978:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BN8PR12MB36204A637AE8A9F78C13FA89D3D00@BN8PR12MB3620.namprd12.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5236;
+x-microsoft-antispam-prvs: <BN8PR12MB2978B2E800EE79D1F68AD788D3D00@BN8PR12MB2978.namprd12.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
 x-forefront-prvs: 03838E948C
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR12MB3266.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(136003)(376002)(346002)(39860400002)(396003)(366004)(316002)(66946007)(76116006)(8676002)(64756008)(66556008)(66476007)(478600001)(52536014)(186003)(81156014)(8936002)(2906002)(66446008)(86362001)(7696005)(71200400001)(6506007)(110136005)(5660300002)(33656002)(26005)(9686003)(54906003)(4326008)(55016002);DIR:OUT;SFP:1102;
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR12MB3266.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(396003)(39860400002)(376002)(346002)(136003)(66556008)(66476007)(26005)(66446008)(478600001)(76116006)(6506007)(110136005)(52536014)(9686003)(54906003)(55016002)(316002)(5660300002)(7696005)(86362001)(64756008)(33656002)(66946007)(2906002)(71200400001)(186003)(8936002)(8676002)(4326008)(81156014);DIR:OUT;SFP:1102;
 received-spf: None (protection.outlook.com: synopsys.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: zqohiYyiG2vzQ57nWrLi/gGIKhmcD3yjP5JI0q4RMKPPxT7/K/YQcLGdkJEVsALEf3Yv4Z2hg9Rr51nam6+VZIufyT9QjdQIJJ3lWoH+J+dhL8XoJeFbxNuXjtoLJYil7aar4tl+PWT5HWJE9+MbZJiIiXmO3UUmXRP3Q7kYusZOob1XLioh/WDjHXBuQxWk9btgFprUZ0H+xZgzwybbjFZqqfjc5+RbtqrfQSGkCFxS6BXrpPlWCeWvQr4qug5VGr24SdKxnXcNO8BMXsWD3/zYO11BP+JC6REe32yIpdrvM54zgGPBXQ4bMH2KI9US9zNQjrOVksHGTtPz132j6ejt33Vi3OOGo1cRLrnJlIolfyXwJp2QbaRsc92W7FwwBA98DbdI7wHflOpJrpqTr4M2XQoRO56r3WKHhyJ3A+b8YW2D2ogS8zcJ0fY5axLe
-x-ms-exchange-antispam-messagedata: udfokRABUuhe/pSY2CH9jYkuUYnsS94DvKMPzYSZgTZJKTp2xgDW23cmbRtjp/Jy4bFu2jC6+XwH320s84z4t+hWf+LcZF6vaAE6PQNxS3iyK7GlxYE072bLrF6Q8cEG+OGlnxGFLbyZM2q3pJrHEQ==
+x-microsoft-antispam-message-info: BRHd8CGeml4uXHo8xOXA+mg+N9n332uflCvXJJtJZJuXNpByAGWiEa3WPwbzygYD8F7JOn1sn05Gua/2f19eQyHOTtD7qYg1ZSGx0F7zh10GsFHTZpQqd480lO8P6dgk5H6skbd8yrnQcws3SbDpcb2iaEA0dKiJNCufNFtyg3PstN71f/exRC6kz+Pwg1TqvY6tpsr3wHfQw0hgmRppvNxf320xtL8emgkWjpy7CubxkeS1ZgEoFpZCk8IBcPtJ+OyaDVIYfiHSRnOvx0AVxIcXVY/GuMJigdIDG2fHTQORsfX+nwV11QIIldbnOyB6ILk1PjyLRvSvnJu19qKg8memK5PY7fRNYFD4FJgBu/GG2fJimIl3N40lhzn0WyfjrMUOQqlKP7qyUSo/E5epCdz0GX9fSx2+95g0qdvdMHruxmPgVxm4qzz7lNg9WEcn
+x-ms-exchange-antispam-messagedata: 34gr5chxkX/OJ1xCyNUldqNtKXAQrjUv5zA51lwvSrGrvRXPUIx79wtn6gxYrpkTvbkIzkiezyiqjtXaDVql/A+HboLszs54b7mH1LdvtP08RPbZWfJ2kMEUbRNPaNR+xHg01lTn+/X1Mxl9lCV/OQ==
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 71bdfd06-91e9-4556-d003-08d7e84752c4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Apr 2020 12:02:12.3797
+X-MS-Exchange-CrossTenant-Network-Message-Id: 971e6b69-78f9-4264-74ef-08d7e84828d3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Apr 2020 12:08:11.4851
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: c33c9f88-1eb7-4099-9700-16013fd9e8aa
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 12HSJ212Ds2gAtjlcSxFfd5Lkrb7ylp9CwQ8nvVTJ74XWBC/mEslC92wUD6vZ7G75ewiDqjpS9OMNr/9rd0qhQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB3620
+X-MS-Exchange-CrossTenant-userprincipalname: 3frypppl85qKLuyWplI/bjuLzCoNF/OYSwx6AVVQF/lxCu2qi+uabWZ3IPsZi0yEMngp9/du4nY9pEmPaCOYWg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR12MB2978
 X-OriginatorOrg: synopsys.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -130,13 +132,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Winkler, Tomas <tomas.winkler@intel.com>
-Date: Apr/24/2020, 12:55:57 (UTC+00:00)
+Date: Apr/24/2020, 13:00:33 (UTC+00:00)
 
 > >=20
-> > Newer Test Chips boards have MSI support. It does no harm to try to req=
-uest it
-> > as the function will fallback to legacy interrupts if MSI is not suppor=
-ted.
+> > In preparation for the addition of new Test Chips, we re-arrange the
+> > initialization sequence so that we rely on PCI ID to match for given Te=
+st Chip
+> > type.
 > >=20
 > > Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
 > >=20
@@ -150,33 +152,120 @@ ted.
 > > Cc: linux-scsi@vger.kernel.org
 > > Cc: linux-kernel@vger.kernel.org
 > > ---
-> >  drivers/scsi/ufs/tc-dwc-pci.c | 8 +++++++-
-> >  1 file changed, 7 insertions(+), 1 deletion(-)
+> >  drivers/scsi/ufs/tc-dwc-pci.c | 68 ++++++++++++++++++++++++++++-------=
+----
+> > ----
+> >  1 file changed, 44 insertions(+), 24 deletions(-)
 > >=20
 > > diff --git a/drivers/scsi/ufs/tc-dwc-pci.c b/drivers/scsi/ufs/tc-dwc-pc=
 i.c index
-> > 74a2d80d32bd..e0a880cbbe68 100644
+> > aeb11f7f0c91..74a2d80d32bd 100644
 > > --- a/drivers/scsi/ufs/tc-dwc-pci.c
 > > +++ b/drivers/scsi/ufs/tc-dwc-pci.c
-> > @@ -136,9 +136,15 @@ tc_dwc_pci_probe(struct pci_dev *pdev, const struc=
-t
-> > pci_device_id *id)
-> >  		return -ENOENT;
-> >  	}
+> > @@ -14,6 +14,11 @@
+> >  #include <linux/pci.h>
+> >  #include <linux/pm_runtime.h>
 > >=20
-> > +	err =3D pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
-> PCI_IRQ_LEGACY | PCI_IRQ_MSI , is enough  you don't have MSIX
-
-Makes sense :)
-
-> > +	if (err < 0) {
-> > +		dev_err(&pdev->dev, "Allocation failed\n");
-> > +		return err;
+> > +struct tc_dwc_data {
+> > +	struct ufs_hba_variant_ops ops;
+> > +	int (*setup)(struct pci_dev *pdev, struct tc_dwc_data *data); };
+> > +
+> >  /* Test Chip type expected values */
+> >  #define TC_G210_20BIT 20
+> >  #define TC_G210_40BIT 40
+> > @@ -23,6 +28,20 @@ static int tc_type =3D TC_G210_INV;
+> > module_param(tc_type, int, 0);  MODULE_PARM_DESC(tc_type, "Test Chip
+> > Type (20 =3D 20-bit, 40 =3D 40-bit)");
+> >=20
+> > +static int tc_dwc_g210_set_config(struct pci_dev *pdev, struct
+> > +tc_dwc_data *data) {
+> > +	if (tc_type =3D=3D TC_G210_20BIT) {
+> > +		data->ops.phy_initialization =3D tc_dwc_g210_config_20_bit;
+> > +	} else if (tc_type =3D=3D TC_G210_40BIT) {
+> > +		data->ops.phy_initialization =3D tc_dwc_g210_config_40_bit;
+> > +	} else {
+> > +		dev_err(&pdev->dev, "test chip version not specified\n");
+> > +		return -EPERM;
 > > +	}
 > > +
-> Where do you call pci_free_irq_vectors() ?=20
+> > +	return 0;
+> > +}
+> > +
+> >  static int tc_dwc_pci_suspend(struct device *dev)  {
+> >  	return ufshcd_system_suspend(dev_get_drvdata(dev));
+> > @@ -48,14 +67,6 @@ static int tc_dwc_pci_runtime_idle(struct device *de=
+v)
+> >  	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+> >  }
+> >=20
+> > -/*
+> > - * struct ufs_hba_dwc_vops - UFS DWC specific variant operations
+> > - */
+> > -static struct ufs_hba_variant_ops tc_dwc_pci_hba_vops =3D {
+> > -	.name                   =3D "tc-dwc-pci",
+> > -	.link_startup_notify	=3D ufshcd_dwc_link_startup_notify,
+> > -};
+> > -
+> >  /**
+> >   * tc_dwc_pci_shutdown - main function to put the controller in reset =
+state
+> >   * @pdev: pointer to PCI device handle
+> > @@ -89,22 +100,11 @@ static void tc_dwc_pci_remove(struct pci_dev *pdev=
+)
+> > static int  tc_dwc_pci_probe(struct pci_dev *pdev, const struct pci_dev=
+ice_id
+> > *id)  {
+> > -	struct ufs_hba *hba;
+> > +	struct tc_dwc_data *data =3D (struct tc_dwc_data *)id->driver_data;
+> >  	void __iomem *mmio_base;
+> > +	struct ufs_hba *hba;
+> >  	int err;
+> >=20
+> > -	/* Check Test Chip type and set the specific setup routine */
+> > -	if (tc_type =3D=3D TC_G210_20BIT) {
+> > -		tc_dwc_pci_hba_vops.phy_initialization =3D
+> > -						tc_dwc_g210_config_20_bit;
+> > -	} else if (tc_type =3D=3D TC_G210_40BIT) {
+> > -		tc_dwc_pci_hba_vops.phy_initialization =3D
+> > -						tc_dwc_g210_config_40_bit;
+> > -	} else {
+> > -		dev_err(&pdev->dev, "test chip version not specified\n");
+> > -		return -EPERM;
+> > -	}
+> > -
+> >  	err =3D pcim_enable_device(pdev);
+> >  	if (err) {
+> >  		dev_err(&pdev->dev, "pcim_enable_device failed\n"); @@ -
+> > 127,7 +127,16 @@ tc_dwc_pci_probe(struct pci_dev *pdev, const struct
+> > pci_device_id *id)
+> >  		return err;
+> >  	}
+> >=20
+> > -	hba->vops =3D &tc_dwc_pci_hba_vops;
+> > +	/* Check Test Chip type and set the specific setup routine */
+> > +	if (data && data->setup) {
+> > +		err =3D data->setup(pdev, data);
+> > +		if (err)
+> > +			return err;
+> > +	} else {
+> > +		return -ENOENT;
+> > +	}
+> > +
+> > +	hba->vops =3D &data->ops;
+> >=20
+> >  	err =3D ufshcd_init(hba, mmio_base, pdev->irq);
+> >  	if (err) {
+> > @@ -150,9 +159,20 @@ static const struct dev_pm_ops tc_dwc_pci_pm_ops
+> > =3D {
+> >  	.runtime_idle    =3D tc_dwc_pci_runtime_idle,
+> >  };
+> >=20
+> > +static struct tc_dwc_data tc_dwc_g210_data =3D {
+>=20
+> Constify the struct, if possible.=20
 
-Right ... Will be fixed in v2. Thanks!
+Actually, I can't because I overwrite one of the ops callback in the=20
+probe() depending on TC specified.
 
 ---
 Thanks,
