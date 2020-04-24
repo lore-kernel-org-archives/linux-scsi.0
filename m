@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FA6C54FD0
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F987C54FCB
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E82E2087E
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A9E320767
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:37:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="hK8sgt3x"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="N4dYuxqU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726933AbgDXLhZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 07:37:25 -0400
-Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:43916 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726831AbgDXLhY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726920AbgDXLhY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 24 Apr 2020 07:37:24 -0400
+Received: from smtprelay-out1.synopsys.com ([149.117.87.133]:43908 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726798AbgDXLhX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Apr 2020 07:37:23 -0400
 Received: from mailhost.synopsys.com (mdc-mailhost1.synopsys.com [10.225.0.209])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 77B99C00E0;
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id AB5FCC0339;
         Fri, 24 Apr 2020 11:37:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1587728243; bh=hFru8LZBc46qgU3/SBVkJocidWlFzfoaiEu/7j+x3SY=;
+        t=1587728243; bh=Kdkz2c2eoMxFLfQe031hFNSbGAX9E7zYNTPeDp82S8s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=hK8sgt3xWQn3prukyE5/jXSGyK1iZrqIYE/e37JJLV3/s0S7798AzSFJHr65Lh45u
-         LGfal4VByg2s+4Sc4Cm24rG4A3j83qqlbMuZ4H5sQisH+kp/PqHpQcvyzYYPmL+fer
-         FoLjP89/TWHG7wh6kd7FCpj5oo4tpV0sSlKHGP95PosLkbwpA+Byk6PZ8G5XWewtjh
-         ujiWxXWqhCPNWffeCwf3AOAFB2A3W6qKkc9eSaNJK0FVW4F2+V3TIgb0W9pbTcZcRi
-         I1w+iabg36zNfnZ5idEwX/LRGGGVwcrTna+bXRNfP/HZoPZZGk4gZNHrfwgu63EX9Q
-         Ntin1YN9UQNcw==
+        b=N4dYuxqUA9OTOsx9Zy1mrvltv9gyN02r6VGkNONaTmS2VaF+Qj/sGe0feG0LtkUFf
+         mnqlCDPlYZc8e6LYbwJXx5H68pnfMta4/iv19PvVWrd5yyrARGHhtaE0o28iaPW0+a
+         HYH8Tl7SsCS/5NlpE47Q1MGv9UH464dn++8j5tGuYcU4uOz3pLEOmrwxlHVP04YGcM
+         5wG75361T6Y412TrE+EecIGQAllbG5yfFUYzinFY+2i7mUN4Th1QattB3p2l54AteX
+         DEi6KtLo4YOmeb/IAbJ+WaK6Zsjpu9qLtg8ABY253m8XfK/cTObtsvGc4Z9KdnpNU2
+         gAZPUvMcc9Xew==
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 32736A005C;
+        by mailhost.synopsys.com (Postfix) with ESMTP id 67740A006C;
         Fri, 24 Apr 2020 11:37:21 +0000 (UTC)
 From:   Jose Abreu <Jose.Abreu@synopsys.com>
 To:     linux-scsi@vger.kernel.org
@@ -50,9 +50,9 @@ Cc:     Joao Pinto <Joao.Pinto@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/5] scsi: ufs: Allow UFS 3.0 as a valid version
-Date:   Fri, 24 Apr 2020 13:36:56 +0200
-Message-Id: <5c4281080538b74ca39cedb9112ffe71bf7a80b5.1587727756.git.Jose.Abreu@synopsys.com>
+Subject: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
+Date:   Fri, 24 Apr 2020 13:36:59 +0200
+Message-Id: <9b5c2d47997629c55ac14ce594771e9e8f254c74.1587727756.git.Jose.Abreu@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1587727756.git.Jose.Abreu@synopsys.com>
 References: <cover.1587727756.git.Jose.Abreu@synopsys.com>
@@ -63,10 +63,10 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a define for UFS version 3.0 and do not print an error message upon
-probe when using this version.
+Newer Test Chips boards have MSI support. It does no harm to try to
+request it as the function will fallback to legacy interrupts if MSI is
+not supported.
 
-Signed-off-by: Joao Lima <Joao.Lima@synopsys.com>
 Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
 
 ---
@@ -79,36 +79,30 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 ---
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- drivers/scsi/ufs/ufshci.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/tc-dwc-pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7d1fa1349d40..2e5c200e915b 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8441,7 +8441,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
- 	    (hba->ufs_version != UFSHCI_VERSION_11) &&
- 	    (hba->ufs_version != UFSHCI_VERSION_20) &&
--	    (hba->ufs_version != UFSHCI_VERSION_21))
-+	    (hba->ufs_version != UFSHCI_VERSION_21) &&
-+	    (hba->ufs_version != UFSHCI_VERSION_30))
- 		dev_err(hba->dev, "invalid UFS version 0x%x\n",
- 			hba->ufs_version);
+diff --git a/drivers/scsi/ufs/tc-dwc-pci.c b/drivers/scsi/ufs/tc-dwc-pci.c
+index 74a2d80d32bd..e0a880cbbe68 100644
+--- a/drivers/scsi/ufs/tc-dwc-pci.c
++++ b/drivers/scsi/ufs/tc-dwc-pci.c
+@@ -136,9 +136,15 @@ tc_dwc_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return -ENOENT;
+ 	}
  
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index c2961d37cc1c..f2ee81669b00 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -104,6 +104,7 @@ enum {
- 	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
- 	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
- 	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
-+	UFSHCI_VERSION_30 = 0x00000300, /* 3.0 */
- };
++	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
++	if (err < 0) {
++		dev_err(&pdev->dev, "Allocation failed\n");
++		return err;
++	}
++
+ 	hba->vops = &data->ops;
  
- /*
+-	err = ufshcd_init(hba, mmio_base, pdev->irq);
++	err = ufshcd_init(hba, mmio_base, pci_irq_vector(pdev, 0));
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Initialization failed\n");
+ 		return err;
 -- 
 2.7.4
 
