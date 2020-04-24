@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD6BC54FD0
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D02C54FD0
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:58:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 428802084D
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:56:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5082620767
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Apr 2020 11:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726770AbgDXL4F convert rfc822-to-8bit (ORCPT
+        id S1726699AbgDXL6M convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Apr 2020 07:56:05 -0400
-Received: from mga11.intel.com ([192.55.52.93]:23711 "EHLO mga11.intel.com"
+        Fri, 24 Apr 2020 07:58:12 -0400
+Received: from mga03.intel.com ([134.134.136.65]:58553 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726668AbgDXL4F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Apr 2020 07:56:05 -0400
-IronPort-SDR: NBE/w8AKVRFuvbQKW1c50tyEo8Kcw/lIgYlg/m1ebOfdV0nIbPrfAKn1In0tamM9sthIdhEsxE
- sdnVvMyBgKew==
+        id S1726289AbgDXL6L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Apr 2020 07:58:11 -0400
+IronPort-SDR: ADdyRU6qjg94jhmcRO+UoUBeyycJlgiCkcWkInC1qE/eaGRwtvtYUBFX9nAQ8rz8xPZV4v1rGj
+ /XQZ7bm+UTGw==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2020 04:56:05 -0700
-IronPort-SDR: MXUKIbeMU1jiZqsaGhX5fvVBvt08G2gRDR49XH6QtXN1ekKYDFmyLOCLDtIy3Phkd1T/y6zTJt
- bne+C5Mk4N3Q==
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2020 04:58:11 -0700
+IronPort-SDR: Yuo+tyxdFcNR+dgH7VP2JRkB9N4V5vQcDWxiWXaB6Ba2/J+uipbIjd64JEZsDUzjbsi2RNhxQU
+ eZQdWbty67rg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.73,311,1583222400"; 
-   d="scan'208";a="245215736"
-Received: from fmsmsx106.amr.corp.intel.com ([10.18.124.204])
-  by orsmga007.jf.intel.com with ESMTP; 24 Apr 2020 04:56:04 -0700
-Received: from lcsmsx601.ger.corp.intel.com (10.109.210.10) by
- FMSMSX106.amr.corp.intel.com (10.18.124.204) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Fri, 24 Apr 2020 04:56:00 -0700
+   d="scan'208";a="430743288"
+Received: from fmsmsx105.amr.corp.intel.com ([10.18.124.203])
+  by orsmga005.jf.intel.com with ESMTP; 24 Apr 2020 04:58:11 -0700
+Received: from lcsmsx602.ger.corp.intel.com (10.109.210.11) by
+ FMSMSX105.amr.corp.intel.com (10.18.124.203) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Fri, 24 Apr 2020 04:57:58 -0700
 Received: from hasmsx602.ger.corp.intel.com (10.184.107.142) by
- LCSMSX601.ger.corp.intel.com (10.109.210.10) with Microsoft SMTP Server
+ LCSMSX602.ger.corp.intel.com (10.109.210.11) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 24 Apr 2020 14:55:57 +0300
+ 15.1.1713.5; Fri, 24 Apr 2020 14:57:55 +0300
 Received: from hasmsx602.ger.corp.intel.com ([10.184.107.142]) by
  HASMSX602.ger.corp.intel.com ([10.184.107.142]) with mapi id 15.01.1713.004;
- Fri, 24 Apr 2020 14:55:57 +0300
+ Fri, 24 Apr 2020 14:57:55 +0300
 From:   "Winkler, Tomas" <tomas.winkler@intel.com>
 To:     Jose Abreu <Jose.Abreu@synopsys.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
@@ -52,14 +52,14 @@ CC:     Joao Pinto <Joao.Pinto@synopsys.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
-Thread-Topic: [PATCH 4/5] scsi: ufs: tc-dwc-pci: Allow for MSI interrupt type
-Thread-Index: AQHWGizUo6qBFQEMn0y8MY3DRjEwoqiIKdoA
-Date:   Fri, 24 Apr 2020 11:55:57 +0000
-Message-ID: <a8a9d40b0bef460c8e593e0add88094d@intel.com>
+Subject: RE: [PATCH 1/5] scsi: ufs: Allow UFS 3.0 as a valid version
+Thread-Topic: [PATCH 1/5] scsi: ufs: Allow UFS 3.0 as a valid version
+Thread-Index: AQHWGizfcmpbFdxnWUWqBCA+Q3q4E6iIKq4g
+Date:   Fri, 24 Apr 2020 11:57:55 +0000
+Message-ID: <a8ffb94396b340c396823b59e0452946@intel.com>
 References: <cover.1587727756.git.Jose.Abreu@synopsys.com>
- <9b5c2d47997629c55ac14ce594771e9e8f254c74.1587727756.git.Jose.Abreu@synopsys.com>
-In-Reply-To: <9b5c2d47997629c55ac14ce594771e9e8f254c74.1587727756.git.Jose.Abreu@synopsys.com>
+ <5c4281080538b74ca39cedb9112ffe71bf7a80b5.1587727756.git.Jose.Abreu@synopsys.com>
+In-Reply-To: <5c4281080538b74ca39cedb9112ffe71bf7a80b5.1587727756.git.Jose.Abreu@synopsys.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -76,11 +76,14 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+> Add a define for UFS version 3.0 and do not print an error message upon probe
+> when using this version.
 > 
-> Newer Test Chips boards have MSI support. It does no harm to try to request it
-> as the function will fallback to legacy interrupts if MSI is not supported.
-> 
+> Signed-off-by: Joao Lima <Joao.Lima@synopsys.com>
 > Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
+LGTM
+Thanks
+Tomas
 > 
 > ---
 > Cc: Joao Lima <Joao.Lima@synopsys.com>
@@ -92,33 +95,37 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 > Cc: linux-scsi@vger.kernel.org
 > Cc: linux-kernel@vger.kernel.org
 > ---
->  drivers/scsi/ufs/tc-dwc-pci.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
+>  drivers/scsi/ufs/ufshcd.c | 3 ++-
+>  drivers/scsi/ufs/ufshci.h | 1 +
+>  2 files changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/ufs/tc-dwc-pci.c b/drivers/scsi/ufs/tc-dwc-pci.c index
-> 74a2d80d32bd..e0a880cbbe68 100644
-> --- a/drivers/scsi/ufs/tc-dwc-pci.c
-> +++ b/drivers/scsi/ufs/tc-dwc-pci.c
-> @@ -136,9 +136,15 @@ tc_dwc_pci_probe(struct pci_dev *pdev, const struct
-> pci_device_id *id)
->  		return -ENOENT;
->  	}
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> 7d1fa1349d40..2e5c200e915b 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8441,7 +8441,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem
+> *mmio_base, unsigned int irq)
+>  	if ((hba->ufs_version != UFSHCI_VERSION_10) &&
+>  	    (hba->ufs_version != UFSHCI_VERSION_11) &&
+>  	    (hba->ufs_version != UFSHCI_VERSION_20) &&
+> -	    (hba->ufs_version != UFSHCI_VERSION_21))
+> +	    (hba->ufs_version != UFSHCI_VERSION_21) &&
+> +	    (hba->ufs_version != UFSHCI_VERSION_30))
+>  		dev_err(hba->dev, "invalid UFS version 0x%x\n",
+>  			hba->ufs_version);
 > 
-> +	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
-PCI_IRQ_LEGACY | PCI_IRQ_MSI , is enough  you don't have MSIX
-> +	if (err < 0) {
-> +		dev_err(&pdev->dev, "Allocation failed\n");
-> +		return err;
-> +	}
-> +
-Where do you call pci_free_irq_vectors() ? 
->  	hba->vops = &data->ops;
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h index
+> c2961d37cc1c..f2ee81669b00 100644
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -104,6 +104,7 @@ enum {
+>  	UFSHCI_VERSION_11 = 0x00010100, /* 1.1 */
+>  	UFSHCI_VERSION_20 = 0x00000200, /* 2.0 */
+>  	UFSHCI_VERSION_21 = 0x00000210, /* 2.1 */
+> +	UFSHCI_VERSION_30 = 0x00000300, /* 3.0 */
+>  };
 > 
-> -	err = ufshcd_init(hba, mmio_base, pdev->irq);
-> +	err = ufshcd_init(hba, mmio_base, pci_irq_vector(pdev, 0));
->  	if (err) {
->  		dev_err(&pdev->dev, "Initialization failed\n");
->  		return err;
+>  /*
 > --
 > 2.7.4
 
