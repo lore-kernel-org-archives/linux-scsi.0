@@ -6,60 +6,50 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC99C55191
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 17:52:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D3FC55191
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 18:07:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 490F320672
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 17:52:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59A5020714
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 18:07:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726279AbgDYRv5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Apr 2020 13:51:57 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:51110 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726061AbgDYRv5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Apr 2020 13:51:57 -0400
-Received: by mail-pj1-f65.google.com with SMTP id t9so5288719pjw.0;
-        Sat, 25 Apr 2020 10:51:55 -0700 (PDT)
+        id S1726405AbgDYSHq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Apr 2020 14:07:46 -0400
+Received: from mail-pf1-f169.google.com ([209.85.210.169]:44376 "EHLO
+        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726378AbgDYSHp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Apr 2020 14:07:45 -0400
+Received: by mail-pf1-f169.google.com with SMTP id p25so6456067pfn.11;
+        Sat, 25 Apr 2020 11:07:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=YOYpjIbi+oV00jOmN2uFU72RJjmnEToaQzfcciU/EQM=;
-        b=SRegaX7Lr0dA32l4dd2LaaVw13wUDk2xIOUUw+1flYWVM7IDqRQB8fpg8kADp9IcQs
-         49lafNEtrPqBggsF0O+c3y1B2mtQ7yhlJe/CF1a1n/BWFbcDLm01p74sGcldllTRcW8g
-         7VQ98LV/ed9hwV5LhpwLNAN1qLZLc2INbBh1V76AGyfo/NPtqSQEUgu7cwa9MdanbFXk
-         BmYGqDZWrKFyPWusuEyd2eSie1QCX10OreIhhRpnVpxjbbcsFqOoM0xxMICB4fYKRpeJ
-         /h3Ixf/edJCvTjRJj7hzfFCJGXpvfSqB4KXe3exUVZ2JEtBI775glLWY8QF1tM71YaLP
-         uu6g==
-X-Gm-Message-State: AGi0PuZ6GHPGKWc3/CTrwSEu5vLVsTtq2FfCN7oRor1Y+rWAYt7qHphZ
-        eKlpcYCv164qOjnWKE0qJDR7+k+Yk/c=
-X-Google-Smtp-Source: APiQypLyIdqdey0S7tINcmBiKFBGecZ1mzVKrvwLHIvRV7Y3vFsxibnx6YprZdbQ7HjTIc+co5PCCw==
-X-Received: by 2002:a17:902:b18d:: with SMTP id s13mr15065359plr.240.1587837114672;
-        Sat, 25 Apr 2020 10:51:54 -0700 (PDT)
+        bh=DygkneB8Wo1mZONnIrZ1eQSaeccTjeq3ViwRwwN9bPw=;
+        b=Dtld5B3dktwufmphgJx1Baa1L3KJeBd0JtZ9H43YfRLzHSnb5/Rz/7JI0Q9Pt784t0
+         KcfcvR6HwTbFMOy0OD3yQcmziinNhPH6c/KGApsdbXRiO3wg0R0JoNoetMMDR2GVkhac
+         9qF/1xOuAqQb4Y10Wr0txBEdCtjKhuvQlRgsHxqQEUyULrWaZUIFK284+EE7/lux1NEQ
+         XV+mG5eFgxYTIKYxeIfWD+os1b700fjB7uKpMPi7CKN/qACYoKiTeEx3xm15jFYv9SIc
+         7GkWOymzFXsQvzOWPGZGkT2tV3tbNa8REhKdZ6OT+PJ4YBmgPmIEpVtZ9IAWHVPmR5U1
+         LmxA==
+X-Gm-Message-State: AGi0PubZUsUpCGVTAocKXB1fBt/cv/T4M++CpPe4XC5fpq/3C8mN88ND
+        O25MAC9g7L/Pw3JgqZV0j3obtbxJEgE=
+X-Google-Smtp-Source: APiQypKhXgyyHDuseRPvP/VuJTW7WBQyQsd9eaKCfk5bn11sPToM4I3uAfs09OIB6zGC5bbrIFVmLA==
+X-Received: by 2002:a63:dc41:: with SMTP id f1mr15663150pgj.348.1587838062664;
+        Sat, 25 Apr 2020 11:07:42 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:9817:f6ce:d8be:3e60? ([2601:647:4000:d7:9817:f6ce:d8be:3e60])
-        by smtp.gmail.com with ESMTPSA id a21sm8550316pfk.39.2020.04.25.10.51.53
+        by smtp.gmail.com with ESMTPSA id h11sm8471825pfo.120.2020.04.25.11.07.41
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Apr 2020 10:51:53 -0700 (PDT)
+        Sat, 25 Apr 2020 11:07:41 -0700 (PDT)
 Subject: Re: [PATCH v2 5/5] scsi: ufs: UFS Host Performance Booster(HPB)
  driver
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To:     huobean@gmail.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20200416203126.1210-1-beanhuo@micron.com>
  <20200416203126.1210-6-beanhuo@micron.com>
- <8921adc3-0c1e-eb16-4a22-1a2a583fc8b3@acm.org>
- <SN6PR04MB4640851C163648C54EB274C5FCD00@SN6PR04MB4640.namprd04.prod.outlook.com>
- <SN6PR04MB4640ABB2BB5D2CE5AA2C3778FCD10@SN6PR04MB4640.namprd04.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -84,12 +74,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <12e8ad61-caa4-3d28-c1d7-febe99a488fb@acm.org>
-Date:   Sat, 25 Apr 2020 10:51:52 -0700
+Message-ID: <183528b9-f04b-40f5-269b-5897da113b97@acm.org>
+Date:   Sat, 25 Apr 2020 11:07:40 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <SN6PR04MB4640ABB2BB5D2CE5AA2C3778FCD10@SN6PR04MB4640.namprd04.prod.outlook.com>
+In-Reply-To: <20200416203126.1210-6-beanhuo@micron.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -98,27 +88,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-04-25 01:59, Avri Altman wrote:
-> One last word for the community members that are not into ufs day-to-day:
-> 
-> HPB implementation made its first public appearance around 2018 as part of Google's Pixel3 and some VIVO models.
-> Since then, more and more mobile platforms are publically using HPB: Galaxy Note10,
-> Galaxy S20 and VIVO NEX3 (that is already using HPB2.0), some Xiaomi models etc.
-> 
-> On the other hand, HPB1.0 spec was just recently closed - not even as part of UFS3.1,
-> but only after - about 2 months ago. The industry is rushing forward, we've seen this many times.
-> 
-> The fact is that HPB is here to stay - either as a horde of out-of-tree implementations,
-> or as a standard acceptable mainline driver.
+On 2020-04-16 13:31, huobean@gmail.com wrote:
+> +static int ufshpb_execute_cmd(struct ufshpb_lu *hpb, unsigned char *cmd)
+> +{
+> +	struct scsi_sense_hdr sshdr;
+> +	struct scsi_device *sdp;
+> +	struct ufs_hba *hba;
+> +	int retries;
+> +	int ret = 0;
+> +
+> +	hba = hpb->hba;
+> +
+> +	sdp = hba->sdev_ufs_lu[hpb->lun];
+> +	if (!sdp) {
+> +		hpb_warn("%s UFSHPB cannot find scsi_device\n",  __func__);
+> +		return -ENODEV;
+> +	}
+> +
+> +	ret = scsi_device_get(sdp);
+> +	if (!ret && !scsi_device_online(sdp)) {
+> +		ret = -ENODEV;
+> +		scsi_device_put(sdp);
+> +		return ret;
+> +	}
+> +
+> +	for (retries = 3; retries > 0; --retries) {
+> +		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+> +				   msecs_to_jiffies(30000), 3, 0, RQF_PM, NULL);
+> +		if (ret == 0)
+> +			break;
+> +	}
+> +
+> +	if (ret) {
+> +		if (driver_byte(ret) == DRIVER_SENSE &&
+> +		    scsi_sense_valid(&sshdr)) {
+> +			switch (sshdr.sense_key) {
+> +			case ILLEGAL_REQUEST:
+> +				hpb_err("ILLEGAL REQUEST asc=0x%x ascq=0x%x\n",
+> +					sshdr.asc, sshdr.ascq);
+> +				break;
+> +			default:
+> +				hpb_err("Unknown return code = %x\n", ret);
+> +				break;
+> +			}
+> +		}
+> +	}
+> +	scsi_device_put(sdp);
+> +
+> +	return ret;
+> +}
 
-Hi Avri,
+If scsi_execute() would be changed into asynchronous SCSI command
+submission, can ufshpb_execute_cmd() be called from inside the UFS
+.queue_rq() callback instead of from workqueue context?
 
-Thanks for the additional clarification. I think we need HPB support in
-the upstream kernel. A possible approach is to start a discussion about
-how to integrate HPB support in the upstream kernel and to defer posting
-new implementations until agreement about an approach has been achieved.
-Is there e.g. an alternative for avoiding deadlocks other than using the
-blk-mq reserved tag feature for the commands that manage the L2P tables?
+The scsi_device_get() call looks misplaced. I think that call should
+happen before schedule_work() is called.
+
+> +static int ufshpb_l2p_load_req(struct ufshpb_lu *hpb, struct request_queue *q,
+> +			       struct ufshpb_map_req *map_req)
+> +{
+> +	struct scsi_request *scsi_rq;
+> +	unsigned char cmd[16] = { };
+> +	struct request *req;
+> +	struct bio *bio;
+> +	int alloc_len;
+> +	int ret;
+> +
+> +	bio = &map_req->bio;
+> +
+> +	ret = ufshpb_add_bio_page(hpb, q, bio, map_req->bvec, map_req->mctx);
+> +	if (ret) {
+> +		hpb_err("ufshpb_add_bio_page() failed with ret %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	alloc_len = hpb->hba->hpb_geo.subregion_entry_sz;
+> +	/*
+> +	 * HPB Sub-Regions are equally sized except for the last one which is
+> +	 * smaller if the last hpb Region is not an integer multiple of
+> +	 * bHPBSubRegionSize.
+> +	 */
+> +	if (map_req->region == (hpb->lu_region_cnt - 1) &&
+> +	    map_req->subregion == (hpb->subregions_in_last_region - 1))
+> +		alloc_len = hpb->last_subregion_entry_size;
+> +
+> +	ufshpb_prepare_read_buf_cmd(cmd, map_req->region, map_req->subregion,
+> +				    alloc_len);
+> +	if (!map_req->req) {
+> +		map_req->req = blk_get_request(q, REQ_OP_SCSI_IN, 0);
+> +		if (IS_ERR(map_req->req))
+> +			return PTR_ERR(map_req->req);
+> +	}
+> +	req = map_req->req;
+> +	scsi_rq = scsi_req(req);
+> +
+> +	blk_rq_append_bio(req, &bio);
+> +
+> +	scsi_req_init(scsi_rq);
+> +
+> +	scsi_rq->cmd_len = COMMAND_SIZE(cmd[0]);
+> +	memcpy(scsi_rq->cmd, cmd, scsi_rq->cmd_len);
+> +	req->timeout = msecs_to_jiffies(30000);
+> +	req->end_io_data = (void *)map_req;
+> +
+> +	hpb_dbg(SCHEDULE_INFO, hpb, "ISSUE READ_BUFFER : (%d-%d) retry = %d\n",
+> +		map_req->region, map_req->subregion, map_req->retry_cnt);
+> +	hpb_trace(hpb, "%s: I RB %d - %d", DRIVER_NAME, map_req->region,
+> +		  map_req->subregion);
+> +
+> +	blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_l2p_load_req_done);
+> +	map_req->req_issue_t = ktime_to_ns(ktime_get());
+> +
+> +	atomic64_inc(&hpb->status.map_req_cnt);
+> +
+> +	return 0;
+> +}
+
+Same question here: if 'req' would be submitted asynchronously, can
+ufshpb_l2p_load_req() be called directly from inside the UFS .queue_rq()
+callback instead of from workqueue context?
 
 Thanks,
 
