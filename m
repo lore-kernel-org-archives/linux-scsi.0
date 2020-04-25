@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CB86C55186
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE68C55185
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:57:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD45B2074F
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39FDB2074F
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:57:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UIptKzTN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="swEtlHZa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726361AbgDYH5c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Apr 2020 03:57:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36750 "EHLO
+        id S1726165AbgDYH5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Apr 2020 03:57:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726346AbgDYH5b (ORCPT
+        by vger.kernel.org with ESMTP id S1726110AbgDYH5Z (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 25 Apr 2020 03:57:31 -0400
+        Sat, 25 Apr 2020 03:57:25 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE981C09B049;
-        Sat, 25 Apr 2020 00:57:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE34AC09B049;
+        Sat, 25 Apr 2020 00:57:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=WJ0+a4mAv4GY8+BItbOjaLJNpt6UkUzQ0TmaFkgRpVY=; b=UIptKzTNy+v1pQpTBCfpGnrTTh
-        AwR/kep313wEK7dYuN+GEBNFmVxT4CTTFvNUoxvwYVuFQrPoQQvhuWGDF2oj1TQjDMWAYLSem6e/W
-        HwXIBZ25Hxji3IlCgZuTXwyo4qhcS3D9ZBYHv0vIDlN6rKlipDTa+8+WTWXsaAfj6l2jZr+NtsccU
-        O/BxD7gldF07/9Mcx5THExZyTui/S779oQYbEIcMbzK2skahi8wmkRclFbhi5DFfUUpTiI6lS2Z8f
-        qxJ5M3WqH0NUYVv/7CfinPnzUx22lhZzBRzAjduCzKE7c7qBIAqPxsw8P3UFztEoscOyoeDC073rN
-        /j17zImA==;
+        bh=tKIIISH07iF8nYnRdMHBGFHVv03E35IQ7XPvfXoVxwE=; b=swEtlHZaUy2+kvWHsFUtYVfjpr
+        87Hpk3kXGbGO4IkSnVZxZ4pm0p8AgKT+eGHw8slFW41wT5hGPjKiM+ctyhsxqzjHq/N/vyNa0INeG
+        giV+F3n8AWL4aCqrXw2t8mZRn75/KMmINIENaXJ+iyl6zUvdW572awMhcyNubJJMOZzHZuMQWUQkK
+        I31ByQtkhbszkdkLTFohp+i/6VkRO8RKk1yFA2YYw+mgQGjS41Ei3Z6jgGVVlTdIGaZbKS0wV7GAz
+        JOCtQXE8Po6dPZ0CwIk65lPgvrXKm1vx3qkVzfA0oB4cVzTW0X3xwokOHQLDlhpZDE4ze4Lt3Q1vq
+        te2TbesA==;
 Received: from [2001:4bb8:193:f203:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jSFgk-00023e-IJ; Sat, 25 Apr 2020 07:57:26 +0000
+        id 1jSFgV-00021W-1W; Sat, 25 Apr 2020 07:57:11 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 7/7] udf: stop using ioctl_by_bdev
-Date:   Sat, 25 Apr 2020 09:57:06 +0200
-Message-Id: <20200425075706.721917-8-hch@lst.de>
+        Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 1/7] block: add a cdrom_device_info pointer to struct gendisk
+Date:   Sat, 25 Apr 2020 09:57:00 +0200
+Message-Id: <20200425075706.721917-2-hch@lst.de>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200425075706.721917-1-hch@lst.de>
 References: <20200425075706.721917-1-hch@lst.de>
@@ -59,74 +59,138 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead just call the CDROM layer functionality directly.
+Add a pointer to the CDROM information structure to struct gendisk.
+This will allow various removable media file systems to call directly
+into the CDROM layer instead of abusing ioctls with kernel pointers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
 Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- fs/udf/lowlevel.c | 29 +++++++++++++----------------
- 1 file changed, 13 insertions(+), 16 deletions(-)
+ drivers/block/paride/pcd.c | 2 +-
+ drivers/cdrom/cdrom.c      | 5 ++++-
+ drivers/cdrom/gdrom.c      | 2 +-
+ drivers/ide/ide-cd.c       | 3 +--
+ drivers/scsi/sr.c          | 3 +--
+ include/linux/cdrom.h      | 2 +-
+ include/linux/genhd.h      | 9 +++++++++
+ 7 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/fs/udf/lowlevel.c b/fs/udf/lowlevel.c
-index 5c7ec121990da..f1094cdcd6cde 100644
---- a/fs/udf/lowlevel.c
-+++ b/fs/udf/lowlevel.c
-@@ -27,41 +27,38 @@
+diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
+index cda5cf917e9af..5124eca90e833 100644
+--- a/drivers/block/paride/pcd.c
++++ b/drivers/block/paride/pcd.c
+@@ -1032,7 +1032,7 @@ static int __init pcd_init(void)
  
- unsigned int udf_get_last_session(struct super_block *sb)
- {
-+	struct cdrom_device_info *cdi = disk_to_cdi(sb->s_bdev->bd_disk);
- 	struct cdrom_multisession ms_info;
--	unsigned int vol_desc_start;
--	struct block_device *bdev = sb->s_bdev;
--	int i;
- 
--	vol_desc_start = 0;
--	ms_info.addr_format = CDROM_LBA;
--	i = ioctl_by_bdev(bdev, CDROMMULTISESSION, (unsigned long)&ms_info);
-+	if (!cdi) {
-+		udf_debug("CDROMMULTISESSION not supported.\n");
-+		return 0;
-+	}
- 
--	if (i == 0) {
-+	ms_info.addr_format = CDROM_LBA;
-+	if (cdrom_multisession(cdi, &ms_info) == 0) {
- 		udf_debug("XA disk: %s, vol_desc_start=%d\n",
- 			  ms_info.xa_flag ? "yes" : "no", ms_info.addr.lba);
- 		if (ms_info.xa_flag) /* necessary for a valid ms_info.addr */
--			vol_desc_start = ms_info.addr.lba;
--	} else {
--		udf_debug("CDROMMULTISESSION not supported: rc=%d\n", i);
-+			return ms_info.addr.lba;
- 	}
--	return vol_desc_start;
-+	return 0;
+ 	for (unit = 0, cd = pcd; unit < PCD_UNITS; unit++, cd++) {
+ 		if (cd->present) {
+-			register_cdrom(&cd->info);
++			register_cdrom(cd->disk, &cd->info);
+ 			cd->disk->private_data = cd;
+ 			add_disk(cd->disk);
+ 		}
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index faca0f346fff2..a1d2112fd283f 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -586,7 +586,7 @@ static int cdrom_mrw_set_lba_space(struct cdrom_device_info *cdi, int space)
+ 	return 0;
  }
  
- unsigned long udf_get_last_block(struct super_block *sb)
+-int register_cdrom(struct cdrom_device_info *cdi)
++int register_cdrom(struct gendisk *disk, struct cdrom_device_info *cdi)
  {
- 	struct block_device *bdev = sb->s_bdev;
-+	struct cdrom_device_info *cdi = disk_to_cdi(bdev->bd_disk);
- 	unsigned long lblock = 0;
+ 	static char banner_printed;
+ 	const struct cdrom_device_ops *cdo = cdi->ops;
+@@ -601,6 +601,9 @@ int register_cdrom(struct cdrom_device_info *cdi)
+ 		cdrom_sysctl_register();
+ 	}
+ 
++	cdi->disk = disk;
++	disk->cdi = cdi;
++
+ 	ENSURE(cdo, drive_status, CDC_DRIVE_STATUS);
+ 	if (cdo->check_events == NULL && cdo->media_changed == NULL)
+ 		WARN_ON_ONCE(cdo->capability & (CDC_MEDIA_CHANGED | CDC_SELECT_DISC));
+diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+index c51292c2a131e..09b0cd292720f 100644
+--- a/drivers/cdrom/gdrom.c
++++ b/drivers/cdrom/gdrom.c
+@@ -770,7 +770,7 @@ static int probe_gdrom(struct platform_device *devptr)
+ 		goto probe_fail_no_disk;
+ 	}
+ 	probe_gdrom_setupdisk();
+-	if (register_cdrom(gd.cd_info)) {
++	if (register_cdrom(gd.disk, gd.cd_info)) {
+ 		err = -ENODEV;
+ 		goto probe_fail_cdrom_register;
+ 	}
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index dcf8b51b47fda..40e124eb918aa 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1305,8 +1305,7 @@ static int ide_cdrom_register(ide_drive_t *drive, int nslots)
+ 	if (drive->atapi_flags & IDE_AFLAG_NO_SPEED_SELECT)
+ 		devinfo->mask |= CDC_SELECT_SPEED;
+ 
+-	devinfo->disk = info->disk;
+-	return register_cdrom(devinfo);
++	return register_cdrom(info->disk, devinfo);
+ }
+ 
+ static int ide_cdrom_probe_capabilities(ide_drive_t *drive)
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index d2fe3fa470f95..f9b589d60a460 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -794,9 +794,8 @@ static int sr_probe(struct device *dev)
+ 	set_capacity(disk, cd->capacity);
+ 	disk->private_data = &cd->driver;
+ 	disk->queue = sdev->request_queue;
+-	cd->cdi.disk = disk;
+ 
+-	if (register_cdrom(&cd->cdi))
++	if (register_cdrom(disk, &cd->cdi))
+ 		goto fail_put;
  
  	/*
--	 * ioctl failed or returned obviously bogus value?
-+	 * The cdrom layer call failed or returned obviously bogus value?
- 	 * Try using the device size...
- 	 */
--	if (ioctl_by_bdev(bdev, CDROM_LAST_WRITTEN, (unsigned long) &lblock) ||
--	    lblock == 0)
-+	if (!cdi || cdrom_get_last_written(cdi, &lblock) || lblock == 0)
- 		lblock = i_size_read(bdev->bd_inode) >> sb->s_blocksize_bits;
+diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+index 528271c600182..4f74ce050253d 100644
+--- a/include/linux/cdrom.h
++++ b/include/linux/cdrom.h
+@@ -104,7 +104,7 @@ extern unsigned int cdrom_check_events(struct cdrom_device_info *cdi,
+ 				       unsigned int clearing);
+ extern int cdrom_media_changed(struct cdrom_device_info *);
  
- 	if (lblock)
- 		return lblock - 1;
--	else
--		return 0;
-+	return 0;
- }
+-extern int register_cdrom(struct cdrom_device_info *cdi);
++extern int register_cdrom(struct gendisk *disk, struct cdrom_device_info *cdi);
+ extern void unregister_cdrom(struct cdrom_device_info *cdi);
+ 
+ typedef struct {
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 058d895544c75..f9c226f9546af 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -217,11 +217,20 @@ struct gendisk {
+ #ifdef  CONFIG_BLK_DEV_INTEGRITY
+ 	struct kobject integrity_kobj;
+ #endif	/* CONFIG_BLK_DEV_INTEGRITY */
++#if IS_ENABLED(CONFIG_CDROM)
++	struct cdrom_device_info *cdi;
++#endif
+ 	int node_id;
+ 	struct badblocks *bb;
+ 	struct lockdep_map lockdep_map;
+ };
+ 
++#if IS_REACHABLE(CONFIG_CDROM)
++#define disk_to_cdi(disk)	((disk)->cdi)
++#else
++#define disk_to_cdi(disk)	NULL
++#endif
++
+ static inline struct gendisk *part_to_disk(struct hd_struct *part)
+ {
+ 	if (likely(part)) {
 -- 
 2.26.1
 
