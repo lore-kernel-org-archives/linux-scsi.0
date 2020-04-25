@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D4D0C55186
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FACDC5519A
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:58:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EFA021582
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:58:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50BF920706
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Apr 2020 07:58:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XUE7EQJj"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QqBgQzau"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726400AbgDYH54 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Apr 2020 03:57:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36728 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726140AbgDYH5Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726127AbgDYH5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 25 Apr 2020 03:57:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36716 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726098AbgDYH5Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 25 Apr 2020 03:57:24 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49D40C09B04A;
-        Sat, 25 Apr 2020 00:57:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 988F3C09B049;
+        Sat, 25 Apr 2020 00:57:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=iN058KjzLihwegdmbCnjqBTIYUWszTynShxhqrWnMxg=; b=XUE7EQJjNRXvwm4wQaG7sgsMvg
-        e0A72bYcGGrzlA4A6UUS/x26AzBv5Stp4XUZrXhrmAMNMBDuHAz6hs8BcSoF4S7M4btdLrQEaJyEt
-        uQiDwzKmSdcB//yKNd9BGvd2d60vO6fSVudZc619t6+pRI1WCVtb88hZyscGPxPVUEES2pfOH2ZUq
-        XOntuUuJm6egAMp1ZbC+QyMF2wMZSzab2onsJOIBGVd80NuH883ekz7Ks7aXs4KYurUNgtoG3P2dQ
-        4xR4xhIijwXS3j25xMN9FFWwWeTE8Q/Q5Q2DN2LbEjHJHrUVDxQ0zQBHgkUGiL0Fgc1cklRx3+v6B
-        fd62jPKQ==;
+        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
+        To:From:Sender:Reply-To:Content-ID:Content-Description;
+        bh=fRRB7Hw/olceB/aYN2JO9ZS8o+tiMugLsMPr0vwHMzw=; b=QqBgQzau0psQY6V+7WQxpmy5PU
+        ajsY2re2MDG11WgmEv5R8G0a/BioSP9tdlDLI5sebNGA3PM9o2nj5FW0KgMosAgCyAiNGLsZjJwWD
+        5hP48gFZo+lE0VsiKSiXoHUc850adImMb5Iwh5HbRgHZqBvKx3zuz8dt8Imwq6SmRuAcGd4sAwBIZ
+        KyXNjbQdtMS9p0ySeuQ2T8LeOV62SQY4USm+i0yhAhVWfVS1rnJLPiH9tu19PLXn54+6GPor1LTqp
+        YQSqctE/qnFyktzPvKiO3VaQ46PTMuYg7o/NGIUPLdpPh+ujf1Ea3GWd4ux5Ygb1qIZMBlok+tpmV
+        RA490WSg==;
 Received: from [2001:4bb8:193:f203:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jSFgZ-000229-RU; Sat, 25 Apr 2020 07:57:17 +0000
+        id 1jSFgX-00021r-EH; Sat, 25 Apr 2020 07:57:13 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
@@ -45,13 +45,14 @@ Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 3/7] cdrom: factor out a cdrom_read_tocentry helper
-Date:   Sat, 25 Apr 2020 09:57:02 +0200
-Message-Id: <20200425075706.721917-4-hch@lst.de>
+Subject: [PATCH 2/7] ide-cd: rename cdrom_read_tocentry
+Date:   Sat, 25 Apr 2020 09:57:01 +0200
+Message-Id: <20200425075706.721917-3-hch@lst.de>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200425075706.721917-1-hch@lst.de>
 References: <20200425075706.721917-1-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
@@ -59,89 +60,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Factor out a version of the CDROMREADTOCENTRY ioctl handler that can
-be called directly from kernel space.
+Give the cdrom_read_tocentry function and ide_ prefix to not conflict
+with the soon to be added generic function.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/cdrom/cdrom.c | 39 ++++++++++++++++++++++-----------------
- include/linux/cdrom.h |  3 +++
- 2 files changed, 25 insertions(+), 17 deletions(-)
+ drivers/ide/ide-cd.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index a1d2112fd283f..c91d1e1382142 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2666,32 +2666,37 @@ static int cdrom_ioctl_read_tochdr(struct cdrom_device_info *cdi,
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 40e124eb918aa..7f17f83039888 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1034,8 +1034,8 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
  	return 0;
  }
  
-+int cdrom_read_tocentry(struct cdrom_device_info *cdi,
-+		struct cdrom_tocentry *entry)
-+{
-+	u8 requested_format = entry->cdte_format;
-+	int ret;
-+
-+	if (requested_format != CDROM_MSF && requested_format != CDROM_LBA)
-+		return -EINVAL;
-+
-+	/* make interface to low-level uniform */
-+	entry->cdte_format = CDROM_MSF;
-+	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, entry);
-+	if (!ret)
-+		sanitize_format(&entry->cdte_addr, &entry->cdte_format,
-+				requested_format);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(cdrom_read_tocentry);
-+
- static int cdrom_ioctl_read_tocentry(struct cdrom_device_info *cdi,
- 		void __user *argp)
+-static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
+-				int format, char *buf, int buflen)
++static int ide_cdrom_read_tocentry(ide_drive_t *drive, int trackno,
++		int msf_flag, int format, char *buf, int buflen)
  {
- 	struct cdrom_tocentry entry;
--	u8 requested_format;
- 	int ret;
+ 	unsigned char cmd[BLK_MAX_CDB];
  
--	/* cd_dbg(CD_DO_IOCTL, "entering CDROMREADTOCENTRY\n"); */
--
- 	if (copy_from_user(&entry, argp, sizeof(entry)))
- 		return -EFAULT;
--
--	requested_format = entry.cdte_format;
--	if (requested_format != CDROM_MSF && requested_format != CDROM_LBA)
--		return -EINVAL;
--	/* make interface to low-level uniform */
--	entry.cdte_format = CDROM_MSF;
--	ret = cdi->ops->audio_ioctl(cdi, CDROMREADTOCENTRY, &entry);
--	if (ret)
--		return ret;
--	sanitize_format(&entry.cdte_addr, &entry.cdte_format, requested_format);
--
--	if (copy_to_user(argp, &entry, sizeof(entry)))
-+	ret = cdrom_read_tocentry(cdi, &entry);
-+	if (!ret && copy_to_user(argp, &entry, sizeof(entry)))
- 		return -EFAULT;
--	/* cd_dbg(CD_DO_IOCTL, "CDROMREADTOCENTRY successful\n"); */
--	return 0;
-+	return ret;
- }
+@@ -1104,7 +1104,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 				     sectors_per_frame << SECTOR_SHIFT);
  
- static int cdrom_ioctl_play_msf(struct cdrom_device_info *cdi,
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index 4f74ce050253d..008c4d79fa332 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -94,6 +94,9 @@ struct cdrom_device_ops {
- 			       struct packet_command *);
- };
+ 	/* first read just the header, so we know how long the TOC is */
+-	stat = cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
++	stat = ide_cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
+ 				    sizeof(struct atapi_toc_header));
+ 	if (stat)
+ 		return stat;
+@@ -1121,7 +1121,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 		ntracks = MAX_TRACKS;
  
-+int cdrom_read_tocentry(struct cdrom_device_info *cdi,
-+		struct cdrom_tocentry *entry);
-+
- /* the general block_device operations structure: */
- extern int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
- 			fmode_t mode);
+ 	/* now read the whole schmeer */
+-	stat = cdrom_read_tocentry(drive, toc->hdr.first_track, 1, 0,
++	stat = ide_cdrom_read_tocentry(drive, toc->hdr.first_track, 1, 0,
+ 				  (char *)&toc->hdr,
+ 				   sizeof(struct atapi_toc_header) +
+ 				   (ntracks + 1) *
+@@ -1141,7 +1141,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 		 * Heiko Eißfeldt.
+ 		 */
+ 		ntracks = 0;
+-		stat = cdrom_read_tocentry(drive, CDROM_LEADOUT, 1, 0,
++		stat = ide_cdrom_read_tocentry(drive, CDROM_LEADOUT, 1, 0,
+ 					   (char *)&toc->hdr,
+ 					   sizeof(struct atapi_toc_header) +
+ 					   (ntracks + 1) *
+@@ -1181,7 +1181,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 
+ 	if (toc->hdr.first_track != CDROM_LEADOUT) {
+ 		/* read the multisession information */
+-		stat = cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
++		stat = ide_cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
+ 					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
+@@ -1195,7 +1195,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 
+ 	if (drive->atapi_flags & IDE_AFLAG_TOCADDR_AS_BCD) {
+ 		/* re-read multisession information using MSF format */
+-		stat = cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
++		stat = ide_cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
+ 					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
 -- 
 2.26.1
 
