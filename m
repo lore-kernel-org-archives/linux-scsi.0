@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B4B9C7C88A
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 17:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1982AC7C886
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 17:42:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4F622071C
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 17:42:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8E522168B
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 17:42:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VOmc3LHo"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="EVNJHZ6d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726403AbgDZRm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Apr 2020 13:42:57 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:33754 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726372AbgDZRmL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 13:42:11 -0400
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200426174208epoutp039c9d8d0b15679e7543dbc86006341bd0~Jb32P2x8N1070010700epoutp03C
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 17:42:08 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200426174208epoutp039c9d8d0b15679e7543dbc86006341bd0~Jb32P2x8N1070010700epoutp03C
+        id S1726500AbgDZRml (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Apr 2020 13:42:41 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:25065 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726447AbgDZRm3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 13:42:29 -0400
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200426174226epoutp04d1b75e2edb5fa552be86218a4b5642ae~Jb4Ga3HP_1821218212epoutp04Q
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 17:42:26 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200426174226epoutp04d1b75e2edb5fa552be86218a4b5642ae~Jb4Ga3HP_1821218212epoutp04Q
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1587922928;
-        bh=aZlGHc5xTiWwAyuHWOUJ6KyldBblFcw6DUpelUfBEa8=;
+        s=mail20170921; t=1587922946;
+        bh=N5xT+Tor3D+R1tVY/D303rOGE0vB3ZA1jQfCCEqyDjo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VOmc3LHoAnPsiadpW7uP+lCjMtCYSBCCBDPIIkpvsm9fEIDaxUtj6QNC46v370J3E
-         rZAXdEADaNTjmFRL0OsB9uCG/gjBWQeiRu64QFY5a1K+YXn8qbHQi6U0Hsv24rfStB
-         Rw0fYq+QlSdhA52J/6emYgEJyra3Jet+kNePj2dY=
-Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20200426174207epcas5p10a309a64b0f5750ce88bb96dc0bdf155~Jb31MDWiv1407714077epcas5p1d;
-        Sun, 26 Apr 2020 17:42:07 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FF.42.04782.FE7C5AE5; Mon, 27 Apr 2020 02:42:07 +0900 (KST)
+        b=EVNJHZ6dWViafdHYMZ1IpxaGiHhzM0stNuPmDeFLZpJnQspxJOvWvXIEoqM++GJWl
+         ygpYvjkscVkPFMHVvjr8syfIb7dbDNpStbS0QuM8J8NVEkbEmCeMsXq5mq8+IZTP0r
+         YZhiY6EfTvEIaIGlUnVsgF8zqPfmBywS2inKgkCs=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20200426174225epcas5p46e8ed90dac5869ac76c9554cb41cf820~Jb4F3I3Cg1741817418epcas5p46;
+        Sun, 26 Apr 2020 17:42:25 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A6.23.10083.108C5AE5; Mon, 27 Apr 2020 02:42:25 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200426174206epcas5p3a948de27f9eaa9256e4c3de5294ce234~Jb30pQwcz0554805548epcas5p3H;
-        Sun, 26 Apr 2020 17:42:06 +0000 (GMT)
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20200426174224epcas5p43a1223a63bb414a5060fa9044681f933~Jb4ExKSu52671526715epcas5p4g;
+        Sun, 26 Apr 2020 17:42:24 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200426174206epsmtrp23798bc6229183f6ec1745eedcd4a91c9~Jb30oe4qx1150211502epsmtrp2V;
-        Sun, 26 Apr 2020 17:42:06 +0000 (GMT)
-X-AuditID: b6c32a49-89bff700000012ae-4e-5ea5c7ef35ad
+        20200426174224epsmtrp2fce8c0694fa0809aba8db6b9a53e0c46~Jb4Ewaj651150211502epsmtrp2h;
+        Sun, 26 Apr 2020 17:42:24 +0000 (GMT)
+X-AuditID: b6c32a4a-875ff70000002763-90-5ea5c80128cc
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E3.DC.25866.EE7C5AE5; Mon, 27 Apr 2020 02:42:06 +0900 (KST)
+        68.DC.25866.008C5AE5; Mon, 27 Apr 2020 02:42:24 +0900 (KST)
 Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
         [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200426174204epsmtip1d26c5ef798b311816760ad027e3ccd9c~Jb3yxOH9D2626126261epsmtip1h;
-        Sun, 26 Apr 2020 17:42:04 +0000 (GMT)
+        20200426174222epsmtip10ef095e69617c0abf8d2f7f5c5415534~Jb4C3Asuq2817828178epsmtip1W;
+        Sun, 26 Apr 2020 17:42:22 +0000 (GMT)
 From:   Alim Akhtar <alim.akhtar@samsung.com>
 To:     robh@kernel.org
 Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -63,94 +63,141 @@ Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
         cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v7 02/10] scsi: ufs: add quirk to disallow reset of
- interrupt aggregation
-Date:   Sun, 26 Apr 2020 23:00:16 +0530
-Message-Id: <20200426173024.63069-3-alim.akhtar@samsung.com>
+Subject: [PATCH v7 10/10] arm64: dts: Add node for ufs exynos7
+Date:   Sun, 26 Apr 2020 23:00:24 +0530
+Message-Id: <20200426173024.63069-11-alim.akhtar@samsung.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200426173024.63069-1-alim.akhtar@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA0WSa0hTYRjHec/OOR6Hi9Mm9KSZtVBTyUslnQ9eCiSOIGHfwrw09KCmm7JN
-        zQqUFG/LWxc0G1OkmZqXNZfJtDQzZwkamFcQrBmSlaKD0CyteRZ9+z3v8/+//+d5eSmBuIpw
-        o9IUak6pkGVISSHe89rX58SaRZ8Q1Fl7iFnU9ZDMl60pktnoaiaYhuFxgpmYMDgxc6Y3OGO0
-        ThPMpFlLMnUTLzFGM9NLMo8tOxiz29/rxOifzaGzInaysgJjjW1lJNv9KJ8tejuAs+uf53G2
-        0tSGWJvxMFsyqMFiqFhhaDKXkZbDKQPDrwhTe/pWyax5l2vVlnlBAZoUliOKAvo0mMbwciSk
-        xHQfAnNzFcEXGwiWxsyOjg3B6NLvv4XznmO26CPJN8wIlkcGEF8UYfB08C5mV5G0PyzUmvbY
-        lZbA8I9iZGcBPYvBYmuknSX0ZdiemibsjNNeYF3swO0ziehQsBo8+DBPeGIYFNjZmQ6Dd3Vm
-        zJ4FdBkFMw+NJC+KBN2rUcd0ElixmJx4dgPb6guS3zMdbptP8cc3Qa8bccgjYPCDdi9WQPtC
-        lzmQn3IfVGwvYbxTBKXFYl7tBYWrUw6nO9RoNATPLKx+1TiepBpBvUXjVI086v/f2ohQGzrI
-        ZankKZwqJCtYweUGqGRyVbYiJSApU25Ee9/EL6oX1Y9HDyGaQlIXEfVcnyAmZDmqPPkQAkog
-        dRXFqZsSxKJkWd51TpmZqMzO4FRDyJ3CpQdEd4ipODGdIlNz6RyXxSn/dTHK2a0ADbC2tMIH
-        2RC9aV1hdJ7T5/t/9kd4d8bfC23dbDkeHut9Q31rTTtZoDiH7dRs+SeuoyC3GTZkf5ouu2PZ
-        p6NQnyQtMZRcCGtv1mqPtBzFLQvqi1GNzqnf4oeuxiS1H/sE72Pk+d0XS8+s9+klu7l0k+t3
-        SYPi/klzAYRd+hUqxVWpsmA/gVIl+wMz2aM0IgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrILMWRmVeSWpSXmKPExsWy7bCSnO6740vjDHp6zSwezNvGZvHy51U2
-        i0/rl7FazD9yjtXi/PkN7BY3txxlsdj0+BqrxeVdc9gsZpzfx2TRfX0Hm8Xy4/+YLP7v2cFu
-        sXTrTUYHXo/Lfb1MHptWdbJ5bF5S79Fycj+Lx8ent1g8+rasYvT4vEnOo/1AN1MARxSXTUpq
-        TmZZapG+XQJXxrbd79gKbvFUTDh+i7mB8TJXFyMnh4SAicSNlodsXYxcHEICOxgldt59xgyR
-        kJa4vnECO4QtLLHy33N2iKImJonTK/qZQBJsAtoSd6dvAbNFgIqOfGtjBLGZBZ4xSZx6WApi
-        CwtESkxefZAVxGYRUJV4/GAtSxcjBwevgI3E4w2yEPPlJVZvOAC2l1PAVuLUjF1MICVCQCXT
-        1/tPYORbwMiwilEytaA4Nz232LDAKC+1XK84Mbe4NC9dLzk/dxMjOJS1tHYw7ln1Qe8QIxMH
-        4yFGCQ5mJRHemJJFcUK8KYmVValF+fFFpTmpxYcYpTlYlMR5v85aGCckkJ5YkpqdmlqQWgST
-        ZeLglGpgEt13v9RrZVn3dm/LWiPR5Ws5K+ufzNXarml+oWbl5cm7f0zhWC4hsexXz5nt3f35
-        Ih+uWy5uv1vNGrrVuu14xU6BZhYZ+93Xpj3ZGvxvCteUOs7PU+TPVh18NpXF1FU4gq1T/E/q
-        pFl59c+XaTj/tL2pb3+UR8zrVtanGS37bnn+7Pi3x6hB4dHvgAXbpj+aVR6+3CZuh4V75LZt
-        BQK12it/pT+S5fm97epWoXhBlQcqzKfOhBVVRGYEaomcO9Lpcihz58EU1bTqTw/YxGS+1lob
-        zeALFzP/ek3trlqy7GqZZ++27Ap2jD2+ua/TI1HV0M78+NSi3e03N9tOepl05dezA7sWBPV0
-        PZZt8eKepcRSnJFoqMVcVJwIAPgHnWrUAgAA
-X-CMS-MailID: 20200426174206epcas5p3a948de27f9eaa9256e4c3de5294ce234
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0hTYRjHec9tx+HqNIUeJyQshFTUMosDeSuEjhES9SXDtJEHFZ2OHa8R
+        aGhaTkUl8Yp28VJGKqZm03Ity0swI1Mz8lJNSCmrKWZZmdtR8tvveZ7//7m8vDQu7yUVdGxC
+        Eq9NUMUrKSnR+dTN3RMN1EfsNcw5sTM1nRQ793OUYi0tDSRb22ci2eHhVgk70f6MYNs+jpHs
+        iL6aYsuHH2OsbryLYhv7/2LsWk+XhK3vmEBBMm6ksADj2pquUtz9ugwue7CX4L7PviW4wvYm
+        xC227eJyDTrsBH1G6hfFx8em8FrvgHPSmNLLJkrTC2l1Y7UoE0055CE7GhhfqL7Rg1lZznQj
+        aC7zzkPSdbYg+D1ZgYnBIoLbeUa06SidMiOxoEewsvSVFINsDEwWE2lVUYwHTJa12/o6Mg7Q
+        t5xjc+PMGwxm7gTnIZp2YALgQx1jTROMK6xZFiRWljH+0GxuxMVhLnC31WBju/X8ULkeEzU7
+        YLDCTIgtXSCrowq37gBMDw2zxVOUaA6G+UsjhMgOMN/fLhFZAYsLjyjrDsDEQb5+v5i+CPU1
+        zzfkgWB4XU1YJTjjBi16b3HUNihYNWOiUwZXcuSi2hWyFkY3nM5QrNORInPwaWlZIr5OEYL5
+        X1WoCLlUbrmgcssFlf+nXUd4E3LiNYI6mhcOaHwS+FQvQaUWkhOivc4nqtuQ7Vu5H+tCDabj
+        RsTQSGkvox/UR8hJVYqQrjYioHGloyw86WaEXBalSr/AaxMjtcnxvGBEzjSh3CkrIUfD5Uy0
+        KomP43kNr92sYrSdIhOFdM/6OnVP5ufa89/G0gKaj8TNoIyHnzVH2SzfmHuKIIE7/GTPSuC4
+        cWYVc/cN8trt6Rw5fVZaF4f/+CI99CfVzz8sp6Qg9VZI4PZTYwNhMSenPdw0oSvvpP5D3UOn
+        kSMy6N4PBHOzoa+Izsiwln5jvA9Z0lRsabz2Ivngy+VyJSHEqPa541pB9Q93C1Q2UgMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpnkeLIzCtJLcpLzFFi42LZdlhJTpfhxNI4g0tNPBYP5m1js3j58yqb
+        xaf1y1gt5h85x2px/vwGdoubW46yWGx6fI3V4vKuOWwWM87vY7Lovr6DzWL58X9MFv/37GC3
+        WLr1JqMDr8flvl4mj02rOtk8Ni+p92g5uZ/F4+PTWywefVtWMXp83iTn0X6gmymAI4rLJiU1
+        J7MstUjfLoErY2rrObaC/RIVS67NZ2xgvCfcxcjJISFgIjH13hPGLkYuDiGBHYwSV2ceZIVI
+        SEtc3ziBHcIWllj57zk7RFETk0TDy6VgRWwC2hJ3p29hArFFgIqOfGtjBLGZBZ4xSZx6WNrF
+        yMEhLGAn8WiJAEiYRUBV4v+nd2AzeQVsJdY9Wc4MMV9eYvWGA2A2J1D81IxdTCCtQgI2EtPX
+        +0OUC0qcnPmEBSTMLKAusX6eEMQieYnmrbOZJzAKzkJSNQuhahaSqgWMzKsYJVMLinPTc4sN
+        C4zyUsv1ihNzi0vz0vWS83M3MYLjSktrB+OeVR/0DjEycTAeYpTgYFYS4Y0pWRQnxJuSWFmV
+        WpQfX1Sak1p8iFGag0VJnPfrrIVxQgLpiSWp2ampBalFMFkmDk6pBqbjpRez9pXZXl/StjSF
+        w/iZ1+8bmQu+Wc66peX04vc8wbXK9bYvXiZscl4yn20Zt58dT9Tp6PR+Udd1Dks/szFtZ/ac
+        dFft44mJPKKf58ZNTeKYNMeG5drBVa/X9+idSv59Rl84Y8mU/V0HT886sOV6QKxQVcTcCbZa
+        hx/Z8PwxvdmnEnfDSHCCk+NE4Ulcl4MfOtwqtPreKV7wad7bLe1r70u42XCVvpx16OzE0mgt
+        xoPCndruc91ZlUMeBzLI3yjyOBOwpU5FOk6Ye8UBnYlS3vd2ba07Gv/p0nQnYe/H0gkvRMtF
+        Z60vzI2z5W54qKjw2etRok1aeXuDz6n2crG4mx4+Xn+qJ+x3/2t4S0WJpTgj0VCLuag4EQBW
+        zYpKGgMAAA==
+X-CMS-MailID: 20200426174224epcas5p43a1223a63bb414a5060fa9044681f933
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
-X-CMS-RootMailID: 20200426174206epcas5p3a948de27f9eaa9256e4c3de5294ce234
+X-CMS-RootMailID: 20200426174224epcas5p43a1223a63bb414a5060fa9044681f933
 References: <20200426173024.63069-1-alim.akhtar@samsung.com>
-        <CGME20200426174206epcas5p3a948de27f9eaa9256e4c3de5294ce234@epcas5p3.samsung.com>
+        <CGME20200426174224epcas5p43a1223a63bb414a5060fa9044681f933@epcas5p4.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Some host controllers support interrupt aggregation but don't allow
-resetting counter and timer in software.
+Adding dt node foe UFS and UFS-PHY for exynos7 SoC.
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Seungwon Jeon <essuuj@gmail.com>
 Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+Tested-by: Paweł Chmiel <pawel.mikolaj.chmiel@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 3 ++-
- drivers/scsi/ufs/ufshcd.h | 6 ++++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ .../boot/dts/exynos/exynos7-espresso.dts      |  4 ++
+ arch/arm64/boot/dts/exynos/exynos7.dtsi       | 44 ++++++++++++++++++-
+ 2 files changed, 46 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3655b88fc862..0e9704da58bd 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4884,7 +4884,8 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	 * false interrupt if device completes another request after resetting
- 	 * aggregation and before reading the DB.
- 	 */
--	if (ufshcd_is_intr_aggr_allowed(hba))
-+	if (ufshcd_is_intr_aggr_allowed(hba) &&
-+	    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
- 		ufshcd_reset_intr_aggr(hba);
- 
- 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 071f0edf3f64..53096642f9a8 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -523,6 +523,12 @@ enum ufshcd_quirks {
- 	 * Clear handling for transfer/task request list is just opposite.
- 	 */
- 	UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR		= 1 << 6,
-+
-+	/*
-+	 * This quirk needs to be enabled if host controller doesn't allow
-+	 * that the interrupt aggregation timer and counter are reset by s/w.
-+	 */
-+	UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR		= 1 << 7,
+diff --git a/arch/arm64/boot/dts/exynos/exynos7-espresso.dts b/arch/arm64/boot/dts/exynos/exynos7-espresso.dts
+index 7af288fa9475..790f12ca8981 100644
+--- a/arch/arm64/boot/dts/exynos/exynos7-espresso.dts
++++ b/arch/arm64/boot/dts/exynos/exynos7-espresso.dts
+@@ -406,6 +406,10 @@
+ 	};
  };
  
- enum ufshcd_caps {
++&ufs {
++	status = "okay";
++};
++
+ &usbdrd_phy {
+ 	vbus-supply = <&usb30_vbus_reg>;
+ 	vbus-boost-supply = <&usb3drd_boost_5v>;
+diff --git a/arch/arm64/boot/dts/exynos/exynos7.dtsi b/arch/arm64/boot/dts/exynos/exynos7.dtsi
+index 5558045637ac..0c1ebd3ea294 100644
+--- a/arch/arm64/boot/dts/exynos/exynos7.dtsi
++++ b/arch/arm64/boot/dts/exynos/exynos7.dtsi
+@@ -220,9 +220,14 @@
+ 			#clock-cells = <1>;
+ 			clocks = <&fin_pll>, <&clock_top1 DOUT_ACLK_FSYS1_200>,
+ 				 <&clock_top1 DOUT_SCLK_MMC0>,
+-				 <&clock_top1 DOUT_SCLK_MMC1>;
++				 <&clock_top1 DOUT_SCLK_MMC1>,
++				 <&clock_top1 DOUT_SCLK_UFSUNIPRO20>,
++				 <&clock_top1 DOUT_SCLK_PHY_FSYS1>,
++				 <&clock_top1 DOUT_SCLK_PHY_FSYS1_26M>;
+ 			clock-names = "fin_pll", "dout_aclk_fsys1_200",
+-				      "dout_sclk_mmc0", "dout_sclk_mmc1";
++				      "dout_sclk_mmc0", "dout_sclk_mmc1",
++				      "dout_sclk_ufsunipro20", "dout_sclk_phy_fsys1",
++				      "dout_sclk_phy_fsys1_26m";
+ 		};
+ 
+ 		serial_0: serial@13630000 {
+@@ -601,6 +606,41 @@
+ 			};
+ 		};
+ 
++		ufs: ufs@15570000 {
++			compatible = "samsung,exynos7-ufs";
++			reg = <0x15570000 0x100>,  /* 0: HCI standard */
++				<0x15570100 0x100>,  /* 1: Vendor specificed */
++				<0x15571000 0x200>,  /* 2: UNIPRO */
++				<0x15572000 0x300>;  /* 3: UFS protector */
++			reg-names = "hci", "vs_hci", "unipro", "ufsp";
++			interrupts = <GIC_SPI 200 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clock_fsys1 ACLK_UFS20_LINK>,
++				<&clock_fsys1 SCLK_UFSUNIPRO20_USER>;
++			clock-names = "core_clk", "sclk_unipro_main";
++			freq-table-hz = <0 0>, <0 0>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&ufs_rst_n &ufs_refclk_out>;
++			pclk-freq-avail-range = <70000000 133000000>;
++			phys = <&ufs_phy>;
++			phy-names = "ufs-phy";
++			status = "disabled";
++		};
++
++		ufs_phy: ufs-phy@0x15571800 {
++			compatible = "samsung,exynos7-ufs-phy";
++			reg = <0x15571800 0x240>;
++			reg-names = "phy-pma";
++			samsung,pmu-syscon = <&pmu_system_controller>;
++			#phy-cells = <0>;
++			clocks = <&clock_fsys1 SCLK_COMBO_PHY_EMBEDDED_26M>,
++				 <&clock_fsys1 PHYCLK_UFS20_RX1_SYMBOL_USER>,
++				 <&clock_fsys1 PHYCLK_UFS20_RX0_SYMBOL_USER>,
++				 <&clock_fsys1 PHYCLK_UFS20_TX0_SYMBOL_USER>;
++			clock-names = "ref_clk", "rx1_symbol_clk",
++				      "rx0_symbol_clk",
++				      "tx0_symbol_clk";
++		};
++
+ 		usbdrd_phy: phy@15500000 {
+ 			compatible = "samsung,exynos7-usbdrd-phy";
+ 			reg = <0x15500000 0x100>;
 -- 
 2.17.1
 
