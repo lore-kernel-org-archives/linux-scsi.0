@@ -2,190 +2,221 @@ Return-Path: <SRS0=HyWO=6K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD547C7C887
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 17:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D0B6C55199
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 22:04:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B17542071C
-	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 17:43:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B0D62075B
+	for <linux-scsi@archiver.kernel.org>; Sun, 26 Apr 2020 22:04:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="U715yx+2"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z5cUhERY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726224AbgDZRmI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Apr 2020 13:42:08 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:28136 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726194AbgDZRmH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 13:42:07 -0400
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200426174204epoutp0140b567dc1e8d2e126ce5dee4315bf2d7~Jb3yOfa1F0140101401epoutp01V
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 17:42:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200426174204epoutp0140b567dc1e8d2e126ce5dee4315bf2d7~Jb3yOfa1F0140101401epoutp01V
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1587922924;
-        bh=REDnVcehytGFohWFIdceGOQoq0NYsHqjhqVHZueRjjo=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=U715yx+2rDXp2YVrPm/LSLdyYonxAEm5sLOhYkYhhJtvLTObIyKYHxwWfBQkzNnMg
-         O9ictBUtA0E79n6tXN+XhXIBS0WEbXyi+S3NG5j4/aLIfCWFh7ZNmvofta7D9UO0vL
-         +Obkqwkvg1irqnMgTu2tIvBaYTC3Zwt7J8ASK8nA=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20200426174203epcas5p3da9f71dfac05b2c99f1d8827c278c7a4~Jb3xihXZr2887628876epcas5p3z;
-        Sun, 26 Apr 2020 17:42:03 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        68.DE.04736.BE7C5AE5; Mon, 27 Apr 2020 02:42:03 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200426174202epcas5p30e4ebe79a1de0138562219ecd7ea2e18~Jb3wuy0jx0554805548epcas5p3E;
-        Sun, 26 Apr 2020 17:42:02 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200426174202epsmtrp108fd8253b838b394d005ab0b9eaba636~Jb3wt-NJb0798907989epsmtrp1P;
-        Sun, 26 Apr 2020 17:42:02 +0000 (GMT)
-X-AuditID: b6c32a4b-ae3ff70000001280-f5-5ea5c7eb8d06
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        03.DC.25866.AE7C5AE5; Mon, 27 Apr 2020 02:42:02 +0900 (KST)
-Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
-        [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200426174200epsmtip12b54082fb55a9eba7c9445ad3d12d472~Jb3uytLih2626126261epsmtip1g;
-        Sun, 26 Apr 2020 17:42:00 +0000 (GMT)
-From:   Alim Akhtar <alim.akhtar@samsung.com>
-To:     robh@kernel.org
-Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
-        krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
-        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
-        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: [PATCH v7 00/10] exynos-ufs: Add support for UFS HCI
-Date:   Sun, 26 Apr 2020 23:00:14 +0530
-Message-Id: <20200426173024.63069-1-alim.akhtar@samsung.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726285AbgDZWEC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Apr 2020 18:04:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726188AbgDZWEC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 18:04:02 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44833C061A0F;
+        Sun, 26 Apr 2020 15:04:02 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id x4so17453729wmj.1;
+        Sun, 26 Apr 2020 15:04:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=10nCqrCYFDyrtgChLL6xzRI0axcD1xMee62SXKtI59A=;
+        b=Z5cUhERYPECk1zSBRsNqEpfg4QLC+jr6VodoG80Euva8IjlBjoCPLPQ7qYxrFMWJMt
+         rgKFzXUrXPd8FaK3VgiPf01BPwVdEmxW9+MkAWGJBWv5/PfPr5eOM7IqXLdw0GWFYeGU
+         k5zZuR/wnNFgP5DF4Ms8Ui/rVrirOhYWhQvzMTtDSXOQGDHNcV6YtG0gCjxpM4oreSNV
+         WOManQGK0kWbhzjsTn2zxyCtDDdKECulUZ3nAMLis9yMZXujcmBTP+i2Mtmj/O8EmzBJ
+         8ewiJc4vXJEEHJCFuO/uMQePXos36VgTfVeCF/WcGZRKudoLz2ZHElDSnCjKDS02J2/y
+         fFZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=10nCqrCYFDyrtgChLL6xzRI0axcD1xMee62SXKtI59A=;
+        b=eBGHtnaIDZorEi7S8ue81SbnJTDYiS3NJYum/2Igy9l/JfhjoJJECDxZuA0om7S6pK
+         rbNKQAprxE686dbO1N6qr09BeHrJvkKY1mK2L7c0f7uni2foTJGIFUs3pJtiAVdaPOFI
+         ac/OFVf90wFMJtJktaV8RLUue6s1VFdf0mIdD6ezdG2H/6P0Fet/lem2CU+2uvIkQkQW
+         FuJ6o2C64Hqx/05wvd8F5ecWF/HEhgpkXotl4zqsyKdU7cHEaysrUxeYoUOtCfMc778v
+         WeVi6bSjaN7ai/GSWXE7TmaTw/9O+PykvQUHGgY4x6SbpKNyl2POsR6x196kKeuivXya
+         r7OQ==
+X-Gm-Message-State: AGi0PuZluek4t8yCibyam8AxpMCmoVYwTswCRKmdMrnMktoJ0REUW628
+        qEpSJ4K/BIzH4iVc2if+vtnkrHlm
+X-Google-Smtp-Source: APiQypL7N6oX8EuE4UOebcwreaU8Nx4yovgWlwmiqrC1Uyma/1vZuSTDyFfLUdgF4qPRmWECjf6ULw==
+X-Received: by 2002:a7b:c3d4:: with SMTP id t20mr23787478wmj.170.1587938640886;
+        Sun, 26 Apr 2020 15:04:00 -0700 (PDT)
+Received: from [192.168.3.2] (ip5f5bfcc8.dynamic.kabel-deutschland.de. [95.91.252.200])
+        by smtp.gmail.com with ESMTPSA id g6sm18319434wrw.34.2020.04.26.15.03.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 26 Apr 2020 15:04:00 -0700 (PDT)
+Subject: Re: [PATCH v2 5/5] scsi: ufs: UFS Host Performance Booster(HPB)
+ driver
+To:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200416203126.1210-1-beanhuo@micron.com>
+ <20200416203126.1210-6-beanhuo@micron.com>
+ <183528b9-f04b-40f5-269b-5897da113b97@acm.org>
+From:   Bean Huo <huobean@gmail.com>
+Message-ID: <e53f3b2c-37ec-2bab-83ff-702dd3b2b813@gmail.com>
+Date:   Mon, 27 Apr 2020 00:03:59 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01SfyyUcRze9/11Lzl7O1afTtFuo6iokb02KWPr3fSHtVrNuLrlHebn7vxI
-        y1LMr0NUS7iw1mVosXN0TqvzI0aiEtJms1walRalLJG7l+W/5/N5nufzPH98aFyiI6V0TEIy
-        r0xQxMkoW6K1y33Pgc+9WvlBY6GMnaxqpdiZpRGKnW98QLLV3YMkOzTUJGLH9c8JVjc1SrLD
-        Rg3F3hl6irHqMQPF1vauYOzqE4OI1baMo2Nibri4CON09fkU13z/Cpfd94zgvn98T3DF+nrE
-        LeicuVyTGgulw2z9I/m4mFRe6RVw3jZ6tNKAJVVJL5oaGkSZqNSxANnQwPjAtewpUQGypSVM
-        OwJTzyhmISTMPIKVFSeBWECgbs8nNhzmD5WkQBgRaAsWcWHIxqBjTE1ZVBSzDybK9NZTjowD
-        dC/mIAvGmXcYTNYFW7ADcwSKb9+yagjGFeb081avmPGHn2/6SSHNBRqaTLiw3wp95WZCuOMC
-        WS2V1mBg7tLw6GsnJhiC4VdN7XpVB5jt1YsELIWZ6zlrmF7DsVBo9BbWl0Fb1bMuPwqmtxrC
-        IsEZd2g0eglR9lD0x4wJTjHk5UgEtStkzY2sO52gVK1eb8xBz+AL0iKXMBFg/hFUgpwrNvWv
-        2NS/4n9WDcLr0Q4+SRUfxasOJ3kn8GmeKkW8KiUhyvNCYrwOWT/JI8SAdIMnOhFDI5mdmH6s
-        lUtIRaoqPb4TAY3LHMXhyffkEnGkIv0Sr0w8p0yJ41WdyIkmZNvFN8iRcAkTpUjmY3k+iVdu
-        sBhtI81EeZqbw80lyw/7y4pOTy6dcit/WZmerPbLk0udc+uml+e9Chuq5WMBeOA4RE47DXRh
-        LZzjQNvs3LfA/GaRn2Y1JnPE/DduW1PYyVnD2NVPvuYzLZrRtl0Zr1777Pwd0c6GdkSc3W+e
-        ytDv9R1ww5tDBgoq0qiJYJvjdva7g7YsfJERqmjFIQ9cqVL8A45nnW1FAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrILMWRmVeSWpSXmKPExsWy7bCSnO6r40vjDHrfq1o8mLeNzeLlz6ts
-        Fp/WL2O1mH/kHKvF+fMb2C1ubjnKYrHp8TVWi8u75rBZzDi/j8mi+/oONovlx/8xWfzfs4Pd
-        YunWm4wOvB6X+3qZPDat6mTz2Lyk3qPl5H4Wj49Pb7F49G1ZxejxeZOcR/uBbqYAjigum5TU
-        nMyy1CJ9uwSujGuzdzAVzJOqOLB6NXsD40SRLkZODgkBE4knj2azdjFycQgJ7GCUeDPpACtE
-        Qlri+sYJ7BC2sMTKf8/ZIYqamCQ2v50ClmAT0Ja4O30LE4gtAlR05FsbI4jNLPCMSeLUw1IQ
-        W1jAVqJv2hSwGhYBVYl3Wz6xgdi8AjYSXy+dglomL7F6wwFmiLigxMmZT1i6GDmA5qhLrJ8n
-        BDFSXqJ562zmCYz8s5BUzUKomoWkagEj8ypGydSC4tz03GLDAqO81HK94sTc4tK8dL3k/NxN
-        jOBY0dLawbhn1Qe9Q4xMHIyHGCU4mJVEeGNKFsUJ8aYkVlalFuXHF5XmpBYfYpTmYFES5/06
-        a2GckEB6YklqdmpqQWoRTJaJg1OqgclnOaPDFrcDgRNmbHKd/8j3xkflb9oXDug0hn5tmmho
-        z9UQYme5fhaXZJKg/69OF7eTnHf+ZBzz9rxp+jZ61Y4rLyab9yue8r167PHuItPZsrnbfm6U
-        UGDPLhQ4c+rICR0/vZ//Ob7909St8yzkNFOaMPXTB6HJWtk864rUcoKPPrFeNj13c9Ns1sSF
-        2ZyiH8onTF0n7qp2UkxMfvPSfoa7/+7FB9QHH2T+VnH9/dUg/npmkfYKj8wFxlYXrAofbAxL
-        uNBtLqjn9jj+QO51bqmoFbWpLn16OiEbZpduOP/ZOmDho/2rfzh8dg8r55oamMqlpB+3WkS2
-        bE3+C9u+5/cfWl0zNhYKP7al45jwDCWW4oxEQy3mouJEAJpKkS4EAwAA
-X-CMS-MailID: 20200426174202epcas5p30e4ebe79a1de0138562219ecd7ea2e18
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200426174202epcas5p30e4ebe79a1de0138562219ecd7ea2e18
-References: <CGME20200426174202epcas5p30e4ebe79a1de0138562219ecd7ea2e18@epcas5p3.samsung.com>
+In-Reply-To: <183528b9-f04b-40f5-269b-5897da113b97@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch-set introduces UFS (Universal Flash Storage) host controller support
-for Samsung family SoC. Mostly, it consists of UFS PHY and host specific driver.
 
-- Changes since v6:
-* Addressed review comments from Avri and Christoph
-* Added Reviewed-by tags of Avri and Can on various patches
+On 25.04.20 20:07, Bart Van Assche wrote:
+> On 2020-04-16 13:31, huobean@gmail.com wrote:
+>> +static int ufshpb_execute_cmd(struct ufshpb_lu *hpb, unsigned char *cmd)
+>> +{
+>> +	struct scsi_sense_hdr sshdr;
+>> +	struct scsi_device *sdp;
+>> +	struct ufs_hba *hba;
+>> +	int retries;
+>> +	int ret = 0;
+>> +
+>> +	hba = hpb->hba;
+>> +
+>> +	sdp = hba->sdev_ufs_lu[hpb->lun];
+>> +	if (!sdp) {
+>> +		hpb_warn("%s UFSHPB cannot find scsi_device\n",  __func__);
+>> +		return -ENODEV;
+>> +	}
+>> +
+>> +	ret = scsi_device_get(sdp);
+>> +	if (!ret && !scsi_device_online(sdp)) {
+>> +		ret = -ENODEV;
+>> +		scsi_device_put(sdp);
+>> +		return ret;
+>> +	}
+>> +
+>> +	for (retries = 3; retries > 0; --retries) {
+>> +		ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
+>> +				   msecs_to_jiffies(30000), 3, 0, RQF_PM, NULL);
+>> +		if (ret == 0)
+>> +			break;
+>> +	}
+>> +
+>> +	if (ret) {
+>> +		if (driver_byte(ret) == DRIVER_SENSE &&
+>> +		    scsi_sense_valid(&sshdr)) {
+>> +			switch (sshdr.sense_key) {
+>> +			case ILLEGAL_REQUEST:
+>> +				hpb_err("ILLEGAL REQUEST asc=0x%x ascq=0x%x\n",
+>> +					sshdr.asc, sshdr.ascq);
+>> +				break;
+>> +			default:
+>> +				hpb_err("Unknown return code = %x\n", ret);
+>> +				break;
+>> +			}
+>> +		}
+>> +	}
+>> +	scsi_device_put(sdp);
+>> +
+>> +	return ret;
+>> +}
+> If scsi_execute() would be changed into asynchronous SCSI command
+> submission, can ufshpb_execute_cmd() be called from inside the UFS
+> .queue_rq() callback instead of from workqueue context?
+>
+> The scsi_device_get() call looks misplaced. I think that call should
+> happen before schedule_work() is called.
+>
+>> +static int ufshpb_l2p_load_req(struct ufshpb_lu *hpb, struct request_queue *q,
+>> +			       struct ufshpb_map_req *map_req)
+>> +{
+>> +	struct scsi_request *scsi_rq;
+>> +	unsigned char cmd[16] = { };
+>> +	struct request *req;
+>> +	struct bio *bio;
+>> +	int alloc_len;
+>> +	int ret;
+>> +
+>> +	bio = &map_req->bio;
+>> +
+>> +	ret = ufshpb_add_bio_page(hpb, q, bio, map_req->bvec, map_req->mctx);
+>> +	if (ret) {
+>> +		hpb_err("ufshpb_add_bio_page() failed with ret %d\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	alloc_len = hpb->hba->hpb_geo.subregion_entry_sz;
+>> +	/*
+>> +	 * HPB Sub-Regions are equally sized except for the last one which is
+>> +	 * smaller if the last hpb Region is not an integer multiple of
+>> +	 * bHPBSubRegionSize.
+>> +	 */
+>> +	if (map_req->region == (hpb->lu_region_cnt - 1) &&
+>> +	    map_req->subregion == (hpb->subregions_in_last_region - 1))
+>> +		alloc_len = hpb->last_subregion_entry_size;
+>> +
+>> +	ufshpb_prepare_read_buf_cmd(cmd, map_req->region, map_req->subregion,
+>> +				    alloc_len);
+>> +	if (!map_req->req) {
+>> +		map_req->req = blk_get_request(q, REQ_OP_SCSI_IN, 0);
+>> +		if (IS_ERR(map_req->req))
+>> +			return PTR_ERR(map_req->req);
+>> +	}
+>> +	req = map_req->req;
+>> +	scsi_rq = scsi_req(req);
+>> +
+>> +	blk_rq_append_bio(req, &bio);
+>> +
+>> +	scsi_req_init(scsi_rq);
+>> +
+>> +	scsi_rq->cmd_len = COMMAND_SIZE(cmd[0]);
+>> +	memcpy(scsi_rq->cmd, cmd, scsi_rq->cmd_len);
+>> +	req->timeout = msecs_to_jiffies(30000);
+>> +	req->end_io_data = (void *)map_req;
+>> +
+>> +	hpb_dbg(SCHEDULE_INFO, hpb, "ISSUE READ_BUFFER : (%d-%d) retry = %d\n",
+>> +		map_req->region, map_req->subregion, map_req->retry_cnt);
+>> +	hpb_trace(hpb, "%s: I RB %d - %d", DRIVER_NAME, map_req->region,
+>> +		  map_req->subregion);
+>> +
+>> +	blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_l2p_load_req_done);
+>> +	map_req->req_issue_t = ktime_to_ns(ktime_get());
+>> +
+>> +	atomic64_inc(&hpb->status.map_req_cnt);
+>> +
+>> +	return 0;
+>> +}
+> Same question here: if 'req' would be submitted asynchronously, can
+> ufshpb_l2p_load_req() be called directly from inside the UFS .queue_rq()
+> callback instead of from workqueue context?
+>
+> Thanks,
+>
+> Bart.
 
-- Changes since v5:
-* re-introduce various quicks which was removed because of no driver
-* consumer of those quirks, initial 4 patches does the same.
-* Added Reviewed-by tags
-* rebased on top of v5.7-rc1
-* included Kiwoong's patch in this series, which this driver needs
+Hi, Bart
+Thanks very much.
+If I understood the Christoph's the second question correctly. Enqueue 
+HPB requests to the
+scsi_device->request_queueu, and fly back to SCSI schedule, it's 
+unacceptable. I don't like this
+implementation way either. Also, the latency of the L2P table update is 
+higher. I will change it
+in the RFC patch.
 
-- Changes since v4:
-* Addressed review comments from Avir and Rob 
-* Minor improvment on the ufs phy and ufshc drivers
-* Added Tested-by from Pawel
-* Change UFS binding to DT schema format
-
-
-- Changes since v3:
-* Addressed Kishon's and Avir's review comments
-* fixed make dt_binding_check error as pointed by Rob 
-
-- Changes since v2:
-* fixed build warning by kbuild test robot 
-* Added Reported-by tags
-
-- Changes since v1:
-* fixed make dt_binding_check error as pointed by Rob
-* Addressed Krzysztof's review comments
-* Added Reviewed-by tags
-
-Note: This series is based on Linux-5.7-rc1 (commit: 8f3d9f354286)
-*** BLURB HERE ***
-
-Alim Akhtar (9):
-  scsi: ufs: add quirk to fix mishandling utrlclr/utmrlclr
-  scsi: ufs: add quirk to disallow reset of interrupt aggregation
-  scsi: ufs: add quirk to enable host controller without hce
-  scsi: ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
-  dt-bindings: phy: Document Samsung UFS PHY bindings
-  phy: samsung-ufs: add UFS PHY driver for samsung SoC
-  dt-bindings: ufs: Add DT binding documentation for ufs
-  scsi: ufs-exynos: add UFS host support for Exynos SoCs
-  arm64: dts: Add node for ufs exynos7
-
-Kiwoong Kim (1):
-  scsi: ufs: add quirk to fix abnormal ocs fatal error
-
- .../bindings/phy/samsung,ufs-phy.yaml         |   74 +
- .../bindings/ufs/samsung,exynos-ufs.yaml      |   93 ++
- .../boot/dts/exynos/exynos7-espresso.dts      |    4 +
- arch/arm64/boot/dts/exynos/exynos7.dtsi       |   44 +-
- drivers/phy/samsung/Kconfig                   |    9 +
- drivers/phy/samsung/Makefile                  |    1 +
- drivers/phy/samsung/phy-exynos7-ufs.h         |   85 ++
- drivers/phy/samsung/phy-samsung-ufs.c         |  369 +++++
- drivers/phy/samsung/phy-samsung-ufs.h         |  142 ++
- drivers/scsi/ufs/Kconfig                      |   12 +
- drivers/scsi/ufs/Makefile                     |    1 +
- drivers/scsi/ufs/ufs-exynos.c                 | 1289 +++++++++++++++++
- drivers/scsi/ufs/ufs-exynos.h                 |  284 ++++
- drivers/scsi/ufs/ufshcd.c                     |  126 +-
- drivers/scsi/ufs/ufshcd.h                     |   29 +
- drivers/scsi/ufs/unipro.h                     |   33 +
- 16 files changed, 2581 insertions(+), 14 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml
- create mode 100644 Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
- create mode 100644 drivers/phy/samsung/phy-exynos7-ufs.h
- create mode 100644 drivers/phy/samsung/phy-samsung-ufs.c
- create mode 100644 drivers/phy/samsung/phy-samsung-ufs.h
- create mode 100644 drivers/scsi/ufs/ufs-exynos.c
- create mode 100644 drivers/scsi/ufs/ufs-exynos.h
-
-
-base-commit: 8f3d9f354286745c751374f5f1fcafee6b3f3136
--- 
-2.17.1
-
+thanks,
+Bean
