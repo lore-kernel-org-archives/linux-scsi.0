@@ -2,170 +2,125 @@ Return-Path: <SRS0=af2F=6L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EE0C54FD0
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 15:08:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED022C55199
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 15:15:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6D12206BF
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 15:08:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA4782054F
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 15:15:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="RICz3GlQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ixjl1U9Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728162AbgD0PIk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Apr 2020 11:08:40 -0400
-Received: from mail1.bemta26.messagelabs.com ([85.158.142.112]:45014 "EHLO
-        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727010AbgD0PIj (ORCPT
+        id S1727947AbgD0PPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Apr 2020 11:15:44 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:52986 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728148AbgD0PPi (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Apr 2020 11:08:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1588000116; i=@ts.fujitsu.com;
-        bh=hhdndVHek54RMTdFxOSkrFch+MGToNeHqu/zEHcd718=;
-        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        b=RICz3GlQBKo+7Vdw1+8OBF0vp9Y4jauNnyuHkxyesoozcqeRuxdS7DU1jLwK8/zWm
-         e8RnRVPBAflS7EvfHSdEgt/hsT9kgljvcmZF+2hSDnxLa4ohVG1AgFeaTEVeG3qR3U
-         72rfiASEM0qVbKvm3joeSPlhHkrrT4tTTj9WQi6g+6roLX7M3v4aLaMErElQf9KXUc
-         1rwmbMs4q/U35O+UuvyByPYrVb7pllhAwZy14c+IUVbK3GiqIIq8Ve/+7CbvWSpfii
-         iAMkoDjoGX23QHMOjVGqjQGFdRg6fYvrmTS3lV4ZjmZkh/fYU2uxb0hb8HZYq/MG2H
-         z7mm3agBiWwDA==
-Received: from [100.113.6.103] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-1.bemta.az-b.eu-central-1.aws.symcld.net id FD/77-39489-475F6AE5; Mon, 27 Apr 2020 15:08:36 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMIsWRWlGSWpSXmKPExsViZ8MRqlv8dVm
-  cwZJFqhZf/09nsVi5+iiTRff1HWwWy4//Y7JYf2QDo0Xr0rdMDmweu282sHl8fHqLxeP9vqts
-  HptPV3t83iQXwBrFmpmXlF+RwJqx8fdD1oKjkhUH/jexNDAuFOti5OIQEpjMKDHx10pWCGc6o
-  8SCZ6eYuxg5OdgEDCRWTLrPAmKLCNhI9B1eygRSxCzQxChx69V6NpCEsECIRN/q42BFLAKqEv
-  Me/QWzeQXsJA4eu8IOYksIyEt0HJgMFucUsJc4c/E6UC8H0DY7iY8P9CYwci9gZFjFaJFUlJm
-  eUZKbmJmja2hgoGtoaKxromtkpJdYpZukl1qqm5yaV1KUCJTUSywv1iuuzE3OSdHLSy3ZxAgM
-  q5RCFrEdjLPWvtc7xCjJwaQkynty9bI4Ib6k/JTKjMTijPii0pzU4kOMMhwcShK8Uz8D5QSLU
-  tNTK9Iyc4AhDpOW4OBREuFN+AKU5i0uSMwtzkyHSJ1iVJQS57UDSQiAJDJK8+DaYHF1iVFWSp
-  iXkYGBQYinILUoN7MEVf4VozgHo5Iw7yyQ7TyZeSVw018BLWYCWlwlvxhkcUkiQkqqgUn11Tu
-  35q5zNrUOtZJzrz6cO0sm3O8Q8xTNp8F3+dKeLJi5Vnn1vH93T21vv3Zn4rMzEnHPzi8WWvq9
-  x+LXN9u8PyJnuXYdON5+VOB53NSfspfSgmYzC4WdaGn5Wf8reW3wQbVPm7xm77wYlFnDv+LAV
-  +WNHxPz3rw169JaKPz4mg/Hrqkbm3dpmlgu/3qN6eOOxg9/ZCLi921Jip3Tnbf48//vlxbzKJ
-  slmKan73fznb4v68zLEqcXQa9fVmn9eGB8uHS2wdy2a1yOXmulXvHtkuTQTS/6H6lYaqSuUr3
-  toWjgC7Ha1pTdu/lqOj3CDqlGn29cqpQw/zt7mLlh6BxJx+2hyT5/uBYotS8JSLNVYinOSDTU
-  Yi4qTgQArlRA2iYDAAA=
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-23.tower-245.messagelabs.com!1588000115!1029317!1
-X-Originating-IP: [62.60.8.85]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 9044 invoked from network); 27 Apr 2020 15:08:35 -0000
-Received: from unknown (HELO mailhost4.uk.fujitsu.com) (62.60.8.85)
-  by server-23.tower-245.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 27 Apr 2020 15:08:35 -0000
-Received: from x-serv01 ([172.17.38.52])
-        by mailhost4.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 03RF8XOS025009;
-        Mon, 27 Apr 2020 16:08:33 +0100
-Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
-        by x-serv01 (Postfix) with ESMTP id 01D7420722;
-        Mon, 27 Apr 2020 17:08:26 +0200 (CEST)
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     mchristi@redhat.com, ddiss@suse.de, hch@lst.de,
-        martin.petersen@oracle.com,
-        Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: [PATCH 2/4] target: tcmu: add attrbutes enforce_pr_isids and force_pr_aptpl
-Date:   Mon, 27 Apr 2020 17:08:21 +0200
-Message-Id: <20200427150823.15350-3-bstroesser@ts.fujitsu.com>
-X-Mailer: git-send-email 2.12.3
-In-Reply-To: <20200427150823.15350-1-bstroesser@ts.fujitsu.com>
-References: <20200427150823.15350-1-bstroesser@ts.fujitsu.com>
+        Mon, 27 Apr 2020 11:15:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588000536;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=eSpYzJ8vruskzw1ixWuPTFKODIOCb1DdC0Y5Ypx1fB0=;
+        b=Ixjl1U9ZxAd7CT3hUfVBj4OC3cNpxodUZOfnDT/R+PiEaqt/AILrKzUj5Eo/rzHioy9Oln
+        cvJLzIAKJ6wHxC5CCF4L4yKtPq/EaBFl8TJ9vWTotACZe3HuIK/3lALMrWYOMCjppl2WFY
+        7T3/PCaVB0U3AZ/R1FovAdsEF10h418=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-24-ooq-R3UWMF6ZxHTaZ8aGuw-1; Mon, 27 Apr 2020 11:15:34 -0400
+X-MC-Unique: ooq-R3UWMF6ZxHTaZ8aGuw-1
+Received: by mail-wm1-f70.google.com with SMTP id h22so31924wml.1
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 08:15:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=eSpYzJ8vruskzw1ixWuPTFKODIOCb1DdC0Y5Ypx1fB0=;
+        b=Gmxd45WdzEJP8DZImbfAVpiX3qeUn+mLgs3hofJr6mw/J4BvmDx2pAFW5LV3Uta8iO
+         fGTtJbp8HprKZhykpstIbNKF8B8UFXcFC2XlEfAl91+fJRqVvkiZMjmvBppfkTim9CYy
+         p0TUe/QvDPOepSPKNWLwnSLhrgJqKlR6b8yRmn6oSOR06NjZAiPqOtKFzpxN+5Xw04Jp
+         rOGjNNVTXziPYVwHR/jXDpKNsxyiM/jwzfhM8uC+XS9Xkk5AxDdk83NKZ+zgFf2wIHJg
+         OMNJkEdvzOdqyW0DIXuHNMaX8NZ9mjikIcyRZ5VbbdpEMe4S5E/UJmQ0zByik2d/SYKr
+         4gGA==
+X-Gm-Message-State: AGi0Pua7pEy53ZudA2AramJBtm/XAPnDdj6vG9PuuM4t9V5eK9uFvdyw
+        z5UXbeqRjDTzjw78ET2BfYDu7/GLNCP18cBj+1AOl02SJ2D1sOBTNBq/JKJJEexb2/gwBWxwdh6
+        u47TRBRupMtz/Ttvz/zXrrg==
+X-Received: by 2002:a5d:670d:: with SMTP id o13mr29924461wru.29.1588000533358;
+        Mon, 27 Apr 2020 08:15:33 -0700 (PDT)
+X-Google-Smtp-Source: APiQypK+T+6Aj+dLlxq4HhKDwXzdqmOqUdriVVov3jgAPiPujwYcHZ4fNtTJwlwzd9NWqPh44afp5Q==
+X-Received: by 2002:a5d:670d:: with SMTP id o13mr29924444wru.29.1588000533150;
+        Mon, 27 Apr 2020 08:15:33 -0700 (PDT)
+Received: from ?IPv6:2001:b07:6468:f312:ac19:d1fb:3f5f:d54f? ([2001:b07:6468:f312:ac19:d1fb:3f5f:d54f])
+        by smtp.gmail.com with ESMTPSA id n6sm23226378wrs.81.2020.04.27.08.15.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Apr 2020 08:15:32 -0700 (PDT)
+Subject: Re: [PATCH v2 6/7] debugfs: switch to simplefs inode creation API
+To:     Emanuele Giuseppe Esposito <eesposit@redhat.com>,
+        linux-fsdevel@vger.kernel.org
+Cc:     Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Manoj N. Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Joel Becker <jlbec@evilplan.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        John Johansen <john.johansen@canonical.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org,
+        linux-security-module@vger.kernel.org
+References: <20200421135119.30007-1-eesposit@redhat.com>
+ <20200421135741.30657-4-eesposit@redhat.com>
+From:   Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <167ebece-2e50-5186-3a42-2fa491fcb8a5@redhat.com>
+Date:   Mon, 27 Apr 2020 17:15:28 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
+MIME-Version: 1.0
+In-Reply-To: <20200421135741.30657-4-eesposit@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-tcmu has not set TRANSPORT_FLAG_PASSTHROUGH_PGR. Therefore the
-in core pr emulation is active by default, but there are some
-attributes for configuration missing. So we add them now.
+On 21/04/20 15:57, Emanuele Giuseppe Esposito wrote:
+> -	inode = debugfs_get_inode(dentry->d_sb);
 
-Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
----
- drivers/target/target_core_configfs.c | 11 +++++++++++
- drivers/target/target_core_user.c     | 19 +++++++++----------
- include/target/target_core_backend.h  |  1 +
- 3 files changed, 21 insertions(+), 10 deletions(-)
+You're not removing debugfs_get_inode so I think you're going to get a
+warning (same in tracefs)?
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index d8589bb39c53..efa92d836946 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1210,6 +1210,17 @@ struct configfs_attribute *passthrough_attrib_attrs[] = {
- };
- EXPORT_SYMBOL(passthrough_attrib_attrs);
- 
-+/*
-+ * pr related dev_attrib attributes for devices passing through CDBs,
-+ * but allowing in core pr emulation.
-+ */
-+struct configfs_attribute *passthrough_pr_attrib_attrs[] = {
-+	&attr_enforce_pr_isids,
-+	&attr_force_pr_aptpl,
-+	NULL,
-+};
-+EXPORT_SYMBOL(passthrough_pr_attrib_attrs);
-+
- TB_CIT_SETUP_DRV(dev_attrib, NULL, NULL);
- TB_CIT_SETUP_DRV(dev_action, NULL, NULL);
- 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index f769bb1e3735..8adde343182f 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -2753,12 +2753,12 @@ static int __init tcmu_module_init(void)
- 		goto out_unreg_device;
- 	}
- 
--	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++) {
-+	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++)
- 		len += sizeof(struct configfs_attribute *);
--	}
--	for (i = 0; tcmu_attrib_attrs[i] != NULL; i++) {
-+	for (i = 0; passthrough_pr_attrib_attrs[i] != NULL; i++)
-+		len += sizeof(struct configfs_attribute *);
-+	for (i = 0; tcmu_attrib_attrs[i] != NULL; i++)
- 		len += sizeof(struct configfs_attribute *);
--	}
- 	len += sizeof(struct configfs_attribute *);
- 
- 	tcmu_attrs = kzalloc(len, GFP_KERNEL);
-@@ -2767,13 +2767,12 @@ static int __init tcmu_module_init(void)
- 		goto out_unreg_genl;
- 	}
- 
--	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++) {
-+	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++)
- 		tcmu_attrs[i] = passthrough_attrib_attrs[i];
--	}
--	for (k = 0; tcmu_attrib_attrs[k] != NULL; k++) {
--		tcmu_attrs[i] = tcmu_attrib_attrs[k];
--		i++;
--	}
-+	for (k = 0; passthrough_pr_attrib_attrs[k] != NULL; k++)
-+		tcmu_attrs[i++] = passthrough_pr_attrib_attrs[k];
-+	for (k = 0; tcmu_attrib_attrs[k] != NULL; k++)
-+		tcmu_attrs[i++] = tcmu_attrib_attrs[k];
- 	tcmu_ops.tb_dev_attrib_attrs = tcmu_attrs;
- 
- 	ret = transport_backend_register(&tcmu_ops);
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index 1b752d8ea529..8177667eba6d 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -94,6 +94,7 @@ int	transport_set_vpd_ident(struct t10_vpd *, unsigned char *);
- 
- extern struct configfs_attribute *sbc_attrib_attrs[];
- extern struct configfs_attribute *passthrough_attrib_attrs[];
-+extern struct configfs_attribute *passthrough_pr_attrib_attrs[];
- 
- /* core helpers also used by command snooping in pscsi */
- void	*transport_kmap_data_sg(struct se_cmd *);
--- 
-2.12.3
+You can wait a few more days for reviews and/or Acked-bys (especially
+for patches 6 and 7) and then post v3.
+
+Since the touch-everything patch (#2) has already been reviewed, and
+it's mechanical and not introducing any semantic change, you can
+probably reduce the To/Cc list to filesystem, debugfs and tracefs
+maintainers.
+
+Thanks,
+
+Paolo
 
