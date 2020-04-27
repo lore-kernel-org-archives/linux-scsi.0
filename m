@@ -2,61 +2,58 @@ Return-Path: <SRS0=af2F=6L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C4CDC4CECC
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 17:37:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3C1AC4CECC
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 17:39:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E36D206D9
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 17:37:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6C50206D9
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 17:39:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726252AbgD0Rhq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Apr 2020 13:37:46 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:42748 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725963AbgD0Rhp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2020 13:37:45 -0400
-Received: by mail-pl1-f196.google.com with SMTP id v2so7243224plp.9
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 10:37:45 -0700 (PDT)
+        id S1726355AbgD0Rjt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Apr 2020 13:39:49 -0400
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:55620 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726344AbgD0Rjs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2020 13:39:48 -0400
+Received: by mail-pj1-f67.google.com with SMTP id a32so7805175pje.5
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 10:39:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=mtJh8MzN173nPmR+JfgfK0KFEh2Sv9D0Hj1TjArQa7Q=;
-        b=idEOsOde7Lt428J70GgnBhsEsmOVXYmfgko+HP8M4TDFU+2w/LQkDcr7NzqqOLAdoH
-         hXaT/T6Ghjf+HRfuT+meA2zPiZWTrK+0Tf9PmrOqDn5CG576+zzryPQ0C9x206Jf+YLI
-         4rgX/iAHItnQ19DxKMAlWs7fAxFtyLT65oBdt7rXyvS/K/Fj2FPp2RDwWBVtqrajT2KN
-         tLNINkNYA1r8FICgIFc4yu0t3PV1mQYnXUS36k1xuiDWmvkb6q5bbl3D80MUkw4GTM5/
-         dTtvkAYdeM25NOMk1+qzo2jN6hs5u+LomKe0arCoQFKSZvQnsNQtNjCA9qxNg+Ymqvo9
-         6+1Q==
-X-Gm-Message-State: AGi0PuaXLbYQ09j2/TeuPofNHOVe3cW8Se2oahYQ3c8a0CdnKe+os8EW
-        gKfT/hxkfRd7kpVPkqPHJDE=
-X-Google-Smtp-Source: APiQypLfb4Jze1d36lWlDeEht+WKNGITjkQAHXQ3Sn2EMWIv3XagjXKQntGRsV8ljc82oU93NXBNVA==
-X-Received: by 2002:a17:90b:2385:: with SMTP id mr5mr24046564pjb.172.1588009064835;
-        Mon, 27 Apr 2020 10:37:44 -0700 (PDT)
+        bh=4aDgljY6ATZLQYZ11tc2dYkqWQ8Ycz9rI3nFmiRCbuc=;
+        b=HyYoIJcOopTFoEbbWONb3e8BdpWJ2mDOR+dUoRoj/5Yb9OXJd/y4unFtj9UL3dGeKD
+         385G8cDF6UAnIIoxQajQY5Q4fplEsb7XvL4nvnRbiWa6kL9mBN103ikdnufQJpy2Kfik
+         iJq3Gnl/rSu1NEVAEXuhSaIVrFs5vJdHmp1y9zaY0A7++aw3BFSiQnLZwaTIXDOtEVUE
+         68YbY0sO2WSS69wcDMInjiIAAbEBizJo0JN2bH0BykqZ2ExXgIlIcYD8JqFzj91ikYMi
+         CcVti06tyvwzJ5CMPXNkM0iQupkmwcmn+6BWNkzR8qxjUmkESxtP8Xi3k/RYoubg3PUT
+         ZmhA==
+X-Gm-Message-State: AGi0PuazCW10CBbTfKyH5k4FAd2kEmg710sMNQPeuuN2FBesEXfrTirC
+        ca1nHyVzGg+aK8x8yauPenU=
+X-Google-Smtp-Source: APiQypKk5+P3F6S39pbl6oJdNW5mtpNP8HdguGs1fqbABriTj0HF8Aw3/e3artOohm0hlG9lTIK1og==
+X-Received: by 2002:a17:902:9a8a:: with SMTP id w10mr25231444plp.259.1588009186797;
+        Mon, 27 Apr 2020 10:39:46 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:a598:4365:d06:a875? ([2601:647:4000:d7:a598:4365:d06:a875])
-        by smtp.gmail.com with ESMTPSA id d126sm11206222pfc.81.2020.04.27.10.37.43
+        by smtp.gmail.com with ESMTPSA id j14sm11995576pjm.27.2020.04.27.10.39.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Apr 2020 10:37:44 -0700 (PDT)
-Subject: Re: [PATCH v4 02/11] qla2xxx: Suppress two recently introduced
- compiler warnings
-To:     Daniel Wagner <dwagner@suse.de>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org,
-        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
-        Joe Jin <joe.jin@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Mon, 27 Apr 2020 10:39:45 -0700 (PDT)
+Subject: Re: [PATCH v4 05/11] qla2xxx: Make a gap in struct
+ qla2xxx_offld_chain explicit
+To:     himanshu.madhani@oracle.com,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
         Quinn Tran <qutran@marvell.com>,
         Martin Wilck <mwilck@suse.com>,
-        Steven Rostedt <rostedt@goodmis.org>
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
 References: <20200427030310.19687-1-bvanassche@acm.org>
- <20200427030310.19687-3-bvanassche@acm.org>
- <20200427081548.skbi7pqysknamfv5@beryllium.lan>
+ <20200427030310.19687-6-bvanassche@acm.org>
+ <d63f4b0b-9eea-9ae7-5c77-4b37a2040193@oracle.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -81,33 +78,53 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <6ee88b11-4a44-beb7-4328-e53a0314377d@acm.org>
-Date:   Mon, 27 Apr 2020 10:37:42 -0700
+Message-ID: <a2cc0d95-f20e-42ec-1e78-a25bbc8e567d@acm.org>
+Date:   Mon, 27 Apr 2020 10:39:44 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200427081548.skbi7pqysknamfv5@beryllium.lan>
+In-Reply-To: <d63f4b0b-9eea-9ae7-5c77-4b37a2040193@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-04-27 01:15, Daniel Wagner wrote:
-> On Sun, Apr 26, 2020 at 08:03:01PM -0700, Bart Van Assche wrote:
->> +#pragma GCC diagnostic push
->> +#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+On 2020-04-27 07:27, himanshu.madhani@oracle.com wrote:
+> On 4/26/20 10:03 PM, Bart Van Assche wrote:
+>> This patch makes struct qla2xxx_offld_chain compatible with ARCH=i386.
+>>
+>> Cc: Nilesh Javali <njavali@marvell.com>
+>> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+>> Cc: Quinn Tran <qutran@marvell.com>
+>> Cc: Martin Wilck <mwilck@suse.com>
+>> Cc: Daniel Wagner <dwagner@suse.de>
+>> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>>   drivers/scsi/qla2xxx/qla_dbg.h | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_dbg.h
+>> b/drivers/scsi/qla2xxx/qla_dbg.h
+>> index 433e95502808..b106b6808d34 100644
+>> --- a/drivers/scsi/qla2xxx/qla_dbg.h
+>> +++ b/drivers/scsi/qla2xxx/qla_dbg.h
+>> @@ -238,6 +238,7 @@ struct qla2xxx_offld_chain {
+>>       uint32_t chain_size;
+>>         uint32_t size;
+>> +    uint32_t reserved;
+>>       u64     addr;
+>>   };
+>>  
 > 
-> I would be really surprised if this is needed for every single
-> DECLARE_EVENT_CLASS declaration. 
+> I think this should to be verified with Marvell Firmware folks. (I don't
+> have API document handy with me anymore)
 
-Hi Daniel,
-
-My understanding is that this is only necessary if vsnprintf() is used
-in the implementation of the event class.
-
-Thanks,
+Please note that this patch does not change the layout of this structure
+for x86_64. All this patch does is to make a hole in this structure
+explicit.
 
 Bart.
