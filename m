@@ -6,53 +6,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C137C5519A
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACE77C54FD0
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAB36206DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D4C1206DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726398AbgD0DDU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Apr 2020 23:03:20 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:38114 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbgD0DDU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 23:03:20 -0400
-Received: by mail-pg1-f195.google.com with SMTP id p8so8020016pgi.5
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 20:03:20 -0700 (PDT)
+        id S1726432AbgD0DDW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Apr 2020 23:03:22 -0400
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:53150 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725838AbgD0DDV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 23:03:21 -0400
+Received: by mail-pj1-f65.google.com with SMTP id a5so6897391pjh.2
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 20:03:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=PiQKJtXkK91EAzXv1PvtB9UER3Afe92wbfNuHeDpwJM=;
-        b=T6tclEaDg893JRwP+7D4XCibi4sfzpD8BOTUmuVqIuKiRlujyNbm0wtai8aoNY50qo
-         eAjeB0flY3l4pB2D9izLRIl2KShiY1nNCJebMJO5455vBySWQSkZ4kKteciQTZwzrno8
-         U+nVL76byU3WZr+p93XiuYJY4aV6pJbEEa0PCO1Oj4QjpYiU+ugYxdTaYu4aR6ETrX3M
-         sOfgeSnLl4hb2oXHl6183/mZMA19dkNssce5YMy3k26C79rpLjLxGBkWKI272IhqQnPy
-         yGtbScE08zyH2iipZFqDCgd3S0Bq0DkteeD+4T/WZ2rvSOK/4O1eNK8lk5sbCRmBswE7
-         VznQ==
-X-Gm-Message-State: AGi0PuaC/NQ4AUvGf76dpkbY5g9ia0RAo1vixns5D7P2rjg3LYyL/tli
-        i5DMeEzAVKzl1dtKqz8lPl8=
-X-Google-Smtp-Source: APiQypKaEweHfWs+Q+K48Pa6aK9ApI/NVmFyI9KeKielf7b0bUOSKr5bL3Z4hnDK+B8vR7GFYyev4w==
-X-Received: by 2002:a63:7f5d:: with SMTP id p29mr20174716pgn.96.1587956599694;
-        Sun, 26 Apr 2020 20:03:19 -0700 (PDT)
+        bh=fRauz+j8J2uP/NRkN0t8vhcmoKds5BpQaEyxqqvTMZc=;
+        b=UF97+SCCy6+qHULkiy2xlwGWcOGBwchqSNuDq/zPjkvWe3J8SnBtQdUOiLWeHy+gyv
+         knS7HlyVkF8Z1hkQSxD+FOC7uQhZZBqvYdyRElFZN4miMgDxqbg5ebity6tJO8guHatQ
+         IlB/vUMKwDYqIZGFYuIGTIXE+jsa8g9RoaAqeiySW3yANLf8CrAiMqEC9KUR+l2rjTI+
+         jh9hp9jQrZeRUE5uvNA+cWEX0Os1+KTCOSTnpPBxhg4qSGRDPYXokfo87Tjr4hqZagn+
+         kLwraoqGDc5Q3pxSnO7vZXq91GRyuLEy0lf/KxYDy49wFXZA7mAhk8NpryZXE7GEj4um
+         QjKg==
+X-Gm-Message-State: AGi0PuYaN7UE0sF5DPjOocCtV+wgEW7+h5G5Wg50Q9pxnk1HXAm5keu9
+        6sC9hUnSnqTCj7vUe0ybIStpa1+uF+o=
+X-Google-Smtp-Source: APiQypLyRVrLkc+IrG2B8goRGxGzblA8EQwaWsO2TxjejFUBlFlOOF/k8lFBQozu4SZjq7TH3O3szw==
+X-Received: by 2002:a17:902:24b:: with SMTP id 69mr20221880plc.52.1587956601073;
+        Sun, 26 Apr 2020 20:03:21 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:612a:373a:aa97:7fa7])
-        by smtp.gmail.com with ESMTPSA id v94sm9982617pjb.39.2020.04.26.20.03.18
+        by smtp.gmail.com with ESMTPSA id v94sm9982617pjb.39.2020.04.26.20.03.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Apr 2020 20:03:19 -0700 (PDT)
+        Sun, 26 Apr 2020 20:03:20 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
-        Joe Jin <joe.jin@oracle.com>,
         Nilesh Javali <njavali@marvell.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v4 02/11] qla2xxx: Suppress two recently introduced compiler warnings
-Date:   Sun, 26 Apr 2020 20:03:01 -0700
-Message-Id: <20200427030310.19687-3-bvanassche@acm.org>
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH v4 03/11] qla2xxx: Sort BUILD_BUG_ON() statements alphabetically
+Date:   Sun, 26 Apr 2020 20:03:02 -0700
+Message-Id: <20200427030310.19687-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200427030310.19687-1-bvanassche@acm.org>
 References: <20200427030310.19687-1-bvanassche@acm.org>
@@ -63,60 +63,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Suppress the following two compiler warnings because these are not useful:
+Before adding more BUILD_BUG_ON() statements, sort the existing statements
+alphabetically.
 
-In file included from ./include/trace/define_trace.h:102,
-                 from ./include/trace/events/qla.h:39,
-                 from drivers/scsi/qla2xxx/qla_dbg.c:77:
-./include/trace/events/qla.h: In function 'trace_event_raw_event_qla_log_event':
-./include/trace/trace_events.h:691:9: warning: function 'trace_event_raw_event_qla_log_event' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-  691 |  struct trace_event_raw_##call *entry;    \
-      |         ^~~~~~~~~~~~~~~~
-./include/trace/events/qla.h:12:1: note: in expansion of macro 'DECLARE_EVENT_CLASS'
-   12 | DECLARE_EVENT_CLASS(qla_log_event,
-      | ^~~~~~~~~~~~~~~~~~~
-In file included from ./include/trace/define_trace.h:103,
-                 from ./include/trace/events/qla.h:39,
-                 from drivers/scsi/qla2xxx/qla_dbg.c:77:
-./include/trace/events/qla.h: In function 'perf_trace_qla_log_event':
-./include/trace/perf.h:41:9: warning: function 'perf_trace_qla_log_event' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-   41 |  struct hlist_head *head;     \
-      |         ^~~~~~~~~~
-./include/trace/events/qla.h:12:1: note: in expansion of macro 'DECLARE_EVENT_CLASS'
-
-Cc: Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>
-Cc: Joe Jin <joe.jin@oracle.com>
 Cc: Nilesh Javali <njavali@marvell.com>
 Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
 Cc: Quinn Tran <qutran@marvell.com>
 Cc: Martin Wilck <mwilck@suse.com>
 Cc: Daniel Wagner <dwagner@suse.de>
-Fixes: 598a90f2002c ("scsi: qla2xxx: add ring buffer for tracing debug logs")
+Cc: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- include/trace/events/qla.h | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/trace/events/qla.h b/include/trace/events/qla.h
-index b71f680968eb..737a667ab98f 100644
---- a/include/trace/events/qla.h
-+++ b/include/trace/events/qla.h
-@@ -9,6 +9,9 @@
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d190db5ea7d9..497544413aa0 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -7835,11 +7835,11 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(struct init_cb_24xx) != 128);
+ 	BUILD_BUG_ON(sizeof(struct init_cb_81xx) != 128);
+ 	BUILD_BUG_ON(sizeof(struct pt_ls4_request) != 64);
++	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
++	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
+ 	BUILD_BUG_ON(sizeof(struct sns_cmd_pkt) != 2064);
+ 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
+ 	BUILD_BUG_ON(sizeof(struct vf_evfp_entry_24xx) != 56);
+-	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
+-	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
  
- #define QLA_MSG_MAX 256
- 
-+#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
-+
- DECLARE_EVENT_CLASS(qla_log_event,
- 	TP_PROTO(const char *buf,
- 		struct va_format *vaf),
-@@ -32,6 +35,8 @@ DEFINE_EVENT(qla_log_event, ql_dbg_log,
- 	TP_ARGS(buf, vaf)
- );
- 
-+#pragma GCC diagnostic pop
-+
- #endif /* _TRACE_QLA_H */
- 
- #define TRACE_INCLUDE_FILE qla
+ 	/* Allocate cache for SRBs. */
+ 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
