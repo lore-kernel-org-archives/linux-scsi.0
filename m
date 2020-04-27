@@ -6,24 +6,23 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B38F5C55199
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 06:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AC6EC55199
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 06:16:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9FF882173E
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 06:16:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86526218AC
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 06:16:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbgD0GQD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Apr 2020 02:16:03 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42184 "EHLO mx2.suse.de"
+        id S1726648AbgD0GQi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Apr 2020 02:16:38 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42382 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726231AbgD0GQC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Apr 2020 02:16:02 -0400
+        id S1726242AbgD0GQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Apr 2020 02:16:38 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 0E0A7AC6D;
-        Mon, 27 Apr 2020 06:16:00 +0000 (UTC)
-Subject: Re: [PATCH 1/7] block: add a cdrom_device_info pointer to struct
- gendisk
+        by mx2.suse.de (Postfix) with ESMTP id E8EE4AC6D;
+        Mon, 27 Apr 2020 06:16:35 +0000 (UTC)
+Subject: Re: [PATCH 2/7] ide-cd: rename cdrom_read_tocentry
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
@@ -31,14 +30,14 @@ Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         Damien Le Moal <damien.lemoal@wdc.com>
 References: <20200425075706.721917-1-hch@lst.de>
- <20200425075706.721917-2-hch@lst.de>
+ <20200425075706.721917-3-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <262e6cc4-a0e7-821c-9e51-03a2ed5cba86@suse.de>
-Date:   Mon, 27 Apr 2020 08:15:59 +0200
+Message-ID: <3528369c-b03a-8c72-9b84-a188b92c5a03@suse.de>
+Date:   Mon, 27 Apr 2020 08:16:34 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200425075706.721917-2-hch@lst.de>
+In-Reply-To: <20200425075706.721917-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -48,23 +47,16 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/25/20 9:57 AM, Christoph Hellwig wrote:
-> Add a pointer to the CDROM information structure to struct gendisk.
-> This will allow various removable media file systems to call directly
-> into the CDROM layer instead of abusing ioctls with kernel pointers.
+> Give the cdrom_read_tocentry function and ide_ prefix to not conflict
+> with the soon to be added generic function.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->   drivers/block/paride/pcd.c | 2 +-
->   drivers/cdrom/cdrom.c      | 5 ++++-
->   drivers/cdrom/gdrom.c      | 2 +-
->   drivers/ide/ide-cd.c       | 3 +--
->   drivers/scsi/sr.c          | 3 +--
->   include/linux/cdrom.h      | 2 +-
->   include/linux/genhd.h      | 9 +++++++++
->   7 files changed, 18 insertions(+), 8 deletions(-)
+>   drivers/ide/ide-cd.c | 14 +++++++-------
+>   1 file changed, 7 insertions(+), 7 deletions(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
