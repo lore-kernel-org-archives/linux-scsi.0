@@ -2,52 +2,60 @@ Return-Path: <SRS0=af2F=6L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8534FC54FD0
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5023BC55194
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 648BF206DD
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AB3C206DD
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 03:03:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726340AbgD0DDS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Apr 2020 23:03:18 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:34370 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbgD0DDR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 23:03:17 -0400
-Received: by mail-pf1-f195.google.com with SMTP id x15so8286269pfa.1
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 20:03:17 -0700 (PDT)
+        id S1726374AbgD0DDT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Apr 2020 23:03:19 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:43930 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725838AbgD0DDT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 23:03:19 -0400
+Received: by mail-pf1-f196.google.com with SMTP id v63so8264289pfb.10
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 20:03:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=KnN3gqhxrVOA9xUZF22dqkY+K6Fqyg/4yvfETWknLFY=;
-        b=teV6Gc5YTcaWoReXzKHhSdg6xNcvIJDBkA4tkbsNME0FJr3G/uNlkXcVc+ZehF1mzR
-         9KZIw0uf4UyZMFYZbwCoBgMmR4kVVV1MeQdXShU8D0AFBKhDKctovrUO50hQLo3zu+E9
-         Wjd26UlvQqOPtnZxKNBgL6WUlfO75/raDjCaQ4GX59hiiQ6uTcX43k/q4uoyRllOCBMa
-         Lv05Y28nNMLemMARRjAxOazRgYJN7V1vL13+efosy7Tc105fv9/1yfNU1w7CDvxeIzUF
-         CPYtzmDTmbzzwqxX0825BhvSOukmRSr5goOmi1Bp5beukzMLUxU0AqpsV1WqAxjMAxoX
-         IA0g==
-X-Gm-Message-State: AGi0PuZRJZ428jjAaEAxc7VArNDBXq/x1YrYaNtHvt6vuyivivcEo1CJ
-        qwzCtXxpqK4Ue5OdNebpn5FFyg3cKBc=
-X-Google-Smtp-Source: APiQypJ8FfQwkxb/bM88BNJs0MueROJ+YfoPBr2V60fCuK8/J2Um+bkeP4AnD1Xt0IHla2am1O+IOw==
-X-Received: by 2002:a63:1160:: with SMTP id 32mr20460139pgr.441.1587956596837;
-        Sun, 26 Apr 2020 20:03:16 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=oUR/+fzPcZEaCR7aM6FTqus/G3zElRKO8lKcija1eTo=;
+        b=klgKhGYBmc8oN8oQXC6kXjyIWljlv8o9jsqJjzhWpz58EaipD8nG7xtWxs7cMjLXus
+         4iwQ4q/3Srkr/Cu0YuCdUw6hNtuqdABidol9/RL7nqNLPu5+96+4va0JrFRoluT7apkq
+         UVgOSNAw7/o4bHbRQd1xp+l2jNk4mAbVnuCJbUb4yWeUFo78HiaBjvlklNMuDTQ7Kf4K
+         U0PK1ZvNojbARyXisVn6d/+FcaVNCWruMlz532rF7UQatkBjP9c/E9cjZSRRvxUOHHr7
+         QZYqo5uOvNPZ5EmAGRbnG/QzEMB9od1rdjwpjMKgLiB0BaLQK27eH+sZAYCtqIP0yyZW
+         tVuw==
+X-Gm-Message-State: AGi0Puaaf/WC94HzZpj4t/7DsCUVZ/7Dp/A/MeYXslATpzt8WDlr1glc
+        rufXdgijDKw/Q2aYere3MLA=
+X-Google-Smtp-Source: APiQypJ30oujk3Q6O6OJMQ0asYzcbsKEI+yWjk5Fi40II7Nk4c6MrgFSUFXwPziMqvRF9HaPepoEsQ==
+X-Received: by 2002:a63:e002:: with SMTP id e2mr18533272pgh.405.1587956598275;
+        Sun, 26 Apr 2020 20:03:18 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:612a:373a:aa97:7fa7])
-        by smtp.gmail.com with ESMTPSA id v94sm9982617pjb.39.2020.04.26.20.03.15
+        by smtp.gmail.com with ESMTPSA id v94sm9982617pjb.39.2020.04.26.20.03.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Apr 2020 20:03:15 -0700 (PDT)
+        Sun, 26 Apr 2020 20:03:17 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v4 00/11] Fix qla2xxx endianness annotations
-Date:   Sun, 26 Apr 2020 20:02:59 -0700
-Message-Id: <20200427030310.19687-1-bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: [PATCH v4 01/11] qla2xxx: Fix spelling of a variable name
+Date:   Sun, 26 Apr 2020 20:03:00 -0700
+Message-Id: <20200427030310.19687-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.26.1
+In-Reply-To: <20200427030310.19687-1-bvanassche@acm.org>
+References: <20200427030310.19687-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -55,69 +63,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc: Quinn Tran <qutran@marvell.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/qla2xxx/qla_fw.h   | 2 +-
+ drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-This patch series fixes the endianness annotations in the qla2xxx driver.
-Please consider this patch series for the v5.8 kernel.
-
-Thanks,
-
-Bart.
-
-Changes compared to v3:
-- Included several source code cleanup patches, e.g. to address isssues
-  detected by checkpatch.
-
-Changes compared to v2:
-- Removed one BUILD_BUG_ON() statement.
-
-Changes compared to v1:
-- Left out the raw_smp_processor_id() patch because it may take time to achieve
-  agreement about this patch.
-- Added three patches to this series: two patches for verifying structure size
-  at compile time and one patch for changing function names from upper case to
-  lower case.
-
-Bart Van Assche (11):
-  qla2xxx: Fix spelling of a variable name
-  qla2xxx: Suppress two recently introduced compiler warnings
-  qla2xxx: Sort BUILD_BUG_ON() statements alphabetically
-  qla2xxx: Add more BUILD_BUG_ON() statements
-  qla2xxx: Make a gap in struct qla2xxx_offld_chain explicit
-  qla2xxx: Increase the size of struct qla_fcp_prio_cfg to
-    FCP_PRIO_CFG_SIZE
-  qla2xxx: Change two hardcoded constants into offsetof() / sizeof()
-    expressions
-  qla2xxx: Fix the code that reads from mailbox registers
-  qla2xxx: Change {RD,WRT}_REG_*() function names from upper case into
-    lower case
-  qla2xxx: Fix endianness annotations in header files
-  qla2xxx: Fix endianness annotations in source files
-
- drivers/scsi/qla2xxx/qla_attr.c    |   3 +-
- drivers/scsi/qla2xxx/qla_bsg.c     |   4 +-
- drivers/scsi/qla2xxx/qla_dbg.c     | 672 +++++++++++++-------------
- drivers/scsi/qla2xxx/qla_dbg.h     | 443 ++++++++---------
- drivers/scsi/qla2xxx/qla_def.h     | 711 ++++++++++++++-------------
- drivers/scsi/qla2xxx/qla_fw.h      | 746 ++++++++++++++---------------
- drivers/scsi/qla2xxx/qla_init.c    | 280 +++++------
- drivers/scsi/qla2xxx/qla_inline.h  |   8 +-
- drivers/scsi/qla2xxx/qla_iocb.c    | 121 ++---
- drivers/scsi/qla2xxx/qla_isr.c     | 217 +++++----
- drivers/scsi/qla2xxx/qla_mbx.c     | 111 +++--
- drivers/scsi/qla2xxx/qla_mr.c      | 111 +++--
- drivers/scsi/qla2xxx/qla_mr.h      |  32 +-
- drivers/scsi/qla2xxx/qla_nvme.c    |  12 +-
- drivers/scsi/qla2xxx/qla_nvme.h    |  46 +-
- drivers/scsi/qla2xxx/qla_nx.c      | 161 +++----
- drivers/scsi/qla2xxx/qla_nx.h      |  36 +-
- drivers/scsi/qla2xxx/qla_nx2.c     |  12 +-
- drivers/scsi/qla2xxx/qla_os.c      | 114 +++--
- drivers/scsi/qla2xxx/qla_sup.c     | 347 +++++++-------
- drivers/scsi/qla2xxx/qla_target.c  |  84 ++--
- drivers/scsi/qla2xxx/qla_target.h  | 208 ++++----
- drivers/scsi/qla2xxx/qla_tmpl.c    |  12 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  14 +
- include/trace/events/qla.h         |   5 +
- 25 files changed, 2314 insertions(+), 2196 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index f9bad5bd7198..b364a497e33d 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1292,7 +1292,7 @@ struct device_reg_24xx {
+ };
+ /* RISC-RISC semaphore register PCI offet */
+ #define RISC_REGISTER_BASE_OFFSET	0x7010
+-#define RISC_REGISTER_WINDOW_OFFET	0x6
++#define RISC_REGISTER_WINDOW_OFFSET	0x6
+ 
+ /* RISC-RISC semaphore/flag register (risc address 0x7016) */
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 80390d3f3236..b94429504d30 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2861,7 +2861,7 @@ qla25xx_read_risc_sema_reg(scsi_qla_host_t *vha, uint32_t *data)
+ 	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
+ 
+ 	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
+-	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET);
++	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET);
+ 
+ }
+ 
+@@ -2871,7 +2871,7 @@ qla25xx_write_risc_sema_reg(scsi_qla_host_t *vha, uint32_t data)
+ 	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
+ 
+ 	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
+-	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET, data);
++	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET, data);
+ }
+ 
+ static void
