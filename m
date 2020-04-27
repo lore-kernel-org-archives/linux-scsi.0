@@ -2,143 +2,107 @@ Return-Path: <SRS0=af2F=6L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B711EC54FD0
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 01:48:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94717C54FD0
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 01:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 997D72080C
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 01:48:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CEBC206A5
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 01:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726327AbgD0Bsx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 26 Apr 2020 21:48:53 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:37542 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbgD0Bsw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 21:48:52 -0400
-Received: by mail-pj1-f66.google.com with SMTP id a7so6764196pju.2
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 18:48:52 -0700 (PDT)
+        id S1726327AbgD0Bzh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 26 Apr 2020 21:55:37 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:43776 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726186AbgD0Bzg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Apr 2020 21:55:36 -0400
+Received: by mail-pf1-f196.google.com with SMTP id v63so8191535pfb.10
+        for <linux-scsi@vger.kernel.org>; Sun, 26 Apr 2020 18:55:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FZYoppyqa3a1qqvomYxzLuR4sE0PGXggE4GaZWOB6nQ=;
-        b=tk0xxd1RQli0mt1H0HXEdLeUjqygI6qMDCHd5NIvWLeMb/VpoA7oOx+TJEMGcoXnYg
-         JzT+suRMwBw7bgdHqtjOshq4/LBmsZHdImaoHM0sxVmYrUGNxlYWtgOG0JTc4Vr1WHQZ
-         qX3+DpoorN0m/6Fek/3YoQYJglB0PUoIFON/4bN9fA1+JHcEBHIOYGIL+qfQ6V5SfCBR
-         IqVBENWrphifsk/BUWvMbFgOYvRxHIXjfcPFF+eR1Jxlmy9VxDFkFXBuq+CRRhwyoQXF
-         NLv3ViQmM93o8YfvQauQn4NJdKPxwACtZSWCAeH4CuLrNcZ96AAcSFZktnPGlLpJkoBJ
-         g1mg==
-X-Gm-Message-State: AGi0PuYbbOurHX87xViwPjfZ+bM5koatk8NajvOs/oyA08kpk2mWz0yo
-        5F3bYUiwLsxTcGi7ZZ4kaHo=
-X-Google-Smtp-Source: APiQypIMtPGGlycn93wdB5R6V4xJwvdq1IXtElTitn/1JRCVQ6r5WDwuNl5kq4syY9Lqdxxi0JM7WA==
-X-Received: by 2002:a17:902:8d8d:: with SMTP id v13mr20851746plo.67.1587952131938;
-        Sun, 26 Apr 2020 18:48:51 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:612a:373a:aa97:7fa7])
-        by smtp.gmail.com with ESMTPSA id a19sm11274707pfd.91.2020.04.26.18.48.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Apr 2020 18:48:50 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=FfkljgAHUiBsMyOwLJc6cB6zpxoEnYGhd955jCWD7qI=;
+        b=ocD+uWRZnBC1aSztiu+pXnqH9yvUR6+p/NUGBeavws9CcTI8Jh8rNnu5arkclWGPLZ
+         Zg20LVoMhHy6jZPioabps0SzQyre8vBxST+ui5P6kgZokSuXEAXCc9u5BJWF1mwKPta8
+         dUotQSV1C3PkTy0YPkZhUKC0cC571FVB+Pq8BLFe6qlxaEcoXMom+JKhJYVObPHSMONb
+         2E7p1hU5oRncE4bxs1fePbADMhMz6Z7Orquk83KfV5Gfz5WnJvmK+gndZH8DUc1TlyPS
+         LgW2+RZOPWxhLiew7vbYZbNrwk8qI6nT8m9gs6oqtJ5lZz07jIM9jwqneqRlQAdTHvFr
+         V9BA==
+X-Gm-Message-State: AGi0PubZuJ4w78DIkbdX57f+DL9Qtx29sHDkVHql51v7h+jnuSNkeIxB
+        ORpArYf0+xmT2RoZiIUhmiU=
+X-Google-Smtp-Source: APiQypLBnEsPFz6WkDfdp79DTP24D0xX9xF005JusK31qQmxdG9vUZGAqUf4Mc1YSBwnjd0SzEKs/w==
+X-Received: by 2002:a63:6285:: with SMTP id w127mr12997399pgb.449.1587952535788;
+        Sun, 26 Apr 2020 18:55:35 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:612a:373a:aa97:7fa7? ([2601:647:4000:d7:612a:373a:aa97:7fa7])
+        by smtp.gmail.com with ESMTPSA id p190sm11275957pfp.207.2020.04.26.18.55.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 26 Apr 2020 18:55:35 -0700 (PDT)
+Subject: Re: [PATCH 1/3] scsi: qla2xxx: Fix warning after FC target reset
+To:     Viacheslav Dubeyko <v.dubeiko@yadro.com>,
+        linux-scsi@vger.kernel.org
+Cc:     hmadhani@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux@yadro.com, r.bolshakov@yadro.com,
+        slava@dubeyko.com
+References: <1d7b21bf9f7676643239eb3d60eaca7cfa505cf0.camel@yadro.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Merlijn Wajer <merlijn@archive.org>
-Subject: [PATCH] sr: Use {get,put}_unaligned_be*() instead of open-coding these functions
-Date:   Sun, 26 Apr 2020 18:48:44 -0700
-Message-Id: <20200427014844.12109-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.26.1
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <fcbbfdac-1a79-51ac-beae-ea4b38f21798@acm.org>
+Date:   Sun, 26 Apr 2020 18:55:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1d7b21bf9f7676643239eb3d60eaca7cfa505cf0.camel@yadro.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch makes the sr code slightly easier to read.
+On 2020-04-24 05:10, Viacheslav Dubeyko wrote:
+> From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+> Date: Fri, 10 Apr 2020 11:07:08 +0300
+> Subject: [PATCH 1/3] scsi: qla2xxx: Fix warning after FC target reset
+> 
+> Currently, FC target reset finishes with the warning
+> message.
 
-Cc: Merlijn Wajer <merlijn@archive.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/sr.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
+Hi Slava,
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index d2fe3fa470f9..7727893238c7 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -51,6 +51,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/uaccess.h>
- 
-+#include <asm/unaligned.h>
-+
- #include <scsi/scsi.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_device.h>
-@@ -344,10 +346,8 @@ static int sr_done(struct scsi_cmnd *SCpnt)
- 		case ILLEGAL_REQUEST:
- 			if (!(SCpnt->sense_buffer[0] & 0x90))
- 				break;
--			error_sector = (SCpnt->sense_buffer[3] << 24) |
--				(SCpnt->sense_buffer[4] << 16) |
--				(SCpnt->sense_buffer[5] << 8) |
--				SCpnt->sense_buffer[6];
-+			error_sector =
-+				get_unaligned_be32(&SCpnt->sense_buffer[3]);
- 			if (SCpnt->request->bio != NULL)
- 				block_sectors =
- 					bio_sectors(SCpnt->request->bio);
-@@ -495,13 +495,9 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
- 		SCpnt->sdb.length = this_count * s_size;
- 	}
- 
--	SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
--	SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
--	SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
--	SCpnt->cmnd[5] = (unsigned char) block & 0xff;
-+	put_unaligned_be32(block, &SCpnt->cmnd[2]);
- 	SCpnt->cmnd[6] = SCpnt->cmnd[9] = 0;
--	SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
--	SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
-+	put_unaligned_be16(this_count, &SCpnt->cmnd[7]);
- 
- 	/*
- 	 * We shouldn't disconnect in the middle of a sector, so with a dumb
-@@ -854,8 +850,7 @@ static void get_sectorsize(struct scsi_cd *cd)
- 	} else {
- 		long last_written;
- 
--		cd->capacity = 1 + ((buffer[0] << 24) | (buffer[1] << 16) |
--				    (buffer[2] << 8) | buffer[3]);
-+		cd->capacity = 1 + get_unaligned_be32(&buffer[0]);
- 		/*
- 		 * READ_CAPACITY doesn't return the correct size on
- 		 * certain UDF media.  If last_written is larger, use
-@@ -866,8 +861,7 @@ static void get_sectorsize(struct scsi_cd *cd)
- 		if (!cdrom_get_last_written(&cd->cdi, &last_written))
- 			cd->capacity = max_t(long, cd->capacity, last_written);
- 
--		sector_size = (buffer[4] << 24) |
--		    (buffer[5] << 16) | (buffer[6] << 8) | buffer[7];
-+		sector_size = get_unaligned_be32(&buffer[4]);
- 		switch (sector_size) {
- 			/*
- 			 * HP 4020i CD-Recorder reports 2340 byte sectors
-@@ -955,13 +949,13 @@ static void get_capabilities(struct scsi_cd *cd)
- 	}
- 
- 	n = data.header_length + data.block_descriptor_length;
--	cd->cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
-+	cd->cdi.speed = get_unaligned_be16(&buffer[n + 8]) / 176;
- 	cd->readcd_known = 1;
- 	cd->readcd_cdda = buffer[n + 5] & 0x01;
- 	/* print some capability bits */
- 	sr_printk(KERN_INFO, cd,
- 		  "scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n",
--		  ((buffer[n + 14] << 8) + buffer[n + 15]) / 176,
-+		  get_unaligned_be16(&buffer[n + 14]) / 176,
- 		  cd->cdi.speed,
- 		  buffer[n + 3] & 0x01 ? "writer " : "", /* CD Writer */
- 		  buffer[n + 3] & 0x20 ? "dvd-ram " : "",
+For future patch submissions, please include a cover letter with the
+patch series and also use threaded mode, e.g. by setting
+sendemail.thread = true in ~/.gitconfig.
+
+A summary of what Martin Petersen expects from contributors is available
+at https://lore.kernel.org/ksummit-discuss/yq1o8zqeqhb.fsf@oracle.com/.
+
+Thanks,
+
+Bart.
