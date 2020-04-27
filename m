@@ -2,133 +2,146 @@ Return-Path: <SRS0=af2F=6L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD16C54FCB
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 12:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA847C7C881
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 14:11:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66CA920663
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 12:53:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FBDB2078C
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Apr 2020 14:11:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tJuDZKxv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727825AbgD0Mx1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Apr 2020 08:53:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56086 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727029AbgD0Mx1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Apr 2020 08:53:27 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 34D8DAA55;
-        Mon, 27 Apr 2020 12:53:25 +0000 (UTC)
-Subject: Re: [PATCH v8 07/11] scsi: sd_zbc: factor out sanity checks for zoned
- commands
-To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        id S1727941AbgD0OLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Apr 2020 10:11:31 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50880 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727902AbgD0OLa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2020 10:11:30 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03RDwgcp122673;
+        Mon, 27 Apr 2020 14:11:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=Wa9PDmgzkzn0YtjxVYxn+dHBEN6HBXROnWRC8fL2f6Q=;
+ b=tJuDZKxvqjB8M9Q0JI0TtBb5x2OwCYyKsigCsb1WBy3ASfO81tZNdN/BwiewacLADDZ1
+ qkCeDn21O3XUML2+3jR5tkXKKSAbV/nlVaOfAXkxdidsh2YXO4iT9qnq6XR/aqMIergN
+ k72A/Qqd199HznWrVLNfRQDsuIrPubXuDwgNgEyuSHauBlHG1eqHhebxfSWWV51K9gdb
+ XW4jZtp+8kdZEnX1axaktgYo3NLDHSG+RwnSZU5ivUu2TyHihBbKH7i3bKn+4HbPePz/
+ eTrI0TAm13NXHO3+M9e1/wG7A+pOB1covam8HnZbxnLXILmjFckSgWDODrrfncLY+swP Kw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 30nucfst3y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 27 Apr 2020 14:11:17 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03RE85hI179740;
+        Mon, 27 Apr 2020 14:09:17 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 30mxrqcbty-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 27 Apr 2020 14:09:16 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03RE9ErG009166;
+        Mon, 27 Apr 2020 14:09:14 GMT
+Received: from [10.154.123.249] (/10.154.123.249)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 27 Apr 2020 07:09:14 -0700
+Subject: Re: [PATCH v4 01/11] qla2xxx: Fix spelling of a variable name
+To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20200427113153.31246-1-johannes.thumshirn@wdc.com>
- <20200427113153.31246-8-johannes.thumshirn@wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <8b936d56-c7a6-50ad-3a71-6e41f403a047@suse.de>
-Date:   Mon, 27 Apr 2020 14:53:24 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200427030310.19687-1-bvanassche@acm.org>
+ <20200427030310.19687-2-bvanassche@acm.org>
+From:   himanshu.madhani@oracle.com
+Organization: Oracle Corporation
+Message-ID: <eb7bc9e4-0473-7b67-92ea-12dd77f1aa74@oracle.com>
+Date:   Mon, 27 Apr 2020 09:09:12 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200427113153.31246-8-johannes.thumshirn@wdc.com>
+In-Reply-To: <20200427030310.19687-2-bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9603 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=0
+ mlxlogscore=999 malwarescore=0 bulkscore=0 spamscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004270119
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9603 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004270119
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/27/20 1:31 PM, Johannes Thumshirn wrote:
-> Factor sanity checks for zoned commands from sd_zbc_setup_zone_mgmt_cmnd().
-> 
-> This will help with the introduction of an emulated ZONE_APPEND command.
-> 
-> Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
+
+On 4/26/20 10:03 PM, Bart Van Assche wrote:
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->   drivers/scsi/sd_zbc.c | 36 +++++++++++++++++++++++++-----------
->   1 file changed, 25 insertions(+), 11 deletions(-)
+>   drivers/scsi/qla2xxx/qla_fw.h   | 2 +-
+>   drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+>   2 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> index f45c22b09726..ee156fbf3780 100644
-> --- a/drivers/scsi/sd_zbc.c
-> +++ b/drivers/scsi/sd_zbc.c
-> @@ -209,6 +209,26 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
->   	return ret;
+> diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+> index f9bad5bd7198..b364a497e33d 100644
+> --- a/drivers/scsi/qla2xxx/qla_fw.h
+> +++ b/drivers/scsi/qla2xxx/qla_fw.h
+> @@ -1292,7 +1292,7 @@ struct device_reg_24xx {
+>   };
+>   /* RISC-RISC semaphore register PCI offet */
+>   #define RISC_REGISTER_BASE_OFFSET	0x7010
+> -#define RISC_REGISTER_WINDOW_OFFET	0x6
+> +#define RISC_REGISTER_WINDOW_OFFSET	0x6
+>   
+>   /* RISC-RISC semaphore/flag register (risc address 0x7016) */
+>   
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 80390d3f3236..b94429504d30 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -2861,7 +2861,7 @@ qla25xx_read_risc_sema_reg(scsi_qla_host_t *vha, uint32_t *data)
+>   	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
+>   
+>   	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
+> -	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET);
+> +	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET);
+>   
 >   }
 >   
-> +static blk_status_t sd_zbc_cmnd_checks(struct scsi_cmnd *cmd)
-> +{
-> +	struct request *rq = cmd->request;
-> +	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> +	sector_t sector = blk_rq_pos(rq);
-> +
-> +	if (!sd_is_zoned(sdkp))
-> +		/* Not a zoned device */
-> +		return BLK_STS_IOERR;
-> +
-> +	if (sdkp->device->changed)
-> +		return BLK_STS_IOERR;
-> +
-> +	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
-> +		/* Unaligned request */
-> +		return BLK_STS_IOERR;
-> +
-> +	return BLK_STS_OK;
-> +}
-> +
->   /**
->    * sd_zbc_setup_zone_mgmt_cmnd - Prepare a zone ZBC_OUT command. The operations
->    *			can be RESET WRITE POINTER, OPEN, CLOSE or FINISH.
-> @@ -223,20 +243,14 @@ blk_status_t sd_zbc_setup_zone_mgmt_cmnd(struct scsi_cmnd *cmd,
->   					 unsigned char op, bool all)
->   {
->   	struct request *rq = cmd->request;
-> -	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
->   	sector_t sector = blk_rq_pos(rq);
-> +	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
->   	sector_t block = sectors_to_logical(sdkp->device, sector);
-> +	blk_status_t ret;
+> @@ -2871,7 +2871,7 @@ qla25xx_write_risc_sema_reg(scsi_qla_host_t *vha, uint32_t data)
+>   	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
 >   
-> -	if (!sd_is_zoned(sdkp))
-> -		/* Not a zoned device */
-> -		return BLK_STS_IOERR;
-> -
-> -	if (sdkp->device->changed)
-> -		return BLK_STS_IOERR;
-> -
-> -	if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
-> -		/* Unaligned request */
-> -		return BLK_STS_IOERR;
-> +	ret = sd_zbc_cmnd_checks(cmd);
-> +	if (ret != BLK_STS_OK)
-> +		return ret;
+>   	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
+> -	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET, data);
+> +	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET, data);
+>   }
 >   
->   	cmd->cmd_len = 16;
->   	memset(cmd->cmnd, 0, cmd->cmd_len);
+>   static void
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-Hannes
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Himanshu Madhani
+Oracle Linux Engineering
