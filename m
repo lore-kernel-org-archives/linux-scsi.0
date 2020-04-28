@@ -2,124 +2,322 @@ Return-Path: <SRS0=LQeo=6M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 941A8C83000
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AEDDC83008
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 15:56:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 752F2206D6
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:51:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jCW3hAgZ"
+	by mail.kernel.org (Postfix) with ESMTP id DA4FA20661
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 15:56:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728206AbgD1Ou6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Apr 2020 10:50:58 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:45370 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727878AbgD1Ou6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 10:50:58 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SEmpuT116964;
-        Tue, 28 Apr 2020 14:50:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=21bkKoVEDcFItNpAZkSZgketfx0K3t7FQdrYOmCXnPU=;
- b=jCW3hAgZbJUKMmmZkFPGdiEJOqCIc+5ynLGimPU6zQvVRnxd2ilU5Ou/968dVRCGba6o
- cHgh1Q0qisyk8aTXXR58Sc1GYi7ZdJ7pSzRf9n7tbLbB8GrTE/VlNlhJbtspwK/Gb5dY
- T1grJgeG8dc7YXiYrqVU03qn1N+yrMUas3BOW5RbqH8GyqFvM+/TMUcGxwamFc4b4d0z
- qMe4l8ksN2nKs1wzcRozVgVGNQywFmnKs5pZf4rz3T+GmbkIaULeEGTD7FmgDnnM3qga
- tjWoIJ+7vxBcUmHsXlBVWdiDadW+7LzML2J+BhIpnkDtAppxfqVZabenkxcVTpn1NDc6 Qw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30nucg0egh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 14:50:52 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SEb5vD179570;
-        Tue, 28 Apr 2020 14:50:51 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 30my0dbqwf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 14:50:51 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03SEomVU022423;
-        Tue, 28 Apr 2020 14:50:49 GMT
-Received: from [192.168.1.24] (/70.114.128.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Apr 2020 07:50:48 -0700
-Subject: Re: [PATCH][next] scsi: qla2xxx: make 1 bit bit-fields unsigned int
-To:     Colin King <colin.king@canonical.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Arun Easi <aeasi@marvell.com>, linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200428102013.1040598-1-colin.king@canonical.com>
-From:   himanshu.madhani@oracle.com
-Organization: Oracle Corporation
-Message-ID: <ba9f540a-f46a-9380-e097-20d02abed2e1@oracle.com>
-Date:   Tue, 28 Apr 2020 09:50:47 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+        id S1728028AbgD1P4H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Apr 2020 11:56:07 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2122 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727865AbgD1P4G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Apr 2020 11:56:06 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 689E37CCE431A6F85A86;
+        Tue, 28 Apr 2020 16:56:04 +0100 (IST)
+Received: from [127.0.0.1] (10.47.4.245) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1913.5; Tue, 28 Apr
+ 2020 16:56:02 +0100
+Subject: Re: [PATCH RFC v6 08/10] megaraid_sas: switch fusion adapters to MQ
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "hare@suse.de" <hare@suse.de>,
+        "don.brace@microsemi.com" <don.brace@microsemi.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+CC:     "chenxiang (M)" <chenxiang66@hisilicon.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "esc.storagedev@microsemi.com" <esc.storagedev@microsemi.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <1583409280-158604-1-git-send-email-john.garry@huawei.com>
+ <1583409280-158604-9-git-send-email-john.garry@huawei.com>
+ <a1f0399e2e85b2244a9ae40e4a2f1089@mail.gmail.com>
+ <f839f040-8bf4-cf83-7670-dfc208b77326@huawei.com>
+ <7cac3eb9fd79b5b988e25da542305b35@mail.gmail.com>
+ <40faaef8-8bfc-639f-747f-cacd4e61464f@huawei.com>
+ <7b8c79b0453722023c6c7d53cd24441d@mail.gmail.com>
+ <b759a8ed-09ba-bfe8-8916-c05ab9671cbf@huawei.com>
+ <260c5decdb38db9f74994988ce7fcaf1@mail.gmail.com>
+ <380d3bf2-67ee-a09a-3098-51b24b98f912@huawei.com>
+ <e0c5a076-9fe5-4401-fd41-97f457888ad3@huawei.com>
+ <d2ae343770a83466b870a33ffae5fa23@mail.gmail.com>
+ <8e16d68b-4d71-58f1-ede9-92ffe5d65ba9@huawei.com>
+ <f712fd935562dcff73f0f6cf15f9cce7@mail.gmail.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <538dd70d-7edb-c66c-4205-d91f24a907ea@huawei.com>
+Date:   Tue, 28 Apr 2020 16:55:22 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20200428102013.1040598-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <f712fd935562dcff73f0f6cf15f9cce7@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
- suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280116
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 priorityscore=1501
- mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
- lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280116
+X-Originating-IP: [10.47.4.245]
+X-ClientProxiedBy: lhreml706-chm.china.huawei.com (10.201.108.55) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Kashyap,
 
+> I am using <mq-deadline> which is MQ version of SQ deadline.
+> For now we can just consider case without scheduler.
+> 
+> I have some more findings. May be someone from upstream community can
+> connect the dots.
+> 
+> #1. hctx_may_queue() throttle the IO at hctx level. This is eventually per
+> sdev throttling for megaraid_sas driver because It creates only one
+> context - hctx0 for each scsi device.
+> 
+> If driver is using only one h/w queue,  active_queues will be always steady.
+> In my test it was 64 thread, so active_queues=64.
 
-On 4/28/20 5:20 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The bitfields mpi_fw_dump_reading and mpi_fw_dumped are currently signed
-> which is not recommended as the representation is an implementation defined
-> behaviour.  Fix this by making the bit-fields unsigned ints.
-> 
-> Fixes: cbb01c2f2f63 ("scsi: qla2xxx: Fix MPI failure AEN (8200) handling")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/scsi/qla2xxx/qla_def.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index daa9e936887b..172ea4e5887d 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -4248,8 +4248,8 @@ struct qla_hw_data {
->   	int		fw_dump_reading;
->   	void		*mpi_fw_dump;
->   	u32		mpi_fw_dump_len;
-> -	int		mpi_fw_dump_reading:1;
-> -	int		mpi_fw_dumped:1;
-> +	unsigned int	mpi_fw_dump_reading:1;
-> +	unsigned int	mpi_fw_dumped:1;
->   	int		prev_minidump_failed;
->   	dma_addr_t	eft_dma;
->   	void		*eft;
-> 
+So I figure that 64 threads comes from 64 having disks.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Even though <fio> thread is shared among allowed cpumask
+> (cpus_allowed_policy=shared option in fio),  active_queues will be always 64
+> because we have only one h/w queue.
+> All the logical cpus are mapped to one h/w queue. It means, thread moving
+> from one cpu to another cpu will not change active_queues per hctx.
+> 
+> In case of this RFC, active_queues are now per hctx and there are multiple
+> hctx, but tags are shared. 
 
--- 
-Himanshu Madhani
-Oracle Linux Engineering
+Right, so we need a policy to divide up the shared tags across request 
+queues, based on principle of fairness.
+
+This can create unwanted throttling and
+> eventually more lock contention in sbitmap.
+> I added below patch and things improved a bit, but not a full proof.
+> 
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index 586c9d6..c708fbc 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -60,10 +60,12 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
+>    * For shared tag users, we track the number of currently active users
+>    * and attempt to provide a fair share of the tag depth for each of them.
+>    */
+> -static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+> +static inline bool hctx_may_queue(struct request_queue *q,
+> +                                 struct blk_mq_hw_ctx *hctx,
+>                                    struct sbitmap_queue *bt)
+>   {
+> -       unsigned int depth, users;
+> +       unsigned int depth, users, i, outstanding = 0;
+> +       struct blk_mq_hw_ctx *hctx_iter;
+> 
+>          if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_SHARED))
+>                  return true;
+> @@ -84,14 +86,18 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx
+> *hctx,
+>           * Allow at least some tags
+>           */
+>          depth = max((bt->sb.depth + users - 1) / users, 4U);
+> -       return atomic_read(&hctx->nr_active) < depth;
+> +
+> +       queue_for_each_hw_ctx(q, hctx_iter, i)
+> +               outstanding += atomic_read(&hctx_iter->nr_active);
+> +
+
+OK,  I think that we need to find a cleaner way to do this.
+
+> +       return outstanding < depth;
+>   }
+> 
+>   static int __blk_mq_get_tag(struct blk_mq_alloc_data *data,
+>                              struct sbitmap_queue *bt)
+>   {
+>          if (!(data->flags & BLK_MQ_REQ_INTERNAL) &&
+> -           !hctx_may_queue(data->hctx, bt))
+> 
+> 
+> #2 - In completion path, scsi module call blk_mq_run_hw_queues() upon IO
+> completion.  I am not sure if it is good to run all the h/w queue or just
+> h/w queue of current reference is good enough.
+> Below patch helped to reduce contention in hcxt_lock().
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 610ee41..f72de2a 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -572,6 +572,7 @@ static bool scsi_end_request(struct request *req,
+> blk_status_t error,
+>          struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+>          struct scsi_device *sdev = cmd->device;
+>          struct request_queue *q = sdev->request_queue;
+> +       struct blk_mq_hw_ctx *mq_hctx = req->mq_hctx;
+> 
+>          if (blk_update_request(req, error, bytes))
+>                  return true;
+> @@ -613,7 +614,7 @@ static bool scsi_end_request(struct request *req,
+> blk_status_t error,
+>              !list_empty(&sdev->host->starved_list))
+>                  kblockd_schedule_work(&sdev->requeue_work);
+>          else
+> -               blk_mq_run_hw_queues(q, true);
+> +               blk_mq_run_hw_queue(mq_hctx, true);
+
+Not sure on this. But, indeed, I found running all queues did add lots 
+of extra load for when enabling the deadline scheduler.
+
+> 
+>          percpu_ref_put(&q->q_usage_counter);
+>          return false;
+> 
+> #3 -  __blk_mq_tag_idle() calls blk_mq_tag_wakeup_all which may not be
+> optimal for shared queue.
+> There is a penalty if we are calling __sbq_wake_up() frequently. In case of
+> nr_hw_queue = 1, things are better because one hctx and hctx->state will
+> avoid multiple calls.
+> If blk_mq_tag_wakeup_all is called from hctx0 context, there is no need to
+> call from hctx1, hctx2 etc.
+> 
+> I have added below patch in my testing.
+> 
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index 586c9d6..5b331e5 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -53,7 +53,9 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
+> 
+>          atomic_dec(&tags->active_queues);
+> 
+> -       blk_mq_tag_wakeup_all(tags, false);
+> +       /* TBD - Do this only for hctx->flags & BLK_MQ_F_TAG_HCTX_SHARED */
+> +       if (hctx->queue_num == 0)
+> +               blk_mq_tag_wakeup_all(tags, false);
+
+ok, I see. But, again, I think we need to find a cleaner way to do this.
+
+>   }
+> 
+>   /*
+> 
+> 
+> With all above mentioned changes, I see performance improved from 2.2M IOPS
+> to 2.7M on same workload and profile.
+
+But still short of nr_hw_queue = 1, which got 3.1M IOPS, as below, right?
+
+Thanks,
+John
+
+> 
+>>
+>>>
+>>> Old Driver which has nr_hw_queue = 1 and I issue IOs from <fio>  queue
+>>> depth = 128. We get 3.1M IOPS in this config. This eventually exhaust
+>>> host can_queue.
+>>
+>> So I think I need to find a point where we start to get throttled.
+>>
+>>> Note - Very low contention in sbitmap_get()
+>>>
+>>> -   23.58%     0.25%  fio              [kernel.vmlinux]            [k]
+>>> blk_mq_make_request
+>>>      - 23.33% blk_mq_make_request
+>>>         - 21.68% blk_mq_get_request
+>>>            - 20.19% blk_mq_get_tag
+>>>               + 10.08% prepare_to_wait_exclusive
+>>>               + 4.51% io_schedule
+>>>               - 3.59% __sbitmap_queue_get
+>>>                  - 2.82% sbitmap_get
+>>>                       0.86% __sbitmap_get_word
+>>>                       0.75% _raw_spin_lock_irqsave
+>>>                       0.55% _raw_spin_unlock_irqrestore
+>>>
+>>> Driver with RFC which has nr_hw_queue = N and I issue IOs from <fio>
+>>> queue depth = 128. We get 2.3 M IOPS in this config. This eventually
+>>> exhaust host can_queue.
+>>> Note - Very high contention in sbitmap_get()
+>>>
+>>> -   42.39%     0.12%  fio              [kernel.vmlinux]            [k]
+>>> generic_make_request
+>>>      - 42.27% generic_make_request
+>>>         - 41.00% blk_mq_make_request
+>>>            - 38.28% blk_mq_get_request
+>>>               - 33.76% blk_mq_get_tag
+>>>                  - 30.25% __sbitmap_queue_get
+>>>                     - 29.90% sbitmap_get
+>>>                        + 9.06% _raw_spin_lock_irqsave
+>>>                        + 7.94% _raw_spin_unlock_irqrestore
+>>>                        + 3.86% __sbitmap_get_word
+>>>                        + 1.78% call_function_single_interrupt
+>>>                        + 0.67% ret_from_intr
+>>>                  + 1.69% io_schedule
+>>>                    0.59% prepare_to_wait_exclusive
+>>>                    0.55% __blk_mq_get_tag
+>>>
+>>> In this particular case, I observed alloc_hint = zeros which means,
+>>> sbitmap_get is not able to find free tags from hint. That may lead to
+>>> contention.
+>>> This condition is not happening with nr_hw_queue=1 (without RFC) driver.
+>>>
+>>> alloc_hint=
+>>> {663, 2425, 3060, 54, 3149, 4319, 4175, 4867, 543, 2481, 0, 4779, 377,
+>>> ***0***, 2010, 0, 909, 3350, 1546, 2179, 2875, 659, 3902, 2224, 3212,
+>>> 836, 1892, 1669, 2420, 3415, 1904, 512, 3027, 4810, 2845, 4690, 712,
+>>> 3105, 0, 0, 0, 3268, 4915, 3897, 1349, 547, 4, 733, 1765, 2068, 979,
+>>> 51, 880, 0, 370, 3520, 2877, 4097, 418, 4501, 3717, 2893, 604, 508,
+>>> 759, 3329, 4038, 4829, 715, 842, 1443, 556}
+>>>
+>>> Driver with RFC which has nr_hw_queue = N and I issue IOs from <fio>
+>>> queue depth = 32. We get 3.1M IOPS in this config. This workload does
+>>> *not* exhaust host can_queue.
+>>
+>> Please ensure .host_tagset is set for whenever nr_hw_queue = N. This is as
+>> per
+>> RFC, and I don't think you modified from the RFC for your test.
+>> But I just wanted to mention that to be crystal clear.
+> 
+> Yes I have two separate driver copy. One with RFC change and another without
+> RFC.
+>>
+>>>
+>>> -    5.07%     0.14%  fio              [kernel.vmlinux]  [k]
+>>> generic_make_request
+>>>      - 4.93% generic_make_request
+>>>         - 3.61% blk_mq_make_request
+>>>            - 2.04% blk_mq_get_request
+>>>               - 1.08% blk_mq_get_tag
+>>>                  - 0.70% __sbitmap_queue_get
+>>>                       0.67% sbitmap_get
+>>>
+>>> In summary, RFC has some performance bottleneck in sbitmap_get () if
+>>> outstanding per shost is about to exhaust.  Without this RFC also
+>>> driver works in nr_hw_queue = 1, but that case is managed very well.
+>>> I am not sure why it happens only with shared host tag ? Theoretically
+>>> all the hctx is sharing the same bitmaptag which is same as
+>>> nr_hw_queue=1, so why contention is only visible in shared host tag
+>>> case.
+>>
+>> Let me check this.
+>>
+>>>
+>>> If you want to reproduce this issue, may be you have to reduce the
+>>> can_queue in hisi_sas driver.
+>>>
+>>
+>> Thanks,
+>> John
+
