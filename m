@@ -2,122 +2,249 @@ Return-Path: <SRS0=LQeo=6M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6594EC83000
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E2FFC83008
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:50:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CEF4206D7
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:26:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54F062085B
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:50:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727808AbgD1O0t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Apr 2020 10:26:49 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:36815 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726900AbgD1O0t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 10:26:49 -0400
-Received: by mail-pf1-f193.google.com with SMTP id z1so9065414pfn.3;
-        Tue, 28 Apr 2020 07:26:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=Q536HUdRDiwCeFtyBvxsfcPLV6dHJL7EQUA8DH0pwk4=;
-        b=dofea+5K95Dm5q5kAcGTgwL29/bTfhMQWkNwLKTSDIVnAFHKLO0n9KVDa+KHbt0HR3
-         RX9QsfeAgQmJl0kw96M2kAgzuGmQtxtCTJSQ3i/csjLuubtoLY4qGqV5a4d1xbIvvhQB
-         wXeaqWLSWRr926gNGFSAS+ywmnDCvi1ULEP5rLmZiMwH12/7Kq8SrFVNKaYl/njYSnps
-         rZxQKl/cBqBUoH0VLYG39+RQggXLjLb1DXTtIvonQXxbWz8oMF2dgRzlHQmHgAOagVWm
-         28ZS+R7VzGca+RlLx8XQgHO8w9QtLjHytjLhSOWJU2AL1s40BVbl/e6DM6afjcu0/Pfq
-         9Mzw==
-X-Gm-Message-State: AGi0PuZFq3Vt6dc4FP/aDxVuAzq8OvDMUAe2r40KfVjff/hBWYQ6Tc9g
-        K08pNORXQoBMLc+33MzJpx8VR3+n0vyeGg==
-X-Google-Smtp-Source: APiQypKaYa1OICrT5Gzv72KonLdVK19a8CS/obsWPt4MMYBIUsWSbVHGbJG0oRBMavCXDgyfT4rHEg==
-X-Received: by 2002:a62:ee02:: with SMTP id e2mr5444174pfi.161.1588084008048;
-        Tue, 28 Apr 2020 07:26:48 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:1473:9ec8:73db:e572? ([2601:647:4000:d7:1473:9ec8:73db:e572])
-        by smtp.gmail.com with ESMTPSA id y21sm15047059pfm.219.2020.04.28.07.26.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Apr 2020 07:26:47 -0700 (PDT)
-Subject: Re: [PATCH][next] scsi: qla2xxx: make 1 bit bit-fields unsigned int
-To:     Colin King <colin.king@canonical.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        id S1727838AbgD1Oub (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Apr 2020 10:50:31 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:39951 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727957AbgD1Oub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Apr 2020 10:50:31 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 18AF020416A;
+        Tue, 28 Apr 2020 16:50:27 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 45jL8+zCnOjE; Tue, 28 Apr 2020 16:50:21 +0200 (CEST)
+Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 45F1020414E;
+        Tue, 28 Apr 2020 16:50:19 +0200 (CEST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH v9 08/11] scsi: sd_zbc: emulate ZONE_APPEND commands
+To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     "hch@infradead.org" <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Arun Easi <aeasi@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200428102013.1040598-1-colin.king@canonical.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <0c085901-349e-63f5-2dce-679eca553718@acm.org>
-Date:   Tue, 28 Apr 2020 07:26:46 -0700
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+References: <20200428104605.8143-1-johannes.thumshirn@wdc.com>
+ <20200428104605.8143-9-johannes.thumshirn@wdc.com>
+ <92524364-fdd2-c386-9ac4-e4cbb73751f0@suse.de>
+ <SN4PR0401MB35985B7C08A21C15DBD515299BAC0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <8413fd2a-75e6-585e-834a-813c8784f302@interlog.com>
+Date:   Tue, 28 Apr 2020 10:50:18 -0400
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200428102013.1040598-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <SN4PR0401MB35985B7C08A21C15DBD515299BAC0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-04-28 03:20, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On 2020-04-28 8:09 a.m., Johannes Thumshirn wrote:
+> On 28/04/2020 13:42, Hannes Reinecke wrote:
+> [...]
+>>> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+>>> index 50fff0bf8c8e..6009311105ef 100644
+>>> --- a/drivers/scsi/sd.h
+>>> +++ b/drivers/scsi/sd.h
+>>> @@ -79,6 +79,12 @@ struct scsi_disk {
+>>>     	u32		zones_optimal_open;
+>>>     	u32		zones_optimal_nonseq;
+>>>     	u32		zones_max_open;
+>>> +	u32		*zones_wp_ofst;
+>>> +	spinlock_t	zones_wp_ofst_lock;
+>>> +	u32		*rev_wp_ofst;
+>>> +	struct mutex	rev_mutex;
+>>> +	struct work_struct zone_wp_ofst_work;
+>>> +	char		*zone_wp_update_buf;
+>>>     #endif
+>>>     	atomic_t	openers;
+>>>     	sector_t	capacity;	/* size in logical blocks */
+>>
+>> 'zones_wp_ofst' ?
+>>
+>> Please replace the cryptic 'ofst' with 'offset'; those three additional
+>> characters don't really make a difference ...
 > 
-> The bitfields mpi_fw_dump_reading and mpi_fw_dumped are currently signed
-> which is not recommended as the representation is an implementation defined
-> behaviour.  Fix this by making the bit-fields unsigned ints.
-> 
-> Fixes: cbb01c2f2f63 ("scsi: qla2xxx: Fix MPI failure AEN (8200) handling")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/qla2xxx/qla_def.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index daa9e936887b..172ea4e5887d 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -4248,8 +4248,8 @@ struct qla_hw_data {
->  	int		fw_dump_reading;
->  	void		*mpi_fw_dump;
->  	u32		mpi_fw_dump_len;
-> -	int		mpi_fw_dump_reading:1;
-> -	int		mpi_fw_dumped:1;
-> +	unsigned int	mpi_fw_dump_reading:1;
-> +	unsigned int	mpi_fw_dumped:1;
->  	int		prev_minidump_failed;
->  	dma_addr_t	eft_dma;
->  	void		*eft;
+> 'zones_wp_ofst' was good to maintain the 80 chars limit and not end up
+> with broken up lines, because we crossed the limit. I'll have a look if
+> we can make it 'zones_wp_offset' without uglifying the code.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+When stuck like that, I have started using "_o" as in "lba_o" for
+LBA's octet offset :-)
+
+Good rule of thumb: if you can't write "a = b + c" (a couple of tab
+indentations in) then your variable names are too damn long.
+
+Of course the Linux kernel dictating indent_to_8 and restricting lines
+to punched card width doesn't help.
+
+Doug Gilbert
+
+> [...]
+> 
+>>> @@ -396,11 +633,67 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
+>>>     	return 0;
+>>>     }
+>>>     
+>>> +static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
+>>> +{
+>>> +	struct scsi_disk *sdkp = scsi_disk(disk);
+>>> +
+>>> +	swap(sdkp->zones_wp_ofst, sdkp->rev_wp_ofst);
+>>> +}
+>>> +
+>>> +static int sd_zbc_revalidate_zones(struct scsi_disk *sdkp,
+>>> +				   u32 zone_blocks,
+>>> +				   unsigned int nr_zones)
+>>> +{
+>>> +	struct gendisk *disk = sdkp->disk;
+>>> +	int ret = 0;
+>>> +
+>>> +	/*
+>>> +	 * Make sure revalidate zones are serialized to ensure exclusive
+>>> +	 * updates of the scsi disk data.
+>>> +	 */
+>>> +	mutex_lock(&sdkp->rev_mutex);
+>>> +
+>>> +	/*
+>>> +	 * Revalidate the disk zones to update the device request queue zone
+>>> +	 * bitmaps and the zone write pointer offset array. Do this only once
+>>> +	 * the device capacity is set on the second revalidate execution for
+>>> +	 * disk scan or if something changed when executing a normal revalidate.
+>>> +	 */
+>>> +	if (sdkp->first_scan) {
+>>> +		sdkp->zone_blocks = zone_blocks;
+>>> +		sdkp->nr_zones = nr_zones;
+>>> +		goto unlock;
+>>> +	}
+>>> +
+>>> +	if (sdkp->zone_blocks == zone_blocks &&
+>>> +	    sdkp->nr_zones == nr_zones &&
+>>> +	    disk->queue->nr_zones == nr_zones)
+>>> +		goto unlock;
+>>> +
+>>> +	sdkp->rev_wp_ofst = kvcalloc(nr_zones, sizeof(u32), GFP_NOIO);
+>>> +	if (!sdkp->rev_wp_ofst) {
+>>> +		ret = -ENOMEM;
+>>> +		goto unlock;
+>>> +	}
+>>> +
+>>> +	ret = blk_revalidate_disk_zones(disk, sd_zbc_revalidate_zones_cb);
+>>> +
+>>> +	kvfree(sdkp->rev_wp_ofst);
+>>> +	sdkp->rev_wp_ofst = NULL;
+>>> +
+>>> +unlock:
+>>> +	mutex_unlock(&sdkp->rev_mutex);
+>>
+>> I don't really understand this.
+>> Passing a callback is fine if things happen asynchronously, and you
+>> wouldn't know from the calling context when that happened. Ok.
+>> But the above code definitely assumes that blk_revalidate_disk_zones()
+>> will be completed upon return, otherwise we'll get a nice crash in the
+>> callback function as the 'rev' pointer is invalid.
+>> But _if_ blk_revalidata_disk_zones() has completed upon return we might
+>> as well kill the callback, have the ->rev_wp_ofst a local variable ans
+>> simply the whole thing.
+> 
+> Sorry but I don't understand your comment. If in
+> blk_revalidate_disk_zones() returns an error, all that happens is that
+> we free the rev_wp_ofst pointer and return the error to the caller.
+> 
+> And looking at blk_revalidate_disk_zones() itself, I can't see a code
+> path that calls the callback if something went wrong:
+> 
+> noio_flag = memalloc_noio_save();
+>   
+> 
+> ret = disk->fops->report_zones(disk, 0, UINT_MAX,
+>   
+> 
+>                                  blk_revalidate_zone_cb, &args);
+>   
+> 
+> memalloc_noio_restore(noio_flag);
+>   
+> 
+>   
+>   
+> 
+> /*
+>    * Install the new bitmaps and update nr_zones only once the queue is
+>   
+> 
+>    * stopped and all I/Os are completed (i.e. a scheduler is not
+>   
+> 
+>    * referencing the bitmaps).
+>    */
+> blk_mq_freeze_queue(q);
+>   
+> 
+> if (ret >= 0) {
+>   
+> 
+>           blk_queue_chunk_sectors(q, args.zone_sectors);
+>   
+> 
+>           q->nr_zones = args.nr_zones;
+>   
+> 
+>           swap(q->seq_zones_wlock, args.seq_zones_wlock);
+>   
+> 
+>           swap(q->conv_zones_bitmap, args.conv_zones_bitmap);
+>   
+> 
+>           if (update_driver_data)
+>                   update_driver_data(disk);
+>   
+> 
+>           ret = 0;
+>   
+> 
+> } else {
+>           pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+>   
+> 
+>           blk_queue_free_zone_bitmaps(q);
+> }
+> blk_mq_unfreeze_queue(q);
+> 
+> And even *iff* the callback would be executed, we would have:
+> static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
+> {
+>           struct scsi_disk *sdkp = scsi_disk(disk);
+>   
+> 
+> 
+>           swap(sdkp->zones_wp_ofst, sdkp->rev_wp_ofst);
+> }
+> 
+> I.e. we exchange some pointers. I can't see a possible crash here, we're
+> not accessing anything.
+> 
+> Byte,
+> 	Johannes
+> 
+
