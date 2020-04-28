@@ -2,124 +2,69 @@ Return-Path: <SRS0=LQeo=6M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1D2DC83000
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 13:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D13C83000
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA525206B9
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 13:57:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JJxHOFQZ"
+	by mail.kernel.org (Postfix) with ESMTP id EF160206D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:17:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727780AbgD1N5d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Apr 2020 09:57:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:52916 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727026AbgD1N5d (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 09:57:33 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SDtSTY177507;
-        Tue, 28 Apr 2020 13:57:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=t9szbrynnuaWIUfa4RDgczEpwPZNZHbdMwwIAjrCsQE=;
- b=JJxHOFQZ18K3EvV11K9PLt7B5u1QBp1hqTc36lHJWyugg3smvw0dQzQsfLBxSUBYNCCg
- Eamcc+bTOoIn2Z2JncCs5fzvQQWbKZdxoN1XzXNFYCgWfuCiYKQYw9+RfeAD6WrukZNu
- bTKHw5902WGDZQKX8X6kxkQlbVajvBPxTzpq3Hi31tQULGsVg7LgGuzFxnpftIBwoPA2
- FxcmQin06gZkTXBwkxZa4/UT1rpDMUhJO0I3jckt9pheP52jUncl+iFB0r7+CyzuKeIh
- /lSxIuHsGaCWz3+HeonkwKQcKDHrrCAdwcY5n8SDroHXC8s1BvbjRDdeCtg9d1kFR7nx vQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 30p01npma4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 13:57:19 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SDqf4Y127767;
-        Tue, 28 Apr 2020 13:55:19 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30mxpg1jp5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 13:55:18 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03SDtFb1002635;
-        Tue, 28 Apr 2020 13:55:15 GMT
-Received: from [192.168.1.24] (/70.114.128.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Apr 2020 06:55:15 -0700
-Subject: Re: [PATCH v4 10/11] qla2xxx: Fix endianness annotations in header
- files
-To:     Finn Thain <fthain@telegraphics.com.au>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Daniel Wagner <dwagner@suse.de>,
-        Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-References: <20200427030310.19687-1-bvanassche@acm.org>
- <20200427030310.19687-11-bvanassche@acm.org>
- <8ca5292e-88c6-ecb3-77b7-bd6735f5ccca@oracle.com>
- <alpine.LNX.2.22.394.2004281017310.12@nippy.intranet>
-From:   himanshu.madhani@oracle.com
-Organization: Oracle Corporation
-Message-ID: <8688f3a5-f9a8-8511-03ad-8bd897070375@oracle.com>
-Date:   Tue, 28 Apr 2020 08:55:14 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
+        id S1727881AbgD1ORx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Apr 2020 10:17:53 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:40294 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727114AbgD1ORx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Apr 2020 10:17:53 -0400
+Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 53F634A93A80664C1FA2;
+        Tue, 28 Apr 2020 22:17:49 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
+ 14.3.487.0; Tue, 28 Apr 2020 22:17:39 +0800
+From:   Wei Yongjun <weiyongjun1@huawei.com>
+To:     "Manoj N . Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Wei Yongjun <weiyongjun1@huawei.com>, <linux-scsi@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>
+Subject: [PATCH -next] scsi: cxlflash: Fix error return code in cxlflash_probe()
+Date:   Tue, 28 Apr 2020 14:18:55 +0000
+Message-ID: <20200428141855.88704-1-weiyongjun1@huawei.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.22.394.2004281017310.12@nippy.intranet>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 bulkscore=0 adultscore=0 phishscore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280110
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 clxscore=1011
- phishscore=0 mlxlogscore=999 adultscore=0 priorityscore=1501 mlxscore=0
- suspectscore=0 malwarescore=0 lowpriorityscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004280110
+Content-Type:   text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+X-Originating-IP: [10.175.113.25]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Fix to return negative error code -ENOMEM from create_afu error
+handling case instead of 0, as done elsewhere in this function.
+
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/scsi/cxlflash/main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index fbd2ae40dab4..fcc5aa9f6014 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3744,6 +3744,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	cfg->afu_cookie = cfg->ops->create_afu(pdev);
+ 	if (unlikely(!cfg->afu_cookie)) {
+ 		dev_err(dev, "%s: create_afu failed\n", __func__);
++		rc = -ENOMEM;
+ 		goto out_remove;
+ 	}
 
 
-On 4/27/20 7:25 PM, Finn Thain wrote:
-> On Mon, 27 Apr 2020, himanshu.madhani@oracle.com wrote:
-> 
->>
->> This looks okay, but i would strongly suggest driver maintainer to
->> verify if this introduces any regression or not.
-> 
-> If the changes don't affect code generation, regression is impossible.
-> 
-> So, compilers (and cross-compilers) could answer your question, if they
-> could achieve sufficient code coverage.
 
-Agree if the code generation does not change then there should be no 
-regression.
-
-> 
-> It would be nice if there was a tag that could be added to a patch so that
-> CI services could check for compiler output invariance (.s or .i or both).
-> 
-This sounds like a good idea for CI service to check for compiler output 
-and make sure patch does not break it.
-
->>
->> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
->>
-
--- 
-Himanshu Madhani
-Oracle Linux Engineering
