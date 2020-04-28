@@ -2,439 +2,366 @@ Return-Path: <SRS0=LQeo=6M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35ECEC83008
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:11:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A735AC83000
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:45:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06C91206D9
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:11:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44552206B8
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:45:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TLTQqZnJ"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eHMwzPsW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726482AbgD1GLh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Apr 2020 02:11:37 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:42754 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726469AbgD1GLd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 02:11:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588054290;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=udgdDHWppQ/Cg+o9NBmUfSLimvQ5CFUYfdF9VmZoH9E=;
-        b=TLTQqZnJgEb7KFjlKdwh+iYG1D1yo5l7qPdAJNtn1HjG7FWoeyEbA6kX1t4+DimR/6Bczj
-        CpfEnIs9qO5FgQbKxw6ktBxmYKCtCk0QUr3MV94ftAPW+sAK6JV6Lnn+sMnopkljRJm0gL
-        oPshGM8B7YmlJRYKWaWkTeuZHmmAE+Y=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-158-NmDx1q1oMte_ekRsTcfQXg-1; Tue, 28 Apr 2020 02:11:28 -0400
-X-MC-Unique: NmDx1q1oMte_ekRsTcfQXg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E85E81899520;
-        Tue, 28 Apr 2020 06:11:26 +0000 (UTC)
-Received: from rh2.redhat.com (ovpn-116-120.rdu2.redhat.com [10.10.116.120])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E5EB010013D9;
-        Tue, 28 Apr 2020 06:11:25 +0000 (UTC)
-From:   Mike Christie <mchristi@redhat.com>
-To:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc:     Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 11/11] target: drop sess_get_index
-Date:   Tue, 28 Apr 2020 01:11:09 -0500
-Message-Id: <20200428061109.3042-12-mchristi@redhat.com>
-In-Reply-To: <20200428061109.3042-1-mchristi@redhat.com>
-References: <20200428061109.3042-1-mchristi@redhat.com>
+        id S1726299AbgD1Gpi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Apr 2020 02:45:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46094 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726279AbgD1Gph (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Apr 2020 02:45:37 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98718C03C1A9
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 23:45:37 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id o185so9854236pgo.3
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 23:45:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=JxWkLxRe+Z9iC469r5nnbiYM+CkwZeVvk2yozbHsbQs=;
+        b=eHMwzPsWygWeAaLi7ktD0A1cYf8qAVY1nex7KDgWZcMdDFMb8mArbZuYxuTG07nxUh
+         EusKqF8OrALRiw3O5c8/fDWuXExxQcPg0vkEj6fON7jaR80EfWvDb0tpQfnwb+oIGknO
+         qNg2S6X0seWUxcDUfWeG2oSRyfFkHqSdmraFA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=JxWkLxRe+Z9iC469r5nnbiYM+CkwZeVvk2yozbHsbQs=;
+        b=JoYWUIeoEzs3eFbCRn24Bp7mUwKnfm9EhAqfw2YPUJEImsZHz2EBdoB0LpEmcsE2kn
+         ih0dKgJsC3YpgxQ4C7cmmHRAit6Rd+QV5aAzwXmX9l/czqcaUvUR0H3KuoutWiimcLgM
+         7cTG+gJVEKE+FB99RYsAi+JU16e5B0Sn4HOrE9QEkLuTgfpGisUpEeiJJWuGecPNIJSO
+         nyaSbRyDHkS4BXrWjTSy/ELxRjjT378haRdBnm7eNH97WDMuQByp03bV6W5pVRvMA8fN
+         YoYN+ToqD0rOmY8RE6VYEddULo8bl4IUcdOzFqkyPL/0gpnvFk+qD0y/BZLYqetVzoIT
+         weeA==
+X-Gm-Message-State: AGi0PuZ2BRaTvyVMtY4iEVrECHwHeVPtP0oOG9muWq6rO/5DwkkIbmek
+        sC3EPemxqqbJheJ/40Q49SFzfUfqrHAIY21DGbrqQFwm86r+OP06AkJc10f1iMBM3AksKY8lK+6
+        TOL7IJVl58ZzLej5dADyIk6Lmo5ep57uzacDNbb++KME3biVMIcX4pbzCpWW9sQLOv2Y5178B8w
+        q0NUAVcj7bk9yowFq3P0Os
+X-Google-Smtp-Source: APiQypLlmC87pgdqF3NTkXgUs+FjpaJazOlHbw+/kOBVnxRqzSKyu+mTFH72qomBn3Zh1KgnWgEdlA==
+X-Received: by 2002:a62:7555:: with SMTP id q82mr27957039pfc.136.1588056336365;
+        Mon, 27 Apr 2020 23:45:36 -0700 (PDT)
+Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id m24sm12067851pgn.91.2020.04.27.23.45.34
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 27 Apr 2020 23:45:35 -0700 (PDT)
+From:   Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH] mpt3sas: Capture IOC data for analyzing the issue.
+Date:   Tue, 28 Apr 2020 02:45:22 -0400
+Message-Id: <1588056322-29227-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-LIO now handles session id allocation so drop the callout.
+If some issue happens OR if firmware fault occurs then to get the basic
+information developer may ask the customer to reproduce the issue with
+logging level enabled. But most of the basic information needed to
+analyze the issue will be available in ioc’s MPT3SAS_ADAPTER structure
+such as IOCFacts, ioc flags (related to sge, msix, error recovery etc.),
+performance mode type, TMs and internal commands reply status etc. So if
+this MPT3SAS_ADAPTER data is captured into a file whenever some issue
+occurs then developer can get some basic of the information that he needed
+to analyze the issue from this captured data.
+pros
+       - Reduces the number of reproductions count,
+       - No need to add the printk statements which affects the performance
+                when they are added in IO path.
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
+User can capture the MPT3SAS_ADAPTER structure data into a file by
+executing below command.
+cat /sys/kernel/debug/mpt3sas/scsi_hostX/ioc_dump > file.dump
+(where X is host number).
+
+Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/infiniband/ulp/srpt/ib_srpt.c        | 15 ---------------
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |  6 ------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c           |  7 -------
- drivers/target/iscsi/iscsi_target_configfs.c |  6 ------
- drivers/target/loopback/tcm_loop.c           |  6 ------
- drivers/target/sbp/sbp_target.c              |  6 ------
- drivers/target/target_core_configfs.c        |  4 ----
- drivers/target/target_core_stat.c            |  5 +----
- drivers/target/tcm_fc/tfc_conf.c             |  1 -
- drivers/target/tcm_fc/tfc_sess.c             |  7 -------
- drivers/usb/gadget/function/f_tcm.c          |  6 ------
- drivers/vhost/scsi.c                         |  6 ------
- drivers/xen/xen-scsiback.c                   |  6 ------
- include/target/target_core_fabric.h          |  1 -
- 14 files changed, 1 insertion(+), 81 deletions(-)
+ drivers/scsi/mpt3sas/Makefile          |   3 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h    |  18 +++-
+ drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 158 +++++++++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c   |   4 +
+ 4 files changed, 179 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/scsi/mpt3sas/mpt3sas_debugfs.c
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/u=
-lp/srpt/ib_srpt.c
-index 10b6a02..90c3a3d 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -3356,20 +3356,6 @@ static void srpt_close_session(struct se_session *=
-se_sess)
- 	srpt_disconnect_ch_sync(ch);
- }
-=20
--/**
-- * srpt_sess_get_index - return the value of scsiAttIntrPortIndex (SCSI-=
-MIB)
-- * @se_sess: SCSI target session.
-- *
-- * A quote from RFC 4455 (SCSI-MIB) about this MIB object:
-- * This object represents an arbitrary integer used to uniquely identify=
- a
-- * particular attached remote initiator port to a particular SCSI target=
- port
-- * within a particular SCSI target device within a particular SCSI insta=
-nce.
-- */
--static u32 srpt_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static void srpt_set_default_node_attrs(struct se_node_acl *nacl)
- {
- }
-@@ -3846,7 +3832,6 @@ static ssize_t srpt_wwn_version_show(struct config_=
-item *item, char *buf)
- 	.release_cmd			=3D srpt_release_cmd,
- 	.check_stop_free		=3D srpt_check_stop_free,
- 	.close_session			=3D srpt_close_session,
--	.sess_get_index			=3D srpt_sess_get_index,
- 	.write_pending			=3D srpt_write_pending,
- 	.set_default_node_attributes	=3D srpt_set_default_node_attrs,
- 	.get_cmd_state			=3D srpt_get_tcm_cmd_state,
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmv=
-scsi_tgt/ibmvscsi_tgt.c
-index 20c750f..5e0ef6f 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3744,11 +3744,6 @@ static void ibmvscsis_release_cmd(struct se_cmd *s=
-e_cmd)
- 	spin_unlock_bh(&vscsi->intr_lock);
- }
-=20
--static u32 ibmvscsis_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
- {
- 	struct ibmvscsis_cmd *cmd =3D container_of(se_cmd, struct ibmvscsis_cmd=
-,
-@@ -4039,7 +4034,6 @@ static ssize_t ibmvscsis_tpg_enable_store(struct co=
-nfig_item *item,
- 	.tpg_get_inst_index		=3D ibmvscsis_tpg_get_inst_index,
- 	.check_stop_free		=3D ibmvscsis_check_stop_free,
- 	.release_cmd			=3D ibmvscsis_release_cmd,
--	.sess_get_index			=3D ibmvscsis_sess_get_index,
- 	.write_pending			=3D ibmvscsis_write_pending,
- 	.set_default_node_attributes	=3D ibmvscsis_set_default_node_attrs,
- 	.get_cmd_state			=3D ibmvscsis_get_cmd_state,
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tc=
-m_qla2xxx.c
-index 43fcf81..a358d5c 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -354,11 +354,6 @@ static void tcm_qla2xxx_close_session(struct se_sess=
-ion *se_sess)
- 	tcm_qla2xxx_put_sess(sess);
- }
-=20
--static u32 tcm_qla2xxx_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
- {
- 	struct qla_tgt_cmd *cmd =3D container_of(se_cmd,
-@@ -1832,7 +1827,6 @@ static ssize_t tcm_qla2xxx_wwn_version_show(struct =
-config_item *item,
- 	.check_stop_free		=3D tcm_qla2xxx_check_stop_free,
- 	.release_cmd			=3D tcm_qla2xxx_release_cmd,
- 	.close_session			=3D tcm_qla2xxx_close_session,
--	.sess_get_index			=3D tcm_qla2xxx_sess_get_index,
- 	.write_pending			=3D tcm_qla2xxx_write_pending,
- 	.set_default_node_attributes	=3D tcm_qla2xxx_set_default_node_attrs,
- 	.get_cmd_state			=3D tcm_qla2xxx_get_cmd_state,
-@@ -1871,7 +1865,6 @@ static ssize_t tcm_qla2xxx_wwn_version_show(struct =
-config_item *item,
- 	.check_stop_free                =3D tcm_qla2xxx_check_stop_free,
- 	.release_cmd			=3D tcm_qla2xxx_release_cmd,
- 	.close_session			=3D tcm_qla2xxx_close_session,
--	.sess_get_index			=3D tcm_qla2xxx_sess_get_index,
- 	.write_pending			=3D tcm_qla2xxx_write_pending,
- 	.set_default_node_attributes	=3D tcm_qla2xxx_set_default_node_attrs,
- 	.get_cmd_state			=3D tcm_qla2xxx_get_cmd_state,
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/targe=
-t/iscsi/iscsi_target_configfs.c
-index c40cff1..0b98245 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -1342,11 +1342,6 @@ static int iscsi_get_cmd_state(struct se_cmd *se_c=
-md)
- 	return cmd->i_state;
- }
-=20
--static u32 lio_sess_get_index(struct se_session *se_sess)
--{
--	return se_sess->sid;
--}
--
- static int lio_queue_data_in(struct se_cmd *se_cmd)
- {
- 	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_cmd=
-);
-@@ -1527,7 +1522,6 @@ static void lio_release_cmd(struct se_cmd *se_cmd)
- 	.check_stop_free		=3D lio_check_stop_free,
- 	.release_cmd			=3D lio_release_cmd,
- 	.close_session			=3D lio_tpg_close_session,
--	.sess_get_index			=3D lio_sess_get_index,
- 	.write_pending			=3D lio_write_pending,
- 	.set_default_node_attributes	=3D lio_set_default_node_attributes,
- 	.get_cmd_state			=3D iscsi_get_cmd_state,
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback=
-/tcm_loop.c
-index 7ea0738..d4c59fa 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -512,11 +512,6 @@ static u32 tcm_loop_get_inst_index(struct se_portal_=
-group *se_tpg)
- 	return 1;
- }
-=20
--static u32 tcm_loop_sess_get_index(struct se_session *se_sess)
--{
--	return 1;
--}
--
- static void tcm_loop_set_default_node_attributes(struct se_node_acl *se_=
-acl)
- {
- 	return;
-@@ -1153,7 +1148,6 @@ static ssize_t tcm_loop_wwn_version_show(struct con=
-fig_item *item, char *page)
- 	.tpg_get_inst_index		=3D tcm_loop_get_inst_index,
- 	.check_stop_free		=3D tcm_loop_check_stop_free,
- 	.release_cmd			=3D tcm_loop_release_cmd,
--	.sess_get_index			=3D tcm_loop_sess_get_index,
- 	.write_pending			=3D tcm_loop_write_pending,
- 	.set_default_node_attributes	=3D tcm_loop_set_default_node_attributes,
- 	.get_cmd_state			=3D tcm_loop_get_cmd_state,
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_tar=
-get.c
-index 0eb1072..1adbe4c 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -1713,11 +1713,6 @@ static void sbp_release_cmd(struct se_cmd *se_cmd)
- 	sbp_free_request(req);
- }
-=20
--static u32 sbp_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static int sbp_write_pending(struct se_cmd *se_cmd)
- {
- 	struct sbp_target_request *req =3D container_of(se_cmd,
-@@ -2314,7 +2309,6 @@ static ssize_t sbp_tpg_attrib_max_logins_per_lun_st=
-ore(struct config_item *item,
- 	.tpg_check_prod_mode_write_protect =3D sbp_check_false,
- 	.tpg_get_inst_index		=3D sbp_tpg_get_inst_index,
- 	.release_cmd			=3D sbp_release_cmd,
--	.sess_get_index			=3D sbp_sess_get_index,
- 	.write_pending			=3D sbp_write_pending,
- 	.set_default_node_attributes	=3D sbp_set_default_node_attrs,
- 	.get_cmd_state			=3D sbp_get_cmd_state,
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-index c557deb..62967fe 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -400,10 +400,6 @@ static int target_fabric_tf_ops_check(const struct t=
-arget_core_fabric_ops *tfo)
- 		pr_err("Missing tfo->release_cmd()\n");
- 		return -EINVAL;
+diff --git a/drivers/scsi/mpt3sas/Makefile b/drivers/scsi/mpt3sas/Makefile
+index 84fb3fb..e76d994 100644
+--- a/drivers/scsi/mpt3sas/Makefile
++++ b/drivers/scsi/mpt3sas/Makefile
+@@ -7,4 +7,5 @@ mpt3sas-y +=  mpt3sas_base.o     \
+ 		mpt3sas_transport.o     \
+ 		mpt3sas_ctl.o	\
+ 		mpt3sas_trigger_diag.o \
+-		mpt3sas_warpdrive.o
++		mpt3sas_warpdrive.o \
++		mpt3sas_debugfs.o \
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index c574379..4fca393 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -76,9 +76,9 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"33.101.00.00"
+-#define MPT3SAS_MAJOR_VERSION		33
+-#define MPT3SAS_MINOR_VERSION		101
++#define MPT3SAS_DRIVER_VERSION		"34.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		34
++#define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
+ 
+@@ -1472,6 +1472,8 @@ struct MPT3SAS_ADAPTER {
+ 	u16		device_remove_in_progress_sz;
+ 	u8		is_gen35_ioc;
+ 	u8		is_aero_ioc;
++	struct dentry	*debugfs_root;
++	struct dentry	*ioc_dump;
+ 	PUT_SMID_IO_FP_HIP put_smid_scsi_io;
+ 	PUT_SMID_IO_FP_HIP put_smid_fast_path;
+ 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
+@@ -1479,6 +1481,11 @@ struct MPT3SAS_ADAPTER {
+ 	GET_MSIX_INDEX get_msix_index_for_smlio;
+ };
+ 
++struct mpt3sas_debugfs_buffer {
++	void	*buf;
++	u32	len;
++};
++
+ #define MPT_DRV_SUPPORT_BITMAP_MEMMOVE 0x00000001
+ 
+ typedef u8 (*MPT_CALLBACK)(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+@@ -1782,6 +1789,11 @@ mpt3sas_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ /* NCQ Prio Handling Check */
+ bool scsih_ncq_prio_supp(struct scsi_device *sdev);
+ 
++void mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc);
++void mpt3sas_destroy_debugfs(struct MPT3SAS_ADAPTER *ioc);
++void mpt3sas_init_debugfs(void);
++void mpt3sas_exit_debugfs(void);
++
+ /**
+  * _scsih_is_pcie_scsi_device - determines if device is an pcie scsi device
+  * @device_info: bitfield providing information about the device.
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+new file mode 100644
+index 0000000..e323611
+--- /dev/null
++++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+@@ -0,0 +1,158 @@
++// SPDX-License-Identifier: GPL-2.
++/*
++ * Debugfs interface Support for MPT (Message Passing Technology) based
++ * controllers.
++ *
++ * Copyright (C) 2020  Broadcom Inc.
++ *
++ * Authors: Broadcom Inc.
++ * Sreekanth Reddy  <sreekanth.reddy@broadcom.com>
++ * Suganath Prabu <suganath-prabu.subramani@broadcom.com>
++ *
++ * Send feedback to : MPT-FusionLinux.pdl@broadcom.com)
++ *
++ **/
++
++#include <linux/version.h>
++#include <linux/kernel.h>
++#include <linux/types.h>
++#include <linux/pci.h>
++#include <linux/interrupt.h>
++#include <linux/compat.h>
++#include <linux/uio.h>
++
++#include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
++#include "mpt3sas_base.h"
++#include <linux/debugfs.h>
++
++static struct dentry *mpt3sas_debugfs_root;
++
++/*
++ * _debugfs_iocdump_read - copy ioc dump from debugfs buffer
++ * @filep:	File Pointer
++ * @ubuf:	Buffer to fill data
++ * @cnt:	Length of the buffer
++ * @ppos:	Offset in the file
++ */
++
++static ssize_t
++_debugfs_iocdump_read(struct file *filp, char __user *ubuf, size_t cnt,
++	loff_t *ppos)
++
++{
++	struct mpt3sas_debugfs_buffer *debug = filp->private_data;
++
++	if (!debug || !debug->buf)
++		return 0;
++
++	return simple_read_from_buffer(ubuf, cnt, ppos, debug->buf, debug->len);
++}
++
++/*
++ * _debugfs_iocdump_open :	open the ioc_dump debugfs attribute file
++ */
++static int
++_debugfs_iocdump_open(struct inode *inode, struct file *file)
++{
++	struct MPT3SAS_ADAPTER *ioc = inode->i_private;
++	struct mpt3sas_debugfs_buffer *debug;
++
++	debug = kzalloc(sizeof(struct mpt3sas_debugfs_buffer), GFP_KERNEL);
++	if (!debug)
++		return -ENOMEM;
++
++	debug->buf = (void *)ioc;
++	debug->len = sizeof(struct MPT3SAS_ADAPTER);
++	file->private_data = debug;
++	return 0;
++}
++
++/*
++ * _debugfs_iocdump_release :	release the ioc_dump debugfs attribute
++ * @inode: inode structure to the corresponds device
++ * @file: File pointer
++ */
++static int
++_debugfs_iocdump_release(struct inode *inode, struct file *file)
++{
++	struct mpt3sas_debugfs_buffer *debug = file->private_data;
++
++	if (!debug)
++		return 0;
++
++	file->private_data = NULL;
++	kfree(debug);
++	return 0;
++}
++
++static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
++	.owner		= THIS_MODULE,
++	.open           = _debugfs_iocdump_open,
++	.read           = _debugfs_iocdump_read,
++	.release        = _debugfs_iocdump_release,
++};
++
++/*
++ * mpt3sas_init_debugfs :	Create debugfs root for mpt3sas driver
++ */
++void mpt3sas_init_debugfs(void)
++{
++	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
++	if (!mpt3sas_debugfs_root)
++		pr_info("mpt3sas: Cannot create debugfs root\n");
++}
++
++/*
++ * mpt3sas_exit_debugfs :	Remove debugfs root for mpt3sas driver
++ */
++void mpt3sas_exit_debugfs(void)
++{
++	debugfs_remove_recursive(mpt3sas_debugfs_root);
++}
++
++/*
++ * mpt3sas_setup_debugfs :	Setup debugfs per HBA adapter
++ * ioc:				MPT3SAS_ADAPTER object
++ */
++void
++mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc)
++{
++	char name[64];
++
++	snprintf(name, sizeof(name), "scsi_host%d", ioc->shost->host_no);
++	if (!ioc->debugfs_root) {
++		ioc->debugfs_root =
++		    debugfs_create_dir(name, mpt3sas_debugfs_root);
++		if (!ioc->debugfs_root) {
++			dev_err(&ioc->pdev->dev,
++			    "Cannot create per adapter debugfs directory\n");
++			return;
++		}
++	}
++
++	snprintf(name, sizeof(name), "ioc_dump");
++	ioc->ioc_dump =	debugfs_create_file(name, 0444,
++	    ioc->debugfs_root, ioc, &mpt3sas_debugfs_iocdump_fops);
++	if (!ioc->ioc_dump) {
++		dev_err(&ioc->pdev->dev,
++		    "Cannot create ioc_dump debugfs file\n");
++		debugfs_remove(ioc->debugfs_root);
++		return;
++	}
++
++	snprintf(name, sizeof(name), "host_recovery");
++	debugfs_create_u8(name, 0444, ioc->debugfs_root, &ioc->shost_recovery);
++
++}
++
++/*
++ * mpt3sas_destroy_debugfs :	Destroy debugfs per HBA adapter
++ * @ioc:	MPT3SAS_ADAPTER object
++ */
++void mpt3sas_destroy_debugfs(struct MPT3SAS_ADAPTER *ioc)
++{
++	debugfs_remove_recursive(ioc->debugfs_root);
++}
++
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index c597d54..58fb55d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -9928,6 +9928,7 @@ static void scsih_remove(struct pci_dev *pdev)
+ 				&ioc->ioc_pg1_copy);
+ 	/* release all the volumes */
+ 	_scsih_ir_shutdown(ioc);
++	mpt3sas_destroy_debugfs(ioc);
+ 	sas_remove_host(shost);
+ 	list_for_each_entry_safe(raid_device, next, &ioc->raid_device_list,
+ 	    list) {
+@@ -10814,6 +10815,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  	}
--	if (!tfo->sess_get_index) {
--		pr_err("Missing tfo->sess_get_index()\n");
--		return -EINVAL;
--	}
- 	if (!tfo->write_pending) {
- 		pr_err("Missing tfo->write_pending()\n");
- 		return -EINVAL;
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_co=
-re_stat.c
-index 69ba7c3..7121514 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -1264,7 +1264,6 @@ static ssize_t target_stat_iport_indx_show(struct c=
-onfig_item *item,
- 	struct se_lun_acl *lacl =3D iport_to_lacl(item);
- 	struct se_node_acl *nacl =3D lacl->se_lun_nacl;
- 	struct se_session *se_sess;
--	struct se_portal_group *tpg;
- 	ssize_t ret;
-=20
- 	spin_lock_irq(&nacl->nacl_sess_lock);
-@@ -1274,10 +1273,8 @@ static ssize_t target_stat_iport_indx_show(struct =
-config_item *item,
- 		return -ENODEV;
- 	}
-=20
--	tpg =3D nacl->se_tpg;
- 	/* scsiAttIntrPortIndex */
--	ret =3D snprintf(page, PAGE_SIZE, "%u\n",
--			tpg->se_tpg_tfo->sess_get_index(se_sess));
-+	ret =3D snprintf(page, PAGE_SIZE, "%u\n", se_sess->sid);
- 	spin_unlock_irq(&nacl->nacl_sess_lock);
- 	return ret;
+ 
+ 	scsi_scan_host(shost);
++	mpt3sas_setup_debugfs(ioc);
+ 	return 0;
+ out_add_shost_fail:
+ 	mpt3sas_base_detach(ioc);
+@@ -11220,6 +11222,7 @@ scsih_init(void)
+ 	tm_sas_control_cb_idx = mpt3sas_base_register_callback_handler(
+ 	    _scsih_sas_control_complete);
+ 
++	mpt3sas_init_debugfs();
+ 	return 0;
  }
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc=
-_conf.c
-index 870b7bb..747824f 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -426,7 +426,6 @@ static u32 ft_tpg_get_inst_index(struct se_portal_gro=
-up *se_tpg)
- 	.check_stop_free =3D		ft_check_stop_free,
- 	.release_cmd =3D			ft_release_cmd,
- 	.close_session =3D		ft_sess_close,
--	.sess_get_index =3D		ft_sess_get_index,
- 	.write_pending =3D		ft_write_pending,
- 	.set_default_node_attributes =3D	ft_set_default_node_attr,
- 	.get_cmd_state =3D		ft_get_cmd_state,
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc=
-_sess.c
-index 6e172ff..6b58e1a 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -331,13 +331,6 @@ void ft_sess_close(struct se_session *se_sess)
- 	synchronize_rcu();		/* let transport deregister happen */
+ 
+@@ -11251,6 +11254,7 @@ scsih_exit(void)
+ 	if (hbas_to_enumerate != 2)
+ 		raid_class_release(mpt2sas_raid_template);
+ 	sas_release_transport(mpt3sas_transport_template);
++	mpt3sas_exit_debugfs();
  }
-=20
--u32 ft_sess_get_index(struct se_session *se_sess)
--{
--	struct ft_sess *sess =3D se_sess->fabric_sess_ptr;
--
--	return sess->port_id;	/* XXX TBD probably not what is needed */
--}
--
- u32 ft_sess_get_port_name(struct se_session *se_sess,
- 			  unsigned char *buf, u32 len)
- {
-diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/fun=
-ction/f_tcm.c
-index e6d7232..1f10ddd 100644
---- a/drivers/usb/gadget/function/f_tcm.c
-+++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -1287,11 +1287,6 @@ static void usbg_release_cmd(struct se_cmd *se_cmd=
-)
- 	target_free_tag(se_sess, se_cmd);
- }
-=20
--static u32 usbg_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static void usbg_set_default_node_attrs(struct se_node_acl *nacl)
- {
- }
-@@ -1720,7 +1715,6 @@ static int usbg_check_stop_free(struct se_cmd *se_c=
-md)
- 	.tpg_check_prod_mode_write_protect =3D usbg_check_false,
- 	.tpg_get_inst_index		=3D usbg_tpg_get_inst_index,
- 	.release_cmd			=3D usbg_release_cmd,
--	.sess_get_index			=3D usbg_sess_get_index,
- 	.write_pending			=3D usbg_send_write_request,
- 	.set_default_node_attributes	=3D usbg_set_default_node_attrs,
- 	.get_cmd_state			=3D usbg_get_cmd_state,
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 182d2ea..7526f35 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -340,11 +340,6 @@ static void vhost_scsi_release_cmd(struct se_cmd *se=
-_cmd)
- 	target_free_tag(se_sess, se_cmd);
- }
-=20
--static u32 vhost_scsi_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static int vhost_scsi_write_pending(struct se_cmd *se_cmd)
- {
- 	/* Go ahead and process the write immediately */
-@@ -2304,7 +2299,6 @@ static void vhost_scsi_drop_tport(struct se_wwn *ww=
-n)
- 	.tpg_get_inst_index		=3D vhost_scsi_tpg_get_inst_index,
- 	.release_cmd			=3D vhost_scsi_release_cmd,
- 	.check_stop_free		=3D vhost_scsi_check_stop_free,
--	.sess_get_index			=3D vhost_scsi_sess_get_index,
- 	.write_pending			=3D vhost_scsi_write_pending,
- 	.set_default_node_attributes	=3D vhost_scsi_set_default_node_attrs,
- 	.get_cmd_state			=3D vhost_scsi_get_cmd_state,
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index 67b4092..b107cdd 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -1391,11 +1391,6 @@ static void scsiback_release_cmd(struct se_cmd *se=
-_cmd)
- 	target_free_tag(se_cmd->se_sess, se_cmd);
- }
-=20
--static u32 scsiback_sess_get_index(struct se_session *se_sess)
--{
--	return 0;
--}
--
- static int scsiback_write_pending(struct se_cmd *se_cmd)
- {
- 	/* Go ahead and process the write immediately */
-@@ -1825,7 +1820,6 @@ static int scsiback_check_false(struct se_portal_gr=
-oup *se_tpg)
- 	.tpg_get_inst_index		=3D scsiback_tpg_get_inst_index,
- 	.check_stop_free		=3D scsiback_check_stop_free,
- 	.release_cmd			=3D scsiback_release_cmd,
--	.sess_get_index			=3D scsiback_sess_get_index,
- 	.write_pending			=3D scsiback_write_pending,
- 	.set_default_node_attributes	=3D scsiback_set_default_node_attrs,
- 	.get_cmd_state			=3D scsiback_get_cmd_state,
-diff --git a/include/target/target_core_fabric.h b/include/target/target_=
-core_fabric.h
-index be43180..3af7dc6 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -66,7 +66,6 @@ struct target_core_fabric_ops {
- 	int (*check_stop_free)(struct se_cmd *);
- 	void (*release_cmd)(struct se_cmd *);
- 	void (*close_session)(struct se_session *);
--	u32 (*sess_get_index)(struct se_session *);
- 	int (*write_pending)(struct se_cmd *);
- 	void (*set_default_node_attributes)(struct se_node_acl *);
- 	int (*get_cmd_state)(struct se_cmd *);
---=20
+ 
+ /**
+-- 
 1.8.3.1
 
