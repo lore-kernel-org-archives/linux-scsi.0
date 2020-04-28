@@ -2,249 +2,124 @@ Return-Path: <SRS0=LQeo=6M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E2FFC83008
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 941A8C83000
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:51:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54F062085B
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:50:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 752F2206D6
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 14:51:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jCW3hAgZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727838AbgD1Oub (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Apr 2020 10:50:31 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:39951 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727957AbgD1Oub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Apr 2020 10:50:31 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 18AF020416A;
-        Tue, 28 Apr 2020 16:50:27 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 45jL8+zCnOjE; Tue, 28 Apr 2020 16:50:21 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 45F1020414E;
-        Tue, 28 Apr 2020 16:50:19 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v9 08/11] scsi: sd_zbc: emulate ZONE_APPEND commands
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     "hch@infradead.org" <hch@infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        id S1728206AbgD1Ou6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Apr 2020 10:50:58 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:45370 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727878AbgD1Ou6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 10:50:58 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SEmpuT116964;
+        Tue, 28 Apr 2020 14:50:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=21bkKoVEDcFItNpAZkSZgketfx0K3t7FQdrYOmCXnPU=;
+ b=jCW3hAgZbJUKMmmZkFPGdiEJOqCIc+5ynLGimPU6zQvVRnxd2ilU5Ou/968dVRCGba6o
+ cHgh1Q0qisyk8aTXXR58Sc1GYi7ZdJ7pSzRf9n7tbLbB8GrTE/VlNlhJbtspwK/Gb5dY
+ T1grJgeG8dc7YXiYrqVU03qn1N+yrMUas3BOW5RbqH8GyqFvM+/TMUcGxwamFc4b4d0z
+ qMe4l8ksN2nKs1wzcRozVgVGNQywFmnKs5pZf4rz3T+GmbkIaULeEGTD7FmgDnnM3qga
+ tjWoIJ+7vxBcUmHsXlBVWdiDadW+7LzML2J+BhIpnkDtAppxfqVZabenkxcVTpn1NDc6 Qw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 30nucg0egh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 14:50:52 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03SEb5vD179570;
+        Tue, 28 Apr 2020 14:50:51 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 30my0dbqwf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 28 Apr 2020 14:50:51 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03SEomVU022423;
+        Tue, 28 Apr 2020 14:50:49 GMT
+Received: from [192.168.1.24] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 28 Apr 2020 07:50:48 -0700
+Subject: Re: [PATCH][next] scsi: qla2xxx: make 1 bit bit-fields unsigned int
+To:     Colin King <colin.king@canonical.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-References: <20200428104605.8143-1-johannes.thumshirn@wdc.com>
- <20200428104605.8143-9-johannes.thumshirn@wdc.com>
- <92524364-fdd2-c386-9ac4-e4cbb73751f0@suse.de>
- <SN4PR0401MB35985B7C08A21C15DBD515299BAC0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <8413fd2a-75e6-585e-834a-813c8784f302@interlog.com>
-Date:   Tue, 28 Apr 2020 10:50:18 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Arun Easi <aeasi@marvell.com>, linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200428102013.1040598-1-colin.king@canonical.com>
+From:   himanshu.madhani@oracle.com
+Organization: Oracle Corporation
+Message-ID: <ba9f540a-f46a-9380-e097-20d02abed2e1@oracle.com>
+Date:   Tue, 28 Apr 2020 09:50:47 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <SN4PR0401MB35985B7C08A21C15DBD515299BAC0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+In-Reply-To: <20200428102013.1040598-1-colin.king@canonical.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
+ suspectscore=0 adultscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004280116
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004280116
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-04-28 8:09 a.m., Johannes Thumshirn wrote:
-> On 28/04/2020 13:42, Hannes Reinecke wrote:
-> [...]
->>> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
->>> index 50fff0bf8c8e..6009311105ef 100644
->>> --- a/drivers/scsi/sd.h
->>> +++ b/drivers/scsi/sd.h
->>> @@ -79,6 +79,12 @@ struct scsi_disk {
->>>     	u32		zones_optimal_open;
->>>     	u32		zones_optimal_nonseq;
->>>     	u32		zones_max_open;
->>> +	u32		*zones_wp_ofst;
->>> +	spinlock_t	zones_wp_ofst_lock;
->>> +	u32		*rev_wp_ofst;
->>> +	struct mutex	rev_mutex;
->>> +	struct work_struct zone_wp_ofst_work;
->>> +	char		*zone_wp_update_buf;
->>>     #endif
->>>     	atomic_t	openers;
->>>     	sector_t	capacity;	/* size in logical blocks */
->>
->> 'zones_wp_ofst' ?
->>
->> Please replace the cryptic 'ofst' with 'offset'; those three additional
->> characters don't really make a difference ...
-> 
-> 'zones_wp_ofst' was good to maintain the 80 chars limit and not end up
-> with broken up lines, because we crossed the limit. I'll have a look if
-> we can make it 'zones_wp_offset' without uglifying the code.
 
-When stuck like that, I have started using "_o" as in "lba_o" for
-LBA's octet offset :-)
 
-Good rule of thumb: if you can't write "a = b + c" (a couple of tab
-indentations in) then your variable names are too damn long.
-
-Of course the Linux kernel dictating indent_to_8 and restricting lines
-to punched card width doesn't help.
-
-Doug Gilbert
-
-> [...]
+On 4/28/20 5:20 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
->>> @@ -396,11 +633,67 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
->>>     	return 0;
->>>     }
->>>     
->>> +static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
->>> +{
->>> +	struct scsi_disk *sdkp = scsi_disk(disk);
->>> +
->>> +	swap(sdkp->zones_wp_ofst, sdkp->rev_wp_ofst);
->>> +}
->>> +
->>> +static int sd_zbc_revalidate_zones(struct scsi_disk *sdkp,
->>> +				   u32 zone_blocks,
->>> +				   unsigned int nr_zones)
->>> +{
->>> +	struct gendisk *disk = sdkp->disk;
->>> +	int ret = 0;
->>> +
->>> +	/*
->>> +	 * Make sure revalidate zones are serialized to ensure exclusive
->>> +	 * updates of the scsi disk data.
->>> +	 */
->>> +	mutex_lock(&sdkp->rev_mutex);
->>> +
->>> +	/*
->>> +	 * Revalidate the disk zones to update the device request queue zone
->>> +	 * bitmaps and the zone write pointer offset array. Do this only once
->>> +	 * the device capacity is set on the second revalidate execution for
->>> +	 * disk scan or if something changed when executing a normal revalidate.
->>> +	 */
->>> +	if (sdkp->first_scan) {
->>> +		sdkp->zone_blocks = zone_blocks;
->>> +		sdkp->nr_zones = nr_zones;
->>> +		goto unlock;
->>> +	}
->>> +
->>> +	if (sdkp->zone_blocks == zone_blocks &&
->>> +	    sdkp->nr_zones == nr_zones &&
->>> +	    disk->queue->nr_zones == nr_zones)
->>> +		goto unlock;
->>> +
->>> +	sdkp->rev_wp_ofst = kvcalloc(nr_zones, sizeof(u32), GFP_NOIO);
->>> +	if (!sdkp->rev_wp_ofst) {
->>> +		ret = -ENOMEM;
->>> +		goto unlock;
->>> +	}
->>> +
->>> +	ret = blk_revalidate_disk_zones(disk, sd_zbc_revalidate_zones_cb);
->>> +
->>> +	kvfree(sdkp->rev_wp_ofst);
->>> +	sdkp->rev_wp_ofst = NULL;
->>> +
->>> +unlock:
->>> +	mutex_unlock(&sdkp->rev_mutex);
->>
->> I don't really understand this.
->> Passing a callback is fine if things happen asynchronously, and you
->> wouldn't know from the calling context when that happened. Ok.
->> But the above code definitely assumes that blk_revalidate_disk_zones()
->> will be completed upon return, otherwise we'll get a nice crash in the
->> callback function as the 'rev' pointer is invalid.
->> But _if_ blk_revalidata_disk_zones() has completed upon return we might
->> as well kill the callback, have the ->rev_wp_ofst a local variable ans
->> simply the whole thing.
+> The bitfields mpi_fw_dump_reading and mpi_fw_dumped are currently signed
+> which is not recommended as the representation is an implementation defined
+> behaviour.  Fix this by making the bit-fields unsigned ints.
 > 
-> Sorry but I don't understand your comment. If in
-> blk_revalidate_disk_zones() returns an error, all that happens is that
-> we free the rev_wp_ofst pointer and return the error to the caller.
+> Fixes: cbb01c2f2f63 ("scsi: qla2xxx: Fix MPI failure AEN (8200) handling")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_def.h | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> And looking at blk_revalidate_disk_zones() itself, I can't see a code
-> path that calls the callback if something went wrong:
-> 
-> noio_flag = memalloc_noio_save();
->   
-> 
-> ret = disk->fops->report_zones(disk, 0, UINT_MAX,
->   
-> 
->                                  blk_revalidate_zone_cb, &args);
->   
-> 
-> memalloc_noio_restore(noio_flag);
->   
-> 
->   
->   
-> 
-> /*
->    * Install the new bitmaps and update nr_zones only once the queue is
->   
-> 
->    * stopped and all I/Os are completed (i.e. a scheduler is not
->   
-> 
->    * referencing the bitmaps).
->    */
-> blk_mq_freeze_queue(q);
->   
-> 
-> if (ret >= 0) {
->   
-> 
->           blk_queue_chunk_sectors(q, args.zone_sectors);
->   
-> 
->           q->nr_zones = args.nr_zones;
->   
-> 
->           swap(q->seq_zones_wlock, args.seq_zones_wlock);
->   
-> 
->           swap(q->conv_zones_bitmap, args.conv_zones_bitmap);
->   
-> 
->           if (update_driver_data)
->                   update_driver_data(disk);
->   
-> 
->           ret = 0;
->   
-> 
-> } else {
->           pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
->   
-> 
->           blk_queue_free_zone_bitmaps(q);
-> }
-> blk_mq_unfreeze_queue(q);
-> 
-> And even *iff* the callback would be executed, we would have:
-> static void sd_zbc_revalidate_zones_cb(struct gendisk *disk)
-> {
->           struct scsi_disk *sdkp = scsi_disk(disk);
->   
-> 
-> 
->           swap(sdkp->zones_wp_ofst, sdkp->rev_wp_ofst);
-> }
-> 
-> I.e. we exchange some pointers. I can't see a possible crash here, we're
-> not accessing anything.
-> 
-> Byte,
-> 	Johannes
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+> index daa9e936887b..172ea4e5887d 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -4248,8 +4248,8 @@ struct qla_hw_data {
+>   	int		fw_dump_reading;
+>   	void		*mpi_fw_dump;
+>   	u32		mpi_fw_dump_len;
+> -	int		mpi_fw_dump_reading:1;
+> -	int		mpi_fw_dumped:1;
+> +	unsigned int	mpi_fw_dump_reading:1;
+> +	unsigned int	mpi_fw_dumped:1;
+>   	int		prev_minidump_failed;
+>   	dma_addr_t	eft_dma;
+>   	void		*eft;
 > 
 
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+-- 
+Himanshu Madhani
+Oracle Linux Engineering
