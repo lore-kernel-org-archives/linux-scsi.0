@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CD1C8300A
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:11:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F2BBC8300B
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:11:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C81B220730
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:11:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E72E206D7
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 06:11:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KqHtrFk3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JIER9uUz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726466AbgD1GL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726424AbgD1GL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 28 Apr 2020 02:11:26 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:41616 "EHLO
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47603 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726357AbgD1GLX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 02:11:23 -0400
+        with ESMTP id S1726453AbgD1GLZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Apr 2020 02:11:25 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588054281;
+        s=mimecast20190719; t=1588054284;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rvL4TBUT8IqneXOcycrthcEmyku94zfv6Jd8TdQNkuo=;
-        b=KqHtrFk3Ne5MKvqcsd5KVTtTp325HjaBpSK2h3T+5UdUPpg9ATJjxIJK6OugBfV9pboSHq
-        gOz0gx3PaM9bYkm7H+ggiHQEsyZj0RHbnVxIL1MXhZqQ4rH/PpIgYS6Shlm6v2Y2JReiOz
-        fw9a7+4aRMCKCqj2Ag54CNObmI+Hy1k=
+        bh=a7CGUahcxXkgqnWckHyziBroYR9jevjwgpqBwe42zSo=;
+        b=JIER9uUzaY8vVlGhfzbOJZvSgwdpL0Ij136U+OD2qvvUfPXim/wxpveIDOh6i7V+a08qE/
+        KtZ72ZGRXTSLZvVvxD62uvBlnUWHV2qKzIgx2/CttgfUMGR0t11FzPTjPeuEaFaPA0mAtG
+        vHEoxZ02BNbBisPeIxXxe34AGoaaRog=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-301-GhNGbo7XOF6WXmuxThoWTQ-1; Tue, 28 Apr 2020 02:11:15 -0400
-X-MC-Unique: GhNGbo7XOF6WXmuxThoWTQ-1
+ us-mta-191-K1AHXl62O9qa4a6Sf5WHtg-1; Tue, 28 Apr 2020 02:11:19 -0400
+X-MC-Unique: K1AHXl62O9qa4a6Sf5WHtg-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 83E9DA0BF2;
-        Tue, 28 Apr 2020 06:11:14 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 56CC9107ACF6;
+        Tue, 28 Apr 2020 06:11:18 +0000 (UTC)
 Received: from rh2.redhat.com (ovpn-116-120.rdu2.redhat.com [10.10.116.120])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 832131001281;
-        Tue, 28 Apr 2020 06:11:13 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 55BAB10013D9;
+        Tue, 28 Apr 2020 06:11:17 +0000 (UTC)
 From:   Mike Christie <mchristi@redhat.com>
 To:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 Cc:     Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 01/11] target: check enforce_pr_isids during registration
-Date:   Tue, 28 Apr 2020 01:10:59 -0500
-Message-Id: <20200428061109.3042-2-mchristi@redhat.com>
+Subject: [PATCH 04/11] target: use tpid in target_stat_iport_port_ident_show
+Date:   Tue, 28 Apr 2020 01:11:02 -0500
+Message-Id: <20200428061109.3042-5-mchristi@redhat.com>
 In-Reply-To: <20200428061109.3042-1-mchristi@redhat.com>
 References: <20200428061109.3042-1-mchristi@redhat.com>
 MIME-Version: 1.0
@@ -61,70 +61,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the check for enforce_pr_isids to the registration code where we
-can fail at the time an initiator tries to register a path without an
-isid. In its current place in __core_scsi3_locate_pr_reg, it is too
-late because it can be registered and be reported in PR in commands and
-it is stuck in this state because we cannot unregister it.
+Use the tpid session id instead of sess_get_initiator_sid.
 
-Note.
-I am including in this patchset, because the 5th patch is built on top.
+Note that for userspace compat this patch continues the behavior:
+
+1. Still add the "+i+" even if there is no session_id.
+2. Use the acl initiatorname instead of the transportID port/addr/name.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_pr.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ drivers/target/target_core_stat.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core=
-_pr.c
-index 5e93169..cd2d32f 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1176,15 +1176,6 @@ static struct t10_pr_registration *__core_scsi3_lo=
-cate_pr_reg(
- 		 * ISID, then we have found a match.
- 		 */
- 		if (!pr_reg->isid_present_at_reg) {
--			/*
--			 * Determine if this SCSI device server requires that
--			 * SCSI Intiatior TransportID w/ ISIDs is enforced
--			 * for fabric modules (iSCSI) requiring them.
--			 */
--			if (tpg->se_tpg_tfo->sess_get_initiator_sid !=3D NULL) {
--				if (dev->dev_attrib.enforce_pr_isids)
--					continue;
--			}
- 			atomic_inc_mb(&pr_reg->pr_res_holders);
- 			spin_unlock(&pr_tmpl->registration_lock);
- 			return pr_reg;
-@@ -1591,10 +1582,25 @@ static void core_scsi3_lunacl_undepend_item(struc=
-t se_dev_entry *se_deve)
- 				continue;
- 			dest_rtpi =3D tmp_lun->lun_rtpi;
+diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_co=
+re_stat.c
+index 237309d..69ba7c3 100644
+--- a/drivers/target/target_core_stat.c
++++ b/drivers/target/target_core_stat.c
+@@ -1308,9 +1308,7 @@ static ssize_t target_stat_iport_port_ident_show(st=
+ruct config_item *item,
+ 	struct se_lun_acl *lacl =3D iport_to_lacl(item);
+ 	struct se_node_acl *nacl =3D lacl->se_lun_nacl;
+ 	struct se_session *se_sess;
+-	struct se_portal_group *tpg;
+ 	ssize_t ret;
+-	unsigned char buf[64];
 =20
-+			iport_ptr =3D NULL;
- 			i_str =3D target_parse_pr_out_transport_id(tmp_tpg,
- 					ptr, &tid_len, &iport_ptr);
- 			if (!i_str)
- 				continue;
-+			/*
-+			 * Determine if this SCSI device server requires that
-+			 * SCSI Intiatior TransportID w/ ISIDs is enforced
-+			 * for fabric modules (iSCSI) requiring them.
-+			 */
-+			if (tpg->se_tpg_tfo->sess_get_initiator_sid &&
-+                            dev->dev_attrib.enforce_pr_isids &&
-+			    !iport_ptr) {
-+				pr_warn("SPC-PR: enforce_pr_isids is set but a isid has not been sen=
-t in the SPEC_I_PT data for %s.",
-+					i_str);
-+				ret =3D TCM_INVALID_PARAMETER_LIST;
-+				spin_unlock(&dev->se_port_lock);
-+				goto out_unmap;
-+			}
+ 	spin_lock_irq(&nacl->nacl_sess_lock);
+ 	se_sess =3D nacl->nacl_sess;
+@@ -1319,13 +1317,9 @@ static ssize_t target_stat_iport_port_ident_show(s=
+truct config_item *item,
+ 		return -ENODEV;
+ 	}
 =20
- 			atomic_inc_mb(&tmp_tpg->tpg_pr_ref_count);
- 			spin_unlock(&dev->se_port_lock);
+-	tpg =3D nacl->se_tpg;
+-	/* scsiAttIntrPortName+scsiAttIntrPortIdentifier */
+-	memset(buf, 0, 64);
+-	if (tpg->se_tpg_tfo->sess_get_initiator_sid !=3D NULL)
+-		tpg->se_tpg_tfo->sess_get_initiator_sid(se_sess, buf, 64);
+-
+-	ret =3D snprintf(page, PAGE_SIZE, "%s+i+%s\n", nacl->initiatorname, buf=
+);
++	ret =3D snprintf(page, PAGE_SIZE, "%s+i+%s\n", nacl->initiatorname,
++		       se_sess->tpid->session_id ? se_sess->tpid->session_id :
++		       "");
+ 	spin_unlock_irq(&nacl->nacl_sess_lock);
+ 	return ret;
+ }
 --=20
 1.8.3.1
 
