@@ -2,98 +2,130 @@ Return-Path: <SRS0=LQeo=6M=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4A9DC83004
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 01:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C38C83004
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 02:14:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 814602051A
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 01:48:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3E71206D9
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Apr 2020 02:14:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OTEWS7wo"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KnwnZ++v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726333AbgD1Bsw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Apr 2020 21:48:52 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:57952 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726261AbgD1Bsv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Apr 2020 21:48:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03S1gijB194611;
-        Tue, 28 Apr 2020 01:48:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=fhKLJ893u690XV8dqxeEV2iPiR/BZuKXc4gcS8Su49A=;
- b=OTEWS7wobXNvL6ztC23ac1S7DbFNM8Ej6DW478gagXbdTjjJnHJCWOhhfdfFWkl54JK7
- 3P9OZPCsoespgzCfKYi2tHzrO93QHHg2Sc9OYrGoGKn5c+f3J4VdkmMtYHRNqydAkXqK
- lbDthbiOvV/RN/hofR84NXm5t0RG+dCMHqwGFCNqhRnEakk6Pn/XeOTIeoD5oZIsEZR5
- k/jxbcu1mFo9fmdXhb4vmxPUkVIZN/hP+s0xWj7oMiZ2F6ZzwAEVnDSHyoX7NO7HWcoZ
- nlUURMHRcnUt5bPhkn7c7YIXWVP5dwmBsCRjRLzw08TKcyfks6fNxQZTEP6qIDghanh9 Gg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 30nucfvyjd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 01:48:40 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03S1lqxv056035;
-        Tue, 28 Apr 2020 01:48:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 30mxwxgby7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 28 Apr 2020 01:48:39 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03S1mcNR031134;
-        Tue, 28 Apr 2020 01:48:38 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 27 Apr 2020 18:48:38 -0700
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc:     james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        brking@linux.ibm.com, Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvfc: don't send implicit logouts prior to NPIV login
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200427214824.6890-1-tyreld@linux.ibm.com>
-Date:   Mon, 27 Apr 2020 21:48:34 -0400
-In-Reply-To: <20200427214824.6890-1-tyreld@linux.ibm.com> (Tyrel Datwyler's
-        message of "Mon, 27 Apr 2020 16:48:24 -0500")
-Message-ID: <yq1368o9y8d.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726363AbgD1COs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Apr 2020 22:14:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59970 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726343AbgD1COr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Apr 2020 22:14:47 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 778B6C09B051
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 19:14:47 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id a32so448033pje.5
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2020 19:14:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=dNDHgCC2Tbezyzaz1jik79FYVEDQH+X+/Zl/FX9zdvE=;
+        b=KnwnZ++vm3JMJEkBfjFTzuMZedHlKQkCikCMg8o+5SWaFUknNqNFJgJ3P2p9Bu58HM
+         uf017eQcybmhKeNlI5fCSw+3L8DgrWC0bVbQgF+oc8afCfYiOFaqp3b/LyOGYDXw57Uj
+         QuOKGbFyCv2xwx1rc1Vb7FqncrawNMyBdsB/86iAof/qDTTDi8hg+1WYx/5AFR7ebw4n
+         sQ/ZxXJZQZcKzI3CfLRPf/Fz31PKeWGx/2vzUUpwYkPulnIEOq6wrS3fwVu+YWWfJChZ
+         N8ChLbccFNspOjuqbjvUfB4gcGKYV27YIq0wzgMlqrHmCRN1evUqwui+9EvxyLrUj/S8
+         NQQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=dNDHgCC2Tbezyzaz1jik79FYVEDQH+X+/Zl/FX9zdvE=;
+        b=YGortTupZ6fFigzHjYl2x7F8kmMpQZi4WFerSvTANuuYIFKIOfXbH74pA6BeYtEXZO
+         AAWfd7uAmSJL6tC0gED8GBHMYNJPv5bsn6NtggsRkBHCHzINsHsWqmoPN0nZcxjvvyJ0
+         A2nvuct1fC8u12wmHv4B7cE6XkvGQz1rr8fzg8OFS5L/JslxVwsuqnC1a5OpXOsqrYbb
+         Azlh12rROrEPfiLVbljTgastihXR8D5jBnc0mnnBZ3r9o6QCOFaLqE8lFwk7Y1yHXBLd
+         /5BnrIezw6CaSFB150EzHx8nWUXl0vcuSJGAQIohlLS7D+QU8BecoFk3dUNDfWCOQ6Hd
+         LUrQ==
+X-Gm-Message-State: AGi0PuZcYQHlytgOLzQRLQ4UyiRIseJzFHYkFHCPcyodkrBEeI/l7POI
+        4qybHIu7XlcectX/G1BJK3EQtA==
+X-Google-Smtp-Source: APiQypJ+Q+7kB5uiF6PP1T5S7xnrAVLUajbrQdNpmN5RmNLCd3B63jV5Haw2iF8Xd19BTMuAfLQl5w==
+X-Received: by 2002:a17:90a:68cb:: with SMTP id q11mr2161545pjj.15.1588040086489;
+        Mon, 27 Apr 2020 19:14:46 -0700 (PDT)
+Received: from google.com (56.4.82.34.bc.googleusercontent.com. [34.82.4.56])
+        by smtp.gmail.com with ESMTPSA id q64sm13385299pfc.112.2020.04.27.19.14.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Apr 2020 19:14:45 -0700 (PDT)
+Date:   Tue, 28 Apr 2020 02:14:41 +0000
+From:   Satya Tangirala <satyat@google.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Eric Biggers <ebiggers@google.com>
+Subject: Re: [PATCH v10 02/12] block: Keyslot Manager for Inline Encryption
+Message-ID: <20200428021441.GA52406@google.com>
+References: <20200408035654.247908-1-satyat@google.com>
+ <20200408035654.247908-3-satyat@google.com>
+ <20200422092250.GA12290@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 bulkscore=0
- suspectscore=0 mlxlogscore=999 phishscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004280012
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9604 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 priorityscore=1501
- mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
- lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004280011
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200422092250.GA12290@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-Tyrel,
-
-> Commit ed830385a2b1 ("scsi: ibmvfc: Avoid loss of all paths during SVC
-> node reboot") introduced a regression where when the client resets or
-> re-enables its CRQ with the hypervisor there is a chance that if the
-> server side doesn't issue its INIT handshake quick enough the client
-> can issue an Implicit Logout prior to doing an NPIV Login. The server
-> treats this scenario as a protocol violation and closes the CRQ on its
-> end forcing the client through a reset that gets the client host state
-> and next host action out of agreement leading to a BUG assert.
-
-Applied to 5.7/scsi-fixes, thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+On Wed, Apr 22, 2020 at 02:22:50AM -0700, Christoph Hellwig wrote:
+> > +bool blk_ksm_crypto_cfg_supported(struct blk_keyslot_manager *ksm,
+> > +				  const struct blk_crypto_config *cfg)
+> > +{
+> > +	if (!ksm)
+> > +		return false;
+> > +	return (ksm->crypto_modes_supported[cfg->crypto_mode] &
+> > +		cfg->data_unit_size) &&
+> > +	       (ksm->max_dun_bytes_supported >= cfg->dun_bytes);
+> 
+> Nit: why not expand this a bit to be more readable:
+> 
+> 	if (!(ksm->crypto_modes_supported[cfg->crypto_mode] &
+> 			cfg->data_unit_size))
+> 		return false;
+> 	if (ksm->max_dun_bytes_supported < cfg->dun_bytes)
+> 		return false;
+> 	return true;
+> 
+> > +int blk_ksm_evict_key(struct blk_keyslot_manager *ksm,
+> > +		      const struct blk_crypto_key *key)
+> > +{
+> > +	struct blk_ksm_keyslot *slot;
+> > +	int err = 0;
+> > +
+> > +	blk_ksm_hw_enter(ksm);
+> > +	slot = blk_ksm_find_keyslot(ksm, key);
+> > +	if (!slot)
+> > +		goto out_unlock;
+> > +
+> > +	if (atomic_read(&slot->slot_refs) != 0) {
+> > +		err = -EBUSY;
+> > +		goto out_unlock;
+> > +	}
+> 
+> This check looks racy.
+Yes, this could in theory race with blk_ksm_put_slot (e.g. if it's
+called while there's still IO in flight/IO that just finished) - But
+it's currently only called by fscrypt when a key is being destroyed,
+which only happens after all the inodes using that key are evicted, and
+no data is in flight, so when this function is called, slot->slot_refs
+will be 0. In particular, this function should only be called when the
+key isn't being used for IO anymore. I'll add a WARN_ON_ONCE and also
+make the assumption clearer. We could also instead make this wait for
+the slot_refs to become 0 and then evict the key instead of just
+returning -EBUSY as it does now, but I'm not sure if it's really what
+we want to do/worth doing right now...
