@@ -2,85 +2,70 @@ Return-Path: <SRS0=qgw9=6N=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D6C0C83000
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Apr 2020 15:41:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47849C83000
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Apr 2020 15:41:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E3DC206B8
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Apr 2020 15:41:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26B762073E
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Apr 2020 15:41:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588174879;
+	bh=2ZqWRbxVt4j71SLYV4KPEQCs1PbuDAjO7HUknYYbNns=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=TzD3HxxIghHMKBEm8496ipXsKO4FT77h8uCa/v6DbAs982B/a64ffhhr85/SrmuBb
+	 CCt7OEEVMo75FSb1+7G4YpQL/4Ohydeu2k5trTA6ys3f7tmv4TxE+IZDAtin+Hcpih
+	 27LkRutbqzrmDKLfGE8BnLEIh69wR5RIQZEDfxio=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726776AbgD2PlA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Apr 2020 11:41:00 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:35756 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726519AbgD2PlA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Apr 2020 11:41:00 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1jTopT-0004nr-Du; Wed, 29 Apr 2020 15:40:55 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: pm80xx: remove redundant assignments to status
-Date:   Wed, 29 Apr 2020 16:40:55 +0100
-Message-Id: <20200429154055.286617-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.25.1
+        id S1727082AbgD2PlS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Apr 2020 11:41:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59348 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726519AbgD2PlS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 29 Apr 2020 11:41:18 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B6E6C206B8;
+        Wed, 29 Apr 2020 15:41:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588174878;
+        bh=2ZqWRbxVt4j71SLYV4KPEQCs1PbuDAjO7HUknYYbNns=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=R9AfLiaFJlw5JSXlCW15G3DTabSmVOQ/lANj0JENNj4+UeE02Y92/rNK/YKukolZD
+         1W1RnOWmMUpOyf8cN8cRPMrfsX6imrbanS7UnYVA6dLa1vpNwdI2un/EBsqL0bUOe5
+         XtPi1ATfXhEh3BndFU++e7RrogPF0GEBcwXuQUlg=
+Date:   Wed, 29 Apr 2020 08:41:16 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v11 00/12] Inline Encryption Support
+Message-ID: <20200429154116.GA1844@sol.localdomain>
+References: <20200429072121.50094-1-satyat@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200429072121.50094-1-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Wed, Apr 29, 2020 at 07:21:09AM +0000, Satya Tangirala wrote:
+> This patch series adds support for Inline Encryption to the block layer,
+> UFS, fscrypt, f2fs and ext4.
+> 
 
-The variable status is being assigned with a value that is never read
-hence the assignment is redundant and can be removed.
+This patch series can also be retrieved from
 
-Addresses-Coverity: ("Unused value")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.c | 3 ---
- 1 file changed, 3 deletions(-)
+        Repo: https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git
+        Tag: inline-encryption-v11
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 4d205ebaee87..f5e36375a68f 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -235,7 +235,6 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
- 			pm8001_ha->forensic_fatal_step = 1;
- 			pm8001_ha->fatal_forensic_shift_offset = 0;
- 			pm8001_ha->forensic_last_offset	= 0;
--			status = 0;
- 			offset = (int)
- 			((char *)pm8001_ha->forensic_info.data_buf.direct_data
- 			- (char *)buf);
-@@ -258,7 +257,6 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
- 					forensic_info.data_buf.direct_data,
- 					"%08x ", *(temp + index));
- 			}
--			status = 0;
- 			offset = (int)
- 			((char *)pm8001_ha->forensic_info.data_buf.direct_data
- 			- (char *)buf);
-@@ -285,7 +283,6 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
- 		pm8001_cw32(pm8001_ha, 0, MEMBASE_II_SHIFT_REGISTER,
- 			pm8001_ha->fatal_forensic_shift_offset);
- 		pm8001_ha->fatal_bar_loc = 0;
--		status = 0;
- 		offset = (int)
- 			((char *)pm8001_ha->forensic_info.data_buf.direct_data
- 			- (char *)buf);
--- 
-2.25.1
-
+- Eric
