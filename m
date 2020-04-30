@@ -2,94 +2,129 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A42B6C83009
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 02:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0022EC83001
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 04:10:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 824AB2083B
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 02:18:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB6FD2073E
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 04:10:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uVdvH7xc"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="sI5jE6IA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726789AbgD3CSW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Apr 2020 22:18:22 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:39240 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726577AbgD3CSW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Apr 2020 22:18:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03U2CtXT122330;
-        Thu, 30 Apr 2020 02:18:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=fPwXYJHHR+W1NjWv4Qp1lUFGK+tT0/YvyWBS49A3w8A=;
- b=uVdvH7xc8nB8GW0v2enQ3JuDJtigWeUCf/UjIS+k91HHUYsUx6ib/bNO3ynKXHa99ll2
- comg/inARD5QvgyWcYAcCW6sLP0+t5c1chcOqQ2ODTpnWVRsYXr4RndVgWmMZSJMa9OA
- GpOng7ISeYTcaGbU7cJ5EDSMCIzTgl3Vw7qnN5uhDp10Ws3xrKyrzvBc42zPeRCuHUPs
- WuGftXL+GJiqt5biCsa0p42DmW5PMX5aUUKtmLv6UjsUvuhmnd6BLlz9r+mOBZPPFH4x
- DXHsNytxN+R3kT2UReSsTzFUk1wxy4NK9hvNd4FuIXN2chaQku04jiWONKoXx/htM0Jp Vg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 30nucg8wnf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Apr 2020 02:18:11 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03U2Gl4X141087;
-        Thu, 30 Apr 2020 02:18:10 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 30mxpmf47e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Apr 2020 02:18:10 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03U2I99r008462;
-        Thu, 30 Apr 2020 02:18:09 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 29 Apr 2020 19:18:09 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     aacraid@microsemi.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Xiongfeng Wang <wangxiongfeng2@huawei.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: dpt_i2o: Remove always false 'chan < 0' statement
-Date:   Wed, 29 Apr 2020 22:18:04 -0400
-Message-Id: <158821297687.28621.4212963275967150101.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <1588162218-61757-1-git-send-email-wangxiongfeng2@huawei.com>
-References: <1588162218-61757-1-git-send-email-wangxiongfeng2@huawei.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9606 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=788 malwarescore=0
- mlxscore=0 bulkscore=0 adultscore=0 phishscore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004300015
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9606 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 priorityscore=1501
- mlxlogscore=859 impostorscore=0 suspectscore=0 malwarescore=0
- lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004300014
+        id S1726354AbgD3EKW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 00:10:22 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:41994 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725280AbgD3EKW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 00:10:22 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1588219821; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=zY3h7WyYFL9pgdVpyH23IWdwL6hQCkZYVkn4m8ZIaOI=; b=sI5jE6IAaiotPH9CPJg42Nx3mBWxrLcjsxTekafphEpxzLvOEAF4latdfKWqH5nCJ4j/njoV
+ 60CKjnke75AoXogmaS5pPsBLcXX77ov4mOpeSZR/7+77U/sCNcnLrYyaaq7qZxtGekqgJT/7
+ 4nuPQjku3buVJ0FuyTSJ0BaHuFE=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5eaa4fa9.7fc768d196c0-smtp-out-n03;
+ Thu, 30 Apr 2020 04:10:17 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id EF649C43637; Thu, 30 Apr 2020 04:10:16 +0000 (UTC)
+Received: from pacamara-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4FD30C433CB;
+        Thu, 30 Apr 2020 04:10:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4FD30C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=cang@codeaurora.org
+From:   Can Guo <cang@codeaurora.org>
+To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        stanley.chu@mediatek.com, alim.akhtar@samsung.com,
+        beanhuo@micron.com, Avri.Altman@wdc.com,
+        bjorn.andersson@linaro.org, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com, cang@codeaurora.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3 1/1] scsi: pm: Balance pm_only counter of request queue during system resume
+Date:   Wed, 29 Apr 2020 21:10:05 -0700
+Message-Id: <1588219805-25794-1-git-send-email-cang@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 29 Apr 2020 20:10:18 +0800, Xiongfeng Wang wrote:
+During system resume, scsi_resume_device() decreases a request queue's
+pm_only counter if the scsi device was quiesced before. But after that,
+if the scsi device's RPM status is RPM_SUSPENDED, the pm_only counter is
+still held (non-zero). Current scsi resume hook only sets the RPM status
+of the scsi device and its request queue to RPM_ACTIVE, but leaves the
+pm_only counter unchanged. This may make the request queue's pm_only
+counter remain non-zero after resume hook returns, hence those who are
+waiting on the mq_freeze_wq would never be woken up. Fix this by calling
+blk_post_runtime_resume() if pm_only is non-zero to balance the pm_only
+counter which is held by the scsi device's RPM ops.
 
-> The channel index is represented by an unsigned variable 'u32 chan'. We
-> don't need to check whether it is less than zero. The following
-> statement is always false and let's remove it.
-> 	'chan < 0'
+(struct request_queue)0xFFFFFF815B69E938
+	pm_only = (counter = 2),
+	rpm_status = 0,
+	dev = 0xFFFFFF815B0511A0,
 
-Applied to 5.8/scsi-queue, thanks!
+((struct device)0xFFFFFF815B0511A0)).power
+	is_suspended = FALSE,
+	runtime_status = RPM_ACTIVE,
 
-[1/1] scsi: dpt_i2o: Remove always false 'chan < 0' statement
-      https://git.kernel.org/mkp/scsi/c/6f41f08c88c5
+(struct scsi_device)0xFFFFFF815b051000
+	request_queue = 0xFFFFFF815B69E938,
+	sdev_state = SDEV_RUNNING,
+	quiesced_by = 0x0,
 
+B::v.f_/task_
+-000|__switch_to
+-001|context_switch
+-001|__schedule
+-002|schedule
+-003|blk_queue_enter(q = 0xFFFFFF815B69E938, flags = 0)
+-004|generic_make_request
+-005|submit_bio
+
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+
+Change since v2:
+- Rebased on 5.8-scsi-queue
+
+Change since v1:
+- Added more debugging context info
+
+ drivers/scsi/scsi_pm.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 3717eea..4804029 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -93,8 +93,10 @@ static int scsi_dev_type_resume(struct device *dev,
+ 		 */
+ 		if (!err && scsi_is_sdev_device(dev)) {
+ 			struct scsi_device *sdev = to_scsi_device(dev);
+-
+-			blk_set_runtime_active(sdev->request_queue);
++			if (blk_queue_pm_only(sdev->request_queue))
++				blk_post_runtime_resume(sdev->request_queue, 0);
++			else
++				blk_set_runtime_active(sdev->request_queue);
+ 		}
+ 	}
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
