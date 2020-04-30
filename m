@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCC5CC83011
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C723FC8300C
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD3D02076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE5C3208C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727091AbgD3NUd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:33 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60854 "EHLO mx2.suse.de"
+        id S1727093AbgD3NUf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:35 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60694 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726929AbgD3NUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726924AbgD3NUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 30 Apr 2020 09:20:08 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 49D8FAF2D;
+        by mx2.suse.de (Postfix) with ESMTP id 4C67AAF31;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,11 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH RFC v3 14/41] hpsa: drop refcount field from CommandList
-Date:   Thu, 30 Apr 2020 15:18:37 +0200
-Message-Id: <20200430131904.5847-15-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH RFC v3 24/41] megaraid_sas: separate out megasas_prepare_aen()
+Date:   Thu, 30 Apr 2020 15:18:47 +0200
+Message-Id: <20200430131904.5847-25-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -42,69 +41,126 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Field is now unused, so drop it.
+Separate out code for preparing an AEN into a separate function.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/hpsa.c     | 12 ++----------
- drivers/scsi/hpsa_cmd.h |  1 -
- 2 files changed, 2 insertions(+), 11 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 85 +++++++++++++++++--------------
+ 1 file changed, 46 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 51e503a668d5..6f66cec0e2cc 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5514,8 +5514,8 @@ static void hpsa_cmd_init(struct ctlr_info *h, int index,
- {
- 	dma_addr_t cmd_dma_handle, err_dma_handle;
- 
--	/* Zero out all of commandlist except the last field, refcount */
--	memset(c, 0, offsetof(struct CommandList, refcount));
-+	/* Zero out all of commandlist */
-+	memset(c, 0, sizeof(struct CommandList));
- 	c->Header.tag = cpu_to_le64((u64) (index << DIRECT_LOOKUP_SHIFT));
- 	cmd_dma_handle = h->cmd_pool_dhandle + index * sizeof(*c);
- 	c->err_info = h->errinfo_pool + index;
-@@ -5537,7 +5537,6 @@ static void hpsa_preinitialize_commands(struct ctlr_info *h)
- 		struct CommandList *c = h->cmd_pool + i;
- 
- 		hpsa_cmd_init(h, i, c);
--		atomic_set(&c->refcount, 0);
- 	}
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ddb8df03481f..8498e6a1d67c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -6506,6 +6506,51 @@ megasas_get_seq_num(struct megasas_instance *instance,
+ 	return ret;
  }
  
-@@ -6133,19 +6132,12 @@ static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
- 		return NULL;
++static struct megasas_cmd *
++megasas_prepare_aen(struct megasas_instance *instance, u32 seq_num,
++		    union megasas_evt_class_locale *aen)
++{
++	struct megasas_cmd *cmd;
++	struct megasas_dcmd_frame *dcmd;
++
++	cmd = megasas_get_cmd(instance);
++	if (!cmd)
++		return NULL;
++
++	dcmd = &cmd->frame->dcmd;
++
++	memset(instance->evt_detail, 0, sizeof(struct megasas_evt_detail));
++
++	/*
++	 * Prepare DCMD for aen registration
++	 */
++	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
++
++	dcmd->cmd = MFI_CMD_DCMD;
++	dcmd->cmd_status = 0x0;
++	dcmd->sge_count = 1;
++	dcmd->flags = MFI_FRAME_DIR_READ;
++	dcmd->timeout = 0;
++	dcmd->pad_0 = 0;
++	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct megasas_evt_detail));
++	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_EVENT_WAIT);
++	dcmd->mbox.w[0] = cpu_to_le32(seq_num);
++	instance->last_seq_num = seq_num;
++	dcmd->mbox.w[1] = cpu_to_le32(aen->word);
++
++	megasas_set_dma_settings(instance, dcmd, instance->evt_detail_h,
++				 sizeof(struct megasas_evt_detail));
++
++	/*
++	 * Store reference to the cmd used to register for AEN. When an
++	 * application wants us to register for AEN, we have to abort this
++	 * cmd and re-register with a new EVENT LOCALE supplied by that app
++	 */
++	instance->aen_cmd = cmd;
++
++	return cmd;
++}
++
+ /**
+  * megasas_register_aen -	Registers for asynchronous event notification
+  * @instance:			Adapter soft state
+@@ -6521,7 +6566,6 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
+ {
+ 	int ret_val;
+ 	struct megasas_cmd *cmd;
+-	struct megasas_dcmd_frame *dcmd;
+ 	union megasas_evt_class_locale curr_aen;
+ 	union megasas_evt_class_locale prev_aen;
+ 
+@@ -6590,47 +6634,10 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
+ 		}
  	}
  
--	atomic_inc(&c->refcount);
+-	cmd = megasas_get_cmd(instance);
 -
- 	hpsa_cmd_partial_init(h, idx, c);
- 	return c;
- }
++	cmd = megasas_prepare_aen(instance, seq_num, &curr_aen);
+ 	if (!cmd)
+ 		return -ENOMEM;
  
- static void cmd_tagged_free(struct ctlr_info *h, struct CommandList *c)
- {
+-	dcmd = &cmd->frame->dcmd;
+-
+-	memset(instance->evt_detail, 0, sizeof(struct megasas_evt_detail));
+-
 -	/*
--	 * Release our reference to the block.  We don't need to do anything
--	 * else to free it, because it is accessed by index.
+-	 * Prepare DCMD for aen registration
 -	 */
--	(void)atomic_dec(&c->refcount);
- 	c->scsi_cmd = NULL;
- }
- 
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 7825cbfea4dc..2575a396f1a5 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -449,7 +449,6 @@ struct CommandList {
- 
- 	int abort_pending;
- 	struct hpsa_scsi_dev_t *device;
--	atomic_t refcount; /* Must be last to avoid memset in hpsa_cmd_init() */
- } __aligned(COMMANDLIST_ALIGNMENT);
- 
- /* Max S/G elements in I/O accelerator command */
+-	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
+-
+-	dcmd->cmd = MFI_CMD_DCMD;
+-	dcmd->cmd_status = 0x0;
+-	dcmd->sge_count = 1;
+-	dcmd->flags = MFI_FRAME_DIR_READ;
+-	dcmd->timeout = 0;
+-	dcmd->pad_0 = 0;
+-	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct megasas_evt_detail));
+-	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_EVENT_WAIT);
+-	dcmd->mbox.w[0] = cpu_to_le32(seq_num);
+-	instance->last_seq_num = seq_num;
+-	dcmd->mbox.w[1] = cpu_to_le32(curr_aen.word);
+-
+-	megasas_set_dma_settings(instance, dcmd, instance->evt_detail_h,
+-				 sizeof(struct megasas_evt_detail));
+-
+-	if (instance->aen_cmd != NULL) {
+-		megasas_return_cmd(instance, cmd);
+-		return 0;
+-	}
+-
+-	/*
+-	 * Store reference to the cmd used to register for AEN. When an
+-	 * application wants us to register for AEN, we have to abort this
+-	 * cmd and re-register with a new EVENT LOCALE supplied by that app
+-	 */
+-	instance->aen_cmd = cmd;
+-
+ 	/*
+ 	 * Issue the aen registration frame
+ 	 */
 -- 
 2.16.4
 
