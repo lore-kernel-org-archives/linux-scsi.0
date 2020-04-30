@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65BA1C8300B
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E23C8300C
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 355D22076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45DDD2076D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726837AbgD3NUJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:09 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60752 "EHLO mx2.suse.de"
+        id S1726974AbgD3NUK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:10 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60756 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726871AbgD3NUG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726882AbgD3NUG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 30 Apr 2020 09:20:06 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 148B8AD0E;
+        by mx2.suse.de (Postfix) with ESMTP id 1B8A1AF0F;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,11 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH RFC v3 11/41] hpsa: move hpsa_hba_inquiry after scsi_add_host()
-Date:   Thu, 30 Apr 2020 15:18:34 +0200
-Message-Id: <20200430131904.5847-12-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH RFC v3 13/41] hpsa: use scsi_host_busy_iter() to traverse outstanding commands
+Date:   Thu, 30 Apr 2020 15:18:36 +0200
+Message-Id: <20200430131904.5847-14-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -42,83 +41,183 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move hpsa_hba_inquiry to after scsi_add_host() so that the host
-is fully initialized.
+From: Hannes Reinecke <hare@suse.com>
+
+Replace all hand-crafted command iterations with
+scsi_host_busy_iter() calls.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hpsa.c | 37 +++++++++++++++++++------------------
- 1 file changed, 19 insertions(+), 18 deletions(-)
+ drivers/scsi/hpsa.c | 117 ++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 67 insertions(+), 50 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 1e9302e99d05..fe2fd1c8f4e0 100644
+index 8f23011aade9..51e503a668d5 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -5835,6 +5835,22 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
- 	return 0;
+@@ -1812,30 +1812,26 @@ static int hpsa_add_device(struct ctlr_info *h, struct hpsa_scsi_dev_t *device)
+ 	return rc;
  }
  
-+static void hpsa_hba_inquiry(struct ctlr_info *h)
+-static int hpsa_find_outstanding_commands_for_dev(struct ctlr_info *h,
+-						struct hpsa_scsi_dev_t *dev)
+-{
+-	int i;
+-	int count = 0;
+-
+-	for (i = 0; i < h->nr_cmds; i++) {
+-		struct CommandList *c = h->cmd_pool + i;
+-		int refcount = atomic_inc_return(&c->refcount);
+-
+-		if (refcount > 1 && hpsa_cmd_dev_match(h, c, dev,
+-				dev->scsi3addr)) {
+-			unsigned long flags;
++struct hpsa_command_iter_data {
++	struct ctlr_info *h;
++	struct hpsa_scsi_dev_t *dev;
++	unsigned char *scsi3addr;
++	int count;
++};
+ 
+-			spin_lock_irqsave(&h->lock, flags);	/* Implied MB */
+-			if (!hpsa_is_cmd_idle(c))
+-				++count;
+-			spin_unlock_irqrestore(&h->lock, flags);
+-		}
++static bool hpsa_find_outstanding_commands_iter(struct scsi_cmnd *sc,
++						void *data, bool reserved)
 +{
-+	int rc;
++	struct hpsa_command_iter_data *iter_data = data;
++	struct ctlr_info *h = iter_data->h;
++	struct hpsa_scsi_dev_t *dev = iter_data->dev;
++	struct CommandList *c = h->cmd_pool + sc->request->tag;
+ 
+-		cmd_free(h, c);
++	if (hpsa_cmd_dev_match(h, c, dev, dev->scsi3addr)) {
++		iter_data->count++;
++		return false;
+ 	}
+-
+-	return count;
++	return true;
+ }
+ 
+ #define NUM_WAIT 20
+@@ -1845,13 +1841,20 @@ static void hpsa_wait_for_outstanding_commands_for_dev(struct ctlr_info *h,
+ 	int cmds = 0;
+ 	int waits = 0;
+ 	int num_wait = NUM_WAIT;
++	struct hpsa_command_iter_data iter_data = {
++		.h = h,
++		.dev = device,
++	};
+ 
+ 	if (device->external)
+ 		num_wait = HPSA_EH_PTRAID_TIMEOUT;
+ 
+ 	while (1) {
+-		cmds = hpsa_find_outstanding_commands_for_dev(h, device);
+-		if (cmds == 0)
++		iter_data.count = 0;
++		scsi_host_busy_iter(h->scsi_host,
++				    hpsa_find_outstanding_commands_iter,
++				    &iter_data);
++		if (iter_data.count == 0)
+ 			break;
+ 		if (++waits > num_wait)
+ 			break;
+@@ -8152,27 +8155,34 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+ 	kfree(h);				/* init_one 1 */
+ }
+ 
++static bool fail_all_outstanding_cmds_iter(struct scsi_cmnd *sc, void *data,
++					   bool reserved)
++{
++	struct hpsa_command_iter_data *iter_data = data;
++	struct ctlr_info *h = iter_data->h;
++	struct CommandList *c = h->cmd_pool + sc->request->tag;
 +
-+#define HBA_INQUIRY_BYTE_COUNT 64
-+	h->hba_inquiry_data = kmalloc(HBA_INQUIRY_BYTE_COUNT, GFP_KERNEL);
-+	if (!h->hba_inquiry_data)
-+		return;
-+	rc = hpsa_scsi_do_inquiry(h, RAID_CTLR_LUNID, 0,
-+		h->hba_inquiry_data, HBA_INQUIRY_BYTE_COUNT);
-+	if (rc != 0) {
-+		kfree(h->hba_inquiry_data);
-+		h->hba_inquiry_data = NULL;
-+	}
++	c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
++	finish_cmd(c);
++	atomic_dec(&h->commands_outstanding);
++	iter_data->count++;
++
++	return true;
 +}
 +
- static int hpsa_scsi_add_host(struct ctlr_info *h)
+ /* Called when controller lockup detected. */
+ static void fail_all_outstanding_cmds(struct ctlr_info *h)
  {
- 	int rv;
-@@ -5844,6 +5860,9 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
- 		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
- 		return rv;
- 	}
-+
-+	hpsa_hba_inquiry(h);
-+
- 	scsi_scan_host(h->scsi_host);
- 	return 0;
- }
-@@ -7920,22 +7939,6 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 	return err;
- }
+-	int i, refcount;
+-	struct CommandList *c;
+-	int failcount = 0;
++	struct hpsa_command_iter_data iter_data = {
++		.h = h,
++		.count = 0,
++	};
  
--static void hpsa_hba_inquiry(struct ctlr_info *h)
--{
--	int rc;
--
--#define HBA_INQUIRY_BYTE_COUNT 64
--	h->hba_inquiry_data = kmalloc(HBA_INQUIRY_BYTE_COUNT, GFP_KERNEL);
--	if (!h->hba_inquiry_data)
--		return;
--	rc = hpsa_scsi_do_inquiry(h, RAID_CTLR_LUNID, 0,
--		h->hba_inquiry_data, HBA_INQUIRY_BYTE_COUNT);
--	if (rc != 0) {
--		kfree(h->hba_inquiry_data);
--		h->hba_inquiry_data = NULL;
+ 	flush_workqueue(h->resubmit_wq); /* ensure all cmds are fully built */
+-	for (i = 0; i < h->nr_cmds; i++) {
+-		c = h->cmd_pool + i;
+-		refcount = atomic_inc_return(&c->refcount);
+-		if (refcount > 1) {
+-			c->err_info->CommandStatus = CMD_CTLR_LOCKUP;
+-			finish_cmd(c);
+-			atomic_dec(&h->commands_outstanding);
+-			failcount++;
+-		}
+-		cmd_free(h, c);
 -	}
--}
--
- static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
- {
- 	int rc, i;
-@@ -8844,8 +8847,6 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	/* Turn the interrupts on so we can service requests */
- 	h->access.set_intr_mask(h, HPSA_INTR_ON);
++	scsi_host_busy_iter(h->scsi_host,
++			    fail_all_outstanding_cmds_iter, &iter_data);
+ 	dev_warn(&h->pdev->dev,
+-		"failed %d commands in fail_all\n", failcount);
++		"failed %d commands in fail_all\n", iter_data.count);
+ }
  
--	hpsa_hba_inquiry(h);
--
- 	h->lastlogicals = kzalloc(sizeof(*(h->lastlogicals)), GFP_KERNEL);
- 	if (!h->lastlogicals)
- 		dev_info(&h->pdev->dev,
+ static void set_lockup_detected_for_all_cpus(struct ctlr_info *h, u32 value)
+@@ -9472,22 +9482,29 @@ static int is_accelerated_cmd(struct CommandList *c)
+ 	return c->cmd_type == CMD_IOACCEL1 || c->cmd_type == CMD_IOACCEL2;
+ }
+ 
++static bool hpsa_drain_accel_commands_iter(struct scsi_cmnd *sc, void *data,
++					   bool reserved)
++{
++	struct hpsa_command_iter_data *iter_data = data;
++	struct ctlr_info *h = iter_data->h;
++	struct CommandList *c = h->cmd_pool + sc->request->tag;
++
++	iter_data->count += is_accelerated_cmd(c);
++	return true;
++}
++
+ static void hpsa_drain_accel_commands(struct ctlr_info *h)
+ {
+-	struct CommandList *c = NULL;
+-	int i, accel_cmds_out;
+-	int refcount;
++	struct hpsa_command_iter_data iter_data = {
++		.h = h,
++	};
+ 
+ 	do { /* wait for all outstanding ioaccel commands to drain out */
+-		accel_cmds_out = 0;
+-		for (i = 0; i < h->nr_cmds; i++) {
+-			c = h->cmd_pool + i;
+-			refcount = atomic_inc_return(&c->refcount);
+-			if (refcount > 1) /* Command is allocated */
+-				accel_cmds_out += is_accelerated_cmd(c);
+-			cmd_free(h, c);
+-		}
+-		if (accel_cmds_out <= 0)
++		iter_data.count = 0;
++		scsi_host_busy_iter(h->scsi_host,
++				    hpsa_drain_accel_commands_iter,
++				    &iter_data);
++		if (iter_data.count <= 0)
+ 			break;
+ 		msleep(100);
+ 	} while (1);
 -- 
 2.16.4
 
