@@ -2,94 +2,115 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C55EC28CBC
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 14:12:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1257FC83000
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 14:16:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26A51206D9
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 14:12:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588255934;
-	bh=vEhVLLwSFyJhdLX9Pt2w9y/nEjjsIQJj5jJiyTA4d3g=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Dnoui9Qr1WdV4iuNVTnWq1JX+/Ga06DfjF+hTlDdXLrlwQn1teUyQV/6lPQ3YwyIT
-	 utqziK2wkuPzxi7i5LZfSmS+rnXAlgpWla0txg6lMIGVCBk/NHZp+HsGFpspgEwLmY
-	 82LTk/4xqVhur2Cw15YR7ps9QQCwSz22aDsgkoMg=
+	by mail.kernel.org (Postfix) with ESMTP id ED11B206D9
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 14:16:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727920AbgD3NvK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:51:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59118 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727079AbgD3NvJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:51:09 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 316D02082E;
-        Thu, 30 Apr 2020 13:51:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588254668;
-        bh=vEhVLLwSFyJhdLX9Pt2w9y/nEjjsIQJj5jJiyTA4d3g=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZC7Efpt9apFX702Y0V8UEt2Ayn67snqlZjCmjpiQ5NhwQDmOu0XVv03yEVWwV+8/M
-         JNZxyou7QX1zUJ0tWYYzlgqHVQRg3q5T0IOsQMtipY5br+Pznqh63lU+ORTtahk9Sf
-         dXonyuomrPB7hOFWGyuGLizGQoYwg5OxlZ45AcR8=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wu Bo <wubo40@huawei.com>, Douglas Gilbert <dgilbert@interlog.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 21/79] scsi: sg: add sg_remove_request in sg_write
-Date:   Thu, 30 Apr 2020 09:49:45 -0400
-Message-Id: <20200430135043.19851-21-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200430135043.19851-1-sashal@kernel.org>
-References: <20200430135043.19851-1-sashal@kernel.org>
+        id S1726631AbgD3OQc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 10:16:32 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2135 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726743AbgD3OQc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 10:16:32 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id B75065EE7C5E96BC1BFE;
+        Thu, 30 Apr 2020 15:16:28 +0100 (IST)
+Received: from [127.0.0.1] (10.47.0.178) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 30 Apr
+ 2020 15:16:27 +0100
+Subject: Re: [PATCH RFC v3 01/41] scsi: add 'nr_reserved_cmds' field to the
+ SCSI host template
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
+References: <20200430131904.5847-1-hare@suse.de>
+ <20200430131904.5847-2-hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <9655eb3f-b2e3-7c9e-f2ee-1587c13df875@huawei.com>
+Date:   Thu, 30 Apr 2020 15:15:45 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200430131904.5847-2-hare@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.0.178]
+X-ClientProxiedBy: lhreml731-chm.china.huawei.com (10.201.108.82) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Wu Bo <wubo40@huawei.com>
+On 30/04/2020 14:18, Hannes Reinecke wrote:
+> From: Hannes Reinecke <hare@suse.com>
+> 
+> Quite a lot of drivers are using management commands internally, which
+> typically use the same hardware tag pool (ie they are being allocated
+> from the same hardware resources) as the 'normal' I/O commands.
+> These commands are set aside before allocating the block-mq tag bitmap,
+> so they'll never show up as busy in the tag map.
+> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+> this situation.
+> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+> template to instruct the block layer to set aside a tag space for these
+> management commands by using reserved_tags.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-[ Upstream commit 83c6f2390040f188cc25b270b4befeb5628c1aee ]
+It may be worth adding this field to scsi_host_template. And we should 
+also prob mention this in Documentation/scsi/scsi_mid_low_api.txt
 
-If the __copy_from_user function failed we need to call sg_remove_request
-in sg_write.
+Apart from that, thanks:
 
-Link: https://lore.kernel.org/r/610618d9-e983-fd56-ed0f-639428343af7@huawei.com
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Wu Bo <wubo40@huawei.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/sg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Reviewed-by: John Garry <john.garry@huawei.com>
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 9c0ee192f0f9c..20472aaaf630a 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -685,8 +685,10 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	hp->flags = input_size;	/* structure abuse ... */
- 	hp->pack_id = old_hdr.pack_id;
- 	hp->usr_ptr = NULL;
--	if (copy_from_user(cmnd, buf, cmd_size))
-+	if (copy_from_user(cmnd, buf, cmd_size)) {
-+		sg_remove_request(sfp, srp);
- 		return -EFAULT;
-+	}
- 	/*
- 	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
- 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
--- 
-2.20.1
+> ---
+>   drivers/scsi/scsi_lib.c  | 1 +
+>   include/scsi/scsi_host.h | 6 ++++++
+>   2 files changed, 7 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 47835c4b4ee0..5358f553f526 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1885,6 +1885,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>   		shost->tag_set.ops = &scsi_mq_ops_no_commit;
+>   	shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
+>   	shost->tag_set.queue_depth = shost->can_queue;
+> +	shost->tag_set.reserved_tags = shost->nr_reserved_cmds;
+>   	shost->tag_set.cmd_size = cmd_size;
+>   	shost->tag_set.numa_node = NUMA_NO_NODE;
+>   	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 822e8cda8d9b..37bb7d74e4c4 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -599,6 +599,12 @@ struct Scsi_Host {
+>   	 * is nr_hw_queues * can_queue.
+>   	 */
+>   	unsigned nr_hw_queues;
+> +
+> +	/*
+> +	 * Number of commands to reserve, if any.
+> +	 */
+> +	unsigned nr_reserved_cmds;
+> +
+>   	unsigned active_mode:2;
+>   	unsigned unchecked_isa_dma:1;
+>   
+> 
 
