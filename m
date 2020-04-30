@@ -2,105 +2,94 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10991C8300B
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C55EC28CBC
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 14:12:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9F4420870
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:21:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26A51206D9
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 14:12:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588255934;
+	bh=vEhVLLwSFyJhdLX9Pt2w9y/nEjjsIQJj5jJiyTA4d3g=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Dnoui9Qr1WdV4iuNVTnWq1JX+/Ga06DfjF+hTlDdXLrlwQn1teUyQV/6lPQ3YwyIT
+	 utqziK2wkuPzxi7i5LZfSmS+rnXAlgpWla0txg6lMIGVCBk/NHZp+HsGFpspgEwLmY
+	 82LTk/4xqVhur2Cw15YR7ps9QQCwSz22aDsgkoMg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbgD3NU6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:58 -0400
-Received: from verein.lst.de ([213.95.11.211]:40689 "EHLO verein.lst.de"
+        id S1727920AbgD3NvK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:51:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59118 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726819AbgD3NU5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:20:57 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 6051968D07; Thu, 30 Apr 2020 15:20:54 +0200 (CEST)
-Date:   Thu, 30 Apr 2020 15:20:53 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
-        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 8/7] hfs: stop using ioctl_by_bdev
-Message-ID: <20200430132053.GA25428@lst.de>
+        id S1727079AbgD3NvJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 09:51:09 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 316D02082E;
+        Thu, 30 Apr 2020 13:51:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588254668;
+        bh=vEhVLLwSFyJhdLX9Pt2w9y/nEjjsIQJj5jJiyTA4d3g=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ZC7Efpt9apFX702Y0V8UEt2Ayn67snqlZjCmjpiQ5NhwQDmOu0XVv03yEVWwV+8/M
+         JNZxyou7QX1zUJ0tWYYzlgqHVQRg3q5T0IOsQMtipY5br+Pznqh63lU+ORTtahk9Sf
+         dXonyuomrPB7hOFWGyuGLizGQoYwg5OxlZ45AcR8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Wu Bo <wubo40@huawei.com>, Douglas Gilbert <dgilbert@interlog.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 21/79] scsi: sg: add sg_remove_request in sg_write
+Date:   Thu, 30 Apr 2020 09:49:45 -0400
+Message-Id: <20200430135043.19851-21-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200430135043.19851-1-sashal@kernel.org>
+References: <20200430135043.19851-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead just call the CDROM layer functionality directly.
+From: Wu Bo <wubo40@huawei.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+[ Upstream commit 83c6f2390040f188cc25b270b4befeb5628c1aee ]
+
+If the __copy_from_user function failed we need to call sg_remove_request
+in sg_write.
+
+Link: https://lore.kernel.org/r/610618d9-e983-fd56-ed0f-639428343af7@huawei.com
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Wu Bo <wubo40@huawei.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
+ drivers/scsi/sg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This one got lost.  Basically exactly the same as hfsplus.
-
- fs/hfs/mdb.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
-
-diff --git a/fs/hfs/mdb.c b/fs/hfs/mdb.c
-index 460281b1299eb..cdf0edeeb2781 100644
---- a/fs/hfs/mdb.c
-+++ b/fs/hfs/mdb.c
-@@ -32,29 +32,35 @@
- static int hfs_get_last_session(struct super_block *sb,
- 				sector_t *start, sector_t *size)
- {
--	struct cdrom_multisession ms_info;
--	struct cdrom_tocentry te;
--	int res;
-+	struct cdrom_device_info *cdi = disk_to_cdi(sb->s_bdev->bd_disk);
- 
- 	/* default values */
- 	*start = 0;
- 	*size = i_size_read(sb->s_bdev->bd_inode) >> 9;
- 
- 	if (HFS_SB(sb)->session >= 0) {
-+		struct cdrom_tocentry te;
-+	
-+		if (!cdi)
-+			return -EINVAL;
-+
- 		te.cdte_track = HFS_SB(sb)->session;
- 		te.cdte_format = CDROM_LBA;
--		res = ioctl_by_bdev(sb->s_bdev, CDROMREADTOCENTRY, (unsigned long)&te);
--		if (!res && (te.cdte_ctrl & CDROM_DATA_TRACK) == 4) {
--			*start = (sector_t)te.cdte_addr.lba << 2;
--			return 0;
-+		if (cdrom_read_tocentry(cdi, &te) ||
-+		    (te.cdte_ctrl & CDROM_DATA_TRACK) != 4) {
-+			pr_err("invalid session number or type of track\n");
-+			return -EINVAL;
- 		}
--		pr_err("invalid session number or type of track\n");
--		return -EINVAL;
-+
-+		*start = (sector_t)te.cdte_addr.lba << 2;
-+	} else if (cdi) {
-+		struct cdrom_multisession ms_info;
-+
-+		ms_info.addr_format = CDROM_LBA;
-+		if (cdrom_multisession(cdi, &ms_info) == 0 && ms_info.xa_flag)
-+			*start = (sector_t)ms_info.addr.lba << 2;
- 	}
--	ms_info.addr_format = CDROM_LBA;
--	res = ioctl_by_bdev(sb->s_bdev, CDROMMULTISESSION, (unsigned long)&ms_info);
--	if (!res && ms_info.xa_flag)
--		*start = (sector_t)ms_info.addr.lba << 2;
-+
- 	return 0;
- }
- 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 9c0ee192f0f9c..20472aaaf630a 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -685,8 +685,10 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	hp->flags = input_size;	/* structure abuse ... */
+ 	hp->pack_id = old_hdr.pack_id;
+ 	hp->usr_ptr = NULL;
+-	if (copy_from_user(cmnd, buf, cmd_size))
++	if (copy_from_user(cmnd, buf, cmd_size)) {
++		sg_remove_request(sfp, srp);
+ 		return -EFAULT;
++	}
+ 	/*
+ 	 * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
+ 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
 -- 
-2.26.2
+2.20.1
 
