@@ -5,62 +5,62 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5997CC8300E
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 12:00:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF959C83012
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 12:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DC4220775
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 12:00:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94EF220775
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 12:00:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="j3MV8ehi"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="WVjua0bo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726571AbgD3MAM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 08:00:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37328 "EHLO
+        id S1727112AbgD3MAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 08:00:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726906AbgD3MAK (ORCPT
+        by vger.kernel.org with ESMTP id S1726949AbgD3MAQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 08:00:10 -0400
+        Thu, 30 Apr 2020 08:00:16 -0400
 Received: from mail-qk1-x749.google.com (mail-qk1-x749.google.com [IPv6:2607:f8b0:4864:20::749])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAD4EC09B040
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 05:00:08 -0700 (PDT)
-Received: by mail-qk1-x749.google.com with SMTP id f11so6165602qkk.16
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 05:00:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D78C08E934
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 05:00:16 -0700 (PDT)
+Received: by mail-qk1-x749.google.com with SMTP id d13so6175557qke.19
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 05:00:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=xb7ctfgBkT8MKaWibTzyhvK9qysU0rW7SMEIFQJPgjA=;
-        b=j3MV8ehiEKFgagO26nEjNhVxO4Z3rfz3PgodR90MbmrOihzmftOVMN3dBSVjw6DwcH
-         NwnboOih2ghd10oscPSB9TbkVyxMFmxTmRY9cfbQYPSStmlGMGHr4pXkNtCKksXqcReZ
-         VmjTcKlNEs5zmmT5nzpxh8Q4oACZ2GFvoGqw5BcrCu7lRNJhLvd8n0p8WvM7/2zMhXRC
-         MChmDritFxEmgy7hFU9O/trQyxIrq47yNSgUDXcWBXHbTrr6Hx7+nBsFawKzrqskLaa2
-         vz8ZbhrtwnNrqNVciVFxtHPWdZimvNauQchtfjH7114FebUU3UGoR8rZ65ov0YMMRTqZ
-         cTTQ==
+        bh=dcBMNhJyVF3JG7u2k+hpIfX5J5/+YNOMhft7o2B+Ju4=;
+        b=WVjua0boMZFfyXRxNHxXtkkQlvtsd9hMr76JSeSRnGAS4i4rb0v5hyP/xpU/t08yAU
+         8iFqQJRhyAkwJFM1oK1XZBTqXHm3CqsdLruIVMn/pVnKPy3fC4DShhJRinGldvR/S/PE
+         BRJ35yKgDNYU78xLeadViChpObrcGpoomH0GOf1yWskNC6xGjTXCQ70zRp3w8mJsEov1
+         wnopsVuB0htL7AZ3eqUvciTbLOa1LCZTKOiayOWzgpDf/NefzgdtHrk8kZ6h2I0f2Ln0
+         gH8rvRj4IA4NAJmjknAgox3uK+dYnH04ADDO1Fq1XchcZcytltv69jWbnlNIl/trv1Tn
+         lHrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=xb7ctfgBkT8MKaWibTzyhvK9qysU0rW7SMEIFQJPgjA=;
-        b=TqUjgC1sDx9UhHMAujeRcS3zHqk7bJDklSN3HNACoxsvStVhQF56rd3fsaYEEDmo22
-         sod6mB9AwEiuyHV2n3rEhgpH5JSNoQMjsWBgmi0qt0Mg/WaXqPDUzrqEKBmtZ7x3l5lS
-         /hRJTFDgIM6GiO3B8JQfassvT8tZqd/r16SjrA7HMTbtalfc0gKwDeFw3zl3i+egvrcw
-         hfPXQlD85ylF9dzdMSM2yzTZZMXX4vydXp+fJSPj2McBKQKCMmgdf1m7bD0ULXl+a82B
-         gkvupopDM4g4VLX+ARU74nIN6G0j2il+HUf74mxoMAMZTSt5JiJmT33P9ApUQzwoLthX
-         tBig==
-X-Gm-Message-State: AGi0PubVk5/0rIsEJp1IN/PuNJcVM5Ea20pYgq2BcOtdJkL+q5+FBP5L
-        qvgViap235aks2z5X0zhRfFCVPJyTJk=
-X-Google-Smtp-Source: APiQypJ0+JbtQIPsOVpdih60Wu/ehAdkUx4TBNQKmrynPl5SshZ274V1P85qpQJQSoRICJ+5d5v3BF8jgY8=
-X-Received: by 2002:ad4:4f01:: with SMTP id fb1mr2711453qvb.162.1588248007896;
- Thu, 30 Apr 2020 05:00:07 -0700 (PDT)
-Date:   Thu, 30 Apr 2020 11:59:51 +0000
+        bh=dcBMNhJyVF3JG7u2k+hpIfX5J5/+YNOMhft7o2B+Ju4=;
+        b=A9576RjZlXirawUVqEocKAApGiDJ6gbSPfQ0j5AGCaN2dC5uftKKylqvYqGEjOpyaQ
+         O9L0pUgHbLkOm8KhRindlLumyhmjIOkPa5lUdmg8kgKoU5gDC87O5VXFlq7yI/PlTtaA
+         QYdYkcko1YIUiQNan21pbqtPA372qSdYBjZqwjVd2cWCbJ4tsn5C5SpboIDahyUXD9Dt
+         BVh1Po+EgzwtXU8EsUa15+mW2utrE9klGhosXbJWxakHg0DpKKWA3HxqS4+YRKR0X5M4
+         yfdO2VLoGVZEcn5AIe2L1wxE97IoA7zhf8I3tNyood7WfqV/t7L5UWQGPzCH/R/+js8z
+         0Dwg==
+X-Gm-Message-State: AGi0Pua0JP+pPViA4lKwBNwiCC0gF7zMiYLm+f4YTmi15VPaXkwQG+fq
+        aGNIM9IENNHHSJcOLI2Copiq6zDd5qU=
+X-Google-Smtp-Source: APiQypIqTjtVoRaD2OhqjnO9XpfMgccnF/80vIjLwCBdsxgR6aNsuU+7iyNxHrHcnYjkH2WPjyT1Rf+7CFc=
+X-Received: by 2002:a05:6214:1804:: with SMTP id o4mr2636288qvw.10.1588248015930;
+ Thu, 30 Apr 2020 05:00:15 -0700 (PDT)
+Date:   Thu, 30 Apr 2020 11:59:56 +0000
 In-Reply-To: <20200430115959.238073-1-satyat@google.com>
-Message-Id: <20200430115959.238073-5-satyat@google.com>
+Message-Id: <20200430115959.238073-10-satyat@google.com>
 Mime-Version: 1.0
 References: <20200430115959.238073-1-satyat@google.com>
 X-Mailer: git-send-email 2.26.2.303.gf8c07b1a785-goog
-Subject: [PATCH v12 04/12] block: Make blk-integrity preclude hardware inline encryption
+Subject: [PATCH v12 09/12] fs: introduce SB_INLINECRYPT
 From:   Satya Tangirala <satyat@google.com>
 To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -75,150 +75,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Whenever a device supports blk-integrity, make the kernel pretend that
-the device doesn't support inline encryption (essentially by setting the
-keyslot manager in the request queue to NULL).
-
-There's no hardware currently that supports both integrity and inline
-encryption. However, it seems possible that there will be such hardware
-in the near future (like the NVMe key per I/O support that might support
-both inline encryption and PI).
-
-But properly integrating both features is not trivial, and without
-real hardware that implements both, it is difficult to tell if it will
-be done correctly by the majority of hardware that support both.
-So it seems best not to support both features together right now, and
-to decide what to do at probe time.
+Introduce SB_INLINECRYPT, which is set by filesystems that wish to use
+blk-crypto for file content en/decryption. This flag maps to the
+'-o inlinecrypt' mount option which multiple filesystems will implement,
+and code in fs/crypto/ needs to be able to check for this mount option
+in a filesystem-independent way.
 
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- block/bio-integrity.c   |  3 +++
- block/blk-integrity.c   |  7 +++++++
- block/keyslot-manager.c | 19 +++++++++++++++++++
- include/linux/blkdev.h  | 30 ++++++++++++++++++++++++++++++
- 4 files changed, 59 insertions(+)
+ fs/proc_namespace.c | 1 +
+ include/linux/fs.h  | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index bf62c25cde8f4..3579ac0f6ec1f 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -42,6 +42,9 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
- 	struct bio_set *bs = bio->bi_pool;
- 	unsigned inline_vecs;
- 
-+	if (WARN_ON_ONCE(bio_has_crypt_ctx(bio)))
-+		return ERR_PTR(-EOPNOTSUPP);
-+
- 	if (!bs || !mempool_initialized(&bs->bio_integrity_pool)) {
- 		bip = kmalloc(struct_size(bip, bip_inline_vecs, nr_vecs), gfp_mask);
- 		inline_vecs = nr_vecs;
-diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-index ff1070edbb400..c03705cbb9c9f 100644
---- a/block/blk-integrity.c
-+++ b/block/blk-integrity.c
-@@ -409,6 +409,13 @@ void blk_integrity_register(struct gendisk *disk, struct blk_integrity *template
- 	bi->tag_size = template->tag_size;
- 
- 	disk->queue->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
-+
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+	if (disk->queue->ksm) {
-+		pr_warn("blk-integrity: Integrity and hardware inline encryption are not supported together. Disabling hardware inline encryption.\n");
-+		blk_ksm_unregister(disk->queue);
-+	}
-+#endif
- }
- EXPORT_SYMBOL(blk_integrity_register);
- 
-diff --git a/block/keyslot-manager.c b/block/keyslot-manager.c
-index 69f51909fc8ad..8d388cdbcd5d0 100644
---- a/block/keyslot-manager.c
-+++ b/block/keyslot-manager.c
-@@ -25,6 +25,9 @@
-  * Upper layers will call blk_ksm_get_slot_for_key() to program a
-  * key into some slot in the inline encryption hardware.
-  */
-+
-+#define pr_fmt(fmt) "blk-crypto: " fmt
-+
- #include <linux/keyslot-manager.h>
- #include <linux/atomic.h>
- #include <linux/mutex.h>
-@@ -376,3 +379,19 @@ void blk_ksm_destroy(struct blk_keyslot_manager *ksm)
- 	memzero_explicit(ksm, sizeof(*ksm));
- }
- EXPORT_SYMBOL_GPL(blk_ksm_destroy);
-+
-+bool blk_ksm_register(struct blk_keyslot_manager *ksm, struct request_queue *q)
-+{
-+	if (blk_integrity_queue_supports_integrity(q)) {
-+		pr_warn("Integrity and hardware inline encryption are not supported together. Disabling hardware inline encryption.\n");
-+		return false;
-+	}
-+	q->ksm = ksm;
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(blk_ksm_register);
-+
-+void blk_ksm_unregister(struct request_queue *q)
-+{
-+	q->ksm = NULL;
-+}
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 98aae4638fda9..17738dab8ae04 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1562,6 +1562,12 @@ struct blk_integrity *bdev_get_integrity(struct block_device *bdev)
- 	return blk_get_integrity(bdev->bd_disk);
- }
- 
-+static inline bool
-+blk_integrity_queue_supports_integrity(struct request_queue *q)
-+{
-+	return q->integrity.profile;
-+}
-+
- static inline bool blk_integrity_rq(struct request *rq)
- {
- 	return rq->cmd_flags & REQ_INTEGRITY;
-@@ -1642,6 +1648,11 @@ static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
- {
- 	return NULL;
- }
-+static inline bool
-+blk_integrity_queue_supports_integrity(struct request_queue *q)
-+{
-+	return false;
-+}
- static inline int blk_integrity_compare(struct gendisk *a, struct gendisk *b)
- {
- 	return 0;
-@@ -1693,6 +1704,25 @@ static inline struct bio_vec *rq_integrity_vec(struct request *rq)
- 
- #endif /* CONFIG_BLK_DEV_INTEGRITY */
- 
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+
-+bool blk_ksm_register(struct blk_keyslot_manager *ksm, struct request_queue *q);
-+
-+void blk_ksm_unregister(struct request_queue *q);
-+
-+#else /* CONFIG_BLK_INLINE_ENCRYPTION */
-+
-+static inline bool blk_ksm_register(struct blk_keyslot_manager *ksm,
-+				    struct request_queue *q)
-+{
-+	return true;
-+}
-+
-+static inline void blk_ksm_unregister(struct request_queue *q) { }
-+
-+#endif /* CONFIG_BLK_INLINE_ENCRYPTION */
-+
-+
- struct block_device_operations {
- 	int (*open) (struct block_device *, fmode_t);
- 	void (*release) (struct gendisk *, fmode_t);
+diff --git a/fs/proc_namespace.c b/fs/proc_namespace.c
+index 273ee82d8aa97..8bf195d3bda69 100644
+--- a/fs/proc_namespace.c
++++ b/fs/proc_namespace.c
+@@ -49,6 +49,7 @@ static int show_sb_opts(struct seq_file *m, struct super_block *sb)
+ 		{ SB_DIRSYNC, ",dirsync" },
+ 		{ SB_MANDLOCK, ",mand" },
+ 		{ SB_LAZYTIME, ",lazytime" },
++		{ SB_INLINECRYPT, ",inlinecrypt" },
+ 		{ 0, NULL }
+ 	};
+ 	const struct proc_fs_info *fs_infop;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4f6f59b4f22a8..38fc6c8d4f45b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1376,6 +1376,7 @@ extern int send_sigurg(struct fown_struct *fown);
+ #define SB_NODIRATIME	2048	/* Do not update directory access times */
+ #define SB_SILENT	32768
+ #define SB_POSIXACL	(1<<16)	/* VFS does not apply the umask */
++#define SB_INLINECRYPT	(1<<17)	/* Use blk-crypto for encrypted files */
+ #define SB_KERNMOUNT	(1<<22) /* this is a kern_mount call */
+ #define SB_I_VERSION	(1<<23) /* Update inode I_version field */
+ #define SB_LAZYTIME	(1<<25) /* Update the on-disk [acm]times lazily */
 -- 
 2.26.2.303.gf8c07b1a785-goog
 
