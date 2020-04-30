@@ -2,25 +2,25 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 464B3C8300A
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48B52C8300D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 278BC2076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3481A208CA
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726841AbgD3NUO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:14 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60762 "EHLO mx2.suse.de"
+        id S1726971AbgD3NUS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:18 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60960 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726891AbgD3NUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:20:05 -0400
+        id S1726937AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 09:20:11 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 2A04AAF22;
+        by mx2.suse.de (Postfix) with ESMTP id 61991AF3B;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,9 +30,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC v3 19/41] megaraid_sas: avoid using megaraid_lookup_instance()
-Date:   Thu, 30 Apr 2020 15:18:42 +0200
-Message-Id: <20200430131904.5847-20-hare@suse.de>
+Subject: [PATCH RFC v3 31/41] mv_sas: kill mvsas_debug_issue_ssp_tmf()
+Date:   Thu, 30 Apr 2020 15:18:54 +0200
+Message-Id: <20200430131904.5847-32-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,55 +41,118 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When a scsi device is given we can dereference the hostdata
-pointer directly from the scsi host, no need to painstakingly
-looking it up.
+Just a wrapper around mvs_exec_internal_tmf_task(), so call
+it directly and kill the wrapper.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/mvsas/mv_sas.c | 33 +++++++++++----------------------
+ 1 file changed, 11 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b241a0ae9955..43a179fc91f2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2004,9 +2004,7 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev,
- 						 bool is_target_prop)
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index a920eced92ec..937c27777ab9 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1277,11 +1277,14 @@ static void mvs_tmf_timedout(struct timer_list *t)
+ 
+ #define MVS_TASK_TIMEOUT 20
+ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+-			void *parameter, u32 para_len, struct mvs_tmf_task *tmf)
++				      u8 *lun, struct mvs_tmf_task *tmf)
  {
- 	u32 max_io_size_kb = MR_DEFAULT_NVME_MDTS_KB;
--	struct megasas_instance *instance;
+ 	int res, retry;
+ 	struct sas_task *task = NULL;
+ 
++	if (!(dev->tproto & SAS_PROTOCOL_SSP))
++		return TMF_RESP_FUNC_ESUPP;
++
+ 	for (retry = 0; retry < 3; retry++) {
+ 		task = sas_alloc_slow_task(GFP_KERNEL);
+ 		if (!task)
+@@ -1290,7 +1293,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+ 		task->dev = dev;
+ 		task->task_proto = dev->tproto;
+ 
+-		memcpy(&task->ssp_task, parameter, para_len);
++		memcpy(task->ssp_task.LUN, lun, 8);
+ 		task->task_done = mvs_task_done;
+ 
+ 		task->slow_task->timer.function = mvs_tmf_timedout;
+@@ -1351,20 +1354,6 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+ 	return res;
+ }
+ 
+-static int mvs_debug_issue_ssp_tmf(struct domain_device *dev,
+-				u8 *lun, struct mvs_tmf_task *tmf)
+-{
+-	struct sas_ssp_task ssp_task;
+-	if (!(dev->tproto & SAS_PROTOCOL_SSP))
+-		return TMF_RESP_FUNC_ESUPP;
 -
--	instance = megasas_lookup_instance(sdev->host->host_no);
-+	struct megasas_instance *instance = shost_priv(sdev->host);
+-	memcpy(ssp_task.LUN, lun, 8);
+-
+-	return mvs_exec_internal_tmf_task(dev, &ssp_task,
+-				sizeof(ssp_task), tmf);
+-}
+-
+-
+ /*  Standard mandates link reset for ATA  (type 0)
+     and hard reset for SSP (type 1) , only for RECOVERY */
+ static int mvs_debug_I_T_nexus_reset(struct domain_device *dev)
+@@ -1390,7 +1379,7 @@ int mvs_lu_reset(struct domain_device *dev, u8 *lun)
  
- 	/*
- 	 * The RAID firmware may require extended timeouts.
-@@ -2029,11 +2027,10 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev,
- static int megasas_slave_configure(struct scsi_device *sdev)
- {
- 	u16 pd_index = 0;
--	struct megasas_instance *instance;
-+	struct megasas_instance *instance = shost_priv(sdev->host);
- 	int ret_target_prop = DCMD_FAILED;
- 	bool is_target_prop = false;
+ 	tmf_task.tmf = TMF_LU_RESET;
+ 	mvi_dev->dev_status = MVS_DEV_EH;
+-	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
++	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
+ 	if (rc == TMF_RESP_FUNC_COMPLETE) {
+ 		spin_lock_irqsave(&mvi->lock, flags);
+ 		mvs_release_task(mvi, dev);
+@@ -1447,7 +1436,7 @@ int mvs_query_task(struct sas_task *task)
+ 		tmf_task.tmf = TMF_QUERY_TASK;
+ 		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
  
--	instance = megasas_lookup_instance(sdev->host->host_no);
- 	if (instance->pd_list_not_supported) {
- 		if (!MEGASAS_IS_LOGICAL(sdev) && sdev->type == TYPE_DISK) {
- 			pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
-@@ -2069,10 +2066,9 @@ static int megasas_slave_configure(struct scsi_device *sdev)
- static int megasas_slave_alloc(struct scsi_device *sdev)
- {
- 	u16 pd_index = 0;
--	struct megasas_instance *instance ;
-+	struct megasas_instance *instance = shost_priv(sdev->host);
- 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+-		rc = mvs_debug_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
++		rc = mvs_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
+ 		switch (rc) {
+ 		/* The task is still in Lun, release it then */
+ 		case TMF_RESP_FUNC_SUCC:
+@@ -1502,7 +1491,7 @@ int mvs_abort_task(struct sas_task *task)
+ 		tmf_task.tmf = TMF_ABORT_TASK;
+ 		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
  
--	instance = megasas_lookup_instance(sdev->host->host_no);
- 	if (!MEGASAS_IS_LOGICAL(sdev)) {
- 		/*
- 		 * Open the OS scan to the SYSTEM PD
+-		rc = mvs_debug_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
++		rc = mvs_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
+ 
+ 		/* if successful, clear the task and callback forwards.*/
+ 		if (rc == TMF_RESP_FUNC_COMPLETE) {
+@@ -1545,7 +1534,7 @@ int mvs_abort_task_set(struct domain_device *dev, u8 *lun)
+ 	struct mvs_tmf_task tmf_task;
+ 
+ 	tmf_task.tmf = TMF_ABORT_TASK_SET;
+-	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
++	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
+ 
+ 	return rc;
+ }
+@@ -1556,7 +1545,7 @@ int mvs_clear_aca(struct domain_device *dev, u8 *lun)
+ 	struct mvs_tmf_task tmf_task;
+ 
+ 	tmf_task.tmf = TMF_CLEAR_ACA;
+-	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
++	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
+ 
+ 	return rc;
+ }
+@@ -1567,7 +1556,7 @@ int mvs_clear_task_set(struct domain_device *dev, u8 *lun)
+ 	struct mvs_tmf_task tmf_task;
+ 
+ 	tmf_task.tmf = TMF_CLEAR_TASK_SET;
+-	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
++	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
+ 
+ 	return rc;
+ }
 -- 
 2.16.4
 
