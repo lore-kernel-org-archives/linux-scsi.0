@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C723FC8300C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA5B7C8300D
 	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE5C3208C3
+	by mail.kernel.org (Postfix) with ESMTP id D4AF42076D
 	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727093AbgD3NUf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726924AbgD3NUf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 30 Apr 2020 09:20:35 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60694 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60868 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726924AbgD3NUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726935AbgD3NUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 30 Apr 2020 09:20:08 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 4C67AAF31;
+        by mx2.suse.de (Postfix) with ESMTP id 81212AF4C;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,9 +30,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC v3 24/41] megaraid_sas: separate out megasas_prepare_aen()
-Date:   Thu, 30 Apr 2020 15:18:47 +0200
-Message-Id: <20200430131904.5847-25-hare@suse.de>
+Subject: [PATCH RFC v3 22/41] block: implement persistent commands
+Date:   Thu, 30 Apr 2020 15:18:45 +0200
+Message-Id: <20200430131904.5847-23-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,126 +41,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Separate out code for preparing an AEN into a separate function.
+Some LLDDs implement event handling by sending a command to the
+firmware, which then will be completed once the firmware wants
+to register an event.
+So worst case a command is being sent to the firmware then the
+driver initializes, and will be returned once the driver unloads.
+To avoid these commands to block the queues during freezing or
+quiescing this patch implements support for 'persistent' commands,
+which will be excluded from blk_queue_enter() and blk_queue_exit()
+calls.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 85 +++++++++++++++++--------------
- 1 file changed, 46 insertions(+), 39 deletions(-)
+ block/blk-mq.c            | 12 +++++++++---
+ include/linux/blk-mq.h    |  2 ++
+ include/linux/blk_types.h |  4 ++++
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index ddb8df03481f..8498e6a1d67c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6506,6 +6506,51 @@ megasas_get_seq_num(struct megasas_instance *instance,
- 	return ret;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 44482aaed11e..402cf104d183 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -402,9 +402,14 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ {
+ 	struct blk_mq_alloc_data alloc_data = { .flags = flags, .cmd_flags = op };
+ 	struct request *rq;
+-	int ret;
++	int ret = 0;
+ 
+-	ret = blk_queue_enter(q, flags);
++	if (flags & BLK_MQ_REQ_PERSISTENT) {
++		if (blk_queue_dying(q))
++			ret = -ENODEV;
++		alloc_data.cmd_flags |= REQ_PERSISTENT;
++	} else
++		ret = blk_queue_enter(q, flags);
+ 	if (ret)
+ 		return ERR_PTR(ret);
+ 
+@@ -481,7 +486,8 @@ static void __blk_mq_free_request(struct request *rq)
+ 	if (sched_tag != -1)
+ 		blk_mq_put_tag(hctx->sched_tags, ctx, sched_tag);
+ 	blk_mq_sched_restart(hctx);
+-	blk_queue_exit(q);
++	if (!(rq->cmd_flags & REQ_PERSISTENT))
++		blk_queue_exit(q);
  }
  
-+static struct megasas_cmd *
-+megasas_prepare_aen(struct megasas_instance *instance, u32 seq_num,
-+		    union megasas_evt_class_locale *aen)
-+{
-+	struct megasas_cmd *cmd;
-+	struct megasas_dcmd_frame *dcmd;
-+
-+	cmd = megasas_get_cmd(instance);
-+	if (!cmd)
-+		return NULL;
-+
-+	dcmd = &cmd->frame->dcmd;
-+
-+	memset(instance->evt_detail, 0, sizeof(struct megasas_evt_detail));
-+
-+	/*
-+	 * Prepare DCMD for aen registration
-+	 */
-+	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
-+
-+	dcmd->cmd = MFI_CMD_DCMD;
-+	dcmd->cmd_status = 0x0;
-+	dcmd->sge_count = 1;
-+	dcmd->flags = MFI_FRAME_DIR_READ;
-+	dcmd->timeout = 0;
-+	dcmd->pad_0 = 0;
-+	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct megasas_evt_detail));
-+	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_EVENT_WAIT);
-+	dcmd->mbox.w[0] = cpu_to_le32(seq_num);
-+	instance->last_seq_num = seq_num;
-+	dcmd->mbox.w[1] = cpu_to_le32(aen->word);
-+
-+	megasas_set_dma_settings(instance, dcmd, instance->evt_detail_h,
-+				 sizeof(struct megasas_evt_detail));
-+
-+	/*
-+	 * Store reference to the cmd used to register for AEN. When an
-+	 * application wants us to register for AEN, we have to abort this
-+	 * cmd and re-register with a new EVENT LOCALE supplied by that app
-+	 */
-+	instance->aen_cmd = cmd;
-+
-+	return cmd;
-+}
-+
- /**
-  * megasas_register_aen -	Registers for asynchronous event notification
-  * @instance:			Adapter soft state
-@@ -6521,7 +6566,6 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
- {
- 	int ret_val;
- 	struct megasas_cmd *cmd;
--	struct megasas_dcmd_frame *dcmd;
- 	union megasas_evt_class_locale curr_aen;
- 	union megasas_evt_class_locale prev_aen;
+ void blk_mq_free_request(struct request *rq)
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index c186dc25fc1c..a4b02196810c 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -441,6 +441,8 @@ enum {
+ 	BLK_MQ_REQ_INTERNAL	= (__force blk_mq_req_flags_t)(1 << 2),
+ 	/* set RQF_PREEMPT */
+ 	BLK_MQ_REQ_PREEMPT	= (__force blk_mq_req_flags_t)(1 << 3),
++	/* mark request as persistent */
++	BLK_MQ_REQ_PERSISTENT	= (__force blk_mq_req_flags_t)(1 << 4),
+ };
  
-@@ -6590,47 +6634,10 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
- 		}
- 	}
+ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 70254ae11769..898e75e2e8b0 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -336,6 +336,9 @@ enum req_flag_bits {
+ 	/* command specific flags for REQ_OP_WRITE_ZEROES: */
+ 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
  
--	cmd = megasas_get_cmd(instance);
--
-+	cmd = megasas_prepare_aen(instance, seq_num, &curr_aen);
- 	if (!cmd)
- 		return -ENOMEM;
++	/* Persistent firmware command, ignore for q_usage_counter */
++	__REQ_PERSISTENT,
++
+ 	__REQ_HIPRI,
  
--	dcmd = &cmd->frame->dcmd;
--
--	memset(instance->evt_detail, 0, sizeof(struct megasas_evt_detail));
--
--	/*
--	 * Prepare DCMD for aen registration
--	 */
--	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
--
--	dcmd->cmd = MFI_CMD_DCMD;
--	dcmd->cmd_status = 0x0;
--	dcmd->sge_count = 1;
--	dcmd->flags = MFI_FRAME_DIR_READ;
--	dcmd->timeout = 0;
--	dcmd->pad_0 = 0;
--	dcmd->data_xfer_len = cpu_to_le32(sizeof(struct megasas_evt_detail));
--	dcmd->opcode = cpu_to_le32(MR_DCMD_CTRL_EVENT_WAIT);
--	dcmd->mbox.w[0] = cpu_to_le32(seq_num);
--	instance->last_seq_num = seq_num;
--	dcmd->mbox.w[1] = cpu_to_le32(curr_aen.word);
--
--	megasas_set_dma_settings(instance, dcmd, instance->evt_detail_h,
--				 sizeof(struct megasas_evt_detail));
--
--	if (instance->aen_cmd != NULL) {
--		megasas_return_cmd(instance, cmd);
--		return 0;
--	}
--
--	/*
--	 * Store reference to the cmd used to register for AEN. When an
--	 * application wants us to register for AEN, we have to abort this
--	 * cmd and re-register with a new EVENT LOCALE supplied by that app
--	 */
--	instance->aen_cmd = cmd;
--
- 	/*
- 	 * Issue the aen registration frame
- 	 */
+ 	/* for driver use */
+@@ -362,6 +365,7 @@ enum req_flag_bits {
+ #define REQ_CGROUP_PUNT		(1ULL << __REQ_CGROUP_PUNT)
+ 
+ #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
++#define REQ_PERSISTENT		(1ULL << __REQ_PERSISTENT)
+ #define REQ_HIPRI		(1ULL << __REQ_HIPRI)
+ 
+ #define REQ_DRV			(1ULL << __REQ_DRV)
 -- 
 2.16.4
 
