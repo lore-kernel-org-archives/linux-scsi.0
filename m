@@ -7,114 +7,142 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 873EDC47247
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77E73C47257
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:34:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B120214D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:34:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D776214D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:34:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728107AbgD3VeK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 17:34:10 -0400
-Received: from mout.kundenserver.de ([212.227.126.134]:58935 "EHLO
+        id S1728095AbgD3VeI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 17:34:08 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:54945 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727124AbgD3VeI (ORCPT
+        with ESMTP id S1726881AbgD3VeI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2020 17:34:08 -0400
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue010 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MekrN-1iw23r0YOj-00apFq; Thu, 30 Apr 2020 23:33:54 +0200
+ 1MBlgy-1jKPRO2P7c-00CAl1; Thu, 30 Apr 2020 23:33:46 +0200
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     linux-kernel@vger.kernel.org,
-        Intel SCU Linux support <intel-linux-scu@intel.com>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org
-Subject: [PATCH 14/15] isci: avoid gcc-10 zero-length-bounds warning
-Date:   Thu, 30 Apr 2020 23:30:56 +0200
-Message-Id: <20200430213101.135134-15-arnd@arndb.de>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@SteelEye.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org
+Subject: [PATCH 13/15] scsi: sas: avoid gcc-10 zero-length-bounds warning
+Date:   Thu, 30 Apr 2020 23:30:55 +0200
+Message-Id: <20200430213101.135134-14-arnd@arndb.de>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <20200430213101.135134-1-arnd@arndb.de>
 References: <20200430213101.135134-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:7STMyUCnzNFORsOTFhBk+QO1wMd0aCQREYl9i/6g5djgitDUpZ6
- d1Cx+C01pHvqZt+aQoS8ab5L853K/yBtfnhyeugGSlvh7HKQ0PL0VPWymc4AUUryftBYEso
- OUGbikus/NGt12kseU7xwabsGAmxqrTKLyaGQy3cjPJ43HXWsVNNnuwv8J52mfRiGUTqkiy
- p2VouWvfbNWfatj6Qx9KA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:bSMgVGjYJbk=:e3OoHoNyVrETSsb4hMOhs/
- AS0ivt9Xcb53jajnQRqZgv28gM4KSUsPE4/o60hKXktudnmPzwv7RW8Kj4AuCquc4xriwDklb
- xKB4Dxt0vhsg9WTFIyTiatKW/x6/E+2Nk8pLmNKGMItbeiWHT43Hwq6qvUgQzpoxRSAtI8K+c
- AbFuuj3Oam60e+HhGtj5h/CXSHXFlomhGukqvM1te61faABhg4P98Ria19e5qoPauXLU31Ir7
- uyL1FS3S/Pki/1dKyCc7sM6Ze1PWMD8JL99fDJsTBP/GpBfhDzFTAdNrCaOkVW4p63C2XUS1b
- csL4aTU4V1v07Popcn2+JRSVN/QvEmL1z9z+73jfAP3H4oshS/HrD1Ttx26cgkbqiV823bAPX
- ZhkZbjdTbcPzcEB/fsZEHN5B27L5aSM9MkkOVUbub1Ihc+pylki8sChmoY4/67R7FSVVwByPd
- J8Nz/BCBgevzfXFncJ4UPzc9CbgwT3Cbu8rokQWb9XVFywpOkgnas+iJg2fL949baMrHLRuV8
- xV3WIiGzMWBZQFDW8Ac3Ix3EbrfgS1K01zPWZNZFeF+3kf+l8QQ9HsgqFXQbOQ6mx+3uwTYYx
- /ol12IcZtrb7B6wpmHD1NPPwpwrDydQTJ8Dn+CHU4DYt3/OjzXb/4/KvoKwHe3/tLjE7iM6pt
- hrd1WgsjuRO9ZM5+aPlpnjsWOH/mx90oUd8XFgynTRngF97dbGjgqqiobJW+pvbZIV5+ZTjc4
- PM8Qk89cI6yabSO1NdqEAs9oCr5xwcoXbbP27xCCOsgQ1TG8rKyt8vvnm4wbtXZwD607vZvx2
- zUHvdw7DVW21QES1ntvMt/CqXvDLFzW6Q3TYBwZKF6Xm0K41d4=
+X-Provags-ID: V03:K1:Tij/Kp5SwKUhjG30C/bCLnQ40qQlaQDnfS4eB2TiFRLUOoReIgO
+ Uve4poc8gqTByejdFMSMTbXXNX/NxzKv5T9zugR5eHiWbAjhJmGlx+2BBvuxR6JAVdV/1EQ
+ 1fdrcKt+4tTHyB7fAeB6oMluR6RJ2X6imecINN6izUjHLPCJaOZJo26erjiprH8p28GZ8VV
+ cHewMZZqRY9In9Z8ideeA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:4+zXPanuvnw=:PWwkvbgpjR2mhreEII4Fj0
+ CqSLh1dXafv4dZ7n4lWhQ9Ast7nFtTbkCoCR22k+O52B49d8/N/dgtvv+wc4/uao7Pk6D6PoY
+ 4MAtED1dya9H0gMwXzi+/MYaRQWOEJQCejlZgIb8AIqM42rDsIyCZc2/vmgMz7E9AOKf3OCb3
+ QfJBjbtC4KRLTbENxGbVa3yIzGnf7NGcxbQXHQdjm0gNcG5n2G11GdqN1xMIRkzlRLXNtH+z2
+ m8fvwwwW5Vo94Nh2HMan9eA/JFckJ0v7T8GPhcv7PqbRQpHs5KMtd+nAB9cxcSdZFQvlkq+iu
+ Z76R5wuy9yh9baDX+TTAjOmJfFJGm8kAAv66Y8TxNtnwiWEleK3DLohZ5aOY6taEYwWEHoyf8
+ F9mQENzzykPewo8elzI+nU0uMoqX3Y87ec3ou2zLzv76k4ODZC2Ap6hZqVRu9+zAc1qms6nbe
+ OZJz8qr6g3vLdA/BaKkznTf5APh+0ptV5i2wgj3cf+e+4epz8uYeaHV5XUE6iALbU8Hc84RjU
+ T7v5jwXwHJfkM5PWbLrNyQkDOexhxmktY459IHbgNZu7NS0LXROlcqqoD6C1Lmf+PD2Wjnpfj
+ tVE1GCOKdNCZBl1PllJdcO9FVmf1hAJDjNgpj7T3i/mQhV+fNf2s5cDXpvsjbWKiOg7bL7V8O
+ e7ACjlfIDowg2+2JvNaf9xhRmn2pHSyjx7yjOsUUwJxb6HNq/YQDY6Sn0d9z/xFknyO0A6NyX
+ xOGrySVHGtA8OgRFFUMbXF+GuTm41/I4fNG4ecm0QKRYaAVQnCOzYw7FkwYqfm98jDrL5Zwlv
+ djjOEKTF6jRi9Ru+QHILl4EUf2x6uroVjS1LsIYYGWLsZjSTHg=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-gcc-10 warns about accesses to zero-length arrays:
+Two files access the zero-length resp_data[] array, which now
+causes a compiler warning:
 
-drivers/scsi/isci/task.h:125:31: error: array subscript 0 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[0]'} [-Werror=zero-length-bounds]
-  125 |    tmf->resp.resp_iu.resp_data[0],
-      |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-include/linux/dynamic_debug.h:143:2: note: in expansion of macro '__dynamic_func_call'
-  143 |  __dynamic_func_call(__UNIQUE_ID(ddebug), fmt, func, ##__VA_ARGS__)
-      |  ^~~~~~~~~~~~~~~~~~~
-include/linux/dynamic_debug.h:157:2: note: in expansion of macro '_dynamic_func_call'
-  157 |  _dynamic_func_call(fmt,__dynamic_dev_dbg,   \
-      |  ^~~~~~~~~~~~~~~~~~
-include/linux/dev_printk.h:115:2: note: in expansion of macro 'dynamic_dev_dbg'
-  115 |  dynamic_dev_dbg(dev, dev_fmt(fmt), ##__VA_ARGS__)
-      |  ^~~~~~~~~~~~~~~
-drivers/scsi/isci/task.h:111:3: note: in expansion of macro 'dev_dbg'
-  111 |   dev_dbg(&ihost->pdev->dev,
-      |   ^~~~~~~
+drivers/scsi/aic94xx/aic94xx_tmf.c: In function 'asd_get_tmf_resp_tasklet':
+drivers/scsi/aic94xx/aic94xx_tmf.c:291:22: warning: array subscript 3 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[0]'} [-Wzero-length-bounds]
+  291 |   res = ru->resp_data[3];
+      |         ~~~~~~~~~~~~~^~~
 In file included from include/scsi/libsas.h:15,
-                 from drivers/scsi/isci/task.c:59:
-include/scsi/sas.h:326:9: note: while referencing 'resp_data'
-  326 |  u8     resp_data[0];
+                 from drivers/scsi/aic94xx/aic94xx.h:16,
+                 from drivers/scsi/aic94xx/aic94xx_tmf.c:11:
+include/scsi/sas.h:557:9: note: while referencing 'resp_data'
+  557 |  u8     resp_data[0];
+      |         ^~~~~~~~~
+drivers/scsi/libsas/sas_task.c: In function 'sas_ssp_task_response':
+drivers/scsi/libsas/sas_task.c:21:30: warning: array subscript 3 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[0]'} [-Wzero-length-bounds]
+   21 |   tstat->stat = iu->resp_data[3];
+      |                 ~~~~~~~~~~~~~^~~
+In file included from include/scsi/scsi_transport_sas.h:8,
+                 from drivers/scsi/libsas/sas_internal.h:14,
+                 from drivers/scsi/libsas/sas_task.c:3:
+include/scsi/sas.h:557:9: note: while referencing 'resp_data'
+  557 |  u8     resp_data[0];
       |         ^~~~~~~~~
 
-This instance is not a bug, so just work around the warning by
-adding a temporary pointer.
+This should really be a flexible-array member, but the structure
+already has such a member, swapping it out with sense_data[] would
+cause many more warnings elsewhere.
 
+As a workaround, add a temporary pointer that can be accessed without
+a warning.
+
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Fixes: 366ca51f30de ("[SCSI] libsas: abstract STP task status into a function")
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/isci/task.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_tmf.c | 4 +++-
+ drivers/scsi/libsas/sas_task.c     | 3 ++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
-index 8f4531f22ac2..2d556d7b5292 100644
---- a/drivers/scsi/isci/task.h
-+++ b/drivers/scsi/isci/task.h
-@@ -98,6 +98,8 @@ struct isci_tmf {
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index f814026f26fa..a3139f9766c8 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -269,6 +269,7 @@ static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
+ 	struct ssp_frame_hdr *fh;
+ 	struct ssp_response_iu   *ru;
+ 	int res = TMF_RESP_FUNC_FAILED;
++	u8 *resp;
  
- static inline void isci_print_tmf(struct isci_host *ihost, struct isci_tmf *tmf)
+ 	ASD_DPRINTK("tmf resp tasklet\n");
+ 
+@@ -287,8 +288,9 @@ static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
+ 	fh = edb->vaddr + 16;
+ 	ru = edb->vaddr + 16 + sizeof(*fh);
+ 	res = ru->status;
++	resp = ru->resp_data;
+ 	if (ru->datapres == 1)	  /* Response data present */
+-		res = ru->resp_data[3];
++		res = resp[3];
+ #if 0
+ 	ascb->tag = fh->tag;
+ #endif
+diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
+index e2d42593ce52..4cd2f9611c4a 100644
+--- a/drivers/scsi/libsas/sas_task.c
++++ b/drivers/scsi/libsas/sas_task.c
+@@ -12,13 +12,14 @@ void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+ 			   struct ssp_response_iu *iu)
  {
-+	u8 *resp = tmf->resp.resp_iu.resp_data;
-+
- 	if (SAS_PROTOCOL_SATA == tmf->proto)
- 		dev_dbg(&ihost->pdev->dev,
- 			"%s: status = %x\n"
-@@ -122,10 +124,7 @@ static inline void isci_print_tmf(struct isci_host *ihost, struct isci_tmf *tmf)
- 			tmf->resp.resp_iu.datapres,
- 			tmf->resp.resp_iu.status,
- 			be32_to_cpu(tmf->resp.resp_iu.response_data_len),
--			tmf->resp.resp_iu.resp_data[0],
--			tmf->resp.resp_iu.resp_data[1],
--			tmf->resp.resp_iu.resp_data[2],
--			tmf->resp.resp_iu.resp_data[3]);
-+			resp[0], resp[1], resp[2], resp[3]);
- }
+ 	struct task_status_struct *tstat = &task->task_status;
++	u8 *resp = iu->resp_data;
  
+ 	tstat->resp = SAS_TASK_COMPLETE;
  
+ 	if (iu->datapres == 0)
+ 		tstat->stat = iu->status;
+ 	else if (iu->datapres == 1)
+-		tstat->stat = iu->resp_data[3];
++		tstat->stat = resp[3];
+ 	else if (iu->datapres == 2) {
+ 		tstat->stat = SAM_STAT_CHECK_CONDITION;
+ 		tstat->buf_valid_size =
 -- 
 2.26.0
 
