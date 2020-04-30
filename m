@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48B52C8300D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7DBC8300E
 	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3481A208CA
+	by mail.kernel.org (Postfix) with ESMTP id 483EC20870
 	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726971AbgD3NUS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:18 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60960 "EHLO mx2.suse.de"
+        id S1727080AbgD3NUT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:19 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60974 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726937AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726965AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 30 Apr 2020 09:20:11 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 61991AF3B;
+        by mx2.suse.de (Postfix) with ESMTP id B588CAF72;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,9 +30,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC v3 31/41] mv_sas: kill mvsas_debug_issue_ssp_tmf()
-Date:   Thu, 30 Apr 2020 15:18:54 +0200
-Message-Id: <20200430131904.5847-32-hare@suse.de>
+Subject: [PATCH RFC v3 21/41] megaraid_sas: megaraid_sas: reshuffle SCSI host allocation
+Date:   Thu, 30 Apr 2020 15:18:44 +0200
+Message-Id: <20200430131904.5847-22-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,118 +41,163 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Just a wrapper around mvs_exec_internal_tmf_task(), so call
-it directly and kill the wrapper.
+Reshuffle SCSI host allocation such that the scsi host device
+can be allocated prior to the first command being sent.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/mvsas/mv_sas.c | 33 +++++++++++----------------------
- 1 file changed, 11 insertions(+), 22 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |  3 +++
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 36 ++++++++++++++++++++---------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  5 ++++
+ 3 files changed, 33 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index a920eced92ec..937c27777ab9 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1277,11 +1277,14 @@ static void mvs_tmf_timedout(struct timer_list *t)
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index d295a2036588..b47306a66650 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2677,6 +2677,9 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 	u8 crash_buf_state);
+ void megasas_free_host_crash_buffer(struct megasas_instance *instance);
  
- #define MVS_TASK_TIMEOUT 20
- static int mvs_exec_internal_tmf_task(struct domain_device *dev,
--			void *parameter, u32 para_len, struct mvs_tmf_task *tmf)
-+				      u8 *lun, struct mvs_tmf_task *tmf)
- {
- 	int res, retry;
- 	struct sas_task *task = NULL;
- 
-+	if (!(dev->tproto & SAS_PROTOCOL_SSP))
-+		return TMF_RESP_FUNC_ESUPP;
++int megasas_io_attach(struct megasas_instance *instance);
++void megasas_io_detach(struct megasas_instance *instance);
 +
- 	for (retry = 0; retry < 3; retry++) {
- 		task = sas_alloc_slow_task(GFP_KERNEL);
- 		if (!task)
-@@ -1290,7 +1293,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
- 		task->dev = dev;
- 		task->task_proto = dev->tproto;
+ void megasas_return_cmd_fusion(struct megasas_instance *instance,
+ 	struct megasas_cmd_fusion *cmd);
+ int megasas_issue_blocked_cmd(struct megasas_instance *instance,
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 00a1d5caf7d5..ddb8df03481f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5468,6 +5468,13 @@ megasas_init_adapter_mfi(struct megasas_instance *instance)
+ 		goto fail_reply_queue;
+ 	}
  
--		memcpy(&task->ssp_task, parameter, para_len);
-+		memcpy(task->ssp_task.LUN, lun, 8);
- 		task->task_done = mvs_task_done;
++	/*
++	 * Notify the mid-layer about the new controller; do this
++	 * early so that we can allocate internal commands
++	 */
++	if (megasas_io_attach(instance))
++		goto fail_io_attach;
++
+ 	if (megasas_issue_init_mfi(instance))
+ 		goto fail_fw_init;
  
- 		task->slow_task->timer.function = mvs_tmf_timedout;
-@@ -1351,20 +1354,6 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
- 	return res;
+@@ -5490,7 +5497,8 @@ megasas_init_adapter_mfi(struct megasas_instance *instance)
+ 	return 0;
+ 
+ fail_fw_init:
+-
++	megasas_io_detach(instance);
++fail_io_attach:
+ 	dma_free_coherent(&instance->pdev->dev, reply_q_sz,
+ 			    instance->reply_queue, instance->reply_queue_h);
+ fail_reply_queue:
+@@ -6340,6 +6348,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	if (tmp_sectors && (instance->max_sectors_per_req > tmp_sectors))
+ 		instance->max_sectors_per_req = tmp_sectors;
+ 
++	megasas_set_max_sectors(instance);
++
+ 	/* Check for valid throttlequeuedepth module parameter */
+ 	if (throttlequeuedepth &&
+ 			throttlequeuedepth <= instance->max_scsi_cmds)
+@@ -6757,7 +6767,7 @@ static int megasas_start_aen(struct megasas_instance *instance)
+  * megasas_io_attach -	Attaches this driver to SCSI mid-layer
+  * @instance:		Adapter soft state
+  */
+-static int megasas_io_attach(struct megasas_instance *instance)
++int megasas_io_attach(struct megasas_instance *instance)
+ {
+ 	struct Scsi_Host *host = instance->host;
+ 
+@@ -6767,7 +6777,8 @@ static int megasas_io_attach(struct megasas_instance *instance)
+ 	host->can_queue = instance->max_scsi_cmds;
+ 	host->sg_tablesize = instance->max_num_sge;
+ 
+-	megasas_set_max_sectors(instance);
++	/* Will be adjusted later */
++	host->max_sectors = MEGASAS_MAX_SECTORS_IEEE;
+ 
+ 	host->cmd_per_lun = MEGASAS_DEFAULT_CMD_PER_LUN;
+ 	host->max_channel = MEGASAS_MAX_CHANNELS - 1;
+@@ -6788,6 +6799,15 @@ static int megasas_io_attach(struct megasas_instance *instance)
+ 	return 0;
  }
  
--static int mvs_debug_issue_ssp_tmf(struct domain_device *dev,
--				u8 *lun, struct mvs_tmf_task *tmf)
--{
--	struct sas_ssp_task ssp_task;
--	if (!(dev->tproto & SAS_PROTOCOL_SSP))
--		return TMF_RESP_FUNC_ESUPP;
++/**
++ * megasas_io_detach -	Detaches this driver from the SCSI mid-layer
++ * @instance:		Adapter soft state
++ */
++void megasas_io_detach(struct megasas_instance *instance)
++{
++	scsi_remove_host(instance->host);
++}
++
+ /**
+  * megasas_set_dma_mask -	Set DMA mask for supported controllers
+  *
+@@ -7373,12 +7393,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = instance;
+ 	megasas_mgmt_info.max_index++;
+ 
+-	/*
+-	 * Register with SCSI mid-layer
+-	 */
+-	if (megasas_io_attach(instance))
+-		goto fail_io_attach;
 -
--	memcpy(ssp_task.LUN, lun, 8);
--
--	return mvs_exec_internal_tmf_task(dev, &ssp_task,
--				sizeof(ssp_task), tmf);
--}
--
--
- /*  Standard mandates link reset for ATA  (type 0)
-     and hard reset for SSP (type 1) , only for RECOVERY */
- static int mvs_debug_I_T_nexus_reset(struct domain_device *dev)
-@@ -1390,7 +1379,7 @@ int mvs_lu_reset(struct domain_device *dev, u8 *lun)
+ 	instance->unload = 0;
+ 	/*
+ 	 * Trigger SCSI to scan our drives
+@@ -7404,7 +7418,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	return 0;
  
- 	tmf_task.tmf = TMF_LU_RESET;
- 	mvi_dev->dev_status = MVS_DEV_EH;
--	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
-+	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
- 	if (rc == TMF_RESP_FUNC_COMPLETE) {
- 		spin_lock_irqsave(&mvi->lock, flags);
- 		mvs_release_task(mvi, dev);
-@@ -1447,7 +1436,7 @@ int mvs_query_task(struct sas_task *task)
- 		tmf_task.tmf = TMF_QUERY_TASK;
- 		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
+ fail_start_aen:
+-fail_io_attach:
+ 	megasas_mgmt_info.count--;
+ 	megasas_mgmt_info.max_index--;
+ 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
+@@ -7802,7 +7815,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
  
--		rc = mvs_debug_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
-+		rc = mvs_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
- 		switch (rc) {
- 		/* The task is still in Lun, release it then */
- 		case TMF_RESP_FUNC_SUCC:
-@@ -1502,7 +1491,7 @@ int mvs_abort_task(struct sas_task *task)
- 		tmf_task.tmf = TMF_ABORT_TASK;
- 		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
+ 	if (instance->fw_crash_state != UNAVAILABLE)
+ 		megasas_free_host_crash_buffer(instance);
+-	scsi_remove_host(instance->host);
+ 	instance->unload = 1;
  
--		rc = mvs_debug_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
-+		rc = mvs_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
+ 	if (megasas_wait_for_adapter_operational(instance))
+@@ -7812,6 +7824,8 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
  
- 		/* if successful, clear the task and callback forwards.*/
- 		if (rc == TMF_RESP_FUNC_COMPLETE) {
-@@ -1545,7 +1534,7 @@ int mvs_abort_task_set(struct domain_device *dev, u8 *lun)
- 	struct mvs_tmf_task tmf_task;
+ skip_firing_dcmds:
++	megasas_io_detach(instance);
++
+ 	/* cancel the delayed work if this work still in queue*/
+ 	if (instance->ev != NULL) {
+ 		struct megasas_aen_event *ev = instance->ev;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index bec3d4cca74f..483146051957 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1857,6 +1857,9 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 	if (megasas_alloc_cmds_fusion(instance))
+ 		goto fail_alloc_cmds;
  
- 	tmf_task.tmf = TMF_ABORT_TASK_SET;
--	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
-+	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
++	if (megasas_io_attach(instance))
++		goto fail_io_attach;
++
+ 	if (megasas_ioc_init_fusion(instance)) {
+ 		status_reg = instance->instancet->read_fw_status_reg(instance);
+ 		if (((status_reg & MFI_STATE_MASK) == MFI_STATE_FAULT) &&
+@@ -1895,6 +1898,8 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 	return 0;
  
- 	return rc;
- }
-@@ -1556,7 +1545,7 @@ int mvs_clear_aca(struct domain_device *dev, u8 *lun)
- 	struct mvs_tmf_task tmf_task;
- 
- 	tmf_task.tmf = TMF_CLEAR_ACA;
--	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
-+	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
- 
- 	return rc;
- }
-@@ -1567,7 +1556,7 @@ int mvs_clear_task_set(struct domain_device *dev, u8 *lun)
- 	struct mvs_tmf_task tmf_task;
- 
- 	tmf_task.tmf = TMF_CLEAR_TASK_SET;
--	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
-+	rc = mvs_exec_internal_tmf_task(dev, lun, &tmf_task);
- 
- 	return rc;
- }
+ fail_ioc_init:
++	megasas_io_detach(instance);
++fail_io_attach:
+ 	megasas_free_cmds_fusion(instance);
+ fail_alloc_cmds:
+ 	megasas_free_cmds(instance);
 -- 
 2.16.4
 
