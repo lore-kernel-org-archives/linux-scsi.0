@@ -2,112 +2,143 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DB16C83001
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 05:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 146F5C83006
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 06:46:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57CB82082E
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 05:40:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mnX7Cg+i"
+	by mail.kernel.org (Postfix) with ESMTP id E1B5221BE5
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 06:46:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588229184;
+	bh=S8VnrcC8lJzFcPUaXFPCvyn46mx7gp2QMp+KtHDb6+E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=2I1eNsHtspNvFyR4zY5fDYBpqbmf4NvqPQsc6FdmcKK2U17vd4TEVIqearymgjjwI
+	 8kp2MIR+p85Fc9SoNCPLOLeWa/5L+hUsq/ba31JrZgu735TcC19gn83yKBiBMi86tv
+	 ZkW7Wi6y3ois97da99wXV0JV8hBXj0okUKPklz94=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726433AbgD3Fkq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 01:40:46 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:30562 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726428AbgD3Fkp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 01:40:45 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588225245; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=/s8xOLocV/YTRQ/Nzq+NBZkj5U9IzFR+p0Ifn/H2Edo=;
- b=mnX7Cg+iQBgIFgzMQIScYwJvmGId1zr+BXVyPj09L0ibHfrPmnV+iFR2a8sMABCyRyvgxucJ
- NLTxDj/03hRTRELh629MkclZGeDLREC5Fe8uSxES5yyM6C8Jw3A5JCF/DPLslAUjJSx2xn6I
- Cnp+UHb01oN95nsFJ2du6i9ZMQ4=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eaa64dc.7f707f237e30-smtp-out-n01;
- Thu, 30 Apr 2020 05:40:44 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 24818C44791; Thu, 30 Apr 2020 05:40:44 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id S1726499AbgD3GqY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 02:46:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49308 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726180AbgD3GqY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 02:46:24 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4EF4BC433CB;
-        Thu, 30 Apr 2020 05:40:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B66C8214D8;
+        Thu, 30 Apr 2020 06:46:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588229183;
+        bh=S8VnrcC8lJzFcPUaXFPCvyn46mx7gp2QMp+KtHDb6+E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AnHSkbJzWg0a+1u5u9ySsA8JJGJo6Pq7XgC03hxGia+a3xwYv0092zLFCF3QnpAmA
+         R4z1iy7z2j2vd4IB8SXqek9ackjWIhsx9Xkdt4njmPINY3adLhUHAJbz5HoRzHDybp
+         vR9e01b8EZprxcbpv7WK50etU4yWaGtZxHT7uueg=
+Date:   Wed, 29 Apr 2020 23:46:21 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v11 02/12] block: Keyslot Manager for Inline Encryption
+Message-ID: <20200430064621.GA16238@sol.localdomain>
+References: <20200429072121.50094-1-satyat@google.com>
+ <20200429072121.50094-3-satyat@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 30 Apr 2020 13:40:43 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        stanley.chu@mediatek.com, alim.akhtar@samsung.com,
-        beanhuo@micron.com, Avri.Altman@wdc.com,
-        bjorn.andersson@linaro.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 1/1] scsi: pm: Balance pm_only counter of request queue
- during system resume
-In-Reply-To: <9e15123e-4315-15cd-3d23-2df6144bd376@acm.org>
-References: <1588219805-25794-1-git-send-email-cang@codeaurora.org>
- <9e15123e-4315-15cd-3d23-2df6144bd376@acm.org>
-Message-ID: <1ef85ee212bee679f7b2927cbbc79cba@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200429072121.50094-3-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+A few very minor comments:
 
-On 2020-04-30 13:08, Bart Van Assche wrote:
-> On 2020-04-29 21:10, Can Guo wrote:
->> During system resume, scsi_resume_device() decreases a request queue's
->> pm_only counter if the scsi device was quiesced before. But after 
->> that,
->> if the scsi device's RPM status is RPM_SUSPENDED, the pm_only counter 
->> is
->> still held (non-zero). Current scsi resume hook only sets the RPM 
->> status
->> of the scsi device and its request queue to RPM_ACTIVE, but leaves the
->> pm_only counter unchanged. This may make the request queue's pm_only
->> counter remain non-zero after resume hook returns, hence those who are
->> waiting on the mq_freeze_wq would never be woken up. Fix this by 
->> calling
->> blk_post_runtime_resume() if pm_only is non-zero to balance the 
->> pm_only
->> counter which is held by the scsi device's RPM ops.
-> 
-> How was this issue discovered? How has this patch been tested?
-> 
-> Thanks,
-> 
-> Bart.
+On Wed, Apr 29, 2020 at 07:21:11AM +0000, Satya Tangirala wrote:
+> diff --git a/block/keyslot-manager.c b/block/keyslot-manager.c
+> new file mode 100644
+> index 0000000000000..b584723b392ad
+> --- /dev/null
+> +++ b/block/keyslot-manager.c
+> @@ -0,0 +1,380 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright 2019 Google LLC
+> + */
+> +
+> +/**
+> + * DOC: The Keyslot Manager
+> + *
+> + * Many devices with inline encryption support have a limited number of "slots"
+> + * into which encryption contexts may be programmed, and requests can be tagged
+> + * with a slot number to specify the key to use for en/decryption.
+> + *
+> + * As the number of slots are limited, and programming keys is expensive on
+> + * many inline encryption hardware, we don't want to program the same key into
+> + * multiple slots - if multiple requests are using the same key, we want to
+> + * program just one slot with that key and use that slot for all requests.
+> + *
+> + * The keyslot manager manages these keyslots appropriately, and also acts as
+> + * an abstraction between the inline encryption hardware and the upper layers.
+> + *
+> + * Lower layer devices will set up a keyslot manager in their request queue
+> + * and tell it how to perform device specific operations like programming/
+> + * evicting keys from keyslots.
+> + *
+> + * Upper layers will call blk_ksm_get_slot_for_key() to program a
+> + * key into some slot in the inline encryption hardware.
+> + */
+> +#include <crypto/algapi.h>
 
-As the issue was found after system resumes, so the issue was discovered
-during system suspend/resume test, and it is very easy to be replicated.
-After system resumes, if this issue hits some scsi devices, all bios 
-sent
-to their request queues are blocked, which may cause a system hang if 
-the
-scsi devices are vital to system functionality.
+Now that this file doesn't use crypto_memneq(), the include of <crypto/algapi.h>
+can be removed.
 
-To make sure the patch work well, we have tested system suspend/resume
-and made sure no system hang happen due to request queues got blocked
-by imbalanced pm_only counter.
+> +/**
+> + * blk_ksm_get_slot_for_key() - Program a key into a keyslot.
+> + * @ksm: The keyslot manager to program the key into.
+> + * @key: Pointer to the key object to program, including the raw key, crypto
+> + *	 mode, and data unit size.
+> + * @keyslot: A pointer to return the pointer of the allocated keyslot.
+> + *
+> + * Get a keyslot that's been programmed with the specified key.  If one already
+> + * exists, return it with incremented refcount.  Otherwise, wait for a keyslot
+> + * to become idle and program it.
+> + *
+> + * Context: Process context. Takes and releases ksm->lock.
+> + * Return: BLK_STS_OK on success (and keyslot is set to the pointer of the
+> + *	   allocated keyslot), or some other blk_status_t otherwise (and
+> + *	   keyslot is set to NULL).
+> + */
+> +blk_status_t blk_ksm_get_slot_for_key(struct blk_keyslot_manager *ksm,
+> +				      const struct blk_crypto_key *key,
+> +				      struct blk_ksm_keyslot **slot_ptr)
 
-Thanks,
+The comment should say @slot_ptr, not @keyslot.  You can find kerneldoc warnings
+using 'scripts/kernel-doc -v -none $file'.
 
-Can Guo.
+> +/**
+> + * blk_ksm_crypto_cfg_supported() - Find out if the crypto_mode, dusize, dun
+> + *				    bytes of a crypto_config are supported by a
+> + *				    ksm.
+
+IMO, shorten this a bit to something like "Find out if a crypto configuration is
+supported by a ksm", so that less of the comment becomes outdated when someone
+adds a new field.
+
+> + * @ksm: The keyslot manager to check
+> + * @cfg: The crypto configuration to check for.
+> + *
+> + * Checks for crypto_mode/data unit size/dun bytes support.
+> + *
+> + * Return: Whether or not this ksm supports the specified crypto key.
+
+"config", not "key".
+
+- Eric
