@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 828C6C83011
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B7DC83010
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 601942076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 381292076D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726965AbgD3NUT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:19 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60756 "EHLO mx2.suse.de"
+        id S1727069AbgD3NUR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:17 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60976 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726955AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726962AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 30 Apr 2020 09:20:11 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 95B0AAF69;
+        by mx2.suse.de (Postfix) with ESMTP id BA82CAF7C;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,10 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC v3 32/41] pm8001: kill pm8001_issue_ssp_tmf()
-Date:   Thu, 30 Apr 2020 15:18:55 +0200
-Message-Id: <20200430131904.5847-33-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH RFC v3 29/41] snic: use reserved commands
+Date:   Thu, 30 Apr 2020 15:18:52 +0200
+Message-Id: <20200430131904.5847-30-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,138 +41,420 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Just a wrapper around pm8001_exec_internal_tmf_task(), so call it
-directly and kill the wrapper.
+From: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Use a reserved command for host and device reset.
+
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 42 ++++++++++++++++------------------------
- 1 file changed, 17 insertions(+), 25 deletions(-)
+ drivers/scsi/snic/snic.h      |   4 +-
+ drivers/scsi/snic/snic_main.c |   8 +++
+ drivers/scsi/snic/snic_scsi.c | 140 +++++++++++++++++-------------------------
+ 3 files changed, 66 insertions(+), 86 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index b7cbc312843e..eb645e4a5940 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -700,16 +700,15 @@ static void pm8001_tmf_timedout(struct timer_list *t)
- /**
-   * pm8001_exec_internal_tmf_task - execute some task management commands.
-   * @dev: the wanted device.
-+  * @lun: the logical unit number of the device
-   * @tmf: which task management wanted to be take.
--  * @para_len: para_len.
--  * @parameter: ssp task parameter.
-   *
-   * when errors or exception happened, we may want to do something, for example
-   * abort the issued task which result in this execption, it is done by calling
-   * this function, note it is also with the task execute interface.
-   */
- static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
--	void *parameter, u32 para_len, struct pm8001_tmf_task *tmf)
-+	u8 *lun, struct pm8001_tmf_task *tmf)
+diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
+index de0ab5fc8474..7dc529ae8a90 100644
+--- a/drivers/scsi/snic/snic.h
++++ b/drivers/scsi/snic/snic.h
+@@ -59,7 +59,6 @@
+  */
+ #define SNIC_TAG_ABORT		BIT(30)		/* Tag indicating abort */
+ #define SNIC_TAG_DEV_RST	BIT(29)		/* Tag for device reset */
+-#define SNIC_TAG_IOCTL_DEV_RST	BIT(28)		/* Tag for User Device Reset */
+ #define SNIC_TAG_MASK		(BIT(24) - 1)	/* Mask for lookup */
+ #define SNIC_NO_TAG		-1
+ 
+@@ -278,6 +277,7 @@ struct snic {
+ 
+ 	/* Scsi Host info */
+ 	struct Scsi_Host *shost;
++	struct scsi_device *shost_dev;
+ 
+ 	/* vnic related structures */
+ 	struct vnic_dev_bar bar0;
+@@ -380,7 +380,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+ int snic_abort_cmd(struct scsi_cmnd *);
+ int snic_device_reset(struct scsi_cmnd *);
+ int snic_host_reset(struct scsi_cmnd *);
+-int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
++int snic_reset(struct Scsi_Host *);
+ void snic_shutdown_scsi_cleanup(struct snic *);
+ 
+ 
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index 14f4ce665e58..f520da64ec8e 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -303,6 +303,7 @@ static int
+ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
  {
- 	int res, retry;
- 	struct sas_task *task = NULL;
-@@ -717,6 +716,9 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 	struct pm8001_device *pm8001_dev = dev->lldd_dev;
- 	DECLARE_COMPLETION_ONSTACK(completion_setstate);
+ 	int ret = 0;
++	struct snic *snic = shost_priv(shost);
  
-+	if (!(dev->tproto & SAS_PROTOCOL_SSP))
-+		return TMF_RESP_FUNC_ESUPP;
-+
- 	for (retry = 0; retry < 3; retry++) {
- 		task = sas_alloc_slow_task(GFP_KERNEL);
- 		if (!task)
-@@ -724,7 +726,7 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 
- 		task->dev = dev;
- 		task->task_proto = dev->tproto;
--		memcpy(&task->ssp_task, parameter, para_len);
-+		memcpy(task->ssp_task.LUN, lun, 8);
- 		task->task_done = pm8001_task_done;
- 		task->slow_task->timer.function = pm8001_tmf_timedout;
- 		task->slow_task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
-@@ -909,18 +911,6 @@ void pm8001_dev_gone(struct domain_device *dev)
- 	pm8001_dev_gone_notify(dev);
- }
- 
--static int pm8001_issue_ssp_tmf(struct domain_device *dev,
--	u8 *lun, struct pm8001_tmf_task *tmf)
--{
--	struct sas_ssp_task ssp_task;
--	if (!(dev->tproto & SAS_PROTOCOL_SSP))
--		return TMF_RESP_FUNC_ESUPP;
--
--	strncpy((u8 *)&ssp_task.LUN, lun, 8);
--	return pm8001_exec_internal_tmf_task(dev, &ssp_task, sizeof(ssp_task),
--		tmf);
--}
--
- /* retry commands by ha, by task and/or by device */
- void pm8001_open_reject_retry(
- 	struct pm8001_hba_info *pm8001_ha,
-@@ -1127,7 +1117,7 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun)
- 		wait_for_completion(&completion_setstate);
- 	} else {
- 		tmf_task.tmf = TMF_LU_RESET;
--		rc = pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
-+		rc = pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
+ 	ret = scsi_add_host(shost, &pdev->dev);
+ 	if (ret) {
+@@ -313,6 +314,12 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
+ 		return ret;
  	}
- 	/* If failed, fall-through I_T_Nexus reset */
- 	PM8001_EH_DBG(pm8001_ha, pm8001_printk("for device[%x]:rc=%d\n",
-@@ -1162,10 +1152,10 @@ int pm8001_query_task(struct sas_task *task)
- 		for (i = 0; i < 16; i++)
- 			printk(KERN_INFO "%02x ", cmnd->cmnd[i]);
- 		printk(KERN_INFO "]\n");
--		tmf_task.tmf = 	TMF_QUERY_TASK;
-+		tmf_task.tmf = TMF_QUERY_TASK;
- 		tmf_task.tag_of_task_to_be_managed = tag;
  
--		rc = pm8001_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
-+		rc = pm8001_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
- 		switch (rc) {
- 		/* The task is still in Lun, release it then */
- 		case TMF_RESP_FUNC_SUCC:
-@@ -1225,9 +1215,11 @@ int pm8001_abort_task(struct sas_task *task)
- 		int_to_scsilun(cmnd->device->lun, &lun);
- 		tmf_task.tmf = TMF_ABORT_TASK;
- 		tmf_task.tag_of_task_to_be_managed = tag;
--		rc = pm8001_issue_ssp_tmf(dev, lun.scsi_lun, &tmf_task);
--		pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
--			pm8001_dev->sas_device, 0, tag);
-+		rc = pm8001_exec_internal_tmf_task(dev, lun.scsi_lun,
-+						   &tmf_task);
-+		if (rc == TMF_RESP_FUNC_SUCC)
-+			pm8001_exec_internal_task_abort(pm8001_ha, pm8001_dev,
-+				pm8001_dev->sas_device, 0, tag);
- 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
- 		task->task_proto & SAS_PROTOCOL_STP) {
- 		if (pm8001_ha->chip_id == chip_8006) {
-@@ -1337,7 +1329,7 @@ int pm8001_abort_task_set(struct domain_device *dev, u8 *lun)
- 	struct pm8001_tmf_task tmf_task;
++	snic->shost_dev = scsi_get_virtual_dev(shost, 1, 0);
++	if (!snic->shost_dev) {
++		SNIC_HOST_ERR(shost,
++			      "snic: scsi_get_virtual_dev failed\n");
++		return -ENOMEM;
++	}
+ 	SNIC_BUG_ON(shost->work_q != NULL);
+ 	snprintf(shost->work_q_name, sizeof(shost->work_q_name), "scsi_wq_%d",
+ 		 shost->host_no);
+@@ -385,6 +392,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  
- 	tmf_task.tmf = TMF_ABORT_TASK_SET;
--	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
-+	return pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
- }
+ 		goto prob_end;
+ 	}
++	shost->nr_reserved_cmds = 2;
+ 	snic = shost_priv(shost);
+ 	snic->shost = shost;
  
- int pm8001_clear_aca(struct domain_device *dev, u8 *lun)
-@@ -1345,7 +1337,7 @@ int pm8001_clear_aca(struct domain_device *dev, u8 *lun)
- 	struct pm8001_tmf_task tmf_task;
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index b3650c989ed4..d42e178bfab3 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -77,7 +77,7 @@ static const char * const snic_io_status_str[] = {
+ 	[SNIC_STAT_FATAL_ERROR]	= "SNIC_STAT_FATAL_ERROR",
+ };
  
- 	tmf_task.tmf = TMF_CLEAR_ACA;
--	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
-+	return pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
- }
+-static void snic_scsi_cleanup(struct snic *, int);
++static void snic_scsi_cleanup(struct snic *);
  
- int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
-@@ -1358,6 +1350,6 @@ int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
- 		pm8001_printk("I_T_L_Q clear task set[%x]\n",
- 		pm8001_dev->device_id));
- 	tmf_task.tmf = TMF_CLEAR_TASK_SET;
--	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
-+	return pm8001_exec_internal_tmf_task(dev, lun, &tmf_task);
- }
+ const char *
+ snic_state_to_str(unsigned int state)
+@@ -867,7 +867,6 @@ snic_process_itmf_cmpl(struct snic *snic,
+ 		break;
  
+ 	case SNIC_TAG_DEV_RST:
+-	case SNIC_TAG_DEV_RST | SNIC_TAG_IOCTL_DEV_RST:
+ 		snic_proc_dr_cmpl_locked(snic, fwreq, cmpl_stat, cmnd_id, sc);
+ 		spin_unlock_irqrestore(io_lock, flags);
+ 		ret = 0;
+@@ -920,7 +919,6 @@ static void
+ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ {
+ 	struct scsi_cmnd  *sc = NULL;
+-	struct snic_req_info *rqi = NULL;
+ 	struct snic_itmf_cmpl *itmf_cmpl = NULL;
+ 	ulong ctx;
+ 	u32 cmnd_id;
+@@ -938,14 +936,6 @@ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 		      "Itmf_cmpl: nterm %u , flags 0x%x\n",
+ 		      le32_to_cpu(itmf_cmpl->nterminated), itmf_cmpl->flags);
+ 
+-	/* spl case, dev reset issued through ioctl */
+-	if (cmnd_id & SNIC_TAG_IOCTL_DEV_RST) {
+-		rqi = (struct snic_req_info *) ctx;
+-		sc = rqi->sc;
+-
+-		goto ioctl_dev_rst;
+-	}
+-
+ 	if ((cmnd_id & SNIC_TAG_MASK) >= snic->max_tag_id) {
+ 		SNIC_HOST_ERR(snic->shost,
+ 			      "Itmf_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
+@@ -958,7 +948,6 @@ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 	sc = scsi_host_find_tag(snic->shost, cmnd_id & SNIC_TAG_MASK);
+ 	WARN_ON_ONCE(!sc);
+ 
+-ioctl_dev_rst:
+ 	if (!sc) {
+ 		atomic64_inc(&snic->s_stats.io.sc_null);
+ 		SNIC_HOST_ERR(snic->shost,
+@@ -974,13 +963,13 @@ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 
+ 
+ static void
+-snic_hba_reset_scsi_cleanup(struct snic *snic, struct scsi_cmnd *sc)
++snic_hba_reset_scsi_cleanup(struct snic *snic)
+ {
+ 	struct snic_stats *st = &snic->s_stats;
+ 	long act_ios = 0, act_fwreqs = 0;
+ 
+ 	SNIC_SCSI_DBG(snic->shost, "HBA Reset scsi cleanup.\n");
+-	snic_scsi_cleanup(snic, snic_cmd_tag(sc));
++	snic_scsi_cleanup(snic);
+ 
+ 	/* Update stats on pending IOs */
+ 	act_ios = atomic64_read(&st->io.active);
+@@ -1021,17 +1010,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 		      "reset_cmpl: type = %x, hdr_stat = %x, cmnd_id = %x, hid = %x, ctx = %lx\n",
+ 		      typ, hdr_stat, cmnd_id, hid, ctx);
+ 
+-	/* spl case, host reset issued through ioctl */
+-	if (cmnd_id == SCSI_NO_TAG) {
+-		rqi = (struct snic_req_info *) ctx;
+-		SNIC_HOST_INFO(snic->shost,
+-			       "reset_cmpl:Tag %d ctx %lx cmpl stat %s\n",
+-			       cmnd_id, ctx, snic_io_status_to_str(hdr_stat));
+-		sc = rqi->sc;
+-
+-		goto ioctl_hba_rst;
+-	}
+-
+ 	if (cmnd_id >= snic->max_tag_id) {
+ 		SNIC_HOST_ERR(snic->shost,
+ 			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
+@@ -1042,7 +1020,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 	}
+ 
+ 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
+-ioctl_hba_rst:
+ 	if (!sc) {
+ 		atomic64_inc(&snic->s_stats.io.sc_null);
+ 		SNIC_HOST_ERR(snic->shost,
+@@ -1089,7 +1066,7 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 	spin_unlock_irqrestore(io_lock, flags);
+ 
+ 	/* scsi cleanup */
+-	snic_hba_reset_scsi_cleanup(snic, sc);
++	snic_hba_reset_scsi_cleanup(snic);
+ 
+ 	SNIC_BUG_ON(snic_get_state(snic) != SNIC_OFFLINE &&
+ 		    snic_get_state(snic) != SNIC_FWRESET);
+@@ -2150,7 +2127,7 @@ snic_device_reset(struct scsi_cmnd *sc)
+ 	struct Scsi_Host *shost = sc->device->host;
+ 	struct snic *snic = shost_priv(shost);
+ 	struct snic_req_info *rqi = NULL;
+-	int tag = snic_cmd_tag(sc);
++	struct scsi_cmnd *reset_sc = NULL;
+ 	int start_time = jiffies;
+ 	int ret = FAILED;
+ 	int dr_supp = 0;
+@@ -2174,42 +2151,41 @@ snic_device_reset(struct scsi_cmnd *sc)
+ 		goto dev_rst_end;
+ 	}
+ 
+-	/* There is no tag when lun reset is issue through ioctl. */
+-	if (unlikely(tag <= SNIC_NO_TAG)) {
+-		SNIC_HOST_INFO(snic->shost,
+-			       "Devrst: LUN Reset Recvd thru IOCTL.\n");
++	reset_sc = scsi_get_reserved_cmd(sc->device, DMA_NONE, false);
++	if (!reset_sc)
++		goto dev_rst_end;
+ 
+-		rqi = snic_req_init(snic, 0);
+-		if (!rqi)
+-			goto dev_rst_end;
++	rqi = snic_req_init(snic, 0);
++	if (!rqi)
++		goto dev_rst_end;
+ 
+-		memset(scsi_cmd_priv(sc), 0,
+-			sizeof(struct snic_internal_io_state));
+-		CMD_SP(sc) = (char *)rqi;
+-		CMD_FLAGS(sc) = SNIC_NO_FLAGS;
++	memset(scsi_cmd_priv(reset_sc), 0,
++	       sizeof(struct snic_internal_io_state));
++	CMD_SP(reset_sc) = (char *)rqi;
++	CMD_FLAGS(reset_sc) = SNIC_NO_FLAGS;
+ 
+-		/* Add special tag for dr coming from user spc */
+-		rqi->tm_tag = SNIC_TAG_IOCTL_DEV_RST;
+-		rqi->sc = sc;
+-	}
++	rqi->sc = reset_sc;
+ 
+-	ret = snic_send_dr_and_wait(snic, sc);
++	ret = snic_send_dr_and_wait(snic, reset_sc);
+ 	if (ret) {
+ 		SNIC_HOST_ERR(snic->shost,
+ 			      "Devrst: IO w/ Tag %x Failed w/ err = %d\n",
+-			      tag, ret);
++			      snic_cmd_tag(reset_sc), ret);
+ 
+-		snic_unlink_and_release_req(snic, sc, 0);
++		snic_unlink_and_release_req(snic, reset_sc, 0);
+ 
+ 		goto dev_rst_end;
+ 	}
+ 
+-	ret = snic_dr_finish(snic, sc);
++	ret = snic_dr_finish(snic, reset_sc);
+ 
+ dev_rst_end:
+-	SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
+-		 jiffies_to_msecs(jiffies - start_time),
+-		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
++	if (reset_sc) {
++		SNIC_TRC(snic->shost->host_no, snic_cmd_tag(reset_sc), (ulong) reset_sc,
++			 jiffies_to_msecs(jiffies - start_time),
++			 0, SNIC_TRC_CMD(reset_sc), SNIC_TRC_CMD_STATE_FLAGS(reset_sc));
++		scsi_put_reserved_cmd(reset_sc);
++	}
+ 
+ 	SNIC_SCSI_DBG(snic->shost,
+ 		      "Devrst: Returning from Device Reset : %s\n",
+@@ -2229,10 +2205,11 @@ snic_device_reset(struct scsi_cmnd *sc)
+  * snic_issue_hba_reset : Queues FW Reset Request.
+  */
+ static int
+-snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
++snic_issue_hba_reset(struct snic *snic)
+ {
+ 	struct snic_req_info *rqi = NULL;
+ 	struct snic_host_req *req = NULL;
++	struct scsi_cmnd *reset_sc;
+ 	spinlock_t *io_lock = NULL;
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	unsigned long flags;
+@@ -2241,30 +2218,31 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ 	rqi = snic_req_init(snic, 0);
+ 	if (!rqi) {
+ 		ret = -ENOMEM;
+-
+ 		goto hba_rst_end;
+ 	}
+ 
+-	if (snic_cmd_tag(sc) == SCSI_NO_TAG) {
+-		memset(scsi_cmd_priv(sc), 0,
+-			sizeof(struct snic_internal_io_state));
+-		SNIC_HOST_INFO(snic->shost, "issu_hr:Host reset thru ioctl.\n");
+-		rqi->sc = sc;
++	reset_sc = scsi_get_reserved_cmd(snic->shost_dev,
++					 DMA_NONE, false);
++	if (!reset_sc) {
++		ret = -EBUSY;
++		goto hba_rst_end_put;
+ 	}
+-
++	memset(scsi_cmd_priv(reset_sc), 0,
++	       sizeof(struct snic_internal_io_state));
++	rqi->sc = reset_sc;
+ 	req = rqi_to_req(rqi);
+ 
+-	io_lock = snic_io_lock_hash(snic, sc);
++	io_lock = snic_io_lock_hash(snic, reset_sc);
+ 	spin_lock_irqsave(io_lock, flags);
+-	SNIC_BUG_ON(CMD_SP(sc) != NULL);
+-	CMD_STATE(sc) = SNIC_IOREQ_PENDING;
+-	CMD_SP(sc) = (char *) rqi;
+-	CMD_FLAGS(sc) |= SNIC_IO_INITIALIZED;
++	SNIC_BUG_ON(CMD_SP(reset_sc) != NULL);
++	CMD_STATE(reset_sc) = SNIC_IOREQ_PENDING;
++	CMD_SP(reset_sc) = (char *) rqi;
++	CMD_FLAGS(reset_sc) |= SNIC_IO_INITIALIZED;
+ 	snic->remove_wait = &wait;
+ 	spin_unlock_irqrestore(io_lock, flags);
+ 
+ 	/* Initialize Request */
+-	snic_io_hdr_enc(&req->hdr, SNIC_REQ_HBA_RESET, 0, snic_cmd_tag(sc),
++	snic_io_hdr_enc(&req->hdr, SNIC_REQ_HBA_RESET, 0, snic_cmd_tag(reset_sc),
+ 			snic->config.hid, 0, (ulong) rqi);
+ 
+ 	req->u.reset.flags = 0;
+@@ -2279,7 +2257,7 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ 	}
+ 
+ 	spin_lock_irqsave(io_lock, flags);
+-	CMD_FLAGS(sc) |= SNIC_HOST_RESET_ISSUED;
++	CMD_FLAGS(reset_sc) |= SNIC_HOST_RESET_ISSUED;
+ 	spin_unlock_irqrestore(io_lock, flags);
+ 	atomic64_inc(&snic->s_stats.reset.hba_resets);
+ 	SNIC_HOST_INFO(snic->shost, "Queued HBA Reset Successfully.\n");
+@@ -2296,13 +2274,14 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ 
+ 	spin_lock_irqsave(io_lock, flags);
+ 	snic->remove_wait = NULL;
+-	rqi = (struct snic_req_info *) CMD_SP(sc);
+-	CMD_SP(sc) = NULL;
++	rqi = (struct snic_req_info *) CMD_SP(reset_sc);
++	CMD_SP(reset_sc) = NULL;
+ 	spin_unlock_irqrestore(io_lock, flags);
+ 
+ 	if (rqi)
+ 		snic_req_free(snic, rqi);
+ 
++	scsi_put_reserved_cmd(reset_sc);
+ 	ret = 0;
+ 
+ 	return ret;
+@@ -2310,10 +2289,13 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ hba_rst_err:
+ 	spin_lock_irqsave(io_lock, flags);
+ 	snic->remove_wait = NULL;
+-	rqi = (struct snic_req_info *) CMD_SP(sc);
+-	CMD_SP(sc) = NULL;
++	rqi = (struct snic_req_info *) CMD_SP(reset_sc);
++	CMD_SP(reset_sc) = NULL;
+ 	spin_unlock_irqrestore(io_lock, flags);
+ 
++hba_rst_end_put:
++	if (reset_sc)
++		scsi_put_reserved_cmd(reset_sc);
+ 	if (rqi)
+ 		snic_req_free(snic, rqi);
+ 
+@@ -2326,7 +2308,7 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
+ } /* end of snic_issue_hba_reset */
+ 
+ int
+-snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
++snic_reset(struct Scsi_Host *shost)
+ {
+ 	struct snic *snic = shost_priv(shost);
+ 	enum snic_state sv_state;
+@@ -2355,7 +2337,7 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
+ 	while (atomic_read(&snic->ios_inflight))
+ 		schedule_timeout(msecs_to_jiffies(1));
+ 
+-	ret = snic_issue_hba_reset(snic, sc);
++	ret = snic_issue_hba_reset(snic);
+ 	if (ret) {
+ 		SNIC_HOST_ERR(shost,
+ 			      "reset:Host Reset Failed w/ err %d.\n",
+@@ -2394,7 +2376,7 @@ snic_host_reset(struct scsi_cmnd *sc)
+ 		      sc, sc->cmnd[0], sc->request,
+ 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
+ 
+-	ret = snic_reset(shost, sc);
++	ret = snic_reset(shost);
+ 
+ 	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
+ 		 jiffies_to_msecs(jiffies - start_time),
+@@ -2436,7 +2418,7 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
+  * snic_scsi_cleanup: Walks through tag map and releases the reqs
+  */
+ static void
+-snic_scsi_cleanup(struct snic *snic, int ex_tag)
++snic_scsi_cleanup(struct snic *snic)
+ {
+ 	struct snic_req_info *rqi = NULL;
+ 	struct scsi_cmnd *sc = NULL;
+@@ -2448,19 +2430,9 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
+ 	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
+ 
+ 	for (tag = 0; tag < snic->max_tag_id; tag++) {
+-		/* Skip ex_tag */
+-		if (tag == ex_tag)
+-			continue;
+-
+ 		io_lock = snic_io_lock_tag(snic, tag);
+ 		spin_lock_irqsave(io_lock, flags);
+ 		sc = scsi_host_find_tag(snic->shost, tag);
+-		if (!sc) {
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
+-
+ 		if (unlikely(snic_tmreq_pending(sc))) {
+ 			/*
+ 			 * When FW Completes reset w/o sending completions
+@@ -2520,7 +2492,7 @@ snic_shutdown_scsi_cleanup(struct snic *snic)
+ {
+ 	SNIC_HOST_INFO(snic->shost, "Shutdown time SCSI Cleanup.\n");
+ 
+-	snic_scsi_cleanup(snic, SCSI_NO_TAG);
++	snic_scsi_cleanup(snic);
+ } /* end of snic_shutdown_scsi_cleanup */
+ 
+ /*
 -- 
 2.16.4
 
