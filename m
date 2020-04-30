@@ -2,177 +2,119 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6542CC4724C
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 873EDC47247
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:34:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 484722076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:33:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B120214D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 21:34:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727985AbgD3Vda (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 17:33:30 -0400
-Received: from mout.kundenserver.de ([212.227.126.133]:45197 "EHLO
+        id S1728107AbgD3VeK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 17:34:10 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:58935 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726909AbgD3Vd3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2020 17:33:29 -0400
+        with ESMTP id S1727124AbgD3VeI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2020 17:34:08 -0400
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue010 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MmlCY-1imznH36yU-00jrwf; Thu, 30 Apr 2020 23:31:17 +0200
+ 1MekrN-1iw23r0YOj-00apFq; Thu, 30 Apr 2020 23:33:54 +0200
 From:   Arnd Bergmann <arnd@arndb.de>
-To:     linux-kernel@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        James Smart <james.smart@broadcom.com>,
-        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+To:     linux-kernel@vger.kernel.org,
+        Intel SCU Linux support <intel-linux-scu@intel.com>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        Bob Copeland <me@bobcopeland.com>, Jan Kara <jack@suse.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Florian Westphal <fw@strlen.de>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>,
-        linux-crypto@vger.kernel.org, linux-media@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org,
-        linux-karma-devel@lists.sourceforge.net, bpf@vger.kernel.org,
-        linux-usb@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org
-Subject: [PATCH 00/15] gcc-10 warning fixes
-Date:   Thu, 30 Apr 2020 23:30:42 +0200
-Message-Id: <20200430213101.135134-1-arnd@arndb.de>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org
+Subject: [PATCH 14/15] isci: avoid gcc-10 zero-length-bounds warning
+Date:   Thu, 30 Apr 2020 23:30:56 +0200
+Message-Id: <20200430213101.135134-15-arnd@arndb.de>
 X-Mailer: git-send-email 2.26.0
+In-Reply-To: <20200430213101.135134-1-arnd@arndb.de>
+References: <20200430213101.135134-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:d0r1T0atJ0fP6VC0lsoU2Nb50uVHm7+C7HFBKxo5Oh9FT7cjF4F
- 56LFacsuF89qNSNIhAKt16YSLWAlWssvN8MtPe8NN45LaPwc/cCelzxDkHr4+0tFL6+Sa9G
- a57V34rwqixwafD6sE/njElSMiK55+3n3WBVw4f5PpMdpEy2CNFI8yBkDaQox92MxOq478P
- ATheht8WQuHpTQRLL5ZEQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:qtjOffXScL0=:Yde/YTTIyDLV71HcVFV/g8
- 5aCgJ4X4xNzxI3sDnVHzb+4x1iuaUyj/FDU6axm1cC5dNjOHg+8xAyvhGoryNPJJFdXCQ9E8u
- /vBjaVgpQi6NvTWJp+z0wFIoWkqjlRGR2wCLBCvG5ImhRZo6H4jl5uiqg/TUea1BRC5KOAUug
- NLH3+1SoQ96QZaVVmYPbql6nsHgFb4uZYdjCp8JTVI2L30Rp4+0Uw3uwnSsZJuLBGqAnsFaeh
- k7gAnZ02jIaJcsH2V+TwomCcLBG4OX9P3yetdeZWPtDSychl7RC+/gMGRpPt2beTcJXb7Sr4/
- wgqf3CYR6/N2vUz2MhXS9Sl+HtdkF3gKvKsNTp2mw9draDW6IVxA+E16ianBs3s2/Jj86Cp4d
- ehuoj5P2KJYrz+9tZ+et7SchBa5i/iGqThgNGHpUmVXaAI8nZHkjO7rEce0Ctm42WVr0HLTd4
- o1jt4fwG8tpZvziYdVKKK9x4WQWsYAq2xx0LoedsVxg8abX+ql1c1UVSezkM6FJvLsBYSOqLC
- Wl2wmpwXK3rQEhxxX4Sh0+p7vR68f1MiX8v4GGJjHzQvAfDgNp//3vXmnFa9OfQMY1+J5Oamt
- RKC21TWUo81CDfLbGJUutjWh36LNJfa+N4p4bSAvqbx+J8urAAoBgP4lL7BwvnjawPWVT3bQ7
- nx782MGIljH805ldEh/1deDsyPsEUVqES3Wx9pJakt2RNm+5lKUyzj8TLjsuKM9bM+MwiaVGP
- y3sVYv2Jji3wkCZuDo3KR4124HQta8GSeSFOnIEeWuWxcaFbOJf9loaB0IyqLaH/bv1s0C1At
- ctEvneGxLk11FkM6cOL//qiBQ4ws+UB1hR0Fmjp4sHdhGtlvK4=
+X-Provags-ID: V03:K1:7STMyUCnzNFORsOTFhBk+QO1wMd0aCQREYl9i/6g5djgitDUpZ6
+ d1Cx+C01pHvqZt+aQoS8ab5L853K/yBtfnhyeugGSlvh7HKQ0PL0VPWymc4AUUryftBYEso
+ OUGbikus/NGt12kseU7xwabsGAmxqrTKLyaGQy3cjPJ43HXWsVNNnuwv8J52mfRiGUTqkiy
+ p2VouWvfbNWfatj6Qx9KA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:bSMgVGjYJbk=:e3OoHoNyVrETSsb4hMOhs/
+ AS0ivt9Xcb53jajnQRqZgv28gM4KSUsPE4/o60hKXktudnmPzwv7RW8Kj4AuCquc4xriwDklb
+ xKB4Dxt0vhsg9WTFIyTiatKW/x6/E+2Nk8pLmNKGMItbeiWHT43Hwq6qvUgQzpoxRSAtI8K+c
+ AbFuuj3Oam60e+HhGtj5h/CXSHXFlomhGukqvM1te61faABhg4P98Ria19e5qoPauXLU31Ir7
+ uyL1FS3S/Pki/1dKyCc7sM6Ze1PWMD8JL99fDJsTBP/GpBfhDzFTAdNrCaOkVW4p63C2XUS1b
+ csL4aTU4V1v07Popcn2+JRSVN/QvEmL1z9z+73jfAP3H4oshS/HrD1Ttx26cgkbqiV823bAPX
+ ZhkZbjdTbcPzcEB/fsZEHN5B27L5aSM9MkkOVUbub1Ihc+pylki8sChmoY4/67R7FSVVwByPd
+ J8Nz/BCBgevzfXFncJ4UPzc9CbgwT3Cbu8rokQWb9XVFywpOkgnas+iJg2fL949baMrHLRuV8
+ xV3WIiGzMWBZQFDW8Ac3Ix3EbrfgS1K01zPWZNZFeF+3kf+l8QQ9HsgqFXQbOQ6mx+3uwTYYx
+ /ol12IcZtrb7B6wpmHD1NPPwpwrDydQTJ8Dn+CHU4DYt3/OjzXb/4/KvoKwHe3/tLjE7iM6pt
+ hrd1WgsjuRO9ZM5+aPlpnjsWOH/mx90oUd8XFgynTRngF97dbGjgqqiobJW+pvbZIV5+ZTjc4
+ PM8Qk89cI6yabSO1NdqEAs9oCr5xwcoXbbP27xCCOsgQ1TG8rKyt8vvnm4wbtXZwD607vZvx2
+ zUHvdw7DVW21QES1ntvMt/CqXvDLFzW6Q3TYBwZKF6Xm0K41d4=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Here are a couple of fixes for warnings introduced with gcc-10.
-If you wish to reproduce these, you can find the compiler I used
-at [1].
+gcc-10 warns about accesses to zero-length arrays:
 
-If you like the fixes, please apply them directly into maintainer
-trees. I expect that we will also need them to be backported
-into stable kernels later.
+drivers/scsi/isci/task.h:125:31: error: array subscript 0 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[0]'} [-Werror=zero-length-bounds]
+  125 |    tmf->resp.resp_iu.resp_data[0],
+      |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+include/linux/dynamic_debug.h:143:2: note: in expansion of macro '__dynamic_func_call'
+  143 |  __dynamic_func_call(__UNIQUE_ID(ddebug), fmt, func, ##__VA_ARGS__)
+      |  ^~~~~~~~~~~~~~~~~~~
+include/linux/dynamic_debug.h:157:2: note: in expansion of macro '_dynamic_func_call'
+  157 |  _dynamic_func_call(fmt,__dynamic_dev_dbg,   \
+      |  ^~~~~~~~~~~~~~~~~~
+include/linux/dev_printk.h:115:2: note: in expansion of macro 'dynamic_dev_dbg'
+  115 |  dynamic_dev_dbg(dev, dev_fmt(fmt), ##__VA_ARGS__)
+      |  ^~~~~~~~~~~~~~~
+drivers/scsi/isci/task.h:111:3: note: in expansion of macro 'dev_dbg'
+  111 |   dev_dbg(&ihost->pdev->dev,
+      |   ^~~~~~~
+In file included from include/scsi/libsas.h:15,
+                 from drivers/scsi/isci/task.c:59:
+include/scsi/sas.h:326:9: note: while referencing 'resp_data'
+  326 |  u8     resp_data[0];
+      |         ^~~~~~~~~
 
-I disabled -Wrestrict on gcc in my local test tree, but with
-the patches from this series and the ones I have already sent,
-I see no gcc-10 specific warnings in linux-next when doing
-many randconfig builds for arm/arm64/x86.
+This instance is not a bug, so just work around the warning by
+adding a temporary pointer.
 
-      Arnd
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/isci/task.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Arnd Bergmann (15):
-  crypto - Avoid free() namespace collision
-  iwlwifi: mvm: fix gcc-10 zero-length-bounds warning
-  mwifiex: avoid -Wstringop-overflow warning
-  ath10k: fix gcc-10 zero-length-bounds warnings
-  bpf: avoid gcc-10 stringop-overflow warning
-  netfilter: conntrack: avoid gcc-10 zero-length-bounds warning
-  drop_monitor: work around gcc-10 stringop-overflow warning
-  usb: ehci: avoid gcc-10 zero-length-bounds warning
-  udf: avoid gcc-10 zero-length-bounds warnings
-  hpfs: avoid gcc-10 zero-length-bounds warning
-  omfs: avoid gcc-10 stringop-overflow warning
-  media: s5k5baf: avoid gcc-10 zero-length-bounds warning
-  scsi: sas: avoid gcc-10 zero-length-bounds warning
-  isci: avoid gcc-10 zero-length-bounds warning
-  nvme: avoid gcc-10 zero-length-bounds warning
-
- crypto/lrw.c                                  |  6 +--
- crypto/xts.c                                  |  6 +--
- drivers/media/i2c/s5k5baf.c                   |  4 +-
- drivers/net/wireless/ath/ath10k/htt.h         |  4 +-
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    | 14 +++----
- .../net/wireless/marvell/mwifiex/sta_cmd.c    | 39 ++++++++-----------
- drivers/nvme/host/fc.c                        |  2 +-
- drivers/scsi/aic94xx/aic94xx_tmf.c            |  4 +-
- drivers/scsi/isci/task.h                      |  7 ++--
- drivers/scsi/libsas/sas_task.c                |  3 +-
- fs/hpfs/anode.c                               |  7 +++-
- fs/omfs/file.c                                | 12 +++---
- fs/omfs/omfs_fs.h                             |  2 +-
- fs/udf/ecma_167.h                             |  2 +-
- fs/udf/super.c                                |  2 +-
- include/linux/filter.h                        |  6 +--
- include/linux/usb/ehci_def.h                  | 12 ++++--
- include/net/netfilter/nf_conntrack.h          |  2 +-
- net/core/drop_monitor.c                       | 11 ++++--
- net/netfilter/nf_conntrack_core.c             |  4 +-
- 20 files changed, 76 insertions(+), 73 deletions(-)
-
-[1] https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/10.0.20200413/
-
-Cc: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Amitkumar Karwar <amitkarwar@gmail.com>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Cc: Bob Copeland <me@bobcopeland.com>
-Cc: Jan Kara <jack@suse.com>
-Cc: Alexei Starovoitov <ast@kernel.org>
-Cc: Daniel Borkmann <daniel@iogearbox.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Pablo Neira Ayuso <pablo@netfilter.org>
-Cc: Florian Westphal <fw@strlen.de>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Neil Horman <nhorman@tuxdriver.com>
-Cc: linux-crypto@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-karma-devel@lists.sourceforge.net
-Cc: bpf@vger.kernel.org
-Cc: linux-usb@vger.kernel.org
-Cc: netfilter-devel@vger.kernel.org
-Cc: coreteam@netfilter.org
-
-
-
+diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
+index 8f4531f22ac2..2d556d7b5292 100644
+--- a/drivers/scsi/isci/task.h
++++ b/drivers/scsi/isci/task.h
+@@ -98,6 +98,8 @@ struct isci_tmf {
+ 
+ static inline void isci_print_tmf(struct isci_host *ihost, struct isci_tmf *tmf)
+ {
++	u8 *resp = tmf->resp.resp_iu.resp_data;
++
+ 	if (SAS_PROTOCOL_SATA == tmf->proto)
+ 		dev_dbg(&ihost->pdev->dev,
+ 			"%s: status = %x\n"
+@@ -122,10 +124,7 @@ static inline void isci_print_tmf(struct isci_host *ihost, struct isci_tmf *tmf)
+ 			tmf->resp.resp_iu.datapres,
+ 			tmf->resp.resp_iu.status,
+ 			be32_to_cpu(tmf->resp.resp_iu.response_data_len),
+-			tmf->resp.resp_iu.resp_data[0],
+-			tmf->resp.resp_iu.resp_data[1],
+-			tmf->resp.resp_iu.resp_data[2],
+-			tmf->resp.resp_iu.resp_data[3]);
++			resp[0], resp[1], resp[2], resp[3]);
+ }
+ 
+ 
 -- 
 2.26.0
 
