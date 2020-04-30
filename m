@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7DBC8300E
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713CBC8300F
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 483EC20870
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B0AE20870
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727080AbgD3NUT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:19 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60974 "EHLO mx2.suse.de"
+        id S1727083AbgD3NUU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:20 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60970 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726965AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726968AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 30 Apr 2020 09:20:11 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id B588CAF72;
+        by mx2.suse.de (Postfix) with ESMTP id A9BC1AF6D;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,9 +30,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC v3 21/41] megaraid_sas: megaraid_sas: reshuffle SCSI host allocation
-Date:   Thu, 30 Apr 2020 15:18:44 +0200
-Message-Id: <20200430131904.5847-22-hare@suse.de>
+Subject: [PATCH RFC v3 34/41] pm8001: use libsas-provided domain devices for SATA
+Date:   Thu, 30 Apr 2020 15:18:57 +0200
+Message-Id: <20200430131904.5847-35-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,163 +41,96 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reshuffle SCSI host allocation such that the scsi host device
-can be allocated prior to the first command being sent.
+The pm8001 driver assumes that libsas does not provide any domain
+devices for SATA, which is actually not true.
+So use the libsas-provided domain devices for SATA and don't
+allocate private ones.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  3 +++
- drivers/scsi/megaraid/megaraid_sas_base.c   | 36 ++++++++++++++++++++---------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  5 ++++
- 3 files changed, 33 insertions(+), 11 deletions(-)
+ drivers/scsi/pm8001/pm8001_hwi.c | 14 +-------------
+ drivers/scsi/pm8001/pm80xx_hwi.c | 15 +--------------
+ 2 files changed, 2 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index d295a2036588..b47306a66650 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2677,6 +2677,9 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
- 	u8 crash_buf_state);
- void megasas_free_host_crash_buffer(struct megasas_instance *instance);
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index fb9848e1d481..1c1b87905bea 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -1785,7 +1785,7 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 	struct pm8001_ccb_info *ccb;
+ 	struct sas_task *task = NULL;
+ 	struct host_to_dev_fis fis;
+-	struct domain_device *dev;
++	struct domain_device *dev = pm8001_ha_dev->sas_device;
+ 	struct inbound_queue_table *circularQ;
+ 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
  
-+int megasas_io_attach(struct megasas_instance *instance);
-+void megasas_io_detach(struct megasas_instance *instance);
-+
- void megasas_return_cmd_fusion(struct megasas_instance *instance,
- 	struct megasas_cmd_fusion *cmd);
- int megasas_issue_blocked_cmd(struct megasas_instance *instance,
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 00a1d5caf7d5..ddb8df03481f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5468,6 +5468,13 @@ megasas_init_adapter_mfi(struct megasas_instance *instance)
- 		goto fail_reply_queue;
+@@ -1806,17 +1806,6 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 		return;
  	}
  
-+	/*
-+	 * Notify the mid-layer about the new controller; do this
-+	 * early so that we can allocate internal commands
-+	 */
-+	if (megasas_io_attach(instance))
-+		goto fail_io_attach;
-+
- 	if (megasas_issue_init_mfi(instance))
- 		goto fail_fw_init;
+-	/* allocate domain device by ourselves as libsas
+-	 * is not going to provide any
+-	*/
+-	dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
+-	if (!dev) {
+-		sas_free_task(task);
+-		pm8001_tag_free(pm8001_ha, ccb_tag);
+-		PM8001_FAIL_DBG(pm8001_ha,
+-			pm8001_printk("Domain device cannot be allocated\n"));
+-		return;
+-	}
+ 	task->dev = dev;
+ 	task->dev->lldd_dev = pm8001_ha_dev;
  
-@@ -5490,7 +5497,8 @@ megasas_init_adapter_mfi(struct megasas_instance *instance)
- 	return 0;
- 
- fail_fw_init:
--
-+	megasas_io_detach(instance);
-+fail_io_attach:
- 	dma_free_coherent(&instance->pdev->dev, reply_q_sz,
- 			    instance->reply_queue, instance->reply_queue_h);
- fail_reply_queue:
-@@ -6340,6 +6348,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (tmp_sectors && (instance->max_sectors_per_req > tmp_sectors))
- 		instance->max_sectors_per_req = tmp_sectors;
- 
-+	megasas_set_max_sectors(instance);
-+
- 	/* Check for valid throttlequeuedepth module parameter */
- 	if (throttlequeuedepth &&
- 			throttlequeuedepth <= instance->max_scsi_cmds)
-@@ -6757,7 +6767,7 @@ static int megasas_start_aen(struct megasas_instance *instance)
-  * megasas_io_attach -	Attaches this driver to SCSI mid-layer
-  * @instance:		Adapter soft state
-  */
--static int megasas_io_attach(struct megasas_instance *instance)
-+int megasas_io_attach(struct megasas_instance *instance)
- {
- 	struct Scsi_Host *host = instance->host;
- 
-@@ -6767,7 +6777,8 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	host->can_queue = instance->max_scsi_cmds;
- 	host->sg_tablesize = instance->max_num_sge;
- 
--	megasas_set_max_sectors(instance);
-+	/* Will be adjusted later */
-+	host->max_sectors = MEGASAS_MAX_SECTORS_IEEE;
- 
- 	host->cmd_per_lun = MEGASAS_DEFAULT_CMD_PER_LUN;
- 	host->max_channel = MEGASAS_MAX_CHANNELS - 1;
-@@ -6788,6 +6799,15 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	return 0;
+@@ -1848,7 +1837,6 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 	if (res) {
+ 		sas_free_task(task);
+ 		pm8001_tag_free(pm8001_ha, ccb_tag);
+-		kfree(dev);
+ 	}
  }
  
-+/**
-+ * megasas_io_detach -	Detaches this driver from the SCSI mid-layer
-+ * @instance:		Adapter soft state
-+ */
-+void megasas_io_detach(struct megasas_instance *instance)
-+{
-+	scsi_remove_host(instance->host);
-+}
-+
- /**
-  * megasas_set_dma_mask -	Set DMA mask for supported controllers
-  *
-@@ -7373,12 +7393,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = instance;
- 	megasas_mgmt_info.max_index++;
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 4d205ebaee87..e59e72b20b0c 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -1809,7 +1809,7 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 	struct pm8001_ccb_info *ccb;
+ 	struct sas_task *task = NULL;
+ 	struct host_to_dev_fis fis;
+-	struct domain_device *dev;
++	struct domain_device *dev = pm8001_ha_dev->sas_device;
+ 	struct inbound_queue_table *circularQ;
+ 	u32 opc = OPC_INB_SATA_HOST_OPSTART;
  
--	/*
--	 * Register with SCSI mid-layer
--	 */
--	if (megasas_io_attach(instance))
--		goto fail_io_attach;
+@@ -1830,18 +1830,6 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 		return;
+ 	}
+ 
+-	/* allocate domain device by ourselves as libsas
+-	 * is not going to provide any
+-	*/
+-	dev = kzalloc(sizeof(struct domain_device), GFP_ATOMIC);
+-	if (!dev) {
+-		sas_free_task(task);
+-		pm8001_tag_free(pm8001_ha, ccb_tag);
+-		PM8001_FAIL_DBG(pm8001_ha,
+-			pm8001_printk("Domain device cannot be allocated\n"));
+-		return;
+-	}
 -
- 	instance->unload = 0;
- 	/*
- 	 * Trigger SCSI to scan our drives
-@@ -7404,7 +7418,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	return 0;
+ 	task->dev = dev;
+ 	task->dev->lldd_dev = pm8001_ha_dev;
  
- fail_start_aen:
--fail_io_attach:
- 	megasas_mgmt_info.count--;
- 	megasas_mgmt_info.max_index--;
- 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
-@@ -7802,7 +7815,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
+@@ -1875,7 +1863,6 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
+ 	if (res) {
+ 		sas_free_task(task);
+ 		pm8001_tag_free(pm8001_ha, ccb_tag);
+-		kfree(dev);
+ 	}
+ }
  
- 	if (instance->fw_crash_state != UNAVAILABLE)
- 		megasas_free_host_crash_buffer(instance);
--	scsi_remove_host(instance->host);
- 	instance->unload = 1;
- 
- 	if (megasas_wait_for_adapter_operational(instance))
-@@ -7812,6 +7824,8 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
- 
- skip_firing_dcmds:
-+	megasas_io_detach(instance);
-+
- 	/* cancel the delayed work if this work still in queue*/
- 	if (instance->ev != NULL) {
- 		struct megasas_aen_event *ev = instance->ev;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index bec3d4cca74f..483146051957 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1857,6 +1857,9 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 	if (megasas_alloc_cmds_fusion(instance))
- 		goto fail_alloc_cmds;
- 
-+	if (megasas_io_attach(instance))
-+		goto fail_io_attach;
-+
- 	if (megasas_ioc_init_fusion(instance)) {
- 		status_reg = instance->instancet->read_fw_status_reg(instance);
- 		if (((status_reg & MFI_STATE_MASK) == MFI_STATE_FAULT) &&
-@@ -1895,6 +1898,8 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 	return 0;
- 
- fail_ioc_init:
-+	megasas_io_detach(instance);
-+fail_io_attach:
- 	megasas_free_cmds_fusion(instance);
- fail_alloc_cmds:
- 	megasas_free_cmds(instance);
 -- 
 2.16.4
 
