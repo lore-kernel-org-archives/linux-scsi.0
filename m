@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53B7DC83010
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EFCBC8300D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 381292076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40A1F2076D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727069AbgD3NUR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:17 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60976 "EHLO mx2.suse.de"
+        id S1727086AbgD3NUX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:23 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60694 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726962AbgD3NUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:20:11 -0400
+        id S1727049AbgD3NUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 09:20:18 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id BA82CAF7C;
+        by mx2.suse.de (Postfix) with ESMTP id 1FAAEAFA7;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,10 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH RFC v3 29/41] snic: use reserved commands
-Date:   Thu, 30 Apr 2020 15:18:52 +0200
-Message-Id: <20200430131904.5847-30-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH RFC v3 40/41] mv_sas: use reserved tags and drop private tag allocation
+Date:   Thu, 30 Apr 2020 15:19:03 +0200
+Message-Id: <20200430131904.5847-41-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,420 +41,315 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
+Switch to use reserved tags. With that all tags are maintained
+by the block layer and we can drop the private tag allocation.
 
-Use a reserved command for host and device reset.
-
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/snic/snic.h      |   4 +-
- drivers/scsi/snic/snic_main.c |   8 +++
- drivers/scsi/snic/snic_scsi.c | 140 +++++++++++++++++-------------------------
- 3 files changed, 66 insertions(+), 86 deletions(-)
+ drivers/scsi/mvsas/mv_init.c | 10 +----
+ drivers/scsi/mvsas/mv_sas.c  | 98 +++++++++-----------------------------------
+ drivers/scsi/mvsas/mv_sas.h  | 13 +++---
+ 3 files changed, 27 insertions(+), 94 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
-index de0ab5fc8474..7dc529ae8a90 100644
---- a/drivers/scsi/snic/snic.h
-+++ b/drivers/scsi/snic/snic.h
-@@ -59,7 +59,6 @@
-  */
- #define SNIC_TAG_ABORT		BIT(30)		/* Tag indicating abort */
- #define SNIC_TAG_DEV_RST	BIT(29)		/* Tag for device reset */
--#define SNIC_TAG_IOCTL_DEV_RST	BIT(28)		/* Tag for User Device Reset */
- #define SNIC_TAG_MASK		(BIT(24) - 1)	/* Mask for lookup */
- #define SNIC_NO_TAG		-1
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 5973eed94938..17dab5aa966a 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -141,7 +141,6 @@ static void mvs_free(struct mvs_info *mvi)
+ 		scsi_host_put(mvi->shost);
+ 	list_for_each_entry(mwq, &mvi->wq_list, entry)
+ 		cancel_delayed_work(&mwq->work_q);
+-	kfree(mvi->tags);
+ 	kfree(mvi);
+ }
  
-@@ -278,6 +277,7 @@ struct snic {
- 
- 	/* Scsi Host info */
- 	struct Scsi_Host *shost;
-+	struct scsi_device *shost_dev;
- 
- 	/* vnic related structures */
- 	struct vnic_dev_bar bar0;
-@@ -380,7 +380,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int snic_abort_cmd(struct scsi_cmnd *);
- int snic_device_reset(struct scsi_cmnd *);
- int snic_host_reset(struct scsi_cmnd *);
--int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
-+int snic_reset(struct Scsi_Host *);
- void snic_shutdown_scsi_cleanup(struct snic *);
- 
- 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 14f4ce665e58..f520da64ec8e 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -303,6 +303,7 @@ static int
- snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
- {
- 	int ret = 0;
-+	struct snic *snic = shost_priv(shost);
- 
- 	ret = scsi_add_host(shost, &pdev->dev);
- 	if (ret) {
-@@ -313,6 +314,12 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
- 		return ret;
+@@ -286,10 +285,6 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+ 			printk(KERN_DEBUG "failed to create dma pool %s.\n", pool_name);
+ 			goto err_out;
  	}
+-	mvi->tags_num = slot_nr;
+-
+-	/* Initialize tags */
+-	mvs_tag_init(mvi);
+ 	return 0;
+ err_out:
+ 	return 1;
+@@ -372,10 +367,6 @@ static struct mvs_info *mvs_pci_alloc(struct pci_dev *pdev,
+ 	mvi->sas = sha;
+ 	mvi->shost = shost;
  
-+	snic->shost_dev = scsi_get_virtual_dev(shost, 1, 0);
-+	if (!snic->shost_dev) {
-+		SNIC_HOST_ERR(shost,
-+			      "snic: scsi_get_virtual_dev failed\n");
-+		return -ENOMEM;
-+	}
- 	SNIC_BUG_ON(shost->work_q != NULL);
- 	snprintf(shost->work_q_name, sizeof(shost->work_q_name), "scsi_wq_%d",
- 		 shost->host_no);
-@@ -385,6 +392,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+-	mvi->tags = kzalloc(MVS_CHIP_SLOT_SZ>>3, GFP_KERNEL);
+-	if (!mvi->tags)
+-		goto err_out;
+-
+ 	if (MVS_CHIP_DISP->chip_ioremap(mvi))
+ 		goto err_out;
+ 	if (!mvs_alloc(mvi, shost))
+@@ -474,6 +465,7 @@ static void  mvs_post_sas_ha_init(struct Scsi_Host *shost,
+ 	else
+ 		can_queue = MVS_CHIP_SLOT_SZ;
  
- 		goto prob_end;
- 	}
 +	shost->nr_reserved_cmds = 2;
- 	snic = shost_priv(shost);
- 	snic->shost = shost;
+ 	shost->sg_tablesize = min_t(u16, SG_ALL, MVS_MAX_SG);
+ 	shost->can_queue = can_queue;
+ 	mvi->shost->cmd_per_lun = MVS_QUEUE_SIZE;
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 0b647bf7dc0a..669ce9aa57ea 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -9,55 +9,6 @@
  
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index b3650c989ed4..d42e178bfab3 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -77,7 +77,7 @@ static const char * const snic_io_status_str[] = {
- 	[SNIC_STAT_FATAL_ERROR]	= "SNIC_STAT_FATAL_ERROR",
+ #include "mv_sas.h"
+ 
+-static int mvs_find_tag(struct mvs_info *mvi, struct sas_task *task, u32 *tag)
+-{
+-	if (task->lldd_task) {
+-		struct mvs_slot_info *slot;
+-		slot = task->lldd_task;
+-		*tag = slot->slot_tag;
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+-void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
+-{
+-	void *bitmap = mvi->tags;
+-	clear_bit(tag, bitmap);
+-}
+-
+-void mvs_tag_free(struct mvs_info *mvi, u32 tag)
+-{
+-	mvs_tag_clear(mvi, tag);
+-}
+-
+-void mvs_tag_set(struct mvs_info *mvi, unsigned int tag)
+-{
+-	void *bitmap = mvi->tags;
+-	set_bit(tag, bitmap);
+-}
+-
+-inline int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
+-{
+-	unsigned int index, tag;
+-	void *bitmap = mvi->tags;
+-
+-	index = find_first_zero_bit(bitmap, mvi->tags_num);
+-	tag = index;
+-	if (tag >= mvi->tags_num)
+-		return -SAS_QUEUE_FULL;
+-	mvs_tag_set(mvi, tag);
+-	*tag_out = tag;
+-	return 0;
+-}
+-
+-void mvs_tag_init(struct mvs_info *mvi)
+-{
+-	int i;
+-	for (i = 0; i < mvi->tags_num; ++i)
+-		mvs_tag_clear(mvi, i);
+-}
+-
+ static struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
+ {
+ 	unsigned long i = 0, j = 0, hi = 0;
+@@ -764,10 +715,13 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 		n_elem = task->num_scatter;
+ 	}
+ 
+-	rc = mvs_tag_alloc(mvi, &tag);
+-	if (rc)
++	if (task->tag == -1) {
++		dev_printk(KERN_ERR, mvi->dev,
++			   "invalid sas_task tag\n");
++		rc = -EINVAL;
+ 		goto err_out;
+-
++	}
++	tag = task->tag;
+ 	slot = &mvi->slot_info[tag];
+ 
+ 	task->lldd_task = NULL;
+@@ -777,7 +731,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 	slot->buf = dma_pool_zalloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
+ 	if (!slot->buf) {
+ 		rc = -ENOMEM;
+-		goto err_out_tag;
++		goto err_out;
+ 	}
+ 
+ 	tei.task = task;
+@@ -824,8 +778,6 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+ 
+ err_out_slot_buf:
+ 	dma_pool_free(mvi->dma_pool, slot->buf, slot->buf_dma);
+-err_out_tag:
+-	mvs_tag_free(mvi, tag);
+ err_out:
+ 
+ 	dev_printk(KERN_ERR, mvi->dev, "mvsas prep failed[%d]!\n", rc);
+@@ -866,12 +818,6 @@ int mvs_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ 	return mvs_task_exec(task, gfp_flags, NULL, 0, NULL);
+ }
+ 
+-static void mvs_slot_free(struct mvs_info *mvi, u32 rx_desc)
+-{
+-	u32 slot_idx = rx_desc & RXQ_SLOT_MASK;
+-	mvs_tag_clear(mvi, slot_idx);
+-}
+-
+ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
+ 			  struct mvs_slot_info *slot, u32 slot_idx)
+ {
+@@ -909,7 +855,6 @@ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
+ 	slot->task = NULL;
+ 	slot->port = NULL;
+ 	slot->slot_tag = 0xFFFFFFFF;
+-	mvs_slot_free(mvi, slot_idx);
+ }
+ 
+ static void mvs_update_wideport(struct mvs_info *mvi, int phy_no)
+@@ -1418,7 +1363,6 @@ int mvs_I_T_nexus_reset(struct domain_device *dev)
+ /* optional SAM-3 */
+ int mvs_query_task(struct sas_task *task)
+ {
+-	u32 tag;
+ 	struct scsi_lun lun;
+ 	struct mvs_tmf_task tmf_task;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+@@ -1426,18 +1370,15 @@ int mvs_query_task(struct sas_task *task)
+ 	if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SSP) {
+ 		struct scsi_cmnd * cmnd = (struct scsi_cmnd *)task->uldd_task;
+ 		struct domain_device *dev = task->dev;
+-		struct mvs_device *mvi_dev = (struct mvs_device *)dev->lldd_dev;
+-		struct mvs_info *mvi = mvi_dev->mvi_info;
+ 
+ 		int_to_scsilun(cmnd->device->lun, &lun);
+-		rc = mvs_find_tag(mvi, task, &tag);
+-		if (rc == 0) {
++		if (task->tag == -1) {
+ 			rc = TMF_RESP_FUNC_FAILED;
+ 			return rc;
+ 		}
+ 
+ 		tmf_task.tmf = TMF_QUERY_TASK;
+-		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
++		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(task->tag);
+ 
+ 		rc = mvs_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
+ 		switch (rc) {
+@@ -1463,7 +1404,6 @@ int mvs_abort_task(struct sas_task *task)
+ 	struct mvs_info *mvi;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+ 	unsigned long flags;
+-	u32 tag;
+ 
+ 	if (!mvi_dev) {
+ 		mv_printk("Device has removed\n");
+@@ -1484,15 +1424,14 @@ int mvs_abort_task(struct sas_task *task)
+ 		struct scsi_cmnd * cmnd = (struct scsi_cmnd *)task->uldd_task;
+ 
+ 		int_to_scsilun(cmnd->device->lun, &lun);
+-		rc = mvs_find_tag(mvi, task, &tag);
+-		if (rc == 0) {
++		if (task->tag == -1) {
+ 			mv_printk("No such tag in %s\n", __func__);
+ 			rc = TMF_RESP_FUNC_FAILED;
+ 			return rc;
+ 		}
+ 
+ 		tmf_task.tmf = TMF_ABORT_TASK;
+-		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
++		tmf_task.tag_of_task_to_be_managed = cpu_to_le16(task->tag);
+ 
+ 		rc = mvs_exec_internal_tmf_task(dev, lun.scsi_lun, &tmf_task);
+ 
+@@ -1714,7 +1653,8 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 		~(SAS_TASK_STATE_PENDING | SAS_TASK_AT_INITIATOR);
+ 	task->task_state_flags |= SAS_TASK_STATE_DONE;
+ 	/* race condition*/
+-	aborted = task->task_state_flags & SAS_TASK_STATE_ABORTED;
++	aborted = (task->task_state_flags & SAS_TASK_STATE_ABORTED) ||
++		(flags & MVS_SLOT_CMPL_SLOT_RESET);
+ 	spin_unlock(&task->task_state_lock);
+ 
+ 	memset(tstat, 0, sizeof(*tstat));
+@@ -1732,7 +1672,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 	}
+ 
+ 	/* when no device attaching, go ahead and complete by error handling*/
+-	if (unlikely(!mvi_dev || flags)) {
++	if (unlikely(!mvi_dev || (flags & MVS_SLOT_CMPL_PHY_GONE))) {
+ 		if (!mvi_dev)
+ 			mv_dprintk("port has not device.\n");
+ 		tstat->stat = SAS_PHY_DOWN;
+@@ -1845,7 +1785,7 @@ void mvs_do_release_task(struct mvs_info *mvi,
+ 			slot_idx, slot->slot_tag, task);
+ 		MVS_CHIP_DISP->command_active(mvi, slot_idx);
+ 
+-		mvs_slot_complete(mvi, slot_idx, 1);
++		mvs_slot_complete(mvi, slot_idx, MVS_SLOT_CMPL_PHY_GONE);
+ 	}
+ }
+ 
+@@ -2067,14 +2007,16 @@ int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
+ 		rx_desc = le32_to_cpu(mvi->rx[rx_prod_idx + 1]);
+ 
+ 		if (likely(rx_desc & RXQ_DONE))
+-			mvs_slot_complete(mvi, rx_desc, 0);
++			mvs_slot_complete(mvi, rx_desc, MVS_SLOT_CMPL_NONE);
+ 		if (rx_desc & RXQ_ATTN) {
+ 			attn = true;
+ 		} else if (rx_desc & RXQ_ERR) {
+ 			if (!(rx_desc & RXQ_DONE))
+-				mvs_slot_complete(mvi, rx_desc, 0);
++				mvs_slot_complete(mvi, rx_desc,
++						  MVS_SLOT_CMPL_NONE);
+ 		} else if (rx_desc & RXQ_SLOT_RESET) {
+-			mvs_slot_free(mvi, rx_desc);
++			mvs_slot_complete(mvi, rx_desc,
++					  MVS_SLOT_CMPL_SLOT_RESET);
+ 		}
+ 	}
+ 
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 327fdd5ee962..480a5129eff4 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -83,6 +83,12 @@ enum dev_reset {
+ 	MVS_PHY_TUNE	= 2,
  };
  
--static void snic_scsi_cleanup(struct snic *, int);
-+static void snic_scsi_cleanup(struct snic *);
++enum mvs_slot_complete_flags {
++	MVS_SLOT_CMPL_NONE = 0,
++	MVS_SLOT_CMPL_PHY_GONE = 1,
++	MVS_SLOT_CMPL_SLOT_RESET = 2,
++};
++
+ struct mvs_info;
+ struct mvs_prv_info;
  
- const char *
- snic_state_to_str(unsigned int state)
-@@ -867,7 +867,6 @@ snic_process_itmf_cmpl(struct snic *snic,
- 		break;
+@@ -370,8 +376,6 @@ struct mvs_info {
+ 	u32 chip_id;
+ 	const struct mvs_chip_info *chip;
  
- 	case SNIC_TAG_DEV_RST:
--	case SNIC_TAG_DEV_RST | SNIC_TAG_IOCTL_DEV_RST:
- 		snic_proc_dr_cmpl_locked(snic, fwreq, cmpl_stat, cmnd_id, sc);
- 		spin_unlock_irqrestore(io_lock, flags);
- 		ret = 0;
-@@ -920,7 +919,6 @@ static void
- snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- {
- 	struct scsi_cmnd  *sc = NULL;
--	struct snic_req_info *rqi = NULL;
- 	struct snic_itmf_cmpl *itmf_cmpl = NULL;
- 	ulong ctx;
- 	u32 cmnd_id;
-@@ -938,14 +936,6 @@ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 		      "Itmf_cmpl: nterm %u , flags 0x%x\n",
- 		      le32_to_cpu(itmf_cmpl->nterminated), itmf_cmpl->flags);
+-	int tags_num;
+-	unsigned long *tags;
+ 	/* further per-slot information */
+ 	struct mvs_phy phy[MVS_MAX_PHYS];
+ 	struct mvs_port port[MVS_MAX_PHYS];
+@@ -424,11 +428,6 @@ struct mvs_task_exec_info {
  
--	/* spl case, dev reset issued through ioctl */
--	if (cmnd_id & SNIC_TAG_IOCTL_DEV_RST) {
--		rqi = (struct snic_req_info *) ctx;
--		sc = rqi->sc;
--
--		goto ioctl_dev_rst;
--	}
--
- 	if ((cmnd_id & SNIC_TAG_MASK) >= snic->max_tag_id) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "Itmf_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
-@@ -958,7 +948,6 @@ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	sc = scsi_host_find_tag(snic->shost, cmnd_id & SNIC_TAG_MASK);
- 	WARN_ON_ONCE(!sc);
- 
--ioctl_dev_rst:
- 	if (!sc) {
- 		atomic64_inc(&snic->s_stats.io.sc_null);
- 		SNIC_HOST_ERR(snic->shost,
-@@ -974,13 +963,13 @@ snic_itmf_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 
- 
- static void
--snic_hba_reset_scsi_cleanup(struct snic *snic, struct scsi_cmnd *sc)
-+snic_hba_reset_scsi_cleanup(struct snic *snic)
- {
- 	struct snic_stats *st = &snic->s_stats;
- 	long act_ios = 0, act_fwreqs = 0;
- 
- 	SNIC_SCSI_DBG(snic->shost, "HBA Reset scsi cleanup.\n");
--	snic_scsi_cleanup(snic, snic_cmd_tag(sc));
-+	snic_scsi_cleanup(snic);
- 
- 	/* Update stats on pending IOs */
- 	act_ios = atomic64_read(&st->io.active);
-@@ -1021,17 +1010,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 		      "reset_cmpl: type = %x, hdr_stat = %x, cmnd_id = %x, hid = %x, ctx = %lx\n",
- 		      typ, hdr_stat, cmnd_id, hid, ctx);
- 
--	/* spl case, host reset issued through ioctl */
--	if (cmnd_id == SCSI_NO_TAG) {
--		rqi = (struct snic_req_info *) ctx;
--		SNIC_HOST_INFO(snic->shost,
--			       "reset_cmpl:Tag %d ctx %lx cmpl stat %s\n",
--			       cmnd_id, ctx, snic_io_status_to_str(hdr_stat));
--		sc = rqi->sc;
--
--		goto ioctl_hba_rst;
--	}
--
- 	if (cmnd_id >= snic->max_tag_id) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
-@@ -1042,7 +1020,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	}
- 
- 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
--ioctl_hba_rst:
- 	if (!sc) {
- 		atomic64_inc(&snic->s_stats.io.sc_null);
- 		SNIC_HOST_ERR(snic->shost,
-@@ -1089,7 +1066,7 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	spin_unlock_irqrestore(io_lock, flags);
- 
- 	/* scsi cleanup */
--	snic_hba_reset_scsi_cleanup(snic, sc);
-+	snic_hba_reset_scsi_cleanup(snic);
- 
- 	SNIC_BUG_ON(snic_get_state(snic) != SNIC_OFFLINE &&
- 		    snic_get_state(snic) != SNIC_FWRESET);
-@@ -2150,7 +2127,7 @@ snic_device_reset(struct scsi_cmnd *sc)
- 	struct Scsi_Host *shost = sc->device->host;
- 	struct snic *snic = shost_priv(shost);
- 	struct snic_req_info *rqi = NULL;
--	int tag = snic_cmd_tag(sc);
-+	struct scsi_cmnd *reset_sc = NULL;
- 	int start_time = jiffies;
- 	int ret = FAILED;
- 	int dr_supp = 0;
-@@ -2174,42 +2151,41 @@ snic_device_reset(struct scsi_cmnd *sc)
- 		goto dev_rst_end;
- 	}
- 
--	/* There is no tag when lun reset is issue through ioctl. */
--	if (unlikely(tag <= SNIC_NO_TAG)) {
--		SNIC_HOST_INFO(snic->shost,
--			       "Devrst: LUN Reset Recvd thru IOCTL.\n");
-+	reset_sc = scsi_get_reserved_cmd(sc->device, DMA_NONE, false);
-+	if (!reset_sc)
-+		goto dev_rst_end;
- 
--		rqi = snic_req_init(snic, 0);
--		if (!rqi)
--			goto dev_rst_end;
-+	rqi = snic_req_init(snic, 0);
-+	if (!rqi)
-+		goto dev_rst_end;
- 
--		memset(scsi_cmd_priv(sc), 0,
--			sizeof(struct snic_internal_io_state));
--		CMD_SP(sc) = (char *)rqi;
--		CMD_FLAGS(sc) = SNIC_NO_FLAGS;
-+	memset(scsi_cmd_priv(reset_sc), 0,
-+	       sizeof(struct snic_internal_io_state));
-+	CMD_SP(reset_sc) = (char *)rqi;
-+	CMD_FLAGS(reset_sc) = SNIC_NO_FLAGS;
- 
--		/* Add special tag for dr coming from user spc */
--		rqi->tm_tag = SNIC_TAG_IOCTL_DEV_RST;
--		rqi->sc = sc;
--	}
-+	rqi->sc = reset_sc;
- 
--	ret = snic_send_dr_and_wait(snic, sc);
-+	ret = snic_send_dr_and_wait(snic, reset_sc);
- 	if (ret) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "Devrst: IO w/ Tag %x Failed w/ err = %d\n",
--			      tag, ret);
-+			      snic_cmd_tag(reset_sc), ret);
- 
--		snic_unlink_and_release_req(snic, sc, 0);
-+		snic_unlink_and_release_req(snic, reset_sc, 0);
- 
- 		goto dev_rst_end;
- 	}
- 
--	ret = snic_dr_finish(snic, sc);
-+	ret = snic_dr_finish(snic, reset_sc);
- 
- dev_rst_end:
--	SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
--		 jiffies_to_msecs(jiffies - start_time),
--		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
-+	if (reset_sc) {
-+		SNIC_TRC(snic->shost->host_no, snic_cmd_tag(reset_sc), (ulong) reset_sc,
-+			 jiffies_to_msecs(jiffies - start_time),
-+			 0, SNIC_TRC_CMD(reset_sc), SNIC_TRC_CMD_STATE_FLAGS(reset_sc));
-+		scsi_put_reserved_cmd(reset_sc);
-+	}
- 
- 	SNIC_SCSI_DBG(snic->shost,
- 		      "Devrst: Returning from Device Reset : %s\n",
-@@ -2229,10 +2205,11 @@ snic_device_reset(struct scsi_cmnd *sc)
-  * snic_issue_hba_reset : Queues FW Reset Request.
-  */
- static int
--snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
-+snic_issue_hba_reset(struct snic *snic)
- {
- 	struct snic_req_info *rqi = NULL;
- 	struct snic_host_req *req = NULL;
-+	struct scsi_cmnd *reset_sc;
- 	spinlock_t *io_lock = NULL;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	unsigned long flags;
-@@ -2241,30 +2218,31 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- 	rqi = snic_req_init(snic, 0);
- 	if (!rqi) {
- 		ret = -ENOMEM;
--
- 		goto hba_rst_end;
- 	}
- 
--	if (snic_cmd_tag(sc) == SCSI_NO_TAG) {
--		memset(scsi_cmd_priv(sc), 0,
--			sizeof(struct snic_internal_io_state));
--		SNIC_HOST_INFO(snic->shost, "issu_hr:Host reset thru ioctl.\n");
--		rqi->sc = sc;
-+	reset_sc = scsi_get_reserved_cmd(snic->shost_dev,
-+					 DMA_NONE, false);
-+	if (!reset_sc) {
-+		ret = -EBUSY;
-+		goto hba_rst_end_put;
- 	}
--
-+	memset(scsi_cmd_priv(reset_sc), 0,
-+	       sizeof(struct snic_internal_io_state));
-+	rqi->sc = reset_sc;
- 	req = rqi_to_req(rqi);
- 
--	io_lock = snic_io_lock_hash(snic, sc);
-+	io_lock = snic_io_lock_hash(snic, reset_sc);
- 	spin_lock_irqsave(io_lock, flags);
--	SNIC_BUG_ON(CMD_SP(sc) != NULL);
--	CMD_STATE(sc) = SNIC_IOREQ_PENDING;
--	CMD_SP(sc) = (char *) rqi;
--	CMD_FLAGS(sc) |= SNIC_IO_INITIALIZED;
-+	SNIC_BUG_ON(CMD_SP(reset_sc) != NULL);
-+	CMD_STATE(reset_sc) = SNIC_IOREQ_PENDING;
-+	CMD_SP(reset_sc) = (char *) rqi;
-+	CMD_FLAGS(reset_sc) |= SNIC_IO_INITIALIZED;
- 	snic->remove_wait = &wait;
- 	spin_unlock_irqrestore(io_lock, flags);
- 
- 	/* Initialize Request */
--	snic_io_hdr_enc(&req->hdr, SNIC_REQ_HBA_RESET, 0, snic_cmd_tag(sc),
-+	snic_io_hdr_enc(&req->hdr, SNIC_REQ_HBA_RESET, 0, snic_cmd_tag(reset_sc),
- 			snic->config.hid, 0, (ulong) rqi);
- 
- 	req->u.reset.flags = 0;
-@@ -2279,7 +2257,7 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- 	}
- 
- 	spin_lock_irqsave(io_lock, flags);
--	CMD_FLAGS(sc) |= SNIC_HOST_RESET_ISSUED;
-+	CMD_FLAGS(reset_sc) |= SNIC_HOST_RESET_ISSUED;
- 	spin_unlock_irqrestore(io_lock, flags);
- 	atomic64_inc(&snic->s_stats.reset.hba_resets);
- 	SNIC_HOST_INFO(snic->shost, "Queued HBA Reset Successfully.\n");
-@@ -2296,13 +2274,14 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- 
- 	spin_lock_irqsave(io_lock, flags);
- 	snic->remove_wait = NULL;
--	rqi = (struct snic_req_info *) CMD_SP(sc);
--	CMD_SP(sc) = NULL;
-+	rqi = (struct snic_req_info *) CMD_SP(reset_sc);
-+	CMD_SP(reset_sc) = NULL;
- 	spin_unlock_irqrestore(io_lock, flags);
- 
- 	if (rqi)
- 		snic_req_free(snic, rqi);
- 
-+	scsi_put_reserved_cmd(reset_sc);
- 	ret = 0;
- 
- 	return ret;
-@@ -2310,10 +2289,13 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- hba_rst_err:
- 	spin_lock_irqsave(io_lock, flags);
- 	snic->remove_wait = NULL;
--	rqi = (struct snic_req_info *) CMD_SP(sc);
--	CMD_SP(sc) = NULL;
-+	rqi = (struct snic_req_info *) CMD_SP(reset_sc);
-+	CMD_SP(reset_sc) = NULL;
- 	spin_unlock_irqrestore(io_lock, flags);
- 
-+hba_rst_end_put:
-+	if (reset_sc)
-+		scsi_put_reserved_cmd(reset_sc);
- 	if (rqi)
- 		snic_req_free(snic, rqi);
- 
-@@ -2326,7 +2308,7 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- } /* end of snic_issue_hba_reset */
- 
- int
--snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
-+snic_reset(struct Scsi_Host *shost)
- {
- 	struct snic *snic = shost_priv(shost);
- 	enum snic_state sv_state;
-@@ -2355,7 +2337,7 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	while (atomic_read(&snic->ios_inflight))
- 		schedule_timeout(msecs_to_jiffies(1));
- 
--	ret = snic_issue_hba_reset(snic, sc);
-+	ret = snic_issue_hba_reset(snic);
- 	if (ret) {
- 		SNIC_HOST_ERR(shost,
- 			      "reset:Host Reset Failed w/ err %d.\n",
-@@ -2394,7 +2376,7 @@ snic_host_reset(struct scsi_cmnd *sc)
- 		      sc, sc->cmnd[0], sc->request,
- 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
- 
--	ret = snic_reset(shost, sc);
-+	ret = snic_reset(shost);
- 
- 	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
- 		 jiffies_to_msecs(jiffies - start_time),
-@@ -2436,7 +2418,7 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
-  * snic_scsi_cleanup: Walks through tag map and releases the reqs
-  */
- static void
--snic_scsi_cleanup(struct snic *snic, int ex_tag)
-+snic_scsi_cleanup(struct snic *snic)
- {
- 	struct snic_req_info *rqi = NULL;
- 	struct scsi_cmnd *sc = NULL;
-@@ -2448,19 +2430,9 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
- 	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
- 
- 	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		/* Skip ex_tag */
--		if (tag == ex_tag)
--			continue;
--
- 		io_lock = snic_io_lock_tag(snic, tag);
- 		spin_lock_irqsave(io_lock, flags);
- 		sc = scsi_host_find_tag(snic->shost, tag);
--		if (!sc) {
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
--
- 		if (unlikely(snic_tmreq_pending(sc))) {
- 			/*
- 			 * When FW Completes reset w/o sending completions
-@@ -2520,7 +2492,7 @@ snic_shutdown_scsi_cleanup(struct snic *snic)
- {
- 	SNIC_HOST_INFO(snic->shost, "Shutdown time SCSI Cleanup.\n");
- 
--	snic_scsi_cleanup(snic, SCSI_NO_TAG);
-+	snic_scsi_cleanup(snic);
- } /* end of snic_shutdown_scsi_cleanup */
- 
- /*
+ /******************** function prototype *********************/
+ void mvs_get_sas_addr(void *buf, u32 buflen);
+-void mvs_tag_clear(struct mvs_info *mvi, u32 tag);
+-void mvs_tag_free(struct mvs_info *mvi, u32 tag);
+-void mvs_tag_set(struct mvs_info *mvi, unsigned int tag);
+-int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out);
+-void mvs_tag_init(struct mvs_info *mvi);
+ void mvs_iounmap(void __iomem *regs);
+ int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex);
+ void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard);
 -- 
 2.16.4
 
