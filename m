@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D1FC8300D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5449C8300B
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE6E72076D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93CDF2076D
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727044AbgD3NU3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60748 "EHLO mx2.suse.de"
+        id S1727088AbgD3NUb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:31 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60764 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727047AbgD3NUQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:20:16 -0400
+        id S1726951AbgD3NUK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 09:20:10 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 1F158AFA0;
+        by mx2.suse.de (Postfix) with ESMTP id A890EAF6C;
         Thu, 30 Apr 2020 13:20:02 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,9 +30,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH RFC v3 35/41] libsas: add SCSI target pointer to struct domain_device
-Date:   Thu, 30 Apr 2020 15:18:58 +0200
-Message-Id: <20200430131904.5847-36-hare@suse.de>
+Subject: [PATCH RFC v3 37/41] libsas: add tag to struct sas_task
+Date:   Thu, 30 Apr 2020 15:19:00 +0200
+Message-Id: <20200430131904.5847-38-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -41,46 +41,77 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a pointer to the SCSI target which corresponds to the
-domain device.
+All block layer commands now have a tag, so we should be storing
+it in the sas_task structure for easier lookup.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 2 ++
- include/scsi/libsas.h               | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/scsi/libsas/sas_ata.c       | 4 ++++
+ drivers/scsi/libsas/sas_init.c      | 2 ++
+ drivers/scsi/libsas/sas_scsi_host.c | 2 +-
+ include/scsi/libsas.h               | 2 ++
+ 4 files changed, 9 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 5d716d388707..897007343b3d 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -211,6 +211,10 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 
+ 	task->data_dir = qc->dma_dir;
+ 	task->scatter = qc->sg;
++	if (qc->scsicmd)
++		task->tag = qc->scsicmd->request->tag;
++	else
++		task->tag = qc->tag;
+ 	task->ata_task.retry_count = 1;
+ 	task->task_state_flags = SAS_TASK_STATE_PENDING;
+ 	qc->lldd_task = task;
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 5aa8593b88b5..0d32cb49d0af 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -53,6 +53,7 @@ struct sas_task *sas_alloc_slow_task(struct sas_ha_struct *ha,
+ 	if (!slow)
+ 		goto out_err_slow;
+ 
++	task->tag = -1;
+ 	if (shost->nr_reserved_cmds) {
+ 		struct scsi_device *sdev;
+ 
+@@ -66,6 +67,7 @@ struct sas_task *sas_alloc_slow_task(struct sas_ha_struct *ha,
+ 		slow->scmd = scsi_get_reserved_cmd(sdev, DMA_NONE, false);
+ 		if (!slow->scmd)
+ 			goto out_err_scmd;
++		task->tag = slow->scmd->request->tag;
+ 		ASSIGN_SAS_TASK(slow->scmd, task);
+ 	}
+ 
 diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 9e0975e55c27..c5a430e3fa2d 100644
+index c5a430e3fa2d..585e0df5fce2 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -830,6 +830,7 @@ int sas_target_alloc(struct scsi_target *starget)
- 
- 	kref_get(&found_dev->kref);
- 	starget->hostdata = found_dev;
-+	found_dev->starget = starget;
- 	return 0;
- }
- 
-@@ -919,6 +920,7 @@ void sas_target_destroy(struct scsi_target *starget)
- 		return;
- 
- 	starget->hostdata = NULL;
-+	found_dev->starget = NULL;
- 	sas_put_device(found_dev);
- }
- 
+@@ -149,7 +149,7 @@ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
+ 	memcpy(task->ssp_task.LUN, &lun.scsi_lun, 8);
+ 	task->ssp_task.task_attr = TASK_ATTR_SIMPLE;
+ 	task->ssp_task.cmd = cmd;
+-
++	task->tag = cmd->request->tag;
+ 	task->scatter = scsi_sglist(cmd);
+ 	task->num_scatter = scsi_sg_count(cmd);
+ 	task->total_xfer_len = scsi_bufflen(cmd);
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 4e2d61e8fb1e..2d9bc4882930 100644
+index c927228019c9..af864f68b5cc 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -175,6 +175,7 @@ struct domain_device {
+@@ -594,6 +594,8 @@ struct sas_task {
+ 	u32    total_xfer_len;
+ 	u8     data_dir:2;	  /* Use PCI_DMA_... */
  
- 	struct domain_device *parent;
- 	struct list_head siblings; /* devices on the same level */
-+	struct scsi_target *starget; /* Corresponding SCSI target device */
- 	struct asd_sas_port *port;        /* shortcut to root of the tree */
- 	struct sas_phy *phy;
++	u32    tag;
++
+ 	struct task_status_struct task_status;
+ 	void   (*task_done)(struct sas_task *);
  
 -- 
 2.16.4
