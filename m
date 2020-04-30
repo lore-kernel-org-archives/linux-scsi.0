@@ -2,25 +2,25 @@ Return-Path: <SRS0=Cu6i=6O=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 334D1C8300D
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F45CC8300B
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07AD120870
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04E9220873
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Apr 2020 13:20:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726900AbgD3NUF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:20:05 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60568 "EHLO mx2.suse.de"
+        id S1726975AbgD3NUN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 09:20:13 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60750 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726689AbgD3NUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:20:04 -0400
+        id S1726850AbgD3NUG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 09:20:06 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id B8D7CAEBF;
+        by mx2.suse.de (Postfix) with ESMTP id D2B35AED6;
         Thu, 30 Apr 2020 13:20:01 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -29,11 +29,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Ming Lei <ming.lei@redhat.com>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH RFC v3 04/41] csiostor: use reserved command for LUN reset
-Date:   Thu, 30 Apr 2020 15:18:27 +0200
-Message-Id: <20200430131904.5847-5-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH RFC v3 06/41] virtio_scsi: use reserved commands for TMF
+Date:   Thu, 30 Apr 2020 15:18:29 +0200
+Message-Id: <20200430131904.5847-7-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200430131904.5847-1-hare@suse.de>
 References: <20200430131904.5847-1-hare@suse.de>
@@ -42,171 +41,245 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When issuing a LUN reset we should be using a reserved command
-to avoid overwriting the original command.
+From: Hannes Reinecke <hare@suse.com>
+
+Set two commands aside for TMF, and use reserved commands to issue
+TMFs. With that we can drop the TMF memory pool.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/csiostor/csio_init.c |  1 +
- drivers/scsi/csiostor/csio_scsi.c | 48 +++++++++++++++++++++++----------------
- 2 files changed, 30 insertions(+), 19 deletions(-)
+ drivers/scsi/virtio_scsi.c | 105 ++++++++++++++++++---------------------------
+ 1 file changed, 41 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index 8dea7d53788a..5e1b0a24caf6 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -622,6 +622,7 @@ csio_shost_init(struct csio_hw *hw, struct device *dev,
- 	ln->dev_num = (shost->host_no << 16);
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 0e0910c5b942..26054c29d897 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -35,10 +35,10 @@
+ #define VIRTIO_SCSI_MEMPOOL_SZ 64
+ #define VIRTIO_SCSI_EVENT_LEN 8
+ #define VIRTIO_SCSI_VQ_BASE 2
++#define VIRTIO_SCSI_RESERVED_CMDS 2
  
- 	shost->can_queue = CSIO_MAX_QUEUE;
-+	shost->nr_reserved_cmds = 1;
- 	shost->this_id = -1;
- 	shost->unique_id = shost->host_no;
- 	shost->max_cmd_len = 16; /* Max CDB length supported */
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 00cf33573136..273a8b952e69 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -2057,10 +2057,12 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
- static int
- csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
+ /* Command queue element */
+ struct virtio_scsi_cmd {
+-	struct scsi_cmnd *sc;
+ 	struct completion *comp;
+ 	union {
+ 		struct virtio_scsi_cmd_req       cmd;
+@@ -86,9 +86,6 @@ struct virtio_scsi {
+ 	struct virtio_scsi_vq req_vqs[];
+ };
+ 
+-static struct kmem_cache *virtscsi_cmd_cache;
+-static mempool_t *virtscsi_cmd_pool;
+-
+ static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
  {
--	struct csio_lnode *ln = shost_priv(cmnd->device->host);
-+	struct scsi_cmnd *reset_cmnd;
-+	struct scsi_device *sdev = cmnd->device;
-+	struct csio_lnode *ln = shost_priv(sdev->host);
- 	struct csio_hw *hw = csio_lnode_to_hw(ln);
- 	struct csio_scsim *scsim = csio_hw_to_scsim(hw);
--	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
-+	struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
- 	struct csio_ioreq *ioreq = NULL;
- 	struct csio_scsi_qset *sqset;
- 	unsigned long flags;
-@@ -2073,13 +2075,13 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 		goto fail;
+ 	return vdev->priv;
+@@ -108,7 +105,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
+ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+ {
+ 	struct virtio_scsi_cmd *cmd = buf;
+-	struct scsi_cmnd *sc = cmd->sc;
++	struct scsi_cmnd *sc = scsi_cmd_from_priv(cmd);
+ 	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
  
- 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
--		      cmnd->device->lun, rn->flowid, rn->scsi_id);
-+		      sdev->lun, rn->flowid, rn->scsi_id);
+ 	dev_dbg(&sc->device->sdev_gendev,
+@@ -406,7 +403,7 @@ static int __virtscsi_add_cmd(struct virtqueue *vq,
+ 			    struct virtio_scsi_cmd *cmd,
+ 			    size_t req_size, size_t resp_size)
+ {
+-	struct scsi_cmnd *sc = cmd->sc;
++	struct scsi_cmnd *sc = scsi_cmd_from_priv(cmd);
+ 	struct scatterlist *sgs[6], req, resp;
+ 	struct sg_table *out, *in;
+ 	unsigned out_num = 0, in_num = 0;
+@@ -557,8 +554,6 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
+ 	dev_dbg(&sc->device->sdev_gendev,
+ 		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
  
- 	if (!csio_is_lnode_ready(ln)) {
- 		csio_err(hw,
- 			 "LUN reset cannot be issued on non-ready"
- 			 " local node vnpi:0x%x (LUN:%llu)\n",
--			 ln->vnp_flowid, cmnd->device->lun);
-+			 ln->vnp_flowid, sdev->lun);
- 		goto fail;
- 	}
+-	cmd->sc = sc;
+-
+ 	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
  
-@@ -2099,17 +2101,22 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 		csio_err(hw,
- 			 "LUN reset cannot be issued on non-ready"
- 			 " remote node ssni:0x%x (LUN:%llu)\n",
--			 rn->flowid, cmnd->device->lun);
-+			 rn->flowid, sdev->lun);
- 		goto fail;
- 	}
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+@@ -590,17 +585,17 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
+ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(comp);
+-	int ret = FAILED;
  
-+	reset_cmnd = scsi_get_reserved_cmd(sdev, DMA_NONE);
-+	if (!reset_cmnd) {
-+		csio_err(hw, "No free TMF request\n");
-+		goto fail;
+ 	cmd->comp = &comp;
++
+ 	if (virtscsi_add_cmd(&vscsi->ctrl_vq, cmd,
+ 			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf, true) < 0)
+-		goto out;
++		return FAILED;
+ 
+ 	wait_for_completion(&comp);
+ 	if (cmd->resp.tmf.response == VIRTIO_SCSI_S_OK ||
+ 	    cmd->resp.tmf.response == VIRTIO_SCSI_S_FUNCTION_SUCCEEDED)
+-		ret = SUCCESS;
++		return SUCCESS;
+ 
+ 	/*
+ 	 * The spec guarantees that all requests related to the TMF have
+@@ -613,33 +608,36 @@ static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
+ 	 * REQ_ATOM_COMPLETE has been set.
+ 	 */
+ 	virtscsi_poll_requests(vscsi);
+-
+-out:
+-	mempool_free(cmd, virtscsi_cmd_pool);
+-	return ret;
++	return FAILED;
+ }
+ 
+ static int virtscsi_device_reset(struct scsi_cmnd *sc)
+ {
++	struct scsi_device *sdev = sc->device;
++	struct scsi_cmnd *reset_sc;
+ 	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
+ 	struct virtio_scsi_cmd *cmd;
++	int rc;
+ 
+-	sdev_printk(KERN_INFO, sc->device, "device reset\n");
+-	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
+-	if (!cmd)
++	sdev_printk(KERN_INFO, sdev, "device reset\n");
++	reset_sc = scsi_get_reserved_cmd(sdev, DMA_NONE);
++	if (!reset_sc)
+ 		return FAILED;
+-
++	cmd = scsi_cmd_priv(reset_sc);
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
+ 		.type = VIRTIO_SCSI_T_TMF,
+ 		.subtype = cpu_to_virtio32(vscsi->vdev,
+ 					     VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET),
+ 		.lun[0] = 1,
+-		.lun[1] = sc->device->id,
+-		.lun[2] = (sc->device->lun >> 8) | 0x40,
+-		.lun[3] = sc->device->lun & 0xff,
++		.lun[1] = sdev->id,
++		.lun[2] = (sdev->lun >> 8) | 0x40,
++		.lun[3] = sdev->lun & 0xff,
+ 	};
+-	return virtscsi_tmf(vscsi, cmd);
++	rc = virtscsi_tmf(vscsi, cmd);
++	scsi_put_reserved_cmd(reset_sc);
++
++	return rc;
+ }
+ 
+ static int virtscsi_device_alloc(struct scsi_device *sdevice)
+@@ -679,25 +677,31 @@ static int virtscsi_change_queue_depth(struct scsi_device *sdev, int qdepth)
+ 
+ static int virtscsi_abort(struct scsi_cmnd *sc)
+ {
+-	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
++	struct scsi_device *sdev = sc->device;
++	struct scsi_cmnd *reset_sc;
++	struct virtio_scsi *vscsi = shost_priv(sdev->host);
+ 	struct virtio_scsi_cmd *cmd;
++	int rc;
+ 
+ 	scmd_printk(KERN_INFO, sc, "abort\n");
+-	cmd = mempool_alloc(virtscsi_cmd_pool, GFP_NOIO);
+-	if (!cmd)
++	reset_sc = scsi_get_reserved_cmd(sdev, DMA_NONE);
++	if (!reset_sc)
+ 		return FAILED;
++	cmd = scsi_cmd_priv(reset_sc);
+ 
+ 	memset(cmd, 0, sizeof(*cmd));
+ 	cmd->req.tmf = (struct virtio_scsi_ctrl_tmf_req){
+ 		.type = VIRTIO_SCSI_T_TMF,
+ 		.subtype = VIRTIO_SCSI_T_TMF_ABORT_TASK,
+ 		.lun[0] = 1,
+-		.lun[1] = sc->device->id,
+-		.lun[2] = (sc->device->lun >> 8) | 0x40,
+-		.lun[3] = sc->device->lun & 0xff,
++		.lun[1] = sdev->id,
++		.lun[2] = (sdev->lun >> 8) | 0x40,
++		.lun[3] = sdev->lun & 0xff,
+ 		.tag = cpu_to_virtio64(vscsi->vdev, (unsigned long)sc),
+ 	};
+-	return virtscsi_tmf(vscsi, cmd);
++	rc = virtscsi_tmf(vscsi, cmd);
++	scsi_put_reserved_cmd(reset_sc);
++	return rc;
+ }
+ 
+ static int virtscsi_map_queues(struct Scsi_Host *shost)
+@@ -865,6 +869,11 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 		goto virtscsi_init_failed;
+ 
+ 	shost->can_queue = virtqueue_get_vring_size(vscsi->req_vqs[0].vq);
++	shost->can_queue -= VIRTIO_SCSI_RESERVED_CMDS;
++	if (shost->can_queue <= 0) {
++		err = -ENOMEM;
++		goto scsi_add_host_failed;
 +	}
- 	/* Get a free ioreq structure - SM is already set to uninit */
- 	ioreq = csio_get_scsi_ioreq_lock(hw, scsim);
  
- 	if (!ioreq) {
- 		csio_err(hw, "Out of IO request elements. Active # :%d\n",
- 			 scsim->stats.n_active);
--		goto fail;
-+		goto fail_ret_cmnd;
- 	}
+ 	cmd_per_lun = virtscsi_config_get(vdev, cmd_per_lun) ?: 1;
+ 	shost->cmd_per_lun = min_t(u32, cmd_per_lun, shost->can_queue);
+@@ -878,6 +887,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+ 	shost->max_channel = 0;
+ 	shost->max_cmd_len = VIRTIO_SCSI_CDB_SIZE;
+ 	shost->nr_hw_queues = num_queues;
++	shost->nr_reserved_cmds = VIRTIO_SCSI_RESERVED_CMDS;
  
- 	sqset			= &hw->sqset[ln->portid][smp_processor_id()];
-@@ -2119,11 +2126,11 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	ioreq->iq_idx		= sqset->iq_idx;
- 	ioreq->eq_idx		= sqset->eq_idx;
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+ 	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_T10_PI)) {
+@@ -979,45 +989,12 @@ static struct virtio_driver virtio_scsi_driver = {
  
--	csio_scsi_cmnd(ioreq)	= cmnd;
--	cmnd->host_scribble	= (unsigned char *)ioreq;
--	cmnd->SCp.Status	= 0;
-+	csio_scsi_cmnd(ioreq)	= reset_cmnd;
-+	reset_cmnd->host_scribble	= (unsigned char *)ioreq;
-+	reset_cmnd->SCp.Status	= 0;
+ static int __init init(void)
+ {
+-	int ret = -ENOMEM;
+-
+-	virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
+-	if (!virtscsi_cmd_cache) {
+-		pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
+-		goto error;
+-	}
+-
+-
+-	virtscsi_cmd_pool =
+-		mempool_create_slab_pool(VIRTIO_SCSI_MEMPOOL_SZ,
+-					 virtscsi_cmd_cache);
+-	if (!virtscsi_cmd_pool) {
+-		pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
+-		goto error;
+-	}
+-	ret = register_virtio_driver(&virtio_scsi_driver);
+-	if (ret < 0)
+-		goto error;
+-
+-	return 0;
+-
+-error:
+-	if (virtscsi_cmd_pool) {
+-		mempool_destroy(virtscsi_cmd_pool);
+-		virtscsi_cmd_pool = NULL;
+-	}
+-	if (virtscsi_cmd_cache) {
+-		kmem_cache_destroy(virtscsi_cmd_cache);
+-		virtscsi_cmd_cache = NULL;
+-	}
+-	return ret;
++	return register_virtio_driver(&virtio_scsi_driver);
+ }
  
--	cmnd->SCp.Message	= FCP_TMF_LUN_RESET;
-+	reset_cmnd->SCp.Message	= FCP_TMF_LUN_RESET;
- 	ioreq->tmo		= CSIO_SCSI_LUNRST_TMO_MS / 1000;
- 
- 	/*
-@@ -2140,7 +2147,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	sld.level = CSIO_LEV_LUN;
- 	sld.lnode = ioreq->lnode;
- 	sld.rnode = ioreq->rnode;
--	sld.oslun = cmnd->device->lun;
-+	sld.oslun = sdev->lun;
- 
- 	spin_lock_irqsave(&hw->lock, flags);
- 	/* Kick off TM SM on the ioreq */
-@@ -2156,14 +2163,14 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	csio_dbg(hw, "Waiting max %d secs for LUN reset completion\n",
- 		    count * (CSIO_SCSI_TM_POLL_MS / 1000));
- 	/* Wait for completion */
--	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd)
-+	while ((((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == reset_cmnd)
- 								&& count--)
- 		msleep(CSIO_SCSI_TM_POLL_MS);
- 
- 	/* LUN reset timed-out */
--	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == cmnd) {
-+	if (((struct scsi_cmnd *)csio_scsi_cmnd(ioreq)) == reset_cmnd) {
- 		csio_err(hw, "LUN reset (%d:%llu) timed out\n",
--			 cmnd->device->id, cmnd->device->lun);
-+			 sdev->id, sdev->lun);
- 
- 		spin_lock_irq(&hw->lock);
- 		csio_scsi_drvcleanup(ioreq);
-@@ -2174,11 +2181,12 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	}
- 
- 	/* LUN reset returned, check cached status */
--	if (cmnd->SCp.Status != FW_SUCCESS) {
-+	if (reset_cmnd->SCp.Status != FW_SUCCESS) {
- 		csio_err(hw, "LUN reset failed (%d:%llu), status: %d\n",
--			 cmnd->device->id, cmnd->device->lun, cmnd->SCp.Status);
--		goto fail;
-+			 sdev->id, sdev->lun, reset_cmnd->SCp.Status);
-+		goto fail_ret_cmnd;
- 	}
-+	scsi_put_reserved_cmd(reset_cmnd);
- 
- 	/* LUN reset succeeded, Start aborting affected I/Os */
- 	/*
-@@ -2196,7 +2204,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	if (retval != 0) {
- 		csio_err(hw,
- 			 "Attempt to abort I/Os during LUN reset of %llu"
--			 " returned %d\n", cmnd->device->lun, retval);
-+			 " returned %d\n", sdev->lun, retval);
- 		/* Return I/Os back to active_q */
- 		spin_lock_irq(&hw->lock);
- 		list_splice_tail_init(&local_q, &scsim->active_q);
-@@ -2207,12 +2215,14 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	CSIO_INC_STATS(rn, n_lun_rst);
- 
- 	csio_info(hw, "LUN reset occurred (%d:%llu)\n",
--		  cmnd->device->id, cmnd->device->lun);
-+		  sdev->id, sdev->lun);
- 
- 	return SUCCESS;
- 
- fail_ret_ioreq:
- 	csio_put_scsi_ioreq_lock(hw, scsim, ioreq);
-+fail_ret_cmnd:
-+	scsi_put_reserved_cmd(reset_cmnd);
- fail:
- 	CSIO_INC_STATS(rn, n_lun_rst_fail);
- 	return FAILED;
+ static void __exit fini(void)
+ {
+ 	unregister_virtio_driver(&virtio_scsi_driver);
+-	mempool_destroy(virtscsi_cmd_pool);
+-	kmem_cache_destroy(virtscsi_cmd_cache);
+ }
+ module_init(init);
+ module_exit(fini);
 -- 
 2.16.4
 
