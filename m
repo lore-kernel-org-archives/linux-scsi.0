@@ -5,66 +5,66 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE42C47256
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE42C47254
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A3EAC216FD
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFA34216FD
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VxLbMJ5U"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TytGx4cA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726564AbgEAVn2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 17:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43630 "EHLO
+        id S1726626AbgEAVna (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 17:43:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726473AbgEAVn1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 17:43:27 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B412DC08E859
-        for <linux-scsi@vger.kernel.org>; Fri,  1 May 2020 14:43:26 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id j1so13218507wrt.1
-        for <linux-scsi@vger.kernel.org>; Fri, 01 May 2020 14:43:26 -0700 (PDT)
+        with ESMTP id S1726473AbgEAVn3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 17:43:29 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EF50C061A0C;
+        Fri,  1 May 2020 14:43:28 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id x17so13177636wrt.5;
+        Fri, 01 May 2020 14:43:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Vv4ytNzEcopKaz8vwbQnowrsOWj2zpwTXKtoo4+Vczk=;
-        b=VxLbMJ5Uag5/Y15QQg6HOyi1qIGGHfBoUvww14S9PZvWN5wdzALRY07gIweUUYJSnb
-         qa0GGT53W4KGDhtatGDL4mw/OKTLr0q0XhUprOQrIFjcGHjS3guVHJG4Wh3kRfFjFVSQ
-         nVhFI1HapZ3HxI2/CDkySbjzARYGngvxgHvJuRS9tRIW6TFWi53TV6jIu1s7P7cgHC8e
-         7kkqGN7wKFD5I79bTDLiJsRN5HY08pkTLpSlSiLz5iJObdx5de2hOvHnMXSY12I0sMMq
-         TuUKu7ashqkKc6GwiMCad2Jb4quu3fEDdpJbjyGYePHRpHXpz0otkte2vGrCo2r7ky8A
-         5SuQ==
+        bh=k4iB7kYfbLttb4YHb0hIHMQWZXXWpmHPyDeGkvvrkzM=;
+        b=TytGx4cAkJjG73EC35zKdiVqF27g4gkE+3TiIG9bZ+FWJcM5MinF9rNbwFdzLRxidM
+         8s+2s7cMdLMMhJ8Trq/4pt9hmAyvJ8upVNUrbW3pxgyz2KTevSJlYNAutE7FH6UBgTkL
+         OPXczHdSl4Qa1PNYcVprjOR/fNhXA2qwbAG+Dkoa5L1Fkw6Z4nUmy/1hOJYtrOORwGHw
+         0P172brNBNoPMxeeE4GC6J0wcBcjqgcRbCDrWZPVu+1SgSIM8W8LUcXOpg9V+J4xjmvW
+         CrHS8T1bsu6X8ide9rGAYSA9n0Sb/b/3w9Au+Mzz45OPg1e3iIy/amver15p9eHy9+0T
+         3Ckw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Vv4ytNzEcopKaz8vwbQnowrsOWj2zpwTXKtoo4+Vczk=;
-        b=puHm0AB5ZjPxH4MEKqe69rU2XNkq/OfKbmtPAZXEYNCeAfYWR2wDxclqLx0XOQ9qrT
-         qPEauDRuXuZSkMnNfOISsGMqcomlsC9xgHh0veVt8dDKw3BIvl3I44y7EvQki3yLOXCZ
-         8FUAq0WNGQ5IMKeEPb5NI9H55x9DTtLQFPHIylx47JKpWR7SW0Nvy6bq9T+V/f7qN6dc
-         Ta+5ppfe+bT1qBx79nrvY7MbUYTI6Z+LcNs91+7edbY+aRPvTIcKh+tH25Bhzyc9tliQ
-         q+RXvvIEFJYL6C3sCSonUwtLJqVBH7JSQreXTyBULsQm/+Le84j8pfUzli2lWLU5V+QS
-         2BuA==
-X-Gm-Message-State: AGi0PuY8gnsaV0SyywZnKZakuk3B2IsdksbvINgxLaAWD9xDZ0eQTBhQ
-        3ipzXvUsKQQW1OSnLemF0ZpZC6rF
-X-Google-Smtp-Source: APiQypLd9xS2P920d2QS8nuesUj1eZHUEBM+lwxHtpEU2NI0eLL+dqNNy4dHp5mgy3ngj0GlVtz+0g==
-X-Received: by 2002:adf:edc6:: with SMTP id v6mr5997781wro.8.1588369405225;
-        Fri, 01 May 2020 14:43:25 -0700 (PDT)
+        bh=k4iB7kYfbLttb4YHb0hIHMQWZXXWpmHPyDeGkvvrkzM=;
+        b=S0xWBgv5F9bGMMwoiC4hWJmbKs+JuqJxgLBOcv7wn5u5nJJJjIfxyur0TFlV3ZDffj
+         d68VxZlyYhkSE6bZus2lYGb75z4KpocZrT9WAVcbfaI5tG+uUUwwIHbgIvtu/By63OA9
+         R4wPdkjMyZV93/ta9BDGfo6N8Lvv4baTYym6YDOwb6zIaD7bIYCfXQnjRhYK/Iv1nxg5
+         7U7ilWZzxFRsqQyiCSKtZqxCwqTT3CYA/blf5E3ZL/gIN/f9wVFn2Zx8Iu/C71GN4ZKw
+         uLSTdfVCzstdhdL9QCObe0YKbH7w1olDYGw+k1XViLno2XE9a77/dz51aYsYoK/6jUt0
+         5Mfg==
+X-Gm-Message-State: AGi0PuZvbBQYbc9FFABbowlokZxLAgzJfD4CemfMElHuNuN3fkxvmWU8
+        Aq/SU4+v/dwB+9jROfU/flhqxyUI
+X-Google-Smtp-Source: APiQypJhSV5JPJvKRKcUl3mh/ccEhO9BXPSpSJsU3Nf8AceXp3ESVmIpIsmxEhGOZZ8Fzl1tM7jR5w==
+X-Received: by 2002:a5d:664f:: with SMTP id f15mr5889140wrw.72.1588369406984;
+        Fri, 01 May 2020 14:43:26 -0700 (PDT)
 Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t2sm1207734wmt.15.2020.05.01.14.43.23
+        by smtp.gmail.com with ESMTPSA id t2sm1207734wmt.15.2020.05.01.14.43.25
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 May 2020 14:43:24 -0700 (PDT)
+        Fri, 01 May 2020 14:43:26 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
+Cc:     James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 3/9] lpfc: Remove re-binding of nvme rport during registration
-Date:   Fri,  1 May 2020 14:43:04 -0700
-Message-Id: <20200501214310.91713-4-jsmart2021@gmail.com>
+Subject: [PATCH 4/9] lpfc: Fix negation of else clause in lpfc_prep_node_fc4type
+Date:   Fri,  1 May 2020 14:43:05 -0700
+Message-Id: <20200501214310.91713-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200501214310.91713-1-jsmart2021@gmail.com>
 References: <20200501214310.91713-1-jsmart2021@gmail.com>
@@ -75,65 +75,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The lldd rebinds the ndlp with rport during a nvme rport registration
-(va nvme_fc_register_remoteport). If rport & ndlp pointers are same as
-the previous one, the lldd will re-use the ndlp and rport association
-without re-iniitalization. This assumption is incorrect. The lldd should
-be ignorant of whether the returned rport pointer is new or not, and
-should always assume it is new.
+Implementation of a previous patch added a condition to an if check
+that always end up with the if test being true. Execution of the else
+clause was inadvertantly negated.  The additional condition check was
+incorrect and unnecessary after the other modifications had been done
+in that patch.
 
-Remove the re-binding code, always assumes that rport pointer received
-from transport is a new pointer.
+Remove the check from the if series.
 
+Fixes: b95b21193c85 ("scsi: lpfc: Fix loss of remote port after devloss due to lack of RPIs")
+Cc: <stable@vger.kernel.org> # v5.4+
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 32 --------------------------------
- 1 file changed, 32 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 43df08aeecf1..3121cf37a572 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2322,38 +2322,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 		spin_unlock_irq(&vport->phba->hbalock);
- 		rport = remote_port->private;
- 		if (oldrport) {
--			/* New remoteport record does not guarantee valid
--			 * host private memory area.
--			 */
--			if (oldrport == remote_port->private) {
--				/* Same remoteport - ndlp should match.
--				 * Just reuse.
--				 */
--				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
--						 LOG_NVME_DISC,
--						 "6014 Rebind lport to current "
--						 "remoteport x%px wwpn 0x%llx, "
--						 "Data: x%x x%x x%px x%px x%x "
--						 " x%06x\n",
--						 remote_port,
--						 remote_port->port_name,
--						 remote_port->port_id,
--						 remote_port->port_role,
--						 oldrport->ndlp,
--						 ndlp,
--						 ndlp->nlp_type,
--						 ndlp->nlp_DID);
--
--				/* It's a complete rebind only if the driver
--				 * is registering with the same ndlp. Otherwise
--				 * the driver likely executed a node swap
--				 * prior to this registration and the ndlp to
--				 * remoteport binding needs to be redone.
--				 */
--				if (prev_ndlp == ndlp)
--					return 0;
--
--			}
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 2aa578d20f8c..7fce73c39c1c 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -462,7 +462,6 @@ lpfc_prep_node_fc4type(struct lpfc_vport *vport, uint32_t Did, uint8_t fc4_type)
+ 	struct lpfc_nodelist *ndlp;
  
- 			/* Sever the ndlp<->rport association
- 			 * before dropping the ndlp ref from
+ 	if ((vport->port_type != LPFC_NPIV_PORT) ||
+-	    (fc4_type == FC_TYPE_FCP) ||
+ 	    !(vport->ct_flags & FC_CT_RFF_ID) || !vport->cfg_restrict_login) {
+ 
+ 		ndlp = lpfc_setup_disc_node(vport, Did);
 -- 
 2.26.1
 
