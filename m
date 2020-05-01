@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4EC5C35280
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2ED7C47254
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A528D208DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AB88208DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s/cOZvj0"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tRp1XGph"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726495AbgEAVn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726519AbgEAVn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 1 May 2020 17:43:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43616 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726396AbgEAVnZ (ORCPT
+        with ESMTP id S1726463AbgEAVnZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 17:43:25 -0400
 Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79AB3C061A0E
-        for <linux-scsi@vger.kernel.org>; Fri,  1 May 2020 14:43:23 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id d15so13200063wrx.3
-        for <linux-scsi@vger.kernel.org>; Fri, 01 May 2020 14:43:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E454C061A0C
+        for <linux-scsi@vger.kernel.org>; Fri,  1 May 2020 14:43:25 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id l18so2442944wrn.6
+        for <linux-scsi@vger.kernel.org>; Fri, 01 May 2020 14:43:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=BpCqSnke1+1QEG3E8VLjxlAmomwwH06zG/XWaoTpefM=;
-        b=s/cOZvj07tW4AzYsAWq6pg96iK3R42I581GwbGlixckxJ5etlb2YHKvBKPPamxMjrF
-         ZcQ8/T1l50d0ASHDmt8lnJgDCRBoDuECNCQX3wb23iAQ/SQD17KjWPv6LK12p7h6/vh2
-         SOPZ3mKsFmVnBx1Wtq8cA1bjg67gvdOSwbmM/y1Nl8Tjk/0e6F7705OTeuS/lQr8j2ye
-         5/iY/K3Wy96s6cYjZysxfkVufwH12N5OIF3ikpL3NVmyj3eVyp6UG+WUhZ5+mevzeoR8
-         UYyN55Q4EdcEee8sV49H5IqK5CDTxXebTpPaiE1EXwUaun+4Q8UtBhYbz7hIPBBhVt2a
-         I3nQ==
+        bh=65kWVGa9kl8uAn4jfM7Y1jGC934v1JVqxU+ajpy5d3k=;
+        b=tRp1XGphPJuBLOsOqD4rCfHsyoOpxjqTdontn9QJTxDUW8h0cvrzqbQypz5pLpU4TM
+         EqDhLqFIvp4CFIv6xVLf5EjnP1mQmOQTYsVsXZoj7D1yWZYAoiXhxL6H3u31VeQBFOI1
+         RRwl/XtyfRl7EdscV46pJzifjupoBm2aVfim5q9ChNVkoLJ1HUm1f7PO/BI4BLHOXt8o
+         wyqzUS6ix9G9QhX25xyo7/dAekvFc9hLlXNzHiECM9m83a3W/sYaXh3+8l2AKNEmS9bZ
+         q8K2Kw9XQhg8u+pQXkwvEsmfLji3VBq7ssKQM+CB6REeegHwV7XSrCY/RrurzD3sM1zZ
+         MBTg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=BpCqSnke1+1QEG3E8VLjxlAmomwwH06zG/XWaoTpefM=;
-        b=DvE7WkVGGVoX8amlU9BnGvsBNpc2GEIOXB567BKJrtc4EX2ReN2ZORvepiCjiBb98U
-         MWWjwTTSCZ8wDKN45zrxrpe5JB8STDvC9rgOxkfhqlx32EZcko2x/txKzMrXeId2RbtX
-         W4SnLhGXnEnvMrE8pPOwnS/kTr81jeWlCTAn3dsbBvXwtbzBUUBE7xnH+5qGEzry4M1R
-         E/sVbtHSFUwVhVnpY75rvCXd5Yi8t/cz6CM7yHOrRnWVZUqPrUqKTAQ6xt23bqhj6lf2
-         Q+Pk1PnKC8OQgLCCo7KwcP1Kwl9xeQq5tEiiQaef30w9lPMM6UsDOO5cBYQoPwiTuHyq
-         8L+Q==
-X-Gm-Message-State: AGi0PuaTWpy2zFTDC9VesO6XMNWkI2hO2l+CQO6dKhBFx6ojFSlK8yQ3
-        +3WG+3DiBKVzs0YRDJOJWtJF4agb
-X-Google-Smtp-Source: APiQypLhF9bdm/Z6G4Y3j4S2RXR7BN8kPmaYm6F2cw/oG1NsQOIJ+p3sPrkJ+dScHeG5GbpgRrYmeg==
-X-Received: by 2002:adf:f990:: with SMTP id f16mr5606293wrr.33.1588369401993;
-        Fri, 01 May 2020 14:43:21 -0700 (PDT)
+        bh=65kWVGa9kl8uAn4jfM7Y1jGC934v1JVqxU+ajpy5d3k=;
+        b=JsrjWR49c2IR0F2K1X09EeQEculti9/iDwVCbhSxGgHM7zhZBUYuWnHzK9efZNMHWx
+         CZBxVLmbgsRpFwW1apwI4RNITPom+SRHok8Bf69ac96DUcwfQnqfX/Ca1dzDEmYf3McO
+         xmvuR0H2GFQyl4ho2Olow1xPyxwmvPA1p5vl07BDFyBlKf5U/yNyWkCxTdnrwrQT5WQQ
+         3OKN6BFsDo2pNbbOh99bzOjNtzY1k4V6c4+WsTLftlQtQKjcxITLR7ar5ktG0c7vZpm2
+         fwvOeY9ykrqjXM1lNLXAo4a4ywaYDfjQiXJBRie11HnRkrQ4SKmvDcNo5YMRTbP/MLeX
+         FjNg==
+X-Gm-Message-State: AGi0PubSKtgOA7Byhzb57WTEj4/iBvAoFf+WxYh0kazxltStsY2KZi0r
+        FKl6GzIBQ8r+JZNadr5KxV1UTxL2
+X-Google-Smtp-Source: APiQypK3kjwRlZ8lwSUbsEr3H3Hl6ZlwGqT1vmdMQJHbYPzZKSewIaKrQDSaVz2AsmbR6Qb4UJZ/6w==
+X-Received: by 2002:a05:6000:1008:: with SMTP id a8mr6326641wrx.189.1588369403598;
+        Fri, 01 May 2020 14:43:23 -0700 (PDT)
 Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t2sm1207734wmt.15.2020.05.01.14.43.20
+        by smtp.gmail.com with ESMTPSA id t2sm1207734wmt.15.2020.05.01.14.43.22
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 May 2020 14:43:21 -0700 (PDT)
+        Fri, 01 May 2020 14:43:23 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 1/9] lpfc: Synchronize NVME transport and lpfc driver devloss_tmo
-Date:   Fri,  1 May 2020 14:43:02 -0700
-Message-Id: <20200501214310.91713-2-jsmart2021@gmail.com>
+Subject: [PATCH 2/9] lpfc: Maintain atomic consistency of queue_claimed flag
+Date:   Fri,  1 May 2020 14:43:03 -0700
+Message-Id: <20200501214310.91713-3-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200501214310.91713-1-jsmart2021@gmail.com>
 References: <20200501214310.91713-1-jsmart2021@gmail.com>
@@ -75,40 +75,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver is not passing it's devloss tmo to the nvme-fc transport when
-registering the remote port. Thus devloss tmo for the nvme-fc remote port
-will be set to the transport's default. This causes driver actions to be
-out of sync with transport actions and out of sync with scsi actions for
-perhaps the same remote port.
+A previous change introduced the atomic use of queue_claimed flag for
+eq's and cq's.  The code works fine, but the clearing of the
+queue_claimed flag is not atomic.
 
-This is especially notable in the following scenario: while remote port
-is attached, devloss is changed globally for lpfc remote ports via lpfc
-sysfs parameter. lpfc ties this change in with nvme-fc transport. If the
-device disconnects long enough for devloss to expire thus the existing
-remote port is deleted, then the remote port is re-discovered, the newly
-created remote port will end up set at the transport default, not lpfc's
-value.
-
-Fix by setting devloss tmo value when registering the remote port.
+Change queue_claimed = 0 into xchg(&queue_claimed, 0) to be consistent
+for change under atomicity.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 12d2b2775773..43df08aeecf1 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -2296,6 +2296,7 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index b6fb665e6ec4..9ce37560f4c0 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -538,7 +538,7 @@ lpfc_sli4_process_eq(struct lpfc_hba *phba, struct lpfc_queue *eq,
+ 	if (count > eq->EQ_max_eqe)
+ 		eq->EQ_max_eqe = count;
  
- 	rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
- 	rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
-+	rpinfo.dev_loss_tmo = vport->cfg_devloss_tmo;
+-	eq->queue_claimed = 0;
++	xchg(&eq->queue_claimed, 0);
  
- 	spin_lock_irq(&vport->phba->hbalock);
- 	oldrport = lpfc_ndlp_get_nrport(ndlp);
+ rearm_and_exit:
+ 	/* Always clear the EQ. */
+@@ -13694,7 +13694,7 @@ __lpfc_sli4_process_cq(struct lpfc_hba *phba, struct lpfc_queue *cq,
+ 				"0369 No entry from completion queue "
+ 				"qid=%d\n", cq->queue_id);
+ 
+-	cq->queue_claimed = 0;
++	xchg(&cq->queue_claimed, 0);
+ 
+ rearm_and_exit:
+ 	phba->sli4_hba.sli4_write_cq_db(phba, cq, consumed,
 -- 
 2.26.1
 
