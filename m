@@ -2,160 +2,124 @@ Return-Path: <SRS0=ePHC=6P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CA0BC47257
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 14:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FD1C47253
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 14:53:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17EBD2173E
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 14:44:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="vDhiT4fr"
+	by mail.kernel.org (Postfix) with ESMTP id 9EAD320857
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 14:53:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728981AbgEAOoS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 10:44:18 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:65377 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728896AbgEAOoR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 10:44:17 -0400
-X-UUID: 55359df475514474a6f5bdab7b596339-20200501
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=evW9M5xH2hSwwDxvwZiNYpsh4mIH0v4sdQGB+gToaUI=;
-        b=vDhiT4frFxhi5TgTmpe5GquHYUWVE9Ty8qPwDz2qGQLcOFn20+TkulcmkY8V2h1ST8cPXVgut6sL4sTkcSfaw/v8h8hs3b6n83sds/8JLkG9RRs6Lllu8S4Jf34dL9uLEokjJvlHVZMxmEYTDTXOLt+uZM+zZFk0PLqn01vODDE=;
-X-UUID: 55359df475514474a6f5bdab7b596339-20200501
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1745562342; Fri, 01 May 2020 22:38:38 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 1 May 2020 22:38:34 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 1 May 2020 22:38:34 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
-CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v3 1/5] scsi: ufs: enable WriteBooster on some pre-3.1 UFS devices
-Date:   Fri, 1 May 2020 22:38:31 +0800
-Message-ID: <20200501143835.26032-2-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20200501143835.26032-1-stanley.chu@mediatek.com>
-References: <20200501143835.26032-1-stanley.chu@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1729035AbgEAOx7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 10:53:59 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3702 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728737AbgEAOx7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 10:53:59 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 041EWMTO023972;
+        Fri, 1 May 2020 10:53:44 -0400
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 30r82muqf7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 01 May 2020 10:53:44 -0400
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id 041EqEmf026392;
+        Fri, 1 May 2020 14:53:43 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma02dal.us.ibm.com with ESMTP id 30mcu7kfxv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 01 May 2020 14:53:43 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 041Ergpe59310418
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 1 May 2020 14:53:42 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id EAD627805E;
+        Fri,  1 May 2020 14:53:41 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 12D2C7805C;
+        Fri,  1 May 2020 14:53:39 +0000 (GMT)
+Received: from [153.66.254.194] (unknown [9.85.187.215])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Fri,  1 May 2020 14:53:39 +0000 (GMT)
+Message-ID: <1588344818.3428.18.camel@linux.ibm.com>
+Subject: Re: [PATCH 13/15] scsi: sas: avoid gcc-10 zero-length-bounds warning
+From:   James Bottomley <jejb@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>, John Garry <john.garry@huawei.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@steeleye.com>,
+        Hannes Reinecke <hare@suse.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Date:   Fri, 01 May 2020 07:53:38 -0700
+In-Reply-To: <CAK8P3a1=5dmgB+k9B_jk2qBhBPnMSFMWrByP4jRvyvaJwBo94A@mail.gmail.com>
+References: <20200430213101.135134-1-arnd@arndb.de>
+         <20200430213101.135134-14-arnd@arndb.de>
+         <b5e6ef12-c2ac-d0ce-b7a1-a58d4c8de300@huawei.com>
+         <CAK8P3a1=5dmgB+k9B_jk2qBhBPnMSFMWrByP4jRvyvaJwBo94A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-05-01_07:2020-04-30,2020-05-01 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ lowpriorityscore=0 priorityscore=1501 phishscore=0 impostorscore=0
+ clxscore=1011 spamscore=0 malwarescore=0 mlxscore=0 bulkscore=0
+ adultscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2003020000 definitions=main-2005010112
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-V3JpdGVCb29zdGVyIGZlYXR1cmUgY2FuIGJlIHN1cHBvcnRlZCBieSBzb21lIHByZS0zLjEgVUZT
-IGRldmljZXMNCmJ5IHVwZ3JhZGluZyBmaXJtd2FyZS4NCg0KVG8gZW5hYmxlIFdyaXRlQm9vc3Rl
-ciBmZWF0dXJlIGluIHN1Y2ggZGV2aWNlcywgaW50cm9kdWNlIGEgZGV2aWNlDQpxdWlyayB0byBy
-ZWxheCB0aGUgZW50cmFuY2UgY29uZGl0aW9uIG9mIHVmc2hjZF93Yl9wcm9iZSgpIHRvIGFsbG93
-DQpob3N0IGRyaXZlciB0byBjaGVjayB0aG9zZSBkZXZpY2VzJyBXcml0ZUJvb3N0ZXIgY2FwYWJp
-bGl0eS4NCg0KV3JpdGVCb29zdGVyIGZlYXR1cmUgY2FuIGJlIGF2YWlsYWJsZSBpZiBiZWxvdyBh
-bGwgY29uZGl0aW9ucyBhcmUNCnNhdGlzZmllZCwNCg0KMS4gSG9zdCBlbmFibGVzIFdyaXRlQm9v
-c3RlciBjYXBhYmlsaXR5DQoyLiBVRlMgMy4xIGRldmljZSBvciBVRlMgcHJlLTMuMSBkZXZpY2Ug
-d2l0aCBxdWlyaw0KICAgVUZTX0RFVklDRV9RVUlSS19TVVBQT1JUX0VYVEVOREVEX0ZFQVRVUkVT
-IGVuYWJsZWQNCjMuIERldmljZSBkZXNjcmlwdG9yIGhhcyBkRXh0ZW5kZWRVRlNGZWF0dXJlc1N1
-cHBvcnQgZmllbGQNCjQuIFdyaXRlQm9vc3RlciBzdXBwb3J0IGlzIHNwZWNpZmllZCBpbiBhYm92
-ZSBmaWVsZA0KDQpTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0
-ZWsuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNfcXVpcmtzLmggfCAgNyArKysrDQog
-ZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyAgICAgfCA2NiArKysrKysrKysrKysrKysrKysrKysr
-LS0tLS0tLS0tLS0tLQ0KIDIgZmlsZXMgY2hhbmdlZCwgNDggaW5zZXJ0aW9ucygrKSwgMjUgZGVs
-ZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc19xdWlya3MuaCBi
-L2RyaXZlcnMvc2NzaS91ZnMvdWZzX3F1aXJrcy5oDQppbmRleCBkZjdhMWU2ODA1YTMuLmUzMTc1
-YTYzYzY3NiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzX3F1aXJrcy5oDQorKysg
-Yi9kcml2ZXJzL3Njc2kvdWZzL3Vmc19xdWlya3MuaA0KQEAgLTEwMSw0ICsxMDEsMTEgQEAgc3Ry
-dWN0IHVmc19kZXZfZml4IHsNCiAgKi8NCiAjZGVmaW5lIFVGU19ERVZJQ0VfUVVJUktfSE9TVF9W
-U19ERUJVR1NBVkVDT05GSUdUSU1FCSgxIDw8IDkpDQogDQorLyoNCisgKiBTb21lIHByZS0zLjEg
-VUZTIGRldmljZXMgY2FuIHN1cHBvcnQgZXh0ZW5kZWQgZmVhdHVyZXMgYnkgdXBncmFkaW5nDQor
-ICogdGhlIGZpcm13YXJlLiBFbmFibGUgdGhpcyBxdWlyayB0byBtYWtlIFVGUyBjb3JlIGRyaXZl
-ciBwcm9iZSBhbmQgZW5hYmxlDQorICogc3VwcG9ydGVkIGZlYXR1cmVzIG9uIHN1Y2ggZGV2aWNl
-cy4NCisgKi8NCisjZGVmaW5lIFVGU19ERVZJQ0VfUVVJUktfU1VQUE9SVF9FWFRFTkRFRF9GRUFU
-VVJFUyAoMSA8PCAxMCkNCisNCiAjZW5kaWYgLyogVUZTX1FVSVJLU19IXyAqLw0KZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5j
-DQppbmRleCA5MTVlOTYzMzk4YzQuLmM2NjY4Nzk5ZDk1NiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-c2NzaS91ZnMvdWZzaGNkLmMNCisrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCkBAIC0y
-MjksNiArMjI5LDggQEAgc3RhdGljIHN0cnVjdCB1ZnNfZGV2X2ZpeCB1ZnNfZml4dXBzW10gPSB7
-DQogCQlVRlNfREVWSUNFX1FVSVJLX0hPU1RfUEFfU0FWRUNPTkZJR1RJTUUpLA0KIAlVRlNfRklY
-KFVGU19WRU5ET1JfU0tIWU5JWCwgImhCOGFMMSIgLypIMjhVNjIzMDFBTVIqLywNCiAJCVVGU19E
-RVZJQ0VfUVVJUktfSE9TVF9WU19ERUJVR1NBVkVDT05GSUdUSU1FKSwNCisJVUZTX0ZJWChVRlNf
-VkVORE9SX1NLSFlOSVgsICJIOUhRMjFBRkFNWkRBUiIsDQorCQlVRlNfREVWSUNFX1FVSVJLX1NV
-UFBPUlRfRVhURU5ERURfRkVBVFVSRVMpLA0KIA0KIAlFTkRfRklYDQogfTsNCkBAIC02ODAwLDkg
-KzY4MDIsMTkgQEAgc3RhdGljIGludCB1ZnNoY2Rfc2NzaV9hZGRfd2x1cyhzdHJ1Y3QgdWZzX2hi
-YSAqaGJhKQ0KIA0KIHN0YXRpYyB2b2lkIHVmc2hjZF93Yl9wcm9iZShzdHJ1Y3QgdWZzX2hiYSAq
-aGJhLCB1OCAqZGVzY19idWYpDQogew0KKwlpZiAoIXVmc2hjZF9pc193Yl9hbGxvd2VkKGhiYSkp
-DQorCQlyZXR1cm47DQorDQorCWlmIChoYmEtPmRlc2Nfc2l6ZS5kZXZfZGVzYyA8PSBERVZJQ0Vf
-REVTQ19QQVJBTV9FWFRfVUZTX0ZFQVRVUkVfU1VQKQ0KKwkJZ290byB3Yl9kaXNhYmxlZDsNCisN
-CiAJaGJhLT5kZXZfaW5mby5kX2V4dF91ZnNfZmVhdHVyZV9zdXAgPQ0KIAkJZ2V0X3VuYWxpZ25l
-ZF9iZTMyKGRlc2NfYnVmICsNCiAJCQkJICAgREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VGU19GRUFU
-VVJFX1NVUCk7DQorDQorCWlmICghKGhiYS0+ZGV2X2luZm8uZF9leHRfdWZzX2ZlYXR1cmVfc3Vw
-ICYgVUZTX0RFVl9XUklURV9CT09TVEVSX1NVUCkpDQorCQlnb3RvIHdiX2Rpc2FibGVkOw0KKw0K
-IAkvKg0KIAkgKiBXQiBtYXkgYmUgc3VwcG9ydGVkIGJ1dCBub3QgY29uZmlndXJlZCB3aGlsZSBw
-cm92aXNpb25pbmcuDQogCSAqIFRoZSBzcGVjIHNheXMsIGluIGRlZGljYXRlZCB3YiBidWZmZXIg
-bW9kZSwNCkBAIC02ODE4LDExICs2ODMwLDI5IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF93Yl9wcm9i
-ZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB1OCAqZGVzY19idWYpDQogCWhiYS0+ZGV2X2luZm8uYl9w
-cmVzcnZfdXNwY19lbiA9DQogCQlkZXNjX2J1ZltERVZJQ0VfREVTQ19QQVJBTV9XQl9QUkVTUlZf
-VVNSU1BDX0VOXTsNCiANCi0JaWYgKCEoKGhiYS0+ZGV2X2luZm8uZF9leHRfdWZzX2ZlYXR1cmVf
-c3VwICYNCi0JCSBVRlNfREVWX1dSSVRFX0JPT1NURVJfU1VQKSAmJg0KLQkJaGJhLT5kZXZfaW5m
-by5iX3diX2J1ZmZlcl90eXBlICYmDQorCWlmICghKGhiYS0+ZGV2X2luZm8uYl93Yl9idWZmZXJf
-dHlwZSAmJg0KIAkgICAgICBoYmEtPmRldl9pbmZvLmRfd2JfYWxsb2NfdW5pdHMpKQ0KLQkJaGJh
-LT5jYXBzICY9IH5VRlNIQ0RfQ0FQX1dCX0VOOw0KKwkJZ290byB3Yl9kaXNhYmxlZDsNCisNCisJ
-cmV0dXJuOw0KKw0KK3diX2Rpc2FibGVkOg0KKwloYmEtPmNhcHMgJj0gflVGU0hDRF9DQVBfV0Jf
-RU47DQorfQ0KKw0KK3N0YXRpYyB2b2lkIHVmc19maXh1cF9kZXZpY2Vfc2V0dXAoc3RydWN0IHVm
-c19oYmEgKmhiYSkNCit7DQorCXN0cnVjdCB1ZnNfZGV2X2ZpeCAqZjsNCisJc3RydWN0IHVmc19k
-ZXZfaW5mbyAqZGV2X2luZm8gPSAmaGJhLT5kZXZfaW5mbzsNCisNCisJZm9yIChmID0gdWZzX2Zp
-eHVwczsgZi0+cXVpcms7IGYrKykgew0KKwkJaWYgKChmLT53bWFudWZhY3R1cmVyaWQgPT0gZGV2
-X2luZm8tPndtYW51ZmFjdHVyZXJpZCB8fA0KKwkJICAgICBmLT53bWFudWZhY3R1cmVyaWQgPT0g
-VUZTX0FOWV9WRU5ET1IpICYmDQorCQkgICAgICgoZGV2X2luZm8tPm1vZGVsICYmDQorCQkgICAg
-ICAgU1RSX1BSRlhfRVFVQUwoZi0+bW9kZWwsIGRldl9pbmZvLT5tb2RlbCkpIHx8DQorCQkgICAg
-ICAhc3RyY21wKGYtPm1vZGVsLCBVRlNfQU5ZX01PREVMKSkpDQorCQkJaGJhLT5kZXZfcXVpcmtz
-IHw9IGYtPnF1aXJrOw0KKwl9DQogfQ0KIA0KIHN0YXRpYyBpbnQgdWZzX2dldF9kZXZpY2VfZGVz
-YyhzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KQEAgLTY4NjIsMTAgKzY4OTIsNiBAQCBzdGF0aWMgaW50
-IHVmc19nZXRfZGV2aWNlX2Rlc2Moc3RydWN0IHVmc19oYmEgKmhiYSkNCiANCiAJbW9kZWxfaW5k
-ZXggPSBkZXNjX2J1ZltERVZJQ0VfREVTQ19QQVJBTV9QUkRDVF9OQU1FXTsNCiANCi0JLyogRW5h
-YmxlIFdCIG9ubHkgZm9yIFVGUy0zLjEgKi8NCi0JaWYgKGRldl9pbmZvLT53c3BlY3ZlcnNpb24g
-Pj0gMHgzMTApDQotCQl1ZnNoY2Rfd2JfcHJvYmUoaGJhLCBkZXNjX2J1Zik7DQotDQogCWVyciA9
-IHVmc2hjZF9yZWFkX3N0cmluZ19kZXNjKGhiYSwgbW9kZWxfaW5kZXgsDQogCQkJCSAgICAgICZk
-ZXZfaW5mby0+bW9kZWwsIFNEX0FTQ0lJX1NURCk7DQogCWlmIChlcnIgPCAwKSB7DQpAQCAtNjg3
-NCw2ICs2OTAwLDEzIEBAIHN0YXRpYyBpbnQgdWZzX2dldF9kZXZpY2VfZGVzYyhzdHJ1Y3QgdWZz
-X2hiYSAqaGJhKQ0KIAkJZ290byBvdXQ7DQogCX0NCiANCisJdWZzX2ZpeHVwX2RldmljZV9zZXR1
-cChoYmEpOw0KKw0KKwkvKiBFbmFibGUgV0Igb25seSBmb3IgVUZTLTMuMSAqLw0KKwlpZiAoZGV2
-X2luZm8tPndzcGVjdmVyc2lvbiA+PSAweDMxMCB8fA0KKwkgICAgKGhiYS0+ZGV2X3F1aXJrcyAm
-IFVGU19ERVZJQ0VfUVVJUktfU1VQUE9SVF9FWFRFTkRFRF9GRUFUVVJFUykpDQorCQl1ZnNoY2Rf
-d2JfcHJvYmUoaGJhLCBkZXNjX2J1Zik7DQorDQogCS8qDQogCSAqIHVmc2hjZF9yZWFkX3N0cmlu
-Z19kZXNjIHJldHVybnMgc2l6ZSBvZiB0aGUgc3RyaW5nDQogCSAqIHJlc2V0IHRoZSBlcnJvciB2
-YWx1ZQ0KQEAgLTY4OTMsMjEgKzY5MjYsNiBAQCBzdGF0aWMgdm9pZCB1ZnNfcHV0X2RldmljZV9k
-ZXNjKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogCWRldl9pbmZvLT5tb2RlbCA9IE5VTEw7DQogfQ0K
-IA0KLXN0YXRpYyB2b2lkIHVmc19maXh1cF9kZXZpY2Vfc2V0dXAoc3RydWN0IHVmc19oYmEgKmhi
-YSkNCi17DQotCXN0cnVjdCB1ZnNfZGV2X2ZpeCAqZjsNCi0Jc3RydWN0IHVmc19kZXZfaW5mbyAq
-ZGV2X2luZm8gPSAmaGJhLT5kZXZfaW5mbzsNCi0NCi0JZm9yIChmID0gdWZzX2ZpeHVwczsgZi0+
-cXVpcms7IGYrKykgew0KLQkJaWYgKChmLT53bWFudWZhY3R1cmVyaWQgPT0gZGV2X2luZm8tPndt
-YW51ZmFjdHVyZXJpZCB8fA0KLQkJICAgICBmLT53bWFudWZhY3R1cmVyaWQgPT0gVUZTX0FOWV9W
-RU5ET1IpICYmDQotCQkgICAgICgoZGV2X2luZm8tPm1vZGVsICYmDQotCQkgICAgICAgU1RSX1BS
-RlhfRVFVQUwoZi0+bW9kZWwsIGRldl9pbmZvLT5tb2RlbCkpIHx8DQotCQkgICAgICAhc3RyY21w
-KGYtPm1vZGVsLCBVRlNfQU5ZX01PREVMKSkpDQotCQkJaGJhLT5kZXZfcXVpcmtzIHw9IGYtPnF1
-aXJrOw0KLQl9DQotfQ0KLQ0KIC8qKg0KICAqIHVmc2hjZF90dW5lX3BhX3RhY3RpdmF0ZSAtIFR1
-bmVzIFBBX1RBY3RpdmF0ZSBvZiBsb2NhbCBVbmlQcm8NCiAgKiBAaGJhOiBwZXItYWRhcHRlciBp
-bnN0YW5jZQ0KQEAgLTcyNDQsOCArNzI2Miw2IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2RldmljZV9w
-YXJhbXNfaW5pdChzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KIA0KIAl1ZnNoY2RfZ2V0X3JlZl9jbGtf
-Z2F0aW5nX3dhaXQoaGJhKTsNCiANCi0JdWZzX2ZpeHVwX2RldmljZV9zZXR1cChoYmEpOw0KLQ0K
-IAlpZiAoIXVmc2hjZF9xdWVyeV9mbGFnX3JldHJ5KGhiYSwgVVBJVV9RVUVSWV9PUENPREVfUkVB
-RF9GTEFHLA0KIAkJCVFVRVJZX0ZMQUdfSUROX1BXUl9PTl9XUEUsICZmbGFnKSkNCiAJCWhiYS0+
-ZGV2X2luZm8uZl9wb3dlcl9vbl93cF9lbiA9IGZsYWc7DQotLSANCjIuMTguMA0K
+On Fri, 2020-05-01 at 09:54 +0200, Arnd Bergmann wrote:
+> On Fri, May 1, 2020 at 9:48 AM John Garry <john.garry@huawei.com>
+> wrote:
+> > On 30/04/2020 22:30, Arnd Bergmann wrote:
+> > > This should really be a flexible-array member, but the structure
+> > > already has such a member, swapping it out with sense_data[]
+> > > would cause many more warnings elsewhere.
+> > > 
+> > 
+> > 
+> > Hi Arnd,
+> > 
+> > If we really prefer flexible-array members over zero-length array
+> > members, then could we have a union of flexible-array members? I'm
+> > not sure if that's a good idea TBH (or even permitted), as these
+> > structures are defined by the SAS spec and good practice to keep as
+> > consistent as possible, but just wondering.
+> 
+> gcc does not allow flexible-array members inside of a union, or more
+> than one flexible-array member at the end of a structure.
+> 
+> I found one hack that would work, but I think it's too ugly and
+> likely not well-defined either:
+> 
+> struct ssp_response_iu {
+> ...
+>         struct {
+>                 u8      dummy[0]; /* a struct must have at least one
+> non-flexible member */
+
+If gcc is now warning about zero length members, why isn't it warning
+about this one ... are unions temporarily excluded?
+
+>                 u8      resp_data[]; /* allowed here because it's at
+> the one of a struct */
+>         };
+>         u8     sense_data[];
+> } __attribute__ ((packed));
+
+Let's go back to what the standard says:  we want the data beyond the
+ssp_response_iu to be addressable either as sense_data if it's an error
+return or resp_data if it's a real response.  What about trying to use
+an alias attribute inside the structure ... will that work on gcc-10?
+
+James
 
