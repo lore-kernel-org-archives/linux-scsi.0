@@ -2,101 +2,144 @@ Return-Path: <SRS0=ePHC=6P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5E5C4724C
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79250C4724C
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:52:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3205C208CA
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:49:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DBCD216FD
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:52:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588308730;
+	bh=fwTbx3jF7Z0eOL7Ky1F644zwZxDT3uqvpQUjubd7yQo=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=zwoLxf8SZQs4mP82zLUZb4jAOs2WjEn+Pb/mdmPSyZjJGmQw723wtb47X7CE6nwnc
+	 rnCXNsqweZ+hLPJeNJvBSxC272SZj3sRV8v/VC+kHDvcq3lGaeiYOxUFXPCcLG4LxB
+	 D9y+r7l6k1JXOaWP3QX65i/img80PXx/N0oaCoAc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728194AbgEAEtH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 00:49:07 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:53016 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727922AbgEAEtH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 00:49:07 -0400
-Received: by mail-pj1-f65.google.com with SMTP id a5so1911634pjh.2
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 21:49:07 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=/bdPUZDycEkQ7pzVjUY0XHefCzfgRSw4vWWSmFPQ54Q=;
-        b=C2r6yA0EtpsxiTy5it+JUSGnGuOsPNMO3m/7wRFqP0lt+eTVvBSDTAE1Gp55REtSgB
-         nyOpKfj4fJPBd8OxS3tZEDzHlp8/toxml4QyJfULk48r5/5WqTXk5vTxSgkbbA2H7qTB
-         JNfMoxCKh3LDgaS1eaEusUeltfrn5hIdMxkdkWuYEC8YwmuqTcaI7comVF2sLKJmOHVq
-         u1B1KNgJMzHy+PBT9m1mI8O0HbSF2PQOHgPwQY1PWsIs8GrTCWZZ/mimqTI6o7YR4OHK
-         sZv8Gx0clF8wNTOybST88aCHYzOFMpePVplw9zNkY/wUkLGGOSeerOWGiy4y9INa5tqa
-         iNQg==
-X-Gm-Message-State: AGi0PubbmlvYrAOGXIAu+KPxfTgVooN6W4H44YNyezLYigm9OhtkTf6B
-        Zc7UI50w5EPqZoOxAAzpiX8s3OBoyP4=
-X-Google-Smtp-Source: APiQypL/wflykaVP69QsGX/eltr+Qm9khPyLs5WFcYGZvh/cWry2USUoj5pElwkiwuXQPpVhd751JQ==
-X-Received: by 2002:a17:90a:246e:: with SMTP id h101mr2671259pje.83.1588308546087;
-        Thu, 30 Apr 2020 21:49:06 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:6909:5f45:32d1:8e51? ([2601:647:4000:d7:6909:5f45:32d1:8e51])
-        by smtp.gmail.com with ESMTPSA id f70sm1171958pfa.17.2020.04.30.21.49.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Apr 2020 21:49:05 -0700 (PDT)
-Subject: Re: [PATCH RFC v3 10/41] scsi: make host device a first-class citizen
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org
-References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-11-hare@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <e0f8cf98-62d0-02ee-4585-5159a48764ce@acm.org>
-Date:   Thu, 30 Apr 2020 21:49:04 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1728150AbgEAEwK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 00:52:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57276 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727922AbgEAEwJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 May 2020 00:52:09 -0400
+Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D57EA2073E;
+        Fri,  1 May 2020 04:52:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588308729;
+        bh=fwTbx3jF7Z0eOL7Ky1F644zwZxDT3uqvpQUjubd7yQo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=yzqKeFWGfOvplqDishgMV5MSwR1HBWShRbBe36MDhjXPJINmxH6Vn8o4UYAoLsnBc
+         RYZywE4vH5gr4ax7Fm/Unf6cYbPFuex4DJm4QIBlETVvgf0Hlh04vESD/oOnVtTfmY
+         onfhZ2iSFlayZ2ZfK3uQkATFrdNInA95BCqmqx8A=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Cc:     linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Andy Gross <agross@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Satya Tangirala <satyat@google.com>
+Subject: [RFC PATCH v4 0/4] Inline crypto support on DragonBoard 845c
+Date:   Thu, 30 Apr 2020 21:51:07 -0700
+Message-Id: <20200501045111.665881-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <20200430131904.5847-11-hare@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-04-30 06:18, Hannes Reinecke wrote:
-> Rather than having the device created by scsi_get_host_dev() as
-> a weird semi-initialized device make it a first class citizen by
-> implementing a minimal command emulation and provide (static)
-> inquiry data.
+Hello,
 
-It may be worth mentioning in the commit message that gdth and sierra_ms
-are the only two drivers that create a "host device".
+This patchset implements UFS inline crypto support on the DragonBoard
+845c, using the Qualcomm Inline Crypto Engine (ICE) that's present on
+the Snapdragon 845 SoC.
 
-Thanks,
+This is based on top of the patchset "[PATCH v12 00/11] Inline Encryption
+Support" by Satya Tangirala, which adds support for the UFS standard
+inline crypto, the block layer changes needed to use inline crypto, and
+support for inline crypto in fscrypt (ext4 and f2fs encryption).  Link:
+https://lkml.kernel.org/r/20200430115959.238073-1-satyat@google.com
 
-Bart.
+This new patchset is mostly a RFC showing hardware inline crypto working
+on a publicly available development board that runs the mainline Linux
+kernel.  While patches 1-2 could be applied now, patches 3-4 depend on
+the main "Inline Encryption Support" patchset being merged first.
+
+Most of the logic needed to use ICE is already handled by ufshcd-crypto
+and the blk-crypto framework, which are introduced by the "Inline
+Encryption Support" patchset.  Therefore, this new patchset just adds
+the vendor-specific parts.  I also only implemented support for version
+3 of the ICE hardware, which seems to be easier to use than older
+versions.
+
+Due to these factors and others, I was able to greatly simplify the
+driver from the vendor's original.  It works fine in testing with
+fscrypt and with a blk-crypto self-test I'm also working on.
+
+This driver also works nearly as-is on Snapdragon 765 and Snapdragon
+865, which are very recent SoCs, having just been announced in Dec 2019
+(though these newer SoCs currently lack upstream kernel support).
+
+This patchset is also available in git at:
+    Repo: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
+    Tag: db845c-crypto-v4
+
+Changed v3 => v4:
+    - Rebased onto the v12 inline encryption patchset.
+    - A couple small cleanups.
+
+Changed v2 => v3:
+    - Rebased onto the v8 inline encryption patchset.  Now the driver
+      has to opt into inline crypto support rather than opting out.
+    - Switched qcom_scm_ice_set_key() to use dma_alloc_coherent()
+      so that we can reliably zeroing the key without assuming that
+      bounce buffers aren't used.  Also added a comment.
+    - Made the key_size and data_unit_size arguments to
+      qcom_scm_ice_set_key() be 'u32' instead of 'int'.
+
+Changed v1 => v2:
+    - Rebased onto the v7 inline encryption patchset.
+    - Account for all the recent qcom_scm changes.
+    - Don't ignore errors from ->program_key().
+    - Don't dereference NULL hba->vops.
+    - Dropped the patch that added UFSHCD_QUIRK_BROKEN_CRYPTO, as this
+      flag is now included in the main inline encryption patchset.
+    - Many other cleanups.
+
+Eric Biggers (4):
+  firmware: qcom_scm: Add support for programming inline crypto keys
+  arm64: dts: sdm845: add Inline Crypto Engine registers and clock
+  scsi: ufs: add program_key() variant op
+  scsi: ufs-qcom: add Inline Crypto Engine support
+
+ MAINTAINERS                          |   2 +-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi |  13 +-
+ drivers/firmware/qcom_scm.c          | 101 +++++++++++
+ drivers/firmware/qcom_scm.h          |   4 +
+ drivers/scsi/ufs/Kconfig             |   1 +
+ drivers/scsi/ufs/Makefile            |   4 +-
+ drivers/scsi/ufs/ufs-qcom-ice.c      | 245 +++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-qcom.c          |  12 +-
+ drivers/scsi/ufs/ufs-qcom.h          |  27 +++
+ drivers/scsi/ufs/ufshcd-crypto.c     |  27 +--
+ drivers/scsi/ufs/ufshcd.h            |   3 +
+ include/linux/qcom_scm.h             |  19 +++
+ 12 files changed, 441 insertions(+), 17 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
+
+-- 
+2.26.2
+
