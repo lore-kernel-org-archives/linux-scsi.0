@@ -3,46 +3,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABED9C4724C
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 804B0C4724C
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:38:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 920DB20857
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:36:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6456920857
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:38:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728126AbgEAEgn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 00:36:43 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:34601 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726153AbgEAEgm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 00:36:42 -0400
-Received: by mail-pj1-f67.google.com with SMTP id h12so4325957pjz.1
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 21:36:42 -0700 (PDT)
+        id S1728212AbgEAEiz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 00:38:55 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:35848 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726153AbgEAEiy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 00:38:54 -0400
+Received: by mail-pg1-f196.google.com with SMTP id o185so4087641pgo.3
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 21:38:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=cYCU6VX4qAXTopAo6+i/aOjbd3BScQ30cSO9tJsbrn8=;
-        b=loua3qcp2g3ecURXgGvwN8RBCJ1msIhz4Istqao7NAMdcJVLniG7HkeOAdEE/D7fxM
-         MI/XAeVxG5L6rW0fjZksSwOl2Srf2X5FR3K4ZcB1EzMDQM/aU6epJCFMXkz6oG/yimKi
-         pHHpkHE7FFFneOrSlWgfLDrUxX5BkGr9v9rI5kCHONAzoLMCah7Wi8bWvSJh73slF1yo
-         81/gkpNEJLBt8EyUaprmh/0z6ceRJXJFLhbNjqSBRGN6y0BdJi/dJIxgY9yYmoGUDoNc
-         eMFFXlCGaxl5sBy50L+MIwkxhgOhGREeU8dSiwsfhvDPxt3P5FJ1NoR8RXXBxLD6GAgN
-         IrBQ==
-X-Gm-Message-State: AGi0Puam4RmO7aziKkUj1d5nzzTonskT4zIggEQaO0CQIgT7scucNgHb
-        iSwX1uHV1JHMYo6mJIkfdgE=
-X-Google-Smtp-Source: APiQypI5XXdk10lJanLPq0HdKCeeuwaeqU5NTqh1GBAt6xRsF2QKd5YDzxuxNO34WQMjTrge+sHZOA==
-X-Received: by 2002:a17:90a:3086:: with SMTP id h6mr2627890pjb.49.1588307801792;
-        Thu, 30 Apr 2020 21:36:41 -0700 (PDT)
+        bh=afkKFlXi4Qsp2AmUrnWaOqqvjZ+f8MEjCPC/KELS274=;
+        b=IvukC4od001/Z1QczqqJOD9VnFaZqX7BX10jyLO2Mid6DiaeWO+AEwnkpExG12KcZ0
+         /uiFqXSsJAZRA4xRJb2SpS3tOacLXK3VM5Oe69PJEDTa/1q0YfgTQy9FuHQ1IF7RJC1t
+         IUZ7wcEAwOPt9MxUzCq82Qsvqn35qhB9HavNOykgoENzN1hc+2kLc9XxdYwiAUvW/mjz
+         1KDQ8HlZvSz83TV+aM1ZB20j1vn9Zu75YLuNT+o1ylimWQRyWFFprwNSOr4ZSAj+Pcyw
+         Y6dTHrrQuOcIBBSCWdjlgwXeNwbxEZ5TYLZBqRcEvFPUHs/8pFmNObkY0PEHZ8lp6niQ
+         A1LQ==
+X-Gm-Message-State: AGi0PuYWouQHac6nqQ8gDH4Sug1gdU0ihGSqmCRTyR0E5glrr7BNRMWn
+        tWR9gBl5kC5BNLCCnrt0les=
+X-Google-Smtp-Source: APiQypLdfuZ0LtR9n3jgLi3Y+wanUvsdSHfihVfSncqCvEiBG/sax9vrGYuDGWNVd3HK2/HMRtVnbQ==
+X-Received: by 2002:a63:b11:: with SMTP id 17mr2430268pgl.3.1588307932342;
+        Thu, 30 Apr 2020 21:38:52 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:6909:5f45:32d1:8e51? ([2601:647:4000:d7:6909:5f45:32d1:8e51])
-        by smtp.gmail.com with ESMTPSA id g16sm1104927pfq.203.2020.04.30.21.36.40
+        by smtp.gmail.com with ESMTPSA id b5sm1114351pfb.190.2020.04.30.21.38.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Apr 2020 21:36:41 -0700 (PDT)
-Subject: Re: [PATCH RFC v3 01/41] scsi: add 'nr_reserved_cmds' field to the
- SCSI host template
+        Thu, 30 Apr 2020 21:38:51 -0700 (PDT)
+Subject: Re: [PATCH RFC v3 03/41] scsi: Implement scsi_cmd_is_reserved()
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -51,7 +50,7 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.com>
 References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-2-hare@suse.de>
+ <20200430131904.5847-4-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -76,12 +75,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <813c7194-77d3-79fb-f792-a386bea3db8f@acm.org>
-Date:   Thu, 30 Apr 2020 21:36:39 -0700
+Message-ID: <7ee63e35-0872-0c0c-118d-0b7a1d27f3c8@acm.org>
+Date:   Thu, 30 Apr 2020 21:38:50 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200430131904.5847-2-hare@suse.de>
+In-Reply-To: <20200430131904.5847-4-hare@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -91,17 +90,23 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-04-30 06:18, Hannes Reinecke wrote:
-> From: Hannes Reinecke <hare@suse.com>
-> 
-> Quite a lot of drivers are using management commands internally, which
-> typically use the same hardware tag pool (ie they are being allocated
-> from the same hardware resources) as the 'normal' I/O commands.
-> These commands are set aside before allocating the block-mq tag bitmap,
-> so they'll never show up as busy in the tag map.
-> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
-> this situation.
-> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
-> template to instruct the block layer to set aside a tag space for these
-> management commands by using reserved_tags.
+>  void scsi_put_reserved_cmd(struct scsi_cmnd *scmd)
+>  {
+> -	struct request *rq = blk_mq_rq_from_pdu(scmd);
+> +	struct request *rq;
+>  
+> -	blk_mq_free_request(rq);
+> +	if (scmd && scsi_cmd_is_reserved(scmd)) {
+> +		rq = blk_mq_rq_from_pdu(scmd);
+> +		blk_mq_free_request(rq);
+> +	}
+>  }
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The above looks weird to me. Why to tolerate that a caller passes NULL
+as argument to this function? Additionally, wouldn't a
+WARN_ON_ONCE(!scsi_cmd_is_reserved(scmd)) be more appropriate instead of
+the if (scsi_cmd_is_reserved(scmd)) { ... } ?
+
+Thanks,
+
+Bart.
