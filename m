@@ -2,84 +2,98 @@ Return-Path: <SRS0=ePHC=6P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E87B7C4724C
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 08:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD93CC47253
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 09:55:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA1452173E
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 08:33:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8562E2166E
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 09:55:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fZpUdZcg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FPQ3pbDA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728369AbgEAIdz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 04:33:55 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:39593 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728345AbgEAIdz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 04:33:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588322034;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9m2SfPn+y7SUHxD1zi8RvVgtwkO6MdlJLiNdU9aPZ60=;
-        b=fZpUdZcgs9WWiZkEeh92g3pVErWGe3hv3GRrt4qainFLw+OuXtMqis0KsemOr/cMSdgX2I
-        TyXJpDGxAVJFC14hG9/FBj8UKQOVxKJiF7EqgRnQU4WzFiSdwR1sLvxqYor3sUzRkgfGya
-        83wZDW+NUXrM3DJI4OEuvkav2TtU5j0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-396-Ijrp9sqPPFSBbseAd1AtHA-1; Fri, 01 May 2020 04:33:50 -0400
-X-MC-Unique: Ijrp9sqPPFSBbseAd1AtHA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DB263468;
-        Fri,  1 May 2020 08:33:48 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E6AB22B4B6;
-        Fri,  1 May 2020 08:33:41 +0000 (UTC)
-Date:   Fri, 1 May 2020 16:33:37 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH RFC v3 22/41] block: implement persistent commands
-Message-ID: <20200501083337.GA1009055@T590>
-References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-23-hare@suse.de>
+        id S1728458AbgEAJzX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 05:55:23 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:59032 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728325AbgEAJzX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 05:55:23 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0419t3w3054517;
+        Fri, 1 May 2020 09:55:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=oA2EYlqtMj8SXF8ij2FPfBlczX1un0eUx9jcQLXMKZ8=;
+ b=FPQ3pbDAHIrgnSsllcb4F9byaqKAhRM2SfCjejF/eAi7s0t+D2ZaomYgxz9W6gtbiZm3
+ D8in/c3S8QEJykZOsY/P9Ofc5a5Meit7istGwy6BqqUmF38R9RDDYmbi6di6blSGvr6E
+ /dzwfusbZysi2R4BMS/mYC10VVYGTDCVu3fm+NAiBKClmd7834JqWR1uSvuLI4TdrA0N
+ 6NXG91E0v/PIAWFulCW7tEb2/YCWG+pTcY5D+RVjn9iITtTvIg1lfUqWx8okWOuC7ldo
+ McHEC48fqGdL7SBKreWmIjUQbtaelRYP9zL0VIm1wVmBfVmytrdZ0KJZMIbVMlnHY+PT Xg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 30r7f5sma0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 01 May 2020 09:55:21 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0419qxS1037530;
+        Fri, 1 May 2020 09:53:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 30r7fa0hby-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 01 May 2020 09:53:20 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0419rJP3030907;
+        Fri, 1 May 2020 09:53:19 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 01 May 2020 02:53:17 -0700
+Date:   Fri, 1 May 2020 12:53:11 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     suganath-prabu.subramani@broadcom.com
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: Re: [bug report] scsi: mpt3sas: Handle RDPQ DMA allocation in same
+ 4G region
+Message-ID: <20200501095311.GD1992@kadam>
+References: <20200429142149.GA823478@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200430131904.5847-23-hare@suse.de>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20200429142149.GA823478@mwanda>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=3
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 mlxlogscore=473
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005010076
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
+ lowpriorityscore=0 priorityscore=1501 adultscore=0 mlxlogscore=540
+ clxscore=1015 phishscore=0 impostorscore=0 suspectscore=3 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005010076
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 03:18:45PM +0200, Hannes Reinecke wrote:
-> Some LLDDs implement event handling by sending a command to the
-> firmware, which then will be completed once the firmware wants
-> to register an event.
-> So worst case a command is being sent to the firmware then the
-> driver initializes, and will be returned once the driver unloads.
-> To avoid these commands to block the queues during freezing or
-> quiescing this patch implements support for 'persistent' commands,
-> which will be excluded from blk_queue_enter() and blk_queue_exit()
-> calls.
+This also causes a bug in the callers.
 
-This way is quite dangerous from block layer viewpoint, and it should
-have been done in driver/device specific way instead of polluting block
-layer.
+    drivers/scsi/mpt3sas/mpt3sas_base.c:7428 mpt3sas_base_attach()
+    warn: 'ioc->hpr_lookup' double freed
 
+We free the pointers, then return an error and the caller frees the
+pointers as well.
 
-thanks, 
-Ming
+Smatch is very limited in the types of double frees it looks for.
+It really requires someone to manually go through the free paths and
+check it by hand because I'm sure there are other bugs there as well.
+
+Please CC me on the Fix because I'm not subscribed to the linux-scsi
+mailing list.
+
+regards,
+dan carpenter
 
