@@ -2,122 +2,199 @@ Return-Path: <SRS0=ePHC=6P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14476C47247
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 01:50:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1413C47247
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 02:15:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE88920873
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 01:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85C552074A
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 02:15:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="rNSg13nu";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="rNSg13nu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728035AbgEABuI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 21:50:08 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:37509 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727114AbgEABuI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Apr 2020 21:50:08 -0400
-Received: by mail-pg1-f194.google.com with SMTP id r4so3915711pgg.4;
-        Thu, 30 Apr 2020 18:50:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=qkIeoMHtgOsTJkY1aDcu+fBY2Ht3cDIXeezTTJRV748=;
-        b=QqGCXmjbW+PYtlg11P9wKIWUwHk0uNxTHOP1L0zwN87Jb6fsch4miK4RlJ9po258AY
-         tc7ZUPOyxqUFPwp0Kffxs+GHERahlyQllqxy55/+QTRiuMfxg8UnR5S+Pc6IlAz1cPAi
-         jZWlPG3+OaECOPmf6WBpQUam2l8zLQvLKt2KV+ZrlnB4NNQATIARnhLjCoFwLaom4aFB
-         9wRF1ojb7CWE9J8Db2UEiJ/I9eujtK1INHKcfoZDXi9bR8veOITMwX69+qRCBYx69VJR
-         ftKB4o005UQFhNhruZri+AtWmUKtzWT60D9lTUIdki/PWN6XU4PQcAUci5GZyxkL4M26
-         Zccw==
-X-Gm-Message-State: AGi0PuaDbC26VMuzb5dFicCOsUzvpwgocPKdyTbPTFjzr9+nmqbULJA4
-        no3SpL1XYiteIMo44bfFzYOAOWA/N3s=
-X-Google-Smtp-Source: APiQypLEgLff28ZP2x8zYd3YtoDlBcERGP54sgg8E6/dfD6WzPsDz+pvqx9X0aPESAV+eI5E/lgazQ==
-X-Received: by 2002:a63:7801:: with SMTP id t1mr1882676pgc.192.1588297805676;
-        Thu, 30 Apr 2020 18:50:05 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:8cd3:cd23:3cea:980a? ([2601:647:4000:d7:8cd3:cd23:3cea:980a])
-        by smtp.gmail.com with ESMTPSA id l64sm816022pjb.44.2020.04.30.18.50.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Apr 2020 18:50:04 -0700 (PDT)
-Subject: Re: [PATCH v3 1/1] scsi: pm: Balance pm_only counter of request queue
- during system resume
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        stanley.chu@mediatek.com, alim.akhtar@samsung.com,
-        beanhuo@micron.com, Avri.Altman@wdc.com,
-        bjorn.andersson@linaro.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1588219805-25794-1-git-send-email-cang@codeaurora.org>
- <9e15123e-4315-15cd-3d23-2df6144bd376@acm.org>
- <1ef85ee212bee679f7b2927cbbc79cba@codeaurora.org>
- <ef23a815-118a-52fe-4880-19e7fc4fcd10@acm.org>
- <1e2a2e39dbb3a0f06fe95bbfd66e1648@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <226048f7-6ad3-a625-c2ed-d9d13e096803@acm.org>
-Date:   Thu, 30 Apr 2020 18:50:03 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
-MIME-Version: 1.0
-In-Reply-To: <1e2a2e39dbb3a0f06fe95bbfd66e1648@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+        id S1728040AbgEACPh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 22:15:37 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58038 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728009AbgEACPh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Apr 2020 22:15:37 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id E50C78EE105;
+        Thu, 30 Apr 2020 19:15:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1588299336;
+        bh=12uN4iRrl7yWx582rVDDYLfsEquyL2jowDW9sfgfRXw=;
+        h=Subject:From:To:Cc:Date:From;
+        b=rNSg13nuV5PT92uBKBWV85D+TOdi/saZpD+nYgDBdaLr/9dgeUQ0ZDas/t7r4kAuX
+         woWSK4NoZxJkBUDuyvL8sBA2ADhk/+/5Dju0sSNdcfx8cwyvAFnhdjX3i1M67kPJ7h
+         xDjItO1lYUqztxnPFYXF1bIh0pjPZaXSto3fIto0=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id U7Fzxe3Dq2Bk; Thu, 30 Apr 2020 19:15:36 -0700 (PDT)
+Received: from [153.66.254.194] (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 6C1698EE0EA;
+        Thu, 30 Apr 2020 19:15:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1588299336;
+        bh=12uN4iRrl7yWx582rVDDYLfsEquyL2jowDW9sfgfRXw=;
+        h=Subject:From:To:Cc:Date:From;
+        b=rNSg13nuV5PT92uBKBWV85D+TOdi/saZpD+nYgDBdaLr/9dgeUQ0ZDas/t7r4kAuX
+         woWSK4NoZxJkBUDuyvL8sBA2ADhk/+/5Dju0sSNdcfx8cwyvAFnhdjX3i1M67kPJ7h
+         xDjItO1lYUqztxnPFYXF1bIh0pjPZaXSto3fIto0=
+Message-ID: <1588299335.6654.7.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.7-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Thu, 30 Apr 2020 19:15:35 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-04-30 18:42, Can Guo wrote:
-> On 2020-05-01 04:32, Bart Van Assche wrote:
-> > Has it been considered to test directly whether a SCSI device has been
-> > runtime suspended instead of relying on blk_queue_pm_only()? How about
-> > using pm_runtime_status_suspended() or adding a function in
-> > block/blk-pm.h that checks whether q->rpm_status == RPM_SUSPENDED?
-> 
-> Yes, I used to make the patch like that way, and it also worked well, as
-> both ways are equal actually. I kinda like the current code because we
-> should be confident that after scsi_dev_type_resume() returns, pm_only
-> must be 0. Different reviewers may have different opinions, either way
-> works well anyways.
+Four minor fixes: three in drivers and one in the core.  The core one
+allows an additional state change that fixes a regression introduced by
+an update to the aacraid driver in the previous merge window.
 
-Hi Can,
+The patch is available here:
 
-Please note that this is not a matter of personal preferences of a
-reviewer but a matter of correctness. blk_queue_pm_only() does not only
-return a value > 0 if a SCSI device has been runtime suspended but also
-returns true if scsi_device_quiesce() was called for another reason.
-Hence my request to test the "runtime suspended" status directly and not
-to rely on blk_queue_pm_only().
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks,
+The short changelog is:
 
-Bart.
+David Disseldorp (1):
+      scsi: target/iblock: fix WRITE SAME zeroing
+
+Dexuan Cui (1):
+      scsi: core: Allow the state change from SDEV_QUIESCE to SDEV_BLOCK
+
+Martin Wilck (2):
+      scsi: qla2xxx: check UNLOADING before posting async work
+      scsi: qla2xxx: set UNLOADING before waiting for session deletion
+
+And the diffstat
+
+ drivers/scsi/qla2xxx/qla_os.c       | 35 +++++++++++++++++------------------
+ drivers/scsi/scsi_lib.c             |  1 +
+ drivers/target/target_core_iblock.c |  2 +-
+ 3 files changed, 19 insertions(+), 19 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d190db5ea7d9..1d9a4866f9a7 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3732,6 +3732,13 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	}
+ 	qla2x00_wait_for_hba_ready(base_vha);
+ 
++	/*
++	 * if UNLOADING flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
++
+ 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+ 	    IS_QLA28XX(ha)) {
+ 		if (ha->flags.fw_started)
+@@ -3750,15 +3757,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
+-
+ 	qla_nvme_delete(base_vha);
+ 
+ 	dma_free_coherent(&ha->pdev->dev,
+@@ -4864,6 +4862,9 @@ qla2x00_alloc_work(struct scsi_qla_host *vha, enum qla_work_type type)
+ 	struct qla_work_evt *e;
+ 	uint8_t bail;
+ 
++	if (test_bit(UNLOADING, &vha->dpc_flags))
++		return NULL;
++
+ 	QLA_VHA_MARK_BUSY(vha, bail);
+ 	if (bail)
+ 		return NULL;
+@@ -6628,13 +6629,6 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 	struct pci_dev *pdev = ha->pdev;
+ 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+ 
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+ 	ql_log(ql_log_warn, base_vha, 0x015b,
+ 	    "Disabling adapter.\n");
+ 
+@@ -6645,9 +6639,14 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	qla2x00_wait_for_sess_deletion(base_vha);
++	/*
++	 * if UNLOADING flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
+ 
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
++	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+ 	qla2x00_delete_all_vps(ha, base_vha);
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 47835c4b4ee0..06c260f6cdae 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2284,6 +2284,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 		switch (oldstate) {
+ 		case SDEV_RUNNING:
+ 		case SDEV_CREATED_BLOCK:
++		case SDEV_QUIESCE:
+ 		case SDEV_OFFLINE:
+ 			break;
+ 		default:
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 51ffd5c002de..1c181d31f4c8 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -432,7 +432,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+ 				target_to_linux_sector(dev, cmd->t_task_lba),
+ 				target_to_linux_sector(dev,
+ 					sbc_get_write_same_sectors(cmd)),
+-				GFP_KERNEL, false);
++				GFP_KERNEL, BLKDEV_ZERO_NOUNMAP);
+ 	if (ret)
+ 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 
