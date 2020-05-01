@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 423D6C47247
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 01:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C20EC47247
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 01:42:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 191E82073E
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 01:19:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5268C20836
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 01:42:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lxiC7tlA"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wuwyZFfQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728010AbgEABTy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Apr 2020 21:19:54 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:50156 "EHLO
+        id S1727970AbgEABmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Apr 2020 21:42:39 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:63634 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728025AbgEABTy (ORCPT
+        by vger.kernel.org with ESMTP id S1726384AbgEABmi (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Apr 2020 21:19:54 -0400
+        Thu, 30 Apr 2020 21:42:38 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588295993; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1588297357; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=T52XjBMRa795mkQixIuPfXttq+DeeUPrNOtA5L+BOUs=;
- b=lxiC7tlAF6mtzft64T/VIQHweU9HvVzboXGoXgkSwaXMVW6YIGXKvWgg//lg7Nd2RJwzSpJR
- q8J43hWCXzKgzS1r2c3hZ7u/Ke+ZbF+8nCXTol0SeIXUz6sEk8ONIag/9raPaQQbbHfW5Y7v
- BS8lNYKMgt6rULcYCTMYHz8aFm8=
+ MIME-Version: Sender; bh=6fsK5uLt2V2waTX9WKqrO/UQSke0sztBS7rUL0rzJxg=;
+ b=wuwyZFfQNR4+LvZuxN2trt8NxlJ2aacuFlZVGIGsgPWp9uQo9Y93P3q+NZaGZ2gO0lNA0HuR
+ x5iUo6r4C1IaCH3jANS70ifmT522b9nM/P3zWItbfo0328oV/V4X+tNPHUmujr7YH6wYrKlA
+ wluhD83oLb23ujy8cyN8Em/eCM4=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eab791e.7fcd1355bc38-smtp-out-n03;
- Fri, 01 May 2020 01:19:26 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eab7e7c.7f91e8fa5998-smtp-out-n04;
+ Fri, 01 May 2020 01:42:20 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D5C21C43636; Fri,  1 May 2020 01:19:26 +0000 (UTC)
+        id 6420FC4478C; Fri,  1 May 2020 01:42:18 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C1942C433CB;
-        Fri,  1 May 2020 01:19:25 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3613AC433D2;
+        Fri,  1 May 2020 01:42:17 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Fri, 01 May 2020 09:19:25 +0800
+Date:   Fri, 01 May 2020 09:42:17 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
@@ -64,7 +64,7 @@ References: <1588219805-25794-1-git-send-email-cang@codeaurora.org>
  <9e15123e-4315-15cd-3d23-2df6144bd376@acm.org>
  <1ef85ee212bee679f7b2927cbbc79cba@codeaurora.org>
  <ef23a815-118a-52fe-4880-19e7fc4fcd10@acm.org>
-Message-ID: <0d9a1e88b0477e8a04b091b9532923f5@codeaurora.org>
+Message-ID: <1e2a2e39dbb3a0f06fe95bbfd66e1648@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
@@ -130,6 +130,8 @@ On 2020-05-01 04:32, Bart Van Assche wrote:
 
 Hi Bart,
 
+Slightly revised my previous mail.
+
 Please let me address your concern.
 
 First of all, it is allowed to call scsi_device_quiesce() multiple 
@@ -148,18 +150,25 @@ only if the sdev was quiesced().
 
 So, in a word, after scsi_device_resume() returns in 
 scsi_dev_type_resume(),
-pm_only counter should be 1 (if the sdev's runtime power status is
-RPM_SUSPENDED) or 0 (if the sdev's runtime power status is RPM_ACTIVE).
+if a sdev has block layer runtime PM enabled (sdev->request_queue->dev 
+is not
+NULL), its queue's pm_only counter should be 1 (if the sdev's runtime 
+power
+status is RPM_SUSPENDED) or 0 (if the sdev's runtime power status is 
+RPM_ACTIVE).
+If a sdev has block layer runtime PM disabled (sdev->request_queue->dev 
+is NULL),
+its queue's pm_only counter should be 0.
 
-> Has it been considered to test directly whether a SCSI device has been
-> runtime suspended instead of relying on blk_queue_pm_only()? How about
-> using pm_runtime_status_suspended() or adding a function in
-> block/blk-pm.h that checks whether q->rpm_status == RPM_SUSPENDED?
+Has it been considered to test directly whether a SCSI device has been
+runtime suspended instead of relying on blk_queue_pm_only()? How about
+using pm_runtime_status_suspended() or adding a function in
+block/blk-pm.h that checks whether q->rpm_status == RPM_SUSPENDED?
 
 Yes, I used to make the patch like that way, and it also worked well, as
 both ways are equal actually. I kinda like the current code because we
 should be confident that after scsi_dev_type_resume() returns, pm_only
-must be 0. Different reviewers may have different opionions, either way
+must be 0. Different reviewers may have different opinions, either way
 works well anyways.
 
 Thanks,
