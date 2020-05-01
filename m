@@ -6,51 +6,50 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 804B0C4724C
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:38:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5E5C4724C
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6456920857
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:38:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3205C208CA
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 04:49:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728212AbgEAEiz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 00:38:55 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:35848 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726153AbgEAEiy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 00:38:54 -0400
-Received: by mail-pg1-f196.google.com with SMTP id o185so4087641pgo.3
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 21:38:52 -0700 (PDT)
+        id S1728194AbgEAEtH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 00:49:07 -0400
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:53016 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727922AbgEAEtH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 00:49:07 -0400
+Received: by mail-pj1-f65.google.com with SMTP id a5so1911634pjh.2
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2020 21:49:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=afkKFlXi4Qsp2AmUrnWaOqqvjZ+f8MEjCPC/KELS274=;
-        b=IvukC4od001/Z1QczqqJOD9VnFaZqX7BX10jyLO2Mid6DiaeWO+AEwnkpExG12KcZ0
-         /uiFqXSsJAZRA4xRJb2SpS3tOacLXK3VM5Oe69PJEDTa/1q0YfgTQy9FuHQ1IF7RJC1t
-         IUZ7wcEAwOPt9MxUzCq82Qsvqn35qhB9HavNOykgoENzN1hc+2kLc9XxdYwiAUvW/mjz
-         1KDQ8HlZvSz83TV+aM1ZB20j1vn9Zu75YLuNT+o1ylimWQRyWFFprwNSOr4ZSAj+Pcyw
-         Y6dTHrrQuOcIBBSCWdjlgwXeNwbxEZ5TYLZBqRcEvFPUHs/8pFmNObkY0PEHZ8lp6niQ
-         A1LQ==
-X-Gm-Message-State: AGi0PuYWouQHac6nqQ8gDH4Sug1gdU0ihGSqmCRTyR0E5glrr7BNRMWn
-        tWR9gBl5kC5BNLCCnrt0les=
-X-Google-Smtp-Source: APiQypLdfuZ0LtR9n3jgLi3Y+wanUvsdSHfihVfSncqCvEiBG/sax9vrGYuDGWNVd3HK2/HMRtVnbQ==
-X-Received: by 2002:a63:b11:: with SMTP id 17mr2430268pgl.3.1588307932342;
-        Thu, 30 Apr 2020 21:38:52 -0700 (PDT)
+        bh=/bdPUZDycEkQ7pzVjUY0XHefCzfgRSw4vWWSmFPQ54Q=;
+        b=C2r6yA0EtpsxiTy5it+JUSGnGuOsPNMO3m/7wRFqP0lt+eTVvBSDTAE1Gp55REtSgB
+         nyOpKfj4fJPBd8OxS3tZEDzHlp8/toxml4QyJfULk48r5/5WqTXk5vTxSgkbbA2H7qTB
+         JNfMoxCKh3LDgaS1eaEusUeltfrn5hIdMxkdkWuYEC8YwmuqTcaI7comVF2sLKJmOHVq
+         u1B1KNgJMzHy+PBT9m1mI8O0HbSF2PQOHgPwQY1PWsIs8GrTCWZZ/mimqTI6o7YR4OHK
+         sZv8Gx0clF8wNTOybST88aCHYzOFMpePVplw9zNkY/wUkLGGOSeerOWGiy4y9INa5tqa
+         iNQg==
+X-Gm-Message-State: AGi0PubbmlvYrAOGXIAu+KPxfTgVooN6W4H44YNyezLYigm9OhtkTf6B
+        Zc7UI50w5EPqZoOxAAzpiX8s3OBoyP4=
+X-Google-Smtp-Source: APiQypL/wflykaVP69QsGX/eltr+Qm9khPyLs5WFcYGZvh/cWry2USUoj5pElwkiwuXQPpVhd751JQ==
+X-Received: by 2002:a17:90a:246e:: with SMTP id h101mr2671259pje.83.1588308546087;
+        Thu, 30 Apr 2020 21:49:06 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:6909:5f45:32d1:8e51? ([2601:647:4000:d7:6909:5f45:32d1:8e51])
-        by smtp.gmail.com with ESMTPSA id b5sm1114351pfb.190.2020.04.30.21.38.51
+        by smtp.gmail.com with ESMTPSA id f70sm1171958pfa.17.2020.04.30.21.49.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Apr 2020 21:38:51 -0700 (PDT)
-Subject: Re: [PATCH RFC v3 03/41] scsi: Implement scsi_cmd_is_reserved()
+        Thu, 30 Apr 2020 21:49:05 -0700 (PDT)
+Subject: Re: [PATCH RFC v3 10/41] scsi: make host device a first-class citizen
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         John Garry <john.garry@huawei.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.com>
+        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org
 References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-4-hare@suse.de>
+ <20200430131904.5847-11-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -75,12 +74,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <7ee63e35-0872-0c0c-118d-0b7a1d27f3c8@acm.org>
-Date:   Thu, 30 Apr 2020 21:38:50 -0700
+Message-ID: <e0f8cf98-62d0-02ee-4585-5159a48764ce@acm.org>
+Date:   Thu, 30 Apr 2020 21:49:04 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200430131904.5847-4-hare@suse.de>
+In-Reply-To: <20200430131904.5847-11-hare@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -90,22 +89,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-04-30 06:18, Hannes Reinecke wrote:
->  void scsi_put_reserved_cmd(struct scsi_cmnd *scmd)
->  {
-> -	struct request *rq = blk_mq_rq_from_pdu(scmd);
-> +	struct request *rq;
->  
-> -	blk_mq_free_request(rq);
-> +	if (scmd && scsi_cmd_is_reserved(scmd)) {
-> +		rq = blk_mq_rq_from_pdu(scmd);
-> +		blk_mq_free_request(rq);
-> +	}
->  }
+> Rather than having the device created by scsi_get_host_dev() as
+> a weird semi-initialized device make it a first class citizen by
+> implementing a minimal command emulation and provide (static)
+> inquiry data.
 
-The above looks weird to me. Why to tolerate that a caller passes NULL
-as argument to this function? Additionally, wouldn't a
-WARN_ON_ONCE(!scsi_cmd_is_reserved(scmd)) be more appropriate instead of
-the if (scsi_cmd_is_reserved(scmd)) { ... } ?
+It may be worth mentioning in the commit message that gdth and sierra_ms
+are the only two drivers that create a "host device".
 
 Thanks,
 
