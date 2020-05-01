@@ -2,162 +2,154 @@ Return-Path: <SRS0=ePHC=6P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 380ECC47256
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 05:12:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F0BBC47256
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 07:48:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1955521924
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 05:12:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mzzFIhaK"
+	by mail.kernel.org (Postfix) with ESMTP id 08633208C3
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 07:48:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728202AbgEAFMX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 01:12:23 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:21378 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728159AbgEAFMW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 01:12:22 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588309941; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Gb5UVWrknkO+6yt6LwWbrza8osaP6Xld9YYD0ScSLPA=;
- b=mzzFIhaKhODcgxdqY5Ozx4DMbupH+eueG5ea4sH/FRn7yuozY2Xf6VdiGWLPWJ257SNA32fX
- zcOJmae8NqNAhqDFffAYDUn0cYPJWdaHeMCMod2mkwADwm+UeLw1EYYnMbKMBHD97P79HnyJ
- 0tJ9aMDkRRPwbfRZCEAH0nDnWlc=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eabafb4.7f7e4515ad50-smtp-out-n03;
- Fri, 01 May 2020 05:12:20 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 80208C4478F; Fri,  1 May 2020 05:12:18 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 78AAFC433CB;
-        Fri,  1 May 2020 05:12:17 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 01 May 2020 13:12:17 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, rnayak@codeaurora.org,
-        stanley.chu@mediatek.com, alim.akhtar@samsung.com,
-        beanhuo@micron.com, Avri.Altman@wdc.com,
-        bjorn.andersson@linaro.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
+        id S1728420AbgEAHse (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 03:48:34 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2139 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728380AbgEAHsd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 May 2020 03:48:33 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 2ACBDF1F7EACDF2BC6BB;
+        Fri,  1 May 2020 08:48:32 +0100 (IST)
+Received: from [127.0.0.1] (10.47.3.165) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Fri, 1 May 2020
+ 08:48:31 +0100
+Subject: Re: [PATCH 13/15] scsi: sas: avoid gcc-10 zero-length-bounds warning
+To:     Arnd Bergmann <arnd@arndb.de>, <linux-kernel@vger.kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 1/1] scsi: pm: Balance pm_only counter of request queue
- during system resume
-In-Reply-To: <226048f7-6ad3-a625-c2ed-d9d13e096803@acm.org>
-References: <1588219805-25794-1-git-send-email-cang@codeaurora.org>
- <9e15123e-4315-15cd-3d23-2df6144bd376@acm.org>
- <1ef85ee212bee679f7b2927cbbc79cba@codeaurora.org>
- <ef23a815-118a-52fe-4880-19e7fc4fcd10@acm.org>
- <1e2a2e39dbb3a0f06fe95bbfd66e1648@codeaurora.org>
- <226048f7-6ad3-a625-c2ed-d9d13e096803@acm.org>
-Message-ID: <3bfa692ce706c5c198f565e674afb56f@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        James Bottomley <James.Bottomley@SteelEye.com>
+CC:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Hannes Reinecke <hare@suse.com>, <linux-scsi@vger.kernel.org>
+References: <20200430213101.135134-1-arnd@arndb.de>
+ <20200430213101.135134-14-arnd@arndb.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <b5e6ef12-c2ac-d0ce-b7a1-a58d4c8de300@huawei.com>
+Date:   Fri, 1 May 2020 08:47:49 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <20200430213101.135134-14-arnd@arndb.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.3.165]
+X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-01 09:50, Bart Van Assche wrote:
-> On 2020-04-30 18:42, Can Guo wrote:
->> On 2020-05-01 04:32, Bart Van Assche wrote:
->> > Has it been considered to test directly whether a SCSI device has been
->> > runtime suspended instead of relying on blk_queue_pm_only()? How about
->> > using pm_runtime_status_suspended() or adding a function in
->> > block/blk-pm.h that checks whether q->rpm_status == RPM_SUSPENDED?
->> 
->> Yes, I used to make the patch like that way, and it also worked well, 
->> as
->> both ways are equal actually. I kinda like the current code because we
->> should be confident that after scsi_dev_type_resume() returns, pm_only
->> must be 0. Different reviewers may have different opinions, either way
->> works well anyways.
+On 30/04/2020 22:30, Arnd Bergmann wrote:
+> Two files access the zero-length resp_data[] array, which now
+> causes a compiler warning:
 > 
-> Hi Can,
+> drivers/scsi/aic94xx/aic94xx_tmf.c: In function 'asd_get_tmf_resp_tasklet':
+> drivers/scsi/aic94xx/aic94xx_tmf.c:291:22: warning: array subscript 3 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[0]'} [-Wzero-length-bounds]
+>    291 |   res = ru->resp_data[3];
+>        |         ~~~~~~~~~~~~~^~~
+> In file included from include/scsi/libsas.h:15,
+>                   from drivers/scsi/aic94xx/aic94xx.h:16,
+>                   from drivers/scsi/aic94xx/aic94xx_tmf.c:11:
+> include/scsi/sas.h:557:9: note: while referencing 'resp_data'
+>    557 |  u8     resp_data[0];
+>        |         ^~~~~~~~~
+> drivers/scsi/libsas/sas_task.c: In function 'sas_ssp_task_response':
+> drivers/scsi/libsas/sas_task.c:21:30: warning: array subscript 3 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[0]'} [-Wzero-length-bounds]
+>     21 |   tstat->stat = iu->resp_data[3];
+>        |                 ~~~~~~~~~~~~~^~~
+> In file included from include/scsi/scsi_transport_sas.h:8,
+>                   from drivers/scsi/libsas/sas_internal.h:14,
+>                   from drivers/scsi/libsas/sas_task.c:3:
+> include/scsi/sas.h:557:9: note: while referencing 'resp_data'
+>    557 |  u8     resp_data[0];
+>        |         ^~~~~~~~~
 > 
-> Please note that this is not a matter of personal preferences of a
-> reviewer but a matter of correctness. blk_queue_pm_only() does not only
-> return a value > 0 if a SCSI device has been runtime suspended but also
-> returns true if scsi_device_quiesce() was called for another reason.
-> Hence my request to test the "runtime suspended" status directly and 
-> not
-> to rely on blk_queue_pm_only().
+> This should really be a flexible-array member, but the structure
+> already has such a member, swapping it out with sense_data[] would
+> cause many more warnings elsewhere.
 > 
-> Thanks,
+
+
+Hi Arnd,
+
+If we really prefer flexible-array members over zero-length array 
+members, then could we have a union of flexible-array members? I'm not 
+sure if that's a good idea TBH (or even permitted), as these structures 
+are defined by the SAS spec and good practice to keep as consistent as 
+possible, but just wondering.
+
+Apart from that:
+
+Reviewed-by: John Garry <john.garry@huawei.com>
+
+> As a workaround, add a temporary pointer that can be accessed without
+> a warning.
 > 
-> Bart.
+> Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+> Fixes: 366ca51f30de ("[SCSI] libsas: abstract STP task status into a function")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>   drivers/scsi/aic94xx/aic94xx_tmf.c | 4 +++-
+>   drivers/scsi/libsas/sas_task.c     | 3 ++-
+>   2 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+> index f814026f26fa..a3139f9766c8 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_tmf.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+> @@ -269,6 +269,7 @@ static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
+>   	struct ssp_frame_hdr *fh;
+>   	struct ssp_response_iu   *ru;
+>   	int res = TMF_RESP_FUNC_FAILED;
+> +	u8 *resp;
+>   
+>   	ASD_DPRINTK("tmf resp tasklet\n");
+>   
+> @@ -287,8 +288,9 @@ static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
+>   	fh = edb->vaddr + 16;
+>   	ru = edb->vaddr + 16 + sizeof(*fh);
+>   	res = ru->status;
+> +	resp = ru->resp_data;
+>   	if (ru->datapres == 1)	  /* Response data present */
+> -		res = ru->resp_data[3];
+> +		res = resp[3];
+>   #if 0
+>   	ascb->tag = fh->tag;
+>   #endif
+> diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
+> index e2d42593ce52..4cd2f9611c4a 100644
+> --- a/drivers/scsi/libsas/sas_task.c
+> +++ b/drivers/scsi/libsas/sas_task.c
+> @@ -12,13 +12,14 @@ void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+>   			   struct ssp_response_iu *iu)
+>   {
+>   	struct task_status_struct *tstat = &task->task_status;
+> +	u8 *resp = iu->resp_data;
+>   
+>   	tstat->resp = SAS_TASK_COMPLETE;
+>   
+>   	if (iu->datapres == 0)
+>   		tstat->stat = iu->status;
+>   	else if (iu->datapres == 1)
+> -		tstat->stat = iu->resp_data[3];
+> +		tstat->stat = resp[3];
+>   	else if (iu->datapres == 2) {
+>   		tstat->stat = SAM_STAT_CHECK_CONDITION;
+>   		tstat->buf_valid_size =
+> 
 
-Hi Bart,
-
-I agree we are pursuing correctness here, but as I said, I think both
-way are equally correct. I also agree with you that the alternative way,
-see [2], is much easier to be understood, we can take the alternative 
-way
-if you are OK with it.
-
-[1] Currently, scsi_dev_type_resume() is the hooker for resume, thaw and
-restore. Per my understanding, when scsi_dev_type_resume() is running,
-it is not possible that scsi_device_quiesce() can be called to this 
-sdev,
-at least not possible in current code base. So it is OK to rely on
-blk_queue_pm_only() in scsi_dev_type_resume().
-
-[2] The alternative way which I have tested with is like below. I think
-it is what you requested for if my understanding is right, please 
-correct
-me if I am wrong.
-
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 3717eea..d18271d 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -74,12 +74,15 @@ static int scsi_dev_type_resume(struct device *dev,
-  {
-         const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : 
-NULL;
-         int err = 0;
-+       bool was_rpm_suspended = false;
-
-         err = cb(dev, pm);
-         scsi_device_resume(to_scsi_device(dev));
-         dev_dbg(dev, "scsi resume: %d\n", err);
-
-         if (err == 0) {
-+               was_rpm_suspended = pm_runtime_suspended(dev);
-+
-                 pm_runtime_disable(dev);
-                 err = pm_runtime_set_active(dev);
-                 pm_runtime_enable(dev);
-@@ -93,8 +96,10 @@ static int scsi_dev_type_resume(struct device *dev,
-                  */
-                 if (!err && scsi_is_sdev_device(dev)) {
-                         struct scsi_device *sdev = to_scsi_device(dev);
--
--                       blk_set_runtime_active(sdev->request_queue);
-+                       if (was_rpm_suspended)
-+                               
-blk_post_runtime_resume(sdev->request_queue, 0);
-+                       else
-+                               
-blk_set_runtime_active(sdev->request_queue);
-                 }
-         }
-
-Thanks,
-
-Can Guo
