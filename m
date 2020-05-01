@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ACE7C35280
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D892C47254
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E753C2054F
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 386472068E
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 May 2020 21:43:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A6O81F/X"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JDo26L/U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726742AbgEAVnd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 May 2020 17:43:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43648 "EHLO
+        id S1726783AbgEAVng (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 May 2020 17:43:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726473AbgEAVnc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 17:43:32 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13B78C061A0C
-        for <linux-scsi@vger.kernel.org>; Fri,  1 May 2020 14:43:32 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id d17so13146322wrg.11
-        for <linux-scsi@vger.kernel.org>; Fri, 01 May 2020 14:43:32 -0700 (PDT)
+        with ESMTP id S1726698AbgEAVnf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 May 2020 17:43:35 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B83E4C061A0C
+        for <linux-scsi@vger.kernel.org>; Fri,  1 May 2020 14:43:33 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id g12so1288612wmh.3
+        for <linux-scsi@vger.kernel.org>; Fri, 01 May 2020 14:43:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=zS1gHsQdot/aWK29mtvhR9h+kIiXuYYXQ8PiZqBszOw=;
-        b=A6O81F/XQCv5gadKxoBgoKcnyYvwS5KU0ogWVh6zSIDZcO2NZUe9lwUC+tLR43sia6
-         8AZOvlva4BzRmMyXs491H+8w4FST23DClFvFzehHkb7b9AeJjXd7qnrfnVLhABCMTPKx
-         rigrrJI1V0kOaPQn6LEoFYak3iocQiU6JLA7yW9QYjRM6NJkCh7nWaD2roxLSeKSCteu
-         ILODy3qw7w2ZlOgMhcybkpGpLApuyByBKrsPMG/+O+oElbrFC82+HhjYziZ65VFwWJqX
-         rYJVJ9domtONTj5vi/8pl06O7WH3K+hDdxnR1bVEE+fSX7TlUT48ir36jMC0Ibs5UNAM
-         bDiw==
+        bh=U1bVtl4y9fwwi9e93e1qxOPfvWLUSQ8CJk/V0MzCuyk=;
+        b=JDo26L/UYIIbJ7EknjdYpxKZam88v0ZeYIOe9MDgKUO04h61XbykoV7BkhAtQecc12
+         cffcldrPI465a7dV3OAT3bFNlue2dh+8pc7J8DtfQbjjujqeUgOWxn4ZF6oD+MYP91XT
+         Cns7mjAHemK+K8oYpB3miCuFnFdpnGi78B1PP5h6NmYvN0itMwFriSZWnTScgdjnONz+
+         /14DFomvcKBklsmowJHOX0WrEW+dAsHIyU8jjQb2A0M0917P3aSA7H561whRAoHZnFQ7
+         fVVmlUhxleu3hqyeF5MKuD/SK85dACteB7ms8BFBjmvbfBZaWi/0Ok54FllTifd43U9R
+         KtDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zS1gHsQdot/aWK29mtvhR9h+kIiXuYYXQ8PiZqBszOw=;
-        b=N3Khaa0X6/6+U/acEdEG57puMwRJImZBXqh4eg1s66aTbtJyS5H+utZgexbKPkNxm5
-         LmM1tWsgHSCATbTD4pXWWVGmk2gT1ryuw+fs/Igqd1QtMcNdVoXF2WudOkuB9vF+P3lM
-         W09dQr+FzoKMWEqcD3sIqrJp4YaLBW+NgBmgBKttdxcDR4kq4ahQ6D+5GYelhGDxnIUz
-         PkzP1GX8mG40xldWe+yHZvRmw6Z7FXAZ1ICge2MvQyXVtzbcPboMS1a/JOFL5MYiW9Ux
-         L+QQvLj0Y0zO62fzRGvgkM5lKkH4nJ27tCKfmtT27uGAczfm6JsmE5zHW/fa3W8wVm1p
-         HMRg==
-X-Gm-Message-State: AGi0PuYx3TNuV7sHFuAAT/MHSmaOx2iepY5rAEU/fFUNeFIIFcoQOQUt
-        5ar0BkRl0FNxxQxUX4mWpbMMLEGH
-X-Google-Smtp-Source: APiQypJKx8yeYQzOlHkQDGKv4nOBAratxdC/lOqn+xksNHIeYKCpHvIfEO23bHEB7UR//jJQW6Yw+g==
-X-Received: by 2002:adf:c7c3:: with SMTP id y3mr4961402wrg.196.1588369410465;
-        Fri, 01 May 2020 14:43:30 -0700 (PDT)
+        bh=U1bVtl4y9fwwi9e93e1qxOPfvWLUSQ8CJk/V0MzCuyk=;
+        b=J7cQVZQH7pfpMuGscQ65+1E7UN4+U1p1M+6Dq3H9lzV+FpoYKgKCgFfi6y8yzJQ1Tc
+         bBr9biV6+Y/i8Y53IBZJITimuqmN6wQ8rz6GukCLD2dl1TzR+/PKav5oFm79egs+/cRV
+         X2cfeCvquHUq2Du+k/6E5YOOuXlQPa9oLfsJknPSjrG4saVzVpoX/b78SQl/qIalFFXR
+         MSQ6TPKXxWoCeIFeGWDo2aCzqwgrBJSmKQnALRfz/xmtBSXXIuy+/7RB71UUGinRxEFZ
+         kryKbk3L0TWssRTpIuv8dDxGdoCzgkvT9u+INXOElAzRyIU24imFW3k4HQS3jkx5LQNo
+         t9tQ==
+X-Gm-Message-State: AGi0PuadRoqtlxbspnt7rNodX70JFrDUIZROB4hiDiac1QivnFQdN8+4
+        umbI//e7Cb7bgPi3Iaby+HXBGD0P
+X-Google-Smtp-Source: APiQypJS7/tuo50olOo8h/+ZRWTCU0KAL64zlhINopJSHZnPmAwPQHWhdPTroX/xfzPqn8Q7AfFJuQ==
+X-Received: by 2002:a05:600c:2645:: with SMTP id 5mr1443107wmy.168.1588369412057;
+        Fri, 01 May 2020 14:43:32 -0700 (PDT)
 Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id t2sm1207734wmt.15.2020.05.01.14.43.28
+        by smtp.gmail.com with ESMTPSA id t2sm1207734wmt.15.2020.05.01.14.43.30
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 May 2020 14:43:29 -0700 (PDT)
+        Fri, 01 May 2020 14:43:31 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 6/9] lpfc: Remove unnecessary lockdep_assert_held calls
-Date:   Fri,  1 May 2020 14:43:07 -0700
-Message-Id: <20200501214310.91713-7-jsmart2021@gmail.com>
+Subject: [PATCH 7/9] lpfc: Fix noderef and address space warnings
+Date:   Fri,  1 May 2020 14:43:08 -0700
+Message-Id: <20200501214310.91713-8-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.1
 In-Reply-To: <20200501214310.91713-1-jsmart2021@gmail.com>
 References: <20200501214310.91713-1-jsmart2021@gmail.com>
@@ -75,159 +75,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In an audit of lockdep calls in the driver, there are multiple lockdep
-checks in successive calling layers. E.g. a routine checks, and then
-calls a lower routine that also checks, and so on. Calling sequences
-result in many redundant checks.
+Running make C=1 M=drivers/scsi/lpfc triggers sparse warnings
 
-Refine the code to remove lower-level lockdep checks.
-Update comments on the lock, correcting a few places where lock object
-in comment was incorrect.
+Correct the code generating the following errors:
+- Incompatible address space assignment without proper conversion.
+- Deference of usespace and per cpu pointers.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c |  8 +++-----
- drivers/scsi/lpfc/lpfc_sli.c     | 33 +++++++++++++++-----------------
- 2 files changed, 18 insertions(+), 23 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 3 ++-
+ drivers/scsi/lpfc/lpfc_mbox.c    | 3 ++-
+ drivers/scsi/lpfc/lpfc_sli.c     | 8 ++++----
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 789eecbf32eb..a8f4ced0fc41 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1356,14 +1356,14 @@ lpfc_vlan_id_match(uint16_t curr_vlan_id, uint16_t new_vlan_id)
- }
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 8a6e02aa553f..24d946ef8609 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2436,7 +2436,8 @@ lpfc_debugfs_dif_err_write(struct file *file, const char __user *buf,
+ 		return 0;
  
- /**
-- * lpfc_update_fcf_record - Update driver fcf record
-  * __lpfc_update_fcf_record_pri - update the lpfc_fcf_pri record.
-  * @phba: pointer to lpfc hba data structure.
-  * @fcf_index: Index for the lpfc_fcf_record.
-  * @new_fcf_record: pointer to hba fcf record.
-  *
-  * This routine updates the driver FCF priority record from the new HBA FCF
-- * record. This routine is called with the host lock held.
-+ * record. The hbalock is asserted held in the code path calling this
-+ * routine.
-  **/
- static void
- __lpfc_update_fcf_record_pri(struct lpfc_hba *phba, uint16_t fcf_index,
-@@ -1372,8 +1372,6 @@ __lpfc_update_fcf_record_pri(struct lpfc_hba *phba, uint16_t fcf_index,
- {
- 	struct lpfc_fcf_pri *fcf_pri;
+ 	if (dent == phba->debug_InjErrLBA) {
+-		if ((buf[0] == 'o') && (buf[1] == 'f') && (buf[2] == 'f'))
++		if ((dstbuf[0] == 'o') && (dstbuf[1] == 'f') &&
++		    (dstbuf[2] == 'f'))
+ 			tmp = (uint64_t)(-1);
+ 	}
  
--	lockdep_assert_held(&phba->hbalock);
--
- 	fcf_pri = &phba->fcf.fcf_pri[fcf_index];
- 	fcf_pri->fcf_rec.fcf_index = fcf_index;
- 	/* FCF record priority */
-@@ -1451,7 +1449,7 @@ lpfc_copy_fcf_record(struct lpfc_fcf_rec *fcf_rec,
-  *
-  * This routine updates the driver FCF record from the new HBA FCF record
-  * together with the address mode, vlan_id, and other informations. This
-- * routine is called with the host lock held.
-+ * routine is called with the hbalock held.
-  **/
- static void
- __lpfc_update_fcf_record(struct lpfc_hba *phba, struct lpfc_fcf_rec *fcf_rec,
+diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+index e35b52b66d6c..e34e0f11bfdd 100644
+--- a/drivers/scsi/lpfc/lpfc_mbox.c
++++ b/drivers/scsi/lpfc/lpfc_mbox.c
+@@ -1378,7 +1378,8 @@ lpfc_config_port(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	 */
+ 
+ 	if (phba->cfg_hostmem_hgp && phba->sli_rev != 3) {
+-		phba->host_gp = &phba->mbox->us.s2.host[0];
++		phba->host_gp = (struct lpfc_hgp __iomem *)
++				 &phba->mbox->us.s2.host[0];
+ 		phba->hbq_put = NULL;
+ 		offset = (uint8_t *)&phba->mbox->us.s2.host -
+ 			(uint8_t *)phba->slim2p.virt;
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 9ce37560f4c0..df77e75b9f53 100644
+index df77e75b9f53..0c9844cac3aa 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1248,8 +1248,8 @@ lpfc_sli_get_iocbq(struct lpfc_hba *phba)
-  * @phba: Pointer to HBA context object.
-  * @iocbq: Pointer to driver iocb object.
-  *
-- * This function is called with hbalock held to release driver
-- * iocb object to the iocb pool. The iotag in the iocb object
-+ * This function is called to release the driver iocb object
-+ * to the iocb pool. The iotag in the iocb object
-  * does not change for each use of the iocb object. This function
-  * clears all other fields of the iocb object when it is freed.
-  * The sqlq structure that holds the xritag and phys and virtual
-@@ -1259,7 +1259,8 @@ lpfc_sli_get_iocbq(struct lpfc_hba *phba)
-  * this IO was aborted then the sglq entry it put on the
-  * lpfc_abts_els_sgl_list until the CQ_ABORTED_XRI is received. If the
-  * IO has good status or fails for any other reason then the sglq
-- * entry is added to the free list (lpfc_els_sgl_list).
-+ * entry is added to the free list (lpfc_els_sgl_list). The hbalock is
-+ *  asserted held in the code path calling this routine.
-  **/
- static void
- __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
-@@ -1269,8 +1270,6 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
- 	unsigned long iflag = 0;
- 	struct lpfc_sli_ring *pring;
+@@ -14272,7 +14272,6 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
+ 	int ecount = 0;
+ 	int hba_eqidx;
+ 	struct lpfc_eq_intr_info *eqi;
+-	uint32_t icnt;
  
--	lockdep_assert_held(&phba->hbalock);
--
- 	if (iocbq->sli4_xritag == NO_XRI)
- 		sglq = NULL;
- 	else
-@@ -1333,18 +1332,17 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
-  * @phba: Pointer to HBA context object.
-  * @iocbq: Pointer to driver iocb object.
-  *
-- * This function is called with hbalock held to release driver
-- * iocb object to the iocb pool. The iotag in the iocb object
-- * does not change for each use of the iocb object. This function
-- * clears all other fields of the iocb object when it is freed.
-+ * This function is called to release the driver iocb object to the
-+ * iocb pool. The iotag in the iocb object does not change for each
-+ * use of the iocb object. This function clears all other fields of
-+ * the iocb object when it is freed. The hbalock is asserted held in
-+ * the code path calling this routine.
-  **/
- static void
- __lpfc_sli_release_iocbq_s3(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
- {
- 	size_t start_clean = offsetof(struct lpfc_iocbq, iocb);
+ 	/* Get the driver's phba structure from the dev_id */
+ 	hba_eq_hdl = (struct lpfc_hba_eq_hdl *)dev_id;
+@@ -14300,11 +14299,12 @@ lpfc_sli4_hba_intr_handler(int irq, void *dev_id)
+ 		return IRQ_NONE;
+ 	}
  
--	lockdep_assert_held(&phba->hbalock);
--
- 	/*
- 	 * Clean all volatile data fields, preserve iotag and node struct.
- 	 */
-@@ -1789,17 +1787,17 @@ lpfc_sli_next_iotag(struct lpfc_hba *phba, struct lpfc_iocbq *iocbq)
-  * @nextiocb: Pointer to driver iocb object which need to be
-  *            posted to firmware.
-  *
-- * This function is called with hbalock held to post a new iocb to
-- * the firmware. This function copies the new iocb to ring iocb slot and
-- * updates the ring pointers. It adds the new iocb to txcmplq if there is
-+ * This function is called to post a new iocb to the firmware. This
-+ * function copies the new iocb to ring iocb slot and updates the
-+ * ring pointers. It adds the new iocb to txcmplq if there is
-  * a completion call back for this iocb else the function will free the
-- * iocb object.
-+ * iocb object.  The hbalock is asserted held in the code path calling
-+ * this routine.
-  **/
- static void
- lpfc_sli_submit_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 		IOCB_t *iocb, struct lpfc_iocbq *nextiocb)
- {
--	lockdep_assert_held(&phba->hbalock);
- 	/*
- 	 * Set up an iotag
- 	 */
-@@ -11170,6 +11168,7 @@ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-  * request, this function issues abort out unconditionally. This function is
-  * called with hbalock held. The function returns 0 when it fails due to
-  * memory allocation failure or when the command iocb is an abort request.
-+ * The hbalock is asserted held in the code path calling this routine.
-  **/
- static int
- lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
-@@ -11183,8 +11182,6 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	unsigned long iflags;
- 	struct lpfc_nodelist *ndlp;
+-	eqi = phba->sli4_hba.eq_info;
+-	icnt = this_cpu_inc_return(eqi->icnt);
++	eqi = this_cpu_ptr(phba->sli4_hba.eq_info);
++	eqi->icnt++;
++
+ 	fpeq->last_cpu = raw_smp_processor_id();
  
--	lockdep_assert_held(&phba->hbalock);
--
- 	/*
- 	 * There are certain command types we don't want to abort.  And we
- 	 * don't want to abort commands that are already in the process of
+-	if (icnt > LPFC_EQD_ISR_TRIGGER &&
++	if (eqi->icnt > LPFC_EQD_ISR_TRIGGER &&
+ 	    fpeq->q_flag & HBA_EQ_DELAY_CHK &&
+ 	    phba->cfg_auto_imax &&
+ 	    fpeq->q_mode != LPFC_MAX_AUTO_EQ_DELAY &&
 -- 
 2.26.1
 
