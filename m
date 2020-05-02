@@ -2,154 +2,166 @@ Return-Path: <SRS0=BOnk=6Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A6D2C3A5A9
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 May 2020 16:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 183A0C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 May 2020 16:22:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDFF721974
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 May 2020 16:19:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="bAALQSS6";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="xQvujg5H"
+	by mail.kernel.org (Postfix) with ESMTP id F10A021974
+	for <linux-scsi@archiver.kernel.org>; Sat,  2 May 2020 16:22:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728379AbgEBQTY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 May 2020 12:19:24 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:1211 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728235AbgEBQTW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2020 12:19:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1588436362; x=1619972362;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=3zEhew9gWJTYChTkmuNoXs9KyrWOfZV3SNtd+IY8FZU=;
-  b=bAALQSS6nWBTR9UO3Lv+cblGL3GiOVD7vV8ED1yv7x630WAsLqjCUHwP
-   rJUoBSxahjlwvF56YgotxN2fKmW3anSQxXeOTNs6t7PVkBadfkOJMoDk4
-   vYvdln+/9xJH/OO1CvTonQtK/fdWJ6knikFEFda+J/YxqjwqM1rpdUieM
-   Bn70EN1XEqoyEwon8w9OTs0qkHgRlzvPacbz6KbmcfyEua5TYx/26jfK3
-   jj2fyo8IBR+g7m4+rP5qfHhHO839vjQHUUkEOcpoCVrMF8c57wT58Fxov
-   DoDWbUMZtGij7Arzv7JmNeJT1mN44QCn5KYssiEJym0MFvNQZLAD/dVnk
-   A==;
-IronPort-SDR: hyEhjHp4cUIoiSXVk0WXDPm/5YkRA1Rcf18PQ+kY1Df0mE0vHyYuGuRR2hycCwd5FQ+Kn89bUq
- +oiYlcur3neGWu5ysQa+eRh49NfpafcwnIF0fO6T/+utE4akiewsD/3ZcO4HKOZEhddXpZrffl
- nCXek5mbD4SKHpxr1JV5Zuy5XJxlQMCosQlr4Mww+g6D9ZbACAZ+WyB8qlmCiTSLXoSpOHfSeW
- hFYg0pUfLxchI7TJnhKl8ckuXuRG6V+9AadOylk7cuqxUmqtfZhO4xgS4eTdjqoMj0NuRqMUSS
- Zvg=
-X-IronPort-AV: E=Sophos;i="5.73,343,1583164800"; 
-   d="scan'208";a="245566020"
-Received: from mail-bn7nam10lp2106.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.106])
-  by ob1.hgst.iphmx.com with ESMTP; 03 May 2020 00:19:20 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XlCO7nmCiLErRB8tdmy7sQYcZ7Db9+Lbz5UN/yJHRFy2EXKQudfMmbvcObXgFIWB1zkyY3DqPrJ3C+qH3GHBsH8S/cW9eBbzk+VZLhhHvpiXoedgVkREfwwUGKbgQlxj/6nwvo2HpdUmses/jUM/31sfEazyuT9MB6Lat0NBHtlqop++FPH5I0gstaBSKyQXEEqlkBJgGqVIBd7b4XcxZoMOxaOUBBQhJ33BxNO+vbssPmSqQyH+mS5dFncRgGRqfcNCRc8XgR9Uc0AsA6/VkqT/gSDVQc5c5xpu4dv+u+g1+G6m5rvkJ2hNonrNZeNp1JMOA9Pl3KAhwe2nteVi7Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3zEhew9gWJTYChTkmuNoXs9KyrWOfZV3SNtd+IY8FZU=;
- b=amcrrEhOO7SEWC8xjLiNoRROW/I7DAc5syooEwv5posUf/4hXIKE8Rrn9bg64pntSIZ+3afPh9vDf+QIuS8O9lhIMQaBJh/37Llc4/z4fSEHNPxYQn2M3+W7dUcqi9wrd0wl530MyLxyU/++8V3Ab/N1EKyDQWD0Zl2M741Bj9YwQPVHJWelTjK+lwx5+YQu3OBWlJ5lbQ55HG6wr2ccrsn0RE0ZEwNjkpQzCWETKAifmaZ68denWZUOE8rtKV5LX2NPerLi1jEdNlngddgR/4708u3XuFaVKidaAA2FurCWch7UvN5tbSR3SiFQvidzxcU5ch/cK09Xi3fLdQxIrg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3zEhew9gWJTYChTkmuNoXs9KyrWOfZV3SNtd+IY8FZU=;
- b=xQvujg5HYS+3nGFD8jichPHlTm45Thcj4zYeLKBEpS3gW8bonH2p05s8hevJeurbfc7swdjQZqUL2wiSePlPNbY5wo3hNzi2oyBINR7mSXUMtu5Ex/E0pNlmb+xalqhZlRfqNcXx9/fpRaGWOUkuAhTDXrASmZElwtqi2EMyio0=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB5200.namprd04.prod.outlook.com (2603:10b6:805:103::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.29; Sat, 2 May
- 2020 16:19:17 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.2958.027; Sat, 2 May 2020
- 16:19:17 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bean Huo <huobean@gmail.com>, Bart Van Assche <bvanassche@acm.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 5/5] scsi: ufs: UFS Host Performance Booster(HPB)
- driver
-Thread-Topic: [PATCH v2 5/5] scsi: ufs: UFS Host Performance Booster(HPB)
- driver
-Thread-Index: AQHWFC4dSn/DnOroKESaR41iHFfp4qiF2/SAgAK+MnCAAPi+kIAAmSYAgAJemjCAAWl4gIAASG8QgABD6oCAAtOb8IAAXhUAgANcvzA=
-Date:   Sat, 2 May 2020 16:19:17 +0000
-Message-ID: <SN6PR04MB46409E525B4AA66C428122EEFCA80@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200416203126.1210-1-beanhuo@micron.com>
-         <20200416203126.1210-6-beanhuo@micron.com>
-         <8921adc3-0c1e-eb16-4a22-1a2a583fc8b3@acm.org>
-         <SN6PR04MB4640851C163648C54EB274C5FCD00@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <SN6PR04MB4640ABB2BB5D2CE5AA2C3778FCD10@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <12e8ad61-caa4-3d28-c1d7-febe99a488fb@acm.org>
-         <SN6PR04MB4640A33BBE0CD58107D7FC69FCAF0@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <b2584ba8-3542-1aae-5802-e59d218e1553@acm.org>
-         <SN6PR04MB464009AFAC8F7EFC04184826FCAC0@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <15eca4dd2ec8a4ba210ce0844e9f5027251fa6f2.camel@gmail.com>
-         <BYAPR04MB4629393BA60AF5E5898FB304FCAA0@BYAPR04MB4629.namprd04.prod.outlook.com>
- <79278fe0f4e0ce820484386a72bc6044d3c66822.camel@gmail.com>
-In-Reply-To: <79278fe0f4e0ce820484386a72bc6044d3c66822.camel@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2a00:a040:188:8f6c:c15d:86e6:9e1d:ec73]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 5a327671-840c-43ec-2f3b-08d7eeb49028
-x-ms-traffictypediagnostic: SN6PR04MB5200:
-x-microsoft-antispam-prvs: <SN6PR04MB5200786A6CA4B81EF03D93D4FCA80@SN6PR04MB5200.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 039178EF4A
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: wzsyQ/t+3Dtu0eq4vY57N5KhEe1aNtozWxkdHBz/hQWInPGO1SLf2cX3mFqn+yCt+LOtlh17QgoiN3ZPoEJM5UdPsw+1QX7wb6/ZNRbaZeZModETyY0AeAu28YxplCrkorWGrLcxQAQH8tt/W1WcCiOlfVNw0IYNMhYxe4r9ggFS72MOPfK847rZZE519gccoZedEfF5AP66rYlnJyuKKaNwWkiV2bXWqZiJuxCxeeJIykMD27RyJM2Vl40wNFpM65x6iLqmlWr/LwbC9JN8Ik8C+TXFDNENOrtOzfnYJ+ZYUfOeiR9M3vTh9W2KtNoBhCxITa6t3utkK6jd3OQI4Z5MR7xriuGyMJwHo5e2m6VnI77ripGMIf5sG5kSKaABdXEBc3p47NOCLq7DmmRkMXgYf3LoGl206Lh6m1TSKt3H2Ug8kUd1mMCWLVyXL1PS3/11gchaGefN02jYkuFf+HrDpuuzr9/J+GCNx0Fx7wY=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(39860400002)(136003)(396003)(376002)(346002)(9686003)(55016002)(6506007)(4326008)(66476007)(64756008)(76116006)(66446008)(66556008)(66946007)(5660300002)(4744005)(186003)(71200400001)(8676002)(52536014)(8936002)(110136005)(54906003)(7696005)(7416002)(33656002)(2906002)(478600001)(316002)(86362001)(921003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: MyaxCIhwfAh8sjb7Q0rPAVOY9Htq/I1WHl0IQng128prNPXgG9Lm414xxN7CR9Myp/k1yckaztOcnIoQx7Qt9ypMGNYuTszDWPpWRchgs/s6jatlRb1EVhcaQts52VGtkF8jCTkjNKYrc9gtBMQWW1UvN8oNHRAGgpw3wmuZnlNvEherP8jza0CkQ0/VLnGgBdxrwoAhFxUvxaIRIcyR4sSYDuOzApAJjeNv+MTEpPNkOcRc1jEXAMhj7gDKJC+4nx390e4ETQ9sO3CFfEMEWl9r5uwzdGeVtCAyiIrFg2G9ZcAzOGQ/vJHytLt9MAwG8G0HROI77aSxVFuVG+F/3PmGVClAjNPGJWD6GNfIj3CE+DNHKY5iY3KPwHzqOLqBUoZlJJiVB7ie9CHSjNcOku04rotTwh4C/MINUkzYC+R5f8y+yWNe3EO3DqdnzWAadc6vl7ysROnSNVXCjU5sQ0hZ/EA3MdBG+nR7CfCXnLTVspFkuIIGioRQxxjL6cRMKkuCmqHgzZ7HlQGAmK9H7NFztXf5EV5o+ClYKc1t7cFf1UOxzjpQez7E4bqH7Gso61TWURkhC1P7e8NOB4tlBFoimwnb1psJ5cA5JotDJ31nVWDW3CsK+DNELGwQoNP7lPRVLS29ZpN0W4XYQLuDKNtR7xbPK+wmX7TJOoRjbIpeQoVKKpJeGkiaPqbd6VRk27f5jb6VkIPWJVCco68+OwGv/xiWQF3SGSnUSNxcsG3wF/bjFn0J42IrZpv7G6puIbE6TbB3B081k/Cp6ZKh51lm+UpmYmKP5k4TKwBlBYkWs1tp++VILly5WnPsUBEfoBJOl90GJLFkC0ZMDDDuaGGtdQuYExS/WQzPnGvVZrU=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1728381AbgEBQWh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 May 2020 12:22:37 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:41225 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728325AbgEBQWh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2020 12:22:37 -0400
+Received: by mail-pf1-f195.google.com with SMTP id 18so3144046pfv.8
+        for <linux-scsi@vger.kernel.org>; Sat, 02 May 2020 09:22:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=owczh4rvPkt6YuMsXofkll5vS9JUcQTvJ6bXF+wEGk0=;
+        b=Cbqbr4OTDLlQDUdaZ8nb5RZl99CzRZfqJIIg1mtoM6mxOADFeN7IQ3Get38BA1F9rG
+         x0nS4E57maNH00FuQSTY395M1NUZUnSDjHb0HMQzzFPJ2paEpH37U+YGeROHa+OBpUyv
+         UhV/vRRLnEUafrB9+UWKftUgV4t/SZBezln1e4aQoCXN38qdQ2kaAnanOJnsHf4NmSQS
+         Bwjawz8MIJgO6YfGF9OvbiKdcNrSKgh1QN8MqiOMTH4CuoSetTwBJGsl/lv5/5ldOITc
+         VWUf4BmqXuCK9L9R1C3dEde/jNMzvpHEteCIwrTlZZ3L5dao0BMQXif9on76cl0/ytPS
+         bzFA==
+X-Gm-Message-State: AGi0PuZk4J6RcFJvyvOIIRviSjpovGQd8Wra2ag0TJAkAKlmWyomoWan
+        djrd0oELiCELXwNtZy0IZb6rkuOwE7LXLw==
+X-Google-Smtp-Source: APiQypK4licLHwrarJotTrcEFhdtIKvTpoSl6x74x4NUQRhPAvgdskDp+3pfWRZFaxynnQbOMwdWIQ==
+X-Received: by 2002:a63:1a16:: with SMTP id a22mr9612903pga.264.1588436555379;
+        Sat, 02 May 2020 09:22:35 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:f841:776c:f563:db5c? ([2601:647:4000:d7:f841:776c:f563:db5c])
+        by smtp.gmail.com with ESMTPSA id z185sm872482pgz.26.2020.05.02.09.22.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 02 May 2020 09:22:34 -0700 (PDT)
+Subject: Re: [PATCH RFC v3 22/41] block: implement persistent commands
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        John Garry <john.garry@huawei.com>,
+        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org
+References: <20200430131904.5847-1-hare@suse.de>
+ <20200430131904.5847-23-hare@suse.de>
+ <4cd47cec-90cf-8e3b-c3f8-8dc9d4d22c80@acm.org>
+ <c65981a3-68b9-e7f5-ea10-efe57bbb3dfc@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <8b979bbf-54bf-da09-fc96-00367f805a95@acm.org>
+Date:   Sat, 2 May 2020 09:22:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5a327671-840c-43ec-2f3b-08d7eeb49028
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 May 2020 16:19:17.5231
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 9D7bSFmfVeALU9EnRpDJua/j2TzVbs257/ZJhnbSmstIpJuI65HYEw0KxdtyH29RLeoiQGlWrxBKEEcN6dSniA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB5200
+In-Reply-To: <c65981a3-68b9-e7f5-ea10-efe57bbb3dfc@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQmVhbiwNCg0KPiBUbyBtZSwgaGllcmFyY2hpY2FsIGRlc2lnbiBzb3VuZHMgZ29vZCwgYW5k
-IG1vdmUgdGhlIGltcGxlbWVudGF0aW9uIG9mDQo+IEhQQiBtYW5hZ2VyIG1vZHVsZSB0byBTQ1NJ
-IGxheWVyIGlzIG5pY2UuIGJ1dCB3aGF0IGlzIG9waW5pb24gb2YNCj4gb3RoZXJzPyBhbmQgd2hp
-Y2ggd2F5IHRoZXkgcHJlZmVyLiBvciB0aGV5IHdhbnQgdXMgdG8gY29udGludWUgY3VycmVudA0K
-PiBTYW1zdW5nIGFwcHJvYWNoIGFuZCBzb2x2ZSBpdHMgY29ucyBmdXJ0aGVyLg0KSSBjYW4gcHV0
-IGFuIFJGQyB0b2dldGhlciBpbiBmZXcgZGF5cy4NCk15IHBsYW4gaXMgdG8gYm9ycm93IGFzIG11
-Y2ggYXMgcG9zc2libGUgZnJvbSBTYW1zdW5nIGRyaXZlciwNCkJ1dCB0byBtb3ZlIHRoZSBMMlAg
-Y2FjaGUgbWFuYWdlbWVudCBhbmQgSFBCLVJFQUQgY29tbWFuZCBzZXR1cCB0byB0aGUgc2NzaSBt
-aWQtbGF5ZXIuDQpBbHNvIG1heWJlIGVsYWJvcmF0ZSB0aGUgaG9zdC1tYW5hZ2VkIG1vZGUgbG9n
-aWMgdG8gc29tZSBleHRlbnQuDQpUaGlzIHdpbGwgbm90IGJlIGEgZnVsbC1mbGVkZ2VkIGRyaXZl
-ciwgYnV0IG1vcmUgb2YgYSBza2VsZXRvbiAtIA0KVGhlIGdvcnkgZGV0YWlscyBjYW4gY29tZSBh
-ZnRlciwgb25jZSB3ZSdsbCBhZ3JlZSBvbiB0aGUgZ2VuZXJhbCBjb25jZXB0Lg0KDQpMZXQncyB3
-YWl0IGZldyAgZGF5cyBtb3JlIHRvIGFsbG93IHNvbWUgbW9yZSBwZW9wbGUgdG8gY29tbWVudC4N
-CklkZWFsbHksIHRoaXMgc2hvdWxkIGJlIGEgam9pbnQgZWZmb3J0IG9mIHRoZSB1ZnMgY29tbXVu
-aXR5LA0KR2l2ZW4gdGhlIHNpemUgb2YgdGhpcyBkcml2ZXIsIGFuZCB0aGUgIGluZHVzdHJ5J3Mg
-aW50ZXJlc3QgYW5kIGZvY3VzLg0KDQpUaGFua3MsDQpBdnJpDQo=
+On 2020-05-02 05:11, Hannes Reinecke wrote:
+> On 5/1/20 6:59 AM, Bart Van Assche wrote:
+>> On 2020-04-30 06:18, Hannes Reinecke wrote:
+>>> diff --git a/block/blk-mq.c b/block/blk-mq.c
+>>> index 44482aaed11e..402cf104d183 100644
+>>> --- a/block/blk-mq.c
+>>> +++ b/block/blk-mq.c
+>>> @@ -402,9 +402,14 @@ struct request *blk_mq_alloc_request(struct
+>>> request_queue *q, unsigned int op,
+>>>   {
+>>>       struct blk_mq_alloc_data alloc_data = { .flags = flags,
+>>> .cmd_flags = op };
+>>>       struct request *rq;
+>>> -    int ret;
+>>> +    int ret = 0;
+>>>   -    ret = blk_queue_enter(q, flags);
+>>> +    if (flags & BLK_MQ_REQ_PERSISTENT) {
+>>> +        if (blk_queue_dying(q))
+>>> +            ret = -ENODEV;
+>>> +        alloc_data.cmd_flags |= REQ_PERSISTENT;
+>>> +    } else
+>>> +        ret = blk_queue_enter(q, flags);
+>>>       if (ret)
+>>>           return ERR_PTR(ret);
+>>>   
+>>
+>> I think that not calling blk_queue_enter() for persistent commands means
+>> opening a giant can of worms. There is quite some code in the block
+>> layer that assumes that neither .queue_rq() nor the request completion
+>> code will be called if q_usage_counter == 0. Skipping the
+>> blk_queue_enter() call for persistent commands breaks that assumption. I
+>> think we need a better solution.
+>>
+> Well, yeah, maybe.
+> My aim here is that _all_ I/O requiring a tag from the hardware will be
+> tracked by the blocklayer tagset. Only that will give the block-layer
+> accurate information about outstanding commands, such that the ongoing
+> CPU hotplug discussion can make the correct decisions and implement
+> functions really covering all outstanding I/O.
+> It also allows us to use the scsi_host_busy_iter() functions within the
+> driver, and will get rid of the hand-crafted iterations the driver has
+> to do now.
+> 
+> It worked reasonably well, until I encountered the infamous AEN
+> commands, which actually require the opposite: _not_ to be tracked by
+> the block layer at all, as the commands themselves are just placeholders
+> to be returned by the firmware once an event occurs.
+> (And yes, I _do_ think this is a quite dangerous operation, because I
+> can't quite see how one could reliably return this command in case of a
+> firmware crash ...)
+> (But anyhow, that's how the firmware is written and we have to live with
+> it.)
+> 
+> So I implemented this approach, to have tags which are ignored by the
+> block layer. But I have to admit that this approach relies on quite some
+> assumptions (like these tags are never actually submitted to the
+> blocklayer itself, are never started etc), none of which are spelled out
+> clearly (yet).
+> An alternative approach would be to arbitrary decrease the tagset size
+> by one (eg by shifting the tags by one), and use the free tag for AENs).
+> That would have to be coded within the driver, though.
+> 
+> If that's a solution which you like better I could give it a go.
+
+How about dropping support for AEN commands entirely? As far as I know
+such a command has never been standardized. Additionally, all SCSI core
+code I'm familiar with supports unit attentions and does not rely on
+asynchronous events to be reported immediately.
+
+If dropping support for AEN commands is not an option, how about
+aborting these commands before freezing a request queue?
+
+Thanks,
+
+Bart.
