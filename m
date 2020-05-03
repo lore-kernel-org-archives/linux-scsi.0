@@ -2,248 +2,206 @@ Return-Path: <SRS0=cGsx=6R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A37D6C47257
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 01:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115D9C47257
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 06:04:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DE0420787
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 01:51:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D82012075B
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 06:04:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vQyf2HRn"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="BDfp66HX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726752AbgECBvd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 May 2020 21:51:33 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:21889 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726684AbgECBvc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2020 21:51:32 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588470692; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=hB4FBkH/8U2uRl5gbiUMkGwH/lIPHxjTpsf9dChF1Ic=;
- b=vQyf2HRnUi4Q9gahvBCSOFJPH204gGerS4dwIbh8fy4ZfYdOD+I1jD4CiCWY6QAgcpmu90VZ
- ulMUoMyok/zXB20EvrRIFqY+JwtXCaRdiTSQs4ezuMivdaYV0tHjmHGJ4nJb6b+NkOHEbfVb
- pI/S9X7TTwHBA4oZbLFQL7eD9ao=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eae239e.7fd91d01b928-smtp-out-n05;
- Sun, 03 May 2020 01:51:26 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E5F22C4478C; Sun,  3 May 2020 01:51:25 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 14C02C433D2;
-        Sun,  3 May 2020 01:51:24 +0000 (UTC)
+        id S1727102AbgECGEN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 May 2020 02:04:13 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:44123 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727030AbgECGEG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2020 02:04:06 -0400
+X-UUID: cfb0f8d605854736bbe847ae7772f632-20200503
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=v7bzIt6FbMqNxzzK05aI6D5qi1uwWl7jSYZU5TgeLwQ=;
+        b=BDfp66HXRmR1/Wzyl5PnztxLwKVLYsFC5TOcgmsBQdqAmjJ+9J6GSuZx2Ub7WnviH8YpH+zlurgFW3A2hCbqp8sZw6wkkdlwvsMC0OTmXWBd99c1HM6btb1duOYNIbCnqvR9gSCb+7lAxXB8KdzumK37oFnMdMRgnZLzK01GbFs=;
+X-UUID: cfb0f8d605854736bbe847ae7772f632-20200503
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 869439203; Sun, 03 May 2020 14:03:57 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sun, 3 May 2020 14:03:55 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sun, 3 May 2020 14:03:55 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
+CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
+        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v4 6/8] scsi: ufs: add LU Dedicated buffer mode support for WriteBooster
+Date:   Sun, 3 May 2020 14:03:49 +0800
+Message-ID: <20200503060351.10572-7-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200503060351.10572-1-stanley.chu@mediatek.com>
+References: <20200503060351.10572-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Sun, 03 May 2020 09:51:24 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        asutoshd@codeaurora.org, beanhuo@micron.com,
-        matthias.bgg@gmail.com, bvanassche@acm.org,
-        linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-Subject: Re: [PATCH v3 2/5] scsi: ufs: add "index" in parameter list of
- ufshcd_query_flag()
-In-Reply-To: <20200501143835.26032-3-stanley.chu@mediatek.com>
-References: <20200501143835.26032-1-stanley.chu@mediatek.com>
- <20200501143835.26032-3-stanley.chu@mediatek.com>
-Message-ID: <e4528d5ec4cba4bfb50aeb8c1012672b@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-01 22:38, Stanley Chu wrote:
-> For preparation of LU Dedicated buffer mode support on WriteBooster
-> feature, "index" parameter shall be added and allowed to be specified
-> by callers.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
+QWNjb3JkaW5nIHRvIFVGUyBzcGVjaWZpY2F0aW9uLCB0aGVyZSBhcmUgdHdvIFdyaXRlQm9vc3Rl
+ciBtb2RlIG9mDQpvcGVyYXRpb25zOiAiTFUgZGVkaWNhdGVkIGJ1ZmZlciIgbW9kZSBhbmQgInNo
+YXJlZCBidWZmZXIiIG1vZGUuDQpJbiB0aGUgIkxVIGRlZGljYXRlZCBidWZmZXIiIG1vZGUsIHRo
+ZSBXcml0ZUJvb3N0ZXIgQnVmZmVyIGlzDQpkZWRpY2F0ZWQgdG8gYSBsb2dpY2FsIHVuaXQuDQoN
+CklmIHRoZSBkZXZpY2Ugc3VwcG9ydHMgdGhlICJMVSBkZWRpY2F0ZWQgYnVmZmVyIiBtb2RlLCB0
+aGlzIG1vZGUgaXMNCmNvbmZpZ3VyZWQgYnkgc2V0dGluZyBiV3JpdGVCb29zdGVyQnVmZmVyVHlw
+ZSB0byAwMGguIFRoZSBsb2dpY2FsDQp1bml0IFdyaXRlQm9vc3RlciBCdWZmZXIgc2l6ZSBpcyBj
+b25maWd1cmVkIGJ5IHNldHRpbmcgdGhlDQpkTFVOdW1Xcml0ZUJvb3N0ZXJCdWZmZXJBbGxvY1Vu
+aXRzIGZpZWxkIG9mIHRoZSByZWxhdGVkIFVuaXQNCkRlc2NyaXB0b3IuIE9ubHkgYSB2YWx1ZSBn
+cmVhdGVyIHRoYW4gemVybyBlbmFibGVzIHRoZSBXcml0ZUJvb3N0ZXINCmZlYXR1cmUgaW4gdGhl
+IGxvZ2ljYWwgdW5pdC4NCg0KTW9kaWZ5IHVmc2hjZF93Yl9wcm9iZSgpIGFzIGFib3ZlIGRlc2Ny
+aXB0aW9uIHRvIHN1cHBvcnQgTFUgRGVkaWNhdGVkDQpidWZmZXIgbW9kZS4NCg0KTm90ZSB0aGF0
+IGFjY29yZGluZyB0byBVRlMgMy4xIHNwZWNpZmljYXRpb24sIHRoZSB2YWxpZCB2YWx1ZSBvZg0K
+YkRldmljZU1heFdyaXRlQm9vc3RlckxVcyBwYXJhbWV0ZXIgaW4gR2VvbWV0cnkgRGVzY3JpcHRv
+ciBpcyAxLA0Kd2hpY2ggbWVhbnMgYXQgbW9zdCBvbmUgTFVOIGNhbiBoYXZlIFdyaXRlQm9vc3Rl
+ciBidWZmZXIgaW4gIkxVDQpkZWRpY2F0ZWQgYnVmZmVyIG1vZGUiLiBUaGVyZWZvcmUgdGhpcyBw
+YXRjaCBzdXBwb3J0cyBvbmx5IG9uZQ0KTFVOIHdpdGggV3JpdGVCb29zdGVyIGVuYWJsZWQuIEFs
+bCBXcml0ZUJvb3N0ZXIgcmVsYXRlZCBzeXNmcyBub2Rlcw0KYXJlIHNwZWNpZmljYWxseSBtYXBw
+ZWQgdG8gdGhlIExVTiB3aXRoIFdyaXRlQm9vc3RlciBlbmFibGVkIGluDQpMVSBEZWRpY2F0ZWQg
+YnVmZmVyIG1vZGUuDQoNClNpZ25lZC1vZmYtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBt
+ZWRpYXRlay5jb20+DQotLS0NCiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1zeXNmcy5jIHwgMTEgKysr
+KysrKy0NCiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy5oICAgICAgIHwgIDcgKysrKysNCiBkcml2ZXJz
+L3Njc2kvdWZzL3Vmc2hjZC5jICAgIHwgNTIgKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0t
+LS0tLS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCAgICB8ICA3ICsrKysrDQogNCBmaWxl
+cyBjaGFuZ2VkLCA2NSBpbnNlcnRpb25zKCspLCAxMiBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLXN5c2ZzLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1z
+eXNmcy5jDQppbmRleCBiODZiNmE0MGQ3ZTYuLmEwYjM3NjNlMWRjMiAxMDA2NDQNCi0tLSBhL2Ry
+aXZlcnMvc2NzaS91ZnMvdWZzLXN5c2ZzLmMNCisrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLXN5
+c2ZzLmMNCkBAIC02MjIsMTYgKzYyMiwyNSBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGF0dHJpYnV0
+ZV9ncm91cCB1ZnNfc3lzZnNfc3RyaW5nX2Rlc2NyaXB0b3JzX2dyb3VwID0gew0KIAkuYXR0cnMg
+PSB1ZnNfc3lzZnNfc3RyaW5nX2Rlc2NyaXB0b3JzLA0KIH07DQogDQorc3RhdGljIGlubGluZSBi
+b29sIHVmc2hjZF9pc193Yl9mbGFncyhlbnVtIGZsYWdfaWRuIGlkbikNCit7DQorCXJldHVybiAo
+KGlkbiA+PSBRVUVSWV9GTEFHX0lETl9XQl9FTikgJiYNCisJCShpZG4gPD0gUVVFUllfRkxBR19J
+RE5fV0JfQlVGRl9GTFVTSF9EVVJJTkdfSElCRVJOOCkpOw0KK30NCisNCiAjZGVmaW5lIFVGU19G
+TEFHKF9uYW1lLCBfdW5hbWUpCQkJCQkJXA0KIHN0YXRpYyBzc2l6ZV90IF9uYW1lIyNfc2hvdyhz
+dHJ1Y3QgZGV2aWNlICpkZXYsCQkJCVwNCiAJc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIs
+IGNoYXIgKmJ1ZikJCQlcDQogewkJCQkJCQkJCVwNCiAJYm9vbCBmbGFnOwkJCQkJCQlcDQorCXU4
+IGluZGV4ID0gMDsJCQkJCQkJXA0KIAlpbnQgcmV0OwkJCQkJCQlcDQogCXN0cnVjdCB1ZnNfaGJh
+ICpoYmEgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsJCQlcDQorCWlmICh1ZnNoY2RfaXNfd2JfZmxh
+Z3MoUVVFUllfRkxBR19JRE4jI191bmFtZSkpCQkJXA0KKwkJaW5kZXggPSB1ZnNoY2Rfd2JfZ2V0
+X2ZsYWdfaW5kZXgoaGJhKTsJCQlcDQogCXBtX3J1bnRpbWVfZ2V0X3N5bmMoaGJhLT5kZXYpOwkJ
+CQkJXA0KIAlyZXQgPSB1ZnNoY2RfcXVlcnlfZmxhZyhoYmEsIFVQSVVfUVVFUllfT1BDT0RFX1JF
+QURfRkxBRywJXA0KLQkJUVVFUllfRkxBR19JRE4jI191bmFtZSwgMCwgJmZsYWcpOwkJCVwNCisJ
+CVFVRVJZX0ZMQUdfSUROIyNfdW5hbWUsIGluZGV4LCAmZmxhZyk7CQkJXA0KIAlwbV9ydW50aW1l
+X3B1dF9zeW5jKGhiYS0+ZGV2KTsJCQkJCVwNCiAJaWYgKHJldCkJCQkJCQkJXA0KIAkJcmV0dXJu
+IC1FSU5WQUw7CQkJCQkJXA0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLmggYi9k
+cml2ZXJzL3Njc2kvdWZzL3Vmcy5oDQppbmRleCBkYWFjNTA1M2I4NTAuLmViM2QzY2ViYzg3ZCAx
+MDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLmgNCisrKyBiL2RyaXZlcnMvc2NzaS91
+ZnMvdWZzLmgNCkBAIC0zMzAsNiArMzMwLDEyIEBAIGVudW0gaGVhbHRoX2Rlc2NfcGFyYW0gew0K
+IAlIRUFMVEhfREVTQ19QQVJBTV9MSUZFX1RJTUVfRVNUX0IJPSAweDQsDQogfTsNCiANCisvKiBX
+cml0ZUJvb3N0ZXIgYnVmZmVyIG1vZGUgKi8NCitlbnVtIHsNCisJV0JfQlVGX01PREVfTFVfREVE
+SUNBVEVECT0gMHgwLA0KKwlXQl9CVUZfTU9ERV9TSEFSRUQJCT0gMHgxLA0KK307DQorDQogLyoN
+CiAgKiBMb2dpY2FsIFVuaXQgV3JpdGUgUHJvdGVjdA0KICAqIDAwaDogTFUgbm90IHdyaXRlIHBy
+b3RlY3RlZA0KQEAgLTU1OSw2ICs1NjUsNyBAQCBzdHJ1Y3QgdWZzX2Rldl9pbmZvIHsNCiAJYm9v
+bCBpc19sdV9wb3dlcl9vbl93cDsNCiAJLyogTWF4aW11bSBudW1iZXIgb2YgZ2VuZXJhbCBMVSBz
+dXBwb3J0ZWQgYnkgdGhlIFVGUyBkZXZpY2UgKi8NCiAJdTggbWF4X2x1X3N1cHBvcnRlZDsNCisJ
+dTggd2JfZGVkaWNhdGVkX2x1Ow0KIAl1MTYgd21hbnVmYWN0dXJlcmlkOw0KIAkvKlVGUyBkZXZp
+Y2UgUHJvZHVjdCBOYW1lICovDQogCXU4ICptb2RlbDsNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KaW5kZXggZDRhOWM0
+NzkyOTRjLi5mZTA5MzIwN2NjNDUgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
+ZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQpAQCAtNTIwNSw2ICs1MjA1LDcg
+QEAgc3RhdGljIGJvb2wgdWZzaGNkX3diX3N1cChzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KIHN0YXRp
+YyBpbnQgdWZzaGNkX3diX2N0cmwoc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBlbmFibGUpDQog
+ew0KIAlpbnQgcmV0Ow0KKwl1OCBpbmRleDsNCiAJZW51bSBxdWVyeV9vcGNvZGUgb3Bjb2RlOw0K
+IA0KIAlpZiAoIXVmc2hjZF93Yl9zdXAoaGJhKSkNCkBAIC01MjE3LDggKzUyMTgsOSBAQCBzdGF0
+aWMgaW50IHVmc2hjZF93Yl9jdHJsKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJvb2wgZW5hYmxlKQ0K
+IAllbHNlDQogCQlvcGNvZGUgPSBVUElVX1FVRVJZX09QQ09ERV9DTEVBUl9GTEFHOw0KIA0KKwlp
+bmRleCA9IHVmc2hjZF93Yl9nZXRfZmxhZ19pbmRleChoYmEpOw0KIAlyZXQgPSB1ZnNoY2RfcXVl
+cnlfZmxhZ19yZXRyeShoYmEsIG9wY29kZSwNCi0JCQkJICAgICAgUVVFUllfRkxBR19JRE5fV0Jf
+RU4sIDAsIE5VTEwpOw0KKwkJCQkgICAgICBRVUVSWV9GTEFHX0lETl9XQl9FTiwgaW5kZXgsIE5V
+TEwpOw0KIAlpZiAocmV0KSB7DQogCQlkZXZfZXJyKGhiYS0+ZGV2LCAiJXMgd3JpdGUgYm9vc3Rl
+ciAlcyBmYWlsZWQgJWRcbiIsDQogCQkJX19mdW5jX18sIGVuYWJsZSA/ICJlbmFibGUiIDogImRp
+c2FibGUiLCByZXQpOw0KQEAgLTUyMzUsMTUgKzUyMzcsMTcgQEAgc3RhdGljIGludCB1ZnNoY2Rf
+d2JfY3RybChzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBib29sIGVuYWJsZSkNCiBzdGF0aWMgaW50IHVm
+c2hjZF93Yl90b2dnbGVfZmx1c2hfZHVyaW5nX2g4KHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJvb2wg
+c2V0KQ0KIHsNCiAJaW50IHZhbDsNCisJdTggaW5kZXg7DQogDQogCWlmIChzZXQpDQogCQl2YWwg
+PSAgVVBJVV9RVUVSWV9PUENPREVfU0VUX0ZMQUc7DQogCWVsc2UNCiAJCXZhbCA9IFVQSVVfUVVF
+UllfT1BDT0RFX0NMRUFSX0ZMQUc7DQogDQorCWluZGV4ID0gdWZzaGNkX3diX2dldF9mbGFnX2lu
+ZGV4KGhiYSk7DQogCXJldHVybiB1ZnNoY2RfcXVlcnlfZmxhZ19yZXRyeShoYmEsIHZhbCwNCi0J
+CQkgICAgICAgUVVFUllfRkxBR19JRE5fV0JfQlVGRl9GTFVTSF9EVVJJTkdfSElCRVJOOCwgMCwN
+Ci0JCQkJICAgICAgIE5VTEwpOw0KKwkJCQlRVUVSWV9GTEFHX0lETl9XQl9CVUZGX0ZMVVNIX0RV
+UklOR19ISUJFUk44LA0KKwkJCQlpbmRleCwgTlVMTCk7DQogfQ0KIA0KIHN0YXRpYyBpbmxpbmUg
+dm9pZCB1ZnNoY2Rfd2JfdG9nZ2xlX2ZsdXNoKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJvb2wgZW5h
+YmxlKQ0KQEAgLTUyNTgsMTMgKzUyNjIsMTUgQEAgc3RhdGljIGlubGluZSB2b2lkIHVmc2hjZF93
+Yl90b2dnbGVfZmx1c2goc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBlbmFibGUpDQogc3RhdGlj
+IGludCB1ZnNoY2Rfd2JfYnVmX2ZsdXNoX2VuYWJsZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KIHsN
+CiAJaW50IHJldDsNCisJdTggaW5kZXg7DQogDQogCWlmICghdWZzaGNkX3diX3N1cChoYmEpIHx8
+IGhiYS0+d2JfYnVmX2ZsdXNoX2VuYWJsZWQpDQogCQlyZXR1cm4gMDsNCiANCisJaW5kZXggPSB1
+ZnNoY2Rfd2JfZ2V0X2ZsYWdfaW5kZXgoaGJhKTsNCiAJcmV0ID0gdWZzaGNkX3F1ZXJ5X2ZsYWdf
+cmV0cnkoaGJhLCBVUElVX1FVRVJZX09QQ09ERV9TRVRfRkxBRywNCiAJCQkJICAgICAgUVVFUllf
+RkxBR19JRE5fV0JfQlVGRl9GTFVTSF9FTiwNCi0JCQkJICAgICAgMCwgTlVMTCk7DQorCQkJCSAg
+ICAgIGluZGV4LCBOVUxMKTsNCiAJaWYgKHJldCkNCiAJCWRldl9lcnIoaGJhLT5kZXYsICIlcyBX
+QiAtIGJ1ZiBmbHVzaCBlbmFibGUgZmFpbGVkICVkXG4iLA0KIAkJCV9fZnVuY19fLCByZXQpOw0K
+QEAgLTUyNzgsMTIgKzUyODQsMTUgQEAgc3RhdGljIGludCB1ZnNoY2Rfd2JfYnVmX2ZsdXNoX2Vu
+YWJsZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KIHN0YXRpYyBpbnQgdWZzaGNkX3diX2J1Zl9mbHVz
+aF9kaXNhYmxlKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogew0KIAlpbnQgcmV0Ow0KKwl1OCBpbmRl
+eDsNCiANCiAJaWYgKCF1ZnNoY2Rfd2Jfc3VwKGhiYSkgfHwgIWhiYS0+d2JfYnVmX2ZsdXNoX2Vu
+YWJsZWQpDQogCQlyZXR1cm4gMDsNCiANCisJaW5kZXggPSB1ZnNoY2Rfd2JfZ2V0X2ZsYWdfaW5k
+ZXgoaGJhKTsNCiAJcmV0ID0gdWZzaGNkX3F1ZXJ5X2ZsYWdfcmV0cnkoaGJhLCBVUElVX1FVRVJZ
+X09QQ09ERV9DTEVBUl9GTEFHLA0KLQkJCQkgICAgICBRVUVSWV9GTEFHX0lETl9XQl9CVUZGX0ZM
+VVNIX0VOLCAwLCBOVUxMKTsNCisJCQkJICAgICAgUVVFUllfRkxBR19JRE5fV0JfQlVGRl9GTFVT
+SF9FTiwNCisJCQkJICAgICAgaW5kZXgsIE5VTEwpOw0KIAlpZiAocmV0KSB7DQogCQlkZXZfd2Fy
+bihoYmEtPmRldiwgIiVzOiBXQiAtIGJ1ZiBmbHVzaCBkaXNhYmxlIGZhaWxlZCAlZFxuIiwNCiAJ
+CQkgX19mdW5jX18sIHJldCk7DQpAQCAtNjgwMiw2ICs2ODExLDEwIEBAIHN0YXRpYyBpbnQgdWZz
+aGNkX3Njc2lfYWRkX3dsdXMoc3RydWN0IHVmc19oYmEgKmhiYSkNCiANCiBzdGF0aWMgdm9pZCB1
+ZnNoY2Rfd2JfcHJvYmUoc3RydWN0IHVmc19oYmEgKmhiYSwgdTggKmRlc2NfYnVmKQ0KIHsNCisJ
+aW50IHJldDsNCisJdTggbHVuOw0KKwl1MzIgZF9sdV93Yl9idWZfYWxsb2MgPSAwOw0KKw0KIAlp
+ZiAoIXVmc2hjZF9pc193Yl9hbGxvd2VkKGhiYSkpDQogCQlyZXR1cm47DQogDQpAQCAtNjgyNCwx
+NiArNjgzNywzMyBAQCBzdGF0aWMgdm9pZCB1ZnNoY2Rfd2JfcHJvYmUoc3RydWN0IHVmc19oYmEg
+KmhiYSwgdTggKmRlc2NfYnVmKQ0KIAloYmEtPmRldl9pbmZvLmJfd2JfYnVmZmVyX3R5cGUgPQ0K
+IAkJZGVzY19idWZbREVWSUNFX0RFU0NfUEFSQU1fV0JfVFlQRV07DQogDQotCWhiYS0+ZGV2X2lu
+Zm8uZF93Yl9hbGxvY191bml0cyA9DQotCQlnZXRfdW5hbGlnbmVkX2JlMzIoZGVzY19idWYgKw0K
+LQkJCQkgICBERVZJQ0VfREVTQ19QQVJBTV9XQl9TSEFSRURfQUxMT0NfVU5JVFMpOw0KIAloYmEt
+PmRldl9pbmZvLmJfcHJlc3J2X3VzcGNfZW4gPQ0KIAkJZGVzY19idWZbREVWSUNFX0RFU0NfUEFS
+QU1fV0JfUFJFU1JWX1VTUlNQQ19FTl07DQogDQotCWlmICghKGhiYS0+ZGV2X2luZm8uYl93Yl9i
+dWZmZXJfdHlwZSAmJg0KLQkgICAgICBoYmEtPmRldl9pbmZvLmRfd2JfYWxsb2NfdW5pdHMpKQ0K
+LQkJZ290byB3Yl9kaXNhYmxlZDsNCisJaWYgKGhiYS0+ZGV2X2luZm8uYl93Yl9idWZmZXJfdHlw
+ZSA9PSBXQl9CVUZfTU9ERV9TSEFSRUQpIHsNCisJCWhiYS0+ZGV2X2luZm8uZF93Yl9hbGxvY191
+bml0cyA9DQorCQlnZXRfdW5hbGlnbmVkX2JlMzIoZGVzY19idWYgKw0KKwkJCQkgICBERVZJQ0Vf
+REVTQ19QQVJBTV9XQl9TSEFSRURfQUxMT0NfVU5JVFMpOw0KKwkJaWYgKCFoYmEtPmRldl9pbmZv
+LmRfd2JfYWxsb2NfdW5pdHMpDQorCQkJZ290byB3Yl9kaXNhYmxlZDsNCisJfSBlbHNlIHsNCisJ
+CWZvciAobHVuID0gMDsgbHVuIDwgaGJhLT5kZXZfaW5mby5tYXhfbHVfc3VwcG9ydGVkOyBsdW4r
+Kykgew0KKwkJCXJldCA9IHVmc2hjZF9yZWFkX3VuaXRfZGVzY19wYXJhbShoYmEsDQorCQkJCQls
+dW4sDQorCQkJCQlVTklUX0RFU0NfUEFSQU1fV0JfQlVGX0FMTE9DX1VOSVRTLA0KKwkJCQkJKHU4
+ICopJmRfbHVfd2JfYnVmX2FsbG9jLA0KKwkJCQkJc2l6ZW9mKGRfbHVfd2JfYnVmX2FsbG9jKSk7
+DQorCQkJaWYgKHJldCkNCisJCQkJZ290byB3Yl9kaXNhYmxlZDsNCisJCQlpZiAoZF9sdV93Yl9i
+dWZfYWxsb2MpIHsNCisJCQkJaGJhLT5kZXZfaW5mby53Yl9kZWRpY2F0ZWRfbHUgPSBsdW47DQor
+CQkJCWJyZWFrOw0KKwkJCX0NCisJCX0NCiANCisJCWlmICghZF9sdV93Yl9idWZfYWxsb2MpDQor
+CQkJZ290byB3Yl9kaXNhYmxlZDsNCisJfQ0KIAlyZXR1cm47DQogDQogd2JfZGlzYWJsZWQ6DQpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCBiL2RyaXZlcnMvc2NzaS91ZnMv
+dWZzaGNkLmgNCmluZGV4IDg5ODg4MzA1OGUzYS4uZjIzMmE2N2ZkOWIzIDEwMDY0NA0KLS0tIGEv
+ZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2Qu
+aA0KQEAgLTg2MSw2ICs4NjEsMTMgQEAgc3RhdGljIGlubGluZSBib29sIHVmc2hjZF9rZWVwX2F1
+dG9ia29wc19lbmFibGVkX2V4Y2VwdF9zdXNwZW5kKA0KIAlyZXR1cm4gaGJhLT5jYXBzICYgVUZT
+SENEX0NBUF9LRUVQX0FVVE9fQktPUFNfRU5BQkxFRF9FWENFUFRfU1VTUEVORDsNCiB9DQogDQor
+c3RhdGljIGlubGluZSB1OCB1ZnNoY2Rfd2JfZ2V0X2ZsYWdfaW5kZXgoc3RydWN0IHVmc19oYmEg
+KmhiYSkNCit7DQorCWlmIChoYmEtPmRldl9pbmZvLmJfd2JfYnVmZmVyX3R5cGUgPT0gV0JfQlVG
+X01PREVfTFVfREVESUNBVEVEKQ0KKwkJcmV0dXJuIGhiYS0+ZGV2X2luZm8ud2JfZGVkaWNhdGVk
+X2x1Ow0KKwlyZXR1cm4gMDsNCit9DQorDQogZXh0ZXJuIGludCB1ZnNoY2RfcnVudGltZV9zdXNw
+ZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEpOw0KIGV4dGVybiBpbnQgdWZzaGNkX3J1bnRpbWVfcmVz
+dW1lKHN0cnVjdCB1ZnNfaGJhICpoYmEpOw0KIGV4dGVybiBpbnQgdWZzaGNkX3J1bnRpbWVfaWRs
+ZShzdHJ1Y3QgdWZzX2hiYSAqaGJhKTsNCi0tIA0KMi4xOC4wDQo=
 
-Reviewed-by: Can Guo <cang@codeaurora.org>
-
-> ---
->  drivers/scsi/ufs/ufs-sysfs.c |  2 +-
->  drivers/scsi/ufs/ufshcd.c    | 28 +++++++++++++++-------------
->  drivers/scsi/ufs/ufshcd.h    |  2 +-
->  3 files changed, 17 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-sysfs.c 
-> b/drivers/scsi/ufs/ufs-sysfs.c
-> index 93484408bc40..b86b6a40d7e6 100644
-> --- a/drivers/scsi/ufs/ufs-sysfs.c
-> +++ b/drivers/scsi/ufs/ufs-sysfs.c
-> @@ -631,7 +631,7 @@ static ssize_t _name##_show(struct device 
-> *dev,				\
->  	struct ufs_hba *hba = dev_get_drvdata(dev);			\
->  	pm_runtime_get_sync(hba->dev);					\
->  	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
-> -		QUERY_FLAG_IDN##_uname, &flag);				\
-> +		QUERY_FLAG_IDN##_uname, 0, &flag);			\
->  	pm_runtime_put_sync(hba->dev);					\
->  	if (ret)							\
->  		return -EINVAL;						\
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c6668799d956..f23705379b7d 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2784,13 +2784,13 @@ static inline void ufshcd_init_query(struct
-> ufs_hba *hba,
->  }
-> 
->  static int ufshcd_query_flag_retry(struct ufs_hba *hba,
-> -	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
-> +	enum query_opcode opcode, enum flag_idn idn, u8 index, bool 
-> *flag_res)
->  {
->  	int ret;
->  	int retries;
-> 
->  	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
-> -		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
-> +		ret = ufshcd_query_flag(hba, opcode, idn, index, flag_res);
->  		if (ret)
->  			dev_dbg(hba->dev,
->  				"%s: failed with error %d, retries %d\n",
-> @@ -2811,16 +2811,17 @@ static int ufshcd_query_flag_retry(struct 
-> ufs_hba *hba,
->   * @hba: per-adapter instance
->   * @opcode: flag query to perform
->   * @idn: flag idn to access
-> + * @index: flag index to access
->   * @flag_res: the flag value after the query request completes
->   *
->   * Returns 0 for success, non-zero in case of failure
->   */
->  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
-> -			enum flag_idn idn, bool *flag_res)
-> +			enum flag_idn idn, u8 index, bool *flag_res)
->  {
->  	struct ufs_query_req *request = NULL;
->  	struct ufs_query_res *response = NULL;
-> -	int err, index = 0, selector = 0;
-> +	int err, selector = 0;
->  	int timeout = QUERY_REQ_TIMEOUT;
-> 
->  	BUG_ON(!hba);
-> @@ -4177,7 +4178,7 @@ static int ufshcd_complete_dev_init(struct 
-> ufs_hba *hba)
->  	bool flag_res = true;
-> 
->  	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-> -		QUERY_FLAG_IDN_FDEVICEINIT, NULL);
-> +		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL);
->  	if (err) {
->  		dev_err(hba->dev,
->  			"%s setting fDeviceInit flag failed with error %d\n",
-> @@ -4188,7 +4189,7 @@ static int ufshcd_complete_dev_init(struct 
-> ufs_hba *hba)
->  	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
->  	for (i = 0; i < 1000 && !err && flag_res; i++)
->  		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-> -			QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
-> +			QUERY_FLAG_IDN_FDEVICEINIT, 0, &flag_res);
-> 
->  	if (err)
->  		dev_err(hba->dev,
-> @@ -5003,7 +5004,7 @@ static int ufshcd_enable_auto_bkops(struct 
-> ufs_hba *hba)
->  		goto out;
-> 
->  	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-> -			QUERY_FLAG_IDN_BKOPS_EN, NULL);
-> +			QUERY_FLAG_IDN_BKOPS_EN, 0, NULL);
->  	if (err) {
->  		dev_err(hba->dev, "%s: failed to enable bkops %d\n",
->  				__func__, err);
-> @@ -5053,7 +5054,7 @@ static int ufshcd_disable_auto_bkops(struct 
-> ufs_hba *hba)
->  	}
-> 
->  	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-> -			QUERY_FLAG_IDN_BKOPS_EN, NULL);
-> +			QUERY_FLAG_IDN_BKOPS_EN, 0, NULL);
->  	if (err) {
->  		dev_err(hba->dev, "%s: failed to disable bkops %d\n",
->  				__func__, err);
-> @@ -5219,7 +5220,7 @@ static int ufshcd_wb_ctrl(struct ufs_hba *hba,
-> bool enable)
->  		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> 
->  	ret = ufshcd_query_flag_retry(hba, opcode,
-> -				      QUERY_FLAG_IDN_WB_EN, NULL);
-> +				      QUERY_FLAG_IDN_WB_EN, 0, NULL);
->  	if (ret) {
->  		dev_err(hba->dev, "%s write booster %s failed %d\n",
->  			__func__, enable ? "enable" : "disable", ret);
-> @@ -5243,7 +5244,7 @@ static int
-> ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
->  		val = UPIU_QUERY_OPCODE_CLEAR_FLAG;
-> 
->  	return ufshcd_query_flag_retry(hba, val,
-> -			       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8,
-> +			       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8, 0,
->  				       NULL);
->  }
-> 
-> @@ -5264,7 +5265,8 @@ static int ufshcd_wb_buf_flush_enable(struct 
-> ufs_hba *hba)
->  		return 0;
-> 
->  	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-> -				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
-> +				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
-> +				      0, NULL);
->  	if (ret)
->  		dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
->  			__func__, ret);
-> @@ -5283,7 +5285,7 @@ static int ufshcd_wb_buf_flush_disable(struct
-> ufs_hba *hba)
->  		return 0;
-> 
->  	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-> -				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
-> +				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, 0, NULL);
->  	if (ret) {
->  		dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
->  			 __func__, ret);
-> @@ -7263,7 +7265,7 @@ static int ufshcd_device_params_init(struct 
-> ufs_hba *hba)
->  	ufshcd_get_ref_clk_gating_wait(hba);
-> 
->  	if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-> -			QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
-> +			QUERY_FLAG_IDN_PWR_ON_WPE, 0, &flag))
->  		hba->dev_info.f_power_on_wp_en = flag;
-> 
->  	/* Probe maximum power mode co-supported by both UFS host and device 
-> */
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 056537e52c19..e555d794d441 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -946,7 +946,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
->  int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
->  		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
->  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
-> -	enum flag_idn idn, bool *flag_res);
-> +	enum flag_idn idn, u8 index, bool *flag_res);
-> 
->  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
->  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
