@@ -1,167 +1,249 @@
-Return-Path: <SRS0=BOnk=6Q=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=cGsx=6R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 183A0C3A5A9
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 May 2020 16:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A37D6C47257
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 01:51:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F10A021974
-	for <linux-scsi@archiver.kernel.org>; Sat,  2 May 2020 16:22:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DE0420787
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 01:51:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vQyf2HRn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728381AbgEBQWh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 2 May 2020 12:22:37 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:41225 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728325AbgEBQWh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2020 12:22:37 -0400
-Received: by mail-pf1-f195.google.com with SMTP id 18so3144046pfv.8
-        for <linux-scsi@vger.kernel.org>; Sat, 02 May 2020 09:22:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=owczh4rvPkt6YuMsXofkll5vS9JUcQTvJ6bXF+wEGk0=;
-        b=Cbqbr4OTDLlQDUdaZ8nb5RZl99CzRZfqJIIg1mtoM6mxOADFeN7IQ3Get38BA1F9rG
-         x0nS4E57maNH00FuQSTY395M1NUZUnSDjHb0HMQzzFPJ2paEpH37U+YGeROHa+OBpUyv
-         UhV/vRRLnEUafrB9+UWKftUgV4t/SZBezln1e4aQoCXN38qdQ2kaAnanOJnsHf4NmSQS
-         Bwjawz8MIJgO6YfGF9OvbiKdcNrSKgh1QN8MqiOMTH4CuoSetTwBJGsl/lv5/5ldOITc
-         VWUf4BmqXuCK9L9R1C3dEde/jNMzvpHEteCIwrTlZZ3L5dao0BMQXif9on76cl0/ytPS
-         bzFA==
-X-Gm-Message-State: AGi0PuZk4J6RcFJvyvOIIRviSjpovGQd8Wra2ag0TJAkAKlmWyomoWan
-        djrd0oELiCELXwNtZy0IZb6rkuOwE7LXLw==
-X-Google-Smtp-Source: APiQypK4licLHwrarJotTrcEFhdtIKvTpoSl6x74x4NUQRhPAvgdskDp+3pfWRZFaxynnQbOMwdWIQ==
-X-Received: by 2002:a63:1a16:: with SMTP id a22mr9612903pga.264.1588436555379;
-        Sat, 02 May 2020 09:22:35 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:f841:776c:f563:db5c? ([2601:647:4000:d7:f841:776c:f563:db5c])
-        by smtp.gmail.com with ESMTPSA id z185sm872482pgz.26.2020.05.02.09.22.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 02 May 2020 09:22:34 -0700 (PDT)
-Subject: Re: [PATCH RFC v3 22/41] block: implement persistent commands
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>,
-        Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org
-References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-23-hare@suse.de>
- <4cd47cec-90cf-8e3b-c3f8-8dc9d4d22c80@acm.org>
- <c65981a3-68b9-e7f5-ea10-efe57bbb3dfc@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <8b979bbf-54bf-da09-fc96-00367f805a95@acm.org>
-Date:   Sat, 2 May 2020 09:22:33 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1726752AbgECBvd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 2 May 2020 21:51:33 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:21889 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726684AbgECBvc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 2 May 2020 21:51:32 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1588470692; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=hB4FBkH/8U2uRl5gbiUMkGwH/lIPHxjTpsf9dChF1Ic=;
+ b=vQyf2HRnUi4Q9gahvBCSOFJPH204gGerS4dwIbh8fy4ZfYdOD+I1jD4CiCWY6QAgcpmu90VZ
+ ulMUoMyok/zXB20EvrRIFqY+JwtXCaRdiTSQs4ezuMivdaYV0tHjmHGJ4nJb6b+NkOHEbfVb
+ pI/S9X7TTwHBA4oZbLFQL7eD9ao=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5eae239e.7fd91d01b928-smtp-out-n05;
+ Sun, 03 May 2020 01:51:26 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E5F22C4478C; Sun,  3 May 2020 01:51:25 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 14C02C433D2;
+        Sun,  3 May 2020 01:51:24 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <c65981a3-68b9-e7f5-ea10-efe57bbb3dfc@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Sun, 03 May 2020 09:51:24 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Stanley Chu <stanley.chu@mediatek.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        asutoshd@codeaurora.org, beanhuo@micron.com,
+        matthias.bgg@gmail.com, bvanassche@acm.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
+Subject: Re: [PATCH v3 2/5] scsi: ufs: add "index" in parameter list of
+ ufshcd_query_flag()
+In-Reply-To: <20200501143835.26032-3-stanley.chu@mediatek.com>
+References: <20200501143835.26032-1-stanley.chu@mediatek.com>
+ <20200501143835.26032-3-stanley.chu@mediatek.com>
+Message-ID: <e4528d5ec4cba4bfb50aeb8c1012672b@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-02 05:11, Hannes Reinecke wrote:
-> On 5/1/20 6:59 AM, Bart Van Assche wrote:
->> On 2020-04-30 06:18, Hannes Reinecke wrote:
->>> diff --git a/block/blk-mq.c b/block/blk-mq.c
->>> index 44482aaed11e..402cf104d183 100644
->>> --- a/block/blk-mq.c
->>> +++ b/block/blk-mq.c
->>> @@ -402,9 +402,14 @@ struct request *blk_mq_alloc_request(struct
->>> request_queue *q, unsigned int op,
->>>   {
->>>       struct blk_mq_alloc_data alloc_data = { .flags = flags,
->>> .cmd_flags = op };
->>>       struct request *rq;
->>> -    int ret;
->>> +    int ret = 0;
->>>   -    ret = blk_queue_enter(q, flags);
->>> +    if (flags & BLK_MQ_REQ_PERSISTENT) {
->>> +        if (blk_queue_dying(q))
->>> +            ret = -ENODEV;
->>> +        alloc_data.cmd_flags |= REQ_PERSISTENT;
->>> +    } else
->>> +        ret = blk_queue_enter(q, flags);
->>>       if (ret)
->>>           return ERR_PTR(ret);
->>>   
->>
->> I think that not calling blk_queue_enter() for persistent commands means
->> opening a giant can of worms. There is quite some code in the block
->> layer that assumes that neither .queue_rq() nor the request completion
->> code will be called if q_usage_counter == 0. Skipping the
->> blk_queue_enter() call for persistent commands breaks that assumption. I
->> think we need a better solution.
->>
-> Well, yeah, maybe.
-> My aim here is that _all_ I/O requiring a tag from the hardware will be
-> tracked by the blocklayer tagset. Only that will give the block-layer
-> accurate information about outstanding commands, such that the ongoing
-> CPU hotplug discussion can make the correct decisions and implement
-> functions really covering all outstanding I/O.
-> It also allows us to use the scsi_host_busy_iter() functions within the
-> driver, and will get rid of the hand-crafted iterations the driver has
-> to do now.
+On 2020-05-01 22:38, Stanley Chu wrote:
+> For preparation of LU Dedicated buffer mode support on WriteBooster
+> feature, "index" parameter shall be added and allowed to be specified
+> by callers.
 > 
-> It worked reasonably well, until I encountered the infamous AEN
-> commands, which actually require the opposite: _not_ to be tracked by
-> the block layer at all, as the commands themselves are just placeholders
-> to be returned by the firmware once an event occurs.
-> (And yes, I _do_ think this is a quite dangerous operation, because I
-> can't quite see how one could reliably return this command in case of a
-> firmware crash ...)
-> (But anyhow, that's how the firmware is written and we have to live with
-> it.)
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> Reviewed-by: Bean Huo <beanhuo@micron.com>
+
+Reviewed-by: Can Guo <cang@codeaurora.org>
+
+> ---
+>  drivers/scsi/ufs/ufs-sysfs.c |  2 +-
+>  drivers/scsi/ufs/ufshcd.c    | 28 +++++++++++++++-------------
+>  drivers/scsi/ufs/ufshcd.h    |  2 +-
+>  3 files changed, 17 insertions(+), 15 deletions(-)
 > 
-> So I implemented this approach, to have tags which are ignored by the
-> block layer. But I have to admit that this approach relies on quite some
-> assumptions (like these tags are never actually submitted to the
-> blocklayer itself, are never started etc), none of which are spelled out
-> clearly (yet).
-> An alternative approach would be to arbitrary decrease the tagset size
-> by one (eg by shifting the tags by one), and use the free tag for AENs).
-> That would have to be coded within the driver, though.
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c 
+> b/drivers/scsi/ufs/ufs-sysfs.c
+> index 93484408bc40..b86b6a40d7e6 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -631,7 +631,7 @@ static ssize_t _name##_show(struct device 
+> *dev,				\
+>  	struct ufs_hba *hba = dev_get_drvdata(dev);			\
+>  	pm_runtime_get_sync(hba->dev);					\
+>  	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
+> -		QUERY_FLAG_IDN##_uname, &flag);				\
+> +		QUERY_FLAG_IDN##_uname, 0, &flag);			\
+>  	pm_runtime_put_sync(hba->dev);					\
+>  	if (ret)							\
+>  		return -EINVAL;						\
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c6668799d956..f23705379b7d 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2784,13 +2784,13 @@ static inline void ufshcd_init_query(struct
+> ufs_hba *hba,
+>  }
 > 
-> If that's a solution which you like better I could give it a go.
-
-How about dropping support for AEN commands entirely? As far as I know
-such a command has never been standardized. Additionally, all SCSI core
-code I'm familiar with supports unit attentions and does not rely on
-asynchronous events to be reported immediately.
-
-If dropping support for AEN commands is not an option, how about
-aborting these commands before freezing a request queue?
-
-Thanks,
-
-Bart.
+>  static int ufshcd_query_flag_retry(struct ufs_hba *hba,
+> -	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
+> +	enum query_opcode opcode, enum flag_idn idn, u8 index, bool 
+> *flag_res)
+>  {
+>  	int ret;
+>  	int retries;
+> 
+>  	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
+> -		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
+> +		ret = ufshcd_query_flag(hba, opcode, idn, index, flag_res);
+>  		if (ret)
+>  			dev_dbg(hba->dev,
+>  				"%s: failed with error %d, retries %d\n",
+> @@ -2811,16 +2811,17 @@ static int ufshcd_query_flag_retry(struct 
+> ufs_hba *hba,
+>   * @hba: per-adapter instance
+>   * @opcode: flag query to perform
+>   * @idn: flag idn to access
+> + * @index: flag index to access
+>   * @flag_res: the flag value after the query request completes
+>   *
+>   * Returns 0 for success, non-zero in case of failure
+>   */
+>  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+> -			enum flag_idn idn, bool *flag_res)
+> +			enum flag_idn idn, u8 index, bool *flag_res)
+>  {
+>  	struct ufs_query_req *request = NULL;
+>  	struct ufs_query_res *response = NULL;
+> -	int err, index = 0, selector = 0;
+> +	int err, selector = 0;
+>  	int timeout = QUERY_REQ_TIMEOUT;
+> 
+>  	BUG_ON(!hba);
+> @@ -4177,7 +4178,7 @@ static int ufshcd_complete_dev_init(struct 
+> ufs_hba *hba)
+>  	bool flag_res = true;
+> 
+>  	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+> -		QUERY_FLAG_IDN_FDEVICEINIT, NULL);
+> +		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL);
+>  	if (err) {
+>  		dev_err(hba->dev,
+>  			"%s setting fDeviceInit flag failed with error %d\n",
+> @@ -4188,7 +4189,7 @@ static int ufshcd_complete_dev_init(struct 
+> ufs_hba *hba)
+>  	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
+>  	for (i = 0; i < 1000 && !err && flag_res; i++)
+>  		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+> -			QUERY_FLAG_IDN_FDEVICEINIT, &flag_res);
+> +			QUERY_FLAG_IDN_FDEVICEINIT, 0, &flag_res);
+> 
+>  	if (err)
+>  		dev_err(hba->dev,
+> @@ -5003,7 +5004,7 @@ static int ufshcd_enable_auto_bkops(struct 
+> ufs_hba *hba)
+>  		goto out;
+> 
+>  	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+> -			QUERY_FLAG_IDN_BKOPS_EN, NULL);
+> +			QUERY_FLAG_IDN_BKOPS_EN, 0, NULL);
+>  	if (err) {
+>  		dev_err(hba->dev, "%s: failed to enable bkops %d\n",
+>  				__func__, err);
+> @@ -5053,7 +5054,7 @@ static int ufshcd_disable_auto_bkops(struct 
+> ufs_hba *hba)
+>  	}
+> 
+>  	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+> -			QUERY_FLAG_IDN_BKOPS_EN, NULL);
+> +			QUERY_FLAG_IDN_BKOPS_EN, 0, NULL);
+>  	if (err) {
+>  		dev_err(hba->dev, "%s: failed to disable bkops %d\n",
+>  				__func__, err);
+> @@ -5219,7 +5220,7 @@ static int ufshcd_wb_ctrl(struct ufs_hba *hba,
+> bool enable)
+>  		opcode = UPIU_QUERY_OPCODE_CLEAR_FLAG;
+> 
+>  	ret = ufshcd_query_flag_retry(hba, opcode,
+> -				      QUERY_FLAG_IDN_WB_EN, NULL);
+> +				      QUERY_FLAG_IDN_WB_EN, 0, NULL);
+>  	if (ret) {
+>  		dev_err(hba->dev, "%s write booster %s failed %d\n",
+>  			__func__, enable ? "enable" : "disable", ret);
+> @@ -5243,7 +5244,7 @@ static int
+> ufshcd_wb_toggle_flush_during_h8(struct ufs_hba *hba, bool set)
+>  		val = UPIU_QUERY_OPCODE_CLEAR_FLAG;
+> 
+>  	return ufshcd_query_flag_retry(hba, val,
+> -			       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8,
+> +			       QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8, 0,
+>  				       NULL);
+>  }
+> 
+> @@ -5264,7 +5265,8 @@ static int ufshcd_wb_buf_flush_enable(struct 
+> ufs_hba *hba)
+>  		return 0;
+> 
+>  	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+> -				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
+> +				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN,
+> +				      0, NULL);
+>  	if (ret)
+>  		dev_err(hba->dev, "%s WB - buf flush enable failed %d\n",
+>  			__func__, ret);
+> @@ -5283,7 +5285,7 @@ static int ufshcd_wb_buf_flush_disable(struct
+> ufs_hba *hba)
+>  		return 0;
+> 
+>  	ret = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
+> -				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
+> +				      QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, 0, NULL);
+>  	if (ret) {
+>  		dev_warn(hba->dev, "%s: WB - buf flush disable failed %d\n",
+>  			 __func__, ret);
+> @@ -7263,7 +7265,7 @@ static int ufshcd_device_params_init(struct 
+> ufs_hba *hba)
+>  	ufshcd_get_ref_clk_gating_wait(hba);
+> 
+>  	if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+> -			QUERY_FLAG_IDN_PWR_ON_WPE, &flag))
+> +			QUERY_FLAG_IDN_PWR_ON_WPE, 0, &flag))
+>  		hba->dev_info.f_power_on_wp_en = flag;
+> 
+>  	/* Probe maximum power mode co-supported by both UFS host and device 
+> */
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 056537e52c19..e555d794d441 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -946,7 +946,7 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+>  int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+>  		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
+>  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+> -	enum flag_idn idn, bool *flag_res);
+> +	enum flag_idn idn, u8 index, bool *flag_res);
+> 
+>  void ufshcd_auto_hibern8_enable(struct ufs_hba *hba);
+>  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
