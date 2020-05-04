@@ -1,122 +1,231 @@
-Return-Path: <SRS0=cGsx=6R=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=Qtkh=6S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 964A9C28CBC
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 14:42:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F7D5C47247
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 01:09:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C7DA20836
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 May 2020 14:42:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E05682071C
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 01:09:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GpzPA3Xl"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DM2MrpGH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728703AbgECOmF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 May 2020 10:42:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57070 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728277AbgECOmE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2020 10:42:04 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78099C061A0E
-        for <linux-scsi@vger.kernel.org>; Sun,  3 May 2020 07:42:04 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id l25so4946713pgc.5
-        for <linux-scsi@vger.kernel.org>; Sun, 03 May 2020 07:42:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=5kF7tOB8NIP61SrpOZNQ+9pKtsEJhMKDr//+OJNXUhs=;
-        b=GpzPA3XlurS74coUQ8ZY24hfJUgOk468ZKqNWqThv24neHF9lDrn+DR08yD54Lnpww
-         tTCvtqVJ5ZFH/PgK2+HKIn/1dIrEWDOW9oXijt5KOl1aBRuEQEeSkpDd0obp2pQMvj2w
-         6iYB4Vox2HPq3WQ0FMy2AsV8v2nF4adoLITtc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=5kF7tOB8NIP61SrpOZNQ+9pKtsEJhMKDr//+OJNXUhs=;
-        b=c1kG7QUJMiypAYRYmnZUiO6mnXsLiGpJIkumUBs3ik6Hn1mvzkUO7x+IFwsFhXsYKJ
-         bHmNGNlQmTRm/X01eLUHFka/NPElXa8CbkDG6qbg8Z/9ZdRL4QtqbueJg0++lxz9J8sY
-         V9qclOFxfRIMKZRMg9NrggoD7gI8OnJbOoMY4wApUkkY4eweU3UA088zJnDMTHK13yAm
-         ABOkKhJWoXtHifvyGEXI8qX9O/wGP90rYnxcpNfl817lON/SRKrmiNuZ58hlbT5NoMkr
-         OKW5X6OPnK8QNVXh946l+zRu0W8L0bFD6FXQsCkMqY6TrzCiXBgBePVh8VoH5jb0SJAt
-         s2lQ==
-X-Gm-Message-State: AGi0PubverUGOR/uRcxRjhLZiVmbgoVoZGi2KJl19xmrrQhhh5u+iohU
-        qlX+I8mNxrYR2iDMWnit1DcA3oZFF7I=
-X-Google-Smtp-Source: APiQypJNZ0G3nByn3nmGcsGiNsSy0/OJkNx7qy3zorpvfagTYovuVBHdvVfXxbx5sJeKX2dbUE9AYA==
-X-Received: by 2002:a63:f707:: with SMTP id x7mr13647210pgh.374.1588516923817;
-        Sun, 03 May 2020 07:42:03 -0700 (PDT)
-Received: from [10.230.185.151] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id mj4sm4548796pjb.0.2020.05.03.07.42.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 03 May 2020 07:42:03 -0700 (PDT)
-Subject: Re: [PATCH 1/9] lpfc: Synchronize NVME transport and lpfc driver
- devloss_tmo
-To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
-Cc:     Dick Kennedy <dick.kennedy@broadcom.com>
-References: <20200501214310.91713-1-jsmart2021@gmail.com>
- <20200501214310.91713-2-jsmart2021@gmail.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <3d45f9aa-c9f0-693d-c040-ffd7c75effe4@broadcom.com>
-Date:   Sun, 3 May 2020 07:42:01 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1727917AbgEDBJw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 May 2020 21:09:52 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:44785 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727806AbgEDBJu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 May 2020 21:09:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588554588;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=a006YMxBlpdsYC6Hn7MLJEpwuF1EjHqPJMXWp4WNuZo=;
+        b=DM2MrpGHt7m7brh2GuNczWIqGga1CU/dC6gwDmvE2FuKE5Yhd6xBiz7Pu6B1CHq69qMjSH
+        0RI3UgW4PPL9FSfpGwoUNWPhK6qqkhPFe++V24P22ESus+Kw8EnJsUbfXuYggUF2N9cYf5
+        Njkaz579DpxJZMcsb7cF++x8CtrSOVg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-62--qNRk7BUNYSj3vt4k9_7gA-1; Sun, 03 May 2020 21:09:46 -0400
+X-MC-Unique: -qNRk7BUNYSj3vt4k9_7gA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EA462107ACCA;
+        Mon,  4 May 2020 01:09:44 +0000 (UTC)
+Received: from T590 (ovpn-8-18.pek2.redhat.com [10.72.8.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D61A71943D;
+        Mon,  4 May 2020 01:09:37 +0000 (UTC)
+Date:   Mon, 4 May 2020 09:09:32 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Douglas Gilbert <dgilbert@interlog.com>
+Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH V2] scsi: put hot fields of scsi_host_template into one
+ cacheline
+Message-ID: <20200504010919.GA1136774@T590>
+References: <20200422095425.319674-1-ming.lei@redhat.com>
+ <841bd018-eff5-d242-97dd-416384eb4b08@interlog.com>
 MIME-Version: 1.0
-In-Reply-To: <20200501214310.91713-2-jsmart2021@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <841bd018-eff5-d242-97dd-416384eb4b08@interlog.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Fri, May 01, 2020 at 06:27:07PM -0400, Douglas Gilbert wrote:
+> On 2020-04-22 5:54 a.m., Ming Lei wrote:
+> > The following three fields of scsi_host_template are referenced in
+> > scsi IO submission path, so put them together into one cacheline:
+> > 
+> > - cmd_size
+> > - queuecommand
+> > - commit_rqs
+> > 
+> > Cc: Bart Van Assche <bvanassche@acm.org>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: John Garry <john.garry@huawei.com>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> > V2:
+> > 	- move the 3 fields at the beginning of scsi_host_template
+> > 	- comment why we do this way
+> > 
+> >   include/scsi/scsi_host.h | 72 ++++++++++++++++++++++------------------
+> >   1 file changed, 39 insertions(+), 33 deletions(-)
+> 
+> Hi,
+> I would like to test this patch. However it doesn't apply on Martin's
+> tree (all 3 chunks fail). Could you post a clean version?
+> 
+> Doug Gilbert
+> 
 
-On 5/1/2020 2:43 PM, James Smart wrote:
-> The driver is not passing it's devloss tmo to the nvme-fc transport when
-> registering the remote port. Thus devloss tmo for the nvme-fc remote port
-> will be set to the transport's default. This causes driver actions to be
-> out of sync with transport actions and out of sync with scsi actions for
-> perhaps the same remote port.
->
-> This is especially notable in the following scenario: while remote port
-> is attached, devloss is changed globally for lpfc remote ports via lpfc
-> sysfs parameter. lpfc ties this change in with nvme-fc transport. If the
-> device disconnects long enough for devloss to expire thus the existing
-> remote port is deleted, then the remote port is re-discovered, the newly
-> created remote port will end up set at the transport default, not lpfc's
-> value.
->
-> Fix by setting devloss tmo value when registering the remote port.
->
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-> ---
->   drivers/scsi/lpfc/lpfc_nvme.c | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-> index 12d2b2775773..43df08aeecf1 100644
-> --- a/drivers/scsi/lpfc/lpfc_nvme.c
-> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
-> @@ -2296,6 +2296,7 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
->   
->   	rpinfo.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
->   	rpinfo.node_name = wwn_to_u64(ndlp->nlp_nodename.u.wwn);
-> +	rpinfo.dev_loss_tmo = vport->cfg_devloss_tmo;
->   
->   	spin_lock_irq(&vport->phba->hbalock);
->   	oldrport = lpfc_ndlp_get_nrport(ndlp);
+Hi Doug,
 
-Please drop this patch from this set.  Christoph is having me change a 
-patch submitted to the nvme tree that will require this change and one 
-other lpfc modification. Easier to manage if this patch merges via the 
-nvme tree rather than the scsi tree.
+Please try the following one:
 
--- james
+From 356220ede9f06a20d90fa387cc84eb63eea2335d Mon Sep 17 00:00:00 2001
+From: Ming Lei <ming.lei@redhat.com>
+Date: Tue, 21 Apr 2020 17:27:30 +0800
+Subject: [PATCH] scsi: put hot fields of scsi_host_template into one cacheline
+
+The following three fields of scsi_host_template are referenced in
+scsi IO submission path, so put them together into one cacheline:
+
+- cmd_size
+- queuecommand
+- commit_rqs
+
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: John Garry <john.garry@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ include/scsi/scsi_host.h | 72 ++++++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 33 deletions(-)
+
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 46ef8cccc982..6fa2697638b4 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -30,40 +30,15 @@ struct scsi_transport_template;
+ #define MODE_TARGET 0x02
+ 
+ struct scsi_host_template {
+-	struct module *module;
+-	const char *name;
+-
+ 	/*
+-	 * The info function will return whatever useful information the
+-	 * developer sees fit.  If not provided, then the name field will
+-	 * be used instead.
+-	 *
+-	 * Status: OPTIONAL
++	 * Put fields referenced in IO submission path together in
++	 * same cacheline
+ 	 */
+-	const char *(* info)(struct Scsi_Host *);
+ 
+ 	/*
+-	 * Ioctl interface
+-	 *
+-	 * Status: OPTIONAL
+-	 */
+-	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
+-		     void __user *arg);
+-
+-
+-#ifdef CONFIG_COMPAT
+-	/* 
+-	 * Compat handler. Handle 32bit ABI.
+-	 * When unknown ioctl is passed return -ENOIOCTLCMD.
+-	 *
+-	 * Status: OPTIONAL
++	 * Additional per-command data allocated for the driver.
+ 	 */
+-	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
+-			    void __user *arg);
+-#endif
+-
+-	int (*init_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
+-	int (*exit_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
++	unsigned int cmd_size;
+ 
+ 	/*
+ 	 * The queuecommand function is used to queue up a scsi
+@@ -111,6 +86,41 @@ struct scsi_host_template {
+ 	 */
+ 	void (*commit_rqs)(struct Scsi_Host *, u16);
+ 
++	struct module *module;
++	const char *name;
++
++	/*
++	 * The info function will return whatever useful information the
++	 * developer sees fit.  If not provided, then the name field will
++	 * be used instead.
++	 *
++	 * Status: OPTIONAL
++	 */
++	const char *(*info)(struct Scsi_Host *);
++
++	/*
++	 * Ioctl interface
++	 *
++	 * Status: OPTIONAL
++	 */
++	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
++		     void __user *arg);
++
++
++#ifdef CONFIG_COMPAT
++	/*
++	 * Compat handler. Handle 32bit ABI.
++	 * When unknown ioctl is passed return -ENOIOCTLCMD.
++	 *
++	 * Status: OPTIONAL
++	 */
++	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg);
++#endif
++
++	int (*init_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
++	int (*exit_cmd_priv)(struct Scsi_Host *shost, struct scsi_cmnd *cmd);
++
+ 	/*
+ 	 * This is an error handling strategy routine.  You don't need to
+ 	 * define one of these if you don't want to - there is a default
+@@ -475,10 +485,6 @@ struct scsi_host_template {
+ 	 */
+ 	u64 vendor_id;
+ 
+-	/*
+-	 * Additional per-command data allocated for the driver.
+-	 */
+-	unsigned int cmd_size;
+ 	struct scsi_host_cmd_pool *cmd_pool;
+ 
+ 	/* Delay for runtime autosuspend */
+-- 
+2.25.2
+
+
+
+-- 
+Ming
 
