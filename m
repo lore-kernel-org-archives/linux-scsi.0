@@ -2,43 +2,49 @@ Return-Path: <SRS0=Qtkh=6S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47717C3A5A9
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 682E8C47247
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:24:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32CA1206E6
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:22:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50B9320757
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728109AbgEDKWD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 May 2020 06:22:03 -0400
-Received: from mx2.suse.de ([195.135.220.15]:49670 "EHLO mx2.suse.de"
+        id S1728636AbgEDKYr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 May 2020 06:24:47 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52010 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727088AbgEDKWC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 May 2020 06:22:02 -0400
+        id S1726351AbgEDKYq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 May 2020 06:24:46 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D8A66AC53;
-        Mon,  4 May 2020 10:22:01 +0000 (UTC)
-Subject: Re: [PATCH RFC v3 06/41] virtio_scsi: use reserved commands for TMF
+        by mx2.suse.de (Postfix) with ESMTP id 8175AAB3D;
+        Mon,  4 May 2020 10:24:45 +0000 (UTC)
+Subject: Re: [PATCH RFC v3 04/41] csiostor: use reserved command for LUN reset
 To:     Ming Lei <ming.lei@redhat.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         John Garry <john.garry@huawei.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-7-hare@suse.de> <20200504092543.GC1139563@T590>
+ <20200430131904.5847-5-hare@suse.de> <20200430151546.GB1005453@T590>
+ <cd0f88db-96ec-d69f-f33e-b10a1cb3756d@suse.de>
+ <20200501150129.GB1012188@T590> <20200501174505.GC23795@lst.de>
+ <eea98eb5-1779-cf06-e930-e47fb4918306@suse.de>
+ <20200502142907.GE1013372@T590>
+ <8795fedc-8b07-fbfc-89f5-0cb76ee054b0@suse.de>
+ <20200504084700.GB1139563@T590>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <2957db37-3aca-ece5-23b1-0bceba45e10b@suse.de>
-Date:   Mon, 4 May 2020 12:21:57 +0200
+Message-ID: <902fae06-8ad7-9abd-c76c-61f975471711@suse.de>
+Date:   Mon, 4 May 2020 12:24:41 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200504092543.GC1139563@T590>
+In-Reply-To: <20200504084700.GB1139563@T590>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -47,90 +53,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/4/20 11:25 AM, Ming Lei wrote:
-> On Thu, Apr 30, 2020 at 03:18:29PM +0200, Hannes Reinecke wrote:
->> From: Hannes Reinecke <hare@suse.com>
->>
->> Set two commands aside for TMF, and use reserved commands to issue
->> TMFs. With that we can drop the TMF memory pool.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>   drivers/scsi/virtio_scsi.c | 105 ++++++++++++++++++---------------------------
->>   1 file changed, 41 insertions(+), 64 deletions(-)
->>
->> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
->> index 0e0910c5b942..26054c29d897 100644
->> --- a/drivers/scsi/virtio_scsi.c
->> +++ b/drivers/scsi/virtio_scsi.c
->> @@ -35,10 +35,10 @@
->>   #define VIRTIO_SCSI_MEMPOOL_SZ 64
->>   #define VIRTIO_SCSI_EVENT_LEN 8
->>   #define VIRTIO_SCSI_VQ_BASE 2
->> +#define VIRTIO_SCSI_RESERVED_CMDS 2
->>   
->>   /* Command queue element */
->>   struct virtio_scsi_cmd {
->> -	struct scsi_cmnd *sc;
->>   	struct completion *comp;
->>   	union {
->>   		struct virtio_scsi_cmd_req       cmd;
->> @@ -86,9 +86,6 @@ struct virtio_scsi {
->>   	struct virtio_scsi_vq req_vqs[];
->>   };
->>   
->> -static struct kmem_cache *virtscsi_cmd_cache;
->> -static mempool_t *virtscsi_cmd_pool;
->> -
->>   static inline struct Scsi_Host *virtio_scsi_host(struct virtio_device *vdev)
->>   {
->>   	return vdev->priv;
->> @@ -108,7 +105,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
->>   static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
->>   {
->>   	struct virtio_scsi_cmd *cmd = buf;
->> -	struct scsi_cmnd *sc = cmd->sc;
->> +	struct scsi_cmnd *sc = scsi_cmd_from_priv(cmd);
->>   	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
->>   
->>   	dev_dbg(&sc->device->sdev_gendev,
->> @@ -406,7 +403,7 @@ static int __virtscsi_add_cmd(struct virtqueue *vq,
->>   			    struct virtio_scsi_cmd *cmd,
->>   			    size_t req_size, size_t resp_size)
->>   {
->> -	struct scsi_cmnd *sc = cmd->sc;
->> +	struct scsi_cmnd *sc = scsi_cmd_from_priv(cmd);
->>   	struct scatterlist *sgs[6], req, resp;
->>   	struct sg_table *out, *in;
->>   	unsigned out_num = 0, in_num = 0;
->> @@ -557,8 +554,6 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
->>   	dev_dbg(&sc->device->sdev_gendev,
->>   		"cmd %p CDB: %#02x\n", sc, sc->cmnd[0]);
->>   
->> -	cmd->sc = sc;
->> -
->>   	BUG_ON(sc->cmd_len > VIRTIO_SCSI_CDB_SIZE);
->>   
->>   #ifdef CONFIG_BLK_DEV_INTEGRITY
->> @@ -590,17 +585,17 @@ static int virtscsi_queuecommand(struct Scsi_Host *shost,
->>   static int virtscsi_tmf(struct virtio_scsi *vscsi, struct virtio_scsi_cmd *cmd)
->>   {
->>   	DECLARE_COMPLETION_ONSTACK(comp);
->> -	int ret = FAILED;
->>   
->>   	cmd->comp = &comp;
->> +
->>   	if (virtscsi_add_cmd(&vscsi->ctrl_vq, cmd,
->>   			      sizeof cmd->req.tmf, sizeof cmd->resp.tmf, true) < 0)
+On 5/4/20 10:47 AM, Ming Lei wrote:
+> On Mon, May 04, 2020 at 08:55:05AM +0200, Hannes Reinecke wrote:
+>> On 5/2/20 4:29 PM, Ming Lei wrote:
+>>> On Sat, May 02, 2020 at 10:49:32AM +0200, Hannes Reinecke wrote:
+>>>> On 5/1/20 7:45 PM, Christoph Hellwig wrote:
+>>>>> On Fri, May 01, 2020 at 11:01:29PM +0800, Ming Lei wrote:
+>>>>>>> We cannot increase MAX_QUEUE arbitrarily as this is a compile time variable,
+>>>>>>> which seems to relate to a hardware setting.
+>>>>>>>
+>>>>>>> But I can see to update the reserved command functionality for allowing to
+>>>>>>> fetch commands from the normal I/O tag pool; in the case of LUN reset it
+>>>>>>> shouldn't make much of a difference as the all I/O is quiesced anyway.
+>>>>>>
+>>>>>> It isn't related with reset.
+>>>>>>
+>>>>>> This patch reduces active IO queue depth by 1 anytime no matter there is reset
+>>>>>> or not, and this way may cause performance regression.
+>>>>>
+>>>>> But isn't it the right thing to do?  How else do we guarantee that
+>>>>> there always is a tag available for the LU reset?
+>>>>>
+>>>> Precisely. One could argue that this is an issue with the current driver,
+>>>> too; if all tags have timed-out there is no way how we can send a LUN reset
+>>>> even now. Hence we need to reserve a tag for us to reliably send a LUN
+>>>> reset.
+>>>> And this was precisely the problem what sparked off this entire patchset;
+>>>> some drivers require a valid tag to send internal, non SCSI commands to the
+>>>> hardware.
+>>>
+>>> Could you explain a bit how you conclude that csio_scsi reset hander has to
+>>> use one unique tag? At least we don't allocate request from block layer for
+>>> ioctl(SG_SCSI_RESET), see scsi_ioctl_reset(). Also this patch doesn't
+>>> use the reserved rq->tag too.
+>>>
+>>>> And with the current design it requires some really ugly hacks to make this
+>>>> to work.
+>>>
+>>> You also don't explain how csio_eh_lun_reset_handler() is broken and where
+>>> the ugly hack is in csio scsi too, and how this patch fixes the issue, could
+>>> you document the exact reason in the commit log?
+>>>
+>> The problem is the ioctl path.
+>> When issuing TMF commands from the ioctl path we currently do not have a
+>> valid SCSI command to pass to the various SCSI EH functions.
+>> This requires the SCSI LLDDs to check for every EH function whether the
+>> passed in SCSI command is valid (ie coming from SCSI EH), or a made up one
+>> coming from the ioctl path.
 > 
-> virtscsi uses dedicated ->ctrl_vq to send TMF, and ->ctrl_vq isn't
-> nothing to do with vqs(->vqs[]) for sending IO request.
+> Could you point out where the check is in csio driver?
 > 
-Indeed, you are right.
-We should be handling this by adding a virtual LUN corresponding the the 
-ctrl_vq and allocate commands from there.
+Okok, I see your point.
 
-Will be updating for the next round.
+Indeed the csiostor driver doesn't use the 'tag' per se for submitting 
+commands; it's just using the scsi command pointer as a tag to figure 
+out if a completion has been send from the hw.
+
+I'll be giving it a bit more thought, and will be dropping it for the 
+next round (which will contain only the minimal changes to get the 
+'reserved_cmds' interface in).
 
 Cheers,
 
