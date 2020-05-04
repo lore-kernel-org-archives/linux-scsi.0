@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC890C4725B
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 14:21:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6836CC47258
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 14:21:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C66F20721
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 14:21:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45B742075A
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 14:21:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YMEexKN/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tPyV3hPp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728962AbgEDOUv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 May 2020 10:20:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50794 "EHLO
+        id S1729134AbgEDOVM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 May 2020 10:21:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728943AbgEDOUu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 10:20:50 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 187F5C061A0E;
-        Mon,  4 May 2020 07:20:50 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id h4so8668448wmb.4;
-        Mon, 04 May 2020 07:20:50 -0700 (PDT)
+        with ESMTP id S1729016AbgEDOUy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 10:20:54 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB907C061A10;
+        Mon,  4 May 2020 07:20:53 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id g13so21135978wrb.8;
+        Mon, 04 May 2020 07:20:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=e82KDXd5ytTWPE1FY/zm/Yn+yGNuQqRobHdfZUxy9Xo=;
-        b=YMEexKN/PoGfUuryPOYMz/0EKsYdUZXoLItcdVbdBwJLEncNgIr4UwxfEgmNl9Zajf
-         V8jVUYq5BY4ccFmhJvY62nm5SnwgqdvSFayGs9uy5VTNV+7PgMpiYKAQuFpxICbFK3Uf
-         7KXZ9GnYp1AUW/mWjxOTi2rW4FyW2vjXgWo4+54iUkOccrRbTBJ8jqMswmcwFojaqRTN
-         v7VbdvRox+eooMknzshC646NI9cfOJbVqVKSF3snyCK5CD8dPfWZalr0gebXpu+jXW/U
-         FGrNCbgBQA+UbkbSQA5np038+TXaqGsf418ZzN9bwiChZTIQQ3oV7R7zsBLhoWVRo4jC
-         5uRw==
+        bh=NOGahbgFbrGavSQQTAIEOH3ZDeZsbOUYsFMx2n9Uex0=;
+        b=tPyV3hPp0PG8Fx23d8yS8xUZ5PDaRUR7FCwLRt/owPbofFDHZ53HQQgy70LsjVb1KU
+         F1GaHAdwE5yzmePCxutAhrDTC64yAG4AZKQtQ7V/Ft2qMQznN538q07OYVzc6b0IE5Kv
+         hbq/1KQuntYdm2GphNqIIbADnrEjsgL+SjeNrCYwTEWU3xc6nf97BWpxzJjxljtUYFEC
+         5WFbZ40//GlowX/+nbBez7xj/L/MO2/+exoqpkE8/NZ2+EOqJz/jyhpiVHUXNHugt8H1
+         Qfu3Bdnq6/xKII+54dyAsQmZ5tPp5exGEpWqXGN462I7cPpmcNS9G9cMcx5e2gXLhD8l
+         s4Jg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=e82KDXd5ytTWPE1FY/zm/Yn+yGNuQqRobHdfZUxy9Xo=;
-        b=Ds+CXBDV2k/QwRUcE5gAFBtpkbbP4GIC5hG9Iw/CAojfgrk+YTewvl3tJxY++iJD/j
-         JaS/C6TFL/A+da++QFUdyjlKOf8vyed6PNmhA5yrwpuDL0rwiXPu2tnB45dioNOglN0K
-         u2yqV+LNBY2z1MRj5QCE9JUsLhIp+x4pzc1tf6rUUv14Dt3TEoEaszdAX3r5la8uYgcT
-         Rg2h1JODTBFDKkXP2ZYRrZvlzWuW/pJgwOXUg0wzhtZFaQ30SJlPZDkkP8NSX1l+HTV4
-         Q8QsRPJjEGBlT7oDwS8B9XTE0e6RUpp5BgOSl0q9T+tZpUXd0mbcQErB+1btjjC2RVnh
-         fkFQ==
-X-Gm-Message-State: AGi0PuZtPjN7nSVgZcC5W50hplaf6VClYktQ5cU2M3xigfzcOtCuuS2U
-        0woelW4eshQQVNTrs3Ngerw=
-X-Google-Smtp-Source: APiQypKmTJY4b3A3bpY6R2H5HWPXZBrkmqVF1E1mJAHYVbHaHXp05+S6W+13SvcZ6v8JWDDatZhvKQ==
-X-Received: by 2002:a1c:6402:: with SMTP id y2mr15222663wmb.116.1588602048836;
-        Mon, 04 May 2020 07:20:48 -0700 (PDT)
+        bh=NOGahbgFbrGavSQQTAIEOH3ZDeZsbOUYsFMx2n9Uex0=;
+        b=T8rlRVaKqWX/eWe69g5T9Q7Nvc4VsZEk9+9Q+ksMPiIwhM1XKOYnu1M4M4VkjWRzEs
+         w9DlE9w59xF+DZcR4RxogvJHbhb84pOImROzCDaW9AcwdiFjkvszi3bndJh1//DACCqR
+         28v6xsujGnupe7xNSddw4SGpPseTNXjLxFnMhGcz4HIv+JnszZUGM5ixs4c4WhRZ+9sc
+         BJlwwMGwiww1YkDGlwFsWgPt3bmjMlXl8CsyUKa21B1sBPrX9lf5YfZQvlc8YHKHwH2g
+         /kd4M5ainKDT9U0sTvBydMMLHr+rrFDLfjZ3GqtzKHcJUdna+vppj/V6/qSPypo9bQ/b
+         sUmA==
+X-Gm-Message-State: AGi0PuZJOrqt+gtxf7WdZ1chdWS0RL3VcInThuxArJKCLrZUpXOGC6+E
+        gYl3D4+PHBX7FJj63RjQiSs=
+X-Google-Smtp-Source: APiQypLBt6FV37S7ZWmd6A1HD4lHdQi5M+Ugq8m8PY3uxaMCcu6Zddyr6PIHhqm5Z+jxzi/2SEYmXQ==
+X-Received: by 2002:a5d:4704:: with SMTP id y4mr12099618wrq.96.1588602052521;
+        Mon, 04 May 2020 07:20:52 -0700 (PDT)
 Received: from localhost.localdomain (ip5f5bfcc8.dynamic.kabel-deutschland.de. [95.91.252.200])
-        by smtp.gmail.com with ESMTPSA id p7sm19196140wrf.31.2020.05.04.07.20.47
+        by smtp.gmail.com with ESMTPSA id p7sm19196140wrf.31.2020.05.04.07.20.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 May 2020 07:20:48 -0700 (PDT)
+        Mon, 04 May 2020 07:20:52 -0700 (PDT)
 From:   huobean@gmail.com
 X-Google-Original-From: beanhuo@micron.com
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
@@ -66,9 +66,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         cang@codeaurora.org, rdunlap@infradead.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         hch@infradead.org
-Subject: [RESENT PATCH RFC v3 1/5] scsi; ufs: add device descriptor for Host Performance Booster
-Date:   Mon,  4 May 2020 16:20:28 +0200
-Message-Id: <20200504142032.16619-2-beanhuo@micron.com>
+Subject: [RESENT PATCH RFC v3 4/5] scsi: ufs: add unit and geometry parameters for HPB
+Date:   Mon,  4 May 2020 16:20:31 +0200
+Message-Id: <20200504142032.16619-5-beanhuo@micron.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200504142032.16619-1-beanhuo@micron.com>
 References: <20200504142032.16619-1-beanhuo@micron.com>
@@ -79,62 +79,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Add HPB related attributes in devivce descriptor. HPB support is specified
-by Bit7 of bUFSFeatureSupport, HPB version is indicated by wHPBVersion and
-the HPB Control Mode is specified by bHPBControl in UFS device descriptor.
+Add HPB related parameters introduced in Unit Descriptor and
+Geometry Descriptor.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufs.h    |  6 ++++++
- drivers/scsi/ufs/ufshcd.c | 11 +++++++++++
- 2 files changed, 17 insertions(+)
+ drivers/scsi/ufs/ufs.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index b7fec5c73688..53a5e263f7c8 100644
+index 1f2d4b4950b8..6210e489d2ce 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -258,6 +258,8 @@ enum device_desc_param {
- 	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
- 	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
- 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
-+	DEVICE_DESC_PARAM_HPB_VER		= 0x40,
-+	DEVICE_DESC_PARAM_HPB_CTRL_MODE		= 0x42,
+@@ -219,6 +219,9 @@ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
+ 	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
+ 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
++	UNIT_DESC_PARAM_HPB_MAX_ACTIVE_REGIONS	= 0x23,
++	UNIT_DESC_PARAM_HPB_PIN_REGION_START_OFFSET	= 0x25,
++	UNIT_DESC_PARAM_HPB_NUM_PIN_REGIONS             = 0x27,
  };
  
- /* Interconnect descriptor parameters offsets in bytes*/
-@@ -537,6 +539,10 @@ struct ufs_dev_info {
- 	u8 *model;
- 	u16 wspecversion;
- 	u32 clk_gating_wait_us;
-+	/* HPB Version */
-+	u16 hpb_ver;
-+	/* bHPBControl */
-+	u8 hpb_control_mode;
+ /* Device descriptor parameters offsets in bytes*/
+@@ -304,6 +307,10 @@ enum geometry_desc_param {
+ 	GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS	= 0x3E,
+ 	GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR	= 0x42,
+ 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
++	GEOMETRY_DESC_PARAM_HPB_REGION_SIZE	= 0x48,
++	GEOMETRY_DESC_PARAM_HPB_NUMBER_LU	= 0x49,
++	GEOMETRY_DESC_PARAM_HPB_SUBREGION_SIZE  = 0x4A,
++	GEOMETRY_DESC_PARAM_HPB_MAX_ACTIVE_REGIONS = 0x4B,
  };
  
- /**
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 698e8d20b4ba..de13d2333f1f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6627,6 +6627,17 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
-+	if (desc_buf[DEVICE_DESC_PARAM_UFS_FEAT] & 0x80) {
-+		hba->dev_info.hpb_control_mode =
-+			desc_buf[DEVICE_DESC_PARAM_HPB_CTRL_MODE];
-+		hba->dev_info.hpb_ver =
-+			(u16) (desc_buf[DEVICE_DESC_PARAM_HPB_VER] << 8) |
-+			desc_buf[DEVICE_DESC_PARAM_HPB_VER + 1];
-+		dev_info(hba->dev, "HPB Version: 0x%2x\n",
-+			 hba->dev_info.hpb_ver);
-+		dev_info(hba->dev, "HPB control mode: %d\n",
-+			 hba->dev_info.hpb_control_mode);
-+	}
- 	/*
- 	 * getting vendor (manufacturerID) and Bank Index in big endian
- 	 * format
+ /* Health descriptor parameters offsets in bytes*/
 -- 
 2.17.1
 
