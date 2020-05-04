@@ -2,45 +2,43 @@ Return-Path: <SRS0=Qtkh=6S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9ED4C3A5A9
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 06:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65675C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 06:45:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA82B20757
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 06:43:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AC8F206D9
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 06:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726906AbgEDGnM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 May 2020 02:43:12 -0400
-Received: from mx2.suse.de ([195.135.220.15]:51090 "EHLO mx2.suse.de"
+        id S1726963AbgEDGpO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 May 2020 02:45:14 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51738 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726660AbgEDGnM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 4 May 2020 02:43:12 -0400
+        id S1726660AbgEDGpN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 May 2020 02:45:13 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id C1314ABBD;
-        Mon,  4 May 2020 06:43:11 +0000 (UTC)
-Subject: Re: [PATCH RFC v3 04/41] csiostor: use reserved command for LUN reset
-To:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>
+        by mx2.suse.de (Postfix) with ESMTP id 250CFABBD;
+        Mon,  4 May 2020 06:45:13 +0000 (UTC)
+Subject: Re: [PATCH RFC v3 29/41] snic: use reserved commands
+To:     Ming Lei <ming.lei@redhat.com>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         John Garry <john.garry@huawei.com>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 References: <20200430131904.5847-1-hare@suse.de>
- <20200430131904.5847-5-hare@suse.de> <20200430151546.GB1005453@T590>
- <cd0f88db-96ec-d69f-f33e-b10a1cb3756d@suse.de>
- <20200501150129.GB1012188@T590> <20200501174505.GC23795@lst.de>
- <20200502031115.GB1013372@T590>
+ <20200430131904.5847-30-hare@suse.de> <20200502031916.GC1013372@T590>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <9453394e-3ef5-eab0-1ddf-94f170057e32@suse.de>
-Date:   Mon, 4 May 2020 08:43:07 +0200
+Message-ID: <6347ffc6-48ca-789b-7765-cbcf928c3458@suse.de>
+Date:   Mon, 4 May 2020 08:45:09 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200502031115.GB1013372@T590>
+In-Reply-To: <20200502031916.GC1013372@T590>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -49,55 +47,86 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/2/20 5:11 AM, Ming Lei wrote:
-> On Fri, May 01, 2020 at 07:45:05PM +0200, Christoph Hellwig wrote:
->> On Fri, May 01, 2020 at 11:01:29PM +0800, Ming Lei wrote:
->>>> We cannot increase MAX_QUEUE arbitrarily as this is a compile time variable,
->>>> which seems to relate to a hardware setting.
->>>>
->>>> But I can see to update the reserved command functionality for allowing to
->>>> fetch commands from the normal I/O tag pool; in the case of LUN reset it
->>>> shouldn't make much of a difference as the all I/O is quiesced anyway.
->>>
->>> It isn't related with reset.
->>>
->>> This patch reduces active IO queue depth by 1 anytime no matter there is reset
->>> or not, and this way may cause performance regression.
+On 5/2/20 5:19 AM, Ming Lei wrote:
+> On Thu, Apr 30, 2020 at 03:18:52PM +0200, Hannes Reinecke wrote:
+>> From: Hannes Reinecke <hare@suse.com>
 >>
->> But isn't it the right thing to do?  How else do we guarantee that
->> there always is a tag available for the LU reset?
+>> Use a reserved command for host and device reset.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>   drivers/scsi/snic/snic.h      |   4 +-
+>>   drivers/scsi/snic/snic_main.c |   8 +++
+>>   drivers/scsi/snic/snic_scsi.c | 140 +++++++++++++++++-------------------------
+>>   3 files changed, 66 insertions(+), 86 deletions(-)
+>>
+>> diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
+>> index de0ab5fc8474..7dc529ae8a90 100644
+>> --- a/drivers/scsi/snic/snic.h
+>> +++ b/drivers/scsi/snic/snic.h
+>> @@ -59,7 +59,6 @@
+>>    */
+>>   #define SNIC_TAG_ABORT		BIT(30)		/* Tag indicating abort */
+>>   #define SNIC_TAG_DEV_RST	BIT(29)		/* Tag for device reset */
+>> -#define SNIC_TAG_IOCTL_DEV_RST	BIT(28)		/* Tag for User Device Reset */
+>>   #define SNIC_TAG_MASK		(BIT(24) - 1)	/* Mask for lookup */
+>>   #define SNIC_NO_TAG		-1
+>>   
+>> @@ -278,6 +277,7 @@ struct snic {
+>>   
+>>   	/* Scsi Host info */
+>>   	struct Scsi_Host *shost;
+>> +	struct scsi_device *shost_dev;
+>>   
+>>   	/* vnic related structures */
+>>   	struct vnic_dev_bar bar0;
+>> @@ -380,7 +380,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+>>   int snic_abort_cmd(struct scsi_cmnd *);
+>>   int snic_device_reset(struct scsi_cmnd *);
+>>   int snic_host_reset(struct scsi_cmnd *);
+>> -int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
+>> +int snic_reset(struct Scsi_Host *);
+>>   void snic_shutdown_scsi_cleanup(struct snic *);
+>>   
+>>   
+>> diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+>> index 14f4ce665e58..f520da64ec8e 100644
+>> --- a/drivers/scsi/snic/snic_main.c
+>> +++ b/drivers/scsi/snic/snic_main.c
+>> @@ -303,6 +303,7 @@ static int
+>>   snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
+>>   {
+>>   	int ret = 0;
+>> +	struct snic *snic = shost_priv(shost);
+>>   
+>>   	ret = scsi_add_host(shost, &pdev->dev);
+>>   	if (ret) {
+>> @@ -313,6 +314,12 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
+>>   		return ret;
+>>   	}
+>>   
+>> +	snic->shost_dev = scsi_get_virtual_dev(shost, 1, 0);
+>> +	if (!snic->shost_dev) {
+>> +		SNIC_HOST_ERR(shost,
+>> +			      "snic: scsi_get_virtual_dev failed\n");
+>> +		return -ENOMEM;
+>> +	}
+>>   	SNIC_BUG_ON(shost->work_q != NULL);
+>>   	snprintf(shost->work_q_name, sizeof(shost->work_q_name), "scsi_wq_%d",
+>>   		 shost->host_no);
+>> @@ -385,6 +392,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>   
+>>   		goto prob_end;
+>>   	}
+>> +	shost->nr_reserved_cmds = 2;
 > 
-> If that is case, some of these patches should be bug-fix, but nothing
-> about this kind of comment is provided. If it is true, please update
-> the commit log and explain the current issue in detail, such as,
-> what is the side-effect of 'overwriting the original command'?
+> Not see .can_queue is increased by 2 in this patch, please comment on
+> the reason. Otherwise, IO performance drop may be caused.
 > 
-> And we might need to backport it to stable tree because storage error
-> recovery is very key function.
->  > Even though it is true, still not sure if this patch is the correct
-> way to fix the issue cause IO performance drop might be caused.
-> 
-You can't have it both ways.
-
-The underlying problem is this:
-The csiostor driver (and several others, too) require a valid hardware 
-tag to send a LU reset command. Currently it tries to allocate a tag 
-from the pool of free hardware tags.
-However, experience shows that the majority of cases (in my personal 
-experience _all_ of the cases) where we ever entered the error handler 
-are due to command timeouts. If now all commands timed out, the tag 
-space is full and we cannot get a free tag to send the LU reset command.
-Hence LU reset will currently fail in this case.
-With the patchset we will always ensure to have at least one free tag
-such that we can send the LU reset command. But, as correctly noted,
-it will reduce the available tagspace and possibly reduce the performance.
-But you really can have it both ways. Either you go for max performance 
-and have the risk of starving the error handler, or you go for 
-reliability and accept a (slightly) lower performance.
-And, btw, I'm not sure if one could even measure the performance impact.
-csiostor has 2048 tags per HBA with a 10G FCoE link. So it would require 
-a latency of less than 8us with 4k I/O to saturate the HBA; for 
-everything slower we wouldn't be seeing anything.
+snic is requiring a tag for both LU reset and Host reset.
+We do require one tag for SCSI EH, and I'm setting aside another one for 
+ioctl commands.
+Will be adding a comment here explaining things.
 
 Cheers,
 
