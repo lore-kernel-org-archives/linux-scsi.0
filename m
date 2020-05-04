@@ -2,106 +2,108 @@ Return-Path: <SRS0=Qtkh=6S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5499AC47257
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 14:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F340C4724C
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 16:16:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 352A3206D9
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 14:57:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69601206E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 16:16:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="HbrD1ihm"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="JtB9E0VA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729122AbgEDO5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 May 2020 10:57:04 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:10830 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728689AbgEDO4i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 10:56:38 -0400
-X-UUID: 9fdaca3a1bae4332aa301141592e3c6b-20200504
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=i0FzsfpTNA3ISziIiPIG4aqyoIUmD6rlIQ3hBf2gOAA=;
-        b=HbrD1ihmC/AQzYhm7vai7aGvqi7Z1uK9YCKuwwAGzxS8RBWw2ouePKZh4CIl1jYQCU6t7XvD6QKhltcSGIKjnP4bUs3TN9RAB68dDqEcqHki2qZ7NVbRGf0LnF75wASTuSQQxVih8w0PWm80ILyd1gFWVwtrrKQSi/oiobDtIaw=;
-X-UUID: 9fdaca3a1bae4332aa301141592e3c6b-20200504
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1936321619; Mon, 04 May 2020 22:56:31 +0800
-Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 4 May 2020 22:56:26 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 4 May 2020 22:56:26 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
-CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v6 3/8] scsi: ufs: export ufs_fixup_device_setup() function
-Date:   Mon, 4 May 2020 22:56:17 +0800
-Message-ID: <20200504145622.13895-4-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20200504145622.13895-1-stanley.chu@mediatek.com>
-References: <20200504145622.13895-1-stanley.chu@mediatek.com>
+        id S1729588AbgEDQQo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 May 2020 12:16:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40556 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726551AbgEDQQn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 12:16:43 -0400
+Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 740BAC061A41
+        for <linux-scsi@vger.kernel.org>; Mon,  4 May 2020 09:16:42 -0700 (PDT)
+Received: by mail-il1-x144.google.com with SMTP id q10so11811841ile.0
+        for <linux-scsi@vger.kernel.org>; Mon, 04 May 2020 09:16:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=O2NAB+HJ6UzNB91gndqrDrOBWBRRYdtXc0RXwgVqjIU=;
+        b=JtB9E0VAIJLFoltqJ/EHP5uJ1L/CC5gPEHBmZzWmKIrxbjl26Ne5XpvBSLm41xSBIg
+         t1xVdmJvdqBHaspjtVCP0vgnGV8j2MBTNBjG6GfJcM4fXOhB5+xGf03i727pyog2NP6D
+         GccF27GbRs4QZX7lndDIpxFVeOCoMgIl3dOrXZVf+VRPY7WwOdamJ/8xOXsiov24FI4J
+         cg7O0CG65PADdLp8q2dvOrT5ZwuaButnO4gv0VIES92fKah6Zco3/qNsmkTYiehcGMU9
+         Q2MWvAeM0Qng2AHkE9aLevizkhC1L0KUTdxlOLZZymREU3y6Lz7t6E+UeIP0pi9e0AJ9
+         6new==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=O2NAB+HJ6UzNB91gndqrDrOBWBRRYdtXc0RXwgVqjIU=;
+        b=JSOu3OIT4iRHrCAyk0LajRgS3Wr3PcO/uN3iSacUFKusvp4iL0uHipH91oLSNhMu/z
+         RTZYDWQNkR9a6055uOo+pIyNPXW6QXdcJiGjTckrNAF6pWP5v8AJ91MvZsnwKKGug3xX
+         VF0P5RyWOChSHLFi6pDkbT/WAZpwFI0pleMZDjwGtXn1Um4AU9xyZ7xzWp6X5dILor6j
+         /1T3R8iXQZo0twmTXZh8fAnchHBCW6SRj2pfgZ+EKDm3LAp5YqZtFlJJ7ra0qHejC7bh
+         E5eOmNXZvMNjxJuNchUwGYnv8uhqswfSvPPhfs+3+hu2cXjs0yG4ckYDOC26MbCFLzgQ
+         qzxw==
+X-Gm-Message-State: AGi0PuZvFKLliOXdLXHwXbYFyDp37aApU5KYxvh0IUIT0zrujfqXhMV7
+        7MsR8vW+tRsP/4i1+HCCVOi5Pg==
+X-Google-Smtp-Source: APiQypLOM7ihGkQHTNt/pKRC46v+xHKsvR0zC0Gq/TKe4vXwyBmsBEqqQDWLYSJ6GF4HlBlFg2BYoQ==
+X-Received: by 2002:a92:d6c6:: with SMTP id z6mr16340696ilp.32.1588609001697;
+        Mon, 04 May 2020 09:16:41 -0700 (PDT)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id m22sm4250384iow.35.2020.05.04.09.16.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 May 2020 09:16:41 -0700 (PDT)
+Subject: Re: [PATCH 5/7] hfsplus: stop using ioctl_by_bdev
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@wdc.com>
+References: <20200425075706.721917-1-hch@lst.de>
+ <20200425075706.721917-6-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <6c47f731-7bff-f186-da55-7ce6cffacdc3@kernel.dk>
+Date:   Mon, 4 May 2020 10:16:40 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 2B33CF8D6FE1F84FDDCC74114279B75D92A1088D4717E2F1AC1615FB2A26F5722000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20200425075706.721917-6-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-RXhwb3J0IHVmc19maXh1cF9kZXZpY2Vfc2V0dXAoKSB0byBhbGxvdyB2ZW5kb3JzIHRvIHJlLXVz
-ZSBpdCBmb3INCmZpeGluZyBkZXZpY2UgcXVyaWtzIG9uIHNwZWNpZmllZCBVRlMgaG9zdHMuDQoN
-ClNpZ25lZC1vZmYtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQpS
-ZXZpZXdlZC1ieTogQXZyaSBBbHRtYW4gPGF2cmkuYWx0bWFuQHdkYy5jb20+DQotLS0NCiBkcml2
-ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIHwgNyArKysrLS0tDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNo
-Y2QuaCB8IDQgKysrLQ0KIDIgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCA0IGRlbGV0
-aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZl
-cnMvc2NzaS91ZnMvdWZzaGNkLmMNCmluZGV4IGZjMTU0OWY4MjljYy4uYmE4MTg1NjI1MTA5IDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KKysrIGIvZHJpdmVycy9zY3Np
-L3Vmcy91ZnNoY2QuYw0KQEAgLTY4MzUsMTIgKzY4MzUsMTIgQEAgc3RhdGljIHZvaWQgdWZzaGNk
-X3diX3Byb2JlKHN0cnVjdCB1ZnNfaGJhICpoYmEsIHU4ICpkZXNjX2J1ZikNCiAJaGJhLT5jYXBz
-ICY9IH5VRlNIQ0RfQ0FQX1dCX0VOOw0KIH0NCiANCi1zdGF0aWMgdm9pZCB1ZnNfZml4dXBfZGV2
-aWNlX3NldHVwKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQordm9pZCB1ZnNoY2RfZml4dXBfZGV2aWNl
-X3NldHVwKHN0cnVjdCB1ZnNfaGJhICpoYmEsIHN0cnVjdCB1ZnNfZGV2X2ZpeCAqZml4dXBzKQ0K
-IHsNCiAJc3RydWN0IHVmc19kZXZfZml4ICpmOw0KIAlzdHJ1Y3QgdWZzX2Rldl9pbmZvICpkZXZf
-aW5mbyA9ICZoYmEtPmRldl9pbmZvOw0KIA0KLQlmb3IgKGYgPSB1ZnNfZml4dXBzOyBmLT5xdWly
-azsgZisrKSB7DQorCWZvciAoZiA9IGZpeHVwczsgZi0+cXVpcms7IGYrKykgew0KIAkJaWYgKChm
-LT53bWFudWZhY3R1cmVyaWQgPT0gZGV2X2luZm8tPndtYW51ZmFjdHVyZXJpZCB8fA0KIAkJICAg
-ICBmLT53bWFudWZhY3R1cmVyaWQgPT0gVUZTX0FOWV9WRU5ET1IpICYmDQogCQkgICAgICgoZGV2
-X2luZm8tPm1vZGVsICYmDQpAQCAtNjg0OSw2ICs2ODQ5LDcgQEAgc3RhdGljIHZvaWQgdWZzX2Zp
-eHVwX2RldmljZV9zZXR1cChzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KIAkJCWhiYS0+ZGV2X3F1aXJr
-cyB8PSBmLT5xdWlyazsNCiAJfQ0KIH0NCitFWFBPUlRfU1lNQk9MX0dQTCh1ZnNoY2RfZml4dXBf
-ZGV2aWNlX3NldHVwKTsNCiANCiBzdGF0aWMgaW50IHVmc19nZXRfZGV2aWNlX2Rlc2Moc3RydWN0
-IHVmc19oYmEgKmhiYSkNCiB7DQpAQCAtNjg5NSw3ICs2ODk2LDcgQEAgc3RhdGljIGludCB1ZnNf
-Z2V0X2RldmljZV9kZXNjKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogCQlnb3RvIG91dDsNCiAJfQ0K
-IA0KLQl1ZnNfZml4dXBfZGV2aWNlX3NldHVwKGhiYSk7DQorCXVmc2hjZF9maXh1cF9kZXZpY2Vf
-c2V0dXAoaGJhLCB1ZnNfZml4dXBzKTsNCiAJdWZzaGNkX3ZvcHNfZml4dXBfZGV2X3F1aXJrcyho
-YmEpOw0KIA0KIAkvKg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggYi9k
-cml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQppbmRleCA1ZmEwM2UwZjNiZDEuLmYzNDYwMTEyMTg4
-MCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgNCisrKyBiL2RyaXZlcnMv
-c2NzaS91ZnMvdWZzaGNkLmgNCkBAIC02OSw2ICs2OSw3IEBADQogI2luY2x1ZGUgPHNjc2kvc2Nz
-aV9laC5oPg0KIA0KICNpbmNsdWRlICJ1ZnMuaCINCisjaW5jbHVkZSAidWZzX3F1aXJrcy5oIg0K
-ICNpbmNsdWRlICJ1ZnNoY2kuaCINCiANCiAjZGVmaW5lIFVGU0hDRCAidWZzaGNkIg0KQEAgLTk1
-MSw3ICs5NTIsOCBAQCBpbnQgdWZzaGNkX3F1ZXJ5X2ZsYWcoc3RydWN0IHVmc19oYmEgKmhiYSwg
-ZW51bSBxdWVyeV9vcGNvZGUgb3Bjb2RlLA0KIA0KIHZvaWQgdWZzaGNkX2F1dG9faGliZXJuOF9l
-bmFibGUoc3RydWN0IHVmc19oYmEgKmhiYSk7DQogdm9pZCB1ZnNoY2RfYXV0b19oaWJlcm44X3Vw
-ZGF0ZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCB1MzIgYWhpdCk7DQotDQordm9pZCB1ZnNoY2RfZml4
-dXBfZGV2aWNlX3NldHVwKHN0cnVjdCB1ZnNfaGJhICpoYmEsDQorCQkJICAgICAgIHN0cnVjdCB1
-ZnNfZGV2X2ZpeCAqZml4dXBzKTsNCiAjZGVmaW5lIFNEX0FTQ0lJX1NURCB0cnVlDQogI2RlZmlu
-ZSBTRF9SQVcgZmFsc2UNCiBpbnQgdWZzaGNkX3JlYWRfc3RyaW5nX2Rlc2Moc3RydWN0IHVmc19o
-YmEgKmhiYSwgdTggZGVzY19pbmRleCwNCi0tIA0KMi4xOC4wDQo=
+On 4/25/20 1:57 AM, Christoph Hellwig wrote:
+>  	if (HFSPLUS_SB(sb)->session >= 0) {
+> +		struct cdrom_tocentry te;
+> +
+> +		if (!cdi)
+> +			return -EINVAL;
+> +
+>  		te.cdte_track = HFSPLUS_SB(sb)->session;
+>  		te.cdte_format = CDROM_LBA;
+> -		res = ioctl_by_bdev(sb->s_bdev,
+> -			CDROMREADTOCENTRY, (unsigned long)&te);
+> -		if (!res && (te.cdte_ctrl & CDROM_DATA_TRACK) == 4) {
+> -			*start = (sector_t)te.cdte_addr.lba << 2;
+> -			return 0;
+> +		if (cdrom_read_tocentry(cdi, &te) ||
+> +		    (te.cdte_ctrl & CDROM_DATA_TRACK) != 4) {
+> +			pr_err("invalid session number or type of track\n");
+> +			return -EINVAL;
+>  		}
+
+I must be missing something obvious from just looking over the patches,
+but how does this work if cdrom is modular and hfsplus is builtin?
+
+-- 
+Jens Axboe
 
