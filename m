@@ -2,141 +2,163 @@ Return-Path: <SRS0=Qtkh=6S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD4EC3A5A9
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:50:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA205C3A5A9
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:55:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A95A20752
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:50:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0B9B20757
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 10:55:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bY/m1GNI"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="d04Ril+F";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="hcomA+Z5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728253AbgEDKuB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 May 2020 06:50:01 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:36537 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728104AbgEDKuA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 06:50:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588589399;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QPdkegKkQaUD8YoFWrnzzlTYvUa1Kpn69i8w5h1cwpc=;
-        b=bY/m1GNI/qSmqz40EbjmSApjelHi9HlAi96gwCTeKiFwaVt+kC2ozKlOIyunPH/cJl5iw6
-        t19zahtwXfsHiHaha4oPBiHl9Hno+u5FmNXxi5q31mNNCLHvSg46YdPDHcAO5SajQdyB1K
-        aitviaqBMxdG8seyV3NqTVHXCG+LL5w=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-132-4HzxRqcKNV2UCB_DbI-lfQ-1; Mon, 04 May 2020 06:49:55 -0400
-X-MC-Unique: 4HzxRqcKNV2UCB_DbI-lfQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 76EB1107ACCA;
-        Mon,  4 May 2020 10:49:54 +0000 (UTC)
-Received: from T590 (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 57C6A10016DA;
-        Mon,  4 May 2020 10:49:46 +0000 (UTC)
-Date:   Mon, 4 May 2020 18:49:42 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH RFC v3 04/41] csiostor: use reserved command for LUN reset
-Message-ID: <20200504104942.GE1139563@T590>
-References: <20200430131904.5847-5-hare@suse.de>
- <20200430151546.GB1005453@T590>
- <cd0f88db-96ec-d69f-f33e-b10a1cb3756d@suse.de>
- <20200501150129.GB1012188@T590>
- <20200501174505.GC23795@lst.de>
- <eea98eb5-1779-cf06-e930-e47fb4918306@suse.de>
- <20200502142907.GE1013372@T590>
- <8795fedc-8b07-fbfc-89f5-0cb76ee054b0@suse.de>
- <20200504084700.GB1139563@T590>
- <902fae06-8ad7-9abd-c76c-61f975471711@suse.de>
+        id S1728477AbgEDKzv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 May 2020 06:55:51 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:18138 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727098AbgEDKzt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 06:55:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1588589749; x=1620125749;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Oh4h2+4WZfPbgFoCzN2W2S5zx5A2o0hiWxokVRUC5Q4=;
+  b=d04Ril+FeNviB0yI7PwDNjlt0BB8G+q9TyMNWJohylMoz2U+0sh5tic3
+   EnQEfD/Q3EWbNiOQuTl+MvcJ5fJTXLpzSsHOn6RbyRyeCzPFOLf17khUT
+   T2myWbd5gGctAWspSoUMQEzyUELk33XWlYtF5NRA/ULs7k8tKQ2lPaabm
+   aPKQMleWAVx5exg9Jrcj9WD02ozONqXWMpO2PeM37mOOrCSIQ78u98CmQ
+   +4dCJlz4J9pd9g32QYzfyZQi90nnalsis4gnua6hFEVtlBcPTSkvpP5P9
+   txAhpX2hnUKlR0eux5DDk7Ww+wXONDVtZ9yl5RRJo/SMg7M2hZXvuBfEa
+   A==;
+IronPort-SDR: Ln/eydCr9O3sDbfek55OFSjYHtspaSrNBCJZQD3ttPDoxTfh7PdeGhaucQFz3Kym1ulu8j1Gkv
+ Kni3t9JI1swq4oac9SYFcjMfd3v8/h4TivPbnxSzt3FDJ42Nf8vTFl5TyyHPYyptI6Tm0Hy3Zr
+ VdpNfHmQrdbChZnN37YQxodXcYbHyJo2lfSD4P4KkkLVm881+0DJgW9kBIFarviTEFe5qvhwbd
+ zyPI/dGD4nPZEg1KMc57whwVq1t7HqlczaAGUKV5yS0pzVu1cNoQrlI1ICIXqoSkbSoirWXgXO
+ 7oM=
+X-IronPort-AV: E=Sophos;i="5.73,351,1583164800"; 
+   d="scan'208";a="138292890"
+Received: from mail-co1nam04lp2051.outbound.protection.outlook.com (HELO NAM04-CO1-obe.outbound.protection.outlook.com) ([104.47.45.51])
+  by ob1.hgst.iphmx.com with ESMTP; 04 May 2020 18:55:47 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=n0mZpg5CVrBCxtpsGhiqBSrDs6U2zO5k+xY9y2v2Au5LFMn1LEMUqKaUB2e7srUQMlWz9VKiNJFiGmJHdWVtMZPT8DS9OSNOBDvmM9xY4uUzr+xBSEFpnoZRuDVWM6a1rP+xgQ7xN6i3iwJyxmqUbuwFJtAJUePEq1GoElhsFp8VbSrC9/kzBL+HzS5eRHmisj5qi0qPj1BgKUGqKzoxz4/r8jf3/W9svOenK+AYAb0/5gs4KK/REZjZQBP7ATvIlvAjmqJ3hj9TRLF1uH9IgvyN3g9JXcHzdmMbVkHKhQyTkWY0cvC6qq49PTgUZyoIjz9+VnELgtKhkbJcERhYCA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=R1IHuRbl5+OWrYQQMS7uZLA68oV+zHatijsoxTF/oz8=;
+ b=WDbP2q+SZSXVnyJ59gKzyvQyGRT0KNiZs6xbbD0O+1371UZJqKHLzhAnqOuhiOGTGK+BdNESlUDzjhaLx5bczR4KSy5/47ZB/80Dm2qSabJn3NahEikTg8sMpqsXuNQEiAIsfrZtEeV6RHKhLY1N1HttIfcU2PIxahHOddGJb2PJwynO9bLYApAm+MBBWZY9rsux2lx+JC9MTY7OLTpOEuPfqhipg0p5dZIONm24+2b8rWeAxyojjRRTGifGlfxN6kxS0Chw1iJZctlGFriC1NNUQ/KRIDebhSgbEghXuXV2zv6SW2azokcG3jxzzfTjzgq7ttV9LIsQzkw+DWAcug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=R1IHuRbl5+OWrYQQMS7uZLA68oV+zHatijsoxTF/oz8=;
+ b=hcomA+Z5JrNQ0d3N/n/ceo8YVXPxOop6acjK0aarsg7JgW5vptGlY/xs6GjMfA8DEXp1AQBjTlM5850IypI3ZFy+GlNIGGsa/wFMOzG+OlUQJSKWII6BSXeAIzAwplfN81YzcEArqrmXBp/xK3XV8mYqCJKTLoiuyIOj0wrbR04=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB4464.namprd04.prod.outlook.com (2603:10b6:805:b2::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.27; Mon, 4 May
+ 2020 10:55:45 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.2958.030; Mon, 4 May 2020
+ 10:55:45 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
+CC:     "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>
+Subject: RE: [PATCH v5 4/8] scsi: ufs-mediatek: add fixup_dev_quirks vops
+Thread-Topic: [PATCH v5 4/8] scsi: ufs-mediatek: add fixup_dev_quirks vops
+Thread-Index: AQHWIT7UcNDlRrxlf0S0WlJUL1qmaqiXwh9Q
+Date:   Mon, 4 May 2020 10:55:44 +0000
+Message-ID: <SN6PR04MB46408BF365ADE7F226275BC0FCA60@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200503113415.21034-1-stanley.chu@mediatek.com>
+ <20200503113415.21034-5-stanley.chu@mediatek.com>
+In-Reply-To: <20200503113415.21034-5-stanley.chu@mediatek.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: mediatek.com; dkim=none (message not signed)
+ header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 0bb70594-c25b-46a9-ef8a-08d7f019b23a
+x-ms-traffictypediagnostic: SN6PR04MB4464:
+x-microsoft-antispam-prvs: <SN6PR04MB446415C053937DE91B2ADDE7FCA60@SN6PR04MB4464.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:2399;
+x-forefront-prvs: 03932714EB
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: sVYxk6HOTY93j7bP2XvIhFvJyuiiEW6zb8SfCIRgsHwNbctaOK6bVwUrAUvkASId4+2cRSmf8w8Mz/NmT4yIaueS5exwKDNQJlN+TJMz7/pHWum5lpbdM74QylDOKGdXc9/oU9RJHHBhGlnXczHf0Wxf2s5f3Ghd5RtnebZT/pdUHTR4Kb1orCwSdPDHD10zzOdAegbHERW/7u7yp1sMIGvYKSzJuK4RF29EIbtVT01oaUhikLd2fD7032ZtmuQguJ3tMIk/PgptZINqFLEj8Ja7slp8CpovLQsegvXmJYFP+/kPmeXBskyaK43h5Z6aM0BQoNn3E2NpIm2I+nwunILEeiMLyaUP/pbJDVQIwo9UqjFX5R5vVnqeJGW/KsDVL/ltfy7AcQseSfD5WiWDwKO9QPhlsNvEIOJuylPeB69ZA1GCaQR7tr/YQGS5qwcl
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(376002)(39860400002)(346002)(396003)(136003)(66476007)(8676002)(26005)(2906002)(52536014)(6506007)(71200400001)(478600001)(33656002)(5660300002)(86362001)(64756008)(4744005)(55016002)(9686003)(7696005)(66946007)(54906003)(66446008)(76116006)(4326008)(66556008)(186003)(8936002)(316002)(7416002)(110136005);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 2CsDIQPmF5JMeflgoh85wQDoymLbvdkNNtDd+oxAXWdFACswnFcRhbTCWS1GBjZGcsjSmLZ2NJWmg40Ls5MuHExkVR6rR1PvSbyrHm52BNYBUSFWxg3jRWu1yZWgbikykOz/pN3JW3sk00XBeVLl26t6TSLc94DWl3zf8w0UW1Uy6bZbEyVx2iR4aZaWph7hQt+hqF+PzpyBUwxXalSfku5+lNObAdMzdF8rtx1fIg1RJ3tth9dO9KuOF1O0mxZ5O6G4rqIU1LgLFmpUQSmxa5w3N12jnLZBI0cMWSsLgnTdKAoYhnN8gwPyXrovSsHDRUxBywuwa5o6Ykx0ATfjnYMHL+U/MMvfCzvdfuXUXejjZKv4zJ3MNlRYrO6TeJrR7lx7ZXeUfDeZonFoM+mN1HJqrPsnmNEE3ocl7ogube9RuJ3BuRqsAp/5njggbJHvEDa8I3UuSECQJD/qma1LdGdpx9oZQSptviS1skdQ5Yti1Ds3Q6YetQ50bPqfzsKwMfAl93SbkcVKoBIAA6Po5dNkR6A9YhaFHEgHkjGRgM4Oqw4x4oaDs+cyQDZssL5NPWbBdhoAnZ8aNaIggQtBb7NngQVo6gBOdf4AMRWymVs4w3XUpkn0Z9J4sP6eNv7kDXwQOB+F3k4jR8xMdgvEKcFxdfINka2gUYvOQnaEklRIZNMfptMRjjs+zIugYqtKsXPGAiirZ/BiZV67HYtsJwO44SzbzI68YUrTPsGIdgWyopMhW84KAHgD1brVTecMR4V8M9TSyM4zPiXM/2Ej2Wzzk2UXApA/aWKooCpcC70=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <902fae06-8ad7-9abd-c76c-61f975471711@suse.de>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0bb70594-c25b-46a9-ef8a-08d7f019b23a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 May 2020 10:55:44.8071
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: tJmRo7UenTzlfHlb4Y+70c2Wr2cHIyCbnVYAhRXmm3C9+mgFoi2VAbyyCW5gcU0oMzRyMLIQQNsjteoqac5HRA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4464
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 04, 2020 at 12:24:41PM +0200, Hannes Reinecke wrote:
-> On 5/4/20 10:47 AM, Ming Lei wrote:
-> > On Mon, May 04, 2020 at 08:55:05AM +0200, Hannes Reinecke wrote:
-> > > On 5/2/20 4:29 PM, Ming Lei wrote:
-> > > > On Sat, May 02, 2020 at 10:49:32AM +0200, Hannes Reinecke wrote:
-> > > > > On 5/1/20 7:45 PM, Christoph Hellwig wrote:
-> > > > > > On Fri, May 01, 2020 at 11:01:29PM +0800, Ming Lei wrote:
-> > > > > > > > We cannot increase MAX_QUEUE arbitrarily as this is a compile time variable,
-> > > > > > > > which seems to relate to a hardware setting.
-> > > > > > > > 
-> > > > > > > > But I can see to update the reserved command functionality for allowing to
-> > > > > > > > fetch commands from the normal I/O tag pool; in the case of LUN reset it
-> > > > > > > > shouldn't make much of a difference as the all I/O is quiesced anyway.
-> > > > > > > 
-> > > > > > > It isn't related with reset.
-> > > > > > > 
-> > > > > > > This patch reduces active IO queue depth by 1 anytime no matter there is reset
-> > > > > > > or not, and this way may cause performance regression.
-> > > > > > 
-> > > > > > But isn't it the right thing to do?  How else do we guarantee that
-> > > > > > there always is a tag available for the LU reset?
-> > > > > > 
-> > > > > Precisely. One could argue that this is an issue with the current driver,
-> > > > > too; if all tags have timed-out there is no way how we can send a LUN reset
-> > > > > even now. Hence we need to reserve a tag for us to reliably send a LUN
-> > > > > reset.
-> > > > > And this was precisely the problem what sparked off this entire patchset;
-> > > > > some drivers require a valid tag to send internal, non SCSI commands to the
-> > > > > hardware.
-> > > > 
-> > > > Could you explain a bit how you conclude that csio_scsi reset hander has to
-> > > > use one unique tag? At least we don't allocate request from block layer for
-> > > > ioctl(SG_SCSI_RESET), see scsi_ioctl_reset(). Also this patch doesn't
-> > > > use the reserved rq->tag too.
-> > > > 
-> > > > > And with the current design it requires some really ugly hacks to make this
-> > > > > to work.
-> > > > 
-> > > > You also don't explain how csio_eh_lun_reset_handler() is broken and where
-> > > > the ugly hack is in csio scsi too, and how this patch fixes the issue, could
-> > > > you document the exact reason in the commit log?
-> > > > 
-> > > The problem is the ioctl path.
-> > > When issuing TMF commands from the ioctl path we currently do not have a
-> > > valid SCSI command to pass to the various SCSI EH functions.
-> > > This requires the SCSI LLDDs to check for every EH function whether the
-> > > passed in SCSI command is valid (ie coming from SCSI EH), or a made up one
-> > > coming from the ioctl path.
-> > 
-> > Could you point out where the check is in csio driver?
-> > 
-> Okok, I see your point.
-> 
-> Indeed the csiostor driver doesn't use the 'tag' per se for submitting
-> commands; it's just using the scsi command pointer as a tag to figure out if
-> a completion has been send from the hw.
-> 
-> I'll be giving it a bit more thought, and will be dropping it for the next
-> round (which will contain only the minimal changes to get the
-> 'reserved_cmds' interface in).
-
-IMO, the 'reserved_cmds' interface is only needed in case that RESET
-command is transported from IO channel. Any HBA which has dedicated
-channel for sending RESET doesn't need this interface.
-
-Thanks,
-Ming
+> @@ -555,10 +561,8 @@ static int ufs_mtk_apply_dev_quirks(struct ufs_hba
+> *hba)
+>         struct ufs_dev_info *dev_info =3D &hba->dev_info;
+>         u16 mid =3D dev_info->wmanufacturerid;
+>=20
+> -       if (mid =3D=3D UFS_VENDOR_SAMSUNG) {
+> -               hba->dev_quirks &=3D ~UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE;
+> +       if (mid =3D=3D UFS_VENDOR_SAMSUNG)
+>                 ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE), 6);
+> -       }
+>=20
+>         /*
+>          * Decide waiting time before gating reference clock and
+> @@ -575,6 +579,17 @@ static int ufs_mtk_apply_dev_quirks(struct ufs_hba
+> *hba)
+>         return 0;
+>  }
+>=20
+> +void ufs_mtk_fixup_dev_quirks(struct ufs_hba *hba)
+> +{
+> +       struct ufs_dev_info *dev_info =3D &hba->dev_info;
+> +       u16 mid =3D dev_info->wmanufacturerid;
+> +
+> +       ufshcd_fixup_device_setup(hba, ufs_mtk_dev_fixups);
+> +
+> +       if (mid =3D=3D UFS_VENDOR_SAMSUNG)
+> +               hba->dev_quirks &=3D ~UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE;
+Why move it? It is a unipro/hci param.
 
