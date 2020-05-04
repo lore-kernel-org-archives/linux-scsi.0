@@ -4,118 +4,119 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 950F0C47257
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 18:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B5A8C47257
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 19:09:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 731632087E
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 18:00:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2E162078C
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 May 2020 19:09:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fMssfDr/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oIILggnN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731037AbgEDSAi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 May 2020 14:00:38 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:40951 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731030AbgEDSAh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 14:00:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588615236;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6ekvQ0W9+R32qHNFUdIvIRrUfmozi/8YjzI602DYnNY=;
-        b=fMssfDr/mtB7h6mvx3MDZ5nLgRJi4SAQODKSwnyHZigsXgDh1QAoiw0NXRdXjYR821UJFE
-        vHsihl1gHBQwPmf3hMY2ywYD9ZnnBtYdB3w5DdE2WKIoaWRhWK++D8s+Yc9AxUQoo04TjB
-        sqsyV6Ve3zCjjjKOEzRgsZT87ariCoo=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-191-yCyZRAtbPyiVILsb5m4vdA-1; Mon, 04 May 2020 14:00:34 -0400
-X-MC-Unique: yCyZRAtbPyiVILsb5m4vdA-1
-Received: by mail-qk1-f200.google.com with SMTP id i10so59715qkm.23
-        for <linux-scsi@vger.kernel.org>; Mon, 04 May 2020 11:00:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=6ekvQ0W9+R32qHNFUdIvIRrUfmozi/8YjzI602DYnNY=;
-        b=C0lkDS8CGN567JHEhhAlZ2xJNLw9QqzV8TCKKdJxff+tkegUXe94lYsUtRbP6DjYNb
-         tZuZID1AQa9Q78hTht36n2QTRSrg+cl7mjeuJSQGZ7OooqsprQ41NIMHP36CfrZ6Xu4l
-         ql5d26zu5qwwARGaIQLG+KulaqlyGLso//WxGhfVycX3aS546uMzt1CzxtIsztGZ6qF8
-         rfcHuV/b4hW3DYnXC3ZyfVHaiaPUdAY+htMbBIwo3NDo2E37iGpIhOrweED92lICfDsx
-         7kqDQXgaZydInvTKH9iTAeONRoPkyqlLQaR4OB4hGfmsAjNqAv+Ag7se3YDTmp5bSg+H
-         OoZg==
-X-Gm-Message-State: AGi0PuZ9mSmu3qwgKJV59HWJIx0ZejKgcqpaDsNfTaZpKPiPvzAGx31f
-        Nj9VJkIVIX9ztTgXY81h5RWYeL65mk870maQJIyr9njy9PPnq/JDq+9GxII80PH6TLoKgQYGo6M
-        mAIsAoJqEzInJG8bD0lniZQ==
-X-Received: by 2002:a37:7ac2:: with SMTP id v185mr420388qkc.386.1588615234063;
-        Mon, 04 May 2020 11:00:34 -0700 (PDT)
-X-Google-Smtp-Source: APiQypKnPZqN9nanSFOcjxGdXzeO8UeX54jnQMDIyTHF0H8gUXHreTJ/6vLH9+V/+wddz6hIGwk4aA==
-X-Received: by 2002:a37:7ac2:: with SMTP id v185mr420356qkc.386.1588615233715;
-        Mon, 04 May 2020 11:00:33 -0700 (PDT)
-Received: from loberhel7laptop ([2600:6c64:4e80:f1:4a17:2cf9:6a8a:f150])
-        by smtp.gmail.com with ESMTPSA id d4sm11755419qtc.48.2020.05.04.11.00.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 04 May 2020 11:00:33 -0700 (PDT)
-Message-ID: <f42a7ef6701574ebe4805a494650c56a10a9bdae.camel@redhat.com>
-Subject: Re: [PATCH] scsi: qla2xxx: Do not log message when reading port
- speed via sysfs
-From:   Laurence Oberman <loberman@redhat.com>
+        id S1727122AbgEDTJf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 May 2020 15:09:35 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37202 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725981AbgEDTJf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 May 2020 15:09:35 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 044J9TrV095487;
+        Mon, 4 May 2020 19:09:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=m9cwG9HGuBvud61LkxUBAl2mqDGnYZg/+tL5tc41mYI=;
+ b=oIILggnNj1n859JbPJjwGNWqiZFWgLkpgHIgXzuphWWlinllCOMKGUmqOHffDJiH2jAT
+ XuCxWqQ+wi59Z8/hfdZxWIyJQ4PqiI8yy8X6JqtWgL7QxAR81U83P0zP7YG1ajdGQosf
+ 8GK6PqIQjRNZz22NNpikliBTr8u68Lr2koJr0pjtnBj1Na7BzU2aPrnI0BVTp/ORRey+
+ BWONalSKrY2jxNlPhyw1pmUgKpjfVH+P6dJg+OIWEr0LjbwfR5qLH3dg85WMm76ZMc0O
+ 9/HU8bhNQV/MY+65tBLNWrruLneMS72+tbzo3Q0TJz3pb/GuoLYhp7TGDFfHFJ5ISCkD VQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 30s0tm8tjb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 04 May 2020 19:09:29 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 044J7Nmu009014;
+        Mon, 4 May 2020 19:07:29 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 30sjnbkauc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 04 May 2020 19:07:28 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 044J7Bhr018655;
+        Mon, 4 May 2020 19:07:11 GMT
+Received: from [10.154.152.113] (/10.154.152.113)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 04 May 2020 12:07:11 -0700
+Subject: Re: [PATCH] scsi: qla2xxx: Do not log message when reading port speed
+ via sysfs
 To:     "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
-Cc:     stable@vger.kernel.org, njavali@marvell.com,
-        himanshu.madhani@oracle.com
-Date:   Mon, 04 May 2020 14:00:32 -0400
-In-Reply-To: <20200504175416.15417-1-emilne@redhat.com>
+Cc:     stable@vger.kernel.org, njavali@marvell.com
 References: <20200504175416.15417-1-emilne@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
-Mime-Version: 1.0
+From:   himanshu.madhani@oracle.com
+Organization: Oracle Corporation
+Message-ID: <d36541d4-3ff4-ffe9-e5dc-7e61c918f6d7@oracle.com>
+Date:   Mon, 4 May 2020 14:07:10 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.7.0
+MIME-Version: 1.0
+In-Reply-To: <20200504175416.15417-1-emilne@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9610 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005040149
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9610 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 suspectscore=0
+ phishscore=0 clxscore=1015 bulkscore=0 mlxlogscore=999 adultscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005040149
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-05-04 at 13:54 -0400, Ewan D. Milne wrote:
+
+
+On 5/4/20 12:54 PM, Ewan D. Milne wrote:
 > Calling ql_log() inside qla2x00_port_speed_show() is causing messages
-> to be output to the console for no particularly good reason.  The
-> sysfs
-> read routine should just return the information to userspace.  The
-> only
+> to be output to the console for no particularly good reason.  The sysfs
+> read routine should just return the information to userspace.  The only
 > reason to log a message is when the port speed actually changes, and
 > this already occurs elsewhere.
 > 
 > Cc: <stable@vger.kernel.org> # v5.1+
-> Fixes: 4910b524ac9 ("scsi: qla2xxx: Add support for setting port
-> speed")
+> Fixes: 4910b524ac9 ("scsi: qla2xxx: Add support for setting port speed")
 > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 > ---
->  drivers/scsi/qla2xxx/qla_attr.c | 3 ---
->  1 file changed, 3 deletions(-)
+>   drivers/scsi/qla2xxx/qla_attr.c | 3 ---
+>   1 file changed, 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c
-> b/drivers/scsi/qla2xxx/qla_attr.c
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
 > index 3325596..2c9e5ac 100644
 > --- a/drivers/scsi/qla2xxx/qla_attr.c
 > +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -1850,9 +1850,6 @@ qla2x00_port_speed_show(struct device *dev,
-> struct device_attribute *attr,
->  		return -EINVAL;
->  	}
->  
+> @@ -1850,9 +1850,6 @@ qla2x00_port_speed_show(struct device *dev, struct device_attribute *attr,
+>   		return -EINVAL;
+>   	}
+>   
 > -	ql_log(ql_log_info, vha, 0x70d6,
 > -	    "port speed:%d\n", ha->link_data_rate);
 > -
->  	return scnprintf(buf, PAGE_SIZE, "%s\n", spd[ha-
-> >link_data_rate]);
->  }
->  
+>   	return scnprintf(buf, PAGE_SIZE, "%s\n", spd[ha->link_data_rate]);
+>   }
+>   
+> 
+Looks Good.
 
-Looks good for me, and fixes an issue we dealt with last week. 
-In other words confusing log noise for customers.
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-
+-- 
+Himanshu Madhani
+Oracle Linux Engineering
