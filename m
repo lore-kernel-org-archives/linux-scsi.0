@@ -5,57 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C327BC47257
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 May 2020 15:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D987DC47254
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 May 2020 15:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A25A620838
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 May 2020 15:31:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C43F1215A4
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 May 2020 15:31:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729396AbgEEPbP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 May 2020 11:31:15 -0400
-Received: from m9a0014g.houston.softwaregrp.com ([15.124.64.90]:42048 "EHLO
-        m9a0014g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729281AbgEEPbO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2020 11:31:14 -0400
-Received: FROM m9a0014g.houston.softwaregrp.com (15.121.0.190) BY m9a0014g.houston.softwaregrp.com WITH ESMTP;
- Tue,  5 May 2020 15:30:20 +0000
+        id S1729491AbgEEPbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 May 2020 11:31:52 -0400
+Received: from m9a0013g.houston.softwaregrp.com ([15.124.64.91]:52579 "EHLO
+        m9a0013g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729281AbgEEPbv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 May 2020 11:31:51 -0400
+Received: FROM m9a0013g.houston.softwaregrp.com (15.121.0.190) BY m9a0013g.houston.softwaregrp.com WITH ESMTP;
+ Tue,  5 May 2020 15:30:53 +0000
 Received: from M9W0068.microfocus.com (2002:f79:bf::f79:bf) by
  M9W0067.microfocus.com (2002:f79:be::f79:be) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Tue, 5 May 2020 15:29:05 +0000
-Received: from NAM04-SN1-obe.outbound.protection.outlook.com (15.124.72.10) by
+ 15.1.1591.10; Tue, 5 May 2020 15:30:27 +0000
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (15.124.72.13) by
  M9W0068.microfocus.com (15.121.0.191) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Tue, 5 May 2020 15:29:05 +0000
+ 15.1.1591.10 via Frontend Transport; Tue, 5 May 2020 15:30:27 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=boSMYFwwVwmyHzQzu/F3L+vGr8060Kem3TYiMqxZBbYs4DGmMIq0bW1S6EH4RdViJSsj0S6qExqfZRupVVzT/VCQWPYC2hvHj05f5oLUuf3zVLDgZVErZtckQ//Bgbgyk+/QaQRd1rlVxFNY+voZ4uB9WfVfVbNEPeDe8AkKyH/qnVtp9UIM3lm7SP1r5GcYOqW6uYfM5f75wdNWW0Pq0lTC4ssTFt7lzQuDVB7LP2ILtVUTL5oNtpeGSuFNXwZHrynyZkaVQPL8hdMXUvrsfLYmSjwOD+6Q/FWNUF7f/VFrUMr/NkINJbkW6G2NUuPs9VnoJPf4upj1UcU9M0lmPw==
+ b=DETuNQAvzmpg+HRGItS6+U3lQuWjzMQAzUONmz5o4xNf+PjTvBIoxrM6Rivfsllzo34sb0AfXEtg6uhMMbjfOXkS6Pm84Y0Dm2evygGkI7IWo8L46l4bas6P3kC04rpvAFXJ4SEm5Zonj0RsVTLppwjZyXEhvVJM0YwDnioHfsPl0tAFCjYSaL9U7R2AVniUY43Fekw6/2lmV9maIT1vkE4fnTzx4en6W8zp+Joa9MT7yTuySEztcRaevawRB1kFg8aJyzSzurPsOYq7Dr22kGALv3M7R2YFkKkWjH147/EXAjCi+zVuG6swYLf6qtF+fhGNjSfkBMK8w81G9cVeWg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lGPtS1uVH4ut7Dis5kw4TQp1FOfKr1EJuuHf9qCMRp0=;
- b=MuPFqC4jHSuAV41SJI9L2utxcEMfdjHJHkLSlfkqMZwjdjFF9eF86m9MhdprAvhuTOxMYCmnObTjjgxd6fp7sBkKdsedOpjnObHPS+7WXKxBg4fYHRvVfBAvJSDptlaMEeyEf8kMWh5ZFMnZ0o/zG1Si2E+0mE5PMyNPounvjHmbq6qDkCwGV6wcHX+o60JLJ6wFjuWdboXc6lB3QkqaCv+AqQu08kx3rVDlYwY9jX16mP39lgqXbmAFBvbiVTbCen3Syb0vow2zt3EF3UBk5ycwtaiqwpTiZtjx3EUsWZ5X5MH/I4mlzSaX7SNASOSNpmjUydfxyQ2sGebkz5D3iw==
+ bh=zIpFYCQcc+Gjvwfj1rC13xEjOrDL99ot//NLaOJTaUQ=;
+ b=Pv+7q+qYMpHY1YkkyoBbdAcmXY/rUy6w7Vq0Kix89kDA9YmqRUEqtCQokSEERhriFzNTVMB0BiFWUNeWPUw3pATWBaNvx3N6iWbQrF7hHiWDy4p/mO3+ZeWN0v9k05NsWnBd8ONEK9TG0k4s+uPYL9NavAG5fm9+lT488l6FpMH20N1gs/jO4ZGWdVXK1r07JMxDE0Gt2CBPLy5GuwvKjKJRPi4aWgZgq8FGcnBEpZwmHkBd43aq6WyrwJsN1+cwG56H4bJjWtgFzGY9/L2GYG9imiTiNM9otUXjGV0hZGNKFySCcz+oKx4U9nKc037crChPUnTmwdTYhhS/ly86LA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
+Authentication-Results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=suse.com;
 Received: from BL0PR18MB2290.namprd18.prod.outlook.com (2603:10b6:207:48::11)
- by BL0PR18MB3748.namprd18.prod.outlook.com (2603:10b6:208:36::16) with
+ by BL0PR18MB3745.namprd18.prod.outlook.com (2603:10b6:208:81::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.26; Tue, 5 May
- 2020 15:29:05 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.29; Tue, 5 May
+ 2020 15:30:26 +0000
 Received: from BL0PR18MB2290.namprd18.prod.outlook.com
  ([fe80::9ddc:db5b:9a5a:6b3d]) by BL0PR18MB2290.namprd18.prod.outlook.com
  ([fe80::9ddc:db5b:9a5a:6b3d%7]) with mapi id 15.20.2958.029; Tue, 5 May 2020
- 15:29:05 +0000
-Subject: Re: [PATCH] scsi: qedi: remove unused variable udev & uctrl
-To:     Xie XiuQi <xiexiuqi@huawei.com>,
-        <QLogic-Storage-Upstream@cavium.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20200505121904.25702-1-xiexiuqi@huawei.com>
+ 15:30:26 +0000
+Subject: Re: [PATCH] scsi: qla2xxx: Do not log message when reading port speed
+ via sysfs
+To:     "Ewan D. Milne" <emilne@redhat.com>, <linux-scsi@vger.kernel.org>
+CC:     <stable@vger.kernel.org>, <njavali@marvell.com>,
+        <himanshu.madhani@oracle.com>
+References: <20200504175416.15417-1-emilne@redhat.com>
 From:   Lee Duncan <lduncan@suse.com>
 Autocrypt: addr=lduncan@suse.com; keydata=
  xsFNBE6ockoBEADMQ+ZJI8khyuc2jMfgf4RmARpBkZrcHSs1xTKVVBUbpFooDEVi49D/bz0G
@@ -140,84 +140,74 @@ Autocrypt: addr=lduncan@suse.com; keydata=
  iv2n7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh
  9eFpv8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPa
  Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <b4b7073d-be1f-ac6f-5fe2-b2a45ad2dec4@suse.com>
-Date:   Tue, 5 May 2020 08:28:57 -0700
+Message-ID: <62fa4d6b-0e4d-9a9c-890c-7c443475e923@suse.com>
+Date:   Tue, 5 May 2020 08:30:18 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
-In-Reply-To: <20200505121904.25702-1-xiexiuqi@huawei.com>
+In-Reply-To: <20200504175416.15417-1-emilne@redhat.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO2P265CA0015.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:62::27) To BL0PR18MB2290.namprd18.prod.outlook.com
+X-ClientProxiedBy: LO2P265CA0016.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:62::28) To BL0PR18MB2290.namprd18.prod.outlook.com
  (2603:10b6:207:48::11)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by LO2P265CA0015.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:62::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.20 via Frontend Transport; Tue, 5 May 2020 15:29:02 +0000
+Received: from [192.168.20.3] (73.25.22.216) by LO2P265CA0016.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:62::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.27 via Frontend Transport; Tue, 5 May 2020 15:30:24 +0000
 X-Originating-IP: [73.25.22.216]
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 19aac92d-d407-4d6e-fa34-08d7f1090b99
-X-MS-TrafficTypeDiagnostic: BL0PR18MB3748:
-X-Microsoft-Antispam-PRVS: <BL0PR18MB3748760CF248F6D7D69F87C2DAA70@BL0PR18MB3748.namprd18.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:51;
+X-MS-Office365-Filtering-Correlation-Id: c7cf51b6-c03a-454e-068d-08d7f1093c10
+X-MS-TrafficTypeDiagnostic: BL0PR18MB3745:
+X-Microsoft-Antispam-PRVS: <BL0PR18MB37453620E4ADE13291CE77C6DAA70@BL0PR18MB3745.namprd18.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3044;
 X-Forefront-PRVS: 0394259C80
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7+b0O/WBYrBW+zQ/15uLxF8ThbuCk/L8Yc0clw7VcwXGPMRwPZZVL9Yx9MXk3ODlc0vLnFl9Nma2+qm2ytBEygdrD9QMAh067yr2DQvXKL+c/bPDn/d9oTTQAN7F84X/UI+HgmH4jDEpThg9h1XPUVGe5MPC12FTRrgSXccnEpvO0a8fRGVZ2VcumNDoD9zQZNW4urXhDQlJyyf5Vzrxrgsc013Qv6GxdseU84euHpqoILLup9/m9yvDgngqsYs0uWJnbv13Zna/P/sS+PayiLqX8jNk2BnXj/vZWZ4OlL9CMIGVpTr+GVRczQUu98yvAtJJE1FAJlms5pf29HU0CwnrqAqxlOTcMVPNJx+CZ3mky/NPtReIcaLtFjgUZMEEdVP8slPCEYtQbkKiZvwiw8PFaktsUmPabuV8yzyLABpJqR0qLGWahk5BVCiz1R4auYv7omUER+L+ELoBTluVJmMxSIWAdDzA+htQF6id6eGG89snxb6eT9sx08d3AlOmn484XhX05apknee7TqF3it31x8jtx3qGNzCQb3Ov52ZiZumCSGebioHJYo966PJC
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(396003)(346002)(376002)(136003)(39860400002)(33430700001)(33440700001)(6666004)(2616005)(956004)(2906002)(31686004)(4326008)(26005)(16526019)(186003)(31696002)(53546011)(36756003)(478600001)(52116002)(8936002)(8676002)(66946007)(86362001)(66556008)(66476007)(316002)(6486002)(5660300002)(16576012)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: 9u3WwSHrXyAsNGxcy7Dz7QM5UD/k1zYvmO0+jWLPL5FOGQI7prGdozr684JhBPo6GA6cBuy4DLrU32le6KO2i2HPIS+ywu69dddQWGU3NnPJpK1xZlgWIeNZdA9CX/7j5vH/rqf3+N2ZSPeiUE9xMDMVBvzucEBYciwvD7V4CGs4CGMByLert9VRHFIvGaiN7P50eVhU4YtzfXAO1gxtsvUntrQ5ZYPzjLiByd/cDf5hAuAqbnTtNhfqgKguSkJb3LkV2iKHkwJbbDhQUpYfK670iMnLZiTgKfzHIOJViwLu7MJKkxMLZuiAO1iY2/Yjsh+UecUh/PB7QpbpIfKx970BL3eV7bb00B3KYlL2MDUp0BWZPFOjB7BIGeZzZdZLVP4Y66zuUsYxyyE5gQABO/UrFH9SuGj6Rf5BWcnm1KQ1mcxWdwf3CLOUYbNoeoC4haVOgI/kXfOrRjvV7u5ZAbi832d8efugOiZYqgUUFshaSt4ctXcZlZ8MeFXjkVgzLPW4l3QpXq3Sv6ng64efo5i2lQkg3oN+oI0ft9qLhFpvnGf0yAE5PhicOcKwSxGnqXZc9SeSNouYtA/gszYuI3Ansd3Dav9VmDdDippe7Irs7/NCDZSOvqizI7Xq0c8fahFSK9Wq4JOTv9Km/AMEViUA4mhlimiT4reQlkc/AoSN4Yl6PimeT1b/quQqIsQ2B0MGpvQ9YaNPHlaBbVVBHfjYqoTwBEi1CcBWRI9AaBPeBTJuusiE62P9rbkyL3xvrFmsb6FKgnYRjnx+NkmkxfzggsLf8MIsh0BobhWleyI=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 19aac92d-d407-4d6e-fa34-08d7f1090b99
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2020 15:29:04.9783
+X-Microsoft-Antispam-Message-Info: YNDyBe777s+tN/kN0XiK4n27HPo4LAZrt4v37UA/Red0CECQ4ViDDh1tAsWRQ5YQ7qmVDibjm3wn6Y2JBTgr5rq0atWCLadzrit14tj/SxY/J4Wc2+leTGY8K7TDsgMIDN3xCPVwfwMXv4f27SZOSk4nd1DHEL6A39Bl5DZtg/aEXHeavC69DCg0rwYPhmAt7HfjRge9D5I09jCa+d69iTF+OOKgWggSvXmpjWty133QExdwGfBVcwrQ0MhK9KxNva9z+B8sX38uVeyIsSA4tzcqLFYbEGgNoJxFtb4bgiivNL2hW72eA97o4lkl/xrPpF+jLUaJmGcF/ytNn/g4L3eBMjIwb2iFiK4p1NSuQApBX7z15voAmGy1ZBYDxp5K7whJMsmugCLHRLz8LEKSTlI8dCkvuupC/mWmhp0zhvR9mT8SiODj1sr7m/G9baZkUL/n5/WD02MwU2PP7eqVFky9Ov10f35+D3d9a/PQ5DQtMdLTreIRQKI9pVVj6gMKbScxvu/p9jldSkHftT9MXiDJxgHXW/i+AjwHJ0CsbL6bbsr2QZr0JmU1mhRtoSy5
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(366004)(396003)(39860400002)(346002)(376002)(33430700001)(478600001)(33440700001)(2906002)(52116002)(316002)(16576012)(31696002)(66946007)(66556008)(186003)(15650500001)(36756003)(4326008)(66476007)(16526019)(53546011)(26005)(8676002)(8936002)(6486002)(5660300002)(86362001)(6666004)(31686004)(956004)(2616005)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: oSdd/uu8Ah9vkxK3Ol8F0LXQAyMGfwENQtGj/3guB2vFdThaufnV2Tv1MmpeYo8AEl89qde9XdYTyZbXDpdz9+1bCUY9LTpwA/TFsOrQeIYO1jDNALF11j38KFnoRLxT3dfkHMSIvWzZNUaEEUI2uD9qVzBNkBbuvmd1D/+2sUTTY2MwA2sXjE14a/D0Gh/AQBFOO0ZNF+XWNE9muMlyh+oI16YIMG0K5mYWAyK1UaaF4YuAjJEwScrFrhysdnP45HmJsUNWIChEbwm6A1mU8V4IINrOYCeeYXYXJS8098x8nLh7bbE5gKPQ1pTpHtEMgv2KreGo1rCSnLPkMHmYaTNivlj0ElKR2t10NrljzNIQ8O8naasJHg/l7fUh7U7GNwciJqX6w8jPu+/4guNYZCzi5mh/du53h9WM5FdSm0Rzthg/lWLabShOI9zzAZNDmbHpRyQ0+LEiioAg0ZhFKzuLSjXrpMaH5OampTA+Dnbq0KQ0OpBWlxN6DpLHscgUFNv7AkV8VjQgkLZJXnHeK8ZvrKetmTh0kLmUfy6+DOQs3R8BmXyUmMc/IUcPMjsUIgOsIircig5SXv4QT0Aa3sVdzbcGXwoKhVvTLPXc/i/OnOxz8C+csdEv/I1IeFB6/WhKfzVcwNGIazcrIK3CaYk7ghX2wGBRih/tBbvn9krHR0g/a096L+tp+qQmxBUO8Fo9ez4thNQvgWtULK45tow+FvREOAHUSIXKzMkedOHLR6dqhxAo4gcAbmUCT8IQdYPNqzVpq9WlGUeZmCH10mLUYn97Sj3B061WX7YhupI=
+X-MS-Exchange-CrossTenant-Network-Message-Id: c7cf51b6-c03a-454e-068d-08d7f1093c10
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2020 15:30:26.2556
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xt8R2mA0916pehUw0+jo2m9B9DO7VnQfM/nyWfhAhI3JvSc2Fswqcjim4KfZUNIpsMjoY2CHwYcrlEsKpfzdJA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR18MB3748
+X-MS-Exchange-CrossTenant-UserPrincipalName: mtVWu5duX+fhN36hXmjSglr3NP2WT/P0gKoQroPvfu4KbjG3oipKtFmDaGfgfEouQB1N+SpZJ/TW+LwzfNroGA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR18MB3745
 X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/5/20 5:19 AM, Xie XiuQi wrote:
-> uctrl and udev are unused after commit 9632a6b4b747
-> ("scsi: qedi: Move LL2 producer index processing in BH.")
+On 5/4/20 10:54 AM, Ewan D. Milne wrote:
+> Calling ql_log() inside qla2x00_port_speed_show() is causing messages
+> to be output to the console for no particularly good reason.  The sysfs
+> read routine should just return the information to userspace.  The only
+> reason to log a message is when the port speed actually changes, and
+> this already occurs elsewhere.
 > 
-> Remove them.
-> 
-> Signed-off-by: Xie XiuQi <xiexiuqi@huawei.com>
+> Cc: <stable@vger.kernel.org> # v5.1+
+> Fixes: 4910b524ac9 ("scsi: qla2xxx: Add support for setting port speed")
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 > ---
->  drivers/scsi/qedi/qedi_main.c | 5 -----
->  1 file changed, 5 deletions(-)
+>  drivers/scsi/qla2xxx/qla_attr.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-> index b995b19865ca..313f7e10aed9 100644
-> --- a/drivers/scsi/qedi/qedi_main.c
-> +++ b/drivers/scsi/qedi/qedi_main.c
-> @@ -658,8 +658,6 @@ static struct qedi_ctx *qedi_host_alloc(struct pci_dev *pdev)
->  static int qedi_ll2_rx(void *cookie, struct sk_buff *skb, u32 arg1, u32 arg2)
->  {
->  	struct qedi_ctx *qedi = (struct qedi_ctx *)cookie;
-> -	struct qedi_uio_dev *udev;
-> -	struct qedi_uio_ctrl *uctrl;
->  	struct skb_work_list *work;
->  	struct ethhdr *eh;
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+> index 3325596..2c9e5ac 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -1850,9 +1850,6 @@ qla2x00_port_speed_show(struct device *dev, struct device_attribute *attr,
+>  		return -EINVAL;
+>  	}
 >  
-> @@ -698,9 +696,6 @@ static int qedi_ll2_rx(void *cookie, struct sk_buff *skb, u32 arg1, u32 arg2)
->  		  "Allowed frame ethertype [0x%x] len [0x%x].\n",
->  		  eh->h_proto, skb->len);
->  
-> -	udev = qedi->udev;
-> -	uctrl = udev->uctrl;
+> -	ql_log(ql_log_info, vha, 0x70d6,
+> -	    "port speed:%d\n", ha->link_data_rate);
 > -
->  	work = kzalloc(sizeof(*work), GFP_ATOMIC);
->  	if (!work) {
->  		QEDI_WARN(&qedi->dbg_ctx,
+>  	return scnprintf(buf, PAGE_SIZE, "%s\n", spd[ha->link_data_rate]);
+>  }
+>  
 > 
 
 Reviewed-by: Lee Duncan <lduncan@suse.com>
-
--- 
-Lee
-
