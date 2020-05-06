@@ -6,41 +6,43 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A078C28CBC
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 12:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF53C28CBC
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 13:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DAB6206D5
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 12:30:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40C8D206D5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 13:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727971AbgEFMar (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 May 2020 08:30:47 -0400
-Received: from mx2.suse.de ([195.135.220.15]:38172 "EHLO mx2.suse.de"
+        id S1728455AbgEFNlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 May 2020 09:41:37 -0400
+Received: from mx2.suse.de ([195.135.220.15]:52904 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725985AbgEFMaq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 May 2020 08:30:46 -0400
+        id S1728058AbgEFNlg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 May 2020 09:41:36 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 8F0DBAC91;
-        Wed,  6 May 2020 12:30:47 +0000 (UTC)
-Subject: Re: [PATCH v4 01/11] qla2xxx: Fix spelling of a variable name
+        by mx2.suse.de (Postfix) with ESMTP id 5FDEAAD26;
+        Wed,  6 May 2020 13:41:37 +0000 (UTC)
+Subject: Re: [PATCH v4 02/11] qla2xxx: Suppress two recently introduced
+ compiler warnings
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-Cc:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+Cc:     linux-scsi@vger.kernel.org,
+        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
+        Joe Jin <joe.jin@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Daniel Wagner <dwagner@suse.de>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
+        Martin Wilck <mwilck@suse.com>, Daniel Wagner <dwagner@suse.de>
 References: <20200427030310.19687-1-bvanassche@acm.org>
- <20200427030310.19687-2-bvanassche@acm.org>
+ <20200427030310.19687-3-bvanassche@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d28f3086-4219-6c30-9143-4b1b82d0cb9f@suse.de>
-Date:   Wed, 6 May 2020 14:30:41 +0200
+Message-ID: <10253f19-a558-c9ab-d15f-1d6b7dcf50ff@suse.de>
+Date:   Wed, 6 May 2020 15:41:31 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200427030310.19687-2-bvanassche@acm.org>
+In-Reply-To: <20200427030310.19687-3-bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -50,53 +52,63 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 4/27/20 5:03 AM, Bart Van Assche wrote:
+> Suppress the following two compiler warnings because these are not useful:
+> 
+> In file included from ./include/trace/define_trace.h:102,
+>                   from ./include/trace/events/qla.h:39,
+>                   from drivers/scsi/qla2xxx/qla_dbg.c:77:
+> ./include/trace/events/qla.h: In function 'trace_event_raw_event_qla_log_event':
+> ./include/trace/trace_events.h:691:9: warning: function 'trace_event_raw_event_qla_log_event' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
+>    691 |  struct trace_event_raw_##call *entry;    \
+>        |         ^~~~~~~~~~~~~~~~
+> ./include/trace/events/qla.h:12:1: note: in expansion of macro 'DECLARE_EVENT_CLASS'
+>     12 | DECLARE_EVENT_CLASS(qla_log_event,
+>        | ^~~~~~~~~~~~~~~~~~~
+> In file included from ./include/trace/define_trace.h:103,
+>                   from ./include/trace/events/qla.h:39,
+>                   from drivers/scsi/qla2xxx/qla_dbg.c:77:
+> ./include/trace/events/qla.h: In function 'perf_trace_qla_log_event':
+> ./include/trace/perf.h:41:9: warning: function 'perf_trace_qla_log_event' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
+>     41 |  struct hlist_head *head;     \
+>        |         ^~~~~~~~~~
+> ./include/trace/events/qla.h:12:1: note: in expansion of macro 'DECLARE_EVENT_CLASS'
+> 
+> Cc: Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>
+> Cc: Joe Jin <joe.jin@oracle.com>
 > Cc: Nilesh Javali <njavali@marvell.com>
 > Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
 > Cc: Quinn Tran <qutran@marvell.com>
 > Cc: Martin Wilck <mwilck@suse.com>
 > Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Fixes: 598a90f2002c ("scsi: qla2xxx: add ring buffer for tracing debug logs")
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->   drivers/scsi/qla2xxx/qla_fw.h   | 2 +-
->   drivers/scsi/qla2xxx/qla_init.c | 4 ++--
->   2 files changed, 3 insertions(+), 3 deletions(-)
+>   include/trace/events/qla.h | 5 +++++
+>   1 file changed, 5 insertions(+)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-> index f9bad5bd7198..b364a497e33d 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw.h
-> @@ -1292,7 +1292,7 @@ struct device_reg_24xx {
->   };
->   /* RISC-RISC semaphore register PCI offet */
->   #define RISC_REGISTER_BASE_OFFSET	0x7010
-> -#define RISC_REGISTER_WINDOW_OFFET	0x6
-> +#define RISC_REGISTER_WINDOW_OFFSET	0x6
+> diff --git a/include/trace/events/qla.h b/include/trace/events/qla.h
+> index b71f680968eb..737a667ab98f 100644
+> --- a/include/trace/events/qla.h
+> +++ b/include/trace/events/qla.h
+> @@ -9,6 +9,9 @@
 >   
->   /* RISC-RISC semaphore/flag register (risc address 0x7016) */
+>   #define QLA_MSG_MAX 256
 >   
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 80390d3f3236..b94429504d30 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2861,7 +2861,7 @@ qla25xx_read_risc_sema_reg(scsi_qla_host_t *vha, uint32_t *data)
->   	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
+> +#pragma GCC diagnostic push
+> +#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+> +
+>   DECLARE_EVENT_CLASS(qla_log_event,
+>   	TP_PROTO(const char *buf,
+>   		struct va_format *vaf),
+> @@ -32,6 +35,8 @@ DEFINE_EVENT(qla_log_event, ql_dbg_log,
+>   	TP_ARGS(buf, vaf)
+>   );
 >   
->   	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
-> -	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET);
-> +	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET);
+> +#pragma GCC diagnostic pop
+> +
+>   #endif /* _TRACE_QLA_H */
 >   
->   }
->   
-> @@ -2871,7 +2871,7 @@ qla25xx_write_risc_sema_reg(scsi_qla_host_t *vha, uint32_t data)
->   	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
->   
->   	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
-> -	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET, data);
-> +	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET, data);
->   }
->   
->   static void
+>   #define TRACE_INCLUDE_FILE qla
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
