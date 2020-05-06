@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 933B9C47256
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 16:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B127C28CBC
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 16:12:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 739C9208DB
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 16:12:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E477C20936
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 16:12:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="c6vpEXzw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="atS0PxDi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730253AbgEFQME (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 May 2020 12:12:04 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61300 "EHLO
+        id S1730285AbgEFQMI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 May 2020 12:12:08 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61321 "EHLO
         esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730243AbgEFQL7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2020 12:11:59 -0400
+        with ESMTP id S1730281AbgEFQMH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2020 12:12:07 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1588781519; x=1620317519;
+  t=1588781527; x=1620317527;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=mmrsIuvT4emv5cGWG0aWsrxpc1/G5U077NvrBZdYN1I=;
-  b=c6vpEXzwQ7fTPgUhDebQQ5eWd0nEkANaMYb00PBm76UmioVJqwXF0m6G
-   Fqbse6khoHiBwtEVs13P03kKAxAkGG2OaZ5rjX30qSS1qckBpAFKxGiS2
-   8S/HNM7KZHCIS8mx0K+rC6nBgcvs04A9Kle8Fjn0hR9tN8NfecC7Y/gY9
-   uc+rPpHxmhr9ooCZAuR7Vklu77Vm2N+TWMYYW7wpKgL6wgDyeTxLx8gmq
-   Z7Lw28ff91bPqN8UtA6bi+hTx0mRyBKbAWUZTLTIKjpaW8IUWEYRc69zp
-   Z8jEbj9a4w2BNiLZgqsTTj61cKs9r7ahQb3C2Uns+2m9d8plYM3d2lbKb
-   w==;
-IronPort-SDR: m48QWCelDg+tSwE/6li91q249sZPjj0upRLnhE3vsyv66dTE22eGnHXsAwLRZNs5FnJgDqGUDL
- 4LPEszD74/NQOFi8iFLjjzhwdPSZBsFJOitkq2V+7dWmtKekE9BF0VV6RHqPbiJfReSlSgieVv
- n4oSDxNLlUhNR5WiAda+YMAhMTkeRHbi/tK6hgjmgzpkhvaQ2/Eynk/vxe+mDbPWP0NT8LR8lc
- 112uhuk6t5rIdkGHVaZuBSjOhQUQVg5Ciifx/xDVPestF/YxxwVSyo9xE06HGTuzrMAov/SBED
- D0Q=
+  bh=OxG58gmQxO/wsNKD46rcb3CCQQtQoICGm9rQW0sMuDY=;
+  b=atS0PxDi+irOZ5xYt/ONT9oP9Pf5VC9q90Np5E1kbAvZUWliTFwU5azr
+   8puMVJ2RDOZZIxeNXj0NkiEySXQizth1ezVFraJnyLR99ZkvFTMyDYwiQ
+   6wD2pxrx8L1k/4+VXlIK4tjgngPLdUJoBFm1uH+rnShhgNeqdDh+/eI5Y
+   EI02l6M3IygcQoCtzPAcEewZ8T9Un9c0kbxsIlXfC8rSbC+zQZK7Iw/UP
+   P9GT0ITObmjP1giTPyD+RZMQln1muOG6hJf6p+RJgc6ZtBZWHbYlIUYwn
+   xQTmmR2fesuQrALgBjOgrFjr9pHTJPK69+Dz+EOJVwCe2lzAKrWJcxhO1
+   g==;
+IronPort-SDR: 6eGzfzj72/9oyhcaYWNIwAlr0y7dKdhnY5Tdy/FgNaQBRf/fUwBACYjm7/jL11sh76IAwgMjPU
+ t2bwy/a3F96YRh0Fma1GCIX7vMlrlbF8l10TI/gRrEx0GqBOFls3UoPsx3k8MiZcFomz4kpvzC
+ rI18mHeqrhpu0uBTIBN1by0ti1zhpFjFfl7jHK0rCkzqxqg95zqRm4jRdqUXRasKX7KgSykmUq
+ 9MbURp459XlCZ0V6pnjy9tSaRMMAyStrhArThYIsBf4thgfjq2Cziqnc/ac7t9fiPT6EnpeAKg
+ /sc=
 X-IronPort-AV: E=Sophos;i="5.73,359,1583164800"; 
-   d="scan'208";a="245917897"
+   d="scan'208";a="245917915"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 May 2020 00:11:59 +0800
-IronPort-SDR: VxyV49J1D0wPQwyTCz55iDlMASIkqxgnfR4WZr66yW/Di2Qdfzsb6VqbikIrtw0ybEoZXRlOzh
- nHtVUSL51o6HLPZpn9W1fwXBt0hhyKAxs=
+  by ob1.hgst.iphmx.com with ESMTP; 07 May 2020 00:12:06 +0800
+IronPort-SDR: SJVeI9xC3ItEiJuLwry9cJNQAL3YXLyJtbWaD1oPWEv8RYAz7+QtfOUUbKV7QhDZEBwwXPEMzf
+ COdzUtWFG2azlVtVlzlxcHL30vieDk5Yo=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2020 09:02:25 -0700
-IronPort-SDR: bIYGJp8759BxC0b2Nr9+oDVs9lNiufRvzvdH5W2Lr9pYwgcXMSEjuMLYDY+1PxhpRyR4Zn1Eoj
- Q4okWJwfT9dQ==
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2020 09:02:32 -0700
+IronPort-SDR: qdy9dU46JX6laW4ErvdwNTFcIvgszCHwZBcJaiO4xx8gFPqshwKfOqN7Vs9LFRKmjUAZHzYcyP
+ ON7YFZNqa26g==
 WDCIronportException: Internal
 Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 May 2020 09:11:57 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 May 2020 09:12:05 -0700
 From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -61,12 +61,11 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v10 4/9] block: Modify revalidate zones
-Date:   Thu,  7 May 2020 01:11:40 +0900
-Message-Id: <20200506161145.9841-5-johannes.thumshirn@wdc.com>
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v10 8/9] block: export bio_release_pages and bio_iov_iter_get_pages
+Date:   Thu,  7 May 2020 01:11:44 +0900
+Message-Id: <20200506161145.9841-9-johannes.thumshirn@wdc.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200506161145.9841-1-johannes.thumshirn@wdc.com>
 References: <20200506161145.9841-1-johannes.thumshirn@wdc.com>
@@ -77,86 +76,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+Export bio_release_pages and bio_iov_iter_get_pages, so they can be used
+from modular code.
 
-Modify the interface of blk_revalidate_disk_zones() to add an optional
-driver callback function that a driver can use to extend processing
-done during zone revalidation. The callback, if defined, is executed
-with the device request queue frozen, after all zones have been
-inspected.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- block/blk-zoned.c              | 9 ++++++++-
- drivers/block/null_blk_zoned.c | 2 +-
- include/linux/blkdev.h         | 3 ++-
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ block/bio.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index c822cfa7a102..23831fa8701d 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -471,14 +471,19 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
- /**
-  * blk_revalidate_disk_zones - (re)allocate and initialize zone bitmaps
-  * @disk:	Target disk
-+ * @update_driver_data:	Callback to update driver data on the frozen disk
-  *
-  * Helper function for low-level device drivers to (re) allocate and initialize
-  * a disk request queue zone bitmaps. This functions should normally be called
-  * within the disk ->revalidate method for blk-mq based drivers.  For BIO based
-  * drivers only q->nr_zones needs to be updated so that the sysfs exposed value
-  * is correct.
-+ * If the @update_driver_data callback function is not NULL, the callback is
-+ * executed with the device request queue frozen after all zones have been
-+ * checked.
-  */
--int blk_revalidate_disk_zones(struct gendisk *disk)
-+int blk_revalidate_disk_zones(struct gendisk *disk,
-+			      void (*update_driver_data)(struct gendisk *disk))
+diff --git a/block/bio.c b/block/bio.c
+index 3aa3c4ce2e5e..e4c46e2bd5ba 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -951,6 +951,7 @@ void bio_release_pages(struct bio *bio, bool mark_dirty)
+ 		put_page(bvec->bv_page);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(bio_release_pages);
+ 
+ static int __bio_iov_bvec_add_pages(struct bio *bio, struct iov_iter *iter)
  {
- 	struct request_queue *q = disk->queue;
- 	struct blk_revalidate_zone_args args = {
-@@ -512,6 +517,8 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
- 		q->nr_zones = args.nr_zones;
- 		swap(q->seq_zones_wlock, args.seq_zones_wlock);
- 		swap(q->conv_zones_bitmap, args.conv_zones_bitmap);
-+		if (update_driver_data)
-+			update_driver_data(disk);
- 		ret = 0;
- 	} else {
- 		pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
-diff --git a/drivers/block/null_blk_zoned.c b/drivers/block/null_blk_zoned.c
-index 9e4bcdad1a80..46641df2e58e 100644
---- a/drivers/block/null_blk_zoned.c
-+++ b/drivers/block/null_blk_zoned.c
-@@ -73,7 +73,7 @@ int null_register_zoned_dev(struct nullb *nullb)
- 	struct request_queue *q = nullb->q;
+@@ -1114,6 +1115,7 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 		bio_set_flag(bio, BIO_NO_PAGE_REF);
+ 	return bio->bi_vcnt ? 0 : ret;
+ }
++EXPORT_SYMBOL_GPL(bio_iov_iter_get_pages);
  
- 	if (queue_is_mq(q))
--		return blk_revalidate_disk_zones(nullb->disk);
-+		return blk_revalidate_disk_zones(nullb->disk, NULL);
- 
- 	blk_queue_chunk_sectors(q, nullb->dev->zone_size_sects);
- 	q->nr_zones = blkdev_nr_zones(nullb->disk);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d6e6ce3dc656..fd405dac8eb0 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -357,7 +357,8 @@ unsigned int blkdev_nr_zones(struct gendisk *disk);
- extern int blkdev_zone_mgmt(struct block_device *bdev, enum req_opf op,
- 			    sector_t sectors, sector_t nr_sectors,
- 			    gfp_t gfp_mask);
--extern int blk_revalidate_disk_zones(struct gendisk *disk);
-+int blk_revalidate_disk_zones(struct gendisk *disk,
-+			      void (*update_driver_data)(struct gendisk *disk));
- 
- extern int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 				     unsigned int cmd, unsigned long arg);
+ static void submit_bio_wait_endio(struct bio *bio)
+ {
 -- 
 2.24.1
 
