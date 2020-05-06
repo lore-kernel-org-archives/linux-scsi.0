@@ -2,96 +2,222 @@ Return-Path: <SRS0=GN0H=6U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D89B9C28CBC
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 15:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B90A8C28CBC
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 16:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF01020A8B
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 15:43:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 900A220A8B
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 May 2020 16:11:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="D4j0Q7uU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729432AbgEFPnO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 May 2020 11:43:14 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:35213 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729148AbgEFPnO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2020 11:43:14 -0400
-Received: by mail-pg1-f195.google.com with SMTP id t11so1269185pgg.2;
-        Wed, 06 May 2020 08:43:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=BJf4wYu0NsxL6tylmAdtEX4s9vSFaIuYVOh5PmM+C7Q=;
-        b=rfS/WNAsadvgZYHywiiKzuRBk46hKn1AJ54alxOBavI1X12egJy/CA+QhQF+Z6Y3DZ
-         3DxpQ0HGjBCBsXpG/VPNHoFpn6iI6D0zccq8TfdtfHACyPJ6nlUPmjhqI/w+FWLj5vzs
-         y+VXqyvae49g3v36WxhHlorgEZMucLpGiGoXxZwWK3ZyXAY6mjoJZVsxFMjW3qzdLQGY
-         9i+shXXRidLggMBMSpyxyLIrGe3FD4hyhhj3ZoFfkfr4t7cZqOI2nGWo1JN0w0vEjf1F
-         VOg5JkYJGfO+zwhFHR9jZ86WBx6/vVytErb1jaR7A5VSBOI/whxMoW+69j0YX09ev3fm
-         OkFQ==
-X-Gm-Message-State: AGi0PuYV/iVV/wyD84THRRkWMRjLzlfvubN4XqqdhJ/aKNoXGx414HDF
-        G/G+yYy6dfSXgXOw8snVJLjXma20RcY=
-X-Google-Smtp-Source: APiQypLNTiOvWmG+Bh8Q3IGgwbzltAxS1IKMuY4odWTD0V93/uoZKcGQskMNNzedsCBNHRPlQ4Scww==
-X-Received: by 2002:a63:e210:: with SMTP id q16mr7476154pgh.26.1588779792772;
-        Wed, 06 May 2020 08:43:12 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:901f:c4d7:864c:c3a5? ([2601:647:4000:d7:901f:c4d7:864c:c3a5])
-        by smtp.gmail.com with ESMTPSA id z1sm5036494pjn.43.2020.05.06.08.43.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 May 2020 08:43:12 -0700 (PDT)
-Subject: Re: [PATCH] scsi: qla2xxx: make qlafx00_process_aen() return void
-To:     Jason Yan <yanaijie@huawei.com>, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, hmadhani@marvell.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200506061757.19536-1-yanaijie@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <15498a73-a02d-2568-4d85-9278fbba8ab4@acm.org>
-Date:   Wed, 6 May 2020 08:43:10 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1730226AbgEFQLw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 May 2020 12:11:52 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:61287 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730031AbgEFQLw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 May 2020 12:11:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1588781511; x=1620317511;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=AAOjyDq77pYajeR8YUvq7Y6cYNRk46t6uohLT5cJoG0=;
+  b=D4j0Q7uULZvn5sgaFxJHs5jREotGa0fIBL+8cewJbxOOTvLnhUfzS3fm
+   WJB8OE8bdWUaMw8Xn8I4oyGC9M/qNNuqnj1ga/ITc6Bpn8bNF6u77aWy7
+   KJSQf3VtgSWa9oRFmOWsU/YdVV6uJXhbdiIITtpSdM/xxC1jvaOMF5mng
+   vmm5Jeigl7hG1rH2VsprmC/jHLjudLPKS4pKj5umBeMUcOgnolK/d7u+C
+   RJzM0aTmnOtB1YKNbFLw50AlDf49hNkfTGVX4XXHnW3zwPXvPEXQBA4/L
+   2SN12EMGpakL2M4wsuwvhgy0dUVhH7VDJnpI1d/tsDpkCCua4e0WryQbC
+   w==;
+IronPort-SDR: L95Ft4KqJqCYAuoIpuAHEfqAZZhqmHzR9q8cEG8DjxQjz1WXNZYmQbMvWlRi4pKMF8hXm2rsq8
+ 1YYf5kk6SjsYl88W9+sLnOB42rWUFpJQFTy2Sy/rr56WyeaM4+rPpgj+PTGh6kEROjNax7dUKJ
+ AQ33XVVmM28Lb/5keTIEvUDD4y7f2dK96BOYKtn/X9hnTe6NeEgazivu3ZZzOQtQDVT5fVvVvN
+ KS186ogqOTHBP2K8toqzJ6JemMAM8/m2XDUTsmO0hn5r5LS5EhQ64FR0M7VgF/q8IVx/UPEEeQ
+ 4VY=
+X-IronPort-AV: E=Sophos;i="5.73,359,1583164800"; 
+   d="scan'208";a="245917883"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 07 May 2020 00:11:51 +0800
+IronPort-SDR: wYfBNM6GTENyrulOdXq38FVvJ4w5x1fI7yfSAOWA1W2u7if2dYGguKHxhFK2Zfc4a4VjrX9n8z
+ uxNwM8u/tIRZ2lesqdHS+4N5c+3T0wops=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2020 09:02:16 -0700
+IronPort-SDR: rPRYvLLeaCQzUmGJMusvSYiNsSygecjJLL5BUMWtUaN7/bz9NHymapPmsjEo/ZX4eBARO7TPs8
+ xf0eCXtgdyMw==
+WDCIronportException: Internal
+Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 May 2020 09:11:49 -0700
+From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Subject: [PATCH v10 0/9] Introduce Zone Append for writing to zoned block devices
+Date:   Thu,  7 May 2020 01:11:36 +0900
+Message-Id: <20200506161145.9841-1-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-In-Reply-To: <20200506061757.19536-1-yanaijie@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-05 23:17, Jason Yan wrote:
-> No other functions use the return value of qlafx00_process_aen() and the
-> return value is always 0 now. Make it return void. This fixes the
-> following coccicheck warning:
-> 
-> drivers/scsi/qla2xxx/qla_mr.c:1716:5-9: Unneeded variable: "rval".
-> Return "0" on line 1768
+The upcoming NVMe ZNS Specification will define a new type of write
+command for zoned block devices, zone append.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+When when writing to a zoned block device using zone append, the start
+sector of the write is pointing at the start LBA of the zone to write to.
+Upon completion the block device will respond with the position the data
+has been placed in the zone. This from a high level perspective can be
+seen like a file system's block allocator, where the user writes to a
+file and the file-system takes care of the data placement on the device.
+
+In order to fully exploit the new zone append command in file-systems and
+other interfaces above the block layer, we choose to emulate zone append
+in SCSI and null_blk. This way we can have a single write path for both
+file-systems and other interfaces above the block-layer, like io_uring on
+zoned block devices, without having to care too much about the underlying
+characteristics of the device itself.
+
+The emulation works by providing a cache of each zone's write pointer, so
+zone append issued to the disk can be translated to a write with a
+starting LBA of the write pointer. This LBA is used as input zone number
+for the write pointer lookup in the zone write pointer offset cache and
+the cached offset is then added to the LBA to get the actual position to
+write the data. In SCSI we then turn the REQ_OP_ZONE_APPEND request into a
+WRITE(16) command. Upon successful completion of the WRITE(16), the cache
+will be updated to the new write pointer location and the written sector
+will be noted in the request. On error the cache entry will be marked as
+invalid and on the next write an update of the write pointer will be
+scheduled, before issuing the actual write.
+
+In order to reduce memory consumption, the only cached item is the offset
+of the write pointer from the start of the zone, everything else can be
+calculated. On an example drive with 52156 zones, the additional memory
+consumption of the cache is thus 52156 * 4 = 208624 Bytes or 51 4k Byte
+pages. The performance impact is neglectable for a spinning drive.
+
+For null_blk the emulation is way simpler, as null_blk's zoned block
+device emulation support already caches the write pointer position, so we
+only need to report the position back to the upper layers. Additional
+caching is not needed here.
+
+Furthermore we have converted zonefs to run use ZONE_APPEND for synchronous
+direct I/Os. Asynchronous I/O still uses the normal path via iomap.
+
+The series is based on Jens' for-5.8/block branch with HEAD:
+8cf7961dab42 ("block: bypass ->make_request_fn for blk-mq drivers")
+
+As Christoph asked for a branch I pushed it to a git repo at:
+git://git.kernel.org/pub/scm/linux/kernel/git/jth/linux.git zone-append.v10
+https://git.kernel.org/pub/scm/linux/kernel/git/jth/linux.git/log/?h=zone-append.v10
+
+Changes to v9:
+- Renamed zone_wp_ofst to zone_wp_offset (Hannes/Martin)
+- Colledted Reviews
+- Dropped already merged patches
+
+Changes to v8:
+- Added kerneldoc for bio_add_hw_page (Hannes)
+- Simplified calculation of zone-boundary cross checking (Bart)
+- Added safety nets for max_appen_sectors setting
+- Added Reviews from Hannes
+- Added Damien's Ack on the zonefs change
+
+Changes to v7:
+- Rebased on Jens' for-5.8/block
+- Fixed up stray whitespace change (Bart)
+- Added Reviews from Bart and Christoph
+
+Changes to v6:
+- Added Daniel's Reviewed-by's
+- Addressed Christoph's comment on whitespace changes in 4/11
+- Renamed driver_cb in 6/11
+- Fixed lines over 80 characters in 8/11
+- Damien simplified sd_zbc_revalidate_zones() in 8/11
+
+Changes to v5:
+- Added patch to fix the memleak on failed scsi command setup
+- Added prep patch from Christoph for bio_add_hw_page
+- Added Christoph's suggestions for adding append pages to bios
+- Fixed compile warning with !CONFIG_BLK_DEV_ZONED
+- Damien re-worked revalidate zone
+- Added Christoph's suggestions for rescanning write pointers to update cache
+
+Changes to v4:
+- Added page merging for zone-append bios (Christoph)
+- Removed different locking schmes for zone management operations (Christoph)
+- Changed wp_ofst assignment from blk_revalidate_zones (Christoph)
+- Smaller nitpicks (Christoph)
+- Documented my changes to Keith's patch so it's clear where I messed up so he
+  doesn't get blamed
+- Added Damien as a Co-developer to the sd emulation patch as he wrote as much
+  code for it as I did (if not more)
+
+Changes since v3:
+- Remove impact of zone-append from bio_full() and bio_add_page()
+  fast-path (Christoph)
+- All of the zone write pointer offset caching is handled in SCSI now
+  (Christoph) 
+- Drop null_blk pathces that damien sent separately (Christoph)
+- Use EXPORT_SYMBOL_GPL for new exports (Christoph)	
+
+Changes since v2:
+- Remove iomap implementation and directly issue zone-appends from within
+  zonefs (Christoph)
+- Drop already merged patch
+- Rebase onto new for-next branch
+
+Changes since v1:
+- Too much to mention, treat as a completely new series.
+
+
+Christoph Hellwig (1):
+  block: rename __bio_add_pc_page to bio_add_hw_page
+
+Damien Le Moal (2):
+  block: Modify revalidate zones
+  null_blk: Support REQ_OP_ZONE_APPEND
+
+Johannes Thumshirn (5):
+  block: introduce blk_req_zone_write_trylock
+  scsi: sd_zbc: factor out sanity checks for zoned commands
+  scsi: sd_zbc: emulate ZONE_APPEND commands
+  block: export bio_release_pages and bio_iov_iter_get_pages
+  zonefs: use REQ_OP_ZONE_APPEND for sync DIO
+
+Keith Busch (1):
+  block: Introduce REQ_OP_ZONE_APPEND
+
+ block/bio.c                    | 129 ++++++++---
+ block/blk-core.c               |  52 +++++
+ block/blk-map.c                |   5 +-
+ block/blk-mq.c                 |  27 +++
+ block/blk-settings.c           |  31 +++
+ block/blk-sysfs.c              |  13 ++
+ block/blk-zoned.c              |  23 +-
+ block/blk.h                    |   4 +-
+ drivers/block/null_blk_zoned.c |  37 ++-
+ drivers/scsi/scsi_lib.c        |   1 +
+ drivers/scsi/sd.c              |  16 +-
+ drivers/scsi/sd.h              |  43 +++-
+ drivers/scsi/sd_zbc.c          | 399 ++++++++++++++++++++++++++++++---
+ fs/zonefs/super.c              |  80 ++++++-
+ include/linux/blk_types.h      |  14 ++
+ include/linux/blkdev.h         |  15 +-
+ 16 files changed, 797 insertions(+), 92 deletions(-)
+
+-- 
+2.24.1
 
