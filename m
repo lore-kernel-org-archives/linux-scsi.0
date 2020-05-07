@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6349CC38A24
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A10D8C38A24
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42D9720870
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:12:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88539207DD
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:13:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726476AbgEGJMf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 05:12:35 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34782 "EHLO mx2.suse.de"
+        id S1725964AbgEGJNj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 05:13:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:35476 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726467AbgEGJMe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 May 2020 05:12:34 -0400
+        id S1725848AbgEGJNi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 May 2020 05:13:38 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 472C5AF5D;
-        Thu,  7 May 2020 09:12:35 +0000 (UTC)
-Subject: Re: [PATCH 2/9] lpfc: Maintain atomic consistency of queue_claimed
- flag
+        by mx2.suse.de (Postfix) with ESMTP id C5176AE3C;
+        Thu,  7 May 2020 09:13:39 +0000 (UTC)
+Subject: Re: [PATCH 3/9] lpfc: Remove re-binding of nvme rport during
+ registration
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     Dick Kennedy <dick.kennedy@broadcom.com>
 References: <20200501214310.91713-1-jsmart2021@gmail.com>
- <20200501214310.91713-3-jsmart2021@gmail.com>
+ <20200501214310.91713-4-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <06022053-28c1-5ea3-c9d7-d4ab193a8620@suse.de>
-Date:   Thu, 7 May 2020 11:12:30 +0200
+Message-ID: <2b52fbd9-0c96-3121-13b3-b1916c89a3da@suse.de>
+Date:   Thu, 7 May 2020 11:13:35 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200501214310.91713-3-jsmart2021@gmail.com>
+In-Reply-To: <20200501214310.91713-4-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,41 +44,65 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/1/20 11:43 PM, James Smart wrote:
-> A previous change introduced the atomic use of queue_claimed flag for
-> eq's and cq's.  The code works fine, but the clearing of the
-> queue_claimed flag is not atomic.
+> The lldd rebinds the ndlp with rport during a nvme rport registration
+> (va nvme_fc_register_remoteport). If rport & ndlp pointers are same as
+> the previous one, the lldd will re-use the ndlp and rport association
+> without re-iniitalization. This assumption is incorrect. The lldd should
+> be ignorant of whether the returned rport pointer is new or not, and
+> should always assume it is new.
 > 
-> Change queue_claimed = 0 into xchg(&queue_claimed, 0) to be consistent
-> for change under atomicity.
+> Remove the re-binding code, always assumes that rport pointer received
+> from transport is a new pointer.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->   drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+>   drivers/scsi/lpfc/lpfc_nvme.c | 32 --------------------------------
+>   1 file changed, 32 deletions(-)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index b6fb665e6ec4..9ce37560f4c0 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -538,7 +538,7 @@ lpfc_sli4_process_eq(struct lpfc_hba *phba, struct lpfc_queue *eq,
->   	if (count > eq->EQ_max_eqe)
->   		eq->EQ_max_eqe = count;
+> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+> index 43df08aeecf1..3121cf37a572 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvme.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
+> @@ -2322,38 +2322,6 @@ lpfc_nvme_register_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+>   		spin_unlock_irq(&vport->phba->hbalock);
+>   		rport = remote_port->private;
+>   		if (oldrport) {
+> -			/* New remoteport record does not guarantee valid
+> -			 * host private memory area.
+> -			 */
+> -			if (oldrport == remote_port->private) {
+> -				/* Same remoteport - ndlp should match.
+> -				 * Just reuse.
+> -				 */
+> -				lpfc_printf_vlog(ndlp->vport, KERN_INFO,
+> -						 LOG_NVME_DISC,
+> -						 "6014 Rebind lport to current "
+> -						 "remoteport x%px wwpn 0x%llx, "
+> -						 "Data: x%x x%x x%px x%px x%x "
+> -						 " x%06x\n",
+> -						 remote_port,
+> -						 remote_port->port_name,
+> -						 remote_port->port_id,
+> -						 remote_port->port_role,
+> -						 oldrport->ndlp,
+> -						 ndlp,
+> -						 ndlp->nlp_type,
+> -						 ndlp->nlp_DID);
+> -
+> -				/* It's a complete rebind only if the driver
+> -				 * is registering with the same ndlp. Otherwise
+> -				 * the driver likely executed a node swap
+> -				 * prior to this registration and the ndlp to
+> -				 * remoteport binding needs to be redone.
+> -				 */
+> -				if (prev_ndlp == ndlp)
+> -					return 0;
+> -
+> -			}
 >   
-> -	eq->queue_claimed = 0;
-> +	xchg(&eq->queue_claimed, 0);
->   
->   rearm_and_exit:
->   	/* Always clear the EQ. */
-> @@ -13694,7 +13694,7 @@ __lpfc_sli4_process_cq(struct lpfc_hba *phba, struct lpfc_queue *cq,
->   				"0369 No entry from completion queue "
->   				"qid=%d\n", cq->queue_id);
->   
-> -	cq->queue_claimed = 0;
-> +	xchg(&cq->queue_claimed, 0);
->   
->   rearm_and_exit:
->   	phba->sli4_hba.sli4_write_cq_db(phba, cq, consumed,
+>   			/* Sever the ndlp<->rport association
+>   			 * before dropping the ndlp ref from
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
