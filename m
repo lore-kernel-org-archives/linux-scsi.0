@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7275C38A2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D26AC47247
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:29:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C057B20936
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 012E6215A4
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:29:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588861769;
-	bh=ZfiDHdEWc5i37C86ooZPCz3v4KBAAVaiq6/gYNMCDtk=;
+	s=default; t=1588861791;
+	bh=06ndIgCZI4ggrsVfN2LGTIb2q7MnraO4TFqut1b1ySg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sKw2zwutsrlycfXzhr5SCUDIzS4pW+6guAy71l4SSdm5B4FNd+CftKa+I6Bxc/IXE
-	 Q8um4XDmcG2gCBgx/Y3nbfh6Um1wLALkAHiGu2xGUEiK4d/0Yh/119nIDPREzTg/gw
-	 1DzTm6rjtQyhwJ88tpKRvT6j6iQSJ1aAXHNjufsw=
+	b=1MTFh41ZWhgnVFSn/fdZXTp8UgvJ25CYZLkohhMrFkMY8Lq6fTinEi4lWxn0IXy9B
+	 IXpMdnmmKG0zsiEXiqJUKbgmT0oSOTtsWlMpeCoa8BMYEzJ6yHy+MkOx8rywT/DZ66
+	 0fieceZts5z+kpg/XzXCdgv7UQ6n8SWSxKaKGIy8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728553AbgEGO31 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 10:29:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57102 "EHLO mail.kernel.org"
+        id S1728680AbgEGO3t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 10:29:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58004 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728540AbgEGO30 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 May 2020 10:29:26 -0400
+        id S1728670AbgEGO3t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 May 2020 10:29:49 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B1D742083B;
-        Thu,  7 May 2020 14:29:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CA9AA208D6;
+        Thu,  7 May 2020 14:29:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588861765;
-        bh=ZfiDHdEWc5i37C86ooZPCz3v4KBAAVaiq6/gYNMCDtk=;
+        s=default; t=1588861788;
+        bh=06ndIgCZI4ggrsVfN2LGTIb2q7MnraO4TFqut1b1ySg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=R/VWRSv1YqINTob+xWDed1NHIto4UP1+K1WrTELMgyWqQQJI2yz53coSi4WvkzN/D
-         W04tdP4TbfDvEi/SjGgcQjroP74F0G6eO+Zl7+Ebu8g2ZqiyD8ZmndzOWtawKaGZ98
-         m98+GlLi0i0pTfqhUzAbyyKn1eT+s6B5u+pTzqZ4=
+        b=bdkgS+74VBvwOCfa5Ya4QTsI8rIdcLXhaWhSjzfoaiatCScGzu5uWxRMiyS60Tdb6
+         wrw1W0nFhZJ6bl3jjX2QPyKMQDj7GguqYGhm82YO72YZ29wSn4b7owW78ARAVxZRNN
+         gWlrmnlo6SSJgiIEGrJ3O2aU22d1a8tkrMtIOyoo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     David Disseldorp <ddiss@suse.de>,
@@ -45,12 +45,12 @@ Cc:     David Disseldorp <ddiss@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/20] scsi: target/iblock: fix WRITE SAME zeroing
-Date:   Thu,  7 May 2020 10:29:02 -0400
-Message-Id: <20200507142917.26612-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/16] scsi: target/iblock: fix WRITE SAME zeroing
+Date:   Thu,  7 May 2020 10:29:31 -0400
+Message-Id: <20200507142943.26848-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200507142917.26612-1-sashal@kernel.org>
-References: <20200507142917.26612-1-sashal@kernel.org>
+In-Reply-To: <20200507142943.26848-1-sashal@kernel.org>
+References: <20200507142943.26848-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -88,10 +88,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 854b2bcca7c1a..5668d02de10b0 100644
+index 60429011292a2..2a9e023f54291 100644
 --- a/drivers/target/target_core_iblock.c
 +++ b/drivers/target/target_core_iblock.c
-@@ -445,7 +445,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
+@@ -447,7 +447,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
  				target_to_linux_sector(dev, cmd->t_task_lba),
  				target_to_linux_sector(dev,
  					sbc_get_write_same_sectors(cmd)),
