@@ -2,120 +2,100 @@ Return-Path: <SRS0=AKtJ=6V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06782C47247
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 23:16:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B0BC4724C
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 23:51:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E351720870
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 23:16:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A7A12082E
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 23:51:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="pqFEksD4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726638AbgEGXQf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 19:16:35 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:33237 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbgEGXQf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 19:16:35 -0400
-Received: by mail-pl1-f194.google.com with SMTP id t7so2722036plr.0
-        for <linux-scsi@vger.kernel.org>; Thu, 07 May 2020 16:16:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=qu+ByJdMlD1CkEGLIpiu7+O3BI4pk0mRsd5qbYrIWjo=;
-        b=RezPR5kyn6Ht7juOa/+d7QC81/PwLbLyNMvkJENxxvktUtNeE1UHQLgj/TqocChDub
-         s57r5zeXCF+V9ATFDk+2gLMZv+b+Jwb145zG3Qp1eT9QoXYDT25MN0laxmkSoHQSsCV3
-         TC96A/5kh7dskiREs8olJZ6t3zXZR8uJcMEioGrFJHagtJfPcySw/Vfsfv8NuH8mqtMA
-         5QTCvyPELgrr4ga/8puDVRxkGU87Og/1oGSstvrRiielEze6tHqlRhOi+fOKKLuI1wgR
-         Dw+9jjkN9pESmX0I5daLVNfRQ+SpyK1eEVUZBfG/LVVqmQjusP9qZ3zy2Coa6RHze95i
-         DB9w==
-X-Gm-Message-State: AGi0PubTM/s4xhsf77WnzOaiwZmsGiiY85Q/Foeq1e6m+9bWCNcvsG8q
-        bn2jCdjcWhJcTTBZa3PXCcI=
-X-Google-Smtp-Source: APiQypKFAt6hgetfVqk+/mGy0opCg9LrVvrs3efeVwdICvkeaWpQRdL4HSPG+tvRqZAfThQzmMcW5w==
-X-Received: by 2002:a17:90a:3b42:: with SMTP id t2mr2755128pjf.11.1588893394286;
-        Thu, 07 May 2020 16:16:34 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:8ce8:d4c:1f4f:21e0? ([2601:647:4000:d7:8ce8:d4c:1f4f:21e0])
-        by smtp.gmail.com with ESMTPSA id cm14sm753333pjb.31.2020.05.07.16.16.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 May 2020 16:16:33 -0700 (PDT)
-Subject: Re: [PATCH v5 02/11] qla2xxx: Suppress two recently introduced
- compiler warnings
-To:     Nick Desaulniers <ndesaulniers@google.com>,
-        kbuild test robot <lkp@intel.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        kbuild-all@lists.01.org,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        linux-scsi@vger.kernel.org, Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
-        Joe Jin <joe.jin@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>, Arnd Bergmann <arnd@arndb.de>
-References: <20200507042835.9135-3-bvanassche@acm.org>
- <202005080353.y49Uwj18%lkp@intel.com>
- <CAKwvOdnuXX2xpsz6fxV-qfvj1AqN3V7qyOwtwtCG4NWq+HzfAw@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <86bcf088-a35d-0a0f-0ba4-5883b1f2d6cb@acm.org>
-Date:   Thu, 7 May 2020 16:16:31 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1726509AbgEGXvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 19:51:03 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:62743 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726476AbgEGXvC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 19:51:02 -0400
+X-UUID: d4a0d81a670149c6b1bccba1ad43e72a-20200508
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=7rh/xNev2bozJWN2jpMZ42zVTLpDJdHHe0AkEEw+riA=;
+        b=pqFEksD4ggHIegkXQTKEXf1adsl5Vqtd0yZnmajUF+a+blHp8FILsOHUVYw9VzM/gpWlB6ro5kDxk/mgk7MHROeC9ni2GDgFUfEsi2aqjAnH3F7nk4EepCgVyfXnPbpGzoU3MuXgX/SJMbIVgkQlBKzBJQ4pHj9y7Rab2BgVBX8=;
+X-UUID: d4a0d81a670149c6b1bccba1ad43e72a-20200508
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1143080490; Fri, 08 May 2020 07:50:59 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 8 May 2020 07:50:56 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 8 May 2020 07:50:54 +0800
+Message-ID: <1588895457.3197.40.camel@mtkswgap22>
+Subject: Re: [PATCH v5 1/8] scsi: ufs: enable WriteBooster on some pre-3.1
+ UFS devices
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Avri Altman <Avri.Altman@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>
+Date:   Fri, 8 May 2020 07:50:57 +0800
+In-Reply-To: <1588602837.3197.32.camel@mtkswgap22>
+References: <20200503113415.21034-1-stanley.chu@mediatek.com>
+         <20200503113415.21034-2-stanley.chu@mediatek.com>
+         <BYAPR04MB4629F2C00ABAB512DB833232FCA60@BYAPR04MB4629.namprd04.prod.outlook.com>
+         <1588602837.3197.32.camel@mtkswgap22>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-In-Reply-To: <CAKwvOdnuXX2xpsz6fxV-qfvj1AqN3V7qyOwtwtCG4NWq+HzfAw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-TM-SNTS-SMTP: E528BD5724FFA756FDB6C319DCE7ED3EFAD25D9B4B53F50DE16DB1ECC31FC39B2000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-07 15:00, Nick Desaulniers wrote:
-> On Thu, May 7, 2020 at 12:18 PM kbuild test robot <lkp@intel.com> wrote:
->> All errors (new ones prefixed by >>):
->>
->>    In file included from drivers/scsi/qla2xxx/qla_dbg.c:77:
->>>> include/trace/events/qla.h:13:32: error: unknown warning group '-Wsuggest-attribute=format', ignored [-Werror,-Wunknown-warning-option]
->>    #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
->>                                   ^
-> 
-> Hi Bart,
-> These compiler specific pragma's are not toolchain portable.  You'll
-> need to wrap them in:
-> #ifndef __clang__
-> preprocessor macros, or I think we have a pragma helper in tree that
-> helps with compiler specific pragmas.  IIRC it uses _Pragma to define
-> pragmas in macros.
-Hi Nick,
+SGkgQXZyaSwNCk9uIE1vbiwgMjAyMC0wNS0wNCBhdCAyMjozMyArMDgwMCwgU3RhbmxleSBDaHUg
+d3JvdGU6DQo+IEhpIEF2cmksDQo+IA0KPiBPbiBNb24sIDIwMjAtMDUtMDQgYXQgMTA6MzcgKzAw
+MDAsIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiA+ID4gDQo+ID4gPiAgc3RhdGljIHZvaWQgdWZzaGNk
+X3diX3Byb2JlKHN0cnVjdCB1ZnNfaGJhICpoYmEsIHU4ICpkZXNjX2J1ZikNCj4gPiA+ICB7DQo+
+ID4gPiArICAgICAgIGlmICghdWZzaGNkX2lzX3diX2FsbG93ZWQoaGJhKSkNCj4gPiA+ICsgICAg
+ICAgICAgICAgICByZXR1cm47DQo+ID4gPiArDQo+ID4gPiArICAgICAgIGlmIChoYmEtPmRlc2Nf
+c2l6ZS5kZXZfZGVzYyA8PQ0KPiA+ID4gREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VGU19GRUFUVVJF
+X1NVUCkNCj4gPiBTaG91bGQgYmUgDQo+ID4gREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VGU19GRUFU
+VVJFX1NVUCArIDQgDQo+IA0KPiBJIHRoaW5rIHRoaXMgZGVzY3JpcHRpb24gbGVuZ3RoIGNoZWNr
+IGlzIHJlZHVuZGFudCBiZWNhdXNlIHRoZSBkZXZpY2UNCj4gcXVpcmsgc2hhbGwgYmUgYWRkZWQg
+b25seSBhZnRlciBXcml0ZUJvb3N0ZXIgc3VwcG9ydGF0IGlzIGNvbmZpcm1lZCBpbg0KPiBhdHRh
+Y2hlZCBVRlMgZGV2aWNlLiBTbyBJIHdpbGwgcmVtb3ZlIHRoaXMgaW4gbmV4dCB2ZXJzaW9uLg0K
+DQpTb3JyeSB0aGlzIHN0YXRlbWVudCBpcyBpbmNvcnJlY3QgYmVjYXVzZSB0aGlzIGtpbmQgb24g
+ZGV2aWNlcyBtYXkgaGF2ZQ0Kc2hvcnQgKHdpdGhvdXQgREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VG
+U19GRUFUVVJFX1NVUCBmaWVsZCkgYmVmb3JlDQpmaXJtd2FyZSB1cGdyYWRpbmcuIFNvIHRoZSBj
+aGVja2luZyBmb3IgZGVzY3JpcHRvciBsZW5ndGggaXMgc3RpbGwNCnJlcXVpcmVkIHRvIGF2b2lk
+IG91dC1vZi1ib3VuZGFyeSBhY2Nlc3MgaW4gYmVsb3cgY29kZXMuDQoNCkkgd2lsbCBhZGQgaXQg
+YmFjayBpbiBuZXh0IHZlcnNpb24gYW5kIGFsc28gZml4IHRoZSBsZW5ndGguDQoNClRoYW5rcywN
+ClN0YW5sZXkgQ2h1DQoNCj4gPiANCj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXw0KPiA+IExpbnV4LW1lZGlhdGVrIG1haWxpbmcgbGlzdA0KPiA+IExp
+bnV4LW1lZGlhdGVrQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gPiBodHRwOi8vbGlzdHMuaW5mcmFk
+ZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW1lZGlhdGVrDQo+IA0KDQo=
 
-Thanks for the feedback. I will have a look at _Pragma() and see what
-the best way is to suppress this warning.
-
-Bart.
