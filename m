@@ -6,35 +6,34 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA6C4C38A2A
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AEAFC38A2A
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:50:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7AE9207DD
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:49:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E3DB207DD
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 09:50:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725903AbgEGJtZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 05:49:25 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58452 "EHLO mx2.suse.de"
+        id S1725964AbgEGJuH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 05:50:07 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58666 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725848AbgEGJtZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 May 2020 05:49:25 -0400
+        id S1725848AbgEGJuG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 May 2020 05:50:06 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D7B52AFF2;
-        Thu,  7 May 2020 09:49:26 +0000 (UTC)
-Subject: Re: [PATCH 5/9] lpfc: Change default queue allocation for reduced
- memory consumption
+        by mx2.suse.de (Postfix) with ESMTP id 251D8AFF2;
+        Thu,  7 May 2020 09:50:08 +0000 (UTC)
+Subject: Re: [PATCH 6/9] lpfc: Remove unnecessary lockdep_assert_held calls
 To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     Dick Kennedy <dick.kennedy@broadcom.com>
 References: <20200501214310.91713-1-jsmart2021@gmail.com>
- <20200501214310.91713-6-jsmart2021@gmail.com>
+ <20200501214310.91713-7-jsmart2021@gmail.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <9e20e9e8-5437-d57c-7242-7b39c455d1b1@suse.de>
-Date:   Thu, 7 May 2020 11:49:21 +0200
+Message-ID: <3a8c4d8d-5040-f9b2-d1d7-f51d2f42f4ca@suse.de>
+Date:   Thu, 7 May 2020 11:50:03 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200501214310.91713-6-jsmart2021@gmail.com>
+In-Reply-To: <20200501214310.91713-7-jsmart2021@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -44,29 +43,22 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/1/20 11:43 PM, James Smart wrote:
-> By default, the driver attempts to allocate a hdwq per logical cpu in
-> order to provide good cpu affinity. Some systems have extremely high cpu
-> counts and this can significantly raise memory consumption.
+> In an audit of lockdep calls in the driver, there are multiple lockdep
+> checks in successive calling layers. E.g. a routine checks, and then
+> calls a lower routine that also checks, and so on. Calling sequences
+> result in many redundant checks.
 > 
-> In testing on x86 platforms (non-AMD) it is found that sharing of a hdwq
-> by a physical cpu and it's HT cpu can occur with little performance
-> degredation. By sharing the hdwq count can be halved, significantly
-> reducing the memory overhead.
-> 
-> Change the default behavior of the driver on non-AMD x86 platforms to
-> share a hdwq by the cpu and its HT cpu.
+> Refine the code to remove lower-level lockdep checks.
+> Update comments on the lock, correcting a few places where lock object
+> in comment was incorrect.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <jsmart2021@gmail.com>
 > ---
->   drivers/scsi/lpfc/lpfc.h      |  23 ++++++--
->   drivers/scsi/lpfc/lpfc_attr.c | 106 +++++++++++++++++++++++++++-------
->   drivers/scsi/lpfc/lpfc_init.c |  82 +++++++++++---------------
->   drivers/scsi/lpfc/lpfc_sli4.h |   2 +-
->   4 files changed, 137 insertions(+), 76 deletions(-)
-> I do assume that you've checked that this matches with blk-mq queue 
-layout, right?
-
+>   drivers/scsi/lpfc/lpfc_hbadisc.c |  8 +++-----
+>   drivers/scsi/lpfc/lpfc_sli.c     | 33 +++++++++++++++-----------------
+>   2 files changed, 18 insertions(+), 23 deletions(-)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
