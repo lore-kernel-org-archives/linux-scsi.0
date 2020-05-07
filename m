@@ -2,102 +2,91 @@ Return-Path: <SRS0=AKtJ=6V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F5AC38A24
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29839C38A24
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 15:26:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC73520659
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:38:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588862322;
-	bh=WhwM3iTNbsmNSS6/bb0949tPxR2HU1JwzHMfmAt9BzA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Q6ZpTUunSvK8a98ChB2w9YQkgxoaqIL9yPm9QgfdJm1FVFzHCWoCa/5PftXvF+6kZ
-	 pgDXqNNriBBIjEBzItQNKD2ZdJBeBvZIZTBbTM+3ek+N3WkPH3+ZiViEKUkZ8eR6ED
-	 TpkzEmDE2x+mUq9hsyZiQ5nTdUY0jETxpTys0nFE=
+	by mail.kernel.org (Postfix) with ESMTP id 0EF742082E
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 15:26:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728967AbgEGOia (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 10:38:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53486 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726476AbgEGO1k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 May 2020 10:27:40 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1C896215A4;
-        Thu,  7 May 2020 14:27:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588861659;
-        bh=WhwM3iTNbsmNSS6/bb0949tPxR2HU1JwzHMfmAt9BzA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ueq8VAsv+roqAxguB/gPFVMYUzmWmm2DDhM2gbqqmuUKqXcksm7tSOjMqL2a+D3yk
-         UMfAGJgNOP3D4PE7a5/5KzI0NOaPMofkr7qvQcEWoiMgYi7fUkApM6fQkb6Qo8WBlu
-         +zcIpkeTIL5pCcaxv5WFBukFzHJ0WC0MSM/KnT6M=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Martin Wilck <mwilck@suse.com>, Arun Easi <aeasi@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 10/50] scsi: qla2xxx: check UNLOADING before posting async work
-Date:   Thu,  7 May 2020 10:26:46 -0400
-Message-Id: <20200507142726.25751-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200507142726.25751-1-sashal@kernel.org>
-References: <20200507142726.25751-1-sashal@kernel.org>
+        id S1726029AbgEGP0J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 11:26:09 -0400
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:42422 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725914AbgEGP0J (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 11:26:09 -0400
+Received: by mail-pg1-f173.google.com with SMTP id n11so2637725pgl.9
+        for <linux-scsi@vger.kernel.org>; Thu, 07 May 2020 08:26:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=AEETiEBUw4pUXT7g/pwmwKpSZoy+QrekaScjtjsdDNs=;
+        b=uSINnphWtG8z5AQc7240hM0lGyuHp5c8LU9jAkEe2cf40aw8ggBH2IW2UZJscp4GvI
+         RocW9rgMPJO5X5l6BxWDUGovua5Fs3eB+L7Ohkv6HZhLphuKnoDFc5bNK6nDYjsSRiKw
+         vbDKcRiw5aYjfmY5lc0UsMSxo3AW2rkSO697hJWC+9/HOUtWiOylQcu81ACch5y+x662
+         liCzUOnJnYD9N4RTLzXwkKdN5aAGfnfeLdNdeIZmZ5Uc2aVSYUh3S+id1M2VZWBX2XvA
+         B5b3WhenaB0Ij3HOk81vwCHmsQkK7Vplm91+6Iu64I1Matfd+m9wTCHho+MPw3faCxH0
+         MIPw==
+X-Gm-Message-State: AGi0PuYUVv7qlYGJETr4BXnejskXIF8ki2YjLqD7t8xzV3OwKmTVdRf+
+        XRlbS48ObBezgSXbJt3RHFdIw3oaUhY=
+X-Google-Smtp-Source: APiQypLaw0AM7GujdDOSoUHfuFF44GI21JgwiT1gRaiuAieGUoPhCU8/qlzJwqmTXXnGYj2xCresXg==
+X-Received: by 2002:a05:6a00:d:: with SMTP id h13mr14715724pfk.254.1588865166718;
+        Thu, 07 May 2020 08:26:06 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:8ce8:d4c:1f4f:21e0? ([2601:647:4000:d7:8ce8:d4c:1f4f:21e0])
+        by smtp.gmail.com with ESMTPSA id i25sm5068709pfo.196.2020.05.07.08.26.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 May 2020 08:26:05 -0700 (PDT)
+Subject: Re: [PATCH] scsi: remove 'list' entry from struct scsi_cmnd
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+References: <20200507062642.100612-1-hare@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <1ca6052e-10c7-cb7b-968e-26289ddb4e59@acm.org>
+Date:   Thu, 7 May 2020 08:26:04 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200507062642.100612-1-hare@suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+On 2020-05-06 23:26, Hannes Reinecke wrote:
+> Leftover from commandlist removal.
 
-[ Upstream commit 5a263892d7d0b4fe351363f8d1a14c6a75955475 ]
-
-qlt_free_session_done() tries to post async PRLO / LOGO, and waits for the
-completion of these async commands. If UNLOADING is set, this is doomed to
-timeout, because the async logout command will never complete.
-
-The only way to avoid waiting pointlessly is to fail posting these commands
-in the first place if the driver is in UNLOADING state.  In general,
-posting any command should be avoided when the driver is UNLOADING.
-
-With this patch, "rmmod qla2xxx" completes without noticeable delay.
-
-Link: https://lore.kernel.org/r/20200421204621.19228-3-mwilck@suse.com
-Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
-Acked-by: Arun Easi <aeasi@marvell.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Martin Wilck <mwilck@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qla2xxx/qla_os.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 4a89202115521..98908c2a096a7 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4854,6 +4854,9 @@ qla2x00_alloc_work(struct scsi_qla_host *vha, enum qla_work_type type)
- 	struct qla_work_evt *e;
- 	uint8_t bail;
- 
-+	if (test_bit(UNLOADING, &vha->dpc_flags))
-+		return NULL;
-+
- 	QLA_VHA_MARK_BUSY(vha, bail);
- 	if (bail)
- 		return NULL;
--- 
-2.20.1
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
