@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C405C47247
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:35:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FB6FC47247
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:35:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 513292073A
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:35:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E4882073A
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 14:35:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588862128;
-	bh=AbF2uNFJWRWl/L5czMYiTGS/1WgEFm5qePayN96IG0s=;
+	s=default; t=1588862142;
+	bh=tP9D+63v58Q0bM08mp96NUT3tfQZXHC9ELHMUIXPN/I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=k+9eppis7HSgwcF62k5V6WRq2oigkIB2WKJkGmiWN2HRgWNvheZLGJbPy2a//0/L7
-	 XOJ+fG2SQdyymUov0cWkUKhfnuOoMMk+H3bVc6hrrIhojk67+bkNp9HCbP4fNiJ+d9
-	 yJFJ15BDvBm1C2rzSspRMsPr3shbxFrwJJ0lOvPQ=
+	b=K9S4UDXjXIROKwBx1CwPIWRtN81+M2M6mKYQiZGSsg8rtwrNmzUzFoA5Q+rwwXx5P
+	 SpQCJuznRn3PbYC5/xUr7CcfZ8pEiRVye8nCLta8e2vukrb15E/1WYaj3/gYBj1qfP
+	 yW0u79RSYLF8Dy2D1vR69Dy+Pv2So07OBKMPH8ec=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728248AbgEGO2n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 10:28:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55538 "EHLO mail.kernel.org"
+        id S1727980AbgEGOfi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 10:35:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55464 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728227AbgEGO2m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 7 May 2020 10:28:42 -0400
+        id S1728194AbgEGO2j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 May 2020 10:28:39 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7BB7820870;
-        Thu,  7 May 2020 14:28:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9A77A2184D;
+        Thu,  7 May 2020 14:28:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588861721;
-        bh=AbF2uNFJWRWl/L5czMYiTGS/1WgEFm5qePayN96IG0s=;
+        s=default; t=1588861718;
+        bh=tP9D+63v58Q0bM08mp96NUT3tfQZXHC9ELHMUIXPN/I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2NPkos4l10kNgO7io05XDPcA/MbZEQHUpao6/yVyNlc6WzLDozpMNutdC6vA1cjf0
-         qmc1EesX0YyjV/IGXWAxTK48btIX17XDK8d0vkns7hFdM4KohXErxPAIvL80mf409a
-         bIRQUVKM6srWG8fZGJAZ3hH7PRXiUG+k80Q7zzps=
+        b=doNWDEgCUxdNQ7rIE1AXYesHbKBY2+zR68WYEX5leWKh30I5CBcOJAjf4E4phbnaS
+         c1w3Zm3soTyP2Km1tjcnns/wQMRss1jU6CwoqcZIAzoVyTIZXawgN4Ii6PKeqDlzOk
+         Rwe5m8LBQyio5BdSQ8K03bYWXiGJdKzjOXe+maTw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     David Disseldorp <ddiss@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Martin Wilck <mwilck@suse.com>, Arun Easi <aeasi@marvell.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 08/35] scsi: target/iblock: fix WRITE SAME zeroing
-Date:   Thu,  7 May 2020 10:28:02 -0400
-Message-Id: <20200507142830.26239-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 06/35] scsi: qla2xxx: set UNLOADING before waiting for session deletion
+Date:   Thu,  7 May 2020 10:28:00 -0400
+Message-Id: <20200507142830.26239-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200507142830.26239-1-sashal@kernel.org>
 References: <20200507142830.26239-1-sashal@kernel.org>
@@ -60,45 +61,96 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: David Disseldorp <ddiss@suse.de>
+From: Martin Wilck <mwilck@suse.com>
 
-[ Upstream commit 1d2ff149b263c9325875726a7804a0c75ef7112e ]
+[ Upstream commit 856e152a3c08bf7987cbd41900741d83d9cddc8e ]
 
-SBC4 specifies that WRITE SAME requests with the UNMAP bit set to zero
-"shall perform the specified write operation to each LBA specified by the
-command".  Commit 2237498f0b5c ("target/iblock: Convert WRITE_SAME to
-blkdev_issue_zeroout") modified the iblock backend to call
-blkdev_issue_zeroout() when handling WRITE SAME requests with UNMAP=0 and a
-zero data segment.
+The purpose of the UNLOADING flag is to avoid port login procedures to
+continue when a controller is in the process of shutting down.  It makes
+sense to set this flag before starting session teardown.
 
-The iblock blkdev_issue_zeroout() call incorrectly provides a flags
-parameter of 0 (bool false), instead of BLKDEV_ZERO_NOUNMAP.  The bool
-false parameter reflects the blkdev_issue_zeroout() API prior to commit
-ee472d835c26 ("block: add a flags argument to (__)blkdev_issue_zeroout")
-which was merged shortly before 2237498f0b5c.
+Furthermore, use atomic test_and_set_bit() to avoid the shutdown being run
+multiple times in parallel. In qla2x00_disable_board_on_pci_error(), the
+test for UNLOADING is postponed until after the check for an already
+disabled PCI board.
 
-Link: https://lore.kernel.org/r/20200419163109.11689-1-ddiss@suse.de
-Fixes: 2237498f0b5c ("target/iblock: Convert WRITE_SAME to blkdev_issue_zeroout")
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: David Disseldorp <ddiss@suse.de>
+Link: https://lore.kernel.org/r/20200421204621.19228-2-mwilck@suse.com
+Fixes: 45235022da99 ("scsi: qla2xxx: Fix driver unload by shutting down chip")
+Reviewed-by: Arun Easi <aeasi@marvell.com>
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_iblock.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c | 32 ++++++++++++++------------------
+ 1 file changed, 14 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 51ffd5c002dee..1c181d31f4c87 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -432,7 +432,7 @@ iblock_execute_zero_out(struct block_device *bdev, struct se_cmd *cmd)
- 				target_to_linux_sector(dev, cmd->t_task_lba),
- 				target_to_linux_sector(dev,
- 					sbc_get_write_same_sectors(cmd)),
--				GFP_KERNEL, false);
-+				GFP_KERNEL, BLKDEV_ZERO_NOUNMAP);
- 	if (ret)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 06037e3c78549..7c588c5b5f6e3 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3700,6 +3700,13 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	}
+ 	qla2x00_wait_for_hba_ready(base_vha);
+ 
++	/*
++	 * if UNLOADING flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
++
+ 	if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
+ 	    IS_QLA28XX(ha)) {
+ 		if (ha->flags.fw_started)
+@@ -3718,15 +3725,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
+-
+ 	qla_nvme_delete(base_vha);
+ 
+ 	dma_free_coherent(&ha->pdev->dev,
+@@ -6053,13 +6051,6 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 	struct pci_dev *pdev = ha->pdev;
+ 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+ 
+-	/*
+-	 * if UNLOAD flag is already set, then continue unload,
+-	 * where it was set first.
+-	 */
+-	if (test_bit(UNLOADING, &base_vha->dpc_flags))
+-		return;
+-
+ 	ql_log(ql_log_warn, base_vha, 0x015b,
+ 	    "Disabling adapter.\n");
+ 
+@@ -6070,9 +6061,14 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	qla2x00_wait_for_sess_deletion(base_vha);
++	/*
++	 * if UNLOADING flag is already set, then continue unload,
++	 * where it was set first.
++	 */
++	if (test_and_set_bit(UNLOADING, &base_vha->dpc_flags))
++		return;
+ 
+-	set_bit(UNLOADING, &base_vha->dpc_flags);
++	qla2x00_wait_for_sess_deletion(base_vha);
+ 
+ 	qla2x00_delete_all_vps(ha, base_vha);
  
 -- 
 2.20.1
