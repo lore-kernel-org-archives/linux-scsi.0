@@ -2,163 +2,104 @@ Return-Path: <SRS0=EpTV=6W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F8FC38A2A
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 20:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0231EC38A2A
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 21:25:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D880D21775
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 20:29:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RYelO5xu"
+	by mail.kernel.org (Postfix) with ESMTP id D9F34218AC
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 21:25:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727798AbgEHU3h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 May 2020 16:29:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47820 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726883AbgEHU3g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 16:29:36 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5CD0C05BD43
-        for <linux-scsi@vger.kernel.org>; Fri,  8 May 2020 13:29:36 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id j21so1371285pgb.7
-        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2020 13:29:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=u+UVXV6ltTLEXRg71t8ZlanM7FX+NKobsCkEXtg96NE=;
-        b=RYelO5xukoxW/3L2JkFg5tmZjnglITAKD+MtkemsP4cYGsp1xVe2wKSLENvSgIdHsX
-         vJEM4DVmFUsMREPGy11z9HYp3s+bimMEI+E7V2jYclf+2NSk16LxuYudzAzXYEn+aUnq
-         M9G7wXu19gtldXMWAbsOJNmNcxPB314nhuUCEREf9kr0mfeXHjFdwiovK7nU33Xp5GDF
-         Wi2VpiKa4+k3AFjmYirN2mFplQFJiSpvC+twMPYBd8mnsf53EgiHQgPt2kYVPmbjGMz1
-         9qYprWaiLvP2WtPec3tUFbpNhGSNch3HN569tbT9JFMVmccT1ZDGVO5PvFC0P1QWqUQF
-         ghag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=u+UVXV6ltTLEXRg71t8ZlanM7FX+NKobsCkEXtg96NE=;
-        b=EAOf5MqKuSOPYGQNuufVGl5QdvAuCv8xjDIygrOOIsHtK7TS5U2sCQGMgzigp93d6L
-         dW62lbMrI81KyJ9/evMSzXjYTLjqNn4z14Fk8InzRjclxiRKTr8wgMS5pFWgz2gwofNI
-         t/Pb3s3265yunFiT11eGBwhV3OW5TAgJuxRCHULf+nIdGBad6livwXxlyV0QEFDi8Ste
-         W7VIaPQPc55AcoD+z/W6/4Svho83e4gzLaaA+MNoxeGtNLjCZNNjyVb+8b68nFoatGP+
-         XOMCe0DIRHoM3LpIF8GYcwMri08OO65DHnNtdz6DFodf/5WuK1+Og3Mhdxl2yQ0Merz7
-         3JJQ==
-X-Gm-Message-State: AGi0PuZ/83SA2PM14S7Z5YFWBC/EaG0Rje/3xCqSggD/ryFRuobWpBhT
-        C8dlxop5Li3Rma2bsTVBWTcgag==
-X-Google-Smtp-Source: APiQypLCUECJxgUiSkcMPk0rlGPzCyI65jqxd7/f9HwhCEcSdXX9Vsv2UyFO2+fMqyxSvtcI5p4OTQ==
-X-Received: by 2002:a63:d40a:: with SMTP id a10mr3495198pgh.71.1588969775920;
-        Fri, 08 May 2020 13:29:35 -0700 (PDT)
-Received: from google.com (240.242.82.34.bc.googleusercontent.com. [34.82.242.240])
-        by smtp.gmail.com with ESMTPSA id b15sm2616111pfd.139.2020.05.08.13.29.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 May 2020 13:29:35 -0700 (PDT)
-Date:   Fri, 8 May 2020 20:29:31 +0000
-From:   Satya Tangirala <satyat@google.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Steev Klimaszewski <steev@kali.org>,
-        Thara Gopinath <thara.gopinath@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Andy Gross <agross@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Can Guo <cang@codeaurora.org>,
-        Elliot Berman <eberman@codeaurora.org>,
-        John Stultz <john.stultz@linaro.org>
-Subject: Re: [RFC PATCH v4 4/4] scsi: ufs-qcom: add Inline Crypto Engine
- support
-Message-ID: <20200508202931.GA236461@google.com>
-References: <20200501045111.665881-1-ebiggers@kernel.org>
- <20200501045111.665881-5-ebiggers@kernel.org>
- <31fa95e5-7757-96ae-2e86-1f54959e3a6c@linaro.org>
- <20200507180435.GB236103@gmail.com>
- <20200507180838.GC236103@gmail.com>
- <150ddaaf-12ec-231e-271a-c65b1d88d30f@kali.org>
- <20200508202513.GA233206@gmail.com>
+        id S1728032AbgEHVZ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 May 2020 17:25:27 -0400
+Received: from mout.kundenserver.de ([212.227.17.10]:38713 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726811AbgEHVZ0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 17:25:26 -0400
+Received: from mail-lf1-f47.google.com ([209.85.167.47]) by
+ mrelayeu.kundenserver.de (mreue106 [212.227.15.145]) with ESMTPSA (Nemesis)
+ id 1MVdUQ-1jepSZ2p2i-00RXTE for <linux-scsi@vger.kernel.org>; Fri, 08 May
+ 2020 23:25:23 +0200
+Received: by mail-lf1-f47.google.com with SMTP id b26so2555623lfa.5
+        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2020 14:25:23 -0700 (PDT)
+X-Gm-Message-State: AOAM533JEE7B7LboDC3rDOlepVXUau9WCHhKpUMeJCnVjMXHDsdGtjmo
+        P65FY4S7gyj/yXOamgJgATSZ0QzczbJmY+tQnaw=
+X-Google-Smtp-Source: ABdhPJwSbUdjB9DO/G+19w5aRs7LQT+CAlyjKWm6agIZLUYuzztH5C96+Kzj7mrekg3JtrK5uDCrZTgLgP2bIRx7Hl8=
+X-Received: by 2002:ac2:5df9:: with SMTP id z25mr3212534lfq.125.1588973123154;
+ Fri, 08 May 2020 14:25:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200508202513.GA233206@gmail.com>
+References: <20200507042835.9135-3-bvanassche@acm.org> <202005080353.y49Uwj18%lkp@intel.com>
+ <CAKwvOdnuXX2xpsz6fxV-qfvj1AqN3V7qyOwtwtCG4NWq+HzfAw@mail.gmail.com> <86bcf088-a35d-0a0f-0ba4-5883b1f2d6cb@acm.org>
+In-Reply-To: <86bcf088-a35d-0a0f-0ba4-5883b1f2d6cb@acm.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 8 May 2020 23:25:06 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3PA25WUJp73Yea9xq_ca3uXA9Vz2U=UmHiDhg8FmGiNw@mail.gmail.com>
+Message-ID: <CAK8P3a3PA25WUJp73Yea9xq_ca3uXA9Vz2U=UmHiDhg8FmGiNw@mail.gmail.com>
+Subject: Re: [PATCH v5 02/11] qla2xxx: Suppress two recently introduced
+ compiler warnings
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Nick Desaulniers <ndesaulniers@google.com>,
+        kbuild test robot <lkp@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        kbuild-all@lists.01.org,
+        clang-built-linux <clang-built-linux@googlegroups.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Daniel Wagner <dwagner@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
+        Joe Jin <joe.jin@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:rhqFf4z49bKgAv1XPzucT/jg7B5rmMAAt/jOUw4XucpjnLvYIVM
+ vO9lchKr+w4WpQMaH2ZFcsY9Ns4UGYT2evWZVC95kmSpmwpI26lH4eFzAUTGEGo9WLL1fhy
+ RtGIrdeU9XnRn6hXvqaSmPsY5AnxvVsJuLZqZ9ronnCgZcycqA/o0J0ATW+Ebux5VVmSZgE
+ a4rQEKcwbBqh2vEcYs/Eg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:/xUQQhvPPwM=:uldB+1mctnl3o+47HyY5K+
+ PtI9fEZHBUPj4e9gABItt2f7zmmJcM8x8UW7FpAE4cSiouRM97iWAWnO16HXSy4aKop63Mcv9
+ nsSzvGghEs/i+mKpY71UUzQQYncPuDdB1PQ6pYhenYlpacDyLr2yocHCegskl+QwcQJycwWaG
+ R1D7xFJUOXBLWLXr4CUiilPoG47uZJ7Q9swO5CBf8uhpqOR2OCGmsbSn4kmOftG8Q/th3Uu/H
+ 3DkGMPJuguyIj4mVtZ8QmdbnMDwv2sbQQEIssCluOrb6YX2sofycZkZbsIjbJNkDBgooCgCQ6
+ hlgTL/higUmhjrJT0vDmeL5TGvEOA//6qqSbB2QzG7AN5+gdkMsGaZzPnEfZusFArqJ0mmgnS
+ rFx+2XAhCtNvEFDra5UZD6vLa+2TyF1+K7+OO0g8RDa7xExklDgnjIVswNGW99vhS7wsXIV+K
+ aASlNC49VB/sEmJaPUIFv16Z193CMjVS4CbCY8rhAJjONxjF/rTSgPXydWFlN/fUu9Y/PTjms
+ /P6bHlM20XlrOc5aVGy8SmPF5rF0kFHLkoeOsdgub5+I8ZqXXUeLFaEdypWUhqWTkSVhdr/Lk
+ 08JmwM3TGmFuv0Irs+ACVRxZ1XbAX3lt7cQgRmc1bBaVOanCfx8T1ay5j5eEAfzcA6ii8FvMq
+ Yy8idcTrR8HIV94d8nr1h14YpuHbn9g+9sN8u62rlAEbaioZrPd2rsjEympmxk33MIbfiW1yH
+ +W7KJ+qfG1d9UP/DJgVXUyak4Z7O2GIfB70xuQeLv3+fqwSjmXS00unPpKOseZfrLRr3OPYQe
+ GcJBMh5+vLbxKrGhTnTTDuoFJwlWfXhmXRU5bSgZS1VCVMOOLQ=
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, May 08, 2020 at 01:25:13PM -0700, Eric Biggers wrote:
-> On Fri, May 08, 2020 at 03:18:23PM -0500, Steev Klimaszewski wrote:
-> > 
-> > On 5/7/20 1:08 PM, Eric Biggers wrote:
-> > > On Thu, May 07, 2020 at 11:04:35AM -0700, Eric Biggers wrote:
-> > >> Hi Thara,
-> > >>
-> > >> On Thu, May 07, 2020 at 08:36:58AM -0400, Thara Gopinath wrote:
-> > >>>
-> > >>> On 5/1/20 12:51 AM, Eric Biggers wrote:
-> > >>>> From: Eric Biggers <ebiggers@google.com>
-> > >>>>
-> > >>>> Add support for Qualcomm Inline Crypto Engine (ICE) to ufs-qcom.
-> > >>>>
-> > >>>> The standards-compliant parts, such as querying the crypto capabilities
-> > >>>> and enabling crypto for individual UFS requests, are already handled by
-> > >>>> ufshcd-crypto.c, which itself is wired into the blk-crypto framework.
-> > >>>> However, ICE requires vendor-specific init, enable, and resume logic,
-> > >>>> and it requires that keys be programmed and evicted by vendor-specific
-> > >>>> SMC calls.  Make the ufs-qcom driver handle these details.
-> > >>>>
-> > >>>> I tested this on Dragonboard 845c, which is a publicly available
-> > >>>> development board that uses the Snapdragon 845 SoC and runs the upstream
-> > >>>> Linux kernel.  This is the same SoC used in the Pixel 3 and Pixel 3 XL
-> > >>>> phones.  This testing included (among other things) verifying that the
-> > >>>> expected ciphertext was produced, both manually using ext4 encryption
-> > >>>> and automatically using a block layer self-test I've written.
-> > >>> Hello Eric,
-> > >>>
-> > >>> I am interested in testing out this series on 845, 855 and if possile on 865
-> > >>> platforms. Can you give me some more details about your testing please.
-> > >>>
-> > >> Great!  You can test this with fscrypt, a.k.a. ext4 or f2fs encryption.
-> > >>
-> > >> A basic manual test would be:
-> > >>
-> > >> 1. Build a kernel with:
-> > >>
-> > >> 	CONFIG_BLK_INLINE_ENCRYPTION=y
-> > >> 	CONFIG_FS_ENCRYPTION=y
-> > >> 	CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-> > > Sorry, I forgot: 'CONFIG_SCSI_UFS_CRYPTO=y' is needed too.
-> > >
-> > > - Eric
-> > 
-> > I took a look into this as well - is v12 the latest of the fscrypt
-> > inline crypto patches?
-> > 
-> > I see a EXPORT_SYMBOL_GPL(fscrypt_inode_uses_inline_crypto) but it seems
-> > like it should be EXPORT_SYMBOL_GPL(__fscrypt_inode_uses_inline_crypto)
-> > otherwise you end up with
-> > 
-> > 
-> > WARNING: modpost: "fscrypt_inode_uses_inline_crypto" [vmlinux] is a
-> > static EXPORT_SYMBOL_GPL
-> > 
-> > 
-> > when you have something like CONFIG_F2FS_FS=m
-> > 
-> > 
-> > Apologies but I'm not sure where the original patchset is to send as a
-> > reply to them.
-> 
-> The original patchset is at
-> https://lkml.kernel.org/r/20200430115959.238073-1-satyat@google.com/
-> 
-> Yes, v12 is the latest version, and yes that's a bug.  The export needs double
-> underscores.  Satya will fix it when he sends out v13.
-> 
-> - Eric
-Yup, that's the plan. Thanks!
+On Fri, May 8, 2020 at 1:16 AM Bart Van Assche <bvanassche@acm.org> wrote:
+>
+> On 2020-05-07 15:00, Nick Desaulniers wrote:
+> > On Thu, May 7, 2020 at 12:18 PM kbuild test robot <lkp@intel.com> wrote:
+> >> All errors (new ones prefixed by >>):
+> >>
+> >>    In file included from drivers/scsi/qla2xxx/qla_dbg.c:77:
+> >>>> include/trace/events/qla.h:13:32: error: unknown warning group '-Wsuggest-attribute=format', ignored [-Werror,-Wunknown-warning-option]
+> >>    #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+> >>                                   ^
+> >
+> > Hi Bart,
+> > These compiler specific pragma's are not toolchain portable.  You'll
+> > need to wrap them in:
+> > #ifndef __clang__
+> > preprocessor macros, or I think we have a pragma helper in tree that
+> > helps with compiler specific pragmas.  IIRC it uses _Pragma to define
+> > pragmas in macros.
+> Hi Nick,
+>
+> Thanks for the feedback. I will have a look at _Pragma() and see what
+> the best way is to suppress this warning.
+
+The __diag_ignore() macro in linux/compiler.h should work for this.
+
+       Arnd
