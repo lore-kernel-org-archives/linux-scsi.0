@@ -2,67 +2,89 @@ Return-Path: <SRS0=EpTV=6W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA35C47257
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 18:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13897C47255
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 20:11:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3548F2184D
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 18:12:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="P8Qwb/7m"
+	by mail.kernel.org (Postfix) with ESMTP id F100A20CC7
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 20:11:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727841AbgEHSMf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 May 2020 14:12:35 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:43411 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727812AbgEHSMe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 14:12:34 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588961554; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=wPiyQjSJF8vUdRxJrjwFgYJTIXhq+dC/nAsEoueYbiA=; b=P8Qwb/7mQf4LJMQpSpqJ+bkCnTzHpDT38Ijj4qb4VEcWYoofcmIW5PLRbe6HOpun7lyUZO5O
- Rcklyc4rjHOLGERpGPhbj9P36hvD7EEte+5LJFOiJ8t8IyxMZAymZ5vMx/bKA5qUlVZ0nMEU
- pQEPP96qF/GfbSoljLFlLEc4AeE=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb5a10a.7fc7670df298-smtp-out-n03;
- Fri, 08 May 2020 18:12:26 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 18B03C4478C; Fri,  8 May 2020 18:12:26 +0000 (UTC)
-Received: from [192.168.8.176] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0B44CC433D2;
-        Fri,  8 May 2020 18:12:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0B44CC433D2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v1 3/5] scsi: ufs: customize flush threshold for
- WriteBooster
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
-        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-References: <20200508171513.14665-1-stanley.chu@mediatek.com>
- <20200508171513.14665-4-stanley.chu@mediatek.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <4196ff98-093e-3708-d166-a7a7c6046c57@codeaurora.org>
-Date:   Fri, 8 May 2020 11:12:23 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+        id S1726948AbgEHULm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 May 2020 16:11:42 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:33444 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726797AbgEHULm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 16:11:42 -0400
+Received: by mail-pg1-f195.google.com with SMTP id a4so1363403pgc.0;
+        Fri, 08 May 2020 13:11:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=M0td/tVQrd6JWU+Nqfok36GqNdC8dDzRs4sSNx11odc=;
+        b=Oe3ZoViFiDif47K1+IE90XRud+/MAWzK4VsqgMOWRZplrifsNVbS5rCCXBcvrNX1eZ
+         j9wK9iYH3Ui0pVA/uHfHN09eZ9raTEESFkkIfO+vh2AHF9xicMBOVKZ6DX56Rg3EO17l
+         K49DbEu+xTSJNZSBWpOCpunwm8fR8Bpc1V75Z15CRAJRKlxTx12vlxi0aVdZvPnbAT5P
+         HbD/sDWNULxsQ0XwpQ8Y5pxRD/37ykwUmjkrrPbEMGZkiNXlKuiTvo1JQEXb6T/BZV0o
+         sBqpwoUG092M8KIjsvFgXL/xAHg18F3TLsgXmwvvtnreQ6afupUzu09N/J2ZdiVA3KvW
+         Duxw==
+X-Gm-Message-State: AGi0PubkqVNQQaAX0C3nur1uoQyWXkBVqYucX4pB63KcF4b+F3+Fmmf1
+        ae9i+fWu3WeCpUT+k/w4i2UJ6Vkd4pk=
+X-Google-Smtp-Source: APiQypLbS2OlCtnbNFCZ+k3kV86aeI2BepAWtPhcHgidQvpHFrabaIkHVxwrKM4aPYHHzPtLRQfYwg==
+X-Received: by 2002:a63:180a:: with SMTP id y10mr3815182pgl.204.1588968701422;
+        Fri, 08 May 2020 13:11:41 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:89ed:1db3:8c60:ba90? ([2601:647:4000:d7:89ed:1db3:8c60:ba90])
+        by smtp.gmail.com with ESMTPSA id q14sm1973399pgq.60.2020.05.08.13.11.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 May 2020 13:11:40 -0700 (PDT)
+Subject: Re: [RESENT PATCH RFC v3 5/5] scsi: ufs: UFS Host Performance
+ Booster(HPB) driver
+To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org,
+        rdunlap@infradead.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hch@infradead.org
+References: <20200504142032.16619-1-beanhuo@micron.com>
+ <20200504142032.16619-6-beanhuo@micron.com>
+ <7b3e127f-a25f-e821-6704-2680ea619c6d@acm.org>
+ <1edda80d569a53e0af28fbe30a367d84f099f8fe.camel@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <ff9de169-be8e-1595-5df0-0d09b1a1ce8e@acm.org>
+Date:   Fri, 8 May 2020 13:11:38 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200508171513.14665-4-stanley.chu@mediatek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1edda80d569a53e0af28fbe30a367d84f099f8fe.camel@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -70,69 +92,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/8/2020 10:15 AM, Stanley Chu wrote:
-> Allow flush threshold for WriteBooster to be customizable by
-> vendors. To achieve this, make the value as a variable in struct
-> ufs_hba first.
+On 2020-05-08 07:44, Bean Huo wrote:
+> 1: driver module parameter, while system booting, specify maximum HPB
+> cache size in kernel boot Parameters:
 > 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c | 6 ++++--
->   drivers/scsi/ufs/ufshcd.h | 1 +
->   2 files changed, 5 insertions(+), 2 deletions(-)
+>    	static int max_hpb_mem = 128;
+>    	module_param(max_hpb_mem,int,0444);
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index cdacbe6378a1..9a0ce6550c2f 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5301,8 +5301,8 @@ static bool ufshcd_wb_presrv_usrspc_keep_vcc_on(struct ufs_hba *hba,
->   			 cur_buf);
->   		return false;
->   	}
-> -	/* Let it continue to flush when >60% full */
-> -	if (avail_buf < UFS_WB_40_PERCENT_BUF_REMAIN)
-> +	/* Let it continue to flush when available buffer exceeds threshold */
-> +	if (avail_buf < hba->vps->wb_flush_threshold)
->   		return true;
->   
->   	return false;
-> @@ -6839,6 +6839,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
->   		if (!d_lu_wb_buf_alloc)
->   			goto wb_disabled;
->   	}
-> +
-Is this newline needed?
+> but this paramter is added in the ufshcd.c since the ufshpb.c is not a 
+> independent module. looks not very natural.
+> [ ... ]
+> If you prefer to convert current HPB driver to be a kernel module
+> driver, I prefer first apporach.
 
->   	return;
->   
->   wb_disabled:
-> @@ -7462,6 +7463,7 @@ static const struct attribute_group *ufshcd_driver_groups[] = {
->   
->   static struct ufs_hba_variant_params ufs_hba_vps = {
->   	.hba_enable_delay_us		= 1000,
-> +	.wb_flush_threshold		= UFS_WB_40_PERCENT_BUF_REMAIN,
->   	.devfreq_profile.polling_ms	= 100,
->   	.devfreq_profile.target		= ufshcd_devfreq_target,
->   	.devfreq_profile.get_dev_status	= ufshcd_devfreq_get_dev_status,
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index f7bdf52ba8b0..e3dfb48e669e 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -570,6 +570,7 @@ struct ufs_hba_variant_params {
->   	struct devfreq_dev_profile devfreq_profile;
->   	struct devfreq_simple_ondemand_data ondemand_data;
->   	u16 hba_enable_delay_us;
-> +	u32 wb_flush_threshold;
->   };
->   
->   /**
-> 
+Hi Bean,
 
-Patch[3] & [4] may be combined into a single patch perhaps?
-Patch[4] just redoes what [3] did in a different way, so might as well 
-just do what patch[4] does right away.
+A kernel module parameter sounds good to me.
 
+Thanks,
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Bart.
