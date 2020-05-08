@@ -4,63 +4,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 293ACC38A2A
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 16:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D2B4C38A2A
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 16:27:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08BB021473
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 16:19:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62F08208CA
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 16:27:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qHevvyz9"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="jZpBM1WW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727860AbgEHQTh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 May 2020 12:19:37 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:48280 "EHLO
+        id S1727107AbgEHQ15 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 May 2020 12:27:57 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:31514 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726817AbgEHQTh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 12:19:37 -0400
+        by vger.kernel.org with ESMTP id S1726756AbgEHQ14 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 12:27:56 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588954776; h=Content-Transfer-Encoding: Content-Type:
+ s=smtp; t=1588955275; h=Content-Transfer-Encoding: Content-Type:
  In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=Sehda5KYpri+SgmjTuPUNWxcMIV/yX17URV1EJd8KjM=; b=qHevvyz9xVCx1scueDOSy7Smpq/PN3P2w9Kbg/BsMWSUXglGdCHMvF7lkBHBitUvSwSo9IW2
- jrBhIoLC1B7h9eCzFNftL5NYJn8ri4f7e8jQ5xiU1fZqgtpqT6tufnfJ4FZ/UUpafPbiqgjX
- SD+Aib2KHaH9fqjJ0H5HKWHcatE=
+ Subject: Sender; bh=qB2bS14fhdIt0BpwIyYHdF4S6yvPiSAFKy4qqwnKDFk=; b=jZpBM1WWDdkCw1QcD4CGlqWGOC3q/ElIzT+jJvZufI653xcUq8nHgL44KSWjbw4fhSwIQTiB
+ YunU05/XyFP72XFryWCxi5G7SSdh1I/pEdrsbaBDP+bmKLs2RmWpCnwHbSTQehfRD2Hkq3GZ
+ t5vJNDQ4YbjNeFmJ4mxxHZKhAPo=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb5868d.7f72e02193e8-smtp-out-n03;
- Fri, 08 May 2020 16:19:25 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb58889.7f33db8c1bc8-smtp-out-n02;
+ Fri, 08 May 2020 16:27:53 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 2139BC433D2; Fri,  8 May 2020 16:19:25 +0000 (UTC)
+        id 185AAC4478C; Fri,  8 May 2020 16:27:53 +0000 (UTC)
 Received: from [192.168.8.176] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CCDF0C433D2;
-        Fri,  8 May 2020 16:19:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CCDF0C433D2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 545E2C433D2;
+        Fri,  8 May 2020 16:27:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 545E2C433D2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v8 8/8] scsi: ufs: cleanup WriteBooster feature
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
-        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-References: <20200508080115.24233-1-stanley.chu@mediatek.com>
- <20200508080115.24233-9-stanley.chu@mediatek.com>
+Subject: Re: [PATCH RFC] ufs: Make ufshcd_wait_for_register() sleep instead of
+ busy-waiting
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+References: <20200507222750.19113-1-bvanassche@acm.org>
 From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <ca589cd1-bf28-7227-02d7-1c7789f6f6e9@codeaurora.org>
-Date:   Fri, 8 May 2020 09:19:22 -0700
+Message-ID: <198a1467-09db-f846-e153-a9681ff15b71@codeaurora.org>
+Date:   Fri, 8 May 2020 09:27:50 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <20200508080115.24233-9-stanley.chu@mediatek.com>
+In-Reply-To: <20200507222750.19113-1-bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -69,112 +68,173 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/8/2020 1:01 AM, Stanley Chu wrote:
-> Small cleanup as below items,
+On 5/7/2020 3:27 PM, Bart Van Assche wrote:
+> The ufshcd_wait_for_register() function either sleeps or spins until the
+> specified register has reached the desired value. Busy-waiting is not
+> only considered a bad practice but also has a bad impact on energy
+> consumption. Always sleep instead of spinning by making sure that all
+> ufshcd_wait_for_register() calls happen from a context where it is
+> allowed to sleep. The only function call that has to be moved is the
+> ufshcd_hba_stop() call in ufshcd_host_reset_and_restore().
 > 
-> 1. Use ufshcd_is_wb_allowed() directly instead of ufshcd_wb_sup()
->     since ufshcd_wb_sup() just returns the result of
->     ufshcd_is_wb_allowed().
-> 
-> 2. In ufshcd_suspend(), "else if (!ufshcd_is_runtime_pm(pm_op))
->     can be simplified to "else" since both have the same meaning.
-> 
-> This patch does not change any functionality.
-> 
-> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Cc: Bean Huo <beanhuo@micron.com>
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> Cc: Asutosh Das <asutoshd@codeaurora.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-
-The whole series looks good to me.
-
 Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
->   drivers/scsi/ufs/ufshcd.c | 20 +++++++-------------
->   1 file changed, 7 insertions(+), 13 deletions(-)
+
+>   drivers/scsi/ufs/ufshcd.c | 51 +++++++++++++++++++++------------------
+>   drivers/scsi/ufs/ufshcd.h |  2 +-
+>   2 files changed, 29 insertions(+), 24 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index b6a0d77d47ac..426073a518ef 100644
+> index bf7caea2253b..72069d4faa1e 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -253,7 +253,6 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up);
->   static irqreturn_t ufshcd_intr(int irq, void *__hba);
->   static int ufshcd_change_power_mode(struct ufs_hba *hba,
->   			     struct ufs_pa_layer_attr *pwr_mode);
-> -static bool ufshcd_wb_sup(struct ufs_hba *hba);
->   static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
->   static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
->   static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-> @@ -285,7 +284,7 @@ static inline void ufshcd_wb_config(struct ufs_hba *hba)
->   {
->   	int ret;
->   
-> -	if (!ufshcd_wb_sup(hba))
-> +	if (!ufshcd_is_wb_allowed(hba))
->   		return;
->   
->   	ret = ufshcd_wb_ctrl(hba, true);
-> @@ -5197,18 +5196,13 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
->   				__func__, err);
+> @@ -563,21 +563,21 @@ void ufshcd_delay_us(unsigned long us, unsigned long tolerance)
 >   }
+>   EXPORT_SYMBOL_GPL(ufshcd_delay_us);
 >   
-> -static bool ufshcd_wb_sup(struct ufs_hba *hba)
-> -{
-> -	return ufshcd_is_wb_allowed(hba);
-> -}
-> -
->   static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
+> -/*
+> +/**
+>    * ufshcd_wait_for_register - wait for register value to change
+> - * @hba - per-adapter interface
+> - * @reg - mmio register offset
+> - * @mask - mask to apply to read register value
+> - * @val - wait condition
+> - * @interval_us - polling interval in microsecs
+> - * @timeout_ms - timeout in millisecs
+> - * @can_sleep - perform sleep or just spin
+> + * @hba: per-adapter interface
+> + * @reg: mmio register offset
+> + * @mask: mask to apply to the read register value
+> + * @val: value to wait for
+> + * @interval_us: polling interval in microseconds
+> + * @timeout_ms: timeout in milliseconds
+>    *
+> - * Returns -ETIMEDOUT on error, zero on success
+> + * Return:
+> + * -ETIMEDOUT on error, zero on success.
+>    */
+>   int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+>   				u32 val, unsigned long interval_us,
+> -				unsigned long timeout_ms, bool can_sleep)
+> +				unsigned long timeout_ms)
 >   {
->   	int ret;
->   	u8 index;
->   	enum query_opcode opcode;
+>   	int err = 0;
+>   	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
+> @@ -586,10 +586,7 @@ int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+>   	val = val & mask;
 >   
-> -	if (!ufshcd_wb_sup(hba))
-> +	if (!ufshcd_is_wb_allowed(hba))
->   		return 0;
+>   	while ((ufshcd_readl(hba, reg) & mask) != val) {
+> -		if (can_sleep)
+> -			usleep_range(interval_us, interval_us + 50);
+> -		else
+> -			udelay(interval_us);
+> +		usleep_range(interval_us, interval_us + 50);
+>   		if (time_after(jiffies, timeout)) {
+>   			if ((ufshcd_readl(hba, reg) & mask) != val)
+>   				err = -ETIMEDOUT;
+> @@ -2589,7 +2586,7 @@ ufshcd_clear_cmd(struct ufs_hba *hba, int tag)
+>   	 */
+>   	err = ufshcd_wait_for_register(hba,
+>   			REG_UTP_TRANSFER_REQ_DOOR_BELL,
+> -			mask, ~mask, 1000, 1000, true);
+> +			mask, ~mask, 1000, 1000);
 >   
->   	if (!(enable ^ hba->wb_enabled))
-> @@ -5264,7 +5258,7 @@ static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba)
->   	int ret;
->   	u8 index;
+>   	return err;
+>   }
+> @@ -4258,16 +4255,23 @@ EXPORT_SYMBOL_GPL(ufshcd_make_hba_operational);
+>   /**
+>    * ufshcd_hba_stop - Send controller to reset state
+>    * @hba: per adapter instance
+> - * @can_sleep: perform sleep or just spin
+>    */
+> -static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
+> +static inline void ufshcd_hba_stop(struct ufs_hba *hba)
+>   {
+> +	unsigned long flags;
+>   	int err;
 >   
-> -	if (!ufshcd_wb_sup(hba) || hba->wb_buf_flush_enabled)
-> +	if (!ufshcd_is_wb_allowed(hba) || hba->wb_buf_flush_enabled)
->   		return 0;
+> +	/*
+> +	 * Obtain the host lock to prevent that the controller is disabled
+> +	 * while the UFS interrupt handler is active on another CPU.
+> +	 */
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>   	ufshcd_writel(hba, CONTROLLER_DISABLE,  REG_CONTROLLER_ENABLE);
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +
+>   	err = ufshcd_wait_for_register(hba, REG_CONTROLLER_ENABLE,
+>   					CONTROLLER_ENABLE, CONTROLLER_DISABLE,
+> -					10, 1, can_sleep);
+> +					10, 1);
+>   	if (err)
+>   		dev_err(hba->dev, "%s: Controller disable failed\n", __func__);
+>   }
+> @@ -4288,7 +4292,7 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
 >   
->   	index = ufshcd_wb_get_flag_index(hba);
-> @@ -5286,7 +5280,7 @@ static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba)
->   	int ret;
->   	u8 index;
+>   	if (!ufshcd_is_hba_active(hba))
+>   		/* change controller state to "reset state" */
+> -		ufshcd_hba_stop(hba, true);
+> +		ufshcd_hba_stop(hba);
 >   
-> -	if (!ufshcd_wb_sup(hba) || !hba->wb_buf_flush_enabled)
-> +	if (!ufshcd_is_wb_allowed(hba) || !hba->wb_buf_flush_enabled)
->   		return 0;
->   
->   	index = ufshcd_wb_get_flag_index(hba);
-> @@ -5336,7 +5330,7 @@ static bool ufshcd_wb_keep_vcc_on(struct ufs_hba *hba)
->   	int ret;
->   	u32 avail_buf;
->   
-> -	if (!ufshcd_wb_sup(hba))
-> +	if (!ufshcd_is_wb_allowed(hba))
->   		return false;
->   	/*
->   	 * The ufs device needs the vcc to be ON to flush.
-> @@ -8235,12 +8229,12 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->   		 * configured WB type is 70% full, keep vcc ON
->   		 * for the device to flush the wb buffer
+>   	/* UniPro link is disabled at this point */
+>   	ufshcd_set_link_off(hba);
+> @@ -5911,7 +5915,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+>   	/* poll for max. 1 sec to clear door bell register by h/w */
+>   	err = ufshcd_wait_for_register(hba,
+>   			REG_UTP_TASK_REQ_DOOR_BELL,
+> -			mask, 0, 1000, 1000, true);
+> +			mask, 0, 1000, 1000);
+>   out:
+>   	return err;
+>   }
+> @@ -6478,8 +6482,9 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+>   	 * Stop the host controller and complete the requests
+>   	 * cleared by h/w
+>   	 */
+> +	ufshcd_hba_stop(hba);
+> +
+>   	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	ufshcd_hba_stop(hba, false);
+>   	hba->silence_err_logs = true;
+>   	ufshcd_complete_requests(hba);
+>   	hba->silence_err_logs = false;
+> @@ -7986,7 +7991,7 @@ static int ufshcd_link_state_transition(struct ufs_hba *hba,
+>   		 * Change controller state to "reset state" which
+>   		 * should also put the link in off/reset state
 >   		 */
-> -		if ((hba->auto_bkops_enabled && ufshcd_wb_sup(hba)) ||
-> +		if ((hba->auto_bkops_enabled && ufshcd_is_wb_allowed(hba)) ||
->   		    ufshcd_wb_keep_vcc_on(hba))
->   			hba->dev_info.keep_vcc_on = true;
->   		else
->   			hba->dev_info.keep_vcc_on = false;
-> -	} else if (!ufshcd_is_runtime_pm(pm_op)) {
-> +	} else {
->   		hba->dev_info.keep_vcc_on = false;
->   	}
+> -		ufshcd_hba_stop(hba, true);
+> +		ufshcd_hba_stop(hba);
+>   		/*
+>   		 * TODO: Check if we need any delay to make sure that
+>   		 * controller is reset
+> @@ -8545,7 +8550,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+>   	scsi_remove_host(hba->host);
+>   	/* disable interrupts */
+>   	ufshcd_disable_intr(hba, hba->intr_mask);
+> -	ufshcd_hba_stop(hba, true);
+> +	ufshcd_hba_stop(hba);
 >   
+>   	ufshcd_exit_clk_scaling(hba);
+>   	ufshcd_exit_clk_gating(hba);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 733722840794..5c944530cde5 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -822,7 +822,7 @@ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+>   void ufshcd_delay_us(unsigned long us, unsigned long tolerance);
+>   int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
+>   				u32 val, unsigned long interval_us,
+> -				unsigned long timeout_ms, bool can_sleep);
+> +				unsigned long timeout_ms);
+>   void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba, struct clk *refclk);
+>   void ufshcd_update_reg_hist(struct ufs_err_reg_hist *reg_hist,
+>   			    u32 reg);
 > 
 
 
