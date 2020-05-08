@@ -2,307 +2,156 @@ Return-Path: <SRS0=EpTV=6W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C3DC47247
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 06:00:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEA5C47247
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 07:35:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03B6320870
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 06:00:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF7E1206D5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 07:35:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ZLO259zZ";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="OsRuotv9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728304AbgEHGAD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 May 2020 02:00:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52988 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728298AbgEHGAC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 02:00:02 -0400
-Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A64C1C05BD43
-        for <linux-scsi@vger.kernel.org>; Thu,  7 May 2020 23:00:01 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: krisman)
-        with ESMTPSA id 6AF672A0457
-From:   Gabriel Krisman Bertazi <krisman@collabora.com>
-To:     lduncan@suse.com
-Cc:     cleech@redhat.com, martin.petersen@oracle.com,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        Gabriel Krisman Bertazi <krisman@collabora.com>,
-        kernel@collabora.com, Khazhismel Kumykov <khazhy@google.com>
-Subject: [PATCH] iscsi: Fix deadlock on recovery path during GFP_IO reclaim
-Date:   Fri,  8 May 2020 01:59:54 -0400
-Message-Id: <20200508055954.843165-1-krisman@collabora.com>
-X-Mailer: git-send-email 2.26.2
+        id S1726083AbgEHHfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 May 2020 03:35:48 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:29947 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725991AbgEHHfs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 03:35:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1588923347; x=1620459347;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=X5zpXGzypz+RUfEDSxNZYpScsSgg3HpAUCUhb3mVpSY=;
+  b=ZLO259zZWrPTgN7ERiVlX6M8w1rKuHctpNbjDwK37WvdTEA2RvRcHy/6
+   o8gUEj8UThIi8RvJD2n/obkoYuOKn1Pnm3opDpuS4Y9RkDwbCIztuzBpB
+   joUm/wCOKJvTtLwPP8j5F52Apt9aMZi3nibTE17snPruqNJVxBYerVbb+
+   TpPvKA4tBpC2nx9/3HJZMI8gse9bx+Zg2WV8D86eCq/DI9mf8i0L4tmSe
+   d2PgWqb99ivKyC7dJW5nZd2a3m6ObE9jccppLndN8e57rJGhjjyAor40i
+   Jrt6jxn3kXEenFmJewMBIhiZnCIw+h2+eih8Kjw4XXbhxU+CeJJHCHpe1
+   A==;
+IronPort-SDR: mLiukl/iEaDcfyte3dnKMYBvtGRzRm51497jfvfleyY+qgdm4+myOPsp0fmwGGje6F83QA4zoB
+ c/6XHtXciHK1eP+cep56GwFKy/Mdfadcv2pPRXUnP60InCK3dK05YX6vkoj6MZn6+qe9B1/ol/
+ G3FrVLIRX979rujqDAVch9PRCz4AhzDyy+BQ0pMrsVpXfStHTbAFmukU/G6CbzlPMuRZ/TTdsz
+ o4AkfxQluKbbQiLDqa3ZqilYDLE8xxTIb3VLp0X1uJ0b+5vBRHrHQB+IV8GAwgmpwESq+JpEeB
+ Ec8=
+X-IronPort-AV: E=Sophos;i="5.73,366,1583164800"; 
+   d="scan'208";a="246093381"
+Received: from mail-bn8nam12lp2176.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.176])
+  by ob1.hgst.iphmx.com with ESMTP; 08 May 2020 15:35:45 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KEOWaOn+FPnuWU2vJPnzlx+kbEmcXnejBNF0xJbEPnIWRXHEJqUF7cGR43YB91Hqn5pg+0wz1tVApgzPpCkBtkkHIcGwXpXtt+sUaUr8RPv/JZLFWSz47k+7FLZkhkONpeEtTFzrHA18B4pDTncrQVkQtt6PGmGe5GAveMh1UQdG9X4l8WEAKGtsDSRFT/7mzUGEU1y6S8ea26eWKdc50YhSDt8x3ACcI1npS/Wb8dSkyeJDMr+nUTGpnxbsaSudhr3mYEabgqmkim0HVrE6+aWMbPQTssN0+UJCvzkmcDLBpbckP6X0RiwWKHXL6NnKiQwqJmnn1avWZ4nCgkA9WQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x+8ELw6aHoSUiZfVKYmdXzmRh2+/ZAIWp8FU0p5Ri+0=;
+ b=nT1/bYuQAM1QCh5UtJFnaIPAlXDPLkwbAGwJw3LwxPkOZVwVwu2PYZiaCmwsyypFkOwfYyS3YU76EZf/GSZkHAoVhAS2iEFL+hAyixyIEKFbenOr7KXlQJOx4JK1P7Tt8/0jnOaKQBiHyCK+/V4kErc5ZB/F1slT6Tw0+zF7+2s6fsCSyM3znyDskiEWIhYJUS76sItDCSMapW2q8C6s4x2x+34hvYAKfPyJXFIzIBi47DP45Bu67k4X5RZ8F3lqMVc4ACl0KNuiPyMJTla5ThXe+bDy3mMq9nyESebWrtdclXGhgxdhvYrQzSi1LpK/vui0jeQRMZfMFXs86XX2UA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x+8ELw6aHoSUiZfVKYmdXzmRh2+/ZAIWp8FU0p5Ri+0=;
+ b=OsRuotv9E5gR3yUCEBL8IIyBjS7IDG8sN8vuCo6BV6KYvFejfFPvzzXcxsZ4glD3qxztaTozlGs08v8vS2EdBgyeGkQkO3FVakx57XdGE2jNoQVNtE1EZ8CZ6stkygD3H7UAVDuO/OrdGgfeuWy+38pJ9zsphK5B3V43bjeJkpE=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB4845.namprd04.prod.outlook.com (2603:10b6:805:b3::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.28; Fri, 8 May
+ 2020 07:35:44 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.2958.032; Fri, 8 May 2020
+ 07:35:43 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
+CC:     "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>
+Subject: RE: [PATCH v7 1/8] scsi: ufs: enable WriteBooster on some pre-3.1 UFS
+ devices
+Thread-Topic: [PATCH v7 1/8] scsi: ufs: enable WriteBooster on some pre-3.1
+ UFS devices
+Thread-Index: AQHWJN904L6sndOEuECiOw2U04WYjqidzIYw
+Date:   Fri, 8 May 2020 07:35:43 +0000
+Message-ID: <SN6PR04MB4640F483F0821F76DF6C344AFCA20@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200508022141.10783-1-stanley.chu@mediatek.com>
+ <20200508022141.10783-2-stanley.chu@mediatek.com>
+In-Reply-To: <20200508022141.10783-2-stanley.chu@mediatek.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: mediatek.com; dkim=none (message not signed)
+ header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [77.138.4.172]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 481c8c9f-8e28-45ef-feb6-08d7f3226aa3
+x-ms-traffictypediagnostic: SN6PR04MB4845:
+x-microsoft-antispam-prvs: <SN6PR04MB48459F38A8756AF880879A0BFCA20@SN6PR04MB4845.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
+x-forefront-prvs: 039735BC4E
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: WLcD/kILk2XNVkIfjc6iuQA3EkaGRvG4yIccRjx+1Pg/Jl9HIcFrEcaHGEyqJ8PhI+2ztRO04jMc/xLwBvx+cBw72mOo/xPzPst8cjjWKBKG8BQrxR1i4JvAtd+j8KF3DfBB0Hsa3aGQqEwkpyHeWRgdX/gZ/CwJ63CDBkvhufzdG246b9NCc6LljSbywAWbNaNfnBIq/2NTcKxpFNIxqp/l1QaPmNGcPvocSJJpv4EZ41/DR5GV8opGS99UzbZeHO+am9ZvF/UPlSeyJyN96fOxakgnqMhrEYFJeSqzRMNFDG6Afg6NrdtX6PXLSmilbMeHJX0KP8VFYnf14r16FT1oLHs15wAKqqK0y9tHdbZo1wkW4i5rciC4sg53PBMxqztf1QwTKLB99XH72m9ksGX4SCg6Bl5GRqQhoh7E52Rw2IRoLESTENRbBuzLp/NUHa3ezNkphZ4rEyc90n7FjKvYx4mmQ1GWv+q0aFEPScm7WP50hSyvw4qZlEp8ox7ghTd78LBYxCBk7msWnPfK9g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(396003)(376002)(366004)(346002)(39860400002)(33430700001)(54906003)(66556008)(7416002)(316002)(478600001)(76116006)(66946007)(7696005)(5660300002)(33440700001)(83300400001)(186003)(8936002)(83280400001)(83310400001)(83320400001)(83290400001)(8676002)(86362001)(66476007)(66446008)(26005)(71200400001)(4744005)(33656002)(55016002)(52536014)(9686003)(64756008)(4326008)(6506007)(110136005)(2906002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: bgmRUCOp0IPIHtvfLkfdX7av0az+TjvVWuDfdmF/MLFlqgiwcDTXazUC0hJX7Gw4XI85VBxRtdWaoFDJMipQnOX32ApsZVAZh7WpDCpqyMZoNkoaKNiJXRD6+6oChBhAyHAPf+iFnT7REuG/OnhwQm7zqOJ9DQEEAjaCWfkh71NrWFl6bfeKqSX27LhrmBL4fazKSQ+m6hvV/2cJ6lXmNaj/nk1pgQpVkwvZFln/7ou+jp36OjZypZC1jQLLaFNpIIbPsqL+kfHIIdrPVNkYMmRcHTfQ3HFNEGPpubxsLCuKEOGd7GLUCL105EwBmTy1lppoNb2nnQChFlGspYSpzRX7shf6YLOiOIgWllA0IwxUyRX4pD4VMYatFIHavsXendLJlcXzQQeBtwc0ojvVFlnY1vsFXhHW/5+2zNXqw6Cn/KRThYdMwDLayn9+Uz8PKsuY4y7jcGYdVi/022UAMilMS/J6VSCFH3DrjA4VpNo=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 481c8c9f-8e28-45ef-feb6-08d7f3226aa3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 May 2020 07:35:43.8825
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QzoYbvvQQKPpsFcTsqtk+8DFZE++iXZ5NvLoYGhNMNz6TrPtuK+ekaqTx4ib95cd1JiRzT1Xe/bgXeiljL5oDA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4845
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-iscsi suffers from a deadlock in case a management command submitted via
-the netlink socket sleeps on an allocation while holding the
-rx_queue_mutex, if that allocation causes a memory reclaim that
-writebacks to a failed iscsi device.  Then, the recovery procedure can
-never make progress to recover the failed disk or abort outstanding IO
-operations to complete the reclaim (since rx_queue_mutex is locked),
-thus locking the system.
-
-Nevertheless, just marking all allocations under rx_queue_mutex as
-GFP_NOIO (or locking the userspace process with something like
-PF_MEMALLOC_NOIO) is not enough, since the iscsi command code relies on
-other subsystems that try to grab locked mutexes, whose threads are
-GFP_IO, leading to the same deadlock. One instance where this situation
-can be observed is in the backtraces below, stitched from multiple bugs
-reports, involving the kobj uevent sent when a session is created.
-
-The root of the problem is not the fact that iscsi does GFP_IO
-allocations, that is acceptable. The actual problem is that
-rx_queue_mutex has a very large granularity, covering every unrelated
-netlink command execution at the same time as the error recovery path.
-
-The proposed fix leverages the recently added mechanism to stop failed
-connections from the kernel, by enabling it to execute even though a
-management command from the netlink socket is being run (rx_queue_mutex
-is held), provided that the command is known to be safe.  It splits the
-rx_queue_mutex in two mutexes, one protecting from concurrent command
-execution from the netlink socket, and one protecting stop_conn from
-racing with other connection management operations that might conflict
-with it.
-
-It is not very pretty, but it is the simplest way to resolve the
-deadlock.  I considered making it a lock per connection, but some
-external mutex would still be needed to deal with iscsi_if_destroy_conn.
-
-The patch was tested by forcing a memory shrinker (unrelated, but used
-bufio/dm-verity) to reclaim ISCSI pages every time
-ISCSI_UEVENT_CREATE_SESSION happens, which is reasonable to simulate
-reclaims that might happen with GFP_KERNEL on that path.  Then, a faulty
-hung target causes a connection to fail during intensive IO, at the same
-time a new session is added by iscsid.
-
-The following stacktraces are stiches from several bug reports, showing
-a case where the deadlock can happen.
-
- iSCSI-write
-         holding: rx_queue_mutex
-         waiting: uevent_sock_mutex
-
-         kobject_uevent_env+0x1bd/0x419
-         kobject_uevent+0xb/0xd
-         device_add+0x48a/0x678
-         scsi_add_host_with_dma+0xc5/0x22d
-         iscsi_host_add+0x53/0x55
-         iscsi_sw_tcp_session_create+0xa6/0x129
-         iscsi_if_rx+0x100/0x1247
-         netlink_unicast+0x213/0x4f0
-         netlink_sendmsg+0x230/0x3c0
-
- iscsi_fail iscsi_conn_failure
-         waiting: rx_queue_mutex
-
-         schedule_preempt_disabled+0x325/0x734
-         __mutex_lock_slowpath+0x18b/0x230
-         mutex_lock+0x22/0x40
-         iscsi_conn_failure+0x42/0x149
-         worker_thread+0x24a/0xbc0
-
- EventManager_
-         holding: uevent_sock_mutex
-         waiting: dm_bufio_client->lock
-
-         dm_bufio_lock+0xe/0x10
-         shrink+0x34/0xf7
-         shrink_slab+0x177/0x5d0
-         do_try_to_free_pages+0x129/0x470
-         try_to_free_mem_cgroup_pages+0x14f/0x210
-         memcg_kmem_newpage_charge+0xa6d/0x13b0
-         __alloc_pages_nodemask+0x4a3/0x1a70
-         fallback_alloc+0x1b2/0x36c
-         __kmalloc_node_track_caller+0xb9/0x10d0
-         __alloc_skb+0x83/0x2f0
-         kobject_uevent_env+0x26b/0x419
-         dm_kobject_uevent+0x70/0x79
-         dev_suspend+0x1a9/0x1e7
-         ctl_ioctl+0x3e9/0x411
-         dm_ctl_ioctl+0x13/0x17
-         do_vfs_ioctl+0xb3/0x460
-         SyS_ioctl+0x5e/0x90
-
- MemcgReclaimerD"
-         holding: dm_bufio_client->lock
-         waiting: stuck io to finish (needs iscsi_fail thread to progress)
-
-         schedule at ffffffffbd603618
-         io_schedule at ffffffffbd603ba4
-         do_io_schedule at ffffffffbdaf0d94
-         __wait_on_bit at ffffffffbd6008a6
-         out_of_line_wait_on_bit at ffffffffbd600960
-         wait_on_bit.constprop.10 at ffffffffbdaf0f17
-         __make_buffer_clean at ffffffffbdaf18ba
-         __cleanup_old_buffer at ffffffffbdaf192f
-         shrink at ffffffffbdaf19fd
-         do_shrink_slab at ffffffffbd6ec000
-         shrink_slab at ffffffffbd6ec24a
-         do_try_to_free_pages at ffffffffbd6eda09
-         try_to_free_mem_cgroup_pages at ffffffffbd6ede7e
-         mem_cgroup_resize_limit at ffffffffbd7024c0
-         mem_cgroup_write at ffffffffbd703149
-         cgroup_file_write at ffffffffbd6d9c6e
-         sys_write at ffffffffbd6662ea
-         system_call_fastpath at ffffffffbdbc34a2
-
-Reported-by: Khazhismel Kumykov <khazhy@google.com>
-Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 67 +++++++++++++++++++++--------
- 1 file changed, 49 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 17a45716a0fe..d99c17306dff 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1616,6 +1616,12 @@ static DECLARE_TRANSPORT_CLASS(iscsi_connection_class,
- static struct sock *nls;
- static DEFINE_MUTEX(rx_queue_mutex);
- 
-+/*
-+ * conn_mutex protects the {start,bind,stop,destroy}_conn from racing
-+ * against the kernel stop_connection recovery mechanism
-+ */
-+static DEFINE_MUTEX(conn_mutex);
-+
- static LIST_HEAD(sesslist);
- static LIST_HEAD(sessdestroylist);
- static DEFINE_SPINLOCK(sesslock);
-@@ -2442,6 +2448,32 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
- }
- EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
- 
-+/*
-+ * This can be called without the rx_queue_mutex, if invoked by the kernel
-+ * stop work. But, in that case, it is guaranteed not to race with
-+ * iscsi_destroy by conn_mutex.
-+ */
-+static void iscsi_if_stop_conn(struct iscsi_cls_conn *conn, int flag)
-+{
-+	/*
-+	 * It is important that this path doesn't rely on
-+	 * rx_queue_mutex, otherwise, a thread doing allocation on a
-+	 * start_session/start_connection could sleep waiting on a
-+	 * writeback to a failed iscsi device, that cannot be recovered
-+	 * because the lock is held.  If we don't hold it here, the
-+	 * kernel stop_conn_work_fn has a chance to stop the broken
-+	 * session and resolve the allocation.
-+	 *
-+	 * Still, the user invoked .stop_conn() needs to be serialized
-+	 * with stop_conn_work_fn by a private mutex.  Not pretty, but
-+	 * it works.
-+	 */
-+	mutex_lock(&conn_mutex);
-+	conn->transport->stop_conn(conn, flag);
-+	mutex_unlock(&conn_mutex);
-+
-+}
-+
- static void stop_conn_work_fn(struct work_struct *work)
- {
- 	struct iscsi_cls_conn *conn, *tmp;
-@@ -2460,30 +2492,17 @@ static void stop_conn_work_fn(struct work_struct *work)
- 		uint32_t sid = iscsi_conn_get_sid(conn);
- 		struct iscsi_cls_session *session;
- 
--		mutex_lock(&rx_queue_mutex);
--
- 		session = iscsi_session_lookup(sid);
- 		if (session) {
- 			if (system_state != SYSTEM_RUNNING) {
- 				session->recovery_tmo = 0;
--				conn->transport->stop_conn(conn,
--							   STOP_CONN_TERM);
-+				iscsi_if_stop_conn(conn, STOP_CONN_TERM);
- 			} else {
--				conn->transport->stop_conn(conn,
--							   STOP_CONN_RECOVER);
-+				iscsi_if_stop_conn(conn, STOP_CONN_RECOVER);
- 			}
- 		}
- 
- 		list_del_init(&conn->conn_list_err);
--
--		mutex_unlock(&rx_queue_mutex);
--
--		/* we don't want to hold rx_queue_mutex for too long,
--		 * for instance if many conns failed at the same time,
--		 * since this stall other iscsi maintenance operations.
--		 * Give other users a chance to proceed.
--		 */
--		cond_resched();
- 	}
- }
- 
-@@ -2843,8 +2862,11 @@ iscsi_if_destroy_conn(struct iscsi_transport *transport, struct iscsi_uevent *ev
- 	spin_unlock_irqrestore(&connlock, flags);
- 
- 	ISCSI_DBG_TRANS_CONN(conn, "Destroying transport conn\n");
-+
-+	mutex_lock(&conn_mutex);
- 	if (transport->destroy_conn)
- 		transport->destroy_conn(conn);
-+	mutex_unlock(&conn_mutex);
- 
- 	return 0;
- }
-@@ -3686,9 +3708,12 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 			break;
- 		}
- 
-+		mutex_lock(&conn_mutex);
- 		ev->r.retcode =	transport->bind_conn(session, conn,
- 						ev->u.b_conn.transport_eph,
- 						ev->u.b_conn.is_leading);
-+		mutex_unlock(&conn_mutex);
-+
- 		if (ev->r.retcode || !transport->ep_connect)
- 			break;
- 
-@@ -3709,25 +3734,31 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		break;
- 	case ISCSI_UEVENT_START_CONN:
- 		conn = iscsi_conn_lookup(ev->u.start_conn.sid, ev->u.start_conn.cid);
--		if (conn)
-+		if (conn) {
-+			mutex_lock(&conn_mutex);
- 			ev->r.retcode = transport->start_conn(conn);
-+			mutex_unlock(&conn_mutex);
-+		}
- 		else
- 			err = -EINVAL;
- 		break;
- 	case ISCSI_UEVENT_STOP_CONN:
- 		conn = iscsi_conn_lookup(ev->u.stop_conn.sid, ev->u.stop_conn.cid);
- 		if (conn)
--			transport->stop_conn(conn, ev->u.stop_conn.flag);
-+			iscsi_if_stop_conn(conn, ev->u.stop_conn.flag);
- 		else
- 			err = -EINVAL;
- 		break;
- 	case ISCSI_UEVENT_SEND_PDU:
- 		conn = iscsi_conn_lookup(ev->u.send_pdu.sid, ev->u.send_pdu.cid);
--		if (conn)
-+		if (conn) {
-+			mutex_lock(&conn_mutex);
- 			ev->r.retcode =	transport->send_pdu(conn,
- 				(struct iscsi_hdr*)((char*)ev + sizeof(*ev)),
- 				(char*)ev + sizeof(*ev) + ev->u.send_pdu.hdr_size,
- 				ev->u.send_pdu.data_size);
-+			mutex_unlock(&conn_mutex);
-+		}
- 		else
- 			err = -EINVAL;
- 		break;
--- 
-2.26.2
-
+>=20
+> WriteBooster feature can be supported by some pre-3.1 UFS devices
+> by upgrading firmware.
+>=20
+> To enable WriteBooster feature in such devices, introduce a device
+> quirk to relax the entrance condition of ufshcd_wb_probe() to allow
+> host driver to check those devices' WriteBooster capability.
+>=20
+> WriteBooster feature can be available if below all conditions are
+> satisfied,
+>=20
+> 1. Host enables WriteBooster capability
+> 2. UFS 3.1 device or UFS pre-3.1 device with quirk
+>    UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES enabled
+> 3. The device descriptor shall have
+>    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP field
+> 4. WriteBooster support is specified in above field
+>=20
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
