@@ -7,61 +7,60 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B479C47247
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 02:55:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74F30C35280
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 02:55:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AF2D20731
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 02:55:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54E7F20731
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 02:55:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LTofqDZ8"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VAJnvqbT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727795AbgEHCzH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 22:55:07 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33766 "EHLO
+        id S1727111AbgEHCy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 22:54:57 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:33670 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727122AbgEHCy7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 22:54:59 -0400
+        with ESMTP id S1726756AbgEHCyx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 22:54:53 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0482roCO085506;
-        Fri, 8 May 2020 02:54:48 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0482rnIM085497;
+        Fri, 8 May 2020 02:54:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=j87H2zhImmv42ymjgeEv+Aqxm8iN731BNIlqg0RTtK8=;
- b=LTofqDZ8fQqbLv5BFSk9dJCpOw/UJlKvFU5yBUnnqSS9t/LSlyrrRuYGU4Pux9c2DcNZ
- 7xqa1CfSaS9oHIShArIUJ1r8kxHdkW1+0CvupyGKRkBsABEO2DXPd8nmxlb3vnDSG39c
- qEupGl/HlnIKC3gQo4ObNNisCR73Py5x329E49RARKGWhdcgIEbBGz/idB9oD458Dyd/
- 3RLaJlS8nDSsvGk28AEzhNwvt2baFgOZEpbHYr33Wd6UWEXW2wP0hZmRt92Q4lS9PGAe
- 0OcbbJloB0gWCTLzdAQvO3H6hmGpv5IpjvGpGjtFsT3QbEuZuXg7OWmN3GKb/+isCBFx Aw== 
+ bh=Sq+mU1qvjVw5dKRhuurPqz36df4d8wnd3ANBxDpyJRc=;
+ b=VAJnvqbTKxGnQ/NAjhCEVryhwkbvDVAgxnerkWsJKIFBWQY5hLd3WK4xVXv568mCcIhm
+ GF8IKP2EM9MoDA1ivVB9lXz4l7BdvYcW5jmp6MSFzpinBQsTai5nBNcWb0H2kMH/xziv
+ dfHDhAFxRM34DPib2O5u/x6zAi0W/1uy65TKHqqviKpGFt5LuYIx211vZYsh4SiyDP7A
+ BEq+IXVXmWuKl9xZzCj1vVMEWNImDE6WW2ioktbffi8SCD22psExA24ertJPANOLO9DQ
+ aTCm7TPvSFP/Vh2fLDXQE2wuReKYy4CQSgKolII1664/HItkFiqAZKzjB5ALZU91xDcN nA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30vtexrrm2-1
+        by userp2120.oracle.com with ESMTP id 30vtexrrku-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 May 2020 02:54:48 +0000
+        Fri, 08 May 2020 02:54:44 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0482quHF138370;
-        Fri, 8 May 2020 02:54:47 GMT
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0482qutg138303;
+        Fri, 8 May 2020 02:54:43 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 30vtdmp5an-1
+        by aserp3030.oracle.com with ESMTP id 30vtdmp58a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 May 2020 02:54:47 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0482slpl028811;
-        Fri, 8 May 2020 02:54:47 GMT
+        Fri, 08 May 2020 02:54:43 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0482sf0T028792;
+        Fri, 8 May 2020 02:54:42 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 07 May 2020 19:54:47 -0700
+        with ESMTP ; Thu, 07 May 2020 19:54:41 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, hmadhani@marvell.com,
-        Jason Yan <yanaijie@huawei.com>, njavali@marvell.com,
-        joe.carnuccio@cavium.com, GR-QLogic-Storage-Upstream@marvell.com,
+To:     jejb@linux.ibm.com, Jason Yan <yanaijie@huawei.com>,
+        kartilak@cisco.com, sebaddel@cisco.com, satishkh@cisco.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qla2xxx: use true,false for ha->fw_dumped
-Date:   Thu,  7 May 2020 22:54:33 -0400
-Message-Id: <158890633245.6466.16079762113899462190.b4-ty@oracle.com>
+Subject: Re: [PATCH] scsi: fnic: use true,false for fnic->internal_reset_inprogress
+Date:   Thu,  7 May 2020 22:54:28 -0400
+Message-Id: <158890633245.6466.4414588807706254361.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200430121800.15323-1-yanaijie@huawei.com>
-References: <20200430121800.15323-1-yanaijie@huawei.com>
+In-Reply-To: <20200430121718.14970-1-yanaijie@huawei.com>
+References: <20200430121718.14970-1-yanaijie@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9614 signatures=668687
@@ -80,17 +79,17 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 30 Apr 2020 20:18:00 +0800, Jason Yan wrote:
+On Thu, 30 Apr 2020 20:17:18 +0800, Jason Yan wrote:
 
 > Fix the following coccicheck warning:
 > 
-> drivers/scsi/qla2xxx/qla_tmpl.c:1120:2-20: WARNING: Assignment of 0/1 to
+> drivers/scsi/fnic/fnic_scsi.c:2627:5-36: WARNING: Comparison of 0/1 to
 > bool variable
 
 Applied to 5.8/scsi-queue, thanks!
 
-[1/1] scsi: qla2xxx: Use true, false for ha->fw_dumped
-      https://git.kernel.org/mkp/scsi/c/dbe6f49259da
+[1/1] scsi: fnic: Use true, false for fnic->internal_reset_inprogress
+      https://git.kernel.org/mkp/scsi/c/b91857a5ca13
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
