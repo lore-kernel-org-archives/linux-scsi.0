@@ -2,106 +2,221 @@ Return-Path: <SRS0=EpTV=6W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06464C38A2A
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 09:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D19A0C47257
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 10:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D54AA208DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 09:19:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB78B21473
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 10:08:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KP0eStUj"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YHTx8S84"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725774AbgEHJTN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 May 2020 05:19:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56016 "EHLO
+        id S1726771AbgEHKIH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 May 2020 06:08:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725379AbgEHJTN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 05:19:13 -0400
+        with ESMTP id S1726083AbgEHKIH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 06:08:07 -0400
 Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEF6FC05BD43
-        for <linux-scsi@vger.kernel.org>; Fri,  8 May 2020 02:19:12 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id j5so1022046wrq.2
-        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2020 02:19:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03A16C05BD43;
+        Fri,  8 May 2020 03:08:06 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id l18so1184099wrn.6;
+        Fri, 08 May 2020 03:08:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=dLM3aaZFjTo6AVK2W1obBjRTchEjF5uUlbZ0dyrxQSk=;
-        b=KP0eStUjLLIO9rx1qEgE+/q4QlR9p4S5SYJYt9TnMdhOv+kn4spmVMYqbJEKsoxpLj
-         pcFFYrWV5Z3spIepSnILjealIq+2sqnyya+DPaORykw4TZlZwbxZLaxqy+zX6ZprJkVk
-         +l/1c7VL1x8BavJUA8bAl2h1eFWYQ9hTKUiwU=
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=cMrXUnaCQ6nb0TNeDE3z+xWlmBXzCBLLvf7b5TeC00M=;
+        b=YHTx8S84AjkknLST+QQrfc6FW2ngA/ciHZ2fjnf3DmCskDVE/lrfqCyF8og4Cj129z
+         KsC822zLkQiWHFgK801nGelUuDMSOqH2WP8FHS6Fn/NtwGd34/ynSNDAlQXxJ1OZa29o
+         hUpTZY7Djkyo/v9PAwLPWGJhm10Q608NpkiM1gsve2ObdiBRUdges4bi9p0aC2LDwCOn
+         d3ersJJnNF/NeuL6lvR/GPlVtVxlIpfhQjHQv85bJsuypdFve/9CCnA1vdtxmm8hLX1G
+         ymuexHRslUdJPEb1vbdjVVtpQMtanNyFyIu8AvfR0PhY4WgSw/mnWGniNlEPXyRFCWe5
+         jadA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=dLM3aaZFjTo6AVK2W1obBjRTchEjF5uUlbZ0dyrxQSk=;
-        b=M71sVNygOufZavNnhZY1ccNiRNdzP/6Y/cgY+esUvR6UBid2XulqpzB1Uegtk+tJnV
-         sRpoMI4/EvP3ZVFHGXSgVKac2uFsVb8KU+3pIEBciEMUFf+gek8EOuiV6aAfmNC8ucmV
-         zKcbdTB8T+BtvAydn/1sqFjS0jEkq2pX5EJUp0KFzhdi7EX6GMsrp6J1CEE3qDiPXgHG
-         TVWjOyQg7FfIZKvMz/Yjl9MjeJdoU49AiOIroAXCD4ozonmWwOWn6sUiNKNxZ7wMQ6U9
-         jGxQMoOHT96vc6RluRpvE9rGpB+eemTvkicsK0txNfG4OY4u4nRKW106r10LsrTBJbnV
-         gJ3w==
-X-Gm-Message-State: AGi0PubkOlkFY3w12YD4/M+bAfcbOHW7a1PtXpGeW3Pnwp4CSNSjTFIm
-        6aXqEow/TK+ii2QPyUmTZEO5wbbgSFMovM41yVhwDYZBm4YL+l7MNeaPfs8MYl9TvHoRDK4hAWH
-        tmvQaK3Clet3PPER+AUUbsGCBTiDVbwnfZ/BUa2O3jcqpMYxLG9PHsYbt+RPRO6vQ0VpYWvFPFT
-        qWXBEUSD9NWLCI+R+G5AJk
-X-Google-Smtp-Source: APiQypIAVo8FFTLTiTOG7vm3m6SHmb5GJ99niMh+mowwmAlZgVaVg9vRwqH7Sb47o1WA1JBObX4lnA==
-X-Received: by 2002:adf:e9cf:: with SMTP id l15mr1936168wrn.166.1588929551139;
-        Fri, 08 May 2020 02:19:11 -0700 (PDT)
-Received: from dhcp-10-123-20-28.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id q2sm1975751wrm.42.2020.05.08.02.19.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 May 2020 02:19:10 -0700 (PDT)
-From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     dan.carpenter@oracle.com, Sathya.Prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com,
-        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix double free warnings
-Date:   Fri,  8 May 2020 05:18:54 -0400
-Message-Id: <20200508091854.32748-1-suganath-prabu.subramani@broadcom.com>
-X-Mailer: git-send-email 2.18.4
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=cMrXUnaCQ6nb0TNeDE3z+xWlmBXzCBLLvf7b5TeC00M=;
+        b=jHeAvhswyAIZHeTJ/2MfmK+SgHnfcuoaG18Bp0qC4ZdjAXGYKjLqBpyGGI3vgQpyNi
+         td7lFpBbWUyrPBvqu6f6xDbJAI1sGLmcl4fufKJBr0zywjNy3z5i2G/Ep0bSjXwh+GcD
+         TryTSLu7BVTv6h5ZM+RI27IXNdjo713oDEJ5DUtoS1Dlr4aMQrGKnveoeC0zx2GkSMa1
+         TfJ5kOTAJMymi+9v4BT4zOSF5UxjTUtw3m5hwufLdX+5ReHzWcPHjDx5+eePsaRLH86J
+         +dDHQQFiOyabj2DxvOFpMHCdUZK4DLpV6Hvh6fZxQFXZuzWwPFX17/Sg0Y/7MnVgyU/D
+         r6yA==
+X-Gm-Message-State: AGi0PubMBNlygdLIdMj8wlMZ/uGGg6EF+2ecr0tzrWBHgfm0lklfWed7
+        LHlLYlVelvg4zwAksr3aeME/EkuLfU4=
+X-Google-Smtp-Source: APiQypLEt17JB/X+Fw/Poq8HAZrU3IhnvWhHS2sDpGd7T4Csm9vGWOiTN9ucEdO21bX1g+xV1ENvhw==
+X-Received: by 2002:a5d:54c4:: with SMTP id x4mr2175403wrv.73.1588932485577;
+        Fri, 08 May 2020 03:08:05 -0700 (PDT)
+Received: from ubuntu-G3 (ip5f5bfcc8.dynamic.kabel-deutschland.de. [95.91.252.200])
+        by smtp.googlemail.com with ESMTPSA id e21sm2178418wrc.1.2020.05.08.03.08.04
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 08 May 2020 03:08:05 -0700 (PDT)
+Message-ID: <201b31e72f545ef46a74c7aa8e9cad8a9a81727e.camel@gmail.com>
+Subject: Re: [RESENT PATCH RFC v3 5/5] scsi: ufs: UFS Host Performance
+ Booster(HPB) driver
+From:   Bean Huo <huobean@gmail.com>
+To:     Randy Dunlap <rdunlap@infradead.org>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        hch@infradead.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        cang@codeaurora.org
+Date:   Fri, 08 May 2020 12:08:03 +0200
+In-Reply-To: <38db2ee7-18ff-9263-1cc7-1b9c6f085632@infradead.org>
+References: <20200504142032.16619-1-beanhuo@micron.com>
+         <20200504142032.16619-6-beanhuo@micron.com>
+         <38db2ee7-18ff-9263-1cc7-1b9c6f085632@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix below warnings from Smatch static analyser:
-drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
-warn: 'ioc->hpr_lookup' double freed
+On Thu, 2020-05-07 at 18:34 -0700, Randy Dunlap wrote:
+> Hi,
+> 
+> On 5/4/20 7:20 AM, huobean@gmail.com wrote:
+> > diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> > index e2005aeddc2d..0224f224a641 100644
+> > --- a/drivers/scsi/ufs/Kconfig
+> > +++ b/drivers/scsi/ufs/Kconfig
+> > @@ -160,3 +160,65 @@ config SCSI_UFS_BSG
+> >  
+> >  	  Select this if you need a bsg device node for your UFS
+> > controller.
+> >  	  If unsure, say N.
+> > +
+> > +config SCSI_UFSHPB
+> > +	bool "UFS Host Performance Booster (EXPERIMENTAL)"
+> > +	depends on SCSI_UFSHCD
+> > +	help
+> > +	  NAND flash-based storage devices, including UFS, have
+> > mechanisms to
+> > +	  translate logical addresses of the IO requests to the
+> > corresponding
+> > +	  physical addresses of the flash storage. Traditionally, this
+> > L2P
+> > +	  mapping data is loaded to the internal SRAM in the storage
+> > controller.
+> > +	  When the capacity of storage is larger, a larger size of SRAM
+> > for the
+> > +	  L2P map data is required. Since increased SRAM size affects
+> > the
+> > +	  manufacturing cost significantly, it is not cost-effective to
+> > allocate
+> > +	  all the amount of SRAM needed to keep all the Logical-address 
+> > to
+> > +	  Physical-address (L2P) map data. Therefore, L2P map data,
+> > which is
+> > +	  required to identify the physical address for the requested
+> > IOs, can
+> > +	  only be partially stored in SRAM from NAND flash. Due to this
+> > partial
+> > +	  loading, accessing the flash address area where the L2P
+> > information
+> > +	  for that address is not loaded in the SRAM can result in
+> > serious
+> > +	  performance degradation.
+> > +
+> > +	  UFS Host Performance Booster (HPB) is a software solution for
+> > the
+> > +	  above problem, which uses the host side system memory as a
+> > cache for
+> > +	  the FTL L2P mapping table. It does not need additional
+> > hardware
+> > +	  support from the host side. By using HPB, the L2P mapping
+> > table can be
+> > +	  read from host memory and stored in host-side memory. when
+> > performing
+> 
+> Should that be: from device memory and stored in host-side memory.
+> ?
+> 
+> Also, s/when/When/
+> 
+> 
+> > +	  the read operation, the corresponding L2P information will be
+> > sent to
+> > +	  the UFS device along with the reading request. Since the L2P
+> > entry is
+> 
+> s/reading/read/
+> 
+> > +	  provided in the read request, UFS device does not have to
+> > load L2P
+> > +	  entry from flash memory to UFS internal SRAM. This will
+> > significantly
+> > +	  improve the read performance.
+> > +
+> > +	  When selected, this feature will be built in the UFS driver.
+> > +
+> > +	  If in doubt, say N.
+> > +
+> > +config UFSHPB_MAX_MEM_SIZE
+> > +	int "UFS HPB maximum memory size per controller (in MiB)"
+> > +	depends on SCSI_UFSHPB
+> > +	default 128
+> > +	range 0 65536
+> > +	help
+> > +	  This parameter defines the maximum UFS HPB memory/cache size
+> > in the
+> > +	  host system. The recommended HPB cache size by the UFS device
+> > can be
+> > +	  calculated from bHPBRegionSize and
+> > wDeviceMaxActiveHPBRegions. The
+> > +	  reference formula can be
+> 
+> s/can be/is/
+> 
+> > +
+> > +		(bHPBRegionSize(in KB) / 4KB) * 8 *
+> > wDeviceMaxActiveHPBRegions.
+> > +
+> > +	  The HPB cache in the host system is used to contain L2P
+> > mapping
+> > +	  entries. If the allocated HPB cache size is lower than what
+> > calculated
+> 
+> 	                                                    than that
+> 
+> > +	  by the above formula, the use of HPB feature may provide
+> > lower
+> > +	  performance advantage. But the system memory resource has the
+> > +	  limitation, we can not let HPB driver allocate its cache at
+> > will
+> > +	  according to the UFS device recommendation, so an appropriate
+> > size of
+> > +	  the cache for HPB should be specified before you choose to
+> > use HPB,
+> > +	  then please enter a non-zero positive integer value.
+> > +
+> > +	  Nevertheless, if you want to leave this to the HPB driver,
+> > and let the
+> > +	  HPB driver allocate the HPB cache based on the recommendation
+> > of the
+> > +	  UFS device. Just give 0 value to this parameter.
+> > +
+> > +	  Leave the default value if unsure.
+> 
+> thanks.
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
-warn: 'ioc->internal_lookup' double freed
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Hi Randy
+Thanks for your review. I will change them based on your
+comments.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 7fa3bdb..a6dbc73 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4898,8 +4898,14 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		    ioc->config_page, ioc->config_page_dma);
- 	}
- 
--	kfree(ioc->hpr_lookup);
--	kfree(ioc->internal_lookup);
-+	if (ioc->hpr_lookup) {
-+		kfree(ioc->hpr_lookup);
-+		ioc->hpr_lookup = NULL;
-+	}
-+	if (ioc->internal_lookup) {
-+		kfree(ioc->internal_lookup);
-+		ioc->internal_lookup = NULL;
-+	}
- 	if (ioc->chain_lookup) {
- 		for (i = 0; i < ioc->scsiio_depth; i++) {
- 			for (j = ioc->chains_per_prp_buffer;
--- 
-2.18.4
+thanks,
+
+Bean
 
