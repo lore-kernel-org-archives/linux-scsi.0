@@ -1,101 +1,101 @@
-Return-Path: <SRS0=AKtJ=6V=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=EpTV=6W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B0BC4724C
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 23:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7888BC35280
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 00:56:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A7A12082E
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 May 2020 23:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B791208CA
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 00:56:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="pqFEksD4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IY+PWBA7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726509AbgEGXvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 May 2020 19:51:03 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:62743 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726476AbgEGXvC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 19:51:02 -0400
-X-UUID: d4a0d81a670149c6b1bccba1ad43e72a-20200508
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=7rh/xNev2bozJWN2jpMZ42zVTLpDJdHHe0AkEEw+riA=;
-        b=pqFEksD4ggHIegkXQTKEXf1adsl5Vqtd0yZnmajUF+a+blHp8FILsOHUVYw9VzM/gpWlB6ro5kDxk/mgk7MHROeC9ni2GDgFUfEsi2aqjAnH3F7nk4EepCgVyfXnPbpGzoU3MuXgX/SJMbIVgkQlBKzBJQ4pHj9y7Rab2BgVBX8=;
-X-UUID: d4a0d81a670149c6b1bccba1ad43e72a-20200508
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1143080490; Fri, 08 May 2020 07:50:59 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 8 May 2020 07:50:56 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 8 May 2020 07:50:54 +0800
-Message-ID: <1588895457.3197.40.camel@mtkswgap22>
-Subject: Re: [PATCH v5 1/8] scsi: ufs: enable WriteBooster on some pre-3.1
- UFS devices
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Avri Altman <Avri.Altman@wdc.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>
-Date:   Fri, 8 May 2020 07:50:57 +0800
-In-Reply-To: <1588602837.3197.32.camel@mtkswgap22>
-References: <20200503113415.21034-1-stanley.chu@mediatek.com>
-         <20200503113415.21034-2-stanley.chu@mediatek.com>
-         <BYAPR04MB4629F2C00ABAB512DB833232FCA60@BYAPR04MB4629.namprd04.prod.outlook.com>
-         <1588602837.3197.32.camel@mtkswgap22>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726538AbgEHA4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 May 2020 20:56:20 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33026 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726509AbgEHA4T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 May 2020 20:56:19 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0480tTQC090798;
+        Fri, 8 May 2020 00:56:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=74OoXJha9YRi+Rb6Cto4iXXmlC65kQwoiw3DxdiI128=;
+ b=IY+PWBA7P/G6yp4NHvH0lwvM8VPRH8AO649kHp50a2STiO6Qryo4oxDMzmIdXGzhgRmj
+ NOpm315n5bdNfl8L3kbaSfH+qafmqU3JDhz7cK9UwzA6n0kLUo/6qcRaFvqX2t4UeovC
+ aF14JA0BzhYbQ0gvy8oDs+0LB0GwygofEs7E6errEHWbTaS/XLRNOd1pmN55EsNTcJPA
+ J6rdKMNtfRkQXSFRT54bv3VIAGhGwCdwg3LF8wdOFOzOjOg+cfOhXSaLObrudmdZNAha
+ TY9ZfFUNP1R8WK/npypxPsqbp2ZJcI/q0XmZU6cMH7MHOli0miBAd+z4JFQazKUAmX7s Sw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 30vtepgg0u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 08 May 2020 00:56:15 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0480rXGq030961;
+        Fri, 8 May 2020 00:56:15 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 30vtdxr72s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 08 May 2020 00:56:15 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0480uDDH006838;
+        Fri, 8 May 2020 00:56:13 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 07 May 2020 17:56:13 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: Fix compilation error on 32bits arch
+Date:   Thu,  7 May 2020 20:56:12 -0400
+Message-Id: <158889873927.7304.4812677615111222210.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200507023526.221574-1-damien.lemoal@wdc.com>
+References: <20200507023526.221574-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: E528BD5724FFA756FDB6C319DCE7ED3EFAD25D9B4B53F50DE16DB1ECC31FC39B2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9614 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=984 phishscore=0
+ bulkscore=0 malwarescore=0 suspectscore=0 adultscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005080005
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9614 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0
+ impostorscore=0 phishscore=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 suspectscore=0 mlxscore=0
+ mlxlogscore=999 bulkscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2003020000 definitions=main-2005080005
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQXZyaSwNCk9uIE1vbiwgMjAyMC0wNS0wNCBhdCAyMjozMyArMDgwMCwgU3RhbmxleSBDaHUg
-d3JvdGU6DQo+IEhpIEF2cmksDQo+IA0KPiBPbiBNb24sIDIwMjAtMDUtMDQgYXQgMTA6MzcgKzAw
-MDAsIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiA+ID4gDQo+ID4gPiAgc3RhdGljIHZvaWQgdWZzaGNk
-X3diX3Byb2JlKHN0cnVjdCB1ZnNfaGJhICpoYmEsIHU4ICpkZXNjX2J1ZikNCj4gPiA+ICB7DQo+
-ID4gPiArICAgICAgIGlmICghdWZzaGNkX2lzX3diX2FsbG93ZWQoaGJhKSkNCj4gPiA+ICsgICAg
-ICAgICAgICAgICByZXR1cm47DQo+ID4gPiArDQo+ID4gPiArICAgICAgIGlmIChoYmEtPmRlc2Nf
-c2l6ZS5kZXZfZGVzYyA8PQ0KPiA+ID4gREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VGU19GRUFUVVJF
-X1NVUCkNCj4gPiBTaG91bGQgYmUgDQo+ID4gREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VGU19GRUFU
-VVJFX1NVUCArIDQgDQo+IA0KPiBJIHRoaW5rIHRoaXMgZGVzY3JpcHRpb24gbGVuZ3RoIGNoZWNr
-IGlzIHJlZHVuZGFudCBiZWNhdXNlIHRoZSBkZXZpY2UNCj4gcXVpcmsgc2hhbGwgYmUgYWRkZWQg
-b25seSBhZnRlciBXcml0ZUJvb3N0ZXIgc3VwcG9ydGF0IGlzIGNvbmZpcm1lZCBpbg0KPiBhdHRh
-Y2hlZCBVRlMgZGV2aWNlLiBTbyBJIHdpbGwgcmVtb3ZlIHRoaXMgaW4gbmV4dCB2ZXJzaW9uLg0K
-DQpTb3JyeSB0aGlzIHN0YXRlbWVudCBpcyBpbmNvcnJlY3QgYmVjYXVzZSB0aGlzIGtpbmQgb24g
-ZGV2aWNlcyBtYXkgaGF2ZQ0Kc2hvcnQgKHdpdGhvdXQgREVWSUNFX0RFU0NfUEFSQU1fRVhUX1VG
-U19GRUFUVVJFX1NVUCBmaWVsZCkgYmVmb3JlDQpmaXJtd2FyZSB1cGdyYWRpbmcuIFNvIHRoZSBj
-aGVja2luZyBmb3IgZGVzY3JpcHRvciBsZW5ndGggaXMgc3RpbGwNCnJlcXVpcmVkIHRvIGF2b2lk
-IG91dC1vZi1ib3VuZGFyeSBhY2Nlc3MgaW4gYmVsb3cgY29kZXMuDQoNCkkgd2lsbCBhZGQgaXQg
-YmFjayBpbiBuZXh0IHZlcnNpb24gYW5kIGFsc28gZml4IHRoZSBsZW5ndGguDQoNClRoYW5rcywN
-ClN0YW5sZXkgQ2h1DQoNCj4gPiANCj4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXw0KPiA+IExpbnV4LW1lZGlhdGVrIG1haWxpbmcgbGlzdA0KPiA+IExp
-bnV4LW1lZGlhdGVrQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gPiBodHRwOi8vbGlzdHMuaW5mcmFk
-ZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LW1lZGlhdGVrDQo+IA0KDQo=
+On Thu, 7 May 2020 11:35:26 +0900, Damien Le Moal wrote:
 
+> Allowing a non-power-of-2 zone size forces the use of direct division
+> operations of 64bits sector values to obtain a zone number or number of
+> zones. Doing so without using do_div() leads to compilation errors on
+> 32bits architecture.
+> 
+> Devices with a zone size that is not a power of 2 do not exist today so
+> allowing their emulation is of limited interest, as the sd driver will
+> not support them anyway. So to fix this compilation error, instead of
+> using do_div() for sector values divisions, simply disallow zone size
+> values that are not a power of 2 value, allowing to use bitshift for
+> divisions in all cases.
+
+Applied to 5.8/scsi-queue, thanks!
+
+[1/1] scsi: scsi_debug: Disallow zone sizes that are not powers of 2
+      https://git.kernel.org/mkp/scsi/c/108e36f0d8bf
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
