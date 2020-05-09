@@ -2,83 +2,97 @@ Return-Path: <SRS0=PQdO=6X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 617E4C28CBC
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 May 2020 14:45:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1017C47255
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 May 2020 23:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F4DD20735
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 May 2020 14:45:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC68921473
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 May 2020 23:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727952AbgEIOpU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 May 2020 10:45:20 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:51126 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726782AbgEIOpT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 9 May 2020 10:45:19 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id EB35220418E;
-        Sat,  9 May 2020 16:45:16 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id M1NS0c49Laat; Sat,  9 May 2020 16:45:11 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 4386B204150;
-        Sat,  9 May 2020 16:45:09 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH] scsi: scsi_debug: fix an error handling bug in
- sdeb_zbc_model_str()
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <20200509100408.GA5555@mwanda>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <0398fb52-dd1e-bb02-5160-69f2537132b7@interlog.com>
-Date:   Sat, 9 May 2020 10:45:07 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1728945AbgEIXqL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 May 2020 19:46:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47462 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728918AbgEIXqI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 May 2020 19:46:08 -0400
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C155C061A0C;
+        Sat,  9 May 2020 16:46:08 -0700 (PDT)
+Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jXZAO-004iSV-BF; Sat, 09 May 2020 23:46:00 +0000
+From:   Al Viro <viro@ZenIV.linux.org.uk>
+To:     linux-kernel@vger.kernel.org
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org,
+        James Smart <james.smart@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 17/20] lpfc_debugfs: get rid of pointless access_ok()
+Date:   Sun, 10 May 2020 00:45:54 +0100
+Message-Id: <20200509234557.1124086-17-viro@ZenIV.linux.org.uk>
+X-Mailer: git-send-email 2.25.4
+In-Reply-To: <20200509234557.1124086-1-viro@ZenIV.linux.org.uk>
+References: <20200509234124.GM23230@ZenIV.linux.org.uk>
+ <20200509234557.1124086-1-viro@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20200509100408.GA5555@mwanda>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-09 6:04 a.m., Dan Carpenter wrote:
-> This test is checking the wrong variable.  It should be testing "ret".
-> The "sdeb_zbc_model" variable is an enum (unsigned in this situation)
-> and we never assign negative values to it.
-> 
-> Fixes: 9267e0eb41fe ("scsi: scsi_debug: Add ZBC module parameter")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+From: Al Viro <viro@zeniv.linux.org.uk>
 
-s/ret/res/ at the end of the first line above.
+	No, you do NOT need to "protect copy from user" that way.
+Incidentally, your userland ABI stinks.  I understand that you
+wanted to accept "reset" and "reset\n" as equivalent, but I suspect
+that accepting "reset this, you !@^!@!" had been an accident.
+Nothing to do about that now - it is a userland ABI...
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ drivers/scsi/lpfc/lpfc_debugfs.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-> ---
->   drivers/scsi/scsi_debug.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 105e563d87b4e..73847366dc495 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -6460,7 +6460,7 @@ static int sdeb_zbc_model_str(const char *cp)
->   		res = sysfs_match_string(zbc_model_strs_b, cp);
->   		if (res < 0) {
->   			res = sysfs_match_string(zbc_model_strs_c, cp);
-> -			if (sdeb_zbc_model < 0)
-> +			if (res < 0)
->   				return -EINVAL;
->   		}
->   	}
-> 
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 8a6e02aa553f..5a754fb5f854 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -2166,10 +2166,6 @@ lpfc_debugfs_lockstat_write(struct file *file, const char __user *buf,
+ 	char *pbuf;
+ 	int i;
+ 
+-	/* Protect copy from user */
+-	if (!access_ok(buf, nbytes))
+-		return -EFAULT;
+-
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+ 	if (copy_from_user(mybuf, buf, nbytes))
+@@ -2621,10 +2617,6 @@ lpfc_debugfs_multixripools_write(struct file *file, const char __user *buf,
+ 	if (nbytes > 64)
+ 		nbytes = 64;
+ 
+-	/* Protect copy from user */
+-	if (!access_ok(buf, nbytes))
+-		return -EFAULT;
+-
+ 	memset(mybuf, 0, sizeof(mybuf));
+ 
+ 	if (copy_from_user(mybuf, buf, nbytes))
+@@ -2787,10 +2779,6 @@ lpfc_debugfs_scsistat_write(struct file *file, const char __user *buf,
+ 	char mybuf[6] = {0};
+ 	int i;
+ 
+-	/* Protect copy from user */
+-	if (!access_ok(buf, nbytes))
+-		return -EFAULT;
+-
+ 	if (copy_from_user(mybuf, buf, (nbytes >= sizeof(mybuf)) ?
+ 				       (sizeof(mybuf) - 1) : nbytes))
+ 		return -EFAULT;
+-- 
+2.11.0
 
