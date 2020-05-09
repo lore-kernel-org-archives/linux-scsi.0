@@ -1,154 +1,322 @@
-Return-Path: <SRS0=EpTV=6W=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=PQdO=6X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5AC6C38A2A
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 22:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB61EC47255
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 May 2020 00:33:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87D87216FD
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 May 2020 22:29:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6D5424960
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 May 2020 00:33:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="hAiMPJi+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727778AbgEHW3l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 May 2020 18:29:41 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:36583 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727082AbgEHW3l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 18:29:41 -0400
-Received: by mail-pg1-f194.google.com with SMTP id d22so1514409pgk.3
-        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2020 15:29:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=gKbOb4boJ7z+2oCHWb7R40Fkbb6M7I9TRXxhkxZKIE8=;
-        b=V0kO59uZFQEOU7srCUD/MC4zzb/qyboHmY3ZF6DIy55/wGSFeg7SsAITDjM4BM446G
-         O1aAmFxKNA/q5VESQYoQs9Bd3JNvZjLBHnj/4XkWQcCqc4C3a73uP0/0KkeDGojafj8Y
-         BIHo9nF9UVWIMPoFCT5TdCRpaR9e8OqsV2LTWmigDCf5m8DJ0ZyRadtJ8QXi7FuNbK6w
-         Ki1XLHQ3lOoTmAjk4NH7S2L0dTEudvdVVAxwOa58r1uGEwg7wBta11o8+hN51Y7gTb0+
-         kE6V5a6UZmhZqvFuzzXc4zXURBOx/xQlORm7miXodGjwX9Pcd++K2EFN2GpQle3hK6gD
-         sQTw==
-X-Gm-Message-State: AGi0PuZNgbxFwLUL8QZM/85yQ1WcS/muPo8jK1UgLkcHUY4Sn99rFax6
-        AHn0Ahahwlb1sjQwUNGYlfw=
-X-Google-Smtp-Source: APiQypKUNV0NsH6563aOt3+/uu4H+ILQgX3WNn11IUFfrLoIVrNFkciA37J26vdUKTSkYSFRmGH5/w==
-X-Received: by 2002:aa7:951b:: with SMTP id b27mr5215090pfp.2.1588976979981;
-        Fri, 08 May 2020 15:29:39 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:89ed:1db3:8c60:ba90? ([2601:647:4000:d7:89ed:1db3:8c60:ba90])
-        by smtp.gmail.com with ESMTPSA id o11sm2109675pgp.62.2020.05.08.15.29.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 May 2020 15:29:39 -0700 (PDT)
-Subject: Re: [PATCH v5 02/11] qla2xxx: Suppress two recently introduced
- compiler warnings
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Nick Desaulniers <ndesaulniers@google.com>,
-        kbuild test robot <lkp@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        kbuild-all@lists.01.org,
-        clang-built-linux <clang-built-linux@googlegroups.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
-        Joe Jin <joe.jin@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>
-References: <20200507042835.9135-3-bvanassche@acm.org>
- <202005080353.y49Uwj18%lkp@intel.com>
- <CAKwvOdnuXX2xpsz6fxV-qfvj1AqN3V7qyOwtwtCG4NWq+HzfAw@mail.gmail.com>
- <86bcf088-a35d-0a0f-0ba4-5883b1f2d6cb@acm.org>
- <CAK8P3a3PA25WUJp73Yea9xq_ca3uXA9Vz2U=UmHiDhg8FmGiNw@mail.gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <040756ba-81ea-64e4-6a11-85608b871b88@acm.org>
-Date:   Fri, 8 May 2020 15:29:37 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1728368AbgEIAc6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 May 2020 20:32:58 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:43297 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727959AbgEIAc5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 May 2020 20:32:57 -0400
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200509003254epoutp04a7043b80aaa871e83ffa46a0208e558b~NNN6216lv2443124431epoutp04W
+        for <linux-scsi@vger.kernel.org>; Sat,  9 May 2020 00:32:54 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200509003254epoutp04a7043b80aaa871e83ffa46a0208e558b~NNN6216lv2443124431epoutp04W
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1588984374;
+        bh=neo+HlKkQMCxdPB9fgCSJEAlMpQVKOxhn4oUXLHS10E=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=hAiMPJi+nizBw2Fj/dnHMciZK9KPIa6IJwQTAji8h10W6euA+4TKz62jSFO+xFcrd
+         /lc34pmvu239DrIG1IBCUHi0GkvAmROTHaIac18THQ7mHl2i/rkDUnMaoN7ZmzY/2Z
+         e6n6OEiB0xxVJg+ugXNOeV6JGo6kMsD/+fXKQo7o=
+Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20200509003253epcas5p12e5c0818bdeb7dd26794d78ea4f841dd~NNN5oftA52572825728epcas5p1f;
+        Sat,  9 May 2020 00:32:53 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E9.13.10010.53AF5BE5; Sat,  9 May 2020 09:32:53 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200509003252epcas5p105fcdf77df196a4f581f51fc7e82f1f8~NNN43vH4C0506305063epcas5p1v;
+        Sat,  9 May 2020 00:32:52 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200509003252epsmtrp2b1babae60489d2cafa01eac8fa1ed4b3~NNN424e_p1992219922epsmtrp2L;
+        Sat,  9 May 2020 00:32:52 +0000 (GMT)
+X-AuditID: b6c32a49-735ff7000000271a-b9-5eb5fa351a28
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A0.1A.25866.43AF5BE5; Sat,  9 May 2020 09:32:52 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200509003248epsmtip2b6fddca22f966ae2f394d65a39833f31~NNN1ile1w2388123881epsmtip2O;
+        Sat,  9 May 2020 00:32:48 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Kishon Vijay Abraham I'" <kishon@ti.com>, <robh@kernel.org>
+Cc:     <devicetree@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <krzk@kernel.org>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
+        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, "'Vinod Koul'" <vkoul@kernel.org>
+In-Reply-To: <b0239aa5-004e-fc88-93a4-5b0d6f174ca3@ti.com>
+Subject: RE: [PATCH v7 07/10] phy: samsung-ufs: add UFS PHY driver for
+ samsung SoC
+Date:   Sat, 9 May 2020 06:02:36 +0530
+Message-ID: <006701d62599$5fbc2c80$1f348580$@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a3PA25WUJp73Yea9xq_ca3uXA9Vz2U=UmHiDhg8FmGiNw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQINaKJiJYqhfY8pF8dQGQjTbFgO/QI75FnYAdd4tKsCTMaX9af9XhAA
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKKsWRmVeSWpSXmKPExsWy7bCmhq7pr61xBm83CFm8/HmVzeLT+mWs
+        FvOPnGO1uPC0h83i/PkN7BY3txxlsdj0+BqrxeVdc9gsZpzfx2TRfX0Hm8Xy4/+YLP7v2cFu
+        sXTrTUaLnXdOMDvweVzu62Xy2LSqk81j85J6j5aT+1k8Pj69xeLRt2UVo8fxG9uZPD5vkvNo
+        P9DNFMAZxWWTkpqTWZZapG+XwJWx/PUz1oKruhX3rx9jbWDsVOli5OSQEDCRmPB1PksXIxeH
+        kMBuRonbq3ZAOZ+AnJt/WSGcz4wS115OYoRp2XFvAiNEYhejxIcPrcwQzhtGiYaWl0wgVWwC
+        uhI7FrexdTFycIgIOEo07IoDqWEWeMUk8XfbRhaQGk4BK4mbHWeYQWxhgRCJa++2gcVZBFQk
+        etuug23jFbCUONh3GMoWlDg58wlYDbOAtsSyha+ZIS5SkPj5dBkriC0i4CaxcepWNogacYmj
+        P3vAjpMQeMAhcbP1DytEg4vExJ+3oZqFJV4d38IOYUtJfH63F+xoCYFsiZ5dxhDhGoml846x
+        QNj2EgeuzGEBKWEW0JRYv0sfYhWfRO/vJ0wQnbwSHW1CENWqEs3vrkJ1SktM7O6GOsBDYv7m
+        s+wTGBVnIXlsFpLHZiF5YBbCsgWMLKsYJVMLinPTU4tNCwzzUsv1ihNzi0vz0vWS83M3MYJT
+        npbnDsa7Dz7oHWJk4mA8xCjBwawkwjuxYkucEG9KYmVValF+fFFpTmrxIUZpDhYlcd7TaUAp
+        gfTEktTs1NSC1CKYLBMHp1QDk2z1xlj77zpPxZ/UqM37t0/tjPOHJRW/Au/M+XQ8pv3mT4k5
+        zw7U9h97UtUatq9UaOvRxas/3+g7EXz+yPKZHP9zCtSDF664dUKnk/Oq0c1t1ZdZ1Gv/Jro7
+        82pHL4s78M3LZNKyMGOVF2VTOS5cVkjv+Prf6pjCNuOYme2X+iOf/hDTD/60LC9k+QmRfcvn
+        qe42XdivcPBg0M+2HFaHfHm+e35JnCmJUlPSGJawHE3Y+IzL0CVgZ/8kC1GmZRaVieUsnFZR
+        9U3sOXOWfUhw+d6f8i+l0pyrXS6vYn2u/j6rZbzv5ix7lvkpwqVF62MZd/wBXo7dKUe3l53o
+        KuWxZv6TI9wvquf/pqP3iK6DEktxRqKhFnNRcSIAf9XfVugDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrNIsWRmVeSWpSXmKPExsWy7bCSvK7Jr61xBitvSlu8/HmVzeLT+mWs
+        FvOPnGO1uPC0h83i/PkN7BY3txxlsdj0+BqrxeVdc9gsZpzfx2TRfX0Hm8Xy4/+YLP7v2cFu
+        sXTrTUaLnXdOMDvweVzu62Xy2LSqk81j85J6j5aT+1k8Pj69xeLRt2UVo8fxG9uZPD5vkvNo
+        P9DNFMAZxWWTkpqTWZZapG+XwJXx7uZrloJ32hVHu3ezNzAuUepi5OSQEDCR2HFvAmMXIxeH
+        kMAORomvR06yQySkJa5vnABlC0us/PecHaLoFaPE7uZpzCAJNgFdiR2L29hAbBEBZ4m7256y
+        ghQxC/xgkjg7pRNq7FtGicY7G8FGcQpYSdzsOAPWLSwQJHF/VTcriM0ioCLR23adEcTmFbCU
+        ONh3GMoWlDg58wkLiM0soC3R+7CVEcZetvA1M8R5ChI/ny5jhbjCTWLj1K1sEDXiEkd/9jBP
+        YBSehWTULCSjZiEZNQtJywJGllWMkqkFxbnpucWGBUZ5qeV6xYm5xaV56XrJ+bmbGMHxq6W1
+        g3HPqg96hxiZOBgPMUpwMCuJ8E6s2BInxJuSWFmVWpQfX1Sak1p8iFGag0VJnPfrrIVxQgLp
+        iSWp2ampBalFMFkmDk6pBqalDd837vr9qY89RvacjuCHA4bhAf2OIRfDZBOlrONK1j7Oc15z
+        vibx03kWNfdnFyfNnLxhi0ZEbGGQavjLUpumLFHHFyGiO2d+WMdqznj/SsbsiD3cCQL8jmLM
+        01U/aq/d/EtI+ZqfrPSudWWxAnXBC6ccq3TKWSrkH/KxJ4v9ybFjd5oUI0wVOFVWBtae9ub7
+        cuj8skcHU5dtqNDTZl54J1co8H3L4Y03PwbYnJ/K7MVUFrPwxLxVDG+CXI+cFA14Ozc03Fbk
+        u8hOZS+2AOv55Telf1hw+KUn8C3+tGDl+7UHPdZUWqe092gdsePdoLLJqMrCPrpkZ1lNqu2l
+        myGx904ny/jcrjzD7juxW4mlOCPRUIu5qDgRAM2N5vdOAwAA
+X-CMS-MailID: 20200509003252epcas5p105fcdf77df196a4f581f51fc7e82f1f8
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200426174217epcas5p2c7d1606b641b73f67a169b8d22f0637d
+References: <20200426173024.63069-1-alim.akhtar@samsung.com>
+        <CGME20200426174217epcas5p2c7d1606b641b73f67a169b8d22f0637d@epcas5p2.samsung.com>
+        <20200426173024.63069-8-alim.akhtar@samsung.com>
+        <b0239aa5-004e-fc88-93a4-5b0d6f174ca3@ti.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-08 14:25, Arnd Bergmann wrote:
-> On Fri, May 8, 2020 at 1:16 AM Bart Van Assche <bvanassche@acm.org> wrote:
->>
->> On 2020-05-07 15:00, Nick Desaulniers wrote:
->>> On Thu, May 7, 2020 at 12:18 PM kbuild test robot <lkp@intel.com> wrote:
->>>> All errors (new ones prefixed by >>):
->>>>
->>>>    In file included from drivers/scsi/qla2xxx/qla_dbg.c:77:
->>>>>> include/trace/events/qla.h:13:32: error: unknown warning group '-Wsuggest-attribute=format', ignored [-Werror,-Wunknown-warning-option]
->>>>    #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
->>>>                                   ^
->>>
->>> Hi Bart,
->>> These compiler specific pragma's are not toolchain portable.  You'll
->>> need to wrap them in:
->>> #ifndef __clang__
->>> preprocessor macros, or I think we have a pragma helper in tree that
->>> helps with compiler specific pragmas.  IIRC it uses _Pragma to define
->>> pragmas in macros.
->> Hi Nick,
->>
->> Thanks for the feedback. I will have a look at _Pragma() and see what
->> the best way is to suppress this warning.
-> 
-> The __diag_ignore() macro in linux/compiler.h should work for this.
+Hi Kishon,
+Thanks for review.
 
-Thanks Arnd, that's good to know. Is using __diag_ignore() mandatory in
-this case? The following construct seems to work fine with both gcc and
-clang:
+> -----Original Message-----
+> From: Kishon Vijay Abraham I <kishon=40ti.com>
+> Sent: 07 May 2020 10:49
+> To: Alim Akhtar <alim.akhtar=40samsung.com>; robh=40kernel.org
+> Cc: devicetree=40vger.kernel.org; linux-scsi=40vger.kernel.org; krzk=40ke=
+rnel.org;
+> avri.altman=40wdc.com; martin.petersen=40oracle.com;
+> kwmad.kim=40samsung.com; stanley.chu=40mediatek.com;
+> cang=40codeaurora.org; linux-samsung-soc=40vger.kernel.org; linux-arm-
+> kernel=40lists.infradead.org; linux-kernel=40vger.kernel.org; Vinod Koul
+> <vkoul=40kernel.org>
+> Subject: Re: =5BPATCH v7 07/10=5D phy: samsung-ufs: add UFS PHY driver fo=
+r
+> samsung SoC
+>=20
+=2E
+=2E
+=2E
+> Okay, here you are using a state machine for the PHY configuration becaus=
+e of
+> the way the PHY is integrated with the UFS. Would be nice to have the sta=
+te
+> machine documented somewhere. I only have the PHY patch in my inbox.
+Ok, will document in the driver file as well as in the header file.
 
- #define QLA_MSG_MAX 256
+> > +
+> > +	if (ufs_phy->ufs_phy_state =3D=3D CFG_POST_PWR_HS)
+> > +		err =3D samsung_ufs_phy_wait_for_lock_acq(phy);
+> > +out:
+> > +	return err;
+> > +=7D
+> > +
+> > +static int samsung_ufs_phy_symbol_clk_init(struct samsung_ufs_phy
+> > +*phy) =7B
+> > +	struct clk *clk;
+> > +	int ret =3D 0;
+> > +
+> > +	clk =3D devm_clk_get(phy->dev, =22tx0_symbol_clk=22);
+>=20
+> There is no =22exit=22 callback in phy_ops which means if there are multi=
+ple phy_init
+> calls, this clock will not be freed. This could be moved to =22probe=22 I=
+MO.
 
-+#pragma GCC diagnostic push
-+#ifndef __clang__
-+#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
-+#endif
-+
- DECLARE_EVENT_CLASS(qla_log_event,
- 	TP_PROTO(const char *buf,
- 		struct va_format *vaf),
-@@ -27,6 +32,8 @@ DECLARE_EVENT_CLASS(qla_log_event,
- 	TP_printk("%s %s", __get_str(buf), __get_str(msg))
- );
+Ok, will add exit callback.
 
-+#pragma GCC diagnostic pop
-+
- DEFINE_EVENT(qla_log_event, ql_dbg_log,
- 	TP_PROTO(const char *buf, struct va_format *vaf),
- 	TP_ARGS(buf, vaf)
+> > +	if (IS_ERR(clk)) =7B
+> > +		dev_err(phy->dev, =22failed to get tx0_symbol_clk clock=5Cn=22);
+> > +		goto out;
+> > +	=7D else =7B
+>=20
+> =22else=22 here and below is not required. Something like below
+>=20
+Ack
+> 	clk =3D devm_clk_get(phy->dev, =22tx0_symbol_clk=22);
+> 	if (IS_ERR(clk)) =7B
+> 		dev_err(phy->dev, =22failed to get tx0_symbol_clk clock=5Cn=22);
+> 		goto out;
+> 	=7D
+> 	phy->tx0_symbol_clk =3D clk;
+>=20
+> > +		phy->tx0_symbol_clk =3D clk;
+> > +	=7D
+> > +
+> > +	clk =3D devm_clk_get(phy->dev, =22rx0_symbol_clk=22);
+> > +	if (IS_ERR(clk)) =7B
+> > +		dev_err(phy->dev, =22failed to get rx0_symbol_clk clock=5Cn=22);
+> > +		goto out;
+> > +	=7D else =7B
+> > +		phy->rx0_symbol_clk =3D clk;
+> > +	=7D
+> > +
+> > +	clk =3D devm_clk_get(phy->dev, =22rx1_symbol_clk=22);
+> > +	if (IS_ERR(clk)) =7B
+> > +		dev_err(phy->dev, =22failed to get rx1_symbol_clk clock=5Cn=22);
+> > +		goto out;
+> > +	=7D else =7B
+> > +		phy->rx1_symbol_clk =3D clk;
+> > +	=7D
+> > +
+> > +	ret =3D clk_prepare_enable(phy->tx0_symbol_clk);
+> > +	if (ret) =7B
+> > +		dev_err(phy->dev, =22%s: tx0_symbol_clk enable failed %d=5Cn=22,
+> > +				__func__, ret);
+> > +		goto out;
+> > +	=7D
+> > +	ret =3D clk_prepare_enable(phy->rx0_symbol_clk);
+> > +	if (ret) =7B
+> > +		dev_err(phy->dev, =22%s: rx0_symbol_clk enable failed %d=5Cn=22,
+> > +				__func__, ret);
+> > +		goto out;
+> > +	=7D
+> > +	ret =3D clk_prepare_enable(phy->rx1_symbol_clk);
+> > +	if (ret) =7B
+> > +		dev_err(phy->dev, =22%s: rx1_symbol_clk enable failed %d=5Cn=22,
+> > +				__func__, ret);
+> > +		goto out;
+> > +	=7D
+>=20
+> All these clocks are never disabled?
+Sure, will add disabling of clocks in exit callback=20
 
-Bart.
+> > +out:
+> > +	return ret;
+> > +=7D
+> > +
+> > +static int samsung_ufs_phy_clks_init(struct samsung_ufs_phy *phy) =7B
+> > +	struct clk *phy_ref_clk;
+> > +	int ret;
+> > +
+> > +	phy_ref_clk =3D devm_clk_get(phy->dev, =22ref_clk=22);
+> > +	if (IS_ERR(phy_ref_clk))
+> > +		dev_err(phy->dev, =22failed to get ref_clk clock=5Cn=22);
+> > +	else
+> > +		phy->ref_clk =3D phy_ref_clk;
+> > +
+> > +	ret =3D clk_prepare_enable(phy->ref_clk);
+> > +	if (ret) =7B
+> > +		dev_err(phy->dev, =22%s: ref_clk enable failed %d=5Cn=22,
+> > +				__func__, ret);
+> > +		return ret;
+> > +	=7D
+> > +
+> > +	dev_info(phy->dev, =22UFS MPHY ref_clk_rate =3D %ld=5Cn=22,
+> > +clk_get_rate(phy_ref_clk));
+> > +
+> > +	return 0;
+> > +=7D
+> > +
+> > +static int samsung_ufs_phy_init(struct phy *phy) =7B
+> > +	struct samsung_ufs_phy *_phy =3D get_samsung_ufs_phy(phy);
+> > +	int ret;
+> > +
+> > +	_phy->lane_cnt =3D phy->attrs.bus_width;
+> > +	_phy->ufs_phy_state =3D CFG_PRE_INIT;
+> > +
+> > +	_phy->is_pre_init =3D true;
+> > +	_phy->is_post_init =3D false;
+> > +	_phy->is_pre_pmc =3D false;
+> > +	_phy->is_post_pmc =3D false;
+> > +
+> > +
+> > +	if (of_device_is_compatible(_phy->dev->of_node,
+> > +				=22samsung,exynos7-ufs-phy=22)) =7B
+>=20
+> Can't it be added in driver data for this compatible?
+Sure, will handle via driver data.
+
+> > +		ret =3D samsung_ufs_phy_symbol_clk_init(_phy);
+> > +		if (ret)
+> > +			dev_err(_phy->dev,
+> > +				=22failed to set ufs phy symbol clocks=5Cn=22);
+> > +	=7D
+> > +
+=2E
+=2E
+=2E
+> > +static int samsung_ufs_phy_set_mode(struct phy *generic_phy,
+> > +					enum phy_mode mode, int submode) =7B
+> > +	struct samsung_ufs_phy *_phy =3D get_samsung_ufs_phy(generic_phy);
+> > +
+> > +	_phy->mode =3D PHY_MODE_INVALID;
+> > +
+> > +	if (mode > 0)
+> > +		_phy->mode =3D mode;
+> > +
+> > +	return 0;
+> > +=7D
+> > +
+> > +static struct phy_ops samsung_ufs_phy_ops =3D =7B
+> > +	.init		=3D samsung_ufs_phy_init,
+> > +	.power_on	=3D samsung_ufs_phy_power_on,
+> > +	.power_off	=3D samsung_ufs_phy_power_off,
+> > +	.calibrate	=3D samsung_ufs_phy_calibrate,
+> > +	.set_mode	=3D samsung_ufs_phy_set_mode,
+>=20
+> missing .owner.
+Ack,
+
+> > +=7D
+> > +;
+=2E
+=2E
+> > +++ b/drivers/phy/samsung/phy-samsung-ufs.h
+> > =40=40 -0,0 +1,142 =40=40
+> > +/* SPDX-License-Identifier: GPL-2.0-only */
+> > +/*
+> > + * UFS PHY driver for Samsung EXYNOS SoC
+> > + *
+> > + * Copyright (C) 2015 Samsung Electronics Co., Ltd.
+>=20
+> 2020
+>=20
+Sure, will update.
+
+> Thanks
+> Kishon
+
