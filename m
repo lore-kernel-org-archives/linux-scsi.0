@@ -2,112 +2,121 @@ Return-Path: <SRS0=m8SI=6Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1723C38A2A
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F488C38A2A
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:57:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A794020801
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:50:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 343AA20801
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:57:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="If6iRWzV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729032AbgEJVu6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 May 2020 17:50:58 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:55382 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727771AbgEJVu6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 10 May 2020 17:50:58 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 1C89120423B;
-        Sun, 10 May 2020 23:50:56 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id M2Bp6mboodUj; Sun, 10 May 2020 23:50:49 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 63333204165;
-        Sun, 10 May 2020 23:50:49 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: scsi_alloc_target: parent of the target (need not be a scsi host)
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        SCSI development list <linux-scsi@vger.kernel.org>
-References: <59d462c4-ceab-041a-bbb5-5b509f13a123@interlog.com>
- <1589136759.9701.25.camel@HansenPartnership.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <5425d3ef-1cf8-fee0-58a5-fbf702d30562@interlog.com>
-Date:   Sun, 10 May 2020 17:50:47 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1729401AbgEJV5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 May 2020 17:57:54 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:26310 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727771AbgEJV5x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 May 2020 17:57:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589147872;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=d9rX/zfDWHGn5HkavCodZaas52U6Kq+3RTu4U00tsvw=;
+        b=If6iRWzVGR4He/kDshQJ5nd5J6Gn4zpvVt8hzlcQhg167L815imIffX1MjrDSUhmdNU/NG
+        r9L7VT3lNm+6iAjhNxAZUSOU+cOARyX5vIKgLqjMN1TmHn+oLjdSBtMlDx/2+t8koc1aXv
+        FVPLdXI82TYO4VAfe3IfuBVZkLeINwk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-432-CZ7KVWy9OZ6FQIRhuR6tfQ-1; Sun, 10 May 2020 17:57:48 -0400
+X-MC-Unique: CZ7KVWy9OZ6FQIRhuR6tfQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 764731899520;
+        Sun, 10 May 2020 21:57:47 +0000 (UTC)
+Received: from rh2.redhat.com (ovpn-113-0.rdu2.redhat.com [10.10.113.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 81F761002382;
+        Sun, 10 May 2020 21:57:46 +0000 (UTC)
+From:   Mike Christie <mchristi@redhat.com>
+To:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH v5 00/15] target: add sysfs support
+Date:   Sun, 10 May 2020 16:57:29 -0500
+Message-Id: <20200510215744.21999-1-mchristi@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1589136759.9701.25.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-10 2:52 p.m., James Bottomley wrote:
-> On Sun, 2020-05-10 at 14:32 -0400, Douglas Gilbert wrote:
->> This gem is in scsi_scan.c in the documentation of that function's
->> first argument. "need not be a scsi host" should read "it damn well
->> better be a scsi host" otherwise that function will crash and burn!
-> 
-> It shouldn't: several transport classes, like SAS and FC have
-> intermediate devices between the host and the target and they all work
-> just fine using the non-host parent.  Since you don't give the error
-> this is just guesswork, but the host has to be somewhere in the parent
-> chain otherwise dev_to_shost(parent) will return NULL ... is that your
-> problem?
+The following patches made over Linus's current tree allow lio to export
+info about structs like the se_session that the kernel initiates creation
+of via events like initiator login where there is no local user interaction
+like a mkdir.
 
-May be that "need not be a scsi host" should be expanded to something
-that suggests dev_to_shost(first_arg) can resolve to a non-NULL pointer.
+Why sysfs when we have configfs?
 
-Are there restrictions on those intermediate object(s)? Can there be more
-than one? If so, can those intermediate objects only form a linear chain
-or could it be more complex, an object subtree for example?
+I started with configfs and hit bugs like:
 
->> I'm trying to work out why the function: starget_for_each_device() in
->> scsi.c does _not_ use that collection right in front of it (i.e.
->> scsi_target::devices). Instead, it step up to the host level, and
->> iterates over all devices (LUs) on that host and only calls the given
->> function for those devices that match the channel and target numbers.
->> That is bizarrely wasteful if scsi_target::devices could be iterated
->> over instead.
->>
->> Anyone know why this is?
-> 
-> Best guess would be it wasn't converted over when the target list was
-> introduced.
+commit cc57c07343bd071cdf1915a91a24ab7d40c9b590
+Author: Mike Christie <mchristi@redhat.com>
+Date:   Sun Jul 15 18:16:17 2018 -0500
 
-Okay, I'll change it and see what breaks.
+    configfs: fix registered group removal
+
+and it turns out that bug was not really a bug and was just how configfs
+was meant to work. It seems it was not meant to be used where the kernel
+initiates creation of dirs/files as a result of some internal action. It's
+more geared to the user initiating the creation, and my patch just lead
+to other bugs and was reverted:
+
+commit f19e4ed1e1edbfa3c9ccb9fed17759b7d6db24c6
+Author: Al Viro <viro@zeniv.linux.org.uk>
+Date:   Thu Aug 29 23:13:30 2019 -0400
+
+    configfs_register_group() shouldn't be (and isn't) called in
+rmdirable parts
+
+So to export the session info we have debugfs, sysfs, ioctl, netlink, etc.
+sysfs just seemed like a decent fit since one of the primary users is
+rtslib and it already has lots of file/dir handling code.
 
 
-If you are not familiar with "mark"s in xarrays, they are binary flags
-hidden inside the pointers that xarray holds to form a container. With
-these flags (two available per xarray) one can make iterations much more
-efficient with xa_for_each_marked() { }. The win is that there is no
-need to dereference the pointers of collection members that are _not_
-marked. After playing with these in my rework of the sg driver, I
-concluded that the best thing to mark was object states. Unfortunately
-there are only 2 marks *** per xarray but scsi_device, for example, has
-9 states in scsi_device_state. Would you like to hazard a guess of
-which two (or two groups), if any, are iterated over often enough to
-make marking worthwhile?
+V4:
+- Don't drop const char use in fabric drivers.
+- add Documentation/ABI
+- use initaitor port prefix instead of generic "session"
+- only make session_id file if iSCSI format=1 is being used.
 
-Those two marks could be stretched to four, sort of, as scsi_device
-objects are members of two xarrays in my xarray rework: all sdev objects
-in a starget, and all sdev objects in a shost.
+V3:
+- drop format field
+- delay tpg deletion to allow fabric modules time to remove their
+  sessions.
+- Added root sessions dir for easier lookup if userspace has the
+  session id.
+- add session symlink
+- use simple ida.
+- Fix goto use. Actually moved sysfs addition call to after nego
+  to avoid sysfs additions when login ends up failing.
+- Dropped target_setup_session callback fixups and dropped the
+  init/free session callback for now. It's not immediately needed
+  for this base session sysfs info support.
 
-Doug Gilbert
-
-
-*** two flags is only _two_ sub-list possibilities per xarray. So, for
-     example, you can't iterate like this (directly):
-         xa_for_each_marked(mark1_set && mark2_clear) { }.
-
-
+V2:
+- rename top level dir to scsi_target
+- Fix extra newline
+- Copy data that's exported to sysfs so we do not have to worry about
+configfs and sysfs refcounts.
+- Export session info needed for tracking sessions in userspace and
+handling commands like PGRs there (still needs a way to notify userspace
+when sessions are added/deleted, but that will be a different set since
+the focus is different).
 
 
