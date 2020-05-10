@@ -7,19 +7,19 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3661C54E8D
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:58:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76D4BC54E8E
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:58:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96D512082E
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:58:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5935920801
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:58:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hLm1AjDo"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EDbpQlQ8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729454AbgEJV6D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1729456AbgEJV6D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 10 May 2020 17:58:03 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:26282 "EHLO
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:26727 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729426AbgEJV6D (ORCPT
+        with ESMTP id S1729441AbgEJV6D (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 10 May 2020 17:58:03 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1589147881;
@@ -27,35 +27,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rvoZGSRWBEXYEtlMWTnXJDJmfm1hmNo6v+xGFxXvqPo=;
-        b=hLm1AjDopXh1U233cB+ozN6/+g/0Ue9ZBlpqf98eoZIMZS9Bt92IvFQM+73mXuOqqaTVb4
-        NRqeKY4Bnsygdgo/aSh0AfV5xOctdAxHFfW0NWfm2sbEmd/dXj3Aw5OAQxfN5OVu0JPF1t
-        gKCRa3EgobgjcDjevo0jUjmtpltae6s=
+        bh=MsyvH9GitKHUxBhaxtCpGLpGmekg1oe8CYsiLYGkx9Q=;
+        b=EDbpQlQ8Qrqy/nWKE5DM3lc7eg5wlYCvOZCFMnxzZs1tMaSi55sQvAFNxHfTvBKtZ9j/OA
+        MfdJtGj5GkEueycKSFRDcc6ndIr5QWoFsXZgmfYXMwdA89Ggj0lYM7ML4/jCKsIbZogKQd
+        4VuPo/HnG5VAYW1MlFsxKAyVl4cULqk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-489-XIOpnXElP2GNph8mO1ilvw-1; Sun, 10 May 2020 17:57:59 -0400
-X-MC-Unique: XIOpnXElP2GNph8mO1ilvw-1
+ us-mta-214-x_WjqQOcOJeKH2ozsvan9Q-1; Sun, 10 May 2020 17:57:59 -0400
+X-MC-Unique: x_WjqQOcOJeKH2ozsvan9Q-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 352761005510;
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 39BE8100A68C;
         Sun, 10 May 2020 21:57:58 +0000 (UTC)
 Received: from rh2.redhat.com (ovpn-113-0.rdu2.redhat.com [10.10.113.0])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C57111002382;
-        Sun, 10 May 2020 21:57:55 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 606E31002387;
+        Sun, 10 May 2020 21:57:57 +0000 (UTC)
 From:   Mike Christie <mchristi@redhat.com>
 To:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Cc:     Mike Christie <mchristi@redhat.com>,
-        "Michael S . Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Juergen Gross <jgross@suse.com>
-Subject: [PATCH 03/15] target: add helper to parse acl and transport name
-Date:   Sun, 10 May 2020 16:57:32 -0500
-Message-Id: <20200510215744.21999-4-mchristi@redhat.com>
+Cc:     Mike Christie <mchristi@redhat.com>
+Subject: [PATCH 04/15] tcm loop: use target_parse_emulated_name
+Date:   Sun, 10 May 2020 16:57:33 -0500
+Message-Id: <20200510215744.21999-5-mchristi@redhat.com>
 In-Reply-To: <20200510215744.21999-1-mchristi@redhat.com>
 References: <20200510215744.21999-1-mchristi@redhat.com>
 MIME-Version: 1.0
@@ -66,122 +61,120 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The drivers that emulate the initiator port id (loop, scsi vhost, xen scsiback)
-do almost the extact same parsing when making their I_T_nexus. This adds a
-helper that parses out the acl name and port name from the user buffer, so
-these types of drivers drop prefixes like "naa." when they need to for the
-SCSI SPC4 TransportID SAS address, but then keep it for the LIO ACL name.
+Use target_parse_emulated_name so the acl and SCSI names are properly
+formatted.
 
-The next patches will then convert those drivers.
-
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Jason Wang <jasowang@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Stefan Hajnoczi <stefanha@redhat.com>
-Cc: Juergen Gross <jgross@suse.com>
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_fabric_lib.c | 73 +++++++++++++++++++++++++++++++++
- include/target/target_core_fabric.h     |  2 +
- 2 files changed, 75 insertions(+)
+ drivers/target/loopback/tcm_loop.c | 65 ++++++--------------------------------
+ 1 file changed, 10 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index e89b3d8..81ed7d5 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -423,6 +423,79 @@ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
- 	return buf + offset;
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 74aded7..64e5f1f 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -725,7 +725,8 @@ static int tcm_loop_alloc_sess_cb(struct se_portal_group *se_tpg,
+ 
+ static int tcm_loop_make_nexus(
+ 	struct tcm_loop_tpg *tl_tpg,
+-	const char *name)
++	const char *tpt_id_name,
++	const char *acl_name)
+ {
+ 	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
+ 	struct tcm_loop_nexus *tl_nexus;
+@@ -742,7 +743,7 @@ static int tcm_loop_make_nexus(
+ 
+ 	tl_nexus->se_sess = target_setup_session(&tl_tpg->tl_se_tpg, 0, 0,
+ 					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
+-					name, name, tl_nexus,
++					tpt_id_name, acl_name, tl_nexus,
+ 					tcm_loop_alloc_sess_cb);
+ 	if (IS_ERR(tl_nexus->se_sess)) {
+ 		ret = PTR_ERR(tl_nexus->se_sess);
+@@ -751,7 +752,7 @@ static int tcm_loop_make_nexus(
+ 	}
+ 
+ 	pr_debug("TCM_Loop_ConfigFS: Established I_T Nexus to emulated %s Initiator Port: %s\n",
+-		 tcm_loop_dump_proto_id(tl_hba), name);
++		 tcm_loop_dump_proto_id(tl_hba), acl_name);
+ 	return 0;
  }
  
-+/**
-+ * target_parse_emulated_name - parse TransportID and acl name from user buffer
-+ * @proto_id: SCSI protocol identifier
-+ * @user_buf: buffer with emualted name to extract acl and TransportID from
-+ * @acl_name: buffer to store se_node_acl name in
-+ * @max_name_len: len of acl_name buffer
-+ * @tpt_id_name: Pointer to the TransportID name will be stored here.
-+ */
-+int target_parse_emulated_name(u8 proto_id, const char *user_buf,
-+			       unsigned char *acl_name, int max_name_len,
-+			       unsigned char **tpt_id_name)
-+{
-+	int user_len = strlen(user_buf);
-+	char *proto_prefix, *name_start;
-+
-+	if (user_len >= max_name_len) {
-+		pr_err("Emulated name: %s, exceeds max: %d\n", user_buf,
-+		       max_name_len);
-+		return -EINVAL;
-+	}
-+
-+	switch (proto_id) {
-+	case SCSI_PROTOCOL_SAS:
-+		proto_prefix = "naa.";
-+		break;
-+	case SCSI_PROTOCOL_FCP:
-+		proto_prefix = "fc.";
-+		break;
-+	case SCSI_PROTOCOL_ISCSI:
-+		proto_prefix = "iqn.";
-+		break;
-+	default:
-+		pr_err("Unsupported proto_id: 0x%02x\n", proto_id);
-+		return -EINVAL;
-+	}
-+
-+	name_start = strstr(user_buf, proto_prefix);
-+	if (!name_start) {
-+		pr_err("Invalid emulated name %s. Must start with %s\n",
-+		       user_buf, proto_prefix);
-+		return -EINVAL;
-+	}
-+
-+	switch (proto_id) {
-+	case SCSI_PROTOCOL_SAS:
-+		sprintf(acl_name, name_start);
-+		break;
-+	case SCSI_PROTOCOL_FCP:
-+		sprintf(acl_name, &name_start[3]); /* Skip over "fc." */
-+		break;
-+	case SCSI_PROTOCOL_ISCSI:
-+		sprintf(acl_name, name_start);
-+		break;
-+	}
-+
-+	if (acl_name[user_len - 1] == '\n')
-+		acl_name[user_len - 1] = '\0';
-+
-+	if (proto_id == SCSI_PROTOCOL_SAS) {
-+		/*
-+		 * target_setup_session will want the naa. prefix to match
-+		 * the ACL name, but the t10 transport id only wants the
-+		 * address.
-+		 */
-+		*tpt_id_name = acl_name + 4;
-+	} else {
-+		*tpt_id_name = acl_name;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(target_parse_emulated_name);
-+
- struct t10_transport_id *target_create_transport_id(u8 proto, const char *name,
- 						    const char *session_id)
- {
-diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-index af1dd81..0113e1c 100644
---- a/include/target/target_core_fabric.h
-+++ b/include/target/target_core_fabric.h
-@@ -125,6 +125,8 @@ struct target_core_fabric_ops {
- int target_depend_item(struct config_item *item);
- void target_undepend_item(struct config_item *item);
+@@ -814,7 +815,7 @@ static ssize_t tcm_loop_tpg_nexus_store(struct config_item *item,
+ 	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
+ 			struct tcm_loop_tpg, tl_se_tpg);
+ 	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
+-	unsigned char i_port[TL_WWN_ADDR_LEN], *ptr, *port_ptr;
++	unsigned char i_port[TL_WWN_ADDR_LEN], *tpt_id_name;
+ 	int ret;
+ 	/*
+ 	 * Shutdown the active I_T nexus if 'NULL' is passed..
+@@ -823,59 +824,13 @@ static ssize_t tcm_loop_tpg_nexus_store(struct config_item *item,
+ 		ret = tcm_loop_drop_nexus(tl_tpg);
+ 		return (!ret) ? count : ret;
+ 	}
+-	/*
+-	 * Otherwise make sure the passed virtual Initiator port WWN matches
+-	 * the fabric protocol_id set in tcm_loop_make_scsi_hba(), and call
+-	 * tcm_loop_make_nexus()
+-	 */
+-	if (strlen(page) >= TL_WWN_ADDR_LEN) {
+-		pr_err("Emulated NAA Sas Address: %s, exceeds max: %d\n",
+-		       page, TL_WWN_ADDR_LEN);
+-		return -EINVAL;
+-	}
+-	snprintf(&i_port[0], TL_WWN_ADDR_LEN, "%s", page);
  
-+int target_parse_emulated_name(u8, const char *, unsigned char *, int,
-+			       unsigned char **);
- struct t10_transport_id *target_create_transport_id(u8, const char *,
- 						    const char *);
- void target_free_transport_id(struct t10_transport_id *);
+-	ptr = strstr(i_port, "naa.");
+-	if (ptr) {
+-		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_SAS) {
+-			pr_err("Passed SAS Initiator Port %s does not match target port protoid: %s\n",
+-			       i_port, tcm_loop_dump_proto_id(tl_hba));
+-			return -EINVAL;
+-		}
+-		port_ptr = &i_port[0];
+-		goto check_newline;
+-	}
+-	ptr = strstr(i_port, "fc.");
+-	if (ptr) {
+-		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_FCP) {
+-			pr_err("Passed FCP Initiator Port %s does not match target port protoid: %s\n",
+-			       i_port, tcm_loop_dump_proto_id(tl_hba));
+-			return -EINVAL;
+-		}
+-		port_ptr = &i_port[3]; /* Skip over "fc." */
+-		goto check_newline;
+-	}
+-	ptr = strstr(i_port, "iqn.");
+-	if (ptr) {
+-		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_ISCSI) {
+-			pr_err("Passed iSCSI Initiator Port %s does not match target port protoid: %s\n",
+-			       i_port, tcm_loop_dump_proto_id(tl_hba));
+-			return -EINVAL;
+-		}
+-		port_ptr = &i_port[0];
+-		goto check_newline;
+-	}
+-	pr_err("Unable to locate prefix for emulated Initiator Port: %s\n",
+-	       i_port);
+-	return -EINVAL;
+-	/*
+-	 * Clear any trailing newline for the NAA WWN
+-	 */
+-check_newline:
+-	if (i_port[strlen(i_port)-1] == '\n')
+-		i_port[strlen(i_port)-1] = '\0';
++	ret = target_parse_emulated_name(tl_hba->tl_proto_id, page, i_port,
++					 TL_WWN_ADDR_LEN, &tpt_id_name);
++	if (ret)
++		return ret;
+ 
+-	ret = tcm_loop_make_nexus(tl_tpg, port_ptr);
++	ret = tcm_loop_make_nexus(tl_tpg, tpt_id_name, i_port);
+ 	if (ret < 0)
+ 		return ret;
+ 
 -- 
 1.8.3.1
 
