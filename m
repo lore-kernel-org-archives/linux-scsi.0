@@ -7,51 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 716B6C54E8D
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2273DC38A2A
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:58:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53C7D2082E
-	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:57:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7A3420801
+	for <linux-scsi@archiver.kernel.org>; Sun, 10 May 2020 21:58:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fXdB2zWV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SiqVV1Dc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729414AbgEJV5z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 10 May 2020 17:57:55 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:50518 "EHLO
+        id S1729436AbgEJV6B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 10 May 2020 17:58:01 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:27436 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727771AbgEJV5y (ORCPT
+        by vger.kernel.org with ESMTP id S1727771AbgEJV6B (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 10 May 2020 17:57:54 -0400
+        Sun, 10 May 2020 17:58:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589147873;
+        s=mimecast20190719; t=1589147879;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=QtOC7yhozGwSpi1ObIbsOC3pYvzbInVS5uL0N04TdXg=;
-        b=fXdB2zWVIzMYTpNPRMswYfq4dDdtQMxRSjpz9/eIF9QUa7JwIvccaPRnwYJeDPJkpUCE47
-        SiuFGd6Fzc8LHmOSGtbgl/ijkcuw1nhrbxSubIECX7CGutpwIDyLyZQ6D1WcooKb8AQFCO
-        2p2rQQU/d3m1IJMX1RKnMxShkYR9nYo=
+        bh=c883L+0FxgYJSLRcMvFrWp4tibYxxIu1dWuQptPC9y4=;
+        b=SiqVV1DcuO245O2f3LpiBsR1ePQiS++v4Jc4EIC4qdJZyT6xkXpNyACB99yBrwV+Gv3Uo4
+        ww21/25Y6kcsukBjQEMl4gpByy6FtspPVt0drIb41Dio9BbHEHqYY7gChXv2i3JuUy7Oq7
+        nvuMAUxxdngEFPLwVwbDK1kwHMXlpTA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-146-QIdEDkicMcaMuZqnFklMQQ-1; Sun, 10 May 2020 17:57:49 -0400
-X-MC-Unique: QIdEDkicMcaMuZqnFklMQQ-1
+ us-mta-45-50L3z5XJP-iDvgXukGah9g-1; Sun, 10 May 2020 17:57:56 -0400
+X-MC-Unique: 50L3z5XJP-iDvgXukGah9g-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AAE451899521;
-        Sun, 10 May 2020 21:57:48 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9947D835B8B;
+        Sun, 10 May 2020 21:57:55 +0000 (UTC)
 Received: from rh2.redhat.com (ovpn-113-0.rdu2.redhat.com [10.10.113.0])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A322F1002382;
-        Sun, 10 May 2020 21:57:47 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D7D1D10016E8;
+        Sun, 10 May 2020 21:57:48 +0000 (UTC)
 From:   Mike Christie <mchristi@redhat.com>
 To:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Cc:     Mike Christie <mchristi@redhat.com>
-Subject: [PATCH 01/15] target: check enforce_pr_isids during registration
-Date:   Sun, 10 May 2020 16:57:30 -0500
-Message-Id: <20200510215744.21999-2-mchristi@redhat.com>
+Cc:     Mike Christie <mchristi@redhat.com>,
+        "Michael S . Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Juergen Gross <jgross@suse.com>
+Subject: [PATCH 02/15] target: separate acl name from port ids
+Date:   Sun, 10 May 2020 16:57:31 -0500
+Message-Id: <20200510215744.21999-3-mchristi@redhat.com>
 In-Reply-To: <20200510215744.21999-1-mchristi@redhat.com>
 References: <20200510215744.21999-1-mchristi@redhat.com>
 MIME-Version: 1.0
@@ -62,66 +67,379 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the check for enforce_pr_isids to the registration code where we
-can fail at the time an initiator tries to register a path without an
-isid. In its current place in __core_scsi3_locate_pr_reg, it is too
-late because it can be registered and be reported in PR in commands and
-it is stuck in this state because we cannot unregister it.
+The PGR code assumes the ACL name is going to be based on the SPC4
+transportID type of values. The problem is that for iSCSI we have an extra
+session id as part of the SCSI port id and some fabric modules support or
+would like to support non transportID values for the ACL name. For example,
+iSCSI and SRP would like to use the source address for the ACL name, but
+that is not a valud transportID value that you can get in a PGR request.
 
-Note.
-I am including in this patchset, because the 5th patch is built on top.
+This patch adds a new transport_id struct which maps to the SPC4
+transportID. In the future it will be used for PGR commands instead of the
+ACL name. In this patchset it is used to export the initiator info in the
+session's sysfs dir, so tools can display the info and daemons that execute
+commands like PGRs in userspace can build a session id to I_T nexus mapping.
 
+In this patch only srp is passing in different values for the transport id
+and acl name. The next patches will convert loop, scsi vhost and xen
+scsiback that are more complex due to their initiator name emulation.
+
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Jason Wang <jasowang@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Stefan Hajnoczi <stefanha@redhat.com>
+Cc: Juergen Gross <jgross@suse.com>
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/target/target_core_pr.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 5e93169..cd2d32f 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1176,15 +1176,6 @@ static struct t10_pr_registration *__core_scsi3_locate_pr_reg(
- 		 * ISID, then we have found a match.
- 		 */
- 		if (!pr_reg->isid_present_at_reg) {
--			/*
--			 * Determine if this SCSI device server requires that
--			 * SCSI Intiatior TransportID w/ ISIDs is enforced
--			 * for fabric modules (iSCSI) requiring them.
--			 */
--			if (tpg->se_tpg_tfo->sess_get_initiator_sid != NULL) {
--				if (dev->dev_attrib.enforce_pr_isids)
--					continue;
--			}
- 			atomic_inc_mb(&pr_reg->pr_res_holders);
- 			spin_unlock(&pr_tmpl->registration_lock);
- 			return pr_reg;
-@@ -1591,10 +1582,25 @@ static void core_scsi3_lunacl_undepend_item(struct se_dev_entry *se_deve)
- 				continue;
- 			dest_rtpi = tmp_lun->lun_rtpi;
+V4:
+- Don't drop const char use. We still have target_setup_session allocate
+the transport_id struct, but because every uses format=0 we just need to
+pass in the transport_id's name.
+
+V3:
+- drop format
+
+ drivers/infiniband/ulp/srpt/ib_srpt.c    | 10 +++++---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c |  4 +--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c       |  2 +-
+ drivers/target/loopback/tcm_loop.c       |  3 ++-
+ drivers/target/sbp/sbp_target.c          |  2 +-
+ drivers/target/target_core_fabric_lib.c  | 41 +++++++++++++++++++++++++++++++
+ drivers/target/target_core_transport.c   | 42 ++++++++++++++++++++++++--------
+ drivers/target/tcm_fc/tfc_sess.c         |  3 ++-
+ drivers/usb/gadget/function/f_tcm.c      |  3 ++-
+ drivers/vhost/scsi.c                     |  1 +
+ drivers/xen/xen-scsiback.c               |  3 ++-
+ include/target/target_core_base.h        | 12 +++++++++
+ include/target/target_core_fabric.h      |  5 +++-
+ 13 files changed, 108 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
+index 9855274..d107f63 100644
+--- a/drivers/infiniband/ulp/srpt/ib_srpt.c
++++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
+@@ -2320,7 +2320,8 @@ static int srpt_cm_req_recv(struct srpt_device *const sdev,
+ 			break;
+ 		ch->sess = target_setup_session(&stpg->tpg, tag_num,
+ 						tag_size, TARGET_PROT_NORMAL,
+-						ch->sess_name, ch, NULL);
++						i_port_id + 2, ch->sess_name,
++						ch, NULL);
+ 	}
+ 	mutex_unlock(&sport->port_guid_id.mutex);
  
-+			iport_ptr = NULL;
- 			i_str = target_parse_pr_out_transport_id(tmp_tpg,
- 					ptr, &tid_len, &iport_ptr);
- 			if (!i_str)
- 				continue;
-+			/*
-+			 * Determine if this SCSI device server requires that
-+			 * SCSI Intiatior TransportID w/ ISIDs is enforced
-+			 * for fabric modules (iSCSI) requiring them.
-+			 */
-+			if (tpg->se_tpg_tfo->sess_get_initiator_sid &&
-+                            dev->dev_attrib.enforce_pr_isids &&
-+			    !iport_ptr) {
-+				pr_warn("SPC-PR: enforce_pr_isids is set but a isid has not been sent in the SPEC_I_PT data for %s.",
-+					i_str);
-+				ret = TCM_INVALID_PARAMETER_LIST;
-+				spin_unlock(&dev->se_port_lock);
-+				goto out_unmap;
-+			}
+@@ -2329,14 +2330,15 @@ static int srpt_cm_req_recv(struct srpt_device *const sdev,
+ 		if (!IS_ERR_OR_NULL(ch->sess))
+ 			break;
+ 		ch->sess = target_setup_session(&stpg->tpg, tag_num,
+-					tag_size, TARGET_PROT_NORMAL, i_port_id,
+-					ch, NULL);
++					tag_size, TARGET_PROT_NORMAL,
++					i_port_id + 2, i_port_id, ch, NULL);
+ 		if (!IS_ERR_OR_NULL(ch->sess))
+ 			break;
+ 		/* Retry without leading "0x" */
+ 		ch->sess = target_setup_session(&stpg->tpg, tag_num,
+ 						tag_size, TARGET_PROT_NORMAL,
+-						i_port_id + 2, ch, NULL);
++						i_port_id + 2, i_port_id + 2,
++						ch, NULL);
+ 	}
+ 	mutex_unlock(&sport->port_gid_id.mutex);
  
- 			atomic_inc_mb(&tmp_tpg->tpg_pr_ref_count);
- 			spin_unlock(&dev->se_port_lock);
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index d9e94e8..31459f3 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -2223,8 +2223,8 @@ static int ibmvscsis_make_nexus(struct ibmvscsis_tport *tport)
+ 	}
+ 
+ 	nexus->se_sess = target_setup_session(&tport->se_tpg, 0, 0,
+-					      TARGET_PROT_NORMAL, name, nexus,
+-					      NULL);
++					      TARGET_PROT_NORMAL, name, name,
++					      nexus, NULL);
+ 	if (IS_ERR(nexus->se_sess)) {
+ 		rc = PTR_ERR(nexus->se_sess);
+ 		goto transport_init_fail;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 1f0a185..7b21809 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1483,7 +1483,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 	 */
+ 	se_sess = target_setup_session(&tpg->se_tpg, num_tags,
+ 				       sizeof(struct qla_tgt_cmd),
+-				       TARGET_PROT_ALL, port_name,
++				       TARGET_PROT_ALL, port_name, port_name,
+ 				       qlat_sess, tcm_qla2xxx_session_cb);
+ 	if (IS_ERR(se_sess))
+ 		return PTR_ERR(se_sess);
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 3305b47..74aded7 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -742,7 +742,8 @@ static int tcm_loop_make_nexus(
+ 
+ 	tl_nexus->se_sess = target_setup_session(&tl_tpg->tl_se_tpg, 0, 0,
+ 					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
+-					name, tl_nexus, tcm_loop_alloc_sess_cb);
++					name, name, tl_nexus,
++					tcm_loop_alloc_sess_cb);
+ 	if (IS_ERR(tl_nexus->se_sess)) {
+ 		ret = PTR_ERR(tl_nexus->se_sess);
+ 		kfree(tl_nexus);
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
+index e4a9b9f..2cac4d9 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -199,7 +199,7 @@ static struct sbp_session *sbp_session_create(
+ 	sess->se_sess = target_setup_session(&tpg->se_tpg, 128,
+ 					     sizeof(struct sbp_target_request),
+ 					     TARGET_PROT_NORMAL, guid_str,
+-					     sess, NULL);
++					     guid_str, sess, NULL);
+ 	if (IS_ERR(sess->se_sess)) {
+ 		pr_err("failed to init se_session\n");
+ 		ret = PTR_ERR(sess->se_sess);
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index 1e031d8..e89b3d8 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -422,3 +422,44 @@ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+ 	*out_tid_len = 24;
+ 	return buf + offset;
+ }
++
++struct t10_transport_id *target_create_transport_id(u8 proto, const char *name,
++						    const char *session_id)
++{
++	struct t10_transport_id *tpt_id;
++
++	tpt_id = kzalloc(sizeof(*tpt_id), GFP_KERNEL);
++	if (!tpt_id)
++		return NULL;
++	tpt_id->proto = proto;
++
++	tpt_id->name = kstrdup(name, GFP_KERNEL);
++	if (!tpt_id->name)
++		goto free_tpt_id;
++
++	if (session_id) {
++		tpt_id->session_id = kstrdup(session_id, GFP_KERNEL);
++		if (!tpt_id->session_id)
++			goto free_name;
++	}
++
++	return tpt_id;
++
++free_name:
++	kfree(tpt_id->name);
++free_tpt_id:
++	kfree(tpt_id);
++	return NULL;
++}
++EXPORT_SYMBOL(target_create_transport_id);
++
++void target_free_transport_id(struct t10_transport_id *tpt_id)
++{
++	if (!tpt_id)
++		return;
++
++	kfree(tpt_id->name);
++	kfree(tpt_id->session_id);
++	kfree(tpt_id);
++}
++EXPORT_SYMBOL(target_free_transport_id);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 594b724..fb00fcc 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -413,15 +413,27 @@ void transport_register_session(
+ }
+ EXPORT_SYMBOL(transport_register_session);
+ 
++/**
++ * target_setup_session - alloc and add a session to lio core
++ * @tpg: parent tpg
++ * @tag_num: if non-zero max num in-flight commands.
++ * @tag_size: if tag_num is non-zero, fabric driver's per cmd data in bytes.
++ * @prot_op: bitmask that defines which T10-PI modes are supported.
++ * @tpt_id_name: SCSI TransportID name/address/identifier
++ * @acl_name: name used for se_node_acl
++ * @private: storage for fabric driver accessible via fabric_sess_ptr
++ * @callback: opt function called before session has been added to lio core.
++ */
+ struct se_session *
+ target_setup_session(struct se_portal_group *tpg,
+ 		     unsigned int tag_num, unsigned int tag_size,
+-		     enum target_prot_op prot_op,
+-		     const char *initiatorname, void *private,
++		     enum target_prot_op prot_op, const char *tpt_id_name,
++		     const char *acl_name, void *private,
+ 		     int (*callback)(struct se_portal_group *,
+ 				     struct se_session *, void *))
+ {
+ 	struct se_session *sess;
++	int rc;
+ 
+ 	/*
+ 	 * If the fabric driver is using percpu-ida based pre allocation
+@@ -435,26 +447,35 @@ struct se_session *
+ 	if (IS_ERR(sess))
+ 		return sess;
+ 
++	sess->tpt_id = target_create_transport_id(tpg->proto_id, tpt_id_name,
++						  NULL);
++	if (!sess->tpt_id) {
++		rc = -ENOMEM;
++		goto free_sess;
++	}
++
+ 	sess->se_node_acl = core_tpg_check_initiator_node_acl(tpg,
+-					(unsigned char *)initiatorname);
++					(unsigned char *)acl_name);
+ 	if (!sess->se_node_acl) {
+-		transport_free_session(sess);
+-		return ERR_PTR(-EACCES);
++		rc = -EACCES;
++		goto free_sess;
+ 	}
+ 	/*
+ 	 * Go ahead and perform any remaining fabric setup that is
+ 	 * required before transport_register_session().
+ 	 */
+ 	if (callback != NULL) {
+-		int rc = callback(tpg, sess, private);
+-		if (rc) {
+-			transport_free_session(sess);
+-			return ERR_PTR(rc);
+-		}
++		rc = callback(tpg, sess, private);
++		if (rc)
++			goto free_sess;
+ 	}
+ 
+ 	transport_register_session(tpg, sess->se_node_acl, sess, private);
+ 	return sess;
++
++free_sess:
++	transport_free_session(sess);
++	return ERR_PTR(rc);
+ }
+ EXPORT_SYMBOL(target_setup_session);
+ 
+@@ -579,6 +600,7 @@ void transport_free_session(struct se_session *se_sess)
+ 		sbitmap_queue_free(&se_sess->sess_tag_pool);
+ 		kvfree(se_sess->sess_cmd_map);
+ 	}
++	target_free_transport_id(se_sess->tpt_id);
+ 	percpu_ref_exit(&se_sess->cmd_count);
+ 	kmem_cache_free(se_sess_cache, se_sess);
+ }
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 4fd6a1d..1d1c460 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -230,7 +230,8 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	sess->se_sess = target_setup_session(se_tpg, TCM_FC_DEFAULT_TAGS,
+ 					     sizeof(struct ft_cmd),
+ 					     TARGET_PROT_NORMAL, &initiatorname[0],
+-					     sess, ft_sess_alloc_cb);
++					     &initiatorname[0], sess,
++					     ft_sess_alloc_cb);
+ 	if (IS_ERR(sess->se_sess)) {
+ 		int rc = PTR_ERR(sess->se_sess);
+ 		kfree(sess);
+diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
+index 3650493..cab3036 100644
+--- a/drivers/usb/gadget/function/f_tcm.c
++++ b/drivers/usb/gadget/function/f_tcm.c
+@@ -1583,7 +1583,8 @@ static int tcm_usbg_make_nexus(struct usbg_tpg *tpg, char *name)
+ 						     USB_G_DEFAULT_SESSION_TAGS,
+ 						     sizeof(struct usbg_cmd),
+ 						     TARGET_PROT_NORMAL, name,
+-						     tv_nexus, usbg_alloc_sess_cb);
++						     name, tv_nexus,
++						     usbg_alloc_sess_cb);
+ 	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+ #define MAKE_NEXUS_MSG "core_tpg_check_initiator_node_acl() failed for %s\n"
+ 		pr_debug(MAKE_NEXUS_MSG, name);
+diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
+index c399522..15aabc2 100644
+--- a/drivers/vhost/scsi.c
++++ b/drivers/vhost/scsi.c
+@@ -1964,6 +1964,7 @@ static int vhost_scsi_make_nexus(struct vhost_scsi_tpg *tpg,
+ 					VHOST_SCSI_DEFAULT_TAGS,
+ 					sizeof(struct vhost_scsi_cmd),
+ 					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
++					(unsigned char *)name,
+ 					(unsigned char *)name, tv_nexus,
+ 					vhost_scsi_nexus_cb);
+ 	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 75c0a2e..93cb386 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -1531,7 +1531,8 @@ static int scsiback_make_nexus(struct scsiback_tpg *tpg,
+ 						     VSCSI_DEFAULT_SESSION_TAGS,
+ 						     sizeof(struct vscsibk_pend),
+ 						     TARGET_PROT_NORMAL, name,
+-						     tv_nexus, scsiback_alloc_sess_cb);
++						     name, tv_nexus,
++						     scsiback_alloc_sess_cb);
+ 	if (IS_ERR(tv_nexus->tvn_se_sess)) {
+ 		kfree(tv_nexus);
+ 		ret = -ENOMEM;
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 6d4a694..2e79cce 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -331,6 +331,17 @@ struct t10_wwn {
+ 	struct list_head t10_vpd_list;
+ };
+ 
++struct t10_transport_id {
++	/* The format=0 transport specific port id/name value. */
++	char *name;
++	/*
++	 * If proto is iSCSI and it's using format=1, then this is set to the
++	 * initiator session id string defined in spc4r37 table 508.
++	 */
++	char *session_id;
++	u8 proto;
++};
++
+ struct t10_pr_registration {
+ 	/* Used for fabrics that contain WWN+ISID */
+ #define PR_REG_ISID_LEN				16
+@@ -610,6 +621,7 @@ static inline struct se_node_acl *fabric_stat_to_nacl(struct config_item *item)
+ struct se_session {
+ 	unsigned		sess_tearing_down:1;
+ 	u64			sess_bin_isid;
++	struct t10_transport_id	*tpt_id;
+ 	enum target_prot_op	sup_prot_ops;
+ 	enum target_prot_type	sess_prot_type;
+ 	struct se_node_acl	*se_node_acl;
+diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+index 063f133..af1dd81 100644
+--- a/include/target/target_core_fabric.h
++++ b/include/target/target_core_fabric.h
+@@ -125,9 +125,12 @@ struct target_core_fabric_ops {
+ int target_depend_item(struct config_item *item);
+ void target_undepend_item(struct config_item *item);
+ 
++struct t10_transport_id *target_create_transport_id(u8, const char *,
++						    const char *);
++void target_free_transport_id(struct t10_transport_id *);
+ struct se_session *target_setup_session(struct se_portal_group *,
+ 		unsigned int, unsigned int, enum target_prot_op prot_op,
+-		const char *, void *,
++		const char *, const char *, void *,
+ 		int (*callback)(struct se_portal_group *,
+ 				struct se_session *, void *));
+ void target_remove_session(struct se_session *);
 -- 
 1.8.3.1
 
