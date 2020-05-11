@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED28EC54E4B
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 20:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F787C54E8D
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 20:10:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D10EF206F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 20:10:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2D8D20720
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 20:10:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731540AbgEKUKF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 May 2020 16:10:05 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:35101 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731405AbgEKUKF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2020 16:10:05 -0400
-Received: by mail-pl1-f195.google.com with SMTP id u15so434774plm.2
-        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2020 13:10:04 -0700 (PDT)
+        id S1731575AbgEKUKG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 May 2020 16:10:06 -0400
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:40850 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731405AbgEKUKG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2020 16:10:06 -0400
+Received: by mail-pj1-f65.google.com with SMTP id fu13so8295962pjb.5
+        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2020 13:10:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=2dITsv9JMmCOILvd6qs9FnxxdcpxfpNDUd3BI/+BJ7E=;
-        b=RNJHvxJ/pmBThH1esPpKhhgiB7aw694YE6K1BUEurtbguj4ONQxooJa7VhLIhveog1
-         p66qZ+URPejI8nEOBhtB7mMaZRvCsuWUtgu5wdpBD5AZd29nwScmOzLsQZU4N0hqmiCb
-         yOCTFblYZeT/dCuNvwzQqYBsoALueXXf1a4SK95qVQwgic+PCGhJefDNbfFWlp7OyKpC
-         jv4ll1HURnuisyJHt9zo/T8ZsIXs+DeLn5cq9Pxipnfeu4qbMdDBXvu3aH+62V1sQPOz
-         mYz22ukOqUxRMO8Ev85B6fM1/48NUCqQOEKI/yb8IpOX2ImcEcF/uL/PzGOuj7sV7/bE
-         FTLw==
-X-Gm-Message-State: AGi0PuaKXKXwwr5KhTKDAHWdFIjNZgM9CaS+gl8MJvIkTcw9XgF6doOS
-        7C8RTiIyK14+/aFlEWirsZ8=
-X-Google-Smtp-Source: APiQypL8wo5j6A9/9ixrpYiSdrhgxq3etUQgICjC+P6JuCFoKKGkuMMKgiiy+tQBFa6GvUwOgVNrag==
-X-Received: by 2002:a17:90b:3014:: with SMTP id hg20mr24862578pjb.56.1589227804140;
-        Mon, 11 May 2020 13:10:04 -0700 (PDT)
+        bh=6TzEOTCAxT0J64ovyFgfWtPQmxxnko7qUntCwks98go=;
+        b=T67KNh0dSVHxfZY1aTbEODGdzdfIGpcJBcfykMrPLUK7vjwUWly1qKbbKP9X+6Wtim
+         qTIlEPW6HplXvz7FxAqnAgXVIHYScpsDN7Fd9pAWGK108pX6RTpAe9QBWgu/tXWKRieO
+         ObQPnoQqDAZ8r6dfjiYH0OagHfqUt0JIDubjTVBsUD0NdSsGIu8vEW0UfMSimSN9s0cD
+         dKXE+pQiTTtFptRBa0yYhpL1FkDh0WvemV2xP8Y8g1hfHHGskuHIJ+PIeL77kPqX8dsn
+         Vknp0MjQf8FWEUsaoKXac64EYz3YEiEUhC2xoeNP7RHK+sLKUZ3bx1ntSL/TNV1Lar21
+         dtjQ==
+X-Gm-Message-State: AGi0PuZJ5Vfa1DaVWv9pmHvxh0zShRhRSDzfP+Abu7818f2APvPG54qC
+        Y6XzZYciHH+xdSRQLKQA5yo=
+X-Google-Smtp-Source: APiQypLrUfOnv5cInu3QhevwPulfJHXDtZ/qYDyrp7gGC7ZR6mvqWy7UUQUzqNVorMHx21l8fTV4BA==
+X-Received: by 2002:a17:902:8d8d:: with SMTP id v13mr16895267plo.67.1589227805586;
+        Mon, 11 May 2020 13:10:05 -0700 (PDT)
 Received: from localhost.localdomain ([2601:647:4000:d7:c4e5:b27b:830d:5d6e])
-        by smtp.gmail.com with ESMTPSA id 30sm8610265pgp.38.2020.05.11.13.10.02
+        by smtp.gmail.com with ESMTPSA id 30sm8610265pgp.38.2020.05.11.13.10.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2020 13:10:03 -0700 (PDT)
+        Mon, 11 May 2020 13:10:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -51,9 +51,9 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Quinn Tran <qutran@marvell.com>,
         Martin Wilck <mwilck@suse.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v5 07/15] qla2xxx: Increase the size of struct qla_fcp_prio_cfg to FCP_PRIO_CFG_SIZE
-Date:   Mon, 11 May 2020 13:09:38 -0700
-Message-Id: <20200511200946.7675-8-bvanassche@acm.org>
+Subject: [PATCH v5 08/15] qla2xxx: Change two hardcoded constants into offsetof() / sizeof() expressions
+Date:   Mon, 11 May 2020 13:09:39 -0700
+Message-Id: <20200511200946.7675-9-bvanassche@acm.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200511200946.7675-1-bvanassche@acm.org>
 References: <20200511200946.7675-1-bvanassche@acm.org>
@@ -64,16 +64,7 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch fixes the following Coverity complaint without changing any
-functionality:
-
-CID 337793 (#1 of 1): Wrong size argument (SIZEOF_MISMATCH)
-suspicious_sizeof: Passing argument ha->fcp_prio_cfg of type
-struct qla_fcp_prio_cfg * and argument 32768UL to function memset is
-suspicious because a multiple of sizeof (struct qla_fcp_prio_cfg) /*48*/
-is expected.
-
-memset(ha->fcp_prio_cfg, 0, FCP_PRIO_CFG_SIZE);
+This patch does not change any functionality.
 
 Reviewed-by: Daniel Wagner <dwagner@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
@@ -84,34 +75,35 @@ Cc: Martin Wilck <mwilck@suse.com>
 Cc: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_fw.h | 3 ++-
- drivers/scsi/qla2xxx/qla_os.c | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_fw.h  | 3 +--
+ drivers/scsi/qla2xxx/qla_sup.c | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index b364a497e33d..4fa34374f34f 100644
+index 4fa34374f34f..f18d2d00d28c 100644
 --- a/drivers/scsi/qla2xxx/qla_fw.h
 +++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -2217,8 +2217,9 @@ struct qla_fcp_prio_cfg {
+@@ -2216,9 +2216,8 @@ struct qla_fcp_prio_cfg {
+ #define FCP_PRIO_ATTR_ENABLE    0x1
  #define FCP_PRIO_ATTR_PERSIST   0x2
  	uint8_t  reserved;      /* Reserved for future use          */
- #define FCP_PRIO_CFG_HDR_SIZE   0x10
--	struct qla_fcp_prio_entry entry[1];     /* fcp priority entries  */
-+	struct qla_fcp_prio_entry entry[1023]; /* fcp priority entries  */
- #define FCP_PRIO_CFG_ENTRY_SIZE 0x20
-+	uint8_t  reserved2[16];
+-#define FCP_PRIO_CFG_HDR_SIZE   0x10
++#define FCP_PRIO_CFG_HDR_SIZE   offsetof(struct qla_fcp_prio_cfg, entry)
+ 	struct qla_fcp_prio_entry entry[1023]; /* fcp priority entries  */
+-#define FCP_PRIO_CFG_ENTRY_SIZE 0x20
+ 	uint8_t  reserved2[16];
  };
  
- #define FCP_PRIO_CFG_SIZE       (32*1024) /* fcp prio data per port*/
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5199169c4ce0..743c0df18fa0 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7883,6 +7883,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct qla82xx_uri_data_desc) != 28);
- 	BUILD_BUG_ON(sizeof(struct qla82xx_uri_table_desc) != 32);
- 	BUILD_BUG_ON(sizeof(struct qla83xx_fw_dump) != 51196);
-+	BUILD_BUG_ON(sizeof(struct qla_fcp_prio_cfg) != FCP_PRIO_CFG_SIZE);
- 	BUILD_BUG_ON(sizeof(struct qla_fdt_layout) != 128);
- 	BUILD_BUG_ON(sizeof(struct qla_flt_header) != 8);
- 	BUILD_BUG_ON(sizeof(struct qla_flt_region) != 16);
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index 3da79ee1d88e..57ffbf9d7dbf 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -3617,7 +3617,7 @@ qla24xx_read_fcp_prio_cfg(scsi_qla_host_t *vha)
+ 
+ 	/* read remaining FCP CMD config data from flash */
+ 	fcp_prio_addr += (FCP_PRIO_CFG_HDR_SIZE >> 2);
+-	len = ha->fcp_prio_cfg->num_entries * FCP_PRIO_CFG_ENTRY_SIZE;
++	len = ha->fcp_prio_cfg->num_entries * sizeof(struct qla_fcp_prio_entry);
+ 	max_len = FCP_PRIO_CFG_SIZE - FCP_PRIO_CFG_HDR_SIZE;
+ 
+ 	ha->isp_ops->read_optrom(vha, &ha->fcp_prio_cfg->entry[0],
