@@ -2,156 +2,112 @@ Return-Path: <SRS0=B1Ch=6Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D108C47255
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 14:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D41C54E8D
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 15:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22873206F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 14:41:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="p0jZ56gG";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="w1hvheYV"
+	by mail.kernel.org (Postfix) with ESMTP id AF4DF206D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 15:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729544AbgEKOle (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 May 2020 10:41:34 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49480 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729143AbgEKOle (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 May 2020 10:41:34 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 4E26B8EE151;
-        Mon, 11 May 2020 07:41:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1589208094;
-        bh=XyLPQji5d2d7WjRo3RldEPNbf6Gl5PpJiGEOv6Kyr1o=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=p0jZ56gGM3poIVtThvFKXQ6VleUD5foGFryJgusaIhPISn2YVbCOh5INGEjMf+x+D
-         x+EHyZssvI4lBTaU6Ny8KXa/wc1rJdPQ75GFkmxwXjP6QIvW/nz4MUh1Hp0YF6bAe7
-         Wsx5wRYzc/UmueqYRulY649o9rjuy0DtEZDu137s=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id uIE0IM36AWdG; Mon, 11 May 2020 07:41:33 -0700 (PDT)
-Received: from [153.66.254.194] (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 3E2538EE100;
-        Mon, 11 May 2020 07:41:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1589208093;
-        bh=XyLPQji5d2d7WjRo3RldEPNbf6Gl5PpJiGEOv6Kyr1o=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=w1hvheYV3m0ZDOICrnCnXPdA1rdl7Mu8WHrdsyZjXesn8FE05t0R4vimIsAfhtvHw
-         mciDm74ZqBO4DuT0mY2CsEQgAPq1xaFjGITupyDJoGOhMEXjsHajAeTBKAF/UjOIqc
-         n9JQIMpzCfjx/M7CEYdoHKcda7f/nFuTTPziycmI=
-Message-ID: <1589208092.3505.9.camel@HansenPartnership.com>
-Subject: Re: scsi_alloc_target: parent of the target (need not be a scsi
- host)
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     dgilbert@interlog.com,
-        SCSI development list <linux-scsi@vger.kernel.org>
-Date:   Mon, 11 May 2020 07:41:32 -0700
-In-Reply-To: <5425d3ef-1cf8-fee0-58a5-fbf702d30562@interlog.com>
-References: <59d462c4-ceab-041a-bbb5-5b509f13a123@interlog.com>
-         <1589136759.9701.25.camel@HansenPartnership.com>
-         <5425d3ef-1cf8-fee0-58a5-fbf702d30562@interlog.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
+        id S1730392AbgEKPzh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 May 2020 11:55:37 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:34163 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726934AbgEKPzh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2020 11:55:37 -0400
+Received: by mail-pf1-f195.google.com with SMTP id x15so4339350pfa.1
+        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2020 08:55:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=DP0sKd/2EJmC4Ml1rgJpamPd3rxwoBsv1lAesgQp6aI=;
+        b=eFwtqjYX3fkduW4/nvRLY12l9rV4DchgXBe2iQwxVlqsY0ohxVIxXy7W8+cbkBHNa7
+         b8PsuNdJngc15OLnvFWYChaY+5f+uDtfEdVXsxzeBv1ezpud2/SnZX2K5N7/DqDMPgrF
+         SdP0AwXQTCeyl/pm6wByy3iqGGy8qdj5JQtkRU716YmFbUELLBLsYLRB15wsta458T9J
+         wHWa+EdQH6b9dMh73RC5sodE9LrvEVltjfsVkfzcWnaJO0PbbpToB6i+HV0BqSnaLoPd
+         t7kHsBfI01F5CVVvNrAa2kQpOmCllTIo451gEykA/WEjzWdMOFMP/JR5pmBoR//2kw5G
+         KgMA==
+X-Gm-Message-State: AGi0PuatbhCjIbU+rtz8jQ/Lbz1B+Bs7IPMcAkLh3VyJYTNCjg8mSBPI
+        G8XiVSY0KrZvSSEWaNja+QE=
+X-Google-Smtp-Source: APiQypJ387LXAq4DtaDREbSBu4Ogg/ilodq8Q0CYdQZo97JObOlY4Yy/pyIKG+Qvqsli9dV6x/ew0w==
+X-Received: by 2002:a63:6747:: with SMTP id b68mr15437629pgc.142.1589212535969;
+        Mon, 11 May 2020 08:55:35 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:c4e5:b27b:830d:5d6e? ([2601:647:4000:d7:c4e5:b27b:830d:5d6e])
+        by smtp.gmail.com with ESMTPSA id y29sm9810339pfq.162.2020.05.11.08.55.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 May 2020 08:55:35 -0700 (PDT)
+Subject: Re: [PATCH v4 04/11] qla2xxx: Add more BUILD_BUG_ON() statements
+To:     Arun Easi <aeasi@marvell.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200427030310.19687-1-bvanassche@acm.org>
+ <20200427030310.19687-5-bvanassche@acm.org>
+ <alpine.LRH.2.21.9999.2005110032540.23618@irv1user01.caveonetworks.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <27074fb3-b237-4a53-9667-7550b5bb5249@acm.org>
+Date:   Mon, 11 May 2020 08:55:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
+MIME-Version: 1.0
+In-Reply-To: <alpine.LRH.2.21.9999.2005110032540.23618@irv1user01.caveonetworks.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 2020-05-10 at 17:50 -0400, Douglas Gilbert wrote:
-> On 2020-05-10 2:52 p.m., James Bottomley wrote:
-> > On Sun, 2020-05-10 at 14:32 -0400, Douglas Gilbert wrote:
-> > > This gem is in scsi_scan.c in the documentation of that
-> > > function's first argument. "need not be a scsi host" should read
-> > > "it damn well better be a scsi host" otherwise that function will
-> > > crash and burn!
-> > 
-> > It shouldn't: several transport classes, like SAS and FC have
-> > intermediate devices between the host and the target and they all
-> > work just fine using the non-host parent.  Since you don't give the
-> > error this is just guesswork, but the host has to be somewhere in
-> > the parent chain otherwise dev_to_shost(parent) will return NULL
-> > ... is that your problem?
+On 2020-05-11 00:34, Arun Easi wrote:
+> How did you pick the list of structures for this one? IOCB
+> structures make sense, but why "ct_sns_req", for e.g.? Adding
+> support for a different request may alter the structure size.
 > 
-> May be that "need not be a scsi host" should be expanded to something
-> that suggests dev_to_shost(first_arg) can resolve to a non-NULL
-> pointer.
-> 
-> Are there restrictions on those intermediate object(s)? Can there be
-> more than one? If so, can those intermediate objects only form a
-> linear chain or could it be more complex, an object subtree for
-> example?
+> Wondering what made you add all these checks? Anything tripped
+> while making some changes?
 
-I think you can read the current code as well as I can:
+Hi Arun,
 
-static inline struct Scsi_Host *dev_to_shost(struct device *dev)
-{
-	while
-(!scsi_is_host_device(dev)) {
-		if (!dev->parent)
-			return NULL;
-		dev =
-dev->parent;
-	}
-	return container_of(dev, struct Scsi_Host,
-shost_gendev);
-}
+For this patch I selected all data structures that have one or more
+little endian or big endian members. Such data structures either are
+used to interface with the firmware or represent FC frame information. I
+agree that struct ct_sns_req is special. I will leave the size check for
+that data structure out when I repost this patch series.
 
-The broad point is that this is open source, not some proprietary OS. 
-I'm not giving you an API set in stone and you have to figure out the
-use cases, I'm telling you how the current API behaves and the reason
-why it behaves this way.  If there's an expansion or change you need,
-provided it supports the current uses and is maintainable, it can be
-done.  What you have to tell me is what you're trying to do.
+Bart.
 
-> > > I'm trying to work out why the function:
-> > > starget_for_each_device() in scsi.c does _not_ use that
-> > > collection right in front of it (i.e. scsi_target::devices).
-> > > Instead, it step up to the host level, and iterates over all
-> > > devices (LUs) on that host and only calls the given function for
-> > > those devices that match the channel and target numbers.
-> > > That is bizarrely wasteful if scsi_target::devices could be
-> > > iterated over instead.
-> > >  
-> > > Anyone know why this is?
-> > 
-> > Best guess would be it wasn't converted over when the target list
-> > was introduced.
-> 
-> Okay, I'll change it and see what breaks.
-> 
-> 
-> If you are not familiar with "mark"s in xarrays, they are binary
-> flags hidden inside the pointers that xarray holds to form a
-> container. With these flags (two available per xarray) one can make
-> iterations much more efficient with xa_for_each_marked() { }. The win
-> is that there is no need to dereference the pointers of collection
-> members that are _not_ marked. After playing with these in my rework
-> of the sg driver, I concluded that the best thing to mark was object
-> states. Unfortunately there are only 2 marks *** per xarray but
-> scsi_device, for example, has 9 states in scsi_device_state. Would
-> you like to hazard a guess of which two (or two groups), if any, are
-> iterated over often enough to make marking worthwhile?
-> 
-> Those two marks could be stretched to four, sort of, as scsi_device
-> objects are members of two xarrays in my xarray rework: all sdev
-> objects in a starget, and all sdev objects in a shost.
-
-I've got to say that sounds like a solution looking for a problem.
-
-The fast path of SCSI is pretty rigorously checked with high iops
-devices these days.  The fact that this iterator is really lock heavy
-but has never been fingered in any of the traces indicates that it's
-probably not really a problem that needs solving.
-
-James
 
