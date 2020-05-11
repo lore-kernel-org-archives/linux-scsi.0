@@ -2,243 +2,297 @@ Return-Path: <SRS0=B1Ch=6Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E17FDC47255
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 18:31:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F12D9C47255
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 18:40:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C53BF20736
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 18:31:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBC1620720
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 18:40:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="tdXVjhDi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731162AbgEKSbk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 May 2020 14:31:40 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:59502 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729825AbgEKSbk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 May 2020 14:31:40 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 3B4062041B2;
-        Mon, 11 May 2020 20:31:38 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id apMMMrtNUupI; Mon, 11 May 2020 20:31:30 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 839D0204188;
-        Mon, 11 May 2020 20:31:28 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: scsi_alloc_target: parent of the target (need not be a scsi host)
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        SCSI development list <linux-scsi@vger.kernel.org>
-References: <59d462c4-ceab-041a-bbb5-5b509f13a123@interlog.com>
- <1589136759.9701.25.camel@HansenPartnership.com>
- <5425d3ef-1cf8-fee0-58a5-fbf702d30562@interlog.com>
- <1589208092.3505.9.camel@HansenPartnership.com>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <9a72ead7-a8b3-abe6-cb97-c3dd030ac031@interlog.com>
-Date:   Mon, 11 May 2020 14:31:26 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1729969AbgEKSkX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 May 2020 14:40:23 -0400
+Received: from mail1.bemta25.messagelabs.com ([195.245.230.67]:23768 "EHLO
+        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729768AbgEKSkW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 May 2020 14:40:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1589222419; i=@ts.fujitsu.com;
+        bh=WnJVErCFN3qUdYpRLqLJN/kf6RynwdAgactAl9+ftj0=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=tdXVjhDiO0DnYeVV6vCgoIk8n8FifOXvAqAhhJjW1kJkomKw1V83zAcQxN5edcU2D
+         IFjKd9mMQGUP8kfVcBjDpXgnAOwd3nG3fccHpV7oXnvFKffvBRGdJTp/cAqSTt72GG
+         2EaQkH5g9FF8m2sr8YrSWe78+3DBQAL7gvpYpqArrKsQsI2bazbnMCOXmc3UCStt89
+         dBorJqg2QquG/PfySxdgvryfqY7gDxJS/8ZAYgMkIL0FLQEiCPMRzRu1YAJQEVLKgO
+         TfNyMzqM0YiozjmCf5Tb/pI/U7UXtIrchmq80zrIN5yW8BzFtIezOrCylCdPxub+mU
+         dLMG/ftXr6DJA==
+Received: from [100.112.199.17] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-3.bemta.az-b.eu-west-1.aws.symcld.net id 40/02-40520-21C99BE5; Mon, 11 May 2020 18:40:18 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrOIsWRWlGSWpSXmKPExsViZ8MxVVdozs4
+  4gwkz2C2mffjJbNG8eD2bRff1HWwWy4//Y7JYf2QDo0Xr0rdMDmwel694e+yfu4bd4+PTWywe
+  7/ddZfP4vEkugDWKNTMvKb8igTVj9raTrAVNJhU7Zu9jbGC8rd3FyMUhJDCLUeLTuUb2LkZOD
+  mEBV4n7686xgiREBBYySlzecYoZJMEsYCxxpv0AI4gtJJAusffqJbAGNgEDiRWT7rOA2LwCjh
+  Kb/71mA7FZBFQl5q1oAKsXFQiXeLHlDytEjaDEyZlPwOo5BawkzjZsYYSYbyYxb/NDqF3iEre
+  ezGeCsOUltr+dwzyBkW8WkvZZSFpmIWmZhaRlASPLKkaLpKLM9IyS3MTMHF1DAwNdQ0MjXUNL
+  S11DE1O9xCrdJL3UUt3y1OISXUO9xPJiveLK3OScFL281JJNjMDwTyk4PnEH45q17/UOMUpyM
+  CmJ8upN3RknxJeUn1KZkVicEV9UmpNafIhRhoNDSYJ320ygnGBRanpqRVpmDjAWYdISHDxKIr
+  z2s4DSvMUFibnFmekQqVOMilLivDtBEgIgiYzSPLg2WPxfYpSVEuZlZGBgEOIpSC3KzSxBlX/
+  FKM7BqARUATKFJzOvBG76K6DFTECLHz7fBrK4JBEhJdXAxJ3GFF31Y8fhI2abZDZHanFbh5hd
+  SzxcmXTVyZhhzceT2/kaSuY///lb7eW8urA31WdN09YuvLRm6QV77f3rhE/fchNRWLDxWun8s
+  ndMEyplvrSmN6SdZg2/7y5tvF8/cqrn0zXPlz3Lcpc7llz39ofI6+8t2T1619coO+4NtTl6W1
+  x+vnVy1Rlr379Rt5uPqTTp3NwgzO7z/fDVzd5qzIYLz12bZNleOl9WXMb26eMFG/gerBLxnTT
+  v+/nYSodFdR9f+SfPETO+9/9zQf53Jt7/+dr31tR/P/6/M3bdzSvcNhJvvNpLYyofC/5wFNwT
+  cnD10+41t1ez7l9lPF9qe5OgctOdT7W/izYaWa1a3qfEUpyRaKjFXFScCAAVuI2gegMAAA==
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-17.tower-287.messagelabs.com!1589222415!287191!1
+X-Originating-IP: [62.60.8.149]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 18371 invoked from network); 11 May 2020 18:40:17 -0000
+Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
+  by server-17.tower-287.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 11 May 2020 18:40:17 -0000
+Received: from [172.17.80.59] ([172.17.80.59])
+        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with ESMTP id 04BIdPB9018567;
+        Mon, 11 May 2020 19:39:43 +0100
+Subject: Re: [PATCH 12/15] target: add sysfs session helper functions
+To:     Mike Christie <mchristi@redhat.com>, bvanassche@acm.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <20200510215744.21999-1-mchristi@redhat.com>
+ <20200510215744.21999-13-mchristi@redhat.com>
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Message-ID: <66e9bbf8-fdb2-d819-a496-75a1dea779cf@ts.fujitsu.com>
+Date:   Mon, 11 May 2020 20:39:20 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.1.0
 MIME-Version: 1.0
-In-Reply-To: <1589208092.3505.9.camel@HansenPartnership.com>
-Content-Type: multipart/mixed;
- boundary="------------69D3F28E49125A4068DE8E80"
-Content-Language: en-CA
+In-Reply-To: <20200510215744.21999-13-mchristi@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------69D3F28E49125A4068DE8E80
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-On 2020-05-11 10:41 a.m., James Bottomley wrote:
-> On Sun, 2020-05-10 at 17:50 -0400, Douglas Gilbert wrote:
->> On 2020-05-10 2:52 p.m., James Bottomley wrote:
->>> On Sun, 2020-05-10 at 14:32 -0400, Douglas Gilbert wrote:
->>>> This gem is in scsi_scan.c in the documentation of that
->>>> function's first argument. "need not be a scsi host" should read
->>>> "it damn well better be a scsi host" otherwise that function will
->>>> crash and burn!
->>>
->>> It shouldn't: several transport classes, like SAS and FC have
->>> intermediate devices between the host and the target and they all
->>> work just fine using the non-host parent.  Since you don't give the
->>> error this is just guesswork, but the host has to be somewhere in
->>> the parent chain otherwise dev_to_shost(parent) will return NULL
->>> ... is that your problem?
->>
->> May be that "need not be a scsi host" should be expanded to something
->> that suggests dev_to_shost(first_arg) can resolve to a non-NULL
->> pointer.
-
-In my working tree, I've changed that to:
-
-* scsi_alloc_target - allocate a new or find an existing target
-  * @parent:     may point to the parent shost, or an intermediate object
-  *              that dev_to_shost() can resolve to the parent shost
-  * @channel:    target channel number (zero if no channels)
-  * @id:         target id number
-
-Hinting at what is actually happening.
-
->> Are there restrictions on those intermediate object(s)? Can there be
->> more than one? If so, can those intermediate objects only form a
->> linear chain or could it be more complex, an object subtree for
->> example?
+On 05/10/20 23:57, Mike Christie wrote:
+> This patch adds helpers to add/remove a dir per session. There is only 2
+> files/dirs initially.
 > 
-> I think you can read the current code as well as I can:
+
+...
+
+> +
+> +int target_sysfs_add_session(struct se_portal_group *se_tpg,
+> +			     struct se_session *se_sess)
+> +{
+> +	int ret;
+> +
+> +	/*
+> +	 * Copy ACL name so we don't have to worry about mixing configfs
+> +	 * and sysfs refcounts.
+> +	 */
+> +	if (!se_sess->se_node_acl->dynamic_node_acl) {
+> +		se_sess->acl_name = kstrdup(se_sess->se_node_acl->initiatorname,
+> +					    GFP_KERNEL);
+> +		if (!se_sess->acl_name)
+> +			return -ENOMEM;
+> +	}
+> +
+> +	ret = kobject_add(&se_sess->kobj, se_tpg->sessions_kobj, "%s-%d",
+> +			  se_sess->tpt_id->name, se_sess->sid);
+> +	if (ret) {
+> +		pr_err("Could not add session%d to sysfs. Error %d.\n",
+> +		       se_sess->sid, ret);
+> +		goto free_acl_name;
+> +	}
+> +
+> +	ret = add_transport_id_attrs(se_sess);
+> +	if (ret)
+> +		goto del_kobj;
+> +
+> +	if (se_sess->tfo->session_attrs) {
+> +		ret = sysfs_create_group(&se_sess->kobj,
+> +					 se_sess->tfo->session_attrs);
+> +		if (ret)
+> +			goto rm_tpt_id_grps;
+> +	}
+> +
+> +	ret = sysfs_create_link(tcm_core_sessions_kobj, &se_sess->kobj,
+> +				se_sess->kobj.name);
+
+I would prefer to have links named "session-%d" or "%d" only, of course
+with se_sess->sid as the value for '%d'.
+
+If userspace knows the session-id only, such names make it easier to
+find the corresponding link.
+
+> +	if (ret)
+> +		goto rm_fabric_grps;
+> +
+> +	se_sess->sysfs_added = true;
+> +	return 0;
+> +
+> +rm_fabric_grps:
+> +	if (se_sess->tfo->session_attrs)
+> +		sysfs_remove_group(&se_sess->kobj, se_sess->tfo->session_attrs);
+> +rm_tpt_id_grps:
+> +	remove_transport_id_attrs(se_sess);
+> +del_kobj:
+> +	kobject_del(&se_sess->kobj);
+> +free_acl_name:
+> +	kfree(se_sess->acl_name);
+> +	se_sess->acl_name = NULL;
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(target_sysfs_add_session);
+> +
+> +void target_sysfs_remove_session(struct se_session *se_sess)
+> +{
+> +	/* discovery sessions are normally not added to sysfs */
+> +	if (!se_sess->sysfs_added)
+> +		return;
+> +
+> +	sysfs_remove_link(tcm_core_sessions_kobj, se_sess->kobj.name);
+> +	if (se_sess->tfo->session_attrs)
+> +		sysfs_remove_group(&se_sess->kobj, se_sess->tfo->session_attrs);
+> +	remove_transport_id_attrs(se_sess);
+> +	kobject_del(&se_sess->kobj);
+> +}
+> +EXPORT_SYMBOL(target_sysfs_remove_session);
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index fdf84db..04cb042 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -42,6 +42,7 @@
+>   
+>   static struct workqueue_struct *target_completion_wq;
+>   static struct kmem_cache *se_sess_cache;
+> +static DEFINE_IDA(se_sess_ida);
+>   struct kmem_cache *se_ua_cache;
+>   struct kmem_cache *t10_pr_reg_cache;
+>   struct kmem_cache *t10_alua_lu_gp_cache;
+> @@ -251,14 +252,27 @@ struct se_session *transport_alloc_session(enum target_prot_op sup_prot_ops)
+>   				" se_sess_cache\n");
+>   		return ERR_PTR(-ENOMEM);
+>   	}
+> -	ret = transport_init_session(se_sess);
+> +
+> +	ret = ida_simple_get(&se_sess_ida, 1, 0, GFP_KERNEL);
+>   	if (ret < 0) {
+> -		kmem_cache_free(se_sess_cache, se_sess);
+> -		return ERR_PTR(ret);
+> +		pr_err("Unable to allocate session index.\n");
+> +		goto free_sess;
+>   	}
+> -	se_sess->sup_prot_ops = sup_prot_ops;
+> +	se_sess->sid = ret;
+> +
+> +	ret = transport_init_session(se_sess);
+> +	if (ret < 0)
+> +		goto free_sid;
+>   
+> +	se_sess->sup_prot_ops = sup_prot_ops;
+> +	target_sysfs_init_session(se_sess);
+>   	return se_sess;
+> +
+> +free_sid:
+> +	ida_simple_remove(&se_sess_ida, se_sess->sid);
+> +free_sess:
+> +	kmem_cache_free(se_sess_cache, se_sess);
+> +	return ERR_PTR(ret);
+>   }
+>   EXPORT_SYMBOL(transport_alloc_session);
+>   
+> @@ -597,12 +611,21 @@ void transport_free_session(struct se_session *se_sess)
+>   		sbitmap_queue_free(&se_sess->sess_tag_pool);
+>   		kvfree(se_sess->sess_cmd_map);
+>   	}
+> -	target_free_transport_id(se_sess->tpt_id);
+>   	percpu_ref_exit(&se_sess->cmd_count);
+> -	kmem_cache_free(se_sess_cache, se_sess);
+> +	kobject_put(&se_sess->kobj);
+>   }
+>   EXPORT_SYMBOL(transport_free_session);
+>   
+> +void __target_free_session(struct se_session *se_sess)
+> +{
+> +	kfree(se_sess->acl_name);
+> +	target_free_transport_id(se_sess->tpt_id);
+> +
+> +	ida_simple_remove(&se_sess_ida, se_sess->sid);
+> +
+> +	kmem_cache_free(se_sess_cache, se_sess);
+> +}
+> +
+>   static int target_release_res(struct se_device *dev, void *data)
+>   {
+>   	struct se_session *sess = data;
+> diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+> index b7f7e02..34d89cb 100644
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -9,6 +9,7 @@
+>   #include <linux/semaphore.h>     /* struct semaphore */
+>   #include <linux/completion.h>
+>   #include <linux/kobject.h>
+> +#include <linux/idr.h>
+>   
+>   #define TARGET_CORE_VERSION		"v5.0"
+>   
+> @@ -626,6 +627,7 @@ struct se_session {
+>   	enum target_prot_op	sup_prot_ops;
+>   	enum target_prot_type	sess_prot_type;
+>   	struct se_node_acl	*se_node_acl;
+> +	char			*acl_name;
+>   	struct se_portal_group *se_tpg;
+>   	void			*fabric_sess_ptr;
+>   	struct percpu_ref	cmd_count;
+> @@ -636,6 +638,10 @@ struct se_session {
+>   	wait_queue_head_t	cmd_list_wq;
+>   	void			*sess_cmd_map;
+>   	struct sbitmap_queue	sess_tag_pool;
+> +	struct kobject		kobj;
+> +	int			sid;
+> +	bool			sysfs_added;
+> +	const struct target_core_fabric_ops *tfo;
+>   };
+>   
+>   struct se_device;
+> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+> index ced377f..f876a05 100644
+> --- a/include/target/target_core_fabric.h
+> +++ b/include/target/target_core_fabric.h
+> @@ -74,6 +74,10 @@ struct target_core_fabric_ops {
+>   	int (*queue_status)(struct se_cmd *);
+>   	void (*queue_tm_rsp)(struct se_cmd *);
+>   	void (*aborted_task)(struct se_cmd *);
+> +
+> +	/* Optional session management and sysfs callouts */
+> +	const struct attribute_group *session_attrs;
+> +
+>   	/*
+>   	 * fabric module calls for target_core_fabric_configfs.c
+>   	 */
+> @@ -145,7 +149,9 @@ void	transport_register_session(struct se_portal_group *,
+>   void	target_put_nacl(struct se_node_acl *);
+>   void	transport_deregister_session_configfs(struct se_session *);
+>   void	transport_deregister_session(struct se_session *);
+> -
+> +void	target_sysfs_remove_session(struct se_session *se_sess);
+> +int	target_sysfs_add_session(struct se_portal_group *se_tpg,
+> +				 struct se_session *se_sess);
+>   
+>   void	transport_init_se_cmd(struct se_cmd *,
+>   		const struct target_core_fabric_ops *,
 > 
-> static inline struct Scsi_Host *dev_to_shost(struct device *dev)
-> {
-> 	while
-> (!scsi_is_host_device(dev)) {
-> 		if (!dev->parent)
-> 			return NULL;
-> 		dev =
-> dev->parent;
-> 	}
-> 	return container_of(dev, struct Scsi_Host,
-> shost_gendev);
-> }
-> 
-> The broad point is that this is open source, not some proprietary OS.
-> I'm not giving you an API set in stone and you have to figure out the
-> use cases, I'm telling you how the current API behaves and the reason
-> why it behaves this way.  If there's an expansion or change you need,
-> provided it supports the current uses and is maintainable, it can be
-> done.  What you have to tell me is what you're trying to do.
-
-https://marc.info/?l=linux-scsi&m=158880168715701&w=2
-
-One aspect of xarray operations is that they are performed on the
-collection holder (a scsi_host::__targets in this case), not so much on
-the collected objects where it has a smaller footprint than list_head.
-So I would be inclined to add a scsi_target::parent_shost pointer and
-have a trivial:
-   static inline struct Scsi_Host *starg_to_shost(struct scsi_target *starg) {}
-accessor.
-
->>>> I'm trying to work out why the function:
->>>> starget_for_each_device() in scsi.c does _not_ use that
->>>> collection right in front of it (i.e. scsi_target::devices).
->>>> Instead, it step up to the host level, and iterates over all
->>>> devices (LUs) on that host and only calls the given function for
->>>> those devices that match the channel and target numbers.
->>>> That is bizarrely wasteful if scsi_target::devices could be
->>>> iterated over instead.
->>>>   
->>>> Anyone know why this is?
->>>
->>> Best guess would be it wasn't converted over when the target list
->>> was introduced.
->>
->> Okay, I'll change it and see what breaks.
-
-A qualified success, so far. See below.
-
->> If you are not familiar with "mark"s in xarrays, they are binary
->> flags hidden inside the pointers that xarray holds to form a
->> container. With these flags (two available per xarray) one can make
->> iterations much more efficient with xa_for_each_marked() { }. The win
->> is that there is no need to dereference the pointers of collection
->> members that are _not_ marked. After playing with these in my rework
->> of the sg driver, I concluded that the best thing to mark was object
->> states. Unfortunately there are only 2 marks *** per xarray but
->> scsi_device, for example, has 9 states in scsi_device_state. Would
->> you like to hazard a guess of which two (or two groups), if any, are
->> iterated over often enough to make marking worthwhile?
->>
->> Those two marks could be stretched to four, sort of, as scsi_device
->> objects are members of two xarrays in my xarray rework: all sdev
->> objects in a starget, and all sdev objects in a shost.
-> 
-> I've got to say that sounds like a solution looking for a problem.
-> 
-> The fast path of SCSI is pretty rigorously checked with high iops
-> devices these days.  The fact that this iterator is really lock heavy
-> but has never been fingered in any of the traces indicates that it's
-> probably not really a problem that needs solving.
-
-https://www.kernel.org/doc/html/latest/core-api/xarray.html
-
-Of xarray it says:
-"It is more memory-efficient, parallelisable and cache friendly than
-a doubly-linked list. It takes advantage of RCU to perform lookups
-without locking."  M. Wilcox in the overview of that linked document.
-
-
-The use of list_head objects to hold together the scsi mid-level
-object tree is a mess, IMO. That makes it hard to maintain and possibly
-inefficient. The fact that whoever added the scsi_target's collection
-of scsi_device-s could not see the obvious way to iterate over that
-collection is an example.
-
-list_head based collections (as currently used) take spinlocks on
-both modifying and non-modifying operations. An interesting aspect
-of xarrays is that they have integrated locking and take cheaper
-rcu locks for iterations which are mostly involved with non-modifying
-operations. That integrated locking is both an advantage (it is
-well instrumented in the case of xarray) and creates difficulties
-when retrofitting xarrays in the place of list_head based collections
-which have "roll your own" type locking.
-
-
-Testing? Yes plenty of it. And things break, just not yet in the scsi
-subsystem :-)  With the attached script, first my laptop goes into
-thermal throttling, then a few minutes later systemd-udev seems
-to lose it, spraying blocks of these messages in the log:
-   xtwo70 systemd-udevd[9453]: 4:0:8:15: Failed to process device, ignoring: 
-File exists
-
-and leaking memory at the same time (based on that "age") in the kernel:
-# cat /sys/kernel/debug/kmemleak
-unreferenced object 0xffff88815929e000 (size 8192):
-    comm "modprobe", pid 14214, jiffies 4297239717 (age 743.446s)
-    hex dump (first 32 bytes):
-      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-      00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    backtrace:
-      [<000000003f0664f4>] 0xffffffffa0d7c202
-      [<00000000f06ff621>] do_one_initcall+0x58/0x300
-      [<00000000ee7e3b9e>] do_init_module+0x57/0x1f0
-      [<000000000427a735>] load_module+0x2758/0x2930
-      [<00000000b9da2d49>] __do_sys_finit_module+0xbf/0xe0
-      [<000000003f60bec7>] do_syscall_64+0x4b/0x1c0
-      [<000000007cbf2f8c>] entry_SYSCALL_64_after_hwframe+0x49/0xb3
-.... < many more of the same >
-
-The script does complete and my laptop seems normal.
-It is hard to verify correctness and any performance gains when systemd
-and udev are eating most of the processor resources.
-
-
-Doug Gilbert
-
-
-
---------------69D3F28E49125A4068DE8E80
-Content-Type: application/x-shellscript;
- name="tst_sdebug_modpr_rmmod.sh"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="tst_sdebug_modpr_rmmod.sh"
-
-IyEvYmluL2Jhc2gKCiMgRXhhbXBsZSBpbnZvY2F0aW9uOgojICAgIC4vdHN0X3NkZWJ1Z19t
-b2Rwcl9ybW1vZC5zaAojCiMgTi5CLiBXcml0ZXMgdG8gL2Rldi9zZzEKIwoKIyMgRG9lcyB0
-aGUgc2FtZSB0aGluZyA2IHRpbWVzLCBieSByZXBsaWNhdGlvbi4gVG8gdGVzdCB0aHJvdWdo
-IG5pZ2h0LgojIHRha2VzIDQgdG8gNSBob3VycwoKZm9yIGsgaW4gMSAyIDQgNyA4IDExIDE2
-IDMxIDY0CmRvCglmb3IgaiBpbiAxIDIgNCA2IDgKCWRvCgkJZm9yIG0gaW4gMiA0IDggMTIK
-CQlkbwoJCQltb2Rwcm9iZSBzY3NpX2RlYnVnIG5vX3VsZD0xIG1heF9sdW5zPSR7a30gbnVt
-X3RndHM9JHtqfSBzZWN0b3Jfc2l6ZT01MTIgZGV2X3NpemVfbWI9MTAwIG5kZWxheT0xMDAw
-MCBwZXJfaG9zdF9zdG9yZT0xIGFkZF9ob3N0PSR7bX0KCQkJc2xlZXAgMC4xCgkJCWlmIFsg
-LWMgL2Rldi9zZzEgXSA7IHRoZW4KCQkJCXNnX3R1cnMgL2Rldi9zZzAKCQkJCXNnX3R1cnMg
-L2Rldi9zZzEKCQkJCSMgc2doX2RkIGlmPS9kZXYvc2cwIGJzPTUxMiBvZj0vZGV2L3NnMQoJ
-CQkJc2dfZGQgaWY9L2Rldi9zZzAgYnM9NTEyIG9mPS9kZXYvc2cxCgkJCWVsc2UKCQkJCWVj
-aG8gIi9kZXYvc2cxIG5vdCByZWFkeSIKCQkJZmkKCQkJcm1tb2Qgc2NzaV9kZWJ1ZwoJCWRv
-bmUKCWRvbmUKZG9uZQoK
---------------69D3F28E49125A4068DE8E80--
