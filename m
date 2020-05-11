@@ -6,43 +6,43 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7638C47255
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 16:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DDDCC47255
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 16:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F27D2070B
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 16:08:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E04F22070B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 16:11:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730665AbgEKQIC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 May 2020 12:08:02 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:50926 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730612AbgEKQIB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2020 12:08:01 -0400
-Received: by mail-pj1-f67.google.com with SMTP id t9so8141922pjw.0
-        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2020 09:07:59 -0700 (PDT)
+        id S1730016AbgEKQLw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 May 2020 12:11:52 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:38051 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729550AbgEKQLw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2020 12:11:52 -0400
+Received: by mail-pl1-f193.google.com with SMTP id m7so4131633plt.5
+        for <linux-scsi@vger.kernel.org>; Mon, 11 May 2020 09:11:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=inMeMFW1trvPQKioCVVtm4GtjAqhIxmuCda3l3GaVe0=;
-        b=nnHoZXBYkbf0DTeXH8T0xBpOt5L5WDLnFE5t0r5+6oQ5eh3xyz1Hsl6wQHJvdAZzg7
-         GZXP65e0EWD/qSyKPTxtcqpILEy1ZxfTvkHLw933W0wKrcrL+KW4TnZv1ngPz3uKOe8N
-         gEUpvj+eUM+oS9ylo+41qQeMbnjeP5E2IYUkHKcOtZdpegIcOah+q2hLu2fOXMkYQ83g
-         0uhOoqmXxSXufYJ3UxvjK2PAyDrJjFo5wESmBpiLmokqD2aQZlA3CNq6thzv9EMDL11C
-         ynNb0Co/MYVUi/QNH2qVDjEezXVKFfOmQJuubcM9ZjiEZyuz1XRxj6LewbDOj2737/sj
-         YykQ==
-X-Gm-Message-State: AGi0PuakoncHr2nbkrhluoUL3QBv43FxPG41dSTUSMhHbrGf0MOL4Mf8
-        wPLdakQco3+cisbZZ0D46tA=
-X-Google-Smtp-Source: APiQypKfWZK4/yovBGuwe+hA5Rm3OWLFYj23dqbQH5aCSNC5LYqg5yf4E+LM8I6c0PNxpBf4bSpdzw==
-X-Received: by 2002:a17:90b:3547:: with SMTP id lt7mr17168533pjb.14.1589213279325;
-        Mon, 11 May 2020 09:07:59 -0700 (PDT)
+        bh=sErqUs0vhXwvlzUk5Qm/vY6u1XrZRa3tkjbjJjEjN1Y=;
+        b=WiyYweE0/D+KmLXgem8gA7nzHAK+PPc0cISSyb1Iq5A9mre6007tr84q/m3qXx6nWr
+         EnWFc/h3b/d5gzyH/FgX6cTCzNG98wTIzt7Y1gymYqilUd1GOJ9gBPauw0xGqJR9eZ4k
+         hGf+jPvq7VG3Y2GHVNRdh6Ai/gxANm4lAP7vQw2UUGbatKlcGJ3wwhbpVSVyZyQ/rzVG
+         bLUBnJNJcmVDmd2zayUk4Apukw/mBjtag3vbGgfIlEWW9D9H+Z4t6c1gicvtrmdIfbeq
+         nu3tQ2GORSxhzyjgsp1zZidYph9+KB/wjAEnTjz1mNpdG/6935go/25HIf0kRsW6He8W
+         LpJQ==
+X-Gm-Message-State: AGi0PuYDbngiirtBStDk3AviggX2tSjrDcaPYRNpKqqBRRz70e9yKUC9
+        lM1ZKho8sWW4z8sM+z1Lo8I=
+X-Google-Smtp-Source: APiQypJ85td6HFuySLFa+CzqnEKSY9yxjZgo/dfS5wzhumem7+D1cn1lVJM1di2OGXkjaxpKE8noNA==
+X-Received: by 2002:a17:90a:246c:: with SMTP id h99mr19339682pje.125.1589213511473;
+        Mon, 11 May 2020 09:11:51 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:c4e5:b27b:830d:5d6e? ([2601:647:4000:d7:c4e5:b27b:830d:5d6e])
-        by smtp.gmail.com with ESMTPSA id g25sm9347863pfo.150.2020.05.11.09.07.57
+        by smtp.gmail.com with ESMTPSA id j32sm8328722pgb.55.2020.05.11.09.11.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 May 2020 09:07:58 -0700 (PDT)
-Subject: Re: [PATCH v4 08/11] qla2xxx: Fix the code that reads from mailbox
- registers
+        Mon, 11 May 2020 09:11:50 -0700 (PDT)
+Subject: Re: [PATCH v4 09/11] qla2xxx: Change {RD,WRT}_REG_*() function names
+ from upper case into lower case
 To:     Arun Easi <aeasi@marvell.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
@@ -53,8 +53,8 @@ Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Daniel Wagner <dwagner@suse.de>,
         Roman Bolshakov <r.bolshakov@yadro.com>
 References: <20200427030310.19687-1-bvanassche@acm.org>
- <20200427030310.19687-9-bvanassche@acm.org>
- <alpine.LRH.2.21.9999.2005110037000.23618@irv1user01.caveonetworks.com>
+ <20200427030310.19687-10-bvanassche@acm.org>
+ <alpine.LRH.2.21.9999.2005110039430.23618@irv1user01.caveonetworks.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -79,12 +79,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <0eae3a14-6ffd-b637-e753-3f0d684bd267@acm.org>
-Date:   Mon, 11 May 2020 09:07:57 -0700
+Message-ID: <8667a46c-631e-a00c-2a1a-ac97c5fd0fd0@acm.org>
+Date:   Mon, 11 May 2020 09:11:49 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.7.0
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.21.9999.2005110037000.23618@irv1user01.caveonetworks.com>
+In-Reply-To: <alpine.LRH.2.21.9999.2005110039430.23618@irv1user01.caveonetworks.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -93,33 +93,26 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-11 00:39, Arun Easi wrote:
+On 2020-05-11 00:40, Arun Easi wrote:
 > On Sun, 26 Apr 2020, 8:03pm, Bart Van Assche wrote:
->>  	default:
->> -		ha->aenmb[1] = RD_REG_WORD(&reg->aenmailbox1);
->> -		ha->aenmb[2] = RD_REG_WORD(&reg->aenmailbox2);
->> -		ha->aenmb[3] = RD_REG_WORD(&reg->aenmailbox3);
->> -		ha->aenmb[4] = RD_REG_WORD(&reg->aenmailbox4);
->> -		ha->aenmb[5] = RD_REG_WORD(&reg->aenmailbox5);
->> -		ha->aenmb[6] = RD_REG_WORD(&reg->aenmailbox6);
->> -		ha->aenmb[7] = RD_REG_WORD(&reg->aenmailbox7);
->> +		ha->aenmb[1] = RD_REG_DWORD(&reg->aenmailbox1);
->> +		ha->aenmb[2] = RD_REG_DWORD(&reg->aenmailbox2);
->> +		ha->aenmb[3] = RD_REG_DWORD(&reg->aenmailbox3);
->> +		ha->aenmb[4] = RD_REG_DWORD(&reg->aenmailbox4);
->> +		ha->aenmb[5] = RD_REG_DWORD(&reg->aenmailbox5);
->> +		ha->aenmb[6] = RD_REG_DWORD(&reg->aenmailbox6);
->> +		ha->aenmb[7] = RD_REG_DWORD(&reg->aenmailbox7);
+>> @@ -258,8 +258,8 @@ static inline void WRT_REG_DWORD(volatile __le32 __iomem *addr, u32 data)
+>>   * The ISP2312 v2 chip cannot access the FLASH/GPIO registers via MMIO in an
+>>   * 133Mhz slot.
+>>   */
+>> -#define RD_REG_WORD_PIO(addr)		(inw((unsigned long)addr))
+>> -#define WRT_REG_WORD_PIO(addr, data)	(outw(data, (unsigned long)addr))
+>> +#define rd_reg_word_PIO(addr)		(inw((unsigned long)addr))
+>> +#define wrt_reg_word_PIO(addr, data)	(outw(data, (unsigned long)addr))
 > 
-> Please leave the older access as is. The way you did is right, but
-> these adapters are not frequently qualified, so please leave it the
-> tested way.
+> Why mix case for PIO? Might as well do it here too. Anyway,
+> 
+> Reviewed-by: Arun Easi <aeasi@marvell.com>
 
-The current code silently truncates 32-bit values into 16-bit values on
-little endian architectures. The current code is totally broken on big
-endian architectures. So I think the above changes are an important bug
-fix. If these changes would introduce a regression, these changes are
-easy to revert.
+Hi Arun,
+
+Please trim emails when replying. It was hard for me to find your reply.
+
+Anyway, I will make the proposed change.
 
 Thanks,
 
