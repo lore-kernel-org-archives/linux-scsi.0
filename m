@@ -2,151 +2,220 @@ Return-Path: <SRS0=B1Ch=6Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F416C47255
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 17:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B24CDC47255
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 18:24:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48F5A206D7
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 17:15:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6069C2070B
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 May 2020 18:24:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CenGbeSg"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="QV6sua0t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730814AbgEKRPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 May 2020 13:15:19 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:45617 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729731AbgEKRPT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 May 2020 13:15:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589217318;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zLMCWnI+g1sNy6IPUS5WeLtM2KBsMrBBwB3Mc9zU9Eg=;
-        b=CenGbeSgtWZJYJ/N0wq3oIqSvsUOE7mQ8wlW+16egl8uK732kF1uarCzmwdRI9NJ+Y4Ge3
-        qeYlng2sA8BiNpmxlJmREv1CbaXtW5wPm+QKkSjfyzuzG+ysgFD/PoXi9oVcihiADdlwoQ
-        C7eKe2qjHMxYXfNUylyuPMtfIaQOJlU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-17-MVoBktSGMqOA-zWY1dTIkQ-1; Mon, 11 May 2020 13:15:16 -0400
-X-MC-Unique: MVoBktSGMqOA-zWY1dTIkQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6E037107ACF2;
-        Mon, 11 May 2020 17:15:14 +0000 (UTC)
-Received: from [10.10.116.128] (ovpn-116-128.rdu2.redhat.com [10.10.116.128])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 25771100164D;
-        Mon, 11 May 2020 17:15:13 +0000 (UTC)
-Subject: Re: [PATCH 11/15] target: add sysfs support
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
+        id S1729727AbgEKSYC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 May 2020 14:24:02 -0400
+Received: from mail1.bemta26.messagelabs.com ([85.158.142.114]:29506 "EHLO
+        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729673AbgEKSYB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 May 2020 14:24:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1589221438; i=@ts.fujitsu.com;
+        bh=mCZ03AYdPA8KQ8psz6W86daHCBigtHLM/IyTOmJ+kv8=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=QV6sua0thVNvrp83/ZO958VNSkCZvOHORqeEW3s06yr9IHFAjyopAzMi0inqtK5rz
+         3hOlj/KTCRbXsglnyPwzrhtd8Zcx34n55fFYy0hIiNns536/jGnOjvGmdgMp5Kkd/E
+         EBZP1mNwc/Atst94oOm4LFpuxAGZTByNdPUiv24E47sV3GwGoX1p9ohUaWdaV7MgLn
+         dF16qFnzZe+0oEbPMMG0ZQzGAamkF/sQg2B1j0V6QmxnbX95iWNhRjJjJhX7ylNbI2
+         YRSFmqx16vEEWQNW71qqSVHY8DaUPjIKBhG0GNSV6IbQogyzT43mX3sp0Z5hPOCBH9
+         fDMYvBn00XbrA==
+Received: from [100.113.4.151] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-3.bemta.az-b.eu-central-1.aws.symcld.net id 67/D7-40390-D3899BE5; Mon, 11 May 2020 18:23:57 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJIsWRWlGSWpSXmKPExsViZ8MxVdd2xs4
+  4g8PrJCymffjJbLHs0mcmizk3jSy6r+9gs1h+/B+TxfojGxgt/v96xWqxf9s/VovXk/6zWrQu
+  fcvkwOVx+Yq3x8ent1g83u+7yuaxfstVFo/Pm+QCWKNYM/OS8isSWDMWr1rPWtCkXHF/2hWWB
+  sbLMl2MnBxCArMYJabs0eli5OAQFvCV+NTK2MXIxSEisJBR4vKOU8wgDrPASUaJk1dPs0A0pE
+  ksWfaGGcRmEzCQWDHpPlicV8BRYtaq34wgNouAqsTq76vA4qIC4RIvtvxhhagRlDg58wlYnFP
+  AUuL55ONgcWYBM4l5mx8yQ9jiEreezGeCsOUltr+dwzyBkW8WkvZZSFpmIWmZhaRlASPLKkaL
+  pKLM9IyS3MTMHF1DAwNdQ0NjXRNdIyO9xCrdJL3UUt3k1LySokSgpF5iebFecWVuck6KXl5qy
+  SZGYIykFLKI7WCctfa93iFGSQ4mJVFevak744T4kvJTKjMSizPii0pzUosPMcpwcChJ8D4DyQ
+  kWpaanVqRl5gDjFSYtwcGjJMK7ZDpQmre4IDG3ODMdInWKUVFKnPfwNKCEAEgiozQPrg2WIi4
+  xykoJ8zIyMDAI8RSkFuVmlqDKv2IU52BUEubNBRnPk5lXAjf9FdBiJqDFD59vA1lckoiQkmpg
+  ilFZ89n0d9jH+1f37uLxmuy3nZPlaGnDDt7rN7rZv6UFz28I6YthZtRZtt8xMPfA6QdOd/49n
+  bnPhfGgcaaB949ADp2grkczLyeVF/DOfyDSp/nmwfGK6Lur83axfeK4UF3ErV7+5MtM4xPCKp
+  vbb+REvuFV411UMCnJUO+Kv6ZI7pLzfL+0Gaa02IkufD+n61qzMPfyitcMHNysWepPmDPr438
+  rycZU3rzJJray8kPU1iufJ9nvvmziwqN1I5ojIWCt6DntvOsXHx+ZcuflTsfeopb/4boSbDVd
+  cZPLFt04/1s34kvMpxlL2WubJl34cdz+w9Nzp2YnNL/e/OBN5reEjhPeEnF1lm6b+69PVGIpz
+  kg01GIuKk4EAHyPu6qMAwAA
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-7.tower-245.messagelabs.com!1589221436!1328578!1
+X-Originating-IP: [62.60.8.149]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 19562 invoked from network); 11 May 2020 18:23:57 -0000
+Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
+  by server-7.tower-245.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 11 May 2020 18:23:57 -0000
+Received: from [172.17.80.59] ([172.17.80.59])
+        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with ESMTP id 04BIN0ed007288;
+        Mon, 11 May 2020 19:23:08 +0100
+Subject: Re: [PATCH 03/15] target: add helper to parse acl and transport name
+To:     Mike Christie <mchristi@redhat.com>, bvanassche@acm.org,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+        target-devel@vger.kernel.org
+Cc:     "Michael S . Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Juergen Gross <jgross@suse.com>
 References: <20200510215744.21999-1-mchristi@redhat.com>
- <20200510215744.21999-12-mchristi@redhat.com>
- <20200511063002.GA1260895@kroah.com>
-From:   Mike Christie <mchristi@redhat.com>
-Message-ID: <aad8269e-f9ee-ebc7-6e54-aa4b5b6021b8@redhat.com>
-Date:   Mon, 11 May 2020 12:15:12 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+ <20200510215744.21999-4-mchristi@redhat.com>
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Message-ID: <20302416-6b4a-e9eb-695b-c4dcf50d02dd@ts.fujitsu.com>
+Date:   Mon, 11 May 2020 20:22:50 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.1.0
 MIME-Version: 1.0
-In-Reply-To: <20200511063002.GA1260895@kroah.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20200510215744.21999-4-mchristi@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/11/20 1:30 AM, Greg Kroah-Hartman wrote:
-> On Sun, May 10, 2020 at 04:57:40PM -0500, Mike Christie wrote:
->> These next two patches add a sysfs interface that reports the target
->> layer's I_T nexuses/sessions. For the non-SCSI people cc'd, this just means
->> we are reporting a server's connections to remote clients.
->>
->> This patch adds the upper level dirs which shows/organizes our local port
->> (tpgts below) and the connection (session below). The next patch will then
->> add the dirs/files for each connection/session which exports info like
->> ACL/permissions and SCSI port values.
->>
->> Here is the general layout:
->>
->> [sys]# tree scsi_target/
->> scsi_target/
->> |-- fabric/target module
->> |   `-- target name
->> |       `-- tpgt_$target_port_group_number
->> |           `-- sessions
->> |               `-- initiator name - session ID number
->> |                   |-- acl
->> |                   `-- transport_id
->> |                       |-- name
->> |                       |-- proto
->> |                       `-- session_id
->>
->> Here is an example with the scsi target layer's iSCSI driver:
->>
->> scsi_target/
->> |-- iscsi
->> |   `-- iqn.1999-09.com.tcmu:minna
->> |       `-- tpgt_1
->> |           `-- sessions
->> |               `-- iqn.2005-03.com.ceph:ini1-1
->> |                   |-- acl
->> |                   `-- transport_id
->> |                       |-- name
->> |                       |-- proto
->> |                       `-- session_id
->> |-- fc
->> |-- loopback
->> |-- qla2xxx_tcm
->>
->>
->> Note/Question for Greg:
->>
->> We are not exporting info in the upper level dirs like "fabric/target
->> module", "target name", tpgt, etc and just need those dirs to be able to
->> organize/view the endpoints of the session. So, in this patch I made a new
->> top level dir scsi_target and made the other dirs with
->> kobject_create_and_add. It looks like we could also add device structs in
->> the target related structs, use classes, and build the tree/hierarchy that
->> way too. It was not clear to me when to use one or the other.
+On 05/10/20 23:57, Mike Christie wrote:
+> The drivers that emulate the initiator port id (loop, scsi vhost, xen scsiback)
+> do almost the extact same parsing when making their I_T_nexus. This adds a
+> helper that parses out the acl name and port name from the user buffer, so
+> these types of drivers drop prefixes like "naa." when they need to for the
+> SCSI SPC4 TransportID SAS address, but then keep it for the LIO ACL name.
 > 
-> Never use kobject calls in a driver subsystem like you have here, as
-> those objects will not be seen by userspace tools that get uevents.
-> Just use real 'struct devices' if you really really need a deep
-> directory tree.
+> The next patches will then convert those drivers.
 > 
-> But I would push back here, why do you feel you want such a deep tree?
-> What are you getting from this?  Why do you need that "sessions"
-> directory at all?
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Jason Wang <jasowang@redhat.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Stefan Hajnoczi <stefanha@redhat.com>
+> Cc: Juergen Gross <jgross@suse.com>
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
+> ---
+>   drivers/target/target_core_fabric_lib.c | 73 +++++++++++++++++++++++++++++++++
+>   include/target/target_core_fabric.h     |  2 +
+>   2 files changed, 75 insertions(+)
+> 
+> diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+> index e89b3d8..81ed7d5 100644
+> --- a/drivers/target/target_core_fabric_lib.c
+> +++ b/drivers/target/target_core_fabric_lib.c
+> @@ -423,6 +423,79 @@ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+>   	return buf + offset;
+>   }
+>   
+> +/**
+> + * target_parse_emulated_name - parse TransportID and acl name from user buffer
+> + * @proto_id: SCSI protocol identifier
+> + * @user_buf: buffer with emualted name to extract acl and TransportID from
+> + * @acl_name: buffer to store se_node_acl name in
+> + * @max_name_len: len of acl_name buffer
+> + * @tpt_id_name: Pointer to the TransportID name will be stored here.
+> + */
+> +int target_parse_emulated_name(u8 proto_id, const char *user_buf,
+> +			       unsigned char *acl_name, int max_name_len,
+> +			       unsigned char **tpt_id_name)
+> +{
+> +	int user_len = strlen(user_buf);
+> +	char *proto_prefix, *name_start;
+> +
+> +	if (user_len >= max_name_len) {
+> +		pr_err("Emulated name: %s, exceeds max: %d\n", user_buf,
+> +		       max_name_len);
+> +		return -EINVAL;
+> +	}
+> +
+> +	switch (proto_id) {
+> +	case SCSI_PROTOCOL_SAS:
+> +		proto_prefix = "naa.";
+> +		break;
+> +	case SCSI_PROTOCOL_FCP:
+> +		proto_prefix = "fc.";
+> +		break;
+> +	case SCSI_PROTOCOL_ISCSI:
+> +		proto_prefix = "iqn.";
+> +		break;
+> +	default:
+> +		pr_err("Unsupported proto_id: 0x%02x\n", proto_id);
+> +		return -EINVAL;
+> +	}
+> +
+> +	name_start = strstr(user_buf, proto_prefix);
+> +	if (!name_start) {
+> +		pr_err("Invalid emulated name %s. Must start with %s\n",
+> +		       user_buf, proto_prefix);
+> +		return -EINVAL;
+> +	}
+> +
+> +	switch (proto_id) {
+> +	case SCSI_PROTOCOL_SAS:
+> +		sprintf(acl_name, name_start);
+> +		break;
+> +	case SCSI_PROTOCOL_FCP:
+> +		sprintf(acl_name, &name_start[3]); /* Skip over "fc." */
+> +		break;
 
-I do not need the sessions under the tpgt dir and will drop it. The
-target subsystem does not have a bus or use device structs at all right
-now. And, I saw how other code that does not have a bus like btrfs/ext4
-use kobject_create_and_add() to group/organize objects and went wild
-with dirs :)
+Would it make sense to check acl_name for SAS and FCP according to
+the assumptions made in (sas|fc)_get_pr_transport_id() how the
+string should look like?
 
-And, I can move the code to device structs, but had a question about the
-deep tree question.
+- SAS: 8 hex digits
+- FC: 8 pairs of 2 hex digits separated by 7 colons
 
-A common operation will be that userspace knows the names of the objects
-above the session in the tree already. Apps then want to read in a
-specific session or scan the specific sessions in a target or a tpgt.
-The deep tree makes it easy to build the sysfs path and scan/read the
-specific object/objects.
+For compatibility reasons 16 hex digits could be allowed alternatively
+for FC, if fc_get_pr_transport_id() is enhanced accordingly.
 
-I wanted to avoid the issue where apps have with the flat layout where
-they have to scan every session when they just want something specific.
-
-Will a deep tree be ok for this type of reason?
-
+> +	case SCSI_PROTOCOL_ISCSI:
+> +		sprintf(acl_name, name_start);
+> +		break;
+> +	}
+> +
+> +	if (acl_name[user_len - 1] == '\n')
+> +		acl_name[user_len - 1] = '\0';
+> +
+> +	if (proto_id == SCSI_PROTOCOL_SAS) {
+> +		/*
+> +		 * target_setup_session will want the naa. prefix to match
+> +		 * the ACL name, but the t10 transport id only wants the
+> +		 * address.
+> +		 */
+> +		*tpt_id_name = acl_name + 4;
+> +	} else {
+> +		*tpt_id_name = acl_name;
+> +	}
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(target_parse_emulated_name);
+> +
+>   struct t10_transport_id *target_create_transport_id(u8 proto, const char *name,
+>   						    const char *session_id)
+>   {
+> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+> index af1dd81..0113e1c 100644
+> --- a/include/target/target_core_fabric.h
+> +++ b/include/target/target_core_fabric.h
+> @@ -125,6 +125,8 @@ struct target_core_fabric_ops {
+>   int target_depend_item(struct config_item *item);
+>   void target_undepend_item(struct config_item *item);
+>   
+> +int target_parse_emulated_name(u8, const char *, unsigned char *, int,
+> +			       unsigned char **);
+>   struct t10_transport_id *target_create_transport_id(u8, const char *,
+>   						    const char *);
+>   void target_free_transport_id(struct t10_transport_id *);
+> 
