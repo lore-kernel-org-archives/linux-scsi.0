@@ -2,116 +2,125 @@ Return-Path: <SRS0=/Ihf=62=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B20E1C2D0FA
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 21:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA5EC2D0F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 23:05:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9097020747
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 21:35:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deduktiva.com header.i=@deduktiva.com header.b="zKaOJ+np"
+	by mail.kernel.org (Postfix) with ESMTP id 958FE20747
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 23:05:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731364AbgELVfg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 17:35:36 -0400
-Received: from mail.namespace.at ([213.208.148.235]:38212 "EHLO
-        mail.namespace.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728313AbgELVfg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 17:35:36 -0400
-X-Greylist: delayed 396 seconds by postgrey-1.27 at vger.kernel.org; Tue, 12 May 2020 17:35:34 EDT
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deduktiva.com; s=a; h=In-Reply-To:Content-Type:MIME-Version:References:
-        Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=89R+I3Nv7OoCwz8O8Y54aGE2z5VkV6QrCU8YbhHz6xo=; b=zKaOJ+npDkNXXDEnk53Q45lxY9
-        L+TqqOKXMugQYZpxZD3IXZ1X5Y67B/Xuo5RVVOdQh1VQjx1o9BcTfU6gbx0szYvY/gTkztZlO6uov
-        ifKocjLZbiUlcuyV9lXBnY5KUY2vhtZkzTgOkBos5Ca5otIMYPZ+zeQHYf9zVftSUxc48At8D2bwA
-        7n52DGNOuZ/p+/rQg0em8gLbT4B4L/Ae8UtwnHVqcxUFujaR4ykzYs0/2a/i592KtQmQSHyBwVIj2
-        fPzjnIrEDjZbS9faSTywbViS85MPI4jQqA9TnLZabFNRXkO/8Juom9bwut7QZQddiYz6dpKfY3tUh
-        6DZkttqw==;
-Date:   Tue, 12 May 2020 23:28:55 +0200
-From:   Chris Hofstaedtler <chris.hofstaedtler@deduktiva.com>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, stable@vger.kernel.org,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: Re: [PATCH 03/12] lpfc: Fix broken Credit Recovery after driver load
-Message-ID: <20200512212855.36q2ut2io2cdtagn@zeha.at>
-References: <20200128002312.16346-1-jsmart2021@gmail.com>
- <20200128002312.16346-4-jsmart2021@gmail.com>
+        id S1731640AbgELXFo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 19:05:44 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:36080 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727104AbgELXFn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 19:05:43 -0400
+Received: by mail-pl1-f193.google.com with SMTP id f15so6050670plr.3;
+        Tue, 12 May 2020 16:05:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0w3GRC8jItu9FjcP/PaDffrBCgmRis5/MkyhSMcrbBo=;
+        b=JpOtdQlYzhp6EiqL/VesrteqUxO910yQXjedZ0rHoVDjWyzQ8BzEVk5KIBhTD1zDdZ
+         fup4ilmp+9dcC3Is3lXytrR7WvBUKXwq+IDYyPe0Uq5cZP6w9GY6tnregRidSXzFuRUG
+         CRJ+uX/j3Iasvr92enFrwBKaTra5xUrXvzWrhZfvZl7bZihMFerWEyx1lK8WYcxTEOoR
+         cnH12nwevdfqS+avCruc89ywWu3C57I03b9CMG6UiTgMpMwbuYbpNMGkeaRuZCWrDTMo
+         MS8KL2qYgvU7er59mGHeOWl0z5hDpsFWuzn7DEzXcyLdXTo2XRk9CA6ePqB2hzTXyrtt
+         IUYg==
+X-Gm-Message-State: AGi0PuZXYWxYD1pFt9jv+aYtCFbUhkijfACEVKQhYHeZS1AuKFSdiavp
+        d9wVkl1fPTIqwITmV21q0zk=
+X-Google-Smtp-Source: APiQypKfpgQIXQnrn/tEEgOPwlQNx73DZziIz22CPK4RPqgSZPhHhbUogpjN0qdEjl+VY1cEpZplbA==
+X-Received: by 2002:a17:90b:93:: with SMTP id bb19mr28473353pjb.134.1589324742657;
+        Tue, 12 May 2020 16:05:42 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:d1a1:34bc:ea5:fadd? ([2601:647:4000:d7:d1a1:34bc:ea5:fadd])
+        by smtp.gmail.com with ESMTPSA id 207sm11182475pgh.34.2020.05.12.16.05.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 May 2020 16:05:41 -0700 (PDT)
+Subject: Re: [PATCH] scsi: target: put lun_ref at end of tmr processing
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        martin.petersen@oracle.com, mchristi@readhat.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        bly@catalogicsoftware.com
+References: <20200512161753.10625-1-bstroesser@ts.fujitsu.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <b5da2b56-2924-abec-2a8c-94d53741560d@acm.org>
+Date:   Tue, 12 May 2020 16:05:40 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
+In-Reply-To: <20200512161753.10625-1-bstroesser@ts.fujitsu.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20200128002312.16346-4-jsmart2021@gmail.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 2020-05-12 09:17, Bodo Stroesser wrote:
+> Testing with Loopback I found, that after a Loopback LUN
+> has executed a TMR, I can no longer unlink the LUN.
+> The rm command hangs in transport_clear_lun_ref() at
+> wait_for_completion(&lun->lun_shutdown_comp)
+> The reason is, that transport_lun_remove_cmd() is not
+> called at the end of target_tmr_work().
+> 
+> It seems, that in other fabrics this call happens implicitly
+> when the fabric drivers call transport_generic_free_cmd()
+> during their ->queue_tm_rsp().
+> 
+> Unfortunately Loopback seems to not comply to the common way
+> of calling transport_generic_free_cmd() from ->queue_*().
+> Instead it calls transport_generic_free_cmd() from its
+>   ->check_stop_free() only.
+> 
+> But the ->check_stop_free() is called by
+> transport_cmd_check_stop_to_fabric() after it has reset the
+> se_cmd->se_lun pointer.
+> Therefore the following transport_generic_free_cmd() skips the
+> transport_lun_remove_cmd().
+> 
+> So this patch re-adds the transport_lun_remove_cmd() at the end
+> of target_tmr_work(), which was removed during commit
+> 2c9fa49e100f962af988f1c0529231bf14905cda
+> "scsi: target/core: Make ABORT and LUN RESET handling synchronous"
+> 
+> For fabrics using transport_generic_free_cmd() in the usual way
+> the double call to transport_lun_remove_cmd() doesn't harm, as
+> transport_lun_remove_cmd() checks for this situation and does
+> not release lun_ref twice.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> Tested-by: Bryant G. Ly <bryangly@gmail.com>
 
-this commit, applied in Ubuntu's 5.4.0-30.34 tree as
-77d5805eafdb5c42bdfe78f058ad9c40ee1278b4, appears to cause our
-HPE-branded 2-port 8Gb lpfcs to report FLOGI errors. Reverting it fixes target
-discovery for me. See below for log messages and HW details.
+Please add Fixes: ... and Cc: stable tags. Anyway:
 
-* James Smart <jsmart2021@gmail.com> [700101 01:00]:
-> When driver is set to enable bb credit recovery, the switch displayed
-> the setting as inactive.  If the link bounces, it switches to Active.
-
-[..]
-
-> Fixes: 6bfb16208298 ("scsi: lpfc: Fix configuration of BB credit recovery in service parameters")
-> Cc: <stable@vger.kernel.org> # v5.4+
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <jsmart2021@gmail.com>
-
-Broken log messages:
-
-[    5.837826] Emulex LightPulse Fibre Channel SCSI driver 12.6.0.4
-[    5.837827] Copyright (C) 2017-2019 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
-[    5.838807] scsi host2: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 07 device 00 irq 128
-[    8.300583] scsi host4: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 07 device 01 irq 182
-[    8.858018] lpfc 0000:07:00.0: 0:1303 Link Up Event x1 received Data: x1 xf7 x20 x0 x0 x0 0
-[   11.380022] lpfc 0000:07:00.1: 1:1303 Link Up Event x1 received Data: x1 xf7 x20 x0 x0 x0 0
-[   28.819755] lpfc 0000:07:00.1: 1:(0):0237 Pending Link Event during Discovery: State x7
-[   28.819963] lpfc 0000:07:00.1: 1:1305 Link Down Event x2 received Data: x2 x7 x98014 x0 x0
-[   28.915823] lpfc 0000:07:00.1: 1:1303 Link Up Event x3 received Data: x3 x0 x20 x0 x0 x0 0
-[   28.920083] lpfc 0000:07:00.0: 0:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
-
-Reverted:
-
-[   74.838109] Emulex LightPulse Fibre Channel SCSI driver 12.6.0.4-7fbb1b050a65
-[   74.838111] Copyright (C) 2017-2019 Broadcom. All Rights Reserved. The term "Broadcom" refers to Broadcom Inc. and/or its subsidiaries.
-[   74.840310] scsi host2: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 07 device 00 irq 128
-[   77.272319] scsi host4: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 07 device 01 irq 182
-[   77.813387] lpfc 0000:07:00.0: 0:1303 Link Up Event x1 received Data: x1 xf7 x20 x0 x0 x0 0
-[   80.261594] lpfc 0000:07:00.1: 1:1303 Link Up Event x1 received Data: x1 xf7 x20 x0 x0 x0 0
-(plus various sd attach messages)
-
-systool info:
-
-    active_fc4s         = "0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 "
-    dev_loss_tmo        = "30"
-    max_npiv_vports     = "255"
-    maxframe_size       = "2048 bytes"
-    npiv_vports_inuse   = "0"
-    port_id             = "0x0b0260"
-    port_state          = "Online"
-    port_type           = "NPort (fabric via point-to-point)"
-    speed               = "8 Gbit"
-    supported_classes   = "Class 3"
-    supported_fc4s      = "0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 "
-    supported_speeds    = "2 Gbit, 4 Gbit, 8 Gbit"
-    symbolic_name       = "Emulex AJ763B/AH403A FV2.10X6 DV12.6.0.4-7fbb1b050a65 HN:pm01-vh03 OS:Linux"
-    tgtid_bind_type     = "wwpn (World Wide Port Name)"
-
-Let me know if you need further debug logs or something.
-
-Thanks,
--- 
-Chris Hofstaedtler / Deduktiva GmbH (FN 418592 b, HG Wien)
-www.deduktiva.com / +43 1 353 1707
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
