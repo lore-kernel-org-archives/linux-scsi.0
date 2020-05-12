@@ -2,144 +2,104 @@ Return-Path: <SRS0=/Ihf=62=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0B6C2D0F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F4DCA90AF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:22:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2824B206B7
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:18:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5040D206B7
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:22:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="aRZuroFU";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ECMaLI4z"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WB1ARAwX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727096AbgELQSX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 12:18:23 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:12006 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726287AbgELQSX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 12:18:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1589300302; x=1620836302;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=qPumcoszRgOGF+v9vZLE8kW3uA40Xr24mpmhMN8k6OE=;
-  b=aRZuroFUR82Sg2sb6H9Q3qhifINGEv0Gsqnrk5xsHspgHKQMuA9ge/R0
-   rLQY6Zsq34ddGAQt0lcrZ7OyNHzAxWO53AcrrWB1kKgz3Mg1Dh5BKgrYV
-   k89AAaKWyos7zOMCH8BL3dsJVSyzwgrBtyb7BshpqK8mlFM82ItVuPk1A
-   yveki1tZ23FU3zrRlh1syzHFrgZqD8cYyU7pEm2fVeq/OBoiWH+u8GyW9
-   KyGOz/MrRlWSjyevqpAoA3AtUKbAN/lgjQO9xthaO48LMGaRZ+nIAu4Zw
-   85mzCBPu0BMRAsVBY26ljf0xtsjbiqW3ProF1J2QZWFyFgN9TATC+EmnN
-   w==;
-IronPort-SDR: mJPpW1pIqbTAUC5aU0Mw8ZQv3SsTjCOPdpiH8rJ7WmNtikFu+No7e4BprRE53ogh17jwXrjobF
- Q9KLEUBuT+z00NqG02hjGzH3cK3SnRjn7EhQCXQNlnjWNsXkJyOWj8scPV1k4d+1JtUyM3ZdWY
- ipjHhdANWiOj5hHwwwULt06o25X8UU3wiRelclYHE9LLDRkNMpu/VQzqrtNeqY6583cECOeaTk
- qCPXu+jipUMA9yQe7DyVPWOzNh6ZUHpbaVXbV7yW+DwuirwI3ecNAmGj+BpNW1s2AJq8L954dR
- Nmc=
-X-IronPort-AV: E=Sophos;i="5.73,384,1583164800"; 
-   d="scan'208";a="240207545"
-Received: from mail-mw2nam10lp2108.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.108])
-  by ob1.hgst.iphmx.com with ESMTP; 13 May 2020 00:18:21 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=B01KX5ZqK7vWSyB3Au8KGeRW7wu0sVRojWjCoLNZq50wZmvk6Cfg2mlMpzwbvdA562f94Ygz6C/nx5CMk9p+1WloGDgTn0R6hjbVzj4R5sVBEGMcv4XKXaPOq3tq2Fxr7IEEPY00R8h+ZksEkIOB3OOyx5ODnVt8Jz8o52aD0eRoEbk8BIDj3LR4Wvfz8c5LTeZRbzCwaU4e/ZjvKZ+qhc4woRQQIZAkqI9UiYSa/A+U1HLumiKWm75bfvmfVNyggb5xwJ/2dZ38aWo1LxQcsziO0TgjtPwPDmOc4XMSOtz8KcUh6BGU5deXSOacrJIgDRANzFuNf1w5xtf2QBeGlg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=z2kt2/faP9o2u5G/ZjYio8BtDFsm1WxJJWNXSplfrlg=;
- b=K/aQSVNnTFeYCSxoEj4QSdTzjFz+ci8HAI/k/CRZMtBIgfS2/qE0bstdKdjeJx4t4K2gz7b7D3oj7ks1NE1L9CuIiD+3pW5w7s1fKc0A1Omj1OBnIE+WgHmXo3HJhdImFc9YtHRuw9Yea2PWtTkibT+qC4U/MSC4hReFHMEJNhpxW15lkHqLar2etdJ7+qxTml2PeD4LL2GxtVTkZsVDTHIrwSTjgfFlEexAX87aAhUCSl30i9717zru2+P+Tx9EYOZHWZm9CCN2ZhGYCNrI9nAF7nJqAHKQ04JXcdt8Cbl1JIKfQO+5hcWD/UkN+eHD1p7nD+QlQuraVSv1SxwEPw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=z2kt2/faP9o2u5G/ZjYio8BtDFsm1WxJJWNXSplfrlg=;
- b=ECMaLI4zJT8W2h6OFOuJsedMWFNyMlpcj7hmRCfYqgIvLEg2mqNbtPlNP1mRwanpI6fcvT8dxTjUI6782yntO4I6EIFyLFiQmOXkP9fQOyKDrVTmqxWPzDazbWV9mm837ErsI58SucJejLm9sut9ffHwGO5TJjJdWPXlBDe7DCo=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN4PR0401MB3710.namprd04.prod.outlook.com
- (2603:10b6:803:43::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.27; Tue, 12 May
- 2020 16:18:20 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.2979.033; Tue, 12 May 2020
- 16:18:19 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "hch@infradead.org" <hch@infradead.org>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v11 00/10] Introduce Zone Append for writing to zoned
- block devices
-Thread-Topic: [PATCH v11 00/10] Introduce Zone Append for writing to zoned
- block devices
-Thread-Index: AQHWKDsvWpidiX8hYEyMY94iZDcZOw==
-Date:   Tue, 12 May 2020 16:18:19 +0000
-Message-ID: <SN4PR0401MB3598F2AE584D163B222FE4D59BBE0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
- <20200512131748.GA15699@infradead.org> <yq14ksl2ldd.fsf@oracle.com>
- <20200512160410.GA22624@infradead.org> <yq1zhad169p.fsf@oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: d0b5379a-878c-4de5-38f2-08d7f69015e3
-x-ms-traffictypediagnostic: SN4PR0401MB3710:
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN4PR0401MB371095A987C0AD0A5241B2A89BBE0@SN4PR0401MB3710.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
-x-forefront-prvs: 0401647B7F
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: KU7NKSakogqeL/tOR0a/1+8mIUEiOqzhYbFQhRA7Alu+QXwtTaGboh/IvYxhX0bb75WLHq7xsdw4BJnvtq54fsIBFFKXnGgSPOdg4dMOZf+Bf9VNSRQFA1vZStI7F/c7iE8AM1LfKUhx5aFSGcIoAJxDZ7FLKtCXI72AJKlLRO4OLKfpImzmGcNcjaPycFwyBbz9h5Eh4ieuePp1EsHw1Jo/HUVNC2GNMxnn/uSyICOA+ClDvWphDOwXRNsPjZG5E6pNGeyOaBN5WuvvD5BRFoKFz8BIs5ZCKO4M0CCGO6lta1TZ8Efhec5Cfle8yL5TDSPzPS1Msb4qu4XObQAab7BKaTZppBq2OyjGWCSUWyu8qrKqwLnIEFQPFChNp9zZvxsBxgyxkyfmVKCWfXX3lEUHDknj/XYqLzBLpCQEvTE17KReNFFGO6d77yOhWGHOzvRf3pmpPDHiBojKR5Vm5gjt/9+Rds3gxv48Kgcd3pz3MEQVfteYGUjt5Nijb0ySB2EQULYRm/1BLILTEL2R/9N0gZOEBusszueXHvHWwsB+11NW8UvTb/LpTq7n/blbDUkjdMr68/68zIAmbU+OJnvSfrRy8owEB7JcfEtfMcM=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(33430700001)(5660300002)(26005)(2906002)(186003)(4326008)(498600001)(86362001)(71200400001)(4744005)(8676002)(33656002)(8936002)(9686003)(76116006)(64756008)(91956017)(966005)(7696005)(66556008)(66476007)(66946007)(66446008)(53546011)(6506007)(52536014)(110136005)(54906003)(55016002)(33440700001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: G15iezrnYpUVDyx1DcHTPw/uZeD1KB0rnxCclimBknoNFEZGWhAex5AKa3KykhK29O8R4Ka2EfWnCU98y8nBwqbm0rx534ks5iRttfAt7iDkWvlhpQepxcw9PoI1Qh54W+TMpBd6Ztfc7Fhua7gRO8Aziyd0YNuKBgCxItCzsr3XZ4wt5d7K0FtXQ4cfTGbynM0Uw3hFN6OSrcbslFVWGZ72PgW2KaR/4kuxiy/7Lx7i/tAKJReiok401dJQe18aLTiJhkyvARyRk10HdIXTqhzPx8JoIJoWXLd1f8NP/nKaXvOJAbllMU+UqHlEvbqw8S3nc3mOn/WkNfZS2nu9AqP4IzVexQOMskGs8fjLyErfkxx9G9x/T4YicO0GBktkrEK6REWEDbxKpcaDtGv41qrjFY1Smixb3MYToPsAydb7KlVUA4FO0VLa9c/zak3CUn5NW9hoimwEgH7QW41tJCnOiHZ4LglI7UIHv0mEzgUgovt/9/pGvVKgtwp4w1/v
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727099AbgELQWU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 12:22:20 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:34354 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725851AbgELQWU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 12:22:20 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CGCJmt015556;
+        Tue, 12 May 2020 16:21:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=OyaR5MxMU3PPoMjghDt25i0Hctx3uK2R6FlsBKH+A5c=;
+ b=WB1ARAwXINLjYpP5h6QLVmPJVJzLCG084isZwoPbJDzgY7XckKnh9KRr0N2dzUF4zwrH
+ K6lZ9py+qbqpK/5En0f0Cj6SB0+yAwk6XgsEcbFLawbFabrFeg/JXc/5PxYL1qD3DfDC
+ mjgmAL9+kL+2D/J5sRRszQWKP6KRkEed95MiJXYDYezw0UujemgFOehTOXuhF6a9SysU
+ WnqMO+Z2LNt9GxL/eWCqp0jO1xQLjsoUU45TgVeZEIggTeMPWurjlcoLQFBV0iqSud04
+ I7kdy0AG0vbK5Y/WSRbIeyfpGRnAYLP+lM1PiWoSnSMFjigykDT4/yLnWWSMewI/bq+k LA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 30x3gmm2wc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 12 May 2020 16:21:54 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CGINVq155386;
+        Tue, 12 May 2020 16:21:54 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 30x69tjj1k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 May 2020 16:21:54 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04CGLp24001016;
+        Tue, 12 May 2020 16:21:52 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 12 May 2020 09:21:51 -0700
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com, beanhuo@micron.com,
+        cang@codeaurora.org, matthias.bgg@gmail.com, bvanassche@acm.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
+Subject: Re: [PATCH v2 4/4] scsi: ufs-mediatek: customize WriteBooster flush
+ policy
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20200509093716.21010-1-stanley.chu@mediatek.com>
+        <20200509093716.21010-5-stanley.chu@mediatek.com>
+        <635f91f6-3a27-ffdd-4021-67705d4063fc@codeaurora.org>
+Date:   Tue, 12 May 2020 12:21:47 -0400
+In-Reply-To: <635f91f6-3a27-ffdd-4021-67705d4063fc@codeaurora.org> (Asutosh
+        Das's message of "Mon, 11 May 2020 19:19:42 -0700")
+Message-ID: <yq1v9l115us.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.0.91 (gnu/linux)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d0b5379a-878c-4de5-38f2-08d7f69015e3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 May 2020 16:18:19.8061
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: pbALKJ9TKoLGj813THjxwwIdekjOMtfrqQuGy0Z8qCs3lFZt1agTHk8mkVvg7G7kbmxS/fBAYhuGShFC9+y/mjXWqVAcHyXhBYQj3l9IYF0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3710
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 adultscore=0
+ spamscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005120124
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ clxscore=1015 spamscore=0 lowpriorityscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 priorityscore=1501 mlxscore=0 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005120123
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 12/05/2020 18:15, Martin K. Petersen wrote:=0A=
-> =0A=
-> Christoph,=0A=
-> =0A=
->> Where is that series?  I don't remember any changes in that area.=0A=
-> =0A=
-> Haven't posted it yet. Still working on a few patches that address=0A=
-> validating reported values for devices that change parameters in flight.=
-=0A=
-> =0A=
-> The first part of the series is here:=0A=
-> =0A=
-> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/log/?h=3D5.=
-8/sd-revalidate=0A=
-> =0A=
-=0A=
-Just did a quick skim in the gitweb and I can't see anything that will clas=
-h. So I think we're good.=0A=
+
+Hi Asutosh!
+
+> Patchset looks good to me.
+>
+> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+
+When you want to approve an entire series, please respond to the cover
+letter email. Otherwise the kernel.org tooling will only record the tag
+for the individual patch you are responding to. In this case only patch
+4 got tagged as reviewed in patchwork.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
