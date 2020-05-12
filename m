@@ -2,104 +2,132 @@ Return-Path: <SRS0=/Ihf=62=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C39C2D0F7
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:15:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26A89CA90AF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:18:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E9F820752
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:15:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0644820746
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:18:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="niJi7UYH"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="iybkzUEt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728365AbgELQPB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 12:15:01 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:56646 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727915AbgELQPB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 12:15:01 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CGCI8B015542;
-        Tue, 12 May 2020 16:14:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=jfNIRjccwnvqnFIrzDzQr48D/17TCvRV1Qnnis5ecl0=;
- b=niJi7UYHIdNqGmAJy4SWdhaxvpU5EyZA2gNb+WwT7U0Bq06E3aMzWlBD0RQYVgh/sDoJ
- 7DrJI9qRGuxEm49tSRWCpCrqanWS3neJBvzPbCmTxuixcun2xPH/pucyOGE1HaTyrVoB
- B10lrcAvo5BRd3xEVCUMvibWbicyUCdxWH8bCBkHlx77qBcIEyxfMtHRgKpqG7gSS6RR
- TSihKecOJU7Uzws4UR38i1tK2v3zBvVT2aWW6tX/yM7rQbKcIWvCRMLDgqiNg6Yme0lu
- DyXPdL7WXlODZsXvqp+lSo60AjAv2oJO4EPiH6/7aq8MWkTvOhRyat5ApX00JuTZSBBo IA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 30x3gmm1p0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 12 May 2020 16:14:56 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CG7wvY100421;
-        Tue, 12 May 2020 16:12:55 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 30ydsqsdm1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 May 2020 16:12:55 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04CGCrr4005079;
-        Tue, 12 May 2020 16:12:53 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 May 2020 09:12:53 -0700
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        linux-block <linux-block@vger.kernel.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Keith Busch <kbusch@kernel.org>,
-        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH v11 00/10] Introduce Zone Append for writing to zoned
- block devices
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
-        <20200512131748.GA15699@infradead.org> <yq14ksl2ldd.fsf@oracle.com>
-        <20200512160410.GA22624@infradead.org>
-Date:   Tue, 12 May 2020 12:12:50 -0400
-In-Reply-To: <20200512160410.GA22624@infradead.org> (Christoph Hellwig's
-        message of "Tue, 12 May 2020 09:04:10 -0700")
-Message-ID: <yq1zhad169p.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.0.91 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 mlxscore=0
- adultscore=0 mlxlogscore=852 malwarescore=0 bulkscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005120122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=881
- clxscore=1015 spamscore=0 lowpriorityscore=0 phishscore=0 bulkscore=0
- malwarescore=0 priorityscore=1501 mlxscore=0 suspectscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005120123
+        id S1726872AbgELQSR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 12:18:17 -0400
+Received: from mail1.bemta26.messagelabs.com ([85.158.142.4]:51314 "EHLO
+        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726287AbgELQSR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 May 2020 12:18:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1589300294; i=@ts.fujitsu.com;
+        bh=KhpI/oTYPBwCSd5HBuPq6OYDwPV+G6NOvvgcPbitnik=;
+        h=From:To:Cc:Subject:Date:Message-Id;
+        b=iybkzUEtWGHRmN9d017HqfGltqS07475UxX2hq6HOVNetaZ6jOhXqzIqGM41ANn/c
+         OMc+ModBbDFe7xvziZqrW5nEAKbAcy+sSj9Whggw3hGQCW3HYIT2QLbBfH/CSjdykS
+         A+iNMY6Q6bnNoaXubVitGmN5RwNHhGnNuCZwQGlk9Ra29gKfwebjWrPFtlcF8DzJm0
+         pZhslS0IrER04DQb4kEOT39mhhovRnD89YQwenlcvq/rzHbXtPEwSp5OrliMI3LYXz
+         tK9pBvX89GRm5XHkVABUdn1eBc9WJZpc3vovnUFZiJcMaQ2IgRFYO9T41ehiwocOMe
+         G9IbaXtgCkZmA==
+Received: from [100.113.3.197] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-4.bemta.az-a.eu-central-1.aws.symcld.net id C0/AE-37389-04CCABE5; Tue, 12 May 2020 16:18:08 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLLMWRWlGSWpSXmKPExsViZ8MxRdf+zK4
+  4g53ntC12Xv/IZDHtw09mi+7rO9gslh//x2TxddNGNovWpW+ZHNg8Ll/x9vj/bwqzx8ent1g8
+  bp++wOTxeZNcAGsUa2ZeUn5FAmvG3peHGAum8FfcW32esYFxPW8XIxeHkMBkRokfLe1MEM50R
+  ok9X1vYuhg5OdgEDCRWTLrPApIQEVjLKPHi4UMmkASzgJ7EtH/r2EFsYQFnic/n/oE1sAioSq
+  zonQRm8wrYSTyaNR2sXkJAXqLjwGSWCYycCxgZVjFaJhVlpmeU5CZm5ugaGhjoGhoa6xoDWSZ
+  6iVW6iXqppbrJqXklRYlAWb3E8mK94src5JwUvbzUkk2MwFBJKWTO2MF4de17vUOMkhxMSqK8
+  LRN2xQnxJeWnVGYkFmfEF5XmpBYfYpTh4FCS4A07DZQTLEpNT61Iy8wBhi1MWoKDR0mE1+YUU
+  Jq3uCAxtzgzHSJ1ilFRSpx3P0hCACSRUZoH1waLlUuMslLCvIwMDAxCPAWpRbmZJajyrxjFOR
+  iVhHlngUzhycwrgZv+CmgxE9Dih8+3gSwuSURISTUwhVq6vNQtOaItZhsTyj+jdZ/Dtl7Wy6o
+  S4a9PCSjb/v7kdCMpRcqk0vEb/+V/WrandyptcgkpXsa7036/n36DbIZt1bEclRjbTpEepe2q
+  j6fHHWJet2j/1k/tqZPTCpS3i8wJuqK+3CNxTeqyuTtWhErGu9+JCm2Jr/7uu/zg2cvnn+XMr
+  PZK/LZmT+iCzn8rnMVWvjrFIGl+aHNujpXaZY+FVVkKS/8+M53frdJZv19bXPXypfDCOdbV7I
+  +yJI86pEimh9lOm7d+zx+5oEix56F//zdYfOV3+tVTJS81JWpLhuNasScLxEq4Ovff9vEp5eV
+  9K/R8scmExdxxzNqrFvyWPNdZoDKDf7bRhjtKLMUZiYZazEXFiQDWLVuCEAMAAA==
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-15.tower-226.messagelabs.com!1589300286!894377!1
+X-Originating-IP: [62.60.8.148]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 5712 invoked from network); 12 May 2020 16:18:07 -0000
+Received: from unknown (HELO mailhost1.uk.fujitsu.com) (62.60.8.148)
+  by server-15.tower-226.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 12 May 2020 16:18:07 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost1.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 04CGI6p2006160;
+        Tue, 12 May 2020 17:18:06 +0100
+Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
+        by x-serv01 (Postfix) with ESMTP id 3AC9420708;
+        Tue, 12 May 2020 18:18:03 +0200 (CEST)
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+To:     martin.petersen@oracle.com, bvanassche@acm.org,
+        mchristi@readhat.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, bly@catalogicsoftware.com
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Subject: [PATCH] scsi: target: put lun_ref at end of tmr processing
+Date:   Tue, 12 May 2020 18:17:53 +0200
+Message-Id: <20200512161753.10625-1-bstroesser@ts.fujitsu.com>
+X-Mailer: git-send-email 2.12.3
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Testing with Loopback I found, that after a Loopback LUN
+has executed a TMR, I can no longer unlink the LUN.
+The rm command hangs in transport_clear_lun_ref() at
+wait_for_completion(&lun->lun_shutdown_comp)
+The reason is, that transport_lun_remove_cmd() is not
+called at the end of target_tmr_work().
 
-Christoph,
+It seems, that in other fabrics this call happens implicitly
+when the fabric drivers call transport_generic_free_cmd()
+during their ->queue_tm_rsp().
 
-> Where is that series?  I don't remember any changes in that area.
+Unfortunately Loopback seems to not comply to the common way
+of calling transport_generic_free_cmd() from ->queue_*().
+Instead it calls transport_generic_free_cmd() from its
+  ->check_stop_free() only.
 
-Haven't posted it yet. Still working on a few patches that address
-validating reported values for devices that change parameters in flight.
+But the ->check_stop_free() is called by
+transport_cmd_check_stop_to_fabric() after it has reset the
+se_cmd->se_lun pointer.
+Therefore the following transport_generic_free_cmd() skips the
+transport_lun_remove_cmd().
 
-The first part of the series is here:
+So this patch re-adds the transport_lun_remove_cmd() at the end
+of target_tmr_work(), which was removed during commit
+2c9fa49e100f962af988f1c0529231bf14905cda
+"scsi: target/core: Make ABORT and LUN RESET handling synchronous"
 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/log/?h=5.8/sd-revalidate
+For fabrics using transport_generic_free_cmd() in the usual way
+the double call to transport_lun_remove_cmd() doesn't harm, as
+transport_lun_remove_cmd() checks for this situation and does
+not release lun_ref twice.
 
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Tested-by: Bryant G. Ly <bryangly@gmail.com>
+---
+ drivers/target/target_core_transport.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 594b724bbf79..264a822c0bfa 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3350,6 +3350,7 @@ static void target_tmr_work(struct work_struct *work)
+ 
+ 	cmd->se_tfo->queue_tm_rsp(cmd);
+ 
++	transport_lun_remove_cmd(cmd);
+ 	transport_cmd_check_stop_to_fabric(cmd);
+ 	return;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.12.3
+
