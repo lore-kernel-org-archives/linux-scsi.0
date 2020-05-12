@@ -2,96 +2,166 @@ Return-Path: <SRS0=/Ihf=62=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E07C2D0F6
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 18:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67C98C2D0F7
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 18:18:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5BE620714
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 18:11:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48A6E206D3
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 18:18:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="X9yzDJ5w"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pXPfJyHQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730761AbgELSLC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 14:11:02 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:30901 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725987AbgELSLB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 May 2020 14:11:01 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1589307061; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=OO3R9jYg4r1wAHoA8hhGY1+VCtV/dK//JXy3OK5Qw9E=; b=X9yzDJ5w+uANXT+L0o2HIQlXUvsmNWzlgT6jU82S+P7kKsBNoTKhd66cdZAwY7/rteL0gINH
- rDZ4TE3ZFIi7C6CJR70/e9MEUgg0tc/p6AmznY7L91o8aW6ZPuM0Pp+YL7Q3ejPkgOAKQOrq
- Aki8pSI2ojxQZbVTMdVDF0BwEpI=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5ebae6b4.7ffa4cc7b810-smtp-out-n02;
- Tue, 12 May 2020 18:11:00 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 9100AC4478F; Tue, 12 May 2020 18:10:58 +0000 (UTC)
-Received: from [192.168.8.150] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1684BC433F2;
-        Tue, 12 May 2020 18:10:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1684BC433F2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v2 4/4] scsi: ufs-mediatek: customize WriteBooster flush
- policy
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
-        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com
-References: <20200509093716.21010-1-stanley.chu@mediatek.com>
- <20200509093716.21010-5-stanley.chu@mediatek.com>
- <635f91f6-3a27-ffdd-4021-67705d4063fc@codeaurora.org>
- <yq1v9l115us.fsf@oracle.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <7d5f53eb-f642-3c8b-edf6-d4693ecb49a4@codeaurora.org>
-Date:   Tue, 12 May 2020 11:10:56 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S1731019AbgELSS6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 14:18:58 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44388 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727104AbgELSS5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 14:18:57 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CIIpvN040091;
+        Tue, 12 May 2020 18:18:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=VviYrr/USMV/gMJUYUTpsN6oJQuVWzCYHlCvsK+0aSk=;
+ b=pXPfJyHQ6euIXTF/aX94ymfcK/kQTuXBmca/EKkwG9lwWp9SXLyxLT6C1Xtgy/X9/Cvj
+ KbdJ+0tUkjb/Syb+LDrwM40HQ/oaPsWaXllkFwE3A9ZRLUvSiG24hXc3dgerPHUryHSH
+ bAgC/fVF4G+3E/kKwhnNpQwMM84h4J7paV0j5iPFVlIDahvV8zd+CGjwoJDJk/2DQAoZ
+ QWBlyfKFQp7Tb8nXD9EnpNU3uIFiGJqVQ+k88+ZWppMrkRFBt35y2tdvE+N7IVrKTGbL
+ ywEYKV2iXZywdNirG7HPx7SDeMLw7a8ka8ih2Cq7WCMIort2uFW3ZFI8Z5gW7ms9NQMd Ug== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 3100yfr01v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 12 May 2020 18:18:54 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CIIEkV047101;
+        Tue, 12 May 2020 18:18:54 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 3100y8r1fh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 May 2020 18:18:54 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04CIIrx3005130;
+        Tue, 12 May 2020 18:18:53 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 12 May 2020 11:18:53 -0700
+Date:   Tue, 12 May 2020 21:18:47 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     jsmart2021@gmail.com
+Cc:     linux-scsi@vger.kernel.org
+Subject: [bug report] lpfc: Refactor NVME LS receive handling
+Message-ID: <20200512181847.GA299019@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <yq1v9l115us.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 suspectscore=10 mlxscore=0 mlxlogscore=694 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005120138
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
+ mlxscore=0 suspectscore=10 spamscore=0 mlxlogscore=728 malwarescore=0
+ bulkscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005120138
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/12/2020 9:21 AM, Martin K. Petersen wrote:
-> 
-> Hi Asutosh!
-> 
->> Patchset looks good to me.
->>
->> Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
-> 
-> When you want to approve an entire series, please respond to the cover
-> letter email. Otherwise the kernel.org tooling will only record the tag
-> for the individual patch you are responding to. In this case only patch
-> 4 got tagged as reviewed in patchwork.
-> 
+Hello James Smart,
 
-Hi Martin
-Sure - I'll keep this in mind.
+This is a semi-automatic email about new static checker warnings.
 
-Thanks,
-Asutosh
+The patch 3a8070c567aa: "lpfc: Refactor NVME LS receive handling" 
+from Mar 31, 2020, leads to the following Smatch complaint:
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+    drivers/scsi/lpfc/lpfc_sli.c:2905 lpfc_nvme_unsol_ls_handler()
+    error: we previously assumed 'phba->targetport' could be null (see line 2837)
+
+drivers/scsi/lpfc/lpfc_sli.c
+  2836			failwhy = "No Localport";
+  2837		} else if (phba->nvmet_support && !phba->targetport) {
+                           ^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^
+Assume both pointers are NULL.
+
+  2838			failwhy = "No Targetport";
+  2839		} else if (unlikely(fc_hdr->fh_r_ctl != FC_RCTL_ELS4_REQ)) {
+  2840			failwhy = "Bad NVME LS R_CTL";
+  2841		} else if (unlikely((fctl & 0x00FF0000) !=
+  2842				(FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT))) {
+  2843			failwhy = "Bad NVME LS F_CTL";
+  2844		} else {
+  2845			axchg = kzalloc(sizeof(*axchg), GFP_ATOMIC);
+  2846			if (!axchg)
+  2847				failwhy = "No CTX memory";
+  2848		}
+  2849	
+  2850		if (unlikely(failwhy)) {
+  2851			lpfc_printf_log(phba, KERN_ERR, LOG_NVME_DISC | LOG_NVME_IOERR,
+  2852					"6154 Drop NVME LS: SID %06X OXID x%X: %s\n",
+  2853					sid, oxid, failwhy);
+  2854			goto out_fail;
+  2855		}
+  2856	
+  2857		/* validate the source of the LS is logged in */
+  2858		ndlp = lpfc_findnode_did(phba->pport, sid);
+  2859		if (!ndlp || !NLP_CHK_NODE_ACT(ndlp) ||
+  2860		    ((ndlp->nlp_state != NLP_STE_UNMAPPED_NODE) &&
+  2861		     (ndlp->nlp_state != NLP_STE_MAPPED_NODE))) {
+  2862			lpfc_printf_log(phba, KERN_ERR, LOG_NVME_DISC,
+  2863					"6216 NVME Unsol rcv: No ndlp: "
+  2864					"NPort_ID x%x oxid x%x\n",
+  2865					sid, oxid);
+  2866			goto out_fail;
+  2867		}
+  2868	
+  2869		axchg->phba = phba;
+  2870		axchg->ndlp = ndlp;
+  2871		axchg->size = size;
+  2872		axchg->oxid = oxid;
+  2873		axchg->sid = sid;
+  2874		axchg->wqeq = NULL;
+  2875		axchg->state = LPFC_NVME_STE_LS_RCV;
+  2876		axchg->entry_cnt = 1;
+  2877		axchg->rqb_buffer = (void *)nvmebuf;
+  2878		axchg->hdwq = &phba->sli4_hba.hdwq[0];
+  2879		axchg->payload = nvmebuf->dbuf.virt;
+  2880		INIT_LIST_HEAD(&axchg->list);
+  2881	
+  2882		if (phba->nvmet_support)
+  2883			ret = lpfc_nvmet_handle_lsreq(phba, axchg);
+  2884		else
+  2885			ret = lpfc_nvme_handle_lsreq(phba, axchg);
+  2886	
+  2887		/* if zero, LS was successfully handled. If non-zero, LS not handled */
+  2888		if (!ret)
+  2889			return;
+  2890	
+  2891		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_DISC | LOG_NVME_IOERR,
+  2892				"6155 Drop NVME LS from DID %06X: SID %06X OXID x%X "
+  2893				"NVMe%s handler failed %d\n",
+  2894				did, sid, oxid,
+  2895				(phba->nvmet_support) ? "T" : "I", ret);
+  2896	
+  2897	out_fail:
+  2898		kfree(axchg);
+  2899	
+  2900		/* recycle receive buffer */
+  2901		lpfc_in_buf_free(phba, &nvmebuf->dbuf);
+  2902	
+  2903		/* If start of new exchange, abort it */
+  2904		if (fctl & FC_FC_FIRST_SEQ && !(fctl & FC_FC_EX_CTX))
+  2905			lpfc_nvme_unsol_ls_issue_abort(phba, axchg, sid, oxid);
+                                                       ^^^^
+phba->targetport is dereferenced without checking.
+
+  2906	}
+  2907	
+
+regards,
+dan carpenter
