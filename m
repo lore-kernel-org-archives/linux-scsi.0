@@ -2,162 +2,118 @@ Return-Path: <SRS0=/Ihf=62=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024F0C54E4A
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 08:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D54A2C54E8B
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 08:56:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF184206CC
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 08:46:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE24A2082E
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 08:56:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jYXGq5v6"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Od/t/O43"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729047AbgELIqg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 04:46:36 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59490 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbgELIqg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 04:46:36 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04C8h2JH052096;
-        Tue, 12 May 2020 08:46:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=sUcWufXYK5jH9Tzpw8fNYnpiSXb1JjxD6fHu5JAYX4A=;
- b=jYXGq5v6HaWmfa+e5Rm2azZobLfYterxKYV3jprEkNmKUnJqvufL7s7CIOhDHiy90uJw
- Ye/TG2qaUEOIUV4fy/kZetWJecTsRNEu21Am0U95ji97hrQHMLR1Q/K1nkXzJFv2D8kw
- iSxj02LPzFU8uyP03A4dpfgpclG056H6WoekHYXHM7WseCpfT2nta7cgP9jZqlWJtmOk
- L0lprbS5kLNsKwsTsVGjpJE9h/zaiO+MWNI6E2p9VOASoHVkXuNKqsE4nndRrre1E1KX
- UIGKy/Uho3dLYLhREzBwCWjPbtPdbp6zheXs4zy7z/xvS7YK3sK16CoswqiZy4s31i97 yw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30x3gshnut-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 12 May 2020 08:46:33 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04C8cX85095532;
-        Tue, 12 May 2020 08:46:33 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 30xbghrd95-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 May 2020 08:46:33 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04C8kWAJ026252;
-        Tue, 12 May 2020 08:46:32 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 12 May 2020 01:46:31 -0700
-Date:   Tue, 12 May 2020 11:46:26 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     jsmart2021@gmail.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] lpfc: Refactor Send LS Abort support
-Message-ID: <20200512084626.GA252662@mwanda>
+        id S1729250AbgELI4F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 04:56:05 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:16012 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727859AbgELI4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 04:56:05 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1589273765; x=1620809765;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=YWXANu2tzSwd2q0J4374R6vpioY6gmSMC2fMgiiszi8=;
+  b=Od/t/O434QtETjOQz1jBQ/RPFHYA5oJfiiB+drW9QTZ4ggKljYntYTC4
+   qKT7LtSF8B+DEPEqq6krpTRevi3vvH0hSeqwrT5Oof0GUK0ATgdL1gN3Z
+   Y5wTMNvyPvjDshoPFJ0ne2tBO2f2x9BRS6Z/MuseCOTbq5g7rX5hS5f/T
+   yulxJ/1Si92w9uyctIWy52fOZd5jaGhs90eiTzcCz8tqmPLD6pAvFScLo
+   F27RBQ4UWyBaCbBaucne9v/1hKGZYWtEwA2SrG8encR811Af7YZRpzYtY
+   e6jN9TEK3xl+QvyxwgooYhcZT4BdvsdWFA13bcSY8+xckjzwDumCR+cHu
+   A==;
+IronPort-SDR: ziwTGvV/u4nL3Iuv+zqgvDPrRY+Kq2PoWh2AZE+kzleTQcFRpw4bdrr2rNM73mMoxc7x9JMdQe
+ iTp2Di4l81xJSuW0hV/ecgIIdVjXhNAMqM2njVwyw90jVareQ8i0sS7HAX5MgZJwEDk2qXEczL
+ GCR8C6ki69myke1AnfAicZ5IpIx0NVuk1KF5A7MNhmAjMrmoQ6fNC/z/3YOWUNDDN448mMzGN3
+ 97NMZFqRomhrBhc6rKr0oyOm8amQ/KL6BzfZX2NKOPZprqgWtzpH4hUQTrLhTDIIaIEAOxjwTD
+ aKY=
+X-IronPort-AV: E=Sophos;i="5.73,383,1583164800"; 
+   d="scan'208";a="141823527"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 May 2020 16:56:05 +0800
+IronPort-SDR: 8FLTNUwhTf7AzU7uDbJM7NiFUDRQAZPUvSXicZWHqXg0p3nL1hL95c/BXFbNdMpTUBBwjHtWWF
+ LFOKLj7nYJ320BnVdP7MjZLaOrWgkOAM4=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2020 01:45:47 -0700
+IronPort-SDR: T/Il2f6XwNF00+XvPCJA4OUTvzFgNMT3F50auizYj+VWSaaVXaTigJDyflOVFnum+JmH7kxmlN
+ HOMQYu4wnvWw==
+WDCIronportException: Internal
+Received: from unknown (HELO redsun60.ssa.fujisawa.hgst.com) ([10.149.66.36])
+  by uls-op-cesaip01.wdc.com with ESMTP; 12 May 2020 01:56:02 -0700
+From:   Johannes Thumshirn <johannes.thumshirn@wdc.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v11 01/10] block: provide fallbacks for blk_queue_zone_is_seq and blk_queue_zone_no
+Date:   Tue, 12 May 2020 17:55:45 +0900
+Message-Id: <20200512085554.26366-2-johannes.thumshirn@wdc.com>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
+References: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9618 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- spamscore=0 suspectscore=3 phishscore=0 bulkscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005120072
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9618 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- malwarescore=0 adultscore=0 mlxscore=0 priorityscore=1501
- lowpriorityscore=0 impostorscore=0 clxscore=1011 bulkscore=0 phishscore=0
- suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005120072
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+blk_queue_zone_is_seq() and blk_queue_zone_no() have not been called with
+CONFIG_BLK_DEV_ZONED disabled until now.
 
-The patch e96a22b0b7c2: "lpfc: Refactor Send LS Abort support" from
-Mar 31, 2020, leads to the following static checker warning:
+The introduction of REQ_OP_ZONE_APPEND will change this, so we need to
+provide noop fallbacks for the !CONFIG_BLK_DEV_ZONED case.
 
-	drivers/scsi/lpfc/lpfc_nvmet.c:1366 lpfc_nvmet_ls_abort()
-	warn: 'ret' can be either negative or positive
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ include/linux/blkdev.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-drivers/scsi/lpfc/lpfc_nvmet.c
-   832  /**
-   833   * __lpfc_nvme_ls_abort - Generic service routine to abort a prior
-   834   *         NVME LS request
-   835   * @vport: The local port that issued the LS
-   836   * @ndlp: The remote port the LS was sent to
-   837   * @pnvme_lsreq: Pointer to LS request structure from the transport
-   838   *
-   839   * The driver validates the ndlp, looks for the LS, and aborts the
-   840   * LS if found.
-   841   *
-   842   * Returns:
-   843   * 0 : if LS found and aborted
-   844   * non-zero: various error conditions in form -Exxx
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f00bd4042295..91c6e413bf6b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -721,6 +721,16 @@ static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
+ {
+ 	return 0;
+ }
++static inline bool blk_queue_zone_is_seq(struct request_queue *q,
++					 sector_t sector)
++{
++	return false;
++}
++static inline unsigned int blk_queue_zone_no(struct request_queue *q,
++					     sector_t sector)
++{
++	return 0;
++}
+ #endif /* CONFIG_BLK_DEV_ZONED */
+ 
+ static inline bool rq_is_sync(struct request *rq)
+-- 
+2.24.1
 
-This is an unpublished Smatch check where negatives and positives are
-both treated as errors.  I think the code is correct.  But the comment
-describing the returns needs to be updated.
-
-   845   **/
-   846  int
-   847  __lpfc_nvme_ls_abort(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
-   848                          struct nvmefc_ls_req *pnvme_lsreq)
-   849  {
-   850          struct lpfc_hba *phba = vport->phba;
-   851          struct lpfc_sli_ring *pring;
-   852          struct lpfc_iocbq *wqe, *next_wqe;
-   853          bool foundit = false;
-   854  
-   855          if (!ndlp) {
-   856                  lpfc_printf_log(phba, KERN_ERR,
-   857                                  LOG_NVME_DISC | LOG_NODE |
-   858                                          LOG_NVME_IOERR | LOG_NVME_ABTS,
-   859                                  "6049 NVMEx LS REQ Abort: Bad NDLP x%px DID "
-   860                                  "x%06x, Failing LS Req\n",
-   861                                  ndlp, ndlp ? ndlp->nlp_DID : 0);
-   862                  return -EINVAL;
-   863          }
-   864  
-   865          lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC | LOG_NVME_ABTS,
-   866                           "6040 NVMEx LS REQ Abort: Issue LS_ABORT for lsreq "
-   867                           "x%p rqstlen:%d rsplen:%d %pad %pad\n",
-   868                           pnvme_lsreq, pnvme_lsreq->rqstlen,
-   869                           pnvme_lsreq->rsplen, &pnvme_lsreq->rqstdma,
-   870                           &pnvme_lsreq->rspdma);
-   871  
-   872          /*
-   873           * Lock the ELS ring txcmplq and look for the wqe that matches
-   874           * this ELS. If found, issue an abort on the wqe.
-   875           */
-   876          pring = phba->sli4_hba.nvmels_wq->pring;
-   877          spin_lock_irq(&phba->hbalock);
-   878          spin_lock(&pring->ring_lock);
-   879          list_for_each_entry_safe(wqe, next_wqe, &pring->txcmplq, list) {
-   880                  if (wqe->context2 == pnvme_lsreq) {
-   881                          wqe->iocb_flag |= LPFC_DRIVER_ABORTED;
-   882                          foundit = true;
-   883                          break;
-   884                  }
-   885          }
-   886          spin_unlock(&pring->ring_lock);
-   887  
-   888          if (foundit)
-   889                  lpfc_sli_issue_abort_iotag(phba, pring, wqe);
-   890          spin_unlock_irq(&phba->hbalock);
-   891  
-   892          if (foundit)
-   893                  return 0;
-   894  
-   895          lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC | LOG_NVME_ABTS,
-   896                           "6213 NVMEx LS REQ Abort: Unable to locate req x%p\n",
-   897                           pnvme_lsreq);
-   898          return 1;
-                ^^^^^^^^
-
-   899  }
-
-regards,
-dan carpenter
