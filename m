@@ -2,105 +2,73 @@ Return-Path: <SRS0=/Ihf=62=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6F51C2D0F6
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:03:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8039CCA90AF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:04:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 955A52054F
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:03:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F2BF20722
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 May 2020 16:04:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YeLXG78G"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cKUpxpJ0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728934AbgELQDJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 12:03:09 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43342 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726055AbgELQDJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 12:03:09 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CFv3dq026382;
-        Tue, 12 May 2020 16:02:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
- message-id : date : from : to : cc : subject : references : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=xi1fE0OIOYczCayh3JK/aSeCXO3ktTVQ0riZLtwHdH4=;
- b=YeLXG78GKQ66Yg8stE5C0S1j80EBGkyywTumsNnT/yMFlaWnxd1dv+iqzMLo99hYnkc4
- 07mRSs9nK9S9dK0O1SMmHN6udMtt0zRCQjVYYvl1l3NwCkKTpp2uWnZL7E7wkZYKQoxC
- sz3y9ev1QVln+FJoHtZANcUa8dQq30wsCsMGdppdDHH/CJfPUGQSsleV0dIJuM46Fha7
- 0HRaq726sFLeAfJoFTCWcs+egQpsX5mX/2PpmBYiaiwR4V2YSfRP/waAD8LSVEld6TOE
- 4x/WuykP5e0nFWdG6xTkYHcR981Q8dtRoKdgMIS9mlTXXbgZhOhOz3Zu/9gZzQVizvpc jg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30x3gskwrg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 12 May 2020 16:02:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CFwZve194131;
-        Tue, 12 May 2020 16:02:58 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 30xbgk4jtf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 May 2020 16:02:58 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04CG2u76018573;
-        Tue, 12 May 2020 16:02:57 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123) by default (Oracle
- Beehive Gateway v4.0) with ESMTP ; Tue, 12 May 2020 09:01:21 -0700
-ORGANIZATION: Oracle Corporation
-USER-AGENT: Gnus/5.13 (Gnus v5.13) Emacs/27.0.91 (gnu/linux)
-MIME-Version: 1.0
-Message-ID: <yq14ksl2ldd.fsf@oracle.com>
-Date:   Tue, 12 May 2020 09:01:18 -0700 (PDT)
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        id S1727099AbgELQEN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 12:04:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53034 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725987AbgELQEM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 12:04:12 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA2AFC061A0C;
+        Tue, 12 May 2020 09:04:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Y7BSP3BlQ61Lb6dN81uzMsCFbdus5l/4uVt1/IWDFJo=; b=cKUpxpJ0u2DERhN04TX7WHJLSN
+        FMUPWssMl6aaphrFgb4INIz6Z3m5iJegCgjSwBjUBQK6ZzSQpyK1PVNNoh+76wcuJsf9kZNIJUUPu
+        Nc6NnaEuH3BCG9Hj+Rg4/306w2OrJqIzCIORyBK1VHJOiPss72MTmN6htGytW1LjJv62Sm5ArJlzE
+        hlr8dxqdgfLLaRuXUqH840+kyAYq1mqskKo4GfXuYwEFI+egZ4+dS0578harKdIMSqthfxoXz5ys2
+        3/dQMRQ7kOI2mxLVjgbicKxGbUkhNsOUgd5RY3UwOi8X9wjbBRV+9qJLbaI14VUid9vG2tFB1MHPd
+        PV2CfNWw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jYXO6-00067e-3n; Tue, 12 May 2020 16:04:10 +0000
+Date:   Tue, 12 May 2020 09:04:10 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Jens Axboe <axboe@kernel.dk>,
         linux-block <linux-block@vger.kernel.org>,
         Damien Le Moal <Damien.LeMoal@wdc.com>,
         Keith Busch <kbusch@kernel.org>,
         "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
 Subject: Re: [PATCH v11 00/10] Introduce Zone Append for writing to zoned
  block devices
+Message-ID: <20200512160410.GA22624@infradead.org>
 References: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
  <20200512131748.GA15699@infradead.org>
-In-Reply-To: <20200512131748.GA15699@infradead.org> <(Christoph> <Hellwig's>
- <message> <of> <"Tue> <> <12> <May> <2020> <06:17:48> <-0700")>
-Content-Type: text/plain; charset=ascii
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=733
- spamscore=0 suspectscore=0 phishscore=0 bulkscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005120121
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=763
- malwarescore=0 adultscore=0 mlxscore=0 priorityscore=1501
- lowpriorityscore=0 impostorscore=0 clxscore=1015 bulkscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005120121
+ <yq14ksl2ldd.fsf@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq14ksl2ldd.fsf@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, May 12, 2020 at 09:01:18AM -0700, Martin K. Petersen wrote:
+> I suspect this series going to clash with my sd revalidate surgery. I
+> may have to stick that in a postmerge branch based on Jens' tree.
 
-Christoph,
+Where is that series?  I don't remember any changes in that area.
 
-> The whole series looks good to me:
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> I hope we can get this in 5.8 to help with the btrfs in 5.9.
-
-Yep, I think this looks good.
-
-I suspect this series going to clash with my sd revalidate surgery. I
-may have to stick that in a postmerge branch based on Jens' tree.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+---end quoted text---
