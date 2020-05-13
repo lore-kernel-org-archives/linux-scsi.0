@@ -2,141 +2,115 @@ Return-Path: <SRS0=+pcl=63=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A754C433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 15:35:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F8F3C433E3
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 16:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9682D204EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 15:35:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="qeIgWRTJ"
+	by mail.kernel.org (Postfix) with ESMTP id D30E420671
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 16:47:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1589388431;
+	bh=/v2IdDrymQyOQwGKwD3DYskW13FfX9JBpATBQnCGEcA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=IzttIH8Dg6U53kZo+0Y050OTG/swYSM2FD6cZvD34LxtApdOzPVwxpur840oeloiV
+	 QUzMji8AsbqrbZigjgBCHZMlrpgxgsFoUki80JMrifpJEajLkPbHQItk8y4fVXVCz5
+	 4js6tMkMXvZoyofwT0jFVF0+pw+GBCegpycXHCTk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389261AbgEMPf3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 11:35:29 -0400
-Received: from mail1.bemta25.messagelabs.com ([195.245.230.2]:20954 "EHLO
-        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389255AbgEMPf3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 May 2020 11:35:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1589384126; i=@ts.fujitsu.com;
-        bh=FXX7HR9EP9nN4Qc4Odqz55unqXGlxJCDNyqQsVOxOuc=;
-        h=From:To:Cc:Subject:Date:Message-Id;
-        b=qeIgWRTJFOaWXuQxGxqPDzue74JMgFcLZmiRilv7W2PBt8LRaZoV0d/18IZRbWJYL
-         lVgUpDD9TCVgCIqYwPuQ4YWDXNAIrkjoTfq5Wu241kymND99Bd1wbxoub+8TDR2mbX
-         +QuXdo367KMTtxXAuYnqVi+ZifX09n60rWOdEebNtH+d+h2WXLFf7Lo4/nFmYLrYVE
-         qGOxfURFzwdgCW3TZzL3TGjdjYrsfYOlYMGxZfvdkSZMUr/XYVLSQ8sETadbA+dvaN
-         Igtft9Dk6jjUtO3dY5M+cxx7WHGLJTPTBW6uBv/2AY7WV2Io7dBBQj1iBEaCk9k6vG
-         QiaAC+HKPwkpA==
-Received: from [100.112.193.214] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-2.bemta.az-a.eu-west-1.aws.symcld.net id 75/7C-40611-EB31CBE5; Wed, 13 May 2020 15:35:26 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrPLMWRWlGSWpSXmKPExsViZ8MxRXev8J4
-  4gwef1S12Xv/IZDHtw09mi+7rO9gslh//x2Sx/sgGRosFGx8xWrQufcvkwO5x+Yq3x/9/U5g9
-  Pj69xeLxft9VNo/Pm+QCWKNYM/OS8isSWDNe9VYVzBGsOPvnD1sD4wT+LkYuDiGByYwS569PY
-  4RwpjNK7F4yC8jh5GATMJBYMek+C0hCRGANo8T9ZXuYQBLMAm4S17a+ZgGxhYHsp98ms3cxcn
-  CwCKhK3D3sDRLmFbCVaJ58gRnElhCQl+g4MJllAiPnAkaGVYwWSUWZ6RkluYmZObqGBga6hoZ
-  GuoaWRrpGxiZ6iVW6iXqppbrlqcUluoZ6ieXFesWVuck5KXp5qSWbGIHhklJw4NUOxpNr3+sd
-  YpTkYFIS5fW8sTtOiC8pP6UyI7E4I76oNCe1+BCjDAeHkgRvkdCeOCHBotT01Iq0zBxg6MKkJ
-  Th4lER4DUDSvMUFibnFmekQqVOMilLivMtBEgIgiYzSPLg2WLxcYpSVEuZlZGBgEOIpSC3KzS
-  xBlX/FKM7BqCTMmwsyhSczrwRu+iugxUxAi53v7AJZXJKIkJJqYGJxcUn68GR/YfvrtyUcTyz
-  PbBX9EaJ5bKn4zFfhj2+8KdG5OyMv9E7gEzfXmwyVdyb4/gw2eTqr64a8doqy391snvpWC/br
-  WzMO10ewNXiHnNb+zuW17PO+uFSeaN3virv7PaNEb/9+/8j4b7+AycPnE965J60+8tec8dosQ
-  +e/qx08l261du1QOuT36zHD3IXWkhrGe3df6km93SV/SyxS8+vKH39i/f6Vz1n1+6GhjPuc0E
-  uLr+04N8P3p6xhSc656xrer6pkGMVsj3BbqHR/4r9T0/U/OG5q87YT3dtuvQ3w9UxSNsi6Oit
-  yEr/ElMQTX761JvGvvMgiMDHmTImky7wP6/8/DlXomH/QeKESS3FGoqEWc1FxIgAXJe/GEgMA
-  AA==
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-10.tower-265.messagelabs.com!1589384125!1024971!1
-X-Originating-IP: [62.60.8.148]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 23576 invoked from network); 13 May 2020 15:35:25 -0000
-Received: from unknown (HELO mailhost1.uk.fujitsu.com) (62.60.8.148)
-  by server-10.tower-265.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 13 May 2020 15:35:25 -0000
-Received: from x-serv01 ([172.17.38.52])
-        by mailhost1.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 04DFZ4cu022537;
-        Wed, 13 May 2020 16:35:04 +0100
-Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
-        by x-serv01 (Postfix) with ESMTP id 617A82070C;
-        Wed, 13 May 2020 17:35:04 +0200 (CEST)
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-To:     martin.petersen@oracle.com, bvanassche@acm.org,
-        mchristi@redhat.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, bly@catalogicsoftware.com
-Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>, stable@vger.kernel.org
-Subject: [PATCH v2] scsi: target: put lun_ref at end of tmr processing
-Date:   Wed, 13 May 2020 17:34:43 +0200
-Message-Id: <20200513153443.3554-1-bstroesser@ts.fujitsu.com>
-X-Mailer: git-send-email 2.12.3
+        id S1732671AbgEMQrK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 12:47:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52836 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729328AbgEMQrK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 May 2020 12:47:10 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id ACEC32054F;
+        Wed, 13 May 2020 16:47:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1589388430;
+        bh=/v2IdDrymQyOQwGKwD3DYskW13FfX9JBpATBQnCGEcA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nAeGjCGQQCEXECiiVUZ7LQP3/1bJtcWmeYZLTYbvUSHQs9C+sg1PGBkyCDUte1c9B
+         UYBEHmYQLrO4Ycv+IwUgQAYx+Ig+4XaEH8IHLafNSLlVrXNOtJ6gnpBTOZ0UREEf2n
+         x/hhC5VoAEYTb5c9q+su5I0gJUEo4ndlnhA7bCQY=
+Date:   Wed, 13 May 2020 09:47:07 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v12 01/12] Documentation: Document the blk-crypto
+ framework
+Message-ID: <20200513164707.GA1243@sol.localdomain>
+References: <20200430115959.238073-1-satyat@google.com>
+ <20200430115959.238073-2-satyat@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200430115959.238073-2-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Testing with Loopback I found, that after a Loopback LUN
-has executed a TMR, I can no longer unlink the LUN.
-The rm command hangs in transport_clear_lun_ref() at
-wait_for_completion(&lun->lun_shutdown_comp)
-The reason is, that transport_lun_remove_cmd() is not
-called at the end of target_tmr_work().
+On Thu, Apr 30, 2020 at 11:59:48AM +0000, Satya Tangirala wrote:
+> The blk-crypto framework adds support for inline encryption. There
+> are numerous changes throughout the storage stack. This patch documents
+> the main design choices in the block layer, the API presented to users
+> of the block layer (like fscrypt or layered devices) and the API presented
+> to drivers for adding support for inline encryption.
+> 
+> Signed-off-by: Satya Tangirala <satyat@google.com>
 
-It seems, that in other fabrics this call happens implicitly
-when the fabric drivers call transport_generic_free_cmd()
-during their ->queue_tm_rsp().
+Looks good, you can add:
 
-Unfortunately Loopback seems to not comply to the common way
-of calling transport_generic_free_cmd() from ->queue_*().
-Instead it calls transport_generic_free_cmd() from its
-  ->check_stop_free() only.
+    Reviewed-by: Eric Biggers <ebiggers@google.com>
 
-But the ->check_stop_free() is called by
-transport_cmd_check_stop_to_fabric() after it has reset the
-se_cmd->se_lun pointer.
-Therefore the following transport_generic_free_cmd() skips the
-transport_lun_remove_cmd().
+But a few comments for when you resend:
 
-So this patch re-adds the transport_lun_remove_cmd() at the end
-of target_tmr_work(), which was removed during commit
-2c9fa49e100f962af988f1c0529231bf14905cda
-"scsi: target/core: Make ABORT and LUN RESET handling synchronous"
+> +When a bio is added to a request, the request takes over ownership of the
+> +``bi_crypt_context`` of the bio - in particular, the request keeps the
+> +``bi_crypt_context`` of the first bio in its bio-list, and frees the rest
+> +(blk-mq needs to be careful to maintain this invariant during bio and request
+> +merges).
 
-For fabrics using transport_generic_free_cmd() in the usual way
-the double call to transport_lun_remove_cmd() doesn't harm, as
-transport_lun_remove_cmd() checks for this situation and does
-not release lun_ref twice.
+Is this part up-to-date?  There was discussion about not freeing the bios' crypt
+contexts.
 
-Fixes: 2c9fa49e100f ("scsi: target/core: Make ABORT and LUN RESET handling synchronous")
-Cc: stable@vger.kernel.org
-Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Tested-by: Bryant G. Ly <bryangly@gmail.com>
-Reviewed-by: Bart van Assche <bvanassche@acm.org>
----
+> +``blk_crypto_evict_key`` should be called by upper layers when they want
+> +to ensure that a key is removed from memory and from any keyslots in inline
+> +encryption hardware that the key might have been programmed into (or the
+> +blk-crypto-fallback).
 
-v2:
- - Resend of the same patch with added tags "Fixes:",
-   "Cc: stable@.." and "Reviewed-by:"
+This should be reworded to emphasize that blk_crypto_evict_key()
+*must* be called (as now the keyslot manager has a pointer to the key).
 
- drivers/target/target_core_transport.c | 1 +
- 1 file changed, 1 insertion(+)
+> +API presented to device drivers
+> +===============================
+> +
+> +A :c:type:``struct keyslot_manager`` should be set up by device drivers in the
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 594b724bbf79..264a822c0bfa 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3350,6 +3350,7 @@ static void target_tmr_work(struct work_struct *work)
- 
- 	cmd->se_tfo->queue_tm_rsp(cmd);
- 
-+	transport_lun_remove_cmd(cmd);
- 	transport_cmd_check_stop_to_fabric(cmd);
- 	return;
- 
--- 
-2.12.3
+"keyslot_manager" => "blk_keyslot_manager".  Likewise below.
 
+> +``request_queue`` of the device. The device driver needs to call
+> +``blk_ksm_init`` on the ``keyslot_manager``, which specfying the number of
+> +keyslots supported by the hardware.
+
+"which specfying" => "while specifying"
+
+> +The device driver also needs to tell the KSM how to actually manipulate the
+> +IE hardware in the device to do things like programming the crypto key into
+> +the IE hardware into a particular keyslot. All this is achieved through the
+> +:c:type:`struct keyslot_mgmt_ll_ops` field in the KSM that the device driver
+> +must fill up after initing the ``keyslot_manager``.
+
+"keyslot_mgmt_ll_ops" => "blk_ksm_ll_ops"
+
+- Eric
