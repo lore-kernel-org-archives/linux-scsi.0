@@ -2,66 +2,61 @@ Return-Path: <SRS0=+pcl=63=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08DD0C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E36CC433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:59:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED6BF20659
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:58:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A496620693
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:59:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732797AbgEMX6K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 19:58:10 -0400
-Received: from m4a0073g.houston.softwaregrp.com ([15.124.2.131]:40042 "EHLO
+        id S1732859AbgEMX7s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 19:59:48 -0400
+Received: from m4a0073g.houston.softwaregrp.com ([15.124.2.131]:38765 "EHLO
         m4a0073g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732456AbgEMX6J (ORCPT
+        by vger.kernel.org with ESMTP id S1732456AbgEMX7r (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 May 2020 19:58:09 -0400
-Received: FROM m4a0073g.houston.softwaregrp.com (15.120.17.147) BY m4a0073g.houston.softwaregrp.com WITH ESMTP;
- Wed, 13 May 2020 23:55:48 +0000
-Received: from M9W0068.microfocus.com (2002:f79:bf::f79:bf) by
- M4W0335.microfocus.com (2002:f78:1193::f78:1193) with Microsoft SMTP Server
+        Wed, 13 May 2020 19:59:47 -0400
+Received: FROM m4a0073g.houston.softwaregrp.com (15.120.17.146) BY m4a0073g.houston.softwaregrp.com WITH ESMTP;
+ Wed, 13 May 2020 23:57:26 +0000
+Received: from M4W0334.microfocus.com (2002:f78:1192::f78:1192) by
+ M4W0334.microfocus.com (2002:f78:1192::f78:1192) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Wed, 13 May 2020 23:57:43 +0000
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (15.124.72.11) by
- M9W0068.microfocus.com (15.121.0.191) with Microsoft SMTP Server
+ 15.1.1591.10; Wed, 13 May 2020 23:59:24 +0000
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (15.124.8.14) by
+ M4W0334.microfocus.com (15.120.17.146) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Wed, 13 May 2020 23:57:43 +0000
+ 15.1.1591.10 via Frontend Transport; Wed, 13 May 2020 23:59:24 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mexcjVVTTKBZ/bsuE7AfDFKWJbkiK8IStqGvlm3T4Kpkf/ouGBS89Dsjj42WJi0wJigmXWm0tdShssEdOgYbkxDWCYzJxHeGJ4r7z2U5ulzgrXQjKACaUDRFfUMNi6tRc1HAFROUGSEIpwAkUvSUCduzvkaauF3M5mqgfHHrXs/tJoap2z2/iLKiqPDJgSW/JwkVuWmGMg3fC0m4eNCZpQFz87V+Xw+RbxQ7GPhULi6H/swRmOxYUZ8+QsqAY5aCLNMwHDAr/HwyQcWmme1qeIF211iqEhMJB1ZyvgjMUbkzbE52sA7RjI6hcVuRY9khB2FBKmBAjePoOXdbIL9jAQ==
+ b=Y32xDYyjJGsNVQb9yoIdExS1DUTU/v9B9ID/AEX27mvXrNb+5+zO1jf6r+HEF1FlokES8utELWCZMxTQlqn8iLu7FD8iE7KQbKimSSrovc78g1gy37U3YhkYepAn99GHnIY8eqUYbEhZBoQmQnoQvRyg2c9MEkbfLxltiCEf0JGOn8fNFx19y6eL8mXdiCf+UrkTQhgXbS5RoDq61kU8GG9P0rG9komDWuMEXDf3xtKhSvyShJFhiIz7OYPR8BtqB9BJalV7ooTnMMquDR4r1OetTastow96L+2kyGfECl7mFEIJM6/7/jIHhKnwmbKqexoquys1YwEwOLvqHY3yWw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dCICd9aJQTt/Pg+IVM20L02LTV44Lavw5Jxu//bebv0=;
- b=RGl+Pmnx0xSpf9jbC5d/A+k1ey1HF6sC7fq/6YMCGfNFh7F8gN2i0CfTH/WaVD77AG7HCUJaQIiffdp24Ba0h3H7bIQGR5DPZbelImrAXYX1bv8BUPwwhpx97DwOAt6PuodQ7RUuxTkCCutTwxbA2LFXKjm8NzUY1Vmp2oRnXjX1yotsYXytbeRNSloNglZblhLnnLciZzrQimNcnr4264qbXuuGOna0k3tNWiwXHDzfBAmwrpVogFBQlXNtX9WVYMZwvg11K61npYXYCq/aDduQ4c25K9dqXbAaUl1VNc10IRcbNXLBfsCGjZdURHF7mXxmrHYXshoiRdJ2LpJIbw==
+ bh=d/WaQycaPJ1xYGpiACUIH8jQ8fqZ0xlXfxp29SCNp9I=;
+ b=XWY0WkK2U4xnpUnmQsPeLaZkftofmhqfTml472jtpW4XvNbSLEZ9VvWaOOspTXz7dELrePCOirPRmDzLaU3mqqw22YKKfXZkLCUbtqY6Y0wCVU/noLeE2mW+hAiFZHjeSAYMX1NgHeQAGCsKw1Lp39Re/v3svl6mH5AHkAkeR+g7Qw3n07yEOHzUxnZJo+yARGK+wzxucJZzXdprruwXB67FsRwoXUpZI6COgmHtYfwoAUpmMXUvFQXujmaXWnmPZhUuvH08QxIxo/ZJZD/VUYV7oTJQpWXa35bSliSV8kMkUBCYe1gxhsG0hSD/6nzGg5Nves+6JEZF6p3Nia/gbg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
-Authentication-Results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=suse.com;
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
 Received: from BL0PR18MB2290.namprd18.prod.outlook.com (2603:10b6:207:48::11)
  by BL0PR18MB2321.namprd18.prod.outlook.com (2603:10b6:207:48::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.30; Wed, 13 May
- 2020 23:57:41 +0000
+ 2020 23:59:23 +0000
 Received: from BL0PR18MB2290.namprd18.prod.outlook.com
  ([fe80::9ddc:db5b:9a5a:6b3d]) by BL0PR18MB2290.namprd18.prod.outlook.com
  ([fe80::9ddc:db5b:9a5a:6b3d%7]) with mapi id 15.20.2979.033; Wed, 13 May 2020
- 23:57:40 +0000
-Subject: Re: [PATCH 03/15] target: add helper to parse acl and transport name
+ 23:59:23 +0000
+Subject: Re: [PATCH 04/15] tcm loop: use target_parse_emulated_name
 To:     Mike Christie <mchristi@redhat.com>, <bvanassche@acm.org>,
         <bstroesser@ts.fujitsu.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
-CC:     "Michael S . Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Juergen Gross <jgross@suse.com>
 References: <20200510215744.21999-1-mchristi@redhat.com>
- <20200510215744.21999-4-mchristi@redhat.com>
+ <20200510215744.21999-5-mchristi@redhat.com>
 From:   Lee Duncan <lduncan@suse.com>
 Autocrypt: addr=lduncan@suse.com; keydata=
  xsFNBE6ockoBEADMQ+ZJI8khyuc2jMfgf4RmARpBkZrcHSs1xTKVVBUbpFooDEVi49D/bz0G
@@ -146,41 +141,39 @@ Autocrypt: addr=lduncan@suse.com; keydata=
  iv2n7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh
  9eFpv8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPa
  Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <f1d3fcd8-1fe6-b5e8-4fc6-e6bb646234e5@suse.com>
-Date:   Wed, 13 May 2020 16:57:36 -0700
+Message-ID: <2cb2e526-0ba6-f6ce-ede9-949f2ef6a49b@suse.com>
+Date:   Wed, 13 May 2020 16:59:20 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
-In-Reply-To: <20200510215744.21999-4-mchristi@redhat.com>
+In-Reply-To: <20200510215744.21999-5-mchristi@redhat.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SN6PR04CA0096.namprd04.prod.outlook.com
- (2603:10b6:805:f2::37) To BL0PR18MB2290.namprd18.prod.outlook.com
+X-ClientProxiedBy: SN6PR04CA0105.namprd04.prod.outlook.com
+ (2603:10b6:805:f2::46) To BL0PR18MB2290.namprd18.prod.outlook.com
  (2603:10b6:207:48::11)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by SN6PR04CA0096.namprd04.prod.outlook.com (2603:10b6:805:f2::37) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.24 via Frontend Transport; Wed, 13 May 2020 23:57:39 +0000
+Received: from [192.168.20.3] (73.25.22.216) by SN6PR04CA0105.namprd04.prod.outlook.com (2603:10b6:805:f2::46) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.20 via Frontend Transport; Wed, 13 May 2020 23:59:22 +0000
 X-Originating-IP: [73.25.22.216]
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 747cae6e-58bf-4812-a0c3-08d7f7996bac
+X-MS-Office365-Filtering-Correlation-Id: 0cef06d0-f9ee-480a-118c-08d7f799a8e7
 X-MS-TrafficTypeDiagnostic: BL0PR18MB2321:
-X-LD-Processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BL0PR18MB23218ADE0354C6FA9B7E9892DABF0@BL0PR18MB2321.namprd18.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-Microsoft-Antispam-PRVS: <BL0PR18MB2321E5BE17CBACCF805CCC9DDABF0@BL0PR18MB2321.namprd18.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:234;
 X-Forefront-PRVS: 0402872DA1
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: n5iHVMum3knko0gHMTKq8c791TZm9m+Hq6slAHmbUTGOewVEBq8p24qBU8UcQF9FQPA+jHHu+jHjemFWtHO81isjAgk2T4QgQmCmAwa0OaHt7IP9XE9d2N+X8h6v8OI0Qudwsm2oKW/wXftx82iY0uKdR01UV2yVuaxBL1GEg+8sTGIL8O8T55IVD6QG5Da6p6YhAVLfp0hlMlI69CKxlhQn9bmvj1qJy5nEImeYt/Il6WXlRjhChxCrWaM9uqPgvs+mqPgBUTCkO6eWgAY1CjYp1Q0IyTEhsA/ogr6zOQcEJw+68yhP+qlhWML9iKQ3wOT3iGAFYDGFZQPDfR+PFlZ0dJMGBS3RkJuE/h97UgiYDXLVAaVnosPd+vglqEVyYIDdlh7Kr1GN1Fbz9CClby3iSFLgADjquoWG2piU+Rbkn3oSXiU1y7xHBYIT3Y0Q7i3drJu/5r1486LIdies90SuSfKFBt4KEWkG+gcAMHeBqnD5c06Ihv5nqDdClOS9
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(376002)(136003)(396003)(39860400002)(346002)(956004)(86362001)(31696002)(16526019)(2906002)(186003)(66556008)(52116002)(8676002)(66476007)(107886003)(66946007)(36756003)(16576012)(8936002)(4326008)(54906003)(6486002)(478600001)(26005)(31686004)(316002)(4744005)(2616005)(7416002)(6666004)(5660300002)(53546011)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: MtBTHD3HVsePdUGgp4a5Hw3k2GaKAqxuxS5fcB6FosqMdZWlQnK/DQX6+d3xM5Zw5YVZvgtEGI2kOfpKzk7yYNdZGpbq6/KShW043x0+cZlgT+w3Zrlc0l1MNnGGXTpfQujmQ7dqFXse+g3Fv7pG4VsocbaBzBncfwGWa17xJ9gfocYFQBUeAcof1ZD+GbrFrsK8QczDdNM1WddzD5cTmL9uWXTfVKvXL/K8+3HNpFFX+Gijj2wJQQYVVhg0K+lIsavXTbFGo6n3WcFsvwomusu+UTqA486RdtUGtocv0Li99MkcmG5J1v4EdCfI0Q9bhjJNS76eHPXIKgHCHCzdiabaiQFUaVAtA+rN1WGBJ2szGNbV82Czi4fUnirCtqr0GUoQ8COZq+ixGprBNV6/MuDGLCmKiMuM+rCLEBkSBSlJBKJ2wozF6dqFvsuM2kxL4asRC67aE13qhhPnM/He/dPZmuzrm5oNrK8DsjU+py8=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 747cae6e-58bf-4812-a0c3-08d7f7996bac
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2020 23:57:40.6825
+X-Microsoft-Antispam-Message-Info: J5r6Nl+ZDkc1jCRSyLr1H0swqN2sdRXnBsAmtw/YPyqALBCIc11goUacTGLm/JfLEkHykVogSi1rp01nwLISS+V8A81uaTCXO+Y4ROZx1tjl1D45YfpigRkxiMwxHefy/K52lQCqc6pxG5jORWLbFkjwVpueGAcLCpyDGbOsYhNEJqeNwVZP2o5nJGjgP6U7F1f//YlEX8E+fP+6Nw93R6imQCARNrkqR/BXKsgClFN7fcuhLwBIXXrHHLP06YrVNbLKjH349EhkH4zCUOviG429IxndiBX3eFziQ0l3alBWfgDcS/bDt/+3hX491CbgXs4vsdgIDfw5JcS35QIvmO8zVKvjWlRiEuxFhRwrr5WR2/Hf17l6/WsbN15lD3VoiH5Yf38pshJ3n5A3Pk/k64PaQYz1BbW6QGeViVog4wbppUhWPR5aWd3lzprjCJx1hZa/ZZoESjUyF5m5KSKFUyJuIaTpDiovc/tPGFWfZLsF4vuJ0E3fsAmcZVRf+dFQ
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(346002)(39860400002)(136003)(376002)(366004)(316002)(26005)(31686004)(6486002)(478600001)(5660300002)(53546011)(2616005)(2906002)(16526019)(186003)(31696002)(956004)(86362001)(8936002)(66476007)(66946007)(66556008)(52116002)(8676002)(16576012)(36756003)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: wHwbh63sm8PMrAqY6030obdjmFLwafspEx+Q4OvBffYXtZiIelJuNPCmqRK38d+ud+2+XlavnBttdN9QX61dpRpqX2W1MougsKlbNdv2rEX4OXuVCn+NJn3Uh7atVV1yYCEuCVM1sgdFOloGNTiquGMMfiycScJMtN6TKrCqJZ6QMvm+lIGzwYxaJtl9x6v6Wn01SqrUjeL9bAtsP/QCoZ/7QtRw2R4yH+3HJI5hr0A7NtDyoyRCqM1bVPBziHkn1wv12b3s+NQmJVOPvpAigs59mVT7K7kM45xjkLyjaHwNDNHsgxa+WUUbAHtPZtV5GyUn1herT4ogrZBfdipTH8kAAc4WI50vte/wYZlYCSf+8Xfh4rc+gzyLPlxCeRsw6yG1m2Av2jO1LGDFgcfJlbeIYiq75vaDTijzEhm17in759OxPWTKWoDglSDbgdcPg7FKjYv98Omp2G+BDCop++aCn+uWBWfzCMnjxuoxwhI=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0cef06d0-f9ee-480a-118c-08d7f799a8e7
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2020 23:59:23.3676
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: I28+1STrs0GzCLuAOHb0HsY2YyppI/LV5NPXaeKIXUB6HIM7rVvlXpvx9lmj57mW/ppAaAhD/tfttxlOps0g+Q==
+X-MS-Exchange-CrossTenant-UserPrincipalName: ksWRgaggB2wlgOkIRzWiYYH99gpevOG71v9G7kx3R/0kvwLBo480/u0C3SeJrWz7YxdZEqYKUzTzKThogmntXA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR18MB2321
 X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
@@ -189,25 +182,120 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/10/20 2:57 PM, Mike Christie wrote:
-> The drivers that emulate the initiator port id (loop, scsi vhost, xen scsiback)
-> do almost the extact same parsing when making their I_T_nexus. This adds a
-> helper that parses out the acl name and port name from the user buffer, so
-> these types of drivers drop prefixes like "naa." when they need to for the
-> SCSI SPC4 TransportID SAS address, but then keep it for the LIO ACL name.
+> Use target_parse_emulated_name so the acl and SCSI names are properly
+> formatted.
 > 
-> The next patches will then convert those drivers.
-> 
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Jason Wang <jasowang@redhat.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Stefan Hajnoczi <stefanha@redhat.com>
-> Cc: Juergen Gross <jgross@suse.com>
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
 > ---
->  drivers/target/target_core_fabric_lib.c | 73 +++++++++++++++++++++++++++++++++
->  include/target/target_core_fabric.h     |  2 +
->  2 files changed, 75 insertions(+)
+>  drivers/target/loopback/tcm_loop.c | 65 ++++++--------------------------------
+>  1 file changed, 10 insertions(+), 55 deletions(-)
 > 
-...
+> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+> index 74aded7..64e5f1f 100644
+> --- a/drivers/target/loopback/tcm_loop.c
+> +++ b/drivers/target/loopback/tcm_loop.c
+> @@ -725,7 +725,8 @@ static int tcm_loop_alloc_sess_cb(struct se_portal_group *se_tpg,
+>  
+>  static int tcm_loop_make_nexus(
+>  	struct tcm_loop_tpg *tl_tpg,
+> -	const char *name)
+> +	const char *tpt_id_name,
+> +	const char *acl_name)
+>  {
+>  	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
+>  	struct tcm_loop_nexus *tl_nexus;
+> @@ -742,7 +743,7 @@ static int tcm_loop_make_nexus(
+>  
+>  	tl_nexus->se_sess = target_setup_session(&tl_tpg->tl_se_tpg, 0, 0,
+>  					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
+> -					name, name, tl_nexus,
+> +					tpt_id_name, acl_name, tl_nexus,
+>  					tcm_loop_alloc_sess_cb);
+>  	if (IS_ERR(tl_nexus->se_sess)) {
+>  		ret = PTR_ERR(tl_nexus->se_sess);
+> @@ -751,7 +752,7 @@ static int tcm_loop_make_nexus(
+>  	}
+>  
+>  	pr_debug("TCM_Loop_ConfigFS: Established I_T Nexus to emulated %s Initiator Port: %s\n",
+> -		 tcm_loop_dump_proto_id(tl_hba), name);
+> +		 tcm_loop_dump_proto_id(tl_hba), acl_name);
+>  	return 0;
+>  }
+>  
+> @@ -814,7 +815,7 @@ static ssize_t tcm_loop_tpg_nexus_store(struct config_item *item,
+>  	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
+>  			struct tcm_loop_tpg, tl_se_tpg);
+>  	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
+> -	unsigned char i_port[TL_WWN_ADDR_LEN], *ptr, *port_ptr;
+> +	unsigned char i_port[TL_WWN_ADDR_LEN], *tpt_id_name;
+>  	int ret;
+>  	/*
+>  	 * Shutdown the active I_T nexus if 'NULL' is passed..
+> @@ -823,59 +824,13 @@ static ssize_t tcm_loop_tpg_nexus_store(struct config_item *item,
+>  		ret = tcm_loop_drop_nexus(tl_tpg);
+>  		return (!ret) ? count : ret;
+>  	}
+> -	/*
+> -	 * Otherwise make sure the passed virtual Initiator port WWN matches
+> -	 * the fabric protocol_id set in tcm_loop_make_scsi_hba(), and call
+> -	 * tcm_loop_make_nexus()
+> -	 */
+> -	if (strlen(page) >= TL_WWN_ADDR_LEN) {
+> -		pr_err("Emulated NAA Sas Address: %s, exceeds max: %d\n",
+> -		       page, TL_WWN_ADDR_LEN);
+> -		return -EINVAL;
+> -	}
+> -	snprintf(&i_port[0], TL_WWN_ADDR_LEN, "%s", page);
+>  
+> -	ptr = strstr(i_port, "naa.");
+> -	if (ptr) {
+> -		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_SAS) {
+> -			pr_err("Passed SAS Initiator Port %s does not match target port protoid: %s\n",
+> -			       i_port, tcm_loop_dump_proto_id(tl_hba));
+> -			return -EINVAL;
+> -		}
+> -		port_ptr = &i_port[0];
+> -		goto check_newline;
+> -	}
+> -	ptr = strstr(i_port, "fc.");
+> -	if (ptr) {
+> -		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_FCP) {
+> -			pr_err("Passed FCP Initiator Port %s does not match target port protoid: %s\n",
+> -			       i_port, tcm_loop_dump_proto_id(tl_hba));
+> -			return -EINVAL;
+> -		}
+> -		port_ptr = &i_port[3]; /* Skip over "fc." */
+> -		goto check_newline;
+> -	}
+> -	ptr = strstr(i_port, "iqn.");
+> -	if (ptr) {
+> -		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_ISCSI) {
+> -			pr_err("Passed iSCSI Initiator Port %s does not match target port protoid: %s\n",
+> -			       i_port, tcm_loop_dump_proto_id(tl_hba));
+> -			return -EINVAL;
+> -		}
+> -		port_ptr = &i_port[0];
+> -		goto check_newline;
+> -	}
+> -	pr_err("Unable to locate prefix for emulated Initiator Port: %s\n",
+> -	       i_port);
+> -	return -EINVAL;
+> -	/*
+> -	 * Clear any trailing newline for the NAA WWN
+> -	 */
+> -check_newline:
+> -	if (i_port[strlen(i_port)-1] == '\n')
+> -		i_port[strlen(i_port)-1] = '\0';
+> +	ret = target_parse_emulated_name(tl_hba->tl_proto_id, page, i_port,
+> +					 TL_WWN_ADDR_LEN, &tpt_id_name);
+> +	if (ret)
+> +		return ret;
+>  
+> -	ret = tcm_loop_make_nexus(tl_tpg, port_ptr);
+> +	ret = tcm_loop_make_nexus(tl_tpg, tpt_id_name, i_port);
+>  	if (ret < 0)
+>  		return ret;
+>  
+> 
 
 Reviewed-by: Lee Duncan <lduncan@suse.com>
