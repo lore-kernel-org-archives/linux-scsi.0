@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FEDBC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:36:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08DD0C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:58:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66CF42054F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:36:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED6BF20659
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:58:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732706AbgEMXgd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 19:36:33 -0400
-Received: from m9a0013g.houston.softwaregrp.com ([15.124.64.91]:40908 "EHLO
-        m9a0013g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732636AbgEMXgc (ORCPT
+        id S1732797AbgEMX6K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 19:58:10 -0400
+Received: from m4a0073g.houston.softwaregrp.com ([15.124.2.131]:40042 "EHLO
+        m4a0073g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732456AbgEMX6J (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 May 2020 19:36:32 -0400
-Received: FROM m9a0013g.houston.softwaregrp.com (15.121.0.190) BY m9a0013g.houston.softwaregrp.com WITH ESMTP;
- Wed, 13 May 2020 23:35:23 +0000
+        Wed, 13 May 2020 19:58:09 -0400
+Received: FROM m4a0073g.houston.softwaregrp.com (15.120.17.147) BY m4a0073g.houston.softwaregrp.com WITH ESMTP;
+ Wed, 13 May 2020 23:55:48 +0000
 Received: from M9W0068.microfocus.com (2002:f79:bf::f79:bf) by
- M9W0067.microfocus.com (2002:f79:be::f79:be) with Microsoft SMTP Server
+ M4W0335.microfocus.com (2002:f78:1193::f78:1193) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Wed, 13 May 2020 23:35:50 +0000
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (15.124.72.10) by
+ 15.1.1591.10; Wed, 13 May 2020 23:57:43 +0000
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (15.124.72.11) by
  M9W0068.microfocus.com (15.121.0.191) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Wed, 13 May 2020 23:35:50 +0000
+ 15.1.1591.10 via Frontend Transport; Wed, 13 May 2020 23:57:43 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TrpbFlIXZmQJ8NtTGJ2Z4rLG70qY/Kqb6yAsK10I9gdSD0kbwycttvM+7xY0tzx80Pbv8a/lOWpJXB1hd/nvUtAlox7+s/HCT/Fa+O9rVUIAekE4ylit0ER+8vMphRufwrS5Nx1SEWrY9qLQbMhsjLa9yq5+HoKyG691z1VifNMqJ3vWkxLVLJil1eeYPqulEXebfjTanLF97QJp7qEfD+XdokprTi9N9knDYChCaY9TeTuVwshNM7twzfOLQ25Sdmu0HnWwZ+rwbjBjwxGtodqrc6NYq1UydQp1DjnLDQTwWXtuuiTyJ8xRR7/CJVHR4kRndZlgcBYTG4vhsqM6wg==
+ b=mexcjVVTTKBZ/bsuE7AfDFKWJbkiK8IStqGvlm3T4Kpkf/ouGBS89Dsjj42WJi0wJigmXWm0tdShssEdOgYbkxDWCYzJxHeGJ4r7z2U5ulzgrXQjKACaUDRFfUMNi6tRc1HAFROUGSEIpwAkUvSUCduzvkaauF3M5mqgfHHrXs/tJoap2z2/iLKiqPDJgSW/JwkVuWmGMg3fC0m4eNCZpQFz87V+Xw+RbxQ7GPhULi6H/swRmOxYUZ8+QsqAY5aCLNMwHDAr/HwyQcWmme1qeIF211iqEhMJB1ZyvgjMUbkzbE52sA7RjI6hcVuRY9khB2FBKmBAjePoOXdbIL9jAQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q/auoXP6Xl4zGKQm9MACVVY69hhzbpHmyKEZU0ELfYc=;
- b=JmQVC/OSmNRrouLF2SGlRAfEVinAMYu6ff62Xv36Ip3/cgaQRapyMR+Pbj9evNcsAUBcZvUbRIiwOkoaAEcWTVV9ZoWazJKzMukAeHwFoB2odAVUJJ8v1mJfSH2Oh0bH6Wxq6qHqV8MWLNBp7MM8jwkVudii38Ljz6MiDB1lbjzeckrW+D0u0JjSBb2a6z/l/tsK7CbVEJEuxciI/w9XbCjmJ7hq5VfrdrmkHF6cEwn7IVP7FU6bboBpBwoX3X/gq2SuYHiWqMssMs1PauPAG+G8ueV3qs7x1dn9d27duAcb48HBRzXMHWD2q451dAlxBGpxC19vEiU4AvQ8L/TuQw==
+ bh=dCICd9aJQTt/Pg+IVM20L02LTV44Lavw5Jxu//bebv0=;
+ b=RGl+Pmnx0xSpf9jbC5d/A+k1ey1HF6sC7fq/6YMCGfNFh7F8gN2i0CfTH/WaVD77AG7HCUJaQIiffdp24Ba0h3H7bIQGR5DPZbelImrAXYX1bv8BUPwwhpx97DwOAt6PuodQ7RUuxTkCCutTwxbA2LFXKjm8NzUY1Vmp2oRnXjX1yotsYXytbeRNSloNglZblhLnnLciZzrQimNcnr4264qbXuuGOna0k3tNWiwXHDzfBAmwrpVogFBQlXNtX9WVYMZwvg11K61npYXYCq/aDduQ4c25K9dqXbAaUl1VNc10IRcbNXLBfsCGjZdURHF7mXxmrHYXshoiRdJ2LpJIbw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
  dkim=pass header.d=suse.com; arc=none
 Authentication-Results: suse.com; dkim=none (message not signed)
  header.d=none;suse.com; dmarc=none action=none header.from=suse.com;
 Received: from BL0PR18MB2290.namprd18.prod.outlook.com (2603:10b6:207:48::11)
- by BL0PR18MB2322.namprd18.prod.outlook.com (2603:10b6:207:4b::14) with
+ by BL0PR18MB2321.namprd18.prod.outlook.com (2603:10b6:207:48::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.29; Wed, 13 May
- 2020 23:35:47 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.30; Wed, 13 May
+ 2020 23:57:41 +0000
 Received: from BL0PR18MB2290.namprd18.prod.outlook.com
  ([fe80::9ddc:db5b:9a5a:6b3d]) by BL0PR18MB2290.namprd18.prod.outlook.com
  ([fe80::9ddc:db5b:9a5a:6b3d%7]) with mapi id 15.20.2979.033; Wed, 13 May 2020
- 23:35:47 +0000
-Subject: Re: [PATCH 02/15] target: separate acl name from port ids
+ 23:57:40 +0000
+Subject: Re: [PATCH 03/15] target: add helper to parse acl and transport name
 To:     Mike Christie <mchristi@redhat.com>, <bvanassche@acm.org>,
         <bstroesser@ts.fujitsu.com>, <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
@@ -61,7 +61,7 @@ CC:     "Michael S . Tsirkin" <mst@redhat.com>,
         Stefan Hajnoczi <stefanha@redhat.com>,
         Juergen Gross <jgross@suse.com>
 References: <20200510215744.21999-1-mchristi@redhat.com>
- <20200510215744.21999-3-mchristi@redhat.com>
+ <20200510215744.21999-4-mchristi@redhat.com>
 From:   Lee Duncan <lduncan@suse.com>
 Autocrypt: addr=lduncan@suse.com; keydata=
  xsFNBE6ockoBEADMQ+ZJI8khyuc2jMfgf4RmARpBkZrcHSs1xTKVVBUbpFooDEVi49D/bz0G
@@ -146,42 +146,42 @@ Autocrypt: addr=lduncan@suse.com; keydata=
  iv2n7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh
  9eFpv8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPa
  Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <ebce879c-2187-4d10-9e7e-74d0a68aafbd@suse.com>
-Date:   Wed, 13 May 2020 16:35:43 -0700
+Message-ID: <f1d3fcd8-1fe6-b5e8-4fc6-e6bb646234e5@suse.com>
+Date:   Wed, 13 May 2020 16:57:36 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
-In-Reply-To: <20200510215744.21999-3-mchristi@redhat.com>
+In-Reply-To: <20200510215744.21999-4-mchristi@redhat.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SN4PR0501CA0097.namprd05.prod.outlook.com
- (2603:10b6:803:42::14) To BL0PR18MB2290.namprd18.prod.outlook.com
+X-ClientProxiedBy: SN6PR04CA0096.namprd04.prod.outlook.com
+ (2603:10b6:805:f2::37) To BL0PR18MB2290.namprd18.prod.outlook.com
  (2603:10b6:207:48::11)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by SN4PR0501CA0097.namprd05.prod.outlook.com (2603:10b6:803:42::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3021.10 via Frontend Transport; Wed, 13 May 2020 23:35:45 +0000
+Received: from [192.168.20.3] (73.25.22.216) by SN6PR04CA0096.namprd04.prod.outlook.com (2603:10b6:805:f2::37) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.24 via Frontend Transport; Wed, 13 May 2020 23:57:39 +0000
 X-Originating-IP: [73.25.22.216]
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: dd3d0578-f945-4d27-ac25-08d7f7965cd1
-X-MS-TrafficTypeDiagnostic: BL0PR18MB2322:
+X-MS-Office365-Filtering-Correlation-Id: 747cae6e-58bf-4812-a0c3-08d7f7996bac
+X-MS-TrafficTypeDiagnostic: BL0PR18MB2321:
 X-LD-Processed: 856b813c-16e5-49a5-85ec-6f081e13b527,ExtFwd
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BL0PR18MB2322BADAE2A36EAC8B614AC7DABF0@BL0PR18MB2322.namprd18.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <BL0PR18MB23218ADE0354C6FA9B7E9892DABF0@BL0PR18MB2321.namprd18.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
 X-Forefront-PRVS: 0402872DA1
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Hw9fts7mcmVOBQsynxcyT4mmHUubFguah+MVPEXtaYzMVzOBJN141JBBz5JamyE/UCUBBZrNZhh8i+t9Yf/4HjMsH+mKg0PVe62hkSqlFE2iQY9YnrtYR3o+pxH1ARE74NIBNhXT2mA6RuPaJHbIKSMXRx4W2HhqjEqsTPru2F5GlyAPwQP4dwtg5f+52Te0NJaKmN7z9YRAN1myHdTqgD/yF6YH38Y4wzyFNMS2CezxiFeDJi53CX4cRuMaBBgNKTXn6et1ZjhZO+XwVIrZEXwINdJOWrZ9h1oN77nPUgqDy7EpkOK6lHeEbXV3hLBuzgHvbLst3Ya7nBc9xiP8BPvQNKU7hmydSL/mupSFpCGrMuMbxmNDECBjruAhnGKr5cdq7AvQ2FIPu4aF68M+t3edrQtrcZhoOtZwZh0R3G148b95jiVcpSoMdNg7QkM87P/bvzbFtjUcqTGKT2Y9RznJrWd2SE65AZujJu3hLn9hhHcqb6FvdjocpNZjhnRL
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(346002)(366004)(136003)(39860400002)(396003)(376002)(4326008)(16526019)(16576012)(2616005)(186003)(2906002)(6486002)(8936002)(8676002)(956004)(54906003)(36756003)(52116002)(5660300002)(66476007)(26005)(316002)(66946007)(86362001)(31696002)(31686004)(66556008)(7416002)(53546011)(478600001)(107886003)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: l9pi2nNeVsusQ07Cx8fDgeqwW1CwGxyIVQSgBEj8RF0S3MZcAMXh1cS6mMBFgEIpk3OZqPr64Wgt6+rFlVKwlluyifefuao8MW32ZP1xkMt5pTxKIrGotvR1KlHrUFiu+pXJxfm3ArGu01U/8BGsFkLPxm4SZ0dTOm7By9LfsB+ndgNRFP47z1RNv07dPU5LQ5RH13nY/PiUonvQbw0lXw0zV7CXy3cOuJ0MtysAGfnYdSO4ekUQU0+9UhHPiM07tRPkg5qGgq0UrEfv3FlUArUlJCSYidCR7mJZvXlkILR6TFVRpwjEprPhNrWer6JXWgniWGHAbbwxmMlaWzl+peCFBiHt3VQ9xi+Sry8rnbpiEU+lWwCTnis0l8fpL84D7Yaa/FgsjDBtiEASXqAV+/DxJ7DXi6BpXlrqQhhk9BYdgEdFzG30BQZB7JcOpbr/ztDALGnNr4B+fCusG3I3/Ehk5skCN8KyStngf0bRNFo=
-X-MS-Exchange-CrossTenant-Network-Message-Id: dd3d0578-f945-4d27-ac25-08d7f7965cd1
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2020 23:35:47.2653
+X-Microsoft-Antispam-Message-Info: n5iHVMum3knko0gHMTKq8c791TZm9m+Hq6slAHmbUTGOewVEBq8p24qBU8UcQF9FQPA+jHHu+jHjemFWtHO81isjAgk2T4QgQmCmAwa0OaHt7IP9XE9d2N+X8h6v8OI0Qudwsm2oKW/wXftx82iY0uKdR01UV2yVuaxBL1GEg+8sTGIL8O8T55IVD6QG5Da6p6YhAVLfp0hlMlI69CKxlhQn9bmvj1qJy5nEImeYt/Il6WXlRjhChxCrWaM9uqPgvs+mqPgBUTCkO6eWgAY1CjYp1Q0IyTEhsA/ogr6zOQcEJw+68yhP+qlhWML9iKQ3wOT3iGAFYDGFZQPDfR+PFlZ0dJMGBS3RkJuE/h97UgiYDXLVAaVnosPd+vglqEVyYIDdlh7Kr1GN1Fbz9CClby3iSFLgADjquoWG2piU+Rbkn3oSXiU1y7xHBYIT3Y0Q7i3drJu/5r1486LIdies90SuSfKFBt4KEWkG+gcAMHeBqnD5c06Ihv5nqDdClOS9
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(376002)(136003)(396003)(39860400002)(346002)(956004)(86362001)(31696002)(16526019)(2906002)(186003)(66556008)(52116002)(8676002)(66476007)(107886003)(66946007)(36756003)(16576012)(8936002)(4326008)(54906003)(6486002)(478600001)(26005)(31686004)(316002)(4744005)(2616005)(7416002)(6666004)(5660300002)(53546011)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: MtBTHD3HVsePdUGgp4a5Hw3k2GaKAqxuxS5fcB6FosqMdZWlQnK/DQX6+d3xM5Zw5YVZvgtEGI2kOfpKzk7yYNdZGpbq6/KShW043x0+cZlgT+w3Zrlc0l1MNnGGXTpfQujmQ7dqFXse+g3Fv7pG4VsocbaBzBncfwGWa17xJ9gfocYFQBUeAcof1ZD+GbrFrsK8QczDdNM1WddzD5cTmL9uWXTfVKvXL/K8+3HNpFFX+Gijj2wJQQYVVhg0K+lIsavXTbFGo6n3WcFsvwomusu+UTqA486RdtUGtocv0Li99MkcmG5J1v4EdCfI0Q9bhjJNS76eHPXIKgHCHCzdiabaiQFUaVAtA+rN1WGBJ2szGNbV82Czi4fUnirCtqr0GUoQ8COZq+ixGprBNV6/MuDGLCmKiMuM+rCLEBkSBSlJBKJ2wozF6dqFvsuM2kxL4asRC67aE13qhhPnM/He/dPZmuzrm5oNrK8DsjU+py8=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 747cae6e-58bf-4812-a0c3-08d7f7996bac
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2020 23:57:40.6825
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +C/V+JLMLUMKfA8sgtEPwsWJ/kzW+92V/hOWopiwt9gZ/PIIWxh8DbvdpDfhKb8YPHADI+BGT/m8mWeYHjECEg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR18MB2322
+X-MS-Exchange-CrossTenant-UserPrincipalName: I28+1STrs0GzCLuAOHb0HsY2YyppI/LV5NPXaeKIXUB6HIM7rVvlXpvx9lmj57mW/ppAaAhD/tfttxlOps0g+Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR18MB2321
 X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -189,22 +189,13 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/10/20 2:57 PM, Mike Christie wrote:
-> The PGR code assumes the ACL name is going to be based on the SPC4
-> transportID type of values. The problem is that for iSCSI we have an extra
-> session id as part of the SCSI port id and some fabric modules support or
-> would like to support non transportID values for the ACL name. For example,
-> iSCSI and SRP would like to use the source address for the ACL name, but
-> that is not a valud transportID value that you can get in a PGR request.
+> The drivers that emulate the initiator port id (loop, scsi vhost, xen scsiback)
+> do almost the extact same parsing when making their I_T_nexus. This adds a
+> helper that parses out the acl name and port name from the user buffer, so
+> these types of drivers drop prefixes like "naa." when they need to for the
+> SCSI SPC4 TransportID SAS address, but then keep it for the LIO ACL name.
 > 
-> This patch adds a new transport_id struct which maps to the SPC4
-> transportID. In the future it will be used for PGR commands instead of the
-> ACL name. In this patchset it is used to export the initiator info in the
-> session's sysfs dir, so tools can display the info and daemons that execute
-> commands like PGRs in userspace can build a session id to I_T nexus mapping.
-> 
-> In this patch only srp is passing in different values for the transport id
-> and acl name. The next patches will convert loop, scsi vhost and xen
-> scsiback that are more complex due to their initiator name emulation.
+> The next patches will then convert those drivers.
 > 
 > Cc: Michael S. Tsirkin <mst@redhat.com>
 > Cc: Jason Wang <jasowang@redhat.com>
@@ -213,29 +204,10 @@ On 5/10/20 2:57 PM, Mike Christie wrote:
 > Cc: Juergen Gross <jgross@suse.com>
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
 > ---
+>  drivers/target/target_core_fabric_lib.c | 73 +++++++++++++++++++++++++++++++++
+>  include/target/target_core_fabric.h     |  2 +
+>  2 files changed, 75 insertions(+)
 > 
-> V4:
-> - Don't drop const char use. We still have target_setup_session allocate
-> the transport_id struct, but because every uses format=0 we just need to
-> pass in the transport_id's name.
-> 
-> V3:
-> - drop format
-> 
->  drivers/infiniband/ulp/srpt/ib_srpt.c    | 10 +++++---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c |  4 +--
->  drivers/scsi/qla2xxx/tcm_qla2xxx.c       |  2 +-
->  drivers/target/loopback/tcm_loop.c       |  3 ++-
->  drivers/target/sbp/sbp_target.c          |  2 +-
->  drivers/target/target_core_fabric_lib.c  | 41 +++++++++++++++++++++++++++++++
->  drivers/target/target_core_transport.c   | 42 ++++++++++++++++++++++++--------
->  drivers/target/tcm_fc/tfc_sess.c         |  3 ++-
->  drivers/usb/gadget/function/f_tcm.c      |  3 ++-
->  drivers/vhost/scsi.c                     |  1 +
->  drivers/xen/xen-scsiback.c               |  3 ++-
->  include/target/target_core_base.h        | 12 +++++++++
->  include/target/target_core_fabric.h      |  5 +++-
->  13 files changed, 108 insertions(+), 23 deletions(-)
-> 
+...
 
 Reviewed-by: Lee Duncan <lduncan@suse.com>
