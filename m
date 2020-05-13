@@ -2,95 +2,375 @@ Return-Path: <SRS0=+pcl=63=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 214F0C2D0F8
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 01:30:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF25C2D0F6
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 01:39:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01409206A3
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 01:30:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3DA9206B7
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 01:39:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731683AbgEMBaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 21:30:00 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:53648 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728313AbgEMBaA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 21:30:00 -0400
-Received: by mail-pj1-f65.google.com with SMTP id hi11so10386115pjb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 12 May 2020 18:29:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=gwy+lLNoD6gj3sXBHbZwUYAzRLtq9D30HpDSknUytOk=;
-        b=FTp1SBhxCqDZoC8cUihvIm4KceYiDuor3r3cFDMSBVxU/2+Fl2L5kqODx2ru+6qyMS
-         CcI6H7CdtcJaTQzMhKIARjYW4IBoOF/hREH9WMgLVC7JtnkGbW8z4bg9GF/fqq8dJK3s
-         TKYcMjdMRbcvTh1L2HDy1+L3Aae3nQny/TZIZNVVttWEzwzcZQDZb6oRAs+OEv2XEKe/
-         6hKQcy1duk6xtw/jb9C6Ni0YFQzw8Bg4BHRj8ed6DiWclI02KmG7OWdpktPIz3+PIEiz
-         MkYxEZQE/94y3D2DWjbOoZxXY0d1RIEaxkvYLE2F3hsB1gcmnM/gPLMQrbpTAbVxourG
-         5ToA==
-X-Gm-Message-State: AOAM530lGfOa2EvVmfkjbadFNpZbkp0FYLKskYvHR99aLCcCiq7F6lS8
-        GV3T6ont6RQOA8d8/OeMZtjxijay
-X-Google-Smtp-Source: ABdhPJwPY/66PDF/MX9T0jVjg9P9ywKHNz4Z/wRkMroW/6LS11PRhHCDE2ll5u1RAoq0yLR5t3rvoQ==
-X-Received: by 2002:a17:902:fe09:: with SMTP id g9mr3829187plj.301.1589333399089;
-        Tue, 12 May 2020 18:29:59 -0700 (PDT)
-Received: from [192.168.2.13] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id j2sm13428661pfb.73.2020.05.12.18.29.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 12 May 2020 18:29:58 -0700 (PDT)
-Subject: Re: [PATCH v5 00/15] Fix qla2xxx endianness annotations
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org
-References: <20200511200946.7675-1-bvanassche@acm.org>
- <yq1mu6d14s7.fsf@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <091a394c-6ad4-ad72-f1e5-ed6519f81951@acm.org>
-Date:   Tue, 12 May 2020 18:29:56 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1728332AbgEMBj4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 21:39:56 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:36284 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728228AbgEMBj4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 May 2020 21:39:56 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id E598C204197;
+        Wed, 13 May 2020 03:39:53 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id MaYMqjpoDXlD; Wed, 13 May 2020 03:39:46 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 935D320417A;
+        Wed, 13 May 2020 03:39:45 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     damien.lemoal@wdc.com, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com, hare@suse.de,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] scsi_debug: parser tables and code interaction
+Date:   Tue, 12 May 2020 21:39:43 -0400
+Message-Id: <20200513013943.25285-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <yq1mu6d14s7.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-12 09:44, Martin K. Petersen wrote:
-> I in reading v5 I noticed that Arun's reviews were missing from patches
-> 1, (2), 3, 5, 7, and 9. Not sure if other v4 review tags were missed.
-> Please verify when you repost.
+This patch is in response to a static analyser report from Dan Carpenter
+titled: "[bug report] scsi: scsi_debug: Add per_host_store option".
+This code may not clear the static analyzer reports, but may shed light
+on why they occur. Amongst other things this driver has a table driven
+SCSI command parser which also involves some C code. There are some
+invariants between the table entries and the corresponding C code (i.e.
+the resp_*() functions) that, if broken, may lead to a NULL dereference.
+And the report is valid, at least in the case of the PRE-FETCH command.
+Alas, that is not one of the cases that the static analyzer reported.
 
-That happened unintentionally. Thanks Martin for having caught this. I
-will add Arun's reviewed-by tags when I repost.
+In this particular corner case: when the fake_rw flag is set and the
+table entry for a "store"-accessing command does not have the required
+F_FAKE_RW flag set, do the following. Call BUG_ON() in the devip2sip()
+very close to a comment block explaining why it was called and how to
+fix it.  checkpatch.pl complains about the BUG_ON() but there is no
+reasonable remedial action that can be taken at run time.
 
-Bart.
+This change allows the code reported by the static analyzer to be
+simplified. Comments were also added to the table flags (e.g.
+F_FAKE_RW) so developers who add commands might be more inclined to
+use them (properly).
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_debug.c | 115 +++++++++++++++++++++-----------------
+ 1 file changed, 64 insertions(+), 51 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 60e84a1cdfac..66f00346dbd2 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -61,7 +61,7 @@
+ 
+ /* make sure inq_product_rev string corresponds to this version */
+ #define SDEBUG_VERSION "0189"	/* format to fit INQUIRY revision field */
+-static const char *sdebug_version_date = "20200507";
++static const char *sdebug_version_date = "20200512";
+ 
+ #define MY_NAME "scsi_debug"
+ 
+@@ -236,21 +236,23 @@ static const char *sdebug_version_date = "20200507";
+ #define SDEBUG_CANQUEUE  (SDEBUG_CANQUEUE_WORDS * BITS_PER_LONG)
+ #define DEF_CMD_PER_LUN  255
+ 
+-#define F_D_IN			1
+-#define F_D_OUT			2
++/* UA - Unit Attention; SA - Service Action; SSU - Start Stop Unit */
++#define F_D_IN			1	/* Data-in command (e.g. READ) */
++#define F_D_OUT			2	/* Data-out command (e.g. WRITE) */
+ #define F_D_OUT_MAYBE		4	/* WRITE SAME, NDOB bit */
+ #define F_D_UNKN		8
+-#define F_RL_WLUN_OK		0x10
+-#define F_SKIP_UA		0x20
+-#define F_DELAY_OVERR		0x40
+-#define F_SA_LOW		0x80	/* cdb byte 1, bits 4 to 0 */
+-#define F_SA_HIGH		0x100	/* as used by variable length cdbs */
+-#define F_INV_OP		0x200
+-#define F_FAKE_RW		0x400
+-#define F_M_ACCESS		0x800	/* media access */
+-#define F_SSU_DELAY		0x1000
+-#define F_SYNC_DELAY		0x2000
+-
++#define F_RL_WLUN_OK		0x10	/* allowed with REPORT LUNS W-LUN */
++#define F_SKIP_UA		0x20	/* bypass UAs (e.g. INQUIRY command) */
++#define F_DELAY_OVERR		0x40	/* for commands like INQUIRY */
++#define F_SA_LOW		0x80	/* SA is in cdb byte 1, bits 4 to 0 */
++#define F_SA_HIGH		0x100	/* SA is in cdb bytes 8 and 9 */
++#define F_INV_OP		0x200	/* invalid opcode (not supported) */
++#define F_FAKE_RW		0x400	/* bypass resp_*() when fake_rw set */
++#define F_M_ACCESS		0x800	/* media access, reacts to SSU state */
++#define F_SSU_DELAY		0x1000	/* SSU command delay (long-ish) */
++#define F_SYNC_DELAY		0x2000	/* SYNCHRONIZE CACHE delay */
++
++/* Useful combinations of the above flags */
+ #define FF_RESPOND (F_RL_WLUN_OK | F_SKIP_UA | F_DELAY_OVERR)
+ #define FF_MEDIA_IO (F_M_ACCESS | F_FAKE_RW)
+ #define FF_SA (F_SA_HIGH | F_SA_LOW)
+@@ -607,25 +609,25 @@ static const struct opcode_info_t sync_cache_iarr[] = {
+ };
+ 
+ static const struct opcode_info_t pre_fetch_iarr[] = {
+-	{0, 0x90, 0, F_SYNC_DELAY | F_M_ACCESS, resp_pre_fetch, NULL,
++	{0, 0x90, 0, F_SYNC_DELAY | FF_MEDIA_IO, resp_pre_fetch, NULL,
+ 	    {16,  0x2, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 	     0xff, 0xff, 0xff, 0xff, 0x3f, 0xc7} },	/* PRE-FETCH (16) */
+ };
+ 
+ static const struct opcode_info_t zone_out_iarr[] = {	/* ZONE OUT(16) */
+-	{0, 0x94, 0x1, F_SA_LOW, resp_close_zone, NULL,
++	{0, 0x94, 0x1, F_SA_LOW | F_M_ACCESS, resp_close_zone, NULL,
+ 	    {16, 0x1, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 	     0xff, 0, 0, 0xff, 0xff, 0x1, 0xc7} },	/* CLOSE ZONE */
+-	{0, 0x94, 0x2, F_SA_LOW, resp_finish_zone, NULL,
++	{0, 0x94, 0x2, F_SA_LOW | F_M_ACCESS, resp_finish_zone, NULL,
+ 	    {16, 0x2, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 	     0xff, 0, 0, 0xff, 0xff, 0x1, 0xc7} },	/* FINISH ZONE */
+-	{0, 0x94, 0x4, F_SA_LOW, resp_rwp_zone, NULL,
++	{0, 0x94, 0x4, F_SA_LOW | F_M_ACCESS, resp_rwp_zone, NULL,
+ 	    {16, 0x4, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 	     0xff, 0, 0, 0xff, 0xff, 0x1, 0xc7} },  /* RESET WRITE POINTER */
+ };
+ 
+ static const struct opcode_info_t zone_in_iarr[] = {	/* ZONE IN(16) */
+-	{0, 0x95, 0x6, F_SA_LOW | F_D_IN, NULL, NULL,
++	{0, 0x95, 0x6, F_SA_LOW | F_D_IN | F_M_ACCESS, NULL, NULL,
+ 	    {16, 0x6, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 	     0xff, 0xff, 0xff, 0xff, 0x3f, 0xc7} }, /* REPORT ZONES */
+ };
+@@ -726,17 +728,17 @@ static const struct opcode_info_t opcode_info_arr[SDEB_I_LAST_ELEM_P1 + 1] = {
+ 	{0, 0x89, 0, F_D_OUT | FF_MEDIA_IO, resp_comp_write, NULL,
+ 	    {16,  0xf8, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0,
+ 	     0, 0xff, 0x3f, 0xc7} },		/* COMPARE AND WRITE */
+-	{ARRAY_SIZE(pre_fetch_iarr), 0x34, 0, F_SYNC_DELAY | F_M_ACCESS,
++	{ARRAY_SIZE(pre_fetch_iarr), 0x34, 0, F_SYNC_DELAY | FF_MEDIA_IO,
+ 	    resp_pre_fetch, pre_fetch_iarr,
+ 	    {10,  0x2, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xff, 0xff, 0xc7, 0, 0,
+ 	     0, 0, 0, 0} },			/* PRE-FETCH (10) */
+ 
+ /* 30 */
+-	{ARRAY_SIZE(zone_out_iarr), 0x94, 0x3, F_SA_LOW,
++	{ARRAY_SIZE(zone_out_iarr), 0x94, 0x3, F_SA_LOW | F_M_ACCESS,
+ 	    resp_open_zone, zone_out_iarr, /* ZONE_OUT(16), OPEN ZONE) */
+ 		{16,  0x3 /* SA */, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 		 0xff, 0xff, 0x0, 0x0, 0xff, 0xff, 0x1, 0xc7} },
+-	{ARRAY_SIZE(zone_in_iarr), 0x95, 0x0, F_SA_LOW | F_D_IN,
++	{ARRAY_SIZE(zone_in_iarr), 0x95, 0x0, F_SA_LOW | F_M_ACCESS,
+ 	    resp_report_zones, zone_in_iarr, /* ZONE_IN(16), REPORT ZONES) */
+ 		{16,  0x0 /* SA */, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+ 		 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xbf, 0xc7} },
+@@ -2873,10 +2875,20 @@ static inline int check_device_access_params
+ 	return 0;
+ }
+ 
+-static inline struct sdeb_store_info *devip2sip(struct sdebug_dev_info *devip)
++/*
++ * Note: if BUG_ON() fires it usually indicates a problem with the parser
++ * tables. Perhaps a missing F_FAKE_RW or FF_MEDIA_IO flag. Response functions
++ * that access any of the "stores" in struct sdeb_store_info should call this
++ * function with bug_if_fake_rw set to true.
++ */
++static inline struct sdeb_store_info *devip2sip(struct sdebug_dev_info *devip,
++						bool bug_if_fake_rw)
+ {
+-	return sdebug_fake_rw ?
+-			NULL : xa_load(per_store_ap, devip->sdbg_host->si_idx);
++	if (sdebug_fake_rw) {
++		BUG_ON(bug_if_fake_rw);	/* See note above */
++		return NULL;
++	}
++	return xa_load(per_store_ap, devip->sdbg_host->si_idx);
+ }
+ 
+ /* Returns number of bytes copied or -1 if error. */
+@@ -3013,7 +3025,7 @@ static void dif_copy_prot(struct scsi_cmnd *scp, sector_t sector,
+ 	size_t resid;
+ 	void *paddr;
+ 	struct sdeb_store_info *sip = devip2sip((struct sdebug_dev_info *)
+-						scp->device->hostdata);
++						scp->device->hostdata, true);
+ 	struct t10_pi_tuple *dif_storep = sip->dif_storep;
+ 	const void *dif_store_end = dif_storep + sdebug_store_sectors;
+ 	struct sg_mapping_iter miter;
+@@ -3059,7 +3071,7 @@ static int prot_verify_read(struct scsi_cmnd *scp, sector_t start_sec,
+ 	unsigned int i;
+ 	sector_t sector;
+ 	struct sdeb_store_info *sip = devip2sip((struct sdebug_dev_info *)
+-						scp->device->hostdata);
++						scp->device->hostdata, true);
+ 	struct t10_pi_tuple *sdt;
+ 
+ 	for (i = 0; i < sectors; i++, ei_lba++) {
+@@ -3092,7 +3104,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u32 ei_lba;
+ 	int ret;
+ 	u64 lba;
+-	struct sdeb_store_info *sip = devip2sip(devip);
++	struct sdeb_store_info *sip = devip2sip(devip, true);
+ 	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+ 	u8 *cmd = scp->cmnd;
+ 	struct sdebug_queued_cmd *sqcp;
+@@ -3401,8 +3413,8 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u32 ei_lba;
+ 	int ret;
+ 	u64 lba;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
++	struct sdeb_store_info *sip = devip2sip(devip, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
+ 	u8 *cmd = scp->cmnd;
+ 
+ 	switch (cmd[0]) {
+@@ -3552,8 +3564,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 	u8 *cmd = scp->cmnd;
+ 	u8 *lrdp = NULL;
+ 	u8 *up;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
++	struct sdeb_store_info *sip = devip2sip(devip, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
+ 	u8 wrprotect;
+ 	u16 lbdof, num_lrd, k;
+ 	u32 num, num_by, bt_len, lbdof_blen, sg_off, cum_lb;
+@@ -3728,8 +3740,8 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 	u32 lb_size = sdebug_sector_size;
+ 	int ret;
+ 	struct sdeb_store_info *sip = devip2sip((struct sdebug_dev_info *)
+-						scp->device->hostdata);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
++						scp->device->hostdata, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
+ 	u8 *fs1p;
+ 	u8 *fsp;
+ 
+@@ -3902,8 +3914,8 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ {
+ 	u8 *cmd = scp->cmnd;
+ 	u8 *arr;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
++	struct sdeb_store_info *sip = devip2sip(devip, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
+ 	u64 lba;
+ 	u32 dnum;
+ 	u32 lb_size = sdebug_sector_size;
+@@ -3973,8 +3985,8 @@ static int resp_unmap(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ {
+ 	unsigned char *buf;
+ 	struct unmap_block_desc *desc;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
++	struct sdeb_store_info *sip = devip2sip(devip, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
+ 	unsigned int i, payload_len, descriptors;
+ 	int ret;
+ 
+@@ -4041,7 +4053,6 @@ static int resp_get_lba_status(struct scsi_cmnd *scp,
+ 			       struct sdebug_dev_info *devip)
+ {
+ 	u8 *cmd = scp->cmnd;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+ 	u64 lba;
+ 	u32 alloc_len, mapped, num;
+ 	int ret;
+@@ -4057,9 +4068,11 @@ static int resp_get_lba_status(struct scsi_cmnd *scp,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (scsi_debug_lbp())
++	if (scsi_debug_lbp()) {
++		struct sdeb_store_info *sip = devip2sip(devip, true);
++
+ 		mapped = map_state(sip, lba, &num);
+-	else {
++	} else {
+ 		mapped = 1;
+ 		/* following just in case virtual_gb changed */
+ 		sdebug_capacity = get_sdebug_capacity();
+@@ -4119,9 +4132,9 @@ static int resp_pre_fetch(struct scsi_cmnd *scp,
+ 	u64 block, rest = 0;
+ 	u32 nblks;
+ 	u8 *cmd = scp->cmnd;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+-	u8 *fsp = sip ? sip->storep : NULL;
++	struct sdeb_store_info *sip = devip2sip(devip, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
++	u8 *fsp = sip->storep;
+ 
+ 	if (cmd[0] == PRE_FETCH) {	/* 10 byte cdb */
+ 		lba = get_unaligned_be32(cmd + 2);
+@@ -4265,8 +4278,8 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u64 lba;
+ 	u8 *arr;
+ 	u8 *cmd = scp->cmnd;
+-	struct sdeb_store_info *sip = devip2sip(devip);
+-	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
++	struct sdeb_store_info *sip = devip2sip(devip, true);
++	rwlock_t *macc_lckp = &sip->macc_lck;
+ 
+ 	bytchk = (cmd[1] >> 1) & 0x3;
+ 	if (bytchk == 0) {
+@@ -4344,7 +4357,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 	u8 *arr = NULL, *desc;
+ 	u8 *cmd = scp->cmnd;
+ 	struct sdeb_zone_state *zsp;
+-	struct sdeb_store_info *sip = devip2sip(devip);
++	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4484,7 +4497,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u8 *cmd = scp->cmnd;
+ 	struct sdeb_zone_state *zsp;
+ 	bool all = cmd[14] & 0x01;
+-	struct sdeb_store_info *sip = devip2sip(devip);
++	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4563,7 +4576,7 @@ static int resp_close_zone(struct scsi_cmnd *scp,
+ 	u8 *cmd = scp->cmnd;
+ 	struct sdeb_zone_state *zsp;
+ 	bool all = cmd[14] & 0x01;
+-	struct sdeb_store_info *sip = devip2sip(devip);
++	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4636,7 +4649,7 @@ static int resp_finish_zone(struct scsi_cmnd *scp,
+ 	u64 z_id;
+ 	u8 *cmd = scp->cmnd;
+ 	bool all = cmd[14] & 0x01;
+-	struct sdeb_store_info *sip = devip2sip(devip);
++	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+@@ -4712,7 +4725,7 @@ static int resp_rwp_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 	u64 z_id;
+ 	u8 *cmd = scp->cmnd;
+ 	bool all = cmd[14] & 0x01;
+-	struct sdeb_store_info *sip = devip2sip(devip);
++	struct sdeb_store_info *sip = devip2sip(devip, false);
+ 	rwlock_t *macc_lckp = sip ? &sip->macc_lck : &sdeb_fake_rw_lck;
+ 
+ 	if (!sdebug_dev_is_zoned(devip)) {
+-- 
+2.25.1
+
