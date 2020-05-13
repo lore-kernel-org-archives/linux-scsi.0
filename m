@@ -2,103 +2,104 @@ Return-Path: <SRS0=+pcl=63=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D453DCA90AF
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 09:37:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28249C2D0FC
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 10:25:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABAFB20769
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 09:37:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07B9F205ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 10:25:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BZ2Ylcx0"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=deduktiva.com header.i=@deduktiva.com header.b="b6nmtRDA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729194AbgEMJh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 05:37:27 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:36574 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728684AbgEMJh1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2020 05:37:27 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04D9bJes016181;
-        Wed, 13 May 2020 09:37:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=MeY7UEwws+nUZj742E+tUlYvuDD2IWvPTxv7x8obghM=;
- b=BZ2Ylcx0kRlpFyOp8yUqzU5ER0xZTdv8ZQINuwUBZkD4KnrWEu6dX+A4036fXEi60nTO
- XwVdW18VJQvCbogQ8neEWysCo7Hd/d38UWCKpJXYyiboAZB2UYeDMyEDkI00LjKqYyCo
- r/QoA+T17WT4OaQ4LEvyVJPxqxINyD2tT5v9omF2vJ6dcpRSKUeM+PHKosNFsdRLdWku
- 5PKLuazmvt8Ko+txka/TAjYY0xwG8gjQRRDZ2xZln9Se0dTDfHPj0cQ+mcYyaLZ4FrKG
- QhtBN8eRmGM5CK6WU8vgjWgwnQxRphTwL8v/+nEyT9jSqryeICnSrd8NPRp2yCO6q9Jk hA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 3100xwk4um-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 13 May 2020 09:37:19 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04D9IaXc041860;
-        Wed, 13 May 2020 09:37:11 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 3100yr0j1y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 May 2020 09:37:11 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04D9b9nV020973;
-        Wed, 13 May 2020 09:37:09 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 13 May 2020 02:37:09 -0700
-Date:   Wed, 13 May 2020 12:37:03 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        Zou Wei <zou_wei@huawei.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: aacraid: Fix an Oops in error handling
-Message-ID: <20200513093703.GB347693@mwanda>
+        id S1732973AbgEMKZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 06:25:24 -0400
+Received: from mail.namespace.at ([213.208.148.235]:40934 "EHLO
+        mail.namespace.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731466AbgEMKZX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2020 06:25:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deduktiva.com; s=a; h=In-Reply-To:Content-Type:MIME-Version:References:
+        Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=83dIodJhlCkWiD1JexrwDh4DNuHCVUIHIC9p5u2NCrQ=; b=b6nmtRDAR6jh84PXOgNGGLFHb0
+        ZmInZF+/07GgZORyr9jp3KbEZLHi9Unbe2UOFa4QHnZesECTFTBZR4pwlDf3pzkV8HdHTJXx5YqjU
+        kqo55apxDPz9IZAPpjcI6cNfoxtubzlh+02eGhT+O1NDlkec1tNpj7Xm0bCuHUoZV7tqVgEaUgjJp
+        +bzx46DtF0ocIyHfwQaLfuDm0IyUV+bCNtoqFktZrwmYg1TMT5dtVw2asZaoMoz3muTedMMRj8AqF
+        43ELYfpmGQC05mStRi8aV5EoJdgF9wXO3lzfdBNWkTkah49Rdb1CT+CF1G4MElfVNWdZZTU9hTViW
+        4ejoYJ5Q==;
+Date:   Wed, 13 May 2020 12:25:15 +0200
+From:   Chris Hofstaedtler | Deduktiva <chris.hofstaedtler@deduktiva.com>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, stable@vger.kernel.org,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: Re: [PATCH 03/12] lpfc: Fix broken Credit Recovery after driver load
+Message-ID: <20200513102515.6uo2zbp455hupx7l@zeha.at>
+References: <20200128002312.16346-1-jsmart2021@gmail.com>
+ <20200128002312.16346-4-jsmart2021@gmail.com>
+ <20200512212855.36q2ut2io2cdtagn@zeha.at>
+ <f75f508a-deaf-f0d3-b394-c4377f7848b5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 spamscore=0 suspectscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005130086
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 cotscore=-2147483648 bulkscore=0
- phishscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
- impostorscore=0 spamscore=0 malwarescore=0 priorityscore=1501 mlxscore=0
- suspectscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2005130087
+In-Reply-To: <f75f508a-deaf-f0d3-b394-c4377f7848b5@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If the memdup_user() function fails then it results in an Oops in the
-error handling code when we try to kfree() and error pointer.
+* James Smart <jsmart2021@gmail.com> [200513 02:00]:
+> On 5/12/2020 2:28 PM, Chris Hofstaedtler wrote:
+> > this commit, applied in Ubuntu's 5.4.0-30.34 tree as
+> > 77d5805eafdb5c42bdfe78f058ad9c40ee1278b4, appears to cause our
+> > HPE-branded 2-port 8Gb lpfcs to report FLOGI errors. Reverting it fixes target
+> > discovery for me. See below for log messages and HW details.
+> > 
+> > ...
+> > Let me know if you need further debug logs or something.
+> > 
+> > Thanks,
+> > 
+> 
+> I'm more interested in what other patches you do or do not have in your
+> tree.
 
-Fixes: 8d925b1f00e6 ("scsi: aacraid: Use memdup_user() as a cleanup")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/scsi/aacraid/commctrl.c | 1 +
- 1 file changed, 1 insertion(+)
+To save everybody time figuring out patches, I've tried with a 5.7-rc tree
+24085f70a6e1b0cb647ec92623284641d8270637, which gives these dmesg messages:
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 102658bdc15a..34e65dea992e 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -516,6 +516,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 	user_srbcmd = memdup_user(user_srb, fibsize);
- 	if (IS_ERR(user_srbcmd)) {
- 		rcode = PTR_ERR(user_srbcmd);
-+		user_srbcmd = NULL;
- 		goto cleanup;
- 	}
+[    4.222975] Emulex LightPulse Fibre Channel SCSI driver 12.8.0.0
+[    4.223864] scsi host2: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 07 device 00 irq 128
+[    6.654380] scsi host4: Emulex LPe12000 PCIe Fibre Channel Adapter on PCI bus 07 device 01 irq 182
+[    7.169041] lpfc 0000:07:00.0: 0:1303 Link Up Event x1 received Data: x1 xf7 x20 x0 x0 x0 0
+[    9.578752] lpfc 0000:07:00.1: 1:1303 Link Up Event x1 received Data: x1 xf7 x20 x0 x0 x0 0
+[   27.225755] lpfc 0000:07:00.0: 0:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   29.637644] lpfc 0000:07:00.1: 1:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   47.275946] lpfc 0000:07:00.0: 0:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   49.787867] lpfc 0000:07:00.1: 1:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   67.356082] lpfc 0000:07:00.0: 0:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   69.875049] lpfc 0000:07:00.1: 1:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   87.401269] lpfc 0000:07:00.0: 0:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[   89.929189] lpfc 0000:07:00.1: 1:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[  105.533242] lpfc 0000:07:00.0: 0:(0):0237 Pending Link Event during Discovery: State x7
+[  105.533546] lpfc 0000:07:00.0: 0:1305 Link Down Event x2 received Data: x2 x7 x98014 x0 x0
+[  105.615008] lpfc 0000:07:00.0: 0:1303 Link Up Event x3 received Data: x3 x0 x20 x0 x0 x0 0
+[  109.989341] lpfc 0000:07:00.1: 1:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
+[  124.772701] lpfc 0000:07:00.0: 0:(0):2858 FLOGI failure Status:x3/x2 TMO:x10 Data x101000 x0
  
--- 
-2.26.2
+> This is the message that threw it to the left:
+> 0237 Pending Link Event during Discovery
+> 
+> Let me look a little.
+> 
+> -- james
 
+Best,
+Chris
+
+-- 
+Chris Hofstaedtler / Deduktiva GmbH (FN 418592 b, HG Wien)
+www.deduktiva.com / +43 1 353 1707
