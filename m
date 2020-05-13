@@ -2,172 +2,171 @@ Return-Path: <SRS0=+pcl=63=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A043C2D0F8
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 02:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51D54C47077
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 02:38:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25ADD207BC
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 02:21:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 334812312B
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 02:38:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MofD5KKp"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="C81jvOP5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728533AbgEMCVQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 May 2020 22:21:16 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:15849 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728056AbgEMCVQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 22:21:16 -0400
-X-UUID: 05b6ab5c543b4fe6b82e34aafd627e20-20200513
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=FEa8S57yUP1uBt7sF+Iuhy7qLD+6bZVqAcdAPC8F9JE=;
-        b=MofD5KKpO/m36BxdJRtjBzFkVHXb10wjpOslr9htC/NJWkvKVnPxstr/NMHx1QQyZstkHJ6vrNnLLJbsI9xXEwU81tlcEMmeGf8AlA4Tm+Rq7ynThQR/0wtp2gtWsshF2uOdPC3ZvSK8sOknIW9FGMpNifr1QpbN1tSpMcgPaig=;
-X-UUID: 05b6ab5c543b4fe6b82e34aafd627e20-20200513
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 2030145763; Wed, 13 May 2020 10:21:10 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 13 May 2020 10:21:03 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 13 May 2020 10:21:03 +0800
-Message-ID: <1589336464.3197.68.camel@mtkswgap22>
-Subject: Re: [PATCH v1 4/4] scsi: ufs: Fix WriteBooster flush during runtime
- suspend
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-CC:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>
-Date:   Wed, 13 May 2020 10:21:04 +0800
-In-Reply-To: <3740c6fa-77f1-53eb-ec8e-8f9d09f2646f@codeaurora.org>
-References: <20200512104750.8711-1-stanley.chu@mediatek.com>
-         <20200512104750.8711-5-stanley.chu@mediatek.com>
-         <3740c6fa-77f1-53eb-ec8e-8f9d09f2646f@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1728515AbgEMCiC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 May 2020 22:38:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38698 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725898AbgEMCiB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 May 2020 22:38:01 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49677C061A0C
+        for <linux-scsi@vger.kernel.org>; Tue, 12 May 2020 19:38:01 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id y18so534201pfl.9
+        for <linux-scsi@vger.kernel.org>; Tue, 12 May 2020 19:38:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=WyehoVS5xyMsLCe9+kv0B9xp6ecEQYyhEXRq6FyyLdc=;
+        b=C81jvOP5IIpQSOmMCWgKmuxFjl4tmtvtegGVhvIv2onkYKGOq/ngfs15R0Jup3yyBt
+         BLb8nqLC/i0JhgUehRlszwt35PWjr82kiTS5uPwjiFPswK7F8WgRyxbBO9HB/AgmcaiK
+         nlas4o8GF8bnhZ+5Mn3gsgaFcoNjdJ2iUWeoyGR5unsHH1uBrttK/snvSm3RjVeFGomT
+         CNo8Pgsyjk5pol/9nRwPvzTXp7x+zOAw3wlryxhBG5/v2F3JAdYayCfJVrCLi45lAYYY
+         gMFfT9LbX2U9jBvAtyA6H6tnHykC6pO8D98NmDhRP/NRnU9PWb6dVEZL2gXdHOeWvmmN
+         XzeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=WyehoVS5xyMsLCe9+kv0B9xp6ecEQYyhEXRq6FyyLdc=;
+        b=gHv6MENv2Sc7rrXP7aOOblZxtGdzwOFLTBNv87nSlkqv6B3lAlrePbKirN10tyiDGF
+         Oc3ojxoFY9flFpNDELsadVk8n4vdJXvaqxLlyGHqCrM85B/FrLDVMwkFm4+8o7BeW3LR
+         kxUoeMGMOcK2XrXgHHmxsOpO54teP9Lba2CsdAUKN6Sb0hHSXc/nYOdNENrGEte7w8DG
+         mvbUigJwoMtnVSS5wH0j2fDS2t+nstGUknY5OkniqI8tMIluoe00KZjR8PB8F05bpTZu
+         ZZjcYxVuAmL6cWdDMRVDMd+Zrvg0o7jNdKCk8K9onwOGnyCDxn1ckH1yLI/THbRGQePa
+         jnRw==
+X-Gm-Message-State: AOAM530Ace8gVH7R8kkHoVM/140uN0YiGolsjK0KMp9Dgxm4idOUL+Wt
+        CelXPRyZYJXR4Fyc8IvmXhG7Dg==
+X-Google-Smtp-Source: ABdhPJzaaa08OSndxUzWVb1oUbS2rPRvAvnZOpuEVl6MGugQ7SyvMZIgJja84vb/FDIjuTHT2UoE3w==
+X-Received: by 2002:a62:6146:: with SMTP id v67mr5541865pfb.134.1589337480765;
+        Tue, 12 May 2020 19:38:00 -0700 (PDT)
+Received: from ?IPv6:2605:e000:100e:8c61:1d8:eb9:1d84:211c? ([2605:e000:100e:8c61:1d8:eb9:1d84:211c])
+        by smtp.gmail.com with ESMTPSA id b9sm12967542pfp.12.2020.05.12.19.37.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 12 May 2020 19:38:00 -0700 (PDT)
+Subject: Re: [PATCH v11 00/10] Introduce Zone Append for writing to zoned
+ block devices
+To:     Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Keith Busch <kbusch@kernel.org>,
+        "linux-scsi @ vger . kernel . org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-fsdevel @ vger . kernel . org" <linux-fsdevel@vger.kernel.org>
+References: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <abd4b3d4-6261-c3a6-9b4c-9bf009a9820d@kernel.dk>
+Date:   Tue, 12 May 2020 20:37:57 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20200512085554.26366-1-johannes.thumshirn@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQXN1dG9zaCwNCg0KT24gVHVlLCAyMDIwLTA1LTEyIGF0IDEwOjA0IC0wNzAwLCBBc3V0b3No
-IERhcyAoYXNkKSB3cm90ZToNCj4gSGkgU3RhbmxleSwNCj4gDQo+IE9uIDUvMTIvMjAyMCAzOjQ3
-IEFNLCBTdGFubGV5IENodSB3cm90ZToNCj4gPiBDdXJyZW50bHkgVUZTIGhvc3QgZHJpdmVyIHBy
-b21pc2VzIFZDQyBzdXBwbHkgaWYgVUZTIGRldmljZQ0KPiA+IG5lZWRzIHRvIGRvIFdyaXRlQm9v
-c3RlciBmbHVzaCBkdXJpbmcgcnVudGltZSBzdXNwZW5kLg0KPiA+IA0KPiA+IEhvd2V2ZXIgdGhl
-IFVGUyBzcGVjaWZpY2F0aW9uIG1lbnRpb25zLA0KPiA+IA0KPiA+ICJXaGlsZSB0aGUgZmx1c2hp
-bmcgb3BlcmF0aW9uIGlzIGluIHByb2dyZXNzLCB0aGUgZGV2aWNlIGlzDQo+ID4gaW4gQWN0aXZl
-IHBvd2VyIG1vZGUuIg0KPiA+IA0KPiA+IFRoZXJlZm9yZSBVRlMgaG9zdCBkcml2ZXIgbmVlZHMg
-dG8gcHJvbWlzZSBtb3JlOiBLZWVwIFVGUw0KPiA+IGRldmljZSBhcyAiQWN0aXZlIHBvd2VyIG1v
-ZGUiLCBvdGhlcndpc2UgVUZTIGRldmljZSBzaGFsbCBub3QNCj4gPiBkbyBhbnkgZmx1c2ggaWYg
-ZGV2aWNlIGVudGVycyBTbGVlcCBvciBQb3dlckRvd24gcG93ZXIgbW9kZS4NCj4gPiANCj4gPiBG
-aXggdGhpcyBieSBub3QgY2hhbmdpbmcgZGV2aWNlIHBvd2VyIG1vZGUgaWYgV3JpdGVCb29zdGVy
-DQo+ID4gZmx1c2ggaXMgcmVxdWlyZWQgaW4gdWZzaGNkX3N1c3BlbmQoKS4NCj4gPiANCj4gPiBT
-aWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KPiA+
-IC0tLQ0KPiA+ICAgZHJpdmVycy9zY3NpL3Vmcy91ZnMuaCAgICB8ICAxIC0NCj4gPiAgIGRyaXZl
-cnMvc2NzaS91ZnMvdWZzaGNkLmMgfCAzOSArKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
-LS0tLS0tLS0NCj4gPiAgIDIgZmlsZXMgY2hhbmdlZCwgMTkgaW5zZXJ0aW9ucygrKSwgMjEgZGVs
-ZXRpb25zKC0pDQo+ID4gDQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzLmgg
-Yi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy5oDQo+ID4gaW5kZXggYjMxMzUzNDRhYjNmLi45ZTRiYzJl
-OTdhZGEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMuaA0KPiA+ICsrKyBi
-L2RyaXZlcnMvc2NzaS91ZnMvdWZzLmgNCj4gPiBAQCAtNTc3LDcgKzU3Nyw2IEBAIHN0cnVjdCB1
-ZnNfZGV2X2luZm8gew0KPiA+ICAgCXUzMiBkX2V4dF91ZnNfZmVhdHVyZV9zdXA7DQo+ID4gICAJ
-dTggYl93Yl9idWZmZXJfdHlwZTsNCj4gPiAgIAl1MzIgZF93Yl9hbGxvY191bml0czsNCj4gPiAt
-CWJvb2wga2VlcF92Y2Nfb247DQo+ID4gICAJdTggYl9wcmVzcnZfdXNwY19lbjsNCj4gPiAgIH07
-DQo+ID4gICANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyBiL2Ry
-aXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gPiBpbmRleCAxNjlhMzM3OWU0NjguLjJkMGFmZjhh
-YzI2MCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4gKysr
-IGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiA+IEBAIC04MTAxLDggKzgxMDEsNyBAQCBz
-dGF0aWMgdm9pZCB1ZnNoY2RfdnJlZ19zZXRfbHBtKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ID4g
-ICAJICAgICFoYmEtPmRldl9pbmZvLmlzX2x1X3Bvd2VyX29uX3dwKSB7DQo+ID4gICAJCXVmc2hj
-ZF9zZXR1cF92cmVnKGhiYSwgZmFsc2UpOw0KPiA+ICAgCX0gZWxzZSBpZiAoIXVmc2hjZF9pc191
-ZnNfZGV2X2FjdGl2ZShoYmEpKSB7DQo+ID4gLQkJaWYgKCFoYmEtPmRldl9pbmZvLmtlZXBfdmNj
-X29uKQ0KPiA+IC0JCQl1ZnNoY2RfdG9nZ2xlX3ZyZWcoaGJhLT5kZXYsIGhiYS0+dnJlZ19pbmZv
-LnZjYywgZmFsc2UpOw0KPiA+ICsJCXVmc2hjZF90b2dnbGVfdnJlZyhoYmEtPmRldiwgaGJhLT52
-cmVnX2luZm8udmNjLCBmYWxzZSk7DQo+ID4gICAJCWlmICghdWZzaGNkX2lzX2xpbmtfYWN0aXZl
-KGhiYSkpIHsNCj4gPiAgIAkJCXVmc2hjZF9jb25maWdfdnJlZ19scG0oaGJhLCBoYmEtPnZyZWdf
-aW5mby52Y2NxKTsNCj4gPiAgIAkJCXVmc2hjZF9jb25maWdfdnJlZ19scG0oaGJhLCBoYmEtPnZy
-ZWdfaW5mby52Y2NxMik7DQo+ID4gQEAgLTgxNzIsNiArODE3MSw3IEBAIHN0YXRpYyBpbnQgdWZz
-aGNkX3N1c3BlbmQoc3RydWN0IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQo+
-ID4gICAJZW51bSB1ZnNfcG1fbGV2ZWwgcG1fbHZsOw0KPiA+ICAgCWVudW0gdWZzX2Rldl9wd3Jf
-bW9kZSByZXFfZGV2X3B3cl9tb2RlOw0KPiA+ICAgCWVudW0gdWljX2xpbmtfc3RhdGUgcmVxX2xp
-bmtfc3RhdGU7DQo+ID4gKwlib29sIGtlZXBfY3Vycl9kZXZfcHdyX21vZGUgPSBmYWxzZTsNCj4g
-PiAgIA0KPiA+ICAgCWhiYS0+cG1fb3BfaW5fcHJvZ3Jlc3MgPSAxOw0KPiA+ICAgCWlmICghdWZz
-aGNkX2lzX3NodXRkb3duX3BtKHBtX29wKSkgew0KPiA+IEBAIC04MjI2LDI4ICs4MjI2LDI3IEBA
-IHN0YXRpYyBpbnQgdWZzaGNkX3N1c3BlbmQoc3RydWN0IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNf
-cG1fb3AgcG1fb3ApDQo+ID4gICAJCQkvKiBtYWtlIHN1cmUgdGhhdCBhdXRvIGJrb3BzIGlzIGRp
-c2FibGVkICovDQo+ID4gICAJCQl1ZnNoY2RfZGlzYWJsZV9hdXRvX2Jrb3BzKGhiYSk7DQo+ID4g
-ICAJCX0NCj4gPiArDQo+ID4gICAJCS8qDQo+ID4gLQkJICogV2l0aCB3YiBlbmFibGVkLCBpZiB0
-aGUgYmtvcHMgaXMgZW5hYmxlZCBvciBpZiB0aGUNCj4gPiAtCQkgKiBjb25maWd1cmVkIFdCIHR5
-cGUgaXMgNzAlIGZ1bGwsIGtlZXAgdmNjIE9ODQo+ID4gLQkJICogZm9yIHRoZSBkZXZpY2UgdG8g
-Zmx1c2ggdGhlIHdiIGJ1ZmZlcg0KPiA+ICsJCSAqIElmIGRldmljZSBuZWVkcyB0byBkbyBCS09Q
-IG9yIFdCIGJ1ZmZlciBmbHVzaCwga2VlcCBkZXZpY2UNCj4gPiArCQkgKiBwb3dlciBtb2RlIGFz
-ICJhY3RpdmUgcG93ZXIgbW9kZSIgYW5kIGl0cyBWQ0Mgc3VwcGx5Lg0KPiA+ICAgCQkgKi8NCj4g
-PiAtCQlpZiAoKGhiYS0+YXV0b19ia29wc19lbmFibGVkICYmIHVmc2hjZF9pc193Yl9hbGxvd2Vk
-KGhiYSkpIHx8DQo+ID4gLQkJICAgIHVmc2hjZF93Yl9rZWVwX3ZjY19vbihoYmEpKQ0KPiA+IC0J
-CQloYmEtPmRldl9pbmZvLmtlZXBfdmNjX29uID0gdHJ1ZTsNCj4gPiAtCQllbHNlDQo+ID4gLQkJ
-CWhiYS0+ZGV2X2luZm8ua2VlcF92Y2Nfb24gPSBmYWxzZTsNCj4gPiAtCX0gZWxzZSB7DQo+ID4g
-LQkJaGJhLT5kZXZfaW5mby5rZWVwX3ZjY19vbiA9IGZhbHNlOw0KPiA+ICsJCWtlZXBfY3Vycl9k
-ZXZfcHdyX21vZGUgPSBoYmEtPmF1dG9fYmtvcHNfZW5hYmxlZCB8fA0KPiA+ICsJCQl1ZnNoY2Rf
-d2Jfa2VlcF92Y2Nfb24oaGJhKTsNCj4gPiAgIAl9DQo+ID4gICANCj4gPiAtCWlmICgocmVxX2Rl
-dl9wd3JfbW9kZSAhPSBoYmEtPmN1cnJfZGV2X3B3cl9tb2RlKSAmJg0KPiA+IC0JICAgICgodWZz
-aGNkX2lzX3J1bnRpbWVfcG0ocG1fb3ApICYmICFoYmEtPmF1dG9fYmtvcHNfZW5hYmxlZCkgfHwN
-Cj4gPiAtCSAgICAhdWZzaGNkX2lzX3J1bnRpbWVfcG0ocG1fb3ApKSkgew0KPiA+IC0JCS8qIGVu
-c3VyZSB0aGF0IGJrb3BzIGlzIGRpc2FibGVkICovDQo+ID4gLQkJdWZzaGNkX2Rpc2FibGVfYXV0
-b19ia29wcyhoYmEpOw0KPiA+IC0JCXJldCA9IHVmc2hjZF9zZXRfZGV2X3B3cl9tb2RlKGhiYSwg
-cmVxX2Rldl9wd3JfbW9kZSk7DQo+ID4gLQkJaWYgKHJldCkNCj4gPiAtCQkJZ290byBlbmFibGVf
-Z2F0aW5nOw0KPiA+ICsJaWYgKHJlcV9kZXZfcHdyX21vZGUgIT0gaGJhLT5jdXJyX2Rldl9wd3Jf
-bW9kZSkgew0KPiA+ICsJCWlmICgodWZzaGNkX2lzX3J1bnRpbWVfcG0ocG1fb3ApICYmICFoYmEt
-PmF1dG9fYmtvcHNfZW5hYmxlZCkgfHwNCj4gPiArCQkgICAgIXVmc2hjZF9pc19ydW50aW1lX3Bt
-KHBtX29wKSkgew0KPiA+ICsJCQkvKiBlbnN1cmUgdGhhdCBia29wcyBpcyBkaXNhYmxlZCAqLw0K
-PiA+ICsJCQl1ZnNoY2RfZGlzYWJsZV9hdXRvX2Jrb3BzKGhiYSk7DQo+ID4gKwkJfQ0KPiA+ICsN
-Cj4gPiArCQlpZiAoIWtlZXBfY3Vycl9kZXZfcHdyX21vZGUpIHsNCj4gPiArCQkJcmV0ID0gdWZz
-aGNkX3NldF9kZXZfcHdyX21vZGUoaGJhLCByZXFfZGV2X3B3cl9tb2RlKTsNCj4gPiArCQkJaWYg
-KHJldCkNCj4gPiArCQkJCWdvdG8gZW5hYmxlX2dhdGluZzsNCj4gPiArCQl9DQo+ID4gICAJfQ0K
-PiA+ICAgDQo+ID4gICAJZmx1c2hfd29yaygmaGJhLT5lZWhfd29yayk7DQo+ID4gDQo+IA0KPiBD
-YW4geW91IHBsZWFzZSBjb25maXJtIHRoYXQgeW91J3ZlIHRlc3RlZCBhbmQgZm91bmQgdGhhdCB3
-aXRoIHRoZSANCj4gcHJldmlvdXMgY29kZSwgdGhlIGZsdXNoIG9wZXJhdGlvbiBpbiB0aGUgZGV2
-aWNlIHdhcyBub3QgaGFwcGVuaW5nLg0KPiANCj4gSWYgc28sIHBsZWFzZSBjYW4geW91IGxldCBt
-ZSBrbm93IHRoZSB0ZXN0LWNhc2UgdGhhdCB5b3UgcmFuIHRvIGZpZ3VyZSANCj4gdGhpcyBvdXQu
-DQo+IA0KPiBJJ2QgbGlrZSB0byB2ZXJpZnkgdGhpcyBhdCBteSBlbmQuDQoNClNvcnJ5IGN1cnJl
-bnRseSBJIGhhdmUgbm8gZWFzeSB0ZXN0IGNhc2VzIG9yIHNjcmlwdHMgYXZhaWxhYmxlLg0KDQpU
-byBwcmVjaXNlbHkgY29uZmlybSB0aGUgZmx1c2ggYmVoYXZpb3IgYnkgbG9ncywgSSBhZGRlZCBz
-b21lIGNvZGVzIHRvDQpxdWVyeSAiYXZhaWxhYmxlIFdyaXRlQm9vc3RlciBidWZmZXIiIGJlZm9y
-ZSBlbnRlcmluZyBydW50aW1lIHN1c3BlbmQNCmFuZCBhZnRlciBsZWF2aW5nIHJ1bnRpbWUgcmVz
-dW1lLCBhbmQgb2JzZXJ2ZSB0aGUgdHJlbmQgb2YgYXZhaWxhYmxlDQpXcml0ZUJvb3N0ZXIgYnVm
-ZmVyLg0KDQpNeSB0ZXN0IHN0ZXBzIGFyZSBhcyBiZWxvdywNCg0KMS4gQ3JlYXRlIGEgd3JpdGVy
-IHRvIHdyaXRlIGxhcmdlIGRhdGEgaW4gYSBzaG9ydCB0aW1lIHRvIGZpbGwtaW4NCldyaXRlQm9v
-c3RlciBidWZmZXIuDQoNCjIuIERvIHNvbWV0aGluZyB0byBwcmV2ZW50IHN5c3RlbSBzdXNwZW5k
-DQoNCjMuIERvIHNvbWV0aGluZyB0byBwcmV2ZW50IGxpbmsgZW50ZXJpbmcgSGliZXJuOCwgZm9y
-IGV4YW1wbGUsIGRpc2FibGUNCkF1dG8tSGliZXJuOCBhbmQgZGlzYWJsZSBIaWJlcm44IGR1cmlu
-ZyBjbG9jayBnYXRpbmcuIEJlY2F1c2UgdGhlDQpIaWJlcm44IHBlcmlvZCBiZWZvcmUgcnVudGlt
-ZS1zdXNwZW5kIGlzIGtub3duIHRoYXQgVkNDIGlzIHByb3ZpZGVkIGFuZA0KZGV2aWNlIGNhbiBm
-bHVzaCBXcml0ZUJvb3N0ZXIgYnVmZmVyIGlmICJGbHVzaCBEdXJpbmcgSDgiIGlzIGVuYWJsZWQg
-YXMNCnVwc3RyZWFtIGtlcm5lbCBjdXJyZW50bHkuDQoNCjQuIFNocmluayB0aGUgcnVudGltZSBz
-dXNwZW5kIGRlbGF5IChtYXliZSAxMDBtcyB+IDIwMG1zKSB0byBtYWtlDQpydW50aW1lIHN1c3Bl
-bmQgaGFwcGVuIGVhcmxpZXIuDQoNCjUuIEFmdGVyICJhdmFpbGFibGUgV3JpdGVCb3NvdGVyIGJ1
-ZmZlciIgcmVhY2hlcyBsb3dlci1sZXZlbCwgZm9yDQpleGFtcGxlLCAxMCUsIHN0b3AgdGhlIHdy
-aXRlci4NCg0KNi4gT2JzZXJ2ZSB0aGUgdHJlbmQgb2YgV3JpdGVCb29zdGVyIGF2YWlsYWJsZSBi
-dWZmZXIuDQoNCg0KSW4gdGhlIHByZXZpb3VzIGNvZGUsIHRoZSBhdmFpbGFibGUgV3JpdGVCb29z
-dGVyIGJ1ZmZlciBpcyBpbmNyZWFzZWQNCnZlcnkgdmVyeSBzbG93bHkuIEVzcGVjaWFsbHkgbm8g
-aW5jcmVhc2luZyBpcyBvYnNlcnZlZCBkdXJpbmcNCnJ1bnRpbWUtc3VzcGVuZC4NCg0KQWZ0ZXIg
-YXBwbHlpbmcgdGhpcyBmaXgsIHRoZSBhdmFpbGFibGUgV3JpdGVCb29zdGVyIGJ1ZmZlciBpcyBp
-bmNyZWFzZWQNCm11Y2ggZmFzdGVyIGFuZCB0aGUgaW5jcmVhc2luZyBjYW4gYmUgZWFzaWx5IG9i
-c2VydmVkIGR1cmluZw0KcnVudGltZS1zdXNwZW5kLg0KDQpUaGFua3MsDQpTdGFubGV5IENodQ0K
-DQo+IA0KPiAtLQ0KPiBUaGFua3MsDQo+IC1hc2QNCj4gDQoNCg==
+On 5/12/20 2:55 AM, Johannes Thumshirn wrote:
+> The upcoming NVMe ZNS Specification will define a new type of write
+> command for zoned block devices, zone append.
+> 
+> When when writing to a zoned block device using zone append, the start
+> sector of the write is pointing at the start LBA of the zone to write to.
+> Upon completion the block device will respond with the position the data
+> has been placed in the zone. This from a high level perspective can be
+> seen like a file system's block allocator, where the user writes to a
+> file and the file-system takes care of the data placement on the device.
+> 
+> In order to fully exploit the new zone append command in file-systems and
+> other interfaces above the block layer, we choose to emulate zone append
+> in SCSI and null_blk. This way we can have a single write path for both
+> file-systems and other interfaces above the block-layer, like io_uring on
+> zoned block devices, without having to care too much about the underlying
+> characteristics of the device itself.
+> 
+> The emulation works by providing a cache of each zone's write pointer, so
+> zone append issued to the disk can be translated to a write with a
+> starting LBA of the write pointer. This LBA is used as input zone number
+> for the write pointer lookup in the zone write pointer offset cache and
+> the cached offset is then added to the LBA to get the actual position to
+> write the data. In SCSI we then turn the REQ_OP_ZONE_APPEND request into a
+> WRITE(16) command. Upon successful completion of the WRITE(16), the cache
+> will be updated to the new write pointer location and the written sector
+> will be noted in the request. On error the cache entry will be marked as
+> invalid and on the next write an update of the write pointer will be
+> scheduled, before issuing the actual write.
+> 
+> In order to reduce memory consumption, the only cached item is the offset
+> of the write pointer from the start of the zone, everything else can be
+> calculated. On an example drive with 52156 zones, the additional memory
+> consumption of the cache is thus 52156 * 4 = 208624 Bytes or 51 4k Byte
+> pages. The performance impact is neglectable for a spinning drive.
+> 
+> For null_blk the emulation is way simpler, as null_blk's zoned block
+> device emulation support already caches the write pointer position, so we
+> only need to report the position back to the upper layers. Additional
+> caching is not needed here.
+> 
+> Furthermore we have converted zonefs to run use ZONE_APPEND for synchronous
+> direct I/Os. Asynchronous I/O still uses the normal path via iomap.
+> 
+> Performance testing with zonefs sync writes on a 14 TB SMR drive and nullblk
+> shows good results. On the SMR drive we're not regressing (the performance
+> improvement is within noise), on nullblk we could drastically improve specific
+> workloads:
+> 
+> * nullblk:
+> 
+> Single Thread Multiple Zones
+> 				kIOPS	MiB/s	MB/s	% delta
+> mq-deadline REQ_OP_WRITE	10.1	631	662
+> mq-deadline REQ_OP_ZONE_APPEND	13.2	828	868	+31.12
+> none REQ_OP_ZONE_APPEND		15.6	978	1026	+54.98
+> 
+> 
+> Multiple Threads Multiple Zones
+> 				kIOPS	MiB/s	MB/s	% delta
+> mq-deadline REQ_OP_WRITE	10.2	640	671
+> mq-deadline REQ_OP_ZONE_APPEND	10.4	650	681	+1.49
+> none REQ_OP_ZONE_APPEND		16.9	1058	1109	+65.28
+> 
+> * 14 TB SMR drive
+> 
+> Single Thread Multiple Zones
+> 				IOPS	MiB/s	MB/s	% delta
+> mq-deadline REQ_OP_WRITE	797	49.9	52.3
+> mq-deadline REQ_OP_ZONE_APPEND	806	50.4	52.9	+1.15
+> 
+> Multiple Threads Multiple Zones
+> 				kIOPS	MiB/s	MB/s	% delta
+> mq-deadline REQ_OP_WRITE	745	46.6	48.9
+> mq-deadline REQ_OP_ZONE_APPEND	768	48	50.3	+2.86
+> 
+> The %-delta is against the baseline of REQ_OP_WRITE using mq-deadline as I/O
+> scheduler.
+> 
+> The series is based on Jens' for-5.8/block branch with HEAD:
+> ae979182ebb3 ("bdi: fix up for "remove the name field in struct backing_dev_info"")
+
+Applied for 5.8, thanks.
+
+-- 
+Jens Axboe
 
