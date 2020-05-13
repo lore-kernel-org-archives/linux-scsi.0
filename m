@@ -4,50 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E50C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 21:36:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A11A9C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 21:36:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D03282054F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 21:36:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9093B2054F
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 21:36:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HcixQ6k9"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TGsSCWtf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729409AbgEMVgb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 17:36:31 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:57951 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728881AbgEMVg3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2020 17:36:29 -0400
+        id S1729392AbgEMVgc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 17:36:32 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:31905 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729359AbgEMVg3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 May 2020 17:36:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589405789;
+        s=mimecast20190719; t=1589405788;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=UwIpCXRimK6nkSbPjNNgCftnS+rK1CtylodRWRJy1j4=;
-        b=HcixQ6k9u2rnk8O2cYflMRNbMPjhQuz07hTWU7pis7d5kax7mbLVHr7SHe4Q4dGWumP7oO
-        +z0VU7oORWG/argiWffOiijRPkBl+6PYJBqZK8lQpTa/0g+QurUu9fYsfLvcPLNAKp1R9c
-        dmVyDW6m4qy5vKPCfgP58z/roqfuM4o=
+        bh=2q8wNP5BfDbkqdgV480g/4dZ2snqC8+5OQT7xuYCGC8=;
+        b=TGsSCWtfG95WuwofCyjKbUYvEapAEMA6EPc7vin31RzwfNFr+VWPMD4GCmEB1ord0y+4vO
+        oAmvAUCQNMGPhjlcNgcSDVmPFQEPsLTWBuejgf0DLCGxRkr1TUYnjkbJd9x8GA5atRk/1Z
+        m1Kb6ltAsXv/NTeCwS4GHBB2xxWkjKI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-428-aEQS2vveONa43IB6vSQRzw-1; Wed, 13 May 2020 17:36:27 -0400
-X-MC-Unique: aEQS2vveONa43IB6vSQRzw-1
+ us-mta-69-ApFMHm3KOWuAOSRNWDobEg-1; Wed, 13 May 2020 17:36:26 -0400
+X-MC-Unique: ApFMHm3KOWuAOSRNWDobEg-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8C9BC108BD0B;
-        Wed, 13 May 2020 21:36:26 +0000 (UTC)
-Received: from sulaco.redhat.com (unknown [10.3.128.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E358A5D9E5;
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8C1DB107ACF4;
         Wed, 13 May 2020 21:36:25 +0000 (UTC)
+Received: from sulaco.redhat.com (unknown [10.3.128.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C8F6A5D9E5;
+        Wed, 13 May 2020 21:36:24 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: [RFC PATCH v2 3/7] print_req_error: Use dev_printk
-Date:   Wed, 13 May 2020 16:36:17 -0500
-Message-Id: <20200513213621.470411-4-tasleson@redhat.com>
+Subject: [RFC PATCH v2 2/7] create_syslog_header: Add durable name
+Date:   Wed, 13 May 2020 16:36:16 -0500
+Message-Id: <20200513213621.470411-3-tasleson@redhat.com>
 In-Reply-To: <20200513213621.470411-1-tasleson@redhat.com>
 References: <20200513213621.470411-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -58,32 +59,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This gets us a persistent durable name for code that logs messages in the
+block layer that have the appropriate callbacks setup for durable name.
+
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- block/blk-core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/base/core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 60dc9552ef8d..44bf92047031 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -213,12 +213,15 @@ EXPORT_SYMBOL_GPL(blk_status_to_errno);
- static void print_req_error(struct request *req, blk_status_t status,
- 		const char *caller)
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 86ea3acb1e1f..8c89b711d91d 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3577,6 +3577,7 @@ create_syslog_header(const struct device *dev, char *hdr, size_t hdrlen)
  {
-+	struct device *dev;
- 	int idx = (__force int)status;
+ 	const char *subsys;
+ 	size_t pos = 0;
++	int dlen;
  
- 	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(blk_errors)))
- 		return;
+ 	if (dev->class)
+ 		subsys = dev->class->name;
+@@ -3619,6 +3620,10 @@ create_syslog_header(const struct device *dev, char *hdr, size_t hdrlen)
+ 				"DEVICE=+%s:%s", subsys, dev_name(dev));
+ 	}
  
--	printk_ratelimited(KERN_ERR
-+	dev = (req->rq_disk) ? disk_to_dev(req->rq_disk) : NULL;
++	dlen = dev_durable_name(dev, hdr + (pos + 1), hdrlen - (pos + 1));
++	if (dlen)
++		pos += dlen + 1;
 +
-+	dev_err_ratelimited(dev,
- 		"%s: %s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
- 		"phys_seg %u prio class %u\n",
- 		caller, blk_errors[idx].name,
+ 	if (pos >= hdrlen)
+ 		goto overflow;
+ 
 -- 
 2.25.4
 
