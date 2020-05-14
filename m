@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87E66C433E5
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 18:52:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2FC9C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67CB92065F
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 18:52:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 853D7206A5
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:01:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589482336;
-	bh=zIZJBvqQV5EzAwQlt823kY5ulNaTAeV6ljSNeDxKaQo=;
+	s=default; t=1589482902;
+	bh=UCbMAnvwx/g0V4i48SPEWakU9xn/Zshm3MNAPzY7n98=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yvtI7PX5emZ0KRPakn/CxJ/IfbuRCdsKqUuYL6X7ritSIMmWeEzxywPU4+TG0S3l+
-	 EK67ic6H7L30bCeCWOLe1iapcBJutrzcWr/ji2vqJ8oB3POnaumn8xNS/4iTEhgdJs
-	 xlWkkKbi1gVFNsoKDF38J/PbY5bGxw/UQQ9pMVB4=
+	b=flTgwZ3oUEHgsWOLGOSsZwyHiiLudlcU3CB2a10UlwxebEbmf6iKT3IDzIH5AIadC
+	 hKr91FZ45TnjnjpQ8HyNhHVj6S1BtD0IgDi0j8Je24ABd1VXIVAlHa2Ak7wZdw0UPx
+	 UPOIze12voRqoQKYKSSgXzj1O5e5ZGwu3EIcA8x8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728174AbgENSwP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 14:52:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50256 "EHLO mail.kernel.org"
+        id S1729954AbgENTB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 15:01:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56074 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728165AbgENSwO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 May 2020 14:52:14 -0400
+        id S1729386AbgENSz1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 May 2020 14:55:27 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2717B206F1;
-        Thu, 14 May 2020 18:52:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A5BEC2076A;
+        Thu, 14 May 2020 18:55:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589482333;
-        bh=zIZJBvqQV5EzAwQlt823kY5ulNaTAeV6ljSNeDxKaQo=;
+        s=default; t=1589482526;
+        bh=UCbMAnvwx/g0V4i48SPEWakU9xn/Zshm3MNAPzY7n98=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gA6TVCdtLAvxpRVqfZM+TkmN3oHVyM6O1f+cOKpf0Ta4/nexZjBt5JuPPgsHx9U3s
-         /vLdKzVt5wbYv5h07mKM8a1p2PD5Ij6fjg3pLZltyxP1mIIX8lSXVJ7s62wQNc4jfj
-         Nxa9kigAS9H7/5gqmWFsBUnGIOLy7gc0rxXHFc/Q=
+        b=nl5WZ3PVcrcMlV2pFRMKPM5S7dwW12XgUiO+Nj3xfJl7JaDVih6+tcjQu6K17B/8d
+         rDiwano7soNmCMAE+eJMiGA0pj8No72FQGOfSLvH+KjvmtFZHwoUcUMsTZ/aLYC6Uz
+         DQ749G8IOzhuf4YKBW2waoMh6Yh8CB623eX2b2nY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 5.6 19/62] scsi: ibmvscsi: Fix WARN_ON during event pool release
-Date:   Thu, 14 May 2020 14:51:04 -0400
-Message-Id: <20200514185147.19716-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 21/39] scsi: ibmvscsi: Fix WARN_ON during event pool release
+Date:   Thu, 14 May 2020 14:54:38 -0400
+Message-Id: <20200514185456.21060-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200514185147.19716-1-sashal@kernel.org>
-References: <20200514185147.19716-1-sashal@kernel.org>
+In-Reply-To: <20200514185456.21060-1-sashal@kernel.org>
+References: <20200514185456.21060-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -125,10 +125,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 7f66a77832099..59f0f1030c54a 100644
+index 07c23bbd968c5..83645a1c6f82e 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2320,16 +2320,12 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+@@ -2299,16 +2299,12 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
  static int ibmvscsi_remove(struct vio_dev *vdev)
  {
  	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
