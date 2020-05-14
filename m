@@ -2,143 +2,149 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4A70C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 18:03:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87E66C433E5
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 18:52:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F41020671
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 18:03:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OBFzdABP"
+	by mail.kernel.org (Postfix) with ESMTP id 67CB92065F
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 18:52:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1589482336;
+	bh=zIZJBvqQV5EzAwQlt823kY5ulNaTAeV6ljSNeDxKaQo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=yvtI7PX5emZ0KRPakn/CxJ/IfbuRCdsKqUuYL6X7ritSIMmWeEzxywPU4+TG0S3l+
+	 EK67ic6H7L30bCeCWOLe1iapcBJutrzcWr/ji2vqJ8oB3POnaumn8xNS/4iTEhgdJs
+	 xlWkkKbi1gVFNsoKDF38J/PbY5bGxw/UQQ9pMVB4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbgENSD3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 14:03:29 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:49112 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726075AbgENSD2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 May 2020 14:03:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589479407;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tE7zZsDmw/yZbrfqaJT36sACACFD7o4pfgXiX6CyaVE=;
-        b=OBFzdABPq/YKikQ7jCq/qxFXTRcCHLhDYay4/TUVG+vnu3EVSWWDK7tmPP3nMYSpQgeRJE
-        +kCa78rwpdslUu9X03DeE4Giwc4xSI1NJbq3fUmXP9E743T1dGwTwrCVarNLWWQyLOFJDA
-        rybVGjupjgI+gDDPhJJcSgMdpo+LUJA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-11-Hxoc4choN32rFwGvVK4wyA-1; Thu, 14 May 2020 14:03:22 -0400
-X-MC-Unique: Hxoc4choN32rFwGvVK4wyA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728174AbgENSwP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 14:52:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50256 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728165AbgENSwO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 May 2020 14:52:14 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 14E96872FEB;
-        Thu, 14 May 2020 18:03:21 +0000 (UTC)
-Received: from [10.3.128.23] (unknown [10.3.128.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1741376E95;
-        Thu, 14 May 2020 18:03:19 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [RFC PATCH v2 5/7] ata_dev_printk: Use dev_printk
-To:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-References: <20200513213621.470411-1-tasleson@redhat.com>
- <20200513213621.470411-6-tasleson@redhat.com>
- <82257837-c5a8-6a38-ce13-0f1ce7e245ac@suse.de>
-From:   Tony Asleson <tasleson@redhat.com>
-Organization: Red Hat
-Message-ID: <e12aeb9e-fe5d-5b5e-d190-401997cecc34@redhat.com>
-Date:   Thu, 14 May 2020 13:03:18 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        by mail.kernel.org (Postfix) with ESMTPSA id 2717B206F1;
+        Thu, 14 May 2020 18:52:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1589482333;
+        bh=zIZJBvqQV5EzAwQlt823kY5ulNaTAeV6ljSNeDxKaQo=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=gA6TVCdtLAvxpRVqfZM+TkmN3oHVyM6O1f+cOKpf0Ta4/nexZjBt5JuPPgsHx9U3s
+         /vLdKzVt5wbYv5h07mKM8a1p2PD5Ij6fjg3pLZltyxP1mIIX8lSXVJ7s62wQNc4jfj
+         Nxa9kigAS9H7/5gqmWFsBUnGIOLy7gc0rxXHFc/Q=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 5.6 19/62] scsi: ibmvscsi: Fix WARN_ON during event pool release
+Date:   Thu, 14 May 2020 14:51:04 -0400
+Message-Id: <20200514185147.19716-19-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200514185147.19716-1-sashal@kernel.org>
+References: <20200514185147.19716-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <82257837-c5a8-6a38-ce13-0f1ce7e245ac@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/14/20 12:53 AM, Hannes Reinecke wrote:
-> On 5/13/20 11:36 PM, Tony Asleson wrote:
->> Utilize the dev_printk function which will add structured data
->> to the log message.
->>
->> Signed-off-by: Tony Asleson <tasleson@redhat.com>
->> ---
->>   drivers/ata/libata-core.c | 10 +++++++---
->>   1 file changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 42c8728f6117..16978d615a17 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -7301,6 +7301,7 @@ EXPORT_SYMBOL(ata_link_printk);
->>   void ata_dev_printk(const struct ata_device *dev, const char *level,
->>               const char *fmt, ...)
->>   {
->> +    const struct device *gendev;
->>       struct va_format vaf;
->>       va_list args;
->>   @@ -7309,9 +7310,12 @@ void ata_dev_printk(const struct ata_device
->> *dev, const char *level,
->>       vaf.fmt = fmt;
->>       vaf.va = &args;
->>   -    printk("%sata%u.%02u: %pV",
->> -           level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
->> -           &vaf);
->> +    gendev = (dev->sdev) ? &dev->sdev->sdev_gendev : &dev->tdev;
->> +
->> +    dev_printk(level, gendev, "ata%u.%02u: %pV",
->> +            dev->link->ap->print_id,
->> +            dev->link->pmp + dev->devno,
->> +            &vaf);
->>         va_end(args);
->>   }
->>
-> That is wrong.
-> dev_printk() will already prefix the logging message with the device
-> name, so we'll end up having the name printed twice.
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-It certainly could be. Early in boot when &dev->sdev->sdev_gendev ==
-NULL and &dev->tdev is used we get
+[ Upstream commit b36522150e5b85045f868768d46fbaaa034174b2 ]
 
-dev1.0: ata1.00: configured for UDMA/100
+While removing an ibmvscsi client adapter a WARN_ON like the following is
+seen in the kernel log:
 
-later when &dev->sdev->sdev_gendev != NULL we get
+drmgr: drmgr: -r -c slot -s U9080.M9S.783AEC8-V11-C11 -w 5 -d 1
+WARNING: CPU: 9 PID: 24062 at ../kernel/dma/mapping.c:311 dma_free_attrs+0x78/0x110
+Supported: No, Unreleased kernel
+CPU: 9 PID: 24062 Comm: drmgr Kdump: loaded Tainted: G               X 5.3.18-12-default
+NIP:  c0000000001fa758 LR: c0000000001fa744 CTR: c0000000001fa6e0
+REGS: c0000002173375d0 TRAP: 0700   Tainted: G               X (5.3.18-12-default)
+MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28088282  XER: 20000000
+CFAR: c0000000001fbf0c IRQMASK: 1
+GPR00: c0000000001fa744 c000000217337860 c00000000161ab00 0000000000000000
+GPR04: 0000000000000000 c000011e12250000 0000000018010000 0000000000000000
+GPR08: 0000000000000000 0000000000000001 0000000000000001 c0080000190f4fa8
+GPR12: c0000000001fa6e0 c000000007fc2a00 0000000000000000 0000000000000000
+GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+GPR20: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+GPR24: 000000011420e310 0000000000000000 0000000000000000 0000000018010000
+GPR28: c00000000159de50 c000011e12250000 0000000000006600 c000011e5c994848
+NIP [c0000000001fa758] dma_free_attrs+0x78/0x110
+LR [c0000000001fa744] dma_free_attrs+0x64/0x110
+Call Trace:
+[c000000217337860] [000000011420e310] 0x11420e310 (unreliable)
+[c0000002173378b0] [c0080000190f0280] release_event_pool+0xd8/0x120 [ibmvscsi]
+[c000000217337930] [c0080000190f3f74] ibmvscsi_remove+0x6c/0x160 [ibmvscsi]
+[c000000217337960] [c0000000000f3cac] vio_bus_remove+0x5c/0x100
+[c0000002173379a0] [c00000000087a0a4] device_release_driver_internal+0x154/0x280
+[c0000002173379e0] [c0000000008777cc] bus_remove_device+0x11c/0x220
+[c000000217337a60] [c000000000870fc4] device_del+0x1c4/0x470
+[c000000217337b10] [c0000000008712a0] device_unregister+0x30/0xa0
+[c000000217337b80] [c0000000000f39ec] vio_unregister_device+0x2c/0x60
+[c000000217337bb0] [c00800001a1d0964] dlpar_remove_slot+0x14c/0x250 [rpadlpar_io]
+[c000000217337c50] [c00800001a1d0bcc] remove_slot_store+0xa4/0x110 [rpadlpar_io]
+[c000000217337cd0] [c000000000c091a0] kobj_attr_store+0x30/0x50
+[c000000217337cf0] [c00000000057c934] sysfs_kf_write+0x64/0x90
+[c000000217337d10] [c00000000057be10] kernfs_fop_write+0x1b0/0x290
+[c000000217337d60] [c000000000488c4c] __vfs_write+0x3c/0x70
+[c000000217337d80] [c00000000048c648] vfs_write+0xd8/0x260
+[c000000217337dd0] [c00000000048ca8c] ksys_write+0xdc/0x130
+[c000000217337e20] [c00000000000b488] system_call+0x5c/0x70
+Instruction dump:
+7c840074 f8010010 f821ffb1 20840040 eb830218 7c8407b4 48002019 60000000
+2fa30000 409e003c 892d0988 792907e0 <0b090000> 2fbd0000 419e0028 2fbc0000
+---[ end trace 5955b3c0cc079942 ]---
+rpadlpar_io: slot U9080.M9S.783AEC8-V11-C11 removed
 
-sd 1:0:0:0: [sdb] 209715200 512-byte logical blocks: (107 GB/100 GiB)
+This is tripped as a result of irqs being disabled during the call to
+dma_free_coherent() by release_event_pool(). At this point in the code path
+we have quiesced the adapter and it is overly paranoid to be holding the
+host lock.
 
-to clarify, your point is dev1.0 is redundant as ata1.00 exists in the
-message?
+[mkp: fixed build warning reported by sfr]
 
+Link: https://lore.kernel.org/r/1588027793-17952-1-git-send-email-tyreld@linux.ibm.com
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-In the block layer print_req_error we get:
-
-block sdb: blk_update_request: I/O error, dev sdb, sector 10000 op
-0x0:(READ) flags 0x80700 phys_seg 4 prio class 0
-
-Which seems a bit more redundant.
-
-I've been trying to be careful to not change the human readable portion
-of the message, so not to disturb all the log scraping tools that exist
-mining errors.  Maybe this is the wrong approach?  In my original patch
-series I brought back printk_emit so that I could add the structured
-data without introducing changes in the message text output.  James
-Bottomley suggested using dev_printk which certainly made things
-cleaner, but it does add the prefix.
-
-
-Thanks,
-Tony
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 7f66a77832099..59f0f1030c54a 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -2320,16 +2320,12 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ static int ibmvscsi_remove(struct vio_dev *vdev)
+ {
+ 	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
+-	unsigned long flags;
+ 
+ 	srp_remove_host(hostdata->host);
+ 	scsi_remove_host(hostdata->host);
+ 
+ 	purge_requests(hostdata, DID_ERROR);
+-
+-	spin_lock_irqsave(hostdata->host->host_lock, flags);
+ 	release_event_pool(&hostdata->pool, hostdata);
+-	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 
+ 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
+ 					max_events);
+-- 
+2.20.1
 
