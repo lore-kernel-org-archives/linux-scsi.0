@@ -2,79 +2,71 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F01E9C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:10:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E34AC433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:12:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3AE620709
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:10:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AC42206D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:12:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589433056;
-	bh=+7Nv0uff65CHEgSOICQgU3aX0Fv+NjHfAe+0Cmtlgvw=;
+	s=default; t=1589433129;
+	bh=cdFrV7nh7pJqlqa0/pkPvBaYElxzoq3V+cr3ke1Ix5g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=YMr1EP1fx52XFpWUENcpxSVlComFq7zRSCCMQAIEUVFDFrgYzZBQl3xlXMCx8MUs4
-	 r8ROrBFsaFstNyvYVH2COi8mf7C8MKF1t2e+U8P+1d778HIE6lkpxXiobxERSvSx/m
-	 1k1hnBlgVQxCaGc1sJReSooKQv97jPQNBgavjBLc=
+	b=hCptW7o1bPV4TJeLK0WoRxptJVHzRhy0mX/0HDyecsi5W9/m3MIOo2EPKM6U7h+94
+	 xAdypyQwcyJl/IAjdV28Strvlqv1E7glCksv92RPJ7epIHOP8yG7/oeLQdwF0zScCP
+	 XUdgzlUWKVjNQ4RCaIxLjshsLTL1G0XEr3qYwuXM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725876AbgENFK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 01:10:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49250 "EHLO mail.kernel.org"
+        id S1725876AbgENFMH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 01:12:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49530 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725788AbgENFKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 May 2020 01:10:55 -0400
+        id S1725788AbgENFMH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 May 2020 01:12:07 -0400
 Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36449206D4;
-        Thu, 14 May 2020 05:10:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D5DFF206D4;
+        Thu, 14 May 2020 05:12:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589433055;
-        bh=+7Nv0uff65CHEgSOICQgU3aX0Fv+NjHfAe+0Cmtlgvw=;
+        s=default; t=1589433127;
+        bh=cdFrV7nh7pJqlqa0/pkPvBaYElxzoq3V+cr3ke1Ix5g=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vwp8gJPPTHeKccZV7k1yrahp5FPT66Y2DslfqT+lmRhxMP08GBwTz6gcKkzO/spv5
-         dhRVa4d1xmYyCiUYotjlwDl+6Yx1Cl63diCalWTluZtVzGJY6PAaIGGs0O5HxHccw8
-         N7KmznuBnLJh5eiG0UuJOhCVU3xxHn0DpMuEAsGQ=
-Date:   Wed, 13 May 2020 22:10:53 -0700
+        b=k2VsDoJve1gy0nqVqVKZHvP2YadsKWdsfOk2d6wWgvoInglUMeVyOX0D6k15HOULg
+         hcQOk+F1+efu8V0RnZHR/Nwlcpp1qBS8gbxG5coCW4XjhFQ315KR+Vl4v6XHWurap+
+         yjR+HEitPXERvDZN0i8LtInW04GRKwswvZBdqjes=
+Date:   Wed, 13 May 2020 22:12:05 -0700
 From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>, Jens Axboe <axboe@kernel.dk>
+To:     Satya Tangirala <satyat@google.com>
 Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
         Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
         Kuohong Wang <kuohong.wang@mediatek.com>,
         Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v13 00/12] Inline Encryption Support
-Message-ID: <20200514051053.GA14829@sol.localdomain>
+Subject: Re: [PATCH v13 08/12] scsi: ufs: Add inline encryption support to UFS
+Message-ID: <20200514051205.GB14829@sol.localdomain>
 References: <20200514003727.69001-1-satyat@google.com>
+ <20200514003727.69001-9-satyat@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200514003727.69001-1-satyat@google.com>
+In-Reply-To: <20200514003727.69001-9-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 14, 2020 at 12:37:15AM +0000, Satya Tangirala wrote:
-> This patch series adds support for Inline Encryption to the block layer,
-> UFS, fscrypt, f2fs and ext4. It has been rebased onto linux-block/for-next.
+On Thu, May 14, 2020 at 12:37:23AM +0000, Satya Tangirala wrote:
+> Wire up ufshcd.c with the UFS Crypto API, the block layer inline
+> encryption additions and the keyslot manager.
 > 
-> Note that the patches in this series for the block layer (i.e. patches 1,
-> 2, 3, 4 and 5) can be applied independently of the subsequent patches in
-> this series.
+> Signed-off-by: Satya Tangirala <satyat@google.com>
 
-Thanks, the (small) changes from v12 look good.  As usual, I made this available
-in git at:
+Looks good, you can add:
 
-        Repo: https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git
-        Tag: inline-encryption-v13
-
-Jens, do you have any feedback on this patchset?  Is there any chance at taking
-the block layer part (patches 1-5) for 5.8?  That part needs to go upstream
-first, since patches 6-12 depend on them.  Then patches 6-12 can go upstream via
-the SCSI and fscrypt trees in the following release.
+    Reviewed-by: Eric Biggers <ebiggers@google.com>
 
 - Eric
