@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB05C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84E9C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A2E1206D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97ADB20643
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:08:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589483254;
-	bh=zIZJBvqQV5EzAwQlt823kY5ulNaTAeV6ljSNeDxKaQo=;
+	s=default; t=1589483294;
+	bh=f+Y1eVMDuHdZJkZjF68rRNrU4JYJgguRQOgTKK9NJ3M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=g91SovyFZFFi1YnFvUOhh7lPtvv5qHp51n8CFC4069/E32o4xvk8Ol9/8uwRGx+vS
-	 leEmNL4Y8gkpjb4JB/SAg876KAKXSzpepIzSDD5bdtMB9WvGvhbeHU8tvDpj5ITdby
-	 SRv0+tO2yAUpef4tD477brKUhdH/3TYKaTYS0vec=
+	b=TP6la6vst3O4XiDjUQFnHq3AGUFd4hKzqB2Bp9OQAsvsXvok2lOktsaDBHUwgiCAk
+	 tWybrzovDLGc+ZVSZVZFIA4vKk1zzVrP7/s55awV3MwqKMMyqAvSEbnz9JXNvXqvk6
+	 0l7OtDTe7QoWxRmlyrRuMXm+U1XSBDIxS1eOIcBw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729001AbgENTH3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 15:07:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52924 "EHLO mail.kernel.org"
+        id S1728683AbgENSx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 14:53:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52552 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728741AbgENSxe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 May 2020 14:53:34 -0400
+        id S1728669AbgENSxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 May 2020 14:53:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EFBF2207DA;
-        Thu, 14 May 2020 18:53:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7F1F12065F;
+        Thu, 14 May 2020 18:53:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589482413;
-        bh=zIZJBvqQV5EzAwQlt823kY5ulNaTAeV6ljSNeDxKaQo=;
+        s=default; t=1589482404;
+        bh=f+Y1eVMDuHdZJkZjF68rRNrU4JYJgguRQOgTKK9NJ3M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZdYcPYV+LyXm5STljRZr/hjgDEqX2t/TthLzPANR4ZL4Nf01pn17osNJfpYM7CkA7
-         DiwHFz/6i8N7/BYsEDRVv8oKkS2I6GzYXy5vsa/fZgAqTJhFkawjulCprbaDtdvC4I
-         pDgCpIMPMpSX1lz9LvBxjOSDdTdZXQ3U9ldS7AAQ=
+        b=P7x/lERGM+2S1NNOwRSQb0JgRfAWulSPMJH5XXcjmd834T4aP3R/Dm+AuHjUo35Ys
+         LewJJphJzVLR7xjSOH4yABrYtPxSn7gAEcXPl8ZLpgKRh9GduobPSCTijrgafM66jh
+         6RJDlmteXec/vUrXKKQjGhAI5pdq6WPsb6RHiG/4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 5.4 18/49] scsi: ibmvscsi: Fix WARN_ON during event pool release
-Date:   Thu, 14 May 2020 14:52:39 -0400
-Message-Id: <20200514185311.20294-18-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 10/49] scsi: qla2xxx: Delete all sessions before unregister local nvme port
+Date:   Thu, 14 May 2020 14:52:31 -0400
+Message-Id: <20200514185311.20294-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200514185311.20294-1-sashal@kernel.org>
 References: <20200514185311.20294-1-sashal@kernel.org>
@@ -59,92 +60,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit b36522150e5b85045f868768d46fbaaa034174b2 ]
+[ Upstream commit c48f849d3f7a4ec1025105f446e29d395c4dcc2f ]
 
-While removing an ibmvscsi client adapter a WARN_ON like the following is
-seen in the kernel log:
+Delete all sessions before unregistering local nvme port.  This allows nvme
+layer to decrement all active rport count down to zero.  Once the count is
+down to zero, nvme would call qla to continue with the npiv port deletion.
 
-drmgr: drmgr: -r -c slot -s U9080.M9S.783AEC8-V11-C11 -w 5 -d 1
-WARNING: CPU: 9 PID: 24062 at ../kernel/dma/mapping.c:311 dma_free_attrs+0x78/0x110
-Supported: No, Unreleased kernel
-CPU: 9 PID: 24062 Comm: drmgr Kdump: loaded Tainted: G               X 5.3.18-12-default
-NIP:  c0000000001fa758 LR: c0000000001fa744 CTR: c0000000001fa6e0
-REGS: c0000002173375d0 TRAP: 0700   Tainted: G               X (5.3.18-12-default)
-MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28088282  XER: 20000000
-CFAR: c0000000001fbf0c IRQMASK: 1
-GPR00: c0000000001fa744 c000000217337860 c00000000161ab00 0000000000000000
-GPR04: 0000000000000000 c000011e12250000 0000000018010000 0000000000000000
-GPR08: 0000000000000000 0000000000000001 0000000000000001 c0080000190f4fa8
-GPR12: c0000000001fa6e0 c000000007fc2a00 0000000000000000 0000000000000000
-GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-GPR20: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-GPR24: 000000011420e310 0000000000000000 0000000000000000 0000000018010000
-GPR28: c00000000159de50 c000011e12250000 0000000000006600 c000011e5c994848
-NIP [c0000000001fa758] dma_free_attrs+0x78/0x110
-LR [c0000000001fa744] dma_free_attrs+0x64/0x110
-Call Trace:
-[c000000217337860] [000000011420e310] 0x11420e310 (unreliable)
-[c0000002173378b0] [c0080000190f0280] release_event_pool+0xd8/0x120 [ibmvscsi]
-[c000000217337930] [c0080000190f3f74] ibmvscsi_remove+0x6c/0x160 [ibmvscsi]
-[c000000217337960] [c0000000000f3cac] vio_bus_remove+0x5c/0x100
-[c0000002173379a0] [c00000000087a0a4] device_release_driver_internal+0x154/0x280
-[c0000002173379e0] [c0000000008777cc] bus_remove_device+0x11c/0x220
-[c000000217337a60] [c000000000870fc4] device_del+0x1c4/0x470
-[c000000217337b10] [c0000000008712a0] device_unregister+0x30/0xa0
-[c000000217337b80] [c0000000000f39ec] vio_unregister_device+0x2c/0x60
-[c000000217337bb0] [c00800001a1d0964] dlpar_remove_slot+0x14c/0x250 [rpadlpar_io]
-[c000000217337c50] [c00800001a1d0bcc] remove_slot_store+0xa4/0x110 [rpadlpar_io]
-[c000000217337cd0] [c000000000c091a0] kobj_attr_store+0x30/0x50
-[c000000217337cf0] [c00000000057c934] sysfs_kf_write+0x64/0x90
-[c000000217337d10] [c00000000057be10] kernfs_fop_write+0x1b0/0x290
-[c000000217337d60] [c000000000488c4c] __vfs_write+0x3c/0x70
-[c000000217337d80] [c00000000048c648] vfs_write+0xd8/0x260
-[c000000217337dd0] [c00000000048ca8c] ksys_write+0xdc/0x130
-[c000000217337e20] [c00000000000b488] system_call+0x5c/0x70
-Instruction dump:
-7c840074 f8010010 f821ffb1 20840040 eb830218 7c8407b4 48002019 60000000
-2fa30000 409e003c 892d0988 792907e0 <0b090000> 2fbd0000 419e0028 2fbc0000
----[ end trace 5955b3c0cc079942 ]---
-rpadlpar_io: slot U9080.M9S.783AEC8-V11-C11 removed
+PID: 27448  TASK: ffff9e34b777c1c0  CPU: 0   COMMAND: "qaucli"
+ 0 [ffff9e25e84abbd8] __schedule at ffffffff977858ca
+ 1 [ffff9e25e84abc68] schedule at ffffffff97785d79
+ 2 [ffff9e25e84abc78] schedule_timeout at ffffffff97783881
+ 3 [ffff9e25e84abd28] wait_for_completion at ffffffff9778612d
+ 4 [ffff9e25e84abd88] qla_nvme_delete at ffffffffc0e3024e [qla2xxx]
+ 5 [ffff9e25e84abda8] qla24xx_vport_delete at ffffffffc0e024b9 [qla2xxx]
+ 6 [ffff9e25e84abdf0] fc_vport_terminate at ffffffffc011c247 [scsi_transport_fc]
+ 7 [ffff9e25e84abe28] store_fc_host_vport_delete at ffffffffc011cd94 [scsi_transport_fc]
+ 8 [ffff9e25e84abe70] dev_attr_store at ffffffff974b376b
+ 9 [ffff9e25e84abe80] sysfs_kf_write at ffffffff972d9a92
+10 [ffff9e25e84abe90] kernfs_fop_write at ffffffff972d907b
+11 [ffff9e25e84abec8] vfs_write at ffffffff9724c790
+12 [ffff9e25e84abf08] sys_write at ffffffff9724d55f
+13 [ffff9e25e84abf50] system_call_fastpath at ffffffff97792ed2
+    RIP: 00007fc0bd81a6fd  RSP: 00007ffff78d9648  RFLAGS: 00010202
+    RAX: 0000000000000001  RBX: 0000000000000022  RCX: 00007ffff78d96e0
+    RDX: 0000000000000022  RSI: 00007ffff78d94e0  RDI: 0000000000000008
+    RBP: 00007ffff78d9440   R8: 0000000000000000   R9: 00007fc0bd48b2cd
+    R10: 0000000000000017  R11: 0000000000000293  R12: 0000000000000000
+    R13: 00005624e4dac840  R14: 00005624e4da9a10  R15: 0000000000000000
+    ORIG_RAX: 0000000000000001  CS: 0033  SS: 002b
 
-This is tripped as a result of irqs being disabled during the call to
-dma_free_coherent() by release_event_pool(). At this point in the code path
-we have quiesced the adapter and it is overly paranoid to be holding the
-host lock.
-
-[mkp: fixed build warning reported by sfr]
-
-Link: https://lore.kernel.org/r/1588027793-17952-1-git-send-email-tyreld@linux.ibm.com
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Link: https://lore.kernel.org/r/20200331104015.24868-4-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 7f66a77832099..59f0f1030c54a 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -2320,16 +2320,12 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
- static int ibmvscsi_remove(struct vio_dev *vdev)
- {
- 	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
--	unsigned long flags;
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 1fbc5c6c6c142..3aa3436332505 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2926,11 +2926,11 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 	    test_bit(FCPORT_UPDATE_NEEDED, &vha->dpc_flags))
+ 		msleep(1000);
  
- 	srp_remove_host(hostdata->host);
- 	scsi_remove_host(hostdata->host);
+-	qla_nvme_delete(vha);
  
- 	purge_requests(hostdata, DID_ERROR);
--
--	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	release_event_pool(&hostdata->pool, hostdata);
--	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+ 	qla24xx_disable_vp(vha);
+ 	qla2x00_wait_for_sess_deletion(vha);
  
- 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
- 					max_events);
++	qla_nvme_delete(vha);
+ 	vha->flags.delete_progress = 1;
+ 
+ 	qlt_remove_target(ha, vha);
 -- 
 2.20.1
 
