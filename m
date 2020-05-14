@@ -2,94 +2,93 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F6D7C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:53:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0132C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 08:19:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CC9A206C0
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:53:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0D242065D
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 08:19:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fXnMnOxX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725943AbgENFxM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 01:53:12 -0400
-Received: from mx2.suse.de ([195.135.220.15]:54036 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725794AbgENFxM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 May 2020 01:53:12 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id AE6C4AD72;
-        Thu, 14 May 2020 05:53:13 +0000 (UTC)
-Subject: Re: [RFC PATCH v2 5/7] ata_dev_printk: Use dev_printk
-To:     Tony Asleson <tasleson@redhat.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20200513213621.470411-1-tasleson@redhat.com>
- <20200513213621.470411-6-tasleson@redhat.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <82257837-c5a8-6a38-ce13-0f1ce7e245ac@suse.de>
-Date:   Thu, 14 May 2020 07:53:08 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        id S1726059AbgENIT4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 04:19:56 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:22158 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725886AbgENITz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 May 2020 04:19:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1589444395; x=1620980395;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=FPz9BqtoLVDe3Qvnd6i5kB1gkUZszsYxGzyxcvWye3A=;
+  b=fXnMnOxXZFv50cJHSoGkSBpml55+seCIUwo0c6AEMYzNql0M7oiz9ss1
+   /hHPyDHMw6dFVom7SLT8pl7DTUjdW59ID0412Vkwl/I0ZCugD3iFD0xMj
+   RU9X/zYd/pE48BGWQ9e1G+fEEGDd2neMLZQ3rwSk77ocVqqnXpEVpbW7g
+   sHtVnBm24lG2aoGuULkrEmZ8wNDNQZu3JTqkTrkINE0yRuMuE9rh0JikR
+   ZbW3F/DLQWWO31Oz0liiTfeC5zZq9lbvhh/Do9EmSjJ4zyv2cSOl8Bdi0
+   r1tRFIkgC0dW52AM5/DBzbr6+eAE5/XqR6YxUzlrRC/cLag7JiIFWXWVK
+   A==;
+IronPort-SDR: oh+q4nxHXByMB0hSQ3HG8ISkOESSx+26Fdq6xjFAcf8LkW2RUdjFBFbG/VC8VTXCfaGEaf38YP
+ zKrpgAn2L5PqnYnvR+xBVQJvFRjMuFC+bV9mPSJoq2q4TPdFEkhHZUNqyL6Q3vxeZONqvvZ2IS
+ jXFxnPPx/WXvGSMYtZge4ZQLZ/2oOHGRg5/7zshV7xpMRk4SGx0lzqKbA02P8EcP9D5NJOKtfK
+ VQn2/DstP3weryraKrtlDERiIDHzRKhjHLZrNLnIA5M4U9LdGWMpjIGatE0kle8i2Ro7RAZKXI
+ Z64=
+X-IronPort-AV: E=Sophos;i="5.73,390,1583164800"; 
+   d="scan'208";a="246607744"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 14 May 2020 16:19:54 +0800
+IronPort-SDR: MVdUtHrNzQs2Gjm02bTqV5HhIn5cW0JtzdTHQRn01fCluwoCvLMEE1z9zRkWx2YEzXkeyzzJhZ
+ mvXvZ4DBq66XhiAhN64AFXnLRbYMfVqJg=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2020 01:10:07 -0700
+IronPort-SDR: GY/JVi/Mtfqn8YRxkR36GuBWrQGLil4wlNF3zXrvSwf62CZ7DJYVpGIcYfRZ9FYB8SlWWbMvnE
+ /bn7t4+v4TOg==
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 14 May 2020 01:19:54 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] sd: Signal drive managed SMR disks
+Date:   Thu, 14 May 2020 17:19:53 +0900
+Message-Id: <20200514081953.1252087-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-In-Reply-To: <20200513213621.470411-6-tasleson@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/13/20 11:36 PM, Tony Asleson wrote:
-> Utilize the dev_printk function which will add structured data
-> to the log message.
-> 
-> Signed-off-by: Tony Asleson <tasleson@redhat.com>
-> ---
->   drivers/ata/libata-core.c | 10 +++++++---
->   1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 42c8728f6117..16978d615a17 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -7301,6 +7301,7 @@ EXPORT_SYMBOL(ata_link_printk);
->   void ata_dev_printk(const struct ata_device *dev, const char *level,
->   		    const char *fmt, ...)
->   {
-> +	const struct device *gendev;
->   	struct va_format vaf;
->   	va_list args;
->   
-> @@ -7309,9 +7310,12 @@ void ata_dev_printk(const struct ata_device *dev, const char *level,
->   	vaf.fmt = fmt;
->   	vaf.va = &args;
->   
-> -	printk("%sata%u.%02u: %pV",
-> -	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
-> -	       &vaf);
-> +	gendev = (dev->sdev) ? &dev->sdev->sdev_gendev : &dev->tdev;
-> +
-> +	dev_printk(level, gendev, "ata%u.%02u: %pV",
-> +			dev->link->ap->print_id,
-> +			dev->link->pmp + dev->devno,
-> +			&vaf);
->   
->   	va_end(args);
->   }
-> 
-That is wrong.
-dev_printk() will already prefix the logging message with the device 
-name, so we'll end up having the name printed twice.
+Print a message indicating that a disk is a drive-managed SMR model when
+such drive is found using the ZONED filed of the Block Device
+Characteristics VPD page (IDENTIFY data on ATA side).
 
-Cheers,
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/sd.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Hannes
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a793cb08d025..8929e178c6f8 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2955,6 +2955,9 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 			 * with partitions as regular block devices.
+ 			 */
+ 			q->limits.zoned = BLK_ZONED_NONE;
++			if (sdkp->zoned == 2 && sdkp->first_scan)
++				sd_printk(KERN_NOTICE, sdkp,
++					  "Drive-managed SMR disk\n");
+ 		}
+ 	}
+ 	if (blk_queue_is_zoned(q) && sdkp->first_scan)
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.25.4
+
