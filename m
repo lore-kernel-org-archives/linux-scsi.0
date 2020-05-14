@@ -1,301 +1,371 @@
-Return-Path: <SRS0=+pcl=63=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E36CC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:59:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15381C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 00:37:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A496620693
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 May 2020 23:59:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DC8720659
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 00:37:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZAIRPf+o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732859AbgEMX7s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 19:59:48 -0400
-Received: from m4a0073g.houston.softwaregrp.com ([15.124.2.131]:38765 "EHLO
-        m4a0073g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732456AbgEMX7r (ORCPT
+        id S1733040AbgENAhg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 20:37:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730289AbgENAhf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 May 2020 19:59:47 -0400
-Received: FROM m4a0073g.houston.softwaregrp.com (15.120.17.146) BY m4a0073g.houston.softwaregrp.com WITH ESMTP;
- Wed, 13 May 2020 23:57:26 +0000
-Received: from M4W0334.microfocus.com (2002:f78:1192::f78:1192) by
- M4W0334.microfocus.com (2002:f78:1192::f78:1192) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10; Wed, 13 May 2020 23:59:24 +0000
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (15.124.8.14) by
- M4W0334.microfocus.com (15.120.17.146) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.1591.10 via Frontend Transport; Wed, 13 May 2020 23:59:24 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y32xDYyjJGsNVQb9yoIdExS1DUTU/v9B9ID/AEX27mvXrNb+5+zO1jf6r+HEF1FlokES8utELWCZMxTQlqn8iLu7FD8iE7KQbKimSSrovc78g1gy37U3YhkYepAn99GHnIY8eqUYbEhZBoQmQnoQvRyg2c9MEkbfLxltiCEf0JGOn8fNFx19y6eL8mXdiCf+UrkTQhgXbS5RoDq61kU8GG9P0rG9komDWuMEXDf3xtKhSvyShJFhiIz7OYPR8BtqB9BJalV7ooTnMMquDR4r1OetTastow96L+2kyGfECl7mFEIJM6/7/jIHhKnwmbKqexoquys1YwEwOLvqHY3yWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=d/WaQycaPJ1xYGpiACUIH8jQ8fqZ0xlXfxp29SCNp9I=;
- b=XWY0WkK2U4xnpUnmQsPeLaZkftofmhqfTml472jtpW4XvNbSLEZ9VvWaOOspTXz7dELrePCOirPRmDzLaU3mqqw22YKKfXZkLCUbtqY6Y0wCVU/noLeE2mW+hAiFZHjeSAYMX1NgHeQAGCsKw1Lp39Re/v3svl6mH5AHkAkeR+g7Qw3n07yEOHzUxnZJo+yARGK+wzxucJZzXdprruwXB67FsRwoXUpZI6COgmHtYfwoAUpmMXUvFQXujmaXWnmPZhUuvH08QxIxo/ZJZD/VUYV7oTJQpWXa35bSliSV8kMkUBCYe1gxhsG0hSD/6nzGg5Nves+6JEZF6p3Nia/gbg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from BL0PR18MB2290.namprd18.prod.outlook.com (2603:10b6:207:48::11)
- by BL0PR18MB2321.namprd18.prod.outlook.com (2603:10b6:207:48::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.30; Wed, 13 May
- 2020 23:59:23 +0000
-Received: from BL0PR18MB2290.namprd18.prod.outlook.com
- ([fe80::9ddc:db5b:9a5a:6b3d]) by BL0PR18MB2290.namprd18.prod.outlook.com
- ([fe80::9ddc:db5b:9a5a:6b3d%7]) with mapi id 15.20.2979.033; Wed, 13 May 2020
- 23:59:23 +0000
-Subject: Re: [PATCH 04/15] tcm loop: use target_parse_emulated_name
-To:     Mike Christie <mchristi@redhat.com>, <bvanassche@acm.org>,
-        <bstroesser@ts.fujitsu.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>
-References: <20200510215744.21999-1-mchristi@redhat.com>
- <20200510215744.21999-5-mchristi@redhat.com>
-From:   Lee Duncan <lduncan@suse.com>
-Autocrypt: addr=lduncan@suse.com; keydata=
- xsFNBE6ockoBEADMQ+ZJI8khyuc2jMfgf4RmARpBkZrcHSs1xTKVVBUbpFooDEVi49D/bz0G
- XngCDUzLt1g7QwHkMl5hDe6h6zPcACkUf0vy3AkpbidveIbIUKhb29tnsuiAcvzmrE4Q5CcQ
- JCSFAUnBPliKauX+r0oHjJE02ifuims1nBQ9CK8sWGHqkkwH2vUW2GSX2Q8zGMemwEJdhclS
- 3VOYZa+Cdm+hRxUxcEo4QigWM1IlgUqjhQp6ZXTYuNECHZTrL9NUbslW5Rbmc3m0ABrJcaAo
- LgG13TnT6HCreN/PO8VbSFdFU+3MX1GqZUHfPBA4UvGvcI8QgdYyCtyYF9PQ02Lr0kK0FwBD
- cm416qSMCsk0kaFPeL99Afg8ElXsA9bGW6ImJQap/L1uoWZTNL5q9KKO5As9rq6RHGlb2FFz
- 9IPggMhBYsSVZNmLsvgGXvZToUCW58IMELG/X5ssI8Kr65KxKVNOT5gXGmTyV3sqomsRVVHm
- wA3RBwjnx7tM7QsV+7UboF3MOcMjBOCIDiw95dBVSM6+leThXC5dc4/17Idw912mnlo1CsxO
- uQSJddzWeD0A2hbL8EcRQN/z9YD0IwEgeNa2t1nQ6nGjbDZ5TiG6Mqxk+rdYJ5StA+b/TExl
- nZ29y2s6etx9wbTUBSA1aFiEPDN5U77CrjiM0H4y7eKldLezPwARAQABzSRMZWUgRHVuY2Fu
- IDxsZWVtYW4uZHVuY2FuQGdtYWlsLmNvbT7CwYEEEwECACsCGy8FCRLP94AGCwkIBwMCBhUI
- AgkKCwQWAgMBAh4BAheABQJOqHy+AhkBAAoJEMU8XTeNhnafp4YQAMgE1owepFfSgebbT3fj
- 0/S83KvYloj2Fv/OiQKgjnEamy7k2n3XBl0+XYHe/0ZlKAYN8oCnlpr+PTh5iT79rq99CkZa
- 1OENVypbnVGjeZQpNivmXtkKYATwVhqyWsWItJyQ7fqciDkPlCekjURhEMRliE8OcrpvXOxq
- w1apxuL6phkQxY0fQGSQzz9sXZcMIx4ZhotQRwGLr5FIpqIhToIlVhvkooL7NsDG0FlagV5f
- +Jr412zvk7f3rPKrLR8Bp1qTe/HLeEyhT38CWECiTM8+VAGFQ4+5HRg6F4322T8VynMX/zyp
- LUVHIymbmzyXXMj6xJsbrcN8UJsPglQ+fHmb5ojKsy+S92KgAgpnq4mmz63eCzZrKZ7B5AqB
- qMhZ0V8wjv0LzHdQbHH72ikM/IWkAvPfVYsvm08mxUdFMmwFXpjIZJeJJyxS6Glxcxt98usO
- cdrBBJE57Q77GQC69gbPJu2vmH7quAKp59PxMxqZPDMfn2nt/Qnxem3SYL3377rl3UAlZmbK
- 2kKAOY3gngHfptoYtlJJ69bnoTIOXPNfE5jPkLrt3LbOQyfvrSKSTUOet26fWD9cME/tXtvC
- 48hsyheShX3obqBVZO6UnW5J+f6DVLuHv1huDUEwQMvHyejpomfnOFpGX8LkaS26Btvm94h2
- szYB8xYSw5VfH3DKzsFNBE6ockoBEADAo38n1dd3etQL/i07qPVoqGSWmaMZqS6DSFAPfqLe
- RVRTQZRBltdHNlV4BcDhRHDQJCuhuKqhTe8TkM2wpFFOVyNYkXm4V5mEmUtQ8PDa76FfY2nn
- 6cV4DIN/oCqt0SnWbi18LLd9x7knApsD+y1MnVYmQxw1x91GvHFJD4L4NwHNZJUO4YkIwhl/
- AMcDP0WYJRwR8vt657gEtfkZnD9N3Vb+gLk820VGMPpbDNqedqPxNEjMyNSn2AwBTJ5bxvCM
- +6eJA/F6/hIyvoAmb8oAXBpW6+GZQEi3D2xOmzQmgoMstLuxIzeK0gBg4lFg0dMsX6fq+CxW
- QtKR46HFs3R6xtLZkYOg0ZNlnSlJUOE0BiRgEOP0hJhSYFqnHuXvIxnTAr8gh0883KMI64nA
- sCOcUaO/SeRkGRvzg+Oh0Nnr2DG/U3TMygDlkr/MXZQDGi3H3760/HD3ipQjs28nLHtiqJNr
- 5wwJwMv1iWcw9tuzNLt/5mmI5+veDJRObGCqQM43A2FMUx+zVZfVLVyVihnQ08eGdVTAsuSl
- FzyPaaIQUaPn224wRtnbDTTWg9HTR3R6Qxi0ayWeTVZV3va2lCXWrUecJpzvUFLyH3ViM2Iw
- LboM03qutGcjINkb4KuqqW6EHm3MkOC69TWgIFa4W2rpy1FPkDvXNf9nlqcgoNo0fQARAQAB
- wsOEBBgBAgAPBQJOqHJKAhsuBQkSz/eAAikJEMU8XTeNhnafwV0gBBkBAgAGBQJOqHJKAAoJ
- EF8LJ744L6KVhr4QAKGjq1s8WBup2uWOevIcncyAaKYaGX3gQj4Qf+lfklvPpnwUfPMbcYMU
- DhTo4H1lw1dDSBic65OsqMjz2pxJ+AYtLxrONKKCUQRyfO1mwB4etIv7ZF+E5HsclwqM/GWt
- Y9QijHgRbDiUK1h3Y2sQGc/MKg8m7EImZOGEEMQQj1tJ5r3ksH2e6KwO+K9y/uf+qLHd6lSb
- G2+niSSUhcA46PdW2tzx40dZp6d2aEl53f2jwsQbrog1BsGuxOA9+26xhF4p0Ag/hfOX9/n/
- mMzw+bXSFB/gJE0zQ83jksuHFCSJDHEsPzmKi4hVRKuEcEAryjGXH4bqoDkz/p3DRdIfnuKi
- Li/iwSsK76UgGekw6tjjP8ggz6UC8UVhdMv9q4hcewv5/omdnuHj/G6uSGlVcAi+5VJ88yEH
- 5Am1IYbjSbqzSDQazEK3oAE6qXwzQXjq1iuqR9Xa6eXtcog+CHFSKU3aEuL+f8oUUzpEU+Xq
- ZSPuHpFgYHsNTkxUA8fuP6Tr53kqHD9PEqLb8+M1MlJBjiD+JSHIN5+C6LpZIZ0Zbp7qInu8
- Pu1eALxri4VgevZKQOQXTJUsNFWh4EYdsfNgcCbQoP8gFFns9YmQ0vXHnJG/dPjzBPAUfKZg
- PtVofEMK1B4J9gAm1fO3hqRxrtSkUZgopZpjHtC7ZuYSkwmEUoMjxpwP/j2ql5J6t06uIhUz
- OgHAEJ9+4ppeAPNQAUsRVrPk3m1PaV1xs7nx/D4yXbq+S0/iMA+g1k0Ovh3TSvdQfK/74Rp0
- 48Tr+0Tm2uAESaN4+7WK0v8rONVPuqpSKf92o5KmFtlT+Yyz9ZRu52GE7BzkktMEnGp1sLBM
- zbwflhj/ZtMPOdQxmpBZS5h34alcBiYK3wVVZpzRNLhke3z8ZAn0e2xG8fOX56LiL7o1w8wF
- SA7PMuuhklq3NY/xTwBOpT8YiQU6VlELQQTR06unnHa6we3JcsNlTH2//7mZ0QVp9nPW6MEw
- FUvbjJliGQbs4e8z6vL8M7bgl1kgcTViSW4jL41CXnGlLSUm8pqvbQ95/gJhgs6PVBwH5FF8
- JGCvUKOeAFsICUPEFizy4BgQpPPYE++I07VqZ87/gaeN9EeFgZASolQwcZNRAWplDD4jIpj8
- u7wo+4j22HyVXuoQTg8+p5TVMV1Y0b2X4tJm98ways9e5LTQLXM6dcoGKeVF3Pt53RVBiv2n
- 7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh9eFp
- v8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPaXd8p
- +B+giaT8a1b5hWuz85V0zsFNBE6ockoBEADAo38n1dd3etQL/i07qPVoqGSWmaMZqS6DSFAP
- fqLeRVRTQZRBltdHNlV4BcDhRHDQJCuhuKqhTe8TkM2wpFFOVyNYkXm4V5mEmUtQ8PDa76Ff
- Y2nn6cV4DIN/oCqt0SnWbi18LLd9x7knApsD+y1MnVYmQxw1x91GvHFJD4L4NwHNZJUO4YkI
- whl/AMcDP0WYJRwR8vt657gEtfkZnD9N3Vb+gLk820VGMPpbDNqedqPxNEjMyNSn2AwBTJ5b
- xvCM+6eJA/F6/hIyvoAmb8oAXBpW6+GZQEi3D2xOmzQmgoMstLuxIzeK0gBg4lFg0dMsX6fq
- +CxWQtKR46HFs3R6xtLZkYOg0ZNlnSlJUOE0BiRgEOP0hJhSYFqnHuXvIxnTAr8gh0883KMI
- 64nAsCOcUaO/SeRkGRvzg+Oh0Nnr2DG/U3TMygDlkr/MXZQDGi3H3760/HD3ipQjs28nLHti
- qJNr5wwJwMv1iWcw9tuzNLt/5mmI5+veDJRObGCqQM43A2FMUx+zVZfVLVyVihnQ08eGdVTA
- suSlFzyPaaIQUaPn224wRtnbDTTWg9HTR3R6Qxi0ayWeTVZV3va2lCXWrUecJpzvUFLyH3Vi
- M2IwLboM03qutGcjINkb4KuqqW6EHm3MkOC69TWgIFa4W2rpy1FPkDvXNf9nlqcgoNo0fQAR
- AQABwsOEBBgBAgAPBQJOqHJKAhsuBQkSz/eAAikJEMU8XTeNhnafwV0gBBkBAgAGBQJOqHJK
- AAoJEF8LJ744L6KVhr4QAKGjq1s8WBup2uWOevIcncyAaKYaGX3gQj4Qf+lfklvPpnwUfPMb
- cYMUDhTo4H1lw1dDSBic65OsqMjz2pxJ+AYtLxrONKKCUQRyfO1mwB4etIv7ZF+E5HsclwqM
- /GWtY9QijHgRbDiUK1h3Y2sQGc/MKg8m7EImZOGEEMQQj1tJ5r3ksH2e6KwO+K9y/uf+qLHd
- 6lSbG2+niSSUhcA46PdW2tzx40dZp6d2aEl53f2jwsQbrog1BsGuxOA9+26xhF4p0Ag/hfOX
- 9/n/mMzw+bXSFB/gJE0zQ83jksuHFCSJDHEsPzmKi4hVRKuEcEAryjGXH4bqoDkz/p3DRdIf
- nuKiLi/iwSsK76UgGekw6tjjP8ggz6UC8UVhdMv9q4hcewv5/omdnuHj/G6uSGlVcAi+5VJ8
- 8yEH5Am1IYbjSbqzSDQazEK3oAE6qXwzQXjq1iuqR9Xa6eXtcog+CHFSKU3aEuL+f8oUUzpE
- U+XqZSPuHpFgYHsNTkxUA8fuP6Tr53kqHD9PEqLb8+M1MlJBjiD+JSHIN5+C6LpZIZ0Zbp7q
- Inu8Pu1eALxri4VgevZKQOQXTJUsNFWh4EYdsfNgcCbQoP8gFFns9YmQ0vXHnJG/dPjzBPAU
- fKZgPtVofEMK1B4J9gAm1fO3hqRxrtSkUZgopZpjHtC7ZuYSkwmEUoMjxpwP/j2ql5J6t06u
- IhUzOgHAEJ9+4ppeAPNQAUsRVrPk3m1PaV1xs7nx/D4yXbq+S0/iMA+g1k0Ovh3TSvdQfK/7
- 4Rp048Tr+0Tm2uAESaN4+7WK0v8rONVPuqpSKf92o5KmFtlT+Yyz9ZRu52GE7BzkktMEnGp1
- sLBMzbwflhj/ZtMPOdQxmpBZS5h34alcBiYK3wVVZpzRNLhke3z8ZAn0e2xG8fOX56LiL7o1
- w8wFSA7PMuuhklq3NY/xTwBOpT8YiQU6VlELQQTR06unnHa6we3JcsNlTH2//7mZ0QVp9nPW
- 6MEwFUvbjJliGQbs4e8z6vL8M7bgl1kgcTViSW4jL41CXnGlLSUm8pqvbQ95/gJhgs6PVBwH
- 5FF8JGCvUKOeAFsICUPEFizy4BgQpPPYE++I07VqZ87/gaeN9EeFgZASolQwcZNRAWplDD4j
- Ipj8u7wo+4j22HyVXuoQTg8+p5TVMV1Y0b2X4tJm98ways9e5LTQLXM6dcoGKeVF3Pt53RVB
- iv2n7WpDcR/bT0ADCwtg8piRWMtA8Boc8w5WG06vphxLlDIe/hDMkNlgCUy84gLiRI76VaBh
- 9eFpv8Bn4aZBVOiuzj4s2DSAp4G3loUsTuj4uxGgDlfhK1xdJhBvKdO8omG+A73DZ7aKxLPa
- Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <2cb2e526-0ba6-f6ce-ede9-949f2ef6a49b@suse.com>
-Date:   Wed, 13 May 2020 16:59:20 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-In-Reply-To: <20200510215744.21999-5-mchristi@redhat.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SN6PR04CA0105.namprd04.prod.outlook.com
- (2603:10b6:805:f2::46) To BL0PR18MB2290.namprd18.prod.outlook.com
- (2603:10b6:207:48::11)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by SN6PR04CA0105.namprd04.prod.outlook.com (2603:10b6:805:f2::46) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.20 via Frontend Transport; Wed, 13 May 2020 23:59:22 +0000
-X-Originating-IP: [73.25.22.216]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0cef06d0-f9ee-480a-118c-08d7f799a8e7
-X-MS-TrafficTypeDiagnostic: BL0PR18MB2321:
-X-Microsoft-Antispam-PRVS: <BL0PR18MB2321E5BE17CBACCF805CCC9DDABF0@BL0PR18MB2321.namprd18.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:234;
-X-Forefront-PRVS: 0402872DA1
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: J5r6Nl+ZDkc1jCRSyLr1H0swqN2sdRXnBsAmtw/YPyqALBCIc11goUacTGLm/JfLEkHykVogSi1rp01nwLISS+V8A81uaTCXO+Y4ROZx1tjl1D45YfpigRkxiMwxHefy/K52lQCqc6pxG5jORWLbFkjwVpueGAcLCpyDGbOsYhNEJqeNwVZP2o5nJGjgP6U7F1f//YlEX8E+fP+6Nw93R6imQCARNrkqR/BXKsgClFN7fcuhLwBIXXrHHLP06YrVNbLKjH349EhkH4zCUOviG429IxndiBX3eFziQ0l3alBWfgDcS/bDt/+3hX491CbgXs4vsdgIDfw5JcS35QIvmO8zVKvjWlRiEuxFhRwrr5WR2/Hf17l6/WsbN15lD3VoiH5Yf38pshJ3n5A3Pk/k64PaQYz1BbW6QGeViVog4wbppUhWPR5aWd3lzprjCJx1hZa/ZZoESjUyF5m5KSKFUyJuIaTpDiovc/tPGFWfZLsF4vuJ0E3fsAmcZVRf+dFQ
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR18MB2290.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(346002)(39860400002)(136003)(376002)(366004)(316002)(26005)(31686004)(6486002)(478600001)(5660300002)(53546011)(2616005)(2906002)(16526019)(186003)(31696002)(956004)(86362001)(8936002)(66476007)(66946007)(66556008)(52116002)(8676002)(16576012)(36756003)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: wHwbh63sm8PMrAqY6030obdjmFLwafspEx+Q4OvBffYXtZiIelJuNPCmqRK38d+ud+2+XlavnBttdN9QX61dpRpqX2W1MougsKlbNdv2rEX4OXuVCn+NJn3Uh7atVV1yYCEuCVM1sgdFOloGNTiquGMMfiycScJMtN6TKrCqJZ6QMvm+lIGzwYxaJtl9x6v6Wn01SqrUjeL9bAtsP/QCoZ/7QtRw2R4yH+3HJI5hr0A7NtDyoyRCqM1bVPBziHkn1wv12b3s+NQmJVOPvpAigs59mVT7K7kM45xjkLyjaHwNDNHsgxa+WUUbAHtPZtV5GyUn1herT4ogrZBfdipTH8kAAc4WI50vte/wYZlYCSf+8Xfh4rc+gzyLPlxCeRsw6yG1m2Av2jO1LGDFgcfJlbeIYiq75vaDTijzEhm17in759OxPWTKWoDglSDbgdcPg7FKjYv98Omp2G+BDCop++aCn+uWBWfzCMnjxuoxwhI=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0cef06d0-f9ee-480a-118c-08d7f799a8e7
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2020 23:59:23.3676
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ksWRgaggB2wlgOkIRzWiYYH99gpevOG71v9G7kx3R/0kvwLBo480/u0C3SeJrWz7YxdZEqYKUzTzKThogmntXA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR18MB2321
-X-OriginatorOrg: suse.com
+        Wed, 13 May 2020 20:37:35 -0400
+Received: from mail-qk1-x74a.google.com (mail-qk1-x74a.google.com [IPv6:2607:f8b0:4864:20::74a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 783C2C061A0C
+        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2020 17:37:35 -0700 (PDT)
+Received: by mail-qk1-x74a.google.com with SMTP id p17so1496606qkp.10
+        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2020 17:37:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=Y1TvKp65tsQMJNgm9HMaRO/OTRlalkrsXwsa1JM97tc=;
+        b=ZAIRPf+oXWmjCxrysa3jnmus5IGwb5XwIiHrVByRxAvpfIiYD0ItqjkDiHZYWDO672
+         N6ekiRkc2g/Uwy6OxSuTPl/jJsC3yfHMTGqr+kXgxIM1GV4xoOast3Baq4FyVQY8wkck
+         XuUHl2oyXL+nBJJo71j5Aw3SQgmWnew7yHCKmU3YiBWlXl00JzZ7JHNUGPeMEmpLh2hL
+         k5HCo+shfd2274Q38Cxm9cTV2VSSR22B+2IDwM8W2ULznysB/DsfvvHt30N6+uqW/5Kq
+         DHJuckiUowmfqdW0OuXvIhO0M/9ZkJlk4A3Z2NAoQ6ct8QBRjvaWH5N735j7QujKWzkR
+         7gaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=Y1TvKp65tsQMJNgm9HMaRO/OTRlalkrsXwsa1JM97tc=;
+        b=QBf/FsFrBslCqtd1RRpVqkCxTEoohU302AHajI/E3eT0ZxSSPS/lTXJOGfPBAdB5B9
+         b7AMaTQPav9kEURRyXqgeXA5p8w1U1b0HLc1x+ILTgvWvEtfWmA7ZuK7ACfOcRcTVTGp
+         6utpNeqMGHHrUYg/w8QT61aXzc4XMan0ENv/D4Bhps2IgBL5onYqHkaQ9S6wWBWcVfnr
+         mPC/VxCR1mq7xfS9NUnX9pFJVDeGQHkectjgKTLYrq9YHGTWu6/++gAWZCLP77n2wg3v
+         694kbiHKRyxCpZL6LGZ0i5LQvgyoSssPtLPkBhtQYe4I2j1e3Vp24dkpykggXuectGFy
+         1N0A==
+X-Gm-Message-State: AOAM530m4dkJsQuGahJP9cokKcUGWHuQyrazAQIogCaE0YVa/YEtKoMQ
+        NL3/j+OR0uVEAeHOcrQvsosx60cDuTM=
+X-Google-Smtp-Source: ABdhPJzXq3gY922W8GvJYKDCvdvkhTLMen1AnugqOEU+vcfl/4sIauHvla7GSVA5QizCia3rzhtcSzDwKjE=
+X-Received: by 2002:a05:6214:1262:: with SMTP id r2mr2374687qvv.126.1589416654581;
+ Wed, 13 May 2020 17:37:34 -0700 (PDT)
+Date:   Thu, 14 May 2020 00:37:15 +0000
+Message-Id: <20200514003727.69001-1-satyat@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.26.2.645.ge9eca65c58-goog
+Subject: [PATCH v13 00/12] Inline Encryption Support
+From:   Satya Tangirala <satyat@google.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
+Cc:     Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/10/20 2:57 PM, Mike Christie wrote:
-> Use target_parse_emulated_name so the acl and SCSI names are properly
-> formatted.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> ---
->  drivers/target/loopback/tcm_loop.c | 65 ++++++--------------------------------
->  1 file changed, 10 insertions(+), 55 deletions(-)
-> 
-> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-> index 74aded7..64e5f1f 100644
-> --- a/drivers/target/loopback/tcm_loop.c
-> +++ b/drivers/target/loopback/tcm_loop.c
-> @@ -725,7 +725,8 @@ static int tcm_loop_alloc_sess_cb(struct se_portal_group *se_tpg,
->  
->  static int tcm_loop_make_nexus(
->  	struct tcm_loop_tpg *tl_tpg,
-> -	const char *name)
-> +	const char *tpt_id_name,
-> +	const char *acl_name)
->  {
->  	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
->  	struct tcm_loop_nexus *tl_nexus;
-> @@ -742,7 +743,7 @@ static int tcm_loop_make_nexus(
->  
->  	tl_nexus->se_sess = target_setup_session(&tl_tpg->tl_se_tpg, 0, 0,
->  					TARGET_PROT_DIN_PASS | TARGET_PROT_DOUT_PASS,
-> -					name, name, tl_nexus,
-> +					tpt_id_name, acl_name, tl_nexus,
->  					tcm_loop_alloc_sess_cb);
->  	if (IS_ERR(tl_nexus->se_sess)) {
->  		ret = PTR_ERR(tl_nexus->se_sess);
-> @@ -751,7 +752,7 @@ static int tcm_loop_make_nexus(
->  	}
->  
->  	pr_debug("TCM_Loop_ConfigFS: Established I_T Nexus to emulated %s Initiator Port: %s\n",
-> -		 tcm_loop_dump_proto_id(tl_hba), name);
-> +		 tcm_loop_dump_proto_id(tl_hba), acl_name);
->  	return 0;
->  }
->  
-> @@ -814,7 +815,7 @@ static ssize_t tcm_loop_tpg_nexus_store(struct config_item *item,
->  	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
->  			struct tcm_loop_tpg, tl_se_tpg);
->  	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
-> -	unsigned char i_port[TL_WWN_ADDR_LEN], *ptr, *port_ptr;
-> +	unsigned char i_port[TL_WWN_ADDR_LEN], *tpt_id_name;
->  	int ret;
->  	/*
->  	 * Shutdown the active I_T nexus if 'NULL' is passed..
-> @@ -823,59 +824,13 @@ static ssize_t tcm_loop_tpg_nexus_store(struct config_item *item,
->  		ret = tcm_loop_drop_nexus(tl_tpg);
->  		return (!ret) ? count : ret;
->  	}
-> -	/*
-> -	 * Otherwise make sure the passed virtual Initiator port WWN matches
-> -	 * the fabric protocol_id set in tcm_loop_make_scsi_hba(), and call
-> -	 * tcm_loop_make_nexus()
-> -	 */
-> -	if (strlen(page) >= TL_WWN_ADDR_LEN) {
-> -		pr_err("Emulated NAA Sas Address: %s, exceeds max: %d\n",
-> -		       page, TL_WWN_ADDR_LEN);
-> -		return -EINVAL;
-> -	}
-> -	snprintf(&i_port[0], TL_WWN_ADDR_LEN, "%s", page);
->  
-> -	ptr = strstr(i_port, "naa.");
-> -	if (ptr) {
-> -		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_SAS) {
-> -			pr_err("Passed SAS Initiator Port %s does not match target port protoid: %s\n",
-> -			       i_port, tcm_loop_dump_proto_id(tl_hba));
-> -			return -EINVAL;
-> -		}
-> -		port_ptr = &i_port[0];
-> -		goto check_newline;
-> -	}
-> -	ptr = strstr(i_port, "fc.");
-> -	if (ptr) {
-> -		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_FCP) {
-> -			pr_err("Passed FCP Initiator Port %s does not match target port protoid: %s\n",
-> -			       i_port, tcm_loop_dump_proto_id(tl_hba));
-> -			return -EINVAL;
-> -		}
-> -		port_ptr = &i_port[3]; /* Skip over "fc." */
-> -		goto check_newline;
-> -	}
-> -	ptr = strstr(i_port, "iqn.");
-> -	if (ptr) {
-> -		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_ISCSI) {
-> -			pr_err("Passed iSCSI Initiator Port %s does not match target port protoid: %s\n",
-> -			       i_port, tcm_loop_dump_proto_id(tl_hba));
-> -			return -EINVAL;
-> -		}
-> -		port_ptr = &i_port[0];
-> -		goto check_newline;
-> -	}
-> -	pr_err("Unable to locate prefix for emulated Initiator Port: %s\n",
-> -	       i_port);
-> -	return -EINVAL;
-> -	/*
-> -	 * Clear any trailing newline for the NAA WWN
-> -	 */
-> -check_newline:
-> -	if (i_port[strlen(i_port)-1] == '\n')
-> -		i_port[strlen(i_port)-1] = '\0';
-> +	ret = target_parse_emulated_name(tl_hba->tl_proto_id, page, i_port,
-> +					 TL_WWN_ADDR_LEN, &tpt_id_name);
-> +	if (ret)
-> +		return ret;
->  
-> -	ret = tcm_loop_make_nexus(tl_tpg, port_ptr);
-> +	ret = tcm_loop_make_nexus(tl_tpg, tpt_id_name, i_port);
->  	if (ret < 0)
->  		return ret;
->  
-> 
+This patch series adds support for Inline Encryption to the block layer,
+UFS, fscrypt, f2fs and ext4. It has been rebased onto linux-block/for-next.
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Note that the patches in this series for the block layer (i.e. patches 1,
+2, 3, 4 and 5) can be applied independently of the subsequent patches in
+this series.
+
+Inline Encryption hardware allows software to specify an encryption context
+(an encryption key, crypto algorithm, data unit num, data unit size, etc.)
+along with a data transfer request to a storage device, and the inline
+encryption hardware will use that context to en/decrypt the data. The
+inline encryption hardware is part of the storage device, and it
+conceptually sits on the data path between system memory and the storage
+device. Inline Encryption hardware has become increasingly common, and we
+want to support it in the kernel.
+
+Inline Encryption hardware implementations often function around the
+concept of a limited number of "keyslots", which can hold an encryption
+context each. The storage device can be directed to en/decrypt any
+particular request with the encryption context stored in any particular
+keyslot.
+
+Patch 1 documents the whole series.
+
+Patch 2 introduces a Keyslot Manager to efficiently manage keyslots.
+The keyslot manager also functions as the interface that blk-crypto
+(introduced in Patch 3), will use to program keys into inline encryption
+hardware. For more information on the Keyslot Manager, refer to
+documentation found in block/keyslot-manager.c and linux/keyslot-manager.h.
+
+Patch 3 adds the block layer changes for inline encryption support. It
+introduces struct bio_crypt_ctx, and a ptr to one in struct bio, which
+allows struct bio to represent an encryption context that can be passed
+down the storage stack from the filesystem layer to the storage driver.
+
+Patch 4 precludes inline encryption support in a device whenever it
+supports blk-integrity, because there is currently no known hardware that
+supports both features, and it is not completely straightfoward to support
+both of them properly, and doing it improperly might result in leaks of
+information about the plaintext.
+
+Patch 5 introduces blk-crypto-fallback - a kernel crypto API fallback for
+blk-crypto to use when inline encryption hardware isn't present. This
+allows filesystems to specify encryption contexts for bios without
+having to worry about whether the underlying hardware has inline
+encryption support, and allows for testing without real hardware inline
+encryption support. This fallback is separately configurable from
+blk-crypto, and can be disabled if desired while keeping inline
+encryption support. It may also be possible to remove file content
+en/decryption from fscrypt and simply use blk-crypto-fallback in a future
+patch. For more details on blk-crypto and the fallback, refer to
+Documentation/block/inline-encryption.rst.
+
+Patches 6-8 add support for inline encryption into the UFS driver according
+to the JEDEC UFS HCI v2.1 specification. Inline encryption support for
+other drivers (like eMMC) may be added in the same way - the device driver
+should set up a Keyslot Manager in the device's request_queue (refer to
+the UFS crypto additions in ufshcd-crypto.c and ufshcd.c for an example).
+
+Patch 9 adds the SB_INLINECRYPT mount flag to the fs layer, which
+filesystems must set to indicate that they want to use blk-crypto for
+en/decryption of file contents.
+
+Patch 10 adds support to fscrypt - to use inline encryption with fscrypt,
+the filesystem must be mounted with '-o inlinecrypt' - when this option is
+specified, the contents of any AES-256-XTS encrypted file will be
+encrypted using blk-crypto.
+
+Patches 11 and 12 add support to f2fs and ext4 respectively, so that we
+have a complete stack that can make use of inline encryption.
+
+The patches were tested running kvm-xfstests, by specifying the introduced
+"inlinecrypt" mount option, so that en/decryption happens with the
+blk-crypto fallback. The patches were also tested on a Pixel 4 with UFS
+hardware that has support for inline encryption.
+
+There have been a few patch sets addressing Inline Encryption Support in
+the past. Briefly, this patch set differs from those as follows:
+
+1) "crypto: qce: ice: Add support for Inline Crypto Engine"
+is specific to certain hardware, while our patch set's Inline
+Encryption support for UFS is implemented according to the JEDEC UFS
+specification.
+
+2) "scsi: ufs: UFS Host Controller crypto changes" registers inline
+encryption support as a kernel crypto algorithm. Our patch views inline
+encryption as being fundamentally different from a generic crypto
+provider (in that inline encryption is tied to a device), and so does
+not use the kernel crypto API to represent inline encryption hardware.
+
+3) "scsi: ufs: add real time/inline crypto support to UFS HCD" requires
+the device mapper to work - our patch does not.
+
+Changes v12 => v13:
+ - Updated docs
+ - Minor cleanups
+ - rebased onto linux-block/for-next
+
+Changes v11 => v12:
+ - Inlined some fscrypt functions
+ - Minor cleanups and improved comments
+
+Changes v10 => v11:
+ - We now allocate a new bio_crypt_ctx for each request instead of
+   pulling and reusing the one in the bio inserted into the request. The
+   bio_crypt_ctx of a bio is freed after the bio is ended.
+ - Make each blk_ksm_keyslot store a pointer to the blk_crypto_key
+   instead of a copy of the blk_crypto_key, so that each blk_crypto_key
+   will have its own keyslot. We also won't need to compute the siphash
+   for a blk_crypto_key anymore.
+ - Minor cleanups
+
+Changes v9 => v10:
+ - Incorporate Eric's fix for allowing en/decryption to happen as usual via
+   fscrypt in the case that hardware doesn't support the desired crypto
+   configuration, but blk-crypto-fallback is disabled. (Introduce
+   struct blk_crypto_config and blk_crypto_config_supported for fscrypt
+   to call, to check that either blk-crypto-fallback is enabled or the
+   device supports the crypto configuration).
+ - Update docs
+ - Lots of cleanups
+
+Changes v8 => v9:
+ - Don't open code bio_has_crypt_ctx into callers of blk-crypto functions.
+ - Lots of cleanups
+
+Changes v7 => v8:
+ - Pass a struct blk_ksm_keyslot * around instead of slot numbers which
+   simplifies some functions and passes around arguments with better types
+ - Make bios with no encryption context avoid making calls into blk-crypto
+   by checking for the presence of bi_crypt_context before making the call
+ - Make blk-integrity preclude inline encryption support at probe time
+ - Many many cleanups
+
+Changes v6 => v7:
+ - Keyslot management is now done on a per-request basis rather than a
+   per-bio basis.
+ - Storage drivers can now specify the maximum number of bytes they
+   can accept for the data unit number (DUN) for each crypto algorithm,
+   and upper layers can specify the minimum number of bytes of DUN they
+   want with the blk_crypto_key they send with the bio - a driver is
+   only considered to support a blk_crypto_key if the driver supports at
+   least as many DUN bytes as the upper layer wants. This is necessary
+   because storage drivers may not support as many bytes as the
+   algorithm specification dictates (for e.g. UFS only supports 8 byte
+   DUNs for AES-256-XTS, even though the algorithm specification
+   says DUNs are 16 bytes long).
+ - Introduce SB_INLINECRYPT to keep track of whether inline encryption
+   is enabled for a filesystem (instead of using an fscrypt_operation).
+ - Expose keyslot manager declaration and embed it within ufs_hba to
+   clean up code.
+ - Make blk-crypto preclude blk-integrity.
+ - Some bug fixes
+ - Introduce UFSHCD_QUIRK_BROKEN_CRYPTO for UFS drivers that don't
+   support inline encryption (yet)
+
+Changes v5 => v6:
+ - Blk-crypto's kernel crypto API fallback is no longer restricted to
+   8-byte DUNs. It's also now separately configurable from blk-crypto, and
+   can be disabled entirely, while still allowing the kernel to use inline
+   encryption hardware. Further, struct bio_crypt_ctx takes up less space,
+   and no longer contains the information needed by the crypto API
+   fallback - the fallback allocates the required memory when necessary.
+ - Blk-crypto now supports all file content encryption modes supported by
+   fscrypt.
+ - Fixed bio merging logic in blk-merge.c
+ - Fscrypt now supports inline encryption with the direct key policy, since
+   blk-crypto now has support for larger DUNs.
+ - Keyslot manager now uses a hashtable to lookup which keyslot contains
+   any particular key (thanks Eric!)
+ - Fscrypt support for inline encryption now handles filesystems with
+   multiple underlying block devices (thanks Eric!)
+ - Numerous cleanups
+
+Changes v4 => v5:
+ - The fscrypt patch has been separated into 2. The first adds support
+   for the IV_INO_LBLK_64 policy (which was called INLINE_CRYPT_OPTIMIZED
+   in past versions of this series). This policy is now purely an on disk
+   format, and doesn't dictate whether blk-crypto is used for file content
+   encryption or not. Instead, this is now decided based on the
+   "inlinecrypt" mount option.
+ - Inline crypto key eviction is now handled by blk-crypto instead of
+   fscrypt.
+ - More refactoring.
+
+Changes v3 => v4:
+ - Fixed the issue with allocating crypto_skcipher in
+   blk_crypto_keyslot_program.
+ - bio_crypto_alloc_ctx is now mempool backed.
+ - In f2fs, a bio's bi_crypt_context is now set up when the
+   bio is allocated, rather than just before the bio is
+   submitted - this fixes bugs in certain cases, like when an
+   encrypted block is being moved without decryption.
+ - Lots of refactoring and cleanup of blk-crypto - thanks Eric!
+
+Changes v2 => v3:
+ - Overhauled keyslot manager's get keyslot logic and optimized LRU.
+ - Block crypto en/decryption fallback now supports data unit sizes
+   that divide the bvec length (instead of requiring each bvec's length
+   to be the same as the data unit size).
+ - fscrypt master key is now keyed additionally by super_block and
+   ci_ctfm != NULL.
+ - all references of "hw encryption" are replaced by inline encryption.
+ - address various other review comments from Eric.
+
+Changes v1 => v2:
+ - Block layer and UFS changes are split into 3 patches each.
+ - We now only have a ptr to a struct bio_crypt_ctx in struct bio, instead
+   of the struct itself.
+ - struct bio_crypt_ctx no longer has flags.
+ - blk-crypto now correctly handles the case when it fails to init
+   (because of insufficient memory), but kernel continues to boot.
+ - ufshcd-crypto now works on big endian cpus.
+ - Many cleanups.
+
+Eric Biggers (1):
+  ext4: add inline encryption support
+
+Satya Tangirala (11):
+  Documentation: Document the blk-crypto framework
+  block: Keyslot Manager for Inline Encryption
+  block: Inline encryption support for blk-mq
+  block: Make blk-integrity preclude hardware inline encryption
+  block: blk-crypto-fallback for Inline Encryption
+  scsi: ufs: UFS driver v2.1 spec crypto additions
+  scsi: ufs: UFS crypto API
+  scsi: ufs: Add inline encryption support to UFS
+  fs: introduce SB_INLINECRYPT
+  fscrypt: add inline encryption support
+  f2fs: add inline encryption support
+
+ Documentation/admin-guide/ext4.rst        |   6 +
+ Documentation/block/index.rst             |   1 +
+ Documentation/block/inline-encryption.rst | 263 +++++++++
+ Documentation/filesystems/f2fs.rst        |   7 +-
+ block/Kconfig                             |  17 +
+ block/Makefile                            |   2 +
+ block/bio-integrity.c                     |   3 +
+ block/bio.c                               |   6 +
+ block/blk-core.c                          |  27 +-
+ block/blk-crypto-fallback.c               | 657 ++++++++++++++++++++++
+ block/blk-crypto-internal.h               | 201 +++++++
+ block/blk-crypto.c                        | 404 +++++++++++++
+ block/blk-integrity.c                     |   7 +
+ block/blk-map.c                           |   1 +
+ block/blk-merge.c                         |  11 +
+ block/blk-mq.c                            |  13 +
+ block/blk.h                               |   2 +
+ block/bounce.c                            |   2 +
+ block/keyslot-manager.c                   | 397 +++++++++++++
+ drivers/md/dm.c                           |   3 +
+ drivers/scsi/ufs/Kconfig                  |   9 +
+ drivers/scsi/ufs/Makefile                 |   1 +
+ drivers/scsi/ufs/ufshcd-crypto.c          | 226 ++++++++
+ drivers/scsi/ufs/ufshcd-crypto.h          |  60 ++
+ drivers/scsi/ufs/ufshcd.c                 |  46 +-
+ drivers/scsi/ufs/ufshcd.h                 |  24 +
+ drivers/scsi/ufs/ufshci.h                 |  67 ++-
+ fs/buffer.c                               |   7 +-
+ fs/crypto/Kconfig                         |   6 +
+ fs/crypto/Makefile                        |   1 +
+ fs/crypto/bio.c                           |  50 ++
+ fs/crypto/crypto.c                        |   2 +-
+ fs/crypto/fname.c                         |   4 +-
+ fs/crypto/fscrypt_private.h               | 120 +++-
+ fs/crypto/inline_crypt.c                  | 339 +++++++++++
+ fs/crypto/keyring.c                       |   4 +-
+ fs/crypto/keysetup.c                      |  92 ++-
+ fs/crypto/keysetup_v1.c                   |  16 +-
+ fs/ext4/inode.c                           |   4 +-
+ fs/ext4/page-io.c                         |   6 +-
+ fs/ext4/readpage.c                        |  11 +-
+ fs/ext4/super.c                           |   9 +
+ fs/f2fs/compress.c                        |   2 +-
+ fs/f2fs/data.c                            |  68 ++-
+ fs/f2fs/super.c                           |  32 ++
+ fs/proc_namespace.c                       |   1 +
+ include/linux/blk-crypto.h                | 123 ++++
+ include/linux/blk_types.h                 |   6 +
+ include/linux/blkdev.h                    |  41 ++
+ include/linux/fs.h                        |   1 +
+ include/linux/fscrypt.h                   |  82 +++
+ include/linux/keyslot-manager.h           | 106 ++++
+ 52 files changed, 3504 insertions(+), 92 deletions(-)
+ create mode 100644 Documentation/block/inline-encryption.rst
+ create mode 100644 block/blk-crypto-fallback.c
+ create mode 100644 block/blk-crypto-internal.h
+ create mode 100644 block/blk-crypto.c
+ create mode 100644 block/keyslot-manager.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-crypto.c
+ create mode 100644 drivers/scsi/ufs/ufshcd-crypto.h
+ create mode 100644 fs/crypto/inline_crypt.c
+ create mode 100644 include/linux/blk-crypto.h
+ create mode 100644 include/linux/keyslot-manager.h
+
+-- 
+2.26.2.645.ge9eca65c58-goog
+
