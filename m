@@ -2,228 +2,191 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77AD7C433E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 00:38:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD07AC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 00:53:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92848206DA
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 00:38:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFEE12065C
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 00:53:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qgIaOplr"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="JIDWNnyl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387440AbgENAiO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 May 2020 20:38:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46970 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1733213AbgENAhl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 May 2020 20:37:41 -0400
-Received: from mail-qt1-x849.google.com (mail-qt1-x849.google.com [IPv6:2607:f8b0:4864:20::849])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0826C05BD0A
-        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2020 17:37:41 -0700 (PDT)
-Received: by mail-qt1-x849.google.com with SMTP id c20so1692081qtw.11
-        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2020 17:37:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=2a1/6iexsVaAsJm0zmzLMWWLusJiPio4DT5jdk5JBwA=;
-        b=qgIaOplrCikSNBkGIriRGFSxoWJE0hZrycHHNLysncx+37fXhnpldyi9/GJf5pfkD9
-         uQRYBh2+FA3JBYi5/Ev1m3DYPjlmv0HUKs50wtVzYWcoIHmLy6MKRybf6uo1SnhKyP65
-         xsc4pofml5pz/fSKk3SUTvZ8qTZRC7t1XEmiC7ZlKHvvUVEdU+cgR0kaRXfaD7wGmgVj
-         Rz+dmRwXO7wIOwy6Z+aPSiBgKUkM3n6jYV5ORzOlOI+qe7iv/jFC+YL6eabgxMA+Fpr1
-         Tr8NIi/4cWJ0SJ4DYAhRJYc0Sy5YsvRWIpEYJfFRk/4dkFGjEeHRGgYkUcnmpVN/5a4F
-         WGnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=2a1/6iexsVaAsJm0zmzLMWWLusJiPio4DT5jdk5JBwA=;
-        b=e9XeoUHGSJlKHMNlJ4zKL0KSz6c3/xO/oVq8f0M5xjYBuWWqe2t3DjDQfF/EEwf7fc
-         2/4HuQhV7qREkwtg7LZUhFwcc9r/drt2ATCv6IXqCKvl1sruHIhGjbImSqmevzE08cMK
-         nyEF4GfuHaRleteHl1uRiy8Wwvcv8l/s9hoyEuYwlA+Usoph0VFjTrEAOXAh9XVI3Wqs
-         0p9FliN8w5dCuxaIlc/hh1YA9O2cJ37Kv87tWQ3QMsf7g+3c4DQc7FIE7ijnrhoxFDxt
-         D9y0SKpjOYJDYp3IKKFFoeh2xO1+HrDd3DYSL4+4BtnhheOv8H4C1QFM0f4Sh3oHBJun
-         NtuA==
-X-Gm-Message-State: AOAM531saLWBV+KGS6kLGM01YsEriE28nvkAHFzGGKTAMrUAxB3JMl0n
-        /uskeBcgd9CQ6J2c3jCgslrutYYjGDc=
-X-Google-Smtp-Source: ABdhPJxasO7CuvbgVMrryShWRnajhNBFChEkNUrrAJjMb5JoLsPu1wFEEDlrSFyCr2M5sCz96zL9uZgIBPw=
-X-Received: by 2002:a05:6214:1262:: with SMTP id r2mr2374970qvv.126.1589416660998;
- Wed, 13 May 2020 17:37:40 -0700 (PDT)
-Date:   Thu, 14 May 2020 00:37:19 +0000
-In-Reply-To: <20200514003727.69001-1-satyat@google.com>
-Message-Id: <20200514003727.69001-5-satyat@google.com>
-Mime-Version: 1.0
-References: <20200514003727.69001-1-satyat@google.com>
-X-Mailer: git-send-email 2.26.2.645.ge9eca65c58-goog
-Subject: [PATCH v13 04/12] block: Make blk-integrity preclude hardware inline encryption
-From:   Satya Tangirala <satyat@google.com>
-To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
-Cc:     Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        Eric Biggers <ebiggers@google.com>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+        id S1729999AbgENAxG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 May 2020 20:53:06 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:46136 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730124AbgENAxF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 May 2020 20:53:05 -0400
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200514005302epoutp04b708375152ae5b0ca79b00f115a04dab~Ovt6qwOVx0770907709epoutp04Q
+        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2020 00:53:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200514005302epoutp04b708375152ae5b0ca79b00f115a04dab~Ovt6qwOVx0770907709epoutp04Q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1589417582;
+        bh=nPCI6KtKTzdjjbh5jTvGpI1fKN6gjrCt7WH8b1I6htY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=JIDWNnyl+XfuRRDnU3d+KgrMk0nzdqPUK/FFTRjbvwVmw3f3OCbKM1DkjEG6eQhf0
+         PGh9m92Kj39McQEFOp7bihys70ZyjenuDEk2ow9Mva6hSXD+4D55oW+CA7rTZmViY+
+         gdI/c46vhcm3LVMO5QdkuHqNVmS5/bQ3oLqasC5o=
+Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20200514005301epcas5p12b499e4a67f841847287592c8d0d802a~Ovt6FMEZK1507415074epcas5p1H;
+        Thu, 14 May 2020 00:53:01 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2A.45.10010.D669CBE5; Thu, 14 May 2020 09:53:01 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20200514005300epcas5p4ce7ba7fe62567e7ba0066c96473853b2~Ovt5NBVm_0641706417epcas5p4H;
+        Thu, 14 May 2020 00:53:00 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200514005300epsmtrp170edd15e00d54c024bd519712b5f3565~Ovt5L31Oz1129711297epsmtrp1L;
+        Thu, 14 May 2020 00:53:00 +0000 (GMT)
+X-AuditID: b6c32a49-735ff7000000271a-03-5ebc966d3c8b
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        61.D3.18461.C669CBE5; Thu, 14 May 2020 09:53:00 +0900 (KST)
+Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
+        [107.108.73.139]) by epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200514005258epsmtip2e0d7cfb9638c1a1d72cfc65a6b2f4d8c~Ovt3TdqWN0066800668epsmtip2I;
+        Thu, 14 May 2020 00:52:58 +0000 (GMT)
+From:   Alim Akhtar <alim.akhtar@samsung.com>
+To:     robh@kernel.org
+Cc:     devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+        krzk@kernel.org, avri.altman@wdc.com, martin.petersen@oracle.com,
+        kwmad.kim@samsung.com, stanley.chu@mediatek.com,
+        cang@codeaurora.org, linux-samsung-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH v9 04/10] scsi: ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN
+ quirk
+Date:   Thu, 14 May 2020 06:09:08 +0530
+Message-Id: <20200514003914.26052-5-alim.akhtar@samsung.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200514003914.26052-1-alim.akhtar@samsung.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmleLIzCtJLcpLzFFi42LZdlhTXTd32p44g+5nghYP5m1js3j58yqb
+        xaf1y1gt5h85x2px/vwGdoubW46yWGx6fI3V4vKuOWwWM87vY7Lovr6DzWL58X9MFv/37GC3
+        WLr1JqMDr8flvl4mj02rOtk8Ni+p92g5uZ/F4+PTWywefVtWMXp83iTn0X6gmymAI4rLJiU1
+        J7MstUjfLoEr4+OfbcwF20UrZrRcZW9gvCvYxcjJISFgIrHz3FG2LkYuDiGB3YwS764cY4dw
+        PjFKfD7ezwxSJSTwjVHixicmmI7F576zQhTtZZS49ewLI4TTwiQx/chMVpAqNgFtibvTt4B1
+        iAgISxz51sYIYjML3GCSeLDSBcQWFgiSaNrWzQJiswioSszdshhsG6+AjcTT+efYIbbJS6ze
+        cAAszilgK7HlyzGwzRICnRwS677fhypykZi84RYLhC0s8er4Fqi4lMTL/jYgmwPIzpbo2WUM
+        Ea6RWDrvGFS5vcSBK3NYQEqYBTQl1u/ShziTT6L39xMmiE5eiY42IYhqVYnmd1ehOqUlJnZ3
+        s0LYHhKnj65kgQTDBEaJ3R/uM05glJ2FMHUBI+MqRsnUguLc9NRi0wLDvNRyveLE3OLSvHS9
+        5PzcTYzgdKLluYPx7oMPeocYmTgYDzFKcDArifD6rd8dJ8SbklhZlVqUH19UmpNafIhRmoNF
+        SZz3dNqWOCGB9MSS1OzU1ILUIpgsEwenVANTzK/1ga5H+v/yP4u+Xr06k3Nh/qzo2hctQTpT
+        6kJ2a/wzL8uUWMrHYlfR7Gpvef/31DmJGXOvVMnKtZ1uD8huXfb1cZ92dcbuCrnPoqLdshoN
+        04XF/blkH9csVPNwbJ3YILn/lrfUFiaDPKOiWB9lztz7/Y/azht67bH+F8JhtEzm3PeLq8sU
+        b2v/84jNMz+oU3rQhjc+7uwjLYs266nRvncn+DbH+7pyK84ItTy72vVonP+dLI9zphtFPxnb
+        6G+3W3Nx/qJvAvxVj/9G+n7Oydhy4vI7t4cJK1cf2/UxTiR0y1ShlwlNC299MBE492pj9SMm
+        uaLnCnu48y7flVgjxRJSvGBHlJ3wktMnFiuxFGckGmoxFxUnAgAKIhw5lgMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMLMWRmVeSWpSXmKPExsWy7bCSvG7OtD1xBiumSFg8mLeNzeLlz6ts
+        Fp/WL2O1mH/kHKvF+fMb2C1ubjnKYrHp8TVWi8u75rBZzDi/j8mi+/oONovlx/8xWfzfs4Pd
+        YunWm4wOvB6X+3qZPDat6mTz2Lyk3qPl5H4Wj49Pb7F49G1ZxejxeZOcR/uBbqYAjigum5TU
+        nMyy1CJ9uwSujI9/tjEXbBetmNFylb2B8a5gFyMnh4SAicTic99Zuxi5OIQEdjNKXLtwghUi
+        IS1xfeMEdghbWGLlv+fsEEVNTBKX3j1hA0mwCWhL3J2+hQnEFgEqOvKtjRHEZhZ4xiRx6mEp
+        iC0sECDxfe8isDiLgKrE3C2LmUFsXgEbiafzz0EtkJdYveEAWJxTwFZiy5djYEcIAdUsW7OM
+        cQIj3wJGhlWMkqkFxbnpucWGBYZ5qeV6xYm5xaV56XrJ+bmbGMHhrKW5g3H7qg96hxiZOBgP
+        MUpwMCuJ8Pqt3x0nxJuSWFmVWpQfX1Sak1p8iFGag0VJnPdG4cI4IYH0xJLU7NTUgtQimCwT
+        B6dUA5Of/J0bJQk5Ez7p7cs5846tb+Hl1todZw+dSf+yl+mjiwJztfWBPYvs2qLjGhRMdv3a
+        vtiv1OH8p40RoWL1U4Qm32o6NNuwyF5urm51R0Gh7USxDUvcv56IEY9WnmUn25KhV9J47cmB
+        f0+6FoV8etqfI3L0GY/0nYaskL8tJk8kt+hz6W7ZfTHX8M+TZYHvLux62nPlab61vceTDxfy
+        dqxa8komd4NTTGhFgU1J+on4OQXbdr27mqhz656E37VNUvb3zr62k/24zn3nBJ595dN6RPry
+        /7yRzpN6fiC2Wi/lx/bXt7jz+DPvdiXcM83fxvniyDyboxZtOcKyLM80Xqi5V6T7Lp8te8LX
+        J32Fu4QSS3FGoqEWc1FxIgAijn9D1gIAAA==
+X-CMS-MailID: 20200514005300epcas5p4ce7ba7fe62567e7ba0066c96473853b2
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200514005300epcas5p4ce7ba7fe62567e7ba0066c96473853b2
+References: <20200514003914.26052-1-alim.akhtar@samsung.com>
+        <CGME20200514005300epcas5p4ce7ba7fe62567e7ba0066c96473853b2@epcas5p4.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Whenever a device supports blk-integrity, make the kernel pretend that
-the device doesn't support inline encryption (essentially by setting the
-keyslot manager in the request queue to NULL).
+Some UFS host controllers like Exynos uses granularities of PRDT length and
+offset as bytes, whereas others uses actual segment count.
 
-There's no hardware currently that supports both integrity and inline
-encryption. However, it seems possible that there will be such hardware
-in the near future (like the NVMe key per I/O support that might support
-both inline encryption and PI).
-
-But properly integrating both features is not trivial, and without
-real hardware that implements both, it is difficult to tell if it will
-be done correctly by the majority of hardware that support both.
-So it seems best not to support both features together right now, and
-to decide what to do at probe time.
-
-Signed-off-by: Satya Tangirala <satyat@google.com>
-Reviewed-by: Eric Biggers <ebiggers@google.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- block/bio-integrity.c   |  3 +++
- block/blk-integrity.c   |  7 +++++++
- block/keyslot-manager.c | 19 +++++++++++++++++++
- include/linux/blkdev.h  | 30 ++++++++++++++++++++++++++++++
- 4 files changed, 59 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 30 +++++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 29 insertions(+), 7 deletions(-)
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index bf62c25cde8f4..3579ac0f6ec1f 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -42,6 +42,9 @@ struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio,
- 	struct bio_set *bs = bio->bi_pool;
- 	unsigned inline_vecs;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index ee30ed6cc805..ba093d0d0942 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2151,8 +2151,14 @@ static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 		return sg_segments;
  
-+	if (WARN_ON_ONCE(bio_has_crypt_ctx(bio)))
-+		return ERR_PTR(-EOPNOTSUPP);
+ 	if (sg_segments) {
+-		lrbp->utr_descriptor_ptr->prd_table_length =
+-			cpu_to_le16((u16)sg_segments);
 +
- 	if (!bs || !mempool_initialized(&bs->bio_integrity_pool)) {
- 		bip = kmalloc(struct_size(bip, bip_inline_vecs, nr_vecs), gfp_mask);
- 		inline_vecs = nr_vecs;
-diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-index ff1070edbb400..c03705cbb9c9f 100644
---- a/block/blk-integrity.c
-+++ b/block/blk-integrity.c
-@@ -409,6 +409,13 @@ void blk_integrity_register(struct gendisk *disk, struct blk_integrity *template
- 	bi->tag_size = template->tag_size;
++		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
++			lrbp->utr_descriptor_ptr->prd_table_length =
++				cpu_to_le16((sg_segments *
++					sizeof(struct ufshcd_sg_entry)));
++		else
++			lrbp->utr_descriptor_ptr->prd_table_length =
++				cpu_to_le16((u16) (sg_segments));
  
- 	disk->queue->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
-+
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+	if (disk->queue->ksm) {
-+		pr_warn("blk-integrity: Integrity and hardware inline encryption are not supported together. Disabling hardware inline encryption.\n");
-+		blk_ksm_unregister(disk->queue);
-+	}
-+#endif
- }
- EXPORT_SYMBOL(blk_integrity_register);
+ 		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
  
-diff --git a/block/keyslot-manager.c b/block/keyslot-manager.c
-index fcd3fd469d7c1..c2ef41b3147ba 100644
---- a/block/keyslot-manager.c
-+++ b/block/keyslot-manager.c
-@@ -25,6 +25,9 @@
-  * Upper layers will call blk_ksm_get_slot_for_key() to program a
-  * key into some slot in the inline encryption hardware.
-  */
-+
-+#define pr_fmt(fmt) "blk-crypto: " fmt
-+
- #include <linux/keyslot-manager.h>
- #include <linux/atomic.h>
- #include <linux/mutex.h>
-@@ -376,3 +379,19 @@ void blk_ksm_destroy(struct blk_keyslot_manager *ksm)
- 	memzero_explicit(ksm, sizeof(*ksm));
- }
- EXPORT_SYMBOL_GPL(blk_ksm_destroy);
-+
-+bool blk_ksm_register(struct blk_keyslot_manager *ksm, struct request_queue *q)
-+{
-+	if (blk_integrity_queue_supports_integrity(q)) {
-+		pr_warn("Integrity and hardware inline encryption are not supported together. Disabling hardware inline encryption.\n");
-+		return false;
-+	}
-+	q->ksm = ksm;
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(blk_ksm_register);
-+
-+void blk_ksm_unregister(struct request_queue *q)
-+{
-+	q->ksm = NULL;
-+}
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index de38318a7acf0..d8f85fe696752 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1582,6 +1582,12 @@ struct blk_integrity *bdev_get_integrity(struct block_device *bdev)
- 	return blk_get_integrity(bdev->bd_disk);
- }
+@@ -3500,11 +3506,21 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
  
-+static inline bool
-+blk_integrity_queue_supports_integrity(struct request_queue *q)
-+{
-+	return q->integrity.profile;
-+}
-+
- static inline bool blk_integrity_rq(struct request *rq)
- {
- 	return rq->cmd_flags & REQ_INTEGRITY;
-@@ -1662,6 +1668,11 @@ static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
- {
- 	return NULL;
- }
-+static inline bool
-+blk_integrity_queue_supports_integrity(struct request_queue *q)
-+{
-+	return false;
-+}
- static inline int blk_integrity_compare(struct gendisk *a, struct gendisk *b)
- {
- 	return 0;
-@@ -1713,6 +1724,25 @@ static inline struct bio_vec *rq_integrity_vec(struct request *rq)
+ 		/* Response upiu and prdt offset should be in double words */
+-		utrdlp[i].response_upiu_offset =
+-			cpu_to_le16(response_offset >> 2);
+-		utrdlp[i].prd_table_offset = cpu_to_le16(prdt_offset >> 2);
+-		utrdlp[i].response_upiu_length =
+-			cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
++		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
++			utrdlp[i].response_upiu_offset =
++				cpu_to_le16(response_offset);
++			utrdlp[i].prd_table_offset =
++				cpu_to_le16(prdt_offset);
++			utrdlp[i].response_upiu_length =
++				cpu_to_le16(ALIGNED_UPIU_SIZE);
++		} else {
++			utrdlp[i].response_upiu_offset =
++				cpu_to_le16(response_offset >> 2);
++			utrdlp[i].prd_table_offset =
++				cpu_to_le16(prdt_offset >> 2);
++			utrdlp[i].response_upiu_length =
++				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
++		}
  
- #endif /* CONFIG_BLK_DEV_INTEGRITY */
+ 		ufshcd_init_lrb(hba, &hba->lrb[i], i);
+ 	}
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index f8d08cb9caf7..a9b9ace9fc72 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -535,6 +535,12 @@ enum ufshcd_quirks {
+ 	 * enabled via HCE register.
+ 	 */
+ 	UFSHCI_QUIRK_BROKEN_HCE				= 1 << 8,
++
++	/*
++	 * This quirk needs to be enabled if the host controller regards
++	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
++	 */
++	UFSHCD_QUIRK_PRDT_BYTE_GRAN			= 1 << 9,
+ };
  
-+#ifdef CONFIG_BLK_INLINE_ENCRYPTION
-+
-+bool blk_ksm_register(struct blk_keyslot_manager *ksm, struct request_queue *q);
-+
-+void blk_ksm_unregister(struct request_queue *q);
-+
-+#else /* CONFIG_BLK_INLINE_ENCRYPTION */
-+
-+static inline bool blk_ksm_register(struct blk_keyslot_manager *ksm,
-+				    struct request_queue *q)
-+{
-+	return true;
-+}
-+
-+static inline void blk_ksm_unregister(struct request_queue *q) { }
-+
-+#endif /* CONFIG_BLK_INLINE_ENCRYPTION */
-+
-+
- struct block_device_operations {
- 	int (*open) (struct block_device *, fmode_t);
- 	void (*release) (struct gendisk *, fmode_t);
+ enum ufshcd_caps {
 -- 
-2.26.2.645.ge9eca65c58-goog
+2.17.1
 
