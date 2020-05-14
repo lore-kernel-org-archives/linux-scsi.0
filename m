@@ -2,107 +2,122 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 434A2C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:09:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A8F6C433E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:12:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F562206A5
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:09:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IqBExic+"
+	by mail.kernel.org (Postfix) with ESMTP id E8293206D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 19:12:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1589483552;
+	bh=g/Kuj3iIyO8kDN4cmTyXiRn1HMqDROk+couMxyMzf6U=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=CL8PmgK0om0KpfG4MAy8fDPbDals0/uqMsa+Eq0/6ysRPbszJvO5sW/dlpFfsUTtE
+	 q9me31M48zJYDCeMA4OwT0VSALyZtz5YrRdoQKyKFGn3B4P+Essi3RxHkSyJcvKtFA
+	 Uxxxa1bhNOip9EoyU8nIAHG9ZyZ1GRYIILQcZupU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730233AbgENTJa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 15:09:30 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:46502 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728395AbgENSws (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 May 2020 14:52:48 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EIqfTQ095751;
-        Thu, 14 May 2020 18:52:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=tvqIBLu6lg3y2HnIlnc3WUWvJNdM68/P14TI1Bz48Ko=;
- b=IqBExic+AJyH/zGV1srQ0P7B4BkhVT5S+sQRFSsst9tUg/5Fzwj+Eh2Jed3RaqK0R+4v
- xYIoMss74L4W/2DKPv6F76Y+XNPnIOLFA+f9x1Kuh+AIn0z2J3pRjtxZV1lCP8RtZxQ+
- AHFnCXXVlmCIbfEUYAq4Uj+0TbphU1GbIzJm4EfHCYhD8JRS+QYsOJxi1wvdUA2ncLJA
- gZtJa7mMIMzliI/WIb0ee0p4agQq29FN3xouDOdkxYbmFPIFOsMyRAZtOGw+9ocCSDxh
- lLo2mqlSCIMeoHRd6ZPaaGmBpf5d4FzNSy29IcaVCW2rbIyjOxmdQYBN3bRZuKL8734g jw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 3100yg4euq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 14 May 2020 18:52:45 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EIqjh3022951;
-        Thu, 14 May 2020 18:52:45 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 3100ypvq3g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 May 2020 18:52:45 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04EIqVrM028726;
-        Thu, 14 May 2020 18:52:31 GMT
-Received: from [192.168.1.24] (/70.114.128.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 14 May 2020 11:52:31 -0700
-Subject: Re: [PATCH 2/3] qla2xxx: SAN congestion management(SCM)
- implementation.
-To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20200514101026.10040-1-njavali@marvell.com>
- <20200514101026.10040-3-njavali@marvell.com>
-From:   himanshu.madhani@oracle.com
-Organization: Oracle Corporation
-Message-ID: <0f9ffb1c-7c6b-ff64-d3f3-387948b41bd6@oracle.com>
-Date:   Thu, 14 May 2020 13:52:30 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1729695AbgENTM2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 15:12:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50032 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728097AbgENSwE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 May 2020 14:52:04 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BA34420675;
+        Thu, 14 May 2020 18:52:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1589482323;
+        bh=g/Kuj3iIyO8kDN4cmTyXiRn1HMqDROk+couMxyMzf6U=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tDHlsWN6eXU6+LkvLzX9lcluO2oWW8NoC+j9rnjrF9HFoZIELx1udOjBXXltCwS/t
+         QPu/12AwAj6f4DrOuJuY0VwiqZOX0NmuH32gflIDjE7tO0dD5eNTzTnH70+IMAt4nP
+         WL4iUjTmySFBQatA0ADZfqT7dIGGQWN5i7ZIDCYE=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 11/62] scsi: qla2xxx: Delete all sessions before unregister local nvme port
+Date:   Thu, 14 May 2020 14:50:56 -0400
+Message-Id: <20200514185147.19716-11-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200514185147.19716-1-sashal@kernel.org>
+References: <20200514185147.19716-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200514101026.10040-3-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005140165
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- cotscore=-2147483648 mlxscore=0 suspectscore=0 spamscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 clxscore=1015 phishscore=0 bulkscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005140165
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Nilesh,
+From: Quinn Tran <qutran@marvell.com>
 
-On 5/14/20 5:10 AM, Nilesh Javali wrote:
-> * Firmware Initialization with SCM enabled based on NVRAM setting and
->    firmware support (About Firmware).
-> * Enable PUREX and add support for fabric performance impact
->    notification(FPIN) handling.
-> * Support for the following FPIN descriptors:
->    	1. Link Integrity Notification.
-> 	2. Delivery Notification.
-> 	3. Peer Congestion Notification.
-> 	4. Congestion Notification.
-> * Mark a device as slow when a Peer Congestion Notification is received.
-> * Allocate a default purex item for each vha, to handle memory
->    allocation failures in ISR.
+[ Upstream commit c48f849d3f7a4ec1025105f446e29d395c4dcc2f ]
 
-When you repost this series, fix comments for function header and places 
-where its using windows style comments in this patch.
+Delete all sessions before unregistering local nvme port.  This allows nvme
+layer to decrement all active rport count down to zero.  Once the count is
+down to zero, nvme would call qla to continue with the npiv port deletion.
 
+PID: 27448  TASK: ffff9e34b777c1c0  CPU: 0   COMMAND: "qaucli"
+ 0 [ffff9e25e84abbd8] __schedule at ffffffff977858ca
+ 1 [ffff9e25e84abc68] schedule at ffffffff97785d79
+ 2 [ffff9e25e84abc78] schedule_timeout at ffffffff97783881
+ 3 [ffff9e25e84abd28] wait_for_completion at ffffffff9778612d
+ 4 [ffff9e25e84abd88] qla_nvme_delete at ffffffffc0e3024e [qla2xxx]
+ 5 [ffff9e25e84abda8] qla24xx_vport_delete at ffffffffc0e024b9 [qla2xxx]
+ 6 [ffff9e25e84abdf0] fc_vport_terminate at ffffffffc011c247 [scsi_transport_fc]
+ 7 [ffff9e25e84abe28] store_fc_host_vport_delete at ffffffffc011cd94 [scsi_transport_fc]
+ 8 [ffff9e25e84abe70] dev_attr_store at ffffffff974b376b
+ 9 [ffff9e25e84abe80] sysfs_kf_write at ffffffff972d9a92
+10 [ffff9e25e84abe90] kernfs_fop_write at ffffffff972d907b
+11 [ffff9e25e84abec8] vfs_write at ffffffff9724c790
+12 [ffff9e25e84abf08] sys_write at ffffffff9724d55f
+13 [ffff9e25e84abf50] system_call_fastpath at ffffffff97792ed2
+    RIP: 00007fc0bd81a6fd  RSP: 00007ffff78d9648  RFLAGS: 00010202
+    RAX: 0000000000000001  RBX: 0000000000000022  RCX: 00007ffff78d96e0
+    RDX: 0000000000000022  RSI: 00007ffff78d94e0  RDI: 0000000000000008
+    RBP: 00007ffff78d9440   R8: 0000000000000000   R9: 00007fc0bd48b2cd
+    R10: 0000000000000017  R11: 0000000000000293  R12: 0000000000000000
+    R13: 00005624e4dac840  R14: 00005624e4da9a10  R15: 0000000000000000
+    ORIG_RAX: 0000000000000001  CS: 0033  SS: 002b
 
+Link: https://lore.kernel.org/r/20200331104015.24868-4-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_attr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index d7e7043f9eab2..9556392652e33 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2928,11 +2928,11 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 	    test_bit(FCPORT_UPDATE_NEEDED, &vha->dpc_flags))
+ 		msleep(1000);
+ 
+-	qla_nvme_delete(vha);
+ 
+ 	qla24xx_disable_vp(vha);
+ 	qla2x00_wait_for_sess_deletion(vha);
+ 
++	qla_nvme_delete(vha);
+ 	vha->flags.delete_progress = 1;
+ 
+ 	qlt_remove_target(ha, vha);
 -- 
-Himanshu Madhani
-Oracle Linux Engineering
+2.20.1
+
