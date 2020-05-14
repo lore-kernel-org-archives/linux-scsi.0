@@ -2,81 +2,79 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E872C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 04:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F01E9C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:10:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D97520575
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 04:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3AE620709
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 05:10:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1589433056;
+	bh=+7Nv0uff65CHEgSOICQgU3aX0Fv+NjHfAe+0Cmtlgvw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=YMr1EP1fx52XFpWUENcpxSVlComFq7zRSCCMQAIEUVFDFrgYzZBQl3xlXMCx8MUs4
+	 r8ROrBFsaFstNyvYVH2COi8mf7C8MKF1t2e+U8P+1d778HIE6lkpxXiobxERSvSx/m
+	 1k1hnBlgVQxCaGc1sJReSooKQv97jPQNBgavjBLc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725926AbgENEBz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 00:01:55 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:49759 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725876AbgENEBz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 May 2020 00:01:55 -0400
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-372-aP7_It_xNvmGipQcRGESVw-1; Thu, 14 May 2020 00:01:50 -0400
-X-MC-Unique: aP7_It_xNvmGipQcRGESVw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1725876AbgENFK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 01:10:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49250 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725788AbgENFKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 May 2020 01:10:55 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CDEC819200C0;
-        Thu, 14 May 2020 04:01:49 +0000 (UTC)
-Received: from ldigby.remote.csb (vpn2-54-19.bne.redhat.com [10.64.54.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 710CF2E169;
-        Thu, 14 May 2020 04:01:48 +0000 (UTC)
-From:   Lance Digby <lance.digby@gmail.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH target] target: Add initiatorname to NON_EXISTENT_LUN error
-Date:   Thu, 14 May 2020 14:01:38 +1000
-Message-Id: <cd119ce943d9ec62ef1bff237ebb49e35a337c3b.1589407872.git.lance.digby@gmail.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: gmail.com
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+        by mail.kernel.org (Postfix) with ESMTPSA id 36449206D4;
+        Thu, 14 May 2020 05:10:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1589433055;
+        bh=+7Nv0uff65CHEgSOICQgU3aX0Fv+NjHfAe+0Cmtlgvw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=vwp8gJPPTHeKccZV7k1yrahp5FPT66Y2DslfqT+lmRhxMP08GBwTz6gcKkzO/spv5
+         dhRVa4d1xmYyCiUYotjlwDl+6Yx1Cl63diCalWTluZtVzGJY6PAaIGGs0O5HxHccw8
+         N7KmznuBnLJh5eiG0UuJOhCVU3xxHn0DpMuEAsGQ=
+Date:   Wed, 13 May 2020 22:10:53 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v13 00/12] Inline Encryption Support
+Message-ID: <20200514051053.GA14829@sol.localdomain>
+References: <20200514003727.69001-1-satyat@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200514003727.69001-1-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The NON_EXISTENT_LUN error can be written without an error condition
- on the initiator responsible. Adding the initiatorname to this message
- will reduce the effort required to fix this when many initiators are
-supported by a target.
+On Thu, May 14, 2020 at 12:37:15AM +0000, Satya Tangirala wrote:
+> This patch series adds support for Inline Encryption to the block layer,
+> UFS, fscrypt, f2fs and ext4. It has been rebased onto linux-block/for-next.
+> 
+> Note that the patches in this series for the block layer (i.e. patches 1,
+> 2, 3, 4 and 5) can be applied independently of the subsequent patches in
+> this series.
 
-Signed-off-by: Lance Digby <lance.digby@gmail.com>
----
- drivers/target/target_core_device.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Thanks, the (small) changes from v12 look good.  As usual, I made this available
+in git at:
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_co=
-re_device.c
-index 4cee113..604dea0 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -100,9 +100,10 @@
- =09=09 */
- =09=09if (unpacked_lun !=3D 0) {
- =09=09=09pr_err("TARGET_CORE[%s]: Detected NON_EXISTENT_LUN"
--=09=09=09=09" Access for 0x%08llx\n",
-+=09=09=09=09" Access for 0x%08llx from %s\n",
- =09=09=09=09se_cmd->se_tfo->fabric_name,
--=09=09=09=09unpacked_lun);
-+=09=09=09=09unpacked_lun,
-+=09=09=09=09se_sess->se_node_acl->initiatorname);
- =09=09=09return TCM_NON_EXISTENT_LUN;
- =09=09}
-=20
---=20
-1.8.3.1
+        Repo: https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git
+        Tag: inline-encryption-v13
 
+Jens, do you have any feedback on this patchset?  Is there any chance at taking
+the block layer part (patches 1-5) for 5.8?  That part needs to go upstream
+first, since patches 6-12 depend on them.  Then patches 6-12 can go upstream via
+the SCSI and fscrypt trees in the following release.
+
+- Eric
