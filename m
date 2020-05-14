@@ -2,235 +2,235 @@ Return-Path: <SRS0=2tzU=64=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15EB2C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 10:12:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 866D7C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 14:11:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E15352065D
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 10:12:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="S3vgEgiR"
+	by mail.kernel.org (Postfix) with ESMTP id 4D1092070A
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 May 2020 14:11:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726010AbgENKMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 May 2020 06:12:06 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54280 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725974AbgENKMG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 May 2020 06:12:06 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 04EAA8oM018694
-        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2020 03:12:05 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0818; bh=nnqpgDUb6DqAOOFhlNa/F4Hi5P+pcwvGwFzDTMDdiJo=;
- b=S3vgEgiRPTRKmm1lbnKUIKSVFkBmNorEbP3z4S1N/PDcdOEwH2MudNp0L8fkvHuNZFt8
- T9EQr0wAiKPuQUxG4Pdo4VMN9ljSkSu6QuxW8SD3IX3V6RIx3/zxi3dnDwXZ4pe1Hqd1
- 6RRHHk4NoGblS4jrNRpwt4STn8ygZJZX1YXrUlIXT+0nBVJo4MJuf/fBq1UVESCLndf4
- o0Uaz6NGCQXYMt1f843al4Ve7gTGpajtMvuOpulfWtsjXoehtpdMIhLXID4n3v3mwIwD
- avUorQX/DQkOCWFpA4fRlFHML1gPtYFssP/OdaTyWm2WgxVjPt0AkwiwPrc960N47EAW Dg== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3100xk1stk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2020 03:12:05 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 14 May
- 2020 03:12:02 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 14 May 2020 03:12:02 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id BC1533F704D;
-        Thu, 14 May 2020 03:12:02 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 04EAC2cB010095;
-        Thu, 14 May 2020 03:12:02 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 04EAC2FX010094;
-        Thu, 14 May 2020 03:12:02 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 3/3] qla2xxx: Pass SCM counters to the application.
-Date:   Thu, 14 May 2020 03:10:26 -0700
-Message-ID: <20200514101026.10040-4-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20200514101026.10040-1-njavali@marvell.com>
+        id S1726216AbgENOLy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 May 2020 10:11:54 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:42024 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726140AbgENOLx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 May 2020 10:11:53 -0400
+Received: by mail-pf1-f195.google.com with SMTP id y18so1355154pfl.9
+        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2020 07:11:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=/ud6ZbYirQ/09o2P8MHEZwskgnXCDDQv7zBjWBX3HS0=;
+        b=D0RYmBfiWC47HRWtszmC4FV2EwC7A530qtBxEf9cWNVwKQHWvQ5Fe4LkVQ6mMIZ7X2
+         U9XYVVNBb00TQp4AmfhzVFsbc6GdrfgCxvpma1+PtEb9zDi1lpGxQopmjeKSmS8zd17T
+         NcLowFOhfcnSPlur8WzrdL2DnWWRGehOo4h4CfXy2FokybJ1TQ6YFvABqyr+YOalCtyB
+         26OtXTx+DOFwgrDOA/AmJfUD/U92CY/+77JVkeJXYBt3ADW2p/vInRQHsrAPn4brHUIR
+         UdhToUbL0TU4DqHliiuVMcCOqxK9ohoE39AgRQEF+w5YjAA9y/ufc5LUNL4xsVN2VyF9
+         fyLQ==
+X-Gm-Message-State: AOAM531RzUB4o3vuiFbAzGt4DrfvjFa9inOSVLdgy4umtf2XATfp7X4o
+        pFjcacx0S82fnJPkmrCmpig=
+X-Google-Smtp-Source: ABdhPJwldOfrkZCQ4zWXwPRuT00aHVMEZ+33zA/zHqVqt3SNK0jrMSCPZSUs3cEq3Pt01UNDHSxPMQ==
+X-Received: by 2002:a63:1e5f:: with SMTP id p31mr3966082pgm.19.1589465512430;
+        Thu, 14 May 2020 07:11:52 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:6c16:7f27:8c37:e02d? ([2601:647:4000:d7:6c16:7f27:8c37:e02d])
+        by smtp.gmail.com with ESMTPSA id p1sm18936061pjk.50.2020.05.14.07.11.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 14 May 2020 07:11:51 -0700 (PDT)
+Subject: Re: [PATCH 0/3] qla2xxx SAN Congestion Management (SCM) support
+To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
 References: <20200514101026.10040-1-njavali@marvell.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <ad298d9c-92ad-0f7a-6873-6f346ce46c14@acm.org>
+Date:   Thu, 14 May 2020 07:11:50 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.676
- definitions=2020-05-14_02:2020-05-13,2020-05-14 signatures=0
+In-Reply-To: <20200514101026.10040-1-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Shyam Sundar <ssundar@marvell.com>
+On 2020-05-14 03:10, Nilesh Javali wrote:
+> Please apply the qla2xxx patch series implementing SAN Congestion Management
+> (SCM) support to the scsi tree at your earliest convenience.
 
-Implement 3 functions to pass on SAN congestion management
-related counters tracked by the driver, up to the Marvell
-application using the BSG interface.
+Hi Nilesh,
 
-Signed-off-by: Shyam Sundar <ssundar@marvell.com>
-Signed-off-by: Arun Easi <aeasi@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_bsg.c | 114 +++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_bsg.h |   3 +
- 2 files changed, 117 insertions(+)
+This patch series introduces the following compiler warnings (W=1):
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 97b51c477972..bd898bbdd44d 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -2446,6 +2446,111 @@ qla2x00_get_flash_image_status(struct bsg_job *bsg_job)
- 	return 0;
- }
- 
-+static int
-+qla2x00_get_drv_attr(struct bsg_job *bsg_job)
-+{
-+	struct qla_drv_attr drv_attr;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+
-+	memset(&drv_attr, 0, sizeof(struct qla_drv_attr));
-+	/* Additional check should be added if SCM is not enabled
-+	 * by default for a given driver version.
-+	 */
-+	drv_attr.attributes |= QLA_DRV_ATTR_SCM_SUPPORTED;
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+			    bsg_job->reply_payload.sg_cnt, &drv_attr,
-+			    sizeof(struct qla_drv_attr));
-+
-+	bsg_reply->reply_payload_rcv_len = sizeof(struct qla_drv_attr);
-+	bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
-+
-+	bsg_job->reply_len = sizeof(*bsg_job->reply);
-+	bsg_reply->result = DID_OK << 16;
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+
-+	return 0;
-+}
-+
-+static int
-+qla2x00_get_port_scm(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *shost = fc_bsg_to_shost(bsg_job);
-+	scsi_qla_host_t *vha = shost_priv(shost);
-+	struct qla_hw_data *ha = vha->hw;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+
-+	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha))
-+		return -EPERM;
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+			    bsg_job->reply_payload.sg_cnt, &vha->scm_stats,
-+			    sizeof(struct qla_scm_port));
-+
-+	bsg_reply->reply_payload_rcv_len = sizeof(struct qla_scm_port);
-+	bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
-+
-+	bsg_job->reply_len = sizeof(*bsg_job->reply);
-+	bsg_reply->result = DID_OK << 16;
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+
-+	return 0;
-+}
-+
-+static int
-+qla2x00_get_target_scm(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *shost = fc_bsg_to_shost(bsg_job);
-+	scsi_qla_host_t *vha = shost_priv(shost);
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct qla_hw_data *ha = vha->hw;
-+	fc_port_t *fcport =  NULL;
-+	int rval;
-+	struct qla_scm_target *scm_stats = NULL;
-+
-+	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha))
-+		return -EPERM;
-+
-+	scm_stats = kzalloc(sizeof(*scm_stats), GFP_KERNEL);
-+	if (!scm_stats) {
-+		ql_log(ql_log_warn, vha, 0x7024,
-+		       "Failed to allocate memory for target scm stats.\n");
-+		return -ENOMEM;
-+	}
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+			  bsg_job->request_payload.sg_cnt, scm_stats,
-+			  sizeof(struct qla_scm_target));
-+
-+	fcport = qla2x00_find_fcport_by_wwpn(vha, scm_stats->wwpn, 0);
-+	if (fcport) {
-+		/* Copy SCM Target data to local struct, keep WWPN from user */
-+		memcpy(&scm_stats->current_events,
-+		       &fcport->scm_stats.current_events,
-+		       (sizeof(struct qla_scm_target) -
-+			sizeof(scm_stats->wwpn)));
-+		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+				    bsg_job->reply_payload.sg_cnt, scm_stats,
-+				    sizeof(struct qla_scm_target));
-+		rval = EXT_STATUS_OK;
-+	} else {
-+		rval = EXT_STATUS_ERR;
-+	}
-+
-+	bsg_reply->reply_payload_rcv_len = sizeof(struct qla_scm_target);
-+	bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = rval;
-+
-+	bsg_job->reply_len = sizeof(*bsg_job->reply);
-+	bsg_reply->result = DID_OK << 16;
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+
-+	kfree(scm_stats);
-+	return 0;
-+}
-+
- static int
- qla2x00_process_vendor_specific(struct bsg_job *bsg_job)
- {
-@@ -2522,6 +2627,15 @@ qla2x00_process_vendor_specific(struct bsg_job *bsg_job)
- 	case QL_VND_SS_GET_FLASH_IMAGE_STATUS:
- 		return qla2x00_get_flash_image_status(bsg_job);
- 
-+	case QL_VND_GET_PORT_SCM:
-+		return qla2x00_get_port_scm(bsg_job);
-+
-+	case QL_VND_GET_TARGET_SCM:
-+		return qla2x00_get_target_scm(bsg_job);
-+
-+	case QL_VND_GET_DRV_ATTR:
-+		return qla2x00_get_drv_attr(bsg_job);
-+
- 	default:
- 		return -ENOSYS;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index 0b308859047c..c7cf5f772ad3 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -32,6 +32,9 @@
- #define QL_VND_DPORT_DIAGNOSTICS	0x19
- #define QL_VND_GET_PRIV_STATS_EX	0x1A
- #define QL_VND_SS_GET_FLASH_IMAGE_STATUS	0x1E
-+#define QL_VND_GET_PORT_SCM		0x20
-+#define QL_VND_GET_TARGET_SCM		0x21
-+#define QL_VND_GET_DRV_ATTR		0x22
- 
- /* BSG Vendor specific subcode returns */
- #define EXT_STATUS_OK			0
--- 
-2.19.0.rc0
+drivers/scsi/qla2xxx/qla_isr.c:27:1: warning: no previous prototype for
+‘qla_link_integrity_tgt_stats_update’ [-Wmissing-prototypes]
+   27 | qla_link_integrity_tgt_stats_update(struct fpin_descriptor
+*fpin_desc,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:83:1: warning: no previous prototype for
+‘qla_scm_process_link_integrity_d’ [-Wmissing-prototypes]
+   83 | qla_scm_process_link_integrity_d(struct scsi_qla_host *vha,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:143:1: warning: no previous prototype for
+‘qla_delivery_tgt_stats_update’ [-Wmissing-prototypes]
+  143 | qla_delivery_tgt_stats_update(struct fpin_descriptor *fpin_desc,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:173:1: warning: no previous prototype for
+‘qla_scm_process_delivery_notification_d’ [-Wmissing-prototypes]
+  173 | qla_scm_process_delivery_notification_d(struct scsi_qla_host *vha,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:204:1: warning: no previous prototype for
+‘qla_scm_set_target_device_state’ [-Wmissing-prototypes]
+  204 | qla_scm_set_target_device_state(fc_port_t *fcport,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:227:1: warning: no previous prototype for
+‘qla_peer_congestion_tgt_stats_update’ [-Wmissing-prototypes]
+  227 | qla_peer_congestion_tgt_stats_update(struct fpin_descriptor
+*fpin_desc,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:270:1: warning: no previous prototype for
+‘qla_scm_process_peer_congestion_notification_d’ [-Wmissing-prototypes]
+  270 | qla_scm_process_peer_congestion_notification_d(struct
+scsi_qla_host *vha,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:313:1: warning: no previous prototype for
+‘qla_scm_process_congestion_notification_d’ [-Wmissing-prototypes]
+  313 | qla_scm_process_congestion_notification_d(struct scsi_qla_host *vha,
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:343:1: warning: no previous prototype for
+‘qla27xx_process_purex_fpin’ [-Wmissing-prototypes]
+  343 | qla27xx_process_purex_fpin(struct scsi_qla_host *vha, struct
+purex_item *item)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:1136:1: warning: no previous prototype
+for ‘qla24xx_alloc_purex_item’ [-Wmissing-prototypes]
+ 1136 | qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:1192:2: warning: no previous prototype
+for ‘qla24xx_copy_std_pkt’ [-Wmissing-prototypes]
+ 1192 | *qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
+      |  ^~~~~~~~~~~~~~~~~~~~
+drivers/scsi/qla2xxx/qla_isr.c:1213:1: warning: no previous prototype
+for ‘qla27xx_copy_fpin_pkt’ [-Wmissing-prototypes]
+ 1213 | qla27xx_copy_fpin_pkt(struct scsi_qla_host *vha, void **pkt,
+      | ^~~~~~~~~~~~~~~~~~~~~
+  CC [M]  drivers/scsi/qla2xxx/qla_gs.o
+  CC [M]  drivers/scsi/qla2xxx/qla_dbg.o
+  CC [M]  drivers/scsi/qla2xxx/qla_sup.o
+  CC [M]  drivers/scsi/qla2xxx/qla_attr.o
+  CC [M]  drivers/scsi/qla2xxx/qla_mid.o
+  CC [M]  drivers/scsi/qla2xxx/qla_dfs.o
+drivers/scsi/qla2xxx/qla_dfs.c: In function
+‘qla2x00_dfs_tgt_port_database_show’:
+drivers/scsi/qla2xxx/qla_dfs.c:107:1: warning: the frame size of 1280
+bytes is larger than 1024 bytes [-Wframe-larger-than=]
+  107 | }
+      | ^
 
+
+and also the following sparse complaints:
+
+$ make M=drivers/scsi/qla2xxx C=2
+  CHECK   drivers/scsi/qla2xxx/qla_os.c
+  CC [M]  drivers/scsi/qla2xxx/qla_os.o
+  CHECK   drivers/scsi/qla2xxx/qla_init.c
+drivers/scsi/qla2xxx/qla_init.c:8520:22: warning: cast to restricted __le16
+  CC [M]  drivers/scsi/qla2xxx/qla_init.o
+  CHECK   drivers/scsi/qla2xxx/qla_mbx.c
+  CC [M]  drivers/scsi/qla2xxx/qla_mbx.o
+  CHECK   drivers/scsi/qla2xxx/qla_iocb.c
+  CC [M]  drivers/scsi/qla2xxx/qla_iocb.o
+  CHECK   drivers/scsi/qla2xxx/qla_isr.c
+drivers/scsi/qla2xxx/qla_isr.c:27:1: warning: symbol
+'qla_link_integrity_tgt_stats_update' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:106:38: warning: restricted __be32
+degrades to integer
+drivers/scsi/qla2xxx/qla_isr.c:83:1: warning: symbol
+'qla_scm_process_link_integrity_d' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:143:1: warning: symbol
+'qla_delivery_tgt_stats_update' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:173:1: warning: symbol
+'qla_scm_process_delivery_notification_d' was not declared. Should it be
+static?
+drivers/scsi/qla2xxx/qla_isr.c:204:1: warning: symbol
+'qla_scm_set_target_device_state' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:240:56: warning: incorrect type in
+assignment (different base types)
+drivers/scsi/qla2xxx/qla_isr.c:240:56:    expected unsigned int
+[usertype] event_period
+drivers/scsi/qla2xxx/qla_isr.c:240:56:    got restricted __be32
+[usertype] event_period
+drivers/scsi/qla2xxx/qla_isr.c:227:1: warning: symbol
+'qla_peer_congestion_tgt_stats_update' was not declared. Should it be
+static?
+drivers/scsi/qla2xxx/qla_isr.c:270:1: warning: symbol
+'qla_scm_process_peer_congestion_notification_d' was not declared.
+Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:313:1: warning: symbol
+'qla_scm_process_congestion_notification_d' was not declared. Should it
+be static?
+drivers/scsi/qla2xxx/qla_isr.c:343:1: warning: symbol
+'qla27xx_process_purex_fpin' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:1135:19: warning: symbol
+'qla24xx_alloc_purex_item' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:1192:1: warning: symbol
+'qla24xx_copy_std_pkt' was not declared. Should it be static?
+drivers/scsi/qla2xxx/qla_isr.c:1225:23: warning: restricted __le16
+degrades to integer
+drivers/scsi/qla2xxx/qla_isr.c:1225:23: warning: cast to restricted __le16
+drivers/scsi/qla2xxx/qla_isr.c:1212:19: warning: symbol
+'qla27xx_copy_fpin_pkt' was not declared. Should it be static?
+  CC [M]  drivers/scsi/qla2xxx/qla_isr.o
+  CHECK   drivers/scsi/qla2xxx/qla_gs.c
+  CC [M]  drivers/scsi/qla2xxx/qla_gs.o
+  CHECK   drivers/scsi/qla2xxx/qla_dbg.c
+  CC [M]  drivers/scsi/qla2xxx/qla_dbg.o
+  CHECK   drivers/scsi/qla2xxx/qla_sup.c
+  CC [M]  drivers/scsi/qla2xxx/qla_sup.o
+  CHECK   drivers/scsi/qla2xxx/qla_attr.c
+  CC [M]  drivers/scsi/qla2xxx/qla_attr.o
+  CHECK   drivers/scsi/qla2xxx/qla_mid.c
+  CC [M]  drivers/scsi/qla2xxx/qla_mid.o
+  CHECK   drivers/scsi/qla2xxx/qla_dfs.c
+  CC [M]  drivers/scsi/qla2xxx/qla_dfs.o
+drivers/scsi/qla2xxx/qla_dfs.c: In function
+‘qla2x00_dfs_tgt_port_database_show’:
+drivers/scsi/qla2xxx/qla_dfs.c:107:1: warning: the frame size of 1280
+bytes is larger than 1024 bytes [-Wframe-larger-than=]
+  107 | }
+      | ^
+
+Please fix these issues.
+
+Thanks,
+
+Bart.
