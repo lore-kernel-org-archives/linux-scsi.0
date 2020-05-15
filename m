@@ -2,117 +2,105 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F07B3C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 18:52:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB01EC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 19:00:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD7872073E
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 18:52:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B87D220728
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 19:00:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="M75s1AzQ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oJBvAo8Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726219AbgEOSw5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 14:52:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47968 "EHLO
+        id S1726226AbgEOTA3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 15:00:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726144AbgEOSw5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 14:52:57 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06780C061A0C
-        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2020 11:52:57 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id f13so3293881wmc.5
-        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2020 11:52:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=CQibJcsW1riP710/wd8HzZKYzEd6nHQT+cA9QhF63CQ=;
-        b=M75s1AzQKVcsInhjuIzspZLwTGeQE8XhIDSHw3MsYSebnCE/XZXkw4OhZLXv6cGbcG
-         J0hF1Z3yn2zxuacgSZRBoM0EyYMCu/O81Q/V0s256CVieFNK0db836N3jEsy1TMlVHaL
-         de8bdcajyllwA5Mhu9yYDt6qoJiNn+yOXLQAo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=CQibJcsW1riP710/wd8HzZKYzEd6nHQT+cA9QhF63CQ=;
-        b=HgSMvMZluJ0vNxqZq4IiO9NKKhabMteXoPGu1LKkukzbb99348CY+5KU3SWOH5A9FQ
-         0LlQlHuqxw5Xll8HfE4V2Nb4u+r9hD7JFKYzrqDPeXvkGsL0uSg3seRpH5SQ9/HrWcsf
-         nHH8kyDxzKBT0Dse33kxa/yBCjTwlwuux/ouVlNKxrC6LjjiweUHuZdlBUiPBjfg3EnX
-         h06ER/540A2zecNSlFyrs/FaWTXqVjKXWS6vQo7cK76lluRY06FgBU3mcHr/AH5A5cUo
-         YtguEBr37IxO3/1wTFWiTmC5sfM1l9C0EIFFlW/C7AZiQxuld2wFmM4rn6T35nncdWz1
-         x+Ug==
-X-Gm-Message-State: AOAM531paB6I8bNDRqC6nwivSDIx5bPS3FWxukBT3BoseYaOkMH/U1ZX
-        RAYBaUyXbzD1j7UpQSiUCS653g==
-X-Google-Smtp-Source: ABdhPJzWkVMDiGz3Cuj+AMDWmeXDPp3l242ZNF+uf0sR9W3kSZkW+qIVO/teiSVbYPjFVAA0sqtWzw==
-X-Received: by 2002:a1c:a910:: with SMTP id s16mr5431609wme.70.1589568775622;
-        Fri, 15 May 2020 11:52:55 -0700 (PDT)
-Received: from [10.230.185.151] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w82sm4712169wmg.28.2020.05.15.11.52.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 May 2020 11:52:55 -0700 (PDT)
-Subject: Re: [PATCH 1/3] qla2xxx: Change in PUREX to handle FPIN ELS requests.
-To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20200514101026.10040-1-njavali@marvell.com>
- <20200514101026.10040-2-njavali@marvell.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <75f6aa9d-faca-5e21-8af4-21ff656adbd3@broadcom.com>
-Date:   Fri, 15 May 2020 11:52:51 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        with ESMTP id S1726144AbgEOTA3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 15:00:29 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B6C2C061A0C;
+        Fri, 15 May 2020 12:00:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=cpdp67EUtxwQ4pvAlHHorIRNUGF4UtquU7Pnx9Rww6E=; b=oJBvAo8ZP0MxYVgwBCVArAwAjU
+        ksi/m0csrnuZAbzFyX+GIi2y9tiwHZYjJUb9SWcRqRtAmVb/CL9oI2cGKoVw95o9gl+NlsGLOQvoG
+        Fg3QpYPy1cBLS6cdmi1kA1P0I7I4LVkxO64m23SkXTDu3tt/AotueGrwOkzDjJLTS3P0qnsoQYy7F
+        xAqYTLA06l0bJV0g84y3ZuqtM6UZjHvgoykv8NZBVSKUaiI/4dimcgIRb8+ajUcQ9iHaJ6AgeJjko
+        k0NLU9xyh5P5L5dCsKDJUm6q0DX4ly03R4uOHxEyZg8WjqhbToo8C81op/n0x9ndGLqRqa65ALEQw
+        rRDGLbUg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jZfZK-0005ND-Lw; Fri, 15 May 2020 19:00:26 +0000
+Date:   Fri, 15 May 2020 12:00:26 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     kbuild test robot <lkp@intel.com>
+Cc:     Michal Simek <monstr@monstr.eu>, kbuild-all@lists.01.org,
+        linux-kernel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        Stefan Asserhall <stefan.asserhall@xilinx.com>,
+        linux-scsi@vger.kernel.org, linux-parisc@vger.kernel.org
+Subject: Re: drivers/scsi/ncr53c8xx.c:5306:9: sparse: sparse: cast truncates
+ bits from constant value (58f becomes 8f)
+Message-ID: <20200515190026.GI16070@bombadil.infradead.org>
+References: <202005160227.h6Ieqnmz%lkp@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20200514101026.10040-2-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202005160227.h6Ieqnmz%lkp@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Sat, May 16, 2020 at 02:20:38AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
+> head:   051e6b7e34b9bd24f46725f74994a4d3a653966e
+> commit: 06e85c7e9a1c1356038936566fc23f7c0d363b96 asm-generic: fix unistd_32.h generation format
+> date:   5 weeks ago
 
+I don't see how that commit in any way reflects this error message.
 
-On 5/14/2020 3:10 AM, Nilesh Javali wrote:
-> From: Shyam Sundar <ssundar@marvell.com>
->
-> SAN Congestion Management generates ELS pkts whose size
-> can vary, and be > 64 bytes. Change the purex
-> handling code to support non standard ELS pkt size.
->
-> Signed-off-by: Shyam Sundar <ssundar@marvell.com>
-> Signed-off-by: Arun Easi <aeasi@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
->   drivers/scsi/qla2xxx/qla_def.h |  17 ++++-
->   drivers/scsi/qla2xxx/qla_gbl.h |   3 +-
->   drivers/scsi/qla2xxx/qla_isr.c | 116 ++++++++++++++++++++++++---------
->   drivers/scsi/qla2xxx/qla_mbx.c |  22 +++++--
->   drivers/scsi/qla2xxx/qla_os.c  |  19 ++++--
->   5 files changed, 136 insertions(+), 41 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index 172ea4e5887d..954d1a230b8a 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -1270,6 +1270,11 @@ static inline bool qla2xxx_is_valid_mbs(unsigned int mbs)
->   
->   #define ELS_CMD_MAP_SIZE	32
->   #define ELS_COMMAND_RDP		0x18
-> +/* Fabric Perf Impact Notification */
-> +#define ELS_COMMAND_FPIN	0x16
-> +/* Read Diagnostic Functions */
-> +#define ELS_COMMAND_RDF		0x19
-> +#define ELS_COMMAND_PUN		0x31
+> reproduce:
+>         # apt-get install sparse
+>         # sparse version: v0.6.1-193-gb8fad4bc-dirty
+>         git checkout 06e85c7e9a1c1356038936566fc23f7c0d363b96
+>         make ARCH=x86_64 allmodconfig
 
-You should use the definitions for FPIN, RDF from 
-include/uapi/scsi/fc/fc_els.h.  And add PUN to the file.
+I can't even see a way to build the ncr53c8xx module with this config.
+Unless somebody reenabled EISA on x86, the only way I can see to
+still build this driver is on PA-RISC with the ZALON code.
 
-Note datastructures for FPIN and RDF are there as well.
+>         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+> 
+> If you fix the issue, kindly add following tag as appropriate
+> Reported-by: kbuild test robot <lkp@intel.com>
+> 
+> 
+> sparse warnings: (new ones prefixed by >>)
+> 
+> >> drivers/scsi/ncr53c8xx.c:5306:9: sparse: sparse: cast truncates bits from constant value (58f becomes 8f)
+> 
+> ^1da177e4c3f41 Linus Torvalds 2005-04-16 @5306  	OUTW (nc_sien , STO|HTH|MA|SGE|UDC|RST|PAR);
 
--- james
+This seems entirely intentional.
+
+Something like this should do the job (whitespace damaged):
+
++++ b/drivers/scsi/ncr53c8xx.h
+@@ -407,7 +407,7 @@
+ 
+ #ifdef CONFIG_SCSI_NCR53C8XX_NO_WORD_TRANSFERS
+ /* Only 8 or 32 bit transfers allowed */
+-#define OUTW_OFF(o, val)       do { writeb((char)((val) >> 8), (char __iomem *)np->reg + ncr_offw(o)); writeb((char)(val), (char __iomem *)np->reg + ncr_offw(o) + 1); } while (0)
++#define OUTW_OFF(o, val)       do { writeb((char)((val) >> 8), (char __iomem *)np->reg + ncr_offw(o)); writeb((char)((val) & 0xff), (char __iomem *)np->reg + ncr_offw(o) + 1); } while (0)
+ #else
+ #define OUTW_OFF(o, val)       writew_raw((val), (char __iomem *)np->reg + ncr_offw(o))
+ #endif
+
 
