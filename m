@@ -2,128 +2,118 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63913C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 08:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 156E3C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 09:10:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F96D206F1
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 08:32:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE54D2065C
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 09:10:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hNoS6Mtp"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="o48RXwIo";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="YvzRHXv0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727857AbgEOIcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 04:32:39 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:46892 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726730AbgEOIcj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 04:32:39 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04F8WaCV061056;
-        Fri, 15 May 2020 08:32:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id; s=corp-2020-01-29;
- bh=qabFLrPBdCY3XzQ1h1tsRNJ4eGD+6UXRbZdhAcUiFI4=;
- b=hNoS6Mtp3jr5/HiRadwKCuRNDibTlfSTKmSX3zVlln2xorHymhFdluq4r4rM6o0ZegcE
- Qc3z5H4/waSb8c+rYF6OCknwMeGf289CEl6ca34tFt8PYfCVTtLs9sZgwL1XnvaWGZPb
- sjXMkN8ca8inddOsT0EuwTfyG6g9vT7Q686AKH9sh0fBrES2U+VCuXyB1FNBMBKZYpzA
- QJK/BKtuHYUiRSff1LxM0RxY/2IYKMtRDp+w2EYUC7vOsAaHf5WltXA6iBEmnRTbRKRc
- J6oa70PhEWIInzoBaee0cp9hoN0facjCK2NMtKNNSS6ARco2IPxKNMOJLNfx6ZVl8e3p KQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 3100yg986d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 15 May 2020 08:32:36 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04F8Sk8J123706;
-        Fri, 15 May 2020 08:30:31 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 3100yr3jp5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 15 May 2020 08:30:31 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04F8UUCh002457;
-        Fri, 15 May 2020 08:30:30 GMT
-Received: from gms-target-03.osdevelopmeniad.oraclevcn.com (/100.100.242.162)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 15 May 2020 01:30:30 -0700
-From:   Gulam Mohamed <gulam.mohamed@oracle.com>
-To:     gulam.mohamed@oracle.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: Correct-the-type-of-arg-to-scsi_host_lookup
-Date:   Fri, 15 May 2020 08:30:16 +0000
-Message-Id: <1589531416-3852-1-git-send-email-gulam.mohamed@oracle.com>
-X-Mailer: git-send-email 1.8.3.1
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 suspectscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005150074
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- cotscore=-2147483648 mlxscore=0 suspectscore=0 spamscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 clxscore=1011 phishscore=0 bulkscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005150075
+        id S1727929AbgEOJKq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 05:10:46 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:3569 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726922AbgEOJKp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 05:10:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1589533845; x=1621069845;
+  h=from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+  b=o48RXwIoX6lusSruGxTPucAN63KskHuaJ6+CXsyh2z8lQgvGE9vg15wU
+   lRb1ROy0dA1ZwUSmM8Hjc+Jf7PFCSBFXglA9odlP3AHmEAm/zpDQEDxhf
+   xvhV0NSzP0qCDmXBMNyxYbhTdKJRW9c7zzLXgfualRdAifUkQWPNQgAIo
+   GDgspETwhFJaby3OxiXwBZyNLLQ+5oq4dVRXnx8Z4QFkmTMO3IGio8ndA
+   kdwtxxUx5y+v3ZhHxgCwNyQSUu27k9NtKwee8exFvA1EMGCoDw+mF4nVm
+   yW5RuC4BI/tF0grakypQy/HeL0sdcDUhmiHeVs6q3HzZYeoGjLc0qXLbz
+   Q==;
+IronPort-SDR: 9JTq4RKIXR9fgXb/wyr7pCBFaOhLRXyKkli4RtQYQTHDLt4lVmmiEdKJhXXocln65+P+8uPavU
+ GRxi9TVEkV+FaukrfCorsiT1GUieMNXM6IqTuiAkWxTXdg4q9NQBQo/vc/gr36qevKqGpMIQMf
+ 6PIHYbTDnFgzDvbcE+TNogoqgY0fv24Dv4Ln87cleH16I/5kZc7wcklVJIb/9AT1Y4GRtrylPF
+ LQepkRgBa85QU+wZMvZUV3XoFObXeeIFwJb6wpP08wgcDizaWbf6tAtfFqZycLmRJslmdt2ZGm
+ RNI=
+X-IronPort-AV: E=Sophos;i="5.73,394,1583164800"; 
+   d="scan'208";a="142108841"
+Received: from mail-dm6nam12lp2169.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.169])
+  by ob1.hgst.iphmx.com with ESMTP; 15 May 2020 17:10:44 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nQJM9VNnBs/lf4wyIuUvzAV6Qh5QKasNh+Z5eDpTOUHj4/69eqcrfglrpM98f39NcsiO0Y8UItFQGe3rIfhcqErAXOf8NFLN/Xf7IbQeIZ3NEbE7wcuhzDrsURFWgROvsQmX6Eas5fuSVqa6TjenyYhwCgAZqEGw/64lg720EmYXNigTYb+eVPO0oJp9chkUvKy6904+6ni70rMoEK63B25h41nqM/+CW7Me0pJSq8Gt4UPI7dpYuMe4KYMFYM+tX46IrMsC79nEIpPLCL8+2oVspXtH2Dx8uhTcCtdBeaZuuhmZiAnlgnWX3eiTtiKVC6Wr+boDUQUESF+NF7/hFA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=hG4wFubrBHkXPljabtWE/GC0jESuYkpiHwMW3Z6BX8RFKM+ZLdO5IHRmKvB36WmzwO80v5PkDe04WruIgthbXl9UmWMZnoasS2QpJU1TmFPq7gnkh2DXQ7e6VgA3BldiEa0WreTrmiMGA0/o+naGTo0VTlrFnBjr8UwCEUc9AXCycOQ8E1ndTj/4wz0BM8N4A6kLzK+2OdxK5VeeR/6Xfv3FpYRDujQtXN4rmWRP6COrRsYyCJEMumBmpisZFsAKPQBXxWbWBb8J/T/gpdZ5wOekO5imZn5RGKEvvgiYvI4oAJcmfAvzI+WDyFIFjvbzUTFJPoaS22Pb73D+5k+62A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=YvzRHXv0D4lAI5sn+9zi1Q7/QHumDf9A8xjQjOnhd5xsBghtNMrhyEQiyBke0gOHsXvKUS20qtaAhqUa9REZmIG3ZhIa7LA1CtApENnyMPrA+ANdhJRuj+bumbRExhQM8eFREm0TWbqIOrALlZLeTVDN56EBk803HO/A2ntg8Dw=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3664.namprd04.prod.outlook.com
+ (2603:10b6:803:4b::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.29; Fri, 15 May
+ 2020 09:10:43 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::9854:2bc6:1ad2:f655%4]) with mapi id 15.20.3000.022; Fri, 15 May 2020
+ 09:10:43 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: Add zoned capabilities device attribute
+Thread-Topic: [PATCH] sd: Add zoned capabilities device attribute
+Thread-Index: AQHWKnyOs6lOLNtzqkCpmABY3Ic9nA==
+Date:   Fri, 15 May 2020 09:10:43 +0000
+Message-ID: <SN4PR0401MB35982034A2D5135BF83E7EFA9BBD0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200515054856.1408575-1-damien.lemoal@wdc.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: wdc.com; dkim=none (message not signed)
+ header.d=none;wdc.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: e5f40e4f-a319-4422-05d8-08d7f8afd8c0
+x-ms-traffictypediagnostic: SN4PR0401MB3664:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SN4PR0401MB36646AF5CF30544AAB3C15A99BBD0@SN4PR0401MB3664.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1728;
+x-forefront-prvs: 04041A2886
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: IIMjL6txwFw6YkB/HoXtASMe+PPjy9w7vRNNNzJXDIkXSBzfhOiWwFC1egEMMNXcgmHzS0mh7genLXX4GYGImHGJ+x88/tROcNpwoVzbkWRpq9fhARuJT48H5Q01u8PMRdA9JWKtWn0iWroSeyKB2gbVr43ELYhbPsMt/amE2uNwQ0UGKjCM/70c+eUeGcZwFK6+9FQb4yu30LVPbVzivc8jy3t3F2jc0LLIHsInEcdE4FdjcW8qUYwGv0gUNW48Rw1iyjg5hUjnm5RudS3D0cAXvAwA8niVbsVANraIj7NWGVND5i7SZ1vE9TToUSibFK5q+QR6fQUL9oCe4zFFe6bmKVi5Y7/pabPg9jkvo5vW5TcSPv9SvZm+Rd7RFEJ616Ki49FvM/jPuVHAIKKFWBTczqRPS1lUzjxetKdWt3CeuARyTZNn9Ak+ga8kNbmx
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(39860400002)(346002)(376002)(366004)(396003)(316002)(8936002)(5660300002)(478600001)(66476007)(64756008)(19618925003)(33656002)(66556008)(558084003)(66946007)(8676002)(2906002)(52536014)(76116006)(66446008)(9686003)(6506007)(7696005)(91956017)(4270600006)(26005)(71200400001)(86362001)(186003)(110136005)(55016002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: zs8RUEcpy8zXG3W0dOEDH6VqtG2aIfYri4Ajea57ZGNsAHdZxLOGf433bGV5PXNqdBoH2u6T53kB59JdvD+RzRKKoewWgQjAuIrfw2YaK3p30zwrXoaRs88+RW3uPHR60EYC2mg3UWkSPOuwmUu2NuveV6T1lkFIK+dRwbswYd24vvYRg0Ht3T172spXsxmL1jyWlsGtxKNIoQsKtVCciEmbZmTKig08jFkU9cPFI/B3HkOwAODA+e+x3tXqjpaLcR9NByu+iwIUJSVpvcCiMu2EOSg62xWiNSjyhy2zAXPGTkDkGs+8rTUrJrYa9TnNfq8Ib2JWp+F4kwmBFMh7SnufWV0UPOAXUrKdUeXdo60GsvV6Ec0vu8LCrb9H9Lx+iStnelQQrEW/MGCQmZKGjWA8Hlg9ZO7gHyQtIOaHUoBXMUMOZR8mheK/M7C3J3VxUpaSS8BT2LlaadHtPeeezir6cM/v9BxWqYmuw2j2ybt4kS4KVJCAJLXb2P30sZNg
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5f40e4f-a319-4422-05d8-08d7f8afd8c0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 May 2020 09:10:43.4733
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CsABo1mCgoeLOdgC0MWXov4yoVBQ+Y0fO1K2Dy+lO6jk6MkvKjMfw//3NHJCbDU6rM+cx4OmKTMpd3taRj+x7vjmK6MZHbpPOuNXzo4Ys9k=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3664
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The data type of the argument, hostnum, to function
-scsi_host_lookup(unsigned short hostnum) is unsigned short but the
-hostnum sent to this function from callers functions is uint32_t or
-unsigned int. Correct the data type to unsigned int to avoid the
-wrapping of the hostnum value after 65535. Also change the data type of
-local variable hostnum of the function __scsi_host_match() to unsigned
-int.
-
-Signed-off-by: Gulam Mohamed <gulam.mohamed@oracle.com>
-Reviewed-by: Joe Jin <joe.jin@oracle.com>
-Reviewed-by: Fred Herard <fred.herard@oracle.com>
----
- drivers/scsi/hosts.c     | 4 ++--
- include/scsi/scsi_host.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 7ec91c3a66ca..c5c1534eb6e7 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -510,7 +510,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- static int __scsi_host_match(struct device *dev, const void *data)
- {
- 	struct Scsi_Host *p;
--	const unsigned short *hostnum = data;
-+	const unsigned int *hostnum = data;
- 
- 	p = class_to_shost(dev);
- 	return p->host_no == *hostnum;
-@@ -527,7 +527,7 @@ static int __scsi_host_match(struct device *dev, const void *data)
-  *	that scsi_host_get() took. The put_device() below dropped
-  *	the reference from class_find_device().
-  **/
--struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
-+struct Scsi_Host *scsi_host_lookup(unsigned int hostnum)
- {
- 	struct device *cdev;
- 	struct Scsi_Host *shost = NULL;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 822e8cda8d9b..59742fb6fcd7 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -731,7 +731,7 @@ extern int __must_check scsi_add_host_with_dma(struct Scsi_Host *,
- extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
- extern int scsi_host_busy(struct Scsi_Host *shost);
- extern void scsi_host_put(struct Scsi_Host *t);
--extern struct Scsi_Host *scsi_host_lookup(unsigned short);
-+extern struct Scsi_Host *scsi_host_lookup(unsigned int);
- extern const char *scsi_host_state_name(enum scsi_host_state);
- extern void scsi_host_complete_all_commands(struct Scsi_Host *shost,
- 					    int status);
--- 
-1.8.3.1
-
+Looks good,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
