@@ -2,143 +2,71 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8041C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 07:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E4F9C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 07:57:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D0C02075F
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 07:41:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HbpcDNi3"
+	by mail.kernel.org (Postfix) with ESMTP id 25E8320727
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 07:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726953AbgEOHlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 03:41:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55390 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726624AbgEOHle (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 May 2020 03:41:34 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD219C061A0C;
-        Fri, 15 May 2020 00:41:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=5F5020LXe/PKeW2E7HP+KIsjpPbHby4z569GcXavvzw=; b=HbpcDNi3cjt95r1YCRFokz/Cxj
-        P+8RahgC1lAn/32KwuHkV4Lvhyhsk97XCxxP0im6h+5rMpUaSLveo3+kRZlKvMsoccaigaCPWm1cy
-        qLJ0wTKT1MLNqAGARFe/2g2elZChAcggp62D7/BfxeDnVplokiU+xeDaFSkipusQsgp50BZkC4QCs
-        1GC5JyHov7b6RP7pfumvwoG8cFIdaqTzqMYYr19s9rekZo9R5CGENqmBlqKBDBqmSGhAo6+3NJkic
-        Hk5pup2crDyCB948jsfNP0kCfoLy2tU6hHMpyfWcRcJLPEHubtPFNggqhzA2Eerfysdcuiz7ClvSL
-        fAiHMJXg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jZUyF-0005Jq-7l; Fri, 15 May 2020 07:41:27 +0000
-Date:   Fri, 15 May 2020 00:41:27 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Eric Biggers <ebiggers@kernel.org>,
-        Satya Tangirala <satyat@google.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v13 00/12] Inline Encryption Support
-Message-ID: <20200515074127.GA13926@infradead.org>
-References: <20200514003727.69001-1-satyat@google.com>
- <20200514051053.GA14829@sol.localdomain>
- <8fa1aafe-1725-e586-ede3-a3273e674470@kernel.dk>
+        id S1726714AbgEOH5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 03:57:30 -0400
+Received: from mx2.suse.de ([195.135.220.15]:43690 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726665AbgEOH5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 May 2020 03:57:30 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 1E1ABABD0;
+        Fri, 15 May 2020 07:57:32 +0000 (UTC)
+Date:   Fri, 15 May 2020 09:57:28 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH v6 03/15] qla2xxx: Simplify the functions for dumping
+ firmware
+Message-ID: <20200515075728.hiilzcdiel3pepvo@beryllium.lan>
+References: <20200514213516.25461-1-bvanassche@acm.org>
+ <20200514213516.25461-4-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8fa1aafe-1725-e586-ede3-a3273e674470@kernel.dk>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200514213516.25461-4-bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 14, 2020 at 09:48:40AM -0600, Jens Axboe wrote:
-> I have applied 1-5 for 5.8. Small tweak needed in patch 3 due to a header
-> inclusion, but clean apart from that.
+On Thu, May 14, 2020 at 02:35:04PM -0700, Bart Van Assche wrote:
+> Instead of passing an argument to the firmware dumping functions that
+> tells these functions whether or not to obtain the hardware lock, obtain
+> that lock before calling these functions. This patch fixes the following
+> recently introduced C=2 build error:
+> 
+>   CHECK   drivers/scsi/qla2xxx/qla_tmpl.c
+> drivers/scsi/qla2xxx/qla_tmpl.c:1133:1: error: Expected ; at end of statement
+> drivers/scsi/qla2xxx/qla_tmpl.c:1133:1: error: got }
+> drivers/scsi/qla2xxx/qla_tmpl.h:247:0: error: Expected } at end of function
+> drivers/scsi/qla2xxx/qla_tmpl.h:247:0: error: got end-of-input
+> 
+> Cc: Arun Easi <aeasi@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Fixes: cbb01c2f2f63 ("scsi: qla2xxx: Fix MPI failure AEN (8200) handling")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-I looked at this a bit more as it clashed with my outstanding
-q_usage_counter optimization, and I think we should move the
-blk_crypto_bio_prep call into blk-mq, similar to what we do about
-the integrity_prep call.  Comments?
-
----
-From b7a78be7de0f39ef972d6a2f97a3982a422bf3ab Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Fri, 15 May 2020 09:32:40 +0200
-Subject: block: move blk_crypto_bio_prep into blk_mq_make_request
-
-Currently blk_crypto_bio_prep is called for every block driver, including
-stacking drivers, which is probably not the right thing to do.  Instead
-move it to blk_mq_make_request, similar to how we handle integrity data.
-If we ever grow a low-level make_request based driver that wants
-encryption it will have to call blk_crypto_bio_prep manually, but I really
-hope we don't grow more non-stacking make_request drivers to start with.
-
-This also means we only need to do the crypto preparation after splitting
-and bouncing the bio, which means we don't bother allocating the fallback
-context for a bio that might only be a dummy and gets split or bounced
-later.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-core.c | 13 +++++--------
- block/blk-mq.c   |  2 ++
- 2 files changed, 7 insertions(+), 8 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 1e97f99735232..ac59afaa26960 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1131,12 +1131,10 @@ blk_qc_t generic_make_request(struct bio *bio)
- 			/* Create a fresh bio_list for all subordinate requests */
- 			bio_list_on_stack[1] = bio_list_on_stack[0];
- 			bio_list_init(&bio_list_on_stack[0]);
--			if (blk_crypto_bio_prep(&bio)) {
--				if (q->make_request_fn)
--					ret = q->make_request_fn(q, bio);
--				else
--					ret = blk_mq_make_request(q, bio);
--			}
-+			if (q->make_request_fn)
-+				ret = q->make_request_fn(q, bio);
-+			else
-+				ret = blk_mq_make_request(q, bio);
- 
- 			blk_queue_exit(q);
- 
-@@ -1185,8 +1183,7 @@ blk_qc_t direct_make_request(struct bio *bio)
- 		return BLK_QC_T_NONE;
- 	if (unlikely(bio_queue_enter(bio)))
- 		return BLK_QC_T_NONE;
--	if (blk_crypto_bio_prep(&bio))
--		ret = blk_mq_make_request(q, bio);
-+	ret = blk_mq_make_request(q, bio);
- 	blk_queue_exit(q);
- 	return ret;
- }
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index d2962863e629f..0b5a0fa0d124b 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2033,6 +2033,8 @@ blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	blk_queue_bounce(q, &bio);
- 	__blk_queue_split(q, &bio, &nr_segs);
- 
-+	if (!blk_crypto_bio_prep(&bio))
-+		return BLK_QC_T_NONE;
- 	if (!bio_integrity_prep(bio))
- 		return BLK_QC_T_NONE;
- 
--- 
-2.26.2
-
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
