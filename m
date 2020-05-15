@@ -2,116 +2,117 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA348C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 17:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F07B3C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 18:52:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA34620756
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 17:01:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589562082;
-	bh=L//wP+MT78GfEJiCI4QlGMGDDzxZTlmk/idX3FTcIRY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Q0jPiJA5wHYaWA36MyIhUQUB/SaeQX6sjyK6zd5t9sKv/bjHH1YRToCGkJC1I7kEL
-	 6ynvc7e/3Hqo8uTjMRXYWxNbynzRfZ17ZuMqF3xMQr1ctaxiL0odNUHlrM+YXBHJ+L
-	 X34qAYDRG196lwS0FHXnI3ZUZNBHv1Ad0G7aL29c=
+	by mail.kernel.org (Postfix) with ESMTP id CD7872073E
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 18:52:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="M75s1AzQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbgEORBV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 13:01:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37894 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726144AbgEORBV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 May 2020 13:01:21 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 50779206C0;
-        Fri, 15 May 2020 17:01:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589562080;
-        bh=L//wP+MT78GfEJiCI4QlGMGDDzxZTlmk/idX3FTcIRY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jddSpVkyXHBGXItg77bdv0TcwbfgMVMe7Q2SEgJSoRcLF+hg+keRPqsZMu/YO1rmZ
-         I8ELGSK3mDMWTnLtifx6EDg1r10Vo10Ir8EHH01XWJC8mm89kmSMuAIYFJHvh1sxPN
-         9EBOPbPYajXxJZoBC2mjpLyEbAzfjzQKOwDPVGe0=
-Date:   Fri, 15 May 2020 10:00:59 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Satya Tangirala <satyat@google.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v13 00/12] Inline Encryption Support
-Message-ID: <20200515170059.GA1009@sol.localdomain>
-References: <20200514003727.69001-1-satyat@google.com>
- <20200514051053.GA14829@sol.localdomain>
- <8fa1aafe-1725-e586-ede3-a3273e674470@kernel.dk>
- <20200515074127.GA13926@infradead.org>
- <20200515122540.GA143740@google.com>
- <20200515144224.GA12040@infradead.org>
+        id S1726219AbgEOSw5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 14:52:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47968 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726144AbgEOSw5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 14:52:57 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06780C061A0C
+        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2020 11:52:57 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id f13so3293881wmc.5
+        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2020 11:52:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=CQibJcsW1riP710/wd8HzZKYzEd6nHQT+cA9QhF63CQ=;
+        b=M75s1AzQKVcsInhjuIzspZLwTGeQE8XhIDSHw3MsYSebnCE/XZXkw4OhZLXv6cGbcG
+         J0hF1Z3yn2zxuacgSZRBoM0EyYMCu/O81Q/V0s256CVieFNK0db836N3jEsy1TMlVHaL
+         de8bdcajyllwA5Mhu9yYDt6qoJiNn+yOXLQAo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=CQibJcsW1riP710/wd8HzZKYzEd6nHQT+cA9QhF63CQ=;
+        b=HgSMvMZluJ0vNxqZq4IiO9NKKhabMteXoPGu1LKkukzbb99348CY+5KU3SWOH5A9FQ
+         0LlQlHuqxw5Xll8HfE4V2Nb4u+r9hD7JFKYzrqDPeXvkGsL0uSg3seRpH5SQ9/HrWcsf
+         nHH8kyDxzKBT0Dse33kxa/yBCjTwlwuux/ouVlNKxrC6LjjiweUHuZdlBUiPBjfg3EnX
+         h06ER/540A2zecNSlFyrs/FaWTXqVjKXWS6vQo7cK76lluRY06FgBU3mcHr/AH5A5cUo
+         YtguEBr37IxO3/1wTFWiTmC5sfM1l9C0EIFFlW/C7AZiQxuld2wFmM4rn6T35nncdWz1
+         x+Ug==
+X-Gm-Message-State: AOAM531paB6I8bNDRqC6nwivSDIx5bPS3FWxukBT3BoseYaOkMH/U1ZX
+        RAYBaUyXbzD1j7UpQSiUCS653g==
+X-Google-Smtp-Source: ABdhPJzWkVMDiGz3Cuj+AMDWmeXDPp3l242ZNF+uf0sR9W3kSZkW+qIVO/teiSVbYPjFVAA0sqtWzw==
+X-Received: by 2002:a1c:a910:: with SMTP id s16mr5431609wme.70.1589568775622;
+        Fri, 15 May 2020 11:52:55 -0700 (PDT)
+Received: from [10.230.185.151] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id w82sm4712169wmg.28.2020.05.15.11.52.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 May 2020 11:52:55 -0700 (PDT)
+Subject: Re: [PATCH 1/3] qla2xxx: Change in PUREX to handle FPIN ELS requests.
+To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+References: <20200514101026.10040-1-njavali@marvell.com>
+ <20200514101026.10040-2-njavali@marvell.com>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <75f6aa9d-faca-5e21-8af4-21ff656adbd3@broadcom.com>
+Date:   Fri, 15 May 2020 11:52:51 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200515144224.GA12040@infradead.org>
+In-Reply-To: <20200514101026.10040-2-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, May 15, 2020 at 07:42:24AM -0700, Christoph Hellwig wrote:
-> On Fri, May 15, 2020 at 12:25:40PM +0000, Satya Tangirala wrote:
-> > One of the nice things about the current design is that regardless of what
-> > request queue an FS sends an encrypted bio to, blk-crypto will be able to handle
-> > the encryption (whether by using hardware inline encryption, or using the
-> > blk-crypto-fallback). The FS itself does not need to worry about what the
-> > request queue is.
-> 
-> True.  Which just makes me despise that design with the pointless
-> fallback even more..
 
-The fallback is actually really useful.  First, for testing: it allows all the
-filesystem code that uses inline crypto to be tested using gce-xfstests and
-kvm-xfstests, so that it's covered by the usual ext4 and f2fs regression testing
-and it's much easier to develop patches for.  It also allowed us to enable the
-inlinecrypt mount option in Cuttlefish, which is the virtual Android device used
-to test the Android common kernels.  So, it gets the kernel test platform as
-similar to a real Android device as possible.
 
-Ideally we'd implement virtualized inline encryption as you suggested.  But
-these platforms use a mix of VMM's (QEMU, GCE, and crosvm) and storage types
-(virtio-blk, virtio-scsi, and maybe others; none of these even have an inline
-encryption standard defined yet).  So it's not currently feasible.
+On 5/14/2020 3:10 AM, Nilesh Javali wrote:
+> From: Shyam Sundar <ssundar@marvell.com>
+>
+> SAN Congestion Management generates ELS pkts whose size
+> can vary, and be > 64 bytes. Change the purex
+> handling code to support non standard ELS pkt size.
+>
+> Signed-off-by: Shyam Sundar <ssundar@marvell.com>
+> Signed-off-by: Arun Easi <aeasi@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_def.h |  17 ++++-
+>   drivers/scsi/qla2xxx/qla_gbl.h |   3 +-
+>   drivers/scsi/qla2xxx/qla_isr.c | 116 ++++++++++++++++++++++++---------
+>   drivers/scsi/qla2xxx/qla_mbx.c |  22 +++++--
+>   drivers/scsi/qla2xxx/qla_os.c  |  19 ++++--
+>   5 files changed, 136 insertions(+), 41 deletions(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+> index 172ea4e5887d..954d1a230b8a 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -1270,6 +1270,11 @@ static inline bool qla2xxx_is_valid_mbs(unsigned int mbs)
+>   
+>   #define ELS_CMD_MAP_SIZE	32
+>   #define ELS_COMMAND_RDP		0x18
+> +/* Fabric Perf Impact Notification */
+> +#define ELS_COMMAND_FPIN	0x16
+> +/* Read Diagnostic Functions */
+> +#define ELS_COMMAND_RDF		0x19
+> +#define ELS_COMMAND_PUN		0x31
 
-Second, it creates a clean design where users can just use blk-crypto, and not
-have to implement a second encryption implementation.  For example, I'd
-eventually like to switch fscrypt over to just use blk-crypto.  That would
-remove the duplicate code that you're concerned about.  It would also make it
-much easier to implement direct I/O support in fscrypt which is something that
-people have been requesting for a long time.
+You should use the definitions for FPIN, RDF from 
+include/uapi/scsi/fc/fc_els.h.  And add PUN to the file.
 
-The reason the fscrypt conversion isn't yet part of the patchset is just that I
-consider it super important that we don't cause any regressions in fscrypt and
-that it doesn't use inline encryption hardware by default.  So it's not quite
-time to switch over for real yet, especially while the current patches are still
-pending upstream.  But I think it will come eventually, especially if we see
-that most Linux distros are enabling CONFIG_BLK_INLINE_ENCRYPTION anyway.  The
-inlinecrypt mount option will thten start controlling whether blk-crypto is
-allowed to to use real hardware or not, not whether blk-crypto is used or not.
+Note datastructures for FPIN and RDF are there as well.
 
-Also, in the coming months we're planning to implement filesystem metadata
-encryption that is properly integrated with the fscrypt key derivation so that
-file contents don't have to be encrypted twice (as would be the case with
-dm-crypt + fscrypt).  That's going to involve adding lots of encryption hooks to
-code in ext4, f2fs, and places like fs/buffer.c.  blk-crypto-fallback is super
-helpful for this, since it will allow us to simply call
-fscrypt_set_bio_crypt_ctx() everywhere, and not have to both do that *and*
-implement a second case where we do all the crypto work scheduling, bounce page
-allocation, crypto API calls, etc. at the filesystem level.
+-- james
 
-- Eric
