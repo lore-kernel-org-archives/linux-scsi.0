@@ -2,127 +2,101 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A18CC433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 23:05:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12466C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 23:50:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04C65205CB
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 23:05:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6B66205CB
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 23:50:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Dk3lOutv"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LOE/kShL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726231AbgEOXFm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 19:05:42 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:36988 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726183AbgEOXFm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 May 2020 19:05:42 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 959984C850;
-        Fri, 15 May 2020 23:05:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1589583932;
-         x=1591398333; bh=7gdtLQzQAnbmIMUMQRVEBwOBRmZb3nBrA2047dJiI8I=; b=
-        Dk3lOutvNXk4HKvo/XeHy1S+CJJa1VE1UIymo/bKJLz5x0XYsY+Q9RqFwFx/976E
-        5M1kOsQEk5nzLw5ZNcg2QMhrf0VsTCoa7pi2p4eWamE3a6az0UJIoFOKrSqlR8Oe
-        2riGY358Ox8cyoaL9QkqS8vSx7Yxua5rD6IyuoW0494=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id DeUexwjR8X6M; Sat, 16 May 2020 02:05:32 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        id S1726553AbgEOXuH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 19:50:07 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:40331 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726231AbgEOXuH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 19:50:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589586606;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Hw3RkCsgcQacr6zjV1u999K3NhEH21GsqpqwnnfF7j0=;
+        b=LOE/kShLy3W8yXhbc2TAIxVMuH/Ebl05F/9u/jGl0+afA7bgUjLNPKxYE1Usr8hm9G3Acu
+        v02Cv+QF60/bQrLGCx2EhaWZ0wcztAiMXP/T5js/s7/QmxsWTvcJOt95AxVjN7j+XT6hvj
+        SJpUsn4zt7VhuHaMp+LwnCBM3fmMthE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-115-ICg31iNCP2q4ZAaE7I9IYw-1; Fri, 15 May 2020 19:50:03 -0400
+X-MC-Unique: ICg31iNCP2q4ZAaE7I9IYw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 991034C845;
-        Sat, 16 May 2020 02:05:31 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Sat, 16
- May 2020 02:05:33 +0300
-Date:   Sat, 16 May 2020 02:05:32 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>,
-        Arun Easi <aeasi@marvell.com>, Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>, Martin Wilck <mwilck@suse.com>
-Subject: Re: [PATCH v6 01/15] qla2xxx: Fix spelling of a variable name
-Message-ID: <20200515230532.GH98158@SPB-NB-133.local>
-References: <20200514213516.25461-1-bvanassche@acm.org>
- <20200514213516.25461-2-bvanassche@acm.org>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4B9CA1841958;
+        Fri, 15 May 2020 23:50:02 +0000 (UTC)
+Received: from [10.10.118.190] (ovpn-118-190.rdu2.redhat.com [10.10.118.190])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 828C51943D;
+        Fri, 15 May 2020 23:50:01 +0000 (UTC)
+Subject: Re: [PATCH target] target: Add initiatorname to NON_EXISTENT_LUN
+ error
+To:     Lance Digby <lance.digby@gmail.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <cd119ce943d9ec62ef1bff237ebb49e35a337c3b.1589407872.git.lance.digby@gmail.com>
+From:   Mike Christie <mchristi@redhat.com>
+Message-ID: <93c437ce-f881-9f54-5e39-afa8afd96141@redhat.com>
+Date:   Fri, 15 May 2020 18:50:00 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20200514213516.25461-2-bvanassche@acm.org>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+In-Reply-To: <cd119ce943d9ec62ef1bff237ebb49e35a337c3b.1589407872.git.lance.digby@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 14, 2020 at 02:35:02PM -0700, Bart Van Assche wrote:
-> Reviewed-by: Daniel Wagner <dwagner@suse.de>
-> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Arun Easi <aeasi@marvell.com>
-> Cc: Nilesh Javali <njavali@marvell.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/qla2xxx/qla_fw.h   | 2 +-
->  drivers/scsi/qla2xxx/qla_init.c | 4 ++--
->  2 files changed, 3 insertions(+), 3 deletions(-)
+On 5/13/20 11:01 PM, Lance Digby wrote:
+> The NON_EXISTENT_LUN error can be written without an error condition
+>  on the initiator responsible. Adding the initiatorname to this message
+>  will reduce the effort required to fix this when many initiators are
+> supported by a target.
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-> index f9bad5bd7198..b364a497e33d 100644
-> --- a/drivers/scsi/qla2xxx/qla_fw.h
-> +++ b/drivers/scsi/qla2xxx/qla_fw.h
-> @@ -1292,7 +1292,7 @@ struct device_reg_24xx {
->  };
->  /* RISC-RISC semaphore register PCI offet */
->  #define RISC_REGISTER_BASE_OFFSET	0x7010
-> -#define RISC_REGISTER_WINDOW_OFFET	0x6
-> +#define RISC_REGISTER_WINDOW_OFFSET	0x6
->  
->  /* RISC-RISC semaphore/flag register (risc address 0x7016) */
->  
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-> index 95b6166ae0cc..f8fe0334571f 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -2861,7 +2861,7 @@ qla25xx_read_risc_sema_reg(scsi_qla_host_t *vha, uint32_t *data)
->  	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
->  
->  	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
-> -	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET);
-> +	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET);
->  
->  }
->  
-> @@ -2871,7 +2871,7 @@ qla25xx_write_risc_sema_reg(scsi_qla_host_t *vha, uint32_t data)
->  	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
->  
->  	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
-> -	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET, data);
-> +	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET, data);
->  }
->  
->  static void
+> Signed-off-by: Lance Digby <lance.digby@gmail.com>
+> ---
+>  drivers/target/target_core_device.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> index 4cee113..604dea0 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -100,9 +100,10 @@
+>  		 */
+>  		if (unpacked_lun != 0) {
+>  			pr_err("TARGET_CORE[%s]: Detected NON_EXISTENT_LUN"
+> -				" Access for 0x%08llx\n",
+> +				" Access for 0x%08llx from %s\n",
+>  				se_cmd->se_tfo->fabric_name,
+> -				unpacked_lun);
+> +				unpacked_lun,
+> +				se_sess->se_node_acl->initiatorname);
 
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+You can do nacl->initiatorname.
 
-Thanks,
-Roman
+Do you also want add the name to the tmr case? It's probably not common,
+but the error message would be consistent.
+
+>  			return TCM_NON_EXISTENT_LUN;
+>  		}
+>  
+
