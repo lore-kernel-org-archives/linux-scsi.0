@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 458FDC433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 10:31:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5953C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 10:31:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EB712074D
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 10:31:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3EDB20767
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 10:31:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="SlsCK9TA"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="JOkk5c/g"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728279AbgEOKbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 06:31:32 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:36645 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728053AbgEOKbc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 06:31:32 -0400
+        id S1728288AbgEOKbj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 06:31:39 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:40620 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728053AbgEOKbi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 06:31:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1589538691; x=1621074691;
+  t=1589538698; x=1621074698;
   h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=G79IPLEUy4pR/EJjfpHcLFxh1pI4Vg1GZOA2EV04Es8=;
-  b=SlsCK9TA0SWutLj1BiaetsH+0yEUJBdXjEJK/VfVafP64AwZzzQHcQpU
-   91aPgj/D3trUomttdm1s+HflCzVrLNkQF2Gl0AHp7pRxv7eG71gpNoHsn
-   w1PleWUuF+zpYx7yVYx5JsfpgDBgJr7m6YEH7firdBY8ytZwTOBxLVgua
-   tblkLsEoEQ1K5lXn3snNW7cKrXA0Drea70mIQ+6jdMlrz3pLvDv1jRlnF
-   1Dump12nBAZxVZ01L2MtZrin0ykkKMWN0RQ2h4bS+QvoOx1HWBdCQg8aR
-   HxAxifuFG9c+r/VgUT+tPr9dXMBV0vkn/QxSJ+a35dZ9WEzo/afCDOYaF
-   A==;
-IronPort-SDR: 82UC76aZ90lRLW+Dv+WHBDCm53hvi7LqzrGciF63qoSzTiyjB/scOhelNudd1Bs3Kj3tHnhzZZ
- gNiRDBOcdS7dUPjNWo/kFJvf0zxlNV9+fjWQ4ywoJ7EUCq7N4t+JOZ5Z2RJyj/f6YQC9BjI75i
- 5bCeAllUH+5lJWr9GkxY2zmTdVIwDti6HVztujaBgOCWSs/ZqJIl8bL6aYDCqpHCeJXRtbt8cg
- AMZ/9l90Ps2cevLmYP+U3Dul3MrYQvBRj65QumEmI9WHTSChxeKCuK7gcUEqA18kMl3D2bC//d
- RTw=
+   references:mime-version:content-transfer-encoding;
+  bh=aPxI2eK/ay27sxXuvB12Qt7fEJWoSAOBVHuQP5fBlbg=;
+  b=JOkk5c/gLeafZ2AHviqmee6Pie0TYoM2rWjk/k2+fJH6ap3qG6bMoX7z
+   Z3pqqu7Rqg5BDc0xlFEaP6PWYCksOCSBs/o3pbZNqhI3Ws7tqH0RbRghD
+   H3B7UfFs4HVvK4jDJFjADzmi1jsXSS/7jc2bzYoesCJccDtiLUrHyjS1b
+   fIRZypyTEQ4x+k6e07ICxnmAmsDVuq2SEyhH3qm/4qPoFijGHMo5y5SfI
+   wOe76WCDELs2J+cuZFMHFrLvNj79lnsSog0eot0NAM2QJ2kE0liYn5aO9
+   T/rWBtWiHNw4Y7D0juGYaVG6D6m5vwDE8YvMwWEMYhlOusmm+uH8MtBgg
+   w==;
+IronPort-SDR: mWPmqim+HrM3pP77lrCCiATWktdQ4FmXMQfGYw2SwQOwyPJWPo6O2VLp1AwuDQOtNTcgF7X6H0
+ wCwYhiAWyDrvciDyGlkcV12AznFCpKrXlrRTI3kI8jY+LXZ02XV58BSaBbmOkGxjzzoNbg/w/2
+ Z1824nQis8b1D8FKC8iBhc1wB6jWZxyOyGTGsYVGzJO6UoqfJ8n5V4wecc6FF2tWXa+cTTLeJ2
+ 8ejuh1Iot1dmPpasWmAbGFM29pH9RztlZdTjvYm21ySYq7O5z+YerVcEmP5MwgoxcKSlS/8Y6u
+ leo=
 X-IronPort-AV: E=Sophos;i="5.73,394,1583164800"; 
-   d="scan'208";a="139202404"
+   d="scan'208";a="246735797"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 15 May 2020 18:31:31 +0800
-IronPort-SDR: Eq9HqaLeHNmS5xhxz1icn32Eu4hh/dj8iYGKavNllCOI5/hikVcj39TNopOASsb7k9Be38ZERp
- 6Tm68f4uWNgCQZnAtjysXmD5AxMMmogxo=
+  by ob1.hgst.iphmx.com with ESMTP; 15 May 2020 18:31:37 +0800
+IronPort-SDR: KZbjH8m7x/fhPvUNrWgQGYqMg+omdZc77jJh37hDg2BmsVlOTyOTZwkZ4Rp4Q6QVG72YoaK3Od
+ y0YwCyYMLA5V+wTrC1Sjp1R1Ws2Liio/g=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2020 03:21:08 -0700
-IronPort-SDR: WkJLCxfkU7XpwUKWV5vIeirXeZ2mBGrGw3gKS2se27N/tGfvP4xdDeRcY3KWpT92Ek58wQTOK8
- GGkhK2jii9BA==
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2020 03:21:16 -0700
+IronPort-SDR: CwaAg0AryuILN3tJ6YionGj+kx8L/+YH2AcB+5PNRjrrcne0g+BUTwtIObDz5TfMCLSXzVB3ek
+ FgWx5aUq//rQ==
 WDCIronportException: Internal
 Received: from ile422988.sdcorp.global.sandisk.com ([10.0.231.246])
-  by uls-op-cesaip01.wdc.com with ESMTP; 15 May 2020 03:31:26 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 15 May 2020 03:31:34 -0700
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -66,203 +66,92 @@ Cc:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
         yongmyung lee <ymhungry.lee@samsung.com>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
-Subject: [RFC PATCH 04/13] scsi: ufs: ufshpb: Init part II - Attach scsi device
-Date:   Fri, 15 May 2020 13:30:05 +0300
-Message-Id: <1589538614-24048-5-git-send-email-avri.altman@wdc.com>
+Subject: [RFC PATCH 05/13] scsi: ufs: ufshpb: Disable HPB if no HPB-enabled luns
+Date:   Fri, 15 May 2020 13:30:06 +0300
+Message-Id: <1589538614-24048-6-git-send-email-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
 References: <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The ufs boot process is essentially comprised of 2 parts: first a
-handshake with the device, and then, scsi scans and assign a scsi device
-to each lun.  The latter, although running a-synchronically, is
-happening right after reading the device configuration - lun by lun.
+We are disabling the feature altogether if reading the configuration
+fails, or there are no HPB-luns configured, or no active regions are
+configure.  Still, after reading the configuration successfully, there
+can be no HBP-enabled luns, e.g. if their pinned regions allocation has
+failed.
 
-By now we've read the device HPB configuration, and we are ready  to
-attach a scsi device to our HPB luns.  A perfect timing might be while
-scsi is performing its .slave_alloc() or .slave_configure().
+So to avoid keep checking the upiu responses for nothing, we are
+verifying that indeed there are any HPB-enabled luns out there after
+1min from the configuration read.  By then all the luns were scanned and
+initialized their device handler.  If there are no HPB-enabled luns –
+the feature is disabled altogether.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshcd.c |   3 ++
- drivers/scsi/ufs/ufshpb.c | 103 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshpb.h |   3 ++
- 3 files changed, 109 insertions(+)
+ drivers/scsi/ufs/ufshcd.h |  1 +
+ drivers/scsi/ufs/ufshpb.c | 24 ++++++++++++++++++++++++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index bffe699..c2011bf 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4628,6 +4628,9 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
- 
- 	ufshcd_get_lu_power_on_wp_status(hba, sdev);
- 
-+	if (ufshcd_is_hpb_supported(hba))
-+		ufshpb_attach_sdev(hba, sdev);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index e94e699..4a10e7b 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -7,7 +7,9 @@
-  */
- 
- #include <asm/unaligned.h>
-+#include <scsi/scsi_dh.h>
- #include <scsi/scsi_dh_ufshpb.h>
-+#include "../scsi_priv.h"
- #include "ufshcd.h"
- #include "ufs.h"
- #include "ufshpb.h"
-@@ -25,6 +27,7 @@ enum ufshpb_control_modes {
- 
- struct ufshpb_lun {
- 	u8 lun;
-+	struct scsi_device *sdev;
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index e7014a3..19a5613 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -743,6 +743,7 @@ struct ufs_hba {
+ 	struct request_queue	*bsg_queue;
+ 	bool wb_buf_flush_enabled;
+ 	bool wb_enabled;
++	struct delayed_work hpb_disable_work;
  };
  
+ /* Returns true if clocks can be gated. Otherwise false */
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+index 4a10e7b..be926cb 100644
+--- a/drivers/scsi/ufs/ufshpb.c
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -299,6 +299,28 @@ static int ufshpb_get_unit_config(struct ufs_hba *hba, u8 dev_num_luns)
+ 	return ret;
+ }
  
-@@ -34,6 +37,91 @@ struct ufshpb_lun *ufshpb_luns;
- static unsigned long ufshpb_lun_map[BITS_TO_LONGS(UFSHPB_MAX_LUNS)];
- static u8 ufshpb_lun_lookup[UFSHPB_MAX_LUNS];
- 
-+void ufshpb_remove_lun(u8 lun)
++static void ufshpb_disable_work(struct work_struct *work)
 +{
-+	struct ufshpb_lun *hpb;
-+
-+	if (!ufshpb_luns)
-+		return;
-+
-+	hpb = ufshpb_luns + lun;
-+	if (hpb->sdev && hpb->sdev->handler_data) {
-+		if (scsi_device_get(hpb->sdev))
-+			return;
-+
-+		scsi_dh_release_device(hpb->sdev);
-+		scsi_device_put(hpb->sdev);
-+	}
-+}
-+
-+/**
-+ * ufshpb_attach_sdev - attach and activate a hpb device handler
-+ * @hba: per adapter object
-+ * @sdev: scsi device that owns that handler
-+ *
-+ * Called during .slave_alloc(), and after ufshpb_probe() read the device hpb
-+ * configuration.
-+ */
-+void ufshpb_attach_sdev(struct ufs_hba *hba, struct scsi_device *sdev)
-+{
-+	struct ufshpb_lun *hpb_lun;
-+	struct ufshpb_dh_data {
-+		struct ufshpb_config *c;
-+		struct ufshpb_lun_config *lc;
-+	} h;
-+	int ret = -EINVAL;
-+	u8 lun = sdev->lun;
-+	u8 i;
-+
-+	/* ignore w-luns as those can't be hpb luns */
-+	if (lun >= UFSHPB_MAX_LUNS)
-+		return;
-+
-+	/* ignore non-hpb luns */
-+	if (!test_bit(lun, ufshpb_lun_map))
-+		return;
-+
-+	i = ufshpb_lun_lookup[lun];
-+
-+	if (sdev->handler && sdev->handler_data) {
-+		dev_err(hba->dev, "trying to re-attach lun %d ?\n", lun);
-+		goto out;
-+	}
-+
-+	if (!ufshpb_luns) {
-+		dev_err(hba->dev, "HPB was already removed\n");
-+		goto out;
-+	}
-+
-+	if (scsi_device_get(sdev)) {
-+		dev_err(hba->dev, "failed to get sdev for lun %d\n", lun);
-+		goto out;
-+	}
-+
-+	hpb_lun = ufshpb_luns + i;
-+	hpb_lun->sdev = sdev;
-+
-+	ret = scsi_dh_attach(sdev->request_queue, "ufshpb");
-+	if (ret || !sdev->handler || !sdev->handler_data)
-+		goto put_scsi_dev;
-+
-+	h.c = ufshpb_conf;
-+	h.lc = ufshpb_luns_conf + i;
-+
-+	memcpy(sdev->handler_data, &h, sizeof(h));
-+
-+	ret = scsi_dh_activate(sdev->request_queue, NULL, NULL);
-+
-+put_scsi_dev:
-+	scsi_device_put(sdev);
-+
-+out:
-+	if (ret) {
-+		dev_err(hba->dev, "attach sdev to HPB lun %d failed\n", lun);
-+		ufshpb_remove_lun(i);
-+	}
-+}
-+
- /**
-  * ufshpb_remove - ufshpb cleanup
-  *
-@@ -41,9 +129,24 @@ static u8 ufshpb_lun_lookup[UFSHPB_MAX_LUNS];
-  */
- void ufshpb_remove(struct ufs_hba *hba)
- {
-+	if (!ufshpb_conf)
-+		goto remove_hpb;
++	struct ufs_hba *hba = container_of(work, struct ufs_hba,
++					   hpb_disable_work.work);
 +
 +	if (ufshpb_luns) {
 +		unsigned int num_hpb_luns = ufshpb_conf->num_hpb_luns;
 +		int i;
 +
-+		spin_lock(hba->host->host_lock);
-+		for (i = 0; i < num_hpb_luns; i++)
-+			ufshpb_remove_lun(i);
-+		spin_unlock(hba->host->host_lock);
++		for (i = 0; i < num_hpb_luns; i++) {
++			struct ufshpb_lun *hpb = ufshpb_luns + i;
++
++			if (hpb->sdev && hpb->sdev->handler_data)
++				return;
++		}
 +	}
 +
- 	kfree(ufshpb_conf);
- 	kfree(ufshpb_luns_conf);
- 	kfree(ufshpb_luns);
++	hba->caps &= ~UFSHCD_CAP_HPB;
++	ufshpb_remove(hba);
++	dev_info(hba->dev, "HPB was removed - no active HPB luns\n");
++}
 +
-+remove_hpb:
- 	ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
- 			  QUERY_FLAG_IDN_HPB_RESET, 0, NULL);
- }
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index ee990f4..276a749 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -14,9 +14,12 @@ struct ufs_hba;
- #ifdef CONFIG_SCSI_UFS_HPB
- void ufshpb_remove(struct ufs_hba *hba);
- int ufshpb_probe(struct ufs_hba *hba);
-+void ufshpb_attach_sdev(struct ufs_hba *hba, struct scsi_device *sdev);
- #else
- static inline void ufshpb_remove(struct ufs_hba *hba) {}
- static inline int ufshpb_probe(struct ufs_hba *hba) { return 0; }
-+static inline void
-+ufshpb_attach_sdev(struct ufs_hba *hba, struct scsi_device *sdev) {}
- #endif
+ /**
+  * ufshpb_probe - read hpb config from the device
+  * @hba: per adapter object
+@@ -368,6 +390,8 @@ int ufshpb_probe(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
  
- #endif /* _UFSHPB_H */
++	INIT_DELAYED_WORK(&hba->hpb_disable_work, ufshpb_disable_work);
++	schedule_delayed_work(&hba->hpb_disable_work, 60 * HZ);
+ out:
+ 	kfree(dev_desc);
+ 	if (ret) {
 -- 
 2.7.4
 
