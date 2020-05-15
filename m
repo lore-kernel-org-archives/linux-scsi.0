@@ -2,65 +2,124 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8AEC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 09:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 718FBC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 10:19:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF191206B6
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 09:44:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48CE820760
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 10:19:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AOrQHDKh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727898AbgEOJoD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 05:44:03 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34752 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727116AbgEOJoD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 May 2020 05:44:03 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id ACC9EAD31;
-        Fri, 15 May 2020 09:44:04 +0000 (UTC)
-Date:   Fri, 15 May 2020 11:44:01 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Arun Easi <aeasi@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH v6 15/15] qla2xxx: Fix endianness annotations in source
- files
-Message-ID: <20200515094401.lvdsr7q4m7j26ze6@beryllium.lan>
-References: <20200514213516.25461-1-bvanassche@acm.org>
- <20200514213516.25461-16-bvanassche@acm.org>
+        id S1728073AbgEOKTb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 06:19:31 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:51830 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727927AbgEOKTb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 06:19:31 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04FA6aWf066361;
+        Fri, 15 May 2020 10:19:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type : in-reply-to;
+ s=corp-2020-01-29; bh=Sraec879HLM5mjkyogjFeEukkZwmyXPLKB47XiprxHQ=;
+ b=AOrQHDKhZmh7LCauki/I/L1zz5BtGRBDBykkJnK5poPnUy/7xKKy3L7uNzf0I57JLG61
+ pNt7KfFXAiKI7OllVQyWXCra2aY7vN8op9V4JPlTEyuy3viffgcmCAtIalCD0oC1fj76
+ tTFJijWEj5OYto0qQAf5r9ccW8dhk8/MI/QdF6Sipdx8nlzvJs5CWhEgFpWHCXdEaTnb
+ fY/YsfGDlz2TZN8WAMVvz+hHr4i0hhhizF5AKOYKYr0X2EBx4lyML2Yoe6Div6Vj8GLr
+ dGJGN/Ud2YZ6sJjdUGovMWPbRkGz9TRpkqgvz6rRsWEWPHMJhA9TVa+LmkkJiujJOx+y GQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 3100yga5jy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 15 May 2020 10:19:16 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04FAEBC8192223;
+        Fri, 15 May 2020 10:19:16 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 3100yjqfnf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 15 May 2020 10:19:16 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04FAJDdv007968;
+        Fri, 15 May 2020 10:19:13 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 15 May 2020 03:19:12 -0700
+Date:   Fri, 15 May 2020 13:19:03 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     James Smart <james.smart@broadcom.com>,
+        linux-nvme@lists.infradead.org
+Cc:     Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Paul Ely <paul.ely@broadcom.com>, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH resend] scsi: lpfc: Fix a use after free in
+ lpfc_nvme_unsol_ls_handler()
+Message-ID: <20200515101903.GJ3041@kadam>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200514213516.25461-16-bvanassche@acm.org>
+In-Reply-To: <yq1y2purqt1.fsf@oracle.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 bulkscore=0
+ phishscore=0 suspectscore=2 adultscore=0 mlxscore=0 mlxlogscore=903
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005150089
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
+ cotscore=-2147483648 mlxscore=0 suspectscore=2 spamscore=0 impostorscore=0
+ mlxlogscore=931 malwarescore=0 clxscore=1011 phishscore=0 bulkscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005150088
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 14, 2020 at 02:35:16PM -0700, Bart Van Assche wrote:
-> Fix all endianness complaints reported by sparse (C=2) without affecting
-> the behavior of the code on little endian CPUs.
-> 
-> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Cc: Nilesh Javali <njavali@marvell.com>
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+The "axchg" pointer is dereferenced when we call the
+lpfc_nvme_unsol_ls_issue_abort() function.  It can't be either freed or
+NULL.
 
-As far I can tell this looks okay but it's hard to review due it's size
-Stil I think we need an reviewd by the Marvell. I try to give the whole series
-a spin on our system next week.
+Fixes: 3a8070c567aa ("lpfc: Refactor NVME LS receive handling")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: James Smart <james.smart@broadcom.com>
+---
+Resending to the NVMe list.  Added James' R-b.
 
+Is there a way we could update MAINTAINERS so that ./get_maintainer.pl
+send these to the correct list?
+
+ drivers/scsi/lpfc/lpfc_sli.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 38889cb6e1996..fcf51b4192d66 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2895,14 +2895,14 @@ lpfc_nvme_unsol_ls_handler(struct lpfc_hba *phba, struct lpfc_iocbq *piocb)
+ 			(phba->nvmet_support) ? "T" : "I", ret);
+ 
+ out_fail:
+-	kfree(axchg);
+-
+ 	/* recycle receive buffer */
+ 	lpfc_in_buf_free(phba, &nvmebuf->dbuf);
+ 
+ 	/* If start of new exchange, abort it */
+-	if (fctl & FC_FC_FIRST_SEQ && !(fctl & FC_FC_EX_CTX))
++	if (axchg && (fctl & FC_FC_FIRST_SEQ) && !(fctl & FC_FC_EX_CTX))
+ 		lpfc_nvme_unsol_ls_issue_abort(phba, axchg, sid, oxid);
++
++	kfree(axchg);
+ }
+ 
+ /**
+-- 
+2.26.2
