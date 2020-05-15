@@ -2,79 +2,96 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB0BAC433E3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 06:35:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 980F5C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 06:38:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA8E92075F
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 06:35:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kwP3dkT2"
+	by mail.kernel.org (Postfix) with ESMTP id 724792065F
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 06:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726460AbgEOGfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 02:35:31 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:39623 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726191AbgEOGfa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 02:35:30 -0400
-X-UUID: a627162ab9be4896a6a78854bb275d10-20200515
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=dnVzAwZEKYSKKY4z6dkr6lk8gdmk1Zn9tS3rjZChFxw=;
-        b=kwP3dkT2wnhIK6hP6had2V0Z7rwvK+3/mjplUJSj+Y2YTlsYDUe1aNcX60PT1zJsQI+DGMO5AOQuCjtilA4TxJRcvm/jQ4MZXj4SIX54zHioqFt/GT2+ucgVaVjbC/X8ONuXj0OGZArn4uLYaSbrzzSD73g88Df20DCAmLwlh5U=;
-X-UUID: a627162ab9be4896a6a78854bb275d10-20200515
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 782748912; Fri, 15 May 2020 14:35:27 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 15 May 2020 14:35:24 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 15 May 2020 14:35:24 +0800
-Message-ID: <1589524526.3197.110.camel@mtkswgap22>
-Subject: Re: [PATCH v13 07/12] scsi: ufs: UFS crypto API
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Satya Tangirala <satyat@google.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-fscrypt@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-f2fs-devel@lists.sourceforge.net>,
-        <linux-ext4@vger.kernel.org>,
-        "Barani Muthukumaran" <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>,
-        "Eric Biggers" <ebiggers@google.com>
-Date:   Fri, 15 May 2020 14:35:26 +0800
-In-Reply-To: <20200514003727.69001-8-satyat@google.com>
-References: <20200514003727.69001-1-satyat@google.com>
-         <20200514003727.69001-8-satyat@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726525AbgEOGiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 02:38:11 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33960 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726295AbgEOGiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 May 2020 02:38:11 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id E5561B19D;
+        Fri, 15 May 2020 06:38:11 +0000 (UTC)
+Subject: Re: [PATCH v6 03/15] qla2xxx: Simplify the functions for dumping
+ firmware
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200514213516.25461-1-bvanassche@acm.org>
+ <20200514213516.25461-4-bvanassche@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <de66ff0c-e5eb-346c-ee46-a7ed245f7a9f@suse.de>
+Date:   Fri, 15 May 2020 08:38:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20200514213516.25461-4-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgU2F0eWEsDQoNCk9uIFRodSwgMjAyMC0wNS0xNCBhdCAwMDozNyArMDAwMCwgU2F0eWEgVGFu
-Z2lyYWxhIHdyb3RlOg0KPiBJbnRyb2R1Y2UgZnVuY3Rpb25zIHRvIG1hbmlwdWxhdGUgVUZTIGlu
-bGluZSBlbmNyeXB0aW9uIGhhcmR3YXJlDQo+IGluIGxpbmUgd2l0aCB0aGUgSkVERUMgVUZTSENJ
-IHYyLjEgc3BlY2lmaWNhdGlvbiBhbmQgdG8gd29yayB3aXRoIHRoZQ0KPiBibG9jayBrZXlzbG90
-IG1hbmFnZXIuDQo+IA0KPiBUaGUgVUZTIGNyeXB0byBBUEkgd2lsbCBhc3N1bWUgYnkgZGVmYXVs
-dCB0aGF0IGEgdmVuZG9yIGRyaXZlciBkb2Vzbid0DQo+IHN1cHBvcnQgVUZTIGNyeXB0bywgZXZl
-biBpZiB0aGUgaGFyZHdhcmUgYWR2ZXJ0aXNlcyB0aGUgY2FwYWJpbGl0eSwgYmVjYXVzZQ0KPiBh
-IGxvdCBvZiBoYXJkd2FyZSByZXF1aXJlcyBzb21lIHNwZWNpYWwgaGFuZGxpbmcgdGhhdCdzIG5v
-dCBzcGVjaWZpZWQgaW4NCj4gdGhlIGFmb3JlbWVudGlvbmVkIEpFREVDIHNwZWMuIEVhY2ggdmVu
-ZG9yIGRyaXZlciBtdXN0IGV4cGxpY2l0eSBzZXQNCg0KZXhwbGljaXRseQ0KDQo+IGhiYS0+Y2Fw
-cyB8PSBVRlNIQ0RfQ0FQX0NSWVBUTyBiZWZvcmUgdWZzaGNkX2hiYV9pbml0X2NyeXB0byBpcyBj
-YWxsZWQgdG8NCj4gb3B0LWluIHRvIFVGUyBjcnlwdG8gc3VwcG9ydC4NCj4gDQo+IFNpZ25lZC1v
-ZmYtYnk6IFNhdHlhIFRhbmdpcmFsYSA8c2F0eWF0QGdvb2dsZS5jb20+DQo+IFJldmlld2VkLWJ5
-OiBFcmljIEJpZ2dlcnMgPGViaWdnZXJzQGdvb2dsZS5jb20+DQoNClJldmlld2VkLWJ5OiBTdGFu
-bGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KDQo=
+On 5/14/20 11:35 PM, Bart Van Assche wrote:
+> Instead of passing an argument to the firmware dumping functions that
+> tells these functions whether or not to obtain the hardware lock, obtain
+> that lock before calling these functions. This patch fixes the following
+> recently introduced C=2 build error:
+> 
+>    CHECK   drivers/scsi/qla2xxx/qla_tmpl.c
+> drivers/scsi/qla2xxx/qla_tmpl.c:1133:1: error: Expected ; at end of statement
+> drivers/scsi/qla2xxx/qla_tmpl.c:1133:1: error: got }
+> drivers/scsi/qla2xxx/qla_tmpl.h:247:0: error: Expected } at end of function
+> drivers/scsi/qla2xxx/qla_tmpl.h:247:0: error: got end-of-input
+> 
+> Cc: Arun Easi <aeasi@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Fixes: cbb01c2f2f63 ("scsi: qla2xxx: Fix MPI failure AEN (8200) handling")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/qla2xxx/qla_bsg.c    |   4 +-
+>   drivers/scsi/qla2xxx/qla_dbg.c    | 153 ++++++++----------------------
+>   drivers/scsi/qla2xxx/qla_def.h    |   2 +-
+>   drivers/scsi/qla2xxx/qla_gbl.h    |  21 ++--
+>   drivers/scsi/qla2xxx/qla_isr.c    |  12 +--
+>   drivers/scsi/qla2xxx/qla_mbx.c    |   6 +-
+>   drivers/scsi/qla2xxx/qla_nx.c     |   2 +-
+>   drivers/scsi/qla2xxx/qla_nx2.c    |   2 +-
+>   drivers/scsi/qla2xxx/qla_os.c     |   2 +-
+>   drivers/scsi/qla2xxx/qla_target.c |   4 +-
+>   drivers/scsi/qla2xxx/qla_tmpl.c   |  19 +---
+>   11 files changed, 71 insertions(+), 156 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
