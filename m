@@ -2,105 +2,127 @@ Return-Path: <SRS0=Oq5V=65=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5818C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 15:33:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC514C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 15:45:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A658C20671
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 15:33:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BD1B20758
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 May 2020 15:45:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fYMX3i2c"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="swiwDxiW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726643AbgEOPd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 11:33:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44496 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726438AbgEOPd1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 15 May 2020 11:33:27 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79561C061A0C;
-        Fri, 15 May 2020 08:33:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
-        Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=1RN5PKNNkon+9cLMhdGB7yGTCqGbH26WhuWNkEgICvk=; b=fYMX3i2cYeMChsVRxIsb/vGbDG
-        zjJ9PHGhkouzpEhqjnhvqvQp2LITvYJ0LfeRhMToS3OrJZEH8i06kios/s3YCE8AGDs7vQkQp0vv5
-        xjlebxEysK+dI/sAeVddxYKEFEXxg1B7oOVVeUSTDHnAmZQqhhnxxiuBEpK/DQUDXPt9PZXSX7zsF
-        r8DABDNonX/xxEv7L3csQG/LxBYGeKVBBla67cdf4XqzvyiJmqktnHIQOLzP1lcaJaJ6PQJsDOmTv
-        ttkx/Wr73h3xuDoXDYo/sima3MY8Uw7KedI/amKQ9+e4hsv8H8L1Wfgw9y2WEAwjs0UioQ2TS1/DE
-        Faxz1eqQ==;
-Received: from [2601:1c0:6280:3f0::19c2]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jZcKp-0003U8-Tg; Fri, 15 May 2020 15:33:15 +0000
-Subject: Re: [RFC PATCH 02/13] scsi: ufshpb: Init part I - Read HPB config
-To:     Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        id S1726239AbgEOPpK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 11:45:10 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50348 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbgEOPpK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 11:45:10 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04FFbaAX026514;
+        Fri, 15 May 2020 15:44:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=1+tmDik4nldXbJypXaUhJGdOyXd8Xu5EjWsUz55WNq0=;
+ b=swiwDxiW+E50V8KoiFNCvJYi9QUnywNiBtzj86gkR7Uj4ghIJTEjkfPTEKfe/Mq6J/bU
+ Z3hKbk5ChtXeRnVPcZH+6qqzUqqf7iaA9HkGly4XMrtZJjINFVjvytfjCWYPyt5DAiKv
+ qc7W+UTAu1GxGoTuRqCo1N94XsFmaxotY60sX5XiWhEQcfTF/uDOO6H58+1TU7N2w1mA
+ hR4WHmh3pqVYmWt7I6KJYh0uZClcdEX5XJyM5EWjZbMWBNmzfuu7OUYW3haSDeYNT6/4
+ 7kgF4AjChK0/N9wmATW/Rjp/RtPUj1mM7QOmTp4mKjyeW39/wDn8ODy4HSjCGSvoAP2P sQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 3100xwv3vd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 15 May 2020 15:44:59 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04FFcB0a154889;
+        Fri, 15 May 2020 15:44:58 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 3100yf33mp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 15 May 2020 15:44:58 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04FFitcD013397;
+        Fri, 15 May 2020 15:44:55 GMT
+Received: from [192.168.1.24] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 15 May 2020 08:44:55 -0700
+Subject: Re: [PATCH v6 06/15] qla2xxx: Make a gap in struct
+ qla2xxx_offld_chain explicit
+To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>, alim.akhtar@samsung.com,
-        asutoshd@codeaurora.org, Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
-        stanley.chu@mediatek.com,
-        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>
-References: <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
- <1589538614-24048-3-git-send-email-avri.altman@wdc.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <5d867abf-7ea5-9097-c588-53dd73f004d4@infradead.org>
-Date:   Fri, 15 May 2020 08:33:12 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Arun Easi <aeasi@marvell.com>, Daniel Wagner <dwagner@suse.de>,
+        Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200514213516.25461-1-bvanassche@acm.org>
+ <20200514213516.25461-7-bvanassche@acm.org>
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <1780ae48-5865-a5d0-51d5-ebf8f0b83ab9@oracle.com>
+Date:   Fri, 15 May 2020 10:44:53 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <1589538614-24048-3-git-send-email-avri.altman@wdc.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20200514213516.25461-7-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005150133
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 lowpriorityscore=0
+ suspectscore=0 mlxlogscore=999 clxscore=1015 cotscore=-2147483648
+ mlxscore=0 phishscore=0 adultscore=0 impostorscore=0 bulkscore=0
+ malwarescore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005150133
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi--
 
-On 5/15/20 3:30 AM, Avri Altman wrote:
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index e2005ae..a540919 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -160,3 +160,15 @@ config SCSI_UFS_BSG
->  
->  	  Select this if you need a bsg device node for your UFS controller.
->  	  If unsure, say N.
-> +
-> +config SCSI_UFS_HPB
-> +	bool "Support UFS Host Performance Booster (HPB)"
-> +        depends on SCSI_UFSHCD
-> +        help
-> +	  A UFS feature targeted to improve random read performance.  It uses
-> +	  the host’s system memory as a cache for L2P map data, so that both
-> +	  physical block address (PBA) and logical block address (LBA) can be
-> +	  delivered in HPB read command.
-> +
-> +          Select this to enable this feature.
-> +          If unsure, say N.
 
-Please follow Documentation/process/coding-style.rst for Kconfig files:
+On 5/14/20 4:35 PM, Bart Van Assche wrote:
+> This patch makes struct qla2xxx_offld_chain compatible with ARCH=i386.
+> 
+> Reviewed-by: Daniel Wagner <dwagner@suse.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Arun Easi <aeasi@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: Roman Bolshakov <r.bolshakov@yadro.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/qla2xxx/qla_dbg.h | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+> index 433e95502808..b106b6808d34 100644
+> --- a/drivers/scsi/qla2xxx/qla_dbg.h
+> +++ b/drivers/scsi/qla2xxx/qla_dbg.h
+> @@ -238,6 +238,7 @@ struct qla2xxx_offld_chain {
+>   	uint32_t chain_size;
+>   
+>   	uint32_t size;
+> +	uint32_t reserved;
+>   	u64	 addr;
+>   };
+>   
+> 
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-Lines under a ``config`` definition are indented with
-one tab, while help text is indented an additional two spaces.
-
-I.e., not a mixture.
-
-thanks.
 -- 
-~Randy
-
+Himanshu Madhani
+Oracle Linux Engineering
