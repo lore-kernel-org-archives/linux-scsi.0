@@ -2,106 +2,126 @@ Return-Path: <SRS0=EJvX=66=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C70FC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 16:10:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A89D6C433E1
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 17:14:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5992B207CB
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 16:10:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=micron.com header.i=@micron.com header.b="NisQnGhF"
+	by mail.kernel.org (Postfix) with ESMTP id 9044920756
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 17:14:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726399AbgEPQKt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 May 2020 12:10:49 -0400
-Received: from mail-eopbgr690058.outbound.protection.outlook.com ([40.107.69.58]:6981
-        "EHLO NAM04-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726212AbgEPQKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 16 May 2020 12:10:49 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TpaFjVkbCNWUPTBoqiBi2rpieacgr0pDOTvi9EHPtlchOzPZht4YFbWmi0eU3Xg9CpflP6bV+XCEURnJt4JChu9b7fJ13ISyVVcjXC6QZFrygJsObBRvDQjYUC+xFEsevS7WMYL9dIDdsGb2ohIFJrBKVzi3gI7VgjRuDZfr1APj0RfhmRRtz/yaJMFpYL2hso7XkPmBRn1prqvVn1DxkutFjfznuFogkNe5JRGhg3MhBO4tLRsBvxXNC5HDMA3jm6P9ia5zZrr4EemRpD2+ivR1B76xR3xL6rRloqVzjSU7Obo2ntewCCDVkMM/9DQGKgcoRwJcoD6bqTUVJRU2KA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ilKdzipZMsi5lfmH5jehFqdxh/9/riaQ2sALAGPjSqs=;
- b=mp6JngSN1uOmaw/N3WtoyrBtUZ77N+2moU8pPrb8SP1n9P2KnZuKRIShLyA8SGFiakkca7mTe1MS/1gV8PgyFBpkKAoRuwqbKhD9xs71Y0rKwj/VZ0AJNrP3RJxdQk305pFZRPXdaYBYpOLdvjtXtoYo5ELdWbUACAyIVb7mgvTx7OG8dkw5UGdm1KvD01m2LpskNnaEGnMWqtYPkPbIhsxjqhDEy6tsNYR+OBPxkSSaMxkNV5g91skpfenE7CSqkN7rL52wbx0obRLVOIXJk5JrjmZQAe/oeBHr2yZ/SqO9sZ7ApaQ4uQbf+Q8AUa0SyKaMpHZ8KUqpdbUiJ763Ug==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=micron.com; dmarc=pass action=none header.from=micron.com;
- dkim=pass header.d=micron.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=micron.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ilKdzipZMsi5lfmH5jehFqdxh/9/riaQ2sALAGPjSqs=;
- b=NisQnGhFd99y94jIkRBWdJGLraJ5TDubKdAtTT/dFKaR3jvvIYq5CGkpdU2nfVenVtv0Jm482swC0Vw6BOKtEemUZfwP3xSUbDTyKdBW01xRjgSr7Wt545faMN5oDriV2cQhisy18K6vs2Dye0d75xda26jFDAxWMwF8q6OOiAo=
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com (2603:10b6:408:35::23)
- by BN7PR08MB4867.namprd08.prod.outlook.com (2603:10b6:408:27::25) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.26; Sat, 16 May
- 2020 16:10:46 +0000
-Received: from BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::9ca2:4625:2b46:e45c]) by BN7PR08MB5684.namprd08.prod.outlook.com
- ([fe80::9ca2:4625:2b46:e45c%4]) with mapi id 15.20.2979.033; Sat, 16 May 2020
- 16:10:46 +0000
-From:   "Bean Huo (beanhuo)" <beanhuo@micron.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
+        id S1726257AbgEPROS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 May 2020 13:14:18 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:39997 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726242AbgEPROR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 May 2020 13:14:17 -0400
+Received: by mail-pg1-f193.google.com with SMTP id j21so2557747pgb.7;
+        Sat, 16 May 2020 10:14:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=/MV9WcXQv0+4wZLOKsDXnPVuUYGVfdhe+QBIyAhTTT8=;
+        b=P0DSRhjcsLF2j9KB5SRmUsPVnNJN9SmCbF3o5lQy2PG3OnxUmqRbIIAYD0lTIRVtVr
+         Xl92GYBBHqDwVnmPRfFlbP5Lnzhu1EHjcWc/rACLl1nCLg3q9KVpfzBWZjPH1rYotCRO
+         ucfzcPKMm+JZWL5GqOkVXo7hA1u3tjLJb6z770ML130Utv+YRfEKw4upNnlhot4Gaq7h
+         Ii9mRvGY0ysakRQV9pEPwhQTX2jXo1gRN1y3f47Gkjod2d/nWQyIPcIAax8y09JZarrh
+         2SZtypXut2XFTCeSzBHGvyE5YbtKCtR2HhhNgx4Q5ZdwHCRSW2Xu1fPOP+qbl+nnT01u
+         xtTA==
+X-Gm-Message-State: AOAM533XHQ5Jsr1GR3zUuD2tEqQuHdAjRs7mQTq8r0xsz+X/8N3bhVJo
+        2dswPj5/3R+ZqLN9TRWt4XU=
+X-Google-Smtp-Source: ABdhPJw/MzKN74At9Ms8VObjIfKeXq4vKnwZuzlWXZecBeaeph2yHO1uFyAMHS1GoOl86uybifKFqg==
+X-Received: by 2002:a62:6485:: with SMTP id y127mr8977880pfb.11.1589649256677;
+        Sat, 16 May 2020 10:14:16 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:97a:fd5b:e2c1:c090? ([2601:647:4000:d7:97a:fd5b:e2c1:c090])
+        by smtp.gmail.com with ESMTPSA id v17sm4849010pfc.190.2020.05.16.10.14.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 16 May 2020 10:14:15 -0700 (PDT)
+Subject: Re: [RFC PATCH 00/13] scsi: ufs: Add HPB Support
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Can Guo <cang@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>
-Subject: RE: [EXT] Re: [PATCH RFC] ufs: Make ufshcd_wait_for_register() sleep
- instead of busy-waiting
-Thread-Topic: [EXT] Re: [PATCH RFC] ufs: Make ufshcd_wait_for_register() sleep
- instead of busy-waiting
-Thread-Index: AQHWJVWjClMqL4p0T0io9BqnliNXaqipk2aAgAFaw3A=
-Date:   Sat, 16 May 2020 16:10:46 +0000
-Message-ID: <BN7PR08MB5684DAE992082615202BA428DBBA0@BN7PR08MB5684.namprd08.prod.outlook.com>
-References: <20200507222750.19113-1-bvanassche@acm.org>
- <198a1467-09db-f846-e153-a9681ff15b71@codeaurora.org>
- <16bb7e00-abbd-060c-c775-ae49a024d7de@acm.org>
-In-Reply-To: <16bb7e00-abbd-060c-c775-ae49a024d7de@acm.org>
-Accept-Language: en-150, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYmVhbmh1b1xhcHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJhMjllMzViXG1zZ3NcbXNnLWNiMjRjOWUwLTk3OGYtMTFlYS04Yjk2LWRjNzE5NjFmOWRkM1xhbWUtdGVzdFxjYjI0YzllMi05NzhmLTExZWEtOGI5Ni1kYzcxOTYxZjlkZDNib2R5LnR4dCIgc3o9IjIxMCIgdD0iMTMyMzQxMTkwNDQyNzA1MTQwIiBoPSJLT051VEtiaHdGUUxPZEtYYWNWQzRYajZGWWc9IiBpZD0iIiBibD0iMCIgYm89IjEiIGNpPSJjQUFBQUVSSFUxUlNSVUZOQ2dVQUFIQUFBQUQwWUgyTm5DdldBYWpsekdwSVowUkRxT1hNYWtoblJFTUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFCQUFBQTlvN0IxZ0FBQUFBQUFBQUFBQUFBQUE9PSIvPjwvbWV0YT4=
-x-dg-rorf: true
-authentication-results: acm.org; dkim=none (message not signed)
- header.d=none;acm.org; dmarc=none action=none header.from=micron.com;
-x-originating-ip: [165.225.81.101]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: b7ad578b-e942-4f17-b6fb-08d7f9b3b17b
-x-ms-traffictypediagnostic: BN7PR08MB4867:
-x-microsoft-antispam-prvs: <BN7PR08MB4867E0DC3F2C314B5758665FDBBA0@BN7PR08MB4867.namprd08.prod.outlook.com>
-x-ms-exchange-transport-forked: True
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-forefront-prvs: 040513D301
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: jr57Oiw18r1vN7oxOUjfi0oUYjd/H1ICCc57yC7WrMPFqRHcI2sKLliE8u1LPrONy5DThxZSaH2hp3V6egvoEn1lpLdju4hNmKTnMNj/pyJI27XFFZFuLBz1Ye7EvpiCmYDzi1wmohuYh33Tetc1b/Fm1sTZIqhCrMhdq2YZ6zJB5K1MA4VsjzBthWmPuhvpz8xgNDavOvl9ULWQukZeYWWTePzlK9TA80g4ysXJm/7n31PLjVeXl3LZ0cmvIE1PIx79Rv9DkiW20dOUdAL2KKSwcdpMbZKXN1DLT2YXXTwqcbsgivGqFWOrR9nTkcZK16AeVco8lsIrCbSSdH0FjEcDmfZ83rF+EU6phGFhYrq7+d4gAwyUeMx6TB7hsfhOmXVxtJYzkMBKxq5780rgvV5MSCa7NKOEGWY+TXo4lJbrKYfYwMQqVbOCE1CUyXZc
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN7PR08MB5684.namprd08.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(136003)(346002)(376002)(39860400002)(396003)(55236004)(6506007)(26005)(5660300002)(110136005)(54906003)(7696005)(186003)(316002)(4326008)(76116006)(9686003)(478600001)(33656002)(55016002)(66946007)(8676002)(2906002)(86362001)(66446008)(64756008)(4270600006)(66556008)(66476007)(8936002)(71200400001)(52536014)(558084003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: jAm2KcUkY0UM3DSHP49vCRKoj+STc2z+PFUpHxYxG1uwR6CBYYsUtapLbnJuPlVQ0A6QBe2DfPvzNvFjfISPGlJFJ45GKTVjzdvFPDEOHHlbtCT16wE7pTpGbNY2QzUkMuVxaU3UOgWIQuYMr27SfU21GCkMc74AGX3sEwU6plyFqxnniiMk8jEYnQWi6Ec5f6SDtvLxDFGzE39jot+waJdGf/XeueUnzE9VR5IOZPesebB+eMEr1c3XHpedZSaQ6jHQCSXs8S5CZcMwSeEljyNQdV+EnMA82sGFZrPGf2FcvNnbzV8Pe2sGHvXrSm2/q3RUVD2Pm087hT48eIJ+RWK7FCqVjn/V9b4LgO0+WnnfOxZDpXHfhnt7QOq9/105tUZnq0O3S5vbadqrGQDtnsoh//lmO6Ys0y8cGB+1SxrgBtDzAq6c9mfTC0WwnoF7mAo1av3UjFmZzj68oGBl2HBFyUFbVwVZz9OLJp/uZMyzBcHorKtClCcQzf0kHwh+
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>
+References: <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
+ <d10b27f1-49ec-d092-b252-2bb8cdc4c66e@acm.org>
+ <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
+Date:   Sat, 16 May 2020 10:14:14 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-X-OriginatorOrg: micron.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b7ad578b-e942-4f17-b6fb-08d7f9b3b17b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 May 2020 16:10:46.7002
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f38a5ecd-2813-4862-b11b-ac1d563c806f
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: o6CC4tyTGDatu0FmvK2JzS6SHM+H9BTI/Zn73wgtr91sOa0vrn9008znnx3MGk5cBou9agmZugnxxXeYkCknCA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR08MB4867
+In-Reply-To: <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UmV2aWV3ZWQtYnk6IEJlYW4gSHVvIDxiZWFuaHVvQG1pY3Jvbi5jb20+DQpUZXN0ZWQtYnk6IEJl
-YW4gSHVvIDxiZWFuaHVvQG1pY3Jvbi5jb20+DQoNCg==
+On 2020-05-16 02:14, Avri Altman wrote:
+>> Thank you for having taken the time to publish your work. The way this
+>> series has been split into individual patches makes reviewing easy.
+>> Additionally, the cover letter and patch descriptions are very
+>> informative, insightful and well written. However, I'm concerned about a
+>> key aspect of the implementation, namely relying on a device handler to
+>> alter the meaning of a block layer request. My concern about this
+>> approach is that at most one device handler can be associated with a
+>> SCSI LLD. If in the future more functionality would be added to the UFS
+>> spec and if it would be desirable to implement that functionality as a
+>> new kernel module, it won't be possible to implement that functionality
+>> as a new device handler. So I think that not relying on the device
+>> handler infrastructure is more future proof because that removes the
+>> restrictions we have to deal with when using the device handler framework.
+>
+> So should we keep perusing this direction, or leave it, and concentrate in Bean's RFC?
+> Or maybe come up with a 3rd way?
+
+Hi Avri,
+
+I prefer to proceed with reviewing Bean's patch series. If someone
+prefers a different approach, I think this is a good time to bring that up.
+
+Thanks,
+
+Bart.
