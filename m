@@ -2,46 +2,46 @@ Return-Path: <SRS0=EJvX=66=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 646C2C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 01:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F8BC433E0
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 01:49:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 488FF207BB
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 01:46:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54468207CB
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 01:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbgEPBqS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 21:46:18 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:37719 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726541AbgEPBqR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 21:46:17 -0400
-Received: by mail-pg1-f196.google.com with SMTP id f23so1849791pgj.4;
-        Fri, 15 May 2020 18:46:16 -0700 (PDT)
+        id S1726541AbgEPBtB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 21:49:01 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:42665 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726247AbgEPBtB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 21:49:01 -0400
+Received: by mail-pl1-f193.google.com with SMTP id k19so1632337pll.9;
+        Fri, 15 May 2020 18:49:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=ozaQPfbwUuNVUGa/T9+ig8Jwi6csJDZ7UY/cyZqf/Zk=;
-        b=ZoRZEvRuqExrNalOGEy/C7u7/CWDs8/fKqudD2SiEQK0uQoeQJUenSkF2upp+dyJXY
-         vSAAj/s2xpIyXmNj0di0RX2wkiQNCfKpd4g+8BcRNRMIxHXNtQifvvNwQqfv2dVZSwbV
-         jTnsjOQc6OaeU5YkzM5FqkpL8WWgs4cm7jt9qIocqriDWTG4X7tARTJ4WGSVOIHQVtcg
-         ClQV/JViDKhGat5ykR40isz40xKtefI6tpoTxcOPbmvjTtwX5u37gyIhpYhEC9JPJE++
-         PeXnoU84Xo3ekB2EAdN04EkOUaGH+Dt3AOfrYIGrrVwYqG/GG/RUXFNR278UXXoX0rdO
-         /wkA==
-X-Gm-Message-State: AOAM5323OntGFKhjoufxusA1ydsh+v1cT7FZqC2nJOg7T6CSguBVpW0u
-        iX2rH9JTRJCP44k0qL8jdm0=
-X-Google-Smtp-Source: ABdhPJxjiqpibobSqV5W7xM1pKavxEjCXdRAST5Y1tkkF8km7GRnO8/rMGGyVxOtjJ3WrDqt0Xy0bA==
-X-Received: by 2002:a65:6703:: with SMTP id u3mr5635547pgf.179.1589593575577;
-        Fri, 15 May 2020 18:46:15 -0700 (PDT)
+        bh=yrLeDS8QFWAcUfi/7i8KWUQD7BCqRDUd/m8UQW8uxws=;
+        b=qHzDkMFuFeM5dLs64+f0yop6zkhqhHyCI2nY6qFcX9lUF4DCHeQmKnw++lkc0bFfgf
+         /kVFr2wl5+KYpal6dVt1g9GruuOjsHLoHGIgumWfmYmG4KiZkoTfz0/K7zAm2xn2bOrk
+         YPOBSMERUJl0GS9qlGhQzw2KOxAx3x55vcufZFWPNLXsclWI/z30XkNeXz7EpZWLQ7xS
+         cxGJ+zT6MTPKKjNjCyC5LQ5Pe50TTvq8UzDnJfyI2hmzX8lHBNP8ZRD0f/t0OLGjOKrp
+         6N6Slis8hNgt3TDp1y9bTRlsz9j0jvauEsDdJqUQJHhjPbfTAW8t/TGwHBWuDFXDViUZ
+         2gcQ==
+X-Gm-Message-State: AOAM530li3BrRs1hJdz9DsTwqDKgzplYBVhy5DHNDegJUjj2OKoyYkos
+        U5PE4Nk7HKNowDT603VVniE=
+X-Google-Smtp-Source: ABdhPJxYBh+wCgL+cxPf1r3Ll6WSEPxZ/z37GJzLJVrR0RkqZ4lAchXCRbVgMSM7wSCts0wJYNJGvA==
+X-Received: by 2002:a17:90a:154e:: with SMTP id y14mr6765748pja.180.1589593740194;
+        Fri, 15 May 2020 18:49:00 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:f99a:ee92:9332:42a? ([2601:647:4000:d7:f99a:ee92:9332:42a])
-        by smtp.gmail.com with ESMTPSA id r21sm2431204pjo.2.2020.05.15.18.46.13
+        by smtp.gmail.com with ESMTPSA id p6sm2640161pgl.26.2020.05.15.18.48.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 May 2020 18:46:14 -0700 (PDT)
-Subject: Re: [RFC PATCH 02/13] scsi: ufshpb: Init part I - Read HPB config
+        Fri, 15 May 2020 18:48:59 -0700 (PDT)
+Subject: Re: [RFC PATCH 03/13] scsi: scsi_dh: Introduce scsi_dh_ufshpb
 To:     Avri Altman <avri.altman@wdc.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -56,7 +56,7 @@ Cc:     alim.akhtar@samsung.com, asutoshd@codeaurora.org,
         yongmyung lee <ymhungry.lee@samsung.com>,
         Jinyoung CHOI <j-young.choi@samsung.com>
 References: <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
- <1589538614-24048-3-git-send-email-avri.altman@wdc.com>
+ <1589538614-24048-4-git-send-email-avri.altman@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -81,12 +81,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <6aaf9bd5-44f5-f523-5aaf-23e3fe784055@acm.org>
-Date:   Fri, 15 May 2020 18:46:13 -0700
+Message-ID: <80b0ffae-7af4-6d06-77e7-a8a97aaa9a05@acm.org>
+Date:   Fri, 15 May 2020 18:48:58 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <1589538614-24048-3-git-send-email-avri.altman@wdc.com>
+In-Reply-To: <1589538614-24048-4-git-send-email-avri.altman@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -96,38 +96,24 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-05-15 03:30, Avri Altman wrote:
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 426073a..bffe699 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -50,6 +50,7 @@
->  #include "ufs_bsg.h"
->  #include <asm/unaligned.h>
->  #include <linux/blkdev.h>
-> +#include "ufshpb.h"
->  
->  #define CREATE_TRACE_POINTS
->  #include <trace/events/ufs.h>
-> @@ -7341,6 +7342,9 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->  		hba->clk_scaling.is_allowed = true;
->  	}
->  
-> +	if (ufshcd_is_hpb_supported(hba))
-> +		ufshpb_probe(hba);
+> +static int ufshpb_attach(struct scsi_device *sdev)
+> +{
+> +	struct ufshpb_dh_data *h;
 > +
->  	ufs_bsg_probe(hba);
->  	scsi_scan_host(hba->host);
->  	pm_runtime_put_sync(hba->dev);
+> +	h = kzalloc(sizeof(*h), GFP_KERNEL);
+> +	if (!h)
+> +		return SCSI_DH_NOMEM;
+> +
+> +	sdev_printk(KERN_INFO, sdev, "%s: attached to sdev (lun) %llu\n",
+> +		    UFSHPB_NAME, sdev->lun);
+> +
+> +	sdev->handler_data = h;
+> +
+> +	return SCSI_DH_OK;
+> +}
 
-This looks weird to me because of the following reasons:
-- If there are direct calls from the ufshcd module into the ufshpb
-  module and if there are direct calls from the ufshpb module into the
-  ufshcd module, why has ufshpb been implemented as a kernel module? Or
-  in other words, will it ever be possible to load the ufshcd module
-  without loading the ufshpb module?
-- Patch 3/13 makes ufshpb a device handler. There are no direct calls
-  from any upstream SCSI LLD to any upstream device handler. However,
-  this patch adds a direct call from the ufshcd module to the ufshpb
-  module which is a device handler.
+I think that all other SCSI device handlers check in their .attach
+function whether the @sdev SCSI device is supported by the device
+handler. I don't see any such check in the above function?
 
 Bart.
