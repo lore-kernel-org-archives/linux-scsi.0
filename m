@@ -2,46 +2,46 @@ Return-Path: <SRS0=EJvX=66=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E18C433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 02:44:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D85DC433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 03:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67103206D4
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 02:44:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C6D02073E
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 03:06:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727890AbgEPCoY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 May 2020 22:44:24 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:35206 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726550AbgEPCoY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 22:44:24 -0400
-Received: by mail-pl1-f194.google.com with SMTP id q16so1680511plr.2;
-        Fri, 15 May 2020 19:44:23 -0700 (PDT)
+        id S1727976AbgEPDGd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 May 2020 23:06:33 -0400
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:51739 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726247AbgEPDGc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 May 2020 23:06:32 -0400
+Received: by mail-pj1-f67.google.com with SMTP id mq3so1764968pjb.1;
+        Fri, 15 May 2020 20:06:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=pL+AUd0A7OCcde1sHZtLCMWs3WJ63whbQI17iOw+8mU=;
-        b=dY4XNLpIleDLbaKMy571EXOYSKIK0Aqw/26TYj591o2dLKWgJfMp9ibJ2teQb3D9bX
-         IRZDPH4Tqk3zgLYKp0C6qAmYlJ6k1KHA4bF9KfF2BQ7ElxpfGVGWnmjWE1tVMZ9G7FYy
-         ZUvyW1DJOgVXCTQGlj0waKc4vNMRjM2fkMEluRbY21LU1XSlBRBsJOiOmG+xkS3QYsfz
-         0dg62OeMVIFGSHqAofv07+VY1Pi5hohXWiJvl0j8GJfXfCVsWubiBbUsQs61ThEGDHfq
-         6txGvlgyWTvyI9WlFtkKYPOOWIKAh0nVIWM5vfwVH0PymKgZY85V3NHfF4CxFBP2ptHA
-         HjSQ==
-X-Gm-Message-State: AOAM533WfwR9RCdvHocbFrpYgU9GZDBuMVETEsc7cMYjWIEzBw32BBHg
-        w3qPw5bJ4wzPJgd2SNhe/tg=
-X-Google-Smtp-Source: ABdhPJzOl9wD6JC4RziF0YOhf7EXg5TPvtwYouNgCoHf7pXBp28aU4WEOlA+sEEsejtKZmfDMX/fUA==
-X-Received: by 2002:a17:90a:a590:: with SMTP id b16mr6811042pjq.177.1589597063216;
-        Fri, 15 May 2020 19:44:23 -0700 (PDT)
+        bh=T2GyJli/LtpjNMryaclGRF8nKqCQNV/l/DH3OGmd/9c=;
+        b=M+FeyZMM6vVp00doQX97+0OwJO+20jTuZcbX0w2EaXGSWsfql/7T+pFUCqjVCdDq6l
+         qYtFMAQ93dAdiweMOGOM9u8gqp893OmGx/XVz9e1FG6sq3J+dVBYMh7CHL+n+S57/tGz
+         H3cHmXDDYf33HGNVOIHaGi5mCaxEz1MsdfO3J2TrsmHfxIVswYeiq3vgYJZXvWKivqLR
+         o6/NqcTCRDG3Z5IzKeP2hc9gjT/ogl+xn0FPxTfmMVMVAhBNTv6VrLrXZ97leHKaHDXg
+         GR7iHRLO1nKhlrxgE2JiZRYNTLcRYilzdLUaI8Z0KjAGYzCaogDnRwsYFukHx5dTHUkr
+         ySTw==
+X-Gm-Message-State: AOAM533d6SYs9Hgxttv01cL4e4m4nBJ2OsBHf2YQ7oHMNd7bTEUyr7k2
+        YB/HwLrbJz+1vjyp9gWIwPE=
+X-Google-Smtp-Source: ABdhPJx+vns/ssIkJi4jyZILzl09L0c7z3Gfq+MJqyh+rsrNcXyD1wZtZWFUhveEu/tBDZ8XYMo7SA==
+X-Received: by 2002:a17:902:9044:: with SMTP id w4mr6607162plz.83.1589598391314;
+        Fri, 15 May 2020 20:06:31 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:f99a:ee92:9332:42a? ([2601:647:4000:d7:f99a:ee92:9332:42a])
-        by smtp.gmail.com with ESMTPSA id w2sm2512857pja.53.2020.05.15.19.44.20
+        by smtp.gmail.com with ESMTPSA id z7sm2968082pff.47.2020.05.15.20.06.29
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 15 May 2020 19:44:22 -0700 (PDT)
-Subject: Re: [RFC PATCH 07/13] scsi: scsi_dh: ufshpb: Add ufshpb state machine
+        Fri, 15 May 2020 20:06:30 -0700 (PDT)
+Subject: Re: [RFC PATCH 09/13] scsi: ufshpb: Add response API
 To:     Avri Altman <avri.altman@wdc.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -56,7 +56,7 @@ Cc:     alim.akhtar@samsung.com, asutoshd@codeaurora.org,
         yongmyung lee <ymhungry.lee@samsung.com>,
         Jinyoung CHOI <j-young.choi@samsung.com>
 References: <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
- <1589538614-24048-8-git-send-email-avri.altman@wdc.com>
+ <1589538614-24048-10-git-send-email-avri.altman@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -81,12 +81,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <5fd7224f-3bbd-863f-ffd4-b049aeeb5456@acm.org>
-Date:   Fri, 15 May 2020 19:44:20 -0700
+Message-ID: <9619597b-3a3e-e67c-5afa-cebf03cc678b@acm.org>
+Date:   Fri, 15 May 2020 20:06:28 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <1589538614-24048-8-git-send-email-avri.altman@wdc.com>
+In-Reply-To: <1589538614-24048-10-git-send-email-avri.altman@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -96,172 +96,67 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-05-15 03:30, Avri Altman wrote:
-> @@ -17,6 +18,13 @@
->  
->  #define UFSHPB_NAME	"ufshpb"
->  
-> +#define UFSHPB_WRITE_BUFFER (0xfa)
-> +#define WRITE_BUFFER_TIMEOUT (3 * HZ)
-> +#define WRITE_BUFFER_RETRIES (3)
-> +#define UFSHPB_READ_BUFFER (0xf9)
-> +#define READ_BUFFER_TIMEOUT (3 * HZ)
-> +#define READ_BUFFER_RETRIES (3)
+> +#define RSP_DATA_SEG_LEN (sizeof(struct ufshpb_sense_data))
 
-Parentheses around expressions are normal but parentheses around
-constants are unusual. I think the parentheses around constants can be
-left out.
+The name of this macro is almost as long as the expression it replaces.
+It may make the code easier to read by dropping this macro and using the
+sizeof() expression directly.
 
-> +#define to_subregion() (container_of(work, struct ufshpb_subregion, hpb_work))
+> +	struct tasklet_struct rsp_tasklet;
 
-Could this have been defined as an inline function?
+Why a tasklet instead of e.g. a work_struct? Tasklets can cause nasty
+problems, e.g. CPU lockup complaints if too much work is done in tasklet
+context.
 
-> @@ -76,6 +118,7 @@ struct ufshpb_subregion {
->   * @writes - sum over subregions @writes
->   * @region - region index
->   * @active_subregions - actual active subregions
-> + * @evicted - to indicated if this region is currently being evicted
->   */
->  struct ufshpb_region {
->  	struct ufshpb_subregion *subregion_tbl;
-> @@ -85,6 +128,7 @@ struct ufshpb_region {
->  	unsigned int region;
->  
->  	atomic_t active_subregions;
-> +	atomic_t evicted;
->  };
-
-Declaring a state variable as atomic_t is unusual. How are changes of
-the @evicted member variable serialized?
-
->  /**
-> @@ -93,6 +137,7 @@ struct ufshpb_region {
->   * @lh_map_ctx - list head of mapping context
->   * @map_list_lock - to protect mapping context list operations
->   * @region_tbl - regions/subregions table
-> + * @pinned_map - to mark pinned regions
->   * @sdev - scsi device for that lun
->   * @regions_per_lun
->   * @subregions_per_lun - lun size is not guaranteed to be region aligned
-> @@ -105,6 +150,7 @@ struct ufshpb_dh_lun {
->  	struct list_head lh_map_ctx;
->  	spinlock_t map_list_lock;
->  	struct ufshpb_region *region_tbl;
-> +	unsigned long *pinned_map;
->  	struct scsi_device *sdev;
->  
->  	unsigned int regions_per_lun;
-> @@ -113,6 +159,10 @@ struct ufshpb_dh_lun {
->  	unsigned int max_active_regions;
->  
->  	atomic_t active_regions;
-> +
-> +	struct mutex eviction_lock;
-> +
-> +	struct workqueue_struct *wq;
->  };
-
-Please document what the eviction_lock protects.
-
-> +static inline void ufshpb_set_write_buf_cmd(unsigned char *cmd,
-> +					    unsigned int region)
+> +static void ufshpb_dh_notify(struct ufshpb_lun *hpb,
+> +			     struct ufshpb_sense_data *sense)
 > +{
-> +	cmd[0] = UFSHPB_WRITE_BUFFER;
-> +	cmd[1] = 0x01;
-> +	put_unaligned_be16(region, &cmd[2]);
-> +}
-
-Please follow the example of the sd driver and use the verb "setup"
-instead of "set" for functions that initialize a SCSI CDB.
-
-> +static int ufshpb_submit_write_buf_cmd(struct scsi_device *sdev,
-> +				       unsigned int region)
-> +{
-> +	unsigned char cmd[10] = {};
-> +	struct scsi_sense_hdr sshdr = {};
-> +	u64 flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-> +		    REQ_FAILFAST_DRIVER;
-> +	int timeout = WRITE_BUFFER_TIMEOUT;
-> +	int cmd_retries = WRITE_BUFFER_RETRIES;
-> +	int ret = 0;
+> +	struct ufs_hba *hba = shost_priv(hpb->sdev->host);
 > +
-> +	ufshpb_set_write_buf_cmd(cmd, region);
+> +	spin_lock(hba->host->host_lock);
 > +
-> +	ret = scsi_execute(sdev, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
-> +			   timeout, cmd_retries, flags, 0, NULL);
-> +
-> +	/* HPB spec does not define any error handling */
-> +	sdev_printk(KERN_INFO, sdev, "%s: WRITE_BUFFER %s result %d\n",
-> +		    UFSHPB_NAME, ret ? "failed" : "succeeded", ret);
-> +
-> +	return ret;
-> +}
-
-I don't think that unconditionally printing the result of the WRITE
-BUFFER command is acceptable. How about only reporting failures?
-
-> +static void ufshpb_set_read_buf_cmd(unsigned char *cmd, unsigned int region,
-> +				    unsigned int subregion,
-> +				    unsigned int alloc_len)
-> +{
-> +	cmd[0] = UFSHPB_READ_BUFFER;
-> +	cmd[1] = 0x01;
-> +	put_unaligned_be16(region, &cmd[2]);
-> +	put_unaligned_be16(subregion, &cmd[4]);
-> +
-> +	cmd[6] = alloc_len >> 16;
-> +	cmd[7] = (alloc_len >> 8) & 0xff;
-> +	cmd[8] = alloc_len & 0xff;
-> +	cmd[9] = 0x00;
-> +}
-
-Please use put_unaligned_be24() instead of open-coding it.
-
-> +static int ufshpb_subregion_alloc_pages(struct ufshpb_dh_lun *hpb,
-> +					struct ufshpb_subregion *s)
-> +{
-> +	struct ufshpb_map_ctx *mctx;
-> +
-> +	spin_lock(&hpb->map_list_lock);
-> +	mctx = list_first_entry_or_null(&hpb->lh_map_ctx,
-> +					struct ufshpb_map_ctx, list);
-> +	if (!mctx) {
-> +		spin_unlock(&hpb->map_list_lock);
-> +		return -EINVAL;
+> +	if (scsi_device_get(hpb->sdev)) {
+> +		spin_unlock(hba->host->host_lock);
+> +		return;
 > +	}
 > +
-> +	list_del_init(&mctx->list);
-> +	spin_unlock(&hpb->map_list_lock);
+> +	scsi_dh_set_params(hpb->sdev->request_queue, (const char *)sense);
 > +
-> +	s->mctx = mctx;
-> +	mctx->pages = (char *)__get_free_pages(GFP_KERNEL, order);
-> +	if (!mctx->pages)
-> +		return -ENOMEM;
+> +	scsi_device_put(hpb->sdev);
 > +
-> +	return 0;
+> +	spin_unlock(hba->host->host_lock);
 > +}
 
-Relying on higher order pages is not acceptable because memory gets
-fragmented easily. See also
-https://elinux.org/images/a/a8/Controlling_Linux_Memory_Fragmentation_and_Higher_Order_Allocation_Failure-_Analysis%2C_Observations_and_Results.pdf.
+To me this looks like slight abuse of the scsi_dh_set_params() function.
+The documentation of that function mentions clearly that the second
+argument is an ASCII string and not e.g. sense data.
 
-> +	hpb->pinned_map = kcalloc(BITS_TO_LONGS(hpb->regions_per_lun),
-> +				  sizeof(unsigned long), GFP_KERNEL);
+Has this driver been tested on a system with lockdep enabled? I don't
+think that it is acceptable to use spin_lock() in tasklet context.
 
-Is this perhaps an open-coded version of bitmap_alloc()? If so, please
-use bitmap_alloc() instead.
-
-> +	snprintf(wq_name, ARRAY_SIZE(wq_name), "ufshpb_wq_%d", sdev->id);
-> +	wq = alloc_workqueue(wq_name, WQ_HIGHPRI, WQ_MAX_ACTIVE);
-> +	if (!wq) {
-> +		ret = -ENOMEM;
-> +		goto out_free;
+> +static void ufshpb_tasklet_fn(unsigned long priv)
+> +{
+> +	struct ufshpb_lun *hpb = (struct ufshpb_lun *)priv;
+> +	struct ufshpb_rsp_element *rsp_elem = NULL;
+> +	unsigned long flags;
+> +
+> +	while (1) {
+> +		spin_lock_irqsave(&hpb->rsp_list_lock, flags);
+> +		rsp_elem = ufshpb_get_rsp_elem(hpb, &hpb->lh_rsp);
+> +		spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
+> +
+> +		if (!rsp_elem)
+> +			return;
+> +
+> +		ufshpb_dh_notify(hpb, &rsp_elem->sense_data);
+> +
+> +		spin_lock_irqsave(&hpb->rsp_list_lock, flags);
+> +		list_add_tail(&rsp_elem->list, &hpb->lh_rsp_free);
+> +		spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
 > +	}
+> +}
 
-What is the purpose of the ufshpb_wq_%d workqueues? Why to allocate
-dedicated workqueues instead of using one of the existing system
-workqueues? If the scsi_execute() calls would be changed into
-asynchronous SCSI command submission, would these workqueues still be
-necessary?
+Please schedule work instead of using tasklet context.
 
 Thanks,
 
