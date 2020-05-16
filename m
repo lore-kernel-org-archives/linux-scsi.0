@@ -2,82 +2,133 @@ Return-Path: <SRS0=EJvX=66=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9DEC433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 17:46:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5D0EC433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 23:29:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6890206C0
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 17:46:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DE3C207C4
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 May 2020 23:29:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="JGZBlk/L"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CAxm0r3b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726659AbgEPRqk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 May 2020 13:46:40 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:20465 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726407AbgEPRqY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 May 2020 13:46:24 -0400
-X-UUID: be12eaa8158047eda95f7e0694b10794-20200517
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=smxDr4bDqkE0WeFbg5czyt0T5/ZlATJAURAS2eLOh2c=;
-        b=JGZBlk/L4DzWpESEXgjO/WytXBz+AnfEYA5JcWagqa9pnKHruznaANIpIjeQM3M5ahkItJicvVlDY5o/NzgA68DSzriIwt9QHKodoosmCfSNL8+MZcpLzIPqQryuJGSwISMCD9k+ILsSjDbYYeyr/wfwDJC4uiF8QEWc3e9OILI=;
-X-UUID: be12eaa8158047eda95f7e0694b10794-20200517
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 343474321; Sun, 17 May 2020 01:46:18 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sun, 17 May 2020 01:46:13 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 17 May 2020 01:46:13 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
-CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v3 0/5] scsi: ufs: Fix WriteBooster and cleanup UFS driver
-Date:   Sun, 17 May 2020 01:46:10 +0800
-Message-ID: <20200516174615.15445-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1726726AbgEPX3s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 May 2020 19:29:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33788 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726660AbgEPX3s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 16 May 2020 19:29:48 -0400
+Received: from mail-lj1-x241.google.com (mail-lj1-x241.google.com [IPv6:2a00:1450:4864:20::241])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69DCAC061A0C;
+        Sat, 16 May 2020 16:29:46 -0700 (PDT)
+Received: by mail-lj1-x241.google.com with SMTP id d21so6001076ljg.9;
+        Sat, 16 May 2020 16:29:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=VsIGqmQYU9B1hFiVmj/6ksJDLb/9MQhxyITf5iqCEAU=;
+        b=CAxm0r3bkWmXjkeiCzLPuKYnFKjmYcTMlB211VAPCdb2e0rDkYvjgKujtHQo5YnQtR
+         WYhrUreg7ADZxvFKkuBOju+THp+1gYsGi9JRt/ejoHugqQ4Lt4ZAXR+GRw0L0A+66/UM
+         aT52BE/bEQrnitmXPtcIktSrpJmQpc7TJEMrOI75rNNhQB37g9VgqnacNxAKPZzWKTyC
+         t5lEVHc9351QfxtHaytLZpm6wG6w9yCKQ6BfTZJuXdw3BjiOXq0PASbRavhsXMe4v5m7
+         e6iGVuXlEwtLZbH1wQsJO1JSDfci6337NAg2ZQm4a6IpeQIYHn+TtN7fx0LsK8LP8LjF
+         lWxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=VsIGqmQYU9B1hFiVmj/6ksJDLb/9MQhxyITf5iqCEAU=;
+        b=MAg9pFOhYzriAxZ871VKtOgkLjY5lbZ+AWH01z4/vDbK1PAq8EKlZvBiBgJH0jjULr
+         fbjEtKp6TmKp95hBSP5RRzMjhwDgKtonkKsUKTD+p4rdHYPyn5lHX9eJJsOYP2gD55tn
+         +ff1EEMghmloDuJqNNuS5ajbzuq4okQqwv5GHN89TfOn3jXAK5onOwzklHc5XiDBervm
+         F54BoSETgF56gbC2bXgMkQuD3NPwi5aqnbJVhuu5wQAI4Gkc48DLQcL+O850R8Y+nEC+
+         TDo8VNcDztOC2zgjVq4nOsLR4I5FVP7L3+GHwdTwrko/8hpnW86aT3DErCmpqmUefGNn
+         DltA==
+X-Gm-Message-State: AOAM533avlE1crr8Mc++AtLc6QULDDBy4TbR7XJBNukXxJKAPOcSqq+L
+        RxFRGlKgNA8O99mNNI2VZtiAnovjpuBN4gG0HtE=
+X-Google-Smtp-Source: ABdhPJwMEerA6PY5MC+s0R6rodZvVntL+CV0Pe2OuKYU6/n9FN6gEnBajSh8QBi/2P6CtuqIJdRTr7gER99hj/E+DNQ=
+X-Received: by 2002:a2e:a545:: with SMTP id e5mr6015544ljn.271.1589671784750;
+ Sat, 16 May 2020 16:29:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: D1FFA3E32EA32E77CA68C80B76F405815EBCEA9C03532CCC767E5BDCDA7D90CF2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+References: <cd119ce943d9ec62ef1bff237ebb49e35a337c3b.1589407872.git.lance.digby@gmail.com>
+ <93c437ce-f881-9f54-5e39-afa8afd96141@redhat.com>
+In-Reply-To: <93c437ce-f881-9f54-5e39-afa8afd96141@redhat.com>
+From:   Lance Digby <lance.digby@gmail.com>
+Date:   Sun, 17 May 2020 09:29:38 +1000
+Message-ID: <CAHh6B+poeCFeZjCt04QT2c12bgvCf9UN+5vdx5EeK6PcgD2y3g@mail.gmail.com>
+Subject: Re: [PATCH target] target: Add initiatorname to NON_EXISTENT_LUN error
+To:     Mike Christie <mchristi@redhat.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGksDQoNClRoaXMgcGF0Y2ggc2V0IGZpeGVzIHNvbWUgV3JpdGVCb29zdGVyIGlzc3VlcyBhbmQg
-ZG8gc21hbGwgY2xlYW51cCBpbiBVRlMgZHJpdmVyDQoNCnYyIC0+IHYzDQogIC0gSW50cm9kdWNl
-IHBhdGNoIFs1XSB0byBmaXggcG9zc2libGUgVkNDIHBvd2VyIGRyYWluIGR1cmluZyBydW50aW1l
-IHN1c3BlbmQgKEFzdXRvc2gpDQoNCnYxIC0+IHYyDQogIC0gUmVtb3ZlIGR1bW15IG5ldyBsaW5l
-IGluIHBhdGNoIFs0XSAoQXN1dG9zaCkNCiAgLSBBZGQgbW9yZSBsaW1pdGF0aW9uIHRvIGFsbG93
-IFdyaXRlQm9vc3RlciBmbHVzaCBkdXJpbmcgSGliZXJuOCBpbiBydW50aW1lLXN1c3BlbmQuIE5v
-dyB0aGUgZGV2aWNlIHBvd2VyIG1vZGUgaXMga2VwdCBhcyBBY3RpdmUgcG93ZXIgbW9kZSBvbmx5
-IGlmIGxpbmsgaXMgcHV0IGluIEhpYmVybjggb3IgQXV0by1IaWJlcm44IGlzIGVuYWJsZWQgZHVy
-aW5nIHJ1bnRpbWUtc3VzcGVuZCAoQXN1dG9zaCkNCg0KU3RhbmxleSBDaHUgKDUpOg0KICBzY3Np
-OiB1ZnM6IFJlbW92ZSB1bm5lY2Vzc2FyeSBtZW1zZXQgZm9yIGRldl9pbmZvDQogIHNjc2k6IHVm
-czogQWxsb3cgV3JpdGVCb29zdGVyIG9uIFVGUyAyLjIgZGV2aWNlcw0KICBzY3NpOiB1ZnM6IEZp
-eCBpbmRleCBvZiBhdHRyaWJ1dGVzIHF1ZXJ5IGZvciBXcml0ZUJvb3N0ZXIgZmVhdHVyZQ0KICBz
-Y3NpOiB1ZnM6IEZpeCBXcml0ZUJvb3N0ZXIgZmx1c2ggZHVyaW5nIHJ1bnRpbWUgc3VzcGVuZA0K
-ICBzY3NpOiB1ZnM6IEZpeCBwb3NzaWJsZSBWQ0MgcG93ZXIgZHJhaW4gZHVyaW5nIHJ1bnRpbWUg
-c3VzcGVuZA0KDQogZHJpdmVycy9zY3NpL3Vmcy91ZnMtc3lzZnMuYyB8IDEzICsrKystDQogZHJp
-dmVycy9zY3NpL3Vmcy91ZnMuaCAgICAgICB8ICAyICstDQogZHJpdmVycy9zY3NpL3Vmcy91ZnNo
-Y2QuYyAgICB8IDk5ICsrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLQ0KIGRyaXZl
-cnMvc2NzaS91ZnMvdWZzaGNkLmggICAgfCAgMyArLQ0KIDQgZmlsZXMgY2hhbmdlZCwgODIgaW5z
-ZXJ0aW9ucygrKSwgMzUgZGVsZXRpb25zKC0pDQoNCi0tIA0KMi4xOC4wDQo=
+Mike,  Thanks for the review!
+  The pr_err  Detected NON_EXISTENT_LUN is the error messages issued
+for the TCM_NON_EXISTENT_LUN retcode so I believe they are the same.
+  Simply scanning for the wrong lun on an initiator will generate this
+error on the target but not generate an error on the initiator. And I
+have seen installs, with a lot of initiators, automate the scanning of
+such luns incorrectly deemed missing.
+  While this looks like a simple problem it can take days to get
+access or the tcp traces to sort it out.
 
+   Within the same routine there is another pr_err for
+TCM_WRITE_PROTECTED that I did not add the initiatorname to as I
+thought this would leave a heavy footprint on the initiator. If you
+believe this should be changed for consistency please let me know and
+I will add this and change to nacl->initiatorname.
+
+
+
+
+
+
+
+
+
+On Sat, May 16, 2020 at 9:50 AM Mike Christie <mchristi@redhat.com> wrote:
+>
+> On 5/13/20 11:01 PM, Lance Digby wrote:
+> > The NON_EXISTENT_LUN error can be written without an error condition
+> >  on the initiator responsible. Adding the initiatorname to this message
+> >  will reduce the effort required to fix this when many initiators are
+> > supported by a target.
+> >
+> > Signed-off-by: Lance Digby <lance.digby@gmail.com>
+> > ---
+> >  drivers/target/target_core_device.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+> > index 4cee113..604dea0 100644
+> > --- a/drivers/target/target_core_device.c
+> > +++ b/drivers/target/target_core_device.c
+> > @@ -100,9 +100,10 @@
+> >                */
+> >               if (unpacked_lun != 0) {
+> >                       pr_err("TARGET_CORE[%s]: Detected NON_EXISTENT_LUN"
+> > -                             " Access for 0x%08llx\n",
+> > +                             " Access for 0x%08llx from %s\n",
+> >                               se_cmd->se_tfo->fabric_name,
+> > -                             unpacked_lun);
+> > +                             unpacked_lun,
+> > +                             se_sess->se_node_acl->initiatorname);
+>
+> You can do nacl->initiatorname.
+>
+> Do you also want add the name to the tmr case? It's probably not common,
+> but the error message would be consistent.
+>
+> >                       return TCM_NON_EXISTENT_LUN;
+> >               }
+> >
+>
