@@ -2,94 +2,76 @@ Return-Path: <SRS0=k4K9=7A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84831C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 22:41:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB3CC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 23:22:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C5F52075F
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 22:41:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CA61207D4
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 23:22:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="K5u3wqcO"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="j3kWp4m2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728266AbgERWlT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 May 2020 18:41:19 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58954 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726359AbgERWlT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2020 18:41:19 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04IMbd63186943;
-        Mon, 18 May 2020 22:41:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=wfqzLoaxxp4lVJqPw3YFi9A16uL/yoQRMCgjuuIIKA4=;
- b=K5u3wqcOEeuqDuqzTRLVdUswKm0ySp6xLFvhCA85l1Q67h2UDSIJW9Y85rzinCLUfuR7
- SEvQWOmom4eN7cv3JP8sRKrtuKRqpGVqkINeKX0NxddmI9MDeWpGktI/mUOGlE4c6Dvf
- ZgmrDENqjAEfQNclYOm/YJyQbkfcSZVZaklqkJb2WL5TMiPVvWWapdrAWURDj2CM6OPI
- raKLqCq9e1XZ+UT/2aEgClwlQdzvtCDYHf4q79soEyMo14PVoyHzslTSCCU+3EN1JeM7
- w9Ctenxi9MnarrJvByF8Kh6eounEBXJycvcp/UA6SMVl5mxvINgsj32HFcfIj1OW+gR6 7A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 3128tn9se7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 18 May 2020 22:41:03 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04IMYQUk152989;
-        Mon, 18 May 2020 22:41:02 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 312t3wm6k2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 May 2020 22:41:02 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04IMf1Rp019137;
-        Mon, 18 May 2020 22:41:01 GMT
-Received: from [192.168.1.35] (/70.114.128.235)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 18 May 2020 15:41:01 -0700
-Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
-To:     Roman Bolshakov <r.bolshakov@yadro.com>, linux-scsi@vger.kernel.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com,
-        target-devel@vger.kernel.org, linux@yadro.com,
+        id S1726966AbgERXW6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 May 2020 19:22:58 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:59992 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726481AbgERXW6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 May 2020 19:22:58 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 71FB94C831;
+        Mon, 18 May 2020 23:22:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1589844168;
+         x=1591658569; bh=qk1wvFlbfdhfxYWfppbnswNLumKwOzmwbv8R8eFqO00=; b=
+        j3kWp4m2cjWEcvzEVaQxM67FrZ5HazP4zQZmZqim8Iyj7SzTtsVoTDs2QAHTilcd
+        Rn15CatuUVa2p0tJgupfgi4MOgoPisrIdKkt7fk7MIgefgupqa2BbfirN4Zg1U5K
+        YGaltFADj4Z+AYI2bPGdj/orF+rrPeLgvzUHUgPDMGI=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id zJQqs84end9t; Tue, 19 May 2020 02:22:48 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 011D64128B;
+        Tue, 19 May 2020 02:22:48 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 19
+ May 2020 02:22:49 +0300
+Date:   Tue, 19 May 2020 02:22:48 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
+        <target-devel@vger.kernel.org>, <linux@yadro.com>,
         Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
         Nilesh Javali <njavali@marvell.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Daniel Wagner <dwagner@suse.de>,
-        Martin Wilck <mwilck@suse.com>, stable@vger.kernel.org
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Martin Wilck <mwilck@suse.com>, <stable@vger.kernel.org>
+Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
+Message-ID: <20200518232248.GG75422@SPB-NB-133.local>
 References: <20200518183141.66621-1-r.bolshakov@yadro.com>
-From:   Himanshu Madhani <himanshu.madhani@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <59107930-dfae-35be-9fb7-cef729e55412@oracle.com>
-Date:   Mon, 18 May 2020 17:40:58 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
 In-Reply-To: <20200518183141.66621-1-r.bolshakov@yadro.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- phishscore=0 bulkscore=0 suspectscore=0 mlxscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005180191
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
- clxscore=1011 cotscore=-2147483648 suspectscore=0 lowpriorityscore=0
- adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005180191
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 5/18/20 1:31 PM, Roman Bolshakov wrote:
+On Mon, May 18, 2020 at 09:31:42PM +0300, Roman Bolshakov wrote:
 > The driver performs SCR (state change registration) in all modes
 > including pure target mode.
 > 
@@ -105,16 +87,16 @@ On 5/18/20 1:31 PM, Roman Bolshakov wrote:
 > session of the command/TMF, and that results in invocation of
 > qlt_send_busy():
 > 
->    qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
->    qla_target(0): Unable to send command to target, sending BUSY status
+>   qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
+>   qla_target(0): Unable to send command to target, sending BUSY status
 > 
 > Such response causes command timeout on the initiator. Error handler
 > thread on the initiator will be spawned to abort the commands:
 > 
->    scsi 23:0:0:0: tag#0 abort scheduled
->    scsi 23:0:0:0: tag#0 aborting command
->    qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
->    qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
+>   scsi 23:0:0:0: tag#0 abort scheduled
+>   scsi 23:0:0:0: tag#0 aborting command
+>   qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
+>   qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
 > 
 > Command abort is rejected by target and fails (2003), error handler then
 > tries to perform DEVICE RESET and TARGET RESET but they're also doomed
@@ -140,8 +122,8 @@ On 5/18/20 1:31 PM, Roman Bolshakov wrote:
 > Cc: stable@vger.kernel.org # v5.4+
 > Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 > ---
->   drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
 > Hi Martin,
 > 
@@ -158,22 +140,41 @@ On 5/18/20 1:31 PM, Roman Bolshakov wrote:
 > --- a/drivers/scsi/qla2xxx/qla_gs.c
 > +++ b/drivers/scsi/qla2xxx/qla_gs.c
 > @@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
->   			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
->   				qla2x00_clear_loop_id(fcport);
->   				fcport->flags |= FCF_FABRIC_DEVICE;
+>  			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+>  				qla2x00_clear_loop_id(fcport);
+>  				fcport->flags |= FCF_FABRIC_DEVICE;
 > -			} else if (fcport->d_id.b24 != rp->id.b24 ||
 > -				fcport->scan_needed) {
 > +			} else if ((fcport->d_id.b24 != rp->id.b24 ||
 > +				    fcport->scan_needed) &&
 > +				   (fcport->port_type != FCT_INITIATOR &&
 > +				    fcport->port_type != FCT_NVME_INITIATOR)) {
->   				qlt_schedule_sess_for_deletion(fcport);
->   			}
->   			fcport->d_id.b24 = rp->id.b24;
+>  				qlt_schedule_sess_for_deletion(fcport);
+>  			}
+>  			fcport->d_id.b24 = rp->id.b24;
+> -- 
+> 2.26.1
 > 
-Looks okay.
 
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+P.S. A little bit cleaner alternative would be to avoid session deletion
+only if scan needed is set (that allows session deletion of initiator
+ports after fabric discovery if N_Port ID change happened). Please let
+me know if I should submit v2 like this:
 
--- 
-Himanshu Madhani                     Oracle Linux Engineering
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 42c3ad27f1cb..b9955af5cffe 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+ 				qla2x00_clear_loop_id(fcport);
+ 				fcport->flags |= FCF_FABRIC_DEVICE;
+-			} else if (fcport->d_id.b24 != rp->id.b24 ||
+-				fcport->scan_needed) {
++			} else if (fcport->d_id.b24 != rp->id.b24 ||
++				   (fcport->scan_needed &&
++				    fcport->port_type != FCT_INITIATOR &&
++				    fcport->port_type != FCT_NVME_INITIATOR)) {
+ 				qlt_schedule_sess_for_deletion(fcport);
+ 			}
+ 			fcport->d_id.b24 = rp->id.b24;
