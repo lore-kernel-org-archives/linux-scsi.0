@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24785C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 21:17:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 055F0C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 21:17:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AE62207F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 21:17:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0A52207C4
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 21:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726640AbgERVRV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 May 2020 17:17:21 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:42937 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726250AbgERVRV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2020 17:17:21 -0400
-Received: by mail-pl1-f194.google.com with SMTP id k19so4738443pll.9
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2020 14:17:21 -0700 (PDT)
+        id S1727037AbgERVRY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 May 2020 17:17:24 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:37712 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726250AbgERVRY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2020 17:17:24 -0400
+Received: by mail-pf1-f195.google.com with SMTP id y198so3957825pfb.4
+        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2020 14:17:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=v6E7r3HQnFANVdICPIMBt6UBQTbIMqrW26GcfdRgP6Y=;
-        b=Y6thDzdM2TrDQqsb6u5imMob4cYaX7KATan5Zg7+P571eb9Wqeb7Bo519AHW5yFoRu
-         pofc7TpAdWU2KTEaVMmIYMaPTJLjpPoCoHlYixXT8feaIygGXFYqd50z55NdJ9ScG50J
-         cPxieC6rqR0hOllgJWFgmXnbRgAy8FGQc3Kda+yOrbPEjIlimKbAfXPEXYgySHp43ZuD
-         AUS4XY+hB46cF9G3P8TaKOw5L6qvNGpNJwvi8P/Eo4mCJ6QxNSQEjT78s1Vidw9YGfhw
-         /8B0P2lj4clUR8pGUux90liU8cqLf0OblgKKt4QsoOcOw70ky/2Rs8N638W8mK8y1zvK
-         85QQ==
-X-Gm-Message-State: AOAM530sjoMw4J4WYiRfiN4I8HUPAALzaQY6s9hOvw7cq9IYfomfawwW
-        VB3of+yb3w3TlF5IjVqoykU=
-X-Google-Smtp-Source: ABdhPJwfZcySCckB+aCrPPUJtOEx8HYtRkK8vV4yIyu8efhb85AUjq4prOSba1xbffwaBC4HDcyezQ==
-X-Received: by 2002:a17:90a:c984:: with SMTP id w4mr1420604pjt.9.1589836640433;
-        Mon, 18 May 2020 14:17:20 -0700 (PDT)
+        bh=63pNs68I/xD/4flIFYQY8xsHu4flsoym9FPsoghGBfE=;
+        b=Dzz6MtzGJd+Sna9TyKmVFz6QD2wqENmJ9F1/p6R0zdgnXgNb0wDOiALUa8uLwM3SNf
+         IzusZdVrGXdNf96RdpeovtkDe+SyMEIF9yC4w8kLT412z1fMRG1vtRzT4kYnwPegyyJU
+         7MK++UjU0GRACQ0H4N4d7qAJaNQtYKjvFMhMRJ3YqfBdzGXSLYQ9YMLaev40S1N74Cjq
+         KY9jyoqKgBWU1ftjSWOguJcjNDR151X6lisFqcRGhNgt8ccl5Fm88r+eCH+vRO7Yk3LT
+         e4p87ketVSsfjy+3ZUQ2J4tbq6BEnsgBAt12I6Z0EjH7rckqkXaHwb+MSLdY8DDzRFq5
+         JlgA==
+X-Gm-Message-State: AOAM532NWtt9dQEvx+XG7XgfY8UyaL9ltoZtaUvjvFA0p3Vx5N6ReX4L
+        EFcpMmTaDsVcGZgdzFUowTQ=
+X-Google-Smtp-Source: ABdhPJwPx3QoJiXyYR1V6oA+UaJCAApbGfJTU/+1+bCnxu1tIev8vEAeF5AOQFtJDwOr0BQVTLko4w==
+X-Received: by 2002:a62:1957:: with SMTP id 84mr15727686pfz.54.1589836642218;
+        Mon, 18 May 2020 14:17:22 -0700 (PDT)
 Received: from localhost.localdomain ([2601:647:4000:d7:dc5d:b628:d57b:164])
-        by smtp.gmail.com with ESMTPSA id i184sm8813123pgc.36.2020.05.18.14.17.18
+        by smtp.gmail.com with ESMTPSA id i184sm8813123pgc.36.2020.05.18.14.17.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2020 14:17:19 -0700 (PDT)
+        Mon, 18 May 2020 14:17:21 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -48,12 +48,13 @@ Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Bart Van Assche <bvanassche@acm.org>,
         Daniel Wagner <dwagner@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
+        Joe Jin <joe.jin@oracle.com>,
         Nilesh Javali <njavali@marvell.com>,
         Quinn Tran <qutran@marvell.com>, Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v7 01/15] qla2xxx: Fix spelling of a variable name
-Date:   Mon, 18 May 2020 14:16:58 -0700
-Message-Id: <20200518211712.11395-2-bvanassche@acm.org>
+Subject: [PATCH v7 02/15] qla2xxx: Suppress two recently introduced compiler warnings
+Date:   Mon, 18 May 2020 14:16:59 -0700
+Message-Id: <20200518211712.11395-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200518211712.11395-1-bvanassche@acm.org>
 References: <20200518211712.11395-1-bvanassche@acm.org>
@@ -64,54 +65,64 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Change "offet" into "offset" in a variable name.
+Suppress the following two compiler warnings because these are not useful:
+
+In file included from ./include/trace/define_trace.h:102,
+                 from ./include/trace/events/qla.h:39,
+                 from drivers/scsi/qla2xxx/qla_dbg.c:77:
+./include/trace/events/qla.h: In function 'trace_event_raw_event_qla_log_event':
+./include/trace/trace_events.h:691:9: warning: function 'trace_event_raw_event_qla_log_event' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
+  691 |  struct trace_event_raw_##call *entry;    \
+      |         ^~~~~~~~~~~~~~~~
+./include/trace/events/qla.h:12:1: note: in expansion of macro 'DECLARE_EVENT_CLASS'
+   12 | DECLARE_EVENT_CLASS(qla_log_event,
+      | ^~~~~~~~~~~~~~~~~~~
+In file included from ./include/trace/define_trace.h:103,
+                 from ./include/trace/events/qla.h:39,
+                 from drivers/scsi/qla2xxx/qla_dbg.c:77:
+./include/trace/events/qla.h: In function 'perf_trace_qla_log_event':
+./include/trace/perf.h:41:9: warning: function 'perf_trace_qla_log_event' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
+   41 |  struct hlist_head *head;     \
+      |         ^~~~~~~~~~
+./include/trace/events/qla.h:12:1: note: in expansion of macro 'DECLARE_EVENT_CLASS'
 
 Reviewed-by: Daniel Wagner <dwagner@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Arun Easi <aeasi@marvell.com>
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Cc: Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>
+Cc: Joe Jin <joe.jin@oracle.com>
 Cc: Nilesh Javali <njavali@marvell.com>
 Cc: Quinn Tran <qutran@marvell.com>
 Cc: Martin Wilck <mwilck@suse.com>
+Fixes: 598a90f2002c ("scsi: qla2xxx: add ring buffer for tracing debug logs")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_fw.h   | 2 +-
- drivers/scsi/qla2xxx/qla_init.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ include/trace/events/qla.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index f9bad5bd7198..b364a497e33d 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -1292,7 +1292,7 @@ struct device_reg_24xx {
- };
- /* RISC-RISC semaphore register PCI offet */
- #define RISC_REGISTER_BASE_OFFSET	0x7010
--#define RISC_REGISTER_WINDOW_OFFET	0x6
-+#define RISC_REGISTER_WINDOW_OFFSET	0x6
+diff --git a/include/trace/events/qla.h b/include/trace/events/qla.h
+index b71f680968eb..5857cf682ee7 100644
+--- a/include/trace/events/qla.h
++++ b/include/trace/events/qla.h
+@@ -9,6 +9,11 @@
  
- /* RISC-RISC semaphore/flag register (risc address 0x7016) */
+ #define QLA_MSG_MAX 256
  
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 95b6166ae0cc..f8fe0334571f 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2861,7 +2861,7 @@ qla25xx_read_risc_sema_reg(scsi_qla_host_t *vha, uint32_t *data)
- 	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
++#pragma GCC diagnostic push
++#ifndef __clang__
++#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
++#endif
++
+ DECLARE_EVENT_CLASS(qla_log_event,
+ 	TP_PROTO(const char *buf,
+ 		struct va_format *vaf),
+@@ -27,6 +32,8 @@ DECLARE_EVENT_CLASS(qla_log_event,
+ 	TP_printk("%s %s", __get_str(buf), __get_str(msg))
+ );
  
- 	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
--	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET);
-+	*data = RD_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET);
- 
- }
- 
-@@ -2871,7 +2871,7 @@ qla25xx_write_risc_sema_reg(scsi_qla_host_t *vha, uint32_t data)
- 	struct device_reg_24xx __iomem *reg = &vha->hw->iobase->isp24;
- 
- 	WRT_REG_DWORD(&reg->iobase_addr, RISC_REGISTER_BASE_OFFSET);
--	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFET, data);
-+	WRT_REG_DWORD(&reg->iobase_window + RISC_REGISTER_WINDOW_OFFSET, data);
- }
- 
- static void
++#pragma GCC diagnostic pop
++
+ DEFINE_EVENT(qla_log_event, ql_dbg_log,
+ 	TP_PROTO(const char *buf, struct va_format *vaf),
+ 	TP_ARGS(buf, vaf)
