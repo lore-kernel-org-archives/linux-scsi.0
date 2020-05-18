@@ -2,91 +2,155 @@ Return-Path: <SRS0=k4K9=7A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F233C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 16:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16FDAC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 18:33:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5134C207ED
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 16:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAB772065F
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 18:33:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j3ozo5YH"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="oaWC7Uel"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728481AbgERQuq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 May 2020 12:50:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51780 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726958AbgERQup (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2020 12:50:45 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7874C061A0C;
-        Mon, 18 May 2020 09:50:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=kZ1kt/vvSWLV22qkWN7aKlxZz7wcX+WgFj2oUslFSoQ=; b=j3ozo5YHhZD8k6To6Kx6JYBtFf
-        3ro7WFhgIcFxk9sM8YyXJMP1ljUysW3CEYKqKWLP2qaP1VCDz6hG1+RO2o48RMHX57B2pgMWsTRHm
-        6qBznsPTqj9W41MCa36Vj34K2scnpByyAH9hk4n4QgEXgqPsfPMqKctkdvqZ7CGVT9Kiu7m2eG0Xg
-        Z2S552l1JSMN6/ihF5mjDfESDw9j42b5Dk/ljZbE4GQkDocvWkFANRe792+jf+a62b7+a2MOwkY6h
-        9rT/3ag8Svxuei5DS+/8LTm1jF4aabP4NRraZDwyB4/0lNAIu6kjG/Hr6ujWcERiWB5IZCd5yGJ4J
-        yiJHceqg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jaiyS-0000NI-EH; Mon, 18 May 2020 16:50:44 +0000
-Date:   Mon, 18 May 2020 09:50:44 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Satya Tangirala <satyat@google.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v13 00/12] Inline Encryption Support
-Message-ID: <20200518165044.GA23230@infradead.org>
-References: <20200514003727.69001-1-satyat@google.com>
- <20200514051053.GA14829@sol.localdomain>
- <8fa1aafe-1725-e586-ede3-a3273e674470@kernel.dk>
- <20200515074127.GA13926@infradead.org>
- <20200515122540.GA143740@google.com>
- <20200515144224.GA12040@infradead.org>
- <20200515170059.GA1009@sol.localdomain>
+        id S1729312AbgERSdN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 May 2020 14:33:13 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:52756 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728490AbgERSdM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 May 2020 14:33:12 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id DEB5E4C667;
+        Mon, 18 May 2020 18:33:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1589826786; x=
+        1591641187; bh=5veyLmE+XwlS6sb+AeD6bFUjXEVExdI2mtSwN4PL/P0=; b=o
+        aWC7UelGUiQ5XJmzXZZjr6S/pJRGkNtROZ3e9JfhowuWzPuhIrj7+HQ+h51X3Tnh
+        sxlyo5U2OuWbsrYuglJcIUp0zTEMlMJ7o8BbqPw8BvcfwC0tpVakH23cu50yf2j6
+        KQD/EGC2cf0acgfnFN1s7AijEE4tpUAx4uzquGpvJM=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id OoTef8jXwn9X; Mon, 18 May 2020 21:33:06 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id A20D04128B;
+        Mon, 18 May 2020 21:33:05 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 18
+ May 2020 21:33:07 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
+        <target-devel@vger.kernel.org>, <linux@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Daniel Wagner <dwagner@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Martin Wilck <mwilck@suse.com>, <stable@vger.kernel.org>
+Subject: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
+Date:   Mon, 18 May 2020 21:31:42 +0300
+Message-ID: <20200518183141.66621-1-r.bolshakov@yadro.com>
+X-Mailer: git-send-email 2.26.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200515170059.GA1009@sol.localdomain>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, May 15, 2020 at 10:00:59AM -0700, Eric Biggers wrote:
-> The fallback is actually really useful.  First, for testing: it allows all the
-> filesystem code that uses inline crypto to be tested using gce-xfstests and
-> kvm-xfstests, so that it's covered by the usual ext4 and f2fs regression testing
-> and it's much easier to develop patches for.  It also allowed us to enable the
-> inlinecrypt mount option in Cuttlefish, which is the virtual Android device used
-> to test the Android common kernels.  So, it gets the kernel test platform as
-> similar to a real Android device as possible.
-> 
-> Ideally we'd implement virtualized inline encryption as you suggested.  But
-> these platforms use a mix of VMM's (QEMU, GCE, and crosvm) and storage types
-> (virtio-blk, virtio-scsi, and maybe others; none of these even have an inline
-> encryption standard defined yet).  So it's not currently feasible.
+The driver performs SCR (state change registration) in all modes
+including pure target mode.
 
-Not that you don't need to implement it in the hypervisor.  You can
-also trivially wire up for things like null_blk.
+For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for the
+port mentioned in the RSCN and fabric rescan is scheduled. During the
+rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
+the port that caused the RSCN.
 
-> Second, it creates a clean design where users can just use blk-crypto, and not
-> have to implement a second encryption implementation.
+In target mode, the session deletion has an impact on ATIO handler,
+qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
+incoming from the deleted session. qlt_handle_cmd_for_atio() and
+qlt_handle_task_mgmt() return -EFAULT if they are not able to find
+session of the command/TMF, and that results in invocation of
+qlt_send_busy():
 
-And I very much disagree about that being a clean implementation.  It is
-fine if the user doesn't care, but you should catch this before hitting
-the block stack and do the encryption there without hardware blk-crypt
-support.
+  qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
+  qla_target(0): Unable to send command to target, sending BUSY status
+
+Such response causes command timeout on the initiator. Error handler
+thread on the initiator will be spawned to abort the commands:
+
+  scsi 23:0:0:0: tag#0 abort scheduled
+  scsi 23:0:0:0: tag#0 aborting command
+  qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
+  qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
+
+Command abort is rejected by target and fails (2003), error handler then
+tries to perform DEVICE RESET and TARGET RESET but they're also doomed
+to fail because TMFs are ignored for the deleted sessions.
+
+Then initiator makes BUS RESET that resets the link via
+qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator port
+up, SAN switch detects that and sends RSCN to the target port and it
+fails again the same way as described above. It never goes out of the
+loop.
+
+The change breaks the RSCN loop by keeping initiator sessions mentioned
+in RSCN payload in all modes, including dual and pure target mode.
+
+Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
+Cc: Quinn Tran <qutran@marvell.com>
+Cc: Arun Easi <aeasi@marvell.com>
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: stable@vger.kernel.org # v5.4+
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+---
+ drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+Hi Martin,
+
+Please apply the patch to scsi-fixes/5.7 at your earliest convenience.
+
+qla2xxx in target and, likely, dual mode is unusable in some SAN fabrics
+due to the bug.
+
+Thanks,
+Roman
+
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 42c3ad27f1cb..b9955af5cffe 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+ 				qla2x00_clear_loop_id(fcport);
+ 				fcport->flags |= FCF_FABRIC_DEVICE;
+-			} else if (fcport->d_id.b24 != rp->id.b24 ||
+-				fcport->scan_needed) {
++			} else if ((fcport->d_id.b24 != rp->id.b24 ||
++				    fcport->scan_needed) &&
++				   (fcport->port_type != FCT_INITIATOR &&
++				    fcport->port_type != FCT_NVME_INITIATOR)) {
+ 				qlt_schedule_sess_for_deletion(fcport);
+ 			}
+ 			fcport->d_id.b24 = rp->id.b24;
+-- 
+2.26.1
+
