@@ -2,104 +2,178 @@ Return-Path: <SRS0=k4K9=7A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71564C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 21:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84831C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 22:41:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D319205CB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 21:41:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C5F52075F
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 22:41:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="K5u3wqcO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728087AbgERVlW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 May 2020 17:41:22 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60212 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726492AbgERVlW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 May 2020 17:41:22 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 04ILVuwV091023;
-        Mon, 18 May 2020 17:41:17 -0400
-Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 312cayq8dg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 May 2020 17:41:17 -0400
-Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
-        by ppma04wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 04ILdiee002643;
-        Mon, 18 May 2020 21:41:16 GMT
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-        by ppma04wdc.us.ibm.com with ESMTP id 313wh3hf44-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 18 May 2020 21:41:16 +0000
-Received: from b01ledav002.gho.pok.ibm.com (b01ledav002.gho.pok.ibm.com [9.57.199.107])
-        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 04ILfFmx37159408
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 18 May 2020 21:41:15 GMT
-Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 51666124054;
-        Mon, 18 May 2020 21:41:15 +0000 (GMT)
-Received: from b01ledav002.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CCE0E124052;
-        Mon, 18 May 2020 21:41:14 +0000 (GMT)
-Received: from p8tul1-build.aus.stglabs.ibm.com (unknown [9.3.141.206])
-        by b01ledav002.gho.pok.ibm.com (Postfix) with ESMTPS;
-        Mon, 18 May 2020 21:41:14 +0000 (GMT)
-Date:   Mon, 18 May 2020 16:41:14 -0500
-From:   "Matthew R. Ochs" <mrochs@linux.ibm.com>
-To:     Wei Yongjun <weiyongjun1@huawei.com>
-Cc:     "Manoj N . Kumar" <manoj@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH -next] scsi: cxlflash: Fix error return code in
- cxlflash_probe()
-Message-ID: <20200518214114.GA16690@p8tul1-build.aus.stglabs.ibm.com>
-References: <20200428141855.88704-1-weiyongjun1@huawei.com>
+        id S1728266AbgERWlT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 May 2020 18:41:19 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58954 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726359AbgERWlT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 May 2020 18:41:19 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04IMbd63186943;
+        Mon, 18 May 2020 22:41:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=wfqzLoaxxp4lVJqPw3YFi9A16uL/yoQRMCgjuuIIKA4=;
+ b=K5u3wqcOEeuqDuqzTRLVdUswKm0ySp6xLFvhCA85l1Q67h2UDSIJW9Y85rzinCLUfuR7
+ SEvQWOmom4eN7cv3JP8sRKrtuKRqpGVqkINeKX0NxddmI9MDeWpGktI/mUOGlE4c6Dvf
+ ZgmrDENqjAEfQNclYOm/YJyQbkfcSZVZaklqkJb2WL5TMiPVvWWapdrAWURDj2CM6OPI
+ raKLqCq9e1XZ+UT/2aEgClwlQdzvtCDYHf4q79soEyMo14PVoyHzslTSCCU+3EN1JeM7
+ w9Ctenxi9MnarrJvByF8Kh6eounEBXJycvcp/UA6SMVl5mxvINgsj32HFcfIj1OW+gR6 7A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 3128tn9se7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 18 May 2020 22:41:03 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04IMYQUk152989;
+        Mon, 18 May 2020 22:41:02 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 312t3wm6k2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 18 May 2020 22:41:02 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04IMf1Rp019137;
+        Mon, 18 May 2020 22:41:01 GMT
+Received: from [192.168.1.35] (/70.114.128.235)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 18 May 2020 15:41:01 -0700
+Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
+To:     Roman Bolshakov <r.bolshakov@yadro.com>, linux-scsi@vger.kernel.org
+Cc:     GR-QLogic-Storage-Upstream@marvell.com,
+        target-devel@vger.kernel.org, linux@yadro.com,
+        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Daniel Wagner <dwagner@suse.de>,
+        Martin Wilck <mwilck@suse.com>, stable@vger.kernel.org
+References: <20200518183141.66621-1-r.bolshakov@yadro.com>
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <59107930-dfae-35be-9fb7-cef729e55412@oracle.com>
+Date:   Mon, 18 May 2020 17:40:58 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200428141855.88704-1-weiyongjun1@huawei.com>
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.676
- definitions=2020-05-18_06:2020-05-15,2020-05-18 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- lowpriorityscore=0 mlxscore=0 suspectscore=0 spamscore=0 impostorscore=0
- malwarescore=0 adultscore=0 bulkscore=0 clxscore=1011 mlxlogscore=999
- priorityscore=1501 cotscore=-2147483648 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005180181
+In-Reply-To: <20200518183141.66621-1-r.bolshakov@yadro.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
+ phishscore=0 bulkscore=0 suspectscore=0 mlxscore=0 spamscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005180191
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 cotscore=-2147483648 suspectscore=0 lowpriorityscore=0
+ adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005180191
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Apr 28, 2020 at 02:18:55PM +0000, Wei Yongjun wrote:
-> Fix to return negative error code -ENOMEM from create_afu error
-> handling case instead of 0, as done elsewhere in this function.
+
+
+On 5/18/20 1:31 PM, Roman Bolshakov wrote:
+> The driver performs SCR (state change registration) in all modes
+> including pure target mode.
 > 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-
-Acked-by: Matthew R. Ochs <mrochs@linux.ibm.com>
-
+> For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for the
+> port mentioned in the RSCN and fabric rescan is scheduled. During the
+> rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
+> the port that caused the RSCN.
+> 
+> In target mode, the session deletion has an impact on ATIO handler,
+> qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
+> incoming from the deleted session. qlt_handle_cmd_for_atio() and
+> qlt_handle_task_mgmt() return -EFAULT if they are not able to find
+> session of the command/TMF, and that results in invocation of
+> qlt_send_busy():
+> 
+>    qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
+>    qla_target(0): Unable to send command to target, sending BUSY status
+> 
+> Such response causes command timeout on the initiator. Error handler
+> thread on the initiator will be spawned to abort the commands:
+> 
+>    scsi 23:0:0:0: tag#0 abort scheduled
+>    scsi 23:0:0:0: tag#0 aborting command
+>    qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
+>    qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
+> 
+> Command abort is rejected by target and fails (2003), error handler then
+> tries to perform DEVICE RESET and TARGET RESET but they're also doomed
+> to fail because TMFs are ignored for the deleted sessions.
+> 
+> Then initiator makes BUS RESET that resets the link via
+> qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator port
+> up, SAN switch detects that and sends RSCN to the target port and it
+> fails again the same way as described above. It never goes out of the
+> loop.
+> 
+> The change breaks the RSCN loop by keeping initiator sessions mentioned
+> in RSCN payload in all modes, including dual and pure target mode.
+> 
+> Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Arun Easi <aeasi@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: stable@vger.kernel.org # v5.4+
+> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 > ---
->  drivers/scsi/cxlflash/main.c | 1 +
->  1 file changed, 1 insertion(+)
+>   drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
+>   1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-> index fbd2ae40dab4..fcc5aa9f6014 100644
-> --- a/drivers/scsi/cxlflash/main.c
-> +++ b/drivers/scsi/cxlflash/main.c
-> @@ -3744,6 +3744,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
->  	cfg->afu_cookie = cfg->ops->create_afu(pdev);
->  	if (unlikely(!cfg->afu_cookie)) {
->  		dev_err(dev, "%s: create_afu failed\n", __func__);
-> +		rc = -ENOMEM;
->  		goto out_remove;
->  	}
+> Hi Martin,
 > 
+> Please apply the patch to scsi-fixes/5.7 at your earliest convenience.
 > 
+> qla2xxx in target and, likely, dual mode is unusable in some SAN fabrics
+> due to the bug.
 > 
+> Thanks,
+> Roman
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+> index 42c3ad27f1cb..b9955af5cffe 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+>   			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+>   				qla2x00_clear_loop_id(fcport);
+>   				fcport->flags |= FCF_FABRIC_DEVICE;
+> -			} else if (fcport->d_id.b24 != rp->id.b24 ||
+> -				fcport->scan_needed) {
+> +			} else if ((fcport->d_id.b24 != rp->id.b24 ||
+> +				    fcport->scan_needed) &&
+> +				   (fcport->port_type != FCT_INITIATOR &&
+> +				    fcport->port_type != FCT_NVME_INITIATOR)) {
+>   				qlt_schedule_sess_for_deletion(fcport);
+>   			}
+>   			fcport->d_id.b24 = rp->id.b24;
+> 
+Looks okay.
+
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+
+-- 
+Himanshu Madhani                     Oracle Linux Engineering
