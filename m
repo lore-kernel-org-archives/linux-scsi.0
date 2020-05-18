@@ -2,97 +2,141 @@ Return-Path: <SRS0=k4K9=7A=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EFD9C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 01:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73739C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 06:18:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A539207BB
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 01:02:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52FBB207D4
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 06:18:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726855AbgERBC3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 17 May 2020 21:02:29 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:28166 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726821AbgERBC3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 17 May 2020 21:02:29 -0400
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-242-4JzaRyvBOUKOHEemSFbP9g-1; Sun, 17 May 2020 21:02:25 -0400
-X-MC-Unique: 4JzaRyvBOUKOHEemSFbP9g-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 29B68474;
-        Mon, 18 May 2020 01:02:24 +0000 (UTC)
-Received: from ldigby.remote.csb (vpn2-54-25.bne.redhat.com [10.64.54.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 907A1398;
-        Mon, 18 May 2020 01:02:22 +0000 (UTC)
-From:   Lance Digby <lance.digby@gmail.com>
-To:     mchristi@redhat.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v1 target] target: Add initiatorname to NON_EXISTENT_LUN error
-Date:   Mon, 18 May 2020 11:02:16 +1000
-Message-Id: <9b13bb2e1f52f1792cd81850ee95bf3781bb5363.1589759816.git.lance.digby@gmail.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: gmail.com
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+        id S1726508AbgERGSy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 May 2020 02:18:54 -0400
+Received: from mx2.suse.de ([195.135.220.15]:48290 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726040AbgERGSx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 May 2020 02:18:53 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 6D817B15D;
+        Mon, 18 May 2020 06:18:54 +0000 (UTC)
+Subject: Re: [PATCH v6 15/15] qla2xxx: Fix endianness annotations in source
+ files
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Arun Easi <aeasi@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Daniel Wagner <dwagner@suse.de>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+References: <20200514213516.25461-1-bvanassche@acm.org>
+ <20200514213516.25461-16-bvanassche@acm.org>
+ <77c33a4e-c67c-1978-8b72-ceca58d4309d@suse.de>
+ <fdc5993d-ffb8-cd7f-06a3-20e16a1017d0@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <8b47f67b-d4d3-9ca4-139c-8d55dbef27c5@suse.de>
+Date:   Mon, 18 May 2020 08:18:47 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
+MIME-Version: 1.0
+In-Reply-To: <fdc5993d-ffb8-cd7f-06a3-20e16a1017d0@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The NON_EXISTENT_LUN error can be written without an error condition
-on the initiator responsible. Adding the initiatorname to this message
-will reduce the effort required to fix this when many initiators are
-supported by a target.
+On 5/15/20 9:22 PM, Bart Van Assche wrote:
+> On 2020-05-14 23:50, Hannes Reinecke wrote:
+>> On 5/14/20 11:35 PM, Bart Van Assche wrote:
+>>> diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c
+>>> b/drivers/scsi/qla2xxx/qla_tmpl.c
+>>> index f05a4fa2b9d7..b91ec1c3a3ae 100644
+>>> --- a/drivers/scsi/qla2xxx/qla_tmpl.c
+>>> +++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+>>> @@ -922,9 +922,9 @@ qla27xx_firmware_info(struct scsi_qla_host *vha,
+>>>        tmp->firmware_version[0] = vha->hw->fw_major_version;
+>>>        tmp->firmware_version[1] = vha->hw->fw_minor_version;
+>>>        tmp->firmware_version[2] = vha->hw->fw_subminor_version;
+>>> -    tmp->firmware_version[3] = cpu_to_le32(
+>>> +    tmp->firmware_version[3] = (__force u32)cpu_to_le32(
+>>>            vha->hw->fw_attributes_h << 16 | vha->hw->fw_attributes);
+>>> -    tmp->firmware_version[4] = cpu_to_le32(
+>>> +    tmp->firmware_version[4] = (__force u32)cpu_to_le32(
+>>>          vha->hw->fw_attributes_ext[1] << 16 |
+>>> vha->hw->fw_attributes_ext[0]);
+>>>    }
+>>>   
+>> Why do you need (__force u32) here?
+>> It should be a 32bit array, and cpu_to_le32() trivially returns 32bits.
+>> What's there to force?
+> 
+> The hw->fw_{major,minor,subminor}_version and also the
+> hw->fw_attributes_ext variables have been annotated as CPU endian. I
+> inserted the (__force u32) casts because that suppresses the endianness
+> warnings without affecting the generated code on little endian or big
+> endian systems. Thinking further about this, storing CPU endian values
+> in a firmware data structure is most likely wrong. How about modifying
+> patch 15/15 as follows?
+> 
+>   drivers/scsi/qla2xxx/qla_tmpl.c | 10 +++++-----
+>   drivers/scsi/qla2xxx/qla_tmpl.h |  2 +-
+>   2 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+> index b91ec1c3a3ae..8dc82cfd38b2 100644
+> --- a/drivers/scsi/qla2xxx/qla_tmpl.c
+> +++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+> @@ -919,12 +919,12 @@ static void
+>   qla27xx_firmware_info(struct scsi_qla_host *vha,
+>       struct qla27xx_fwdt_template *tmp)
+>   {
+> -	tmp->firmware_version[0] = vha->hw->fw_major_version;
+> -	tmp->firmware_version[1] = vha->hw->fw_minor_version;
+> -	tmp->firmware_version[2] = vha->hw->fw_subminor_version;
+> -	tmp->firmware_version[3] = (__force u32)cpu_to_le32(
+> +	tmp->firmware_version[0] = cpu_to_le32(vha->hw->fw_major_version);
+> +	tmp->firmware_version[1] = cpu_to_le32(vha->hw->fw_minor_version);
+> +	tmp->firmware_version[2] = cpu_to_le32(vha->hw->fw_subminor_version);
+> +	tmp->firmware_version[3] = cpu_to_le32(
+>   		vha->hw->fw_attributes_h << 16 | vha->hw->fw_attributes);
+> -	tmp->firmware_version[4] = (__force u32)cpu_to_le32(
+> +	tmp->firmware_version[4] = cpu_to_le32(
+>   	  vha->hw->fw_attributes_ext[1] << 16 | vha->hw->fw_attributes_ext[0]);
+>   }
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_tmpl.h b/drivers/scsi/qla2xxx/qla_tmpl.h
+> index bba8dc90acfb..89280b3477aa 100644
+> --- a/drivers/scsi/qla2xxx/qla_tmpl.h
+> +++ b/drivers/scsi/qla2xxx/qla_tmpl.h
+> @@ -27,7 +27,7 @@ struct __packed qla27xx_fwdt_template {
+>   	uint32_t saved_state[16];
+> 
+>   	uint32_t reserved_3[8];
+> -	uint32_t firmware_version[5];
+> +	__le32 firmware_version[5];
+>   };
+> 
+>   #define TEMPLATE_TYPE_FWDUMP		99
+> 
+> Thanks,
+> 
+> Bart.
+> 
+Yes, that's better.
 
-This version ensures the initiator name is also printed on the same
-message in transport_lookup_tmr_lun for consistency.
+Cheers,
 
-Signed-off-by: Lance Digby <lance.digby@gmail.com>
----
- drivers/target/target_core_device.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_co=
-re_device.c
-index 4cee113..15064a5 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -100,9 +100,10 @@
- =09=09 */
- =09=09if (unpacked_lun !=3D 0) {
- =09=09=09pr_err("TARGET_CORE[%s]: Detected NON_EXISTENT_LUN"
--=09=09=09=09" Access for 0x%08llx\n",
-+=09=09=09=09" Access for 0x%08llx from %s\n",
- =09=09=09=09se_cmd->se_tfo->fabric_name,
--=09=09=09=09unpacked_lun);
-+=09=09=09=09unpacked_lun,
-+=09=09=09=09nacl->initiatorname);
- =09=09=09return TCM_NON_EXISTENT_LUN;
- =09=09}
-=20
-@@ -174,9 +175,10 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u6=
-4 unpacked_lun)
-=20
- =09if (!se_lun) {
- =09=09pr_debug("TARGET_CORE[%s]: Detected NON_EXISTENT_LUN"
--=09=09=09" Access for 0x%08llx\n",
-+=09=09=09" Access for 0x%08llx for %s\n",
- =09=09=09se_cmd->se_tfo->fabric_name,
--=09=09=09unpacked_lun);
-+=09=09=09unpacked_lun,
-+=09=09=09nacl->initiatorname);
- =09=09return -ENODEV;
- =09}
- =09se_cmd->se_dev =3D rcu_dereference_raw(se_lun->lun_se_dev);
---=20
-1.8.3.1
-
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
