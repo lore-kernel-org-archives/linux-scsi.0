@@ -1,180 +1,164 @@
-Return-Path: <SRS0=k4K9=7A=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=JQ6K=7B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB3CC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 23:22:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 482D8C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 04:55:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CA61207D4
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 May 2020 23:22:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2848E206D4
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 04:55:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="j3kWp4m2"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="Su9d2uKP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726966AbgERXW6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 May 2020 19:22:58 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:59992 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726481AbgERXW6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 May 2020 19:22:58 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 71FB94C831;
-        Mon, 18 May 2020 23:22:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1589844168;
-         x=1591658569; bh=qk1wvFlbfdhfxYWfppbnswNLumKwOzmwbv8R8eFqO00=; b=
-        j3kWp4m2cjWEcvzEVaQxM67FrZ5HazP4zQZmZqim8Iyj7SzTtsVoTDs2QAHTilcd
-        Rn15CatuUVa2p0tJgupfgi4MOgoPisrIdKkt7fk7MIgefgupqa2BbfirN4Zg1U5K
-        YGaltFADj4Z+AYI2bPGdj/orF+rrPeLgvzUHUgPDMGI=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id zJQqs84end9t; Tue, 19 May 2020 02:22:48 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 011D64128B;
-        Tue, 19 May 2020 02:22:48 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 19
- May 2020 02:22:49 +0300
-Date:   Tue, 19 May 2020 02:22:48 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
-        <target-devel@vger.kernel.org>, <linux@yadro.com>,
-        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Martin Wilck <mwilck@suse.com>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
-Message-ID: <20200518232248.GG75422@SPB-NB-133.local>
-References: <20200518183141.66621-1-r.bolshakov@yadro.com>
+        id S1726336AbgESEz2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 May 2020 00:55:28 -0400
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:19216 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726307AbgESEz2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2020 00:55:28 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ec366710000>; Mon, 18 May 2020 21:54:09 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 18 May 2020 21:55:27 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 18 May 2020 21:55:27 -0700
+Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL111.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 19 May
+ 2020 04:55:27 +0000
+Received: from rnnvemgw01.nvidia.com (10.128.109.123) by HQMAIL111.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 19 May 2020 04:55:27 +0000
+Received: from sandstorm.nvidia.com (Not Verified[10.2.55.90]) by rnnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5ec366be0004>; Mon, 18 May 2020 21:55:27 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     LKML <linux-kernel@vger.kernel.org>
+CC:     John Hubbard <jhubbard@nvidia.com>,
+        =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: [PATCH] scsi: st: convert convert get_user_pages() --> pin_user_pages()
+Date:   Mon, 18 May 2020 21:55:25 -0700
+Message-ID: <20200519045525.2446851-1-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20200518183141.66621-1-r.bolshakov@yadro.com>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+X-NVConfidentiality: public
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1589864049; bh=y7ZGqZbOGTyig85XFWwJiWU7MUjiGK9+NipTHeZgGFw=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         MIME-Version:X-NVConfidentiality:Content-Type:
+         Content-Transfer-Encoding;
+        b=Su9d2uKPrbXNdMUViNd/L97OsaxGH5Lzxmux/E2Z7MUnViIh8lQIHtnbUnvbqi1j/
+         97TS6KfQPJGFKGgdH3XzjOJmm8S2Wg4k+gVIzjb463PrMGc88/xp21URtukEyobu6e
+         b+kt6SjwznwV5S6bDizkhw0JAz6kdKlO9MaHMRNTDTkGwUsZ89KDY4cvtHA/pYYkNx
+         950uAI5boUlAlxVr7MFFsIfodnuHP8tyf3jOQP0xE6TCycw2MUbjd+KDnjEqXClTIY
+         D5cNLd404vW9JqoTda/1QcPb7kHdq78ZjVC+b7HCOOaRjmDKRoO6wQSyAbaBJLmrUV
+         YoxhrAHMykE0Q==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 18, 2020 at 09:31:42PM +0300, Roman Bolshakov wrote:
-> The driver performs SCR (state change registration) in all modes
-> including pure target mode.
-> 
-> For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for the
-> port mentioned in the RSCN and fabric rescan is scheduled. During the
-> rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
-> the port that caused the RSCN.
-> 
-> In target mode, the session deletion has an impact on ATIO handler,
-> qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
-> incoming from the deleted session. qlt_handle_cmd_for_atio() and
-> qlt_handle_task_mgmt() return -EFAULT if they are not able to find
-> session of the command/TMF, and that results in invocation of
-> qlt_send_busy():
-> 
->   qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
->   qla_target(0): Unable to send command to target, sending BUSY status
-> 
-> Such response causes command timeout on the initiator. Error handler
-> thread on the initiator will be spawned to abort the commands:
-> 
->   scsi 23:0:0:0: tag#0 abort scheduled
->   scsi 23:0:0:0: tag#0 aborting command
->   qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
->   qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
-> 
-> Command abort is rejected by target and fails (2003), error handler then
-> tries to perform DEVICE RESET and TARGET RESET but they're also doomed
-> to fail because TMFs are ignored for the deleted sessions.
-> 
-> Then initiator makes BUS RESET that resets the link via
-> qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator port
-> up, SAN switch detects that and sends RSCN to the target port and it
-> fails again the same way as described above. It never goes out of the
-> loop.
-> 
-> The change breaks the RSCN loop by keeping initiator sessions mentioned
-> in RSCN payload in all modes, including dual and pure target mode.
-> 
-> Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
-> Cc: Quinn Tran <qutran@marvell.com>
-> Cc: Arun Easi <aeasi@marvell.com>
-> Cc: Nilesh Javali <njavali@marvell.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Daniel Wagner <dwagner@suse.de>
-> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: stable@vger.kernel.org # v5.4+
-> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
-> ---
->  drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> Hi Martin,
-> 
-> Please apply the patch to scsi-fixes/5.7 at your earliest convenience.
-> 
-> qla2xxx in target and, likely, dual mode is unusable in some SAN fabrics
-> due to the bug.
-> 
-> Thanks,
-> Roman
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-> index 42c3ad27f1cb..b9955af5cffe 100644
-> --- a/drivers/scsi/qla2xxx/qla_gs.c
-> +++ b/drivers/scsi/qla2xxx/qla_gs.c
-> @@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
->  			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
->  				qla2x00_clear_loop_id(fcport);
->  				fcport->flags |= FCF_FABRIC_DEVICE;
-> -			} else if (fcport->d_id.b24 != rp->id.b24 ||
-> -				fcport->scan_needed) {
-> +			} else if ((fcport->d_id.b24 != rp->id.b24 ||
-> +				    fcport->scan_needed) &&
-> +				   (fcport->port_type != FCT_INITIATOR &&
-> +				    fcport->port_type != FCT_NVME_INITIATOR)) {
->  				qlt_schedule_sess_for_deletion(fcport);
->  			}
->  			fcport->d_id.b24 = rp->id.b24;
-> -- 
-> 2.26.1
-> 
+This code was using get_user_pages*(), in a "Case 2" scenario
+(DMA/RDMA), using the categorization from [1]. That means that it's
+time to convert the get_user_pages*() + put_page() calls to
+pin_user_pages*() + unpin_user_pages() calls.
 
-P.S. A little bit cleaner alternative would be to avoid session deletion
-only if scan needed is set (that allows session deletion of initiator
-ports after fabric discovery if N_Port ID change happened). Please let
-me know if I should submit v2 like this:
+There is some helpful background in [2]: basically, this is a small
+part of fixing a long-standing disconnect between pinning pages, and
+file systems' use of those pages.
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 42c3ad27f1cb..b9955af5cffe 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
- 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
- 				qla2x00_clear_loop_id(fcport);
- 				fcport->flags |= FCF_FABRIC_DEVICE;
--			} else if (fcport->d_id.b24 != rp->id.b24 ||
--				fcport->scan_needed) {
-+			} else if (fcport->d_id.b24 != rp->id.b24 ||
-+				   (fcport->scan_needed &&
-+				    fcport->port_type != FCT_INITIATOR &&
-+				    fcport->port_type != FCT_NVME_INITIATOR)) {
- 				qlt_schedule_sess_for_deletion(fcport);
- 			}
- 			fcport->d_id.b24 = rp->id.b24;
+Note that this effectively changes the code's behavior as well: it now
+ultimately calls set_page_dirty_lock(), instead of SetPageDirty().This
+is probably more accurate.
+
+As Christoph Hellwig put it, "set_page_dirty() is only safe if we are
+dealing with a file backed page where we have reference on the inode it
+hangs off." [3]
+
+Also, this deletes one of the two FIXME comments (about refcounting),
+because there is nothing wrong with the refcounting at this point.
+
+[1] Documentation/core-api/pin_user_pages.rst
+
+[2] "Explicit pinning of user-space pages":
+    https://lwn.net/Articles/807108/
+
+[3] https://lore.kernel.org/r/20190723153640.GB720@lst.de
+
+Cc: "Kai M=C3=A4kisara" <Kai.Makisara@kolumbus.fi>
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ drivers/scsi/st.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index c5f9b348b438..0369c7edfd94 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4922,7 +4922,7 @@ static int sgl_map_user_pages(struct st_buffer *STbp,
+ 	unsigned long end =3D (uaddr + count + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	unsigned long start =3D uaddr >> PAGE_SHIFT;
+ 	const int nr_pages =3D end - start;
+-	int res, i, j;
++	int res, i;
+ 	struct page **pages;
+ 	struct rq_map_data *mdata =3D &STbp->map_data;
+=20
+@@ -4944,7 +4944,7 @@ static int sgl_map_user_pages(struct st_buffer *STbp,
+=20
+         /* Try to fault in all of the necessary pages */
+         /* rw=3D=3DREAD means read from drive, write into memory area */
+-	res =3D get_user_pages_fast(uaddr, nr_pages, rw =3D=3D READ ? FOLL_WRITE =
+: 0,
++	res =3D pin_user_pages_fast(uaddr, nr_pages, rw =3D=3D READ ? FOLL_WRITE =
+: 0,
+ 				  pages);
+=20
+ 	/* Errors and no page mapped should return here */
+@@ -4964,8 +4964,7 @@ static int sgl_map_user_pages(struct st_buffer *STbp,
+ 	return nr_pages;
+  out_unmap:
+ 	if (res > 0) {
+-		for (j=3D0; j < res; j++)
+-			put_page(pages[j]);
++		unpin_user_pages(pages, res);
+ 		res =3D 0;
+ 	}
+ 	kfree(pages);
+@@ -4977,18 +4976,10 @@ static int sgl_map_user_pages(struct st_buffer *STb=
+p,
+ static int sgl_unmap_user_pages(struct st_buffer *STbp,
+ 				const unsigned int nr_pages, int dirtied)
+ {
+-	int i;
++	/* FIXME: cache flush missing for rw=3D=3DREAD */
+=20
+-	for (i=3D0; i < nr_pages; i++) {
+-		struct page *page =3D STbp->mapped_pages[i];
++	unpin_user_pages_dirty_lock(STbp->mapped_pages, nr_pages, dirtied);
+=20
+-		if (dirtied)
+-			SetPageDirty(page);
+-		/* FIXME: cache flush missing for rw=3D=3DREAD
+-		 * FIXME: call the correct reference counting function
+-		 */
+-		put_page(page);
+-	}
+ 	kfree(STbp->mapped_pages);
+ 	STbp->mapped_pages =3D NULL;
+=20
+--=20
+2.26.2
+
