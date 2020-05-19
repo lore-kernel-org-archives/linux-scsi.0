@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C65C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 14:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7058FC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 14:42:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35E5B207FB
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 14:42:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BC882072C
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 14:42:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=axtens.net header.i=@axtens.net header.b="WTWPhjns"
+	dkim=pass (1024-bit key) header.d=axtens.net header.i=@axtens.net header.b="bzj4mT45"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728662AbgESOmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 May 2020 10:42:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58700 "EHLO
+        id S1728647AbgESOmp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 May 2020 10:42:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726504AbgESOmW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2020 10:42:22 -0400
+        with ESMTP id S1726504AbgESOmo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2020 10:42:44 -0400
 Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4223BC08C5C1
-        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2020 07:42:22 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id l73so1280879pjb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2020 07:42:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7D23C08C5C0
+        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2020 07:42:44 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id nu7so1462137pjb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2020 07:42:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=axtens.net; s=google;
         h=from:to:cc:subject:in-reply-to:references:date:message-id
          :mime-version;
-        bh=0UgPMqcoNwKDTDlJvIV5xcSA4BF3gP0ryxkw9QQb0/Q=;
-        b=WTWPhjns5WgXVGYyVKQvspakjV9ET6HnAV3d8CSVwERDbg4WIXmX9m8toai0U8+TSu
-         MqYskrTwMsy8nWm6qbhg8O3jsK33kPVjRqGZXeyySl+gnyakkdYFobdABIH98CUQx2AY
-         O4QTRMaRlFy3xRC5ptn7T5B8ArVV64408WuR0=
+        bh=/hLpHiO1wZq0aHTKhapIPxrND+LJX72tlKhIeQED8IM=;
+        b=bzj4mT45st7r9EU+yeUHArb0VIvR9uFw231jWVVCWVsbjrHJRWNwnBmR3UyZGOi+kO
+         gEQgQuRP6xIjrpqlOuXxF0K79ux4de41JDhMwxs/wB4kKxxELn5Ot/fNFUi0qOxaGEs7
+         kwD+DkKl/Q94WQ1/aamkaaje+wgxLrM3T/2yo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
          :message-id:mime-version;
-        bh=0UgPMqcoNwKDTDlJvIV5xcSA4BF3gP0ryxkw9QQb0/Q=;
-        b=becpmtnhChc1ngMAjQKZn83iIpfJt9XXOo0ZylvDNsHCpykJsAf05ulJ0xG1OUXBty
-         cVnqSoq1eBu077/FJJ2QFXFGPm0yvz6aMKSsJVbvVcohQUuJd/4L8EvnocjsEitmNLt2
-         HY0zfsa9rYvEkCqhUeCnDbfTAx7AYd7bJKnriwM7pJKJdl5vxIoKu/DJSSofNgBwjFck
-         lKRwkTcbvyBMeHIdFUVFYaQ57HcCGbBoEb0Chl4gqv6oNnTROO9OrS4qtlb+4xUh1JJz
-         4njidVUIMHTs7WNpdL06BN3Z4CfwAs6hC3pxZ4iV/7eE/f6PinLVEL/DLTywiK7KyCqW
-         MTJQ==
-X-Gm-Message-State: AOAM532nz+mHykN9LZpGGTykWkixP3hh9uy2PQZuc22n4eYSsMNc2V6D
-        NRwxmtoAMYs6PAPWLzwJL3GXJw==
-X-Google-Smtp-Source: ABdhPJwBa0vNktasHNWMphvkiqZE85pcnWPRfH/Lld2diTPLupTTMPGFo0GVy6qdRNBqq1/pZjJU8g==
-X-Received: by 2002:a17:902:8509:: with SMTP id bj9mr11525597plb.151.1589899341671;
-        Tue, 19 May 2020 07:42:21 -0700 (PDT)
+        bh=/hLpHiO1wZq0aHTKhapIPxrND+LJX72tlKhIeQED8IM=;
+        b=Yy5O6J5crNwl6cYfEs+2qn6x+KvvIn9D/oNbNq1e3qHbbR0Ut+JR356z/vb7s9+zxL
+         WgO9/3L1PYOUC5EeLzK9kCWGCW3W9BxjdV2iC3213RzqmaYC3ewhjD2B8JMXm0NdXV7P
+         /ptrMsSNaosDpN0J9p1UJGs1PzBEvTH1r2RMICQo5b7WDhMk51+3rtJK+gCtA0FuNJqZ
+         hIC9yB+wtuT32ZkgPn6Yrbk0qgGnq6kQ/AvOc+OZZpTBUDwUChYYyW75Lj8w0qPFDhu5
+         Ghn/1bGaz+vuxKw0r8cy/2VDCBqJYm0CZuI00Zi3oBJ9OkOeVw/sx7IBqF7Xw0PTInhk
+         ndkA==
+X-Gm-Message-State: AOAM5329DbYFPWpuQLpFoCQsX+SpAaOtckzIop1SxcCPpT6MsGZFUyh9
+        Gw76gdWvu5J5Mxg9sHAem0fCdQ==
+X-Google-Smtp-Source: ABdhPJyr15AGM34sP/V+PzCKvni0D8nxM+CqegIOTDSJuysonumgsPtwY/GlltijFbmFmBsvW7yi5A==
+X-Received: by 2002:a17:90a:3201:: with SMTP id k1mr5379173pjb.202.1589899364130;
+        Tue, 19 May 2020 07:42:44 -0700 (PDT)
 Received: from localhost (2001-44b8-111e-5c00-b5ed-d3ff-25d3-7e68.static.ipv6.internode.on.net. [2001:44b8:111e:5c00:b5ed:d3ff:25d3:7e68])
-        by smtp.gmail.com with ESMTPSA id r12sm10044368pgv.59.2020.05.19.07.42.20
+        by smtp.gmail.com with ESMTPSA id c124sm11339359pfb.187.2020.05.19.07.42.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2020 07:42:20 -0700 (PDT)
+        Tue, 19 May 2020 07:42:43 -0700 (PDT)
 From:   Daniel Axtens <dja@axtens.net>
 To:     kbuild test robot <lkp@intel.com>
 Cc:     kbuild-all@lists.01.org, Johannes Weiner <hannes@cmpxchg.org>,
@@ -64,8 +64,8 @@ Cc:     kbuild-all@lists.01.org, Johannes Weiner <hannes@cmpxchg.org>,
 Subject: Re: [hnaz-linux-mm:master 156/523] include/linux/string.h:307:9: note: in expansion of macro '__underlying_strncpy'
 In-Reply-To: <202005191736.t1JQZSrV%lkp@intel.com>
 References: <202005191736.t1JQZSrV%lkp@intel.com>
-Date:   Wed, 20 May 2020 00:42:17 +1000
-Message-ID: <87blmkhtpy.fsf@dja-thinkpad.axtens.net>
+Date:   Wed, 20 May 2020 00:42:40 +1000
+Message-ID: <87a724htpb.fsf@dja-thinkpad.axtens.net>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-scsi-owner@vger.kernel.org
@@ -73,7 +73,8 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This looks like a SCSI issue that this has just happened to expose?
+This looks like an underlying SCSI issue that this patch has just
+happened to expose?
 + scsi list
 
 kbuild test robot <lkp@intel.com> writes:
