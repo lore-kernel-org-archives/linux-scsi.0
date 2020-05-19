@@ -2,91 +2,152 @@ Return-Path: <SRS0=JQ6K=7B=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FE18C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 07:16:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB6AC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 08:46:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06736207D8
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 07:16:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589872605;
-	bh=fpXw8UjrNLsw42ZqREF1astOwgPtPId8PMNmuvmW9iU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=e79Oyaff7dfGNheV4bv07u4n9szQfCTtMGPM2iU2h6t1qotXC1q9pU4uCIDM3O5//
-	 M9UUu6sYu/boHTyC+MEGrSXE+0EsrT1vRR5b7I7CRtdwEG0iYfLNBk7QC6cjEvL7Kx
-	 1NK2hGxiWBBxhs4bRp4t0+yVNcbI3D32uoxMvIsY=
+	by mail.kernel.org (Postfix) with ESMTP id 659C120657
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 May 2020 08:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728277AbgESHQm convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 May 2020 03:16:42 -0400
-Received: from mail-ej1-f67.google.com ([209.85.218.67]:46976 "EHLO
-        mail-ej1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726892AbgESHQm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2020 03:16:42 -0400
-Received: by mail-ej1-f67.google.com with SMTP id e2so10866155eje.13;
-        Tue, 19 May 2020 00:16:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=czw5XAHuVQyeo0GaaGsHjL+iNsEvTVJwYFnML7pk990=;
-        b=g8Tl14Sniix92Mwgl3vIi4ITFl4rjPY31bEwq5NobtmN7+B9wrsCoew19K73VDXD76
-         ++T63ZgEijGrvR0oYozjTtXSeYaq57c83D2Ef6P4StKBAnhGHfKUWUnmecVY3F8W2ZvO
-         13z0u5KmQfFnnt1Xf9HcetHKFG0Nts0J2WhLzGeb49nzwW3gugm1/uqT4oDODxsRkTrl
-         dTgjhRfSJCM1tnixGzSIib9vAHsIRMF7p8smOdRVbGsjjG5hqWmgBknHmZk6WFHYwrWX
-         iKAtm7boPcm3D+UBiIGq1m1I88+1iUCwKU6Bp1BtS2EGuU02ek9PD8yR45Extib9Pwe6
-         0Pdw==
-X-Gm-Message-State: AOAM530dMzKdDX/M/7uKEKBgCdFmGrGwQe/P1sXLyDvgOHqwVQlkJT1T
-        EmBQEOOwe4du3R9e7gvXRkg=
-X-Google-Smtp-Source: ABdhPJzIRX+Uvac/mFboWQ4qXwL71U8FW6fLVGH+Y+7thPaQdu49D8AiTD5v1+LcEq4/Lq5C6URTog==
-X-Received: by 2002:a17:906:3048:: with SMTP id d8mr18239949ejd.97.1589872599602;
-        Tue, 19 May 2020 00:16:39 -0700 (PDT)
-Received: from kozik-lap ([194.230.155.188])
-        by smtp.googlemail.com with ESMTPSA id o21sm18954edr.68.2020.05.19.00.16.37
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 19 May 2020 00:16:38 -0700 (PDT)
-Date:   Tue, 19 May 2020 09:16:36 +0200
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     robh@kernel.org, devicetree@vger.kernel.org,
-        linux-scsi@vger.kernel.org, avri.altman@wdc.com,
-        martin.petersen@oracle.com, kwmad.kim@samsung.com,
-        stanley.chu@mediatek.com, cang@codeaurora.org,
-        linux-samsung-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v9 10/10] arm64: dts: Add node for ufs exynos7
-Message-ID: <20200519071636.GA6971@kozik-lap>
-References: <20200514003914.26052-1-alim.akhtar@samsung.com>
- <CGME20200514005313epcas5p3eac58d00d9f617b860a3ac607c8413ec@epcas5p3.samsung.com>
- <20200514003914.26052-11-alim.akhtar@samsung.com>
+        id S1728419AbgESIq6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 May 2020 04:46:58 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49804 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726121AbgESIq6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 May 2020 04:46:58 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 46FE1AF9F;
+        Tue, 19 May 2020 08:46:59 +0000 (UTC)
+Message-ID: <3ee76f0fc5df716523bfbdd34726b6cccd4971cd.camel@suse.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
+From:   Martin Wilck <mwilck@suse.com>
+To:     Roman Bolshakov <r.bolshakov@yadro.com>, linux-scsi@vger.kernel.org
+Cc:     GR-QLogic-Storage-Upstream@marvell.com,
+        target-devel@vger.kernel.org, linux@yadro.com,
+        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Daniel Wagner <dwagner@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        stable@vger.kernel.org
+Date:   Tue, 19 May 2020 10:46:54 +0200
+In-Reply-To: <20200518183141.66621-1-r.bolshakov@yadro.com>
+References: <20200518183141.66621-1-r.bolshakov@yadro.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.36.2 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
-In-Reply-To: <20200514003914.26052-11-alim.akhtar@samsung.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 14, 2020 at 06:09:14AM +0530, Alim Akhtar wrote:
-> Adding dt node foe UFS and UFS-PHY for exynos7 SoC.
+On Mon, 2020-05-18 at 21:31 +0300, Roman Bolshakov wrote:
+> The driver performs SCR (state change registration) in all modes
+> including pure target mode.
 > 
-> Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
-> Tested-by: Paweł Chmiel <pawel.mikolaj.chmiel@gmail.com>
+> For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for
+> the
+> port mentioned in the RSCN and fabric rescan is scheduled. During the
+> rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
+> the port that caused the RSCN.
+> 
+> In target mode, the session deletion has an impact on ATIO handler,
+> qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
+> incoming from the deleted session. qlt_handle_cmd_for_atio() and
+> qlt_handle_task_mgmt() return -EFAULT if they are not able to find
+> session of the command/TMF, and that results in invocation of
+> qlt_send_busy():
+> 
+>   qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
+>   qla_target(0): Unable to send command to target, sending BUSY
+> status
+> 
+> Such response causes command timeout on the initiator. Error handler
+> thread on the initiator will be spawned to abort the commands:
+> 
+>   scsi 23:0:0:0: tag#0 abort scheduled
+>   scsi 23:0:0:0: tag#0 aborting command
+>   qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
+>   qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0
+> -- 0 2003.
+> 
+> Command abort is rejected by target and fails (2003), error handler
+> then
+> tries to perform DEVICE RESET and TARGET RESET but they're also
+> doomed
+> to fail because TMFs are ignored for the deleted sessions.
+> 
+> Then initiator makes BUS RESET that resets the link via
+> qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator
+> port
+> up, SAN switch detects that and sends RSCN to the target port and it
+> fails again the same way as described above. It never goes out of the
+> loop.
+> 
+> The change breaks the RSCN loop by keeping initiator sessions
+> mentioned
+> in RSCN payload in all modes, including dual and pure target mode.
+> 
+> Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
+> Cc: Quinn Tran <qutran@marvell.com>
+> Cc: Arun Easi <aeasi@marvell.com>
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Daniel Wagner <dwagner@suse.de>
+> Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Cc: Martin Wilck <mwilck@suse.com>
+> Cc: stable@vger.kernel.org # v5.4+
+> Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
 > ---
->  .../boot/dts/exynos/exynos7-espresso.dts      |  4 ++
->  arch/arm64/boot/dts/exynos/exynos7.dtsi       | 43 ++++++++++++++++++-
->  2 files changed, 45 insertions(+), 2 deletions(-)
+>  drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> Hi Martin,
+> 
+> Please apply the patch to scsi-fixes/5.7 at your earliest
+> convenience.
+> 
+> qla2xxx in target and, likely, dual mode is unusable in some SAN
+> fabrics
+> due to the bug.
+> 
+> Thanks,
+> Roman
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c
+> b/drivers/scsi/qla2xxx/qla_gs.c
+> index 42c3ad27f1cb..b9955af5cffe 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t
+> *vha, srb_t *sp)
+>  			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+>  				qla2x00_clear_loop_id(fcport);
+>  				fcport->flags |= FCF_FABRIC_DEVICE;
+> -			} else if (fcport->d_id.b24 != rp->id.b24 ||
+> -				fcport->scan_needed) {
+> +			} else if ((fcport->d_id.b24 != rp->id.b24 ||
+> +				    fcport->scan_needed) &&
+> +				   (fcport->port_type != FCT_INITIATOR
+> &&
+> +				    fcport->port_type !=
+> FCT_NVME_INITIATOR)) {
+>  				qlt_schedule_sess_for_deletion(fcport);
+>  			}
+>  			fcport->d_id.b24 = rp->id.b24;
 
-I will pick it up after all bindings get Rob's ack (or are picked up as
-well).  The second bindings patch are still pending on that.
+Hi Roman,
 
-Best regards,
-Krzysztof
+what if the session does need to be deleted eventually? E.g. if after
+the RSCN the connection to the initiator is actually lost, either
+temporarily or for good? Would the session be deleted in some other
+code path, or would it just continue to lurk around?
+
+Martin
+
+
