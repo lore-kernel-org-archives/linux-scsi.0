@@ -2,116 +2,99 @@ Return-Path: <SRS0=Yj8A=7C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 415A9C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 01:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C37C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 01:58:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 065C0207D8
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 01:48:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589939329;
-	bh=5b3m5wFU4hh9Yv7TMddahce+qOkkHM0MuT6Fti2iXIs=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=2Eiki5pFrvrdc8D1v56O5u5NbUKjXspuLg37bc8On9SL9nV5/d3z3Zi/VJXn3adkN
-	 4tcujdRW27LuIx8JiYYuKf46gy1zuFqEOpieJkcOFaKAqy4RtyaGVEVN5k+ne9FOUe
-	 SvCkfiO1EtA3HGP82LBXe3dm8j8tBNhfC9TY4jAE=
+	by mail.kernel.org (Postfix) with ESMTP id 6CA9720829
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 01:58:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H9rgqIVI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728371AbgETBss (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 May 2020 21:48:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45774 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726348AbgETBss (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 19 May 2020 21:48:48 -0400
-Received: from localhost.localdomain (c-73-231-172-41.hsd1.ca.comcast.net [73.231.172.41])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B589C2075F;
-        Wed, 20 May 2020 01:48:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589939328;
-        bh=5b3m5wFU4hh9Yv7TMddahce+qOkkHM0MuT6Fti2iXIs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=nwLV5Rqwvc8jicA632QYsFEE2NijiwSig33QJZW92YQP8EcAPtyVF8Nk31RJv0D4m
-         aDxKLuYLlmmJlg2PyRbB1Bz8ob+JRDhdtkDFETlLS9WHESNn+bT6ID+DRDzrsw65E2
-         4t9jJKjfV6ZA/8Qq8kdBFTpBGZFkSTeKpXnYxBgs=
-Date:   Tue, 19 May 2020 18:48:47 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Daniel Axtens <dja@axtens.net>
-Cc:     kbuild test robot <lkp@intel.com>, kbuild-all@lists.01.org,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [hnaz-linux-mm:master 156/523] include/linux/string.h:307:9:
- note: in expansion of macro '__underlying_strncpy'
-Message-Id: <20200519184847.5affb9238b7358ac0d18c98e@linux-foundation.org>
-In-Reply-To: <87blmkhtpy.fsf@dja-thinkpad.axtens.net>
-References: <202005191736.t1JQZSrV%lkp@intel.com>
-        <87blmkhtpy.fsf@dja-thinkpad.axtens.net>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S1728451AbgETB6D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 May 2020 21:58:03 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:51516 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726379AbgETB6D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 May 2020 21:58:03 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04K1pbPZ078876;
+        Wed, 20 May 2020 01:57:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=/KpLfiF3yE04CnWO301FHWY+Pb0/izJPSpL1Ck1Oh3E=;
+ b=H9rgqIVIO8tVMlKGHRMeKD6zV3D9RcXUiaLMlJDpth4bKowufEIkgg2NkSud4P76X/Z4
+ bYmWn6dwvWv8cASbpNSIS74DP69/GLncfPNGAJScC+CYxPx/E9XFOK5fg5PqPJb1j5Um
+ hw/17lZbJQezSw/J84qkWMMLGU56hEpl2CYmrWLQFx6q8MQqLH7rgG/reydpXpDMtCt2
+ R3EPeRCV/yndL2KvpG121w+EWY5aSUHXr2euAnVQY45q6DcG0CmgLVDls8X9XKSHeTeg
+ cd0XjwdIyfkUXQ3ANL1wtG5PYZhvgMtib0cZo7WuDqiBLPKbbx9hUmqpHPAZ/PJRVtHp 2Q== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 3128tngfrs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 20 May 2020 01:57:51 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04K1sUOx095184;
+        Wed, 20 May 2020 01:57:51 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 314gm64dpd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 20 May 2020 01:57:50 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04K1vmT4008030;
+        Wed, 20 May 2020 01:57:48 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 19 May 2020 18:57:47 -0700
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Kai =?utf-8?Q?M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] scsi: st: convert convert get_user_pages() -->
+ pin_user_pages()
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1d06zweqg.fsf@ca-mkp.ca.oracle.com>
+References: <20200519045525.2446851-1-jhubbard@nvidia.com>
+        <7440e420-009b-20cc-e1e6-7e2a212f65fa@nvidia.com>
+Date:   Tue, 19 May 2020 21:57:45 -0400
+In-Reply-To: <7440e420-009b-20cc-e1e6-7e2a212f65fa@nvidia.com> (John Hubbard's
+        message of "Tue, 19 May 2020 13:12:11 -0700")
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 mlxscore=0 spamscore=0 suspectscore=1
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005200014
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 cotscore=-2147483648 suspectscore=1 lowpriorityscore=0
+ adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005200013
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 20 May 2020 00:42:17 +1000 Daniel Axtens <dja@axtens.net> wrote:
 
-> This looks like a SCSI issue that this has just happened to expose?
-> + scsi list
+John,
 
-Maybe.
+> Looks like I accidentally doubled a word on the subject line: "convert
+> convert".
+>
+> I'd appreciate it a maintainer could remove one of those for me, while
+> applying the patch, assuming that we don't need a v2 for other
+> reasons.
 
-static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
-		struct scsi_cmnd *cmd)
-{
-	switch (cmd->cmnd[0]) {
-	case INQUIRY: {
-		unsigned char inqdata[36];
-		char *buffer;
-		struct scatterlist *sg;
+I can fix that up. But I'll give Kai a chance to review before I apply.
 
-		if (cmd->device->lun) {
-			cmd->result = (DID_TIME_OUT << 16);
-			cmd->scsi_done(cmd);
-			return;
-		}
-		inqdata[0] = TYPE_PROCESSOR;
-		/* Periph Qualifier & Periph Dev Type */
-		inqdata[1] = 0;
-		/* rem media bit & Dev Type Modifier */
-		inqdata[2] = 0;
-		/* ISO, ECMA, & ANSI versions */
-		inqdata[4] = 31;
-		/* length of additional data */
-		strncpy(&inqdata[8], "Areca   ", 8);
-		/* Vendor Identification */
->>>		strncpy(&inqdata[16], "RAID controller ", 16);
-		/* Product Identification */
-		strncpy(&inqdata[32], "R001", 4); /* Product Revision */
-
-		sg = scsi_sglist(cmd);
-		buffer = kmap_atomic(sg_page(sg)) + sg->offset;
-
-		memcpy(buffer, inqdata, sizeof(inqdata));
-		sg = scsi_sglist(cmd);
-		kunmap_atomic(buffer - sg->offset);
-
-		cmd->scsi_done(cmd);
-	}
-	break;
-
-That strncpy() will indeed fail to copy the trailing null, but it looks
-like that null isn't appropriate in the inquiry data.
-
-So I suspect this is a valid usage of strncpy() and the checking is
-just too strict.
-
-otoh if this is the only place where we hit this issue then perhaps we
-can switch to memcpy() and get on with life ;)
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
