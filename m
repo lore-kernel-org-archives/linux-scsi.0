@@ -2,198 +2,112 @@ Return-Path: <SRS0=Yj8A=7C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F2DC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55439C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:39:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B48B205CB
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:23:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="UYcl7bgT"
+	by mail.kernel.org (Postfix) with ESMTP id 240F22075F
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:39:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726534AbgETHXi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 May 2020 03:23:38 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:47547 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726224AbgETHXi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 03:23:38 -0400
-X-UUID: 0d71851b929444c1a16eb5ee065435be-20200520
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=x7Ix7wIXALpP6Po6n+AWWCWKLuf6w1Ut3QGKm4+Qrs0=;
-        b=UYcl7bgTL/NsBWttvF9QFjJqD3OpeqXG7MKxvQ0jiRNwzfb3ucqS9ZA26MT5VeAzaWnCGukE344gyp4OucduX0fF5B8migELtKICRDjMkHLLXvtqGkzxfcCt8so8vjsJm2JWCtnbZ9zSXO1CXLt66biAbOXc5EtnWN656nJrPXs=;
-X-UUID: 0d71851b929444c1a16eb5ee065435be-20200520
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 628090825; Wed, 20 May 2020 15:23:30 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Wed, 20 May 2020 15:23:27 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 20 May 2020 15:23:27 +0800
-Message-ID: <1589959408.7715.7.camel@mtkswgap22>
-Subject: Re: [PATCH v3 5/5] scsi: ufs: Fix possible VCC power drain during
- runtime suspend
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-CC:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>
-Date:   Wed, 20 May 2020 15:23:28 +0800
-In-Reply-To: <6d32fba1-f7c3-f043-42b6-0da065e9795b@codeaurora.org>
-References: <20200516174615.15445-1-stanley.chu@mediatek.com>
-         <20200516174615.15445-6-stanley.chu@mediatek.com>
-         <6d32fba1-f7c3-f043-42b6-0da065e9795b@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726698AbgETHj5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 May 2020 03:39:57 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:35990 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726686AbgETHj5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 03:39:57 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id CDC20299D4;
+        Wed, 20 May 2020 03:39:53 -0400 (EDT)
+Date:   Wed, 20 May 2020 17:39:55 +1000 (AEST)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Daniel Wagner <dwagner@suse.de>
+cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Arun Easi <aeasi@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH v7 15/15] qla2xxx: Fix endianness annotations in source
+ files
+In-Reply-To: <20200519152401.oh6cewdru3fu7ogd@beryllium.lan>
+Message-ID: <alpine.LNX.2.22.394.2005201726250.8@nippy.intranet>
+References: <20200518211712.11395-1-bvanassche@acm.org> <20200518211712.11395-16-bvanassche@acm.org> <20200519152401.oh6cewdru3fu7ogd@beryllium.lan>
 MIME-Version: 1.0
-X-TM-SNTS-SMTP: 3B5D2DD1F965F138CE1099F2E31E5F9F6B99042E6C4CAF4988037835AD6A6D8E2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGksIEFzdXRvc2gsDQoNClRoYW5rcyBmb3IgeW91ciByZXZpZXcuDQoNCk9uIFR1ZSwgMjAyMC0w
-NS0xOSBhdCAwOToyNyAtMDcwMCwgQXN1dG9zaCBEYXMgKGFzZCkgd3JvdGU6DQo+IEhpIFN0YW5s
-ZXksDQo+IA0KPiBPbiA1LzE2LzIwMjAgMTA6NDYgQU0sIFN0YW5sZXkgQ2h1IHdyb3RlOg0KPiA+
-IFRoZSBjb21taXQgInNjc2k6IHVmczogRml4IFdyaXRlQm9vc3RlciBmbHVzaCBkdXJpbmcgcnVu
-dGltZQ0KPiA+IHN1c3BlbmQiIHByb21pc2VzIGVzc2VudGlhbCByZXNvdXJjZSwgaS5lLiwgZm9y
-IFVGUyBkZXZpY2VzIGRvaW5nDQo+ID4gV3JpdGVCb29zdGVyIGJ1ZmZlciBmbHVzaCBhbmQgQXV0
-byBCS09Qcy4gSG93ZXZlciBpZiBkZXZpY2UNCj4gPiBmaW5pc2hlcyBpdHMgam9iIGJ1dCBub3Qg
-cmVzdW1lZCBmb3IgYSB2ZXJ5IGxvbmcgdGltZSwgc3lzdGVtDQo+ID4gd2lsbCBoYXZlIHVubmVj
-ZXNzYXJ5IHBvd2VyIGRyYWluIGJlY2F1c2UgVkNDIGlzIHN0aWxsIHN1cHBsaWVkLg0KPiA+IA0K
-PiA+IFRvIGZpeCB0aGlzLCBhIG1ldGhvZCB0byByZWNoZWNrIHRoZSB0aHJlc2hvbGQgb2Yga2Vl
-cGluZyBWQ0MNCj4gPiBzdXBwbHkgaXMgcmVxdWlyZWQuIEhvd2V2ZXIsIHRoZSB0aHJlc2hvbGQg
-cmVjaGVjayBuZWVkcyB0bw0KPiA+IHJlLWFjdGl2YXRlIHRoZSBsaW5rIGJlY2F1c2UgdGhlIGRl
-Y2lzaW9uIGRlcGVuZHMgb24gdGhlIGRldmljZQ0KPiA+IHN0YXR1cy4NCj4gPiANCj4gPiBJbnRy
-b2R1Y2UgYSBkZWxheWVkIHdvcmsgdG8gZm9yY2UgcnVudGltZSByZXN1bWUgYWZ0ZXIgYSBjZXJ0
-YWluDQo+ID4gZGVsYXkgZHVyaW5nIHJ1bnRpbWUgc3VzcGVuZC4gVGhpcyBtYWtlcyB0aHJlc2hv
-bGQgcmVjaGVjayBzaW1wbGVyDQo+ID4gd2hpY2ggd2lsbCBiZSBkb25lIGluIHRoZSBuZXh0IHJ1
-bnRpbWUtc3VzcGVuZC4NCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3Rh
-bmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KPiA+IC0tLQ0KPiANCj4gSXMgdGhlcmUgYSByZWFzb24g
-dG8gaGF2ZSB0aGlzIGNvZGUgYXMgYSBzZXBhcmF0ZSBwYXRjaD8NCj4gWzFdIENvbW1pdDogInNj
-c2k6IHVmczogRml4IFdyaXRlQm9vc3RlciBmbHVzaCBkdXJpbmcgcnVudGltZSBzdXNwZW5kIiAN
-Cj4gaW50cm9kdWNlcyAna2VlcF9jdXJyX2Rldl9wd3JfbW9kZScgYW5kIHRoZSB2ZXJ5IG5leHQg
-Y2hhbmdlICh0aGlzIG9uZSkgDQo+IHJlbW92ZXMgaXQuDQo+IERvIHlvdSB0aGluayB0aGlzIGNo
-YW5nZSBhbmQgWzFdIHNob3VsZCBiZSBtZXJnZWQ/DQoNClllcywgdGhlc2UgMiBwYXRjaGVzIHNo
-YWxsIGJlIG1lcmdlZC4gSSB3aWxsIGRvIGl0IGluIG5leHQgdmVyc2lvbi4NCg0KPiANCj4gPiAg
-IGRyaXZlcnMvc2NzaS91ZnMvdWZzLmggICAgfCAgMSArDQo+ID4gICBkcml2ZXJzL3Njc2kvdWZz
-L3Vmc2hjZC5jIHwgNDMgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tDQo+
-ID4gICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oIHwgIDEgKw0KPiA+ICAgMyBmaWxlcyBjaGFu
-Z2VkLCA0MCBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiA+IA0KPiA+IGRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMuaA0KPiA+
-IGluZGV4IGRiMDdlZWRmZWQ5Ni4uYzcwODQ1ZDQxNDQ5IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZl
-cnMvc2NzaS91ZnMvdWZzLmgNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy5oDQo+ID4g
-QEAgLTU3NCw2ICs1NzQsNyBAQCBzdHJ1Y3QgdWZzX2Rldl9pbmZvIHsNCj4gPiAgIAl1MzIgZF9l
-eHRfdWZzX2ZlYXR1cmVfc3VwOw0KPiA+ICAgCXU4IGJfd2JfYnVmZmVyX3R5cGU7DQo+ID4gICAJ
-dTMyIGRfd2JfYWxsb2NfdW5pdHM7DQo+ID4gKwlib29sIGJfcnBtX2Rldl9mbHVzaF9jYXBhYmxl
-Ow0KPiA+ICAgCXU4IGJfcHJlc3J2X3VzcGNfZW47DQo+ID4gICB9Ow0KPiA+ICAgDQo+ID4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vm
-c2hjZC5jDQo+ID4gaW5kZXggZjRmMmM3YjVhYjBhLi5hMTM3NTUzZjliNDEgMTAwNjQ0DQo+ID4g
-LS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS91
-ZnMvdWZzaGNkLmMNCj4gPiBAQCAtOTQsNiArOTQsOSBAQA0KPiA+ICAgLyogZGVmYXVsdCBkZWxh
-eSBvZiBhdXRvc3VzcGVuZDogMjAwMCBtcyAqLw0KPiA+ICAgI2RlZmluZSBSUE1fQVVUT1NVU1BF
-TkRfREVMQVlfTVMgMjAwMA0KPiA+ICAgDQo+ID4gKy8qIERlZmF1bHQgZGVsYXkgb2YgUlBNIGRl
-dmljZSBmbHVzaCBkZWxheWVkIHdvcmsgKi8NCj4gPiArI2RlZmluZSBSUE1fREVWX0ZMVVNIX1JF
-Q0hFQ0tfV09SS19ERUxBWV9NUyA1MDAwDQo+ID4gKw0KPiA+ICAgLyogRGVmYXVsdCB2YWx1ZSBv
-ZiB3YWl0IHRpbWUgYmVmb3JlIGdhdGluZyBkZXZpY2UgcmVmIGNsb2NrICovDQo+ID4gICAjZGVm
-aW5lIFVGU0hDRF9SRUZfQ0xLX0dBVElOR19XQUlUX1VTIDB4RkYgLyogbWljcm9zZWNzICovDQo+
-ID4gICANCj4gPiBAQCAtNTMxMCw3ICs1MzEzLDcgQEAgc3RhdGljIGJvb2wgdWZzaGNkX3diX3By
-ZXNydl91c3JzcGNfa2VlcF92Y2Nfb24oc3RydWN0IHVmc19oYmEgKmhiYSwNCj4gPiAgIAlyZXR1
-cm4gZmFsc2U7DQo+ID4gICB9DQo+ID4gICANCj4gPiAtc3RhdGljIGJvb2wgdWZzaGNkX3diX2tl
-ZXBfdmNjX29uKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ID4gK3N0YXRpYyBib29sIHVmc2hjZF93
-Yl9uZWVkX2ZsdXNoKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ID4gICB7DQo+ID4gICAJaW50IHJl
-dDsNCj4gPiAgIAl1MzIgYXZhaWxfYnVmOw0KPiA+IEBAIC01MzQ4LDYgKzUzNTEsMjEgQEAgc3Rh
-dGljIGJvb2wgdWZzaGNkX3diX2tlZXBfdmNjX29uKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ID4g
-ICAJcmV0dXJuIHVmc2hjZF93Yl9wcmVzcnZfdXNyc3BjX2tlZXBfdmNjX29uKGhiYSwgYXZhaWxf
-YnVmKTsNCj4gPiAgIH0NCj4gPiAgIA0KPiA+ICtzdGF0aWMgdm9pZCB1ZnNoY2RfcnBtX2Rldl9m
-bHVzaF9yZWNoZWNrX3dvcmsoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQ0KPiA+ICt7DQo+ID4g
-KwlzdHJ1Y3QgdWZzX2hiYSAqaGJhID0gY29udGFpbmVyX29mKHRvX2RlbGF5ZWRfd29yayh3b3Jr
-KSwNCj4gPiArCQkJCQkgICBzdHJ1Y3QgdWZzX2hiYSwNCj4gPiArCQkJCQkgICBycG1fZGV2X2Zs
-dXNoX3JlY2hlY2tfd29yayk7DQo+ID4gKwkvKg0KPiA+ICsJICogVG8gcHJldmVudCB1bm5lY2Vz
-c2FyeSBWQ0MgcG93ZXIgZHJhaW4gYWZ0ZXIgZGV2aWNlIGZpbmlzaGVzDQo+ID4gKwkgKiBXcml0
-ZUJvb3N0ZXIgYnVmZmVyIGZsdXNoIG9yIEF1dG8gQktPUHMsIGZvcmNlIHJ1bnRpbWUgcmVzdW1l
-DQo+ID4gKwkgKiBhZnRlciBhIGNlcnRhaW4gZGVsYXkgdG8gcmVjaGVjayB0aGUgdGhyZXNob2xk
-IGJ5IG5leHQgcnVudGltZQ0KPiA+ICsJICogc3Vwc2VuZC4NCj4gPiArCSAqLw0KPiA+ICsJcG1f
-cnVudGltZV9nZXRfc3luYyhoYmEtPmRldik7DQo+ID4gKwlwbV9ydW50aW1lX3B1dF9zeW5jKGhi
-YS0+ZGV2KTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgIC8qKg0KPiA+ICAgICogdWZzaGNkX2V4Y2Vw
-dGlvbl9ldmVudF9oYW5kbGVyIC0gaGFuZGxlIGV4Y2VwdGlvbnMgcmFpc2VkIGJ5IGRldmljZQ0K
-PiA+ICAgICogQHdvcms6IHBvaW50ZXIgdG8gd29yayBkYXRhDQo+ID4gQEAgLTgxNjQsNyArODE4
-Miw2IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3N1c3BlbmQoc3RydWN0IHVmc19oYmEgKmhiYSwgZW51
-bSB1ZnNfcG1fb3AgcG1fb3ApDQo+ID4gICAJZW51bSB1ZnNfcG1fbGV2ZWwgcG1fbHZsOw0KPiA+
-ICAgCWVudW0gdWZzX2Rldl9wd3JfbW9kZSByZXFfZGV2X3B3cl9tb2RlOw0KPiA+ICAgCWVudW0g
-dWljX2xpbmtfc3RhdGUgcmVxX2xpbmtfc3RhdGU7DQo+ID4gLQlib29sIGtlZXBfY3Vycl9kZXZf
-cHdyX21vZGUgPSBmYWxzZTsNCj4gPiAgIA0KPiA+ICAgCWhiYS0+cG1fb3BfaW5fcHJvZ3Jlc3Mg
-PSAxOw0KPiA+ICAgCWlmICghdWZzaGNkX2lzX3NodXRkb3duX3BtKHBtX29wKSkgew0KPiA+IEBA
-IC04MjI0LDExICs4MjQxLDEyIEBAIHN0YXRpYyBpbnQgdWZzaGNkX3N1c3BlbmQoc3RydWN0IHVm
-c19oYmEgKmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQo+ID4gICAJCSAqIEhpYmVybjgsIGtl
-ZXAgZGV2aWNlIHBvd2VyIG1vZGUgYXMgImFjdGl2ZSBwb3dlciBtb2RlIg0KPiA+ICAgCQkgKiBh
-bmQgVkNDIHN1cHBseS4NCj4gPiAgIAkJICovDQo+ID4gLQkJa2VlcF9jdXJyX2Rldl9wd3JfbW9k
-ZSA9IGhiYS0+YXV0b19ia29wc19lbmFibGVkIHx8DQo+ID4gKwkJaGJhLT5kZXZfaW5mby5iX3Jw
-bV9kZXZfZmx1c2hfY2FwYWJsZSA9DQo+ID4gKwkJCWhiYS0+YXV0b19ia29wc19lbmFibGVkIHx8
-DQo+ID4gICAJCQkoKChyZXFfbGlua19zdGF0ZSA9PSBVSUNfTElOS19ISUJFUk44X1NUQVRFKSB8
-fA0KPiA+ICAgCQkJKChyZXFfbGlua19zdGF0ZSA9PSBVSUNfTElOS19BQ1RJVkVfU1RBVEUpICYm
-DQo+ID4gICAJCQl1ZnNoY2RfaXNfYXV0b19oaWJlcm44X2VuYWJsZWQoaGJhKSkpICYmDQo+ID4g
-LQkJCXVmc2hjZF93Yl9rZWVwX3ZjY19vbihoYmEpKTsNCj4gPiArCQkJdWZzaGNkX3diX25lZWRf
-Zmx1c2goaGJhKSk7DQo+ID4gICAJfQ0KPiA+ICAgDQo+ID4gICAJaWYgKHJlcV9kZXZfcHdyX21v
-ZGUgIT0gaGJhLT5jdXJyX2Rldl9wd3JfbW9kZSkgew0KPiA+IEBAIC04MjM4LDcgKzgyNTYsNyBA
-QCBzdGF0aWMgaW50IHVmc2hjZF9zdXNwZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZz
-X3BtX29wIHBtX29wKQ0KPiA+ICAgCQkJdWZzaGNkX2Rpc2FibGVfYXV0b19ia29wcyhoYmEpOw0K
-PiA+ICAgCQl9DQo+ID4gICANCj4gPiAtCQlpZiAoIWtlZXBfY3Vycl9kZXZfcHdyX21vZGUpIHsN
-Cj4gPiArCQlpZiAoIWhiYS0+ZGV2X2luZm8uYl9ycG1fZGV2X2ZsdXNoX2NhcGFibGUpIHsNCj4g
-PiAgIAkJCXJldCA9IHVmc2hjZF9zZXRfZGV2X3B3cl9tb2RlKGhiYSwgcmVxX2Rldl9wd3JfbW9k
-ZSk7DQo+ID4gICAJCQlpZiAocmV0KQ0KPiA+ICAgCQkJCWdvdG8gZW5hYmxlX2dhdGluZzsNCj4g
-PiBAQCAtODI5NSw5ICs4MzEzLDE2IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3N1c3BlbmQoc3RydWN0
-IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQo+ID4gICAJaWYgKGhiYS0+Y2xr
-X3NjYWxpbmcuaXNfYWxsb3dlZCkNCj4gPiAgIAkJdWZzaGNkX3Jlc3VtZV9jbGtzY2FsaW5nKGhi
-YSk7DQo+ID4gICAJaGJhLT5jbGtfZ2F0aW5nLmlzX3N1c3BlbmRlZCA9IGZhbHNlOw0KPiA+ICsJ
-aGJhLT5kZXZfaW5mby5iX3JwbV9kZXZfZmx1c2hfY2FwYWJsZSA9IGZhbHNlOw0KPiA+ICAgCXVm
-c2hjZF9yZWxlYXNlKGhiYSk7DQo+ID4gICBvdXQ6DQo+ID4gKwlpZiAoaGJhLT5kZXZfaW5mby5i
-X3JwbV9kZXZfZmx1c2hfY2FwYWJsZSkgew0KPiA+ICsJCXNjaGVkdWxlX2RlbGF5ZWRfd29yaygm
-aGJhLT5ycG1fZGV2X2ZsdXNoX3JlY2hlY2tfd29yaywNCj4gPiArCQkJbXNlY3NfdG9famlmZmll
-cyhSUE1fREVWX0ZMVVNIX1JFQ0hFQ0tfV09SS19ERUxBWV9NUykpOw0KPiA+ICsJfQ0KPiA+ICsN
-Cj4gPiAgIAloYmEtPnBtX29wX2luX3Byb2dyZXNzID0gMDsNCj4gPiArDQo+IE5pdHBpY2s7IG5l
-d2xpbmUsIHBlcmhhcHM/DQoNClRoYW5rcywgSSBXaWxsIHJlbW92ZSBpdC4NCg0KPiANCj4gPiAg
-IAlpZiAocmV0KQ0KPiA+ICAgCQl1ZnNoY2RfdXBkYXRlX3JlZ19oaXN0KCZoYmEtPnVmc19zdGF0
-cy5zdXNwZW5kX2VyciwgKHUzMilyZXQpOw0KPiA+ICAgCXJldHVybiByZXQ7DQo+ID4gQEAgLTgz
-ODYsNiArODQxMSwxMSBAQCBzdGF0aWMgaW50IHVmc2hjZF9yZXN1bWUoc3RydWN0IHVmc19oYmEg
-KmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQo+ID4gICAJLyogRW5hYmxlIEF1dG8tSGliZXJu
-YXRlIGlmIGNvbmZpZ3VyZWQgKi8NCj4gPiAgIAl1ZnNoY2RfYXV0b19oaWJlcm44X2VuYWJsZSho
-YmEpOw0KPiA+ICAgDQo+ID4gKwlpZiAoaGJhLT5kZXZfaW5mby5iX3JwbV9kZXZfZmx1c2hfY2Fw
-YWJsZSkgew0KPiA+ICsJCWhiYS0+ZGV2X2luZm8uYl9ycG1fZGV2X2ZsdXNoX2NhcGFibGUgPSBm
-YWxzZTsNCj4gPiArCQljYW5jZWxfZGVsYXllZF93b3JrKCZoYmEtPnJwbV9kZXZfZmx1c2hfcmVj
-aGVja193b3JrKTsNCj4gPiArCX0NCj4gPiArDQo+ID4gICAJLyogU2NoZWR1bGUgY2xvY2sgZ2F0
-aW5nIGluIGNhc2Ugb2Ygbm8gYWNjZXNzIHRvIFVGUyBkZXZpY2UgeWV0ICovDQo+ID4gICAJdWZz
-aGNkX3JlbGVhc2UoaGJhKTsNCj4gPiAgIA0KPiA+IEBAIC04ODU5LDYgKzg4ODksOSBAQCBpbnQg
-dWZzaGNkX2luaXQoc3RydWN0IHVmc19oYmEgKmhiYSwgdm9pZCBfX2lvbWVtICptbWlvX2Jhc2Us
-IHVuc2lnbmVkIGludCBpcnEpDQo+ID4gICAJCQkJCQlVRlNfU0xFRVBfUFdSX01PREUsDQo+ID4g
-ICAJCQkJCQlVSUNfTElOS19ISUJFUk44X1NUQVRFKTsNCj4gPiAgIA0KPiA+ICsJSU5JVF9ERUxB
-WUVEX1dPUksoJmhiYS0+cnBtX2Rldl9mbHVzaF9yZWNoZWNrX3dvcmssDQo+ID4gKwkJCSAgdWZz
-aGNkX3JwbV9kZXZfZmx1c2hfcmVjaGVja193b3JrKTsNCj4gPiArDQo+ID4gICAJLyogU2V0IHRo
-ZSBkZWZhdWx0IGF1dG8taGliZXJhdGUgaWRsZSB0aW1lciB2YWx1ZSB0byAxNTAgbXMgKi8NCj4g
-PiAgIAlpZiAodWZzaGNkX2lzX2F1dG9faGliZXJuOF9zdXBwb3J0ZWQoaGJhKSAmJiAhaGJhLT5h
-aGl0KSB7DQo+ID4gICAJCWhiYS0+YWhpdCA9IEZJRUxEX1BSRVAoVUZTSENJX0FISUJFUk44X1RJ
-TUVSX01BU0ssIDE1MCkgfA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hj
-ZC5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiA+IGluZGV4IDhkYjdhNjEwMTg5Mi4u
-OWFjZDQzNzAzN2U4IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmgN
-Cj4gPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQo+ID4gQEAgLTc0NSw2ICs3NDUs
-NyBAQCBzdHJ1Y3QgdWZzX2hiYSB7DQo+ID4gICAJc3RydWN0IHJlcXVlc3RfcXVldWUJKmJzZ19x
-dWV1ZTsNCj4gPiAgIAlib29sIHdiX2J1Zl9mbHVzaF9lbmFibGVkOw0KPiA+ICAgCWJvb2wgd2Jf
-ZW5hYmxlZDsNCj4gPiArCXN0cnVjdCBkZWxheWVkX3dvcmsgcnBtX2Rldl9mbHVzaF9yZWNoZWNr
-X3dvcms7DQo+ID4gICB9Ow0KPiA+ICAgDQo+ID4gICAvKiBSZXR1cm5zIHRydWUgaWYgY2xvY2tz
-IGNhbiBiZSBnYXRlZC4gT3RoZXJ3aXNlIGZhbHNlICovDQo+ID4gDQo+IA0KPiANCg0KVGhhbmtz
-LA0KU3RhbmxleSBDaHUNCg0KDQo=
+Hi Daniel,
 
+On Tue, 19 May 2020, Daniel Wagner wrote:
+
+> 
+> I tried to figure out if with the patch the compiler generates different 
+> object code. Looking through the filtered diff between the two versions 
+> I haven't really found any relevant changes. All looks good.
+> 
+> In case someone wants to look at the diffs:
+> 
+> https://monom.org/data/qla2xxx/qla2xxx-endianness-annotations.diff 
+> https://monom.org/data/qla2xxx/qla2xxx-endianness-annotations-filtered.diff
+> 
+
+I agree. qla2xxx-endianness-annotations.diff seems to be noise.
+
+The differences in the __bug_table sections and ql_dbg() call sites are 
+presumably caused by line break changes. Perhaps they can be squelched by 
+inserting blank lines at the appropriate places (for either build). That 
+could probably be automated.
+
+Once the comments are stripped from the .s files, we are left with 
+differences like this,
+
+@@ -21204,75 +21205,75 @@
+        .quad   .LC146
+        .quad   .LC146
+        .quad   .LC272
++       .local  __key.63281
++       .comm   __key.63281,0,1
+        .local  __key.63280
+        .comm   __key.63280,0,1
+-       .local  __key.63279
+-       .comm   __key.63279,0,1
+        .align 16
+-       .type   __func__.63244, @object
+-       .size   __func__.63244, 22
+-__func__.63244:
++       .type   __func__.63245, @object
++       .size   __func__.63245, 22
++__func__.63245:
+        .string "qlt_24xx_config_rings"
+        .align 16
+        .type   __func__.61306, @object
+        .size   __func__.61306, 26
+
+...
+
+@@ -2571,7 +2571,7 @@
+        .pushsection __jump_table,  "aw" 
+         .balign 8 
+        .long 1b - ., .L218 - .         #
+-        .quad __UNIQUE_ID_ddebug285.63134+40 + 0 - .   #,
++        .quad __UNIQUE_ID_ddebug285.63135+40 + 0 - .   #,
+        .popsection 
+        
+ # 0 "" 2
+
+It would be nice to know how these symbols end up with different numbering 
+between builds because it makes a real mess of the diff.
+
+I wonder whether the Reproducible Builds project has developed any 
+techniques that could be applied here.
+https://reproducible-builds.org/
