@@ -2,138 +2,150 @@ Return-Path: <SRS0=Yj8A=7C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66473C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 21:20:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68FBAC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 21:33:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C72620823
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 21:20:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3ADC820874
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 21:33:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="HPI0qj9a";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="U1pYvLoD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728148AbgETVUC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 May 2020 17:20:02 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:43318 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727083AbgETVUC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 17:20:02 -0400
-Received: by mail-pl1-f195.google.com with SMTP id k22so1864936pls.10;
-        Wed, 20 May 2020 14:20:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=y1v1713nXqKb0mxXeMZ0dgr7QWzgxODsG/gXBN3Zu1w=;
-        b=U3jjxk19NY2QmIT5YJfOd3YG70EbpS0kPXFacjOQP+0tzT/GACpRJ3BMkydGlQK4L0
-         bUXYqqOHS7WRap3JBWRhjHxlKdkGpcAKgEOg1ba/qEJNE93ogW4iANxc2EUFfNxCC9PM
-         reTm4bZGlmeL+QQVenpZsYi04ABryo2+0YWbTUxwOTDccHaVpPuIDB5nUrU4CuROmvGD
-         uBFbDJk6oexbpSuJrOAWlw9iH+JdXvzhNfhf4YVr4BzgGuHUX3HmcZXcU5Z7k3387Z7v
-         lOiMmKZ/bgJ6TQuhKfd5yhEQUzw4RL1EMIqPGiu1eT2oyCD5T6yuJfDwxhWuadj638CQ
-         xHwg==
-X-Gm-Message-State: AOAM532ZCZnshxpmsPL6rHsg9snCkwQa8HNXfoEOXHrSeD1ihCDVxSaJ
-        sVjWN4vFYpV3GOi2GGMiNy4=
-X-Google-Smtp-Source: ABdhPJzsTi5dHdAljD2Af9tu7m+Hchp/cP7wHZA4vPNursV5rq+vV6uAs1HaY/yk/uNQQoSqHaePgg==
-X-Received: by 2002:a17:90a:f313:: with SMTP id ca19mr7042583pjb.7.1590009601132;
-        Wed, 20 May 2020 14:20:01 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:c031:e55:f9a8:4282? ([2601:647:4000:d7:c031:e55:f9a8:4282])
-        by smtp.gmail.com with ESMTPSA id i21sm2560415pgn.20.2020.05.20.14.19.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 May 2020 14:20:00 -0700 (PDT)
-Subject: Re: Another approach of UFSHPB
-To:     Christoph Hellwig <hch@infradead.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
+        id S1728236AbgETVdn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 May 2020 17:33:43 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:30356 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727006AbgETVdm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 17:33:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1590010421; x=1621546421;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Co7SOBZeBIcC6AaYPGkCwGxunR9+98vMinbo5IPtjf0=;
+  b=HPI0qj9a2MtY/ZEeQjdS1hd8URczJ1T/MINrDNQXB9sSXe/VMJ5Wnxht
+   5ao99vEVI/1oxovN3CvNYnvJ1TujP406u0ro8pnSK9v+Oj4NlQ0fJfetG
+   cvqR7cFMZySDXLnDZbKkQFcVuyTY7vsaezBPpL6i70Prt/Jxr2uK0423/
+   dNmfoiDEWdllgCVs+X0Qid2yDY1WL62ZVCVC/A7lRNAQm4qkC35ngY/qX
+   xii9RoyyJZuNXDArg0ZmOc/NKBr56fFcYw8idgqnMFIzn+rtYaXNSCQ4F
+   Xpv3oK9GKdWV/WTC+VgCRVOfAjC56LNztoAhCngiWEcM7JaZPUHlTeSf2
+   A==;
+IronPort-SDR: X0OgFjqOK4ICUPfq3E/2KX+72ZGUnrEfruHdfrwYZG7q6E34+QtqOjyTOWRgIJXEMpdBTvwVE3
+ M0FC8eWpocrpZjeFLju5UUB84R1H9xGRsLhB5eGl3SqYu/+o21HYg4m1Z/cORNtQLXkfl9Z4j3
+ 0uhsChMabzVdDeE0HRJPfAYInqbgPEJPHVg6l/3sY53HYQmw+bTTP5Mmfs+4BClpXsknfvioqt
+ IZVxr5IDD2+IEaZWd2uCVjlf7Rb0kQFm/6ij+EOZBxf0yBVe1845hH45IOpHEqgV43jnyHIPaQ
+ bZA=
+X-IronPort-AV: E=Sophos;i="5.73,415,1583164800"; 
+   d="scan'208";a="138486720"
+Received: from mail-bn7nam10lp2103.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.103])
+  by ob1.hgst.iphmx.com with ESMTP; 21 May 2020 05:33:40 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bNdv4WZomxjz1qYrH+4/nxjqjshIXvYPKsTWgMvrlqauUjUunuc+BrHFaLiI9gX0AIBBZr8L4ip+XTAtNGIEpBEpB5B/HaTVLgwhudITt68/FlbbpojS7T8WeJq1KYGqROdv1LxGA9tAczRLrF9ikokaQx+z/SooM23j98fUBAlus/S3a1JLPkVW/Azo3istu0XripeA+E/fM0eE41/qt5bjqfH37EfCxG7QlNbnlz0GgOIIqYx+686Op+glBNOCgXyX5J5jyXzKI0L32nHZ+0MhQN7XXS7Ot+3mZoa/T0zq5VjPV0jysV4digtKQnYCHcZu5tT+5kDXBBRwXv0Ddg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Co7SOBZeBIcC6AaYPGkCwGxunR9+98vMinbo5IPtjf0=;
+ b=Slq92VDExhPXvY6ZJWr0dYhfBkVXm2XSaIrrjszNP53aVpiuU3UwrGHyAsBpkdYtqar+I0tNSqVmjuzmB+nutChGdqTX6KUYEDUY25SIy2m4ExNF3SKcsrnkSUCWzCjSM45AzJHzPbA4/6KTN1VfeWzj12jZ1i5WmBbuLLT/lz5Af9iIxclEeeoeijt2aMYZDrn9b8vMN75yYtBDNkkX9Y/MmZH2UN3NYc3EFTamMuCBhSviY9/LmtLb0pEApk7xyUlYc0kwpUTFyl6nrPJRww22KHeHMDUyJnM2+VUYull57YkW5MZM95ODZEgIbbRhanLzNjpclHxOgTm2zTtT8g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Co7SOBZeBIcC6AaYPGkCwGxunR9+98vMinbo5IPtjf0=;
+ b=U1pYvLoDJmv4hBuLiGsCAmWHwEDywPYH19XGoudr1gPVQycuoKV6LqMOwUTvZCgXDkqaJdkPMJgvlM3sCamVFjnc4vZ8UxSi9OnVru+rRcYcFPjsO84womkuTYTwkdqfvlhiuDNZiE/41CnVvPQIzsUh07b8zu8jZRzBObRhIwM=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB4094.namprd04.prod.outlook.com (2603:10b6:805:4a::26) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3021.23; Wed, 20 May
+ 2020 21:33:38 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3000.034; Wed, 20 May 2020
+ 21:33:38 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Asutosh Das <asutoshd@codeaurora.org>,
         "cang@codeaurora.org" <cang@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>
-References: <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
- <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
- <d10b27f1-49ec-d092-b252-2bb8cdc4c66e@acm.org>
- <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
- <CGME20200516171420epcas2p108c570904c5117c3654d71e0a2842faa@epcms2p7>
- <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
- <20200520175555.GA27975@infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <e1e81ad1-2681-9dbe-34aa-85f4e5559927@acm.org>
-Date:   Wed, 20 May 2020 14:19:57 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <20200520175555.GA27975@infradead.org>
-Content-Type: text/plain; charset=utf-8
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "PedroM.Sousa@synopsys.com" <PedroM.Sousa@synopsys.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+CC:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v4 2/2] scsi: ufs-qcom: enter and exit hibern8 during
+ clock scaling
+Thread-Topic: [PATCH v4 2/2] scsi: ufs-qcom: enter and exit hibern8 during
+ clock scaling
+Thread-Index: AQHWLs+aURSVuu3/rEe19CGhEeTU+aixfJxw
+Date:   Wed, 20 May 2020 21:33:37 +0000
+Message-ID: <SN6PR04MB464071B647084B0EB111992DFCB60@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <186237103353b5a79c3496e619fca894dbc78600.1589997078.git.asutoshd@codeaurora.org>
+ <9b67c25eb7c0bf80075b36660aebdb3788207353.1589997078.git.asutoshd@codeaurora.org>
+In-Reply-To: <9b67c25eb7c0bf80075b36660aebdb3788207353.1589997078.git.asutoshd@codeaurora.org>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: codeaurora.org; dkim=none (message not signed)
+ header.d=none;codeaurora.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2a00:a040:188:8f6c:2c4a:d7ba:2b72:69e]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: f5411620-9b86-4e14-8810-08d7fd057546
+x-ms-traffictypediagnostic: SN6PR04MB4094:
+x-microsoft-antispam-prvs: <SN6PR04MB4094F177058F25B294562D88FCB60@SN6PR04MB4094.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-forefront-prvs: 04097B7F7F
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: fUUk79Y//9GonvIm6ZDKEO6XwDnWqBHnUDZJ5Ig9CYSxir23wsz0AMaMpocbcs5/fNHDKp6uEfTWv57Npu8b/7YyIIKbpyf5UHMD12YcuwF9MPhICYNwZY9j2mwsHN3hWXpoakH+gb5ZP/nCYL3ZPuLnb+Ofw+LGZu/9wO5JoZvcbAhLCXnUPCcMJYB3vz5pfDH23z5tu2Y21j0LZIEMcqsM7aPR95Lci3bGjeJHUtGcs5UIxE1EPjpTZ4RrBnRrxfCFr/KvFXUslmi4kWddo3w88B4LaqN2868baUwrHHFUJwizilZTal5+/gdQ3fx8Dgej3n57X1PSY0nGyfSxgA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(346002)(376002)(39860400002)(396003)(366004)(4326008)(6506007)(7696005)(8676002)(86362001)(8936002)(316002)(66556008)(66446008)(64756008)(478600001)(186003)(33656002)(2906002)(76116006)(66946007)(66476007)(5660300002)(9686003)(52536014)(55016002)(110136005)(54906003)(71200400001)(4744005)(7416002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: l4FMCDACgW8ph7Jz1X9wfRSDgZY3w78AY5tvJdp8NQT8heUVhSeeM66CctU8gJuu9RDdZKmQFcyldalh+vkBKRT34Nko2FCnEiraewn1MtQFuWKNCUECu8d51B30Sx9FGV3m7VUMON93qbz63bsmNHrl4vBEkWks4aRIAD+XxyanBnV5t2kSoEBdUuRGuCEBi8gAoIlZ95b0GN6NkmRdQ0tBjuygSDNEap+vfWKemh9bQkGyz9kKIQ7h1KooYcTaSfIWABUtZHsLRIh4sPmve7QQVKsTMhaS6Z5QNCdo7g37bLQsLKle0w3+f7anNPUKbXq/TGbGnhuofPfX2IQ7/6QURk8s7TpOqJGyrdDoG1R7nIVXNEW6OXCr4EF/NokuAnMWyaQya54o8ACXWIUgqg/H2NsVfGcLIQVGQ1TyeNo2/659sHGwNxjXGHEgDZdx7b6y/lRO2RTNTfSI0CTSi+52bfmeFEhgZKzqhnwG4s87ENg3nDXyi76NNNQev4JMXXeudWRnhfiL1d3CMp5bgvsUwaMAJUxu0DYiNBdsvp0=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5411620-9b86-4e14-8810-08d7fd057546
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 May 2020 21:33:37.9425
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: dx/cRUF8+Tf13TauzPNthf0Co3DCQhZC45fxzoDQkVBLQiJPg+FHYqqJiwHAlbuItyEgN5UPRtv8t2s3egB4yw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4094
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-20 10:55, Christoph Hellwig wrote:
-> HPB is a completely fucked up concept and we shoud not merge it at all.
-> Especially not with a crazy bullshit vendor extension layer that makes
-> it even easier for vendors to implement even worse things than the
-> already horrible spec says.  Just stop this crap and implement sane
-> interfaces for the next generation hardware instead of wasting your
-> time on this idiotic idea.
+Hi,
 
-Hi Christoph,
+>=20
+>=20
+> Qualcomm controller needs to be in hibern8 before scaling clocks.
+> This change puts the controller in hibern8 state before scaling
+> and brings it out after scaling of clocks.
+>=20
+> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 
-What exactly is it that you are not happy about? Is it the concept of
-using host memory to store L2P translation information or how that
-concept has been translated into SCSI commands (HPB READ BUFFER, HPB
-READ and HPB WRITE BUFFER)?
+I guess that your previous versions are pretty far back - ,
+I noticed a comment by Pedro, so you might want to resend this series.
 
-In the former case: aren't Open-Channel SSDs another example of storage
-devices for which the L2P translation tables are maintained in host
-memory? Didn't the driver for Fusion-io SSDs also maintain the L2P
-mapping in host memory?
+What happens if the pre-change is successful,
+but you are not getting to the post change because, e.g. ufshcd_set_clk_fre=
+q failed?
 
-Do you agree that HPB UFS storage devices are already being used widely
-and hence that not accepting this functionality in the upstream kernel
-will force users of HPB devices to maintain HPB code outside the kernel
-tree? Isn't one of the goals of the Linux kernel project to increase its
-user base?
+Also, this piece of code is ~5 years old, so you might want to elaborate on=
+ how come hibernation is now needed.
 
-Bart.
-
-
+Thanks,
+Avri
