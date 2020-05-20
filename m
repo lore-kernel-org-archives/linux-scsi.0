@@ -2,112 +2,136 @@ Return-Path: <SRS0=Yj8A=7C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55439C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36683C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:52:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 240F22075F
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C60320823
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 07:52:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726698AbgETHj5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 May 2020 03:39:57 -0400
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:35990 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726686AbgETHj5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 03:39:57 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id CDC20299D4;
-        Wed, 20 May 2020 03:39:53 -0400 (EDT)
-Date:   Wed, 20 May 2020 17:39:55 +1000 (AEST)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Daniel Wagner <dwagner@suse.de>
-cc:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Arun Easi <aeasi@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH v7 15/15] qla2xxx: Fix endianness annotations in source
- files
-In-Reply-To: <20200519152401.oh6cewdru3fu7ogd@beryllium.lan>
-Message-ID: <alpine.LNX.2.22.394.2005201726250.8@nippy.intranet>
-References: <20200518211712.11395-1-bvanassche@acm.org> <20200518211712.11395-16-bvanassche@acm.org> <20200519152401.oh6cewdru3fu7ogd@beryllium.lan>
+        id S1726439AbgETHwl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 May 2020 03:52:41 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2232 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726403AbgETHwl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 May 2020 03:52:41 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 335CA3100B71746184BD;
+        Wed, 20 May 2020 08:52:39 +0100 (IST)
+Received: from [127.0.0.1] (10.210.167.247) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Wed, 20 May
+ 2020 08:52:38 +0100
+Subject: Re: [PATCH] ata: libata: Remove unused parameter in function
+ ata_sas_port_alloc()
+To:     chenxiang <chenxiang66@hisilicon.com>, <tj@kernel.org>,
+        <martin.petersen@oracle.com>, <brking@us.ibm.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, c00284940 <c00284940@huawei.com>
+References: <1589958442-70575-1-git-send-email-chenxiang66@hisilicon.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <8815c2e4-6e6e-8ce8-f7d8-b2c8eef788bf@huawei.com>
+Date:   Wed, 20 May 2020 08:51:39 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1589958442-70575-1-git-send-email-chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.167.247]
+X-ClientProxiedBy: lhreml745-chm.china.huawei.com (10.201.108.195) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Daniel,
+On 20/05/2020 08:07, chenxiang wrote:
+> From: c00284940 <c00284940@huawei.com>
 
-On Tue, 19 May 2020, Daniel Wagner wrote:
+Hi Xiang Chen,
+
+Please ensure author is same as signed-off person.
+
+Thanks
 
 > 
-> I tried to figure out if with the patch the compiler generates different 
-> object code. Looking through the filtered diff between the two versions 
-> I haven't really found any relevant changes. All looks good.
+> Input Parameter shost in function ata_sas_port_alloc() is not used, so
+> remove it.
 > 
-> In case someone wants to look at the diffs:
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> ---
+>   drivers/ata/libata-sata.c     | 4 +---
+>   drivers/scsi/ipr.c            | 2 +-
+>   drivers/scsi/libsas/sas_ata.c | 2 +-
+>   include/linux/libata.h        | 2 +-
+>   4 files changed, 4 insertions(+), 6 deletions(-)
 > 
-> https://monom.org/data/qla2xxx/qla2xxx-endianness-annotations.diff 
-> https://monom.org/data/qla2xxx/qla2xxx-endianness-annotations-filtered.diff
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index c16423e..a3c83fe 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -1070,7 +1070,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+>    *	port_alloc - Allocate port for a SAS attached SATA device
+>    *	@host: ATA host container for all SAS ports
+>    *	@port_info: Information from low-level host driver
+> - *	@shost: SCSI host that the scsi device is attached to
+>    *
+>    *	LOCKING:
+>    *	PCI/etc. bus probe sem.
+> @@ -1080,8 +1079,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+>    */
+>   
+>   struct ata_port *ata_sas_port_alloc(struct ata_host *host,
+> -				    struct ata_port_info *port_info,
+> -				    struct Scsi_Host *shost)
+> +				    struct ata_port_info *port_info)
+>   {
+>   	struct ata_port *ap;
+>   
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index 7d77997..331c41c 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -4816,7 +4816,7 @@ static int ipr_target_alloc(struct scsi_target *starget)
+>   		if (!sata_port)
+>   			return -ENOMEM;
+>   
+> -		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info, shost);
+> +		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info);
+>   		if (ap) {
+>   			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+>   			sata_port->ioa_cfg = ioa_cfg;
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 5d716d3..0cdfae9 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -549,7 +549,7 @@ int sas_ata_init(struct domain_device *found_dev)
+>   
+>   	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
+>   
+> -	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
+> +	ap = ata_sas_port_alloc(ata_host, &sata_port_info);
+>   	if (!ap) {
+>   		pr_err("ata_sas_port_alloc failed.\n");
+>   		rc = -ENODEV;
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 8bf5e59..5a6fb80 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1228,7 +1228,7 @@ extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>   extern int ata_slave_link_init(struct ata_port *ap);
+>   extern void ata_sas_port_destroy(struct ata_port *);
+>   extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+> -					   struct ata_port_info *, struct Scsi_Host *);
+> +					   struct ata_port_info *);
+>   extern void ata_sas_async_probe(struct ata_port *ap);
+>   extern int ata_sas_sync_probe(struct ata_port *ap);
+>   extern int ata_sas_port_init(struct ata_port *);
 > 
 
-I agree. qla2xxx-endianness-annotations.diff seems to be noise.
-
-The differences in the __bug_table sections and ql_dbg() call sites are 
-presumably caused by line break changes. Perhaps they can be squelched by 
-inserting blank lines at the appropriate places (for either build). That 
-could probably be automated.
-
-Once the comments are stripped from the .s files, we are left with 
-differences like this,
-
-@@ -21204,75 +21205,75 @@
-        .quad   .LC146
-        .quad   .LC146
-        .quad   .LC272
-+       .local  __key.63281
-+       .comm   __key.63281,0,1
-        .local  __key.63280
-        .comm   __key.63280,0,1
--       .local  __key.63279
--       .comm   __key.63279,0,1
-        .align 16
--       .type   __func__.63244, @object
--       .size   __func__.63244, 22
--__func__.63244:
-+       .type   __func__.63245, @object
-+       .size   __func__.63245, 22
-+__func__.63245:
-        .string "qlt_24xx_config_rings"
-        .align 16
-        .type   __func__.61306, @object
-        .size   __func__.61306, 26
-
-...
-
-@@ -2571,7 +2571,7 @@
-        .pushsection __jump_table,  "aw" 
-         .balign 8 
-        .long 1b - ., .L218 - .         #
--        .quad __UNIQUE_ID_ddebug285.63134+40 + 0 - .   #,
-+        .quad __UNIQUE_ID_ddebug285.63135+40 + 0 - .   #,
-        .popsection 
-        
- # 0 "" 2
-
-It would be nice to know how these symbols end up with different numbering 
-between builds because it makes a real mess of the diff.
-
-I wonder whether the Reproducible Builds project has developed any 
-techniques that could be applied here.
-https://reproducible-builds.org/
