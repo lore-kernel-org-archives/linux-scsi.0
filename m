@@ -2,161 +2,63 @@ Return-Path: <SRS0=Yj8A=7C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D93EC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 16:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3499EC433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 16:56:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 286D520708
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 16:56:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01EBF20709
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 16:56:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qETLb7uq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BQDaGBsp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbgETQ4A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 May 2020 12:56:00 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:54123 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726862AbgETQ4A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 May 2020 12:56:00 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1589993759; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=fPU9FrcmOGKQPbx+xpLCEeVLHsVWTWvsU+CO+NzO6BM=; b=qETLb7uqYHFTK+N+z5dYEb9bYhFQkak4/TyVAfu8XRpanJHVtJEEUBaT6v+P99h3wu62vKOS
- +3g3lhY96/Uy79sIoDPqkoIi4mlqHVHsXvLETAXCS8OWEHuYWvdHXRvO9EKkdCftzi001wvf
- p48t8I09UPB19NBSajAKSvs8NUY=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5ec56112.7f64ed020f48-smtp-out-n02;
- Wed, 20 May 2020 16:55:46 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6C3C7C43391; Wed, 20 May 2020 16:55:46 +0000 (UTC)
-Received: from [192.168.8.176] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5BE96C433C6;
-        Wed, 20 May 2020 16:55:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5BE96C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v3 2/2] scsi: ufs-qcom: enter and exit hibern8 during
- clock scaling
-To:     Pedro Sousa <PedroM.Sousa@synopsys.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "rnayak@codeaurora.org" <rnayak@codeaurora.org>,
-        "vinholikatti@gmail.com" <vinholikatti@gmail.com>,
-        "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kernel-team@android.com" <kernel-team@android.com>,
-        "saravanak@google.com" <saravanak@google.com>,
-        "salyzyn@google.com" <salyzyn@google.com>,
-        Andy Gross <agross@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S1727044AbgETQ4C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 May 2020 12:56:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50888 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726747AbgETQ4B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 12:56:01 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94E9EC061A0E;
+        Wed, 20 May 2020 09:56:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=IghXcCDK0cEq/Kj0CX/Mm43AHbJSZlDSkk+jenubsNQ=; b=BQDaGBspyP167GjL2cQ6d5nYLD
+        AZ6i8M4iloyuqf7rJPi3xaEjhZ8sg98tXuZelUK5kQV/n2kscQCoNEQXqDPRNb0KZ+HTrwNsQoJUW
+        GNnZkkshlOPFtAMxINd9zLARk/fVY+pNjkTkVcG/cw60pz108g+QhXQaCvpaqPTzz23i+XsGlHdeg
+        y9pVlPVqmacuJxuZYm7IakGkDpcTYWjVieB40HumuUQzP6s+s6JwFxmHbyjTVlJ78X1+T8Nwc+l0u
+        S0Ns0NEyWHg92ygZEHUG8PyovrEWcotmbkN8+muw/qDUBZkJgCbOlBPeEGX+OP8Mlck8cxMJi/h0E
+        otDXNaHA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jbS0b-0005MA-9e; Wed, 20 May 2020 16:55:57 +0000
+Date:   Wed, 20 May 2020 09:55:57 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     James Smart <james.smart@broadcom.com>,
+        linux-nvme@lists.infradead.org, Jens Axboe <axboe@kernel.dk>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1571849351-819-1-git-send-email-asutoshd@codeaurora.org>
- <1571849351-819-2-git-send-email-asutoshd@codeaurora.org>
- <MN2PR12MB31675521623C9AFEA87B6076CC740@MN2PR12MB3167.namprd12.prod.outlook.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <06fbd425-3815-690a-22bc-a362c5deca6d@codeaurora.org>
-Date:   Wed, 20 May 2020 09:55:43 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        kernel-janitors@vger.kernel.org, Paul Ely <paul.ely@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH resend] scsi: lpfc: Fix a use after free in
+ lpfc_nvme_unsol_ls_handler()
+Message-ID: <20200520165557.GA9700@infradead.org>
+References: <yq1y2purqt1.fsf@oracle.com>
+ <20200515101903.GJ3041@kadam>
 MIME-Version: 1.0
-In-Reply-To: <MN2PR12MB31675521623C9AFEA87B6076CC740@MN2PR12MB3167.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200515101903.GJ3041@kadam>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Pedro,
-
-On 11/11/2019 7:54 AM, Pedro Sousa wrote:
-> Hi Asutosh,
-> 
-> Please check comments.
-Sorry for missing out on this and thanks for your review.
-
-> 
-> -----Original Message-----
-> From: Asutosh Das <asutoshd@codeaurora.org>
-> Sent: Wednesday, October 23, 2019 5:49 PM
-> To: cang@codeaurora.org; rnayak@codeaurora.org; vinholikatti@gmail.com; jejb@linux.vnet.ibm.com; martin.petersen@oracle.com
-> Cc: linux-scsi@vger.kernel.org; kernel-team@android.com; saravanak@google.com; salyzyn@google.com; Asutosh Das <asutoshd@codeaurora.org>; Andy Gross <agross@kernel.org>; Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman <avri.altman@wdc.com>; Pedro Sousa <pedrom.sousa@synopsys.com>; James E.J. Bottomley <jejb@linux.ibm.com>; open list:ARM/QUALCOMM SUPPORT <linux-arm-msm@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
-> Subject: [PATCH v3 2/2] scsi: ufs-qcom: enter and exit hibern8 during clock scaling
-> 
-> Qualcomm controller needs to be in hibern8 before scaling clocks.
-> This change puts the controller in hibern8 state before scaling
-> and brings it out after scaling of clocks.
-> 
-> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-> ---
->   drivers/scsi/ufs/ufs-qcom.c | 12 +++++++++++-
->   1 file changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index a5b7148..55b1de5 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1305,18 +1305,27 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
->   	int err = 0;
->   
->   	if (status == PRE_CHANGE) {
-> +		err = ufshcd_uic_hibern8_enter(hba);
-> +		if (err)
-> +			return err;
->   		if (scale_up)
->   			err = ufs_qcom_clk_scale_up_pre_change(hba);
->   		else
->   			err = ufs_qcom_clk_scale_down_pre_change(hba);
-> +		if (err)
-> +			ufshcd_uic_hibern8_exit(hba);
-> +
->   	} else {
->   		if (scale_up)
->   			err = ufs_qcom_clk_scale_up_post_change(hba);
->   		else
->   			err = ufs_qcom_clk_scale_down_post_change(hba);
->   
-> -		if (err || !dev_req_params)
-> +
-> +		if (err || !dev_req_params) {
-> +			ufshcd_uic_hibern8_exit(hba);
->   			goto out;
-> +		}
->   
->   		ufs_qcom_cfg_timers(hba,
->   				    dev_req_params->gear_rx,
-> @@ -1324,6 +1333,7 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
->   				    dev_req_params->hs_rate,
->   				    false);
->   		ufs_qcom_update_bus_bw_vote(host);
-> +		ufshcd_uic_hibern8_exit(hba);
-> 
-> Here you are creating the possibility of returning a success even if hibern8 exit fails.
-> If hibern8 exit fails the ufs recovery will be triggered and "err" variable will not get updated
-> in this function, how is this handled? Did you tested this possibility?
-> 
->   	}
->   
->   out:
-> 
-
-
-Yes - I agree with your comment. The error should be propagated from 
-this function correctly to the caller. I'll push another version.
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+James, can you review this patch?
