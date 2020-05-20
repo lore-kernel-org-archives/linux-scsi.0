@@ -2,112 +2,138 @@ Return-Path: <SRS0=Yj8A=7C=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 557ACC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 18:59:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66473C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 21:20:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 369FE207D8
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 18:59:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LMx+SdcV"
+	by mail.kernel.org (Postfix) with ESMTP id 4C72620823
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 May 2020 21:20:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726860AbgETS7z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 May 2020 14:59:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42264 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726548AbgETS7y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 14:59:54 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A78AC061A0E;
-        Wed, 20 May 2020 11:59:53 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id u1so3487317wmn.3;
-        Wed, 20 May 2020 11:59:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=fnshiy6ihG9QhaGP6naqQpz00mp02JHtZheI8F1kYaM=;
-        b=LMx+SdcVWNgrCI/SwL9uv/KpzlE4nNYpyDC/Qs7GCtcpfMqszET3vUOSHYZm+a7TsB
-         kCrRw4lPadNsy8pHZ5KYrPz8pgw6MKPiE9HYHPivG4fHIEQty7nYzEwEvQqTZGd23ZHU
-         mKHJf+EIof99d3ATX3LwiH5lc8Q65OyANQT6gDDp9HrefEI+p/uAIjmDUaZSUCifdB4H
-         HLcK573YuYicChl3CkLBGuESoFktARC7HkR1uLhe5Irc/DlglckvI/CB+Ci5v0O8PKW2
-         DWzaZtyWHa2VFVx5MOPi7U/rPyejQYbORcyQ1r8ktBdvcaOMuWN1z0873Vn8OnfbrTTy
-         XTTw==
+        id S1728148AbgETVUC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 May 2020 17:20:02 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43318 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727083AbgETVUC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 May 2020 17:20:02 -0400
+Received: by mail-pl1-f195.google.com with SMTP id k22so1864936pls.10;
+        Wed, 20 May 2020 14:20:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=fnshiy6ihG9QhaGP6naqQpz00mp02JHtZheI8F1kYaM=;
-        b=aGvYDm80CUft1kQZJ+9Xoc6rPrSb7WdgRUFZ2wFfG+FXj2H6toC558CEo67fPNW7+m
-         Vm62WFswO7JXWSgtCgyYyvXaV8sCfDm9XA7ruWVIdJyast6Gw0fDQgTCM70gG8zF88X0
-         BVYPKao2mMDGxxDX8pQW3U5RpnKT4KuOD+3mdp63b49t2RIgxaQ0ju3H97DRhSSf1+1N
-         x7A1k8LNyQsQuFrMYSX+QRS6Su+9Xc+1WplbXiAm9deloZktIicMouvTRFfeGeM8O2Lq
-         JSAwmYjvi6o4Kpp7LNrOqGwsebxK9PsUcceXr5WSSQoJS/vChlUZ7XVIO2wQr7/wPZFp
-         +bAQ==
-X-Gm-Message-State: AOAM531lLLZC8b9ZHEmNx+w+HDordXFMusnTZeZ4LzFvu1qG4E3+lcS3
-        HkW8OxRXGXAu670HXhPOlC4=
-X-Google-Smtp-Source: ABdhPJxTXt+BUKcH00voKpAxp/kIhKxbelcXyVkcM2PQ+e7817YIs0PeHaSR8i7UnQp3Yhugozz8pw==
-X-Received: by 2002:a7b:c8d2:: with SMTP id f18mr5658325wml.174.1590001192003;
-        Wed, 20 May 2020 11:59:52 -0700 (PDT)
-Received: from localhost.localdomain.localdomain (ip68-5-85-189.oc.oc.cox.net. [68.5.85.189])
-        by smtp.gmail.com with ESMTPSA id c19sm3896483wrb.89.2020.05.20.11.59.49
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 20 May 2020 11:59:51 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-nvme@lists.infradead.org
-Cc:     linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        paul.ely@broadcom.com, hare@suse.de, jejb@linux.ibm.com,
-        axboe@kernel.dk, martin.petersen@oracle.com, hch@infradead.org,
-        dan.carpenter@oracle.com, James Smart <jsmart2021@gmail.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: [PATCH 3/3] lpfc: Fix return value in __lpfc_nvme_ls_abort
-Date:   Wed, 20 May 2020 11:59:29 -0700
-Message-Id: <20200520185929.48779-4-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.1
-In-Reply-To: <20200520185929.48779-1-jsmart2021@gmail.com>
-References: <20200520185929.48779-1-jsmart2021@gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=y1v1713nXqKb0mxXeMZ0dgr7QWzgxODsG/gXBN3Zu1w=;
+        b=U3jjxk19NY2QmIT5YJfOd3YG70EbpS0kPXFacjOQP+0tzT/GACpRJ3BMkydGlQK4L0
+         bUXYqqOHS7WRap3JBWRhjHxlKdkGpcAKgEOg1ba/qEJNE93ogW4iANxc2EUFfNxCC9PM
+         reTm4bZGlmeL+QQVenpZsYi04ABryo2+0YWbTUxwOTDccHaVpPuIDB5nUrU4CuROmvGD
+         uBFbDJk6oexbpSuJrOAWlw9iH+JdXvzhNfhf4YVr4BzgGuHUX3HmcZXcU5Z7k3387Z7v
+         lOiMmKZ/bgJ6TQuhKfd5yhEQUzw4RL1EMIqPGiu1eT2oyCD5T6yuJfDwxhWuadj638CQ
+         xHwg==
+X-Gm-Message-State: AOAM532ZCZnshxpmsPL6rHsg9snCkwQa8HNXfoEOXHrSeD1ihCDVxSaJ
+        sVjWN4vFYpV3GOi2GGMiNy4=
+X-Google-Smtp-Source: ABdhPJzsTi5dHdAljD2Af9tu7m+Hchp/cP7wHZA4vPNursV5rq+vV6uAs1HaY/yk/uNQQoSqHaePgg==
+X-Received: by 2002:a17:90a:f313:: with SMTP id ca19mr7042583pjb.7.1590009601132;
+        Wed, 20 May 2020 14:20:01 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:c031:e55:f9a8:4282? ([2601:647:4000:d7:c031:e55:f9a8:4282])
+        by smtp.gmail.com with ESMTPSA id i21sm2560415pgn.20.2020.05.20.14.19.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 May 2020 14:20:00 -0700 (PDT)
+Subject: Re: Another approach of UFSHPB
+To:     Christoph Hellwig <hch@infradead.org>,
+        yongmyung lee <ymhungry.lee@samsung.com>
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>
+References: <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
+ <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
+ <d10b27f1-49ec-d092-b252-2bb8cdc4c66e@acm.org>
+ <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <CGME20200516171420epcas2p108c570904c5117c3654d71e0a2842faa@epcms2p7>
+ <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
+ <20200520175555.GA27975@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <e1e81ad1-2681-9dbe-34aa-85f4e5559927@acm.org>
+Date:   Wed, 20 May 2020 14:19:57 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200520175555.GA27975@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A static checker reported the following issue:
-  drivers/scsi/lpfc/lpfc_nvmet.c:1366 lpfc_nvmet_ls_abort()
-  warn: 'ret' can be either negative or positive
+On 2020-05-20 10:55, Christoph Hellwig wrote:
+> HPB is a completely fucked up concept and we shoud not merge it at all.
+> Especially not with a crazy bullshit vendor extension layer that makes
+> it even easier for vendors to implement even worse things than the
+> already horrible spec says.  Just stop this crap and implement sane
+> interfaces for the next generation hardware instead of wasting your
+> time on this idiotic idea.
 
-The comment indicates a non-zero value indicates error in the
-form of -Exxx, but the code is returning "1".
+Hi Christoph,
 
-Fix the code to return -EINVAL to be compliant to comment.
+What exactly is it that you are not happy about? Is it the concept of
+using host memory to store L2P translation information or how that
+concept has been translated into SCSI commands (HPB READ BUFFER, HPB
+READ and HPB WRITE BUFFER)?
 
-Fixes: e96a22b0b7c2 ("lpfc: Refactor Send LS Abort support")
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/lpfc/lpfc_nvme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In the former case: aren't Open-Channel SSDs another example of storage
+devices for which the L2P translation tables are maintained in host
+memory? Didn't the driver for Fusion-io SSDs also maintain the L2P
+mapping in host memory?
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 21bbccf0dc31..b46ba70f78da 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -895,7 +895,7 @@ __lpfc_nvme_ls_abort(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_NVME_DISC | LOG_NVME_ABTS,
- 			 "6213 NVMEx LS REQ Abort: Unable to locate req x%p\n",
- 			 pnvme_lsreq);
--	return 1;
-+	return -EINVAL;
- }
- 
- static int
--- 
-2.26.1
+Do you agree that HPB UFS storage devices are already being used widely
+and hence that not accepting this functionality in the upstream kernel
+will force users of HPB devices to maintain HPB code outside the kernel
+tree? Isn't one of the goals of the Linux kernel project to increase its
+user base?
+
+Bart.
+
 
