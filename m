@@ -2,143 +2,369 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A7AC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 12:14:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AEE4C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:12:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C28B620756
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 12:14:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED1502072C
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:12:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kYkQMHt3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fitc3n/u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729291AbgEUMOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 08:14:44 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:54140 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727949AbgEUMOo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 08:14:44 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LCBeAZ037696;
-        Thu, 21 May 2020 12:14:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=uRhEcY0t0XSLnOWYuJxEO2fJklh7L1NChLV6Gtg2qy0=;
- b=kYkQMHt33Uv3flQWtvKNt1gWrfHOjs2JEfGageb8olQxdnPMz1smm6YEarauypkOppsj
- ol8THM8jHgPNLPE2nwHCxGsFmB4RWz85Nfhku+l0SkAX2m8s7CoonTdIapIIZlqCyq20
- HNF2h8TpbzMgcQP5k1ms/rc2cDpO7ukxOtSJEo/j7kxDdntXNwSrwdlJNqhIlXyoZWtB
- C9NgnqjNRoiQKrGDmb9OXVO1NoNN75Vcj7v6vG4e5DoP2FYwuI1tsu637WTMmLxKzXE3
- cZ4zhaYEOCfsB5OdGu0P6+ZX9jIfMpQlfNtgPcGo70d3cOj2zkma3PUDE1aTqmKMLG5u pg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 31501rep8s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 21 May 2020 12:14:34 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LCCYej195905;
-        Thu, 21 May 2020 12:12:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 314gm92h08-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 21 May 2020 12:12:34 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04LCCRns014474;
-        Thu, 21 May 2020 12:12:28 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 21 May 2020 05:12:27 -0700
-Date:   Thu, 21 May 2020 15:12:21 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Karen Xie <kxie@chelsio.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@suse.de>,
-        Mike Christie <michaelc@cs.wisc.edu>,
-        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: cxgb3i: fix some leaks in init_act_open()
-Message-ID: <20200521121221.GA247492@mwanda>
+        id S1729534AbgEUPMq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 11:12:46 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47629 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727898AbgEUPMq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 11:12:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1590073963;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=M6CgIrqwtx6L786prVqd3u5XjZAvtvwbUH9C4cru9Gc=;
+        b=fitc3n/ukjm78B+DRZyXxZQUWPpDEvN5geeNRYxUq10qjdmBR++wYSgrz+Xq9ENlFuirms
+        lEq3YN6KjiG1tqccazB+K9fVPumnZCtNidtQYDmLmuzJ9P6BrJMGq4qcJElaQVT+UHpTBw
+        bpd6yRSU9I0ZcT2DRhfwqIJvjj/WC+g=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-215-Jx2fp_fcNwWKkNps3ODd_w-1; Thu, 21 May 2020 11:12:39 -0400
+X-MC-Unique: Jx2fp_fcNwWKkNps3ODd_w-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 645B58014D4;
+        Thu, 21 May 2020 15:12:38 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.40.192.92])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F358410372CB;
+        Thu, 21 May 2020 15:12:36 +0000 (UTC)
+Subject: Re: [v2 4/5] mpt3sas: Handle RDPQ DMA allocation in same 4G region
+To:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     hch@infradead.org, Sathya.Prakash@broadcom.com,
+        sreekanth.reddy@broadcom.com
+References: <1587626596-1044-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1587626596-1044-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+From:   Tomas Henzl <thenzl@redhat.com>
+Message-ID: <3849d23c-8af5-7427-2f56-7c78d996d1c2@redhat.com>
+Date:   Thu, 21 May 2020 17:12:36 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9627 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- adultscore=0 phishscore=0 mlxscore=0 spamscore=0 suspectscore=2
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005210092
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9627 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
- mlxlogscore=999 clxscore=1011 priorityscore=1501 cotscore=-2147483648
- impostorscore=0 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
- mlxscore=0 suspectscore=2 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005210092
+In-Reply-To: <1587626596-1044-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There wasn't any clean up done if cxgb3_alloc_atid() failed and also the
-original code didn't release "csk->l2t".
+On 4/23/20 9:23 AM, Suganath Prabu wrote:
+> For INVADER_SERIES each set of 8 reply queues (0 - 7, 8 - 15,..) and
+> VENTURA_SERIES each set of 16 reply queues (0 - 15, 16 - 31,..) should
+> be within 4 GB boundary. Driver uses limitation of VENTURA_SERIES to
+> manage INVADER_SERIES as well. So here driver is allocating the DMA able
+> memory for RDPQ's accordingly.
+> 
+> 1) At driver load, set DMA Mask to 64 and allocate memory for RDPQ's.
+> 2) Check if allocated resources for RDPQ are in the same 4GB range.
+> 3) If #2 is true, continue with 64 bit DMA and go to #6
+> 4) If #2 is false, then free all the resources from #1.
+> 5) Set DMA mask to 32 and allocate RDPQ's.
+> 6) Proceed with driver loading and other allocations
+> ---
+> v1 Change log:
+> 1) Use one dma pool for RDPQ's, thus removes the logic of using second
+> dma pool with align.
+> v2 Change log:
+> Added flag use_32bit_dma. If this flag is true, 32 bit coharent
+> dma is used.
+> 
+> Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 152 +++++++++++++++++++++++++-----------
+>  drivers/scsi/mpt3sas/mpt3sas_base.h |   3 +
+>  2 files changed, 109 insertions(+), 46 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 0588941..af30e74 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -2810,7 +2810,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
+>  	int dma_mask;
+>  
+>  	if (ioc->is_mcpu_endpoint ||
+> -	    sizeof(dma_addr_t) == 4 ||
+> +	    sizeof(dma_addr_t) == 4 || ioc->use_32bit_dma ||
+>  	    dma_get_required_mask(&pdev->dev) <= 32)
+>  		dma_mask = 32;
+>  	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
+> @@ -4807,8 +4807,8 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+>  {
+>  	int i = 0;
+>  	int j = 0;
+> +	int dma_alloc_count = 0;
+>  	struct chain_tracker *ct;
+> -	struct reply_post_struct *rps;
+>  
+>  	dexitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
+>  
+> @@ -4850,29 +4850,34 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+>  	}
+>  
+>  	if (ioc->reply_post) {
+> -		do {
+> -			rps = &ioc->reply_post[i];
+> -			if (rps->reply_post_free) {
+> -				dma_pool_free(
+> -				    ioc->reply_post_free_dma_pool,
+> -				    rps->reply_post_free,
+> -				    rps->reply_post_free_dma);
+> -				dexitprintk(ioc,
+> -					    ioc_info(ioc, "reply_post_free_pool(0x%p): free\n",
+> -						     rps->reply_post_free));
+> -				rps->reply_post_free = NULL;
+> +		dma_alloc_count = DIV_ROUND_UP(ioc->reply_queue_count,
+> +				RDPQ_MAX_INDEX_IN_ONE_CHUNK);
+> +		for (i = 0; i < ioc->reply_queue_count; i++) {
+> +			if (i % RDPQ_MAX_INDEX_IN_ONE_CHUNK == 0
+> +			    && dma_alloc_count) {
+> +				if (ioc->reply_post[i].reply_post_free) {
+> +					dma_pool_free(
+> +					    ioc->reply_post_free_dma_pool,
+> +					    ioc->reply_post[i].reply_post_free,
+> +					ioc->reply_post[i].reply_post_free_dma);
+> +					dexitprintk(ioc, ioc_info(ioc,
+> +					   "reply_post_free_pool(0x%p): free\n",
+> +					   ioc->reply_post[i].reply_post_free));
+> +					ioc->reply_post[i].reply_post_free =
+> +									NULL;
+> +				}
+> +				--dma_alloc_count;
+>  			}
+> -		} while (ioc->rdpq_array_enable &&
+> -			   (++i < ioc->reply_queue_count));
+> +		}
+> +		dma_pool_destroy(ioc->reply_post_free_dma_pool);
+>  		if (ioc->reply_post_free_array &&
+>  			ioc->rdpq_array_enable) {
+>  			dma_pool_free(ioc->reply_post_free_array_dma_pool,
+> -				ioc->reply_post_free_array,
+> -				ioc->reply_post_free_array_dma);
+> +			    ioc->reply_post_free_array,
+> +			    ioc->reply_post_free_array_dma);
+>  			ioc->reply_post_free_array = NULL;
+>  		}
+>  		dma_pool_destroy(ioc->reply_post_free_array_dma_pool);
+> -		dma_pool_destroy(ioc->reply_post_free_dma_pool);
+>  		kfree(ioc->reply_post);
+>  	}
+>  
+> @@ -4948,36 +4953,75 @@ mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
+>  static int
+>  base_alloc_rdpq_dma_pool(struct MPT3SAS_ADAPTER *ioc, int sz)
+>  {
+> -	int i;
+> +	int i = 0;
+> +	u32 dma_alloc_count = 0;
+> +	int reply_post_free_sz = ioc->reply_post_queue_depth *
+> +		sizeof(Mpi2DefaultReplyDescriptor_t);
+>  	int count = ioc->rdpq_array_enable ? ioc->reply_queue_count : 1;
+>  
+>  	ioc->reply_post = kcalloc(count, sizeof(struct reply_post_struct),
+>  			GFP_KERNEL);
+>  	if (!ioc->reply_post)
+>  		return -ENOMEM;
+> +	/*
+> +	 *  For INVADER_SERIES each set of 8 reply queues(0-7, 8-15, ..) and
+> +	 *  VENTURA_SERIES each set of 16 reply queues(0-15, 16-31, ..) should
+> +	 *  be within 4GB boundary i.e reply queues in a set must have same
+> +	 *  upper 32-bits in their memory address. so here driver is allocating
+> +	 *  the DMA'able memory for reply queues according.
+> +	 *  Driver uses limitation of
+> +	 *  VENTURA_SERIES to manage INVADER_SERIES as well.
+> +	 */
+> +	dma_alloc_count = DIV_ROUND_UP(ioc->reply_queue_count,
+> +				RDPQ_MAX_INDEX_IN_ONE_CHUNK);
+>  	ioc->reply_post_free_dma_pool =
+> -	    dma_pool_create("reply_post_free pool",
+> -	    &ioc->pdev->dev, sz, 16, 0);
+> +		dma_pool_create("reply_post_free pool",
+> +		    &ioc->pdev->dev, sz, 16, 0);
+>  	if (!ioc->reply_post_free_dma_pool)
+>  		return -ENOMEM;
+> -	i = 0;
+> -	do {
+> -		ioc->reply_post[i].reply_post_free =
+> -		    dma_pool_zalloc(ioc->reply_post_free_dma_pool,
+> -		    GFP_KERNEL,
+> -		    &ioc->reply_post[i].reply_post_free_dma);
+> -		if (!ioc->reply_post[i].reply_post_free)
+> -			return -ENOMEM;
+> -		dinitprintk(ioc,
+> -			ioc_info(ioc, "reply post free pool (0x%p): depth(%d),"
+> -			    "element_size(%d), pool_size(%d kB)\n",
+> -			    ioc->reply_post[i].reply_post_free,
+> -			    ioc->reply_post_queue_depth, 8, sz / 1024));
+> -		dinitprintk(ioc,
+> -			ioc_info(ioc, "reply_post_free_dma = (0x%llx)\n",
+> -			    (u64)ioc->reply_post[i].reply_post_free_dma));
+> +	for (i = 0; i < ioc->reply_queue_count; i++) {
+> +		if ((i % RDPQ_MAX_INDEX_IN_ONE_CHUNK == 0) && dma_alloc_count) {
+> +			ioc->reply_post[i].reply_post_free =
+ioc->reply_post is allocated with 'count' size, which may be smaller
+than ioc->reply_queue_count
+Probably this causes some older systems to not boot.
+The problem should be fixed before it comes to mainline.
 
-Fixes: 6f7efaabefeb ("[SCSI] cxgb3i: change cxgb3i to use libcxgbi")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-From static analysis.  Not tested.
+Cheers,
+tomash
 
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 524cdbcd29aa..ec7d01f6e2d5 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -959,6 +959,7 @@ static int init_act_open(struct cxgbi_sock *csk)
- 	struct net_device *ndev = cdev->ports[csk->port_id];
- 	struct cxgbi_hba *chba = cdev->hbas[csk->port_id];
- 	struct sk_buff *skb = NULL;
-+	int ret;
- 
- 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
- 		"csk 0x%p,%u,0x%lx.\n", csk, csk->state, csk->flags);
-@@ -979,16 +980,16 @@ static int init_act_open(struct cxgbi_sock *csk)
- 	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
- 	if (csk->atid < 0) {
- 		pr_err("NO atid available.\n");
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto put_sock;
- 	}
- 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
- 	cxgbi_sock_get(csk);
- 
- 	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
- 	if (!skb) {
--		cxgb3_free_atid(t3dev, csk->atid);
--		cxgbi_sock_put(csk);
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+		goto free_atid;
- 	}
- 	skb->sk = (struct sock *)csk;
- 	set_arp_failure_handler(skb, act_open_arp_failure);
-@@ -1010,6 +1011,15 @@ static int init_act_open(struct cxgbi_sock *csk)
- 	cxgbi_sock_set_state(csk, CTP_ACTIVE_OPEN);
- 	send_act_open_req(csk, skb, csk->l2t);
- 	return 0;
-+
-+free_atid:
-+	cxgb3_free_atid(t3dev, csk->atid);
-+put_sock:
-+	cxgbi_sock_put(csk);
-+	l2t_release(t3dev, csk->l2t);
-+	csk->l2t = NULL;
-+
-+	return ret;
- }
- 
- cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
--- 
-2.26.2
+> +			    dma_pool_alloc(ioc->reply_post_free_dma_pool,
+> +				GFP_KERNEL,
+> +				&ioc->reply_post[i].reply_post_free_dma);
+> +			if (!ioc->reply_post[i].reply_post_free)
+> +				return -ENOMEM;
+> +			/*
+> +			 * Each set of RDPQ pool must satisfy 4gb boundary
+> +			 * restriction.
+> +			 * 1) Check if allocated resources for RDPQ pool are in
+> +			 *	the same 4GB range.
+> +			 * 2) If #1 is true, continue with 64 bit DMA.
+> +			 * 3) If #1 is false, return 1. which means free all the
+> +			 * resources and set DMA mask to 32 and allocate.
+> +			 */
+> +			if (!mpt3sas_check_same_4gb_region(
+> +				(long)ioc->reply_post[i].reply_post_free, sz)) {
+> +				dinitprintk(ioc,
+> +				    ioc_err(ioc, "bad Replypost free pool(0x%p)"
+> +				    "reply_post_free_dma = (0x%llx)\n",
+> +				    ioc->reply_post[i].reply_post_free,
+> +				    (unsigned long long)
+> +				    ioc->reply_post[i].reply_post_free_dma));
+> +				return -EAGAIN;
+> +			}
+> +			memset(ioc->reply_post[i].reply_post_free, 0,
+> +						RDPQ_MAX_INDEX_IN_ONE_CHUNK *
+> +						reply_post_free_sz);
+> +			dma_alloc_count--;
+>  
+> -	} while (ioc->rdpq_array_enable && ++i < ioc->reply_queue_count);
+> +		} else {
+> +			ioc->reply_post[i].reply_post_free =
+> +			    (Mpi2ReplyDescriptorsUnion_t *)
+> +			    ((long)ioc->reply_post[i-1].reply_post_free
+> +			    + reply_post_free_sz);
+> +			ioc->reply_post[i].reply_post_free_dma =
+> +			    (dma_addr_t)
+> +			    (ioc->reply_post[i-1].reply_post_free_dma +
+> +			    reply_post_free_sz);
+> +		}
+> +	}
+>  	return 0;
+>  }
+>  
+> @@ -4995,10 +5039,12 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+>  	u16 chains_needed_per_io;
+>  	u32 sz, total_sz, reply_post_free_sz, reply_post_free_array_sz;
+>  	u32 retry_sz;
+> +	u32 rdpq_sz = 0;
+>  	u16 max_request_credit, nvme_blocks_needed;
+>  	unsigned short sg_tablesize;
+>  	u16 sge_size;
+>  	int i, j;
+> +	int ret = 0;
+>  	struct chain_tracker *ct;
+>  
+>  	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
+> @@ -5152,14 +5198,28 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+>  	/* reply post queue, 16 byte align */
+>  	reply_post_free_sz = ioc->reply_post_queue_depth *
+>  	    sizeof(Mpi2DefaultReplyDescriptor_t);
+> -
+> -	sz = reply_post_free_sz;
+> +	rdpq_sz = reply_post_free_sz * RDPQ_MAX_INDEX_IN_ONE_CHUNK;
+>  	if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
+> -		sz *= ioc->reply_queue_count;
+> -	if (base_alloc_rdpq_dma_pool(ioc, sz))
+> -		goto out;
+> -	total_sz += sz * (!ioc->rdpq_array_enable ? 1 : ioc->reply_queue_count);
+> -
+> +		rdpq_sz = reply_post_free_sz * ioc->reply_queue_count;
+> +	ret = base_alloc_rdpq_dma_pool(ioc, rdpq_sz);
+> +	if (ret == -EAGAIN) {
+> +		/*
+> +		 * Free allocated bad RDPQ memory pools.
+> +		 * Change dma coherent mask to 32 bit and reallocate RDPQ
+> +		 */
+> +		_base_release_memory_pools(ioc);
+> +		ioc->use_32bit_dma = true;
+> +		if (_base_config_dma_addressing(ioc, ioc->pdev) != 0) {
+> +			ioc_err(ioc,
+> +			    "32 DMA mask failed %s\n", pci_name(ioc->pdev));
+> +			return -ENODEV;
+> +		}
+> +		if (base_alloc_rdpq_dma_pool(ioc, rdpq_sz))
+> +			return -ENOMEM;
+> +	} else if (ret == -ENOMEM)
+> +		return -ENOMEM;
+> +	total_sz = rdpq_sz * (!ioc->rdpq_array_enable ? 1 :
+> +	    DIV_ROUND_UP(ioc->reply_queue_count, RDPQ_MAX_INDEX_IN_ONE_CHUNK));
+>  	ioc->scsiio_depth = ioc->hba_queue_depth -
+>  	    ioc->hi_priority_depth - ioc->internal_depth;
+>  
+> @@ -5171,7 +5231,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+>  		    ioc_info(ioc, "scsi host: can_queue depth (%d)\n",
+>  			     ioc->shost->can_queue));
+>  
+> -
+>  	/* contiguous pool for request and chains, 16 byte align, one extra "
+>  	 * "frame for smid=0
+>  	 */
+> @@ -7141,6 +7200,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+>  	ioc->smp_affinity_enable = smp_affinity_enable;
+>  
+>  	ioc->rdpq_array_enable_assigned = 0;
+> +	ioc->use_32bit_dma = 0;
+>  	if (ioc->is_aero_ioc)
+>  		ioc->base_readl = &_base_readl_aero;
+>  	else
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index caae040..5a83971 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -367,6 +367,7 @@ struct mpt3sas_nvme_cmd {
+>  #define MPT3SAS_HIGH_IOPS_REPLY_QUEUES		8
+>  #define MPT3SAS_HIGH_IOPS_BATCH_COUNT		16
+>  #define MPT3SAS_GEN35_MAX_MSIX_QUEUES		128
+> +#define RDPQ_MAX_INDEX_IN_ONE_CHUNK		16
+>  
+>  /* OEM Specific Flags will come from OEM specific header files */
+>  struct Mpi2ManufacturingPage10_t {
+> @@ -1063,6 +1064,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
+>   * @thresh_hold: Max number of reply descriptors processed
+>   *				before updating Host Index
+>   * @drv_support_bitmap: driver's supported feature bit map
+> + * @use_32bit_dma: Flag to use 32 bit consistent dma mask
+>   * @scsi_io_cb_idx: shost generated commands
+>   * @tm_cb_idx: task management commands
+>   * @scsih_cb_idx: scsih internal commands
+> @@ -1252,6 +1254,7 @@ struct MPT3SAS_ADAPTER {
+>  	u8		high_iops_queues;
+>  	u32		drv_support_bitmap;
+>  	bool		enable_sdev_max_qd;
+> +	bool		use_32bit_dma;
+>  
+>  	/* internal commands, callback index */
+>  	u8		scsi_io_cb_idx;
+> 
 
