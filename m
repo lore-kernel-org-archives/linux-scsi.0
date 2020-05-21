@@ -2,449 +2,150 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A48FDC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:17:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62966C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 16:49:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81E2F207D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:17:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 366392072C
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 16:49:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="c42Y1dMY"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BBlJE/2w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729678AbgEUPRi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 11:17:38 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:41392 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727988AbgEUPRh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 May 2020 11:17:37 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 170B44999F;
-        Thu, 21 May 2020 15:17:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1590074250;
-         x=1591888651; bh=azTFsx5pT+xwmFKCNHnOoz6GCjXdAT0cN0zwshK92aU=; b=
-        c42Y1dMYqMUIF5HddFaTp64B8rVm58yCB1DYblVQ2QEn4f/YjGJBXEQOWLzIiDYk
-        OvDR2BRu/zfR0amudL9bEPIqT9yQcb8ZfbcmftfQNTS5shs82DuYgfPEwplTz6W5
-        CTKUVgzOZHVPZwEhEHvIvCNtI/cwnpswgkeQzdN7Z9g=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id U1vjTcTe5Nr2; Thu, 21 May 2020 18:17:30 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id ACE4D47D4C;
-        Thu, 21 May 2020 18:17:29 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 21
- May 2020 18:17:31 +0300
-Date:   Thu, 21 May 2020 18:17:30 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Martin Wilck <mwilck@suse.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <target-devel@vger.kernel.org>, <linux@yadro.com>,
-        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        <stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
-Message-ID: <20200521151730.GA73599@SPB-NB-133.local>
-References: <20200518183141.66621-1-r.bolshakov@yadro.com>
- <3ee76f0fc5df716523bfbdd34726b6cccd4971cd.camel@suse.com>
+        id S1729943AbgEUQto (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 12:49:44 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:30730 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728721AbgEUQtn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 12:49:43 -0400
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200521164941epoutp0175414ab033fd98811131a1c1965987cf~RGSLfNU4H1467214672epoutp01X
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2020 16:49:41 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200521164941epoutp0175414ab033fd98811131a1c1965987cf~RGSLfNU4H1467214672epoutp01X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1590079781;
+        bh=BxuoQ2bDUpnmdDK6AiDLxEreiEN3dox/04SRxbRcCYA=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=BBlJE/2wbRifrbbgu/9yBi5y2o731MUTbpdulYmbSYPI/S+sqsVX1ZlYlL9phYsU9
+         FC0czf9Ug9FUl8Ft4Na3HBcW8OyS6TYQ4ctjwHM5RyH++5Gr2VPFUdK1stvWK4ofL6
+         YK6iOAXEwK2ff1xsJZKlV+A9F0AxQwoQXhbwtuTE=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20200521164940epcas5p315923a6e098754aec537394f45aa5b65~RGSKjw7Gf3196531965epcas5p3M;
+        Thu, 21 May 2020 16:49:40 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        39.C8.23389.321B6CE5; Fri, 22 May 2020 01:49:39 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200521164938epcas5p332682bce7ac711559181361ec1868fc5~RGSJdDMoW3194731947epcas5p3Q;
+        Thu, 21 May 2020 16:49:38 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200521164938epsmtrp18f1d4d5ab8ed32dbf03a57f61aade580~RGSJcHLaZ3131231312epsmtrp1v;
+        Thu, 21 May 2020 16:49:38 +0000 (GMT)
+X-AuditID: b6c32a4b-7adff70000005b5d-37-5ec6b123febc
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1E.6E.25866.221B6CE5; Fri, 22 May 2020 01:49:38 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200521164935epsmtip2385e245437ef260d48f6c6b07e5b015e~RGSGl6sca1862918629epsmtip2x;
+        Thu, 21 May 2020 16:49:35 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Krzysztof Kozlowski'" <krzk@kernel.org>
+Cc:     <robh@kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <avri.altman@wdc.com>,
+        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
+        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+In-Reply-To: <20200519071636.GA6971@kozik-lap>
+Subject: RE: [PATCH v9 10/10] arm64: dts: Add node for ufs exynos7
+Date:   Thu, 21 May 2020 22:19:33 +0530
+Message-ID: <018f01d62f8f$d0b993a0$722cbae0$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <3ee76f0fc5df716523bfbdd34726b6cccd4971cd.camel@suse.com>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQDj7nWNOwhaAxvEU9bpCgUI3fQKTQLlQRCoAnN8e0wCOeNtTKparPXQ
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGKsWRmVeSWpSXmKPExsWy7bCmhq7yxmNxBlPemVu8/HmVzeLT+mWs
+        FvOPnGO1OH9+A7vFzS1HWSw2Pb7GanF51xw2ixnn9zFZdF/fwWax/Pg/Jov/e3awWyzdepPR
+        gcfjcl8vk8emVZ1sHpuX1Hu0nNzP4vHx6S0Wj74tqxg9Pm+S82g/0M0UwBHFZZOSmpNZllqk
+        b5fAlfHz4xSmgn88FauPv2FtYPzP3cXIySEhYCLxYEMncxcjF4eQwG5Gid7Vl5hBEkICnxgl
+        li33gkh8ZpRouzqZBabj2oYHrBCJXYwS83rPQLW/YZT49/otO0gVm4CuxI7FbWwgtgiQvfnG
+        cnaQImaBk0wSR/p6mEASnAJ6Eh9nvgSzhQWcJN6fmgu2m0VAVaJx3Q9GEJtXwFLi/eu/7BC2
+        oMTJmU/AzmAW0JZYtvA1M8RJChI/ny5jhVjmJjHnJUQvs4C4xNGfPWDXSQic4ZA4eOoaVIOL
+        xO2m32wQtrDEq+Nb2CFsKYmX/W1ANgeQnS3Rs8sYIlwjsXTeMaj37SUOXJnDAlLCLKApsX6X
+        PsQqPone30+YIDp5JTrahCCqVSWa312F6pSWmNjdzQphe0jMbnjPOIFRcRaSx2YheWwWkgdm
+        ISxbwMiyilEytaA4Nz212LTAOC+1XK84Mbe4NC9dLzk/dxMjOKlpee9gfPTgg94hRiYOxkOM
+        EhzMSiK8C/mPxgnxpiRWVqUW5ccXleakFh9ilOZgURLnfdy4JU5IID2xJDU7NbUgtQgmy8TB
+        KdXApN2tk+G0xCugU/B0a/G8a/cVK9nUZ88WYTYP0DjSdCM2y79CPvrhoy9f/ku6Fja901Z4
+        f9iG+VbzonfsXX8v1kuoZrfNcdvkPvPXPoHy90vdjh/g19JxKGKqPMAQLV/fc63ylk/uDtPr
+        HjaRGaxaWaaLFq2RF2x2DX4e+EGuSi+R6eq5HdVBqyd1LdBuf6Vffu1PfaCE8ZQsjVefTP9K
+        i++Qay9ftfMnu85er++PImYdOh3k+DK4W3tdX87H2XzPA2545M9P+J+90farp3LK/L8+V/mW
+        uM4w2eP5UDl4/p+30869OvjyW5dKvcCx9fIclkcKdjxwlJuS/VD1xQm1wNqrbafzMoOsFHM4
+        JpcpsRRnJBpqMRcVJwIAibESidkDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDIsWRmVeSWpSXmKPExsWy7bCSvK7SxmNxBp9Wa1q8/HmVzeLT+mWs
+        FvOPnGO1OH9+A7vFzS1HWSw2Pb7GanF51xw2ixnn9zFZdF/fwWax/Pg/Jov/e3awWyzdepPR
+        gcfjcl8vk8emVZ1sHpuX1Hu0nNzP4vHx6S0Wj74tqxg9Pm+S82g/0M0UwBHFZZOSmpNZllqk
+        b5fAlbF380v2gmNcFRNv7GdrYLzL0cXIySEhYCJxbcMD1i5GLg4hgR2MEmvO/2CDSEhLXN84
+        gR3CFpZY+e85O0TRK0aJKZN6WUESbAK6EjsWt4E1iADZm28sBytiFrjMJPFn6VpGiI5HjBJt
+        /2cxgVRxCuhJfJz5EswWFnCSeH9qLjOIzSKgKtG47gcjiM0rYCnx/vVfdghbUOLkzCcsIDaz
+        gLZE78NWRhh72cLXzBDnKUj8fLqMFeIKN4k5L39A1YhLHP3ZwzyBUXgWklGzkIyahWTULCQt
+        CxhZVjFKphYU56bnFhsWGOWllusVJ+YWl+al6yXn525iBEeoltYOxj2rPugdYmTiYDzEKMHB
+        rCTCu5D/aJwQb0piZVVqUX58UWlOavEhRmkOFiVx3q+zFsYJCaQnlqRmp6YWpBbBZJk4OKUa
+        mPg0o+TshF/VdRiZr/O7NYtnWzK7fkiT6nT5mO+KiXELDKuFvr/qq6/Klj55kEvj3dq8zSLL
+        2O4qcp+/cqqv+NXxF49O/WG4V+ojdvRy3ok7NYea54ax8aqsXXLv7q9V3+IKetjv64kkSIbN
+        flhU3TKn8N+kLYt2FQnYh86xfBR3ND6r/IHFr2MKzW+vyYupRgo2SXCJqp/sv82yxStymdL5
+        w0Zvl3JLxFyYFPDxDQN3yp0Ozl3itysfT1/qt8++x3rnkpTsh4zP5wm0TPlt1XDnh1SZO6O9
+        ve+tut+fGFUibTfZ3Dkr9cuN5TXP+tpF0ic2T1Pe7pWs4mNe7FBlaLA7sInv94Fvui2hS6Kv
+        KbEUZyQaajEXFScCAIfNOYg/AwAA
+X-CMS-MailID: 20200521164938epcas5p332682bce7ac711559181361ec1868fc5
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200514005313epcas5p3eac58d00d9f617b860a3ac607c8413ec
+References: <20200514003914.26052-1-alim.akhtar@samsung.com>
+        <CGME20200514005313epcas5p3eac58d00d9f617b860a3ac607c8413ec@epcas5p3.samsung.com>
+        <20200514003914.26052-11-alim.akhtar@samsung.com>
+        <20200519071636.GA6971@kozik-lap>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 19, 2020 at 10:46:54AM +0200, Martin Wilck wrote:
-> On Mon, 2020-05-18 at 21:31 +0300, Roman Bolshakov wrote:
-> > The driver performs SCR (state change registration) in all modes
-> > including pure target mode.
-> > 
-> > For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for
-> > the
-> > port mentioned in the RSCN and fabric rescan is scheduled. During the
-> > rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
-> > the port that caused the RSCN.
-> > 
-> > In target mode, the session deletion has an impact on ATIO handler,
-> > qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
-> > incoming from the deleted session. qlt_handle_cmd_for_atio() and
-> > qlt_handle_task_mgmt() return -EFAULT if they are not able to find
-> > session of the command/TMF, and that results in invocation of
-> > qlt_send_busy():
-> > 
-> >   qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
-> >   qla_target(0): Unable to send command to target, sending BUSY
-> > status
-> > 
-> > Such response causes command timeout on the initiator. Error handler
-> > thread on the initiator will be spawned to abort the commands:
-> > 
-> >   scsi 23:0:0:0: tag#0 abort scheduled
-> >   scsi 23:0:0:0: tag#0 aborting command
-> >   qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
-> >   qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0
-> > -- 0 2003.
-> > 
-> > Command abort is rejected by target and fails (2003), error handler
-> > then
-> > tries to perform DEVICE RESET and TARGET RESET but they're also
-> > doomed
-> > to fail because TMFs are ignored for the deleted sessions.
-> > 
-> > Then initiator makes BUS RESET that resets the link via
-> > qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator
-> > port
-> > up, SAN switch detects that and sends RSCN to the target port and it
-> > fails again the same way as described above. It never goes out of the
-> > loop.
-> > 
-> > The change breaks the RSCN loop by keeping initiator sessions
-> > mentioned
-> > in RSCN payload in all modes, including dual and pure target mode.
-> > 
-> > Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
-> > Cc: Quinn Tran <qutran@marvell.com>
-> > Cc: Arun Easi <aeasi@marvell.com>
-> > Cc: Nilesh Javali <njavali@marvell.com>
-> > Cc: Bart Van Assche <bvanassche@acm.org>
-> > Cc: Daniel Wagner <dwagner@suse.de>
-> > Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-> > Cc: Martin Wilck <mwilck@suse.com>
-> > Cc: stable@vger.kernel.org # v5.4+
-> > Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
-> > ---
-> >  drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > Hi Martin,
-> > 
-> > Please apply the patch to scsi-fixes/5.7 at your earliest
-> > convenience.
-> > 
-> > qla2xxx in target and, likely, dual mode is unusable in some SAN
-> > fabrics
-> > due to the bug.
-> > 
-> > Thanks,
-> > Roman
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_gs.c
-> > b/drivers/scsi/qla2xxx/qla_gs.c
-> > index 42c3ad27f1cb..b9955af5cffe 100644
-> > --- a/drivers/scsi/qla2xxx/qla_gs.c
-> > +++ b/drivers/scsi/qla2xxx/qla_gs.c
-> > @@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t
-> > *vha, srb_t *sp)
-> >  			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
-> >  				qla2x00_clear_loop_id(fcport);
-> >  				fcport->flags |= FCF_FABRIC_DEVICE;
-> > -			} else if (fcport->d_id.b24 != rp->id.b24 ||
-> > -				fcport->scan_needed) {
-> > +			} else if ((fcport->d_id.b24 != rp->id.b24 ||
-> > +				    fcport->scan_needed) &&
-> > +				   (fcport->port_type != FCT_INITIATOR
-> > &&
-> > +				    fcport->port_type !=
-> > FCT_NVME_INITIATOR)) {
-> >  				qlt_schedule_sess_for_deletion(fcport);
-> >  			}
-> >  			fcport->d_id.b24 = rp->id.b24;
-> 
-> Hi Roman,
-> 
-> what if the session does need to be deleted eventually?
 
-Hi Martin,
 
-I'm sorry for the delay, it took a while to complete the answer :)
-
-In the other reply to the patch I sent a proposal for v2. We might go
-with it to handle N_Port_ID changes. N_Port_ID may change in the
-switched fabric topology if initiator cable is replugged to another
-physical port on the SAN switch (some fabrics assign physical port
-number to domain area). Physical reconnection means initiator is going
-to relogin anyway and previous session is no longer needed.
-
-Third variant would be to check non-NULL TCM session on the fcport instead of
-checking against fc_port type but that will be less reliable if qla2xxx_nvmet
-is added to the mainline, i.e.:
-
-     } else if (fcport->d_id.b24 != rp->id.b24 ||
-                (fcport->scan_needed &&
-                 !fcport->se_sess)) {
-             qlt_schedule_sess_for_deletion(fcport);
-     }
-
-Fourth variant would be to disable SCR in pure target mode as Firmware
-Interface Specification suggests. Although, the issue would still exit
-in dual mode. Proposal #2 and #3 fix the issue in target and dual modes.
-
-> E.g. if after the RSCN the connection to the initiator is actually
-> lost, either temporarily or for good? Would the session be deleted in
-> some other code path, or would it just continue to lurk around?
-> 
-
-RSCN per-se shouldn't be a reason to delete initiator IMO, since it's
-just a notification that state of the entity in the fabric has changed.
-Nx_Port should figure out what changed and then decide if it's worth to
-keep session of the port.
-
-There are multiple cases in v5.7 when session deletion happens. I tried
-to cover them below in cscope order and inspected the code around.
-Pardon me for mistakes if I overlooked something:
-
-1.
-2.
-3.  GPN_ID request may be issued to find if something has changed with a
-    port after an RSCN.
-
-    I don't see if it's called anywhere though. There's an request of
-    GPN_ID inside GPN_ID response handling but it's never called
-    outside. So it looks a kind of dead code:
-
-    qla24xx_post_gpnid_work() sends QLA_EVT_GPNID ->
-    qla2x00_do_work() dispatches the event to qla24xx_async_gpnid() ->
-    qla24xx_async_gpnid() sends IOCB with GPN_ID to fimrware and sets up
-    call back to qla2x00_async_gpnid_sp_done() ->
-    qla2x00_async_gpnid_sp_done() calls qla24xx_post_gpnid_work() if the
-    IOCB timed out or RSCN arrived in the middle of the request.
-
-
-    If GPN_ID request fails, all session on the host are deleted in
-    qla24xx_handle_gpnid_event(). It's kind of weird that it deletes
-    everything. May be it was expected to look like this to delete only
-    the port that was requested in the GPN_ID request (ea->id.b24):
-
-      if (ea->rc) {
-              /* cable is disconnected */
-              list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
-                      if (fcport->d_id.b24 == ea->id.b24) {
-                              fcport->scan_state = QLA_FCPORT_SCAN;
-
-         		      qlt_schedule_sess_for_deletion(fcport);
-         	     }
-              }
-      } else {
-
-    Instead of (5.7/scsi-fixes):
-
-      if (ea->rc) {
-              /* cable is disconnected */
-              list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
-                      if (fcport->d_id.b24 == ea->id.b24)
-                              fcport->scan_state = QLA_FCPORT_SCAN;
-
-                      qlt_schedule_sess_for_deletion(fcport);
-              }
-      } else {
-
-
-    If GPN_ID request suceeds, and there's a session for the port with
-    the same N_Port_Name, it deletes all sessions on the host in
-    qla24xx_handle_gpnid_event(). It looks like too heavy hammer IMO,
-    maybe it was expected to behave like this to replace only session
-    session with the same N_Port_Name (including deleted sessions):
-
-      list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
-          list) {
-              if ((conflict->d_id.b24 == ea->id.b24) &&
-                  (fcport != conflict)) {
-                      /*
-                       * 2 fcports with conflict Nport ID or
-                       * an existing fcport is having nport ID
-                       * conflict with new fcport.
-                       */
-
-                      conflict->scan_state = QLA_FCPORT_SCAN;
-
-         	      qlt_schedule_sess_for_deletion(conflict);
-              }
-      }
-
-    Instead of (5.7/scsi-fixes):
-
-      list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
-          list) {
-              if ((conflict->d_id.b24 == ea->id.b24) &&
-                  (fcport != conflict))
-                      /*
-                       * 2 fcports with conflict Nport ID or
-                       * an existing fcport is having nport ID
-                       * conflict with new fcport.
-                       */
-
-                      conflict->scan_state = QLA_FCPORT_SCAN;
-
-              qlt_schedule_sess_for_deletion(conflict);
-      }
-
-    If GPN_ID request succeeds, no sessions were were found for the
-    N_Port_Name but there's a session with conflicting N_Port_ID, it gets
-    deleted in qla24xx_handle_gpnid_event().
-
-4.
-5.  Session is deleted during fabric rescan in qla24xx_async_gnnft_done()
-    if RSCN had N_Port_ID of the session (**The patch aims to address
-    the issue**) or N_Port_ID was changed in GPN_FT reply.
-
-    Sessions missing in GPN_FT response are deleted after fabric
-    discovery in qla24xx_async_gnnft_done() if driver is running in pure
-    initiator or dual mode. So, if zone definition changed or some ports
-    logged out, sessions of the ports that somehow disappeared from the
-    zone are going to be deleted.
-
-6.
-7.  Session is deleted if ADISC to an N_Port fails
-    qla24xx_handle_adisc_event(). It's also going to be deleted if
-    GPN_ID was done for the port or RSCN for the port arrived during ADISC.
-
-    I'm not sure but it may cause session loss for the target
-    mode and then I/O timeout on the attached initiator.
-
-8.
-9.  RSCN or fabric rescan during GNL will trigger session deletion in
-    qla24xx_handle_gnl_done_event().
-
-10.
-11. GPDB handling during login will delete session in
-    qla24xx_handle_gpdb_event() if RSCN has happened or GPN_ID was made
-    in the middle of the GPDB for the port. If ports are detected by
-    GPDB as logged out or logout is pending, their session is also
-    deleted.
-
-12. Session is going to be deleted in P2P mode if a spare N_Port handle
-    can't be found in qla_chk_n2n_b4_login().
-
-13. Failed PLOGI in all topologies but P2P is going to trigger session
-    deletion in qla24xx_fcport_handle_login().
-
-14. Session is deleted after an unsuccessful PRLI in
-    qla24xx_handle_prli_done_event(). I wonder if dual FCP/FC-NVMe
-    sessions are impacted by that.
-
-15.
-16. RSCN during PLOGI or duplicated N_Port handle will trigger session
-    deletion in qla24xx_handle_plogi_done_event()
-
-17. Missing target, switch, name server and NVMe sessions are deleted in
-    after rescan of arbitrated loop by qla2x00_configure_local_loop() in
-    dual and pure initiator mode.
-
-    This check is similar to 5. Code duplication can be removed.
-
-18. An RSCN during port registration is going to trigger deletion of the
-    related session in qla_register_fcport_fn().
-
-19. Missing target, switch, name server and NVMe sessions are deleted
-    after sync fabric scan by qla2x00_find_all_fabric_devs() in dual and
-    pure initiator mode.
-
-    The code is similar to 5 and 17, perhaps the duplication can be
-    removed.
-
-20. Session is deleted in qla2x00_els_dcmd2_sp_done() if duplicate
-    N_Port handle was detected by firmware during Login IOCB.
-
-21. Session is deleted in initiator mode if firmware detects port logout
-    in qla2x00_async_event()
-
-22. Session is deleted in during initiator I/O in qla2x00_status_entry()
-    if firmware returns a kind of logged out state.
-
-23. Conflicting session with the same N_Port_ID is deleted in cases when
-    login is performed by firmware in qla24xx_report_id_acquisition().
-
-24. In case of link loss, all session are deleted in
-    qla2x00_mark_all_devices_lost().
-
-25. Another session with the same N_Port_ID is deleted during the
-    session init in qla24xx_create_new_sess().
-
-26. All target sessions are deleted in qlt_clear_tgt_db() as part of
-    target shutdown in qlt_stop_phase1() and in case of LIP or if Port
-    configuration of the target port was changed.
-
-27. Session deletion happens in the dead code, qlt_fc_port_deleted().
-    Perhaps the function can be safely removed.
-
-28. Session is deleted for a port that issued LOGO, TPRLO and PRLO in
-    qlt_xmit_tm_rsp().
-
-29. Session is deleted in qlt_do_ctio_completion() during the I/O in
-    target mode if firmware detects initiator logout and responds to the
-    driver with a related error.
-
-30.
-31.
-32. A PLOGI handler is going to delete stale sessions in
-    qlt_find_sess_invalidate_other() if S_ID or N_Port handle of
-    the PLOGI matches N_Port_ID or N_Port handle of an existing session.
-
-33. PLOGI, PRLI will result in session deletion if the session is
-    already established.
-
-    FWIW, NVMe PRLI may destroy FCP session in case of simultaneous
-    FCP/NVMe target, current code doesn't handle multiple process logins
-    well. It shouldn't be a big deal since qla2xxx_nvmet hasn't been
-    merged to mainline yet.
-
-34. TPRLO, PRLO, LOGO result in session deletion in qlt_24xx_handle_els()
-    After inspecting the code I think, only LOGO should fully delete the
-    session.
-
-    In the case of mixed FC-NVMe/FCP initiator/target, PRLO/TPRLO
-    to/from SCSI target may break sessions of FC-NVMe, likewise FC-NVMe
-    PRLO/TPRLO may break FCP sessions.
-
-    PRLO and TPRLO (which is like PRLO from all ports) should only
-    downgrade session of the requested FC-4 type to a kind of "process
-    (i.e. FCP/FC-NVMe) logged out" state rather than delete it. TPRLO
-    should log out all sessions of the FC-4 type on the target port,
-    while PRLO should do it only for the originator of the ELS request.
-
-
-> E.g. if after the RSCN the connection to the initiator is actually
-> lost, either temporarily or for good? Would the session be deleted in
-> some other code path, or would it just continue to lurk around?
-> 
-
-So, as a summary, it seems that the existing code mostly keeps sessions
-until:
- - a conflict of N_Port_ID, N_Port_Name or N_Port handle detected;
- - the session is in the middle of refresh/rescan and RSCN arrives;
- - there's an explicit process or port logout from the session, i.e.
-   PRLO, TPRLO, LOGO
- - there's a new port or process login from the same session, i.e.
-   PLOGI, PRLI;
- - target is shut down;
- - target port link is reset;
-
-And if a session of an initiator is deleted when driver works in target
-mode, new session won't be established until a PLOGI and PRLI come from
-the initiator.
-
-The assumption is used qlt_handle_cmd_for_atio() and
-qlt_handle_task_mgmt() to discard commands and TMFs from initiators that
-are not logged in.
-
-Thanks,
-Roman
+> -----Original Message-----
+> From: Krzysztof Kozlowski <krzk=40kernel.org>
+> Sent: 19 May 2020 12:47
+> To: Alim Akhtar <alim.akhtar=40samsung.com>
+> Cc: robh=40kernel.org; devicetree=40vger.kernel.org; linux-scsi=40vger.ke=
+rnel.org;
+> avri.altman=40wdc.com; martin.petersen=40oracle.com;
+> kwmad.kim=40samsung.com; stanley.chu=40mediatek.com;
+> cang=40codeaurora.org; linux-samsung-soc=40vger.kernel.org; linux-arm-
+> kernel=40lists.infradead.org; linux-kernel=40vger.kernel.org
+> Subject: Re: =5BPATCH v9 10/10=5D arm64: dts: Add node for ufs exynos7
+>=20
+> On Thu, May 14, 2020 at 06:09:14AM +0530, Alim Akhtar wrote:
+> > Adding dt node foe UFS and UFS-PHY for exynos7 SoC.
+> >
+> > Signed-off-by: Alim Akhtar <alim.akhtar=40samsung.com>
+> > Tested-by: Pawe=C5=82=20Chmiel=20<pawel.mikolaj.chmiel=40gmail.com>=0D=
+=0A>=20>=20---=0D=0A>=20>=20=20.../boot/dts/exynos/exynos7-espresso.dts=20=
+=20=20=20=20=20=7C=20=204=20++=0D=0A>=20>=20=20arch/arm64/boot/dts/exynos/e=
+xynos7.dtsi=20=20=20=20=20=20=20=7C=2043=20++++++++++++++++++-=0D=0A>=20>=
+=20=202=20files=20changed,=2045=20insertions(+),=202=20deletions(-)=0D=0A>=
+=20=0D=0A>=20I=20will=20pick=20it=20up=20after=20all=20bindings=20get=20Rob=
+'s=20ack=20(or=20are=20picked=20up=20as=20well).=20=20The=0D=0A>=20second=
+=20bindings=20patch=20are=20still=20pending=20on=20that.=0D=0A>=20=0D=0ATha=
+nk=20Krzysztof,=0D=0AYes,=20one=20binding=20still=20awaiting=20Rob's=20ack,=
+=20I=20have=20addressed=20his=20comment=20in=20this=20v9=20series.=0D=0AHop=
+ing=20he=20will=20find=20some=20time=20to=20review=20the=20same.=0D=0A=0D=
+=0A>=20Best=20regards,=0D=0A>=20Krzysztof=0D=0A=0D=0A
