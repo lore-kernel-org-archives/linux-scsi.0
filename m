@@ -2,369 +2,449 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AEE4C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:12:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A48FDC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:17:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED1502072C
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:12:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81E2F207D8
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 15:17:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fitc3n/u"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="c42Y1dMY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729534AbgEUPMq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 11:12:46 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47629 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727898AbgEUPMq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 11:12:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590073963;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=M6CgIrqwtx6L786prVqd3u5XjZAvtvwbUH9C4cru9Gc=;
-        b=fitc3n/ukjm78B+DRZyXxZQUWPpDEvN5geeNRYxUq10qjdmBR++wYSgrz+Xq9ENlFuirms
-        lEq3YN6KjiG1tqccazB+K9fVPumnZCtNidtQYDmLmuzJ9P6BrJMGq4qcJElaQVT+UHpTBw
-        bpd6yRSU9I0ZcT2DRhfwqIJvjj/WC+g=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-215-Jx2fp_fcNwWKkNps3ODd_w-1; Thu, 21 May 2020 11:12:39 -0400
-X-MC-Unique: Jx2fp_fcNwWKkNps3ODd_w-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1729678AbgEUPRi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 11:17:38 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:41392 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727988AbgEUPRh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 May 2020 11:17:37 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 170B44999F;
+        Thu, 21 May 2020 15:17:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1590074250;
+         x=1591888651; bh=azTFsx5pT+xwmFKCNHnOoz6GCjXdAT0cN0zwshK92aU=; b=
+        c42Y1dMYqMUIF5HddFaTp64B8rVm58yCB1DYblVQ2QEn4f/YjGJBXEQOWLzIiDYk
+        OvDR2BRu/zfR0amudL9bEPIqT9yQcb8ZfbcmftfQNTS5shs82DuYgfPEwplTz6W5
+        CTKUVgzOZHVPZwEhEHvIvCNtI/cwnpswgkeQzdN7Z9g=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id U1vjTcTe5Nr2; Thu, 21 May 2020 18:17:30 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 645B58014D4;
-        Thu, 21 May 2020 15:12:38 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.40.192.92])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F358410372CB;
-        Thu, 21 May 2020 15:12:36 +0000 (UTC)
-Subject: Re: [v2 4/5] mpt3sas: Handle RDPQ DMA allocation in same 4G region
-To:     Suganath Prabu <suganath-prabu.subramani@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     hch@infradead.org, Sathya.Prakash@broadcom.com,
-        sreekanth.reddy@broadcom.com
-References: <1587626596-1044-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1587626596-1044-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <3849d23c-8af5-7427-2f56-7c78d996d1c2@redhat.com>
-Date:   Thu, 21 May 2020 17:12:36 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        by mta-01.yadro.com (Postfix) with ESMTPS id ACE4D47D4C;
+        Thu, 21 May 2020 18:17:29 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 21
+ May 2020 18:17:31 +0300
+Date:   Thu, 21 May 2020 18:17:30 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Martin Wilck <mwilck@suse.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <target-devel@vger.kernel.org>, <linux@yadro.com>,
+        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Daniel Wagner <dwagner@suse.de>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        <stable@vger.kernel.org>
+Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
+Message-ID: <20200521151730.GA73599@SPB-NB-133.local>
+References: <20200518183141.66621-1-r.bolshakov@yadro.com>
+ <3ee76f0fc5df716523bfbdd34726b6cccd4971cd.camel@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <1587626596-1044-5-git-send-email-suganath-prabu.subramani@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <3ee76f0fc5df716523bfbdd34726b6cccd4971cd.camel@suse.com>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 4/23/20 9:23 AM, Suganath Prabu wrote:
-> For INVADER_SERIES each set of 8 reply queues (0 - 7, 8 - 15,..) and
-> VENTURA_SERIES each set of 16 reply queues (0 - 15, 16 - 31,..) should
-> be within 4 GB boundary. Driver uses limitation of VENTURA_SERIES to
-> manage INVADER_SERIES as well. So here driver is allocating the DMA able
-> memory for RDPQ's accordingly.
+On Tue, May 19, 2020 at 10:46:54AM +0200, Martin Wilck wrote:
+> On Mon, 2020-05-18 at 21:31 +0300, Roman Bolshakov wrote:
+> > The driver performs SCR (state change registration) in all modes
+> > including pure target mode.
+> > 
+> > For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for
+> > the
+> > port mentioned in the RSCN and fabric rescan is scheduled. During the
+> > rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
+> > the port that caused the RSCN.
+> > 
+> > In target mode, the session deletion has an impact on ATIO handler,
+> > qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
+> > incoming from the deleted session. qlt_handle_cmd_for_atio() and
+> > qlt_handle_task_mgmt() return -EFAULT if they are not able to find
+> > session of the command/TMF, and that results in invocation of
+> > qlt_send_busy():
+> > 
+> >   qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
+> >   qla_target(0): Unable to send command to target, sending BUSY
+> > status
+> > 
+> > Such response causes command timeout on the initiator. Error handler
+> > thread on the initiator will be spawned to abort the commands:
+> > 
+> >   scsi 23:0:0:0: tag#0 abort scheduled
+> >   scsi 23:0:0:0: tag#0 aborting command
+> >   qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
+> >   qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0
+> > -- 0 2003.
+> > 
+> > Command abort is rejected by target and fails (2003), error handler
+> > then
+> > tries to perform DEVICE RESET and TARGET RESET but they're also
+> > doomed
+> > to fail because TMFs are ignored for the deleted sessions.
+> > 
+> > Then initiator makes BUS RESET that resets the link via
+> > qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator
+> > port
+> > up, SAN switch detects that and sends RSCN to the target port and it
+> > fails again the same way as described above. It never goes out of the
+> > loop.
+> > 
+> > The change breaks the RSCN loop by keeping initiator sessions
+> > mentioned
+> > in RSCN payload in all modes, including dual and pure target mode.
+> > 
+> > Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
+> > Cc: Quinn Tran <qutran@marvell.com>
+> > Cc: Arun Easi <aeasi@marvell.com>
+> > Cc: Nilesh Javali <njavali@marvell.com>
+> > Cc: Bart Van Assche <bvanassche@acm.org>
+> > Cc: Daniel Wagner <dwagner@suse.de>
+> > Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+> > Cc: Martin Wilck <mwilck@suse.com>
+> > Cc: stable@vger.kernel.org # v5.4+
+> > Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+> > ---
+> >  drivers/scsi/qla2xxx/qla_gs.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > Hi Martin,
+> > 
+> > Please apply the patch to scsi-fixes/5.7 at your earliest
+> > convenience.
+> > 
+> > qla2xxx in target and, likely, dual mode is unusable in some SAN
+> > fabrics
+> > due to the bug.
+> > 
+> > Thanks,
+> > Roman
+> > 
+> > diff --git a/drivers/scsi/qla2xxx/qla_gs.c
+> > b/drivers/scsi/qla2xxx/qla_gs.c
+> > index 42c3ad27f1cb..b9955af5cffe 100644
+> > --- a/drivers/scsi/qla2xxx/qla_gs.c
+> > +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> > @@ -3495,8 +3495,10 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t
+> > *vha, srb_t *sp)
+> >  			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0) {
+> >  				qla2x00_clear_loop_id(fcport);
+> >  				fcport->flags |= FCF_FABRIC_DEVICE;
+> > -			} else if (fcport->d_id.b24 != rp->id.b24 ||
+> > -				fcport->scan_needed) {
+> > +			} else if ((fcport->d_id.b24 != rp->id.b24 ||
+> > +				    fcport->scan_needed) &&
+> > +				   (fcport->port_type != FCT_INITIATOR
+> > &&
+> > +				    fcport->port_type !=
+> > FCT_NVME_INITIATOR)) {
+> >  				qlt_schedule_sess_for_deletion(fcport);
+> >  			}
+> >  			fcport->d_id.b24 = rp->id.b24;
 > 
-> 1) At driver load, set DMA Mask to 64 and allocate memory for RDPQ's.
-> 2) Check if allocated resources for RDPQ are in the same 4GB range.
-> 3) If #2 is true, continue with 64 bit DMA and go to #6
-> 4) If #2 is false, then free all the resources from #1.
-> 5) Set DMA mask to 32 and allocate RDPQ's.
-> 6) Proceed with driver loading and other allocations
-> ---
-> v1 Change log:
-> 1) Use one dma pool for RDPQ's, thus removes the logic of using second
-> dma pool with align.
-> v2 Change log:
-> Added flag use_32bit_dma. If this flag is true, 32 bit coharent
-> dma is used.
+> Hi Roman,
 > 
-> Signed-off-by: Suganath Prabu <suganath-prabu.subramani@broadcom.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 152 +++++++++++++++++++++++++-----------
->  drivers/scsi/mpt3sas/mpt3sas_base.h |   3 +
->  2 files changed, 109 insertions(+), 46 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 0588941..af30e74 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -2810,7 +2810,7 @@ _base_config_dma_addressing(struct MPT3SAS_ADAPTER *ioc, struct pci_dev *pdev)
->  	int dma_mask;
->  
->  	if (ioc->is_mcpu_endpoint ||
-> -	    sizeof(dma_addr_t) == 4 ||
-> +	    sizeof(dma_addr_t) == 4 || ioc->use_32bit_dma ||
->  	    dma_get_required_mask(&pdev->dev) <= 32)
->  		dma_mask = 32;
->  	/* Set 63 bit DMA mask for all SAS3 and SAS35 controllers */
-> @@ -4807,8 +4807,8 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
->  {
->  	int i = 0;
->  	int j = 0;
-> +	int dma_alloc_count = 0;
->  	struct chain_tracker *ct;
-> -	struct reply_post_struct *rps;
->  
->  	dexitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
->  
-> @@ -4850,29 +4850,34 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
->  	}
->  
->  	if (ioc->reply_post) {
-> -		do {
-> -			rps = &ioc->reply_post[i];
-> -			if (rps->reply_post_free) {
-> -				dma_pool_free(
-> -				    ioc->reply_post_free_dma_pool,
-> -				    rps->reply_post_free,
-> -				    rps->reply_post_free_dma);
-> -				dexitprintk(ioc,
-> -					    ioc_info(ioc, "reply_post_free_pool(0x%p): free\n",
-> -						     rps->reply_post_free));
-> -				rps->reply_post_free = NULL;
-> +		dma_alloc_count = DIV_ROUND_UP(ioc->reply_queue_count,
-> +				RDPQ_MAX_INDEX_IN_ONE_CHUNK);
-> +		for (i = 0; i < ioc->reply_queue_count; i++) {
-> +			if (i % RDPQ_MAX_INDEX_IN_ONE_CHUNK == 0
-> +			    && dma_alloc_count) {
-> +				if (ioc->reply_post[i].reply_post_free) {
-> +					dma_pool_free(
-> +					    ioc->reply_post_free_dma_pool,
-> +					    ioc->reply_post[i].reply_post_free,
-> +					ioc->reply_post[i].reply_post_free_dma);
-> +					dexitprintk(ioc, ioc_info(ioc,
-> +					   "reply_post_free_pool(0x%p): free\n",
-> +					   ioc->reply_post[i].reply_post_free));
-> +					ioc->reply_post[i].reply_post_free =
-> +									NULL;
-> +				}
-> +				--dma_alloc_count;
->  			}
-> -		} while (ioc->rdpq_array_enable &&
-> -			   (++i < ioc->reply_queue_count));
-> +		}
-> +		dma_pool_destroy(ioc->reply_post_free_dma_pool);
->  		if (ioc->reply_post_free_array &&
->  			ioc->rdpq_array_enable) {
->  			dma_pool_free(ioc->reply_post_free_array_dma_pool,
-> -				ioc->reply_post_free_array,
-> -				ioc->reply_post_free_array_dma);
-> +			    ioc->reply_post_free_array,
-> +			    ioc->reply_post_free_array_dma);
->  			ioc->reply_post_free_array = NULL;
->  		}
->  		dma_pool_destroy(ioc->reply_post_free_array_dma_pool);
-> -		dma_pool_destroy(ioc->reply_post_free_dma_pool);
->  		kfree(ioc->reply_post);
->  	}
->  
-> @@ -4948,36 +4953,75 @@ mpt3sas_check_same_4gb_region(long reply_pool_start_address, u32 pool_sz)
->  static int
->  base_alloc_rdpq_dma_pool(struct MPT3SAS_ADAPTER *ioc, int sz)
->  {
-> -	int i;
-> +	int i = 0;
-> +	u32 dma_alloc_count = 0;
-> +	int reply_post_free_sz = ioc->reply_post_queue_depth *
-> +		sizeof(Mpi2DefaultReplyDescriptor_t);
->  	int count = ioc->rdpq_array_enable ? ioc->reply_queue_count : 1;
->  
->  	ioc->reply_post = kcalloc(count, sizeof(struct reply_post_struct),
->  			GFP_KERNEL);
->  	if (!ioc->reply_post)
->  		return -ENOMEM;
-> +	/*
-> +	 *  For INVADER_SERIES each set of 8 reply queues(0-7, 8-15, ..) and
-> +	 *  VENTURA_SERIES each set of 16 reply queues(0-15, 16-31, ..) should
-> +	 *  be within 4GB boundary i.e reply queues in a set must have same
-> +	 *  upper 32-bits in their memory address. so here driver is allocating
-> +	 *  the DMA'able memory for reply queues according.
-> +	 *  Driver uses limitation of
-> +	 *  VENTURA_SERIES to manage INVADER_SERIES as well.
-> +	 */
-> +	dma_alloc_count = DIV_ROUND_UP(ioc->reply_queue_count,
-> +				RDPQ_MAX_INDEX_IN_ONE_CHUNK);
->  	ioc->reply_post_free_dma_pool =
-> -	    dma_pool_create("reply_post_free pool",
-> -	    &ioc->pdev->dev, sz, 16, 0);
-> +		dma_pool_create("reply_post_free pool",
-> +		    &ioc->pdev->dev, sz, 16, 0);
->  	if (!ioc->reply_post_free_dma_pool)
->  		return -ENOMEM;
-> -	i = 0;
-> -	do {
-> -		ioc->reply_post[i].reply_post_free =
-> -		    dma_pool_zalloc(ioc->reply_post_free_dma_pool,
-> -		    GFP_KERNEL,
-> -		    &ioc->reply_post[i].reply_post_free_dma);
-> -		if (!ioc->reply_post[i].reply_post_free)
-> -			return -ENOMEM;
-> -		dinitprintk(ioc,
-> -			ioc_info(ioc, "reply post free pool (0x%p): depth(%d),"
-> -			    "element_size(%d), pool_size(%d kB)\n",
-> -			    ioc->reply_post[i].reply_post_free,
-> -			    ioc->reply_post_queue_depth, 8, sz / 1024));
-> -		dinitprintk(ioc,
-> -			ioc_info(ioc, "reply_post_free_dma = (0x%llx)\n",
-> -			    (u64)ioc->reply_post[i].reply_post_free_dma));
-> +	for (i = 0; i < ioc->reply_queue_count; i++) {
-> +		if ((i % RDPQ_MAX_INDEX_IN_ONE_CHUNK == 0) && dma_alloc_count) {
-> +			ioc->reply_post[i].reply_post_free =
-ioc->reply_post is allocated with 'count' size, which may be smaller
-than ioc->reply_queue_count
-Probably this causes some older systems to not boot.
-The problem should be fixed before it comes to mainline.
+> what if the session does need to be deleted eventually?
 
-Cheers,
-tomash
+Hi Martin,
 
+I'm sorry for the delay, it took a while to complete the answer :)
 
-> +			    dma_pool_alloc(ioc->reply_post_free_dma_pool,
-> +				GFP_KERNEL,
-> +				&ioc->reply_post[i].reply_post_free_dma);
-> +			if (!ioc->reply_post[i].reply_post_free)
-> +				return -ENOMEM;
-> +			/*
-> +			 * Each set of RDPQ pool must satisfy 4gb boundary
-> +			 * restriction.
-> +			 * 1) Check if allocated resources for RDPQ pool are in
-> +			 *	the same 4GB range.
-> +			 * 2) If #1 is true, continue with 64 bit DMA.
-> +			 * 3) If #1 is false, return 1. which means free all the
-> +			 * resources and set DMA mask to 32 and allocate.
-> +			 */
-> +			if (!mpt3sas_check_same_4gb_region(
-> +				(long)ioc->reply_post[i].reply_post_free, sz)) {
-> +				dinitprintk(ioc,
-> +				    ioc_err(ioc, "bad Replypost free pool(0x%p)"
-> +				    "reply_post_free_dma = (0x%llx)\n",
-> +				    ioc->reply_post[i].reply_post_free,
-> +				    (unsigned long long)
-> +				    ioc->reply_post[i].reply_post_free_dma));
-> +				return -EAGAIN;
-> +			}
-> +			memset(ioc->reply_post[i].reply_post_free, 0,
-> +						RDPQ_MAX_INDEX_IN_ONE_CHUNK *
-> +						reply_post_free_sz);
-> +			dma_alloc_count--;
->  
-> -	} while (ioc->rdpq_array_enable && ++i < ioc->reply_queue_count);
-> +		} else {
-> +			ioc->reply_post[i].reply_post_free =
-> +			    (Mpi2ReplyDescriptorsUnion_t *)
-> +			    ((long)ioc->reply_post[i-1].reply_post_free
-> +			    + reply_post_free_sz);
-> +			ioc->reply_post[i].reply_post_free_dma =
-> +			    (dma_addr_t)
-> +			    (ioc->reply_post[i-1].reply_post_free_dma +
-> +			    reply_post_free_sz);
-> +		}
-> +	}
->  	return 0;
->  }
->  
-> @@ -4995,10 +5039,12 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
->  	u16 chains_needed_per_io;
->  	u32 sz, total_sz, reply_post_free_sz, reply_post_free_array_sz;
->  	u32 retry_sz;
-> +	u32 rdpq_sz = 0;
->  	u16 max_request_credit, nvme_blocks_needed;
->  	unsigned short sg_tablesize;
->  	u16 sge_size;
->  	int i, j;
-> +	int ret = 0;
->  	struct chain_tracker *ct;
->  
->  	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
-> @@ -5152,14 +5198,28 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
->  	/* reply post queue, 16 byte align */
->  	reply_post_free_sz = ioc->reply_post_queue_depth *
->  	    sizeof(Mpi2DefaultReplyDescriptor_t);
-> -
-> -	sz = reply_post_free_sz;
-> +	rdpq_sz = reply_post_free_sz * RDPQ_MAX_INDEX_IN_ONE_CHUNK;
->  	if (_base_is_controller_msix_enabled(ioc) && !ioc->rdpq_array_enable)
-> -		sz *= ioc->reply_queue_count;
-> -	if (base_alloc_rdpq_dma_pool(ioc, sz))
-> -		goto out;
-> -	total_sz += sz * (!ioc->rdpq_array_enable ? 1 : ioc->reply_queue_count);
-> -
-> +		rdpq_sz = reply_post_free_sz * ioc->reply_queue_count;
-> +	ret = base_alloc_rdpq_dma_pool(ioc, rdpq_sz);
-> +	if (ret == -EAGAIN) {
-> +		/*
-> +		 * Free allocated bad RDPQ memory pools.
-> +		 * Change dma coherent mask to 32 bit and reallocate RDPQ
-> +		 */
-> +		_base_release_memory_pools(ioc);
-> +		ioc->use_32bit_dma = true;
-> +		if (_base_config_dma_addressing(ioc, ioc->pdev) != 0) {
-> +			ioc_err(ioc,
-> +			    "32 DMA mask failed %s\n", pci_name(ioc->pdev));
-> +			return -ENODEV;
-> +		}
-> +		if (base_alloc_rdpq_dma_pool(ioc, rdpq_sz))
-> +			return -ENOMEM;
-> +	} else if (ret == -ENOMEM)
-> +		return -ENOMEM;
-> +	total_sz = rdpq_sz * (!ioc->rdpq_array_enable ? 1 :
-> +	    DIV_ROUND_UP(ioc->reply_queue_count, RDPQ_MAX_INDEX_IN_ONE_CHUNK));
->  	ioc->scsiio_depth = ioc->hba_queue_depth -
->  	    ioc->hi_priority_depth - ioc->internal_depth;
->  
-> @@ -5171,7 +5231,6 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
->  		    ioc_info(ioc, "scsi host: can_queue depth (%d)\n",
->  			     ioc->shost->can_queue));
->  
-> -
->  	/* contiguous pool for request and chains, 16 byte align, one extra "
->  	 * "frame for smid=0
->  	 */
-> @@ -7141,6 +7200,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
->  	ioc->smp_affinity_enable = smp_affinity_enable;
->  
->  	ioc->rdpq_array_enable_assigned = 0;
-> +	ioc->use_32bit_dma = 0;
->  	if (ioc->is_aero_ioc)
->  		ioc->base_readl = &_base_readl_aero;
->  	else
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index caae040..5a83971 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -367,6 +367,7 @@ struct mpt3sas_nvme_cmd {
->  #define MPT3SAS_HIGH_IOPS_REPLY_QUEUES		8
->  #define MPT3SAS_HIGH_IOPS_BATCH_COUNT		16
->  #define MPT3SAS_GEN35_MAX_MSIX_QUEUES		128
-> +#define RDPQ_MAX_INDEX_IN_ONE_CHUNK		16
->  
->  /* OEM Specific Flags will come from OEM specific header files */
->  struct Mpi2ManufacturingPage10_t {
-> @@ -1063,6 +1064,7 @@ typedef void (*MPT3SAS_FLUSH_RUNNING_CMDS)(struct MPT3SAS_ADAPTER *ioc);
->   * @thresh_hold: Max number of reply descriptors processed
->   *				before updating Host Index
->   * @drv_support_bitmap: driver's supported feature bit map
-> + * @use_32bit_dma: Flag to use 32 bit consistent dma mask
->   * @scsi_io_cb_idx: shost generated commands
->   * @tm_cb_idx: task management commands
->   * @scsih_cb_idx: scsih internal commands
-> @@ -1252,6 +1254,7 @@ struct MPT3SAS_ADAPTER {
->  	u8		high_iops_queues;
->  	u32		drv_support_bitmap;
->  	bool		enable_sdev_max_qd;
-> +	bool		use_32bit_dma;
->  
->  	/* internal commands, callback index */
->  	u8		scsi_io_cb_idx;
+In the other reply to the patch I sent a proposal for v2. We might go
+with it to handle N_Port_ID changes. N_Port_ID may change in the
+switched fabric topology if initiator cable is replugged to another
+physical port on the SAN switch (some fabrics assign physical port
+number to domain area). Physical reconnection means initiator is going
+to relogin anyway and previous session is no longer needed.
+
+Third variant would be to check non-NULL TCM session on the fcport instead of
+checking against fc_port type but that will be less reliable if qla2xxx_nvmet
+is added to the mainline, i.e.:
+
+     } else if (fcport->d_id.b24 != rp->id.b24 ||
+                (fcport->scan_needed &&
+                 !fcport->se_sess)) {
+             qlt_schedule_sess_for_deletion(fcport);
+     }
+
+Fourth variant would be to disable SCR in pure target mode as Firmware
+Interface Specification suggests. Although, the issue would still exit
+in dual mode. Proposal #2 and #3 fix the issue in target and dual modes.
+
+> E.g. if after the RSCN the connection to the initiator is actually
+> lost, either temporarily or for good? Would the session be deleted in
+> some other code path, or would it just continue to lurk around?
 > 
 
+RSCN per-se shouldn't be a reason to delete initiator IMO, since it's
+just a notification that state of the entity in the fabric has changed.
+Nx_Port should figure out what changed and then decide if it's worth to
+keep session of the port.
+
+There are multiple cases in v5.7 when session deletion happens. I tried
+to cover them below in cscope order and inspected the code around.
+Pardon me for mistakes if I overlooked something:
+
+1.
+2.
+3.  GPN_ID request may be issued to find if something has changed with a
+    port after an RSCN.
+
+    I don't see if it's called anywhere though. There's an request of
+    GPN_ID inside GPN_ID response handling but it's never called
+    outside. So it looks a kind of dead code:
+
+    qla24xx_post_gpnid_work() sends QLA_EVT_GPNID ->
+    qla2x00_do_work() dispatches the event to qla24xx_async_gpnid() ->
+    qla24xx_async_gpnid() sends IOCB with GPN_ID to fimrware and sets up
+    call back to qla2x00_async_gpnid_sp_done() ->
+    qla2x00_async_gpnid_sp_done() calls qla24xx_post_gpnid_work() if the
+    IOCB timed out or RSCN arrived in the middle of the request.
+
+
+    If GPN_ID request fails, all session on the host are deleted in
+    qla24xx_handle_gpnid_event(). It's kind of weird that it deletes
+    everything. May be it was expected to look like this to delete only
+    the port that was requested in the GPN_ID request (ea->id.b24):
+
+      if (ea->rc) {
+              /* cable is disconnected */
+              list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
+                      if (fcport->d_id.b24 == ea->id.b24) {
+                              fcport->scan_state = QLA_FCPORT_SCAN;
+
+         		      qlt_schedule_sess_for_deletion(fcport);
+         	     }
+              }
+      } else {
+
+    Instead of (5.7/scsi-fixes):
+
+      if (ea->rc) {
+              /* cable is disconnected */
+              list_for_each_entry_safe(fcport, t, &vha->vp_fcports, list) {
+                      if (fcport->d_id.b24 == ea->id.b24)
+                              fcport->scan_state = QLA_FCPORT_SCAN;
+
+                      qlt_schedule_sess_for_deletion(fcport);
+              }
+      } else {
+
+
+    If GPN_ID request suceeds, and there's a session for the port with
+    the same N_Port_Name, it deletes all sessions on the host in
+    qla24xx_handle_gpnid_event(). It looks like too heavy hammer IMO,
+    maybe it was expected to behave like this to replace only session
+    session with the same N_Port_Name (including deleted sessions):
+
+      list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
+          list) {
+              if ((conflict->d_id.b24 == ea->id.b24) &&
+                  (fcport != conflict)) {
+                      /*
+                       * 2 fcports with conflict Nport ID or
+                       * an existing fcport is having nport ID
+                       * conflict with new fcport.
+                       */
+
+                      conflict->scan_state = QLA_FCPORT_SCAN;
+
+         	      qlt_schedule_sess_for_deletion(conflict);
+              }
+      }
+
+    Instead of (5.7/scsi-fixes):
+
+      list_for_each_entry_safe(conflict, t, &vha->vp_fcports,
+          list) {
+              if ((conflict->d_id.b24 == ea->id.b24) &&
+                  (fcport != conflict))
+                      /*
+                       * 2 fcports with conflict Nport ID or
+                       * an existing fcport is having nport ID
+                       * conflict with new fcport.
+                       */
+
+                      conflict->scan_state = QLA_FCPORT_SCAN;
+
+              qlt_schedule_sess_for_deletion(conflict);
+      }
+
+    If GPN_ID request succeeds, no sessions were were found for the
+    N_Port_Name but there's a session with conflicting N_Port_ID, it gets
+    deleted in qla24xx_handle_gpnid_event().
+
+4.
+5.  Session is deleted during fabric rescan in qla24xx_async_gnnft_done()
+    if RSCN had N_Port_ID of the session (**The patch aims to address
+    the issue**) or N_Port_ID was changed in GPN_FT reply.
+
+    Sessions missing in GPN_FT response are deleted after fabric
+    discovery in qla24xx_async_gnnft_done() if driver is running in pure
+    initiator or dual mode. So, if zone definition changed or some ports
+    logged out, sessions of the ports that somehow disappeared from the
+    zone are going to be deleted.
+
+6.
+7.  Session is deleted if ADISC to an N_Port fails
+    qla24xx_handle_adisc_event(). It's also going to be deleted if
+    GPN_ID was done for the port or RSCN for the port arrived during ADISC.
+
+    I'm not sure but it may cause session loss for the target
+    mode and then I/O timeout on the attached initiator.
+
+8.
+9.  RSCN or fabric rescan during GNL will trigger session deletion in
+    qla24xx_handle_gnl_done_event().
+
+10.
+11. GPDB handling during login will delete session in
+    qla24xx_handle_gpdb_event() if RSCN has happened or GPN_ID was made
+    in the middle of the GPDB for the port. If ports are detected by
+    GPDB as logged out or logout is pending, their session is also
+    deleted.
+
+12. Session is going to be deleted in P2P mode if a spare N_Port handle
+    can't be found in qla_chk_n2n_b4_login().
+
+13. Failed PLOGI in all topologies but P2P is going to trigger session
+    deletion in qla24xx_fcport_handle_login().
+
+14. Session is deleted after an unsuccessful PRLI in
+    qla24xx_handle_prli_done_event(). I wonder if dual FCP/FC-NVMe
+    sessions are impacted by that.
+
+15.
+16. RSCN during PLOGI or duplicated N_Port handle will trigger session
+    deletion in qla24xx_handle_plogi_done_event()
+
+17. Missing target, switch, name server and NVMe sessions are deleted in
+    after rescan of arbitrated loop by qla2x00_configure_local_loop() in
+    dual and pure initiator mode.
+
+    This check is similar to 5. Code duplication can be removed.
+
+18. An RSCN during port registration is going to trigger deletion of the
+    related session in qla_register_fcport_fn().
+
+19. Missing target, switch, name server and NVMe sessions are deleted
+    after sync fabric scan by qla2x00_find_all_fabric_devs() in dual and
+    pure initiator mode.
+
+    The code is similar to 5 and 17, perhaps the duplication can be
+    removed.
+
+20. Session is deleted in qla2x00_els_dcmd2_sp_done() if duplicate
+    N_Port handle was detected by firmware during Login IOCB.
+
+21. Session is deleted in initiator mode if firmware detects port logout
+    in qla2x00_async_event()
+
+22. Session is deleted in during initiator I/O in qla2x00_status_entry()
+    if firmware returns a kind of logged out state.
+
+23. Conflicting session with the same N_Port_ID is deleted in cases when
+    login is performed by firmware in qla24xx_report_id_acquisition().
+
+24. In case of link loss, all session are deleted in
+    qla2x00_mark_all_devices_lost().
+
+25. Another session with the same N_Port_ID is deleted during the
+    session init in qla24xx_create_new_sess().
+
+26. All target sessions are deleted in qlt_clear_tgt_db() as part of
+    target shutdown in qlt_stop_phase1() and in case of LIP or if Port
+    configuration of the target port was changed.
+
+27. Session deletion happens in the dead code, qlt_fc_port_deleted().
+    Perhaps the function can be safely removed.
+
+28. Session is deleted for a port that issued LOGO, TPRLO and PRLO in
+    qlt_xmit_tm_rsp().
+
+29. Session is deleted in qlt_do_ctio_completion() during the I/O in
+    target mode if firmware detects initiator logout and responds to the
+    driver with a related error.
+
+30.
+31.
+32. A PLOGI handler is going to delete stale sessions in
+    qlt_find_sess_invalidate_other() if S_ID or N_Port handle of
+    the PLOGI matches N_Port_ID or N_Port handle of an existing session.
+
+33. PLOGI, PRLI will result in session deletion if the session is
+    already established.
+
+    FWIW, NVMe PRLI may destroy FCP session in case of simultaneous
+    FCP/NVMe target, current code doesn't handle multiple process logins
+    well. It shouldn't be a big deal since qla2xxx_nvmet hasn't been
+    merged to mainline yet.
+
+34. TPRLO, PRLO, LOGO result in session deletion in qlt_24xx_handle_els()
+    After inspecting the code I think, only LOGO should fully delete the
+    session.
+
+    In the case of mixed FC-NVMe/FCP initiator/target, PRLO/TPRLO
+    to/from SCSI target may break sessions of FC-NVMe, likewise FC-NVMe
+    PRLO/TPRLO may break FCP sessions.
+
+    PRLO and TPRLO (which is like PRLO from all ports) should only
+    downgrade session of the requested FC-4 type to a kind of "process
+    (i.e. FCP/FC-NVMe) logged out" state rather than delete it. TPRLO
+    should log out all sessions of the FC-4 type on the target port,
+    while PRLO should do it only for the originator of the ELS request.
+
+
+> E.g. if after the RSCN the connection to the initiator is actually
+> lost, either temporarily or for good? Would the session be deleted in
+> some other code path, or would it just continue to lurk around?
+> 
+
+So, as a summary, it seems that the existing code mostly keeps sessions
+until:
+ - a conflict of N_Port_ID, N_Port_Name or N_Port handle detected;
+ - the session is in the middle of refresh/rescan and RSCN arrives;
+ - there's an explicit process or port logout from the session, i.e.
+   PRLO, TPRLO, LOGO
+ - there's a new port or process login from the same session, i.e.
+   PLOGI, PRLI;
+ - target is shut down;
+ - target port link is reset;
+
+And if a session of an initiator is deleted when driver works in target
+mode, new session won't be established until a PLOGI and PRLI come from
+the initiator.
+
+The assumption is used qlt_handle_cmd_for_atio() and
+qlt_handle_task_mgmt() to discard commands and TMFs from initiators that
+are not logged in.
+
+Thanks,
+Roman
