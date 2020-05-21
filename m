@@ -2,133 +2,172 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 063B3C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 19:57:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 291DBC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:06:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D751520829
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 19:57:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDD83207D3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:06:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="Oz9GsFMn"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e6kwWhti"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729974AbgEUT5D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 15:57:03 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:17071 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728635AbgEUT5C (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 15:57:02 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5ec6dc7d0003>; Thu, 21 May 2020 12:54:37 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Thu, 21 May 2020 12:57:02 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Thu, 21 May 2020 12:57:02 -0700
-Received: from [10.2.48.182] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 21 May
- 2020 19:57:02 +0000
-Subject: Re: [PATCH] scsi: st: convert convert get_user_pages() -->
- pin_user_pages()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        LKML <linux-kernel@vger.kernel.org>
-CC:     =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-References: <20200519045525.2446851-1-jhubbard@nvidia.com>
- <494478b6-9a8c-5271-fc9f-fd758af850c0@acm.org>
-X-Nvconfidentiality: public
-From:   John Hubbard <jhubbard@nvidia.com>
-Message-ID: <2fa00c72-5ffb-9bc6-df25-a87a863a6d62@nvidia.com>
-Date:   Thu, 21 May 2020 12:57:01 -0700
+        id S1728476AbgEUUGN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 16:06:13 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:29243 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726814AbgEUUGN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 16:06:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1590091571;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=i2rsjB333bm9UUZYWROF/tVZl9kjFmhPMGz6xRIFCKg=;
+        b=e6kwWhtioM8+yhgbU35Fi6cEGRhiLEfT4ga1KhPneXnFYL/CJJkX4rPYlBC00+Ztsadke4
+        W1vWCqCrmT8qBNXe97HFc64UUrD+7HusaPAAmbvCPqJeen9A5Dxcz1CnzS2zvpXN0YGgkj
+        q+O7jHY3J4jndrjvQ8OXAe/Req7UXM0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-510-Y7xfbhZ9O5ajfvkGYmSiRQ-1; Thu, 21 May 2020 16:06:08 -0400
+X-MC-Unique: Y7xfbhZ9O5ajfvkGYmSiRQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 66827872FE0;
+        Thu, 21 May 2020 20:06:07 +0000 (UTC)
+Received: from [10.10.119.146] (ovpn-119-146.rdu2.redhat.com [10.10.119.146])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 674886EA26;
+        Thu, 21 May 2020 20:06:06 +0000 (UTC)
+Subject: Re: [PATCH 3/3] target: rename target_setup_cmd_from_cdb() to
+ target_parse_cdb()
+To:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>,
+        martin.petersen@oracle.com, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     shirley.ma@oracle.com, ssudhakarp@gmail.com
+References: <1590082959-1034-1-git-send-email-sudhakar.panneerselvam@oracle.com>
+From:   Mike Christie <mchristi@redhat.com>
+Message-ID: <8cde32d4-eef3-ec4c-9a0e-54c896e90ccc@redhat.com>
+Date:   Thu, 21 May 2020 15:06:05 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <494478b6-9a8c-5271-fc9f-fd758af850c0@acm.org>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <1590082959-1034-1-git-send-email-sudhakar.panneerselvam@oracle.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1590090878; bh=7cEuukJFvnz/9s6hpg5DMIacgnLOUaLP+0TTObIGU0E=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=Oz9GsFMn6PDszwZOpTHP8j0on3bP6QhuGuI5OfQ1/usrvgl/0ZltkNhRDvZlsuX7e
-         +bAew0LRexR2r3tx+KqUK2NTqK8ZAfqdYLv3fSwlhAYX9TxnGDO7AyX37kM4FpPQ8C
-         WZ/jP32uAcF828jC/kiHHhTwd/ter9jtVF2qHk1H12MnTdFj2uBBLnlah8uqX/uMnj
-         C7ze0nRYN4iv0ayhjZMYdKZS4eoPOOPEv9epeYagx2WrJeLiAktdWLuya1+zwutagg
-         sMRHyq0voBxMMHf+7jBkWrl4v52YrdcQgmZNRst1vVUOA6Cjl1C8XagQvzWAx+XrIf
-         gjSncIN+F7GUg==
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-21 12:47, Bart Van Assche wrote:
-> On 2020-05-18 21:55, John Hubbard wrote:
->> This code was using get_user_pages*(), in a "Case 2" scenario
->> (DMA/RDMA), using the categorization from [1]. That means that it's
->> time to convert the get_user_pages*() + put_page() calls to
->> pin_user_pages*() + unpin_user_pages() calls.
->>
->> There is some helpful background in [2]: basically, this is a small
->> part of fixing a long-standing disconnect between pinning pages, and
->> file systems' use of those pages.
->>
->> Note that this effectively changes the code's behavior as well: it now
->> ultimately calls set_page_dirty_lock(), instead of SetPageDirty().This
->> is probably more accurate.
->>
->> As Christoph Hellwig put it, "set_page_dirty() is only safe if we are
->> dealing with a file backed page where we have reference on the inode it
->> hangs off." [3]
->>
->> Also, this deletes one of the two FIXME comments (about refcounting),
->> because there is nothing wrong with the refcounting at this point.
->>
->> [1] Documentation/core-api/pin_user_pages.rst
->>
->> [2] "Explicit pinning of user-space pages":
->>      https://lwn.net/Articles/807108/
->>
->> [3] https://lore.kernel.org/r/20190723153640.GB720@lst.de
+On 5/21/20 12:42 PM, Sudhakar Panneerselvam wrote:
+> This commit also removes the unused argument, cdb that was passed
+> to this function.
 > 
-> Kai, why is the st driver calling get_user_pages_fast() directly instead
-> of calling blk_rq_map_user()? blk_rq_map_user() is already used in
-> st_scsi_execute(). I think that the blk_rq_map_user() implementation is
-> also based on get_user_pages_fast(). See also iov_iter_get_pages_alloc()
-> in lib/iov_iter.c.
+> Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
+> ---
+>  drivers/target/iscsi/iscsi_target.c    | 2 +-
+>  drivers/target/target_core_transport.c | 6 +++---
+>  drivers/target/target_core_xcopy.c     | 2 +-
+>  include/target/target_core_fabric.h    | 2 +-
+>  4 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> John, why are the get_user_pages_fast() calls in the st driver modified
-> but not the blk_rq_map_user() call? Are you sure that the modified code
-> is a "case 2" scenario and not a "case 1" scenario?
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index a90b80aee9d8..38b14291eb76 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1185,7 +1185,7 @@ int iscsit_setup_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
+>  
+>  	/* only used for printks or comparing with ->ref_task_tag */
+>  	cmd->se_cmd.tag = (__force u32)cmd->init_task_tag;
+> -	cmd->sense_reason = target_setup_cmd_from_cdb(&cmd->se_cmd, hdr->cdb);
+> +	cmd->sense_reason = target_parse_cdb(&cmd->se_cmd);
+>  	if (cmd->sense_reason)
+>  		goto attach_cmd;
+>  
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 2e878188dff7..329c301129c2 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -1450,7 +1450,7 @@ void transport_init_se_cmd(
+>  EXPORT_SYMBOL(target_init_cmd_from_cdb);
+>  
+>  sense_reason_t
+> -target_setup_cmd_from_cdb(struct se_cmd *cmd, unsigned char *cdb)
+> +target_parse_cdb(struct se_cmd *cmd)
+>  {
+>  	struct se_device *dev = cmd->se_dev;
+>  	sense_reason_t ret;
+> @@ -1472,7 +1472,7 @@ void transport_init_se_cmd(
+>  	atomic_long_inc(&cmd->se_lun->lun_stats.cmd_pdus);
+>  	return 0;
+>  }
+> -EXPORT_SYMBOL(target_setup_cmd_from_cdb);
+> +EXPORT_SYMBOL(target_parse_cdb);
+>  
+>  /*
+>   * Used by fabric module frontends to queue tasks directly.
+> @@ -1636,7 +1636,7 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
+>  		return 0;
+>  	}
+>  
+> -	rc = target_setup_cmd_from_cdb(se_cmd, cdb);
+> +	rc = target_parse_cdb(se_cmd);
+>  	if (rc != 0) {
+>  		transport_generic_request_failure(se_cmd, rc);
+>  		return 0;
+> diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+> index b20c25343cf1..5cd1e81b33f8 100644
+> --- a/drivers/target/target_core_xcopy.c
+> +++ b/drivers/target/target_core_xcopy.c
+> @@ -530,7 +530,7 @@ static int target_xcopy_setup_pt_cmd(
+>  		return -EINVAL;
+>  
+>  	cmd->tag = 0;
+> -	if (target_setup_cmd_from_cdb(cmd, cdb))
+> +	if (target_parse_cdb(cmd))
+>  		return -EINVAL;
+>  
+>  	if (transport_generic_map_mem_to_cmd(cmd, xop->xop_data_sg,
+> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
+> index 5c92a5ccc9f0..6eb04a87ca97 100644
+> --- a/include/target/target_core_fabric.h
+> +++ b/include/target/target_core_fabric.h
+> @@ -153,7 +153,7 @@ void	transport_init_se_cmd(struct se_cmd *,
+>  		struct se_session *, u32, int, int, unsigned char *);
+>  sense_reason_t transport_lookup_cmd_lun(struct se_cmd *, u64);
+>  sense_reason_t target_init_cmd_from_cdb(struct se_cmd *, unsigned char *);
+> -sense_reason_t target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
+> +sense_reason_t target_parse_cdb(struct se_cmd *);
+>  int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
+>  		unsigned char *, unsigned char *, u64, u32, int, int, int,
+>  		struct scatterlist *, u32, struct scatterlist *, u32,
 > 
 
-No, I am not sure. I thought this was a DMA case (I'm not a SCSI Tape user,
-so it *seemed* reasonable that a DMA engine was involved), but if it's really
-direct IO, then we need to just drop this patch entirely. Because: I need to
-convert the block/biovec code, including iov_iter_get_pages_alloc() and
-friends, in order to handle direct IO. I'm working on that but it's not
-ready yet.
+Maybe the naming would be nicer if we did:
 
-(I was trying to get the smaller, non-direct-IO cases converted first.)
+target_init_cmd_cdb
+and
+target_parse_cmd_cdb
 
-Thanks for spotting the discrepancy, and apologies for the confusion on this
-end.
+This would match each other's pattern and also match the style of the
+other cmd related function naming where its "target or transport"
+prefix, verb, cmd then optionally something extra.
 
-Also, I doubt if it's worth it, but do you want a patch to change SetPageDirty()
-to set_page_dirty_lock(), meanwhile? It seems like if that's never come up, then
-it's mostly a theoretical bug.
+Or maybe:
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+target_cmd_init_cdb
+and
+target_cmd_parse_cdb
+
+so they at least match each other and you get an idea they pair together.
+
+Just a suggestion and not a requirement, because I'm pretty bad at
+naming, so I have no idea if its better or not.
+
