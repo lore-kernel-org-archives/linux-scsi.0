@@ -2,143 +2,143 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5BF5C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 07:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A7AC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 12:14:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF83520738
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 07:24:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C28B620756
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 12:14:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kYkQMHt3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728259AbgEUHYU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 03:24:20 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2236 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727003AbgEUHYU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 May 2020 03:24:20 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 381C32BC0707CEABAA41;
-        Thu, 21 May 2020 08:24:18 +0100 (IST)
-Received: from [127.0.0.1] (10.47.6.132) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 21 May
- 2020 08:24:17 +0100
-Subject: Re: [PATCH v2] ata: libata: Remove unused parameter in function
- ata_sas_port_alloc()
-To:     chenxiang <chenxiang66@hisilicon.com>, <tj@kernel.org>,
-        <martin.petersen@oracle.com>, <brking@us.ibm.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>
-References: <1590023852-47302-1-git-send-email-chenxiang66@hisilicon.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2174ba8a-065e-4bc6-b0a0-f8394a9e7563@huawei.com>
-Date:   Thu, 21 May 2020 08:23:18 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1729291AbgEUMOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 08:14:44 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:54140 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727949AbgEUMOo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 08:14:44 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LCBeAZ037696;
+        Thu, 21 May 2020 12:14:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=uRhEcY0t0XSLnOWYuJxEO2fJklh7L1NChLV6Gtg2qy0=;
+ b=kYkQMHt33Uv3flQWtvKNt1gWrfHOjs2JEfGageb8olQxdnPMz1smm6YEarauypkOppsj
+ ol8THM8jHgPNLPE2nwHCxGsFmB4RWz85Nfhku+l0SkAX2m8s7CoonTdIapIIZlqCyq20
+ HNF2h8TpbzMgcQP5k1ms/rc2cDpO7ukxOtSJEo/j7kxDdntXNwSrwdlJNqhIlXyoZWtB
+ C9NgnqjNRoiQKrGDmb9OXVO1NoNN75Vcj7v6vG4e5DoP2FYwuI1tsu637WTMmLxKzXE3
+ cZ4zhaYEOCfsB5OdGu0P6+ZX9jIfMpQlfNtgPcGo70d3cOj2zkma3PUDE1aTqmKMLG5u pg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31501rep8s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 21 May 2020 12:14:34 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LCCYej195905;
+        Thu, 21 May 2020 12:12:34 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 314gm92h08-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 May 2020 12:12:34 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04LCCRns014474;
+        Thu, 21 May 2020 12:12:28 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 21 May 2020 05:12:27 -0700
+Date:   Thu, 21 May 2020 15:12:21 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Karen Xie <kxie@chelsio.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@suse.de>,
+        Mike Christie <michaelc@cs.wisc.edu>,
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: cxgb3i: fix some leaks in init_act_open()
+Message-ID: <20200521121221.GA247492@mwanda>
 MIME-Version: 1.0
-In-Reply-To: <1590023852-47302-1-git-send-email-chenxiang66@hisilicon.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.6.132]
-X-ClientProxiedBy: lhreml715-chm.china.huawei.com (10.201.108.66) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9627 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 mlxscore=0 spamscore=0 suspectscore=2
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005210092
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9627 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
+ mlxlogscore=999 clxscore=1011 priorityscore=1501 cotscore=-2147483648
+ impostorscore=0 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
+ mlxscore=0 suspectscore=2 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005210092
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/05/2020 02:17, chenxiang wrote:
-> From: Xiang Chen <chenxiang66@hisilicon.com>
-> 
-> Input Parameter shost in function ata_sas_port_alloc() is not used, so
-> remove it.
-> 
-> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-> ---
->   drivers/ata/libata-sata.c     | 4 +---
->   drivers/scsi/ipr.c            | 2 +-
->   drivers/scsi/libsas/sas_ata.c | 2 +-
->   include/linux/libata.h        | 2 +-
->   4 files changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index c16423e..a3c83fe 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -1070,7 +1070,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
->    *	port_alloc - Allocate port for a SAS attached SATA device
->    *	@host: ATA host container for all SAS ports
->    *	@port_info: Information from low-level host driver
-> - *	@shost: SCSI host that the scsi device is attached to
->    *
->    *	LOCKING:
->    *	PCI/etc. bus probe sem.
-> @@ -1080,8 +1079,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
->    */
->   
->   struct ata_port *ata_sas_port_alloc(struct ata_host *host,
-> -				    struct ata_port_info *port_info,
-> -				    struct Scsi_Host *shost)
-> +				    struct ata_port_info *port_info)
->   {
->   	struct ata_port *ap;
+There wasn't any clean up done if cxgb3_alloc_atid() failed and also the
+original code didn't release "csk->l2t".
 
-A better change could be to add the following, instead of removing the 
-argument:
+Fixes: 6f7efaabefeb ("[SCSI] cxgb3i: change cxgb3i to use libcxgbi")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+From static analysis.  Not tested.
 
-	ap->scsi_host = shost;
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-And remove the setting from the callsites, upon successful return. But 
-then we would need to pass shost=NULL for ipr, as it does not seem to 
-set ap->shost - but that may be an oversight.
-
-Thanks,
-John
-
->   
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index 7d77997..331c41c 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -4816,7 +4816,7 @@ static int ipr_target_alloc(struct scsi_target *starget)
->   		if (!sata_port)
->   			return -ENOMEM;
->   
-> -		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info, shost);
-> +		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info);
->   		if (ap) {
->   			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
->   			sata_port->ioa_cfg = ioa_cfg;
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index 5d716d3..0cdfae9 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -549,7 +549,7 @@ int sas_ata_init(struct domain_device *found_dev)
->   
->   	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
->   
-> -	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
-> +	ap = ata_sas_port_alloc(ata_host, &sata_port_info);
->   	if (!ap) {
->   		pr_err("ata_sas_port_alloc failed.\n");
->   		rc = -ENODEV;
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 8bf5e59..5a6fb80 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1228,7 +1228,7 @@ extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->   extern int ata_slave_link_init(struct ata_port *ap);
->   extern void ata_sas_port_destroy(struct ata_port *);
->   extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
-> -					   struct ata_port_info *, struct Scsi_Host *);
-> +					   struct ata_port_info *);
->   extern void ata_sas_async_probe(struct ata_port *ap);
->   extern int ata_sas_sync_probe(struct ata_port *ap);
->   extern int ata_sas_port_init(struct ata_port *);
-> 
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index 524cdbcd29aa..ec7d01f6e2d5 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -959,6 +959,7 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	struct net_device *ndev = cdev->ports[csk->port_id];
+ 	struct cxgbi_hba *chba = cdev->hbas[csk->port_id];
+ 	struct sk_buff *skb = NULL;
++	int ret;
+ 
+ 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+ 		"csk 0x%p,%u,0x%lx.\n", csk, csk->state, csk->flags);
+@@ -979,16 +980,16 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
+ 	if (csk->atid < 0) {
+ 		pr_err("NO atid available.\n");
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto put_sock;
+ 	}
+ 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
+ 	cxgbi_sock_get(csk);
+ 
+ 	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
+ 	if (!skb) {
+-		cxgb3_free_atid(t3dev, csk->atid);
+-		cxgbi_sock_put(csk);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto free_atid;
+ 	}
+ 	skb->sk = (struct sock *)csk;
+ 	set_arp_failure_handler(skb, act_open_arp_failure);
+@@ -1010,6 +1011,15 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	cxgbi_sock_set_state(csk, CTP_ACTIVE_OPEN);
+ 	send_act_open_req(csk, skb, csk->l2t);
+ 	return 0;
++
++free_atid:
++	cxgb3_free_atid(t3dev, csk->atid);
++put_sock:
++	cxgbi_sock_put(csk);
++	l2t_release(t3dev, csk->l2t);
++	csk->l2t = NULL;
++
++	return ret;
+ }
+ 
+ cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
+-- 
+2.26.2
 
