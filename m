@@ -2,107 +2,96 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 923A1C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:58:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9B88C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 22:13:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A16D20826
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:58:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE60820826
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 22:13:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="p+yVAsbO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729756AbgEUU6e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 16:58:34 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:39700 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728778AbgEUU6e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 16:58:34 -0400
-Received: by mail-pf1-f176.google.com with SMTP id b190so4035564pfg.6;
-        Thu, 21 May 2020 13:58:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=HlyikusR5+ebS59Lh+bZL2cphTrjmdR11F4ZjNW58eY=;
-        b=mz/dY8syfhzi67/G3KNfUZ6zRf9kTpNns1wj/26d/6py9oVhb7/rwCJxEhdUuWldvy
-         h3arXbQPibcGT2xBz9ZuAESaPtSz1k7SNca93xyZyIH25lu77vEuVQs03Vzf1HbiTZK4
-         Q/lL9ZP3GR1QyPvzWkbtzjtShdi/gP6ox2KXvDtIp298SMF5cT6tSZSlpLXNV+J+hQIx
-         KNouz2butlKUgok5329PT5ydJtPY7yPmIYc++az1j+AvwOIRtzZutkiKB9YLf8KvgmdS
-         alPBPQXGU11ny70l+R7IZFH+LwN16MURbOojAUJUSvlwo3E1qfPISrOa+SsqLLsBNAaQ
-         KfLA==
-X-Gm-Message-State: AOAM533iHDGO1HJtsgnwYmdyN5LzrCQAQlLQM6O0qwd2KTzlokOwnhTN
-        NSDxTL5PtD316balpsHMaVjVQRbi
-X-Google-Smtp-Source: ABdhPJycbICYK4dBV4MK/0g2Pesr6Cd+vJeOxzXRWijmiNNPOLhpEiWnd5tswi3obVOdTRIv6sQmzA==
-X-Received: by 2002:a63:5225:: with SMTP id g37mr10312414pgb.230.1590094712763;
-        Thu, 21 May 2020 13:58:32 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:50cc:4329:ba49:7ab1? ([2601:647:4000:d7:50cc:4329:ba49:7ab1])
-        by smtp.gmail.com with ESMTPSA id 19sm5098162pjl.52.2020.05.21.13.58.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 May 2020 13:58:32 -0700 (PDT)
-Subject: Re: [PATCH] scsi: st: convert convert get_user_pages() -->
- pin_user_pages()
-To:     John Hubbard <jhubbard@nvidia.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20200519045525.2446851-1-jhubbard@nvidia.com>
- <494478b6-9a8c-5271-fc9f-fd758af850c0@acm.org>
- <2fa00c72-5ffb-9bc6-df25-a87a863a6d62@nvidia.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <658b4aec-16fb-6969-747f-00e37bd36491@acm.org>
-Date:   Thu, 21 May 2020 13:58:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <2fa00c72-5ffb-9bc6-df25-a87a863a6d62@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1730604AbgEUWNh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 18:13:37 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58124 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730041AbgEUWNg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 18:13:36 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LMDXWb059175;
+        Thu, 21 May 2020 22:13:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id; s=corp-2020-01-29;
+ bh=RQ2C7FnbPSYIwbPTG05e0XXleG+erbn2rt5WqAx+uLw=;
+ b=p+yVAsbOSEmjMebJq2nMdOpGOdtlyFPxiPy7uT/tOtnYzc1FVnrJ3Homsk+3cAEUtUPB
+ 6bx4h8DTcMLS/efzZ6cwY+j8S47LInfD4io2XIzS9WK+ZYXLBe5qKL58lDwQcuc2RWbj
+ vD7m/fP906EXNH6IrLcAG6q9s4dUhe8soxYosP9e+qR2dP9uG3izIucSY9tHc/xSj2FH
+ MxNrKFo/iXwKvluzCOILMMRa8AL8YIMiby0pSBko2jTOTUMtxJ3BtBKMdn0dgw6NANV/
+ ZzqVYq0kPqrgvv+MU4SSSpIPBMcSp+x0y26pvOQwYAevgxXG3kwZuD1zDLZgWljpcoUA 9g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 31501rhfg2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 21 May 2020 22:13:33 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LMCgD6187487;
+        Thu, 21 May 2020 22:13:32 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 313gj6d2cb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 May 2020 22:13:32 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04LMDVTI005377;
+        Thu, 21 May 2020 22:13:31 GMT
+Received: from supannee-devvm-ol7.osdevelopmeniad.oraclevcn.com (/100.100.231.179)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 21 May 2020 15:13:31 -0700
+From:   Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
+To:     martin.petersen@oracle.com, mchristi@redhat.com,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     shirley.ma@oracle.com
+Subject: [PATCH v2 0/3] target: fix NULL pointer dereference
+Date:   Thu, 21 May 2020 22:13:22 +0000
+Message-Id: <1590099205-7997-1-git-send-email-sudhakar.panneerselvam@oracle.com>
+X-Mailer: git-send-email 1.8.3.1
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 adultscore=0 bulkscore=0 suspectscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005210165
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
+ mlxlogscore=999 clxscore=1015 priorityscore=1501 cotscore=-2147483648
+ impostorscore=0 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
+ mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005210165
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-21 12:57, John Hubbard wrote:
-> Also, I doubt if it's worth it, but do you want a patch to change
-> SetPageDirty()
-> to set_page_dirty_lock(), meanwhile? It seems like if that's never come
-> up, then
-> it's mostly a theoretical bug.
+The following set of commits address a NULL pointer dereference and some
+refactoring around this issue.
 
-Hi John,
+v2:
+ - new helper is named as target_cmd_init_cdb()
+ - existing function, target_setup_cmd_from_cdb is renamed as
+   target_cmd_parse_cdb()
 
-Since I do not use the st driver myself I will leave it to Kai to answer
-that question.
+Sudhakar Panneerselvam (3):
+  target: factor out a new helper, target_cmd_init_cdb()
+  target: fix NULL pointer dereference
+  target: rename target_setup_cmd_from_cdb() to target_cmd_parse_cdb()
 
-Thanks,
+ drivers/target/iscsi/iscsi_target.c    | 21 +++++++++++++--------
+ drivers/target/target_core_transport.c | 27 +++++++++++++++++++++------
+ drivers/target/target_core_xcopy.c     |  5 ++++-
+ include/target/target_core_fabric.h    |  3 ++-
+ 4 files changed, 40 insertions(+), 16 deletions(-)
 
-Bart.
+-- 
+1.8.3.1
 
