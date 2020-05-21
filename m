@@ -2,172 +2,108 @@ Return-Path: <SRS0=cxkO=7D=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 291DBC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36CFBC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:38:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDD83207D3
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:06:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FEE72078B
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 May 2020 20:38:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e6kwWhti"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fmURDM/3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728476AbgEUUGN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 May 2020 16:06:13 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:29243 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726814AbgEUUGN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 16:06:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590091571;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=i2rsjB333bm9UUZYWROF/tVZl9kjFmhPMGz6xRIFCKg=;
-        b=e6kwWhtioM8+yhgbU35Fi6cEGRhiLEfT4ga1KhPneXnFYL/CJJkX4rPYlBC00+Ztsadke4
-        W1vWCqCrmT8qBNXe97HFc64UUrD+7HusaPAAmbvCPqJeen9A5Dxcz1CnzS2zvpXN0YGgkj
-        q+O7jHY3J4jndrjvQ8OXAe/Req7UXM0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-510-Y7xfbhZ9O5ajfvkGYmSiRQ-1; Thu, 21 May 2020 16:06:08 -0400
-X-MC-Unique: Y7xfbhZ9O5ajfvkGYmSiRQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 66827872FE0;
-        Thu, 21 May 2020 20:06:07 +0000 (UTC)
-Received: from [10.10.119.146] (ovpn-119-146.rdu2.redhat.com [10.10.119.146])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 674886EA26;
-        Thu, 21 May 2020 20:06:06 +0000 (UTC)
-Subject: Re: [PATCH 3/3] target: rename target_setup_cmd_from_cdb() to
- target_parse_cdb()
-To:     Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>,
-        martin.petersen@oracle.com, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     shirley.ma@oracle.com, ssudhakarp@gmail.com
-References: <1590082959-1034-1-git-send-email-sudhakar.panneerselvam@oracle.com>
-From:   Mike Christie <mchristi@redhat.com>
-Message-ID: <8cde32d4-eef3-ec4c-9a0e-54c896e90ccc@redhat.com>
-Date:   Thu, 21 May 2020 15:06:05 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        id S1728899AbgEUUi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 May 2020 16:38:28 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:42566 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726814AbgEUUi2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 May 2020 16:38:28 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LKbvag110410;
+        Thu, 21 May 2020 20:38:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
+ message-id : date : from : sender : to : cc : subject : references :
+ in-reply-to : content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=D1Z9zo7088BokUCqM7S+dmfjR7IYF3FR/+2WLcO3RSw=;
+ b=fmURDM/3RvkbR20bPstrKAErIvNK9HTAHAEaNqml2rGC8Hw3HOWJZbJ+OzkBMBwpAgFV
+ 6fBIPxh8cKMZnzpkZzYBUNhwfEhBLEuDtk2+pCKQvL8rcxj02R3tFpxLYGy3u3IQyUhv
+ Enrzp1CxsYud8FzwyHUCu41DtOb5LhSRyXSmP6Tn69ZDASLfyK2rgydjwiMXpOvFp92L
+ Itqh6ihbjrOlmnoywKAS8gPir6+Lr6Rp07ULraps1cOkJXHbeN9kbpZ2mxxofivB/5mF
+ 9FW7xibVnL1gHmWJ9qWucpbcfzeT5GWY/3ikdSP83USjpS7tIx6jsmO9iUPFcIoZ76X8 eg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 31284man0d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 21 May 2020 20:38:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04LKTGRp166724;
+        Thu, 21 May 2020 20:38:24 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 3150233qke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 May 2020 20:38:24 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04LKcNVl016907;
+        Thu, 21 May 2020 20:38:23 GMT
 MIME-Version: 1.0
-In-Reply-To: <1590082959-1034-1-git-send-email-sudhakar.panneerselvam@oracle.com>
+Message-ID: <a5497b1c-0f60-4b94-bc3c-f3ac29eddefe@default>
+Date:   Thu, 21 May 2020 13:38:21 -0700 (PDT)
+From:   Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
+To:     Mike Christie <mchristi@redhat.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Shirley Ma <shirley.ma@oracle.com>, ssudhakarp@gmail.com
+Subject: RE: [PATCH 3/3] target: rename target_setup_cmd_from_cdb() to
+ target_parse_cdb()
+References: <1590082959-1034-1-git-send-email-sudhakar.panneerselvam@oracle.com>
+ <8cde32d4-eef3-ec4c-9a0e-54c896e90ccc@redhat.com>
+In-Reply-To: <8cde32d4-eef3-ec4c-9a0e-54c896e90ccc@redhat.com>
+X-Priority: 3
+X-Mailer: Oracle Beehive Extensions for Outlook 2.0.1.9.1  (1003210) [OL
+ 15.0.5215.0 (x86)]
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 bulkscore=0 suspectscore=0 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005210151
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0
+ cotscore=-2147483648 impostorscore=0 malwarescore=0 mlxlogscore=999
+ lowpriorityscore=0 phishscore=0 spamscore=0 bulkscore=0 adultscore=0
+ priorityscore=1501 clxscore=1011 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005210152
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/21/20 12:42 PM, Sudhakar Panneerselvam wrote:
-> This commit also removes the unused argument, cdb that was passed
-> to this function.
-> 
-> Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
-> ---
->  drivers/target/iscsi/iscsi_target.c    | 2 +-
->  drivers/target/target_core_transport.c | 6 +++---
->  drivers/target/target_core_xcopy.c     | 2 +-
->  include/target/target_core_fabric.h    | 2 +-
->  4 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-> index a90b80aee9d8..38b14291eb76 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -1185,7 +1185,7 @@ int iscsit_setup_scsi_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
->  
->  	/* only used for printks or comparing with ->ref_task_tag */
->  	cmd->se_cmd.tag = (__force u32)cmd->init_task_tag;
-> -	cmd->sense_reason = target_setup_cmd_from_cdb(&cmd->se_cmd, hdr->cdb);
-> +	cmd->sense_reason = target_parse_cdb(&cmd->se_cmd);
->  	if (cmd->sense_reason)
->  		goto attach_cmd;
->  
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 2e878188dff7..329c301129c2 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -1450,7 +1450,7 @@ void transport_init_se_cmd(
->  EXPORT_SYMBOL(target_init_cmd_from_cdb);
->  
->  sense_reason_t
-> -target_setup_cmd_from_cdb(struct se_cmd *cmd, unsigned char *cdb)
-> +target_parse_cdb(struct se_cmd *cmd)
->  {
->  	struct se_device *dev = cmd->se_dev;
->  	sense_reason_t ret;
-> @@ -1472,7 +1472,7 @@ void transport_init_se_cmd(
->  	atomic_long_inc(&cmd->se_lun->lun_stats.cmd_pdus);
->  	return 0;
->  }
-> -EXPORT_SYMBOL(target_setup_cmd_from_cdb);
-> +EXPORT_SYMBOL(target_parse_cdb);
->  
->  /*
->   * Used by fabric module frontends to queue tasks directly.
-> @@ -1636,7 +1636,7 @@ int target_submit_cmd_map_sgls(struct se_cmd *se_cmd, struct se_session *se_sess
->  		return 0;
->  	}
->  
-> -	rc = target_setup_cmd_from_cdb(se_cmd, cdb);
-> +	rc = target_parse_cdb(se_cmd);
->  	if (rc != 0) {
->  		transport_generic_request_failure(se_cmd, rc);
->  		return 0;
-> diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-> index b20c25343cf1..5cd1e81b33f8 100644
-> --- a/drivers/target/target_core_xcopy.c
-> +++ b/drivers/target/target_core_xcopy.c
-> @@ -530,7 +530,7 @@ static int target_xcopy_setup_pt_cmd(
->  		return -EINVAL;
->  
->  	cmd->tag = 0;
-> -	if (target_setup_cmd_from_cdb(cmd, cdb))
-> +	if (target_parse_cdb(cmd))
->  		return -EINVAL;
->  
->  	if (transport_generic_map_mem_to_cmd(cmd, xop->xop_data_sg,
-> diff --git a/include/target/target_core_fabric.h b/include/target/target_core_fabric.h
-> index 5c92a5ccc9f0..6eb04a87ca97 100644
-> --- a/include/target/target_core_fabric.h
-> +++ b/include/target/target_core_fabric.h
-> @@ -153,7 +153,7 @@ void	transport_init_se_cmd(struct se_cmd *,
->  		struct se_session *, u32, int, int, unsigned char *);
->  sense_reason_t transport_lookup_cmd_lun(struct se_cmd *, u64);
->  sense_reason_t target_init_cmd_from_cdb(struct se_cmd *, unsigned char *);
-> -sense_reason_t target_setup_cmd_from_cdb(struct se_cmd *, unsigned char *);
-> +sense_reason_t target_parse_cdb(struct se_cmd *);
->  int	target_submit_cmd_map_sgls(struct se_cmd *, struct se_session *,
->  		unsigned char *, unsigned char *, u64, u32, int, int, int,
->  		struct scatterlist *, u32, struct scatterlist *, u32,
-> 
+> Maybe the naming would be nicer if we did:
+>=20
+> target_init_cmd_cdb
+> and
+> target_parse_cmd_cdb
+>=20
+> This would match each other's pattern and also match the style of the
+> other cmd related function naming where its "target or transport"
+> prefix, verb, cmd then optionally something extra.
+>=20
+> Or maybe:
+>=20
+> target_cmd_init_cdb
+> and
+> target_cmd_parse_cdb
+>=20
+> so they at least match each other and you get an idea they pair together.
+>=20
+> Just a suggestion and not a requirement, because I'm pretty bad at
+> naming, so I have no idea if its better or not.
+>=20
 
-Maybe the naming would be nicer if we did:
+Thank you Mike, Nice suggestion. I will incorporate the name change and sen=
+d out another patch shortly.
 
-target_init_cmd_cdb
-and
-target_parse_cmd_cdb
-
-This would match each other's pattern and also match the style of the
-other cmd related function naming where its "target or transport"
-prefix, verb, cmd then optionally something extra.
-
-Or maybe:
-
-target_cmd_init_cdb
-and
-target_cmd_parse_cdb
-
-so they at least match each other and you get an idea they pair together.
-
-Just a suggestion and not a requirement, because I'm pretty bad at
-naming, so I have no idea if its better or not.
-
+Thanks
+Sudhakar
