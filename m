@@ -2,55 +2,52 @@ Return-Path: <SRS0=0D1w=7E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B096C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 16:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E22C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 16:49:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E3FE2054F
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 16:35:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3146120723
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 16:49:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730419AbgEVQf1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 May 2020 12:35:27 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:33664 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726762AbgEVQf1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 12:35:27 -0400
-Received: by mail-pj1-f67.google.com with SMTP id z15so2367008pjb.0;
-        Fri, 22 May 2020 09:35:26 -0700 (PDT)
+        id S1730665AbgEVQtt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 May 2020 12:49:49 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:34734 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726862AbgEVQtt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 12:49:49 -0400
+Received: by mail-pj1-f66.google.com with SMTP id l73so2372226pjb.1;
+        Fri, 22 May 2020 09:49:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:autocrypt
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=FrFECtsWjQl6tf8ykrWng9hvZAmDCDrjdPeRhrm7ht8=;
-        b=AK3HPcv03cTNj5OniSg9AXgBrdm8JYAEvHQrf0pK38gz6pFeRYn049kvvwH+Sq4jKT
-         d0G6DxQsEhgPcFzzvpmJeMFSo93rB/QqUVowbRyCKVtGDP7kngIZv4bNJFQlxiKwL9+0
-         H1WvQq3gJ9GjV+vI/cFGEaHDvDbTh+QnPOqg4eJDbFSj9OS+P7HL66wRbz79z451+GHA
-         UBKF/EX9cMO2QGoWKj7BtH/vmlkkton5lL3aHGRikGthEK/1AtteAcMTEbd872VfIZIw
-         SPKWfKyLr/q3W8bM2xesOpxf+fQtemYbfLjOeF3eBqjsLRXkIEtqggi3DdTQHy01BQLB
-         Vn9A==
-X-Gm-Message-State: AOAM532d3RsAqYFNMFwaEZkhfXavSwxW8MeNsCylM+XPD1+WBiPvWoBN
-        K/FAfIMSxma/mY4hiRzjaPw=
-X-Google-Smtp-Source: ABdhPJyXQgvh/4e4/HGGwIDBAWsyl5WfZZk7uK5Jo8/5fM225m/l8sR/7+kGSH1fMjgsiFE/d4N8vw==
-X-Received: by 2002:a17:90a:21af:: with SMTP id q44mr5827865pjc.50.1590165325521;
-        Fri, 22 May 2020 09:35:25 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:69bd:6780:3ba9:55db? ([2601:647:4000:d7:69bd:6780:3ba9:55db])
-        by smtp.gmail.com with ESMTPSA id s15sm6488500pgv.5.2020.05.22.09.35.22
+        bh=pe3U2Pc1R5aAAvHcpLLKtfeeYNZhxpfWB/nI2dXUKTo=;
+        b=OMN21QpBu3Y+HgKC/8YrB7BqYvGfAfoWQWslGszGh2v/13AUUmpkYHAMGvmOI43xbY
+         6CC5XOAknG9ZbCcK/J0Lj+zDmkMNnx3INvnxPSo43njOnPwS1gH3vxVvZodBQgS/EZD3
+         yIygLFdnDEyWarxo3czQ66JBODKz8Beop/LHqFNuL51LtJYO9nsICmaVdPFFQMag8gBG
+         E8h91HIVWD//HhUtxQXQXiLCJE26eAc2uZkFmRLrLWUu052SJodFWUHSjbrCRXjDMgL/
+         xYVWbHnsJN9ouVIdkQwpG7Mhi1f4O3IKrx53l9lyb60ZSoBdsH/TwkZf3fUHIzUVr+hK
+         46/A==
+X-Gm-Message-State: AOAM532C1rVFdVK9VGkosvXsxyAA1PJuYsd9g5OPP0RKse4rl4N8pznm
+        Y7DW1stAYRdVWuiYvO6qzkg=
+X-Google-Smtp-Source: ABdhPJxVeW2HY3x3447XCgvX+Lp7tGkdpIlaSOHG8Pt7Eg0yxtQApkFapH1xSLqYoqhM2Gs2+Tw5Dg==
+X-Received: by 2002:a17:902:d70f:: with SMTP id w15mr16286450ply.55.1590166187500;
+        Fri, 22 May 2020 09:49:47 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:2d21:38e:755:9ae8? ([2601:647:4000:d7:2d21:38e:755:9ae8])
+        by smtp.gmail.com with ESMTPSA id b5sm7268911pju.50.2020.05.22.09.49.44
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 May 2020 09:35:24 -0700 (PDT)
+        Fri, 22 May 2020 09:49:46 -0700 (PDT)
 Subject: Re: Another approach of UFSHPB
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     Christoph Hellwig <hch@infradead.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
+To:     ymhungry.lee@samsung.com, Avri Altman <Avri.Altman@wdc.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
         "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         Zang Leigang <zangleigang@hisilicon.com>,
         Avi Shchislowski <Avi.Shchislowski@wdc.com>,
@@ -70,8 +67,7 @@ References: <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
  <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
  <CGME20200516171420epcas2p108c570904c5117c3654d71e0a2842faa@epcms2p7>
  <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
- <20200520175555.GA27975@infradead.org>
- <e1e81ad1-2681-9dbe-34aa-85f4e5559927@acm.org>
+From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
  LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
@@ -95,65 +91,66 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <224ba721-b80e-f018-a3f9-a2f56ecef8d6@acm.org>
-Date:   Fri, 22 May 2020 09:35:21 -0700
+Message-ID: <aaf130c2-27bd-977b-55df-e97859f4c097@acm.org>
+Date:   Fri, 22 May 2020 09:49:43 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <e1e81ad1-2681-9dbe-34aa-85f4e5559927@acm.org>
+In-Reply-To: <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-20 14:19, Bart Van Assche wrote:
-> On 2020-05-20 10:55, Christoph Hellwig wrote:
->> HPB is a completely fucked up concept and we shoud not merge it at all.
->> Especially not with a crazy bullshit vendor extension layer that makes
->> it even easier for vendors to implement even worse things than the
->> already horrible spec says.  Just stop this crap and implement sane
->> interfaces for the next generation hardware instead of wasting your
->> time on this idiotic idea.
+On 2020-05-19 15:31, yongmyung lee wrote:
+> Currently, UFS driver (usually ufshcd.c) has become bulky and complex.
+> So, I would like to split these codes into layers 
+> like the works of Bean Huo and Avril Altman.
+> Especially, I suggest the UFS-Feature Driver model based on Linux Bus-Driver Model,
+> which is suitable to manage all Extended UFS-Feature drivers like the Figure as below:
 > 
-> What exactly is it that you are not happy about? Is it the concept of
-> using host memory to store L2P translation information or how that
-> concept has been translated into SCSI commands (HPB READ BUFFER, HPB
-> READ and HPB WRITE BUFFER)?
 > 
-> In the former case: aren't Open-Channel SSDs another example of storage
-> devices for which the L2P translation tables are maintained in host
-> memory? Didn't the driver for Fusion-io SSDs also maintain the L2P
-> mapping in host memory?
+> UFS Driver data structure (struct ufs_hba)
+>    |
+>    |    -----------------------    -- ufshpb driver -- <- attach ufshpb device driver (it can be loadable)
+>    |---| ufs-ext feature layer |   -- ufs-wb driver -- <- attach ufswb device driver
+>    |   |                       |   -- ...           -- <- ...
+>    |    -----------------------    -- next ufs feature driver  -- <- attach ufs-next feature driver
 > 
-> Do you agree that HPB UFS storage devices are already being used widely
-> and hence that not accepting this functionality in the upstream kernel
-> will force users of HPB devices to maintain HPB code outside the kernel
-> tree? Isn't one of the goals of the Linux kernel project to increase its
-> user base?
+> * wb : write-booster
 
-The following quote from
-https://www.anandtech.com/show/13474/the-google-pixel-3-review/2 is
-interesting: "Another big improvement for file I/O is the implementation
-of “Host Performance Booster” in the kernel and UFS controller firmware
-stack. HPB is essentially caching of the NAND chip’s FTL (flash
-translation layer) L2P (logical to physical) mapping tables into the
-hosts (SoCs) main memory. This allows the host driver to look up the
-target L2P entry directly without betting on UFS’s limited SRAM to have
-a cache-hit, reducing latency and greatly increasing random read
-performance. The authors of the feature showcase an improvement of
-59-67% in random I/O read performance due to the new feature. It’s worth
-to mention that traditional Android I/O benchmarks won’t be able to show
-this as as those tend to test read speeds with the files they’ve just
-created."
+Splitting the UFS driver into multiple modules would be great if the
+interface between these modules can be kept small and elegant. However,
+I'm not sure that this approach should be based on Linux device driver
+bus concept. Devices can be unbound at any time from their driver by
+writing into the "unbind" sysfs attribute. I don't think we want the UFS
+core functionality ever to be unbound while any other UFS functionality
+is still active. Has it been considered to implement each feature as a
+loadable module without relying on the bus model? The existing kernel
+module infrastructure already prevents to unload modules (e.g. the UFS
+core) that are in use by a kernel module that depends on it (e.g. UFS HPB).
 
-Given the cost of SRAM in embedded controllers I think there is a strong
-incentive for manufacturers of flash storage devices to reduce the
-amount of SRAM on the storage controller. I think this means that
-proposals to use host memory for caching L2P mappings will keep popping
-up, no matter what we tell the storage controller vendors about what we
-think about such a design.
+> Furthermore, each ufs-ext feature driver will be written as a loadable kernel module.
+> Vendors (e.g., Android Phone manufacturer) could optionally load and remove each module.
+
+What will happen if a feature module is unloaded (e.g. HPB) while I/O is
+ongoing that relies on HPB?
+
+> Also they can customize the parameters of ufs-ext feature drivers
+> while each module is being loaded.
+> (For example, vendor would set the maximum memory size
+>  that can be reclaimed in the Host Control mode in HPB)
+
+Should these parameters be per module or per UFS device?
+
+> In addition, we plan to provide QEMU with UFS-simulator
+> for a test environment for UFS driver development.
+
+A UFS simulator for QEMU support would definitely be welcome.
+
+Thanks,
 
 Bart.
