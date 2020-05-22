@@ -2,138 +2,102 @@ Return-Path: <SRS0=0D1w=7E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21BD3C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 10:36:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05C1DC433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 12:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7816204EA
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 10:36:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB30020757
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 12:18:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TI6qrINx"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="n81B/JDE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728489AbgEVKgR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 May 2020 06:36:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45638 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728362AbgEVKgQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 06:36:16 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CD3CC061A0E
-        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2020 03:36:16 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id w64so9314126wmg.4
-        for <linux-scsi@vger.kernel.org>; Fri, 22 May 2020 03:36:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=IvYd5IGFvqlYeq7XsQzsVXg/xWFw1hytqQS5q0XQBmQ=;
-        b=TI6qrINxXM1+VOg6AjQt+WD1UMKn5pfK/wAQZ8iZJwDyu6K2NUbtO59zXkf8F35cMM
-         IIEbgp8402k+hHQB8h5LwYO5RIkIoucW5Njf14V9v9pqlf6hJ1MWY1LeMC7g7qqX9jgO
-         wBYSyORo9LyXnFbAj4SkdcX5SjoyxZ4R5P8Bs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=IvYd5IGFvqlYeq7XsQzsVXg/xWFw1hytqQS5q0XQBmQ=;
-        b=Vz9bKm7vTgJ6GgALnUgYsumxadoEybiyTZBStiMAJamAldiBB7fm/ugNipD7HKTgu8
-         CDD7ZD9Lp/qImateF9JqAd9fVUk7lwV0ypmCA7b1os8CGd+eKbWuyas3d2MTEgui9ocv
-         MvsmYHljzykA/HTrJ8lN0xrd7T173aqLNKRYITs9HgsFIZMxjMigRSSncOfNN+GZPpaj
-         ousgS8wBdpr2Q4bhtsQiyzFf7xx7jGOSoFLFEl2fbOWV4+vycJ2WbMb3pcYhIyPJBLnO
-         W+5a7p4cwb/RotI5BtMD+8/3lUXO9Q0a6fvH5YC/Fy3Xs/zDP35hVhFVdthRdaxDx+C6
-         gAXQ==
-X-Gm-Message-State: AOAM530/QpyWIcMGLpuB5kL1rO6x0fDllO3BuedINbACcMse7KF6L290
-        zVDHaLt4+ClKXt3ZZZefs7R7GUWViIUodt9sp55RRAXDwYoxJxGLVQOdOmJt6CXi0OoNqCknepK
-        nUhqwl5HpSuYrcE+5d4ZD9hXayj5WyN7Wch51VM6pUDJkv5p8a4LjANb1OkD3PR045RN39xt2qK
-        q/w3ix3fLBThfIHnuF2HEo
-X-Google-Smtp-Source: ABdhPJzsQJ/7EZ5ay9ZsACBMgvXSS7nhE9w8498/bKwAs9uOD9mcyt0gJfdeTCase3holAgumegbgA==
-X-Received: by 2002:a1c:2e41:: with SMTP id u62mr13490113wmu.91.1590143774475;
-        Fri, 22 May 2020 03:36:14 -0700 (PDT)
-Received: from dhcp-10-123-20-28.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id z10sm9188648wmi.2.2020.05.22.03.36.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 May 2020 03:36:13 -0700 (PDT)
-From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     sreekanth.reddy@broadcom.com, thenzl@redhat.com,
-        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix reply queue count in non RDPQ mode.
-Date:   Fri, 22 May 2020 06:35:58 -0400
-Message-Id: <20200522103558.5710-1-suganath-prabu.subramani@broadcom.com>
-X-Mailer: git-send-email 2.18.4
+        id S1729535AbgEVMS2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 May 2020 08:18:28 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:42410 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728889AbgEVMSY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 08:18:24 -0400
+X-UUID: 95ef12c71ef1453685c344ff69309885-20200522
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=ckHEM7GVI4e4nimxXTABhbmcvCORVQbBj1jfInkgoAg=;
+        b=n81B/JDEMXzSi0diDNXDhCFgfIYXJp3X+8YMHa2xMVSdwxEmbSUOkp0CBaez8Ex/nmQBnNcjWMNjqyb9+b5pNfOCmGZ3GMVCxjXbL9NqcBeQisT1cOATNBKlF2exr9PJfrZ9/BjoNceCbHvtX4g56CdpXG9Lq9CBTZUNuwf4TOo=;
+X-UUID: 95ef12c71ef1453685c344ff69309885-20200522
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 669861996; Fri, 22 May 2020 20:18:19 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 22 May 2020 20:18:15 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 22 May 2020 20:18:15 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <cc.chou@mediatek.com>,
+        <chaotian.jing@mediatek.com>, <pengshun.zhao@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 3/3] scsi: ufs-mediatek: Introduce low-power mode for device power supply
+Date:   Fri, 22 May 2020 20:18:14 +0800
+Message-ID: <20200522121814.9100-4-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200522121814.9100-1-stanley.chu@mediatek.com>
+References: <20200522121814.9100-1-stanley.chu@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For non RDPQ mode, Driver allocates a single contiguous block of
-memory pool for all reply descriptor post queues and passes down a
-single address in the ReplyDescriptorPostQueueAddress field of the IOC
-Init Request Message to the firmware. So reply_post queue will have
-only one entry which holds the address of this single contiguous block
-of memory pool.
-
-So while allocating the reply descriptor post queue pool driver should
-loop for only one time in non-RDPQ mode. But due to a bug in below
-patch driver is looping for ioc->reply_queue_count number of times
-even though reply_post queue's queue depth is only one in non-RDPQ
-mode. This leads to 'BUG: KASAN: use-after-free in
-base_alloc_rdpq_dma_pool'.
-
-commit 8012209eb26b7819385a6ec6eae4b1d0a0dbe585 ("scsi: mpt3sas:
-Handle RDPQ DMA allocation in same 4G region")
-
-Fix is to loop over only one time while allocating the memory for the
-reply descriptor post queue in non-RDPQ mode
-
-Reported-by: Tomas Henzl <thenzl@redhat.com>
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index dc260fe..beaea19 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4809,6 +4809,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	int j = 0;
- 	int dma_alloc_count = 0;
- 	struct chain_tracker *ct;
-+	int count = ioc->rdpq_array_enable ? ioc->reply_queue_count : 1;
- 
- 	dexitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
- 
-@@ -4850,9 +4851,9 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	if (ioc->reply_post) {
--		dma_alloc_count = DIV_ROUND_UP(ioc->reply_queue_count,
-+		dma_alloc_count = DIV_ROUND_UP(count,
- 				RDPQ_MAX_INDEX_IN_ONE_CHUNK);
--		for (i = 0; i < ioc->reply_queue_count; i++) {
-+		for (i = 0; i < count; i++) {
- 			if (i % RDPQ_MAX_INDEX_IN_ONE_CHUNK == 0
- 			    && dma_alloc_count) {
- 				if (ioc->reply_post[i].reply_post_free) {
-@@ -4973,14 +4974,14 @@ base_alloc_rdpq_dma_pool(struct MPT3SAS_ADAPTER *ioc, int sz)
- 	 *  Driver uses limitation of
- 	 *  VENTURA_SERIES to manage INVADER_SERIES as well.
- 	 */
--	dma_alloc_count = DIV_ROUND_UP(ioc->reply_queue_count,
-+	dma_alloc_count = DIV_ROUND_UP(count,
- 				RDPQ_MAX_INDEX_IN_ONE_CHUNK);
- 	ioc->reply_post_free_dma_pool =
- 		dma_pool_create("reply_post_free pool",
- 		    &ioc->pdev->dev, sz, 16, 0);
- 	if (!ioc->reply_post_free_dma_pool)
- 		return -ENOMEM;
--	for (i = 0; i < ioc->reply_queue_count; i++) {
-+	for (i = 0; i < count; i++) {
- 		if ((i % RDPQ_MAX_INDEX_IN_ONE_CHUNK == 0) && dma_alloc_count) {
- 			ioc->reply_post[i].reply_post_free =
- 			    dma_pool_alloc(ioc->reply_post_free_dma_pool,
--- 
-1.8.3.1
+QWxsb3cgZGV2aWNlIHBvd2VyIHN1cHBseSB0byBlbnRlciBsb3ctcG93ZXIgbW9kZSBpZiBkZXZp
+Y2Ugd2lsbA0KZG8gbm90aGluZyB0byBzYXZlIG1vcmUgcG93ZXIuDQoNClNpZ25lZC1vZmYtYnk6
+IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5jb20+DQpSZXZpZXdlZC1ieTogUGVu
+Z3NodW4gWmhhbyA8cGVuZ3NodW4uemhhb0BtZWRpYXRlay5jb20+DQotLS0NCiBkcml2ZXJzL3Nj
+c2kvdWZzL3Vmcy1tZWRpYXRlay5jIHwgMjEgKysrKysrKysrKysrKysrKysrKysrDQogMSBmaWxl
+IGNoYW5nZWQsIDIxIGluc2VydGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91
+ZnMvdWZzLW1lZGlhdGVrLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5jDQppbmRl
+eCAzYzg1ZjVlOTdkZWEuLjVmNDFiN2I3ZGI4ZiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS91
+ZnMvdWZzLW1lZGlhdGVrLmMNCisrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMN
+CkBAIC0xMiw2ICsxMiw3IEBADQogI2luY2x1ZGUgPGxpbnV4L29mX2FkZHJlc3MuaD4NCiAjaW5j
+bHVkZSA8bGludXgvcGh5L3BoeS5oPg0KICNpbmNsdWRlIDxsaW51eC9wbGF0Zm9ybV9kZXZpY2Uu
+aD4NCisjaW5jbHVkZSA8bGludXgvcmVndWxhdG9yL2NvbnN1bWVyLmg+DQogI2luY2x1ZGUgPGxp
+bnV4L3NvYy9tZWRpYXRlay9tdGtfc2lwX3N2Yy5oPg0KIA0KICNpbmNsdWRlICJ1ZnNoY2QuaCIN
+CkBAIC01MjEsNiArNTIyLDE5IEBAIHN0YXRpYyBpbnQgdWZzX210a19saW5rX3NldF9scG0oc3Ry
+dWN0IHVmc19oYmEgKmhiYSkNCiAJcmV0dXJuIDA7DQogfQ0KIA0KK3N0YXRpYyB2b2lkIHVmc19t
+dGtfdnJlZ19zZXRfbHBtKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJvb2wgbHBtKQ0KK3sNCisJaWYg
+KCFoYmEtPnZyZWdfaW5mby52Y2NxMikNCisJCXJldHVybjsNCisNCisJaWYgKGxwbSAmICFoYmEt
+PnZyZWdfaW5mby52Y2MtPmVuYWJsZWQpDQorCQlyZWd1bGF0b3Jfc2V0X21vZGUoaGJhLT52cmVn
+X2luZm8udmNjcTItPnJlZywNCisJCQkJICAgUkVHVUxBVE9SX01PREVfSURMRSk7DQorCWVsc2Ug
+aWYgKCFscG0pDQorCQlyZWd1bGF0b3Jfc2V0X21vZGUoaGJhLT52cmVnX2luZm8udmNjcTItPnJl
+ZywNCisJCQkJICAgUkVHVUxBVE9SX01PREVfTk9STUFMKTsNCit9DQorDQogc3RhdGljIGludCB1
+ZnNfbXRrX3N1c3BlbmQoc3RydWN0IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3Ap
+DQogew0KIAlpbnQgZXJyOw0KQEAgLTUzNyw2ICs1NTEsMTIgQEAgc3RhdGljIGludCB1ZnNfbXRr
+X3N1c3BlbmQoc3RydWN0IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQogCQkJ
+dWZzaGNkX3NldF9saW5rX29mZihoYmEpOw0KIAkJCXJldHVybiAtRUFHQUlOOw0KIAkJfQ0KKwkJ
+LyoNCisJCSAqIE1ha2Ugc3VyZSBubyBlcnJvciB3aWxsIGJlIHJldHVybmVkIHRvIHByZXZlbnQN
+CisJCSAqIHVmc2hjZF9zdXNwZW5kKCkgcmUtZW5hYmxpbmcgcmVndWxhdG9ycyB3aGlsZSB2cmVn
+IGlzIHN0aWxsDQorCQkgKiBpbiBsb3ctcG93ZXIgbW9kZS4NCisJCSAqLw0KKwkJdWZzX210a192
+cmVnX3NldF9scG0oaGJhLCB0cnVlKTsNCiAJfQ0KIA0KIAlpZiAoIXVmc2hjZF9pc19saW5rX2Fj
+dGl2ZShoYmEpKQ0KQEAgLTU1NCw2ICs1NzQsNyBAQCBzdGF0aWMgaW50IHVmc19tdGtfcmVzdW1l
+KHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZzX3BtX29wIHBtX29wKQ0KIAkJcGh5X3Bvd2Vy
+X29uKGhvc3QtPm1waHkpOw0KIA0KIAlpZiAodWZzaGNkX2lzX2xpbmtfaGliZXJuOChoYmEpKSB7
+DQorCQl1ZnNfbXRrX3ZyZWdfc2V0X2xwbShoYmEsIGZhbHNlKTsNCiAJCWVyciA9IHVmc19tdGtf
+bGlua19zZXRfaHBtKGhiYSk7DQogCQlpZiAoZXJyKSB7DQogCQkJZXJyID0gdWZzaGNkX2xpbmtf
+cmVjb3ZlcnkoaGJhKTsNCi0tIA0KMi4xOC4wDQo=
 
