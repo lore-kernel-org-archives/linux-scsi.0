@@ -2,103 +2,161 @@ Return-Path: <SRS0=0D1w=7E=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9098AC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 07:33:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB5EC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 08:32:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F1022073B
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 07:33:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1407B207FB
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 08:32:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zr8ftTxm"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="qzmKjDQi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728468AbgEVHdI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 May 2020 03:33:08 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:57240 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728214AbgEVHdG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 03:33:06 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04M7RiMI099138;
-        Fri, 22 May 2020 07:31:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=FHKudRAmfJMTmkL5lBhr9gMRqVNot+ZGcY+gLOKSPWQ=;
- b=zr8ftTxmN8djMVNxsfauxHijqmQZJ27JNYNzSbiwZV1H4No0xKEXcoTBytv3PDJSvcrp
- /Nyramp0bw+dLsKfAey75XBoOuEv6PhQEYKJ3fSf3n1UF81MxbM2guQfVP9qMNYBHSff
- 0IBWTd1TSwN4MLhOwVoRqfipf6RiOQW0ZCK7XL0FAcRfHgkHtQjUaJ+5Ssh5CBYpXINY
- 19VERK0I4Y44f8lhzUIpFleEzhe1ducy/y6uezF+0Px3K3Lqe7sK49O1DZqJJPuH2L+p
- jIo5SWG9s0WsYzgwXQcbaKu7YC1xheaXy9TBqY2v9S5VpftJZIi8oHvInJOIZ0c/DQKw 9g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 31501rjt8p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 22 May 2020 07:31:24 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04M7TICY165649;
-        Fri, 22 May 2020 07:29:24 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 315023u8fy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 May 2020 07:29:24 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04M7TJnm022187;
-        Fri, 22 May 2020 07:29:19 GMT
-Received: from kadam (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 22 May 2020 00:29:18 -0700
-Date:   Fri, 22 May 2020 10:29:11 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, paul.ely@broadcom.com,
-        hare@suse.de, jejb@linux.ibm.com, axboe@kernel.dk,
-        martin.petersen@oracle.com, hch@infradead.org
-Subject: Re: [PATCH 0/3] lpfc: Fix errors in LS receive refactoring
-Message-ID: <20200522072911.GA22511@kadam>
-References: <20200520185929.48779-1-jsmart2021@gmail.com>
+        id S1729353AbgEVIcZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 May 2020 04:32:25 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:59834 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729055AbgEVIcW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 04:32:22 -0400
+X-UUID: 8690f13bda0e4a1ab8af2d95163df061-20200522
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=jt0ZXqiT2HEFVooRxngfMXTBN2JMD11Mqu493IhVNBM=;
+        b=qzmKjDQiTqyugo4nLpTJcwEmbHB+Lx2VAlSLiGceFSC7jGuwDxOCOdl2e9HpQ4wsTP3Sjhxgty//SYW+xVMhnv3c6OCNsKTGYa0EH32odPyob0+1EPJ0yaHA8U54egXr7p5eWG5OFH9FtSxTpqoGWOp/80Ie9XImUN+9ItjNB8Y=;
+X-UUID: 8690f13bda0e4a1ab8af2d95163df061-20200522
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1161361424; Fri, 22 May 2020 16:32:16 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 22 May 2020 16:32:15 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 22 May 2020 16:32:14 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
+CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
+        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <Virtual_Global_UFS_Upstream@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v4 3/4] scsi: ufs: Fix index of attributes query for WriteBooster feature
+Date:   Fri, 22 May 2020 16:32:11 +0800
+Message-ID: <20200522083212.4008-4-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20200522083212.4008-1-stanley.chu@mediatek.com>
+References: <20200522083212.4008-1-stanley.chu@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200520185929.48779-1-jsmart2021@gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 bulkscore=0 suspectscore=0 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005220060
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
- mlxlogscore=999 clxscore=1015 priorityscore=1501 cotscore=-2147483648
- impostorscore=0 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
- mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005220060
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, May 20, 2020 at 11:59:26AM -0700, James Smart wrote:
-> A prior patch set refactored lpfc to create common routines for NVME LS
-> handling for use by both the initiator and target paths.  The refactoring
-> introduced several errors spotted by additional testing and static checker
-> reporting.
-> 
-> This patch set corrects those errors.
-> 
-> The patches should enter via the nvme tree, as the lpfc modifications were
-> in support of nvme-fc transport api deltas merged via the nvme tree.
-> 
-> -- james
-
-Thanks!
-
-Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-regards,
-dan carpenter
-
+Rm9yIFdyaXRlQm9vc3RlciBmZWF0dXJlIHJlbGF0ZWQgYXR0cmlidXRlcywgdGhlIGluZGV4IHVz
+ZWQgYnkNCnF1ZXJ5IHNoYWxsIGJlIExVTiBJRCBpZiBMVSBEZWRpY2F0ZWQgYnVmZmVyIG1vZGUg
+aXMgZW5hYmxlZC4NCg0KU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0YW5sZXkuY2h1QG1l
+ZGlhdGVrLmNvbT4NClJldmlld2VkLWJ5OiBBdnJpIEFsdG1hbiA8YXZyaS5hbHRtYW5Ad2RjLmNv
+bT4NCi0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzLXN5c2ZzLmMgfCAxMyArKysrKysrKysrKy0t
+DQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyAgICB8IDE2ICsrKysrKysrKystLS0tLS0NCiBk
+cml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oICAgIHwgIDIgKy0NCiAzIGZpbGVzIGNoYW5nZWQsIDIy
+IGluc2VydGlvbnMoKyksIDkgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Nj
+c2kvdWZzL3Vmcy1zeXNmcy5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtc3lzZnMuYw0KaW5kZXgg
+YTBiMzc2M2UxZGMyLi4yZDcxZDIzMmE2OWQgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZz
+L3Vmcy1zeXNmcy5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1zeXNmcy5jDQpAQCAtNjM3
+LDcgKzYzNyw3IEBAIHN0YXRpYyBzc2l6ZV90IF9uYW1lIyNfc2hvdyhzdHJ1Y3QgZGV2aWNlICpk
+ZXYsCQkJCVwNCiAJaW50IHJldDsJCQkJCQkJXA0KIAlzdHJ1Y3QgdWZzX2hiYSAqaGJhID0gZGV2
+X2dldF9kcnZkYXRhKGRldik7CQkJXA0KIAlpZiAodWZzaGNkX2lzX3diX2ZsYWdzKFFVRVJZX0ZM
+QUdfSUROIyNfdW5hbWUpKQkJCVwNCi0JCWluZGV4ID0gdWZzaGNkX3diX2dldF9mbGFnX2luZGV4
+KGhiYSk7CQkJXA0KKwkJaW5kZXggPSB1ZnNoY2Rfd2JfZ2V0X3F1ZXJ5X2luZGV4KGhiYSk7CQkJ
+XA0KIAlwbV9ydW50aW1lX2dldF9zeW5jKGhiYS0+ZGV2KTsJCQkJCVwNCiAJcmV0ID0gdWZzaGNk
+X3F1ZXJ5X2ZsYWcoaGJhLCBVUElVX1FVRVJZX09QQ09ERV9SRUFEX0ZMQUcsCVwNCiAJCVFVRVJZ
+X0ZMQUdfSUROIyNfdW5hbWUsIGluZGV4LCAmZmxhZyk7CQkJXA0KQEAgLTY4MCw2ICs2ODAsMTIg
+QEAgc3RhdGljIGNvbnN0IHN0cnVjdCBhdHRyaWJ1dGVfZ3JvdXAgdWZzX3N5c2ZzX2ZsYWdzX2dy
+b3VwID0gew0KIAkuYXR0cnMgPSB1ZnNfc3lzZnNfZGV2aWNlX2ZsYWdzLA0KIH07DQogDQorc3Rh
+dGljIGlubGluZSBib29sIHVmc2hjZF9pc193Yl9hdHRycyhlbnVtIGF0dHJfaWRuIGlkbikNCit7
+DQorCXJldHVybiAoKGlkbiA+PSBRVUVSWV9BVFRSX0lETl9XQl9GTFVTSF9TVEFUVVMpICYmDQor
+CQkoaWRuIDw9IFFVRVJZX0FUVFJfSUROX0NVUlJfV0JfQlVGRl9TSVpFKSk7DQorfQ0KKw0KICNk
+ZWZpbmUgVUZTX0FUVFJJQlVURShfbmFtZSwgX3VuYW1lKQkJCQkJXA0KIHN0YXRpYyBzc2l6ZV90
+IF9uYW1lIyNfc2hvdyhzdHJ1Y3QgZGV2aWNlICpkZXYsCQkJCVwNCiAJc3RydWN0IGRldmljZV9h
+dHRyaWJ1dGUgKmF0dHIsIGNoYXIgKmJ1ZikJCQlcDQpAQCAtNjg3LDkgKzY5MywxMiBAQCBzdGF0
+aWMgc3NpemVfdCBfbmFtZSMjX3Nob3coc3RydWN0IGRldmljZSAqZGV2LAkJCQlcDQogCXN0cnVj
+dCB1ZnNfaGJhICpoYmEgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsJCQlcDQogCXUzMiB2YWx1ZTsJ
+CQkJCQkJXA0KIAlpbnQgcmV0OwkJCQkJCQlcDQorCXU4IGluZGV4ID0gMDsJCQkJCQkJXA0KKwlp
+ZiAodWZzaGNkX2lzX3diX2F0dHJzKFFVRVJZX0FUVFJfSUROIyNfdW5hbWUpKQkJCVwNCisJCWlu
+ZGV4ID0gdWZzaGNkX3diX2dldF9xdWVyeV9pbmRleChoYmEpOwkJCVwNCiAJcG1fcnVudGltZV9n
+ZXRfc3luYyhoYmEtPmRldik7CQkJCQlcDQogCXJldCA9IHVmc2hjZF9xdWVyeV9hdHRyKGhiYSwg
+VVBJVV9RVUVSWV9PUENPREVfUkVBRF9BVFRSLAlcDQotCQlRVUVSWV9BVFRSX0lETiMjX3VuYW1l
+LCAwLCAwLCAmdmFsdWUpOwkJCVwNCisJCVFVRVJZX0FUVFJfSUROIyNfdW5hbWUsIGluZGV4LCAw
+LCAmdmFsdWUpOwkJXA0KIAlwbV9ydW50aW1lX3B1dF9zeW5jKGhiYS0+ZGV2KTsJCQkJCVwNCiAJ
+aWYgKHJldCkJCQkJCQkJXA0KIAkJcmV0dXJuIC1FSU5WQUw7CQkJCQkJXA0KZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQpp
+bmRleCAwZGJkOGE3YTY2NDIuLjMyNjJhYzBlMzlkNCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2Nz
+aS91ZnMvdWZzaGNkLmMNCisrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCkBAIC01MTk5
+LDcgKzUxOTksNyBAQCBzdGF0aWMgaW50IHVmc2hjZF93Yl9jdHJsKHN0cnVjdCB1ZnNfaGJhICpo
+YmEsIGJvb2wgZW5hYmxlKQ0KIAllbHNlDQogCQlvcGNvZGUgPSBVUElVX1FVRVJZX09QQ09ERV9D
+TEVBUl9GTEFHOw0KIA0KLQlpbmRleCA9IHVmc2hjZF93Yl9nZXRfZmxhZ19pbmRleChoYmEpOw0K
+KwlpbmRleCA9IHVmc2hjZF93Yl9nZXRfcXVlcnlfaW5kZXgoaGJhKTsNCiAJcmV0ID0gdWZzaGNk
+X3F1ZXJ5X2ZsYWdfcmV0cnkoaGJhLCBvcGNvZGUsDQogCQkJCSAgICAgIFFVRVJZX0ZMQUdfSURO
+X1dCX0VOLCBpbmRleCwgTlVMTCk7DQogCWlmIChyZXQpIHsNCkBAIC01MjI1LDcgKzUyMjUsNyBA
+QCBzdGF0aWMgaW50IHVmc2hjZF93Yl90b2dnbGVfZmx1c2hfZHVyaW5nX2g4KHN0cnVjdCB1ZnNf
+aGJhICpoYmEsIGJvb2wgc2V0KQ0KIAllbHNlDQogCQl2YWwgPSBVUElVX1FVRVJZX09QQ09ERV9D
+TEVBUl9GTEFHOw0KIA0KLQlpbmRleCA9IHVmc2hjZF93Yl9nZXRfZmxhZ19pbmRleChoYmEpOw0K
+KwlpbmRleCA9IHVmc2hjZF93Yl9nZXRfcXVlcnlfaW5kZXgoaGJhKTsNCiAJcmV0dXJuIHVmc2hj
+ZF9xdWVyeV9mbGFnX3JldHJ5KGhiYSwgdmFsLA0KIAkJCQlRVUVSWV9GTEFHX0lETl9XQl9CVUZG
+X0ZMVVNIX0RVUklOR19ISUJFUk44LA0KIAkJCQlpbmRleCwgTlVMTCk7DQpAQCAtNTI0OCw3ICs1
+MjQ4LDcgQEAgc3RhdGljIGludCB1ZnNoY2Rfd2JfYnVmX2ZsdXNoX2VuYWJsZShzdHJ1Y3QgdWZz
+X2hiYSAqaGJhKQ0KIAlpZiAoIXVmc2hjZF9pc193Yl9hbGxvd2VkKGhiYSkgfHwgaGJhLT53Yl9i
+dWZfZmx1c2hfZW5hYmxlZCkNCiAJCXJldHVybiAwOw0KIA0KLQlpbmRleCA9IHVmc2hjZF93Yl9n
+ZXRfZmxhZ19pbmRleChoYmEpOw0KKwlpbmRleCA9IHVmc2hjZF93Yl9nZXRfcXVlcnlfaW5kZXgo
+aGJhKTsNCiAJcmV0ID0gdWZzaGNkX3F1ZXJ5X2ZsYWdfcmV0cnkoaGJhLCBVUElVX1FVRVJZX09Q
+Q09ERV9TRVRfRkxBRywNCiAJCQkJICAgICAgUVVFUllfRkxBR19JRE5fV0JfQlVGRl9GTFVTSF9F
+TiwNCiAJCQkJICAgICAgaW5kZXgsIE5VTEwpOw0KQEAgLTUyNzAsNyArNTI3MCw3IEBAIHN0YXRp
+YyBpbnQgdWZzaGNkX3diX2J1Zl9mbHVzaF9kaXNhYmxlKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQog
+CWlmICghdWZzaGNkX2lzX3diX2FsbG93ZWQoaGJhKSB8fCAhaGJhLT53Yl9idWZfZmx1c2hfZW5h
+YmxlZCkNCiAJCXJldHVybiAwOw0KIA0KLQlpbmRleCA9IHVmc2hjZF93Yl9nZXRfZmxhZ19pbmRl
+eChoYmEpOw0KKwlpbmRleCA9IHVmc2hjZF93Yl9nZXRfcXVlcnlfaW5kZXgoaGJhKTsNCiAJcmV0
+ID0gdWZzaGNkX3F1ZXJ5X2ZsYWdfcmV0cnkoaGJhLCBVUElVX1FVRVJZX09QQ09ERV9DTEVBUl9G
+TEFHLA0KIAkJCQkgICAgICBRVUVSWV9GTEFHX0lETl9XQl9CVUZGX0ZMVVNIX0VOLA0KIAkJCQkg
+ICAgICBpbmRleCwgTlVMTCk7DQpAQCAtNTI5MCwxMCArNTI5MCwxMiBAQCBzdGF0aWMgYm9vbCB1
+ZnNoY2Rfd2JfcHJlc3J2X3VzcnNwY19rZWVwX3ZjY19vbihzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0K
+IHsNCiAJdTMyIGN1cl9idWY7DQogCWludCByZXQ7DQorCXU4IGluZGV4Ow0KIA0KKwlpbmRleCA9
+IHVmc2hjZF93Yl9nZXRfcXVlcnlfaW5kZXgoaGJhKTsNCiAJcmV0ID0gdWZzaGNkX3F1ZXJ5X2F0
+dHJfcmV0cnkoaGJhLCBVUElVX1FVRVJZX09QQ09ERV9SRUFEX0FUVFIsDQogCQkJCQkgICAgICBR
+VUVSWV9BVFRSX0lETl9DVVJSX1dCX0JVRkZfU0laRSwNCi0JCQkJCSAgICAgIDAsIDAsICZjdXJf
+YnVmKTsNCisJCQkJCSAgICAgIGluZGV4LCAwLCAmY3VyX2J1Zik7DQogCWlmIChyZXQpIHsNCiAJ
+CWRldl9lcnIoaGJhLT5kZXYsICIlcyBkQ3VyV3JpdGVCb29zdGVyQnVmZmVyU2l6ZSByZWFkIGZh
+aWxlZCAlZFxuIiwNCiAJCQlfX2Z1bmNfXywgcmV0KTsNCkBAIC01MzE2LDYgKzUzMTgsNyBAQCBz
+dGF0aWMgYm9vbCB1ZnNoY2Rfd2Jfa2VlcF92Y2Nfb24oc3RydWN0IHVmc19oYmEgKmhiYSkNCiB7
+DQogCWludCByZXQ7DQogCXUzMiBhdmFpbF9idWY7DQorCXU4IGluZGV4Ow0KIA0KIAlpZiAoIXVm
+c2hjZF9pc193Yl9hbGxvd2VkKGhiYSkpDQogCQlyZXR1cm4gZmFsc2U7DQpAQCAtNTMzMCw5ICs1
+MzMzLDEwIEBAIHN0YXRpYyBib29sIHVmc2hjZF93Yl9rZWVwX3ZjY19vbihzdHJ1Y3QgdWZzX2hi
+YSAqaGJhKQ0KIAkgKiBidWZmZXIgKGRDdXJyZW50V3JpdGVCb29zdGVyQnVmZmVyU2l6ZSkuIFRo
+ZXJlJ3Mgbm8gcG9pbnQgaW4NCiAJICoga2VlcGluZyB2Y2Mgb24gd2hlbiBjdXJyZW50IGJ1ZmZl
+ciBpcyBlbXB0eS4NCiAJICovDQorCWluZGV4ID0gdWZzaGNkX3diX2dldF9xdWVyeV9pbmRleCho
+YmEpOw0KIAlyZXQgPSB1ZnNoY2RfcXVlcnlfYXR0cl9yZXRyeShoYmEsIFVQSVVfUVVFUllfT1BD
+T0RFX1JFQURfQVRUUiwNCiAJCQkJICAgICAgUVVFUllfQVRUUl9JRE5fQVZBSUxfV0JfQlVGRl9T
+SVpFLA0KLQkJCQkgICAgICAwLCAwLCAmYXZhaWxfYnVmKTsNCisJCQkJICAgICAgaW5kZXgsIDAs
+ICZhdmFpbF9idWYpOw0KIAlpZiAocmV0KSB7DQogCQlkZXZfd2FybihoYmEtPmRldiwgIiVzIGRB
+dmFpbGFibGVXcml0ZUJvb3N0ZXJCdWZmZXJTaXplIHJlYWQgZmFpbGVkICVkXG4iLA0KIAkJCSBf
+X2Z1bmNfXywgcmV0KTsNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oIGIv
+ZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KaW5kZXggODhkNDIwMjQyNzgyLi45YWNhZWFmOTRk
+MjkgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQorKysgYi9kcml2ZXJz
+L3Njc2kvdWZzL3Vmc2hjZC5oDQpAQCAtODY4LDcgKzg2OCw3IEBAIHN0YXRpYyBpbmxpbmUgYm9v
+bCB1ZnNoY2Rfa2VlcF9hdXRvYmtvcHNfZW5hYmxlZF9leGNlcHRfc3VzcGVuZCgNCiAJcmV0dXJu
+IGhiYS0+Y2FwcyAmIFVGU0hDRF9DQVBfS0VFUF9BVVRPX0JLT1BTX0VOQUJMRURfRVhDRVBUX1NV
+U1BFTkQ7DQogfQ0KIA0KLXN0YXRpYyBpbmxpbmUgdTggdWZzaGNkX3diX2dldF9mbGFnX2luZGV4
+KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQorc3RhdGljIGlubGluZSB1OCB1ZnNoY2Rfd2JfZ2V0X3F1
+ZXJ5X2luZGV4KHN0cnVjdCB1ZnNfaGJhICpoYmEpDQogew0KIAlpZiAoaGJhLT5kZXZfaW5mby5i
+X3diX2J1ZmZlcl90eXBlID09IFdCX0JVRl9NT0RFX0xVX0RFRElDQVRFRCkNCiAJCXJldHVybiBo
+YmEtPmRldl9pbmZvLndiX2RlZGljYXRlZF9sdTsNCi0tIA0KMi4xOC4wDQo=
 
