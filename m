@@ -1,109 +1,153 @@
-Return-Path: <SRS0=0D1w=7E=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=JddF=7F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB047C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 16:52:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE061C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 May 2020 00:43:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7359E206D5
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 May 2020 16:52:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AF5A20738
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 May 2020 00:43:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0BZ66Vr9"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="fDckYlRX";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="fDckYlRX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730487AbgEVQwU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 May 2020 12:52:20 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45150 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730445AbgEVQwT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 22 May 2020 12:52:19 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MGmCoF127891;
-        Fri, 22 May 2020 16:52:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2020-01-29;
- bh=NbkzrpzfdMkZVyNkKF8d10u9zQwPbuOBwaLGLqxsGlc=;
- b=0BZ66Vr9tCjCVqTO1oRYWQpOQaMnH7o5lUXe+8GiR4ioflvWsi3BvTbqYBV2qzpPk9ZV
- lxk5L/Xtm7GNzHLsWchywj1u1VWxz0Ss6hY3dBJrBkpLkPdncFzb8I/ExOfIafQku8of
- ejlTXeWtegRWXCbUqekoWQOwblMXiCXrSzjhsnRJJrPiv2ub4VR9rHLHMAcXAkKNu4WC
- NAjmgPQVLEQZe8uiJop6N2MuaUIJ4TNaLh4Ph+xo2E2w7Xuz4cNsKJylAAfsZ7M2qqc5
- 6QMSrtUNUnI0Suk3T7kMAv8swQyUjW4WPV4cw8h/42uNOJBQvH8RQgl9febvY6/pc/dD nw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 3127krpthm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 22 May 2020 16:52:15 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MGmk3G109572;
-        Fri, 22 May 2020 16:52:14 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 313gj7sacb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 May 2020 16:52:14 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04MGqDIs013279;
-        Fri, 22 May 2020 16:52:13 GMT
-Received: from supannee-devvm-ol7.osdevelopmeniad.oraclevcn.com (/100.100.231.179)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 22 May 2020 09:52:13 -0700
-From:   Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
-To:     martin.petersen@oracle.com, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
-        stefanha@redhat.com, shirley.ma@oracle.com
-Subject: [PATCH 1/1] vhost: scsi: notify TCM about the maximum sg entries supported per command.
-Date:   Fri, 22 May 2020 16:51:57 +0000
-Message-Id: <1590166317-953-1-git-send-email-sudhakar.panneerselvam@oracle.com>
-X-Mailer: git-send-email 1.8.3.1
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
- mlxscore=0 adultscore=0 bulkscore=0 suspectscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005220136
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
- bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
- suspectscore=0 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005220136
+        id S2387427AbgEWAnn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 May 2020 20:43:43 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36310 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731169AbgEWAnm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 May 2020 20:43:42 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 5D41E8EE453;
+        Fri, 22 May 2020 17:43:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1590194622;
+        bh=sOKAHK5PnU0iTCaOEaYRSCMn48ivVogoeleYthdNfTc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=fDckYlRXI/G85hpFaGc1llC/BHjHEncGJpR8sSBiOpEmpYxD+lR/M4DfkcU9gSx1T
+         3EIneb9x5t7iv/Pr5yFQCiJxNqspUmDhiOYmUNVGf1ig19PiO617RhSIuP5eVUlDuM
+         sYQ4zd1LP1J4SOnG0UYMFgZb8+n+H4MXMUkbDw20=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id IT1oRr35ZQsY; Fri, 22 May 2020 17:43:42 -0700 (PDT)
+Received: from [153.66.254.194] (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DF7048EE116;
+        Fri, 22 May 2020 17:43:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1590194622;
+        bh=sOKAHK5PnU0iTCaOEaYRSCMn48ivVogoeleYthdNfTc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=fDckYlRXI/G85hpFaGc1llC/BHjHEncGJpR8sSBiOpEmpYxD+lR/M4DfkcU9gSx1T
+         3EIneb9x5t7iv/Pr5yFQCiJxNqspUmDhiOYmUNVGf1ig19PiO617RhSIuP5eVUlDuM
+         sYQ4zd1LP1J4SOnG0UYMFgZb8+n+H4MXMUkbDw20=
+Message-ID: <1590194620.14721.28.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.7-rc6
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 22 May 2020 17:43:40 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-vhost-scsi pre-allocates the maximum sg entries per command and if a
-command requires more than VHOST_SCSI_PREALLOC_SGLS entries, then that
-command is failed by it. This patch lets vhost communicate the max sg limit
-when it registers vhost_scsi_ops with TCM. With this change, TCM would
-report the max sg entries through "Block Limits" VPD page which will be
-typically queried by the SCSI initiator during device discovery. By knowing
-this limit, the initiator could ensure the maximum transfer length is less
-than or equal to what is reported by vhost-scsi.
+Three minor fixes, two in drivers, one to fix a hang after reset with
+iSCSI, and one to avoid a spurious log message; and the final core one
+to correct a suspend/resume miscount with quiesced devices.
 
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Jason Wang <jasowang@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Stefan Hajnoczi <stefanha@redhat.com>
-Signed-off-by: Sudhakar Panneerselvam <sudhakar.panneerselvam@oracle.com>
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Bodo Stroesser (1):
+      scsi: target: Put lun_ref at end of tmr processing
+
+Can Guo (1):
+      scsi: pm: Balance pm_only counter of request queue during system resume
+
+Ewan D. Milne (1):
+      scsi: qla2xxx: Do not log message when reading port speed via sysfs
+
+And the diffstat:
+
+ drivers/scsi/qla2xxx/qla_attr.c        |  3 ---
+ drivers/scsi/scsi_pm.c                 | 10 ++++++++--
+ drivers/target/target_core_transport.c |  1 +
+ 3 files changed, 9 insertions(+), 5 deletions(-)
+
+With full diff below.
+
+James
+
 ---
- drivers/vhost/scsi.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index c39952243fd3..8b104f76f324 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -2280,6 +2280,7 @@ static void vhost_scsi_drop_tport(struct se_wwn *wwn)
- static const struct target_core_fabric_ops vhost_scsi_ops = {
- 	.module				= THIS_MODULE,
- 	.fabric_name			= "vhost",
-+	.max_data_sg_nents		= VHOST_SCSI_PREALLOC_SGLS,
- 	.tpg_get_wwn			= vhost_scsi_get_fabric_wwn,
- 	.tpg_get_tag			= vhost_scsi_get_tpgt,
- 	.tpg_check_demo_mode		= vhost_scsi_check_true,
--- 
-1.8.3.1
-
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 33255968f03a..2c9e5ac24692 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1850,9 +1850,6 @@ qla2x00_port_speed_show(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 	}
+ 
+-	ql_log(ql_log_info, vha, 0x70d6,
+-	    "port speed:%d\n", ha->link_data_rate);
+-
+ 	return scnprintf(buf, PAGE_SIZE, "%s\n", spd[ha->link_data_rate]);
+ }
+ 
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 3717eea37ecb..5f0ad8b32e3a 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -80,6 +80,10 @@ static int scsi_dev_type_resume(struct device *dev,
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
+ 
+ 	if (err == 0) {
++		bool was_runtime_suspended;
++
++		was_runtime_suspended = pm_runtime_suspended(dev);
++
+ 		pm_runtime_disable(dev);
+ 		err = pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
+@@ -93,8 +97,10 @@ static int scsi_dev_type_resume(struct device *dev,
+ 		 */
+ 		if (!err && scsi_is_sdev_device(dev)) {
+ 			struct scsi_device *sdev = to_scsi_device(dev);
+-
+-			blk_set_runtime_active(sdev->request_queue);
++			if (was_runtime_suspended)
++				blk_post_runtime_resume(sdev->request_queue, 0);
++			else
++				blk_set_runtime_active(sdev->request_queue);
+ 		}
+ 	}
+ 
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 594b724bbf79..264a822c0bfa 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3350,6 +3350,7 @@ static void target_tmr_work(struct work_struct *work)
+ 
+ 	cmd->se_tfo->queue_tm_rsp(cmd);
+ 
++	transport_lun_remove_cmd(cmd);
+ 	transport_cmd_check_stop_to_fabric(cmd);
+ 	return;
+ 
