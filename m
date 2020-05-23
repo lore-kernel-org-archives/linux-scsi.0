@@ -2,86 +2,112 @@ Return-Path: <SRS0=JddF=7F=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DF25C433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 May 2020 10:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E6F8C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 May 2020 10:11:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07A6920727
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 May 2020 10:10:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41DF820727
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 May 2020 10:11:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oCl8f3IC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387717AbgEWKKp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 May 2020 06:10:45 -0400
-Received: from mail.zju.edu.cn ([61.164.42.155]:16444 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725268AbgEWKKp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 23 May 2020 06:10:45 -0400
-Received: by ajax-webmail-mail-app4 (Coremail) ; Sat, 23 May 2020 18:10:25
- +0800 (GMT+08:00)
-X-Originating-IP: [222.205.77.158]
-Date:   Sat, 23 May 2020 18:10:25 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   dinghao.liu@zju.edu.cn
-To:     "Bean Huo (beanhuo)" <beanhuo@micron.com>
-Cc:     "kjlu@umn.edu" <kjlu@umn.edu>,
-        "Alim Akhtar" <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
-        "Can Guo" <cang@codeaurora.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: RE: RE: [EXT] [PATCH] scsi: ufs-bsg: Fix runtime PM imbalance
- on error
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version XT5.0.10 build 20190906(84e8bf8f)
- Copyright (c) 2002-2020 www.mailtech.cn zju.edu.cn
-In-Reply-To: <SN6PR08MB5693D06B4B30D0A76824D2BBDBB40@SN6PR08MB5693.namprd08.prod.outlook.com>
-References: <20200522045932.31795-1-dinghao.liu@zju.edu.cn>
- <SN6PR08MB56932A6D579AFB4E28AFD001DBB40@SN6PR08MB5693.namprd08.prod.outlook.com>
- <4a6ba414.bf5c4.1723b9792df.Coremail.dinghao.liu@zju.edu.cn>
- <SN6PR08MB5693D06B4B30D0A76824D2BBDBB40@SN6PR08MB5693.namprd08.prod.outlook.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+        id S2387759AbgEWKLp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 May 2020 06:11:45 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:47792 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725268AbgEWKLp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 May 2020 06:11:45 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04NA8E8r056160;
+        Sat, 23 May 2020 10:11:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=n4h8Ze/WKiLXL3/dPkzL/wAshMKn0b30Ha6W6Rr7XF8=;
+ b=oCl8f3ICddFsd+XbIb+UWjYuM20nfc+mTATGV6AaPSujHe2g4Vvf1HVK0coJPmEE0Jb5
+ SkVT+li1vlyRmeQecBv6McHElWBjb3Pp1OVqVGAKydxY4iWrliHOk+CccX+ZP3r4JBYH
+ /9YuUnMJXzynwu11vuM0N1P62FC3WqQzVFYFFnPsHYk4MGu4dLn+YtWS19XmlHF/9f9E
+ ACtwTrOO72E4+w7hazE/BxdX5iTWyhWnO/r5WGl6xtbJbzw87z7m9g8PgPxR2w6fR/4n
+ VVHLRiOmHNPFC9CfKcuJ6xUAsZoNTgxvPl7P8W8Rn2CnZV7DFYMLxlPt+GE5VDXxBva2 Bw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 316u8qgpgr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 23 May 2020 10:11:38 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04NA9Ie4122828;
+        Sat, 23 May 2020 10:11:38 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 316un0g2wq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 23 May 2020 10:11:37 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04NABbO9022106;
+        Sat, 23 May 2020 10:11:37 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 23 May 2020 03:11:36 -0700
+Date:   Sat, 23 May 2020 13:11:29 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Cc:     Mike Christie <mchristi@redhat.com>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: target: tcmu: Fix a use after free in
+ tcmu_check_expired_queue_cmd()
+Message-ID: <20200523101129.GB98132@mwanda>
 MIME-Version: 1.0
-Message-ID: <2ca4e9a1.c1e27.1724103291c.Coremail.dinghao.liu@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: cS_KCgBHf3iR9shee3ERAg--.40393W
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgQJBlZdtORGcwAIsv
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJTRUUUbtCS07vEb7Iv0x
-        C_Cr1lV2xY67kC6x804xWlV2xY67CY07I20VC2zVCF04k26cxKx2IYs7xG6rWj6s0DMIAI
-        bVAFxVCF77xC64kEw24lV2xY67C26IkvcIIF6IxKo4kEV4ylV2xY628lY4IE4IxF12IF4w
-        CS07vE84x0c7CEj48ve4kI8wCS07vE84ACjcxK6xIIjxv20xvE14v26w1j6s0DMIAIbVA2
-        z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIAIbVA2z4x0Y4vEx4A2jsIE14v26r
-        xl6s0DMIAIbVA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lV2xY62AIxVAIcxkEcVAq
-        07x20xvEncxIr21lV2xY6c02F40EFcxC0VAKzVAqx4xG6I80ewCS07vEYx0E2Ix0cI8IcV
-        AFwI0_JrI_JrylV2xY6cIj6I8E87Iv67AKxVWUJVW8JwCS07vEOx8S6xCaFVCjc4AY6r1j
-        6r4UMIAIbVACI402YVCY1x02628vn2kIc2xKxwCS07vE7I0Y64k_MIAIbVCY02Avz4vE14
-        v_Gw1lV2xY6xkI7II2jI8vz4vEwIxGrwCS07vE42xK82IY6x8ErcxFaVAv8VW8uw4UJr1U
-        MIAIbVCF72vE77IF4wCS07vE4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lV2xY6I8I3I0E5I8CrV
-        AFwI0_Jr0_Jr4lV2xY6I8I3I0E7480Y4vE14v26r106r1rMIAIbVC2zVAF1VAY17CE14v2
-        6r1q6r43MIAIbVCI42IY6xIIjxv20xvE14v26r1j6r1xMIAIbVCI42IY6xIIjxv20xvEc7
-        CjxVAFwI0_Gr0_Cr1lV2xY6IIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCS07vEIxAI
-        cVC2z280aVAFwI0_Jr0_Gr1lV2xY6IIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIda
-        VFxhVjvjDU=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 mlxscore=0
+ malwarescore=0 phishscore=0 spamscore=0 suspectscore=2 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005230084
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
+ priorityscore=1501 spamscore=0 cotscore=-2147483648 suspectscore=2
+ phishscore=0 clxscore=1011 mlxlogscore=999 bulkscore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005230084
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBIaSwgRGluZ2hhbwo+IAo+ID4gVGhhbmsgeW91IGZvciB5b3VyIGFkdmljZSEgTW92aW5nIG9y
-aWdpbmFsIHBtX3J1bnRpbWVfcHV0X3N5bmMoKSB0byBhZnRlcgo+ID4gIm91dCIgbGFiZWwgd2ls
-bCBpbmZsdWVuY2UgYW4gZXJyb3IgcGF0aCBicmFuY2hlZCBmcm9tCj4gPiB1cHNfYnNnX3Zlcmlm
-eV9xdWVyeV9zaXplKCkuIFNvIEkgdGhpbmsgY2hhbmdpbmcgImdvdG8gb3V0IiB0byAiYnJlYWsi
-IGlzIGEgZ29vZAo+ID4gaWRlYS4gQnV0IGluIHRoaXMgY2FzZSB3ZSBtYXkgZXhlY3V0ZSBhbiBl
-eHRyYQo+ID4gc2dfY29weV9mcm9tX2J1ZmZlcigpIGFuZCBhbiBleHRyYSBrZnJlZSgpIGNvbXBh
-cmVkIHdpdGggdW5wYXRjaGVkIHZlcnNpb24uCj4gPiBEb2VzIHRoaXMgbWF0dGVyPwo+ID4gCj4g
-V2hhdCBkbyB5b3UgbWVhbiAiIHVucGF0Y2hlZCB2ZXJzaW9uICI/IAo+Cj4gSSBzZWUsIGJlbG93
-IGdvdG8gd2lsbCBieXBhc3Mgc2dfY29weV9mcm9tX2J1ZmZlcigpIGFuZCBhbiBleHRyYSBrZnJl
-ZSgpCj4gSW4gY2FzZSB1ZnNfYnNnX2FsbG9jX2Rlc2NfYnVmZmVyKCkgZmFpbHMuIAo+IAoKVGhh
-dCdzIGV4YWN0bHkgd2hhdCBJIHdhbnQgdG8gZXhwcmVzcy4gSWYgdXNpbmcgImJyZWFrIiBpcyBP
-SyBJIHdpbGwgc2VuZAphIG5ldyBwYXRjaCB0byBmaXggdGhpcyBwcm9ibGVtLgoKPiBCZWFuCj4g
-CgpSZWdhZWRzLApEaW5naGFvCg==
+The pr_debug() dereferences "cmd" after we already freed it by calling
+tcmu_free_cmd(cmd).  The debug printk needs to be done earlier.
+
+Fixes: 61fb24822166 ("scsi: target: tcmu: Userspace must not complete queued commands")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/target/target_core_user.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 904d8a8373f2..28fb9441de7a 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1292,13 +1292,13 @@ static void tcmu_check_expired_queue_cmd(struct tcmu_cmd *cmd)
+ 	if (!time_after(jiffies, cmd->deadline))
+ 		return;
+ 
++	pr_debug("Timing out queued cmd %p on dev %s.\n",
++		  cmd, cmd->tcmu_dev->name);
++
+ 	list_del_init(&cmd->queue_entry);
+ 	se_cmd = cmd->se_cmd;
+ 	tcmu_free_cmd(cmd);
+ 
+-	pr_debug("Timing out queued cmd %p on dev %s.\n",
+-		  cmd, cmd->tcmu_dev->name);
+-
+ 	target_complete_cmd(se_cmd, SAM_STAT_TASK_SET_FULL);
+ }
+ 
+-- 
+2.26.2
+
