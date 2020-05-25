@@ -2,144 +2,114 @@ Return-Path: <SRS0=b1yV=7H=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 899E5C433E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 May 2020 18:26:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E09A3C433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 May 2020 20:41:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71B1320776
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 May 2020 18:26:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFDCA20787
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 May 2020 20:41:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="krPQWD30"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389264AbgEYS0N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 May 2020 14:26:13 -0400
-Received: from mail-ej1-f66.google.com ([209.85.218.66]:37236 "EHLO
-        mail-ej1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387644AbgEYS0N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 May 2020 14:26:13 -0400
-Received: by mail-ej1-f66.google.com with SMTP id l21so21340052eji.4;
-        Mon, 25 May 2020 11:26:11 -0700 (PDT)
+        id S2390530AbgEYUlb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 May 2020 16:41:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48866 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390437AbgEYUla (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 May 2020 16:41:30 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EA6DC061A0E;
+        Mon, 25 May 2020 13:41:30 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id m1so2792740pgk.1;
+        Mon, 25 May 2020 13:41:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=RkZMhQLldIOys7nQpzJNFew5Ei3EG4rJ9hOJdxzbwfk=;
+        b=krPQWD30ZCtO95s7MF8vMdQ5C1OlfmYMp3uv9JE2P3gqz+WkE/Hbqek1HDoCGzgJ6j
+         of2+bh9iipH3npWs6AxtnHUYMK15Rl6mQfvW0I2GlbLBGz/0WWcKz2OkQpHaAjw+k0NM
+         FFxi0fyinbgIdGgaAhPkfvSkkoYb1z8HBbHCJEdmvYkgZyQRjbo1n2AWYyeqISe7746T
+         upgkB1/bvDOBPcAbVmegmYlKs6nZ/+OGxe2GskW3ihEddLjlv1buOzHSchSrwbivLv72
+         qaALbI9W9/uOH8mZO5mj1SfnN5lLr47j77idBRYkx+uC2UW4fQCGTY/kSh3zGB+TUi8b
+         wV+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1qikXNcYuPEp2SbYrhq3PIeLmdf37Vp6toU2hryNiAU=;
-        b=UmCbsIdwmg0jEmX4PliEuAzxbhnr++enG6DM+5PuammxCnBstbdR/KQuR+PQ0y42pB
-         fELpWJdXAh9RRdvCdWiH9zJBGAFpDDjj9hVcqgZRFsmp+QEJ3TaWFO9YfkzBGYJJHvAw
-         o4Q+ZpiNqa5bc5+55Ii/p9IZQV6zI7wmnkKzetFoTXnND07uZfTbO0xCl/Lq513bMTAH
-         5Wh8pwjGqrxPUiH1SErSegLkfEqMhFcnq8ekW5Ri//s16Av17xL3ey9iqTng4x6xVtNd
-         6L3rIuXUbnfs+yEY4cuwJJkqbYguGR9w4bl6PHVt3r2SZMgjF5r8gFw3XllbqpAHOW39
-         eTGQ==
-X-Gm-Message-State: AOAM530wgjA9f4C4bbwoAhVYMprvnaEiCXOn5aEnfXakvXVCvKmo8Wih
-        B7R6u9qx8iVPnxwLifqJiBg=
-X-Google-Smtp-Source: ABdhPJxkEBfJS/XXtSSCnmQUkO84UroYhCAKuA4jbTqreWDo9ErA8dsQuCsf23LSLacMkksSHFqFeg==
-X-Received: by 2002:a17:906:4bc1:: with SMTP id x1mr19051208ejv.13.1590431170704;
-        Mon, 25 May 2020 11:26:10 -0700 (PDT)
-Received: from workstation.lan ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id n15sm15555707ejs.10.2020.05.25.11.26.08
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=RkZMhQLldIOys7nQpzJNFew5Ei3EG4rJ9hOJdxzbwfk=;
+        b=SitZCAyF+RKclLN9zwBCqUr2LIZ68fquQyCfXNpibwKIRDqzXn1DRreZuEu2TVm+yN
+         pdb/i+PUOwWmMRVESlRMJqxgwA8QCfT1VTJb0yrAK0Odyhd/ZVyi6MUYdVzQPLZQTGto
+         XwhNTtkXiryq1cAKVjaeZiQfzW0+3/56wm1KVJAf4TdS7UG2B7zw9x2pD9orBSw9kooh
+         L428kziYJIhklkvxAkxyzk4ysw1FxFM35zg+/oBkNALvnqCjijCZJ6j56UzcQUFsYSkP
+         BcOsD7mJOv4X60iUXwbxZnEC/E4uokvKKh0BEzblqPZp54sGfjpoPM1XmMPj4jKnoIsf
+         pegw==
+X-Gm-Message-State: AOAM533H5bQcwya7TKnQZDgSESQZFYfm1FdxLSUMVHwu7Il+AVqP9gVz
+        J24bkHh6QfK4liD1l5g8fYx+mLv3
+X-Google-Smtp-Source: ABdhPJy18biZE6cpZtxmd7gPtm4MkApYXoZPl+nTvYgRXICZkwMwsscr+L+DR42ER3/ctduP0LdmeA==
+X-Received: by 2002:a05:6a00:1490:: with SMTP id v16mr18061272pfu.173.1590439290104;
+        Mon, 25 May 2020 13:41:30 -0700 (PDT)
+Received: from aw-bldr-10.qualcomm.com (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id d2sm13632095pfc.7.2020.05.25.13.41.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 May 2020 11:26:09 -0700 (PDT)
-From:   =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Karsten Graul <kgraul@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        greybus-dev@lists.linaro.org, netdev@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: [PATCH 0/8] Add helper for accessing Power Management callbacs
-Date:   Mon, 25 May 2020 18:26:00 +0000
-Message-Id: <20200525182608.1823735-1-kw@linux.com>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        Mon, 25 May 2020 13:41:29 -0700 (PDT)
+From:   Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
+To:     agross@kernel.org, bjorn.andersson@linaro.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, subhashj@codeaurora.org,
+        venkatg@codeaurora.org
+Cc:     linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
+Subject: [PATCH] scsi: ufs-qcom: Fix scheduling while atomic issue
+Date:   Mon, 25 May 2020 13:41:25 -0700
+Message-Id: <20200525204125.46171-1-jeffrey.l.hugo@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This series aims to add a new driver_to_pm() helper allowing for
-accessing the Power Management callbacs for a particular device.
+ufs_qcom_dump_dbg_regs() uses usleep_range, a sleeping function, but can
+be called from atomic context in the following flow:
 
-Access to the callbacs (struct dev_pm_ops) is normally done through
-using the pm pointer that is embedded within the device_driver struct.
+ufshcd_intr -> ufshcd_sl_intr -> ufshcd_check_errors ->
+ufshcd_print_host_regs -> ufshcd_vops_dbg_register_dump ->
+ufs_qcom_dump_dbg_regs
 
-This new helper allows for the code required to reference the pm pointer
-and access Power Management callbas to be simplified.  Changing the
-following:
+This causes a boot crash on the Lenovo Miix 630 when the interrupt is
+handled on the idle thread.
 
-  struct device_driver *drv = dev->driver;
-  if (dev->driver && dev->driver->pm && dev->driver->pm->prepare) {
-      int ret = dev->driver->pm->prepare(dev);
+Fix the issue by switching to udelay().
 
-To:
+Fixes: 9c46b8676271 ("scsi: ufs-qcom: dump additional testbus registers")
+Signed-off-by: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-  const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
-  if (pm && pm->prepare) {
-      int ret = pm->prepare(dev);
-
-Or, changing the following:
-
-     const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-
-To:
-     const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
-
-This series builds on top of the previous commit 6da2f2ccfd2d ("PCI/PM:
-Make power management op coding style consistent") that had an aim to
-make accessing the Power Managemnet callbacs more consistent.
-
-No functional change intended.
-
-Links:
-  https://lore.kernel.org/driverdev-devel/20191014230016.240912-6-helgaas@kernel.org/
-  https://lore.kernel.org/driverdev-devel/8592302.r4xC6RIy69@kreacher/
-  https://lore.kernel.org/driverdev-devel/20191016135002.GA24678@kadam/
-
-Krzysztof Wilczyński (8):
-  driver core: Add helper for accessing Power Management callbacs
-  ACPI: PM: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-  greybus: Use the new device_to_pm() helper to access struct dev_pm_ops
-  scsi: pm: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-  usb: phy: fsl: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-  PCI/PM: Use the new device_to_pm() helper to access struct dev_pm_ops
-  PM: Use the new device_to_pm() helper to access struct dev_pm_ops
-  net/iucv: Use the new device_to_pm() helper to access struct
-    dev_pm_ops
-
- drivers/acpi/device_pm.c         |  5 ++-
- drivers/base/power/domain.c      | 12 ++++--
- drivers/base/power/generic_ops.c | 65 ++++++++++++++------------------
- drivers/base/power/main.c        | 48 +++++++++++++++--------
- drivers/base/power/runtime.c     |  7 ++--
- drivers/greybus/bundle.c         |  4 +-
- drivers/pci/pci-driver.c         | 32 ++++++++--------
- drivers/scsi/scsi_pm.c           |  8 ++--
- drivers/usb/phy/phy-fsl-usb.c    | 11 ++++--
- include/linux/device/driver.h    | 15 ++++++++
- net/iucv/iucv.c                  | 30 +++++++++------
- 11 files changed, 138 insertions(+), 99 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 19aa5c44e0da..f938867301a0 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1658,11 +1658,11 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ 
+ 	/* sleep a bit intermittently as we are dumping too much data */
+ 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ 	ufs_qcom_testbus_read(hba);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ 	ufs_qcom_print_unipro_testbus(hba);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ }
+ 
+ /**
 -- 
-2.26.2
+2.17.1
 
