@@ -2,184 +2,109 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6738DC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 18:27:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F11B1C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 18:39:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4658F20674
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 18:27:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB3622073B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 18:39:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="PUQDLpq5"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lBItXttT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729867AbgEZS1L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 14:27:11 -0400
-Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:18853 "EHLO
-        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729163AbgEZS1L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 14:27:11 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5ecd5f720000>; Tue, 26 May 2020 11:26:58 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 26 May 2020 11:27:10 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 26 May 2020 11:27:10 -0700
-Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 26 May
- 2020 18:27:10 +0000
-Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 26 May 2020 18:27:10 +0000
-Received: from sandstorm.nvidia.com (Not Verified[10.2.50.17]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5ecd5f7e0000>; Tue, 26 May 2020 11:27:10 -0700
-From:   John Hubbard <jhubbard@nvidia.com>
-To:     LKML <linux-kernel@vger.kernel.org>
-CC:     Souptick Joarder <jrdr.linux@gmail.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        =?UTF-8?q?Kai=20M=C3=A4kisara=20=28Kolumbus=29?= 
-        <kai.makisara@kolumbus.fi>, Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-Subject: [PATCH v2] scsi: st: convert convert get_user_pages() --> pin_user_pages()
-Date:   Tue, 26 May 2020 11:27:09 -0700
-Message-ID: <20200526182709.99599-1-jhubbard@nvidia.com>
-X-Mailer: git-send-email 2.26.2
+        id S2388499AbgEZSj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 14:39:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57530 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728113AbgEZSj0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 14:39:26 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0D43C03E96D
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2020 11:39:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=i70/VeKkFNWOCOEr/ho6wQPtJ8yKUGRxXhfcAK1Pcp8=; b=lBItXttT/czFaIsBYNdI8km5Wo
+        +QvxFPIEj3Bm7A6gUnx+cLnkHJoK3HTk+tWGtlsIACSSsznIEgXpRWE9R6YV7qDwf0NdGyL/OQBeQ
+        IqcCB91spjDy1MIbEsEWy3Onc4mdcY4gaAEY/I/I/m8KTjd7eKPNipqRJEIg0z2WR6JoB3K09BYDZ
+        B+yZI8TPu4jkdbCcCx1XXPypCcPd7gMowuQixuQsmZep9lXvchS5J+dFJGHjyTwdjaVvUenzgjdXR
+        fVGhm2cLD2JyQijPwdDZXB+RFKNjcJd+oznHXjSBMh0E/oF+bdLl0VkzXEB4Wix/sHGlJb/xAwi9H
+        e0QBG6hg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jdeTw-0006uX-Gp; Tue, 26 May 2020 18:39:20 +0000
+Date:   Tue, 26 May 2020 11:39:20 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com
+Subject: Re: [RFC v2 1/6] scsi: xarray hctl
+Message-ID: <20200526183920.GI17206@bombadil.infradead.org>
+References: <20200524155814.5895-1-dgilbert@interlog.com>
+ <20200524155814.5895-2-dgilbert@interlog.com>
+ <6527a0ca-954c-70e8-f0f5-08206c1779f2@suse.de>
+ <8dab99d1-a22d-0065-5a7a-fd9b80bc661a@interlog.com>
+ <20200525174052.GD17206@bombadil.infradead.org>
+ <825bece5-e209-a4da-ddb1-809c48e4e9b3@suse.de>
+ <20200526142727.GH17206@bombadil.infradead.org>
+ <b14bdfa1-1cb9-6e3f-c025-fccdfa034024@suse.de>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1590517618; bh=+7F/94TzCK/cPi9jWHCOZuja1kFgCeQFGR9DSAN4SLE=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         MIME-Version:X-NVConfidentiality:Content-Type:
-         Content-Transfer-Encoding;
-        b=PUQDLpq5QAaAQylmPbkePzO834JX34IxkMzVlwVWLOXzs2DUhn+5mxC3s5mgzIfoA
-         ypaXkrTBFosCl8JiV0dQGNqmHtUgfGbBVMltLOiFuk3UrRR1QVH37WL3I0684VGJYL
-         bGF3oRbcdFUWNCd7BGuXcIHoPxtgiTSLzxKWEjd0PnhN2eA8s8ozzdflZ2KRjagmV/
-         5ilJSQKf7JSqN518XowupBXJhekSVgU0U/9Puqp6EWVf7k7rg7hCrwhoyARYU0OXwY
-         cezrUF5lXc9EFDA/hLqL9zb0YKRivZ2YD3bzLR4PbKlC8T8FnXHICTV+WBdly0MD9N
-         QKD7avnwOq/GA==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b14bdfa1-1cb9-6e3f-c025-fccdfa034024@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This code was using get_user_pages*(), in a "Case 1" scenario
-(Direct IO), using the categorization from [1]. That means that it's
-time to convert the get_user_pages*() + put_page() calls to
-pin_user_pages*() + unpin_user_pages() calls.
+On Tue, May 26, 2020 at 07:53:35PM +0200, Hannes Reinecke wrote:
+> On 5/26/20 4:27 PM, Matthew Wilcox wrote:
+> > Ah, OK.  I think for these arrays you'd be better off accepting the cost
+> > of an extra 4 bytes in the struct scsi_device rather than the cost of
+> > storing the scsi_device at the LUN.
+> > 
+> > Let's just work an example where you have a 64-bit LUN with 4 ranges,
+> > each of 64 entries (this is almost a best-case scenario for the XArray).
+> > [0,63], 2^62+[0,63], 2^63+[0,63], 2^63+2^62+[0,63].
+> > 
+> > If we store them sequentially in an allocating XArray, we take up 256 *
+> > 4 bytes = 1kB extra space in the scsi_device.  The XArray will allocate
+> > four nodes plus one node to hold the four nodes, which is 5 * 576 bytes
+> > (2780 bytes) for a total of 3804 bytes.
+> > 
+> > Storing them in at their LUN will allocate a top level node which covers
+> > bits 60-66, then four nodes, each covering bits of 54-59, another four
+> > nodes covering bits 48-53, four nodes for 42-47, ...  I make it 41 nodes,
+> > coming to 23616 bytes.  And the pointer chase to get to each LUN is
+> > ten deep.  It'll mostly be cached, but still ...
+> > 
+> Which is my worry, too.
+> In the end we're having a massively large array space (128bit if we take the
+> numbers as they stand today), of which only a _tiny_ fraction is actually
+> allocated.
 
-There is some helpful background in [2]: basically, this is a small
-part of fixing a long-standing disconnect between pinning pages, and
-file systems' use of those pages.
+In your scheme, yes.  Do you ever need to look up scsi_device from
+a scsi_host with only the C:T:L as a key (and it's a situation where
+speed matters)?  Everything I've seen so far is about iterating every
+sdev in an shost, but maybe this is a "when you have a hammer" situation.
 
-Note that this effectively changes the code's behavior as well: it now
-ultimately calls set_page_dirty_lock(), instead of SetPageDirty().This
-is probably more accurate.
+> We can try to reduce the array space by eg. restricting channels and targets
+> to be 16 bits, and the LUN to be 32 bits.
+> But then we'll be having a hard time arguing; "Hey, we have a cool new
+> feature, which has a really nice interface, but we can't support the same
+> set of devices as we have now...".
+> That surely will go down well.
 
-As Christoph Hellwig put it, "set_page_dirty() is only safe if we are
-dealing with a file backed page where we have reference on the inode it
-hangs off." [3]
+But using the allocating XArray will outperform both the linked list and
+the direct-store XArray that you're proposing.
 
-Also, this deletes one of the two FIXME comments (about refcounting),
-because there is nothing wrong with the refcounting at this point.
+> Maybe one should look at using an rbtree directly; _that_ could be made to
+> work with an 128bit index, and lookup should be fast, too.
+> Let's see.
 
-[1] Documentation/core-api/pin_user_pages.rst
-
-[2] "Explicit pinning of user-space pages":
-    https://lwn.net/Articles/807108/
-
-[3] https://lore.kernel.org/r/20190723153640.GB720@lst.de
-
-Cc: "Kai M=C3=A4kisara (Kolumbus)" <kai.makisara@kolumbus.fi>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
-
-Hi,
-
-As mentioned in the v1 review thread, we probably still want/need
-this. Or so I claim. :) Please see what you think...
-
-Changes since v1: changed the commit log, to refer to Direct IO
-(Case 1), instead of DMA/RDMA (Case 2). And added Bart to Cc.
-
-v1:
-https://lore.kernel.org/linux-scsi/20200519045525.2446851-1-jhubbard@nvidia=
-.com/
-
-thanks,
-John Hubbard
-NVIDIA
-
-
- drivers/scsi/st.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index c5f9b348b438..1e3eda9fa231 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4922,7 +4922,7 @@ static int sgl_map_user_pages(struct st_buffer *STbp,
- 	unsigned long end =3D (uaddr + count + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	unsigned long start =3D uaddr >> PAGE_SHIFT;
- 	const int nr_pages =3D end - start;
--	int res, i, j;
-+	int res, i;
- 	struct page **pages;
- 	struct rq_map_data *mdata =3D &STbp->map_data;
-=20
-@@ -4944,7 +4944,7 @@ static int sgl_map_user_pages(struct st_buffer *STbp,
-=20
-         /* Try to fault in all of the necessary pages */
-         /* rw=3D=3DREAD means read from drive, write into memory area */
--	res =3D get_user_pages_fast(uaddr, nr_pages, rw =3D=3D READ ? FOLL_WRITE =
-: 0,
-+	res =3D pin_user_pages_fast(uaddr, nr_pages, rw =3D=3D READ ? FOLL_WRITE =
-: 0,
- 				  pages);
-=20
- 	/* Errors and no page mapped should return here */
-@@ -4964,8 +4964,7 @@ static int sgl_map_user_pages(struct st_buffer *STbp,
- 	return nr_pages;
-  out_unmap:
- 	if (res > 0) {
--		for (j=3D0; j < res; j++)
--			put_page(pages[j]);
-+		unpin_user_pages(pages, res);
- 		res =3D 0;
- 	}
- 	kfree(pages);
-@@ -4977,18 +4976,9 @@ static int sgl_map_user_pages(struct st_buffer *STbp=
-,
- static int sgl_unmap_user_pages(struct st_buffer *STbp,
- 				const unsigned int nr_pages, int dirtied)
- {
--	int i;
--
--	for (i=3D0; i < nr_pages; i++) {
--		struct page *page =3D STbp->mapped_pages[i];
-+	/* FIXME: cache flush missing for rw=3D=3DREAD */
-+	unpin_user_pages_dirty_lock(STbp->mapped_pages, nr_pages, dirtied);
-=20
--		if (dirtied)
--			SetPageDirty(page);
--		/* FIXME: cache flush missing for rw=3D=3DREAD
--		 * FIXME: call the correct reference counting function
--		 */
--		put_page(page);
--	}
- 	kfree(STbp->mapped_pages);
- 	STbp->mapped_pages =3D NULL;
-=20
---=20
-2.26.2
+The rbtree is even worse than the linked list if your primary API is
+"iterate all objects".
 
