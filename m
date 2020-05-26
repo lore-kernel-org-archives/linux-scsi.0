@@ -2,100 +2,142 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE05BC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 07:24:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD065C433E4
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 07:59:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD1132070A
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 07:24:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9088A20776
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 07:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731582AbgEZHY4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 03:24:56 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55194 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726756AbgEZHY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 May 2020 03:24:56 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 4408EAEA2;
-        Tue, 26 May 2020 07:24:57 +0000 (UTC)
-Subject: Re: [RFC v2 1/6] scsi: xarray hctl
-To:     dgilbert@interlog.com, Matthew Wilcox <willy@infradead.org>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com
-References: <20200524155814.5895-1-dgilbert@interlog.com>
- <20200524155814.5895-2-dgilbert@interlog.com>
- <6527a0ca-954c-70e8-f0f5-08206c1779f2@suse.de>
- <8dab99d1-a22d-0065-5a7a-fd9b80bc661a@interlog.com>
- <20200525174052.GD17206@bombadil.infradead.org>
- <f11f3d83-19a5-7a2a-bf14-917536514f68@interlog.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <4d026d56-5859-965c-4813-99539ede1309@suse.de>
-Date:   Tue, 26 May 2020 09:24:53 +0200
+        id S1731736AbgEZH7b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 03:59:31 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35074 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728364AbgEZH73 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 May 2020 03:59:29 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 04Q72te3172987;
+        Tue, 26 May 2020 03:07:33 -0400
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 316yqhtjpg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 26 May 2020 03:07:33 -0400
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 04Q72ajK171037;
+        Tue, 26 May 2020 03:07:33 -0400
+Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 316yqhtjnu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 26 May 2020 03:07:33 -0400
+Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
+        by ppma01fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 04Q764jX026533;
+        Tue, 26 May 2020 07:07:31 GMT
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+        by ppma01fra.de.ibm.com with ESMTP id 316uf8j6d8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 26 May 2020 07:07:31 +0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 04Q77S5F62914722
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 26 May 2020 07:07:28 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3774FAE055;
+        Tue, 26 May 2020 07:07:28 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 57101AE05A;
+        Tue, 26 May 2020 07:07:27 +0000 (GMT)
+Received: from oc5311105230.ibm.com (unknown [9.145.70.211])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue, 26 May 2020 07:07:27 +0000 (GMT)
+Subject: Re: [PATCH 8/8] net/iucv: Use the new device_to_pm() helper to access
+ struct dev_pm_ops
+To:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Karsten Graul <kgraul@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        greybus-dev@lists.linaro.org, netdev@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+References: <20200525182608.1823735-1-kw@linux.com>
+ <20200525182608.1823735-9-kw@linux.com>
+From:   Ursula Braun <ubraun@linux.ibm.com>
+Message-ID: <55c3d2eb-feff-bf33-235d-b89c0abef7b1@linux.ibm.com>
+Date:   Tue, 26 May 2020 09:07:27 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <f11f3d83-19a5-7a2a-bf14-917536514f68@interlog.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20200525182608.1823735-9-kw@linux.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
+ definitions=2020-05-25_12:2020-05-25,2020-05-25 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ malwarescore=0 suspectscore=0 clxscore=1011 priorityscore=1501 bulkscore=0
+ lowpriorityscore=0 mlxlogscore=999 phishscore=0 adultscore=0 mlxscore=0
+ spamscore=0 cotscore=-2147483648 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005260049
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/26/20 4:01 AM, Douglas Gilbert wrote:
-[ .. ]
-> 
-> Attached is a UML (like) class diagram for folks to kick around. It handles
-> u32 values for the host, channel and target_id level and u64 at the lun
-> (leaf) level, via a bit of hackery, even on 32 bit machines. So the object
-> tree is built on the diagonal, with the multiplicity coming from xarray
-> members (attributes). The arrowed lines show inheritance, with
-> struct device being the base class aka superclass (one could argue
-> otherwise). The "transport_class_<n>"s are added as needed by SCSI
-> transports such as SAS and iSCSI.
-> 
-> And it uses native xarray indexes up to 2**32 - 1. So it meets all the
-> constraints we have currently.
-> 
-> Plus, based on the answers I get from above questions, in the
-> scsi_lu_low32 class I would like to add another xarray, that holds
-> bitsets rather than pointers. Each bitset holds amongst other things
-> the 9 scsi_device states. That way you could iterate through all
-> LU devices looking for an uncommon state _without_ dereferencing
-> pointers to any sdev_s that are bypassed. And if xarray is cache
-> efficient in storing its data, then it would be much faster. The
-> same thing (i.e. bitset xarray) could be done in scsi_channel, for
-> starget states.
-> 
-> Finally, for efficient xarray use, every object needs to be able to
-> get to its parent (or at least, its "collection") quickly as that is
-> where all xarray operations take place. And by efficient I do _not_
-> mean calling dev_to_shost(starget->dev.parent) when we built the
-> object hierarchy and _know_ where its "shost" is.
-> 
-I would kill the 'channel' object, and use a combined 'channel':'target' 
-index for the scsi target. The 'channel' really is only a number, and
-doesn't have an object on its own.
-And for the LUN numbers I doubt we need to have two lookup arrays; one
-32bit array would be sufficient to hold basically _all_ installations
-I've seen so far (I've yet to come across on installation using more 
-than two LUN levels).
-What we could to is use the index into REPORT LUNs as the array index;
-things might shuffle around there if someone remaps devices, but that's
-a tough one even nowadays.
 
-Lemme see...
 
-Cheers,
+On 5/25/20 8:26 PM, Krzysztof Wilczyński wrote:
+> Use the new device_to_pm() helper to access Power Management callbacs
+> (struct dev_pm_ops) for a particular device (struct device_driver).
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 
-Hannes
--- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+pm support is going to be removed (for s390 in general and) for
+net/iucv/iucv.c with this net-next patch:
+
+commit 4b32f86bf1673acb16441dd55d7b325609f54897
+Author: Julian Wiedmann <jwi@linux.ibm.com>
+Date:   Tue May 19 21:10:08 2020 +0200
+
+    net/iucv: remove pm support
+    
+    commit 394216275c7d ("s390: remove broken hibernate / power management support")
+    removed support for ARCH_HIBERNATION_POSSIBLE from s390.
+    
+    So drop the unused pm ops from the s390-only iucv bus driver.
+    
+    CC: Hendrik Brueckner <brueckner@linux.ibm.com>
+    Signed-off-by: Julian Wiedmann <jwi@linux.ibm.com>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+> ---
+>  net/iucv/iucv.c | 30 ++++++++++++++++++------------
+>  1 file changed, 18 insertions(+), 12 deletions(-)
+> 
+> diff --git a/net/iucv/iucv.c b/net/iucv/iucv.c
+> index 9a2d023842fe..1a3029ab7c1f 100644
+> --- a/net/iucv/iucv.c
+> +++ b/net/iucv/iucv.c
+
+...
