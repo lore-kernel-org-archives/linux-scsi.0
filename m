@@ -2,74 +2,125 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93950C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 10:13:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF94C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 10:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75C902073B
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 10:13:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7853E2073B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 10:36:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590489371;
+	bh=pdYL9aHWYegG+yy2CbjK7CZRpFI/0NsJ7qSuM1XyoO4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=gSLp87KNkUohNltwY4aww77ZKuIXVLaVUKXwBCEWFiKfumapl8NShZNVV6cIruakK
+	 q6cqcZow9gwfIbjeMH2Gl1KJXHkBG5Xs/LgeiZDVIRzF45jtzz4cQJ1arUop47rJoi
+	 aDcsDD2/A9yMNxMI5PpdXPzlOlJWuF6hTxJ6ePjc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388187AbgEZKNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 06:13:02 -0400
-Received: from spam.zju.edu.cn ([61.164.42.155]:55030 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728810AbgEZKNC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 May 2020 06:13:02 -0400
-Received: by ajax-webmail-mail-app3 (Coremail) ; Tue, 26 May 2020 18:12:46
- +0800 (GMT+08:00)
-X-Originating-IP: [222.205.78.173]
-Date:   Tue, 26 May 2020 18:12:46 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From:   dinghao.liu@zju.edu.cn
-To:     "Vignesh Raghavendra" <vigneshr@ti.com>
-Cc:     kjlu@umn.edu, "Alim Akhtar" <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
+        id S1731925AbgEZKgI convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 06:36:08 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:44980 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727890AbgEZKgH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 06:36:07 -0400
+Received: by mail-ot1-f68.google.com with SMTP id f18so15836136otq.11;
+        Tue, 26 May 2020 03:36:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=OP8/hxzSora7+RyKmdWGrhPbxw1jS07GePgn3bcs4Ls=;
+        b=c3uGYnrCb4WAGHZya8YQv3RDUmJ/iiligWaOKn8wjfpV6U65Cn+8P6/8We9RY7VPtq
+         WVO8PaEN3ZnluyQhcXt0N8r5TRkyvnCduaHHOdNx9nCECB95hckaw0sDD5uyk8Nn2QKu
+         4gvjRqM2nDflIKrbTKV/pirTNdtUlTyUoiyzenvnBJ1wIy8O4zwHHA8UOX7+4gSJzhAm
+         hcGSnaL4shRqSiAdcGS+tX0IMhd1J7bAattoBquo+F8QEF4b0cibfEMexFGyHrhAU1ho
+         MyMPIi+HTS5QCj8XKC+wRD34gPgMWUuSHGLmaRBDq20pXlFYwQyq8tgBaEUIV4BzrVX0
+         D1Iw==
+X-Gm-Message-State: AOAM533HtqFz8V6nIu1fgbPJqBp/IXkPI8Zs9ruj9GgQHQbhvJuyeNXF
+        s+xvlroxpkP7LQrddggsqwfl9h26kfXyLjRyJ5Q=
+X-Google-Smtp-Source: ABdhPJy1GHMjiBmqkoqcnOQswjrf3GtFhFuljSG5cgXHe0ZrV2FGIT0iVHs8J6BfXHu/3+89V/CmkBUjqTdpcpTHsMI=
+X-Received: by 2002:a9d:6c0f:: with SMTP id f15mr346512otq.118.1590489366099;
+ Tue, 26 May 2020 03:36:06 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200525182608.1823735-1-kw@linux.com> <20200525182608.1823735-3-kw@linux.com>
+ <CAJZ5v0jQUmdDYmJsP43Ja3urpVLUxe-yD_Hm_Jd2LtCoPiXsrQ@mail.gmail.com> <20200526094518.GA4600@amd>
+In-Reply-To: <20200526094518.GA4600@amd>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 26 May 2020 12:35:55 +0200
+Message-ID: <CAJZ5v0ibtOMFDtCcyfmGeE15uR-+hQLw8tr6bfbp4aR4V7C3vA@mail.gmail.com>
+Subject: Re: [PATCH 2/8] ACPI: PM: Use the new device_to_pm() helper to access
+ struct dev_pm_ops
+To:     Pavel Machek <pavel@denx.de>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Re: [PATCH] scsi: ufs: Fix runtime PM imbalance on error
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version XT5.0.10 build 20190906(84e8bf8f)
- Copyright (c) 2002-2020 www.mailtech.cn zju.edu.cn
-In-Reply-To: <73cb87f7-52ac-1a18-364e-977080cc149c@ti.com>
-References: <20200522045335.30556-1-dinghao.liu@zju.edu.cn>
- <73cb87f7-52ac-1a18-364e-977080cc149c@ti.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
-MIME-Version: 1.0
-Message-ID: <20dbb267.d17cd.172507864cf.Coremail.dinghao.liu@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID: cC_KCgCH_0Ke68xesPgJAA--.2822W
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgkMBlZdtOUEVwADsL
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJTRUUUbXvS07vEb7Iv0x
-        C_Cr1lV2xY67kC6x804xWlV2xY67CY07I20VC2zVCF04k26cxKx2IYs7xG6rWj6s0DMIAI
-        bVAFxVCF77xC64kEw24lV2xY67C26IkvcIIF6IxKo4kEV4ylV2xY628lY4IE4IxF12IF4w
-        CS07vE84x0c7CEj48ve4kI8wCS07vE84ACjcxK6xIIjxv20xvE14v26w1j6s0DMIAIbVA2
-        z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIAIbVA2z4x0Y4vEx4A2jsIE14v26r
-        xl6s0DMIAIbVA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1lV2xY62AIxVAIcxkEcVAq
-        07x20xvEncxIr21lV2xY6c02F40EFcxC0VAKzVAqx4xG6I80ewCS07vEYx0E2Ix0cI8IcV
-        AFwI0_JrI_JrylV2xY6cIj6I8E87Iv67AKxVWUJVW8JwCS07vEOx8S6xCaFVCjc4AY6r1j
-        6r4UMIAIbVCjxxvEw4WlV2xY6xkIecxEwVAFwVW8twCS07vEc2IjII80xcxEwVAKI48JMI
-        AIbVCF04k20xvE74AGY7Cv6cx26r4fKr1UJr1lV2xY6xCjnVCjjxCrMIAIbVCFx2IqxVCF
-        s4IE7xkEbVWUJVW8JwCS07vEx2IqxVAqx4xG67AKxVWUJVWUGwCS07vEx2IqxVCjr7xvwV
-        AFwI0_JrI_JrWlV2xY6I8E67AF67kF1VAFwI0_Jw0_GFylV2xY6IIF0xvE2Ix0cI8IcVAF
-        wI0_Jr0_JF4lV2xY6IIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCS07vEIxAIcVCF04
-        k26cxKx2IYs7xG6rWUJVWrZr1UMIAIbVCI42IY6I8E87Iv67AKxVWUJVW8JwCS07vEIxAI
-        cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUU==
+        Felipe Balbi <balbi@kernel.org>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Karsten Graul <kgraul@linux.ibm.com>,
+        Ursula Braun <ubraun@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        greybus-dev@lists.linaro.org, netdev <netdev@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        linux-s390@vger.kernel.org,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" 
+        <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBIaSwKPiAKPiBPbiAyMi8wNS8yMCAxMDoyMyBhbSwgRGluZ2hhbyBMaXUgd3JvdGU6Cj4gPiBX
-aGVuIGRldm1fY2xrX2dldCgpIHJldHVybnMgYW4gZXJyb3IgY29kZSwgYSBwYWlyaW5nCj4gPiBy
-dW50aW1lIFBNIHVzYWdlIGNvdW50ZXIgZGVjcmVtZW50IGlzIG5lZWRlZCB0byBrZWVwCj4gPiB0
-aGUgY291bnRlciBiYWxhbmNlZC4KPiA+IAo+ID4gU2lnbmVkLW9mZi1ieTogRGluZ2hhbyBMaXUg
-PGRpbmdoYW8ubGl1QHpqdS5lZHUuY24+Cj4gPiAtLS0KPiAKPiBUaGFua3MgZm9yIHRoZSBwYXRj
-aCEgQnV0IHRoaXMgZml4IGlzIGluY29tcGxldGUsIEkgaGF2ZSBwb3N0ZWQgCj4gYSBtb3JlIGNv
-bXByZWhlbnNpdmUgZml4IGF0IFsxXS4uIFBsZWFzZSB0YWtlIGEgbG9vayEKCgpZb3UgYXJlIHJp
-Z2h0LCB3ZSBzaG91bGQgY2FsbCBwbV9ydW50aW1lX2Rpc2FibGUoKSBvbiBlcnJvciwgdG9vLgpU
-aGFuayB5b3VyIGZvciB5b3VyIHJlbWluZGVyIQoKUmVnYXJkcywKRGluZ2hhbw==
+On Tue, May 26, 2020 at 11:45 AM Pavel Machek <pavel@denx.de> wrote:
+>
+> On Tue 2020-05-26 10:37:36, Rafael J. Wysocki wrote:
+> > On Mon, May 25, 2020 at 8:26 PM Krzysztof Wilczyński <kw@linux.com> wrote:
+> > >
+> > > Use the new device_to_pm() helper to access Power Management callbacs
+> > > (struct dev_pm_ops) for a particular device (struct device_driver).
+> > >
+> > > No functional change intended.
+> > >
+> > > Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+> > > ---
+> > >  drivers/acpi/device_pm.c | 5 +++--
+> > >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+> > > index 5832bc10aca8..b98a32c48fbe 100644
+> > > --- a/drivers/acpi/device_pm.c
+> > > +++ b/drivers/acpi/device_pm.c
+> > > @@ -1022,9 +1022,10 @@ static bool acpi_dev_needs_resume(struct device *dev, struct acpi_device *adev)
+> > >  int acpi_subsys_prepare(struct device *dev)
+> > >  {
+> > >         struct acpi_device *adev = ACPI_COMPANION(dev);
+> > > +       const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
+> >
+> > I don't really see a reason for this change.
+> >
+> > What's wrong with the check below?
+>
+> Duplicated code. Yes, compiler can sort it out, but... new version
+> looks better to me.
+
+So the new code would not be duplicated?
+
+Look at the other patches in the series then. :-)
