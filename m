@@ -2,116 +2,100 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DABB7C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 06:35:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE05BC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 07:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B65092071A
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 06:35:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590474926;
-	bh=lT4rvAif71IsjSUrxQMACsE1/IWSMB9YtdoebR/hi/U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=zgG0hUwPzuTaQS9H3WhIwErl3Pjlu/9lu5qah0Z0Nk+9pXGzc2f1ucEnIi3XjYc2A
-	 Qj/ERav9uLL9R1FfrnFTN7UDCATyJziEDOLfuCPJCfySLNozsvk9aqPM/c6wC5NaoA
-	 ubNmqT1atATmpljcfDqdME1wiwMvLGZCsg42Bslo=
+	by mail.kernel.org (Postfix) with ESMTP id BD1132070A
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 07:24:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729783AbgEZGfY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 02:35:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35964 "EHLO mail.kernel.org"
+        id S1731582AbgEZHY4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 03:24:56 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55194 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726776AbgEZGfY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 May 2020 02:35:24 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EF9752068D;
-        Tue, 26 May 2020 06:35:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590474923;
-        bh=lT4rvAif71IsjSUrxQMACsE1/IWSMB9YtdoebR/hi/U=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TnaP6H+bfcIwQM2DdB81Z/y15ftt9v8BASFf0zYe1DVE1SWw2uZEVX4B8sm9OKNVL
-         U7W1SxfUlTqITkqwa7Wl9DLBh4VenSSpH0PyygxmtomnmGeuy8dcfzNYBZgXv408qp
-         NGe5za7/QN+ohkAa6M6oqOsAotjw69NQ2c+RPcMk=
-Date:   Tue, 26 May 2020 08:35:21 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Pavel Machek <pavel@ucw.cz>, Johan Hovold <johan@kernel.org>,
-        Alex Elder <elder@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Karsten Graul <kgraul@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        John Stultz <john.stultz@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        greybus-dev@lists.linaro.org, netdev@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 8/8] net/iucv: Use the new device_to_pm() helper to
- access struct dev_pm_ops
-Message-ID: <20200526063521.GC2578492@kroah.com>
-References: <20200525182608.1823735-1-kw@linux.com>
- <20200525182608.1823735-9-kw@linux.com>
+        id S1726756AbgEZHY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 May 2020 03:24:56 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 4408EAEA2;
+        Tue, 26 May 2020 07:24:57 +0000 (UTC)
+Subject: Re: [RFC v2 1/6] scsi: xarray hctl
+To:     dgilbert@interlog.com, Matthew Wilcox <willy@infradead.org>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com
+References: <20200524155814.5895-1-dgilbert@interlog.com>
+ <20200524155814.5895-2-dgilbert@interlog.com>
+ <6527a0ca-954c-70e8-f0f5-08206c1779f2@suse.de>
+ <8dab99d1-a22d-0065-5a7a-fd9b80bc661a@interlog.com>
+ <20200525174052.GD17206@bombadil.infradead.org>
+ <f11f3d83-19a5-7a2a-bf14-917536514f68@interlog.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <4d026d56-5859-965c-4813-99539ede1309@suse.de>
+Date:   Tue, 26 May 2020 09:24:53 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <f11f3d83-19a5-7a2a-bf14-917536514f68@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200525182608.1823735-9-kw@linux.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, May 25, 2020 at 06:26:08PM +0000, Krzysztof Wilczyński wrote:
-> Use the new device_to_pm() helper to access Power Management callbacs
-> (struct dev_pm_ops) for a particular device (struct device_driver).
+On 5/26/20 4:01 AM, Douglas Gilbert wrote:
+[ .. ]
 > 
-> No functional change intended.
+> Attached is a UML (like) class diagram for folks to kick around. It handles
+> u32 values for the host, channel and target_id level and u64 at the lun
+> (leaf) level, via a bit of hackery, even on 32 bit machines. So the object
+> tree is built on the diagonal, with the multiplicity coming from xarray
+> members (attributes). The arrowed lines show inheritance, with
+> struct device being the base class aka superclass (one could argue
+> otherwise). The "transport_class_<n>"s are added as needed by SCSI
+> transports such as SAS and iSCSI.
 > 
-> Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
-> ---
->  net/iucv/iucv.c | 30 ++++++++++++++++++------------
->  1 file changed, 18 insertions(+), 12 deletions(-)
+> And it uses native xarray indexes up to 2**32 - 1. So it meets all the
+> constraints we have currently.
 > 
-> diff --git a/net/iucv/iucv.c b/net/iucv/iucv.c
-> index 9a2d023842fe..1a3029ab7c1f 100644
-> --- a/net/iucv/iucv.c
-> +++ b/net/iucv/iucv.c
-> @@ -1836,23 +1836,23 @@ static void iucv_external_interrupt(struct ext_code ext_code,
->  
->  static int iucv_pm_prepare(struct device *dev)
->  {
-> -	int rc = 0;
-> +	const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
->  
->  #ifdef CONFIG_PM_DEBUG
->  	printk(KERN_INFO "iucv_pm_prepare\n");
->  #endif
-> -	if (dev->driver && dev->driver->pm && dev->driver->pm->prepare)
-> -		rc = dev->driver->pm->prepare(dev);
-> -	return rc;
-> +	return pm && pm->prepare ? pm->prepare(dev) : 0;
+> Plus, based on the answers I get from above questions, in the
+> scsi_lu_low32 class I would like to add another xarray, that holds
+> bitsets rather than pointers. Each bitset holds amongst other things
+> the 9 scsi_device states. That way you could iterate through all
+> LU devices looking for an uncommon state _without_ dereferencing
+> pointers to any sdev_s that are bypassed. And if xarray is cache
+> efficient in storing its data, then it would be much faster. The
+> same thing (i.e. bitset xarray) could be done in scsi_channel, for
+> starget states.
+> 
+> Finally, for efficient xarray use, every object needs to be able to
+> get to its parent (or at least, its "collection") quickly as that is
+> where all xarray operations take place. And by efficient I do _not_
+> mean calling dev_to_shost(starget->dev.parent) when we built the
+> object hierarchy and _know_ where its "shost" is.
+> 
+I would kill the 'channel' object, and use a combined 'channel':'target' 
+index for the scsi target. The 'channel' really is only a number, and
+doesn't have an object on its own.
+And for the LUN numbers I doubt we need to have two lookup arrays; one
+32bit array would be sufficient to hold basically _all_ installations
+I've seen so far (I've yet to come across on installation using more 
+than two LUN levels).
+What we could to is use the index into REPORT LUNs as the array index;
+things might shuffle around there if someone remaps devices, but that's
+a tough one even nowadays.
 
-No need for ? : here either, just use if () please.
+Lemme see...
 
-It's "interesting" how using your new helper doesn't actually make the
-code smaller.  Perhaps it isn't a good helper function?
+Cheers,
 
-thanks,
-
-greg k-h
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
