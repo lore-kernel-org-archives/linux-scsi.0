@@ -2,60 +2,102 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78E2FC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 14:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEF4EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 14:57:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 543D420776
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 14:53:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fu+G1VUN"
+	by mail.kernel.org (Postfix) with ESMTP id B002B20776
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 14:57:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729601AbgEZOxo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 10:53:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50334 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726916AbgEZOxo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 10:53:44 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53F13C03E96D;
-        Tue, 26 May 2020 07:53:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4CjAmi30LAVB8ETLdMsuowaxBjBIdLdRt5GpwP/DM6w=; b=fu+G1VUNChJfi1lQIbdOx0911I
-        Cy/RGHaEEwn+z7tK6qvQ2+JOjretTS8U2TsxU653Iovr8Qbe3BX8QLr3cOSZRIYFxmXqtqFW52P7E
-        SEO96XrFf0srLLk07JjbKkxe0EjTovpGgXkkLy8lDUHFqEaKixYq2ih7CwIOlx+hYEssvz7nQZerg
-        9TTPp/3uR79vLVQxpC5tn81D4VsVLiPvj173NMGqb8zfqOTB5nH52Z3Pdv2ycyfDpH1Cw0zKdV0ai
-        fNgXQHNea+UYoSf5jGC37y1HubpK7D791wyL/dM26HMk/MqVRuJYfqV81nPCqkhVJdqD5fPEbQlSZ
-        HKl5OsCA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jdaxa-0001E7-RR; Tue, 26 May 2020 14:53:42 +0000
-Date:   Tue, 26 May 2020 07:53:42 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-nvme@lists.infradead.org, axboe@kernel.dk,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        jejb@linux.ibm.com, kernel-janitors@vger.kernel.org,
-        hch@infradead.org, paul.ely@broadcom.com, hare@suse.de,
-        dan.carpenter@oracle.com
-Subject: Re: [PATCH 0/3] lpfc: Fix errors in LS receive refactoring
-Message-ID: <20200526145342.GA4348@infradead.org>
-References: <20200520185929.48779-1-jsmart2021@gmail.com>
+        id S1729300AbgEZO5r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 10:57:47 -0400
+Received: from mail-ej1-f65.google.com ([209.85.218.65]:37776 "EHLO
+        mail-ej1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727978AbgEZO5r (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 10:57:47 -0400
+Received: by mail-ej1-f65.google.com with SMTP id l21so24159170eji.4;
+        Tue, 26 May 2020 07:57:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=h/vc/U48e43hYebkBpRwszhtS9SjYZ2xSvS7nTqAhXk=;
+        b=JPgpJnLNkWjACul1dvYApARVGs2Cs5gfG38iSSaBGT9/l5HFAlskGf9v34VHttoTvd
+         cN9mDEwJ9T2RpslOcBxIh3Ok6hEdzIQwFiiibxZG5vsq7L6QpmZwS2RWsfcLS4DzBhpL
+         2UsyWHHXavFq7+qswrou69yuetvQU/XCZlHtrhiyueM6ERqDLX8Xd3B0xuRVF4u0T/JB
+         3FbgiyyU/xsDy3HAghkLsm0BWrnDttYQlIdKeg33LsCiCJA9GTkm9MSzIjVerh8ATz3W
+         fvX6oKgTZC+77hTsTqts/rPQf8cB7ZzNHFrzvM3tRsKxivdTMljMV9kdwqgl9PT3z9r8
+         ql7g==
+X-Gm-Message-State: AOAM5322H1G4oVJlE4HYNCDokfd3D5xFWS8N3RXUnHQpcWHMowcngU31
+        1wgyg9nuoHj3xOkFpKT+l+Y=
+X-Google-Smtp-Source: ABdhPJzdElVIHtsR0qMTrQLNXyURt2kuG/VwKifaQBwdr8EPvJOXOlo0YVxmLG6Ml176FD4Quk6tgg==
+X-Received: by 2002:a17:906:4406:: with SMTP id x6mr1463667ejo.160.1590505065110;
+        Tue, 26 May 2020 07:57:45 -0700 (PDT)
+Received: from rocinante ([95.155.85.46])
+        by smtp.gmail.com with ESMTPSA id v3sm149610ejj.14.2020.05.26.07.57.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 May 2020 07:57:44 -0700 (PDT)
+Date:   Tue, 26 May 2020 16:57:42 +0200
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Ursula Braun <ubraun@linux.ibm.com>
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Karsten Graul <kgraul@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        greybus-dev@lists.linaro.org, netdev@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 8/8] net/iucv: Use the new device_to_pm() helper to
+ access struct dev_pm_ops
+Message-ID: <20200526145742.GA75990@rocinante>
+References: <20200525182608.1823735-1-kw@linux.com>
+ <20200525182608.1823735-9-kw@linux.com>
+ <55c3d2eb-feff-bf33-235d-b89c0abef7b1@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200520185929.48779-1-jsmart2021@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <55c3d2eb-feff-bf33-235d-b89c0abef7b1@linux.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks,
+Hi Ursula,
 
-applied to nvme-5.8.
+On 20-05-26 09:07:27, Ursula Braun wrote:
+> 
+> 
+> On 5/25/20 8:26 PM, Krzysztof Wilczyński wrote:
+> > Use the new device_to_pm() helper to access Power Management callbacs
+> > (struct dev_pm_ops) for a particular device (struct device_driver).
+> > 
+> > No functional change intended.
+> > 
+> > Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+> 
+> pm support is going to be removed (for s390 in general and) for
+> net/iucv/iucv.c with this net-next patch:
+[...]
+
+Good to know!  Thank you for letting me know.  I appreciate that.
+
+Krzysztof
