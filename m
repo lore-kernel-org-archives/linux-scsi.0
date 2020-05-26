@@ -2,136 +2,145 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BDC8C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 16:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64463C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 17:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4839E207D8
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 16:48:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dCxwuhqp"
+	by mail.kernel.org (Postfix) with ESMTP id 3FB0C20823
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 17:04:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731519AbgEZQsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 12:48:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40080 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731501AbgEZQsQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 12:48:16 -0400
-Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 749AFC03E97C
-        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2020 09:48:15 -0700 (PDT)
-Received: by mail-io1-xd43.google.com with SMTP id d7so22790036ioq.5
-        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2020 09:48:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=CDy85Gj7MYd1kNtILJcUzn7KVIhIM0XshsVeAc/i0tA=;
-        b=dCxwuhqpPbwbXsS8D4GR15Oi/vkWvJ2t6JE5jqhDuEYRBCxiAwo9cWnqARqt/pZ9N3
-         vSDlZ8wDeZydMMsvQgllY5SFL21AkwmUO/yVMpJRwkWuLZ+okFm2plV7st5ZUHxgg7+n
-         nw9y2DMW7Y1odFWc8D0ovkNrkmBQTlf+wVi0icllMuisiL6LQjhD1eU0HTahi0uvVson
-         7H1igoRa7sC3VzH0k6kw37/8QsEYXM6RYbG1TkZAtikaoCp3wlyHVEwAfTjAFYYV3q4L
-         NgflHMgnD8hmupC7gXChsbUVMFzyhgq3aBSV9WdpBp5mfIm6+JpoU8GgF7qXRXSqT3gV
-         qZIQ==
+        id S1728561AbgEZREE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 13:04:04 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:37676 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726420AbgEZREE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 13:04:04 -0400
+Received: by mail-pl1-f196.google.com with SMTP id x10so8917858plr.4;
+        Tue, 26 May 2020 10:04:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=CDy85Gj7MYd1kNtILJcUzn7KVIhIM0XshsVeAc/i0tA=;
-        b=hhm8jY1y4BjWk8Q9TsoebhZt58P5yHxVcmhHw6WwfFOMD0l5mBGSaKr43KC22k3GL7
-         zQo24gW+vDGcS4jflcwaFIAiCMZHY9KAIlDXPlBz0Ex26qU0ihoRadz4xRy7BCkRV/qr
-         mBtjfzmR8jWUfcE8ptPL8uY8IQ6tMMm5BJ9beApqP/9ZXy6r6BzgV+yKECC7YgCUeL3F
-         stOoZJg7ESW6+8y6hNFgVbucAoiHAgOEUKJ+OXmYkd8L+A9O75pZvHeLD65d8G07rkOL
-         xzaIPnHLZKPMJyl6cbM0HDu48UXUXXj3chkd0gp1IjowGzi2i8vEBGUoXIIiAFXQPUPk
-         CQEw==
-X-Gm-Message-State: AOAM533fNFIogZ3hiKRfOeN9rOXe/k2RTeD7N8Yl4lWM9CYiHSL1hBay
-        tNZq//NlANYM7XeQRRsQ6I/DOw==
-X-Google-Smtp-Source: ABdhPJwt8EDbE+Md3qNwECgPyEhh34GzLnn6Kwx5Q+Egs2R3PU4UAkkaFOOCDwhKuojJpS4rMr4mTQ==
-X-Received: by 2002:a02:2708:: with SMTP id g8mr1921759jaa.52.1590511694529;
-        Tue, 26 May 2020 09:48:14 -0700 (PDT)
-Received: from [172.22.22.4] (c-73-185-129-58.hsd1.mn.comcast.net. [73.185.129.58])
-        by smtp.googlemail.com with ESMTPSA id d29sm250489ild.42.2020.05.26.09.48.12
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=Wlo4YYZRgFxx8YY2behXUUIIdun8rPBWQgGdvg5rdjQ=;
+        b=PpZ+CnBqwU+bcLvPxIHBzd9wOOAt6JKT6646D1M8YdfghUa46YXuP/jTALPYw05ldX
+         OybCnu8LOjIqLHWXAcEqZxeWXnnHiGpyM5NCv9LXXW61S5f83+WMo1dKqrjFV2w308Mz
+         5YSMLMc0XF3qr3lZePKQ6J9TrcRhzKmV8hdIOThMZM64nBJmyhrfJkR2QzXp5qicy13O
+         nUK+B923NEEE4jcG8L14TQcNgQWLwDHTCFcpl8bWg5UsnSFehQUaJlMFxp8oDfpnsag3
+         NzWtlwKzLfZGpS0fDqYAmbstHfp4ZPbD5c3ZniDTleb28K/umiNd8+WtmWd0KdPeHrnr
+         9s3g==
+X-Gm-Message-State: AOAM5335RmO232Iw1lvnwV7vsSSM5p4NwZvqMeQH27j8tFkJkcZZoJ2S
+        OyM6umcT0cNoev7udk6k8h8=
+X-Google-Smtp-Source: ABdhPJyOSOhqC9a2daL8vGXqvaSTXPUAR8rqvSnxCfcaqDbhQ92llj4+dJ/MTg7PmzoW0mltmneccA==
+X-Received: by 2002:a17:90a:f493:: with SMTP id bx19mr189496pjb.45.1590512643516;
+        Tue, 26 May 2020 10:04:03 -0700 (PDT)
+Received: from [192.168.2.10] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id h4sm51270pje.29.2020.05.26.10.04.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 May 2020 09:48:13 -0700 (PDT)
-Subject: Re: [greybus-dev] [PATCH 8/8] net/iucv: Use the new device_to_pm()
- helper to access struct dev_pm_ops
-To:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>, linux-pci@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Pavel Machek <pavel@ucw.cz>, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Kevin Hilman <khilman@kernel.org>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        linux-acpi@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Len Brown <lenb@kernel.org>, linux-pm@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Johan Hovold <johan@kernel.org>, greybus-dev@lists.linaro.org,
-        John Stultz <john.stultz@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Felipe Balbi <balbi@kernel.org>, Alex Elder <elder@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Karsten Graul <kgraul@linux.ibm.com>,
-        "David S. Miller" <davem@davemloft.net>
-References: <20200525182608.1823735-1-kw@linux.com>
- <20200525182608.1823735-9-kw@linux.com> <20200526063521.GC2578492@kroah.com>
- <20200526150744.GC75990@rocinante>
-From:   Alex Elder <elder@linaro.org>
-Message-ID: <acb9415a-d0d0-3ebc-b5ae-c26a7dc2114a@linaro.org>
-Date:   Tue, 26 May 2020 11:48:12 -0500
+        Tue, 26 May 2020 10:04:02 -0700 (PDT)
+Subject: Re: Another approach of UFSHPB
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>
+References: <aaf130c2-27bd-977b-55df-e97859f4c097@acm.org>
+ <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
+ <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
+ <d10b27f1-49ec-d092-b252-2bb8cdc4c66e@acm.org>
+ <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
+ <CGME20200516171420epcas2p108c570904c5117c3654d71e0a2842faa@epcms2p4>
+ <231786897.01590385382061.JavaMail.epsvc@epcpadp2>
+ <6eec7c64-d4c1-c76e-5c14-7904a8792275@acm.org>
+ <SN6PR04MB46400AED930A3DC5B94AED25FCB00@SN6PR04MB4640.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <fd8c4336-8528-19d9-b1fe-1f74baf6b483@acm.org>
+Date:   Tue, 26 May 2020 10:03:59 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200526150744.GC75990@rocinante>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <SN6PR04MB46400AED930A3DC5B94AED25FCB00@SN6PR04MB4640.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/26/20 10:07 AM, Krzysztof Wilczyński wrote:
-> Hello Greg,
-> 
-> [...]
->> It's "interesting" how using your new helper doesn't actually make the
->> code smaller.  Perhaps it isn't a good helper function?
+On 2020-05-25 23:15, Avri Altman wrote:
+>> On 2020-05-24 22:40, Daejun Park wrote:
+>>> The HPB driver is close to the UFS core function, but it is not essential
+>>> for operating UFS device. With reference to this article
+>>> (https://lwn.net/Articles/645810/), we implemented extended UFS-feature
+>>> as bus model. Because the HPB driver consumes the user's main memory, it
+>> should
+>>> support bind / unbind functionality as needed. We implemented the HPB
+>> driver
+>>> can be unbind / unload on runtime.
+>>
+>> I do not agree that the bus model is the best choice for freeing cache
+>> memory if it is no longer needed. A shrinker is probably a much better
+>> choice because the callback functions in a shrinker get invoked when a
+>> system is under memory pressure. See also register_shrinker(),
+>> unregister_shrinker() and struct shrinker in include/linux/shrinker.h.
+>
+> Since this discussion is closely related to cache allocation,
+> What is your opinion about allocating the pages dynamically as the regions
+> Are being activated/deactivated, in oppose of how it is done today - 
+> Statically on init for the entire max-active-subregions?
 
-Helper functions often improve code readability, which is
-beneficial even if it doesn't reduce code size or efficiency.
+Memory that is statically allocated cannot be used for any other purpose
+(e.g. page cache) without triggering the associated shrinker. As far as
+I know shrinkers are only triggered when (close to) out of memory. So
+dynamically allocating memory as needed is probably a better strategy
+than statically allocating the entire region at initialization time.
 
-But I won't argue for or against this particular change.
-It's OK with me either way.
+Thanks,
 
-					-Alex
+Bart.
 
-> The idea for the helper was inspired by the comment Dan made to Bjorn
-> about Bjorn's change, as per:
-> 
->    https://lore.kernel.org/driverdev-devel/20191016135002.GA24678@kadam/
-> 
-> It looked like a good idea to try to reduce the following:
-> 
->    dev->driver && dev->driver->pm && dev->driver->pm->prepare
-> 
-> Into something more succinct.  Albeit, given the feedback from yourself
-> and Rafael, I gather that this helper is not really a good addition.
-> 
-> Thank you everyone and sorry for the commotion!
-> 
-> Krzysztof
-> _______________________________________________
-> greybus-dev mailing list
-> greybus-dev@lists.linaro.org
-> https://lists.linaro.org/mailman/listinfo/greybus-dev
-> 
+
 
