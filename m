@@ -2,48 +2,60 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B3ECC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 15:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F72EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 15:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 609562070A
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 15:07:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C57F20776
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 15:19:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590506363;
+	bh=pgSnFmjqIUWFOY7OIPGTlhciS8aSQP9kq1ANrXciBOI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=OnPMjLEzUqHhJIwM68gSVgAhlfYtc9gQH4nLbFBFEDGMpW4ZSlxT7V/kU1H/Rj/41
+	 WMlQBMEaeY6CspHJ5QQKDLjiXbr6EiCE9v2GY6DazlH/8SrqL2teGs0ibAqEQ2Edpg
+	 6it7z5WZvYVbGUW2hDlYfEK/TZd/AFj0HWWIsSYo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729710AbgEZPHt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 11:07:49 -0400
-Received: from mail-ej1-f65.google.com ([209.85.218.65]:43297 "EHLO
-        mail-ej1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728166AbgEZPHt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 11:07:49 -0400
-Received: by mail-ej1-f65.google.com with SMTP id a2so24155918ejb.10;
-        Tue, 26 May 2020 08:07:47 -0700 (PDT)
+        id S1728815AbgEZPTU convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 11:19:20 -0400
+Received: from mail-oo1-f67.google.com ([209.85.161.67]:40593 "EHLO
+        mail-oo1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726939AbgEZPTU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 11:19:20 -0400
+Received: by mail-oo1-f67.google.com with SMTP id f39so976300ooi.7;
+        Tue, 26 May 2020 08:19:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=KjgTih7A660W8l2Ai5zV0xie7l2fjS3cquiqxZY0eUs=;
-        b=lj0xOxS+RFiPf9SsOq/2HiLpzJM8NqDxbOEmL6gK5IWHwUO1MvEcGdGh/ue2UIwHEs
-         g1fuHrUZTMNafI1bJQlUpKzxnH0gIOZ2sDFdr3agSkIZjUNbR+E+3qyAH8GhAbdq+JQO
-         uowDnKKCjJIGxSvbMpLth3SFSzzIFsGZtL8EgFNZpGPyXxh2/PdBvnFAGRG+aE0vP4A8
-         Jk5rQMDzbtDospNqOqOlXNmu5iNO6beaa8MWhQt6lm/O3dx5IYX2B9t6zjPUsAQuBYGW
-         +1KPD8SnieaYmzDNPUcPPHZqGVuJBVrp4k5fShXQmCcuIFEyUovshFaMOKky8Wl3YcdI
-         ToQA==
-X-Gm-Message-State: AOAM5306iPBdlX3xOO+3pC8x3R7m9tVCiXk0LcQ01D98VdJJ/LLCrMTi
-        8Sp0+ggbBZLudgHz0UkIczY=
-X-Google-Smtp-Source: ABdhPJzpF2izaI7HGirZOZ/xZQdcIiUyWXIQKdVRDh55kJz8UdqLFQpxuDMPANNvmQBg9fruG2pCcw==
-X-Received: by 2002:a17:906:8748:: with SMTP id hj8mr1609977ejb.335.1590505666414;
-        Tue, 26 May 2020 08:07:46 -0700 (PDT)
-Received: from rocinante ([95.155.85.46])
-        by smtp.gmail.com with ESMTPSA id t22sm137834ejr.93.2020.05.26.08.07.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 May 2020 08:07:45 -0700 (PDT)
-Date:   Tue, 26 May 2020 17:07:44 +0200
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=VZBcz6P8XvlHsbrU2eTtG7/ScIEzLwH8fekfbRdSKRQ=;
+        b=axB0+ztMZNPQHmh2T5J1rNX9XSSqUJ1ghF8kZRp21n86wbYCSnhFvdknxHvMgxWxZL
+         rJYrae7L8x9X9tavzKHdELQgCk12rkUHqFsMLw0DOyOPALJ64FjunAwiRSUvz1m3yVhr
+         YEgm3brc/NQ/u+Z1lT5X4ylfv29HXZrhuqdCJ1AntbRSp1wcywD6q2CsIn5JhLuIWysr
+         t+cDgFv5/X0ScpqJLzcNZ5SDMwfmAU1MKJwdysYqI01xgTnA25QVvB21spZSxQ/bSpyO
+         i79CoXuo5QvVoCierl6itgrB8iHESrqx4Z6WWFHlVXuIllaA8n62yLSWiTTNaaTXTJpz
+         LKzQ==
+X-Gm-Message-State: AOAM530hYjiOOErfVOwMBEOEK3O85DOWy81EVO7IHYM6CudnZRKUWkfX
+        Cr6QBA3mlyVEcrw/eY8Zjl1zL0ULWIYdXBscdXM=
+X-Google-Smtp-Source: ABdhPJz6T1ptdbNy/G/lwrqbnMsBUWMLewVuG8K8TUsIgnEptYY3NNFI0VGqY6Fo8CDoDMoNJVTCuZ+6jxk8hfWP6YI=
+X-Received: by 2002:a4a:be07:: with SMTP id l7mr17198759oop.38.1590506358744;
+ Tue, 26 May 2020 08:19:18 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200525182608.1823735-1-kw@linux.com> <20200525182608.1823735-9-kw@linux.com>
+ <20200526063521.GC2578492@kroah.com> <20200526150744.GC75990@rocinante>
+In-Reply-To: <20200526150744.GC75990@rocinante>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 26 May 2020 17:19:07 +0200
+Message-ID: <CAJZ5v0grVQhmk=q9_=CbBa8y_8XbTOeqv-Hb6Hivi6ffKsVHmQ@mail.gmail.com>
+Subject: Re: [PATCH 8/8] net/iucv: Use the new device_to_pm() helper to access
+ struct dev_pm_ops
+To:     =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
         Ulf Hansson <ulf.hansson@linaro.org>,
@@ -60,43 +72,43 @@ Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         John Stultz <john.stultz@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
-        greybus-dev@lists.linaro.org, netdev@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 8/8] net/iucv: Use the new device_to_pm() helper to
- access struct dev_pm_ops
-Message-ID: <20200526150744.GC75990@rocinante>
-References: <20200525182608.1823735-1-kw@linux.com>
- <20200525182608.1823735-9-kw@linux.com>
- <20200526063521.GC2578492@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20200526063521.GC2578492@kroah.com>
+        greybus-dev@lists.linaro.org, netdev <netdev@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        linux-s390@vger.kernel.org,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" 
+        <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello Greg,
+On Tue, May 26, 2020 at 5:07 PM Krzysztof Wilczyński <kw@linux.com> wrote:
+>
+> Hello Greg,
+>
+> [...]
+> > It's "interesting" how using your new helper doesn't actually make the
+> > code smaller.  Perhaps it isn't a good helper function?
+>
+> The idea for the helper was inspired by the comment Dan made to Bjorn
+> about Bjorn's change, as per:
+>
+>   https://lore.kernel.org/driverdev-devel/20191016135002.GA24678@kadam/
+>
+> It looked like a good idea to try to reduce the following:
+>
+>   dev->driver && dev->driver->pm && dev->driver->pm->prepare
+>
+> Into something more succinct.  Albeit, given the feedback from yourself
+> and Rafael, I gather that this helper is not really a good addition.
 
-[...]
-> It's "interesting" how using your new helper doesn't actually make the
-> code smaller.  Perhaps it isn't a good helper function?
+IMO it could be used for reducing code duplication like you did in the
+PCI code, but not necessarily in the other places where the code in
+question is not exactly duplicated.
 
-The idea for the helper was inspired by the comment Dan made to Bjorn
-about Bjorn's change, as per:
-
-  https://lore.kernel.org/driverdev-devel/20191016135002.GA24678@kadam/
-
-It looked like a good idea to try to reduce the following:
-
-  dev->driver && dev->driver->pm && dev->driver->pm->prepare
-
-Into something more succinct.  Albeit, given the feedback from yourself
-and Rafael, I gather that this helper is not really a good addition.
-
-Thank you everyone and sorry for the commotion!
-
-Krzysztof
+Thanks!
