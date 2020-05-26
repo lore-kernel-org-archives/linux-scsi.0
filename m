@@ -2,110 +2,136 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD0EAC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 09:42:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A49C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 09:45:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F5B520671
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 09:42:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZvFKYRsO"
+	by mail.kernel.org (Postfix) with ESMTP id B5EEE2070A
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 09:45:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731745AbgEZJmE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 05:42:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58436 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728568AbgEZJmE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 05:42:04 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 016CFC03E97E;
-        Tue, 26 May 2020 02:42:03 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id j16so7284484wrb.7;
-        Tue, 26 May 2020 02:42:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=8UhW5rzzft+OEaSoE2TBO2iHGY9SJECQYAYg9UffWAk=;
-        b=ZvFKYRsOzogk0YA/7ew8KXxjxofyeoeLY0htM4L2q0VMu4ZItrbjE1eWiMTRkfeW2l
-         WmvM7xcfE1bCEMak8arcSBV1GrNz1dxoSAAlk2DfgCn6v2MTVQpvlSCWd3soLqwlwvRe
-         7sLp0prQThsEJTXp8SkOxqqhg1VK7upxdyWcKSEuXPUZFn2k0a0ozy5Ndk786cMKBCPN
-         Halmn96kPbJzf1i4zu2r03tmAdYQZOVPF+SWIQPIr18jLSLz0IDlqG9MG85lieKgNwIV
-         cPYtac9Z/wr/JLJE03F6o/tEotPCW46DYcUFKI2OtA50s8r5INYggUIelrymdJcnk3cf
-         6iyQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=8UhW5rzzft+OEaSoE2TBO2iHGY9SJECQYAYg9UffWAk=;
-        b=JBmmLLBGNe2Z4K4ebCbj59Z8+ZbCQdyGsSRE3tXghywwwcIG8go9AQzKHQA/m/Olze
-         dVqWY87MXsogE0e4cRN7mbXdPqORY0RipE4gOLW9zDumXTjEs9zAxNE3mmVffeX1AbDu
-         mjH0ajQyFpYNw+xfqGhAnpTfnYh7w+TVyBmo/wflXb7U85NGXVskrfcRRn93T3K3e8yM
-         pdRUNxYUsfBMTcXS1rTx3Wt+fxZCx+PzVMsUajwcGnCi+OhwaHdY5GfHyx9szkIV3pJ+
-         0s+nQsKc1mfsMFrb5uThJVRsoJx6NqCBs0Su2mLUfkQ3gbJFqwtBmwifqhrrNA6FbOtG
-         RbzQ==
-X-Gm-Message-State: AOAM531FjbF00NTJoZUbjY5UzWb3l13s3Q0rTjJEddp6dxWfUxie76pE
-        vHflCf+MVHZDZJw8lSM7tRc=
-X-Google-Smtp-Source: ABdhPJxf7l1rVuIyVqBW1rJlGcbIOpVb4aw2XaHf6b66cVMjhtwY35OTm3FyzL/jWhfRlEgz2h74Tg==
-X-Received: by 2002:adf:ecc5:: with SMTP id s5mr18517057wro.240.1590486121738;
-        Tue, 26 May 2020 02:42:01 -0700 (PDT)
-Received: from ubuntu-g3.micron.com ([165.225.203.62])
-        by smtp.googlemail.com with ESMTPSA id b9sm1708039wrt.39.2020.05.26.02.41.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 26 May 2020 02:42:01 -0700 (PDT)
-Message-ID: <229fb4b001341c536f5996151ec6d78e925ecda4.camel@gmail.com>
-Subject: Re: [PATCH] scsi: ufs-qcom: Fix scheduling while atomic issue
-From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Jeffrey Hugo <jeffrey.l.hugo@gmail.com>,
-        "agross@kernel.org" <agross@kernel.org>,
-        "bjorn.andersson@linaro.org" <bjorn.andersson@linaro.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "subhashj@codeaurora.org" <subhashj@codeaurora.org>,
-        "venkatg@codeaurora.org" <venkatg@codeaurora.org>
-Cc:     "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Tue, 26 May 2020 11:41:52 +0200
-In-Reply-To: <SN6PR04MB4640A91499223A26A7460738FCB00@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200525204125.46171-1-jeffrey.l.hugo@gmail.com>
-         <SN6PR04MB4640A91499223A26A7460738FCB00@SN6PR04MB4640.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1731814AbgEZJpW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 05:45:22 -0400
+Received: from jabberwock.ucw.cz ([46.255.230.98]:55976 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728686AbgEZJpW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 05:45:22 -0400
+Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
+        id 791CE1C02C0; Tue, 26 May 2020 11:45:19 +0200 (CEST)
+Date:   Tue, 26 May 2020 11:45:18 +0200
+From:   Pavel Machek <pavel@denx.de>
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Karsten Graul <kgraul@linux.ibm.com>,
+        Ursula Braun <ubraun@linux.ibm.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        greybus-dev@lists.linaro.org, netdev <netdev@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        linux-s390@vger.kernel.org,
+        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+        "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" 
+        <linux-usb@vger.kernel.org>
+Subject: Re: [PATCH 2/8] ACPI: PM: Use the new device_to_pm() helper to
+ access struct dev_pm_ops
+Message-ID: <20200526094518.GA4600@amd>
+References: <20200525182608.1823735-1-kw@linux.com>
+ <20200525182608.1823735-3-kw@linux.com>
+ <CAJZ5v0jQUmdDYmJsP43Ja3urpVLUxe-yD_Hm_Jd2LtCoPiXsrQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
+Content-Disposition: inline
+In-Reply-To: <CAJZ5v0jQUmdDYmJsP43Ja3urpVLUxe-yD_Hm_Jd2LtCoPiXsrQ@mail.gmail.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-05-26 at 06:25 +0000, Avri Altman wrote:
->  
-> > ufs_qcom_dump_dbg_regs() uses usleep_range, a sleeping function,
-> > but can
-> > be called from atomic context in the following flow:
-> > 
-> > ufshcd_intr -> ufshcd_sl_intr -> ufshcd_check_errors ->
-> > ufshcd_print_host_regs -> ufshcd_vops_dbg_register_dump ->
-> > ufs_qcom_dump_dbg_regs
-> > 
-> > This causes a boot crash on the Lenovo Miix 630 when the interrupt
-> > is
-> > handled on the idle thread.
-> > 
-> > Fix the issue by switching to udelay().
-> > 
-> > Fixes: 9c46b8676271 ("scsi: ufs-qcom: dump additional testbus
-> > registers")
-> > Signed-off-by: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
-> 
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
 
+--bg08WKrSYDhXBjb5
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue 2020-05-26 10:37:36, Rafael J. Wysocki wrote:
+> On Mon, May 25, 2020 at 8:26 PM Krzysztof Wilczy=C5=84ski <kw@linux.com> =
+wrote:
+> >
+> > Use the new device_to_pm() helper to access Power Management callbacs
+> > (struct dev_pm_ops) for a particular device (struct device_driver).
+> >
+> > No functional change intended.
+> >
+> > Signed-off-by: Krzysztof Wilczy=C5=84ski <kw@linux.com>
+> > ---
+> >  drivers/acpi/device_pm.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+> > index 5832bc10aca8..b98a32c48fbe 100644
+> > --- a/drivers/acpi/device_pm.c
+> > +++ b/drivers/acpi/device_pm.c
+> > @@ -1022,9 +1022,10 @@ static bool acpi_dev_needs_resume(struct device =
+*dev, struct acpi_device *adev)
+> >  int acpi_subsys_prepare(struct device *dev)
+> >  {
+> >         struct acpi_device *adev =3D ACPI_COMPANION(dev);
+> > +       const struct dev_pm_ops *pm =3D driver_to_pm(dev->driver);
+>=20
+> I don't really see a reason for this change.
+>=20
+> What's wrong with the check below?
+
+Duplicated code. Yes, compiler can sort it out, but... new version
+looks better to me.
+
+Best regards,
+								pavel
+
+> >
+> > -       if (dev->driver && dev->driver->pm && dev->driver->pm->prepare)=
+ {
+> > -               int ret =3D dev->driver->pm->prepare(dev);
+> > +       if (pm && pm->prepare) {
+> > +               int ret =3D pm->prepare(dev);
+
+
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--bg08WKrSYDhXBjb5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAl7M5S0ACgkQMOfwapXb+vJLqgCcCbDmh7NooqBM+qslb58avjsp
+78cAn1mUUlj/BAfzgJELHWPID2a0mmvg
+=+Cmh
+-----END PGP SIGNATURE-----
+
+--bg08WKrSYDhXBjb5--
