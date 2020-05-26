@@ -2,125 +2,186 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF94C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 10:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6627BC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 11:53:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7853E2073B
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 10:36:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590489371;
-	bh=pdYL9aHWYegG+yy2CbjK7CZRpFI/0NsJ7qSuM1XyoO4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=gSLp87KNkUohNltwY4aww77ZKuIXVLaVUKXwBCEWFiKfumapl8NShZNVV6cIruakK
-	 q6cqcZow9gwfIbjeMH2Gl1KJXHkBG5Xs/LgeiZDVIRzF45jtzz4cQJ1arUop47rJoi
-	 aDcsDD2/A9yMNxMI5PpdXPzlOlJWuF6hTxJ6ePjc=
+	by mail.kernel.org (Postfix) with ESMTP id 3D3EE2073B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 11:53:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="t4kZrH+2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731925AbgEZKgI convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 06:36:08 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:44980 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727890AbgEZKgH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 06:36:07 -0400
-Received: by mail-ot1-f68.google.com with SMTP id f18so15836136otq.11;
-        Tue, 26 May 2020 03:36:06 -0700 (PDT)
+        id S1728513AbgEZLxZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 07:53:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50568 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728151AbgEZLxZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 07:53:25 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F4CEC03E96F
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2020 04:53:25 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id c8so1231048iob.6
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2020 04:53:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=hlMxfZxeMD+DKWmT3pt17RdFPN380iI2WVeOeZ79wkw=;
+        b=t4kZrH+2brZaCI4MrOkR6KZfqPavGym3179KUX4j/ZvYjMZeGwNOrjXyEzeIGYdSAV
+         5PSjV6gaZI3+EepcmOnwgmqSZhsuJiMkZi7Pd8CQCruTBzcT6c5Ley9CH2SsLVshyIt3
+         QNsiKJjobAtOpmroQCiLNENOzYP0eYjZlDsUmDlIgRz7hEU6moYbMyw7UQaxsEmCHNA/
+         qZOM3IaV+rOtSdd1HCCRWWUcEIllNbeZrBRMH2IICgG1iA6wF2ughWfOqEzUP8+mT3/1
+         ycBv0p1napzjkUUxgXfJ/eXiWh48UrP1d6+OA7KfHNjYL+8zAtH4huoUG0QivvNCEAYz
+         ekyw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=OP8/hxzSora7+RyKmdWGrhPbxw1jS07GePgn3bcs4Ls=;
-        b=c3uGYnrCb4WAGHZya8YQv3RDUmJ/iiligWaOKn8wjfpV6U65Cn+8P6/8We9RY7VPtq
-         WVO8PaEN3ZnluyQhcXt0N8r5TRkyvnCduaHHOdNx9nCECB95hckaw0sDD5uyk8Nn2QKu
-         4gvjRqM2nDflIKrbTKV/pirTNdtUlTyUoiyzenvnBJ1wIy8O4zwHHA8UOX7+4gSJzhAm
-         hcGSnaL4shRqSiAdcGS+tX0IMhd1J7bAattoBquo+F8QEF4b0cibfEMexFGyHrhAU1ho
-         MyMPIi+HTS5QCj8XKC+wRD34gPgMWUuSHGLmaRBDq20pXlFYwQyq8tgBaEUIV4BzrVX0
-         D1Iw==
-X-Gm-Message-State: AOAM533HtqFz8V6nIu1fgbPJqBp/IXkPI8Zs9ruj9GgQHQbhvJuyeNXF
-        s+xvlroxpkP7LQrddggsqwfl9h26kfXyLjRyJ5Q=
-X-Google-Smtp-Source: ABdhPJy1GHMjiBmqkoqcnOQswjrf3GtFhFuljSG5cgXHe0ZrV2FGIT0iVHs8J6BfXHu/3+89V/CmkBUjqTdpcpTHsMI=
-X-Received: by 2002:a9d:6c0f:: with SMTP id f15mr346512otq.118.1590489366099;
- Tue, 26 May 2020 03:36:06 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200525182608.1823735-1-kw@linux.com> <20200525182608.1823735-3-kw@linux.com>
- <CAJZ5v0jQUmdDYmJsP43Ja3urpVLUxe-yD_Hm_Jd2LtCoPiXsrQ@mail.gmail.com> <20200526094518.GA4600@amd>
-In-Reply-To: <20200526094518.GA4600@amd>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 26 May 2020 12:35:55 +0200
-Message-ID: <CAJZ5v0ibtOMFDtCcyfmGeE15uR-+hQLw8tr6bfbp4aR4V7C3vA@mail.gmail.com>
-Subject: Re: [PATCH 2/8] ACPI: PM: Use the new device_to_pm() helper to access
- struct dev_pm_ops
-To:     Pavel Machek <pavel@denx.de>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Kevin Hilman <khilman@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Johan Hovold <johan@kernel.org>, Alex Elder <elder@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Julian Wiedmann <jwi@linux.ibm.com>,
-        Karsten Graul <kgraul@linux.ibm.com>,
-        Ursula Braun <ubraun@linux.ibm.com>,
-        Jakub Kicinski <kuba@kernel.org>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=hlMxfZxeMD+DKWmT3pt17RdFPN380iI2WVeOeZ79wkw=;
+        b=PpGuYO1rEhCWnsDujjOJ9z0Sl7ajpQwkBO0atmmAoKD2IaiPIMnV/O2RgERR7M+o4e
+         IxqsN0H26tKXThEBzLSvrEzoblnJFMKjoRuhRpHgoqDMQ5Iwjk0o2ATvcAxqReFo7HIH
+         PTfMF4Pz3GhaRbvlTHz10OTINP2Wczts0WugOidstixZGLCnXq8iJmelajNPZDdvnLTe
+         r73pqVUmtqDdO+ZUdthqUiT3jNxemWcc0cfX/p/z0u8rC/hA7h8n1m3g9TCxdhdECwMI
+         L2i95YtbZEwh0iG5mcpMGsAu510hBFF3Ftu0WvyVbdgt11UcvLMdPAAwbTiVuGhUfCHO
+         NlBQ==
+X-Gm-Message-State: AOAM533JlOnCWAK/yuUoR8okXuxASGN9fRKaw6htnfjzCvJyaI+/qhlq
+        gAZStMjPkDKaJu5ncblgONPbsQ==
+X-Google-Smtp-Source: ABdhPJysJNQt3T6dM953D88S5wdzxi/U/oshKuW/qDlHy6hbQRmFmerb1YPlez4lats+13/+SUWV/g==
+X-Received: by 2002:a5e:a70b:: with SMTP id b11mr8299591iod.63.1590494004490;
+        Tue, 26 May 2020 04:53:24 -0700 (PDT)
+Received: from [172.22.22.4] (c-73-185-129-58.hsd1.mn.comcast.net. [73.185.129.58])
+        by smtp.googlemail.com with ESMTPSA id c7sm11123220ilf.36.2020.05.26.04.53.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 May 2020 04:53:23 -0700 (PDT)
+Subject: Re: [greybus-dev] [PATCH 1/8] driver core: Add helper for accessing
+ Power Management callbacs
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>, linux-pci@vger.kernel.org,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Pavel Machek <pavel@ucw.cz>, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Kevin Hilman <khilman@kernel.org>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        linux-acpi@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Len Brown <lenb@kernel.org>, linux-pm@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Ursula Braun <ubraun@linux.ibm.com>,
+        Johan Hovold <johan@kernel.org>, greybus-dev@lists.linaro.org,
         John Stultz <john.stultz@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        greybus-dev@lists.linaro.org, netdev <netdev@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        linux-s390@vger.kernel.org,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        "open list:ULTRA-WIDEBAND (UWB) SUBSYSTEM:" 
-        <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Felipe Balbi <balbi@kernel.org>, Alex Elder <elder@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        netdev@vger.kernel.org, linux-usb@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Karsten Graul <kgraul@linux.ibm.com>,
+        "David S. Miller" <davem@davemloft.net>
+References: <20200525182608.1823735-1-kw@linux.com>
+ <20200525182608.1823735-2-kw@linux.com> <20200526063334.GB2578492@kroah.com>
+From:   Alex Elder <elder@linaro.org>
+Message-ID: <41c42552-0f4f-df6a-d587-5c62333aa6a8@linaro.org>
+Date:   Tue, 26 May 2020 06:53:22 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
+MIME-Version: 1.0
+In-Reply-To: <20200526063334.GB2578492@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, May 26, 2020 at 11:45 AM Pavel Machek <pavel@denx.de> wrote:
->
-> On Tue 2020-05-26 10:37:36, Rafael J. Wysocki wrote:
-> > On Mon, May 25, 2020 at 8:26 PM Krzysztof Wilczyński <kw@linux.com> wrote:
-> > >
-> > > Use the new device_to_pm() helper to access Power Management callbacs
-> > > (struct dev_pm_ops) for a particular device (struct device_driver).
-> > >
-> > > No functional change intended.
-> > >
-> > > Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
-> > > ---
-> > >  drivers/acpi/device_pm.c | 5 +++--
-> > >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-> > > index 5832bc10aca8..b98a32c48fbe 100644
-> > > --- a/drivers/acpi/device_pm.c
-> > > +++ b/drivers/acpi/device_pm.c
-> > > @@ -1022,9 +1022,10 @@ static bool acpi_dev_needs_resume(struct device *dev, struct acpi_device *adev)
-> > >  int acpi_subsys_prepare(struct device *dev)
-> > >  {
-> > >         struct acpi_device *adev = ACPI_COMPANION(dev);
-> > > +       const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
-> >
-> > I don't really see a reason for this change.
-> >
-> > What's wrong with the check below?
->
-> Duplicated code. Yes, compiler can sort it out, but... new version
-> looks better to me.
+On 5/26/20 1:33 AM, Greg Kroah-Hartman wrote:
+> On Mon, May 25, 2020 at 06:26:01PM +0000, Krzysztof Wilczyński wrote:
+>> Add driver_to_pm() helper allowing for accessing the Power Management
+>> callbacs for a particular device.  Access to the callbacs (struct
+>> dev_pm_ops) is normally done through using the pm pointer that is
+>> embedded within the device_driver struct.
+>>
+>> Helper allows for the code required to reference the pm pointer and
+>> access Power Management callbas to be simplified.  Changing the
+>> following:
+>>
+>>    struct device_driver *drv = dev->driver;
+>>    if (dev->driver && dev->driver->pm && dev->driver->pm->prepare) {
+>>        int ret = dev->driver->pm->prepare(dev);
+>>
+>> To:
+>>
+>>    const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
+>>    if (pm && pm->prepare) {
+>>        int ret = pm->prepare(dev);
+>>
+>> Or, changing the following:
+>>
+>>       const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+>>
+>> To:
+>>       const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
+>>
+>> Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
+>> ---
+>>   include/linux/device/driver.h | 15 +++++++++++++++
+>>   1 file changed, 15 insertions(+)
+>>
+>> diff --git a/include/linux/device/driver.h b/include/linux/device/driver.h
+>> index ee7ba5b5417e..ccd0b315fd93 100644
+>> --- a/include/linux/device/driver.h
+>> +++ b/include/linux/device/driver.h
+>> @@ -236,6 +236,21 @@ driver_find_device_by_acpi_dev(struct device_driver *drv, const void *adev)
+>>   }
+>>   #endif
+>>   
+>> +/**
+>> + * driver_to_pm - Return Power Management callbacs (struct dev_pm_ops) for
+>> + *                a particular device.
+>> + * @drv: Pointer to a device (struct device_driver) for which you want to access
+>> + *       the Power Management callbacks.
+>> + *
+>> + * Returns a pointer to the struct dev_pm_ops embedded within the device (struct
+>> + * device_driver), or returns NULL if Power Management is not present and the
+>> + * pointer is not valid.
+>> + */
+>> +static inline const struct dev_pm_ops *driver_to_pm(struct device_driver *drv)
+>> +{
+>> +	return drv && drv->pm ? drv->pm : NULL;
 
-So the new code would not be duplicated?
+This could just be:
 
-Look at the other patches in the series then. :-)
+	if (drv)
+		return drv->pm;
+
+	return NULL;
+
+Or if you want to evoke passion in Greg:
+
+	return drv ? drv->pm : NULL;
+
+					-Alex
+
+> I hate ? : lines with a passion, as they break normal pattern mattching
+> in my brain.  Please just spell this all out:
+> 	if (drv && drv->pm)
+> 		return drv->pm;
+> 	return NULL;
+> 
+> Much easier to read, and the compiler will do the exact same thing.
+> 
+> Only place ? : are ok to use in my opinion, are as function arguments.
+> 
+> thanks,
+> 
+> greg k-h
+> _______________________________________________
+> greybus-dev mailing list
+> greybus-dev@lists.linaro.org
+> https://lists.linaro.org/mailman/listinfo/greybus-dev
+> 
+
