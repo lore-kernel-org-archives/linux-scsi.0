@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 214CAC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 08:37:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC1FC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 08:39:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D71072075F
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 08:37:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99BC32075F
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 08:39:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590482276;
-	bh=OS4Gv5g4JBD1F6N+LFPnSXYNGjnWhSL9y/zGwBzvIhY=;
+	s=default; t=1590482352;
+	bh=LZd35WMOa7IbfDvr8mZwpDwQwMekO2DmhzIGj/f0MHg=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=jIF3TId11vePrf2H1IKU5glKaiMkUXFjocHGfueHHKt/MYKwUFHaeHXOCuaHPDwJU
-	 AOfZzTZwneYOq6duUVHNAemltf2For1e0b9tq2uLtm2VDhO7nlPCA84qgXl8/ked5y
-	 kptvrzgr+Ekwzpm7P3GIWLH8Z9faEP6KMlIpYoVc=
+	b=AtfbNa89ucNQnjY8XIe0VLf7Z0iscEO9cGPzR8jmhGFroaEEIFid7R2EiOcYZCEPY
+	 k9wud79BvOVzfyq68GqJyO87LQ5U+Cgdzsals/dHLXmfa6/VjFSC7eqPrER4DsybNc
+	 xY51OasmlDOJL1ivpGvc+LZEmKRRM0DCK0+7gC9k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731491AbgEZIhu convert rfc822-to-8bit (ORCPT
+        id S1731534AbgEZIjK convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 04:37:50 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:40832 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726926AbgEZIhu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 04:37:50 -0400
-Received: by mail-ot1-f66.google.com with SMTP id d26so15621702otc.7;
-        Tue, 26 May 2020 01:37:49 -0700 (PDT)
+        Tue, 26 May 2020 04:39:10 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:42355 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728516AbgEZIjJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 04:39:09 -0400
+Received: by mail-ot1-f67.google.com with SMTP id z3so15626949otp.9;
+        Tue, 26 May 2020 01:39:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc:content-transfer-encoding;
-        bh=RHXgtuB1SAqLX2SMugvAUZcluD7absnJHKc68BKyHlE=;
-        b=grQNmI1zEy6kOUUZz44tbb6NYebIAISHtLfet0b4vGMCVvnMvTbW5e77TrO7nj4fLT
-         GogvpCZGKgeLJ6nysmy+WSAb8Zrs3FyDhoRMkgxQZU1yOJXiNfQenT/jvBoqP32AYYEJ
-         Bf981m424nyI+Sv250UGR8ebTASlZMxr3C6Xnyy31Zexgs4lwgmOlu3WmenOkCn4bUss
-         u68GlsRFVaX6OPnQrh839fK4NNIqUYA9fgmLNUW3uxklVZ03mpPGokC0oMD24MDobKUK
-         8oY79o9WA3UPx94WK0tMFjpxe1irKep2U3n7msCY2yJuY7n/js1HfXOl3m8O0uEYpS9F
-         xB2A==
-X-Gm-Message-State: AOAM5336/KsSkYIg+O+RdGS2ZYanxKjcW81AIF9xEXnvI9/qW11nD8cA
-        PahwVdEqx+/SMcr2gxORyTl/yiv6PKFsarBBQls=
-X-Google-Smtp-Source: ABdhPJy0XoZJ2esVX8+4wcFLlF6um9NLvGAJ5fc2t1hUUEHZCOGJRTRLWSbAKm+GZYwEumVFNBb3ARUgbj71FBUSPrI=
-X-Received: by 2002:a9d:6c0f:: with SMTP id f15mr92375otq.118.1590482268905;
- Tue, 26 May 2020 01:37:48 -0700 (PDT)
+        bh=MpwY3EHc5z85EihmevYmSupSr3w2Pyaz4sc6UHi08wA=;
+        b=THJavD6TYGCMTkFEN445a4SyCaYydzMAEnjQ4yo3GHCeH7RP+WZy8uJJuPgZ2/pLfC
+         x9igDO4yJmCJtVoypSWlVb96jb1cmxDovIgbOODut3UXEq52tlpgZYtV630arLaultMe
+         WgoN96/7MOnzQHLvmF80oa7Fl3U1zD4AXAtzFTDRxdWJVVX+UM/iUAkvfn9GBOMxDQbn
+         CoCJJwN/9lR9M+BzeAJ2Fvu6Ew1quXmt5BHM1a9TDEPinK12Y9FFEdr2H2hdSkaMR5nj
+         uPH9e7X1x8lsd237CMFsegWizytsLwIJJnvLQCDh0t6eNbYoUcYlwu518FRW9q9IVe2y
+         Y0uA==
+X-Gm-Message-State: AOAM532+cJb3MDqSS6QdXTcf5LwAF685IGszKu0Kjp4V1aHyfptx0AQU
+        4b1hWTGbPm/j75JxsTBvKpPCPHQbU5TAVGAhUBA=
+X-Google-Smtp-Source: ABdhPJyg99dhbbsUdUpzqyLlD2Zp0WEwPi+B3o8RxPqwRzQCCrVCeDF3laDVas19O0CvHdxuwQP2MEhi6k5TafK25JQ=
+X-Received: by 2002:a9d:6c0f:: with SMTP id f15mr94657otq.118.1590482348592;
+ Tue, 26 May 2020 01:39:08 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200525182608.1823735-1-kw@linux.com> <20200525182608.1823735-3-kw@linux.com>
-In-Reply-To: <20200525182608.1823735-3-kw@linux.com>
+References: <20200525182608.1823735-1-kw@linux.com> <20200525182608.1823735-6-kw@linux.com>
+In-Reply-To: <20200525182608.1823735-6-kw@linux.com>
 From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 26 May 2020 10:37:36 +0200
-Message-ID: <CAJZ5v0jQUmdDYmJsP43Ja3urpVLUxe-yD_Hm_Jd2LtCoPiXsrQ@mail.gmail.com>
-Subject: Re: [PATCH 2/8] ACPI: PM: Use the new device_to_pm() helper to access
- struct dev_pm_ops
+Date:   Tue, 26 May 2020 10:38:56 +0200
+Message-ID: <CAJZ5v0i-RnP7RycZ3GqOZuEYqrX_+r5-VS7DqtNCyHDwp1sPKg@mail.gmail.com>
+Subject: Re: [PATCH 5/8] usb: phy: fsl: Use the new device_to_pm() helper to
+ access struct dev_pm_ops
 To:     =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>
 Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
@@ -96,31 +96,48 @@ On Mon, May 25, 2020 at 8:26 PM Krzysztof Wilczyński <kw@linux.com> wrote:
 >
 > Signed-off-by: Krzysztof Wilczyński <kw@linux.com>
 > ---
->  drivers/acpi/device_pm.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  drivers/usb/phy/phy-fsl-usb.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-> index 5832bc10aca8..b98a32c48fbe 100644
-> --- a/drivers/acpi/device_pm.c
-> +++ b/drivers/acpi/device_pm.c
-> @@ -1022,9 +1022,10 @@ static bool acpi_dev_needs_resume(struct device *dev, struct acpi_device *adev)
->  int acpi_subsys_prepare(struct device *dev)
->  {
->         struct acpi_device *adev = ACPI_COMPANION(dev);
-> +       const struct dev_pm_ops *pm = driver_to_pm(dev->driver);
-
-I don't really see a reason for this change.
-
-What's wrong with the check below?
-
+> diff --git a/drivers/usb/phy/phy-fsl-usb.c b/drivers/usb/phy/phy-fsl-usb.c
+> index b451f4695f3f..3b9ad5db8380 100644
+> --- a/drivers/usb/phy/phy-fsl-usb.c
+> +++ b/drivers/usb/phy/phy-fsl-usb.c
+> @@ -460,6 +460,7 @@ int fsl_otg_start_host(struct otg_fsm *fsm, int on)
+>         struct device *dev;
+>         struct fsl_otg *otg_dev =
+>                 container_of(otg->usb_phy, struct fsl_otg, phy);
+> +       const struct dev_pm_ops *pm;
+>         u32 retval = 0;
 >
-> -       if (dev->driver && dev->driver->pm && dev->driver->pm->prepare) {
-> -               int ret = dev->driver->pm->prepare(dev);
-> +       if (pm && pm->prepare) {
-> +               int ret = pm->prepare(dev);
->
->                 if (ret < 0)
->                         return ret;
+>         if (!otg->host)
+> @@ -479,8 +480,9 @@ int fsl_otg_start_host(struct otg_fsm *fsm, int on)
+>                 else {
+>                         otg_reset_controller();
+>                         VDBG("host on......\n");
+> -                       if (dev->driver->pm && dev->driver->pm->resume) {
+> -                               retval = dev->driver->pm->resume(dev);
+> +                       pm = driver_to_pm(dev->driver);
+> +                       if (pm && pm->resume) {
+> +                               retval = pm->resume(dev);
+
+And why is the new version better this time?
+
+>                                 if (fsm->id) {
+>                                         /* default-b */
+>                                         fsl_otg_drv_vbus(fsm, 1);
+> @@ -504,8 +506,9 @@ int fsl_otg_start_host(struct otg_fsm *fsm, int on)
+>                 else {
+>                         VDBG("host off......\n");
+>                         if (dev && dev->driver) {
+> -                               if (dev->driver->pm && dev->driver->pm->suspend)
+> -                                       retval = dev->driver->pm->suspend(dev);
+> +                               pm = driver_to_pm(dev->driver);
+> +                               if (pm && pm->suspend)
+> +                                       retval = pm->suspend(dev);
+>                                 if (fsm->id)
+>                                         /* default-b */
+>                                         fsl_otg_drv_vbus(fsm, 0);
 > --
 > 2.26.2
 >
