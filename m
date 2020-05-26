@@ -2,162 +2,275 @@ Return-Path: <SRS0=HoCN=7I=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C453AC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 06:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21336C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 06:21:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9381C207CB
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 06:15:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AiEeSq0g";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="RAvW8gEh"
+	by mail.kernel.org (Postfix) with ESMTP id F121C207D8
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 May 2020 06:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727112AbgEZGPu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 02:15:50 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:15154 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726775AbgEZGPt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 May 2020 02:15:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1590473747; x=1622009747;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=HqokLzC4hDoDVjIbf1+5JFXJSDOpcInRtpbVntEiK58=;
-  b=AiEeSq0geElRQ5DqbWNAFYGJKOuef4DqA7Hdd0hsZiGz/m8MOIBZ8zjb
-   DD/r1hkWD35CsHV8Tn3M3jMDEvopslmB8mr5d65mFlj+8t7OAq+VTWmvR
-   F/NI9XI9by7ixGCHc/RDsNid8oSvXW6cJ71aFgQNXh5na8MgoVnDX1pcI
-   ZY8fGV+iSDOfVwjy6PP2dxdBMWKuNZkS6a47lgrNeL2ZJROifOE5e1KWk
-   PaWsp29stUZceVzUSZ5EDdvoVOUH4SXSyNKzkQ15JNR/NKzc0nPd0Ql5E
-   ZWataswBIE0p20ehmTDdZzwHoOr6uPtAj5i2iRLby5PQaKADEY4/tqbuP
-   A==;
-IronPort-SDR: QxRFRzZSXwMw1Rd8qvvKqUVor50nxo5kQ/64TvY+gvUvj5bCYTnNKOrZ/ur73R0X4nHShjhQ7D
- 6k2TiIEt/EXL86IIVhr0gFgZUPBFaEDkcGxTeIQPcAmZFCF9xxGJG9qHqHU0oKgmGAS/pnw/67
- qEObYbiyanSTkVoz106El/cJXl8a7NSRJ8Tg26nzb8mgBvEYS2laEUVog+704OCGupuwCL93lh
- FkblbUCM45zYPNow1B1MqR7EsFxVgxYqaF+43MELbXZuEJ3dnDh18wXWNYVUUXd/PFUP2Ecn0Y
- BT4=
-X-IronPort-AV: E=Sophos;i="5.73,436,1583164800"; 
-   d="scan'208";a="138503062"
-Received: from mail-dm6nam11lp2172.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.172])
-  by ob1.hgst.iphmx.com with ESMTP; 26 May 2020 14:15:46 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OiJBXo4QC3XIrKKjOwrt3sr1XiuyMK2OD51tsRx8iGm3uwkF30v0PbjLJOkeqsvLYKUvXrxoh9o7kEsuBnBPxHlADg9dECK5CK0eWU5F5cqAZQ5j+SGxpoVtyDI4P5Jygq8lQ7xh4AaWKmJ8Cq05z5+VJ9Why0HKQSsyc5ROGINo9fDligV1e18w669btzMbruzeSAkFAoCxGSdWyWhLyTbhSyVG2gP2+EzOn6EJjfTFoNYfLv8HB+RudKeGmrme2OfRcQctSr7Ru1Lx4VFGN6G2ZdX9HGzXnHAvhsa8JZIgR9BOITKZYu9SB6ZMLLrVN3aVeLDPJcsOf4YiPxiu5w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HqokLzC4hDoDVjIbf1+5JFXJSDOpcInRtpbVntEiK58=;
- b=mQsANp4jsWHVv2qlzUVoHXv6rxQWEN7hFbollK+UaSxoJaJHbilCjn+G/glBaGXPy2ksn+6Pi0bYDzQtlU3WNQx15wXIwsEYbVEm9s8UN29g2pSI8Gre3L6u6ejOsWVseUqRZHqGNQljkjN2dBZxbtIsfRWwU0c3b3MpXRKEQceEQAA7ICEPE64A0wIifSQJDZUw/ggKPm1YUqEoqvW7wIUdp7HNNvN9GdyJGTp2fBAgqzUusvB8rWJwz0k03kKU6ahcIBv/jmh2E7KRaK7NiS+QlwVyJIjwt/S/KcLTE0/Uk0ULTiBGSArIpo9alTwq0jAjk1C1Bb0q83pxKNP2JA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HqokLzC4hDoDVjIbf1+5JFXJSDOpcInRtpbVntEiK58=;
- b=RAvW8gEh21FbNvdleeemMr88BMxfTV1TtFmcZcGX1dcDq7Nzu50OEO6XKnoExH1HdOW8/WxcwR0XHAfepSwflr8T91uT/G7bxSo+uCdNIpGk/mqZcrVFVaYDQ2NHREoWRvdV1A+LoYd2VwuZMk9dRhR5u/YjWjNe6iyc7s7TXRE=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4432.namprd04.prod.outlook.com (2603:10b6:805:33::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3021.27; Tue, 26 May
- 2020 06:15:37 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3021.029; Tue, 26 May 2020
- 06:15:37 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>
-Subject: RE: Another approach of UFSHPB
-Thread-Topic: Another approach of UFSHPB
-Thread-Index: AQHWLi/ZJIgJKMJKI0iqt61IMTjbaqi0VZyAgAP8IICAAJtZAIAA/5Jw
-Date:   Tue, 26 May 2020 06:15:37 +0000
-Message-ID: <SN6PR04MB46400AED930A3DC5B94AED25FCB00@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <aaf130c2-27bd-977b-55df-e97859f4c097@acm.org>
- <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
- <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
- <d10b27f1-49ec-d092-b252-2bb8cdc4c66e@acm.org>
- <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
- <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
- <CGME20200516171420epcas2p108c570904c5117c3654d71e0a2842faa@epcms2p4>
- <231786897.01590385382061.JavaMail.epsvc@epcpadp2>
- <6eec7c64-d4c1-c76e-5c14-7904a8792275@acm.org>
-In-Reply-To: <6eec7c64-d4c1-c76e-5c14-7904a8792275@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: acm.org; dkim=none (message not signed)
- header.d=none;acm.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: f9df2c23-70de-4879-cd97-08d8013c3511
-x-ms-traffictypediagnostic: SN6PR04MB4432:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR04MB4432C0655C136417158B9848FCB00@SN6PR04MB4432.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 041517DFAB
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: mgjdUEDVEqdCPMLqcv6pT+8gnh2awgoQVvfUrFMS2aO5sw1G3zhFvVFpyHPPGlmd0XRiMGkuKm6ZMwThYxdd0Z4bblISVzxAWpEcgRzbRNWfvz2tWKvxfQOpr+6jZ7nyWCVqMksY0ugJI6HpQ1y5gwhMR26yuxRd+dMdCeHwt79gv2CYzWmeBRDUgvD4JRQs1j7cNuENtoxbxDwAO/CqMeqzwMSqOCfPUi9jsT+1SrzDwY7Ws4eN71Oa5WF5F9wJrg4H7qt+nJ1kVQATTa+bzS0m5dy44pNPmezpeDKEMxSrC+fjtYijvXZpIJbMUuGJ5oxiE6DOPe5q3p0a79zWgJ8Vsz/zBH18+31wiGvHG+jE4g5QeANqoeWPbh+4KqK0iOj7TN1Owmxp91wVoErUTg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(376002)(366004)(136003)(39860400002)(346002)(8936002)(3480700007)(55016002)(66946007)(66446008)(9686003)(8676002)(26005)(110136005)(6506007)(5660300002)(54906003)(33656002)(76116006)(7696005)(66476007)(316002)(66556008)(53546011)(64756008)(478600001)(4326008)(71200400001)(2906002)(86362001)(7416002)(186003)(52536014);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: XAFtSPt16/fq4xGx+ECbHiyQlBa0yYtqHZp4uhI4HzOJUoM4r+0lGjSEAV3fZ/Df9dqbxct0csVZx+fPKAT/lSVQ6qMiRnUZ7j2Cuj78/gqBK5KV7xsM+/VghN1aPw/xpS/d9jzQ3+EeqKlxdwpRhOPTf4yjC/IuxvBtdArgdd2kHrf+Mikn1XzylgM+mUdWMcIqCpKla9BxnbteV+98v6SDQnwWuooAgVjTYSMCvulIPHMK7MlI0LMtMHiv34mV6xJo31O082/FmjA7QZ0bTSoB5u8NI5WPPO8nmmbGYX7IN9Nav8+qGke1652XnN8th/QweR+ZKr9NEok4j+JPPo+K8FdrZJAk6FQ4tkRNJnO/znJmrY+EZMuxy1sV/h0LBR5p7xY0kFpMzzpTnd+0Lpi2yotWLfvwPfjjb+DU4vb8DkqIY0baUYsIC9o7q7l50Zsxo39Txq0T7oioQISiF8OiTwuUDTmlp63S9SxtNho=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1726873AbgEZGVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 May 2020 02:21:31 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56490 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726746AbgEZGVb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 May 2020 02:21:31 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 130B4B14F;
+        Tue, 26 May 2020 06:21:32 +0000 (UTC)
+Subject: Re: [RFC v2 1/6] scsi: xarray hctl
+To:     Matthew Wilcox <willy@infradead.org>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.vnet.ibm.com
+References: <20200524155814.5895-1-dgilbert@interlog.com>
+ <20200524155814.5895-2-dgilbert@interlog.com>
+ <6527a0ca-954c-70e8-f0f5-08206c1779f2@suse.de>
+ <8dab99d1-a22d-0065-5a7a-fd9b80bc661a@interlog.com>
+ <20200525174052.GD17206@bombadil.infradead.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <825bece5-e209-a4da-ddb1-809c48e4e9b3@suse.de>
+Date:   Tue, 26 May 2020 08:21:26 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f9df2c23-70de-4879-cd97-08d8013c3511
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 May 2020 06:15:37.1357
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: /q7BWgEi6E8Hvbn+BoNejq0gO9QmA7mjEYFERWCo1A39cmhrvS+259ZXO1/yONFFcZLfkQoRNuOeMiYyYcCU3Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4432
+In-Reply-To: <20200525174052.GD17206@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiBPbiAyMDIwLTA1LTI0IDIyOjQwLCBEYWVqdW4gUGFyayB3cm90ZToNCj4gPiBUaGUgSFBCIGRy
-aXZlciBpcyBjbG9zZSB0byB0aGUgVUZTIGNvcmUgZnVuY3Rpb24sIGJ1dCBpdCBpcyBub3QgZXNz
-ZW50aWFsDQo+ID4gZm9yIG9wZXJhdGluZyBVRlMgZGV2aWNlLiBXaXRoIHJlZmVyZW5jZSB0byB0
-aGlzIGFydGljbGUNCj4gPiAoaHR0cHM6Ly9sd24ubmV0L0FydGljbGVzLzY0NTgxMC8pLCB3ZSBp
-bXBsZW1lbnRlZCBleHRlbmRlZCBVRlMtZmVhdHVyZQ0KPiA+IGFzIGJ1cyBtb2RlbC4gQmVjYXVz
-ZSB0aGUgSFBCIGRyaXZlciBjb25zdW1lcyB0aGUgdXNlcidzIG1haW4gbWVtb3J5LCBpdA0KPiBz
-aG91bGQNCj4gPiBzdXBwb3J0IGJpbmQgLyB1bmJpbmQgZnVuY3Rpb25hbGl0eSBhcyBuZWVkZWQu
-IFdlIGltcGxlbWVudGVkIHRoZSBIUEINCj4gZHJpdmVyDQo+ID4gY2FuIGJlIHVuYmluZCAvIHVu
-bG9hZCBvbiBydW50aW1lLg0KPiANCj4gSSBkbyBub3QgYWdyZWUgdGhhdCB0aGUgYnVzIG1vZGVs
-IGlzIHRoZSBiZXN0IGNob2ljZSBmb3IgZnJlZWluZyBjYWNoZQ0KPiBtZW1vcnkgaWYgaXQgaXMg
-bm8gbG9uZ2VyIG5lZWRlZC4gQSBzaHJpbmtlciBpcyBwcm9iYWJseSBhIG11Y2ggYmV0dGVyDQo+
-IGNob2ljZSBiZWNhdXNlIHRoZSBjYWxsYmFjayBmdW5jdGlvbnMgaW4gYSBzaHJpbmtlciBnZXQg
-aW52b2tlZCB3aGVuIGENCj4gc3lzdGVtIGlzIHVuZGVyIG1lbW9yeSBwcmVzc3VyZS4gU2VlIGFs
-c28gcmVnaXN0ZXJfc2hyaW5rZXIoKSwNCj4gdW5yZWdpc3Rlcl9zaHJpbmtlcigpIGFuZCBzdHJ1
-Y3Qgc2hyaW5rZXIgaW4gaW5jbHVkZS9saW51eC9zaHJpbmtlci5oLg0KU2luY2UgdGhpcyBkaXNj
-dXNzaW9uIGlzIGNsb3NlbHkgcmVsYXRlZCB0byBjYWNoZSBhbGxvY2F0aW9uLA0KV2hhdCBpcyB5
-b3VyIG9waW5pb24gYWJvdXQgYWxsb2NhdGluZyB0aGUgcGFnZXMgZHluYW1pY2FsbHkgYXMgdGhl
-IHJlZ2lvbnMNCkFyZSBiZWluZyBhY3RpdmF0ZWQvZGVhY3RpdmF0ZWQsIGluIG9wcG9zZSBvZiBo
-b3cgaXQgaXMgZG9uZSB0b2RheSAtIA0KU3RhdGljYWxseSBvbiBpbml0IGZvciB0aGUgZW50aXJl
-IG1heC1hY3RpdmUtc3VicmVnaW9ucz8NCg==
+On 5/25/20 7:40 PM, Matthew Wilcox wrote:
+> On Mon, May 25, 2020 at 12:30:52PM -0400, Douglas Gilbert wrote:
+>> On 2020-05-25 2:57 a.m., Hannes Reinecke wrote:
+>>> On 5/24/20 5:58 PM, Douglas Gilbert wrote:
+>>>> +++ b/drivers/scsi/scsi.c
+>>>> @@ -554,19 +554,32 @@ EXPORT_SYMBOL(scsi_device_put);
+>>>>    struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
+>>>>                           struct scsi_device *prev)
+>>>>    {
+>>>> -    struct list_head *list = (prev ? &prev->siblings : &shost->__devices);
+>>>> -    struct scsi_device *next = NULL;
+>>>> -    unsigned long flags;
+>>>> +    struct scsi_device *next = prev;
+>>>> +    unsigned long flags, l_idx;
+>>>>        spin_lock_irqsave(shost->host_lock, flags);
+>>>> -    while (list->next != &shost->__devices) {
+>>>> -        next = list_entry(list->next, struct scsi_device, siblings);
+>>>> -        /* skip devices that we can't get a reference to */
+>>>> -        if (!scsi_device_get(next))
+>>>> -            break;
+>>>> +    if (xa_empty(&shost->__devices)) {
+>>>>            next = NULL;
+>>>> -        list = list->next;
+>>>> +        goto unlock;
+>>>>        }
+> 
+> You don't need this stanza.  xa_find() will do the right thing (ie return
+> NULL) with an empty array.
+> 
+>>>> +    do {
+>>>> +        if (!next) {    /* get first element iff first iteration */
+>>>> +            l_idx = 0;
+>>>> +            next = xa_find(&shost->__devices, &l_idx,
+>>>> +                       scsi_xa_limit_16b.max, XA_PRESENT);
+> 
+> You don't need to use a 16-bit limit here; the XArray code will stop after
+> the end of the array, and the only thing you might save is scanning the top
+> node unnecessarily far.  To get there, you'd have to have an index >= 2^12,
+> and the additional limit would mean that you'd scan the first 16 entries of
+> the top node instead of all 64.  Kind of pales into insignificance compared
+> to actually walking all 2^12 elements up to that point ;-)
+> 
+>>>> @@ -391,8 +391,8 @@ static void scsi_single_lun_run(struct
+>>>> scsi_device *current_sdev)
+>>>>        spin_lock_irqsave(shost->host_lock, flags);
+>>>>        if (starget->starget_sdev_user)
+>>>>            goto out;
+>>>> -    list_for_each_entry_safe(sdev, tmp, &starget->devices,
+>>>> -            same_target_siblings) {
+>>>> +    /* XARRAY: was list_for_each_entry_safe(); is this safe ? */
+>>>> +    xa_for_each(&starget->devices, l_idx, sdev) {
+>>>>            if (sdev == current_sdev)
+>>>>                continue;
+>>>>            if (scsi_device_get(sdev))
+>>>
+>>> Frankly, I don't know why we're using the _safe variant here.
+>>> Typically the _safe variant is used to protect against removal
+>>> (ie if a list element is removed while iterating over the list),
+>>> but I can't really imagine why starting I/O on the device would
+>>> cause one entry to be deleted...
+>>> James?
+> 
+> ... to add, xa_for_each() is safe against deletion while walking.
+> Or addition while walking.
+> 
+>>>> @@ -234,8 +234,9 @@ static struct scsi_device
+>>>> *scsi_alloc_sdev(struct scsi_target *starget,
+>>>>        sdev->channel = starget->channel;
+>>>>        mutex_init(&sdev->state_mutex);
+>>>>        sdev->sdev_state = SDEV_CREATED;
+>>>> -    INIT_LIST_HEAD(&sdev->siblings);
+>>>> -    INIT_LIST_HEAD(&sdev->same_target_siblings);
+>>>> +    /* XARRAY: INIT_LIST_HEAD()s here on list leaves, why ? */
+>>>> +    sdev->sh_idx = -1;
+>>>> +    sdev->starg_idx = -1;        /* for debugging */
+>>>>        INIT_LIST_HEAD(&sdev->starved_entry);
+>>>>        INIT_LIST_HEAD(&sdev->event_list);
+>>>>        spin_lock_init(&sdev->list_lock);
+>>>
+>>> It is good practice to call INIT_LIST_HEAD() on list leaves as then you
+>>> can call 'list_empty()' to figure out if they are part of a list or not.
+>>>
+>>> But I'm wondering about the 'sh_idx' and the 'starg_idx' here.
+>>> We already have perfectly good indices with the 'lun' and 'id' entries
+>>> in struct scsi_device, which (incidentally) _need_ to be unique.
+>>>
+>>> So why not use them?
+>>
+>> Ah now we have something to discuss and perhaps Willy can help
+>>
+>> At the target level we have two indexes:
+>>     - channel (is 16 bits enough)
+>>     - target (16 or 32 bits?)
+>> This could be address to ways:
+>>     1) introduce struct scsi_channel {int num_chans; scsi_target *t1p;}
+>>     2) combine channnel and target into one 32 bit integer.
+>>
+>> The xarray type of its index seems to be unsigned long (Willy,
+>> is that correct?). That is the same size as a pointer, 32 bits
+>> on a 32 bit machine, 64 bits on a 64 bit machine. That is
+>> unfortunate, since we can represent the full 64 bit LUN as
+>> a single index on a 32 bit machine. We could 'hide' that and
+>> have two xarrays in scsi_device for 32 bit machines.
+> 
+> You aren't the first person to ask about having a 64-bit lookup on
+> 32-bit machines.  Indeed, I remember Hannes asking for a 256 bit lookup
+> at LinuxCon in Prague.  I have always been reluctant to add such a thing
+> because the XArray uses quite a naive data type underneath.  It works well with
+> dense arrays but becomes very wasteful of memory for sparse arrays.
+> 
+> My understanding of SCSI-world is that most devices have a single
+> LUN 0.  Most devices that have multiple LUNs number them sequentially.
+> Some devices have either an internal structure or essentially pick random
+> LUNs for the devices they expose.
+> 
+Not quite. You are correct that most devices have a single LUN 0
+(think of libata :-), but those with several LUNs typically
+enumerate them. In most cases the enumeration starts at 0 (or 1,
+if LUN 0 is used for a management LUN), and reaches up to 256.
+Some arrays use a different LUN layout, which means that the top
+two bit of the LUN number are set, and possibly some intermediate
+numbers, too. But the LUNs themselves are numbered consecutively, too;
+it's just at a certain offset.
+I've never seen anyone picking LUN numbers at random.
+
+>> So to start with, I took the easy approach, the one that most
+>> resembles the what include/linux/list.h has been using. There
+>> is also a (overly ?) complex locking scheme that I really did
+>> not want to upset.
+> 
+> I think this is currently the best way to use the XArray.  I do have
+> a project in the works to replace the data structure implementing the
+> XArray API with a better one, but that project has been underway for
+> almost two years now, so I would have a hard time suggesting that you
+> wait for it to be ready.
+> 
+>> Those num_chans, t1p members that I put in scsi_channel is just
+>> to show the xarray lookup can be bypassed when num_chans=1
+>> which is very likely. Same approach could be taken in scsi_target
+>> to scsi_device.
+> 
+> If you do only have a single entry at 0, the XArray is very efficient.
+> It simplifies to a single pointer.  You don't need to optimise for that
+> case yourself ;-)
+> 
+But still, the original question still stands: what would be the most 
+efficient way using xarrays here?
+We have a four-level hierarchy Host:Channel:Target:LUN
+and we need to lookup devices (and, occasinally, targets) per host.
+At this time, 'channel' and 'target' are unsigned integer, and
+LUNs are 64 bit.
+It should be possible to shorten 'channel' and 'target' to 16 bits,
+as most driver have a limit well below that anyway.
+And as discussed above we might be able to shorten the LUN number
+to 32 bits by (ab-)using unused ranges in the LUN structure.
+But that still leaves us with two 32 bit numbers.
+
+The current approach from Doug is using an _additional_ index into
+the xarray. Which I think it pretty wasteful, seeing that the
+HCTL number already _is_ a linear index. So using the HCTL number
+as index into the xarray would be the logical choice, only we can't
+due to implementation limitations.
+
+>>>> @@ -326,6 +331,7 @@ static void scsi_target_dev_release(struct device *dev)
+>>>>        struct device *parent = dev->parent;
+>>>>        struct scsi_target *starget = to_scsi_target(dev);
+>>>> +    xa_destroy(&starget->devices);
+> 
+> By the way, you don't have to call xa_destroy() if you know the array
+> is empty.  The IDR used to have that unfortunate requirement, and about a
+> third of users blissfully ignored it, leaking uncounted amounts of memory.
+> 
+>>>> @@ -445,7 +455,15 @@ static struct scsi_target
+>>>> *scsi_alloc_target(struct device *parent,
+>>>>        if (found_target)
+>>>>            goto found;
+>>>> -    list_add_tail(&starget->siblings, &shost->__targets);
+>>>> +    /* XARRAY: was list_add_tail(); may get hole in xarray or tail */
+>>>> +    res = xa_alloc(&shost->__targets, &u_idx, starget, scsi_xa_limit_16b,
+>>>> +               GFP_ATOMIC);
+>>>> +    if (res < 0) {
+>>>> +        spin_unlock_irqrestore(shost->host_lock, flags);
+>>>> +        pr_err("%s: xa_alloc failure errno=%d\n", __func__, -res);
+>>>> +        return NULL;
+>>>> +    }
+>>>> +    starget->sh_idx = u_idx;
+>>>>        spin_unlock_irqrestore(shost->host_lock, flags);
+>>>>        /* allocate and add */
+>>>>        transport_setup_device(dev);
+>>>
+>>> 'scsi_xa_limit_16b' ?
+>>> What's that for?
+>>
+>> See include/linux/xarray.h xa_limit_32b
+>>
+>> This is a 16 bit equivalent. Not sure if that is too restrictive.
+>> Anyway, the xa_alloc() call amongst others needs an upper and
+>> lower bound.
+> 
+> I'm happy to have an xa_limit_16b in xarray.h.  I estimate it would have
+> about 5-10 users across the entire kernel.
+> 
+>>> And, again, if we were to use the target id as an index we could be
+>>> using 'xa_store' and the problem would be solved...
+> 
+> It may make sense to use an allocating XArray for LUNs and targets, but
+> use the channel ID directly.  It depends how structured these things
+> are in SCSI, and I'll admit I haven't been keeping up with how SCSI
+> numbers things on a modern system (I suspect 99.9% of SCSI devices
+> are USB keys with one host, one channel, one target, one LUN, but
+> that the 0.1% of SCSI devices on Linux systems are responsible for 80%
+> of the performance end of the market)
+> 
+I can't really argue here, as my perception is a bit skewed. What with 
+95% of my customer calls coming from the latter end of the spectrum ...
+
+Anyway. I'll see if I can come up with a mapping for HCTL numbers
+onto xarray.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
