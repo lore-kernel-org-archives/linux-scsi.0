@@ -2,283 +2,139 @@ Return-Path: <SRS0=8UCH=7J=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8ACC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 May 2020 02:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5707C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 May 2020 09:15:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19B812075F
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 May 2020 02:53:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BA6E2084C
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 May 2020 09:15:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="uVCPv3Iv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728139AbgE0Cxc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 May 2020 22:53:32 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:52081 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725948AbgE0Cxc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 May 2020 22:53:32 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 79B522041D4;
-        Wed, 27 May 2020 04:53:30 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 2RlaZN7KQYY4; Wed, 27 May 2020 04:53:23 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id DDC8820418E;
-        Wed, 27 May 2020 04:53:22 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [RFC v2 1/6] scsi: xarray hctl
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     Hannes Reinecke <hare@suse.de>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        jejb@linux.vnet.ibm.com
-References: <20200524155814.5895-1-dgilbert@interlog.com>
- <20200524155814.5895-2-dgilbert@interlog.com>
- <6527a0ca-954c-70e8-f0f5-08206c1779f2@suse.de>
- <8dab99d1-a22d-0065-5a7a-fd9b80bc661a@interlog.com>
- <20200525174052.GD17206@bombadil.infradead.org>
- <825bece5-e209-a4da-ddb1-809c48e4e9b3@suse.de>
- <20200526142727.GH17206@bombadil.infradead.org>
- <b14bdfa1-1cb9-6e3f-c025-fccdfa034024@suse.de>
- <4a52d9a2-d0ed-27a9-f839-1f81a8b872fc@interlog.com>
- <0eb4bb5d-1c2f-9230-beec-4b523e1d1501@interlog.com>
-Message-ID: <c99b7e24-6408-ea38-898b-692b391f164e@interlog.com>
-Date:   Tue, 26 May 2020 22:53:20 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <0eb4bb5d-1c2f-9230-beec-4b523e1d1501@interlog.com>
-Content-Type: multipart/mixed;
- boundary="------------F1B9025395B282DF2FF5F14F"
-Content-Language: en-CA
+        id S1726938AbgE0JPF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 May 2020 05:15:05 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:22939 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726898AbgE0JPE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 May 2020 05:15:04 -0400
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200527091503epoutp02536ff6d9e6849f1818c397d96174d6ab~S188kNEwh0218202182epoutp02B
+        for <linux-scsi@vger.kernel.org>; Wed, 27 May 2020 09:15:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200527091503epoutp02536ff6d9e6849f1818c397d96174d6ab~S188kNEwh0218202182epoutp02B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1590570903;
+        bh=Dm3JG1JFIBm92Ne8ZPoNhZSsC2dbIoAQEZ/k9FavCTg=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=uVCPv3Iv1/QfhOj13XaqxIv1jaxjgNCc3r0bNtz54cHXd/QLUN4xchO64XOZ2n/aI
+         ByTiD67uOzPy9y+Dx4SrxLZI8NnYi3dTAd/QNJQYa8qLBirCBI0jVUKZ7uz083YBBI
+         IX3PxzvvsPRBGLzhLi7yHCC1fPFmwA/0QxnInLk4=
+Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p1.samsung.com
+        (KnoxPortal) with ESMTP id
+        20200527091502epcas1p192c155d38ef4f98613a989b482a1aad4~S188EUuYj2923029230epcas1p1c;
+        Wed, 27 May 2020 09:15:02 +0000 (GMT)
+Mime-Version: 1.0
+Subject: Re: Another approach of UFSHPB
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Zang Leigang <zangleigang@hisilicon.com>,
+        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        MOHAMMED RAFIQ KAMAL BASHA <md.rafiq@samsung.com>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <fd8c4336-8528-19d9-b1fe-1f74baf6b483@acm.org>
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <231786897.01590570902533.JavaMail.epsvc@epcpadp1>
+Date:   Wed, 27 May 2020 18:11:06 +0900
+X-CMS-MailID: 20200527091106epcms2p34428c8cbcda670e0a77cf6eab36ffcb4
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20200516171420epcas2p108c570904c5117c3654d71e0a2842faa
+References: <fd8c4336-8528-19d9-b1fe-1f74baf6b483@acm.org>
+        <aaf130c2-27bd-977b-55df-e97859f4c097@acm.org>
+        <835c57b9-f792-2460-c3cc-667031969d63@acm.org>
+        <1589538614-24048-1-git-send-email-avri.altman@wdc.com>
+        <d10b27f1-49ec-d092-b252-2bb8cdc4c66e@acm.org>
+        <SN6PR04MB46408050B71E3A6225D6C495FCBA0@SN6PR04MB4640.namprd04.prod.outlook.com>
+        <231786897.01589928601376.JavaMail.epsvc@epcpadp1>
+        <231786897.01590385382061.JavaMail.epsvc@epcpadp2>
+        <6eec7c64-d4c1-c76e-5c14-7904a8792275@acm.org>
+        <SN6PR04MB46400AED930A3DC5B94AED25FCB00@SN6PR04MB4640.namprd04.prod.outlook.com>
+        <CGME20200516171420epcas2p108c570904c5117c3654d71e0a2842faa@epcms2p3>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------F1B9025395B282DF2FF5F14F
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-On 2020-05-26 4:27 p.m., Douglas Gilbert wrote:
-> On 2020-05-26 3:10 p.m., Douglas Gilbert wrote:
->> On 2020-05-26 1:53 p.m., Hannes Reinecke wrote:
->>> On 5/26/20 4:27 PM, Matthew Wilcox wrote:
->>>> On Tue, May 26, 2020 at 08:21:26AM +0200, Hannes Reinecke wrote:
->>>>> On 5/25/20 7:40 PM, Matthew Wilcox wrote:
->>>>>> You aren't the first person to ask about having a 64-bit lookup on
->>>>>> 32-bit machines.  Indeed, I remember Hannes asking for a 256 bit lookup
->>>>>> at LinuxCon in Prague.  I have always been reluctant to add such a thing
->>>>>> because the XArray uses quite a naive data type underneath.  It works well 
->>>>>> with
->>>>>> dense arrays but becomes very wasteful of memory for sparse arrays.
->>>>>>
->>>>>> My understanding of SCSI-world is that most devices have a single
->>>>>> LUN 0.  Most devices that have multiple LUNs number them sequentially.
->>>>>> Some devices have either an internal structure or essentially pick random
->>>>>> LUNs for the devices they expose.
->>>>>
->>>>> Not quite. You are correct that most devices have a single LUN 0
->>>>> (think of libata :-), but those with several LUNs typically
->>>>> enumerate them. In most cases the enumeration starts at 0 (or 1,
->>>>> if LUN 0 is used for a management LUN), and reaches up to 256.
->>>>> Some arrays use a different LUN layout, which means that the top
->>>>> two bit of the LUN number are set, and possibly some intermediate
->>>>> numbers, too. But the LUNs themselves are numbered consecutively, too;
->>>>> it's just at a certain offset.
->>>>> I've never seen anyone picking LUN numbers at random.
->>>>
->>>> Ah, OK.  I think for these arrays you'd be better off accepting the cost
->>>> of an extra 4 bytes in the struct scsi_device rather than the cost of
->>>> storing the scsi_device at the LUN.
->>>>
->>>> Let's just work an example where you have a 64-bit LUN with 4 ranges,
->>>> each of 64 entries (this is almost a best-case scenario for the XArray).
->>>> [0,63], 2^62+[0,63], 2^63+[0,63], 2^63+2^62+[0,63].
->>>>
->>>> If we store them sequentially in an allocating XArray, we take up 256 *
->>>> 4 bytes = 1kB extra space in the scsi_device.  The XArray will allocate
->>>> four nodes plus one node to hold the four nodes, which is 5 * 576 bytes
->>>> (2780 bytes) for a total of 3804 bytes.
->>>>
->>>> Storing them in at their LUN will allocate a top level node which covers
->>>> bits 60-66, then four nodes, each covering bits of 54-59, another four
->>>> nodes covering bits 48-53, four nodes for 42-47, ...  I make it 41 nodes,
->>>> coming to 23616 bytes.  And the pointer chase to get to each LUN is
->>>> ten deep.  It'll mostly be cached, but still ...
->>>>
->>> Which is my worry, too.
->>> In the end we're having a massively large array space (128bit if we take the 
->>> numbers as they stand today), of which only a _tiny_ fraction is actually 
->>> allocated.
->>> We can try to reduce the array space by eg. restricting channels and targets 
->>> to be 16 bits, and the LUN to be 32 bits.
->>> But then we'll be having a hard time arguing; "Hey, we have a cool new 
->>> feature, which has a really nice interface, but we can't support the same set 
->>> of devices as we have now...".
->>> That surely will go down well.
+On 2020-05-26 Bart Van Assche wrote:
+>On 2020-05-25 23:15, Avri Altman wrote:
+>>> On 2020-05-24 22:40, Daejun Park wrote:
+>>>> The HPB driver is close to the UFS core function, but it is not essential
+>>>> for operating UFS device. With reference to this article
+>>>> (https://lwn.net/Articles/645810/), we implemented extended UFS-feature
+>>>> as bus model. Because the HPB driver consumes the user's main memory, it
+>>> should
+>>>> support bind / unbind functionality as needed. We implemented the HPB
+>>> driver
+>>>> can be unbind / unload on runtime.
 >>>
->>> Maybe one should look at using an rbtree directly; _that_ could be made to 
->>> work with an 128bit index, and lookup should be fast, too.
->>> Let's see.
->>>
->>>>> But still, the original question still stands: what would be the most
->>>>> efficient way using xarrays here?
->>>>> We have a four-level hierarchy Host:Channel:Target:LUN
->>>>> and we need to lookup devices (and, occasinally, targets) per host.
->>>>> At this time, 'channel' and 'target' are unsigned integer, and
->>>>> LUNs are 64 bit.
->>>>
->>>> It certainly seems sensible to me to have a per-host allocating XArray
->>>> to store the targets that belong to that host.  I imagine you also want
->>>> a per-target XArray for the LUNs that belong to that target.  Do you
->>>> also want a per-host XArray to store the LUNs so you can iterate all
->>>> LUNs per host as a single lookup rather than indirecting through the
->>>> target Xarray?  That's a design decision for you to make.
->>>>
->>> Seeing that I'm trying to use the existing HCTL number as index it's quite 
->>> hard to have a per-host lookup structure, as this would inevitably
->>> require a separate LUN index somewhere.
->>> Which would mean to have a two-level xarray structure, where the first xarray 
->>> hold the scsi targets, and the second one the LUNs per target.
->>> Not super-nice, but doable.
->>>
->>> Still thinking about the rbtree idea, though.
+>>> I do not agree that the bus model is the best choice for freeing cache
+>>> memory if it is no longer needed. A shrinker is probably a much better
+>>> choice because the callback functions in a shrinker get invoked when a
+>>> system is under memory pressure. See also register_shrinker(),
+>>> unregister_shrinker() and struct shrinker in include/linux/shrinker.h.
 >>
->> You already have one, and it handles its own locking. It is called xarray :-)
->>
->>
->> Circling back to where I started: xarrays that allocate their own indexes.
->>
->> Apart from the LUN ***, the other indexes tend to be monotonic increasing, most
->> of the time, correct Hannes? So thinking about an xarray in a shost object
->> with pointers to starget objects. At run time if say a target disappears,
->> often another appears either with the same target_id or a larger target_id,
->> perhaps larger than any previously issued id. So with careful insertions
->> (xa_alloc() will allow us to precisely position replacements) we can maintain
->> that monotonic ascending order. As I showed in patch 6/6 we can easily
->> track the number of elements in each xarray, lets call it 'n'. For
->> n < 12 (say) we don't care and just do O(n) iterator searches. For n >= 12
->> we check if the xarray is in ascending order, if it isn't, we sort it by
->> the index we want (e.g. channel_id,target_id). For elements that we
->> change positions of, in the xarray, we need to change the variable I called 
->> 'sh_idx' (i.e. the xarray index) in the corresponding starget object.
->>
->> Why do this, to do a binary search when n >= 12, of course. Lookup time
->> is then O(ln(n)) with only around ln(n) cache-unfriendly visits to starget
->> objects.
->>
->> And that sort can be much better than O(n.ln(n)) since at the point of an
->> insertion, if the xarray was known to be sorted before the insertion,
->> then we only need as single iteration through the xarray to place the
->> new element in the correct position. After that it would be handy to
->> xa_swap() function that gave us the new xarray index. Making sure the
->> xarray indexes don't become too sparse might also be addressed in the
->> sort.
->>
->>
->> Question to Matthew:
->> Will xa_find(&xarray, &idx, full_range, 0)
->> return NULL _and_ place the index of the lowest "hole" in that xarray
->> (or 1 beyond the upper limit of the range) in 'idx' ?
+>> Since this discussion is closely related to cache allocation,
+>> What is your opinion about allocating the pages dynamically as the regions
+>> Are being activated/deactivated, in oppose of how it is done today - 
+>> Statically on init for the entire max-active-subregions?
 
-Looked at xa_find() in lib/xarray.c and the answer is no. No harm,
-we can find holes by watching the index arguments output by
-xa_find() and xa_find_after() as we iterate over the array.
+> Memory that is statically allocated cannot be used for any other purpose
+> (e.g. page cache) without triggering the associated shrinker. As far as
+> I know shrinkers are only triggered when (close to) out of memory. So
+> dynamically allocating memory as needed is probably a better strategy
+> than statically allocating the entire region at initialization time.
 
->> Note to others: the last argument in a typical xa_find() call
->> is either XA_PRESENT or some other mark the app is using, not 0.
->>
->> Doug Gilbert
->>
->>
->> *** the SCSI REPORT LUNS command doesn't say anything about the _ordering_
->>      of LUNs or even if it is stable from one invocation to the next.
->>      There is nothing to stop the scsi_scan.c code from sorting the LUN
->>      inventory before applying it to the ML object tree.
-> 
-> Maybe interest Matthew into doing the heavy lifting:
-> 
-> void xa_compact_and_sort(struct xa_array *xa,
->                           int offset_ul_idx,
->                           int (*compar)(const void *l, const void *r));
-> 
-> [Function modelled on qsort(3), perhaps qsort_r(3) would be better.]
-> 
-> The second argument to xa_compact_and_sort() is either:
->      - offsetof(struct struct, sh_idx) where sh_idx is an unsigned long, or
->      - if less than zero then ignore index fixup and don't compact
-> 
-> The third argument is either:
->       - a compare function that, for example, acts on an ordering for the
->         key: channel_id,target_id and uses it to return <0, ==0 or >=0
->         based on being called with pointers to two starget objects, or
->       - NULL: then just do a compaction if ul_idx >= 0
-> 
-> So when ul_idx >= 0 xa_compact_and_sort() places the new compacted index
-> at each *((unsigned long *)((u8 *)starget) + ul_idx)). So in the case of
-> my 1/6 patch the type of sh_idx would change from int to unsigned long.
+To improve UFS device performance using the HPB driver, 
+the number of active-subregions above a certain threshold is essential.
+If the number of active-subregions is lower than the threshold, 
+the performance improvement by using HPB will be reduced. 
+Also, due to frequent and active/inactive protocol overhead, 
+performance may be worse than when the HPB feature is not used.
 
-On further thought, I would add a new bool argument 'do_compact' and
-drop that "and don't compact" from offset_ul_idx description. Or
-just have separate the xa_compact() and xa_sort() functions.
+Therefore, it is better to unbind/unload HPB driver than 
+to reduce the number of active subregions below the threshold. 
+We designed the HPB driver to make the UFS device work 
+even when the module is unloaded.
 
-Attached is a rough idea of what the xa_compact logic might do. It in
-turn depends on either a xa_swap() or xa_move() function which we
-don't currently have. Naturally I would like those functions to "carry"
-the mark info with them (unlike xa_load() and xa_store()) as they
-swap or move elements.
+Thanks,
 
-A common use case might be when all but the last element are already
-sorted, and a newly arrived target (disk) is appended to the array.
-So only the last element needs to be re-placed if it is out of order.
-
-Doug Gilbert
-
-
-
-
-
---------------F1B9025395B282DF2FF5F14F
-Content-Type: text/x-csrc; charset=UTF-8;
- name="xa_compact.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="xa_compact.c"
-
-#include <linux/xarray.h>
-
-
-unsigned long
-xa_compact(struct xa_array *xap, int off_ul_idx, unsigned long last)
-{
-	bool adjust_user_idx = (offset_ul_idx >= 0);
-	unsigned long idx;
-	unsigned long pp1_idx = 0;	/* previous index plus 1 */
-	unsigned long num = 0;
-	unsigned long gap = 0;
-	void *vp;
-
-	for (vp = xa_find(xap, idx, last, XA_PRESENT); vp;
-	     ++num, vp = xa_find_after(xap, idx, last, XA_PRESENT)) {
-		if (idx > pp1_idx)
-			gap += idx - pp1_idx;
-		if (gap > 0)
-			xa_swap(xap, num, idx);
-			/* or xa_move(xap, dst_idx, src_idx) */
-			if (adjust_user_idx) {
-				vp = xa_load(xap, num);
-				*((unsigned long *)((u8 *)vp + off_ul_idx)) =
-								num;
-			}
-		}
-		pp1_idx = idx + 1;
-	}
-	return num;		/* compacted number of elements */
-}
-
---------------F1B9025395B282DF2FF5F14F--
+Daejun
