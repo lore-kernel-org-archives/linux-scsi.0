@@ -2,55 +2,60 @@ Return-Path: <SRS0=GT1C=7K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 627ADC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 16:16:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28365C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 16:18:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4932D21532
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 16:16:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09C662158C
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 16:18:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404946AbgE1QQI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 May 2020 12:16:08 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:40583 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404872AbgE1QQF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 12:16:05 -0400
-Received: by mail-pg1-f194.google.com with SMTP id j21so13667238pgb.7;
-        Thu, 28 May 2020 09:16:05 -0700 (PDT)
+        id S2404983AbgE1QSf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 May 2020 12:18:35 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:41731 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404830AbgE1QSe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 12:18:34 -0400
+Received: by mail-pl1-f194.google.com with SMTP id a13so11745485pls.8;
+        Thu, 28 May 2020 09:18:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=AiyBV0vGcERCP8qoB3YDvmHJfZC1K97O59wS9c3H20E=;
-        b=ABLiMPA0aB9SPugVCCN6+iX9qDj8YVsAf115Rh/PgyjfHnJ8YFQMZ9wOi5qQGVadVv
-         6RI0mhcaeQGP0vgZM5X9gVm+t7Kg7//YlENJM2tDtuGj+XzuCwuLtfCvw68NVk8EwjYG
-         enh1VD9yjnTb7/EfuLA6yz5J8AKklTq0G1loiWKOM7AGSfNetcUBawVBofqdGxVi0gg4
-         YeFjU0ArFCj7+4Xb5kJwT/39yjbr+i7KXtIOeK8a0jYg+pkGgu8VY6vdiOTBwZHubwc5
-         7PowMhrU8aJu6PKprUA0oWv+RLeQjFLj6naq6RbY2ePwHb+4EplNsn1F04G3NHxrH8/Q
-         Wc3g==
-X-Gm-Message-State: AOAM530kP87+jfXaWB6A+pIL/GmDLM8EUCxiCnFFhsRDJdEE0rKSlnQ4
-        YUY/8O7yf7sKXVg9si57j7giPRXDUJs=
-X-Google-Smtp-Source: ABdhPJwHssJ9qRtCjFfhshenoj9JiKUIVFUD49Gb/k5xSugTgXAdeYtepavbRi8b7HcDBVhbDJxw9g==
-X-Received: by 2002:a63:ef03:: with SMTP id u3mr3675843pgh.254.1590682564091;
-        Thu, 28 May 2020 09:16:04 -0700 (PDT)
+        bh=KfsbVj6z63bsl5JP4iMltZwaQmXOUwSJ85dsdEa49v0=;
+        b=Q/gJa6Ofe8uHIf+UD/bW/tFXyUYXQtF977ngNyQZ3HOkxffijf/ZObUFsBYskdJPFZ
+         QJXMCILWyLx5FRpwXqLfo3tkXPN0y4zbTH2ov8VObxLQRIA9049RWdiMaYnEWf6swvCG
+         rYgozQ8Qy5Drp0y9l0+vtYndg1g56tsGbySqzJprUcydkdcJgqvMEtjL80/fpuWqvKZk
+         xBplf1rVk9K2UiDcGPu7SiwMTw1rIF2+KA9lliRn6jzXxqfTqOOGc2tqh4ztk9odeGJs
+         rFeInuWiHV+819Lnzz4QlhTJyakJovVCL1L0vCaeJD+1owwBbcdusRcynKKhAAum+V8i
+         vOaw==
+X-Gm-Message-State: AOAM530wyDPG9BCDqAJmJS8ydvEnkgek0CFSsT/57eDs4Lhuqs5KsFgr
+        LenmycZEXKyBgvZkiJh2YZ1eVvLKlYg=
+X-Google-Smtp-Source: ABdhPJzSojmBDRyhoDwHcIILc2Kh1NHXmgnQJLnmqXvVEmFLe3Tvu1PZhUmzw7X8xUVDoealvOpqVA==
+X-Received: by 2002:a17:90b:193:: with SMTP id t19mr4874703pjs.47.1590682712542;
+        Thu, 28 May 2020 09:18:32 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:40e6:aa88:9c03:e0b4? ([2601:647:4000:d7:40e6:aa88:9c03:e0b4])
-        by smtp.gmail.com with ESMTPSA id a85sm5013772pfd.181.2020.05.28.09.16.02
+        by smtp.gmail.com with ESMTPSA id u26sm5137592pfn.88.2020.05.28.09.18.30
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 May 2020 09:16:03 -0700 (PDT)
-Subject: Re: [PATCH v2 1/3] scsi: ufs: remove max_t in ufs_get_device_desc
-To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+        Thu, 28 May 2020 09:18:31 -0700 (PDT)
+Subject: Re: [PATCH v2 3/3] scsi: ufs: cleanup ufs initialization path
+To:     Avri Altman <Avri.Altman@wdc.com>, Bean Huo <huobean@gmail.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 References: <20200528115616.9949-1-huobean@gmail.com>
- <20200528115616.9949-2-huobean@gmail.com>
- <85bbc91f-7b91-46fc-acff-3bcc2288c4ae@acm.org>
- <82e8faa7d6a0c5f04832519740230f9f520347cb.camel@gmail.com>
+ <20200528115616.9949-4-huobean@gmail.com>
+ <SN6PR04MB4640F8F4B293E6D3980952D5FC8E0@SN6PR04MB4640.namprd04.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -75,12 +80,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <8e1bfd09-0269-ecd6-eb24-31f953573189@acm.org>
-Date:   Thu, 28 May 2020 09:16:01 -0700
+Message-ID: <0cc529a9-10a5-2ccd-055e-b9b2a47e5183@acm.org>
+Date:   Thu, 28 May 2020 09:18:29 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <82e8faa7d6a0c5f04832519740230f9f520347cb.camel@gmail.com>
+In-Reply-To: <SN6PR04MB4640F8F4B293E6D3980952D5FC8E0@SN6PR04MB4640.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -89,32 +94,17 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-28 08:04, Bean Huo wrote:
-> do you mean  like this: buff_len = hba->desc_size[id]?
+On 2020-05-28 07:58, Avri Altman wrote:
+>> From: Bean Huo <beanhuo@micron.com>
+>> +static void ufshcd_update_desc_length(struct ufs_hba *hba,
+>> +                                     enum desc_idn desc_id, int desc_len)
+> desc_len is at most 255 so maybe u8?
 
-How about the following untested change?
+At least on x86 using types like 'u8' for function arguments may lead to
+suboptimal code because it may cause the compiler to insert a widening
+instruction. How about changing 'int desc_len' into 'unsigned desc_len'
+instead?
 
 Thanks,
 
 Bart.
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 698e8d20b4ba..e33754c15c2c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6606,14 +6606,11 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba
- static int ufs_get_device_desc(struct ufs_hba *hba)
- {
- 	int err;
--	size_t buff_len;
- 	u8 model_index;
- 	u8 *desc_buf;
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
-
--	buff_len = max_t(size_t, hba->desc_size.dev_desc,
--			 QUERY_DESC_MAX_SIZE + 1);
--	desc_buf = kmalloc(buff_len, GFP_KERNEL);
-+	desc_buf = kmalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
- 	if (!desc_buf) {
- 		err = -ENOMEM;
- 		goto out;
