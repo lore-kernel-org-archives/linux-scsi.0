@@ -2,61 +2,59 @@ Return-Path: <SRS0=GT1C=7K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8FCC433E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 12:07:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9533CC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 12:08:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E9BD21548
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 12:07:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69E1921548
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 12:08:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fxc1oLmB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eE7jAjL8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389286AbgE1MHN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 May 2020 08:07:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46442 "EHLO
+        id S2388780AbgE1MIL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 May 2020 08:08:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388805AbgE1L4o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 07:56:44 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A167C08C5C5;
-        Thu, 28 May 2020 04:56:44 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id s8so27527922wrt.9;
-        Thu, 28 May 2020 04:56:44 -0700 (PDT)
+        with ESMTP id S2388784AbgE1L4h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 07:56:37 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBEA7C08C5C5;
+        Thu, 28 May 2020 04:56:36 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id d128so1732728wmc.1;
+        Thu, 28 May 2020 04:56:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=9UwLraUvWSGxTL8/w/Jkm4qi5C2Agi4iehso91sVdME=;
-        b=fxc1oLmBo1WXMuBKvAkrLl7rHqdG9bsNZXFBaJZtWGrLH5q5v89kJSMJh3GoB5yIme
-         11vmAKEhc1+M791N13eA1YZVqx+1UI6anSRkY3Eqdb+Gqy4GFZ7Wtxx7jsoeY7jembJe
-         EocRdg3r93uoM0XuulIXfaE23Y845OuotnQER+o5C+LQ5B+ota5xjbWnZdHYKmh0JCwr
-         +lUga9fs3bLUk6gKvNgjyvhNkaNKER+y9noWPQN+JVTWPJR6n71AH6tOYEMMiC4OVA6y
-         qcVOSs6YMkkMJ5FAYa7SCWJAfJsOUDByZJGRLYAnd1y71/7NHZ9m8b5i83X5/tEq5Cqd
-         JsEw==
+        h=from:to:cc:subject:date:message-id;
+        bh=tq+q++/frST5N5CKETYuRqUnrOlaPvf/ODtcvH07zHM=;
+        b=eE7jAjL8k8KesdXQ8UHRMzDquL2AN+NiiE5Ao/ztSJTqX/49+V4QyMgvpYLstoGEui
+         l/9NgM3PVhu2Y3RghbdJcM/kPsQSce/RVVcZ/RZraP8e4lrmVuq9oINYYaYltQ2oPM9G
+         4OM1YDfwzsgPmp5l+ILk4RyiaP4aeSqEoib0C6VrpSiG4V+kOtz0Lpfwis0zu3ryBhRh
+         9u+5lodqjSz9NGOeF+fhnjH+/T0BWzMy0m4iqDaMWlsL+/n7PnNunIyfDi493W+SYApR
+         WS8Y4A9L4lgZntMs/NfU8tAkEWHE/JCQI9wa4qAFmOI8qsIY67lDiwfHkTUdArIFu+xK
+         DHMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=9UwLraUvWSGxTL8/w/Jkm4qi5C2Agi4iehso91sVdME=;
-        b=huRIwtH8To9FdwKKG5e+lHLqVx9ZTC25AYU8KlT61MwVyHgHlrOfv8Ua8K4pCNXnnl
-         Bg1fPx1DPBL/Kxy6j/3fOgd/BQBYcRScBDQdBhIk3T6bSusBW2TiuHH++XP6N3h1W8Qk
-         awI0l+2upCoEeTQUnCJ2RvdICShScxC9ijYFlbzHf+MJ641CVFPKXLiWuLBnLCaMsgAb
-         SRYefUV01iiUWqX0edfyaRhuRUIkBu8skr8HgY7GWUn0i5+HxnbJotVfYCPuzM5lWlgo
-         6Fijb/K4HqkocbT36rR2pqOyX1XhlChfAKlHVy1dutbE8W74B7gEPN5YWC0I03NCMJQa
-         4DgA==
-X-Gm-Message-State: AOAM5318aEbxRW94PhIUL65tOKVml2htXJr6IvrEeVUpP8Zyso9dDoeK
-        n0eZcHLxEWLZ3DJXOhs2I34=
-X-Google-Smtp-Source: ABdhPJzWouZ5p9oOg1oYEbxXHI9AGgOwQUFfCqK/grNWTJV0udRVhTV0lskpt9HCgLXIlrTftKH4JQ==
-X-Received: by 2002:adf:f8c8:: with SMTP id f8mr3173653wrq.151.1590667003156;
-        Thu, 28 May 2020 04:56:43 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=tq+q++/frST5N5CKETYuRqUnrOlaPvf/ODtcvH07zHM=;
+        b=Y5LMQ1/sRKIwUcEoY+exfXUdWmheyRAjWUCFKQscx+u9+tNSR3uQX0uREe3RcnGDyG
+         QG+aWjc+Xm9E5DLAKU/IfodkZReXfwTq6OvU3BKXYarkag26qZwk9pKwm+4tsPi/wXDs
+         L2RK0ElaiQTGM91gYE/vQggigTWDkxBphRkutjNdQvbyaI8bX9k2nbXPUw1aYc3tlMYB
+         eX5ZXDCb98x6NEgWsx0rLjRT+4w38m07an0LBrfaKuNDogS/M7kZFjiQeUmbmPAfyJqk
+         N1hozLGl4kNWOKLux8pO89AGAJzS2fZqOaRM98R6vNA0KgRS3WFSsA4YsIa/adtZQXnm
+         PWyQ==
+X-Gm-Message-State: AOAM5325ZI87Q13BAEWTXpI3f6TO2q4JzhJZqVGnxN5KCSA1ManUSeAQ
+        cGhqFEjL8SU6aDZ5g+qTBqw=
+X-Google-Smtp-Source: ABdhPJxWIov3wIHFYf08Dxe/mGLEPx1E1mLIZwJgbqV2sS3UN5RUfoXpV0uTQjt2XBqLEIbdmRbWbA==
+X-Received: by 2002:a1c:7c02:: with SMTP id x2mr3204327wmc.183.1590666995753;
+        Thu, 28 May 2020 04:56:35 -0700 (PDT)
 Received: from ubuntu-laptop.micron.com ([165.225.203.62])
-        by smtp.gmail.com with ESMTPSA id y37sm6589178wrd.55.2020.05.28.04.56.40
+        by smtp.gmail.com with ESMTPSA id y37sm6589178wrd.55.2020.05.28.04.56.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 May 2020 04:56:42 -0700 (PDT)
+        Thu, 28 May 2020 04:56:35 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -64,12 +62,10 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] scsi: ufs: delete ufshcd_read_desc()
-Date:   Thu, 28 May 2020 13:56:15 +0200
-Message-Id: <20200528115616.9949-3-huobean@gmail.com>
+Subject: [PATCH v2 0/3] scsi: ufs: cleanup ufs initialization
+Date:   Thu, 28 May 2020 13:56:13 +0200
+Message-Id: <20200528115616.9949-1-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200528115616.9949-1-huobean@gmail.com>
-References: <20200528115616.9949-1-huobean@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -77,80 +73,24 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Delete ufshcd_read_desc(). Instead, let caller directly call
-ufshcd_read_desc_param().
+This patchset is to cleanup UFS descriptor access, and delete some
+unnecessary code.
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/scsi/ufs/ufshcd.c | 27 ++++++++-------------------
- 1 file changed, 8 insertions(+), 19 deletions(-)
+Changelog:
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0f8c7e05df29..0a95f0a5ab73 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3221,16 +3221,6 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
- 	return ret;
- }
- 
--static inline int ufshcd_read_desc(struct ufs_hba *hba,
--				   enum desc_idn desc_id,
--				   int desc_index,
--				   void *buf,
--				   u32 size)
--{
--	return ufshcd_read_desc_param(hba, desc_id, desc_index, 0, buf, size);
--}
--
--
- /**
-  * struct uc_string_id - unicode string
-  *
-@@ -3278,9 +3268,8 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
- 	if (!uc_str)
- 		return -ENOMEM;
- 
--	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_STRING,
--			       desc_index, uc_str,
--			       QUERY_DESC_MAX_SIZE);
-+	ret = ufshcd_read_desc_param(hba, QUERY_DESC_IDN_STRING, desc_index, 0,
-+				     (u8 *)uc_str, QUERY_DESC_MAX_SIZE);
- 	if (ret < 0) {
- 		dev_err(hba->dev, "Reading String Desc failed after %d retries. err = %d\n",
- 			QUERY_REQ_RETRIES, ret);
-@@ -6684,8 +6673,8 @@ static void ufshcd_set_active_icc_lvl(struct ufs_hba *hba)
- 	if (!desc_buf)
- 		return;
- 
--	ret = ufshcd_read_desc(hba, QUERY_DESC_IDN_POWER, 0,
--			desc_buf, buff_len);
-+	ret = ufshcd_read_desc_param(hba, QUERY_DESC_IDN_POWER, 0, 0,
-+				     desc_buf, buff_len);
- 	if (ret) {
- 		dev_err(hba->dev,
- 			"%s: Failed reading power descriptor.len = %d ret = %d",
-@@ -6888,8 +6877,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, desc_buf,
--			hba->desc_size.dev_desc);
-+	err = ufshcd_read_desc_param(hba, QUERY_DESC_IDN_DEVICE, 0, 0, desc_buf,
-+				     hba->desc_size.dev_desc);
- 	if (err) {
- 		dev_err(hba->dev, "%s: Failed reading Device Desc. err = %d\n",
- 			__func__, err);
-@@ -7170,8 +7159,8 @@ static int ufshcd_device_geo_params_init(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
--	err = ufshcd_read_desc(hba, QUERY_DESC_IDN_GEOMETRY, 0,
--			desc_buf, buff_len);
-+	err = ufshcd_read_desc_param(hba, QUERY_DESC_IDN_GEOMETRY, 0, 0,
-+				     desc_buf, buff_len);
- 	if (err) {
- 		dev_err(hba->dev, "%s: Failed reading Geometry Desc. err = %d\n",
- 				__func__, err);
+v1 - v2:
+    1. split patch
+    2. fix one compiling WARNING (Reported-by: kbuild test robot <lkp@intel.com>)
+
+Bean Huo (3):
+  scsi: ufs: remove max_t in ufs_get_device_desc
+  scsi: ufs: delete ufshcd_read_desc()
+  scsi: ufs: cleanup ufs initialization path
+
+ drivers/scsi/ufs/ufshcd.c | 166 ++++++++------------------------------
+ drivers/scsi/ufs/ufshcd.h |  12 +--
+ 2 files changed, 34 insertions(+), 144 deletions(-)
+
 -- 
 2.17.1
 
