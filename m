@@ -2,107 +2,137 @@ Return-Path: <SRS0=GT1C=7K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5309C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 10:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07C42C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 12:05:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92076208A7
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 10:22:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UtM8cW31"
+	by mail.kernel.org (Postfix) with ESMTP id DC54521532
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 12:05:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590667539;
+	bh=iEDnrsz6xY98L2zR/1m+vsa68l86wv7afRh44H+XURc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=fFxmSfBpMmdaCf7r7pnfNiR8kvC95HyFJ+N1UT+rJaq95GzqvEF5PRV5HNC7d3LIV
+	 zkwrnZf89f21BizMGviRW6fsxJPpCCYeXL+hOemT3kfO5NNr/Mlu71NNQ6cut4rf/6
+	 EJvQwWnjlNbXcwbqWCPAgeivZWZmFF+QFGcELRx4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387837AbgE1KVz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 May 2020 06:21:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59886 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387810AbgE1KVI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 06:21:08 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76370C08C5C5;
-        Thu, 28 May 2020 03:21:06 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id j21so13264480pgb.7;
-        Thu, 28 May 2020 03:21:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=sw0rt0kzpIX/gUx8+hCgXRUMgtmjnf69jO+OqqsmVeg=;
-        b=UtM8cW31AvkQC00j8DXuOSIp629fS3hCuVZFezqVeULbkTblEPhvk6Ey2Fx0Qxnm1k
-         eP34hG0buqPe5K7WeGfOwz7sE/7ofmoOGKqBZeDq1SVptUBW+RHbEIqHK4kH4zoM3ikI
-         6Gr7P1OP9YmJZDnHE8xj4lgD/Aa5FQSJgevNB8GBCI3GZCQ9v+1qViC+tGIPFIZ0O4CW
-         lLAPIdiqZTXFRwHlp4VKamYWM4JjMamCa932exOsrAbc+JaljC6bSKdjdaJVwAjnOZ2L
-         lD4dgsSSntxzABZIeSuNi/zfJKAWME61JRPdDGgvfBryQzY6dh+zNnT6XOw5/6lSC3Dr
-         s5CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=sw0rt0kzpIX/gUx8+hCgXRUMgtmjnf69jO+OqqsmVeg=;
-        b=f5Zi1WJkyS8I6KS04s0QFpCo+NAm5lyKfaxM2CRcyZZiPa+2prlWpjaTWmGxTx617T
-         nfFyfkwkjOEun6W5wEnmmyA8MxlJEqWsaZpGlbNDLKQsH87mPX7qRoBSBtegEuPZGhHc
-         +ikAwWQ0oHg3IBG8+7kpgTAkvZNyiPFaEDa89FpOUdg9H3V97R5+IlwvkGt6hAsY6Sh8
-         0KE2JN37UolMskYKpUKljnb0bqcYozgna0IMgkRps9l1p+VJcQYyi2iX2dBIGfYtb2rM
-         03Vks9RCAtxM8RqfxTyo1VHreDxMQ+oYGwMHGKkl4dc6voOhTuaJOu+76ye9Dc+v25yw
-         tzJQ==
-X-Gm-Message-State: AOAM532PXCdDKtFO7/A9kR4r+wL3R13s64JCloCVOOoIocBQkDOf8p17
-        nhj8MrMMKJcafFIHN0GnCbU=
-X-Google-Smtp-Source: ABdhPJzcLA0+TQPlgAm8Qs94D4yKVFqRRUBD1tklJ3GnQ1Zw51/zVWrAlHppT6eTOe4HIMuqeGm2kg==
-X-Received: by 2002:a62:1b87:: with SMTP id b129mr2370316pfb.162.1590661265781;
-        Thu, 28 May 2020 03:21:05 -0700 (PDT)
-Received: from suzukaze.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
-        by smtp.gmail.com with ESMTPSA id g65sm370180pfb.61.2020.05.28.03.21.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 May 2020 03:21:05 -0700 (PDT)
-From:   Chuhong Yuan <hslester96@gmail.com>
-Cc:     Chris Boot <bootc@bootc.net>,
+        id S2389307AbgE1MFb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 May 2020 08:05:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49362 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388901AbgE1L5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 May 2020 07:57:00 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0D47421501;
+        Thu, 28 May 2020 11:56:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1590667019;
+        bh=iEDnrsz6xY98L2zR/1m+vsa68l86wv7afRh44H+XURc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=q3/89yLCjXqiNsO+YxoA1VFhQlFGDKOFNhhz7J5O3inu/kGDdX63S1mu7Z+TD1j8Y
+         4oI52pR1cnE09Ftg+DPBu7SLJ92UKISsPjSKeKD+4JrOrhpkOkT/XqfrgLQiQs7ZDq
+         gmO55I8dBx5xfVrCUmwsSSSDYFigGuT0H/c2nGzA=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Can Guo <cang@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>
-Subject: [PATCH] sbp-target: add the missed kfree() in an error path
-Date:   Thu, 28 May 2020 18:20:56 +0800
-Message-Id: <20200528102056.911825-1-hslester96@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 04/26] scsi: pm: Balance pm_only counter of request queue during system resume
+Date:   Thu, 28 May 2020 07:56:32 -0400
+Message-Id: <20200528115654.1406165-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200528115654.1406165-1-sashal@kernel.org>
+References: <20200528115654.1406165-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sbp_fetch_command() forgets to call kfree() in an error path.
-Add the missed call to fix it.
+From: Can Guo <cang@codeaurora.org>
 
-Fixes: a511ce339780 ("sbp-target: Initial merge of firewire/ieee-1394 target mode support")
-Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
+[ Upstream commit 05d18ae1cc8a0308b12f37b4ab94afce3535fac9 ]
+
+During system resume, scsi_resume_device() decreases a request queue's
+pm_only counter if the scsi device was quiesced before. But after that, if
+the scsi device's RPM status is RPM_SUSPENDED, the pm_only counter is still
+held (non-zero). Current SCSI resume hook only sets the RPM status of the
+scsi_device and its request queue to RPM_ACTIVE, but leaves the pm_only
+counter unchanged. This may make the request queue's pm_only counter remain
+non-zero after resume hook returns, hence those who are waiting on the
+mq_freeze_wq would never be woken up. Fix this by calling
+blk_post_runtime_resume() if a sdev's RPM status was RPM_SUSPENDED.
+
+(struct request_queue)0xFFFFFF815B69E938
+	pm_only = (counter = 2),
+	rpm_status = 0,
+	dev = 0xFFFFFF815B0511A0,
+
+((struct device)0xFFFFFF815B0511A0)).power
+	is_suspended = FALSE,
+	runtime_status = RPM_ACTIVE,
+
+(struct scsi_device)0xffffff815b051000
+	request_queue = 0xFFFFFF815B69E938,
+	sdev_state = SDEV_RUNNING,
+	quiesced_by = 0x0,
+
+B::v.f_/task_0xFFFFFF810C246940
+-000|__switch_to(prev = 0xFFFFFF810C246940, next = 0xFFFFFF80A49357C0)
+-001|context_switch(inline)
+-001|__schedule(?)
+-002|schedule()
+-003|blk_queue_enter(q = 0xFFFFFF815B69E938, flags = 0)
+-004|generic_make_request(?)
+-005|submit_bio(bio = 0xFFFFFF80A8195B80)
+
+Link: https://lore.kernel.org/r/1588740936-28846-1-git-send-email-cang@codeaurora.org
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Can Guo <cang@codeaurora.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/sbp/sbp_target.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_pm.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index e4a9b9fe3dfb..504a755ea344 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -1128,8 +1128,10 @@ static int sbp_fetch_command(struct sbp_target_request *req)
- 				req->orb_pointer + sizeof(req->orb),
- 				req->cmd_buf + sizeof(req->orb.command_block),
- 				copy_len);
--		if (ret != RCODE_COMPLETE)
-+		if (ret != RCODE_COMPLETE) {
-+			kfree(req->cmd_buf);
- 			return -EIO;
-+		}
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 3717eea37ecb..5f0ad8b32e3a 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -80,6 +80,10 @@ static int scsi_dev_type_resume(struct device *dev,
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
+ 
+ 	if (err == 0) {
++		bool was_runtime_suspended;
++
++		was_runtime_suspended = pm_runtime_suspended(dev);
++
+ 		pm_runtime_disable(dev);
+ 		err = pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
+@@ -93,8 +97,10 @@ static int scsi_dev_type_resume(struct device *dev,
+ 		 */
+ 		if (!err && scsi_is_sdev_device(dev)) {
+ 			struct scsi_device *sdev = to_scsi_device(dev);
+-
+-			blk_set_runtime_active(sdev->request_queue);
++			if (was_runtime_suspended)
++				blk_post_runtime_resume(sdev->request_queue, 0);
++			else
++				blk_set_runtime_active(sdev->request_queue);
+ 		}
  	}
  
- 	return 0;
 -- 
-2.26.2
+2.25.1
 
