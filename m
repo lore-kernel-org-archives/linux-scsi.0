@@ -2,118 +2,147 @@ Return-Path: <SRS0=GT1C=7K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0320C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 20:14:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0EC8C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 20:53:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2177207D3
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 20:14:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD1682075F
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 20:53:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="EW9a3uYA"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QbYo5iRY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406955AbgE1UOE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 May 2020 16:14:04 -0400
-Received: from mta-p7.oit.umn.edu ([134.84.196.207]:59524 "EHLO
-        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406949AbgE1UOB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 16:14:01 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p7.oit.umn.edu (Postfix) with ESMTP id 49XzRs0cPPz9vrWR
-        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2020 20:14:01 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p7.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id lqq5N2ugNYIz for <linux-scsi@vger.kernel.org>;
-        Thu, 28 May 2020 15:14:00 -0500 (CDT)
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id 49XzRr66VDz9vrWJ
-        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2020 15:14:00 -0500 (CDT)
-DMARC-Filter: OpenDMARC Filter v1.3.2 mta-p7.oit.umn.edu 49XzRr66VDz9vrWJ
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-p7.oit.umn.edu 49XzRr66VDz9vrWJ
-Received: by mail-io1-f69.google.com with SMTP id j23so34414iok.2
-        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2020 13:14:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=U7D66rZ3bV/mdno+N6Y057Ta6Mf7fN3AGEm3ICQ61Jg=;
-        b=EW9a3uYAYxVAoF/74DWigOh60vuyrSoIJXn/zN2njgaJY+rLuRnWb20OuhePu9eGzx
-         x+biPSLnq17WzRzA3wiIIhVLLXsSfoPGbePDH/GgJGkqi3xCqp7mwyApibjbiF8CJOEw
-         gqLZEjO0l9TEF1LPlW8L0GLN+M4RsxBCCRVCeECOz+b6VXA/LhuAex6ca1b5FPEwCo1q
-         FJQ4cIVwIUalpS8dUxzFPJ/dACsFu+3DKkKqPBcbUvLGPkorZTdNo3ItLGTPVnd891n5
-         5zsDqKKeVcm6bZXFH7whDD+b3vAuIq5FU3XQ7lnE6dEl8giPm3tQNFGBw2p/yFLvN11u
-         u33g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=U7D66rZ3bV/mdno+N6Y057Ta6Mf7fN3AGEm3ICQ61Jg=;
-        b=TgoHFpgNUkGzBO667uVQUooGKhkJUJDG25+z5YMftZu2IZi48Po+fzXO1r3SaFq/tS
-         QPegyYQH7Jq3dtgYW5CFoVBy3DUQ5KAxVMWuEAINdH5Rpmh3yMq59cXaRFVMGs8uHGuY
-         Bd4OAMCGqfFZV1WZsQzjVQi8w2VFsNjIbPCP5unCoWs2KkO4qVzBXTbvH8aAPygMJo7c
-         YiAiGupNpVYpgTDVa1tTaDB0Hxb+NlmVxo3M2NAPQqTz/Hsc7KUH1AkbEbOz2Nxh63HP
-         7SgbtVDmPsDN/uHfKECndrJyBrjudxmEG6PwP5OtrFuKFbbfqJJUmGqMwaafIMu8vm2f
-         jlAQ==
-X-Gm-Message-State: AOAM5338nRcaqgF7ybcOksrUDLMtBPbzA4vmDk8ncn10+VbH4skfj0bx
-        WMSjtdGOd2xyvUlO9ADr1ZTW2DNB87FXs9b6aINbSCmDXbIk2IfB+hlopMOskrPIEJikjUM4Nhs
-        Y8Td62PrvEYDekY8AViKcFY/B2g==
-X-Received: by 2002:a5e:9b10:: with SMTP id j16mr3809159iok.49.1590696840391;
-        Thu, 28 May 2020 13:14:00 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzZhwnn75y08LB5aGQ6JOpTV5oB0pOWzycl/FkLU+GqywfvLq+r/t8EuBVFSGqd0pv6K7Re0w==
-X-Received: by 2002:a5e:9b10:: with SMTP id j16mr3809135iok.49.1590696840039;
-        Thu, 28 May 2020 13:14:00 -0700 (PDT)
-Received: from qiushi.dtc.umn.edu (cs-kh5248-02-umh.cs.umn.edu. [128.101.106.4])
-        by smtp.gmail.com with ESMTPSA id h10sm3027690ioe.3.2020.05.28.13.13.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 May 2020 13:13:59 -0700 (PDT)
-From:   wu000273@umn.edu
-To:     kjlu@umn.edu
-Cc:     wu000273@umn.edu, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: Fix reference count leak in iscsi_boot_create_kobj.
-Date:   Thu, 28 May 2020 15:13:53 -0500
-Message-Id: <20200528201353.14849-1-wu000273@umn.edu>
-X-Mailer: git-send-email 2.17.1
+        id S2407350AbgE1Uxz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 May 2020 16:53:55 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:46312 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407319AbgE1Uxy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 16:53:54 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04SKCCr6062074;
+        Thu, 28 May 2020 20:53:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=QHiQmF731w2gPc8YvWOwn9LoaX5iqW2yMhIt158oZxc=;
+ b=QbYo5iRYsDkrf1HyL16Yf/VULj7M5MBhXsqKHG7K46t+ab//ZYbAnb523ylx/twqHeS+
+ zuh11toDh7SxaqDG1mDmbzX0VZvVKBvdLIcWFxsBsb6ycDoysBeJk/GSVD+Ph8R1rqu9
+ oipvrQE6qIJhSw4XeV1ZteymDd58iCUbYJI1zBwODbPh6wYj3uNK17yta3lfFStY3Tj2
+ TDrutgcAOrI3SWusZzO65rrBNJk/1HJfirqM45YO6s6YWYBql+Yjz0I27LQf7fR4jwIm
+ w/1n09h7TYTxplYFsNREA+TwSo1HIxEC/M8j07Fx59Acy0qz+v2SvTdLOxXHLXcFNCRZ Rw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 318xe1q860-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 28 May 2020 20:53:49 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04SK8w3f177107;
+        Thu, 28 May 2020 20:53:48 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 317ds38f6e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 28 May 2020 20:53:48 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04SKrl7X020612;
+        Thu, 28 May 2020 20:53:47 GMT
+Received: from [20.15.0.202] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 28 May 2020 13:53:47 -0700
+Subject: Re: [PATCH] scsi: target: tcmu: fix size in calls to
+ tcmu_flush_dcache_range
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+References: <20200528193108.9085-1-bstroesser@ts.fujitsu.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <d13df4f2-edb5-3e13-8fd9-ddd5a80c809d@oracle.com>
+Date:   Thu, 28 May 2020 15:53:46 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
+MIME-Version: 1.0
+In-Reply-To: <20200528193108.9085-1-bstroesser@ts.fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9635 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=999 adultscore=0 suspectscore=0 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005280132
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9635 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ adultscore=0 cotscore=-2147483648 mlxscore=0 bulkscore=0
+ priorityscore=1501 phishscore=0 lowpriorityscore=0 malwarescore=0
+ clxscore=1011 impostorscore=0 suspectscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005280132
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Qiushi Wu <wu000273@umn.edu>
 
-kobject_init_and_add() should be handled when it return an error,
-because kobject_init_and_add() takes reference even when it fails.
-If this function returns an error, kobject_put() must be called to
-properly clean up the memory associated with the object. Previous
-commit "b8eb718348b8" fixed a similar problem. Thus replace calling
-kfree() by calling kobject_put().
 
-Signed-off-by: Qiushi Wu <wu000273@umn.edu>
----
- drivers/scsi/iscsi_boot_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 5/28/20 2:31 PM, Bodo Stroesser wrote:
+> 1) If remaining ring space before the end of the ring is
+>     smaller then the next cmd to write, tcmu writes a padding
+>     entry which fills the remaining space at the end of the
+>     ring.
+>     Then tcmu calls tcmu_flush_dcache_range() with the size
+>     of struct tcmu_cmd_entry as data length to flush.
+>     If the space filled by the padding was smaller then
+>     tcmu_cmd_entry, tcmu_flush_dcache_range() is called for
+>     an address range reaching behind the end of the vmalloc'ed
+>     ring.
+>     tcmu_flush_dcache_range() in a loop calls
+>        flush_dcache_page(virt_to_page(start));
+>     for every page being part of the range. On x86 the line is
+>     optimized out by the compiler, as flush_dcache_page() is
+>     empty on x86.
+>     But I assume the above can cause trouble on other
+>     architectures that really have a flush_dcache_page().
+>     For paddings only the header part of an entry is relevant
+>     Due to alignment rules the header always fits in the
+>     remaining space, if padding is needed.
+>     So tcmu_flush_dcache_range() can safely be called with
+>     sizeof(entry->hdr) as the length here.
+> 
+> 2) After it has written a command to cmd ring, tcmu calls
+>     tcmu_flush_dcache_range() using the size of a struct
+>     tcmu_cmd_entry as data length to flush.
+>     But if a command needs many iovecs, the real size of the
+>     command may be bigger then tcmu_cmd_entry, so a part of
+>     the written command is not flushed then.
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> ---
+>   drivers/target/target_core_user.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index f769bb1e3735..cdb4848d23c6 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -1026,7 +1026,7 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
+>   		entry->hdr.cmd_id = 0; /* not used for PAD */
+>   		entry->hdr.kflags = 0;
+>   		entry->hdr.uflags = 0;
+> -		tcmu_flush_dcache_range(entry, sizeof(*entry));
+> +		tcmu_flush_dcache_range(entry, sizeof(entry->hdr));
+>   
+>   		UPDATE_HEAD(mb->cmd_head, pad_size, udev->cmdr_size);
+>   		tcmu_flush_dcache_range(mb, sizeof(*mb));
+> @@ -1084,7 +1084,7 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
+>   	cdb_off = CMDR_OFF + cmd_head + base_command_size;
+>   	memcpy((void *) mb + cdb_off, se_cmd->t_task_cdb, scsi_command_size(se_cmd->t_task_cdb));
+>   	entry->req.cdb_off = cdb_off;
+> -	tcmu_flush_dcache_range(entry, sizeof(*entry));
+> +	tcmu_flush_dcache_range(entry, command_size);
+>   
+>   	UPDATE_HEAD(mb->cmd_head, command_size, udev->cmdr_size);
+>   	tcmu_flush_dcache_range(mb, sizeof(*mb));
+> 
 
-diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-index e4857b728033..a64abe38db2d 100644
---- a/drivers/scsi/iscsi_boot_sysfs.c
-+++ b/drivers/scsi/iscsi_boot_sysfs.c
-@@ -352,7 +352,7 @@ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
- 	boot_kobj->kobj.kset = boot_kset->kset;
- 	if (kobject_init_and_add(&boot_kobj->kobj, &iscsi_boot_ktype,
- 				 NULL, name, index)) {
--		kfree(boot_kobj);
-+		kobject_put(&boot_kobj->kobj);
- 		return NULL;
- 	}
- 	boot_kobj->data = data;
--- 
-2.17.1
-
+Acked-by: Mike Christie <michael.christie@oracle.com>
