@@ -2,279 +2,127 @@ Return-Path: <SRS0=GT1C=7K=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 899F3C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 08:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB75C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 08:57:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 701A82088E
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 08:54:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E72B02088E
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 08:57:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="C709W4BT";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="FAYB6APw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728000AbgE1IyG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 May 2020 04:54:06 -0400
-Received: from mx2.suse.de ([195.135.220.15]:50336 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727814AbgE1IyF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 May 2020 04:54:05 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id B285AB428;
-        Thu, 28 May 2020 08:54:01 +0000 (UTC)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
+        id S1728072AbgE1I5t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 May 2020 04:57:49 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:32963 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728054AbgE1I5t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 04:57:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1590656268; x=1622192268;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=h/I/9xZjkFRtVfje3pdXs9BhFKosta3CEFdwxVvq5M8=;
+  b=C709W4BTnzCCjSvVOhp5IzEBA/ImUUXKpRyZgT6qtGoYyX+980pRy2C8
+   FrX9kU4MCRaLG293tJpAQM8M9joR/7MsqDN6CLkP50tNL89lWUxrmu18I
+   ULzJfsX9lPwcvIj2X8HNKD3pWcZDlg2c19pzzCETPN5YxH0H7BKh26Mdp
+   KEfO6nEDkN1DclycoDjp3HcZv0PQTAnUVAb6MZEibFn0Xj/H8pms+1Lk7
+   8GeRhVPxYV6m3rFFH6ZZqFhjsEDE//RL1Nek4DB5CHEsgoFd2ofzVbEIn
+   dZd1UyaEkyPUmj/Ffrx85VmY2pOBxSaPamxqvLijb6ClzJGxxZ2O+Q47d
+   Q==;
+IronPort-SDR: 0PijYfsGqGIV5TcDLhNgVM0e5lXjlsFXKYHDkmh+7yIA6JY7DWQVEykQycPUxrMIA2w7zvEijt
+ uah2+jLb167PyvpnhlvM7Zc7WqfyO68417Q77KF8WCYboYz8vTPYYyUwRMi9IyzC7yUZk7jT6+
+ 06jk1IV6N6uoiJffkwb4Qe+FfPVYYF8dfsOz+7z5AhZWewKCpNHl2tJzcY+bfhjEDVTFQsCRAX
+ apiEBePTBILjrg9OIbGDkqRbJMyVYN0jVKXqunDCBkqL/8X5VXAx5HQ6/kDj25GafFZP79DH1w
+ Nlg=
+X-IronPort-AV: E=Sophos;i="5.73,444,1583164800"; 
+   d="scan'208";a="138688878"
+Received: from mail-bn8nam12lp2172.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.172])
+  by ob1.hgst.iphmx.com with ESMTP; 28 May 2020 16:57:47 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Fcik9Uw8ecWxanBp1Fi90mNBr+ElVE3zuqNt1ELHRIatMSGL9P7bCwPMbFZYhmZmN2mf8w4FkMrlj/AxIXwi9PSryicRXq4B10ZOELnNa3oAx8JlUMR/Uog4cSfcrBBlRu4lyOoYl6a7+GLk1fMghuaCg0+MUnq3u0jGxB30aWZAqfMhh16+WACmXMqjbkUWmfnjAXoMKCr/Zh+VTNo4TxRrRj2N9WIPvEycyRfXcrzM98gOeQ5Eh0pGMPd9Csy6ziRDH9yV+Dm2O6JXyDz5h0pfSUMuKTGCeLsQwhGGYWPoeSwbj49uL2ANQyRy41MZ9395YQyrRE6nZofObsnV3w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tmkthvyAFz2wZxbjwyZsblKMDLRt04Vg0RkUqRZGXos=;
+ b=GcvYPn9Z07/HbfVIdnDKgcxYmHJNrKv2WGjVl0GyQgVHNlHnA0uF0exe/fmN9DaiCRvQcECc9D5L6rssYT+BcUkBFvh8yrorlCbIPJ3buF4uHawQHDE6krUQ4qpUP6rww3yOPVS1eAxttlIvHawJVz+wbBEKo+7x2evVD8/b0pPCQr6pCBEEtUY7ntQ3dlHlNSiX83Jv4vukopx0nNKzvRUBZLiv+vFHtqKkaEvK0/sa5dhKVIM6zy40XiNk7aTQBm+0qfPKD9+gwxgmoIRX254tOBTBrKo7ORVneV1HLxGPXpwfZFpC6IM1WWmS8xc3GDIWXgdNKvXElTJAJmfFdA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tmkthvyAFz2wZxbjwyZsblKMDLRt04Vg0RkUqRZGXos=;
+ b=FAYB6APwmbO0MaN1u7aAgtS/A6i/2/glrvJEQqaYeczZAf6wsuAeewGxZaJdt9XYTCxHJATRRusW1M2vsdjpzoF2t9H9iM905lBFopLw8iWUSjiRkgxSSREpfx1J2i7xag0yywXas7MvjTLQUeT3eKYnVOsrftCFnaQaRPu0Qc0=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN4PR0401MB3550.namprd04.prod.outlook.com
+ (2603:10b6:803:46::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3045.19; Thu, 28 May
+ 2020 08:57:45 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::1447:186c:326e:30b2]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::1447:186c:326e:30b2%7]) with mapi id 15.20.3021.030; Thu, 28 May 2020
+ 08:57:45 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
         Doug Gilbert <dgilbert@interlog.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Daniel Wagner <daniel.wagner@suse.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/4] scsi: move target device list to xarray
-Date:   Thu, 28 May 2020 10:42:26 +0200
-Message-Id: <20200528084227.122885-4-hare@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200528084227.122885-1-hare@suse.de>
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 1/4] scsi: convert target lookup to xarray
+Thread-Topic: [PATCH 1/4] scsi: convert target lookup to xarray
+Thread-Index: AQHWNM2GW0LN5YtayEuY3Usabhqz/w==
+Date:   Thu, 28 May 2020 08:57:45 +0000
+Message-ID: <SN4PR0401MB3598F50F2A783DCE68DF92839B8E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
 References: <20200528084227.122885-1-hare@suse.de>
+ <20200528084227.122885-2-hare@suse.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: suse.de; dkim=none (message not signed)
+ header.d=none;suse.de; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.240.72]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 30dd4f67-a20d-40e0-a2bd-08d802e5307d
+x-ms-traffictypediagnostic: SN4PR0401MB3550:
+x-microsoft-antispam-prvs: <SN4PR0401MB3550D1BDDEE196DEF6367BB99B8E0@SN4PR0401MB3550.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:2657;
+x-forefront-prvs: 0417A3FFD2
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 6ej2RN/wfxHNmifOy+I0Y8NPAWeueFOkF4/tN/Ire9WKmYUOxAWSCB0ndY/psaW8z134wem2nnriEDcSZsZ025ErmBLeT3gctnAI7BE4koouQN66sw5W/zR2Y1EOUgFAVskNRuoLY8NncnarvtB8z6Pm+xRb4LOEUbRebAP5oDbO1I7DXFu/n2BCsVljRsCU+xAoi69/Hy0dNfwswdtVk9nPY36gIZ/UQTK80CYUAgWaxvZyVxeGwj6mhAvIp6Szoc5OKjTI64KQNpByJ6tIvt5gCd7sRwIlKgvIBTXWBv0YYSd45r7Z2tuFkUL71kWK
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(376002)(39860400002)(396003)(366004)(346002)(8936002)(5660300002)(8676002)(52536014)(55016002)(9686003)(86362001)(71200400001)(478600001)(558084003)(4326008)(316002)(186003)(33656002)(53546011)(7696005)(6506007)(110136005)(26005)(2906002)(66476007)(54906003)(76116006)(66946007)(91956017)(66446008)(66556008)(64756008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: Sh2Vud5kAI/Of7CJuSnQqBWiDa4rYBzYdicFkKT0NYUmn0SHW68okjHzYwlvbUdklMyLLFHWhORj1JpC3ltg2IynBP7lBLDEPxZDGDdmdLIxshzAqIM1KVAOBpiTpLVZ1wQXYB5O+e42pBx16RJB8Waup7lA5GE9OZbtSnua5QPShbArdOJVMNx2mqbKybw1QwIwwM3NNyNPrJTQXmx4dscx8eIXVOVUM4KUXiKLLZuxALXvH5PPMCe09lITvZIj2EOIYCdykY0lUrZwsRu9XI7VKJGSqLAyz3nNkkPc1Dp0PY23XLSbnmaL3nc+rt7ZprDZAQMjIjz9eeWqDLJWRu2h8LRyEAVNdVyPUuA4JBgjnyZXv+XAcsoBjTx4UvKulXDP3JU2j9jQE9LthP+gWJG5CB1QHgrp3JDuKwJzw+AHTU3XnNiZrc7Nf9NUGwF6REWI62n3LkYvZDMExyThEJ1JNzmJuZtTBk+LyYRqQiS11x7bqu9uc7DaXYZo8AiS
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30dd4f67-a20d-40e0-a2bd-08d802e5307d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 May 2020 08:57:45.5932
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: LHvnr8UGgOh3S7EgB8OWtOrmZ1zxau4E9pqUdCmTgdnxvBzN5Kz0HDE/DFQpkIJ7rFYfZuomHsA+8PUUEQYJXqCNRInK7twNzF449jTJo5A=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0401MB3550
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use xarray for device lookup by target. LUNs below 256 are linear,
-and can be used directly as the index into the xarray.
-LUNs above 256 have a distinct LUN format, and are not necessarily
-linear. They'll be stored in indices above 256 in the xarray, with
-the next free index in the xarray.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/scsi/scsi.c        | 39 ++++++++++++++++++++-------------------
- drivers/scsi/scsi_lib.c    |  9 ++++-----
- drivers/scsi/scsi_scan.c   |  3 +--
- drivers/scsi/scsi_sysfs.c  | 17 +++++++++++++++--
- include/scsi/scsi_device.h |  4 ++--
- 5 files changed, 42 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d119ee7177e0..9dbbc51a1eb5 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -601,13 +601,14 @@ static struct scsi_target *__scsi_target_lookup(struct Scsi_Host *shost,
- void starget_for_each_device(struct scsi_target *starget, void *data,
- 		     void (*fn)(struct scsi_device *, void *))
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	struct scsi_device *sdev;
-+	unsigned long lun_id = 0;
- 
--	shost_for_each_device(sdev, shost) {
--		if ((sdev->channel == starget->channel) &&
--		    (sdev->id == starget->id))
--			fn(sdev, data);
-+	xa_for_each(&starget->devices, lun_id, sdev) {
-+		if (scsi_device_get(sdev))
-+			continue;
-+		fn(sdev, data);
-+		scsi_device_put(sdev);
- 	}
- }
- EXPORT_SYMBOL(starget_for_each_device);
-@@ -629,14 +630,11 @@ EXPORT_SYMBOL(starget_for_each_device);
- void __starget_for_each_device(struct scsi_target *starget, void *data,
- 			       void (*fn)(struct scsi_device *, void *))
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	struct scsi_device *sdev;
-+	unsigned long lun_id = 0;
- 
--	__shost_for_each_device(sdev, shost) {
--		if ((sdev->channel == starget->channel) &&
--		    (sdev->id == starget->id))
--			fn(sdev, data);
--	}
-+	xa_for_each(&starget->devices, lun_id, sdev)
-+		fn(sdev, data);
- }
- EXPORT_SYMBOL(__starget_for_each_device);
- 
-@@ -659,11 +657,19 @@ struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *starget,
- 						   u64 lun)
- {
- 	struct scsi_device *sdev;
-+	unsigned long lun_idx = 256;
-+
-+	if (lun < lun_idx) {
-+		sdev = xa_load(&starget->devices, lun);
-+		if (sdev && sdev->sdev_state == SDEV_DEL)
-+			sdev = NULL;
-+		return sdev;
-+	}
- 
--	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
-+	xa_for_each(&starget->devices, lun_idx, sdev) {
- 		if (sdev->sdev_state == SDEV_DEL)
- 			continue;
--		if (sdev->lun ==lun)
-+		if (sdev->lun == lun)
- 			return sdev;
- 	}
- 
-@@ -717,16 +723,11 @@ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
- 		u16 channel, u16 id, u64 lun)
- {
- 	struct scsi_target *starget;
--	struct scsi_device *sdev;
- 
- 	starget = __scsi_target_lookup(shost, channel, id);
- 	if (!starget)
- 		return NULL;
--	sdev = __scsi_device_lookup_by_target(starget, lun);
--	if (sdev && sdev->sdev_state == SDEV_DEL)
--		sdev = NULL;
--
--	return sdev;
-+	return __scsi_device_lookup_by_target(starget, lun);
- }
- EXPORT_SYMBOL(__scsi_device_lookup);
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index c163fa22267c..e818c5de6ff4 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -361,9 +361,9 @@ static void scsi_kick_queue(struct request_queue *q)
- static void scsi_single_lun_run(struct scsi_device *current_sdev)
- {
- 	struct Scsi_Host *shost = current_sdev->host;
--	struct scsi_device *sdev, *tmp;
-+	struct scsi_device *sdev;
- 	struct scsi_target *starget = scsi_target(current_sdev);
--	unsigned long flags;
-+	unsigned long flags, lun_id = 0;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	starget->starget_sdev_user = NULL;
-@@ -380,8 +380,7 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (starget->starget_sdev_user)
- 		goto out;
--	list_for_each_entry_safe(sdev, tmp, &starget->devices,
--			same_target_siblings) {
-+	xa_for_each(&starget->devices, lun_id, sdev) {
- 		if (sdev == current_sdev)
- 			continue;
- 		if (scsi_device_get(sdev))
-@@ -390,9 +389,9 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		scsi_kick_queue(sdev->request_queue);
- 		spin_lock_irqsave(shost->host_lock, flags);
--	
- 		scsi_device_put(sdev);
- 	}
-+
-  out:
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index dc2656df495b..c7aba9ba5c0c 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -235,7 +235,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	mutex_init(&sdev->state_mutex);
- 	sdev->sdev_state = SDEV_CREATED;
- 	INIT_LIST_HEAD(&sdev->siblings);
--	INIT_LIST_HEAD(&sdev->same_target_siblings);
- 	INIT_LIST_HEAD(&sdev->starved_entry);
- 	INIT_LIST_HEAD(&sdev->event_list);
- 	spin_lock_init(&sdev->list_lock);
-@@ -417,7 +416,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	starget->id = id;
- 	starget->channel = channel;
- 	starget->can_queue = 0;
--	INIT_LIST_HEAD(&starget->devices);
-+	xa_init(&starget->devices);
- 	starget->state = STARGET_CREATED;
- 	starget->scsi_level = SCSI_2;
- 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 95aaa96ce03b..27c19232f175 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -434,6 +434,7 @@ static void scsi_device_cls_release(struct device *class_dev)
- static void scsi_device_dev_release_usercontext(struct work_struct *work)
- {
- 	struct scsi_device *sdev;
-+	struct scsi_target *starget;
- 	struct device *parent;
- 	struct list_head *this, *tmp;
- 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
-@@ -441,6 +442,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	unsigned long flags;
- 
- 	sdev = container_of(work, struct scsi_device, ew.work);
-+	starget = sdev->sdev_target;
- 
- 	scsi_dh_release_device(sdev);
- 
-@@ -448,7 +450,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	spin_lock_irqsave(sdev->host->host_lock, flags);
- 	list_del(&sdev->siblings);
--	list_del(&sdev->same_target_siblings);
-+	xa_erase(&starget->devices, sdev->lun_idx);
- 	list_del(&sdev->starved_entry);
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
-@@ -1621,7 +1623,18 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 
- 	transport_setup_device(&sdev->sdev_gendev);
- 	spin_lock_irqsave(shost->host_lock, flags);
--	list_add_tail(&sdev->same_target_siblings, &starget->devices);
-+	if (sdev->lun < 256) {
-+		sdev->lun_idx = sdev->lun;
-+		WARN_ON(xa_insert(&starget->devices, sdev->lun_idx,
-+				   sdev, GFP_KERNEL) < 0);
-+	} else {
-+		struct xa_limit scsi_lun_limit = {
-+			.min = 256,
-+			.max = UINT_MAX,
-+		};
-+		WARN_ON(xa_alloc(&starget->devices, &sdev->lun_idx,
-+				  sdev, scsi_lun_limit, GFP_KERNEL) < 0);
-+	}
- 	list_add_tail(&sdev->siblings, &shost->__devices);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	/*
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 28034cc0fce5..2c6b9d8bc40e 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -104,7 +104,6 @@ struct scsi_device {
- 
- 	/* the next two are protected by the host->host_lock */
- 	struct list_head    siblings;   /* list of all devices on this host */
--	struct list_head    same_target_siblings; /* just the devices sharing same target id */
- 
- 	atomic_t device_busy;		/* commands actually active on LLDD */
- 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
-@@ -123,6 +122,7 @@ struct scsi_device {
- 
- 	unsigned int id, channel;
- 	u64 lun;
-+	unsigned int lun_idx;		/* Index into target device xarray */
- 	unsigned int manufacturer;	/* Manufacturer of device, for using 
- 					 * vendor-specific cmd's */
- 	unsigned sector_size;	/* size in bytes */
-@@ -285,7 +285,7 @@ enum scsi_target_state {
- struct scsi_target {
- 	struct scsi_device	*starget_sdev_user;
- 	struct list_head	siblings;
--	struct list_head	devices;
-+	struct xarray		devices;
- 	struct device		dev;
- 	struct kref		reap_ref; /* last put renders target invisible */
- 	unsigned int		channel;
--- 
-2.16.4
-
+On 28/05/2020 10:53, Hannes Reinecke wrote:=0A=
+> +	sdev =3D __scsi_device_lookup_by_target(starget, lun);=0A=
+> +	if (sdev && sdev->sdev_state =3D=3D SDEV_DEL)=0A=
+> +		sdev =3D NULL;=0A=
+=0A=
+Nope, still there.=0A=
