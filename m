@@ -1,140 +1,86 @@
-Return-Path: <SRS0=GT1C=7K=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=G6Im=7L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F9CC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 21:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9F33C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 00:21:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D36E52073B
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 May 2020 21:56:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590702986;
-	bh=YrvA6l1wo4LASJiVpABx+mDsD3QcKwzk5VGr+qu3r4c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Dvwdm66mHrZYYKa7V6hIhi8BcdpaUWmBEsgswwyYqaa3mK6EAQBBXMy0QsYdW7nxt
-	 5oZrIWmRG3IlmxmvlFshqiwMe0sN9sggN39KMeGNTYgzkNb+1gIVSfHiVDCBGKMXnU
-	 VO4OKkeQkREjCPlDGArD++ry1TgCfioDVIc8kIEA=
+	by mail.kernel.org (Postfix) with ESMTP id 8E91B2078C
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 00:21:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qcFPHjYv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436782AbgE1V4Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 May 2020 17:56:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52240 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436745AbgE1V4X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 May 2020 17:56:23 -0400
-Received: from gmail.com (unknown [104.132.1.76])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4C1E0206F1;
-        Thu, 28 May 2020 21:56:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590702982;
-        bh=YrvA6l1wo4LASJiVpABx+mDsD3QcKwzk5VGr+qu3r4c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rEJMBMPXsLqP516mYlBkqFn4ZibP50uBkCESunKDePTB/L5cCrgLy2v/2tR1SN+aa
-         g3GjRaUu76j+HeqJkWL7d6rAhzwYeGle3Q+vgQj6s/0yhQ+hWVDunlbLRfOr835Mt5
-         mac8NUQU0tbuTlMA7ONnECD74zrStT9vhTojjbxQ=
-Date:   Thu, 28 May 2020 14:54:30 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Satya Tangirala <satyat@google.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: Re: [PATCH v13 10/12] fscrypt: add inline encryption support
-Message-ID: <20200528215430.GA143195@gmail.com>
-References: <20200514003727.69001-1-satyat@google.com>
- <20200514003727.69001-11-satyat@google.com>
+        id S2437630AbgE2AVO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 May 2020 20:21:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49854 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437625AbgE2AVM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 May 2020 20:21:12 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 473F2C08C5C6
+        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2020 17:21:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=KWl+6okp+I7EbsxVN5Q76DQ4ade6eqSfrwSj2xZty14=; b=qcFPHjYvIPcMt035AqJpKpHhX7
+        SkX735gLq0zlrP9vMezqsQaV0O42zdR4gX8g961yRxBA1sqi9jWz1HkQ9VkguQQk8VN0s7Wmk04/+
+        Eo2HK+/OoeKvjhrcyucfhqpbu5TTel3LPmI7Cnj8XnivRpJ/5rHfqwJD+KLXqXB0++0utcvhnrfJ1
+        /KHYtK5Wxl+NCVyIH3oDFW5YTUtEYFrPNqykoarDVua6j8+H+5XQ+arYOBwimBskqNNpqO2UL0Rvm
+        oTCKPYMGpFyaTyeVobWnSwkSXfcQ8g0V7QBmc4N86A8fuEGD1nM2/mpSaYO/DYD++e3flIEfTrepe
+        bkQkb8Xw==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jeSlc-0002ap-BS; Fri, 29 May 2020 00:20:56 +0000
+Date:   Thu, 28 May 2020 17:20:56 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Douglas Gilbert <dgilbert@interlog.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Daniel Wagner <daniel.wagner@suse.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/4] scsi: move target device list to xarray
+Message-ID: <20200529002056.GS17206@bombadil.infradead.org>
+References: <20200528163625.110184-1-hare@suse.de>
+ <20200528163625.110184-4-hare@suse.de>
+ <a6b85428-f32c-e57b-fa3e-e376400819ac@interlog.com>
+ <20200528185402.GP17206@bombadil.infradead.org>
+ <c33c3000-caac-4b51-42fd-d6e13a9fd641@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200514003727.69001-11-satyat@google.com>
+In-Reply-To: <c33c3000-caac-4b51-42fd-d6e13a9fd641@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A few minor things to clean up when you resend this after v5.8-rc1:
+On Thu, May 28, 2020 at 10:58:31PM +0200, Hannes Reinecke wrote:
+> On 5/28/20 8:54 PM, Matthew Wilcox wrote:
+> > On Thu, May 28, 2020 at 01:50:02PM -0400, Douglas Gilbert wrote:
+> > > On 2020-05-28 12:36 p.m., Hannes Reinecke wrote:
+> > > > Use xarray for device lookup by target. LUNs below 256 are linear,
+> > > > and can be used directly as the index into the xarray.
+> > > > LUNs above 256 have a distinct LUN format, and are not necessarily
+> > > > linear. They'll be stored in indices above 256 in the xarray, with
+> > > > the next free index in the xarray.
+> > 
+> > I don't understand why you think this is an improvement over just
+> > using an allocating XArray for all LUNs.  It seems like more code,
+> > and doesn't actually save you any storage space ... ?
+> > 
+> The LUN range is 64 bit.
+> I was under the impression that xarray can only handle up to unsigned long;
+> which probably would work for 64bit systems, but there _are_ users running
+> on 32 bit, and they get patently unhappy when we have to tell them 'sorry,
+> not for you'.
 
-(You'll have to resolve the conflicts with
- https://lore.kernel.org/r/20200515204141.251098-1-ebiggers@kernel.org
- too, but it shouldn't be too hard.  Note that I made setup_per_mode_enc_key()
- use a mutex, like this patch does.)
+I meant just use xa_alloc() for everything instead of using xa_insert for
+0-255.
 
-On Thu, May 14, 2020 at 12:37:25AM +0000, Satya Tangirala wrote:
-> Add support for inline encryption to fs/crypto/.  With "inline
-> encryption", the block layer handles the decryption/encryption as part
-> of the bio, instead of the filesystem doing the crypto itself via
-> Linux's crypto API.  This model is needed in order to take advantage of
-> the inline encryption hardware present on most modern mobile SoCs.
-> 
-> To use inline encryption, the filesystem needs to be mounted with
-> '-o inlinecrypt'.  The contents of any encrypted files will then be
-> encrypted using blk-crypto, instead of using the traditional
-> filesystem-layer crypto. Fscrypt still provides the key and IV to use,
-> and the actual ciphertext on-disk is still the same; therefore it's
-> testable using the existing fscrypt ciphertext verification tests.
-> 
-> Note that since blk-crypto has a fallack to Linux's crypto API, and
-
-"fallack" => "fallback"
-
->  struct fscrypt_info {
->  
-> -	/* The actual crypto transform used for encryption and decryption */
-> -	struct crypto_skcipher *ci_ctfm;
-> +	/* The key in a form prepared for actual encryption/decryption */
-> +	struct fscrypt_prepared_key	ci_key;
->  
-
-It would be clearer to call this field 'ci_enc_key' instead of 'ci_key'.
-Since there are several types of fscrypt keys, including the recently added
-ci_dirhash_key, I've been trying to clarify what type of key is meant when it's
-ambiguous.  E.g. see https://git.kernel.org/torvalds/c/f592efe735a29c76
-
->  	/* True if the key should be freed when this fscrypt_info is freed */
-
-If taking the above suggestion, this would need "the key" => "ci_enc_key"
-
->  	/*
->  	 * If non-NULL, then encryption is done using the master key directly
-> -	 * and ci_ctfm will equal ci_direct_key->dk_ctfm.
-> +	 * and ci_key will equal ci_direct_key->dk_key.
->  	 */
-
-If taking the above suggestion, this would need "ci_key" => "ci_enc_key"
-
-> +/* inline_crypt.c */
-> +#ifdef CONFIG_FS_ENCRYPTION_INLINE_CRYPT
-> +extern void fscrypt_select_encryption_impl(struct fscrypt_info *ci);
-
-I'm now trying to consistently not use 'extern' on function declarations.  So,
-can you remove it from the new declarations here and include/linux/fscrypt.h?
-
-> +/**
-> + * fscrypt_set_bio_crypt_ctx - prepare a file contents bio for inline encryption
-
-I'm also now trying to consistently include the parentheses in the function
-names in kerneldoc comments.  So:
-
- * fscrypt_set_bio_crypt_ctx() - prepare a file data bio for inline crypto
-
- * fscrypt_set_bio_crypt_ctx_bh() - prepare a file data bio for inline crypto
-
-(similarly for the other new kerneldoc comments)
-
-Make sure to also run
-
-	scripts/kernel-doc -v -none fs/crypto/*.{c,h} include/linux/fscrypt.h
-
-to check for new kerneldoc warnings.  In fscrypt.git#master I've gotten rid of
-all the existing ones.
-
-Thanks!
-
-- Eric
