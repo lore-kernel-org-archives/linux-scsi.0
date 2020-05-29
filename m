@@ -2,128 +2,103 @@ Return-Path: <SRS0=G6Im=7L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F49AC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 16:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C22DC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 16:41:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 764EE2145D
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 16:24:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D103E2077D
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 16:41:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bE8JsViJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725865AbgE2QYr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 May 2020 12:24:47 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:32768 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725601AbgE2QYq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 29 May 2020 12:24:46 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id D56F320418D;
-        Fri, 29 May 2020 18:24:43 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id wpwikUY5E7+w; Fri, 29 May 2020 18:24:36 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 7672E20414B;
-        Fri, 29 May 2020 18:24:35 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 3/4] scsi: move target device list to xarray
-To:     Hannes Reinecke <hare@suse.de>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20200528163625.110184-1-hare@suse.de>
- <20200528163625.110184-4-hare@suse.de>
- <a6b85428-f32c-e57b-fa3e-e376400819ac@interlog.com>
- <20200528185402.GP17206@bombadil.infradead.org>
- <c33c3000-caac-4b51-42fd-d6e13a9fd641@suse.de>
- <20200529002056.GS17206@bombadil.infradead.org>
- <8c84ac5f-f64a-0372-5738-fb49f2d01c91@suse.de>
- <20200529112107.GT17206@bombadil.infradead.org>
- <6ed49962-479e-ced7-16b4-095c8f5f70d6@suse.de>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <8b6cd6c4-06ff-a7f0-76f2-9f7ff3ba472a@interlog.com>
-Date:   Fri, 29 May 2020 12:24:34 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <6ed49962-479e-ced7-16b4-095c8f5f70d6@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 8bit
+        id S1726857AbgE2QlR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 May 2020 12:41:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32980 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725681AbgE2QlR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2020 12:41:17 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09137C03E969;
+        Fri, 29 May 2020 09:41:17 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id y17so4385028wrn.11;
+        Fri, 29 May 2020 09:41:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=5H7t2JkJtK8bEnNB5nn596iezOidqOpYmSimrSsUglM=;
+        b=bE8JsViJ37vX9JA94OJxidc026Lxn8nybhNKSLyo8hK8PELjDMDYSe8zb/vhX5VrvX
+         YJOGbyo/dJYYDnyKetZEWArQAlsS2Poi/8+LjW+MrDCOcft36YQY4pMY02ECamJ3gfGz
+         9X932oObjmiaZFUeFdlNF4nExE7+F9IZSqLnnJMVmUwWNlwHl4PVN1wVAftvuVr0vzv1
+         NSHfpfEFM0+b/OQ+xRAqkM9zTiNJSvY9ZajnjQL7i0Xlry5EUabjs7XiH2Pa3hBTX6uf
+         MND/NAzAfPwkzC7Z5CJhPNp3i69ViW3FJYAdJ9vr2AilfiCqIHQwB1Bdv8SX4Wxfg6yI
+         U2vA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=5H7t2JkJtK8bEnNB5nn596iezOidqOpYmSimrSsUglM=;
+        b=EWRe5jmUSoRjEgJ5AMMwT4/MjMduQje5hvF8VSP4DM+tghpHYjJEfFI0QKkYRC21Rw
+         CvC40j/gDN0TaNF67WwmHV+tzZrj+IHya9delG79D/JY+KINu2ue23Mh4pWvD0jTlPqE
+         h4dyIJyO5f7d6kryddoU9U92r9iC0B0jq4ep7lrZm2+H7/9f2fyg1OdZaL4mgvAJMYKo
+         Bmxot9qbf6wYcg0O9ED8zsifafE+ymaVevNa/6zr3VYEL9rGlkxooY11mAWEVnXZmXzI
+         vDg55PjACHJaZgJl85SRoHAimjD5Ll6s4r/Bhnei60AohN29KRLVzrH9z7IRw22wtDsj
+         DSFw==
+X-Gm-Message-State: AOAM533FWvKsy2FR3LBVXyXWoLTWsOcO+0HCfCsq0bNAb9cuO95A+9fX
+        HBd4tNf1Bbndq8SDhtQDB0S4pWEnU5A=
+X-Google-Smtp-Source: ABdhPJw9+4r/R74QnBRhy9oZZ9OjeYshXAy8R82oDM3m2jIJUrT+58o2X8+mbvMBeHWCNb5XGG+nOQ==
+X-Received: by 2002:adf:dcc3:: with SMTP id x3mr9164926wrm.93.1590770475776;
+        Fri, 29 May 2020 09:41:15 -0700 (PDT)
+Received: from ubuntu-laptop.micron.com ([165.225.203.62])
+        by smtp.gmail.com with ESMTPSA id z25sm17344wmf.10.2020.05.29.09.41.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 May 2020 09:41:15 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 0/4] scsi: ufs: cleanup ufs initialization
+Date:   Fri, 29 May 2020 18:40:50 +0200
+Message-Id: <20200529164054.27552-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-29 8:46 a.m., Hannes Reinecke wrote:
-> On 5/29/20 1:21 PM, Matthew Wilcox wrote:
->> On Fri, May 29, 2020 at 08:50:21AM +0200, Hannes Reinecke wrote:
->>>> I meant just use xa_alloc() for everything instead of using xa_insert for
->>>> 0-255.
->>>>
->>> But then I'll have to use xa_find() to get to the actual element as the 1:1
->>> mapping between SCSI LUN and array index is lost.
->>> And seeing that most storage arrays will expose only up to 256 LUNs I
->>> thought this was a good improvement on lookup.
->>> Of course, this only makes sense if xa_load() is more efficient than
->>> xa_find(). If not then of course it's a bit futile.
->>
->> xa_load() is absolutely more efficient than xa_find().  It's just a
->> question of whether it matters ;-)  Carry on ...
->>
-> Thanks. I will.
-> 
-> BTW, care to update the documentation?
-> 
->   * Return: 0 on success, -ENOMEM if memory could not be allocated or
->   * -EBUSY if there are no free entries in @limit.
->   */
-> int __xa_alloc(struct xarray *xa, u32 *id, void *entry,
->          struct xa_limit limit, gfp_t gfp)
-> {
->      XA_STATE(xas, xa, 0);
-> 
->      if (WARN_ON_ONCE(xa_is_advanced(entry)))
->          return -EINVAL;
->      if (WARN_ON_ONCE(!xa_track_free(xa)))
->          return -EINVAL;
-> 
-> So looks as if the documentation is in need of updating to cover -EINVAL.
-> And, please, state somewhere that whenever you want to use xa_alloc() you _need_ 
-> to specify XA_ALLOC_FLAGS in xa_init_flags(), otherwise
-> you trip across the above.
-> 
-> It's not entirely obvious, and took me the better half of a day to figure out.
+From: Bean Huo <beanhuo@micron.com>
 
-Ditto for me. At the time I did relay my frustration to Matthew who did
-address it in the documentation. Another one is that xa_find*() requires the
-XA_PRESENT mark, even when you are not using marks (or haven't yet learnt
-about them ...). A clearer demarcation of the two xarray modes (i.e. either
-the user supplies the index, or xarray does) would be helpful. That mode
-impacts which parts of the xarray interface are used, for example in the sg
-driver rewrite, xarrays are used for all collections but if memory serves,
-there isn't a single xa_load() or xa_store() call.
+Cleanup UFS descriptor length initialization, and delete unnecessary code.
 
-But writing technical documentation is difficult. Very few third parties step
-up to help, leaving the designer/implementer to do it. And it is extremely
-difficult for someone who knows the code backwards (and where the skeletons are
-buried) to stand on their heads and present the information in a pedagogic
-manner.
+Changelog:
 
-Also traditional code documentation uses 7 bit ASCII text and "ACSII art" in
-a sort of nod to earlier generations of programmers. Surely more modern
-techniques, including colour diagrams and even animations, should now be
-encouraged. Maybe when compilers start accepting html :-)
+v2 - v3:
+    1. Fix typo in the commit message (Avri Altman & Bart van Assche)
+    2. Delete ufshcd_init_desc_sizes() in patch 3/4 (Stanley Chu)
+    3. Remove max_t() and buff_len in patch 1/4 (Bart van Assche)
+    4. Add patch 4/4
 
-Doug Gilbert
+v1 - v2:
+    1. Split patch
+    2. Fix one compiling WARNING (Reported-by: kbuild test robot <lkp@intel.com>)
 
+Bean Huo (4):
+  scsi: ufs: remove max_t in ufs_get_device_desc
+  scsi: ufs: delete ufshcd_read_desc()
+  scsi: ufs: cleanup ufs initialization path
+  scsi: ufs: add compatibility with 3.1 UFS unit descriptor length
 
-P.S. I have tried to practice what I preach:
-                http://sg.danny.cz/sg/sg_v40.html
+ drivers/scsi/ufs/ufs.h     |  11 +-
+ drivers/scsi/ufs/ufs_bsg.c |   5 +-
+ drivers/scsi/ufs/ufshcd.c  | 200 ++++++++-----------------------------
+ drivers/scsi/ufs/ufshcd.h  |  16 +--
+ 4 files changed, 50 insertions(+), 182 deletions(-)
+
+-- 
+2.17.1
+
