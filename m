@@ -2,129 +2,132 @@ Return-Path: <SRS0=G6Im=7L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDE25C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 22:09:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D815C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 22:14:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DDB620776
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 22:09:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nlTe8JO0"
+	by mail.kernel.org (Postfix) with ESMTP id 7DDED20897
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 22:14:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728071AbgE2WJC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 May 2020 18:09:02 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60564 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727879AbgE2WJB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2020 18:09:01 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04TM8eId155992;
-        Fri, 29 May 2020 22:08:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=qedDwc2aEc/U17HxBqyELpRMoiYkZznjcLXjG+GsT6E=;
- b=nlTe8JO0BZlhAy6csK+8Cl4PvTONkVmtuKQLpxktVS24CuK35qmvLiUaypDPauSWWobm
- xj99qJjZ7VtFLR9pyp+sqdBauTP47ns5w1u7f8f93d5MA8S9LG1vVCuqAcUi0B/f4p3i
- K4WwNsC6cPIoCKipYKQ2kBz6IqRHHW7XNYGNBLgrnQa83LdtZEcOwEiVF6teNargOoZZ
- j5XejHCcl5BbL2OfjF6gU+qm5naMSf/i3yQvl4ZIFZ1GinPRxoGscjQjYazRuafamV0O
- LjdxdcI4c22PZQXjdt9mfvaoYBx6LjhwKDU7yAu7Rt0nZJNHvkts2rOjiB2TY5ztCaAn 8g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 318xbkcqte-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 29 May 2020 22:08:50 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04TM31Mg010946;
-        Fri, 29 May 2020 22:06:50 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 317ds4wp2e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 May 2020 22:06:50 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04TM6kX5030254;
-        Fri, 29 May 2020 22:06:47 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 29 May 2020 15:06:46 -0700
-Subject: Re: [PATCH 2/5] target_core_pscsi: use __scsi_device_lookup()
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20200529134730.146573-1-hare@suse.de>
- <20200529134730.146573-3-hare@suse.de>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <1c47b356-de00-b799-ce28-a886ed309853@oracle.com>
-Date:   Fri, 29 May 2020 17:06:44 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S1726943AbgE2WOw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 May 2020 18:14:52 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:33540 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725808AbgE2WOw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 29 May 2020 18:14:52 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 6D4F020418F;
+        Sat, 30 May 2020 00:14:51 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id dM3OZ+jHoiRk; Sat, 30 May 2020 00:14:45 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id C514F20415B;
+        Sat, 30 May 2020 00:14:44 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        bvanassche@acm.org
+Subject: [PATCH 1/1] scsi: scsi_forget_host() shuffle
+Date:   Fri, 29 May 2020 18:14:42 -0400
+Message-Id: <20200529221442.8404-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20200529134730.146573-3-hare@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9636 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
- mlxlogscore=999 adultscore=0 suspectscore=0 bulkscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005290159
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9636 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 phishscore=0 cotscore=-2147483648
- suspectscore=0 bulkscore=0 clxscore=1011 impostorscore=0 malwarescore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005290159
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This patch leaves me a bit uneasy but it does cure the crash
+that occurs in this function. xarray iterators are pretty safe
+_unless_ something deletes the parent node holding the
+collection. The problem seems to be these nested loops do not
+_explicitly_ remove the starget object. That is done magically
+at the sdev level on the removal of the last sdev in a starget.
+And that is half an iteration too soon! Hence the shuffle which
+isn't a great solution. The magical starget removal is wrong IMO
+and this will burn us elsewhere, I suspect.
 
+Thes patch is on top of Hannes Reinecke's "[PATCHv4 0/5] scsi:
+use xarray for devices and targets" patchset.
 
-On 5/29/20 8:47 AM, Hannes Reinecke wrote:
-> Instead of walking the list of devices manually use the helper
-> function to return the device directly.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-> Reviewed-by: Bart van Assche <bvanassche@acm.org>
-> ---
->   drivers/target/target_core_pscsi.c | 8 +++-----
->   1 file changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> index c9d92b3e777d..5fb852d1281f 100644
-> --- a/drivers/target/target_core_pscsi.c
-> +++ b/drivers/target/target_core_pscsi.c
-> @@ -496,11 +496,9 @@ static int pscsi_configure_device(struct se_device *dev)
->   	}
->   
->   	spin_lock_irq(sh->host_lock);
-> -	list_for_each_entry(sd, &sh->__devices, siblings) {
-> -		if ((pdv->pdv_channel_id != sd->channel) ||
-> -		    (pdv->pdv_target_id != sd->id) ||
-> -		    (pdv->pdv_lun_id != sd->lun))
-> -			continue;
-> +	sd = __scsi_device_lookup(sh, pdv->pdv_channel_id,
-> +				  pdv->pdv_target_id, pdv->pdv_lun_id);
-> +	if (sd) {
->   		/*
->   		 * Functions will release the held struct scsi_host->host_lock
->   		 * before calling calling pscsi_add_device_to_list() to register
-> 
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi_scan.c | 47 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 37 insertions(+), 10 deletions(-)
 
-Do you need a check in pscsi_set_configfs_dev_params to make sure 
-pdv_channel_id is withing the 16 value limit? If not, userspace could 
-use pdv_channel_id = (1 << 17) and when you shift that by 16, will we 
-end up with 0 after the cast?
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 0a344653487d..e378f03d0297 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1858,25 +1858,52 @@ void scsi_scan_host(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_scan_host);
+ 
++static void scsi_forget_host_inner(struct Scsi_Host *shost,
++				   struct scsi_target *starg,
++				   unsigned long *flagsp)
++{
++	struct scsi_device *sdev;
++	struct scsi_device *prev_sdev = NULL;
++	unsigned long lun_id;
++
++	xa_for_each(&starg->__devices, lun_id, sdev) {
++		if (sdev->sdev_state == SDEV_DEL)
++			continue;
++		if (!prev_sdev) {
++			prev_sdev = sdev;
++			continue;
++		}
++		spin_unlock_irqrestore(shost->host_lock, *flagsp);
++		__scsi_remove_device(prev_sdev);
++		spin_lock_irqsave(shost->host_lock, *flagsp);
++		prev_sdev = sdev;
++	}
++	if (prev_sdev) {
++		spin_unlock_irqrestore(shost->host_lock, *flagsp);
++		__scsi_remove_device(prev_sdev);
++		spin_lock_irqsave(shost->host_lock, *flagsp);
++	}
++}
++
++/* N.B. Keeping iteration one step ahead of destruction point */
+ void scsi_forget_host(struct Scsi_Host *shost)
+ {
+ 	struct scsi_target *starget;
+-	struct scsi_device *sdev;
++	struct scsi_target *prev_starget = NULL;
+ 	unsigned long flags;
+-	unsigned long tid = 0;
++	unsigned long tid;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	xa_for_each(&shost->__targets, tid, starget) {
+-		unsigned long lun_id = 0;
+-
+-		xa_for_each(&starget->__devices, lun_id, sdev) {
+-			if (sdev->sdev_state == SDEV_DEL)
+-				continue;
+-			spin_unlock_irqrestore(shost->host_lock, flags);
+-			__scsi_remove_device(sdev);
+-			spin_lock_irqsave(shost->host_lock, flags);
++		if (!prev_starget) {
++			prev_starget = starget;
++			continue;
+ 		}
++		scsi_forget_host_inner(shost, prev_starget, &flags);
++		prev_starget = starget;
+ 	}
++	if (prev_starget)
++		scsi_forget_host_inner(shost, prev_starget, &flags);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+-- 
+2.25.1
 
-It's probably only going to come up in QA/testing type of setups since 
-as you said there's never been a case with a channel_id that large.
