@@ -2,25 +2,25 @@ Return-Path: <SRS0=G6Im=7L=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B275C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 13:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B918BC433E3
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 13:47:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 633D2207BC
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 13:47:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99D0A207BC
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 13:47:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726961AbgE2Nrj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 May 2020 09:47:39 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35686 "EHLO mx2.suse.de"
+        id S1726962AbgE2Nrl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 May 2020 09:47:41 -0400
+Received: from mx2.suse.de ([195.135.220.15]:35728 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726838AbgE2Nrj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726924AbgE2Nrj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 29 May 2020 09:47:39 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id D437DAFA9;
+        by mx2.suse.de (Postfix) with ESMTP id D25AEAF94;
         Fri, 29 May 2020 13:47:36 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,297 +30,78 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/5] scsi: remove direct device lookup per host
-Date:   Fri, 29 May 2020 15:47:29 +0200
-Message-Id: <20200529134730.146573-5-hare@suse.de>
+Subject: [PATCHv4 0/5] scsi: use xarray for devices and targets
+Date:   Fri, 29 May 2020 15:47:25 +0200
+Message-Id: <20200529134730.146573-1-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200529134730.146573-1-hare@suse.de>
-References: <20200529134730.146573-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Drop the per-host device list for direct lookup and iterate
-over the targets and devices xarrays instead.
-As both are now using xarrays the lookup is more efficient
-as we can use the provided indices based on the HCTL id
-to do a direct lookup instead of traversing lists.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/hosts.c       |  1 -
- drivers/scsi/scsi.c        | 84 ++++++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/scsi_scan.c   | 20 ++++++-----
- drivers/scsi/scsi_sysfs.c  | 10 ++----
- include/scsi/scsi_device.h | 13 ++++---
- include/scsi/scsi_host.h   |  3 +-
- 6 files changed, 100 insertions(+), 31 deletions(-)
+based on the ideas from Doug Gilbert here's now my take on using
+xarrays for devices and targets.
+It revolves around two ideas:
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 87537b0745c1..8cd7cd192bae 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -383,7 +383,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->host_lock = &shost->default_lock;
- 	spin_lock_init(shost->host_lock);
- 	shost->shost_state = SHOST_CREATED;
--	INIT_LIST_HEAD(&shost->__devices);
- 	xa_init_flags(&shost->__targets, XA_FLAGS_LOCK_IRQ);
- 	INIT_LIST_HEAD(&shost->eh_cmd_q);
- 	INIT_LIST_HEAD(&shost->starved_list);
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a3e01708744f..6a1d8c6bd8f9 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -554,18 +554,48 @@ EXPORT_SYMBOL(scsi_device_put);
- struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
- 					   struct scsi_device *prev)
- {
--	struct list_head *list = (prev ? &prev->siblings : &shost->__devices);
-+	struct scsi_target *starget;
- 	struct scsi_device *next = NULL;
- 	unsigned long flags;
-+	unsigned long tid = 0, lun_idx = 0;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
--	while (list->next != &shost->__devices) {
--		next = list_entry(list->next, struct scsi_device, siblings);
--		/* skip devices that we can't get a reference to */
--		if (!scsi_device_get(next))
-+	if (!prev) {
-+		starget = xa_find(&shost->__targets, &tid,
-+				       UINT_MAX, XA_PRESENT);
-+		if (starget) {
-+			next = xa_find(&starget->__devices, &lun_idx,
-+				       UINT_MAX, XA_PRESENT);
-+			if (!scsi_device_get(next)) {
-+				spin_unlock_irqrestore(shost->host_lock, flags);
-+				return next;
-+			}
-+		}
-+	} else {
-+		starget = prev->sdev_target;
-+		tid = (starget->channel << 16) | starget->id;
-+		lun_idx = prev->lun_idx;
-+	}
-+	while (starget) {
-+		next = xa_find_after(&starget->__devices, &lun_idx,
-+				     UINT_MAX, XA_PRESENT);
-+		if (next) {
-+			if (!scsi_device_get(next))
-+				break;
-+			continue;
-+		}
-+		/* No more LUNs on this target, switch to the next */
-+		starget = xa_find_after(&shost->__targets, &tid,
-+					UINT_MAX, XA_PRESENT);
-+		if (!starget) {
-+			next = NULL;
-+			break;
-+		}
-+		lun_idx = 0;
-+		next = xa_find(&starget->__devices, &lun_idx,
-+			       UINT_MAX, XA_PRESENT);
-+		if (next && !scsi_device_get(next))
- 			break;
--		next = NULL;
--		list = list->next;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
-@@ -575,6 +605,46 @@ struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
- }
- EXPORT_SYMBOL(__scsi_iterate_devices);
- 
-+/* helper for __shost_for_each_device, see that for documentation */
-+struct scsi_device *__scsi_iterate_devices_unlocked(struct Scsi_Host *shost,
-+						    struct scsi_device *prev)
-+{
-+	struct scsi_target *starget;
-+	struct scsi_device *next = NULL;
-+	unsigned long tid = 0, lun_idx = 0;
-+
-+	if (!prev) {
-+		starget = xa_find(&shost->__targets, &tid,
-+				       UINT_MAX, XA_PRESENT);
-+		if (starget)
-+			return xa_find(&starget->__devices, &lun_idx,
-+				       UINT_MAX, XA_PRESENT);
-+	} else {
-+		starget = prev->sdev_target;
-+		tid = scsi_target_index(starget);
-+		lun_idx = prev->lun_idx;
-+	}
-+	while (starget) {
-+		next = xa_find_after(&starget->__devices, &lun_idx,
-+				     UINT_MAX, XA_PRESENT);
-+		if (next)
-+			return next;
-+		/* No more LUNs on this target, switch to the next */
-+		starget = xa_find_after(&shost->__targets, &tid,
-+					UINT_MAX, XA_PRESENT);
-+		if (!starget)
-+			return NULL;
-+
-+		lun_idx = 0;
-+		next = xa_find(&starget->__devices, &lun_idx,
-+			       UINT_MAX, XA_PRESENT);
-+		if (next)
-+			return next;
-+	}
-+	return NULL;
-+}
-+EXPORT_SYMBOL(__scsi_iterate_devices_unlocked);
-+
- /**
-  * __scsi_target_lookup  -  find a target based on channel and target id
-  * @shost:	SCSI host pointer
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index e88ee895ab2a..82a00d7751b3 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -234,7 +234,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	sdev->channel = starget->channel;
- 	mutex_init(&sdev->state_mutex);
- 	sdev->sdev_state = SDEV_CREATED;
--	INIT_LIST_HEAD(&sdev->siblings);
- 	INIT_LIST_HEAD(&sdev->starved_entry);
- 	INIT_LIST_HEAD(&sdev->event_list);
- 	spin_lock_init(&sdev->list_lock);
-@@ -1852,17 +1851,22 @@ EXPORT_SYMBOL(scsi_scan_host);
- 
- void scsi_forget_host(struct Scsi_Host *shost)
- {
-+	struct scsi_target *starget;
- 	struct scsi_device *sdev;
- 	unsigned long flags;
-+	unsigned long tid = 0;
- 
-- restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
--	list_for_each_entry(sdev, &shost->__devices, siblings) {
--		if (sdev->sdev_state == SDEV_DEL)
--			continue;
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		__scsi_remove_device(sdev);
--		goto restart;
-+	xa_for_each(&shost->__targets, tid, starget) {
-+		unsigned long lun_id = 0;
-+
-+		xa_for_each(&starget->__devices, lun_id, sdev) {
-+			if (sdev->sdev_state == SDEV_DEL)
-+				continue;
-+			spin_unlock_irqrestore(shost->host_lock, flags);
-+			__scsi_remove_device(sdev);
-+			spin_lock_irqsave(shost->host_lock, flags);
-+		}
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 05a0111d4a6d..4d40801a3961 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -449,7 +449,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	parent = sdev->sdev_gendev.parent;
- 
- 	spin_lock_irqsave(sdev->host->host_lock, flags);
--	list_del(&sdev->siblings);
- 	xa_erase(&starget->__devices, sdev->lun_idx);
- 	list_del(&sdev->starved_entry);
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
-@@ -1476,19 +1475,16 @@ static void __scsi_remove_target(struct scsi_target *starget)
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
- 	struct scsi_device *sdev;
-+	unsigned long lun_idx = 0;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-- restart:
--	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+	xa_for_each(&starget->__devices, lun_idx, sdev) {
- 		/*
- 		 * We cannot call scsi_device_get() here, as
- 		 * we might've been called from rmmod() causing
- 		 * scsi_device_get() to fail the module_is_live()
- 		 * check.
- 		 */
--		if (sdev->channel != starget->channel ||
--		    sdev->id != starget->id)
--			continue;
- 		if (sdev->sdev_state == SDEV_DEL ||
- 		    sdev->sdev_state == SDEV_CANCEL ||
- 		    !get_device(&sdev->sdev_gendev))
-@@ -1497,7 +1493,6 @@ static void __scsi_remove_target(struct scsi_target *starget)
- 		scsi_remove_device(sdev);
- 		put_device(&sdev->sdev_gendev);
- 		spin_lock_irqsave(shost->host_lock, flags);
--		goto restart;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
-@@ -1643,7 +1638,6 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 			     "LUN index %u:%u:%llu allocation error %d\n",
- 			     sdev_channel(sdev), sdev_id(sdev), sdev->lun, ret);
- 	}
--	list_add_tail(&sdev->siblings, &shost->__devices);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	/*
- 	 * device can now only be removed via __scsi_remove_device() so hold
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 56801661f481..3690af6ce6af 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -102,9 +102,6 @@ struct scsi_device {
- 	struct Scsi_Host *host;
- 	struct request_queue *request_queue;
- 
--	/* the next two are protected by the host->host_lock */
--	struct list_head    siblings;   /* list of all devices on this host */
--
- 	atomic_t device_busy;		/* commands actually active on LLDD */
- 	atomic_t device_blocked;	/* Device returned QUEUE_FULL. */
- 
-@@ -381,6 +378,10 @@ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
- 	     (sdev); \
- 	     (sdev) = __scsi_iterate_devices((shost), (sdev)))
- 
-+/* only exposed to implement shost_for_each_device */
-+struct scsi_device *__scsi_iterate_devices_unlocked(struct Scsi_Host *,
-+						    struct scsi_device *);
-+
- /**
-  * __shost_for_each_device - iterate over all devices of a host (UNLOCKED)
-  * @sdev: the &struct scsi_device to use as a cursor
-@@ -394,8 +395,10 @@ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
-  * device list in interrupt context.  Otherwise you really want to use
-  * shost_for_each_device instead.
-  */
--#define __shost_for_each_device(sdev, shost) \
--	list_for_each_entry((sdev), &((shost)->__devices), siblings)
-+#define __shost_for_each_device(sdev, shost)				\
-+	for((sdev) = __scsi_iterate_devices_unlocked((shost), NULL);	\
-+	    (sdev);							\
-+	    (sdev) = __scsi_iterate_devices_unlocked((shost),(sdev)))
- 
- extern int scsi_change_queue_depth(struct scsi_device *, int);
- extern int scsi_track_queue_full(struct scsi_device *, int);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b9395676c75b..ee0b72075e9f 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -520,9 +520,8 @@ struct Scsi_Host {
- 	 * their __ prefixed variants with the lock held. NEVER
- 	 * access this list directly from a driver.
- 	 */
--	struct list_head	__devices;
- 	struct xarray		__targets;
--	
-+
- 	struct list_head	starved_list;
- 
- 	spinlock_t		default_lock;
+ - The scsi target 'channel' and 'id' numbers are never ever used
+   to the full 32 bit range; channels are well below 10, and no
+   driver is using more than 16 bits for the id. So we can reduce
+   the type of 'channel' and 'id' to 16 bits, and use the 32 bit
+   value 'channel << 16 | id' as the index into the target xarray.
+ - Most SCSI targets are only using the first 32 bits of the 64 bit
+   LUN structure. So there we can use the LUN number as the index into
+   the xarray; larger LUN numbers won't fit, so we'll allocate a
+   separate index for those. For these device lookup won't be as
+   efficient, but one can argue that we're running into scalability
+   issues long before that.
+
+With these changes we can implement an efficient lookup mechanism,
+devolving into direct lookup for most cases.
+And iteration over devices should be as efficient as the current,
+list-based, approach.
+
+It also removes the current duality between host-based and
+target-based device lists; now all devices are listed per target,
+and a full iteration would need to iterate first over all targets
+and then over all devices per target.
+
+As usual, comments and reviews are welcome
+
+Changes to v1:
+- Fixup __scsi_iterate_devices()
+- Include reviews from Johannes
+- Minor fixes
+- Include comments from Doug
+
+Changes to v2:
+- Reshuffle hunks as per suggestion from Johannes
+
+Changes to v3:
+- Use GFP_ATOMIC instead of GFP_KERNEL
+- Fixup target iteration as reported by Doug Gilbert
+- Update scsi_error to make use of the new iterators
+
+Hannes Reinecke (5):
+  scsi: convert target lookup to xarray
+  target_core_pscsi: use __scsi_device_lookup()
+  scsi: move target device list to xarray
+  scsi: remove direct device lookup per host
+  scsi_error: use xarray lookup instead of wrappers
+
+ drivers/scsi/hosts.c               |   4 +-
+ drivers/scsi/scsi.c                | 151 +++++++++++++++++++++++++++++--------
+ drivers/scsi/scsi_error.c          |  35 +++++----
+ drivers/scsi/scsi_lib.c            |   9 +--
+ drivers/scsi/scsi_priv.h           |   2 +
+ drivers/scsi/scsi_scan.c           |  73 +++++++++---------
+ drivers/scsi/scsi_sysfs.c          |  48 ++++++++----
+ drivers/target/target_core_pscsi.c |   8 +-
+ include/scsi/scsi_device.h         |  32 +++++---
+ include/scsi/scsi_host.h           |   5 +-
+ 10 files changed, 243 insertions(+), 124 deletions(-)
+
 -- 
 2.16.4
 
