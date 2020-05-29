@@ -4,102 +4,165 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8201C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 09:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC218C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 09:27:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 968C6207D4
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 09:23:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7F35207D4
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 May 2020 09:27:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MUfbobrp"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="Zp9qq+/c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726519AbgE2JXQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 May 2020 05:23:16 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:9059 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725790AbgE2JXQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 May 2020 05:23:16 -0400
-X-UUID: 93b4a5988c9f4d6e9b86390d1bb89a48-20200529
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=uzfw9R1d1VOhip5QwrPTSrk84wKyVcP93tK5NZw6nGU=;
-        b=MUfbobrpT7qYztbauBkf6fKsVCXZlRGY2QrZL6JkU4vH+t61Tc6JheMHNpy+4T0z/1QvwltAaVP0Ji0R2wWtMmNLH+wdWyShDdlCIt7/T+517wQJi5xxCBm44vaCwNkLaoPJWcdlWUxKq/RIdZGZpkQilKqRc7JjW1TAw5Oruoo=;
-X-UUID: 93b4a5988c9f4d6e9b86390d1bb89a48-20200529
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 744379384; Fri, 29 May 2020 17:23:13 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Fri, 29 May 2020 17:23:10 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 29 May 2020 17:23:10 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <pengshun.zhao@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v2 1/5] scsi: ufs-mediatek: Fix imprecise waiting time for ref-clk control
-Date:   Fri, 29 May 2020 17:23:06 +0800
-Message-ID: <20200529092310.1106-2-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20200529092310.1106-1-stanley.chu@mediatek.com>
-References: <20200529092310.1106-1-stanley.chu@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1725808AbgE2J1D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 May 2020 05:27:03 -0400
+Received: from mail1.bemta25.messagelabs.com ([195.245.230.3]:57238 "EHLO
+        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725306AbgE2J1C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 29 May 2020 05:27:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1590744420; i=@ts.fujitsu.com;
+        bh=F/F58PsdIWKqqeKnez2VulAPhgUIvW8QLlSIPSLcuBQ=;
+        h=From:To:Cc:Subject:Date:Message-Id;
+        b=Zp9qq+/cTgy68XmsmIzPQRLHfcQBStHHXCFIwWlnazED1St74vztFQDvyVYzcRz6G
+         KQUFXjQcFAGKntalcuA+bqr4VPoV3IYPPk/fStTVF1f8tHRhnamR2xHPVQB7Ce0R7Z
+         Q2v7iyLZ8AjYNUbVl2vA4G8/17vihp3D3XxGTF2q2jf0KSALtENxYaB07Pj82T4iQT
+         IlhqGDQnyfekOC5KueYe8k7WaLcxyf+/4gfzk0DRHXhD6t1ByW+tL2C9wfM9tuIDGQ
+         ma/VNEy1BS4PH9Ya4Qx2aep78jhbKY6NiwnebDs+WH+uETjqgfYjQ/QXacZyymh80d
+         WN88KgJMZzw2Q==
+Received: from [100.112.193.214] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-3.bemta.az-a.eu-west-1.aws.symcld.net id 03/A4-09207-465D0DE5; Fri, 29 May 2020 09:27:00 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrILMWRWlGSWpSXmKPExsViZ8MRqpty9UK
+  cwavNHBbd13ewWSw//o/J4u+kG6wWrUvfMjmweHx8eovF4/MmuQCmKNbMvKT8igTWjJ2/jjIW
+  fBar+HnxHVsD4z2hLkYuDiGByYwSvT1nGCGc6YwSKxbvAXI4OdgEDCRWTLrP0sXIwSEiUCsx7
+  1QZSJhZQE9i2r917CC2sICXxJm93WA2i4CqRNuBE2wgNq+ArcSsQ2eZQWwJAXmJjgOTWSYwci
+  5gZFjFaJ5UlJmeUZKbmJmja2hgoGtoaKRraGmia2aml1ilm6iXWqpbnlpcomuol1herFdcmZu
+  ck6KXl1qyiRHo85SCQ047GN+//qB3iFGSg0lJlNf41Pk4Ib6k/JTKjMTijPii0pzU4kOMMhwc
+  ShK8hlcuxAkJFqWmp1akZeYAww8mLcHBoyTCKwWS5i0uSMwtzkyHSJ1iVJQS500BSQiAJDJK8
+  +DaYCF/iVFWSpiXkYGBQYinILUoN7MEVf4VozgHo5Iwb/hFoCk8mXklcNNfAS1mAlr8YMk5kM
+  UliQgpqQamKp/sl6sWvt8odu1F2i+Tm60T9Z65MZ5nS78Y0rFkj9Yu7oAAqzkGsz4vXu2nImL
+  ic9R+six/n82CsqroHbaTy0MW8SZr/22pTnnlte9949W6batvxnH8XH5ld0qkYEDil0tei194
+  H3nIt7B5wUb+7zULp6+9/OxS0aPdck81J1vbnt/D0hUYqznDwXHy1LQ/bw9Mb2io0LMs3xwqr
+  3ztlcCDMzkBvAHm3/vfXjereuD++68pd+7VjJsbY4w2Bklx/XqW/WJSiKxiqU2yYZa+0Uoevj
+  3JTEd14+60+zVdd32pcPlceblRff+7k2tP6dl8iAmLcfsQJJkTdLkq9N4z7ynPbino82iobX/
+  YJtOtxFKckWioxVxUnAgA9hHv+PQCAAA=
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-11.tower-271.messagelabs.com!1590744419!732836!1
+X-Originating-IP: [62.60.8.85]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 32468 invoked from network); 29 May 2020 09:27:00 -0000
+Received: from unknown (HELO mailhost4.uk.fujitsu.com) (62.60.8.85)
+  by server-11.tower-271.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 29 May 2020 09:27:00 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost4.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 04T9Qx0P012070;
+        Fri, 29 May 2020 10:26:59 +0100
+Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
+        by x-serv01 (Postfix) with ESMTP id CA8862060A;
+        Fri, 29 May 2020 11:26:58 +0200 (CEST)
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+To:     martin.petersen@oracle.com, michael.christie@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Subject: [PATCH RFC] scsi: target: tcmu: optimize use of flush_dcache_page
+Date:   Fri, 29 May 2020 11:26:56 +0200
+Message-Id: <20200529092656.1048-1-bstroesser@ts.fujitsu.com>
+X-Mailer: git-send-email 2.12.3
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Q3VycmVudGx5IHJlZi1jbGsgY29udHJvbCB0aW1lb3V0IGlzIGltcGxlbWVudGVkIGJ5IEppZmZp
-ZXMuIEhvd2V2ZXINCmppZmZpZXMgaXMgbm90IGFjY3VyYXRlIGVub3VnaCB0aHVzICJmYWxzZSB0
-aW1lb3V0IiBtYXkgaGFwcGVuLg0KDQpVc2UgbW9yZSBhY2N1cmF0ZSBkZWxheSBtZWNoYW5pc20g
-aW5zdGVhZCwgZm9yIGV4YW1wbGUsIGt0aW1lLg0KDQpTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENo
-dSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KUmV2aWV3ZWQtYnk6IEFuZHkgVGVuZyA8YW5k
-eS50ZW5nQG1lZGlhdGVrLmNvbT4NCi0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVr
-LmMgfCA3ICsrKystLS0NCiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5oIHwgMiArLQ0K
-IDIgZmlsZXMgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KDQpkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYyBiL2RyaXZlcnMvc2NzaS91
-ZnMvdWZzLW1lZGlhdGVrLmMNCmluZGV4IGQ1NmNlOGQ5N2Q0ZS4uNTIzZWU1NTczOTIxIDEwMDY0
-NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYw0KKysrIGIvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYw0KQEAgLTEyMCw3ICsxMjAsNyBAQCBzdGF0aWMgaW50IHVm
-c19tdGtfc2V0dXBfcmVmX2NsayhzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBib29sIG9uKQ0KIHsNCiAJ
-c3RydWN0IHVmc19tdGtfaG9zdCAqaG9zdCA9IHVmc2hjZF9nZXRfdmFyaWFudChoYmEpOw0KIAlz
-dHJ1Y3QgYXJtX3NtY2NjX3JlcyByZXM7DQotCXVuc2lnbmVkIGxvbmcgdGltZW91dDsNCisJa3Rp
-bWVfdCB0aW1lb3V0LCB0aW1lX2NoZWNrZWQ7DQogCXUzMiB2YWx1ZTsNCiANCiAJaWYgKGhvc3Qt
-PnJlZl9jbGtfZW5hYmxlZCA9PSBvbikNCkBAIC0xMzUsOCArMTM1LDkgQEAgc3RhdGljIGludCB1
-ZnNfbXRrX3NldHVwX3JlZl9jbGsoc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBvbikNCiAJfQ0K
-IA0KIAkvKiBXYWl0IGZvciBhY2sgKi8NCi0JdGltZW91dCA9IGppZmZpZXMgKyBtc2Vjc190b19q
-aWZmaWVzKFJFRkNMS19SRVFfVElNRU9VVF9NUyk7DQorCXRpbWVvdXQgPSBrdGltZV9hZGRfdXMo
-a3RpbWVfZ2V0KCksIFJFRkNMS19SRVFfVElNRU9VVF9VUyk7DQogCWRvIHsNCisJCXRpbWVfY2hl
-Y2tlZCA9IGt0aW1lX2dldCgpOw0KIAkJdmFsdWUgPSB1ZnNoY2RfcmVhZGwoaGJhLCBSRUdfVUZT
-X1JFRkNMS19DVFJMKTsNCiANCiAJCS8qIFdhaXQgdW50aWwgYWNrIGJpdCBlcXVhbHMgdG8gcmVx
-IGJpdCAqLw0KQEAgLTE0NCw3ICsxNDUsNyBAQCBzdGF0aWMgaW50IHVmc19tdGtfc2V0dXBfcmVm
-X2NsayhzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBib29sIG9uKQ0KIAkJCWdvdG8gb3V0Ow0KIA0KIAkJ
-dXNsZWVwX3JhbmdlKDEwMCwgMjAwKTsNCi0JfSB3aGlsZSAodGltZV9iZWZvcmUoamlmZmllcywg
-dGltZW91dCkpOw0KKwl9IHdoaWxlIChrdGltZV9iZWZvcmUodGltZV9jaGVja2VkLCB0aW1lb3V0
-KSk7DQogDQogCWRldl9lcnIoaGJhLT5kZXYsICJtaXNzaW5nIGFjayBvZiByZWZjbGsgcmVxLCBy
-ZWc6IDB4JXhcbiIsIHZhbHVlKTsNCiANCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vm
-cy1tZWRpYXRlay5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KaW5kZXggNWJi
-ZDNlOWNiYWUyLi5mYzQyZGNiZmQ4MDAgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vm
-cy1tZWRpYXRlay5oDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5oDQpAQCAt
-MjgsNyArMjgsNyBAQA0KICNkZWZpbmUgUkVGQ0xLX1JFUVVFU1QgICAgICAgICAgICAgIEJJVCgw
-KQ0KICNkZWZpbmUgUkVGQ0xLX0FDSyAgICAgICAgICAgICAgICAgIEJJVCgxKQ0KIA0KLSNkZWZp
-bmUgUkVGQ0xLX1JFUV9USU1FT1VUX01TICAgICAgIDMNCisjZGVmaW5lIFJFRkNMS19SRVFfVElN
-RU9VVF9VUyAgICAgICAzMDAwDQogDQogLyoNCiAgKiBWZW5kb3Igc3BlY2lmaWMgcHJlLWRlZmlu
-ZWQgcGFyYW1ldGVycw0KLS0gDQoyLjE4LjANCg==
+(scatter|gather)_data_area() need to flush dcache after
+writing data to or before reading data from a page in
+uio data area.
+The two routines are able to handle data transfer to/from
+such a page in fragments and flush the cache after each
+fragment is copied by calling the wrapper
+tcmu_flush_dcache_range().
+
+That means:
+1) flush_dcache_page() can be called multiple times for
+   the same page.
+2) Calling flush_dcache_page() indirectly using the
+   wrapper does not make sense, because each call of the
+   wrapper is for one single page only and the calling
+   routine already has the correct page pointer.
+
+Therefore I changed (scatter|gather)_data_area() such,
+that instead of calling tcmu_flush_dcache_range()
+before/after each memcpy, it now calls flush_dcache_page()
+before unmapping a page (when writing is complete for
+that page) or after mapping a page (when starting to read
+the page).
+
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+---
+
+Since I have x86 machines only, where flush_dcache_page()
+is empty, this patch indeed is compile tested only.
+Therefore it needs thorough review or ideally a test on
+an architecture that has a non empty flush_dcache_page().
+
+
+ drivers/target/target_core_user.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index cdb4848d23c6..d922a7087c31 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -676,8 +676,10 @@ static void scatter_data_area(struct tcmu_dev *udev,
+ 		from = kmap_atomic(sg_page(sg)) + sg->offset;
+ 		while (sg_remaining > 0) {
+ 			if (block_remaining == 0) {
+-				if (to)
++				if (to) {
++					flush_dcache_page(page);
+ 					kunmap_atomic(to);
++				}
+ 
+ 				block_remaining = DATA_BLOCK_SIZE;
+ 				dbi = tcmu_cmd_get_dbi(tcmu_cmd);
+@@ -722,7 +724,6 @@ static void scatter_data_area(struct tcmu_dev *udev,
+ 				memcpy(to + offset,
+ 				       from + sg->length - sg_remaining,
+ 				       copy_bytes);
+-				tcmu_flush_dcache_range(to, copy_bytes);
+ 			}
+ 
+ 			sg_remaining -= copy_bytes;
+@@ -731,8 +732,10 @@ static void scatter_data_area(struct tcmu_dev *udev,
+ 		kunmap_atomic(from - sg->offset);
+ 	}
+ 
+-	if (to)
++	if (to) {
++		flush_dcache_page(page);
+ 		kunmap_atomic(to);
++	}
+ }
+ 
+ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+@@ -778,13 +781,13 @@ static void gather_data_area(struct tcmu_dev *udev, struct tcmu_cmd *cmd,
+ 				dbi = tcmu_cmd_get_dbi(cmd);
+ 				page = tcmu_get_block_page(udev, dbi);
+ 				from = kmap_atomic(page);
++				flush_dcache_page(page);
+ 			}
+ 			copy_bytes = min_t(size_t, sg_remaining,
+ 					block_remaining);
+ 			if (read_len < copy_bytes)
+ 				copy_bytes = read_len;
+ 			offset = DATA_BLOCK_SIZE - block_remaining;
+-			tcmu_flush_dcache_range(from, copy_bytes);
+ 			memcpy(to + sg->length - sg_remaining, from + offset,
+ 					copy_bytes);
+ 
+-- 
+2.12.3
 
