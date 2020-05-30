@@ -6,42 +6,43 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 220D9C433DF
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 May 2020 16:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24BFEC433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 May 2020 16:24:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09F1B207D5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 May 2020 16:24:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D385207D0
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 May 2020 16:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729173AbgE3QYY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 May 2020 12:24:24 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:40913 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728998AbgE3QYY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 May 2020 12:24:24 -0400
-Received: by mail-pf1-f195.google.com with SMTP id v2so1337115pfv.7;
-        Sat, 30 May 2020 09:24:23 -0700 (PDT)
+        id S1729203AbgE3QYt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 May 2020 12:24:49 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:35808 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728998AbgE3QYt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 May 2020 12:24:49 -0400
+Received: by mail-pg1-f194.google.com with SMTP id o6so1413824pgh.2;
+        Sat, 30 May 2020 09:24:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=LiEAI8LkR+7XG0pM0v8PC1VVoSVEQVNXCKYCi5daAu0=;
-        b=flJNXILpQtJdgZo0TPtkyqiUdDzt9ETVAQbWYPgEbtP0qmHM9nUMLnoKvdxJGZ5uDC
-         Hs+k3Mfu6CXx6O7qLr3a0hu2zhBSjxGfJBOc90rA9kVL5qjE4bXdVmE93WK26Mg62bNb
-         1CS6rDetqt8aoQaAUS6YgXpOVDuTMwOBaGwRK8IqNlEYuCCPuTVlqM2mlsR1BA2/c9AL
-         TI0M2uHZmbtR7BP5Qb3fzbWSs8lJqmaRggNeK95tKzm59Ezt80JByzA/V3heMk11R+OV
-         DQHuDMglQe+Er4/DoYbnzF94C0JHoL/2SP15dSgFru65OOpq8bSTsucVBTcZjtJd8Zfa
-         PiDA==
-X-Gm-Message-State: AOAM533tzYGujOVrCiZ6H0XR6V1qas3l1noSdOuPFKbv0J5PdOrvR/++
-        EqAV/4J5iPPZQhQn/U3TLE/df/TKkJI=
-X-Google-Smtp-Source: ABdhPJwZVUA4wpsQ8IYcgqtwJoAJ4ZJY2oz7flnnLhk2p2j77D+iI8vRncEHteOUOutpF1qwLydykw==
-X-Received: by 2002:a63:480f:: with SMTP id v15mr10355568pga.148.1590855862710;
-        Sat, 30 May 2020 09:24:22 -0700 (PDT)
+        bh=Tjer9jZOxhEJEYx2bnfeiWkgYHgy87CXKjRV1cG5nf0=;
+        b=ETBmkv4U6NB6zIzLa3c5yyyFyxTM3pfPMBD7oaNoLUN8XGjbS0cfVzc2e8xP5s12Oz
+         FEEJaV7XP/U+JuLx/a8nLv/RjuyTq/xjsjJEO0sp8ebv1mHexn/m3L7MhnC1b9ne7uFv
+         dmoHDfiEqbduix3Ri7jW7U/w/iPX1yNjM5/xa/CNhghmAxcAOMp+ogkY/MM0lkbCfWD8
+         uRKmXbf8O3DKIK2uQI5+PNVJ+6jfzrDIl1eFUbHndtRLyWJGiYrlmmI5ikj7opmxoPOh
+         fcKAsFzVYijTLmiMppqL4vqLPhX27oAsg7rHIn6BnLOOiDhZZ10d0ELOUCLUTfloCnx/
+         GS7g==
+X-Gm-Message-State: AOAM530rJV2Z3jH/JcKCRMQ884LHUHKPztpMbUj8PAdeQRD2iWopKnnX
+        Sa0skwB0cC2XCOwdco6/MW7j7O3BCdA=
+X-Google-Smtp-Source: ABdhPJxie6j8fUAJfOGtT9azb6D9FUoguK/B7V9RIy0goDjYfVJ2DEVi05dGT6g8Bc3f08ObJD5UcQ==
+X-Received: by 2002:a63:3e46:: with SMTP id l67mr12682932pga.430.1590855887878;
+        Sat, 30 May 2020 09:24:47 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:b048:c07d:3c0c:7eb5? ([2601:647:4000:d7:b048:c07d:3c0c:7eb5])
-        by smtp.gmail.com with ESMTPSA id 192sm9562567pfz.198.2020.05.30.09.24.21
+        by smtp.gmail.com with ESMTPSA id j12sm6775246pfd.21.2020.05.30.09.24.46
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 30 May 2020 09:24:21 -0700 (PDT)
-Subject: Re: [PATCH 1/2] scsi: sr: Fix sr_probe() missing mutex_destroy
+        Sat, 30 May 2020 09:24:47 -0700 (PDT)
+Subject: Re: [PATCH 2/2] scsi: sr: Fix sr_probe() missing deallocate of device
+ minor
 To:     Simon Arlott <simon@octiron.net>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -49,6 +50,7 @@ To:     Simon Arlott <simon@octiron.net>,
 Cc:     linux-scsi@vger.kernel.org, Merlijn Wajer <merlijn@archive.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 References: <0cb16d6f-098a-a8c3-09c3-273d02067ada@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+ <da1f6f28-cdd4-72da-703b-749aba3f27ef@0882a8b5-c6c3-11e9-b005-00805fc181fe>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -73,12 +75,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <48ed3e8c-6aed-c7bc-6330-18f2f64f8803@acm.org>
-Date:   Sat, 30 May 2020 09:24:20 -0700
+Message-ID: <40ceaf86-3787-2047-b91a-20911b36407f@acm.org>
+Date:   Sat, 30 May 2020 09:24:45 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <0cb16d6f-098a-a8c3-09c3-273d02067ada@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+In-Reply-To: <da1f6f28-cdd4-72da-703b-749aba3f27ef@0882a8b5-c6c3-11e9-b005-00805fc181fe>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -87,13 +89,12 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-05-30 02:32, Simon Arlott wrote:
-> If the device minor cannot be allocated or the cdrom fails to be
-> registered then the mutex should be destroyed.
+On 2020-05-30 02:33, Simon Arlott wrote:
+> If the cdrom fails to be registered then the device minor should be
+> deallocated.
 
-Please add Fixes: and Cc: stable tags.
+Also for this patch, please add Fixes: and Cc: stable tags.
 
 Thanks,
 
 Bart.
-
