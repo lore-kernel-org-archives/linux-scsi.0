@@ -1,79 +1,136 @@
-Return-Path: <SRS0=+zlT=7O=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=e+HO=7P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E091CC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Jun 2020 10:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B34B6C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:17:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B549320772
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Jun 2020 10:47:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="LYxPH7Ik"
+	by mail.kernel.org (Postfix) with ESMTP id 9E71A206C3
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:17:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726011AbgFAKrz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Jun 2020 06:47:55 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:29099 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726113AbgFAKq4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Jun 2020 06:46:56 -0400
-X-UUID: 17e55ee0386d4a59ae9ee73598f5e7d8-20200601
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=3tcqnbR/zIlPdKV8ncXNBaptfuExNkU2Wwoy2vi6+Dg=;
-        b=LYxPH7Ikoi/Ep5KfZFnE4VbGq89skg7OuL7PkHeAAdH8JvcX47b/hyEtQXI8alTKMCCex5fG8bka+/ou4tgYDPVEdzZog7vcVJOMZLL3iO1+dIVz29ctRK+Jvp+fzZPtVvzWHMIURh4MDphjUMmCpxQR6RbqkC5kTSik3yXKzaA=;
-X-UUID: 17e55ee0386d4a59ae9ee73598f5e7d8-20200601
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1830363407; Mon, 01 Jun 2020 18:46:48 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs05n1.mediatek.inc (172.21.101.15) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 1 Jun 2020 18:46:45 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 1 Jun 2020 18:46:45 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v3 0/5] scsi: ufs-mediatek: Fix clk-gating and introduce low-power mode for vccq2
-Date:   Mon, 1 Jun 2020 18:46:41 +0800
-Message-ID: <20200601104646.15436-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        id S1726666AbgFBJRI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 05:17:08 -0400
+Received: from mga09.intel.com ([134.134.136.24]:47446 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726139AbgFBJRH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Jun 2020 05:17:07 -0400
+IronPort-SDR: 2mN2UP+5DYwxn5upqVhb2xj1+l3/5I5dEv3Qz6GydjAMPEi0vdAQuUMo8RT+ZT+/C3OurkGVJa
+ ZXmEr/uWWLwA==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2020 02:17:05 -0700
+IronPort-SDR: x/s6TqMkfFCMf6Elj0L0Y8lX5QW2JWx9MUk5QQCfVZssNH9dEg0ZyETqw7Bb3OWNT1BFwpyD/P
+ Tvjal8T4d0iQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,463,1583222400"; 
+   d="scan'208";a="416118065"
+Received: from gklab-125-110.igk.intel.com ([10.91.125.110])
+  by orsmga004.jf.intel.com with ESMTP; 02 Jun 2020 02:16:55 -0700
+From:   Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S . Miller" <davem@davemloft.net>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        David Zhou <David1.Zhou@amd.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Igor Russkikh <irusskikh@marvell.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Brian King <brking@us.ibm.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jim Gill <jgill@vmware.com>,
+        VMware PV-Drivers <pv-drivers@vmware.com>
+Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+Subject: [PATCH 00/15] forward MSIx vector enable error code in pci_alloc_irq_vectors_affinity
+Date:   Tue,  2 Jun 2020 11:16:17 +0200
+Message-Id: <20200602091617.31395-1-piotr.stankiewicz@intel.com>
+X-Mailer: git-send-email 2.17.2
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGksDQpUaGlzIHNlcmllcyBmaXhlcyBjbGstZ2F0aW5nIGlzc3VlcyBhbmQgaW50cm9kdWNlcyBs
-b3ctcG93ZXIgbW9kZSBmb3IgdmNjcTIgaW4gTWVkaWFUZWsgcGxhdGZvcm1zLg0KDQp2MiAtPiB2
-MzoNCiAgLSBGaXggKGFkZCBiYWNrKSBsaW5rb2ZmIHN1cHBvcnQgaW4gcGF0Y2ggWzRdIHNpbmNl
-IHByZXZpb3VzIHZlcnNpb24gaW5jb3JyZWN0bHkgcmVtb3ZlZCBsaW5rb2ZmIHN1cHBvcnQNCg0K
-djEgLT4gdjI6DQogIC0gQWRkIHBhdGNoIFs0XSBhbmQgWzVdDQoNClN0YW5sZXkgQ2h1ICg1KToN
-CiAgc2NzaTogdWZzLW1lZGlhdGVrOiBGaXggaW1wcmVjaXNlIHdhaXRpbmcgdGltZSBmb3IgcmVm
-LWNsayBjb250cm9sDQogIHNjc2k6IHVmcy1tZWRpYXRlazogRG8gbm90IGdhdGUgY2xvY2tzIGlm
-IGF1dG8taGliZXJuOCBpcyBub3QgZW50ZXJlZA0KICAgIHlldA0KICBzY3NpOiB1ZnMtbWVkaWF0
-ZWs6IEludHJvZHVjZSBsb3ctcG93ZXIgbW9kZSBmb3IgZGV2aWNlIHBvd2VyIHN1cHBseQ0KICBz
-Y3NpOiB1ZnMtbWVkaWF0ZWs6IEZpeCB1bmJhbGFuY2VkIGNsb2NrIG9uL29mZg0KICBzY3NpOiB1
-ZnMtbWVkaWF0ZWs6IEFsbG93IHVuYm91bmQgbXBoeQ0KDQogZHJpdmVycy9zY3NpL3Vmcy91ZnMt
-bWVkaWF0ZWsuYyB8IDExNiArKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLQ0KIGRyaXZl
-cnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmggfCAgIDMgKy0NCiAyIGZpbGVzIGNoYW5nZWQsIDkw
-IGluc2VydGlvbnMoKyksIDI5IGRlbGV0aW9ucygtKQ0KDQotLSANCjIuMTguMA0K
+The primary objective of this patch series is to change the behaviour
+of pci_alloc_irq_vectors_affinity such that it forwards the MSI-X enable
+error code when appropriate. In the process, though, it was pointed out
+that there are multiple places in the kernel which check/ask for message
+signalled interrupts (MSI or MSI-X), which spawned the first patch adding
+PCI_IRQ_MSI_TYPES. Finally the rest of the chain converts all users to
+take advantage of PCI_IRQ_MSI_TYPES or PCI_IRQ_ALL_TYPES, as
+appropriate.
+
+Piotr Stankiewicz (15):
+  PCI: add shorthand define for message signalled interrupt types
+  PCI/MSI: forward MSIx vector enable error code in
+    pci_alloc_irq_vectors_affinity
+  PCI: use PCI_IRQ_MSI_TYPES where appropriate
+  ahci: use PCI_IRQ_MSI_TYPES where appropriate
+  crypto: inside-secure - use PCI_IRQ_MSI_TYPES where appropriate
+  dmaengine: dw-edma: use PCI_IRQ_MSI_TYPES  where appropriate
+  drm/amdgpu: use PCI_IRQ_MSI_TYPES where appropriate
+  IB/qib: Use PCI_IRQ_MSI_TYPES where appropriate
+  media: ddbridge: use PCI_IRQ_MSI_TYPES where appropriate
+  vmw_vmci: use PCI_IRQ_ALL_TYPES where appropriate
+  mmc: sdhci: use PCI_IRQ_MSI_TYPES where appropriate
+  amd-xgbe: use PCI_IRQ_MSI_TYPES where appropriate
+  aquantia: atlantic: use PCI_IRQ_ALL_TYPES where appropriate
+  net: hns3: use PCI_IRQ_MSI_TYPES where appropriate
+  scsi: use PCI_IRQ_MSI_TYPES and PCI_IRQ_ALL_TYPES where appropriate
+
+ Documentation/PCI/msi-howto.rst                           | 5 +++--
+ drivers/ata/ahci.c                                        | 2 +-
+ drivers/crypto/inside-secure/safexcel.c                   | 2 +-
+ drivers/dma/dw-edma/dw-edma-pcie.c                        | 2 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c                   | 8 ++++----
+ drivers/infiniband/hw/qib/qib_pcie.c                      | 2 +-
+ drivers/media/pci/ddbridge/ddbridge-main.c                | 2 +-
+ drivers/misc/vmw_vmci/vmci_guest.c                        | 3 +--
+ drivers/mmc/host/sdhci-pci-gli.c                          | 3 +--
+ drivers/mmc/host/sdhci-pci-o2micro.c                      | 3 +--
+ drivers/net/ethernet/amd/xgbe/xgbe-pci.c                  | 2 +-
+ drivers/net/ethernet/aquantia/atlantic/aq_pci_func.c      | 4 +---
+ drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c   | 3 +--
+ drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c | 2 +-
+ drivers/pci/msi.c                                         | 4 ++--
+ drivers/pci/pcie/portdrv_core.c                           | 4 ++--
+ drivers/pci/switch/switchtec.c                            | 3 +--
+ drivers/scsi/ipr.c                                        | 2 +-
+ drivers/scsi/vmw_pvscsi.c                                 | 2 +-
+ include/linux/pci.h                                       | 4 ++--
+ 20 files changed, 28 insertions(+), 34 deletions(-)
+
+-- 
+2.17.2
 
