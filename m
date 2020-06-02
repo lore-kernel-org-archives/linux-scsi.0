@@ -4,87 +4,71 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41AC2C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E362EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 11:34:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1164D206A4
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:21:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C88FA2068D
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 11:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728285AbgFBJVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 05:21:31 -0400
-Received: from mga03.intel.com ([134.134.136.65]:55922 "EHLO mga03.intel.com"
+        id S1726311AbgFBLeT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 07:34:19 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37870 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726485AbgFBJVb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jun 2020 05:21:31 -0400
-IronPort-SDR: /Q4VtJXGsIiU5kWrWVLmplyue0lVFlWoSOQfmDp5ldBHEBvB8kjgbsZj+VDf9eQOSywOdQIW2P
- Df1lqZnoNOoQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2020 02:21:31 -0700
-IronPort-SDR: Zk4p6UqDmqIfERpDP4fvJX3Mqub+M0OjDj1bzssxGtQb4VtxnI/D/+3/6aPJz6AUcBLkkMI4xT
- nFKvkvO8qguw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,463,1583222400"; 
-   d="scan'208";a="444621658"
-Received: from gklab-125-110.igk.intel.com ([10.91.125.110])
-  by orsmga005.jf.intel.com with ESMTP; 02 Jun 2020 02:21:29 -0700
-From:   Piotr Stankiewicz <piotr.stankiewicz@intel.com>
-To:     Brian King <brking@us.ibm.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jim Gill <jgill@vmware.com>,
-        VMware PV-Drivers <pv-drivers@vmware.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Piotr Stankiewicz <piotr.stankiewicz@intel.com>
-Subject: [PATCH 15/15] scsi: use PCI_IRQ_MSI_TYPES and PCI_IRQ_ALL_TYPES where appropriate
-Date:   Tue,  2 Jun 2020 11:21:26 +0200
-Message-Id: <20200602092126.32327-1-piotr.stankiewicz@intel.com>
-X-Mailer: git-send-email 2.17.2
+        id S1726130AbgFBLeT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Jun 2020 07:34:19 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 5B947AD5D;
+        Tue,  2 Jun 2020 11:34:20 +0000 (UTC)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        Daniel Wagner <daniel.wagner@suse.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/6] target_core_pscsi: use __scsi_device_lookup()
+Date:   Tue,  2 Jun 2020 13:33:07 +0200
+Message-Id: <20200602113311.121513-3-hare@suse.de>
+X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200602113311.121513-1-hare@suse.de>
+References: <20200602113311.121513-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Seeing as there is shorthand available to use when asking for any type
-of interrupt, or any type of message signalled interrupt, leverage it.
+Instead of walking the list of devices manually use the helper
+function to return the device directly.
 
-Signed-off-by: Piotr Stankiewicz <piotr.stankiewicz@intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ipr.c        | 2 +-
- drivers/scsi/vmw_pvscsi.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/target/target_core_pscsi.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index d48a8fa997b9..666dcf196d07 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -10275,7 +10275,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 4e37fa9b409d..38799e47b590 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -496,11 +496,9 @@ static int pscsi_configure_device(struct se_device *dev)
+ 	}
  
- 	irq_flag = PCI_IRQ_LEGACY;
- 	if (ioa_cfg->ipr_chip->has_msi)
--		irq_flag |= PCI_IRQ_MSI | PCI_IRQ_MSIX;
-+		irq_flag |= PCI_IRQ_MSI_TYPES;
- 	rc = pci_alloc_irq_vectors(pdev, 1, ipr_number_of_msix, irq_flag);
- 	if (rc < 0) {
- 		ipr_wait_for_pci_err_recovery(ioa_cfg);
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index c3f010df641e..825b7db9c713 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -1347,7 +1347,7 @@ static u32 pvscsi_get_max_targets(struct pvscsi_adapter *adapter)
- 
- static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
--	unsigned int irq_flag = PCI_IRQ_MSIX | PCI_IRQ_MSI | PCI_IRQ_LEGACY;
-+	unsigned int irq_flag = PCI_IRQ_ALL_TYPES;
- 	struct pvscsi_adapter *adapter;
- 	struct pvscsi_adapter adapter_temp;
- 	struct Scsi_Host *host = NULL;
+ 	spin_lock_irq(sh->host_lock);
+-	list_for_each_entry(sd, &sh->__devices, siblings) {
+-		if ((pdv->pdv_channel_id != sd->channel) ||
+-		    (pdv->pdv_target_id != sd->id) ||
+-		    (pdv->pdv_lun_id != sd->lun))
+-			continue;
++	sd = __scsi_device_lookup(sh, pdv->pdv_channel_id,
++				  pdv->pdv_target_id, pdv->pdv_lun_id);
++	if (sd) {
+ 		/*
+ 		 * Functions will release the held struct scsi_host->host_lock
+ 		 * before calling calling pscsi_add_device_to_list() to register
 -- 
-2.17.2
+2.16.4
 
