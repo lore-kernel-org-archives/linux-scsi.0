@@ -2,135 +2,89 @@ Return-Path: <SRS0=e+HO=7P=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B34B6C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:17:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41AC2C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:21:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E71A206C3
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:17:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1164D206A4
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Jun 2020 09:21:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726666AbgFBJRI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 05:17:08 -0400
-Received: from mga09.intel.com ([134.134.136.24]:47446 "EHLO mga09.intel.com"
+        id S1728285AbgFBJVb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 05:21:31 -0400
+Received: from mga03.intel.com ([134.134.136.65]:55922 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726139AbgFBJRH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jun 2020 05:17:07 -0400
-IronPort-SDR: 2mN2UP+5DYwxn5upqVhb2xj1+l3/5I5dEv3Qz6GydjAMPEi0vdAQuUMo8RT+ZT+/C3OurkGVJa
- ZXmEr/uWWLwA==
+        id S1726485AbgFBJVb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Jun 2020 05:21:31 -0400
+IronPort-SDR: /Q4VtJXGsIiU5kWrWVLmplyue0lVFlWoSOQfmDp5ldBHEBvB8kjgbsZj+VDf9eQOSywOdQIW2P
+ Df1lqZnoNOoQ==
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2020 02:17:05 -0700
-IronPort-SDR: x/s6TqMkfFCMf6Elj0L0Y8lX5QW2JWx9MUk5QQCfVZssNH9dEg0ZyETqw7Bb3OWNT1BFwpyD/P
- Tvjal8T4d0iQ==
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2020 02:21:31 -0700
+IronPort-SDR: Zk4p6UqDmqIfERpDP4fvJX3Mqub+M0OjDj1bzssxGtQb4VtxnI/D/+3/6aPJz6AUcBLkkMI4xT
+ nFKvkvO8qguw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.73,463,1583222400"; 
-   d="scan'208";a="416118065"
+   d="scan'208";a="444621658"
 Received: from gklab-125-110.igk.intel.com ([10.91.125.110])
-  by orsmga004.jf.intel.com with ESMTP; 02 Jun 2020 02:16:55 -0700
+  by orsmga005.jf.intel.com with ESMTP; 02 Jun 2020 02:21:29 -0700
 From:   Piotr Stankiewicz <piotr.stankiewicz@intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S . Miller" <davem@davemloft.net>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        David Zhou <David1.Zhou@amd.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Igor Russkikh <irusskikh@marvell.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Brian King <brking@us.ibm.com>,
+To:     Brian King <brking@us.ibm.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Jim Gill <jgill@vmware.com>,
         VMware PV-Drivers <pv-drivers@vmware.com>
-Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Piotr Stankiewicz <piotr.stankiewicz@intel.com>
-Subject: [PATCH 00/15] forward MSIx vector enable error code in pci_alloc_irq_vectors_affinity
-Date:   Tue,  2 Jun 2020 11:16:17 +0200
-Message-Id: <20200602091617.31395-1-piotr.stankiewicz@intel.com>
+Subject: [PATCH 15/15] scsi: use PCI_IRQ_MSI_TYPES and PCI_IRQ_ALL_TYPES where appropriate
+Date:   Tue,  2 Jun 2020 11:21:26 +0200
+Message-Id: <20200602092126.32327-1-piotr.stankiewicz@intel.com>
 X-Mailer: git-send-email 2.17.2
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The primary objective of this patch series is to change the behaviour
-of pci_alloc_irq_vectors_affinity such that it forwards the MSI-X enable
-error code when appropriate. In the process, though, it was pointed out
-that there are multiple places in the kernel which check/ask for message
-signalled interrupts (MSI or MSI-X), which spawned the first patch adding
-PCI_IRQ_MSI_TYPES. Finally the rest of the chain converts all users to
-take advantage of PCI_IRQ_MSI_TYPES or PCI_IRQ_ALL_TYPES, as
-appropriate.
+Seeing as there is shorthand available to use when asking for any type
+of interrupt, or any type of message signalled interrupt, leverage it.
 
-Piotr Stankiewicz (15):
-  PCI: add shorthand define for message signalled interrupt types
-  PCI/MSI: forward MSIx vector enable error code in
-    pci_alloc_irq_vectors_affinity
-  PCI: use PCI_IRQ_MSI_TYPES where appropriate
-  ahci: use PCI_IRQ_MSI_TYPES where appropriate
-  crypto: inside-secure - use PCI_IRQ_MSI_TYPES where appropriate
-  dmaengine: dw-edma: use PCI_IRQ_MSI_TYPES  where appropriate
-  drm/amdgpu: use PCI_IRQ_MSI_TYPES where appropriate
-  IB/qib: Use PCI_IRQ_MSI_TYPES where appropriate
-  media: ddbridge: use PCI_IRQ_MSI_TYPES where appropriate
-  vmw_vmci: use PCI_IRQ_ALL_TYPES where appropriate
-  mmc: sdhci: use PCI_IRQ_MSI_TYPES where appropriate
-  amd-xgbe: use PCI_IRQ_MSI_TYPES where appropriate
-  aquantia: atlantic: use PCI_IRQ_ALL_TYPES where appropriate
-  net: hns3: use PCI_IRQ_MSI_TYPES where appropriate
-  scsi: use PCI_IRQ_MSI_TYPES and PCI_IRQ_ALL_TYPES where appropriate
+Signed-off-by: Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+---
+ drivers/scsi/ipr.c        | 2 +-
+ drivers/scsi/vmw_pvscsi.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
- Documentation/PCI/msi-howto.rst                           | 5 +++--
- drivers/ata/ahci.c                                        | 2 +-
- drivers/crypto/inside-secure/safexcel.c                   | 2 +-
- drivers/dma/dw-edma/dw-edma-pcie.c                        | 2 +-
- drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c                   | 8 ++++----
- drivers/infiniband/hw/qib/qib_pcie.c                      | 2 +-
- drivers/media/pci/ddbridge/ddbridge-main.c                | 2 +-
- drivers/misc/vmw_vmci/vmci_guest.c                        | 3 +--
- drivers/mmc/host/sdhci-pci-gli.c                          | 3 +--
- drivers/mmc/host/sdhci-pci-o2micro.c                      | 3 +--
- drivers/net/ethernet/amd/xgbe/xgbe-pci.c                  | 2 +-
- drivers/net/ethernet/aquantia/atlantic/aq_pci_func.c      | 4 +---
- drivers/net/ethernet/hisilicon/hns3/hns3pf/hclge_main.c   | 3 +--
- drivers/net/ethernet/hisilicon/hns3/hns3vf/hclgevf_main.c | 2 +-
- drivers/pci/msi.c                                         | 4 ++--
- drivers/pci/pcie/portdrv_core.c                           | 4 ++--
- drivers/pci/switch/switchtec.c                            | 3 +--
- drivers/scsi/ipr.c                                        | 2 +-
- drivers/scsi/vmw_pvscsi.c                                 | 2 +-
- include/linux/pci.h                                       | 4 ++--
- 20 files changed, 28 insertions(+), 34 deletions(-)
-
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index d48a8fa997b9..666dcf196d07 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -10275,7 +10275,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
+ 
+ 	irq_flag = PCI_IRQ_LEGACY;
+ 	if (ioa_cfg->ipr_chip->has_msi)
+-		irq_flag |= PCI_IRQ_MSI | PCI_IRQ_MSIX;
++		irq_flag |= PCI_IRQ_MSI_TYPES;
+ 	rc = pci_alloc_irq_vectors(pdev, 1, ipr_number_of_msix, irq_flag);
+ 	if (rc < 0) {
+ 		ipr_wait_for_pci_err_recovery(ioa_cfg);
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index c3f010df641e..825b7db9c713 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -1347,7 +1347,7 @@ static u32 pvscsi_get_max_targets(struct pvscsi_adapter *adapter)
+ 
+ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	unsigned int irq_flag = PCI_IRQ_MSIX | PCI_IRQ_MSI | PCI_IRQ_LEGACY;
++	unsigned int irq_flag = PCI_IRQ_ALL_TYPES;
+ 	struct pvscsi_adapter *adapter;
+ 	struct pvscsi_adapter adapter_temp;
+ 	struct Scsi_Host *host = NULL;
 -- 
 2.17.2
 
