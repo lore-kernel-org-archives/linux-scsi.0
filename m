@@ -2,206 +2,153 @@ Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B1BC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:55:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0514C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 03:25:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9A0320738
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:55:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B94882077D
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 03:25:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gpiccoli-net.20150623.gappssmtp.com header.i=@gpiccoli-net.20150623.gappssmtp.com header.b="Pr3qbHoE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725823AbgFCCzv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 22:55:51 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:45229 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725780AbgFCCzu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 2 Jun 2020 22:55:50 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 7D5A72041CB;
-        Wed,  3 Jun 2020 04:55:48 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id TgJbtiLeHY-Q; Wed,  3 Jun 2020 04:55:42 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 29EF42041B2;
-        Wed,  3 Jun 2020 04:55:40 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        bvanassche@acm.org
-Subject: [PATCH] scsi: add starget_to_shost() specialization
-Date:   Tue,  2 Jun 2020 22:55:39 -0400
-Message-Id: <20200603025539.163780-1-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
+        id S1725916AbgFCDZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 23:25:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37988 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725780AbgFCDY7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 23:24:59 -0400
+Received: from mail-qt1-x843.google.com (mail-qt1-x843.google.com [IPv6:2607:f8b0:4864:20::843])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABB0FC08C5C0
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2020 20:24:59 -0700 (PDT)
+Received: by mail-qt1-x843.google.com with SMTP id i16so883733qtr.7
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2020 20:24:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gpiccoli-net.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=BXmCBfyCWBLJ8/sk/iuZv1hV1FI7bZPNvbpxPPDsSrw=;
+        b=Pr3qbHoE/XjCIaqP7dlsDSIMPAazmDW9tHTHFWkAXq7xEc17VVgUj5l0TtXxGue6z/
+         mx7jPyCjA6XYbxLQZLWU4Q8LXt+WBI5Qy/ZSQJVccOVCyq8RmkJImXtZWzUms/jHdOr0
+         /9D9QOPiSqyl8hbYu6Cu5Z/eFKYitVKoSO05V6B14iGdvobgtq+dculwlRHcCJa05xjQ
+         Dp60o96utYkCHkzWCjnqYXGZiU069VIQSNAtvbix8KYfP84OLInAVmpAuaV91nIUKmOn
+         NYgqXv69N1+bEuSH8bf5buigkBNPKs+0oZ7k8IXpFE8/pZGWSas6BvEzIH/cEI1xOtoh
+         9O1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=BXmCBfyCWBLJ8/sk/iuZv1hV1FI7bZPNvbpxPPDsSrw=;
+        b=U2/Ta28qYnZn/D72Rq/I7tPb1ZzMUEq4t95mUQ0aReK2dsCwpXmV4rRNFk02hodThe
+         n+MQp85gqQbjZNvedJgY4kp1k3qE5v3rojERCajNJBWbu3m1ft33j2d0QorRrwyp6iJ2
+         2QCNUzxhlVfsRvMIDuW+5QQXRq7i2A6O8hHEXa8yfvOlGc2Y1hHp2mmAADM1QXJCAFd+
+         /Q+mFTjfooVQAF8iTjDsCAjg3UM7qZwAb0BEiKUJU+c01Cxg0uKvMbOwBtSNdkcEghLd
+         IJPYylOrLTepBnKdFHwcEiZCPW7UrrPTmMFdtl9eaoh6RYo8f9DHnjL5E2U3966tnOcb
+         jxUA==
+X-Gm-Message-State: AOAM533KHuoRdN5duE+py4A6L/FeR6kFXGFUxWfNFOwwAgtr0K4XP+qt
+        xfTdyiYeAvUPHy8YtY+uDOj7b57lyudmyXzrFNzwHw==
+X-Google-Smtp-Source: ABdhPJycYUOYhoObzTOamww+3Mmgy1O9ppXhzPVe9/ry0aYrYn3BhdV1Qo/FrpfDcbyEh6+9kWeUUyvNdeX4U+rbU9o=
+X-Received: by 2002:aed:31a1:: with SMTP id 30mr32221789qth.366.1591154698875;
+ Tue, 02 Jun 2020 20:24:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <DM6PR18MB30346814DE1F5807188A844CD2B80@DM6PR18MB3034.namprd18.prod.outlook.com>
+ <DM6PR18MB3034B8373D1AF280C18593CCD2B60@DM6PR18MB3034.namprd18.prod.outlook.com>
+In-Reply-To: <DM6PR18MB3034B8373D1AF280C18593CCD2B60@DM6PR18MB3034.namprd18.prod.outlook.com>
+From:   "Guilherme G. Piccoli" <kernel@gpiccoli.net>
+Date:   Wed, 3 Jun 2020 00:24:22 -0300
+Message-ID: <CALJn8nNv3pEF2G3AfukziYZ2W8Hb94iguY=TUfxnKYsbjBrBiA@mail.gmail.com>
+Subject: Re: Regarding - Patch - Fix crash on qla2x00_mailbox_command
+To:     Saurav Kashyap <skashyap@marvell.com>
+Cc:     "rosattig@linux.vnet.ibm.com" <rosattig@linux.vnet.ibm.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Arun Easi <aeasi@marvell.com>,
+        Girish Basrur <gbasrur@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
+        maurosr@linux.ibm.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the SCSI mid-layer object tree the host level and the target level
-under it can be separated by transport supplied objects. For example
-the SCSI SAS transport inserts SAS port and phy objects. To cope with
-this in a generic way there is function called dev_to_host() that
-loops back up the 'device' object hierarchy asking at each level:
-"Are you a shost object?".
+IIRC Rodrigo's email does not work anymore...looping Mauro, he should
+be able to forward to appropriate folks at IBM.
+Cheers,
 
-It does the job but it is not particulary efficient in the case where
-the given object is a SCSI target. This is because when a SCSI target
-object is created it knows its SCSI host object and can hold that
-pointer value. So as long as a SCSI target cannot change its parent
-SCSI host object "midstream" then following that pointer (which is
-what starget_to_shost() does) is safe and faster.
 
-Also the level below the starget, is the sdev (aka LU) object which
-already has a redundant pointer called scsi_device::host . So since
-that has proven safe, adding another redundant pointer at the target
-level must also be safe (by induction).
+Guilherme
 
-This patch is against Martin's 5.8/scsi-queue branch and Hannes' v4
-"scsi: use xarray for devices and targets" patchset sent earlier today.
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi.c           |  2 +-
- drivers/scsi/scsi_scan.c      | 11 ++++++-----
- drivers/scsi/scsi_sysfs.c     |  2 +-
- include/scsi/scsi_device.h    |  8 ++++++++
- include/scsi/scsi_transport.h |  2 +-
- 5 files changed, 17 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 296cecd61d3a..9d0ce5959866 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -761,7 +761,7 @@ struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *starget,
- 						 u64 lun)
- {
- 	struct scsi_device *sdev;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 41818111808e..5f4b8ed31a76 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -217,7 +217,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- {
- 	struct scsi_device *sdev;
- 	int display_failure_msg = 1, ret;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
- 		       GFP_KERNEL);
-@@ -305,7 +305,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- static void scsi_target_destroy(struct scsi_target *starget)
- {
- 	struct device *dev = &starget->dev;
--	struct Scsi_Host *shost = dev_to_shost(dev->parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	unsigned long flags;
- 	unsigned long tid = scsi_target_index(starget);
- 
-@@ -424,6 +424,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	device_initialize(dev);
- 	kref_init(&starget->reap_ref);
- 	dev->parent = get_device(parent);
-+	starget->parent_shost = shost;		/* redundant but faster */
- 	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
- 	dev->bus = &scsi_bus_type;
- 	dev->type = &scsi_target_type;
-@@ -1055,7 +1056,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	unsigned char *result;
- 	blist_flags_t bflags;
- 	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 
- 	/*
- 	 * The rescan flag is used as an optimization, the first scan of a
-@@ -1205,7 +1206,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- {
- 	uint max_dev_lun;
- 	u64 sparse_lun, lun;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 
- 	SCSI_LOG_SCAN_BUS(3, starget_printk(KERN_INFO, starget,
- 		"scsi scan: Sequential scan\n"));
-@@ -1303,7 +1304,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
- 	struct scsi_lun *lunp, *lun_data;
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdev;
--	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	int ret = 0;
- 
- 	/*
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index e30a058c6b33..0b5ede1b8ebe 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1477,7 +1477,7 @@ EXPORT_SYMBOL(scsi_remove_device);
- 
- static void __scsi_remove_target(struct scsi_target *starget)
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	unsigned long flags;
- 	struct scsi_device *sdev, *sdev_next;
- 	unsigned long lun_idx = 0;
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 3690af6ce6af..fd1465a73ef4 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -278,12 +278,14 @@ enum scsi_target_state {
-  * scsi_target: representation of a scsi target, for now, this is only
-  * used for single_lun devices. If no one has active IO to the target,
-  * starget_sdev_user is NULL, else it points to the active sdev.
-+ * * Invariant: starg->parent_shost == dev_to_shost(starg->dev.parent)
-  */
- struct scsi_target {
- 	struct scsi_device	*starget_sdev_user;
- 	struct list_head	siblings;
- 	struct xarray		__devices;
- 	struct device		dev;
-+	struct Scsi_Host        *parent_shost;	/* redundant but faster */
- 	struct kref		reap_ref; /* last put renders target invisible */
- 	u16			channel;
- 	u16			id; /* target id ... replace
-@@ -323,6 +325,12 @@ static inline u32 scsi_target_index(struct scsi_target *starget)
- 	return (starget->channel << 16) | (starget->id);
- }
- 
-+/* This is faster that doing dev_to_shost(starg->dev.parent) */
-+static inline struct Scsi_Host *starget_to_shost(struct scsi_target *starg)
-+{
-+	return starg->parent_shost;
-+}
-+
- #define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
- static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
- {
-diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
-index a0458bda3148..5a2337ded7b0 100644
---- a/include/scsi/scsi_transport.h
-+++ b/include/scsi/scsi_transport.h
-@@ -70,7 +70,7 @@ scsi_transport_reserve_device(struct scsi_transport_template * t, int space)
- static inline void *
- scsi_transport_target_data(struct scsi_target *starget)
- {
--	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	return (u8 *)starget->starget_data
- 		+ shost->transportt->target_private_offset;
- 
--- 
-2.25.1
-
+On Wed, May 20, 2020 at 3:33 AM Saurav Kashyap <skashyap@marvell.com> wrote:
+>
+> Hi Rodrigo,
+> Any updates on this?
+>
+> Thanks,
+> ~Saurav
+>
+> > -----Original Message-----
+> > From: Saurav Kashyap
+> > Sent: Monday, May 18, 2020 12:20 PM
+> > To: rosattig@linux.vnet.ibm.com
+> > Cc: linux-scsi@vger.kernel.org; Arun Easi <aeasi@marvell.com>; Girish Basrur
+> > <gbasrur@marvell.com>; Nilesh Javali <njavali@marvell.com>
+> > Subject: Regarding - Patch - Fix crash on qla2x00_mailbox_command
+> >
+> > Hi  Rodrigo,
+> > We are seen regression introduced by below patch for QLA 82XX HBAs. On
+> > unload, the disable interrupt, mailbox command (MBX 0x10) fails because of
+> > this patch and leaves the FW/HW in unstable state. The next load fails with
+> > initialization FW timing out.
+> > The only way out of this is to reboot the server. I  and  test team have tried to
+> > reproduce an original problem that is fixed by below patch but we don't have
+> > any luck.
+> >
+> > We would like to revert the below patch but would like to address original
+> > problem as well. Can you share more details about the NULL pointer
+> > dereference? Which data structure was NULL and what was the test case?
+> >
+> > ==============================
+> > git show 3cb182b3fa8b7a61f05c671525494697cba39c6a
+> > commit 3cb182b3fa8b7a61f05c671525494697cba39c6a
+> > Author: Rodrigo R. Galvao <rosattig@linux.vnet.ibm.com>
+> > Date:   Mon May 28 14:58:44 2018 -0300
+> >
+> >     scsi: qla2xxx: Fix crash on qla2x00_mailbox_command
+> >
+> >     This patch fixes a crash on qla2x00_mailbox_command caused when the
+> > driver
+> >     is on UNLOADING state and tries to call qla2x00_poll, which triggers a
+> >     NULL pointer dereference.
+> >
+> >     Signed-off-by: Rodrigo R. Galvao <rosattig@linux.vnet.ibm.com>
+> >     Signed-off-by: Mauro S. M. Rodrigues <maurosr@linux.vnet.ibm.com>
+> >     Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> >     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> >
+> > diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+> > index d8a36c1..7e875f5 100644
+> > --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> > +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> > @@ -292,6 +292,14 @@ static int is_rom_cmd(uint16_t cmd)
+> >                         if (time_after(jiffies, wait_time))
+> >                                 break;
+> >
+> > +                       /*
+> > +                        * Check if it's UNLOADING, cause we cannot poll in
+> > +                        * this case, or else a NULL pointer dereference
+> > +                        * is triggered.
+> > +                        */
+> > +                       if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
+> > +                               return QLA_FUNCTION_TIMEOUT;
+> > +
+> >                         /* Check for pending interrupts. */
+> >                         qla2x00_poll(ha->rsp_q_map[0]);
+> > ====================
+> >
+> > Thanks,
+> > ~Saurav
