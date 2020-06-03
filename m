@@ -2,97 +2,101 @@ Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 131B2C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 01:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE95C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:07:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E15D920734
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 01:59:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="o7xV1BeG"
+	by mail.kernel.org (Postfix) with ESMTP id 257AF207D5
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:07:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1591150066;
+	bh=qLcUIqg4MkGQXm/ALUeDTBM4qZrROCTmpgT+XERn3Wo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Wh77nO8oUTCzaijnB8Cp7cxLxADFQede7t4ZdUoqH7boMpBJH7qXwMGInA5gOv9lF
+	 ZJpgtPwJ7WT5NPY1FnZK08oXKub7xmsnrQmt854VkBfXj0pbT25byAT8IFGC275BzL
+	 pXwP/wjbqLU5pMmCxB8QJxLza2uGLaprA4VAneTc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725855AbgFCB7k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 21:59:40 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52026 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725777AbgFCB7k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 21:59:40 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0531q8Tn136677;
-        Wed, 3 Jun 2020 01:59:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=LA/R9GKBwbdN4mXyUNmnz5fo3CahJp9bsWipVyj+2Is=;
- b=o7xV1BeGfb9Bu2fOyx79Iz4dI/nQdWO13YVde928CMguoqwvJIhiXpAQRLG+Lt4QcyXP
- oG6k8fuaDV1lsSpSvOSmUCCtd7EV3iKVCUaROGWpRzIeWtcWgENnn827CkS0PSCGtr/J
- CHTEdFpauv+wTbgcJXiI2nWvLfBbLxPo2IDiqd+VrPDxAWPJm1CcJA53xgTefmHwVP4F
- NQu1BPDMDnBj5acSxVang3RGlR8nDKZAcUvJ/uebiHlWimjiB57xcPi/VqWlzZsCZrlj
- QHdd7yZkeKJFefZHhWBNjG5y2vFPTgmShwO/Qk3Qkg7x4xCvvDoL4lZzaca7kmVeWGpz /A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 31dkrukthb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Jun 2020 01:59:36 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0531rH70005886;
-        Wed, 3 Jun 2020 01:57:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 31c1dy727y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Jun 2020 01:57:35 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0531vYhv001954;
-        Wed, 3 Jun 2020 01:57:34 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 02 Jun 2020 18:57:34 -0700
-To:     Don Brace <don.brace@microsemi.com>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCHES] uaccess hpsa
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1v9k89ajq.fsf@ca-mkp.ca.oracle.com>
-References: <20200528234025.GT23230@ZenIV.linux.org.uk>
-        <20200529233923.GL23230@ZenIV.linux.org.uk>
-Date:   Tue, 02 Jun 2020 21:57:32 -0400
-In-Reply-To: <20200529233923.GL23230@ZenIV.linux.org.uk> (Al Viro's message of
-        "Sat, 30 May 2020 00:39:23 +0100")
+        id S1725905AbgFCCHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 22:07:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46960 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725789AbgFCCHp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Jun 2020 22:07:45 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 32A502072F;
+        Wed,  3 Jun 2020 02:07:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1591150064;
+        bh=qLcUIqg4MkGQXm/ALUeDTBM4qZrROCTmpgT+XERn3Wo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aq1ZrZwQU3kRCrtJOZAwJUWVfYq2+bOd3t19aKhFjRpZJjQ7d+Ws0QDXHtHTp4POk
+         R8bz/dDLIX+5ng8Qi7HF7HQhyQniQJZPjcc7IzSHpZ0zGN5s5i/2EhPAsNVyErNBhD
+         imgt4H8pvVTVYE1AU9KFtJHzqyXDQxsAq7RLeOCY=
+Date:   Tue, 2 Jun 2020 19:07:42 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Satya Tangirala <satyat@google.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v13 10/12] fscrypt: add inline encryption support
+Message-ID: <20200603020742.GA50072@sol.localdomain>
+References: <20200514003727.69001-1-satyat@google.com>
+ <20200514003727.69001-11-satyat@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=848
- spamscore=0 bulkscore=0 adultscore=0 suspectscore=1 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030012
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 priorityscore=1501
- mlxscore=0 lowpriorityscore=0 suspectscore=1 malwarescore=0 clxscore=1011
- adultscore=0 mlxlogscore=890 cotscore=-2147483648 phishscore=0 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030012
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200514003727.69001-11-satyat@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+One more thing:
 
-> 	hpsa compat ioctl done (hopefully) saner.  I really want
-> to kill compat_alloc_user_space() off - it's always trouble and
-> for a driver-private ioctls it's absolutely pointless.
->
-> 	Note that this is only compile-tested - I don't have the
-> hardware to test it on *or* userland to issue the ioctls in
-> question.  So this series definitely needs a review and testing
-> from hpsa maintainers before it might go anywhere.
+On Thu, May 14, 2020 at 12:37:25AM +0000, Satya Tangirala wrote:
+> +/* Enable inline encryption for this file if supported. */
+> +void fscrypt_select_encryption_impl(struct fscrypt_info *ci)
+> +{
+> +	const struct inode *inode = ci->ci_inode;
+> +	struct super_block *sb = inode->i_sb;
+> +	struct blk_crypto_config crypto_cfg;
+> +	int num_devs;
+> +	struct request_queue **devs;
+> +	int i;
+> +
+> +	/* The file must need contents encryption, not filenames encryption */
+> +	if (!fscrypt_needs_contents_encryption(inode))
+> +		return;
+> +
+> +	/* The crypto mode must be valid */
+> +	if (ci->ci_mode->blk_crypto_mode == BLK_ENCRYPTION_MODE_INVALID)
+> +		return;
+> +
+> +	/* The filesystem must be mounted with -o inlinecrypt */
+> +	if (!(sb->s_flags & SB_INLINECRYPT))
+> +		return;
+> +
+> +	/*
+> +	 * blk-crypto must support the crypto configuration we'll use for the
+> +	 * inode on all devices in the sb
+> +	 */
+> +	crypto_cfg.crypto_mode = ci->ci_mode->blk_crypto_mode;
+> +	crypto_cfg.data_unit_size = sb->s_blocksize;
+> +	crypto_cfg.dun_bytes = fscrypt_get_dun_bytes(ci);
+> +	num_devs = fscrypt_get_num_devices(sb);
+> +	devs = kmalloc_array(num_devs, sizeof(*devs), GFP_NOFS);
+> +	if (!devs)
+> +		return;
 
-Don: Please test and review. Thanks!
+This function needs to return an error code, so that if this memory allocation
+fails, the error is not ignored.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+- Eric
