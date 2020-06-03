@@ -7,95 +7,92 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 498FBC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 01:42:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 131B2C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 01:59:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A4C8207D8
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 01:42:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E15D920734
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 01:59:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Jo5KW3r8"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="o7xV1BeG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728285AbgFCBm1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 21:42:27 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:42646 "EHLO
+        id S1725855AbgFCB7k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 21:59:40 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:52026 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726894AbgFCBm0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 21:42:26 -0400
+        with ESMTP id S1725777AbgFCB7k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 21:59:40 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0531gELT117727;
-        Wed, 3 Jun 2020 01:42:14 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0531q8Tn136677;
+        Wed, 3 Jun 2020 01:59:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=ZVSt6fgPdJ/CcpTZx/Rwe/Oczc0sTullCA75JDI9ZCE=;
- b=Jo5KW3r8OhyKp7cM663ARgdXcOFIbRrENHwcZPdUhpqk0eTJDX3Vyh9S88tDZi5mom7b
- PCGLnUZh7a5587Kl56YkR3HH8W0DcWPjD+DZ9zhO0nfug3cdiLKurbR5RiESpT1GfEHx
- 7tRkgoUi35QK70r1F2yY/FbuW+iwK3/rigW3U7ahQWkfJDFXyrWDIlQf26ybN6HapxMm
- sxV0B7rwiLI6+hlMOfquvFlBWkapXkFrGc7wx2+zyT9HsI26y+2xdvjO38PdgULUMWaQ
- WyXO5Y9U6HF4/NlHOBwlVxL9E+FtfdeWZ2wpmvbxmVIHnDtEBWff+g/O7qZ9t+Kv/ggG 3Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 31dkruksg4-1
+ bh=LA/R9GKBwbdN4mXyUNmnz5fo3CahJp9bsWipVyj+2Is=;
+ b=o7xV1BeGfb9Bu2fOyx79Iz4dI/nQdWO13YVde928CMguoqwvJIhiXpAQRLG+Lt4QcyXP
+ oG6k8fuaDV1lsSpSvOSmUCCtd7EV3iKVCUaROGWpRzIeWtcWgENnn827CkS0PSCGtr/J
+ CHTEdFpauv+wTbgcJXiI2nWvLfBbLxPo2IDiqd+VrPDxAWPJm1CcJA53xgTefmHwVP4F
+ NQu1BPDMDnBj5acSxVang3RGlR8nDKZAcUvJ/uebiHlWimjiB57xcPi/VqWlzZsCZrlj
+ QHdd7yZkeKJFefZHhWBNjG5y2vFPTgmShwO/Qk3Qkg7x4xCvvDoL4lZzaca7kmVeWGpz /A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31dkrukthb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Jun 2020 01:42:14 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0531dP2I189042;
-        Wed, 3 Jun 2020 01:42:13 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 31c12q4340-1
+        Wed, 03 Jun 2020 01:59:36 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0531rH70005886;
+        Wed, 3 Jun 2020 01:57:35 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 31c1dy727y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Jun 2020 01:42:13 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0531gAKF007867;
-        Wed, 3 Jun 2020 01:42:10 GMT
+        Wed, 03 Jun 2020 01:57:35 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0531vYhv001954;
+        Wed, 3 Jun 2020 01:57:34 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 02 Jun 2020 18:42:10 -0700
-To:     Roman Bolshakov <r.bolshakov@yadro.com>
-Cc:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <target-devel@vger.kernel.org>, <linux@yadro.com>,
-        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Martin Wilck <mwilck@suse.com>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
+        with ESMTP ; Tue, 02 Jun 2020 18:57:34 -0700
+To:     Don Brace <don.brace@microsemi.com>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCHES] uaccess hpsa
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq11rmx9b9w.fsf@ca-mkp.ca.oracle.com>
-References: <20200518183141.66621-1-r.bolshakov@yadro.com>
-Date:   Tue, 02 Jun 2020 21:42:06 -0400
-In-Reply-To: <20200518183141.66621-1-r.bolshakov@yadro.com> (Roman Bolshakov's
-        message of "Mon, 18 May 2020 21:31:42 +0300")
+Message-ID: <yq1v9k89ajq.fsf@ca-mkp.ca.oracle.com>
+References: <20200528234025.GT23230@ZenIV.linux.org.uk>
+        <20200529233923.GL23230@ZenIV.linux.org.uk>
+Date:   Tue, 02 Jun 2020 21:57:32 -0400
+In-Reply-To: <20200529233923.GL23230@ZenIV.linux.org.uk> (Al Viro's message of
+        "Sat, 30 May 2020 00:39:23 +0100")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- adultscore=0 suspectscore=1 spamscore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006030010
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=848
+ spamscore=0 bulkscore=0 adultscore=0 suspectscore=1 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006030012
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 priorityscore=1501
- mlxscore=0 lowpriorityscore=0 suspectscore=1 malwarescore=0 clxscore=1015
- adultscore=0 mlxlogscore=999 cotscore=-2147483648 phishscore=0 bulkscore=0
+ mlxscore=0 lowpriorityscore=0 suspectscore=1 malwarescore=0 clxscore=1011
+ adultscore=0 mlxlogscore=890 cotscore=-2147483648 phishscore=0 bulkscore=0
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030010
+ engine=8.12.0-2004280000 definitions=main-2006030012
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Roman,
+> 	hpsa compat ioctl done (hopefully) saner.  I really want
+> to kill compat_alloc_user_space() off - it's always trouble and
+> for a driver-private ioctls it's absolutely pointless.
+>
+> 	Note that this is only compile-tested - I don't have the
+> hardware to test it on *or* userland to issue the ioctls in
+> question.  So this series definitely needs a review and testing
+> from hpsa maintainers before it might go anywhere.
 
-> The driver performs SCR (state change registration) in all modes
-> including pure target mode.
-
-What is the current status of this patch? There was a bunch of going
-back and forth wrt. whether this was the correct approach.
-
-Thanks!
+Don: Please test and review. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
