@@ -2,104 +2,206 @@ Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C23C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B1BC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:55:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 023F1206E9
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:34:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RkoCDwAN"
+	by mail.kernel.org (Postfix) with ESMTP id A9A0320738
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:55:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725855AbgFCCee (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 22:34:34 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:42518 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725810AbgFCCee (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 22:34:34 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0532SsfC186047;
-        Wed, 3 Jun 2020 02:34:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
- message-id : date : from : to : cc : subject : references : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=5GmeQZysT7OXDXCPVrq0Gz+WWUQybEphX3DXqlt8Mzw=;
- b=RkoCDwANhsH+H214bP7SVpmxInV9sD+FYb5O4fWYPamRVZyNdb+3yBBNDYHX6Dn0Zn+d
- 2sI57lunXJ6fYSkTzueHHYSRhTnrJ4+5PeTupmLhwvcYuGnaq3UcK+tOVG8bA94hcd3L
- uH0huQIJwriSGGaYxgMEEYAmwqbAJUA7yCkkK4aDhhs//NVIZ5//HsdahkYtDFYtNXbs
- hmuZOHpnCufn3/BeTGgaclxuFI5whUOpjCK/i2GLG1Arh7EEEWthFAcGM4SCzqvpBki/
- spNJKk4p8XPQmH2JrFdAIeS772qhdTYbwZsQKp/jo2B+aNu9GHODKFTk5YEwBQhEfeZQ /g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 31dkrukvy6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Jun 2020 02:34:30 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0532TG6o131916;
-        Wed, 3 Jun 2020 02:32:29 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 31c1dy84db-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Jun 2020 02:32:29 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0532WLuD023670;
-        Wed, 3 Jun 2020 02:32:26 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201) by default (Oracle
- Beehive Gateway v4.0) with ESMTP ; Tue, 02 Jun 2020 19:31:47 -0700
+        id S1725823AbgFCCzv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 22:55:51 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:45229 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725780AbgFCCzu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 2 Jun 2020 22:55:50 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 7D5A72041CB;
+        Wed,  3 Jun 2020 04:55:48 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id TgJbtiLeHY-Q; Wed,  3 Jun 2020 04:55:42 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-23-251-188-50.dyn.295.ca [23.251.188.50])
+        by smtp.infotech.no (Postfix) with ESMTPA id 29EF42041B2;
+        Wed,  3 Jun 2020 04:55:40 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
+        bvanassche@acm.org
+Subject: [PATCH] scsi: add starget_to_shost() specialization
+Date:   Tue,  2 Jun 2020 22:55:39 -0400
+Message-Id: <20200603025539.163780-1-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Message-ID: <159114947917.26776.13243682219428913589.b4-ty@oracle.com>
-Date:   Tue, 2 Jun 2020 19:31:37 -0700 (PDT)
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org,
-        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        sreekanth.reddy@broadcom.com, thenzl@redhat.com
-Subject: Re: [PATCH] mpt3sas: Fix memset in non-rdpq mode.
-References: <20200528145617.27252-1-suganath-prabu.subramani@broadcom.com>
-In-Reply-To: <20200528145617.27252-1-suganath-prabu.subramani@broadcom.com>
-X-Mailer: git-send-email 2.26.2
-Content-Type: text/plain; charset=ascii
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
- spamscore=0 bulkscore=0 adultscore=0 suspectscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030017
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 priorityscore=1501
- mlxscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0 clxscore=1015
- adultscore=0 mlxlogscore=999 cotscore=-2147483648 phishscore=0 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030017
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 28 May 2020 10:56:17 -0400, Suganath Prabu S wrote:
+In the SCSI mid-layer object tree the host level and the target level
+under it can be separated by transport supplied objects. For example
+the SCSI SAS transport inserts SAS port and phy objects. To cope with
+this in a generic way there is function called dev_to_host() that
+loops back up the 'device' object hierarchy asking at each level:
+"Are you a shost object?".
 
-> Replace dma_pool_alloc and memset with dma_pool_zalloc.
-> This fixes memset accessing out of range address when reply_queue
-> count is less than RDPQ_MAX_INDEX_IN_ONE_CHUNK (i.e. 16) in non-RDPQ
-> mode.
-> 
-> In non-RDPQ mode, the driver allocates a single contiguous pool of
-> size reply_queue's count * reqly_post_free_sz. But here the driver is
-> always memsetting this pool with size 16 *  reqly_post_free_sz. so if
-> reply queue count is less then 16 (i.e. when msix vectors enabled is
-> less then 16) then the driver is accessing out of range address and
-> this results in 'BUG: unable to handle kernel paging request at
-> fff0x...x' bug.
-> 
-> [...]
+It does the job but it is not particulary efficient in the case where
+the given object is a SCSI target. This is because when a SCSI target
+object is created it knows its SCSI host object and can hold that
+pointer value. So as long as a SCSI target cannot change its parent
+SCSI host object "midstream" then following that pointer (which is
+what starget_to_shost() does) is safe and faster.
 
-Applied to 5.8/scsi-queue, thanks!
+Also the level below the starget, is the sdev (aka LU) object which
+already has a redundant pointer called scsi_device::host . So since
+that has proven safe, adding another redundant pointer at the target
+level must also be safe (by induction).
 
-[1/1] scsi: mpt3sas: Fix memset() in non-RDPQ mode
-      https://git.kernel.org/mkp/scsi/c/61e6ba03ea26
+This patch is against Martin's 5.8/scsi-queue branch and Hannes' v4
+"scsi: use xarray for devices and targets" patchset sent earlier today.
 
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+---
+ drivers/scsi/scsi.c           |  2 +-
+ drivers/scsi/scsi_scan.c      | 11 ++++++-----
+ drivers/scsi/scsi_sysfs.c     |  2 +-
+ include/scsi/scsi_device.h    |  8 ++++++++
+ include/scsi/scsi_transport.h |  2 +-
+ 5 files changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 296cecd61d3a..9d0ce5959866 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -761,7 +761,7 @@ struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *starget,
+ 						 u64 lun)
+ {
+ 	struct scsi_device *sdev;
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 41818111808e..5f4b8ed31a76 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -217,7 +217,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ {
+ 	struct scsi_device *sdev;
+ 	int display_failure_msg = 1, ret;
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 
+ 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
+ 		       GFP_KERNEL);
+@@ -305,7 +305,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ static void scsi_target_destroy(struct scsi_target *starget)
+ {
+ 	struct device *dev = &starget->dev;
+-	struct Scsi_Host *shost = dev_to_shost(dev->parent);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 	unsigned long flags;
+ 	unsigned long tid = scsi_target_index(starget);
+ 
+@@ -424,6 +424,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	device_initialize(dev);
+ 	kref_init(&starget->reap_ref);
+ 	dev->parent = get_device(parent);
++	starget->parent_shost = shost;		/* redundant but faster */
+ 	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
+ 	dev->bus = &scsi_bus_type;
+ 	dev->type = &scsi_target_type;
+@@ -1055,7 +1056,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 	unsigned char *result;
+ 	blist_flags_t bflags;
+ 	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 
+ 	/*
+ 	 * The rescan flag is used as an optimization, the first scan of a
+@@ -1205,7 +1206,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
+ {
+ 	uint max_dev_lun;
+ 	u64 sparse_lun, lun;
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 
+ 	SCSI_LOG_SCAN_BUS(3, starget_printk(KERN_INFO, starget,
+ 		"scsi scan: Sequential scan\n"));
+@@ -1303,7 +1304,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
+ 	struct scsi_lun *lunp, *lun_data;
+ 	struct scsi_sense_hdr sshdr;
+ 	struct scsi_device *sdev;
+-	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 	int ret = 0;
+ 
+ 	/*
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index e30a058c6b33..0b5ede1b8ebe 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1477,7 +1477,7 @@ EXPORT_SYMBOL(scsi_remove_device);
+ 
+ static void __scsi_remove_target(struct scsi_target *starget)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 	unsigned long flags;
+ 	struct scsi_device *sdev, *sdev_next;
+ 	unsigned long lun_idx = 0;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 3690af6ce6af..fd1465a73ef4 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -278,12 +278,14 @@ enum scsi_target_state {
+  * scsi_target: representation of a scsi target, for now, this is only
+  * used for single_lun devices. If no one has active IO to the target,
+  * starget_sdev_user is NULL, else it points to the active sdev.
++ * * Invariant: starg->parent_shost == dev_to_shost(starg->dev.parent)
+  */
+ struct scsi_target {
+ 	struct scsi_device	*starget_sdev_user;
+ 	struct list_head	siblings;
+ 	struct xarray		__devices;
+ 	struct device		dev;
++	struct Scsi_Host        *parent_shost;	/* redundant but faster */
+ 	struct kref		reap_ref; /* last put renders target invisible */
+ 	u16			channel;
+ 	u16			id; /* target id ... replace
+@@ -323,6 +325,12 @@ static inline u32 scsi_target_index(struct scsi_target *starget)
+ 	return (starget->channel << 16) | (starget->id);
+ }
+ 
++/* This is faster that doing dev_to_shost(starg->dev.parent) */
++static inline struct Scsi_Host *starget_to_shost(struct scsi_target *starg)
++{
++	return starg->parent_shost;
++}
++
+ #define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
+ static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
+ {
+diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
+index a0458bda3148..5a2337ded7b0 100644
+--- a/include/scsi/scsi_transport.h
++++ b/include/scsi/scsi_transport.h
+@@ -70,7 +70,7 @@ scsi_transport_reserve_device(struct scsi_transport_template * t, int space)
+ static inline void *
+ scsi_transport_target_data(struct scsi_target *starget)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
++	struct Scsi_Host *shost = starget_to_shost(starget);
+ 	return (u8 *)starget->starget_data
+ 		+ shost->transportt->target_private_offset;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.25.1
+
