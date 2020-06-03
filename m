@@ -2,153 +2,156 @@ Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9728BC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 18:24:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7784FC433E1
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 18:37:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 85B2D20734
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 18:24:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59F182074B
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 18:37:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="Gj7ra8p5";
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="RdCecKU2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725985AbgFCSYE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Jun 2020 14:24:04 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:47315 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725821AbgFCSYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Jun 2020 14:24:04 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id DF08F2041E3;
-        Wed,  3 Jun 2020 20:24:01 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id BaqSqbBBw73T; Wed,  3 Jun 2020 20:23:59 +0200 (CEST)
-Received: from [192.168.48.23] (host-23-251-188-50.dyn.295.ca [23.251.188.50])
-        by smtp.infotech.no (Postfix) with ESMTPA id 3F68C204172;
-        Wed,  3 Jun 2020 20:23:57 +0200 (CEST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCHv4 0/6] scsi: use xarray for devices and targets
-To:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daniel Wagner <daniel.wagner@suse.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20200602113311.121513-1-hare@suse.de>
- <20200603125359.GA12995@lst.de>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <03657a10-0941-c866-ce0c-ee92635279a9@interlog.com>
-Date:   Wed, 3 Jun 2020 14:23:55 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S1726096AbgFCShR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Jun 2020 14:37:17 -0400
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:19195 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725821AbgFCShQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2020 14:37:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1591209435; x=1622745435;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=cLJ/qa747wF9Fe+WFhnXCutuePuobeRnZG8cjfIbMUA=;
+  b=Gj7ra8p5sj4wsWEXjf9KDbgXZDcqDB8NI7aEbDB1IPb+vh7NUqg7Rgst
+   byzgXWMEtZ/R6dOJFwh3Cx10JMkoQ3FZmjgQF/vcYOu7UfVeFU5qHm52r
+   3u5YXX1dIOHUAphMXYxt+c9L27qJA4gx9/GYn+2Bkq8QG++gbmbjGSPZr
+   zjqQneFy5GijNQu84sn1A5XoXASf4JfmriW8zXYlQahqe/elfYR4PDExq
+   CrFxem1tyTCeEpTGTccgSz/AncYea45by+wBsQLoPr2ZQeZu8E4ASFA/M
+   S757otWzCKTgxX+MqoT6WPxGXguiM1HwAfrJKJ8YaGJUzPj9gdRI899YW
+   w==;
+IronPort-SDR: G85FKuQVx2QTtvyyGTuNh0tINKIFhlMHc2Qhr7TiEA2DIsIDxU/1CQ8PfBvbb7rqUMS+E5Qwzh
+ ZpxZlNOee8KugjsAAMWuztoVl+u6da0v95O4/8VitBu2gzFg2RKEOtcEyowzNfV/3pMb6i1K4L
+ TFUNjWy36QPpXeCDus5THww4aHrMoFTwYqOEQZYcph2Kc+aZD7Ud0WoMK+DRNMHG+BtFvvGicP
+ BrkiIyfXo+FwOjQhJTVGtkaCqxN4NuY2iX/SblQdJiNzT4fv3jeabzy/4SLjXYFsiTSGOAsHH0
+ MB0=
+X-IronPort-AV: E=Sophos;i="5.73,468,1583218800"; 
+   d="scan'208";a="77251033"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 03 Jun 2020 11:37:14 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Wed, 3 Jun 2020 11:37:13 -0700
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
+ Transport; Wed, 3 Jun 2020 11:37:18 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mSYgl3DLUHydPs3wLvywMpsW7Tg7ORd1pBXupQ8U570iDYq82JZfR9erepwSO7CVFAPycqO3pRQYgq8OeS4CYYa/4R//9x6lpwJOd7A/v6YMCEim5gv1VpB9bwDn5a3faPjoMsvle2Z9JF94rETo+2gazeqTqRcghOFn/UnZrcdRIYicgjcp5y0P3xLbsSbmxt36khCTqhjO0K/WNeO2wykqTL7jwGS0O6ByG5OP/TbpRLayBLjBVzEzlDaOMdFcbwJeERFXXzI+ogYjal6vhr4ocoxpxNcEgizpYP5u0AIREs2D9GaNfcQnV6T5KmutQ55l893/jVV19rJg82Kovg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=egULetR9boTFQ9ntxzxj8MXMMDSBJ+0kUGP2729lzX4=;
+ b=fEgrn2DtWA3KpYk5t4msDT9AKbUWLqB2GFIlzhzbumjeS8+Ajh6jbMqHB93jAXCv9eF0j2bTRFSmFVpnwkLG+BZYPOtn+lNEtKojFMWRvo1DGvgUR1uMfCdcSzwkUtImtEDHTU7n77upUN/rRq53ZLxyHXC4mVDIkDACbGyOIi5CjNDneb7giR9iXXzioYaVy1ehhbEVKzyB/7EWgGI34l9wbbwgmO6BC6CPTxU5eK9Pj5rmt2E/RdE8SYlHHIcdjmli648SFzhTHZnfvkVQOaB7XnzGpI7qidsGU3oQvLoZXiiteYx3441cdJbzLNb+sFtLDvuRrz9JrMhwldv1xQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector2-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=egULetR9boTFQ9ntxzxj8MXMMDSBJ+0kUGP2729lzX4=;
+ b=RdCecKU2I5pNB+/wr65X6dI6nKp0oJxGAqUlcyCgg+KvG2MPIDE5oQylh3vXQBTLaWxFckOPpqDUfEYmID/ZKT87tU1Uo3dl6SUV50ZzMyB3pOfAD3pbD9804fqFpgpKG6yUtV7JEe43bkxQlX+qMkOuESPIJJ9pz6VFZqWxImk=
+Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
+ by SN6PR11MB3230.namprd11.prod.outlook.com (2603:10b6:805:b8::29) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3045.21; Wed, 3 Jun
+ 2020 18:37:12 +0000
+Received: from SN6PR11MB2848.namprd11.prod.outlook.com
+ ([fe80::5907:a4c5:ee9b:8cde]) by SN6PR11MB2848.namprd11.prod.outlook.com
+ ([fe80::5907:a4c5:ee9b:8cde%7]) with mapi id 15.20.3045.022; Wed, 3 Jun 2020
+ 18:37:12 +0000
+From:   <Don.Brace@microchip.com>
+To:     <viro@zeniv.linux.org.uk>, <torvalds@linux-foundation.org>
+CC:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <don.brace@microsemi.com>, <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCHES] uaccess hpsa
+Thread-Topic: [PATCHES] uaccess hpsa
+Thread-Index: AQHWNhJ3VNoomsaOeEeeBRTBzDDm+ajHJEVw
+Date:   Wed, 3 Jun 2020 18:37:11 +0000
+Message-ID: <SN6PR11MB2848F6299FBA22C75DF05218E1880@SN6PR11MB2848.namprd11.prod.outlook.com>
+References: <20200528234025.GT23230@ZenIV.linux.org.uk>
+ <20200529233923.GL23230@ZenIV.linux.org.uk>
+In-Reply-To: <20200529233923.GL23230@ZenIV.linux.org.uk>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: zeniv.linux.org.uk; dkim=none (message not signed)
+ header.d=none;zeniv.linux.org.uk; dmarc=none action=none
+ header.from=microchip.com;
+x-originating-ip: [76.30.211.63]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 2957550a-f560-4234-1de6-08d807ed2158
+x-ms-traffictypediagnostic: SN6PR11MB3230:
+x-microsoft-antispam-prvs: <SN6PR11MB32305184366C82ED8EA99700E1880@SN6PR11MB3230.namprd11.prod.outlook.com>
+x-bypassexternaltag: True
+x-ms-oob-tlc-oobclassifiers: OLM:88;
+x-forefront-prvs: 04238CD941
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: x3dpf+j1eIfxCKUjlSqZMGOakKJXXZv94DCtjymLyzCxhtT6TmNX4EiA1fDiVkMAATmGc29toYLrdI1W4LHVxQTHI4o3yHRctBsyS6E9Jbu3lQEYcCRfk7R2jwEzgrPxHewA1QkET5wKFli16PehUqzjULd/iYwl/1mDd5fgISmesbPSmROqoMgF9evWfk2btKe9uQN/X4+cSrVc03rNpmDWu3DETUZk9/JT99jMFdDPhejrL55fB1ekj3M9svUQhggMVroFhptdpGueZWkIfr0UHC8/Sli695ZVePZL1ZyCWANoHgKIidjITasWoYE0mLwBYtYZcR5MOfdItCC2SQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(376002)(396003)(346002)(136003)(39860400002)(66476007)(33656002)(7696005)(66556008)(6506007)(64756008)(53546011)(76116006)(2906002)(26005)(66446008)(52536014)(186003)(478600001)(83380400001)(8936002)(4326008)(86362001)(9686003)(66946007)(71200400001)(4744005)(5660300002)(316002)(55016002)(54906003)(8676002)(110136005);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: ZDTQaP3QQxZdKZ2kUQutdmXoImLzF+LIGc2fGr7RHMIHG/XYfWMSA+gKOxFNk2QZPWfWihLw35AyfU7+306oP+l8rTkOIHrsOfo3M2nosOj1ECXORtof41z99c4+VuRm6LRppmnH9rGJhLIj/Xmj5TpuTURs7yWExjooaXKnYhokF0tOZGIkH0mshjbcfP0KiLPzu9M0nMIKBDn8XudMCVS9N+zwiUsQH+ZtBCvWCGvYAAmfDQDtSEJ8Qr9pBRmRB17oXrCiaaBjG+KQLl644Efu31pEq4flsZbt2b3C8HQMdqR7cyH3j8j1cwN4XqCyE5zWptvZPQc73ilQI6+tSgUSADwWay0c6D6Urq1UnNmq6m1BYt4SOYpw1u0RbxAq0YXaC8NFYcz4RjxjhCkwIGmmtgcHHQ0fyjyaBJT1gYSS1G2H3VW0ofFUYAVeiWmg+7VTT0e0YOuMuXrbv1V+Eihrb5aZ9yC7X0QJjVntwEo=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-In-Reply-To: <20200603125359.GA12995@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2957550a-f560-4234-1de6-08d807ed2158
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Jun 2020 18:37:11.9762
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RAgePfZkoEPXVjtNUIs8y3465Tq+clayFcUGnYZ9p8Z0Vc0PYdF60C6oDR6gOcqK9z99WQIKQMe+M6Zojd6b8w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3230
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-06-03 8:53 a.m., Christoph Hellwig wrote:
-> On Tue, Jun 02, 2020 at 01:33:05PM +0200, Hannes Reinecke wrote:
->> Hi all,
->>
->> based on the ideas from Doug Gilbert here's now my take on using
->> xarrays for devices and targets.
->> It revolves around two ideas:
->>
->> - The scsi target 'channel' and 'id' numbers are never ever used
->>    to the full 32 bit range; channels are well below 10, and no
->>    driver is using more than 16 bits for the id. So we can reduce
->>    the type of 'channel' and 'id' to 16 bits, and use the 32 bit
->>    value 'channel << 16 | id' as the index into the target xarray.
->> - Nearly every target only ever uses the first two levels of the
->>    4-level SCSI LUN structure, which means that we can use the
->>    linearized SCSI LUN id as an index into the xarray.
->>    If we ever come across targets utilizing more that 2 levels of
->>    the LUN structure we'll allocate the first unused index and have
->>    to resort to a less efficient lookup instead of direct indexing.
->>
->> With these changes we can implement an efficient lookup mechanism,
->> devolving into direct lookup for most cases. It also allows us to
->> detect duplicate entries or accidental overwrites of existing elements
->> by using xa_cmpxchg().
->> And iteration over targets and devices should be as efficient as the
->> current, list-based, approach.
->>
->> As usual, comments and reviews are welcome.
-> 
-> I see absolutely no argument for what the point of this series.  It adds
-> more code, and I don't really see any indications for it fixing bugs,
-> speeding up workloads, or reducing memory usage.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel=
+.org] On Behalf Of Al Viro
+Sent: Friday, May 29, 2020 6:39 PM
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org; linux-fsdevel@vger.kernel.org; Don Brace =
+<don.brace@microsemi.com>; linux-scsi@vger.kernel.org
+Subject: [PATCHES] uaccess hpsa
 
-Lets take memory usage first. The legacy design (part of which may have
-been a later add-on) has three collections where two are needed:
-    1) all targets in a host
-    2) all sdev_s in a target
-    3) all sdev_s in a host
+        hpsa compat ioctl done (hopefully) saner.  I really want to kill co=
+mpat_alloc_user_space() off - it's always trouble and for a driver-private =
+ioctls it's absolutely pointless.
 
-So the third one is redundant and now removed (together with the
-complexity of making sure those 3 collections are always in sync, seen
-from the users' viewpoint). Each doubly linked collection on 64
-bit machines uses 16 bytes (2 eight byte pointers). So that is a
-32 byte reduction in each sdev object. The proposed solution adds 0
-bytes because it uses the LUN as an index which is already there.
-Similar but smaller win in scsi_target objects.
+        The series is in vfs.git #uaccess.hpsa, based at v5.7-rc1
 
-There are also some locks and mutexes in the three level object
-tree (host-target-sdev[LU]) that can probably be dispensed with
-as xarrays come with their own locks. That has not been done yet
-making both my earlier proposal and this one "overlocked". And
-locks and mutexes take up space in objects and slow things down.
+Al Viro (4):
+      hpsa passthrough: lift {BIG_,}IOCTL_Command_struct copy{in,out} into =
+hpsa_ioctl()
+      hpsa: don't bother with vmalloc for BIG_IOCTL_Command_struct
+      hpsa: get rid of compat_alloc_user_space()
+      hpsa_ioctl(): tidy up a bit
+
+Acked-by: Don Brace <don.brace@microsemi.com>
+Tested-by: Don Brace <don.brace@microsemi.com>
 
 
-The speeding up will come in big machine startup and shutdown and
-its reaction time to disruptions (e.g. cable disconnected to a disk
-array) IMO. xarray and explicit parent pointers give us a faster
-way to navigate up and down the object tree. With this patchset we
-have an O(ln(n)) lookup in the downward direction where currently we
-only have O(n). Very little use is made of the "lookup" functions in
-the API because users could see that it was just an iteration
-(i.e. O(n)). Hopefully transports will take advantage of faster
-lookups and perhaps implement their own xarrays. Even the upward
-navigation can be complicated by transports inserting levels between
-the host and the target. This is what the SCSI mid-layer object tree
-looks like moving upwards from a SAS SSD, connected to an
-SAS expander, moving up to its host (a HBA):
-     scsi_device, ptr=ffff99d23f513960
-     scsi_target, ptr=ffff99d241595c28
-     sas_rphy, ptr=ffff99d242519c00
-     sas_port, ptr=ffff99d24251ec00
-     sas_expander_device, ptr=ffff99d23f4c6438
-     sas_port, ptr=ffff99d23f4c7400
-     Scsi_Host, ptr=ffff99d2425261f8
-
-There already is a scsi_device::host redundant pointer to bypass the
-oft-called and slow-walking dev_to_shost(). I'm proposing another
-redundant scsi_target::parent_shost pointer that will bypass seven
-dev_to_shost() invocations.
-
-Currently all iterations are done under the host_lock as that is
-required for doubly linked list safety. xarray uses rcu read locks
-on all non-modifying operations including iterations and if we can
-safely rely on them, that will increase the available parallelism
-within one host.
-
-Finally the SCSI fast path will usually require the presence the
-corresponding sdev object, preferably cached. So making it smaller
-will help.
-
-Doug Gilbert
-
-
-P.S. I sidestepped the "bugs" issue. Surely we will add some but
-it is hard to believe when you wade into the complexity of the
-currently linked collections and their myriad of locks, that there
-aren't subtle bugs in the existing code. I have been working with
-xarrays for about 1 year and finding locking issues is easier
-with xarrays compared to "roll your own" linked list locking, IMO.
+ drivers/scsi/hpsa.c | 199 ++++++++++++++++++++++++------------------------=
+----
+ 1 file changed, 90 insertions(+), 109 deletions(-)
 
