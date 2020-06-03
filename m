@@ -2,153 +2,117 @@ Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0514C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 03:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AFAFC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 07:10:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B94882077D
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 03:25:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBE8420679
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 07:10:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gpiccoli-net.20150623.gappssmtp.com header.i=@gpiccoli-net.20150623.gappssmtp.com header.b="Pr3qbHoE"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ywLZO/YD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725916AbgFCDZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 23:25:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37988 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbgFCDY7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 23:24:59 -0400
-Received: from mail-qt1-x843.google.com (mail-qt1-x843.google.com [IPv6:2607:f8b0:4864:20::843])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABB0FC08C5C0
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2020 20:24:59 -0700 (PDT)
-Received: by mail-qt1-x843.google.com with SMTP id i16so883733qtr.7
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2020 20:24:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gpiccoli-net.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BXmCBfyCWBLJ8/sk/iuZv1hV1FI7bZPNvbpxPPDsSrw=;
-        b=Pr3qbHoE/XjCIaqP7dlsDSIMPAazmDW9tHTHFWkAXq7xEc17VVgUj5l0TtXxGue6z/
-         mx7jPyCjA6XYbxLQZLWU4Q8LXt+WBI5Qy/ZSQJVccOVCyq8RmkJImXtZWzUms/jHdOr0
-         /9D9QOPiSqyl8hbYu6Cu5Z/eFKYitVKoSO05V6B14iGdvobgtq+dculwlRHcCJa05xjQ
-         Dp60o96utYkCHkzWCjnqYXGZiU069VIQSNAtvbix8KYfP84OLInAVmpAuaV91nIUKmOn
-         NYgqXv69N1+bEuSH8bf5buigkBNPKs+0oZ7k8IXpFE8/pZGWSas6BvEzIH/cEI1xOtoh
-         9O1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=BXmCBfyCWBLJ8/sk/iuZv1hV1FI7bZPNvbpxPPDsSrw=;
-        b=U2/Ta28qYnZn/D72Rq/I7tPb1ZzMUEq4t95mUQ0aReK2dsCwpXmV4rRNFk02hodThe
-         n+MQp85gqQbjZNvedJgY4kp1k3qE5v3rojERCajNJBWbu3m1ft33j2d0QorRrwyp6iJ2
-         2QCNUzxhlVfsRvMIDuW+5QQXRq7i2A6O8hHEXa8yfvOlGc2Y1hHp2mmAADM1QXJCAFd+
-         /Q+mFTjfooVQAF8iTjDsCAjg3UM7qZwAb0BEiKUJU+c01Cxg0uKvMbOwBtSNdkcEghLd
-         IJPYylOrLTepBnKdFHwcEiZCPW7UrrPTmMFdtl9eaoh6RYo8f9DHnjL5E2U3966tnOcb
-         jxUA==
-X-Gm-Message-State: AOAM533KHuoRdN5duE+py4A6L/FeR6kFXGFUxWfNFOwwAgtr0K4XP+qt
-        xfTdyiYeAvUPHy8YtY+uDOj7b57lyudmyXzrFNzwHw==
-X-Google-Smtp-Source: ABdhPJycYUOYhoObzTOamww+3Mmgy1O9ppXhzPVe9/ry0aYrYn3BhdV1Qo/FrpfDcbyEh6+9kWeUUyvNdeX4U+rbU9o=
-X-Received: by 2002:aed:31a1:: with SMTP id 30mr32221789qth.366.1591154698875;
- Tue, 02 Jun 2020 20:24:58 -0700 (PDT)
-MIME-Version: 1.0
-References: <DM6PR18MB30346814DE1F5807188A844CD2B80@DM6PR18MB3034.namprd18.prod.outlook.com>
- <DM6PR18MB3034B8373D1AF280C18593CCD2B60@DM6PR18MB3034.namprd18.prod.outlook.com>
-In-Reply-To: <DM6PR18MB3034B8373D1AF280C18593CCD2B60@DM6PR18MB3034.namprd18.prod.outlook.com>
-From:   "Guilherme G. Piccoli" <kernel@gpiccoli.net>
-Date:   Wed, 3 Jun 2020 00:24:22 -0300
-Message-ID: <CALJn8nNv3pEF2G3AfukziYZ2W8Hb94iguY=TUfxnKYsbjBrBiA@mail.gmail.com>
-Subject: Re: Regarding - Patch - Fix crash on qla2x00_mailbox_command
-To:     Saurav Kashyap <skashyap@marvell.com>
-Cc:     "rosattig@linux.vnet.ibm.com" <rosattig@linux.vnet.ibm.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Arun Easi <aeasi@marvell.com>,
-        Girish Basrur <gbasrur@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Mauro Rodrigues <maurosr@linux.vnet.ibm.com>,
-        maurosr@linux.ibm.com
-Content-Type: text/plain; charset="UTF-8"
+        id S1725828AbgFCHKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Jun 2020 03:10:41 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:54676 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725275AbgFCHKl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2020 03:10:41 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05372UIE025996
+        for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2020 07:10:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id; s=corp-2020-01-29;
+ bh=/vRbDhMqsyCtHtiuhEn0HwHmMOF3TeSvVKf0ajs2kaM=;
+ b=ywLZO/YDJLXffST4rkkbwTMQAAtezFxv6Js6g3mxTm54yRsCpdog1DIyHs5toaewpemx
+ 3XfQ+WGJ80nrrp8lOJ+ouENBKpBpcDs04223YklJ3au/lIwau9H+juST7YAfDZZim8sP
+ 54qBuPDBdCG7UULvcDJmwUlQHLHjh2tj1+OZc/g7EHBeB6/eqegD+AmaLueciufHwYVq
+ KG3TCaxvG/wYjFPYQP0wcWNL1l4bVOfZiTklIzdwopfp3c7Mp+98o05g05xcrum1LQO4
+ SDA4hGl0PrRm7J4LBryQlTnCc8+Flr5NJul/AL7lSvfj7mOFP+WmRILJ3xEOSZKKwrM7 JQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 31bfem7hum-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2020 07:10:40 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 053743ok079842
+        for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2020 07:08:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 31c25r9tmv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2020 07:08:40 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05378d9l008281
+        for <linux-scsi@vger.kernel.org>; Wed, 3 Jun 2020 07:08:39 GMT
+Received: from localhost.localdomain (/183.246.144.78)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 03 Jun 2020 00:08:39 -0700
+From:   Bob Liu <bob.liu@oracle.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, Bob Liu <bob.liu@oracle.com>
+Subject: [PATCH] scsi: register sysfs for scsi workqueue
+Date:   Wed,  3 Jun 2020 15:06:16 +0800
+Message-Id: <20200603070616.29629-1-bob.liu@oracle.com>
+X-Mailer: git-send-email 2.9.5
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=3 spamscore=0
+ malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006030055
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=3
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1015
+ impostorscore=0 adultscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006030055
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-IIRC Rodrigo's email does not work anymore...looping Mauro, he should
-be able to forward to appropriate folks at IBM.
-Cheers,
+This patch enable setting cpu affinity through "cpumask" for scsi workqueues
+(scsi_wq_* and scsi_tmf_*), so as to get better isolation.
 
+The max number of active worker was changed form 1 to 2, since "cpumask" of
+ordered workqueue isn't allowed to change.
 
-Guilherme
+__WQ_LEGACY was left because of
+23d11a5(workqueue: skip flush dependency checks for legacy workqueues)
 
+Signed-off-by: Bob Liu <bob.liu@oracle.com>
+---
+ drivers/scsi/hosts.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-On Wed, May 20, 2020 at 3:33 AM Saurav Kashyap <skashyap@marvell.com> wrote:
->
-> Hi Rodrigo,
-> Any updates on this?
->
-> Thanks,
-> ~Saurav
->
-> > -----Original Message-----
-> > From: Saurav Kashyap
-> > Sent: Monday, May 18, 2020 12:20 PM
-> > To: rosattig@linux.vnet.ibm.com
-> > Cc: linux-scsi@vger.kernel.org; Arun Easi <aeasi@marvell.com>; Girish Basrur
-> > <gbasrur@marvell.com>; Nilesh Javali <njavali@marvell.com>
-> > Subject: Regarding - Patch - Fix crash on qla2x00_mailbox_command
-> >
-> > Hi  Rodrigo,
-> > We are seen regression introduced by below patch for QLA 82XX HBAs. On
-> > unload, the disable interrupt, mailbox command (MBX 0x10) fails because of
-> > this patch and leaves the FW/HW in unstable state. The next load fails with
-> > initialization FW timing out.
-> > The only way out of this is to reboot the server. I  and  test team have tried to
-> > reproduce an original problem that is fixed by below patch but we don't have
-> > any luck.
-> >
-> > We would like to revert the below patch but would like to address original
-> > problem as well. Can you share more details about the NULL pointer
-> > dereference? Which data structure was NULL and what was the test case?
-> >
-> > ==============================
-> > git show 3cb182b3fa8b7a61f05c671525494697cba39c6a
-> > commit 3cb182b3fa8b7a61f05c671525494697cba39c6a
-> > Author: Rodrigo R. Galvao <rosattig@linux.vnet.ibm.com>
-> > Date:   Mon May 28 14:58:44 2018 -0300
-> >
-> >     scsi: qla2xxx: Fix crash on qla2x00_mailbox_command
-> >
-> >     This patch fixes a crash on qla2x00_mailbox_command caused when the
-> > driver
-> >     is on UNLOADING state and tries to call qla2x00_poll, which triggers a
-> >     NULL pointer dereference.
-> >
-> >     Signed-off-by: Rodrigo R. Galvao <rosattig@linux.vnet.ibm.com>
-> >     Signed-off-by: Mauro S. M. Rodrigues <maurosr@linux.vnet.ibm.com>
-> >     Acked-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> >     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> >
-> > diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-> > index d8a36c1..7e875f5 100644
-> > --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> > +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> > @@ -292,6 +292,14 @@ static int is_rom_cmd(uint16_t cmd)
-> >                         if (time_after(jiffies, wait_time))
-> >                                 break;
-> >
-> > +                       /*
-> > +                        * Check if it's UNLOADING, cause we cannot poll in
-> > +                        * this case, or else a NULL pointer dereference
-> > +                        * is triggered.
-> > +                        */
-> > +                       if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags)))
-> > +                               return QLA_FUNCTION_TIMEOUT;
-> > +
-> >                         /* Check for pending interrupts. */
-> >                         qla2x00_poll(ha->rsp_q_map[0]);
-> > ====================
-> >
-> > Thanks,
-> > ~Saurav
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 1d669e4..aa48142 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -272,8 +272,10 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	if (shost->transportt->create_work_queue) {
+ 		snprintf(shost->work_q_name, sizeof(shost->work_q_name),
+ 			 "scsi_wq_%d", shost->host_no);
+-		shost->work_q = create_singlethread_workqueue(
+-					shost->work_q_name);
++		shost->work_q = alloc_workqueue("%s",
++			WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | WQ_UNBOUND,
++			2, shost->work_q_name);
++
+ 		if (!shost->work_q) {
+ 			error = -EINVAL;
+ 			goto out_free_shost_data;
+@@ -487,8 +489,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	}
+ 
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+-					    WQ_UNBOUND | WQ_MEM_RECLAIM,
+-					   1, shost->host_no);
++			WQ_SYSFS | WQ_UNBOUND | WQ_MEM_RECLAIM, 2, shost->host_no);
+ 	if (!shost->tmf_work_q) {
+ 		shost_printk(KERN_WARNING, shost,
+ 			     "failed to create tmf workq\n");
+-- 
+2.9.5
+
