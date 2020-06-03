@@ -2,98 +2,106 @@ Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D413C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA6CC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:32:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BDA7206E9
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:32:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEB55206E9
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 02:32:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OBqT39h6"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MWw5V8RB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725948AbgFCCcG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Jun 2020 22:32:06 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59074 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbgFCCcG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 22:32:06 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0532Rlek188123;
-        Wed, 3 Jun 2020 02:31:57 GMT
+        id S1725967AbgFCCcQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Jun 2020 22:32:16 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41250 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725888AbgFCCcQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jun 2020 22:32:16 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0532S5Yg185677;
+        Wed, 3 Jun 2020 02:31:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=zzVHRLOiQYXnYFpDFmw0PZpsKu82bGLV3htgEoTFfZg=;
- b=OBqT39h6c9yfr0rXQsvTEvI+Hegp4MputnxHqQ+as6oadEciK+Yyz1ugGd98JvAeYYK8
- xyLDx+1cUyGm7RGfq23qrAdUdzuw6hcOz+MzNS5quTVVwBtAhx8rHqlF5ddVs0G7i3Ql
- u+zE/pgtQnm7q9ZzPNQiE3SQ5PzWO00ttrUt3Q/ZvwlV4Infbn0XHLcZ0iMF87j1liN4
- KgS8q/vs40ev/mQqpFA3PAf9PAy561LU1UU8O1KUS0ISb1QKa0lXNSNwBF8nDsuXWC9R
- FDpMaRiO+xfcas8FikwXFWwKtaSSfxl9lqee84YDsZNugYt06V1vW9DZ1AjmPOI0wHDu Tw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 31bfem6s9r-1
+ bh=Zl0+nJeXbVl6u+zbUzG7Al+pOb28DJU1KHOuBGmYr1Q=;
+ b=MWw5V8RBlTaTao1dWycuNKyPvd4EyatPGmd13VGjmcyLOq+unQc9w0pBq7gyFlzzPs6T
+ C3ZbBsCRiaNPL00dnf+fLCYWDSMYzPS+Sso2rQEBq9H+g6JvYUlGlomOYFZkMuYiq30A
+ 2TWTfAnoMUgRWsW3tk8A1/WLCJyXDMRGfTiMLL2UkLlFyvRjWi4xFd8NNz+BljmuLAy2
+ HwIR5tk/CJmAeHy5nLE5lASp83Od1VBYnRToPjQpcn1hbtAGkqGy9RbrU0J4qTPKceuj
+ KFajytKGbbT48Y9u+p1EN73/zKTn+F6NgvSWbsFyyC6RPMOvodeTMGKbaRZCLu0b7Krf CA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 31dkrukvre-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Jun 2020 02:31:57 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0532TPrb164237;
-        Wed, 3 Jun 2020 02:31:56 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 31c12q5d4v-1
+        Wed, 03 Jun 2020 02:31:47 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0532RvoP063125;
+        Wed, 3 Jun 2020 02:31:46 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 31c25qpmf5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Jun 2020 02:31:56 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0532Vnnm015051;
-        Wed, 3 Jun 2020 02:31:54 GMT
+        Wed, 03 Jun 2020 02:31:46 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0532VisS032607;
+        Wed, 3 Jun 2020 02:31:44 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 02 Jun 2020 19:31:49 -0700
+        with ESMTP ; Tue, 02 Jun 2020 19:31:44 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     kjlu@umn.edu, "wu000273@umn.edu" <wu000273@umn.edu>
+To:     hongwus@codeaurora.org, saravanak@google.com,
+        rnayak@codeaurora.org, kernel-team@android.com,
+        linux-scsi@vger.kernel.org, nguyenb@codeaurora.org,
+        asutoshd@codeaurora.org, salyzyn@google.com,
+        Can Guo <cang@codeaurora.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com,
+        Bean Huo <beanhuo@micron.com>,
+        open list <linux-kernel@vger.kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, Chris Leech <cleech@redhat.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: Fix reference count leak in iscsi_boot_create_kobj.
-Date:   Tue,  2 Jun 2020 22:31:38 -0400
-Message-Id: <159114947917.26776.6215710664403797046.b4-ty@oracle.com>
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: Re: [PATCH v1 1/1] scsi: ufs: Don't update urgent bkops level when toggle auto bkops
+Date:   Tue,  2 Jun 2020 22:31:34 -0400
+Message-Id: <159114947916.26776.2254304120169408842.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200528201353.14849-1-wu000273@umn.edu>
-References: <20200528201353.14849-1-wu000273@umn.edu>
+In-Reply-To: <1590632686-17866-1-git-send-email-cang@codeaurora.org>
+References: <1590632686-17866-1-git-send-email-cang@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- adultscore=0 suspectscore=0 spamscore=0 bulkscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 spamscore=0
+ malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006030018
+ definitions=main-2006030017
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1011
- impostorscore=0 adultscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0
- cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 priorityscore=1501
+ mlxscore=0 lowpriorityscore=0 suspectscore=0 malwarescore=0 clxscore=1011
+ adultscore=0 mlxlogscore=999 cotscore=-2147483648 phishscore=0 bulkscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2004280000 definitions=main-2006030017
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 28 May 2020 15:13:53 -0500, wu000273@umn.edu wrote:
+On Wed, 27 May 2020 19:24:42 -0700, Can Guo wrote:
 
-> kobject_init_and_add() should be handled when it return an error,
-> because kobject_init_and_add() takes reference even when it fails.
-> If this function returns an error, kobject_put() must be called to
-> properly clean up the memory associated with the object. Previous
-> commit "b8eb718348b8" fixed a similar problem. Thus replace calling
-> kfree() by calling kobject_put().
+> Urgent bkops level is used to compare against actual bkops status read
+> from UFS device. Urgent bkops level is set during initialization and might
+> be updated in exception event handler during runtime, but it should not be
+> updated to the actual bkops status every time when auto bkops is toggled.
+> Otherwise, if urgent bkops level is updated to 0, auto bkops shall always
+> be kept enabled.
 
 Applied to 5.8/scsi-queue, thanks!
 
-[1/1] scsi: iscsi: Fix reference count leak in iscsi_boot_create_kobj
-      https://git.kernel.org/mkp/scsi/c/0267ffce562c
+[1/1] scsi: ufs: Don't update urgent bkops level when toggling auto bkops
+      https://git.kernel.org/mkp/scsi/c/be32acff4380
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
