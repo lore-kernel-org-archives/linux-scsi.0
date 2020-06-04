@@ -2,115 +2,103 @@ Return-Path: <SRS0=9nM7=7R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0D7C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 17:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B4C1C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 19:35:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A1BA207D8
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 17:05:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BDA5206DC
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 19:35:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kWRmb1F/"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GjxtAOQp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730012AbgFDRFi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Jun 2020 13:05:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49424 "EHLO
+        id S1728982AbgFDTfT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Jun 2020 15:35:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729927AbgFDRFi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 13:05:38 -0400
-Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6999AC08C5C0;
-        Thu,  4 Jun 2020 10:05:38 -0700 (PDT)
-Received: by mail-qk1-x741.google.com with SMTP id c12so6752683qkk.13;
-        Thu, 04 Jun 2020 10:05:38 -0700 (PDT)
+        with ESMTP id S1728565AbgFDTfT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 15:35:19 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 036A8C08C5C0
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2020 12:35:19 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id l12so3617049ejn.10
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2020 12:35:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=J1s+Pb16pv1Gt2bDnL169e1AM8Xj4PBoeGtJfzzqmg0=;
-        b=kWRmb1F/c0Ll+ov/vXxNYVQuHIEHFMZjBqwXE3AtjgjdSe/9c4liVH3hneDQRuPCKj
-         MyKOiJB0+7VxmsIDxYXxwFQNi/Zxprfpc2pmNEKDNigvVbl78OBOC2kv3TvYZYICCeKO
-         WQq82CuaR7rezVzt+xRTQhSG8FpR0PhxdO+dly5yKkpwJh0D0/+s1exDwjx/RxNUrouO
-         VmUa7JmfS4vMHyJGwZwPWXJRRHk1faU3e3HEkX15wM2UeoxAFcpCgVscpv9PBWMzay3l
-         X+QWajiLLFc3uaGGbmIN0Sbql/exdoZPmdb2GTTKrmGYVcHvluMYK5txVH095cw4HIaL
-         wwCw==
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=oyFcjly3iI3BI3+x8EJy7gBmUy6FOed1sXbAZssuOGo=;
+        b=GjxtAOQpLRjZNmSyUueh+o5GYU/a2WnPWJ6lUemF++gMlaOuL43n5nkyCy1JOOntFQ
+         N5IG9D54Qy0ztQrXQWRSzHY0sM73WSKhqiNtQ6KuMUwOi7+uVXbfp64AR+O9JXuEKwb6
+         LXL0lOS4/jEZkRYhN6FORL6w0jcd96qtmEh4k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=J1s+Pb16pv1Gt2bDnL169e1AM8Xj4PBoeGtJfzzqmg0=;
-        b=jOtn8dyDFMhmZiAmEoJatIclBPun//TBcfAcsm6A2VthANRhmnNuLBsglAYnuhYy1h
-         OdUZFsahv3ZXhPiAVSEJK4apg4oUaFIowLjDa1FZQ9R6QPANt8ZdycEYb27XrHXroewF
-         rKrIHI12/4BjffOwDD+6190qbcrX+DKfH6LyiF9J9DiSW38YpvDiR89U2JJnMWkj0fky
-         CUBwz3B4CRDzDNnG/k4haDAZN7D+I0Vt5ruoFH4R84xPdNgJWEG0zEPID7peLFz2gZp7
-         d7nw3x7hyWJI5EIH09YMgJpkxmdalgAkSynNOZ/Zc1e8eBHkdQKq9ytbzRRSVUTXZUXR
-         7cjA==
-X-Gm-Message-State: AOAM5313WvX0RxX/CwugAw/Pk3jTj+A3cTkM7JpLIKLgHRMgcn6MFxX7
-        bJML0eBziyyIctWvmkTaPGfRyeldYpqV9axECke6J/Mm
-X-Google-Smtp-Source: ABdhPJxDscWfcQXe6GEfNz6VFXlDTFKCZ9rWEriz6wH/9VW6nQGW73AH9oqy/IMdQ0qC40JhyOXEwUaKjsSF93dl2Kc=
-X-Received: by 2002:a05:620a:1321:: with SMTP id p1mr5739527qkj.476.1591290337698;
- Thu, 04 Jun 2020 10:05:37 -0700 (PDT)
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=oyFcjly3iI3BI3+x8EJy7gBmUy6FOed1sXbAZssuOGo=;
+        b=m8SSBpogYP8YH9UJ/ANb4d2bAQ8MMA5MVvfNNa1TOaixe+bYtp39dK9Zq6yCGAYvWe
+         hg2vu4qvpbo/S2zSx3Y70Kc/QPxJ7lZtqGhc8Hh0QSk9BFiQ53w1Ku2GR8/rMWs52046
+         Co/e4Jpvlz+ylAb3QtbfvITUyDBqoA/799sHU/Nhco6zSLhT8/cJY28OumBR4nxfnmHW
+         ZH2to0UQQe19otR2HJwjipJZZ930eoQjl48uNZ1b/5v0rv/sl6h9zjTGK19vP4zqxPT0
+         sTw6219PryeKLgqcAyjM/Uv8f4EoUH1eEXh2p4vvhkeQMnGPc6Fd8WZB4DRFXXH0isVj
+         yeeg==
+X-Gm-Message-State: AOAM533Id41EpQamEMSpvwG06XXV3dJZD8xPZOyjO3Hgteu9PAuSijKQ
+        bwXj90NRXr0X/SqEMDX7d+wsG4/ZLKzG/M14PRQYEQ==
+X-Google-Smtp-Source: ABdhPJyPugwFVDV6AFxPuiXuVnUxIjbCmjXK1NRb4zaJGKhfuG6BzP+CkKC8JEeaZLgBDICeXdLhDSKGf2RflapIHsg=
+X-Received: by 2002:a17:906:8253:: with SMTP id f19mr5433964ejx.470.1591299317595;
+ Thu, 04 Jun 2020 12:35:17 -0700 (PDT)
+From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+References: <1590651115-9619-1-git-send-email-newtongao@tencent.com>
+ <yq17dwp9bss.fsf@ca-mkp.ca.oracle.com> <4779a72c878774e4e3525aae8932feda@mail.gmail.com>
+ <20200604155009.63mhbsoaoq6yra77@suse.com>
+In-Reply-To: <20200604155009.63mhbsoaoq6yra77@suse.com>
 MIME-Version: 1.0
-References: <20200604130406.108940-1-efremov@linux.com>
-In-Reply-To: <20200604130406.108940-1-efremov@linux.com>
-From:   Dexuan-Linux Cui <dexuan.linux@gmail.com>
-Date:   Thu, 4 Jun 2020 10:05:26 -0700
-Message-ID: <CAA42JLat6Ern5_mztmoBX9-ONtmz=gZE3YUphY+njTa+A=efVw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: storvsc: Use kzfree() in storvsc_suspend()
-To:     Denis Efremov <efremov@linux.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hyperv@vger.kernel.org,
-        Linux SCSI List <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQJb9Wzm0098wwdcUnfhuPbO5i84ZwGnJavmAYBmkM8CEG/qNaeTocBQ
+Date:   Fri, 5 Jun 2020 01:05:13 +0530
+Message-ID: <4285a7ff366d7f5cfb5cae582dadf878@mail.gmail.com>
+Subject: RE: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused by JBOD
+To:     Kai Liu <kai.liu@suse.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Xiaoming Gao <newtongao@tencent.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>, xiakaixu1987@gmail.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 4, 2020 at 6:06 AM Denis Efremov <efremov@linux.com> wrote:
+>Subject: Re: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused
+>by JBOD
 >
-> Use kzfree() instead of memset() with 0 followed by kfree().
+>On 2020/06/04 Thu 16:39, Chandrakanth Patil wrote:
+>>
+>>Hi Martin, Xiaoming Gao, Kai Liu,
+>>
+>>It is a known firmware issue and has been fixed. Please update to the
+>>latest firmware available in the Broadcom support website.
+>>Please let me know if you need any further information.
 >
-> Signed-off-by: Denis Efremov <efremov@linux.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+>Hi Chandrakanth,
 >
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 072ed8728657..e5a19cd8a450 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -2035,10 +2035,7 @@ static int storvsc_suspend(struct hv_device *hv_dev)
+>Could you let me know which megaraid based controllers are affected by this
+>issue? All or
+>some models or some generations?
 >
->         vmbus_close(hv_dev->channel);
->
-> -       memset(stor_device->stor_chns, 0,
-> -              num_possible_cpus() * sizeof(void *));
-> -
-> -       kfree(stor_device->stor_chns);
-> +       kzfree(stor_device->stor_chns);
->         stor_device->stor_chns = NULL;
->
->         cpumask_clear(&stor_device->alloced_cpus);
-> --
-> 2.26.2
+>Best regards,
+>Kai Liu
 
-Hi Denis,
-When I added the function storvsc_suspend() several months ago, somehow I forgot
-to remove the unnecessary memset(). Sorry!
+Hi Kai Liu,
 
-The buffer is recreated in storvsc_resume() -> storvsc_connect_to_vsp() ->
-storvsc_channel_init() -> stor_device->stor_chns = kcalloc(...), so I believe
-the memset() can be safely removed.  Can you please make a v2 patch for it
-and Cc my corporate email "decui" (in To)?
+Gen3 (Invader) and Gen3.5 (Ventura/Aero) generations of controllers are
+affected.
 
 Thanks,
-Dexuan
+Chandrakanth Patil
