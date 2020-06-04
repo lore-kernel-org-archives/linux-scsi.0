@@ -2,103 +2,132 @@ Return-Path: <SRS0=9nM7=7R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B4C1C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 19:35:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C980C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 21:43:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BDA5206DC
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 19:35:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GjxtAOQp"
+	by mail.kernel.org (Postfix) with ESMTP id 835112077D
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 21:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728982AbgFDTfT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Jun 2020 15:35:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44352 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728565AbgFDTfT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 15:35:19 -0400
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 036A8C08C5C0
-        for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2020 12:35:19 -0700 (PDT)
-Received: by mail-ej1-x62d.google.com with SMTP id l12so3617049ejn.10
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2020 12:35:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=oyFcjly3iI3BI3+x8EJy7gBmUy6FOed1sXbAZssuOGo=;
-        b=GjxtAOQpLRjZNmSyUueh+o5GYU/a2WnPWJ6lUemF++gMlaOuL43n5nkyCy1JOOntFQ
-         N5IG9D54Qy0ztQrXQWRSzHY0sM73WSKhqiNtQ6KuMUwOi7+uVXbfp64AR+O9JXuEKwb6
-         LXL0lOS4/jEZkRYhN6FORL6w0jcd96qtmEh4k=
+        id S1728164AbgFDVnM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Jun 2020 17:43:12 -0400
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:46228 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725943AbgFDVnM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 17:43:12 -0400
+Received: by mail-lj1-f196.google.com with SMTP id z9so9172446ljh.13;
+        Thu, 04 Jun 2020 14:43:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=oyFcjly3iI3BI3+x8EJy7gBmUy6FOed1sXbAZssuOGo=;
-        b=m8SSBpogYP8YH9UJ/ANb4d2bAQ8MMA5MVvfNNa1TOaixe+bYtp39dK9Zq6yCGAYvWe
-         hg2vu4qvpbo/S2zSx3Y70Kc/QPxJ7lZtqGhc8Hh0QSk9BFiQ53w1Ku2GR8/rMWs52046
-         Co/e4Jpvlz+ylAb3QtbfvITUyDBqoA/799sHU/Nhco6zSLhT8/cJY28OumBR4nxfnmHW
-         ZH2to0UQQe19otR2HJwjipJZZ930eoQjl48uNZ1b/5v0rv/sl6h9zjTGK19vP4zqxPT0
-         sTw6219PryeKLgqcAyjM/Uv8f4EoUH1eEXh2p4vvhkeQMnGPc6Fd8WZB4DRFXXH0isVj
-         yeeg==
-X-Gm-Message-State: AOAM533Id41EpQamEMSpvwG06XXV3dJZD8xPZOyjO3Hgteu9PAuSijKQ
-        bwXj90NRXr0X/SqEMDX7d+wsG4/ZLKzG/M14PRQYEQ==
-X-Google-Smtp-Source: ABdhPJyPugwFVDV6AFxPuiXuVnUxIjbCmjXK1NRb4zaJGKhfuG6BzP+CkKC8JEeaZLgBDICeXdLhDSKGf2RflapIHsg=
-X-Received: by 2002:a17:906:8253:: with SMTP id f19mr5433964ejx.470.1591299317595;
- Thu, 04 Jun 2020 12:35:17 -0700 (PDT)
-From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-References: <1590651115-9619-1-git-send-email-newtongao@tencent.com>
- <yq17dwp9bss.fsf@ca-mkp.ca.oracle.com> <4779a72c878774e4e3525aae8932feda@mail.gmail.com>
- <20200604155009.63mhbsoaoq6yra77@suse.com>
-In-Reply-To: <20200604155009.63mhbsoaoq6yra77@suse.com>
+        h=x-gm-message-state:reply-to:to:cc:references:from:autocrypt:subject
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=vHTgK20kdVzmm54e8GnMkcKHYCp77QqjCEndPPdZBrM=;
+        b=tgIeVp//9AV0k+cMCuFyvKjJPZkjSMLoPvLtW+MNq7D3P/sUnvv6/yZL+0PasyVBui
+         WpZiP3PrbE3jz7IaIDIYQqOpZoF+natldL5QkSfFE2TEeFwtwpuBLv4MqWI9L/cOiBAy
+         BZZZiF00yf0SPx8ARpiPSAaiwkF8OCEbmjZF7ORwvghSDeNtMl2vFLl7oTaiDnWX57MM
+         EjhA1Y12KW9hlQScGmvpCdsBXTNXOWwR1W3Mur+mSlwPyURQlRzte4wvFE8NDMx5onyc
+         wKMIVC/Ywyhzet8BIt5dO6qYQmexb5xf2utugsVaC+XOUqE4TcRluXPPRzWieISH1JSX
+         yTrw==
+X-Gm-Message-State: AOAM533gss0c+lJUhWuoQPMWobOP7WB0m1l9tsIP08GrFZP9JmQScnVT
+        2cip/BRgyGPqyieTFUoK2MG9r3kz
+X-Google-Smtp-Source: ABdhPJydFmiITVEQNLuANvKPrhYMdYzWXx2TXHFGhDTPGiQOg8Sr/j14TsFL+K0zvar8osgxRh2IRg==
+X-Received: by 2002:a2e:9dd8:: with SMTP id x24mr3361691ljj.304.1591306989329;
+        Thu, 04 Jun 2020 14:43:09 -0700 (PDT)
+Received: from [10.68.32.147] (broadband-37-110-38-130.ip.moscow.rt.ru. [37.110.38.130])
+        by smtp.gmail.com with ESMTPSA id u16sm150340lji.58.2020.06.04.14.43.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 04 Jun 2020 14:43:08 -0700 (PDT)
+Reply-To: efremov@linux.com
+To:     Dexuan-Linux Cui <dexuan.linux@gmail.com>,
+        Dexuan Cui <decui@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hyperv@vger.kernel.org,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20200604130406.108940-1-efremov@linux.com>
+ <CAA42JLat6Ern5_mztmoBX9-ONtmz=gZE3YUphY+njTa+A=efVw@mail.gmail.com>
+From:   Denis Efremov <efremov@linux.com>
+Autocrypt: addr=efremov@linux.com; keydata=
+ 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
+Subject: Re: [PATCH] scsi: storvsc: Use kzfree() in storvsc_suspend()
+Message-ID: <696a6af8-744d-01b5-4a37-5320887e9108@linux.com>
+Date:   Fri, 5 Jun 2020 00:43:09 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.1
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQJb9Wzm0098wwdcUnfhuPbO5i84ZwGnJavmAYBmkM8CEG/qNaeTocBQ
-Date:   Fri, 5 Jun 2020 01:05:13 +0530
-Message-ID: <4285a7ff366d7f5cfb5cae582dadf878@mail.gmail.com>
-Subject: RE: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused by JBOD
-To:     Kai Liu <kai.liu@suse.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Xiaoming Gao <newtongao@tencent.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>, xiakaixu1987@gmail.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAA42JLat6Ern5_mztmoBX9-ONtmz=gZE3YUphY+njTa+A=efVw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->Subject: Re: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused
->by JBOD
->
->On 2020/06/04 Thu 16:39, Chandrakanth Patil wrote:
->>
->>Hi Martin, Xiaoming Gao, Kai Liu,
->>
->>It is a known firmware issue and has been fixed. Please update to the
->>latest firmware available in the Broadcom support website.
->>Please let me know if you need any further information.
->
->Hi Chandrakanth,
->
->Could you let me know which megaraid based controllers are affected by this
->issue? All or
->some models or some generations?
->
->Best regards,
->Kai Liu
+> 
+> Hi Denis,
+> When I added the function storvsc_suspend() several months ago, somehow I forgot
+> to remove the unnecessary memset(). Sorry!
+> 
+> The buffer is recreated in storvsc_resume() -> storvsc_connect_to_vsp() ->
+> storvsc_channel_init() -> stor_device->stor_chns = kcalloc(...), so I believe
+> the memset() can be safely removed. 
 
-Hi Kai Liu,
+I'm not sure that I understand your description. As for me, memset with 0 before
+memory freeing is required only for sensitive information and it's completely
+unrelated to memory zeroing during allocation with kzalloc/kcalloc.
+If it's not a sensitive information then memset could be safely removed.
 
-Gen3 (Invader) and Gen3.5 (Ventura/Aero) generations of controllers are
-affected.
+> Can you please make a v2 patch for it and Cc my corporate email "decui" (in To)?
+
+Yes, of course. Could I add "Suggested-by"?
 
 Thanks,
-Chandrakanth Patil
+Denis
