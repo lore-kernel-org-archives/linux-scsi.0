@@ -2,78 +2,120 @@ Return-Path: <SRS0=9nM7=7R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08934C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 10:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5B23C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 11:09:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6803206DC
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 10:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD0AD206A2
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 11:09:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DtYdwjkf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbgFDKHs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Jun 2020 06:07:48 -0400
-Received: from mx2.suse.de ([195.135.220.15]:48244 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725959AbgFDKHs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Jun 2020 06:07:48 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 1CD49ABE2;
-        Thu,  4 Jun 2020 10:07:50 +0000 (UTC)
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        linux-kernel@vger.kernel.org, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH] qla2xxx: Set NVME status code for failed NVME FCP request
-Date:   Thu,  4 Jun 2020 12:07:45 +0200
-Message-Id: <20200604100745.89250-1-dwagner@suse.de>
-X-Mailer: git-send-email 2.16.4
+        id S1726221AbgFDLJs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Jun 2020 07:09:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50702 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726116AbgFDLJs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 07:09:48 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01941C03E96E
+        for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2020 04:09:47 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id a25so5623549ejg.5
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2020 04:09:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=8Nq0dyaB6V8gFTM/YIgSsevuRr16ab+DDL+OOpCw0+M=;
+        b=DtYdwjkfZDm/pkt5YmTNSHJ9A4B6WzK/4f/uiufgOby6UBjgBvDnu6Ws+LL2sjfFN8
+         +k2ALeYbQ/wjL2qq0DZzmSjDUVdXHzS8IZTAJmvLNW41tNvLt7rpKOJsMmewM63GET6T
+         sJAzUQG0NBEPxWrkewksInmBZe/To4YReryGM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=8Nq0dyaB6V8gFTM/YIgSsevuRr16ab+DDL+OOpCw0+M=;
+        b=fXJM7qR5R85pUybjXUS9C9qIOer91Kbky9i0zN2Gj3ayGOBWD8wgw7uW4IEVklNMkB
+         EzybtoXtnwXKilKo+FcnSowAYYzKrg056A3lNj+wqOA44lZJpjH8kLgeFwI789LSW6qG
+         lXpo42rCuZZ7JdY2uMW/7+Tpdp3zp4kHDqcq8Cl1iHTWOsjRKFsNN7eJQqwmF++elIJL
+         wDYgGbNKWlGKKSiYfEnEqDBnPOBPAQ3qXkU+BH3+myUiUHukEZ8T3dXuGKK/bmuWmpGp
+         RcoW435bWJnbplfzB1fWqGYgg8OIRdYutQUb7uHTx37I9Ul7d/AHvL5gkUWJqjceIfrH
+         y4VQ==
+X-Gm-Message-State: AOAM530A7ceEE0t9jTQz73llbW6E9EX7jIq34TnG1naDhkpJm09pzcm7
+        OTBU6IHQrxRmDn2OlAa077bK5wL7m6RAOskx5oybYA==
+X-Google-Smtp-Source: ABdhPJxWOzqXodtiDr7HB6vWbsh1MH6JiswGUHe7BXvqDqw/2/sI3UN28tMnHUBfoAkzlU8seWlC3OgsrQlzhpsJod8=
+X-Received: by 2002:a17:907:40bf:: with SMTP id nu23mr3339170ejb.74.1591268986462;
+ Thu, 04 Jun 2020 04:09:46 -0700 (PDT)
+From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+References: <1590651115-9619-1-git-send-email-newtongao@tencent.com>
+ <yq17dwp9bss.fsf@ca-mkp.ca.oracle.com> 08525d33fafb0a10c427838621fb571f@mail.gmail.com
+In-Reply-To: 08525d33fafb0a10c427838621fb571f@mail.gmail.com
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQJb9Wzm0098wwdcUnfhuPbO5i84ZwGnJavmp64zHeCAAWdaIA==
+Date:   Thu, 4 Jun 2020 16:39:43 +0530
+Message-ID: <4779a72c878774e4e3525aae8932feda@mail.gmail.com>
+Subject: RE: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused by JBOD
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Xiaoming Gao <newtongao@tencent.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+Cc:     xiakaixu1987@gmail.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The qla2xxx driver knows when request was processed successfully or
-not. But it always sets the NVME status code to 0/NVME_SC_SUCCESS. The
-upper layer needs to figure out from the rcv_rsplen and
-transferred_length variables if the request was successfully. This is
-not always possible, e.g. when the request data length is 0, the
-transferred_length is also set 0 which is interpreted as success in
-nvme_fc_fcpio_done(). Let's inform the upper
-layer (nvme_fc_fcpio_done()) when something went wrong.
+>Subject: RE: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung
+caused by JBOD
+>
+>>Subject: Re: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung
+>>caused by JBOD
+>>
+>>
+>>> when kernel crash, and kexec into kdump kernel, megaraid_sas will
+>>> hung and print follow error logs
+>>>
+>>> 24.1485901 sd 0:0:G:0: [sda 1 tag809 BRCfl Debug mfi stat 0x2(1, data
+>>> len requested/conpleted 0X100 0/0x0)]
+>>> 24.1867171 sd 0:0:G :9: [sda I tag861 BRCfl Debug mfft stat 0x2d,
+>>> data len reques ted/conp1e Led 0X100 0/0x0]
+>>> 24.2054191 sd 0:O:6:O: [sda 1 tag861 FAILED Result: hustbyte=DIDGK
+>>> drioerbyte-DRIUCR SENSE]
+>>> 24.2549711 bik_update_ request ! 1/0 error , dev sda, sector
+>>> 937782912 op 0x0:(READ) flags 0x0 phys_seg 1 prio class
+>>> 21.2752791 buffer_io_error 2 callbacks suppressed
+>>> 21.2752731 Duffer IO error an dev sda, logical block 117212064, async
+>>> page read
+>>>
+>>> this bug is caused by commit '59db5a931bbe73f ("scsi: megaraid_sas:
+>>> Handle sequence JBOD map failure at driver level ")' and can be fixed
+>>> by not set JOB when reset_devices on
+>>
+>>Broadcom: Please review.
+>>
+>>Thanks!
+>>
+>>--
+>>Martin K. Petersen	Oracle Linux Engineering
+>
+>We are working on it and will update you at the earliest.
+>
+>Thanks,
+>Chandrakanth Patil
 
-nvme_fc_fcpio_done() maps all non NVME_SC_SUCCESS status codes to
-NVME_SC_HOST_PATH_ERROR. There isn't any benefit to map the QLA status
-code to the NVME status code. Therefore, let's use NVME_SC_INTERNAL to
-indicate an error which aligns it with the lpfc driver.
+Hi Martin, Xiaoming Gao, Kai Liu,
 
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
- drivers/scsi/qla2xxx/qla_nvme.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+It is a known firmware issue and has been fixed. Please update to the
+latest firmware available in the Broadcom support website.
+Please let me know if you need any further information.
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index d66d47a0f958..fa695a4007f8 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -139,11 +139,12 @@ static void qla_nvme_release_fcp_cmd_kref(struct kref *kref)
- 	sp->priv = NULL;
- 	if (priv->comp_status == QLA_SUCCESS) {
- 		fd->rcv_rsplen = le16_to_cpu(nvme->u.nvme.rsp_pyld_len);
-+		fd->status = NVME_SC_SUCCESS;
- 	} else {
- 		fd->rcv_rsplen = 0;
- 		fd->transferred_length = 0;
-+		fd->status = NVME_SC_INTERNAL;
- 	}
--	fd->status = 0;
- 	spin_unlock_irqrestore(&priv->cmd_lock, flags);
- 
- 	fd->done(fd);
--- 
-2.16.4
-
+Thanks,
+Chandrakanth Patil
