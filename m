@@ -1,60 +1,108 @@
-Return-Path: <SRS0=gfFE=7Q=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=9nM7=7R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 792CEC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 20:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62888C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 06:06:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 639D2207D3
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Jun 2020 20:55:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41003205CB
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 06:06:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbgFCUy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Jun 2020 16:54:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59622 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbgFCUy5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Jun 2020 16:54:57 -0400
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [IPv6:2002:c35c:fd02::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3D82C08C5C0;
-        Wed,  3 Jun 2020 13:54:56 -0700 (PDT)
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.93 #3 (Red Hat Linux))
-        id 1jgaPT-002fID-0a; Wed, 03 Jun 2020 20:54:51 +0000
-Date:   Wed, 3 Jun 2020 21:54:50 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Don.Brace@microchip.com, torvalds@linux-foundation.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        don.brace@microsemi.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCHES] uaccess hpsa
-Message-ID: <20200603205450.GD23230@ZenIV.linux.org.uk>
-References: <20200528234025.GT23230@ZenIV.linux.org.uk>
- <20200529233923.GL23230@ZenIV.linux.org.uk>
- <SN6PR11MB2848F6299FBA22C75DF05218E1880@SN6PR11MB2848.namprd11.prod.outlook.com>
- <20200603191742.GW23230@ZenIV.linux.org.uk>
- <yq18sh398t7.fsf@ca-mkp.ca.oracle.com>
+        id S1726426AbgFDGGA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Jun 2020 02:06:00 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54212 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725959AbgFDGF7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Jun 2020 02:05:59 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 77FA1AFC1;
+        Thu,  4 Jun 2020 06:06:01 +0000 (UTC)
+Subject: Re: [PATCH] scsi: Fix incorrect usage of shost_for_each_device
+To:     Ye Bin <yebin10@huawei.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200518074420.39275-1-yebin10@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <c772dacb-b16a-e404-4333-ab5abf6daaf9@suse.de>
+Date:   Thu, 4 Jun 2020 08:05:56 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq18sh398t7.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <20200518074420.39275-1-yebin10@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 03, 2020 at 04:53:11PM -0400, Martin K. Petersen wrote:
+On 5/18/20 9:44 AM, Ye Bin wrote:
+> shost_for_each_device(sdev, shost) \
+> 	for ((sdev) = __scsi_iterate_devices((shost), NULL); \
+> 	     (sdev); \
+> 	     (sdev) = __scsi_iterate_devices((shost), (sdev)))
 > 
-> Hi Al!
+> When terminating shost_for_each_device() iteration with break or return,
+> scsi_device_put() should be used to prevent stale scsi device references from
+> being left behind.
 > 
-> > OK...  Acked-by/Tested-by added, branch re-pushed (commits are otherwise
-> > identical).  Which tree would you prefer that to go through - vfs.git,
-> > scsi.git, something else?
+> Signed-off-by: Ye Bin <yebin10@huawei.com>
+> ---
+>   drivers/scsi/scsi_error.c | 2 ++
+>   drivers/scsi/scsi_lib.c   | 4 +++-
+>   2 files changed, 5 insertions(+), 1 deletion(-)
 > 
-> I don't have anything queued for 5.8 for hpsa so there shouldn't be any
-> conflicts if it goes through vfs.git. But I'm perfectly happy to take
-> the changes through SCSI if that's your preference.
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 978be1602f71..927b1e641842 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -1412,6 +1412,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+>   				sdev_printk(KERN_INFO, sdev,
+>   					    "%s: skip START_UNIT, past eh deadline\n",
+>   					    current->comm));
+> +			scsi_device_put(sdev);
+>   			break;
+>   		}
+>   		stu_scmd = NULL;
+> @@ -1478,6 +1479,7 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+>   				sdev_printk(KERN_INFO, sdev,
+>   					    "%s: skip BDR, past eh deadline\n",
+>   					     current->comm));
+> +			scsi_device_put(sdev);
+>   			break;
+>   		}
+>   		bdr_scmd = NULL;
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index be1a4a9a5fca..173bc7fc2836 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2859,8 +2859,10 @@ scsi_host_unblock(struct Scsi_Host *shost, int new_state)
+>   
+>   	shost_for_each_device(sdev, shost) {
+>   		ret = scsi_internal_device_unblock(sdev, new_state);
+> -		if (ret)
+> +		if (ret) {
+> +			scsi_device_put(sdev);
+>   			break;
+> +		}
+>   	}
+>   	return ret;
+>   }
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Up to you; if you need a pull request, just say so.
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
