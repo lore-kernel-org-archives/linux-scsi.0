@@ -2,85 +2,63 @@ Return-Path: <SRS0=9nM7=7R=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2C1EC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 13:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3107C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 14:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9990A20772
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 13:04:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 862A3207F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Jun 2020 14:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726883AbgFDNER (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Jun 2020 09:04:17 -0400
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:45752 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725926AbgFDNEQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 09:04:16 -0400
-Received: by mail-lf1-f66.google.com with SMTP id d7so3529461lfi.12;
-        Thu, 04 Jun 2020 06:04:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=urAgIqbBzqYwYgj9xnwgXf8/6DMJC8c4LD5osGdOhLY=;
-        b=jvDyhezTeyAmzAK5lCkTlrCy7erWTXtpWKTbpo/Cy9ZKxGjRsWEanXZkG3fH9o6Vhi
-         sIL2nGJfjQVhiYWVDLnISzWSNNbUVJ1sg/a3xFyHxRfOVlTxWZFPKuHCJAObleiWDSbs
-         fy1pYykh2NmSx5BI7VMmgDToz+x5HgusEKE9gxyjiX0jWGDAJM3yew4zLIG0TYSdySo0
-         iw/JpemDtQo/8S1euYgaOVYnRkPSX3KH47qhrI+qtcXsuBZvZcG6fuTdd166uq1DhVpm
-         JgtA9zWr11JgXGGzSocBww8Thml+VkuMG9vp9LSkHswZzmQU6yfrDyRgMWjUfFjIMnNA
-         lP+g==
-X-Gm-Message-State: AOAM530428NUfkW+Yh/MG7S2mlMcjLz+cAim2fV5I3xV/AFciHLE27nk
-        jhVrabIrQyjP51614z3WfdI=
-X-Google-Smtp-Source: ABdhPJzS9kADwtRgaXZHbRJYWBULIzX77aZRmv+Bae/lnf6GOmmkrg7UmLzqiqJoxJPKCK8UP1vo9w==
-X-Received: by 2002:a19:4854:: with SMTP id v81mr2467234lfa.189.1591275854710;
-        Thu, 04 Jun 2020 06:04:14 -0700 (PDT)
-Received: from localhost.localdomain (broadband-37-110-38-130.ip.moscow.rt.ru. [37.110.38.130])
-        by smtp.googlemail.com with ESMTPSA id h13sm1181611ljc.129.2020.06.04.06.04.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2020 06:04:14 -0700 (PDT)
-From:   Denis Efremov <efremov@linux.com>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc:     Denis Efremov <efremov@linux.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: storvsc: Use kzfree() in storvsc_suspend()
-Date:   Thu,  4 Jun 2020 16:04:06 +0300
-Message-Id: <20200604130406.108940-1-efremov@linux.com>
-X-Mailer: git-send-email 2.26.2
+        id S1728694AbgFDOLm convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Jun 2020 10:11:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52214 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728496AbgFDOLl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 4 Jun 2020 10:11:41 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 208045] ARM ubuntu 18.04 as the iscsi server, using initiator
+ login, the kernel crashes
+Date:   Thu, 04 Jun 2020 14:11:41 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: lnsyyj@hotmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cf_kernel_version
+Message-ID: <bug-208045-11613-UvBzJC4qOR@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-208045-11613@https.bugzilla.kernel.org/>
+References: <bug-208045-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use kzfree() instead of memset() with 0 followed by kfree().
+https://bugzilla.kernel.org/show_bug.cgi?id=208045
 
-Signed-off-by: Denis Efremov <efremov@linux.com>
----
- drivers/scsi/storvsc_drv.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+JiangYu (lnsyyj@hotmail.com) changed:
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 072ed8728657..e5a19cd8a450 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -2035,10 +2035,7 @@ static int storvsc_suspend(struct hv_device *hv_dev)
- 
- 	vmbus_close(hv_dev->channel);
- 
--	memset(stor_device->stor_chns, 0,
--	       num_possible_cpus() * sizeof(void *));
--
--	kfree(stor_device->stor_chns);
-+	kzfree(stor_device->stor_chns);
- 	stor_device->stor_chns = NULL;
- 
- 	cpumask_clear(&stor_device->alloced_cpus);
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+     Kernel Version|4.19.118                    |4.19.118, 5.4.44, 5.6.16
+
 -- 
-2.26.2
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
