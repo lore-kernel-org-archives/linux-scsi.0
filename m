@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F16C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 01:35:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC16DC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 01:55:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 966472074B
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 01:35:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7242207DA
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 01:55:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="G21YkRyd"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qZu45s9q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726117AbgFEBfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Jun 2020 21:35:12 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:45494 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726068AbgFEBfJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 21:35:09 -0400
+        id S1726066AbgFEBzL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Jun 2020 21:55:11 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:61439 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725601AbgFEBzJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 21:55:09 -0400
 Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200605013502epoutp04d4ba0c8fbe0fe32b32d6cd6ee27edbd5~Vge4ZodFV0288902889epoutp04x
-        for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2020 01:35:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200605013502epoutp04d4ba0c8fbe0fe32b32d6cd6ee27edbd5~Vge4ZodFV0288902889epoutp04x
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200605015502epoutp0296705b4a898fb5c0e20577f47ee7e0d1~VgwVHuJ6D1307413074epoutp025
+        for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2020 01:55:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200605015502epoutp0296705b4a898fb5c0e20577f47ee7e0d1~VgwVHuJ6D1307413074epoutp025
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1591320903;
-        bh=yBOOpZHK+T1wXWIvlooCMpPM8S4RbTXRZae8l66y5Rw=;
+        s=mail20170921; t=1591322102;
+        bh=YeLOOetpgFN6Xjq3qCp+/tl/0+s7zdtBxGQbAX+Ha+k=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=G21YkRydt0rIic72KVVl6XnR5XMFmLGdaq6ZyfaCnU8fyp2BeNhA+v0CaVyGazI2Q
-         YC2WvG9Tt2q0Kz9rd0jgZdEAJ8CfotaxNBKX8k1rcnSyxvtxAaqsK+pqJ3Eyopd1Cx
-         UFfYjAPDOs/0Gz/pXtlAAwl9+dPpYR1FfuFwSvsQ=
+        b=qZu45s9q71g41uD3xkjTBbr4S5AUCQdBAN8Q3vUH5td7/tWYpOO2yIg0AYkTBIKEh
+         1YfxjFwyarojvalCwEwPlwdmXVhxDAo8A0vVm8gEasmGRdF3CtTfjsoSCyxnxRp8F4
+         5rPrLLd4cV3zrUSHOW/5vjGIjqV7Y/43n2xqtOs8=
 Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p4.samsung.com
         (KnoxPortal) with ESMTP id
-        20200605013502epcas1p41ed004e0b4cd398e11f11ee962c0f2e6~Vge31o3Wq1890718907epcas1p4N;
-        Fri,  5 Jun 2020 01:35:02 +0000 (GMT)
+        20200605015501epcas1p406fc13b52d1873ed0b84102a77feb554~VgwUoLJv72020320203epcas1p4O;
+        Fri,  5 Jun 2020 01:55:01 +0000 (GMT)
 Mime-Version: 1.0
-Subject: [RFC PATCH 2/5] scsi: ufs: Add UFS-feature layer
+Subject: [RFC PATCH 3/5] scsi: ufs: Introduce HPB module
 Reply-To: daejun7.park@samsung.com
 From:   Daejun Park <daejun7.park@samsung.com>
 To:     Daejun Park <daejun7.park@samsung.com>,
@@ -61,482 +61,1079 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         BoRam Shin <boram.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
+In-Reply-To: <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
-Date:   Fri, 05 Jun 2020 10:30:08 +0900
-X-CMS-MailID: 20200605013008epcms2p17127588c869c75798abbfa6ebf2f7e57
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
+Date:   Fri, 05 Jun 2020 10:38:31 +0900
+X-CMS-MailID: 20200605013831epcms2p80a006c5ed447604dd869dce36e1f013f
+Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
 X-CMS-RootMailID: 20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882
-References: <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
+References: <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
+        <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
         <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
-        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p1>
+        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p8>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch is adding UFS feature layer to UFS core driver.
+This is a patch for the HPB module.
+The HPB module queries UFS for device information during initialization.
+We added the export symbol to two functions in ufshcd.c to initialize
+the HPB module.
 
-UFS Driver data structure (struct ufs_hba)
-=09=E2=94=82
-=E2=94=8C--------------=E2=94=90
-=E2=94=82 UFS feature  =E2=94=82 <-- HPB module
-=E2=94=82    layer     =E2=94=82 <-- other extended feature module
-=E2=94=94--------------=E2=94=98
-Each extended UFS-Feature module has a bus of ufs-ext feature type.
-The UFS feature layer manages common APIs used by each extended feature
-module. The APIs are set of UFS Query requests and UFS Vendor commands
-related to each extended feature module.
-
-The following 6 callback functions have been added to "ufshcd.c".
-prep_fn: called after construct upiu structure
-reset: called after proving hba
-reset_host: called before ufshcd_host_reset_and_restore
-suspend: called before ufshcd_suspend
-resume: called after ufshcd_resume
-rsp_upiu: called in ufshcd_transfer_rsp_status with SAM_STAT_GOOD state
+The HPB module can be loaded or built-in as needed.
+The memory pool size used in the HPB module is implemented as a module
+parameter, so that it can be configurable by the user.
 
 Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 ---
- drivers/scsi/ufs/Makefile     |   2 +-
- drivers/scsi/ufs/ufsfeature.c | 178 ++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufsfeature.h |  95 ++++++++++++++++++
- drivers/scsi/ufs/ufshcd.c     |  17 ++++
- drivers/scsi/ufs/ufshcd.h     |   3 +
- 5 files changed, 294 insertions(+), 1 deletion(-)
- create mode 100644 drivers/scsi/ufs/ufsfeature.c
- create mode 100644 drivers/scsi/ufs/ufsfeature.h
+ drivers/scsi/ufs/Kconfig  |   9 +
+ drivers/scsi/ufs/Makefile |   1 +
+ drivers/scsi/ufs/ufshcd.c |   2 +
+ drivers/scsi/ufs/ufshpb.c | 783 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshpb.h | 185 +++++++++
+ 5 files changed, 980 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufshpb.c
+ create mode 100644 drivers/scsi/ufs/ufshpb.h
 
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index e2005aeddc2d..f7c79c369f1d 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -160,3 +160,12 @@ config SCSI_UFS_BSG
+ 
+ 	  Select this if you need a bsg device node for your UFS controller.
+ 	  If unsure, say N.
++
++config UFSHPB
++	tristate "Support UFS Host Performance Booster"
++	depends on SCSI_UFSHCD
++	help
++	  A UFS HPB Feature improves random read performance. It caches
++	  L2P map of UFS to host DRAM. The driver uses HPB read command
++	  by piggybacking physical page number for bypassing FTL's L2P address
++	  translation.
 diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index 94c6c5d7334b..fe3a92b06c87 100644
+index fe3a92b06c87..0baf28d674c6 100644
 --- a/drivers/scsi/ufs/Makefile
 +++ b/drivers/scsi/ufs/Makefile
-@@ -5,7 +5,7 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) +=3D tc-dwc-g210-plt=
-frm.o ufshcd-dwc.o tc-d
- obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) +=3D cdns-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_QCOM) +=3D ufs-qcom.o
- obj-$(CONFIG_SCSI_UFSHCD) +=3D ufshcd-core.o
--ufshcd-core-y=09=09=09=09+=3D ufshcd.o ufs-sysfs.o
-+ufshcd-core-y=09=09=09=09+=3D ufshcd.o ufs-sysfs.o ufsfeature.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)=09+=3D ufs_bsg.o
- obj-$(CONFIG_SCSI_UFSHCD_PCI) +=3D ufshcd-pci.o
- obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) +=3D ufshcd-pltfrm.o
-diff --git a/drivers/scsi/ufs/ufsfeature.c b/drivers/scsi/ufs/ufsfeature.c
-new file mode 100644
-index 000000000000..a6671962fad2
---- /dev/null
-+++ b/drivers/scsi/ufs/ufsfeature.c
-@@ -0,0 +1,178 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Universal Flash Storage Feature Support
-+ *
-+ * Copyright (C) 2017-2018 Samsung Electronics Co., Ltd.
-+ *
-+ * Authors:
-+ *=09Yongmyung Lee <ymhungry.lee@samsung.com>
-+ *=09Jinyoung Choi <j-young.choi@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ * See the COPYING file in the top-level directory or visit
-+ * <http://www.gnu.org/licenses/gpl-2.0.html>
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * This program is provided "AS IS" and "WITH ALL FAULTS" and
-+ * without warranty of any kind. You are solely responsible for
-+ * determining the appropriateness of using and distributing
-+ * the program and assume all risks associated with your exercise
-+ * of rights with respect to the program, including but not limited
-+ * to infringement of third party rights, the risks and costs of
-+ * program errors, damage to or loss of data, programs or equipment,
-+ * and unavailability or interruption of operations. Under no
-+ * circumstances will the contributor of this Program be liable for
-+ * any damages of any kind arising from your use or distribution of
-+ * this program.
-+ *
-+ * The Linux Foundation chooses to take subject only to the GPLv2
-+ * license terms, and distributes only under these terms.
-+ */
-+
-+#include "ufshcd.h"
-+#include "ufsfeature.h"
-+
-+inline void ufsf_slave_configure(struct ufs_hba *hba,
-+=09=09=09=09 struct scsi_device *sdev)
-+{
-+=09/* skip well-known LU */
-+=09if (sdev->lun >=3D UFS_UPIU_MAX_UNIT_NUM_ID)
-+=09=09return;
-+
-+=09if (!(hba->dev_info.b_ufs_feature_sup & UFS_FEATURE_SUPPORT_HPB_BIT))
-+=09=09return;
-+
-+=09atomic_inc(&hba->ufsf.slave_conf_cnt);
-+=09smp_mb__after_atomic(); /* for slave_conf_cnt */
-+
-+=09/* waiting sdev init.*/
-+=09if (waitqueue_active(&hba->ufsf.sdev_wait))
-+=09=09wake_up(&hba->ufsf.sdev_wait);
-+}
-+
-+inline void ufsf_ops_prep_fn(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+=09struct ufshpb_driver *ufshpb_drv;
-+
-+=09ufshpb_drv =3D dev_get_drvdata(&hba->ufsf.hpb_dev);
-+
-+=09if (ufshpb_drv && ufshpb_drv->ufshpb_ops.prep_fn)
-+=09=09ufshpb_drv->ufshpb_ops.prep_fn(hba, lrbp);
-+}
-+
-+inline void ufsf_ops_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp=
-)
-+{
-+=09struct ufshpb_driver *ufshpb_drv;
-+
-+=09ufshpb_drv =3D dev_get_drvdata(&hba->ufsf.hpb_dev);
-+
-+=09if (ufshpb_drv && ufshpb_drv->ufshpb_ops.rsp_upiu)
-+=09=09ufshpb_drv->ufshpb_ops.rsp_upiu(hba, lrbp);
-+}
-+
-+inline void ufsf_ops_reset_host(struct ufs_hba *hba)
-+{
-+=09struct ufshpb_driver *ufshpb_drv;
-+
-+=09ufshpb_drv =3D dev_get_drvdata(&hba->ufsf.hpb_dev);
-+
-+=09if (ufshpb_drv && ufshpb_drv->ufshpb_ops.reset_host)
-+=09=09ufshpb_drv->ufshpb_ops.reset_host(hba);
-+}
-+
-+inline void ufsf_ops_reset(struct ufs_hba *hba)
-+{
-+=09struct ufshpb_driver *ufshpb_drv;
-+
-+=09ufshpb_drv =3D dev_get_drvdata(&hba->ufsf.hpb_dev);
-+
-+=09if (ufshpb_drv && ufshpb_drv->ufshpb_ops.reset)
-+=09=09ufshpb_drv->ufshpb_ops.reset(hba);
-+}
-+
-+inline void ufsf_ops_suspend(struct ufs_hba *hba)
-+{
-+=09struct ufshpb_driver *ufshpb_drv;
-+
-+=09ufshpb_drv =3D dev_get_drvdata(&hba->ufsf.hpb_dev);
-+
-+=09if (ufshpb_drv && ufshpb_drv->ufshpb_ops.suspend)
-+=09=09ufshpb_drv->ufshpb_ops.suspend(hba);
-+}
-+
-+inline void ufsf_ops_resume(struct ufs_hba *hba)
-+{
-+=09struct ufshpb_driver *ufshpb_drv;
-+
-+=09ufshpb_drv =3D dev_get_drvdata(&hba->ufsf.hpb_dev);
-+
-+=09if (ufshpb_drv && ufshpb_drv->ufshpb_ops.resume)
-+=09=09ufshpb_drv->ufshpb_ops.resume(hba);
-+}
-+
-+struct device_type ufshpb_dev_type =3D {
-+=09.name =3D "ufshpb_device"
-+};
-+EXPORT_SYMBOL(ufshpb_dev_type);
-+
-+static int ufsf_bus_match(struct device *dev,
-+=09=09=09 struct device_driver *gendrv)
-+{
-+=09if (dev->type =3D=3D &ufshpb_dev_type)
-+=09=09return 1;
-+
-+=09return 0;
-+}
-+
-+struct bus_type ufsf_bus_type =3D {
-+=09.name =3D "ufsf_bus",
-+=09.match =3D ufsf_bus_match,
-+};
-+EXPORT_SYMBOL(ufsf_bus_type);
-+
-+static void ufsf_dev_release(struct device *dev)
-+{
-+=09put_device(dev->parent);
-+}
-+
-+void ufsf_scan_features(struct ufs_hba *hba)
-+{
-+=09int ret;
-+
-+=09init_waitqueue_head(&hba->ufsf.sdev_wait);
-+=09atomic_set(&hba->ufsf.slave_conf_cnt, 0);
-+
-+=09if (hba->dev_info.wspecversion >=3D HPB_SUPPORTED_VERSION &&
-+=09    (hba->dev_info.b_ufs_feature_sup & UFS_FEATURE_SUPPORT_HPB_BIT)) {
-+=09=09device_initialize(&hba->ufsf.hpb_dev);
-+
-+=09=09hba->ufsf.hpb_dev.bus =3D &ufsf_bus_type;
-+=09=09hba->ufsf.hpb_dev.type =3D &ufshpb_dev_type;
-+=09=09hba->ufsf.hpb_dev.parent =3D get_device(hba->dev);
-+=09=09hba->ufsf.hpb_dev.release =3D ufsf_dev_release;
-+
-+=09=09dev_set_name(&hba->ufsf.hpb_dev, "ufshpb");
-+=09=09ret =3D device_add(&hba->ufsf.hpb_dev);
-+=09=09if (ret)
-+=09=09=09dev_warn(hba->dev, "ufshpb: failed to add device\n");
-+=09}
-+}
-+
-+static int __init ufsf_init(void)
-+{
-+=09int ret;
-+
-+=09ret =3D bus_register(&ufsf_bus_type);
-+=09if (ret)
-+=09=09pr_err("%s bus_register failed\n", __func__);
-+
-+=09return ret;
-+}
-+device_initcall(ufsf_init);
-diff --git a/drivers/scsi/ufs/ufsfeature.h b/drivers/scsi/ufs/ufsfeature.h
-new file mode 100644
-index 000000000000..cbac848ec6c6
---- /dev/null
-+++ b/drivers/scsi/ufs/ufsfeature.h
-@@ -0,0 +1,95 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * Universal Flash Storage Feature Support
-+ *
-+ * Copyright (C) 2017-2018 Samsung Electronics Co., Ltd.
-+ *
-+ * Authors:
-+ *=09Yongmyung Lee <ymhungry.lee@samsung.com>
-+ *=09Jinyoung Choi <j-young.choi@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ * See the COPYING file in the top-level directory or visit
-+ * <http://www.gnu.org/licenses/gpl-2.0.html>
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * This program is provided "AS IS" and "WITH ALL FAULTS" and
-+ * without warranty of any kind. You are solely responsible for
-+ * determining the appropriateness of using and distributing
-+ * the program and assume all risks associated with your exercise
-+ * of rights with respect to the program, including but not limited
-+ * to infringement of third party rights, the risks and costs of
-+ * program errors, damage to or loss of data, programs or equipment,
-+ * and unavailability or interruption of operations. Under no
-+ * circumstances will the contributor of this Program be liable for
-+ * any damages of any kind arising from your use or distribution of
-+ * this program.
-+ *
-+ * The Linux Foundation chooses to take subject only to the GPLv2
-+ * license terms, and distributes only under these terms.
-+ */
-+
-+#ifndef _UFSFEATURE_H_
-+#define _UFSFEATURE_H_
-+
-+#define HPB_SUPPORTED_VERSION=09=09=090x0310
-+#define UFS_FEATURE_SUPPORT_HPB_BIT=09=090x80
-+
-+struct ufs_hba;
-+struct ufshcd_lrb;
-+
-+/**
-+ * struct ufsf_operation - UFS feature specific callbacks
-+ * @prep_fn: called after construct upiu structure
-+ * @reset: called after proving hba
-+ * @reset_host: called before ufshcd_host_reset_and_restore
-+ * @suspend: called before ufshcd_suspend
-+ * @resume: called after ufshcd_resume
-+ * @rsp_upiu: called in ufshcd_transfer_rsp_status with SAM_STAT_GOOD stat=
-e
-+ */
-+struct ufsf_operation {
-+=09void (*prep_fn)(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
-+=09void (*reset)(struct ufs_hba *hba);
-+=09void (*reset_host)(struct ufs_hba *hba);
-+=09void (*suspend)(struct ufs_hba *hba);
-+=09void (*resume)(struct ufs_hba *hba);
-+=09void (*rsp_upiu)(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
-+};
-+
-+struct ufshpb_driver {
-+=09struct device_driver drv;
-+=09struct list_head lh_hpb_lu;
-+
-+=09struct ufsf_operation ufshpb_ops;
-+
-+=09/* memory management */
-+=09struct kmem_cache *ufshpb_mctx_cache;
-+=09mempool_t *ufshpb_mctx_pool;
-+=09mempool_t *ufshpb_page_pool;
-+
-+=09struct workqueue_struct *ufshpb_wq;
-+};
-+
-+struct ufsf_feature_info {
-+=09atomic_t slave_conf_cnt;
-+=09wait_queue_head_t sdev_wait;
-+=09struct device hpb_dev;
-+};
-+
-+void ufsf_slave_configure(struct ufs_hba *hba, struct scsi_device *sdev);
-+void ufsf_scan_features(struct ufs_hba *hba);
-+void ufsf_ops_prep_fn(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
-+void ufsf_ops_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
-+void ufsf_ops_reset_host(struct ufs_hba *hba);
-+void ufsf_ops_reset(struct ufs_hba *hba);
-+void ufsf_ops_suspend(struct ufs_hba *hba);
-+void ufsf_ops_resume(struct ufs_hba *hba);
-+
-+#endif /* End of Header */
+@@ -7,6 +7,7 @@ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+ ufshcd-core-y				+= ufshcd.o ufs-sysfs.o ufsfeature.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
++obj-$(CONFIG_UFSHPB) += ufshpb.o
+ obj-$(CONFIG_SCSI_UFSHCD_PCI) += ufshcd-pci.o
+ obj-$(CONFIG_SCSI_UFSHCD_PLATFORM) += ufshcd-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_HISI) += ufs-hisi.o
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5db18f444ea9..de57ba2a0b03 100644
+index de57ba2a0b03..37416ead337b 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2525,6 +2525,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host=
-, struct scsi_cmnd *cmd)
-=20
- =09ufshcd_comp_scsi_upiu(hba, lrbp);
-=20
-+=09ufsf_ops_prep_fn(hba, lrbp);
+@@ -2855,6 +2855,7 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
+ 	ufshcd_release(hba);
+ 	return err;
+ }
++EXPORT_SYMBOL(ufshcd_query_flag);
+ 
+ /**
+  * ufshcd_query_attr - API function for sending attribute requests
+@@ -3053,6 +3054,7 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
+ 
+ 	return err;
+ }
++EXPORT_SYMBOL(ufshcd_query_descriptor_retry);
+ 
+ /**
+  * ufshcd_read_desc_length - read the specified descriptor length from header
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+new file mode 100644
+index 000000000000..cb0ad4d16d0f
+--- /dev/null
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -0,0 +1,783 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Universal Flash Storage Host Performance Booster
++ *
++ * Copyright (C) 2017-2018 Samsung Electronics Co., Ltd.
++ *
++ * Authors:
++ *	Yongmyung Lee <ymhungry.lee@samsung.com>
++ *	Jinyoung Choi <j-young.choi@samsung.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ * See the COPYING file in the top-level directory or visit
++ * <http://www.gnu.org/licenses/gpl-2.0.html>
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * This program is provided "AS IS" and "WITH ALL FAULTS" and
++ * without warranty of any kind. You are solely responsible for
++ * determining the appropriateness of using and distributing
++ * the program and assume all risks associated with your exercise
++ * of rights with respect to the program, including but not limited
++ * to infringement of third party rights, the risks and costs of
++ * program errors, damage to or loss of data, programs or equipment,
++ * and unavailability or interruption of operations. Under no
++ * circumstances will the contributor of this Program be liable for
++ * any damages of any kind arising from your use or distribution of
++ * this program.
++ *
++ * The Linux Foundation chooses to take subject only to the GPLv2
++ * license terms, and distributes only under these terms.
++ */
 +
- =09err =3D ufshcd_map_sg(hba, lrbp);
- =09if (err) {
- =09=09lrbp->cmd =3D NULL;
-@@ -4645,6 +4647,8 @@ static int ufshcd_slave_configure(struct scsi_device =
-*sdev)
- =09struct ufs_hba *hba =3D shost_priv(sdev->host);
- =09struct request_queue *q =3D sdev->request_queue;
-=20
-+=09ufsf_slave_configure(hba, sdev);
++#include <asm/unaligned.h>
++#include <linux/async.h>
 +
- =09blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
-=20
- =09if (ufshcd_is_rpm_autosuspend_allowed(hba))
-@@ -4765,6 +4769,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struc=
-t ufshcd_lrb *lrbp)
- =09=09=09=09 */
- =09=09=09=09pm_runtime_get_noresume(hba->dev);
- =09=09=09}
++#include "ufshcd.h"
++#include "ufshpb.h"
 +
-+=09=09=09if (scsi_status =3D=3D SAM_STAT_GOOD)
-+=09=09=09=09ufsf_ops_rsp_upiu(hba, lrbp);
- =09=09=09break;
- =09=09case UPIU_TRANSACTION_REJECT_UPIU:
- =09=09=09/* TODO: handle Reject UPIU Response */
-@@ -6508,6 +6515,8 @@ static int ufshcd_host_reset_and_restore(struct ufs_h=
-ba *hba)
- =09 * Stop the host controller and complete the requests
- =09 * cleared by h/w
- =09 */
-+=09ufsf_ops_reset_host(hba);
++static struct ufshpb_driver ufshpb_drv;
 +
- =09ufshcd_hba_stop(hba);
-=20
- =09spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -6934,6 +6943,7 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- =09/* getting Specification Version in big endian format */
- =09dev_info->wspecversion =3D desc_buf[DEVICE_DESC_PARAM_SPEC_VER] << 8 |
- =09=09=09=09      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
-+=09dev_info->b_ufs_feature_sup =3D desc_buf[DEVICE_DESC_PARAM_UFS_FEAT];
-=20
- =09model_index =3D desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
-=20
-@@ -7350,6 +7360,7 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- =09}
-=20
- =09ufs_bsg_probe(hba);
-+=09ufsf_scan_features(hba);
- =09scsi_scan_host(hba->host);
- =09pm_runtime_put_sync(hba->dev);
-=20
-@@ -7442,6 +7453,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool=
- async)
- =09/* Enable Auto-Hibernate if configured */
- =09ufshcd_auto_hibern8_enable(hba);
-=20
-+=09ufsf_ops_reset(hba);
- out:
-=20
- =09trace_ufshcd_init(dev_name(hba->dev), ret,
-@@ -8199,6 +8211,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum u=
-fs_pm_op pm_op)
- =09=09req_link_state =3D UIC_LINK_OFF_STATE;
- =09}
-=20
-+=09ufsf_ops_suspend(hba);
++static int ufshpb_create_sysfs(struct ufs_hba *hba, struct ufshpb_lu *hpb);
 +
- =09/*
- =09 * If we can't transition into any of the low power modes
- =09 * just gate the clocks.
-@@ -8320,6 +8334,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum u=
-fs_pm_op pm_op)
- =09hba->clk_gating.is_suspended =3D false;
- =09hba->dev_info.b_rpm_dev_flush_capable =3D false;
- =09ufshcd_release(hba);
-+=09ufsf_ops_resume(hba);
- out:
- =09if (hba->dev_info.b_rpm_dev_flush_capable) {
- =09=09schedule_delayed_work(&hba->rpm_dev_flush_recheck_work,
-@@ -8416,6 +8431,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum uf=
-s_pm_op pm_op)
- =09/* Enable Auto-Hibernate if configured */
- =09ufshcd_auto_hibern8_enable(hba);
-=20
-+=09ufsf_ops_resume(hba);
++static inline int ufshpb_get_state(struct ufshpb_lu *hpb)
++{
++	return atomic_read(&hpb->hpb_state);
++}
 +
- =09if (hba->dev_info.b_rpm_dev_flush_capable) {
- =09=09hba->dev_info.b_rpm_dev_flush_capable =3D false;
- =09=09cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index bf97d616e597..47866ab722ff 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -71,6 +71,7 @@
- #include "ufs.h"
- #include "ufs_quirks.h"
- #include "ufshci.h"
-+#include "ufsfeature.h"
-=20
- #define UFSHCD "ufshcd"
- #define UFSHCD_DRIVER_VERSION "0.2"
-@@ -746,6 +747,8 @@ struct ufs_hba {
- =09bool wb_buf_flush_enabled;
- =09bool wb_enabled;
- =09struct delayed_work rpm_dev_flush_recheck_work;
++static inline void ufshpb_set_state(struct ufshpb_lu *hpb, int state)
++{
++	atomic_set(&hpb->hpb_state, state);
++}
 +
-+=09struct ufsf_feature_info ufsf;
- };
-=20
- /* Returns true if clocks can be gated. Otherwise false */
---=20
++static inline int ufshpb_lu_get_dev(struct ufshpb_lu *hpb)
++{
++	if (get_device(&hpb->hpb_lu_dev))
++		return 0;
++
++	return -ENODEV;
++}
++
++static inline int ufshpb_lu_get(struct ufshpb_lu *hpb)
++{
++	if (!hpb || (ufshpb_get_state(hpb) != HPB_PRESENT))
++		return -ENODEV;
++
++	if (ufshpb_lu_get_dev(hpb))
++		return -ENODEV;
++
++	return 0;
++}
++
++static inline void ufshpb_lu_put(struct ufshpb_lu *hpb)
++{
++	put_device(&hpb->hpb_lu_dev);
++}
++
++static void ufshpb_init_subregion_tbl(struct ufshpb_lu *hpb,
++				      struct ufshpb_region *rgn)
++{
++	int srgn_idx;
++
++	for (srgn_idx = 0; srgn_idx < rgn->srgn_cnt; srgn_idx++) {
++		struct ufshpb_subregion *srgn = rgn->srgn_tbl + srgn_idx;
++
++		srgn->rgn_idx = rgn->rgn_idx;
++		srgn->srgn_idx = srgn_idx;
++		srgn->srgn_state = HPB_SRGN_UNUSED;
++	}
++}
++
++static inline int ufshpb_alloc_subregion_tbl(struct ufshpb_lu *hpb,
++					     struct ufshpb_region *rgn,
++					     int srgn_cnt)
++{
++	rgn->srgn_tbl = kvcalloc(srgn_cnt, sizeof(struct ufshpb_subregion),
++				 GFP_KERNEL);
++	if (!rgn->srgn_tbl)
++		return -ENOMEM;
++
++	rgn->srgn_cnt = srgn_cnt;
++	return 0;
++}
++
++static void ufshpb_init_lu_parameter(struct ufs_hba *hba,
++				     struct ufshpb_lu *hpb,
++				     struct ufshpb_dev_info *hpb_dev_info,
++				     struct ufshpb_lu_info *hpb_lu_info)
++{
++	u32 entries_per_rgn;
++	u64 rgn_mem_size;
++
++
++	hpb->lu_pinned_start = hpb_lu_info->pinned_start;
++	hpb->lu_pinned_end = hpb_lu_info->num_pinned ?
++		(hpb_lu_info->pinned_start + hpb_lu_info->num_pinned - 1)
++		: PINNED_NOT_SET;
++
++	rgn_mem_size = (1ULL << hpb_dev_info->rgn_size) * HPB_RGN_SIZE_UNIT
++		/ HPB_ENTRY_BLOCK_SIZE * HPB_ENTRY_SIZE;
++	hpb->srgn_mem_size = (1ULL << hpb_dev_info->srgn_size)
++		* HPB_RGN_SIZE_UNIT / HPB_ENTRY_BLOCK_SIZE * HPB_ENTRY_SIZE;
++
++	entries_per_rgn = rgn_mem_size / HPB_ENTRY_SIZE;
++	hpb->entries_per_rgn_shift = ilog2(entries_per_rgn);
++	hpb->entries_per_rgn_mask = entries_per_rgn - 1;
++
++	hpb->entries_per_srgn = hpb->srgn_mem_size /  HPB_ENTRY_SIZE;
++	hpb->entries_per_srgn_shift = ilog2(hpb->entries_per_srgn);
++	hpb->entries_per_srgn_mask = hpb->entries_per_srgn - 1;
++
++	hpb->srgns_per_rgn = rgn_mem_size / hpb->srgn_mem_size;
++
++	hpb->rgns_per_lu = DIV_ROUND_UP(hpb_lu_info->num_blocks,
++				(rgn_mem_size / HPB_ENTRY_SIZE));
++	hpb->srgns_per_lu = DIV_ROUND_UP(hpb_lu_info->num_blocks,
++				(hpb->srgn_mem_size / HPB_ENTRY_SIZE));
++
++	hpb->pages_per_srgn = hpb->srgn_mem_size / PAGE_SIZE;
++
++	dev_info(hba->dev, "ufshpb(%d): region memory size - %llu (bytes)\n",
++		 hpb->lun, rgn_mem_size);
++	dev_info(hba->dev, "ufshpb(%d): subregion memory size - %u (bytes)\n",
++		 hpb->lun, hpb->srgn_mem_size);
++	dev_info(hba->dev, "ufshpb(%d): total blocks per lu - %d\n",
++		 hpb->lun, hpb_lu_info->num_blocks);
++	dev_info(hba->dev, "ufshpb(%d): subregions per region - %d, regions per lu - %u",
++		 hpb->lun, hpb->srgns_per_rgn, hpb->rgns_per_lu);
++}
++
++
++static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
++{
++	struct ufshpb_region *rgn_table, *rgn;
++	struct ufshpb_subregion *srgn;
++	int rgn_idx, srgn_idx, total_srgn_cnt, srgn_cnt, i;
++	int ret = 0;
++
++	rgn_table = kvcalloc(hpb->rgns_per_lu, sizeof(struct ufshpb_region),
++			    GFP_KERNEL);
++	if (!rgn_table)
++		return -ENOMEM;
++
++	hpb->rgn_tbl = rgn_table;
++
++	total_srgn_cnt = hpb->srgns_per_lu;
++	for (rgn_idx = 0, srgn_cnt = 0; rgn_idx < hpb->rgns_per_lu;
++	     rgn_idx++, total_srgn_cnt -= srgn_cnt) {
++		rgn = rgn_table + rgn_idx;
++		rgn->rgn_idx = rgn_idx;
++
++		srgn_cnt = min(total_srgn_cnt, hpb->srgns_per_rgn);
++
++		ret = ufshpb_alloc_subregion_tbl(hpb, rgn, srgn_cnt);
++		if (ret)
++			goto release_srgn_table;
++		ufshpb_init_subregion_tbl(hpb, rgn);
++
++		rgn->rgn_state = HPB_RGN_INACTIVE;
++		}
++	}
++
++	if (total_srgn_cnt != 0) {
++		dev_err(hba->dev, "ufshpb(%d) error total_subregion_count %d",
++			hpb->lun, total_srgn_cnt);
++		goto release_srgn_table;
++	}
++
++	return 0;
++release_srgn_table:
++	for (i = 0; i < rgn_idx; i++) {
++		rgn = rgn_table + i;
++		if (rgn->srgn_tbl)
++			kvfree(rgn->srgn_tbl);
++	}
++	kvfree(rgn_table);
++	return ret;
++}
++
++static void ufshpb_destroy_subregion_tbl(struct ufshpb_lu *hpb,
++					 struct ufshpb_region *rgn)
++{
++	int srgn_idx;
++
++	for (srgn_idx = 0; srgn_idx < rgn->srgn_cnt; srgn_idx++) {
++		struct ufshpb_subregion *srgn;
++
++		srgn = rgn->srgn_tbl + srgn_idx;
++		srgn->srgn_state = HPB_SRGN_UNUSED;
++	}
++}
++
++static void ufshpb_destroy_region_tbl(struct ufshpb_lu *hpb)
++{
++	int rgn_idx;
++
++	for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
++		struct ufshpb_region *rgn;
++
++		rgn = hpb->rgn_tbl + rgn_idx;
++		if (rgn->rgn_state != HPB_RGN_INACTIVE) {
++			rgn->rgn_state = HPB_RGN_INACTIVE;
++
++			ufshpb_destroy_subregion_tbl(hpb, rgn);
++		}
++
++		kvfree(rgn->srgn_tbl);
++	}
++
++	kvfree(hpb->rgn_tbl);
++}
++
++static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb,
++			      struct ufshpb_dev_info *hpb_dev_info)
++{
++	int ret;
++
++	spin_lock_init(&hpb->hpb_state_lock);
++
++	ret = ufshpb_alloc_region_tbl(hba, hpb);
++	if (ret)
++		return ret;
++
++	ret = ufshpb_create_sysfs(hba, hpb);
++	if (ret)
++		goto release_rgn_table;
++
++	return 0;
++
++release_rgn_table:
++	ufshpb_destroy_region_tbl(hpb);
++	return ret;
++}
++
++static struct ufshpb_lu *ufshpb_alloc_hpb_lu(struct ufs_hba *hba, int lun,
++				     struct ufshpb_dev_info *hpb_dev_info,
++				     struct ufshpb_lu_info *hpb_lu_info)
++{
++	struct ufshpb_lu *hpb;
++	int ret;
++
++	hpb = kzalloc(sizeof(struct ufshpb_lu), GFP_KERNEL);
++	if (!hpb)
++		return NULL;
++
++	hpb->ufsf = &hba->ufsf;
++	hpb->lun = lun;
++
++	ufshpb_init_lu_parameter(hba, hpb, hpb_dev_info, hpb_lu_info);
++
++	ret = ufshpb_lu_hpb_init(hba, hpb, hpb_dev_info);
++	if (ret) {
++		dev_err(hba->dev, "hpb lu init failed. ret %d", ret);
++		goto release_hpb;
++	}
++
++	return hpb;
++release_hpb:
++	kfree(hpb);
++	return NULL;
++}
++
++static void ufshpb_lu_release(struct ufshpb_lu *hpb)
++{
++	ufshpb_destroy_region_tbl(hpb);
++
++	list_del_init(&hpb->list_hpb_lu);
++}
++
++static void ufshpb_issue_hpb_reset_query(struct ufs_hba *hba)
++{
++	int err;
++	bool flag_res = true;
++	int try = 0;
++	int retries;
++
++	for (retries = 0; retries < HPB_RESET_REQ_RETRIES; retries++) {
++		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++				QUERY_FLAG_IDN_HPB_RESET, 0, NULL);
++		if (err)
++			dev_dbg(hba->dev,
++				"%s: failed with error %d, retries %d\n",
++				__func__, err, retries);
++		else
++			break;
++	}
++
++	if (err) {
++		dev_err(hba->dev,
++			"%s setting fHpbReset flag failed with error %d\n",
++			__func__, err);
++		return;
++	}
++	/* wait for the device to complete HPB reset query */
++	do {
++		if (++try == HPB_RESET_REQ_RETRIES)
++			break;
++
++		dev_info(hba->dev,
++			"%s start flag reset polling %d times\n",
++			__func__, try);
++
++		/* Poll fHpbReset flag to be cleared */
++		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++				QUERY_FLAG_IDN_HPB_RESET, 0, &flag_res);
++		usleep_range(1000, 1100);
++	} while (flag_res);
++
++	if (err) {
++		dev_err(hba->dev,
++			"%s reading fHpbReset flag failed with error %d\n",
++			__func__, err);
++		return;
++	}
++
++	if (flag_res) {
++		dev_err(hba->dev,
++			"%s fHpbReset was not cleared by the device\n",
++			__func__);
++	}
++}
++
++static void ufshpb_reset(struct ufs_hba *hba)
++{
++	struct ufshpb_lu *hpb;
++
++	list_for_each_entry(hpb, &ufshpb_drv.lh_hpb_lu, list_hpb_lu) {
++		if (ufshpb_lu_get_dev(hpb))
++			continue;
++
++		ufshpb_set_state(hpb, HPB_PRESENT);
++		ufshpb_lu_put(hpb);
++	}
++}
++
++static void ufshpb_reset_host(struct ufs_hba *hba)
++{
++	struct ufshpb_lu *hpb;
++
++	list_for_each_entry(hpb, &ufshpb_drv.lh_hpb_lu, list_hpb_lu) {
++		if (ufshpb_lu_get(hpb))
++			continue;
++
++		dev_info(&hpb->hpb_lu_dev, "ufshpb run reset_host");
++
++		ufshpb_set_state(hpb, HPB_RESET);
++		ufshpb_lu_put(hpb);
++	}
++}
++
++static void ufshpb_suspend(struct ufs_hba *hba)
++{
++	struct ufshpb_lu *hpb;
++
++	list_for_each_entry(hpb, &ufshpb_drv.lh_hpb_lu, list_hpb_lu) {
++		if (ufshpb_lu_get(hpb))
++			continue;
++
++		dev_info(&hpb->hpb_lu_dev, "ufshpb goto suspend");
++		ufshpb_set_state(hpb, HPB_SUSPEND);
++
++		ufshpb_lu_put(hpb);
++	}
++}
++
++static void ufshpb_resume(struct ufs_hba *hba)
++{
++	struct ufshpb_lu *hpb;
++
++	list_for_each_entry(hpb, &ufshpb_drv.lh_hpb_lu, list_hpb_lu) {
++		if (ufshpb_lu_get_dev(hpb))
++			continue;
++
++		dev_info(&hpb->hpb_lu_dev, "ufshpb resume");
++		ufshpb_set_state(hpb, HPB_PRESENT);
++		ufshpb_lu_put(hpb);
++	}
++}
++
++static void ufshpb_stat_init(struct ufshpb_lu *hpb)
++{
++	atomic_set(&hpb->stats.hit_cnt, 0);
++	atomic_set(&hpb->stats.miss_cnt, 0);
++	atomic_set(&hpb->stats.rb_noti_cnt, 0);
++	atomic_set(&hpb->stats.rb_active_cnt, 0);
++	atomic_set(&hpb->stats.rb_inactive_cnt, 0);
++	atomic_set(&hpb->stats.map_req_cnt, 0);
++}
++
++/* SYSFS functions */
++#define ufshpb_sysfs_attr_show_func(__name)				\
++static ssize_t ufshpb_sysfs_show_##__name(struct device *dev,		\
++					 struct device_attribute *attr,	\
++					 char *buf)			\
++{									\
++	struct ufshpb_lu *hpb;						\
++	hpb = container_of(dev, struct ufshpb_lu, hpb_lu_dev);		\
++	return snprintf(buf, PAGE_SIZE, "%d\n",			\
++			atomic_read(&hpb->stats.__name));		\
++}
++
++ufshpb_sysfs_attr_show_func(hit_cnt);
++ufshpb_sysfs_attr_show_func(miss_cnt);
++ufshpb_sysfs_attr_show_func(rb_noti_cnt);
++ufshpb_sysfs_attr_show_func(rb_active_cnt);
++ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
++ufshpb_sysfs_attr_show_func(map_req_cnt);
++
++static struct device_attribute ufshpb_sysfs_entries[] = {
++	__ATTR(hit_count, 0444, ufshpb_sysfs_show_hit_cnt, NULL),
++	__ATTR(miss_count, 0444, ufshpb_sysfs_show_miss_cnt, NULL),
++	__ATTR(rb_noti_count, 0444, ufshpb_sysfs_show_rb_noti_cnt, NULL),
++	__ATTR(rb_active_count, 0444, ufshpb_sysfs_show_rb_active_cnt, NULL),
++	__ATTR(rb_inactive_count, 0444, ufshpb_sysfs_show_rb_inactive_cnt,
++	       NULL),
++	__ATTR(map_req_count, 0444, ufshpb_sysfs_show_map_req_cnt, NULL),
++	__ATTR_NULL
++};
++
++static inline void ufshpb_dev_release(struct device *dev)
++{
++	struct ufs_hba *hba;
++	struct ufsf_feature_info *ufsf;
++	struct ufshpb_lu *hpb;
++
++	hpb = container_of(dev, struct ufshpb_lu, hpb_lu_dev);
++	ufsf = hpb->ufsf;
++	hba = container_of(ufsf, struct ufs_hba, ufsf);
++
++	ufshpb_lu_release(hpb);
++	dev_info(dev, "%s: release success\n", __func__);
++	put_device(dev->parent);
++
++	kfree(hpb);
++}
++
++static int ufshpb_create_sysfs(struct ufs_hba *hba, struct ufshpb_lu *hpb)
++{
++	struct device_attribute *attr;
++	int ret;
++
++	device_initialize(&hpb->hpb_lu_dev);
++
++	ufshpb_stat_init(hpb);
++
++	hpb->hpb_lu_dev.parent = get_device(&hba->ufsf.hpb_dev);
++	hpb->hpb_lu_dev.release = ufshpb_dev_release;
++	dev_set_name(&hpb->hpb_lu_dev, "ufshpb_lu%d", hpb->lun);
++
++	ret = device_add(&hpb->hpb_lu_dev);
++	if (ret) {
++		dev_err(hba->dev, "ufshpb(%d) device_add failed",
++			hpb->lun);
++		return -ENODEV;
++	}
++
++	for (attr = ufshpb_sysfs_entries; attr->attr.name != NULL; attr++) {
++		if (device_create_file(&hpb->hpb_lu_dev, attr))
++			dev_err(hba->dev, "ufshpb(%d) %s create file error\n",
++				hpb->lun, attr->attr.name);
++	}
++
++	return 0;
++}
++
++static int ufshpb_read_desc(struct ufs_hba *hba, u8 desc_id, u8 desc_index,
++			  u8 selector, u8 *desc_buf, u32 size)
++{
++	int err = 0;
++
++	pm_runtime_get_sync(hba->dev);
++
++	err = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
++					    desc_id, desc_index,
++					    selector,
++					    desc_buf, &size);
++	if (err)
++		dev_err(hba->dev, "read desc failed: %d, id %d, idx %d\n",
++			err, desc_id, desc_index);
++
++	pm_runtime_put_sync(hba->dev);
++
++	return err;
++}
++
++static int ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf,
++			       struct ufshpb_dev_info *hpb_dev_info)
++{
++	int hpb_device_max_active_rgns = 0;
++	int hpb_num_lu;
++
++	hpb_dev_info->max_num_lun =
++		geo_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] == 0x00 ? 8 : 32;
++
++	hpb_num_lu = geo_buf[GEOMETRY_DESC_HPB_NUMBER_LU];
++	if (hpb_num_lu == 0) {
++		dev_err(hba->dev, "No HPB LU supported\n");
++		return -ENODEV;
++	}
++
++	hpb_dev_info->rgn_size = geo_buf[GEOMETRY_DESC_HPB_REGION_SIZE];
++	hpb_dev_info->srgn_size = geo_buf[GEOMETRY_DESC_HPB_SUBREGION_SIZE];
++	hpb_device_max_active_rgns =
++		get_unaligned_be16(geo_buf +
++			GEOMETRY_DESC_HPB_DEVICE_MAX_ACTIVE_REGIONS);
++
++	if (hpb_dev_info->rgn_size == 0 || hpb_dev_info->srgn_size == 0 ||
++	    hpb_device_max_active_rgns == 0) {
++		dev_err(hba->dev, "No HPB supported device\n");
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++static int ufshpb_get_dev_info(struct ufs_hba *hba,
++			       struct ufshpb_dev_info *hpb_dev_info,
++			       u8 *desc_buf)
++{
++	int ret;
++
++	ret = ufshpb_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, SELECTOR,
++			     desc_buf, hba->desc_size.dev_desc);
++	if (ret) {
++		dev_err(hba->dev, "%s: idn: %d query request failed\n",
++			__func__, QUERY_DESC_IDN_DEVICE);
++		return -ENODEV;
++	}
++
++	/*
++	 * Get the number of user logical unit to check whether all
++	 * scsi_device finish initialization
++	 */
++	hpb_dev_info->num_lu = desc_buf[DEVICE_DESC_PARAM_NUM_LU];
++
++	ret = ufshpb_read_desc(hba, QUERY_DESC_IDN_GEOMETRY, 0, SELECTOR,
++			       desc_buf, hba->desc_size.geom_desc);
++	if (ret) {
++		dev_err(hba->dev, "%s: idn: %d query request failed\n",
++			__func__, QUERY_DESC_IDN_DEVICE);
++		return ret;
++	}
++
++	ret = ufshpb_get_geo_info(hba, desc_buf, hpb_dev_info);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static int ufshpb_get_lu_info(struct ufs_hba *hba, int lun,
++				    struct ufshpb_lu_info *hpb_lu_info,
++				    u8 *desc_buf)
++{
++	u16 max_active_rgns;
++	u8 lu_enable;
++	int ret;
++
++	ret = ufshpb_read_desc(hba, QUERY_DESC_IDN_UNIT, lun,
++			       SELECTOR, desc_buf,
++				   hba->desc_size.unit_desc);
++	if (ret) {
++		dev_err(hba->dev,
++			"%s: idn: %d lun: %d  query request failed",
++			__func__, QUERY_DESC_IDN_UNIT, lun);
++		return ret;
++	}
++
++	lu_enable = desc_buf[UNIT_DESC_PARAM_LU_ENABLE];
++	if (lu_enable != LU_ENABLED_HPB_FUNC)
++		return -ENODEV;
++
++	max_active_rgns = get_unaligned_be16(
++			desc_buf + UNIT_DESC_HPB_LU_MAX_ACTIVE_REGIONS);
++	if (!max_active_rgns) {
++		dev_err(hba->dev,
++			"lun %d wrong number of max active regions\n", lun);
++		return -ENODEV;
++	}
++
++	hpb_lu_info->num_blocks = get_unaligned_be64(
++			desc_buf + UNIT_DESC_PARAM_LOGICAL_BLK_COUNT);
++	hpb_lu_info->pinned_start = get_unaligned_be16(
++			desc_buf + UNIT_DESC_HPB_LU_PIN_REGION_START_OFFSET);
++	hpb_lu_info->num_pinned = get_unaligned_be16(
++			desc_buf + UNIT_DESC_HPB_LU_NUM_PIN_REGIONS);
++	hpb_lu_info->max_active_rgns = get_unaligned_be16(
++			desc_buf + UNIT_DESC_HPB_LU_MAX_ACTIVE_REGIONS);
++
++	return 0;
++}
++
++static void ufshpb_scan_hpb_lu(struct ufs_hba *hba,
++			       struct ufshpb_dev_info *hpb_dev_info,
++			       u8 *desc_buf)
++{
++	struct scsi_device *sdev;
++	struct ufshpb_lu *hpb;
++	int find_hpb_lu = 0;
++	int ret;
++
++	INIT_LIST_HEAD(&ufshpb_drv.lh_hpb_lu);
++
++	shost_for_each_device(sdev, hba->host) {
++		struct ufshpb_lu_info hpb_lu_info = { 0 };
++		int lun = sdev->lun;
++
++		if (lun >= hpb_dev_info->max_num_lun)
++			continue;
++
++		ret = ufshpb_get_lu_info(hba, lun, &hpb_lu_info, desc_buf);
++		if (ret)
++			continue;
++
++		hpb = ufshpb_alloc_hpb_lu(hba, lun, hpb_dev_info,
++					  &hpb_lu_info);
++		if (!hpb)
++			continue;
++
++		hpb->sdev_ufs_lu = sdev;
++		sdev->hostdata = hpb;
++
++		list_add_tail(&hpb->list_hpb_lu, &ufshpb_drv.lh_hpb_lu);
++		find_hpb_lu++;
++	}
++
++	if (find_hpb_lu) {
++		ufshpb_issue_hpb_reset_query(hba);
++		dev_set_drvdata(&hba->ufsf.hpb_dev, &ufshpb_drv);
++
++		list_for_each_entry(hpb, &ufshpb_drv.lh_hpb_lu, list_hpb_lu) {
++			dev_info(&hpb->hpb_lu_dev, "set state to present\n");
++			ufshpb_set_state(hpb, HPB_PRESENT);
++		}
++	}
++}
++
++static void ufshpb_probe_async(void *data, async_cookie_t cookie)
++{
++	struct ufshpb_dev_info hpb_dev_info = { 0 };
++	struct ufs_hba *hba = data;
++	char *desc_buf;
++	int ret;
++
++	desc_buf = kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
++	if (!desc_buf)
++		goto release_desc_buf;
++
++	ret = ufshpb_get_dev_info(hba, &hpb_dev_info, desc_buf);
++	if (ret)
++		goto release_desc_buf;
++
++	/*
++	 * Because HPB driver uses scsi_device data structure,
++	 * we should wait at this point until finishing initialization of all
++	 * scsi devices. Even if timeout occurs, HPB driver will search
++	 * the scsi_device list on struct scsi_host (shost->__host list_head)
++	 * and can find out HPB logical units in all scsi_devices
++	 */
++	wait_event_timeout(hba->ufsf.sdev_wait,
++			   (atomic_read(&hba->ufsf.slave_conf_cnt)
++				== hpb_dev_info.num_lu),
++			   SDEV_WAIT_TIMEOUT);
++
++	dev_dbg(hba->dev, "ufshpb: slave count %d, lu count %d\n",
++		atomic_read(&hba->ufsf.slave_conf_cnt), hpb_dev_info.num_lu);
++
++	ufshpb_scan_hpb_lu(hba, &hpb_dev_info, desc_buf);
++release_desc_buf:
++	kfree(desc_buf);
++}
++
++static int ufshpb_probe(struct device *dev)
++{
++	struct ufs_hba *hba;
++	struct ufsf_feature_info *ufsf;
++
++	if (dev->type != &ufshpb_dev_type)
++		return -ENODEV;
++
++	ufsf = container_of(dev, struct ufsf_feature_info, hpb_dev);
++	hba = container_of(ufsf, struct ufs_hba, ufsf);
++
++	async_schedule(ufshpb_probe_async, hba);
++	return 0;
++}
++
++static int ufshpb_remove(struct device *dev)
++{
++	struct ufshpb_lu *hpb, *n_hpb;
++	struct ufsf_feature_info *ufsf;
++	struct scsi_device *sdev;
++
++	ufsf = container_of(dev, struct ufsf_feature_info, hpb_dev);
++
++	dev_set_drvdata(&ufsf->hpb_dev, NULL);
++
++	list_for_each_entry_safe(hpb, n_hpb, &ufshpb_drv.lh_hpb_lu,
++				 list_hpb_lu) {
++		ufshpb_set_state(hpb, HPB_FAILED);
++
++		sdev = hpb->sdev_ufs_lu;
++		sdev->hostdata = NULL;
++
++		device_del(&hpb->hpb_lu_dev);
++
++		dev_info(&hpb->hpb_lu_dev, "hpb_lu_dev refcnt %d\n",
++			 kref_read(&hpb->hpb_lu_dev.kobj.kref));
++		put_device(&hpb->hpb_lu_dev);
++	}
++	dev_info(dev, "ufshpb: remove success\n");
++
++	return 0;
++}
++
++static struct ufshpb_driver ufshpb_drv = {
++	.drv = {
++		.name = "ufshpb_driver",
++		.owner = THIS_MODULE,
++		.probe = ufshpb_probe,
++		.remove = ufshpb_remove,
++		.bus = &ufsf_bus_type,
++	},
++	.ufshpb_ops = {
++		.reset = ufshpb_reset,
++		.reset_host = ufshpb_reset_host,
++		.suspend = ufshpb_suspend,
++		.resume = ufshpb_resume,
++	},
++};
++
++unsigned int ufshpb_host_map_kbytes = 1 * 1024;
++module_param(ufshpb_host_map_kbytes, uint, 0644);
++MODULE_PARM_DESC(ufshpb_host_map_kbytes,
++	 "ufshpb host mapping memory kilo-bytes for ufshpb memory-pool");
++
++static int __init ufshpb_init(void)
++{
++	int ret;
++
++	ret = driver_register(&ufshpb_drv.drv);
++	if (ret)
++		pr_err("ufshpb: driver register failed\n");
++	return ret;
++}
++
++static void __exit ufshpb_exit(void)
++{
++	driver_unregister(&ufshpb_drv.drv);
++}
++
++MODULE_AUTHOR("Yongmyong Lee <ymhungry.lee@samsung.com>");
++MODULE_AUTHOR("Jinyoung Choi <j-young.choi@samsung.com>");
++MODULE_DESCRIPTION("UFS Host Performance Booster Driver");
++
++module_init(ufshpb_init);
++module_exit(ufshpb_exit);
++MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+new file mode 100644
+index 000000000000..c6dd88e00849
+--- /dev/null
++++ b/drivers/scsi/ufs/ufshpb.h
+@@ -0,0 +1,185 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Universal Flash Storage Host Performance Booster
++ *
++ * Copyright (C) 2017-2018 Samsung Electronics Co., Ltd.
++ *
++ * Authors:
++ *	Yongmyung Lee <ymhungry.lee@samsung.com>
++ *	Jinyoung Choi <j-young.choi@samsung.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ * See the COPYING file in the top-level directory or visit
++ * <http://www.gnu.org/licenses/gpl-2.0.html>
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * This program is provided "AS IS" and "WITH ALL FAULTS" and
++ * without warranty of any kind. You are solely responsible for
++ * determining the appropriateness of using and distributing
++ * the program and assume all risks associated with your exercise
++ * of rights with respect to the program, including but not limited
++ * to infringement of third party rights, the risks and costs of
++ * program errors, damage to or loss of data, programs or equipment,
++ * and unavailability or interruption of operations. Under no
++ * circumstances will the contributor of this Program be liable for
++ * any damages of any kind arising from your use or distribution of
++ * this program.
++ *
++ * The Linux Foundation chooses to take subject only to the GPLv2
++ * license terms, and distributes only under these terms.
++ */
++
++#ifndef _UFSHPB_H_
++#define _UFSHPB_H_
++
++/* hpb response UPIU macro */
++#define MAX_ACTIVE_NUM				2
++#define MAX_INACTIVE_NUM			2
++#define HPB_RSP_NONE				0x00
++#define HPB_RSP_REQ_REGION_UPDATE		0x01
++#define DEV_DATA_SEG_LEN			0x14
++#define DEV_SENSE_SEG_LEN			0x12
++#define DEV_DES_TYPE				0x80
++#define DEV_ADDITIONAL_LEN			0x10
++
++/* hpb map & entries macro */
++#define HPB_RGN_SIZE_UNIT			512
++#define HPB_ENTRY_BLOCK_SIZE			4096
++#define HPB_ENTRY_SIZE				0x8
++#define PINNED_NOT_SET				U32_MAX
++
++/* hpb support chunk size */
++#define HPB_MULTI_CHUNK_HIGH			1
++
++/* hpb vender defined opcode */
++#define UFSHPB_READ				0xF8
++#define UFSHPB_READ_BUFFER			0xF9
++#define UFSHPB_WRITE_BUFFER			0xFA
++#define UFSHPB_READ_BUFFER_ID			0x01
++#define UFSHPB_WRITE_BUFFER_ID			0x02
++#define HPB_READ_BUFFER_CMD_LENGTH		10
++#define LU_ENABLED_HPB_FUNC			0x02
++
++#define SDEV_WAIT_TIMEOUT			(10 * HZ)
++#define MAP_REQ_TIMEOUT				(30 * HZ)
++#define HPB_RESET_REQ_RETRIES			10
++#define HPB_RESET_REQ_MSLEEP			2
++
++#define SELECTOR 0
++
++enum UFSHPB_STATE {
++	HPB_PRESENT = 1,
++	HPB_SUSPEND,
++	HPB_FAILED,
++	HPB_RESET,
++};
++
++enum HPB_RGN_STATE {
++	HPB_RGN_INACTIVE,
++	HPB_RGN_ACTIVE,
++	/* pinned regions are always active */
++	HPB_RGN_PINNED,
++};
++
++enum HPB_SRGN_STATE {
++	HPB_SRGN_UNUSED,
++	HPB_SRGN_DIRTY,
++	HPB_SRGN_CLEAN,
++	HPB_SRGN_ISSUED,
++};
++
++/**
++ * struct ufshpb_dev_info - UFSHPB device related info
++ * @max_num_lun: maximum number of logical unit that HPB is supported
++ * @num_ln: the number of user logical unit to check whether all lu finished
++ *          initialization
++ * @rgn_size: device reported HPB region size
++ * @srgn_size: device reported HPB sub-region size
++ */
++struct ufshpb_dev_info {
++	int max_num_lun;
++	int num_lu;
++	int rgn_size;
++	int srgn_size;
++};
++
++/**
++ * struct ufshpb_lu_info - UFSHPB logical unit related info
++ * @num_blocks: the number of logical block
++ * @pinned_start: the start region number of pinned region
++ * @num_pinned: the number of pinned regions
++ * @max_active_rgns: maximum number of active regions
++ */
++struct ufshpb_lu_info {
++	int num_blocks;
++	int pinned_start;
++	int num_pinned;
++	int max_active_rgns;
++};
++
++struct ufshpb_subregion {
++	enum HPB_SRGN_STATE srgn_state;
++	int rgn_idx;
++	int srgn_idx;
++};
++
++struct ufshpb_region {
++	struct ufshpb_subregion *srgn_tbl;
++	enum HPB_RGN_STATE rgn_state;
++	int rgn_idx;
++	int srgn_cnt;
++};
++
++struct ufshpb_stats {
++	atomic_t hit_cnt;
++	atomic_t miss_cnt;
++	atomic_t rb_noti_cnt;
++	atomic_t rb_active_cnt;
++	atomic_t rb_inactive_cnt;
++	atomic_t map_req_cnt;
++};
++
++struct ufshpb_lu {
++	int lun;
++
++	struct device hpb_lu_dev;
++	struct scsi_device *sdev_ufs_lu;
++
++	struct ufshpb_region *rgn_tbl;
++
++	spinlock_t hpb_state_lock;
++	atomic_t hpb_state; /* hpb_state_lock */
++
++	/* pinned region information */
++	u32 lu_pinned_start;
++	u32 lu_pinned_end;
++
++	/* HPB related configuration */
++	u32 rgns_per_lu;
++	u32 srgns_per_lu;
++	int srgns_per_rgn;
++	u32 srgn_mem_size;
++	u32 entries_per_rgn_mask;
++	u32 entries_per_rgn_shift;
++	u32 entries_per_srgn;
++	u32 entries_per_srgn_mask;
++	u32 entries_per_srgn_shift;
++	u32 pages_per_srgn;
++
++	struct ufshpb_stats stats;
++
++	struct ufsf_feature_info *ufsf;
++	struct list_head list_hpb_lu;
++};
++
++extern struct device_type ufshpb_dev_type;
++extern struct bus_type ufsf_bus_type;
++
++#endif /* End of Header */
+-- 
 2.17.1
