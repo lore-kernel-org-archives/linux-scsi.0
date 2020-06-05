@@ -2,300 +2,99 @@ Return-Path: <SRS0=+N3d=7S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DFB0C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 15:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5407C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 16:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23226206DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 15:32:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="YIscl53H";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="E9Es1dWQ"
+	by mail.kernel.org (Postfix) with ESMTP id C07D8206DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 16:50:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727863AbgFEPcc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Jun 2020 11:32:32 -0400
-Received: from esa5.microchip.iphmx.com ([216.71.150.166]:47933 "EHLO
-        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726906AbgFEPcc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 11:32:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1591371151; x=1622907151;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:mime-version;
-  bh=Ics+oXP+EHtlDhPW4+AfO+Q0awYLoNYEDGJ0RGaDDgI=;
-  b=YIscl53HXvavTE6IzHvxhgGjvaz2Dhm9GI4deQFWtsbkiysin7LF7AWQ
-   v867fw6+O/JSBHgIDZP9+YkXuHAISWd8LEt+wMT52m6V61v9AKWJo7uyh
-   tGeBtpCPFhXGvII8RsETt8wq5D54yEM1FqbLwnzqCM/tAzFJ55jnOrsIk
-   m3AO/vlKfRA2va2tWsE4m1AYwBLEvGSaO20Ca+udu7lLU12C3LnqGaIcn
-   q2Hkv0Ije5OaJuixSqNa26JELb4B1Sy6zFSUkhZ2Qyq+CBnI2zx6NEby/
-   9aNS6Kfp6XXd3DVCcUdVBssmTVRlzteI4arndwPJmZ59aqMxLpgB7nYwQ
-   A==;
-IronPort-SDR: RmEvNFWGUJHU+PTPIMOildiIUqlLUfiRThg2/A7n3JXm9CESh/Fk8ya+64MBk3tR9Rrv6Im6aB
- xVNfE8jFI0bB+1K7tSl668a6bYFENg1FOS2/GyHLqNeDoyxuOW57GQcJ1fBLHY/1F19EXdJho4
- LPnGo5qgMNHajhF3SGd947dU90Gp456DlT2epXlD2tajP8t7FN0IkgbvGOKeCQ+bQhJSA1dUvv
- OXu9VjFSSc0e5W+o6EQ3iIR76UvXlNzNuwV0nkvu8iG7ET5K2+6/dHNBOeImRyrTguGV82Lcsn
- 1PY=
-X-IronPort-AV: E=Sophos;i="5.73,476,1583218800"; 
-   d="scan'208";a="78362842"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 Jun 2020 08:32:30 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 5 Jun 2020 08:32:29 -0700
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
- Transport; Fri, 5 Jun 2020 08:32:14 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fceSkZRV+MhxJdTH5jmBPjadYFtwb96WW7ImfwZjk8FLLPIQqfIvfbK8EUAaG/TZJpk1eFrTqXk1QHQFGDAKw54IAZe3oJa/PCebwQaXBx3AauLPegaxm3uSapwSezHyf02cbzDfv++9RkWlNIOhelsq9s5M82JljNtAvohDuIk2DPCRc60yQX8LJxAca7h1XXQ8juGFYb8DVNNRn/FdBX2iiWp1LBcf9As/EK1E9yeyi5rVW2BAkCam/zH+tOYihKsMccCE064wj0l2y2xupamAF4gZKT4qgL1HkOh+4BmFryjMlK5RhxHY4Oat+132BEJMR9hvIGwj6d4mSUA1LQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sY8ukDhlQmob86kUCnuXx2NoYxj48dzRn+lwpYI+D2c=;
- b=Jrf7X3mFp3nDGcfnb5DOHLCyZkRIlirbB/Y20XUTH5Ac1rT/B23hN3WrmI7TcI3bPjiaAftKGM+LB+d8JQ2JAUXFfNUOq2AZr3FxwUJbDDjCjNT6qWTebPX8oAUYTnfaOikzQ9PyDFVf4ZcbotPJWKKW2pSQtbl2+dIqsMUDrMOdrRxv+YV24jG0nfEWiE5iyyUUWSQoGCOgBUZ6KqJcBN/kqztWOdsBu1jqIMCNr5VTLdH/1fvGYkEcfuwGoGtE1LWwweanVjLBAVfo1aSEUCioXQAvzwyAc5xZogRuyOd3XTuZr00G6YwJvvO0w0jQouVY9h9Af1VNA4jwUge1uA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sY8ukDhlQmob86kUCnuXx2NoYxj48dzRn+lwpYI+D2c=;
- b=E9Es1dWQDtzzd32bktEVR8u2s4Nk27WdM8synPvjNFvZxp3kuZv8HFbzd9/NgYa00L5ZE+oBIf4U43fKE/aLjMj5hC7HP8W8PtW7Ce8azHpr32K7MvfV6oS6M+l3v+2OmTmMp5y/mjCbzmU17icQGdyV6Y38hRkneHQKNNht5W0=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB3119.namprd11.prod.outlook.com (2603:10b6:805:cc::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.18; Fri, 5 Jun
- 2020 15:32:26 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5907:a4c5:ee9b:8cde]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5907:a4c5:ee9b:8cde%7]) with mapi id 15.20.3066.019; Fri, 5 Jun 2020
- 15:32:25 +0000
-From:   <Don.Brace@microchip.com>
-To:     <hare@suse.de>, <martin.petersen@oracle.com>
-CC:     <hch@lst.de>, <james.bottomley@hansenpartnership.com>,
-        <john.garry@huawei.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH RFC v3 00/41] scsi: enable reserved commands for LLDDs
-Thread-Topic: [PATCH RFC v3 00/41] scsi: enable reserved commands for LLDDs
-Thread-Index: AQHWHvI16e8yEMfm40m6UaRagmZt9KjI9ulw
-Date:   Fri, 5 Jun 2020 15:32:25 +0000
-Message-ID: <SN6PR11MB2848512EB578D01F981F8705E1860@SN6PR11MB2848.namprd11.prod.outlook.com>
+        id S1726639AbgFEQuN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Jun 2020 12:50:13 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41808 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725961AbgFEQuN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 5 Jun 2020 12:50:13 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 53E13AD2C;
+        Fri,  5 Jun 2020 16:50:15 +0000 (UTC)
+Subject: Re: [PATCH RFC v3 00/41] scsi: enable reserved commands for LLDDs
+To:     Don.Brace@microchip.com, martin.petersen@oracle.com
+Cc:     hch@lst.de, james.bottomley@hansenpartnership.com,
+        john.garry@huawei.com, ming.lei@redhat.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org
 References: <20200430131904.5847-1-hare@suse.de>
-In-Reply-To: <20200430131904.5847-1-hare@suse.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: yes
-X-MS-TNEF-Correlator: 
-authentication-results: suse.de; dkim=none (message not signed)
- header.d=none;suse.de; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.211.63]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 5bab6d24-800d-4eba-abbf-08d80965a656
-x-ms-traffictypediagnostic: SN6PR11MB3119:
-x-microsoft-antispam-prvs: <SN6PR11MB3119F73A8B89884BFF37100FE1860@SN6PR11MB3119.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:4303;
-x-forefront-prvs: 0425A67DEF
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 8c4heDzEtJ8x/k/kZnWLAiy7NNOjAXybjUj3ZKc+HyIgCXS0sNDP67SKqoN5S6U7uEhDi3dh3jgGWbCE1ay+9N1jjDiOwMLUWZwsUAO2fGr8XknVrYvP4DOhpy82helL6EeWmbkAePILXji4t2uoZLDhsIhrWeGvThM6yNYG/n4cm9Td9S7KutQHPn3NXizInQgIq3WA8eo1XB+wz6pDjlUUxcDRmsdrN4YjVdt2FdLmSLgelijaMOIyrsEfpyOlPWDh141ZFc6oMnPPOoNI4BEjwc1tGAIINRoUXKBvJL8c1+76rU0T6yK6BBBmRdUCYOENFdSMSrSVrNQj13f+CQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(376002)(346002)(136003)(396003)(39860400002)(366004)(86362001)(52536014)(6506007)(9686003)(55016002)(110136005)(99936003)(54906003)(4744005)(5660300002)(26005)(7696005)(66446008)(4326008)(76116006)(71200400001)(66476007)(478600001)(8676002)(186003)(316002)(66946007)(8936002)(2906002)(66616009)(64756008)(33656002)(66556008);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: mWH9qGIwjXmwYOn/vp1Gvbr7HpKZfyqVTIWbmmCG+o1X5hl2ISngudLIB/8OWF518lNjTCuqYSE5ULjKnEbTeNZaWOy9T+SwHdvWZ/vKuKeCO8LrWFSDc/FuIXDzJpwfzDTi+ukvfAoWINW7dr1javo/N9l+L3M//GBRxFRhhBxdVPUPsOtZNGv4qWPckFDKiumRF1aVIlklmBam4UuRTRWxrLfv7tZL1txictlb3hlpZPUcOKDsATlnaspMmaEk1fJqhBlRZyJ6HZQLRDSK/HYsEoE0/qkLhbNBM0f1wwoPX8p63aW80TWNc4w2MPdG7dTKDTvUEzyGMrx6JJ3EPDSeJHEKmvnVTTtaZI5uGAO44MfDuOXMun7YSa1aPTCVuqxIm4sT8AIXit3qvrpcbxcw2ZvkMmXou+L0vt+OUqiwwkDhRmdh/A2MV8N+9bpp3bOd1nJhQErQH9RMfe2Ny2d1G/ZteRPjvGgFRuWh5GE=
-x-ms-exchange-transport-forked: True
-Content-Type: multipart/mixed;
-        boundary="_002_SN6PR11MB2848512EB578D01F981F8705E1860SN6PR11MB2848namp_"
+ <SN6PR11MB2848512EB578D01F981F8705E1860@SN6PR11MB2848.namprd11.prod.outlook.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <1331858c-6111-aab3-ad6e-16e27661a35c@suse.de>
+Date:   Fri, 5 Jun 2020 18:50:07 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5bab6d24-800d-4eba-abbf-08d80965a656
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jun 2020 15:32:25.8940
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7g182UbRctKPC21SUFgDC0BQw3W+/jpxRQMy+/BIZSf+G88ZHKksrk6SA1swjanTeYHNF4HjTQiBwK9ubo5MiQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3119
+In-Reply-To: <SN6PR11MB2848512EB578D01F981F8705E1860@SN6PR11MB2848.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---_002_SN6PR11MB2848512EB578D01F981F8705E1860SN6PR11MB2848namp_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On 6/5/20 5:32 PM, Don.Brace@microchip.com wrote:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git reserved-tags.v3
+> 
+> As usual, comments and reviews are welcome.
+> 
+> I cloned your tree and ran some tests using hpsa.
+> 
+> I used 3 SATA HBA disks, 3 SAS HBA disks, 2 LOGICAL VOLUMES using HDDs, and 2 LOGICAL VOLUMES using SDDs for ioaccel path.
+> 
+> I have an IO stress test that does mkfs, mount/umount, fio, and fsck to the above volumes while doing sg_reset opeations in parallel.
+> 
+> The stress test has survived 2 full days of testing.
+> 
+> However, my insmod/rmmod test causes a kernel panic.
+> 
+> Not sure why yet. I had re-cloned yesterday an d the panic is still there.
+> 
+> Earlier kernel versions do not panic on rmmod.
+> 
+> --
+> 2.16.4
+> 
+Ah, right. Of course.
 
+Should be fixed with this patch:\
 
-git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git reserved-=
-tags.v3
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fdc291c47b9b..87469908524c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1885,9 +1885,9 @@ void scsi_forget_host(struct Scsi_Host *shost)
+                 goto restart;
+         }
+         /* Remove virtual device last, might be needed to send commands */
++       spin_unlock_irqrestore(shost->host_lock, flags);
+         if (virtual_sdev)
+                 __scsi_remove_device(virtual_sdev);
+-       spin_unlock_irqrestore(shost->host_lock, flags);
+  }
 
-As usual, comments and reviews are welcome.
+  /**
 
-I cloned your tree and ran some tests using hpsa.
+Can you test with that?
 
-I used 3 SATA HBA disks, 3 SAS HBA disks, 2 LOGICAL VOLUMES using HDDs, and=
- 2 LOGICAL VOLUMES using SDDs for ioaccel path.
+Cheers,
 
-I have an IO stress test that does mkfs, mount/umount, fio, and fsck to the=
- above volumes while doing sg_reset opeations in parallel.
-
-The stress test has survived 2 full days of testing.
-
-However, my insmod/rmmod test causes a kernel panic.
-
-Not sure why yet. I had re-cloned yesterday an d the panic is still there.
-
-Earlier kernel versions do not panic on rmmod.
-
---
-2.16.4
-
-
---_002_SN6PR11MB2848512EB578D01F981F8705E1860SN6PR11MB2848namp_
-Content-Type: application/octet-stream;
-	name="reserved-tags.v3_hpsa_rmmod_stack_trace"
-Content-Description: reserved-tags.v3_hpsa_rmmod_stack_trace
-Content-Disposition: attachment;
-	filename="reserved-tags.v3_hpsa_rmmod_stack_trace"; size=7554;
-	creation-date="Fri, 05 Jun 2020 14:23:25 GMT";
-	modification-date="Fri, 05 Jun 2020 14:20:28 GMT"
-Content-Transfer-Encoding: base64
-
-WyAgNDY1LjQxODAzMV0gTk1JIHdhdGNoZG9nOiBXYXRjaGRvZyBkZXRlY3RlZCBoYXJkIExPQ0tV
-UCBvbiBjcHUgNTAKWyAgNDY1LjQxODAzMl0gTW9kdWxlcyBsaW5rZWQgaW46IHh0X0NIRUNLU1VN
-IHh0X01BU1FVRVJBREUgeHRfY29ubnRyYWNrIGlwdF9SRUpFQ1QgbmZ0X2NvdW50ZXIgbmZfbmF0
-X3RmdHAgbmZ0X29ianJlZiBuZl9jb25udHJhY2tfdGZ0cCB0dW4gYnJpZGdlIHN0cCBsbGMgbmZ0
-X2ZpYl9pbmV0IG5mdF9maWJfaXB2NCBuZnRfZmliX2lwdjYgbmZ0X2ZpYiBuZnRfcmVqZWN0X2lu
-ZXQgbmZfcmVqZWN0X2lwdjQgbmZfcmVqZWN0X2lwdjYgbmZ0X3JlamVjdCBuZnRfY3QgbmZ0X2No
-YWluX25hdCBuZl9uYXQgbmZfY29ubnRyYWNrIHJma2lsbCBuZl9kZWZyYWdfaXB2NiBuZl9kZWZy
-YWdfaXB2NCBpcDZfdGFibGVzIG5mdF9jb21wYXQgaXBfc2V0IG5mX3RhYmxlcyBuZm5ldGxpbmsg
-c3VucnBjIHZmYXQgZmF0IGludGVsX3JhcGxfbXNyIGludGVsX3JhcGxfY29tbW9uIHNiX2VkYWMg
-eDg2X3BrZ190ZW1wX3RoZXJtYWwgaW50ZWxfcG93ZXJjbGFtcCBpcG1pX3NzaWYgY29yZXRlbXAg
-a3ZtX2ludGVsIGt2bSBpVENPX3dkdCBpVENPX3ZlbmRvcl9zdXBwb3J0IGlycWJ5cGFzcyBjcmN0
-MTBkaWZfcGNsbXVsIGNyYzMyX3BjbG11bCBnaGFzaF9jbG11bG5pX2ludGVsIGludGVsX2NzdGF0
-ZSBpbnRlbF91bmNvcmUgaXBtaV9zaSBpbnRlbF9yYXBsX3BlcmYgaW9hdGRtYSBqb3lkZXYgc2Vz
-IHBjc3BrciBscGNfaWNoIGhwaWxvIGkyY19pODAxIGhwd2R0IGVuY2xvc3VyZSBpcG1pX2Rldmlu
-dGYgZGNhIGlwbWlfbXNnaGFuZGxlciBhY3BpX3RhZCBhY3BpX3Bvd2VyX21ldGVyIGlwX3RhYmxl
-cyB4ZnMgbGliY3JjMzJjIG1nYWcyMDAgZHJtX2ttc19oZWxwZXIgc3lzY29weWFyZWEgc3lzZmls
-bHJlY3Qgc3lzaW1nYmx0IGZiX3N5c19mb3BzIGNlYyBkcm1fdnJhbV9oZWxwZXIgZHJtX3R0bV9o
-ZWxwZXIgdHRtIHNkX21vZCB0MTBfcGkgc2cgYWhjaSBsaWJhaGNpIGRybSB1YXMgbGliYXRhIHVz
-Yl9zdG9yYWdlIHRnMyBjcmMzMmNfaW50ZWwgaTJjX2FsZ29fYml0IGhwc2EoLSkKWyAgNDY1LjQx
-ODA0N10gIHNjc2lfdHJhbnNwb3J0X3NhcyB3bWkgZG1fbWlycm9yIGRtX3JlZ2lvbl9oYXNoIGRt
-X2xvZyBkbV9tb2QKWyAgNDY1LjQxODA0OV0gQ1BVOiA1MCBQSUQ6IDM0NTUgQ29tbTogcm1tb2Qg
-Tm90IHRhaW50ZWQgNS43LjAtcmMxKyAjMQpbICA0NjUuNDE4MDQ5XSBIYXJkd2FyZSBuYW1lOiBI
-UCBQcm9MaWFudCBNTDM1MCBHZW45L1Byb0xpYW50IE1MMzUwIEdlbjksIEJJT1MgUDkyIDEwLzE3
-LzIwMTgKWyAgNDY1LjQxODA1MF0gUklQOiAwMDEwOm5hdGl2ZV9xdWV1ZWRfc3Bpbl9sb2NrX3Ns
-b3dwYXRoKzB4NWIvMHgxYzAKWyAgNDY1LjQxODA1MF0gQ29kZTogNmQgZjAgMGYgYmEgMmYgMDgg
-MGYgOTIgYzAgMGYgYjYgYzAgYzEgZTAgMDggODkgYzIgOGIgMDcgMzAgZTQgMDkgZDAgYTkgMDAg
-MDEgZmYgZmYgNzUgNDcgODUgYzAgNzQgMGUgOGIgMDcgODQgYzAgNzQgMDggZjMgOTAgPDhiPiAw
-NyA4NCBjMCA3NSBmOCBiOCAwMSAwMCAwMCAwMCA2NiA4OSAwNyBjMyA4YiAzNyA4MSBmZSAwMCAw
-MSAwMApbICA0NjUuNDE4MDUxXSBSU1A6IDAwMTg6ZmZmZmIwZGJjMjc1YmQyOCBFRkxBR1M6IDAw
-MDAwMDAyClsgIDQ2NS40MTgwNTJdIFJBWDogMDAwMDAwMDAwMDAwMDEwMSBSQlg6IDAwMDAwMDAw
-MDAwMDAyNDYgUkNYOiAwMDAwMDAwMDAwMDAwMDAwClsgIDQ2NS40MTgwNTJdIFJEWDogMDAwMDAw
-MDAwMDAwMDAwMCBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJOiBmZmZmOGM4MzI2YmZkODMwClsg
-IDQ2NS40MTgwNTJdIFJCUDogMDAwMDAwMDAwMDAwMDAwMCBSMDg6IDAwMDAwMDAwMDAwMDAzYmUg
-UjA5OiAwMDAwMDAwMDAwMDAwMDAwClsgIDQ2NS40MTgwNTNdIFIxMDogMDAwMDAwMDAwMDAwMDAw
-MCBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgUjEyOiBmZmZmOGM4MzI2OWJkODIwClsgIDQ2NS40MTgw
-NTNdIFIxMzogZmZmZmZmZmZjMDM1ODE1MCBSMTQ6IGZmZmY4YzgzMjQ1Mjc4MDAgUjE1OiAwMDAw
-MDAwMDAwMDAwMDAwClsgIDQ2NS40MTgwNTNdIEZTOiAgMDAwMDdmNDQwYzMyNjc0MCgwMDAwKSBH
-UzpmZmZmOGM4NTM3YjgwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDAKWyAgNDY1LjQx
-ODA1NF0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMwpb
-ICA0NjUuNDE4MDU0XSBDUjI6IDAwMDA1NTdhNjVlZGVlMDggQ1IzOiAwMDAwMDAwM2VjMmE2MDAy
-IENSNDogMDAwMDAwMDAwMDE2MDZlMApbICA0NjUuNDE4MDU0XSBDYWxsIFRyYWNlOgpbICA0NjUu
-NDE4MDU0XSAgX3Jhd19zcGluX2xvY2tfaXJxc2F2ZSsweDIyLzB4MzAKWyAgNDY1LjQxODA1NV0g
-IHNjc2lfZGV2aWNlX2Rldl9yZWxlYXNlX3VzZXJjb250ZXh0KzB4NDYvMHgyYjAKWyAgNDY1LjQx
-ODA1NV0gID8gX19jYW5jZWxfd29ya190aW1lcisweDEwMy8weDE5MApbICA0NjUuNDE4MDU1XSAg
-ZXhlY3V0ZV9pbl9wcm9jZXNzX2NvbnRleHQrMHgyMS8weDYwClsgIDQ2NS40MTgwNTVdICBkZXZp
-Y2VfcmVsZWFzZSsweDI3LzB4ODAKWyAgNDY1LjQxODA1Nl0gIGtvYmplY3RfcHV0KzB4YTYvMHgx
-YjAKWyAgNDY1LjQxODA1Nl0gIHNjc2lfZm9yZ2V0X2hvc3QrMHg3My8weDlkClsgIDQ2NS40MTgw
-NTZdICBzY3NpX3JlbW92ZV9ob3N0KzB4NzIvMHgxMTAKWyAgNDY1LjQxODA1Nl0gIGhwc2FfcmVt
-b3ZlX29uZSsweGFkLzB4MWEwIFtocHNhXQpbICA0NjUuNDE4MDU3XSAgcGNpX2RldmljZV9yZW1v
-dmUrMHgzYi8weGMwClsgIDQ2NS40MTgwNTddICBkZXZpY2VfcmVsZWFzZV9kcml2ZXJfaW50ZXJu
-YWwrMHhlNS8weDFjMApbICA0NjUuNDE4MDU3XSAgZHJpdmVyX2RldGFjaCsweDQ2LzB4ODcKWyAg
-NDY1LjQxODA1N10gIGJ1c19yZW1vdmVfZHJpdmVyKzB4NzcvMHhjYwpbICA0NjUuNDE4MDU4XSAg
-cGNpX3VucmVnaXN0ZXJfZHJpdmVyKzB4MmEvMHhhMApbICA0NjUuNDE4MDU4XSAgaHBzYV9jbGVh
-bnVwKzB4Yy8weDRhNyBbaHBzYV0KWyAgNDY1LjQxODA1OF0gIF9feDY0X3N5c19kZWxldGVfbW9k
-dWxlKzB4MTM5LzB4MjgwClsgIDQ2NS40MTgwNThdICBkb19zeXNjYWxsXzY0KzB4NTUvMHgxYjAK
-WyAgNDY1LjQxODA1OV0gIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsweDQ0LzB4YTkK
-WyAgNDY1LjQxODA1OV0gUklQOiAwMDMzOjB4N2Y0NDBiMzE5N2RiClsgIDQ2NS40MTgwNjBdIENv
-ZGU6IDczIDAxIGMzIDQ4IDhiIDBkIGFkIGY2IDJiIDAwIGY3IGQ4IDY0IDg5IDAxIDQ4IDgzIGM4
-IGZmIGMzIDY2IDJlIDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwIDkwIGYzIDBmIDFlIGZhIGI4IGIw
-IDAwIDAwIDAwIDBmIDA1IDw0OD4gM2QgMDEgZjAgZmYgZmYgNzMgMDEgYzMgNDggOGIgMGQgN2Qg
-ZjYgMmIgMDAgZjcgZDggNjQgODkgMDEgNDgKWyAgNDY1LjQxODA2MF0gUlNQOiAwMDJiOjAwMDA3
-ZmZlNmM2ZDRmYzggRUZMQUdTOiAwMDAwMDIwNiBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDBiMApb
-ICA0NjUuNDE4MDYxXSBSQVg6IGZmZmZmZmZmZmZmZmZmZGEgUkJYOiAwMDAwNTU3YTY1ZWQ0N2Ew
-IFJDWDogMDAwMDdmNDQwYjMxOTdkYgpbICA0NjUuNDE4MDYxXSBSRFg6IDAwMDAwMDAwMDAwMDAw
-MGEgUlNJOiAwMDAwMDAwMDAwMDAwODAwIFJESTogMDAwMDU1N2E2NWVkNDgwOApbICA0NjUuNDE4
-MDYxXSBSQlA6IDAwMDAwMDAwMDAwMDAwMDAgUjA4OiAwMDAwN2ZmZTZjNmQzZjQxIFIwOTogMDAw
-MDAwMDAwMDAwMDAwMApbICA0NjUuNDE4MDYxXSBSMTA6IDAwMDA3ZjQ0MGIzOGI4ZTAgUjExOiAw
-MDAwMDAwMDAwMDAwMjA2IFIxMjogMDAwMDdmZmU2YzZkNTFmMApbICA0NjUuNDE4MDYyXSBSMTM6
-IDAwMDA3ZmZlNmM2ZDVjNTggUjE0OiAwMDAwNTU3YTY1ZWQ0MmEwIFIxNTogMDAwMDU1N2E2NWVk
-NDdhMApbICA0NjUuNDE4MDYyXSBLZXJuZWwgcGFuaWMgLSBub3Qgc3luY2luZzogSGFyZCBMT0NL
-VVAKWyAgNDY1LjQxODA2Ml0gQ1BVOiA1MCBQSUQ6IDM0NTUgQ29tbTogcm1tb2QgTm90IHRhaW50
-ZWQgNS43LjAtcmMxKyAjMQpbICA0NjUuNDE4MDYzXSBIYXJkd2FyZSBuYW1lOiBIUCBQcm9MaWFu
-dCBNTDM1MCBHZW45L1Byb0xpYW50IE1MMzUwIEdlbjksIEJJT1MgUDkyIDEwLzE3LzIwMTgKWyAg
-NDY1LjQxODA2M10gQ2FsbCBUcmFjZToKWyAgNDY1LjQxODA2M10gIDxOTUk+ClsgIDQ2NS40MTgw
-NjNdICBkdW1wX3N0YWNrKzB4NTAvMHg3MApbICA0NjUuNDE4MDY0XSAgcGFuaWMrMHhmYi8weDJk
-NwpbICA0NjUuNDE4MDY0XSAgbm1pX3BhbmljLmNvbGQuMTArMHhjLzB4YwpbICA0NjUuNDE4MDY0
-XSAgd2F0Y2hkb2dfb3ZlcmZsb3dfY2FsbGJhY2suY29sZC43KzB4NWMvMHg3MApbICA0NjUuNDE4
-MDY0XSAgX19wZXJmX2V2ZW50X292ZXJmbG93KzB4NTIvMHhmMApbICA0NjUuNDE4MDY1XSAgaGFu
-ZGxlX3BtaV9jb21tb24rMHgxY2EvMHgyOTAKWyAgNDY1LjQxODA2NV0gID8gc2V0X3B0ZV92YWRk
-cl9wNGQrMHg0YS8weDYwClsgIDQ2NS40MTgwNjVdICA/IF9fbmF0aXZlX3NldF9maXhtYXArMHgy
-NC8weDMwClsgIDQ2NS40MTgwNjVdICA/IGdoZXNfY29weV90b2Zyb21fcGh5cysweDhmLzB4MTEw
-ClsgIDQ2NS40MTgwNjZdICA/IF9fZ2hlc19wZWVrX2VzdGF0dXMuaXNyYS4xMCsweDQ5LzB4YTAK
-WyAgNDY1LjQxODA2Nl0gIGludGVsX3BtdV9oYW5kbGVfaXJxKzB4YzkvMHgxYzAKWyAgNDY1LjQx
-ODA2Nl0gIHBlcmZfZXZlbnRfbm1pX2hhbmRsZXIrMHgyZC8weDUwClsgIDQ2NS40MTgwNjZdICBu
-bWlfaGFuZGxlKzB4NjEvMHgxNjAKWyAgNDY1LjQxODA2N10gIGRlZmF1bHRfZG9fbm1pKzB4NGUv
-MHgxMDAKWyAgNDY1LjQxODA2N10gIGRvX25taSsweDE1OS8weDFjMApbICA0NjUuNDE4MDY3XSAg
-ZW5kX3JlcGVhdF9ubWkrMHgxNi8weDUwClsgIDQ2NS40MTgwNjhdIFJJUDogMDAxMDpuYXRpdmVf
-cXVldWVkX3NwaW5fbG9ja19zbG93cGF0aCsweDViLzB4MWMwClsgIDQ2NS40MTgwNjhdIENvZGU6
-IDZkIGYwIDBmIGJhIDJmIDA4IDBmIDkyIGMwIDBmIGI2IGMwIGMxIGUwIDA4IDg5IGMyIDhiIDA3
-IDMwIGU0IDA5IGQwIGE5IDAwIDAxIGZmIGZmIDc1IDQ3IDg1IGMwIDc0IDBlIDhiIDA3IDg0IGMw
-IDc0IDA4IGYzIDkwIDw4Yj4gMDcgODQgYzAgNzUgZjggYjggMDEgMDAgMDAgMDAgNjYgODkgMDcg
-YzMgOGIgMzcgODEgZmUgMDAgMDEgMDAKWyAgNDY1LjQxODA2OV0gUlNQOiAwMDE4OmZmZmZiMGRi
-YzI3NWJkMjggRUZMQUdTOiAwMDAwMDAwMgpbICA0NjUuNDE4MDY5XSBSQVg6IDAwMDAwMDAwMDAw
-MDAxMDEgUkJYOiAwMDAwMDAwMDAwMDAwMjQ2IFJDWDogMDAwMDAwMDAwMDAwMDAwMApbICA0NjUu
-NDE4MDcwXSBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwMDAwMDAwMDAwMDAwIFJESTog
-ZmZmZjhjODMyNmJmZDgzMApbICA0NjUuNDE4MDcwXSBSQlA6IDAwMDAwMDAwMDAwMDAwMDAgUjA4
-OiAwMDAwMDAwMDAwMDAwM2JlIFIwOTogMDAwMDAwMDAwMDAwMDAwMApbICA0NjUuNDE4MDcxXSBS
-MTA6IDAwMDAwMDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAwMDAwMDAwIFIxMjogZmZmZjhjODMy
-NjliZDgyMApbICA0NjUuNDE4MDcxXSBSMTM6IGZmZmZmZmZmYzAzNTgxNTAgUjE0OiBmZmZmOGM4
-MzI0NTI3ODAwIFIxNTogMDAwMDAwMDAwMDAwMDAwMApbICA0NjUuNDE4MDcxXSAgPyBuYXRpdmVf
-cXVldWVkX3NwaW5fbG9ja19zbG93cGF0aCsweDViLzB4MWMwClsgIDQ2NS40MTgwNzFdICA/IG5h
-dGl2ZV9xdWV1ZWRfc3Bpbl9sb2NrX3Nsb3dwYXRoKzB4NWIvMHgxYzAKWyAgNDY1LjQxODA3Ml0g
-IDwvTk1JPgpbICA0NjUuNDE4MDcyXSAgX3Jhd19zcGluX2xvY2tfaXJxc2F2ZSsweDIyLzB4MzAK
-WyAgNDY1LjQxODA3Ml0gIHNjc2lfZGV2aWNlX2Rldl9yZWxlYXNlX3VzZXJjb250ZXh0KzB4NDYv
-MHgyYjAKWyAgNDY1LjQxODA3Ml0gID8gX19jYW5jZWxfd29ya190aW1lcisweDEwMy8weDE5MApb
-ICA0NjUuNDE4MDczXSAgZXhlY3V0ZV9pbl9wcm9jZXNzX2NvbnRleHQrMHgyMS8weDYwClsgIDQ2
-NS40MTgwNzNdICBkZXZpY2VfcmVsZWFzZSsweDI3LzB4ODAKWyAgNDY1LjQxODA3M10gIGtvYmpl
-Y3RfcHV0KzB4YTYvMHgxYjAKWyAgNDY1LjQxODA3M10gIHNjc2lfZm9yZ2V0X2hvc3QrMHg3My8w
-eDlkClsgIDQ2NS40MTgwNzRdICBzY3NpX3JlbW92ZV9ob3N0KzB4NzIvMHgxMTAKWyAgNDY1LjQx
-ODA3NF0gIGhwc2FfcmVtb3ZlX29uZSsweGFkLzB4MWEwIFtocHNhXQpbICA0NjUuNDE4MDc0XSAg
-cGNpX2RldmljZV9yZW1vdmUrMHgzYi8weGMwClsgIDQ2NS40MTgwNzRdICBkZXZpY2VfcmVsZWFz
-ZV9kcml2ZXJfaW50ZXJuYWwrMHhlNS8weDFjMApbICA0NjUuNDE4MDc1XSAgZHJpdmVyX2RldGFj
-aCsweDQ2LzB4ODcKWyAgNDY1LjQxODA3NV0gIGJ1c19yZW1vdmVfZHJpdmVyKzB4NzcvMHhjYwpb
-ICA0NjUuNDE4MDc1XSAgcGNpX3VucmVnaXN0ZXJfZHJpdmVyKzB4MmEvMHhhMApbICA0NjUuNDE4
-MDc1XSAgaHBzYV9jbGVhbnVwKzB4Yy8weDRhNyBbaHBzYV0KWyAgNDY1LjQxODA3Nl0gIF9feDY0
-X3N5c19kZWxldGVfbW9kdWxlKzB4MTM5LzB4MjgwClsgIDQ2NS40MTgwNzZdICBkb19zeXNjYWxs
-XzY0KzB4NTUvMHgxYjAKWyAgNDY1LjQxODA3Nl0gIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdm
-cmFtZSsweDQ0LzB4YTkKWyAgNDY1LjQxODA3Nl0gUklQOiAwMDMzOjB4N2Y0NDBiMzE5N2RiClsg
-IDQ2NS40MTgwNzddIENvZGU6IDczIDAxIGMzIDQ4IDhiIDBkIGFkIGY2IDJiIDAwIGY3IGQ4IDY0
-IDg5IDAxIDQ4IDgzIGM4IGZmIGMzIDY2IDJlIDBmIDFmIDg0IDAwIDAwIDAwIDAwIDAwIDkwIGYz
-IDBmIDFlIGZhIGI4IGIwIDAwIDAwIDAwIDBmIDA1IDw0OD4gM2QgMDEgZjAgZmYgZmYgNzMgMDEg
-YzMgNDggOGIgMGQgN2QgZjYgMmIgMDAgZjcgZDggNjQgODkgMDEgNDgKWyAgNDY1LjQxODA3N10g
-UlNQOiAwMDJiOjAwMDA3ZmZlNmM2ZDRmYzggRUZMQUdTOiAwMDAwMDIwNiBPUklHX1JBWDogMDAw
-MDAwMDAwMDAwMDBiMApbICA0NjUuNDE4MDc4XSBSQVg6IGZmZmZmZmZmZmZmZmZmZGEgUkJYOiAw
-MDAwNTU3YTY1ZWQ0N2EwIFJDWDogMDAwMDdmNDQwYjMxOTdkYgpbICA0NjUuNDE4MDc4XSBSRFg6
-IDAwMDAwMDAwMDAwMDAwMGEgUlNJOiAwMDAwMDAwMDAwMDAwODAwIFJESTogMDAwMDU1N2E2NWVk
-NDgwOApbICA0NjUuNDE4MDc4XSBSQlA6IDAwMDAwMDAwMDAwMDAwMDAgUjA4OiAwMDAwN2ZmZTZj
-NmQzZjQxIFIwOTogMDAwMDAwMDAwMDAwMDAwMApbICA0NjUuNDE4MDc5XSBSMTA6IDAwMDA3ZjQ0
-MGIzOGI4ZTAgUjExOiAwMDAwMDAwMDAwMDAwMjA2IFIxMjogMDAwMDdmZmU2YzZkNTFmMApbICA0
-NjUuNDE4MDc5XSBSMTM6IDAwMDA3ZmZlNmM2ZDVjNTggUjE0OiAwMDAwNTU3YTY1ZWQ0MmEwIFIx
-NTogMDAwMDU1N2E2NWVkNDdhMApbICA0NjUuNTIxNDk5XSBLZXJuZWwgT2Zmc2V0OiAweDE4ODAw
-MDAwIGZyb20gMHhmZmZmZmZmZjgxMDAwMDAwIChyZWxvY2F0aW9uIHJhbmdlOiAweGZmZmZmZmZm
-ODAwMDAwMDAtMHhmZmZmZmZmZmJmZmZmZmZmKQoK
-
---_002_SN6PR11MB2848512EB578D01F981F8705E1860SN6PR11MB2848namp_--
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
