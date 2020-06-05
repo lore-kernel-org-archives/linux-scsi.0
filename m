@@ -2,112 +2,99 @@ Return-Path: <SRS0=+N3d=7S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB318C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 19:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FDF6C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 20:05:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97B6C206FA
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 19:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C3D9206FA
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 20:05:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nwvDBXzX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gJAZhqq8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727064AbgFETY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Jun 2020 15:24:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40618 "EHLO
+        id S1727935AbgFEUFw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Jun 2020 16:05:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727010AbgFETY5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 15:24:57 -0400
+        with ESMTP id S1727863AbgFEUFw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 16:05:52 -0400
 Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82169C08C5C2;
-        Fri,  5 Jun 2020 12:24:57 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id k11so11310725ejr.9;
-        Fri, 05 Jun 2020 12:24:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03F9EC08C5C2;
+        Fri,  5 Jun 2020 13:05:51 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id x1so11390968ejd.8;
+        Fri, 05 Jun 2020 13:05:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=a6tAsRPhV3Cx+JvaoalRjPfpIYInNkIpjju6515gy3E=;
-        b=nwvDBXzXQXCGh6DGfkXdRoIsbt39xNptx2pjRidLidGX/JA8vOIqatc4HwaLYLCuVo
-         ASqFrkTKUYnbqRa6tLd7Gfn5yfPfA1vsNuPZzhk2dkSItmsGywOSVkIB6CcSJCLV667N
-         2xq5s2acIQ6HzDWzWorLFwucUEe/ACHLW3vsRfDwi1tysg868Xte8th4Pdly44RevBLh
-         213Hl105++NO/xLDxJUmx81gTI25e1lj/ATL33GdmTTAQbZ1B7mAjL64xSBVHeI1pwjg
-         Wu80XcEmtBiuRCUmanwqYh9fmw3YiMXLpEiVvvs257Z6MfgLJ2ymFV5lHpMdJ9KxBffa
-         dakw==
+        h=from:to:cc:subject:date:message-id;
+        bh=oXpENYoZNdPeFaa0kqGIkIEL7ooeWiWEmydsTCzHOgE=;
+        b=gJAZhqq8qvZ67jX77QOVCihXoXZdp1e7DQUWsZupu/M8dARkadrdlGNEPqdMGNZD1h
+         HIpF0eZ14M/Hvx85dJ9BFzicb1tLyhYgpqgczYKqmO+q0zj782ulQD5HYXjS96FcFcps
+         7DSWT9qGCLYgvUYYG2TZXekwgyrwcv4gs1gCXVYZVwBtVJILPXQyHDY17pGSMxWTDjM7
+         7TuZttqsvyn5dJRdYMciSsKdwUy/9xr8EQlRKd/t22FjOAI4G8VrdKieoW0rflvUR2nb
+         s0rLHTadCLjpcRvxAKzIFZp3rVlU6hXot7ZlU8Sg2XMo7Ai7kXzMHccdSFjxPy1DUNT2
+         gntA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=a6tAsRPhV3Cx+JvaoalRjPfpIYInNkIpjju6515gy3E=;
-        b=bAn4BtSwPEW587XRihINNReiIWOwNgmnQ930TjInNYQfEYdSIJhX64YzaVj2T+StIg
-         /WavoTeqD06WPVGd76M9omJEYGp3bi60DzgzemLHH1EjdYt+VE+9N520BFDJHoduVrxi
-         DpVCRFkClPZrExpRn6CvNjRNqfAM+4pLy4qtGYt2dYJjsF7OWx2PFihEdmBoN7wVQjJr
-         x3ZJ4u0aCB98nePBL9T4xCosN1PGtfc0AHF7TzpaXJdAP5o9W4gDn9D848ZVMWT9pa0D
-         fMS3yxx2ftIB4VjTkgqRTduPf1JWD9p3nUmHkYMVfUoZFWZGFQALwXBc7RRXNe6P+fEJ
-         TAXA==
-X-Gm-Message-State: AOAM533+LC3dpSTr6bAcGQ/2RJAzm2zFWkcSfvMmWPhrJ5tFAY+zwvee
-        aElwZVjuB3+ahup8UX+CEqk=
-X-Google-Smtp-Source: ABdhPJy1tY37mS/faSNjI4DE2G1XJUeWE1rL0T+U5o6qRu6hAO2nTsANr2z3msOTMfP78BwR3rw41A==
-X-Received: by 2002:a17:906:e0c:: with SMTP id l12mr9924037eji.435.1591385096146;
-        Fri, 05 Jun 2020 12:24:56 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bfcfd.dynamic.kabel-deutschland.de. [95.91.252.253])
-        by smtp.googlemail.com with ESMTPSA id dn15sm5225170ejc.26.2020.06.05.12.24.55
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 05 Jun 2020 12:24:55 -0700 (PDT)
-Message-ID: <2b4bb56b0a86c24ce96b6de178af16a0701aedc8.camel@gmail.com>
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Add SPDX GPL-2.0 to replace GPL v2
- boilerplate
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=oXpENYoZNdPeFaa0kqGIkIEL7ooeWiWEmydsTCzHOgE=;
+        b=YZra4vDebB1uqWyDjpqRJJdBhnGITExHh9V0aPkByZ1qx8qyyZepAaxIGPjKR7c42I
+         mYNry5/1HNAwS2jbKCFbcjLq3GdOMDbV9TCm6YS3HQvOpRef1hmusm/6bv/VYfcLQDxr
+         sc6xB4xg/Lnyiqc2eHaccxw0VSwl5SJd8W2hajyJyiZ97IpOOCvizJJAy1I6kZkkjA2D
+         cTqjWUFHG+vr/0nBrHLJim6QFIarmhTxcdmA1wrS6GppxaqdSyVU+gz0Xcl63wkjoSM+
+         zu2TRPPba6rNSLTESJ2d7nOgfKCNFCHP3dTBIuc/s+9foOIejdF+4oE/VlTr7CyX8n3A
+         wQSw==
+X-Gm-Message-State: AOAM531eBDv+IZxyOUPvS/3EREvoz4eTcqvSPtcjMuWsKkAByC+ffjDR
+        tMpBsbS0slAJzijvaUKCV9s=
+X-Google-Smtp-Source: ABdhPJxtn/Ht25J90zk+Z3seL4YW/tuU//8++ZP+q0l9Vc34DlkOMQq8Kp6kb20RUzBOllT/wt8lcw==
+X-Received: by 2002:a17:906:4350:: with SMTP id z16mr10085294ejm.139.1591387550586;
+        Fri, 05 Jun 2020 13:05:50 -0700 (PDT)
+Received: from localhost.localdomain (ip5f5bfcfd.dynamic.kabel-deutschland.de. [95.91.252.253])
+        by smtp.gmail.com with ESMTPSA id b21sm5224430ejz.28.2020.06.05.13.05.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Jun 2020 13:05:49 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        cang@codeaurora.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Fri, 05 Jun 2020 21:24:54 +0200
-In-Reply-To: <20200605191807.GJ1373@sol.localdomain>
-References: <20200605191439.19313-1-huobean@gmail.com>
-         <20200605191439.19313-2-huobean@gmail.com>
-         <20200605191807.GJ1373@sol.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        cang@codeaurora.org, ebiggers@kernel.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/2] scsi: ufs: cleanup UFS driver
+Date:   Fri,  5 Jun 2020 22:05:18 +0200
+Message-Id: <20200605200520.20831-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-06-05 at 12:18 -0700, Eric Biggers wrote:
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> >   /*
-> >    * Universal Flash Storage Host controller driver
-> > - *
-> > - * This code is based on drivers/scsi/ufs/ufs.h
-> >    * Copyright (C) 2011-2013 Samsung India Software Operations
-> >    *
-> >    * Authors:
-> >    *   Santosh Yaraganavi <santosh.sy@samsung.com>
-> >    *   Vinayak Holikatti <h.vinayak@samsung.com>
-> > - *
-> > - * This program is free software; you can redistribute it and/or
-> > - * modify it under the terms of the GNU General Public License
-> > - * as published by the Free Software Foundation; either version 2
-> > - * of the License, or (at your option) any later version.
-> > - * See the COPYING file in the top-level directory or visit
-> > - * <http://www.gnu.org/licenses/gpl-2.0.html>
-> 
-> This actually says GPL v2 or later.  Not GPL v2 only.
-> 
-> - Eric
+From: Bean Huo <beanhuo@micron.com>
 
-thanks, that shuold be "SPDX-License-Identifier: GPL-2.0-or-later".
+Cleanup, no functional change
 
-ok, let me update it.
+Changelog:
 
-Bean
+v2 -v3:
+    1. Change SPDX-License-Identifier: GPL-2.0 to
+       SPDX-License-Identifier: GPL-2.0-or-later (Eric Biggers)
+v1 - v2:
+    1. Split patch (Tomas Winkler)
+
+Bean Huo (2):
+  scsi: ufs: Add SPDX GPL-2.0 to replace GPL v2 boilerplate
+  scsi: ufs: remove wrapper function ufshcd_setup_clocks()
+
+ drivers/scsi/ufs/ufs.h           | 27 +-------------
+ drivers/scsi/ufs/ufshcd-pci.c    | 25 +------------
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 27 +-------------
+ drivers/scsi/ufs/ufshcd.c        | 62 +++++++-------------------------
+ drivers/scsi/ufs/ufshcd.h        | 27 +-------------
+ drivers/scsi/ufs/ufshci.h        | 27 +-------------
+ 6 files changed, 18 insertions(+), 177 deletions(-)
+
+-- 
+2.17.1
 
