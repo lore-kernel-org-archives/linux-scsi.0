@@ -2,68 +2,67 @@ Return-Path: <SRS0=+N3d=7S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3E5C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 14:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58613C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 14:56:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBC732070B
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 14:23:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31A6B2065C
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 14:56:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="a1aCNOIv"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="UieNmetr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728628AbgFEOXT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Jun 2020 10:23:19 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:35176 "EHLO mta-01.yadro.com"
+        id S1728072AbgFEO4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Jun 2020 10:56:33 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:37006 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728766AbgFEOXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 5 Jun 2020 10:23:16 -0400
+        id S1727114AbgFEO4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 5 Jun 2020 10:56:33 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id D415F4C84F;
-        Fri,  5 Jun 2020 14:23:13 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 4F9294A49D;
+        Fri,  5 Jun 2020 14:56:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1591366992;
-         x=1593181393; bh=E1NE57bdzzLLiDsjNC/LwG7ogqoub6rklwDXfB2z25A=; b=
-        a1aCNOIv1WK/Az5l1xpHBCnedVVWnM6tUfBh8tIpjdLM1xa7lwZClEUgwHNLH2Lr
-        I04+giArzaAZ2qj2fC3A9jCt9BiMXHktRxZg1pSqH/U9M7Sh3xnn9kgYS/fC2XAg
-        gPZuvbXIh6XZke3fGvQTyd9yrG4ckf/2yeehtnXBqzY=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1591368989; x=
+        1593183390; bh=hK5UW7fk6ycA8/izqnLe126UrSfd0sSzmiAdgwpDkxw=; b=U
+        ieNmetrJw4t403aCETV/RSTzl3UWYcbayAPJwQJUoJbG7XdsYW2P2cjmFa/S6aF5
+        qSw08+6ZnChFcKWcvjER1Ce4opvbWnBBgL61yIzzLQUaXMhBkV7ri09vul5gkgm0
+        ZEOrhnHT60GJt08MrO1uHN2cPRfqYu8DCHFfBqJNBg=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 84z2rE1vd9eN; Fri,  5 Jun 2020 17:23:12 +0300 (MSK)
+        with ESMTP id A1kT8fw3RmxJ; Fri,  5 Jun 2020 17:56:29 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 710274C164;
-        Fri,  5 Jun 2020 17:23:12 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id D0E484C87F;
+        Fri,  5 Jun 2020 17:56:28 +0300 (MSK)
 Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 5 Jun
- 2020 17:23:12 +0300
-Date:   Fri, 5 Jun 2020 17:23:11 +0300
+ 2020 17:56:28 +0300
 From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
+To:     <linux-scsi@vger.kernel.org>
+CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
         <target-devel@vger.kernel.org>, <linux@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
         Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
         Nilesh Javali <njavali@marvell.com>,
         Bart Van Assche <bvanassche@acm.org>,
         Daniel Wagner <dwagner@suse.de>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Martin Wilck <mwilck@suse.com>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Keep initiator ports after RSCN
-Message-ID: <20200605142311.GC56901@SPB-NB-133.local>
-References: <20200518183141.66621-1-r.bolshakov@yadro.com>
- <yq11rmx9b9w.fsf@ca-mkp.ca.oracle.com>
+Subject: [PATCH v2] scsi: qla2xxx: Keep initiator ports after RSCN
+Date:   Fri, 5 Jun 2020 17:44:37 +0300
+Message-ID: <20200605144435.27023-1-r.bolshakov@yadro.com>
+X-Mailer: git-send-email 2.26.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <yq11rmx9b9w.fsf@ca-mkp.ca.oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-Originating-IP: [172.17.204.212]
 X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
  T-EXCH-02.corp.yadro.com (172.17.10.102)
@@ -72,24 +71,84 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 02, 2020 at 09:42:06PM -0400, Martin K. Petersen wrote:
-> 
-> Roman,
-> 
-> > The driver performs SCR (state change registration) in all modes
-> > including pure target mode.
-> 
-> What is the current status of this patch? There was a bunch of going
-> back and forth wrt. whether this was the correct approach.
-> 
-> Thanks!
-> 
+The driver performs SCR (state change registration) in all modes
+including pure target mode.
 
-Hi Martin,
+For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for the
+port mentioned in the RSCN and fabric rescan is scheduled. During the
+rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
+the port that caused the RSCN.
 
-The patch has a logic error that prevents session deletion if N_Port ID
-was changed after fabric rescan and shouldn't be merged IMO. I'll send a
-correct v2 shortly.
+In target mode, the session deletion has an impact on ATIO handler,
+qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
+incoming from the deleted session. qlt_handle_cmd_for_atio() and
+qlt_handle_task_mgmt() return -EFAULT if they are not able to find
+session of the command/TMF, and that results in invocation of
+qlt_send_busy():
 
-Thanks,
-Roman
+  qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
+  qla_target(0): Unable to send command to target, sending BUSY status
+
+Such response causes command timeout on the initiator. Error handler
+thread on the initiator will be spawned to abort the commands:
+
+  scsi 23:0:0:0: tag#0 abort scheduled
+  scsi 23:0:0:0: tag#0 aborting command
+  qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
+  qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
+
+Command abort is rejected by target and fails (2003), error handler then
+tries to perform DEVICE RESET and TARGET RESET but they're also doomed
+to fail because TMFs are ignored for the deleted sessions.
+
+Then initiator makes BUS RESET that resets the link via
+qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator port
+up, SAN switch detects that and sends RSCN to the target port and it
+fails again the same way as described above. It never goes out of the
+loop.
+
+The change breaks the RSCN loop by keeping initiator sessions mentioned
+in RSCN payload in all modes, including dual and pure target mode.
+
+Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
+Cc: Quinn Tran <qutran@marvell.com>
+Cc: Arun Easi <aeasi@marvell.com>
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: stable@vger.kernel.org # v5.4+
+Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
+---
+ drivers/scsi/qla2xxx/qla_gs.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Changes since v1:
+  - Corrected an error when N_Port_ID change wouldn't clean up stale
+    session (Martin W.).
+
+    N_Port_ID may change in the switched fabric topology if initiator
+    cable is replugged to another physical port on the SAN switch (some
+    fabrics assign physical port number to domain area). Physical
+    reconnection implies that initiator is going to relogin anyway and
+    previous session is no longer needed.
+
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 42c3ad27f1cb..df670fba2ab8 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3496,7 +3496,9 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 				qla2x00_clear_loop_id(fcport);
+ 				fcport->flags |= FCF_FABRIC_DEVICE;
+ 			} else if (fcport->d_id.b24 != rp->id.b24 ||
+-				fcport->scan_needed) {
++				   (fcport->scan_needed &&
++				    fcport->port_type != FCT_INITIATOR &&
++				    fcport->port_type != FCT_NVME_INITIATOR)) {
+ 				qlt_schedule_sess_for_deletion(fcport);
+ 			}
+ 			fcport->d_id.b24 = rp->id.b24;
+-- 
+2.26.1
+
