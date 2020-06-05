@@ -2,153 +2,163 @@ Return-Path: <SRS0=+N3d=7S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58613C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 14:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44628C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 15:30:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31A6B2065C
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 14:56:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DC0A206DB
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 15:30:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="UieNmetr"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="X4EKdamM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728072AbgFEO4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Jun 2020 10:56:33 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:37006 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727114AbgFEO4d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 5 Jun 2020 10:56:33 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 4F9294A49D;
-        Fri,  5 Jun 2020 14:56:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received; s=mta-01; t=1591368989; x=
-        1593183390; bh=hK5UW7fk6ycA8/izqnLe126UrSfd0sSzmiAdgwpDkxw=; b=U
-        ieNmetrJw4t403aCETV/RSTzl3UWYcbayAPJwQJUoJbG7XdsYW2P2cjmFa/S6aF5
-        qSw08+6ZnChFcKWcvjER1Ce4opvbWnBBgL61yIzzLQUaXMhBkV7ri09vul5gkgm0
-        ZEOrhnHT60GJt08MrO1uHN2cPRfqYu8DCHFfBqJNBg=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id A1kT8fw3RmxJ; Fri,  5 Jun 2020 17:56:29 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id D0E484C87F;
-        Fri,  5 Jun 2020 17:56:28 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 5 Jun
- 2020 17:56:28 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <GR-QLogic-Storage-Upstream@marvell.com>,
-        <target-devel@vger.kernel.org>, <linux@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Quinn Tran <qutran@marvell.com>, Arun Easi <aeasi@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Daniel Wagner <dwagner@suse.de>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Martin Wilck <mwilck@suse.com>, <stable@vger.kernel.org>
-Subject: [PATCH v2] scsi: qla2xxx: Keep initiator ports after RSCN
-Date:   Fri, 5 Jun 2020 17:44:37 +0300
-Message-ID: <20200605144435.27023-1-r.bolshakov@yadro.com>
-X-Mailer: git-send-email 2.26.1
+        id S1727863AbgFEPai (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Jun 2020 11:30:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60322 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726539AbgFEPah (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 11:30:37 -0400
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18C97C08C5C2
+        for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2020 08:30:37 -0700 (PDT)
+Received: by mail-ed1-x541.google.com with SMTP id l1so7777679ede.11
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2020 08:30:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=kvw05eX12Yh5FgPlRgUSXlHOGxXXNOE9RCalQGq26Xo=;
+        b=X4EKdamMjiSiB2U3W8O5PY6qGT/gQ3iDtOq81oo4CwFUfUs4QtVFNAIgUhQIez2JvK
+         RD0pzFl//irlgsZeeSP74HYMXDs1vDpoaB+QCypLSWwheaLyS9SoUVYBdUffe8ZpnFm8
+         DWSAEQXMks9fdXHdJu3fgbIwLiNOtJChxYCKk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=kvw05eX12Yh5FgPlRgUSXlHOGxXXNOE9RCalQGq26Xo=;
+        b=cjF9H9C+WMNmn+BW3jot+e4i5WmcCvMu0crDbPQ/rSVRGaSmu5XwHckoV/sSZsCdkI
+         7OARRIWZg/GwtyvwBexm4BnndUW9LYxHlVhTA7bDjb7W0RwChydLtLN440GQ3/qrUnvS
+         0KbmmHU6EcVC8W93KIAokKXAp6OkexPSuy/MktTZ+bZ/0hoLx9oUdwR1lquMjvSe0nPY
+         8GnnB9/DDzJTiHxMcAlbseJ+QlUwNMQjSgB2nfER8v3i+pTNalLqTFMJXv4tU0OoBWuO
+         gkVgKOatA3KcN2Xzis5Ar5SbdeZsMSmE/yA8m5rkymutGzzpz1iWcDh21MiSEm6rPAZm
+         gXSw==
+X-Gm-Message-State: AOAM531PShqS6eoWGcHnHj02pEwhPW4iVHjI9qW6WLXpw6jFsTfWo2wO
+        +hBvsQDapYZCRUc8npvjybIonAF83PKWVzUe9hXyHg==
+X-Google-Smtp-Source: ABdhPJzysky/6m/7l4XT3DGaswXSvfsR/17IejP2A8NgogK397u5AbKSPlAhBht80tUh9/J3O0fP7nqA+lWIyObcMo0=
+X-Received: by 2002:a50:f9cc:: with SMTP id a12mr9988020edq.227.1591371035564;
+ Fri, 05 Jun 2020 08:30:35 -0700 (PDT)
+From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+References: <1590651115-9619-1-git-send-email-newtongao@tencent.com>
+ <yq17dwp9bss.fsf@ca-mkp.ca.oracle.com> <4779a72c878774e4e3525aae8932feda@mail.gmail.com>
+ <20200604155009.63mhbsoaoq6yra77@suse.com> <4285a7ff366d7f5cfb5cae582dadf878@mail.gmail.com>
+ <20200605043846.f3ciid3xpvdgumh6@suse.com>
+In-Reply-To: <20200605043846.f3ciid3xpvdgumh6@suse.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQJb9Wzm0098wwdcUnfhuPbO5i84ZwGnJavmAYBmkM8CEG/qNQHLP1nqAXBxbNenexM2cA==
+Date:   Fri, 5 Jun 2020 21:00:32 +0530
+Message-ID: <599e459f0a657fed8a262a34f43b035c@mail.gmail.com>
+Subject: RE: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused by JBOD
+To:     Kai Liu <kai.liu@suse.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Xiaoming Gao <newtongao@tencent.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>, xiakaixu1987@gmail.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver performs SCR (state change registration) in all modes
-including pure target mode.
+>Subject: Re: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused
+>by JBOD
+>
+>On 2020/06/05 Fri 01:05, Chandrakanth Patil wrote:
+>>
+>>Hi Kai Liu,
+>>
+>>Gen3 (Invader) and Gen3.5 (Ventura/Aero) generations of controllers are
+>>affected.
+>
+>Hi Chandrakanth,
+>
+>My card is not one of these but it's also problematic:
+>
+># lspci -nn|grep 3408
+>02:00.0 RAID bus controller [0104]: Broadcom / LSI MegaRAID Tri-Mode
+>SAS3408
+>[1000:0017] (rev 01)
+>
+>According to megaraid_sas.h it's Tomcat:
+>
+>#define PCI_DEVICE_ID_LSI_TOMCAT                    0x0017
+>
+>According to product information on broadcom.com the card model is 9440-8i.
+>So I tried to
+>upgrade to the latest firmware version
+>51.13.0-3223 but I got these error:
+>
+># ./storcli64 /c0 download file=9440-8i_nopad.rom Download Completed.
+>Flashing image to adapter...
+>CLI Version = 007.1316.0000.0000 Mar 12, 2020 Operating system = Linux
+>5.3.18-
+>0.g6748ac9-default Controller = 0 Status = Failure Description = image
+>corrupted
+>
+>I tried few more versions from broadcom website, they all failed with the
+>same "image
+>corrupted" error.
+>
+>Here is the controller information:
+>
+># ./storcli64 /c0 show
+>Generating detailed summary of the adapter, it may take a while to
+>complete.
+>
+>CLI Version = 007.1316.0000.0000 Mar 12, 2020 Operating system = Linux
+>5.3.18-
+>0.g6748ac9-default Controller = 0 Status = Success Description = None
+>
+>Product Name = SAS3408
+>Serial Number = 033FAT10K8000236
+>SAS Address =  57c1cf15516f4000
+>PCI Address = 00:02:00:00
+>System Time = 06/05/2020 12:36:59
+>Mfg. Date = 00/00/00
+>Controller Time = 06/05/2020 04:36:58
+>FW Package Build = 50.6.3-0109
+>BIOS Version = 7.06.02.2_0x07060502
+>FW Version = 5.060.01-2262
+>Driver Name = megaraid_sas
+>Driver Version = 07.713.01.00-rc1
+>Vendor Id = 0x1000
+>Device Id = 0x17
+>SubVendor Id = 0x19E5
+>SubDevice Id = 0xD213
+>Host Interface = PCI-E
+>Device Interface = SAS-12G
+>Bus Number = 2
+>Device Number = 0
+>Function Number = 0
+>Domain ID = 0
+>Drive Groups = 3
+>
+>
+>Thanks,
+>Kai Liu
 
-For each RSCN, scan_needed flag is set in qla2x00_handle_rscn() for the
-port mentioned in the RSCN and fabric rescan is scheduled. During the
-rescan, GNN_FT handler, qla24xx_async_gnnft_done() deletes session of
-the port that caused the RSCN.
+Hi Kai Liu,
 
-In target mode, the session deletion has an impact on ATIO handler,
-qlt_24xx_atio_pkt(). Target responds with SAM STATUS BUSY to I/O
-incoming from the deleted session. qlt_handle_cmd_for_atio() and
-qlt_handle_task_mgmt() return -EFAULT if they are not able to find
-session of the command/TMF, and that results in invocation of
-qlt_send_busy():
+Tomcat (Device ID: 0017) belongs to Gen3.5 controllers (Ventura family of
+controllers). So this issue is applicable.
+As this is an OEM specific firmware, Please contact Broadcom support team in
+order get the correct firmware image.
 
-  qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0014
-  qla_target(0): Unable to send command to target, sending BUSY status
-
-Such response causes command timeout on the initiator. Error handler
-thread on the initiator will be spawned to abort the commands:
-
-  scsi 23:0:0:0: tag#0 abort scheduled
-  scsi 23:0:0:0: tag#0 aborting command
-  qla2xxx [0000:af:00.0]-188c:23: Entered qla24xx_abort_command.
-  qla2xxx [0000:af:00.0]-801c:23: Abort command issued nexus=23:0:0 -- 0 2003.
-
-Command abort is rejected by target and fails (2003), error handler then
-tries to perform DEVICE RESET and TARGET RESET but they're also doomed
-to fail because TMFs are ignored for the deleted sessions.
-
-Then initiator makes BUS RESET that resets the link via
-qla2x00_full_login_lip(). BUS RESET succeeds and brings initiator port
-up, SAN switch detects that and sends RSCN to the target port and it
-fails again the same way as described above. It never goes out of the
-loop.
-
-The change breaks the RSCN loop by keeping initiator sessions mentioned
-in RSCN payload in all modes, including dual and pure target mode.
-
-Fixes: 2037ce49d30a ("scsi: qla2xxx: Fix stale session")
-Cc: Quinn Tran <qutran@marvell.com>
-Cc: Arun Easi <aeasi@marvell.com>
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Daniel Wagner <dwagner@suse.de>
-Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
-Cc: Martin Wilck <mwilck@suse.com>
-Cc: stable@vger.kernel.org # v5.4+
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
----
- drivers/scsi/qla2xxx/qla_gs.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-Changes since v1:
-  - Corrected an error when N_Port_ID change wouldn't clean up stale
-    session (Martin W.).
-
-    N_Port_ID may change in the switched fabric topology if initiator
-    cable is replugged to another physical port on the SAN switch (some
-    fabrics assign physical port number to domain area). Physical
-    reconnection implies that initiator is going to relogin anyway and
-    previous session is no longer needed.
-
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 42c3ad27f1cb..df670fba2ab8 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3496,7 +3496,9 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
- 				qla2x00_clear_loop_id(fcport);
- 				fcport->flags |= FCF_FABRIC_DEVICE;
- 			} else if (fcport->d_id.b24 != rp->id.b24 ||
--				fcport->scan_needed) {
-+				   (fcport->scan_needed &&
-+				    fcport->port_type != FCT_INITIATOR &&
-+				    fcport->port_type != FCT_NVME_INITIATOR)) {
- 				qlt_schedule_sess_for_deletion(fcport);
- 			}
- 			fcport->d_id.b24 = rp->id.b24;
--- 
-2.26.1
-
+-Chandrakanth Patil
