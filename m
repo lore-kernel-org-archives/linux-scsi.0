@@ -2,383 +2,178 @@ Return-Path: <SRS0=+N3d=7S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00AB7C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 02:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE3EC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 04:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5CB5207ED
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 02:20:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="QM7J95yi"
+	by mail.kernel.org (Postfix) with ESMTP id E21FF20899
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 04:39:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726123AbgFECUI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Jun 2020 22:20:08 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:43329 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726021AbgFECUH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jun 2020 22:20:07 -0400
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200605022003epoutp01d6dd140ed8270d74cd0f8b4dd43dcff4~VhGL1DzEQ1378313783epoutp012
-        for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2020 02:20:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200605022003epoutp01d6dd140ed8270d74cd0f8b4dd43dcff4~VhGL1DzEQ1378313783epoutp012
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1591323603;
-        bh=HqJ9XLtjvCGgP5la8izwY+izOX7HRKP7K+U8sm7hxpA=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=QM7J95yiUtC/9OK9lOopbNOlPnQDId06Dw8lDRtVOAX15IqF5GurDU5RGpGytPuNW
-         srV04bkw7/8EMcgFaf/tL/tU6rVf6X6zsrj+ocrxymgUk4CsEc1q7wHjR86Dfojo7T
-         FRarcbEV3Ivun8Tta/apWHXQilZHXJOD7ugN21uk=
-Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p4.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200605022003epcas1p4b3dbe280d30a997ebc5a051e4ba70f10~VhGLK5ZTw1786717867epcas1p4W;
-        Fri,  5 Jun 2020 02:20:03 +0000 (GMT)
-Mime-Version: 1.0
-Subject: [RFC PATCH 5/5] scsi: ufs: Prepare HPB read for cached sub-region
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Daejun Park <daejun7.park@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <336371513.41591323603173.JavaMail.epsvc@epcpadp1>
-Date:   Fri, 05 Jun 2020 11:12:16 +0900
-X-CMS-MailID: 20200605021216epcms2p2034fed78fd0e5d15083066ef5e99ce21
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882
-References: <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
-        <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
-        <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
-        <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
-        <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
-        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p2>
+        id S1726062AbgFEEjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Jun 2020 00:39:36 -0400
+Received: from m9a0013g.houston.softwaregrp.com ([15.124.64.91]:44574 "EHLO
+        m9a0013g.houston.softwaregrp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725280AbgFEEjf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 00:39:35 -0400
+Received: FROM m9a0013g.houston.softwaregrp.com (15.121.0.190) BY m9a0013g.houston.softwaregrp.com WITH ESMTP;
+ Fri,  5 Jun 2020 04:38:35 +0000
+Received: from M9W0068.microfocus.com (2002:f79:bf::f79:bf) by
+ M9W0067.microfocus.com (2002:f79:be::f79:be) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10; Fri, 5 Jun 2020 04:38:57 +0000
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (15.124.72.14) by
+ M9W0068.microfocus.com (15.121.0.191) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10 via Frontend Transport; Fri, 5 Jun 2020 04:38:57 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=UvNfgNYIGyDdskRWmJnze/q+G58DMMR4sZVWuUi+ncPUT3WLeUNoBuYDJPKdlaAnDinlPZ8SD9evW0c0x5fO2CmQsqaTLg8GzEmybftPUni9groS2Zkrs70rgwmiLq5QsqGNCJAE/vYmyAN1xs67+L7ALrVboVGuVQim7pa7b0iT/ab3tuaQxUW335VfvcvP9L7Qdjsh4zMxY92EMOHM3I9BitqBu52UkakypnvhybmtHOEHv27p+Q2mNN6i9QbaEJ3qqRpL/dqViyb2Yn/yK9IVk9kahFNdQgwUNMywbWpkn42cX8zMU/YbTozJet6aObYimecr5iBVSRa6whaN+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7z/YJ2jHJg7BMc4knEiVmUpMCeW/zb5eYaljU6VgHCc=;
+ b=gy2YVzfIWRowMzHDlTlH6tC5iDSmu2tebGFfB4aWyRFI79QIHkp9kRu1iNTjTpvyMUdzFsQwJRF7oFHjQ3i7KqhtdjCmgjUQqkolOBrqiRFXUj43ZVOj/29kMWwi/sJedWN9Tt5ypA56bINw7Ri8E5+O5xuIFoliTI3s/1ajQtxnfHQi5RFspVlOJYJRfDeNtMjMMaBKY//SHZjRfDXwOHM9IsPIFAZHbb2p4asjWpWlQW0YJmmiiKaR/3cWb8fHk6H/r3WG2DlC0rLtdmkjYWIo4H226+dYgk/KeHMH9+C2Y7Sc9iecayfsdnMDbcvbYgjOhtXlT+DdzmSWpltNYQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=suse.com;
+Received: from MW3PR18MB3658.namprd18.prod.outlook.com (2603:10b6:303:54::24)
+ by MW3PR18MB3466.namprd18.prod.outlook.com (2603:10b6:303:58::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.18; Fri, 5 Jun
+ 2020 04:38:56 +0000
+Received: from MW3PR18MB3658.namprd18.prod.outlook.com
+ ([fe80::2da0:153f:7d56:210d]) by MW3PR18MB3658.namprd18.prod.outlook.com
+ ([fe80::2da0:153f:7d56:210d%5]) with mapi id 15.20.3066.018; Fri, 5 Jun 2020
+ 04:38:56 +0000
+Date:   Fri, 5 Jun 2020 12:38:46 +0800
+From:   Kai Liu <kai.liu@suse.com>
+To:     Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+CC:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Xiaoming Gao <newtongao@tencent.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        <xiakaixu1987@gmail.com>, <jejb@linux.ibm.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: megaraid_sas: fix kdump kernel boot hung caused by
+ JBOD
+Message-ID: <20200605043846.f3ciid3xpvdgumh6@suse.com>
+References: <1590651115-9619-1-git-send-email-newtongao@tencent.com>
+ <yq17dwp9bss.fsf@ca-mkp.ca.oracle.com>
+ <4779a72c878774e4e3525aae8932feda@mail.gmail.com>
+ <20200604155009.63mhbsoaoq6yra77@suse.com>
+ <4285a7ff366d7f5cfb5cae582dadf878@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Disposition: inline
+In-Reply-To: <4285a7ff366d7f5cfb5cae582dadf878@mail.gmail.com>
+User-Agent: NeoMutt/20200501
+X-ClientProxiedBy: SG2PR06CA0091.apcprd06.prod.outlook.com
+ (2603:1096:3:14::17) To MW3PR18MB3658.namprd18.prod.outlook.com
+ (2603:10b6:303:54::24)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost (45.122.156.254) by SG2PR06CA0091.apcprd06.prod.outlook.com (2603:1096:3:14::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.18 via Frontend Transport; Fri, 5 Jun 2020 04:38:55 +0000
+X-Originating-IP: [45.122.156.254]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 89e8389d-f187-4c6b-4dd9-08d8090a5b50
+X-MS-TrafficTypeDiagnostic: MW3PR18MB3466:
+X-Microsoft-Antispam-PRVS: <MW3PR18MB3466497194527454BAC65B6D98860@MW3PR18MB3466.namprd18.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-Forefront-PRVS: 0425A67DEF
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Oiup2pHYY1+POwK9RHz93ZUa0F2o+VMBvqfrB6/W7f0nIreqK7cWEFpfkae4WYRSQQ0bCxbiRgM2GKwN2OyeXy8u+NGa2rgBRlKo6z1lA4N8MFyrE1arsO2bWQ9tuQPr9gVCijb22vvPVh549FdYzmgCzAkLBgXLNHKN42+FelhZN6Jqh3qkn0cqSIMn+8e4I61SiVrrvY1zqRpMPTXEvQqZFLJMSA7ByjGtWiIbKMqrvWVz5gqm5hU6FzongikuLNkaEk2o0bgro8kabViI1sR9S8p0BnQxninkwOxW9/G/wlx3auWG5BGV3WDxJUsx3v3tSHMFzTKqhBiVASgBwQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW3PR18MB3658.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(376002)(346002)(396003)(136003)(39860400002)(36756003)(66946007)(4326008)(6486002)(478600001)(2906002)(66556008)(8936002)(8676002)(5660300002)(66476007)(6916009)(7416002)(1076003)(54906003)(6496006)(83380400001)(26005)(6666004)(86362001)(186003)(316002)(16526019)(956004)(44832011)(2616005)(52116002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: cwpIVRTbJwtpRIVDYqhU+fN99D/wwZukpocuYjRUtoSLUn2GR8oK9es78VXf8ta1VcbxKotTLlnzBstStzQ++i5LVISagISluedd2DUM1MVbBYT+Ph9SWh8cqxxL5dPrBTCOX5vpxcNJIS/OLEiEUULrxi1YefGj0v6azNgoabTAPotzb3QgBg6LVoQ3W+XsHIb8MA7saDXXTeFN9QUU2XwNd04CpF8U+/mM8xhM6VfNP6P+2j8CIU4GcsHuKsFBpNXavrFYvL5hwcE52CjmN1/fmRCS5TBUvHZtBvAEmZuTjU3V4kKqGNmE0etausjr4+I/QQFQH2iqglEeest2qA2QqbVilG0CJx1QTaWOBydEsL235WgePdCU5v4FX1eRWiZ0zEplknyaBAeL/7pB60O9WqTFYQ6qdKdhzEkehvIgXh4jaq/sw4XtqwDz2EyfGgW14S40/NAw/I8mb7CAD7F04smgjpufF4WFjLORzXVjYr8qgpxUy0m3VhsAhCm7
+X-MS-Exchange-CrossTenant-Network-Message-Id: 89e8389d-f187-4c6b-4dd9-08d8090a5b50
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2020 04:38:56.3429
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 856b813c-16e5-49a5-85ec-6f081e13b527
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Hcvt2Mpmt4SbXLYNFLBjJt5xZEywwD85USz0/1rmdfNe2BeXXOF7bSCpjymTHO6MA2WCR+Pu7/VBhM0fTMNsCg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR18MB3466
+X-OriginatorOrg: suse.com
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch changes the read I/O to the HPB read I/O.
+On 2020/06/05 Fri 01:05, Chandrakanth Patil wrote:
+>
+>Hi Kai Liu,
+>
+>Gen3 (Invader) and Gen3.5 (Ventura/Aero) generations of controllers are
+>affected.
 
-If the logical address of the read I/O belongs to active sub-region, the
-HPB driver modifies the read I/O command to HPB read. It modifies the upiu
-command of UFS instead of modifying the existing SCSI command.
+Hi Chandrakanth,
 
-In the HPB version 1.0, the maximum read I/O size that can be converted to
-HPB read is 4KB.
+My card is not one of these but it's also problematic:
 
-The dirty map of the active sub-region prevents an incorrect HPB read that
-has stale physical page number which is updated by previous write I/O.
+# lspci -nn|grep 3408
+02:00.0 RAID bus controller [0104]: Broadcom / LSI MegaRAID Tri-Mode SAS3408 [1000:0017] (rev 01)
 
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
- drivers/scsi/ufs/ufshpb.c | 249 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 249 insertions(+)
+According to megaraid_sas.h it's Tomcat:
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index f1aa8e7b5ce0..b3e488ef8675 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -46,6 +46,35 @@ static struct ufshpb_driver ufshpb_drv;
- 
- static int ufshpb_create_sysfs(struct ufs_hba *hba, struct ufshpb_lu *hpb);
- 
-+static inline int ufshpb_is_valid_srgn(struct ufshpb_region *rgn,
-+			     struct ufshpb_subregion *srgn)
-+{
-+	return rgn->rgn_state != HPB_RGN_INACTIVE &&
-+		srgn->srgn_state == HPB_SRGN_CLEAN;
-+}
-+
-+static inline bool ufshpb_is_read_cmd(struct scsi_cmnd *cmd)
-+{
-+	if (cmd->cmnd[0] == READ_10 || cmd->cmnd[0] == READ_16)
-+		return true;
-+
-+	return false;
-+}
-+
-+static inline bool ufshpb_is_write_discard_cmd(struct scsi_cmnd *cmd)
-+{
-+	if (cmd->cmnd[0] == WRITE_10 || cmd->cmnd[0] == WRITE_16 ||
-+	    cmd->cmnd[0] == UNMAP)
-+		return true;
-+
-+	return false;
-+}
-+
-+static inline bool ufshpb_is_support_chunk(int transfer_len)
-+{
-+	return transfer_len <= HPB_MULTI_CHUNK_HIGH;
-+}
-+
- static inline bool ufshpb_is_general_lun(int lun)
- {
- 	return lun < UFS_UPIU_MAX_UNIT_NUM_ID;
-@@ -137,6 +166,225 @@ static inline void ufshpb_lu_put(struct ufshpb_lu *hpb)
- 	put_device(&hpb->hpb_lu_dev);
- }
- 
-+static inline u32 ufshpb_get_lpn(struct scsi_cmnd *cmnd)
-+{
-+	return blk_rq_pos(cmnd->request) >>
-+		(ilog2(cmnd->device->sector_size) - 9);
-+}
-+
-+static inline unsigned int ufshpb_get_len(struct scsi_cmnd *cmnd)
-+{
-+	return blk_rq_sectors(cmnd->request) >>
-+		(ilog2(cmnd->device->sector_size) - 9);
-+}
-+
-+static void ufshpb_set_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
-+			     int srgn_idx, int srgn_offset, int cnt)
-+{
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+	int set_bit_len;
-+	int bitmap_len = hpb->entries_per_srgn;
-+
-+next_srgn:
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	if ((srgn_offset + cnt) > bitmap_len)
-+		set_bit_len = bitmap_len - srgn_offset;
-+	else
-+		set_bit_len = cnt;
-+
-+	if (rgn->rgn_state != HPB_RGN_INACTIVE)
-+		bitmap_set(srgn->mctx->ppn_dirty, srgn_offset, set_bit_len);
-+
-+	srgn_offset = 0;
-+	if (++srgn_idx == hpb->srgns_per_rgn) {
-+		srgn_idx = 0;
-+		rgn_idx++;
-+	}
-+
-+	cnt -= set_bit_len;
-+	if (cnt > 0)
-+		goto next_srgn;
-+
-+	WARN_ON(cnt < 0);
-+}
-+
-+static bool ufshpb_test_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
-+				   int srgn_idx, int srgn_offset, int cnt)
-+{
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+	int bitmap_len = hpb->entries_per_srgn;
-+	int i, bit_len;
-+
-+next_srgn:
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	if (!ufshpb_is_valid_srgn(rgn, srgn))
-+		return true;
-+
-+	/*
-+	 * If the region state is active, mctx must be allocated.
-+	 * In this case, check whether the region is evicted or
-+	 * mctx allcation fail.
-+	 */
-+	WARN_ON(!srgn->mctx);
-+
-+	if ((srgn_offset + cnt) > bitmap_len)
-+		bit_len = bitmap_len - srgn_offset;
-+	else
-+		bit_len = cnt;
-+
-+	for (i = 0; i < bit_len; i++) {
-+		if (test_bit(srgn_offset + i, srgn->mctx->ppn_dirty))
-+			return true;
-+	}
-+
-+	srgn_offset = 0;
-+	if (++srgn_idx == hpb->srgns_per_rgn) {
-+		srgn_idx = 0;
-+		rgn_idx++;
-+	}
-+
-+	cnt -= bit_len;
-+	if (cnt > 0)
-+		goto next_srgn;
-+
-+	return false;
-+}
-+
-+static u64 ufshpb_get_ppn(struct ufshpb_lu *hpb,
-+			  struct ufshpb_map_ctx *mctx, int pos, int *error)
-+{
-+	u64 *ppn_table;
-+	struct page *page;
-+	int index, offset;
-+
-+	index = pos / (PAGE_SIZE / HPB_ENTRY_SIZE);
-+	offset = pos % (PAGE_SIZE / HPB_ENTRY_SIZE);
-+
-+	page = mctx->m_page[index];
-+	if (unlikely(!page)) {
-+		*error = -ENOMEM;
-+		dev_err(&hpb->hpb_lu_dev,
-+			"error. cannot find page in mctx\n");
-+		return 0;
-+	}
-+
-+	ppn_table = page_address(page);
-+	if (unlikely(!ppn_table)) {
-+		*error = -ENOMEM;
-+		dev_err(&hpb->hpb_lu_dev, "error. cannot get ppn_table\n");
-+		return 0;
-+	}
-+
-+	return ppn_table[offset];
-+}
-+
-+static inline void
-+ufshpb_get_pos_from_lpn(struct ufshpb_lu *hpb, unsigned long lpn, int *rgn_idx,
-+			int *srgn_idx, int *offset)
-+{
-+	int rgn_offset;
-+
-+	*rgn_idx = lpn >> hpb->entries_per_rgn_shift;
-+	rgn_offset = lpn & hpb->entries_per_rgn_mask;
-+	*srgn_idx = rgn_offset >> hpb->entries_per_srgn_shift;
-+	*offset = rgn_offset & hpb->entries_per_srgn_mask;
-+}
-+
-+static void
-+ufshpb_set_hpb_read_to_upiu(struct ufshpb_lu *hpb, struct ufshcd_lrb *lrbp,
-+				  u32 lpn, u64 ppn,  unsigned int transfer_len)
-+{
-+	unsigned char *cdb = lrbp->ucd_req_ptr->sc.cdb;
-+
-+	cdb[0] = UFSHPB_READ;
-+
-+	put_unaligned_be32(lpn, &cdb[2]);
-+	put_unaligned_be64(ppn, &cdb[6]);
-+	cdb[14] = transfer_len;
-+}
-+
-+/* routine : READ10 -> HPB_READ  */
-+static void ufshpb_prep_fn(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+	struct ufshpb_lu *hpb;
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+	struct scsi_cmnd *cmd = lrbp->cmd;
-+	u32 lpn;
-+	u64 ppn;
-+	unsigned long flags;
-+	int transfer_len, rgn_idx, srgn_idx, srgn_offset;
-+	int err = 0;
-+
-+	hpb = ufshpb_get_hpb_data(cmd);
-+	err = ufshpb_lu_get(hpb);
-+	if (unlikely(err))
-+		return;
-+
-+	WARN_ON(hpb->lun != cmd->device->lun);
-+	if (!ufshpb_is_write_discard_cmd(cmd) &&
-+	    !ufshpb_is_read_cmd(cmd))
-+		goto put_hpb;
-+
-+	transfer_len = ufshpb_get_len(cmd);
-+	if (unlikely(!transfer_len))
-+		goto put_hpb;
-+
-+	lpn = ufshpb_get_lpn(cmd);
-+	ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx, &srgn_idx, &srgn_offset);
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	/* If commnad type is WRITE and DISCARD, set bitmap as drity */
-+	if (ufshpb_is_write_discard_cmd(cmd)) {
-+		spin_lock_irqsave(&hpb->hpb_state_lock, flags);
-+		ufshpb_set_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
-+				 transfer_len);
-+		spin_unlock_irqrestore(&hpb->hpb_state_lock, flags);
-+		goto put_hpb;
-+	}
-+
-+	WARN_ON(!ufshpb_is_read_cmd(cmd));
-+
-+	if (!ufshpb_is_support_chunk(transfer_len))
-+		goto put_hpb;
-+
-+	spin_lock_irqsave(&hpb->hpb_state_lock, flags);
-+	if (ufshpb_test_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
-+				   transfer_len)) {
-+		atomic_inc(&hpb->stats.miss_cnt);
-+		spin_unlock_irqrestore(&hpb->hpb_state_lock, flags);
-+		goto put_hpb;
-+	}
-+
-+	ppn = ufshpb_get_ppn(hpb, srgn->mctx, srgn_offset, &err);
-+	spin_unlock_irqrestore(&hpb->hpb_state_lock, flags);
-+	if (unlikely(err)) {
-+		/*
-+		 * In this case, the region state is active,
-+		 * but the ppn table is not allocated.
-+		 * Make sure that ppn tabie must be allocated on
-+		 * active state
-+		 */
-+		WARN_ON(true);
-+		dev_err(&hpb->hpb_lu_dev,
-+			"ufshpb_get_ppn failed. err %d\n", err);
-+		goto put_hpb;
-+	}
-+
-+	ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn, transfer_len);
-+
-+	atomic_inc(&hpb->stats.hit_cnt);
-+put_hpb:
-+	ufshpb_lu_put(hpb);
-+}
-+
- static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 					     struct ufshpb_subregion *srgn)
- {
-@@ -1688,6 +1936,7 @@ static struct ufshpb_driver ufshpb_drv = {
- 		.bus = &ufsf_bus_type,
- 	},
- 	.ufshpb_ops = {
-+		.prep_fn = ufshpb_prep_fn,
- 		.reset = ufshpb_reset,
- 		.reset_host = ufshpb_reset_host,
- 		.suspend = ufshpb_suspend,
--- 
-2.17.1
+#define PCI_DEVICE_ID_LSI_TOMCAT                    0x0017
 
+According to product information on broadcom.com the card model is 
+9440-8i. So I tried to upgrade to the latest firmware version 
+51.13.0-3223 but I got these error:
+
+# ./storcli64 /c0 download file=9440-8i_nopad.rom
+Download Completed.
+Flashing image to adapter...
+CLI Version = 007.1316.0000.0000 Mar 12, 2020
+Operating system = Linux 5.3.18-0.g6748ac9-default
+Controller = 0
+Status = Failure
+Description = image corrupted
+
+I tried few more versions from broadcom website, they all failed with 
+the same "image corrupted" error.
+
+Here is the controller information:
+
+# ./storcli64 /c0 show
+Generating detailed summary of the adapter, it may take a while to complete.
+
+CLI Version = 007.1316.0000.0000 Mar 12, 2020
+Operating system = Linux 5.3.18-0.g6748ac9-default
+Controller = 0
+Status = Success
+Description = None
+
+Product Name = SAS3408
+Serial Number = 033FAT10K8000236
+SAS Address =  57c1cf15516f4000
+PCI Address = 00:02:00:00
+System Time = 06/05/2020 12:36:59
+Mfg. Date = 00/00/00
+Controller Time = 06/05/2020 04:36:58
+FW Package Build = 50.6.3-0109
+BIOS Version = 7.06.02.2_0x07060502
+FW Version = 5.060.01-2262
+Driver Name = megaraid_sas
+Driver Version = 07.713.01.00-rc1
+Vendor Id = 0x1000
+Device Id = 0x17
+SubVendor Id = 0x19E5
+SubDevice Id = 0xD213
+Host Interface = PCI-E
+Device Interface = SAS-12G
+Bus Number = 2
+Device Number = 0
+Function Number = 0
+Domain ID = 0
+Drive Groups = 3
+
+
+Thanks,
+Kai Liu
