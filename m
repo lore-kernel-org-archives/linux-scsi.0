@@ -2,151 +2,349 @@ Return-Path: <SRS0=+N3d=7S=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A9CC433DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 17:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 459B2C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 19:14:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4707C206DB
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 17:01:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CF97207ED
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Jun 2020 19:14:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="qZetru8T";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="EnFBrK5q"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J9KgVe3V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726236AbgFERBM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Jun 2020 13:01:12 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:28153 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726090AbgFERBL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 13:01:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1591376470; x=1622912470;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=OtpMg8hFwAbCWWOYjwX8LrdkXX+6NddEj1gETC8ktPQ=;
-  b=qZetru8TUe/6cwTY+2/kE9fXo85zpD7sfEG7lNYaNHFuu5GUOtAgYjJP
-   3oX6Ucwx0eX123ojt3z9Dn8bEg19Z5hPMp2iNM9Nixhv9IvDVT3nzx7or
-   rZcOEyj97hOTUtqD0Hr63ZOp4bY8OGaLMOUdRGxZK7GaYmxvh5EfRPUiE
-   XVxlD4EB3nPMiyYVg3UBQxXoR7sGbr0nYyBJChZ3EFtnis0M16snQzzjL
-   krem201rn+eIgRyoaSSdDW0Y7XjKi0EIygnAAIDpo4n7yibehuGSw1Utj
-   5PL2mEiWoZMlZEd72DBumF2ppgyGrmp/QOoCUlwa5Sa+B+AWTkAyxesu5
-   Q==;
-IronPort-SDR: 3V6wv6aKgm4n+h/hf4c6qnQA4yhUTyqnKxrdWDaxMuG7DA71j9eRQmEEAAe7Qekio7v30oJ59H
- lyu61f8UtMnAMS8Zr+ABddAmPeZDWxXNrR4P/pa2y/4mtSOXygJgOBpLD/fM4MWcA4Jn9HNjCG
- 8vHWUuCp0qQK744GBsY4v/MrUQvPpRFJgmsg2qn2U1og+j6IuMODq5g23zGdV501WTaQTg/8ko
- 9VJkPMChtDUqRY6egXKmdtaOifZezIPAswjtDqNy5rlQhHvC/fvDAugGQqdjmQZcZJc2kPg9OC
- TFQ=
-X-IronPort-AV: E=Sophos;i="5.73,477,1583218800"; 
-   d="scan'208";a="77515659"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 Jun 2020 10:01:06 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 5 Jun 2020 10:01:05 -0700
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1847.3
- via Frontend Transport; Fri, 5 Jun 2020 10:01:05 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VqJndtHwd8FuBwH99CpdtW+jEDpM3LLDy1JkLVfJp30ozDHp5Z046ummq8kThJa3DhZ0cqqoDtuMHvbjEfHJ6/15Hd8dVM11zNGmvEHW32v7u9mzNGe4/kFidwoBuIJ7HoRf0DaKJN/0Qke3F15wQGbr4SFv2Z8+NG+MQIlf5c+m/ClLo1/U2XLXezbRe6pAQn4/2pnjWVUvSr433rdO53FSA4SAMibXcu9ZOw2Ih20CM9bw1flupdgFGoZCqamMohhgZczPf1vMbXS0blvhkJ6Xd9t/zOiaYoClEBO92gGx9yKF+KFabAvUVlXBclC+sUIvl0B7PrTv2LV62Rvy/g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=48P4NnGkWdWpbx8eeSHAkPdbk+c1UhEy04L0Z2YEy+I=;
- b=gKLQ2zESVCCS3+DT05X/+8nwM2W7DPovWIozwIAVj9vqdtRIxe+MNc0PSQG5tODqFqONBDfWQWksq1XnrJPx8wZ6Q1IOKZBN06gTEEOPIcQlLjiHxpkdOVV/xaTv6+uenTVnziRr3vh/KxT7eT6jQtnl775yuBs6S7qWL4UQeaF+SlN3vRye6OYtVMMSsIpI4/76OwGeGnTBqp5Eqs7HPBvH0E784cAi+gBUTzRIAtKeaV296Fv8amaRV773q3ybMT0BkcR+ZtIa3eFy5QJ6jmjNkUNDXJrBZsQZy1zOlC9VhSTg2tWi3Ext5jFZJ9ffDN0i3pO/1L76d2rBNo2a+Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+        id S1727935AbgFETOx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Jun 2020 15:14:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39060 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727843AbgFETOw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jun 2020 15:14:52 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 340ABC08C5C3;
+        Fri,  5 Jun 2020 12:14:52 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id a25so11284462ejg.5;
+        Fri, 05 Jun 2020 12:14:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=48P4NnGkWdWpbx8eeSHAkPdbk+c1UhEy04L0Z2YEy+I=;
- b=EnFBrK5qAi6zT4GFi2n7geCBCeSaRbvNZoXaNSOi/W019BV19eDsACFmLwC6Isk1eQSEHvrRC/088jC2OMjVZBbOQyrkk9aGy5ebpaqe8Q4Pnnk47uqlBDasx1NA5cms83h+fHDXLbjpLLeZ+XC9ESaTwQtWOSqa3o6rdsZ+wLc=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB3264.namprd11.prod.outlook.com (2603:10b6:805:bd::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.18; Fri, 5 Jun
- 2020 17:01:03 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5907:a4c5:ee9b:8cde]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5907:a4c5:ee9b:8cde%7]) with mapi id 15.20.3066.019; Fri, 5 Jun 2020
- 17:01:03 +0000
-From:   <Don.Brace@microchip.com>
-To:     <hare@suse.de>, <martin.petersen@oracle.com>
-CC:     <hch@lst.de>, <james.bottomley@hansenpartnership.com>,
-        <john.garry@huawei.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH RFC v3 00/41] scsi: enable reserved commands for LLDDs
-Thread-Topic: [PATCH RFC v3 00/41] scsi: enable reserved commands for LLDDs
-Thread-Index: AQHWHvI16e8yEMfm40m6UaRagmZt9KjI9ulwgAF97oCAAAKugA==
-Date:   Fri, 5 Jun 2020 17:01:03 +0000
-Message-ID: <SN6PR11MB28483D5AC2811689A8EAC36DE1860@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <20200430131904.5847-1-hare@suse.de>
- <SN6PR11MB2848512EB578D01F981F8705E1860@SN6PR11MB2848.namprd11.prod.outlook.com>
- <1331858c-6111-aab3-ad6e-16e27661a35c@suse.de>
-In-Reply-To: <1331858c-6111-aab3-ad6e-16e27661a35c@suse.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: suse.de; dkim=none (message not signed)
- header.d=none;suse.de; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.211.63]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4534f610-e220-4cf8-95ab-08d8097207f7
-x-ms-traffictypediagnostic: SN6PR11MB3264:
-x-microsoft-antispam-prvs: <SN6PR11MB32642B7DCF30DC185BA1C52EE1860@SN6PR11MB3264.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:3826;
-x-forefront-prvs: 0425A67DEF
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: YvuUIfy1ZUCSiBbjAyaukpwdke2g8/uQsHVffQO1WPQC1DODjGMgH1UoBknPNc+mHh8olKedvLFTmpnIfYOEfBhQ8GD4DNX5JwSLASz7GvExiUa0Ba6bUD3SqhuXDG6L8Nr98sPVWlzbmNZK+5s9kv6Akimt6Ji6RJGJzIW2IarwDZZCkyXkPob0H8nVdFsXNEnaHdQnXtDmqD4Aevr8CaZt86F7kMeXMPG9aOZBA/f3TX6cAPK1fIfkFZrrEyB/KTsIqvcMuz0UBH65+5kXGQvu6GCTefS2bpJ2sFGG+wSkYcAIzpMMr3HWh5Xw6FH1jr59jAfN2CLzOf0PZFvwag==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(396003)(136003)(366004)(376002)(39860400002)(346002)(316002)(110136005)(4326008)(66574014)(66556008)(54906003)(26005)(66476007)(8676002)(8936002)(71200400001)(9686003)(2906002)(478600001)(6506007)(52536014)(66946007)(5660300002)(186003)(55016002)(64756008)(7696005)(66446008)(76116006)(86362001)(33656002)(4744005);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: ZqeGbFF0FOnOWfQxzfXy/M1QrBP5QtzXDIr5m0yVOuxgqEY0yswctWCgnN1ltx6nFIL757aaizIjEWpxyIlU9S263hm5JP1w2eTPNz3uTi+6rnFm8ZyDu/lG6T9ar19VOI4QlJBmmQxBzjl9tp2ywwk0INSSAIZXivSBO4SHrFRd9m+CqvgKfE0fwL7V6wja/1aS7YG8Ad7+LX99otnbKtfa1r7wu/Gmm+4wqztz+4kvZewFv1N2qrPp1+7338cIwhr4VwDYKVNgOYHE9SmH0D5DzozAhjo1yvpq0BrhICqrDxiHaM2kBKg18vGSMmOZLZfSGMP9j6D4cC+h/W64sRsRzL+w0NTFhNv3Ik+4WTzzE2uUN1LcKlAZsI0aSvFkWBSOTiq8TbLFVZfXSiPjzH+rMyC1xTXPGh1c5cdzUDPwBb7dZi9Pdf2owqIKrQh9AqLXU+sxpO+O0W84jhJOU/sk6weX4RUS5Xj56IgEFTc=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4534f610-e220-4cf8-95ab-08d8097207f7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jun 2020 17:01:03.6203
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Jo1n0jdrqwwEXbBxcpDElY4b3eujATNaoLcSIX2jdVP8sM4hDLhu8kEnd4sd3ie7JGzZKfPf/rNxMEFfZBfC8w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3264
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=VtjTYNoGgr1GHPhLx6n1B3qn1vNiQ0PJclvKumvfGAw=;
+        b=J9KgVe3VvLVWkenR+GN+9YnfPlIPop33mi+c7jcu+Iy58wT6FVRPVi2RqLEDKs3zAj
+         iRkVreDXQQdrr+60WQLcpo3AWciPQnZnEVwnPUIkvrvCszMXf3PAspdag9vhOCIp0FCv
+         4g2BsTZ3uLp7KZwb7/EYvrZ4Cjn11XjDcmrYgKIKoQZvs+o1vEndrADYmpqGdXyW+27i
+         2I0KR6dIq3KGP6w37MBLvkBnX68b/hIlRQvJX+u10NtmMf/u01m7r9d5B9QeU1i4YJXP
+         a7W8lDSXggoyHBE3sFRDBSGaXCpgZE2fSdg1nFj3C199/ecxI9JU8SvVv+QjeGy/VVay
+         ysvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=VtjTYNoGgr1GHPhLx6n1B3qn1vNiQ0PJclvKumvfGAw=;
+        b=fgf2wI29sNqcSTPTcWGCXZeyHX7EpgNsY6JzgrIwvzF41kwm6XFAYjU0EONcYVjvam
+         Fg+K8bEryS7lm9mfLSat/PSOGPZObZoWPlMlC7xUpOlfWcvWqQxqF9PzBzArr6orpLrR
+         RGPu1hMKOFxgwR10aZpgrm+XE+uWKqCxb4QqjXDykg651DFoSWFPpEr3UShRwiWX7hKm
+         eVgVxNvEjtQ3sxAg/Li9nwxcLDpAlgXAWsvVj8VgByOPQDKjFMLjQM8ZSPDI/ErABSJe
+         hgT4/7r20p0mYbTqtdE0WWCQF3zb9ifw8EIOsnJSKrF2aOR10lkdy/h29kosKwxJiWhj
+         dHUA==
+X-Gm-Message-State: AOAM533min9OhPogK8uAAVPHulNajERGwj5Y6TLzy93kPx3qstdWxn5R
+        4D78eeJ4Q8GuVREDdRCcUyY=
+X-Google-Smtp-Source: ABdhPJwSfYjuXiSWiRdebYauWtVwgVzcRAQlTw6fvKH2YnxjKnrBTMQi+rDxKpV72BvHMIMDrUSjnw==
+X-Received: by 2002:a17:907:429b:: with SMTP id ny19mr2983818ejb.498.1591384490743;
+        Fri, 05 Jun 2020 12:14:50 -0700 (PDT)
+Received: from localhost.localdomain (ip5f5bfcfd.dynamic.kabel-deutschland.de. [95.91.252.253])
+        by smtp.gmail.com with ESMTPSA id ck11sm5123614ejb.41.2020.06.05.12.14.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Jun 2020 12:14:50 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/2] scsi: ufs: Add SPDX GPL-2.0 to replace GPL v2 boilerplate
+Date:   Fri,  5 Jun 2020 21:14:38 +0200
+Message-Id: <20200605191439.19313-2-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200605191439.19313-1-huobean@gmail.com>
+References: <20200605191439.19313-1-huobean@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Subject: Re: [PATCH RFC v3 00/41] scsi: enable reserved commands for LLDDs
+From: Bean Huo <beanhuo@micron.com>
 
-EXTERNAL EMAIL: Do not click links or open attachments unless you know the =
-content is safe
+Add SPDX GPL-2.0 to UFS driver files that specified the GPL
+version 2 license, remove the full boilerplate text.
 
-> However, my insmod/rmmod test causes a kernel panic.
->
->
-Ah, right. Of course.
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/scsi/ufs/ufs.h           | 27 +--------------------------
+ drivers/scsi/ufs/ufshcd-pci.c    | 25 +------------------------
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 27 +--------------------------
+ drivers/scsi/ufs/ufshcd.c        | 30 +-----------------------------
+ drivers/scsi/ufs/ufshcd.h        | 27 +--------------------------
+ drivers/scsi/ufs/ufshci.h        | 27 +--------------------------
+ 6 files changed, 6 insertions(+), 157 deletions(-)
 
-Should be fixed with this patch:\
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index c70845d41449..4df9150769b7 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -1,36 +1,11 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * Universal Flash Storage Host controller driver
+- *
+- * This code is based on drivers/scsi/ufs/ufs.h
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- * See the COPYING file in the top-level directory or visit
+- * <http://www.gnu.org/licenses/gpl-2.0.html>
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * This program is provided "AS IS" and "WITH ALL FAULTS" and
+- * without warranty of any kind. You are solely responsible for
+- * determining the appropriateness of using and distributing
+- * the program and assume all risks associated with your exercise
+- * of rights with respect to the program, including but not limited
+- * to infringement of third party rights, the risks and costs of
+- * program errors, damage to or loss of data, programs or equipment,
+- * and unavailability or interruption of operations. Under no
+- * circumstances will the contributor of this Program be liable for
+- * any damages of any kind arising from your use or distribution of
+- * this program.
+  */
+ 
+ #ifndef _UFS_H
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index 8f78a8151499..142362d96d86 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -1,3 +1,4 @@
++// SPDX-License-Identifier: GPL-2.0
+ /*
+  * Universal Flash Storage Host controller PCI glue driver
+  *
+@@ -7,30 +8,6 @@
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- * See the COPYING file in the top-level directory or visit
+- * <http://www.gnu.org/licenses/gpl-2.0.html>
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * This program is provided "AS IS" and "WITH ALL FAULTS" and
+- * without warranty of any kind. You are solely responsible for
+- * determining the appropriateness of using and distributing
+- * the program and assume all risks associated with your exercise
+- * of rights with respect to the program, including but not limited
+- * to infringement of third party rights, the risks and costs of
+- * program errors, damage to or loss of data, programs or equipment,
+- * and unavailability or interruption of operations. Under no
+- * circumstances will the contributor of this Program be liable for
+- * any damages of any kind arising from your use or distribution of
+- * this program.
+  */
+ 
+ #include "ufshcd.h"
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 76f9be71c31b..d9f8032026a1 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -1,36 +1,11 @@
++// SPDX-License-Identifier: GPL-2.0
+ /*
+  * Universal Flash Storage Host controller Platform bus based glue driver
+- *
+- * This code is based on drivers/scsi/ufs/ufshcd-pltfrm.c
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- * See the COPYING file in the top-level directory or visit
+- * <http://www.gnu.org/licenses/gpl-2.0.html>
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * This program is provided "AS IS" and "WITH ALL FAULTS" and
+- * without warranty of any kind. You are solely responsible for
+- * determining the appropriateness of using and distributing
+- * the program and assume all risks associated with your exercise
+- * of rights with respect to the program, including but not limited
+- * to infringement of third party rights, the risks and costs of
+- * program errors, damage to or loss of data, programs or equipment,
+- * and unavailability or interruption of operations. Under no
+- * circumstances will the contributor of this Program be liable for
+- * any damages of any kind arising from your use or distribution of
+- * this program.
+  */
+ 
+ #include <linux/platform_device.h>
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index ad4fc829cbb2..e2939382897d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1,40 +1,12 @@
++// SPDX-License-Identifier: GPL-2.0
+ /*
+  * Universal Flash Storage Host controller driver Core
+- *
+- * This code is based on drivers/scsi/ufs/ufshcd.c
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+  * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- * See the COPYING file in the top-level directory or visit
+- * <http://www.gnu.org/licenses/gpl-2.0.html>
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * This program is provided "AS IS" and "WITH ALL FAULTS" and
+- * without warranty of any kind. You are solely responsible for
+- * determining the appropriateness of using and distributing
+- * the program and assume all risks associated with your exercise
+- * of rights with respect to the program, including but not limited
+- * to infringement of third party rights, the risks and costs of
+- * program errors, damage to or loss of data, programs or equipment,
+- * and unavailability or interruption of operations. Under no
+- * circumstances will the contributor of this Program be liable for
+- * any damages of any kind arising from your use or distribution of
+- * this program.
+- *
+- * The Linux Foundation chooses to take subject only to the GPLv2
+- * license terms, and distributes only under these terms.
+  */
+ 
+ #include <linux/async.h>
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index bf97d616e597..672b8787f328 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1,37 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * Universal Flash Storage Host controller driver
+- *
+- * This code is based on drivers/scsi/ufs/ufshcd.h
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+  * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- * See the COPYING file in the top-level directory or visit
+- * <http://www.gnu.org/licenses/gpl-2.0.html>
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * This program is provided "AS IS" and "WITH ALL FAULTS" and
+- * without warranty of any kind. You are solely responsible for
+- * determining the appropriateness of using and distributing
+- * the program and assume all risks associated with your exercise
+- * of rights with respect to the program, including but not limited
+- * to infringement of third party rights, the risks and costs of
+- * program errors, damage to or loss of data, programs or equipment,
+- * and unavailability or interruption of operations. Under no
+- * circumstances will the contributor of this Program be liable for
+- * any damages of any kind arising from your use or distribution of
+- * this program.
+  */
+ 
+ #ifndef _UFSHCD_H
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index c2961d37cc1c..a9345f52605b 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -1,36 +1,11 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ /*
+  * Universal Flash Storage Host controller driver
+- *
+- * This code is based on drivers/scsi/ufs/ufshci.h
+  * Copyright (C) 2011-2013 Samsung India Software Operations
+  *
+  * Authors:
+  *	Santosh Yaraganavi <santosh.sy@samsung.com>
+  *	Vinayak Holikatti <h.vinayak@samsung.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * as published by the Free Software Foundation; either version 2
+- * of the License, or (at your option) any later version.
+- * See the COPYING file in the top-level directory or visit
+- * <http://www.gnu.org/licenses/gpl-2.0.html>
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * This program is provided "AS IS" and "WITH ALL FAULTS" and
+- * without warranty of any kind. You are solely responsible for
+- * determining the appropriateness of using and distributing
+- * the program and assume all risks associated with your exercise
+- * of rights with respect to the program, including but not limited
+- * to infringement of third party rights, the risks and costs of
+- * program errors, damage to or loss of data, programs or equipment,
+- * and unavailability or interruption of operations. Under no
+- * circumstances will the contributor of this Program be liable for
+- * any damages of any kind arising from your use or distribution of
+- * this program.
+  */
+ 
+ #ifndef _UFSHCI_H
+-- 
+2.17.1
 
-Can you test with that?
-
-Cheers,
-
-Hannes
---
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=FCrnberg HRB 36809 (AG=
- N=FCrnberg), Gesch=E4ftsf=FChrer: Felix Imend=F6rffer
-
-Yes, I'll start today.
