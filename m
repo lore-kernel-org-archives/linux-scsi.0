@@ -1,225 +1,143 @@
-Return-Path: <SRS0=2jUW=7T=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=iUlB=7U=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11A12C433DF
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Jun 2020 23:28:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B87D6C433E0
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Jun 2020 07:06:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAE4C20723
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Jun 2020 23:28:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9386820663
+	for <linux-scsi@archiver.kernel.org>; Sun,  7 Jun 2020 07:06:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="j9FVjGkG";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Eyw+9E4j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728690AbgFFX2b convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 Jun 2020 19:28:31 -0400
-Received: from mga02.intel.com ([134.134.136.20]:54184 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728631AbgFFX2a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 6 Jun 2020 19:28:30 -0400
-IronPort-SDR: ByHdZ0rLPU1KpECvvrDx2603g9CcuIJjl9MK//h7o+uYhdLVvKGU9ms6nSM/uvyDD1AZyn90zu
- 3EbliYWEQBlg==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2020 16:28:29 -0700
-IronPort-SDR: 3g2TkjMhcgIIZypQZ8+xavgUSkzRtojFWzrnvIM8kpb/KrItSzmLgGhE3hKi0dMifsT9IdN5GL
- Egf2q875184w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,482,1583222400"; 
-   d="scan'208";a="270136311"
-Received: from fmsmsx108.amr.corp.intel.com ([10.18.124.206])
-  by orsmga003.jf.intel.com with ESMTP; 06 Jun 2020 16:28:28 -0700
-Received: from lcsmsx601.ger.corp.intel.com (10.109.210.10) by
- FMSMSX108.amr.corp.intel.com (10.18.124.206) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Sat, 6 Jun 2020 16:28:28 -0700
-Received: from hasmsx602.ger.corp.intel.com (10.184.107.142) by
- LCSMSX601.ger.corp.intel.com (10.109.210.10) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Sun, 7 Jun 2020 02:28:25 +0300
-Received: from hasmsx602.ger.corp.intel.com ([10.184.107.142]) by
- HASMSX602.ger.corp.intel.com ([10.184.107.142]) with mapi id 15.01.1713.004;
- Sun, 7 Jun 2020 02:28:25 +0300
-From:   "Winkler, Tomas" <tomas.winkler@intel.com>
-To:     Bean Huo <huobean@gmail.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        id S1726314AbgFGHGx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 7 Jun 2020 03:06:53 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:57150 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726192AbgFGHGw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jun 2020 03:06:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1591513611; x=1623049611;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=wyPtyP46xBl5usqImeocN6zaLCnslYSmZ7myqKtDSB8=;
+  b=j9FVjGkGVKrUN980hg7MSRGkIt/XY1cj6KOiFd0ckW4eqIuQ0ilUlLiB
+   VW1WWU7sNzGw3K0OehZveRCqEm1qwRFPu0YLOYp0K/0QGuKuiFekpRPyA
+   LTyxZdvTo38jgXGfThNqCcxcntkJ6roO2ApaqhwkpmO9UmCqKujpuNfoy
+   tkpkYMFUvg/z0fnRWMDyI4EUgalHNgG2Yagj9lyC4WLeslwes4kRWWPlp
+   avHWp4aigjvD+QJieKGSDKeUzmiTtcffMdWGW+fCMJrWybiwPL88Pxw2c
+   naWQ9bm79h+UA82M/lCOW4cf7PL7NZGtsOGcKyT22nnO0FppXufeIovJ0
+   Q==;
+IronPort-SDR: z4fy/xSPgBWFuwBEubY/J5k6l9X7Tsrpk+EHk3BvoV2oU0i/b1Z+8vNenY5vf/qfKh9T2BkqpE
+ ps3w73MZ25xl7Xm59rQzAJABl4YSIJHPxxHibitOjLm6e4qBf79o0THKVYugwyq4ocCXsEtG2j
+ 4sF5oiNQy2QwMnPtiljpIDq68uK5gxOGCigHMQGIqlS7EnziqrbiamEiaSgUjXsQLu2FYgMj9f
+ MIG8KsBUEoQMGO2Dkqazohq76AZLnL2XyuijhpLMkJ2B3EZ/Xvj9/oCzFFlr3OK5BikrWmaGBr
+ 8Q4=
+X-IronPort-AV: E=Sophos;i="5.73,483,1583164800"; 
+   d="scan'208";a="143699598"
+Received: from mail-bn8nam12lp2168.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.168])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Jun 2020 15:06:48 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oT96RCD0RKGvgESIMF2932hF64TKlWfsggyGl4yQy2yEUXK87fICucWOhQjzbcAENWv27ZFoUEbGtir7NBkYLoPabx7nAww1ZEaklPBEUGD/xA5PU+G8XhlIfQsAm1C5ixX4+9sju7DNy98lctCfFsuPoAkUUimSK65kjIEiRTuTpoZo7jzS9xzYu7SA7i/VVAjzxeVg3i9VWU0zrOo1g+LFO6Ap6YIH923/yupiLZB7cK4a3tLNJfsiRnAlMoG2N4TmedH8SE5Jo9qQHgC6Ji5jrQzPaIWwunYGzjIvmNEqSbjBmXPtzcKzntrvkAG6rPRfFctiylMoVKcBghEbtA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wyPtyP46xBl5usqImeocN6zaLCnslYSmZ7myqKtDSB8=;
+ b=EBIIZy9KaiS/oz8bqdiCoeDzF63+2yiGrtj3PTKugh57fUWWqfy2EhtWUSpTSaAxQkbdDOmXViVofNQM+MlDYoLp00ni+ZIwcvq6P/mSgSMIyy5tPch8Q6em4RAAqWittAxGHMVTfyl0cB8HrhsgX9Fh+mU+BpGyw108V1mL7DB3RnSUTVhoep/zugheBVX2FqrVE3tS25mfmoRG40/F3W0JgKQMwJWCa8f5MDpVvuKBm0bGiuxA3c7Hoh1Tql6wXljE4nmSKByWZbGFViYZqq6MEhQM5+pkW2AKmzdvmTjXKz+DcaMgZLt/YxMSSC1zUQv6DVkCBVvK6KgVNtGv0g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wyPtyP46xBl5usqImeocN6zaLCnslYSmZ7myqKtDSB8=;
+ b=Eyw+9E4jYg76cOggoHhBKGnpKJKKQGFAd+OeeLghrdb1kwVgn/r0WbDug1ju+8b0P385iXquHxWjSud4bHMI5xcvEeIz9WHNKMe1Gd5tENB/Fcm7o8rleMU+1olDCFGgDcjxWA4x2bweltmNJBWZhJzth4A5U5/I/m7T56G7+DI=
+Received: from BYAPR04MB4629.namprd04.prod.outlook.com (2603:10b6:a03:14::14)
+ by BYAPR04MB5815.namprd04.prod.outlook.com (2603:10b6:a03:105::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3066.20; Sun, 7 Jun
+ 2020 07:06:45 +0000
+Received: from BYAPR04MB4629.namprd04.prod.outlook.com
+ ([fe80::75ba:5d7d:364c:5ae1]) by BYAPR04MB4629.namprd04.prod.outlook.com
+ ([fe80::75ba:5d7d:364c:5ae1%6]) with mapi id 15.20.3066.023; Sun, 7 Jun 2020
+ 07:06:45 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
         "beanhuo@micron.com" <beanhuo@micron.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
         "cang@codeaurora.org" <cang@codeaurora.org>,
-        "ebiggers@kernel.org" <ebiggers@kernel.org>
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 2/2] scsi: ufs: remove wrapper function
- ufshcd_setup_clocks()
-Thread-Topic: [PATCH v3 2/2] scsi: ufs: remove wrapper function
- ufshcd_setup_clocks()
-Thread-Index: AQHWO3S7gFtcaJKwGkOhBlXWlS1UyqjMPK7g
-Date:   Sat, 6 Jun 2020 23:28:25 +0000
-Message-ID: <bd961d352864412381ca551512ea759e@intel.com>
-References: <20200605200520.20831-1-huobean@gmail.com>
- <20200605200520.20831-3-huobean@gmail.com>
-In-Reply-To: <20200605200520.20831-3-huobean@gmail.com>
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Subject: RE: [RFC PATCH 3/5] scsi: ufs: Introduce HPB module
+Thread-Topic: [RFC PATCH 3/5] scsi: ufs: Introduce HPB module
+Thread-Index: AQHWOtxXhjJ5JD6j7UapdYSyFhANFKjMvdRA
+Date:   Sun, 7 Jun 2020 07:06:45 +0000
+Message-ID: <BYAPR04MB46297B7D1CDD6CA00E87F640FC840@BYAPR04MB4629.namprd04.prod.outlook.com>
+References: <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
+        <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
+        <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
+        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p8>
+ <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
+In-Reply-To: <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-dlp-product: dlpe-windows
-dlp-reaction: no-action
-dlp-version: 11.2.0.6
-x-originating-ip: [10.184.70.1]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+authentication-results: samsung.com; dkim=none (message not signed)
+ header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 1d5dd3c1-30f1-49b2-b039-08d80ab156fc
+x-ms-traffictypediagnostic: BYAPR04MB5815:
+x-microsoft-antispam-prvs: <BYAPR04MB58151E9ED963EABF6D5146BAFC840@BYAPR04MB5815.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:4125;
+x-forefront-prvs: 04270EF89C
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: T6UHxXVIKPM+qxRCzCE4vR4uhAxmz4h6dyRQdz97K2XnJUL3XWXzRn1ZbSqetB2c7TGCb3Ub/iF8EQbwByljbVOimKKNJCniK1WuXqtx5GjUrI8vz5oEjE3zXID55B7H9vgkffPSKYxSoRzciHAOdOLfE2q55rGDs5TJbmZa2OVRrWeV+erXCm/zZ24zKwzlbnvplKGHRGs388xDQWZPvQSKPvlTjUsw6Dw6QGV004fHor6ngUqhJ2mlARGpXpdl5Hicwswo4w0V/xhKXafwYnSCWtUAy8PO/A1ZCU4R1rtj4xqfsLjdG/SfxIKPRsMKGRIrm4q9bcLsfUfN4NFl3hD2kIKPCh5WVO1CI2g+/RldiL1sGE3N0e3KF7wXqvNB
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4629.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(376002)(346002)(136003)(39860400002)(366004)(86362001)(186003)(6506007)(478600001)(66446008)(4326008)(54906003)(8936002)(8676002)(110136005)(66946007)(9686003)(55016002)(64756008)(33656002)(66556008)(26005)(66476007)(52536014)(71200400001)(7416002)(558084003)(7696005)(5660300002)(316002)(2906002)(76116006)(921003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 5oOeFp9PUYBop9adT7/jQJzxmOE9aXDx+2FwiDZSwVh5TO4Vk6tS0nHsMrr4Btxeuay+WBhcJ5j/LdMkTHG5ZOAN+W2+08dleKWrfk96ZTrobUqgNV6ugce9jKWmz+uIAyf1LpOn1f5/CC8Ct2BA3UDBdGRJB47WFGNDPWk7f8VZysJrYd295bcUZ82jNH01OcSyeJrouMLFlihYUJBAJynXMJMLaW0cKA3Hq+42vdXnU35To3xjdyOC09LY18H6lQvg4v/2eVb/mpSHNuFcw8dGkHz3dOqhqcM8EHdzevPLbT1QmLsfQYapZPpDUEm3dP7yQ5ktae/fHDY8hLadgSkyrm9R1Y8H+WYz/jhWEdHg7Qhabz/Cizyl9dIg0IyX1ZMTwafl8lsbUviQ/kKPJ3UYgmhTea+bJx8ozwX2scp/+NATPR2JwwrHj9cT/kHXJVR94pwx3Q5Tk7Fp1NeQ6sOGXt+Yo0TM72oiJfo2MTw=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d5dd3c1-30f1-49b2-b039-08d80ab156fc
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Jun 2020 07:06:45.5866
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: oOlueIN0blnZgdVDyy6wDqDUE8BYEnWebThFtiAqoNy6MHZMHZxhx7e6tI8YmX+OwbLuJ0e2DR+Z3oUC95Tp1A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5815
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-> 
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> The static function ufshcd_setup_clocks() is just a wrapper around
-> __ufshcd_setup_clocks(), remove it. Rename original function wrapped
-> __ufshcd_setup_clocks() to new ufshcd_setup_clocks().
-
-Not sure about this change, we have only one call with skip_ref_clock set to true, the original code actually make sense from readability stand point. 
-
-> 
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++--------------------
->  1 file changed, 12 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-> ec4f55211648..531d0b7878db 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -215,9 +215,7 @@ static int ufshcd_eh_host_reset_handler(struct
-> scsi_cmnd *cmd);  static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int
-> tag);  static void ufshcd_hba_exit(struct ufs_hba *hba);  static int
-> ufshcd_probe_hba(struct ufs_hba *hba, bool async); -static int
-> __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
-> -				 bool skip_ref_clk);
-> -static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
-> +static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on, bool
-> +skip_ref_clk);
->  static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);  static inline void
-> ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);  static int
-> ufshcd_host_reset_and_restore(struct ufs_hba *hba); @@ -1497,7 +1495,7
-> @@ static void ufshcd_ungate_work(struct work_struct *work)
->  	}
-> 
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -	ufshcd_setup_clocks(hba, true);
-> +	ufshcd_setup_clocks(hba, true, false);
-> 
->  	ufshcd_enable_irq(hba);
-> 
-> @@ -1655,10 +1653,10 @@ static void ufshcd_gate_work(struct work_struct
-> *work)
->  	ufshcd_disable_irq(hba);
-> 
->  	if (!ufshcd_is_link_active(hba))
-> -		ufshcd_setup_clocks(hba, false);
-> +		ufshcd_setup_clocks(hba, false, false);
->  	else
->  		/* If link is active, device ref_clk can't be switched off */
-> -		__ufshcd_setup_clocks(hba, false, true);
-> +		ufshcd_setup_clocks(hba, false, true);
-> 
->  	/*
->  	 * In case you are here to cancel this work the gating state @@ -
-> 7683,8 +7681,7 @@ static int ufshcd_init_hba_vreg(struct ufs_hba *hba)
->  	return 0;
->  }
-> 
-> -static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
-> -					bool skip_ref_clk)
-> +static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on, bool
-> +skip_ref_clk)
->  {
->  	int ret = 0;
->  	struct ufs_clk_info *clki;
-> @@ -7747,11 +7744,6 @@ static int __ufshcd_setup_clocks(struct ufs_hba
-> *hba, bool on,
->  	return ret;
->  }
-> 
-> -static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on) -{
-> -	return  __ufshcd_setup_clocks(hba, on, false);
-> -}
-> -
->  static int ufshcd_init_clocks(struct ufs_hba *hba)  {
->  	int ret = 0;
-> @@ -7858,7 +7850,7 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
->  	if (err)
->  		goto out_disable_hba_vreg;
-> 
-> -	err = ufshcd_setup_clocks(hba, true);
-> +	err = ufshcd_setup_clocks(hba, true, false);
->  	if (err)
->  		goto out_disable_hba_vreg;
-> 
-> @@ -7880,7 +7872,7 @@ static int ufshcd_hba_init(struct ufs_hba *hba)
->  out_disable_vreg:
->  	ufshcd_setup_vreg(hba, false);
->  out_disable_clks:
-> -	ufshcd_setup_clocks(hba, false);
-> +	ufshcd_setup_clocks(hba, false, false);
->  out_disable_hba_vreg:
->  	ufshcd_setup_hba_vreg(hba, false);
->  out:
-> @@ -7896,7 +7888,7 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
->  		if (ufshcd_is_clkscaling_supported(hba))
->  			if (hba->devfreq)
->  				ufshcd_suspend_clkscaling(hba);
-> -		ufshcd_setup_clocks(hba, false);
-> +		ufshcd_setup_clocks(hba, false, false);
->  		ufshcd_setup_hba_vreg(hba, false);
->  		hba->is_powered = false;
->  		ufs_put_device_desc(hba);
-> @@ -8259,10 +8251,10 @@ static int ufshcd_suspend(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	ufshcd_disable_irq(hba);
-> 
->  	if (!ufshcd_is_link_active(hba))
-> -		ufshcd_setup_clocks(hba, false);
-> +		ufshcd_setup_clocks(hba, false, false);
->  	else
->  		/* If link is active, device ref_clk can't be switched off */
-> -		__ufshcd_setup_clocks(hba, false, true);
-> +		ufshcd_setup_clocks(hba, false, true);
-> 
->  	hba->clk_gating.state = CLKS_OFF;
->  	trace_ufshcd_clk_gating(dev_name(hba->dev), hba-
-> >clk_gating.state); @@ -8321,7 +8313,7 @@ static int ufshcd_resume(struct
-> ufs_hba *hba, enum ufs_pm_op pm_op)
-> 
->  	ufshcd_hba_vreg_set_hpm(hba);
->  	/* Make sure clocks are enabled before accessing controller */
-> -	ret = ufshcd_setup_clocks(hba, true);
-> +	ret = ufshcd_setup_clocks(hba, true, false);
->  	if (ret)
->  		goto out;
-> 
-> @@ -8404,7 +8396,7 @@ static int ufshcd_resume(struct ufs_hba *hba,
-> enum ufs_pm_op pm_op)
->  	ufshcd_disable_irq(hba);
->  	if (hba->clk_scaling.is_allowed)
->  		ufshcd_suspend_clkscaling(hba);
-> -	ufshcd_setup_clocks(hba, false);
-> +	ufshcd_setup_clocks(hba, false, false);
->  out:
->  	hba->pm_op_in_progress = 0;
->  	if (ret)
-> --
-> 2.17.1
-
+DQo+ICtzdGF0aWMgaW50IHVmc2hwYl9nZXRfZGV2X2luZm8oc3RydWN0IHVmc19oYmEgKmhiYSwN
+Cj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCB1ZnNocGJfZGV2X2luZm8g
+KmhwYl9kZXZfaW5mbywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4ICpkZXNj
+X2J1ZikNCj4gK3sNCj4gKyAgICAgICBpbnQgcmV0Ow0KSG93IGFib3V0IGhlcmUsIGJlZm9yZSBk
+b2luZyBhbnl0aGluZywgY2hlY2sgdGhhdCB0aGUgZGVzY3JpcHRvcnMgYXJlIGluIHByb3BlciBz
+aXplPw0KDQpUaGFua3MsDQpBdnJpDQo=
