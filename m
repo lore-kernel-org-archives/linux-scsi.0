@@ -1,53 +1,54 @@
-Return-Path: <SRS0=xyUR=7V=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=2p7s=7W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A015AC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Jun 2020 23:14:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42512C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:32:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B28821655
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Jun 2020 23:14:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19A4D20853
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:32:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591658066;
-	bh=ABke5fCnb4WtC7EIewoibSfRFGOJLJ1nVVXvihgqlJc=;
+	s=default; t=1591662758;
+	bh=gFlnimGPxJ+s6PY8h4JgH9me7qMFxTl/ShAZ/q4Lzfs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TlyC4/XrJJipHq4Y+tE7mXLmhZdwF1xTJn7sMJHoO9R5jNvt48TdzQ0N30zHaOFuy
-	 VFPFSTA6dprDTnWHrXDwn3GPoTiGciIi2YN0jE6XYu3D1MWi9sd2pdCsiUNGoIJHP+
-	 4BG5KLFOP+Zbse+fkt4pUU8E5vEDryGQQrlt+ykc=
+	b=YbMp9w724O6kyrOe83ejjRezUk9wBNnL4mlPfF/VwSYFIFWG4qs84/W9pE/tOu7wN
+	 6RzOx/m9Ugkyr+wL7PJBEX4lpKiDhDIDBqV6E/l2Nkn9kMD6y7OiXuI/nq8bdY4UWM
+	 0bigUhTt+w6mGnpxjsBAjL1xOAwjC++jC04uovqk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728969AbgFHXOZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:14:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34578 "EHLO mail.kernel.org"
+        id S1730156AbgFIAcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Jun 2020 20:32:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35912 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729778AbgFHXOW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:14:22 -0400
+        id S1729992AbgFHXPJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:15:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D9AB720C09;
-        Mon,  8 Jun 2020 23:14:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 424DA214F1;
+        Mon,  8 Jun 2020 23:15:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658061;
-        bh=ABke5fCnb4WtC7EIewoibSfRFGOJLJ1nVVXvihgqlJc=;
+        s=default; t=1591658109;
+        bh=gFlnimGPxJ+s6PY8h4JgH9me7qMFxTl/ShAZ/q4Lzfs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FoiFvRPrhxRnEeKHQZcwQ/vWm/998GtD5HnTAe/+QmVpsUTZkU/kHmtdI8Zgxr4Yt
-         a4F4Cz3nW1Ary4qbvw3WZ3UjXzjDQexKoiRyx+xY4/eCxVijibJufsZRTq2dQ1ePOi
-         FhfIe9tF97Bd/wF6eRylm7xuUEcKv/t3HRL+O1BI=
+        b=wdfWIR8hh9ISmHTc6Pwyz++ESxW9phyeE0q/SNfJf9SGm3wO02Ib769vkHrMgUzLc
+         f+h2sK0oC8St66xW3AiehgW4IXC8+1mWsyHWsJhenOuIY7Iw1KlBsOxphfVk/Z9SmB
+         DqgxaSBjsACVTyV2iHmNgaiT4oSA5e33U9ssy5bA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Arun Easi <aeasi@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        "Bryant G . Ly" <bryangly@gmail.com>,
+        Bart van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 108/606] scsi: qla2xxx: Fix hang when issuing nvme disconnect-all in NPIV
-Date:   Mon,  8 Jun 2020 19:03:53 -0400
-Message-Id: <20200608231211.3363633-108-sashal@kernel.org>
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 148/606] scsi: target: Put lun_ref at end of tmr processing
+Date:   Mon,  8 Jun 2020 19:04:33 -0400
+Message-Id: <20200608231211.3363633-148-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608231211.3363633-1-sashal@kernel.org>
 References: <20200608231211.3363633-1-sashal@kernel.org>
@@ -60,40 +61,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arun Easi <aeasi@marvell.com>
+From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-[ Upstream commit 45a76264c26fd8cfd0c9746196892d9b7e2657ee ]
+commit f2e6b75f6ee82308ef7b00f29e71e5f1c6b3d52a upstream.
 
-In NPIV environment, a NPIV host may use a queue pair created by base host
-or other NPIVs, so the check for a queue pair created by this NPIV is not
-correct, and can cause an abort to fail, which in turn means the NVME
-command not returned.  This leads to hang in nvme_fc layer in
-nvme_fc_delete_association() which waits for all I/Os to be returned, which
-is seen as hang in the application.
+Testing with Loopback I found that, after a Loopback LUN has executed a
+TMR, I can no longer unlink the LUN.  The rm command hangs in
+transport_clear_lun_ref() at wait_for_completion(&lun->lun_shutdown_comp)
+The reason is, that transport_lun_remove_cmd() is not called at the end of
+target_tmr_work().
 
-Link: https://lore.kernel.org/r/20200331104015.24868-3-njavali@marvell.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Arun Easi <aeasi@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+It seems, that in other fabrics this call happens implicitly when the
+fabric drivers call transport_generic_free_cmd() during their
+->queue_tm_rsp().
+
+Unfortunately Loopback seems to not comply to the common way
+of calling transport_generic_free_cmd() from ->queue_*().
+Instead it calls transport_generic_free_cmd() from its
+  ->check_stop_free() only.
+
+But the ->check_stop_free() is called by
+transport_cmd_check_stop_to_fabric() after it has reset the se_cmd->se_lun
+pointer.  Therefore the following transport_generic_free_cmd() skips the
+transport_lun_remove_cmd().
+
+So this patch re-adds the transport_lun_remove_cmd() at the end of
+target_tmr_work(), which was removed during commit 2c9fa49e100f ("scsi:
+target/core: Make ABORT and LUN RESET handling synchronous").
+
+For fabrics using transport_generic_free_cmd() in the usual way the double
+call to transport_lun_remove_cmd() doesn't harm, as
+transport_lun_remove_cmd() checks for this situation and does not release
+lun_ref twice.
+
+Link: https://lore.kernel.org/r/20200513153443.3554-1-bstroesser@ts.fujitsu.com
+Fixes: 2c9fa49e100f ("scsi: target/core: Make ABORT and LUN RESET handling synchronous")
+Cc: stable@vger.kernel.org
+Tested-by: Bryant G. Ly <bryangly@gmail.com>
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_transport.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 9e09964f5c0e..7b341e41bb85 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3117,7 +3117,7 @@ qla24xx_abort_command(srb_t *sp)
- 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x108c,
- 	    "Entered %s.\n", __func__);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 0ae9e60fc4d5..61486e5abee4 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3349,6 +3349,7 @@ static void target_tmr_work(struct work_struct *work)
  
--	if (vha->flags.qpairs_available && sp->qpair)
-+	if (sp->qpair)
- 		req = sp->qpair->req;
- 	else
- 		return QLA_FUNCTION_FAILED;
+ 	cmd->se_tfo->queue_tm_rsp(cmd);
+ 
++	transport_lun_remove_cmd(cmd);
+ 	transport_cmd_check_stop_to_fabric(cmd);
+ 	return;
+ 
 -- 
 2.25.1
 
