@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42512C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:32:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84203C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:32:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19A4D20853
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:32:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50CEA207C3
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591662758;
-	bh=gFlnimGPxJ+s6PY8h4JgH9me7qMFxTl/ShAZ/q4Lzfs=;
+	s=default; t=1591662762;
+	bh=AbPJ7FvzSzyub/OlkB3mvX9rkt+sl9CLgSM1XLr4RVA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YbMp9w724O6kyrOe83ejjRezUk9wBNnL4mlPfF/VwSYFIFWG4qs84/W9pE/tOu7wN
-	 6RzOx/m9Ugkyr+wL7PJBEX4lpKiDhDIDBqV6E/l2Nkn9kMD6y7OiXuI/nq8bdY4UWM
-	 0bigUhTt+w6mGnpxjsBAjL1xOAwjC++jC04uovqk=
+	b=GamZtkO8kT89+WQSuGNwpd0Z3sIBt58sXKgSGy95hU/6ZW5jekXNTFcmUvhNq+E5C
+	 sFVJXdFDraYro4hokuNuiN1IWbaK+2mgmkUIvMBvepJeqdWl7Cm7QhNYL/84bFfQwA
+	 bPQ+G4JInIZXOc0jTM4mHf7m50OnOlkQejbEGL90=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730156AbgFIAcd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:32:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35912 "EHLO mail.kernel.org"
+        id S1732425AbgFIAck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Jun 2020 20:32:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35888 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729992AbgFHXPJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:15:09 -0400
+        id S1729986AbgFHXPI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:15:08 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 424DA214F1;
-        Mon,  8 Jun 2020 23:15:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D5C65212CC;
+        Mon,  8 Jun 2020 23:15:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658109;
-        bh=gFlnimGPxJ+s6PY8h4JgH9me7qMFxTl/ShAZ/q4Lzfs=;
+        s=default; t=1591658107;
+        bh=AbPJ7FvzSzyub/OlkB3mvX9rkt+sl9CLgSM1XLr4RVA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wdfWIR8hh9ISmHTc6Pwyz++ESxW9phyeE0q/SNfJf9SGm3wO02Ib769vkHrMgUzLc
-         f+h2sK0oC8St66xW3AiehgW4IXC8+1mWsyHWsJhenOuIY7Iw1KlBsOxphfVk/Z9SmB
-         DqgxaSBjsACVTyV2iHmNgaiT4oSA5e33U9ssy5bA=
+        b=NUKIzwYNaQAxemq0PAoBudmdYASUY//paojL7BCz/EkGoma/oJfI4tdEiNYLkUOkI
+         Op68NHqDKc6a5mzgMv3MU/IGwrkRKJjhTQQf4YqV7GbFTus/olijWY+6LYtkxsJ0Sk
+         jOXY9fIaEyrGlczuElxI0S0o+IQ4apu0IAl/TXpA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Bryant G . Ly" <bryangly@gmail.com>,
-        Bart van Assche <bvanassche@acm.org>,
+Cc:     "Ewan D. Milne" <emilne@redhat.com>, Lee Duncan <lduncan@suse.com>,
+        Laurence Oberman <loberman@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 148/606] scsi: target: Put lun_ref at end of tmr processing
-Date:   Mon,  8 Jun 2020 19:04:33 -0400
-Message-Id: <20200608231211.3363633-148-sashal@kernel.org>
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 147/606] scsi: qla2xxx: Do not log message when reading port speed via sysfs
+Date:   Mon,  8 Jun 2020 19:04:32 -0400
+Message-Id: <20200608231211.3363633-147-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608231211.3363633-1-sashal@kernel.org>
 References: <20200608231211.3363633-1-sashal@kernel.org>
@@ -61,62 +61,42 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-commit f2e6b75f6ee82308ef7b00f29e71e5f1c6b3d52a upstream.
+commit fb9024b0646939e59d8a0b6799b317070619795a upstream.
 
-Testing with Loopback I found that, after a Loopback LUN has executed a
-TMR, I can no longer unlink the LUN.  The rm command hangs in
-transport_clear_lun_ref() at wait_for_completion(&lun->lun_shutdown_comp)
-The reason is, that transport_lun_remove_cmd() is not called at the end of
-target_tmr_work().
+Calling ql_log() inside qla2x00_port_speed_show() is causing messages to be
+output to the console for no particularly good reason.  The sysfs read
+routine should just return the information to userspace.  The only reason
+to log a message is when the port speed actually changes, and this already
+occurs elsewhere.
 
-It seems, that in other fabrics this call happens implicitly when the
-fabric drivers call transport_generic_free_cmd() during their
-->queue_tm_rsp().
-
-Unfortunately Loopback seems to not comply to the common way
-of calling transport_generic_free_cmd() from ->queue_*().
-Instead it calls transport_generic_free_cmd() from its
-  ->check_stop_free() only.
-
-But the ->check_stop_free() is called by
-transport_cmd_check_stop_to_fabric() after it has reset the se_cmd->se_lun
-pointer.  Therefore the following transport_generic_free_cmd() skips the
-transport_lun_remove_cmd().
-
-So this patch re-adds the transport_lun_remove_cmd() at the end of
-target_tmr_work(), which was removed during commit 2c9fa49e100f ("scsi:
-target/core: Make ABORT and LUN RESET handling synchronous").
-
-For fabrics using transport_generic_free_cmd() in the usual way the double
-call to transport_lun_remove_cmd() doesn't harm, as
-transport_lun_remove_cmd() checks for this situation and does not release
-lun_ref twice.
-
-Link: https://lore.kernel.org/r/20200513153443.3554-1-bstroesser@ts.fujitsu.com
-Fixes: 2c9fa49e100f ("scsi: target/core: Make ABORT and LUN RESET handling synchronous")
-Cc: stable@vger.kernel.org
-Tested-by: Bryant G. Ly <bryangly@gmail.com>
-Reviewed-by: Bart van Assche <bvanassche@acm.org>
-Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Link: https://lore.kernel.org/r/20200504175416.15417-1-emilne@redhat.com
+Fixes: 4910b524ac9e ("scsi: qla2xxx: Add support for setting port speed")
+Cc: <stable@vger.kernel.org> # v5.1+
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/target/target_core_transport.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/qla2xxx/qla_attr.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 0ae9e60fc4d5..61486e5abee4 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3349,6 +3349,7 @@ static void target_tmr_work(struct work_struct *work)
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 9556392652e3..e3c45edd0e18 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1777,9 +1777,6 @@ qla2x00_port_speed_show(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 	}
  
- 	cmd->se_tfo->queue_tm_rsp(cmd);
- 
-+	transport_lun_remove_cmd(cmd);
- 	transport_cmd_check_stop_to_fabric(cmd);
- 	return;
+-	ql_log(ql_log_info, vha, 0x70d6,
+-	    "port speed:%d\n", ha->link_data_rate);
+-
+ 	return scnprintf(buf, PAGE_SIZE, "%s\n", spd[ha->link_data_rate]);
+ }
  
 -- 
 2.25.1
