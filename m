@@ -2,165 +2,105 @@ Return-Path: <SRS0=xyUR=7V=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 867C3C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Jun 2020 19:02:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCFA2C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Jun 2020 19:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59EDD20853
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Jun 2020 19:02:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PpHVDEe0"
+	by mail.kernel.org (Postfix) with ESMTP id BA4802068D
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Jun 2020 19:36:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726496AbgFHTCW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Jun 2020 15:02:22 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43526 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726203AbgFHTCW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2020 15:02:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 058Iqqku112568;
-        Mon, 8 Jun 2020 19:02:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=ttTYBawOltRsyU4wEKtJhIuZ8gUVNUgEWOMRfQ7ljpg=;
- b=PpHVDEe0fedqwoPXjieNJj1SffK7x1kHRHUo/1k6zzqb5AJbhjTwocOLl2IMlINgjNXr
- pazuDwqC+UUQDISBxjzlZcMY6UmXecPOEVRBwUz4FaqMxGUj7Bii41bfjCrI64GWU++A
- wXJ7MgIqhMLFZ9Mm1CGrT9v6qVl0HfvJ2fEB6XwacUoeAWtBpV5iReSwKQ9AHf+h+b4q
- 7hoRFcOM8uasRQ6x+/iyvzF7rjDflgMQ19KzUBk7c+LQkPLN47a7QBX0u6gtSJSy/Nye
- A1JWxhreha/AmAXiHDpTcs+2/v3Qxcvfy3ZTugCrccUrv8mJp7YFesOPBFMhG6hKMLj5 YQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 31g33m0gvs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 08 Jun 2020 19:02:16 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 058IwMrb140249;
-        Mon, 8 Jun 2020 19:02:16 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 31gn23ncpc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 08 Jun 2020 19:02:16 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 058J2E27020489;
-        Mon, 8 Jun 2020 19:02:15 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 08 Jun 2020 12:02:14 -0700
-Subject: Re: [PATCH 11/17] target: add session sysfs class support
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-References: <1591562164-9766-1-git-send-email-michael.christie@oracle.com>
- <1591562164-9766-12-git-send-email-michael.christie@oracle.com>
- <20200608053259.GA241877@kroah.com>
- <1bb2e8f9-d433-de3b-3c4a-2ded2fa54240@oracle.com>
- <20200608163656.GA425601@kroah.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <e16dedcd-10ae-3d25-c49a-c24b5d964434@oracle.com>
-Date:   Mon, 8 Jun 2020 14:02:16 -0500
+        id S1726412AbgFHTg4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Jun 2020 15:36:56 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:41466 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726406AbgFHTg4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2020 15:36:56 -0400
+Received: by mail-pg1-f193.google.com with SMTP id r10so9182791pgv.8
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Jun 2020 12:36:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=tS+NAUv3oymLebzVE6+rGHdxl7jZAoujAnHprvM8CIE=;
+        b=YTppWR9fcGnIu1BnxdV5mDYbNqFgaszQa9/3z5WwAilkpS8ir0tITXcGhmvlshAY1Q
+         ZxY5qhjaPtd22XgoNsbeULLKtDy5oHzWKSozGfI2ZrUb8+ya1CVLMMXAecgdNhEW6H0x
+         Dd8tURF2P/c3RuSRqAJEa3Sj35Rl/VKB2OTF3Fr8wWPzp2ooHyL5va7T4VNuVFZME7Zk
+         dAU09+NC9THwqU+l1yp3yskxgPlbBfuJZRXzZPUGtuqY2IQt+OHT1WTXQg4hf8VWZA9i
+         DVyZXnXbXExTyvZSRNPYBaRUzhqkwxeosp4DICH12HCljiHGeQB2XKyrQ1ZtmHJHiQu2
+         1WvQ==
+X-Gm-Message-State: AOAM530lETjZZ107Q+qWF1XPJCdBThTOYAAGjx4dKtk/lRGxWyHC4yc2
+        RhYG15KtBqRxxfKctUeoN5g=
+X-Google-Smtp-Source: ABdhPJx+OAdsrFpZd59L3EPR4KuS4/f4xbXqZbzmyuHeGZoHEw1qTrBuncZfZb4cJ2dSa1sbw2lX9g==
+X-Received: by 2002:a65:46c9:: with SMTP id n9mr595940pgr.89.1591645015244;
+        Mon, 08 Jun 2020 12:36:55 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id p11sm8224801pfq.10.2020.06.08.12.36.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 08 Jun 2020 12:36:54 -0700 (PDT)
+Subject: Re: [PATCH v2 1/2] qla2xxx: Change in PUREX to handle FPIN ELS
+ requests.
+To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+References: <20200608184630.31574-1-njavali@marvell.com>
+ <20200608184630.31574-2-njavali@marvell.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <1e2939f1-d117-d548-722c-730e9f21e2de@acm.org>
+Date:   Mon, 8 Jun 2020 12:36:53 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+ Thunderbird/68.8.1
 MIME-Version: 1.0
-In-Reply-To: <20200608163656.GA425601@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20200608184630.31574-2-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9646 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=2 mlxscore=0
- phishscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006080135
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9646 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 adultscore=0 spamscore=0
- cotscore=-2147483648 malwarescore=0 phishscore=0 mlxscore=0 clxscore=1015
- lowpriorityscore=0 impostorscore=0 priorityscore=1501 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006080134
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 6/8/20 11:36 AM, Greg Kroah-Hartman wrote:
-> On Mon, Jun 08, 2020 at 10:35:56AM -0500, Mike Christie wrote:
->>
->>
->> On 6/8/20 12:32 AM, Greg Kroah-Hartman wrote:
->>> On Sun, Jun 07, 2020 at 03:35:58PM -0500, Mike Christie wrote:
->>>> +int target_sysfs_add_session(struct se_portal_group *se_tpg,
->>>> +			     struct se_session *se_sess)
->>>> +{
->>>> +	struct t10_transport_id *tpt_id = se_sess->tpt_id;
->>>> +	int ret;
->>>> +
->>>> +	if (!try_module_get(se_sess->tfo->module))
->>>> +		return -EINVAL;
->>>> +
->>>> +	ret = target_cp_endpoint_strs(se_tpg, se_sess);
->>>> +	if (ret)
->>>> +		goto put_mod;
->>>> +
->>>> +	se_sess->dev.groups = se_sess->tfo->session_attr_groups;
->>>> +	ret = device_add(&se_sess->dev);
->>>> +	if (ret) {
->>>> +		pr_err("Could not add session%d to sysfs. Error %d.\n",
->>>> +		       se_sess->sid, ret);
->>>> +		goto free_ep_strs;
->>>> +	}
->>>> +
->>>> +	pr_info("TCM added session-%d from [fabric: %s, target: %s, tpg %s, acl: %s] to [initiator port: %s%s%s]",
->>>> +		se_sess->sid, se_sess->fabric_name, se_sess->target_name,
->>>> +		se_sess->tpg_name, se_sess->acl_name ? se_sess->acl_name : "dynamic",
->>>> +		tpt_id->name, tpt_id->session_id ? "," : "",
->>>> +		tpt_id->session_id ? tpt_id->session_id : "");
->>>
->>> You have a 'struct device', so please use it, no need for pr_info(),
->>> always use the dev_*() calls instead.
->>>
->>> but, when drivers and kernel code is all working properly, no need to be
->>> noisy at all, this should just be a dev_dbg() call, right?
->>
->> I liked the info one, because the the code can work correctly, but the
->> remote devices we are connecting to are normally going to hit issues.
->>
->> For example every time the storage network goes down temporarily the driver
->> code will call remove function, then call the add again when it comes back
->> up. Having it always logged helps us figure out the root problem later when
->> the customer only has logs available.
+On 2020-06-08 11:46, Nilesh Javali wrote:
+> From: Shyam Sundar <ssundar@marvell.com>
 > 
-> Then make this a tracepoint or something, again, do not be noisy for
-> normal system operations.  Do you want this to be the case for all of
-
-What's a special case vs normal?
-
-I would agree having a SCSI HBA in your system and having it setup 
-during system boot up is normal.
-
-I would agree hardware failing is special.
-
-Having a remote client connect to us, lose its connected then recover 
-seems special, because it's a failure case.
-
-Even the initial connection seems like a special event, because the user 
-has done some extra steps to have the client connect to us. It's like 
-adding a new disk to the system which we log today or like plugging in 
-or removing a USB device which we also log.
-
-
-> your hardware devices all the time?
+> SAN Congestion Management generates ELS pkts whose size
+> can vary, and be > 64 bytes. Change the purex
+> handling code to support non standard ELS pkt size.
 > 
+> Signed-off-by: Shyam Sundar <ssundar@marvell.com>
+> Reviewed-by: Arun Easi <aeasi@marvell.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Reviewed-by: James Smart <james.smart@broadcom.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
 
-I do, but I'm a kernel developer :)
+Has anyone other than Himanshu ever posted a positive review for this
+patch? I can't find the other review tags here:
+https://lore.kernel.org/linux-scsi/20200514101026.10040-1-njavali@marvell.com/
 
-For the sys admin and distro debugging type of case, yes, they want this 
-type of thing logged, because they have done some extra setup to have a 
-remote client connect to us. When the connection is lost and then 
-re-added they want all that info logged with the lower level info we are 
-already logging, so they can follow the time of events.
+Bart.
