@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A48C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 13:50:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E94E5C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 13:50:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD5AA20737
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 13:50:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6DA620737
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 13:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730218AbgFINuD convert rfc822-to-8bit (ORCPT
+        id S1730370AbgFINuW convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Jun 2020 09:50:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34198 "EHLO mail.kernel.org"
+        Tue, 9 Jun 2020 09:50:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34662 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730351AbgFINty (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Jun 2020 09:49:54 -0400
+        id S1730125AbgFINuV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Jun 2020 09:50:21 -0400
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 208045] ARM ubuntu 18.04 as the iscsi server, using initiator
  login, the kernel crashes
-Date:   Tue, 09 Jun 2020 13:49:54 +0000
+Date:   Tue, 09 Jun 2020 13:50:20 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -39,7 +39,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-208045-11613-Jr9b3c4b0d@https.bugzilla.kernel.org/>
+Message-ID: <bug-208045-11613-pqxAlk4RgP@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-208045-11613@https.bugzilla.kernel.org/>
 References: <bug-208045-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -54,10 +54,10 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=208045
 
---- Comment #3 from Bodo Stroesser (bstroesser@ts.fujitsu.com) ---
-Created attachment 289575
-  --> https://bugzilla.kernel.org/attachment.cgi?id=289575&action=edit
-Patch 1/3
+--- Comment #4 from Bodo Stroesser (bstroesser@ts.fujitsu.com) ---
+Created attachment 289577
+  --> https://bugzilla.kernel.org/attachment.cgi?id=289577&action=edit
+Patch 2/3
 
 -- 
 You are receiving this mail because:
