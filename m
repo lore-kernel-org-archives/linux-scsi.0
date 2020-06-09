@@ -2,130 +2,145 @@ Return-Path: <SRS0=2p7s=7W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DC28C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 10:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8154EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 10:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A16D206C3
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 10:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AFF32078D
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 10:11:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="OeT1os0w"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SnXFbZiF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727777AbgFIKAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Jun 2020 06:00:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53458 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726765AbgFIKAR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2020 06:00:17 -0400
-Received: from ozlabs.org (ozlabs.org [IPv6:2401:3900:2:1::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 800EDC05BD1E;
-        Tue,  9 Jun 2020 03:00:17 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        id S1728587AbgFIKL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Jun 2020 06:11:57 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:50664 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726765AbgFIKLz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2020 06:11:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591697513;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PJfpPoOS0YZpWw6ACeQgnrbC82mWkFgR6talvSJCrhE=;
+        b=SnXFbZiF4Yt6vrM2iK2kJ/r4SUBXLCnP6P7FK0tn2iOJYOLg0qTzj4Yg0kgWM1OMsnmwKh
+        4N0frYWl9Gzwz4az9PwyGEa7bXTZpHAX3ggrElFSiMDfN2ixaM/R27ajLpqzTaS1UD9Oxm
+        EELDys0dsnCXfEvN6hVHcjN6N1/GnzM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-167-Hf3jT68SNiKlTEZNO_3gVQ-1; Tue, 09 Jun 2020 06:11:50 -0400
+X-MC-Unique: Hf3jT68SNiKlTEZNO_3gVQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 49h5G15PmVz9sT6;
-        Tue,  9 Jun 2020 20:00:09 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
-        s=201909; t=1591696810;
-        bh=rmK8hLTxcRQ8uaBcN/fGTaE+wcTgRw/Xhbx5UZND1rs=;
-        h=From:To:Subject:Date:From;
-        b=OeT1os0wLS5mryDhKd3XYld/5OKC9ESr1u/4L0fbJqZvp+LZVKaK3VaHNlNQy5/c4
-         WOkTrRKLeShGHuvk0767eykpGXwkSnzV3IaESW6DP1xKyK3vvNMTizaodQtalUOQqg
-         tLAthkI5toqMdqWapKp+HlZFE7oAqzjCiYeknPpvsFBt9cWLIUpZv5YbXZpaqTRGHV
-         8slIxNXLu+YqWNQCvVdw7rKo3+23tltyZr0rT8S3zS+RR5QF3s0yLFre4YuBArUElQ
-         fzy0D8C6DmL42CFKat56uADJrXO2/FhVGz4JnGCiRw2nVkgPJzLSffK9UnLPoFuW6o
-         czqWml5L4v2eg==
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     brking@us.ibm.com, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Subject: ipr crashes due to NULL dma_need_drain since cc97923a5bcc ("block: move dma drain handling to scsi")
-Date:   Tue, 09 Jun 2020 20:00:35 +1000
-Message-ID: <87zh9cftj0.fsf@mpe.ellerman.id.au>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CFA4583DE2E;
+        Tue,  9 Jun 2020 10:11:48 +0000 (UTC)
+Received: from localhost (ovpn-115-52.ams2.redhat.com [10.36.115.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E53015D9F1;
+        Tue,  9 Jun 2020 10:11:44 +0000 (UTC)
+Date:   Tue, 9 Jun 2020 11:11:43 +0100
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     bvanassche@acm.org, bstroesser@ts.fujitsu.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH 02/17] target: separate acl name from port ids
+Message-ID: <20200609101143.GA92564@stefanha-x1.localdomain>
+References: <1591562164-9766-1-git-send-email-michael.christie@oracle.com>
+ <1591562164-9766-3-git-send-email-michael.christie@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1591562164-9766-3-git-send-email-michael.christie@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: redhat.com
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+--AqsLC8rIMeq19msA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'm seeing crashes on powerpc with the ipr driver, which I'm fairly sure
-are due to dma_need_drain being NULL.
+On Sun, Jun 07, 2020 at 03:35:49PM -0500, Mike Christie wrote:
+> The PGR code assumes the ACL name is going to be based on the SPC4
+> transportID type of values. The problem is that for iSCSI we have an extr=
+a
+> session id as part of the SCSI port id and some fabric modules support or
+> would like to support non transportID values for the ACL name. For exampl=
+e,
+> iSCSI and SRP would like to use the source address for the ACL name, but
+> that is not a valud transportID value that you can get in a PGR request.
+>=20
+> This patch adds a new transport_id struct which maps to the SPC4
+> transportID. In the future it will be used for PGR commands instead of th=
+e
+> ACL name. In this patchset it is used to export the initiator info in the
+> session's sysfs dir, so tools can display the info and daemons that execu=
+te
+> commands like PGRs in userspace can build a session id to I_T nexus mappi=
+ng.
+>=20
+> In this patch only srp is passing in different values for the transport i=
+d
+> and acl name. The next patches will convert loop, scsi vhost and xen
+> scsiback that are more complex due to their initiator name emulation.
+>=20
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Jason Wang <jasowang@redhat.com>
+> Cc: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: Stefan Hajnoczi <stefanha@redhat.com>
+> Cc: Juergen Gross <jgross@suse.com>
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Lee Duncan <lduncan@suse.com>
+> ---
+>  drivers/infiniband/ulp/srpt/ib_srpt.c    | 10 +++++---
+>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c |  4 +--
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c       |  2 +-
+>  drivers/target/loopback/tcm_loop.c       |  3 ++-
+>  drivers/target/sbp/sbp_target.c          |  2 +-
+>  drivers/target/target_core_fabric_lib.c  | 41 ++++++++++++++++++++++++++=
++++++
+>  drivers/target/target_core_transport.c   | 42 ++++++++++++++++++++++++--=
+------
+>  drivers/target/tcm_fc/tfc_sess.c         |  3 ++-
+>  drivers/usb/gadget/function/f_tcm.c      |  3 ++-
+>  drivers/vhost/scsi.c                     |  1 +
+>  drivers/xen/xen-scsiback.c               |  3 ++-
+>  include/target/target_core_base.h        | 12 +++++++++
+>  include/target/target_core_fabric.h      |  5 +++-
+>  13 files changed, 108 insertions(+), 23 deletions(-)
 
-The backtrace is:
+For drivers/vhost/scsi.c:
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
 
-  scsi_init_io+0x1d8/0x350
-  scsi_queue_rq+0x7a4/0xc30
-  blk_mq_dispatch_rq_list+0x1b0/0x910
-  blk_mq_sched_dispatch_requests+0x154/0x270
-  __blk_mq_run_hw_queue+0xa0/0x160
-  __blk_mq_delay_run_hw_queue+0x244/0x250
-  blk_mq_sched_insert_request+0x13c/0x250
-  blk_execute_rq_nowait+0x88/0xb0
-  blk_execute_rq+0x5c/0xf0
-  __scsi_execute+0x10c/0x270
-  scsi_mode_sense+0x144/0x440
-  sr_probe+0x2e8/0x810
-  really_probe+0x12c/0x580
-  driver_probe_device+0x88/0x170
-  device_driver_attach+0x11c/0x130
-  __driver_attach+0xac/0x190
-  bus_for_each_dev+0xa8/0x130
-  driver_attach+0x34/0x50
-  bus_add_driver+0x170/0x2b0
-  driver_register+0xb4/0x1c0
-  scsi_register_driver+0x2c/0x40
-  init_sr+0x4c/0x80
-  do_one_initcall+0x60/0x2b0
-  kernel_init_freeable+0x2e0/0x3a0
-  kernel_init+0x2c/0x148
-  ret_from_kernel_thread+0x5c/0x74
+--AqsLC8rIMeq19msA
+Content-Type: application/pgp-signature; name="signature.asc"
 
-And looking at the disassembly I think it's coming from:
+-----BEGIN PGP SIGNATURE-----
 
-static inline bool scsi_cmd_needs_dma_drain(struct scsi_device *sdev,
-		struct request *rq)
-{
-	return sdev->dma_drain_len && blk_rq_is_passthrough(rq) &&
-	       !op_is_write(req_op(rq)) &&
-	       sdev->host->hostt->dma_need_drain(rq);
-                                  ^^^^^^^^^^^^^^
-}
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAl7fYF8ACgkQnKSrs4Gr
+c8gEawgAkeinOFUIiE7aOXNyKyV2gK+P9Y1YWfSDoErYzKLn6Va3v6jd41O9g19o
+m6hBCOfB78sAjgCuUy0w6qSlBKZykWtNH3xd3ODLWkBQOwCtdh0ABf/ujsSi0gqq
+b/fV9SFHiJrX3ipr0qlckq93VILT6a60MwT7tbw5E/vpmFpOB1sFxjfaRqhyyV38
+dDuY7+WIR0ltVdLxkDh9Tx1Pg9Zs/lF1Lu0FGRat1wIaT027rtCdYakEasNqSoCP
+5z+UYaHX2t4TaURtep3iOjGjLzmvB1YJTW8kza+zUrkCDV7KhXDcFoxXIVlUHX6L
+TNA54otTU8z9nawIqDC1F3Bhyz3u/w==
+=F629
+-----END PGP SIGNATURE-----
 
-Bisect agrees:
-
-# first bad commit: [cc97923a5bccc776851c242b61015faf288d5c22] block: move dma drain handling to scsi
-
-
-And looking at ipr.c, it constructs its scsi_host_template manually,
-without using any of the macros that end up calling __ATA_BASE_SHT,
-which populates dma_need_drain.
-
-The obvious fix below works, the system boots and seems to be operating
-normally, but I don't know enough (anything) about SCSI to say if it's
-actually the correct fix.
-
-cheers
-
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 7d77997d26d4..7d86f4ca266c 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -6731,6 +6731,7 @@ static struct scsi_host_template driver_template = {
- 	.compat_ioctl = ipr_ioctl,
- #endif
- 	.queuecommand = ipr_queuecommand,
-+	.dma_need_drain = ata_scsi_dma_need_drain,
- 	.eh_abort_handler = ipr_eh_abort,
- 	.eh_device_reset_handler = ipr_eh_dev_reset,
- 	.eh_host_reset_handler = ipr_eh_host_reset,
+--AqsLC8rIMeq19msA--
 
