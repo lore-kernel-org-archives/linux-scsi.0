@@ -2,45 +2,48 @@ Return-Path: <SRS0=2p7s=7W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCCA9C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:58:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B78C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 01:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9D0420737
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 00:58:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="lUQuojRA"
+	by mail.kernel.org (Postfix) with ESMTP id 2DC6520801
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 01:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728901AbgFIA6l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:58:41 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:27048 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731153AbgFIA6G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2020 20:58:06 -0400
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200609005803epoutp02ac18f1d88c38f4780fc29f12dc856069~Wujuo_Vse0374203742epoutp02C
-        for <linux-scsi@vger.kernel.org>; Tue,  9 Jun 2020 00:58:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200609005803epoutp02ac18f1d88c38f4780fc29f12dc856069~Wujuo_Vse0374203742epoutp02C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1591664283;
-        bh=2ZdGa0WusYMlSIsrK40ujqb//hV2zjpeCw+1vy1+wno=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=lUQuojRAhoL4rHeXG7n0bTdESy12gPbTkpXQjPnrESB2AD6/5bvHQZlPj89yA8mui
-         TdVv2+62cYbaj99d1BbhIuUB0N+pruN8a8D+fby8t1BLVrpd+n4VY5ORGN33247iNY
-         jx9xxEigqC9M1s4DJxym+C8suWhafIz4h0Oj9Ncw=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p3.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200609005803epcas1p3a8278aac6a6ccf493793ac8f95954dd0~WujuEQ_8W1119911199epcas1p3b;
-        Tue,  9 Jun 2020 00:58:03 +0000 (GMT)
-Mime-Version: 1.0
-Subject: RE: [RFC PATCH 3/5] scsi: ufs: Introduce HPB module
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
+        id S1727997AbgFIBPV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Jun 2020 21:15:21 -0400
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:39638 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727930AbgFIBPS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2020 21:15:18 -0400
+Received: by mail-pj1-f67.google.com with SMTP id h95so626221pje.4;
+        Mon, 08 Jun 2020 18:15:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=VJx+ai5rJx6AVd1EhExoPYJWsUcdY4VOIKvvMPbs6xQ=;
+        b=Ly03LunStsL5+TLmuQrlqDlzpULngjZdo/ppfvlptKaBNsAi3Q2cNUnkWqBHQI+VtE
+         zKV1PrMMa0PEnw7dPOqcy3DmJla+lEP1dg9xFYCsMEaC4ADqnbtZjOsTYzRb/68yLVeo
+         TeUrI37f6Uj4o0QTBDteE0SqmopKvgWktBPo5hQctSSXuF9SD2Fbn9Nb3m0EW5pYuhgo
+         N2jLNaCn3C4ilpc5nKv4Dhl453jHnqwlNaW8cBkEVWClrLTjyJ6sxGtiD+gGbrQr/hSE
+         oVEECfbLD5PLqbnsPDanLL2xKMXG2KvLK3vDg1JM3s3ug2mZkrOssrNr8M26kb8hJork
+         8Uxg==
+X-Gm-Message-State: AOAM530ShUSFWl6rmFQ4WH3FwM4Et3jBe+EKOmV6N2ofxC807EW1446E
+        gyJh8YcjHys1GF8Zf3I+bC0=
+X-Google-Smtp-Source: ABdhPJw5AgerJKnBy/yDFJwpbj2ST94fB9icYYME+5O2bN6M0Kca4s01Y2ISkgE5ynmbqScBSMAQuw==
+X-Received: by 2002:a17:90a:3608:: with SMTP id s8mr1907958pjb.167.1591665317520;
+        Mon, 08 Jun 2020 18:15:17 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id np5sm649345pjb.43.2020.06.08.18.15.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 08 Jun 2020 18:15:16 -0700 (PDT)
+Subject: Re: [RFC PATCH 4/5] scsi: ufs: L2P map management for HPB read
 To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
         ALIM AKHTAR <alim.akhtar@samsung.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
@@ -48,9 +51,8 @@ To:     Avri Altman <Avri.Altman@wdc.com>,
         "beanhuo@micron.com" <beanhuo@micron.com>,
         "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
         "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
         "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Sang-yoon Oh <sangyoon.oh@samsung.com>,
         Sung-Jun Park <sungjun07.park@samsung.com>,
@@ -58,135 +60,60 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Adel Choi <adel.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <SN6PR04MB46404CA953E4006BDCC61A65FC870@SN6PR04MB4640.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1431530910.81591664283090.JavaMail.epsvc@epcpadp2>
-Date:   Tue, 09 Jun 2020 09:52:01 +0900
-X-CMS-MailID: 20200609005201epcms2p82af5353727f989c2cf3da468f756bd2e
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882
-References: <SN6PR04MB46404CA953E4006BDCC61A65FC870@SN6PR04MB4640.namprd04.prod.outlook.com>
-        <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
-        <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
-        <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
-        <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
-        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p8>
+References: <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
+ <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
+ <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
+ <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
+ <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p2>
+ <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+ <SN6PR04MB46409E16CCF95A0AA9FFE944FC870@SN6PR04MB4640.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <03c44832-57e2-d4c4-ece2-06b59bec550f@acm.org>
+Date:   Mon, 8 Jun 2020 18:15:15 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.1
+MIME-Version: 1.0
+In-Reply-To: <SN6PR04MB46409E16CCF95A0AA9FFE944FC870@SN6PR04MB4640.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Why not just allow for max-active-regions per the device's configuration?
-> The platform vendor can provision it per its need.
-The max-active-region is configured as device config. The module parameter =
-which you mentioned is just minimum value of the memory pool.
+On 2020-06-06 11:26, Avri Altman wrote:
+>> +       data_seg_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2)
+>> +               & MASK_RSP_UPIU_DATA_SEG_LEN;
+> get_unaligned instead of be32_to_cpu ?
 
-> > +
-> > +       total_srgn_cnt =3D hpb->srgns_per_lu;
-> > +       for (rgn_idx =3D 0, srgn_cnt =3D 0; rgn_idx < hpb->rgns_per_lu;
-> > +            rgn_idx++, total_srgn_cnt -=3D srgn_cnt) {
-> Maybe simplify and improve readability by moving the srgn_cnt into the fo=
-r clause:
-> =09int srgn_cnt =3D hpb->srgns_per_rgn;
-OK, I will apply this for patch v2.
-
-> > +
-> > +static void ufshpb_destroy_region_tbl(struct ufshpb_lu *hpb)
-> > +{
-> > +       int rgn_idx;
-> > +
-> > +       for (rgn_idx =3D 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
-> > +               struct ufshpb_region *rgn;
-> > +
-> > +               rgn =3D hpb->rgn_tbl + rgn_idx;
-> > +               if (rgn->rgn_state !=3D HPB_RGN_INACTIVE) {
-> > +                       rgn->rgn_state =3D HPB_RGN_INACTIVE;
-> > +
-> > +                       ufshpb_destroy_subregion_tbl(hpb, rgn);
-> > +               }
-> > +
-> > +               kvfree(rgn->srgn_tbl);
-> This looks like it belongs to ufshpb_destroy_subregion_tbl?
-Yes, it will be changed.
-
-> How about calling ufshpb_issue_hpb_reset_query right after ufshpb_get_dev=
-_info?
-> This way waiting for the device to complete its reset can be done while s=
-csi is scanning the luns?
-I will change the call path as follows:
-- ufshpb_probe_async
-  - ufshpb_get_dev_info
- =EF=83=A0 - ufshpb_issue_hpb_reset_query 1/2 (query part)
-  - ufshpb_scan_hpb_lu
- =EF=83=A0 - ufshpb_issue_hpb_reset_query 2/2 (wait part)
-
-> > +
-> > +static void ufshpb_reset(struct ufs_hba *hba)
-> > +static void ufshpb_reset_host(struct ufs_hba *hba)
-> > +static void ufshpb_suspend(struct ufs_hba *hba)
-> > +static void ufshpb_resume(struct ufs_hba *hba)
-> The above 4 functions essentially runs the same code but set a different =
-state.
-> Maybe call a helper?
-OK, I will.
-
-> > +static int ufshpb_create_sysfs(struct ufs_hba *hba, struct ufshpb_lu *=
-hpb)
-> Why separate from ufs-sysfs?
-> Also you might want to introduce all the stats not as part of the functio=
-nal patch.
-The HPB feature is implemented as a device. So, We added the hpb-sysfs sepa=
-rated from ufs-sysfs.
-
-> > +
-> > +static int ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf,
-> > +                              struct ufshpb_dev_info *hpb_dev_info)
-> > +{
-> > +       int hpb_device_max_active_rgns =3D 0;
-> > +       int hpb_num_lu;
-> > +
-> > +       hpb_dev_info->max_num_lun =3D
-> > +               geo_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] =3D=3D 0x00 ? =
-8 :
-> > 32;
-> You already have this in hba->dev_info.max_lu_supported
-> > +
-> > +       hpb_num_lu =3D geo_buf[GEOMETRY_DESC_HPB_NUMBER_LU];
-> You should capture hpb_dev_info->max_num_lun =3D hpb_num_lu
-You are right. And hpb_dev_info->max_num_lun will be deleted.
-
-> > +
-> > +       ret =3D ufshpb_read_desc(hba, QUERY_DESC_IDN_DEVICE, 0, SELECTO=
-R,
-> > +                            desc_buf, hba->desc_size.dev_desc);
-> What with this SELECTOR stuff?
-> Why not the default 0?
-Right, SELECTOR should be 0. I will fix it.=20
-
-> What about the other hpb fields in the device descriptor:
-> DEVICE_DESC_PARAM_HPB_VER and DEVICE_DESC_PARAM_HPB_CONTROL ?
-I will add codes that checks these fields on initialization.
-
-> > +unsigned int ufshpb_host_map_kbytes =3D 1 * 1024;
-> > +module_param(ufshpb_host_map_kbytes, uint, 0644);
-> > +MODULE_PARM_DESC(ufshpb_host_map_kbytes,
-> > +        "ufshpb host mapping memory kilo-bytes for ufshpb memory-pool"=
-);
-> You should introduce this module parameter in the patch that uses it.
-OK, could you recommend good location of introducing message? At the patch =
-letter or in the codes?
+Since sparse checks that the argument of be32_to_cpu() has type __be32
+and since no such check is performed for get_unaligned_*(), please keep
+the be32_to_cpu().
 
 Thanks,
-Daejun
 
+Bart.
