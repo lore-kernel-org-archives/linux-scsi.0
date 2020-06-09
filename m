@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B78C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 01:15:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF10C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 01:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DC6520801
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 01:15:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D298D206A4
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 01:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727997AbgFIBPV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Jun 2020 21:15:21 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:39638 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727930AbgFIBPS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2020 21:15:18 -0400
-Received: by mail-pj1-f67.google.com with SMTP id h95so626221pje.4;
-        Mon, 08 Jun 2020 18:15:18 -0700 (PDT)
+        id S1727820AbgFIBXT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Jun 2020 21:23:19 -0400
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:54999 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726977AbgFIBXS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jun 2020 21:23:18 -0400
+Received: by mail-pj1-f65.google.com with SMTP id u8so630304pje.4;
+        Mon, 08 Jun 2020 18:23:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=VJx+ai5rJx6AVd1EhExoPYJWsUcdY4VOIKvvMPbs6xQ=;
-        b=Ly03LunStsL5+TLmuQrlqDlzpULngjZdo/ppfvlptKaBNsAi3Q2cNUnkWqBHQI+VtE
-         zKV1PrMMa0PEnw7dPOqcy3DmJla+lEP1dg9xFYCsMEaC4ADqnbtZjOsTYzRb/68yLVeo
-         TeUrI37f6Uj4o0QTBDteE0SqmopKvgWktBPo5hQctSSXuF9SD2Fbn9Nb3m0EW5pYuhgo
-         N2jLNaCn3C4ilpc5nKv4Dhl453jHnqwlNaW8cBkEVWClrLTjyJ6sxGtiD+gGbrQr/hSE
-         oVEECfbLD5PLqbnsPDanLL2xKMXG2KvLK3vDg1JM3s3ug2mZkrOssrNr8M26kb8hJork
-         8Uxg==
-X-Gm-Message-State: AOAM530ShUSFWl6rmFQ4WH3FwM4Et3jBe+EKOmV6N2ofxC807EW1446E
-        gyJh8YcjHys1GF8Zf3I+bC0=
-X-Google-Smtp-Source: ABdhPJw5AgerJKnBy/yDFJwpbj2ST94fB9icYYME+5O2bN6M0Kca4s01Y2ISkgE5ynmbqScBSMAQuw==
-X-Received: by 2002:a17:90a:3608:: with SMTP id s8mr1907958pjb.167.1591665317520;
-        Mon, 08 Jun 2020 18:15:17 -0700 (PDT)
+        bh=thWSsCQrRP7ICtACTQ/R6uy4/jCeiC8AOikVtNmXUgI=;
+        b=UtWCTI/we+U4jGmAyM6VvkrLcW8lForjfZJo5LChohiFqu022wxI+7HZsbq1SxBpjP
+         oSvKXAWyMZjwaRsXHFLotHmyUbm8Du3hdloTTHcKCCalM2sOinQEmo5MvbTvWZ76fEmd
+         90XhTrP1J6FQEO8kJWsuJtLZEuJ1RMvdSmpE2Q4PuLiWPC+zU2KXT/y7+ZFpae7SE1RR
+         HLXovgUokx/p6qfzJ6bYwrXnZ0Uz0GvRbCvJ0gHDZR/cpx5gtlsh0t1sVqI6PKSspznD
+         teY0Jps9xSFMMMpPaHpV/pWbrwIwpFtuBXEjrmOhx8AX4gFi3pzGeDHpndheauFNgx1s
+         yQkQ==
+X-Gm-Message-State: AOAM533KxFHi4w8N5Eo6UsLO5zoejO9+uOCuttax6bSY2rMcLUD6vPR+
+        O7DaBoyBiJU9uTACdTk3sfg=
+X-Google-Smtp-Source: ABdhPJyWJ822ZCm2Sx7HaBxZ6uRLFa4GtR7KKrhsPfdB9liXGS4hwoZGUNxtf5RN60Px7VvEtDcCrw==
+X-Received: by 2002:a17:90a:7c07:: with SMTP id v7mr2037422pjf.38.1591665795589;
+        Mon, 08 Jun 2020 18:23:15 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id np5sm649345pjb.43.2020.06.08.18.15.15
+        by smtp.gmail.com with ESMTPSA id i191sm8338180pfe.99.2020.06.08.18.23.13
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Jun 2020 18:15:16 -0700 (PDT)
-Subject: Re: [RFC PATCH 4/5] scsi: ufs: L2P map management for HPB read
+        Mon, 08 Jun 2020 18:23:14 -0700 (PDT)
+Subject: Re: [RFC PATCH 5/5] scsi: ufs: Prepare HPB read for cached sub-region
 To:     Avri Altman <Avri.Altman@wdc.com>,
         "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
         ALIM AKHTAR <alim.akhtar@samsung.com>,
@@ -60,13 +60,14 @@ Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Adel Choi <adel.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-References: <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
+References: <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+ <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
  <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
  <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
  <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
  <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p2>
- <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
- <SN6PR04MB46409E16CCF95A0AA9FFE944FC870@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <336371513.41591323603173.JavaMail.epsvc@epcpadp1>
+ <SN6PR04MB4640E4699B88CB43AF62B6DFFC870@SN6PR04MB4640.namprd04.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -91,12 +92,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <03c44832-57e2-d4c4-ece2-06b59bec550f@acm.org>
-Date:   Mon, 8 Jun 2020 18:15:15 -0700
+Message-ID: <a20fb89f-5a89-3e15-cd06-e250c60ccbd0@acm.org>
+Date:   Mon, 8 Jun 2020 18:23:13 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.1
 MIME-Version: 1.0
-In-Reply-To: <SN6PR04MB46409E16CCF95A0AA9FFE944FC870@SN6PR04MB4640.namprd04.prod.outlook.com>
+In-Reply-To: <SN6PR04MB4640E4699B88CB43AF62B6DFFC870@SN6PR04MB4640.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -105,14 +106,18 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-06-06 11:26, Avri Altman wrote:
->> +       data_seg_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2)
->> +               & MASK_RSP_UPIU_DATA_SEG_LEN;
-> get_unaligned instead of be32_to_cpu ?
+On 2020-06-06 11:38, Avri Altman wrote:
+>> +       for (i = 0; i < bit_len; i++) {
+>> +               if (test_bit(srgn_offset + i, srgn->mctx->ppn_dirty))
+>
+> Maybe use a mask or hweight instead of testing bit by bit?
 
-Since sparse checks that the argument of be32_to_cpu() has type __be32
-and since no such check is performed for get_unaligned_*(), please keep
-the be32_to_cpu().
+How about using find_next_bit() from include/linux/bitmap.h?
+
+/*
+ *  find_next_bit(addr, nbits, bit) Position next set bit in *addr
+ *                                  >= bit
+ */
 
 Thanks,
 
