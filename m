@@ -2,93 +2,192 @@ Return-Path: <SRS0=2p7s=7W=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77402C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 16:18:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92E45C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 17:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E47E20760
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 16:18:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BB9F20774
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 17:17:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726784AbgFIQSV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Jun 2020 12:18:21 -0400
-Received: from smtp.asem.it ([151.1.184.197]:62685 "EHLO smtp.asem.it"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725894AbgFIQSV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Jun 2020 12:18:21 -0400
-X-Greylist: delayed 303 seconds by postgrey-1.27 at vger.kernel.org; Tue, 09 Jun 2020 12:18:20 EDT
-Received: from webmail.asem.it
-        by asem.it (smtp.asem.it)
-        (SecurityGateway 6.5.2)
-        with ESMTP id SG000307084.MSG 
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jun 2020 18:13:16 +0200S
-Received: from ASAS044.asem.intra (172.16.16.44) by ASAS044.asem.intra
- (172.16.16.44) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1979.3; Tue, 9 Jun
- 2020 18:13:14 +0200
-Received: from flavio-x.asem.intra (172.16.17.208) by ASAS044.asem.intra
- (172.16.16.44) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Tue, 9 Jun 2020 18:13:14 +0200
-From:   Flavio Suligoi <f.suligoi@asem.it>
-To:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     <MPT-FusionLinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Flavio Suligoi <f.suligoi@asem.it>
-Subject: [PATCH 1/1] scsi: mpt3sas: fix spelling mistake
-Date:   Tue, 9 Jun 2020 18:13:13 +0200
-Message-ID: <20200609161313.32098-1-f.suligoi@asem.it>
-X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-SGHeloLookup-Result: pass smtp.helo=webmail.asem.it (ip=172.16.16.44)
-X-SGSPF-Result: none (smtp.asem.it)
-X-SGOP-RefID: str=0001.0A090204.5EDFB51B.0067,ss=1,re=0.000,recu=0.000,reip=0.000,cl=1,cld=1,fgs=0 (_st=1 _vt=0 _iwf=0)
+        id S1731680AbgFIRRz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Jun 2020 13:17:55 -0400
+Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:54520 "EHLO
+        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728783AbgFIRRy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2020 13:17:54 -0400
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 09 Jun 2020 10:17:53 -0700
+Received: from asutoshd-linux1.qualcomm.com ([10.46.160.39])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 09 Jun 2020 10:17:53 -0700
+Received: by asutoshd-linux1.qualcomm.com (Postfix, from userid 92687)
+        id 1EBFA20C1D; Tue,  9 Jun 2020 10:17:53 -0700 (PDT)
+From:   Asutosh Das <asutoshd@codeaurora.org>
+To:     gregkh@google.com, cang@codeaurora.org, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 1/1] Documentation:sysfs-ufs: Add WriteBooster documentation
+Date:   Tue,  9 Jun 2020 10:17:46 -0700
+Message-Id: <1591723067-22998-1-git-send-email-asutoshd@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix typo: "tigger" --> "trigger"
+Adds sysfs documentation for WriteBooster entries.
 
-Signed-off-by: Flavio Suligoi <f.suligoi@asem.it>
+Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h         | 2 +-
- drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ Documentation/ABI/testing/sysfs-driver-ufs | 136 +++++++++++++++++++++++++++++
+ 1 file changed, 136 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 4fca3939c034..4ff876c31272 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1770,7 +1770,7 @@ void mpt3sas_send_trigger_data_event(struct MPT3SAS_ADAPTER *ioc,
- void mpt3sas_process_trigger_data(struct MPT3SAS_ADAPTER *ioc,
- 	struct SL_WH_TRIGGERS_EVENT_DATA_T *event_data);
- void mpt3sas_trigger_master(struct MPT3SAS_ADAPTER *ioc,
--	u32 tigger_bitmask);
-+	u32 trigger_bitmask);
- void mpt3sas_trigger_event(struct MPT3SAS_ADAPTER *ioc, u16 event,
- 	u16 log_entry_qualifier);
- void mpt3sas_trigger_scsi(struct MPT3SAS_ADAPTER *ioc, u8 sense_key,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
-index 6586a463bea9..405eada2669d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h
-@@ -69,7 +69,7 @@
- #define MASTER_TRIGGER_TASK_MANAGMENT   (0x00000004)
- #define MASTER_TRIGGER_DEVICE_REMOVAL   (0x00000008)
- 
--/* fake firmware event for tigger */
-+/* fake firmware event for trigger */
- #define MPI3_EVENT_DIAGNOSTIC_TRIGGER_FIRED	(0x6E)
- 
- /**
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 016724e..d1a3521 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -883,3 +883,139 @@ Contact:	Subhash Jadavani <subhashj@codeaurora.org>
+ Description:	This entry shows the target state of an UFS UIC link
+ 		for the chosen system power management level.
+ 		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_presv_us_en
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows if preserve user-space was configured
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_shared_alloc_units
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the shared allocated units of WB buffer
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_type
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the configured WB type.
++		0x1 for shared buffer mode. 0x0 for dedicated buffer mode.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_buff_cap_adj
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the total user-space decrease in shared
++		buffer mode.
++		The value of this parameter is 3 for TLC NAND when SLC mode
++		is used as WriteBooster Buffer. 2 for MLC NAND.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_max_alloc_units
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the Maximum total WriteBooster Buffer size
++		which is supported by the entire device.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_max_wb_luns
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the maximum number of luns that can support
++		WriteBooster.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_sup_red_type
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	The supportability of user space reduction mode
++		and preserve user space mode.
++		00h: WriteBooster Buffer can be configured only in
++		user space reduction type.
++		01h: WriteBooster Buffer can be configured only in
++		preserve user space type.
++		02h: Device can be configured in either user space
++		reduction type or preserve user space type.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_sup_wb_type
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	The supportability of WriteBooster Buffer type.
++		00h: LU based WriteBooster Buffer configuration
++		01h: Single shared WriteBooster Buffer
++		configuration
++		02h: Supporting both LU based WriteBooster
++		Buffer and Single shared WriteBooster Buffer
++		configuration
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_enable
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the status of WriteBooster.
++		0: WriteBooster is not enabled.
++		1: WriteBooster is enabled
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_flush_en
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows if flush is enabled.
++		0: Flush operation is not performed.
++		1: Flush operation is performed.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_flush_during_h8
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	Flush WriteBooster Buffer during hibernate state.
++		0: Device is not allowed to flush the
++		WriteBooster Buffer during link hibernate
++		state.
++		1: Device is allowed to flush the
++		WriteBooster Buffer during link hibernate
++		state
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_avail_buf
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the amount of unused WriteBooster buffer
++		available.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_cur_buf
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the amount of unused current buffer.
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_flush_status
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the flush operation status.
++		00h: idle
++		01h: Flush operation in progress
++		02h: Flush operation stopped prematurely.
++		03h: Flush operation completed successfully
++		04h: Flush operation general failure
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_life_time_est
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows an indication of the WriteBooster Buffer
++		lifetime based on the amount of performed program/erase cycles
++		01h: 0% - 10% WriteBooster Buffer life time used
++		...
++		0Ah: 90% - 100% WriteBooster Buffer life time used
++		The file is read only.
++
++What:		/sys/class/scsi_device/*/device/unit_descriptor/wb_buf_alloc_units
++Date:		June 2020
++Contact:	Asutosh Das <asutoshd@codeaurora.org>
++Description:	This entry shows the configured size of WriteBooster buffer.
++		0400h corresponds to 4GB.
++		The file is read only.
 -- 
-2.17.1
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
