@@ -2,69 +2,71 @@ Return-Path: <SRS0=mOiQ=7X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1AEC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 05:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BBEEC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 05:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FFC2207ED
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 05:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 293C4207ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 05:37:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EpIkAqKG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726068AbgFJFgZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Jun 2020 01:36:25 -0400
-Received: from smtp10.smtpout.orange.fr ([80.12.242.132]:17513 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725908AbgFJFgZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2020 01:36:25 -0400
-Received: from [192.168.1.41] ([92.140.207.208])
-        by mwinf5d88 with ME
-        id pHcL2200B4WJoZY03HcMMv; Wed, 10 Jun 2020 07:36:23 +0200
-X-ME-Helo: [192.168.1.41]
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Wed, 10 Jun 2020 07:36:23 +0200
-X-ME-IP: 92.140.207.208
-Subject: Re: [PATCH] scsi: eesox: Fix different dev_id between 'request_irq()'
- and 'free_irq()'
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, linux@armlinux.org.uk
-Cc:     linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <20200530073418.577210-1-christophe.jaillet@wanadoo.fr>
- <159175686975.7062.16533438955437978870.b4-ty@oracle.com>
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Message-ID: <26d388f5-be67-b643-c76c-b9fe52f111f7@wanadoo.fr>
-Date:   Wed, 10 Jun 2020 07:36:16 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S1726170AbgFJFhA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Jun 2020 01:37:00 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:18501 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726072AbgFJFg7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2020 01:36:59 -0400
+X-UUID: f4fe1527b18242e59df5a25dc1234c7c-20200610
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=81MzMxuTxhJRJ2KSmMqjeuJ8g5ENbQ+Pctj6gUCRbTw=;
+        b=EpIkAqKGkXRbR+Wjg+X8AO0SQwT8tBprI3L46Oj2S1JbL4CpiOJWE55tldqJ4DQjMX5iCRl64G0ea6Y1Jb4kadGCFKiEeldzqx+ra3hzWvn61iWXQt6IGq26gyYEvi9hLyIwr38TtSEfgIRJN+Z9o2ZX0b+jRTHfnT66O/ZHSLA=;
+X-UUID: f4fe1527b18242e59df5a25dc1234c7c-20200610
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1094438614; Wed, 10 Jun 2020 13:36:55 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 10 Jun 2020 13:36:52 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 10 Jun 2020 13:36:45 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
+CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
+        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1 0/2] scsi: ufs: Fix and cleanup device quirk
+Date:   Wed, 10 Jun 2020 13:36:43 +0800
+Message-ID: <20200610053645.19975-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-In-Reply-To: <159175686975.7062.16533438955437978870.b4-ty@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: fr
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 985FC581C3A3FF4FA0367BAA3575C081C5D88FC46DFED05247EB138C7C673FB12000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Le 10/06/2020 à 04:41, Martin K. Petersen a écrit :
-> On Sat, 30 May 2020 09:34:18 +0200, Christophe JAILLET wrote:
->
->> The dev_id used in 'request_irq()' and 'free_irq()' should match.
->> So use 'host' in both cases.
-> Applied to 5.8/scsi-queue, thanks!
->
-> [1/1] scsi: eesox: Fix different dev_id between request_irq() and free_irq()
->        https://git.kernel.org/mkp/scsi/c/3bab76807d95
->
-Please revert, the patch is bogus, as spotted by Russell King - ARM 
-Linux admin <linux@armlinux.org.uk>.
-See [1].
-
-I'll try to send the correct fix by this week-end.
-
-CJ
-
-[1]: https://marc.info/?l=linux-scsi&m=159083184215730&w=4
+SGksDQp0aGlzIHNlcmllcyBwcm92aWRlcyBzb21lIGRldmljZSBxdWlyayBmaXhlcyBhbmQgY2xl
+YW51cHMuDQoNClN0YW5sZXkgQ2h1ICgyKToNCiAgc2NzaTogdWZzOiBBZGQgREVMQVlfQkVGT1JF
+X0xQTSBxdWlyayBmb3IgTWljcm9uIGRldmljZXMNCiAgc2NzaTogdWZzOiBDbGVhbnVwIGRldmlj
+ZSB2ZW5kb3IgYW5kIHF1aXJrIGRlZmluaXRpb24NCg0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzX3F1
+aXJrcy5oIHwgMyArKy0NCiBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jICAgICB8IDYgKysrLS0t
+DQogMiBmaWxlcyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pDQoNCi0t
+IA0KMi4xOC4wDQo=
 
