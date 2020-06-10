@@ -2,97 +2,98 @@ Return-Path: <SRS0=mOiQ=7X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A24ECC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 11:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A72C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 12:11:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7911D2074B
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 11:53:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 968BC20734
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 12:11:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="x2kiaGPx"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="PqPggvVL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728619AbgFJLxg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Jun 2020 07:53:36 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:46988 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728583AbgFJLxf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2020 07:53:35 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05ABqQtc139508;
-        Wed, 10 Jun 2020 11:53:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=lLuLvWf3spNYNgQdNK2VUalQ9x6mRO55PW3ewD79iEg=;
- b=x2kiaGPxJ+E1anrnxZXxIbVkTnjBICzvi33S0QcvKPUdDLjbrJrbV/ZKaBR6QcFQlU0z
- u6D7kBXw9ER1cXoMqVRTWbseJsbodfOsneudcDLPVOb7L7iEt7a8h0fr4DpPXhsnTAeA
- +Lgp6CFQOxFmlWwXDid3kvqQUVaLIbJcqJtb340AQCgRuiT33w0aVvpUdtA/OBmqTsTs
- 8f/TDAVn9owDJ3o9bGOzYRKvMzkP71h9LVlK1W4xBAvLW5IKTm007gw9Ro9+/+78sdkj
- NixQQkTdZvtGV3YfNTltr7lzg8D65yhhXtevVWphC/nGE8RoHkFx/fCyZV157ywLzwCy zA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 31g2jr9x5x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 10 Jun 2020 11:53:19 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05ABqRE6194928;
-        Wed, 10 Jun 2020 11:53:18 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 31gn28tbgp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Jun 2020 11:53:18 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05ABr80w012721;
-        Wed, 10 Jun 2020 11:53:11 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 10 Jun 2020 04:53:08 -0700
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, linux@armlinux.org.uk,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: powertec: Fix different dev_id between
- 'request_irq()' and 'free_irq()'
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq11rmnrvcl.fsf@ca-mkp.ca.oracle.com>
-References: <20200530072933.576851-1-christophe.jaillet@wanadoo.fr>
-        <159175686974.7062.8526082970785072740.b4-ty@oracle.com>
-        <08f63617-03df-71cf-70c4-00f08a9f51d8@wanadoo.fr>
-Date:   Wed, 10 Jun 2020 07:53:06 -0400
-In-Reply-To: <08f63617-03df-71cf-70c4-00f08a9f51d8@wanadoo.fr> (Christophe
-        JAILLET's message of "Wed, 10 Jun 2020 07:35:49 +0200")
+        id S1728925AbgFJMLz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Jun 2020 08:11:55 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:50604 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728558AbgFJMLz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Jun 2020 08:11:55 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 23AE44C851;
+        Wed, 10 Jun 2020 12:11:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1591791112;
+         x=1593605513; bh=/xrRxF6yPkRcQvIN8mg7N0FFKkh5RG2CqQyGCAnmOg0=; b=
+        PqPggvVLmUvkV9851i2eZA6vq0cHZ3yKTtx8sLwUzfW3h00IE+a1GM+Cf5B77Y0a
+        DTFb3lV1tbroK9vObZPEzj5iiACt6t/CLS8gQPq04D8b33JFGVO3e1dJ8BKeFBe/
+        1MHRcQLgxXAktvj+bRh5ZNZAalH1irkZ0efbDg+xfyI=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id AkFkGNDQXLqE; Wed, 10 Jun 2020 15:11:52 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id B40D44AC44;
+        Wed, 10 Jun 2020 15:11:51 +0300 (MSK)
+Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 10
+ Jun 2020 15:11:51 +0300
+Date:   Wed, 10 Jun 2020 15:11:51 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        <linux-scsi@vger.kernel.org>, Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2] qla2xxx: Fix the ARM build
+Message-ID: <20200610121151.GA15652@SPB-NB-133.local>
+References: <20200610024215.27997-1-bvanassche@acm.org>
+ <20200610112745.qh7ahl7nff2xwzhm@beryllium.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 mlxscore=0
- phishscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxlogscore=649
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006100091
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
- cotscore=-2147483648 priorityscore=1501 spamscore=0 suspectscore=0
- lowpriorityscore=0 bulkscore=0 mlxlogscore=701 malwarescore=0 mlxscore=0
- phishscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006100091
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20200610112745.qh7ahl7nff2xwzhm@beryllium.lan>
+X-Originating-IP: [172.17.204.212]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Jun 10, 2020 at 01:27:45PM +0200, Daniel Wagner wrote:
+> Hi Bart,
+> 
+> > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+> > index 42dbf90d4651..de9c1604c575 100644
+> > --- a/drivers/scsi/qla2xxx/qla_def.h
+> > +++ b/drivers/scsi/qla2xxx/qla_def.h
+> > @@ -46,7 +46,7 @@ typedef struct {
+> >  	uint8_t al_pa;
+> >  	uint8_t area;
+> >  	uint8_t domain;
+> > -} le_id_t;
+> > +} __packed le_id_t;
+> 
+> Now I am totally confused. le_id_t (and why does be_id_t not need it?) are
+> not used inside either of the reported data structure (cmd_entry_t,
+> ms_iocb_entry_t, request_t, struct ctio_crc2_to_fw, struct ctio7_to_24xx,
+> struct ctio_to_2xxx) which the bot reports. I must oversee something.
+> 
 
-Christophe,
+I also had the thought that both fields should be packed for sake of
+consistency because there is fcp_hdr with be_id_t sid/did and
+fcp_hdr_le with le_id_t sid/did. You also seem to be correct, about your
+concerns. I overlooked that only ctio_crc2_to_fw and ctio7_to_24xx have
+le_id_t initiator_id field.
 
->> [1/1] scsi: powertec: Fix different dev_id between request_irq() and free_irq()
->>        https://git.kernel.org/mkp/scsi/c/af7b415a1ebf
->>
-> Please revert,
-
-Dropped (x2).
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Roman
