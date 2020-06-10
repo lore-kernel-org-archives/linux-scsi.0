@@ -1,193 +1,98 @@
-Return-Path: <SRS0=2p7s=7W=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=mOiQ=7X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92E45C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 17:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 893DBC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 02:03:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BB9F20774
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Jun 2020 17:17:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64E3C2072E
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 02:03:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="A890azgF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731680AbgFIRRz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Jun 2020 13:17:55 -0400
-Received: from alexa-out-sd-02.qualcomm.com ([199.106.114.39]:54520 "EHLO
-        alexa-out-sd-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728783AbgFIRRy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2020 13:17:54 -0400
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 09 Jun 2020 10:17:53 -0700
-Received: from asutoshd-linux1.qualcomm.com ([10.46.160.39])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 09 Jun 2020 10:17:53 -0700
-Received: by asutoshd-linux1.qualcomm.com (Postfix, from userid 92687)
-        id 1EBFA20C1D; Tue,  9 Jun 2020 10:17:53 -0700 (PDT)
-From:   Asutosh Das <asutoshd@codeaurora.org>
-To:     gregkh@google.com, cang@codeaurora.org, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 1/1] Documentation:sysfs-ufs: Add WriteBooster documentation
-Date:   Tue,  9 Jun 2020 10:17:46 -0700
-Message-Id: <1591723067-22998-1-git-send-email-asutoshd@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        id S1726084AbgFJCDO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Jun 2020 22:03:14 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51404 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725798AbgFJCDN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jun 2020 22:03:13 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05A22rRC028473;
+        Wed, 10 Jun 2020 02:02:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=OyjqTL3RFU3qhRhjl1q+nR+l4wbwyQdM/xh+BDHyC/Q=;
+ b=A890azgFkB3wqpRI89CnZldQ8yTmMpDXaWngJiW8JTxbsqhLe1M8vVoG7Ngl8bxMTt/+
+ 0pD/DFFXcmw1uMnwDqc91EaTouHiO54UexWUGwF3B302GLRFcEG5l0vOUBVc0p9UMDVk
+ hC0V8Zc5nFToM02wRMEqFEOwQtIlwrkGgrHNL/MGAlI4XwDeHfUk5msexZj6equoRBqX
+ BB3aAEfIKXn70IsL01jJFDJZTACI6GZfUpQ+0VIh9ZzqIV77+80Aaiky1uXZaGW7qqdJ
+ VaO7JFUrxja9Uxaa3vnK4OcXKZ+C8mAqaxf0V4zwAORLtTL7v30bpOdRyKVV0i4Scycq Xw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 31jepnsq8u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 10 Jun 2020 02:02:53 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05A1wPNd020921;
+        Wed, 10 Jun 2020 02:02:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 31gmwsbn7t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 10 Jun 2020 02:02:52 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05A22pcH004447;
+        Wed, 10 Jun 2020 02:02:51 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 09 Jun 2020 19:02:50 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        "Manoj N. Kumar" <manoj@linux.ibm.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        kernel-janitors@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-kernel@vger.kernel.org, Uma Krishnan <ukrishn@linux.ibm.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] cxlflash: remove an unnecessary NULL check
+Date:   Tue,  9 Jun 2020 22:02:44 -0400
+Message-Id: <159175452258.16072.8552277193377320754.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200605110258.GD978434@mwanda>
+References: <20200605110258.GD978434@mwanda>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
+ mlxscore=0 mlxlogscore=941 bulkscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006100013
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 clxscore=1011 phishscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 cotscore=-2147483648 adultscore=0 spamscore=0
+ mlxlogscore=980 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006100013
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Adds sysfs documentation for WriteBooster entries.
+On Fri, 5 Jun 2020 14:02:58 +0300, Dan Carpenter wrote:
 
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
----
- Documentation/ABI/testing/sysfs-driver-ufs | 136 +++++++++++++++++++++++++++++
- 1 file changed, 136 insertions(+)
+> The "cmd" pointer was already dereferenced a couple lines earlier so
+> this NULL check is too late.  Fortunately, the pointer can never be NULL
+> and the check can be removed.
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 016724e..d1a3521 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -883,3 +883,139 @@ Contact:	Subhash Jadavani <subhashj@codeaurora.org>
- Description:	This entry shows the target state of an UFS UIC link
- 		for the chosen system power management level.
- 		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_presv_us_en
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows if preserve user-space was configured
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_shared_alloc_units
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the shared allocated units of WB buffer
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/wb_type
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the configured WB type.
-+		0x1 for shared buffer mode. 0x0 for dedicated buffer mode.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_buff_cap_adj
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the total user-space decrease in shared
-+		buffer mode.
-+		The value of this parameter is 3 for TLC NAND when SLC mode
-+		is used as WriteBooster Buffer. 2 for MLC NAND.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_max_alloc_units
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the Maximum total WriteBooster Buffer size
-+		which is supported by the entire device.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_max_wb_luns
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the maximum number of luns that can support
-+		WriteBooster.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_sup_red_type
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	The supportability of user space reduction mode
-+		and preserve user space mode.
-+		00h: WriteBooster Buffer can be configured only in
-+		user space reduction type.
-+		01h: WriteBooster Buffer can be configured only in
-+		preserve user space type.
-+		02h: Device can be configured in either user space
-+		reduction type or preserve user space type.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/wb_sup_wb_type
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	The supportability of WriteBooster Buffer type.
-+		00h: LU based WriteBooster Buffer configuration
-+		01h: Single shared WriteBooster Buffer
-+		configuration
-+		02h: Supporting both LU based WriteBooster
-+		Buffer and Single shared WriteBooster Buffer
-+		configuration
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_enable
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the status of WriteBooster.
-+		0: WriteBooster is not enabled.
-+		1: WriteBooster is enabled
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_flush_en
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows if flush is enabled.
-+		0: Flush operation is not performed.
-+		1: Flush operation is performed.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_flush_during_h8
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	Flush WriteBooster Buffer during hibernate state.
-+		0: Device is not allowed to flush the
-+		WriteBooster Buffer during link hibernate
-+		state.
-+		1: Device is allowed to flush the
-+		WriteBooster Buffer during link hibernate
-+		state
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_avail_buf
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the amount of unused WriteBooster buffer
-+		available.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_cur_buf
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the amount of unused current buffer.
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_flush_status
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the flush operation status.
-+		00h: idle
-+		01h: Flush operation in progress
-+		02h: Flush operation stopped prematurely.
-+		03h: Flush operation completed successfully
-+		04h: Flush operation general failure
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_life_time_est
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows an indication of the WriteBooster Buffer
-+		lifetime based on the amount of performed program/erase cycles
-+		01h: 0% - 10% WriteBooster Buffer life time used
-+		...
-+		0Ah: 90% - 100% WriteBooster Buffer life time used
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/unit_descriptor/wb_buf_alloc_units
-+Date:		June 2020
-+Contact:	Asutosh Das <asutoshd@codeaurora.org>
-+Description:	This entry shows the configured size of WriteBooster buffer.
-+		0400h corresponds to 4GB.
-+		The file is read only.
+Applied to 5.8/scsi-queue, thanks!
+
+[1/1] scsi: cxlflash: Remove an unnecessary NULL check
+      https://git.kernel.org/mkp/scsi/c/89dd9ce784fb
+
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
-
+Martin K. Petersen	Oracle Linux Engineering
