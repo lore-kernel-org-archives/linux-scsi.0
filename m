@@ -2,98 +2,114 @@ Return-Path: <SRS0=mOiQ=7X=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A72C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 12:11:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C91C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 14:15:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 968BC20734
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 12:11:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A72262067B
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 14:15:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="PqPggvVL"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="yzMZTPK9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728925AbgFJMLz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Jun 2020 08:11:55 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:50604 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728558AbgFJMLz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Jun 2020 08:11:55 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 23AE44C851;
-        Wed, 10 Jun 2020 12:11:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        in-reply-to:content-disposition:content-type:content-type
-        :mime-version:references:message-id:subject:subject:from:from
-        :date:date:received:received:received; s=mta-01; t=1591791112;
-         x=1593605513; bh=/xrRxF6yPkRcQvIN8mg7N0FFKkh5RG2CqQyGCAnmOg0=; b=
-        PqPggvVLmUvkV9851i2eZA6vq0cHZ3yKTtx8sLwUzfW3h00IE+a1GM+Cf5B77Y0a
-        DTFb3lV1tbroK9vObZPEzj5iiACt6t/CLS8gQPq04D8b33JFGVO3e1dJ8BKeFBe/
-        1MHRcQLgxXAktvj+bRh5ZNZAalH1irkZ0efbDg+xfyI=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id AkFkGNDQXLqE; Wed, 10 Jun 2020 15:11:52 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id B40D44AC44;
-        Wed, 10 Jun 2020 15:11:51 +0300 (MSK)
-Received: from localhost (172.17.204.212) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 10
- Jun 2020 15:11:51 +0300
-Date:   Wed, 10 Jun 2020 15:11:51 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     Daniel Wagner <dwagner@suse.de>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>, Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2] qla2xxx: Fix the ARM build
-Message-ID: <20200610121151.GA15652@SPB-NB-133.local>
-References: <20200610024215.27997-1-bvanassche@acm.org>
- <20200610112745.qh7ahl7nff2xwzhm@beryllium.lan>
+        id S1729777AbgFJOPh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Jun 2020 10:15:37 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:65252 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729774AbgFJOPg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Jun 2020 10:15:36 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05AE6b14006904
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2020 07:15:35 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0818;
+ bh=aWoLAxDt0rKz9JzuXhw2bPMpl7Sbp0RJU2RHLti7qvM=;
+ b=yzMZTPK91UuJQK+1Bi/p+XJlb7SUKZRjn2MqCQBRxi8PKodN7JbzsqqOZ+Fyr1852eWL
+ EdeZUt4Pq3OnjBKejztFqJtbedZqrLEW1KJY1agzXjuyw6j5VbJg/8sCCcVv8+REAU7O
+ 6xnKM9QeWqugPqRstRpc4ZKuKHeQEPdpMhY7qaJrAjWedSt93+lLqGC/dHh0XieEHApv
+ YE2y2fbUXpI4eSLcJZV5YWViPuotNf4Of0V62IJPfS+2Cc+XgwOAiPWQgamLNJhYvE+7
+ /jsqQFPE1hAhze6IXw8q00iKV6K+YSlAQ9dtCqLM+JVo4IxsIst6VTXQWVaavQcRFV9y ZQ== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 31ganne063-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2020 07:15:35 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 10 Jun
+ 2020 07:15:33 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 10 Jun
+ 2020 07:15:33 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 10 Jun 2020 07:15:33 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 7DECC3F703F;
+        Wed, 10 Jun 2020 07:15:33 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 05AEFXWH010659;
+        Wed, 10 Jun 2020 07:15:33 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 05AEFXnC010650;
+        Wed, 10 Jun 2020 07:15:33 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v3 0/2] qla2xxx SAN Congestion Management (SCM) support
+Date:   Wed, 10 Jun 2020 07:15:07 -0700
+Message-ID: <20200610141509.10616-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20200610112745.qh7ahl7nff2xwzhm@beryllium.lan>
-X-Originating-IP: [172.17.204.212]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
+ definitions=2020-06-10_08:2020-06-10,2020-06-10 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 10, 2020 at 01:27:45PM +0200, Daniel Wagner wrote:
-> Hi Bart,
-> 
-> > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> > index 42dbf90d4651..de9c1604c575 100644
-> > --- a/drivers/scsi/qla2xxx/qla_def.h
-> > +++ b/drivers/scsi/qla2xxx/qla_def.h
-> > @@ -46,7 +46,7 @@ typedef struct {
-> >  	uint8_t al_pa;
-> >  	uint8_t area;
-> >  	uint8_t domain;
-> > -} le_id_t;
-> > +} __packed le_id_t;
-> 
-> Now I am totally confused. le_id_t (and why does be_id_t not need it?) are
-> not used inside either of the reported data structure (cmd_entry_t,
-> ms_iocb_entry_t, request_t, struct ctio_crc2_to_fw, struct ctio7_to_24xx,
-> struct ctio_to_2xxx) which the bot reports. I must oversee something.
-> 
+Martin,
 
-I also had the thought that both fields should be packed for sake of
-consistency because there is fcp_hdr with be_id_t sid/did and
-fcp_hdr_le with le_id_t sid/did. You also seem to be correct, about your
-concerns. I overlooked that only ctio_crc2_to_fw and ctio7_to_24xx have
-le_id_t initiator_id field.
+Please apply the updated qla2xxx patch series implementing SAN
+Congestion Management (SCM) support to the scsi tree at your
+earliest convenience.
 
-Roman
+We will follow this up with another patchset to add SCM statistics to
+the scsi transport fc, as recommended by James.
+
+v2->v3:
+1. Updated Reviewed-by tags
+
+v1->v2:
+1. Applied changes to address warnings highlighted by Bart.
+2. Removed data structures and functions that should be part of fc
+transport, to be send out in a follow-up patchset.
+3. Changed the existing code to use definitions from fc transport
+headers.
+
+Thanks,
+Nilesh
+
+Shyam Sundar (2):
+  qla2xxx: Change in PUREX to handle FPIN ELS requests.
+  qla2xxx: SAN congestion management(SCM) implementation.
+
+ drivers/scsi/qla2xxx/qla_dbg.c  |  13 +-
+ drivers/scsi/qla2xxx/qla_def.h  |  71 +++++++-
+ drivers/scsi/qla2xxx/qla_fw.h   |   6 +-
+ drivers/scsi/qla2xxx/qla_gbl.h  |   4 +-
+ drivers/scsi/qla2xxx/qla_init.c |   9 +-
+ drivers/scsi/qla2xxx/qla_isr.c  | 291 +++++++++++++++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_mbx.c  |  64 ++++++-
+ drivers/scsi/qla2xxx/qla_os.c   |  37 +++-
+ include/uapi/scsi/fc/fc_els.h   |   1 +
+ 9 files changed, 428 insertions(+), 68 deletions(-)
+
+
+base-commit: 47742bde281b2920aae8bb82ed2d61d890aa4f56
+-- 
+2.19.0.rc0
+
