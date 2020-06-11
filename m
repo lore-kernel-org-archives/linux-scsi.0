@@ -2,155 +2,132 @@ Return-Path: <SRS0=1qKe=7Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3282DC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:11:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F8CC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:12:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AA8120835
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:11:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7443207C3
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:12:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jiIaxZjQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727781AbgFKKLE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Jun 2020 06:11:04 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2300 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726802AbgFKKLE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Jun 2020 06:11:04 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 63A40B928A75ECC11DD6;
-        Thu, 11 Jun 2020 11:11:02 +0100 (IST)
-Received: from [127.0.0.1] (10.210.169.30) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 11 Jun
- 2020 11:11:00 +0100
-Subject: Re: [PATCH RFC v7 04/12] blk-mq: Facilitate a shared sbitmap per
- tagset
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
-        <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <bvanassche@acm.org>, <hare@suse.com>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-5-git-send-email-john.garry@huawei.com>
- <20200611033728.GC453671@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <4a5ef683-91f4-093c-4fed-675f9fcfda31@huawei.com>
-Date:   Thu, 11 Jun 2020 11:09:43 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <20200611033728.GC453671@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.169.30]
-X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S1727036AbgFKKMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Jun 2020 06:12:06 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:60602 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726708AbgFKKMG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 06:12:06 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05BA6r4m013263;
+        Thu, 11 Jun 2020 10:12:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id; s=corp-2020-01-29;
+ bh=2QDDI0kD5A5seujqkA0+fH9fCS9E1vDtyTv8AY1OlxM=;
+ b=jiIaxZjQOgR3WBG/J3MJXa+JJiHeHi6CS23vv3RTlANm1Anv824jmkgU2bMQ98y6KNlM
+ vx1N3/zAA44DU3twDQGGxqB9u7Mgq4SqNyRCGfvUO5X6y1Zhqwd2bmBQ7NHzkJRK8CpI
+ YwhBRleFNPk0SgA5XnviJbXG856i/TNGdSuAGa45zEr6m3mRg67E3XVlRIMfuZn8AoNy
+ w5Nyu7wCyk67IXC6uzY6N6vYxxYlKSSlab9qcRUY2hGubuQ6sX6d297XVrCEXAPPRKtU
+ 7JrRgVu4k0YCyb1v3YbSmjRUV+1Hp46BBBoRRReM0kVIkOTPB96TbFhqRNlNvRfo45kg LQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 31jepp0vhy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 11 Jun 2020 10:12:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05BA8VL7136609;
+        Thu, 11 Jun 2020 10:10:00 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 31gmwuyx23-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 11 Jun 2020 10:10:00 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05BA9xwe018737;
+        Thu, 11 Jun 2020 10:09:59 GMT
+Received: from localhost.localdomain (/183.246.144.78)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 11 Jun 2020 03:09:55 -0700
+From:   Bob Liu <bob.liu@oracle.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     tj@kernel.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
+        lduncan@suse.com, michael.christie@oracle.com,
+        Bob Liu <bob.liu@oracle.com>
+Subject: [PATCH 1/2] workqueue: don't always set __WQ_ORDERED implicitly
+Date:   Thu, 11 Jun 2020 18:07:16 +0800
+Message-Id: <20200611100717.27506-1-bob.liu@oracle.com>
+X-Mailer: git-send-email 2.9.5
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9648 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0 adultscore=0
+ mlxscore=0 mlxlogscore=999 bulkscore=0 malwarescore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006110078
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9648 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=1
+ priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 cotscore=-2147483648 adultscore=0 spamscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006110078
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/06/2020 04:37, Ming Lei wrote:
+Current code always set 'Unbound && max_active == 1' workqueues to ordered
+implicitly, while this may be not an expected behaviour for some use cases.
 
-Hi Ming,
+E.g some scsi and iscsi workqueues(unbound && max_active = 1) want to be bind
+to different cpu so as to get better isolation, but their cpumask can't be
+changed because WQ_ORDERED is set implicitly.
 
-Thanks for checking this.
+This patch adds a flag __WQ_ORDERED_DISABLE and also
+create_singlethread_workqueue_noorder() to offer an new option.
 
->> bool bt_iter(struct sbitmap *bitmap, unsigned int bitnr, void *data)
->>   	 * We can hit rq == NULL here, because the tagging functions
->>   	 * test and set the bit before assigning ->rqs[].
->>   	 */
->> -	if (rq && rq->q == hctx->queue)
->> +	if (rq && rq->q == hctx->queue && rq->mq_hctx == hctx)
->>   		return iter_data->fn(hctx, rq, iter_data->data, reserved);
->>   	return true;
->>   }
->> @@ -466,6 +466,7 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
->>   		     round_robin, node))
->>   		goto free_bitmap_tags;
->>   
->> +	/* We later overwrite these in case of per-set shared sbitmap */
->>   	tags->bitmap_tags = &tags->__bitmap_tags;
->>   	tags->breserved_tags = &tags->__breserved_tags;
-> You may skip to allocate anything for blk_mq_is_sbitmap_shared(), and
-> similar change for blk_mq_free_tags().
+Signed-off-by: Bob Liu <bob.liu@oracle.com>
+---
+ include/linux/workqueue.h | 4 ++++
+ kernel/workqueue.c        | 4 +++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-I did try that, but it breaks scheduler tags allocation - this is common 
-code. Maybe I can pass some flag, to avoid the allocation for case of 
-shared sbitmap and !sched tags. Same for free path.
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index e48554e..4c86913 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -344,6 +344,7 @@ enum {
+ 	__WQ_ORDERED		= 1 << 17, /* internal: workqueue is ordered */
+ 	__WQ_LEGACY		= 1 << 18, /* internal: create*_workqueue() */
+ 	__WQ_ORDERED_EXPLICIT	= 1 << 19, /* internal: alloc_ordered_workqueue() */
++	__WQ_ORDERED_DISABLE	= 1 << 20, /* internal: don't set __WQ_ORDERED implicitly */
+ 
+ 	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
+ 	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
+@@ -433,6 +434,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+ #define create_singlethread_workqueue(name)				\
+ 	alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
+ 
++#define create_singlethread_workqueue_noorder(name)			\
++	alloc_workqueue("%s", WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | \
++			WQ_UNBOUND | __WQ_ORDERED_DISABLE, 1, (name))
+ extern void destroy_workqueue(struct workqueue_struct *wq);
+ 
+ struct workqueue_attrs *alloc_workqueue_attrs(void);
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 4e01c44..2167013 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -4237,7 +4237,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+ 	 * on NUMA.
+ 	 */
+ 	if ((flags & WQ_UNBOUND) && max_active == 1)
+-		flags |= __WQ_ORDERED;
++		/* the caller may don't want __WQ_ORDERED to be set implicitly. */
++		if (!(flags & __WQ_ORDERED_DISABLE))
++			flags |= __WQ_ORDERED;
+ 
+ 	/* see the comment above the definition of WQ_POWER_EFFICIENT */
+ 	if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
+-- 
+2.9.5
 
-BTW, if you check patch 7/12, I mentioned that we could use this sbitmap 
-for iterating to get the per-hctx bitmap, instead of allocating a temp 
-sbitmap. Maybe it's better.
-
-> 
->>   
->> @@ -475,7 +476,32 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
->>   	return -ENOMEM;
->>   }
->>   
->> -struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
->> +bool blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *tag_set)
->> +{
->> +	unsigned int depth = tag_set->queue_depth - tag_set->reserved_tags;
->> +	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(tag_set->flags);
->> +	bool round_robin = alloc_policy == BLK_TAG_ALLOC_RR;
->> +	int node = tag_set->numa_node;
->> +
->> +	if (bt_alloc(&tag_set->__bitmap_tags, depth, round_robin, node))
->> +		return false;
->> +	if (bt_alloc(&tag_set->__breserved_tags, tag_set->reserved_tags,
->> +		     round_robin, node))
->> +		goto free_bitmap_tags;
->> +	return true;
->> +free_bitmap_tags:
->> +	sbitmap_queue_free(&tag_set->__bitmap_tags);
->> +	return false;
->> +}
->> +
-
-[...]
-
->> index 90b645c3092c..77120dd4e4d5 100644
->> --- a/block/blk-mq.c
->> +++ b/block/blk-mq.c
->> @@ -2229,7 +2229,7 @@ struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
->>   	if (node == NUMA_NO_NODE)
->>   		node = set->numa_node;
->>   
->> -	tags = blk_mq_init_tags(nr_tags, reserved_tags, node,
->> +	tags = blk_mq_init_tags(set, nr_tags, reserved_tags, node,
->>   				BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags));
->>   	if (!tags)
->>   		return NULL;
->> @@ -3349,11 +3349,28 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
->>   	if (ret)
->>   		goto out_free_mq_map;
->>   
->> +	if (blk_mq_is_sbitmap_shared(set)) {
->> +		if (!blk_mq_init_shared_sbitmap(set)) {
->> +			ret = -ENOMEM;
->> +			goto out_free_mq_rq_maps;
->> +		}
->> +
->> +		for (i = 0; i < set->nr_hw_queues; i++) {
->> +			struct blk_mq_tags *tags = set->tags[i];
->> +
->> +			tags->bitmap_tags = &set->__bitmap_tags;
->> +			tags->breserved_tags = &set->__breserved_tags;
->> +		}
-> I am wondering why you don't put ->[bitmap|breserved]_tags initialization into
-> blk_mq_init_shared_sbitmap().
-
-I suppose I could.
-
-Thanks,
-John
