@@ -1,283 +1,231 @@
-Return-Path: <SRS0=mOiQ=7X=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=1qKe=7Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FA6C433E4
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 17:33:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9429C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 01:16:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FF192070B
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Jun 2020 17:33:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A208F207ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 01:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727089AbgFJRdq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Jun 2020 13:33:46 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5815 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726524AbgFJRdq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Jun 2020 13:33:46 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 4B41AC78CC531FA84610;
-        Thu, 11 Jun 2020 01:33:27 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS409-HUB.china.huawei.com (10.3.19.209) with Microsoft SMTP Server id
- 14.3.487.0; Thu, 11 Jun 2020 01:33:20 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
-        <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>, <hare@suse.com>,
-        <hch@lst.de>, <shivasharan.srikanteshwara@broadcom.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-Date:   Thu, 11 Jun 2020 01:29:17 +0800
-Message-ID: <1591810159-240929-11-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
+        id S1726304AbgFKBQN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Jun 2020 21:16:13 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:34766 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726163AbgFKBQM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2020 21:16:12 -0400
+Received: by mail-pf1-f194.google.com with SMTP id z63so986765pfb.1;
+        Wed, 10 Jun 2020 18:16:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=U2xz+clo+p+xAEQa4WAp3fVeKWpdUak8TBQN4ETuhCY=;
+        b=JvKKW0jgcD3daBzwyrLY/wguTKjrSQobrDruVHk7dhAdx1K6pt2za5eoZiAoRyEYyD
+         /Z4l/EJZ0golsfuboVIj6x19KWmu2+wQgaExBWpMnGYb8gAgxxL1qOzrAIcvTMq65D/O
+         90ddGbGdw0+TTyPt/cakGzqMb158Zk9wUpBymWBlX06tcJz5fCsEuEf/ASxRDu61hMh1
+         9/adhh8ova8oc2P2FSNlgSHE5WcHNRtrov6yWaoO3s7PjfPdV9tSWVfmYdni1+sMrhm1
+         5wcQmA8/W5NdhvCz9MgjRsrz4yahm4mmwba1UAZK5qTI56Rstk0Mc+5VxhCMwWhEpM8d
+         juMw==
+X-Gm-Message-State: AOAM531Tl6qvxxtBzej61HxHYYookQ2VTb0ymjh/vn5y1K7FYVNrRvpe
+        bTJCFNA0zpFGEm0nDlqstbo=
+X-Google-Smtp-Source: ABdhPJzqWF2yPbWDLcmy623eeuT+u53nUcxLXq0Ne+zwiWQ3J8arJyeA8fFeq+u2jw1IvmQ5+UcL7w==
+X-Received: by 2002:a63:9347:: with SMTP id w7mr4684819pgm.409.1591838171507;
+        Wed, 10 Jun 2020 18:16:11 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id v129sm1117979pfv.18.2020.06.10.18.16.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 10 Jun 2020 18:16:10 -0700 (PDT)
+Subject: Re: [RFC PATCH 4/5] scsi: ufs: L2P map management for HPB read
+To:     daejun7.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+References: <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
+ <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
+ <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
+ <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
+ <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p2>
+ <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <0389f9cf-fea8-9990-7699-0e4322728e4a@acm.org>
+Date:   Wed, 10 Jun 2020 18:16:08 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+In-Reply-To: <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
+On 2020-06-04 18:56, Daejun Park wrote:
+> +static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
+> +					     struct ufshpb_subregion *srgn)
+> +{
+> +	struct ufshpb_req *map_req;
+> +	struct request *req;
+> +	struct bio *bio;
+> +
+> +	map_req = kmem_cache_alloc(hpb->map_req_cache, GFP_KERNEL);
+> +	if (!map_req)
+> +		return NULL;
+> +
+> +	req = blk_get_request(hpb->sdev_ufs_lu->request_queue,
+> +			      REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
+> +	if (IS_ERR(req))
+> +		goto free_map_req;
+> +
+> +	bio = bio_alloc(GFP_KERNEL, hpb->pages_per_srgn);
+> +	if (!bio) {
+> +		blk_put_request(req);
+> +		goto free_map_req;
+> +	}
+> +
+> +	map_req->hpb = hpb;
+> +	map_req->req = req;
+> +	map_req->bio = bio;
+> +
+> +	map_req->rgn_idx = srgn->rgn_idx;
+> +	map_req->srgn_idx = srgn->srgn_idx;
+> +	map_req->mctx = srgn->mctx;
+> +	map_req->lun = hpb->lun;
+> +
+> +	return map_req;
+> +free_map_req:
+> +	kmem_cache_free(hpb->map_req_cache, map_req);
+> +	return NULL;
+> +}
 
-Fusion adapters can steer completions to individual queues, and
-we now have support for shared host-wide tags.
-So we can enable multiqueue support for fusion adapters and
-drop the hand-crafted interrupt affinity settings.
+Will blk_get_request() fail if all tags have been allocated? Can that
+cause a deadlock or infinite loop?
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/megaraid/megaraid_sas.h        |  1 -
- drivers/scsi/megaraid/megaraid_sas_base.c   | 59 +++++++--------------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 24 +++++----
- 3 files changed, 32 insertions(+), 52 deletions(-)
+> +static inline void ufshpb_set_read_buf_cmd(unsigned char *cdb, int rgn_idx,
+> +					   int srgn_idx, int srgn_mem_size)
+> +{
+> +	cdb[0] = UFSHPB_READ_BUFFER;
+> +	cdb[1] = UFSHPB_READ_BUFFER_ID;
+> +
+> +	put_unaligned_be32(srgn_mem_size, &cdb[5]);
+> +	/* cdb[5] = 0x00; */
+> +	put_unaligned_be16(rgn_idx, &cdb[2]);
+> +	put_unaligned_be16(srgn_idx, &cdb[4]);
+> +
+> +	cdb[9] = 0x00;
+> +}
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index af2c7a2a9565..b27a34a5f5de 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2261,7 +2261,6 @@ enum MR_PERF_MODE {
- 
- struct megasas_instance {
- 
--	unsigned int *reply_map;
- 	__le32 *producer;
- 	dma_addr_t producer_h;
- 	__le32 *consumer;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 00668335c2af..e6bb2a64d51c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -37,6 +37,7 @@
- #include <linux/poll.h>
- #include <linux/vmalloc.h>
- #include <linux/irq_poll.h>
-+#include <linux/blk-mq-pci.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -3115,6 +3116,19 @@ megasas_bios_param(struct scsi_device *sdev, struct block_device *bdev,
- 	return 0;
- }
- 
-+static int megasas_map_queues(struct Scsi_Host *shost)
-+{
-+	struct megasas_instance *instance;
-+
-+	instance = (struct megasas_instance *)shost->hostdata;
-+
-+	if (!instance->smp_affinity_enable)
-+		return 0;
-+
-+	return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
-+			instance->pdev, instance->low_latency_index_start);
-+}
-+
- static void megasas_aen_polling(struct work_struct *work);
- 
- /**
-@@ -3423,8 +3437,10 @@ static struct scsi_host_template megasas_template = {
- 	.eh_timed_out = megasas_reset_timer,
- 	.shost_attrs = megaraid_host_attrs,
- 	.bios_param = megasas_bios_param,
-+	.map_queues = megasas_map_queues,
- 	.change_queue_depth = scsi_change_queue_depth,
- 	.max_segment_size = 0xffffffff,
-+	.host_tagset = 1,
- };
- 
- /**
-@@ -5708,34 +5724,6 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
- 		instance->use_seqnum_jbod_fp = false;
- }
- 
--static void megasas_setup_reply_map(struct megasas_instance *instance)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu, low_latency_index_start;
--
--	low_latency_index_start = instance->low_latency_index_start;
--
--	for (queue = low_latency_index_start; queue < instance->msix_vectors; queue++) {
--		mask = pci_irq_get_affinity(instance->pdev, queue);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			instance->reply_map[cpu] = queue;
--	}
--	return;
--
--fallback:
--	queue = low_latency_index_start;
--	for_each_possible_cpu(cpu) {
--		instance->reply_map[cpu] = queue;
--		if (queue == (instance->msix_vectors - 1))
--			queue = low_latency_index_start;
--		else
--			queue++;
--	}
--}
--
- /**
-  * megasas_get_device_list -	Get the PD and LD device list from FW.
-  * @instance:			Adapter soft state
-@@ -6158,8 +6146,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			goto fail_init_adapter;
- 	}
- 
--	megasas_setup_reply_map(instance);
--
- 	dev_info(&instance->pdev->dev,
- 		"current msix/online cpus\t: (%d/%d)\n",
- 		instance->msix_vectors, (unsigned int)num_online_cpus());
-@@ -6793,6 +6779,9 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
- 	host->max_lun = MEGASAS_MAX_LUN;
- 	host->max_cmd_len = 16;
-+	if (instance->adapter_type != MFI_SERIES && instance->msix_vectors > 0)
-+		host->nr_hw_queues = instance->msix_vectors -
-+			instance->low_latency_index_start;
- 
- 	/*
- 	 * Notify the mid-layer about the new controller
-@@ -6960,11 +6949,6 @@ static inline int megasas_alloc_mfi_ctrl_mem(struct megasas_instance *instance)
-  */
- static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
- {
--	instance->reply_map = kcalloc(nr_cpu_ids, sizeof(unsigned int),
--				      GFP_KERNEL);
--	if (!instance->reply_map)
--		return -ENOMEM;
--
- 	switch (instance->adapter_type) {
- 	case MFI_SERIES:
- 		if (megasas_alloc_mfi_ctrl_mem(instance))
-@@ -6981,8 +6965,6 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
- 
- 	return 0;
-  fail:
--	kfree(instance->reply_map);
--	instance->reply_map = NULL;
- 	return -ENOMEM;
- }
- 
-@@ -6995,7 +6977,6 @@ static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)
-  */
- static inline void megasas_free_ctrl_mem(struct megasas_instance *instance)
- {
--	kfree(instance->reply_map);
- 	if (instance->adapter_type == MFI_SERIES) {
- 		if (instance->producer)
- 			dma_free_coherent(&instance->pdev->dev, sizeof(u32),
-@@ -7683,8 +7664,6 @@ megasas_resume(struct pci_dev *pdev)
- 			goto fail_reenable_msix;
- 	}
- 
--	megasas_setup_reply_map(instance);
--
- 	if (instance->adapter_type != MFI_SERIES) {
- 		megasas_reset_reply_desc(instance);
- 		if (megasas_ioc_init_fusion(instance)) {
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 319f241da4b6..8e25b700988e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -373,24 +373,24 @@ megasas_get_msix_index(struct megasas_instance *instance,
- {
- 	int sdev_busy;
- 
--	/* nr_hw_queue = 1 for MegaRAID */
--	struct blk_mq_hw_ctx *hctx =
--		scmd->device->request_queue->queue_hw_ctx[0];
-+	struct blk_mq_hw_ctx *hctx = scmd->request->mq_hctx;
- 
- 	sdev_busy = atomic_read(&hctx->nr_active);
- 
- 	if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
--	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
-+	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH)) {
- 		cmd->request_desc->SCSIIO.MSIxIndex =
- 			mega_mod64((atomic64_add_return(1, &instance->high_iops_outstanding) /
- 					MR_HIGH_IOPS_BATCH_COUNT), instance->low_latency_index_start);
--	else if (instance->msix_load_balance)
-+	} else if (instance->msix_load_balance) {
- 		cmd->request_desc->SCSIIO.MSIxIndex =
- 			(mega_mod64(atomic64_add_return(1, &instance->total_io_count),
- 				instance->msix_vectors));
--	else
--		cmd->request_desc->SCSIIO.MSIxIndex =
--			instance->reply_map[raw_smp_processor_id()];
-+	} else {
-+		u32 tag = blk_mq_unique_tag(scmd->request);
-+
-+		cmd->request_desc->SCSIIO.MSIxIndex = blk_mq_unique_tag_to_hwq(tag) + instance->low_latency_index_start;
-+	}
- }
- 
- /**
-@@ -3326,7 +3326,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- {
- 	struct megasas_cmd_fusion *cmd, *r1_cmd = NULL;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
--	u32 index;
-+	u32 index, blk_tag, unique_tag;
- 
- 	if ((megasas_cmd_type(scmd) == READ_WRITE_LDIO) &&
- 		instance->ldio_threshold &&
-@@ -3342,7 +3342,9 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
--	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
-+	unique_tag = blk_mq_unique_tag(scmd->request);
-+	blk_tag = blk_mq_unique_tag_to_tag(unique_tag);
-+	cmd = megasas_get_cmd_fusion(instance, blk_tag);
- 
- 	if (!cmd) {
- 		atomic_dec(&instance->fw_outstanding);
-@@ -3383,7 +3385,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 	 */
- 	if (cmd->r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
- 		r1_cmd = megasas_get_cmd_fusion(instance,
--				(scmd->request->tag + instance->max_fw_cmds));
-+				(blk_tag + instance->max_fw_cmds));
- 		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
- 	}
- 
--- 
-2.26.2
+So the put_unaligned_be32(srgn_mem_size, &cdb[5]) comes first because
+the put_unaligned_be16(srgn_idx, &cdb[4]) overwrites byte cdb[5]? That
+is really ugly. Please use put_unaligned_be24() instead if that is what
+you meant and keep the put_*() calls in increasing cdb offset order.
 
+> +static int ufshpb_map_req_add_bio_page(struct ufshpb_lu *hpb,
+> +				       struct request_queue *q, struct bio *bio,
+> +				       struct ufshpb_map_ctx *mctx)
+> +{
+> +	int i, ret = 0;
+> +
+> +	for (i = 0; i < hpb->pages_per_srgn; i++) {
+> +		ret = bio_add_pc_page(q, bio, mctx->m_page[i], PAGE_SIZE, 0);
+> +		if (ret != PAGE_SIZE) {
+> +			dev_notice(&hpb->hpb_lu_dev,
+> +				   "bio_add_pc_page fail %d\n", ret);
+> +			return -ENOMEM;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+
+Why bio_add_pc_page() instead of bio_add_page()?
+
+> +static int ufshpb_execute_map_req(struct ufshpb_lu *hpb,
+> +				  struct ufshpb_req *map_req)
+> +{
+> +	struct request_queue *q;
+> +	struct request *req;
+> +	struct scsi_request *rq;
+> +	int ret = 0;
+> +
+> +	q = hpb->sdev_ufs_lu->request_queue;
+> +	ret = ufshpb_map_req_add_bio_page(hpb, q, map_req->bio,
+> +					  map_req->mctx);
+> +	if (ret) {
+> +		dev_notice(&hpb->hpb_lu_dev,
+> +			   "map_req_add_bio_page fail %d - %d\n",
+> +			   map_req->rgn_idx, map_req->srgn_idx);
+> +		return ret;
+> +	}
+> +
+> +	req = map_req->req;
+> +
+> +	blk_rq_append_bio(req, &map_req->bio);
+> +	req->rq_flags |= RQF_QUIET;
+> +	req->timeout = MAP_REQ_TIMEOUT;
+> +	req->end_io_data = (void *)map_req;
+> +
+> +	rq = scsi_req(req);
+> +	ufshpb_set_read_buf_cmd(rq->cmd, map_req->rgn_idx,
+> +				map_req->srgn_idx, hpb->srgn_mem_size);
+> +	rq->cmd_len = HPB_READ_BUFFER_CMD_LENGTH;
+> +
+> +	blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_map_req_compl_fn);
+> +
+> +	atomic_inc(&hpb->stats.map_req_cnt);
+> +	return 0;
+> +}
+
+Why RQF_QUIET?
+
+Why a custom timeout instead of the SCSI LUN timeout?
+
+Can this function be made asynchronous such that it does not have to be
+executed on the context of a workqueue?
+
+Thanks,
+
+Bart.
