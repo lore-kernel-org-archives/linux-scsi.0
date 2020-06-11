@@ -2,95 +2,93 @@ Return-Path: <SRS0=1qKe=7Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 367C2C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 09:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA9FAC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 09:53:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13C292078D
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 09:36:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A487720656
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 09:53:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="RaBBlggY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727021AbgFKJgZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Jun 2020 05:36:25 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2299 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726907AbgFKJgZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Jun 2020 05:36:25 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 6033969D0A898C07E451;
-        Thu, 11 Jun 2020 10:36:24 +0100 (IST)
-Received: from [127.0.0.1] (10.210.169.30) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 11 Jun
- 2020 10:36:22 +0100
-Subject: Re: [PATCH RFC v7 00/12] blk-mq/scsi: Provide hostwide shared tags
- for SCSI HBAs
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
-        <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <bvanassche@acm.org>, <hare@suse.com>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <20200611030708.GB453671@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <c033f445-97fd-6dc9-c270-9890681b39d9@huawei.com>
-Date:   Thu, 11 Jun 2020 10:35:05 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726864AbgFKJw5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Jun 2020 05:52:57 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:39491 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726560AbgFKJw4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 05:52:56 -0400
+X-UUID: d125a9e89e874c09a2af91ffd9c34a03-20200611
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=CJcfxCu5zDRpr2vZfB1Tc+UVD9m/FFKMEZgs43bapM4=;
+        b=RaBBlggYi7uLe+U5eUAnTHjBINaRfqjWZLew/mB/kJXw6o7PQHLXsYxAbaicIOMyIy4jfjnSQgvkWeOdJ9eUXDKigTo/w+RSRnydNdRQD6tvfdax+QdbOmHBavbc/gLk5+rIkiBDJQbTdsEj0frBFSqNU+rifp9wNZqZcz88U/8=;
+X-UUID: d125a9e89e874c09a2af91ffd9c34a03-20200611
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 366576131; Thu, 11 Jun 2020 17:52:54 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 11 Jun 2020 17:52:50 +0800
+Received: from [172.21.77.33] (172.21.77.33) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 11 Jun 2020 17:52:51 +0800
+Message-ID: <1591869173.25636.39.camel@mtkswgap22>
+Subject: RE: [PATCH v4] scsi: ufs: Fix imprecise load calculation in devfreq
+ window
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Avri Altman <Avri.Altman@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
+        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
+        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
+Date:   Thu, 11 Jun 2020 17:52:53 +0800
+In-Reply-To: <SN6PR04MB46405CE4B375BA3134D64A99FC800@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200611052109.22700-1-stanley.chu@mediatek.com>
+         <SN6PR04MB46405CE4B375BA3134D64A99FC800@SN6PR04MB4640.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-In-Reply-To: <20200611030708.GB453671@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.169.30]
-X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-TM-SNTS-SMTP: 7CBC375DE8EB4263FB517B24417907279B35FCD9CE7FF744E8B9862B97D052252000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/06/2020 04:07, Ming Lei wrote:
->> Using 12x SAS SSDs on hisi_sas v3 hw. mq-deadline results are included,
->> but it is not always an appropriate scheduler to use.
->>
->> Tag depth 		4000 (default)			260**
->>
->> Baseline:
->> none sched:		2290K IOPS			894K
->> mq-deadline sched:	2341K IOPS			2313K
->>
->> Final, host_tagset=0 in LLDD*
->> none sched:		2289K IOPS			703K
->> mq-deadline sched:	2337K IOPS			2291K
->>
->> Final:
->> none sched:		2281K IOPS			1101K
->> mq-deadline sched:	2322K IOPS			1278K
->>
->> * this is relevant as this is the performance in supporting but not
->>    enabling the feature
->> ** depth=260 is relevant as some point where we are regularly waiting for
->>     tags to be available. Figures were are a bit unstable here for testing.
->>
->> A copy of the patches can be found here:
->> https://github.com/hisilicon/kernel-dev/commits/private-topic-blk-mq-shared-tags-rfc-v7
->>
->> And to progress this series, we the the following to go in first, when ready:
->> https://lore.kernel.org/linux-scsi/20200430131904.5847-1-hare@suse.de/
-> I'd suggest to add options to enable shared tags for null_blk & scsi_debug in V8, so
-> that it is easier to verify the changes without real hardware.
-> 
+SGkgQXZyaSwNCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3Lg0KDQpPbiBUaHUsIDIwMjAtMDYtMTEg
+YXQgMDg6MDMgKzAwMDAsIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiA+IA0KPiA+IEZpeGVzOiBhM2Nk
+NWVjNTVmNmMgKCJzY3NpOiB1ZnM6IGFkZCBsb2FkIGJhc2VkIHNjYWxpbmcgb2YgVUZTIGdlYXIi
+KQ0KPiA+IFNpZ25lZC1vZmYtYnk6IFN0YW5sZXkgQ2h1IDxzdGFubGV5LmNodUBtZWRpYXRlay5j
+b20+DQo+IFJldmlld2VkLWJ5OiBBdnJpIEFsdG1hbiA8YXZyaS5hbHRtYW5Ad2RjLmNvbT4NCj4g
+DQo+IEp1c3QgYSBzbWFsbCBuaXQuDQo+IA0KPiA+IC0gICAgICAgc3RhdC0+dG90YWxfdGltZSA9
+IGppZmZpZXNfdG9fdXNlY3MoKGxvbmcpamlmZmllcyAtDQo+ID4gLSAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAobG9uZylzY2FsaW5nLT53aW5kb3dfc3RhcnRfdCk7DQo+ID4gKyAgICAg
+ICBzdGF0LT50b3RhbF90aW1lID0ga3RpbWVfdG9fdXMoY3Vycl90KSAtIHNjYWxpbmctPndpbmRv
+d19zdGFydF90Ow0KPiBrdGltZV9zdWIgPw0KDQpzY2FsaW5nLT53aW5kb3dfc3RhcnRfdCBpcyBh
+bHJlYWR5IGluICJ1cyIgdGh1cyBrdGltZV9zdWIoKSBpcyBub3QNCnN1aXRhYmxlIGhlcmUuDQoN
+CkFub3RoZXIgd2F5IGlzIGNoYW5naW5nIHNjYWxpbmctPndpbmRvd19zdGFydF90IGFzIHR5cGUg
+Imt0aW1lX3QiLiBUaGlzDQppcyB3b3J0aCB0byBkbyBiZWNhdXNlIG9mIGEgbGl0dGxlIHBlcmZv
+cm1hbmNlIGdhaW4uDQoNCkkgd2lsbCBjaGFuZ2UgaXQgaW4gbmV4dCB2ZXJzaW9uLg0KDQpUaGFu
+a3MsDQpTdGFubGV5IENodQ0KDQo=
 
-ok, fine, I can look at including that. To stop the series getting too 
-large, I might spin off the early patches, which are not strictly related.
-
-Thanks,
-John
