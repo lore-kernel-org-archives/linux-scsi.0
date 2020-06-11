@@ -2,132 +2,234 @@ Return-Path: <SRS0=1qKe=7Y=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F8CC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6316EC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:24:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7443207C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:12:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jiIaxZjQ"
+	by mail.kernel.org (Postfix) with ESMTP id 47D5C20760
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 10:24:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727036AbgFKKMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Jun 2020 06:12:06 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:60602 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726708AbgFKKMG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 06:12:06 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05BA6r4m013263;
-        Thu, 11 Jun 2020 10:12:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2020-01-29;
- bh=2QDDI0kD5A5seujqkA0+fH9fCS9E1vDtyTv8AY1OlxM=;
- b=jiIaxZjQOgR3WBG/J3MJXa+JJiHeHi6CS23vv3RTlANm1Anv824jmkgU2bMQ98y6KNlM
- vx1N3/zAA44DU3twDQGGxqB9u7Mgq4SqNyRCGfvUO5X6y1Zhqwd2bmBQ7NHzkJRK8CpI
- YwhBRleFNPk0SgA5XnviJbXG856i/TNGdSuAGa45zEr6m3mRg67E3XVlRIMfuZn8AoNy
- w5Nyu7wCyk67IXC6uzY6N6vYxxYlKSSlab9qcRUY2hGubuQ6sX6d297XVrCEXAPPRKtU
- 7JrRgVu4k0YCyb1v3YbSmjRUV+1Hp46BBBoRRReM0kVIkOTPB96TbFhqRNlNvRfo45kg LQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 31jepp0vhy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 11 Jun 2020 10:12:00 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05BA8VL7136609;
-        Thu, 11 Jun 2020 10:10:00 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 31gmwuyx23-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 11 Jun 2020 10:10:00 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05BA9xwe018737;
-        Thu, 11 Jun 2020 10:09:59 GMT
-Received: from localhost.localdomain (/183.246.144.78)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 11 Jun 2020 03:09:55 -0700
-From:   Bob Liu <bob.liu@oracle.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     tj@kernel.org, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
-        lduncan@suse.com, michael.christie@oracle.com,
-        Bob Liu <bob.liu@oracle.com>
-Subject: [PATCH 1/2] workqueue: don't always set __WQ_ORDERED implicitly
-Date:   Thu, 11 Jun 2020 18:07:16 +0800
-Message-Id: <20200611100717.27506-1-bob.liu@oracle.com>
-X-Mailer: git-send-email 2.9.5
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9648 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0 adultscore=0
- mlxscore=0 mlxlogscore=999 bulkscore=0 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006110078
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9648 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=1
- priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0 impostorscore=0
- malwarescore=0 mlxscore=0 cotscore=-2147483648 adultscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006110078
+        id S1727076AbgFKKYK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Jun 2020 06:24:10 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2301 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726693AbgFKKYJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 11 Jun 2020 06:24:09 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id DF66BA7A270A5D09600F;
+        Thu, 11 Jun 2020 11:24:06 +0100 (IST)
+Received: from [127.0.0.1] (10.210.169.30) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 11 Jun
+ 2020 11:24:05 +0100
+Subject: Re: [PATCH RFC v7 05/12] blk-mq: Record nr_active_requests per queue
+ for when using shared sbitmap
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
+        <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
+        <bvanassche@acm.org>, <hare@suse.com>, <hch@lst.de>,
+        <shivasharan.srikanteshwara@broadcom.com>,
+        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
+        <megaraidlinux.pdl@broadcom.com>
+References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
+ <1591810159-240929-6-git-send-email-john.garry@huawei.com>
+ <20200611040455.GD453671@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <9a5dcb3a-8f5c-ab10-7631-4bd1b58b49bb@huawei.com>
+Date:   Thu, 11 Jun 2020 11:22:47 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <20200611040455.GD453671@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.169.30]
+X-ClientProxiedBy: lhreml713-chm.china.huawei.com (10.201.108.64) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current code always set 'Unbound && max_active == 1' workqueues to ordered
-implicitly, while this may be not an expected behaviour for some use cases.
+>> +static const struct blk_mq_debugfs_attr blk_mq_debugfs_hctx_shared_sbitmap_attrs[] = {
+>> +	{"state", 0400, hctx_state_show},
+>> +	{"flags", 0400, hctx_flags_show},
+>> +	{"dispatch", 0400, .seq_ops = &hctx_dispatch_seq_ops},
+>> +	{"busy", 0400, hctx_busy_show},
+>> +	{"ctx_map", 0400, hctx_ctx_map_show},
+>> +	{"sched_tags", 0400, hctx_sched_tags_show},
+>> +	{"sched_tags_bitmap", 0400, hctx_sched_tags_bitmap_show},
+>> +	{"io_poll", 0600, hctx_io_poll_show, hctx_io_poll_write},
+>> +	{"dispatched", 0600, hctx_dispatched_show, hctx_dispatched_write},
+>> +	{"queued", 0600, hctx_queued_show, hctx_queued_write},
+>> +	{"run", 0600, hctx_run_show, hctx_run_write},
+>> +	{"active", 0400, hctx_active_show},
+>> +	{"dispatch_busy", 0400, hctx_dispatch_busy_show},
+>> +	{}
+>> +};
+> 
+> You may use macro or whatever to avoid so the duplication.
 
-E.g some scsi and iscsi workqueues(unbound && max_active = 1) want to be bind
-to different cpu so as to get better isolation, but their cpumask can't be
-changed because WQ_ORDERED is set implicitly.
+Let me check alternatives.
 
-This patch adds a flag __WQ_ORDERED_DISABLE and also
-create_singlethread_workqueue_noorder() to offer an new option.
+> 
+>> +
+>>   static const struct blk_mq_debugfs_attr blk_mq_debugfs_ctx_attrs[] = {
+>>   	{"default_rq_list", 0400, .seq_ops = &ctx_default_rq_list_seq_ops},
+>>   	{"read_rq_list", 0400, .seq_ops = &ctx_read_rq_list_seq_ops},
+>> @@ -878,13 +895,17 @@ void blk_mq_debugfs_register_hctx(struct request_queue *q,
+>>   				  struct blk_mq_hw_ctx *hctx)
+>>   {
+>>   	struct blk_mq_ctx *ctx;
+>> +	struct blk_mq_tag_set *set = q->tag_set;
+>>   	char name[20];
+>>   	int i;
+>>   
+>>   	snprintf(name, sizeof(name), "hctx%u", hctx->queue_num);
+>>   	hctx->debugfs_dir = debugfs_create_dir(name, q->debugfs_dir);
+>>   
+>> -	debugfs_create_files(hctx->debugfs_dir, hctx, blk_mq_debugfs_hctx_attrs);
+>> +	if (blk_mq_is_sbitmap_shared(set))
+>> +		debugfs_create_files(hctx->debugfs_dir, hctx, blk_mq_debugfs_hctx_shared_sbitmap_attrs);
+>> +	else
+>> +		debugfs_create_files(hctx->debugfs_dir, hctx, blk_mq_debugfs_hctx_attrs);
+>>   
+>>   	hctx_for_each_ctx(hctx, ctx, i)
+>>   		blk_mq_debugfs_register_ctx(hctx, ctx);
+>> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+>> index 92843e3e1a2a..7db16e49f6f6 100644
+>> --- a/block/blk-mq-tag.c
+>> +++ b/block/blk-mq-tag.c
+>> @@ -60,9 +60,11 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
+>>    * For shared tag users, we track the number of currently active users
+>>    * and attempt to provide a fair share of the tag depth for each of them.
+>>    */
+>> -static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+>> +static inline bool hctx_may_queue(struct blk_mq_alloc_data *data,
+>>   				  struct sbitmap_queue *bt)
+>>   {
+>> +	struct blk_mq_hw_ctx *hctx = data->hctx;
+>> +	struct request_queue *q = data->q;
+>>   	unsigned int depth, users;
+>>   
+>>   	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
+>> @@ -84,15 +86,15 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+>>   	 * Allow at least some tags
+>>   	 */
+>>   	depth = max((bt->sb.depth + users - 1) / users, 4U);
+>> -	return atomic_read(&hctx->nr_active) < depth;
+>> +	return __blk_mq_active_requests(hctx, q) < depth;
+> 
+> There is big change on 'users' too:
+> 
+> 	users = atomic_read(&hctx->tags->active_queues);
+> 
+> Originally there is single hctx->tags for these HBAs, now there are many
+> hctx->tags, so 'users' may become much smaller than before.
 
-Signed-off-by: Bob Liu <bob.liu@oracle.com>
----
- include/linux/workqueue.h | 4 ++++
- kernel/workqueue.c        | 4 +++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
+Can you please check how I handled that in the next patch? There we 
+record the number of active request queues per set.
 
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index e48554e..4c86913 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -344,6 +344,7 @@ enum {
- 	__WQ_ORDERED		= 1 << 17, /* internal: workqueue is ordered */
- 	__WQ_LEGACY		= 1 << 18, /* internal: create*_workqueue() */
- 	__WQ_ORDERED_EXPLICIT	= 1 << 19, /* internal: alloc_ordered_workqueue() */
-+	__WQ_ORDERED_DISABLE	= 1 << 20, /* internal: don't set __WQ_ORDERED implicitly */
- 
- 	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
- 	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
-@@ -433,6 +434,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
- #define create_singlethread_workqueue(name)				\
- 	alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
- 
-+#define create_singlethread_workqueue_noorder(name)			\
-+	alloc_workqueue("%s", WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | \
-+			WQ_UNBOUND | __WQ_ORDERED_DISABLE, 1, (name))
- extern void destroy_workqueue(struct workqueue_struct *wq);
- 
- struct workqueue_attrs *alloc_workqueue_attrs(void);
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 4e01c44..2167013 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -4237,7 +4237,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
- 	 * on NUMA.
- 	 */
- 	if ((flags & WQ_UNBOUND) && max_active == 1)
--		flags |= __WQ_ORDERED;
-+		/* the caller may don't want __WQ_ORDERED to be set implicitly. */
-+		if (!(flags & __WQ_ORDERED_DISABLE))
-+			flags |= __WQ_ORDERED;
- 
- 	/* see the comment above the definition of WQ_POWER_EFFICIENT */
- 	if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
--- 
-2.9.5
+(I will note that I could have combined some of these patches, but I 
+liked the piecemeal appraoch, and none of these paths are enabled until 
+later).
 
+> 
+> Maybe '->active_queues' can be moved to tag_set for blk_mq_is_sbitmap_shared().
+> 
+>>   }
+>>   
+>>   static int __blk_mq_get_tag(struct blk_mq_alloc_data *data,
+>>   			    struct sbitmap_queue *bt)
+>>   {
+>>   	if (!(data->flags & BLK_MQ_REQ_INTERNAL) &&
+>> -	    !hctx_may_queue(data->hctx, bt))
+>> -		return BLK_MQ_NO_TAG;
+>> +	    !hctx_may_queue(data, bt))
+>> +		return -1;
+> 
+> BLK_MQ_NO_TAG should have been returned.
+
+OK, I missed that in the rebase.
+
+> 
+>>   	if (data->shallow_depth)
+>>   		return __sbitmap_queue_get_shallow(bt, data->shallow_depth);
+>>   	else
+>> diff --git a/block/blk-mq.c b/block/blk-mq.c
+>> index 77120dd4e4d5..0f7e062a1665 100644
+>> --- a/block/blk-mq.c
+>> +++ b/block/blk-mq.c
+>> @@ -283,7 +283,7 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+>>   	} else {
+>>   		if (data->hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED) {
+>>   			rq_flags = RQF_MQ_INFLIGHT;
+>> -			atomic_inc(&data->hctx->nr_active);
+>> +			__blk_mq_inc_active_requests(data->hctx, data->q);
+>>   		}
+>>   		rq->tag = tag;
+>>   		rq->internal_tag = BLK_MQ_NO_TAG;
+>> @@ -527,7 +527,7 @@ void blk_mq_free_request(struct request *rq)
+>>   
+>>   	ctx->rq_completed[rq_is_sync(rq)]++;
+>>   	if (rq->rq_flags & RQF_MQ_INFLIGHT)
+>> -		atomic_dec(&hctx->nr_active);
+>> +		__blk_mq_dec_active_requests(hctx, q);
+>>   
+>>   	if (unlikely(laptop_mode && !blk_rq_is_passthrough(rq)))
+>>   		laptop_io_completion(q->backing_dev_info);
+>> @@ -1073,7 +1073,7 @@ bool blk_mq_get_driver_tag(struct request *rq)
+>>   	if (rq->tag >= 0) {
+>>   		if (shared) {
+>>   			rq->rq_flags |= RQF_MQ_INFLIGHT;
+>> -			atomic_inc(&data.hctx->nr_active);
+>> +			__blk_mq_inc_active_requests(rq->mq_hctx, rq->q);
+>>   		}
+>>   		data.hctx->tags->rqs[rq->tag] = rq;
+>>   	}
+>> diff --git a/block/blk-mq.h b/block/blk-mq.h
+>> index 1a283c707215..9c1e612c2298 100644
+>> --- a/block/blk-mq.h
+>> +++ b/block/blk-mq.h
+>> @@ -202,6 +202,32 @@ static inline bool blk_mq_get_dispatch_budget(struct blk_mq_hw_ctx *hctx)
+>>   	return true;
+>>   }
+>>   
+>> +static inline void __blk_mq_inc_active_requests(struct blk_mq_hw_ctx *hctx,
+>> +						struct request_queue *q)
+>> +{
+>> +	if (blk_mq_is_sbitmap_shared(q->tag_set))
+>> +		atomic_inc(&q->nr_active_requests_shared_sbitmap);
+>> +	else
+>> +		atomic_inc(&hctx->nr_active);
+>> +}
+>> +
+>> +static inline void __blk_mq_dec_active_requests(struct blk_mq_hw_ctx *hctx,
+>> +						struct request_queue *q)
+>> +{
+>> +	if (blk_mq_is_sbitmap_shared(q->tag_set))
+>> +		atomic_dec(&q->nr_active_requests_shared_sbitmap);
+>> +	else
+>> +		atomic_dec(&hctx->nr_active);
+>> +}
+>> +
+>> +static inline int __blk_mq_active_requests(struct blk_mq_hw_ctx *hctx,
+>> +					   struct request_queue *q)
+>> +{
+>> +	if (blk_mq_is_sbitmap_shared(q->tag_set))
+> 
+> I'd suggest to add one hctx version of blk_mq_is_sbitmap_shared() since
+> q->tag_set is seldom used in fast path, and hctx->flags is more
+> efficient than tag_set->flags.
+
+OK
+
+Thanks,
+John
