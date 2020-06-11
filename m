@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9429C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 01:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C91EC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 01:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A208F207ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 01:16:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 285CC2074B
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 01:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726304AbgFKBQN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Jun 2020 21:16:13 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:34766 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726163AbgFKBQM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2020 21:16:12 -0400
-Received: by mail-pf1-f194.google.com with SMTP id z63so986765pfb.1;
-        Wed, 10 Jun 2020 18:16:12 -0700 (PDT)
+        id S1726339AbgFKBhY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Jun 2020 21:37:24 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:36624 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726163AbgFKBhX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jun 2020 21:37:23 -0400
+Received: by mail-pg1-f195.google.com with SMTP id t7so1811080pgt.3;
+        Wed, 10 Jun 2020 18:37:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=U2xz+clo+p+xAEQa4WAp3fVeKWpdUak8TBQN4ETuhCY=;
-        b=JvKKW0jgcD3daBzwyrLY/wguTKjrSQobrDruVHk7dhAdx1K6pt2za5eoZiAoRyEYyD
-         /Z4l/EJZ0golsfuboVIj6x19KWmu2+wQgaExBWpMnGYb8gAgxxL1qOzrAIcvTMq65D/O
-         90ddGbGdw0+TTyPt/cakGzqMb158Zk9wUpBymWBlX06tcJz5fCsEuEf/ASxRDu61hMh1
-         9/adhh8ova8oc2P2FSNlgSHE5WcHNRtrov6yWaoO3s7PjfPdV9tSWVfmYdni1+sMrhm1
-         5wcQmA8/W5NdhvCz9MgjRsrz4yahm4mmwba1UAZK5qTI56Rstk0Mc+5VxhCMwWhEpM8d
-         juMw==
-X-Gm-Message-State: AOAM531Tl6qvxxtBzej61HxHYYookQ2VTb0ymjh/vn5y1K7FYVNrRvpe
-        bTJCFNA0zpFGEm0nDlqstbo=
-X-Google-Smtp-Source: ABdhPJzqWF2yPbWDLcmy623eeuT+u53nUcxLXq0Ne+zwiWQ3J8arJyeA8fFeq+u2jw1IvmQ5+UcL7w==
-X-Received: by 2002:a63:9347:: with SMTP id w7mr4684819pgm.409.1591838171507;
-        Wed, 10 Jun 2020 18:16:11 -0700 (PDT)
+        bh=JvLFQ/Pp9kYuh584xFsBL9APcPBK2H+2UekyjU/1FqE=;
+        b=WcJD95bSa1R7aRxUWz+AwIO5g52jUnW5HDjS3Uy7odYA+boSggBQnkSxLeKnhKrt7Z
+         R3VFM0JgRBhCd9cpcl+90yhcC2bsJ3pqsrQNQwPjBqyAVdYqo710XBOMMxv3FLMl28JE
+         MoUCODTomejVnk26ajQ1BhDV9fLMxmmT4mW4Z/IRBfa/3djlU1ZbszCWEvnpSVZc9da7
+         Vqkci/ZtVZyl/5RUYbMAhwU6zdPrX54v0+waN0mvp17MfxHtGi42Ax00G0VgDdHvC42Z
+         SnHWRq0G7BV2ahzcxl6eB3+SV13Um+chtgPck8xScq5mYgV9NrjSowFeU5zktHGshreL
+         PhcA==
+X-Gm-Message-State: AOAM530Rvku4516IJc1ah7mFnEUq19uaJR1y1D2m8RdPbMyqSXwyAPyC
+        ocVPXXFnF86IDEx9JpKzCgA=
+X-Google-Smtp-Source: ABdhPJzj+fe92903mWOb5clQ1lpl9X+6fAWCf7LUIk8xYHC62+FrSX4ERbSQ/8EVjaxuzEZ7NS258Q==
+X-Received: by 2002:a62:5ac5:: with SMTP id o188mr5242642pfb.37.1591839441335;
+        Wed, 10 Jun 2020 18:37:21 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v129sm1117979pfv.18.2020.06.10.18.16.09
+        by smtp.gmail.com with ESMTPSA id cm13sm891721pjb.5.2020.06.10.18.37.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Jun 2020 18:16:10 -0700 (PDT)
-Subject: Re: [RFC PATCH 4/5] scsi: ufs: L2P map management for HPB read
+        Wed, 10 Jun 2020 18:37:20 -0700 (PDT)
+Subject: Re: [RFC PATCH 5/5] scsi: ufs: Prepare HPB read for cached sub-region
 To:     daejun7.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
@@ -59,12 +59,13 @@ Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jinyoung CHOI <j-young.choi@samsung.com>,
         Adel Choi <adel.choi@samsung.com>,
         BoRam Shin <boram.shin@samsung.com>
-References: <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
+References: <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+ <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
  <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
  <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
  <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
  <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p2>
- <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+ <336371513.41591323603173.JavaMail.epsvc@epcpadp1>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -89,12 +90,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <0389f9cf-fea8-9990-7699-0e4322728e4a@acm.org>
-Date:   Wed, 10 Jun 2020 18:16:08 -0700
+Message-ID: <bdc420e4-3f2e-cf52-eb42-f85e747b2fb1@acm.org>
+Date:   Wed, 10 Jun 2020 18:37:18 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.8.1
 MIME-Version: 1.0
-In-Reply-To: <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+In-Reply-To: <336371513.41591323603173.JavaMail.epsvc@epcpadp1>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -103,128 +104,139 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-06-04 18:56, Daejun Park wrote:
-> +static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
-> +					     struct ufshpb_subregion *srgn)
+On 2020-06-04 19:12, Daejun Park wrote:
+> +static inline bool ufshpb_is_read_cmd(struct scsi_cmnd *cmd)
 > +{
-> +	struct ufshpb_req *map_req;
-> +	struct request *req;
-> +	struct bio *bio;
+> +	if (cmd->cmnd[0] == READ_10 || cmd->cmnd[0] == READ_16)
+> +		return true;
 > +
-> +	map_req = kmem_cache_alloc(hpb->map_req_cache, GFP_KERNEL);
-> +	if (!map_req)
-> +		return NULL;
+> +	return false;
+> +}
+
+Has it been considered to check req_op(cmd->request) instead of checking
+the SCSI CDB?
+
+> +static inline bool ufshpb_is_write_discard_cmd(struct scsi_cmnd *cmd)
+> +{
+> +	if (cmd->cmnd[0] == WRITE_10 || cmd->cmnd[0] == WRITE_16 ||
+> +	    cmd->cmnd[0] == UNMAP)
+> +		return true;
 > +
-> +	req = blk_get_request(hpb->sdev_ufs_lu->request_queue,
-> +			      REQ_OP_SCSI_IN, BLK_MQ_REQ_PREEMPT);
-> +	if (IS_ERR(req))
-> +		goto free_map_req;
+> +	return false;
+> +}
+
+Does the above code depend on how the sd driver translates write and
+discard requests? Do UFS devices support the WRITE SAME SCSI command?
+Has it been considered to check req_op(cmd->request) instead of checking
+the SCSI CDB?
+
+> +static inline bool ufshpb_is_support_chunk(int transfer_len)
+> +{
+> +	return transfer_len <= HPB_MULTI_CHUNK_HIGH;
+> +}
+
+The names used in the above function are mysterious. What is a support
+chunk? What does "multi chunk high" mean? Please add a comment.
+
+> +static inline u32 ufshpb_get_lpn(struct scsi_cmnd *cmnd)
+> +{
+> +	return blk_rq_pos(cmnd->request) >>
+> +		(ilog2(cmnd->device->sector_size) - 9);
+> +}
+>
+> +static inline unsigned int ufshpb_get_len(struct scsi_cmnd *cmnd)
+> +{
+> +	return blk_rq_sectors(cmnd->request) >>
+> +		(ilog2(cmnd->device->sector_size) - 9);
+> +}
+
+Do the above two functions perhaps each include a duplicate of
+sectors_to_logical()?
+
+> +/* routine : READ10 -> HPB_READ  */
+> +static void ufshpb_prep_fn(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+> +{
+> +	struct ufshpb_lu *hpb;
+> +	struct ufshpb_region *rgn;
+> +	struct ufshpb_subregion *srgn;
+> +	struct scsi_cmnd *cmd = lrbp->cmd;
+> +	u32 lpn;
+> +	u64 ppn;
+> +	unsigned long flags;
+> +	int transfer_len, rgn_idx, srgn_idx, srgn_offset;
+> +	int err = 0;
 > +
-> +	bio = bio_alloc(GFP_KERNEL, hpb->pages_per_srgn);
-> +	if (!bio) {
-> +		blk_put_request(req);
-> +		goto free_map_req;
+> +	hpb = ufshpb_get_hpb_data(cmd);
+> +	err = ufshpb_lu_get(hpb);
+> +	if (unlikely(err))
+> +		return;
+> +
+> +	WARN_ON(hpb->lun != cmd->device->lun);
+        ^^^^^^^
+        WARN_ON_ONCE()?
+
+> +	if (!ufshpb_is_write_discard_cmd(cmd) &&
+> +	    !ufshpb_is_read_cmd(cmd))
+> +		goto put_hpb;
+> +
+> +	transfer_len = ufshpb_get_len(cmd);
+> +	if (unlikely(!transfer_len))
+> +		goto put_hpb;
+> +
+> +	lpn = ufshpb_get_lpn(cmd);
+> +	ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx, &srgn_idx, &srgn_offset);
+> +	rgn = hpb->rgn_tbl + rgn_idx;
+> +	srgn = rgn->srgn_tbl + srgn_idx;
+> +
+> +	/* If commnad type is WRITE and DISCARD, set bitmap as drity */
+              ^^^^^^^               ^^^                        ^^^^^
+              command?              or?                        dirty?
+> +	if (ufshpb_is_write_discard_cmd(cmd)) {
+> +		spin_lock_irqsave(&hpb->hpb_state_lock, flags);
+> +		ufshpb_set_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
+> +				 transfer_len);
+> +		spin_unlock_irqrestore(&hpb->hpb_state_lock, flags);
+> +		goto put_hpb;
 > +	}
 > +
-> +	map_req->hpb = hpb;
-> +	map_req->req = req;
-> +	map_req->bio = bio;
-> +
-> +	map_req->rgn_idx = srgn->rgn_idx;
-> +	map_req->srgn_idx = srgn->srgn_idx;
-> +	map_req->mctx = srgn->mctx;
-> +	map_req->lun = hpb->lun;
-> +
-> +	return map_req;
-> +free_map_req:
-> +	kmem_cache_free(hpb->map_req_cache, map_req);
-> +	return NULL;
-> +}
+> +	WARN_ON(!ufshpb_is_read_cmd(cmd));
+        ^^^^^^^
+        WARN_ON_ONCE()?
 
-Will blk_get_request() fail if all tags have been allocated? Can that
-cause a deadlock or infinite loop?
-
-> +static inline void ufshpb_set_read_buf_cmd(unsigned char *cdb, int rgn_idx,
-> +					   int srgn_idx, int srgn_mem_size)
-> +{
-> +	cdb[0] = UFSHPB_READ_BUFFER;
-> +	cdb[1] = UFSHPB_READ_BUFFER_ID;
+> +	if (!ufshpb_is_support_chunk(transfer_len))
+> +		goto put_hpb;
 > +
-> +	put_unaligned_be32(srgn_mem_size, &cdb[5]);
-> +	/* cdb[5] = 0x00; */
-> +	put_unaligned_be16(rgn_idx, &cdb[2]);
-> +	put_unaligned_be16(srgn_idx, &cdb[4]);
-> +
-> +	cdb[9] = 0x00;
-> +}
-
-So the put_unaligned_be32(srgn_mem_size, &cdb[5]) comes first because
-the put_unaligned_be16(srgn_idx, &cdb[4]) overwrites byte cdb[5]? That
-is really ugly. Please use put_unaligned_be24() instead if that is what
-you meant and keep the put_*() calls in increasing cdb offset order.
-
-> +static int ufshpb_map_req_add_bio_page(struct ufshpb_lu *hpb,
-> +				       struct request_queue *q, struct bio *bio,
-> +				       struct ufshpb_map_ctx *mctx)
-> +{
-> +	int i, ret = 0;
-> +
-> +	for (i = 0; i < hpb->pages_per_srgn; i++) {
-> +		ret = bio_add_pc_page(q, bio, mctx->m_page[i], PAGE_SIZE, 0);
-> +		if (ret != PAGE_SIZE) {
-> +			dev_notice(&hpb->hpb_lu_dev,
-> +				   "bio_add_pc_page fail %d\n", ret);
-> +			return -ENOMEM;
-> +		}
+> +	spin_lock_irqsave(&hpb->hpb_state_lock, flags);
+> +	if (ufshpb_test_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
+> +				   transfer_len)) {
+> +		atomic_inc(&hpb->stats.miss_cnt);
+> +		spin_unlock_irqrestore(&hpb->hpb_state_lock, flags);
+> +		goto put_hpb;
 > +	}
 > +
-> +	return 0;
-> +}
-
-Why bio_add_pc_page() instead of bio_add_page()?
-
-> +static int ufshpb_execute_map_req(struct ufshpb_lu *hpb,
-> +				  struct ufshpb_req *map_req)
-> +{
-> +	struct request_queue *q;
-> +	struct request *req;
-> +	struct scsi_request *rq;
-> +	int ret = 0;
-> +
-> +	q = hpb->sdev_ufs_lu->request_queue;
-> +	ret = ufshpb_map_req_add_bio_page(hpb, q, map_req->bio,
-> +					  map_req->mctx);
-> +	if (ret) {
-> +		dev_notice(&hpb->hpb_lu_dev,
-> +			   "map_req_add_bio_page fail %d - %d\n",
-> +			   map_req->rgn_idx, map_req->srgn_idx);
-> +		return ret;
+> +	ppn = ufshpb_get_ppn(hpb, srgn->mctx, srgn_offset, &err);
+> +	spin_unlock_irqrestore(&hpb->hpb_state_lock, flags);
+> +	if (unlikely(err)) {
+> +		/*
+> +		 * In this case, the region state is active,
+> +		 * but the ppn table is not allocated.
+> +		 * Make sure that ppn tabie must be allocated on
+                                      ^^^^^
+                                      table?
+> +		 * active state
+> +		 */
+> +		WARN_ON(true);
+> +		dev_err(&hpb->hpb_lu_dev,
+> +			"ufshpb_get_ppn failed. err %d\n", err);
+> +		goto put_hpb;
 > +	}
 > +
-> +	req = map_req->req;
+> +	ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn, transfer_len);
 > +
-> +	blk_rq_append_bio(req, &map_req->bio);
-> +	req->rq_flags |= RQF_QUIET;
-> +	req->timeout = MAP_REQ_TIMEOUT;
-> +	req->end_io_data = (void *)map_req;
-> +
-> +	rq = scsi_req(req);
-> +	ufshpb_set_read_buf_cmd(rq->cmd, map_req->rgn_idx,
-> +				map_req->srgn_idx, hpb->srgn_mem_size);
-> +	rq->cmd_len = HPB_READ_BUFFER_CMD_LENGTH;
-> +
-> +	blk_execute_rq_nowait(q, NULL, req, 1, ufshpb_map_req_compl_fn);
-> +
-> +	atomic_inc(&hpb->stats.map_req_cnt);
-> +	return 0;
+> +	atomic_inc(&hpb->stats.hit_cnt);
+> +put_hpb:
+> +	ufshpb_lu_put(hpb);
 > +}
-
-Why RQF_QUIET?
-
-Why a custom timeout instead of the SCSI LUN timeout?
-
-Can this function be made asynchronous such that it does not have to be
-executed on the context of a workqueue?
 
 Thanks,
 
