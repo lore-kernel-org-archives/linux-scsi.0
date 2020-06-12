@@ -1,92 +1,72 @@
-Return-Path: <SRS0=1qKe=7Y=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=UMfj=7Z=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E36C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 18:10:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8332CC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 01:26:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A01420792
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Jun 2020 18:10:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5877020823
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 01:26:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oac2fZTN"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="b6P2p5g4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728006AbgFKSKb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Jun 2020 14:10:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37672 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727914AbgFKSK3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 14:10:29 -0400
-Received: from mail-vs1-xe43.google.com (mail-vs1-xe43.google.com [IPv6:2607:f8b0:4864:20::e43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FC87C03E96F
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2020 11:10:29 -0700 (PDT)
-Received: by mail-vs1-xe43.google.com with SMTP id q2so3930005vsr.1
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2020 11:10:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=qBG61BxxBp7IlBUujng28y0PM1uk4u4KvqXRqLe/cjM=;
-        b=oac2fZTNAh72q99UWVxzTVYB8BO9Offdv45H8Sw/PcQ2aNE3a1jUSrNmaGpxo7ihok
-         77dsj5n++I9x0fEVPM94FqccZ4BLqhYWu6cCg0FeITl+R0J95BuRk5o08wk6RY/66xdK
-         5nGUGD4SpDOWWQeECZJNPofI9J2OQFfxLagAr8yE3YBC44vHviMYhSFb785w6E7ffi7Z
-         +dtwVMn+pfjSIX647qOpu1XS0ijb85vRY7VnL464d1oNvzgMYuNyFrhTa/vrp41BkrjG
-         qGpqJ99wfmm7A/2TkydKCGRbJ6V6q07zcEVtWvUFprCuJTa9yHiuXQOBdVU2KBnzqsSx
-         rcbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=qBG61BxxBp7IlBUujng28y0PM1uk4u4KvqXRqLe/cjM=;
-        b=cC7hQvFE9eV0xc4u5ipG5Wv1BSDovxhgvpsRT4STJnqLH9fBa1WLV0Hc3y+QdMiljX
-         yjmdV2irFs6b8aWeGp4pZd9PI03Fi1eXE/c6+gBCzG33Int+97Vng3T0iqxZTC1eHZjH
-         jhaRNUXFWGZyd23X7Mlp+DWW3Ls36yHFQ9AgVKU0k1ryF7ZagJIXgjA39BfxhFGny3AT
-         N28G4E3987YARIuiJ8EudvykKkk4OiJvQWKlcAg5d6GhG/A3qvfbD1owbRMWHMRyLPJo
-         QhJljoZ0SSIxW0BufXvVroYzIRi+yFlFmTS5k5IXAfgl/EDdGTiGR2g9gQ6wLnWVrVEz
-         t/Ng==
-X-Gm-Message-State: AOAM532sRUg6KUFNPiylR4ax7h8EpUotSxskNvpzrxC3OHRoyaTmGsQX
-        AP9/qoFESJWw1MgZ0DLkeMHcrCzi6qo38DMu6W4=
-X-Google-Smtp-Source: ABdhPJyceaTDUtir1+SAIFQwTinEtaT4H2OMpOJz9uN5gXj7IC0+2o92Nm4uux66tPW2Ii7SXYjF8Fi0eFiug2ymqYc=
-X-Received: by 2002:a67:e0d7:: with SMTP id m23mr8194975vsl.221.1591899027902;
- Thu, 11 Jun 2020 11:10:27 -0700 (PDT)
+        id S1726474AbgFLB0f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Jun 2020 21:26:35 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:19638 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726327AbgFLB0f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 21:26:35 -0400
+X-UUID: 63a286d6d0a64f7a9b2a98bd162a626c-20200612
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=mW39zfEbSzCeS9LVeu/0bwZR50QhQsI3o/dC6sfyMJQ=;
+        b=b6P2p5g41rMRVs+ND6EoPHHbghp7o3mNp/Hhy5ABTEoX0fweCzQ57qkPIWPr7so5YGLaGdDbE1ByaSsGJ3cDIkyKTrSkBMehT4A8yS/0RsnCCR36UEK7hst3oK7Cy98OkRfGNCMm1bMCHp5xmU80jjgpoV7QhmhERLychgDi4so=;
+X-UUID: 63a286d6d0a64f7a9b2a98bd162a626c-20200612
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 410470933; Fri, 12 Jun 2020 09:26:28 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Fri, 12 Jun 2020 09:26:27 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 12 Jun 2020 09:26:21 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <asutoshd@codeaurora.org>
+CC:     <beanhuo@micron.com>, <cang@codeaurora.org>,
+        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v2 0/2] scsi: ufs: Fix and cleanup device quirks
+Date:   Fri, 12 Jun 2020 09:26:23 +0800
+Message-ID: <20200612012625.6615-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-References: <20200514101026.10040-1-njavali@marvell.com> <20200514101026.10040-3-njavali@marvell.com>
- <927c2cbd-682f-a80e-bd2e-2e5bd012ab2d@broadcom.com> <CA+ihqdjtoA=1q7N0pg1TQDAMGo1XtNN8+XnO1qXORyqGYfpq=A@mail.gmail.com>
-In-Reply-To: <CA+ihqdjtoA=1q7N0pg1TQDAMGo1XtNN8+XnO1qXORyqGYfpq=A@mail.gmail.com>
-From:   Shyam S <born27thfeb@gmail.com>
-Date:   Thu, 11 Jun 2020 11:10:16 -0700
-Message-ID: <CA+ihqdi2oQVW7Nks3wfvN=KVhtNNhJg2yeCxZMgKt-t-qc36qw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] qla2xxx: SAN congestion management(SCM) implementation.
-To:     James Smart <james.smart@broadcom.com>
-Cc:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Resending to the reflector.
+SGksDQp0aGlzIHNlcmllcyBwcm92aWRlcyBzb21lIGRldmljZSBxdWlyayBmaXhlcyBhbmQgY2xl
+YW51cHMuDQoNCnYxIC0+IHYyOg0KICAtIFNvcnQgZGV2aWNlIHF1aXJrcyBpbiBhbHBoYWJldGlj
+YWwgb3JkZXIgKEFsaW0gQWtodGFyKQ0KDQpTdGFubGV5IENodSAoMik6DQogIHNjc2k6IHVmczog
+QWRkIERFTEFZX0JFRk9SRV9MUE0gcXVpcmsgZm9yIE1pY3JvbiBkZXZpY2VzDQogIHNjc2k6IHVm
+czogQ2xlYW51cCBkZXZpY2UgdmVuZG9yIG5hbWUgYW5kIGRldmljZSBxdWlyayB0YWJsZQ0KDQog
+ZHJpdmVycy9zY3NpL3Vmcy91ZnNfcXVpcmtzLmggfCAgMyArKy0NCiBkcml2ZXJzL3Njc2kvdWZz
+L3Vmc2hjZC5jICAgICB8IDE1ICsrKysrKystLS0tLS0tLQ0KIDIgZmlsZXMgY2hhbmdlZCwgOSBp
+bnNlcnRpb25zKCspLCA5IGRlbGV0aW9ucygtKQ0KDQotLSANCjIuMTguMA0K
 
-On Mon, May 18, 2020 at 4:25 PM Shyam S <born27thfeb@gmail.com> wrote:
->
->
->>
->>
->> > Q: what purpose are these shorter "meta" event structures serving ? Why
->> > hold onto (what I assume is) the last event.  Wouldn't something
->> > monitoring netlink and use of the existing fc_host_fpin_rcv() interface
->> > be enough ? it should see all events.
->
->
-> The Idea was to be able to have a longer term view within the driver so that while debugging issues, correlations can be made between symptoms exhibited by the driver with these statistics.
->
-> All your other comments make complete sense to me. I'll re-work the changes to move them up the stack.
->
->
-> Regards
-> Shyam
