@@ -6,157 +6,189 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D09B9C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 02:13:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B5FC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 02:28:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC36020842
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 02:13:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90E8120835
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 02:28:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ldh4D0m0"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RHl1lg3X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726543AbgFLCNP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Jun 2020 22:13:15 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:12833 "EHLO
+        id S1726513AbgFLC2I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Jun 2020 22:28:08 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:21171 "EHLO
         mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726505AbgFLCNO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 22:13:14 -0400
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200612021311epoutp03f26b5ce944ba97f527b110d596d55382~XqhLYxSKs0811508115epoutp03n
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2020 02:13:11 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200612021311epoutp03f26b5ce944ba97f527b110d596d55382~XqhLYxSKs0811508115epoutp03n
+        with ESMTP id S1726349AbgFLC2G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 22:28:06 -0400
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200612022803epoutp0381bb349b0e1f40f130aa1f6b9f266141~XquKIZPf91988619886epoutp03_
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2020 02:28:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200612022803epoutp0381bb349b0e1f40f130aa1f6b9f266141~XquKIZPf91988619886epoutp03_
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1591927991;
-        bh=IMm3UciE8kL2Kn8TlcoT7lncpAsQ1WriwftzJHtNstQ=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=ldh4D0m07rMpuVKHm/wWLHKuSPSsSFoYdycuN8dcisEkPEmW+f8LvW8puXWuANx/f
-         KuVzojnUgfHVuKStEhzNogb93KgDLCi3P477VA9dymcijejFPWGbg1Hp92lNKYhFTQ
-         P+m1VYzAlOjDGB62Bn6S2XG6GPKsr8+Wm07L6zJA=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20200612021310epcas5p2f828da073106a9bb8a98e05403d1aedb~XqhKSx_ln0765407654epcas5p2Q;
-        Fri, 12 Jun 2020 02:13:10 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        AF.E6.09475.5B4E2EE5; Fri, 12 Jun 2020 11:13:09 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200612021309epcas5p3b5b53df83cfb0996262016c604f75827~XqhJvtpMa0071200712epcas5p32;
-        Fri, 12 Jun 2020 02:13:09 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200612021309epsmtrp10df7a1a278195f61c3483eb21c0e3739~XqhJun6gZ0247002470epsmtrp1t;
-        Fri, 12 Jun 2020 02:13:09 +0000 (GMT)
-X-AuditID: b6c32a4b-39fff70000002503-6b-5ee2e4b588ea
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B8.CA.08382.5B4E2EE5; Fri, 12 Jun 2020 11:13:09 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.108.234.165]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200612021304epsmtip28a028945a5d0bf1f216c435873410757~XqhEuvhCj0664906649epsmtip2B;
-        Fri, 12 Jun 2020 02:13:03 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Stanley Chu'" <stanley.chu@mediatek.com>,
-        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
-        <asutoshd@codeaurora.org>
-Cc:     <beanhuo@micron.com>, <cang@codeaurora.org>,
-        <matthias.bgg@gmail.com>, <bvanassche@acm.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>
-In-Reply-To: <20200612012625.6615-1-stanley.chu@mediatek.com>
-Subject: RE: [PATCH v2 0/2] scsi: ufs: Fix and cleanup device quirks
-Date:   Fri, 12 Jun 2020 07:43:01 +0530
-Message-ID: <00aa01d6405f$041df030$0c59d090$@samsung.com>
-MIME-Version: 1.0
+        s=mail20170921; t=1591928883;
+        bh=hdov1UyoasQI8pS6FcIxfYTfSmxps6Svz6JY4APTa/A=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=RHl1lg3XUHpp+pyXqVMHyr6U/M+jGbYyNP7C6bGNpnnW04Ut0jnIOjpEAuY7mgdHS
+         gCu2cAOrc74+nke7tJFmjO0lWyKY2djH5otc57S7O71JEEUhScJEU+Aw06PqugP3dp
+         JeYHfylhx56NL//rmVrNfCRWClTkdrR7Ss+nmBVA=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20200612022802epcas2p42b47335386aea0f153933fec99d2048f~XquJHdqaF1818718187epcas2p4O;
+        Fri, 12 Jun 2020 02:28:02 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.184]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 49jl4x0bZKzMqYkl; Fri, 12 Jun
+        2020 02:28:01 +0000 (GMT)
+X-AuditID: b6c32a47-fc5ff70000006b31-1d-5ee2e830fab6
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        3C.75.27441.038E2EE5; Fri, 12 Jun 2020 11:28:00 +0900 (KST)
+Mime-Version: 1.0
+Subject: Re: [RFC PATCH 2/5] scsi: ufs: Add UFS-feature layer
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <1319810e-a323-c022-5e27-902f88cefe8f@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20200612022759epcms2p47929b76eb2e809240f415c19f9383f92@epcms2p4>
+Date:   Fri, 12 Jun 2020 11:27:59 +0900
+X-CMS-MailID: 20200612022759epcms2p47929b76eb2e809240f415c19f9383f92
 Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQL8S8fLu5o7xRiXwOWFaEK+6gqKwQElXUrGpn77JBA=
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Se0xTdxTmd+/tvZdqzbW48JMm6qqGQUbdAtOfoEAMmzchmmUkyx4MVvEO
-        Gl61V8QZs9nhKlCE7oHDSup4yAxzBcurwBwIaukwJaQUlISER00AgQEGpek25vVqxn/fOd/3
-        ne+c5NC4fFESQmtyTnK6HHWWkpQSrb1hoREt3smUt/wD0ajf4sHRLUMfhWZ8HhLdnigi0KVF
-        H46WG+okaG3AT6Hh0askqp+zk6j6QSuGvl2bxZFtaliC3B2VJHIXDAJkHHnO/uL4F0PfnI9E
-        Lct+CbrW8hDEB7HuoUTWXXoRY9vNYxRrqu4GbFPt1+x5ZxfBPmsoJNmlR6ME+8S2jb3QbcTe
-        l34iPXCcy9Kc4nR7Yj+XZlj7ZiTaOunpyz/eo86BIboYBNKQiYKW2n6iGEhpOdMJ4I3GFlIs
-        lgG8u1L2knkKoP2+HntlcblqKJG4BeDgyhgQizkA59qacUFFMhHQXmMgBbyFaQXwzsIRQYQz
-        f2PQXmAiBCKQOQi9+i4g4CAmAU5X/EUJmGB2w6pev6QY0LSM2Q9XSz8V2jJmM3Re9r6w4sx2
-        2DZfiYsb7YC+R3USMSsaXi90YqImGN71leBCLmSuBMLvf9cDYSZ8nlXRrBK9QXDW0UyJOATO
-        lBkoUZIJSzoixfZZeM1yjxBxHOweqiQECc6EwYaOPWLSJnjR78VEpwwWGuSiejcsWPC8dCrg
-        d0ajRMQs9I/cpEzgdfO6u8zr7jKv29/8f9jPgKgHWzktn53O8e9oI3O4fBWvzubzctJVabnZ
-        NvDiKcMT7WByfFHVAzAa9ABI48otss3BEyly2XH1l2c4XW6qLi+L43uAgiaUwTLl6v0UOZOu
-        PsllcpyW071iMTow5BxWNH16l8RT/sbqvoDtGudN7cYQ/nCaovO1sMafplnvYV2cvnSgyqx4
-        M2Ay6ei7qpGk+n3JdXqyqftCY4x7l7VhljhTw2qOIE+fhjXpE36rUf+xFVjZ1LIxqymUnzDW
-        bpp3TIUX/pM7mOEw6PizXc8cH//51THqujPWZkgeLXp4sG2xKj7Sx8SMu5dstzuv7j3V+2Dg
-        BLZDHqO948zXtB/K+6j915KdEVFpl7ZlVtii85zh+3Njay0BTV8kFCk2zPW4rL1L5cXvVS1Z
-        46Zaj11hk12Wgih2YS2f2dj/gxRztWXHy6tvHCVDP1z5IDVx+PH8Z5U7x5MOLHjKH6dvOGRV
-        EnyG+u1wXMer/wNEYt84AwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKIsWRmVeSWpSXmKPExsWy7bCSvO7WJ4/iDA48F7I4Pe8qs8XethPs
-        Fi9/XmWzOPiwk8Vi2oefzBaf1i9jtfh//je7xbVb89ksVr3ZwWax6MY2JovW/6+YLTY9vsZq
-        cXnXHDaLy80XGS26rwNllx//x2TR1GJssfXTb1aLpVtvMjoIe1y+4u1xua+XyWPnrLvsHhMW
-        HWD02Lyk3qPl5H4Wj+/rO9g8Pj69xeLxeZOcR/uBbqYArigum5TUnMyy1CJ9uwSujHUnXrIW
-        LOOqmDnlGHsD4xWOLkZODgkBE4lz5xazdzFycQgJ7GaUmLilhRkiIS1xfeMEdghbWGLlv+dQ
-        Ra8YJc5d3MoGkmAT0JXYsbiNDSQhIrCHUeL7svtgVcwCXcwSXw/+YYNo6WOU2H9vIVgLp4Ct
-        xJPG/YwgtrCAi8SLGe/BdrAIqEosPPybtYuRg4NXwFLiR180SJhXQFDi5MwnLCBhZgE9ibaN
-        YJ3MAvIS29/OgbpUQeLn02WsILaIgJXEio6TTBA14hJHf/YwT2AUnoVk0iyESbOQTJqFpGMB
-        I8sqRsnUguLc9NxiwwLDvNRyveLE3OLSvHS95PzcTYzgmNfS3MG4fdUHvUOMTByMhxglOJiV
-        RHgFxR/GCfGmJFZWpRblxxeV5qQWH2KU5mBREue9UbgwTkggPbEkNTs1tSC1CCbLxMEp1cB0
-        cnpL/gS1xnsr3bbOyL06yTi+5tf86ImJSTvzFizf6PJva9jnpu+nrjxfpePM4f7udOG7xe3p
-        macnzzNa8EldnJUpqnTm5EiNnCQbR6s/d+zP/1KWUL94Q8bDfMGHZzkXrjoefO3Dd/mZxiuJ
-        syvXXXfbY1lqOq/qLRf/JaEjqtIf/eMXPg//sOGF8GHtQpv1MzTvz5y7YPkyC5MFreY3hRY6
-        7dxaKaV9sDOx6UeyTJM+e1+q8SUn7acb10kv/qGUl7nU7uaCIzqfZpdMUD6g6dAUsOpc1K3H
-        P/nCVsxgepM6MeHf7zYtCR/lu/tt1od9ep82c8KrGH//+1eTXnyXm+O84fia72sOXVjqM3uN
-        0xElluKMREMt5qLiRACiPhYwaAMAAA==
-X-CMS-MailID: 20200612021309epcas5p3b5b53df83cfb0996262016c604f75827
-X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200612012633epcas5p30882af0f4cd7f7dd4a820f3fdbb9b1be
-References: <CGME20200612012633epcas5p30882af0f4cd7f7dd4a820f3fdbb9b1be@epcas5p3.samsung.com>
-        <20200612012625.6615-1-stanley.chu@mediatek.com>
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrLJsWRmVeSWpSXmKPExsWy7bCmqa7Bi0dxBvsOiVhsvPuK1eLBvG1s
+        FnvbTrBbvPx5lc3i4MNOFovDt9+xW0z78JPZ4tP6ZawWLw9pWqx6EG7R27+VzWLRjW1MFpd3
+        zWGz6L6+g81i+fF/TBYTXi5hsVi69SajRef0NSwWH3rqLBYt3M3iIOJx+Yq3x+W+XiaPxXte
+        MnlMWHSA0aPl5H4Wj+/rO9g8Pj69xeLRt2UVo8fnTXIe7Qe6mQK4onJsMlITU1KLFFLzkvNT
+        MvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4CeU1IoS8wpBQoFJBYXK+nb2RTl
+        l5akKmTkF5fYKqUWpOQUGBoW6BUn5haX5qXrJefnWhkaGBiZAlUm5GT8u32SveCmSMXVzR/Z
+        Ghi7BLoYOTkkBEwkThxYzdjFyMUhJLCDUeL+8WNADgcHr4CgxN8dwiA1wgK2EhfXLGEGsYUE
+        lCTWX5zFDhHXk7j1cA0jiM0moCMx/cR9sLiIwEQWief7XUFmMgt8Y5LYfPEIG8QyXokZ7U9Z
+        IGxpie3Lt4Lt4hSwlvj/SAwirCHxY1kvM4QtKnFz9Vt2GPv9sfmMELaIROu9s1A1ghIPfu6G
+        iktKHNv9gQnCrpfYeucX2F8SAj2MEod33mKFSOhLXOvYCHYDr4CvxJxrEMtYBFQlZrzfAdXs
+        IvGi5T9YPbOAvMT2t3OYQe5kFtCUWL9LH8SUEFCWOHKLBearho2/2dHZzAJ8Eh2H/8LFd8x7
+        AjVdTWLdz/VMExiVZyECehaSXbMQdi1gZF7FKJZaUJybnlpsVGCMHLebGMHpXMt9B+OMtx/0
+        DjEycTAeYpTgYFYS4RUUfxgnxJuSWFmVWpQfX1Sak1p8iNEU6MuJzFKiyfnAjJJXEm9oamRm
+        ZmBpamFqZmShJM5bbHUhTkggPbEkNTs1tSC1CKaPiYNTqoGpRHGD1g9n7dTfa5Tb5uqcWsCp
+        WeXkdunn/TCxuHM/GP4p3jH6eUZRy6d0zWpDNfnLTYFvf1xu/K5Q+/rJTpubO7IvxCZZP/Bn
+        0Np8f31C7qS4M/+Nuoyyf9YqnBSsFjkzucW+qfdjHqu/vtia4nuF37qeXX3DmHOQ+a3Q+44d
+        ke088s9rmLqriv2+ih/da1TZkf752x+Xp9EhxXsDX6VfDjzpErW28OxxAa3J614X3WLuP7NM
+        Qvmk1vng8vSyH4vk/Pb4G9t8y3J4HeUoHyt2bv4nrcvdcxYtftf9f7lUCcfjQ6pP7Ux9+6T0
+        gkJNJzwodGwROiE2u3dGM9POZTecM4v2vzh9NqzlwuJvCgeUWIozEg21mIuKEwFtWO/BcAQA
+        AA==
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882
+References: <1319810e-a323-c022-5e27-902f88cefe8f@acm.org>
+        <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
+        <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
+        <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
+        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p4>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
+Hi Bart,
 
-> -----Original Message-----
-> From: Stanley Chu <stanley.chu@mediatek.com>
-> Sent: 12 June 2020 06:56
-> To: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
-> avri.altman@wdc.com; alim.akhtar@samsung.com; jejb@linux.ibm.com;
-> asutoshd@codeaurora.org
-> Cc: beanhuo@micron.com; cang@codeaurora.org; matthias.bgg@gmail.com;
-> bvanassche@acm.org; linux-mediatek@lists.infradead.org; linux-arm-
-> kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
-> kuohong.wang@mediatek.com; peter.wang@mediatek.com; chun-
-> hung.wu@mediatek.com; andy.teng@mediatek.com;
-> chaotian.jing@mediatek.com; cc.chou@mediatek.com; Stanley Chu
-> <stanley.chu@mediatek.com>
-> Subject: [PATCH v2 0/2] scsi: ufs: Fix and cleanup device quirks
-> 
-> Hi,
-> this series provides some device quirk fixes and cleanups.
-> 
-> v1 -> v2:
->   - Sort device quirks in alphabetical order (Alim Akhtar)
-> 
-> Stanley Chu (2):
->   scsi: ufs: Add DELAY_BEFORE_LPM quirk for Micron devices
->   scsi: ufs: Cleanup device vendor name and device quirk table
-> 
->  drivers/scsi/ufs/ufs_quirks.h |  3 ++-
->  drivers/scsi/ufs/ufshcd.c     | 15 +++++++--------
->  2 files changed, 9 insertions(+), 9 deletions(-)
-> 
-For this series
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Thanks! 
+On 2020-06-04 18:30, Daejun Park wrote:
+> > +inline void ufsf_slave_configure(struct ufs_hba *hba,
+> > +         struct scsi_device *sdev)
+> > +{
+> > +  /* skip well-known LU */
+> > +  if (sdev->lun >= UFS_UPIU_MAX_UNIT_NUM_ID)
+> > +    return;
+> > +
+> > +  if (!(hba->dev_info.b_ufs_feature_sup & UFS_FEATURE_SUPPORT_HPB_BIT))
+> > +    return;
+> > +
+> > +  atomic_inc(&hba->ufsf.slave_conf_cnt);
+> > +  smp_mb__after_atomic(); /* for slave_conf_cnt */
+> > +
+> > +  /* waiting sdev init.*/
+> > +  if (waitqueue_active(&hba->ufsf.sdev_wait))
+> > +    wake_up(&hba->ufsf.sdev_wait);
+> > +}
 
-> --
-> 2.18.0
+> Guarding a wake_up() call with a waitqueue_active() check is an
+> anti-pattern. Please don't do that and call wake_up() directly.
+> Additionally, wake_up() includes a barrier if it wakes up a kernel
+> thread so the smp_mb__after_atomic() can be left out if the
+> waitqueue_active() call is removed.
+OK, I will change it.
+
+> > +/**
+> > + * struct ufsf_operation - UFS feature specific callbacks
+> > + * @prep_fn: called after construct upiu structure
+> > + * @reset: called after proving hba
+                           ^^^^^^^
+> Is this a typo? Should "proving" perhaps be changed into "probing"?
+Yes, I will change.
+
+> > +struct ufshpb_driver {
+> > +  struct device_driver drv;
+> > +  struct list_head lh_hpb_lu;
+> > +
+> > +  struct ufsf_operation ufshpb_ops;
+> > +
+> > +  /* memory management */
+> > +  struct kmem_cache *ufshpb_mctx_cache;
+> > +  mempool_t *ufshpb_mctx_pool;
+> > +  mempool_t *ufshpb_page_pool;
+> > +
+> > +  struct workqueue_struct *ufshpb_wq;
+> > +};
+
+> Why is a dedicated workqueue needed? Why are the standard workqueues not
+> good enough?
+The map_work handles map related operations, including IO operations. So, adding
+this task to the standard WQ can interfere with other jobs and degrade HPB related performance.
+
+
+> > @@ -2525,6 +2525,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+> >  
+> >    ufshcd_comp_scsi_upiu(hba, lrbp);
+> >  
+> > +  ufsf_ops_prep_fn(hba, lrbp);
+> > +
+> >    err = ufshcd_map_sg(hba, lrbp);
+> >    if (err) {
+> >      lrbp->cmd = NULL;
+
+> What happens if a SCSI command is retried and hence ufsf_ops_prep_fn()
+> is called multiple times for the same SCSI command?
+Developers of UFS features should implement it so that prep_fn does not have
+any problems even if it processes the same SCSI command multiple times.
+In HPB feature, prep_fn modifies only upiu  structure. So it is ok to call
+it multiple times because the upiu is rebuilt from ufshcd_comp_scsi_upiu().
+
+Thanks,
+
+Daejun.
 
