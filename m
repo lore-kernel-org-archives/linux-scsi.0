@@ -4,40 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C33DC433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 02:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6CF5C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 03:53:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5F0620870
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 02:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E8B020792
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Jun 2020 03:53:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="CCfpYwFc"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="S8UMwwyg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726462AbgFLCfH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Jun 2020 22:35:07 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:24670 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726321AbgFLCfG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 22:35:06 -0400
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200612023503epoutp03700dee0ab1032c54d64ca08ee8fdbfeb~Xq0RLu4iL2747327473epoutp03G
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2020 02:35:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200612023503epoutp03700dee0ab1032c54d64ca08ee8fdbfeb~Xq0RLu4iL2747327473epoutp03G
+        id S1726444AbgFLDxG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Jun 2020 23:53:06 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:54333 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726327AbgFLDxG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jun 2020 23:53:06 -0400
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200612035302epoutp02a671a82b7462d6f14a2adb8f77cb2750~Xr4W7SET-1753117531epoutp02X
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2020 03:53:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200612035302epoutp02a671a82b7462d6f14a2adb8f77cb2750~Xr4W7SET-1753117531epoutp02X
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1591929303;
-        bh=OfPXcKb6SWjuFyRP7Ix12rFArx8O98KZKofQrzhVp9Q=;
+        s=mail20170921; t=1591933982;
+        bh=5tLF6fdYvXuQ+oWURL9o4gFqdlrIDs0SFbyH+UiH4HA=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=CCfpYwFcuqQkD8Sx9Fo/XF7SN1F0Gw89K/qotvAevuKanoMd5yWfeEFlXxMY9Nrqa
-         iC1wxAV4ea6du7RO5vhVuKUYsmARjP3RcTUUqcXZf97J5tAJmIefmx+Z0+dQzObbp4
-         Q3PHNL+M+Y9WMn8cAK0aFPhq5SOMG7EPhPXkpMDc=
-Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p1.samsung.com
+        b=S8UMwwygyudO/7/ritdt9TDR0Kr+VbZnbnCfqkq2Np/qOxpTBM8FhGyRJMazFHxpI
+         DFb85jluzgun5VSsRKPyZf1I4l3Ec7fSFhcUIENQDL5x2H/goj4d7xjkJQWzetx58L
+         LD7jICDgoS9MA3cjDd0t9eIrrIyDHJVTFEWuEU6Q=
+Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p1.samsung.com
         (KnoxPortal) with ESMTP id
-        20200612023502epcas1p1c157b3977b551021cf2290af43e63356~Xq0Qz5bYo3017330173epcas1p1J;
-        Fri, 12 Jun 2020 02:35:02 +0000 (GMT)
+        20200612035301epcas1p1670632461b5acc152457d38ae6aeca32~Xr4WivTyW0502605026epcas1p1i;
+        Fri, 12 Jun 2020 03:53:01 +0000 (GMT)
 Mime-Version: 1.0
-Subject: Re: [RFC PATCH 3/5] scsi: ufs: Introduce HPB module
+Subject: Re: [RFC PATCH 5/5] scsi: ufs: Prepare HPB read for cached
+ sub-region
 Reply-To: daejun7.park@samsung.com
 From:   Daejun Park <daejun7.park@samsung.com>
 To:     Bart Van Assche <bvanassche@acm.org>,
@@ -61,15 +62,15 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         BoRam Shin <boram.shin@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <76831c81-7879-8be7-54a4-ca6bfa68c30e@acm.org>
+In-Reply-To: <bdc420e4-3f2e-cf52-eb42-f85e747b2fb1@acm.org>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <336371513.41591929302700.JavaMail.epsvc@epcpadp1>
-Date:   Fri, 12 Jun 2020 11:29:53 +0900
-X-CMS-MailID: 20200612022953epcms2p6ba18adf3e029bcab69d1382a6ec82b00
+Message-ID: <963815509.21591933981778.JavaMail.epsvc@epcpadp2>
+Date:   Fri, 12 Jun 2020 12:39:11 +0900
+X-CMS-MailID: 20200612033911epcms2p8dee9ef9f42a622ab1f5921ded4ca589d
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
@@ -77,17 +78,20 @@ X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
 X-CMS-RootMailID: 20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882
-References: <76831c81-7879-8be7-54a4-ca6bfa68c30e@acm.org>
+References: <bdc420e4-3f2e-cf52-eb42-f85e747b2fb1@acm.org>
+        <963815509.21591323002276.JavaMail.epsvc@epcpadp1>
+        <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
         <336371513.41591320902369.JavaMail.epsvc@epcpadp1>
         <963815509.21591320301642.JavaMail.epsvc@epcpadp1>
         <231786897.01591320001492.JavaMail.epsvc@epcpadp1>
-        <231786897.01591322101492.JavaMail.epsvc@epcpadp1>
-        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p6>
+        <336371513.41591323603173.JavaMail.epsvc@epcpadp1>
+        <CGME20200605011604epcms2p8bec8ef6682583d7248dc7d9dc1bfc882@epcms2p8>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 2020-06-04 18:38, Daejun Park wrote:
 > > +  if (total_srgn_cnt != 0) {
 > > +    dev_err(hba->dev, "ufshpb(%d) error total_subregion_count %d",
 > > +      hpb->lun, total_srgn_cnt);
@@ -213,8 +217,8 @@ check the condition before waiting.
 > So this is an asynchronous probe that is not visible to the device
 > driver core? Could the PROBE_PREFER_ASYNCHRONOUS flag have been used
 > instead to make device probing asynchronous?
-I added the PROBE_PREFER_ASYNCHRONOUS flag to code and changed it to 
-probe synchronously.
+I added the PROBE_PREFER_ASYNCHRONOUS flag to code and changed it to probe
+synchronously.
  
 > > +static int ufshpb_remove(struct device *dev)
 > > +{
@@ -296,6 +300,7 @@ I changed it to probe without async_schedule.
 OK, I will.
 
 Thanks,
+
 Daejun.
 
 
