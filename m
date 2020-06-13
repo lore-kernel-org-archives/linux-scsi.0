@@ -2,79 +2,50 @@ Return-Path: <SRS0=9DJi=72=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BF15C433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 13 Jun 2020 10:48:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 296C4C433E0
+	for <linux-scsi@archiver.kernel.org>; Sat, 13 Jun 2020 14:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F166E207BC
-	for <linux-scsi@archiver.kernel.org>; Sat, 13 Jun 2020 10:48:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F07F3207BC
+	for <linux-scsi@archiver.kernel.org>; Sat, 13 Jun 2020 14:18:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rvxAA/4A";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="oTBKo822"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="g0wX4/9z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726101AbgFMKsd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 13 Jun 2020 06:48:33 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:43724 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726045AbgFMKsc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Jun 2020 06:48:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1592045311; x=1623581311;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=4IgpfZfmeYhZ9M/EAl7XrGDkFqpnupz//KAZOUOwULQ=;
-  b=rvxAA/4A9j93r2fogETegJWfAoHQGny3HKvxZEKXQQjtBKozShcu4fTY
-   YtxhfCHm0gQec/sASeSokpx6kqIxZDiSxkvBJ/RlQQWv+Ri67MrWwXV+N
-   6SgC94vB+noYqiRPHHOV8wPh9HRNrR/SQsY0pHYdrYiiC+DWRnyKGYA9l
-   /gKZUXp/eeW9FR7+xt6NhY6QA22EH45HQG3i4uOiXZ3Fv2WiET62xYbok
-   ur1sbmgvlTZknsNTTpEO5e+Rw4pbhbYrg84bt/tuQip6Dcfj8pVJdf4jZ
-   /US+Ltawf6XOAoofBcGs/tTxsykwtXMOVa5OOZtvE9Ytl2hKA28URFrt5
-   g==;
-IronPort-SDR: A4uP8KPI/Uho8AJqq/h27cUJEGfAPMj0hZSlApwiYVI+n5ud3E6RVENCvdwKBExu5kdkzmvs+9
- f4ARB0mLjeSfx5MuwjlQ5sQuHLg6mG7MWFYU1qu/ZtT+AhGYz1SMwwM1PgDX2VQtW5I+vfLu2O
- vAwpLmyxzM2Ess/NSpm/j/84aVDJRv9fDGRHtyQSyxVMS69BszHTIZ0V57gF0v5WdCuuJ5XvuD
- IrQTWXadVMKfEkiJxYuhywPTgqXxXVYAhT29GVu4+kHpjLnHS2vKo2t7tKeXVp+2QHwp+0A34N
- C6g=
-X-IronPort-AV: E=Sophos;i="5.73,506,1583164800"; 
-   d="scan'208";a="141297128"
-Received: from mail-dm6nam10lp2109.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.109])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Jun 2020 18:48:28 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fsJviH/+mF3ftwJobPw9M7e0IEA1TP35+kZdLbpzT56yJKtlQVN/84BwWA+ESkoYmukhblJ8lCUHV1jOU83ualqoO/15kRwHx4HEupd5N+jI5i/IuqrUCucdr4NgbxIVlCkKbsetCtQbBqOsgWtahd1MZJy8lPZ5NFL0cyQWk+oiqop7UFkj0YNo0XldmFsEujWpLCTf0O0896GkeCFYjMDqJMI3K/Wjcxo/KqLOJ0ZAh4tPAzqbXMqCgNNCCeii6ES3k90EXWqGO/psADfntvDFS3dDEfTVqSe7iyD5nJNfAQ1ejweiM1acOeZfQ+I0iCHQl9PaxV7p4/093nynHA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oSXHUdViFcpIqWc+XbbZLhvjFyxuR6EGaliBuIzOTPQ=;
- b=EFuoMqkEOiOjZdl+h0FSXUxFQMKYkl3On7IwDIUM7cEUX4+0pw1mYH0fuxlMiOC0OHn5vf3miLjqXY6IdsBeQZHTszRbb7CupaU7u9tZxsfYXhmwAi8Dtrc+cPVGuq+dokLJxz1+98k8dytThK7SWjYIO4VEeUiy3f6TkOruuBHGT450miRyiSSn3jB5cULeYT6f1aIRr1EnZjIBqkU92VWA57rEgfIi2e6IP7518ERT3c/Ar8QN4ptKBQY76Q4URIShdnKkYJGqmrLNiJxkO20b8NAAZ+EnkLcKB6P14aq3XdZMxtX1CPR/chEp7dcFrrB9tfCMiaci5uwbaHgjJw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oSXHUdViFcpIqWc+XbbZLhvjFyxuR6EGaliBuIzOTPQ=;
- b=oTBKo822X2Oqch3qxZFQRfjIzmMfRgI7B3ROt33eZ14rSLTqKMbLu22UGcY4GYQ55CYqk3VC/RLwYiN1uwsQ9WJfa2w8XTgRvDtlfzySjh2rKsRsTmyHD8fJItiKle8/cV85WDt0DHLz9xfawt8mBb4CQ1LIbiW/oC2s7OQD+x8=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN2PR04MB2350.namprd04.prod.outlook.com (2603:10b6:804:8::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3088.21; Sat, 13 Jun
- 2020 10:48:22 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3088.023; Sat, 13 Jun 2020
- 10:48:21 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Stanley Chu <stanley.chu@mediatek.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        id S1726361AbgFMOSk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 13 Jun 2020 10:18:40 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:60263 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726102AbgFMOSk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Jun 2020 10:18:40 -0400
+X-UUID: c184aa17f8104b1a9208789351e2921b-20200613
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=wHRgb/U6EDepiWXV4OCkOGKqYbDMEPUS8ORL4G6vBio=;
+        b=g0wX4/9zL38TPFHqu9k31wM43At4ZGQ1sAE29H2OQq+SkpZtpvONOTHitoafQpBvRb+qjtkqsck3SYOfRDisSI5IaC5VCulTGWjJ1Kt+DLhEiuSAvmJnKFPQvxo3G6uEsbAy0OB+IVhK5hpEeObXCP9GR9Kx+lm3JjVjPH9bRHY=;
+X-UUID: c184aa17f8104b1a9208789351e2921b-20200613
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1479505449; Sat, 13 Jun 2020 22:18:32 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 13 Jun 2020 22:18:27 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 13 Jun 2020 22:18:28 +0800
+Message-ID: <1592057910.25636.81.camel@mtkswgap22>
+Subject: RE: [PATCH v1 2/2] scsi: ufs: Add trace event for UIC commands
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Avri Altman <Avri.Altman@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
         "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
         "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
-CC:     "beanhuo@micron.com" <beanhuo@micron.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
         "cang@codeaurora.org" <cang@codeaurora.org>,
         "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
         "bvanassche@acm.org" <bvanassche@acm.org>,
@@ -89,176 +60,132 @@ CC:     "beanhuo@micron.com" <beanhuo@micron.com>,
         "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
         "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
         "cc.chou@mediatek.com" <cc.chou@mediatek.com>
-Subject: RE: [PATCH v1 2/2] scsi: ufs: Add trace event for UIC commands
-Thread-Topic: [PATCH v1 2/2] scsi: ufs: Add trace event for UIC commands
-Thread-Index: AQHWQMuVYKwzY3Iyf0mpsLlh28O4SKjWW/nQ
-Date:   Sat, 13 Jun 2020 10:48:21 +0000
-Message-ID: <SN6PR04MB4640968DCD865651AFA8925DFC9E0@SN6PR04MB4640.namprd04.prod.outlook.com>
+Date:   Sat, 13 Jun 2020 22:18:30 +0800
+In-Reply-To: <SN6PR04MB4640968DCD865651AFA8925DFC9E0@SN6PR04MB4640.namprd04.prod.outlook.com>
 References: <20200612151000.27639-1-stanley.chu@mediatek.com>
- <20200612151000.27639-3-stanley.chu@mediatek.com>
-In-Reply-To: <20200612151000.27639-3-stanley.chu@mediatek.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: mediatek.com; dkim=none (message not signed)
- header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2a00:a040:188:8f6c:d566:1f5b:a970:690c]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 38c49df9-2682-4548-bc75-08d80f874a9d
-x-ms-traffictypediagnostic: SN2PR04MB2350:
-x-microsoft-antispam-prvs: <SN2PR04MB23504F74D9050C91400456C1FC9E0@SN2PR04MB2350.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:2089;
-x-forefront-prvs: 0433DB2766
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: QH5mTo6UV+BvSumosL/Z+5ok43M0WQLW0twp4a/hLeCPrbW/uxNYAg7uHpebQcQ3MOSoxIpiRpq7COvh8iWdzOsEMd5u7289wmS2w2yweBO0rZXhSlpY7XspcaHGd5AC427pvrW1L+OOkhcATK1YlkBa4Kkw4nYDZRosJZJSQRwpwyE+An+Zuj4XzXbwpCgcJenEtpO113vu168VLLpaojcXCyEB1fvMWAl42nztcyCu4k1JhleO/j4OaCqrmYI8v+vCF7PeP9/H5UQpKE516KElm3z5bgh1HHehe3sj5W6pf4CGQln+rlpIFIFeQ1cmJjCdsFfKE9nt1Grd0pxBoQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(346002)(39860400002)(376002)(366004)(136003)(55016002)(71200400001)(66946007)(64756008)(52536014)(66476007)(9686003)(66556008)(66446008)(54906003)(86362001)(110136005)(76116006)(316002)(7696005)(186003)(8936002)(2906002)(6506007)(8676002)(33656002)(83380400001)(4326008)(7416002)(478600001)(5660300002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: oEMjgJusKtEp2UVTJOaU10qz8zN82C2jCoBW9hkrVwhGUaYT6/MqbByXW6lO0Za2g5oJmxEGLx6hvsZedpb1x/HTau6slu0RQSZJZ0WDrx9qwWXS6G5bxfeA3t13Txedw9j0+iE6Odlv+Piiq0eO5egHz+a9WzDkY8iM0ci3Y/uj9MZ+oWeXnSZfECZwEl8JICjVIf5rpRiN0PlDVsy7nQ9K2/YgIZK0I3bK/WdwQso76dDVj8M2sFAKi1Skbk8N+cAYSLoAXLt0VCnk/oR9qxJ4+0BOm2yuOx3SNPIa80N4Xv2/ndks+u81qV8xTNUxRIFr0fZwqF3nDX14wobFxQw7+ou+0sBAp96TsjW3P5c233PPjKkGMrGToYqpIcb9WJGf31/3sOIWr0HFOqkIwdP1MdDGx9UiLzK9/Twpo4X+otUdSgs7gdIY+GPATgwFFvMRTI1mIR6J6cTpLkqdzMhKxQOcwbfBOhPMHHMLJrXUZdsS8ChuKCCTCQzB8n7WVxTrtaD5MxAEX3r7OaTSPYYu1IRhV5O1t8ZeSW4OH4t09HznBnLESMAayXrT3r9T
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+         <20200612151000.27639-3-stanley.chu@mediatek.com>
+         <SN6PR04MB4640968DCD865651AFA8925DFC9E0@SN6PR04MB4640.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 38c49df9-2682-4548-bc75-08d80f874a9d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Jun 2020 10:48:21.7929
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kB2K77rChAkj2gpARUuGEtt4Ka9wCKkd0YzTqG9dXebrPKgHcw/Z7IEHQiapeJAngHBKe3Hy5/IFCkGYRJ/tzA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN2PR04MB2350
+X-TM-SNTS-SMTP: C5756CE2E349CF9053AF970775DB6925B7A04576EC619A0BCFF76E5D910C78282000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
-> +                                        struct uic_command *ucmd,
-> +                                        const char *str)
-> +{
-> +       u32 cmd;
-> +
-> +       if (!trace_ufshcd_uic_command_enabled())
-> +               return;
-> +
-> +       if (!strcmp(str, "uic_send"))
-> +               cmd =3D ucmd->command;
-> +       else
-> +               cmd =3D ufshcd_readl(hba, REG_UIC_COMMAND);
-Why on complete you can't just use ucmd->command as well?
+SGkgQXZyaSwNCg0KT24gU2F0LCAyMDIwLTA2LTEzIGF0IDEwOjQ4ICswMDAwLCBBdnJpIEFsdG1h
+biB3cm90ZToNCj4gPiArc3RhdGljIHZvaWQgdWZzaGNkX2FkZF91aWNfY29tbWFuZF90cmFjZShz
+dHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgc3RydWN0IHVpY19jb21tYW5kICp1Y21kLA0KPiA+ICsgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgY29uc3QgY2hhciAqc3RyKQ0KPiA+ICt7DQo+ID4gKyAg
+ICAgICB1MzIgY21kOw0KPiA+ICsNCj4gPiArICAgICAgIGlmICghdHJhY2VfdWZzaGNkX3VpY19j
+b21tYW5kX2VuYWJsZWQoKSkNCj4gPiArICAgICAgICAgICAgICAgcmV0dXJuOw0KPiA+ICsNCj4g
+PiArICAgICAgIGlmICghc3RyY21wKHN0ciwgInVpY19zZW5kIikpDQo+ID4gKyAgICAgICAgICAg
+ICAgIGNtZCA9IHVjbWQtPmNvbW1hbmQ7DQo+ID4gKyAgICAgICBlbHNlDQo+ID4gKyAgICAgICAg
+ICAgICAgIGNtZCA9IHVmc2hjZF9yZWFkbChoYmEsIFJFR19VSUNfQ09NTUFORCk7DQo+IFdoeSBv
+biBjb21wbGV0ZSB5b3UgY2FuJ3QganVzdCB1c2UgdWNtZC0+Y29tbWFuZCBhcyB3ZWxsPw0KDQpS
+ZWFkaW5nIHJlZ2lzdGVycyBpcyByZWFsbHkgaGVscGZ1bCBmb3IgZGVidWdnaW5nIHRvIGNoZWNr
+IGlmIGhvc3QgVUlDDQpjb21tYW5kIHJlZ2lzdGVyIHJlYWxseSByZWNlaXZlZCB0aGUgY29tbWFu
+ZCBiZWZvcmUuDQoNCkJ1dCB0aGUgb3JpZ2luYWwgcmVxdWVzdGluZyBVSUMgY29tbWFuZCBzaGFs
+bCBiZSBsb2dnZWQgaW4gdHJhY2Ugc28NCnVjbWQtPmNvbW1hbmQgaXMgbG9nZ2VkIGR1cmluZyAi
+c2VuZCIsIGFuZCB0aGUgY29tbWFuZCBpbiByZWdpc3RlciBpcw0KcmVhZCBhbmQgbG9nZ2VkIGR1
+cmluZyAiY29tcGxldGVkIi4gVGhlbiB3ZSBjb3VsZCBzaW1wbHkgY2hlY2sgdGhlbSB0bw0Ka25v
+dyBpZiBzb21ldGhpbmcgd3Jvbmcgd2hpbGUgc2VuZGluZyB0aGUgY29tbWFuZC4NCg0KVGhpcyBj
+b25jZXB0IGlzIHNpbWlsYXIgYXMgY3VycmVudCBVVFAgY29tbWFuZCB0cmFjZSBldmVudHMgdGhh
+dA0KZG9vcmJlbGwgcmVnaXN0ZXIgaXMgcmVhZCBhbmQgZHVtcGVkIGluIHRoZSB0cmFjZS4NCg0K
+PiANCj4gPiArDQo+ID4gKyAgICAgICB0cmFjZV91ZnNoY2RfdWljX2NvbW1hbmQoZGV2X25hbWUo
+aGJhLT5kZXYpLCBzdHIsIGNtZCwNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICB1Y21kLT5yZXN1bHQsDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdWZz
+aGNkX3JlYWRsKGhiYSwgUkVHX1VJQ19DT01NQU5EX0FSR18xKSwNCj4gPiArICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICB1ZnNoY2RfcmVhZGwoaGJhLCBSRUdfVUlDX0NPTU1BTkRfQVJH
+XzIpLA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHVmc2hjZF9yZWFkbCho
+YmEsIFJFR19VSUNfQ09NTUFORF9BUkdfMykpOw0KPiBXaHkgY2FuJ3QgeW91IGp1c3QgdXNlIHRo
+ZSB1Y21kIG1lbWJlcnM/DQo+IFdoeSBuZWVkIHRvIHJlYWQgdGhvc2U/DQoNCkFzIGFib3ZlIHNh
+bWUgcmVhc29uLCByZWFkaW5nIHJlZ2lzdGVycyBjYW4ga25vdyB3aGljaCBhcmd1bWVudHMgYXJl
+DQpleGFjdGx5IHNlbnQgdG8gdGhlIGRldmljZS4NCg0KVGhpcyBpcyB2ZXJ5IGhlbHBmdWwgZm9y
+IGZhc3QgaXNzdWUgYnJlYWtkb3duIGlmIFVJQyBjb21tYW5kIGlzIG5vdA0KcmVzcG9uZGVkIHVu
+ZGVyIGV4cGVjdGF0aW9uLg0KDQpIZXJlLCB3ZSBhbHNvIHJlYWxseSB3YW50IHRvIGtlZXAgdGhl
+IG9yaWdpbmFsIHJlcXVlc3RpbmcgYXJndW1lbnRzIGZyb20NCiJ1Y21kIiwganVzdCBsaWtlIFVJ
+QyBjb21tYW5kLiBIb3dldmVyLCBhcmd1bWVudHMgaW4gcmVnaXN0ZXIgd2lsbCBiZQ0KY2hhbmdl
+ZCBhZnRlciBVSUMgY29tbWFuZCBpcyBkb25lIHNvIHdlIGNhbiBub3QgZG8gdGhlIHNhbWUgd2F5
+IGFzIFVJQw0KY29tbWFuZC4gU28gYSBjb21wcm9taXNlIGlzIGhlcmUgdGhhdCB3ZSBsb2dnZWQg
+dGhlIGFyZ3VtZW50cyB3aGljaCBob3N0DQpyZWdpc3RlciBleGFjdGx5IHJlY2VpdmVkIGluIHRy
+YWNlLg0KDQo+IA0KPiA+ICt9DQo+IA0KPiANCj4gPiArDQo+ID4gIHN0YXRpYyB2b2lkIHVmc2hj
+ZF9hZGRfY29tbWFuZF90cmFjZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiA+ICAgICAgICAgICAg
+ICAgICB1bnNpZ25lZCBpbnQgdGFnLCBjb25zdCBjaGFyICpzdHIpDQo+ID4gIHsNCj4gPiBAQCAt
+MjA1NCw2ICsyMDc1LDggQEAgdWZzaGNkX2Rpc3BhdGNoX3VpY19jbWQoc3RydWN0IHVmc19oYmEg
+KmhiYSwNCj4gPiBzdHJ1Y3QgdWljX2NvbW1hbmQgKnVpY19jbWQpDQo+ID4gICAgICAgICAvKiBX
+cml0ZSBVSUMgQ21kICovDQo+ID4gICAgICAgICB1ZnNoY2Rfd3JpdGVsKGhiYSwgdWljX2NtZC0+
+Y29tbWFuZCAmIENPTU1BTkRfT1BDT0RFX01BU0ssDQo+ID4gICAgICAgICAgICAgICAgICAgICAg
+IFJFR19VSUNfQ09NTUFORCk7DQo+ID4gKw0KPiA+ICsgICAgICAgdWZzaGNkX2FkZF91aWNfY29t
+bWFuZF90cmFjZShoYmEsIHVpY19jbWQsICJ1aWNfc2VuZCIpOw0KPiA+ICB9DQo+ID4gDQo+ID4g
+IC8qKg0KPiA+IEBAIC0yMDgwLDYgKzIxMDMsOSBAQCB1ZnNoY2Rfd2FpdF9mb3JfdWljX2NtZChz
+dHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiA+IHN0cnVjdCB1aWNfY29tbWFuZCAqdWljX2NtZCkNCj4g
+PiAgICAgICAgIGhiYS0+YWN0aXZlX3VpY19jbWQgPSBOVUxMOw0KPiA+ICAgICAgICAgc3Bpbl91
+bmxvY2tfaXJxcmVzdG9yZShoYmEtPmhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KPiA+IA0KPiA+
+ICsgICAgICAgdWljX2NtZC0+cmVzdWx0ID0gcmV0Ow0KPiA+ICsgICAgICAgdWZzaGNkX2FkZF91
+aWNfY29tbWFuZF90cmFjZShoYmEsIHVpY19jbWQsICJ1aWNfY29tcGxldGUiKTsNCj4gPiArDQo+
+ID4gICAgICAgICByZXR1cm4gcmV0Ow0KPiA+ICB9DQo+IENhbid0IHlvdSBqdXN0IGNhbGwgdGhl
+ICJzZW5kIiBhbmQgImNvbXBsZXRlIiBmcm9tIHVmc2hjZF9zZW5kX3VpY19jbWQ/DQoNCkZvciAi
+c2VuZCIsIHdlIHdvdWxkIGxpa2UgdG8gbG9nIHRoZSB0aW1lIGFzIHByZWNpc2UgYXMgcG9zc2li
+bGUgc28NCiJzZW5kIiBldmVudCBpcyBsb2dnZWQgd2hpbGUgVUlDIGNvbW1hbmQgaXMgc2VudC4N
+Cg0KVGhhbmtzIHNvIG11Y2ghIFlvdXIgcXVlc3Rpb24gcmVtaW5kcyBtZSB0aGF0ICJzZW5kIiB0
+cmFjZSBzaGFsbCBiZQ0KbW92ZWQgYmVmb3JlIFVJQyBjb21tYW5kIGlzIHNlbnQgb3RoZXJ3aXNl
+IHJlZ2lzdGVyIHZhbHVlIG1heSBiZSBjaGFuZ2VkDQpiZWZvcmUgbG9nZ2luZyAic2VuZCIgdHJh
+Y2UuIEkgd2lsbCBmaXggdGhpcyBpbiBuZXh0IHZlcnNpb24uDQoNCkZvciAiY29tcGxldGVkIiwg
+dG8gbWFrZSBsb2dnaW5nIHRpbWUgYXMgY2xvc2VkIHRvIFVJQyBjb21tYW5kDQpjb21wbGV0aW9u
+IGFzIHBvc3NpYmxlLCBtYXliZSBJIG5lZWQgdG8gY2hhbmdlIHRoZSBsb2dnaW5nIHRpbWluZyB0
+bw0KdWZzaGNkX3VpY19jbWRfY29tcGwoKSwganVzdCBsaWtlIFVUUCBjb21tYW5kIGNvbXBsZXRp
+b24gdHJhY2Ugd2hpY2ggaXMNCmxvZ2dlZCBpbiBfX3Vmc2hjZF90cmFuc2Zlcl9yZWdfY29tcGwo
+KS4NCg0KSWYgeW91IGhhdmUgbm8gb2JqZWN0aW9uLCBJIHdpbGwgdHJ5IHRvIGZpeCB0aGlzIGlu
+IG5leHQgdmVyc2lvbi4NCg0KPiANCj4gDQo+ID4gDQo+ID4gQEAgLTM3NjAsNiArMzc4Niw5IEBA
+IHN0YXRpYyBpbnQgdWZzaGNkX3VpY19wd3JfY3RybChzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiA+
+IHN0cnVjdCB1aWNfY29tbWFuZCAqY21kKQ0KPiA+ICAgICAgICAgICAgICAgICByZXQgPSAoc3Rh
+dHVzICE9IFBXUl9PSykgPyBzdGF0dXMgOiAtMTsNCj4gPiAgICAgICAgIH0NCj4gPiAgb3V0Og0K
+PiA+ICsgICAgICAgY21kLT5yZXN1bHQgPSByZXQ7DQo+ID4gKyAgICAgICB1ZnNoY2RfYWRkX3Vp
+Y19jb21tYW5kX3RyYWNlKGhiYSwgY21kLCAidWljX2NvbXBsZXRlIik7DQo+ID4gKw0KPiA+ICAg
+ICAgICAgaWYgKHJldCkgew0KPiA+ICAgICAgICAgICAgICAgICB1ZnNoY2RfcHJpbnRfaG9zdF9z
+dGF0ZShoYmEpOw0KPiA+ICAgICAgICAgICAgICAgICB1ZnNoY2RfcHJpbnRfcHdyX2luZm8oaGJh
+KTsNCj4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS90cmFjZS9ldmVudHMvdWZzLmggYi9pbmNsdWRl
+L3RyYWNlL2V2ZW50cy91ZnMuaA0KPiA+IGluZGV4IDVmMzAwNzM5MjQwZC4uY2Y4ZDU2OGQ1YTEz
+IDEwMDY0NA0KPiA+IC0tLSBhL2luY2x1ZGUvdHJhY2UvZXZlbnRzL3Vmcy5oDQo+ID4gKysrIGIv
+aW5jbHVkZS90cmFjZS9ldmVudHMvdWZzLmgNCj4gPiBAQCAtMjQ5LDYgKzI0OSwzOSBAQCBUUkFD
+RV9FVkVOVCh1ZnNoY2RfY29tbWFuZCwNCj4gPiAgICAgICAgICkNCj4gPiAgKTsNCj4gPiANCj4g
+PiArVFJBQ0VfRVZFTlQodWZzaGNkX3VpY19jb21tYW5kLA0KPiA+ICsgICAgICAgVFBfUFJPVE8o
+Y29uc3QgY2hhciAqZGV2X25hbWUsIGNvbnN0IGNoYXIgKnN0ciwgdTMyIGNtZCwgaW50IHJlc3Vs
+dCwNCj4gPiArICAgICAgICAgICAgICAgIHUzMiBhcmcxLCB1MzIgYXJnMiwgdTMyIGFyZzMpLA0K
+PiA+ICsNCj4gPiArICAgICAgIFRQX0FSR1MoZGV2X25hbWUsIHN0ciwgY21kLCByZXN1bHQsIGFy
+ZzEsIGFyZzIsIGFyZzMpLA0KPiA+ICsNCj4gPiArICAgICAgIFRQX1NUUlVDVF9fZW50cnkoDQo+
+ID4gKyAgICAgICAgICAgICAgIF9fc3RyaW5nKGRldl9uYW1lLCBkZXZfbmFtZSkNCj4gPiArICAg
+ICAgICAgICAgICAgX19zdHJpbmcoc3RyLCBzdHIpDQo+ID4gKyAgICAgICAgICAgICAgIF9fZmll
+bGQodTMyLCBjbWQpDQo+ID4gKyAgICAgICAgICAgICAgIF9fZmllbGQoaW50LCByZXN1bHQpDQo+
+ID4gKyAgICAgICAgICAgICAgIF9fZmllbGQodTMyLCBhcmcxKQ0KPiA+ICsgICAgICAgICAgICAg
+ICBfX2ZpZWxkKHUzMiwgYXJnMikNCj4gPiArICAgICAgICAgICAgICAgX19maWVsZCh1MzIsIGFy
+ZzMpDQo+ID4gKyAgICAgICApLA0KPiA+ICsNCj4gPiArICAgICAgIFRQX2Zhc3RfYXNzaWduKA0K
+PiA+ICsgICAgICAgICAgICAgICBfX2Fzc2lnbl9zdHIoZGV2X25hbWUsIGRldl9uYW1lKTsNCj4g
+PiArICAgICAgICAgICAgICAgX19hc3NpZ25fc3RyKHN0ciwgc3RyKTsNCj4gPiArICAgICAgICAg
+ICAgICAgX19lbnRyeS0+Y21kID0gY21kOw0KPiA+ICsgICAgICAgICAgICAgICBfX2VudHJ5LT5y
+ZXN1bHQgPSByZXN1bHQ7DQo+ID4gKyAgICAgICAgICAgICAgIF9fZW50cnktPmFyZzEgPSBhcmcx
+Ow0KPiA+ICsgICAgICAgICAgICAgICBfX2VudHJ5LT5hcmcyID0gYXJnMjsNCj4gPiArICAgICAg
+ICAgICAgICAgX19lbnRyeS0+YXJnMyA9IGFyZzM7DQo+ID4gKyAgICAgICApLA0KPiA+ICsNCj4g
+PiArICAgICAgIFRQX3ByaW50aygNCj4gPiArICAgICAgICAgICAgICAgIiVzOiAlczogY21kOiAw
+eCV4LCBhcmcxOiAweCV4LCBhcmcyOiAweCV4LCBhcmczOiAweCV4LCByZXN1bHQ6ICVkIiwNCj4g
+PiArICAgICAgICAgICAgICAgX19nZXRfc3RyKHN0ciksIF9fZ2V0X3N0cihkZXZfbmFtZSksIF9f
+ZW50cnktPmNtZCwNCj4gPiArICAgICAgICAgICAgICAgX19lbnRyeS0+YXJnMSwgX19lbnRyeS0+
+YXJnMiwgX19lbnRyeS0+YXJnMywgX19lbnRyeS0+cmVzdWx0DQo+ID4gKyAgICAgICApDQo+IFBl
+cnNvbmFsbHksIGFzIHRob3NlIHRyYWNlIGV2ZW50cyBhcmVuJ3QgdmVyeSBodW1hbiByZWFkYWJs
+ZSBhbnl3YXksIEkgd291bGQganVzdCBkdW1wIHRoZSB1aWMgY29tbWFuZCwNCj4gQW5kIGxldCB0
+aGUgcGFyc2VycyBkbyB0aGVpciBqb2IuDQo+IEFuZCBpZiB0aGlzIGlzIHRoZSBjYXNlLCByZXN1
+bHQgaXMgcmVkdW5kYW50IGFzIGl0IGlzIHBhcnQgb2YgYXJnMg0KDQpNeSBvcmlnaW5hbCB0aG91
+Z2h0IGlzIHRvIGxvZyBzb21lIGV4Y2VwdGlvbnMsIGxpa2UgIi1FVElNRURPVVQiIGluDQoicmVz
+dWx0Ii4gQnV0IGlmIEkgY2hhbmdlZCAiY29tcGxldGlvbiIgdHJhY2UgaGFuZGxpbmcgdG8gaW50
+ZXJydXB0DQpoYW5kbGVyLCB0aGVyZSB3aWxsIGJlIG5vIGNoYW5jZSB0byBsb2cgdGhvc2UgZXhj
+ZXB0aW9ucy4gVGhpcyBpcyBPSw0KYmVjYXVzZSBVVFAgdHJhY2UgaXMgZXhhY3RseSBiZWhhdmUg
+dGhpcyB3YXk6IE5vIGNvbXBsZXRpb24gZXZlbnQgaW4NCnRyYWNlIGlmIHJlcXVlc3QgaXMgbm90
+IGJhY2suIEFuZCBpZiB0aGlzIHdheSBpcyBpbXBsZW1lbnRlZCwgInJlc3VsdCINCmlzIGRlZmlu
+aXRlbHkgcmVkdW5kYW50IGFuZCBzaGFsbCBiZSByZW1vdmVkLg0KDQpUaGFua3MsDQpTdGFubGV5
+IENodQ0KDQo=
 
-> +
-> +       trace_ufshcd_uic_command(dev_name(hba->dev), str, cmd,
-> +                                ucmd->result,
-> +                                ufshcd_readl(hba, REG_UIC_COMMAND_ARG_1)=
-,
-> +                                ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2)=
-,
-> +                                ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3)=
-);
-Why can't you just use the ucmd members?
-Why need to read those?
-
-> +}
-
-
-> +
->  static void ufshcd_add_command_trace(struct ufs_hba *hba,
->                 unsigned int tag, const char *str)
->  {
-> @@ -2054,6 +2075,8 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba,
-> struct uic_command *uic_cmd)
->         /* Write UIC Cmd */
->         ufshcd_writel(hba, uic_cmd->command & COMMAND_OPCODE_MASK,
->                       REG_UIC_COMMAND);
-> +
-> +       ufshcd_add_uic_command_trace(hba, uic_cmd, "uic_send");
->  }
->=20
->  /**
-> @@ -2080,6 +2103,9 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba,
-> struct uic_command *uic_cmd)
->         hba->active_uic_cmd =3D NULL;
->         spin_unlock_irqrestore(hba->host->host_lock, flags);
->=20
-> +       uic_cmd->result =3D ret;
-> +       ufshcd_add_uic_command_trace(hba, uic_cmd, "uic_complete");
-> +
->         return ret;
->  }
-Can't you just call the "send" and "complete" from ufshcd_send_uic_cmd?
-
-
->=20
-> @@ -3760,6 +3786,9 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba,
-> struct uic_command *cmd)
->                 ret =3D (status !=3D PWR_OK) ? status : -1;
->         }
->  out:
-> +       cmd->result =3D ret;
-> +       ufshcd_add_uic_command_trace(hba, cmd, "uic_complete");
-> +
->         if (ret) {
->                 ufshcd_print_host_state(hba);
->                 ufshcd_print_pwr_info(hba);
-> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-> index 5f300739240d..cf8d568d5a13 100644
-> --- a/include/trace/events/ufs.h
-> +++ b/include/trace/events/ufs.h
-> @@ -249,6 +249,39 @@ TRACE_EVENT(ufshcd_command,
->         )
->  );
->=20
-> +TRACE_EVENT(ufshcd_uic_command,
-> +       TP_PROTO(const char *dev_name, const char *str, u32 cmd, int resu=
-lt,
-> +                u32 arg1, u32 arg2, u32 arg3),
-> +
-> +       TP_ARGS(dev_name, str, cmd, result, arg1, arg2, arg3),
-> +
-> +       TP_STRUCT__entry(
-> +               __string(dev_name, dev_name)
-> +               __string(str, str)
-> +               __field(u32, cmd)
-> +               __field(int, result)
-> +               __field(u32, arg1)
-> +               __field(u32, arg2)
-> +               __field(u32, arg3)
-> +       ),
-> +
-> +       TP_fast_assign(
-> +               __assign_str(dev_name, dev_name);
-> +               __assign_str(str, str);
-> +               __entry->cmd =3D cmd;
-> +               __entry->result =3D result;
-> +               __entry->arg1 =3D arg1;
-> +               __entry->arg2 =3D arg2;
-> +               __entry->arg3 =3D arg3;
-> +       ),
-> +
-> +       TP_printk(
-> +               "%s: %s: cmd: 0x%x, arg1: 0x%x, arg2: 0x%x, arg3: 0x%x, r=
-esult: %d",
-> +               __get_str(str), __get_str(dev_name), __entry->cmd,
-> +               __entry->arg1, __entry->arg2, __entry->arg3, __entry->res=
-ult
-> +       )
-Personally, as those trace events aren't very human readable anyway, I woul=
-d just dump the uic command,
-And let the parsers do their job.
-And if this is the case, result is redundant as it is part of arg2
-
-Thanks,
-Avri
-
-> +);
-> +
->  TRACE_EVENT(ufshcd_upiu,
->         TP_PROTO(const char *dev_name, const char *str, void *hdr, void *=
-tsf),
->=20
-> --
-> 2.18.0
