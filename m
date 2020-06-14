@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE60C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Jun 2020 22:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A10FC433E1
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Jun 2020 22:39:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2057B2071A
-	for <linux-scsi@archiver.kernel.org>; Sun, 14 Jun 2020 22:39:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E100206D7
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Jun 2020 22:39:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728004AbgFNWjk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 14 Jun 2020 18:39:40 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:39311 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727998AbgFNWjh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Jun 2020 18:39:37 -0400
-Received: by mail-pl1-f196.google.com with SMTP id v24so5999717plo.6
-        for <linux-scsi@vger.kernel.org>; Sun, 14 Jun 2020 15:39:37 -0700 (PDT)
+        id S1728008AbgFNWjl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 14 Jun 2020 18:39:41 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:39310 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728002AbgFNWjk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Jun 2020 18:39:40 -0400
+Received: by mail-pl1-f193.google.com with SMTP id v24so5999747plo.6
+        for <linux-scsi@vger.kernel.org>; Sun, 14 Jun 2020 15:39:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tq326eO73Jg/ADfRmtMYw8srTNnadA8+cdvXjVwbeEU=;
-        b=Jpi8OpdndclZH6FCnmxFyHJ/638rm0J8s3kP8UcQIYg/4oFP8wZG6jvUzuX717KlVv
-         Es8Mr1F8uck1mlx9g+i+M191QF/eAEZe51SxfYj/UOar3Tb1qPCWAFD+mKXDhTGBs0Zq
-         Dl56I+OeoH8bsuwUt8Ua1bmCoJC5lldGHE1O98DkNjB6EIeHG9ikWPtx/8Y6jPmMLYeQ
-         qPPWp6bK8JhHszriI/UIdNR7kcZZjVNzboESisAJ5kapGkA5Vd8XpSrH6lk7H0G18O7K
-         CsLWkgGHYGl4fJp+0jwD09WLlTuib4akCMGyhe7CCWx+7Kd+kFnz3ew96y7iLJQGhtqz
-         p50g==
-X-Gm-Message-State: AOAM530ljMP25Hy5cJM1ypoOHubn+DFeAmEo8sB0TtM+BhdpUG5oJyez
-        Q6fdhoY3BMsbem6V8y2rZyY=
-X-Google-Smtp-Source: ABdhPJxIeozXpCs+Z5JehB0w2kE6mFL/Bw3L2x7Ci4TUPGXKxxmJbKGMB1ZwoCAqAoFPx03weeOHog==
-X-Received: by 2002:a17:90b:3004:: with SMTP id hg4mr9945917pjb.208.1592174376910;
-        Sun, 14 Jun 2020 15:39:36 -0700 (PDT)
+        bh=BDOmZksr0Y5yxPjuSZ5zpWwzkMWSDNJDEwgMiKyrVTs=;
+        b=EJZio7gH+5LHvQV72xIPWZ3j1tcl6zDkGVkdwE2PpT8qT9vIbIrAIe8i0PEP/cWufu
+         w/lPF0Xe3xjJOPbgkmL38HzbsAaaQhBAaJhvbRRsJlO9pjXHlZhRmgAZw8wMMhzjAJZp
+         G685txayIBDHAnRFqroNrenRcaBQxuR71Gyu2wVe37ZVXrbwekSu2WzS3Ab3JKYIhIhq
+         5RHh5KyHo/XBcDwj9L2pFIN0NIVk+H4ys4i7NYi6l8c0iv1kxMN/6bG7b9FGip7Xf0Bz
+         P9oXIulchfkpOCIka8HQRDh/N42S4ZvRnzyl3GF9yTDf2Dd46i92doe+0S9XdMp4vtOE
+         Bddw==
+X-Gm-Message-State: AOAM531bV6QrHYzxx1+mA84Zk85dQbOk4k+4VD30Hk2yXByFIYvg6M1t
+        6uPfsQDnVxE2D+cLckRaqlg=
+X-Google-Smtp-Source: ABdhPJzpxabTS+HPAmBq5K9J7VAqEDP8/MyqmAwODy/LYeNbsb8VAg1obqt2jkq/GsJvUEanS+H3qA==
+X-Received: by 2002:a17:90a:326d:: with SMTP id k100mr9632625pjb.191.1592174379723;
+        Sun, 14 Jun 2020 15:39:39 -0700 (PDT)
 Received: from localhost.localdomain (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id u25sm11768711pfm.115.2020.06.14.15.39.35
+        by smtp.gmail.com with ESMTPSA id u25sm11768711pfm.115.2020.06.14.15.39.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 14 Jun 2020 15:39:36 -0700 (PDT)
+        Sun, 14 Jun 2020 15:39:39 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
@@ -50,9 +50,9 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Daniel Wagner <dwagner@suse.de>,
         Martin Wilck <mwilck@suse.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH 6/9] qla2xxx: Make __qla2x00_alloc_iocbs() initialize 32 bits of request_t.handle
-Date:   Sun, 14 Jun 2020 15:39:18 -0700
-Message-Id: <20200614223921.5851-7-bvanassche@acm.org>
+Subject: [PATCH 8/9] qla2xxx: Make qla2x00_restart_isp() easier to read
+Date:   Sun, 14 Jun 2020 15:39:20 -0700
+Message-Id: <20200614223921.5851-9-bvanassche@acm.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200614223921.5851-1-bvanassche@acm.org>
 References: <20200614223921.5851-1-bvanassche@acm.org>
@@ -63,20 +63,9 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The request_t 'handle' member is 32-bits wide, hence use wrt_reg_dword().
-Change the cast in the wrt_reg_byte() call to make it clear that a
-regular pointer is casted to an __iomem pointer.
-
-Note: 'pkt' points to I/O memory for the qlafx00 adapter family and to
-coherent memory for all other adapter families.
-
-This patch fixes the following Coverity complaint:
-
-CID 358864 (#1 of 1): Reliance on integer endianness (INCOMPATIBLE_CAST)
-incompatible_cast: Pointer &pkt->handle points to an object whose effective
-type is unsigned int (32 bits, unsigned) but is dereferenced as a narrower
-unsigned short (16 bits, unsigned). This may lead to unexpected results
-depending on machine endianness.
+Instead of using complicated control flow to only have one return statement
+at the end of qla2x00_restart_isp(), return an error status as soon as it is
+known that this function will fail.
 
 Cc: Nilesh Javali <njavali@marvell.com>
 Cc: Quinn Tran <qutran@marvell.com>
@@ -84,24 +73,71 @@ Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
 Cc: Daniel Wagner <dwagner@suse.de>
 Cc: Martin Wilck <mwilck@suse.com>
 Cc: Roman Bolshakov <r.bolshakov@yadro.com>
-Fixes: 8ae6d9c7eb10 ("[SCSI] qla2xxx: Enhancements to support ISPFx00.")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 39 +++++++++++++++++++--------------
+ 1 file changed, 22 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 8865c35d3421..7c2ad8c18398 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2305,8 +2305,8 @@ __qla2x00_alloc_iocbs(struct qla_qpair *qpair, srb_t *sp)
- 	pkt = req->ring_ptr;
- 	memset(pkt, 0, REQUEST_ENTRY_SIZE);
- 	if (IS_QLAFX00(ha)) {
--		wrt_reg_byte((void __iomem *)&pkt->entry_count, req_cnt);
--		wrt_reg_word((void __iomem *)&pkt->handle, handle);
-+		wrt_reg_byte((u8 __force __iomem *)&pkt->entry_count, req_cnt);
-+		wrt_reg_dword((__le32 __force __iomem *)&pkt->handle, handle);
- 	} else {
- 		pkt->entry_count = req_cnt;
- 		pkt->handle = handle;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 9e12018e0105..f39a1a40d4c3 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -6998,36 +6998,41 @@ qla2x00_abort_isp(scsi_qla_host_t *vha)
+ static int
+ qla2x00_restart_isp(scsi_qla_host_t *vha)
+ {
+-	int status = 0;
++	int status;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+ 	/* If firmware needs to be loaded */
+ 	if (qla2x00_isp_firmware(vha)) {
+ 		vha->flags.online = 0;
+ 		status = ha->isp_ops->chip_diag(vha);
+-		if (!status)
+-			status = qla2x00_setup_chip(vha);
++		if (status)
++			return status;
++		status = qla2x00_setup_chip(vha);
++		if (status)
++			return status;
+ 	}
+ 
+-	if (!status && !(status = qla2x00_init_rings(vha))) {
+-		clear_bit(RESET_MARKER_NEEDED, &vha->dpc_flags);
+-		ha->flags.chip_reset_done = 1;
++	status = qla2x00_init_rings(vha);
++	if (status)
++		return status;
+ 
+-		/* Initialize the queues in use */
+-		qla25xx_init_queues(ha);
++	clear_bit(RESET_MARKER_NEEDED, &vha->dpc_flags);
++	ha->flags.chip_reset_done = 1;
+ 
+-		status = qla2x00_fw_ready(vha);
+-		if (!status) {
+-			/* Issue a marker after FW becomes ready. */
+-			qla2x00_marker(vha, ha->base_qpair, 0, 0, MK_SYNC_ALL);
+-			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+-		}
++	/* Initialize the queues in use */
++	qla25xx_init_queues(ha);
+ 
++	status = qla2x00_fw_ready(vha);
++	if (status) {
+ 		/* if no cable then assume it's good */
+-		if ((vha->device_flags & DFLG_NO_CABLE))
+-			status = 0;
++		return vha->device_flags & DFLG_NO_CABLE ? 0 : status;
+ 	}
+-	return (status);
++
++	/* Issue a marker after FW becomes ready. */
++	qla2x00_marker(vha, ha->base_qpair, 0, 0, MK_SYNC_ALL);
++	set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++
++	return 0;
+ }
+ 
+ static int
