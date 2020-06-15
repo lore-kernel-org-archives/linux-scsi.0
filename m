@@ -2,154 +2,153 @@ Return-Path: <SRS0=1R64=74=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD0A8C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 16:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 824C9C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6CAA2078E
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 16:24:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6286220857
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:09:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="nk+CrK+q"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ksIm2T40"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731008AbgFOQYU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Jun 2020 12:24:20 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:26469 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730795AbgFOQYP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 12:24:15 -0400
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200615162410epoutp01a8848fe5d891ad431f0fad337fe4a907~YxEC2rrox1537515375epoutp01Z
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 16:24:10 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200615162410epoutp01a8848fe5d891ad431f0fad337fe4a907~YxEC2rrox1537515375epoutp01Z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1592238250;
-        bh=BEyEvCjpVeZ0zAtPUpZTgBK+qidw68l28PlKRvrd7jk=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=nk+CrK+qc0f8ji52XtUiNy90799GBidX1zYiF7LTklutrm0zGDpEyzSPXGwyUWWR4
-         F1Lam81jeItu+474IkdKRH+cdqULbjtQG8n/ZIpeL9SFFwSQt7nAV4Rz93uWIwaGwP
-         VlkY2NPWF0m8uzb6JmQqydo6Dl9SyBzNPKAtnj4E=
-Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-        20200615162409epcas5p1076dad5980246b4ed9585b73bdd7d4d6~YxECOMLhF0740907409epcas5p1h;
-        Mon, 15 Jun 2020 16:24:09 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        47.26.09475.9A0A7EE5; Tue, 16 Jun 2020 01:24:09 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200615162408epcas5p3c8bfc7f248fa72fd01156d39851e628d~YxEBRa4iD0964309643epcas5p30;
-        Mon, 15 Jun 2020 16:24:08 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200615162408epsmtrp1a573006830526845280bb8711ad00873~YxEBQlGE12292522925epsmtrp1F;
-        Mon, 15 Jun 2020 16:24:08 +0000 (GMT)
-X-AuditID: b6c32a4b-389ff70000002503-c3-5ee7a0a9c69e
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        9E.2E.08382.8A0A7EE5; Tue, 16 Jun 2020 01:24:08 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.108.234.165]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200615162405epsmtip19e7d7fb67d9663b3e7591a2ca5be9e08~YxD_UUEA-2560325603epsmtip1s;
-        Mon, 15 Jun 2020 16:24:05 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     <kishon@ti.com>
-Cc:     <kbuild-all@lists.01.org>, <clang-built-linux@googlegroups.com>,
-        <devicetree@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <krzk@kernel.org>, <avri.altman@wdc.com>,
-        <martin.petersen@oracle.com>, <kwmad.kim@samsung.com>,
-        <stanley.chu@mediatek.com>, <cang@codeaurora.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        "'kernel test robot'" <lkp@intel.com>
-In-Reply-To: <202006131334.EEnoEaXS%lkp@intel.com>
-Subject: RE: [RESEND PATCH v10 07/10] phy: samsung-ufs: add UFS PHY driver
- for samsung SoC
-Date:   Mon, 15 Jun 2020 21:54:03 +0530
-Message-ID: <000101d64331$65230260$2f690720$@samsung.com>
+        id S1731326AbgFOSJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Jun 2020 14:09:44 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55738 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728585AbgFOSJm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 14:09:42 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05FI7hca026496;
+        Mon, 15 Jun 2020 18:08:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=EdV85x/l0ZQB7qs/RGol05XelTO/TGwy+i5Nwcf8gRM=;
+ b=ksIm2T40o14OrDnPOVl41oLfXflESyB3DKHmSrY07W8hiE/Z7QLC5o1aUTaHPRbSwzbu
+ 9c0NwLH9cAIIrEop8mGTFh8G1XGbz9PddITo/iGjFqouwLRZRmyMPkuv312Tprpn0qqE
+ vsgCBz56dXPpSbVxKCQXClzuApbPztWVszZo40Z9/pDvMf5EwgQrvvf51uoX9UnrZp3o
+ w/4xkBk0XXZDlc2YcrCzTOExgRGYIv3Y4giKzpy8SzyD0DJs8FkiFKoy2usbln1dH7C7
+ /e2gagyqK7O847BIeVNSzHbKNPgl/68telPWwh1LacJqZVCnTiRrQlKn7a2GbDXIJ48j 0Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 31p6s22cke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 15 Jun 2020 18:08:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05FHwvkZ051587;
+        Mon, 15 Jun 2020 18:08:30 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 31p6de1e1n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 15 Jun 2020 18:08:30 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05FI8G7g031730;
+        Mon, 15 Jun 2020 18:08:17 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 15 Jun 2020 11:08:15 -0700
+Date:   Mon, 15 Jun 2020 21:07:53 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Waiman Long <longman@redhat.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Joe Perches <joe@perches.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        David Rientjes <rientjes@google.com>,
+        samba-technical@lists.samba.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
+        linux-sctp@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        devel@driverdev.osuosl.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, x86@kernel.org,
+        kasan-dev@googlegroups.com, cocci@systeme.lip6.fr,
+        linux-wpan@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
+        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net, wireguard@lists.zx2c4.com,
+        linux-ppp@vger.kernel.org, linux-integrity@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] mm, treewide: Rename kzfree() to kfree_sensitive()
+Message-ID: <20200615180753.GJ4151@kadam>
+References: <20200413211550.8307-1-longman@redhat.com>
+ <20200413211550.8307-2-longman@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQJxKJl1qzUofIPujdEacJl88XyIuwGkdPiqAy1Y4e2nfYD4sA==
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrNKsWRmVeSWpSXmKPExsWy7bCmuu7KBc/jDK6c1bJ4+fMqm8Wn9ctY
-        LR68mc1mMf/IOVaLs93XGC0uPO1hszh/fgO7xc0tR1ksZpzfx2TRfX0Hm8Wr5kdsFsuP/2Oy
-        WLr1JqMDr8flvl4mjz0TT7J5LN7zkslj06pONo/u2f9YPFpO7mfx+Pj0FotH35ZVjB7Hb2xn
-        8vi8Sc6j/UA3UwB3FJdNSmpOZllqkb5dAlfGm7sLWAo6eSp2nnnF1MC4jKuLkYNDQsBE4t9d
-        6y5GLg4hgd2MEt0nZjBCOJ8YJW5vPssM4XxjlNi1YD9LFyMnWMfVKW+hEnsZJS41b2eDcN4w
-        Spw82cEMUsUmoCuxY3EbG4gtIiAssXnfW7AiZoHnTBLTnr5jAklwChhJvNrdwgpiCwvESOxs
-        fAzWzCKgKtH4bT2YzStgKXGv8QWULShxcuYTsDOYBeQltr+dwwxxkoLEz6fLWCGWOUmc3L2G
-        DaJGXOLozx6wUyUEvnBILP24jh2iwUXi+9wfUP8IS7w6vgUqLiXxsr+NHRIy2RI9u4whwjUS
-        S+cdgyq3lzhwZQ4LSAmzgKbE+l36EKv4JHp/P2GC6OSV6GgTgqhWlWh+dxWqU1piYnc3K4Tt
-        IbHp3jb2CYyKs5A8NgvJY7OQPDALYdkCRpZVjJKpBcW56anFpgXGeanlesWJucWleel6yfm5
-        mxjB6U/Lewfjowcf9A4xMnEwHmKU4GBWEuE9JP88Tog3JbGyKrUoP76oNCe1+BCjNAeLkjiv
-        0o8zcUIC6YklqdmpqQWpRTBZJg5OqQamQyffFsQIMrx4+vho23v5KzqOzB6vztp1fVlZLxl0
-        X/Nve0nRfpUilyL3fzumKBbHqWVOvlNvXX6bXWLv5tP27tdfnncq6ujiYY1bN2WGgI/Kef0c
-        Ycm96XcPs2RzHapYv+bg7G/lCfNnywuqGuqEu6UvjDY4MPexhqnah03KBtd23/S7FRFx3jss
-        d0pTAsM0ifA10ze2dwZovvRdv7WUJ/pdfdIhM72ij3MEW/1u/6+relC/NH3h+lP2V1R6jLss
-        /q0SWFJ4XjevaIGXyabcn0/FkkP7uZrvm8y+JCVbInAywcPv04I92eJ+t09ZG7ef+PdR8fq3
-        0zUpxr55Obuqn72r+dGuucr2WGryd0YlluKMREMt5qLiRAALl04q7gMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrPIsWRmVeSWpSXmKPExsWy7bCSnO6KBc/jDDp3aFm8/HmVzeLT+mWs
-        Fg/ezGazmH/kHKvF2e5rjBYXnvawWZw/v4Hd4uaWoywWM87vY7Lovr6DzeJV8yM2i+XH/zFZ
-        LN16k9GB1+NyXy+Tx56JJ9k8Fu95yeSxaVUnm0f37H8sHi0n97N4fHx6i8Wjb8sqRo/jN7Yz
-        eXzeJOfRfqCbKYA7issmJTUnsyy1SN8ugSvjzd0FLAWdPBU7z7xiamBcxtXFyMkhIWAicXXK
-        W+YuRi4OIYHdjBIHXrxggkhIS1zfOIEdwhaWWPnvOTtE0StGid3LnzKCJNgEdCV2LG5jA7FF
-        gIo273vLBlLELPCVSWLisr+MEB1bGCXaPuxiBqniFDCSeLW7hRXEFhaIkmib+xFsHYuAqkTj
-        t/VgNbwClhL3Gl9A2YISJ2c+Yeli5ACaqifRthFsMbOAvMT2t3OYIa5TkPj5dBkrxBFOEid3
-        r2GDqBGXOPqzh3kCo/AsJJNmIUyahWTSLCQdCxhZVjFKphYU56bnFhsWGOallusVJ+YWl+al
-        6yXn525iBMexluYOxu2rPugdYmTiYDzEKMHBrCTCe0j+eZwQb0piZVVqUX58UWlOavEhRmkO
-        FiVx3huFC+OEBNITS1KzU1MLUotgskwcnFINTOfqeOY/EUhj+jbdVCjr3OQvTyP/5pelzf26
-        oVdz61H37Ovf2w/n89zlNm/+IRe280v6n8S+LV4bbh9LPcS3IbPT+yTL2T9lJTP/9F2W2dN9
-        WbuHZ5/46i8zPyuIPbh5+EOC+ZbT0nLWF7bPSC/Z7Hq77oJFnHkK0+szgt5Juow79aa5LShm
-        +MWg2rfO4GNqccrxzQef2779upQ/+8KNCT4zP/TGr9WNTJni7Lixsv/XqdaF3NO+BIlM65rP
-        nup7Pv+pyJmtO25vSNLV365/48N83fCTdzcqRP/OWq17/gLHg2114l9ffV3z++veyyd3bhfb
-        vylJeYPax8vvN52dfa7pWFbC3VkvFcsPB+hpd1nvUmIpzkg01GIuKk4EAJd1RTVSAwAA
-X-CMS-MailID: 20200615162408epcas5p3c8bfc7f248fa72fd01156d39851e628d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200613052521epcas5p140d979df19fae20c858c485409596a7a
-References: <20200613024706.27975-8-alim.akhtar@samsung.com>
-        <CGME20200613052521epcas5p140d979df19fae20c858c485409596a7a@epcas5p1.samsung.com>
-        <202006131334.EEnoEaXS%lkp@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200413211550.8307-2-longman@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 adultscore=0 bulkscore=0
+ phishscore=0 malwarescore=0 spamscore=0 mlxlogscore=930 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006150134
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ clxscore=1011 mlxscore=0 mlxlogscore=944 priorityscore=1501 phishscore=0
+ malwarescore=0 suspectscore=2 spamscore=0 cotscore=-2147483648 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006150135
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Kishon,
+On Mon, Apr 13, 2020 at 05:15:49PM -0400, Waiman Long wrote:
+> diff --git a/mm/slab_common.c b/mm/slab_common.c
+> index 23c7500eea7d..c08bc7eb20bd 100644
+> --- a/mm/slab_common.c
+> +++ b/mm/slab_common.c
+> @@ -1707,17 +1707,17 @@ void *krealloc(const void *p, size_t new_size, gfp_t flags)
+>  EXPORT_SYMBOL(krealloc);
+>  
+>  /**
+> - * kzfree - like kfree but zero memory
+> + * kfree_sensitive - Clear sensitive information in memory before freeing
+>   * @p: object to free memory of
+>   *
+>   * The memory of the object @p points to is zeroed before freed.
+> - * If @p is %NULL, kzfree() does nothing.
+> + * If @p is %NULL, kfree_sensitive() does nothing.
+>   *
+>   * Note: this function zeroes the whole allocated buffer which can be a good
+>   * deal bigger than the requested buffer size passed to kmalloc(). So be
+>   * careful when using this function in performance sensitive code.
+>   */
+> -void kzfree(const void *p)
+> +void kfree_sensitive(const void *p)
+>  {
+>  	size_t ks;
+>  	void *mem = (void *)p;
+> @@ -1725,10 +1725,10 @@ void kzfree(const void *p)
+>  	if (unlikely(ZERO_OR_NULL_PTR(mem)))
+>  		return;
+>  	ks = ksize(mem);
+> -	memset(mem, 0, ks);
+> +	memzero_explicit(mem, ks);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+This is an unrelated bug fix.  It really needs to be pulled into a
+separate patch by itself and back ported to stable kernels.
 
-> -----Original Message-----
-> From: kernel test robot <lkp@intel.com>
-> All warnings (new ones prefixed by >>, old ones prefixed by <<):
-> 
-> >> drivers/phy/samsung/phy-samsung-ufs.c:47:5: warning: no previous
-> >> prototype for function 'samsung_ufs_phy_wait_for_lock_acq'
-> >> [-Wmissing-prototypes]
-> int samsung_ufs_phy_wait_for_lock_acq(struct phy *phy) ^
-> drivers/phy/samsung/phy-samsung-ufs.c:47:1: note: declare 'static' if the
-> function is not intended to be used outside of this translation unit int
-> samsung_ufs_phy_wait_for_lock_acq(struct phy *phy) ^ static
-> >> drivers/phy/samsung/phy-samsung-ufs.c:77:5: warning: no previous
-> >> prototype for function 'samsung_ufs_phy_calibrate'
-> >> [-Wmissing-prototypes]
-> int samsung_ufs_phy_calibrate(struct phy *phy) ^
-> drivers/phy/samsung/phy-samsung-ufs.c:77:1: note: declare 'static' if the
-> function is not intended to be used outside of this translation unit int
-> samsung_ufs_phy_calibrate(struct phy *phy) ^ static
-> 2 warnings generated.
-> 
-Not sure, how to handle this here, is this something that you can take care
-while applying this patch? Or
-Shell in send another patch to fix this warning reported by test robot?
-(Other patches in this series is already taken in respective tree)
+>  	kfree(mem);
+>  }
+> -EXPORT_SYMBOL(kzfree);
+> +EXPORT_SYMBOL(kfree_sensitive);
+>  
+>  /**
+>   * ksize - get the actual amount of memory allocated for a given object
 
-> ---
-> 0-DAY CI Kernel Test Service, Intel Corporation
-> https://protect2.fireeye.com/url?k=9d5936bf-c0c2cadc-9d58bdf0-
-> 0cc47a31cdbc-
-> 6ed890c1e74d92a7&q=1&u=https%3A%2F%2Flists.01.org%2Fhyperkitty%2Flist
-> %2Fkbuild-all%40lists.01.org
-
+regards,
+dan carpenter
