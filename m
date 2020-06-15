@@ -2,146 +2,119 @@ Return-Path: <SRS0=1R64=74=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D84C433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FC2C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:58:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40BFB208C7
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:58:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592247490;
-	bh=Fl5W9I2OhhgjaA4OO9wCci0K4DTcx1xK2ig/rm+EdlA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=lqIDRQbo9IE93cmGTwrhTDjTlQGx0Hh/LhxHZZFOmdZVOHfW84/ml6S9o+qgdybch
-	 eJV8XTaizb4Ut3DlLjhvabHmbvGWMlxOxjl5Ha5PZfo7f7bbqzUIFTnrO+pXlbMeOa
-	 HJndSVQMYvbqdN3GYz85NKqI+pCv617yCY15ygGc=
+	by mail.kernel.org (Postfix) with ESMTP id 0CAD7207D3
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:58:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="B79KaIJ0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731379AbgFOS6J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Jun 2020 14:58:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33596 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731179AbgFOS6J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Jun 2020 14:58:09 -0400
-Received: from gmail.com (unknown [104.132.1.76])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E678D20656;
-        Mon, 15 Jun 2020 18:58:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592247488;
-        bh=Fl5W9I2OhhgjaA4OO9wCci0K4DTcx1xK2ig/rm+EdlA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DNefsVw/lFzCGd1Dnt0NvSfDbwWAKX4ug4TOHb1HG9MuOil4WektjXPZwiIU3zn8J
-         gs6qvLj7OalE9q+U+Tb7ahO1YlBL0ysLtw/myVr1ITi5TpE74ILFZhpNBLuj9NlHAY
-         weV9C0kLnnnnXV1POZo8IE2DvyO3HkItNZZ2zF1M=
-Date:   Mon, 15 Jun 2020 11:58:06 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Steev Klimaszewski <steev@kali.org>
-Cc:     Thara Gopinath <thara.gopinath@linaro.org>,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Andy Gross <agross@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Can Guo <cang@codeaurora.org>,
-        Elliot Berman <eberman@codeaurora.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Satya Tangirala <satyat@google.com>
-Subject: Re: [RFC PATCH v4 4/4] scsi: ufs-qcom: add Inline Crypto Engine
- support
-Message-ID: <20200615185806.GC85413@gmail.com>
-References: <20200501045111.665881-1-ebiggers@kernel.org>
- <20200501045111.665881-5-ebiggers@kernel.org>
- <31fa95e5-7757-96ae-2e86-1f54959e3a6c@linaro.org>
- <20200507180435.GB236103@gmail.com>
- <20200507180838.GC236103@gmail.com>
- <150ddaaf-12ec-231e-271a-c65b1d88d30f@kali.org>
- <20200508202513.GA233206@gmail.com>
- <1aa17b19-0ca7-1ff1-b945-442e56ef942a@kali.org>
+        id S1731403AbgFOS62 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Jun 2020 14:58:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51374 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731379AbgFOS6Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 14:58:25 -0400
+Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8464CC08C5C2
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 11:58:24 -0700 (PDT)
+Received: by mail-qk1-x741.google.com with SMTP id l17so16786630qki.9
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 11:58:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ogzWVexVKpi+yf06GApbiQKLooA3A6vya/Qu53dz5sI=;
+        b=B79KaIJ0c/ww8HMtAlyFH2XjxV7yynKBJIWwJHZ+zW3YLHuCCz9Bbiwsd2WzFuQLPj
+         AFf5Hg0Lqd/XvxHRpc9Uh/4vnlvXaITDgihFpq8wunarv4UVftdSwWHlY7Zs6O9gurGh
+         IE5GaopbWKe7DlaPUx/EPeh0He+mTIL/wqUz367myp2ljsairUj+5vVlWMjYvyLYdFxp
+         yylSrzx5rdvX7s5Lrdyjcy+vzWB+YunSNoTcuzE3AgfFM4I5Skeao2I26rxVl1af8CRx
+         y19r67M7mx7zcJG+Kyz2nHe2SegGgVU7ADSwtl1Rh91OJTnONTAEuipSUQQypIEpgb9A
+         T36g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ogzWVexVKpi+yf06GApbiQKLooA3A6vya/Qu53dz5sI=;
+        b=Q1yNQ+eXCsqecxCK4WwbYhVk79VdD5oW8zYq5fPNWf0EZaX1OpyZ6uWZXsd27BLrU1
+         6TBtqDwA4rrCobKJI9ATym0aYqKEnq+KxcGYCPWe1VZs1oTUTNzIpe6DoOjo36McJraw
+         PZ4V3WsFMN3AEjjnYdNY86jXewXrw2S6sSXr1d/G6+cEMQTBcoN9oEJKpgT3nZpjDF9P
+         EvuREcSmYh8R9+6x46rrZHYD4ZKBbD/H/ktn33UJjhDfztPXvAhEzznqpB2VU7zlY0np
+         caga71+5Z7NZEYE0E7PmeEH9JRtc40X98vB5iueyXhD9ST3hjFdGolMn+hWDvC1JyCuX
+         QoJw==
+X-Gm-Message-State: AOAM533XoMSv/HYxiPhABpDI3jxXJBuX0ut9+70ZGGCl8e/MMwmhVmO1
+        nJCKcgF24fhTFZsFTuHSjK5JgA==
+X-Google-Smtp-Source: ABdhPJygSobk4Dm93WtmDBaO2t3cPn7PZD+tDnBnapk86ninzx0O9WOhG6qnekVgX9A+5fj3vrdD7Q==
+X-Received: by 2002:a37:812:: with SMTP id 18mr17402635qki.296.1592247503264;
+        Mon, 15 Jun 2020 11:58:23 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
+        by smtp.gmail.com with ESMTPSA id m13sm13228785qta.90.2020.06.15.11.58.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Jun 2020 11:58:22 -0700 (PDT)
+Received: from jgg by mlx with local (Exim 4.93)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1jkuJK-008kGo-AN; Mon, 15 Jun 2020 15:58:22 -0300
+Date:   Mon, 15 Jun 2020 15:58:22 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
+Cc:     Kieran Bingham <kieran.bingham@ideasonboard.com>,
+        linux-renesas-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-gpio@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-mtd@lists.infradead.org,
+        netdev@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
+        virtualization@lists.linux-foundation.org, linux-mm@kvack.org
+Subject: Re: [PATCH 00/17] spelling.txt: /decriptors/descriptors/
+Message-ID: <20200615185822.GA2084429@ziepe.ca>
+References: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1aa17b19-0ca7-1ff1-b945-442e56ef942a@kali.org>
+In-Reply-To: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 12, 2020 at 01:04:33PM -0500, Steev Klimaszewski wrote:
+On Tue, Jun 09, 2020 at 01:45:53PM +0100, Kieran Bingham wrote:
+> I wouldn't normally go through spelling fixes, but I caught sight of
+> this typo twice, and then foolishly grepped the tree for it, and saw how
+> pervasive it was.
 > 
-> On 5/8/20 3:25 PM, Eric Biggers wrote:
-> > On Fri, May 08, 2020 at 03:18:23PM -0500, Steev Klimaszewski wrote:
-> >> On 5/7/20 1:08 PM, Eric Biggers wrote:
-> >>> On Thu, May 07, 2020 at 11:04:35AM -0700, Eric Biggers wrote:
-> >>>> Hi Thara,
-> >>>>
-> >>>> On Thu, May 07, 2020 at 08:36:58AM -0400, Thara Gopinath wrote:
-> >>>>> On 5/1/20 12:51 AM, Eric Biggers wrote:
-> >>>>>> From: Eric Biggers <ebiggers@google.com>
-> >>>>>>
-> >>>>>> Add support for Qualcomm Inline Crypto Engine (ICE) to ufs-qcom.
-> >>>>>>
-> >>>>>> The standards-compliant parts, such as querying the crypto capabilities
-> >>>>>> and enabling crypto for individual UFS requests, are already handled by
-> >>>>>> ufshcd-crypto.c, which itself is wired into the blk-crypto framework.
-> >>>>>> However, ICE requires vendor-specific init, enable, and resume logic,
-> >>>>>> and it requires that keys be programmed and evicted by vendor-specific
-> >>>>>> SMC calls.  Make the ufs-qcom driver handle these details.
-> >>>>>>
-> >>>>>> I tested this on Dragonboard 845c, which is a publicly available
-> >>>>>> development board that uses the Snapdragon 845 SoC and runs the upstream
-> >>>>>> Linux kernel.  This is the same SoC used in the Pixel 3 and Pixel 3 XL
-> >>>>>> phones.  This testing included (among other things) verifying that the
-> >>>>>> expected ciphertext was produced, both manually using ext4 encryption
-> >>>>>> and automatically using a block layer self-test I've written.
-> >>>>> Hello Eric,
-> >>>>>
-> >>>>> I am interested in testing out this series on 845, 855 and if possile on 865
-> >>>>> platforms. Can you give me some more details about your testing please.
-> >>>>>
-> >>>> Great!  You can test this with fscrypt, a.k.a. ext4 or f2fs encryption.
-> >>>>
-> >>>> A basic manual test would be:
-> >>>>
-> >>>> 1. Build a kernel with:
-> >>>>
-> >>>> 	CONFIG_BLK_INLINE_ENCRYPTION=y
-> >>>> 	CONFIG_FS_ENCRYPTION=y
-> >>>> 	CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-> >>> Sorry, I forgot: 'CONFIG_SCSI_UFS_CRYPTO=y' is needed too.
-> >>>
-> >>> - Eric
-> >>
-> > The original patchset is at
-> > https://lkml.kernel.org/r/20200430115959.238073-1-satyat@google.com/
-> >
-> > Yes, v12 is the latest version, and yes that's a bug.  The export needs double
-> > underscores.  Satya will fix it when he sends out v13.
-> >
-> > - Eric
+> so here I am ... fixing a typo globally... but with an addition in
+> scripts/spelling.txt so it shouldn't re-appear ;-)
 > 
-> Hi Eric,
+> Cc: linux-arm-kernel@lists.infradead.org (moderated list:TI DAVINCI MACHINE SUPPORT)
+> Cc: linux-kernel@vger.kernel.org (open list)
+> Cc: linux-pm@vger.kernel.org (open list:DEVICE FREQUENCY EVENT (DEVFREQ-EVENT))
+> Cc: linux-gpio@vger.kernel.org (open list:GPIO SUBSYSTEM)
+> Cc: dri-devel@lists.freedesktop.org (open list:DRM DRIVERS)
+> Cc: linux-rdma@vger.kernel.org (open list:HFI1 DRIVER)
+> Cc: linux-input@vger.kernel.org (open list:INPUT (KEYBOARD, MOUSE, JOYSTICK, TOUCHSCREEN)...)
+> Cc: linux-mtd@lists.infradead.org (open list:NAND FLASH SUBSYSTEM)
+> Cc: netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+> Cc: ath10k@lists.infradead.org (open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER)
+> Cc: linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS))
+> Cc: linux-scsi@vger.kernel.org (open list:IBM Power Virtual FC Device Drivers)
+> Cc: linuxppc-dev@lists.ozlabs.org (open list:LINUX FOR POWERPC (32-BIT AND 64-BIT))
+> Cc: linux-usb@vger.kernel.org (open list:USB SUBSYSTEM)
+> Cc: virtualization@lists.linux-foundation.org (open list:VIRTIO CORE AND NET DRIVERS)
+> Cc: linux-mm@kvack.org (open list:MEMORY MANAGEMENT)
 > 
 > 
-> I've been testing this on a Lenovo Yoga C630 installed to a partition on
-> the UFS drive, using a 5.7(ish) kernel with fscrypt/inline-encryption
-> and a few patches on top that are still in flux for c630 support.  The
-> sources I use can be found at
-> https://github.com/steev/linux/tree/linux-5.7.y-c630-fscrypt and the
-> config I'm using can be found at
-> https://dev.gentoo.org/~steev/files/lenovo-yoga-c630-5.7.0-rc7-fs-inline-encryption.config.
-> 
-> 
-> Everything seems to be working here.  I've run the tests you've
-> mentioned and haven't seen any issues.
-> 
+> Kieran Bingham (17):
+>   arch: arm: mach-davinci: Fix trivial spelling
+>   drivers: infiniband: Fix trivial spelling
+>   drivers: infiniband: Fix trivial spelling
 
-Great!  Can I add your Tested-by when I send out this patchset again?
+I took these two RDMA patches and merged them, thanks
 
-- Eric
+Jason
