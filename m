@@ -2,262 +2,159 @@ Return-Path: <SRS0=1R64=74=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23694C433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 06:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8E6C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 07:13:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F141D206E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 06:57:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5404C20707
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 07:13:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZKAvCXrS"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="BtM+4fLs";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ndD77+6x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728507AbgFOG5f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Jun 2020 02:57:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52796 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728445AbgFOG5e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 02:57:34 -0400
-Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE00BC061A0E
-        for <linux-scsi@vger.kernel.org>; Sun, 14 Jun 2020 23:57:33 -0700 (PDT)
-Received: by mail-qk1-x72e.google.com with SMTP id w1so14784164qkw.5
-        for <linux-scsi@vger.kernel.org>; Sun, 14 Jun 2020 23:57:33 -0700 (PDT)
+        id S1728417AbgFOHNM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Jun 2020 03:13:12 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:5221 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728260AbgFOHNK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 03:13:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1592205189; x=1623741189;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=XrXQePVHQh8XpeC51qYFRMHa2ZO4E84iBpr4QqIfKvE=;
+  b=BtM+4fLsw95GPQV85Bhvjmya3rN0VEUN4fk9Bv8uFIS3BKv/IvNetDeE
+   ifpJiaL2Zo3dfN+YKdb/YI4H24/s9BSHDDi0oxdtVnwvn63tznwd02blZ
+   G2jjjdPw9VbHl/tn8v6YumhEAm37nWWBH7SEwair24WLQOh8Mp7Kg+gzR
+   TKrYO/TSIBsZz1n0bO3lJXvuZ2LrNEA9WgpxDuqZLtlTa1dlOjCkmq3qa
+   OMLVZoHnJoxJoSwPnEtouYG7tSpzgakHYv16WbT+1Vkrmnsjdaqukddkv
+   qHH68nuS5tmcxaRmgrWaFFktQpgvv8bWMM0V/5ZkK7WhPZFSUn81hJaSK
+   Q==;
+IronPort-SDR: V6F6tanRWsI22vjGKM0iFubq3FktLsSqdLJ5gYxyyVJmIWq0GwVYEOJELlvfbHPdzwCsYXVtXy
+ 9XvO4zVy8uil30Rd82oysPHLUwzwu3Ik3usCM30n69whwIJIgc5mWsk00anwMgek5+jI4L1T0n
+ fTYWTlTy3NCSBI6mk6mHBVsKeqtat5I4d3+WeSiyMzc/DMerJgMYYfDnwigY8gOHQyTFE/n2cS
+ Lu4PQ7pBWMqY5TMqmvEu45xl8bu3Apq94Lw7ExtKKYOOMWpq4380eBCdOlhGx3wjUug5OtaGTd
+ 0Ao=
+X-IronPort-AV: E=Sophos;i="5.73,514,1583164800"; 
+   d="scan'208";a="141394461"
+Received: from mail-mw2nam10lp2107.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.107])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Jun 2020 15:13:07 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ccoDHVjRUDPmZkSvo0yDV7zuaYlgVtxTTqKLkdDoC8Ie2e6EG8F5muJz+mJ4mHOMB7AHRnSEqFeDPLh5eAVTWojmsQ66pzYHNrq6+xWiZa4yXZuJf0+xgVnT2IEhhyl4fxu98orRFH9rJEhENCeM8lMPkm4WovtW5LK8cWR9HY/sqRcQPFymgLtqE9PoU9s8gpGZs2zb1Nj/87lbSKmb7IP/WSOv404xEepfjw6rt6gB/0rYp34BpzXW+pIYFK1EP+m0mG+IjObQtGY61UPZQBgOg696Q5TXRrrRo/Z6dF95SKJqb99ZRs5voosxaN00sJNMaKcSlqYVCqz12ZVwyg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HDjza1bFlTensGY0L822yDbavh470DuLXjk7QvBLp7s=;
+ b=XKSqKxzVLfRsKqY3kL6wIYd2z9eQ5EFB1m9eV43Y16QgIuVTy3OlHwO+t2CULEk8+czL8dElI+baqwaegY7g8wvImyFdcil37KvFxAy1vUsLWj6UzDFUs6B1UMc1DVb6OMBPyZ+Wi42XaBf1/OroiP/cDIycGf5N7wlApstCUTKFlI5fPlvQjOvURoDf6OsnHc1b00iOUplv7tbXSefobJjHtywsqzh0OO36x304wzEB23DQfdrzXS1E/teFkS0DjjTFux7iAQdDaXjvxKZ9zuD9G2IMobr5yRxwAGNozgYjF3h94V+d+K7HLJDNnm+99chdo/uTsXVIr3K1bojF2A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=sAlar1NihVVApceAMxEoWLgMWkjXJ9kYnLmHd1yzj9A=;
-        b=ZKAvCXrSYsY/bqiE4rb6UG3lU4Er7hCdeWESRBZVBkTpdNUCJZhhLRayMf0GSHzKnK
-         8pT4Uf31J4hRgir/hQ4qBLDXIWZC95lrgbSv4fK0KuGQMTXsU8J24kl0P5qsQ+T2m9LG
-         9q087jqb1sm60Or+h3H2YFhqTQFqQywCdFi0Y=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=sAlar1NihVVApceAMxEoWLgMWkjXJ9kYnLmHd1yzj9A=;
-        b=peDuJwJRSpi05EifYOHLzpWgXeQpXEZQOWg6rQZ8QlsmS4zThh0d2dqyXtTKb6T9Nh
-         0AEQUlss4sk6rjhV532h+TnNFDjUbLKvcTtdhHLKViwvnzYuYo+tLFbtbJJnsX/gq/AT
-         XvBmEyUd4EAfYFNKU2Km9Bedx1WikWFqkCKWWBp3SJ5gr77UnkfgFAKdz6Ngq+Jw9O0r
-         pl2PukYoP4zrAsXcqwrE/CwbhX3x+WE4OuS3fTNr8/lSQK0a/WuzdhtviOeDHL7MJ7w+
-         oUC1Wp3gTz2sMehgsbradF8ug2LBDcv5r10sihnunsG/x2j5jv8MVVoSccgC8AM3aHSt
-         TN5g==
-X-Gm-Message-State: AOAM531W7AxCm/uvI40BflM/7gsLRlFJmXLocaL+vCHLt5cJ0YRDvtmb
-        9f+vWKieu9g5Zql7RBtyG1r6oVtUcKYTQ7MLDp8h8A==
-X-Google-Smtp-Source: ABdhPJzBHtqx5pr6g2UkSRht7mswIlfn8JqOJ+c4w/7aV4xJstGn6XyTlfTktLt/3s2lpUPPiR9GA33ejCpTG/VTZtY=
-X-Received: by 2002:ae9:e813:: with SMTP id a19mr13897734qkg.264.1592204252936;
- Sun, 14 Jun 2020 23:57:32 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <20200611030708.GB453671@T590> <c033f445-97fd-6dc9-c270-9890681b39d9@huawei.com>
- <bbdec3b3fbeb9907d2ec66a2afa56c29@mail.gmail.com> <20200615021355.GA4012@T590>
-In-Reply-To: <20200615021355.GA4012@T590>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HDjza1bFlTensGY0L822yDbavh470DuLXjk7QvBLp7s=;
+ b=ndD77+6x8Gj9/w5HTom1w8yIrV2RDO647+/TeYuhMPRYqqedl/M9kk6dYumE7zUzEr0YgRXwf6meF4mYIner1GYLI1c9uCwKZsYK5pEEN02vlVOPVZcotgbSHK0//HL69Fe48VUSSLyG1QK0Mgulni8H3fApPQEcCLPO7aa2FKw=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (52.135.119.19) by
+ SN6PR04MB4574.namprd04.prod.outlook.com (52.135.120.76) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3088.18; Mon, 15 Jun 2020 07:13:04 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3088.028; Mon, 15 Jun 2020
+ 07:13:04 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
+CC:     "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
+        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
+        "cc.chou@mediatek.com" <cc.chou@mediatek.com>,
+        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>
+Subject: RE: [PATCH v2 2/2] scsi: ufs: Add trace event for UIC commands
+Thread-Topic: [PATCH v2 2/2] scsi: ufs: Add trace event for UIC commands
+Thread-Index: AQHWQuDrRUZ57LvD6kiE43KBKdsIrajZQg/Q
+Date:   Mon, 15 Jun 2020 07:13:04 +0000
+Message-ID: <SN6PR04MB46400CE00A5CAF16CE4D4367FC9C0@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200615064753.20935-1-stanley.chu@mediatek.com>
+ <20200615064753.20935-3-stanley.chu@mediatek.com>
+In-Reply-To: <20200615064753.20935-3-stanley.chu@mediatek.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: mediatek.com; dkim=none (message not signed)
+ header.d=none;mediatek.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [212.25.79.133]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: a1ea8bc6-3310-421d-90dd-08d810fb8c0d
+x-ms-traffictypediagnostic: SN6PR04MB4574:
+x-microsoft-antispam-prvs: <SN6PR04MB457447B792F0ED634E2F58C0FC9C0@SN6PR04MB4574.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:3173;
+x-forefront-prvs: 04359FAD81
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: Eizy1Ex9jEY46HVldKsKB7r6rbPtlNTxkYHKq9KlhDiyC5Hxy+5kyBLZIcG3XstvXkI/RZm4c320gzOw/qm1qU3u2UalKiwHOLCw6eCPEnx6d4RvphVs1gQIaybQbAQF5ldNQvGWPYecvgeZXTpmss/TVO1FC0UqGqHXlXmoTBExp3FvFf76TS8sHwAbLfg5zMx9RMmNa75JfF8fX8PuJd4nYs6Si3AM6GurwaDVPV7M3e0XQqS+8slAt6lEGy00X0EzPUuja+mbBB60n4nqbV3AZhb5Fr2cHIzdHF/zniFp0uOrsUS9to6qpGS69o8ED1r4L0SzaaTaB8VL4xr9eA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(136003)(346002)(366004)(39860400002)(376002)(4744005)(86362001)(7416002)(9686003)(52536014)(5660300002)(55016002)(4326008)(478600001)(110136005)(54906003)(33656002)(316002)(2906002)(7696005)(186003)(6506007)(26005)(66446008)(8676002)(66476007)(8936002)(66946007)(71200400001)(76116006)(66556008)(64756008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: bDCGYeHlK9I0yEPEXZG8XcsMyM7h102qMEcxN4AIEgVh+1mmGwulJFzn2VL+QJfjjDLGKefG54oqcVNDvyCmikfUd/hll15XHyIs1CqAAvw73RcWzxpYHxE4kimKL9f8t8F4yQUzWNPHPQd2Z75gIUjaO51N9/aM+Qx977U24oFE4DFlIC/zgR9LIBxp8Gl65D94I5t5I7cjQvefQ491c5sZ4GpgaiRwC0kavnoC2xrMyE5Y55Alffw1smsv9Yvorxz1M03t/XAbJbolUO+v+22An5xVIX2n+FPRwWBKc1rCMNCEa91kdBxcHBTJHrXoc5IiWngnLz0ceixMqHvl1O/cqaohM2lPqLhnTqxsry4ziwxWOuwsK54W+21+vnvFNWhoG5olRJctTMe6F641Zg2JsTGILZ4L7Ayt3By8DXnpWpfcyXHYH+KFxih2D3FNKZBMUh3Kd7jAoOjHQdbb+YCu4rdEX65YnqlOPJpQCX8=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQBVjmvxAE7FMYb7GtMRWGcwtMcECgGaerxUAVTJvjECMFFU0QGrq6Usq6RLEnA=
-Date:   Mon, 15 Jun 2020 12:27:30 +0530
-Message-ID: <e49f164d867b53fd4495f1e05a85df03@mail.gmail.com>
-Subject: RE: [PATCH RFC v7 00/12] blk-mq/scsi: Provide hostwide shared tags
- for SCSI HBAs
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1ea8bc6-3310-421d-90dd-08d810fb8c0d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jun 2020 07:13:04.4060
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CYUqtGUueEYCxrSz2Ykj3KVC+FXeAOQ7jUWkGN5ZqTr7nb1B9dN2uOrkf6OhEDsj39Ki7dmd61/QXBqWk6aqPQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4574
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >
-> > John -
-> >
-> > I tried V7 series and debug further on mq-deadline interface. This
-> > time I have used another setup since HDD based setup is not readily
-> > available for me.
-> > In fact, I was able to simulate issue very easily using single
-> > scsi_device as well. BTW, this is not an issue with this RFC, but
-generic issue.
-> > Since I have converted nr_hw_queue > 1 for Broadcom product using this
-> > RFC, It becomes noticeable now.
-> >
-> > Problem - Using below command  I see heavy CPU utilization on "
-> > native_queued_spin_lock_slowpath". This is because kblockd work queue
-> > is submitting IO from all the CPUs even though fio is bound to single
-CPU.
-> > Lock contention from " dd_dispatch_request" is causing this issue.
-> >
-> > numactl -C 13  fio
-> > single.fio --iodepth=32 --bs=4k --rw=randread --ioscheduler=none
-> > --numjobs=1  --cpus_allowed_policy=split --ioscheduler=mq-deadline
-> > --group_reporting --filename=/dev/sdd
-> >
-> > While running above command, ideally we expect only kworker/13 to be
-> active.
-> > But you can see below - All the CPU is attempting submission and lots
-> > of CPU consumption is due to lock contention.
-> >
-> >   PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+
-COMMAND
-> >  2726 root       0 -20       0      0      0 R  56.5  0.0   0:53.20
-> > kworker/13:1H-k
-> >  7815 root      20   0  712404  15536   2228 R  43.2  0.0   0:05.03
-fio
-> >  2792 root       0 -20       0      0      0 I  26.6  0.0   0:22.19
-> > kworker/18:1H-k
-> >  2791 root       0 -20       0      0      0 I  19.9  0.0   0:17.17
-> > kworker/19:1H-k
-> >  1419 root       0 -20       0      0      0 I  19.6  0.0   0:17.03
-> > kworker/20:1H-k
-> >  2793 root       0 -20       0      0      0 I  18.3  0.0   0:15.64
-> > kworker/21:1H-k
-> >  1424 root       0 -20       0      0      0 I  17.3  0.0   0:14.99
-> > kworker/22:1H-k
-> >  2626 root       0 -20       0      0      0 I  16.9  0.0   0:14.68
-> > kworker/26:1H-k
-> >  2794 root       0 -20       0      0      0 I  16.9  0.0   0:14.87
-> > kworker/23:1H-k
-> >  2795 root       0 -20       0      0      0 I  16.9  0.0   0:14.81
-> > kworker/24:1H-k
-> >  2797 root       0 -20       0      0      0 I  16.9  0.0   0:14.62
-> > kworker/27:1H-k
-> >  1415 root       0 -20       0      0      0 I  16.6  0.0   0:14.44
-> > kworker/30:1H-k
-> >  2669 root       0 -20       0      0      0 I  16.6  0.0   0:14.38
-> > kworker/31:1H-k
-> >  2796 root       0 -20       0      0      0 I  16.6  0.0   0:14.74
-> > kworker/25:1H-k
-> >  2799 root       0 -20       0      0      0 I  16.6  0.0   0:14.56
-> > kworker/28:1H-k
-> >  1425 root       0 -20       0      0      0 I  16.3  0.0   0:14.21
-> > kworker/34:1H-k
-> >  2746 root       0 -20       0      0      0 I  16.3  0.0   0:14.33
-> > kworker/32:1H-k
-> >  2798 root       0 -20       0      0      0 I  16.3  0.0   0:14.50
-> > kworker/29:1H-k
-> >  2800 root       0 -20       0      0      0 I  16.3  0.0   0:14.27
-> > kworker/33:1H-k
-> >  1423 root       0 -20       0      0      0 I  15.9  0.0   0:14.10
-> > kworker/54:1H-k
-> >  1784 root       0 -20       0      0      0 I  15.9  0.0   0:14.03
-> > kworker/55:1H-k
-> >  2801 root       0 -20       0      0      0 I  15.9  0.0   0:14.15
-> > kworker/35:1H-k
-> >  2815 root       0 -20       0      0      0 I  15.9  0.0   0:13.97
-> > kworker/56:1H-k
-> >  1484 root       0 -20       0      0      0 I  15.6  0.0   0:13.90
-> > kworker/57:1H-k
-> >  1485 root       0 -20       0      0      0 I  15.6  0.0   0:13.82
-> > kworker/59:1H-k
-> >  1519 root       0 -20       0      0      0 I  15.6  0.0   0:13.64
-> > kworker/62:1H-k
-> >  2315 root       0 -20       0      0      0 I  15.6  0.0   0:13.87
-> > kworker/58:1H-k
-> >  2627 root       0 -20       0      0      0 I  15.6  0.0   0:13.69
-> > kworker/61:1H-k
-> >  2816 root       0 -20       0      0      0 I  15.6  0.0   0:13.75
-> > kworker/60:1H-k
-> >
-> >
-> > I root cause this issue -
-> >
-> > Block layer always queue IO on hctx context mapped to CPU-13, but hw
-> > queue run from all the hctx context.
-> > I noticed in my test hctx48 has queued all the IOs. No other hctx has
-> > queued IO. But all the hctx is counting for "run".
-> >
-> > # cat hctx48/queued
-> > 2087058
-> >
-> > #cat hctx*/run
-> > 151318
-> > 30038
-> > 83110
-> > 50680
-> > 69907
-> > 60391
-> > 111239
-> > 18036
-> > 33935
-> > 91648
-> > 34582
-> > 22853
-> > 61286
-> > 19489
-> >
-> > Below patch has fix - "Run the hctx queue for which request was
-> > completed instead of running all the hardware queue."
-> > If this looks valid fix, please include in V8 OR I can post separate
-> > patch for this. Just want to have some level of review from this
-discussion.
-> >
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c index
-> > 0652acd..f52118f 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -554,6 +554,7 @@ static bool scsi_end_request(struct request *req,
-> > blk_status_t error,
-> >         struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-> >         struct scsi_device *sdev = cmd->device;
-> >         struct request_queue *q = sdev->request_queue;
-> > +       struct blk_mq_hw_ctx *mq_hctx = req->mq_hctx;
-> >
-> >         if (blk_update_request(req, error, bytes))
-> >                 return true;
-> > @@ -595,7 +596,8 @@ static bool scsi_end_request(struct request *req,
-> > blk_status_t error,
-> >             !list_empty(&sdev->host->starved_list))
-> >                 kblockd_schedule_work(&sdev->requeue_work);
-> >         else
-> > -               blk_mq_run_hw_queues(q, true);
-> > +               blk_mq_run_hw_queue(mq_hctx, true);
-> > +               //blk_mq_run_hw_queues(q, true);
->
-> This way may cause IO hang because ->device_busy is shared by all hctxs.
+>         /* Write UIC Cmd */
+>         ufshcd_writel(hba, uic_cmd->command & COMMAND_OPCODE_MASK,
+>                       REG_UIC_COMMAND);
+> @@ -4825,11 +4847,15 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct
+> ufs_hba *hba, u32 intr_status)
+>                         ufshcd_get_uic_cmd_result(hba);
+>                 hba->active_uic_cmd->argument3 =3D
+>                         ufshcd_get_dme_attr_val(hba);
+> +               ufshcd_add_uic_command_trace(hba, hba->active_uic_cmd,
+> +                                            "complete");
+>                 complete(&hba->active_uic_cmd->done);
+>                 retval =3D IRQ_HANDLED;
+>         }
+>=20
+>         if ((intr_status & UFSHCD_UIC_PWR_MASK) && hba->uic_async_done) {
+> +               ufshcd_add_uic_command_trace(hba, hba->active_uic_cmd,
+> +                                            "complete");
+>                 complete(hba->uic_async_done);
+>                 retval =3D IRQ_HANDLED;
 
-From SCSI stack, if we attempt to run all h/w queue, is it possible that
-block layer actually run hw_queue which has really not queued any IO.
-Currently, in case of mq-deadline, IOS are inserted using
-"dd_insert_request". This function will add IOs on elevator data which is
-per request queue and not per hctx.
-When there is an attempt to run hctx, "blk_mq_sched_has_work" will check
-pending work which is per request queue and not per hctx.
-Because of this, IOs queued on only one hctx will be run from all the hctx
-and this will create unnecessary lock contention.
 
-How about below patch - ?
-
-diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
-index 126021f..1d30bd3 100644
---- a/block/blk-mq-sched.h
-+++ b/block/blk-mq-sched.h
-@@ -74,6 +74,13 @@ static inline bool blk_mq_sched_has_work(struct
-blk_mq_hw_ctx *hctx)
- {
-        struct elevator_queue *e = hctx->queue->elevator;
-
-+       /* If current hctx has not queued any request, there is no need to
-run.
-+        * blk_mq_run_hw_queue() on hctx which has queued IO will handle
-+        * running specific hctx.
-+        */
-+       if (!hctx->queued)
-+               return false;
-+
-        if (e && e->type->ops.has_work)
-                return e->type->ops.has_work(hctx);
-
-Kashyap
-
->
-> Thanks,
-> Ming
+Why not call ufshcd_add_uic_command_trace once if retval =3D=3D IRQ_HANDLED=
+?
+Is it that the exact timestamp?
