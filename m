@@ -2,119 +2,122 @@ Return-Path: <SRS0=1R64=74=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FC2C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:58:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3DD3C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 19:07:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CAD7207D3
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 18:58:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DC64207D3
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Jun 2020 19:07:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="B79KaIJ0"
+	dkim=pass (2048-bit key) header.d=kali.org header.i=@kali.org header.b="WNJIIb/L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731403AbgFOS62 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Jun 2020 14:58:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51374 "EHLO
+        id S1731431AbgFOTHa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Jun 2020 15:07:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731379AbgFOS6Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 14:58:25 -0400
-Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8464CC08C5C2
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 11:58:24 -0700 (PDT)
-Received: by mail-qk1-x741.google.com with SMTP id l17so16786630qki.9
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 11:58:24 -0700 (PDT)
+        with ESMTP id S1731429AbgFOTH2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jun 2020 15:07:28 -0400
+Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E80B1C08C5C3
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 12:07:27 -0700 (PDT)
+Received: by mail-ot1-x341.google.com with SMTP id v13so13970936otp.4
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2020 12:07:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ogzWVexVKpi+yf06GApbiQKLooA3A6vya/Qu53dz5sI=;
-        b=B79KaIJ0c/ww8HMtAlyFH2XjxV7yynKBJIWwJHZ+zW3YLHuCCz9Bbiwsd2WzFuQLPj
-         AFf5Hg0Lqd/XvxHRpc9Uh/4vnlvXaITDgihFpq8wunarv4UVftdSwWHlY7Zs6O9gurGh
-         IE5GaopbWKe7DlaPUx/EPeh0He+mTIL/wqUz367myp2ljsairUj+5vVlWMjYvyLYdFxp
-         yylSrzx5rdvX7s5Lrdyjcy+vzWB+YunSNoTcuzE3AgfFM4I5Skeao2I26rxVl1af8CRx
-         y19r67M7mx7zcJG+Kyz2nHe2SegGgVU7ADSwtl1Rh91OJTnONTAEuipSUQQypIEpgb9A
-         T36g==
+        d=kali.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=gkisYoqPUHl9LL0bMseRIRvV+9UIa3Tr6nRZ75os/94=;
+        b=WNJIIb/LEdiABSPWau+fuOw7xHs2zDQrgqhRIJqIcPdHFpFDXr/7kVCm6XFrZYNotm
+         9x69N7NIXg6LueAOyHhTUs3Q8bI5Yfv4Cz6dJSP2upRHyQUgb3i3opKO/7ZRNTwlsjt9
+         AdF6N+T9WDDaBaVhGjx5C5GGkc/um765axhNEADTEDRPHwWiIIUY0VwyqyOc9Y0Ip+su
+         mq/XWN0vU+gX+2JLCiqqEroKy55EkDL2CeaaPpd+y+fMYSu2NzB2tpcTwJ3Hzx2o634c
+         jBCCtc6J3EgGtpmNxMpR9+LW6CZzbwiMSlJLx8RQ2+XI1KXKhpD29fZL3ibYbBZkSqxY
+         8KwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ogzWVexVKpi+yf06GApbiQKLooA3A6vya/Qu53dz5sI=;
-        b=Q1yNQ+eXCsqecxCK4WwbYhVk79VdD5oW8zYq5fPNWf0EZaX1OpyZ6uWZXsd27BLrU1
-         6TBtqDwA4rrCobKJI9ATym0aYqKEnq+KxcGYCPWe1VZs1oTUTNzIpe6DoOjo36McJraw
-         PZ4V3WsFMN3AEjjnYdNY86jXewXrw2S6sSXr1d/G6+cEMQTBcoN9oEJKpgT3nZpjDF9P
-         EvuREcSmYh8R9+6x46rrZHYD4ZKBbD/H/ktn33UJjhDfztPXvAhEzznqpB2VU7zlY0np
-         caga71+5Z7NZEYE0E7PmeEH9JRtc40X98vB5iueyXhD9ST3hjFdGolMn+hWDvC1JyCuX
-         QoJw==
-X-Gm-Message-State: AOAM533XoMSv/HYxiPhABpDI3jxXJBuX0ut9+70ZGGCl8e/MMwmhVmO1
-        nJCKcgF24fhTFZsFTuHSjK5JgA==
-X-Google-Smtp-Source: ABdhPJygSobk4Dm93WtmDBaO2t3cPn7PZD+tDnBnapk86ninzx0O9WOhG6qnekVgX9A+5fj3vrdD7Q==
-X-Received: by 2002:a37:812:: with SMTP id 18mr17402635qki.296.1592247503264;
-        Mon, 15 Jun 2020 11:58:23 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
-        by smtp.gmail.com with ESMTPSA id m13sm13228785qta.90.2020.06.15.11.58.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jun 2020 11:58:22 -0700 (PDT)
-Received: from jgg by mlx with local (Exim 4.93)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1jkuJK-008kGo-AN; Mon, 15 Jun 2020 15:58:22 -0300
-Date:   Mon, 15 Jun 2020 15:58:22 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
-Cc:     Kieran Bingham <kieran.bingham@ideasonboard.com>,
-        linux-renesas-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-gpio@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-mtd@lists.infradead.org,
-        netdev@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org
-Subject: Re: [PATCH 00/17] spelling.txt: /decriptors/descriptors/
-Message-ID: <20200615185822.GA2084429@ziepe.ca>
-References: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=gkisYoqPUHl9LL0bMseRIRvV+9UIa3Tr6nRZ75os/94=;
+        b=c8ZfSVdjyEDkk98awrigYHzlKXWC3gJx3GRi5KgnulP8FNpxhTyh5eIpwWjrZBpxW6
+         ZxplA0UWoMVHab8bxgk9VAXH0voBlZahCjV93hE8c7zt3oVAmgHX8uBc27Ytr66LPj3C
+         Ke/ojY2j+GgBV4keXcNvYZHu72F+lpeujA+LEun8eDU3VPAnBhDlIH+7QawAXfYVdWXE
+         eZVvSa14udecpAW7b8zdde0njg6BnUWKXNDb6YuCWIDii3BNuK+Iml1dOEqn9up/K9Qs
+         zHqNxUFMkpKPmuqbFsBa7CSQ2CDZV+b1KdYuDdtGIE9mcgOznCKEBZroXSMHIM8GSX1y
+         TnHQ==
+X-Gm-Message-State: AOAM531S484YVPp/iLaq4mrCb0EKCdr5QU2Js2sbdrZGYPoGIyGjdJqZ
+        +hD0jYBhCUWs5iIsSl5w3VgzSw==
+X-Google-Smtp-Source: ABdhPJwfv5W3EVhFyjfklabyBQ0AqghguZeeODyksn4WYKzWBKXJnT04Z0JIf4XQp9S7QAPcJb+NnA==
+X-Received: by 2002:a9d:a14:: with SMTP id 20mr23869540otg.292.1592248047094;
+        Mon, 15 Jun 2020 12:07:27 -0700 (PDT)
+Received: from Steevs-MBP.hackershack.net (cpe-173-175-113-3.satx.res.rr.com. [173.175.113.3])
+        by smtp.gmail.com with ESMTPSA id z7sm3484098oto.2.2020.06.15.12.07.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 15 Jun 2020 12:07:26 -0700 (PDT)
+Subject: Re: [RFC PATCH v4 4/4] scsi: ufs-qcom: add Inline Crypto Engine
+ support
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Thara Gopinath <thara.gopinath@linaro.org>,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Andy Gross <agross@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Satya Tangirala <satyat@google.com>
+References: <20200501045111.665881-1-ebiggers@kernel.org>
+ <20200501045111.665881-5-ebiggers@kernel.org>
+ <31fa95e5-7757-96ae-2e86-1f54959e3a6c@linaro.org>
+ <20200507180435.GB236103@gmail.com> <20200507180838.GC236103@gmail.com>
+ <150ddaaf-12ec-231e-271a-c65b1d88d30f@kali.org>
+ <20200508202513.GA233206@gmail.com>
+ <1aa17b19-0ca7-1ff1-b945-442e56ef942a@kali.org>
+ <20200615185806.GC85413@gmail.com>
+From:   Steev Klimaszewski <steev@kali.org>
+Message-ID: <dc735157-77a2-34a3-12c2-5fe060afa153@kali.org>
+Date:   Mon, 15 Jun 2020 14:07:25 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
+In-Reply-To: <20200615185806.GC85413@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 09, 2020 at 01:45:53PM +0100, Kieran Bingham wrote:
-> I wouldn't normally go through spelling fixes, but I caught sight of
-> this typo twice, and then foolishly grepped the tree for it, and saw how
-> pervasive it was.
-> 
-> so here I am ... fixing a typo globally... but with an addition in
-> scripts/spelling.txt so it shouldn't re-appear ;-)
-> 
-> Cc: linux-arm-kernel@lists.infradead.org (moderated list:TI DAVINCI MACHINE SUPPORT)
-> Cc: linux-kernel@vger.kernel.org (open list)
-> Cc: linux-pm@vger.kernel.org (open list:DEVICE FREQUENCY EVENT (DEVFREQ-EVENT))
-> Cc: linux-gpio@vger.kernel.org (open list:GPIO SUBSYSTEM)
-> Cc: dri-devel@lists.freedesktop.org (open list:DRM DRIVERS)
-> Cc: linux-rdma@vger.kernel.org (open list:HFI1 DRIVER)
-> Cc: linux-input@vger.kernel.org (open list:INPUT (KEYBOARD, MOUSE, JOYSTICK, TOUCHSCREEN)...)
-> Cc: linux-mtd@lists.infradead.org (open list:NAND FLASH SUBSYSTEM)
-> Cc: netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-> Cc: ath10k@lists.infradead.org (open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER)
-> Cc: linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS))
-> Cc: linux-scsi@vger.kernel.org (open list:IBM Power Virtual FC Device Drivers)
-> Cc: linuxppc-dev@lists.ozlabs.org (open list:LINUX FOR POWERPC (32-BIT AND 64-BIT))
-> Cc: linux-usb@vger.kernel.org (open list:USB SUBSYSTEM)
-> Cc: virtualization@lists.linux-foundation.org (open list:VIRTIO CORE AND NET DRIVERS)
-> Cc: linux-mm@kvack.org (open list:MEMORY MANAGEMENT)
-> 
-> 
-> Kieran Bingham (17):
->   arch: arm: mach-davinci: Fix trivial spelling
->   drivers: infiniband: Fix trivial spelling
->   drivers: infiniband: Fix trivial spelling
 
-I took these two RDMA patches and merged them, thanks
+On 6/15/20 1:58 PM, Eric Biggers wrote:
+>
+>> Hi Eric,
+>>
+>>
+>> I've been testing this on a Lenovo Yoga C630 installed to a partition on
+>> the UFS drive, using a 5.7(ish) kernel with fscrypt/inline-encryption
+>> and a few patches on top that are still in flux for c630 support.  The
+>> sources I use can be found at
+>> https://github.com/steev/linux/tree/linux-5.7.y-c630-fscrypt and the
+>> config I'm using can be found at
+>> https://dev.gentoo.org/~steev/files/lenovo-yoga-c630-5.7.0-rc7-fs-inline-encryption.config.
+>>
+>>
+>> Everything seems to be working here.  I've run the tests you've
+>> mentioned and haven't seen any issues.
+>>
+> Great!  Can I add your Tested-by when I send out this patchset again?
+>
+> - Eric
 
-Jason
+
+Absolutely.  Tested-By: Steev Klimaszewski <steev@kali.org> is preferred
+
