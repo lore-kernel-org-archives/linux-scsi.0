@@ -2,152 +2,116 @@ Return-Path: <SRS0=Wxou=75=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DEDBC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 13:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC02C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 14:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CDB22098B
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 13:05:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DrTWSdc5"
+	by mail.kernel.org (Postfix) with ESMTP id 9EBAC20810
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 14:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728908AbgFPNF1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Jun 2020 09:05:27 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:55002 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728825AbgFPNFV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2020 09:05:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592312719;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7nZX/JZoMn+I5qsocsgLqRgQUtpNpbf+EHIybmwJtOc=;
-        b=DrTWSdc51IgcrjaAMEbVTNIUuwKk9tbvc65esaiRUfyf6HC89eIAFP1HkgIwMQcloe71Zx
-        ZrZ3XJ+4bVa1pDQj6zbc3JfNAKPe4H+gjkeZq/QkWFjQYfqmOgahNwU+1FLrUPHDaDY0YO
-        F6zs7fjkWicjD+JvfM+fl05yhD3NjX8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-395-9xOyBG-QPzmPq6osX1JXvA-1; Tue, 16 Jun 2020 09:05:14 -0400
-X-MC-Unique: 9xOyBG-QPzmPq6osX1JXvA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 108C8107B7CB;
-        Tue, 16 Jun 2020 13:05:07 +0000 (UTC)
-Received: from llong.remote.csb (ovpn-114-156.rdu2.redhat.com [10.10.114.156])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3337D5D9E4;
-        Tue, 16 Jun 2020 13:05:01 +0000 (UTC)
-Subject: Re: [PATCH v4 1/3] mm/slab: Use memzero_explicit() in kzfree()
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        David Sterba <dsterba@suse.cz>,
-        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org, stable@vger.kernel.org
-References: <20200616015718.7812-1-longman@redhat.com>
- <20200616015718.7812-2-longman@redhat.com>
- <20200616033035.GB902@sol.localdomain>
-From:   Waiman Long <longman@redhat.com>
-Organization: Red Hat
-Message-ID: <56c2304c-73cc-8f48-d8d0-5dd6c39f33f3@redhat.com>
-Date:   Tue, 16 Jun 2020 09:05:00 -0400
+        id S1729110AbgFPOJA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Jun 2020 10:09:00 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:45949 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728694AbgFPOI7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2020 10:08:59 -0400
+Received: by mail-pf1-f196.google.com with SMTP id a127so9542583pfa.12;
+        Tue, 16 Jun 2020 07:08:58 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=AKN3xkZHGhXjYJKtlU4bgJbg4Zua5Zr3wZEUnZukPYA=;
+        b=aGxWrg5dyM347YefqTVYxNppvCCJSdOylSUBtYVbTtkOydAGgIkC9auC3E5sEiQYbM
+         VM6kPivn9sEgPyMz8g5mjz/RNHW937W5hObA6xBDFC3zbVLlHfp69ADySoiKvbnPSpIB
+         XvOSMPppx6ADT7jHgfgI/4WY7LMjiZ+X4td98HCf77kpRlXZlor/cDgXu6Qzqffe0Lkp
+         bytd14hwPd1rbUxadjpdrIkJpxOwK8JuQirrH3cXW+iMA0My477eXF/VY5a0KWohOI9i
+         1A4cjk1qABzJ+fkWKF7Aopb21NkUpyhwoECF3NZidfD9T2M6ne9gWGBPEmgYBGt4xAs6
+         z0tw==
+X-Gm-Message-State: AOAM533N5ed2bUyppVZJkcSqyYaPlomQXrsht5ZhTXfbSPKXcNZKw7+i
+        rQ5RB48UdaD3UUJoKTvD5Y0=
+X-Google-Smtp-Source: ABdhPJxvqeA4mS5CbWAq1QTTwdI4aDes22DBvQ2QH1b3ZgxqJ9QrlXi1rvpXsrtOZCUi914rTc490Q==
+X-Received: by 2002:a63:7d1d:: with SMTP id y29mr2222280pgc.189.1592316537850;
+        Tue, 16 Jun 2020 07:08:57 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id fy21sm2702187pjb.38.2020.06.16.07.08.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 16 Jun 2020 07:08:56 -0700 (PDT)
+Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
+To:     Finn Thain <fthain@telegraphics.com.au>, Chris Boot <bootc@boo.tc>
+Cc:     linuxppc-dev@lists.ozlabs.org, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>
+References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com>
+ <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet>
+ <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc>
+ <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
+ <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc>
+ <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org>
+Date:   Tue, 16 Jun 2020 07:08:40 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <20200616033035.GB902@sol.localdomain>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/15/20 11:30 PM, Eric Biggers wrote:
-> On Mon, Jun 15, 2020 at 09:57:16PM -0400, Waiman Long wrote:
->> The kzfree() function is normally used to clear some sensitive
->> information, like encryption keys, in the buffer before freeing it back
->> to the pool. Memset() is currently used for the buffer clearing. However,
->> it is entirely possible that the compiler may choose to optimize away the
->> memory clearing especially if LTO is being used. To make sure that this
->> optimization will not happen, memzero_explicit(), which is introduced
->> in v3.18, is now used in kzfree() to do the clearing.
->>
->> Fixes: 3ef0e5ba4673 ("slab: introduce kzfree()")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   mm/slab_common.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/mm/slab_common.c b/mm/slab_common.c
->> index 9e72ba224175..37d48a56431d 100644
->> --- a/mm/slab_common.c
->> +++ b/mm/slab_common.c
->> @@ -1726,7 +1726,7 @@ void kzfree(const void *p)
->>   	if (unlikely(ZERO_OR_NULL_PTR(mem)))
->>   		return;
->>   	ks = ksize(mem);
->> -	memset(mem, 0, ks);
->> +	memzero_explicit(mem, ks);
->>   	kfree(mem);
->>   }
->>   EXPORT_SYMBOL(kzfree);
-> This is a good change, but the commit message isn't really accurate.  AFAIK, no
-> one has found any case where this memset() gets optimized out.  And even with
-> LTO, it would be virtually impossible due to all the synchronization and global
-> data structures that kfree() uses.  (Remember that this isn't the C standard
-> function "free()", so the compiler can't assign it any special meaning.)
-> Not to mention that LTO support isn't actually upstream yet.
->
-> I still agree with the change, but it might be helpful if the commit message
-> were honest that this is really a hardening measure and about properly conveying
-> the intent.  As-is this sounds like a critical fix, which might confuse people.
+On 2020-06-16 02:42, Finn Thain wrote:
+> Martin said, "I'd appreciate a patch to remove it"
+> 
+> And Bart said, "do you want to keep this driver in the kernel tree?"
+> 
+> AFAICT both comments are quite ambiguous. I don't see an actionable 
+> request, just an expression of interest from people doing their jobs.
+> 
+> Note well: there is no pay check associated with having a MAINTAINERS file 
+> entry.
 
-Yes, I agree that the commit log may look a bit scary. How about the 
-following:
+Hi Finn,
 
-The kzfree() function is normally used to clear some sensitive
-information, like encryption keys, in the buffer before freeing it back
-to the pool. Memset() is currently used for buffer clearing. However
-unlikely, there is still a non-zero probability that the compiler may
-choose to optimize away the memory clearing especially if LTO is being
-used in the future. To make sure that this optimization will never
-happen, memzero_explicit(), which is introduced in v3.18, is now used
-in kzfree() to future-proof it.
+As far as I know the sbp driver only has had one user ever and that user
+is no longer user the sbp driver. So why to keep it in the kernel tree?
+Restoring a kernel driver can be easy - the first step is a "git revert".
 
-Cheers,
-Longman
+Thanks,
+
+Bart.
+
 
