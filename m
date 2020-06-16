@@ -2,132 +2,97 @@ Return-Path: <SRS0=Wxou=75=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7F9C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 14:48:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E6BC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:04:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D87B208B3
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 14:48:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E9D320644
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:04:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fNg/dKKG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729336AbgFPOsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Jun 2020 10:48:23 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37776 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728501AbgFPOsV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 16 Jun 2020 10:48:21 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 3F73AAAE8;
-        Tue, 16 Jun 2020 14:48:18 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id 50CC9DA7C3; Tue, 16 Jun 2020 16:48:04 +0200 (CEST)
-Date:   Tue, 16 Jun 2020 16:48:04 +0200
-From:   David Sterba <dsterba@suse.cz>
-To:     Waiman Long <longman@redhat.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        David Sterba <dsterba@suse.cz>,
-        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-Subject: Re: [PATCH v4 3/3] btrfs: Use kfree() in
- btrfs_ioctl_get_subvol_info()
-Message-ID: <20200616144804.GD27795@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Waiman Long <longman@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>, Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-References: <20200616015718.7812-1-longman@redhat.com>
- <20200616015718.7812-4-longman@redhat.com>
+        id S1729560AbgFPPEw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Jun 2020 11:04:52 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:38540 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729161AbgFPPEw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 Jun 2020 11:04:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592319891;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=WInRxfdr4eZeODFgcLKE7FCsEl2xVFTQihm9EJeMp50=;
+        b=fNg/dKKGEqR3ctiK/Yn7CGAocaryjY7EH697wCpF6QeC+fZvIEUqUYi/0FfRRjAjk7S2aP
+        t2NveobMak1pZJ/BtoIEDF6SZ194WyrQ+nNrrulMNbX8gU+1PGJgILIjs4eBrnJF3z7Ze1
+        YNWEaQ1SE9qdL9IWfgZKyxvDkASRyLI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-378-YXsoWeAJMT-PE2Gol0X59Q-1; Tue, 16 Jun 2020 11:04:48 -0400
+X-MC-Unique: YXsoWeAJMT-PE2Gol0X59Q-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 077FF18A2663;
+        Tue, 16 Jun 2020 15:04:48 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.194.69])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 278655D9D3;
+        Tue, 16 Jun 2020 15:04:46 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     ssaner@redhat.com, sreekanth.reddy@broadcom.com
+Subject: [PATCH] mptscsih: fix read sense data size
+Date:   Tue, 16 Jun 2020 17:04:46 +0200
+Message-Id: <20200616150446.4840-1-thenzl@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200616015718.7812-4-longman@redhat.com>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 15, 2020 at 09:57:18PM -0400, Waiman Long wrote:
-> In btrfs_ioctl_get_subvol_info(), there is a classic case where kzalloc()
-> was incorrectly paired with kzfree(). According to David Sterba, there
-> isn't any sensitive information in the subvol_info that needs to be
-> cleared before freeing. So kfree_sensitive() isn't really needed,
-> use kfree() instead.
-> 
-> Reported-by: David Sterba <dsterba@suse.cz>
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  fs/btrfs/ioctl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> index f1dd9e4271e9..e8f7c5f00894 100644
-> --- a/fs/btrfs/ioctl.c
-> +++ b/fs/btrfs/ioctl.c
-> @@ -2692,7 +2692,7 @@ static int btrfs_ioctl_get_subvol_info(struct file *file, void __user *argp)
->  	btrfs_put_root(root);
->  out_free:
->  	btrfs_free_path(path);
-> -	kfree_sensitive(subvol_info);
-> +	kfree(subvol_info);
+The sense data buffer in sense_buf_pool is allocated with
+size of MPT_SENSE_BUFFER_ALLOC(64) (multiplied by req_depth)
+while SNS_LEN(sc)(96) is used when reading the data.
+That may lead to a read from unallocated area,
+sometimes from another (unallocated) page.
+To fix this limit the read size to MPT_SENSE_BUFFER_ALLOC.
 
-I would rather merge a patch doing to kzfree -> kfree instead of doing
-the middle step to switch it to kfree_sensitive. If it would help
-integration of your patchset I can push it to the next rc so there are
-no kzfree left in the btrfs code. Treewide change like that can take
-time so it would be one less problem to care about for you.
+Co-developed-by: Stanislav Saner <ssaner@redhat.com>
+Signed-off-by: Stanislav Saner <ssaner@redhat.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/message/fusion/mptscsih.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index f0737c57e..1491561d2 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -118,8 +118,6 @@ int 		mptscsih_suspend(struct pci_dev *pdev, pm_message_t state);
+ int 		mptscsih_resume(struct pci_dev *pdev);
+ #endif
+ 
+-#define SNS_LEN(scp)	SCSI_SENSE_BUFFERSIZE
+-
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
+@@ -2422,7 +2420,7 @@ mptscsih_copy_sense_data(struct scsi_cmnd *sc, MPT_SCSI_HOST *hd, MPT_FRAME_HDR
+ 		/* Copy the sense received into the scsi command block. */
+ 		req_index = le16_to_cpu(mf->u.frame.hwhdr.msgctxu.fld.req_idx);
+ 		sense_data = ((u8 *)ioc->sense_buf_pool + (req_index * MPT_SENSE_BUFFER_ALLOC));
+-		memcpy(sc->sense_buffer, sense_data, SNS_LEN(sc));
++		memcpy(sc->sense_buffer, sense_data, MPT_SENSE_BUFFER_ALLOC);
+ 
+ 		/* Log SMART data (asc = 0x5D, non-IM case only) if required.
+ 		 */
+-- 
+2.21.3
+
