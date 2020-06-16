@@ -5,68 +5,71 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C717AC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 04:00:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AF2FC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 04:00:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A432D20739
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 04:00:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C06720810
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 04:00:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nPdg4EU7"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s0bTOq51"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726807AbgFPEAb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Jun 2020 00:00:31 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:50812 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726593AbgFPEAa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2020 00:00:30 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05G3upAV054158;
-        Tue, 16 Jun 2020 04:00:16 GMT
+        id S1726940AbgFPEAj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Jun 2020 00:00:39 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41498 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726846AbgFPEAh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2020 00:00:37 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05G3w8xb194145;
+        Tue, 16 Jun 2020 04:00:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=6gt66nmNkN8e5xAv4On8mJpvQuFVMs7mSPf10c7iWbI=;
- b=nPdg4EU7JQvgPCbaC5hwzhb/sju3oUhOfTmJ4Lj1CrR9EExJU2mhU0UG3QlBhbj9EuQp
- gLePJyZ4y+AfQq+Luk+GTqxAwyR85a2M4Ojxus4dm0/Oor6eRhTnPSkOngB/mNHDEf8K
- ARaZ0yoszniFfLG/9xprTB8z9zlr3vWxUwNySnob7vjQIAvlJt/lUwo16c2w6sQxXITF
- WfJp81aWa7JdPlqR275UDSO39ltrsyH/1oY3JqI/JsJByjbYuqWHjVMmKaFAtCUSUARc
- u0+k+9B8TLTrEOckkjNNJShc592wX3dtPPgl0Uy84ASOHikrWMBoJbhHB1mL5pgdRRdK ww== 
+ bh=TkXWLHBUcq6GrqGb8B/sbaIZ/YHDymjYC75g5tesDI8=;
+ b=s0bTOq51QseDHq3DCV1eok86CuoPzPpKYMVoC9U62ArE0saDMsnZyPLX69xmMmiHf234
+ GhtCzXclPyAD2lvezqNJX8FgmH65sQ9KccDDY5XWfo8Aa7QHwrwmkBM3HdBxQgVizkwR
+ TWYYw16ccvp5fkc32sMx4T+djKHsND99VSK/XK3ZASboQzuMEu3UqLhJCMYcF1rztbLF
+ 8thcP+Q59Z1RQaqEhadQSZY1Ppzp8aM+nArYVhqLkdXswKRcQPS43Kk7a4rkdXR3hFtv
+ lGelrDKD8kNKh9uCoaCrNMnAejMfsXhLT4QgfQMCt4BhcPh9j0Tooxa1V88YIFFXPo+U 2Q== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 31p6e7vdky-1
+        by userp2120.oracle.com with ESMTP id 31p6e5vda1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 16 Jun 2020 04:00:15 +0000
+        Tue, 16 Jun 2020 04:00:10 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05G3xQB5131356;
-        Tue, 16 Jun 2020 04:00:15 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05G3xOvH131174;
+        Tue, 16 Jun 2020 04:00:09 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 31p6dcae0p-1
+        by userp3020.oracle.com with ESMTP id 31p6dcadma-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 Jun 2020 04:00:15 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05G40DVJ021424;
-        Tue, 16 Jun 2020 04:00:13 GMT
+        Tue, 16 Jun 2020 04:00:09 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05G406xx021363;
+        Tue, 16 Jun 2020 04:00:06 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 15 Jun 2020 21:00:13 -0700
+        with ESMTP ; Mon, 15 Jun 2020 21:00:06 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
-        avri.altman@wdc.com, Stanley Chu <stanley.chu@mediatek.com>,
-        asutoshd@codeaurora.org, alim.akhtar@samsung.com
+To:     Kieran Bingham <kieran.bingham@ideasonboard.com>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        peter.wang@mediatek.com, beanhuo@micron.com,
-        matthias.bgg@gmail.com, chaotian.jing@mediatek.com,
-        bvanassche@acm.org, linux-arm-kernel@lists.infradead.org,
-        kuohong.wang@mediatek.com, linux-kernel@vger.kernel.org,
-        andy.teng@mediatek.com, cang@codeaurora.org, cc.chou@mediatek.com,
-        chun-hung.wu@mediatek.com, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v2 0/2] scsi: ufs: Fix and cleanup device quirks
-Date:   Mon, 15 Jun 2020 23:59:56 -0400
-Message-Id: <159227986422.24883.11135974078256491088.b4-ty@oracle.com>
+        netdev@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, linux-mm@kvack.org,
+        linux-rdma@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-pm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-usb@vger.kernel.org, linux-gpio@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 00/17] spelling.txt: /decriptors/descriptors/
+Date:   Mon, 15 Jun 2020 23:59:55 -0400
+Message-Id: <159227986422.24883.1110692977647896521.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200612012625.6615-1-stanley.chu@mediatek.com>
-References: <20200612012625.6615-1-stanley.chu@mediatek.com>
+In-Reply-To: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
+References: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
@@ -75,36 +78,31 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adult
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2006160028
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0
- impostorscore=0 bulkscore=0 clxscore=1015 malwarescore=0 suspectscore=0
- mlxscore=0 phishscore=0 mlxlogscore=999 lowpriorityscore=0
- cotscore=-2147483648 priorityscore=1501 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006160027
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
+ mlxscore=0 phishscore=0 mlxlogscore=999 lowpriorityscore=0 clxscore=1011
+ suspectscore=0 spamscore=0 bulkscore=0 malwarescore=0 impostorscore=0
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006160027
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 12 Jun 2020 09:26:23 +0800, Stanley Chu wrote:
+On Tue, 9 Jun 2020 13:45:53 +0100, Kieran Bingham wrote:
 
-> this series provides some device quirk fixes and cleanups.
+> I wouldn't normally go through spelling fixes, but I caught sight of
+> this typo twice, and then foolishly grepped the tree for it, and saw how
+> pervasive it was.
 > 
-> v1 -> v2:
->   - Sort device quirks in alphabetical order (Alim Akhtar)
-> 
-> Stanley Chu (2):
->   scsi: ufs: Add DELAY_BEFORE_LPM quirk for Micron devices
->   scsi: ufs: Cleanup device vendor name and device quirk table
+> so here I am ... fixing a typo globally... but with an addition in
+> scripts/spelling.txt so it shouldn't re-appear ;-)
 > 
 > [...]
 
 Applied to 5.9/scsi-queue, thanks!
 
-[1/2] scsi: ufs: Add DELAY_BEFORE_LPM quirk for Micron devices
-      https://git.kernel.org/mkp/scsi/c/c0a18ee0ce78
-[2/2] scsi: ufs: Clean up device vendor name and device quirk table
-      https://git.kernel.org/mkp/scsi/c/ed0b40ffa364
+[06/17] scsi: Fix trivial spelling
+        https://git.kernel.org/mkp/scsi/c/0a19a725c0ed
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
