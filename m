@@ -2,226 +2,241 @@ Return-Path: <SRS0=Wxou=75=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 779EEC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 16:12:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05BF8C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 18:00:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F3232098B
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 16:12:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D326A2082E
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 18:00:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Kr0cwc+H"
+	dkim=pass (2048-bit key) header.d=boo.tc header.i=@boo.tc header.b="aVKAofFt";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Vflw3gHW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731468AbgFPQM1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Jun 2020 12:12:27 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:26765 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731872AbgFPPn6 (ORCPT
+        id S1730823AbgFPSAG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Jun 2020 14:00:06 -0400
+Received: from new1-smtp.messagingengine.com ([66.111.4.221]:37745 "EHLO
+        new1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727083AbgFPSAF (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 16 Jun 2020 11:43:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592322235;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=n2vgEtySMMJw+Y6/Iz7yVj4GHK2o/g3YD4HMOMKMGxw=;
-        b=Kr0cwc+HRVHnmnKsYYV3UqzW3PHTGjd/Qb4fvvXrY9gxrA+fC4zPWzeE+63uGE7zkOtHoK
-        GfgiIfEKFyYdyuToX7/lqNCnV935c+cFQyZ7ZlZ2ZbVwnemwqwS/BOZQ2ttPGADs80G1Lz
-        Xl+sF7Gm/o42WUYge8t/5umo2Zca46c=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-245-iVwDnxGCNeS1_dm-BMJ-EQ-1; Tue, 16 Jun 2020 11:43:51 -0400
-X-MC-Unique: iVwDnxGCNeS1_dm-BMJ-EQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8A261EC1A2;
-        Tue, 16 Jun 2020 15:43:45 +0000 (UTC)
-Received: from llong.com (ovpn-114-156.rdu2.redhat.com [10.10.114.156])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 68C6460C47;
-        Tue, 16 Jun 2020 15:43:37 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>
-Cc:     Michal Hocko <mhocko@suse.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        ecryptfs@vger.kernel.org, kasan-dev@googlegroups.com,
-        linux-bluetooth@vger.kernel.org, linux-wpan@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-nfs@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net,
-        linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org, Waiman Long <longman@redhat.com>
-Subject: [PATCH v5 0/2] mm, treewide: Rename kzfree() to kfree_sensitive()
-Date:   Tue, 16 Jun 2020 11:43:09 -0400
-Message-Id: <20200616154311.12314-1-longman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+        Tue, 16 Jun 2020 14:00:05 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailnew.nyi.internal (Postfix) with ESMTP id BF51258027E;
+        Tue, 16 Jun 2020 14:00:03 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute4.internal (MEProxy); Tue, 16 Jun 2020 14:00:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=boo.tc; h=
+        subject:to:cc:references:from:message-id:date:mime-version
+        :in-reply-to:content-type:content-transfer-encoding; s=fm3; bh=W
+        K4JaLWYbo7txUBZY+FCSU3GLstd9cPvWcMBaGJr3nE=; b=aVKAofFtzCa5gI6mc
+        Th0FzfvwxeMhpKkpgocaoFXWMcsKKUgFgYpGA88jW9s5PaDhGQe4GWzXd/vHmEua
+        lT7pb2FdO6VBhiXRkjC6lleFdw//9+7arTNZf5YtGxPUY4pqdBhw6/lFNEeqGch8
+        T+ZizTzfvJ7P146VPbRwJ/EGTR7rdxuZ7DVrW0jCmq1DSk5OhSITKuW0EHa9TezK
+        2q1DVij7/VYoJOiQilRtIxznilDE39wCMG6mgmkYvJ6y6zm2LTFGzDCoApCFw/bU
+        C8y9WzS67y8Mxn34ov8w2a3p9thBfXG/aSBMQcV5eKt5Ib2vufaz6szCNFfdKcNO
+        KYqXQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; bh=WK4JaLWYbo7txUBZY+FCSU3GLstd9cPvWcMBaGJr3
+        nE=; b=Vflw3gHWExDHUqNm9TIBMt9r9dXnWF1nw4gPi5V7YOTVx1ITtbh7GgDc+
+        DAlvMwJ24dwV4n82ePizZn+NUwNMvj3LP1XToX52jWIt5nF/24wDC3qbLkzdbUti
+        JKyUP2WTDvmatC6WYj8yV6GqJkvxQBo2eRZahLO7/tdkdoBQfUXD0h0WNTDcr1P0
+        eAWNuRFBy5RihbQp4AJD3c3JF5sz7PpWQ1uoqMFbGJK0jQftO2BmFDJi3DU5+TI/
+        B42rK0ncFb7+zJdUOCVy1K6WZ78vcdyWKD/B1TxGEWLF1T/f3hhCzLX+xKNFba4r
+        tD8i+YlriVNwbeLkbw5QX5GjDbkDw==
+X-ME-Sender: <xms:ogjpXkkoKnunkfd9JFWoIFvt67aMmfEilLqcNRC4dEGvV3tOGJjppQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduhedrudejtddguddvfecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enfghrlhcuvffnffculddvhedmnecujfgurhepuffvfhfhkffffgggjggtgfesthejredt
+    tdefjeenucfhrhhomhepvehhrhhishcuuehoohhtuceosghoohhttgessghoohdrthgtqe
+    enucggtffrrghtthgvrhhnpeetuefgvefhhfdugeetveekvdelhffhledvhfeuvdekfedu
+    hffhvdehgefffeduvdenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeekud
+    drudekjedrheehrdelfeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgr
+    ihhlfhhrohhmpegsohhothgtsegsohhordhttg
+X-ME-Proxy: <xmx:ogjpXj3ZZgqjj-SYUvp_AiGYnVP7rV_A2S44npTeCH9uXVa0dnFV1w>
+    <xmx:ogjpXiqlk_aIyP35hP8w2jLot76p3QuQHdg1A00TZ82OZqARYiie6A>
+    <xmx:ogjpXgl73JZYaOIHbwf8Qf1SKVfh-zHHk3M9t5sb1YhSQ4mRs7S1-A>
+    <xmx:owjpXgxwGkSRNnQZjvuen7DQCuiOf57sCZ2fqC69v8jTiV-Vlfv0Og>
+Received: from heen.boo.tc (heen.boo.tc [81.187.55.93])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 4440730618C1;
+        Tue, 16 Jun 2020 14:00:00 -0400 (EDT)
+Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Finn Thain <fthain@telegraphics.com.au>
+Cc:     "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net" 
+        <linux1394-devel@lists.sourceforge.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Chuhong Yuan <hslester96@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>
+References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com>
+ <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet>
+ <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc>
+ <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
+ <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc>
+ <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>
+ <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org>
+ <SN4PR0401MB35982D889857E3C03E96E49D9B9D0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+ <1592321667.4394.5.camel@HansenPartnership.com>
+From:   Chris Boot <bootc@boo.tc>
+Autocrypt: addr=bootc@boo.tc; prefer-encrypt=mutual;
+ keydata= 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
+ 1QBDj3S+cCP/8Pe5l3n1B7V4SkVPBQs/H/ClB6o=
+Message-ID: <5e512185-45d1-61eb-9bec-91e9f9d53ea3@boo.tc>
+Date:   Tue, 16 Jun 2020 18:59:58 +0100
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.9.0
+MIME-Version: 1.0
+In-Reply-To: <1592321667.4394.5.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- v5:
-  - Break the btrfs patch out as a separate patch to be processed
-    independently.
-  - Update the commit log of patch 1 to make it less scary.
-  - Add a kzfree backward compatibility macro in patch 2.
+On 16/06/2020 16:34, James Bottomley wrote:
+> On Tue, 2020-06-16 at 14:13 +0000, Johannes Thumshirn wrote:
+>> On 16/06/2020 16:09, Bart Van Assche wrote:
+>>> On 2020-06-16 02:42, Finn Thain wrote:
+>>>> Martin said, "I'd appreciate a patch to remove it"
+>>>>
+>>>> And Bart said, "do you want to keep this driver in the kernel
+>>>> tree?"
+>>>>
+>>>> AFAICT both comments are quite ambiguous. I don't see an
+>>>> actionable request, just an expression of interest from people
+>>>> doing their jobs.
+>>>>
+>>>> Note well: there is no pay check associated with having a
+>>>> MAINTAINERS file 
+>>>> entry.
+>>>
+>>> Hi Finn,
+>>>
+>>> As far as I know the sbp driver only has had one user ever and that
+>>> user is no longer user the sbp driver. So why to keep it in the
+>>> kernel tree? Restoring a kernel driver can be easy - the first step
+>>> is a "git revert".
+>>
+>> Why not move the driver to drivers/staging for 2 or 3 kernel releases
+>> and if noone steps up, delete it?
+> 
+> Because that's pretty much the worst of all worlds: If the driver is
+> simply going orphaned it can stay where it is to avoid confusion.  If
+> it's being removed, it's better to remove it from where it is because
+> that makes the patch to restore it easy to find.
+> 
+> Chris, the thing is this: if this driver has just one user on a stable
+> distro who complains about its removal six months to two years from
+> now, Linus will descend on us from a great height (which won't matter
+> to you, since you'll be long gone).  This makes everyone very wary of
+> outright removal.  If you're really, really sure it has no users, it
+> can be deleted, but if there's the slightest chance it has just one, it
+> should get orphaned.
 
- v4:
-  - Break out the memzero_explicit() change as suggested by Dan Carpenter
-    so that it can be backported to stable.
-  - Drop the "crypto: Remove unnecessary memzero_explicit()" patch for
-    now as there can be a bit more discussion on what is best. It will be
-    introduced as a separate patch later on after this one is merged.
+My patch to delete the driver was based on Martin's original request:
+https://lore.kernel.org/lkml/yq1img99d4k.fsf@ca-mkp.ca.oracle.com/
 
-This patchset makes a global rename of the kzfree() to kfree_sensitive()
-to highlight the fact buffer clearing is only needed if the data objects
-contain sensitive information like encrpytion key. The fact that kzfree()
-uses memset() to do the clearing isn't totally safe either as compiler
-may compile out the clearing in their optimizer especially if LTO is
-used. Instead, the new kfree_sensitive() uses memzero_explicit() which
-won't get compiled out.
+I don't especially want it to be gone, nor can I be sure there are no
+users of what is as far as I can tell a working piece of code. I can
+tell you that I never hear about it (other than the odd patch), whereas
+I do get emails out of the blue for some of my other (much smaller)
+stuff which clearly has users. I'd be just as happy for this to be
+orphaned or for nothing to happen to it.
 
+Honestly, I am totally ambivalent as to what happens to this code.
+Martin, however, clearly cares enough to have asked me to supply a patch
+to remove it.
 
-Waiman Long (2):
-  mm/slab: Use memzero_explicit() in kzfree()
-  mm, treewide: Rename kzfree() to kfree_sensitive()
-
- arch/s390/crypto/prng.c                       |  4 +--
- arch/x86/power/hibernate.c                    |  2 +-
- crypto/adiantum.c                             |  2 +-
- crypto/ahash.c                                |  4 +--
- crypto/api.c                                  |  2 +-
- crypto/asymmetric_keys/verify_pefile.c        |  4 +--
- crypto/deflate.c                              |  2 +-
- crypto/drbg.c                                 | 10 +++---
- crypto/ecc.c                                  |  8 ++---
- crypto/ecdh.c                                 |  2 +-
- crypto/gcm.c                                  |  2 +-
- crypto/gf128mul.c                             |  4 +--
- crypto/jitterentropy-kcapi.c                  |  2 +-
- crypto/rng.c                                  |  2 +-
- crypto/rsa-pkcs1pad.c                         |  6 ++--
- crypto/seqiv.c                                |  2 +-
- crypto/shash.c                                |  2 +-
- crypto/skcipher.c                             |  2 +-
- crypto/testmgr.c                              |  6 ++--
- crypto/zstd.c                                 |  2 +-
- .../allwinner/sun8i-ce/sun8i-ce-cipher.c      |  2 +-
- .../allwinner/sun8i-ss/sun8i-ss-cipher.c      |  2 +-
- drivers/crypto/amlogic/amlogic-gxl-cipher.c   |  4 +--
- drivers/crypto/atmel-ecc.c                    |  2 +-
- drivers/crypto/caam/caampkc.c                 | 28 +++++++--------
- drivers/crypto/cavium/cpt/cptvf_main.c        |  6 ++--
- drivers/crypto/cavium/cpt/cptvf_reqmanager.c  | 12 +++----
- drivers/crypto/cavium/nitrox/nitrox_lib.c     |  4 +--
- drivers/crypto/cavium/zip/zip_crypto.c        |  6 ++--
- drivers/crypto/ccp/ccp-crypto-rsa.c           |  6 ++--
- drivers/crypto/ccree/cc_aead.c                |  4 +--
- drivers/crypto/ccree/cc_buffer_mgr.c          |  4 +--
- drivers/crypto/ccree/cc_cipher.c              |  6 ++--
- drivers/crypto/ccree/cc_hash.c                |  8 ++---
- drivers/crypto/ccree/cc_request_mgr.c         |  2 +-
- drivers/crypto/marvell/cesa/hash.c            |  2 +-
- .../crypto/marvell/octeontx/otx_cptvf_main.c  |  6 ++--
- .../marvell/octeontx/otx_cptvf_reqmgr.h       |  2 +-
- drivers/crypto/mediatek/mtk-aes.c             |  2 +-
- drivers/crypto/nx/nx.c                        |  4 +--
- drivers/crypto/virtio/virtio_crypto_algs.c    | 12 +++----
- drivers/crypto/virtio/virtio_crypto_core.c    |  2 +-
- drivers/md/dm-crypt.c                         | 32 ++++++++---------
- drivers/md/dm-integrity.c                     |  6 ++--
- drivers/misc/ibmvmc.c                         |  6 ++--
- .../hisilicon/hns3/hns3pf/hclge_mbx.c         |  2 +-
- .../net/ethernet/intel/ixgbe/ixgbe_ipsec.c    |  6 ++--
- drivers/net/ppp/ppp_mppe.c                    |  6 ++--
- drivers/net/wireguard/noise.c                 |  4 +--
- drivers/net/wireguard/peer.c                  |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  6 ++--
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  6 ++--
- drivers/net/wireless/intersil/orinoco/wext.c  |  4 +--
- drivers/s390/crypto/ap_bus.h                  |  4 +--
- drivers/staging/ks7010/ks_hostif.c            |  2 +-
- drivers/staging/rtl8723bs/core/rtw_security.c |  2 +-
- drivers/staging/wlan-ng/p80211netdev.c        |  2 +-
- drivers/target/iscsi/iscsi_target_auth.c      |  2 +-
- fs/cifs/cifsencrypt.c                         |  2 +-
- fs/cifs/connect.c                             | 10 +++---
- fs/cifs/dfs_cache.c                           |  2 +-
- fs/cifs/misc.c                                |  8 ++---
- fs/crypto/keyring.c                           |  6 ++--
- fs/crypto/keysetup_v1.c                       |  4 +--
- fs/ecryptfs/keystore.c                        |  4 +--
- fs/ecryptfs/messaging.c                       |  2 +-
- include/crypto/aead.h                         |  2 +-
- include/crypto/akcipher.h                     |  2 +-
- include/crypto/gf128mul.h                     |  2 +-
- include/crypto/hash.h                         |  2 +-
- include/crypto/internal/acompress.h           |  2 +-
- include/crypto/kpp.h                          |  2 +-
- include/crypto/skcipher.h                     |  2 +-
- include/linux/slab.h                          |  4 ++-
- lib/mpi/mpiutil.c                             |  6 ++--
- lib/test_kasan.c                              |  6 ++--
- mm/slab_common.c                              | 10 +++---
- net/atm/mpoa_caches.c                         |  4 +--
- net/bluetooth/ecdh_helper.c                   |  6 ++--
- net/bluetooth/smp.c                           | 24 ++++++-------
- net/core/sock.c                               |  2 +-
- net/ipv4/tcp_fastopen.c                       |  2 +-
- net/mac80211/aead_api.c                       |  4 +--
- net/mac80211/aes_gmac.c                       |  2 +-
- net/mac80211/key.c                            |  2 +-
- net/mac802154/llsec.c                         | 20 +++++------
- net/sctp/auth.c                               |  2 +-
- net/sctp/socket.c                             |  2 +-
- net/sunrpc/auth_gss/gss_krb5_crypto.c         |  4 +--
- net/sunrpc/auth_gss/gss_krb5_keys.c           |  6 ++--
- net/sunrpc/auth_gss/gss_krb5_mech.c           |  2 +-
- net/tipc/crypto.c                             | 10 +++---
- net/wireless/core.c                           |  2 +-
- net/wireless/ibss.c                           |  4 +--
- net/wireless/lib80211_crypt_tkip.c            |  2 +-
- net/wireless/lib80211_crypt_wep.c             |  2 +-
- net/wireless/nl80211.c                        | 24 ++++++-------
- net/wireless/sme.c                            |  6 ++--
- net/wireless/util.c                           |  2 +-
- net/wireless/wext-sme.c                       |  2 +-
- scripts/coccinelle/free/devm_free.cocci       |  4 +--
- scripts/coccinelle/free/ifnullfree.cocci      |  4 +--
- scripts/coccinelle/free/kfree.cocci           |  6 ++--
- scripts/coccinelle/free/kfreeaddr.cocci       |  2 +-
- security/apparmor/domain.c                    |  4 +--
- security/apparmor/include/file.h              |  2 +-
- security/apparmor/policy.c                    | 24 ++++++-------
- security/apparmor/policy_ns.c                 |  6 ++--
- security/apparmor/policy_unpack.c             | 14 ++++----
- security/keys/big_key.c                       |  6 ++--
- security/keys/dh.c                            | 14 ++++----
- security/keys/encrypted-keys/encrypted.c      | 14 ++++----
- security/keys/trusted-keys/trusted_tpm1.c     | 34 +++++++++----------
- security/keys/user_defined.c                  |  6 ++--
- 115 files changed, 323 insertions(+), 321 deletions(-)
+Cheers,
+Chris
 
 -- 
-2.18.1
-
+Chris Boot
+bootc@boo.tc
