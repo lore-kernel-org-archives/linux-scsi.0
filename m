@@ -2,257 +2,125 @@ Return-Path: <SRS0=Wxou=75=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 692F3C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD79FC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:34:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51A2B208B3
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:32:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DD1E208B3
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:34:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="W1sBeQ80";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="MYUprjVW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729177AbgFPPcH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Jun 2020 11:32:07 -0400
-Received: from mx2.suse.de ([195.135.220.15]:38706 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728448AbgFPPcH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 16 Jun 2020 11:32:07 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id A120BAFBE;
-        Tue, 16 Jun 2020 15:32:09 +0000 (UTC)
-From:   mwilck@suse.com
-To:     Don Brace <don.brace@microsemi.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
-        Martin Wilck <mwilck@suse.com>
-Subject: [PATCH 1/2] scsi: smartpqi: grab scsi device ref in slave_configure()
-Date:   Tue, 16 Jun 2020 17:31:44 +0200
-Message-Id: <20200616153145.16949-1-mwilck@suse.com>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1729386AbgFPPec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Jun 2020 11:34:32 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42028 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728448AbgFPPec (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 Jun 2020 11:34:32 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C71AB8EE1E9;
+        Tue, 16 Jun 2020 08:34:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1592321671;
+        bh=ajob1nvDrla9Bt+f3LFtU00Hic0WFbZIYozt4cm3MGM=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=W1sBeQ80o/S7QYGmkg7NPKLODl9DIayewfvNHRL0KXkV4cKwIIId31zNmJSXEAOn8
+         PmIczVXVyJ+XHkmj/F4XEVAvG601VQw6E+e3d1SlKbqVhn8CvXKJZo57Nbz5w9m9k9
+         Fk0B2hGn7EnmgCplAjGFyBu8ncCam1gBtEW7wy9I=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id e-XsTU0ZWdDv; Tue, 16 Jun 2020 08:34:30 -0700 (PDT)
+Received: from jarvis (unknown [216.116.10.17])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4FE348EE188;
+        Tue, 16 Jun 2020 08:34:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1592321670;
+        bh=ajob1nvDrla9Bt+f3LFtU00Hic0WFbZIYozt4cm3MGM=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=MYUprjVWr66NFNYQM4jxBy/5blzUQem+8Me7nmbSL8D6xUxpHQ1bYjYJWGDOSQFMP
+         0TrdM6NHXmZUCNnf60cYcNDgiCRbFbF2pklcj6OPtPybkwoQ7Zez969xlVSVJzMk5+
+         XhrYEFkvrYKP8ysOE/5zvYdq13fP6HbGfoQDNx8k=
+Message-ID: <1592321667.4394.5.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Chris Boot <bootc@boo.tc>
+Cc:     "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net" 
+        <linux1394-devel@lists.sourceforge.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Chuhong Yuan <hslester96@gmail.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Nicholas Bellinger <nab@linux-iscsi.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>
+Date:   Tue, 16 Jun 2020 08:34:27 -0700
+In-Reply-To: <SN4PR0401MB35982D889857E3C03E96E49D9B9D0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com>
+         <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet>
+         <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc>
+         <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
+         <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc>
+         <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>
+         <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org>
+         <SN4PR0401MB35982D889857E3C03E96E49D9B9D0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Martin Wilck <mwilck@suse.com>
+On Tue, 2020-06-16 at 14:13 +0000, Johannes Thumshirn wrote:
+> On 16/06/2020 16:09, Bart Van Assche wrote:
+> > On 2020-06-16 02:42, Finn Thain wrote:
+> > > Martin said, "I'd appreciate a patch to remove it"
+> > > 
+> > > And Bart said, "do you want to keep this driver in the kernel
+> > > tree?"
+> > > 
+> > > AFAICT both comments are quite ambiguous. I don't see an
+> > > actionable request, just an expression of interest from people
+> > > doing their jobs.
+> > > 
+> > > Note well: there is no pay check associated with having a
+> > > MAINTAINERS file 
+> > > entry.
+> > 
+> > Hi Finn,
+> > 
+> > As far as I know the sbp driver only has had one user ever and that
+> > user is no longer user the sbp driver. So why to keep it in the
+> > kernel tree? Restoring a kernel driver can be easy - the first step
+> > is a "git revert".
+> 
+> Why not move the driver to drivers/staging for 2 or 3 kernel releases
+> and if noone steps up, delete it?
 
-We have observed kernel crashes caused by the smartpqi driver holding
-a pointer to a struct scsi_device that had been removed already.
-Fix this by getting and holding a ref for the device as long as
-the driver uses it.
+Because that's pretty much the worst of all worlds: If the driver is
+simply going orphaned it can stay where it is to avoid confusion.  If
+it's being removed, it's better to remove it from where it is because
+that makes the patch to restore it easy to find.
 
-Use a lock to avoid races between device probing and removal.
+Chris, the thing is this: if this driver has just one user on a stable
+distro who complains about its removal six months to two years from
+now, Linus will descend on us from a great height (which won't matter
+to you, since you'll be long gone).  This makes everyone very wary of
+outright removal.  If you're really, really sure it has no users, it
+can be deleted, but if there's the slightest chance it has just one, it
+should get orphaned.
 
-Signed-off-by: Martin Wilck <mwilck@suse.com>
----
- drivers/scsi/smartpqi/smartpqi.h      |   1 +
- drivers/scsi/smartpqi/smartpqi_init.c | 122 +++++++++++++++++++++-----
- 2 files changed, 103 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 1129fe7a27ed..5801080c8dbc 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -954,6 +954,7 @@ struct pqi_scsi_dev {
- 	struct raid_map *raid_map;	/* RAID bypass map */
- 
- 	struct pqi_sas_port *sas_port;
-+	spinlock_t sdev_lock;		/* protect access to sdev */
- 	struct scsi_device *sdev;
- 
- 	struct list_head scsi_device_list_entry;
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index cd157f11eb22..54a72f465f85 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -1514,6 +1514,18 @@ static int pqi_add_device(struct pqi_ctrl_info *ctrl_info,
- 
- #define PQI_PENDING_IO_TIMEOUT_SECS	20
- 
-+static inline struct scsi_device *
-+pqi_get_scsi_device(struct pqi_scsi_dev *device)
-+{
-+	unsigned long flags;
-+	struct scsi_device *sdev;
-+
-+	spin_lock_irqsave(&device->sdev_lock, flags);
-+	sdev = device->sdev;
-+	spin_unlock_irqrestore(&device->sdev_lock, flags);
-+	return sdev;
-+}
-+
- static inline void pqi_remove_device(struct pqi_ctrl_info *ctrl_info,
- 	struct pqi_scsi_dev *device)
- {
-@@ -1530,9 +1542,26 @@ static inline void pqi_remove_device(struct pqi_ctrl_info *ctrl_info,
- 			device->target, device->lun,
- 			atomic_read(&device->scsi_cmds_outstanding));
- 
--	if (pqi_is_logical_device(device))
--		scsi_remove_device(device->sdev);
--	else
-+	if (pqi_is_logical_device(device)) {
-+		struct scsi_device *sdev;
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&device->sdev_lock, flags);
-+		sdev = device->sdev;
-+		if (sdev)
-+			get_device(&sdev->sdev_gendev);
-+		spin_unlock_irqrestore(&device->sdev_lock, flags);
-+
-+		/*
-+		 * As scsi_remove_device() will call pqi_slave_destroy(),
-+		 * we can't keep the sdev_lock held. But we've taken a ref,
-+		 * so sdev will not go away under us.
-+		 */
-+		if (sdev) {
-+			scsi_remove_device(sdev);
-+			put_device(&sdev->sdev_gendev);
-+		}
-+	} else
- 		pqi_remove_sas_device(device);
- }
- 
-@@ -1749,7 +1778,7 @@ static inline bool pqi_is_device_added(struct pqi_scsi_dev *device)
- 	if (device->is_expander_smp_device)
- 		return device->sas_port != NULL;
- 
--	return device->sdev != NULL;
-+	return pqi_get_scsi_device(device) != NULL;
- }
- 
- static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
-@@ -1861,11 +1890,24 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
- 	 */
- 	list_for_each_entry(device, &ctrl_info->scsi_device_list,
- 		scsi_device_list_entry) {
--		if (device->sdev && device->queue_depth !=
--			device->advertised_queue_depth) {
--			device->advertised_queue_depth = device->queue_depth;
--			scsi_change_queue_depth(device->sdev,
--				device->advertised_queue_depth);
-+		struct scsi_device *sdev;
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&device->sdev_lock, flags);
-+		sdev = device->sdev;
-+		if (sdev)
-+			get_device(&sdev->sdev_gendev);
-+		spin_unlock_irqrestore(&device->sdev_lock, flags);
-+
-+		if (sdev) {
-+			if (device->queue_depth !=
-+			    device->advertised_queue_depth) {
-+				device->advertised_queue_depth =
-+					device->queue_depth;
-+				scsi_change_queue_depth(sdev,
-+					device->advertised_queue_depth);
-+			}
-+			put_device(&sdev->sdev_gendev);
- 		}
- 	}
- 
-@@ -2082,6 +2124,7 @@ static int pqi_update_scsi_devices(struct pqi_ctrl_info *ctrl_info)
- 			device = list_first_entry(&new_device_list_head,
- 				struct pqi_scsi_dev, new_device_list_entry);
- 
-+		spin_lock_init(&device->sdev_lock);
- 		memcpy(device->scsi3addr, scsi3addr, sizeof(device->scsi3addr));
- 		device->is_physical_device = is_physical_device;
- 		if (is_physical_device) {
-@@ -5785,6 +5828,7 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
- 	struct pqi_ctrl_info *ctrl_info;
- 	struct scsi_target *starget;
- 	struct sas_rphy *rphy;
-+	int ret;
- 
- 	ctrl_info = shost_to_hba(sdev->host);
- 
-@@ -5806,23 +5850,59 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
- 
- 	if (device) {
- 		sdev->hostdata = device;
--		device->sdev = sdev;
--		if (device->queue_depth) {
--			device->advertised_queue_depth = device->queue_depth;
--			scsi_change_queue_depth(sdev,
--				device->advertised_queue_depth);
--		}
--		if (pqi_is_logical_device(device))
--			pqi_disable_write_same(sdev);
--		else
--			sdev->allow_restart = 1;
--	}
-+		ret = 0;
-+	} else
-+		ret = -ENXIO;
- 
- 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
- 
-+	return ret;
-+}
-+
-+static int pqi_slave_configure(struct scsi_device *sdev)
-+{
-+	struct pqi_scsi_dev *device = sdev->hostdata;
-+	unsigned long flags;
-+
-+	/*
-+	 * Grab a ref to the SCSI device, lest it be removed under us. It will
-+	 * be dropped in pqi_slave_destroy().
-+	 * Don't use scsi_device_get() here, we'd increment our own  use count
-+	 */
-+	if (!get_device(&sdev->sdev_gendev))
-+		return -ENXIO;
-+
-+	spin_lock_irqsave(&device->sdev_lock, flags);
-+	device->sdev = sdev;
-+	spin_unlock_irqrestore(&device->sdev_lock, flags);
-+
-+	if (device->queue_depth) {
-+		device->advertised_queue_depth = device->queue_depth;
-+		scsi_change_queue_depth(sdev,
-+					device->advertised_queue_depth);
-+	}
-+	if (pqi_is_logical_device(device))
-+		pqi_disable_write_same(sdev);
-+	else
-+		sdev->allow_restart = 1;
- 	return 0;
- }
- 
-+static void pqi_slave_destroy(struct scsi_device *sdev)
-+{
-+	struct pqi_scsi_dev *device = sdev->hostdata;
-+	unsigned long flags;
-+
-+	if (!device)
-+		return;
-+
-+	spin_lock_irqsave(&device->sdev_lock, flags);
-+	sdev = device->sdev;
-+	device->sdev = NULL;
-+	spin_unlock_irqrestore(&device->sdev_lock, flags);
-+	put_device(&sdev->sdev_gendev);
-+}
-+
- static int pqi_map_queues(struct Scsi_Host *shost)
- {
- 	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
-@@ -6501,6 +6581,8 @@ static struct scsi_host_template pqi_driver_template = {
- 	.eh_device_reset_handler = pqi_eh_device_reset_handler,
- 	.ioctl = pqi_ioctl,
- 	.slave_alloc = pqi_slave_alloc,
-+	.slave_configure = pqi_slave_configure,
-+	.slave_destroy = pqi_slave_destroy,
- 	.map_queues = pqi_map_queues,
- 	.sdev_attrs = pqi_sdev_attrs,
- 	.shost_attrs = pqi_shost_attrs,
--- 
-2.26.2
+James
 
