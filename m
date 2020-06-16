@@ -2,125 +2,123 @@ Return-Path: <SRS0=Wxou=75=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD79FC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CC4CC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 16:07:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DD1E208B3
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 15:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7084B208D5
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Jun 2020 16:07:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="W1sBeQ80";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="MYUprjVW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="anxZyJva"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729386AbgFPPec (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Jun 2020 11:34:32 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42028 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728448AbgFPPec (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 16 Jun 2020 11:34:32 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C71AB8EE1E9;
-        Tue, 16 Jun 2020 08:34:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1592321671;
-        bh=ajob1nvDrla9Bt+f3LFtU00Hic0WFbZIYozt4cm3MGM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=W1sBeQ80o/S7QYGmkg7NPKLODl9DIayewfvNHRL0KXkV4cKwIIId31zNmJSXEAOn8
-         PmIczVXVyJ+XHkmj/F4XEVAvG601VQw6E+e3d1SlKbqVhn8CvXKJZo57Nbz5w9m9k9
-         Fk0B2hGn7EnmgCplAjGFyBu8ncCam1gBtEW7wy9I=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id e-XsTU0ZWdDv; Tue, 16 Jun 2020 08:34:30 -0700 (PDT)
-Received: from jarvis (unknown [216.116.10.17])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1732157AbgFPQHf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Jun 2020 12:07:35 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:46977 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1732265AbgFPPrE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jun 2020 11:47:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592322422;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=djkgmBs6vxKrnF2svfHTCwO6iJZv0MD8YpKSjFl2MGs=;
+        b=anxZyJvaFpuLChSMwUR/a7qLSGGcT0Nzy4aiSkqCpI/xVk6zVIcE9J7iV1341dFYQpdAwe
+        QNobub7hXN4Ms1OW18fOfvph9zqDj6d3Es9xcqmAm7V7WWOGLDbJFRK2rhytEAPFfTLrAb
+        z8prG6hZN2mOJEmSXgQ9/SksTn2gcSw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-218-nWeeH7oNN9eY6skcHYs3nQ-1; Tue, 16 Jun 2020 11:46:56 -0400
+X-MC-Unique: nWeeH7oNN9eY6skcHYs3nQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4FE348EE188;
-        Tue, 16 Jun 2020 08:34:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1592321670;
-        bh=ajob1nvDrla9Bt+f3LFtU00Hic0WFbZIYozt4cm3MGM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MYUprjVWr66NFNYQM4jxBy/5blzUQem+8Me7nmbSL8D6xUxpHQ1bYjYJWGDOSQFMP
-         0TrdM6NHXmZUCNnf60cYcNDgiCRbFbF2pklcj6OPtPybkwoQ7Zez969xlVSVJzMk5+
-         XhrYEFkvrYKP8ysOE/5zvYdq13fP6HbGfoQDNx8k=
-Message-ID: <1592321667.4394.5.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Chris Boot <bootc@boo.tc>
-Cc:     "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net" 
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Chuhong Yuan <hslester96@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>
-Date:   Tue, 16 Jun 2020 08:34:27 -0700
-In-Reply-To: <SN4PR0401MB35982D889857E3C03E96E49D9B9D0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com>
-         <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet>
-         <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc>
-         <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
-         <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc>
-         <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>
-         <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org>
-         <SN4PR0401MB35982D889857E3C03E96E49D9B9D0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0B3678DEEE2;
+        Tue, 16 Jun 2020 15:46:51 +0000 (UTC)
+Received: from warthog.procyon.org.uk (ovpn-114-66.rdu2.redhat.com [10.10.114.66])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3EC3B60C05;
+        Tue, 16 Jun 2020 15:46:41 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <56c2304c-73cc-8f48-d8d0-5dd6c39f33f3@redhat.com>
+References: <56c2304c-73cc-8f48-d8d0-5dd6c39f33f3@redhat.com> <20200616015718.7812-1-longman@redhat.com> <20200616015718.7812-2-longman@redhat.com> <20200616033035.GB902@sol.localdomain>
+To:     Waiman Long <longman@redhat.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>, ebiggers@kernel.org,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Joe Perches <joe@perches.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        David Rientjes <rientjes@google.com>,
+        Michal Hocko <mhocko@suse.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        David Sterba <dsterba@suse.cz>,
+        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
+        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-amlogic@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
+        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
+        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
+        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
+        linux-security-module@vger.kernel.org,
+        linux-integrity@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] mm/slab: Use memzero_explicit() in kzfree()
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <879078.1592322400.1@warthog.procyon.org.uk>
+Date:   Tue, 16 Jun 2020 16:46:40 +0100
+Message-ID: <879079.1592322400@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-06-16 at 14:13 +0000, Johannes Thumshirn wrote:
-> On 16/06/2020 16:09, Bart Van Assche wrote:
-> > On 2020-06-16 02:42, Finn Thain wrote:
-> > > Martin said, "I'd appreciate a patch to remove it"
-> > > 
-> > > And Bart said, "do you want to keep this driver in the kernel
-> > > tree?"
-> > > 
-> > > AFAICT both comments are quite ambiguous. I don't see an
-> > > actionable request, just an expression of interest from people
-> > > doing their jobs.
-> > > 
-> > > Note well: there is no pay check associated with having a
-> > > MAINTAINERS file 
-> > > entry.
-> > 
-> > Hi Finn,
-> > 
-> > As far as I know the sbp driver only has had one user ever and that
-> > user is no longer user the sbp driver. So why to keep it in the
-> > kernel tree? Restoring a kernel driver can be easy - the first step
-> > is a "git revert".
-> 
-> Why not move the driver to drivers/staging for 2 or 3 kernel releases
-> and if noone steps up, delete it?
+Waiman Long <longman@redhat.com> wrote:
 
-Because that's pretty much the worst of all worlds: If the driver is
-simply going orphaned it can stay where it is to avoid confusion.  If
-it's being removed, it's better to remove it from where it is because
-that makes the patch to restore it easy to find.
+> The kzfree() function is normally used to clear some sensitive
+> information, like encryption keys, in the buffer before freeing it back
+> to the pool. Memset()
 
-Chris, the thing is this: if this driver has just one user on a stable
-distro who complains about its removal six months to two years from
-now, Linus will descend on us from a great height (which won't matter
-to you, since you'll be long gone).  This makes everyone very wary of
-outright removal.  If you're really, really sure it has no users, it
-can be deleted, but if there's the slightest chance it has just one, it
-should get orphaned.
+"memset()" is all lowercase.
 
-James
+> is currently used for buffer clearing. However unlikely, there is still a
+> non-zero probability
+
+I'd say "a possibility".
+
+> that
+
+and I'd move "in [the] future" here.
+
+> the compiler may choose to optimize away the
+> memory clearing especially if LTO is being used in the future. To make sure
+> that this optimization will never happen
+
+"in these cases"
+
+> , memzero_explicit(), which is introduced in v3.18, is now used in
+
+"instead of"?
+
+> kzfree() to future-proof it.
+
+Davod
 
