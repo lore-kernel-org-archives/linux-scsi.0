@@ -5,24 +5,24 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11622C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 09:17:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 709B0C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 09:18:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1755212CC
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 09:17:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48E6B2078D
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 09:18:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726572AbgFQJRV convert rfc822-to-8bit (ORCPT
+        id S1726702AbgFQJSC convert rfc822-to-8bit (ORCPT
         <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 05:17:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43422 "EHLO mail.kernel.org"
+        Wed, 17 Jun 2020 05:18:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44008 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726275AbgFQJRU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 05:17:20 -0400
+        id S1725846AbgFQJSB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 05:18:01 -0400
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
-Subject: [Bug 208215] HPSA P410 resetting logical Direct-Access never
- complete 5.7.1
-Date:   Wed, 17 Jun 2020 09:17:20 +0000
+Subject: [Bug 199435] HPSA + P420i resetting logical Direct-Access never
+ complete
+Date:   Wed, 17 Jun 2020 09:18:01 +0000
 X-Bugzilla-Reason: AssignedTo
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -37,10 +37,10 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: rep_platform
-Message-ID: <bug-208215-11613-5H5nnPBGpJ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-208215-11613@https.bugzilla.kernel.org/>
-References: <bug-208215-11613@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-199435-11613-8Te8B2Sal3@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-199435-11613@https.bugzilla.kernel.org/>
+References: <bug-199435-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -51,16 +51,11 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=199435
+
+--- Comment #38 from Andrey Voronkov (voronkovaa@gmail.com) ---
+Sry ^ - wrong thread. Created new bug as the controller differs in my case:
 https://bugzilla.kernel.org/show_bug.cgi?id=208215
-
-Andrey Voronkov (voronkovaa@gmail.com) changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-           Hardware|All                         |Intel
-
---- Comment #1 from Andrey Voronkov (voronkovaa@gmail.com) ---
-Seems like related: https://bugzilla.kernel.org/show_bug.cgi?id=199435
 
 -- 
 You are receiving this mail because:
