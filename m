@@ -2,142 +2,74 @@ Return-Path: <SRS0=X8O6=76=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB69C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DA10C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:49:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD36420C09
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:48:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E94BB20C09
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:49:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725894AbgFQIs5 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 04:48:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54808 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725536AbgFQIs5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 04:48:57 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 199435] HPSA + P420i resetting logical Direct-Access never
- complete
-Date:   Wed, 17 Jun 2020 08:48:55 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: voronkovaa@gmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-199435-11613-UVW5fDr8bs@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-199435-11613@https.bugzilla.kernel.org/>
-References: <bug-199435-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1726583AbgFQItV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 04:49:21 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:59644 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725967AbgFQItV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 04:49:21 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1jlTkt-0000JZ-QT; Wed, 17 Jun 2020 08:49:12 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Seungwon Jeon <essuuj@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] scsi: ufs: ufs-exynos: fix spelling mistake "pa_granularty" -> "pa_granularity"
+Date:   Wed, 17 Jun 2020 09:49:11 +0100
+Message-Id: <20200617084911.167359-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.27.0.rc0
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=199435
+From: Colin Ian King <colin.king@canonical.com>
 
-Andrey Voronkov (voronkovaa@gmail.com) changed:
+There is a spelling mistake in a dev_warn message. Fix it.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |voronkovaa@gmail.com
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/ufs/ufs-exynos.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- Comment #35 from Andrey Voronkov (voronkovaa@gmail.com) ---
-Hi guys, I'm from the future. It's 2020 already!
-I have similar (exact the same?) problem with HPSA P410 already on two of my
-nodes with Kernel 5.7.1-1.el7.elrepo.x86_64
-
-Here are the logs:
-
-2020-06-16T14:59:00.8117 warning kern kernel  [679613.058375] hpsa
-0000:06:00.0: scsi 0:1:0:0: resetting logical  Direct-Access     HP      
-LOGICAL VOLUME   RAID-0 SSDSmartPathCap- En- Exp=1
-2020-06-16T14:59:23.3999 info kern kernel  [679635.647794] libceph: osd0 down
-2020-06-16T14:59:23.3999 info kern kernel  [679635.648599] libceph: osd6 down
-2020-06-16T14:59:24.4468 warning kern kernel  [679636.694762] rbd: rbd1:
-encountered watch error: -107
-2020-06-16T14:59:24.4886 warning kern kernel  [679636.736747] rbd: rbd2:
-encountered watch error: -107
-2020-06-16T14:59:28.4377 info kern kernel  [679640.685700] libceph: osd5 down
-2020-06-16T14:59:36.6272 warning kern kernel  [679648.874179] hpsa
-0000:06:00.0: Controller lockup detected: 0x0015002f after 30
-2020-06-16T14:59:36.6272 warning kern kernel  [679648.875554] hpsa
-0000:06:00.0: controller lockup detected: LUN:0000004000000000
-CDB:01040000000000000000000000000000
-2020-06-16T14:59:36.6272 warning kern kernel  [679648.875591] hpsa
-0000:06:00.0: failed 15 commands in fail_all
-2020-06-16T14:59:36.6272 warning kern kernel  [679648.876650] hpsa
-0000:06:00.0: Controller lockup detected during reset wait
-2020-06-16T14:59:36.6272 warning kern kernel  [679648.876655] hpsa
-0000:06:00.0: scsi 0:1:0:0: reset logical  failed Direct-Access     HP      
-LOGICAL VOLUME   RAID-0 SSDSmartPathCap- En- Exp=1
-2020-06-16T14:59:36.6272 info kern kernel  [679648.876667] sd 0:1:0:2: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6272 info kern kernel  [679648.876672] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6348 info kern kernel  [679648.883168] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6348 info kern kernel  [679648.884214] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6357 info kern kernel  [679648.885286] sd 0:1:0:1: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6367 info kern kernel  [679648.886297] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6377 info kern kernel  [679648.887301] sd 0:1:0:2: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6395 info kern kernel  [679648.888269] sd 0:1:0:2: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6395 info kern kernel  [679648.889193] sd 0:1:0:3: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6419 info kern kernel  [679648.890076] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6419 info kern kernel  [679648.891496] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6447 info kern kernel  [679648.893012] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6447 info kern kernel  [679648.894114] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6466 info kern kernel  [679648.895182] sd 0:1:0:0: Device
-offlined - not ready after error recovery
-2020-06-16T14:59:36.6466 info kern kernel  [679648.896204] sd 0:1:0:2: [sdc]
-tag#477 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK cmd_age=66s
-2020-06-16T14:59:36.6489 info kern kernel  [679648.897223] sd 0:1:0:2: [sdc]
-tag#477 CDB: Read(10) 28 00 00 ed 13 90 00 00 08 00
-2020-06-16T14:59:36.6489 err kern kernel  [679648.898309] blk_update_request:
-I/O error, dev sdc, sector 15537040 op 0x0:(READ) flags 0x0 phys_seg 1 prio
-class 0
-2020-06-16T14:59:36.6523 info kern kernel  [679648.899489] sd 0:1:0:0: [sda]
-tag#469 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK cmd_age=70s
-2020-06-16T14:59:36.6523 err kern kernel  [679648.899956] sd 0:1:0:0: rejecting
-I/O to offline device
-2020-06-16T14:59:36.6523 info kern kernel  [679648.900659] sd 0:1:0:0: [sda]
-tag#469 CDB: Read(10) 28 00 14 78 2f e0 00 00 10 00
-2020-06-16T14:59:36.6524 err kern kernel  [679648.901820] blk_update_request:
-I/O error, dev sda, sector 929142240 op 0x0:(READ) flags 0x3000 phys_seg 1 prio
-class 0
-2020-06-16T14:59:36.6537 err kern kernel  [679648.903092] blk_update_request:
-I/O error, dev sda, sector 343420896 op 0x0:(READ) flags 0x80700 phys_seg 2
-prio class 0
-2020-06-16T14:59:36.6537 info kern kernel  [679648.903138] sd 0:1:0:0: [sda]
-tag#470 FAILED Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK cmd_age=70s
-
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index 440f2af83d9c..0a9e99084f2a 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -883,7 +883,7 @@ static int exynos_ufs_post_link(struct ufs_hba *hba)
+ 		if (attr->pa_granularity < 1 || attr->pa_granularity > 6) {
+ 			/* Valid range for granularity: 1 ~ 6 */
+ 			dev_warn(hba->dev,
+-				"%s: pa_granularty %d is invalid, assuming backwards compatibility\n",
++				"%s: pa_granularity %d is invalid, assuming backwards compatibility\n",
+ 				__func__,
+ 				attr->pa_granularity);
+ 			attr->pa_granularity = 6;
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+2.27.0.rc0
+
