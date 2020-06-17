@@ -2,144 +2,177 @@ Return-Path: <SRS0=X8O6=76=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58953C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 18:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3CB0C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 18:50:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37811217A0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 18:24:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84CBE206DB
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 18:50:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GLJfDoTN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="jIlPqCad";
+	dkim=pass (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="YrkV8arW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728000AbgFQSYi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 14:24:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39300 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727964AbgFQSYf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 14:24:35 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C781C06174E;
-        Wed, 17 Jun 2020 11:24:34 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id dr13so3546780ejc.3;
-        Wed, 17 Jun 2020 11:24:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=j4LtBP0fxQmoKYyM4aJqiDdfJzw3PknGwyZ6hajQswg=;
-        b=GLJfDoTNRo7p5CZV7Xhw2JsFxvzMFmXqTNqRfNbQwgRm5wrJmbWKiyPALGC7z96Slh
-         kZBXvDkazfy+RMomrzztHMcaNtGCnhf5QiYUQQB24w3GU+xJCdx/iOgN/IQhopY2ukue
-         ZhwLbFzjFWeypMxBfXqRqrFlqI+Ocb41ZIZun7GeTTZuIcIACtK1XztmKr2ixCOgNJPx
-         V7NVQ2GVcc5A4zzLONKyQZJdonAIXJjFDYnmWzEqeEd4xxLeh0uuUIio0+IJ8DNvh4DG
-         ybGjVGtMPO9OEWmitIqxrwowc7ZgB3AZcvR4Pb0cuU0nqDiyTDiZ4cmBaSvwDwK31dFh
-         5nUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=j4LtBP0fxQmoKYyM4aJqiDdfJzw3PknGwyZ6hajQswg=;
-        b=lgaB6ketQs+cqe0PTdiTP/jnBdysVH0pX9EtEm0Ml9iTnZ82YPcmbJwE3Q3oUd6I+1
-         y2CSNl6GWEXbKxeQL80xIc77STTZh87EssiNih9UJFWKW+S2sJ6yJq6AduklB8lHvbgF
-         eP5Kswx3aRWBX/ZIidi4CiwH6przkOqN1ZUAbbsx4OzUyRQlmAQAes8qSqcr766gIJx9
-         bnrtr0pLCLrrdIOLyHncXIwJWUFLAx6eWZRbi6fvPzXOoJ3mZmHMtWxxJQHCuzCkiuxG
-         RTE7DiPYLsvjhFdI/RSmjr6paUPkSQ0J4/x2UZadeoEMQteFtbTmkmzpezVdsaCF36yI
-         l74A==
-X-Gm-Message-State: AOAM532qry4rUFb1CiCDQiCxIGOK9P2eAkBj0EF1iV6jZOWDwWZAxJ/O
-        AAM7AfVse/gHqLpLov7h1VA=
-X-Google-Smtp-Source: ABdhPJwu+29N47SWaovTqJG0CwrI+HDlalsmvqqUvokJw9accwzYiNKbC2FwNnooKlKfAp+SIH/rgQ==
-X-Received: by 2002:a17:906:3b44:: with SMTP id h4mr401730ejf.463.1592418273392;
-        Wed, 17 Jun 2020 11:24:33 -0700 (PDT)
-Received: from ubuntu-laptop ([2a01:598:b90f:903c:e489:2676:2097:fdba])
-        by smtp.googlemail.com with ESMTPSA id me8sm504598ejb.28.2020.06.17.11.24.31
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 17 Jun 2020 11:24:32 -0700 (PDT)
-Message-ID: <3d5748ce4481c789000979f9831a5ae681cd9d34.camel@gmail.com>
-Subject: Re: [RFC PATCH v2 3/5] scsi: ufs: Introduce HPB module
-From:   Bean Huo <huobean@gmail.com>
-To:     daejun7.park@samsung.com, Avri Altman <Avri.Altman@wdc.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Date:   Wed, 17 Jun 2020 20:24:18 +0200
-In-Reply-To: <231786897.01592395081831.JavaMail.epsvc@epcpadp2>
-References: <SN6PR04MB46405EC52240E00F5D634E2AFC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <231786897.01592212081335.JavaMail.epsvc@epcpadp2>
-         <336371513.41592205783606.JavaMail.epsvc@epcpadp2>
-         <231786897.01592205482200.JavaMail.epsvc@epcpadp2>
-         <231786897.01592213402355.JavaMail.epsvc@epcpadp1>
-         <CGME20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210@epcms2p5>
-         <231786897.01592395081831.JavaMail.epsvc@epcpadp2>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        id S1727015AbgFQSuN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 14:50:13 -0400
+Received: from fourecks.uuid.uk ([147.135.211.183]:38588 "EHLO
+        fourecks.uuid.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726835AbgFQSuN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 14:50:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Date:
+        Message-ID:Subject:From:To:Sender:Reply-To:Cc:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=ewfhDKKfirLitYkJROxTzREvtN9Z3svV6HuKAzBz5NY=; b=jIlPqCadnZCOcMUWh4u/CTqQhi
+        EH0zl9OabqyC2bInmjRLrgQeKll0B4holKyNI6PoZF/dKbGFCaPi9xZ0xPLrDrBq6e+mTsURhmr5W
+        oqF3P4SWjtR/gPIFLL3ngSwx1b4+qlI7mKc2yhuGAxtjghSlSTkoLQvPyASIWNx4R1d11oFW9/dhH
+        re24nrAetgrW/cnLYMM+1g7MpBLEANkMP6czip6lQdijIq63XbbFk3Jr+mdyT45qzhW/kXKwwPlFY
+        V0VagrpCTnPh6QT4dCmY9hmCEI+oie0PwndbSq1nBfzilu5kIQCiqGJnxdEwMnH75JfMe2aNg/VWX
+        bws7YBMw==;
+Received: by fourecks.uuid.uk with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <simon@octiron.net>)
+        id 1jld8L-0007kd-Mh; Wed, 17 Jun 2020 19:50:09 +0100
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Date:
+        Message-ID:Subject:From:To; bh=ewfhDKKfirLitYkJROxTzREvtN9Z3svV6HuKAzBz5NY=;
+         b=YrkV8arWRnPaoaVVWFFpJUon2CJzTo8EWW/5dNaLDNQog1Xr3/zWJP73sh0mAQjflWg8nvtTbJ
+        9aqvhKCWTZfULTv4vmF0MkCVNm9uG3/++jeZ6Rta9XoOrGZHM2+uuAbNjdEHIPc0m0v60K6WBwz0t
+        ypKLgn6FXhc2WZ9tGsNkoC2P0ADW0ZWvJ+JIjciy2DDv9apHvXgPv+N5AZBcPs9I4NfYEQcRMXHRh
+        Gc6baFVOhXM6DVamcGu86jsXlN+hb0krRiuWc7AWUrb+wXQ1idjAcwmdjj9YWs58cxtujdesJb2RN
+        usdgu3CJHBFrxORGy3KItUp1y9WP/XP4qRMcA==;
+Received: by tsort.uuid.uk with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <simon@octiron.net>)
+        id 1jld8I-0005LZ-1O; Wed, 17 Jun 2020 19:49:58 +0100
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+From:   Simon Arlott <simon@octiron.net>
+Subject: [PATCH] scsi: sd: stop SSD (non-rotational) disks before reboot
+Message-ID: <499138c8-b6d5-ef4a-2780-4f750ed337d3@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+Date:   Wed, 17 Jun 2020 19:49:57 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-06-17 at 19:30 +0900, Daejun Park wrote:
-> > > implemented
-> > > as a module parameter, so that it can be configurable by the
-> > > user.
-> > > 
-> > > To gurantee a minimum memory pool size of 4MB:
-> > > $ insmod ufshpb.ko ufshpb_host_map_kbytes=4096
-> > 
-> > You are going through a lot of troubles to make it a loadable
-> > module.
-> > What are, in your opinion, the pros and cons of this design
-> > decision?
-> 
-> In my opinion...
-> 
-> pros:
-> 1. A user can unload an unnecessary module when there is an
-> insufficient
-> memory situation (HPB case).
-> 2. Since each UFS vendor has a different way of implementing UFS
-> features,
-> it can be supported as a separate module. Otherwise, many quirks must
-> be attached to module, which is not desirable way.
-> 3. It is possible to distinguish parts that are not necessary for
-> essential
-> ufs operation.
-> 4. It is advantageous to implement the latest functions according to
-> the
-> development speed of UFS.
-> 
-> cons:
-> 1. It is difficult work to be implemented as a module.
-> 2. Modifying "ufsfeature.c" is required to implement the feature that
-> can
-> not supported by the exsiting "ufsf_operation".
-> 
-> Thanks,
-> Daejun
+I need to use "reboot=p" on my desktop because one of the PCIe devices
+does not appear after a warm boot. This results in a very cold boot
+because the BIOS turns the PSU off and on.
 
-Dear Avri, Daejun, Bart
+The scsi sd shutdown process does not send a stop command to disks
+before the reboot happens (stop commands are only sent for a shutdown).
 
-It is true that it is very difficult to make everyone happy.
-We now have three HPB drivers in the patchwork, but I still didn't see
-a final agreement. Please tell me which one do you want to focus on?
+The result is that all of my SSDs experience a sudden power loss on
+every reboot, which is undesirable behaviour. These events are recorded
+in the SMART attributes.
 
-Bean
+Avoiding a stop of the disk on a reboot is appropriate for HDDs because
+they're likely to continue to be powered (and should not be told to spin
+down only to spin up again) but the default behaviour for SSDs should
+be changed to stop them before the reboot.
 
+Add a "stop_before_reboot" module parameter that can be used to control
+the shutdown behaviour of disks before a reboot. The default will be
+to stop non-rotational disks (SSDs) only, but it can be configured to
+stop all disks if it is known that power will be lost completely on a
+reboot.
+
+  sd_mod.stop_before_reboot=<integer>
+    0 = never
+    1 = non-rotational disks only (default)
+    2 = all disks
+
+The behaviour on shutdown is unchanged: all disks are unconditionally
+stopped.
+
+The disk I/O will be mostly quiescent at reboot time (and there is a
+sync first) but this should be added to stable kernels to protect all
+SSDs from unexpected power loss during a reboot by default. There is
+the potential for an unexpected power loss to corrupt data depending
+on the SSD model/firmware.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Simon Arlott <simon@octiron.net>
+---
+ Documentation/scsi/scsi-parameters.rst |  7 +++++++
+ drivers/scsi/sd.c                      | 22 +++++++++++++++++++---
+ 2 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/scsi/scsi-parameters.rst b/Documentation/scsi/scsi-parameters.rst
+index 9aba897c97ac..fd64d0d43861 100644
+--- a/Documentation/scsi/scsi-parameters.rst
++++ b/Documentation/scsi/scsi-parameters.rst
+@@ -101,6 +101,13 @@ parameters may be changed at runtime by the command
+ 			allowing boot to proceed.  none ignores them, expecting
+ 			user space to do the scan.
+ 
++	sd_mod.stop_before_reboot=
++			[SCSI] configure stop action for disks before a reboot
++			Format: <integer>
++			0 = never
++			1 = non-rotational disks only (default)
++			2 = all disks
++
+ 	sim710=		[SCSI,HW]
+ 			See header of drivers/scsi/sim710.c.
+ 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d90fefffe31b..1cd652e037ab 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -98,6 +98,12 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+ 
++static unsigned int stop_before_reboot = 1;
++
++module_param(stop_before_reboot, uint, 0644);
++MODULE_PARM_DESC(stop_before_reboot,
++		 "stop disks before reboot (1=non-rotational, 2=all)");
++
+ #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
+ #define SD_MINORS	16
+ #else
+@@ -3576,9 +3582,19 @@ static void sd_shutdown(struct device *dev)
+ 		sd_sync_cache(sdkp, NULL);
+ 	}
+ 
+-	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
+-		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+-		sd_start_stop_device(sdkp, 0);
++	if (sdkp->device->manage_start_stop) {
++		bool stop_disk = (system_state != SYSTEM_RESTART);
++
++		if (stop_before_reboot > 1) { /* stop all disks */
++			stop_disk = true;
++		} else if (stop_before_reboot) { /* non-rotational only */
++			stop_disk |= blk_queue_nonrot(sdkp->disk->queue);
++		}
++
++		if (stop_disk) {
++			sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
++			sd_start_stop_device(sdkp, 0);
++		}
+ 	}
+ }
+ 
+-- 
+2.17.1
+
+-- 
+Simon Arlott
