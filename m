@@ -2,126 +2,99 @@ Return-Path: <SRS0=X8O6=76=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 863BAC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 11:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DE39C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 12:23:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66E1F207DD
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 11:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BEE32098B
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 12:23:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="slufTE79"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IQBU2NQm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726763AbgFQL6H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 07:58:07 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:54221 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726280AbgFQL6F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 07:58:05 -0400
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200617115802epoutp036ee7fc947b3c8680a2d7cbf4954d8c24~ZUuP7_ig-1115511155epoutp03F
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2020 11:58:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200617115802epoutp036ee7fc947b3c8680a2d7cbf4954d8c24~ZUuP7_ig-1115511155epoutp03F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1592395082;
-        bh=z/9+1ybUONTNPwmt/FJ5Ns8irr9TIstMcjxiQL4SBfs=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=slufTE79UrRN8v+yDmkRK3topjC8Hf/5shgSEEsphwCN1KA4YdiuoliavNZSLsbmu
-         UmE/euKltti7Q5bvm2YrdCofWQN27GXuayPOPQHgGFvqecPLAinKptXWoqvZ+g0RTK
-         3wtBh8KFPl7V7p16Ru6GK8lRtqP4a0nRvVvzQ5bs=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p3.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200617115801epcas1p37d5545b6b352dc1d5c44992d6260d0d1~ZUuPcSeQ01421314213epcas1p3R;
-        Wed, 17 Jun 2020 11:58:01 +0000 (GMT)
-Mime-Version: 1.0
-Subject: RE: [RFC PATCH v2 3/5] scsi: ufs: Introduce HPB module
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <SN6PR04MB46405EC52240E00F5D634E2AFC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <231786897.01592395081831.JavaMail.epsvc@epcpadp2>
-Date:   Wed, 17 Jun 2020 19:30:26 +0900
-X-CMS-MailID: 20200617103026epcms2p5ca0dd6f6d540bad48967d7777fa6a530
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210
-References: <SN6PR04MB46405EC52240E00F5D634E2AFC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-        <231786897.01592212081335.JavaMail.epsvc@epcpadp2>
-        <336371513.41592205783606.JavaMail.epsvc@epcpadp2>
-        <231786897.01592205482200.JavaMail.epsvc@epcpadp2>
-        <231786897.01592213402355.JavaMail.epsvc@epcpadp1>
-        <CGME20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210@epcms2p5>
+        id S1726605AbgFQMXe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 08:23:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39402 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725967AbgFQMXd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 08:23:33 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 110BEC061573;
+        Wed, 17 Jun 2020 05:23:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=kuxQjzZYMs0tFNd2RWRJXl84IRXkLYtgdsZsfAqzUYg=; b=IQBU2NQmYfbU9KEVYJFVsVFYt3
+        +7GWl3H6cqgUcZ3+um4sERSLuBbzrv7jNZkdM2ZwoSGps038Nt8YY6ApW7PCwZCMfBc10Gz0GDyzO
+        FLEfO9i0HAYVGksHFDKWFRCvjngG1ecDhElpGpw4HbCuIF3Vgh8+lquymjHTFre2rQkZtiIdou22y
+        K/Aznp4o73iZczN2ksz99zOnq95b5QaAhubthCZzggr2DMMUwYzN2WxAT6vZxmfMDafnFj+QcCY/1
+        +vXnWv1CMw2nHqOvDrXxSQKys1aoXcvwws0qgcZ/d+QvYDKvCoK1AjvkCvq5Nft1Yp25qyw3Vw/EI
+        56Yd0PTA==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jlX69-0005Xm-3Z; Wed, 17 Jun 2020 12:23:21 +0000
+Date:   Wed, 17 Jun 2020 05:23:21 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Michal Hocko <mhocko@kernel.org>
+Cc:     dsterba@suse.cz, Joe Perches <joe@perches.com>,
+        Waiman Long <longman@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        David Rientjes <rientjes@google.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        "Jason A . Donenfeld" <Jason@zx2c4.com>, linux-mm@kvack.org,
+        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-amlogic@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
+        linux-ppp@vger.kernel.org, wireguard@lists.zx2c4.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
+        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
+        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
+        linux-security-module@vger.kernel.org,
+        linux-integrity@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] mm, treewide: Rename kzfree() to kfree_sensitive()
+Message-ID: <20200617122321.GJ8681@bombadil.infradead.org>
+References: <20200616015718.7812-1-longman@redhat.com>
+ <fe3b9a437be4aeab3bac68f04193cb6daaa5bee4.camel@perches.com>
+ <20200616230130.GJ27795@twin.jikos.cz>
+ <20200617003711.GD8681@bombadil.infradead.org>
+ <20200617071212.GJ9499@dhcp22.suse.cz>
+ <20200617110820.GG8681@bombadil.infradead.org>
+ <20200617113157.GM9499@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200617113157.GM9499@dhcp22.suse.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Jun 17, 2020 at 01:31:57PM +0200, Michal Hocko wrote:
+> On Wed 17-06-20 04:08:20, Matthew Wilcox wrote:
+> > If you call vfree() under
+> > a spinlock, you're in trouble.  in_atomic() only knows if we hold a
+> > spinlock for CONFIG_PREEMPT, so it's not safe to check for in_atomic()
+> > in __vfree().  So we need the warning in order that preempt people can
+> > tell those without that there is a bug here.
 > 
-> > This is a patch for the HPB module.
-> > The HPB module queries UFS for device information during initialization.
-> > We added the export symbol to two functions in ufshcd.c to initialize
-> > the HPB module.
-> > 
-> > The HPB module can be loaded or built-in as needed.
-> > The mininum size of the memory pool used in the HPB module is
-> Typo minimum
-> 
-> > implemented
-> > as a module parameter, so that it can be configurable by the user.
-> > 
-> > To gurantee a minimum memory pool size of 4MB:
-> > $ insmod ufshpb.ko ufshpb_host_map_kbytes=4096
-> You are going through a lot of troubles to make it a loadable module.
-> What are, in your opinion, the pros and cons of this design decision?
+> ... Unless I am missing something in_interrupt depends on preempt_count() as
+> well so neither of the two is reliable without PREEMPT_COUNT configured.
 
-In my opinion...
-
-pros:
-1. A user can unload an unnecessary module when there is an insufficient
-memory situation (HPB case).
-2. Since each UFS vendor has a different way of implementing UFS features,
-it can be supported as a separate module. Otherwise, many quirks must
-be attached to module, which is not desirable way.
-3. It is possible to distinguish parts that are not necessary for essential
-ufs operation.
-4. It is advantageous to implement the latest functions according to the
-development speed of UFS.
-
-cons:
-1. It is difficult work to be implemented as a module.
-2. Modifying "ufsfeature.c" is required to implement the feature that can
-not supported by the exsiting "ufsf_operation".
-
-Thanks,
-Daejun
+preempt_count() always tracks whether we're in interrupt context,
+regardless of CONFIG_PREEMPT.  The difference is that CONFIG_PREEMPT
+will track spinlock acquisitions as well.
