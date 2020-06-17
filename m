@@ -2,126 +2,114 @@ Return-Path: <SRS0=X8O6=76=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A622C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:57:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F4076C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:59:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE2E121531
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:57:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2BC521527
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Jun 2020 08:59:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="thh63VHs"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YootRK1o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726025AbgFQI5z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 04:57:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35906 "EHLO
+        id S1726594AbgFQI7Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 04:59:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbgFQI5z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 04:57:55 -0400
+        with ESMTP id S1725964AbgFQI7Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 04:59:24 -0400
 Received: from mail-vs1-xe44.google.com (mail-vs1-xe44.google.com [IPv6:2607:f8b0:4864:20::e44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F7A4C061573;
-        Wed, 17 Jun 2020 01:57:55 -0700 (PDT)
-Received: by mail-vs1-xe44.google.com with SMTP id j13so937068vsn.3;
-        Wed, 17 Jun 2020 01:57:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AD1EC061573;
+        Wed, 17 Jun 2020 01:59:24 -0700 (PDT)
+Received: by mail-vs1-xe44.google.com with SMTP id l10so918275vsr.10;
+        Wed, 17 Jun 2020 01:59:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=e0GIsBatfapINbf1Qhrb6ieuf0yzr/q+/Cwq8LRbwso=;
-        b=thh63VHsT+2xCdrOTfL871hB51pmQB0rlLEQYQ/D2M6BBadj7jBAS2z65tXfYR4Tr1
-         wR7WeY24w9GxeO8dDxW8QmOUriK9jg6VA0m8OBsgFs2UT6IBWmPeK/H0qpKmzsbFkDhB
-         +tS4KpohwMSQwCTUu8n1kBn0vnepV71BshhNwvVODL5DpczpxvnnqoLD4N3VYYSt0dCz
-         ic78H2v3vDFdJ9rfVcCn+zBFlemn0htT7oBz8BnkILsQEEsL9RA0RFNevonUcoEbn0Ke
-         i2OYagDGxBBInJ95+Za7ZZrUTzF0s7j3gFL+Gn+9RKr6boXRrNPz8fFWqNeh4sFBiz0+
-         yBow==
+        bh=EYFdMqmIuxR/QD+dIztgN1OBOyAiHVdjdW3clKBfx9w=;
+        b=YootRK1o/udIGpVTrSt0b6/K6VzGjZvz3cEm9RpKyz4BswP0wBqUjzOPoH4EOOVwkV
+         oF3kdAtTnl80p5ZbZJ/N7DqKYe5Yk5NahvHD+h3uT2mTbIGqQ65VEmghjk0pGeVZ+BaD
+         8i5mbNGeC7SdbeaAmjRzRHn1NX6qI0loVq032cnOmJzqQGRvw9T8IUEvt79+Q0B7auKD
+         kF5/DwtVLoAPsxey47ySitNdVJVX2lZfo6GZam0zP52oF+ASGmXZ5VPE+IPPMrOkQbE1
+         r+9cLNfNbeV9vOqp3Bm7aS0Bmynqc2JCDJszzJv0hSLEaQSe5+l5UwsAg18AO2ycumDh
+         /v5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=e0GIsBatfapINbf1Qhrb6ieuf0yzr/q+/Cwq8LRbwso=;
-        b=CIKDpvUFsFAqowGk4ZEpoQkT9nUCfuVUb8EELLkCNX+s4uDdZFfPuZKDIkewyFnF9z
-         ApHTmfjbwOiasbWCRrAo5vWdwxPVys64Yc0unlbt9gaUafc5GIxkZGHp785DDtOSexU8
-         YZJshu+d+AAy+StbR3VC5QwfiCFxFuMsI/5oqaSJb2Y2tRz9xNlbTajY6BzGFxQFQItm
-         S7oqN+c5yn0SzZo2bTgDPn+tfCnCy6eDv+loRrxsPBSKaQKPxkvL4ODE1tFDRCnMBiG4
-         cb09Mcll3uCREB6FAKQ3JLwMFvNCJWBkc5DKKdwysukafEAqlIY52DOyB3XTq50c62GY
-         y7Lg==
-X-Gm-Message-State: AOAM53230nHzdLjSXwa5+wpZunHcsMVBHM5bl0znepG36HNQwRwF0K4q
-        mhmyzctaekcRWhtCfU9ggCxJLAfP02HS45Fsj3c=
-X-Google-Smtp-Source: ABdhPJwFD40J/rabMT3XsR4v1Ox0g6ANGlzSspKwGjvnIWrfQ3tNbNLN5wNI3QvElV6zbvR8Nowyhk34KTrB0KLEmqI=
-X-Received: by 2002:a67:a64c:: with SMTP id r12mr4847402vsh.127.1592384274215;
- Wed, 17 Jun 2020 01:57:54 -0700 (PDT)
+        bh=EYFdMqmIuxR/QD+dIztgN1OBOyAiHVdjdW3clKBfx9w=;
+        b=L/XsoTGvivTLjGZoQcN+ssRgBzqC6D0EAmE8rpSrMkX9DO3+OCG/caLcee/GVGhKT0
+         44ie1569J7LH+0d+kgENKkqt39wuZG4LFKYpyLF/tPxiJDCL1FHPcHrdFfIQLCQOYSF1
+         Ei5xYB35cgXmN4pO/dvse8Ri1O+izJA4OnlEopw6mUe7P2SVVPlyYw7vvfa97dm8SdNr
+         sQlvUVzpBs4eJ3LPv2+EAjxx61IG5HNma0wFeMTfZo4OF8Waeu6U9mYILtRRjKjqFSSz
+         PtoOLJzAfRck7IMCngT0uZJlJ0sX2N5HhCjQwgEi/2c7UUcqS5zCifaIf4USEeuPJ/A/
+         tRmQ==
+X-Gm-Message-State: AOAM533V4SE4LJQY1MF3cT2wEcairbNYZ84lmI4B0BWUMW1Y8CKTPMOg
+        uw42ufsA/oko+iXQdY35KwGMgO+hwz8eGYNF7dA=
+X-Google-Smtp-Source: ABdhPJyc1vZfkYuSzIe3xUWojqAeNU1qlFHLUMD47fby93Le5wM33xkoWW/r8PFCmbr5olRG8c6+eESixM28o0UA/NA=
+X-Received: by 2002:a67:fb8e:: with SMTP id n14mr4826303vsr.136.1592384363723;
+ Wed, 17 Jun 2020 01:59:23 -0700 (PDT)
 MIME-Version: 1.0
-References: <47dcc56312229fc8f25f39c2beeb3a8ba811f3e9.camel@gmail.com>
- <336371513.41592205783606.JavaMail.epsvc@epcpadp2> <231786897.01592205482200.JavaMail.epsvc@epcpadp2>
- <231786897.01592212081335.JavaMail.epsvc@epcpadp2> <CGME20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210@epcms2p6>
- <1210830415.21592275802431.JavaMail.epsvc@epcpadp1> <SN6PR04MB4640EE125CF504AF9362B23FFC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-In-Reply-To: <SN6PR04MB4640EE125CF504AF9362B23FFC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200617084911.167359-1-colin.king@canonical.com>
+In-Reply-To: <20200617084911.167359-1-colin.king@canonical.com>
 From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Wed, 17 Jun 2020 14:27:19 +0530
-Message-ID: <CAGOxZ50TUnvmmdspxr6dHWrpoxZqHtvR-1Wg6jAVH6k-w5LT2w@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 2/5] scsi: ufs: Add UFS-feature layer
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        Bean Huo <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
+Date:   Wed, 17 Jun 2020 14:28:48 +0530
+Message-ID: <CAGOxZ52KM-DpPPv5qpKZCRoXzEH=YJvcHsNs=3t6rcrB8yX56Q@mail.gmail.com>
+Subject: Re: [PATCH][next] scsi: ufs: ufs-exynos: fix spelling mistake
+ "pa_granularty" -> "pa_granularity"
+To:     Colin King <colin.king@canonical.com>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Seungwon Jeon <essuuj@gmail.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 17, 2020 at 12:27 PM Avri Altman <Avri.Altman@wdc.com> wrote:
+On Wed, Jun 17, 2020 at 2:19 PM Colin King <colin.king@canonical.com> wrote:
 >
-> >
-> > Hi, Bean
-> > >
-> > > On Mon, 2020-06-15 at 16:23 +0900, Daejun Park wrote:
-> > > > +void ufsf_scan_features(struct ufs_hba *hba)
-> > > > +{
-> > > > +       int ret;
-> > > > +
-> > > > +       init_waitqueue_head(&hba->ufsf.sdev_wait);
-> > > > +       atomic_set(&hba->ufsf.slave_conf_cnt, 0);
-> > > > +
-> > > > +       if (hba->dev_info.wspecversion >= HPB_SUPPORTED_VERSION &&
-> > > > +           (hba->dev_info.b_ufs_feature_sup & UFS_DEV_HPB_SUPPORT))
-> > >
-> > > How about removing this check "(hba->dev_info.wspecversion >=
-> > > HPB_SUPPORTED_VERSION" since ufs with lower version than v3.1 can add
-> > > HPB feature by FFU,
-> > > if (hba->dev_info.b_ufs_feature_sup  &UFS_FEATURE_SUPPORT_HPB_BIT) is
-> > > enough.
-> > OK, changing it seems no problem. But I want to know what other people
-> > think
-> > about this version checking code.
-> HPB1.0 isn't part of ufs3.1, but published only later.
-> Allowing earlier versions will required to quirk the descriptor sizes.
-> I see Bean's point here, but I vote for adding it in a single quirk, when the time comes.
+> From: Colin Ian King <colin.king@canonical.com>
 >
-I second Avri here, older devices need a quirk to handle, let do that
-as a separate patch.
-> Thanks,
-> Avri
+> There is a spelling mistake in a dev_warn message. Fix it.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+Thanks Colin,
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 
+>  drivers/scsi/ufs/ufs-exynos.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+> index 440f2af83d9c..0a9e99084f2a 100644
+> --- a/drivers/scsi/ufs/ufs-exynos.c
+> +++ b/drivers/scsi/ufs/ufs-exynos.c
+> @@ -883,7 +883,7 @@ static int exynos_ufs_post_link(struct ufs_hba *hba)
+>                 if (attr->pa_granularity < 1 || attr->pa_granularity > 6) {
+>                         /* Valid range for granularity: 1 ~ 6 */
+>                         dev_warn(hba->dev,
+> -                               "%s: pa_granularty %d is invalid, assuming backwards compatibility\n",
+> +                               "%s: pa_granularity %d is invalid, assuming backwards compatibility\n",
+>                                 __func__,
+>                                 attr->pa_granularity);
+>                         attr->pa_granularity = 6;
+> --
+> 2.27.0.rc0
+>
 
 
 -- 
