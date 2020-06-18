@@ -4,54 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8943AC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:27:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F150C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:29:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6364E21534
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:27:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E180214DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:29:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592447222;
-	bh=cz/GRFPBLgvpIiNPMxzph2rnnxVKOvaZBXFGZLk7SnY=;
+	s=default; t=1592447385;
+	bh=AIM68VyQmCJv9NVAjJep09xySiU1PdQUeWOx6nIZLZU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WJunKtUCV+bVZES9Gh85DjUq1G5FJ+4TNH0twGM3ojue/Y48WmLBzlsnoqqf8WVhz
-	 ZFaZoq1Mw+0+fZm/4jt/3UgFd/UcHiBDlynjCTSGjycGA7Inj9vTp7ZUIA+RtP60u7
-	 4uIWOzaPHpUUAhdSjWEQoclmF/u/zud33bSGwyXQ=
+	b=EunTeix/5Cv0HfjW7ePZoBcb7Xkev6EycKFBXjY5JJBTnWP4cPdFnz8Qt/EoDyYmt
+	 MGl2+Bf0pviM2vVuvAl5aXmhvxPB1BH6iDq7XJd1qQ9WeW5iM+Xw5CgF6qGx8XsCa1
+	 reKWjgUmeBCkrCMd7RdrYUsaqpnn6ox2FiHCW8PA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730652AbgFRC1B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:27:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47910 "EHLO mail.kernel.org"
+        id S1730118AbgFRC3o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:29:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46480 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729685AbgFRBQy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:16:54 -0400
+        id S1729548AbgFRBQI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:16:08 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DA408221F9;
-        Thu, 18 Jun 2020 01:16:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1CB28221F1;
+        Thu, 18 Jun 2020 01:16:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443013;
-        bh=cz/GRFPBLgvpIiNPMxzph2rnnxVKOvaZBXFGZLk7SnY=;
+        s=default; t=1592442967;
+        bh=AIM68VyQmCJv9NVAjJep09xySiU1PdQUeWOx6nIZLZU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YzTKhwbhEzSK08pO0BuYmqNYQ2ZhqvMXfS1Kl7xKz6OdAzWYcDsCCdrx/aLc5GAfc
-         zCYnR4tZu+dh6hcFisjGb3+g8a91iyr+gUcNBQaYsrJ/Rxzai1RJQequv47E7apjOT
-         UwalOsJ3oteGaPVY7Yw+UMBD+HHMQntqwK1esVCA=
+        b=U8txIk0hou5UswgieO/yHeKqkjMK5EzuRww/hSx5uVbtaSUu7mcEqp3xkl4UrjAT2
+         Jk+rKi6LNl79Xek7yV1DNQo5NNHekDeiDp5FGKk62J6TvF55db/rzykX6wIR7Ct3Kg
+         eHDI8MDYbQ+aIHV9gL9xK3gFvTyJZIPQG9CUIZGE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Daniel Wagner <dwagner@suse.de>,
-        Hannes Reinecke <hare@suse.de>,
+Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 016/266] scsi: core: free sgtables in case command setup fails
-Date:   Wed, 17 Jun 2020 21:12:21 -0400
-Message-Id: <20200618011631.604574-16-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 372/388] scsi: acornscsi: Fix an error handling path in acornscsi_probe()
+Date:   Wed, 17 Jun 2020 21:07:49 -0400
+Message-Id: <20200618010805.600873-372-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
-References: <20200618011631.604574-1-sashal@kernel.org>
+In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
+References: <20200618010805.600873-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,93 +59,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-[ Upstream commit 20a66f2bf280277ab5bb22e27445153b4eb0ac88 ]
+[ Upstream commit 42c76c9848e13dbe0538d7ae0147a269dfa859cb ]
 
-In case scsi_setup_fs_cmnd() fails we're not freeing the sgtables allocated
-by scsi_init_io(), thus we leak the allocated memory.
+'ret' is known to be 0 at this point.  Explicitly return -ENOMEM if one of
+the 'ecardm_iomap()' calls fail.
 
-Free the sgtables allocated by scsi_init_io() in case scsi_setup_fs_cmnd()
-fails.
-
-Technically scsi_setup_scsi_cmnd() does not suffer from this problem as it
-can only fail if scsi_init_io() fails, so it does not have sgtables
-allocated. But to maintain symmetry and as a measure of defensive
-programming, free the sgtables on scsi_setup_scsi_cmnd() failure as well.
-scsi_mq_free_sgtables() has safeguards against double-freeing of memory so
-this is safe to do.
-
-While we're at it, rename scsi_mq_free_sgtables() to scsi_free_sgtables().
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=205595
-Link: https://lore.kernel.org/r/20200428104605.8143-2-johannes.thumshirn@wdc.com
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Link: https://lore.kernel.org/r/20200530081622.577888-1-christophe.jaillet@wanadoo.fr
+Fixes: e95a1b656a98 ("[ARM] rpc: acornscsi: update to new style ecard driver")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_lib.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ drivers/scsi/arm/acornscsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 91c007d26c1e..206c9f53e9e7 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -551,7 +551,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
- 	}
- }
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index ddb52e7ba622..9a912fd0f70b 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -2911,8 +2911,10 @@ static int acornscsi_probe(struct expansion_card *ec, const struct ecard_id *id)
  
--static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
-+static void scsi_free_sgtables(struct scsi_cmnd *cmd)
- {
- 	if (cmd->sdb.table.nents)
- 		sg_free_table_chained(&cmd->sdb.table,
-@@ -563,7 +563,7 @@ static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
+ 	ashost->base = ecardm_iomap(ec, ECARD_RES_MEMC, 0, 0);
+ 	ashost->fast = ecardm_iomap(ec, ECARD_RES_IOCFAST, 0, 0);
+-	if (!ashost->base || !ashost->fast)
++	if (!ashost->base || !ashost->fast) {
++		ret = -ENOMEM;
+ 		goto out_put;
++	}
  
- static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- {
--	scsi_mq_free_sgtables(cmd);
-+	scsi_free_sgtables(cmd);
- 	scsi_uninit_cmd(cmd);
- 	scsi_del_cmd_from_list(cmd);
- }
-@@ -1063,7 +1063,7 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
- 
- 	return BLK_STS_OK;
- out_free_sgtables:
--	scsi_mq_free_sgtables(cmd);
-+	scsi_free_sgtables(cmd);
- 	return ret;
- }
- EXPORT_SYMBOL(scsi_init_io);
-@@ -1214,6 +1214,7 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
- 		struct request *req)
- {
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
-+	blk_status_t ret;
- 
- 	if (!blk_rq_bytes(req))
- 		cmd->sc_data_direction = DMA_NONE;
-@@ -1223,9 +1224,14 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
- 		cmd->sc_data_direction = DMA_FROM_DEVICE;
- 
- 	if (blk_rq_is_scsi(req))
--		return scsi_setup_scsi_cmnd(sdev, req);
-+		ret = scsi_setup_scsi_cmnd(sdev, req);
- 	else
--		return scsi_setup_fs_cmnd(sdev, req);
-+		ret = scsi_setup_fs_cmnd(sdev, req);
-+
-+	if (ret != BLK_STS_OK)
-+		scsi_free_sgtables(cmd);
-+
-+	return ret;
- }
- 
- static blk_status_t
+ 	host->irq = ec->irq;
+ 	ashost->host = host;
 -- 
 2.25.1
 
