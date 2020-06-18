@@ -2,168 +2,125 @@ Return-Path: <SRS0=Iqxk=77=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D5EC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 10:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D7B6C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 12:28:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C71B42193E
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 10:22:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 680C92080D
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 12:28:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="aMp7molH";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="C4IKPIV5"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="i409kKuw";
+	dkim=pass (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="u//XLbv1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728270AbgFRKWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Jun 2020 06:22:51 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50366 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726282AbgFRKWr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 06:22:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1592475767; x=1624011767;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=g52g/h8WIgYUC4RwVjymGTrl0sbADB0rD3EBI39XG+c=;
-  b=aMp7molHKI75DBAPntPh1W3CXkVqZRSXFmMnKG4a1eUuRVWMh7/EBQ68
-   RhP76f+u4jhaurY3BSC8xZkg30VGDRoRlhgcYHahPGMnuWPN7rOeHEbrO
-   j2Rf24x8J9bFG80+NMrtVzrl2T0ozyeoimMtMRmeitHH/D4nrS6zy5o1Y
-   rf393OuPqbP8F0Al6zmCzqxK2d8GOl2TFnM9Svrbi/kC4fYkw/lVOKe1g
-   35lvKwaciSncVZi6+W0Lr7v3Np6Gf+shMIf+B3rxznBjMm6XWbj0ds7sf
-   BAQOzFHSkCrBzFG7X5pBvFy1at94FJgDVc7xJ1wKIBBFIfHmZZmkBmly4
-   w==;
-IronPort-SDR: mbNJWiZe4aQ6D3LKWn5+VtqJR7HKVPRRY+5e4bmAzjwcT72kMvN50oHXeow4K1Fy8Zwmj9i0xd
- L7vDXwt9wNEmJBbUd0fudE1UxLtsOqCgP5A9bTP4QyFz93qY7hJkogbN7voCm3C6yaEbpkPQd6
- IQqZm8ZJfFTkgFgYCGigjkdCPf56DPieunxJzLMAixgsteCevrsYXMi7IH2cdfp7CnprASkD0H
- FVeP3m7EQRrdbuaYfrD9aaAjA4v7e+LFRK3NtThHm3KcsBZSVwzOOH+uoxu44JI8qd4uV44ZwE
- ks0=
-X-IronPort-AV: E=Sophos;i="5.73,526,1583164800"; 
-   d="scan'208";a="243266673"
-Received: from mail-bn8nam12lp2174.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.174])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Jun 2020 18:22:42 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GBkIk80QE0EQGFMhnADIl9B85Z94T0Orqh2Zb1Z1aQWKxPXhvzSHSp8XFuqf4AJ9IzXz2Jw3copFYdSCC6ujY/ldryi4J7sGNSCLXKlbTx/XCQwg6MAS8cwLaay2gJOcn0ZHXrdMee6TB33AXBKA5rpmTCknTbJPWeZ4zZgkw9Hzz/u/U1KNHhcuAde/IAuprS4dVg6h65G1N61b9XUsBGHFzlVfaMGvKlkQW87b8C++Xkzez2urFiHFO/R73ti1a41JvkWaYP4QZ08OVUNllq4BpJjQYs8wO1jll8DA4SU/lcm3+lmG4CO0xQT6HLsKSxALFOScr892jfQ+NxmH+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=g52g/h8WIgYUC4RwVjymGTrl0sbADB0rD3EBI39XG+c=;
- b=kRkJwxgP9yZzq7wmEzEASXOEKhipUefPR68ZZ1WdZ3PZqQBiY+09ht6ECokzRP79iM0/CP4nJ8I3yIx2+k+R5nbcizP7l6cyd5runs30rLG83fb7N3pmR94Mp9Nfo/nQRJolZdV2ffnD/L7H0wsXPU9uwJ0oWUwVLK2VfyGWVzQaITNAHh3wimgJ/kPELGynQ0Ha8PREGLd/iwrVZNXHA24nSgl4AHua3f/fDsrQWPCw6LCVYUhNmyjKeCaabNQFlfV3QcnkxFExleAHGpbGXIQKnyM3mq3mtluQ+CRFB569ns9QjzmXG7Ad69iIMO0ZeIODPpr3hlv2uErAZsAsBQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=g52g/h8WIgYUC4RwVjymGTrl0sbADB0rD3EBI39XG+c=;
- b=C4IKPIV5yqGGgLdqV2yS4nlvLwp5cllMsl7Rp8sEh7uIhHD7JRLaKHKH3edif+RNCUr14bfRlZuVMStCwmhTgcdzgFuRcrayUQEV46dBN4pHZujxx9KjHvUGO/fHNy+lw95FnnibPZmhoYGbUv3N8RF+MSb/3I1Y8h2HOtcEUK8=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4717.namprd04.prod.outlook.com (2603:10b6:805:a8::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Thu, 18 Jun
- 2020 10:22:41 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3109.021; Thu, 18 Jun 2020
- 10:22:41 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Subject: RE: [RFC PATCH v2 4/5] scsi: ufs: L2P map management for HPB read
-Thread-Topic: [RFC PATCH v2 4/5] scsi: ufs: L2P map management for HPB read
-Thread-Index: AQHWQvj3YPr08JZ2QEy1VbmJ7tAyW6jeLfhg
-Date:   Thu, 18 Jun 2020 10:22:41 +0000
-Message-ID: <SN6PR04MB4640B1D4FBDF68A59D993F21FC9B0@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <231786897.01592213402355.JavaMail.epsvc@epcpadp1>
-        <231786897.01592212081335.JavaMail.epsvc@epcpadp2>
-        <336371513.41592205783606.JavaMail.epsvc@epcpadp2>
-        <231786897.01592205482200.JavaMail.epsvc@epcpadp2>
-        <CGME20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210@epcms2p7>
- <231786897.01592214002170.JavaMail.epsvc@epcpadp1>
-In-Reply-To: <231786897.01592214002170.JavaMail.epsvc@epcpadp1>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 1b96efa8-7d09-41ba-ad58-08d81371885c
-x-ms-traffictypediagnostic: SN6PR04MB4717:
-x-microsoft-antispam-prvs: <SN6PR04MB4717719AFDA54F4445714622FC9B0@SN6PR04MB4717.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:2150;
-x-forefront-prvs: 0438F90F17
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Maw1dHGzGNonrs0vGZ/B8nDt0aN19qokrulegxtSP6hUfPkwk9Hh7iLAJg8BLCW9e3ChI+XFrFZdDdzVK05sbyZNalzXUlo6kGKKhYXdoPTqR2WR+Sq1rMeDMst+kUzAboQa6Lc9qOBeslEnpzYPTJTLfjH/AQmVYCt+wInQhHEH+Uo0S+pt6Wfjvezy7fFZBS3iKY9dA9LRam6j661BczWJ/d7fhpz5R57n847j9yL3De/v2RWj+R034z2KCzC9yRfTlEkDHg6MwyQfkZVQiW73iC+NRQ8UTSy2EdTnv1RLJMfBZCSAAtaJc5Eb+zWto0Z3txx6d8P7ujCJrjUsx1UPp20Rp+hOIB1z2vPO4ZWiNhmHaVUjcXycSg9I/lYS
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(376002)(366004)(346002)(396003)(39860400002)(33656002)(5660300002)(52536014)(7696005)(2906002)(8936002)(7416002)(64756008)(66476007)(26005)(8676002)(66946007)(316002)(76116006)(478600001)(66446008)(66556008)(4326008)(54906003)(6506007)(110136005)(9686003)(55016002)(71200400001)(86362001)(83380400001)(186003)(921003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: lbObWt8CbaN2ive0Na/WShHvr/D0LAvCbUzsc5krbtHdEgi8yAvIb5R9zUNqt7xqL96GMmv3DbALe7g1c52IvJXzoX9z89sYXJQdrYSj9UVaIvCuTTafsXjfnoEh6D04WmHeAefEGVJfxSKl6tqLSzg6R/GgjYsMtf0wxYPaM+NsxwbRLOlWagcUX+cNqKQ+HHJ8unZK86lDEiCJlEIYIszw2/cy/cL1ECIFhZ3AR7n3mgqHJTHRO8ouSzFzEOnIkTQ3bR9S2ztJGSyQzEKVVp7/sNgp/b12C1sPa+mUCPM+uZhraVm7t55sm+SPCFUWJd7wNM5UyeiiD0XeoDEGwLTxpu6xykrfubrIRPcTUDrbzc1gOrFCiegjT39uvdFLwe2+BbzmBknLCNF+kSbmmfyvUY8Xy9ghrZZQoaPZUg30PPTIyAgFpvM2kdkFTYtrq7WY00i0toBb3LX0ZF377lh1lzXN1wPZZgBcebsAVBqkSXhw3pcCLj39ZB1V+eRj
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1729561AbgFRM2C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Jun 2020 08:28:02 -0400
+Received: from fourecks.uuid.uk ([147.135.211.183]:43798 "EHLO
+        fourecks.uuid.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729300AbgFRM0b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 08:26:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:Reply-To:Cc:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=GwpwYN7fcjVD5JOBtRDLYYGkzTdld4atRJZPVH9CT8o=; b=i409kKuweWdj5i+yO300qD9UM9
+        ogf5WGJ0wNz9RF8USD87C2lkiPmylOiocyPhc0flTIFGFEZOt9zAwTNhaAGT5j6f0BioTj49Sdxte
+        1uvOmKX9u0/IA/DrpmBbVDO/Wu0pwYutwbDgy5uKEmze5ZIotk5iVSbjpSJ902LYGtjvOuFH6AAA/
+        0vglcFdFcci4V9m5505JULMPYtu0IcAXg5abJzqT/ddeInMHXSNenvTcmoz1iH7D+gDA2t8JTiQC6
+        TLkkp1RMHTWNqfih6N+/3sVQUlX+vjRUdb5dqxq9L8EL1axrc682ZcgFNI8+aS3lPE8p3Zqq9sHEU
+        mPt2JIpg==;
+Received: by fourecks.uuid.uk with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <simon@octiron.net>)
+        id 1jltcD-0003Fq-Vh; Thu, 18 Jun 2020 13:26:06 +0100
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:To:Subject;
+        bh=GwpwYN7fcjVD5JOBtRDLYYGkzTdld4atRJZPVH9CT8o=; b=u//XLbv1oTe1N+cIA92I5Isk9E
+        HxRwpuhsmswk3V023bPznux8shzpvpkbjrksH4GPK/l1hpYAi27aj7MtpWqL7wldlaVtUKaWxMPO0
+        pwniabl17tIVkkMyzPQG+P3qkZTaQciuEwG39U6iQlZPFoniMukTU1HLwOOoshogmVBYKqPYZKH1K
+        jIj5awZyrW/2pBBnijyOKvnaOet8I4l1GM3nmhRtnq/m5e9bPt5Q8EWERFfuSBMbrZE9doXyuMo5x
+        b8nX+oCi0dulpMDnDLXqI0udfj+pQFfiMZiVjbBvQ7x2jUxjfQpb7YbST1Zq0G+SrkZmGMGOok+aJ
+        aIjoGEFA==;
+Received: by tsort.uuid.uk with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <simon@octiron.net>)
+        id 1jltcC-0005s7-9F; Thu, 18 Jun 2020 13:25:56 +0100
+Subject: Re: [PATCH] scsi: sd: stop SSD (non-rotational) disks before reboot
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+References: <499138c8-b6d5-ef4a-2780-4f750ed337d3@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+ <CY4PR04MB37511505492E9EC6A245CFB1E79B0@CY4PR04MB3751.namprd04.prod.outlook.com>
+From:   Simon Arlott <simon@octiron.net>
+Message-ID: <18da4d78-f3df-967f-e7ea-8f2faaa95d6b@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+Date:   Thu, 18 Jun 2020 13:25:56 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1b96efa8-7d09-41ba-ad58-08d81371885c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2020 10:22:41.0563
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: UV8IcBjvYacpBrf7ig3LmmtQd4hvtSEzUnzA6xkiTKfva/2RRYXib8tQblWS3f2kDJY1VV90cDaFEeZKHaIOng==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4717
+In-Reply-To: <CY4PR04MB37511505492E9EC6A245CFB1E79B0@CY4PR04MB3751.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-DQo+ICtzdGF0aWMgdm9pZCB1ZnNocGJfcnVuX2FjdGl2ZV9zdWJyZWdpb25fbGlzdChzdHJ1Y3Qg
-dWZzaHBiX2x1ICpocGIpDQo+ICt7DQo+ICsgICAgICAgc3RydWN0IHVmc2hwYl9yZWdpb24gKnJn
-bjsNCj4gKyAgICAgICBzdHJ1Y3QgdWZzaHBiX3N1YnJlZ2lvbiAqc3JnbjsNCj4gKyAgICAgICBz
-dHJ1Y3QgdWZzaHBiX21hcF9jdHggKm1jdHg7DQptY3R4ICBkb2Vzbid0IHJlYWxseSBkbyBhbnl0
-aGluZyBoZXJlDQoNCj4gKyAgICAgICB1bnNpZ25lZCBsb25nIGZsYWdzOw0KPiArICAgICAgIGlu
-dCByZXQgPSAwOw0KPiArDQo+ICsgICAgICAgc3Bpbl9sb2NrX2lycXNhdmUoJmhwYi0+cnNwX2xp
-c3RfbG9jaywgZmxhZ3MpOw0KPiArICAgICAgIHdoaWxlICgoc3JnbiA9IGxpc3RfZmlyc3RfZW50
-cnlfb3JfbnVsbCgmaHBiLT5saF9hY3Rfc3JnbiwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0IHVmc2hwYl9zdWJyZWdpb24sDQo+ICsgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGxpc3RfYWN0X3NyZ24p
-KSkgew0KPiArICAgICAgICAgICAgICAgbGlzdF9kZWxfaW5pdCgmc3Jnbi0+bGlzdF9hY3Rfc3Jn
-bik7DQo+ICsgICAgICAgICAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKCZocGItPnJzcF9s
-aXN0X2xvY2ssIGZsYWdzKTsNCj4gKw0KPiArICAgICAgICAgICAgICAgcmduID0gaHBiLT5yZ25f
-dGJsICsgc3Jnbi0+cmduX2lkeDsNCj4gKyAgICAgICAgICAgICAgIG1jdHggPSBOVUxMOw0KPiAr
-ICAgICAgICAgICAgICAgcmV0ID0gdWZzaHBiX2FkZF9yZWdpb24oaHBiLCByZ24pOw0KPiArICAg
-ICAgICAgICAgICAgaWYgKHJldCkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7DQo+
-ICsNCj4gKyAgICAgICAgICAgICAgIHJldCA9IHVmc2hwYl9pc3N1ZV9tYXBfcmVxKGhwYiwgcmdu
-LCBzcmduKTsNCj4gKyAgICAgICAgICAgICAgIGlmIChyZXQpIHsNCj4gKyAgICAgICAgICAgICAg
-ICAgICAgICAgZGV2X25vdGljZSgmaHBiLT5ocGJfbHVfZGV2LA0KPiArICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgImlzc3VlIG1hcF9yZXEgZmFpbGVkLiByZXQgJWQsIHJlZ2lvbiAlZCAtICVk
-XG4iLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgcmV0LCByZ24tPnJnbl9pZHgsIHNy
-Z24tPnNyZ25faWR4KTsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgYnJlYWs7DQo+ICsgICAg
-ICAgICAgICAgICB9DQo+ICsgICAgICAgICAgICAgICBzcGluX2xvY2tfaXJxc2F2ZSgmaHBiLT5y
-c3BfbGlzdF9sb2NrLCBmbGFncyk7DQo+ICsgICAgICAgfQ0KPiArDQo+ICsgICAgICAgaWYgKHJl
-dCkgew0KPiArICAgICAgICAgICAgICAgZGV2X25vdGljZSgmaHBiLT5ocGJfbHVfZGV2LCAicmVn
-aW9uICVkIC0gJWQsIHdpbGwgcmV0cnlcbiIsDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAg
-IHJnbi0+cmduX2lkeCwgc3Jnbi0+c3Jnbl9pZHgpOw0KPiArICAgICAgICAgICAgICAgc3Bpbl9s
-b2NrX2lycXNhdmUoJmhwYi0+cnNwX2xpc3RfbG9jaywgZmxhZ3MpOw0KPiArICAgICAgICAgICAg
-ICAgdWZzaHBiX2FkZF9hY3RpdmVfbGlzdChocGIsIHJnbiwgc3Jnbik7DQo+ICsgICAgICAgfQ0K
-PiArICAgICAgIHNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmhwYi0+cnNwX2xpc3RfbG9jaywgZmxh
-Z3MpOw0KPiArfQ0K
+On 18/06/2020 09:36, Damien Le Moal wrote:
+> On 2020/06/18 3:50, Simon Arlott wrote:
+>> I need to use "reboot=p" on my desktop because one of the PCIe devices
+>> does not appear after a warm boot. This results in a very cold boot
+>> because the BIOS turns the PSU off and on.
+>> 
+>> The scsi sd shutdown process does not send a stop command to disks
+>> before the reboot happens (stop commands are only sent for a shutdown).
+>> 
+>> The result is that all of my SSDs experience a sudden power loss on
+>> every reboot, which is undesirable behaviour. These events are recorded
+>> in the SMART attributes.
+> 
+> Why is it undesirable for an SSD ? The sequence you are describing is not
+> different from doing "shutdown -h now" and then pressing down the power button
+> again immediately after power is cut...
+
+On a shutdown the kernel will send a stop command to the SSD. It does
+not currently do this for a reboot so I observe the unexpected power
+loss counters increasing.
+
+> Are you experiencing data loss or corruption ? If yes, since a clean reboot or
+> shutdown issues a synchronize cache to all devices, a corruption would mean that
+> your SSD is probably not correctly processing flush cache commands.
+
+No, I'm not experiencing any data loss or corruption that I'm aware of.
+
+We can argue whether or not any given SSD correctly processes commands
+to flush the cache, but they are expecting to be stopped before power
+is removed.
+
+>> Avoiding a stop of the disk on a reboot is appropriate for HDDs because
+>> they're likely to continue to be powered (and should not be told to spin
+>> down only to spin up again) but the default behaviour for SSDs should
+>> be changed to stop them before the reboot.
+> 
+> If your BIOS turns the PSU down and up, then the HDDs too will lose power... The
+> difference will be that the disks will still be spinning from inertia on the
+> power up, and so the HDD spin up processing will be faster than for a pure cold
+> boot sequence.
+
+I haven't verified it, but the BIOS leaves the power off for several
+seconds which should be long enough for the HDDs to spin down.
+
+I'm less concerned about those suddenly losing power but it would be
+nice to have a stop command sent to them too.
+
+-- 
+Simon Arlott
