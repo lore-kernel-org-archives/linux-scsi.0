@@ -4,49 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 353D9C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:12:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF4EDC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:14:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C53220884
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:12:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BB5A20884
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:14:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592446372;
-	bh=tTYjXOD8oHPGv57EVtZqi6gCt2pfErDoIHKj/yUv3Ng=;
+	s=default; t=1592446487;
+	bh=d9AYsEQJGWrQPuhepMSkj3olfNftcEJXAwTAup6nUME=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YfTmDICSiE/Ur0czB99K8Gkvjn/Tcz854bB28AMUbuus+XZjuu0sFiuLzz37KskOk
-	 FFU7UvX/LPmT0VG4oXGImGxvw4uydyGHuNDwrRIhdef6Ek8WHtfF1PHibYCUgWys4H
-	 dCzqr1oYlvjdRrdkN5DlB9ucKiI/OHxT2fwGUDLY=
+	b=ZMQprTHdxtT8OaIDP5+7fFg1MK+/Ll842jolmfQIVjnJzaOD+MwetRtbwhVU3+PsE
+	 zwrnqne56QRW8rIrqAcsmhHiLFGzGcfNHZ6+vrrUZt3cf5iyfMUZpWqD0LXfHv9oh5
+	 BKleAP/59M47nbdVtD965cE3FGnC2nev8xYm24f4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730472AbgFRBVQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:21:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53548 "EHLO mail.kernel.org"
+        id S1730354AbgFRBUo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:20:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53026 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729046AbgFRBVP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:21:15 -0400
+        id S1730346AbgFRBUo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:20:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6CC8E20CC7;
-        Thu, 18 Jun 2020 01:21:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C0680206F1;
+        Thu, 18 Jun 2020 01:20:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443275;
-        bh=tTYjXOD8oHPGv57EVtZqi6gCt2pfErDoIHKj/yUv3Ng=;
+        s=default; t=1592443243;
+        bh=d9AYsEQJGWrQPuhepMSkj3olfNftcEJXAwTAup6nUME=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=U0IC52wJIbYONqY0i5oKZ2CkEqB7Qy47/T9mkGxM16hK//8Y5xnTzKUEtuIdNUMTF
-         cZwyWSh1Fep/w5Pao/Z2z1FaTN4sDcZnhgsuSQb+WQ9dRuGSdZ78603tUwqi7BsjMU
-         hgZ9hUwKBTqxFKnlm9PSKcYq0ovFG8wZaFt6gUBU=
+        b=r5o+YL42aJiI0c+GLWsqC1ik/pfr1eBBCVEr6wrBFCxfivn2WFrs3T6y35nveRrOL
+         h95B0R1YMKQjd45SpTTG54q8ZlUTUCIJ4d+j7rIqvdgKc4Gof6UGq34KyWQE5nEQBn
+         ynfcP8XnnV974JzAj7cqQu+iSMSsy8mPYmI0lETQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qiushi Wu <wu000273@umn.edu>, Lee Duncan <lduncan@suse.com>,
+Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        Sasha Levin <sashal@kernel.org>, linux-arm-msm@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 220/266] scsi: iscsi: Fix reference count leak in iscsi_boot_create_kobj
-Date:   Wed, 17 Jun 2020 21:15:45 -0400
-Message-Id: <20200618011631.604574-220-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 194/266] scsi: ufs-qcom: Fix scheduling while atomic issue
+Date:   Wed, 17 Jun 2020 21:15:19 -0400
+Message-Id: <20200618011631.604574-194-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
 References: <20200618011631.604574-1-sashal@kernel.org>
@@ -59,36 +61,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Qiushi Wu <wu000273@umn.edu>
+From: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
 
-[ Upstream commit 0267ffce562c8bbf9b57ebe0e38445ad04972890 ]
+[ Upstream commit 3be60b564de49875e47974c37fabced893cd0931 ]
 
-kobject_init_and_add() takes reference even when it fails. If this
-function returns an error, kobject_put() must be called to properly
-clean up the memory associated with the object.
+ufs_qcom_dump_dbg_regs() uses usleep_range, a sleeping function, but can be
+called from atomic context in the following flow:
 
-Link: https://lore.kernel.org/r/20200528201353.14849-1-wu000273@umn.edu
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Qiushi Wu <wu000273@umn.edu>
+ufshcd_intr -> ufshcd_sl_intr -> ufshcd_check_errors ->
+ufshcd_print_host_regs -> ufshcd_vops_dbg_register_dump ->
+ufs_qcom_dump_dbg_regs
+
+This causes a boot crash on the Lenovo Miix 630 when the interrupt is
+handled on the idle thread.
+
+Fix the issue by switching to udelay().
+
+Link: https://lore.kernel.org/r/20200525204125.46171-1-jeffrey.l.hugo@gmail.com
+Fixes: 9c46b8676271 ("scsi: ufs-qcom: dump additional testbus registers")
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/iscsi_boot_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ufs/ufs-qcom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-index e4857b728033..a64abe38db2d 100644
---- a/drivers/scsi/iscsi_boot_sysfs.c
-+++ b/drivers/scsi/iscsi_boot_sysfs.c
-@@ -352,7 +352,7 @@ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
- 	boot_kobj->kobj.kset = boot_kset->kset;
- 	if (kobject_init_and_add(&boot_kobj->kobj, &iscsi_boot_ktype,
- 				 NULL, name, index)) {
--		kfree(boot_kobj);
-+		kobject_put(&boot_kobj->kobj);
- 		return NULL;
- 	}
- 	boot_kobj->data = data;
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 411ef60b2c14..c49e9f6c46f8 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1546,11 +1546,11 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ 
+ 	/* sleep a bit intermittently as we are dumping too much data */
+ 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ 	ufs_qcom_testbus_read(hba);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ 	ufs_qcom_print_unipro_testbus(hba);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ }
+ 
+ /**
 -- 
 2.25.1
 
