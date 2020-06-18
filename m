@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC8FC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E16C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:26:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DDDC221F0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:24:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C2FC221F7
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:26:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592443498;
-	bh=WWjhVMfWAJDBpqfzVCsKyPFfmNAuZNLUns5DSJPuq3I=;
+	s=default; t=1592443596;
+	bh=UsY6ojiGGo04yYN4r3Alru+AS50HUpMPbmnkwX+mkWs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yzqAzSRQ9MfOrjMfl++DvcU+9bU+buR623DyPPd1FqekNpasPieX9ZqZtJDr29jKM
-	 6OSU/+re2be6F+EDr7BPlgg2U5/YEQMw5h6AWutul+TtENST9rxyZuqlqEb2O2psXO
-	 QFEg/gU5NKfeessMRc0a2dYQOBG9mDmJcoUglyTA=
+	b=g1IFxYf8HdIMXplDsVaSLvbxOhWsN6NhZdBUqjBqndwxw7dsnw2ltOgRqwxSxnGHr
+	 sfSiQpOiA2qT1WTEP4JfH+WgHX5HbLNxjT9Av2WFBJoDxVFPPLwmzKfino2vnWENJ3
+	 cuyWLNEihlCioyBiypMJnrIwy6POSYZGGo3EQsww=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731313AbgFRBY4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:24:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59672 "EHLO mail.kernel.org"
+        id S1731698AbgFRB0f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:26:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34056 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731302AbgFRBYy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:24:54 -0400
+        id S1731690AbgFRB0c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:26:32 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3BD0220776;
-        Thu, 18 Jun 2020 01:24:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2EFC120897;
+        Thu, 18 Jun 2020 01:26:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443494;
-        bh=WWjhVMfWAJDBpqfzVCsKyPFfmNAuZNLUns5DSJPuq3I=;
+        s=default; t=1592443592;
+        bh=UsY6ojiGGo04yYN4r3Alru+AS50HUpMPbmnkwX+mkWs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0HOp1KPCVvw89ldIeCK897HfLKX8uawMYJEvbPMROc5F2imWpP//pVARgn8FnIKKD
-         mbkjmNWRco8u0tcbHIt7xCc2mIjpEtVM3dcFsuPKxpqcoEx7NfgHE7FGZs/FxXiLRq
-         4JYhbvgePzlZYBdbHRPYgiXPxxaUehmOOlSu3zjo=
+        b=gHgHz3Ol8l/j+n3klM5XFldaxt2pz4OJ8+vnF/giugCXeb3+5jFjEJBzwsl4pjww1
+         5BoKDbDbADNoPmqAiHYYN7Y7Pya0SInmiWNZLBjC7RcIyZhyMONkDyrYGQTy1vB+gv
+         vYC6MLFkCS0Hx25+dIl+1AZcxQV4H3jW8e5zcjrk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Mike Christie <mchristi@redhat.com>,
-        David Disseldorp <ddiss@suse.de>,
+Cc:     Xiyu Yang <xiyuyang19@fudan.edu.cn>,
+        Daniel Wagner <dwagner@suse.de>,
+        James Smart <james.smart@broadcom.com>,
+        Xin Tan <tanxin.ctf@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 121/172] scsi: target: tcmu: Fix a use after free in tcmu_check_expired_queue_cmd()
-Date:   Wed, 17 Jun 2020 21:21:27 -0400
-Message-Id: <20200618012218.607130-121-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 025/108] scsi: lpfc: Fix lpfc_nodelist leak when processing unsolicited event
+Date:   Wed, 17 Jun 2020 21:24:37 -0400
+Message-Id: <20200618012600.608744-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
-References: <20200618012218.607130-1-sashal@kernel.org>
+In-Reply-To: <20200618012600.608744-1-sashal@kernel.org>
+References: <20200618012600.608744-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,45 +61,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Xiyu Yang <xiyuyang19@fudan.edu.cn>
 
-[ Upstream commit 9d7464b18892332e35ff37f0b024429a1a9835e6 ]
+[ Upstream commit 7217e6e694da3aae6d17db8a7f7460c8d4817ebf ]
 
-The pr_debug() dereferences "cmd" after we already freed it by calling
-tcmu_free_cmd(cmd).  The debug printk needs to be done earlier.
+In order to create or activate a new node, lpfc_els_unsol_buffer() invokes
+lpfc_nlp_init() or lpfc_enable_node() or lpfc_nlp_get(), all of them will
+return a reference of the specified lpfc_nodelist object to "ndlp" with
+increased refcnt.
 
-Link: https://lore.kernel.org/r/20200523101129.GB98132@mwanda
-Fixes: 61fb24822166 ("scsi: target: tcmu: Userspace must not complete queued commands")
-Reviewed-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: David Disseldorp <ddiss@suse.de>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+When lpfc_els_unsol_buffer() returns, local variable "ndlp" becomes
+invalid, so the refcount should be decreased to keep refcount balanced.
+
+The reference counting issue happens in one exception handling path of
+lpfc_els_unsol_buffer(). When "ndlp" in DEV_LOSS, the function forgets to
+decrease the refcnt increased by lpfc_nlp_init() or lpfc_enable_node() or
+lpfc_nlp_get(), causing a refcnt leak.
+
+Fix this issue by calling lpfc_nlp_put() when "ndlp" in DEV_LOSS.
+
+Link: https://lore.kernel.org/r/1590416184-52592-1-git-send-email-xiyuyang19@fudan.edu.cn
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_user.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index ac523f247a9c..8da89925a874 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1303,13 +1303,13 @@ static void tcmu_check_expired_queue_cmd(struct tcmu_cmd *cmd)
- 	if (!time_after(jiffies, cmd->deadline))
- 		return;
- 
-+	pr_debug("Timing out queued cmd %p on dev %s.\n",
-+		  cmd, cmd->tcmu_dev->name);
-+
- 	list_del_init(&cmd->queue_entry);
- 	se_cmd = cmd->se_cmd;
- 	tcmu_free_cmd(cmd);
- 
--	pr_debug("Timing out queued cmd %p on dev %s.\n",
--		  cmd, cmd->tcmu_dev->name);
--
- 	target_complete_cmd(se_cmd, SAM_STAT_TASK_SET_FULL);
- }
- 
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 4c84c2ae1112..db1111f7e85a 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -7913,6 +7913,8 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	spin_lock_irq(shost->host_lock);
+ 	if (ndlp->nlp_flag & NLP_IN_DEV_LOSS) {
+ 		spin_unlock_irq(shost->host_lock);
++		if (newnode)
++			lpfc_nlp_put(ndlp);
+ 		goto dropit;
+ 	}
+ 	spin_unlock_irq(shost->host_lock);
 -- 
 2.25.1
 
