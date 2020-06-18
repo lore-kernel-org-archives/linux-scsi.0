@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDFA1C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE09CC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:51:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B820321D82
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:51:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8343221F0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:51:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445074;
-	bh=PrN/lW54aaqiWQ+7/FcQ7+J/s4bKEjEdBNQxuoUCfag=;
+	s=default; t=1592445108;
+	bh=PDZNewECiB6rDTkVJz0+36Vc+dl7xR3vEuGghn0r9rA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=H7tAHTxSNbRMKvTbjfJT91i3lSD/p5Na/XGeiOO1baTyUKeldAnWOwRmwV0x4+Y8Z
-	 BxV6ct6qFYOpTjaz11UN9dcM+uouS6kKVkJecv82BZQ5WDi+G3fYKvh0NnBrDu0QgB
-	 2rDAJvNk0NCu/rzO/8TX1jmHZFtuhkeq08ZpG1VA=
+	b=ZhHQs2myg9hbiW5LE4onfPrFgHjoR+tw8sZVve9/ma2GNdxAVD7q0PmnOxGrcjmAw
+	 Nya93kA0rLk4fLKPFPmATc9vA0LVA4Bw7TQawSN7VBt1vSnFUIIbCFLkIh2U+PBgj8
+	 ka7Acvn5iNwFtB2iRKUHFH+WZoGkvaLrMvA/GAXA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732013AbgFRBvN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:51:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35026 "EHLO mail.kernel.org"
+        id S1731759AbgFRB0y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:26:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34592 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731783AbgFRB1H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:27:07 -0400
+        id S1731747AbgFRB0w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:26:52 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 91AD620B1F;
-        Thu, 18 Jun 2020 01:27:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D4F5320776;
+        Thu, 18 Jun 2020 01:26:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443626;
-        bh=PrN/lW54aaqiWQ+7/FcQ7+J/s4bKEjEdBNQxuoUCfag=;
+        s=default; t=1592443611;
+        bh=PDZNewECiB6rDTkVJz0+36Vc+dl7xR3vEuGghn0r9rA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QNQiSFaiayD9pcRBCDrRXzsE70QFoiZEkBxIqS8+Qym1KPsFTfFq/OBcNgnAbjvre
-         hUpZgWKbpNjdT0IvmWwPAfr1vY+WFrBSxlQaj+faX62Cw8XwvXwUrnFHaunoUsfd8U
-         O/mNeLdp3g6HT4Z/0LxnsruEGi4uGEk6PwOdiPxI=
+        b=h3LczfJGPk85r+892DszU0DsT144ho5E3patH+f/cZuNrWjJU+vG16bhvKrLVHGb2
+         eyJ7WpoTcn9th9xf1QicYB/vmxW6NKGvz/bMrCdEfonbTBwj3x4+sSDcOfSnR79hQs
+         T959eIlbN+vGdVFfX7AAnNAayhRmnLjClG5KQSbo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Viacheslav Dubeyko <v.dubeiko@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
+Cc:     Nilesh Javali <njavali@marvell.com>, Lee Duncan <lduncan@suse.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 051/108] scsi: qla2xxx: Fix warning after FC target reset
-Date:   Wed, 17 Jun 2020 21:25:03 -0400
-Message-Id: <20200618012600.608744-51-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 039/108] scsi: qedi: Do not flush offload work if ARP not resolved
+Date:   Wed, 17 Jun 2020 21:24:51 -0400
+Message-Id: <20200618012600.608744-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012600.608744-1-sashal@kernel.org>
 References: <20200618012600.608744-1-sashal@kernel.org>
@@ -59,106 +59,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+From: Nilesh Javali <njavali@marvell.com>
 
-[ Upstream commit f839544ccff60cbe534282aac68858fc3fb278ca ]
+[ Upstream commit 927527aea0e2a9c1d336c7d33f77f1911481d008 ]
 
-Currently, FC target reset finishes with the warning message:
+For an unreachable target, offload_work is not initialized and the endpoint
+state is set to OFLDCONN_NONE. This results in a WARN_ON due to the check
+of the work function field being set to zero.
 
-[84010.596893] ------------[ cut here ]------------
-[84010.596917] WARNING: CPU: 238 PID: 279973 at ../drivers/scsi/qla2xxx/qla_target.c:6644 qlt_enable_vha+0x1d0/0x260 [qla2xxx]
-[84010.596918] Modules linked in: vrf af_packet 8021q garp mrp stp llc netlink_diag target_tatlin_tblock(OEX) dm_ec(OEX) ttln_rdma(OEX) dm_frontend(OEX) nvme_rdma nvmet tcm_qla2xxx iscsi_target_mod target_core_mod at24 nvmem_core pnv_php ipmi_watchdog ipmi_ssif vmx_crypto gf128mul crct10dif_vpmsum qla2xxx rpcrdma nvme_fc powernv_flash(X) nvme_fabrics uio_pdrv_genirq mtd rtc_opal(X) ibmpowernv(X) opal_prd(X) uio scsi_transport_fc i2c_opal(X) ses enclosure ipmi_poweroff ast i2c_algo_bit ttm bmc_mcu(OEX) drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm drm_panel_orientation_quirks agpgart nfsd auth_rpcgss nfs_acl ipmi_powernv(X) lockd ipmi_devintf ipmi_msghandler grace dummy ext4 crc16 jbd2 mbcache sd_mod rdma_ucm ib_iser rdma_cm ib_umad iw_cm ib_ipoib libiscsi scsi_transport_iscsi ib_cm
-[84010.596975]  configfs mlx5_ib ib_uverbs ib_core mlx5_core crc32c_vpmsum xhci_pci xhci_hcd mpt3sas(OEX) tg3 usbcore mlxfw tls raid_class libphy scsi_transport_sas devlink ptp pps_core nvme nvme_core sunrpc dm_mirror dm_region_hash dm_log sg dm_multipath dm_mod scsi_dh_rdac scsi_dh_emc scsi_dh_alua scsi_mod autofs4
-[84010.597001] Supported: Yes, External
-[84010.597004] CPU: 238 PID: 279973 Comm: bash Tainted: G           OE      4.12.14-197.29-default #1 SLE15-SP1
-[84010.597006] task: c000000a104c0000 task.stack: c000000b52188000
-[84010.597007] NIP: d00000001ffd7f78 LR: d00000001ffd7f6c CTR: c0000000001676c0
-[84010.597008] REGS: c000000b5218b910 TRAP: 0700   Tainted: G           OE       (4.12.14-197.29-default)
-[84010.597008] MSR: 900000010282b033 <SF,HV,VEC,VSX,EE,FP,ME,IR,DR,RI,LE,TM[E]>
-[84010.597015]   CR: 48242424  XER: 00000000
-[84010.597016] CFAR: d00000001ff45d08 SOFTE: 1
-               GPR00: d00000001ffd7f6c c000000b5218bb90 d00000002001b228 0000000000000102
-               GPR04: 0000000000000001 0000000000000001 00013d91ed0a5e2d 0000000000000000
-               GPR08: c000000007793300 0000000000000000 0000000000000000 c000000a086e7818
-               GPR12: 0000000000002200 c000000007793300 0000000000000000 000000012bc937c0
-               GPR16: 000000012bbf7ed0 0000000000000000 000000012bc3dd10 0000000000000000
-               GPR20: 000000012bc4db28 0000010036442810 000000012bc97828 000000012bc96c70
-               GPR24: 00000100365b1550 0000000000000000 00000100363f3d80 c000000be20d3080
-               GPR28: c000000bda7eae00 c000000be20db7e8 c000000be20d3778 c000000be20db7e8
-[84010.597042] NIP [d00000001ffd7f78] qlt_enable_vha+0x1d0/0x260 [qla2xxx]
-[84010.597051] LR [d00000001ffd7f6c] qlt_enable_vha+0x1c4/0x260 [qla2xxx]
-[84010.597051] Call Trace:
-[84010.597061] [c000000b5218bb90] [d00000001ffd7f6c] qlt_enable_vha+0x1c4/0x260 [qla2xxx] (unreliable)
-[84010.597064] [c000000b5218bc20] [d000000009820b6c] tcm_qla2xxx_tpg_enable_store+0xc4/0x130 [tcm_qla2xxx]
-[84010.597067] [c000000b5218bcb0] [d0000000185d0e68] configfs_write_file+0xd0/0x190 [configfs]
-[84010.597072] [c000000b5218bd00] [c0000000003d0edc] __vfs_write+0x3c/0x1e0
-[84010.597074] [c000000b5218bd90] [c0000000003d2ea8] vfs_write+0xd8/0x220
-[84010.597076] [c000000b5218bde0] [c0000000003d4ddc] SyS_write+0x6c/0x110
-[84010.597079] [c000000b5218be30] [c00000000000b188] system_call+0x3c/0x130
-[84010.597080] Instruction dump:
-[84010.597082] 7d0050a8 7d084b78 7d0051ad 40c2fff4 7fa3eb78 4bf73965 60000000 7fa3eb78
-[84010.597086] 4bf6dcd9 60000000 2fa30000 419eff40 <0fe00000> 4bffff38 e95f0058 a12a0180
-[84010.597090] ---[ end trace e32abaf6e6fee826 ]---
+------------[ cut here ]------------
+WARNING: CPU: 24 PID: 18587 at ../kernel/workqueue.c:3037 __flush_work+0x1c1/0x1d0
+:
+Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 02/01/2020
+RIP: 0010:__flush_work+0x1c1/0x1d0
+Code: ba 6d 00 03 80 c9 f0 eb b6 48 c7 c7 20 ee 6c a4 e8 52 d3 04 00 0f 0b 31 c0 e9 d1 fe ff
+ff 48 c7 c7 20 ee 6c a4 e8 3d d3 04 00 <0f> 0b 31 c0 e9 bc fe ff ff e8 11 f3 f
+ 00 31 f6
+RSP: 0018:ffffac5a8cd47a80 EFLAGS: 00010282
+RAX: 0000000000000024 RBX: ffff98d68c1fcaf0 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffff98ce9fd99898 RDI: ffff98ce9fd99898
+RBP: ffff98d68c1fcbc0 R08: 00000000000006fa R09: 0000000000000001
+R10: ffffac5a8cd47b50 R11: 0000000000000001 R12: 0000000000000000
+R13: 000000000000489b R14: ffff98d68c1fc800 R15: ffff98d692132c00
+FS:  00007f65f7f62280(0000) GS:ffff98ce9fd80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffd2435e880 CR3: 0000000809334003 CR4: 00000000007606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+PKRU: 55555554
+Call Trace:
+ ? class_create_release+0x40/0x40
+ ? klist_put+0x2c/0x80
+ qedi_ep_disconnect+0xdd/0x400 [qedi]
+ iscsi_if_ep_disconnect.isra.20+0x59/0x70 [scsi_transport_iscsi]
+ iscsi_if_rx+0x129b/0x1670 [scsi_transport_iscsi]
+ ? __netlink_lookup+0xe7/0x160
+ netlink_unicast+0x21d/0x300
+ netlink_sendmsg+0x30f/0x430
+ sock_sendmsg+0x5b/0x60
+ ____sys_sendmsg+0x1e2/0x240
+ ? copy_msghdr_from_user+0xd9/0x160
+ ___sys_sendmsg+0x88/0xd0
+ ? ___sys_recvmsg+0xa2/0xe0
+ ? hrtimer_try_to_cancel+0x25/0x100
+ ? do_nanosleep+0x9c/0x170
+ ? __sys_sendmsg+0x5e/0xa0
+ __sys_sendmsg+0x5e/0xa0
+ do_syscall_64+0x60/0x1f0
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f65f6f16107
+Code: 64 89 02 48 c7 c0 ff ff ff ff eb b9 0f 1f 80 00 00 00 00 8b 05 aa d2 2b 00 48 63 d2 48
+63 ff 85 c0 75 18 b8 2e 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 59 f3 c3 0f 1f 8
+    0 00 00 00 00 53 48 89 f3 48
+ RSP: 002b:00007ffd24367ca8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+ RAX: ffffffffffffffda RBX: 000055a7aeaaf110 RCX: 00007f65f6f16107
+ RDX: 0000000000000000 RSI: 00007ffd24367cc0 RDI: 0000000000000003
+ RBP: 0000000000000070 R08: 0000000000000000 R09: 0000000000000000
+ R10: 000000000000075c R11: 0000000000000246 R12: 00007ffd24367cc0
+ R13: 000055a7ae560008 R14: 00007ffd24367db0 R15: 0000000000000000
+ ---[ end trace 54f499c05d41f8bb ]---
 
-To reproduce:
+Only flush if the connection endpoint state if different from
+OFLDCONN_NONE.
 
-echo 0x7fffffff > /sys/module/qla2xxx/parameters/logging
-modprobe target_core_mod
-modprobe tcm_qla2xxx
-mkdir /sys/kernel/config/target/qla2xxx
-mkdir /sys/kernel/config/target/qla2xxx/<port-name>
-mkdir /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1
-echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-echo 0 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+[mkp: clarified commit desc]
 
-SYSTEM START
-kernel: pid 327:drivers/scsi/qla2xxx/qla_init.c:2174 qla2x00_initialize_adapter(): vha->flags.online 0x0
-<...>
-kernel: pid 327:drivers/scsi/qla2xxx/qla_os.c:3444 qla2x00_probe_one(): vha->flags.online 0x1
-
-echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:86:a6:2a/tpgt_1/enable
-kernel: pid 348:drivers/scsi/qla2xxx/qla_init.c:6641 qla2x00_abort_isp_cleanup(): vha->flags.online 0x0, ISP_ABORT_NEEDED 0x0
-<...>
-kernel: pid 348:drivers/scsi/qla2xxx/qla_init.c:6998 qla2x00_restart_isp(): vha->flags.online 0x0
-
-echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:86:a6:2a/tpgt_1/enable
-kernel: pid 348:drivers/scsi/qla2xxx/qla_init.c:6641 qla2x00_abort_isp_cleanup(): vha->flags.online 0x0, ISP_ABORT_NEEDED 0x0
-<...>
-kernel: pid 1404:drivers/scsi/qla2xxx/qla_os.c:1107 qla2x00_wait_for_hba_online(): base_vha->flags.online 0x0
-
-echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:86:a6:2a/tpgt_1/enable
-kernel: pid 1404:drivers/scsi/qla2xxx/qla_os.c:1107 qla2x00_wait_for_hba_online(): base_vha->flags.online 0x0
-kernel: -----------[ cut here ]-----------
-kernel: WARNING: CPU: 1 PID: 1404 at drivers/scsi/qla2xxx/qla_target.c:6654 qlt_enable_vha+0x1e0/0x280 [qla2xxx]
-
-The issue happens because no real ISP reset is executed.  The
-qla2x00_abort_isp(scsi_qla_host_t *vha) function expects that
-vha->flags.online will be not zero for ISP reset procedure.  This patch
-sets vha->flags.online to 1 before calling ->abort_isp() for starting the
-ISP reset.
-
-Link: https://lore.kernel.org/r/1d7b21bf9f7676643239eb3d60eaca7cfa505cf0.camel@yadro.com
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Signed-off-by: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+Link: https://lore.kernel.org/r/20200408064332.19377-5-mrangankar@marvell.com
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/qedi/qedi_iscsi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d4024015f859..ea60c6e603c0 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5824,6 +5824,7 @@ qla2x00_do_dpc(void *data)
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 1effac1111d5..fb6439bc1d9a 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -1007,7 +1007,8 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
+ 	if (qedi_ep->state == EP_STATE_OFLDCONN_START)
+ 		goto ep_exit_recover;
  
- 			if (do_reset && !(test_and_set_bit(ABORT_ISP_ACTIVE,
- 			    &base_vha->dpc_flags))) {
-+				base_vha->flags.online = 1;
- 				ql_dbg(ql_dbg_dpc, base_vha, 0x4007,
- 				    "ISP abort scheduled.\n");
- 				if (ha->isp_ops->abort_isp(base_vha)) {
+-	flush_work(&qedi_ep->offload_work);
++	if (qedi_ep->state != EP_STATE_OFLDCONN_NONE)
++		flush_work(&qedi_ep->offload_work);
+ 
+ 	if (qedi_ep->conn) {
+ 		qedi_conn = qedi_ep->conn;
 -- 
 2.25.1
 
