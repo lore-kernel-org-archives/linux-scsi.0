@@ -7,46 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20DCAC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05586C433E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:52:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC0CF221F0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:52:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D18562220C
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:52:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445123;
-	bh=eH7yUeHnY4mVh9udcI/D4+kh7pxNGz2/X5O8iH4oOqE=;
+	s=default; t=1592445130;
+	bh=MISZoiCLDvcumQIPnbJkrwHKF0jEFowkhUBjeR/PLV4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=puuq5VYZQG+mhCejjCIajtlPATOClohD3rZgqggilJkUwyHQCygeWsx4i26RnFhoU
-	 ZAmAB2M1t+cUAhKKE38eiE3BjWtyS8q7p8XN7XgVkHndOfmUSOrTO2QOX/xI03ksbW
-	 Nbq/Fk4kv99iQkkgRAnmbGcrqGeeTVKhEObb1q6Q=
+	b=F6NS566h4RYyHPudBkvGeIyurVRK51kv9KV0xO1/MPhVJ6KjHqQDd1w8tu+hRn0v4
+	 kaH3xOUCuLmET00NFu1DF9M2cc81398ujQ+xL/RjRBdxDtL6Wd31I3wU/I6IqmEFm2
+	 FdRYoiM3FYVz+N1W/gDIQui2AU3vWAZzsKoAQng0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729240AbgFRB0u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:26:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34506 "EHLO mail.kernel.org"
+        id S1731738AbgFRB0t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:26:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34496 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730113AbgFRB0s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:26:48 -0400
+        id S1731729AbgFRB0r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:26:47 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2B2AF20776;
-        Thu, 18 Jun 2020 01:26:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0FC4F2088E;
+        Thu, 18 Jun 2020 01:26:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443607;
-        bh=eH7yUeHnY4mVh9udcI/D4+kh7pxNGz2/X5O8iH4oOqE=;
+        s=default; t=1592443606;
+        bh=MISZoiCLDvcumQIPnbJkrwHKF0jEFowkhUBjeR/PLV4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=U1/8DUVmz5dpam7xdpB0Sa0Dco9j25QEbVF93pYgbzf/t8BEujENitRiHj6yLuUd2
-         TEQDgkX37h9Ha33rZBl0FxwTnpbxBq6AUak9kDejx2VplH7NSWFcViwE8YpiJK3jsY
-         qYNSn+CAGhxH8oBV3TZoBhdxw+gybOa2epZBlPnY=
+        b=K8adrJTaWfuMq9WYNODMzEJU7bMKF54TWMFKftSutXhDLEOJTtdOiWvuijKvs4mW6
+         RbckkbnMeBKDZILO6ekEcmnQL4baQrpuxya9kvqt9cfz+Vw6fzcRRrChBShI/hmyVi
+         T1WTx5DB4vfuJV/i690/8hBelqobEEl+KBwCjW6Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+Cc:     Simon Arlott <simon@octiron.net>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 4.14 036/108] scsi: ibmvscsi: Don't send host info in adapter info MAD after LPM
-Date:   Wed, 17 Jun 2020 21:24:48 -0400
-Message-Id: <20200618012600.608744-36-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 035/108] scsi: sr: Fix sr_probe() missing deallocate of device minor
+Date:   Wed, 17 Jun 2020 21:24:47 -0400
+Message-Id: <20200618012600.608744-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012600.608744-1-sashal@kernel.org>
 References: <20200618012600.608744-1-sashal@kernel.org>
@@ -59,44 +58,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: Simon Arlott <simon@octiron.net>
 
-[ Upstream commit 4919b33b63c8b69d8dcf2b867431d0e3b6dc6d28 ]
+[ Upstream commit 6555781b3fdec5e94e6914511496144241df7dee ]
 
-The adapter info MAD is used to send the client info and receive the host
-info as a response. A persistent buffer is used and as such the client info
-is overwritten after the response. During the course of a normal adapter
-reset the client info is refreshed in the buffer in preparation for sending
-the adapter info MAD.
+If the cdrom fails to be registered then the device minor should be
+deallocated.
 
-However, in the special case of LPM where we reenable the CRQ instead of a
-full CRQ teardown and reset we fail to refresh the client info in the
-adapter info buffer. As a result, after Live Partition Migration (LPM) we
-erroneously report the host's info as our own.
-
-[mkp: typos]
-
-Link: https://lore.kernel.org/r/20200603203632.18426-1-tyreld@linux.ibm.com
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Link: https://lore.kernel.org/r/072dac4b-8402-4de8-36bd-47e7588969cd@0882a8b5-c6c3-11e9-b005-00805fc181fe
+Signed-off-by: Simon Arlott <simon@octiron.net>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/sr.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 83645a1c6f82..aff868afe68d 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -429,6 +429,8 @@ static int ibmvscsi_reenable_crq_queue(struct crq_queue *queue,
- 	int rc = 0;
- 	struct vio_dev *vdev = to_vio_dev(hostdata->dev);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index d0389b20574d..5be3d6b7991b 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -748,7 +748,7 @@ static int sr_probe(struct device *dev)
+ 	cd->cdi.disk = disk;
  
-+	set_adapter_info(hostdata);
-+
- 	/* Re-enable the CRQ */
- 	do {
- 		if (rc)
+ 	if (register_cdrom(&cd->cdi))
+-		goto fail_put;
++		goto fail_minor;
+ 
+ 	/*
+ 	 * Initialize block layer runtime PM stuffs before the
+@@ -766,6 +766,10 @@ static int sr_probe(struct device *dev)
+ 
+ 	return 0;
+ 
++fail_minor:
++	spin_lock(&sr_index_lock);
++	clear_bit(minor, sr_index_bits);
++	spin_unlock(&sr_index_lock);
+ fail_put:
+ 	put_disk(disk);
+ fail_free:
 -- 
 2.25.1
 
