@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0167C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:12:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8785DC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:20:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B52B21924
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:12:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61E3220776
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:20:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592442733;
-	bh=n77+mRGJzhZkF3sMpgr1Vq43gLpGDv+qKc9vyAuvuic=;
+	s=default; t=1592443215;
+	bh=Wu4ICg6jA0FGpJIu5+ZL5+NISmPgf8HVCI+TMn6vJas=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SWQNn/6DVup0cMiykvJHPvmX1bq1JzFqiPMxOHDshC4U9L9uoHRDyhTKZjORamPL4
-	 70JUzpwIDYLO6Yi4yuy2gPTJrO53dOGiSpInOZN8U4L2VwfpvMjPJdWQQW048q2BEg
-	 9LRw+TME8+ke6JikRFNpk/5p1UbkiuWZPtoMBW1c=
+	b=zUzT2HrBU22I/mlr4JL+LeOlB9shnV6xfKDKTWlr1PXYjD2waPmjghtQ7myNe08No
+	 bMPavpqQpn93lhOcMwVgyE74mOU9oxz8BeXNsSFRsyIqIvCGDuWwEqiBskycdjVhcc
+	 BJLtgsR5Ku+ftJTcIdTKJSWt9CcjbFP9R0FBoyWU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727841AbgFRBMM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:12:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40638 "EHLO mail.kernel.org"
+        id S1730275AbgFRBUO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:20:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728003AbgFRBML (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:12:11 -0400
+        id S1730264AbgFRBUJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:20:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6EDC121974;
-        Thu, 18 Jun 2020 01:12:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 492A7206F1;
+        Thu, 18 Jun 2020 01:20:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442730;
-        bh=n77+mRGJzhZkF3sMpgr1Vq43gLpGDv+qKc9vyAuvuic=;
+        s=default; t=1592443208;
+        bh=Wu4ICg6jA0FGpJIu5+ZL5+NISmPgf8HVCI+TMn6vJas=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BBWMPVsHr1befN8TNPY2htXhwn39vqM1E8in6+14n/O7J62tMis8TlDOK63IkWzc3
-         M6U4VtpyoVw65dB4ouG9pqRClewh1mtf/o4KnuDbN0CjiaZDQ/c/35plLzoYlWoG4q
-         7JVzVMIe9cky9fMEJEtEIQA0ppV3fJ+mO8T4JxEQ=
+        b=TCkLAQ5HbpFmsMIYsXMBQ8uFlf2cJz25GydPjXm8M39Kx7eVrpFs7DxB4ZzFmB+58
+         7Y0262LypAvEllE+2EtfXA/Qaelin/lfiO8GNZwMqAIPwIM8XES3sj8E2EMqWj81fk
+         J8NjPjS1ARvJ36ZaoPheDOBghk59ltrJie/hpFCQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        Mike Christie <mchristi@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 186/388] scsi: target: loopback: Fix READ with data and sensebytes
-Date:   Wed, 17 Jun 2020 21:04:43 -0400
-Message-Id: <20200618010805.600873-186-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 165/266] scsi: target: tcmu: Userspace must not complete queued commands
+Date:   Wed, 17 Jun 2020 21:14:50 -0400
+Message-Id: <20200618011631.604574-165-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
-References: <20200618010805.600873-1-sashal@kernel.org>
+In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
+References: <20200618011631.604574-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,101 +62,333 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 
-[ Upstream commit c68a56736c129f5dd1632856956f9c3e04bae200 ]
+[ Upstream commit 61fb2482216679b9e1e797440c148bb143a5040a ]
 
-We use tcm_loop with tape emulations running on tcmu.
+When tcmu queues a new command - no matter whether in command ring or in
+qfull_queue - a cmd_id from IDR udev->commands is assigned to the command.
 
-In case application reads a short tape block with a longer READ, or a long
-tape block with a short READ, according to SCC spec data has to be
-tranferred _and_ sensebytes with ILI set and information field containing
-the residual count. Similar problem also exists when using fixed block
-size in READ.
+If userspace sends a wrong command completion containing the cmd_id of a
+command on the qfull_queue, tcmu_handle_completions() finds the command in
+the IDR and calls tcmu_handle_completion() for it. This might do some nasty
+things because commands in qfull_queue do not have a valid dbi list.
 
-Up to now tcm_loop is not prepared to handle sensebytes if input data is
-provided, as in tcm_loop_queue_data_in() it only sets SAM_STAT_GOOD and, if
-necessary, the residual count.
+To fix this bug, we no longer add queued commands to the idr.  Instead the
+cmd_id is assign when a command is written to the command ring.
 
-To fix the bug, the same handling for sensebytes as present in
-tcm_loop_queue_status() must be done in tcm_loop_queue_data_in() also.
+Due to this change I had to adapt the source code at several places where
+up to now an idr_for_each had been done.
 
-After adding this handling, the two function now are nearly identical, so I
-created a single function with two wrappers.
+[mkp: fix checkpatch warnings]
 
-Link: https://lore.kernel.org/r/20200428182617.32726-1-bstroesser@ts.fujitsu.com
+Link: https://lore.kernel.org/r/20200518164833.12775-1-bstroesser@ts.fujitsu.com
+Acked-by: Mike Christie <mchristi@redhat.com>
 Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/loopback/tcm_loop.c | 36 +++++++++++++-----------------
- 1 file changed, 15 insertions(+), 21 deletions(-)
+ drivers/target/target_core_user.c | 154 ++++++++++++++----------------
+ 1 file changed, 71 insertions(+), 83 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 3305b47fdf53..16d5a4e117a2 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -545,32 +545,15 @@ static int tcm_loop_write_pending(struct se_cmd *se_cmd)
- 	return 0;
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 9425354aef99..70c64e69a1d2 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -882,41 +882,24 @@ static inline size_t tcmu_cmd_get_cmd_size(struct tcmu_cmd *tcmu_cmd,
+ 	return command_size;
  }
  
--static int tcm_loop_queue_data_in(struct se_cmd *se_cmd)
-+static int tcm_loop_queue_data_or_status(const char *func,
-+		struct se_cmd *se_cmd, u8 scsi_status)
+-static int tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd, unsigned int tmo,
+-				struct timer_list *timer)
++static void tcmu_setup_cmd_timer(struct tcmu_cmd *tcmu_cmd, unsigned int tmo,
++				 struct timer_list *timer)
  {
- 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
- 				struct tcm_loop_cmd, tl_se_cmd);
- 	struct scsi_cmnd *sc = tl_cmd->sc;
- 
- 	pr_debug("%s() called for scsi_cmnd: %p cdb: 0x%02x\n",
--		 __func__, sc, sc->cmnd[0]);
+-	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+-	int cmd_id;
 -
--	sc->result = SAM_STAT_GOOD;
--	set_host_byte(sc, DID_OK);
--	if ((se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) ||
--	    (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT))
--		scsi_set_resid(sc, se_cmd->residual_count);
--	sc->scsi_done(sc);
+-	if (tcmu_cmd->cmd_id)
+-		goto setup_timer;
+-
+-	cmd_id = idr_alloc(&udev->commands, tcmu_cmd, 1, USHRT_MAX, GFP_NOWAIT);
+-	if (cmd_id < 0) {
+-		pr_err("tcmu: Could not allocate cmd id.\n");
+-		return cmd_id;
+-	}
+-	tcmu_cmd->cmd_id = cmd_id;
+-
+-	pr_debug("allocated cmd %u for dev %s tmo %lu\n", tcmu_cmd->cmd_id,
+-		 udev->name, tmo / MSEC_PER_SEC);
+-
+-setup_timer:
+ 	if (!tmo)
+-		return 0;
++		return;
+ 
+ 	tcmu_cmd->deadline = round_jiffies_up(jiffies + msecs_to_jiffies(tmo));
+ 	if (!timer_pending(timer))
+ 		mod_timer(timer, tcmu_cmd->deadline);
+ 
 -	return 0;
--}
--
--static int tcm_loop_queue_status(struct se_cmd *se_cmd)
--{
--	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
--				struct tcm_loop_cmd, tl_se_cmd);
--	struct scsi_cmnd *sc = tl_cmd->sc;
--
--	pr_debug("%s() called for scsi_cmnd: %p cdb: 0x%02x\n",
--		 __func__, sc, sc->cmnd[0]);
-+		 func, sc, sc->cmnd[0]);
++	pr_debug("Timeout set up for cmd %p, dev = %s, tmo = %lu\n", tcmu_cmd,
++		 tcmu_cmd->tcmu_dev->name, tmo / MSEC_PER_SEC);
+ }
  
- 	if (se_cmd->sense_buffer &&
- 	   ((se_cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
-@@ -581,7 +564,7 @@ static int tcm_loop_queue_status(struct se_cmd *se_cmd)
- 		sc->result = SAM_STAT_CHECK_CONDITION;
- 		set_driver_byte(sc, DRIVER_SENSE);
- 	} else
--		sc->result = se_cmd->scsi_status;
-+		sc->result = scsi_status;
+ static int add_to_qfull_queue(struct tcmu_cmd *tcmu_cmd)
+ {
+ 	struct tcmu_dev *udev = tcmu_cmd->tcmu_dev;
+ 	unsigned int tmo;
+-	int ret;
  
- 	set_host_byte(sc, DID_OK);
- 	if ((se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) ||
-@@ -591,6 +574,17 @@ static int tcm_loop_queue_status(struct se_cmd *se_cmd)
+ 	/*
+ 	 * For backwards compat if qfull_time_out is not set use
+@@ -931,13 +914,11 @@ static int add_to_qfull_queue(struct tcmu_cmd *tcmu_cmd)
+ 	else
+ 		tmo = TCMU_TIME_OUT;
+ 
+-	ret = tcmu_setup_cmd_timer(tcmu_cmd, tmo, &udev->qfull_timer);
+-	if (ret)
+-		return ret;
++	tcmu_setup_cmd_timer(tcmu_cmd, tmo, &udev->qfull_timer);
+ 
+ 	list_add_tail(&tcmu_cmd->queue_entry, &udev->qfull_queue);
+-	pr_debug("adding cmd %u on dev %s to ring space wait queue\n",
+-		 tcmu_cmd->cmd_id, udev->name);
++	pr_debug("adding cmd %p on dev %s to ring space wait queue\n",
++		 tcmu_cmd, udev->name);
  	return 0;
  }
  
-+static int tcm_loop_queue_data_in(struct se_cmd *se_cmd)
-+{
-+	return tcm_loop_queue_data_or_status(__func__, se_cmd, SAM_STAT_GOOD);
-+}
+@@ -959,7 +940,7 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
+ 	struct tcmu_mailbox *mb;
+ 	struct tcmu_cmd_entry *entry;
+ 	struct iovec *iov;
+-	int iov_cnt, ret;
++	int iov_cnt, cmd_id;
+ 	uint32_t cmd_head;
+ 	uint64_t cdb_off;
+ 	bool copy_to_data_area;
+@@ -1060,14 +1041,21 @@ static int queue_cmd_ring(struct tcmu_cmd *tcmu_cmd, sense_reason_t *scsi_err)
+ 	}
+ 	entry->req.iov_bidi_cnt = iov_cnt;
+ 
+-	ret = tcmu_setup_cmd_timer(tcmu_cmd, udev->cmd_time_out,
+-				   &udev->cmd_timer);
+-	if (ret) {
+-		tcmu_cmd_free_data(tcmu_cmd, tcmu_cmd->dbi_cnt);
++	cmd_id = idr_alloc(&udev->commands, tcmu_cmd, 1, USHRT_MAX, GFP_NOWAIT);
++	if (cmd_id < 0) {
++		pr_err("tcmu: Could not allocate cmd id.\n");
+ 
++		tcmu_cmd_free_data(tcmu_cmd, tcmu_cmd->dbi_cnt);
+ 		*scsi_err = TCM_OUT_OF_RESOURCES;
+ 		return -1;
+ 	}
++	tcmu_cmd->cmd_id = cmd_id;
 +
-+static int tcm_loop_queue_status(struct se_cmd *se_cmd)
-+{
-+	return tcm_loop_queue_data_or_status(__func__,
-+					     se_cmd, se_cmd->scsi_status);
-+}
++	pr_debug("allocated cmd id %u for cmd %p dev %s\n", tcmu_cmd->cmd_id,
++		 tcmu_cmd, udev->name);
 +
- static void tcm_loop_queue_tm_rsp(struct se_cmd *se_cmd)
++	tcmu_setup_cmd_timer(tcmu_cmd, udev->cmd_time_out, &udev->cmd_timer);
++
+ 	entry->hdr.cmd_id = tcmu_cmd->cmd_id;
+ 
+ 	/*
+@@ -1279,50 +1267,39 @@ static unsigned int tcmu_handle_completions(struct tcmu_dev *udev)
+ 	return handled;
+ }
+ 
+-static int tcmu_check_expired_cmd(int id, void *p, void *data)
++static void tcmu_check_expired_ring_cmd(struct tcmu_cmd *cmd)
  {
- 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
+-	struct tcmu_cmd *cmd = p;
+-	struct tcmu_dev *udev = cmd->tcmu_dev;
+-	u8 scsi_status;
+ 	struct se_cmd *se_cmd;
+-	bool is_running;
+-
+-	if (test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags))
+-		return 0;
+ 
+ 	if (!time_after(jiffies, cmd->deadline))
+-		return 0;
++		return;
+ 
+-	is_running = test_bit(TCMU_CMD_BIT_INFLIGHT, &cmd->flags);
++	set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
++	list_del_init(&cmd->queue_entry);
+ 	se_cmd = cmd->se_cmd;
++	cmd->se_cmd = NULL;
+ 
+-	if (is_running) {
+-		/*
+-		 * If cmd_time_out is disabled but qfull is set deadline
+-		 * will only reflect the qfull timeout. Ignore it.
+-		 */
+-		if (!udev->cmd_time_out)
+-			return 0;
++	pr_debug("Timing out inflight cmd %u on dev %s.\n",
++		 cmd->cmd_id, cmd->tcmu_dev->name);
+ 
+-		set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
+-		/*
+-		 * target_complete_cmd will translate this to LUN COMM FAILURE
+-		 */
+-		scsi_status = SAM_STAT_CHECK_CONDITION;
+-		list_del_init(&cmd->queue_entry);
+-		cmd->se_cmd = NULL;
+-	} else {
+-		list_del_init(&cmd->queue_entry);
+-		idr_remove(&udev->commands, id);
+-		tcmu_free_cmd(cmd);
+-		scsi_status = SAM_STAT_TASK_SET_FULL;
+-	}
++	target_complete_cmd(se_cmd, SAM_STAT_CHECK_CONDITION);
++}
+ 
+-	pr_debug("Timing out cmd %u on dev %s that is %s.\n",
+-		 id, udev->name, is_running ? "inflight" : "queued");
++static void tcmu_check_expired_queue_cmd(struct tcmu_cmd *cmd)
++{
++	struct se_cmd *se_cmd;
+ 
+-	target_complete_cmd(se_cmd, scsi_status);
+-	return 0;
++	if (!time_after(jiffies, cmd->deadline))
++		return;
++
++	list_del_init(&cmd->queue_entry);
++	se_cmd = cmd->se_cmd;
++	tcmu_free_cmd(cmd);
++
++	pr_debug("Timing out queued cmd %p on dev %s.\n",
++		  cmd, cmd->tcmu_dev->name);
++
++	target_complete_cmd(se_cmd, SAM_STAT_TASK_SET_FULL);
+ }
+ 
+ static void tcmu_device_timedout(struct tcmu_dev *udev)
+@@ -1407,16 +1384,15 @@ static struct se_device *tcmu_alloc_device(struct se_hba *hba, const char *name)
+ 	return &udev->se_dev;
+ }
+ 
+-static bool run_qfull_queue(struct tcmu_dev *udev, bool fail)
++static void run_qfull_queue(struct tcmu_dev *udev, bool fail)
+ {
+ 	struct tcmu_cmd *tcmu_cmd, *tmp_cmd;
+ 	LIST_HEAD(cmds);
+-	bool drained = true;
+ 	sense_reason_t scsi_ret;
+ 	int ret;
+ 
+ 	if (list_empty(&udev->qfull_queue))
+-		return true;
++		return;
+ 
+ 	pr_debug("running %s's cmdr queue forcefail %d\n", udev->name, fail);
+ 
+@@ -1425,11 +1401,10 @@ static bool run_qfull_queue(struct tcmu_dev *udev, bool fail)
+ 	list_for_each_entry_safe(tcmu_cmd, tmp_cmd, &cmds, queue_entry) {
+ 		list_del_init(&tcmu_cmd->queue_entry);
+ 
+-	        pr_debug("removing cmd %u on dev %s from queue\n",
+-		         tcmu_cmd->cmd_id, udev->name);
++		pr_debug("removing cmd %p on dev %s from queue\n",
++			 tcmu_cmd, udev->name);
+ 
+ 		if (fail) {
+-			idr_remove(&udev->commands, tcmu_cmd->cmd_id);
+ 			/*
+ 			 * We were not able to even start the command, so
+ 			 * fail with busy to allow a retry in case runner
+@@ -1444,10 +1419,8 @@ static bool run_qfull_queue(struct tcmu_dev *udev, bool fail)
+ 
+ 		ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
+ 		if (ret < 0) {
+-		        pr_debug("cmd %u on dev %s failed with %u\n",
+-			         tcmu_cmd->cmd_id, udev->name, scsi_ret);
+-
+-			idr_remove(&udev->commands, tcmu_cmd->cmd_id);
++			pr_debug("cmd %p on dev %s failed with %u\n",
++				 tcmu_cmd, udev->name, scsi_ret);
+ 			/*
+ 			 * Ignore scsi_ret for now. target_complete_cmd
+ 			 * drops it.
+@@ -1462,13 +1435,11 @@ static bool run_qfull_queue(struct tcmu_dev *udev, bool fail)
+ 			 * the queue
+ 			 */
+ 			list_splice_tail(&cmds, &udev->qfull_queue);
+-			drained = false;
+ 			break;
+ 		}
+ 	}
+ 
+ 	tcmu_set_next_deadline(&udev->qfull_queue, &udev->qfull_timer);
+-	return drained;
+ }
+ 
+ static int tcmu_irqcontrol(struct uio_info *info, s32 irq_on)
+@@ -1652,6 +1623,8 @@ static void tcmu_dev_kref_release(struct kref *kref)
+ 		if (tcmu_check_and_free_pending_cmd(cmd) != 0)
+ 			all_expired = false;
+ 	}
++	if (!list_empty(&udev->qfull_queue))
++		all_expired = false;
+ 	idr_destroy(&udev->commands);
+ 	WARN_ON(!all_expired);
+ 
+@@ -2037,9 +2010,6 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+ 	mutex_lock(&udev->cmdr_lock);
+ 
+ 	idr_for_each_entry(&udev->commands, cmd, i) {
+-		if (!test_bit(TCMU_CMD_BIT_INFLIGHT, &cmd->flags))
+-			continue;
+-
+ 		pr_debug("removing cmd %u on dev %s from ring (is expired %d)\n",
+ 			  cmd->cmd_id, udev->name,
+ 			  test_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags));
+@@ -2077,6 +2047,8 @@ static void tcmu_reset_ring(struct tcmu_dev *udev, u8 err_level)
+ 
+ 	del_timer(&udev->cmd_timer);
+ 
++	run_qfull_queue(udev, false);
++
+ 	mutex_unlock(&udev->cmdr_lock);
+ }
+ 
+@@ -2698,6 +2670,7 @@ static void find_free_blocks(void)
+ static void check_timedout_devices(void)
+ {
+ 	struct tcmu_dev *udev, *tmp_dev;
++	struct tcmu_cmd *cmd, *tmp_cmd;
+ 	LIST_HEAD(devs);
+ 
+ 	spin_lock_bh(&timed_out_udevs_lock);
+@@ -2708,9 +2681,24 @@ static void check_timedout_devices(void)
+ 		spin_unlock_bh(&timed_out_udevs_lock);
+ 
+ 		mutex_lock(&udev->cmdr_lock);
+-		idr_for_each(&udev->commands, tcmu_check_expired_cmd, NULL);
+ 
+-		tcmu_set_next_deadline(&udev->inflight_queue, &udev->cmd_timer);
++		/*
++		 * If cmd_time_out is disabled but qfull is set deadline
++		 * will only reflect the qfull timeout. Ignore it.
++		 */
++		if (udev->cmd_time_out) {
++			list_for_each_entry_safe(cmd, tmp_cmd,
++						 &udev->inflight_queue,
++						 queue_entry) {
++				tcmu_check_expired_ring_cmd(cmd);
++			}
++			tcmu_set_next_deadline(&udev->inflight_queue,
++					       &udev->cmd_timer);
++		}
++		list_for_each_entry_safe(cmd, tmp_cmd, &udev->qfull_queue,
++					 queue_entry) {
++			tcmu_check_expired_queue_cmd(cmd);
++		}
+ 		tcmu_set_next_deadline(&udev->qfull_queue, &udev->qfull_timer);
+ 
+ 		mutex_unlock(&udev->cmdr_lock);
 -- 
 2.25.1
 
