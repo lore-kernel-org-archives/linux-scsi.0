@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C86C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CAB3C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:06:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B65BD221F8
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:03:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2688720885
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:06:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445815;
-	bh=apYGblPZ2gXxXJPFoVrzaumKyn/wcqr5xvCdrb003Tk=;
+	s=default; t=1592445962;
+	bh=aOufcwBmOp7E2fx+crtfEfqmLoPsbiYvQABJl+tdg3I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=a9VLc3FFAbyv3scG5Yp6Nc/czxBYRMKcnCk68Y+sXyP8MF5c46drTUAY/iSWBJ5vj
-	 AE/3gsN6QTjM1DFASWlLGynghhPUp/aXDoxySCVzaxq24b2jPTCUlaj3QP0sRN9kjF
-	 SbP1qzaC3XxNDQbhuZ+XuI8pVKElHh4OMeuYRej4=
+	b=0C75eXnEqHJ0j9pncs3NlxNQ2kjR9U1/E/f5wZnUSXef1uT85WsRx7GtJ75HJIOoD
+	 SWMKHk5OL+g8HdEMU/ndoiw8NCRzSOyUQGwbTrRKyHg2x5qmBqT2qVkI+BPAdqv2N7
+	 8NHsiMe+FZ6+Om9oPglqW/sOGwskGfLx93+9jlaQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730993AbgFRCDe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:03:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56968 "EHLO mail.kernel.org"
+        id S1732343AbgFRCFm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:05:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730967AbgFRBXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:23:25 -0400
+        id S1729074AbgFRBWm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:22:42 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2149721D82;
-        Thu, 18 Jun 2020 01:23:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D0A7120663;
+        Thu, 18 Jun 2020 01:22:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443404;
-        bh=apYGblPZ2gXxXJPFoVrzaumKyn/wcqr5xvCdrb003Tk=;
+        s=default; t=1592443361;
+        bh=aOufcwBmOp7E2fx+crtfEfqmLoPsbiYvQABJl+tdg3I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ch0Jna5/+D5X40Q9bRhFSTXdJi0dHDeXkCGjtGT+nBGEOZmx3qfZMRXCWerwbEExL
-         MpE8sB+k8HuiUnt9nqziG049CM+4WUuqAA3Zh6hdKxZgvh54iIq9lkoz7doCjOcAB/
-         AoBnauDxRPy0NXBRO5+XvmxPbOXZ4c4xTQqOQyho=
+        b=wpP4MiUR+xRUOpCCCIcXcLWvkEGX5/3b2loQuZ1UgKa5KRypyfeMftNKlNIZZHDnZ
+         LJ3ZAwmCuPcZAin4SGZVD8ItvD6XoREDrnZoc34f1ZUihwYYqd4cYyymKrjhDOuAOm
+         vgab8kW03n+K1DSAwvO6LSl2sDXPdlxXG5FZclKA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+Cc:     Viacheslav Dubeyko <v.dubeiko@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 4.19 049/172] scsi: ibmvscsi: Don't send host info in adapter info MAD after LPM
-Date:   Wed, 17 Jun 2020 21:20:15 -0400
-Message-Id: <20200618012218.607130-49-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 018/172] scsi: qla2xxx: Fix issue with adapter's stopping state
+Date:   Wed, 17 Jun 2020 21:19:44 -0400
+Message-Id: <20200618012218.607130-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
 References: <20200618012218.607130-1-sashal@kernel.org>
@@ -59,44 +60,89 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
 
-[ Upstream commit 4919b33b63c8b69d8dcf2b867431d0e3b6dc6d28 ]
+[ Upstream commit 803e45550b11c8e43d89812356fe6f105adebdf9 ]
 
-The adapter info MAD is used to send the client info and receive the host
-info as a response. A persistent buffer is used and as such the client info
-is overwritten after the response. During the course of a normal adapter
-reset the client info is refreshed in the buffer in preparation for sending
-the adapter info MAD.
+The goal of the following command sequence is to restart the adapter.
+However, the tgt_stop flag remains set, indicating that the adapter is
+still in stopping state even after re-enabling it.
 
-However, in the special case of LPM where we reenable the CRQ instead of a
-full CRQ teardown and reset we fail to refresh the client info in the
-adapter info buffer. As a result, after Live Partition Migration (LPM) we
-erroneously report the host's info as our own.
+echo 0x7fffffff > /sys/module/qla2xxx/parameters/logging
+modprobe target_core_mod
+modprobe tcm_qla2xxx
+mkdir /sys/kernel/config/target/qla2xxx
+mkdir /sys/kernel/config/target/qla2xxx/<port-name>
+mkdir /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1
+echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+echo 0 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
 
-[mkp: typos]
+kernel: PID 1396:qla_target.c:1555 qlt_stop_phase1(): tgt_stop 0x0, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-e803:1: PID 1396:qla_target.c:1567: Stopping target for host 1(c0000000033557e8)
+kernel: PID 1396:qla_target.c:1579 qlt_stop_phase1(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: PID 1396:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-e801:1: PID 1396:qla_target.c:1316: Scheduling sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-290a:1: PID 340:qla_target.c:1187: qlt_unreg_sess sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-f801:1: PID 340:qla_target.c:1145: Unregistration of sess c00000002d5cd800 21:00:00:24:ff:7f:35:c7 finished fcp_cnt 0
+kernel: PID 340:qla_target.c:1155 qlt_free_session_done(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-28f1:1: PID 346:qla_os.c:3956: Mark all dev lost
+kernel: PID 346:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
+<skipped>
+kernel: PID 1396:qla_target.c:6812 qlt_enable_vha(): tgt_stop 0x1, tgt_stopped 0x0
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
 
-Link: https://lore.kernel.org/r/20200603203632.18426-1-tyreld@linux.ibm.com
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+qlt_handle_cmd_for_atio() rejects the request to send commands because the
+adapter is in the stopping state:
+
+kernel: PID 0:qla_target.c:4442 qlt_handle_cmd_for_atio(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-3861:1: PID 0:qla_target.c:4447: New command while device c000000005314600 is shutting down
+kernel: qla2xxx [0001:00:02.0]-e85f:1: PID 0:qla_target.c:5728: qla_target: Unable to send command to target
+
+This patch calls qla_stop_phase2() in addition to qlt_stop_phase1() in
+tcm_qla2xxx_tpg_enable_store() and tcm_qla2xxx_npiv_tpg_enable_store(). The
+qlt_stop_phase1() marks adapter as stopping (tgt_stop == 0x1, tgt_stopped
+== 0x0) but qlt_stop_phase2() marks adapter as stopped (tgt_stop == 0x0,
+tgt_stopped == 0x1).
+
+Link: https://lore.kernel.org/r/52be1e8a3537f6c5407eae3edd4c8e08a9545ea5.camel@yadro.com
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Viacheslav Dubeyko <v.dubeiko@yadro.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 2 ++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index b99ded6b9e0b..036508a4bd5a 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -429,6 +429,8 @@ static int ibmvscsi_reenable_crq_queue(struct crq_queue *queue,
- 	int rc = 0;
- 	struct vio_dev *vdev = to_vio_dev(hostdata->dev);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 654e1af7f542..b51dba35bcf7 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -960,6 +960,7 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
  
-+	set_adapter_info(hostdata);
-+
- 	/* Re-enable the CRQ */
- 	do {
- 		if (rc)
+ 		atomic_set(&tpg->lport_tpg_enabled, 0);
+ 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
++		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
+ 	}
+ 
+ 	return count;
+@@ -1122,6 +1123,7 @@ static ssize_t tcm_qla2xxx_npiv_tpg_enable_store(struct config_item *item,
+ 
+ 		atomic_set(&tpg->lport_tpg_enabled, 0);
+ 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
++		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
+ 	}
+ 
+ 	return count;
 -- 
 2.25.1
 
