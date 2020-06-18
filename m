@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9779C433E3
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:56:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B973C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:58:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7EB6621924
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:56:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51B0922259
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:58:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592445418;
-	bh=b54IEHmFz7bmWQszzKimOy7e6xhMHWb9MYvGLvxm254=;
+	s=default; t=1592445498;
+	bh=w1lTZXh9IdDYDLqWT6YpftBSWKQnfqyHQ9w33e4WjlE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=S+XY/7NYqOTT96t5D6QTeddAzaRiyzlmXgphVUAHn3iTbBX/hCKlaDYfumft3SYgd
-	 JKdV6vZknpSnhNE/J4h6FXhZavb0uuE4WCKO47pBA3B5vanrHfgSj0jVRt42X4+rVx
-	 HE26EeEvmYu0QMWTSlRy1tfGjLMWnoV25VP5ASNQ=
+	b=DVFEfhlJqJWDWbC1Nacs4hBohnx9jX1Vtcl13NCn0GSwu+mpY2qovV+ZhMbapTgBl
+	 F5HU+vjrsW4PQ/Jz+vX6nSsWhUAA8Go52kReqDOmjelAo1HKLoJcjJTmaIFQ0e0LCi
+	 k7yGbHdofYFJldQ3B4Q7T2u7CmhnZPivmS0EeKRc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732657AbgFRB46 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:56:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60380 "EHLO mail.kernel.org"
+        id S1731325AbgFRBY6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:24:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59766 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731395AbgFRBZR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:25:17 -0400
+        id S1731316AbgFRBY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:24:57 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 144CE2075E;
-        Thu, 18 Jun 2020 01:25:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 07A3621D80;
+        Thu, 18 Jun 2020 01:24:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443517;
-        bh=b54IEHmFz7bmWQszzKimOy7e6xhMHWb9MYvGLvxm254=;
+        s=default; t=1592443497;
+        bh=w1lTZXh9IdDYDLqWT6YpftBSWKQnfqyHQ9w33e4WjlE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=isCpelr4kq4myJdI3J3gIXGWqo73fVydZ4NyRaMfLLqod+itkaD0+KZY6y86floct
-         mkmfM7iJU/CcjKXIt5R17Mxd/3zxSBuBFgtAwdPsgT/AHB+JwVY0qe8QFlr57I3oqG
-         yrbMYh2nbuNMrnSYEKCYJRzGNsWXq9qqS5Sn82Uc=
+        b=zQLrPnSBf+Xnf257jBvWnAXNHb1ZtUqsH79ru6QEjSFMRirng1kk/++G5i9dAcMl4
+         o7pJSN2BAlG7WLD+fhTov0/NQiFtUsNwhtjSZt+63paYMCN+T0zfdWaFUIWDKvgm1M
+         u+kOKlHMeaf516WbeYcKHRcsEPCBvdxajLwxDe4w=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 140/172] scsi: ufs: Don't update urgent bkops level when toggling auto bkops
-Date:   Wed, 17 Jun 2020 21:21:46 -0400
-Message-Id: <20200618012218.607130-140-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 123/172] scsi: ufs-qcom: Fix scheduling while atomic issue
+Date:   Wed, 17 Jun 2020 21:21:29 -0400
+Message-Id: <20200618012218.607130-123-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
 References: <20200618012218.607130-1-sashal@kernel.org>
@@ -61,39 +61,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Can Guo <cang@codeaurora.org>
+From: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
 
-[ Upstream commit be32acff43800c87dc5c707f5d47cc607b76b653 ]
+[ Upstream commit 3be60b564de49875e47974c37fabced893cd0931 ]
 
-Urgent bkops level is used to compare against actual bkops status read from
-UFS device. Urgent bkops level is set during initialization and might be
-updated in exception event handler during runtime. But it should not be
-updated to the actual bkops status every time when auto bkops is toggled.
-Otherwise, if urgent bkops level is updated to 0, auto bkops shall always
-be kept enabled.
+ufs_qcom_dump_dbg_regs() uses usleep_range, a sleeping function, but can be
+called from atomic context in the following flow:
 
-Link: https://lore.kernel.org/r/1590632686-17866-1-git-send-email-cang@codeaurora.org
-Fixes: 24366c2afbb0 ("scsi: ufs: Recheck bkops level if bkops is disabled")
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+ufshcd_intr -> ufshcd_sl_intr -> ufshcd_check_errors ->
+ufshcd_print_host_regs -> ufshcd_vops_dbg_register_dump ->
+ufs_qcom_dump_dbg_regs
+
+This causes a boot crash on the Lenovo Miix 630 when the interrupt is
+handled on the idle thread.
+
+Fix the issue by switching to udelay().
+
+Link: https://lore.kernel.org/r/20200525204125.46171-1-jeffrey.l.hugo@gmail.com
+Fixes: 9c46b8676271 ("scsi: ufs-qcom: dump additional testbus registers")
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Signed-off-by: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/ufs/ufs-qcom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 803d67b3a166..bd21c9cdf818 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5122,7 +5122,6 @@ static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
- 		err = ufshcd_enable_auto_bkops(hba);
- 	else
- 		err = ufshcd_disable_auto_bkops(hba);
--	hba->urgent_bkops_lvl = curr_status;
- out:
- 	return err;
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 75ee5906b966..21e3ff590ec9 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1635,11 +1635,11 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+ 
+ 	/* sleep a bit intermittently as we are dumping too much data */
+ 	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ 	ufs_qcom_testbus_read(hba);
+-	usleep_range(1000, 1100);
++	udelay(1000);
+ 	ufs_qcom_print_unipro_testbus(hba);
+-	usleep_range(1000, 1100);
++	udelay(1000);
  }
+ 
+ /**
 -- 
 2.25.1
 
