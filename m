@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACAE8C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1498AC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:38:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D91921D7A
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:35:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB12F221FE
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:38:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592444138;
-	bh=i77N/US4sl25BCnif63wW5G4Cm8Q8CCwdpW65jgwKP8=;
+	s=default; t=1592444296;
+	bh=rkvfAmVrSaetFUpjPhTSfn6khTQB0mloc8723weKlbs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nHVacvDq+bI90sDn7tqStB0H24Swz7JfC50wkIc9be1hY1SAgSw2ZNu0RB1Vw5pZX
-	 MRR7hUA7GeXB2ZUstXYH0ZFaUPXdOoDnI9TyMczpT8RvZ35bIY47OTUUfFRD6wev0e
-	 8ROd+EuOJCyV0Cx3TtkMPgys6rLtNDL+ZAd5+TNE=
+	b=djIDM/E0pSHdk2ttj/W1PMAMo3EGmdRNvTsWdI2ssR6pjM/LEMUimQoSOKgCgl79Q
+	 +WE1CiKI8yQyE76D0CgRyCNB6dTpHFRf10RvEyPCt0uPU4W0ZdQZDjMaVABmq/TVYe
+	 MVKfuTcxzLamJGqDc3V0Fbx6Rw6AWX/qdYuc8wyk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732766AbgFRBbX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:31:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42066 "EHLO mail.kernel.org"
+        id S1732478AbgFRBiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:38:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40626 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732760AbgFRBbX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:31:23 -0400
+        id S1732550AbgFRBad (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:30:33 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1BE442224B;
-        Thu, 18 Jun 2020 01:31:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0377420FC3;
+        Thu, 18 Jun 2020 01:30:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443882;
-        bh=i77N/US4sl25BCnif63wW5G4Cm8Q8CCwdpW65jgwKP8=;
+        s=default; t=1592443832;
+        bh=rkvfAmVrSaetFUpjPhTSfn6khTQB0mloc8723weKlbs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EoGhXezUQkG3Z227OOtSL8FdFE34M3ypqrIfSn2ewYbIVJGu2jUTSdiRdJnjkmrOP
-         p6rKC/B8cn/h0SgRJMpNP0dCCjzXkwyg8b0CiJePEzuNlXolqE926d+RlK4tb1zC5u
-         YrVBwNRNvVKnbLZy/BbMem92MkUcdy6zG3fW8WmI=
+        b=jJNoIpg84r5TPpMEfv0arm33wG+ET4WN8TZ4XRotLL6ulWoo0yHJX/kXiD57UsoNT
+         8V6/R3+bNdTm4Hhe195ZV7ooKn4JAwFzEOGr7wx4D5Z/60fxCNCp9JgvxYS5ZibWSR
+         KqCJpPEngnr582y9qm98/ULCAt0PZRU41L2V3C7M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+Cc:     Simon Arlott <simon@octiron.net>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 60/60] scsi: acornscsi: Fix an error handling path in acornscsi_probe()
-Date:   Wed, 17 Jun 2020 21:30:04 -0400
-Message-Id: <20200618013004.610532-60-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 20/60] scsi: sr: Fix sr_probe() missing deallocate of device minor
+Date:   Wed, 17 Jun 2020 21:29:24 -0400
+Message-Id: <20200618013004.610532-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618013004.610532-1-sashal@kernel.org>
 References: <20200618013004.610532-1-sashal@kernel.org>
@@ -59,38 +58,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: Simon Arlott <simon@octiron.net>
 
-[ Upstream commit 42c76c9848e13dbe0538d7ae0147a269dfa859cb ]
+[ Upstream commit 6555781b3fdec5e94e6914511496144241df7dee ]
 
-'ret' is known to be 0 at this point.  Explicitly return -ENOMEM if one of
-the 'ecardm_iomap()' calls fail.
+If the cdrom fails to be registered then the device minor should be
+deallocated.
 
-Link: https://lore.kernel.org/r/20200530081622.577888-1-christophe.jaillet@wanadoo.fr
-Fixes: e95a1b656a98 ("[ARM] rpc: acornscsi: update to new style ecard driver")
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Link: https://lore.kernel.org/r/072dac4b-8402-4de8-36bd-47e7588969cd@0882a8b5-c6c3-11e9-b005-00805fc181fe
+Signed-off-by: Simon Arlott <simon@octiron.net>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/arm/acornscsi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/sr.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index deaaf84989cd..be595add8026 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -2912,8 +2912,10 @@ static int acornscsi_probe(struct expansion_card *ec, const struct ecard_id *id)
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 5dc288fecace..7dd4d9ded249 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -746,7 +746,7 @@ static int sr_probe(struct device *dev)
+ 	cd->cdi.disk = disk;
  
- 	ashost->base = ecardm_iomap(ec, ECARD_RES_MEMC, 0, 0);
- 	ashost->fast = ecardm_iomap(ec, ECARD_RES_IOCFAST, 0, 0);
--	if (!ashost->base || !ashost->fast)
-+	if (!ashost->base || !ashost->fast) {
-+		ret = -ENOMEM;
- 		goto out_put;
-+	}
+ 	if (register_cdrom(&cd->cdi))
+-		goto fail_put;
++		goto fail_minor;
  
- 	host->irq = ec->irq;
- 	ashost->host = host;
+ 	/*
+ 	 * Initialize block layer runtime PM stuffs before the
+@@ -764,6 +764,10 @@ static int sr_probe(struct device *dev)
+ 
+ 	return 0;
+ 
++fail_minor:
++	spin_lock(&sr_index_lock);
++	clear_bit(minor, sr_index_bits);
++	spin_unlock(&sr_index_lock);
+ fail_put:
+ 	put_disk(disk);
+ fail_free:
 -- 
 2.25.1
 
