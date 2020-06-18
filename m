@@ -4,51 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8353C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B78B9C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:23:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF59F214DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:23:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ED6C214DB
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:23:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592447021;
-	bh=HJF2uAlzAp+gLKcikaWDlSRt68qDrH/h1QK9+wzPX44=;
+	s=default; t=1592447035;
+	bh=Z/WbnyE4ZXlpudncQs5OzvRsFKu8fkgoznjwuRiGmao=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=j0xgYEPoLiWfn6ue5G9OcrygbDxLdIu7jH2LtJcEjC4qlbaK1/Zi5FxfpPsei0bpc
-	 FvRk2lLRw2TndHu27E4Z/tWeomKHBp4rDIoJlqESCf06vW4N7GKzGrDYxVZauDtGb/
-	 idIaCXa6eLDTMHi3wM8FjU0B27ndEjILASDg1O+Q=
+	b=TLHpck7QAiHakZLjJO8IYpOYUOys68WksH/f9iNPilp3i5SD9hgonboMYVqWEx7sj
+	 sRVrN+bOA2zRtOojfvzVlGvuxIU6hI6o/MpmZ9+CrVkyHfcre2lxLbhE3TkuJWHMgY
+	 NZ5Fs7zEFIPbWGErFst67pSXmjBV3spIKLV3/9N0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727879AbgFRCXl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:23:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49092 "EHLO mail.kernel.org"
+        id S1729826AbgFRBRs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:17:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49032 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729827AbgFRBRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:17:50 -0400
+        id S1729818AbgFRBRr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:17:47 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 85C5621D79;
-        Thu, 18 Jun 2020 01:17:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DBAB8206F1;
+        Thu, 18 Jun 2020 01:17:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443069;
-        bh=HJF2uAlzAp+gLKcikaWDlSRt68qDrH/h1QK9+wzPX44=;
+        s=default; t=1592443066;
+        bh=Z/WbnyE4ZXlpudncQs5OzvRsFKu8fkgoznjwuRiGmao=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WnauIURXMEJQjejEUPMc4RvP9QVC1+9xBD3T6K7EvGkcN0BuMYQKYiyMUrAcNFQJn
-         uyGCulh5gT9vQ7rfKvqGzvBrAlaVVNOLpGlsb8bIyVId6iDlZU4KMH7bCsScwNKrLN
-         p7qeuibgVoirEVRcM2h4sOtwUq1OZD0mesx7I1ns=
+        b=WIvLRAcx+GgjQClulg/2+c247y0zwuk4thSiOuO6HgJv2p9tVI6wMrZNIxdqSoXVx
+         ugqi7BMS0kSX5sOYgfxO0Llg7LcFnkSAi8c300SJLlJe8cySiipnqt6C+wdi3eIzQ9
+         bH/5ovRW4JcY8T+1M4HqibSxf/CvQgddhDi71F8k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xiyu Yang <xiyuyang19@fudan.edu.cn>,
-        Daniel Wagner <dwagner@suse.de>,
-        James Smart <james.smart@broadcom.com>,
-        Xin Tan <tanxin.ctf@gmail.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 058/266] scsi: lpfc: Fix lpfc_nodelist leak when processing unsolicited event
-Date:   Wed, 17 Jun 2020 21:13:03 -0400
-Message-Id: <20200618011631.604574-58-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 056/266] scsi: cxgb3i: Fix some leaks in init_act_open()
+Date:   Wed, 17 Jun 2020 21:13:01 -0400
+Message-Id: <20200618011631.604574-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
 References: <20200618011631.604574-1-sashal@kernel.org>
@@ -61,49 +58,71 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 7217e6e694da3aae6d17db8a7f7460c8d4817ebf ]
+[ Upstream commit b6170a49c59c27a10efed26c5a2969403e69aaba ]
 
-In order to create or activate a new node, lpfc_els_unsol_buffer() invokes
-lpfc_nlp_init() or lpfc_enable_node() or lpfc_nlp_get(), all of them will
-return a reference of the specified lpfc_nodelist object to "ndlp" with
-increased refcnt.
+There wasn't any clean up done if cxgb3_alloc_atid() failed and also the
+original code didn't release "csk->l2t".
 
-When lpfc_els_unsol_buffer() returns, local variable "ndlp" becomes
-invalid, so the refcount should be decreased to keep refcount balanced.
-
-The reference counting issue happens in one exception handling path of
-lpfc_els_unsol_buffer(). When "ndlp" in DEV_LOSS, the function forgets to
-decrease the refcnt increased by lpfc_nlp_init() or lpfc_enable_node() or
-lpfc_nlp_get(), causing a refcnt leak.
-
-Fix this issue by calling lpfc_nlp_put() when "ndlp" in DEV_LOSS.
-
-Link: https://lore.kernel.org/r/1590416184-52592-1-git-send-email-xiyuyang19@fudan.edu.cn
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
-Reviewed-by: James Smart <james.smart@broadcom.com>
-Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
-Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
+Link: https://lore.kernel.org/r/20200521121221.GA247492@mwanda
+Fixes: 6f7efaabefeb ("[SCSI] cxgb3i: change cxgb3i to use libcxgbi")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 66f8867dd837..94d8f2834100 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8394,6 +8394,8 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	spin_lock_irq(shost->host_lock);
- 	if (ndlp->nlp_flag & NLP_IN_DEV_LOSS) {
- 		spin_unlock_irq(shost->host_lock);
-+		if (newnode)
-+			lpfc_nlp_put(ndlp);
- 		goto dropit;
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index 524cdbcd29aa..ec7d01f6e2d5 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -959,6 +959,7 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	struct net_device *ndev = cdev->ports[csk->port_id];
+ 	struct cxgbi_hba *chba = cdev->hbas[csk->port_id];
+ 	struct sk_buff *skb = NULL;
++	int ret;
+ 
+ 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+ 		"csk 0x%p,%u,0x%lx.\n", csk, csk->state, csk->flags);
+@@ -979,16 +980,16 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	csk->atid = cxgb3_alloc_atid(t3dev, &t3_client, csk);
+ 	if (csk->atid < 0) {
+ 		pr_err("NO atid available.\n");
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto put_sock;
  	}
- 	spin_unlock_irq(shost->host_lock);
+ 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
+ 	cxgbi_sock_get(csk);
+ 
+ 	skb = alloc_wr(sizeof(struct cpl_act_open_req), 0, GFP_KERNEL);
+ 	if (!skb) {
+-		cxgb3_free_atid(t3dev, csk->atid);
+-		cxgbi_sock_put(csk);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto free_atid;
+ 	}
+ 	skb->sk = (struct sock *)csk;
+ 	set_arp_failure_handler(skb, act_open_arp_failure);
+@@ -1010,6 +1011,15 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	cxgbi_sock_set_state(csk, CTP_ACTIVE_OPEN);
+ 	send_act_open_req(csk, skb, csk->l2t);
+ 	return 0;
++
++free_atid:
++	cxgb3_free_atid(t3dev, csk->atid);
++put_sock:
++	cxgbi_sock_put(csk);
++	l2t_release(t3dev, csk->l2t);
++	csk->l2t = NULL;
++
++	return ret;
+ }
+ 
+ cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
 -- 
 2.25.1
 
