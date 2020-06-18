@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED145C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:21:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 760A3C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:23:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C26A020663
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:21:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4438421927
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:23:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592443279;
-	bh=q6q9H6WERydXHsFxXw1t9PgwznLXrB3iVaZ9haQcOfM=;
+	s=default; t=1592443386;
+	bh=BUvJVBC8cHLzO7AI89N4vy5cfwfV6G40U7bIhjVbmhs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=k0U+kjBTdGVQOT4KegzeJvDWUzHb7p68nZemSN2OEAkh6/I9HFT1Fi3sHgB6hw+QV
-	 r/i4YTy1tTToYCUoR/P+gR4mNT/BNJaijrshcDiqhUKNA2t/5r9GPwPmE3WrYiDRUU
-	 xJhoSGTst7+o8HZ0J2N1p4H+dVbja5UnXyOmVGX0=
+	b=xY5czLo6HOKkpixw/lJXSG0aIzSg5QfIixDg2z7UDAH151K0EAlAl32N9VpRBoMLr
+	 4RTes+f1PWqyx09eGwg0ue0zgW6z5dRKbI0W6HDs/eBjgdJ67FzRB9CQ9Me4qGouxj
+	 3IknU0jLyZF0g+KzyJPKeDREi3ROQy79ARV2rZSo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727995AbgFRBVS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:21:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53684 "EHLO mail.kernel.org"
+        id S1730912AbgFRBXF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:23:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730475AbgFRBVR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:21:17 -0400
+        id S1729487AbgFRBXD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:23:03 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B82C320663;
-        Thu, 18 Jun 2020 01:21:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8DDF320CC7;
+        Thu, 18 Jun 2020 01:23:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443276;
-        bh=q6q9H6WERydXHsFxXw1t9PgwznLXrB3iVaZ9haQcOfM=;
+        s=default; t=1592443382;
+        bh=BUvJVBC8cHLzO7AI89N4vy5cfwfV6G40U7bIhjVbmhs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EZ0xpsx/Mv4pcImlFnqg9BfLYgHWQUT6ett+poa7ock36vRBOOLi007kYzoiCnnSr
-         LcnFUyTTdzmUXkebAxkqWrNOqWMMZmQ7jl9RgOtPYBRtu0g57sLRLsweHix70nY65J
-         U5xuEsyZ3Hrd7v+nbEV7+Qr5G4O74Y47CjhoOt7k=
+        b=zxwpg7INc1ZsfELqRCdOcNFqV5jWGIN+4PvmgK5ONaWyr+6Ze3F+tY9kkrm5eV7MO
+         DVc5PTUTmW8CSI52O6vkMolUn0FOEOf4Emn/eyqRL/PlfrBbZWrNh3LBbrmERzS7su
+         ktbGl/mIaknqdfSbXZMjpvNTUlTZ5+cRT+u3hPog=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
+Cc:     Xiyu Yang <xiyuyang19@fudan.edu.cn>,
+        Daniel Wagner <dwagner@suse.de>,
+        James Smart <james.smart@broadcom.com>,
+        Xin Tan <tanxin.ctf@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.4 221/266] scsi: ufs: Don't update urgent bkops level when toggling auto bkops
-Date:   Wed, 17 Jun 2020 21:15:46 -0400
-Message-Id: <20200618011631.604574-221-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 033/172] scsi: lpfc: Fix lpfc_nodelist leak when processing unsolicited event
+Date:   Wed, 17 Jun 2020 21:19:59 -0400
+Message-Id: <20200618012218.607130-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
-References: <20200618011631.604574-1-sashal@kernel.org>
+In-Reply-To: <20200618012218.607130-1-sashal@kernel.org>
+References: <20200618012218.607130-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,39 +61,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Can Guo <cang@codeaurora.org>
+From: Xiyu Yang <xiyuyang19@fudan.edu.cn>
 
-[ Upstream commit be32acff43800c87dc5c707f5d47cc607b76b653 ]
+[ Upstream commit 7217e6e694da3aae6d17db8a7f7460c8d4817ebf ]
 
-Urgent bkops level is used to compare against actual bkops status read from
-UFS device. Urgent bkops level is set during initialization and might be
-updated in exception event handler during runtime. But it should not be
-updated to the actual bkops status every time when auto bkops is toggled.
-Otherwise, if urgent bkops level is updated to 0, auto bkops shall always
-be kept enabled.
+In order to create or activate a new node, lpfc_els_unsol_buffer() invokes
+lpfc_nlp_init() or lpfc_enable_node() or lpfc_nlp_get(), all of them will
+return a reference of the specified lpfc_nodelist object to "ndlp" with
+increased refcnt.
 
-Link: https://lore.kernel.org/r/1590632686-17866-1-git-send-email-cang@codeaurora.org
-Fixes: 24366c2afbb0 ("scsi: ufs: Recheck bkops level if bkops is disabled")
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Can Guo <cang@codeaurora.org>
+When lpfc_els_unsol_buffer() returns, local variable "ndlp" becomes
+invalid, so the refcount should be decreased to keep refcount balanced.
+
+The reference counting issue happens in one exception handling path of
+lpfc_els_unsol_buffer(). When "ndlp" in DEV_LOSS, the function forgets to
+decrease the refcnt increased by lpfc_nlp_init() or lpfc_enable_node() or
+lpfc_nlp_get(), causing a refcnt leak.
+
+Fix this issue by calling lpfc_nlp_put() when "ndlp" in DEV_LOSS.
+
+Link: https://lore.kernel.org/r/1590416184-52592-1-git-send-email-xiyuyang19@fudan.edu.cn
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index bc73181b0405..2b6853c7375c 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5101,7 +5101,6 @@ static int ufshcd_bkops_ctrl(struct ufs_hba *hba,
- 		err = ufshcd_enable_auto_bkops(hba);
- 	else
- 		err = ufshcd_disable_auto_bkops(hba);
--	hba->urgent_bkops_lvl = curr_status;
- out:
- 	return err;
- }
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 7398350b08b4..9032793c405e 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -7949,6 +7949,8 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	spin_lock_irq(shost->host_lock);
+ 	if (ndlp->nlp_flag & NLP_IN_DEV_LOSS) {
+ 		spin_unlock_irq(shost->host_lock);
++		if (newnode)
++			lpfc_nlp_put(ndlp);
+ 		goto dropit;
+ 	}
+ 	spin_unlock_irq(shost->host_lock);
 -- 
 2.25.1
 
