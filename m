@@ -6,174 +6,195 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F24B8C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 22:46:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF665C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 23:32:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2FC9206E2
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 22:46:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8724420888
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 23:32:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="TVFjhakG";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="PbnHfdst"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="XFBw77T0";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="RgcNnTc1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731196AbgFRWqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Jun 2020 18:46:17 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1404 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730939AbgFRWqQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Jun 2020 18:46:16 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05IMkDOu025516;
-        Thu, 18 Jun 2020 15:46:13 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=pfpt0818;
- bh=vLrh9PYIAYAxAxUbDVzY6h578et2M6ZL8s4spWk55AA=;
- b=TVFjhakGsNpUOGpChvUAy2C233rJE8MMLisC14KaGY9EoZc6WQyUKE+0wS8wyZzvPdQZ
- OYP+Zc3WjSMpQDck9FsdNN1eQOYLMrA+HxPoVFla02KU4VcMgN8+BFbRUv2G7FvMgLqf
- HX1thJ5ckTgocqKOWGBcQRUlt6J52Nwvtd33kT2+2IkVCZU4nP4bsIZ3oFB11qaYT2MB
- yvmFA0nkfnfQ+uEpqTaA1wO2lAgkRZh6cNul3V9ks0IMJMh/OoBKp3KClrDLvdS3Q9K2
- w4cIZMteUONtRVOGnahw292zkW25yhC6cA3mLCLRKBQVmULnLfuxZlrT3ftKsBXkxdZ2 0Q== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0a-0016f401.pphosted.com with ESMTP id 31q676vs6y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 18 Jun 2020 15:46:13 -0700
-Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 18 Jun
- 2020 15:46:12 -0700
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (104.47.58.108)
- by SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2 via Frontend Transport; Thu, 18 Jun 2020 15:46:12 -0700
+        id S1727098AbgFRXcR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Jun 2020 19:32:17 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:49666 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725829AbgFRXcQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 19:32:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1592523136; x=1624059136;
+  h=from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=UqfiOlZyJC7ZjASMHI7+j2IPcTjyHAI4KmqEmS1Hd28=;
+  b=XFBw77T0yFf51d2KTPW+HEv8UAPfc0PEwaMgKE8j/43bfWzvoXPxlHlj
+   sDIExGWUFM0vgq9hqJ9V/iI+xs0ab8OQy5JYgWWCERA8LHrdQ8FhwSEMx
+   IDwIN6CHVn/E3RYSukoUWAXXm2UdT99kabyZhz1JFMEFNgy49bbgWElLe
+   Y8Ef8wLSJ7GkQ1NVdcxwxoxjBvkI2YZtDKTPmTGhHIwpCAAozs3dFUV6K
+   1eDk6+oeuilxpiJYm8GoJHDw4sBhCVQt7uP1viZskaKvk7hzbpBIEj19E
+   Gx7SGG4gReYTeEHTeXWDv7KH0EtfDX8Gv8vR+uBuPzH6aMzkFoo4G37D+
+   Q==;
+IronPort-SDR: 5dsU7ztvmSiiSzrz5HzNYiLDKSarTsQ13OUGFlBHdr8lOpoJkYir4Ht22EHMtnuFHK0ouVdOJr
+ KeCc0JpNbQ/Ej0FZeDjqNhXxmpAJKd4bUHYfRHZwTwdpazN/VqCx+kWu2EtBOUw15IHwre2+B2
+ s3RmY8KJNUh5TAhEWeC3lib+aGfOCpX1UXinWliKnmvWoRrWybZROA4lpNUDL5KNe3Jz7XkcxL
+ y+PjPwGaxpUgLwFze4Gfxacw2wt5z9ZnhRVKrgtp4GDD+PY6eHix3iXjC4d2cS73lgvGsFGywI
+ ckM=
+X-IronPort-AV: E=Sophos;i="5.75,253,1589212800"; 
+   d="scan'208";a="141750110"
+Received: from mail-bn8nam11lp2170.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.170])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Jun 2020 07:32:02 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kcveBkH6K9awtJIHYNLIGFXu6qn0VhDriqPgj3dUDiK7yWlofrBnYi92c1mBWilwL/d3SCT16y+khhe+a88wxJeyeAP8zrvyCFAcTombC03hyVIBpDN8iDWtCopsIVwKBSJNcvYqcnf5V28KcQhqpWBhYRy7XYljuVKbzCTUJcIhFvyIJjzPBUWcvbNc2qsdnXUrylk9k80IaxFKd3ePnnmuzgvYnJnYRfV6fwpSEWIoIKsdyzzBfRNmjjPjfZAE7p2tOPb9S9+JrOtv9eDU7Y2H5pL2vGE1MIOLaBEG53lxfnL2ONJCTbFoGy8isKqp9GpJpyooLpUxf9SU3J24Fw==
+ b=cQEq9PAaCRXoSVBYk/jrE8sIrCCXvono1+im/Y08PRy2aydyZGRYU+HqSB4/Zc8YFy86tG/9TNM3zKT+J7gZHQsEmECZHZ6GnFBNyrZRBmlounmB6mLHgdIHjimCUkgXOkxzWiveJ8/h8HcGJdz1PN6lJbp3uMlP770KDdArCzzjlLtXq3exHkGUBHvCsP8juxRlkK5TcdUWzCYrDLTg0eSk4KeL1ruZvQjlPeRaOoR3uKvLtEkdSET1n/DKW9PByTiSG+yKqPJq5xArrSJWC//jmnqZr0x1iKHEPjoenFNi8lKMXm7XJewBjDiHQx8seHaSwutgQnZGWtsg49ucRQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vLrh9PYIAYAxAxUbDVzY6h578et2M6ZL8s4spWk55AA=;
- b=Sy4qZZa6rysy9Eu2NahzVluECe9iIG1GEFrCXbkVyxn+m2aHlOzUqW9HWBVYhAbwSlfQnoC6A9w+CLXTNLOKQ4yScXGmlsR4xgEJUPFCP238XPYdLA0E/mBDT96F4JSDegPxg74cIt8oiM5d7yq4OoYSIWSfXtXQj+CYX+RUL8CTHcWmu9FHilDJwQFRy19WxRkV3P4UzJTgNA8MVyUt/4qilrSL57qmJXW5X2wkNSHm6jxq0Wvu2M47a7RGJfa2BGHbEApxd7HM79acIGLThwC4jqJaF9V4ZjPXpPn6/ADojnT2c0h9QtYGpcvcGkAWOlJVuR3ejzotq9hT+MEdhA==
+ bh=UqfiOlZyJC7ZjASMHI7+j2IPcTjyHAI4KmqEmS1Hd28=;
+ b=ljBOSl0tbukbbylnZeW8xVQHwYQKEqpfsgSlspMuPyrzDQbcXo+tZSHffvVbSLw/bAtdZH4MY4h4V650SUIt+kmjsjZ18bFYU/0izCGB/UuD5niAX4u2aIeOV1af08lyoHEqjpYo+A3zACgreElzB0jdnhDyyeDP0aDG6wadgF7gu72vOZNI3/M1Q1+7RYaZV4zSkltdY66kN9gn9WIXbfdDU/Vh8YYf/N+l9OcUDCjCY1RY0ZbaQfC/dySlPN+CNp6XzZNBp4uI38ZEWDQMliVGKzvqmPqEe1MMy8S7GxeSkpj2ik2Fe/V/2r5Z3d4MxS0o8CWDM7bIi8c35IrpYg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vLrh9PYIAYAxAxUbDVzY6h578et2M6ZL8s4spWk55AA=;
- b=PbnHfdst+7GU/42lcPRma/NlNVsp0Spuf7WjiciqoPLl98fqAOQvdFPUm9g93aBTaxH8nFk/QqS64HH0zi5FGz9dKgk0IQoPywdlWtl0+QfSnQA7+2Pa1hnKET2GULtynNRRHubSdvUoeVQJtt7Sy7DaVB2+cIPrHvNx/23n6eI=
-Received: from BYAPR18MB2805.namprd18.prod.outlook.com (2603:10b6:a03:108::25)
- by BYAPR18MB2359.namprd18.prod.outlook.com (2603:10b6:a03:134::18) with
+ bh=UqfiOlZyJC7ZjASMHI7+j2IPcTjyHAI4KmqEmS1Hd28=;
+ b=RgcNnTc160YP/P3aWVIpAbc/vcFVBeUcwUNQQT2Kklsdn09hA9WkPV5AixtkLhnnMfcXpj3eLczocwWMsHDyderYhKkBjXTbAVwEfDgFY9OAa5gEP4yFdMKepem6CnNoVFzildXvpklKB2O1nf0TVTienTkgeHdYuK5A+X0Ax2k=
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
+ by CY4PR04MB1254.namprd04.prod.outlook.com (2603:10b6:910:5b::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Thu, 18 Jun
- 2020 22:46:10 +0000
-Received: from BYAPR18MB2805.namprd18.prod.outlook.com
- ([fe80::fd09:61da:c548:e61b]) by BYAPR18MB2805.namprd18.prod.outlook.com
- ([fe80::fd09:61da:c548:e61b%7]) with mapi id 15.20.3088.029; Thu, 18 Jun 2020
- 22:46:10 +0000
-From:   Shyam Sundar <ssundar@marvell.com>
-To:     "james.smart@broadcom.com" <james.smart@broadcom.com>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3088.19; Thu, 18 Jun
+ 2020 23:31:59 +0000
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::c593:f271:eebe:ac7]) by CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::c593:f271:eebe:ac7%9]) with mapi id 15.20.3109.023; Thu, 18 Jun 2020
+ 23:31:59 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     Simon Arlott <simon@octiron.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-        "Nilesh Javali" <njavali@marvell.com>
-Subject: Re: [PATCH v3 0/2] qla2xxx SAN Congestion Management (SCM) support
-Thread-Topic: [PATCH v3 0/2] qla2xxx SAN Congestion Management (SCM) support
-Thread-Index: AQHWPzGhOwfQ0CGFzUyl8UmpEAyWtajfBiGA
-Date:   Thu, 18 Jun 2020 22:46:10 +0000
-Message-ID: <B39919CA-5C0A-4792-9327-0D50DF8AD2F3@marvell.com>
-References: <20200610141509.10616-1-njavali@marvell.com>
-In-Reply-To: <20200610141509.10616-1-njavali@marvell.com>
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH] scsi: sd: stop SSD (non-rotational) disks before reboot
+Thread-Topic: [PATCH] scsi: sd: stop SSD (non-rotational) disks before reboot
+Thread-Index: AQHWRNgorE8Ue5/pcEOqVFi0S2b5Lw==
+Date:   Thu, 18 Jun 2020 23:31:59 +0000
+Message-ID: <CY4PR04MB375112FC181C9A625137DB94E79B0@CY4PR04MB3751.namprd04.prod.outlook.com>
+References: <499138c8-b6d5-ef4a-2780-4f750ed337d3@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+ <CY4PR04MB37511505492E9EC6A245CFB1E79B0@CY4PR04MB3751.namprd04.prod.outlook.com>
+ <18da4d78-f3df-967f-e7ea-8f2faaa95d6b@0882a8b5-c6c3-11e9-b005-00805fc181fe>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3445.104.11)
-authentication-results: broadcom.com; dkim=none (message not signed)
- header.d=none;broadcom.com; dmarc=none action=none header.from=marvell.com;
-x-originating-ip: [2600:1700:6a70:9c50:4ee:1dc5:f5ae:881d]
+authentication-results: octiron.net; dkim=none (message not signed)
+ header.d=none;octiron.net; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.182.57]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 30305ac0-9f3f-4e24-c2de-08d813d9657e
-x-ms-traffictypediagnostic: BYAPR18MB2359:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR18MB2359BACED1A8316AAD7D974AB49B0@BYAPR18MB2359.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 6d700c41-35d6-48cd-26d8-08d813dfcc0c
+x-ms-traffictypediagnostic: CY4PR04MB1254:
+x-microsoft-antispam-prvs: <CY4PR04MB12547CE84C53DB24AD118067E79B0@CY4PR04MB1254.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
 x-forefront-prvs: 0438F90F17
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: eRPdH24FqVvk5JDsXmJfwWHn33ewBZNoEeZQVoETCjPeEVq0Uory7O3ib0qft6RNImAVUUzW8A8DYi8H7zZ9Ls+MHY9gO+dZ+I7JIKA86izCgV7CnVZCloBkyl5jndu8jlW39Ci2PkCN46PqQxsYOYZq/8ilBDwX/FuuJj7CXPPzQmQl1nAdBnjrM3lf3V52pEh9z53EsWilg/TOSartYKzQyfrTXGITphPNxbGSYZAi63b0L1ACc68Ykxhbbw6iloYvfUcOHwoID/6lfp6Qx4XhYrRsEnGGy8IW7PINOSiNLvJpz0EgRY6GHmqn07Qa
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR18MB2805.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(366004)(396003)(376002)(136003)(346002)(2906002)(54906003)(66946007)(5660300002)(6512007)(76116006)(66476007)(64756008)(66556008)(107886003)(66446008)(4326008)(33656002)(316002)(186003)(36756003)(6506007)(53546011)(478600001)(2616005)(83380400001)(8936002)(8676002)(6486002)(6916009)(86362001)(71200400001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: KJFZBtkaGAj/V230NTy3xHvcHmgBwClN6vxmy4hEtp37afTRBEV1lKm5wDsi7ZuMCxTJQ75QuBUh16eAzBw6LLzwZSD4PklsMpGxP/xFlunPeVNXL5ch16lZwGBvVaXpggjgHTkqq4jmgcC7qGKtsb/VlzAu1lMdox+sM/zbi0RfM3Qtx3Ot5hzT72X9ljm3EkS9jazKu+vcRQPfVCzFK9mQWWkeN/mYl4adJfdlpjDACiMgu/7NIDbg+DAA2YmHhxR3l7z9Y/cWVJMJc4Ot8EXajrRCkHrk9Oi8y7/PnSdT9As2iUUplv4H0oY35WA2+IwXTTulGvYFAgtsoiz5+GURXHtbFPaxwhW7s6VqthqRJU7UhEXKIVmWeC26uRmijMHjDGAXqgypTTpFmRtMHw7sP5BlrdsHEetZaJ8EtVzu8ZAgDnmmbSVp3s8ol97XQepnMP49Wf+/doY61vOjTo/uLks0JABris4OkRiPvjAoSBVHv+JcLgegI+OloTrnb+VX/KCyKB0Dp1Cu+Mssd5kwG6FJPpkiFTMQLpivGvK8SGdEkuDXfHA3Ln5GY7Ke
+x-microsoft-antispam-message-info: NvPNsmX6Q/KUK16wwREm63l9KFDEUxoxUrjP/MCUrjjffk3eroALRSDWTqC1VtWVH750Bl3CHcmVk7xf3lZbNZch1YwWVaJBW1n0dMiaYF3bKetZr8MoRfB4jiaOabQLzI7DrCjP6YRi4/1cQriOEadhkUzTcKDnnYJCikTN0tC7+USbkiGKb+Pb8bkaTuBfuSqY13MH/ka4aq2coasysR34O0ffwOMpZmDJJWW330f29cKFFQJyjml+hgU2tbc8u3sVhOMxK9iMNLZEuahPHizGj9uRKPtlBv9Gox4ecsL6IGydTjGuSUWTxuOE3rOSXFsFL2afIP6ABkLK6v29ng==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(39860400002)(366004)(136003)(346002)(376002)(5660300002)(66556008)(66946007)(76116006)(186003)(66446008)(66476007)(8936002)(64756008)(8676002)(26005)(2906002)(33656002)(478600001)(71200400001)(91956017)(316002)(110136005)(9686003)(7696005)(52536014)(86362001)(83380400001)(6506007)(55016002)(53546011);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: haORWR8CB2zUSq/Ggesqv/aQ/Hg+PY2OP2nOJ0mVQ4a7Kf3B3yZMqQDF1wrZCddD5O1KrJsWGVDIYVVptCBRfhmhFxIea/zcVk7SWrzWJJf75+gD/sVltWddqxPqTpOPk479k7YjcrM8EQ3VlC3M4K7rF9VoCHyMN9gh/z0lfNzninfaKTjtXTMcaL0JzbDWOUk1i2croqO8NoYQktK7ksi7QRnOkEq8MSJAwKSwP7RQ8N4wVTc5mcXuC4yzcnJiHCMm00hcRWLPg6hypB8+kh53NxI+cmf/WZkSUBn2t8YfSy2U726hnb25WmtnA29pojKbhkANj6GLLDFGoVBsg+ex1X/l5IhCBD/cMOn5i/c6vAy0vq4QkhsymulIWfqp4GwUgrLypOnIO3ojMbHriv6gygoEZioNT2E+0WGKna+a5vkOMs3wezKgLA4U6zO5j9z/q9ZTFhu6lgaVqhxEgRRl6DB8IjrQXsMZM6M6AjkyekToI7o5Rg3jjM+rx19y
+x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <6A3E2C5200C39E428A568A9075CB0465@namprd18.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 30305ac0-9f3f-4e24-c2de-08d813d9657e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2020 22:46:10.2813
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6d700c41-35d6-48cd-26d8-08d813dfcc0c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2020 23:31:59.3329
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: gN+aCYBKSoVkNMiXCQrBNw0HoGrT9JORPuInkSHtuTLV0BTBrRPYt9anZaicELrJOJQh/CGHOF+8eiT6eNu8Ew==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR18MB2359
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
- definitions=2020-06-18_21:2020-06-18,2020-06-18 signatures=0
+X-MS-Exchange-CrossTenant-userprincipalname: pa8lcoICFcE2RsC7ktNhiHhlObsyYlQGykbSu+VQ5+3nciwOOVyti4Y29sM20CSAbP3Yno3dXY5UOQaVyYKMBw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB1254
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi James,
-    Could you please review v3 patch-set and let us know if it looks approp=
-riate.
-  =20
-    We should be sending out the next set of changes (to FC Transport) in t=
-he first week of July.
-
-Thanks
-Shyam
-
-
-> On Jun 10, 2020, at 7:15 AM, Nilesh Javali <njavali@marvell.com> wrote:
->=20
-> Martin,
->=20
-> Please apply the updated qla2xxx patch series implementing SAN
-> Congestion Management (SCM) support to the scsi tree at your
-> earliest convenience.
->=20
-> We will follow this up with another patchset to add SCM statistics to
-> the scsi transport fc, as recommended by James.
->=20
-> v2->v3:
-> 1. Updated Reviewed-by tags
->=20
-> v1->v2:
-> 1. Applied changes to address warnings highlighted by Bart.
-> 2. Removed data structures and functions that should be part of fc
-> transport, to be send out in a follow-up patchset.
-> 3. Changed the existing code to use definitions from fc transport
-> headers.
->=20
-> Thanks,
-> Nilesh
->=20
-> Shyam Sundar (2):
->  qla2xxx: Change in PUREX to handle FPIN ELS requests.
->  qla2xxx: SAN congestion management(SCM) implementation.
->=20
-> drivers/scsi/qla2xxx/qla_dbg.c  |  13 +-
-> drivers/scsi/qla2xxx/qla_def.h  |  71 +++++++-
-> drivers/scsi/qla2xxx/qla_fw.h   |   6 +-
-> drivers/scsi/qla2xxx/qla_gbl.h  |   4 +-
-> drivers/scsi/qla2xxx/qla_init.c |   9 +-
-> drivers/scsi/qla2xxx/qla_isr.c  | 291 +++++++++++++++++++++++++++-----
-> drivers/scsi/qla2xxx/qla_mbx.c  |  64 ++++++-
-> drivers/scsi/qla2xxx/qla_os.c   |  37 +++-
-> include/uapi/scsi/fc/fc_els.h   |   1 +
-> 9 files changed, 428 insertions(+), 68 deletions(-)
->=20
->=20
-> base-commit: 47742bde281b2920aae8bb82ed2d61d890aa4f56
-> --=20
-> 2.19.0.rc0
->=20
-
+On 2020/06/18 21:26, Simon Arlott wrote:=0A=
+> On 18/06/2020 09:36, Damien Le Moal wrote:=0A=
+>> On 2020/06/18 3:50, Simon Arlott wrote:=0A=
+>>> I need to use "reboot=3Dp" on my desktop because one of the PCIe device=
+s=0A=
+>>> does not appear after a warm boot. This results in a very cold boot=0A=
+>>> because the BIOS turns the PSU off and on.=0A=
+>>>=0A=
+>>> The scsi sd shutdown process does not send a stop command to disks=0A=
+>>> before the reboot happens (stop commands are only sent for a shutdown).=
+=0A=
+>>>=0A=
+>>> The result is that all of my SSDs experience a sudden power loss on=0A=
+>>> every reboot, which is undesirable behaviour. These events are recorded=
+=0A=
+>>> in the SMART attributes.=0A=
+>>=0A=
+>> Why is it undesirable for an SSD ? The sequence you are describing is no=
+t=0A=
+>> different from doing "shutdown -h now" and then pressing down the power =
+button=0A=
+>> again immediately after power is cut...=0A=
+> =0A=
+> On a shutdown the kernel will send a stop command to the SSD. It does=0A=
+> not currently do this for a reboot so I observe the unexpected power=0A=
+> loss counters increasing.=0A=
+> =0A=
+>> Are you experiencing data loss or corruption ? If yes, since a clean reb=
+oot or=0A=
+>> shutdown issues a synchronize cache to all devices, a corruption would m=
+ean that=0A=
+>> your SSD is probably not correctly processing flush cache commands.=0A=
+> =0A=
+> No, I'm not experiencing any data loss or corruption that I'm aware of.=
+=0A=
+> =0A=
+> We can argue whether or not any given SSD correctly processes commands=0A=
+> to flush the cache, but they are expecting to be stopped before power=0A=
+> is removed.=0A=
+> =0A=
+>>> Avoiding a stop of the disk on a reboot is appropriate for HDDs because=
+=0A=
+>>> they're likely to continue to be powered (and should not be told to spi=
+n=0A=
+>>> down only to spin up again) but the default behaviour for SSDs should=
+=0A=
+>>> be changed to stop them before the reboot.=0A=
+>>=0A=
+>> If your BIOS turns the PSU down and up, then the HDDs too will lose powe=
+r... The=0A=
+>> difference will be that the disks will still be spinning from inertia on=
+ the=0A=
+>> power up, and so the HDD spin up processing will be faster than for a pu=
+re cold=0A=
+>> boot sequence.=0A=
+> =0A=
+> I haven't verified it, but the BIOS leaves the power off for several=0A=
+> seconds which should be long enough for the HDDs to spin down.=0A=
+> =0A=
+> I'm less concerned about those suddenly losing power but it would be=0A=
+> nice to have a stop command sent to them too.=0A=
+=0A=
+OK. So maybe the patch should be as simple as changing SYSTEM_RESTART state=
+ to=0A=
+SYSTEM_POWER_OFF if reboot=3Dp is set, no ? Since that is consistent with t=
+he fact=0A=
+that reboot=3Dp will cause power to go off, exactly the same as a regular=
+=0A=
+shutdown, it seems cleaner and safer to use SYSTEM_POWER_OFF for the entire=
+=0A=
+system, not just scsi disks.=0A=
+=0A=
+Thoughts ?=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
