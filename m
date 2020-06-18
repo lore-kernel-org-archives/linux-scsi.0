@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACE8BC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7916AC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:45:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 877CD221E6
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5858220776
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:45:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592448127;
-	bh=z22Di1OaYRhfoLSdQDUT6FgZNUHWs+7Pv+CcZyeFtLQ=;
+	s=default; t=1592448336;
+	bh=Wcx8lk0N3Maecz0c16aXSXFtrPDKxIAjS2OEZjvytbc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yZfTq/Omr5mwIa1X1TYaB7LK1mUCNQa4bRYlxRQbRormrXYEuNt5K+wfdz3+qWUMp
-	 VxVXdflUGp//07j36JD93hTqER6nyKKL9/wApxE5Bw2FEPcQ008v+0OqHIUXfjI1hv
-	 mco+HUyseYEpYtvGKZAb0fkfAix9i0QZHw5vzq5M=
+	b=1YI/gQpHWIDmMa1p9vZBrlGHMrOwYDqHVx8fpu4PpLyj/H4UctCdkxZmSRioxbhz0
+	 IwYh8DUwMpU843jMpo3AAvNWKW7UI/Zo684UzSK6SqohUYog34hg0geFhETESHPq8O
+	 pEFiBIPt1FGsc6fmqloFIKluE8xpRXR+6gkbx1TY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729010AbgFRCmD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:42:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40662 "EHLO mail.kernel.org"
+        id S1728672AbgFRBK4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:10:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38494 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728863AbgFRBMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:12:12 -0400
+        id S1727809AbgFRBKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:10:55 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AFFEB20B1F;
-        Thu, 18 Jun 2020 01:12:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 70F9820FC3;
+        Thu, 18 Jun 2020 01:10:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442731;
-        bh=z22Di1OaYRhfoLSdQDUT6FgZNUHWs+7Pv+CcZyeFtLQ=;
+        s=default; t=1592442654;
+        bh=Wcx8lk0N3Maecz0c16aXSXFtrPDKxIAjS2OEZjvytbc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Lt4OpY2kEuc70Cm1uPEc9kcLWKoHg/aFVIEUjGWCCW8IS3FOUz1YtnnwhwHBwzlyf
-         O1HLTccr4OeX4xUqGgaqxosBRQfUIujvPlm4Qyidqm71ARBQvdxqRL5s7BeINwpT4g
-         Cj8mdJK9mmSwJw24Nb0hdxn13/9/t2w+36kDRQxg=
+        b=HByx1gmKnUJG8GW2gZZW14xC0guDijZcGJeNdUdIRA8kSynkfDp/8+V6fs8fIHzJN
+         bdYdo7VvxdSA73tuL0wMDv9Frodnb0XgKSbHsL9JAFhHmofNqhgROC6FXipMm5Kp0b
+         jsxSmWEku+jG9jODhS1qmVLtzPjYMosGxKov2bvg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     Chad Dupuis <cdupuis@marvell.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 187/388] scsi: mpt3sas: Fix double free warnings
-Date:   Wed, 17 Jun 2020 21:04:44 -0400
-Message-Id: <20200618010805.600873-187-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 126/388] scsi: qedf: Fix crash when MFW calls for protocol stats while function is still probing
+Date:   Wed, 17 Jun 2020 21:03:43 -0400
+Message-Id: <20200618010805.600873-126-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
 References: <20200618010805.600873-1-sashal@kernel.org>
@@ -60,41 +59,128 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+From: Chad Dupuis <cdupuis@marvell.com>
 
-[ Upstream commit cbbfdb2a2416c9f0cde913cf09670097ac281282 ]
+[ Upstream commit ad40f5256095c68dc17c991eb976261d5ea2daaa ]
 
-Fix following warning from Smatch static analyser:
+The MFW may make a call to qed and then to qedf for protocol statistics
+while the function is still probing.  If this happens it's possible that
+some members of the struct qedf_ctx may not be fully initialized which can
+result in a NULL pointer dereference or general protection fault.
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
-warn: 'ioc->hpr_lookup' double freed
+To prevent this, add a new flag call QEDF_PROBING and set it when the
+__qedf_probe() function is active. Then in the qedf_get_protocol_tlv_data()
+function we can check if the function is still probing and return
+immediantely before any uninitialized structures can be touched.
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
-warn: 'ioc->internal_lookup' double freed
-
-Link: https://lore.kernel.org/r/20200508110738.30732-1-suganath-prabu.subramani@broadcom.com
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Link: https://lore.kernel.org/r/20200416084314.18851-9-skashyap@marvell.com
+Signed-off-by: Chad Dupuis <cdupuis@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qedf/qedf.h      |  1 +
+ drivers/scsi/qedf/qedf_main.c | 35 +++++++++++++++++++++++++++++++----
+ 2 files changed, 32 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 663782bb790d..39d233262039 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -4915,7 +4915,9 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
+index f3f399fe10c8..0da4e16fb23a 100644
+--- a/drivers/scsi/qedf/qedf.h
++++ b/drivers/scsi/qedf/qedf.h
+@@ -355,6 +355,7 @@ struct qedf_ctx {
+ #define QEDF_GRCDUMP_CAPTURE		4
+ #define QEDF_IN_RECOVERY		5
+ #define QEDF_DBG_STOP_IO		6
++#define QEDF_PROBING			8
+ 	unsigned long flags; /* Miscellaneous state flags */
+ 	int fipvlan_retries;
+ 	u8 num_queues;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 5b19f5175c5c..3a7d03472922 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3153,7 +3153,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ {
+ 	int rc = -EINVAL;
+ 	struct fc_lport *lport;
+-	struct qedf_ctx *qedf;
++	struct qedf_ctx *qedf = NULL;
+ 	struct Scsi_Host *host;
+ 	bool is_vf = false;
+ 	struct qed_ll2_params params;
+@@ -3183,6 +3183,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 
+ 		/* Initialize qedf_ctx */
+ 		qedf = lport_priv(lport);
++		set_bit(QEDF_PROBING, &qedf->flags);
+ 		qedf->lport = lport;
+ 		qedf->ctlr.lp = lport;
+ 		qedf->pdev = pdev;
+@@ -3206,9 +3207,12 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	} else {
+ 		/* Init pointers during recovery */
+ 		qedf = pci_get_drvdata(pdev);
++		set_bit(QEDF_PROBING, &qedf->flags);
+ 		lport = qedf->lport;
  	}
  
- 	kfree(ioc->hpr_lookup);
-+	ioc->hpr_lookup = NULL;
- 	kfree(ioc->internal_lookup);
-+	ioc->internal_lookup = NULL;
- 	if (ioc->chain_lookup) {
- 		for (i = 0; i < ioc->scsiio_depth; i++) {
- 			for (j = ioc->chains_per_prp_buffer;
++	QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC, "Probe started.\n");
++
+ 	host = lport->host;
+ 
+ 	/* Allocate mempool for qedf_io_work structs */
+@@ -3513,6 +3517,10 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	else
+ 		fc_fabric_login(lport);
+ 
++	QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC, "Probe done.\n");
++
++	clear_bit(QEDF_PROBING, &qedf->flags);
++
+ 	/* All good */
+ 	return 0;
+ 
+@@ -3538,6 +3546,11 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ err1:
+ 	scsi_host_put(lport->host);
+ err0:
++	if (qedf) {
++		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC, "Probe done.\n");
++
++		clear_bit(QEDF_PROBING, &qedf->flags);
++	}
+ 	return rc;
+ }
+ 
+@@ -3687,11 +3700,25 @@ void qedf_get_protocol_tlv_data(void *dev, void *data)
+ {
+ 	struct qedf_ctx *qedf = dev;
+ 	struct qed_mfw_tlv_fcoe *fcoe = data;
+-	struct fc_lport *lport = qedf->lport;
+-	struct Scsi_Host *host = lport->host;
+-	struct fc_host_attrs *fc_host = shost_to_fc_host(host);
++	struct fc_lport *lport;
++	struct Scsi_Host *host;
++	struct fc_host_attrs *fc_host;
+ 	struct fc_host_statistics *hst;
+ 
++	if (!qedf) {
++		QEDF_ERR(NULL, "qedf is null.\n");
++		return;
++	}
++
++	if (test_bit(QEDF_PROBING, &qedf->flags)) {
++		QEDF_ERR(&qedf->dbg_ctx, "Function is still probing.\n");
++		return;
++	}
++
++	lport = qedf->lport;
++	host = lport->host;
++	fc_host = shost_to_fc_host(host);
++
+ 	/* Force a refresh of the fc_host stats including offload stats */
+ 	hst = qedf_fc_get_host_stats(host);
+ 
 -- 
 2.25.1
 
