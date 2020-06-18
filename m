@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7ACBC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:41:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 236DEC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D1A321941
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:41:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6F5C2220E
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:42:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592444464;
-	bh=PUQJ+8bqGqzjz+y7Oq/eHD+478RlUH0lRCqGWqYDAzU=;
+	s=default; t=1592444570;
+	bh=9YGzsSTiUJdy8MIFfoOP9Qahg5Bc1d7e1PWF+v7gJ+g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YOPbxgJ6c3Ejk4ngOR6H3eJ5t8wzgiv70eWco7gwz1hZe9LdFO4xdKJ90EKlIfzbX
-	 VinMUJZQn5Iw2cGL7Iwxxy3AUWzZKclcYT0rcQlqL3M/DsKV7SAYHEC8A8Up9t/iA7
-	 XTMxMBZGlUGsnzDIT0n4NwgF0QbrHz28scmwKHNQ=
+	b=SxJQZ1fq36HaQ2AQlpqqOnzS7bmOuVDAOaJhKQ79Ozabzi8iZDpPqbq/IGesJPU2X
+	 X4P6EMUrcCxFwrEOgCXNHYCF0JVmhyjqTq6MxbMmhjluA+/9uq29xGKnMRrRbKoic8
+	 hq+zYF1B59CrpxiSg1IETHiAHaq1x3rCTKr2xLlQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730642AbgFRBk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:40:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39504 "EHLO mail.kernel.org"
+        id S1732273AbgFRBmt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:42:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38486 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731358AbgFRB3w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:29:52 -0400
+        id S1731636AbgFRB3P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:29:15 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1A0D722245;
-        Thu, 18 Jun 2020 01:29:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3219422228;
+        Thu, 18 Jun 2020 01:29:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443792;
-        bh=PUQJ+8bqGqzjz+y7Oq/eHD+478RlUH0lRCqGWqYDAzU=;
+        s=default; t=1592443755;
+        bh=9YGzsSTiUJdy8MIFfoOP9Qahg5Bc1d7e1PWF+v7gJ+g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CWq30qpyeZYZPZ1p4vVZ/yQqq/pe833UHLdFzjzvpMyCYAgLVUWtBhq4+L3q5NnRh
-         Nd4IFmmu1ZeDIkySS1fkm+6osot3nPC5WxFEGnhbOUzznr6n74rJYw4CGwAlpBtv1g
-         4aElWAP41kklNa2D9Qjz0avFzZ9fEcC3tFx5Jm04=
+        b=M2NNjs8HWmrR6/BGHcCkgTLxhrfOTbMfXz1/F6rrKlyoivvJssOp+jggLcQX4N6kT
+         Ja28/YQJjzmguypAhuwjxV6de5N49JpHrUtBtTZcY3Nc7RyVovVXe8No791fG1MOaf
+         jUYrRWgqmS8oDC2+JEwoPK1kB4m7afTk+E0vb+Pg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qiushi Wu <wu000273@umn.edu>, Lee Duncan <lduncan@suse.com>,
+Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 72/80] scsi: iscsi: Fix reference count leak in iscsi_boot_create_kobj
-Date:   Wed, 17 Jun 2020 21:28:11 -0400
-Message-Id: <20200618012819.609778-72-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 42/80] scsi: mpt3sas: Fix double free warnings
+Date:   Wed, 17 Jun 2020 21:27:41 -0400
+Message-Id: <20200618012819.609778-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618012819.609778-1-sashal@kernel.org>
 References: <20200618012819.609778-1-sashal@kernel.org>
@@ -59,36 +60,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Qiushi Wu <wu000273@umn.edu>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 0267ffce562c8bbf9b57ebe0e38445ad04972890 ]
+[ Upstream commit cbbfdb2a2416c9f0cde913cf09670097ac281282 ]
 
-kobject_init_and_add() takes reference even when it fails. If this
-function returns an error, kobject_put() must be called to properly
-clean up the memory associated with the object.
+Fix following warning from Smatch static analyser:
 
-Link: https://lore.kernel.org/r/20200528201353.14849-1-wu000273@umn.edu
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Qiushi Wu <wu000273@umn.edu>
+drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
+warn: 'ioc->hpr_lookup' double freed
+
+drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
+warn: 'ioc->internal_lookup' double freed
+
+Link: https://lore.kernel.org/r/20200508110738.30732-1-suganath-prabu.subramani@broadcom.com
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/iscsi_boot_sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-index d453667612f8..15d64f96e623 100644
---- a/drivers/scsi/iscsi_boot_sysfs.c
-+++ b/drivers/scsi/iscsi_boot_sysfs.c
-@@ -360,7 +360,7 @@ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
- 	boot_kobj->kobj.kset = boot_kset->kset;
- 	if (kobject_init_and_add(&boot_kobj->kobj, &iscsi_boot_ktype,
- 				 NULL, name, index)) {
--		kfree(boot_kobj);
-+		kobject_put(&boot_kobj->kobj);
- 		return NULL;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 6ccde2b41517..601a93953307 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3166,7 +3166,9 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->scsi_lookup = NULL;
  	}
- 	boot_kobj->data = data;
+ 	kfree(ioc->hpr_lookup);
++	ioc->hpr_lookup = NULL;
+ 	kfree(ioc->internal_lookup);
++	ioc->internal_lookup = NULL;
+ 	if (ioc->chain_lookup) {
+ 		for (i = 0; i < ioc->chain_depth; i++) {
+ 			if (ioc->chain_lookup[i].chain_buffer)
 -- 
 2.25.1
 
