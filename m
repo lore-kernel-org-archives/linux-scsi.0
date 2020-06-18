@@ -4,49 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8796FC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:38:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFA7C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:39:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E71B2192A
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:38:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 441DF221E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:39:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592444305;
-	bh=ttn8Ozt/ANtbplld6OHlA8lbucWzZr1/YkK0kMkRdas=;
+	s=default; t=1592444344;
+	bh=xTsEMEu4Pag2SES80YniEQS5QeBI0y+E8Kx5pz/Dsds=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vJ2pJYX20nPd6mps+w9pTwxgmhJb8iua0h2lepwEpMPd/RIDnz3B0ld4H3AOQkQRq
-	 Hyg8jxvxzuk4z/jMKq9ckg7/sp+skjhFw21m8KXk4uuA8veZy4ZLzSQNboCsKNOdIO
-	 z8Z8XXFPBMJIdNbBglV8uzXkGWpg1Ul2ES4YKE+0=
+	b=ZO5quO3E9yBlHU0T4MGAo64tn5OKH+AZwfNhaV97do1HnUbE66Oz//H8k6bjNkhoy
+	 Vh4zX6y/WiP1D9B+3vQR6zXxVZ8jnBTVWry1l6397g2y8zw8PNurxQ53S1YQedHPrC
+	 jPYFckVO0N3SS9SVGJe+9wzm5ehQ9l65Xn6MyPH8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731635AbgFRBiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:38:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40502 "EHLO mail.kernel.org"
+        id S1732510AbgFRBaX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:30:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40296 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731811AbgFRBae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:30:34 -0400
+        id S1732501AbgFRBaW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:30:22 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 21E6621D90;
-        Thu, 18 Jun 2020 01:30:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CC2C121941;
+        Thu, 18 Jun 2020 01:30:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443833;
-        bh=ttn8Ozt/ANtbplld6OHlA8lbucWzZr1/YkK0kMkRdas=;
+        s=default; t=1592443821;
+        bh=xTsEMEu4Pag2SES80YniEQS5QeBI0y+E8Kx5pz/Dsds=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=avHwUyKgwM0X8EMfoyj6oUGWuIVx4ACm54SUj7bhfH93Vo6cC1MoWirNUJhxJaIq3
-         JcOOOO6G1+4N8JdUDZlf2s71ZG7oDdBjIon3RGjpZr65q+m6cB1VwUhf/i/Neesj0D
-         EDmPebt1Z0RpCniBo/nUxSsZcvAVOSbA4QATn5HU=
+        b=hcFS/iqbbnmnj5740xfAYu4+z9ARnYD0EvT41A/A3uyyHkBW2ByGs8uUtps3baawz
+         S9hTki0A1+xUv9Ftsc/P0aiEEfH+iLQ+8FH81FnYy547IuRurtZQyc5RTljmyQ8YtT
+         nnv3FnTkogqMoVOImRsMXVYY8KVq5Og0Z+eyP9ik=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+Cc:     Xiyu Yang <xiyuyang19@fudan.edu.cn>,
+        Daniel Wagner <dwagner@suse.de>,
+        James Smart <james.smart@broadcom.com>,
+        Xin Tan <tanxin.ctf@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 4.4 21/60] scsi: ibmvscsi: Don't send host info in adapter info MAD after LPM
-Date:   Wed, 17 Jun 2020 21:29:25 -0400
-Message-Id: <20200618013004.610532-21-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 13/60] scsi: lpfc: Fix lpfc_nodelist leak when processing unsolicited event
+Date:   Wed, 17 Jun 2020 21:29:17 -0400
+Message-Id: <20200618013004.610532-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618013004.610532-1-sashal@kernel.org>
 References: <20200618013004.610532-1-sashal@kernel.org>
@@ -59,44 +61,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: Xiyu Yang <xiyuyang19@fudan.edu.cn>
 
-[ Upstream commit 4919b33b63c8b69d8dcf2b867431d0e3b6dc6d28 ]
+[ Upstream commit 7217e6e694da3aae6d17db8a7f7460c8d4817ebf ]
 
-The adapter info MAD is used to send the client info and receive the host
-info as a response. A persistent buffer is used and as such the client info
-is overwritten after the response. During the course of a normal adapter
-reset the client info is refreshed in the buffer in preparation for sending
-the adapter info MAD.
+In order to create or activate a new node, lpfc_els_unsol_buffer() invokes
+lpfc_nlp_init() or lpfc_enable_node() or lpfc_nlp_get(), all of them will
+return a reference of the specified lpfc_nodelist object to "ndlp" with
+increased refcnt.
 
-However, in the special case of LPM where we reenable the CRQ instead of a
-full CRQ teardown and reset we fail to refresh the client info in the
-adapter info buffer. As a result, after Live Partition Migration (LPM) we
-erroneously report the host's info as our own.
+When lpfc_els_unsol_buffer() returns, local variable "ndlp" becomes
+invalid, so the refcount should be decreased to keep refcount balanced.
 
-[mkp: typos]
+The reference counting issue happens in one exception handling path of
+lpfc_els_unsol_buffer(). When "ndlp" in DEV_LOSS, the function forgets to
+decrease the refcnt increased by lpfc_nlp_init() or lpfc_enable_node() or
+lpfc_nlp_get(), causing a refcnt leak.
 
-Link: https://lore.kernel.org/r/20200603203632.18426-1-tyreld@linux.ibm.com
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Fix this issue by calling lpfc_nlp_put() when "ndlp" in DEV_LOSS.
+
+Link: https://lore.kernel.org/r/1590416184-52592-1-git-send-email-xiyuyang19@fudan.edu.cn
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: James Smart <james.smart@broadcom.com>
+Signed-off-by: Xiyu Yang <xiyuyang19@fudan.edu.cn>
+Signed-off-by: Xin Tan <tanxin.ctf@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c | 2 ++
+ drivers/scsi/lpfc/lpfc_els.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index e26747a1b35a..e7075aae15da 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -427,6 +427,8 @@ static int ibmvscsi_reenable_crq_queue(struct crq_queue *queue,
- 	int rc = 0;
- 	struct vio_dev *vdev = to_vio_dev(hostdata->dev);
- 
-+	set_adapter_info(hostdata);
-+
- 	/* Re-enable the CRQ */
- 	do {
- 		if (rc)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 530b7df21322..315dd25a0c44 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -7315,6 +7315,8 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	spin_lock_irq(shost->host_lock);
+ 	if (ndlp->nlp_flag & NLP_IN_DEV_LOSS) {
+ 		spin_unlock_irq(shost->host_lock);
++		if (newnode)
++			lpfc_nlp_put(ndlp);
+ 		goto dropit;
+ 	}
+ 	spin_unlock_irq(shost->host_lock);
 -- 
 2.25.1
 
