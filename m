@@ -2,110 +2,147 @@ Return-Path: <SRS0=Iqxk=77=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 906CDC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:45:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA3DC433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:46:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60C9722229
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:45:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BWE0KXVY"
+	by mail.kernel.org (Postfix) with ESMTP id EF3BB206F7
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:46:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592444764;
+	bh=zXncZZy/Lmh1Mttg3Sna82Zd/ol2mMw2w1MUHTNk5Mc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=nnBtSVgO7hQz33e6CeYrf1cc69N5KAO0npAHPRs7EeugZHF/NUPwBarTlxRZMCxn3
+	 4j9B3W8sDbKCexAEuAjtpcS7HKEQ9Xuk+VuWCdxGhsdcBas2avaigSenxr2IJ7YYh8
+	 ZjjO5kuHNZWaiqa2QdYfK+bdy3QA4pJwDj7PNO4Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733137AbgFRBpI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:45:08 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:25215 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733130AbgFRBpG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 21:45:06 -0400
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200618014502epoutp03971bdaa67a591aeccdab09446366336d~ZgAUeOwC30619506195epoutp03m
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2020 01:45:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200618014502epoutp03971bdaa67a591aeccdab09446366336d~ZgAUeOwC30619506195epoutp03m
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1592444702;
-        bh=Pannmd10RMEWppu+DWu4lQZprpbqd5OwcGCGr0quGWE=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=BWE0KXVY7ajZglAxOoQjjbPMRmOovLLAuVXp0Mop80YID1AI61+Tky3hhWIqlmZ2+
-         NU+WcYUhoYBSo9uIAkt10S2gD0Cq5/FDHTquAjBHmttISngmzM7P5BCw5ASFARYlVC
-         OMtW6sGLSFKfutogcUuxG1FYujGUz3ifciH/skcM=
-Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p3.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200618014502epcas1p3760deec044c13b085ad47409f1677dea~ZgAUFJIFB3136331363epcas1p3T;
-        Thu, 18 Jun 2020 01:45:02 +0000 (GMT)
-Mime-Version: 1.0
-Subject: RE: [RFC PATCH v2 4/5] scsi: ufs: L2P map management for HPB read
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <SN6PR04MB4640114902AEFE69CCC54C01FC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1210830415.21592444702291.JavaMail.epsvc@epcpadp1>
-Date:   Thu, 18 Jun 2020 10:03:45 +0900
-X-CMS-MailID: 20200618010345epcms2p65b2ea8678f720c38ef620bf2f4a86c22
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210
-References: <SN6PR04MB4640114902AEFE69CCC54C01FC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-        <231786897.01592213402355.JavaMail.epsvc@epcpadp1>
-        <231786897.01592212081335.JavaMail.epsvc@epcpadp2>
-        <336371513.41592205783606.JavaMail.epsvc@epcpadp2>
-        <231786897.01592205482200.JavaMail.epsvc@epcpadp2>
-        <231786897.01592214002170.JavaMail.epsvc@epcpadp1>
-        <CGME20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210@epcms2p6>
+        id S1729410AbgFRBp7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:45:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37326 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732110AbgFRB2e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:28:34 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D202A2220E;
+        Thu, 18 Jun 2020 01:28:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1592443713;
+        bh=zXncZZy/Lmh1Mttg3Sna82Zd/ol2mMw2w1MUHTNk5Mc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=deH1eZihW73OtyVtEoPlIYqs4uqHpLWOuORiY/Oo7ObL2FJzY2RLV6g+kiPqsjvcE
+         NGTJRVtfvSO7oqmuqLV+Ghi2zBE2wNc1G6tAIElIPuzq0bIltE9Kmyt+UgUseAvret
+         OAdOAWrNoValTAftFQQ4j087hPU5Kzf+QdGrwWH4=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Viacheslav Dubeyko <v.dubeiko@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 11/80] scsi: qla2xxx: Fix issue with adapter's stopping state
+Date:   Wed, 17 Jun 2020 21:27:10 -0400
+Message-Id: <20200618012819.609778-11-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200618012819.609778-1-sashal@kernel.org>
+References: <20200618012819.609778-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> +
-> > +static struct ufshpb_map_ctx *ufshpb_get_map_ctx(struct ufshpb_lu *hpb)
-> > +{
-> > +       struct ufshpb_map_ctx *mctx;
-> > +       int i, j;
-> > +
-> > +       mctx = mempool_alloc(ufshpb_drv.ufshpb_mctx_pool, GFP_KERNEL);
-> > +       if (!mctx)
-> > +               return NULL;
-> So you use ufshpb_host_map_kbytes as the min_nr in your mempool_create,
-> But you know that you need max_lru_active_cnt x srgns_per_rgn such mapping context elements.
-> So you are
-> a) failing to provide the slab allocator an information that you already have, and
-> b) selecting from a finite pool will assure that you'll never exceed max-active-regions,
->    even if some corner case fails your logic.
-It was intend to provide user-configurable pre-allocated memory to reduce
-latency due to memory allocation. The value of ufshpb_host_map_kbytes can
-be set to max_lru_active_cnt x srgns_per_rgn, if the user want to.
+From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
 
-Thanks,
-Daejun
+[ Upstream commit 803e45550b11c8e43d89812356fe6f105adebdf9 ]
+
+The goal of the following command sequence is to restart the adapter.
+However, the tgt_stop flag remains set, indicating that the adapter is
+still in stopping state even after re-enabling it.
+
+echo 0x7fffffff > /sys/module/qla2xxx/parameters/logging
+modprobe target_core_mod
+modprobe tcm_qla2xxx
+mkdir /sys/kernel/config/target/qla2xxx
+mkdir /sys/kernel/config/target/qla2xxx/<port-name>
+mkdir /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1
+echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+echo 0 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+
+kernel: PID 1396:qla_target.c:1555 qlt_stop_phase1(): tgt_stop 0x0, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-e803:1: PID 1396:qla_target.c:1567: Stopping target for host 1(c0000000033557e8)
+kernel: PID 1396:qla_target.c:1579 qlt_stop_phase1(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: PID 1396:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-e801:1: PID 1396:qla_target.c:1316: Scheduling sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-290a:1: PID 340:qla_target.c:1187: qlt_unreg_sess sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-f801:1: PID 340:qla_target.c:1145: Unregistration of sess c00000002d5cd800 21:00:00:24:ff:7f:35:c7 finished fcp_cnt 0
+kernel: PID 340:qla_target.c:1155 qlt_free_session_done(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-28f1:1: PID 346:qla_os.c:3956: Mark all dev lost
+kernel: PID 346:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
+<skipped>
+kernel: PID 1396:qla_target.c:6812 qlt_enable_vha(): tgt_stop 0x1, tgt_stopped 0x0
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
+<skipped>
+kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
+
+qlt_handle_cmd_for_atio() rejects the request to send commands because the
+adapter is in the stopping state:
+
+kernel: PID 0:qla_target.c:4442 qlt_handle_cmd_for_atio(): tgt_stop 0x1, tgt_stopped 0x0
+kernel: qla2xxx [0001:00:02.0]-3861:1: PID 0:qla_target.c:4447: New command while device c000000005314600 is shutting down
+kernel: qla2xxx [0001:00:02.0]-e85f:1: PID 0:qla_target.c:5728: qla_target: Unable to send command to target
+
+This patch calls qla_stop_phase2() in addition to qlt_stop_phase1() in
+tcm_qla2xxx_tpg_enable_store() and tcm_qla2xxx_npiv_tpg_enable_store(). The
+qlt_stop_phase1() marks adapter as stopping (tgt_stop == 0x1, tgt_stopped
+== 0x0) but qlt_stop_phase2() marks adapter as stopped (tgt_stop == 0x0,
+tgt_stopped == 0x1).
+
+Link: https://lore.kernel.org/r/52be1e8a3537f6c5407eae3edd4c8e08a9545ea5.camel@yadro.com
+Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index abdd6f93c8fe..324cddd4656e 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -855,6 +855,7 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
+ 
+ 		atomic_set(&tpg->lport_tpg_enabled, 0);
+ 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
++		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
+ 	}
+ 
+ 	return count;
+@@ -1019,6 +1020,7 @@ static ssize_t tcm_qla2xxx_npiv_tpg_enable_store(struct config_item *item,
+ 
+ 		atomic_set(&tpg->lport_tpg_enabled, 0);
+ 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
++		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
+ 	}
+ 
+ 	return count;
+-- 
+2.25.1
+
