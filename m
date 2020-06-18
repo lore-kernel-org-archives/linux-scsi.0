@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65AF2C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:26:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BEEEC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42282214DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:26:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D499D21D6C
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:26:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592447199;
-	bh=RfpH5jAqHoO6gcETFHPV4M6Wpv7wVgxjqm0XsSzlCOo=;
+	s=default; t=1592447219;
+	bh=4P2Er/lUDMo8uruv5gFZ3mMiL8dQT5lEQ8AYO/2A1Xw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fdnoGhZf4mq2PKT9evmqr8cip8i6XYZaItfHYX/Cqe1iDs8hKubX+Sww7fYe//v+3
-	 84L+gLebnH7tuI0fdxCef9vU7nEasoomaNjBPUzhO1FZeJTJuR42nGZjryHqGvc10c
-	 Y4DdbDQX0/E96v/AW2uzaapCrajEbzeVFjfm1s7o=
+	b=0DaTi7LBgFnteST1uqWO1w/UBHHGzOPP+e0aAFQsa7Rg1xyjwYNNfSYxta6x+9u5j
+	 2ymErwpBjGGzWJ2OUl/6vSjizsTo+aF3nnKUnZMrtn8GgN5pZ4HuPcKLPKKsv1Z79h
+	 gKgcMTq4ywJLgYhVfG+sEnS/JDcdHLRPjf6By9oE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731898AbgFRC0b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:26:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48130 "EHLO mail.kernel.org"
+        id S1730808AbgFRC0m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:26:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47986 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729718AbgFRBRC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:17:02 -0400
+        id S1729687AbgFRBQz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:16:55 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 95EFF21D80;
-        Thu, 18 Jun 2020 01:17:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 49CCF21D80;
+        Thu, 18 Jun 2020 01:16:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592443021;
-        bh=RfpH5jAqHoO6gcETFHPV4M6Wpv7wVgxjqm0XsSzlCOo=;
+        s=default; t=1592443015;
+        bh=4P2Er/lUDMo8uruv5gFZ3mMiL8dQT5lEQ8AYO/2A1Xw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qnTlkNPJ2mRXjYCzgA4ZTOrbU6SFqA9KdFgTetF7YBzorop314WNKSnQixzmT7iH/
-         EMObDOYgPJUV5r9cvZIYeBuTwHHwvKilKQvZFGKPqCY3iTR0HKTXDVROyPep+cQCSo
-         DfdpfhKV+thLG03IjwiHQdqSrH9AS2/frn1iwwRo=
+        b=EdtvSq5W1KZAW0nh3Bclf3fzBvZ4mYN6dU9HXilF+GPk3/djTPrs4QP5BzVjqM4fB
+         8mypUenxayXaE6mTYTFEOHDwWSjx3MWCUQfrumd8YVAweHADBnXAJVwDjtqhz7JRRA
+         BzpJYqoSEUv8zOFFC3f2hnEFulRHw+101Xy6rcJo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Viacheslav Dubeyko <v.dubeiko@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 022/266] scsi: qla2xxx: Fix issue with adapter's stopping state
-Date:   Wed, 17 Jun 2020 21:12:27 -0400
-Message-Id: <20200618011631.604574-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 017/266] scsi: qedi: Check for buffer overflow in qedi_set_path()
+Date:   Wed, 17 Jun 2020 21:12:22 -0400
+Message-Id: <20200618011631.604574-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618011631.604574-1-sashal@kernel.org>
 References: <20200618011631.604574-1-sashal@kernel.org>
@@ -60,89 +59,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 803e45550b11c8e43d89812356fe6f105adebdf9 ]
+[ Upstream commit 4a4c0cfb4be74e216dd4446b254594707455bfc6 ]
 
-The goal of the following command sequence is to restart the adapter.
-However, the tgt_stop flag remains set, indicating that the adapter is
-still in stopping state even after re-enabling it.
+Smatch complains that the "path_data->handle" variable is user controlled.
+It comes from iscsi_set_path() so that seems possible.  It's harmless to
+add a limit check.
 
-echo 0x7fffffff > /sys/module/qla2xxx/parameters/logging
-modprobe target_core_mod
-modprobe tcm_qla2xxx
-mkdir /sys/kernel/config/target/qla2xxx
-mkdir /sys/kernel/config/target/qla2xxx/<port-name>
-mkdir /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1
-echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-echo 0 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
+The qedi->ep_tbl[] array has qedi->max_active_conns elements (which is
+always ISCSI_MAX_SESS_PER_HBA (4096) elements).  The array is allocated in
+the qedi_cm_alloc_mem() function.
 
-kernel: PID 1396:qla_target.c:1555 qlt_stop_phase1(): tgt_stop 0x0, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-e803:1: PID 1396:qla_target.c:1567: Stopping target for host 1(c0000000033557e8)
-kernel: PID 1396:qla_target.c:1579 qlt_stop_phase1(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: PID 1396:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-e801:1: PID 1396:qla_target.c:1316: Scheduling sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-290a:1: PID 340:qla_target.c:1187: qlt_unreg_sess sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-f801:1: PID 340:qla_target.c:1145: Unregistration of sess c00000002d5cd800 21:00:00:24:ff:7f:35:c7 finished fcp_cnt 0
-kernel: PID 340:qla_target.c:1155 qlt_free_session_done(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-28f1:1: PID 346:qla_os.c:3956: Mark all dev lost
-kernel: PID 346:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
-<skipped>
-kernel: PID 1396:qla_target.c:6812 qlt_enable_vha(): tgt_stop 0x1, tgt_stopped 0x0
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
-
-qlt_handle_cmd_for_atio() rejects the request to send commands because the
-adapter is in the stopping state:
-
-kernel: PID 0:qla_target.c:4442 qlt_handle_cmd_for_atio(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-3861:1: PID 0:qla_target.c:4447: New command while device c000000005314600 is shutting down
-kernel: qla2xxx [0001:00:02.0]-e85f:1: PID 0:qla_target.c:5728: qla_target: Unable to send command to target
-
-This patch calls qla_stop_phase2() in addition to qlt_stop_phase1() in
-tcm_qla2xxx_tpg_enable_store() and tcm_qla2xxx_npiv_tpg_enable_store(). The
-qlt_stop_phase1() marks adapter as stopping (tgt_stop == 0x1, tgt_stopped
-== 0x0) but qlt_stop_phase2() marks adapter as stopped (tgt_stop == 0x0,
-tgt_stopped == 0x1).
-
-Link: https://lore.kernel.org/r/52be1e8a3537f6c5407eae3edd4c8e08a9545ea5.camel@yadro.com
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Viacheslav Dubeyko <v.dubeiko@yadro.com>
+Link: https://lore.kernel.org/r/20200428131939.GA696531@mwanda
+Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
+Acked-by: Manish Rangankar <mrangankar@marvell.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qedi/qedi_iscsi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index abe7f79bb789..744cd93189da 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -926,6 +926,7 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
- 
- 		atomic_set(&tpg->lport_tpg_enabled, 0);
- 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
-+		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 8829880a54c3..84a639698343 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -1214,6 +1214,10 @@ static int qedi_set_path(struct Scsi_Host *shost, struct iscsi_path *path_data)
  	}
  
- 	return count;
-@@ -1088,6 +1089,7 @@ static ssize_t tcm_qla2xxx_npiv_tpg_enable_store(struct config_item *item,
- 
- 		atomic_set(&tpg->lport_tpg_enabled, 0);
- 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
-+		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
- 	}
- 
- 	return count;
+ 	iscsi_cid = (u32)path_data->handle;
++	if (iscsi_cid >= qedi->max_active_conns) {
++		ret = -EINVAL;
++		goto set_path_exit;
++	}
+ 	qedi_ep = qedi->ep_tbl[iscsi_cid];
+ 	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
+ 		  "iscsi_cid=0x%x, qedi_ep=%p\n", iscsi_cid, qedi_ep);
 -- 
 2.25.1
 
