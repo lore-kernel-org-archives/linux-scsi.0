@@ -7,45 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC86C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACE8BC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EAB2214DB
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:38:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 877CD221E6
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:42:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592447919;
-	bh=o7HWOg7d4ZD/pc/7wRN0L2pGlvAuNr+3UrYtOB7V8MI=;
+	s=default; t=1592448127;
+	bh=z22Di1OaYRhfoLSdQDUT6FgZNUHWs+7Pv+CcZyeFtLQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p+IIlAnCr/I1Ylw3p1/+aFRIubu5+CqOduqTy35lJWKuPo1jripitLRa2DLxHK4XJ
-	 XcXy3P0H83PEWN8pDnqjEFtOyXXCEbn55JLQ562lPwHL5guIbuX+N1o03Iv1pSMchK
-	 MEKEcyPdcnzLjEJXl8WwlkPXOtJ444VimcggXT0Y=
+	b=yZfTq/Omr5mwIa1X1TYaB7LK1mUCNQa4bRYlxRQbRormrXYEuNt5K+wfdz3+qWUMp
+	 VxVXdflUGp//07j36JD93hTqER6nyKKL9/wApxE5Bw2FEPcQ008v+0OqHIUXfjI1hv
+	 mco+HUyseYEpYtvGKZAb0fkfAix9i0QZHw5vzq5M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387727AbgFRCi1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:38:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42566 "EHLO mail.kernel.org"
+        id S1729010AbgFRCmD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:42:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40662 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729108AbgFRBNX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:13:23 -0400
+        id S1728863AbgFRBMM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:12:12 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7EDE821974;
-        Thu, 18 Jun 2020 01:13:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AFFEB20B1F;
+        Thu, 18 Jun 2020 01:12:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442803;
-        bh=o7HWOg7d4ZD/pc/7wRN0L2pGlvAuNr+3UrYtOB7V8MI=;
+        s=default; t=1592442731;
+        bh=z22Di1OaYRhfoLSdQDUT6FgZNUHWs+7Pv+CcZyeFtLQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PD3a/+gMo6zM2CdoV4Wyl3bBxBJkYbtTsK/44iSxn09pOYu+hYRM5JnBUbUoSdreF
-         GMXSlLEwdzwfrzornzEsDU48CcKTaeiuZuu1yHxE6WBqGHhw2qm6FXzPHxX2xqEW9u
-         Z4UYfKxKI9E9WOaFd8845FKgeRyZDRAS1L51vID8=
+        b=Lt4OpY2kEuc70Cm1uPEc9kcLWKoHg/aFVIEUjGWCCW8IS3FOUz1YtnnwhwHBwzlyf
+         O1HLTccr4OeX4xUqGgaqxosBRQfUIujvPlm4Qyidqm71ARBQvdxqRL5s7BeINwpT4g
+         Cj8mdJK9mmSwJw24Nb0hdxn13/9/t2w+36kDRQxg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ye Bin <yebin10@huawei.com>, Bart Van Assche <bvanassche@acm.org>,
+Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 243/388] scsi: core: Fix incorrect usage of shost_for_each_device
-Date:   Wed, 17 Jun 2020 21:05:40 -0400
-Message-Id: <20200618010805.600873-243-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 187/388] scsi: mpt3sas: Fix double free warnings
+Date:   Wed, 17 Jun 2020 21:04:44 -0400
+Message-Id: <20200618010805.600873-187-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
 References: <20200618010805.600873-1-sashal@kernel.org>
@@ -58,65 +60,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ye Bin <yebin10@huawei.com>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 4dea170f4fb225984b4f2f1cf0a41d485177b905 ]
+[ Upstream commit cbbfdb2a2416c9f0cde913cf09670097ac281282 ]
 
-shost_for_each_device(sdev, shost) \
-	for ((sdev) = __scsi_iterate_devices((shost), NULL); \
-	     (sdev); \
-	     (sdev) = __scsi_iterate_devices((shost), (sdev)))
+Fix following warning from Smatch static analyser:
 
-When terminating shost_for_each_device() iteration with break or return,
-scsi_device_put() should be used to prevent stale scsi device references
-from being left behind.
+drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
+warn: 'ioc->hpr_lookup' double freed
 
-Link: https://lore.kernel.org/r/20200518074420.39275-1-yebin10@huawei.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Ye Bin <yebin10@huawei.com>
+drivers/scsi/mpt3sas/mpt3sas_base.c:5256 _base_allocate_memory_pools()
+warn: 'ioc->internal_lookup' double freed
+
+Link: https://lore.kernel.org/r/20200508110738.30732-1-suganath-prabu.subramani@broadcom.com
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_error.c | 2 ++
- drivers/scsi/scsi_lib.c   | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 978be1602f71..927b1e641842 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1412,6 +1412,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 				sdev_printk(KERN_INFO, sdev,
- 					    "%s: skip START_UNIT, past eh deadline\n",
- 					    current->comm));
-+			scsi_device_put(sdev);
- 			break;
- 		}
- 		stu_scmd = NULL;
-@@ -1478,6 +1479,7 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 				sdev_printk(KERN_INFO, sdev,
- 					    "%s: skip BDR, past eh deadline\n",
- 					     current->comm));
-+			scsi_device_put(sdev);
- 			break;
- 		}
- 		bdr_scmd = NULL;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 3ecdae18597d..b8b4366f1200 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2865,8 +2865,10 @@ scsi_host_unblock(struct Scsi_Host *shost, int new_state)
- 
- 	shost_for_each_device(sdev, shost) {
- 		ret = scsi_internal_device_unblock(sdev, new_state);
--		if (ret)
-+		if (ret) {
-+			scsi_device_put(sdev);
- 			break;
-+		}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 663782bb790d..39d233262039 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -4915,7 +4915,9 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
  	}
- 	return ret;
- }
+ 
+ 	kfree(ioc->hpr_lookup);
++	ioc->hpr_lookup = NULL;
+ 	kfree(ioc->internal_lookup);
++	ioc->internal_lookup = NULL;
+ 	if (ioc->chain_lookup) {
+ 		for (i = 0; i < ioc->scsiio_depth; i++) {
+ 			for (j = ioc->chains_per_prp_buffer;
 -- 
 2.25.1
 
