@@ -2,110 +2,152 @@ Return-Path: <SRS0=Iqxk=77=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B0EC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 00:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FC69C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:08:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F5FA2184D
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 00:40:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A9AC21D6C
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 01:08:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592442519;
+	bh=URqU8zLKGIUTvKeRvr6CXtgyoVs4U2bOE2L+VODufmY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=R+0URf93k0qe3GhtTfChZZos83ox2dMRzjFtkzidcHzf61QcjRFZzdm6WnPOdMcqe
+	 wnT17NAO6jJIXepRmR83vyrV4GeAGXR+PDogKknv3EcQsoXIjwlKApkLVaDwd9/XII
+	 yTMwdoDnDPwe5eGtO65vULf/iKRyPzldmp3yyj+E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726899AbgFRAkp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 20:40:45 -0400
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33172 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726845AbgFRAkp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 20:40:45 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 2C6062073E;
-        Wed, 17 Jun 2020 20:40:40 -0400 (EDT)
-Date:   Thu, 18 Jun 2020 10:40:37 +1000 (AEST)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-cc:     Chris Boot <bootc@boo.tc>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net" 
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Chuhong Yuan <hslester96@gmail.com>,
-        Nicholas Bellinger <nab@linux-iscsi.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] scsi: target/sbp: remove firewire SBP target driver
-In-Reply-To: <yq1366ul8o4.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <alpine.LNX.2.22.394.2006180953320.8@nippy.intranet>
-References: <01020172acd3d10f-3964f076-a820-43fc-9494-3f3946e9b7b5-000000@eu-west-1.amazonses.com>        <alpine.LNX.2.22.394.2006140934520.15@nippy.intranet>        <7ad14946-5c25-fc49-1e48-72d37a607832@boo.tc>        <alpine.LNX.2.22.394.2006150919110.8@nippy.intranet>
-        <8da0c285-d707-a3d2-063e-472af5cc560f@boo.tc>        <alpine.LNX.2.22.394.2006161929380.8@nippy.intranet>        <8cbab988-fba7-8e27-7faf-9f7aa36ca235@acm.org>        <SN4PR0401MB35982D889857E3C03E96E49D9B9D0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-        <1592321667.4394.5.camel@HansenPartnership.com>        <5e512185-45d1-61eb-9bec-91e9f9d53ea3@boo.tc> <yq1366ul8o4.fsf@ca-mkp.ca.oracle.com>
+        id S1727854AbgFRBIi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 21:08:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34456 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727843AbgFRBIh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:08:37 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9077D21BE5;
+        Thu, 18 Jun 2020 01:08:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1592442516;
+        bh=URqU8zLKGIUTvKeRvr6CXtgyoVs4U2bOE2L+VODufmY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=xrcW5FKLzI00tmKTU9c93je3rnfIvK9kV/G5MOc/n/fNpmXODD2PAayrg8PRf/RuD
+         jOZzkzZkRaPiKQTiDtJsFRPrLacFkOfb98VaiylzqI7/mezd6w33GrVVpzb6nVhskn
+         9tdJV6iTgCZTubZHjRhnrcpsTTsaKJ35dTqUvGMw=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Daniel Wagner <dwagner@suse.de>,
+        Hannes Reinecke <hare@suse.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 022/388] scsi: core: free sgtables in case command setup fails
+Date:   Wed, 17 Jun 2020 21:01:59 -0400
+Message-Id: <20200618010805.600873-22-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
+References: <20200618010805.600873-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 16 Jun 2020, Martin K. Petersen wrote:
+From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-> 
-> However, keeping code around is not free.
+[ Upstream commit 20a66f2bf280277ab5bb22e27445153b4eb0ac88 ]
 
-Right. And removing code isn't free either, if it forces people to find 
-workarounds.
+In case scsi_setup_fs_cmnd() fails we're not freeing the sgtables allocated
+by scsi_init_io(), thus we leak the allocated memory.
 
-> Core interfaces change frequently.  Nobody enjoys having to tweak host 
-> templates for 50 devices they have never even heard about.
+Free the sgtables allocated by scsi_init_io() in case scsi_setup_fs_cmnd()
+fails.
 
-And yet some people seem to enjoy writing patches that are as trivial as 
-they are invasive...
+Technically scsi_setup_scsi_cmnd() does not suffer from this problem as it
+can only fail if scsi_init_io() fails, so it does not have sgtables
+allocated. But to maintain symmetry and as a measure of defensive
+programming, free the sgtables on scsi_setup_scsi_cmnd() failure as well.
+scsi_mq_free_sgtables() has safeguards against double-freeing of memory so
+this is safe to do.
 
-You seem to be making an argument for more automation here, not an 
-argument for less code. Or is there some upper bound to the size of the 
-kernel, that might be lifted by adding maintainers? (Can you deliver a 
-better product by adding more developers to your project?)
+While we're at it, rename scsi_mq_free_sgtables() to scsi_free_sgtables().
 
-> Also, we now live in a reality where there is a constant barrage of 
-> build bots and code analyzers sending mail. So the effective cost of 
-> keeping code around in the tree is going up.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=205595
+Link: https://lore.kernel.org/r/20200428104605.8143-2-johannes.thumshirn@wdc.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/scsi_lib.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-But if maintenance cost rises due to good analysis, the value of the code 
-should rise too. So what's the problem? It seems to me that the real 
-problem is too many analyses that generate pedantic noise and no tangible 
-improvement in code quality or value.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 06c260f6cdae..3ecdae18597d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -548,7 +548,7 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
+ 	}
+ }
+ 
+-static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
++static void scsi_free_sgtables(struct scsi_cmnd *cmd)
+ {
+ 	if (cmd->sdb.table.nents)
+ 		sg_free_table_chained(&cmd->sdb.table,
+@@ -560,7 +560,7 @@ static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
+ 
+ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ {
+-	scsi_mq_free_sgtables(cmd);
++	scsi_free_sgtables(cmd);
+ 	scsi_uninit_cmd(cmd);
+ }
+ 
+@@ -1059,7 +1059,7 @@ blk_status_t scsi_init_io(struct scsi_cmnd *cmd)
+ 
+ 	return BLK_STS_OK;
+ out_free_sgtables:
+-	scsi_mq_free_sgtables(cmd);
++	scsi_free_sgtables(cmd);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(scsi_init_io);
+@@ -1190,6 +1190,7 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
+ 		struct request *req)
+ {
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
++	blk_status_t ret;
+ 
+ 	if (!blk_rq_bytes(req))
+ 		cmd->sc_data_direction = DMA_NONE;
+@@ -1199,9 +1200,14 @@ static blk_status_t scsi_setup_cmnd(struct scsi_device *sdev,
+ 		cmd->sc_data_direction = DMA_FROM_DEVICE;
+ 
+ 	if (blk_rq_is_scsi(req))
+-		return scsi_setup_scsi_cmnd(sdev, req);
++		ret = scsi_setup_scsi_cmnd(sdev, req);
+ 	else
+-		return scsi_setup_fs_cmnd(sdev, req);
++		ret = scsi_setup_fs_cmnd(sdev, req);
++
++	if (ret != BLK_STS_OK)
++		scsi_free_sgtables(cmd);
++
++	return ret;
+ }
+ 
+ static blk_status_t
+-- 
+2.25.1
 
-> I get a substantial amount of code analysis mail about drivers nobody 
-> have touched in a decade or more.
-> 
-
-When stable, mature code fails analysis, the analysis is also questionable 
-(in the absence of real examples).
-
-> Consequently, I am much more inclined to remove drivers than I have been 
-> in the past. But I am also very happy to bring them back if somebody 
-> uses them or - even better - are willing to step up and maintain them.
-> 
-
-You seem to be saying that 1) a driver should be removed when it no longer 
-meets the present threshold for code quality and 2) that a low quality 
-driver is eligible for re-addition because someone wants to use it.
-I don't think you can have it both ways.
-
-> I don't particularly like the notion of a driver being orphaned because 
-> all that really means is that the driver transitions from being (at 
-> least partially) somebody else's problem to being mine and mine alone.
-> 
-
-Yes it's your problem but only on a best-effort basis.
-
-Many issues detected by automatic analyzers can be fixed with automatic 
-code transformation tools. This kind of solution works tree-wide, so even 
-if some defect in your driver is "yours and yours alone", the solution 
-will probably come from others.
-
-This email, like yours, is just hand-waving. So feel free to ignore it or 
-(preferably) provide evidence of real defects.
