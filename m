@@ -2,147 +2,90 @@ Return-Path: <SRS0=Iqxk=77=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-11.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DD0C433E4
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:52:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D06C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4F16208C7
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:51:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592448719;
-	bh=00xTk4v3mdurKVihEVY4jHy4darVxsmRWvWaQxIDUHw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vBpA4I7TvBLTwdsMDL9TGe/AX4uvCL0eZRDQZohonWn1Ad6B6PV8ev3jO9CtqH+nr
-	 iEEQBfYncW1IqYCJ5wwIa+ZSSlPwjM/oA/nxf0ndmTXoVh+Cq40PnKGQPxvDZZEi39
-	 cgS53XxMt5U6RafUezOheZ3XQlv542Ag0l7jHBBY=
+	by mail.kernel.org (Postfix) with ESMTP id 8D34B2083B
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 02:52:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NEiROki6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727908AbgFRBIr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:08:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34640 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727884AbgFRBIq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:08:46 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 37AA72193E;
-        Thu, 18 Jun 2020 01:08:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442525;
-        bh=00xTk4v3mdurKVihEVY4jHy4darVxsmRWvWaQxIDUHw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Mdq3d/aw8ZmEVy9L3LJ0Ir2x5VvnMqjt9d6yh5BOCdPm/8yivDab7CoA6YpsoQuYG
-         zIhbddBF9THir1r9Gai8squN8V69y6Nt9e9unmERpDOZSOu/FoTFgG2pAqYfQ/9lzg
-         XXPRwsv0hQ19Z4CbFR6QTwGVD8FKifrgrdMWqs+c=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Viacheslav Dubeyko <v.dubeiko@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 029/388] scsi: qla2xxx: Fix issue with adapter's stopping state
-Date:   Wed, 17 Jun 2020 21:02:06 -0400
-Message-Id: <20200618010805.600873-29-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
-References: <20200618010805.600873-1-sashal@kernel.org>
+        id S2387899AbgFRCwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:52:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60922 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728531AbgFRCwF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jun 2020 22:52:05 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6B80C06174E
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2020 19:52:04 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id a127so2081891pfa.12
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2020 19:52:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=scQ0xWsmhNQkJt4nrg2M8FxSA/O+EPCpM7UPve0DYkw=;
+        b=NEiROki6CaCUYearztmsXXPhHyFXevpX/lNS5Oa5P2kE3rnBmEns9f2I61d81rd8OH
+         7jI9kgQPfdMc7/Gl2F7DY+KvX2M3sYns1Y/X4Y0EWdcz1aohyAV6AVyIuDc0aMdpat4o
+         UmJIks5w5f0f6gCwDbJc1qfj8W2QCnU8DFLWqtjUXAwq5lZ3o08toyK4zwem7avGYgH1
+         IRu7UQahBAMta15Hifse48sgupxuesrCHjzf9wvrUqU8Le8brBjc3iL4/JY4q2ZxXC8h
+         ULFkwGyDg3QQ21UyRTXH0y0gAP6x7luktLXo6g634Q+8Fj0pseYyEJlkCZ2dh1LTUm8g
+         3htQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=scQ0xWsmhNQkJt4nrg2M8FxSA/O+EPCpM7UPve0DYkw=;
+        b=L6hR8pjVYL2gYVEVF+CSkNyH3kGU40cWgUhRUN5GztmLqgw14/qp3syzTZ54YQsgdF
+         mUR5XcFuoSpE35IePMqAhay7AC521LdK1zCt2TRKtlgmVrnYOk0ofZblfwwbZtaVKEYC
+         /ceA8NKfhcHXchh7/4pkDDKjFq4Er2RqifRemqXSoZ7OTNqClAlHhQGAsV3W1P3lPkjd
+         /JMo2UWhj6pLOWYbkFkJFyWWE0RdrxfbPFLsIt8HfRwi/Jm1LFSIx+FahUg/0aCYtlR1
+         WKXzLJqaC7rWaayLPiKw1/HNVe2qtlT5M6RBtZQqi1XMOjqM1WhYKS5Y+MGJ0iT2M0pr
+         qfAw==
+X-Gm-Message-State: AOAM533FqZ7k/OtcG5gylEJZA5aMFODDcEJcOk5q8aVj5d8tV2DtTxaU
+        d9AWXlMMOCCbxN549iaqoTGkUWAtiaw=
+X-Google-Smtp-Source: ABdhPJxJngkFUiMRQN1gMzvdbUo6V1A0UaGblI96hI4hykWTF+kk/MmkzPjtgK+BDpIUXinD/v8TGQ==
+X-Received: by 2002:a05:6a00:15c7:: with SMTP id o7mr1609067pfu.51.1592448724031;
+        Wed, 17 Jun 2020 19:52:04 -0700 (PDT)
+Received: from google.com (124.190.199.35.bc.googleusercontent.com. [35.199.190.124])
+        by smtp.gmail.com with ESMTPSA id f29sm1016074pgf.63.2020.06.17.19.52.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Jun 2020 19:52:03 -0700 (PDT)
+Date:   Thu, 18 Jun 2020 02:52:00 +0000
+From:   Satya Tangirala <satyat@google.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/3] scsi: ufs: Add inline encryption support to UFS
+Message-ID: <20200618025200.GA100078@google.com>
+References: <20200617081841.218985-1-satyat@google.com>
+ <20200617081841.218985-4-satyat@google.com>
+ <20200617162827.GD1138@sol.localdomain>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200617162827.GD1138@sol.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Viacheslav Dubeyko <v.dubeiko@yadro.com>
-
-[ Upstream commit 803e45550b11c8e43d89812356fe6f105adebdf9 ]
-
-The goal of the following command sequence is to restart the adapter.
-However, the tgt_stop flag remains set, indicating that the adapter is
-still in stopping state even after re-enabling it.
-
-echo 0x7fffffff > /sys/module/qla2xxx/parameters/logging
-modprobe target_core_mod
-modprobe tcm_qla2xxx
-mkdir /sys/kernel/config/target/qla2xxx
-mkdir /sys/kernel/config/target/qla2xxx/<port-name>
-mkdir /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1
-echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-echo 0 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-echo 1 > /sys/kernel/config/target/qla2xxx/<port-name>/tpgt_1/enable
-
-kernel: PID 1396:qla_target.c:1555 qlt_stop_phase1(): tgt_stop 0x0, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-e803:1: PID 1396:qla_target.c:1567: Stopping target for host 1(c0000000033557e8)
-kernel: PID 1396:qla_target.c:1579 qlt_stop_phase1(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: PID 1396:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-e801:1: PID 1396:qla_target.c:1316: Scheduling sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-290a:1: PID 340:qla_target.c:1187: qlt_unreg_sess sess c00000002d5cd800 for deletion 21:00:00:24:ff:7f:35:c7
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-f801:1: PID 340:qla_target.c:1145: Unregistration of sess c00000002d5cd800 21:00:00:24:ff:7f:35:c7 finished fcp_cnt 0
-kernel: PID 340:qla_target.c:1155 qlt_free_session_done(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-28f1:1: PID 346:qla_os.c:3956: Mark all dev lost
-kernel: PID 346:qla_target.c:1266 qlt_schedule_sess_for_deletion(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
-<skipped>
-kernel: PID 1396:qla_target.c:6812 qlt_enable_vha(): tgt_stop 0x1, tgt_stopped 0x0
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-4807:1: PID 346:qla_os.c:6329: ISP abort scheduled.
-<skipped>
-kernel: qla2xxx [0001:00:02.0]-4808:1: PID 346:qla_os.c:6338: ISP abort end.
-
-qlt_handle_cmd_for_atio() rejects the request to send commands because the
-adapter is in the stopping state:
-
-kernel: PID 0:qla_target.c:4442 qlt_handle_cmd_for_atio(): tgt_stop 0x1, tgt_stopped 0x0
-kernel: qla2xxx [0001:00:02.0]-3861:1: PID 0:qla_target.c:4447: New command while device c000000005314600 is shutting down
-kernel: qla2xxx [0001:00:02.0]-e85f:1: PID 0:qla_target.c:5728: qla_target: Unable to send command to target
-
-This patch calls qla_stop_phase2() in addition to qlt_stop_phase1() in
-tcm_qla2xxx_tpg_enable_store() and tcm_qla2xxx_npiv_tpg_enable_store(). The
-qlt_stop_phase1() marks adapter as stopping (tgt_stop == 0x1, tgt_stopped
-== 0x0) but qlt_stop_phase2() marks adapter as stopped (tgt_stop == 0x0,
-tgt_stopped == 0x1).
-
-Link: https://lore.kernel.org/r/52be1e8a3537f6c5407eae3edd4c8e08a9545ea5.camel@yadro.com
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Viacheslav Dubeyko <v.dubeiko@yadro.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 1f0a185b2a95..bf00ae16b487 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -949,6 +949,7 @@ static ssize_t tcm_qla2xxx_tpg_enable_store(struct config_item *item,
- 
- 		atomic_set(&tpg->lport_tpg_enabled, 0);
- 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
-+		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
- 	}
- 
- 	return count;
-@@ -1111,6 +1112,7 @@ static ssize_t tcm_qla2xxx_npiv_tpg_enable_store(struct config_item *item,
- 
- 		atomic_set(&tpg->lport_tpg_enabled, 0);
- 		qlt_stop_phase1(vha->vha_tgt.qla_tgt);
-+		qlt_stop_phase2(vha->vha_tgt.qla_tgt);
- 	}
- 
- 	return count;
--- 
-2.25.1
-
+On Wed, Jun 17, 2020 at 09:28:27AM -0700, Eric Biggers wrote:
+> On Wed, Jun 17, 2020 at 08:18:41AM +0000, Satya Tangirala wrote:
+> > Wire up ufshcd.c with the UFS Crypto API, the block layer inline
+> > encryption additions and the keyslot manager.
+> > 
+> > Signed-off-by: Satya Tangirala <satyat@google.com>
+> 
+> I had also given Reviewed-by on this one; looks like that was missed as well :-)
+> 
+> https://lkml.kernel.org/linux-scsi/20200514051205.GB14829@sol.localdomain/
+> 
+The UFS comments slipped my mind entirely :( - I addressed them this
+time.
+> - Eric
