@@ -2,86 +2,174 @@ Return-Path: <SRS0=Iqxk=77=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D79F6C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 13:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6EC7C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 15:02:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD6FA2082F
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 13:49:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1BF22075E
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 15:02:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dOtH3Q4z"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BqBqQakT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730360AbgFRNtR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Jun 2020 09:49:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48894 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730345AbgFRNtP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 09:49:15 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF156C06174E;
-        Thu, 18 Jun 2020 06:49:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=n9BaMVUCaVyJLD8yPDoe2PtpH60KSIZHmuyQxc4LjSI=; b=dOtH3Q4zNMES4xCLLlwm8XQOUW
-        toJqrLIhJk4+L36KIPooyLY2K+UIaOFzzH+nOTfHQn4SIFVcucJOYD41Peuylc3Cmoo+Kbx3eznT+
-        yiJ8B0pqNDI5LBVOETjtrjUw8ikMKL3NhEOyPbWqbZl2a2o9feAYkULaMnIO3N0zzEUwh5XJIrtY9
-        SXwQo/k2otshC7Kt906KTwQm27+bhgksFt+1c2mNvKd+nsB1pFykEHIfOCJnl8DfCsCn9JHfXlNoY
-        nweICrbUL4Aq3invuQwb2yeiRR40IQLPk7otS2mHGH3fbstvgLwQLZlGrPbT7v0O4Y/UUefbSPZpw
-        xVB/m5gA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jluue-0006zB-1Q; Thu, 18 Jun 2020 13:49:04 +0000
-Date:   Thu, 18 Jun 2020 06:49:04 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Simon Arlott <simon@octiron.net>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S1731091AbgFRPCy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Jun 2020 11:02:54 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36734 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726853AbgFRPCx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 11:02:53 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05IEvInL016116;
+        Thu, 18 Jun 2020 15:02:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=TnflwDdart9A5pX7oW6y8eCz/jZi03g2hO4oDxswQ3g=;
+ b=BqBqQakTDHx7XbdvZDjiYjZR3Q3rbmMfMosNM6jViubqP4VtFlZ8s2Q98K+IXtnsur/2
+ FbY1VaDI/jV3OM0rXIUlxsDmhVWGRccgDZVTyLVIA9OT7EGaKmJwW6i4dy+q65IsUIqo
+ aiJvjaNDEgo6gcWg+xW/gXzgE59KlIWFjVMsT4Sv4rwM50sIpQ2MB6Av9AHqVbvFr3cI
+ iu57IEoIySKVPSzVulHrfILLG00jEmLoHFzqbsGvUQTEPGsrS7fqDy0fzuWW1CIJG3fq
+ J7YRbYCkMhmbeAO43yV0PPQFjtOUaO2IOfHgsc2p4Jz/5XaEJZHWpGbmPUDN1r/qAKS6 Cg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 31qecm09sj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 18 Jun 2020 15:02:45 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05IExGhR052933;
+        Thu, 18 Jun 2020 15:00:44 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 31q66sew56-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 18 Jun 2020 15:00:42 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05IF0gIp006390;
+        Thu, 18 Jun 2020 15:00:42 GMT
+Received: from [20.15.0.202] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 18 Jun 2020 08:00:42 -0700
+Subject: Re: [PATCH 2/2 v2] scsi: target: tcmu: Fix crash in
+ tcmu_flush_dcache_range on ARM
+To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH] scsi: sd: stop SSD (non-rotational) disks before reboot
-Message-ID: <20200618134904.GA26650@infradead.org>
-References: <499138c8-b6d5-ef4a-2780-4f750ed337d3@0882a8b5-c6c3-11e9-b005-00805fc181fe>
- <20200618072138.GA11778@infradead.org>
- <9877e7de-d573-694b-2b75-95192756684b@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     JiangYu <lnsyyj@hotmail.com>, Daniel Meyerholt <dxm523@gmail.com>
+References: <20200618131632.32748-1-bstroesser@ts.fujitsu.com>
+ <20200618131632.32748-3-bstroesser@ts.fujitsu.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <5e4be724-bd54-3a4d-e0d4-8c60910b0c0a@oracle.com>
+Date:   Thu, 18 Jun 2020 10:00:45 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9877e7de-d573-694b-2b75-95192756684b@0882a8b5-c6c3-11e9-b005-00805fc181fe>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200618131632.32748-3-bstroesser@ts.fujitsu.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9655 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ bulkscore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006180113
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9655 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 cotscore=-2147483648 malwarescore=0
+ clxscore=1011 adultscore=0 suspectscore=0 spamscore=0 lowpriorityscore=0
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 mlxscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006180113
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 01:25:18PM +0100, Simon Arlott wrote:
-> On 18/06/2020 08:21, Christoph Hellwig wrote:
-> > On Wed, Jun 17, 2020 at 07:49:57PM +0100, Simon Arlott wrote:
-> >> Avoiding a stop of the disk on a reboot is appropriate for HDDs because
-> >> they're likely to continue to be powered (and should not be told to spin
-> >> down only to spin up again) but the default behaviour for SSDs should
-> >> be changed to stop them before the reboot.
-> > 
-> > I don't think that is true in general.  At least for most current server
-> > class and older desktop and laptop class systems they use the same
-> > format factors and enclosures, although they are slightly divering now.
-> > 
-> > So I think this needs to be quirked based on the platform and/or
-> > enclosure.
+On 6/18/20 8:16 AM, Bodo Stroesser wrote:
+> This patch fixes the following crash
+> (see https://urldefense.com/v3/__https://bugzilla.kernel.org/show_bug.cgi?id=208045__;!!GqivPVa7Brio!O7JgZIL3VPAzIqwJfZjL48y8M90K3HXv3pUVeoCzZ-vXovCpx5g7xMg-z5aAiVXVtkfE$ )
 > 
-> Are you referring to the behaviour for handling HDDs or SSDs?
-
-All of the above.
-
+>   Process iscsi_trx (pid: 7496, stack limit = 0x0000000010dd111a)
+>   CPU: 0 PID: 7496 Comm: iscsi_trx Not tainted 4.19.118-0419118-generic
+>          #202004230533
+>   Hardware name: Greatwall QingTian DF720/F601, BIOS 601FBE20 Sep 26 2019
+>   pstate: 80400005 (Nzcv daif +PAN -UAO)
+>   pc : flush_dcache_page+0x18/0x40
+>   lr : is_ring_space_avail+0x68/0x2f8 [target_core_user]
+>   sp : ffff000015123a80
+>   x29: ffff000015123a80 x28: 0000000000000000
+>   x27: 0000000000001000 x26: ffff000023ea5000
+>   x25: ffffcfa25bbe08b8 x24: 0000000000000078
+>   x23: ffff7e0000000000 x22: ffff000023ea5001
+>   x21: ffffcfa24b79c000 x20: 0000000000000fff
+>   x19: ffff7e00008fa940 x18: 0000000000000000
+>   x17: 0000000000000000 x16: ffff2d047e709138
+>   x15: 0000000000000000 x14: 0000000000000000
+>   x13: 0000000000000000 x12: ffff2d047fbd0a40
+>   x11: 0000000000000000 x10: 0000000000000030
+>   x9 : 0000000000000000 x8 : ffffc9a254820a00
+>   x7 : 00000000000013b0 x6 : 000000000000003f
+>   x5 : 0000000000000040 x4 : ffffcfa25bbe08e8
+>   x3 : 0000000000001000 x2 : 0000000000000078
+>   x1 : ffffcfa25bbe08b8 x0 : ffff2d040bc88a18
+>   Call trace:
+>    flush_dcache_page+0x18/0x40
+>    is_ring_space_avail+0x68/0x2f8 [target_core_user]
+>    queue_cmd_ring+0x1f8/0x680 [target_core_user]
+>    tcmu_queue_cmd+0xe4/0x158 [target_core_user]
+>    __target_execute_cmd+0x30/0xf0 [target_core_mod]
+>    target_execute_cmd+0x294/0x390 [target_core_mod]
+>    transport_generic_new_cmd+0x1e8/0x358 [target_core_mod]
+>    transport_handle_cdb_direct+0x50/0xb0 [target_core_mod]
+>    iscsit_execute_cmd+0x2b4/0x350 [iscsi_target_mod]
+>    iscsit_sequence_cmd+0xd8/0x1d8 [iscsi_target_mod]
+>    iscsit_process_scsi_cmd+0xac/0xf8 [iscsi_target_mod]
+>    iscsit_get_rx_pdu+0x404/0xd00 [iscsi_target_mod]
+>    iscsi_target_rx_thread+0xb8/0x130 [iscsi_target_mod]
+>    kthread+0x130/0x138
+>    ret_from_fork+0x10/0x18
+>   Code: f9000bf3 aa0003f3 aa1e03e0 d503201f (f9400260)
+>   ---[ end trace 1e451c73f4266776 ]---
 > 
-> For HDDs, the default "1" option could mean "automatic" and apply to
-> rotational disks when power loss is expected.
+> The solution is based on patch:
 > 
-> For SSDs, I don't think an extra stop should ever be an issue.
+>    "scsi: target: tcmu: Optimize use of flush_dcache_page"
+> 
+> which restricts the use of tcmu_flush_dcache_range() to
+> addresses from vmalloc'ed areas only.
+> 
+> This patch now replaces the virt_to_page() call in
+> tcmu_flush_dcache_range() - which is wrong for vmalloced addrs -
+> by vmalloc_to_page().
+> 
+> The patch was tested on ARM with kernel 4.19.118 and 5.7.2
+> 
+> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+> Tested-by: JiangYu <lnsyyj@hotmail.com>
+> Tested-by: Daniel Meyerholt <dxm523@gmail.com>
+> ---
+>   drivers/target/target_core_user.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+> index a65e9671ae7a..835d3001cb0e 100644
+> --- a/drivers/target/target_core_user.c
+> +++ b/drivers/target/target_core_user.c
+> @@ -601,7 +601,7 @@ static inline void tcmu_flush_dcache_range(void *vaddr, size_t size)
+>   	size = round_up(size+offset, PAGE_SIZE);
+>   
+>   	while (size) {
+> -		flush_dcache_page(virt_to_page(start));
+> +		flush_dcache_page(vmalloc_to_page(start));
+>   		start += PAGE_SIZE;
+>   		size -= PAGE_SIZE;
+>   	}
 
-Extra shutdowns will usually cause additional P/E cycles.
+For this bug we only need to change the flush in is_ring_space_avail 
+right? It's what is accessing the mb which is vmalloc'd.
+
+Is it reccommended to call vmalloc_to_page on a page we get with 
+alloc_page and is the mm then always going to do the right thing for us 
+(I do not know the mm code well and just quickly scanned the 
+Documentation and comments, but could not find anything), or could we 
+hit similar issues where we are using the wrong call on different types 
+of allocated memory down the line?
