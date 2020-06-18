@@ -2,140 +2,178 @@ Return-Path: <SRS0=Iqxk=77=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D30C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 19:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F24B8C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 22:46:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63746208C3
-	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 19:14:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2FC9206E2
+	for <linux-scsi@archiver.kernel.org>; Thu, 18 Jun 2020 22:46:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="QVXqJM9V";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="uws01eLW"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="TVFjhakG";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="PbnHfdst"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728137AbgFRTOM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Jun 2020 15:14:12 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:19268 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727826AbgFRTOL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 15:14:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1592507649; x=1624043649;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=hyFKrgEtTh0jqNk9ds2u8Mg5RScq9ETiPJVRk55ToT8=;
-  b=QVXqJM9VZ3gh+KKAhJ9o7MZCcsPch+lrZluvCPEUamdN+MA6qvDJG4y1
-   q/8fzUFcj2lFI121PmY5JVKLU4zHGoYZXIittn58P+2XIfuy0qI5RTaDK
-   EVieWnnVDrYk08fFBQRfBxMiNEUsP8yEqZOHhoTmhANVPLJNEPHdIZ/iz
-   92ftyb2nAuYOmHs+CX7JNapjyKFgvZSAckIacO0VkYElo15CEF2LIvY52
-   pMCdUAAULSePjdViwdMQqAyOQVgP9GroEaXbrCm54vy+6h7M/CrvYfKhY
-   iGQv65NGEA0NVZUoXnEAnG88/6ONa1697vw3BqkOIjOYpoxXbpLzYy3Bk
-   g==;
-IronPort-SDR: beUXWtB787ZBfq0ryZwN+wnK1OXtvy737Tq+VMaNdJVLWRsFs3VVwmMcceUBuUrOiZk0Y9+Gsp
- zxFJz15i98QY5/gf71G61j8idMaJrcrepkYPDTjI0dW7dvi7nsBtcG5SovJgiXscIzMLjGOzC4
- oHCKTgMVsgaQosa+nAb9VOEZ9jKpfNzgRjEjz2OaBx3bzhT3p1+XJmo5vf6m9+f3m0ngPR9O63
- +ncK2lWbJi/ybtkBB3B9PLl10lyh+RZVQlCeBBYSM2Mo+t+vKqEwg0f3jIO8urspES81IXV3dB
- S5k=
-X-IronPort-AV: E=Sophos;i="5.75,252,1589266800"; 
-   d="scan'208";a="78999932"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 18 Jun 2020 12:14:09 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Thu, 18 Jun 2020 12:14:09 -0700
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3
- via Frontend Transport; Thu, 18 Jun 2020 12:14:09 -0700
+        id S1731196AbgFRWqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Jun 2020 18:46:17 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1404 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730939AbgFRWqQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Jun 2020 18:46:16 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05IMkDOu025516;
+        Thu, 18 Jun 2020 15:46:13 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=vLrh9PYIAYAxAxUbDVzY6h578et2M6ZL8s4spWk55AA=;
+ b=TVFjhakGsNpUOGpChvUAy2C233rJE8MMLisC14KaGY9EoZc6WQyUKE+0wS8wyZzvPdQZ
+ OYP+Zc3WjSMpQDck9FsdNN1eQOYLMrA+HxPoVFla02KU4VcMgN8+BFbRUv2G7FvMgLqf
+ HX1thJ5ckTgocqKOWGBcQRUlt6J52Nwvtd33kT2+2IkVCZU4nP4bsIZ3oFB11qaYT2MB
+ yvmFA0nkfnfQ+uEpqTaA1wO2lAgkRZh6cNul3V9ks0IMJMh/OoBKp3KClrDLvdS3Q9K2
+ w4cIZMteUONtRVOGnahw292zkW25yhC6cA3mLCLRKBQVmULnLfuxZlrT3ftKsBXkxdZ2 0Q== 
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 31q676vs6y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 18 Jun 2020 15:46:13 -0700
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH04.marvell.com
+ (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 18 Jun
+ 2020 15:46:12 -0700
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (104.47.58.108)
+ by SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Thu, 18 Jun 2020 15:46:12 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OV7082n5+amLyZ3DMzDqLFDKHgE3dTVPlqAav6kGR9xn2aYlcnC5zdwnfOzE/ClYbNEvXUPJn9iwhg4pv0aFzR228c2L/GMq59O4c8uAawYj/k6hO8WK180TbHaieuazuyjqOycIun1z+YiNtc7jhtmzHR2JnB+gw9IkK+qV6aRQqxOpg5Kd0GDRA8qVCvHzbxplegHdxw7l7hoI0W0YUhTPOb8mcMVDf/CFkVPNmSkmsKmme2Qioc7UInJqljbO0vFJafv5w0qX/SRFu9KaDV0cfvcqf1+S1mGiFCoQQuP3LDxkwu7ga6O/nvEaSJFL3tPIUktVKO4shkrmqdJ8HQ==
+ b=kcveBkH6K9awtJIHYNLIGFXu6qn0VhDriqPgj3dUDiK7yWlofrBnYi92c1mBWilwL/d3SCT16y+khhe+a88wxJeyeAP8zrvyCFAcTombC03hyVIBpDN8iDWtCopsIVwKBSJNcvYqcnf5V28KcQhqpWBhYRy7XYljuVKbzCTUJcIhFvyIJjzPBUWcvbNc2qsdnXUrylk9k80IaxFKd3ePnnmuzgvYnJnYRfV6fwpSEWIoIKsdyzzBfRNmjjPjfZAE7p2tOPb9S9+JrOtv9eDU7Y2H5pL2vGE1MIOLaBEG53lxfnL2ONJCTbFoGy8isKqp9GpJpyooLpUxf9SU3J24Fw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hyFKrgEtTh0jqNk9ds2u8Mg5RScq9ETiPJVRk55ToT8=;
- b=CY+qgHepCYCxn1CTThUnvjx1VfKk6ZRasiLq0psjZcSCqG43kPA2UwvGlZWoUg/Ew9AvvA45j9Z0UXK7Sj7aJp45BMa14aI2zlcEW8/AnpYJRtXjEARNSMpYQJQN86kzpxUSBx2zxiAQOBqUflDfRU9CfkoYjnEv8xeajssW9syehJqMX/IzMfevLd/jt2ulIHONusBW8D4UM26E5nt5k7zL2OsoID2eokIAFvpzUDJq3XSa8xiCkEUYoln6IBilbwPk3Nnu8GW7/YVf+sZUaxAK9xFbEyPisxpitx1AcBEdpqiwpW65hrITASgafqrqljrcsYP7md2o7zFepwB8ww==
+ bh=vLrh9PYIAYAxAxUbDVzY6h578et2M6ZL8s4spWk55AA=;
+ b=Sy4qZZa6rysy9Eu2NahzVluECe9iIG1GEFrCXbkVyxn+m2aHlOzUqW9HWBVYhAbwSlfQnoC6A9w+CLXTNLOKQ4yScXGmlsR4xgEJUPFCP238XPYdLA0E/mBDT96F4JSDegPxg74cIt8oiM5d7yq4OoYSIWSfXtXQj+CYX+RUL8CTHcWmu9FHilDJwQFRy19WxRkV3P4UzJTgNA8MVyUt/4qilrSL57qmJXW5X2wkNSHm6jxq0Wvu2M47a7RGJfa2BGHbEApxd7HM79acIGLThwC4jqJaF9V4ZjPXpPn6/ADojnT2c0h9QtYGpcvcGkAWOlJVuR3ejzotq9hT+MEdhA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hyFKrgEtTh0jqNk9ds2u8Mg5RScq9ETiPJVRk55ToT8=;
- b=uws01eLWdSFAJ/yHITe1mZEi5ID2fY14v+G/9WE7z4sen4n+4lcZwv4bkZI7FyPMMgIHKi0AsH7HqbQoRqzZ88zQaLv/a5IsaVJBK6n6Uhzn8yFvmpYlZpJZem5leygEgpLL8OvkahDk+5uBJoESZU62MLxNx6Z7haOujyTPjnE=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB3517.namprd11.prod.outlook.com (2603:10b6:805:dc::17) with
+ bh=vLrh9PYIAYAxAxUbDVzY6h578et2M6ZL8s4spWk55AA=;
+ b=PbnHfdst+7GU/42lcPRma/NlNVsp0Spuf7WjiciqoPLl98fqAOQvdFPUm9g93aBTaxH8nFk/QqS64HH0zi5FGz9dKgk0IQoPywdlWtl0+QfSnQA7+2Pa1hnKET2GULtynNRRHubSdvUoeVQJtt7Sy7DaVB2+cIPrHvNx/23n6eI=
+Received: from BYAPR18MB2805.namprd18.prod.outlook.com (2603:10b6:a03:108::25)
+ by BYAPR18MB2359.namprd18.prod.outlook.com (2603:10b6:a03:134::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Thu, 18 Jun
- 2020 19:14:08 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5907:a4c5:ee9b:8cde]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5907:a4c5:ee9b:8cde%7]) with mapi id 15.20.3109.021; Thu, 18 Jun 2020
- 19:14:08 +0000
-From:   <Don.Brace@microchip.com>
-To:     <mwilck@suse.com>, <don.brace@microsemi.com>,
-        <martin.petersen@oracle.com>
-CC:     <esc.storagedev@microsemi.com>, <linux-scsi@vger.kernel.org>,
-        <shane.seymour@hpe.com>
-Subject: RE: [PATCH v2 0/3] scsi: smartpqi: fixes for scsi device removal
-Thread-Topic: [PATCH v2 0/3] scsi: smartpqi: fixes for scsi device removal
-Thread-Index: AQHWRIJZE08BPNprAUyiUXsfulgsfajev4uQ
-Date:   Thu, 18 Jun 2020 19:14:07 +0000
-Message-ID: <SN6PR11MB2848A39E8B726862BF2E9500E19B0@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <20200617083514.19174-1-mwilck@suse.com>
-In-Reply-To: <20200617083514.19174-1-mwilck@suse.com>
+ 2020 22:46:10 +0000
+Received: from BYAPR18MB2805.namprd18.prod.outlook.com
+ ([fe80::fd09:61da:c548:e61b]) by BYAPR18MB2805.namprd18.prod.outlook.com
+ ([fe80::fd09:61da:c548:e61b%7]) with mapi id 15.20.3088.029; Thu, 18 Jun 2020
+ 22:46:10 +0000
+From:   Shyam Sundar <ssundar@marvell.com>
+To:     "james.smart@broadcom.com" <james.smart@broadcom.com>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "Nilesh Javali" <njavali@marvell.com>
+Subject: Re: [PATCH v3 0/2] qla2xxx SAN Congestion Management (SCM) support
+Thread-Topic: [PATCH v3 0/2] qla2xxx SAN Congestion Management (SCM) support
+Thread-Index: AQHWPzGhOwfQ0CGFzUyl8UmpEAyWtajfBiGA
+Date:   Thu, 18 Jun 2020 22:46:10 +0000
+Message-ID: <B39919CA-5C0A-4792-9327-0D50DF8AD2F3@marvell.com>
+References: <20200610141509.10616-1-njavali@marvell.com>
+In-Reply-To: <20200610141509.10616-1-njavali@marvell.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.211.63]
+x-mailer: Apple Mail (2.3445.104.11)
+authentication-results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=marvell.com;
+x-originating-ip: [2600:1700:6a70:9c50:4ee:1dc5:f5ae:881d]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4b83a8cc-ba3b-4989-7007-08d813bbc662
-x-ms-traffictypediagnostic: SN6PR11MB3517:
-x-microsoft-antispam-prvs: <SN6PR11MB3517E051DAB8EB15F659BD5FE19B0@SN6PR11MB3517.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:5797;
+x-ms-office365-filtering-correlation-id: 30305ac0-9f3f-4e24-c2de-08d813d9657e
+x-ms-traffictypediagnostic: BYAPR18MB2359:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR18MB2359BACED1A8316AAD7D974AB49B0@BYAPR18MB2359.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
 x-forefront-prvs: 0438F90F17
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: F+0kvmcPpqpi8SjgUMXeDhnKE8SEL/tgmYszRpZCgKzAdCcFpuc2/qcJXnTQdsmsxF2fA9+b8TeIuHYcbfvH5xzpNsjeS4ZC+cFKJ2okFGmWdDWo5nLtty1/i89SN5gY/xnOZCTrlcG3aMvAv+PXj4p3eJPwRgBxdCqdqqzXb38Eo3GQHURk1Lkh792aP32j/fRvpHm7CIuOZSlUBscGzFGaC5q7OHPHHzRyR7EhrM5ImyJQPzcULi/5uoyjI/PQqp7AheKvnwmvhOJpHK4JNMDAjzVTvN5eZ6U1fVIYM0yKaeEDVb2bakG2wkWa+Wem6TeAj3QR1zbhAIeeVWmxXA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(136003)(396003)(346002)(39860400002)(376002)(71200400001)(5660300002)(316002)(54906003)(110136005)(83380400001)(4326008)(9686003)(55016002)(8676002)(8936002)(478600001)(2906002)(558084003)(66946007)(66476007)(66556008)(186003)(86362001)(26005)(6506007)(7696005)(76116006)(66446008)(52536014)(33656002)(64756008);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: mfKPfuNWSRiquQSqqbHvkaTXkqSXFGdjNemVN9HQMNLs7v/+jeuXvqjrE3gJJek/ffvsqYX6+VF0eoD86uQ7oN54RAipFAlVN0IqIHSH0AL+smm/apw+keNo5CgaXkgcsqhnkuBynP1QVs8kRsp4mpsOK4jto3QzVq06Cxjut25Pf80aHZf5rm6oXSJLH7O0ROaKSwsSWjIeFOXGcxQ9uKmfFfJtdnjtH00/UX7DXSy6iKT76T9V7LIHRwkM3VAlUPcYtteN9Zm+dUcsnyUXYA/gBNgQHTM7q+UNb1fwpTv1ZOy0NfKgv+JdGwwF5R55Nrkd2YA9ufuc9pC3nIQJ77zyrQlkoF6I2vaEjyXRlbHbsPAFvthE15mSDf4dZ/wemU9BtCw8s0S2cf2DXHMpu3VwZdhX62DrKRwe+wa7rrG3EHyMOZATcjZx6f4swoQNf+hpuOObnC+1srL3QexbYBqah/WN3zUTqJx0YK9HpX4=
-x-ms-exchange-transport-forked: True
+x-microsoft-antispam-message-info: eRPdH24FqVvk5JDsXmJfwWHn33ewBZNoEeZQVoETCjPeEVq0Uory7O3ib0qft6RNImAVUUzW8A8DYi8H7zZ9Ls+MHY9gO+dZ+I7JIKA86izCgV7CnVZCloBkyl5jndu8jlW39Ci2PkCN46PqQxsYOYZq/8ilBDwX/FuuJj7CXPPzQmQl1nAdBnjrM3lf3V52pEh9z53EsWilg/TOSartYKzQyfrTXGITphPNxbGSYZAi63b0L1ACc68Ykxhbbw6iloYvfUcOHwoID/6lfp6Qx4XhYrRsEnGGy8IW7PINOSiNLvJpz0EgRY6GHmqn07Qa
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR18MB2805.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(366004)(396003)(376002)(136003)(346002)(2906002)(54906003)(66946007)(5660300002)(6512007)(76116006)(66476007)(64756008)(66556008)(107886003)(66446008)(4326008)(33656002)(316002)(186003)(36756003)(6506007)(53546011)(478600001)(2616005)(83380400001)(8936002)(8676002)(6486002)(6916009)(86362001)(71200400001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: KJFZBtkaGAj/V230NTy3xHvcHmgBwClN6vxmy4hEtp37afTRBEV1lKm5wDsi7ZuMCxTJQ75QuBUh16eAzBw6LLzwZSD4PklsMpGxP/xFlunPeVNXL5ch16lZwGBvVaXpggjgHTkqq4jmgcC7qGKtsb/VlzAu1lMdox+sM/zbi0RfM3Qtx3Ot5hzT72X9ljm3EkS9jazKu+vcRQPfVCzFK9mQWWkeN/mYl4adJfdlpjDACiMgu/7NIDbg+DAA2YmHhxR3l7z9Y/cWVJMJc4Ot8EXajrRCkHrk9Oi8y7/PnSdT9As2iUUplv4H0oY35WA2+IwXTTulGvYFAgtsoiz5+GURXHtbFPaxwhW7s6VqthqRJU7UhEXKIVmWeC26uRmijMHjDGAXqgypTTpFmRtMHw7sP5BlrdsHEetZaJ8EtVzu8ZAgDnmmbSVp3s8ol97XQepnMP49Wf+/doY61vOjTo/uLks0JABris4OkRiPvjAoSBVHv+JcLgegI+OloTrnb+VX/KCyKB0Dp1Cu+Mssd5kwG6FJPpkiFTMQLpivGvK8SGdEkuDXfHA3Ln5GY7Ke
 Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6A3E2C5200C39E428A568A9075CB0465@namprd18.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b83a8cc-ba3b-4989-7007-08d813bbc662
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2020 19:14:07.8978
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30305ac0-9f3f-4e24-c2de-08d813d9657e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jun 2020 22:46:10.2813
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: AB2qqkIPZZnUWjJ3VJOnerQ2Ua88noAaQkx0enhjOpDzfJNR2cfTKBGznDA5BZP0QZQZM1RFdArCk4ijTtxiTQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3517
+X-MS-Exchange-CrossTenant-userprincipalname: gN+aCYBKSoVkNMiXCQrBNw0HoGrT9JORPuInkSHtuTLV0BTBrRPYt9anZaicELrJOJQh/CGHOF+8eiT6eNu8Ew==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR18MB2359
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
+ definitions=2020-06-18_21:2020-06-18,2020-06-18 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi James,
+    Could you please review v3 patch-set and let us know if it looks approp=
+riate.
+  =20
+    We should be sending out the next set of changes (to FC Transport) in t=
+he first week of July.
 
-From: Martin Wilck <mwilck@suse.com>
+Thanks
+Shyam
 
->>Hi Don, Martin,
 
->>here's a small update for the mini-series I sent yesterday.
-
-NAK
-We have a smaller patch set that will be ready soon. Currently in test-phas=
-e.
-
-Thanks,
-Don
-
+> On Jun 10, 2020, at 7:15 AM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> Martin,
+>=20
+> Please apply the updated qla2xxx patch series implementing SAN
+> Congestion Management (SCM) support to the scsi tree at your
+> earliest convenience.
+>=20
+> We will follow this up with another patchset to add SCM statistics to
+> the scsi transport fc, as recommended by James.
+>=20
+> v2->v3:
+> 1. Updated Reviewed-by tags
+>=20
+> v1->v2:
+> 1. Applied changes to address warnings highlighted by Bart.
+> 2. Removed data structures and functions that should be part of fc
+> transport, to be send out in a follow-up patchset.
+> 3. Changed the existing code to use definitions from fc transport
+> headers.
+>=20
+> Thanks,
+> Nilesh
+>=20
+> Shyam Sundar (2):
+>  qla2xxx: Change in PUREX to handle FPIN ELS requests.
+>  qla2xxx: SAN congestion management(SCM) implementation.
+>=20
+> drivers/scsi/qla2xxx/qla_dbg.c  |  13 +-
+> drivers/scsi/qla2xxx/qla_def.h  |  71 +++++++-
+> drivers/scsi/qla2xxx/qla_fw.h   |   6 +-
+> drivers/scsi/qla2xxx/qla_gbl.h  |   4 +-
+> drivers/scsi/qla2xxx/qla_init.c |   9 +-
+> drivers/scsi/qla2xxx/qla_isr.c  | 291 +++++++++++++++++++++++++++-----
+> drivers/scsi/qla2xxx/qla_mbx.c  |  64 ++++++-
+> drivers/scsi/qla2xxx/qla_os.c   |  37 +++-
+> include/uapi/scsi/fc/fc_els.h   |   1 +
+> 9 files changed, 428 insertions(+), 68 deletions(-)
+>=20
+>=20
+> base-commit: 47742bde281b2920aae8bb82ed2d61d890aa4f56
+> --=20
+> 2.19.0.rc0
+>=20
 
