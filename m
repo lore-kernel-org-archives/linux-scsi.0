@@ -2,129 +2,172 @@ Return-Path: <SRS0=E1i/=AA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9496AC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 00:20:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64978C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 08:16:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70C4C208C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 00:20:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UKRVppsl"
+	by mail.kernel.org (Postfix) with ESMTP id 4B74F2080C
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 08:16:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728798AbgFSAUG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Jun 2020 20:20:06 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:44971 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728711AbgFSAUF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Jun 2020 20:20:05 -0400
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200619002002epoutp044846ee5c15a81f2923722ca1eb69762b~ZyfYwKKa40101501015epoutp04-
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2020 00:20:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200619002002epoutp044846ee5c15a81f2923722ca1eb69762b~ZyfYwKKa40101501015epoutp04-
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1592526002;
-        bh=qllPWHtyQDpgVZtZhXrldNZVcdedGzFgcgGqEa7an5o=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=UKRVppslD2a8bk98GG+1UAqZiClJhTZiI0FTIk8fFXxEVT+pscZoSbMkDtKkGhcaY
-         tUIPVLLgPKTfSUHw/AUrs9UFq7dgeQyCn3wBUm1rn/l/C7Ig8UF1nrOJCJfyeLXxZ8
-         1rF/+t/8LBULMjRIDErWUmLmeXFoWAhe23vOeeb8=
-Received: from epcpadp1 (unknown [182.195.40.11]) by epcas1p3.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200619002001epcas1p354c155552aba2b742c752d5cf91908d9~ZyfYG_78R0349603496epcas1p3q;
-        Fri, 19 Jun 2020 00:20:01 +0000 (GMT)
-Mime-Version: 1.0
-Subject: RE: [RFC PATCH v2 4/5] scsi: ufs: L2P map management for HPB read
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <SN6PR04MB4640A9A9A78456A1A9AB827AFC9B0@SN6PR04MB4640.namprd04.prod.outlook.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <231786897.01592526001702.JavaMail.epsvc@epcpadp1>
-Date:   Fri, 19 Jun 2020 09:16:40 +0900
-X-CMS-MailID: 20200619001640epcms2p130129f48c57b56c8ae802cc9e2570225
-Content-Transfer-Encoding: 7bit
+        id S1731286AbgFSIPy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 04:15:54 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:60624 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1731022AbgFSIPo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 19 Jun 2020 04:15:44 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id DCBC3BB5FDDBE129A4B3;
+        Fri, 19 Jun 2020 16:15:39 +0800 (CST)
+Received: from [10.133.219.224] (10.133.219.224) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.487.0; Fri, 19 Jun 2020 16:15:30 +0800
+From:   Hou Tao <houtao1@huawei.com>
+Subject: [bug report][megaraid_sas] On 3108 RADI1 read performance is improved
+ when nr_requests is decreased
+To:     <linux-scsi@vger.kernel.org>,
+        Anand Lodnoor <anand.lodnoor@broadcom.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+CC:     Hannes Reinecke <hare@suse.de>, <martin.petersen@oracle.com>,
+        "houtao1@huawei.com" <houtao1@huawei.com>,
+        <linux-block@vger.kernel.org>
+Message-ID: <b87390d4-9981-41c2-7d5b-344ee3cf602a@huawei.com>
+Date:   Fri, 19 Jun 2020 16:15:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.8.0
+MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210
-References: <SN6PR04MB4640A9A9A78456A1A9AB827AFC9B0@SN6PR04MB4640.namprd04.prod.outlook.com>
-        <SN6PR04MB4640114902AEFE69CCC54C01FC9A0@SN6PR04MB4640.namprd04.prod.outlook.com>
-        <231786897.01592213402355.JavaMail.epsvc@epcpadp1>
-        <231786897.01592212081335.JavaMail.epsvc@epcpadp2>
-        <336371513.41592205783606.JavaMail.epsvc@epcpadp2>
-        <231786897.01592205482200.JavaMail.epsvc@epcpadp2>
-        <231786897.01592214002170.JavaMail.epsvc@epcpadp1>
-        <1210830415.21592444702291.JavaMail.epsvc@epcpadp1>
-        <CGME20200615062708epcms2p19a7fbc051bcd5e843c29dcd58fff4210@epcms2p1>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.133.219.224]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > > +
-> > > > +static struct ufshpb_map_ctx *ufshpb_get_map_ctx(struct ufshpb_lu
-> > *hpb)
-> > > > +{
-> > > > +       struct ufshpb_map_ctx *mctx;
-> > > > +       int i, j;
-> > > > +
-> > > > +       mctx = mempool_alloc(ufshpb_drv.ufshpb_mctx_pool, GFP_KERNEL);
-> > > > +       if (!mctx)
-> > > > +               return NULL;
-> > > So you use ufshpb_host_map_kbytes as the min_nr in your
-> > mempool_create,
-> > > But you know that you need max_lru_active_cnt x srgns_per_rgn such
-> > mapping context elements.
-> > > So you are
-> > > a) failing to provide the slab allocator an information that you already have,
-> > and
-> > > b) selecting from a finite pool will assure that you'll never exceed max-
-> > active-regions,
-> > >    even if some corner case fails your logic.
-> > It was intend to provide user-configurable pre-allocated memory to reduce
-> > latency due to memory allocation. The value of ufshpb_host_map_kbytes can
-> > be set to max_lru_active_cnt x srgns_per_rgn, if the user want to.
-> Ok, I see your point.
-> It is as if you expect that a "user" will query the unit descriptors first,
-> Make some calculations, and then will run modprobe with the proper value.
-> Are you assuming that an "intelligent" user does all that?
-> 
-> The reasonable scenario IMO, is that OEMs will initiate a service in their
-> ramdisk/init.rc with some default value.
-> 
-> Don't you see the damage potential in using a wrong value here?
-> 
-I understand your scenario. I will remove module parameter and set min_nr
-value of memory pool as "max_lru_active_cnt x srgns_per_rgn" size.
+Hi,
 
-Thanks,
-Daejun
+Recently we encountered a read performance problem on LSI SAS-3 3108 RAID controller.
+The read performance is much better when nr_requests is set as 192 compared with 256,
+but after disabling the NoRA (No Readahead) feature of the hardware RAID1, there will
+be no difference between nr_requests=192 and nr_requests=256.
+
+One scene is the direct read of one ext4 file with 8GB size. The ext4 fs is stacked
+on hardware RAID1 with 3.7TB size, and the RAID1 is composed of two HDDs.
+The queue_depth of RAID1 device is set as 256 by driver.
+
+fio --direct=1 --ioengine=libaio --group_reporting=1 --runtime=30 --bs=4k \
+	--name=1 --numjobs=1 --iodepth=512 --filesize=8G --directory=/tmp/sdd
+
+one ext4 file:
+IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
+ RA    | 51k             | 51k             | 48k             |
+ NoRA  | 47k             | 46k             | 47k             |
+
+Another scene is the direct read of two ext4 files with 4GB size.
+
+fio --direct=1 --ioengine=libaio --group_reporting=1 --runtime=30 --bs=4k \
+	--numjobs=2 --iodepth=256 --filesize=4G --directory=/tmp/sdd
+
+two ext4 files:
+IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
+ RA    | 95.7k           | 94.5k           | 30.7k           |
+ NoRA  | 27.3k           | 27.1k           | 27.2k           |
+
+These results show RA feature can boost the read performance, but when nr_requests
+is increased, performance is degraded.
+
+However when using a JBOD setup on HDD which has the same model as the HDD
+in RAID1 setup, there is no such problem.
+
+one ext4 file:
+IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
+       | 50k             | 50.4k           | 50.5            |
+
+two ext4 files:
+IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
+       | 46.5k           | 46.3k           | 46.0k           |
+
+So is the performance degradation a known issue of the RAID1 RA feature,
+or is there other explanation for it ?
+
+Regards,
+Tao
+
+---
+Other details of test environment:
+
+(1) linux kernel version
+5.6.15
+
+(2) block setup
+
+device/queue_depth:256
+queue/scheduler:[mq-deadline] kyber bfq none
+
+(3) driver version
+megasas: 07.713.01.00-rc1
+[    3.302270] megasas: 07.713.01.00-rc1
+[    3.302606] megaraid_sas 0000:1c:00.0: BAR:0x1  BAR's base_addr(phys):0x00000000a3500000  mapped virt_addr:0x00000000af230875
+[    3.302608] megaraid_sas 0000:1c:00.0: FW now in Ready state
+[    3.302610] megaraid_sas 0000:1c:00.0: 63 bit DMA mask and 32 bit consistent mask
+[    3.302965] megaraid_sas 0000:1c:00.0: firmware supports msix        : (96)
+[    3.305024] megaraid_sas 0000:1c:00.0: requested/available msix 73/73
+[    3.305028] megaraid_sas 0000:1c:00.0: current msix/online cpus      : (73/72)
+[    3.305029] megaraid_sas 0000:1c:00.0: RDPQ mode     : (disabled)
+[    3.305031] megaraid_sas 0000:1c:00.0: Current firmware supports maximum commands: 928        LDIO threshold: 0
+[    3.305362] megaraid_sas 0000:1c:00.0: Configured max firmware commands: 927
+[    3.308155] megaraid_sas 0000:1c:00.0: Performance mode :Latency
+[    3.308156] megaraid_sas 0000:1c:00.0: FW supports sync cache        : Yes
+[    3.308161] megaraid_sas 0000:1c:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
+[    3.352112] megaraid_sas 0000:1c:00.0: FW provided supportMaxExtLDs: 1       max_lds: 64
+[    3.352113] megaraid_sas 0000:1c:00.0: controller type       : MR(1024MB)
+[    3.352114] megaraid_sas 0000:1c:00.0: Online Controller Reset(OCR)  : Enabled
+[    3.352114] megaraid_sas 0000:1c:00.0: Secure JBOD support   : Yes
+[    3.352115] megaraid_sas 0000:1c:00.0: NVMe passthru support : No
+[    3.352115] megaraid_sas 0000:1c:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs
+[    3.352116] megaraid_sas 0000:1c:00.0: JBOD sequence map support     : Yes
+[    3.352117] megaraid_sas 0000:1c:00.0: PCI Lane Margining support    : No
+[    3.375590] megaraid_sas 0000:1c:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
+[    3.375591] megaraid_sas 0000:1c:00.0: INIT adapter done
+[    3.388987] megaraid_sas 0000:1c:00.0: pci id                : (0x1000)/(0x005d)/(0x19e5)/(0xd207)
+[    3.388988] megaraid_sas 0000:1c:00.0: unevenspan support    : no
+[    3.388988] megaraid_sas 0000:1c:00.0: firmware crash dump   : yes
+[    3.388989] megaraid_sas 0000:1c:00.0: JBOD sequence map     : enabled
+
+(4) megaraid firmware version
+
+Product Name = SAS3108
+FW Package Build = 24.16.0-0106
+BIOS Version = 6.32.02.0_4.17.08.00_0x06150500
+FW Version = 4.660.00-8102
+Driver Name = megaraid_sas
+Driver Version = 07.713.01.00-rc1
+Current Personality = RAID-Mode
+
+(5) hardware RAID1 setup
+
+-------------------------------------------------------------
+DG/VD TYPE  State Access Consist Cache Cac sCC     Size Name
+-------------------------------------------------------------
+1/2   RAID1 Optl  RW     Yes     RWTD  -   ON  3.637 TB
+-------------------------------------------------------------
+
+-----------------------------------------------------------------------
+EID:Slt DID State DG     Size Intf Med SED PI SeSz Model       Sp Type
+-----------------------------------------------------------------------
+0:5       6 Onln   1 3.637 TB SATA HDD N   N  512B MG04ACA400N U  -
+0:6       8 Onln   1 3.637 TB SATA HDD N   N  512B MG04ACA400N U  -
+-----------------------------------------------------------------------
+
+(6) hardware JBOD setup
+
+-----------------------------------------------------------------------
+EID:Slt DID State DG     Size Intf Med SED PI SeSz Model       Sp Type
+-----------------------------------------------------------------------
+0:4       7 JBOD  -  3.638 TB SATA HDD N   N  512B MG04ACA400N U  -
+-----------------------------------------------------------------------
