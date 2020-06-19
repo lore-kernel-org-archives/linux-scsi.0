@@ -2,136 +2,156 @@ Return-Path: <SRS0=E1i/=AA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88947C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 18:38:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD00C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 18:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 646EF21527
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 18:38:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48D2121531
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 18:42:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="iO3KWLb/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QJt1iKuz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388782AbgFSSiN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 14:38:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32924 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388798AbgFSSiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 14:38:11 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 691DCC0613EE
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2020 11:38:09 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id s14so153831plq.6
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Jun 2020 11:38:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=QDtquKpDVyqUKG68/dEGFCUQ2iKdA4vKgNk+0fPkUQA=;
-        b=iO3KWLb/IOrpPbhJquZWw5Trrnm12vFb8zSZNJSSNS6Ao7sk40DRXFOezrveCkqw+j
-         53Xqg+hrlZQb+KEKgITq1dZY+mZb42f+Q0N8yFNBycUbXdENWQmc0+bB2iBvEQyPpNjC
-         2NbS1pQQCHGbC6Sf7kZYDV5crZiDbMiZ36aezDyYLoG7i1yUfPsV6ZGM6oJ7+h6Bpe6P
-         Pml8rLPbjiBzvBTVsOKVdov4rLW+MFC2LCN2KlUafnnhE0fc3d0aOIxFdhMcsBKNRdnk
-         8qO0OjWb6stOLYOrkOkB1FcBjZXIVbyUfHP0v7UxIhAYe1lkjy68Q2Hma2ue4S/Qw1Az
-         GJiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=QDtquKpDVyqUKG68/dEGFCUQ2iKdA4vKgNk+0fPkUQA=;
-        b=s10shVJJ16cYz7p3ZGCW198pF00W0hQbOajlTYCATXAcuI1xrxR/c94GgLj+cPGF1p
-         8oo+ndSL1Qz9rljprscNqYAQNrgYLzZoPakiclmwckJ91AnTzgFRSAoPkzN/+s6WmbAM
-         4YnafiyEYzEX2EUGr4fZYbWAkidLBzkSmIX9XHkiFQ5nIibeUIA34sLa406kWBrItpFj
-         Sm0aqKij4fIDCExf3O8r8kykLoBJE3NL1MG8W48RmyazUiu73CiTb8CVbNVdUFDLWbRF
-         IBwgcy1lU9d8YeCRlvj01MQdgGf0IflTA1GIMWAojFplDnl3TsMx4ZIlxStCrQJ5KsyE
-         g1Mg==
-X-Gm-Message-State: AOAM533ld2zOw9Q/MGvgl3jt05+cDjV2+QxpJj23ZO76UvVu1+VJRTsU
-        bDUbDdTIsC2BIFQpN0SMHgeI5xH5CGI=
-X-Google-Smtp-Source: ABdhPJyit5DhFymkYaDM7kvOWtEZTZtav4eKp+qOHHILCnehtCMg2NidyxRGDqvnOyB1YUfjohdArw==
-X-Received: by 2002:a17:902:9346:: with SMTP id g6mr9132665plp.19.1592591888454;
-        Fri, 19 Jun 2020 11:38:08 -0700 (PDT)
-Received: from ?IPv6:2600:380:7716:2151:5de8:4eed:1c04:bd8a? ([2600:380:7716:2151:5de8:4eed:1c04:bd8a])
-        by smtp.gmail.com with ESMTPSA id c1sm6147856pfo.197.2020.06.19.11.38.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Jun 2020 11:38:07 -0700 (PDT)
-Subject: Re: [PATCH 2/2] block: only return started requests from
- blk_mq_tag_to_rq()
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Keith Busch <keith.busch@wdc.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20200619140159.141905-1-hare@suse.de>
- <60e34dce-aea4-311f-22da-4cb130c5ba88@suse.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <57a809a0-d449-e5f1-8986-761d6417e2c2@kernel.dk>
-Date:   Fri, 19 Jun 2020 12:38:01 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <60e34dce-aea4-311f-22da-4cb130c5ba88@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S2436668AbgFSSl6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 14:41:58 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:52110 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732225AbgFSSl6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 14:41:58 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05JIWdFx070739;
+        Fri, 19 Jun 2020 18:41:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id; s=corp-2020-01-29;
+ bh=41SJszYT73pPwR3/1I12iphb74gh+cbWYaqqArUgJ2c=;
+ b=QJt1iKuzgVYYKvCFAWAf602XaEeVmcJ8kxsHxezNBc3JjdR+VxgQbcmgrw+yjknqrP7f
+ tDgZC68lu6QmwJPRweNhJw/tKd8FQZRvYOtHoGDuayBCwH5G4h6okAohjXFpb3Gt1eAe
+ XHDWkBDjcp2VGnj0gKRf+VV083NkYq1g9YDCHL44dPdOoSTAr1HVvgFKwmgzprYO1jFT
+ L0JM6jLzKjlVa0pMn9x4gMqPRUADp48fCxBWajOhDRC8rW5Z6tJ0tvj2C/aQxVMLdVWp
+ 91QMwT8t6C5o9tN7pjDUI0dx6W6kPAUy/KVqTT2jYLPpIaT8xlnXkHoxU1iUKYCqTaIC qw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 31q66087sc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 19 Jun 2020 18:41:56 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05JIXrrG074615;
+        Fri, 19 Jun 2020 18:41:56 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 31q6635620-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 19 Jun 2020 18:41:56 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05JIftvS003532;
+        Fri, 19 Jun 2020 18:41:55 GMT
+Received: from ca-dev-arm29.us.oracle.com (/10.129.136.23)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 19 Jun 2020 11:41:55 -0700
+From:   Henry Willard <henry.willard@oracle.com>
+To:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <target-devel@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] scsi: target: tcmu: Call flush_dcache_page() with proper page struct
+Date:   Fri, 19 Jun 2020 11:41:45 -0700
+Message-Id: <1592592105-11497-1-git-send-email-henry.willard@oracle.com>
+X-Mailer: git-send-email 1.8.3.1
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9657 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ phishscore=0 bulkscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006190135
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9657 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 malwarescore=0
+ bulkscore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
+ spamscore=0 clxscore=1011 mlxlogscore=999 suspectscore=0 impostorscore=0
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006190135
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/19/20 8:09 AM, Hannes Reinecke wrote:
-> On 6/19/20 4:01 PM, Hannes Reinecke wrote:
->> blk_mq_tag_to_rq() is used from within the driver to map a tag
->> to a request. As such it should only return requests which are
->> already started (ie passed to the driver); otherwise the driver
->> might trip over requests which it has never seen and random
->> crashes will occur.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   block/blk-mq.c | 6 +++++-
->>   1 file changed, 5 insertions(+), 1 deletion(-)
->>
->> diff --git a/block/blk-mq.c b/block/blk-mq.c
->> index 4f57d27bfa73..f02d18113f9e 100644
->> --- a/block/blk-mq.c
->> +++ b/block/blk-mq.c
->> @@ -815,9 +815,13 @@ EXPORT_SYMBOL(blk_mq_delay_kick_requeue_list);
->>   
->>   struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags, unsigned int tag)
->>   {
->> +	struct request *rq;
->> +
->>   	if (tag < tags->nr_tags) {
->>   		prefetch(tags->rqs[tag]);
->> -		return tags->rqs[tag];
->> +		rq = tags->rqs[tag];
->> +		if (blk_mq_request_started(rq))
->> +			return rq;
->>   	}
->>   
->>   	return NULL;
->>
-> This becomes particularly obnoxious for SCSI drivers using 
-> scsi_host_find_tag() for cleaning up stale commands (ie drivers like 
-> qla4xxx, fnic, and snic).
-> All other drivers use it from the completion routine, so one can expect 
-> a valid (and started) tag here. So for those it shouldn't matter.
-> 
-> But still, if there are objections I could look at fixing it within the 
-> SCSI stack; although that would most likely mean I'll have to implement 
-> the above patch as an additional function.
+tcmu_flush_dcache_range() gets called with addresses from both kernel
+linear space and vmalloc space, so virt_to_page() or vmalloc_to_page()
+have to be used as appropriate to get the proper page struct. On x86_64
+flush_dcache_page() is the default noop implementation, so this hasn't
+been a problem there.
 
-The helper does exactly what it should, return a request associated
-with a tag. Either add the logic to the caller, or provide a new
-helper that does what you need. I'd be inclined to just add it to
-the caller that needs it.
+When tcmu_flush_dcache_range() is called with a vmalloc address on Arm64,
+the result is a kernel panic with the following stack trace:
 
+[  448.873342] CPU: 0 PID: 34102 Comm: iscsi_trx Kdump: loaded
+Not tainted 5.4.17-2011.3.2.1.el8uek.aarch64 #2
+[  448.876144] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
+[  448.878377] pstate: 80400005 (Nzcv daif +PAN -UAO)
+[  448.880182] pc : flush_dcache_page+0x18/0x60
+[  448.881888] lr : is_ring_space_avail+0x74/0x390 [target_core_user]
+[  448.883969] sp : ffff80001720fa70
+[  448.885450] x29: ffff80001720fa70 x28: 0000000000000000
+[  448.887348] x27: 0000000000010000 x26: ffff0003c4b88000
+[  448.889285] x25: 0000000000010000 x24: ffff800017da0000
+[  448.891166] x23: ffffffdfffe00000 x22: 0000000000000078
+[  448.893061] x21: 0000800017da0001 x20: 000000000000ffff
+[  448.894931] x19: ffffffffffe5f680 x18: 0000000000000000
+[  448.896826] x17: 0000000000000000 x16: 0000000000000000
+[  448.898704] x15: 0000000000000000 x14: 0000000000000000
+[  448.900562] x13: 0000000000000000 x12: 0000000000000000
+[  448.902403] x11: ffff0003d188e4d0 x10: 0000000000000030
+[  448.904230] x9 : 0000000000000000 x8 : ffff0003d4073f00
+[  448.906094] x7 : 00000000000013b0 x6 : 000000000000003f
+[  448.907911] x5 : 0000000000000040 x4 : ffff0003d16d6258
+[  448.909720] x3 : 0000000000010000 x2 : 0000000000000078
+[  448.911664] x1 : ffff0003d16d6228 x0 : ffff800009f43b1c
+[  448.913767] Call trace:
+[  448.914984]  flush_dcache_page+0x18/0x60
+[  448.916518]  is_ring_space_avail+0x74/0x390 [target_core_user]
+[  448.918450]  queue_cmd_ring+0x228/0x700 [target_core_user]
+[  448.920318]  tcmu_queue_cmd+0xd8/0x14c [target_core_user]
+[  448.922192]  __target_execute_cmd+0x30/0x130 [target_core_mod]
+[  448.924170]  target_execute_cmd+0x1a4/0x450 [target_core_mod]
+[  448.926212]  transport_generic_new_cmd+0x1b8/0x3a0 [target_core_mod]
+[  448.928289]  transport_handle_cdb_direct+0x50/0xb0 [target_core_mod]
+[  448.930368]  iscsit_execute_cmd+0x2c0/0x360 [iscsi_target_mod]
+[  448.932347]  iscsit_sequence_cmd+0xd8/0x1c8 [iscsi_target_mod]
+[  448.934313]  iscsit_process_scsi_cmd+0xac/0xf8 [iscsi_target_mod]
+[  448.936479]  iscsit_get_rx_pdu+0x450/0xd68 [iscsi_target_mod]
+[  448.938423]  iscsi_target_rx_thread+0xc0/0x168 [iscsi_target_mod]
+[  448.940387]  kthread+0x110/0x114
+[  448.941802]  ret_from_fork+0x10/0x18
+[  448.943271] Code: f9000bf3 aa0003f3 aa1e03e0 d503201f (f9400260)
+[  448.945271] SMP: stopping secondary CPUs
+
+Signed-off-by: Henry Willard <henry.willard@oracle.com>
+---
+ drivers/target/target_core_user.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index 560bfec933bc..7557c0630483 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -597,11 +597,19 @@ static inline void tcmu_flush_dcache_range(void *vaddr, size_t size)
+ {
+ 	unsigned long offset = offset_in_page(vaddr);
+ 	void *start = vaddr - offset;
++	struct page *pg;
+ 
+ 	size = round_up(size+offset, PAGE_SIZE);
+ 
+ 	while (size) {
+-		flush_dcache_page(virt_to_page(start));
++		if (virt_addr_valid(start))
++			pg = virt_to_page(start);
++		else if (is_vmalloc_addr(start))
++			pg = vmalloc_to_page(start);
++		else
++			break;
++
++		flush_dcache_page(pg);
+ 		start += PAGE_SIZE;
+ 		size -= PAGE_SIZE;
+ 	}
 -- 
-Jens Axboe
+1.8.3.1
 
