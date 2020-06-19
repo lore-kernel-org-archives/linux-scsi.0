@@ -2,111 +2,153 @@ Return-Path: <SRS0=E1i/=AA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE55BC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 14:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74990C433E2
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 15:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99FA82080C
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 14:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 520DB20809
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 15:42:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="o1+Q0KlZ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aM8guXAk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733276AbgFSOdB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 10:33:01 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:35970 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733089AbgFSOdB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 10:33:01 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05JEVYcK140893;
-        Fri, 19 Jun 2020 14:32:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=0a0jfa6ndZYP4+GPbWa68eEdOsgS9W5sVAeMAk3I0v4=;
- b=o1+Q0KlZH3M2mRp3tG+vYQ2FJaRCyzH4TEyKGTCVngzWD/SQ5U70/YDW29uG+ZhmBtrW
- u9RW0LpiZF6vp1UhtId4T/rt5ivsqxLy9k0evoxi86YpArxqckKciyYO5QndIAxLvajV
- b/Bt377CRr7I8BO0xMwv2vUVOV9z2v0ihYzc4lKG5UbT9DhSJGBQBTD3/NwIQynH7dpo
- 7nHuycfpsq60NBWavK99AtUJ9PgXuR7pkdBBpN3+cWeppam5B9UhDwogeH86Lw2g2KaY
- lWwRUuQ7UdS7lqbyOOw90ZKvrTU1y+zNub4H3DHxK/IM5HMc0RJW5PYuHPCmOo9ndK5s YQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31qg35d03s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 19 Jun 2020 14:32:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05JE9P1Y111498;
-        Fri, 19 Jun 2020 14:30:51 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 31q66vm3ga-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Jun 2020 14:30:51 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05JEUnOp008628;
-        Fri, 19 Jun 2020 14:30:49 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 19 Jun 2020 07:30:48 -0700
-Date:   Fri, 19 Jun 2020 17:30:41 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        Darren Trapp <darren.trapp@cavium.com>
-Cc:     GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@cavium.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: qla2xxx: Fix a condition in
- qla2x00_find_all_fabric_devs()
-Message-ID: <20200619143041.GD267142@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9656 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- bulkscore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006190106
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9656 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 mlxscore=0
- clxscore=1011 malwarescore=0 impostorscore=0 adultscore=0
- cotscore=-2147483648 lowpriorityscore=0 mlxlogscore=999 spamscore=0
- suspectscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2006190107
+        id S2405059AbgFSPlz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 11:41:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33830 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394008AbgFSPlf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 11:41:35 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E79D3C06174E;
+        Fri, 19 Jun 2020 08:41:34 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id gl26so10652572ejb.11;
+        Fri, 19 Jun 2020 08:41:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=KxptnYnfHSGRIej/uEjkXn1kN63Oa8BnOXMgrYh96nA=;
+        b=aM8guXAkFbP8SbiVfoTeNX1Po93NWpTkCHyQH3/TMvLM6y+M94MbhY7XQVb5A6FWKU
+         WcFUeoCbVe3+Kfx9nACDSw6EgPHcXpF8MyAutFzm+GLhkeuu8hJ3SEtRwRv0BWC5cSSI
+         k3fXrEQv0wD5EWm5weldeM6oH3PvARJ9Txys3P2Ak5lDMiuODgproasV+9PCtwYU0aQg
+         pIk4Or7iWk4jyLaP7JrBpqK4OhDzVGe2oIdavGra9sv+b3oT5ieEIH8Cr0QmRD/SFACD
+         pgTE7f4sxnRkNZ2nleLyVfbPnvIAvnLfcKKxWyPj/A/rZMGLRq1cx35Q4fCghxvL4Bks
+         vRbQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=KxptnYnfHSGRIej/uEjkXn1kN63Oa8BnOXMgrYh96nA=;
+        b=B6sW7ACZVIxAHabJCufy84M1Aa1U1b+fKq1kgZLyNkcrvKE/uPurMRV4BYK/l+rZCa
+         IuLZXqzsYCLaDZ3XFl2xjzGusSJy1pDZ7rku0EOyudqLUknPUeu7dbW/ArRuGr9+xrmt
+         Qnfa+kSIGtO+feL2r1Ly3Q+fIRt/rvqXg0nLZSJdsx5hyz0ZP8CXaFWtzeBmj9XdqAIf
+         Vc/TpN4ZlFwoe2iLwd/OZ3ynsXBGE81jjPDQIW7INOF3IYHvASFQqCYGtguBDbPhVAKX
+         bzdnGyO34S7RQc89YTmjosJjF+6Rnx97Lfx6ki7K66IXmhBqztgQJ5mzAMesLizEDJwJ
+         E0dQ==
+X-Gm-Message-State: AOAM532jG7xl8PBpoQ1LOdrRL52hbfz7qYRMx1zFFAf6iiUzXt/RKBhj
+        KqWFcbhXcejf0zbX3C8gfeU=
+X-Google-Smtp-Source: ABdhPJzVILVefkmEhKmRh72ZLo4ICm97ZqUhUpB3InsILsQztqPmR9tULsbSQlp77mYJCa0ypg2IxA==
+X-Received: by 2002:a17:906:39a:: with SMTP id b26mr4447391eja.204.1592581293647;
+        Fri, 19 Jun 2020 08:41:33 -0700 (PDT)
+Received: from ubuntu-laptop.micron.com ([165.225.203.62])
+        by smtp.gmail.com with ESMTPSA id ew9sm4986163ejb.121.2020.06.19.08.41.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Jun 2020 08:41:33 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org
+Cc:     beanhuo@micron.com
+Subject: [PATCH v2 1/2] scsi: remove scsi_sdb_cache
+Date:   Fri, 19 Jun 2020 17:41:16 +0200
+Message-Id: <20200619154117.10262-2-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200619154117.10262-1-huobean@gmail.com>
+References: <20200619154117.10262-1-huobean@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This code doesn't make sense unless the correct "fcport" was found.
+From: Bean Huo <beanhuo@micron.com>
 
-Fixes: 9dd9686b1419 ("scsi: qla2xxx: Add changes for devloss timeout in driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+After 'commit f664a3cc17b7 ("scsi: kill off the legacy IO path")',
+scsi_sdb_cache not be used any more, remove it.
+
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
-This is from static analysis and review.  I'm not super familiar with
-the code and I can't test it.  Please review it extra carefully.
+ drivers/scsi/scsi.c      |  3 ---
+ drivers/scsi/scsi_lib.c  | 15 ---------------
+ drivers/scsi/scsi_priv.h |  1 -
+ 3 files changed, 19 deletions(-)
 
- drivers/scsi/qla2xxx/qla_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 4576d3ae9937..2436a17f5cd9 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5944,7 +5944,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha)
- 			break;
- 		}
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 56c24a73e0c7..24619c3bebd5 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -754,9 +754,6 @@ static int __init init_scsi(void)
+ {
+ 	int error;
  
--		if (NVME_TARGET(vha->hw, fcport)) {
-+		if (found && NVME_TARGET(vha->hw, fcport)) {
- 			if (fcport->disc_state == DSC_DELETE_PEND) {
- 				qla2x00_set_fcport_disc_state(fcport, DSC_GNL);
- 				vha->fcport_count--;
+-	error = scsi_init_queue();
+-	if (error)
+-		return error;
+ 	error = scsi_init_procfs();
+ 	if (error)
+ 		goto cleanup_queue;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0ba7a65e7c8d..c47650f7f0d3 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -52,7 +52,6 @@
+ #define  SCSI_INLINE_SG_CNT  2
+ #endif
+ 
+-static struct kmem_cache *scsi_sdb_cache;
+ static struct kmem_cache *scsi_sense_cache;
+ static struct kmem_cache *scsi_sense_isadma_cache;
+ static DEFINE_MUTEX(scsi_sense_cache_mutex);
+@@ -1955,24 +1954,10 @@ void scsi_unblock_requests(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_unblock_requests);
+ 
+-int __init scsi_init_queue(void)
+-{
+-	scsi_sdb_cache = kmem_cache_create("scsi_data_buffer",
+-					   sizeof(struct scsi_data_buffer),
+-					   0, 0, NULL);
+-	if (!scsi_sdb_cache) {
+-		printk(KERN_ERR "SCSI: can't init scsi sdb cache\n");
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ void scsi_exit_queue(void)
+ {
+ 	kmem_cache_destroy(scsi_sense_cache);
+ 	kmem_cache_destroy(scsi_sense_isadma_cache);
+-	kmem_cache_destroy(scsi_sdb_cache);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 22b6585e28b4..d12ada035961 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -93,7 +93,6 @@ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
+ extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+-extern int scsi_init_queue(void);
+ extern void scsi_exit_queue(void);
+ extern void scsi_evt_thread(struct work_struct *work);
+ struct request_queue;
 -- 
-2.27.0
+2.17.1
 
