@@ -2,161 +2,115 @@ Return-Path: <SRS0=E1i/=AA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FBCFC433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:01:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF7CC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:14:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E80721835
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:01:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592582513;
-	bh=ETv2/IVQMXutub0remuOAhix575L/fyUUGoOmT5ULPM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=FX+LcbfpL/cypGr9u6Syl1iAFld4ulE0e7wqstk5Oq1uzyZ+ghhFHMYdUWkSODSYB
-	 fDwpFJs31sS/vZUTbA7wjAuOjVv2gXA2U1xs8KYMi9Pd9gLl4bQch9oVE2MczQ9TNm
-	 v8jKT1JaQpqXIGKq3pUrFMJZaG+BxidkjYl7fogI=
+	by mail.kernel.org (Postfix) with ESMTP id AAAF321707
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:14:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MnrHb+bh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394181AbgFSQBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 12:01:42 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:33714 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392228AbgFSQBl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 12:01:41 -0400
-Received: by mail-wr1-f66.google.com with SMTP id l11so10219054wru.0;
-        Fri, 19 Jun 2020 09:01:39 -0700 (PDT)
+        id S2391338AbgFSQOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 12:14:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56168 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390422AbgFSPDy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 11:03:54 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90BD2C06174E;
+        Fri, 19 Jun 2020 08:03:54 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id o26so7901835edq.0;
+        Fri, 19 Jun 2020 08:03:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=5ADrT7jFFeW309LoBL3RGIrTXmJjwCmJqXAIhYbchGM=;
+        b=MnrHb+bhJPIiNHeaCS8a/fPwOI6wld7b4KlPZ/oOMUF1zVfizNxUckSlCB9snRURSK
+         XzbrQM04uoK4hVMgFJuCq6xAqaGH9he+9+BmJvbRtPy7JD90CBG0/Ut8Kgszpie4M5fT
+         RZJDv+1XgM+fTfk67GkWVuvYpc84l7+E2xupZasgfuHwokTqnMpTmdNGDIMaxaiOhzRq
+         xwhEGmNzE8AMGlUD/gDuw8YkDsoFXC8nBY4G62nHezapFTsIECYROvYVuQW2yXWcNpgt
+         vsDouCqgOkmOLyP21fqBslVrlg9EJyrRAH9gUt9EXeo13gSdim3xku8UW9kfb4qMPyxH
+         8azg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=igRhbYLV+7PJ6N9DkBcYUmMXd50ZJc1tlq0/bt0/vSM=;
-        b=nXEjci27uYDnoG14W1QNAqoNXY4/B4lcikwcOWWT8xah2FV7c6zCaXca63OkQw2tYL
-         QHJOKqIcZh0PLCBc/TPsLlAaCN0tkc42l0fWMspGcYHZ9vt6Kn3z3Fnz9NTmQvWRDFLg
-         vXGTGsNZK4z6HvJV2eKYEcsLzk1w6AES21hjTMNlm4g1jNKCRZJ11cZr9Vff2SHiW8dX
-         urYMeLd9cbKN0aELd52Hu2CpdO9ZLJkh4UZttb33hQJ1xMz/XcNnqBoh5N9cYtwQinGx
-         EjFhjHS9fBf8bdakfVeeQWHblC31lZStkgRXuJxi8a6LKAFLzuqVSSbi3hhcSbpd4pEd
-         lczg==
-X-Gm-Message-State: AOAM5316dh20f99sfSFm7Sv9rRgAsKZmaBp/yA7Ype66BVwYclQFJsce
-        +AUN5rBcAvEoYfI01ZEsHR0=
-X-Google-Smtp-Source: ABdhPJy0TMbHM+GevwodxJNTOFiPbd2ph++ENu2/j8I0jK2Jsh2xokMWVgPO3ifJPex7Syt3C5rCQQ==
-X-Received: by 2002:a5d:5605:: with SMTP id l5mr4704895wrv.318.1592582498803;
-        Fri, 19 Jun 2020 09:01:38 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id o82sm7393169wmo.40.2020.06.19.09.01.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Jun 2020 09:01:37 -0700 (PDT)
-Date:   Fri, 19 Jun 2020 16:01:36 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Michael Kelley <mikelley@microsoft.com>,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 7/8] scsi: storvsc: Introduce the per-storvsc_device
- spinlock
-Message-ID: <20200619160136.2r34bdu26hxixv7l@liuwe-devbox-debian-v2>
-References: <20200617164642.37393-1-parri.andrea@gmail.com>
- <20200617164642.37393-8-parri.andrea@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200617164642.37393-8-parri.andrea@gmail.com>
-User-Agent: NeoMutt/20180716
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=5ADrT7jFFeW309LoBL3RGIrTXmJjwCmJqXAIhYbchGM=;
+        b=BVJfp3D5J9H/q5IGUPrkbKsWNtN0qV72NjrqHOYjN6BqgSu/dZ+uz+AxPGoc0W64/n
+         DOQtvziWBmopQroSxXa1XnhMZ087tiKtt5qlAIAWs1Y3G5wy/YOErFH2M8NDvli4mxBg
+         8vSWJ+SZKMZ0p5f+7THyDA/MFJrYrRjP0+xWtv0VZfGUiHTzLip+sZZftf7VtZUQz0wb
+         SPfcG1mTVEUVNTAD5VSrlzvDWtqbgOWFhNeoFs3eLmJvIZ4mhYUQIILsVZRkyQJ3Fxzq
+         GlQT2ss9gLPtDcIFVDkbhgJ74GNiX3Y5sJAcWSik+upbeP9Bp87TfQ1l2aTp17ttcy3J
+         Gprg==
+X-Gm-Message-State: AOAM531H25o0KRHyUuvavk2zjtjL4j96F1rHkeRJkrVML2p31gzEfIKL
+        h0Ls5T7ESKtmpYdfAm+sPeg=
+X-Google-Smtp-Source: ABdhPJz9sH1kJUPVEXJrf2QSDqlJenKhQdl0OzUME2Zssy3LTJ1qNCFvxtzlOKQSUuWKycy8K6RLMg==
+X-Received: by 2002:a50:f289:: with SMTP id f9mr3714154edm.188.1592579033304;
+        Fri, 19 Jun 2020 08:03:53 -0700 (PDT)
+Received: from ubuntu-laptop ([2a01:598:9900:aeb5:e489:2676:2097:fdba])
+        by smtp.googlemail.com with ESMTPSA id h9sm4929016ejc.96.2020.06.19.08.03.51
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 19 Jun 2020 08:03:52 -0700 (PDT)
+Message-ID: <dc0c3bcf8b77b838316a0c4a53fdddaa476dd0dc.camel@gmail.com>
+Subject: Re: [RFC PATCH ] scsi: remove scsi_sdb_cache
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     beanhuo@micron.com
+Date:   Fri, 19 Jun 2020 17:03:47 +0200
+In-Reply-To: <acdceada-b183-e41a-8645-aa3716b55236@acm.org>
+References: <20200619131042.10759-1-huobean@gmail.com>
+         <acdceada-b183-e41a-8645-aa3716b55236@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Cc SCSI maintainers
+Hi Bart
 
-This patch should go via the hyperv tree because a later patch is
-dependent on it. It requires and ack from SCSI maintainers though.
+Thanks.
 
-Thanks,
-Wei.
+On Fri, 2020-06-19 at 07:31 -0700, Bart Van Assche wrote:
+> On 2020-06-19 06:10, Bean Huo wrote:
+> > @@ -2039,7 +2024,6 @@ scsi_mode_select(struct scsi_device *sdev,
+> > int pf, int sp, int modepage,
+> >  		real_buffer[1] = data->medium_type;
+> >  		real_buffer[2] = data->device_specific;
+> >  		real_buffer[3] = data->block_descriptor_length;
+> > -	
+Here delete a blank line since there are multiple blank lines.
+> > 	
+> >  
+> >  		cmd[0] = MODE_SELECT;
+> >  		cmd[4] = len;
+> > @@ -2227,7 +2211,7 @@ scsi_device_set_state(struct scsi_device
+> > *sdev, enum scsi_device_state state)
+> >  			goto illegal;
+> >  		}
+> >  		break;
+> > -			
+> > +
 
-On Wed, Jun 17, 2020 at 06:46:41PM +0200, Andrea Parri (Microsoft) wrote:
-> storvsc uses the spinlock of the hv_device's primary channel to
-> serialize modifications of stor_chns[] performed by storvsc_do_io()
-> and storvsc_change_target_cpu(), when it could/should use a (per-)
-> storvsc_device spinlock: this change untangles the synchronization
-> mechanism for the (storvsc-specific) stor_chns[] array from the
-> "generic" VMBus code and data structures, clarifying the scope of
-> this synchronization mechanism.
+Here has trailing whitespace, delete it.
+
+> >  	case SDEV_RUNNING:
+> >  		switch (oldstate) {
+> >  		case SDEV_CREATED:
 > 
-> Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-> ---
->  drivers/scsi/storvsc_drv.c | 16 +++++++++++-----
->  1 file changed, 11 insertions(+), 5 deletions(-)
+> If these whitespace changes are left out, feel free to add:
 > 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 072ed87286578..8ff21e69a8be8 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -462,6 +462,11 @@ struct storvsc_device {
->  	 * Mask of CPUs bound to subchannels.
->  	 */
->  	struct cpumask alloced_cpus;
-> +	/*
-> +	 * Serializes modifications of stor_chns[] from storvsc_do_io()
-> +	 * and storvsc_change_target_cpu().
-> +	 */
-> +	spinlock_t lock;
->  	/* Used for vsc/vsp channel reset process */
->  	struct storvsc_cmd_request init_request;
->  	struct storvsc_cmd_request reset_request;
-> @@ -639,7 +644,7 @@ static void storvsc_change_target_cpu(struct vmbus_channel *channel, u32 old,
->  		return;
->  
->  	/* See storvsc_do_io() -> get_og_chn(). */
-> -	spin_lock_irqsave(&device->channel->lock, flags);
-> +	spin_lock_irqsave(&stor_device->lock, flags);
->  
->  	/*
->  	 * Determines if the storvsc device has other channels assigned to
-> @@ -676,7 +681,7 @@ static void storvsc_change_target_cpu(struct vmbus_channel *channel, u32 old,
->  	WRITE_ONCE(stor_device->stor_chns[new], channel);
->  	cpumask_set_cpu(new, &stor_device->alloced_cpus);
->  
-> -	spin_unlock_irqrestore(&device->channel->lock, flags);
-> +	spin_unlock_irqrestore(&stor_device->lock, flags);
->  }
->  
->  static void handle_sc_creation(struct vmbus_channel *new_sc)
-> @@ -1433,14 +1438,14 @@ static int storvsc_do_io(struct hv_device *device,
->  			}
->  		}
->  	} else {
-> -		spin_lock_irqsave(&device->channel->lock, flags);
-> +		spin_lock_irqsave(&stor_device->lock, flags);
->  		outgoing_channel = stor_device->stor_chns[q_num];
->  		if (outgoing_channel != NULL) {
-> -			spin_unlock_irqrestore(&device->channel->lock, flags);
-> +			spin_unlock_irqrestore(&stor_device->lock, flags);
->  			goto found_channel;
->  		}
->  		outgoing_channel = get_og_chn(stor_device, q_num);
-> -		spin_unlock_irqrestore(&device->channel->lock, flags);
-> +		spin_unlock_irqrestore(&stor_device->lock, flags);
->  	}
->  
->  found_channel:
-> @@ -1881,6 +1886,7 @@ static int storvsc_probe(struct hv_device *device,
->  	init_waitqueue_head(&stor_device->waiting_to_drain);
->  	stor_device->device = device;
->  	stor_device->host = host;
-> +	spin_lock_init(&stor_device->lock);
->  	hv_set_drvdata(device, stor_device);
->  
->  	stor_device->port_number = host->host_no;
-> -- 
-> 2.25.1
-> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
+Bean
+
