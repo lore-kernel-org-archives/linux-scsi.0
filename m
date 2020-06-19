@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74990C433E2
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 15:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06517C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 15:42:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 520DB20809
+	by mail.kernel.org (Postfix) with ESMTP id D845A20809
 	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 15:42:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aM8guXAk"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QZyWYcff"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405059AbgFSPlz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 11:41:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33830 "EHLO
+        id S2404848AbgFSPly (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 11:41:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394008AbgFSPlf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 11:41:35 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E79D3C06174E;
-        Fri, 19 Jun 2020 08:41:34 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id gl26so10652572ejb.11;
-        Fri, 19 Jun 2020 08:41:34 -0700 (PDT)
+        with ESMTP id S2394020AbgFSPlh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 11:41:37 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEB43C06174E;
+        Fri, 19 Jun 2020 08:41:36 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id dp18so10654524ejc.8;
+        Fri, 19 Jun 2020 08:41:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=KxptnYnfHSGRIej/uEjkXn1kN63Oa8BnOXMgrYh96nA=;
-        b=aM8guXAkFbP8SbiVfoTeNX1Po93NWpTkCHyQH3/TMvLM6y+M94MbhY7XQVb5A6FWKU
-         WcFUeoCbVe3+Kfx9nACDSw6EgPHcXpF8MyAutFzm+GLhkeuu8hJ3SEtRwRv0BWC5cSSI
-         k3fXrEQv0wD5EWm5weldeM6oH3PvARJ9Txys3P2Ak5lDMiuODgproasV+9PCtwYU0aQg
-         pIk4Or7iWk4jyLaP7JrBpqK4OhDzVGe2oIdavGra9sv+b3oT5ieEIH8Cr0QmRD/SFACD
-         pgTE7f4sxnRkNZ2nleLyVfbPnvIAvnLfcKKxWyPj/A/rZMGLRq1cx35Q4fCghxvL4Bks
-         vRbQ==
+        bh=DponZSTc3PXadFZ/Va5z+HlpHIhGzNlZ4rlMGnjJEz8=;
+        b=QZyWYcffTCxTAou4/XDL0wFs/ac5lDwo/8AznACPc3AmiBImc+1vq2iwTECxAuhJex
+         ILxAYIS7Ex3EoQiZMwOB3xhsl8aswr8UHePRXi+Nl/oqfinyXTGKJtrS8TKVKwBgxoWl
+         jPWPS/8nw6i3tmrT2b5pJ5lcNKgUus2kUTV6ZZNzx3vMudu8g04fHJBBLuafGVuq3ZV9
+         VPLQlbfV7P1HxJiwfRIT6gZzsnO2t6M5XfElFaZ+PedcGHKmknXmXZdFae8ceJOZU8n5
+         4BofWIMkQsw8X44nTMSHEJhL3nW2HqE7taPGMVvXjEPxPryPqSBPGZ+XccR8/gEbZacw
+         tI1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=KxptnYnfHSGRIej/uEjkXn1kN63Oa8BnOXMgrYh96nA=;
-        b=B6sW7ACZVIxAHabJCufy84M1Aa1U1b+fKq1kgZLyNkcrvKE/uPurMRV4BYK/l+rZCa
-         IuLZXqzsYCLaDZ3XFl2xjzGusSJy1pDZ7rku0EOyudqLUknPUeu7dbW/ArRuGr9+xrmt
-         Qnfa+kSIGtO+feL2r1Ly3Q+fIRt/rvqXg0nLZSJdsx5hyz0ZP8CXaFWtzeBmj9XdqAIf
-         Vc/TpN4ZlFwoe2iLwd/OZ3ynsXBGE81jjPDQIW7INOF3IYHvASFQqCYGtguBDbPhVAKX
-         bzdnGyO34S7RQc89YTmjosJjF+6Rnx97Lfx6ki7K66IXmhBqztgQJ5mzAMesLizEDJwJ
-         E0dQ==
-X-Gm-Message-State: AOAM532jG7xl8PBpoQ1LOdrRL52hbfz7qYRMx1zFFAf6iiUzXt/RKBhj
-        KqWFcbhXcejf0zbX3C8gfeU=
-X-Google-Smtp-Source: ABdhPJzVILVefkmEhKmRh72ZLo4ICm97ZqUhUpB3InsILsQztqPmR9tULsbSQlp77mYJCa0ypg2IxA==
-X-Received: by 2002:a17:906:39a:: with SMTP id b26mr4447391eja.204.1592581293647;
-        Fri, 19 Jun 2020 08:41:33 -0700 (PDT)
+        bh=DponZSTc3PXadFZ/Va5z+HlpHIhGzNlZ4rlMGnjJEz8=;
+        b=B+4cZGJTpuGxlzS+htlFz/yA3x0+YYSMk5LMAHxpL4Yxzl+js1YNeNWJ/7hO0QoiBn
+         9yFTk6ifl4Ty0Gr8towPk0q6g7+ENiYt5CUCktSRc+wVtkBsCmJTyVOp0wHnGr+8y4W9
+         /SJgVlxJQPi3D/OLEBOJoPvPH1mSFddUnvnziDiI1pRlFHknC6d3nXVRuQGjKjlz/RJf
+         BT2syRBcIafT1moiESCrHUPpkiGEHiIHEVlm5gDdw+F1M7+gSevsbcDgOhM0OkYRnUIL
+         1EIl3zCZyQdFVjvuqJUGV5UiJ8y1+Xc8wmTqkfjMY8xHpO8HjEDIRSbFJQXjt5V9svWY
+         K1jQ==
+X-Gm-Message-State: AOAM530YIEz1lRzUgR1aXJBY3kDPqbbavwtpHjUQ3d55bnML8HzJyueo
+        kaZH8v0EP0u/+uyjnaxm0lA=
+X-Google-Smtp-Source: ABdhPJwc5KBg86fF95A4Q+GvR1ansr7SgCbM42vcDpjhFxtXdUQn7fnpXSNMr7CNxA3gP5x3Tao2WQ==
+X-Received: by 2002:a17:906:f49:: with SMTP id h9mr4397827ejj.155.1592581295536;
+        Fri, 19 Jun 2020 08:41:35 -0700 (PDT)
 Received: from ubuntu-laptop.micron.com ([165.225.203.62])
-        by smtp.gmail.com with ESMTPSA id ew9sm4986163ejb.121.2020.06.19.08.41.31
+        by smtp.gmail.com with ESMTPSA id ew9sm4986163ejb.121.2020.06.19.08.41.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Jun 2020 08:41:33 -0700 (PDT)
+        Fri, 19 Jun 2020 08:41:35 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         bvanassche@acm.org
 Cc:     beanhuo@micron.com
-Subject: [PATCH v2 1/2] scsi: remove scsi_sdb_cache
-Date:   Fri, 19 Jun 2020 17:41:16 +0200
-Message-Id: <20200619154117.10262-2-huobean@gmail.com>
+Subject: [PATCH v2 2/2] scsi: fix coding style errors in scsi_lib.c
+Date:   Fri, 19 Jun 2020 17:41:17 +0200
+Message-Id: <20200619154117.10262-3-huobean@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200619154117.10262-1-huobean@gmail.com>
 References: <20200619154117.10262-1-huobean@gmail.com>
@@ -75,80 +75,133 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-After 'commit f664a3cc17b7 ("scsi: kill off the legacy IO path")',
-scsi_sdb_cache not be used any more, remove it.
+Delete trailing whitespace, multiple blank lines, and make
+switch/case be at the same indent.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi.c      |  3 ---
- drivers/scsi/scsi_lib.c  | 15 ---------------
- drivers/scsi/scsi_priv.h |  1 -
- 3 files changed, 19 deletions(-)
+ drivers/scsi/scsi_lib.c | 43 ++++++++++++++++++++---------------------
+ 1 file changed, 21 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 56c24a73e0c7..24619c3bebd5 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -754,9 +754,6 @@ static int __init init_scsi(void)
- {
- 	int error;
- 
--	error = scsi_init_queue();
--	if (error)
--		return error;
- 	error = scsi_init_procfs();
- 	if (error)
- 		goto cleanup_queue;
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0ba7a65e7c8d..c47650f7f0d3 100644
+index c47650f7f0d3..be8f5050f837 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -52,7 +52,6 @@
- #define  SCSI_INLINE_SG_CNT  2
- #endif
+@@ -389,7 +389,7 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		scsi_kick_queue(sdev->request_queue);
+ 		spin_lock_irqsave(shost->host_lock, flags);
+-	
++
+ 		scsi_device_put(sdev);
+ 	}
+  out:
+@@ -1455,18 +1455,18 @@ static void scsi_softirq_done(struct request *rq)
+ 	scsi_log_completion(cmd, disposition);
  
--static struct kmem_cache *scsi_sdb_cache;
- static struct kmem_cache *scsi_sense_cache;
- static struct kmem_cache *scsi_sense_isadma_cache;
- static DEFINE_MUTEX(scsi_sense_cache_mutex);
-@@ -1955,24 +1954,10 @@ void scsi_unblock_requests(struct Scsi_Host *shost)
+ 	switch (disposition) {
+-		case SUCCESS:
+-			scsi_finish_command(cmd);
+-			break;
+-		case NEEDS_RETRY:
+-			scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
+-			break;
+-		case ADD_TO_MLQUEUE:
+-			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+-			break;
+-		default:
+-			scsi_eh_scmd_add(cmd);
+-			break;
++	case SUCCESS:
++		scsi_finish_command(cmd);
++		break;
++	case NEEDS_RETRY:
++		scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
++		break;
++	case ADD_TO_MLQUEUE:
++		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
++		break;
++	default:
++		scsi_eh_scmd_add(cmd);
++		break;
+ 	}
  }
- EXPORT_SYMBOL(scsi_unblock_requests);
  
--int __init scsi_init_queue(void)
--{
--	scsi_sdb_cache = kmem_cache_create("scsi_data_buffer",
--					   sizeof(struct scsi_data_buffer),
--					   0, 0, NULL);
--	if (!scsi_sdb_cache) {
--		printk(KERN_ERR "SCSI: can't init scsi sdb cache\n");
--		return -ENOMEM;
--	}
--
--	return 0;
--}
--
- void scsi_exit_queue(void)
+@@ -2024,7 +2024,6 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
+ 		real_buffer[1] = data->medium_type;
+ 		real_buffer[2] = data->device_specific;
+ 		real_buffer[3] = data->block_descriptor_length;
+-		
+ 
+ 		cmd[0] = MODE_SELECT;
+ 		cmd[4] = len;
+@@ -2110,7 +2109,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		if (scsi_sense_valid(sshdr)) {
+ 			if ((sshdr->sense_key == ILLEGAL_REQUEST) &&
+ 			    (sshdr->asc == 0x20) && (sshdr->ascq == 0)) {
+-				/* 
++				/*
+ 				 * Invalid command operation code
+ 				 */
+ 				sdev->use_10_for_ms = 0;
+@@ -2119,7 +2118,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		}
+ 	}
+ 
+-	if(scsi_status_is_good(result)) {
++	if (scsi_status_is_good(result)) {
+ 		if (unlikely(buffer[0] == 0x86 && buffer[1] == 0x0b &&
+ 			     (modepage == 6 || modepage == 8))) {
+ 			/* Initio breakage? */
+@@ -2129,7 +2128,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 			data->device_specific = 0;
+ 			data->longlba = 0;
+ 			data->block_descriptor_length = 0;
+-		} else if(use_10_for_ms) {
++		} else if (use_10_for_ms) {
+ 			data->length = buffer[0]*256 + buffer[1] + 2;
+ 			data->medium_type = buffer[2];
+ 			data->device_specific = buffer[3];
+@@ -2212,7 +2211,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 			goto illegal;
+ 		}
+ 		break;
+-			
++
+ 	case SDEV_RUNNING:
+ 		switch (oldstate) {
+ 		case SDEV_CREATED:
+@@ -2497,7 +2496,7 @@ EXPORT_SYMBOL_GPL(sdev_evt_send_simple);
+  *	(which must be a legal transition).  When the device is in this
+  *	state, only special requests will be accepted, all others will
+  *	be deferred.  Since special requests may also be requeued requests,
+- *	a successful return doesn't guarantee the device will be 
++ *	a successful return doesn't guarantee the device will be
+  *	totally quiescent.
+  *
+  *	Must be called with user context, may sleep.
+@@ -2623,10 +2622,10 @@ int scsi_internal_device_block_nowait(struct scsi_device *sdev)
+ 			return err;
+ 	}
+ 
+-	/* 
++	/*
+ 	 * The device has transitioned to SDEV_BLOCK.  Stop the
+ 	 * block layer from calling the midlayer with this device's
+-	 * request queue. 
++	 * request queue.
+ 	 */
+ 	blk_mq_quiesce_queue_nowait(q);
+ 	return 0;
+@@ -2661,7 +2660,7 @@ static int scsi_internal_device_block(struct scsi_device *sdev)
+ 
+ 	return err;
+ }
+- 
++
+ void scsi_start_queue(struct scsi_device *sdev)
  {
- 	kmem_cache_destroy(scsi_sense_cache);
- 	kmem_cache_destroy(scsi_sense_isadma_cache);
--	kmem_cache_destroy(scsi_sdb_cache);
- }
- 
- /**
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 22b6585e28b4..d12ada035961 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -93,7 +93,6 @@ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
- extern void scsi_start_queue(struct scsi_device *sdev);
- extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
- extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
--extern int scsi_init_queue(void);
- extern void scsi_exit_queue(void);
- extern void scsi_evt_thread(struct work_struct *work);
- struct request_queue;
+ 	struct request_queue *q = sdev->request_queue;
 -- 
 2.17.1
 
