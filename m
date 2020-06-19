@@ -2,115 +2,101 @@ Return-Path: <SRS0=E1i/=AA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF7CC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EA26C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:19:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAAF321707
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:14:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4078E21707
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 16:19:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MnrHb+bh"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UbD+cIfd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391338AbgFSQOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 12:14:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56168 "EHLO
+        id S2394581AbgFSQTY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 12:19:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390422AbgFSPDy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 11:03:54 -0400
-Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90BD2C06174E;
-        Fri, 19 Jun 2020 08:03:54 -0700 (PDT)
-Received: by mail-ed1-x543.google.com with SMTP id o26so7901835edq.0;
-        Fri, 19 Jun 2020 08:03:54 -0700 (PDT)
+        with ESMTP id S2390746AbgFSQSY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 12:18:24 -0400
+Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80721C0613EE;
+        Fri, 19 Jun 2020 09:18:24 -0700 (PDT)
+Received: by mail-ed1-x541.google.com with SMTP id t21so8014919edr.12;
+        Fri, 19 Jun 2020 09:18:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=5ADrT7jFFeW309LoBL3RGIrTXmJjwCmJqXAIhYbchGM=;
-        b=MnrHb+bhJPIiNHeaCS8a/fPwOI6wld7b4KlPZ/oOMUF1zVfizNxUckSlCB9snRURSK
-         XzbrQM04uoK4hVMgFJuCq6xAqaGH9he+9+BmJvbRtPy7JD90CBG0/Ut8Kgszpie4M5fT
-         RZJDv+1XgM+fTfk67GkWVuvYpc84l7+E2xupZasgfuHwokTqnMpTmdNGDIMaxaiOhzRq
-         xwhEGmNzE8AMGlUD/gDuw8YkDsoFXC8nBY4G62nHezapFTsIECYROvYVuQW2yXWcNpgt
-         vsDouCqgOkmOLyP21fqBslVrlg9EJyrRAH9gUt9EXeo13gSdim3xku8UW9kfb4qMPyxH
-         8azg==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=66DS8cscbOrDDtJFLg4/sv1VZqtWg1mGwXAH3gSwi2w=;
+        b=UbD+cIfdXzYr/rZ1ERd4wfsIKJNa31io9WaMhqcq486ayiJe6jrTzIOa8ZTqLBisSd
+         O71oFljVG3Eay64l/d/sIbanCPTJaFIoCrl1bq8dG5d+itJ+cuOHhYsaMs4o7iVTQes+
+         NoslFybuA1UG8oJHUI53ftDzGHYJfJyDVVuzLXwo08spKLkJEdy+BYNgEURXCUb9B9FU
+         AXzNZPtQcjh7CKn9HzBCqt7i4HZjV/eQ8uRdrZBy8cGCauzoYTrPeRrpGM927qkldbfe
+         gZBduiPXxgKCOY2exRYSsMYn4s4QgtyMmRpDU6jpk2zV7w606zrJbbIUVvwTn6psGmoH
+         +Jsw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=5ADrT7jFFeW309LoBL3RGIrTXmJjwCmJqXAIhYbchGM=;
-        b=BVJfp3D5J9H/q5IGUPrkbKsWNtN0qV72NjrqHOYjN6BqgSu/dZ+uz+AxPGoc0W64/n
-         DOQtvziWBmopQroSxXa1XnhMZ087tiKtt5qlAIAWs1Y3G5wy/YOErFH2M8NDvli4mxBg
-         8vSWJ+SZKMZ0p5f+7THyDA/MFJrYrRjP0+xWtv0VZfGUiHTzLip+sZZftf7VtZUQz0wb
-         SPfcG1mTVEUVNTAD5VSrlzvDWtqbgOWFhNeoFs3eLmJvIZ4mhYUQIILsVZRkyQJ3Fxzq
-         GlQT2ss9gLPtDcIFVDkbhgJ74GNiX3Y5sJAcWSik+upbeP9Bp87TfQ1l2aTp17ttcy3J
-         Gprg==
-X-Gm-Message-State: AOAM531H25o0KRHyUuvavk2zjtjL4j96F1rHkeRJkrVML2p31gzEfIKL
-        h0Ls5T7ESKtmpYdfAm+sPeg=
-X-Google-Smtp-Source: ABdhPJz9sH1kJUPVEXJrf2QSDqlJenKhQdl0OzUME2Zssy3LTJ1qNCFvxtzlOKQSUuWKycy8K6RLMg==
-X-Received: by 2002:a50:f289:: with SMTP id f9mr3714154edm.188.1592579033304;
-        Fri, 19 Jun 2020 08:03:53 -0700 (PDT)
-Received: from ubuntu-laptop ([2a01:598:9900:aeb5:e489:2676:2097:fdba])
-        by smtp.googlemail.com with ESMTPSA id h9sm4929016ejc.96.2020.06.19.08.03.51
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 19 Jun 2020 08:03:52 -0700 (PDT)
-Message-ID: <dc0c3bcf8b77b838316a0c4a53fdddaa476dd0dc.camel@gmail.com>
-Subject: Re: [RFC PATCH ] scsi: remove scsi_sdb_cache
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     beanhuo@micron.com
-Date:   Fri, 19 Jun 2020 17:03:47 +0200
-In-Reply-To: <acdceada-b183-e41a-8645-aa3716b55236@acm.org>
-References: <20200619131042.10759-1-huobean@gmail.com>
-         <acdceada-b183-e41a-8645-aa3716b55236@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=66DS8cscbOrDDtJFLg4/sv1VZqtWg1mGwXAH3gSwi2w=;
+        b=bOC8jvOMtpz4hGKEoh80T3jylRBi5Q1OMfqPIme3tqcP5XNIZgrPWk/SSGIlhn0a1c
+         eeHFeFH4n0wSs/+jTMTnYB30yUM/kLnl+wSbKXeZz8Qrsi969WvK5ov1Y8FY0M7yo5GG
+         6c4zxgVpxvNn1AEXeBn0p7ez/omaOmSICpHQ5wqFTURoa4ztqtL1ustY8XB3hzCCtIEf
+         TIHdathNsfDGSbltl8LzW9QGkZD++mmxvMicX5Aj+fV34c1T4At1joGcO1zaBHW9C0e6
+         4lykitI1kHqYTG/rnNK5aRFrxqYG0WuPbY6O3lxyRwK4LBZRPUtHT3425DMPPPtghDZU
+         p14A==
+X-Gm-Message-State: AOAM530LxiVGzrBBNvzzYwaoWFSlSvLYYUrhsMt3N20BUuhgm+eizaqq
+        smACdVpsDiyjvHCAVj9xGm4=
+X-Google-Smtp-Source: ABdhPJw3hCgZvXVzgIXNddGxi5BWYv8GmLBWoEx0wtBhcQNXiKk07b1OLPTwdmsMcQdazl7s0yf5xA==
+X-Received: by 2002:a50:d55c:: with SMTP id f28mr3987366edj.87.1592583502476;
+        Fri, 19 Jun 2020 09:18:22 -0700 (PDT)
+Received: from andrea (ip-213-220-210-175.net.upcbroadband.cz. [213.220.210.175])
+        by smtp.gmail.com with ESMTPSA id jt16sm5059932ejb.57.2020.06.19.09.18.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Jun 2020 09:18:22 -0700 (PDT)
+Date:   Fri, 19 Jun 2020 18:18:13 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Wei Liu <wei.liu@kernel.org>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 7/8] scsi: storvsc: Introduce the per-storvsc_device
+ spinlock
+Message-ID: <20200619161813.GA1596681@andrea>
+References: <20200617164642.37393-1-parri.andrea@gmail.com>
+ <20200617164642.37393-8-parri.andrea@gmail.com>
+ <20200619160136.2r34bdu26hxixv7l@liuwe-devbox-debian-v2>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200619160136.2r34bdu26hxixv7l@liuwe-devbox-debian-v2>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart
-
-Thanks.
-
-On Fri, 2020-06-19 at 07:31 -0700, Bart Van Assche wrote:
-> On 2020-06-19 06:10, Bean Huo wrote:
-> > @@ -2039,7 +2024,6 @@ scsi_mode_select(struct scsi_device *sdev,
-> > int pf, int sp, int modepage,
-> >  		real_buffer[1] = data->medium_type;
-> >  		real_buffer[2] = data->device_specific;
-> >  		real_buffer[3] = data->block_descriptor_length;
-> > -	
-Here delete a blank line since there are multiple blank lines.
-> > 	
-> >  
-> >  		cmd[0] = MODE_SELECT;
-> >  		cmd[4] = len;
-> > @@ -2227,7 +2211,7 @@ scsi_device_set_state(struct scsi_device
-> > *sdev, enum scsi_device_state state)
-> >  			goto illegal;
-> >  		}
-> >  		break;
-> > -			
-> > +
-
-Here has trailing whitespace, delete it.
-
-> >  	case SDEV_RUNNING:
-> >  		switch (oldstate) {
-> >  		case SDEV_CREATED:
+On Fri, Jun 19, 2020 at 04:01:36PM +0000, Wei Liu wrote:
+> Cc SCSI maintainers
 > 
-> If these whitespace changes are left out, feel free to add:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> This patch should go via the hyperv tree because a later patch is
+> dependent on it. It requires and ack from SCSI maintainers though.
 
-Bean
+Right.  Sorry for the Cc: omission...  ;-/
 
+SCSI maintainers, please let me know if you prefer me to send you a new
+series with this patch (7/8) and the later/dependent hyperv patch (8/8).
+
+(1-6/8 of this series are hyperv-specific only and have been applied to
+the hyperv tree, so this would only 7-8/8 of this series out.)
+
+Thanks,
+
+  Andrea
