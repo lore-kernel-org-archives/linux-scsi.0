@@ -2,172 +2,165 @@ Return-Path: <SRS0=E1i/=AA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64978C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 08:16:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B1FC433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 13:11:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B74F2080C
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 08:16:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 267D220786
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Jun 2020 13:11:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VkGlO6Ux"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731286AbgFSIPy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 04:15:54 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:60624 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731022AbgFSIPo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Jun 2020 04:15:44 -0400
-Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id DCBC3BB5FDDBE129A4B3;
-        Fri, 19 Jun 2020 16:15:39 +0800 (CST)
-Received: from [10.133.219.224] (10.133.219.224) by
- DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
- 14.3.487.0; Fri, 19 Jun 2020 16:15:30 +0800
-From:   Hou Tao <houtao1@huawei.com>
-Subject: [bug report][megaraid_sas] On 3108 RADI1 read performance is improved
- when nr_requests is decreased
-To:     <linux-scsi@vger.kernel.org>,
-        Anand Lodnoor <anand.lodnoor@broadcom.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-CC:     Hannes Reinecke <hare@suse.de>, <martin.petersen@oracle.com>,
-        "houtao1@huawei.com" <houtao1@huawei.com>,
-        <linux-block@vger.kernel.org>
-Message-ID: <b87390d4-9981-41c2-7d5b-344ee3cf602a@huawei.com>
-Date:   Fri, 19 Jun 2020 16:15:30 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.8.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.133.219.224]
-X-CFilter-Loop: Reflected
+        id S1730380AbgFSNLI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 09:11:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38748 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725974AbgFSNLG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 09:11:06 -0400
+Received: from mail-ed1-x543.google.com (mail-ed1-x543.google.com [IPv6:2a00:1450:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4FCC06174E;
+        Fri, 19 Jun 2020 06:11:05 -0700 (PDT)
+Received: by mail-ed1-x543.google.com with SMTP id w7so7595659edt.1;
+        Fri, 19 Jun 2020 06:11:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=JP6uPpMAgWXgeAfAgXoDQSBoCbrd27SovfuK6ZrWwSg=;
+        b=VkGlO6UxVIVq50qO62el0VgTbxXcwkOviiDL5bINq0+1IFLBt9orv8eo19RfPfDNMA
+         LBeli6jfa3SY21Vv8XGflFLxzPb49ba6FFnjsfDQBz71Icnw3ygT5xFDaFr06Rm3fN3x
+         u6j5D2Iky8+vhG229y9fXT4rSCxtFxExMzCI84flIdh63Ov7h6Ogk1A21LlwYQL/jIx7
+         LE3RTqmaDcfcpSFo+BZGN/YqHs6ug48AldeXdeV4WFM2sK2BoiEI5YmHXeyAJIAiQu/B
+         SRTH3a+nQNuoE8tUEKUQUAEQzoBVUNAeg4T/9hPSjzkBmK1f53T1BbnIw8Ih0axLMGOE
+         J9RA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=JP6uPpMAgWXgeAfAgXoDQSBoCbrd27SovfuK6ZrWwSg=;
+        b=e4xlfBP/Sp70mIaB7++pwNPE9sQoUUZi3CX3FrriKEBOYf9JfUR8TIdJjpKx5hdJx5
+         D6RbmkPKpBNDRIHelSTV5eHrYsS+TfUuNkCsogCHMoIXlW1Q1WHY+gO9w3XIdiz/PWFk
+         QEed0lmbK3mBQzEf60Z/F7dUEb1cXr6L538dtFtYMVnaYlcrfe1V7fPY8EtEEk/qMDVY
+         rtD+PLflHN4IYbUZTQfF0R7cJVvPiPBIsWsOhTn4oPIEt2G2GTRRF3B78USO+OkdOzVF
+         xLJwTa+brh+U08NlIsHvUg2++FL7ZlfAsw9wx5hehvITpT4Y0bZBiIYKYEi0IBi1pUiv
+         MtJg==
+X-Gm-Message-State: AOAM532zOQ2cdaVh0J0aCEk7GQZURGM0LBaIdhIu0Rav8cJVo049IPih
+        9sIpldAuZwN1o9iP6E7T/WJxeEK51ynk3g==
+X-Google-Smtp-Source: ABdhPJyyNMLFYLoJfR+ir2N/SRgyBN/kGxj6gWtWg3ptOnlpJSoN2D3bOQ7Ub1Ayuf5EDgUH9y7xtg==
+X-Received: by 2002:a05:6402:6d6:: with SMTP id n22mr3367940edy.362.1592572264186;
+        Fri, 19 Jun 2020 06:11:04 -0700 (PDT)
+Received: from ubuntu-laptop.micron.com ([165.225.203.62])
+        by smtp.gmail.com with ESMTPSA id m30sm4610677eda.16.2020.06.19.06.11.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Jun 2020 06:11:03 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     beanhuo@micron.com, bvanassche@acm.org
+Subject: [RFC PATCH ] scsi: remove scsi_sdb_cache
+Date:   Fri, 19 Jun 2020 15:10:42 +0200
+Message-Id: <20200619131042.10759-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+From: Bean Huo <beanhuo@micron.com>
 
-Recently we encountered a read performance problem on LSI SAS-3 3108 RAID controller.
-The read performance is much better when nr_requests is set as 192 compared with 256,
-but after disabling the NoRA (No Readahead) feature of the hardware RAID1, there will
-be no difference between nr_requests=192 and nr_requests=256.
+After 'commit f664a3cc17b7 ("scsi: kill off the legacy IO path")',
+scsi_sdb_cache not be used any more, remove it.
 
-One scene is the direct read of one ext4 file with 8GB size. The ext4 fs is stacked
-on hardware RAID1 with 3.7TB size, and the RAID1 is composed of two HDDs.
-The queue_depth of RAID1 device is set as 256 by driver.
-
-fio --direct=1 --ioengine=libaio --group_reporting=1 --runtime=30 --bs=4k \
-	--name=1 --numjobs=1 --iodepth=512 --filesize=8G --directory=/tmp/sdd
-
-one ext4 file:
-IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
- RA    | 51k             | 51k             | 48k             |
- NoRA  | 47k             | 46k             | 47k             |
-
-Another scene is the direct read of two ext4 files with 4GB size.
-
-fio --direct=1 --ioengine=libaio --group_reporting=1 --runtime=30 --bs=4k \
-	--numjobs=2 --iodepth=256 --filesize=4G --directory=/tmp/sdd
-
-two ext4 files:
-IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
- RA    | 95.7k           | 94.5k           | 30.7k           |
- NoRA  | 27.3k           | 27.1k           | 27.2k           |
-
-These results show RA feature can boost the read performance, but when nr_requests
-is increased, performance is degraded.
-
-However when using a JBOD setup on HDD which has the same model as the HDD
-in RAID1 setup, there is no such problem.
-
-one ext4 file:
-IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
-       | 50k             | 50.4k           | 50.5            |
-
-two ext4 files:
-IOPS   | nr_requests=128 | nr_requests=192 | nr_requests=256 |
-       | 46.5k           | 46.3k           | 46.0k           |
-
-So is the performance degradation a known issue of the RAID1 RA feature,
-or is there other explanation for it ?
-
-Regards,
-Tao
-
+Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
-Other details of test environment:
+ drivers/scsi/scsi.c      |  3 ---
+ drivers/scsi/scsi_lib.c  | 18 +-----------------
+ drivers/scsi/scsi_priv.h |  1 -
+ 3 files changed, 1 insertion(+), 21 deletions(-)
 
-(1) linux kernel version
-5.6.15
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 56c24a73e0c7..24619c3bebd5 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -754,9 +754,6 @@ static int __init init_scsi(void)
+ {
+ 	int error;
+ 
+-	error = scsi_init_queue();
+-	if (error)
+-		return error;
+ 	error = scsi_init_procfs();
+ 	if (error)
+ 		goto cleanup_queue;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0ba7a65e7c8d..3fadfe9447e8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -52,7 +52,6 @@
+ #define  SCSI_INLINE_SG_CNT  2
+ #endif
+ 
+-static struct kmem_cache *scsi_sdb_cache;
+ static struct kmem_cache *scsi_sense_cache;
+ static struct kmem_cache *scsi_sense_isadma_cache;
+ static DEFINE_MUTEX(scsi_sense_cache_mutex);
+@@ -1955,24 +1954,10 @@ void scsi_unblock_requests(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_unblock_requests);
+ 
+-int __init scsi_init_queue(void)
+-{
+-	scsi_sdb_cache = kmem_cache_create("scsi_data_buffer",
+-					   sizeof(struct scsi_data_buffer),
+-					   0, 0, NULL);
+-	if (!scsi_sdb_cache) {
+-		printk(KERN_ERR "SCSI: can't init scsi sdb cache\n");
+-		return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ void scsi_exit_queue(void)
+ {
+ 	kmem_cache_destroy(scsi_sense_cache);
+ 	kmem_cache_destroy(scsi_sense_isadma_cache);
+-	kmem_cache_destroy(scsi_sdb_cache);
+ }
+ 
+ /**
+@@ -2039,7 +2024,6 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
+ 		real_buffer[1] = data->medium_type;
+ 		real_buffer[2] = data->device_specific;
+ 		real_buffer[3] = data->block_descriptor_length;
+-		
+ 
+ 		cmd[0] = MODE_SELECT;
+ 		cmd[4] = len;
+@@ -2227,7 +2211,7 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
+ 			goto illegal;
+ 		}
+ 		break;
+-			
++
+ 	case SDEV_RUNNING:
+ 		switch (oldstate) {
+ 		case SDEV_CREATED:
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 22b6585e28b4..d12ada035961 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -93,7 +93,6 @@ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
+ extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+-extern int scsi_init_queue(void);
+ extern void scsi_exit_queue(void);
+ extern void scsi_evt_thread(struct work_struct *work);
+ struct request_queue;
+-- 
+2.17.1
 
-(2) block setup
-
-device/queue_depth:256
-queue/scheduler:[mq-deadline] kyber bfq none
-
-(3) driver version
-megasas: 07.713.01.00-rc1
-[    3.302270] megasas: 07.713.01.00-rc1
-[    3.302606] megaraid_sas 0000:1c:00.0: BAR:0x1  BAR's base_addr(phys):0x00000000a3500000  mapped virt_addr:0x00000000af230875
-[    3.302608] megaraid_sas 0000:1c:00.0: FW now in Ready state
-[    3.302610] megaraid_sas 0000:1c:00.0: 63 bit DMA mask and 32 bit consistent mask
-[    3.302965] megaraid_sas 0000:1c:00.0: firmware supports msix        : (96)
-[    3.305024] megaraid_sas 0000:1c:00.0: requested/available msix 73/73
-[    3.305028] megaraid_sas 0000:1c:00.0: current msix/online cpus      : (73/72)
-[    3.305029] megaraid_sas 0000:1c:00.0: RDPQ mode     : (disabled)
-[    3.305031] megaraid_sas 0000:1c:00.0: Current firmware supports maximum commands: 928        LDIO threshold: 0
-[    3.305362] megaraid_sas 0000:1c:00.0: Configured max firmware commands: 927
-[    3.308155] megaraid_sas 0000:1c:00.0: Performance mode :Latency
-[    3.308156] megaraid_sas 0000:1c:00.0: FW supports sync cache        : Yes
-[    3.308161] megaraid_sas 0000:1c:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-[    3.352112] megaraid_sas 0000:1c:00.0: FW provided supportMaxExtLDs: 1       max_lds: 64
-[    3.352113] megaraid_sas 0000:1c:00.0: controller type       : MR(1024MB)
-[    3.352114] megaraid_sas 0000:1c:00.0: Online Controller Reset(OCR)  : Enabled
-[    3.352114] megaraid_sas 0000:1c:00.0: Secure JBOD support   : Yes
-[    3.352115] megaraid_sas 0000:1c:00.0: NVMe passthru support : No
-[    3.352115] megaraid_sas 0000:1c:00.0: FW provided TM TaskAbort/Reset timeout        : 0 secs/0 secs
-[    3.352116] megaraid_sas 0000:1c:00.0: JBOD sequence map support     : Yes
-[    3.352117] megaraid_sas 0000:1c:00.0: PCI Lane Margining support    : No
-[    3.375590] megaraid_sas 0000:1c:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
-[    3.375591] megaraid_sas 0000:1c:00.0: INIT adapter done
-[    3.388987] megaraid_sas 0000:1c:00.0: pci id                : (0x1000)/(0x005d)/(0x19e5)/(0xd207)
-[    3.388988] megaraid_sas 0000:1c:00.0: unevenspan support    : no
-[    3.388988] megaraid_sas 0000:1c:00.0: firmware crash dump   : yes
-[    3.388989] megaraid_sas 0000:1c:00.0: JBOD sequence map     : enabled
-
-(4) megaraid firmware version
-
-Product Name = SAS3108
-FW Package Build = 24.16.0-0106
-BIOS Version = 6.32.02.0_4.17.08.00_0x06150500
-FW Version = 4.660.00-8102
-Driver Name = megaraid_sas
-Driver Version = 07.713.01.00-rc1
-Current Personality = RAID-Mode
-
-(5) hardware RAID1 setup
-
--------------------------------------------------------------
-DG/VD TYPE  State Access Consist Cache Cac sCC     Size Name
--------------------------------------------------------------
-1/2   RAID1 Optl  RW     Yes     RWTD  -   ON  3.637 TB
--------------------------------------------------------------
-
------------------------------------------------------------------------
-EID:Slt DID State DG     Size Intf Med SED PI SeSz Model       Sp Type
------------------------------------------------------------------------
-0:5       6 Onln   1 3.637 TB SATA HDD N   N  512B MG04ACA400N U  -
-0:6       8 Onln   1 3.637 TB SATA HDD N   N  512B MG04ACA400N U  -
------------------------------------------------------------------------
-
-(6) hardware JBOD setup
-
------------------------------------------------------------------------
-EID:Slt DID State DG     Size Intf Med SED PI SeSz Model       Sp Type
------------------------------------------------------------------------
-0:4       7 JBOD  -  3.638 TB SATA HDD N   N  512B MG04ACA400N U  -
------------------------------------------------------------------------
