@@ -2,102 +2,96 @@ Return-Path: <SRS0=CpYn=AB=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC461C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Jun 2020 03:28:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA355C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Jun 2020 03:51:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9886923123
-	for <linux-scsi@archiver.kernel.org>; Sat, 20 Jun 2020 03:28:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 913C622A85
+	for <linux-scsi@archiver.kernel.org>; Sat, 20 Jun 2020 03:51:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kn5Ey95Y"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aRq40Yrz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732754AbgFTD2z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Jun 2020 23:28:55 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:59956 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732724AbgFTD2z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 23:28:55 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05K3Slbe127305;
-        Sat, 20 Jun 2020 03:28:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=LcF2q6oMmSa7YtKuR3BDORedAB+bdACVBYOQFoloR6M=;
- b=kn5Ey95Y5WxBO5UtguFy9Je3O7RnB9jHZHGGAQ/em5T6QadCownM5i9SJderYyyb2TP6
- L8mFeDq9xk+EHjfWVRRdVdueRJm182WqyxW7ehfh1D54i9R8ooFKKxvMcpwvL5tb8nOE
- 6YGJTTciM4QTlpaQChAV4Piw671T1IqCHeLFLVGxceK18gbsLmcY7duxB1OGBTFW2m8X
- 4LxETc5Qr2Yhg9y8TmF2nt5AhXl9RzrMZW5PPZBqqDzcqRBUkC9qX0DJcg8A0p0uzHEp
- 2pT5fG/5x/PRdKMZar03Bmn0eolyj5ZRi15A+FZSMtpxwo08WEgo5XpafC52S9lzzfGZ Kw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 31qg35fdgc-1
+        id S1726751AbgFTDvb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Jun 2020 23:51:31 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44960 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725290AbgFTDva (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jun 2020 23:51:30 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05K3hGS9044000;
+        Sat, 20 Jun 2020 03:51:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=N5U1WxM+JpgZfuqkIOoNIcBd1VwkSQEqb7cWqK8s+tY=;
+ b=aRq40YrzNovRYbhSNGqvGNE/b9RC2VwMamxYgaYqWAs2VFhQKGq4VxidfbgIzYqEqE7/
+ twGBpLLt6LWfOYOAHVIHTYzFvfuNqdkuIyZoe89eA3OobdAdpwpWCCpq7l+ixt6GxDHP
+ UCsXKAeUwknSUbPhZNVfK7s9jViLJ0ZGIjrLLXgpTxh6miYTnY/oqf6oqda6DAsYzcX9
+ 3/AdJKxJP/dZhUn3GH56Uii1u8QGrJuBJwLP3LCXYL1YYLTv4mNnt7Os5sFAhuQG1n1W
+ InHzTRZBIZEX2xzae7/ydsx9RRGWRw3TO512auaZMl7nSZPxkM84OCyj4+PDb0e4dBWO fw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 31s9vqr2vb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 20 Jun 2020 03:28:47 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05K3JH9I035722;
-        Sat, 20 Jun 2020 03:26:46 GMT
+        Sat, 20 Jun 2020 03:51:16 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05K3hSPV065100;
+        Sat, 20 Jun 2020 03:51:15 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 31s8g8c4wf-1
+        by aserp3020.oracle.com with ESMTP id 31sa8yjumw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 20 Jun 2020 03:26:46 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05K3Qi5H011093;
-        Sat, 20 Jun 2020 03:26:45 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        Sat, 20 Jun 2020 03:51:15 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05K3pChR020650;
+        Sat, 20 Jun 2020 03:51:12 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 19 Jun 2020 20:26:44 -0700
+        with ESMTP ; Fri, 19 Jun 2020 20:17:51 -0700
+To:     Avri Altman <avri.altman@wdc.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>
+Subject: Re: [PATCH v2 0/3] Inline Encryption support for UFS
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     bvanassche@acm.org, jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bean Huo <huobean@gmail.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        beanhuo@micron.com
-Subject: Re: [PATCH v2 0/2] scsi: remove scsi_sdb_cache
-Date:   Fri, 19 Jun 2020 23:26:37 -0400
-Message-Id: <159262354734.7800.4948661939239497553.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200619154117.10262-1-huobean@gmail.com>
-References: <20200619154117.10262-1-huobean@gmail.com>
+Organization: Oracle Corporation
+Message-ID: <yq1a70yh1f3.fsf@ca-mkp.ca.oracle.com>
+References: <20200618024736.97207-1-satyat@google.com>
+Date:   Fri, 19 Jun 2020 23:17:49 -0400
+In-Reply-To: <20200618024736.97207-1-satyat@google.com> (Satya Tangirala's
+        message of "Thu, 18 Jun 2020 02:47:33 +0000")
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9657 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 malwarescore=0
- phishscore=0 mlxlogscore=999 spamscore=0 adultscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 adultscore=0
+ malwarescore=0 spamscore=0 mlxlogscore=697 mlxscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006200022
+ definitions=main-2006200024
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9657 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 mlxscore=0
- clxscore=1015 malwarescore=0 impostorscore=0 adultscore=0
- cotscore=-2147483648 lowpriorityscore=0 mlxlogscore=999 spamscore=0
- suspectscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2006200022
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1011
+ malwarescore=0 lowpriorityscore=0 suspectscore=1 priorityscore=1501
+ mlxlogscore=731 mlxscore=0 phishscore=0 cotscore=-2147483648 spamscore=0
+ adultscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2006200024
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 19 Jun 2020 17:41:15 +0200, Bean Huo wrote:
 
-> Changelog:
-> v1 -- v2:
->     1. split patch
->     2. fix more coding errors in the scsi_lib.c
-> 
-> Bean Huo (2):
->   scsi: remove scsi_sdb_cache
->   scsi: fix coding style errors in scsi_lib.c
-> 
-> [...]
+Avri,
 
-Applied to 5.9/scsi-queue, thanks!
+> This patch series adds support for inline encryption to UFS using
+> the inline encryption support in the block layer. It follows the JEDEC
+> UFSHCI v2.1 specification, which defines inline encryption for UFS.
 
-[1/2] scsi: core: Remove scsi_sdb_cache
-      https://git.kernel.org/mkp/scsi/c/71df6fb976c3
-[2/2] scsi: core: Fix formatting errors in scsi_lib.c
-      https://git.kernel.org/mkp/scsi/c/4c7b4d63273d
+I'd appreciate it if you could review this series.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
