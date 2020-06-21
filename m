@@ -2,136 +2,166 @@ Return-Path: <SRS0=/9Oe=AC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9838C433E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:50:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D142C433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:54:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEF8D206E2
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:50:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0094725228
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:54:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kali.org header.i=@kali.org header.b="DuV+Hv67"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mivpMRmf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730474AbgFURua (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Jun 2020 13:50:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35606 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730481AbgFURua (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2020 13:50:30 -0400
-Received: from mail-oo1-xc41.google.com (mail-oo1-xc41.google.com [IPv6:2607:f8b0:4864:20::c41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBCBFC061795
-        for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2020 10:50:29 -0700 (PDT)
-Received: by mail-oo1-xc41.google.com with SMTP id k7so2893156ooo.12
-        for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2020 10:50:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kali.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=Z6fzJhAJ321ixT62OQUqlN+rS3fNSQjyBcE/UbACpjY=;
-        b=DuV+Hv67MaBq/Ob9oSfvtuHDVbHw+hTc1Rh2pjsk3L2pz2XMiMqoE3QJEm3HSaw1r9
-         c1YeAShi164lcWNcHfksX1W4SQxanHh7P+HY+cg9U1tkSOyxtZxuSpql8vQVmXMMeqkp
-         GGr6GihsauMjg+brMyPGAwjLpg6i+n5JEBe3aP8NTrRh7jYAMldFWzELXU+jw+X2pbID
-         /cE7vM75UQ/jkR9QOC2PFwCnWYY4LXfgxq4J5sCHpZ+EA6mokiRQLPUQulEVukoGZs1+
-         naCfyaX3MB20rZ5dXp+tJ8NcqIuCvwxEaHqb+7pZtZRwUirJcEi61G7Ca3TeHPPLRiio
-         3zAg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=Z6fzJhAJ321ixT62OQUqlN+rS3fNSQjyBcE/UbACpjY=;
-        b=d6pI495c7UGR3W9uXPB/d0lPscb6XfWtecA8RuMsCgxhzG13rHiiy/JzrTh54Di5d/
-         FgDc81inF6jj8GyNAZ70AbfW4iGg6QrlnDj/LO6mogSDpUvThCAvZ4OkLYzkeQzT6c1U
-         YpYSIxt6aDsO5M8HyyxeGFz3R5Lq7fWANodT4G+NKVV/hfL/zPlJHqZmwnk3V0o/8ETa
-         5Mnt+JVVbzsjt8gkMf00FTrzZiz+XuMrEbvr5Ts3c881hKna4YhoygVP3i7KXSiEs7vU
-         REMJBpNFqlQIku178QrP6WnwACmwZKlYa98qfpBL4iJE7DswqE9hskieJe42X+8Cc+At
-         IDBQ==
-X-Gm-Message-State: AOAM530EJNNXJ8vwhkHFBEAAcOEzR+DDPEFvjtElnPrDCUAGum61D18g
-        Tqp98T8QZgunXjWRO3VL5fR56w==
-X-Google-Smtp-Source: ABdhPJxCbibHRQuCBo8z043+guNjnBrsjVmhvo/gNbpQNm3dzjFOs/kMOstmC4c83XVlt+0qkUZo8A==
-X-Received: by 2002:a4a:ca8b:: with SMTP id x11mr11267088ooq.83.1592761828953;
-        Sun, 21 Jun 2020 10:50:28 -0700 (PDT)
-Received: from Steevs-MBP.hackershack.net (cpe-173-175-113-3.satx.res.rr.com. [173.175.113.3])
-        by smtp.gmail.com with ESMTPSA id a9sm2733424otr.15.2020.06.21.10.50.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 21 Jun 2020 10:50:28 -0700 (PDT)
-Subject: Re: [PATCH v1 1/3] scsi: ufs: add write booster feature support
-To:     Rob Clark <robdclark@gmail.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Subhash Jadavani <subhashj@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1586374414.git.asutoshd@codeaurora.org>
- <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
- <CAF6AEGvgmfYoybv4XMVVH85fGMr-eDfpzxdzkFWCx-2N5PEw2w@mail.gmail.com>
- <SN6PR04MB46402FD7981F9FCA2111AB37FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
- <20200621075539.GK128451@builder.lan>
- <CAF6AEGuG3XAqN_sedxk9GRm_9yK+a4OH56CZPmbHx+SW-FNVPQ@mail.gmail.com>
-From:   Steev Klimaszewski <steev@kali.org>
-Message-ID: <ba3873e3-75e0-a55f-6a93-d7d8df4da0e9@kali.org>
-Date:   Sun, 21 Jun 2020 12:50:27 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.9.0
+        id S1730520AbgFURyl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Jun 2020 13:54:41 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:63695 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730485AbgFURyk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2020 13:54:40 -0400
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200621175436epoutp045e7f30a17fa2c61585182dd3b526720f~aoKuHOruZ1713817138epoutp04V
+        for <linux-scsi@vger.kernel.org>; Sun, 21 Jun 2020 17:54:36 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200621175436epoutp045e7f30a17fa2c61585182dd3b526720f~aoKuHOruZ1713817138epoutp04V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1592762076;
+        bh=sMQfHlL5WKZfNlTa+has0Lg2mADa798q36HwDttq6B4=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=mivpMRmflPaGQ5fP0EY6ay0rVIANhgu41TDmFcy55v7xNWd8NjeUCFux/u9dsumUd
+         j4bCui7TX3J+AfVIUzCTxYlqquN+wfTPZvVxl3tzVud27zP8tH7GXOtdYHcasjizSp
+         opOuboRZv9qXIjrI/8sHhpw4fGgv1+pw6tLAjmOQ=
+Received: from epsmges5p1new.samsung.com (unknown [182.195.42.73]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20200621175435epcas5p4b2a74c1c8a408492bc70c545dd5d35b9~aoKtAIEDM1252612526epcas5p4I;
+        Sun, 21 Jun 2020 17:54:35 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        56.FF.09467.BDE9FEE5; Mon, 22 Jun 2020 02:54:35 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20200621175434epcas5p4f6d89121ecdc949fb8283f76e1cd115f~aoKsE1XTn3152431524epcas5p41;
+        Sun, 21 Jun 2020 17:54:34 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200621175434epsmtrp2b3835003f4f1aa0cb5f9f7a8d9d31154~aoKsEMsJt2446824468epsmtrp27;
+        Sun, 21 Jun 2020 17:54:34 +0000 (GMT)
+X-AuditID: b6c32a49-a29ff700000024fb-34-5eef9edbf403
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2A.47.08303.ADE9FEE5; Mon, 22 Jun 2020 02:54:34 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200621175432epsmtip29c090758dee0a46e97580180d13277ce~aoKqHYScd1238412384epsmtip2b;
+        Sun, 21 Jun 2020 17:54:32 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        "'Satya Tangirala'" <satyat@google.com>, <asutoshd@codeaurora.org>
+Cc:     <linux-scsi@vger.kernel.org>,
+        "'Barani Muthukumaran'" <bmuthuku@qti.qualcomm.com>,
+        "'Kuohong Wang'" <kuohong.wang@mediatek.com>,
+        "'Kim Boojin'" <boojin.kim@samsung.com>
+In-Reply-To: <SN6PR04MB4640005BEC3EE690CB904298FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
+Subject: RE: [PATCH v2 0/3] Inline Encryption support for UFS
+Date:   Sun, 21 Jun 2020 23:24:30 +0530
+Message-ID: <000001d647f5$05a494c0$10edbe40$@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <CAF6AEGuG3XAqN_sedxk9GRm_9yK+a4OH56CZPmbHx+SW-FNVPQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIx0Plgo8urqRvoCcKHhN3vSK1llAHhF8qPAXMuPMcBtvbalagD6w/A
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrMKsWRmVeSWpSXmKPExsWy7bCmhu7tee/jDLpey1vsbTvBbvHy51U2
+        i5VbHjFbvDn5h82i9f8rZovu6zvYLJYf/8dk0b/6LpsDh8flvl4mjwWbSj1aTu5n8fj49BaL
+        x6Kpzxg9+rasYvT4vEnOo/1AN1MARxSXTUpqTmZZapG+XQJXxvJ709kK7vNUrPv0irGBcRJX
+        FyMnh4SAicSEna9Yuxi5OIQEdjNKvJ22nRnC+cQo8WH2MnYI5zOjxN9/l5m6GDnAWv6cFoaI
+        72KU2L2zH6rjDaPE885PzCBz2QR0JXYsbmMDSYgILGOUePltLxOIwyywAWjux2WMIFWcArES
+        vydfBrOFBWwlFp+cDNbNIqAq8eTQAlYQm1fAUuLqkUNMELagxMmZT1hAbGYBeYntb+cwQ3yh
+        IPHz6TKwehEBN4lrm86zQ9SISxz92QN2noTAAQ6Jho+noRpcJI5u38sKYQtLvDq+hR3ClpL4
+        /G4vG8Sf2RI9u4whwjUSS+cdY4Gw7SUOXJnDAlLCLKApsX6XPsQqPone30+gIcQr0dEmBFGt
+        KtH87ipUp7TExO5uqKUeEks/T2CdwKg4C8ljs5A8NgvJA7MQli1gZFnFKJlaUJybnlpsWmCY
+        l1quV5yYW1yal66XnJ+7iRGcrrQ8dzDeffBB7xAjEwfjIUYJDmYlEd7XAe/ihHhTEiurUovy
+        44tKc1KLDzFKc7AoifMq/TgTJySQnliSmp2aWpBaBJNl4uCUamDqNXQ9MG1bc6m2XWv2p0z1
+        l0ZLRDe12+7XmHlRm2njLG2d0hJmk8dmUzUCA5MuXzZ76Jq/5vjC2zOXuJ3+PnHfI7uN/5gi
+        tIvZRc8JeJ3YM0mRhVVZTXHlSfdNs+N6ctS25om1ymdpxa9IDtK62WLpVttl8MdKqn2d+eGO
+        1IsyrA7LX/5+8ln2Z06iv3bp9L6s+kf+/dHzUjd/OqW8w3LPza+XJbOFv3zY+SGpL/f5u1VN
+        NgmfZq7+4c56WO2O2tcnr/KvSxf9eHfEruXE3ZTrmnsrX5/QS1eKrtuwOPa5/q/GxzmrOB9O
+        ChZx36ZzjDfLLemu7Vu9xs6DF98dqN94sqRlYn57k+e/RQL/2u4rsRRnJBpqMRcVJwIARPn7
+        t8YDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprGIsWRmVeSWpSXmKPExsWy7bCSvO6tee/jDPa+lrXY23aC3eLlz6ts
+        Fiu3PGK2eHPyD5tF6/9XzBbd13ewWSw//o/Jon/1XTYHDo/Lfb1MHgs2lXq0nNzP4vHx6S0W
+        j0VTnzF69G1ZxejxeZOcR/uBbqYAjigum5TUnMyy1CJ9uwSujOX3prMV3OepWPfpFWMD4ySu
+        LkYODgkBE4k/p4W7GLk4hAR2MEqs2jOfsYuREyguLXF94wR2CFtYYuW/5+wQRa8YJU79/8AM
+        kmAT0JXYsbiNDSQhIrCCUeLS55ksIA6zwCZGibt9IKNAWhqYJO5eX8QK0sIpECvxe/JlsB3C
+        ArYSi09OBhvFIqAq8eTQArAaXgFLiatHDjFB2IISJ2c+YQG5lVlAT6JtI1grs4C8xPa3c5gh
+        zlOQ+Pl0GViriICbxLVN59khasQljv7sYZ7AKDwLyaRZCJNmIZk0C0nHAkaWVYySqQXFuem5
+        xYYFRnmp5XrFibnFpXnpesn5uZsYwVGnpbWDcc+qD3qHGJk4GA8xSnAwK4nwvg54FyfEm5JY
+        WZValB9fVJqTWnyIUZqDRUmc9+ushXFCAumJJanZqakFqUUwWSYOTqkGpg0Sy7cejz9k6392
+        rqAo04d53keunzt597K33ea/L1IO6wUe+6uS6PG3b/7k5zdWv/19d8fsVYbe7Cyd/n+Y7oe0
+        JuZNdH2XU3+R+UX/ws2PNVIKn2n5isWW8MvJ6i1eduJ41mL3p+uXnPv0VvlMX13RDt7Kxqqj
+        TTP2HbGed0zOvOLKzlkK8hUV94ONo/b9+pkR8+ja76aCRN4LWtMvLmjz2abd8uq03xJfadsj
+        857PyLt1hif71IHjb8zrarmWvYuTYn77mrUrd+2JXTf/yvK7s1yIjLjyOcIppYaxe63NUpZL
+        S1ZO2Sc4w+FC+8+lntv9Yp4Vti/5MWMzl+v9G3oxEQx2Sd6WfNNnn1DXX5WrxFKckWioxVxU
+        nAgA96DAoikDAAA=
+X-CMS-MailID: 20200621175434epcas5p4f6d89121ecdc949fb8283f76e1cd115f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200621123523epcas5p43bf94789149e6a49a4f9c18b10e1ef37
+References: <20200618024736.97207-1-satyat@google.com>
+        <yq1a70yh1f3.fsf@ca-mkp.ca.oracle.com>
+        <CGME20200621123523epcas5p43bf94789149e6a49a4f9c18b10e1ef37@epcas5p4.samsung.com>
+        <SN6PR04MB4640005BEC3EE690CB904298FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Thanks Avri for CCing me.
 
-On 6/21/20 11:50 AM, Rob Clark wrote:
-> This looks like a device issue to be taken with the flash vendor:
->> There's no way for a end-user to file a bug report with the flash vendor
->> on a device bought from an OEM and even if they would accept the bug
->> report they wouldn't re-provision the flash in an shipped device.
->>
->> So you will have to work around this in the driver.
-> oh, ugg.. well I think these msgs from dmesg identify the part if we
-> end up needing to use a denylist:
->
-> scsi 0:0:0:49488: Well-known LUN    SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
-> scsi 0:0:0:49476: Well-known LUN    SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
-> scsi 0:0:0:49456: Well-known LUN    SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
-> scsi 0:0:0:0: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
-> scsi 0:0:0:1: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
-> sd 0:0:0:0: [sda] 29765632 4096-byte logical blocks: (122 GB/114 GiB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 32 00 10
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports
-> DPO and FUA
-> sd 0:0:0:0: [sda] Optimal transfer size 786432 bytes
-> scsi 0:0:0:2: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
-> scsi 0:0:0:3: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
->
->
-> (otoh I guess the driver could just notice that writeboost keeps
-> failing and stop trying to use it)
->
-> BR,
-> -R
-
-
-FWIW, I see this on my c630 as well, but my LUN shows up as
-
-
-scsi 0:0:0:49488: Well-known LUN    SAMSUNG  KLUDG4U1EA-B0C1   0500 PQ:
-0 ANSI: 6
+> -----Original Message-----
+> From: Avri Altman <Avri.Altman@wdc.com>
+> Sent: 21 June 2020 18:05
+> To: Martin K. Petersen <martin.petersen@oracle.com>; Satya Tangirala
+> <satyat@google.com>; alim.akhtar@samsung.com; asutoshd@codeaurora.org
+> Cc: linux-scsi@vger.kernel.org; Barani Muthukumaran
+> <bmuthuku@qti.qualcomm.com>; Kuohong Wang
+> <kuohong.wang@mediatek.com>; Kim Boojin <boojin.kim@samsung.com>
+> Subject: RE: [PATCH v2 0/3] Inline Encryption support for UFS
+> 
+> +Alim & Asutosh
+> 
+> Hi Satya,
+> 
+> >
+> > Avri,
+> >
+> > > This patch series adds support for inline encryption to UFS using
+> > > the inline encryption support in the block layer. It follows the
+> > > JEDEC UFSHCI v2.1 specification, which defines inline encryption for
+UFS.
+> >
+> > I'd appreciate it if you could review this series.
+> >
+> > Thanks!
+> >
+> > --
+> > Martin K. Petersen      Oracle Linux Engineering
+> A quick question and a comment:
+> 
+> Does the IE infrastructure that you've added to the block layer invented
+for ufs?
+> Do you see other devices using it in the future?
+> 
+> Today, chipset vendors are using a different scheme for their IE.
+> Need their ack before reviewing your patches.
+> 
+Yes, as of today at least in Samsung HCI, we use additional HW blocks to
+handle all the crypto part.
+(Though I need to check the status on the recent SoCs).
+However given the fact that UFSHCI 2.1 spec does includes Crypto support,
+and going by threads that you shared, looks  like other 
+Vendors does uses IE. I am inclined toward getting this reviewed. 
+> Thanks,
+> Avri
 
