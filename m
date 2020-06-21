@@ -2,42 +2,42 @@ Return-Path: <SRS0=/9Oe=AC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4243DC433DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:41:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FAF5C433E6
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:41:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25ECF22254
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:41:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7021A22254
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:41:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592761260;
-	bh=2WuP/skh00do2CBELmgP2BjUhfAXpwflm1XOnaq3gAc=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=oMIIhzIwugOr/R4APAKYaFhWwwyHzrJMnL2vSkIwlKr3grG9pop3sxhbQ5EK9tVZc
-	 7ubaKcpH7DQ8HNF8eWKyrtc73bgDfrGGswE/qbWnOBYXoHddLDGWTLeTCKUbP5oKUs
-	 huW97VEr57HPqIgCUhBCbJuwJJPhBAln1e1L0rKg=
+	s=default; t=1592761262;
+	bh=2pN1FI3WYWMs7QJB0lFYOwEYs2Kt0rr9XebJxKSIrEA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=gbrLXPNLEXbXZgWkrAVXGHlD9JCoUvlp9AMURaqgzQt4Ah8lezdg/izfV3PzNi2I/
+	 n8LnnygDdn1a4VwIBz0VliLat+lma6OkzmTRgm//6ElDLQSaKaAGdGUCp+5Pz4G/vy
+	 ekdGyUrFPRfda44eDgXL5bXSmJ7eyav3LjBc6ZM8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730489AbgFURk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Jun 2020 13:40:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52434 "EHLO mail.kernel.org"
+        id S1730502AbgFURlA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Jun 2020 13:41:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52472 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
         id S1730471AbgFURk7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Sun, 21 Jun 2020 13:40:59 -0400
 Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F1E01221F7;
-        Sun, 21 Jun 2020 17:40:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1FCBF2242B;
+        Sun, 21 Jun 2020 17:40:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592761258;
-        bh=2WuP/skh00do2CBELmgP2BjUhfAXpwflm1XOnaq3gAc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ubwGYsHIoVgXlaRyoXcBBBLDHoHhq+XMSw6IxSxBbVfdgjC6ylw1+ID9Kw+JLG57F
-         5TRg/HoZebRmd7n5WGtAcoV/oHPJmCLoW8HIEzVHVtraklWcV6Pd5n0NddcClJHPPq
-         JBY8KSOHN2nuQr46R9jKMYxSftcL3BzB1fp12HYU=
+        s=default; t=1592761259;
+        bh=2pN1FI3WYWMs7QJB0lFYOwEYs2Kt0rr9XebJxKSIrEA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=FQZahxO7jZkMXsnaQbG0m72HstkrjcH1IgS0f4txBPu6DrzpKvZ5lNFZCdZY1dIPR
+         ApuOZhT0rLj4RvTnVJiop/uLVm36573mUQF47shSeNXPya6VszF84YTRswYgppgcK6
+         gYer+XANs5+YCZSFH8EzlZgLu9expZ/Oze3PSfZk=
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-scsi@vger.kernel.org
 Cc:     linux-arm-msm@vger.kernel.org, linux-fscrypt@vger.kernel.org,
@@ -52,10 +52,12 @@ Cc:     linux-arm-msm@vger.kernel.org, linux-fscrypt@vger.kernel.org,
         Satya Tangirala <satyat@google.com>,
         Steev Klimaszewski <steev@kali.org>,
         Thara Gopinath <thara.gopinath@linaro.org>
-Subject: [PATCH v5 0/5] Inline crypto support on DragonBoard 845c
-Date:   Sun, 21 Jun 2020 10:37:08 -0700
-Message-Id: <20200621173713.132879-1-ebiggers@kernel.org>
+Subject: [PATCH v5 2/5] scsi: ufs-qcom: name the dev_ref_clk_ctrl registers
+Date:   Sun, 21 Jun 2020 10:37:10 -0700
+Message-Id: <20200621173713.132879-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200621173713.132879-1-ebiggers@kernel.org>
+References: <20200621173713.132879-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -63,82 +65,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+From: Eric Biggers <ebiggers@google.com>
 
-This patchset implements UFS inline encryption support on the
-DragonBoard 845c, using the Qualcomm Inline Crypto Engine (ICE)
-that's present on the Snapdragon 845 SoC.
+In preparation for adding another optional register range to the
+ufs-qcom driver, name the existing optional register range
+"dev_ref_clk_ctrl_mem".  This allows the driver to refer to the optional
+register ranges by name rather than index.
 
-This is based on top of the patchset
-"[PATCH v2 0/3] Inline Encryption support for UFS" by Satya Tangirala.
-Link: https://lkml.kernel.org/r/20200618024736.97207-1-satyat@google.com
+No device-tree files actually have to be updated due to this change,
+since none of them actually declares these registers.
 
-Most of the logic needed to use ICE is already handled by the blk-crypto
-framework (introduced in v5.8-rc1) and by ufshcd-crypto
-(the above patchset).  This new patchset just adds the vendor-specific
-parts.  I also only implemented support for version 3 of the ICE
-hardware, which seems to be easier to use than older versions.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ drivers/scsi/ufs/ufs-qcom.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Due to these factors and others, I was able to greatly simplify the
-driver from the vendor's original.  It works fine in testing with
-fscrypt and with a blk-crypto self-test I'm also working on.
-
-This driver also works on several other Snapdragon SoCs.
-See the commit messages for details.
-
-This patchset is also available in git at:
-    Repo: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
-    Tag: db845c-crypto-v5
-
-Changed v4 => v5:
-    - Rebased onto v5.8-rc1 + the latest ufshcd-crypto patchset.
-    - Refer to the ICE registers by name rather than by index.
-    - Added Tested-by and Acked-by tags.
-
-Changed v3 => v4:
-    - Rebased onto the v12 inline encryption patchset.
-    - A couple small cleanups.
-
-Changed v2 => v3:
-    - Rebased onto the v8 inline encryption patchset.  Now the driver
-      has to opt into inline crypto support rather than opting out.
-    - Switched qcom_scm_ice_set_key() to use dma_alloc_coherent()
-      so that we can reliably zeroing the key without assuming that
-      bounce buffers aren't used.  Also added a comment.
-    - Made the key_size and data_unit_size arguments to
-      qcom_scm_ice_set_key() be 'u32' instead of 'int'.
-
-Changed v1 => v2:
-    - Rebased onto the v7 inline encryption patchset.
-    - Account for all the recent qcom_scm changes.
-    - Don't ignore errors from ->program_key().
-    - Don't dereference NULL hba->vops.
-    - Dropped the patch that added UFSHCD_QUIRK_BROKEN_CRYPTO, as this
-      flag is now included in the main inline encryption patchset.
-    - Many other cleanups.
-
-Eric Biggers (5):
-  firmware: qcom_scm: Add support for programming inline crypto keys
-  scsi: ufs-qcom: name the dev_ref_clk_ctrl registers
-  arm64: dts: sdm845: add Inline Crypto Engine registers and clock
-  scsi: ufs: add program_key() variant op
-  scsi: ufs-qcom: add Inline Crypto Engine support
-
- MAINTAINERS                          |   2 +-
- arch/arm64/boot/dts/qcom/sdm845.dtsi |  13 +-
- drivers/firmware/qcom_scm.c          | 101 +++++++++++
- drivers/firmware/qcom_scm.h          |   4 +
- drivers/scsi/ufs/Kconfig             |   1 +
- drivers/scsi/ufs/Makefile            |   4 +-
- drivers/scsi/ufs/ufs-qcom-ice.c      | 245 +++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-qcom.c          |  15 +-
- drivers/scsi/ufs/ufs-qcom.h          |  27 +++
- drivers/scsi/ufs/ufshcd-crypto.c     |  27 +--
- drivers/scsi/ufs/ufshcd.h            |   3 +
- include/linux/qcom_scm.h             |  19 +++
- 12 files changed, 443 insertions(+), 18 deletions(-)
- create mode 100644 drivers/scsi/ufs/ufs-qcom-ice.c
-
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 2e6ddb5cdfc2..bd0b4ed7b37a 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1275,7 +1275,8 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ 		host->dev_ref_clk_en_mask = BIT(26);
+ 	} else {
+ 		/* "dev_ref_clk_ctrl_mem" is optional resource */
+-		res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++						   "dev_ref_clk_ctrl_mem");
+ 		if (res) {
+ 			host->dev_ref_clk_ctrl_mmio =
+ 					devm_ioremap_resource(dev, res);
 -- 
 2.27.0
 
