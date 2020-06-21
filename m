@@ -2,189 +2,96 @@ Return-Path: <SRS0=/9Oe=AC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA664C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:41:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E53D9C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD7A62242C
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:41:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C16AD223E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 17:46:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592761263;
-	bh=SWhjI7glEKSROW2UDnJHK47bgIRnXW8RaLVPD/IWjGc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MgE3O4bu6DDimQRVwaKOsUwK/28p9u7qXHHh6KiMUel4o0nQ5qFa18iUFClcijEBK
-	 NQ9zRvSgMQJbebyxfnKnUDg9RFgIRnIm/iNCzt4blHNTd2P4Us/GHg9I64X1pAp7oZ
-	 wn4UBjTgReSE7Mx6stRdjTzzpR7eTeYQ0u4wv2Ao=
+	s=default; t=1592761571;
+	bh=ALAY1kL3HOvixItCdKVfg4OQ+QcGUrLix48exQRbR2w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=gY9Qslb/04ggUF2IgG8Dc7C+VQ4e6CDjZFLNbdayYIFMtwn4nGL/9opbnustA1/IO
+	 658KneAe+OHgKFcPCqQpmywcCzWGhdpr2YLKtnS3d0iWIRg64s3Dr+OXeDMUKOijNt
+	 hW2t/rq0Xsj9tOHEMUrk7NfQY//Dew63kuTQjnGY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730517AbgFURlC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Jun 2020 13:41:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52472 "EHLO mail.kernel.org"
+        id S1730494AbgFURqL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Jun 2020 13:46:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54662 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730471AbgFURlA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 21 Jun 2020 13:41:00 -0400
-Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1730485AbgFURqL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 21 Jun 2020 13:46:11 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3D3B42242C;
-        Sun, 21 Jun 2020 17:41:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 56F30221E7;
+        Sun, 21 Jun 2020 17:46:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592761260;
-        bh=SWhjI7glEKSROW2UDnJHK47bgIRnXW8RaLVPD/IWjGc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E0wbYiytpXV7bYQAoMypaXeGMeB3FZBCNimyjajaSga9gcT3hJTAfSmBKXZRAKpIL
-         ctkIMOHlKrq1aOANbUp9IC/d1FBXVenrBbFQgHINzK6oFf7EULNUWrCzLrYkdAwspG
-         WK3f8EDTQtSQBBSv13Fu+jIKWJyx5Tm2AaTWJkKU=
+        s=default; t=1592761570;
+        bh=ALAY1kL3HOvixItCdKVfg4OQ+QcGUrLix48exQRbR2w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VFno9ZKxesX0cScIyDxV5cP/GmuIgeRrdZExcaUmv2GpkE8OQIzUhhz8foOF+hlSd
+         rqTVZhAaXLrUBp+E3KsmcqwgHTCYIFY+BjlvCJlBJNqKkkLk/XrktaIZfHrIxc0Ygc
+         LUah7xpfs+11ZXXCpH/oRMGFo5g+D6bTHKRWJsAY=
+Date:   Sun, 21 Jun 2020 10:46:08 -0700
 From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Andy Gross <agross@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Can Guo <cang@codeaurora.org>,
-        Elliot Berman <eberman@codeaurora.org>,
-        John Stultz <john.stultz@linaro.org>,
+To:     Avri Altman <Avri.Altman@wdc.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Satya Tangirala <satyat@google.com>,
-        Steev Klimaszewski <steev@kali.org>,
-        Thara Gopinath <thara.gopinath@linaro.org>
-Subject: [PATCH v5 4/5] scsi: ufs: add program_key() variant op
-Date:   Sun, 21 Jun 2020 10:37:12 -0700
-Message-Id: <20200621173713.132879-5-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200621173713.132879-1-ebiggers@kernel.org>
-References: <20200621173713.132879-1-ebiggers@kernel.org>
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>
+Subject: Re: [PATCH v2 0/3] Inline Encryption support for UFS
+Message-ID: <20200621174608.GA1140@sol.localdomain>
+References: <20200618024736.97207-1-satyat@google.com>
+ <yq1a70yh1f3.fsf@ca-mkp.ca.oracle.com>
+ <SN6PR04MB4640005BEC3EE690CB904298FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <SN6PR04MB46406FA71CAB5FC92E6DC744FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <SN6PR04MB46406FA71CAB5FC92E6DC744FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On Sun, Jun 21, 2020 at 12:47:11PM +0000, Avri Altman wrote:
+>  
+> > +Alim & Asutosh
+> > 
+> > Hi Satya,
+> > 
+> > >
+> > > Avri,
+> > >
+> > > > This patch series adds support for inline encryption to UFS using
+> > > > the inline encryption support in the block layer. It follows the JEDEC
+> > > > UFSHCI v2.1 specification, which defines inline encryption for UFS.
+> > >
+> > > I'd appreciate it if you could review this series.
+> > >
+> > > Thanks!
+> > >
+> > > --
+> > > Martin K. Petersen      Oracle Linux Engineering
+> > A quick question and a comment:
+> > 
+> > Does the IE infrastructure that you've added to the block layer invented for
+> > ufs?
+> And how this infrastructure relates to Eric's RFC: Inline crypto support on DragonBoard 845c
+> https://www.spinics.net/lists/linux-scsi/msg141472.html 
+> 
 
-On Snapdragon SoCs, the Linux kernel isn't permitted to directly access
-the standard UFS crypto configuration registers.  Instead, programming
-and evicting keys must be done through vendor-specific SMC calls.
+My patches are based on top of Satya's patches.  My patches just introduce the
+quirks needed for Qualcomm ICE to work, since it doesn't follow the UFS standard
+exactly.
 
-To support this hardware, add a ->program_key() method to
-'struct ufs_hba_variant_ops'.  This allows overriding the UFS standard
-key programming / eviction procedure.
-
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- drivers/scsi/ufs/ufshcd-crypto.c | 27 +++++++++++++++++----------
- drivers/scsi/ufs/ufshcd.h        |  3 +++
- 2 files changed, 20 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd-crypto.c b/drivers/scsi/ufs/ufshcd-crypto.c
-index 65a3115d2a2d..717a7eb62988 100644
---- a/drivers/scsi/ufs/ufshcd-crypto.c
-+++ b/drivers/scsi/ufs/ufshcd-crypto.c
-@@ -17,14 +17,20 @@ static const struct ufs_crypto_alg_entry {
- 	},
- };
- 
--static void ufshcd_program_key(struct ufs_hba *hba,
--			       const union ufs_crypto_cfg_entry *cfg,
--			       int slot)
-+static int ufshcd_program_key(struct ufs_hba *hba,
-+			      const union ufs_crypto_cfg_entry *cfg, int slot)
- {
- 	int i;
- 	u32 slot_offset = hba->crypto_cfg_register + slot * sizeof(*cfg);
-+	int err = 0;
- 
- 	ufshcd_hold(hba, false);
-+
-+	if (hba->vops && hba->vops->program_key) {
-+		err = hba->vops->program_key(hba, cfg, slot);
-+		goto out;
-+	}
-+
- 	/* Ensure that CFGE is cleared before programming the key */
- 	ufshcd_writel(hba, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
- 	for (i = 0; i < 16; i++) {
-@@ -37,7 +43,9 @@ static void ufshcd_program_key(struct ufs_hba *hba,
- 	/* Dword 16 must be written last */
- 	ufshcd_writel(hba, le32_to_cpu(cfg->reg_val[16]),
- 		      slot_offset + 16 * sizeof(cfg->reg_val[0]));
-+out:
- 	ufshcd_release(hba);
-+	return err;
- }
- 
- static int ufshcd_crypto_keyslot_program(struct blk_keyslot_manager *ksm,
-@@ -52,6 +60,7 @@ static int ufshcd_crypto_keyslot_program(struct blk_keyslot_manager *ksm,
- 	int i;
- 	int cap_idx = -1;
- 	union ufs_crypto_cfg_entry cfg = { 0 };
-+	int err;
- 
- 	BUILD_BUG_ON(UFS_CRYPTO_KEY_SIZE_INVALID != 0);
- 	for (i = 0; i < hba->crypto_capabilities.num_crypto_cap; i++) {
-@@ -79,13 +88,13 @@ static int ufshcd_crypto_keyslot_program(struct blk_keyslot_manager *ksm,
- 		memcpy(cfg.crypto_key, key->raw, key->size);
- 	}
- 
--	ufshcd_program_key(hba, &cfg, slot);
-+	err = ufshcd_program_key(hba, &cfg, slot);
- 
- 	memzero_explicit(&cfg, sizeof(cfg));
--	return 0;
-+	return err;
- }
- 
--static void ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
-+static int ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
- {
- 	/*
- 	 * Clear the crypto cfg on the device. Clearing CFGE
-@@ -93,7 +102,7 @@ static void ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
- 	 */
- 	union ufs_crypto_cfg_entry cfg = { 0 };
- 
--	ufshcd_program_key(hba, &cfg, slot);
-+	return ufshcd_program_key(hba, &cfg, slot);
- }
- 
- static int ufshcd_crypto_keyslot_evict(struct blk_keyslot_manager *ksm,
-@@ -102,9 +111,7 @@ static int ufshcd_crypto_keyslot_evict(struct blk_keyslot_manager *ksm,
- {
- 	struct ufs_hba *hba = container_of(ksm, struct ufs_hba, ksm);
- 
--	ufshcd_clear_keyslot(hba, slot);
--
--	return 0;
-+	return ufshcd_clear_keyslot(hba, slot);
- }
- 
- bool ufshcd_crypto_enable(struct ufs_hba *hba)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 1cb0fde5772c..feb51dde5a0c 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -320,6 +320,7 @@ struct ufs_pwr_mode_info {
-  * @dbg_register_dump: used to dump controller debug information
-  * @phy_initialization: used to initialize phys
-  * @device_reset: called to issue a reset pulse on the UFS device
-+ * @program_key: program or evict an inline encryption key
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -353,6 +354,8 @@ struct ufs_hba_variant_ops {
- 	void	(*config_scaling_param)(struct ufs_hba *hba,
- 					struct devfreq_dev_profile *profile,
- 					void *data);
-+	int	(*program_key)(struct ufs_hba *hba,
-+			       const union ufs_crypto_cfg_entry *cfg, int slot);
- };
- 
- /* clock gating state  */
--- 
-2.27.0
-
+- Eric
