@@ -2,159 +2,163 @@ Return-Path: <SRS0=/9Oe=AC=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B03EC433E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 12:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3263BC433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 16:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5214F248EC
-	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 12:47:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F33B8223AC
+	for <linux-scsi@archiver.kernel.org>; Sun, 21 Jun 2020 16:50:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="RZ5cUXvU";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="e7FNgDhX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WC/NqBMG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730020AbgFUMrR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Jun 2020 08:47:17 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:11830 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730000AbgFUMrQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2020 08:47:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1592743636; x=1624279636;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=hVJPwHv5taRQoZ9kyLLMMi8ZYwsaHLTJjovM/viMohQ=;
-  b=RZ5cUXvUBot3AGGlXHJdGMQLRLVLPAYSCtNpt0uagGgVOYZ2U+3nuNms
-   Fid1QF9tQSyyO67JSwQsv8VjTRJeiRDDByHlEzMLJTqJsZA/jxpJtNUPb
-   3UJxQ/sFwEZTACAalC4qHg0WZtTeyZbHuyhrD4AlNoukZkZP0/xTzUBP1
-   u/xNK+0hh1PrW8o1fjGclqdoNb6CqIAziQXUACOz4OBxF4vP6MuXJVXp+
-   9m6w6dxXvQJtwtrTWkvrR40uwaxhq+Ig8yud3BMl+j1qbWeHTc4sTF4uB
-   oSIaMIc6kdrrzPSB2794drKhmzruPZV1Pd6TNyn+ICaKIWzlAHNP6QJIu
-   Q==;
-IronPort-SDR: g8muksEa1A/gyEJLHoZuAOtikSEPwxAS+FWqG97FYQsLn4GiGbGqIQFXOZ6oMpgHp22ZUfUqKg
- R82Pn9cMIOyzHLbqcGKidQa56mYAUTrOjt1IrFFd+b94k8GeleaJBniYgc1IIrW7zEFxT7G6X4
- bs96CKVRADIWiyAPWkSZXdVyrkVvZcz4bIQJmGWgMEEqbkJqQlpzCkgHVR+Db6ikWAGon6TqeC
- 3rM/0CjqxsKjUIQVGjB1SetO2PEABu9wSSRauanqCoahnE8t4n8+3Ji4XdLRP6isYiFuGLv04F
- Te8=
-X-IronPort-AV: E=Sophos;i="5.75,263,1589212800"; 
-   d="scan'208";a="249743209"
-Received: from mail-bl2nam02lp2058.outbound.protection.outlook.com (HELO NAM02-BL2-obe.outbound.protection.outlook.com) ([104.47.38.58])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Jun 2020 20:47:14 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=asBB7bfIEMktzs8s+ocfGtfCeNFi+ePvHEJ0snKln7CSCXQOVNSTEiqWoR6QFZq7a8PWBFTvdW/Ok/W2aN7X9b5mJLOHxoOPPP2EMF0UIP/NApHGlmiCafyjc1DB3ANp87usoyn0a6B0d0d2iAvPAe36Up3qs1d0whfZN+GrHSYBVclaQQOIVrWuRHRuTyi//OMyvwSNzaJL5L+ZRmNuxaMeAB3/QRCZRRf2IOKmkiQNPk5E++7QHoeBvxI/iZ19V/nKjBwwTMBcqW0+GOVCChgaUSg1vqNXByNavxrIRb0lizniWqnVQXwWZtyIXkCNro3oxyqkPhzvV9xUmTVd0g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UjQniCATfE50IMVlW+Y7gOcPanzJolOne2ozkwhyzYk=;
- b=SYDxlgd5+kkXwlEz3yFHp4rw7hZsWcGGOzzWzAcVnkSbU8sEEylkT8AKa8fcoSnsRFZJfjSiqvUMezy67NM51uwk4XHP9964ghJCVebpgnpI/zhre4kZ6PhmU5307gR/QuS99DPSNDSCyqG/RngUpEpVcHD/ttj4/YCHA0+lB5ywZqZigLhHgo7FMxaQr8UDSPnQb7kvseqw7C7eboh/2mOlWywMsldRW/VrYbAEbjQlEVTbXXvkitS4qQPQT+nbzgnExnus2oYVUDoSk3DaCiM1b4C5atO1TtYP16BdLEd29ENlXXa1nUUmkuiuuglzd1n/MiIRPof8XPx7ZSRJIA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1730436AbgFUQuS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Jun 2020 12:50:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54668 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730411AbgFUQuR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2020 12:50:17 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F420C061794;
+        Sun, 21 Jun 2020 09:50:17 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id n24so15499036ejd.0;
+        Sun, 21 Jun 2020 09:50:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UjQniCATfE50IMVlW+Y7gOcPanzJolOne2ozkwhyzYk=;
- b=e7FNgDhXaTjpapRtGbTZpyh5jsE4/ejBqgEdNXy/gX50AQ8ddNDuIyT9qxGsIA/DGxmvMRdc3IP6ZpzlDfsz8cIW2QU9OwrVo4AoIa5lPZ6VLgp5IqrJPew75ao6nWhDOxIPEBroKpwLeqx6r0p/5HZ3istKIcFx4LiBp7QKnbE=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4815.namprd04.prod.outlook.com (2603:10b6:805:b2::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Sun, 21 Jun
- 2020 12:47:11 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3109.026; Sun, 21 Jun 2020
- 12:47:11 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Satya Tangirala <satyat@google.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Kuohong Wang <kuohong.wang@mediatek.com>,
-        Kim Boojin <boojin.kim@samsung.com>
-Subject: RE: [PATCH v2 0/3] Inline Encryption support for UFS
-Thread-Topic: [PATCH v2 0/3] Inline Encryption support for UFS
-Thread-Index: AQHWRrYXnkxifjeS80qrV/YqWlM3YqjjAQoAgAAFApA=
-Date:   Sun, 21 Jun 2020 12:47:11 +0000
-Message-ID: <SN6PR04MB46406FA71CAB5FC92E6DC744FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200618024736.97207-1-satyat@google.com>
- <yq1a70yh1f3.fsf@ca-mkp.ca.oracle.com>
- <SN6PR04MB4640005BEC3EE690CB904298FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
-In-Reply-To: <SN6PR04MB4640005BEC3EE690CB904298FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 0e6db222-7f71-4e14-d76e-08d815e1378f
-x-ms-traffictypediagnostic: SN6PR04MB4815:
-x-microsoft-antispam-prvs: <SN6PR04MB48156A9E0132C9DE1B66699BFC960@SN6PR04MB4815.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-forefront-prvs: 04410E544A
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: GdttFP0qg+uxTyRqiYfmsn08e/35rye6oQL6ciK0inggkX+1yXfcVQS4pGOKW7NiRZMNrYfYaYaYMexYj88kyo1cZdQ3+ZYrQSucUA20uaPYHzR+lp+uxQKhYCwiqWRNWIBwqHmis3IIYbS2arSYTt/uKFm7hCrfEeWfHREevAA+h2vVUaVBVNu2NVGQVgPloiQc3vDD9C3FkkU1agHrBe2PvKWvTt9URDw4cAVTWzv/mrTDkDJG2/xCSSye0zQvtf66R4x550vqVSwMPCIrU77+DzaN2if9hIHXV4xthqjHN+MOUd6ceTa2+XZmCh3ykps5s7Jb6ZAGIMgAi2znTy9cD11CaT2PsJ5s4iTi66RjhG0fX/E4Ya0dywNDU8qnH6pwDKqP/o6dgGYyHimlqQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(396003)(39850400004)(376002)(366004)(346002)(2906002)(9686003)(55016002)(33656002)(71200400001)(5660300002)(7696005)(26005)(66446008)(66476007)(186003)(66556008)(86362001)(6506007)(76116006)(8936002)(66946007)(83380400001)(64756008)(4744005)(4326008)(966005)(478600001)(2940100002)(52536014)(8676002)(54906003)(316002)(110136005);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: W9kaNInIve9fIrWi29TBIDVm1qN1UOLkQtoXx7reqh1dYPdhvJKjjbuptAvkQAxKrWG2Xfn5t9FaM+vfFLAqK9lYAnM56abi3pACTA5zWZYjnKqOfxRFbBoP3WALxMZPGMMK3zAZLJxTjN1BLyjyBgRjtLrjSSCWM36Z/LVEBqsEQUX8GuzVjlOS5tIktfG7JPIBKACUnBgt4cZtjQ5slQIuJ+oK/mnj2MJwdM4bgQfuXtD13dcZUYM4+g5QALdluAGAciFppc+kxCtkAXjM63roTYdyseownxFVewltS6Ec4zAmlzJUgortPN4H/yO35AUxihrEkYIefF9lCoUxFwTMoNdxNByQNceH6TSW4FJanXs1yW0TI76PdTnUfWHjAxNImni1TY6PEtIAO5vBWbTfDYYGw4SAwQCfYQMIgUa+gznfimb5mEKPVAckr8JtYrfARXtyPRkbr5Tc74+16+l5aiYQovNAmcylzkdYGVY7ZsU6rd1pmv/CA11iHm28
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8/oeYmT0gf/BQf5rhsOaYvoPP5ayrLP9PM0KP+IAgfg=;
+        b=WC/NqBMGWLqBQRZbzUo1d4ajwpofeyOODarATg8fVi1KkjU+anC7Pom0DeZCqPelxu
+         XrRcKDvuIBUgVs3cUzYJOC83XgFBC6pKZU8C34sw0ONUdCf4N/dnOWPj+oqhEuznsnKV
+         oZFMQCqtevhZdAGtoZVIBpcM1s77qdqWW5yxbGI7Bes0hQCUV5mUlIDKESpVEJ2u7QLF
+         mGeRJYH1uJNJIq0/VOje77BpxGIZU+rTJ40DdB6jFYppD/f4VRxhIceQHkGwFB83P/OI
+         TA2jMQDCisNagqz/E/xuwDfOlPtEHywOhE2n7JGq8Ttq2YqVjmiCafXBQEP609cC6L1q
+         espA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8/oeYmT0gf/BQf5rhsOaYvoPP5ayrLP9PM0KP+IAgfg=;
+        b=rlRnCOnFHfe8d1RJ/A5Fxw+3pxmpjT4lBwe+eQMnRzvOGAd8sla/cDTl/6aX3ZdQp0
+         FPT/PGKb72ax6GnNrkN9dmHIST/YqeonJzbmECFi1z9Yx+YjdDepMo8FZCd+g3m6A6ID
+         ocNQ6jXzGyu5ys+jPPWakoUqVnuShSnjKk78rHhKW8h664MDWhYzd6mLp/HCBkF0ebPf
+         dgHIEWHFbdaOX44i0dBLkJm6Z0g/sI8CFSZ0K9XY1paBU6FjIBFVlFiY8Sh6n3hcBQB+
+         d+vKZe6CN16yHphVegNsncv1UQKbWgvrP3i0knaKShvMeSYB9TxeAvEg9k7XQb2Otncs
+         nV4g==
+X-Gm-Message-State: AOAM532NuKj75uB0zJ2PpD7eQZxLzUlRCYw+dq7rFp4v7UVmK1ACGhv7
+        dM81Tb6KuMxhsYGvLtI9ic2oI40lFD6vkQDEJiw=
+X-Google-Smtp-Source: ABdhPJxSdA2O9bfRHd4FEkpgAkg0zBjCVSJMWG2BUWgw83KJC+QN/PKfGTm3H9P6BtV5cQTTx+7xynA2gzaW3NiUvAM=
+X-Received: by 2002:a17:906:856:: with SMTP id f22mr3072421ejd.245.1592758215478;
+ Sun, 21 Jun 2020 09:50:15 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e6db222-7f71-4e14-d76e-08d815e1378f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jun 2020 12:47:11.5014
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: sp1aE2iw4cPc9lCaN6gqmV/qX6hKqFAJfY6H+ECuzZG8s5i9Tslx8J2a5G8kjdy2GpWqrmJ+1otDm+0HqsEGAQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4815
+References: <cover.1586374414.git.asutoshd@codeaurora.org> <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
+ <CAF6AEGvgmfYoybv4XMVVH85fGMr-eDfpzxdzkFWCx-2N5PEw2w@mail.gmail.com>
+ <SN6PR04MB46402FD7981F9FCA2111AB37FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
+ <20200621075539.GK128451@builder.lan>
+In-Reply-To: <20200621075539.GK128451@builder.lan>
+From:   Rob Clark <robdclark@gmail.com>
+Date:   Sun, 21 Jun 2020 09:50:43 -0700
+Message-ID: <CAF6AEGuG3XAqN_sedxk9GRm_9yK+a4OH56CZPmbHx+SW-FNVPQ@mail.gmail.com>
+Subject: Re: [PATCH v1 1/3] scsi: ufs: add write booster feature support
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Avri Altman <Avri.Altman@wdc.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        Subhash Jadavani <subhashj@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=20
-> +Alim & Asutosh
->=20
-> Hi Satya,
->=20
+On Sun, Jun 21, 2020 at 12:58 AM Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
+>
+> On Sun 21 Jun 00:40 PDT 2020, Avri Altman wrote:
+>
 > >
-> > Avri,
-> >
-> > > This patch series adds support for inline encryption to UFS using
-> > > the inline encryption support in the block layer. It follows the JEDE=
-C
-> > > UFSHCI v2.1 specification, which defines inline encryption for UFS.
-> >
-> > I'd appreciate it if you could review this series.
-> >
-> > Thanks!
-> >
-> > --
-> > Martin K. Petersen      Oracle Linux Engineering
-> A quick question and a comment:
->=20
-> Does the IE infrastructure that you've added to the block layer invented =
-for
-> ufs?
-And how this infrastructure relates to Eric's RFC: Inline crypto support on=
- DragonBoard 845c
-https://www.spinics.net/lists/linux-scsi/msg141472.html=20
+> > >
+> > > On Wed, Apr 8, 2020 at 3:00 PM Asutosh Das <asutoshd@codeaurora.org>
+> > > wrote:
+> > > >
+> > > > The write performance of TLC NAND is considerably
+> > > > lower than SLC NAND. Using SLC NAND as a WriteBooster
+> > > > Buffer enables the write request to be processed with
+> > > > lower latency and improves the overall write performance.
+> > > >
+> > > > Adds support for shared-buffer mode WriteBooster.
+> > > >
+> > > > WriteBooster enable: SW enables it when clocks are
+> > > > scaled up, thus it's enabled only in high load conditions.
+> > > >
+> > > > WriteBooster disable: SW will disable the feature,
+> > > > when clocks are scaled down. Thus writes would go as normal
+> > > > writes.
+> > >
+> > > btw, in v5.8-rc1 (plus handful of remaining patches for lenovo c630
+> > > laptop (sdm850)), I'm seeing a lot of:
+> > >
+> > >   ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending flag query for
+> > > idn 14 failed, err = 253
+> > >   ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending flag query for
+> > > idn 14 failed, err = 253
+> > >   ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag_retry: query attribute,
+> > > opcode 6, idn 14, failed with error 253 after 3 retires
+> > >   ufshcd-qcom 1d84000.ufshc: ufshcd_wb_ctrl write booster enable failed 253
+> > >
+> > > and at least subjectively, compiling mesa seems slower, which seems
+> > > like it might be related?
+> > This looks like a device issue to be taken with the flash vendor:
+>
+> There's no way for a end-user to file a bug report with the flash vendor
+> on a device bought from an OEM and even if they would accept the bug
+> report they wouldn't re-provision the flash in an shipped device.
+>
+> So you will have to work around this in the driver.
 
-> Do you see other devices using it in the future?
->=20
-> Today, chipset vendors are using a different scheme for their IE.
-> Need their ack before reviewing your patches.
->=20
-> Thanks,
-> Avri
+oh, ugg.. well I think these msgs from dmesg identify the part if we
+end up needing to use a denylist:
+
+scsi 0:0:0:49488: Well-known LUN    SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+scsi 0:0:0:49476: Well-known LUN    SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+scsi 0:0:0:49456: Well-known LUN    SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+scsi 0:0:0:0: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+scsi 0:0:0:1: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+sd 0:0:0:0: [sda] 29765632 4096-byte logical blocks: (122 GB/114 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 00 32 00 10
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports
+DPO and FUA
+sd 0:0:0:0: [sda] Optimal transfer size 786432 bytes
+scsi 0:0:0:2: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+scsi 0:0:0:3: Direct-Access     SKhynix  H28S8Q302CMR     A102 PQ: 0 ANSI: 6
+
+
+(otoh I guess the driver could just notice that writeboost keeps
+failing and stop trying to use it)
+
+BR,
+-R
+
+
+> Regards,
+> Bjorn
+>
+> > The device reports that it supports wd, but returns inalid idn for flag 0xe...
+> >
+> > Thanks,
+> > Avri
