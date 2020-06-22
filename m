@@ -2,252 +2,140 @@ Return-Path: <SRS0=lGnU=AD=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE24C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Jun 2020 02:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8378C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Jun 2020 03:10:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B965025371
-	for <linux-scsi@archiver.kernel.org>; Mon, 22 Jun 2020 02:33:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 837C520767
+	for <linux-scsi@archiver.kernel.org>; Mon, 22 Jun 2020 03:10:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="blZfhzi+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731000AbgFVCdD convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 21 Jun 2020 22:33:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37470 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726983AbgFVCdD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 21 Jun 2020 22:33:03 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 208045] ARM ubuntu 18.04 as the iscsi server, using initiator
- login, the kernel crashes
-Date:   Mon, 22 Jun 2020 02:33:01 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: lnsyyj@hotmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-208045-11613-8rZiak88UB@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-208045-11613@https.bugzilla.kernel.org/>
-References: <bug-208045-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1731185AbgFVDKj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 21 Jun 2020 23:10:39 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:35978 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726559AbgFVDKj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jun 2020 23:10:39 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05M3AYL3156552;
+        Mon, 22 Jun 2020 03:10:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=Z5AWohSIQN/10LPAph7pzNm6ZxTToaAIJFczhN/Pa+E=;
+ b=blZfhzi+2gWRAlKbpse8FO0ag3V/AcR4UdBHrU5YlLhO5C/XO2OqduP9jQNXaF/nQANB
+ QhYYXSzWisWkmaQwYuhZJpTUeO7qQCqLPwKONcb2VCYBehtf7rirH/6omwkk2WLxmxdB
+ liEKUtbxKkiTYku32AykzUnOhYaaKZy4gGkcDwNRCREiE9KqlAqEFXa5X7phbitGWLS2
+ mFy7A7z53HD12eeHew+Zd0RUlZUkC6nzatu9YJfrY/CSrhf3nlKdDQSzDJg1mJurwS9w
+ eyD+hdoEg1DB4DdjBTA3wjH6akNX0jrUfNbFQD7IsS9AIdWfvga86ImV2u11KcTFLAbL SA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 31sebbc1g3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 22 Jun 2020 03:10:33 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05M37VPh088556;
+        Mon, 22 Jun 2020 03:08:33 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 31sv1k30hn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 Jun 2020 03:08:33 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05M38V6o019381;
+        Mon, 22 Jun 2020 03:08:31 GMT
+Received: from [192.168.0.110] (/183.246.145.120)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 22 Jun 2020 03:08:31 +0000
+Subject: Re: [PATCH 1/2] workqueue: don't always set __WQ_ORDERED implicitly
+To:     linux-kernel@vger.kernel.org
+Cc:     tj@kernel.org, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com,
+        lduncan@suse.com, michael.christie@oracle.com
+References: <20200611100717.27506-1-bob.liu@oracle.com>
+From:   Bob Liu <bob.liu@oracle.com>
+Message-ID: <f926e5b0-b876-3dad-c1b2-33c250205452@oracle.com>
+Date:   Mon, 22 Jun 2020 11:08:24 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
+In-Reply-To: <20200611100717.27506-1-bob.liu@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9659 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 bulkscore=0 suspectscore=1 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006220023
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9659 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 lowpriorityscore=0
+ mlxlogscore=999 cotscore=-2147483648 mlxscore=0 phishscore=0
+ priorityscore=1501 malwarescore=0 bulkscore=0 suspectscore=1 clxscore=1015
+ impostorscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2006220023
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=208045
+ping..
 
---- Comment #10 from JiangYu (lnsyyj@hotmail.com) ---
-[Fri Jun 19 11:19:46 2020] scsi host5: iSCSI Initiator over TCP/IP
-[Fri Jun 19 11:19:46 2020] iSCSI Initiator Node:
-iqn.1993-08.org.debian:01:b27579df472 is not authorized to access iSCSI target
-portal group: 1.
-[Fri Jun 19 11:19:47 2020] iSCSI Login negotiation failed.
-[Fri Jun 19 11:21:33 2020] scsi host5: iSCSI Initiator over TCP/IP
-[Fri Jun 19 11:23:32 2020] scsi host5: iSCSI Initiator over TCP/IP
-[Fri Jun 19 11:23:32 2020] scsi 5:0:0:0: Direct-Access     LIO-ORG  TCMU device
-     0002 PQ: 0 ANSI: 5
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: Attached scsi generic sg11 type 0
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: [sdk] 2147483648 512-byte logical
-blocks: (1.10 TB/1.00 TiB)
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: [sdk] Write Protect is off
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: [sdk] Mode Sense: 2f 00 00 00
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: [sdk] Write cache: disabled, read cache:
-enabled, doesn't support DPO or FUA
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: [sdk] Optimal transfer size 524288 bytes
-[Fri Jun 19 11:23:32 2020] sd 5:0:0:0: [sdk] Attached SCSI disk
-[Fri Jun 19 18:17:11 2020] EXT4-fs (sdk): mounted filesystem with ordered data
-mode. Opts: (null)
-[Mon Jun 22 00:00:14 2020] Unable to handle kernel access to user memory
-outside uaccess routines at virtual address 0000000000000000
-[Mon Jun 22 00:00:14 2020] Mem abort info:
-[Mon Jun 22 00:00:14 2020]   ESR = 0x96000004
-[Mon Jun 22 00:00:14 2020]   Exception class = DABT (current EL), IL = 32 bits
-[Mon Jun 22 00:00:14 2020]   SET = 0, FnV = 0
-[Mon Jun 22 00:00:14 2020]   EA = 0, S1PTW = 0
-[Mon Jun 22 00:00:14 2020] Data abort info:
-[Mon Jun 22 00:00:14 2020]   ISV = 0, ISS = 0x00000004
-[Mon Jun 22 00:00:14 2020]   CM = 0, WnR = 0
-[Mon Jun 22 00:00:14 2020] user pgtable: 4k pages, 48-bit VAs, pgdp =
-000000002c314fa8
-[Mon Jun 22 00:00:14 2020] [0000000000000000] pgd=0000000000000000
-[Mon Jun 22 00:00:14 2020] Internal error: Oops: 96000004 [#1] SMP
-[Mon Jun 22 00:00:14 2020] Modules linked in: rpcsec_gss_krb5 auth_rpcgss nfsv4
-nfs lockd grace fscache target_core_pscsi target_core_file target_core_iblock
-iscsi_target_mod cfg80211 target_core_user uio target_core_mod openvswitch nsh
-nf_nat_ipv6 nf_nat_ipv4 nf_conncount nf_nat nf_conntrack nf_defrag_ipv6
-nf_defrag_ipv4 nls_iso8859_1 ipmi_ssif joydev input_leds ipmi_si ipmi_devintf
-ipmi_msghandler sch_fq_codel sunrpc ib_iser rdma_cm iw_cm ib_cm ib_core
-iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi ip_tables x_tables autofs4
-btrfs zstd_compress raid10 raid456 async_raid6_recov async_memcpy async_pq
-async_xor async_tx xor raid6_pq libcrc32c raid1 raid0 multipath linear ses
-enclosure scsi_transport_sas ast ttm drm_kms_helper cfbfillrect syscopyarea
-cfbimgblt sysfillrect sysimgblt fb_sys_fops cfbcopyarea fb
-[Mon Jun 22 00:00:15 2020]  font drm ixgbe igb drm_panel_orientation_quirks
-i2c_algo_bit mdio bcache crc32_ce crc64 hid_generic i2c_designware_platform
-ahci i2c_designware_core megaraid_sas libahci i2c_core usbhid hid aes_neon_bs
-aes_neon_blk crypto_simd cryptd aes_arm64
-[Mon Jun 22 00:00:15 2020] Process tp_librbd (pid: 5707, stack limit =
-0x00000000d11d520b)
-[Mon Jun 22 00:00:15 2020] CPU: 52 PID: 5707 Comm: tp_librbd Not tainted
-4.19.118-maxcn #1
-[Mon Jun 22 00:00:15 2020] Hardware name: Greatwall QingTian DF720/F601, BIOS
-601FBE20 Sep 26 2019
-[Mon Jun 22 00:00:15 2020] pstate: 20400005 (nzCv daif +PAN -UAO)
-[Mon Jun 22 00:00:15 2020] pc : flush_dcache_page+0x18/0x40
-[Mon Jun 22 00:00:15 2020] lr : tcmu_handle_completions+0xc4/0x4a0
-[target_core_user]
-[Mon Jun 22 00:00:15 2020] sp : ffff00002245bc10
-[Mon Jun 22 00:00:15 2020] x29: ffff00002245bc10 x28: ffffcd70fb93d580 
-[Mon Jun 22 00:00:15 2020] x27: ffff0000223c5000 x26: ffff363403dcf680 
-[Mon Jun 22 00:00:15 2020] x25: ffffc771da0393e0 x24: 0000000000000000 
-[Mon Jun 22 00:00:15 2020] x23: ffff000021bc5000 x22: ffffc771da038000 
-[Mon Jun 22 00:00:15 2020] x21: ffff0000223c4fd0 x20: 00000000007fffd0 
-[Mon Jun 22 00:00:15 2020] x19: 0000000000000000 x18: 0000000000000000 
-[Mon Jun 22 00:00:15 2020] x17: 0000000000000000 x16: ffff36340eba9e00 
-[Mon Jun 22 00:00:15 2020] x15: 0000000000000000 x14: 0000000000000000 
-[Mon Jun 22 00:00:15 2020] x13: 0000000000000000 x12: 0000000000000000 
-[Mon Jun 22 00:00:15 2020] x11: 0000000000000000 x10: 0000000000000000 
-[Mon Jun 22 00:00:15 2020] x9 : 0000000000000000 x8 : 00000000000013e0 
-[Mon Jun 22 00:00:15 2020] x7 : 0000000000000000 x6 : ffff00002245bcf8 
-[Mon Jun 22 00:00:15 2020] x5 : ffff00002245bcf8 x4 : 0000000000000000 
-[Mon Jun 22 00:00:15 2020] x3 : ffff36340fab0000 x2 : ffffb91200000000 
-[Mon Jun 22 00:00:15 2020] x1 : 0000000000000000 x0 : ffff363403dc8f6c 
-[Mon Jun 22 00:00:15 2020] Call trace:
-[Mon Jun 22 00:00:15 2020]  flush_dcache_page+0x18/0x40
-[Mon Jun 22 00:00:15 2020]  tcmu_handle_completions+0xc4/0x4a0
-[target_core_user]
-[Mon Jun 22 00:00:15 2020]  tcmu_irqcontrol+0x34/0x58 [target_core_user]
-[Mon Jun 22 00:00:15 2020]  uio_write+0xb8/0x138 [uio]
-[Mon Jun 22 00:00:15 2020]  __vfs_write+0x60/0x190
-[Mon Jun 22 00:00:15 2020]  vfs_write+0xac/0x1b0
-[Mon Jun 22 00:00:15 2020]  ksys_write+0x74/0xf0
-[Mon Jun 22 00:00:15 2020]  __arm64_sys_write+0x24/0x30
-[Mon Jun 22 00:00:15 2020]  el0_svc_common+0x88/0x180
-[Mon Jun 22 00:00:15 2020]  el0_svc_handler+0x38/0x78
-[Mon Jun 22 00:00:15 2020]  el0_svc+0x8/0xc
-[Mon Jun 22 00:00:15 2020] Code: f9000bf3 aa0003f3 aa1e03e0 d503201f (f9400260) 
-[Mon Jun 22 00:00:15 2020] ---[ end trace cdb72dbc3b2a8038 ]---
-[Mon Jun 22 00:01:16 2020] ABORT_TASK: Found referenced iSCSI task_tag: 42
-[Mon Jun 22 00:01:16 2020] ------------[ cut here ]------------
-[Mon Jun 22 00:01:16 2020] WARNING: CPU: 7 PID: 746959 at
-kernel/workqueue.c:2919 __flush_work+0x260/0x290
-[Mon Jun 22 00:01:16 2020] Modules linked in: rpcsec_gss_krb5 auth_rpcgss nfsv4
-nfs lockd grace fscache target_core_pscsi target_core_file target_core_iblock
-iscsi_target_mod cfg80211 target_core_user uio target_core_mod openvswitch nsh
-nf_nat_ipv6 nf_nat_ipv4 nf_conncount nf_nat nf_conntrack nf_defrag_ipv6
-nf_defrag_ipv4 nls_iso8859_1 ipmi_ssif joydev input_leds ipmi_si ipmi_devintf
-ipmi_msghandler sch_fq_codel sunrpc ib_iser rdma_cm iw_cm ib_cm ib_core
-iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi ip_tables x_tables autofs4
-btrfs zstd_compress raid10 raid456 async_raid6_recov async_memcpy async_pq
-async_xor async_tx xor raid6_pq libcrc32c raid1 raid0 multipath linear ses
-enclosure scsi_transport_sas ast ttm drm_kms_helper cfbfillrect syscopyarea
-cfbimgblt sysfillrect sysimgblt fb_sys_fops cfbcopyarea fb
-[Mon Jun 22 00:01:16 2020]  font drm ixgbe igb drm_panel_orientation_quirks
-i2c_algo_bit mdio bcache crc32_ce crc64 hid_generic i2c_designware_platform
-ahci i2c_designware_core megaraid_sas libahci i2c_core usbhid hid aes_neon_bs
-aes_neon_blk crypto_simd cryptd aes_arm64
-[Mon Jun 22 00:01:16 2020] CPU: 7 PID: 746959 Comm: kworker/u128:0 Tainted: G  
-   D           4.19.118-maxcn #1
-[Mon Jun 22 00:01:16 2020] Hardware name: Greatwall QingTian DF720/F601, BIOS
-601FBE20 Sep 26 2019
-[Mon Jun 22 00:01:16 2020] Workqueue: tmr-user target_tmr_work
-[target_core_mod]
-[Mon Jun 22 00:01:16 2020] pstate: 40400005 (nZcv daif +PAN -UAO)
-[Mon Jun 22 00:01:16 2020] pc : __flush_work+0x260/0x290
-[Mon Jun 22 00:01:16 2020] lr : __flush_work+0x260/0x290
-[Mon Jun 22 00:01:16 2020] sp : ffff0000167cbbd0
-[Mon Jun 22 00:01:16 2020] x29: ffff0000167cbbd0 x28: 0000000000000000 
-[Mon Jun 22 00:01:16 2020] x27: ffffccef4ebc68b8 x26: ffff0000167cbce0 
-[Mon Jun 22 00:01:16 2020] x25: ffff3634100b6a40 x24: 0000000000000000 
-[Mon Jun 22 00:01:16 2020] x23: ffff363410252000 x22: 0000000000000000 
-[Mon Jun 22 00:01:16 2020] x21: ffff363410098000 x20: ffffcd6fad1b1550 
-[Mon Jun 22 00:01:16 2020] x19: ffffcd6fad1b1550 x18: ffffffffffffffff 
-[Mon Jun 22 00:01:16 2020] x17: 0000000000000000 x16: 0000000000000000 
-[Mon Jun 22 00:01:16 2020] x15: ffff363410098708 x14: ffff3634902578af 
-[Mon Jun 22 00:01:16 2020] x13: ffff3634102578be x12: ffff3634100bd000 
-[Mon Jun 22 00:01:16 2020] x11: 0000000005f5e0ff x10: ffff363410099168 
-[Mon Jun 22 00:01:16 2020] x9 : ffff36340fc7d018 x8 : ffff36340f24d010 
-[Mon Jun 22 00:01:16 2020] x7 : 5d20657265682074 x6 : ffffc771fffe2158 
-[Mon Jun 22 00:01:16 2020] x5 : ffffc771fffe2158 x4 : 0000000000000000 
-[Mon Jun 22 00:01:16 2020] x3 : ffffc771fffeaf88 x2 : 203f2659feac9b00 
-[Mon Jun 22 00:01:16 2020] x1 : 0000000000000000 x0 : 0000000000000024 
-[Mon Jun 22 00:01:16 2020] Call trace:
-[Mon Jun 22 00:01:16 2020]  __flush_work+0x260/0x290
-[Mon Jun 22 00:01:16 2020]  __cancel_work_timer+0x134/0x1a8
-[Mon Jun 22 00:01:16 2020]  cancel_work_sync+0x24/0x30
-[Mon Jun 22 00:01:16 2020]  core_tmr_abort_task+0xfc/0x1b0 [target_core_mod]
-[Mon Jun 22 00:01:16 2020]  target_tmr_work+0x108/0x1d8 [target_core_mod]
-[Mon Jun 22 00:01:16 2020]  process_one_work+0x1f0/0x428
-[Mon Jun 22 00:01:16 2020]  worker_thread+0x44/0x488
-[Mon Jun 22 00:01:16 2020]  kthread+0x134/0x138
-[Mon Jun 22 00:01:16 2020]  ret_from_fork+0x10/0x18
-[Mon Jun 22 00:01:16 2020] ---[ end trace cdb72dbc3b2a8039 ]---
-[Mon Jun 22 00:01:31 2020]  connection3:0: detected conn error (1021)
-[Mon Jun 22 00:01:31 2020]  connection3:0: detected conn error (1021)
-[Mon Jun 22 00:01:48 2020] iSCSI Login timeout on Network Portal
-192.168.1.201:3260
-[Mon Jun 22 00:03:31 2020]  session3: session recovery timed out after 120 secs
-[Mon Jun 22 00:03:31 2020] sd 5:0:0:0: Device offlined - not ready after error
-recovery
-[Mon Jun 22 00:03:31 2020] sd 5:0:0:0: [sdk] tag#57 FAILED Result:
-hostbyte=DID_TRANSPORT_DISRUPTED driverbyte=DRIVER_OK
-[Mon Jun 22 00:03:31 2020] sd 5:0:0:0: [sdk] tag#57 CDB: Unmap/Read sub-channel
-42 00 00 00 00 00 00 00 18 00
-[Mon Jun 22 00:03:31 2020] print_req_error: I/O error, dev sdk, sector
-1727496192
-[Mon Jun 22 00:03:31 2020] sd 5:0:0:0: rejecting I/O to offline device
-[Mon Jun 22 00:03:31 2020] print_req_error: I/O error, dev sdk, sector
-1727430656
-[Mon Jun 22 00:03:31 2020] sd 5:0:0:0: rejecting I/O to offline device
-[Mon Jun 22 00:03:31 2020] print_req_error: I/O error, dev sdk, sector
-1727463424
-[Mon Jun 22 10:07:20 2020] sd 5:0:0:0: rejecting I/O to offline device
-[Mon Jun 22 10:07:20 2020] print_req_error: I/O error, dev sdk, sector
-1074326448
-[Mon Jun 22 10:07:20 2020] Aborting journal on device sdk-8.
-[Mon Jun 22 10:07:20 2020] sd 5:0:0:0: rejecting I/O to offline device
-[Mon Jun 22 10:07:20 2020] print_req_error: I/O error, dev sdk, sector
-1074003968
-[Mon Jun 22 10:07:21 2020] Buffer I/O error on dev sdk, logical block
-134250496, lost sync page write
-[Mon Jun 22 10:07:21 2020] JBD2: Error -5 detected when updating journal
-superblock for sdk-8.
-[Mon Jun 22 10:25:43 2020] sd 5:0:0:0: rejecting I/O to offline device
-[Mon Jun 22 10:25:43 2020] print_req_error: I/O error, dev sdk, sector 0
-[Mon Jun 22 10:25:43 2020] Buffer I/O error on dev sdk, logical block 0, lost
-sync page write
-[Mon Jun 22 10:25:43 2020] EXT4-fs (sdk): I/O error while writing superblock
-[Mon Jun 22 10:25:43 2020] EXT4-fs error (device sdk):
-ext4_journal_check_start:61: Detected aborted journal
-[Mon Jun 22 10:25:43 2020] EXT4-fs (sdk): Remounting filesystem read-only
-[Mon Jun 22 10:25:43 2020] sd 5:0:0:0: rejecting I/O to offline device
-[Mon Jun 22 10:25:43 2020] print_req_error: I/O error, dev sdk, sector 0
-[Mon Jun 22 10:25:43 2020] Buffer I/O error on dev sdk, logical block 0, lost
-sync page write
-[Mon Jun 22 10:25:43 2020] EXT4-fs (sdk): I/O error while writing superblock
-
-
-Hello, after a few days of testing, I found another problem. When I use the
-initiator login target, and format the ext4 file system, and write some data,
-there will be an error as reported above.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+On 6/11/20 6:07 PM, Bob Liu wrote:
+> Current code always set 'Unbound && max_active == 1' workqueues to ordered
+> implicitly, while this may be not an expected behaviour for some use cases.
+> 
+> E.g some scsi and iscsi workqueues(unbound && max_active = 1) want to be bind
+> to different cpu so as to get better isolation, but their cpumask can't be
+> changed because WQ_ORDERED is set implicitly.
+> 
+> This patch adds a flag __WQ_ORDERED_DISABLE and also
+> create_singlethread_workqueue_noorder() to offer an new option.
+> 
+> Signed-off-by: Bob Liu <bob.liu@oracle.com>
+> ---
+>  include/linux/workqueue.h | 4 ++++
+>  kernel/workqueue.c        | 4 +++-
+>  2 files changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+> index e48554e..4c86913 100644
+> --- a/include/linux/workqueue.h
+> +++ b/include/linux/workqueue.h
+> @@ -344,6 +344,7 @@ enum {
+>  	__WQ_ORDERED		= 1 << 17, /* internal: workqueue is ordered */
+>  	__WQ_LEGACY		= 1 << 18, /* internal: create*_workqueue() */
+>  	__WQ_ORDERED_EXPLICIT	= 1 << 19, /* internal: alloc_ordered_workqueue() */
+> +	__WQ_ORDERED_DISABLE	= 1 << 20, /* internal: don't set __WQ_ORDERED implicitly */
+>  
+>  	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
+>  	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
+> @@ -433,6 +434,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+>  #define create_singlethread_workqueue(name)				\
+>  	alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
+>  
+> +#define create_singlethread_workqueue_noorder(name)			\
+> +	alloc_workqueue("%s", WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | \
+> +			WQ_UNBOUND | __WQ_ORDERED_DISABLE, 1, (name))
+>  extern void destroy_workqueue(struct workqueue_struct *wq);
+>  
+>  struct workqueue_attrs *alloc_workqueue_attrs(void);
+> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+> index 4e01c44..2167013 100644
+> --- a/kernel/workqueue.c
+> +++ b/kernel/workqueue.c
+> @@ -4237,7 +4237,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+>  	 * on NUMA.
+>  	 */
+>  	if ((flags & WQ_UNBOUND) && max_active == 1)
+> -		flags |= __WQ_ORDERED;
+> +		/* the caller may don't want __WQ_ORDERED to be set implicitly. */
+> +		if (!(flags & __WQ_ORDERED_DISABLE))
+> +			flags |= __WQ_ORDERED;
+>  
+>  	/* see the comment above the definition of WQ_POWER_EFFICIENT */
+>  	if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
+> 
