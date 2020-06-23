@@ -2,204 +2,217 @@ Return-Path: <SRS0=JRJf=AE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F04C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA2FC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:23:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB03F20723
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:03:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C67E20780
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:23:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732760AbgFWODT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 10:03:19 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55844 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1732730AbgFWODT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Jun 2020 10:03:19 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05NDXsR3164073;
-        Tue, 23 Jun 2020 10:03:12 -0400
-Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 31ufgj7pbw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 23 Jun 2020 10:03:11 -0400
-Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
-        by ppma06ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 05NE1Lj4006853;
-        Tue, 23 Jun 2020 14:03:05 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma06ams.nl.ibm.com with ESMTP id 31uk330060-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 23 Jun 2020 14:03:05 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 05NE32Z035127636
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 23 Jun 2020 14:03:02 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8BE34A405E;
-        Tue, 23 Jun 2020 14:03:02 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 39F16A4040;
-        Tue, 23 Jun 2020 14:03:02 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 23 Jun 2020 14:03:02 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Kees Cook <keescook@chromium.org>, stable@vger.kernel.org
-Subject: [PATCH] zfcp: fix panic on ERP timeout for previously dismissed ERP action
-Date:   Tue, 23 Jun 2020 16:02:42 +0200
-Message-Id: <20200623140242.98864-1-maier@linux.ibm.com>
-X-Mailer: git-send-email 2.17.1
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
- definitions=2020-06-23_06:2020-06-23,2020-06-23 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=2
- priorityscore=1501 mlxscore=0 mlxlogscore=993 impostorscore=0 spamscore=0
- adultscore=0 cotscore=-2147483648 clxscore=1011 bulkscore=0 phishscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006230108
+        id S1732836AbgFWOXh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 10:23:37 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53622 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732830AbgFWOXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jun 2020 10:23:36 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id EDC01B012;
+        Tue, 23 Jun 2020 14:23:33 +0000 (UTC)
+Subject: Re: [PATCH RFC v7 02/12] blk-mq: rename blk_mq_update_tag_set_depth()
+To:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        don.brace@microsemi.com, kashyap.desai@broadcom.com,
+        sumit.saxena@broadcom.com, bvanassche@acm.org, hare@suse.com,
+        hch@lst.de, shivasharan.srikanteshwara@broadcom.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        Kashyap Desai <kashyap.desai@broadcom.com>
+References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
+ <1591810159-240929-3-git-send-email-john.garry@huawei.com>
+ <20200611025759.GA453671@T590>
+ <6ef76cdf-2fb3-0ce8-5b5a-0d7af0145901@huawei.com>
+ <8ef58912-d480-a7e1-f04c-da9bd85ea0ae@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <eaf188d5-dac0-da44-1c83-31ff2860d8fa@suse.de>
+Date:   Tue, 23 Jun 2020 16:23:31 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
+MIME-Version: 1.0
+In-Reply-To: <8ef58912-d480-a7e1-f04c-da9bd85ea0ae@huawei.com>
+Content-Type: multipart/mixed;
+ boundary="------------87FA99FADADEA3EE2B4E056B"
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Suppose that, for unrelated reasons, FSF requests on behalf of recovery
-are very slow and can run into the ERP timeout.
+This is a multi-part message in MIME format.
+--------------87FA99FADADEA3EE2B4E056B
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-In the case at hand, we did adapter recovery to a large degree.
-However due to the slowness a LUN open is pending
-so the corresponding fc_rport remains blocked.
-After fast_io_fail_tmo we trigger close physical port recovery
-for the port under which the LUN should have been opened.
-The new higher order port recovery
-dismisses the pending LUN open ERP action and
-dismisses the pending LUN open FSF request.
-Such dismissal decouples the ERP action from the pending corresponding
-FSF request by setting zfcp_fsf_req->erp_action to NULL
-(among other things) [zfcp_erp_strategy_check_fsfreq()].
+On 6/23/20 1:25 PM, John Garry wrote:
+> On 11/06/2020 09:26, John Garry wrote:
+>> On 11/06/2020 03:57, Ming Lei wrote:
+>>> On Thu, Jun 11, 2020 at 01:29:09AM +0800, John Garry wrote:
+>>>> From: Hannes Reinecke <hare@suse.de>
+>>>>
+>>>> The function does not set the depth, but rather transitions from
+>>>> shared to non-shared queues and vice versa.
+>>>> So rename it to blk_mq_update_tag_set_shared() to better reflect
+>>>> its purpose.
+>>>
+>>> It is fine to rename it for me, however:
+>>>
+>>> This patch claims to rename blk_mq_update_tag_set_shared(), but also
+>>> change blk_mq_init_bitmap_tags's signature.
+>>
+>> I was going to update the commit message here, but forgot again...
+>>
+>>>
+>>> So suggest to split this patch into two or add comment log on changing
+>>> blk_mq_init_bitmap_tags().
+>>
+>> I think I'll just split into 2x commits.
+> 
+> Hi Hannes,
+> 
+> Do you have any issue with splitting the undocumented changes into 
+> another patch as so:
+> 
+No, that's perfectly fine.
 
-If now the ERP timeout for the pending open LUN request runs out, we
-must not use zfcp_fsf_req->erp_action in the ERP timeout handler.
-This is a problem since v4.15 commit 75492a51568b ("s390/scsi: Convert
-timers to use timer_setup()"). Before that we intentionally only passed
-zfcp_erp_action as context argument to zfcp_erp_timeout_handler().
+Kashyap, I've also attached an updated patch for the elevator_count 
+patch; if you agree John can include it in the next version.
 
-Note: The lifetime of the corresponding zfcp_fsf_req object continues
-until a (late) response or an (unrelated) adapter recovery.
+Cheers,
 
-Just like the regular response path ignores dismissed requests
-[zfcp_fsf_req_complete() => zfcp_fsf_protstatus_eval() => return early]
-the ERP timeout handler now needs to ignore dismissed requests.
-So simply return early in the ERP timeout handler if the FSF request
-is marked as dismissed in its status flags.
-To protect against the race where zfcp_erp_strategy_check_fsfreq()
-dismisses and sets zfcp_fsf_req->erp_action to NULL after our previous
-status flag check, return early if zfcp_fsf_req->erp_action is NULL.
-After all, the former ERP action does not need to be woken up as that was
-already done as part of the dismissal above [zfcp_erp_action_dismiss()].
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
 
-This fixes the following panic due to kernel page fault in IRQ context:
+--------------87FA99FADADEA3EE2B4E056B
+Content-Type: text/x-patch; charset=UTF-8;
+ name="0001-elevator-count-requests-per-hctx-to-improve-performa.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-elevator-count-requests-per-hctx-to-improve-performa.pa";
+ filename*1="tch"
 
-Unable to handle kernel pointer dereference in virtual kernel address space
-Failing address: 0000000000000000 TEID: 0000000000000483
-Fault in home space mode while using kernel ASCE.
-AS:000009859238c00b R2:00000e3e7ffd000b R3:00000e3e7ffcc007 S:00000e3e7ffd7000 P:000000000000013d
-Oops: 0004 ilc:2 [#1] SMP
-Modules linked in: ...
-CPU: 82 PID: 311273 Comm: stress Kdump: loaded Tainted: G            E  X   ...
-Hardware name: IBM 8561 T01 701 (LPAR)
-Krnl PSW : 0404c00180000000 001fffff80549be0 (zfcp_erp_notify+0x40/0xc0 [zfcp])
-           R:0 T:1 IO:0 EX:0 Key:0 M:1 W:0 P:0 AS:3 CC:0 PM:0 RI:0 EA:3
-Krnl GPRS: 0000000000000080 00000e3d00000000 00000000000000f0 0000000000030000
-           000000010028e700 000000000400a39c 000000010028e700 00000e3e7cf87e02
-           0000000010000000 0700098591cb67f0 0000000000000000 0000000000000000
-           0000033840e9a000 0000000000000000 001fffe008d6bc18 001fffe008d6bbc8
-Krnl Code: 001fffff80549bd4: a7180000            lhi     %r1,0
-           001fffff80549bd8: 4120a0f0            la      %r2,240(%r10)
-          #001fffff80549bdc: a53e0003            llilh   %r3,3
-          >001fffff80549be0: ba132000            cs      %r1,%r3,0(%r2)
-           001fffff80549be4: a7740037            brc     7,1fffff80549c52
-           001fffff80549be8: e320b0180004        lg      %r2,24(%r11)
-           001fffff80549bee: e31020e00004        lg      %r1,224(%r2)
-           001fffff80549bf4: 412020e0            la      %r2,224(%r2)
-Call Trace:
- [<001fffff80549be0>] zfcp_erp_notify+0x40/0xc0 [zfcp]
- [<00000985915e26f0>] call_timer_fn+0x38/0x190
- [<00000985915e2944>] expire_timers+0xfc/0x190
- [<00000985915e2ac4>] run_timer_softirq+0xec/0x218
- [<0000098591ca7c4c>] __do_softirq+0x144/0x398
- [<00000985915110aa>] do_softirq_own_stack+0x72/0x88
- [<0000098591551b58>] irq_exit+0xb0/0xb8
- [<0000098591510c6a>] do_IRQ+0x82/0xb0
- [<0000098591ca7140>] ext_int_handler+0x128/0x12c
- [<0000098591722d98>] clear_subpage.constprop.13+0x38/0x60
-([<000009859172ae4c>] clear_huge_page+0xec/0x250)
- [<000009859177e7a2>] do_huge_pmd_anonymous_page+0x32a/0x768
- [<000009859172a712>] __handle_mm_fault+0x88a/0x900
- [<000009859172a860>] handle_mm_fault+0xd8/0x1b0
- [<0000098591529ef6>] do_dat_exception+0x136/0x3e8
- [<0000098591ca6d34>] pgm_check_handler+0x1c8/0x220
-Last Breaking-Event-Address:
- [<001fffff80549c88>] zfcp_erp_timeout_handler+0x10/0x18 [zfcp]
-Kernel panic - not syncing: Fatal exception in interrupt
+From d50b5f773713070208c405f7c7056eb1afed896a Mon Sep 17 00:00:00 2001
+From: Hannes Reinecke <hare@suse.de>
+Date: Tue, 23 Jun 2020 16:18:40 +0200
+Subject: [PATCH] elevator: count requests per hctx to improve performance
 
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 75492a51568b ("s390/scsi: Convert timers to use timer_setup()")
-Cc: <stable@vger.kernel.org> #4.15+
-Reviewed-by: Julian Wiedmann <jwi@linux.ibm.com>
+Add a 'elevator_queued' count to the hctx to avoid triggering
+the elevator even though there are no requests queued.
+
+Suggested-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
+ block/bfq-iosched.c    | 5 +++++
+ block/blk-mq.c         | 1 +
+ block/mq-deadline.c    | 5 +++++
+ include/linux/blk-mq.h | 4 ++++
+ 4 files changed, 15 insertions(+)
 
-
-Martin, James, this zfcp fix for a seldom panic would be something for
-v5.8-rcX and applies to 5.8/scsi-fixes.
-
-
- drivers/s390/scsi/zfcp_erp.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index db320dab1fee..79f6e8fb03ca 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -577,7 +577,10 @@ static void zfcp_erp_strategy_check_fsfreq(struct zfcp_erp_action *act)
- 				   ZFCP_STATUS_ERP_TIMEDOUT)) {
- 			req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
- 			zfcp_dbf_rec_run("erscf_1", act);
--			req->erp_action = NULL;
-+			/* lock-free concurrent access with
-+			 * zfcp_erp_timeout_handler()
-+			 */
-+			WRITE_ONCE(req->erp_action, NULL);
- 		}
- 		if (act->status & ZFCP_STATUS_ERP_TIMEDOUT)
- 			zfcp_dbf_rec_run("erscf_2", act);
-@@ -613,8 +616,14 @@ void zfcp_erp_notify(struct zfcp_erp_action *erp_action, unsigned long set_mask)
- void zfcp_erp_timeout_handler(struct timer_list *t)
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index a1123d4d586d..3d63b35f6121 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -4640,6 +4640,9 @@ static bool bfq_has_work(struct blk_mq_hw_ctx *hctx)
  {
- 	struct zfcp_fsf_req *fsf_req = from_timer(fsf_req, t, timer);
--	struct zfcp_erp_action *act = fsf_req->erp_action;
-+	struct zfcp_erp_action *act;
+ 	struct bfq_data *bfqd = hctx->queue->elevator->elevator_data;
  
-+	if (fsf_req->status & ZFCP_STATUS_FSFREQ_DISMISSED)
-+		return;
-+	/* lock-free concurrent access with zfcp_erp_strategy_check_fsfreq() */
-+	act = READ_ONCE(fsf_req->erp_action);
-+	if (!act)
-+		return;
- 	zfcp_erp_notify(act, ZFCP_STATUS_ERP_TIMEDOUT);
++	if (!atomic_read(&hctx->elevator_queued))
++		return false;
++
+ 	/*
+ 	 * Avoiding lock: a race on bfqd->busy_queues should cause at
+ 	 * most a call to dispatch for nothing
+@@ -5554,6 +5557,7 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
+ 		rq = list_first_entry(list, struct request, queuelist);
+ 		list_del_init(&rq->queuelist);
+ 		bfq_insert_request(hctx, rq, at_head);
++		atomic_inc(&hctx->elevator_queued)
+ 	}
  }
  
+@@ -5933,6 +5937,7 @@ static void bfq_finish_requeue_request(struct request *rq)
+ 
+ 		bfq_completed_request(bfqq, bfqd);
+ 		bfq_finish_requeue_request_body(bfqq);
++		atomic_dec(&rq->mq_hctx->elevator_queued);
+ 
+ 		spin_unlock_irqrestore(&bfqd->lock, flags);
+ 	} else {
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index e06e8c9f326f..f5403fc97572 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2542,6 +2542,7 @@ blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
+ 		goto free_hctx;
+ 
+ 	atomic_set(&hctx->nr_active, 0);
++	atomic_set(&hctx->elevator_queued, 0);
+ 	if (node == NUMA_NO_NODE)
+ 		node = set->numa_node;
+ 	hctx->numa_node = node;
+diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+index b57470e154c8..9d753745e6be 100644
+--- a/block/mq-deadline.c
++++ b/block/mq-deadline.c
+@@ -533,6 +533,7 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
+ 		rq = list_first_entry(list, struct request, queuelist);
+ 		list_del_init(&rq->queuelist);
+ 		dd_insert_request(hctx, rq, at_head);
++		atomic_inc(&hctx->elevator_queued);
+ 	}
+ 	spin_unlock(&dd->lock);
+ }
+@@ -573,12 +574,16 @@ static void dd_finish_request(struct request *rq)
+ 			blk_mq_sched_mark_restart_hctx(rq->mq_hctx);
+ 		spin_unlock_irqrestore(&dd->zone_lock, flags);
+ 	}
++	atomic_dec(&rq->mq_hctx->elevator_queued);
+ }
+ 
+ static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
+ 
++	if (!atomic_read(&hctx->elevator_queued))
++		return false;
++
+ 	return !list_empty_careful(&dd->dispatch) ||
+ 		!list_empty_careful(&dd->fifo_list[0]) ||
+ 		!list_empty_careful(&dd->fifo_list[1]);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 66711c7234db..a18c506b14e7 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -139,6 +139,10 @@ struct blk_mq_hw_ctx {
+ 	 * shared across request queues.
+ 	 */
+ 	atomic_t		nr_active;
++	/**
++	 * @elevator_queued: Number of queued requests on hctx.
++	 */
++	atomic_t                elevator_queued;
+ 
+ 	/** @cpuhp_online: List to store request if CPU is going to die */
+ 	struct hlist_node	cpuhp_online;
 -- 
-2.17.1
+2.26.2
 
+
+--------------87FA99FADADEA3EE2B4E056B--
