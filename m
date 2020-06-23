@@ -2,120 +2,125 @@ Return-Path: <SRS0=JRJf=AE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20C39C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 21:20:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02299C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 21:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8B7520738
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 21:20:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0FEA208C9
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 21:42:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UeXA81lY"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="jNM1HgXB";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="IHjZ4iL9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390820AbgFWVUh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 17:20:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52688 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390282AbgFWUXU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 16:23:20 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DE34C061755
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2020 13:23:20 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id cm23so2023882pjb.5
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2020 13:23:20 -0700 (PDT)
+        id S2387715AbgFWVmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 17:42:50 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:11867 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387672AbgFWUE3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 16:04:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1592942668; x=1624478668;
+  h=from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=Np6yWb6YmYOwP601KxKtVBHOHmLBPCihT928Zpgt9yE=;
+  b=jNM1HgXBtT6L3aYvSbDUuvWplE+e9YxVf9jdfy6fDDpcKgV8/Tavw1hf
+   o0FZ92cBxJuSci9SNKyu2/YQQHU690hAy4olTyw3eqFdoZq/NBzTUdUkO
+   unZqQMAmn+WvhFOEdfnILXbtF7EDR6XJl/iOR5n2/jlRUfGlZ4wTYXMFZ
+   +nCc0BZNYrEWzn0qCXFmRc6J81lzu9KwJzMAd5Ekj8KbFaj16/aTnX0eV
+   zLCVOpspX2C2dhgbybAMQbjLmBHiYREotsTdb8W6eo95gJ9cx9mJP2jTi
+   Fm5Xslwo7QcObfvMffxoGOtiebw0DLUppeQc1uuL0WZtfRr9hFDboTHvJ
+   A==;
+IronPort-SDR: TVWi/azldYgUFItnCvJoVEgKpOeJXX107UXPJG6StlbwRqUeN5E0rWlmbxm1BBnVvE+2h5dVgQ
+ XeTuEFRpwXfuu/WU/0+T3ja0eYF16Lz8c0EVuitcFyp3G1EUzuSOQUpbGrc0QoNqDYe1oaayRi
+ w0esp+BnIPpf0Q6FiMvKkfw2uhR4SpIZlWJ3XHullZzRbfLAfXqiaadptS4EHEhMWv6i2rTx3c
+ b3dV2FMe8xREgOZcEQ2TSGn93p4dkI3moX/2YHtcQTP99hFM+rYEknDaH12ww0qH7Y0noFh8AF
+ ebI=
+X-IronPort-AV: E=Sophos;i="5.75,272,1589212800"; 
+   d="scan'208";a="140736465"
+Received: from mail-bn8nam12lp2169.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.169])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Jun 2020 04:04:26 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CJny1u+3mJNqHecgnnwu2e9V9NHQ2cs8qRAySfqk+HK0zOKE7g7wzDMzeXjOOQ5ZnfWvz7H+XKutxcAZTnPCoAv8o87FbtsEKme19QLiJnBzFXPl9cnmGrdQYr9pSfzlcueDaBCOAiEAJzAx/IR9yXQv4YF8FLOIUpRZiK00DzHNvvEvJyLCHBmDgKTFBFvthBYQjLmI+wMhFLc+mofxS3CDeB9aZ9xEB3e684XvNNFuV/u2dlW3Y7yTpRq0SGWX9BfqP+bdGRqC2Uf43FYmMC3fyOyCMQZRdFaMd1g/+iBi8RN/kKYuKVgmYqm65HH4V6+rHX08V3IeTGuVmCsiPQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AFsM5q5C6S5qHJP5MbkL5vQyjt0FsmZhwl+q8yIHFjc=;
+ b=cAH5m9D6hME8jQlicG/roRVuUEhvyOMssVqDbowmo+b2RxHGQySFX5nMWXD44UwpqJax3cbRTOD5yRDIUIvMsdA1+gAd3FLNA8CtFs0/nRalhTyKyYy1dDMBaTJgdZvrdWhiX6wwVveK3O0z+UxLT1Bm8DMJ05hHFf9dURBrHWnS2uAjKgOfJdpVO8NmAyx5glwwp06iFQjTrXBSvhHG6ehUqfDhXzS5O4TU4O8Hwv2wYriJ46+IofbDVNvt4lwoB+VVH1KdLTF0nOjvT9FTrb03aDyvzSsqT8NF+4g7QK95LlJ2JDusQaD7/ZsX9EVvLNoKEJzSAG6/9EG3D36HzQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=8GtuMGPUaS390TqO5z4ppfXD7rQJ/F037h9evN14ygA=;
-        b=UeXA81lY2Dk/K6Xv/2qrjX76DJuWeAmT6jNVUMl2qas0bB4/Xq2A+K5qs7yXGrQ+XO
-         mwxD2EAVmkxFTRya/JYVHKi1xwtP25wHgkoYM4HMrUhXW7GS9mEQqjFAZyBl/iHLinb5
-         NBhuRbQiglGun9uYgKwuidd8G5uUNfRAKlWE8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=8GtuMGPUaS390TqO5z4ppfXD7rQJ/F037h9evN14ygA=;
-        b=hoTQOLFfhRQc+9Md6jIne6CZvubUSFzfGNU1Nqarh8w9LdxIT+A8z/C8J9d4wtNS+q
-         aL1/ws8T6uPwu9Pwj3YZhiJVBx3BDlozZ/0ZGfPkEsn3OCNMTwbkbSILpVWqKWQe7LOM
-         GrlBgpIoSSV4C90Gy4/PjrswfHs3u7YpaIT+93emLLoxUA8uWHlP77ItsOvYEzIhPHy5
-         OwJXcUtusoQ4ZtRTdGLyatb5jGtUAcaWLpFI4kvq0Et3Oix57OiDA/HcZ4ikZJl0pxdn
-         tn3cv+JVDMdbO15YsqGYrrseFFIb5kzeySojg9IE60m0fOxutsMCxqXXnVZ/jKKtZmhU
-         a9zQ==
-X-Gm-Message-State: AOAM530xmVhOY51ewLSnxeQ6MtfWhJYhxLeIjEqTo7aNmqBItfx498Rx
-        TLNVtJNjpDjj+6Kb257004WHyA==
-X-Google-Smtp-Source: ABdhPJwaESgPCB1gfNvhANi+Yq++rrbVU7XmZhQA2VoJG+/oGv5jRcVJWUsh89tmByaVWl75PYdDHQ==
-X-Received: by 2002:a17:902:b60e:: with SMTP id b14mr25563736pls.81.1592943799964;
-        Tue, 23 Jun 2020 13:23:19 -0700 (PDT)
-Received: from [10.69.45.46] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id ev20sm3141936pjb.8.2020.06.23.13.23.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 Jun 2020 13:23:19 -0700 (PDT)
-Subject: Re: [PATCH] scsi: lpfc: Avoid another null dereference in
- lpfc_sli4_hba_unset()
-To:     SeongJae Park <sjpark@amazon.com>, jsmart2021@gmail.com,
-        dick.kennedy@broadcom.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        SeongJae Park <sjpark@amazon.de>
-References: <20200623084122.30633-1-sjpark@amazon.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <470678bf-2e08-c75f-db14-7569cc4fe4c7@broadcom.com>
-Date:   Tue, 23 Jun 2020 13:23:17 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
-MIME-Version: 1.0
-In-Reply-To: <20200623084122.30633-1-sjpark@amazon.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AFsM5q5C6S5qHJP5MbkL5vQyjt0FsmZhwl+q8yIHFjc=;
+ b=IHjZ4iL9106SvY4s4mXkIx9f1s9UqsVsAvb2FD8dsflyw4K2gHfuHPTWSb243P/NC+s/1Nb1WyRpA9ApYaXe4wCEjHK36h0haTKwtYJ0U8DyatSb5A8EHtZ35win+z/8LImLWQqUhrXQX68d3wAD3zTFL8SwYT7J6gM6JpD+X4E=
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
+ by BY5PR04MB6916.namprd04.prod.outlook.com (2603:10b6:a03:229::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Tue, 23 Jun
+ 2020 20:04:25 +0000
+Received: from BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::4d72:27c:c075:c5e6]) by BYAPR04MB4965.namprd04.prod.outlook.com
+ ([fe80::4d72:27c:c075:c5e6%7]) with mapi id 15.20.3131.020; Tue, 23 Jun 2020
+ 20:04:25 +0000
+From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+To:     Tony Asleson <tasleson@redhat.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Subject: Re: [RFC PATCH v3 7/8] nvme: Add durable name for dev_printk
+Thread-Topic: [RFC PATCH v3 7/8] nvme: Add durable name for dev_printk
+Thread-Index: AQHWSZMHUF+C0LyjzEmzp/5FmQjokw==
+Date:   Tue, 23 Jun 2020 20:04:25 +0000
+Message-ID: <BYAPR04MB496553DF4EB78924AAEC1F2B86940@BYAPR04MB4965.namprd04.prod.outlook.com>
+References: <20200623191749.115200-1-tasleson@redhat.com>
+ <20200623191749.115200-8-tasleson@redhat.com>
+Accept-Language: en-US
 Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [199.255.45.62]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 157cfe63-9e32-4aea-ac36-08d817b0a130
+x-ms-traffictypediagnostic: BY5PR04MB6916:
+x-microsoft-antispam-prvs: <BY5PR04MB69161950F89D628D1F57647186940@BY5PR04MB6916.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:37;
+x-forefront-prvs: 04433051BF
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: RhnX4W2PKFVHg66Ihp+K1ITM8va6H5/MB1CpHiZCKjghaVlMZqi+hzTIZMhXmPyXl763j/VCrt9t2ILL4+dviJGvD2/VNunRafnUbalQyseMbAvO2Tnpwd5E8qIib46nSddXSN0MdjbGCLxlgshGJ1AA/Mwx+SQ2RpizKFBESu3P5gvzLIi6bxUM/ruGOqOyBfqjXyl7DHB38HC4lN/GXj1WDSnMJKNSSuyjdc0mFKj3xJl0CrEQRfFEJJItaBqeRIL4HH2EaCDbMXOuesG2ffty5mzp9xUdgGcp+tpCfyYiTQmjhFRKQd8k/5t5iuo2
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(346002)(136003)(366004)(396003)(39850400004)(376002)(110136005)(71200400001)(9686003)(558084003)(5660300002)(76116006)(2906002)(33656002)(66556008)(64756008)(66446008)(66946007)(66476007)(52536014)(86362001)(55016002)(8676002)(26005)(7696005)(6506007)(478600001)(316002)(53546011)(186003)(8936002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: MOisWXdEWakvnJ/SnhhOhzPpqTFo4789ngUs9KJ5wo1Bi/3HHSo2DTWyk4K4pLnqTqwIUn4aHuAT//RaT1kw+zh8YOSyVZJMXGc7pK6/bH5Ia1spbE35uFR8lLThsD/yVRgk/fnkQc4nPLBMqhcaRi2mU8CvKDvW55tEi3nU9UicJU49mZmTX1oq5bpW4lQg8mva3b9vrCuZUWTf9px4p8/3KbnfVv6uLzdQ5YfbWujoM5mSLe5+Q4f2RAJOLzlryyjIzJL2ZlXNrgkBdjvXJN6k4FLRhS00n6EV7zp/JbcDsSRW0/cvxUZNiZ/aKP/sq+Nn296G3yCSfadbWTGHToWtnAnt7KQtY4/lTE7gRDhm4ql9WmTJ03upuWsTCYeVHo/bqSC0zl0P5P1Fh7VdpNN3OgyXiFEtvSoivJz6eRCKDeZhZ0RUscwzObq/D6udlXin/Xr24LyaoYeQWlrwNfXmPPX/g0T16Qb3qiQFUho=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 157cfe63-9e32-4aea-ac36-08d817b0a130
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jun 2020 20:04:25.7750
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: gmkGvYBXQEVZgGhXyLhRKkBxSgbG8R9AUIhJD+TjQ70xw12oilNqQvIMbtJpPVeUkaWsgJixSlzigvLi2Q8b56aY3/m5ha7YbUZjutwA7XU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6916
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 6/23/2020 1:41 AM, SeongJae Park wrote:
-> From: SeongJae Park <sjpark@amazon.de>
->
-> Commit cdb42becdd40 ("scsi: lpfc: Replace io_channels for nvme and fcp
-> with general hdw_queues per cpu") has introduced static checker warnings
-> for potential null dereferences in 'lpfc_sli4_hba_unset()' and
-> commit 1ffdd2c0440d ("scsi: lpfc: resolve static checker warning in
-> lpfc_sli4_hba_unset") has tried to fix it.  However, yet another
-> potential null dereference is remaining.  This commit fixes it.
->
-> This bug was discovered and resolved using Coverity Static Analysis
-> Security Testing (SAST) by Synopsys, Inc.
->
-> Fixes: 1ffdd2c0440d ("scsi: lpfc: resolve static checker warning inlpfc_sli4_hba_unset")
-> Fixes: cdb42becdd40 ("scsi: lpfc: Replace io_channels for nvme and fcp with general hdw_queues per cpu")
-> Signed-off-by: SeongJae Park <sjpark@amazon.de>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 69a5249e007a..6637f84a3d1b 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -11878,7 +11878,8 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
->   	lpfc_sli4_xri_exchange_busy_wait(phba);
->   
->   	/* per-phba callback de-registration for hotplug event */
-> -	lpfc_cpuhp_remove(phba);
-> +	if (phba->pport)
-> +		lpfc_cpuhp_remove(phba);
->   
->   	/* Disable PCI subsystem interrupt */
->   	lpfc_sli4_disable_intr(phba);
-
-Reviewed-by: James Smart <james.smart@broadcom.com>
-
--- james
-
+On 6/23/20 12:18 PM, Tony Asleson wrote:=0A=
+> Corrections from Keith Busch review comments.=0A=
+> =0A=
+> Signed-off-by: Tony Asleson<tasleson@redhat.com>=0A=
+> ---=0A=
+>   drivers/nvme/host/core.c | 18 ++++++++++++++++++=0A=
+>   1 file changed, 18 insertions(+)=0A=
+This looks useful me, but why you still have an RFC fag ?=0A=
