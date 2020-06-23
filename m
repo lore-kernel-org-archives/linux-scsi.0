@@ -2,168 +2,204 @@ Return-Path: <SRS0=JRJf=AE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31330C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 13:54:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F04C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:03:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 148BD20720
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 13:54:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB03F20723
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:03:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732810AbgFWNyO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 09:54:14 -0400
-Received: from mx2.suse.de ([195.135.220.15]:39284 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732838AbgFWNxq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Jun 2020 09:53:46 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id DDB0CAD4A;
-        Tue, 23 Jun 2020 13:53:43 +0000 (UTC)
-Message-ID: <9c0b41a03f636d1ef98da9f8a12422d61d71fbff.camel@suse.com>
-Subject: Re: [PATCH] fnic: to not call 'scsi_done()' for unhandled commands
-From:   Martin Wilck <mwilck@suse.com>
-To:     Laurence Oberman <loberman@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Date:   Tue, 23 Jun 2020 15:53:43 +0200
-In-Reply-To: <62ac9a52021d3217171a9d1a3ce5eef913780273.camel@redhat.com>
-References: <20200515112647.49260-1-hare@suse.de>
-         <fe3e6ab8cfeb23dc46f0413ddfd47efe5e33df7f.camel@redhat.com>
-         <5aa5ed17-e763-4b07-7526-fe1c97c04f31@suse.de>
-         <62ac9a52021d3217171a9d1a3ce5eef913780273.camel@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.36.3 
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1732760AbgFWODT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 10:03:19 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55844 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1732730AbgFWODT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jun 2020 10:03:19 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05NDXsR3164073;
+        Tue, 23 Jun 2020 10:03:12 -0400
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 31ufgj7pbw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 Jun 2020 10:03:11 -0400
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 05NE1Lj4006853;
+        Tue, 23 Jun 2020 14:03:05 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma06ams.nl.ibm.com with ESMTP id 31uk330060-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 23 Jun 2020 14:03:05 +0000
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 05NE32Z035127636
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 23 Jun 2020 14:03:02 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8BE34A405E;
+        Tue, 23 Jun 2020 14:03:02 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 39F16A4040;
+        Tue, 23 Jun 2020 14:03:02 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue, 23 Jun 2020 14:03:02 +0000 (GMT)
+From:   Steffen Maier <maier@linux.ibm.com>
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Kees Cook <keescook@chromium.org>, stable@vger.kernel.org
+Subject: [PATCH] zfcp: fix panic on ERP timeout for previously dismissed ERP action
+Date:   Tue, 23 Jun 2020 16:02:42 +0200
+Message-Id: <20200623140242.98864-1-maier@linux.ibm.com>
+X-Mailer: git-send-email 2.17.1
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
+ definitions=2020-06-23_06:2020-06-23,2020-06-23 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=2
+ priorityscore=1501 mlxscore=0 mlxlogscore=993 impostorscore=0 spamscore=0
+ adultscore=0 cotscore=-2147483648 clxscore=1011 bulkscore=0 phishscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006230108
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-05-15 at 10:04 -0400, Laurence Oberman wrote:
-> On Fri, 2020-05-15 at 15:52 +0200, Hannes Reinecke wrote:
-> > On 5/15/20 3:06 PM, Laurence Oberman wrote:
-> > > On Fri, 2020-05-15 at 13:26 +0200, Hannes Reinecke wrote:
-> > > > The fnic drivers assigns an ioreq structure to each command,
-> > > > and
-> > > > severs this assignment once scsi_done() has been called and the
-> > > > command has been completed.
-> > > > So when traversing commands to terminate outstanding I/O we
-> > > > should
-> > > > not call scsi_done() on commands which do not have a
-> > > > corresponding
-> > > > ioreq structure; these commands have either never entered the
-> > > > driver
-> > > > or have already been completed.
-> > > > 
-> > > > Signed-off-by: Hannes Reinecke <hare@suse.com>
-> > > > ---
-> > > >   drivers/scsi/fnic/fnic_scsi.c | 2 +-
-> > > >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/scsi/fnic/fnic_scsi.c
-> > > > b/drivers/scsi/fnic/fnic_scsi.c
-> > > > index 27535c90b248..8d2798cbd30f 100644
-> > > > --- a/drivers/scsi/fnic/fnic_scsi.c
-> > > > +++ b/drivers/scsi/fnic/fnic_scsi.c
-> > > > @@ -1401,7 +1401,7 @@ static void fnic_cleanup_io(struct fnic
-> > > > *fnic,
-> > > > int exclude_id)
-> > > >   		}
-> > > >   		if (!io_req) {
-> > > >   			spin_unlock_irqrestore(io_lock, flags);
-> > > > -			goto cleanup_scsi_cmd;
-> > > > +			continue;
-> > > >   		}
-> > > >   
-> > > >   		CMD_SP(sc) = NULL;
-> > > 
-> > > Hi Hannes,
-> > > Thanks for this patch, but can you share what the impact was of
-> > > this
-> > > issue.
-> > > What diod you see in logs/behavior
-> > > 
-> > 
-> > Unmap the LUNs from the array, and reboot the machine.
-> > Causing a nice kernel oops in fnic_terminate_rport_io:
-> > 
-> > [   41.904013]  rport-3:0-2: blocked FC remote port time out:
-> > removing rport
-> > [   41.911625] BUG: kernel NULL pointer dereference, address: 
-> > 0000000000000040
-> > [   41.919408] #PF: supervisor read access in kernel mode
-> > [   41.919409] #PF: error_code(0x0000) - not-present page
-> > [   41.919411] PGD 0 P4D 0
-> > [   41.919416] Oops: 0000 [#1] SMP PTI
-> > [   41.919420] CPU: 1 PID: 219 Comm: kworker/1:1 Kdump: loaded
-> > Tainted: 
-> > G               X   5.3.18-16-default #1 SLE15-SP2 (unreleased)
-> > [   41.919421] Hardware name: Cisco Systems Inc 
-> > UCSC-C220-M3S/UCSC-C220-M3S, BIOS C220M3.3.0.4e.0.1106191007
-> > 11/06/2019
-> > [   41.919433] Workqueue: fc_wq_3 fc_rport_final_delete
-> > [scsi_transport_fc]
-> > [   41.919443] RIP: 0010:fnic_terminate_rport_io+0x2db/0x6c0 [fnic]
-> > [   41.919446] Code: 3c c2 e8 48 00 95 f5 48 85 c0 49 89 c5 74 2c
-> > 48
-> > 05 
-> > 20 01 00 00 48 89 44 24 10 74 1f 49 8b 85 58 01 00 00 48 8b 80 c0
-> > 01
-> > 00 
-> > 00 <48> 8b 78 40 e8 1c 0f e4 ff 85 c0 0f 85 b2 fd ff ff 4c 89 e6 48
-> > 89
-> > [   41.919448] RSP: 0018:ffffa521c164bde0 EFLAGS: 00010082
-> > [   41.919450] RAX: 0000000000000000 RBX: ffff8c33633587c8 RCX: 
-> > ffff8c3363358bc0
-> > [   41.919452] RDX: ffff8c336347bc80 RSI: 0000000000000080 RDI: 
-> > ffff8c33632dd8c0
-> > [   41.919453] RBP: ffff8c3363359208 R08: 00335f71775f6366 R09: 
-> > 8080808080808080
-> > [   41.919455] R10: ffffa521c0087dc8 R11: fefefefefefefeff R12: 
-> > 0000000000000246
-> > [   41.919456] R13: ffff8c33633e8100 R14: ffff8c24470a4000 R15: 
-> > 0000000000000080
-> > [   41.919459] FS:  0000000000000000(0000)
-> > GS:ffff8c33bfa40000(0000) 
-> > knlGS:0000000000000000
-> > [   41.919461] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > [   41.919466] CR2: 0000000000000040 CR3: 000000011340a003 CR4: 
-> > 00000000000606e0
-> > [   42.066910] Call Trace:
-> > [   42.066929]  fc_terminate_rport_io+0x51/0x70 [scsi_transport_fc]
-> > [   42.066935]  fc_rport_final_delete+0x53/0x1e0
-> > [scsi_transport_fc]
-> > [   42.066943]  process_one_work+0x1f4/0x3e0
-> > [   42.066947]  worker_thread+0x2d/0x3e0
-> > [   42.066951]  ? process_one_work+0x3e0/0x3e0
-> > [   42.066954]  kthread+0x10d/0x130
-> > [   42.066957]  ? kthread_park+0xa0/0xa0
-> > [   42.066961]  ret_from_fork+0x35/0x40
-> > 
-> > Cheers,
-> > 
-> > Hannes
-> 
-> Awesome, Ok Thank you!
-> I looked at the patch and it looks correct to me at least.
-> I will add a Review but prob best to have the Cisco fnic folks also
-> review.
-> Thank you for catching this.
-> 
-> Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Suppose that, for unrelated reasons, FSF requests on behalf of recovery
+are very slow and can run into the ERP timeout.
 
-It seems that the Cisco people have missed this patch. Added them to
-the recpient list now.
+In the case at hand, we did adapter recovery to a large degree.
+However due to the slowness a LUN open is pending
+so the corresponding fc_rport remains blocked.
+After fast_io_fail_tmo we trigger close physical port recovery
+for the port under which the LUN should have been opened.
+The new higher order port recovery
+dismisses the pending LUN open ERP action and
+dismisses the pending LUN open FSF request.
+Such dismissal decouples the ERP action from the pending corresponding
+FSF request by setting zfcp_fsf_req->erp_action to NULL
+(among other things) [zfcp_erp_strategy_check_fsfreq()].
 
-Regards
-Martin
+If now the ERP timeout for the pending open LUN request runs out, we
+must not use zfcp_fsf_req->erp_action in the ERP timeout handler.
+This is a problem since v4.15 commit 75492a51568b ("s390/scsi: Convert
+timers to use timer_setup()"). Before that we intentionally only passed
+zfcp_erp_action as context argument to zfcp_erp_timeout_handler().
 
+Note: The lifetime of the corresponding zfcp_fsf_req object continues
+until a (late) response or an (unrelated) adapter recovery.
+
+Just like the regular response path ignores dismissed requests
+[zfcp_fsf_req_complete() => zfcp_fsf_protstatus_eval() => return early]
+the ERP timeout handler now needs to ignore dismissed requests.
+So simply return early in the ERP timeout handler if the FSF request
+is marked as dismissed in its status flags.
+To protect against the race where zfcp_erp_strategy_check_fsfreq()
+dismisses and sets zfcp_fsf_req->erp_action to NULL after our previous
+status flag check, return early if zfcp_fsf_req->erp_action is NULL.
+After all, the former ERP action does not need to be woken up as that was
+already done as part of the dismissal above [zfcp_erp_action_dismiss()].
+
+This fixes the following panic due to kernel page fault in IRQ context:
+
+Unable to handle kernel pointer dereference in virtual kernel address space
+Failing address: 0000000000000000 TEID: 0000000000000483
+Fault in home space mode while using kernel ASCE.
+AS:000009859238c00b R2:00000e3e7ffd000b R3:00000e3e7ffcc007 S:00000e3e7ffd7000 P:000000000000013d
+Oops: 0004 ilc:2 [#1] SMP
+Modules linked in: ...
+CPU: 82 PID: 311273 Comm: stress Kdump: loaded Tainted: G            E  X   ...
+Hardware name: IBM 8561 T01 701 (LPAR)
+Krnl PSW : 0404c00180000000 001fffff80549be0 (zfcp_erp_notify+0x40/0xc0 [zfcp])
+           R:0 T:1 IO:0 EX:0 Key:0 M:1 W:0 P:0 AS:3 CC:0 PM:0 RI:0 EA:3
+Krnl GPRS: 0000000000000080 00000e3d00000000 00000000000000f0 0000000000030000
+           000000010028e700 000000000400a39c 000000010028e700 00000e3e7cf87e02
+           0000000010000000 0700098591cb67f0 0000000000000000 0000000000000000
+           0000033840e9a000 0000000000000000 001fffe008d6bc18 001fffe008d6bbc8
+Krnl Code: 001fffff80549bd4: a7180000            lhi     %r1,0
+           001fffff80549bd8: 4120a0f0            la      %r2,240(%r10)
+          #001fffff80549bdc: a53e0003            llilh   %r3,3
+          >001fffff80549be0: ba132000            cs      %r1,%r3,0(%r2)
+           001fffff80549be4: a7740037            brc     7,1fffff80549c52
+           001fffff80549be8: e320b0180004        lg      %r2,24(%r11)
+           001fffff80549bee: e31020e00004        lg      %r1,224(%r2)
+           001fffff80549bf4: 412020e0            la      %r2,224(%r2)
+Call Trace:
+ [<001fffff80549be0>] zfcp_erp_notify+0x40/0xc0 [zfcp]
+ [<00000985915e26f0>] call_timer_fn+0x38/0x190
+ [<00000985915e2944>] expire_timers+0xfc/0x190
+ [<00000985915e2ac4>] run_timer_softirq+0xec/0x218
+ [<0000098591ca7c4c>] __do_softirq+0x144/0x398
+ [<00000985915110aa>] do_softirq_own_stack+0x72/0x88
+ [<0000098591551b58>] irq_exit+0xb0/0xb8
+ [<0000098591510c6a>] do_IRQ+0x82/0xb0
+ [<0000098591ca7140>] ext_int_handler+0x128/0x12c
+ [<0000098591722d98>] clear_subpage.constprop.13+0x38/0x60
+([<000009859172ae4c>] clear_huge_page+0xec/0x250)
+ [<000009859177e7a2>] do_huge_pmd_anonymous_page+0x32a/0x768
+ [<000009859172a712>] __handle_mm_fault+0x88a/0x900
+ [<000009859172a860>] handle_mm_fault+0xd8/0x1b0
+ [<0000098591529ef6>] do_dat_exception+0x136/0x3e8
+ [<0000098591ca6d34>] pgm_check_handler+0x1c8/0x220
+Last Breaking-Event-Address:
+ [<001fffff80549c88>] zfcp_erp_timeout_handler+0x10/0x18 [zfcp]
+Kernel panic - not syncing: Fatal exception in interrupt
+
+Signed-off-by: Steffen Maier <maier@linux.ibm.com>
+Fixes: 75492a51568b ("s390/scsi: Convert timers to use timer_setup()")
+Cc: <stable@vger.kernel.org> #4.15+
+Reviewed-by: Julian Wiedmann <jwi@linux.ibm.com>
+---
+
+
+Martin, James, this zfcp fix for a seldom panic would be something for
+v5.8-rcX and applies to 5.8/scsi-fixes.
+
+
+ drivers/s390/scsi/zfcp_erp.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index db320dab1fee..79f6e8fb03ca 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -577,7 +577,10 @@ static void zfcp_erp_strategy_check_fsfreq(struct zfcp_erp_action *act)
+ 				   ZFCP_STATUS_ERP_TIMEDOUT)) {
+ 			req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
+ 			zfcp_dbf_rec_run("erscf_1", act);
+-			req->erp_action = NULL;
++			/* lock-free concurrent access with
++			 * zfcp_erp_timeout_handler()
++			 */
++			WRITE_ONCE(req->erp_action, NULL);
+ 		}
+ 		if (act->status & ZFCP_STATUS_ERP_TIMEDOUT)
+ 			zfcp_dbf_rec_run("erscf_2", act);
+@@ -613,8 +616,14 @@ void zfcp_erp_notify(struct zfcp_erp_action *erp_action, unsigned long set_mask)
+ void zfcp_erp_timeout_handler(struct timer_list *t)
+ {
+ 	struct zfcp_fsf_req *fsf_req = from_timer(fsf_req, t, timer);
+-	struct zfcp_erp_action *act = fsf_req->erp_action;
++	struct zfcp_erp_action *act;
+ 
++	if (fsf_req->status & ZFCP_STATUS_FSFREQ_DISMISSED)
++		return;
++	/* lock-free concurrent access with zfcp_erp_strategy_check_fsfreq() */
++	act = READ_ONCE(fsf_req->erp_action);
++	if (!act)
++		return;
+ 	zfcp_erp_notify(act, ZFCP_STATUS_ERP_TIMEDOUT);
+ }
+ 
+-- 
+2.17.1
 
