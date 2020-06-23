@@ -2,102 +2,91 @@ Return-Path: <SRS0=JRJf=AE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7D2C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:42:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F9A5C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 09:05:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B302520720
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:42:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CE8220702
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 09:05:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="I+KDXaHk"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="eUntoQE4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731836AbgFWImD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 04:42:03 -0400
-Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:31545 "EHLO
-        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731732AbgFWImC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 04:42:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1592901722; x=1624437722;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=3qBFEw3x0r6bNqV2zJ7slaRDovv3TN5c1Z3S4iPJbGE=;
-  b=I+KDXaHk8qzmM4YWLnmosg66/u+ecDEJi/vAahish6q+iirMaBG6Tmv5
-   JGtu8F0ZWS0Ce59LbdQMfAbkHVW9MwoJfGXGTQ3kKZNEtBm8MXbYGzjd+
-   +tHbRbU1RrISaA0aYu2t+AjJdfLMfE3S+YkPEQfHqy7hD860plWttsfKF
-   8=;
-IronPort-SDR: Uv0Wpq3QHiYDL0enQytvGY72Cv4qYs5ky+tluqLYQgCSLdCvjBeExqQt7PKw2WJXdaQgPDgDYM
- Llcx/+QowVHQ==
-X-IronPort-AV: E=Sophos;i="5.75,270,1589241600"; 
-   d="scan'208";a="39247947"
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1a-807d4a99.us-east-1.amazon.com) ([10.43.8.6])
-  by smtp-border-fw-out-6001.iad6.amazon.com with ESMTP; 23 Jun 2020 08:42:00 +0000
-Received: from EX13MTAUEA002.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1a-807d4a99.us-east-1.amazon.com (Postfix) with ESMTPS id B619BA1DCA;
-        Tue, 23 Jun 2020 08:41:58 +0000 (UTC)
-Received: from EX13D31EUA001.ant.amazon.com (10.43.165.15) by
- EX13MTAUEA002.ant.amazon.com (10.43.61.77) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 23 Jun 2020 08:41:57 +0000
-Received: from u886c93fd17d25d.ant.amazon.com (10.43.160.48) by
- EX13D31EUA001.ant.amazon.com (10.43.165.15) with Microsoft SMTP Server (TLS)
- id 15.0.1497.2; Tue, 23 Jun 2020 08:41:48 +0000
-From:   SeongJae Park <sjpark@amazon.com>
-To:     <james.smart@broadcom.com>, <jsmart2021@gmail.com>,
-        <dick.kennedy@broadcom.com>
-CC:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        SeongJae Park <sjpark@amazon.de>
-Subject: [PATCH] scsi: lpfc: Avoid another null dereference in lpfc_sli4_hba_unset()
-Date:   Tue, 23 Jun 2020 10:41:22 +0200
-Message-ID: <20200623084122.30633-1-sjpark@amazon.com>
-X-Mailer: git-send-email 2.17.1
+        id S1731971AbgFWJFT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 05:05:19 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:12525 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731894AbgFWJFS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 05:05:18 -0400
+X-UUID: 476d30af18d14cd08b988024d5536bd0-20200623
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=KrSrGuuWaYdD1xn1WyvfP2hN+0NoJYvJhqKj27QkdiE=;
+        b=eUntoQE4VjF28P8VH9xdZRub0VHzYTYEd5Huq8Mm34YtPmJTH5JE0H015DJnqJQr9/nKeqlCmhmdA9VZXZU0W6BBMogD+QAQRNZX+OtxPDdH8SJ72AnLRJaQ+J984rzcfBSjqRk/7HSv3sUHn0owh6rhmA7S/guFGZ+LM1sSPAA=;
+X-UUID: 476d30af18d14cd08b988024d5536bd0-20200623
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 1576730067; Tue, 23 Jun 2020 17:05:14 +0800
+Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
+ mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 23 Jun 2020 17:05:06 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by MTKCAS06.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 23 Jun 2020 17:05:06 +0800
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
+        <bvanassche@acm.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
+        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <cc.chou@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
+Subject: [PATCH v1] scsi: ufs: Cleanup completed request without interrupt notification
+Date:   Tue, 23 Jun 2020 17:05:11 +0800
+Message-ID: <20200623090511.20085-1-stanley.chu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Originating-IP: [10.43.160.48]
-X-ClientProxiedBy: EX13D24UWB002.ant.amazon.com (10.43.161.159) To
- EX13D31EUA001.ant.amazon.com (10.43.165.15)
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: SeongJae Park <sjpark@amazon.de>
-
-Commit cdb42becdd40 ("scsi: lpfc: Replace io_channels for nvme and fcp
-with general hdw_queues per cpu") has introduced static checker warnings
-for potential null dereferences in 'lpfc_sli4_hba_unset()' and
-commit 1ffdd2c0440d ("scsi: lpfc: resolve static checker warning in
-lpfc_sli4_hba_unset") has tried to fix it.  However, yet another
-potential null dereference is remaining.  This commit fixes it.
-
-This bug was discovered and resolved using Coverity Static Analysis
-Security Testing (SAST) by Synopsys, Inc.
-
-Fixes: 1ffdd2c0440d ("scsi: lpfc: resolve static checker warning inlpfc_sli4_hba_unset")
-Fixes: cdb42becdd40 ("scsi: lpfc: Replace io_channels for nvme and fcp with general hdw_queues per cpu")
-Signed-off-by: SeongJae Park <sjpark@amazon.de>
----
- drivers/scsi/lpfc/lpfc_init.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 69a5249e007a..6637f84a3d1b 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11878,7 +11878,8 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
- 	lpfc_sli4_xri_exchange_busy_wait(phba);
- 
- 	/* per-phba callback de-registration for hotplug event */
--	lpfc_cpuhp_remove(phba);
-+	if (phba->pport)
-+		lpfc_cpuhp_remove(phba);
- 
- 	/* Disable PCI subsystem interrupt */
- 	lpfc_sli4_disable_intr(phba);
--- 
-2.17.1
+SWYgc29tZWhvdyBubyBpbnRlcnJ1cHQgbm90aWZpY2F0aW9uIGlzIHJhaXNlZCBmb3IgYSBjb21w
+bGV0ZWQgcmVxdWVzdA0KYW5kIGl0cyBkb29yYmVsbCBiaXQgaXMgY2xlYXJlZCBieSBob3N0LCBV
+RlMgZHJpdmVyIG5lZWRzIHRvIGNsZWFudXANCml0cyBvdXRzdGFuZGluZyBiaXQgaW4gdWZzaGNk
+X2Fib3J0KCkuDQoNCk90aGVyd2lzZSwgc3lzdGVtIG1heSBjcmFzaCBieSBiZWxvdyBhYm5vcm1h
+bCBmbG93Og0KDQpBZnRlciB0aGlzIHJlcXVlc3QgaXMgcmVxdWV1ZWQgYnkgU0NTSSBsYXllciB3
+aXRoIGl0cw0Kb3V0c3RhbmRpbmcgYml0IHNldCwgdGhlIG5leHQgY29tcGxldGVkIHJlcXVlc3Qg
+d2lsbCB0cmlnZ2VyDQp1ZnNoY2RfdHJhbnNmZXJfcmVxX2NvbXBsKCkgdG8gaGFuZGxlIGFsbCAi
+Y29tcGxldGVkIG91dHN0YW5kaW5nDQpiaXRzIi4gSW4gdGhpcyB0aW1lLCB0aGUgImFibm9ybWFs
+IG91dHN0YW5kaW5nIGJpdCIgd2lsbCBiZSBkZXRlY3RlZA0KYW5kIHRoZSAicmVxdWV1ZWQgcmVx
+dWVzdCIgd2lsbCBiZSBjaG9zZW4gdG8gZXhlY3V0ZSByZXF1ZXN0DQpwb3N0LXByb2Nlc3Npbmcg
+Zmxvdy4gVGhpcyBpcyB3cm9uZyBhbmQgYmxrX2ZpbmlzaF9yZXF1ZXN0KCkgd2lsbA0KQlVHX09O
+IGJlY2F1c2UgdGhpcyByZXF1ZXN0IGlzIHN0aWxsIGluIHRoZSByZXF1ZXN0IHF1ZXVlLg0KDQpT
+aWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KLS0t
+DQogZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8IDMgKystDQogMSBmaWxlIGNoYW5nZWQsIDIg
+aW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L3Vmcy91ZnNoY2QuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCmluZGV4IDUyYWJlODJh
+MTE2Ni4uZjE3M2FkMWJkNzlmIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2Qu
+Yw0KKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KQEAgLTY0NjIsNyArNjQ2Miw3IEBA
+IHN0YXRpYyBpbnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCiAJCQkvKiBj
+b21tYW5kIGNvbXBsZXRlZCBhbHJlYWR5ICovDQogCQkJZGV2X2VycihoYmEtPmRldiwgIiVzOiBj
+bWQgYXQgdGFnICVkIHN1Y2Nlc3NmdWxseSBjbGVhcmVkIGZyb20gREIuXG4iLA0KIAkJCQlfX2Z1
+bmNfXywgdGFnKTsNCi0JCQlnb3RvIG91dDsNCisJCQlnb3RvIGNsZWFudXA7DQogCQl9IGVsc2Ug
+ew0KIAkJCWRldl9lcnIoaGJhLT5kZXYsDQogCQkJCSIlczogbm8gcmVzcG9uc2UgZnJvbSBkZXZp
+Y2UuIHRhZyA9ICVkLCBlcnIgJWRcbiIsDQpAQCAtNjQ5Niw2ICs2NDk2LDcgQEAgc3RhdGljIGlu
+dCB1ZnNoY2RfYWJvcnQoc3RydWN0IHNjc2lfY21uZCAqY21kKQ0KIAkJZ290byBvdXQ7DQogCX0N
+CiANCitjbGVhbnVwOg0KIAlzY3NpX2RtYV91bm1hcChjbWQpOw0KIA0KIAlzcGluX2xvY2tfaXJx
+c2F2ZShob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCi0tIA0KMi4xOC4wDQo=
 
