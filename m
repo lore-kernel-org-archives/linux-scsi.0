@@ -2,192 +2,148 @@ Return-Path: <SRS0=JRJf=AE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CFABC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 00:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C3BC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 01:50:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 634072070E
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 00:56:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4771206C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 01:50:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AZKg5gTm"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="F3ws3kpG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732360AbgFWA4T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 22 Jun 2020 20:56:19 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:42266 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1732403AbgFWA4S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Jun 2020 20:56:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592873746;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B9reJZXYhkiCIkcK6uyVv3pjja9WpM+51hYLbTX+7Xs=;
-        b=AZKg5gTmf8TdSQB6fxblrmCt5dHOgHBT4J5ilx2CEKGhqMHlSou6uDrMb2cnmWIm99cqfq
-        Tp5NskZDvFtj3gEMTwEnAsa68VHSGIY7oPtrWFZ+QJnri56ZEJpW6FdUeo59a//ElPZwgF
-        MwRqfvtpnup0ik/RM6cMEbz00JV4eV8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-220-XVq_4UbCNxWWdKAn_0ospg-1; Mon, 22 Jun 2020 20:55:41 -0400
-X-MC-Unique: XVq_4UbCNxWWdKAn_0ospg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B50CE107ACCA;
-        Tue, 23 Jun 2020 00:55:38 +0000 (UTC)
-Received: from T590 (ovpn-12-189.pek2.redhat.com [10.72.12.189])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8227A512FE;
-        Tue, 23 Jun 2020 00:55:23 +0000 (UTC)
-Date:   Tue, 23 Jun 2020 08:55:18 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-Subject: Re: [PATCH RFC v7 00/12] blk-mq/scsi: Provide hostwide shared tags
- for SCSI HBAs
-Message-ID: <20200623005518.GA843366@T590>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <20200611030708.GB453671@T590>
- <c033f445-97fd-6dc9-c270-9890681b39d9@huawei.com>
- <bbdec3b3fbeb9907d2ec66a2afa56c29@mail.gmail.com>
- <20200615021355.GA4012@T590>
- <e49f164d867b53fd4495f1e05a85df03@mail.gmail.com>
- <20200616010055.GA27192@T590>
- <f9a05331a46a8c60c10e35df4aa08c45@mail.gmail.com>
- <67d626a6-1b7c-fbc8-24b6-8d6b6df8a7b8@suse.de>
+        id S1732000AbgFWBum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 22 Jun 2020 21:50:42 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:45071 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730252AbgFWBul (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jun 2020 21:50:41 -0400
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200623015038epoutp0468e0fd78955209f5645adda6fefe05d8~bCToF6Jyo2100521005epoutp04l
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2020 01:50:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200623015038epoutp0468e0fd78955209f5645adda6fefe05d8~bCToF6Jyo2100521005epoutp04l
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1592877038;
+        bh=dhk5mX215O36H9YO5nuIb/Bpi7FVkbbwNp+j22h+O5A=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=F3ws3kpGg5auuYuLpgtiO9frHI3Okj+o12FPoLQ8ktKJvER9H5EuOL3rgbNh5cuyT
+         EdNhM1b7FQNFTlF/+diWQ0QLry57UHJtDXJkAazSC3uBGJW2dSE0EX3X3KPrDI0uek
+         qR+BfRATQsg/SCTUxu5/f2p8JlxTXdnQdZcPrO0Q=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20200623015037epcas2p3ad20564bad059b1cf6309b137c5a2bc1~bCTnrJ5oY0640706407epcas2p3W;
+        Tue, 23 Jun 2020 01:50:37 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.191]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 49rTkg3tPwzMqYkW; Tue, 23 Jun
+        2020 01:50:35 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        6E.17.19322.AEF51FE5; Tue, 23 Jun 2020 10:50:34 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200623015034epcas2p38a219afaccb31e32e759214a0d056faa~bCTknr8G10640706407epcas2p3J;
+        Tue, 23 Jun 2020 01:50:34 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200623015034epsmtrp1206602c56d280378039a081029750ed3~bCTkm_Mbb2284122841epsmtrp1x;
+        Tue, 23 Jun 2020 01:50:34 +0000 (GMT)
+X-AuditID: b6c32a45-7adff70000004b7a-63-5ef15feabce8
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        05.AB.08382.AEF51FE5; Tue, 23 Jun 2020 10:50:34 +0900 (KST)
+Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20200623015034epsmtip14c1ebc3e170381193ed3f1335431b15e~bCTkY_frV2895528955epsmtip1A;
+        Tue, 23 Jun 2020 01:50:34 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Bart Van Assche'" <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <asutoshd@codeaurora.org>, <cang@codeaurora.org>
+In-Reply-To: <5ed422cb-ad63-e085-cfe4-ac7d78b1ac87@acm.org>
+Subject: RE: [RFC PATCH v1 1/2] ufs: support various values per device
+Date:   Tue, 23 Jun 2020 10:50:33 +0900
+Message-ID: <001901d64900$af212160$0d636420$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <67d626a6-1b7c-fbc8-24b6-8d6b6df8a7b8@suse.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJXX9isUct+sMsc2iUIclPJ2BwbYgFh5K9zAaNqRvACMOGsoae5j0wg
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPJsWRmVeSWpSXmKPExsWy7bCmqe6r+I9xBmcuGFo8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWiy6sY3Jovv6DjaL5cf/MTlwely+4u1xua+XyWPCogOM
+        Ht/Xd7B5fHx6i8Wjb8sqRo/Pm+Q82g90MwVwROXYZKQmpqQWKaTmJeenZOal2yp5B8c7x5ua
+        GRjqGlpamCsp5CXmptoqufgE6Lpl5gCdp6RQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUot
+        SMkpMDQs0CtOzC0uzUvXS87PtTI0MDAyBapMyMno3L6DsWANa8WqRz9YGxibWboYOTkkBEwk
+        Dpx/wtrFyMUhJLCDUWJD3xwWCOcTo8Sh7QvYQaqEBL4xSvx9WwnTsebldKiivYwSl7Y0M0E4
+        LxglvvY1s4JUsQloS0x7uBtsrojAP0aJh8f+sIEkOAWsJb72r2QEsYUF3CT+zvsNFmcRUJXo
+        3NvNBGLzClhKnNi1kBnCFpQ4OfMJ2LHMAvIS29/OYYY4Q0Hi59NlQAs4gBa4SWzeHghRIiIx
+        u7ONGWSvhMBKDolP2zYwgdRICLhINL/kgGgVlnh1fAs7hC0l8bK/Dcqul9g3tYEVoreHUeLp
+        vn+MEAljiVnP2hlB5jALaEqs36UPMVJZ4sgtqMv4JDoO/2WHCPNKdLQJQTQqS/yaNBlqiKTE
+        zJt3oDZ5SPSea2GfwKg4C8mPs5D8OAvJM7MQ9i5gZFnFKJZaUJybnlpsVGCIHNebGMEpV8t1
+        B+Pktx/0DjEycTAeYpTgYFYS4X0d8C5OiDclsbIqtSg/vqg0J7X4EKMpMNQnMkuJJucDk35e
+        SbyhqZGZmYGlqYWpmZGFkjhvruKFOCGB9MSS1OzU1ILUIpg+Jg5OqQammC2mku8XBnpt4xT5
+        bst6Vpw9aELTm0NXDy1JWDqxycy9PyzB8r53VvgZB48bK22PPF+Xmip3bv2sPTtvB3otME9c
+        csgh5X9L9x22MpaKiUbh/gvdT06YcWCmbexPsR+Okyf9E/oj2pwlEnzkzvOkxTen9GUf+G/O
+        GHu/rv0I+4lOH8dHswS9Zafkp2/Q5lv7I2+D7oV31xbNLTxw4z3fu/Upl8tOpksXXkphOblz
+        8a6US//zOC/+N7Vmu2vANqOX61/Hz6MCxQeDQxiPG9m2KRx50XRHLppz0qMZWwurrbf1P+jb
+        39PvUPXe/PylbzVOEv61yzTnzjt+0iiWZ8p9lUlqjrWmedI7Vu5XUtv4UImlOCPRUIu5qDgR
+        ANJVdB9CBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprAIsWRmVeSWpSXmKPExsWy7bCSnO6r+I9xBsef8lg8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWiy6sY3Jovv6DjaL5cf/MTlwely+4u1xua+XyWPCogOM
+        Ht/Xd7B5fHx6i8Wjb8sqRo/Pm+Q82g90MwVwRHHZpKTmZJalFunbJXBldG7fwViwhrVi1aMf
+        rA2MzSxdjJwcEgImEmteTgeyuTiEBHYzSjw4fI8ZIiEpcWLnc0YIW1jifssRVoiiZ4wSR/bP
+        YQVJsAloS0x7uBssISLQwSTxqmMjG0RVA5PEsj+72UGqOAWsJb72rwQbJSzgJvF33m82EJtF
+        QFWic283E4jNK2ApcWLXQmYIW1Di5MwnYPcxA23ofdjKCGHLS2x/OwfqPAWJn0+XAW3mANrs
+        JrF5eyBEiYjE7M425gmMQrOQTJqFZNIsJJNmIWlZwMiyilEytaA4Nz232LDAMC+1XK84Mbe4
+        NC9dLzk/dxMjONK0NHcwbl/1Qe8QIxMH4yFGCQ5mJRHe1wHv4oR4UxIrq1KL8uOLSnNSiw8x
+        SnOwKInz3ihcGCckkJ5YkpqdmlqQWgSTZeLglGpgkgq3C/WckNnWez2AfZG9/mbHCsl80RsL
+        gzwf5O65yjTdva/1zt77GTZe2i4BKZphZjcfe++X4Xdvffnm2/aGk/f/FK3Iljzw+SvXvZ3C
+        cvLP52zMuLFWreTtlGsvZrtHZDDd+6QWILop+01ho8nxPUwMxrbdn9SkS2p+H8j8ffGxtIjr
+        stKYLWbLjTxVWtZKmK5N/nDjqgHbOS6OM+7H0pN2OpYI+8na+LVP+jTbiu3OPMNpBmy8MfU9
+        EbW1+96Eftm6YI2NRlmHgwpnklDRUbcjsiUprUKP6qOnzL+9NS70LeP/uG7Ztstx3/os1/L0
+        96wItzWIy5i7MsP+/ILQ3sOXzRI0Hm1afnQK210lluKMREMt5qLiRAB7+iStIwMAAA==
+X-CMS-MailID: 20200623015034epcas2p38a219afaccb31e32e759214a0d056faa
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200620073914epcas2p2c788e787f4fff602de61e5f8e5fb79ae
+References: <1592638297-36155-1-git-send-email-kwmad.kim@samsung.com>
+        <CGME20200620073914epcas2p2c788e787f4fff602de61e5f8e5fb79ae@epcas2p2.samsung.com>
+        <1592638297-36155-2-git-send-email-kwmad.kim@samsung.com>
+        <5ed422cb-ad63-e085-cfe4-ac7d78b1ac87@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 22, 2020 at 08:24:39AM +0200, Hannes Reinecke wrote:
-> On 6/17/20 1:26 PM, Kashyap Desai wrote:
-> > > 
-> > > ->queued is increased only and not decreased just for debug purpose so
-> > > ->far, so
-> > > it can't be relied for this purpose.
-> > 
-> > Thanks. I overlooked that that it is only incremental counter.
-> > 
-> > > 
-> > > One approach is to add one similar counter, and maintain it by
-> > scheduler's
-> > > insert/dispatch callback.
-> > 
-> > I tried below  and I see performance is on expected range.
-> > 
-> > diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-> > index fdcc2c1..ea201d0 100644
-> > --- a/block/blk-mq-sched.c
-> > +++ b/block/blk-mq-sched.c
-> > @@ -485,6 +485,7 @@ void blk_mq_sched_insert_request(struct request *rq,
-> > bool at_head,
-> > 
-> >                  list_add(&rq->queuelist, &list);
-> >                  e->type->ops.insert_requests(hctx, &list, at_head);
-> > +               atomic_inc(&hctx->elevator_queued);
-> >          } else {
-> >                  spin_lock(&ctx->lock);
-> >                  __blk_mq_insert_request(hctx, rq, at_head);
-> > @@ -511,8 +512,10 @@ void blk_mq_sched_insert_requests(struct
-> > blk_mq_hw_ctx *hctx,
-> >          percpu_ref_get(&q->q_usage_counter);
-> > 
-> >          e = hctx->queue->elevator;
-> > -       if (e && e->type->ops.insert_requests)
-> > +       if (e && e->type->ops.insert_requests) {
-> >                  e->type->ops.insert_requests(hctx, list, false);
-> > +               atomic_inc(&hctx->elevator_queued);
-> > +       }
-> >          else {
-> >                  /*
-> >                   * try to issue requests directly if the hw queue isn't
-> > diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
-> > index 126021f..946b47a 100644
-> > --- a/block/blk-mq-sched.h
-> > +++ b/block/blk-mq-sched.h
-> > @@ -74,6 +74,13 @@ static inline bool blk_mq_sched_has_work(struct
-> > blk_mq_hw_ctx *hctx)
-> >   {
-> >          struct elevator_queue *e = hctx->queue->elevator;
-> > 
-> > +       /* If current hctx has not queued any request, there is no need to
-> > run.
-> > +        * blk_mq_run_hw_queue() on hctx which has queued IO will handle
-> > +        * running specific hctx.
-> > +        */
-> > +       if (!atomic_read(&hctx->elevator_queued))
-> > +               return false;
-> > +
-> >          if (e && e->type->ops.has_work)
-> >                  return e->type->ops.has_work(hctx);
-> > 
-> > diff --git a/block/blk-mq.c b/block/blk-mq.c
-> > index f73a2f9..48f1824 100644
-> > --- a/block/blk-mq.c
-> > +++ b/block/blk-mq.c
-> > @@ -517,8 +517,10 @@ void blk_mq_free_request(struct request *rq)
-> >          struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
-> > 
-> >          if (rq->rq_flags & RQF_ELVPRIV) {
-> > -               if (e && e->type->ops.finish_request)
-> > +               if (e && e->type->ops.finish_request) {
-> >                          e->type->ops.finish_request(rq);
-> > +                       atomic_dec(&hctx->elevator_queued);
-> > +               }
-> >                  if (rq->elv.icq) {
-> >                          put_io_context(rq->elv.icq->ioc);
-> >                          rq->elv.icq = NULL;
-> > @@ -2571,6 +2573,7 @@ blk_mq_alloc_hctx(struct request_queue *q, struct
-> > blk_mq_tag_set *set,
-> >                  goto free_hctx;
-> > 
-> >          atomic_set(&hctx->nr_active, 0);
-> > +       atomic_set(&hctx->elevator_queued, 0);
-> >          if (node == NUMA_NO_NODE)
-> >                  node = set->numa_node;
-> >          hctx->numa_node = node;
-> > diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-> > index 66711c7..ea1ddb1 100644
-> > --- a/include/linux/blk-mq.h
-> > +++ b/include/linux/blk-mq.h
-> > @@ -139,6 +139,10 @@ struct blk_mq_hw_ctx {
-> >           * shared across request queues.
-> >           */
-> >          atomic_t                nr_active;
-> > +       /**
-> > +        * @elevator_queued: Number of queued requests on hctx.
-> > +        */
-> > +       atomic_t                elevator_queued;
-> > 
-> >          /** @cpuhp_online: List to store request if CPU is going to die */
-> >          struct hlist_node       cpuhp_online;
-> > 
-> > 
-> > 
-> Would it make sense to move it into the elevator itself?
+> On 2020-06-20 00:31, Kiwoong Kim wrote:
+> >  #define END_FIX { }
+> 
+> The name of this macro is longer than its value. Additionally, this macro
+> makes code harder to read instead of easier. Please include a patch to
+> remove this macro from the UFS driver.
+> 
+> > +#define UFS_DEV_VAL(_vendor, _model, _key, _val) { \
+> > +	.wmanufacturerid = (_vendor),\
+> > +	.model = (_model),		\
+> > +	.key = (_key),			\
+> > +	.val = (_val),			\
+> > +}
+> 
+> A macro like the above also makes code harder to read instead of easier.
+> Please remove this macro definition and use the designated initialization
+> style directly.
+> 
+> Thanks,
+> 
+> Bart.
 
-That is my initial suggestion, and the counter is just done for bfq &
-mq-deadline, then we needn't to pay the cost for others.
+Got it. Thanks !
 
-Thanks,
-Ming
 
