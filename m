@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F985C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:15:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 620B5C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:17:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 169BC20716
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:15:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44F7520716
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:17:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731567AbgFWIP6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 04:15:58 -0400
-Received: from mx2.suse.de ([195.135.220.15]:39256 "EHLO mx2.suse.de"
+        id S1731627AbgFWIRf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 04:17:35 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41308 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731543AbgFWIP6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Jun 2020 04:15:58 -0400
+        id S1731158AbgFWIRe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jun 2020 04:17:34 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B604CADD5;
-        Tue, 23 Jun 2020 08:15:56 +0000 (UTC)
-Date:   Tue, 23 Jun 2020 10:15:56 +0200
+        by mx2.suse.de (Postfix) with ESMTP id 590E8ADC1;
+        Tue, 23 Jun 2020 08:17:33 +0000 (UTC)
+Date:   Tue, 23 Jun 2020 10:17:33 +0200
 From:   Daniel Wagner <dwagner@suse.de>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -32,25 +32,28 @@ Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Martin Wilck <mwilck@suse.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH 3/9] qla2xxx: Make qla82xx_flash_wait_write_finish()
- easier to read
-Message-ID: <20200623081556.xsi2os2vj54vulgd@beryllium.lan>
+Subject: Re: [PATCH 4/9] qla2xxx: Initialize 'n' before using it
+Message-ID: <20200623081733.eohe7kcj6zawemmn@beryllium.lan>
 References: <20200614223921.5851-1-bvanassche@acm.org>
- <20200614223921.5851-4-bvanassche@acm.org>
+ <20200614223921.5851-5-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200614223921.5851-4-bvanassche@acm.org>
+In-Reply-To: <20200614223921.5851-5-bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Jun 14, 2020 at 03:39:15PM -0700, Bart Van Assche wrote:
-> Return early instead of having a single return statement at the end of this
-> function. This patch fixes the following sparse warning:
+On Sun, Jun 14, 2020 at 03:39:16PM -0700, Bart Van Assche wrote:
+> The following code:
+> 	qla82xx_rom_fast_read(ha, 0, &n)
+> only initializes 'n' if it succeeds. Since 'n' may be reported in a debug
+> message even if no ROM reads succeeded, initialize 'n' to zero.
 > 
-> qla_nx.c:1018: qla82xx_flash_wait_write_finish() error: uninitialized symbol 'val'.
+> This patch fixes the following sparse warning:
+> 
+> qla_nx.c:1218: qla82xx_pinit_from_rom() error: uninitialized symbol 'n'.
 > 
 > Cc: Nilesh Javali <njavali@marvell.com>
 > Cc: Quinn Tran <qutran@marvell.com>
