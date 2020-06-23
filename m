@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B0DC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A0B5C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:39:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD73620738
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:36:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36B0620707
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 08:39:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731699AbgFWIgV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 04:36:21 -0400
-Received: from mx2.suse.de ([195.135.220.15]:51566 "EHLO mx2.suse.de"
+        id S1732057AbgFWIjz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 04:39:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55338 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731567AbgFWIgV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Jun 2020 04:36:21 -0400
+        id S1732039AbgFWIjx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jun 2020 04:39:53 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 6EB3AAE0D;
-        Tue, 23 Jun 2020 08:36:19 +0000 (UTC)
-Date:   Tue, 23 Jun 2020 10:36:19 +0200
+        by mx2.suse.de (Postfix) with ESMTP id CE136B035;
+        Tue, 23 Jun 2020 08:39:51 +0000 (UTC)
+Date:   Tue, 23 Jun 2020 10:39:51 +0200
 From:   Daniel Wagner <dwagner@suse.de>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -32,23 +32,23 @@ Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Martin Wilck <mwilck@suse.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH 8/9] qla2xxx: Make qla2x00_restart_isp() easier to read
-Message-ID: <20200623083619.2l7ycib37k45ylu5@beryllium.lan>
+Subject: Re: [PATCH 9/9] qla2xxx: Introduce a function for computing the
+ debug message prefix
+Message-ID: <20200623083951.snoddcnrgjuiteil@beryllium.lan>
 References: <20200614223921.5851-1-bvanassche@acm.org>
- <20200614223921.5851-9-bvanassche@acm.org>
+ <20200614223921.5851-10-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200614223921.5851-9-bvanassche@acm.org>
+In-Reply-To: <20200614223921.5851-10-bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Jun 14, 2020 at 03:39:20PM -0700, Bart Van Assche wrote:
-> Instead of using complicated control flow to only have one return statement
-> at the end of qla2x00_restart_isp(), return an error status as soon as it is
-> known that this function will fail.
+On Sun, Jun 14, 2020 at 03:39:21PM -0700, Bart Van Assche wrote:
+> Instead of repeating the code for generating a debug message prefix
+> six times, introduce a function for computing the debug message prefix.
 > 
 > Cc: Nilesh Javali <njavali@marvell.com>
 > Cc: Quinn Tran <qutran@marvell.com>
