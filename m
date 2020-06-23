@@ -2,217 +2,142 @@ Return-Path: <SRS0=JRJf=AE=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA2FC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:23:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9ABC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 17:17:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C67E20780
-	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 14:23:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7D9F20781
+	for <linux-scsi@archiver.kernel.org>; Tue, 23 Jun 2020 17:17:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="r2rT3O/f";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="p3w2OtWf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732836AbgFWOXh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 10:23:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53622 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732830AbgFWOXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 23 Jun 2020 10:23:36 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id EDC01B012;
-        Tue, 23 Jun 2020 14:23:33 +0000 (UTC)
-Subject: Re: [PATCH RFC v7 02/12] blk-mq: rename blk_mq_update_tag_set_depth()
-To:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, bvanassche@acm.org, hare@suse.com,
-        hch@lst.de, shivasharan.srikanteshwara@broadcom.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-3-git-send-email-john.garry@huawei.com>
- <20200611025759.GA453671@T590>
- <6ef76cdf-2fb3-0ce8-5b5a-0d7af0145901@huawei.com>
- <8ef58912-d480-a7e1-f04c-da9bd85ea0ae@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <eaf188d5-dac0-da44-1c83-31ff2860d8fa@suse.de>
-Date:   Tue, 23 Jun 2020 16:23:31 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <8ef58912-d480-a7e1-f04c-da9bd85ea0ae@huawei.com>
-Content-Type: multipart/mixed;
- boundary="------------87FA99FADADEA3EE2B4E056B"
+        id S1733013AbgFWRRF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 13:17:05 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14226 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732565AbgFWRRE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Jun 2020 13:17:04 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05NHFWVt018225;
+        Tue, 23 Jun 2020 10:16:48 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=pdbQaThxotdgmElPl2xBhY7R3w1TbO/x3yZosk8if/g=;
+ b=r2rT3O/fZOdLiky5FOCFSSSQ592p/93jSxAiI9x7A7X0gplRJQX+u0pYK7LCr/smJNFi
+ rsSEhf5nC4AJRQxk6PW80ACarI3HoAT5Jket7QBGj76ybfW2LynZxLSEfZnGLGjiHFy8
+ ZrbBTQ0JkODHGeP23pb2hL83OUz/P+IPMqMeRMfYaHsxx+ac087fWcdtG0wfQ4YlCLS3
+ vs2SiO+DRYpp6ymKMpxkXsED/lFh/fyNeOaQF7eN7DGInPBG9gSiooQaro5EMeW/iDSA
+ 8Iu4ZcaxR6EU8MKCjLz9bPkkj7xJmWz/4AG/MLVw/24b/sscMWDVgu9Qnk9z2jVyTRqi AQ== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 31uk2j10da-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Tue, 23 Jun 2020 10:16:48 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 23 Jun
+ 2020 10:16:46 -0700
+Received: from SC-EXCH04.marvell.com (10.93.176.84) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 23 Jun
+ 2020 10:16:46 -0700
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.45) by
+ SC-EXCH04.marvell.com (10.93.176.84) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2 via Frontend Transport; Tue, 23 Jun 2020 10:16:46 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KiV/X2Bt2KAM0HkuZtyroWbstsfRijeohD6dLvJCe+kPIjIRWKIh+HY61ssASJuQh2yEjm3owhv5WzUTF51LUpQCLeOH+uLqVHN23kwML4vrVjCVX9Dv6s80iAeEcYJUHUcbTGgDw+RKo4AIo8dRcZLOSM26gF8hT4xisy3m9nZpPpQPWosrDWx90KTeYrLFcW+ThV8hwkOZwxfaPaenfhZ8eWWTqJW9NuN4pqpHM8qMrw6W7zUcxKX5r775UBDDVa4xXHoiRErt3K0quBqSgJtkg/845TY2eNwR+RYas/k+PlDiWg6M38o4kx4i680WB+rYMhczKvzQboGOdsZFyA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pdbQaThxotdgmElPl2xBhY7R3w1TbO/x3yZosk8if/g=;
+ b=RcoHNDoFV7JSCbjOURuuTwohygwaGQmGEqrnoqimq2Zi85QgRp6zmrxa8RbvwWWo8kM3oJzXjxf4CZ7EqwiWodvbV2BHZa14TQZ3YB7vC1qy9bT87R7tVlqytBn/Whio5/d5euwsdyeCs1VBWvaXrt9FNHMiIhGrBhZ5gsEJelmn6HBVOJ+Zkji4rK81pw/kW8dbjxkfQYZHbznQnAZk/U0DcdsF5cJEwlO+zuXxOP+w8G/z+cOYdQiWyMqhr2t5IQr2MyI1epdZxLahYPazNostNzKDvTkgWed6OzZpWtCEGGH70PzZagoIXl2nLOXgL55A6Y90Av/1QH7abi2Yfw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pdbQaThxotdgmElPl2xBhY7R3w1TbO/x3yZosk8if/g=;
+ b=p3w2OtWfXvMsdm2p29wErQGRHPzOHvjesxOlGS549UiBcDEEs8miBZt+1OGDW6vDHMa/Zg0VOiRXP6LUby8QBc6RaKc9NbZymaE2qrjG1O95vxGoRo3FexG+MVZZq8VJRs+McDJVdstLHbXDMtan6oHuFiOoBNruPV0AJP23aDY=
+Received: from BYAPR18MB2805.namprd18.prod.outlook.com (2603:10b6:a03:108::25)
+ by BYAPR18MB2885.namprd18.prod.outlook.com (2603:10b6:a03:10e::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.21; Tue, 23 Jun
+ 2020 17:16:45 +0000
+Received: from BYAPR18MB2805.namprd18.prod.outlook.com
+ ([fe80::fd09:61da:c548:e61b]) by BYAPR18MB2805.namprd18.prod.outlook.com
+ ([fe80::fd09:61da:c548:e61b%7]) with mapi id 15.20.3109.027; Tue, 23 Jun 2020
+ 17:16:45 +0000
+From:   Shyam Sundar <ssundar@marvell.com>
+To:     Roman Bolshakov <r.bolshakov@yadro.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>,
+        Quinn Tran <qutran@marvell.com>,
+        "Arun Easi" <aeasi@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        "Bart Van Assche" <bvanassche@acm.org>,
+        Daniel Wagner <dwagner@suse.de>,
+        "Himanshu Madhani" <himanshu.madhani@oracle.com>,
+        Martin Wilck <mwilck@suse.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] scsi: qla2xxx: Keep initiator ports after RSCN
+Thread-Topic: [PATCH v2] scsi: qla2xxx: Keep initiator ports after RSCN
+Thread-Index: AQHWO0mLCnxi3iS+kkOWu/lglbF/I6jmjY8A
+Date:   Tue, 23 Jun 2020 17:16:45 +0000
+Message-ID: <4791A081-0A81-454C-921C-EF7EFB6D80FC@marvell.com>
+References: <20200605144435.27023-1-r.bolshakov@yadro.com>
+In-Reply-To: <20200605144435.27023-1-r.bolshakov@yadro.com>
+Accept-Language: en-US
 Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3445.104.11)
+authentication-results: yadro.com; dkim=none (message not signed)
+ header.d=none;yadro.com; dmarc=none action=none header.from=marvell.com;
+x-originating-ip: [2600:1700:6a70:9c50:d453:77be:a8:43ec]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: b5b90a46-341d-43dd-db38-08d8179934cb
+x-ms-traffictypediagnostic: BYAPR18MB2885:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR18MB288596F17D7071424F50ED19B4940@BYAPR18MB2885.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:873;
+x-forefront-prvs: 04433051BF
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 4UBKaOgb91k7Jcycqvtp9IIBNz7yyxERkcupUStWZsi17qNYYlv+l7fOTZ92FzmXtE+OkbAq+nKrbbUEE0YBNMJmbiVsrTNiH5d/cFv56vuZgEGF4rIdwLEJLjGumLlw44YfTwpa4S9v8DxIKWE3UBokqRX210ZjmxSKTfyJrRSxv3fC3MOGwTDtQrLyWiFeTASFWhqIMfXXOO4pKjpkyJrlGZdUTfYdw85GAJlHDYBZI4QOXVehJKMKDXcFpEVxxXRRJ29v4g2rd9KUHAyyveUA2h219pRVBsPQLyO2yHSJ9VxAqEj6jcstG6POdXpD0Esd7Dxq+XRZFvboAdb+4A==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR18MB2805.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(39850400004)(136003)(346002)(396003)(376002)(66946007)(76116006)(71200400001)(4326008)(5660300002)(478600001)(6916009)(33656002)(8936002)(36756003)(86362001)(66556008)(64756008)(66446008)(66476007)(2616005)(8676002)(54906003)(558084003)(53546011)(6506007)(6486002)(186003)(2906002)(316002)(6512007);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata: CZJGToOsAf4v6WH9zWePWTYV7KT/VJv30Ev5cB3UbHLEeBF7etc60fa4yxeB1bFn52ZEF/24nBPvNIO+sIU7yJY6KuRuZGSUt1vmWWAMdFNM5R3S6rT1BlMA68Xvv7OM6ti5/6ukEb3Zs1VW382LyxZezxO+NoT4zyEaRRmTPnRUuLoyyiVRCK1neav6h8vfVdO1MQEGQ3H/DJiQohFWKnipEQAk+kla5Ddoy/aoWsGUY8i0pL0UKoeRIN0ABqYCoY5XlZiXusH0jWvt26NG2MV01qi2ifY42flwsr79Gka+7J5DEegDGcbljpkLI2+Rw2+SV7TVC4d+Z0PvPZkrUJMT1GZCejjwjxOgiTVB3rjYjyQzCMUlC1DUJx0qMNUJENtxEi0cHhExCXWbonS/vU7vvsYR47An/8+oV12+G2n3vLBqPwCder9zjZEU10XZKf89jfDrBtnWF/GoHPjuF5CeVSuXwuK48suIqcMn0/tf+tHJCPIoGXV5lvoAonc5iYKOzsLOT6IqzPC3HVRk6UMHuPOQAuTQ5VLvPsvhJ60=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <8E01A5EB6AA95F43A507491F130DC170@namprd18.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-CrossTenant-Network-Message-Id: b5b90a46-341d-43dd-db38-08d8179934cb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Jun 2020 17:16:45.4976
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: iFl3qw+Oz0Sxk6xGhCpezz+t7qsFh4QCb3QR8BBIuNBekHKBw4wzs4HJ3Q9ci3cMbhqqC8FoaYhtCrs7OMXAtg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR18MB2885
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
+ definitions=2020-06-23_11:2020-06-23,2020-06-23 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------87FA99FADADEA3EE2B4E056B
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Looks good.=20
 
-On 6/23/20 1:25 PM, John Garry wrote:
-> On 11/06/2020 09:26, John Garry wrote:
->> On 11/06/2020 03:57, Ming Lei wrote:
->>> On Thu, Jun 11, 2020 at 01:29:09AM +0800, John Garry wrote:
->>>> From: Hannes Reinecke <hare@suse.de>
->>>>
->>>> The function does not set the depth, but rather transitions from
->>>> shared to non-shared queues and vice versa.
->>>> So rename it to blk_mq_update_tag_set_shared() to better reflect
->>>> its purpose.
->>>
->>> It is fine to rename it for me, however:
->>>
->>> This patch claims to rename blk_mq_update_tag_set_shared(), but also
->>> change blk_mq_init_bitmap_tags's signature.
->>
->> I was going to update the commit message here, but forgot again...
->>
->>>
->>> So suggest to split this patch into two or add comment log on changing
->>> blk_mq_init_bitmap_tags().
->>
->> I think I'll just split into 2x commits.
-> 
-> Hi Hannes,
-> 
-> Do you have any issue with splitting the undocumented changes into 
-> another patch as so:
-> 
-No, that's perfectly fine.
+Reviewed-by: Shyam Sundar <ssundar@marvell.com>
 
-Kashyap, I've also attached an updated patch for the elevator_count 
-patch; if you agree John can include it in the next version.
+> On Jun 5, 2020, at 7:44 AM, Roman Bolshakov <r.bolshakov@yadro.com> wrote=
+:
+>=20
+> qla24xx_async_gnnft_done
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
-
---------------87FA99FADADEA3EE2B4E056B
-Content-Type: text/x-patch; charset=UTF-8;
- name="0001-elevator-count-requests-per-hctx-to-improve-performa.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-elevator-count-requests-per-hctx-to-improve-performa.pa";
- filename*1="tch"
-
-From d50b5f773713070208c405f7c7056eb1afed896a Mon Sep 17 00:00:00 2001
-From: Hannes Reinecke <hare@suse.de>
-Date: Tue, 23 Jun 2020 16:18:40 +0200
-Subject: [PATCH] elevator: count requests per hctx to improve performance
-
-Add a 'elevator_queued' count to the hctx to avoid triggering
-the elevator even though there are no requests queued.
-
-Suggested-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- block/bfq-iosched.c    | 5 +++++
- block/blk-mq.c         | 1 +
- block/mq-deadline.c    | 5 +++++
- include/linux/blk-mq.h | 4 ++++
- 4 files changed, 15 insertions(+)
-
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index a1123d4d586d..3d63b35f6121 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -4640,6 +4640,9 @@ static bool bfq_has_work(struct blk_mq_hw_ctx *hctx)
- {
- 	struct bfq_data *bfqd = hctx->queue->elevator->elevator_data;
- 
-+	if (!atomic_read(&hctx->elevator_queued))
-+		return false;
-+
- 	/*
- 	 * Avoiding lock: a race on bfqd->busy_queues should cause at
- 	 * most a call to dispatch for nothing
-@@ -5554,6 +5557,7 @@ static void bfq_insert_requests(struct blk_mq_hw_ctx *hctx,
- 		rq = list_first_entry(list, struct request, queuelist);
- 		list_del_init(&rq->queuelist);
- 		bfq_insert_request(hctx, rq, at_head);
-+		atomic_inc(&hctx->elevator_queued)
- 	}
- }
- 
-@@ -5933,6 +5937,7 @@ static void bfq_finish_requeue_request(struct request *rq)
- 
- 		bfq_completed_request(bfqq, bfqd);
- 		bfq_finish_requeue_request_body(bfqq);
-+		atomic_dec(&rq->mq_hctx->elevator_queued);
- 
- 		spin_unlock_irqrestore(&bfqd->lock, flags);
- 	} else {
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index e06e8c9f326f..f5403fc97572 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2542,6 +2542,7 @@ blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
- 		goto free_hctx;
- 
- 	atomic_set(&hctx->nr_active, 0);
-+	atomic_set(&hctx->elevator_queued, 0);
- 	if (node == NUMA_NO_NODE)
- 		node = set->numa_node;
- 	hctx->numa_node = node;
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index b57470e154c8..9d753745e6be 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -533,6 +533,7 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 		rq = list_first_entry(list, struct request, queuelist);
- 		list_del_init(&rq->queuelist);
- 		dd_insert_request(hctx, rq, at_head);
-+		atomic_inc(&hctx->elevator_queued);
- 	}
- 	spin_unlock(&dd->lock);
- }
-@@ -573,12 +574,16 @@ static void dd_finish_request(struct request *rq)
- 			blk_mq_sched_mark_restart_hctx(rq->mq_hctx);
- 		spin_unlock_irqrestore(&dd->zone_lock, flags);
- 	}
-+	atomic_dec(&rq->mq_hctx->elevator_queued);
- }
- 
- static bool dd_has_work(struct blk_mq_hw_ctx *hctx)
- {
- 	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
- 
-+	if (!atomic_read(&hctx->elevator_queued))
-+		return false;
-+
- 	return !list_empty_careful(&dd->dispatch) ||
- 		!list_empty_careful(&dd->fifo_list[0]) ||
- 		!list_empty_careful(&dd->fifo_list[1]);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 66711c7234db..a18c506b14e7 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -139,6 +139,10 @@ struct blk_mq_hw_ctx {
- 	 * shared across request queues.
- 	 */
- 	atomic_t		nr_active;
-+	/**
-+	 * @elevator_queued: Number of queued requests on hctx.
-+	 */
-+	atomic_t                elevator_queued;
- 
- 	/** @cpuhp_online: List to store request if CPU is going to die */
- 	struct hlist_node	cpuhp_online;
--- 
-2.26.2
-
-
---------------87FA99FADADEA3EE2B4E056B--
