@@ -2,163 +2,95 @@ Return-Path: <SRS0=oFF2=AF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4DFDC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 17:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FF7C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD6A720836
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 17:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCDA02078D
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593019808;
+	bh=h33gmGGByy2GPZrJ7tjNqx/Etm0E51dsYTshtyz2YhE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=rhCsSHhPaP0f6YsfjvgGW3Pv+BWA3UWhry15FQb/3uRwRUhHRvBuk2djjLqKH9phN
+	 JGbuVMhjnCiPXc+s3PT7CTYn2ttse8184K6cDwDO/hbtAVlmJACdWpAPF6r6GnOOKE
+	 Cvi5GUHE664mgzPP1yrjprBkWHpce61ztsdYJg0Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405228AbgFXRHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Jun 2020 13:07:45 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2360 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2404209AbgFXRHp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Jun 2020 13:07:45 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 6244E95D90D6EF8468AA;
-        Wed, 24 Jun 2020 18:07:43 +0100 (IST)
-Received: from [127.0.0.1] (10.210.166.251) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Wed, 24 Jun
- 2020 18:07:41 +0100
-Subject: Re: [PATCH V2 3/3] pm80xx : Wait for PHY startup before draining
- libsas queue.
-To:     Deepak Ukey <deepak.ukey@microchip.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <jinpu.wang@profitbricks.com>,
-        <martin.petersen@oracle.com>, <dpf@google.com>,
-        <yuuzheng@google.com>, <auradkar@google.com>,
-        <vishakhavc@google.com>, <bjashnani@google.com>,
-        <radha@google.com>, <akshatzen@google.com>
-References: <20200624120322.6265-1-deepak.ukey@microchip.com>
- <20200624120322.6265-4-deepak.ukey@microchip.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <858e1af3-6ce6-e827-d24e-02d56459959b@huawei.com>
-Date:   Wed, 24 Jun 2020 18:06:12 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S2405463AbgFXRaG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Jun 2020 13:30:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43930 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2405429AbgFXRaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Jun 2020 13:30:05 -0400
+Received: from localhost (unknown [171.61.66.58])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 156A52078D;
+        Wed, 24 Jun 2020 17:30:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593019805;
+        bh=h33gmGGByy2GPZrJ7tjNqx/Etm0E51dsYTshtyz2YhE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=yuRiI+ina71wDNranb8AwW9LaPmZDEbmUmZmhXR8uZXZAbrCJrZUhNi9Pyx1X52N0
+         ghUVH4l5ovbj/9oXbBaYRo7phEtcC8FTCj04Fzn7IfiHYfB6T5tYG+/e12h0P/+G6B
+         MbKo17ZfsjVqPDeyfD+FqWt6ycK4fecC5fGAzXcw=
+Date:   Wed, 24 Jun 2020 23:00:00 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Alim Akhtar <alim.akhtar@samsung.com>
+Cc:     'Kishon Vijay Abraham I' <kishon@ti.com>, robh@kernel.org,
+        krzk@kernel.org, linux-samsung-soc@vger.kernel.org,
+        avri.altman@wdc.com, stanley.chu@mediatek.com,
+        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        cang@codeaurora.org, devicetree@vger.kernel.org,
+        kwmad.kim@samsung.com, linux-kernel@vger.kernel.org,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v10 00/10] exynos-ufs: Add support for UFS HCI
+Message-ID: <20200624173000.GJ2324254@vkoul-mobl>
+References: <CGME20200528013223epcas5p2be85fa8803326b49a905fb7225992cad@epcas5p2.samsung.com>
+ <20200528011658.71590-1-alim.akhtar@samsung.com>
+ <159114947915.26776.12485309894552696104.b4-ty@oracle.com>
+ <013a01d63d3e$ecf404d0$c6dc0e70$@samsung.com>
+ <89b96bd0-a9a3-cdd8-dc67-1f9f49eef264@ti.com>
+ <000001d646a6$6cb5fd70$4621f850$@samsung.com>
+ <20200624102112.GX2324254@vkoul-mobl>
+ <004b01d64a48$8bb87270$a3295750$@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20200624120322.6265-4-deepak.ukey@microchip.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.166.251]
-X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <004b01d64a48$8bb87270$a3295750$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/06/2020 13:03, Deepak Ukey wrote:
+Hi Alim,
 
+On 24-06-20, 22:27, Alim Akhtar wrote:
+> > > > Sure, will re-send this series.
+> > 
+> > But patches have not been sent right, pls send and me/Kishon will review
+> > 
+> Thanks for your kind attention on this series. As per [0] comment from
+> Kishon, patch 7/10 [1] and probably 6/10 [2] should have been Applied after
+> 5.8-rc1 was tagged.
 
-> From: peter chang <dpf@google.com>
-> 
-> The host's scan finish waits for the libsas queue to drain. However,
-> if the PHYs are still in the process of starting then the queue will
-> be empty. This means that we declare the scan finished before it has
-> even started. Here we wait for various events from the firmware-side.
+And that is something I am trying atm, but I dont have patches in my
+mailbox, so would you be kind enough to resend me these patches after
+rebasing to phy-next, also do add acks/reviews collected in previous
+posts.
 
-But we still report the phy up even to libsas later, so should 
-revalidate the domain and discover the device.
+I dont think I have seen resend, or maybe I wasnt cced
 
-> 
-> The wait behavior can be configured using the module parameter
-> "wait_for_phy_startup", if the parameter is enabled, the driver will wait
-> for the phy event from the firmware, before proceeding with load.
+> I have already send and re-send V10 of this series. Kishon has already
+> reviewed and provided comments and I have addressed them as well. These
+> patches already have and Reviewed-by, Tested-by tags.
+> Let me know if something more needs to be done from my side.
+> [0] https://lkml.org/lkml/2020/6/7/410
+> [1] https://lkml.org/lkml/2020/5/27/1705
+> [2] https://lkml.org/lkml/2020/5/27/1701
 
-If this is to circumvent a deficiency in udev (which you mentioned in 
-the v1 in this series, but fail to mention here), then better to fix udev.
-
-> 
-> Signed-off-by: Viswas G <Viswas.G@microchip.com>
-
-Author != first Signed-off-by
-
-> Signed-off-by: peter chang <dpf@google.com>
-> Signed-off-by: Radha Ramachandran <radha@google.com>
-> Signed-off-by: Deepak Ukey <Deepak.Ukey@microchip.com>
-> ---
->   drivers/scsi/pm8001/pm8001_ctl.c  | 36 +++++++++++++++++++++
->   drivers/scsi/pm8001/pm8001_defs.h |  6 ++--
->   drivers/scsi/pm8001/pm8001_init.c | 22 +++++++++++++
->   drivers/scsi/pm8001/pm8001_sas.c  | 67 +++++++++++++++++++++++++++++++++++++--
->   drivers/scsi/pm8001/pm8001_sas.h  |  4 +++
->   drivers/scsi/pm8001/pm80xx_hwi.c  | 67 ++++++++++++++++++++++++++++++++-------
->   6 files changed, 185 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index 3c9f42779dd0..eae629610a5f 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -88,6 +88,41 @@ static ssize_t controller_fatal_error_show(struct device *cdev,
->   }
->   static DEVICE_ATTR_RO(controller_fatal_error);
->   
-> +/**
-> + * phy_startup_timeout_show - per-phy discovery timeout
-> + * @cdev: pointer to embedded class device
-> + * @buf: the buffer returned
-> + *
-> + * A sysfs 'read/write' shost attribute.
-> + */
-> +static ssize_t phy_startup_timeout_show(struct device *cdev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(cdev);
-> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%08xh\n",
-> +		pm8001_ha->phy_startup_timeout / HZ);
-> +}
-> +
-> +static ssize_t phy_startup_timeout_store(struct device *cdev,
-> +	struct device_attribute *attr, const char *buf, size_t count)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(cdev);
-> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-> +	int val = 0;
-> +
-> +	if (kstrtoint(buf, 0, &val) < 0)
-> +		return -EINVAL;
-> +
-> +	pm8001_ha->phy_startup_timeout = val * HZ;
-> +	return strlen(buf);
-
-I don't see how this can be used.
-
-> +}
-> +
-> +static DEVICE_ATTR_RW(phy_startup_timeout);
-> +
-
- >
- >   	case HW_EVENT_SAS_PHY_UP:
- > @@ -4975,6 +5015,9 @@ pm80xx_chip_phy_start_req(struct 
-pm8001_hba_info *pm8001_ha, u8 phy_id)
- >
- >   	PM8001_INIT_DBG(pm8001_ha,
- >   		pm8001_printk("PHY START REQ for phy_id %d\n", phy_id));
- > +	set_bit(phy_id, &pm8001_ha->phy_mask);
- > +	pm8001_ha->phy[phy_id].start_timeout =
- > +		jiffies + pm8001_ha->phy_startup_timeout;
- >
- >   	payload.ase_sh_lm_slr_phyid = cpu_to_le32(SPINHOLD_ENABLE |
- >   			LINKMODE_AUTO | pm8001_ha->link_rate | phy_id);
- > --
-
-If there is nothing attached to the phy, then it would never come up, 
-right? If so, how do you handle this?
-
-Thanks,
-john
-
+-- 
+~Vinod
