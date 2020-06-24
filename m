@@ -2,173 +2,163 @@ Return-Path: <SRS0=oFF2=AF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4399C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 16:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4DFDC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 17:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0B652073E
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 16:57:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VGvzqmoQ"
+	by mail.kernel.org (Postfix) with ESMTP id CD6A720836
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 17:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405289AbgFXQ5n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 24 Jun 2020 12:57:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45496 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404919AbgFXQ5m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jun 2020 12:57:42 -0400
-Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B93CC061573
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jun 2020 09:57:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=ob1E0uDsu6387ym17kCfjHalL5bM6lzajHazP8VOBiI=; b=VGvzqmoQ2dFm8WJVlyXPAxWq7n
-        AsMI06piPuJ5TPgqgbOSw40lgolHN9lBzOpCPkna+UtIex1W6xQqgwBNj2JQP6h+9QOGel1mi6wGU
-        ferJMSDLXwS3xWccDcrgp2taO3wOliwmXKez97fFHOToqRTXjXvDlJFyZNI3O7iUtoQ3oYu/QWt2P
-        RdRWV5J+s+urTFQDATyYd93BxJcLzNIBSPTSYI7KLZT34AldedfNAnPvLc24kq+qaSeN6m1r/ABgo
-        q5KcEomVCRrWmrkoESvGI5Ap+5ZFis/DxByW79sXB/0tlrkIsaPFHeCqWNFkVR8P2VngRYHvY7S6c
-        kyE5bxTg==;
-Received: from [2001:4bb8:180:a3:5c7c:8955:539d:955b] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jo8iC-0008Mg-Ra; Wed, 24 Jun 2020 16:57:25 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     MPT-FusionLinux.pdl@broadcom.com,
-        Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH, 5.8 regression] mptfusion: don't use GFP_ATOMIC for larger DMA allocations
-Date:   Wed, 24 Jun 2020 18:57:24 +0200
-Message-Id: <20200624165724.1818496-1-hch@lst.de>
-X-Mailer: git-send-email 2.26.2
+        id S2405228AbgFXRHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 24 Jun 2020 13:07:45 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2360 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2404209AbgFXRHp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Jun 2020 13:07:45 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 6244E95D90D6EF8468AA;
+        Wed, 24 Jun 2020 18:07:43 +0100 (IST)
+Received: from [127.0.0.1] (10.210.166.251) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Wed, 24 Jun
+ 2020 18:07:41 +0100
+Subject: Re: [PATCH V2 3/3] pm80xx : Wait for PHY startup before draining
+ libsas queue.
+To:     Deepak Ukey <deepak.ukey@microchip.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
+        <Viswas.G@microchip.com>, <jinpu.wang@profitbricks.com>,
+        <martin.petersen@oracle.com>, <dpf@google.com>,
+        <yuuzheng@google.com>, <auradkar@google.com>,
+        <vishakhavc@google.com>, <bjashnani@google.com>,
+        <radha@google.com>, <akshatzen@google.com>
+References: <20200624120322.6265-1-deepak.ukey@microchip.com>
+ <20200624120322.6265-4-deepak.ukey@microchip.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <858e1af3-6ce6-e827-d24e-02d56459959b@huawei.com>
+Date:   Wed, 24 Jun 2020 18:06:12 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200624120322.6265-4-deepak.ukey@microchip.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.166.251]
+X-ClientProxiedBy: lhreml716-chm.china.huawei.com (10.201.108.67) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The mpt fusion driver still uses the legacy PCI DMA API, which hardcodes
-atomic allocations.  This caused the driver to fail to load on some
-powerpc VMs with incoherent DMA and small memory sizes.  Switch to use
-the modern DMA API and sleeping allocations for large allocations
-instead.  This is not a full cleanup of the PCI DMA API usage yet, but
-just enough to fix the regression caused by reducing the default atomic
-pool size.
+On 24/06/2020 13:03, Deepak Ukey wrote:
 
-Fixes: 3ee06a6d532f ("dma-pool: fix too large DMA pools on medium memory size systems")
-Reported-by: Guenter Roeck <linux@roeck-us.net>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Tested-by: Guenter Roeck <linux@roeck-us.net>
----
- drivers/message/fusion/mptbase.c | 41 ++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 68aea22f2b8978..5216487db4fbea 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1324,13 +1324,13 @@ mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init)
- 			return 0; /* fw doesn't need any host buffers */
- 
- 		/* spin till we get enough memory */
--		while(host_page_buffer_sz > 0) {
--
--			if((ioc->HostPageBuffer = pci_alloc_consistent(
--			    ioc->pcidev,
--			    host_page_buffer_sz,
--			    &ioc->HostPageBuffer_dma)) != NULL) {
--
-+		while (host_page_buffer_sz > 0) {
-+			ioc->HostPageBuffer =
-+				dma_alloc_coherent(&ioc->pcidev->dev,
-+						host_page_buffer_sz,
-+						&ioc->HostPageBuffer_dma,
-+						GFP_KERNEL);
-+			if (ioc->HostPageBuffer) {
- 				dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT
- 				    "host_page_buffer @ %p, dma @ %x, sz=%d bytes\n",
- 				    ioc->name, ioc->HostPageBuffer,
-@@ -2741,8 +2741,8 @@ mpt_adapter_disable(MPT_ADAPTER *ioc)
- 		sz = ioc->alloc_sz;
- 		dexitprintk(ioc, printk(MYIOC_s_INFO_FMT "free  @ %p, sz=%d bytes\n",
- 		    ioc->name, ioc->alloc, ioc->alloc_sz));
--		pci_free_consistent(ioc->pcidev, sz,
--				ioc->alloc, ioc->alloc_dma);
-+		dma_free_coherent(&ioc->pcidev->dev, sz, ioc->alloc,
-+				ioc->alloc_dma);
- 		ioc->reply_frames = NULL;
- 		ioc->req_frames = NULL;
- 		ioc->alloc = NULL;
-@@ -2751,8 +2751,8 @@ mpt_adapter_disable(MPT_ADAPTER *ioc)
- 
- 	if (ioc->sense_buf_pool != NULL) {
- 		sz = (ioc->req_depth * MPT_SENSE_BUFFER_ALLOC);
--		pci_free_consistent(ioc->pcidev, sz,
--				ioc->sense_buf_pool, ioc->sense_buf_pool_dma);
-+		dma_free_coherent(&ioc->pcidev->dev, sz, ioc->sense_buf_pool,
-+				ioc->sense_buf_pool_dma);
- 		ioc->sense_buf_pool = NULL;
- 		ioc->alloc_total -= sz;
- 	}
-@@ -2802,7 +2802,7 @@ mpt_adapter_disable(MPT_ADAPTER *ioc)
- 			"HostPageBuffer free  @ %p, sz=%d bytes\n",
- 			ioc->name, ioc->HostPageBuffer,
- 			ioc->HostPageBuffer_sz));
--		pci_free_consistent(ioc->pcidev, ioc->HostPageBuffer_sz,
-+		dma_free_coherent(&ioc->pcidev->dev, ioc->HostPageBuffer_sz,
- 		    ioc->HostPageBuffer, ioc->HostPageBuffer_dma);
- 		ioc->HostPageBuffer = NULL;
- 		ioc->HostPageBuffer_sz = 0;
-@@ -4497,7 +4497,8 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
- 			 	ioc->name, sz, sz, num_chain));
- 
- 		total_size += sz;
--		mem = pci_alloc_consistent(ioc->pcidev, total_size, &alloc_dma);
-+		mem = dma_alloc_coherent(&ioc->pcidev->dev, total_size,
-+				&alloc_dma, GFP_KERNEL);
- 		if (mem == NULL) {
- 			printk(MYIOC_s_ERR_FMT "Unable to allocate Reply, Request, Chain Buffers!\n",
- 				ioc->name);
-@@ -4574,8 +4575,8 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
- 		spin_unlock_irqrestore(&ioc->FreeQlock, flags);
- 
- 		sz = (ioc->req_depth * MPT_SENSE_BUFFER_ALLOC);
--		ioc->sense_buf_pool =
--			pci_alloc_consistent(ioc->pcidev, sz, &ioc->sense_buf_pool_dma);
-+		ioc->sense_buf_pool = dma_alloc_coherent(&ioc->pcidev->dev, sz,
-+				&ioc->sense_buf_pool_dma, GFP_KERNEL);
- 		if (ioc->sense_buf_pool == NULL) {
- 			printk(MYIOC_s_ERR_FMT "Unable to allocate Sense Buffers!\n",
- 				ioc->name);
-@@ -4613,18 +4614,16 @@ PrimeIocFifos(MPT_ADAPTER *ioc)
- 
- 	if (ioc->alloc != NULL) {
- 		sz = ioc->alloc_sz;
--		pci_free_consistent(ioc->pcidev,
--				sz,
--				ioc->alloc, ioc->alloc_dma);
-+		dma_free_coherent(&ioc->pcidev->dev, sz, ioc->alloc,
-+				ioc->alloc_dma);
- 		ioc->reply_frames = NULL;
- 		ioc->req_frames = NULL;
- 		ioc->alloc_total -= sz;
- 	}
- 	if (ioc->sense_buf_pool != NULL) {
- 		sz = (ioc->req_depth * MPT_SENSE_BUFFER_ALLOC);
--		pci_free_consistent(ioc->pcidev,
--				sz,
--				ioc->sense_buf_pool, ioc->sense_buf_pool_dma);
-+		dma_free_coherent(&ioc->pcidev->dev, sz, ioc->sense_buf_pool,
-+				ioc->sense_buf_pool_dma);
- 		ioc->sense_buf_pool = NULL;
- 	}
- 
--- 
-2.26.2
+> From: peter chang <dpf@google.com>
+> 
+> The host's scan finish waits for the libsas queue to drain. However,
+> if the PHYs are still in the process of starting then the queue will
+> be empty. This means that we declare the scan finished before it has
+> even started. Here we wait for various events from the firmware-side.
+
+But we still report the phy up even to libsas later, so should 
+revalidate the domain and discover the device.
+
+> 
+> The wait behavior can be configured using the module parameter
+> "wait_for_phy_startup", if the parameter is enabled, the driver will wait
+> for the phy event from the firmware, before proceeding with load.
+
+If this is to circumvent a deficiency in udev (which you mentioned in 
+the v1 in this series, but fail to mention here), then better to fix udev.
+
+> 
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+
+Author != first Signed-off-by
+
+> Signed-off-by: peter chang <dpf@google.com>
+> Signed-off-by: Radha Ramachandran <radha@google.com>
+> Signed-off-by: Deepak Ukey <Deepak.Ukey@microchip.com>
+> ---
+>   drivers/scsi/pm8001/pm8001_ctl.c  | 36 +++++++++++++++++++++
+>   drivers/scsi/pm8001/pm8001_defs.h |  6 ++--
+>   drivers/scsi/pm8001/pm8001_init.c | 22 +++++++++++++
+>   drivers/scsi/pm8001/pm8001_sas.c  | 67 +++++++++++++++++++++++++++++++++++++--
+>   drivers/scsi/pm8001/pm8001_sas.h  |  4 +++
+>   drivers/scsi/pm8001/pm80xx_hwi.c  | 67 ++++++++++++++++++++++++++++++++-------
+>   6 files changed, 185 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+> index 3c9f42779dd0..eae629610a5f 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -88,6 +88,41 @@ static ssize_t controller_fatal_error_show(struct device *cdev,
+>   }
+>   static DEVICE_ATTR_RO(controller_fatal_error);
+>   
+> +/**
+> + * phy_startup_timeout_show - per-phy discovery timeout
+> + * @cdev: pointer to embedded class device
+> + * @buf: the buffer returned
+> + *
+> + * A sysfs 'read/write' shost attribute.
+> + */
+> +static ssize_t phy_startup_timeout_show(struct device *cdev,
+> +	struct device_attribute *attr, char *buf)
+> +{
+> +	struct Scsi_Host *shost = class_to_shost(cdev);
+> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+> +
+> +	return snprintf(buf, PAGE_SIZE, "%08xh\n",
+> +		pm8001_ha->phy_startup_timeout / HZ);
+> +}
+> +
+> +static ssize_t phy_startup_timeout_store(struct device *cdev,
+> +	struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	struct Scsi_Host *shost = class_to_shost(cdev);
+> +	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+> +	struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
+> +	int val = 0;
+> +
+> +	if (kstrtoint(buf, 0, &val) < 0)
+> +		return -EINVAL;
+> +
+> +	pm8001_ha->phy_startup_timeout = val * HZ;
+> +	return strlen(buf);
+
+I don't see how this can be used.
+
+> +}
+> +
+> +static DEVICE_ATTR_RW(phy_startup_timeout);
+> +
+
+ >
+ >   	case HW_EVENT_SAS_PHY_UP:
+ > @@ -4975,6 +5015,9 @@ pm80xx_chip_phy_start_req(struct 
+pm8001_hba_info *pm8001_ha, u8 phy_id)
+ >
+ >   	PM8001_INIT_DBG(pm8001_ha,
+ >   		pm8001_printk("PHY START REQ for phy_id %d\n", phy_id));
+ > +	set_bit(phy_id, &pm8001_ha->phy_mask);
+ > +	pm8001_ha->phy[phy_id].start_timeout =
+ > +		jiffies + pm8001_ha->phy_startup_timeout;
+ >
+ >   	payload.ase_sh_lm_slr_phyid = cpu_to_le32(SPINHOLD_ENABLE |
+ >   			LINKMODE_AUTO | pm8001_ha->link_rate | phy_id);
+ > --
+
+If there is nothing attached to the phy, then it would never come up, 
+right? If so, how do you handle this?
+
+Thanks,
+john
 
