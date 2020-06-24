@@ -6,52 +6,49 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F703C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 02:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52EE1C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 03:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F37D920874
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 02:53:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 330EB20CC7
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 03:10:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388259AbgFXCx0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 22:53:26 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35161 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387985AbgFXCx0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 22:53:26 -0400
-Received: by mail-pg1-f194.google.com with SMTP id f3so656019pgr.2
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2020 19:53:24 -0700 (PDT)
+        id S2388356AbgFXDKI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 23:10:08 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:43764 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387985AbgFXDKI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 23:10:08 -0400
+Received: by mail-pl1-f193.google.com with SMTP id g12so409755pll.10
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2020 20:10:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:autocrypt:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=j7mAGTKtZk8rL1cAIBlxW4qFX3VWHVXb0CUMaqocpfQ=;
-        b=eun76z9xnlUc+Xqsdg6oJIBakWnIFpN7Nf79uLZEbFzyNGtpC8X+fwmt5LtDenDDVP
-         lfT7HTrwjyw7Dm8QQwMEZZIp/vOSg/uWVF2hXyjNwdYaSaSNK079QHUS/V3LM2V32x5F
-         9yqBkBVwtOVGRxZhMmc3RK4fK1H12LHPS593Wr+nqTwvYGEwv+S2xiAfPXVz3vWrHWdS
-         0Dh8htHBrl+sIZWEE0oRa95NF1msoGIdIoxyMKivn5GzU0o9rGt5ROiFZZHKFCMkr9Ac
-         9NEcmGnsggKKG2w7ehK55cBaGJitDcGYvzyzX6JB6alekXk+viQEaQYUKfN/jcYM7OVt
-         tsQw==
-X-Gm-Message-State: AOAM532BT3KK7L19hRWsHADCzRX1Jb9JpkLQr7f+rwzN/SG2+ouXpflr
-        fkEKvkWZywsagVcmAxg7894=
-X-Google-Smtp-Source: ABdhPJw+Tx8gth06SEtOtVrn8nH1AOsEOF/amKBvP+iBgUyyR7sBgUZb5C7CAqEL1Akgv0K2IoWuAw==
-X-Received: by 2002:aa7:8a51:: with SMTP id n17mr5232730pfa.89.1592967204165;
-        Tue, 23 Jun 2020 19:53:24 -0700 (PDT)
+        bh=jDuQ8YZ8Sw6TXaHxYXXfM3NjHzFOPF3o3eqRspL92js=;
+        b=rZqluHCspyoKpdsOdvyTxF+P6LVF59OOLHFdGJQTM9oorZmRweR3RJr9eBgAsrLO+4
+         7bW7iBACRhJ4uKLJM3N14HGBn63U907IumdOKWQmD5iJ+wQAnqGRPi8mNjPsNkYk1cQd
+         8ifNARwEvTGrR6LDamTYa83VyrPHAxBQnt1JR9rYb0l8+xLnOxjifYIAzP/LW7JBAfgU
+         y8LTirfTxr3qaSqV8Aek1n5kUKCaVDzV/AMVKbkTnl19ylBXgfxPUx6UGmmrlGTbF+FC
+         jOQBsYsM8B6hRd2tlME8UD6TFVw13zxv1lcjsqAj9ZSBtWV8ib2hd2vMb6LUkaVRgvP1
+         r1gQ==
+X-Gm-Message-State: AOAM531o2XYewnR5uHK4ojoPyGjZAIr0KsBLQywZfgxbg1OdetS8GAXc
+        GvY5EzhaVlbRXNlCpNsOwIE=
+X-Google-Smtp-Source: ABdhPJwWUvYEd71F6TOZqkAjgTIiAyQAeMkDeh/7emD/h5S6gQyWrQpOkyUVHMMyjQwyreJIsXa1Vg==
+X-Received: by 2002:a17:90a:266f:: with SMTP id l102mr1608803pje.144.1592968205797;
+        Tue, 23 Jun 2020 20:10:05 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id q92sm3617455pjh.12.2020.06.23.19.53.22
+        by smtp.gmail.com with ESMTPSA id x8sm3801429pje.31.2020.06.23.20.10.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 Jun 2020 19:53:23 -0700 (PDT)
-Subject: Re: [RFC PATCH v1 1/2] ufs: introduce callbacks to get command
- information
+        Tue, 23 Jun 2020 20:10:05 -0700 (PDT)
+Subject: Re: [RFC PATCH v1 2/2] exynos-ufs: support command history
 To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
         alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, cang@codeaurora.org,
-        'Christoph Hellwig' <hch@lst.de>
-References: <CGME20200620070044epcas2p269e3c266c86c65dd0e894d8188036a30@epcas2p2.samsung.com>
- <1592635992-35619-1-git-send-email-kwmad.kim@samsung.com>
- <992d1812-98b9-99b5-acc0-69c7aba3d074@acm.org>
- <003201d64905$ee05a5e0$ca10f1a0$@samsung.com>
+        asutoshd@codeaurora.org, cang@codeaurora.org
+References: <1592635992-35619-1-git-send-email-kwmad.kim@samsung.com>
+ <CGME20200620070047epcas2p37229d52d479df9f64ee4fc14f469acf9@epcas2p3.samsung.com>
+ <1592635992-35619-2-git-send-email-kwmad.kim@samsung.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -76,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <111d5f71-1992-5600-23e4-bbfd53c8a615@acm.org>
-Date:   Tue, 23 Jun 2020 19:53:22 -0700
+Message-ID: <6eaeed01-9c1b-1bf2-8375-568d24f079e3@acm.org>
+Date:   Tue, 23 Jun 2020 20:10:02 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <003201d64905$ee05a5e0$ca10f1a0$@samsung.com>
+In-Reply-To: <1592635992-35619-2-git-send-email-kwmad.kim@samsung.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -90,19 +87,161 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-06-22 19:28, Kiwoong Kim wrote:
-> If you could get the information, Many would exploit it for their respective purposes.
-> But, it's important for the information to contain accurate timestamps when the driver
-> hooks it, if you're trying to figure out something wrong.
-> 
-> As for scaling DVFS knobs to boost UFS throughput, locating in the ufs driver is more
-> Beneficial because SoC vendors have their own power domains and thus lead to make
-> different way of what to scale up to boost. If it's populated in block layer, there is
-> no way to introduce boosting per SoC.
+> +#define EN_PRINT_UFS_LOG 1
 
-Thanks for the clarification. Unfortunately we do not yet have an API
-for sharing information between I/O schedulers and block drivers ...
+Since this macro controls debug code, please make this configurable at
+runtime, e.g. as a kernel module parameter or by using the dynamic debug
+mechanism.
+
+> +/* Structure for ufs cmd logging */
+> +#define MAX_CMD_LOGS    32
+
+Please clarify in the comment above this constant how this constant has
+been chosen. Is this constant e.g. related to the queue depth? Is this
+constant per UFS device or is it a maximum for all UFS devices?
+
+> +struct cmd_data {
+> +	unsigned int tag;
+> +	unsigned int sct;
+> +	unsigned long lba;
+> +	u64 start_time;
+> +	u64 end_time;
+> +	u64 outstanding_reqs;
+> +	int retries;
+> +	unsigned char op;
+> +};
+
+Please use data types that explicitly specify the width for members like
+e.g. the lba (u64 instead of unsigned long). Please also use u8 instead
+of unsigned char for 'op' since 'op' is not used to store any kind of
+ASCII character.
+
+> +struct ufs_cmd_info {
+> +	u32 total;
+> +	u32 last;
+> +	struct cmd_data data[MAX_CMD_LOGS];
+> +	struct cmd_data *pdata[32];	/* Currently, 32 slots */
+> +};
+
+What are 'slots'? Why 32?
+
+> +#define DBG_NUM_OF_HOSTS	1
+> +struct ufs_s_dbg_mgr {
+> +	struct ufs_exynos_handle *handle;
+> +	int active;
+> +	u64 first_time;
+> +	u64 time;
+> +
+> +	/* cmd log */
+> +	struct ufs_cmd_info cmd_info;
+> +	struct cmd_data cmd_log;		/* temp buffer to put */
+> +	spinlock_t cmd_lock;
+> +};
+
+Please add a comment above this structure that explains the role of this
+data structure.
+
+> +static struct ufs_s_dbg_mgr ufs_s_dbg[DBG_NUM_OF_HOSTS];
+
+A static array? That's suspicious. Should that array perhaps be a member
+of another UFS data structure, e.g. the UFS host or device data structure?
+
+> +static int ufs_s_dbg_mgr_idx;
+
+What does this variable represent?
+
+> +	for (i = 0 ; i < max ; i++, data++) {
+> +		dev_err(dev, ": 0x%02x, %02d, 0x%08lx, 0x%04x, %d, %llu, %llu, 0x%llx %s",
+> +				data->op,
+> +				data->tag,
+> +				data->lba,
+> +				data->sct,
+> +				data->retries,
+> +				data->start_time,
+> +				data->end_time,
+> +				data->outstanding_reqs,
+> +				((last == i) ? "<--" : " "));
+
+Please follow the same coding style as elsewhere in the Linux kernel and
+specify multiple arguments per line (up to the current column limit).
+Please also align the arguments either with the opening parentheses or
+indent these by one tab as requested in the Linux kernel coding style
+document.
+
+> +/*
+> + * EXTERNAL FUNCTIONS
+> + *
+> + * There are two classes that are to initialize data structures for debug
+> + * and to define actual behavior.
+> + */
+> +void exynos_ufs_dump_info(struct ufs_exynos_handle *handle, struct device *dev)
+> +{
+> +	struct ufs_s_dbg_mgr *mgr = (struct ufs_s_dbg_mgr *)handle->private;
+> +
+> +	if (mgr->active == 0)
+> +		goto out;
+> +
+> +	mgr->time = cpu_clock(raw_smp_processor_id());
+> +
+> +#if EN_PRINT_UFS_LOG
+> +	ufs_s_print_cmd_log(mgr, dev);
+> +#endif
+> +
+> +	if (mgr->first_time == 0ULL)
+> +		mgr->first_time = mgr->time;
+> +out:
+> +	return;
+> +}
+
+Using cpu_clock() without storing the CPU on which it has been sampled
+seems wrong to me. Is higher accuracy than a single jiffy required? If
+not, how about using 'jiffies' instead? From clock.h:
+
+/*
+ * As outlined in clock.c, provides a fast, high resolution, nanosecond
+ * time source that is monotonic per cpu argument and has bounded drift
+ * between cpus.
+ *
+ * ######################### BIG FAT WARNING ##########################
+ * # when comparing cpu_clock(i) to cpu_clock(j) for i != j, time can #
+ * # go backwards !!                                                  #
+ * ####################################################################
+ */
+
+> +void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
+> +			      struct ufs_hba *hba, struct scsi_cmnd *cmd)
+> +{
+> +	struct ufs_s_dbg_mgr *mgr = (struct ufs_s_dbg_mgr *)handle->private;
+> +	int cpu = raw_smp_processor_id();
+> +	struct cmd_data *cmd_log = &mgr->cmd_log;	/* temp buffer to put */
+> +	unsigned long lba = (cmd->cmnd[2] << 24) |
+> +					(cmd->cmnd[3] << 16) |
+> +					(cmd->cmnd[4] << 8) |
+> +					(cmd->cmnd[5] << 0);
+> +	unsigned int sct = (cmd->cmnd[7] << 8) |
+> +					(cmd->cmnd[8] << 0);
+
+Aargh! SCSI command parsing ... Has it been considered to use
+blk_rq_pos(cmd->req) and blk_rq_bytes(cmd->req) instead?
+
+> +int exynos_ufs_init_dbg(struct ufs_exynos_handle *handle)
+> +{
+> +	struct ufs_s_dbg_mgr *mgr;
+> +
+> +	if (ufs_s_dbg_mgr_idx >= DBG_NUM_OF_HOSTS)
+> +		return -1;
+> +
+> +	mgr = &ufs_s_dbg[ufs_s_dbg_mgr_idx++];
+> +	handle->private = (void *)mgr;
+> +	mgr->handle = handle;
+> +	mgr->active = 1;
+
+Can the '(void *)' cast above be left out?
+
+> +#define UFS_VS_MMIO_VER 1
+
+What does this constant represent? Please add a comment.
+
+Thanks,
 
 Bart.
-
-
