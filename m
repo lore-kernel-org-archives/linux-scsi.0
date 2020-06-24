@@ -2,75 +2,45 @@ Return-Path: <SRS0=oFF2=AF=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D23C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 02:06:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21AB0C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 02:49:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38BF920874
-	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 02:06:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E47942098B
+	for <linux-scsi@archiver.kernel.org>; Wed, 24 Jun 2020 02:49:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fDuYCZMC"
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="In2ePKl3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387692AbgFXCGi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 23 Jun 2020 22:06:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49304 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730898AbgFXCGi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 22:06:38 -0400
-Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93ECBC061573;
-        Tue, 23 Jun 2020 19:06:37 -0700 (PDT)
-Received: by mail-ed1-x544.google.com with SMTP id h28so326213edz.0;
-        Tue, 23 Jun 2020 19:06:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=xIwy/k4EIgePfJbUB8TkU4ZDBf+LVEQrSNh8LO92njg=;
-        b=fDuYCZMCEUyXT4Up9c9ueQstUZFpTtlkZ1gML4tVVjMAjOnyn5/zGi7Pdp5DR0E5co
-         Bi4YQ0rqBB/LAm0m/r7Wb3FvhtCHEkYq28vZbH8g8CXjyEr0tacGRRfXQYzbU4nDVIV3
-         gARXIfqbM30QBoi1LjVfXzjUcNwokqXOvHQW+C6Wceszyet5JssBMWo4FJWCsdsO6yts
-         GMzUFOvH0R7kjWdxXLDItlXUlw67DDSVwNLmUQBLrrceDDlw6rDgJKZGjT6A/Zun7ZSq
-         T4eLr/yJgLB1vY3VDmUYQSOw8ii5IW04jfutKhFa8Dz/mgwh5UfKnSJwOowCPTYRwsvK
-         /jwQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=xIwy/k4EIgePfJbUB8TkU4ZDBf+LVEQrSNh8LO92njg=;
-        b=Gc1ioHjb7oA+PnrlNqaTpUTx7kVjdJsWmMqJt74CNXFAs2WWrAA48awUHNDSgcTTO2
-         V6/svdBqnpj1Sg0bdzCipza4HKwl1Yq4u5tMUHj4qwJjG8Fcej3BjbdukYavU7gxiPSm
-         7VhnbVJVz0L+6YzkklhDOeRTcywjDiKrzETyykU97Kg0nNkBF9HD7GqRsEP1gUpC7Jrp
-         cPHf7VGjZ+qBI35j7lVxkXO2MWSWFzIn2UVdht62KW4LASKmCDI+xx9kXZFjv1SFHYje
-         aJI80p3y/yQDjZOwFjDA5jneTeKWfnTrUbyAvCK31A+KGxjqzHzr6+I4j/EDpJbCdIsf
-         FS3Q==
-X-Gm-Message-State: AOAM531dzXPVkmyxTtXlcTbYaaBm1U1wADpq+Xz7YiE9oIhAbiSsI3JV
-        o0jbSGInfxQJL4jKTZDcms52Pof2upZD7UubmA==
-X-Google-Smtp-Source: ABdhPJzwWEkNgVOp839I7QzHVcei9j6Xcd2vkk8450z+tG1nEjfNNx9ipQ+yYxHa9Ne/v0UQzsplqGnp80fi9d0+9Mc=
-X-Received: by 2002:a50:dacf:: with SMTP id s15mr20817852edj.136.1592964396014;
- Tue, 23 Jun 2020 19:06:36 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:aa7:ca0e:0:0:0:0:0 with HTTP; Tue, 23 Jun 2020 19:06:34
- -0700 (PDT)
-In-Reply-To: <1592963601.3278.1.camel@mtkswgap22>
-References: <cover.1586374414.git.asutoshd@codeaurora.org> <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
- <CAF6AEGvgmfYoybv4XMVVH85fGMr-eDfpzxdzkFWCx-2N5PEw2w@mail.gmail.com>
- <SN6PR04MB46402FD7981F9FCA2111AB37FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
- <20200621075539.GK128451@builder.lan> <CAF6AEGuG3XAqN_sedxk9GRm_9yK+a4OH56CZPmbHx+SW-FNVPQ@mail.gmail.com>
- <CAP2JTQJ735yQYSeHgDPqnT0mRUTt1uKVAHacOHmSj3WK48PUog@mail.gmail.com>
- <SN6PR04MB4640DCE37D9D7F4CD99F2195FC940@SN6PR04MB4640.namprd04.prod.outlook.com>
- <CAP2JTQKu77risdNFBy5zwHoRU3qZw2dMi5Hxfi5Tyf6b9GB3XQ@mail.gmail.com>
- <9d3afac3-c245-a746-b029-77aa66c93f9d@kali.org> <1592963601.3278.1.camel@mtkswgap22>
-From:   Kyuho Choi <chlrbgh0@gmail.com>
-Date:   Wed, 24 Jun 2020 11:06:34 +0900
-Message-ID: <CAP2JTQ+kaQKcyaxG8dj_NuB60TwmhhaMkD+gcA+erL7vAOufQA@mail.gmail.com>
+        id S2388202AbgFXCt1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 23 Jun 2020 22:49:27 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:9009 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2387970AbgFXCt0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jun 2020 22:49:26 -0400
+X-UUID: 95d3616d012e43d7bc2cd4f79b8319ef-20200624
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=BGcODz/VQpVMqvScb6YTesfIZ3fiOmFPZSAAtZlz7Hw=;
+        b=In2ePKl3Qen7UuPIi4qBalqm6U8cD0J5qfoH0JR3lgeALUebt3svYhSBGUmos/8mnAtXNS0h4RElDx/RJ+vWuxAZvL7z+sZXhdTAyR5sfTPXGLkw+FiLCiUfHawIOjCjefXz/rBMP+7z1FpSOzz7bSq8ctusQwV7OHBBK47I/OY=;
+X-UUID: 95d3616d012e43d7bc2cd4f79b8319ef-20200624
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 338377957; Wed, 24 Jun 2020 10:49:18 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs05n2.mediatek.inc (172.21.101.140) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 24 Jun 2020 10:49:15 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 24 Jun 2020 10:49:15 +0800
+Message-ID: <1592966957.3278.2.camel@mtkswgap22>
 Subject: Re: [PATCH v1 1/3] scsi: ufs: add write booster feature support
-To:     Stanley Chu <stanley.chu@mediatek.com>
-Cc:     Steev Klimaszewski <steev@kali.org>,
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     Kyuho Choi <chlrbgh0@gmail.com>
+CC:     Steev Klimaszewski <steev@kali.org>,
         Avri Altman <Avri.Altman@wdc.com>,
         Rob Clark <robdclark@gmail.com>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -83,305 +53,133 @@ Cc:     Steev Klimaszewski <steev@kali.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Bean Huo <beanhuo@micron.com>,
-        Tomas Winkler <tomas.winkler@intel.com>,
+        "Tomas Winkler" <tomas.winkler@intel.com>,
         Colin Ian King <colin.king@canonical.com>,
         Bart Van Assche <bvanassche@acm.org>,
         open list <linux-kernel@vger.kernel.org>
+Date:   Wed, 24 Jun 2020 10:49:17 +0800
+In-Reply-To: <CAP2JTQ+kaQKcyaxG8dj_NuB60TwmhhaMkD+gcA+erL7vAOufQA@mail.gmail.com>
+References: <cover.1586374414.git.asutoshd@codeaurora.org>
+         <3c186284280c37c76cf77bf482dde725359b8a8a.1586382357.git.asutoshd@codeaurora.org>
+         <CAF6AEGvgmfYoybv4XMVVH85fGMr-eDfpzxdzkFWCx-2N5PEw2w@mail.gmail.com>
+         <SN6PR04MB46402FD7981F9FCA2111AB37FC960@SN6PR04MB4640.namprd04.prod.outlook.com>
+         <20200621075539.GK128451@builder.lan>
+         <CAF6AEGuG3XAqN_sedxk9GRm_9yK+a4OH56CZPmbHx+SW-FNVPQ@mail.gmail.com>
+         <CAP2JTQJ735yQYSeHgDPqnT0mRUTt1uKVAHacOHmSj3WK48PUog@mail.gmail.com>
+         <SN6PR04MB4640DCE37D9D7F4CD99F2195FC940@SN6PR04MB4640.namprd04.prod.outlook.com>
+         <CAP2JTQKu77risdNFBy5zwHoRU3qZw2dMi5Hxfi5Tyf6b9GB3XQ@mail.gmail.com>
+         <9d3afac3-c245-a746-b029-77aa66c93f9d@kali.org>
+         <1592963601.3278.1.camel@mtkswgap22>
+         <CAP2JTQ+kaQKcyaxG8dj_NuB60TwmhhaMkD+gcA+erL7vAOufQA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+MIME-Version: 1.0
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Stanley,
+SGkgS3l1aG8sDQoNCk9uIFdlZCwgMjAyMC0wNi0yNCBhdCAxMTowNiArMDkwMCwgS3l1aG8gQ2hv
+aSB3cm90ZToNCj4gSGkgU3RhbmxleSwNCj4gDQo+IE9uIDYvMjQvMjAsIFN0YW5sZXkgQ2h1IDxz
+dGFubGV5LmNodUBtZWRpYXRlay5jb20+IHdyb3RlOg0KPiA+IEhpIFN0ZWV2LA0KPiA+DQo+ID4g
+T24gVHVlLCAyMDIwLTA2LTIzIGF0IDIwOjEwIC0wNTAwLCBTdGVldiBLbGltYXN6ZXdza2kgd3Jv
+dGU6DQo+ID4+IE9uIDYvMjMvMjAgMTo1MSBBTSwgS3l1aG8gQ2hvaSB3cm90ZToNCj4gPj4gPiBI
+aSBBdnJpLA0KPiA+PiA+DQo+ID4+ID4gT24gNi8yMy8yMCwgQXZyaSBBbHRtYW4gPEF2cmkuQWx0
+bWFuQHdkYy5jb20+IHdyb3RlOg0KPiA+PiA+Pj4gQUZBSUssIHRoaXMgZGV2aWNlIGFyZSB1ZnMg
+Mi4xLiBJdCdzIG5vdCBzdXBwb3J0IHdyaXRlYm9vc3Rlci4NCj4gPj4gPj4+DQo+ID4+ID4+PiBJ
+J2QgY2hlY2sgbGF0ZXN0IGxpbnV4IHNjc2kgYnJhbmNoIGFuZCB1ZnNoY2Rfd2JfY29uZmlnIGZ1
+bmN0aW9uJ3MNCj4gPj4gPj4+IGNhbGxlZCB3aXRob3V0IGRldmljZSBjYXBhYmlsaXR5IGNoZWNr
+Lg0KPiA+PiA+PiBQbGVhc2UgZ3JlcCB1ZnNoY2Rfd2JfcHJvYmUuDQo+ID4+ID4+DQo+ID4+ID4g
+SSBnb3QgeW91ciBwb2ludCwgYnV0IGFzIEkgbWVudGlvbmVkLCB0aGlzIGRldmljZSBub3Qgc3Vw
+cG9ydCB3YiwgdGhpcw0KPiA+PiA+IGlzIG9sZCBwcm9kdWN0cy4NCj4gPj4gPg0KPiA+PiA+IEkn
+bSBub3Qgc3VyZSB1ZnNoY2Rfd2JfcHJvYmUgYXJlIGNhbGxlZCBvciBub3QgaW4gUm9iIGFuZCBT
+dGVldidzDQo+ID4+ID4gcGxhdGZvcm0uDQo+ID4+ID4gSWYgaXQncyBjYWxsZWQsIGhiYS0+Y2Fw
+cyBhcmUgc2V0dGVkIHdpdGggd2IgZGlhYmxlIGFuZCB0aGlzIGVycm9yIG5vdA0KPiA+PiA+IG9j
+Y3VyZWQuDQo+ID4+ID4gQnV0IChpdCBsb29rcykgbm90IGNhbGxlZCwgc2FtZSBxdWVyeSBlcnJv
+ciB3aWxsIGJlIG9jY3VyZWQgaW4NCj4gPj4gPiB1ZnNoY2Rfd2JfY29uZmlnL2N0cmwuDQo+ID4+
+ID4NCj4gPj4gPiBCUiwNCj4gPj4gPiBLeXVobyBDaG9pDQo+ID4+DQo+ID4+IEkgZG8gc2hvdyB1
+ZnNoY2Rfd2JfcHJvYmUgaW4gbXkgc291cmNlcyAtIEknbSBiYXNlZCBvbiA1LjgtcmMyIHdpdGgg
+YQ0KPiA+PiBmZXcgZXh0cmEgcGF0Y2hlcyBmb3IgdGhlIGM2MzAsIGFuZCB0aGUgaW5saW5lIGVu
+Y3J5cHRpb24gcGF0Y2hlcy4NCj4gPj4NCj4gPj4gSSB0aGlzIGlzIHRoZSBvdXRwdXQgdGhhdCBJ
+IHNlZSAtDQo+ID4+DQo+ID4+ICAxLg0KPiA+PiAgICAgWyAgICAwLjcwMjUwMV0gdWZzaGNkLXFj
+b20gMWQ4NDAwMC51ZnNoYzogdWZzaGNkX3BvcHVsYXRlX3ZyZWc6DQo+ID4+ICAgICBVbmFibGUg
+dG8gZmluZCB2ZGQtaGJhLXN1cHBseSByZWd1bGF0b3IsIGFzc3VtaW5nIGVuYWJsZWQNCj4gPj4g
+IDIuDQo+ID4+ICAgICBbICAgIDAuNzAyNTA2XSB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVmc2hjOiB1
+ZnNoY2RfcG9wdWxhdGVfdnJlZzoNCj4gPj4gICAgIFVuYWJsZSB0byBmaW5kIHZjY3Etc3VwcGx5
+IHJlZ3VsYXRvciwgYXNzdW1pbmcgZW5hYmxlZA0KPiA+PiAgMy4NCj4gPj4gICAgIFsgICAgMC43
+MDI1MDhdIHVmc2hjZC1xY29tIDFkODQwMDAudWZzaGM6IHVmc2hjZF9wb3B1bGF0ZV92cmVnOg0K
+PiA+PiAgICAgVW5hYmxlIHRvIGZpbmQgdmNjcTItc3VwcGx5IHJlZ3VsYXRvciwgYXNzdW1pbmcg
+ZW5hYmxlZA0KPiA+PiAgNC4NCj4gPj4gICAgIFsgICAgMC43MDMyOTZdIHVmc2hjZC1xY29tIDFk
+ODQwMDAudWZzaGM6IEZvdW5kIFFDIElubGluZSBDcnlwdG8NCj4gPj4gICAgIEVuZ2luZSAoSUNF
+KSB2My4xLjc1DQo+ID4+ICA1Lg0KPiA+PiAgICAgWyAgICAwLjcwNTEyMV0gc2NzaSBob3N0MDog
+dWZzaGNkDQo+ID4+ICA2Lg0KPiA+PiAgICAgWyAgICAwLjcyMDE2M10gQUxTQSBkZXZpY2UgbGlz
+dDoNCj4gPj4gIDcuDQo+ID4+ICAgICBbICAgIDAuNzIwMTcxXSAgIE5vIHNvdW5kY2FyZHMgZm91
+bmQuDQo+ID4+ICA4Lg0KPiA+PiAgICAgWyAgICAwLjczMTM5M10gdWZzaGNkLXFjb20gMWQ4NDAw
+MC51ZnNoYzogdWZzaGNkX3ByaW50X3B3cl9pbmZvOltSWCwNCj4gPj4gICAgIFRYXTogZ2Vhcj1b
+MSwgMV0sIGxhbmVbMSwgMV0sIHB3cltTTE9XQVVUT19NT0RFLCBTTE9XQVVUT19NT0RFXSwNCj4g
+Pj4gICAgIHJhdGUgPSAwDQo+ID4+ICA5Lg0KPiA+PiAgICAgWyAgICAwLjg5MzczOF0gdWZzaGNk
+LXFjb20gMWQ4NDAwMC51ZnNoYzogdWZzaGNkX3ByaW50X3B3cl9pbmZvOltSWCwNCj4gPj4gICAg
+IFRYXTogZ2Vhcj1bMywgM10sIGxhbmVbMiwgMl0sIHB3cltGQVNUIE1PREUsIEZBU1QgTU9ERV0s
+IHJhdGUgPSAyDQo+ID4+IDEwLg0KPiA+PiAgICAgWyAgICAwLjg5NDcwM10gdWZzaGNkLXFjb20g
+MWQ4NDAwMC51ZnNoYzoNCj4gPj4gICAgIHVmc2hjZF9maW5kX21heF9zdXBfYWN0aXZlX2ljY19s
+ZXZlbDogUmVndWxhdG9yIGNhcGFiaWxpdHkgd2FzIG5vdA0KPiA+PiAgICAgc2V0LCBhY3R2SWNj
+TGV2ZWw9MA0KPiA+PiAxMS4NCj4gPj4gICAgIFsgICAgMC44OTYwMzJdIHVmc2hjZC1xY29tIDFk
+ODQwMDAudWZzaGM6IHVmc2hjZF9xdWVyeV9mbGFnOiBTZW5kaW5nDQo+ID4+ICAgICBmbGFnIHF1
+ZXJ5IGZvciBpZG4gMTQgZmFpbGVkLCBlcnIgPSAyNTMNCj4gPj4gMTIuDQo+ID4+ICAgICBbICAg
+IDAuODk2OTE5XSB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxhZzog
+U2VuZGluZw0KPiA+PiAgICAgZmxhZyBxdWVyeSBmb3IgaWRuIDE0IGZhaWxlZCwgZXJyID0gMjUz
+DQo+ID4+IDEzLg0KPiA+PiAgICAgWyAgICAwLjg5Nzc5OF0gdWZzaGNkLXFjb20gMWQ4NDAwMC51
+ZnNoYzogdWZzaGNkX3F1ZXJ5X2ZsYWc6IFNlbmRpbmcNCj4gPj4gICAgIGZsYWcgcXVlcnkgZm9y
+IGlkbiAxNCBmYWlsZWQsIGVyciA9IDI1Mw0KPiA+PiAxNC4NCj4gPj4gICAgIFsgICAgMC44OTgy
+MjddIHVmc2hjZC1xY29tIDFkODQwMDAudWZzaGM6IHVmc2hjZF9xdWVyeV9mbGFnX3JldHJ5Og0K
+PiA+PiAgICAgcXVlcnkgYXR0cmlidXRlLCBvcGNvZGUgNiwgaWRuIDE0LCBmYWlsZWQgd2l0aCBl
+cnJvciAyNTMgYWZ0ZXIgMw0KPiA+PiByZXRpcmVzDQo+ID4+IDE1Lg0KPiA+PiAgICAgWyAgICAw
+Ljg5ODc5OF0gdWZzaGNkLXFjb20gMWQ4NDAwMC51ZnNoYzogdWZzaGNkX3diX2N0cmwgd3JpdGUN
+Cj4gPj4gICAgIGJvb3N0ZXIgZW5hYmxlIGZhaWxlZCAyNTMNCj4gPj4gMTYuDQo+ID4+ICAgICBb
+ICAgIDAuODk5MTUwXSB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVmc2hjOiB1ZnNoY2Rfd2JfY29uZmln
+OiBFbmFibGUNCj4gPj4gICAgIFdCIGZhaWxlZDogMjUzDQo+ID4+IDE3Lg0KPiA+PiAgICAgWyAg
+ICAwLjg5OTkxOF0gdWZzaGNkLXFjb20gMWQ4NDAwMC51ZnNoYzogdWZzaGNkX3F1ZXJ5X2ZsYWc6
+IFNlbmRpbmcNCj4gPj4gICAgIGZsYWcgcXVlcnkgZm9yIGlkbiAxNiBmYWlsZWQsIGVyciA9IDI1
+Mw0KPiA+PiAxOC4NCj4gPj4gICAgIFsgICAgMC45MDA0NDhdIHVmc2hjZC1xY29tIDFkODQwMDAu
+dWZzaGM6IHVmc2hjZF9xdWVyeV9mbGFnOiBTZW5kaW5nDQo+ID4+ICAgICBmbGFnIHF1ZXJ5IGZv
+ciBpZG4gMTYgZmFpbGVkLCBlcnIgPSAyNTMNCj4gPj4gMTkuDQo+ID4+ICAgICBbICAgIDAuOTAx
+MjkwXSB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxhZzogU2VuZGlu
+Zw0KPiA+PiAgICAgZmxhZyBxdWVyeSBmb3IgaWRuIDE2IGZhaWxlZCwgZXJyID0gMjUzDQo+ID4+
+IDIwLg0KPiA+PiAgICAgWyAgICAwLjkwMTc0OV0gdWZzaGNkLXFjb20gMWQ4NDAwMC51ZnNoYzog
+dWZzaGNkX3F1ZXJ5X2ZsYWdfcmV0cnk6DQo+ID4+ICAgICBxdWVyeSBhdHRyaWJ1dGUsIG9wY29k
+ZSA2LCBpZG4gMTYsIGZhaWxlZCB3aXRoIGVycm9yIDI1MyBhZnRlciAzDQo+ID4+IHJldGlyZXMN
+Cj4gPj4gMjEuDQo+ID4+ICAgICBbICAgIDAuOTAyMjg1XSB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVm
+c2hjOiB1ZnNoY2Rfd2JfY29uZmlnOiBFbiBXQg0KPiA+PiAgICAgZmx1c2ggZHVyaW5nIEg4OiBm
+YWlsZWQ6IDI1Mw0KPiA+PiAyMi4NCj4gPj4gICAgIFsgICAgMC45MDMxMDVdIHVmc2hjZC1xY29t
+IDFkODQwMDAudWZzaGM6IHVmc2hjZF9xdWVyeV9mbGFnOiBTZW5kaW5nDQo+ID4+ICAgICBmbGFn
+IHF1ZXJ5IGZvciBpZG4gMTUgZmFpbGVkLCBlcnIgPSAyNTMNCj4gPj4gMjMuDQo+ID4+ICAgICBb
+ICAgIDAuOTAzOTg4XSB1ZnNoY2QtcWNvbSAxZDg0MDAwLnVmc2hjOiB1ZnNoY2RfcXVlcnlfZmxh
+ZzogU2VuZGluZw0KPiA+PiAgICAgZmxhZyBxdWVyeSBmb3IgaWRuIDE1IGZhaWxlZCwgZXJyID0g
+MjUzDQo+ID4+IDI0Lg0KPiA+PiAgICAgWyAgICAwLjkwNDg2Nl0gdWZzaGNkLXFjb20gMWQ4NDAw
+MC51ZnNoYzogdWZzaGNkX3F1ZXJ5X2ZsYWc6IFNlbmRpbmcNCj4gPj4gICAgIGZsYWcgcXVlcnkg
+Zm9yIGlkbiAxNSBmYWlsZWQsIGVyciA9IDI1Mw0KPiA+PiAyNS4NCj4gPj4gICAgIFsgICAgMC45
+MDUyOTRdIHVmc2hjZC1xY29tIDFkODQwMDAudWZzaGM6IHVmc2hjZF9xdWVyeV9mbGFnX3JldHJ5
+Og0KPiA+PiAgICAgcXVlcnkgYXR0cmlidXRlLCBvcGNvZGUgNiwgaWRuIDE1LCBmYWlsZWQgd2l0
+aCBlcnJvciAyNTMgYWZ0ZXIgMw0KPiA+PiByZXRpcmVzDQo+ID4+IDI2Lg0KPiA+PiAgICAgWyAg
+ICAwLjkwNTg1OV0gdWZzaGNkLXFjb20gMWQ4NDAwMC51ZnNoYzogdWZzaGNkX3diX2J1Zl9mbHVz
+aF9lbmFibGUNCj4gPj4gICAgIFdCIC0gYnVmIGZsdXNoIGVuYWJsZSBmYWlsZWQgMjUzDQo+ID4N
+Cj4gPiBQbGVhc2UgaGVscCB0cnkgYmVsb3cgc2ltcGxlIHBhdGNoIHRvIHNlZSBpZiBhYm92ZSBX
+cml0ZUJvb3N0ZXIgbWVzc2FnZXMNCj4gPiBjYW4gYmUgZWxpbWluYXRlZC4NCj4gPg0KPiA+DQo+
+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCAyICsrDQo+ID4gIDEgZmls
+ZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0KPiA+IGluZGV4
+IGYxNzNhZDFiZDc5Zi4uMDg5YzA3ODVmMGIzIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2Nz
+aS91ZnMvdWZzaGNkLmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4g
+QEAgLTY5ODUsNiArNjk4NSw4IEBAIHN0YXRpYyBpbnQgdWZzX2dldF9kZXZpY2VfZGVzYyhzdHJ1
+Y3QgdWZzX2hiYQ0KPiA+ICpoYmEpDQo+ID4gIAkgICAgZGV2X2luZm8tPndzcGVjdmVyc2lvbiA9
+PSAweDIyMCB8fA0KPiA+ICAJICAgIChoYmEtPmRldl9xdWlya3MgJiBVRlNfREVWSUNFX1FVSVJL
+X1NVUFBPUlRfRVhURU5ERURfRkVBVFVSRVMpKQ0KPiA+ICAJCXVmc2hjZF93Yl9wcm9iZShoYmEs
+IGRlc2NfYnVmKTsNCj4gPiArCWVsc2UNCj4gPiArCQloYmEtPmNhcHMgJj0gflVGU0hDRF9DQVBf
+V0JfRU47DQo+IA0KPiBJTU8sIGhiYS0+Y2FwcyBhYm91dCBXQl9FTiBpcyBhbHJlYWR5IHNldCBp
+biB1ZnMtdmVuZG9yLmMuIFNvIGZvcg0KPiB3cml0ZWJvb3N0ZXIgZGlkbid0IHN1cHBvcnQgdWZz
+IGRldmljZXMsIG5lZWQgdG8gY2xlYXIgdGhpcyBjYXBzLg0KPiANCj4gPg0KDQpUaGFua3MgZm9y
+IHRoZSBhY2suIFRoZW4gSSdsbCBzZW5kIGl0IGFzIGEgZm9ybWFsIHBhdGNoLg0KDQpUaGFuayB5
+b3UsDQpTdGFubGV5IENodQ0KDQoNCg0K
 
-On 6/24/20, Stanley Chu <stanley.chu@mediatek.com> wrote:
-> Hi Steev,
->
-> On Tue, 2020-06-23 at 20:10 -0500, Steev Klimaszewski wrote:
->> On 6/23/20 1:51 AM, Kyuho Choi wrote:
->> > Hi Avri,
->> >
->> > On 6/23/20, Avri Altman <Avri.Altman@wdc.com> wrote:
->> >>> AFAIK, this device are ufs 2.1. It's not support writebooster.
->> >>>
->> >>> I'd check latest linux scsi branch and ufshcd_wb_config function's
->> >>> called without device capability check.
->> >> Please grep ufshcd_wb_probe.
->> >>
->> > I got your point, but as I mentioned, this device not support wb, this
->> > is old products.
->> >
->> > I'm not sure ufshcd_wb_probe are called or not in Rob and Steev's
->> > platform.
->> > If it's called, hba->caps are setted with wb diable and this error not
->> > occured.
->> > But (it looks) not called, same query error will be occured in
->> > ufshcd_wb_config/ctrl.
->> >
->> > BR,
->> > Kyuho Choi
->>
->> I do show ufshcd_wb_probe in my sources - I'm based on 5.8-rc2 with a
->> few extra patches for the c630, and the inline encryption patches.
->>
->> I this is the output that I see -
->>
->>  1.
->>     [    0.702501] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg:
->>     Unable to find vdd-hba-supply regulator, assuming enabled
->>  2.
->>     [    0.702506] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg:
->>     Unable to find vccq-supply regulator, assuming enabled
->>  3.
->>     [    0.702508] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg:
->>     Unable to find vccq2-supply regulator, assuming enabled
->>  4.
->>     [    0.703296] ufshcd-qcom 1d84000.ufshc: Found QC Inline Crypto
->>     Engine (ICE) v3.1.75
->>  5.
->>     [    0.705121] scsi host0: ufshcd
->>  6.
->>     [    0.720163] ALSA device list:
->>  7.
->>     [    0.720171]   No soundcards found.
->>  8.
->>     [    0.731393] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX,
->>     TX]: gear=[1, 1], lane[1, 1], pwr[SLOWAUTO_MODE, SLOWAUTO_MODE],
->>     rate = 0
->>  9.
->>     [    0.893738] ufshcd-qcom 1d84000.ufshc: ufshcd_print_pwr_info:[RX,
->>     TX]: gear=[3, 3], lane[2, 2], pwr[FAST MODE, FAST MODE], rate = 2
->> 10.
->>     [    0.894703] ufshcd-qcom 1d84000.ufshc:
->>     ufshcd_find_max_sup_active_icc_level: Regulator capability was not
->>     set, actvIccLevel=0
->> 11.
->>     [    0.896032] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 14 failed, err = 253
->> 12.
->>     [    0.896919] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 14 failed, err = 253
->> 13.
->>     [    0.897798] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 14 failed, err = 253
->> 14.
->>     [    0.898227] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag_retry:
->>     query attribute, opcode 6, idn 14, failed with error 253 after 3
->> retires
->> 15.
->>     [    0.898798] ufshcd-qcom 1d84000.ufshc: ufshcd_wb_ctrl write
->>     booster enable failed 253
->> 16.
->>     [    0.899150] ufshcd-qcom 1d84000.ufshc: ufshcd_wb_config: Enable
->>     WB failed: 253
->> 17.
->>     [    0.899918] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 16 failed, err = 253
->> 18.
->>     [    0.900448] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 16 failed, err = 253
->> 19.
->>     [    0.901290] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 16 failed, err = 253
->> 20.
->>     [    0.901749] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag_retry:
->>     query attribute, opcode 6, idn 16, failed with error 253 after 3
->> retires
->> 21.
->>     [    0.902285] ufshcd-qcom 1d84000.ufshc: ufshcd_wb_config: En WB
->>     flush during H8: failed: 253
->> 22.
->>     [    0.903105] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 15 failed, err = 253
->> 23.
->>     [    0.903988] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 15 failed, err = 253
->> 24.
->>     [    0.904866] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag: Sending
->>     flag query for idn 15 failed, err = 253
->> 25.
->>     [    0.905294] ufshcd-qcom 1d84000.ufshc: ufshcd_query_flag_retry:
->>     query attribute, opcode 6, idn 15, failed with error 253 after 3
->> retires
->> 26.
->>     [    0.905859] ufshcd-qcom 1d84000.ufshc: ufshcd_wb_buf_flush_enable
->>     WB - buf flush enable failed 253
->
-> Please help try below simple patch to see if above WriteBooster messages
-> can be eliminated.
->
->
-> ---
->  drivers/scsi/ufs/ufshcd.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index f173ad1bd79f..089c0785f0b3 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6985,6 +6985,8 @@ static int ufs_get_device_desc(struct ufs_hba
-> *hba)
->  	    dev_info->wspecversion == 0x220 ||
->  	    (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES))
->  		ufshcd_wb_probe(hba, desc_buf);
-> +	else
-> +		hba->caps &= ~UFSHCD_CAP_WB_EN;
-
-IMO, hba->caps about WB_EN is already set in ufs-vendor.c. So for
-writebooster didn't support ufs devices, need to clear this caps.
-
->
->  	/*
->  	 * ufshcd_read_string_desc returns size of the string
-> --
->
->
->
->> 27.
->>     [    0.907659] scsi 0:0:0:49488: Well-known LUN    SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 28.
->>     [    0.911082] scsi 0:0:0:49476: Well-known LUN    SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 29.
->>     [    0.913268] scsi 0:0:0:49456: Well-known LUN    SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 30.
->>     [    0.914580] scsi 0:0:0:0: Direct-Access     SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 31.
->>     [    0.915156] sd 0:0:0:0: Power-on or device reset occurred
->> 32.
->>     [    0.915311] scsi 0:0:0:1: Direct-Access     SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 33.
->>     [    0.916104] scsi 0:0:0:2: Direct-Access     SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 34.
->>     [    0.916318] sd 0:0:0:0: [sda] 29765632 4096-byte logical blocks:
->>     (122 GB/114 GiB)
->> 35.
->>     [    0.916417] sd 0:0:0:0: [sda] Write Protect is off
->> 36.
->>     [    0.916424] sd 0:0:0:0: [sda] Mode Sense: 00 32 00 10
->> 37.
->>     [    0.916589] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
->>     enabled, supports DPO and FUA
->> 38.
->>     [    0.916667] sd 0:0:0:0: [sda] Optimal transfer size 8192 bytes
->> 39.
->>     [    0.916897] sd 0:0:0:1: Power-on or device reset occurred
->> 40.
->>     [    0.917131] scsi 0:0:0:3: Direct-Access     SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 41.
->>     [    0.917498] sd 0:0:0:2: Power-on or device reset occurred
->> 42.
->>     [    0.917994] sd 0:0:0:3: Power-on or device reset occurred
->> 43.
->>     [    0.919301] scsi 0:0:0:4: Direct-Access     SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 44.
->>     [    0.920207] sd 0:0:0:2: [sdc] 1024 4096-byte logical blocks:
->>     (4.19 MB/4.00 MiB)
->> 45.
->>     [    0.920310] sd 0:0:0:3: [sdd] 32768 4096-byte logical blocks:
->>     (134 MB/128 MiB)
->> 46.
->>     [    0.920312] sd 0:0:0:2: [sdc] Write Protect is off
->> 47.
->>     [    0.920317] sd 0:0:0:2: [sdc] Mode Sense: 00 32 00 10
->> 48.
->>     [    0.920405] sd 0:0:0:3: [sdd] Write Protect is off
->> 49.
->>     [    0.920410] sd 0:0:0:3: [sdd] Mode Sense: 00 32 00 10
->> 50.
->>     [    0.920642] sd 0:0:0:2: [sdc] Write cache: enabled, read cache:
->>     enabled, supports DPO and FUA
->> 51.
->>     [    0.921151] sd 0:0:0:2: [sdc] Optimal transfer size 8192 bytes
->> 52.
->>     [    0.921212] sd 0:0:0:3: [sdd] Write cache: enabled, read cache:
->>     enabled, supports DPO and FUA
->> 53.
->>     [    0.921526] sd 0:0:0:3: [sdd] Optimal transfer size 8192 bytes
->> 54.
->>     [    0.922585] sd 0:0:0:4: Power-on or device reset occurred
->> 55.
->>     [    0.922983] scsi 0:0:0:5: Direct-Access     SAMSUNG
->>      KLUDG4U1EA-B0C1  0500 PQ: 0 ANSI: 6
->> 56.
->>     [    0.923490] sd 0:0:0:1: [sdb] 1024 4096-byte logical blocks:
->>     (4.19 MB/4.00 MiB)
->> 57.
->>     [    0.928867] sd 0:0:0:1: [sdb] Write Protect is off
->> 58.
->>     [    0.928870] sd 0:0:0:1: [sdb] Mode Sense: 00 32 00 10
->> 59.
->>     [    0.930887] sd 0:0:0:4: [sde] 1048576 4096-byte logical blocks:
->>     (4.29 GB/4.00 GiB)
->> 60.
->>     [    0.931179] sd 0:0:0:1: [sdb] Write cache: enabled, read cache:
->>     enabled, supports DPO and FUA
->> 61.
->>     [    0.932015] random: fast init done
->> 62.
->>     [    0.932022] sd 0:0:0:5: Power-on or device reset occurred
->> 63.
->>     [    0.935289] sd 0:0:0:4: [sde] Write Protect is off
->> 64.
->>     [    0.935293] sd 0:0:0:4: [sde] Mode Sense: 00 32 00 10
->> 65.
->>     [    0.935396]  sda: sda1 sda2 sda3 sda4 sda5
->> 66.
->>     [    0.936047] sd 0:0:0:1: [sdb] Optimal transfer size 8192 bytes
->> 67.
->>     [    0.936358] sd 0:0:0:4: [sde] Write cache: enabled, read cache:
->>     enabled, supports DPO and FUA
->> 68.
->>     [    0.936865] sd 0:0:0:4: [sde] Optimal transfer size 8192 bytes
->> 69.
->>     [    0.938448]  sdc: sdc1 sdc2
->> 70.
->>     [    0.939470] sd 0:0:0:5: [sdf] 393216 4096-byte logical blocks:
->>     (1.61 GB/1.50 GiB)
->> 71.
->>     [    0.939743] sd 0:0:0:5: [sdf] Write Protect is off
->> 72.
->>     [    0.939747] sd 0:0:0:5: [sdf] Mode Sense: 00 32 00 10
->> 73.
->>     [    0.940609] sd 0:0:0:5: [sdf] Write cache: enabled, read cache:
->>     enabled, supports DPO and FUA
->> 74.
->>     [    0.940837] sd 0:0:0:5: [sdf] Optimal transfer size 8192 bytes
->> 75.
->>     [    0.940984] sd 0:0:0:0: [sda] Attached SCSI disk
->> 76.
->>     [    0.941150] sd 0:0:0:2: [sdc] Attached SCSI disk
->> 77.
->>     [    0.945814]  sdd: sdd2 sdd3
->> 78.
->>     [    0.945983]  sdf: sdf2 sdf3 sdf4 sdf5
->> 79.
->>     [    0.946701]  sde: sde1 sde2 sde3 sde4 sde5 sde6 sde7 sde8 sde9
->>     sde10 sde11 sde12 sde13 sde14 sde15 sde16 sde17 sde18 sde19 sde20
->>     sde21 sde22 sde23 sde24 sde25 sde26 sde27
->> 80.
->>     [    0.953610]  sdb: sdb1 sdb2
->> 81.
->>     [    0.954035] sd 0:0:0:5: [sdf] Attached SCSI disk
->> 82.
->>     [    0.954131] sd 0:0:0:4: [sde] Attached SCSI disk
->> 83.
->>     [    0.954177] sd 0:0:0:3: [sdd] Attached SCSI disk
->> 84.
->>     [    0.955316] sd 0:0:0:1: [sdb] Attached SCSI disk
->>
->> Full dmesg output at https://pastebin.com/azWahunu
->>
->>
->> -- Steev
->>
->
->
