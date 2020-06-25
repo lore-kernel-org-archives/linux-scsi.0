@@ -2,93 +2,95 @@ Return-Path: <SRS0=uw5d=AG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B675C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 17:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43155C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 18:22:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E42020707
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 17:12:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16ADD2081A
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 18:22:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O0uZj6Zy"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oEi9td/3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404130AbgFYRM3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 13:12:29 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:59352 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2404083AbgFYRM2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 13:12:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593105147;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=L7q/q0B64Z88wSL1s6uDF2PpyGaTVUVAi/hdXuSecyg=;
-        b=O0uZj6ZylcWeye8FLML7eC4T4ZDZadWFNWlmPzuVsmpJYANM8bcMg7geCOjERhbGjp6DQX
-        QqUJbcf6fRnLXIbOTLqkkE6hIlEgk1H9gIQ9kAXMrMChbfMLsezijXoNYZAuogWKpwxN+8
-        4RIzHilBsdNtQiJuEyESiQYavcWbj3s=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-131-MPnraenqPI6Kw0dJhao3jQ-1; Thu, 25 Jun 2020 13:12:23 -0400
-X-MC-Unique: MPnraenqPI6Kw0dJhao3jQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8423518585A0;
-        Thu, 25 Jun 2020 17:12:22 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.40.192.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 79E612B4B0;
-        Thu, 25 Jun 2020 17:12:21 +0000 (UTC)
-From:   Tomas Henzl <thenzl@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com
-Subject: [PATCH] megaraid_sas: clear affinity hint
-Date:   Thu, 25 Jun 2020 19:12:20 +0200
-Message-Id: <20200625171220.9168-1-thenzl@redhat.com>
+        id S2406132AbgFYSWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 14:22:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54914 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405815AbgFYSWe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 14:22:34 -0400
+Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF1F7C08C5C1;
+        Thu, 25 Jun 2020 11:22:33 -0700 (PDT)
+Received: by mail-ej1-x641.google.com with SMTP id y10so6909726eje.1;
+        Thu, 25 Jun 2020 11:22:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=v8geYdYVNbF2rBwzEMDOXkFAFkAYNm3uyIolEhmynSQ=;
+        b=oEi9td/3wSG1TfTzeZOqQLFC8Rylwdn1Ss0asHlgWIDEr2soxzQ+Q+ppWngvOk6QBj
+         uplo7+7UTdsXYTPdi8xOk5s+qbUPaXTmNG51iKLyGKVvNEV9XNtEg7oQjqFAW6HO6P8J
+         o5JBCvvo5VcoxhsdiWvWqwLDcq49JMPe+JLIYruYt/fodDhauPBz+DDr8UyXVtUzViiY
+         FY7NZckqA10YV2rvfWJ1QHJBPdO0X039l1sqmufVs2JKcSzulo4MUOggJebgrxOQbDgu
+         xpjMwZB7EfXMyuUrCFXLLsxN0MVVY6J5jhcADKKNjIZHpPlnQJhF75aAWcTLUMQw4V6p
+         URMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=v8geYdYVNbF2rBwzEMDOXkFAFkAYNm3uyIolEhmynSQ=;
+        b=h7eVARcohrumS6VsThxbroop2NQ3LEF+IhoC2Zrt/7MX+R6uKU9RpaoznlL6/qKz+G
+         vBkU3jk/jgAl+VzLqTQRqtKy9ZvmmPqOSwMKUkoQ8/9ALfd3kog8OBLGhclPo5muObhU
+         IOE7wfDCeWy8asp6aVyPTXzSdFtkmKP8K+GIhqzaJ886FJe0S4wKbZ1Sc/4/SxMzyjTp
+         EGb3NVw1DTHOB9CJMIyeUJts3h9Xd0TmAOGf/FVIZQTdkWbM8chfZKjOLvFdDOZTP0Nk
+         ZANAfMqFxv/joM5/VCWAFDk2W6OCJPXmiOsu4wHGGm46om+W4miUlI6cz8sZwh+jxAcl
+         9LrA==
+X-Gm-Message-State: AOAM53302myCh9kQL1B+1wq50Xm5SM2SRIZs9mDQE+j8ny2gOoxt2rfZ
+        ny96wtfuxcTAmTC6/5xC4xo=
+X-Google-Smtp-Source: ABdhPJwYuKHKu8ML78wL+jaQLqXrQCzIvC0LSKLl8JU//05HxvBuQruSWlLJAM3qfISlZB1rhyLmBg==
+X-Received: by 2002:a17:906:da19:: with SMTP id fi25mr9261887ejb.369.1593109352334;
+        Thu, 25 Jun 2020 11:22:32 -0700 (PDT)
+Received: from andrea (ip-213-220-210-175.net.upcbroadband.cz. [213.220.210.175])
+        by smtp.gmail.com with ESMTPSA id lm22sm1524867ejb.109.2020.06.25.11.22.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 25 Jun 2020 11:22:31 -0700 (PDT)
+Date:   Thu, 25 Jun 2020 20:22:23 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Andres Beltran <lkmlabelt@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: Re: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
+Message-ID: <20200625182223.GA318674@andrea>
+References: <20200625153723.8428-1-lkmlabelt@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200625153723.8428-1-lkmlabelt@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Affinity hint should be cleared before freeing irq.
+> Andres Beltran (3):
+>   Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
+>     hardening
+>   scsi: storvsc: Use vmbus_requestor to generate transaction ids for
+>     VMBus hardening
+>   hv_netvsc: Use vmbus_requestor to generate transaction ids for VMBus
+>     hardening
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+For the series,
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 00668335c..d5626ad8b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5602,9 +5602,11 @@ megasas_setup_irqs_msix(struct megasas_instance *instance, u8 is_probe)
- 			&instance->irq_context[i])) {
- 			dev_err(&instance->pdev->dev,
- 				"Failed to register IRQ for vector %d.\n", i);
--			for (j = 0; j < i; j++)
-+			for (j = 0; j < i; j++) {
-+				irq_set_affinity_hint(pci_irq_vector(pdev, j), NULL);
- 				free_irq(pci_irq_vector(pdev, j),
- 					 &instance->irq_context[j]);
-+			}
- 			/* Retry irq register for IO_APIC*/
- 			instance->msix_vectors = 0;
- 			instance->msix_load_balance = false;
-@@ -5642,6 +5644,7 @@ megasas_destroy_irqs(struct megasas_instance *instance) {
- 
- 	if (instance->msix_vectors)
- 		for (i = 0; i < instance->msix_vectors; i++) {
-+			irq_set_affinity_hint(pci_irq_vector(instance->pdev, i), NULL);
- 			free_irq(pci_irq_vector(instance->pdev, i),
- 				 &instance->irq_context[i]);
- 		}
--- 
-2.21.3
+Tested-by: Andrea Parri <parri.andrea@gmail.com>
 
+Thanks,
+  Andrea
