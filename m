@@ -2,105 +2,159 @@ Return-Path: <SRS0=uw5d=AG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51796C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 23:10:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A96BC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 23:25:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25500207D8
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 23:10:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F46A20768
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 23:25:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="ff8pJTwL"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ea3gxSWi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407680AbgFYXKo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 19:10:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43000 "EHLO
+        id S2407812AbgFYXZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 19:25:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404432AbgFYXKn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 19:10:43 -0400
-Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF6E9C08C5C1;
-        Thu, 25 Jun 2020 16:10:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=+df13v+AvbHRI+0q7hSJ2DFnkMwltHAJzFloMEs+1FI=; b=ff8pJTwLFHOxuLoV2FtHmAGtv
-        Sf2fkGNbigss0aeXBRx5PHD2LTkdASaEarZAWFoIeihoyJBSMTFesT54Ou2UxgDHgiZYR2Msj3zrY
-        ojzZ67bwf2raqyhWhUTPHLkNBpnSed0G9GhM3v6Wau2DvWi40YIyIhnF4uAj7UfidxsHYJCVY06L6
-        uoaGwU+Bxsx3LES1EVTRKP+vJ2TELzzNmv4T8ESLYYG8AziYCI9Wd+ofeiGK/Ram/bm8SZysWWTwL
-        i1iqkYoCRzcrDrzyNlTkyr5NgidasoYt8UvgdAnaKe3I/kIuKMBjlTWTzZ5bRku9X/6cFDxcwnbUz
-        hdZwTBbPg==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:59774)
-        by pandora.armlinux.org.uk with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1job0x-0004mx-8F; Fri, 26 Jun 2020 00:10:39 +0100
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.92)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1job0n-0003Sj-6B; Fri, 26 Jun 2020 00:10:29 +0100
-Date:   Fri, 26 Jun 2020 00:10:29 +0100
-From:   Russell King - ARM Linux admin <linux@armlinux.org.uk>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] scsi: cumana_2: Fix different dev_id between
- 'request_irq()' and 'free_irq()'
-Message-ID: <20200625231029.GN1551@shell.armlinux.org.uk>
-References: <20200530073555.577414-1-christophe.jaillet@wanadoo.fr>
- <20200625204730.943520-1-christophe.jaillet@wanadoo.fr>
+        with ESMTP id S2406798AbgFYXZf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 19:25:35 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAC6BC08C5C1
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2020 16:25:34 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id k71so650607pje.0
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2020 16:25:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=c+/EjVBEZVp/y7wbiiS6Pl5a7KIYfdvdYemdOyEbkUY=;
+        b=Ea3gxSWidXT1+YBvWlsgj3hYKOtGYlzF5LWC0KUl89s9c7Y6T6gfH/CraZK+77vRsJ
+         xFt3uOV8GL573yPwgr/dfwAs/KYIt3kbLTtkgwbGoAHYKqOjAiTx9HQ44drNgzVfgXEW
+         6vrjsQUrqVH4HVXePYcfjEr7BGs8dpB8xpOGw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=c+/EjVBEZVp/y7wbiiS6Pl5a7KIYfdvdYemdOyEbkUY=;
+        b=H0fza+GN0YmXmMJYDny7AlyqIGwfLn0z8Aq0lYNuXAcjochScF3TPfbyPr00tj8M0E
+         70NGSVzn40lGDFB9COLLz+ipw6Jk+9hb5xrhwxopsCz87lMtO9OL8J9q8FtwyM2em46Z
+         lrWqopOLtJ/MB8FGmiHGE/NuzW5+OuaWyC9ScFzQQJn5uPA5Lb0i4OyFMq+MaygpPfNk
+         NMGwNqBcfEklCVBW+X7oqhF0MAm9r3Qc0/MnZ5LQMPgDrVP/nNoOheyd+OmSTRRjEZC6
+         7ZCpXK0JDq4WkeKfOyquonnWCjTf0NZ72xkFPMOKjsFgFk14jWx3XRsZHfdcVX8Ba8Bs
+         rVnQ==
+X-Gm-Message-State: AOAM533ZxDqSCDgxD66s6ha65Yf5gFcxjpfYaf5pqduP5AvioONaSRlX
+        jqpFXPwcA9oPppam/SKRIQxHBQ==
+X-Google-Smtp-Source: ABdhPJyqVcldJ/zsxbzk1VeKH8M69zfK6PbbT6sDqh/dIDYF84GH7YDnkYxdcHTba60KNsZ84POUrA==
+X-Received: by 2002:a17:902:10e:: with SMTP id 14mr157020plb.213.1593127534159;
+        Thu, 25 Jun 2020 16:25:34 -0700 (PDT)
+Received: from [10.69.45.46] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 21sm4765460pfu.124.2020.06.25.16.25.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 25 Jun 2020 16:25:33 -0700 (PDT)
+Subject: Re: [PATCH 2/3] qla2xxx: SAN congestion management(SCM)
+ implementation.
+To:     Shyam Sundar <ssundar@marvell.com>
+Cc:     Nilesh Javali <njavali@marvell.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Arun Easi <aeasi@marvell.com>
+References: <20200514101026.10040-1-njavali@marvell.com>
+ <20200514101026.10040-3-njavali@marvell.com>
+ <927c2cbd-682f-a80e-bd2e-2e5bd012ab2d@broadcom.com>
+ <CA+ihqdiA7AN05k5MjPG=o8_pf=L-La6UigY4t0emKgJMXm=hnQ@mail.gmail.com>
+ <BYAPR18MB2805AEA357302FCFA20D2B57B48F0@BYAPR18MB2805.namprd18.prod.outlook.com>
+ <351333B3-F666-420F-A9D3-DB86D2617156@marvell.com>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <7c33c4fb-d3ec-cd2e-4de3-ecb95ffec8b8@broadcom.com>
+Date:   Thu, 25 Jun 2020 16:25:31 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200625204730.943520-1-christophe.jaillet@wanadoo.fr>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <351333B3-F666-420F-A9D3-DB86D2617156@marvell.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 25, 2020 at 10:47:30PM +0200, Christophe JAILLET wrote:
-> The dev_id used in 'request_irq()' and 'free_irq()' should match.
-> Use 'info' in both cases.
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-Thanks Christophe.
+On 6/11/2020 10:42 AM, Shyam Sundar wrote:
+> Seems like this (and a previous email) never made it to the reflector, resending.
+>
+> The suggestions make sense to me, and I have made most of the recommended changes.
+> I was looking for some guidance on placements of the sim stats structures.
+>
+>> On May 29, 2020, at 11:53 AM, Shyam Sundar <ssundar@marvell.com> wrote:
+>>
+>> James,
+>>       I was thinking of adding a structures for tracking the target FPIN stats.
+>>
+>> struct fc_rport_statistics {
+>> uint32_t link_failure_count;
+>> uint32_t loss_of_sync_count;
+>> ....
+>> }
+>>
+>> under fc_rport:
+>>
+>> struct fc_rport {
+>>
+>> /* Private (Transport-managed) Attributes */
+>> struct fc_rport_statistics;
+>>
+>>       For host FPIN stats (essentially the alarm & warning), was not sure if I should add them to the fc_host_statistics or
+>> define a new structure under the Private Attributes section within the fc_host_attrs/fc_vport.
 
-> ---
-> V2: update free_irq instead of request_irq in order not to obviously break
->     code
-> ---
->  drivers/scsi/arm/cumana_2.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/arm/cumana_2.c b/drivers/scsi/arm/cumana_2.c
-> index 65691c21f133..29294f0ef8a9 100644
-> --- a/drivers/scsi/arm/cumana_2.c
-> +++ b/drivers/scsi/arm/cumana_2.c
-> @@ -450,7 +450,7 @@ static int cumanascsi2_probe(struct expansion_card *ec,
->  
->  	if (info->info.scsi.dma != NO_DMA)
->  		free_dma(info->info.scsi.dma);
-> -	free_irq(ec->irq, host);
-> +	free_irq(ec->irq, info);
->  
->   out_release:
->  	fas216_release(host);
-> -- 
-> 2.25.1
-> 
-> 
+my initial thought was the same
 
--- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 40Mbps down 10Mbps up. Decent connectivity at last!
+>>
+>>       In theory, given that the host stats could be updated both via signals and FPIN, one could argue that it would make sense
+>> to maintain it with the current host statistics, but keeping it confined to transport will ensure we have a uniform way of handling
+>> congestion and peer congestion events.
+
+but then I have the same thoughts as well. And the commonization of the 
+parsing and incrementing makes a lot more sense.
+
+>>
+>>      Would appreciate your thoughts there.
+>>
+>> Thanks
+>> Shyam
+>>     
+>>
+
+
+I would put them under the Dynamic attributes area in fc_host_attrs and 
+fc_rport.
+fc_host_attrs:
+fpin_cn              incremented for each Congestion Notify FPIN
+cn_sig_warn     incremented for each congestion warning signal
+cn_sig_alarm    incremented for each congestion alarm signal
+fpin_dn             incremented for each Delivery Notification FPIN 
+where attached wwpn is local port
+fpin_li                incremented for each Link Integrity FPIN where 
+attached wwpn is local port
+
+fc_rport:
+fpin_dn             incremented for each Delivery Notification FPIN 
+where attached wwpn is the rport
+fpin_li               incremented for each Link Integrity FPIN where 
+attached wwpn is the rport
+fpin_pcn           incremented for each Peer Congestion Notify FPIN 
+where attached wwpn is the rport
+
+For the cn_sig_xxx values, the driver would just increment them.
+For the fpin_xxx values - we'll augment the fc_host_fpin_rcv routine to 
+parse the fpin and increment the fc_host or fc_rport counter.
+
+-- james
+
+
