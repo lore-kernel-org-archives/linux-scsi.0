@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E91CC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 10:40:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF480C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 12:00:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FC1320706
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 10:40:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE4E6204EC
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 12:00:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404026AbgFYKk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 06:40:59 -0400
-Received: from mga14.intel.com ([192.55.52.115]:36719 "EHLO mga14.intel.com"
+        id S2404355AbgFYMAi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 08:00:38 -0400
+Received: from mga05.intel.com ([192.55.52.43]:2494 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404006AbgFYKk6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Jun 2020 06:40:58 -0400
-IronPort-SDR: KlYDDIoXHtI11jk8DGn5HkkhMlfuSIagJ94UaYtNsVBrYJkxrfjwGvRIHMZnaAqJrr364OV4ne
- 4+bq6qzmxUQQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9662"; a="143930178"
+        id S2404285AbgFYMAi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Jun 2020 08:00:38 -0400
+IronPort-SDR: aWyLI+QWhxZQmUh0WbLcVC45CA8YRpYR03uqWXML6m409mO1wWeZ/xWG1oZUjDiaIgH/kj+RTw
+ yzHAsbQKR/0g==
+X-IronPort-AV: E=McAfee;i="6000,8403,9662"; a="229574160"
 X-IronPort-AV: E=Sophos;i="5.75,279,1589266800"; 
-   d="scan'208";a="143930178"
+   d="scan'208";a="229574160"
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2020 03:40:58 -0700
-IronPort-SDR: /26QjtPc2nQ6MVPSzR3ENM17k6QbC/fq3QXEX/3qjsOpE/EvdJOQgPn8Wl/k5tg3ezE0EwzNR7
- WrsDwlhTDPKg==
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2020 05:00:37 -0700
+IronPort-SDR: RRdd11iqzbMlhPLlbSKEAzlZoQ7FPNxJD/fE2iNg+eO0Vr/psKaGGae25jg/Kuc8pwssbLo9go
+ R+k3XrugJioA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.75,279,1589266800"; 
-   d="scan'208";a="423687171"
+   d="scan'208";a="301965447"
 Received: from lkp-server01.sh.intel.com (HELO 538b5e3c8319) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 25 Jun 2020 03:40:55 -0700
+  by fmsmga004.fm.intel.com with ESMTP; 25 Jun 2020 05:00:35 -0700
 Received: from kbuild by 538b5e3c8319 with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1joPJO-0001YY-V0; Thu, 25 Jun 2020 10:40:54 +0000
-Date:   Thu, 25 Jun 2020 18:40:40 +0800
+        id 1joQYU-0001ay-LX; Thu, 25 Jun 2020 12:00:34 +0000
+Date:   Thu, 25 Jun 2020 19:59:48 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Deepak Ukey <deepak.ukey@microchip.com>, linux-scsi@vger.kernel.org
 Cc:     kbuild-all@lists.01.org, Vasanthalakshmi.Tharmarajan@microchip.com,
@@ -45,13 +45,13 @@ Cc:     kbuild-all@lists.01.org, Vasanthalakshmi.Tharmarajan@microchip.com,
         jinpu.wang@profitbricks.com, martin.petersen@oracle.com,
         dpf@google.com, yuuzheng@google.com, auradkar@google.com,
         vishakhavc@google.com
-Subject: [RFC PATCH] pm80xx : pm8001_chip_get_phy_profile() can be static
-Message-ID: <20200625104040.GA41093@9d911e2d61d0>
-References: <20200624120322.6265-2-deepak.ukey@microchip.com>
+Subject: [RFC PATCH] pm80xx : pm8001_queue_phyup() can be static
+Message-ID: <20200625115948.GA63645@9d911e2d61d0>
+References: <20200624120322.6265-3-deepak.ukey@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200624120322.6265-2-deepak.ukey@microchip.com>
+In-Reply-To: <20200624120322.6265-3-deepak.ukey@microchip.com>
 X-Patchwork-Hint: ignore
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
@@ -66,15 +66,15 @@ Signed-off-by: kernel test robot <lkp@intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index a909d00c6897a..9b60c42af83e1 100644
+index 748c7a06262fb..80e992d9ea314 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -5061,7 +5061,7 @@ pm80xx_chip_isr(struct pm8001_hba_info *pm8001_ha, u8 vec)
- 	return IRQ_HANDLED;
- }
+@@ -49,7 +49,7 @@
+ static int pm80xx_chip_phy_ctl_req(struct pm8001_hba_info *pm8001_ha,
+ 	u32 phyId, u32 phy_op);
  
--int pm8001_chip_get_phy_profile(struct pm8001_hba_info *pm8001_ha, int phy_id,
-+static int pm8001_chip_get_phy_profile(struct pm8001_hba_info *pm8001_ha, int phy_id,
- 		int page_code, struct completion *comp, void *buf)
+-void  pm8001_queue_phyup(struct pm8001_hba_info *pm8001_ha, int phy_id)
++static void  pm8001_queue_phyup(struct pm8001_hba_info *pm8001_ha, int phy_id)
  {
- 	u32 tag;
+ 	int i;
+ 
