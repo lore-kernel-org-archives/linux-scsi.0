@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0882C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0819C433E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5560206B7
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA311206FA
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405332AbgFYOCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S2405333AbgFYOCG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 25 Jun 2020 10:02:06 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41260 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41254 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405295AbgFYOBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S2405145AbgFYOBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 25 Jun 2020 10:01:49 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D37C1AEF6;
+        by mx2.suse.de (Postfix) with ESMTP id C890CAEBE;
         Thu, 25 Jun 2020 14:01:45 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -31,9 +31,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Don Brace <don.brace@microchip.de>,
         Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/22] scsi: revamp host device handling
-Date:   Thu, 25 Jun 2020 16:01:13 +0200
-Message-Id: <20200625140124.17201-12-hare@suse.de>
+Subject: [PATCH 08/22] scsi: implement reserved command handling
+Date:   Thu, 25 Jun 2020 16:01:10 +0200
+Message-Id: <20200625140124.17201-9-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200625140124.17201-1-hare@suse.de>
 References: <20200625140124.17201-1-hare@suse.de>
@@ -42,179 +42,87 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ensure that the host device is excluded from scanning by setting
-the BLIST_NOLUN flag, and avoid it being presented in sysfs.
-Also move the device id from using the ->this_id value as target
-id (which is a bit odd as it's typically is set to -1 anyway) to
-using ->max_channel + 1 as the channel number and '0' as the
-target id.
-With that the host device is now handled like any other scsi device,
-which means we can drop the scsi_put_host_dev() function and let
-scsi_forget_host() etc handle the deallocation.
-We only need to ensure that the host device is deallocated last
-is the driver might need it to send commands during teardown.
+Quite some drivers are using management commands internally, which
+typically use the same hardware tag pool (ie they are being allocated
+from the same hardware resources) as the 'normal' I/O commands.
+These commands are set aside before allocating the block-mq tag bitmap,
+so they'll never show up as busy in the tag map.
+The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+this situation.
+So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+template to instruct the block layer to set aside a tag space for these
+management commands by using reserved tags.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_devinfo.c |  1 +
- drivers/scsi/scsi_scan.c    | 55 ++++++++++++++++++++++++---------------------
- include/scsi/scsi_host.h    | 13 ++++++-----
- 3 files changed, 37 insertions(+), 32 deletions(-)
+ drivers/scsi/scsi_lib.c  | 10 +++++++++-
+ include/scsi/scsi_host.h | 11 +++++++++++
+ 2 files changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index eed31021e788..9d55bfbd347d 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -195,6 +195,7 @@ static struct {
- 	{"Intel", "Multi-Flex", NULL, BLIST_NO_RSOC},
- 	{"iRiver", "iFP Mass Driver", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
- 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
-+	{"LINUX", "VIRTUALLUN", NULL, BLIST_NOLUN},
- 	{"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
- 	{"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
- 	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 34470605fd0a..a24919fbd93d 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1094,6 +1094,15 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
- 
-+	if (scsi_device_is_host_dev(sdev)) {
-+		bflags = scsi_get_device_flags(sdev,
-+					       sdev->vendor,
-+					       sdev->model);
-+		if (bflagsp)
-+			*bflagsp = bflags;
-+		return SCSI_SCAN_LUN_PRESENT;
-+	}
-+
- 	result = kmalloc(result_len, GFP_KERNEL |
- 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
- 	if (!result)
-@@ -1712,6 +1721,9 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
- 		/* If device is already visible, skip adding it to sysfs */
- 		if (sdev->is_visible)
- 			continue;
-+		/* Host devices should never be visible in sysfs */
-+		if (scsi_device_is_host_dev(sdev))
-+			continue;
- 		if (!scsi_host_scan_allowed(shost) ||
- 		    scsi_sysfs_add_sdev(sdev) != 0)
- 			__scsi_remove_device(sdev);
-@@ -1875,12 +1887,16 @@ EXPORT_SYMBOL(scsi_scan_host);
- 
- void scsi_forget_host(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
-+	struct scsi_device *sdev, *host_sdev = NULL;
- 	unsigned long flags;
- 
-  restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+		if (scsi_device_is_host_dev(sdev)) {
-+			host_sdev = sdev;
-+			continue;
-+		}
- 		if (sdev->sdev_state == SDEV_DEL)
- 			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1888,10 +1904,13 @@ void scsi_forget_host(struct Scsi_Host *shost)
- 		goto restart;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-+	/* Remove host device last, might be needed to send commands */
-+	if (host_sdev)
-+		__scsi_remove_device(host_sdev);
- }
- 
- /**
-- * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
-+ * scsi_get_host_dev - Create a virtual scsi_device to the host adapter
-  * @shost: Host that needs a scsi_device
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index bd378e1bd3fc..a752806af70b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1887,7 +1887,9 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	else
+ 		tag_set->ops = &scsi_mq_ops_no_commit;
+ 	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
+-	tag_set->queue_depth = shost->can_queue;
++	tag_set->queue_depth =
++		shost->can_queue + shost->nr_reserved_cmds;
++	tag_set->reserved_tags = shost->nr_reserved_cmds;
+ 	tag_set->cmd_size = cmd_size;
+ 	tag_set->numa_node = NUMA_NO_NODE;
+ 	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+@@ -1910,6 +1912,9 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
+  * @op_flags: request allocation flags
   *
-  * Lock status: None assumed.
-@@ -1899,13 +1918,12 @@ void scsi_forget_host(struct Scsi_Host *shost)
-  * Returns:     The scsi_device or NULL
-  *
-  * Notes:
-- *	Attach a single scsi_device to the Scsi_Host - this should
-- *	be made to look like a "pseudo-device" that points to the
-- *	HA itself.
-- *
-- *	Note - this device is not accessible from any high-level
-- *	drivers (including generics), which is probably not
-- *	optimal.  We can add hooks later to attach.
-+ *	Attach a single scsi_device to the Scsi_Host. The primary aim
-+ *	for this device is to serve as a container from which valid
-+ *	scsi commands can be allocated from. Each scsi command will carry
-+ *	an unused/free command tag, which then can be used by the LLDD to
-+ *	send internal or passthrough commands without having to find a
-+ *	valid command tag internally.
+  * Allocates a SCSI command for internal LLDD use.
++ * If 'nr_reserved_commands' is spectified by the host the
++ * command will be allocated from the reserved tag pool;
++ * otherwise the normal tag pool will be used.
   */
- struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
- {
-@@ -1915,7 +1933,8 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
- 	mutex_lock(&shost->scan_mutex);
- 	if (!scsi_host_scan_allowed(shost))
- 		goto out;
--	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
-+	starget = scsi_alloc_target(&shost->shost_gendev,
-+				    shost->max_channel + 1, 0);
- 	if (!starget)
- 		goto out;
+ struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+ 					int data_direction, int op_flags)
+@@ -1919,6 +1924,9 @@ struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+ 	blk_mq_req_flags_t flags = 0;
+ 	unsigned int op = REQ_INTERNAL | op_flags;
  
-@@ -1933,22 +1952,6 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
- }
- EXPORT_SYMBOL(scsi_get_host_dev);
- 
--/**
-- * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
-- * @sdev: Host device to be freed
-- *
-- * Lock status: None assumed.
-- *
-- * Returns:     Nothing
-- */
--void scsi_free_host_dev(struct scsi_device *sdev)
--{
--	BUG_ON(sdev->id != sdev->host->this_id);
--
--	__scsi_remove_device(sdev);
--}
--EXPORT_SYMBOL(scsi_free_host_dev);
--
- /**
-  * scsi_device_is_host_dev - Check if a scsi device is a host device
-  * @sdev: SCSI device to test
++	if (sdev->host->nr_reserved_cmds)
++		flags = BLK_MQ_REQ_RESERVED;
++
+ 	op |= (data_direction == DMA_TO_DEVICE) ?
+ 		REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
+ 	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index a6a11fe9bbc0..7ee369772c5f 100644
+index 46ef8cccc982..b94938e87e3a 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -786,14 +786,15 @@ void scsi_host_busy_iter(struct Scsi_Host *,
- struct class_container;
+@@ -590,6 +590,11 @@ struct Scsi_Host {
+ 	unsigned short max_cmd_len;
  
- /*
-- * These three functions are used to allocate, free, and test for
-- * a pseudo device which will connect to the host adapter itself rather
-- * than any physical device.  You must deallocate when you are done with the
-- * thing.  This physical pseudo-device isn't real and won't be available
-+ * These functions are used to allocate and test a pseudo device
-+ * which will refer to the host adapter itself rather than any
-+ * physical device.  The device will be deallocated together with
-+ * all other scsi devices, so there is no need to have a separate
-+ * function to free it.
-+ * This device will not show up in sysfs and won't be available
-  * from any high-level drivers.
-  */
--extern void scsi_free_host_dev(struct scsi_device *);
--extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
-+struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
- bool scsi_device_is_host_dev(struct scsi_device *);
+ 	int this_id;
++
++	/*
++	 * Number of commands this host can handle at the same time.
++	 * This excludes reserved commands as specified by nr_reserved_cmds.
++	 */
+ 	int can_queue;
+ 	short cmd_per_lun;
+ 	short unsigned int sg_tablesize;
+@@ -606,6 +611,12 @@ struct Scsi_Host {
+ 	 * is nr_hw_queues * can_queue.
+ 	 */
+ 	unsigned nr_hw_queues;
++
++	/*
++	 * Number of reserved commands to allocate, if any.
++	 */
++	unsigned nr_reserved_cmds;
++
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
  
- /*
 -- 
 2.16.4
 
