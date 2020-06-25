@@ -2,76 +2,77 @@ Return-Path: <SRS0=uw5d=AG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6A2C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38ED4C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E85EE20836
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1720520857
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ilwQ2Uul"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WRVfDLF1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405881AbgFYPhi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 11:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57514 "EHLO
+        id S2405912AbgFYPhw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 11:37:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405159AbgFYPhh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 11:37:37 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B82C08C5C1;
-        Thu, 25 Jun 2020 08:37:37 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id d194so89642pga.13;
-        Thu, 25 Jun 2020 08:37:37 -0700 (PDT)
+        with ESMTP id S2405159AbgFYPhw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 11:37:52 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44B43C08C5C1;
+        Thu, 25 Jun 2020 08:37:52 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id u8so3190213pje.4;
+        Thu, 25 Jun 2020 08:37:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=eKf/0lxOewQJNcyUw6TguSyEm4wSYJQCqTzuEz6QHDI=;
-        b=ilwQ2Uulb1xjp/tK5MQHOUK+bIid5rWWRdDzOZGrO/2KJcOjgX91/pFrJJYpVv08cM
-         WNJbLqJrt7jhsY4dI6GH9OljGn1WGkRkNiKQQ2vcojTPrjAq4YkQ/mg+nB6nNQR8eQ6S
-         8uzbs9doCD3F7on4ZZEJ+tMl0c0Ylrx5mLbb5Zjwpj1i/CrpA9BfCH2496q72RSj/y6R
-         3caexTQppWUu0kQRhnc7UH+KSQlpRGiaOFHM8A5ATNy0WVpP2DrfE5kxv+jiMDCKn7/C
-         xHhtiGg1VfxDiKzd1QsW+606pyH3sgyyUgmiRI1F0oJQi1EcQLdQLC+C9l0UVfoCc5di
-         SkQw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Ray2bSPUJnSLdBE7kZlvUkEyQ1xNAytS0ijjBcKw2IQ=;
+        b=WRVfDLF1+3vYRCgqg1tzWMBT6WY387Lg/jkaWum8dP+0VBE86YVUD67d50z8aNUdML
+         2H90RiEdLk3Fz6mp/nTPoKwebKBIhPdjgodpA3vUTvfBoQI4dIXCfCTSacgPPFsz37E+
+         5AorJTOSwimexzuuGBNpMgXZ0FslGVeX7ryJG/Q38/hbxVqQ5nSVOQ4aBrVyB7Z3/wTf
+         DoPeEAuWtJCS1imd6Do/iorMf+TX2folVe0U9Tu4UAgfT5Z51QFRwjJ7SSDyKFHKSgmi
+         D9xgAbd1XwDd/t+YVnWxjoNTH6N7F/tvA32kwQcVUB5nolIxWVHd7zTmcHtX6ajPBM4s
+         SFVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=eKf/0lxOewQJNcyUw6TguSyEm4wSYJQCqTzuEz6QHDI=;
-        b=m5UAAhfIhwPVEK2rcw1lThW4MgFUgd6tJV1uftBrgugtfsrD8oIMCyfIanFuOE4gQX
-         QZzEc1z4JRYSulILM5Ef45tI54j+Mz3OhqhJwpsjonZkByz2WIGBE5PYAHYyFOL+kXRB
-         qfQX9CNAQTLzzbX5yKs4XLhVctGGudU6edJpX+h1YFge21yIOKx13Jqa6j/haGj4YtW6
-         kh0hnQPdiNLYahkF5wOhYDjpYkwxv7j8Pz66VByXM3yqEDDTFZ8Zqkf48Gh7lpZ00T8G
-         xgAqaZ5oCO4HRPdw6HSa2h5vnlgG2QC+Qhg8vdZFBNvZEOQrEXy7DuB74M7K8BWfdL6S
-         u/FQ==
-X-Gm-Message-State: AOAM5334FMKXRc/1OnIdXmKaevlozldSGFNT3DIPPX+DzdYEqP3gX5c7
-        LmgFskTYEx32DwyfB+qL+yA=
-X-Google-Smtp-Source: ABdhPJxtgGcsYUZbF7sgwR0aNIKuXXwsjT1VUKFe2v8vGMWGijcY1u/KUMstQcuM2xt0X6XfojQYeA==
-X-Received: by 2002:a62:8683:: with SMTP id x125mr35592234pfd.211.1593099457135;
-        Thu, 25 Jun 2020 08:37:37 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Ray2bSPUJnSLdBE7kZlvUkEyQ1xNAytS0ijjBcKw2IQ=;
+        b=Gm0dlJ5Xb/wlCuM4x7cxLgaugT0TM9PoR4/8QG/1pZoD9Wq1UElXeU3NmiP7BQAS5O
+         uPwi7nk4Vy/+PwhrA39mQWpyiryQqODiZsNX0mBaGitCckJBeBSt0ONHYGKAD286BYBG
+         5XWxgiRsnOLO6g41SXUhOtMYVagUzwnlVNlltnRtX9Q8xwLVbXQOSmy81L/XaPxoYrSa
+         65qgBIMrGwofWZg05UoWu6nlPT1HYURThzEhyY6U/0xC5Onjf2fVV7Smv8faFu92dUzH
+         PJfqyXLyD816OXOIEc3rW85hGjN0U6shRphS0nWHCweFna53mOEwtrOpLz74uWRTz60e
+         9wlg==
+X-Gm-Message-State: AOAM533V+DJYxLTNev9siK8xkZUPhWshoUchdnEVAKeXxwZOb/YNgYtz
+        Qr+OvcnLSqhGIdQgQPNGvRc=
+X-Google-Smtp-Source: ABdhPJwTFbs7CBul52sajx8e1tMSEWYr0AJ+vv992AmrjbTk7GLFw2FwtJLeRG8Gtv7gGVPwNXRcIw==
+X-Received: by 2002:a17:90b:706:: with SMTP id s6mr3990425pjz.11.1593099471815;
+        Thu, 25 Jun 2020 08:37:51 -0700 (PDT)
 Received: from localhost.localdomain ([131.107.147.194])
-        by smtp.gmail.com with ESMTPSA id i14sm22980813pfo.14.2020.06.25.08.37.36
+        by smtp.gmail.com with ESMTPSA id i14sm22980813pfo.14.2020.06.25.08.37.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Jun 2020 08:37:36 -0700 (PDT)
+        Thu, 25 Jun 2020 08:37:51 -0700 (PDT)
 From:   Andres Beltran <lkmlabelt@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org
 Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         mikelley@microsoft.com, parri.andrea@gmail.com,
         Andres Beltran <lkmlabelt@gmail.com>,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
-Date:   Thu, 25 Jun 2020 11:37:20 -0400
-Message-Id: <20200625153723.8428-1-lkmlabelt@gmail.com>
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 2/3] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
+Date:   Thu, 25 Jun 2020 11:37:22 -0400
+Message-Id: <20200625153723.8428-3-lkmlabelt@gmail.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200625153723.8428-1-lkmlabelt@gmail.com>
+References: <20200625153723.8428-1-lkmlabelt@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
@@ -79,49 +80,226 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Andres Beltran (Microsoft) <lkmlabelt@gmail.com>
+Currently, pointers to guest memory are passed to Hyper-V as
+transaction IDs in storvsc. In the face of errors or malicious
+behavior in Hyper-V, storvsc should not expose or trust the transaction
+IDs returned by Hyper-V to be valid guest memory addresses. Instead,
+use small integers generated by vmbus_requestor as requests
+(transaction) IDs.
 
-Currently, VMbus drivers use pointers into guest memory as request IDs
-for interactions with Hyper-V. To be more robust in the face of errors
-or malicious behavior from a compromised Hyper-V, avoid exposing
-guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
-bad request ID that is then treated as the address of a guest data
-structure with no validation. Instead, encapsulate these memory
-addresses and provide small integers as request IDs.
-
-The first patch creates the definitions for the data structure, provides
-helper methods to generate new IDs and retrieve data, and
-allocates/frees the memory needed for vmbus_requestor.
-
-The second and third patches make use of vmbus_requestor to send request
-IDs to Hyper-V in storvsc and netvsc respectively.
-
-Thanks.
-Andres Beltran
-
-Cc: linux-scsi@vger.kernel.org
-Cc: netdev@vger.kernel.org
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
+---
+ drivers/scsi/storvsc_drv.c | 82 +++++++++++++++++++++++++++++++++-----
+ 1 file changed, 71 insertions(+), 11 deletions(-)
 
-Andres Beltran (3):
-  Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
-    hardening
-  scsi: storvsc: Use vmbus_requestor to generate transaction ids for
-    VMBus hardening
-  hv_netvsc: Use vmbus_requestor to generate transaction ids for VMBus
-    hardening
-
- drivers/hv/channel.c              | 150 ++++++++++++++++++++++++++++++
- drivers/net/hyperv/hyperv_net.h   |  10 ++
- drivers/net/hyperv/netvsc.c       |  56 +++++++++--
- drivers/net/hyperv/rndis_filter.c |   1 +
- drivers/scsi/storvsc_drv.c        |  62 ++++++++++--
- include/linux/hyperv.h            |  22 +++++
- 6 files changed, 283 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 624467e2590a..38e90675f9c9 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -399,6 +399,7 @@ static int storvsc_timeout = 180;
+ static struct scsi_transport_template *fc_transport_template;
+ #endif
+ 
++static struct scsi_host_template scsi_driver;
+ static void storvsc_on_channel_callback(void *context);
+ 
+ #define STORVSC_MAX_LUNS_PER_TARGET			255
+@@ -698,6 +699,12 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
+ 
++	/*
++	 * The size of vmbus_requestor is an upper bound on the number of requests
++	 * that can be in-progress at any one time across all channels.
++	 */
++	new_sc->rqstor_size = scsi_driver.can_queue;
++
+ 	ret = vmbus_open(new_sc,
+ 			 storvsc_ringbuffer_size,
+ 			 storvsc_ringbuffer_size,
+@@ -726,6 +733,7 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
++	u64 rqst_id;
+ 
+ 	/*
+ 	 * If the number of CPUs is artificially restricted, such as
+@@ -760,14 +768,22 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 	vstor_packet->sub_channel_count = num_sc;
+ 
++	rqst_id = vmbus_next_request_id(&device->channel->requestor, (u64)request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(dev, "No request id available\n");
++		return;
++	}
++
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 			       vmscsi_size_delta),
+-			       (unsigned long)request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+ 
+ 	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&device->channel->requestor, rqst_id);
+ 		dev_err(dev, "Failed to create sub-channel: err=%d\n", ret);
+ 		return;
+ 	}
+@@ -818,20 +834,30 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
+ {
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
++	u64 rqst_id;
+ 
+ 	vstor_packet = &request->vstor_packet;
+ 
+ 	init_completion(&request->wait_event);
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
++	rqst_id = vmbus_next_request_id(&device->channel->requestor, (u64)request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(&device->device, "No request id available\n");
++		return -EAGAIN;
++	}
++
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 			       vmscsi_size_delta),
+-			       (unsigned long)request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+-	if (ret != 0)
++	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&device->channel->requestor, rqst_id);
+ 		return ret;
++	}
+ 
+ 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
+ 	if (t == 0)
+@@ -1233,9 +1259,17 @@ static void storvsc_on_channel_callback(void *context)
+ 	foreach_vmbus_pkt(desc, channel) {
+ 		void *packet = hv_pkt_data(desc);
+ 		struct storvsc_cmd_request *request;
++		u64 cmd_rqst;
+ 
+-		request = (struct storvsc_cmd_request *)
+-			((unsigned long)desc->trans_id);
++		cmd_rqst = vmbus_request_addr(&channel->requestor,
++					      desc->trans_id);
++		if (cmd_rqst == VMBUS_RQST_ERROR) {
++			dev_err(&device->device,
++				"Incorrect transaction id\n");
++			continue;
++		}
++
++		request = (struct storvsc_cmd_request *)cmd_rqst;
+ 
+ 		if (request == &stor_device->init_request ||
+ 		    request == &stor_device->reset_request) {
+@@ -1256,6 +1290,12 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
+ 
++	/*
++	 * The size of vmbus_requestor is an upper bound on the number of requests
++	 * that can be in-progress at any one time across all channels.
++	 */
++	device->channel->rqstor_size = scsi_driver.can_queue;
++
+ 	ret = vmbus_open(device->channel,
+ 			 ring_size,
+ 			 ring_size,
+@@ -1369,6 +1409,7 @@ static int storvsc_do_io(struct hv_device *device,
+ 	int ret = 0;
+ 	const struct cpumask *node_mask;
+ 	int tgt_cpu;
++	u64 rqst_id;
+ 
+ 	vstor_packet = &request->vstor_packet;
+ 	stor_device = get_out_stor_device(device);
+@@ -1463,6 +1504,12 @@ static int storvsc_do_io(struct hv_device *device,
+ 
+ 	vstor_packet->operation = VSTOR_OPERATION_EXECUTE_SRB;
+ 
++	rqst_id = vmbus_next_request_id(&outgoing_channel->requestor, (u64)request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(&device->device, "No request id available\n");
++		return -EAGAIN;
++	}
++
+ 	if (request->payload->range.len) {
+ 
+ 		ret = vmbus_sendpacket_mpb_desc(outgoing_channel,
+@@ -1470,18 +1517,21 @@ static int storvsc_do_io(struct hv_device *device,
+ 				vstor_packet,
+ 				(sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+-				(unsigned long)request);
++				rqst_id);
+ 	} else {
+ 		ret = vmbus_sendpacket(outgoing_channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+-			       (unsigned long)request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+ 	}
+ 
+-	if (ret != 0)
++	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&outgoing_channel->requestor, rqst_id);
+ 		return ret;
++	}
+ 
+ 	atomic_inc(&stor_device->num_outstanding_req);
+ 
+@@ -1562,7 +1612,7 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
+-
++	u64 rqst_id;
+ 
+ 	stor_device = get_out_stor_device(device);
+ 	if (!stor_device)
+@@ -1577,14 +1627,24 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 	vstor_packet->vm_srb.path_id = stor_device->path_id;
+ 
++	rqst_id = vmbus_next_request_id(&device->channel->requestor,
++					(u64)&stor_device->reset_request);
++	if (rqst_id == VMBUS_RQST_ERROR) {
++		dev_err(&device->device, "No request id available\n");
++		return FAILED;
++	}
++
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
+ 			       (sizeof(struct vstor_packet) -
+ 				vmscsi_size_delta),
+-			       (unsigned long)&stor_device->reset_request,
++			       rqst_id,
+ 			       VM_PKT_DATA_INBAND,
+ 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
+-	if (ret != 0)
++	if (ret != 0) {
++		/* Reclaim request ID to avoid leak of IDs */
++		vmbus_request_addr(&device->channel->requestor, rqst_id);
+ 		return FAILED;
++	}
+ 
+ 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
+ 	if (t == 0)
 -- 
 2.25.1
 
