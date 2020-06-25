@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29FEEC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67409C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0495720702
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BAF1206B7
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 14:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405326AbgFYOB6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 10:01:58 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41446 "EHLO mx2.suse.de"
+        id S2405327AbgFYOCB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 10:02:01 -0400
+Received: from mx2.suse.de ([195.135.220.15]:41254 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405313AbgFYOBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Jun 2020 10:01:55 -0400
+        id S2405310AbgFYOBy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Jun 2020 10:01:54 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 009A9AF72;
+        by mx2.suse.de (Postfix) with ESMTP id 21A4CAFB5;
         Thu, 25 Jun 2020 14:01:46 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -30,10 +30,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Don Brace <don.brace@microchip.de>,
         Bart van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/22] hpsa: use reserved commands
-Date:   Thu, 25 Jun 2020 16:01:18 +0200
-Message-Id: <20200625140124.17201-17-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 21/22] aacraid: use scsi_get_internal_cmd()
+Date:   Thu, 25 Jun 2020 16:01:23 +0200
+Message-Id: <20200625140124.17201-22-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200625140124.17201-1-hare@suse.de>
 References: <20200625140124.17201-1-hare@suse.de>
@@ -42,511 +42,539 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Enable the use of reserved commands, and drop the hand-crafted
-command allocation.
+From: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Don Brace <don.brace@microchip.com>
+Use scsi_get_internal_cmd() to allocate internal commands.
+And move scsi_add_host() such that it's allocated early enough
+to provide tags for the initialisation commands.
+
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hpsa.c | 204 ++++++++++++++++++++--------------------------------
- drivers/scsi/hpsa.h |   3 +-
- 2 files changed, 78 insertions(+), 129 deletions(-)
+ drivers/scsi/aacraid/aachba.c   | 92 +++++++++++++++++++----------------------
+ drivers/scsi/aacraid/aacraid.h  |  9 ++--
+ drivers/scsi/aacraid/commctrl.c | 25 ++++++-----
+ drivers/scsi/aacraid/comminit.c |  2 +-
+ drivers/scsi/aacraid/commsup.c  | 57 ++++++++++---------------
+ drivers/scsi/aacraid/dpcsup.c   |  2 +-
+ drivers/scsi/aacraid/linit.c    | 13 ++++--
+ 7 files changed, 97 insertions(+), 103 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index db0142a16a72..a3212d0e0dc2 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -244,10 +244,6 @@ static struct hpsa_scsi_dev_t
- 	*hpsa_find_device_by_sas_rphy(struct ctlr_info *h,
- 		struct sas_rphy *rphy);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index e1ba5e65a66f..a937a8b0d54b 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -359,7 +359,7 @@ int aac_get_config_status(struct aac_dev *dev, int commit_flag)
+ 	int status = 0;
+ 	struct fib * fibptr;
  
--#define SCSI_CMD_BUSY ((struct scsi_cmnd *)&hpsa_cmd_busy)
--static const struct scsi_cmnd hpsa_cmd_busy;
--#define SCSI_CMD_IDLE ((struct scsi_cmnd *)&hpsa_cmd_idle)
--static const struct scsi_cmnd hpsa_cmd_idle;
- static int number_of_controllers;
+-	if (!(fibptr = aac_fib_alloc(dev)))
++	if (!(fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE)))
+ 		return -ENOMEM;
  
- static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
-@@ -265,7 +261,7 @@ static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
- #endif
+ 	aac_fib_init(fibptr);
+@@ -456,7 +456,7 @@ int aac_get_containers(struct aac_dev *dev)
+ 	struct aac_get_container_count_resp *dresp;
+ 	int maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
  
- static void cmd_free(struct ctlr_info *h, struct CommandList *c);
--static struct CommandList *cmd_alloc(struct ctlr_info *h);
-+static struct CommandList *cmd_alloc(struct ctlr_info *h, u8 direction);
- static void cmd_tagged_free(struct ctlr_info *h, struct CommandList *c);
- static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
- 					    struct scsi_cmnd *scmd);
-@@ -346,7 +342,7 @@ static inline struct ctlr_info *shost_to_hba(struct Scsi_Host *sh)
+-	if (!(fibptr = aac_fib_alloc(dev)))
++	if (!(fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE)))
+ 		return -ENOMEM;
  
- static inline bool hpsa_is_cmd_idle(struct CommandList *c)
+ 	aac_fib_init(fibptr);
+@@ -740,61 +740,56 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 	}
+ }
+ 
+-static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(struct scsi_cmnd *))
++static int _aac_probe_container(struct fib * fibptr, int (*callback)(struct scsi_cmnd *))
  {
--	return c->scsi_cmd == SCSI_CMD_IDLE;
-+	return c->scsi_cmd == NULL;
- }
++	struct scsi_cmnd *scsicmd = fibptr->scmd;
+ 	struct aac_dev * dev;
+-	struct fib * fibptr;
+ 	int status = -ENOMEM;
++	struct aac_query_mount *dinfo;
+ 	int cid = scmd_id(scsicmd);
  
- /* extract sense key, asc, and ascq from sense data.  -1 means invalid. */
-@@ -2454,7 +2450,12 @@ static void hpsa_cmd_resolve_events(struct ctlr_info *h,
- 	 * this command has completed.  Then, check to see if the handler is
- 	 * waiting for this command, and, if so, wake it.
- 	 */
--	c->scsi_cmd = SCSI_CMD_IDLE;
-+	if (c->scsi_cmd && c->cmd_type == CMD_IOCTL_PEND) {
-+		struct scsi_cmnd *scmd = c->scsi_cmd;
-+
-+		scsi_put_internal_cmd(scmd);
-+	}
-+	c->scsi_cmd = NULL;
- 	mb();	/* Declare command idle before checking for pending events. */
- 	if (dev) {
- 		atomic_dec(&dev->commands_outstanding);
-@@ -2997,7 +2998,7 @@ static int hpsa_do_receive_diagnostic(struct ctlr_info *h, u8 *scsi3addr,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 	if (fill_cmd(c, RECEIVE_DIAGNOSTIC, h, buf, bufsize,
- 			page, scsi3addr, TYPE_CMD)) {
- 		rc = -1;
-@@ -3049,7 +3050,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 
- 	if (fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize,
- 			page, scsi3addr, TYPE_CMD)) {
-@@ -3077,7 +3078,7 @@ static int hpsa_send_reset(struct ctlr_info *h, struct hpsa_scsi_dev_t *dev,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_NONE);
- 	c->device = dev;
- 
- 	/* fill_cmd can't fail here, no data buffer to map. */
-@@ -3303,7 +3304,7 @@ static int hpsa_get_raid_map(struct ctlr_info *h,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 
- 	if (fill_cmd(c, HPSA_GET_RAID_MAP, h, &this_device->raid_map,
- 			sizeof(this_device->raid_map), 0,
-@@ -3345,7 +3346,7 @@ static int hpsa_bmic_sense_subsystem_information(struct ctlr_info *h,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 
- 	rc = fill_cmd(c, BMIC_SENSE_SUBSYSTEM_INFORMATION, h, buf, bufsize,
- 		0, RAID_CTLR_LUNID, TYPE_CMD);
-@@ -3376,7 +3377,7 @@ static int hpsa_bmic_id_controller(struct ctlr_info *h,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 
- 	rc = fill_cmd(c, BMIC_IDENTIFY_CONTROLLER, h, buf, bufsize,
- 		0, RAID_CTLR_LUNID, TYPE_CMD);
-@@ -3405,7 +3406,7 @@ static int hpsa_bmic_id_physical_device(struct ctlr_info *h,
- 	struct CommandList *c;
- 	struct ErrorInfo *ei;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 	rc = fill_cmd(c, BMIC_IDENTIFY_PHYSICAL_DEVICE, h, buf, bufsize,
- 		0, RAID_CTLR_LUNID, TYPE_CMD);
- 	if (rc)
-@@ -3477,7 +3478,7 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
- 		goto out;
+ 	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
+ 	if (scsicmd->host_scribble) {
+-		cid = *(int *)scsicmd->host_scribble;
+-		if (cid > dev->maximum_num_containers) {
++		cid = *(unsigned int *)scsicmd->host_scribble;
++		if (cid >= dev->maximum_num_containers) {
+ 			status = -ENODEV;
+ 			goto out_status;
+ 		}
  	}
+-	if ((fibptr = aac_fib_alloc(dev))) {
+-		struct aac_query_mount *dinfo;
  
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
+-		aac_fib_init(fibptr);
++	aac_fib_init(fibptr);
  
- 	rc = fill_cmd(c, BMIC_SENSE_STORAGE_BOX_PARAMS, h, bssbp,
- 			sizeof(*bssbp), 0, RAID_CTLR_LUNID, TYPE_CMD);
-@@ -3733,7 +3734,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	unsigned char scsi3addr[8];
- 	struct ErrorInfo *ei;
+-		dinfo = (struct aac_query_mount *)fib_data(fibptr);
++	dinfo = (struct aac_query_mount *)fib_data(fibptr);
  
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
+-		if (fibptr->dev->supplement_adapter_info.supported_options2 &
+-		    AAC_OPTION_VARIABLE_BLOCK_SIZE)
+-			dinfo->command = cpu_to_le32(VM_NameServeAllBlk);
+-		else
+-			dinfo->command = cpu_to_le32(VM_NameServe);
++	if (fibptr->dev->supplement_adapter_info.supported_options2 &
++	    AAC_OPTION_VARIABLE_BLOCK_SIZE)
++		dinfo->command = cpu_to_le32(VM_NameServeAllBlk);
++	else
++		dinfo->command = cpu_to_le32(VM_NameServe);
  
- 	/* address the controller */
- 	memset(scsi3addr, 0, sizeof(scsi3addr));
-@@ -3876,7 +3877,7 @@ static unsigned char hpsa_volume_offline(struct ctlr_info *h,
- #define ASCQ_LUN_NOT_READY_FORMAT_IN_PROGRESS 0x04
- #define ASCQ_LUN_NOT_READY_INITIALIZING_CMD_REQ 0x02
+-		dinfo->count = cpu_to_le32(cid);
+-		dinfo->type = cpu_to_le32(FT_FILESYS);
+-		scsicmd->SCp.ptr = (char *)callback;
+-		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
++	dinfo->count = cpu_to_le32(cid);
++	dinfo->type = cpu_to_le32(FT_FILESYS);
++	scsicmd->SCp.ptr = (char *)callback;
++	scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
  
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_NONE);
- 
- 	(void) fill_cmd(c, TEST_UNIT_READY, h, NULL, 0, 0, scsi3addr, TYPE_CMD);
- 	rc = hpsa_scsi_do_simple_cmd(h, c, DEFAULT_REPLY_QUEUE,
-@@ -5527,7 +5528,6 @@ static void hpsa_cmd_init(struct ctlr_info *h, int index,
- 	c->ErrDesc.Addr = cpu_to_le64((u64) err_dma_handle);
- 	c->ErrDesc.Len = cpu_to_le32((u32) sizeof(*c->err_info));
- 	c->h = h;
--	c->scsi_cmd = SCSI_CMD_IDLE;
- }
- 
- static void hpsa_preinitialize_commands(struct ctlr_info *h)
-@@ -5822,12 +5822,12 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
- 
- 	sh->io_port = 0;
- 	sh->n_io_port = 0;
--	sh->this_id = -1;
- 	sh->max_channel = 3;
- 	sh->max_cmd_len = MAX_COMMAND_SIZE;
- 	sh->max_lun = HPSA_MAX_LUN;
- 	sh->max_id = HPSA_MAX_LUN;
- 	sh->can_queue = h->nr_cmds - HPSA_NRESERVED_CMDS;
-+	sh->nr_reserved_cmds = HPSA_NRESERVED_CMDS;
- 	sh->cmd_per_lun = sh->can_queue;
- 	sh->sg_tablesize = h->maxsgentries;
- 	sh->transportt = hpsa_sas_transport_template;
-@@ -5864,30 +5864,18 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
- 		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
- 		return rv;
- 	}
+-		status = aac_fib_send(ContainerCommand,
++	status = aac_fib_send(ContainerCommand,
+ 			  fibptr,
+ 			  sizeof(struct aac_query_mount),
+ 			  FsaNormal,
+ 			  0, 1,
+ 			  _aac_probe_container1,
+ 			  (void *) scsicmd);
+-		/*
+-		 *	Check that the command queued to the controller
+-		 */
+-		if (status == -EINPROGRESS)
+-			return 0;
 -
-+	h->raid_ctrl_sdev = scsi_get_host_dev(h->scsi_host);
-+	if (!h->raid_ctrl_sdev) {
-+		dev_err(&h->pdev->dev,
-+			"allocate raid controller device failed\n");
-+		return -ENOMEM;
-+	}
- 	hpsa_hba_inquiry(h);
+-		if (status < 0) {
+-			scsicmd->SCp.ptr = NULL;
+-			aac_fib_complete(fibptr);
+-			aac_fib_free(fibptr);
+-		}
+-	}
++	/*
++	 *	Check that the command queued to the controller
++	 */
++	if (status == -EINPROGRESS)
++		return 0;
+ out_status:
+ 	if (status < 0) {
+ 		struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
++
++		scsicmd->SCp.ptr = NULL;
++		aac_fib_complete(fibptr);
+ 		if (fsa_dev_ptr && cid < dev->maximum_num_containers) {
+ 			fsa_dev_ptr += cid;
+ 			if ((fsa_dev_ptr->valid & 1) == 0) {
+@@ -827,29 +822,23 @@ static void aac_probe_container_scsi_done(struct scsi_cmnd *scsi_cmnd)
  
- 	scsi_scan_host(h->scsi_host);
+ int aac_probe_container(struct aac_dev *dev, int cid)
+ {
+-	struct scsi_cmnd *scsicmd = kmalloc(sizeof(*scsicmd), GFP_KERNEL);
+-	struct scsi_device *scsidev = kmalloc(sizeof(*scsidev), GFP_KERNEL);
++	struct fib *fibptr;
++	struct scsi_cmnd *scsicmd;
+ 	int status;
+ 
+-	if (!scsicmd || !scsidev) {
+-		kfree(scsicmd);
+-		kfree(scsidev);
++	fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE);
++	if (!fibptr)
+ 		return -ENOMEM;
+-	}
++
++	scsicmd = fibptr->scmd;
+ 	scsicmd->scsi_done = aac_probe_container_scsi_done;
+ 	scsicmd->host_scribble = (unsigned char *)&cid;
+ 
+-	scsicmd->device = scsidev;
+-	scsidev->sdev_state = 0;
+-	scsidev->id = cid;
+-	scsidev->host = dev->scsi_host_ptr;
+-
+-	if (_aac_probe_container(scsicmd, aac_probe_container_callback1) == 0)
++	if (_aac_probe_container(fibptr, aac_probe_container_callback1) == 0)
+ 		while (scsicmd->host_scribble == (unsigned char *)&cid)
+ 			schedule();
+-	kfree(scsidev);
+ 	status = scsicmd->SCp.Status;
+-	kfree(scsicmd);
++	aac_fib_free(fibptr);
+ 	return status;
+ }
+ 
+@@ -1695,7 +1684,7 @@ static int aac_send_safw_bmic_cmd(struct aac_dev *dev,
+ 		return 0;
+ 
+ 	/* allocate FIB */
+-	fibptr = aac_fib_alloc(dev);
++	fibptr = aac_fib_alloc(dev, DMA_BIDIRECTIONAL);
+ 	if (!fibptr)
+ 		return -ENOMEM;
+ 
+@@ -2062,7 +2051,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 	struct aac_bus_info *command;
+ 	struct aac_bus_info_response *bus_info;
+ 
+-	if (!(fibptr = aac_fib_alloc(dev)))
++	if (!(fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE)))
+ 		return -ENOMEM;
+ 
+ 	aac_fib_init(fibptr);
+@@ -2109,7 +2098,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 		if (rcode >= 0)
+ 			memcpy(&dev->supplement_adapter_info, sinfo, sizeof(*sinfo));
+ 		if (rcode == -ERESTARTSYS) {
+-			fibptr = aac_fib_alloc(dev);
++			fibptr = aac_fib_alloc(dev, DMA_FROM_DEVICE);
+ 			if (!fibptr)
+ 				return -ENOMEM;
+ 		}
+@@ -2828,6 +2817,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+ 			if (((fsa_dev_ptr[cid].valid & 1) == 0) ||
+ 			  (fsa_dev_ptr[cid].sense_data.sense_key ==
+ 			   NOT_READY)) {
++				struct fib * fibptr;
++
+ 				switch (scsicmd->cmnd[0]) {
+ 				case SERVICE_ACTION_IN_16:
+ 					if (!(dev->raw_io_interface) ||
+@@ -2840,7 +2831,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
+ 				case TEST_UNIT_READY:
+ 					if (dev->in_reset)
+ 						return -1;
+-					return _aac_probe_container(scsicmd,
++					fibptr = aac_fib_alloc_tag(dev, scsicmd);
++					return _aac_probe_container(fibptr,
+ 							aac_probe_container_callback2);
+ 				default:
+ 					break;
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index e3e4ecbea726..5b3fd34363c0 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1291,13 +1291,16 @@ struct fsa_dev_info {
+ };
+ 
+ struct fib {
+-	void			*next;	/* this is used by the allocator */
+ 	s16			type;
+ 	s16			size;
+ 	/*
+ 	 *	The Adapter that this I/O is destined for.
+ 	 */
+ 	struct aac_dev		*dev;
++	/*
++	 * The associated scsi command
++	 */
++	struct scsi_cmnd 	*scmd;
+ 	/*
+ 	 *	This is the event the sendfib routine will wait on if the
+ 	 *	caller did not pass one and this is synch io.
+@@ -1552,7 +1555,6 @@ struct aac_dev
+ 	 */
+ 	struct fib              *fibs;
+ 
+-	struct fib		*free_fib;
+ 	spinlock_t		fib_lock;
+ 
+ 	struct mutex		ioctl_mutex;
+@@ -1597,6 +1599,7 @@ struct aac_dev
+ 	size_t			comm_size;
+ 
+ 	struct Scsi_Host	*scsi_host_ptr;
++	struct scsi_device	*scsi_host_dev;
+ 	int			maximum_num_containers;
+ 	int			maximum_num_physicals;
+ 	int			maximum_num_channels;
+@@ -2686,7 +2689,7 @@ void aac_free_irq(struct aac_dev *dev);
+ int aac_setup_safw_adapter(struct aac_dev *dev);
+ const char *aac_driverinfo(struct Scsi_Host *);
+ void aac_fib_vector_assign(struct aac_dev *dev);
+-struct fib *aac_fib_alloc(struct aac_dev *dev);
++struct fib *aac_fib_alloc(struct aac_dev *dev, int direction);
+ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd);
+ int aac_fib_setup(struct aac_dev *dev);
+ void aac_fib_map_free(struct aac_dev *dev);
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 34e65dea992e..f45b546310aa 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -55,7 +55,7 @@ static int ioctl_send_fib(struct aac_dev * dev, void __user *arg)
+ 	if (dev->in_reset) {
+ 		return -EBUSY;
+ 	}
+-	fibptr = aac_fib_alloc(dev);
++	fibptr = aac_fib_alloc(dev, DMA_BIDIRECTIONAL);
+ 	if(fibptr == NULL) {
+ 		return -ENOMEM;
+ 	}
+@@ -462,7 +462,7 @@ static int check_revision(struct aac_dev *dev, void __user *arg)
+ 
+ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ {
+-	struct fib* srbfib;
++	struct fib* srbfib = NULL;
+ 	int status;
+ 	struct aac_srb *srbcmd = NULL;
+ 	struct aac_hba_cmd_req *hbacmd = NULL;
+@@ -493,12 +493,6 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 		dprintk((KERN_DEBUG"aacraid: No permission to send raw srb\n"));
+ 		return -EPERM;
+ 	}
+-	/*
+-	 *	Allocate and initialize a Fib then setup a SRB command
+-	 */
+-	if (!(srbfib = aac_fib_alloc(dev))) {
+-		return -ENOMEM;
+-	}
+ 
+ 	memset(sg_list, 0, sizeof(sg_list)); /* cleanup may take issue */
+ 	if(copy_from_user(&fibsize, &user_srb->count,sizeof(u32))){
+@@ -545,6 +539,15 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 		rcode = -EINVAL;
+ 		goto cleanup;
+ 	}
++
++	/*
++	 *	Allocate and initialize a Fib
++	 */
++	if (!(srbfib = aac_fib_alloc(dev, data_dir))) {
++		rcode = -ENOMEM;
++		goto cleanup;
++	}
++
+ 	actual_fibsize = sizeof(struct aac_srb) - sizeof(struct sgentry) +
+ 		((user_srbcmd->sg.count & 0xff) * sizeof(struct sgentry));
+ 	actual_fibsize64 = actual_fibsize + (user_srbcmd->sg.count & 0xff) *
+@@ -970,8 +973,10 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 	if (rcode != -ERESTARTSYS) {
+ 		for (i = 0; i <= sg_indx; i++)
+ 			kfree(sg_list[i]);
+-		aac_fib_complete(srbfib);
+-		aac_fib_free(srbfib);
++		if (srbfib) {
++			aac_fib_complete(srbfib);
++			aac_fib_free(srbfib);
++		}
+ 	}
+ 
+ 	return rcode;
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 355b16f0b145..0d5be76891b0 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -327,7 +327,7 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 
+ 	aac_wait_for_io_completion(dev);
+ 
+-	fibctx = aac_fib_alloc(dev);
++	fibctx = aac_fib_alloc(dev, DMA_NONE);
+ 	if (!fibctx)
+ 		return -ENOMEM;
+ 	aac_fib_init(fibctx);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 8ee4e1abe568..f177b4d2565b 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -173,7 +173,6 @@ int aac_fib_setup(struct aac_dev * dev)
+ 		fibptr->dev = dev;
+ 		fibptr->hw_fib_va = hw_fib;
+ 		fibptr->data = (void *) fibptr->hw_fib_va->data;
+-		fibptr->next = fibptr+1;	/* Forward chain the fibs */
+ 		init_completion(&fibptr->event_wait);
+ 		spin_lock_init(&fibptr->event_lock);
+ 		hw_fib->header.XferState = cpu_to_le32(0xffffffff);
+@@ -200,14 +199,6 @@ int aac_fib_setup(struct aac_dev * dev)
+ 	 */
+ 	aac_fib_vector_assign(dev);
+ 
+-	/*
+-	 *	Add the fib chain to the free list
+-	 */
+-	dev->fibs[dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB - 1].next = NULL;
+-	/*
+-	*	Set 8 fibs aside for management tools
+-	*/
+-	dev->free_fib = &dev->fibs[dev->scsi_host_ptr->can_queue];
  	return 0;
  }
  
--/*
-- * The block layer has already gone to the trouble of picking out a unique,
-- * small-integer tag for this request.  We use an offset from that value as
-- * an index to select our command block.  (The offset allows us to reserve the
-- * low-numbered entries for our own uses.)
-- */
--static int hpsa_get_cmd_index(struct scsi_cmnd *scmd)
--{
--	int idx = scmd->request->tag;
--
--	if (idx < 0)
--		return idx;
--
--	/* Offset to leave space for internal cmds. */
--	return idx += HPSA_NRESERVED_CMDS;
--}
--
- /*
-  * Send a TEST_UNIT_READY command to the specified LUN using the specified
-  * reply queue; returns zero if the unit is ready, and non-zero otherwise.
-@@ -5971,7 +5959,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
- 	int rc = 0;
- 	struct CommandList *c;
+@@ -232,7 +223,7 @@ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
+ 	fibptr->type = FSAFS_NTC_FIB_CONTEXT;
+ 	fibptr->callback_data = NULL;
+ 	fibptr->callback = NULL;
+-	fibptr->flags = 0;
++	fibptr->scmd = scmd;
  
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_NONE);
- 
- 	/*
- 	 * If no specific reply queue was requested, then send the TUR
-@@ -6044,7 +6032,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	if (lockup_detected(h)) {
- 		snprintf(msg, sizeof(msg),
- 			 "cmd %d RESET FAILED, lockup detected",
--			 hpsa_get_cmd_index(scsicmd));
-+			 scsicmd->request->tag);
- 		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
- 		rc = FAILED;
- 		goto return_reset_status;
-@@ -6054,7 +6042,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	if (detect_controller_lockup(h)) {
- 		snprintf(msg, sizeof(msg),
- 			 "cmd %d RESET FAILED, new lockup detected",
--			 hpsa_get_cmd_index(scsicmd));
-+			 scsicmd->request->tag);
- 		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
- 		rc = FAILED;
- 		goto return_reset_status;
-@@ -6116,12 +6104,12 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
- 					    struct scsi_cmnd *scmd)
- {
--	int idx = hpsa_get_cmd_index(scmd);
-+	int idx = scmd->request->tag;
- 	struct CommandList *c = h->cmd_pool + idx;
- 
--	if (idx < HPSA_NRESERVED_CMDS || idx >= h->nr_cmds) {
-+	if (idx < 0 || idx >= h->nr_cmds) {
- 		dev_err(&h->pdev->dev, "Bad block tag: %d not in [%d..%d]\n",
--			idx, HPSA_NRESERVED_CMDS, h->nr_cmds - 1);
-+			idx, 0, h->nr_cmds - 1);
- 		/* The index value comes from the block layer, so if it's out of
- 		 * bounds, it's probably not our bug.
- 		 */
-@@ -6158,80 +6146,52 @@ static void cmd_tagged_free(struct ctlr_info *h, struct CommandList *c)
- 	 * else to free it, because it is accessed by index.
- 	 */
- 	(void)atomic_dec(&c->refcount);
-+	c->scsi_cmd = NULL;
+ 	return fibptr;
  }
+@@ -240,36 +231,28 @@ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
+ /**
+  *	aac_fib_alloc	-	allocate a fib
+  *	@dev: Adapter to allocate the fib for
++ *	@direction: DMA data direction
+  *
+  *	Allocate a fib from the adapter fib pool. If the pool is empty we
+  *	return NULL.
+  */
  
--/*
-- * For operations that cannot sleep, a command block is allocated at init,
-- * and managed by cmd_alloc() and cmd_free() using a simple bitmap to track
-- * which ones are free or in use.  Lock must be held when calling this.
-- * cmd_free() is the complement.
-- * This function never gives up and returns NULL.  If it hangs,
-- * another thread must call cmd_free() to free some tags.
-- */
--
--static struct CommandList *cmd_alloc(struct ctlr_info *h)
-+static struct CommandList *cmd_alloc(struct ctlr_info *h, u8 direction)
+-struct fib *aac_fib_alloc(struct aac_dev *dev)
++struct fib *aac_fib_alloc(struct aac_dev *dev, int direction)
  {
+-	struct fib * fibptr;
 +	struct scsi_cmnd *scmd;
- 	struct CommandList *c;
--	int refcount, i;
--	int offset = 0;
--
--	/*
--	 * There is some *extremely* small but non-zero chance that that
--	 * multiple threads could get in here, and one thread could
--	 * be scanning through the list of bits looking for a free
--	 * one, but the free ones are always behind him, and other
--	 * threads sneak in behind him and eat them before he can
--	 * get to them, so that while there is always a free one, a
--	 * very unlucky thread might be starved anyway, never able to
--	 * beat the other threads.  In reality, this happens so
--	 * infrequently as to be indistinguishable from never.
--	 *
--	 * Note that we start allocating commands before the SCSI host structure
--	 * is initialized.  Since the search starts at bit zero, this
--	 * all works, since we have at least one command structure available;
--	 * however, it means that the structures with the low indexes have to be
--	 * reserved for driver-initiated requests, while requests from the block
--	 * layer will use the higher indexes.
--	 */
--
--	for (;;) {
--		i = find_next_zero_bit(h->cmd_pool_bits,
--					HPSA_NRESERVED_CMDS,
--					offset);
--		if (unlikely(i >= HPSA_NRESERVED_CMDS)) {
--			offset = 0;
--			continue;
--		}
--		c = h->cmd_pool + i;
--		refcount = atomic_inc_return(&c->refcount);
--		if (unlikely(refcount > 1)) {
--			cmd_free(h, c); /* already in use */
--			offset = (i + 1) % HPSA_NRESERVED_CMDS;
--			continue;
--		}
--		set_bit(i & (BITS_PER_LONG - 1),
--			h->cmd_pool_bits + (i / BITS_PER_LONG));
--		break; /* it's ours now. */
-+	int idx;
++	struct fib * fibptr = NULL;
+ 	unsigned long flags;
 +
-+	scmd = scsi_get_internal_cmd(h->raid_ctrl_sdev,
-+				     (direction & XFER_WRITE) ?
-+				     DMA_TO_DEVICE : DMA_FROM_DEVICE,
+ 	spin_lock_irqsave(&dev->fib_lock, flags);
+-	fibptr = dev->free_fib;
+-	if(!fibptr){
+-		spin_unlock_irqrestore(&dev->fib_lock, flags);
+-		return fibptr;
+-	}
+-	dev->free_fib = fibptr->next;
++	scmd = scsi_get_internal_cmd(dev->scsi_host_dev, direction,
 +				     REQ_NOWAIT);
-+	if (!scmd) {
-+		dev_warn(&h->pdev->dev, "failed to allocate reserved cmd\n");
++	if (scmd)
++		fibptr = aac_fib_alloc_tag(dev, scmd);
+ 	spin_unlock_irqrestore(&dev->fib_lock, flags);
+-	/*
+-	 *	Set the proper node type code and node byte size
+-	 */
+-	fibptr->type = FSAFS_NTC_FIB_CONTEXT;
++	if (!fibptr)
 +		return NULL;
-+	}
-+	idx = scmd->request->tag;
-+	c = cmd_tagged_alloc(h, scmd);
-+	if (!c) {
-+		dev_warn(&h->pdev->dev, "failed to allocate reserved cmd %u\n",
-+			 idx);
-+		scsi_put_internal_cmd(scmd);
-+		return NULL;
- 	}
--	hpsa_cmd_partial_init(h, i, c);
-+	hpsa_cmd_partial_init(h, idx, c);
-+	c->scsi_cmd = scmd;
- 	c->device = NULL;
-+	c->cmd_type = CMD_IOCTL_PEND;
-+	dev_dbg(&h->pdev->dev, "using reserved cmd %u\n", idx);
- 	return c;
- }
- 
--/*
-- * This is the complementary operation to cmd_alloc().  Note, however, in some
-- * corner cases it may also be used to free blocks allocated by
-- * cmd_tagged_alloc() in which case the ref-count decrement does the trick and
-- * the clear-bit is harmless.
-- */
- static void cmd_free(struct ctlr_info *h, struct CommandList *c)
- {
--	if (atomic_dec_and_test(&c->refcount)) {
--		int i;
-+	struct scsi_cmnd *scmd = c->scsi_cmd;
- 
--		i = c - h->cmd_pool;
--		clear_bit(i & (BITS_PER_LONG - 1),
--			  h->cmd_pool_bits + (i / BITS_PER_LONG));
-+	if (!scmd) {
-+		dev_warn(&h->pdev->dev, "freeing idle cmd\n");
-+		return;
-+	}
-+	cmd_tagged_free(h, c);
-+	if (c->cmd_type == CMD_IOCTL_PEND) {
-+		dev_dbg(&h->pdev->dev, "returning reserved cmd %u\n",
-+			scmd->request->tag);
-+		scsi_put_internal_cmd(scmd);
- 	}
- }
- 
-@@ -6398,11 +6358,8 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h,
- 			memset(buff, 0, iocommand->buf_size);
- 		}
- 	}
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, iocommand->Request.Type.Direction);
- 
--	/* Fill in the command type */
--	c->cmd_type = CMD_IOCTL_PEND;
--	c->scsi_cmd = SCSI_CMD_BUSY;
- 	/* Fill in Command Header */
- 	c->Header.ReplyQueue = 0; /* unused in simple mode */
- 	if (iocommand->buf_size > 0) {	/* buffer to fill */
-@@ -6515,10 +6472,8 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h,
- 		data_ptr += sz;
- 		sg_used++;
- 	}
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, ioc->Request.Type.Direction);
- 
--	c->cmd_type = CMD_IOCTL_PEND;
--	c->scsi_cmd = SCSI_CMD_BUSY;
- 	c->Header.ReplyQueue = 0;
- 	c->Header.SGList = (u8) sg_used;
- 	c->Header.SGTotal = cpu_to_le16(sg_used);
-@@ -6649,7 +6604,7 @@ static void hpsa_send_host_reset(struct ctlr_info *h, u8 reset_type)
- {
- 	struct CommandList *c;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_NONE);
- 
- 	/* fill_cmd can't fail here, no data buffer to map */
- 	(void) fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0,
-@@ -6670,8 +6625,6 @@ static int fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- {
- 	enum dma_data_direction dir = DMA_NONE;
- 
--	c->cmd_type = CMD_IOCTL_PEND;
--	c->scsi_cmd = SCSI_CMD_BUSY;
- 	c->Header.ReplyQueue = 0;
- 	if (buff != NULL && size > 0) {
- 		c->Header.SGList = 1;
-@@ -7984,8 +7937,6 @@ static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
- 
- static void hpsa_free_cmd_pool(struct ctlr_info *h)
- {
--	kfree(h->cmd_pool_bits);
--	h->cmd_pool_bits = NULL;
- 	if (h->cmd_pool) {
- 		dma_free_coherent(&h->pdev->dev,
- 				h->nr_cmds * sizeof(struct CommandList),
-@@ -8006,17 +7957,13 @@ static void hpsa_free_cmd_pool(struct ctlr_info *h)
- 
- static int hpsa_alloc_cmd_pool(struct ctlr_info *h)
- {
--	h->cmd_pool_bits = kcalloc(DIV_ROUND_UP(h->nr_cmds, BITS_PER_LONG),
--				   sizeof(unsigned long),
--				   GFP_KERNEL);
- 	h->cmd_pool = dma_alloc_coherent(&h->pdev->dev,
- 		    h->nr_cmds * sizeof(*h->cmd_pool),
- 		    &h->cmd_pool_dhandle, GFP_KERNEL);
- 	h->errinfo_pool = dma_alloc_coherent(&h->pdev->dev,
- 		    h->nr_cmds * sizeof(*h->errinfo_pool),
- 		    &h->errinfo_pool_dhandle, GFP_KERNEL);
--	if ((h->cmd_pool_bits == NULL)
--	    || (h->cmd_pool == NULL)
-+	if ((h->cmd_pool == NULL)
- 	    || (h->errinfo_pool == NULL)) {
- 		dev_err(&h->pdev->dev, "out of memory in %s", __func__);
- 		goto clean_up;
-@@ -8899,7 +8846,7 @@ static void hpsa_flush_cache(struct ctlr_info *h)
- 	if (!flush_buf)
- 		return;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_NONE);
- 
- 	if (fill_cmd(c, HPSA_CACHE_FLUSH, h, flush_buf, 4, 0,
- 		RAID_CTLR_LUNID, TYPE_CMD)) {
-@@ -8934,7 +8881,7 @@ static void hpsa_disable_rld_caching(struct ctlr_info *h)
- 	if (!options)
- 		return;
- 
--	c = cmd_alloc(h);
-+	c = cmd_alloc(h, XFER_READ);
- 
- 	/* first, get the current diag options settings */
- 	if (fill_cmd(c, BMIC_SENSE_DIAG_OPTIONS, h, options, 4, 0,
-@@ -8984,11 +8931,10 @@ static void __hpsa_shutdown(struct pci_dev *pdev)
- 	struct ctlr_info *h;
- 
- 	h = pci_get_drvdata(pdev);
--	/* Turn board interrupts off  and send the flush cache command
--	 * sendcmd will turn off interrupt, and send the flush...
--	 * To write all data in the battery backed cache to disks
-+	/*
-+	 * Turn board interrupts off;
-+	 * flush cache command has already been sent.
- 	 */
--	hpsa_flush_cache(h);
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
- 	hpsa_free_irqs(h);			/* init_one 4 */
- 	hpsa_disable_interrupt_mode(h);		/* pci_init 2 */
-@@ -8996,6 +8942,7 @@ static void __hpsa_shutdown(struct pci_dev *pdev)
- 
- static void hpsa_shutdown(struct pci_dev *pdev)
- {
-+	hpsa_flush_cache(pci_get_drvdata(pdev));
- 	__hpsa_shutdown(pdev);
- 	pci_disable_device(pdev);
- }
-@@ -9040,6 +8987,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
- 	 * when multipath is enabled. There can be SYNCHRONIZE CACHE
- 	 * operations which cannot complete and will hang the system.
- 	 */
-+	hpsa_flush_cache(h);
- 	if (h->scsi_host)
- 		scsi_remove_host(h->scsi_host);		/* init_one 8 */
- 	/* includes hpsa_free_irqs - init_one 4 */
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index f8c88fc7b80a..d5fcecbc4401 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -205,7 +205,6 @@ struct ctlr_info {
- 	dma_addr_t		ioaccel2_cmd_pool_dhandle;
- 	struct ErrorInfo 	*errinfo_pool;
- 	dma_addr_t		errinfo_pool_dhandle;
--	unsigned long  		*cmd_pool_bits;
- 	int			scan_finished;
- 	u8			scan_waiting : 1;
- 	spinlock_t		scan_lock;
-@@ -215,6 +214,8 @@ struct ctlr_info {
- 	spinlock_t devlock; /* to protect hba[ctlr]->dev[];  */
- 	int ndevices; /* number of used elements in .dev[] array. */
- 	struct hpsa_scsi_dev_t *dev[HPSA_MAX_DEVICES];
-+	struct scsi_device *raid_ctrl_sdev;
 +
- 	/*
- 	 * Performant mode tables.
- 	 */
+ 	fibptr->size = sizeof(struct fib);
+-	/*
+-	 *	Null out fields that depend on being zero at the start of
+-	 *	each I/O
+-	 */
+-	fibptr->hw_fib_va->header.XferState = 0;
+-	fibptr->flags = 0;
+-	fibptr->callback = NULL;
+-	fibptr->callback_data = NULL;
+ 
+ 	return fibptr;
+ }
+@@ -297,8 +280,12 @@ void aac_fib_free(struct fib *fibptr)
+ 			 (void*)fibptr,
+ 			 le32_to_cpu(fibptr->hw_fib_va->header.XferState));
+ 	}
+-	fibptr->next = fibptr->dev->free_fib;
+-	fibptr->dev->free_fib = fibptr;
++	if (fibptr->scmd) {
++		struct scsi_cmnd *scmd = fibptr->scmd;
++
++		fibptr->scmd = NULL;
++		scsi_put_internal_cmd(scmd);
++	}
+ 	spin_unlock_irqrestore(&fibptr->dev->fib_lock, flags);
+ }
+ 
+@@ -1661,7 +1648,7 @@ int aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_type)
+ 		retval = unblock_retval;
+ 	if ((forced < 2) && (retval == -ENODEV)) {
+ 		/* Unwind aac_send_shutdown() IOP_RESET unsupported/disabled */
+-		struct fib * fibctx = aac_fib_alloc(aac);
++		struct fib * fibctx = aac_fib_alloc(aac, DMA_NONE);
+ 		if (fibctx) {
+ 			struct aac_pause *cmd;
+ 			int status;
+@@ -2288,7 +2275,7 @@ static int aac_send_wellness_command(struct aac_dev *dev, char *wellness_str,
+ 	int ret = -ENOMEM;
+ 	u32 vbus, vid;
+ 
+-	fibptr = aac_fib_alloc(dev);
++	fibptr = aac_fib_alloc(dev, DMA_TO_DEVICE);
+ 	if (!fibptr)
+ 		goto out;
+ 
+@@ -2386,7 +2373,7 @@ static int aac_send_hosttime(struct aac_dev *dev, struct timespec64 *now)
+ 	struct fib *fibptr;
+ 	__le32 *info;
+ 
+-	fibptr = aac_fib_alloc(dev);
++	fibptr = aac_fib_alloc(dev, DMA_TO_DEVICE);
+ 	if (!fibptr)
+ 		goto out;
+ 
+diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
+index a557aa629827..ae88e1d20c7b 100644
+--- a/drivers/scsi/aacraid/dpcsup.c
++++ b/drivers/scsi/aacraid/dpcsup.c
+@@ -315,7 +315,7 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 index, int isAif,
+ 		struct fib *fibctx;
+ 		struct aac_aifcmd *cmd;
+ 
+-		fibctx = aac_fib_alloc(dev);
++		fibctx = aac_fib_alloc(dev, DMA_FROM_DEVICE);
+ 		if (!fibctx)
+ 			return 1;
+ 		aac_fib_init(fibctx);
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 91cbe479cfa8..9b3d8016e8ef 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -713,7 +713,7 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 			return ret;
+ 
+ 		/* start a HBA_TMF_ABORT_TASK TMF request */
+-		fib = aac_fib_alloc(aac);
++		fib = aac_fib_alloc(aac, DMA_NONE);
+ 		if (!fib)
+ 			return ret;
+ 
+@@ -924,7 +924,7 @@ static int aac_eh_dev_reset(struct scsi_cmnd *cmd)
+ 	pr_err("%s: Host device reset request. SCSI hang ?\n",
+ 	       AAC_DRIVERNAME);
+ 
+-	fib = aac_fib_alloc(aac);
++	fib = aac_fib_alloc(aac, DMA_NONE);
+ 	if (!fib)
+ 		return ret;
+ 
+@@ -987,7 +987,7 @@ static int aac_eh_target_reset(struct scsi_cmnd *cmd)
+ 	pr_err("%s: Host target reset request. SCSI hang ?\n",
+ 	       AAC_DRIVERNAME);
+ 
+-	fib = aac_fib_alloc(aac);
++	fib = aac_fib_alloc(aac, DMA_NONE);
+ 	if (!fib)
+ 		return ret;
+ 
+@@ -1698,6 +1698,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_cmd_len = 16;
+ 	shost->max_id = MAXIMUM_NUM_CONTAINERS;
+ 	shost->max_lun = AAC_MAX_LUN;
++	shost->nr_reserved_cmds = AAC_NUM_MGT_FIB;
+ 	shost->sg_tablesize = HBA_MAX_SG_SEPARATE;
+ 
+ 	if (aac_cfg_major == AAC_CHARDEV_NEEDS_REINIT)
+@@ -1772,6 +1773,10 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (error)
+ 		goto out_deinit;
+ 
++	aac->scsi_host_dev = scsi_get_host_dev(shost);
++	if (!aac->scsi_host_dev)
++		goto out_remove_host;
++
+ 	aac->maximum_num_channels = aac_drivers[index].channels;
+ 	error = aac_get_adapter_info(aac);
+ 	if (error < 0)
+@@ -1847,6 +1852,8 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	kfree(aac->queues);
+ 	aac_adapter_ioremap(aac, 0);
+ 	kfree(aac->fsa_dev);
++ out_remove_host:
++	scsi_remove_host(shost);
+  out_free_fibs:
+ 	kfree(aac->fibs);
+  out_free_host:
 -- 
 2.16.4
 
