@@ -2,152 +2,126 @@ Return-Path: <SRS0=uw5d=AG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89EF1C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6A2C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6852D2082F
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E85EE20836
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ilwQ2Uul"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405802AbgFYPbg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 11:31:36 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2361 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2405780AbgFYPbf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Jun 2020 11:31:35 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id 6EE7C49C8CF4A5AC2D09;
-        Thu, 25 Jun 2020 16:31:34 +0100 (IST)
-Received: from [127.0.0.1] (10.47.7.104) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Thu, 25 Jun
- 2020 16:31:33 +0100
-Subject: Re: [PATCH 08/22] scsi: implement reserved command handling
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Don Brace <don.brace@microchip.de>,
-        Bart van Assche <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>
-References: <20200625140124.17201-1-hare@suse.de>
- <20200625140124.17201-9-hare@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <8074064c-a2ea-2084-cd1a-60bf51af6844@huawei.com>
-Date:   Thu, 25 Jun 2020 16:30:03 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S2405881AbgFYPhi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 11:37:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57514 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405159AbgFYPhh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 11:37:37 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B82C08C5C1;
+        Thu, 25 Jun 2020 08:37:37 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id d194so89642pga.13;
+        Thu, 25 Jun 2020 08:37:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=eKf/0lxOewQJNcyUw6TguSyEm4wSYJQCqTzuEz6QHDI=;
+        b=ilwQ2Uulb1xjp/tK5MQHOUK+bIid5rWWRdDzOZGrO/2KJcOjgX91/pFrJJYpVv08cM
+         WNJbLqJrt7jhsY4dI6GH9OljGn1WGkRkNiKQQ2vcojTPrjAq4YkQ/mg+nB6nNQR8eQ6S
+         8uzbs9doCD3F7on4ZZEJ+tMl0c0Ylrx5mLbb5Zjwpj1i/CrpA9BfCH2496q72RSj/y6R
+         3caexTQppWUu0kQRhnc7UH+KSQlpRGiaOFHM8A5ATNy0WVpP2DrfE5kxv+jiMDCKn7/C
+         xHhtiGg1VfxDiKzd1QsW+606pyH3sgyyUgmiRI1F0oJQi1EcQLdQLC+C9l0UVfoCc5di
+         SkQw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=eKf/0lxOewQJNcyUw6TguSyEm4wSYJQCqTzuEz6QHDI=;
+        b=m5UAAhfIhwPVEK2rcw1lThW4MgFUgd6tJV1uftBrgugtfsrD8oIMCyfIanFuOE4gQX
+         QZzEc1z4JRYSulILM5Ef45tI54j+Mz3OhqhJwpsjonZkByz2WIGBE5PYAHYyFOL+kXRB
+         qfQX9CNAQTLzzbX5yKs4XLhVctGGudU6edJpX+h1YFge21yIOKx13Jqa6j/haGj4YtW6
+         kh0hnQPdiNLYahkF5wOhYDjpYkwxv7j8Pz66VByXM3yqEDDTFZ8Zqkf48Gh7lpZ00T8G
+         xgAqaZ5oCO4HRPdw6HSa2h5vnlgG2QC+Qhg8vdZFBNvZEOQrEXy7DuB74M7K8BWfdL6S
+         u/FQ==
+X-Gm-Message-State: AOAM5334FMKXRc/1OnIdXmKaevlozldSGFNT3DIPPX+DzdYEqP3gX5c7
+        LmgFskTYEx32DwyfB+qL+yA=
+X-Google-Smtp-Source: ABdhPJxtgGcsYUZbF7sgwR0aNIKuXXwsjT1VUKFe2v8vGMWGijcY1u/KUMstQcuM2xt0X6XfojQYeA==
+X-Received: by 2002:a62:8683:: with SMTP id x125mr35592234pfd.211.1593099457135;
+        Thu, 25 Jun 2020 08:37:37 -0700 (PDT)
+Received: from localhost.localdomain ([131.107.147.194])
+        by smtp.gmail.com with ESMTPSA id i14sm22980813pfo.14.2020.06.25.08.37.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 25 Jun 2020 08:37:36 -0700 (PDT)
+From:   Andres Beltran <lkmlabelt@gmail.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org
+Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikelley@microsoft.com, parri.andrea@gmail.com,
+        Andres Beltran <lkmlabelt@gmail.com>,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
+Date:   Thu, 25 Jun 2020 11:37:20 -0400
+Message-Id: <20200625153723.8428-1-lkmlabelt@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <20200625140124.17201-9-hare@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.7.104]
-X-ClientProxiedBy: lhreml724-chm.china.huawei.com (10.201.108.75) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25/06/2020 15:01, Hannes Reinecke wrote:
-> Quite some drivers are using management commands internally, which
-> typically use the same hardware tag pool (ie they are being allocated
-> from the same hardware resources) as the 'normal' I/O commands.
-> These commands are set aside before allocating the block-mq tag bitmap,
-> so they'll never show up as busy in the tag map.
-> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
-> this situation.
-> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
-> template to instruct the block layer to set aside a tag space for these
-> management commands by using reserved tags.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/scsi_lib.c  | 10 +++++++++-
->   include/scsi/scsi_host.h | 11 +++++++++++
->   2 files changed, 20 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index bd378e1bd3fc..a752806af70b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1887,7 +1887,9 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
->   	else
->   		tag_set->ops = &scsi_mq_ops_no_commit;
->   	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
-> -	tag_set->queue_depth = shost->can_queue;
-> +	tag_set->queue_depth =
-> +		shost->can_queue + shost->nr_reserved_cmds;
-> +	tag_set->reserved_tags = shost->nr_reserved_cmds;
->   	tag_set->cmd_size = cmd_size;
->   	tag_set->numa_node = NUMA_NO_NODE;
->   	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
-> @@ -1910,6 +1912,9 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
->    * @op_flags: request allocation flags
->    *
->    * Allocates a SCSI command for internal LLDD use.
-> + * If 'nr_reserved_commands' is spectified by the host the
+From: Andres Beltran (Microsoft) <lkmlabelt@gmail.com>
 
-/s/spectified/specified/
+Currently, VMbus drivers use pointers into guest memory as request IDs
+for interactions with Hyper-V. To be more robust in the face of errors
+or malicious behavior from a compromised Hyper-V, avoid exposing
+guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
+bad request ID that is then treated as the address of a guest data
+structure with no validation. Instead, encapsulate these memory
+addresses and provide small integers as request IDs.
 
-I suppose making this usable by drivers which don't set 
-nr_reserved_commands is helpful (if not slightly strange). In that we 
-can move drivers which don't use rq->tag currently - like pm8001 - to 
-use it, and not have to worry about guessing some nr_reserved_commands 
-to specify.
+The first patch creates the definitions for the data structure, provides
+helper methods to generate new IDs and retrieve data, and
+allocates/frees the memory needed for vmbus_requestor.
 
-> + * command will be allocated from the reserved tag pool;
-> + * otherwise the normal tag pool will be used.
->    */
->   struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
->   					int data_direction, int op_flags)
-> @@ -1919,6 +1924,9 @@ struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
->   	blk_mq_req_flags_t flags = 0;
->   	unsigned int op = REQ_INTERNAL | op_flags;
->   
-> +	if (sdev->host->nr_reserved_cmds)
-> +		flags = BLK_MQ_REQ_RESERVED; > +
->   	op |= (data_direction == DMA_TO_DEVICE) ?
->   		REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
->   	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 46ef8cccc982..b94938e87e3a 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -590,6 +590,11 @@ struct Scsi_Host {
->   	unsigned short max_cmd_len;
->   
->   	int this_id;
-> +
-> +	/*
-> +	 * Number of commands this host can handle at the same time.
-> +	 * This excludes reserved commands as specified by nr_reserved_cmds.
-> +	 */
->   	int can_queue;
->   	short cmd_per_lun;
->   	short unsigned int sg_tablesize;
-> @@ -606,6 +611,12 @@ struct Scsi_Host {
->   	 * is nr_hw_queues * can_queue.
+The second and third patches make use of vmbus_requestor to send request
+IDs to Hyper-V in storvsc and netvsc respectively.
 
-If we are going to go this way, then could you update the comment on 
-Scsi_Host.nr_hw_queues here? Currently we have "it is assumed that each 
-hardware queue has a depth of can_queue..."
+Thanks.
+Andres Beltran
 
-Thanks,
-John
+Cc: linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
 
->   	 */
->   	unsigned nr_hw_queues;
-> +
-> +	/*
-> +	 * Number of reserved commands to allocate, if any.
-> +	 */
-> +	unsigned nr_reserved_cmds;
-> +
+Andres Beltran (3):
+  Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
+    hardening
+  scsi: storvsc: Use vmbus_requestor to generate transaction ids for
+    VMBus hardening
+  hv_netvsc: Use vmbus_requestor to generate transaction ids for VMBus
+    hardening
 
+ drivers/hv/channel.c              | 150 ++++++++++++++++++++++++++++++
+ drivers/net/hyperv/hyperv_net.h   |  10 ++
+ drivers/net/hyperv/netvsc.c       |  56 +++++++++--
+ drivers/net/hyperv/rndis_filter.c |   1 +
+ drivers/scsi/storvsc_drv.c        |  62 ++++++++++--
+ include/linux/hyperv.h            |  22 +++++
+ 6 files changed, 283 insertions(+), 18 deletions(-)
+
+-- 
+2.25.1
 
