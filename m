@@ -2,147 +2,212 @@ Return-Path: <SRS0=uw5d=AG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C18C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 05:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1626C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 08:16:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D2892063A
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 05:48:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="OtJ4PUBv";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="HZs9ZOMg"
+	by mail.kernel.org (Postfix) with ESMTP id 920142081A
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 08:16:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389768AbgFYFsG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 01:48:06 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:3537 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389497AbgFYFsG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 01:48:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1593064086; x=1624600086;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=iijraJqM+zqQp6qWUj6CedchYiKCyWWavoqnVOfj92Q=;
-  b=OtJ4PUBv/Nb9pA1co7WCPe2hXgrBF1ojcyUV1iUC+URcFs9SMODnQZP4
-   q9wo+EkPqSCX2B3t0Jbbacaz5V9ZpdrevTy7+uwTJQGRxOONOnun/k/qX
-   zwoK2eGWbVwmx0jbDLZXtrctAtIb9AmBCRIHh2HRxCrtukhqcqOzwGscJ
-   hMYL2ShYtO5BcuVoDl5CWcICWYyMi7e0w1ZzCT9zfamenvSBWkEHSviVs
-   XFwYBy3V9l+yn7b1Pe+4xloouQz+H5DZa5Zfgg5qoqUOzYkAYXfHa1WWl
-   lLcMbHfoscm2Nei7gvZKknqjBIH2100WxxiqQUhvcjdBx+1nHGwIHak9H
-   w==;
-IronPort-SDR: ASQCGcF+hOfMB9Ch+8NjJFff1d+oFr1HEYkZ0E7vvWv6qFdC3o7L71JyCYMJ+3/OqlgORCQ67W
- Wx49DzoqGvzXRyw6PLk9cD3wr7xIvM1xNPFgBT/kvwNBBthotXYW++9cLyR9zG9tQtBCvq7FT3
- SdeRS090hwlekKQEAM4NBp5rMRgv6j0UxuNiPpzoY1wAHTLHMDcJs4+FXQ+WCKq6cB6Al2/CQw
- Avk+vxBvL5I1X+qI2JVu8ua5iJeWm7xXx/Ivi/gCD2TGmY7xXNO6Wc18q/+0Lhu8fqISmLh0Ik
- gAc=
-X-IronPort-AV: E=Sophos;i="5.75,278,1589212800"; 
-   d="scan'208";a="141112597"
-Received: from mail-bn7nam10lp2109.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.109])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jun 2020 13:48:05 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Aiwvq8Dz5Qb0dlZOaXvapB3IX/Ir1+tvEMiGwzya3Xx6aeBtFqIRA6gMxObsT8KwUdUkfuoKD5hmqvVwsDS3HqoTTG7E3Pk9s5cCBRdVYBJukwpmzBfP4YHPDr3oecQHh/tbeoMiQgHXICyJ9dZmILXv85AJYBorPRHjNIKlLTKOKt9Qvvr04s3grgM6FhJ51aJNiBWMkBO4UC8G7qjXZI72NvJejCsxKusePkErlFb7GnmoDy6Pw0U0024iy06W2uz/R7s3+hKVhkdyHCVGNPPITsD7Fy9sgfc8PwQfdsqUw4YE0pQoKkoEPfTy8dCn98MTszHo29DGsZ/w/Q7MVg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iijraJqM+zqQp6qWUj6CedchYiKCyWWavoqnVOfj92Q=;
- b=iPJsj++DZO9YYYndThZJzY+zaQt5FrSEap9qf6uk9JX91YQxuUeE5PA8+oElQSAeRakNYKz4Bk5tSI9RdsiiI/m/JkCLxUgng7pGfGC2l5fYlVD+kSrMF96Ut95dVwroFKtiAxVdZE0DQCKdM6cOFVHASO1BfioEY9WPfiALwh85mhBHuaARGiT0DE2n6cdDBl6DEjk88Z8K6nDhKc/9TNZ+rs8kKJmkFVw56UyzmwNBJZRm7ZiIQX9K9zD09KwvlHM/KNDwxfOWLSdqlXfQHWZkKBTykqCR/JXT+v+C6DQoq8l1VSAk7Wu0chiEWdxXWf3zQ883LPhJRB1G7E4oZQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iijraJqM+zqQp6qWUj6CedchYiKCyWWavoqnVOfj92Q=;
- b=HZs9ZOMgPDUS3nNTG7DykYh8v3HOdyNIGRqCWndGWF8sLqJdu9SKwc6MbMHCEMj8oCT28C8Og3iDtlu3Fh9Mnv7L+k3XQQp/rXnEs5r2EYRkDY5lzXSKBQ6PH5RNtfwj5xRmqlqa255hhJ9veEAyVy0oi8cuV5JO8JLgwnlKQ1k=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4719.namprd04.prod.outlook.com (2603:10b6:805:ab::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3109.22; Thu, 25 Jun
- 2020 05:48:02 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3131.020; Thu, 25 Jun 2020
- 05:48:02 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "kwmad.kim@samsung.com" <kwmad.kim@samsung.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Subject: RE: [PATCH -next] scsi: ufs: allow exynos ufs driver to build as
- module
-Thread-Topic: [PATCH -next] scsi: ufs: allow exynos ufs driver to build as
- module
-Thread-Index: AQHWRytj7q4ajAgTOEi/fYYjfXFBj6jo2dQA
-Date:   Thu, 25 Jun 2020 05:48:02 +0000
-Message-ID: <SN6PR04MB46401185DCB0815401DBB399FC920@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <CGME20200620175104epcas5p25068bb07029c9d6aff56623e4ecb0a26@epcas5p2.samsung.com>
- <20200620173232.52521-1-alim.akhtar@samsung.com>
-In-Reply-To: <20200620173232.52521-1-alim.akhtar@samsung.com>
-Accept-Language: en-US
+        id S2390580AbgFYIQT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 04:16:19 -0400
+Received: from comms.puri.sm ([159.203.221.185]:41662 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2390510AbgFYIQS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Jun 2020 04:16:18 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id 8D61CE11E2;
+        Thu, 25 Jun 2020 01:16:17 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id eUixIffo3Xax; Thu, 25 Jun 2020 01:16:16 -0700 (PDT)
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+To:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, Alan Stern <stern@rowland.harvard.edu>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
+ <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
+ 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
+ ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
+Message-ID: <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
+Date:   Thu, 25 Jun 2020 10:16:06 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
+In-Reply-To: <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: add088d8-7968-4c06-8c31-08d818cb5353
-x-ms-traffictypediagnostic: SN6PR04MB4719:
-x-microsoft-antispam-prvs: <SN6PR04MB4719EADB4B0ED8F8A4887430FC920@SN6PR04MB4719.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4714;
-x-forefront-prvs: 0445A82F82
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: sx8NanzysQ/ORk2OOkNRt+50wuRwmKxoY7xv2MRcXuIMoC7pofQ8gpxl+6K/x5pCBI+nQzdUCt9KvLT3y3D+y5yuBAibXttrdsKy79JCETHsEwG/yDF99udU8MFi8R2fCBEUCV3u4zbHIcCR15SLW0nUABGjE1VCCqn1gLumcQxRdb0BxELM/qlsehlcBUsh3hnvA/mMMgOFshK64TKDAbrshDsn2fmhlrMkE/u+1U060j1zFzxI1nn48WO+PCGCg/MYblWXoDYg4GSSBHq358RsRXrgYg9gMQXCtiF5QcD8D6912b7BkMS7izC2QVsHuRmjVuDESu4ztF6K9JMC2A==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(396003)(136003)(376002)(346002)(366004)(55016002)(52536014)(66476007)(66556008)(64756008)(66446008)(316002)(76116006)(66946007)(33656002)(5660300002)(4326008)(9686003)(86362001)(478600001)(2906002)(8676002)(54906003)(83380400001)(8936002)(71200400001)(6506007)(110136005)(26005)(7696005)(186003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: k1RypGUuZ9ARUI6xCZcrRDI6QRk0BVKGkukG7Z9WTgYa1H9ig0/2L2HG7QY6hvVpakTVLIa0dL44eR3jtgeXSgi/hmJRs2YJ1AzNtBxw70e/gmBcV/CMB00Jys95X/X+aim8+CgUuK+utXZiYFuaf0t331+3s6ZXXJPc4IchUHvJkV5bgJNCFy/yy1xVxLO9+NtkQkQCPCgA47uAfpqppFuqJZL3yG96/L/qbXBCZ9eM1lsJkv0c0VmSlq0kUH+iJSOhz6qPRhpi8nufpDbRSTVc5vVNgn+VAel2M0Ns+kh0plyFniY5ZdenisjjfFIp+fGHhqM2X2KpMaQSzYZKS6lgUGqOvfvzFl1JEudQ+8jdudJTktIkW1Fmuc3m/1kUqsd+KIpyRIgF78Dd24QuTJ1J9i8CowyToGDuTU5Hf1yAF5w0bNV254m5ObFYIgMixKrlK6G3m7MaKT2PugFjOzlxEwa3e20afltLnkBBo3E=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: add088d8-7968-4c06-8c31-08d818cb5353
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jun 2020 05:48:02.7217
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: kJmS29s7yJbPJuvqWogSLlCIoPN7fJY5eiUPk3crIATXp7gpCxTnrjQn7AANdlqaZTxU5gtFR2Tb/uubmUXtiA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4719
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-IA0KPiANCj4gQWxsb3cgRXh5bm9zIFVGUyBkcml2ZXIgdG8gYnVpbGQgYXMgYSBtb2R1bGUuDQo+
-IFRoaXMgcGF0Y2ggZml4IHRoZSBiZWxvdyBidWlsZCBpc3N1ZSByZXBvcnRlZCBieQ0KPiBrZXJu
-ZWwgYnVpbGQgcm9ib3QuDQo+IA0KPiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1leHlub3MubzogaW4g
-ZnVuY3Rpb24gYGV4eW5vc191ZnNfcHJvYmUnOg0KPiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1leHlu
-b3MuYzoxMjMxOiB1bmRlZmluZWQgcmVmZXJlbmNlIHRvIGB1ZnNoY2RfcGx0ZnJtX2luaXQnDQo+
-IGRyaXZlcnMvc2NzaS91ZnMvdWZzLWV4eW5vcy5vOiBpbiBmdW5jdGlvbiBgZXh5bm9zX3Vmc19w
-cmVfcHdyX21vZGUnOg0KPiBkcml2ZXJzL3Njc2kvdWZzL3Vmcy1leHlub3MuYzo2MzU6IHVuZGVm
-aW5lZCByZWZlcmVuY2UgdG8NCj4gYHVmc2hjZF9nZXRfcHdyX2Rldl9wYXJhbScNCj4gZHJpdmVy
-cy9zY3NpL3Vmcy91ZnMtZXh5bm9zLm86dW5kZWZpbmVkIHJlZmVyZW5jZSB0bw0KPiBgdWZzaGNk
-X3BsdGZybV9zaHV0ZG93bicNCj4gZHJpdmVycy9zY3NpL3Vmcy91ZnMtZXh5bm9zLm86dW5kZWZp
-bmVkIHJlZmVyZW5jZSB0byBgdWZzaGNkX3BsdGZybV9zdXNwZW5kJw0KPiBkcml2ZXJzL3Njc2kv
-dWZzL3Vmcy1leHlub3Mubzp1bmRlZmluZWQgcmVmZXJlbmNlIHRvIGB1ZnNoY2RfcGx0ZnJtX3Jl
-c3VtZScNCj4gZHJpdmVycy9zY3NpL3Vmcy91ZnMtZXh5bm9zLm86dW5kZWZpbmVkIHJlZmVyZW5j
-ZSB0bw0KPiBgdWZzaGNkX3BsdGZybV9ydW50aW1lX3N1c3BlbmQnDQo+IGRyaXZlcnMvc2NzaS91
-ZnMvdWZzLWV4eW5vcy5vOnVuZGVmaW5lZCByZWZlcmVuY2UgdG8NCj4gYHVmc2hjZF9wbHRmcm1f
-cnVudGltZV9yZXN1bWUnDQo+IGRyaXZlcnMvc2NzaS91ZnMvdWZzLWV4eW5vcy5vOnVuZGVmaW5l
-ZCByZWZlcmVuY2UgdG8NCj4gYHVmc2hjZF9wbHRmcm1fcnVudGltZV9pZGxlJw0KPiANCj4gRml4
-ZXM6IDU1ZjRiMWY3MzYzMSAoInNjc2k6IHVmczogdWZzLWV4eW5vczogQWRkIFVGUyBob3N0IHN1
-cHBvcnQgZm9yIEV4eW5vcw0KPiBTb0NzIikNCj4gUmVwb3J0ZWQtYnk6IGtlcm5lbCB0ZXN0IHJv
-Ym90IDxsa3BAaW50ZWwuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBBbGltIEFraHRhciA8YWxpbS5h
-a2h0YXJAc2Ftc3VuZy5jb20+DQpSZXZpZXdlZC1ieTogQXZyaSBBbHRtYW4gPGF2cmkuYWx0bWFu
-QHdkYy5jb20+DQo=
+On 24.06.20 15:33, Bart Van Assche wrote:
+> On 2020-06-23 04:10, Martin Kepplinger wrote:
+>> This add a very conservative but simple implementation for runtime PM
+>> to the sd scsi driver:
+>> Resume when opened (mounted) and suspend when released (unmounted).
+>>
+>> Improvements that allow suspending while a device is "open" can
+>> be added later, but now we save power when no filesystem is mounted
+>> and runtime PM is enabled.
+>>
+>> Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+>> ---
+>>  drivers/scsi/sd.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index d90fefffe31b..fe4cb7c50ec1 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -1372,6 +1372,7 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+>>  	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_open\n"));
+>>  
+>>  	sdev = sdkp->device;
+>> +	scsi_autopm_get_device(sdev);
+>>  
+>>  	/*
+>>  	 * If the device is in error recovery, wait until it is done.
+>> @@ -1418,6 +1419,9 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+>>  
+>>  error_out:
+>>  	scsi_disk_put(sdkp);
+>> +
+>> +	scsi_autopm_put_device(sdev);
+>> +
+>>  	return retval;	
+>>  }
+>>  
+>> @@ -1441,6 +1445,8 @@ static void sd_release(struct gendisk *disk, fmode_t mode)
+>>  
+>>  	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
+>>  
+>> +	scsi_autopm_put_device(sdev);
+>> +
+>>  	if (atomic_dec_return(&sdkp->openers) == 0 && sdev->removable) {
+>>  		if (scsi_block_when_processing_errors(sdev))
+>>  			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+> 
+> My understanding of the above patch is that it introduces a regression,
+> namely by disabling runtime suspend as long as an sd device is held open.
+> 
+> Bart.
+> 
+> 
+
+hi Bart,
+
+Alan says the same (on block request, the block layer should initiate a
+runtime resume), so merging with the thread from
+https://lore.kernel.org/linux-usb/8738e4d3-62b1-0144-107d-ff42000ed6c6@puri.sm/T/
+now and answer to both Bart and Alan here:]
+
+I see scsi-pm.c using the blk-pm.c API but I'm not sure how the block
+layer would itself resume the scsi device (I use it via usb_storage, so
+that usb_stor_resume() follows in my case but I guess that doesn't
+matter here):
+
+my understanding of "sd" is: enable runtime pm in probe(), so *allow*
+the device to be suspended (if enabled by the user), but never
+resume(?). Also, why isn't "autopm" used in its ioctl() implementation
+(as opposed to in "sr")?
+
+here's roughly what happens when enabling runtime PM in sysfs (again,
+because sd_probe() calls autopm_put() and thus allows it:
+
+[   27.384446] sd 0:0:0:0: scsi_runtime_suspend
+[   27.432282] blk_pre_runtime_suspend
+[   27.435783] sd_suspend_common
+[   27.438782] blk_post_runtime_suspend
+[   27.442427] scsi target0:0:0: scsi_runtime_suspend
+[   27.447303] scsi host0: scsi_runtime_suspend
+
+then I "mount /dev/sda1 /mnt" and none of the resume() functions get
+called. To me it looks like the sd driver should initiate resuming, and
+that's not implemented.
+
+what am I doing wrong or overlooking? how exactly does (or should) the
+block layer initiate resume here?
+
+thanks again for your time,
+
+                               martin
