@@ -7,90 +7,77 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43155C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 18:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB032C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 19:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16ADD2081A
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 18:22:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78D7F20679
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 19:01:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oEi9td/3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aVKEq8uh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406132AbgFYSWf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 14:22:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54914 "EHLO
+        id S2406441AbgFYTBk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 15:01:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405815AbgFYSWe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 14:22:34 -0400
-Received: from mail-ej1-x641.google.com (mail-ej1-x641.google.com [IPv6:2a00:1450:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF1F7C08C5C1;
-        Thu, 25 Jun 2020 11:22:33 -0700 (PDT)
-Received: by mail-ej1-x641.google.com with SMTP id y10so6909726eje.1;
-        Thu, 25 Jun 2020 11:22:33 -0700 (PDT)
+        with ESMTP id S2406409AbgFYTBk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 15:01:40 -0400
+Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4868C08C5C1
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2020 12:01:39 -0700 (PDT)
+Received: by mail-io1-xd42.google.com with SMTP id f23so7260087iof.6
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2020 12:01:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=v8geYdYVNbF2rBwzEMDOXkFAFkAYNm3uyIolEhmynSQ=;
-        b=oEi9td/3wSG1TfTzeZOqQLFC8Rylwdn1Ss0asHlgWIDEr2soxzQ+Q+ppWngvOk6QBj
-         uplo7+7UTdsXYTPdi8xOk5s+qbUPaXTmNG51iKLyGKVvNEV9XNtEg7oQjqFAW6HO6P8J
-         o5JBCvvo5VcoxhsdiWvWqwLDcq49JMPe+JLIYruYt/fodDhauPBz+DDr8UyXVtUzViiY
-         FY7NZckqA10YV2rvfWJ1QHJBPdO0X039l1sqmufVs2JKcSzulo4MUOggJebgrxOQbDgu
-         xpjMwZB7EfXMyuUrCFXLLsxN0MVVY6J5jhcADKKNjIZHpPlnQJhF75aAWcTLUMQw4V6p
-         URMw==
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=MqGibfe7wiuAHLMRoT7h4FQe2Tr97ItfXMWDUJHJ8UU=;
+        b=aVKEq8uhbC/r4LSwNroUP+VmtYcxkdHaj9Ftm2jao9O3gratgAHhcinI+Aqle15QVl
+         M4FMnreIE4Q8eAfSfvvGUzad+rkpjYTa4hApfrf4TA0oeOKLE9RSJWUiooSr4R14m8Dk
+         rV+S11xJtAnFyjPmfUOeZCUd4KXV7JntA2I5z7KPF+Aw5RZlLt7BOzCyU0VLKzoS+fBv
+         XgpiDzldEc6lZv+kzmW2mXatYD6G+nha1cUWvNRIpK/2mGALqjMjUzHoCMbUzklJ1TE/
+         g7Fgl/4jFbfDi6E7UyBWxN5oqN2L7lrHjGDsVZ+B/YySqLyKcLsUk5r0t9jQHMq86/xH
+         JQ6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=v8geYdYVNbF2rBwzEMDOXkFAFkAYNm3uyIolEhmynSQ=;
-        b=h7eVARcohrumS6VsThxbroop2NQ3LEF+IhoC2Zrt/7MX+R6uKU9RpaoznlL6/qKz+G
-         vBkU3jk/jgAl+VzLqTQRqtKy9ZvmmPqOSwMKUkoQ8/9ALfd3kog8OBLGhclPo5muObhU
-         IOE7wfDCeWy8asp6aVyPTXzSdFtkmKP8K+GIhqzaJ886FJe0S4wKbZ1Sc/4/SxMzyjTp
-         EGb3NVw1DTHOB9CJMIyeUJts3h9Xd0TmAOGf/FVIZQTdkWbM8chfZKjOLvFdDOZTP0Nk
-         ZANAfMqFxv/joM5/VCWAFDk2W6OCJPXmiOsu4wHGGm46om+W4miUlI6cz8sZwh+jxAcl
-         9LrA==
-X-Gm-Message-State: AOAM53302myCh9kQL1B+1wq50Xm5SM2SRIZs9mDQE+j8ny2gOoxt2rfZ
-        ny96wtfuxcTAmTC6/5xC4xo=
-X-Google-Smtp-Source: ABdhPJwYuKHKu8ML78wL+jaQLqXrQCzIvC0LSKLl8JU//05HxvBuQruSWlLJAM3qfISlZB1rhyLmBg==
-X-Received: by 2002:a17:906:da19:: with SMTP id fi25mr9261887ejb.369.1593109352334;
-        Thu, 25 Jun 2020 11:22:32 -0700 (PDT)
-Received: from andrea (ip-213-220-210-175.net.upcbroadband.cz. [213.220.210.175])
-        by smtp.gmail.com with ESMTPSA id lm22sm1524867ejb.109.2020.06.25.11.22.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Jun 2020 11:22:31 -0700 (PDT)
-Date:   Thu, 25 Jun 2020 20:22:23 +0200
-From:   Andrea Parri <parri.andrea@gmail.com>
-To:     Andres Beltran <lkmlabelt@gmail.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Subject: Re: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
-Message-ID: <20200625182223.GA318674@andrea>
-References: <20200625153723.8428-1-lkmlabelt@gmail.com>
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=MqGibfe7wiuAHLMRoT7h4FQe2Tr97ItfXMWDUJHJ8UU=;
+        b=JYRVf6o9s3J/Akxd1OcigekxL38gA1rSNrMR32HbkJ7OztiE4Ky2OE76vV4Ocl+OFU
+         aIRx37UUS7dGVU/x+N5PDf+dcnnMV86v+TpA/ArJsEzJAz5lfbz2zyX2fUMeSIEGh8zX
+         OnSUqjfBvc9KfAergbKXxo6kPxhqLG2gTLWsfQqKwJSCHi7ax3s6i2w0KDjk6s/G05Au
+         BAoDJ2im00trfI1Id3gAa+sgA0cNeOS1apE1EQrI2nKjPiU3607WH2RLCmEDmHsUcG8m
+         FnkvPvG5jmW9eIiGQ9nwEnIJpYbbDmZp5MCllrKzXFwdSNu4jsa174st6zj9vXSsS8La
+         QzlA==
+X-Gm-Message-State: AOAM5314GPAvYLK74VNOIxVrpkVRD/Bp8DRsz8HZ9niBEh/oSx8j8tov
+        zdHvndWV/KAXQvQY5848dkS30bve8+j0tVNyMnAyRw1w
+X-Google-Smtp-Source: ABdhPJyrVO4nznnvGPb0PjW7ViEMdDuALq+Z38oOKa+BNzE+1itTbkyxUewCTjqSdqTP+AC27M9A+LidftnqczfCbvQ=
+X-Received: by 2002:a5e:9703:: with SMTP id w3mr32331163ioj.29.1593111698757;
+ Thu, 25 Jun 2020 12:01:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200625153723.8428-1-lkmlabelt@gmail.com>
+Received: by 2002:a5e:8b07:0:0:0:0:0 with HTTP; Thu, 25 Jun 2020 12:01:38
+ -0700 (PDT)
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Thu, 25 Jun 2020 21:01:38 +0200
+Message-ID: <CAKR_QVKaRMshWKGEhLpRK40yix1UP1ZMaoDJPBHFBdazc7L0cA@mail.gmail.com>
+Subject: ufs-bsg node not created
+To:     linux-scsi@vger.kernel.org
+Cc:     beanhuo@micron.com, avri.altman@wdc.com, cang@codeaurora.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> Andres Beltran (3):
->   Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
->     hardening
->   scsi: storvsc: Use vmbus_requestor to generate transaction ids for
->     VMBus hardening
->   hv_netvsc: Use vmbus_requestor to generate transaction ids for VMBus
->     hardening
+Hi
 
-For the series,
+I'm trying to use the ufs-bsg transport for SSD debug tool and facing
+an issue where there is no ufs-bsg node created either in /dev or
+/dev/bsg.
 
-Tested-by: Andrea Parri <parri.andrea@gmail.com>
+Tried on live Ubuntu 20.04, and Ubuntu 16.04.6 installation with
+custom built kernel 5.6.14.
+Additionaly, tried rebuilding with [PATCH v2 0/3] Modulize ufs-bsg
+series, I can modprobe ufs-bsg, ufs, bsg modules, still no ufs-bsg
+node gets created.
 
-Thanks,
-  Andrea
+Is there some other module that needs to get loaded?
+
+Thanks, Tom
