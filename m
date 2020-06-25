@@ -2,304 +2,152 @@ Return-Path: <SRS0=uw5d=AG=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38ED4C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B76ECC433DF
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1720520857
-	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:37:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WRVfDLF1"
+	by mail.kernel.org (Postfix) with ESMTP id 9BA3C208C9
+	for <linux-scsi@archiver.kernel.org>; Thu, 25 Jun 2020 15:59:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405912AbgFYPhw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 25 Jun 2020 11:37:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57552 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405159AbgFYPhw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jun 2020 11:37:52 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44B43C08C5C1;
-        Thu, 25 Jun 2020 08:37:52 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id u8so3190213pje.4;
-        Thu, 25 Jun 2020 08:37:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Ray2bSPUJnSLdBE7kZlvUkEyQ1xNAytS0ijjBcKw2IQ=;
-        b=WRVfDLF1+3vYRCgqg1tzWMBT6WY387Lg/jkaWum8dP+0VBE86YVUD67d50z8aNUdML
-         2H90RiEdLk3Fz6mp/nTPoKwebKBIhPdjgodpA3vUTvfBoQI4dIXCfCTSacgPPFsz37E+
-         5AorJTOSwimexzuuGBNpMgXZ0FslGVeX7ryJG/Q38/hbxVqQ5nSVOQ4aBrVyB7Z3/wTf
-         DoPeEAuWtJCS1imd6Do/iorMf+TX2folVe0U9Tu4UAgfT5Z51QFRwjJ7SSDyKFHKSgmi
-         D9xgAbd1XwDd/t+YVnWxjoNTH6N7F/tvA32kwQcVUB5nolIxWVHd7zTmcHtX6ajPBM4s
-         SFVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Ray2bSPUJnSLdBE7kZlvUkEyQ1xNAytS0ijjBcKw2IQ=;
-        b=Gm0dlJ5Xb/wlCuM4x7cxLgaugT0TM9PoR4/8QG/1pZoD9Wq1UElXeU3NmiP7BQAS5O
-         uPwi7nk4Vy/+PwhrA39mQWpyiryQqODiZsNX0mBaGitCckJBeBSt0ONHYGKAD286BYBG
-         5XWxgiRsnOLO6g41SXUhOtMYVagUzwnlVNlltnRtX9Q8xwLVbXQOSmy81L/XaPxoYrSa
-         65qgBIMrGwofWZg05UoWu6nlPT1HYURThzEhyY6U/0xC5Onjf2fVV7Smv8faFu92dUzH
-         PJfqyXLyD816OXOIEc3rW85hGjN0U6shRphS0nWHCweFna53mOEwtrOpLz74uWRTz60e
-         9wlg==
-X-Gm-Message-State: AOAM533V+DJYxLTNev9siK8xkZUPhWshoUchdnEVAKeXxwZOb/YNgYtz
-        Qr+OvcnLSqhGIdQgQPNGvRc=
-X-Google-Smtp-Source: ABdhPJwTFbs7CBul52sajx8e1tMSEWYr0AJ+vv992AmrjbTk7GLFw2FwtJLeRG8Gtv7gGVPwNXRcIw==
-X-Received: by 2002:a17:90b:706:: with SMTP id s6mr3990425pjz.11.1593099471815;
-        Thu, 25 Jun 2020 08:37:51 -0700 (PDT)
-Received: from localhost.localdomain ([131.107.147.194])
-        by smtp.gmail.com with ESMTPSA id i14sm22980813pfo.14.2020.06.25.08.37.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Jun 2020 08:37:51 -0700 (PDT)
-From:   Andres Beltran <lkmlabelt@gmail.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org
-Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikelley@microsoft.com, parri.andrea@gmail.com,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        id S2390150AbgFYP7G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 25 Jun 2020 11:59:06 -0400
+Received: from mx2.suse.de ([195.135.220.15]:38954 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389860AbgFYP7G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 25 Jun 2020 11:59:06 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 096A9AC12;
+        Thu, 25 Jun 2020 15:59:04 +0000 (UTC)
+Subject: Re: [PATCH 08/22] scsi: implement reserved command handling
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Don Brace <don.brace@microchip.de>,
+        Bart van Assche <bvanassche@acm.org>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 2/3] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
-Date:   Thu, 25 Jun 2020 11:37:22 -0400
-Message-Id: <20200625153723.8428-3-lkmlabelt@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200625153723.8428-1-lkmlabelt@gmail.com>
-References: <20200625153723.8428-1-lkmlabelt@gmail.com>
+References: <20200625140124.17201-1-hare@suse.de>
+ <20200625140124.17201-9-hare@suse.de>
+ <8074064c-a2ea-2084-cd1a-60bf51af6844@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <8872a235-76cc-0c80-3f6d-7f001ddf2578@suse.de>
+Date:   Thu, 25 Jun 2020 17:59:03 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
+In-Reply-To: <8074064c-a2ea-2084-cd1a-60bf51af6844@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, pointers to guest memory are passed to Hyper-V as
-transaction IDs in storvsc. In the face of errors or malicious
-behavior in Hyper-V, storvsc should not expose or trust the transaction
-IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-use small integers generated by vmbus_requestor as requests
-(transaction) IDs.
+On 6/25/20 5:30 PM, John Garry wrote:
+> On 25/06/2020 15:01, Hannes Reinecke wrote:
+>> Quite some drivers are using management commands internally, which
+>> typically use the same hardware tag pool (ie they are being allocated
+>> from the same hardware resources) as the 'normal' I/O commands.
+>> These commands are set aside before allocating the block-mq tag bitmap,
+>> so they'll never show up as busy in the tag map.
+>> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+>> this situation.
+>> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+>> template to instruct the block layer to set aside a tag space for these
+>> management commands by using reserved tags.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>   drivers/scsi/scsi_lib.c  | 10 +++++++++-
+>>   include/scsi/scsi_host.h | 11 +++++++++++
+>>   2 files changed, 20 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index bd378e1bd3fc..a752806af70b 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1887,7 +1887,9 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>>       else
+>>           tag_set->ops = &scsi_mq_ops_no_commit;
+>>       tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
+>> -    tag_set->queue_depth = shost->can_queue;
+>> +    tag_set->queue_depth =
+>> +        shost->can_queue + shost->nr_reserved_cmds;
+>> +    tag_set->reserved_tags = shost->nr_reserved_cmds;
+>>       tag_set->cmd_size = cmd_size;
+>>       tag_set->numa_node = NUMA_NO_NODE;
+>>       tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+>> @@ -1910,6 +1912,9 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
+>>    * @op_flags: request allocation flags
+>>    *
+>>    * Allocates a SCSI command for internal LLDD use.
+>> + * If 'nr_reserved_commands' is spectified by the host the
+> 
+> /s/spectified/specified/
+> 
+> I suppose making this usable by drivers which don't set 
+> nr_reserved_commands is helpful (if not slightly strange). In that we 
+> can move drivers which don't use rq->tag currently - like pm8001 - to 
+> use it, and not have to worry about guessing some nr_reserved_commands 
+> to specify.
+> 
+That's what I plan to do, and in fact have patches queued for that.
+I've just posted the initial patchset here to agree on the interface
+and provide drivers which benefit from it with very little churn.
 
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
----
- drivers/scsi/storvsc_drv.c | 82 +++++++++++++++++++++++++++++++++-----
- 1 file changed, 71 insertions(+), 11 deletions(-)
+In a later patchset I'll be converting other drivers and subsystems like
+megaraid_sas and libsas etc; those I had in the v3 version but that was
+deemed to complex for the initial submission.
+Hence I've left them out in this round.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 624467e2590a..38e90675f9c9 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -399,6 +399,7 @@ static int storvsc_timeout = 180;
- static struct scsi_transport_template *fc_transport_template;
- #endif
- 
-+static struct scsi_host_template scsi_driver;
- static void storvsc_on_channel_callback(void *context);
- 
- #define STORVSC_MAX_LUNS_PER_TARGET			255
-@@ -698,6 +699,12 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
- 
- 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
- 
-+	/*
-+	 * The size of vmbus_requestor is an upper bound on the number of requests
-+	 * that can be in-progress at any one time across all channels.
-+	 */
-+	new_sc->rqstor_size = scsi_driver.can_queue;
-+
- 	ret = vmbus_open(new_sc,
- 			 storvsc_ringbuffer_size,
- 			 storvsc_ringbuffer_size,
-@@ -726,6 +733,7 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
- 	struct storvsc_cmd_request *request;
- 	struct vstor_packet *vstor_packet;
- 	int ret, t;
-+	u64 rqst_id;
- 
- 	/*
- 	 * If the number of CPUs is artificially restricted, such as
-@@ -760,14 +768,22 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
- 	vstor_packet->sub_channel_count = num_sc;
- 
-+	rqst_id = vmbus_next_request_id(&device->channel->requestor, (u64)request);
-+	if (rqst_id == VMBUS_RQST_ERROR) {
-+		dev_err(dev, "No request id available\n");
-+		return;
-+	}
-+
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
- 			       (sizeof(struct vstor_packet) -
- 			       vmscsi_size_delta),
--			       (unsigned long)request,
-+			       rqst_id,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 
- 	if (ret != 0) {
-+		/* Reclaim request ID to avoid leak of IDs */
-+		vmbus_request_addr(&device->channel->requestor, rqst_id);
- 		dev_err(dev, "Failed to create sub-channel: err=%d\n", ret);
- 		return;
- 	}
-@@ -818,20 +834,30 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
- {
- 	struct vstor_packet *vstor_packet;
- 	int ret, t;
-+	u64 rqst_id;
- 
- 	vstor_packet = &request->vstor_packet;
- 
- 	init_completion(&request->wait_event);
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
- 
-+	rqst_id = vmbus_next_request_id(&device->channel->requestor, (u64)request);
-+	if (rqst_id == VMBUS_RQST_ERROR) {
-+		dev_err(&device->device, "No request id available\n");
-+		return -EAGAIN;
-+	}
-+
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
- 			       (sizeof(struct vstor_packet) -
- 			       vmscsi_size_delta),
--			       (unsigned long)request,
-+			       rqst_id,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
--	if (ret != 0)
-+	if (ret != 0) {
-+		/* Reclaim request ID to avoid leak of IDs */
-+		vmbus_request_addr(&device->channel->requestor, rqst_id);
- 		return ret;
-+	}
- 
- 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
- 	if (t == 0)
-@@ -1233,9 +1259,17 @@ static void storvsc_on_channel_callback(void *context)
- 	foreach_vmbus_pkt(desc, channel) {
- 		void *packet = hv_pkt_data(desc);
- 		struct storvsc_cmd_request *request;
-+		u64 cmd_rqst;
- 
--		request = (struct storvsc_cmd_request *)
--			((unsigned long)desc->trans_id);
-+		cmd_rqst = vmbus_request_addr(&channel->requestor,
-+					      desc->trans_id);
-+		if (cmd_rqst == VMBUS_RQST_ERROR) {
-+			dev_err(&device->device,
-+				"Incorrect transaction id\n");
-+			continue;
-+		}
-+
-+		request = (struct storvsc_cmd_request *)cmd_rqst;
- 
- 		if (request == &stor_device->init_request ||
- 		    request == &stor_device->reset_request) {
-@@ -1256,6 +1290,12 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
- 
- 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
- 
-+	/*
-+	 * The size of vmbus_requestor is an upper bound on the number of requests
-+	 * that can be in-progress at any one time across all channels.
-+	 */
-+	device->channel->rqstor_size = scsi_driver.can_queue;
-+
- 	ret = vmbus_open(device->channel,
- 			 ring_size,
- 			 ring_size,
-@@ -1369,6 +1409,7 @@ static int storvsc_do_io(struct hv_device *device,
- 	int ret = 0;
- 	const struct cpumask *node_mask;
- 	int tgt_cpu;
-+	u64 rqst_id;
- 
- 	vstor_packet = &request->vstor_packet;
- 	stor_device = get_out_stor_device(device);
-@@ -1463,6 +1504,12 @@ static int storvsc_do_io(struct hv_device *device,
- 
- 	vstor_packet->operation = VSTOR_OPERATION_EXECUTE_SRB;
- 
-+	rqst_id = vmbus_next_request_id(&outgoing_channel->requestor, (u64)request);
-+	if (rqst_id == VMBUS_RQST_ERROR) {
-+		dev_err(&device->device, "No request id available\n");
-+		return -EAGAIN;
-+	}
-+
- 	if (request->payload->range.len) {
- 
- 		ret = vmbus_sendpacket_mpb_desc(outgoing_channel,
-@@ -1470,18 +1517,21 @@ static int storvsc_do_io(struct hv_device *device,
- 				vstor_packet,
- 				(sizeof(struct vstor_packet) -
- 				vmscsi_size_delta),
--				(unsigned long)request);
-+				rqst_id);
- 	} else {
- 		ret = vmbus_sendpacket(outgoing_channel, vstor_packet,
- 			       (sizeof(struct vstor_packet) -
- 				vmscsi_size_delta),
--			       (unsigned long)request,
-+			       rqst_id,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
- 	}
- 
--	if (ret != 0)
-+	if (ret != 0) {
-+		/* Reclaim request ID to avoid leak of IDs */
-+		vmbus_request_addr(&outgoing_channel->requestor, rqst_id);
- 		return ret;
-+	}
- 
- 	atomic_inc(&stor_device->num_outstanding_req);
- 
-@@ -1562,7 +1612,7 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
- 	struct storvsc_cmd_request *request;
- 	struct vstor_packet *vstor_packet;
- 	int ret, t;
--
-+	u64 rqst_id;
- 
- 	stor_device = get_out_stor_device(device);
- 	if (!stor_device)
-@@ -1577,14 +1627,24 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
- 	vstor_packet->vm_srb.path_id = stor_device->path_id;
- 
-+	rqst_id = vmbus_next_request_id(&device->channel->requestor,
-+					(u64)&stor_device->reset_request);
-+	if (rqst_id == VMBUS_RQST_ERROR) {
-+		dev_err(&device->device, "No request id available\n");
-+		return FAILED;
-+	}
-+
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
- 			       (sizeof(struct vstor_packet) -
- 				vmscsi_size_delta),
--			       (unsigned long)&stor_device->reset_request,
-+			       rqst_id,
- 			       VM_PKT_DATA_INBAND,
- 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
--	if (ret != 0)
-+	if (ret != 0) {
-+		/* Reclaim request ID to avoid leak of IDs */
-+		vmbus_request_addr(&device->channel->requestor, rqst_id);
- 		return FAILED;
-+	}
- 
- 	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
- 	if (t == 0)
+>> + * command will be allocated from the reserved tag pool;
+>> + * otherwise the normal tag pool will be used.
+>>    */
+>>   struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+>>                       int data_direction, int op_flags)
+>> @@ -1919,6 +1924,9 @@ struct scsi_cmnd *scsi_get_internal_cmd(struct 
+>> scsi_device *sdev,
+>>       blk_mq_req_flags_t flags = 0;
+>>       unsigned int op = REQ_INTERNAL | op_flags;
+>> +    if (sdev->host->nr_reserved_cmds)
+>> +        flags = BLK_MQ_REQ_RESERVED; > +
+>>       op |= (data_direction == DMA_TO_DEVICE) ?
+>>           REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
+>>       rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
+>> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+>> index 46ef8cccc982..b94938e87e3a 100644
+>> --- a/include/scsi/scsi_host.h
+>> +++ b/include/scsi/scsi_host.h
+>> @@ -590,6 +590,11 @@ struct Scsi_Host {
+>>       unsigned short max_cmd_len;
+>>       int this_id;
+>> +
+>> +    /*
+>> +     * Number of commands this host can handle at the same time.
+>> +     * This excludes reserved commands as specified by nr_reserved_cmds.
+>> +     */
+>>       int can_queue;
+>>       short cmd_per_lun;
+>>       short unsigned int sg_tablesize;
+>> @@ -606,6 +611,12 @@ struct Scsi_Host {
+>>        * is nr_hw_queues * can_queue.
+> 
+> If we are going to go this way, then could you update the comment on 
+> Scsi_Host.nr_hw_queues here? Currently we have "it is assumed that each 
+> hardware queue has a depth of can_queue..."
+> 
+Ah. Right. Yes, will do.
+
+Cheers,
+
+Hannes
 -- 
-2.25.1
-
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
