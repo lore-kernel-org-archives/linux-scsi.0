@@ -2,215 +2,111 @@ Return-Path: <SRS0=Z0Y/=AH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93EA6C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 13:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FADEC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 14:48:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D719207D8
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 13:56:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E2C820768
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 14:48:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="EbBQGhxa"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mXcWS3tl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728842AbgFZN4a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 09:56:30 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:55771 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728091AbgFZN4a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 09:56:30 -0400
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200626135628euoutp0115307a4e6c21ac561160056782cc6dec~cHJOKFRB30807508075euoutp01P
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2020 13:56:28 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200626135628euoutp0115307a4e6c21ac561160056782cc6dec~cHJOKFRB30807508075euoutp01P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1593179788;
-        bh=a4vI0VsOOwJL8FbR9Rem46hINKT1NO3X60g4/O17scM=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=EbBQGhxaRLwuVM9k2ONgx9yEB6QE83Ej5diiCLQxt4jeo//SkgE5FoU9PPAkTl5i5
-         e5zuc2CquqeFEhtmwD0wrcDcAvzMIKM+gmWYmy3yTQNLwsnx19aFaKYmFyRnLS4eOB
-         X+LjvEXrvtu6cZrsy3GgDL/T6jvrtCO5hzVOZ3io=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200626135627eucas1p2a9ee726e5fa75cf94cb890204f9238bb~cHJNzl1sV1232512325eucas1p2P;
-        Fri, 26 Jun 2020 13:56:27 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 29.10.06318.B8EF5FE5; Fri, 26
-        Jun 2020 14:56:27 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200626135627eucas1p2d68eb5853f90bc636faab69149fbe02c~cHJNfTN7h3013530135eucas1p2t;
-        Fri, 26 Jun 2020 13:56:27 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200626135627eusmtrp190e8c28ea5e3042e40fc63d2874ecabf~cHJNespUv2488324883eusmtrp1b;
-        Fri, 26 Jun 2020 13:56:27 +0000 (GMT)
-X-AuditID: cbfec7f5-371ff700000018ae-ec-5ef5fe8b3bda
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id A4.0A.06314.B8EF5FE5; Fri, 26
-        Jun 2020 14:56:27 +0100 (BST)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200626135627eusmtip1f72c23802bc5164742dd5d89e62a4a4e~cHJNKS8xE1358813588eusmtip1P;
-        Fri, 26 Jun 2020 13:56:27 +0000 (GMT)
-Subject: Re: Re: [RFC PATCH v2 5/7] ata_dev_printk: Use dev_printk
-To:     tasleson@redhat.com
-Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <b0118523-eec2-2e60-0b05-8f674d63abd2@samsung.com>
-Date:   Fri, 26 Jun 2020 15:56:26 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
+        id S1729469AbgFZOs1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 10:48:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46198 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729460AbgFZOsZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 10:48:25 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58848C03E979;
+        Fri, 26 Jun 2020 07:48:25 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id ga4so9615727ejb.11;
+        Fri, 26 Jun 2020 07:48:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=uFkU3CTu0x26snxvjGxWKaEDCMpwNzU6I/jnielwKPU=;
+        b=mXcWS3tlV88c2J5fXkNnahhb55+0qc7DNjnqu/NTkjeP+C++AgPYnvBH8GwfIJT6at
+         t3LLpWHfB9DA6W9dBYDNEpuVfn1G3IjSVQQp8GDYzG9S+54uGNxGe1jt4tNwyW0kzntO
+         ZmoEKNcZaVnbdPS0Y0bmt2fkaUm1BOBATwmU1w4UFpclqbXeBF+jjveJrr5DnKs7IOTD
+         EHQYjjPGyySpQs9gq27ygFWvOxzTqoT7IiP56ozDRQDRwnOvwzdIRtz+Z3Sy5IJTDl0q
+         3kF6EZq0Y69AB9agzv0P3QpGJnLTzNXlXccwKL+yehk2cjI2YQD1bdZwh6EbJL0EWpyi
+         H5Dw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=uFkU3CTu0x26snxvjGxWKaEDCMpwNzU6I/jnielwKPU=;
+        b=NiySxcgOJIGNHXmjoLNyD14TG4NVdCGt7HXEO4v+xVvYlkh7IntTM27A17r3ohdsZq
+         VzRyhYniIUUMReau9VLfQWe30us/Gqi1T6K3gu7Al3nreBbKbqHX0x92WN2kOKwGk3DN
+         iqwDTMTfPS0eaKDcMv058vv3gNuKGybfYqW5TJkRUK2uycxKx0B7tOystRwfRkWqG/rW
+         2GTv+S8eTyR84InE8O6OkY6oMO9Vkm74K/FTz6am1MAGpsPyTSEBhPSsHr0LRkUpG+5O
+         EWAGU/e/TEa0VZdbV0QZ5OP7Xx40s9SZEntqo/GjFLS6Du65wNlt+BWuNV2lcsaG50GM
+         +wpg==
+X-Gm-Message-State: AOAM531D46Ug/4k6mDZlYyoAoEZrsGUFycQqUOO6rBZLyQT36eW858ET
+        UtKjna+XBJR/GIVF46ouwmq9hy90w40e9Hxw
+X-Google-Smtp-Source: ABdhPJzwjxRk5el3GSGQTCppEokhkYfYXybbRsAJ8LuoXMZT8IpDF6hSoTtKnAr/1tNEmrfLgSqjOA==
+X-Received: by 2002:a17:906:bb0c:: with SMTP id jz12mr2789278ejb.27.1593182903901;
+        Fri, 26 Jun 2020 07:48:23 -0700 (PDT)
+Received: from andrea (ip-213-220-210-175.net.upcbroadband.cz. [213.220.210.175])
+        by smtp.gmail.com with ESMTPSA id ay27sm613733edb.81.2020.06.26.07.48.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Jun 2020 07:48:23 -0700 (PDT)
+Date:   Fri, 26 Jun 2020 16:48:17 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Wei Liu <wei.liu@kernel.org>
+Cc:     Andres Beltran <lkmlabelt@gmail.com>, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikelley@microsoft.com, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: Re: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
+Message-ID: <20200626144817.GA1023610@andrea>
+References: <20200625153723.8428-1-lkmlabelt@gmail.com>
+ <20200626134227.ka4aghqjpktdupnu@liuwe-devbox-debian-v2>
 MIME-Version: 1.0
-In-Reply-To: <e12aeb9e-fe5d-5b5e-d190-401997cecc34@redhat.com>
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJKsWRmVeSWpSXmKPExsWy7djP87rd/77GGbx8pWuxZ9EkJouN/RwW
-        e29pW3Rf38FmcfHeTXYHVo9pk06xebzfd5XNY/Ppao/Pm+QCWKK4bFJSczLLUov07RK4Mpo3
-        H2UqOCpdcfXyNaYGxr1iXYwcHBICJhK/Xxl2MXJxCAmsYJR40LuXDcL5wijR3NnHBOF8ZpRY
-        9XAVI0zH5EXZEPHljBI3nj9ih3DeMkr8W/IbqIOTQ1jASeLdmq/MILaIgLjEvYVrmEGKmAVm
-        MEp8P/0RrIhNwEpiYjvIVE4OXgE7ic6be9hBbBYBVYmvE5tYQWxRgQiJTw8Os0LUCEqcnPmE
-        BcTmBKqfO6MBbAEz0IJbT+YzQdjyEs1bZ4MtkxCYzC7x9dI5sGYJAReJma3v2SFsYYlXx7dA
-        2TISpyf3sEA0rGOU+NvxAqp7O6PE8sn/2CCqrCXunPvFBgoAZgFNifW79CHCjhIX3u5ggYQL
-        n8SNt4IQR/BJTNo2nRkizCvR0SYEUa0msWHZBjaYtV07VzJPYFSaheS1WUjemYXknVkIexcw
-        sqxiFE8tLc5NTy02zkst1ytOzC0uzUvXS87P3cQITDCn/x3/uoNx35+kQ4wCHIxKPLwvHnyN
-        E2JNLCuuzD3EKMHBrCTC63T2dJwQb0piZVVqUX58UWlOavEhRmkOFiVxXuNFL2OFBNITS1Kz
-        U1MLUotgskwcnFINjOfyfb9n37Jo35wXUDer51j3Gf81we4+WnsZrshN+p7+bs6Cl/a/1p+U
-        imnm2bW6d/7D96ulK+8nn5Xni70xwcvm54af31J+XzFYcWOOUZJ09LS7H06X7N2ZcXN74qHP
-        TPwWD6a+m3pn5tpWu5cmLRPyXkkXMtw+4f0/WSdP/qaLc/y+QyqXn7grsRRnJBpqMRcVJwIA
-        7L+cqywDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFIsWRmVeSWpSXmKPExsVy+t/xu7rd/77GGaz8KWWxZ9EkJouN/RwW
-        e29pW3Rf38FmcfHeTXYHVo9pk06xebzfd5XNY/Ppao/Pm+QCWKL0bIryS0tSFTLyi0tslaIN
-        LYz0DC0t9IxMLPUMjc1jrYxMlfTtbFJSczLLUov07RL0Mpo3H2UqOCpdcfXyNaYGxr1iXYwc
-        HBICJhKTF2V3MXJxCAksZZS4sqCLBSIuI3F8fVkXIyeQKSzx51oXG0TNa0aJVV97WEASwgJO
-        Eu/WfGUGsUUExCXuLVzDDFF0jlHiwNYmsCJmgRmMEv9X5YDYbAJWEhPbVzGC2LwCdhKdN/ew
-        g9gsAqoSXyc2sYLYogIREod3zIKqEZQ4OfMJ2BxOoPq5MxqYIWaqS/yZdwnKFpe49WQ+E4Qt
-        L9G8dTbzBEahWUjaZyFpmYWkZRaSlgWMLKsYRVJLi3PTc4sN9YoTc4tL89L1kvNzNzEC42nb
-        sZ+bdzBe2hh8iFGAg1GJh/fFg69xQqyJZcWVuYcYJTiYlUR4nc6ejhPiTUmsrEotyo8vKs1J
-        LT7EaAr03ERmKdHkfGCs55XEG5oamltYGpobmxubWSiJ83YIHIwREkhPLEnNTk0tSC2C6WPi
-        4JRqYAzWcp7qsz2/bPJxx3dPmoIsJLNTUjtq2u44+4idPlcxPzTF5s9LwYSFx4NUrkstnP1o
-        Qf819sXMWysOXkybk7iuOGMe4/00HsXg5p7qU27cGm6xj2szIv+x7vi7bqpc+j2TRQovk48c
-        uXJm+VqDnms/OXl4rWTljfK6jS8dV4qdfDDTj+81pxJLcUaioRZzUXEiAK0YMOy9AgAA
-X-CMS-MailID: 20200626135627eucas1p2d68eb5853f90bc636faab69149fbe02c
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200626135627eucas1p2d68eb5853f90bc636faab69149fbe02c
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20200626135627eucas1p2d68eb5853f90bc636faab69149fbe02c
-References: <20200513213621.470411-1-tasleson@redhat.com>
-        <20200513213621.470411-6-tasleson@redhat.com>
-        <82257837-c5a8-6a38-ce13-0f1ce7e245ac@suse.de>
-        <e12aeb9e-fe5d-5b5e-d190-401997cecc34@redhat.com>
-        <CGME20200626135627eucas1p2d68eb5853f90bc636faab69149fbe02c@eucas1p2.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200626134227.ka4aghqjpktdupnu@liuwe-devbox-debian-v2>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 5/14/20 8:03 PM, Tony Asleson wrote:
-> On 5/14/20 12:53 AM, Hannes Reinecke wrote:
->> On 5/13/20 11:36 PM, Tony Asleson wrote:
->>> Utilize the dev_printk function which will add structured data
->>> to the log message.
->>>
->>> Signed-off-by: Tony Asleson <tasleson@redhat.com>
->>> ---
->>>   drivers/ata/libata-core.c | 10 +++++++---
->>>   1 file changed, 7 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index 42c8728f6117..16978d615a17 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -7301,6 +7301,7 @@ EXPORT_SYMBOL(ata_link_printk);
->>>   void ata_dev_printk(const struct ata_device *dev, const char *level,
->>>               const char *fmt, ...)
->>>   {
->>> +    const struct device *gendev;
->>>       struct va_format vaf;
->>>       va_list args;
->>>   @@ -7309,9 +7310,12 @@ void ata_dev_printk(const struct ata_device
->>> *dev, const char *level,
->>>       vaf.fmt = fmt;
->>>       vaf.va = &args;
->>>   -    printk("%sata%u.%02u: %pV",
->>> -           level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
->>> -           &vaf);
->>> +    gendev = (dev->sdev) ? &dev->sdev->sdev_gendev : &dev->tdev;
->>> +
->>> +    dev_printk(level, gendev, "ata%u.%02u: %pV",
->>> +            dev->link->ap->print_id,
->>> +            dev->link->pmp + dev->devno,
->>> +            &vaf);
->>>         va_end(args);
->>>   }
->>>
->> That is wrong.
->> dev_printk() will already prefix the logging message with the device
->> name, so we'll end up having the name printed twice.
+On Fri, Jun 26, 2020 at 01:42:27PM +0000, Wei Liu wrote:
+> On Thu, Jun 25, 2020 at 11:37:20AM -0400, Andres Beltran wrote:
+> > From: Andres Beltran (Microsoft) <lkmlabelt@gmail.com>
+> > 
+> > Currently, VMbus drivers use pointers into guest memory as request IDs
+> > for interactions with Hyper-V. To be more robust in the face of errors
+> > or malicious behavior from a compromised Hyper-V, avoid exposing
+> > guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
+> > bad request ID that is then treated as the address of a guest data
+> > structure with no validation. Instead, encapsulate these memory
+> > addresses and provide small integers as request IDs.
+> > 
+> > The first patch creates the definitions for the data structure, provides
+> > helper methods to generate new IDs and retrieve data, and
+> > allocates/frees the memory needed for vmbus_requestor.
+> > 
+> > The second and third patches make use of vmbus_requestor to send request
+> > IDs to Hyper-V in storvsc and netvsc respectively.
+> > 
 > 
-> It certainly could be. Early in boot when &dev->sdev->sdev_gendev ==
-> NULL and &dev->tdev is used we get
-> 
-> dev1.0: ata1.00: configured for UDMA/100
-> 
-> later when &dev->sdev->sdev_gendev != NULL we get
-> 
-> sd 1:0:0:0: [sdb] 209715200 512-byte logical blocks: (107 GB/100 GiB)
+> Per my understanding, this new data structure is per-channel, so it
+> won't introduce contention on the lock in multi-queue scenario. Have you
+> done any testing to confirm there is no severe performance regression?
 
-This one comes from the SCSI layer.
+I did run some performance tests using our dev pipeline (storage and
+network workloads).  I did not find regressions w.r.t. baseline.
 
-From libata we get i.e.:
-
-sd 1:0:0:0: ata2.00: exception Emask 0x0 SAct 0x800000 SErr 0x800000
-action 0x6 frozen
-
-instead of
-
-ata2.00: exception Emask 0x0 SAct 0x800000 SErr 0x800000 action 0x6 frozen
-
-> to clarify, your point is dev1.0 is redundant as ata1.00 exists in the
-> message?
-> 
-> 
-> In the block layer print_req_error we get:
-> 
-> block sdb: blk_update_request: I/O error, dev sdb, sector 10000 op
-> 0x0:(READ) flags 0x80700 phys_seg 4 prio class 0
-
-I think it should be modified to not include dev any longer: 
-
-block sdb: blk_update_request: I/O error, sector 10000 op
-0x0:(READ) flags 0x80700 phys_seg 4 prio class 0
-
-but it is up to Jens to make a final decision on that.
-
-> Which seems a bit more redundant.
-
-Yes but it is a debug message visible only on error while for libata
-_all_ messages are now changed.
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-> I've been trying to be careful to not change the human readable portion
-> of the message, so not to disturb all the log scraping tools that exist
-> mining errors.  Maybe this is the wrong approach?  In my original patch
-> series I brought back printk_emit so that I could add the structured
-> data without introducing changes in the message text output.  James
-> Bottomley suggested using dev_printk which certainly made things
-> cleaner, but it does add the prefix.
-> 
-> 
-> Thanks,
-> Tony
-> 
+  Andrea
