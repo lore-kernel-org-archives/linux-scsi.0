@@ -4,108 +4,181 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5F9C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 10:52:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35BFDC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 11:42:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE77920781
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 10:52:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A3B82082E
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 11:42:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="baIy0omK"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qF0FYYcB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728149AbgFZKv5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 06:51:57 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38306 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728083AbgFZKv4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 06:51:56 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05QAgC4i046576;
-        Fri, 26 Jun 2020 10:51:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=IyAs4nskBqgPQ4L1AWyl1A5z6DX1rt9lSUquCzoUgko=;
- b=baIy0omKhA2O7y3Dq45ECwGvSdQHWzO2iLfCZyZD4VC74CIoGyU6xyFbPDFrBEYdt6WX
- fzSyFJ0L7iiXy9zsBcMdtdZLRw9g6v2cg9aEEPxlg9fN0OB+4U4SyZGXrpBEOB/xnEdx
- pHJPfEh42HaoVB8blH5prlrsejlJmPtNzLx4o6+Cbl6BgCqWhO1EkoDgKu/d/Xaujkaw
- LGb44Mk51QYR/BUY0UH8kx+5ijR/aC+2FpC5BCGWOVVQpEPDVaCuK2Xou952PtujIzXK
- Z2wc2r9OFpiskkQ39OoEGO/qJ9lvBMNjhnY04wLbFZ/Dhe+ACt3blTvdaWoHL1eOTyaf Eg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31uustwe1p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 26 Jun 2020 10:51:44 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05QAmK2J106634;
-        Fri, 26 Jun 2020 10:51:43 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 31uurby0ww-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 26 Jun 2020 10:51:43 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05QApfQc003733;
-        Fri, 26 Jun 2020 10:51:41 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 26 Jun 2020 10:51:40 +0000
-Date:   Fri, 26 Jun 2020 13:51:33 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kukjin Kim <kgene@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: ufs: ufs-exynos: Remove an unnecessary NULL check
-Message-ID: <20200626105133.GF314359@mwanda>
+        id S1725912AbgFZLmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 07:42:50 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:11213 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725836AbgFZLmu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 07:42:50 -0400
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200626114246epoutp01ec632457f9fafc34c6b98a70e86e3693~cFUflcwnm0036800368epoutp01X
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2020 11:42:46 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200626114246epoutp01ec632457f9fafc34c6b98a70e86e3693~cFUflcwnm0036800368epoutp01X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1593171766;
+        bh=QmUco7l6tOoe7oerFB9PNtpjKhWVfd+ECh6I1DRRuLk=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=qF0FYYcBO+fBdvcj6gmY3jd2bIttlPX8bN5UeJIRl+0Mpp8zXKtOuhP3tB0diHKWp
+         w0RhtwPcDNmGUXJ3EZMCf/e4bkMyiCqumpd4+u0Y9KVdaHc7FeRPpWpw5ItRVcse+m
+         BwnpVIcFGBsFMtHYUgJy07T5qbQ5paGQdnT9czsE=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20200626114246epcas2p2531544a1d9a94fe5b5c116a737727230~cFUfMScyl2316823168epcas2p2H;
+        Fri, 26 Jun 2020 11:42:46 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.184]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 49tZkX0xv6zMqYkb; Fri, 26 Jun
+        2020 11:42:44 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        00.78.27013.13FD5FE5; Fri, 26 Jun 2020 20:42:41 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200626114240epcas2p21c9d47ad70dbe0a7073231af3eb74337~cFUaEqAKX2799627996epcas2p20;
+        Fri, 26 Jun 2020 11:42:40 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200626114240epsmtrp1488a27c2b4a08339c0988470fbec4bc8~cFUaBa6Rz3029530295epsmtrp1G;
+        Fri, 26 Jun 2020 11:42:40 +0000 (GMT)
+X-AuditID: b6c32a48-d35ff70000006985-5f-5ef5df31e6b4
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        87.19.08303.03FD5FE5; Fri, 26 Jun 2020 20:42:40 +0900 (KST)
+Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20200626114240epsmtip14fe6b35d9b711874f562058d607a8b4a~cFUZ1Ns2n1448214482epsmtip1r;
+        Fri, 26 Jun 2020 11:42:40 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Stanley Chu'" <chu.stanley@gapp.nthu.edu.tw>
+Cc:     <linux-scsi@vger.kernel.org>,
+        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        "'Bean Huo \(beanhuo\)'" <beanhuo@micron.com>,
+        "'Asutosh Das'" <asutoshd@codeaurora.org>, <cang@codeaurora.org>,
+        <bvanassche@acm.org>
+In-Reply-To: <CAOBeenbWTEbi=gF0WtHCYRK8Y3_nGD7sGcdRqP=oebBJUkanag@mail.gmail.com>
+Subject: RE: [RFC PATCH v1 1/2] ufs: introduce callbacks to get command
+ information
+Date:   Fri, 26 Jun 2020 20:42:40 +0900
+Message-ID: <02e801d64bae$e5d36f00$b17a4d00$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9663 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006260079
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9663 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
- cotscore=-2147483648 adultscore=0 bulkscore=0 spamscore=0 phishscore=0
- suspectscore=0 priorityscore=1501 lowpriorityscore=0 clxscore=1011
- impostorscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2006260078
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQL8/V917mWvtxF9jWsyhmCCDxjM/gJ/aiFPAXuCqJqmfYo+8A==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrFJsWRmVeSWpSXmKPExsWy7bCmua7h/a9xBheXi1s8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWsxtOcJusejGNiaL7us72CyWH//H5MDlcfmKt8flvl4m
+        j6nL1jJ7TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAM6oHJuM1MSU1CKF1Lzk/JTM
+        vHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoEOVFMoSc0qBQgGJxcVK+nY2Rfml
+        JakKGfnFJbZKqQUpOQWGhgV6xYm5xaV56XrJ+blWhgYGRqZAlQk5GRPPTmEumCJfceTTUeYG
+        xkVyXYycHBICJhLHz29g7GLk4hAS2MEocbptLwuE84lRYsXmB6wQzmdGib6/d9hgWiZuvssK
+        YgsJ7GKUuL7ZFaLoBaPEvc0fmEESbALaEtMe7gYrEhEwkth+Yw5YM7PAUyaJ/6/FQGxOgUCJ
+        Zef3MILYwgKhEg9+HQHrZRFQlWjZ/AcszitgKfF6+XxWCFtQ4uTMJywQc7Qlli18zQxxkILE
+        z6fLoHY5Sfz9s5kVokZEYnZnGzPIcRICBzgkHj+CWCYh4CKxZU4bC4QtLPHq+BZ2CFtK4mV/
+        G5RdL7FvagMrRHMPo8TTff+gmo0lZj1rB7I5gDZoSqzfpQ9iSggoSxy5BXUbn0TH4b/sEGFe
+        iY42IYhGZYlfkyZDDZGUmHnzDvsERqVZSD6bheSzWUg+mIWwawEjyypGsdSC4tz01GKjAhPk
+        yN7ECE7EWh47GGe//aB3iJGJg/EQowQHs5IIb4jbpzgh3pTEyqrUovz4otKc1OJDjKbAsJ7I
+        LCWanA/MBXkl8YamRmZmBpamFqZmRhZK4rzvrC7ECQmkJ5akZqemFqQWwfQxcXBKNTAxzTX6
+        X79zxnvLw9+nha5ed028d3ttep7TNAP5B+eSu/bdr3MJN/K0Ox7BIsO0LeMgc+t9rW1SQbdT
+        rx+0jTK9ILyzIDEjbIreRQ/TsIrZLx9lflsqXOoYzxznvzrJoPFR7TnufL7aoKWs5RZqr1Y9
+        +qk28cap3Lrk8E9bohmLBTf2qV72K2hT5pFpz3+647J1zF/+52c6nPIr9dSe/zq6+sX5oNhE
+        u2epvvfX8sddjvCrepLDsTatcFf+z1jbBRbGsksiTji6228v4f+6hGm2xLLPjI+3XObyWvxQ
+        LH6V1AWvLYVndudFXXw58Yzx66/5/UwLt/1wdAu46eag5dXtdujrpk2ppdPfM7ydnajEUpyR
+        aKjFXFScCADv0QFxTQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsWy7bCSnK7B/a9xBqv2alo8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWsxtOcJusejGNiaL7us72CyWH//H5MDlcfmKt8flvl4m
+        j6nL1jJ7TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAM4oLpuU1JzMstQifbsErowP
+        P9+xFUwUqTjVNpO1gbGXv4uRk0NCwERi4ua7rF2MXBxCAjsYJZ7teckCkZCUOLHzOSOELSxx
+        v+UIK4gtJPCMUWLGF3EQm01AW2Law91gcREBI4ntN+awgdjMAm+ZJL5Phxp6h1FiycI3YIM4
+        BQIllp3fA2YLCwRLPPhxjh3EZhFQlWjZ/AcszitgKfF6+XxWCFtQ4uTMJywQQ7Uleh+2MsLY
+        yxa+ZoY4TkHi59NlUEc4Sfz9s5kVokZEYnZnG/MERuFZSEbNQjJqFpJRs5C0LGBkWcUomVpQ
+        nJueW2xYYJSXWq5XnJhbXJqXrpecn7uJERyTWlo7GPes+qB3iJGJg/EQowQHs5IIb4jbpzgh
+        3pTEyqrUovz4otKc1OJDjNIcLErivF9nLYwTEkhPLEnNTk0tSC2CyTJxcEo1MLl+WmB17lTg
+        h3Qd1oiou/PNWpKuhZVVd2geD/t3TWSSx93J1TVRW4u811y+Wv9tfvLUPtWXfJniZsFPI//r
+        T5px0VIg5o6gzutTSzQ1FqpN0KvYdGv/2Za676GJK6qMgzrqWvSW2r2z5v9/uI5rS0bxd1fG
+        YyG7M/QmaoQVnOQ+oNCstjcs3655icLCrf1x6T2qzF1bO3o/HPg3LXOLiLHxqqe6q6J1BDY/
+        Nnjz0sTGU7nlvf7cxO7dS3SMgqf9fXlrX6yj2K4N719M91XM3lJlb7l822WZq/ve8Rq/7LV1
+        f8TivlDihfwXXe/iVw46T3cs2vQg5o64uUn/xYq1edUq/PdzjNj02Ka61OgfVGIpzkg01GIu
+        Kk4EAM7D/9o4AwAA
+X-CMS-MailID: 20200626114240epcas2p21c9d47ad70dbe0a7073231af3eb74337
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200620070044epcas2p269e3c266c86c65dd0e894d8188036a30
+References: <CGME20200620070044epcas2p269e3c266c86c65dd0e894d8188036a30@epcas2p2.samsung.com>
+        <1592635992-35619-1-git-send-email-kwmad.kim@samsung.com>
+        <CAOBeenbWTEbi=gF0WtHCYRK8Y3_nGD7sGcdRqP=oebBJUkanag@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The "head" pointer can't be NULL because it points to an address in
-the middle of a ufs_hba struct.  Looking at this code, probably someone
-would wonder if the intent was to check whether "hba" is NULL, but "hba"
-isn't NULL and the check can just be removed.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/scsi/ufs/ufs-exynos.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-index 16544b3dad47..802f7de626e8 100644
---- a/drivers/scsi/ufs/ufs-exynos.c
-+++ b/drivers/scsi/ufs/ufs-exynos.c
-@@ -264,7 +264,7 @@ static int exynos_ufs_get_clk_info(struct exynos_ufs *ufs)
- 	u8 div = 0;
- 	int ret = 0;
- 
--	if (!head || list_empty(head))
-+	if (list_empty(head))
- 		goto out;
- 
- 	list_for_each_entry(clki, head, list) {
--- 
-2.27.0
-
+> Hi Kiwoong,
+>=20
+> Kiwoong Kim <kwmad.kim=40samsung.com> =E6=96=BC=202020=E5=B9=B46=E6=9C=88=
+20=E6=97=A5=20=E9=80=B1=E5=85=AD=20=E4=B8=8B=E5=8D=883:00=E5=AF=AB=E9=81=93=
+=EF=BC=9A=0D=0A>=20>=0D=0A>=20>=20Some=20SoC=20specific=20might=20need=20co=
+mmand=20history=20for=20various=20reasons,=20such=0D=0A>=20>=20as=20stackin=
+g=20command=20contexts=20in=20system=20memory=20to=20check=20for=20debuggin=
+g=0D=0A>=20>=20in=20the=20future=20or=20scaling=20some=20DVFS=20knobs=20to=
+=20boost=20IO=20throughput.=0D=0A>=20>=0D=0A>=20>=20What=20you=20would=20do=
+=20with=20the=20information=20could=20be=20variant=20per=20SoC=0D=0A>=20>=
+=20vendor.=0D=0A>=20>=0D=0A>=20>=20Signed-off-by:=20Kiwoong=20Kim=20<kwmad.=
+kim=40samsung.com>=0D=0A>=20>=20---=0D=0A>=20>=20=20drivers/scsi/ufs/ufshcd=
+.c=20=7C=204=20++++=0D=0A>=20>=20=20drivers/scsi/ufs/ufshcd.h=20=7C=208=20+=
++++++++=0D=0A>=20>=20=202=20files=20changed,=2012=20insertions(+)=0D=0A>=20=
+>=0D=0A>=20>=20diff=20--git=20a/drivers/scsi/ufs/ufshcd.c=20b/drivers/scsi/=
+ufs/ufshcd.c=0D=0A>=20>=20index=2052abe82..0eae3ce=20100644=0D=0A>=20>=20--=
+-=20a/drivers/scsi/ufs/ufshcd.c=0D=0A>=20>=20+++=20b/drivers/scsi/ufs/ufshc=
+d.c=0D=0A>=20>=20=40=40=20-2545,6=20+2545,8=20=40=40=20static=20int=20ufshc=
+d_queuecommand(struct=20Scsi_Host=0D=0A>=20*host,=20struct=20scsi_cmnd=20*c=
+md)=0D=0A>=20>=20=20=20=20=20=20=20=20=20/*=20issue=20command=20to=20the=20=
+controller=20*/=0D=0A>=20>=20=20=20=20=20=20=20=20=20spin_lock_irqsave(hba-=
+>host->host_lock,=20flags);=0D=0A>=20>=20=20=20=20=20=20=20=20=20ufshcd_vop=
+s_setup_xfer_req(hba,=20tag,=20true);=0D=0A>=20>=20+=20=20=20=20=20=20=20if=
+=20(cmd)=0D=0A>=20>=20+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20ufshcd_=
+vops_cmd_log(hba,=20cmd,=201);=0D=0A>=20>=20=20=20=20=20=20=20=20=20ufshcd_=
+send_command(hba,=20tag);=0D=0A>=20>=20=20out_unlock:=0D=0A>=20>=20=20=20=
+=20=20=20=20=20=20spin_unlock_irqrestore(hba->host->host_lock,=20flags);=20=
+=40=40=0D=0A>=20>=20-4890,6=20+4892,8=20=40=40=20static=20void=20__ufshcd_t=
+ransfer_req_compl(struct=0D=0A>=20ufs_hba=20*hba,=0D=0A>=20>=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20/*=20Mark=20com=
+pleted=20command=20as=20NULL=20in=20LRB=20*/=0D=0A>=20>=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20lrbp->cmd=20=3D=20=
+NULL;=0D=0A>=20>=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20lrbp->compl_time_stamp=20=3D=20ktime_get();=0D=0A>=20>=20=
++=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20ufshc=
+d_vops_cmd_log(hba,=20cmd,=202);=0D=0A>=20>=20+=0D=0A>=20>=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20/*=20Do=20not=
+=20touch=20lrbp=20after=20scsi=20done=20*/=0D=0A>=20>=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20cmd->scsi_done(cmd);=
+=0D=0A>=20>=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20__ufshcd_release(hba);=0D=0A>=20=0D=0A>=20If=20your=20cmd_log=
+=20vop=20callbacks=20are=20only=20existed=20in=20=22ufshcd_queuecommand=22=
+=0D=0A>=20and=20=22ufshcd_transfer_req_compl=22,=20perhaps=20you=20could=20=
+re-use=0D=0A>=20=22ufshcd_vops_setup_xfer_req()=22=20and=20an=20added=20=22=
+ufshcd_vops_compl_req()=22=0D=0A>=20instead=20of=20a=20brand=20new=20=22ufs=
+hcd_vops_cmd_log()=22=20?=0D=0A>=20=0D=0A>=20Thanks,=0D=0A>=20Stanley=20Chu=
+=0D=0A=0D=0ACurrently,=20ufshcd_vops_setup_xfer_req=20doesn't=20get=20scsi_=
+cmnd=20variable.=0D=0AActually,=20when=20introduced=20this=20callback=20fir=
+st,=20I=20was=20willing=20to=20make=20it=20do=20that=0D=0Abut=20someone=20g=
+ave=20me=20another=20idea.=20Then=20do=20you=20agree=20to=20change=20argume=
+nt=20set=20of=20the=20function?=0D=0A=0D=0AAnd=20I=20can't=20find=20ufshcd_=
+vops_compl_req=20in=205.9/scsi-queue.=20Could=20you=20let=20me=20know=20whe=
+re=20to=20find?=0D=0A=0D=0AThank=20you=20for=20your=20opinions.=0D=0A=0D=0A=
+=0D=0A
