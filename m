@@ -3,126 +3,99 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E55FC433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 13:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED64C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 13:54:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55FE42088E
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 13:42:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593178959;
-	bh=Jwht7Lvq5d9ekZL8AaOxFcUtVg6zeeyx6ZQNY7l8Fgg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=l+5DhLXm6RO30m6Yt5ImRbDfflh8VqQk1ymBs7qgtITjzY6ZDmb6HCJvXwAabt6no
-	 /fIiUNCmYpfvx6jzAhEl7MWOZkGfHwmv+vrFOzbGlZs9/Bl/+7fAeVBJVLUJSNypZJ
-	 91lmPYcYcHcvUstSyLy0XzdHs9aksSHfjoGgs7wI=
+	by mail.kernel.org (Postfix) with ESMTP id 094A520663
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 13:54:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hO8nlTBA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728665AbgFZNmd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 09:42:33 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:35921 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725864AbgFZNmb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 09:42:31 -0400
-Received: by mail-wr1-f66.google.com with SMTP id k6so9574802wrn.3;
-        Fri, 26 Jun 2020 06:42:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=WPQDOd5p2KRBs00b1Ze0uo40/AP826N8zKgr9FyI50s=;
-        b=jfBhGs+imk+4tN4veCyowN8biUmvN9sPXenb+TAKj6hEOTLB2DLlSvqb8oLXWoPhoG
-         xm1V+2rhlmM5pZ8DAEIBd2iYccQOcFyHSIttv3rdybF1Fb7P3pRzKzu3ag7/XIJw+wF7
-         6+UKWyMGSAsDotXbfkH80hWeaAjuqx6F68/9QCoqrP8xfmKdugw3TmwAPGxf8HahgzJb
-         ym250W38rMCIVCp4BUqYUqKT3Ehe7NH6j5DY0VE0EsC24Ll44yHo7GAdvlQEyToS0id0
-         RjKLQD810GeVWz0nLknKOYAj9vqy6zcXmU8w8NxBZc/ZrV5sZ9tYahTEBUf+FoS9zmp7
-         K39g==
-X-Gm-Message-State: AOAM531+REODMcAL1DbD+YIF/djar817iExt7qmFtYVhU1rUZFvqDbK4
-        q8WgVntNYfaGtn9Pa9rlSt8=
-X-Google-Smtp-Source: ABdhPJwlh3Oehnp2mDP9/xLAv48E5VyaqWVKYOUqmHHQzdu4xdua4j/ycX1XUnOEA8R9IEfPyNt32g==
-X-Received: by 2002:a5d:5483:: with SMTP id h3mr3996023wrv.10.1593178949427;
-        Fri, 26 Jun 2020 06:42:29 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id u10sm17197124wml.29.2020.06.26.06.42.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2020 06:42:29 -0700 (PDT)
-Date:   Fri, 26 Jun 2020 13:42:27 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Andres Beltran <lkmlabelt@gmail.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
-        parri.andrea@gmail.com, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Subject: Re: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
-Message-ID: <20200626134227.ka4aghqjpktdupnu@liuwe-devbox-debian-v2>
-References: <20200625153723.8428-1-lkmlabelt@gmail.com>
+        id S1728866AbgFZNyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 09:54:20 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:41217 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725864AbgFZNyU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Jun 2020 09:54:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593179659;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=qAa3Wq/vh65NUIYLyLFHRH17KzUhwrUI7z4a1cwWymE=;
+        b=hO8nlTBAkwrWkLGaYHb8Ysi3tLcHMfa7p4fVzhBoDHOeSaXUUzpP0w+vfVY8dL7TFsob2P
+        Gnv1uTI27c1HcIkVrBuvqD1daFsuLpPQ106kwGBuGU8CGzU0Gam701ovT7ku8fCsmsufHK
+        0lnGTJ6QhHbnqihlkevckK6B4H6PPug=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-495-E2p2rOaZNRKMT0qRNvnU9g-1; Fri, 26 Jun 2020 09:54:15 -0400
+X-MC-Unique: E2p2rOaZNRKMT0qRNvnU9g-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D1CB1BFC8;
+        Fri, 26 Jun 2020 13:54:13 +0000 (UTC)
+Received: from [10.3.128.20] (unknown [10.3.128.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B9FE319C4F;
+        Fri, 26 Jun 2020 13:54:12 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <20200623191749.115200-1-tasleson@redhat.com>
+ <20200623191749.115200-6-tasleson@redhat.com>
+ <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
+ <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
+ <33577b4f-6ee1-f054-8853-b61ca800e10a@redhat.com>
+ <9e45d126-f1ac-48b9-56c3-ec0686e38503@samsung.com>
+From:   Tony Asleson <tasleson@redhat.com>
+Organization: Red Hat
+Message-ID: <780b9a02-eca6-6e53-638a-a9638425a863@redhat.com>
+Date:   Fri, 26 Jun 2020 08:54:11 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200625153723.8428-1-lkmlabelt@gmail.com>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <9e45d126-f1ac-48b9-56c3-ec0686e38503@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 25, 2020 at 11:37:20AM -0400, Andres Beltran wrote:
-> From: Andres Beltran (Microsoft) <lkmlabelt@gmail.com>
+On 6/26/20 7:45 AM, Bartlomiej Zolnierkiewicz wrote:
+> Of course I agree that having a persistent identifier associated to
+> storage related log messages is useful and my previous mail was exactly
+> a part of discussion on the best way to achieving it. :-)
 > 
-> Currently, VMbus drivers use pointers into guest memory as request IDs
-> for interactions with Hyper-V. To be more robust in the face of errors
-> or malicious behavior from a compromised Hyper-V, avoid exposing
-> guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
-> bad request ID that is then treated as the address of a guest data
-> structure with no validation. Instead, encapsulate these memory
-> addresses and provide small integers as request IDs.
+> I agree with James that dev_printk() usage is preferred over legacy
+> printk_emit() and I've described a way to do it correctly for libata.
 > 
-> The first patch creates the definitions for the data structure, provides
-> helper methods to generate new IDs and retrieve data, and
-> allocates/frees the memory needed for vmbus_requestor.
+> Unfortunately it means additional work for getting the new feature 
+> merged so if you don't agree with doing it you need to convince:
 > 
-> The second and third patches make use of vmbus_requestor to send request
-> IDs to Hyper-V in storvsc and netvsc respectively.
+> - Jens (libata Maintainer) to accept libata patch as it is
 > 
+> or
+> 
+> - James (& other higher level Maintainers) to use printk_emit() instead
+> 
+> Ultimately they will be the ones merging/long-term supporting proposed
+> patches and not me..
 
-Per my understanding, this new data structure is per-channel, so it
-won't introduce contention on the lock in multi-queue scenario. Have you
-done any testing to confirm there is no severe performance regression?
+Thank you for the helpful response, I appreciate it.  I'll take a look
+at the information you've provided and re-work the patch series.  I may
+have additional question(s) :-)
 
-Wei.
+-Tony
 
-> Thanks.
-> Andres Beltran
-> 
-> Cc: linux-scsi@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> 
-> Andres Beltran (3):
->   Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
->     hardening
->   scsi: storvsc: Use vmbus_requestor to generate transaction ids for
->     VMBus hardening
->   hv_netvsc: Use vmbus_requestor to generate transaction ids for VMBus
->     hardening
-> 
->  drivers/hv/channel.c              | 150 ++++++++++++++++++++++++++++++
->  drivers/net/hyperv/hyperv_net.h   |  10 ++
->  drivers/net/hyperv/netvsc.c       |  56 +++++++++--
->  drivers/net/hyperv/rndis_filter.c |   1 +
->  drivers/scsi/storvsc_drv.c        |  62 ++++++++++--
->  include/linux/hyperv.h            |  22 +++++
->  6 files changed, 283 insertions(+), 18 deletions(-)
-> 
-> -- 
-> 2.25.1
-> 
