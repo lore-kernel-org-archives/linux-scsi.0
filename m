@@ -2,109 +2,199 @@ Return-Path: <SRS0=Z0Y/=AH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D154FC433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 20:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1AC4C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 23:53:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B02EC20885
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 20:57:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593205058;
-	bh=+RTxPRfj4h0ApyMfS0YTVNY5y8BFT8Bo/A+QGbjSSLA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=iUYSUirKv/rOaF9TBB5VZ5pVYXIwSGHi/y6aRwCzTQHmEzWaKbWgKWKNl8M238FPT
-	 4ZWDjaMuDDhxq3R60Q0tzNWbhUHd1GSRzDQWNFQ/Cgl14Rv6GyP8Okgtg3gRkGeahp
-	 Ju63A9b230cqt/N5wqybq9MU0NS7ojzjuD8FcN8s=
+	by mail.kernel.org (Postfix) with ESMTP id B6B132074F
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 23:53:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xUpwuKrO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726132AbgFZU5b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 16:57:31 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:32989 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbgFZU5a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 16:57:30 -0400
-Received: by mail-wr1-f65.google.com with SMTP id f18so2653267wrs.0;
-        Fri, 26 Jun 2020 13:57:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=UEtSMorzUsNwgUS6/uoC1DFelzsLLNjhA0ODxeYGQZk=;
-        b=OZchDIXGo6iu9X5b8iFXhS8rb4s9itnPmLav8LKS6K+d359xFI1TaN+uCZ8xoQ3fc5
-         Xrhullnd59DchWEDJBV2UUpS+Z/r6f4Dje7+caXHhr/XraN3SqIh6/8dzbDbkabaFqL7
-         v4YsyR+4baHNYxzNYo0SFnVcJfuYntG187KBFcswGXBpbD3vI41kJOFDcI2fhhsZFnjz
-         +gbnNdGpOkzNAtiPK8USyvXq3lVTFSNAuzWnHWRqjxoNz4FUXsLZnF21fLgItdn40nsm
-         MzAHRjgbDrUulmhTdseHZ7xKB9cl9bLS6ktN+sX55yZW7Vxm7iVdb/7Hp5sIDjAJueOH
-         mNHg==
-X-Gm-Message-State: AOAM531yYjrp5KxpQQ3scPn7KFIlaXqBvaOhErjOe3QSx0VG8PIu61vH
-        k8ISLaMvRIDTw1SJUtmeOK2sq8ZC
-X-Google-Smtp-Source: ABdhPJyfz6ZN9k8zLdtD9oplahZZwvRGhaQJGtrwjWd/bB5xcjemjyZZRToSI9LENcMOmSKLfSNPJw==
-X-Received: by 2002:a5d:42c8:: with SMTP id t8mr5326836wrr.23.1593205048041;
-        Fri, 26 Jun 2020 13:57:28 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id b184sm12903093wmc.20.2020.06.26.13.57.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2020 13:57:27 -0700 (PDT)
-Date:   Fri, 26 Jun 2020 20:57:26 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Andrea Parri <parri.andrea@gmail.com>
-Cc:     Wei Liu <wei.liu@kernel.org>, Andres Beltran <lkmlabelt@gmail.com>,
-        kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikelley@microsoft.com, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>
-Subject: Re: [PATCH 0/3] Drivers: hv: vmbus: vmbus_requestor data structure
-Message-ID: <20200626205726.nx54ztdtmo3fxbxm@liuwe-devbox-debian-v2>
-References: <20200625153723.8428-1-lkmlabelt@gmail.com>
- <20200626134227.ka4aghqjpktdupnu@liuwe-devbox-debian-v2>
- <20200626144817.GA1023610@andrea>
+        id S1726330AbgFZXxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 19:53:14 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34020 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725983AbgFZXxO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 19:53:14 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05QNmX80180188;
+        Fri, 26 Jun 2020 23:53:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : from :
+ subject : message-id : date : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=TsAo6MsFl/ln9Ttu9ohq5+yEC2UDivwgyxdEEiAPbvU=;
+ b=xUpwuKrOJCSIvy80glVCcUDUoe11aLuG4BsKXBK22yxUGZwyX/5rivMDhC6v24BuZwvY
+ 2eDPSYmFSt3OHwY7Ea1fR1FKgXIt/mLCbB3lGpHwlsU5QIFTX+o4zNY0aW3IdB0O25cn
+ TRTcp1UNFKyRh2Rt0opTeImcqd7L52aCrkzmHtaPilo3G2xfUvYhquTE8QvOKmWAlT4E
+ uTBhiUEyKs61GVJmUlduM6UrK0uWIP1Hs6Vj+H9xMh32KkaKbdbIp6M8Z1sjVUtIPYYE
+ wRNowfwiVdv7JTuqynN90j+brfN10wL5vORI/LQlM9l3tjU2FVODXlS/nGmx7ABiiiwH hA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 31wg3bk3xn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 26 Jun 2020 23:53:11 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05QNmNom125218;
+        Fri, 26 Jun 2020 23:53:10 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 31uurdkekx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 26 Jun 2020 23:53:10 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05QNr9Ib018105;
+        Fri, 26 Jun 2020 23:53:09 GMT
+Received: from localhost.localdomain (/10.159.129.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 26 Jun 2020 23:53:09 +0000
+To:     martin.petersen@oracle.com
+Cc:     jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org,
+        Anjali Kulkarni <anjali.k.kulkarni@oracle.com>
+From:   Anjali Kulkarni <Anjali.K.Kulkarni@oracle.com>
+Subject: [PATCH] scsi: Avoid unnecessary iterations on __scsi_scan_target
+Message-ID: <38cee464-7320-87a9-f55c-f0db4679fc0a@oracle.com>
+Date:   Fri, 26 Jun 2020 16:53:06 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200626144817.GA1023610@andrea>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0 adultscore=0
+ malwarescore=0 mlxscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006260168
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=1 phishscore=0
+ malwarescore=0 cotscore=-2147483648 adultscore=0 lowpriorityscore=0
+ impostorscore=0 clxscore=1011 mlxscore=0 mlxlogscore=999 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006260168
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 26, 2020 at 04:48:17PM +0200, Andrea Parri wrote:
-> On Fri, Jun 26, 2020 at 01:42:27PM +0000, Wei Liu wrote:
-> > On Thu, Jun 25, 2020 at 11:37:20AM -0400, Andres Beltran wrote:
-> > > From: Andres Beltran (Microsoft) <lkmlabelt@gmail.com>
-> > > 
-> > > Currently, VMbus drivers use pointers into guest memory as request IDs
-> > > for interactions with Hyper-V. To be more robust in the face of errors
-> > > or malicious behavior from a compromised Hyper-V, avoid exposing
-> > > guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
-> > > bad request ID that is then treated as the address of a guest data
-> > > structure with no validation. Instead, encapsulate these memory
-> > > addresses and provide small integers as request IDs.
-> > > 
-> > > The first patch creates the definitions for the data structure, provides
-> > > helper methods to generate new IDs and retrieve data, and
-> > > allocates/frees the memory needed for vmbus_requestor.
-> > > 
-> > > The second and third patches make use of vmbus_requestor to send request
-> > > IDs to Hyper-V in storvsc and netvsc respectively.
-> > > 
-> > 
-> > Per my understanding, this new data structure is per-channel, so it
-> > won't introduce contention on the lock in multi-queue scenario. Have you
-> > done any testing to confirm there is no severe performance regression?
-> 
-> I did run some performance tests using our dev pipeline (storage and
-> network workloads).  I did not find regressions w.r.t. baseline.
+There is a loop in scsi_scan_channel(), which calls
+__scsi_scan_target() 255 times, even when it has found a target/device on a
+lun in the first iteration; this ends up adding a 2 secs delay to the boot
+time. The for loop in scsi_scan_channel() adding 2 secs to boot time is as
+follows:
 
-Thanks, that's good to hear.
+for (id = 0; id < shost->max_id; ++id) {
+     ...
+     __scsi_scan_target(&shost->shost_gendev, channel,
+                               order_id, lun, rescan);
+}
 
-Wei.
+__scsi_scan_target() calls scsi_probe_and_add_lun() which calls
+scsi_probe_lun(), hence scsi_probe_lun() ends up getting called 255 times.
+Each call of scsi_probe_lun() takes 0.007865 secs.
+0.007865 multiplied by 255 = 2.00557 secs.
+By adding a break in above for loop when a valid device on lun is found,
+we can avoid this 2 secs delay improving boot time by 2 secs.
 
-> 
->   Andrea
+The flow of code is depicted in the following sequence of events:
+
+do_scan_async() ->
+     do_scsi_scan_host()->
+         scsi_scan_host_selected() ->
+             scsi_scan_channel()
+                 __scsi_scan_target() -> this is called shost->max_id times
+                                         (255 times)
+                     scsi_probe_and_add_lun-> this is called 255 times
+                         scsi_probe_lun : called 255 times, each call
+                                          takes 0.007865 secs.
+
+The with break and without break boot time differences can be seen with
+systemd-analyze:
+
+With break:
+
+[root@vm-sec root]# systemd-analyze
+Startup finished in 2.038s (kernel) + 1.210s (initrd) + 14.198s 
+(userspace) = 17.446s
+
+Without break:
+
+[root@vm-sec root]# systemd-analyze
+Startup finished in 2.036s (kernel) + 3.342s (initrd) + 14.255s 
+(userspace) = 19.634s
+
+Signed-off-by: Anjali Kulkarni <anjali.k.kulkarni@oracle.com>
+---
+  drivers/scsi/scsi_scan.c | 17 +++++++++++------
+  1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f2437a7570ce..a519b944b512 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1527,23 +1527,23 @@ void scsi_rescan_device(struct device *dev)
+  }
+  EXPORT_SYMBOL(scsi_rescan_device);
+
+-static void __scsi_scan_target(struct device *parent, unsigned int channel,
++static int __scsi_scan_target(struct device *parent, unsigned int channel,
+          unsigned int id, u64 lun, enum scsi_scan_mode rescan)
+  {
+      struct Scsi_Host *shost = dev_to_shost(parent);
+      blist_flags_t bflags = 0;
+-    int res;
++    int res = SCSI_SCAN_NO_RESPONSE;
+      struct scsi_target *starget;
+
+      if (shost->this_id == id)
+          /*
+           * Don't scan the host adapter
+           */
+-        return;
++        return res;
+
+      starget = scsi_alloc_target(parent, channel, id);
+      if (!starget)
+-        return;
++        return res;
+      scsi_autopm_get_target(starget);
+
+      if (lun != SCAN_WILD_CARD) {
+@@ -1551,6 +1551,9 @@ static void __scsi_scan_target(struct device 
+*parent, unsigned int channel,
+           * Scan for a specific host/chan/id/lun.
+           */
+          scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan, NULL);
++        res = scsi_probe_and_add_lun(starget, lun, NULL, NULL,
++                rescan, NULL);
++
+          goto out_reap;
+      }
+
+@@ -1578,6 +1581,7 @@ static void __scsi_scan_target(struct device 
+*parent, unsigned int channel,
+      scsi_target_reap(starget);
+
+      put_device(&starget->dev);
++    return res;
+  }
+
+  /**
+@@ -1646,8 +1650,9 @@ static void scsi_scan_channel(struct Scsi_Host 
+*shost, unsigned int channel,
+                  order_id = shost->max_id - id - 1;
+              else
+                  order_id = id;
+-            __scsi_scan_target(&shost->shost_gendev, channel,
+-                    order_id, lun, rescan);
++            if (__scsi_scan_target(&shost->shost_gendev, channel,
++                order_id, lun, rescan) != SCSI_SCAN_NO_RESPONSE)
++                break;
+          }
+      else
+          __scsi_scan_target(&shost->shost_gendev, channel,
+-- 
+2.26.2
+
