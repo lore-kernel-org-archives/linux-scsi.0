@@ -2,91 +2,295 @@ Return-Path: <SRS0=Z0Y/=AH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A06C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 15:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 370E8C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 18:52:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4079D20706
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 15:44:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16CD320836
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 18:52:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593197529;
+	bh=E5ZeGIaQ4TvxmK01qXTN6ia+aVwiHoFFaYZso3L47YA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=hGadgPXEb60HCw/OdKK/BjUYa4eYjoSJfJjjQJUE/QwiCvkeHIGZNLhumqmm856wB
+	 36ZspLTqR6WMLai20oDfhepq0sdCCxr3Boh+RgPbOblUlqqoskieJJnB/JXAEEHgE2
+	 14yv9578nhXgOAG1G6W3mMqWme3BzLyYucPPA1uQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729974AbgFZPom (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 11:44:42 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:33263 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1726895AbgFZPol (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 11:44:41 -0400
-Received: (qmail 300652 invoked by uid 1000); 26 Jun 2020 11:44:41 -0400
-Date:   Fri, 26 Jun 2020 11:44:41 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Martin Kepplinger <martin.kepplinger@puri.sm>, jejb@linux.ibm.com,
-        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel@puri.sm
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-Message-ID: <20200626154441.GA296771@rowland.harvard.edu>
-References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
- <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
- <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
- <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
+        id S1725824AbgFZSwG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 14:52:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45922 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725283AbgFZSwF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Jun 2020 14:52:05 -0400
+Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id EDAD02075A;
+        Fri, 26 Jun 2020 18:52:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593197524;
+        bh=E5ZeGIaQ4TvxmK01qXTN6ia+aVwiHoFFaYZso3L47YA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=n790PbLzROZKWoZhFf+3iV0hWLyb/W4bEQ791+kAAwLaVp5omcjYgtmZzdRV/vQeO
+         QC8lhrpHholCaSmgheL1iCtiGerP/zLk6/3Qqyo8gLLZtwT+jHx0pydM3LZfATP8MY
+         GQG89aRpEKi6nyQJjU12vDJcIx8SPa8rhTc3PTCw=
+Date:   Fri, 26 Jun 2020 13:52:02 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     refactormyself@gmail.com
+Cc:     bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-pci@vger.kernel.org, Vinod Koul <vkoul@kernel.org>,
+        dmaengine@vger.kernel.org,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org,
+        Don Brace <don.brace@microsemi.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
+        Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        linuxppc-dev@lists.ozlabs.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/8 v2] PCI: Align return values of PCIe capability and
+ PCI accessors
+Message-ID: <20200626185202.GA2923565@bjorn-Precision-5520>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200615073225.24061-1-refactormyself@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 26, 2020 at 08:07:51AM -0700, Bart Van Assche wrote:
-> On 2020-06-25 01:16, Martin Kepplinger wrote:
-> > here's roughly what happens when enabling runtime PM in sysfs (again,
-> > because sd_probe() calls autopm_put() and thus allows it:
-> > 
-> > [   27.384446] sd 0:0:0:0: scsi_runtime_suspend
-> > [   27.432282] blk_pre_runtime_suspend
-> > [   27.435783] sd_suspend_common
-> > [   27.438782] blk_post_runtime_suspend
-> > [   27.442427] scsi target0:0:0: scsi_runtime_suspend
-> > [   27.447303] scsi host0: scsi_runtime_suspend
-> > 
-> > then I "mount /dev/sda1 /mnt" and none of the resume() functions get
-> > called. To me it looks like the sd driver should initiate resuming, and
-> > that's not implemented.
-> > 
-> > what am I doing wrong or overlooking? how exactly does (or should) the
-> > block layer initiate resume here?
+On Mon, Jun 15, 2020 at 09:32:17AM +0200, refactormyself@gmail.com wrote:
+> From: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
 > 
-> As far as I know runtime power management support in the sd driver is working
-> fine and is being used intensively by the UFS driver. The following commit was
-> submitted to fix a bug encountered by an UFS developer: 05d18ae1cc8a ("scsi:
-> pm: Balance pm_only counter of request queue during system resume") # v5.7.
-
-I just looked at that commit for the first time.
-
-Instead of making the SCSI driver do the work of deciding what routine to 
-call, why not redefine blk_set_runtime_active(q) to simply call 
-blk_post_runtime_resume(q, 0)?  Or vice versa: if err == 0 have 
-blk_post_runtime_resume call blk_set_runtime_active?
-
-After all, the two routines do almost the same thing -- and the bug 
-addressed by this commit was caused by the difference in their behaviors.
-
-If the device was already runtime-active during the system suspend, doing 
-an extra clear of the pm_only counter won't hurt anything.
-
-> I'm not sure which bug is causing trouble on your setup but I think it's likely
-> that the root cause is somewhere else than in the block layer, the SCSI core
-> or the SCSI sd driver.
 > 
-> Bart.
+> PATCH 1/8 to 7/8:
+> PCIBIOS_ error codes have positive values and they are passed down the
+> call heirarchy from accessors. For functions which are meant to return
+> only a negative value on failure, passing on this value is a bug.
+> To mitigate this, call pcibios_err_to_errno() before passing on return
+> value from PCIe capability accessors call heirarchy. This function
+> converts any positive PCIBIOS_ error codes to negative generic error
+> values.
+> 
+> PATCH 8/8:
+> The PCIe capability accessors can return 0, -EINVAL, or any PCIBIOS_ error
+> code. The pci accessor on the other hand can only return 0 or any PCIBIOS_
+> error code.This inconsistency among these accessor makes it harder for
+> callers to check for errors.
+> Return PCIBIOS_BAD_REGISTER_NUMBER instead of -EINVAL in all PCIe
+> capability accessors.
+> 
+> MERGING:
+> These may all be merged via the PCI tree, since it is a collection of
+> similar fixes. This way they all get merged at once.
+> 
+> Version 2:
+> * cc to maintainers and mailing lists
+> * Edit the Subject to conform with previous style
+> * reorder "Signed by" and "Suggested by"
+> * made spelling corrections
+> * fixed redundant initialisation in PATCH 3/8
+> * include missing call to pcibios_err_to_errno() in PATCH 6/8 and 7/8
+> 
+> 
+> Bolarinwa Olayemi Saheed (8):
+>   dmaengine: ioatdma: Convert PCIBIOS_* errors to generic -E* errors
+>   IB/hfi1: Convert PCIBIOS_* errors to generic -E* errors
+>   IB/hfi1: Convert PCIBIOS_* errors to generic -E* errors
+>   PCI: Convert PCIBIOS_* errors to generic -E* errors
+>   scsi: smartpqi: Convert PCIBIOS_* errors to generic -E* errors
+>   PCI/AER: Convert PCIBIOS_* errors to generic -E* errors
+>   PCI/AER: Convert PCIBIOS_* errors to generic -E* errors
+>   PCI: Align return values of PCIe capability and PCI accessorss
+> 
+>  drivers/dma/ioat/init.c               |  4 ++--
+>  drivers/infiniband/hw/hfi1/pcie.c     | 18 +++++++++++++-----
+>  drivers/pci/access.c                  |  8 ++++----
+>  drivers/pci/pci.c                     | 10 ++++++++--
+>  drivers/pci/pcie/aer.c                | 12 ++++++++++--
+>  drivers/scsi/smartpqi/smartpqi_init.c |  6 +++++-
+>  6 files changed, 42 insertions(+), 16 deletions(-)
 
-Martin's best approach would be to add some debugging code to find out why 
-blk_queue_enter() isn't calling bkl_pm_request_resume(), or why that call 
-doesn't lead to pm_request_resume().
+Since these are really fixing a single PCI API problem, not individual
+driver-related problems, I squashed the pcibios_err_to_errno() patches
+together (except IB/hfi1, since Jason will take those separately) and
+applied them to pci/misc, thanks!
 
-Alan Stern
+The squashed patch as applied is:
+
+commit d20df83b66cc ("PCI: Convert PCIe capability PCIBIOS errors to errno")
+Author: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+Date:   Mon Jun 15 09:32:18 2020 +0200
+
+    PCI: Convert PCIe capability PCIBIOS errors to errno
+    
+    The PCI config accessors (pci_read_config_word(), et al) return
+    PCIBIOS_SUCCESSFUL (zero) or positive error values like
+    PCIBIOS_FUNC_NOT_SUPPORTED.
+    
+    The PCIe capability accessors (pcie_capability_read_word(), et al)
+    similarly return PCIBIOS errors, but some callers assume they return
+    generic errno values like -EINVAL.
+    
+    For example, the Myri-10G probe function returns a positive PCIBIOS error
+    if the pcie_capability_clear_and_set_word() in pcie_set_readrq() fails:
+    
+      myri10ge_probe
+        status = pcie_set_readrq
+          return pcie_capability_clear_and_set_word
+        if (status)
+          return status
+    
+    A positive return from a PCI driver probe function would cause a "Driver
+    probe function unexpectedly returned" warning from local_pci_probe()
+    instead of the desired probe failure.
+    
+    Convert PCIBIOS errors to generic errno for all callers of:
+    
+      pcie_capability_read_word
+      pcie_capability_read_dword
+      pcie_capability_write_word
+      pcie_capability_write_dword
+      pcie_capability_set_word
+      pcie_capability_set_dword
+      pcie_capability_clear_word
+      pcie_capability_clear_dword
+      pcie_capability_clear_and_set_word
+      pcie_capability_clear_and_set_dword
+    
+    that check the return code for anything other than zero.
+    
+    [bhelgaas: commit log, squash together]
+    Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+    Link: https://lore.kernel.org/r/20200615073225.24061-1-refactormyself@gmail.com
+    Signed-off-by: Bolarinwa Olayemi Saheed <refactormyself@gmail.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/dma/ioat/init.c b/drivers/dma/ioat/init.c
+index 58d13564f88b..9a6a9ec3cf48 100644
+--- a/drivers/dma/ioat/init.c
++++ b/drivers/dma/ioat/init.c
+@@ -1195,13 +1195,13 @@ static int ioat3_dma_probe(struct ioatdma_device *ioat_dma, int dca)
+ 	/* disable relaxed ordering */
+ 	err = pcie_capability_read_word(pdev, IOAT_DEVCTRL_OFFSET, &val16);
+ 	if (err)
+-		return err;
++		return pcibios_err_to_errno(err);
+ 
+ 	/* clear relaxed ordering enable */
+ 	val16 &= ~IOAT_DEVCTRL_ROE;
+ 	err = pcie_capability_write_word(pdev, IOAT_DEVCTRL_OFFSET, val16);
+ 	if (err)
+-		return err;
++		return pcibios_err_to_errno(err);
+ 
+ 	if (ioat_dma->cap & IOAT_CAP_DPS)
+ 		writeb(ioat_pending_level + 1,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ce096272f52b..45c51aff9c03 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5688,6 +5688,7 @@ EXPORT_SYMBOL(pcie_get_readrq);
+ int pcie_set_readrq(struct pci_dev *dev, int rq)
+ {
+ 	u16 v;
++	int ret;
+ 
+ 	if (rq < 128 || rq > 4096 || !is_power_of_2(rq))
+ 		return -EINVAL;
+@@ -5706,8 +5707,10 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+ 
+ 	v = (ffs(rq) - 8) << 12;
+ 
+-	return pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
++	ret = pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+ 						  PCI_EXP_DEVCTL_READRQ, v);
++
++	return pcibios_err_to_errno(ret);
+ }
+ EXPORT_SYMBOL(pcie_set_readrq);
+ 
+@@ -5738,6 +5741,7 @@ EXPORT_SYMBOL(pcie_get_mps);
+ int pcie_set_mps(struct pci_dev *dev, int mps)
+ {
+ 	u16 v;
++	int ret;
+ 
+ 	if (mps < 128 || mps > 4096 || !is_power_of_2(mps))
+ 		return -EINVAL;
+@@ -5747,8 +5751,10 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+ 		return -EINVAL;
+ 	v <<= 5;
+ 
+-	return pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
++	ret = pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+ 						  PCI_EXP_DEVCTL_PAYLOAD, v);
++
++	return pcibios_err_to_errno(ret);
+ }
+ EXPORT_SYMBOL(pcie_set_mps);
+ 
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 3acf56683915..2dbc1fd2910b 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -224,20 +224,25 @@ int pcie_aer_is_native(struct pci_dev *dev)
+ 
+ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ {
++	int rc;
++
+ 	if (!pcie_aer_is_native(dev))
+ 		return -EIO;
+ 
+-	return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
++	rc = pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
++	return pcibios_err_to_errno(rc);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+ 
+ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+ {
++	int rc;
++
+ 	if (!pcie_aer_is_native(dev))
+ 		return -EIO;
+ 
+-	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+-					  PCI_EXP_AER_FLAGS);
++	rc = pcie_capability_clear_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS);
++	return pcibios_err_to_errno(rc);
+ }
+ EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
+ 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index cd157f11eb22..bd38c8cea56e 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -7423,8 +7423,12 @@ static int pqi_ctrl_init_resume(struct pqi_ctrl_info *ctrl_info)
+ static inline int pqi_set_pcie_completion_timeout(struct pci_dev *pci_dev,
+ 	u16 timeout)
+ {
+-	return pcie_capability_clear_and_set_word(pci_dev, PCI_EXP_DEVCTL2,
++	int rc;
++
++	rc = pcie_capability_clear_and_set_word(pci_dev, PCI_EXP_DEVCTL2,
+ 		PCI_EXP_DEVCTL2_COMP_TIMEOUT, timeout);
++
++	return pcibios_err_to_errno(rc);
+ }
+ 
+ static int pqi_pci_init(struct pqi_ctrl_info *ctrl_info)
+
+
