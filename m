@@ -2,145 +2,110 @@ Return-Path: <SRS0=Z0Y/=AH=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B828C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 09:52:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5F9C433E1
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 10:52:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73B7721531
-	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 09:52:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE77920781
+	for <linux-scsi@archiver.kernel.org>; Fri, 26 Jun 2020 10:52:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="wyN3pnp1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="baIy0omK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726900AbgFZJwC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 05:52:02 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:28828 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726856AbgFZJwB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Jun 2020 05:52:01 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05Q9jJHA027907
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2020 02:52:01 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=pfpt0818;
- bh=yxSRZMqMIsI5mZL/1KCgVW0tdAkNgjar2XrO0E1Vs6c=;
- b=wyN3pnp1Ax0rPHP2DuDxXuTbtsGMujLC6APDwx8VbIFCX3OOxTSzSuKLEoAM+HthcoFV
- imMfGHqKvTNaTJDncuyq1+6bu7A0SmJPu4tOlvGxCiceW4eaTmBuSobwSumQjIeXqMyv
- gi7+24gN1uLZpuqSvYUC9iQNeAOH2t+ZxR3OUoJzKol7RAbGwhGZkyCf7LNH9Sz8/c42
- BFMkCpa/R+sjYRBLHs06N+mFPE147lCkWiEYQrPmu+LSrm2ujCXzNHWp64+K0H02hyGm
- R3gmBRJqSP4WpBJLrFyw8lkecTY8icwZRB1JUBy9YZfO4G8pYOxq0XfOS+xgSW66CIA7 6A== 
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0a-0016f401.pphosted.com with ESMTP id 31uuqh40aw-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2020 02:52:01 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH04.marvell.com
- (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 26 Jun
- 2020 02:50:24 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 26 Jun 2020 02:50:24 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id D0E443F703F;
-        Fri, 26 Jun 2020 02:50:23 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 05Q9oN5g032252;
-        Fri, 26 Jun 2020 02:50:23 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 05Q9oNO7032185;
-        Fri, 26 Jun 2020 02:50:23 -0700
-From:   Javed Hasan <jhasan@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH V2] scsi: libfc: Skip additional kref updating work event.
-Date:   Fri, 26 Jun 2020 02:49:59 -0700
-Message-ID: <20200626094959.32151-1-jhasan@marvell.com>
-X-Mailer: git-send-email 2.12.0
+        id S1728149AbgFZKv5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 06:51:57 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38306 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728083AbgFZKv4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 06:51:56 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05QAgC4i046576;
+        Fri, 26 Jun 2020 10:51:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=IyAs4nskBqgPQ4L1AWyl1A5z6DX1rt9lSUquCzoUgko=;
+ b=baIy0omKhA2O7y3Dq45ECwGvSdQHWzO2iLfCZyZD4VC74CIoGyU6xyFbPDFrBEYdt6WX
+ fzSyFJ0L7iiXy9zsBcMdtdZLRw9g6v2cg9aEEPxlg9fN0OB+4U4SyZGXrpBEOB/xnEdx
+ pHJPfEh42HaoVB8blH5prlrsejlJmPtNzLx4o6+Cbl6BgCqWhO1EkoDgKu/d/Xaujkaw
+ LGb44Mk51QYR/BUY0UH8kx+5ijR/aC+2FpC5BCGWOVVQpEPDVaCuK2Xou952PtujIzXK
+ Z2wc2r9OFpiskkQ39OoEGO/qJ9lvBMNjhnY04wLbFZ/Dhe+ACt3blTvdaWoHL1eOTyaf Eg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 31uustwe1p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 26 Jun 2020 10:51:44 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05QAmK2J106634;
+        Fri, 26 Jun 2020 10:51:43 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 31uurby0ww-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 26 Jun 2020 10:51:43 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05QApfQc003733;
+        Fri, 26 Jun 2020 10:51:41 GMT
+Received: from mwanda (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 26 Jun 2020 10:51:40 +0000
+Date:   Fri, 26 Jun 2020 13:51:33 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>
+Cc:     Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: ufs: ufs-exynos: Remove an unnecessary NULL check
+Message-ID: <20200626105133.GF314359@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
- definitions=2020-06-26_05:2020-06-26,2020-06-26 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9663 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
+ malwarescore=0 mlxscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006260079
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9663 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ cotscore=-2147483648 adultscore=0 bulkscore=0 spamscore=0 phishscore=0
+ suspectscore=0 priorityscore=1501 lowpriorityscore=0 clxscore=1011
+ impostorscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2006260078
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-  When an rport event(RPORT_EV_READY) is updated without
-  work being queued, avoid taking an additional reference.
+The "head" pointer can't be NULL because it points to an address in
+the middle of a ufs_hba struct.  Looking at this code, probably someone
+would wonder if the intent was to check whether "hba" is NULL, but "hba"
+isn't NULL and the check can just be removed.
 
-  This issue was leading to memory leak.
-  Below is the trace from KMEMLEAK tool.
-  unreferenced object 0xffff8888259e8780 (size 512):
-  comm "kworker/2:1", jiffies 4433237386 (age 113021.971s)
-    hex dump (first 32 bytes):
-	58 0a ec cf 83 88 ff ff 00 00 00 00 00 00 00 00
-	01 00 00 00 08 00 00 00 13 7d f0 1e 0e 00 00 10
-  backtrace:
-  [<000000006b25760f>] fc_rport_recv_req+0x3c6/0x18f0 [libfc]
-  [<00000000f208d994>] fc_lport_recv_els_req+0x120/0x8a0 [libfc]
-  [<00000000a9c437b8>] fc_lport_recv+0xb9/0x130 [libfc]
-  [<00000000a9c437b8>] fc_lport_recv+0xb9/0x130 [libfc]
-  [<00000000ad5be37b>] qedf_ll2_process_skb+0x73d/0xad0 [qedf]
-  [<00000000e0eb6893>] process_one_work+0x382/0x6c0
-  [<000000002dfd9e21>] worker_thread+0x57/0x5c0
-  [<00000000b648204f>] kthread+0x1a0/0x1c0
-  [<0000000072f5ab20>] ret_from_fork+0x35/0x40
-  [<000000001d5c05d8>] 0xffffffffffffffff
-
-  Below is the logs sequence which leads to memory leak.
-  Here we get the RPORT_EV_READY and RPORT_EV_STOP back to back,
-  which lead to overwrite the event RPORT_EV_READY by event RPORT_EV_STOP.
-  Because of this kref_count get incremented by 1.
-  kernel: host0: rport fffce5: Received PLOGI request
-  kernel: host0: rport fffce5: Received PLOGI in INIT state
-  kernel: host0: rport fffce5: Port is Ready
-  kernel: host0: rport fffce5: Received PRLI request while in state Ready
-  kernel: host0: rport fffce5: PRLI rspp type 8 active 1 passive 0
-  kernel: host0: rport fffce5: Received LOGO request while in state Ready
-  kernel: host0: rport fffce5: Delete port
-  kernel: host0: rport fffce5: Received PLOGI request
-  kernel: host0: rport fffce5: Received PLOGI in state Delete - send busy
-  kernel: host0: rport fffce5: work event 3
-  kernel: host0: rport fffce5: lld callback ev 3
-  kernel: host0: rport fffce5: work delete
-
-  Reviewed-by: Girish Basrur <gbasrur@marvell.com>
-  Reviewed-by: Saurav Kashyap <skashyap@marvell.com>
-  Reviewed-by: Shyam Sundar <ssundar@marvell.com>
-  Signed-off-by: Javed Hasan <jhasan@marvell.com>
-
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
-Changes in v2:
- - Identation fix.
----
- drivers/scsi/libfc/fc_rport.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufs-exynos.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index ca39b4b..d84de3f 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -483,10 +483,11 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index 16544b3dad47..802f7de626e8 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -264,7 +264,7 @@ static int exynos_ufs_get_clk_info(struct exynos_ufs *ufs)
+ 	u8 div = 0;
+ 	int ret = 0;
  
- 	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
+-	if (!head || list_empty(head))
++	if (list_empty(head))
+ 		goto out;
  
--	kref_get(&rdata->kref);
--	if (rdata->event == RPORT_EV_NONE &&
--	    !queue_work(rport_event_queue, &rdata->event_work))
--		kref_put(&rdata->kref, fc_rport_destroy);
-+	if (rdata->event == RPORT_EV_NONE) {
-+		kref_get(&rdata->kref);
-+		if(!queue_work(rport_event_queue, &rdata->event_work))
-+			kref_put(&rdata->kref, fc_rport_destroy);
-+	}
- 
- 	rdata->event = event;
- }
+ 	list_for_each_entry(clki, head, list) {
 -- 
-1.8.3.1
+2.27.0
 
