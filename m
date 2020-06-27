@@ -2,160 +2,225 @@ Return-Path: <SRS0=t7w2=AI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 033ADC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 17:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA4EC433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 17:35:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFEB820760
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 17:22:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83E4A206D7
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 17:35:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="WMoxc3Zi"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="np7mfgjw";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="np7mfgjw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726657AbgF0RVy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 27 Jun 2020 13:21:54 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:50366 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726576AbgF0RVx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2020 13:21:53 -0400
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200627172150epoutp02c48f25dfd4bbd17c98f3a601d57bfe7e~cdl06ipje1918119181epoutp02-
-        for <linux-scsi@vger.kernel.org>; Sat, 27 Jun 2020 17:21:50 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200627172150epoutp02c48f25dfd4bbd17c98f3a601d57bfe7e~cdl06ipje1918119181epoutp02-
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1593278511;
-        bh=Mj1/tnc6RZFnSYd28tvLcQszmXhlaLfSSZ9fxlrTZtc=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=WMoxc3ZiqxbpGbYYNLAxHmXvCHoyngG0OdE7lAM2M5qdLl2EYnoCloVuLOk7POuU0
-         R9S8Z410rbvgvbh5AF7J1CbJNNHECAtAHoVVnUKRA4+yNqDsf3X9ytG6KGs+8+Q5Zl
-         w/I/bEJQPo0emYl1BdaBkaCjhDs9azUGrGt4cZpU=
-Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20200627172150epcas5p2e2f7f15adf0a99adf4859de8b5b1cbd8~cdl0ZzVgW0331203312epcas5p2v;
-        Sat, 27 Jun 2020 17:21:50 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        85.62.09703.E2087FE5; Sun, 28 Jun 2020 02:21:50 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200627172149epcas5p258f6c4e9aaacaae7be3f57ab45284b36~cdlzYjdtB3099630996epcas5p2z;
-        Sat, 27 Jun 2020 17:21:49 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200627172149epsmtrp16b4a101457857ed0bef3cc6e5ffec1e1~cdlzX1YR_1968219682epsmtrp1S;
-        Sat, 27 Jun 2020 17:21:49 +0000 (GMT)
-X-AuditID: b6c32a4a-4b5ff700000025e7-fa-5ef7802e51f8
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        7D.60.08303.D2087FE5; Sun, 28 Jun 2020 02:21:49 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.108.234.165]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200627172146epsmtip1f6660a7806fee34e60dcbe3081c3bf6f~cdlwqXWU91592315923epsmtip1G;
-        Sat, 27 Jun 2020 17:21:46 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Dan Carpenter'" <dan.carpenter@oracle.com>
-Cc:     "'Avri Altman'" <avri.altman@wdc.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
-        "'Kukjin Kim'" <kgene@kernel.org>,
-        "'Krzysztof Kozlowski'" <krzk@kernel.org>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
-        "'Wei Yongjun'" <weiyongjun1@huawei.com>,
-        <linux-scsi@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-In-Reply-To: <20200626105133.GF314359@mwanda>
-Subject: RE: [PATCH] scsi: ufs: ufs-exynos: Remove an unnecessary NULL check
-Date:   Sat, 27 Jun 2020 22:51:44 +0530
-Message-ID: <041701d64ca7$70bafb80$5230f280$@samsung.com>
-MIME-Version: 1.0
+        id S1726207AbgF0Rf0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 27 Jun 2020 13:35:26 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58380 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725932AbgF0Rf0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 27 Jun 2020 13:35:26 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C991C8EE13D;
+        Sat, 27 Jun 2020 10:35:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1593279325;
+        bh=CAqv7UAzSIvMRORrnIhtD30lRQySqjn7wSDPDhEoRfk=;
+        h=Subject:From:To:Cc:Date:From;
+        b=np7mfgjwctXCdyc0Rff44c2rrlR5GRlfD/GEnpV/JxyYS9Ki9iyeQwavXUJ8CsLZ0
+         fsHrTeLxHdx+YjbZ6FPWvvflejqPoidoZhgWFUH54RvC0IkG5/b43ng+eMM7kjsuhu
+         XA/e36H/yNacJtuC+5UgOOZa/Xz2EmgMDUIJorNg=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ZekNd-Fia26I; Sat, 27 Jun 2020 10:35:25 -0700 (PDT)
+Received: from [153.66.254.194] (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1C99F8EE07B;
+        Sat, 27 Jun 2020 10:35:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1593279325;
+        bh=CAqv7UAzSIvMRORrnIhtD30lRQySqjn7wSDPDhEoRfk=;
+        h=Subject:From:To:Cc:Date:From;
+        b=np7mfgjwctXCdyc0Rff44c2rrlR5GRlfD/GEnpV/JxyYS9Ki9iyeQwavXUJ8CsLZ0
+         fsHrTeLxHdx+YjbZ6FPWvvflejqPoidoZhgWFUH54RvC0IkG5/b43ng+eMM7kjsuhu
+         XA/e36H/yNacJtuC+5UgOOZa/Xz2EmgMDUIJorNg=
+Message-ID: <1593279324.11424.5.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.8-rc2
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 27 Jun 2020 10:35:24 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Content-Language: en-in
-Thread-Index: AQJZTJzG6GPUwl4om2Vud+BKbvKiigG4ppPqp9jvn9A=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAKsWRmVeSWpSXmKPExsWy7bCmhq5ew/c4g92ThSxe/rzKZvH633QW
-        i0U3tjFZbL0lbdH/+DWzxfnzG9gtbm45ymJxedccNosZ5/cxWXRf38Fmsfz4PyaLw192sTnw
-        eLQcecvqsWlVJ5vHhEUHGD0+Pr3F4tG3ZRWjx+dNch7tB7qZAtijuGxSUnMyy1KL9O0SuDLW
-        XPjFWjCNo+LRqf1MDYyH2boYOTkkBEwkFh2ZyNzFyMUhJLCbUeLfju8sEM4nRokdzzqgnM+M
-        Eg8+XwByOMBavv00g4jvYpT48P8pE4TzhlHi1oM77CBz2QR0JXYsbgPbISJgIHHv5AuwScwC
-        B5glbvY/ZgZJcAIVHZ99kwnEFhbwkWjb/5cFxGYRUJW42nqXEcTmFbCUePp8JSuELShxcuYT
-        sBpmAXmJ7W/nMEM8oSDx8+kyVoi4uMTRnz3MEIutJKZ+XAa2WELgAofEzGNL2CBecJGYe9gL
-        oldY4tXxLewQtpTEy/42doiSbImeXcYQ4RqJpfOOsUDY9hIHrswBBwSzgKbE+l36EFv5JHp/
-        P2GC6OSV6GgTgqhWlWh+dxWqU1piYnc3K4TtIXHj8XvWCYyKs5D8NQvJX7OQ/DILYdkCRpZV
-        jJKpBcW56anFpgVGeanlesWJucWleel6yfm5mxjBiUzLawfjwwcf9A4xMnEwHmKU4GBWEuH9
-        bP0tTog3JbGyKrUoP76oNCe1+BCjNAeLkjiv0o8zcUIC6YklqdmpqQWpRTBZJg5OqQYmsb6o
-        TIUkkZDzx0+rHe9ySj21Z7f2jZcmCQczu5NnX/5YLO7xrnvJN5uQ1wZ2er8u/Lv0JST+zLWD
-        czdNXruyhVOJQ2KaSGO06bP9B0MTtba879swK7Z3/YyPkYJxm/IVdcPsP1//W/Fo26I5DDeu
-        nL6o8rDgs+WBQ89meTUesPXZ+Ge+g4K3/A1xw1nM2W7TNNY2NSckMr+SnX7C2vlQ5xJPmdtJ
-        b1/dCLNcmrP7+aEPJgf/2S/wu+K/T33Nn69CZ8sjP721VzptnbXc7t6FpB39Xzel1fW+XRer
-        qf6kWu7K2tvHuZ6anZwj1vVVf46TSYs+49JCoylNs44wW16JfRqrIVUqnNqszSWZYTrrnRJL
-        cUaioRZzUXEiAE4ddX7TAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMIsWRmVeSWpSXmKPExsWy7bCSnK5uw/c4g/WfeC1e/rzKZvH633QW
-        i0U3tjFZbL0lbdH/+DWzxfnzG9gtbm45ymJxedccNosZ5/cxWXRf38Fmsfz4PyaLw192sTnw
-        eLQcecvqsWlVJ5vHhEUHGD0+Pr3F4tG3ZRWjx+dNch7tB7qZAtijuGxSUnMyy1KL9O0SuDLW
-        XPjFWjCNo+LRqf1MDYyH2boYOTgkBEwkvv0062Lk4hAS2MEo8WXaBJYuRk6guLTE9Y0T2CFs
-        YYmV/56zQxS9YpT4/Ws2K0iCTUBXYsfiNjYQW0TAQOLeyRcsIEXMAieYJX4+WMYEkhASqJNo
-        bd0KZnMCNRyffRPMFhbwkWjb/xdsG4uAqsTV1ruMIDavgKXE0+crWSFsQYmTM5+wgFzKLKAn
-        0bYRrIRZQF5i+9s5zBDHKUj8fLqMFSIuLnH0Zw8zxD1WElM/LmOZwCg8C8mkWQiTZiGZNAtJ
-        9wJGllWMkqkFxbnpucWGBUZ5qeV6xYm5xaV56XrJ+bmbGMHxqKW1g3HPqg96hxiZOBgPMUpw
-        MCuJ8H62/hYnxJuSWFmVWpQfX1Sak1p8iFGag0VJnPfrrIVxQgLpiSWp2ampBalFMFkmDk6p
-        BqZZ8+ba/1+WENV0SEgsuz1fI31O9eKZlv1yG76zKl81/lg/oTObxf35AR2v13+uT45j/Sd8
-        eZ7H7ca5z27vY5/45cfPm9cf/V5+Ytubi72cixSmWS5T8A7JMWmyd7RREK07+iU8bf/6s3cd
-        3qZO92UwjLeP2ewYfnFB6ORu2cnr7FmcYlInr16yw17y/Z1ogdtn4/YLKd9gZNeP+au++kyx
-        38epsxZr87u9f9N44PjUVRcTfT4c7NihYy945IDrPZVpBpd41u7IzeeZGsGXeEamZ1WvLZsE
-        R85uTvuaYC0h9g3a57byPbjwe62OkOK9P0HLF8wJljefs0ggoHrN0+PcH1w4W/JjH28wXOpw
-        9d9qJZbijERDLeai4kQAf11sgTYDAAA=
-X-CMS-MailID: 20200627172149epcas5p258f6c4e9aaacaae7be3f57ab45284b36
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20200626105156epcas5p191d18d66af6bd09a10635559461c0bc0
-References: <CGME20200626105156epcas5p191d18d66af6bd09a10635559461c0bc0@epcas5p1.samsung.com>
-        <20200626105133.GF314359@mwanda>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Dan
+Six small fixes, five in drivers and one to correct another minor
+regression from cc97923a5bcc ("block: move dma drain handling to scsi")
+where we still need the drain stub to be built in to the kernel for the
+modular libata, non-modular SAS driver case.
 
-> -----Original Message-----
-> The "head" pointer can't be NULL because it points to an address in the
-middle
-> of a ufs_hba struct.  Looking at this code, probably someone would wonder
-if
-> the intent was to check whether "hba" is NULL, but "hba"
-> isn't NULL and the check can just be removed.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-Please add Fixes: tag
-With that
-Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
+The patch is available here:
 
-Thanks!
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
->  drivers/scsi/ufs/ufs-exynos.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-index
-> 16544b3dad47..802f7de626e8 100644
-> --- a/drivers/scsi/ufs/ufs-exynos.c
-> +++ b/drivers/scsi/ufs/ufs-exynos.c
-> @@ -264,7 +264,7 @@ static int exynos_ufs_get_clk_info(struct exynos_ufs
-> *ufs)
->  	u8 div = 0;
->  	int ret = 0;
-> 
-> -	if (!head || list_empty(head))
-> +	if (list_empty(head))
->  		goto out;
-> 
->  	list_for_each_entry(clki, head, list) {
-> --
-> 2.27.0
+The short changelog is:
 
+Christoph Hellwig (1):
+      scsi: libata: Fix the ata_scsi_dma_need_drain stub
 
+Daniel Wagner (1):
+      scsi: qla2xxx: Set NVMe status code for failed NVMe FCP request
+
+Roman Bolshakov (1):
+      scsi: qla2xxx: Keep initiator ports after RSCN
+
+SeongJae Park (1):
+      scsi: lpfc: Avoid another null dereference in lpfc_sli4_hba_unset()
+
+Steffen Maier (1):
+      scsi: zfcp: Fix panic on ERP timeout for previously dismissed ERP action
+
+Tomas Henzl (1):
+      scsi: mptscsih: Fix read sense data size
+
+And the diffstat:
+
+ drivers/message/fusion/mptscsih.c |  4 +---
+ drivers/s390/scsi/zfcp_erp.c      | 13 +++++++++++--
+ drivers/scsi/lpfc/lpfc_init.c     |  3 ++-
+ drivers/scsi/qla2xxx/qla_gs.c     |  4 +++-
+ drivers/scsi/qla2xxx/qla_nvme.c   |  3 ++-
+ include/linux/libata.h            |  2 +-
+ 6 files changed, 20 insertions(+), 9 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index f0737c57ed5f..1491561d2e5c 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -118,8 +118,6 @@ int 		mptscsih_suspend(struct pci_dev *pdev, pm_message_t state);
+ int 		mptscsih_resume(struct pci_dev *pdev);
+ #endif
+ 
+-#define SNS_LEN(scp)	SCSI_SENSE_BUFFERSIZE
+-
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
+@@ -2422,7 +2420,7 @@ mptscsih_copy_sense_data(struct scsi_cmnd *sc, MPT_SCSI_HOST *hd, MPT_FRAME_HDR
+ 		/* Copy the sense received into the scsi command block. */
+ 		req_index = le16_to_cpu(mf->u.frame.hwhdr.msgctxu.fld.req_idx);
+ 		sense_data = ((u8 *)ioc->sense_buf_pool + (req_index * MPT_SENSE_BUFFER_ALLOC));
+-		memcpy(sc->sense_buffer, sense_data, SNS_LEN(sc));
++		memcpy(sc->sense_buffer, sense_data, MPT_SENSE_BUFFER_ALLOC);
+ 
+ 		/* Log SMART data (asc = 0x5D, non-IM case only) if required.
+ 		 */
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index db320dab1fee..79f6e8fb03ca 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -577,7 +577,10 @@ static void zfcp_erp_strategy_check_fsfreq(struct zfcp_erp_action *act)
+ 				   ZFCP_STATUS_ERP_TIMEDOUT)) {
+ 			req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
+ 			zfcp_dbf_rec_run("erscf_1", act);
+-			req->erp_action = NULL;
++			/* lock-free concurrent access with
++			 * zfcp_erp_timeout_handler()
++			 */
++			WRITE_ONCE(req->erp_action, NULL);
+ 		}
+ 		if (act->status & ZFCP_STATUS_ERP_TIMEDOUT)
+ 			zfcp_dbf_rec_run("erscf_2", act);
+@@ -613,8 +616,14 @@ void zfcp_erp_notify(struct zfcp_erp_action *erp_action, unsigned long set_mask)
+ void zfcp_erp_timeout_handler(struct timer_list *t)
+ {
+ 	struct zfcp_fsf_req *fsf_req = from_timer(fsf_req, t, timer);
+-	struct zfcp_erp_action *act = fsf_req->erp_action;
++	struct zfcp_erp_action *act;
+ 
++	if (fsf_req->status & ZFCP_STATUS_FSFREQ_DISMISSED)
++		return;
++	/* lock-free concurrent access with zfcp_erp_strategy_check_fsfreq() */
++	act = READ_ONCE(fsf_req->erp_action);
++	if (!act)
++		return;
+ 	zfcp_erp_notify(act, ZFCP_STATUS_ERP_TIMEDOUT);
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 69a5249e007a..6637f84a3d1b 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11878,7 +11878,8 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
+ 	lpfc_sli4_xri_exchange_busy_wait(phba);
+ 
+ 	/* per-phba callback de-registration for hotplug event */
+-	lpfc_cpuhp_remove(phba);
++	if (phba->pport)
++		lpfc_cpuhp_remove(phba);
+ 
+ 	/* Disable PCI subsystem interrupt */
+ 	lpfc_sli4_disable_intr(phba);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 42c3ad27f1cb..df670fba2ab8 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -3496,7 +3496,9 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
+ 				qla2x00_clear_loop_id(fcport);
+ 				fcport->flags |= FCF_FABRIC_DEVICE;
+ 			} else if (fcport->d_id.b24 != rp->id.b24 ||
+-				fcport->scan_needed) {
++				   (fcport->scan_needed &&
++				    fcport->port_type != FCT_INITIATOR &&
++				    fcport->port_type != FCT_NVME_INITIATOR)) {
+ 				qlt_schedule_sess_for_deletion(fcport);
+ 			}
+ 			fcport->d_id.b24 = rp->id.b24;
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index d66d47a0f958..fa695a4007f8 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -139,11 +139,12 @@ static void qla_nvme_release_fcp_cmd_kref(struct kref *kref)
+ 	sp->priv = NULL;
+ 	if (priv->comp_status == QLA_SUCCESS) {
+ 		fd->rcv_rsplen = le16_to_cpu(nvme->u.nvme.rsp_pyld_len);
++		fd->status = NVME_SC_SUCCESS;
+ 	} else {
+ 		fd->rcv_rsplen = 0;
+ 		fd->transferred_length = 0;
++		fd->status = NVME_SC_INTERNAL;
+ 	}
+-	fd->status = 0;
+ 	spin_unlock_irqrestore(&priv->cmd_lock, flags);
+ 
+ 	fd->done(fd);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 042e584daca7..c57bf6749681 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1092,7 +1092,7 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
+ #define ATA_SCSI_COMPAT_IOCTL /* empty */
+ #endif
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+-#if IS_ENABLED(CONFIG_ATA)
++#if IS_REACHABLE(CONFIG_ATA)
+ bool ata_scsi_dma_need_drain(struct request *rq);
+ #else
+ #define ata_scsi_dma_need_drain NULL
