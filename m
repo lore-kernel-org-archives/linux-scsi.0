@@ -7,77 +7,77 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B260C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 03:10:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41300C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 03:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9C8020674
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 03:10:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B7F920675
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 03:11:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UVMiQAzv"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZbTbhD9D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725930AbgF0DKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 23:10:01 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38094 "EHLO
+        id S1725930AbgF0DL1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 23:11:27 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38864 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725828AbgF0DKB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 23:10:01 -0400
+        with ESMTP id S1725828AbgF0DL1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 23:11:27 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R387Yh140563;
-        Sat, 27 Jun 2020 03:09:37 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R37v6T140505;
+        Sat, 27 Jun 2020 03:11:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=xIrmrUzyhNuy2QdFNyWnEHlW+Vl1QGrjqP5R+DFTkvQ=;
- b=UVMiQAzvzEiz+I9s1sMlK7Zv/0o3tGDno+b+cbkiEqUnyY6WUryhHGnFspBP2ldoPuSR
- PAa5XWsxlRKf0NFWkTaKuEce7ArhmKT59dh1akNofeEdlv4fFub6+ELOxHMbhZQpVIqI
- fkNuAUDqYGN6TJJO1W+L7Wme2qah1Z9JGttuhBC3KcEA1GlIYIGQER9S6GXWXVVsL6ot
- 3kAskece3czHPrt+PexLMHT4TZ8sEoCxVROq/FYnPPrtBlrHWPQ1B9IGiXBhmdNYGKFE
- PpXsm+L00VqCErJPghOokghObhEmYCnbXlLYTFrFE94QSOId1lfleE67RuwEmAPq+tyX tg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 31wg3bkcdv-1
+ bh=65tMzZGkpgU13g+QkF5YudnfqI5t4N1Mep/VGwF/5h0=;
+ b=ZbTbhD9DHPaRSQIZT6hBBGeb6NE1RAN/HhaPHoF8t2AtWgAabCa0lqYai4MlQJadX4/H
+ O1nRa/s7hQ+623MsvdC3igxdmAKB2im7tPeXb44/4XoVfJ7glm7HbKd7jKQglgZlUGET
+ YtcgynnX88TQCm0fUXeGdA1+ySkpfQ5CiHaXb0ppQ21CwEjYoPgZ2EGoRfRvr3H4h/il
+ ZlsLVNBZ8nYlWA5MvmjFMWIMoGr8ZcRA4m/s7pghDyNTBi7PF+75PIf9Y42evsL2PPlR
+ OrSVrIqDN212tO9rjjYKFbLOPiYDdpjFTL94wzKZq5fyZ86rOr9HAUjSjONcnfSJspDu CQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 31wg3bkcgp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 27 Jun 2020 03:09:37 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R38I2M099922;
-        Sat, 27 Jun 2020 03:09:37 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 31wv58terd-1
+        Sat, 27 Jun 2020 03:11:18 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R38JvH151041;
+        Sat, 27 Jun 2020 03:09:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 31wweh0vy9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 27 Jun 2020 03:09:36 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05R39Xg4010865;
-        Sat, 27 Jun 2020 03:09:33 GMT
+        Sat, 27 Jun 2020 03:09:18 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05R39Cur023857;
+        Sat, 27 Jun 2020 03:09:13 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 27 Jun 2020 03:09:33 +0000
+        with ESMTP ; Sat, 27 Jun 2020 03:09:12 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     jejb@linux.ibm.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        linux-scsi@vger.kernel.org
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Darren Trapp <darren.trapp@cavium.com>
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        bvanassche@acm.org, matthias.bgg@gmail.com, andy.teng@mediatek.com,
-        cc.chou@mediatek.com, kuohong.wang@mediatek.com,
-        linux-kernel@vger.kernel.org, chaotian.jing@mediatek.com,
-        cang@codeaurora.org, chun-hung.wu@mediatek.com, beanhuo@micron.com,
-        asutoshd@codeaurora.org, linux-arm-kernel@lists.infradead.org,
-        peter.wang@mediatek.com, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v2] scsi: ufs: Disable WriteBooster capability in non-supported UFS device
-Date:   Fri, 26 Jun 2020 23:09:25 -0400
-Message-Id: <159322718420.11145.18067065778687552607.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Hannes Reinecke <hare@suse.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Himanshu Madhani <himanshu.madhani@cavium.com>,
+        GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH] scsi: qla2xxx: Fix a condition in qla2x00_find_all_fabric_devs()
+Date:   Fri, 26 Jun 2020 23:09:09 -0400
+Message-Id: <159322725421.11274.1151779103436589073.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200625030430.25048-1-stanley.chu@mediatek.com>
-References: <20200625030430.25048-1-stanley.chu@mediatek.com>
+In-Reply-To: <20200619143041.GD267142@mwanda>
+References: <20200619143041.GD267142@mwanda>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 bulkscore=0
- mlxscore=0 mlxlogscore=902 malwarescore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006270020
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0
+ malwarescore=0 adultscore=0 mlxlogscore=989 spamscore=0 bulkscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006270020
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 phishscore=0
  malwarescore=0 cotscore=-2147483648 adultscore=0 lowpriorityscore=0
- impostorscore=0 clxscore=1015 mlxscore=0 mlxlogscore=911 spamscore=0
+ impostorscore=0 clxscore=1011 mlxscore=0 mlxlogscore=999 spamscore=0
  priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2004280000 definitions=main-2006270020
 Sender: linux-scsi-owner@vger.kernel.org
@@ -85,17 +85,14 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 25 Jun 2020 11:04:30 +0800, Stanley Chu wrote:
+On Fri, 19 Jun 2020 17:30:41 +0300, Dan Carpenter wrote:
 
-> If UFS device is not qualified to enter the detection of WriteBooster
-> probing by disallowed UFS version or device quirks, then WriteBooster
-> capability in host shall be disabled to prevent any WriteBooster
-> operations in the future.
+> This code doesn't make sense unless the correct "fcport" was found.
 
-Applied to 5.9/scsi-queue, thanks!
+Applied to 5.8/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: Disable WriteBooster capability for non-supported UFS devices
-      https://git.kernel.org/mkp/scsi/c/a7f1e69d4974
+[1/1] scsi: qla2xxx: Fix a condition in qla2x00_find_all_fabric_devs()
+      https://git.kernel.org/mkp/scsi/c/1fc98aaf7f85
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
