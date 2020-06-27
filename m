@@ -2,103 +2,102 @@ Return-Path: <SRS0=t7w2=AI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED944C433DF
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 00:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FA75C433DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 03:09:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9B8E2080C
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 00:22:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63D2E2081A
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 03:09:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WFs+ObC1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726101AbgF0AWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 26 Jun 2020 20:22:06 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:14922 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726028AbgF0AWG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Jun 2020 20:22:06 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 05R03M7i010514;
-        Fri, 26 Jun 2020 20:21:48 -0400
-Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 31waw95326-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 26 Jun 2020 20:21:48 -0400
-Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
-        by ppma01wdc.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 05R0FoB2022990;
-        Sat, 27 Jun 2020 00:21:47 GMT
-Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
-        by ppma01wdc.us.ibm.com with ESMTP id 31uurtqk3e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 27 Jun 2020 00:21:47 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 05R0LjAg25362816
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 27 Jun 2020 00:21:45 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0706D78063;
-        Sat, 27 Jun 2020 00:21:47 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2BEF67805C;
-        Sat, 27 Jun 2020 00:21:46 +0000 (GMT)
-Received: from [153.66.254.194] (unknown [9.85.184.115])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Sat, 27 Jun 2020 00:21:45 +0000 (GMT)
-Message-ID: <1593217304.10175.4.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: Avoid unnecessary iterations on __scsi_scan_target
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Anjali Kulkarni <Anjali.K.Kulkarni@oracle.com>,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org
-Date:   Fri, 26 Jun 2020 17:21:44 -0700
-In-Reply-To: <7917b23d-0222-d0c7-42a4-b3f18ac24ec2@oracle.com>
-References: <38cee464-7320-87a9-f55c-f0db4679fc0a@oracle.com>
-         <1593216207.10175.2.camel@linux.vnet.ibm.com>
-         <7917b23d-0222-d0c7-42a4-b3f18ac24ec2@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.216,18.0.687
- definitions=2020-06-26_12:2020-06-26,2020-06-26 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- clxscore=1011 impostorscore=0 malwarescore=0 cotscore=-2147483648
- mlxscore=0 bulkscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0
- adultscore=0 mlxlogscore=996 spamscore=0 classifier=spam adjust=0
+        id S1725861AbgF0DJS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 26 Jun 2020 23:09:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:48688 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725831AbgF0DJS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jun 2020 23:09:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R38Pqa106117;
+        Sat, 27 Jun 2020 03:09:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=kWmIZR3qrWv9Wbf06UsNxAbwpC9Qmn+wYlBkQdrluCI=;
+ b=WFs+ObC1AJcvu7mZ5b0q+yn9Zru4rLEy2OW9VHT+65swLrqR7JfNvSX3zFsiZgEF23u5
+ GTTFtp7WREy9HrqvYeR3JUsku7L+gEO/+LgoR56rE5RBJfJNpYHErARmBN+eCgZUpk7K
+ Zxg4ruDYrq/ksK3HWEv+jmt5+Lyp505F59NdPELOwCRuY2/dFDKshpeANTGbGmT5aLbK
+ kb1C1XvWRg0vQz0YzDKjG5gjTsjU/HJJpMpwECVtnyOxGswHvmaSh1HpkQuXDCg6iUkd
+ HHqli63UfuoUB8QRUL0e3fuX551D+0BCxfEuEEG6myQpcPC/8D1qFLzI1kUA5iwVkj/z /w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 31uusu8wjp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 27 Jun 2020 03:09:16 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R38A1C099266;
+        Sat, 27 Jun 2020 03:09:16 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 31wv58tejs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 27 Jun 2020 03:09:16 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05R39ESo011694;
+        Sat, 27 Jun 2020 03:09:15 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 27 Jun 2020 03:09:14 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Javed Hasan <jhasan@marvell.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 0/2] libfc: Handling of extra kref.
+Date:   Fri, 26 Jun 2020 23:09:11 -0400
+Message-Id: <159322725421.11274.1724284827781560113.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200622101212.3922-1-jhasan@marvell.com>
+References: <20200622101212.3922-1-jhasan@marvell.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 bulkscore=0
+ mlxscore=0 mlxlogscore=819 malwarescore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006270020
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ cotscore=-2147483648 malwarescore=0 mlxscore=0 clxscore=1011
+ lowpriorityscore=0 mlxlogscore=849 phishscore=0 priorityscore=1501
+ spamscore=0 impostorscore=0 adultscore=0 classifier=spam adjust=0
  reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006260166
+ definitions=main-2006270020
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2020-06-26 at 17:17 -0700, Anjali Kulkarni wrote:
-> Thanks James.
-> 
-> This is on a VM on OCI cloud, using virtio scsi.
-> 
-> Here is output of lspci on the VM:
-> 
-> 00:00.0 Host bridge: Intel Corporation 440FX - 82441FX PMC [Natoma]
-> (rev 02)
-> 00:01.0 ISA bridge: Intel Corporation 82371SB PIIX3 ISA
-> [Natoma/Triton II]
-> 00:01.1 IDE interface: Intel Corporation 82371SB PIIX3 IDE 
-> [Natoma/Triton II]
-> 00:01.2 USB controller: Intel Corporation 82371SB PIIX3 USB 
-> [Natoma/Triton II] (rev 01)
-> 00:01.3 Bridge: Intel Corporation 82371AB/EB/MB PIIX4 ACPI (rev 03)
-> 00:02.0 VGA compatible controller: Device 1234:1111 (rev 02)
-> 00:03.0 Ethernet controller: Red Hat, Inc. Virtio network device
-> 00:04.0 SCSI storage controller: Red Hat, Inc. Virtio SCSI
+On Mon, 22 Jun 2020 03:12:10 -0700, Javed Hasan wrote:
 
-I think the right thing to do would be to fix virtio-SCSI.  It already
-has the guest to host communication to know how many targets are
-configured.  There's shouldn't be any need to do scanning.
+> Kindly apply this series to scsi tree at your earliest convenience.
+> 
+> Thanks,
+> Javed
+> 
+> Javed Hasan (2):
+>   scsi: libfc: Handling of extra kref.
+>   scsi: libfc: Skip additional kref updating work event.
+> 
+> [...]
 
-James
+Applied to 5.8/scsi-fixes, thanks!
 
+[1/2] scsi: libfc: Handling of extra kref
+      https://git.kernel.org/mkp/scsi/c/71f2bf85e90d
+[2/2] scsi: libfc: Skip additional kref updating work event
+      https://git.kernel.org/mkp/scsi/c/823a65409c89
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
