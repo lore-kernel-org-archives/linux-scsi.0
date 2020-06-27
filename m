@@ -2,93 +2,109 @@ Return-Path: <SRS0=t7w2=AI=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D5DAC433DF
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 04:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC0DC433E0
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 13:33:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC3FB20857
-	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 04:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E90120B1F
+	for <linux-scsi@archiver.kernel.org>; Sat, 27 Jun 2020 13:33:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i1mob5Pi"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="R/iHhHeN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725885AbgF0Ep7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 27 Jun 2020 00:45:59 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:48308 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725840AbgF0Ep6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2020 00:45:58 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R4hX0G067788;
-        Sat, 27 Jun 2020 04:45:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- references : message-id : date : mime-version : in-reply-to : content-type
- : content-transfer-encoding; s=corp-2020-01-29;
- bh=nFo71nSVFCsU+0FggxHBmS1HfWVT47gChz2B23U4Cnc=;
- b=i1mob5PiUBCDlVuQPzWIJTbDDuX5XYgB1YfeTpaeew1ObHT2jc9xGFfIXRLd6tPe4VLe
- 5L0xw5gFjpAdDpDoRqBBM8tbYbcV85dsuy92YYO9bWMZ+vUM+s3BmO0DMeTEUySmmtEy
- anLxQi14mjYrlMuSgK/Mtsmqe/yNrEI0JqdMsEdKN1OszZZP1ET17ZGaiQBqG/n3m2zV
- UrWEphn9Ytc07kIuRsijDdWmTBCWJ0McTCj98L2LLJAHUUFSRh8SGOA6F907Weh2mrVc
- 0WpK0eJ8vKWTiUAmdugeln53nLsgXxKWRTVNtAIJUUBK8rJJ2dDwY2hmkno+EjD7BXsE jQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 31wx2m82rd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 27 Jun 2020 04:45:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05R4iNKT109356;
-        Sat, 27 Jun 2020 04:45:51 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 31wwwyw9p6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 27 Jun 2020 04:45:51 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05R4jmpd009716;
-        Sat, 27 Jun 2020 04:45:49 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 27 Jun 2020 04:45:48 +0000
-Subject: Re: [RFC PATCH 09/10] target: add helper to close session
- synchronously
-From:   Mike Christie <michael.christie@oracle.com>
-To:     hare@suse.de, bvanassche@acm.org, bstroesser@ts.fujitsu.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-References: <1593232509-13720-1-git-send-email-michael.christie@oracle.com>
- <1593232509-13720-10-git-send-email-michael.christie@oracle.com>
-Message-ID: <89747f03-3bbf-a210-bf7d-4c487d80f285@oracle.com>
-Date:   Fri, 26 Jun 2020 23:45:54 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <1593232509-13720-10-git-send-email-michael.christie@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
- adultscore=0 mlxscore=0 spamscore=0 bulkscore=0 malwarescore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006270032
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9664 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0
- lowpriorityscore=0 bulkscore=0 mlxlogscore=999 clxscore=1015 adultscore=0
- impostorscore=0 cotscore=-2147483648 priorityscore=1501 malwarescore=0
- phishscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2006270032
+        id S1726394AbgF0Nd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 27 Jun 2020 09:33:28 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:24772 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725850AbgF0Nd2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2020 09:33:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593264807;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=Qer1iXTJUcRgtSy6CWeiNt2qqL/Nc340WbBo6sqo8Hw=;
+        b=R/iHhHeNOo4oAUxabGXpW7u3Kt1S/YKgoQsFb/8S4HDHz9JFqd76Lya+vsUDe3EAFmKqrz
+        1idG++QoHJW+JegEZfCi3XCwYdizxJi65hAcGQTZbcOv2/0N6Xx1L0voBpQjtm2Gjh/8em
+        8LbTEaLkmiNJ7AW3O9PGP+copUsDwME=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-345-2Hx_SW-KOIipwUmNYHBQ3g-1; Sat, 27 Jun 2020 09:33:25 -0400
+X-MC-Unique: 2Hx_SW-KOIipwUmNYHBQ3g-1
+Received: by mail-qt1-f200.google.com with SMTP id e4so8622545qtd.13
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Jun 2020 06:32:58 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Qer1iXTJUcRgtSy6CWeiNt2qqL/Nc340WbBo6sqo8Hw=;
+        b=qapeMk0kG5cRLxGOusfDYHvase5/68Hv932Xmp8QfNuSL+9x3b+k2FYGU/C/Ptf25z
+         UMs7V+w0dUZvudbfyas4r4gLrFSefsU51spD90Ks0kfj5zEdFahHPbighMPzeLV8++sx
+         jXUPf55bOSwTytghXAta0tBud4eu5b0PaJtK01Jy5RyXkmJUT+YgbYhp5jYH0xVznKTE
+         qb4+K3bbuBDJEOtui6PqL4BG/bnPe9BJfIVENvEt01UjwQ5cbvWKfcKU9Xu2XWhyKWpu
+         VsLkCCVgYGBfAj8+em/ue7M+GmQFdlR94eC0e+8lKl6Q3gQz7Z+52zs4XUX7yGKwWa8H
+         zq3w==
+X-Gm-Message-State: AOAM530SRpbOemh+K3/tf6gn3GmsPbkQ1xLjmMKZCizDmI/HCivyr0wZ
+        8CWGGIwX8erTQ6Ntco3t3sjZMtfupK6bRjgLBXZ0SfrjnskXFGUaRcK0flX91cXsDlDmpG+zqIB
+        H7eHOUk4SBfdamYYbZ4MWoQ==
+X-Received: by 2002:ac8:40cd:: with SMTP id f13mr7446122qtm.373.1593264777905;
+        Sat, 27 Jun 2020 06:32:57 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxTywsDCYj1R1MS3BxIDCt8awqyb1UCPMVd5HfK6pZlMhU6x4aB7OaqYuih/FjYDa/EJvOPwQ==
+X-Received: by 2002:ac8:40cd:: with SMTP id f13mr7446108qtm.373.1593264777712;
+        Sat, 27 Jun 2020 06:32:57 -0700 (PDT)
+Received: from trix.remote.csb (075-142-250-213.res.spectrum.com. [75.142.250.213])
+        by smtp.gmail.com with ESMTPSA id b22sm9767979qka.43.2020.06.27.06.32.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 27 Jun 2020 06:32:57 -0700 (PDT)
+From:   trix@redhat.com
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Tom Rix <trix@redhat.com>
+Subject: [PATCH] scsi: scsi_transport_spi: fix function pointer check.
+Date:   Sat, 27 Jun 2020 06:32:42 -0700
+Message-Id: <20200627133242.21618-1-trix@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/26/20 11:35 PM, Mike Christie wrote:
-> +	if (!se_sess->tfo->close_session) {
-> +		pr_err("Session %d does not support configfs session removal.",
-> +		       se_sess->sid);
-> +		return -EINVAL;
-> +	}
+From: Tom Rix <trix@redhat.com>
 
-I just realized I posted a slightly older version of the patch I meant 
-to post. The locking issue above will be fixed in the final version.
+clang static analysis flags several null function pointer problems.
+
+drivers/scsi/scsi_transport_spi.c:374:1: warning: Called function pointer is null (null dereference) [core.CallAndMessage]
+spi_transport_max_attr(offset, "%d\n");
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Reviewing the store_spi_store_max macro
+
+	if (i->f->set_##field)
+		return -EINVAL;
+
+should be
+
+	if (!i->f->set_##field)
+		return -EINVAL;
+
+Signed-off-by: Tom Rix <trix@redhat.com>
+---
+ drivers/scsi/scsi_transport_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index f8661062ef95..f3d5b1bbd5aa 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -339,7 +339,7 @@ store_spi_transport_##field(struct device *dev, 			\
+ 	struct spi_transport_attrs *tp					\
+ 		= (struct spi_transport_attrs *)&starget->starget_data;	\
+ 									\
+-	if (i->f->set_##field)						\
++	if (!i->f->set_##field)						\
+ 		return -EINVAL;						\
+ 	val = simple_strtoul(buf, NULL, 0);				\
+ 	if (val > tp->max_##field)					\
+-- 
+2.18.1
+
