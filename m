@@ -2,123 +2,140 @@ Return-Path: <SRS0=bO3J=AJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B989C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 19:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05043C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 19:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1199B206C3
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 19:37:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D92CD206A1
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 19:42:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SKA0ho0L"
+	dkim=pass (2048-bit key) header.d=hmh.eng.br header.i=@hmh.eng.br header.b="c2KxKieR";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="LtENHqXH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726743AbgF1Th5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Jun 2020 15:37:57 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:37300 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726699AbgF1Th5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2020 15:37:57 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05SJW2FR026997;
-        Sun, 28 Jun 2020 19:37:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=8UP1J8KIvbZruRKT34GLAOGsHEsERFbjMb6TYIdgN2k=;
- b=SKA0ho0L8D64ZCt+/uCdE3qnGdjpYSs0TM3MQkkSZnON0thQItuoIxru3npGbpfSSRtg
- LyFL6N2N06I2dezWYLzWvxDmqcGLE6vj2GJPnN3uKaOZbT07w/hSTr7OZWsZbKjbdVY4
- o5Z+5AqyOmOpZROvLyRP1vEqtoilPzexG/rk8SDhPZKIm4v/JzugSMfmO5KXhai1CKhZ
- PlViTk90N1Kdp0qSnlkaGYk7djD9dmtd4SEfk4SqqxaFVfC2z6M7o4iANQQMh3cK3Rzu
- uCfrFaz/R1lKMzGI1s6xpwg+4jvLQMC0URE89xbF0mrg3YGDtleQrI62r3/p17TkmqiK /w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 31wxrmuda1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 28 Jun 2020 19:37:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05SJXc56063762;
-        Sun, 28 Jun 2020 19:35:37 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 31xg1u36q5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 28 Jun 2020 19:35:37 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05SJZYGd012940;
-        Sun, 28 Jun 2020 19:35:34 GMT
-Received: from [20.15.0.2] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 28 Jun 2020 19:35:34 +0000
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.80.23.2.2\))
-Subject: Re: [PATCH] scsi: target: tcmu: Fix crash on ARM during cmd
- completion
-From:   Michael Christie <michael.christie@oracle.com>
-In-Reply-To: <93e7f9ef-566e-6949-b2c7-2e822ee49f39@acm.org>
-Date:   Sun, 28 Jun 2020 14:35:32 -0500
-Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        id S1726733AbgF1TmK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Jun 2020 15:42:10 -0400
+Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:51397 "EHLO
+        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726691AbgF1TmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 28 Jun 2020 15:42:09 -0400
+Received: from compute7.internal (compute7.nyi.internal [10.202.2.47])
+        by mailout.west.internal (Postfix) with ESMTP id 33EEC422;
+        Sun, 28 Jun 2020 15:42:08 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute7.internal (MEProxy); Sun, 28 Jun 2020 15:42:08 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hmh.eng.br; h=
+        date:from:to:cc:subject:message-id:references:mime-version
+        :content-type:in-reply-to; s=fm3; bh=FGcZt/6GMkSRNLSDs9gB3jrYVai
+        8Gb9IKiujRYjF0bo=; b=c2KxKieRlGyL4lugZMvSumbQer6ZcVGoY79mqdNktlP
+        EA9BS4lrBMXff3UF+drQ+OKGnoCo0m9lYl0kfQJ8brNc9y1NLUt7Sc/k6Hl11j5j
+        H5Dex58q7zc4fLbVGq4/ldslSivmEeyVJITyjwR4HzxHL/h4Op8hUBbczmjzExFg
+        V1DfXIHjUbqwGb25JRvUrUc1CJYlxt4kCmIBHGF0dgJLxXqQ/gmGv0lnvh6SzMHm
+        s9NUcgmq2xrto0VOi+FjXxdgqC6yfXd/JaNhLl9Dk+czRikuzvV4R5PyxqooAsGV
+        F9uhg2zT6OoPq4M8eBQgJZg/klXeTVnzXqGuml13vEw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=FGcZt/
+        6GMkSRNLSDs9gB3jrYVai8Gb9IKiujRYjF0bo=; b=LtENHqXHroWzaMwe02bbjT
+        Z6UDKOvW5rVJIcgJCqq4VH+n5M8CBpc3hcfPxwj/lXCQ15bEgarufzWB1LXOY0zS
+        niUYegZl1lhSw1yk/TqnV1RW/jdmZErLF96dqHqxExJgMiYq39NRT2rd9T8p5Ttg
+        Ff2JfTol87jVxtdvSfCtNdKNs/LX4ja4pHlM7Xm8hJhgIo8LA8ETwx0VlMEtSkmM
+        5tIrwa57zXiVr5aPUUwUrKk48NmUf/ZMmAOBYSS0Zpwt5k45tafSY/KkJWEIVvBo
+        9guG52VaZnrQzNi4mswQIPQ5KThcfBy8vWc3x3oBPa5Jv2hRGO6nqGPKzzuofChA
+        ==
+X-ME-Sender: <xms:jvL4Xvo5bgBZaO0zXy5vIbdioY7QHQzPTSzde8p9c3huu8PTbgJxzA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduhedrudeliedgudegvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvuffkfhggtggujggfsehttddttddtredvnecuhfhrohhmpefjvghn
+    rhhiqhhuvgcuuggvucfoohhrrggvshcujfholhhstghhuhhhuceohhhmhheshhhmhhdrvg
+    hnghdrsghrqeenucggtffrrghtthgvrhhnpedtfeefvdffkeevjeeuffdvvdevveetjefg
+    vdfhffeuteefvdevgeeuueejtddutdenucffohhmrghinheplhhkmhhlrdhorhhgnecukf
+    hppedujeejrdduleegrdejrdefvdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgr
+    mhepmhgrihhlfhhrohhmpehhmhhhsehhmhhhrdgvnhhgrdgsrh
+X-ME-Proxy: <xmx:jvL4Xppnc72eOJi3Amq7ZlpksP_mtyLe1zFDti1KvTPm6RhMCnz-Pw>
+    <xmx:jvL4XsPQj179TK0CKyTNtl3oc6J5sUGSFDCcr239X3zyM7MqDfTPJw>
+    <xmx:jvL4Xi6Bckveud57Q62bV0KqU-9JCQ7Ul7F0O8JI2HBYLuRXOtSesg>
+    <xmx:j_L4XkmAWFdu1d9pOFGmyvEuilO1seWEYRFUL-Qmz4L11Ry1Pw__Ig>
+Received: from khazad-dum.debian.net (unknown [177.194.7.32])
+        by mail.messagingengine.com (Postfix) with ESMTPA id A45713280059;
+        Sun, 28 Jun 2020 15:42:06 -0400 (EDT)
+Received: from localhost (localhost [127.0.0.1])
+        by localhost.khazad-dum.debian.net (Postfix) with ESMTP id E20FA340015F;
+        Sun, 28 Jun 2020 16:42:04 -0300 (-03)
+X-Virus-Scanned: Debian amavisd-new at khazad-dum.debian.net
+Received: from khazad-dum.debian.net ([127.0.0.1])
+        by localhost (khazad-dum2.khazad-dum.debian.net [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id dA65gXlKiPuD; Sun, 28 Jun 2020 16:42:03 -0300 (-03)
+Received: by khazad-dum.debian.net (Postfix, from userid 1000)
+        id F130E3400159; Sun, 28 Jun 2020 16:42:02 -0300 (-03)
+Date:   Sun, 28 Jun 2020 16:42:02 -0300
+From:   Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To:     Simon Arlott <simon@octiron.net>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        JiangYu <lnsyyj@hotmail.com>,
-        Daniel Meyerholt <dxm523@gmail.com>,
-        Henry Willard <henry.willard@oracle.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <15C73AF2-672A-4686-A418-0C41993E8060@oracle.com>
-References: <20200624085320.31117-1-bstroesser@ts.fujitsu.com>
- <93e7f9ef-566e-6949-b2c7-2e822ee49f39@acm.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-X-Mailer: Apple Mail (2.3608.80.23.2.2)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9666 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 phishscore=0
- malwarescore=0 mlxlogscore=999 adultscore=0 mlxscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006280146
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9666 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
- priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
- malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
- lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006280146
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Subject: Re: [PATCH] scsi: sd: stop SSD (non-rotational) disks before reboot
+Message-ID: <20200628194202.GA9252@khazad-dum.debian.net>
+References: <499138c8-b6d5-ef4a-2780-4f750ed337d3@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+ <CY4PR04MB37511505492E9EC6A245CFB1E79B0@CY4PR04MB3751.namprd04.prod.outlook.com>
+ <20200623204234.GA16156@khazad-dum.debian.net>
+ <4e9c7e62-b1e4-80b0-8e22-9d57d3431f37@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4e9c7e62-b1e4-80b0-8e22-9d57d3431f37@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+X-GPG-Fingerprint1: 4096R/0x0BD9E81139CB4807: C467 A717 507B BAFE D3C1  6092
+ 0BD9 E811 39CB 4807
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Sun, 28 Jun 2020, Simon Arlott wrote:
+> On 23/06/2020 21:42, Henrique de Moraes Holschuh wrote:
+> > [1] I have long lost the will and energy to pursue this, so *this* is a
+> > throw-away anecdote for anyone that cares: I reported here a few years
+> > ago that many models of *SATA* based SSDs from Crucial/Micron, Samsung
+> > and Intel were complaining (through their SMART attributes) that Linux
+> > was causing unsafe shutdowns.
+> > 
+> > https://lkml.org/lkml/2017/4/10/1181
+> > 
+> > TL;DR: wait one *extra* second after the SSD acknowleged the STOP
+> > command as complete before you trust the SSD device is safe to be
+> > powered down (i.e. before reboot, suspend, poweroff/shutdown, and device
+> > removal/detach).  This worked around the issue for every vendor and
+> > model of SSD we tested.
+> 
+> Looking through that thread, it looks like a simple 1 second delay on
+> shutdown/reboot patch hasn't been proposed yet?
 
+It should work, yes.  And it likely would help with whatever $RANDOM
+other hardware that has the same issues but has no way to make itself
+noticed, so *I* would appreciate it as something I could tell the kernel
+to *always* do.
 
-> On Jun 27, 2020, at 9:31 PM, Bart Van Assche <bvanassche@acm.org> =
-wrote:
->=20
-> On 2020-06-24 01:53, Bodo Stroesser wrote:
->> The fix is to use the maximum of remaining ring space and
->> sizeof(struct tcmu_cmd_entry) as the length param.
->>=20
->=20
-> [ ... ]
->=20
->> +		/*
->> +		 * Flush max. up to end of cmd ring, since current entry =
-might
->> +		 * be a padding that is shorter than sizeof(*entry)
->> +		 */
->> +		size_t ring_left =3D =
-head_to_end(udev->cmdr_last_cleaned,
->> +					       udev->cmdr_size);
->> +		tcmu_flush_dcache_range(entry, ring_left < =
-sizeof(*entry) ?
->> +					ring_left : sizeof(*entry));
->>=20
->> 		if (tcmu_hdr_get_op(entry->hdr.len_op) =3D=3D =
-TCMU_OP_PAD) {
->> 			UPDATE_HEAD(udev->cmdr_last_cleaned,
->=20
-> The patch description says "maximum" but the above formula calculates =
-the
-> minimum of "ring_left" and sizeof(*entry). Did I perhaps misread this =
-patch?
+But for "sd" devices, it would be likely more complete to also ensure
+the delay for device removal (not just on reboot and power off).
 
-Ah yeah, Bodo probably meant to write what they wrote for the comment =
-above about the max up to the end of the ring and not max of space left =
-and entry size.=
+> In my case none of the SSDs are recording unexpected power loss if they
+> are stopped before the reboot, but the reboot won't necessarily be
+> instantaneous after the last stop command returns.
+
+Yes, it is a race.  If either the SSD happens to need less "extra" time,
+or the computer takes a bit longer to reboot/power off, all is well.
+Otherwise, the SSD loses the race, and gets powered down at an
+inappropriate time.
+
+-- 
+  Henrique Holschuh
