@@ -2,135 +2,144 @@ Return-Path: <SRS0=bO3J=AJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4B7BC433E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 15:08:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F154C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 15:54:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 961A2206F1
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 15:08:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2039206F1
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 15:54:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RySqVmaj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726590AbgF1PIR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Jun 2020 11:08:17 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35497 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726587AbgF1PIO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2020 11:08:14 -0400
-Received: by mail-pl1-f196.google.com with SMTP id k1so6121378pls.2
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Jun 2020 08:08:14 -0700 (PDT)
+        id S1726060AbgF1Pyw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Jun 2020 11:54:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44472 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725970AbgF1Pyv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2020 11:54:51 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A2F9C03E979;
+        Sun, 28 Jun 2020 08:54:51 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id g18so14218893wrm.2;
+        Sun, 28 Jun 2020 08:54:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sEfpGNC1wgHInVbFM/yJkO/397CoGeIpiR31ps+GqnY=;
+        b=RySqVmajWV6OJ+iQX3hGEZ4N8UoeksvAL7R8YX+DoCwaicjMoJaqy342V+OpKzHsqi
+         lPZ7R4qe5X2nZczwgkpCv3yI9NlZOSryVdb52+xYjoFqvQ9gX4b0HHd9IrC14w7Iklcb
+         uFEIsCZxQps4O0qGBKX5GgyhxoIvTaG+iEaNSPDGVt0qFgxXPOvaL5Tsj6rItoVy+C+A
+         6E2eeL/708cAfNpuCiYhdeOJY0/A59LoAS8QaDmWW3POhxp0K3i94z+/1ScJEqH6zpFr
+         D7KPM15Jsui4v9h53M6+2hRUX3Zb1b7Vcs2S+5po6Ixh2sPc5Ty8o7cmY/h4dELa4hwn
+         XsHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=0LvO3BRijGyYc58uugpk7/1HNM1xopprDiOqCriUBE4=;
-        b=SmJU5NzoJMq9nCHMsfPhIzLMgbWPgbbsaUiqdri92gXa9N7Ju9fA5E/FxHCR7rw6LL
-         OG1hmOEAEvzMqJVOQtww+NeKKgfpMs0sr0oqVAA7nzhntoJVaKKwmmOBWLK3HHRojHZ7
-         CTHahx5UPfHzo1geFUxbx08IDgbnaWGwIj3fIbiNkrADgppCR5FeHi1u7sMD0YZm8k9+
-         mv7q6DtuUPtUPdbHO/A7ahZF1DVorJJlbQ5b/bpbU359CxVqjBmCUBV0qolDKfWrA2wY
-         vvie5gPvqAlnvnZWX4ZkcbPSUt1GG1Ac+4rcttezSB0r3dt3/Rh9I/bMAy1FBJW+wF0u
-         qzXQ==
-X-Gm-Message-State: AOAM530TxO/wzkY3NuYKLe667ZVSxd34liBkBhPPxa864xuFgC96IAxS
-        VGjiFUlFd/ppeQle8ZV++hDcUkBk
-X-Google-Smtp-Source: ABdhPJyK6q10Z0Mh0IwZNDqJjC0rN6muZ+n7301a8ocLL2Sn8mB64aVRT/dtJZGFjx0Mj5Kdm5tz0Q==
-X-Received: by 2002:a17:90a:930c:: with SMTP id p12mr14038266pjo.2.1593356893672;
-        Sun, 28 Jun 2020 08:08:13 -0700 (PDT)
-Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id g13sm2536172pje.29.2020.06.28.08.08.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 28 Jun 2020 08:08:12 -0700 (PDT)
-Subject: Re: [PATCH 03/22] scsi: add scsi_{get,put}_internal_cmd() helper
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>,
-        Don Brace <don.brace@microchip.de>, linux-scsi@vger.kernel.org
-References: <20200625140124.17201-1-hare@suse.de>
- <20200625140124.17201-4-hare@suse.de>
- <863b7da2-bbfc-a32f-87ab-648f8561314c@acm.org>
- <7a52763c-eb51-7c63-8d06-b0cc2eab6630@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <e5964b6d-43c1-a14d-c791-4b5826eb2ee8@acm.org>
-Date:   Sun, 28 Jun 2020 08:08:11 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sEfpGNC1wgHInVbFM/yJkO/397CoGeIpiR31ps+GqnY=;
+        b=BhFCl2218dBr+fIiYNxL52MIlbv9pZwNQKrapZWXKr5jfaL7amDOjwcuryP2IZ7d/c
+         ia2z5NTXJYv/cK+AUjqLAJrCvCLXWffJTld0HJxKX13CNeUy6EQI5ZrAIZwA4Te4q1f1
+         U/teA2Vli1ziNMlXdgq2kqo2J0tH5XtaMYpx3rhH7BrV3wJo/YqwvB9ebZUZQ6tmtpf+
+         RFxc3yafD2eLS7kDC3oLJHAICfqJUDbI0HGtwulQQfCi35WC6iLYoUpCRg4TTmmXIhiB
+         pUDEeFdYkMVVhioi35PeqlnIQJmKn4RabSJSi1VsQ0P2Uh92IbR8cOigSEPtCxchvfw7
+         XYtQ==
+X-Gm-Message-State: AOAM533q9sPK4rHyTcaHXsKx4X1gDn+nRSp1uimNXmXTK30hAnE3VRUb
+        8MCvamTqGEJiYDVJURRjL6+UDf1vTNjNzXJ+tx4=
+X-Google-Smtp-Source: ABdhPJyXfnsc3DPdGe1IaBxe+LCRIZkifchnFRbAacIOGQqLZU0NIUnLM09Dp40041gsmjwm364kCA8GepFmOmc0YH0=
+X-Received: by 2002:a5d:55c9:: with SMTP id i9mr13066890wrw.404.1593359690077;
+ Sun, 28 Jun 2020 08:54:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <7a52763c-eb51-7c63-8d06-b0cc2eab6630@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20200611100717.27506-1-bob.liu@oracle.com>
+In-Reply-To: <20200611100717.27506-1-bob.liu@oracle.com>
+From:   Lai Jiangshan <jiangshanlai+lkml@gmail.com>
+Date:   Sun, 28 Jun 2020 23:54:38 +0800
+Message-ID: <CAJhGHyDQLuoCkjwnze_6ZOLwXPtbNxnjxOr=fqqqsR_yxB9xtA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] workqueue: don't always set __WQ_ORDERED implicitly
+To:     Bob Liu <bob.liu@oracle.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, lduncan@suse.com,
+        michael.christie@oracle.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-06-28 02:02, Hannes Reinecke wrote:
-> On 6/28/20 5:48 AM, Bart Van Assche wrote:
->> On 2020-06-25 07:01, Hannes Reinecke wrote:
->>> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
->>> +                    int data_direction, int op_flags)
->>
->> How about using enum dma_data_direction for data_direction and unsigned
->> int, or even better, a new __bitwise type for op_flags?
->>
-> Okay for data direction, but converting op_flags into __bitwise (or even
-> a new type) should be relegated to a different patchset.
+On Thu, Jun 11, 2020 at 6:29 PM Bob Liu <bob.liu@oracle.com> wrote:
+>
+> Current code always set 'Unbound && max_active == 1' workqueues to ordered
+> implicitly, while this may be not an expected behaviour for some use cases.
+>
+> E.g some scsi and iscsi workqueues(unbound && max_active = 1) want to be bind
+> to different cpu so as to get better isolation, but their cpumask can't be
+> changed because WQ_ORDERED is set implicitly.
 
-OK.
+Hello
 
->>> +/**
->>> + * scsi_put_internal_cmd - free an internal SCSI command
->>> + * @scmd: SCSI command to be freed
->>> + */
->>> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd)
->>> +{
->>> +    struct request *rq = blk_mq_rq_from_pdu(scmd);
->>> +
->>> +    if (blk_rq_is_internal(rq))
->>> +        blk_mq_free_request(rq);
->>> +}
->>> +EXPORT_SYMBOL_GPL(scsi_put_internal_cmd);
->>
->> How about triggering a warning for the !blk_rq_is_internal(rq) case
->> instead of silently ignoring regular SCSI commands?
->>
-> That's by design.
-> Some drivers have a common routine for freeing up commands, so it'd be
-> quite tricky to separate these two cases out at the driver level.
-> So it's far easier to call the common routine for all commands, and
-> let this function do the right thing for all commands.
+If I read the code correctly, the reason why their cpumask can't
+be changed is because __WQ_ORDERED_EXPLICIT, not __WQ_ORDERED.
 
-That sounds fair to me, but is an example available in this patch series
-of a call to scsi_put_internal_cmd() from such a common routine? It
-seems to me that all calls to scsi_put_internal_cmd() introduced in this
-patch series happen from code paths that handle internal commands only?
+>
+> This patch adds a flag __WQ_ORDERED_DISABLE and also
+> create_singlethread_workqueue_noorder() to offer an new option.
+>
+> Signed-off-by: Bob Liu <bob.liu@oracle.com>
+> ---
+>  include/linux/workqueue.h | 4 ++++
+>  kernel/workqueue.c        | 4 +++-
+>  2 files changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+> index e48554e..4c86913 100644
+> --- a/include/linux/workqueue.h
+> +++ b/include/linux/workqueue.h
+> @@ -344,6 +344,7 @@ enum {
+>         __WQ_ORDERED            = 1 << 17, /* internal: workqueue is ordered */
+>         __WQ_LEGACY             = 1 << 18, /* internal: create*_workqueue() */
+>         __WQ_ORDERED_EXPLICIT   = 1 << 19, /* internal: alloc_ordered_workqueue() */
+> +       __WQ_ORDERED_DISABLE    = 1 << 20, /* internal: don't set __WQ_ORDERED implicitly */
+>
+>         WQ_MAX_ACTIVE           = 512,    /* I like 512, better ideas? */
+>         WQ_MAX_UNBOUND_PER_CPU  = 4,      /* 4 * #cpus for unbound wq */
+> @@ -433,6 +434,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+>  #define create_singlethread_workqueue(name)                            \
+>         alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
+>
+> +#define create_singlethread_workqueue_noorder(name)                    \
+> +       alloc_workqueue("%s", WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | \
+> +                       WQ_UNBOUND | __WQ_ORDERED_DISABLE, 1, (name))
 
-Thanks,
+I think using __WQ_ORDERED without __WQ_ORDERED_EXPLICIT is what you
+need, in which case cpumask is allowed to be changed.
 
-Bart.
+Just use alloc_workqueue() with __WQ_ORDERED and max_active=1. It can
+be wrapped as a new function or macro, but I don't think
+create_singlethread_workqueue_noorder() is a good name for it.
+
+>  extern void destroy_workqueue(struct workqueue_struct *wq);
+>
+>  struct workqueue_attrs *alloc_workqueue_attrs(void);
+> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+> index 4e01c44..2167013 100644
+> --- a/kernel/workqueue.c
+> +++ b/kernel/workqueue.c
+> @@ -4237,7 +4237,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+>          * on NUMA.
+>          */
+>         if ((flags & WQ_UNBOUND) && max_active == 1)
+> -               flags |= __WQ_ORDERED;
+> +               /* the caller may don't want __WQ_ORDERED to be set implicitly. */
+> +               if (!(flags & __WQ_ORDERED_DISABLE))
+> +                       flags |= __WQ_ORDERED;
+>
+>         /* see the comment above the definition of WQ_POWER_EFFICIENT */
+>         if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
+> --
+> 2.9.5
+>
