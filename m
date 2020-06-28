@@ -2,46 +2,46 @@ Return-Path: <SRS0=bO3J=AJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4237C433DF
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 03:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E01C433DF
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 03:48:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4446208B6
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 03:43:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD9C920782
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 03:48:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726013AbgF1DnK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 27 Jun 2020 23:43:10 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:53871 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725993AbgF1DnK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2020 23:43:10 -0400
-Received: by mail-pj1-f67.google.com with SMTP id q90so5809310pjh.3
-        for <linux-scsi@vger.kernel.org>; Sat, 27 Jun 2020 20:43:09 -0700 (PDT)
+        id S1726037AbgF1DsO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 27 Jun 2020 23:48:14 -0400
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:51036 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725973AbgF1DsO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jun 2020 23:48:14 -0400
+Received: by mail-pj1-f68.google.com with SMTP id k71so3108051pje.0
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Jun 2020 20:48:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=FxeCuAPwFb8cn4KIKL59s1IFlb/8XDwopTQWRt/j3gc=;
-        b=K4W3JkqHC4mEAnLPX9FLaqYfsO1q1cLh0LjEyXtJP1q6BkKRy7nXx6MYd8OO6679z2
-         C7akJ/91PUdaLZfkyrCb3/TFvSPKt6/FvYwGzT4IcBiSDAQxibctZ0pFjovVSmTRHN9e
-         Y2tt2rYS69I459fG4qI1mkzDHfezojpGMbIJtPyZSby3/ggv1bzSrQJnP/5uVgXj8m1H
-         nmpYW474gtLEOPauApinaG2FfEXRbKFNPa6NogufO9EvnoAVWnJ5R8jGHZOOZPMjAhrB
-         8UqGuuCZK3UfKG5a3N+cvsbmG3C9pAONnklXrMdXg67JyOa2in/HQK7XrXynSqwUO2A6
-         2kEg==
-X-Gm-Message-State: AOAM5326sskYwdb4z6ZpUSSGk8U1Lsvr9eFLj3QRNC23vpLZbk0gGxCu
-        WmHmA+z4IuyHBtYUfnuW31lRhnjK
-X-Google-Smtp-Source: ABdhPJzE4WpGi1Zztb3M1HsKf0h5VcQrtQq92LfILRIkyYIbJO40py8EuP+dNIMlOIFjCFp9gNrlaA==
-X-Received: by 2002:a17:902:9301:: with SMTP id bc1mr8255495plb.116.1593315788745;
-        Sat, 27 Jun 2020 20:43:08 -0700 (PDT)
+        bh=+Q/x87tRQYChDN5xgZaWVF77jvzuE7MGGIj0n4sW+Wo=;
+        b=tf4viQ0pmZBhvv0w+Lzp+yK0ljwfU8S6ohoefr8BJNhiQ2V/TKTIhalTekF+kGWWcs
+         inXyO9yTdDuoL6TOisa+RHcyaMPabxIJUoG8nEfYfl+1xGTLLwQfXTcQlSbh/gqQJ2r2
+         cb8L4kzvyizLPHAfcvkkPUKUcuc9sf+6U/I+IjSUr+Wx8awZOEGQG0zamfy8X3njiCyB
+         mlaz6XYpcU3xwgNKivsCrdjM0+BQpb2LrPrZbPhVFcWvvJ5FubgvxQxM6tAzb11xcT78
+         lAeS4YI4c7Wqx5rLqtS2H6otYHgL0MfMLEviFfQ5gRiY2Jz7AMQEBGYYB00OUDFXsQ1O
+         VPJA==
+X-Gm-Message-State: AOAM5315srENfLShlAOZwzmVp/CD4lYML3ubkhZ5HcBFveIfdKf6swY+
+        Jzf8GGkWj1u0v9QhlyCfzzhKaYTq
+X-Google-Smtp-Source: ABdhPJzPml4GpKzD1kGpa2708Hn14Z1V1Z7IpNM7bGQu+h0IC/JB9QkrZIPRmHTFrjaM5U0TDosAdQ==
+X-Received: by 2002:a17:902:694b:: with SMTP id k11mr8707678plt.285.1593316093175;
+        Sat, 27 Jun 2020 20:48:13 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id n7sm15057833pjq.22.2020.06.27.20.43.07
+        by smtp.gmail.com with ESMTPSA id v66sm30534789pfb.63.2020.06.27.20.48.12
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 27 Jun 2020 20:43:08 -0700 (PDT)
-Subject: Re: [PATCH 02/22] block: add flag for internal commands
+        Sat, 27 Jun 2020 20:48:12 -0700 (PDT)
+Subject: Re: [PATCH 03/22] scsi: add scsi_{get,put}_internal_cmd() helper
 To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -49,7 +49,7 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Don Brace <don.brace@microchip.de>, linux-scsi@vger.kernel.org
 References: <20200625140124.17201-1-hare@suse.de>
- <20200625140124.17201-3-hare@suse.de>
+ <20200625140124.17201-4-hare@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -74,12 +74,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <3576e7ea-02d3-fc48-a66b-4dcc1bf6a8c2@acm.org>
-Date:   Sat, 27 Jun 2020 20:43:07 -0700
+Message-ID: <863b7da2-bbfc-a32f-87ab-648f8561314c@acm.org>
+Date:   Sat, 27 Jun 2020 20:48:11 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <20200625140124.17201-3-hare@suse.de>
+In-Reply-To: <20200625140124.17201-4-hare@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -89,30 +89,57 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-06-25 07:01, Hannes Reinecke wrote:
-> diff --git a/block/blk-exec.c b/block/blk-exec.c
-> index 85324d53d072..86e8968cfa90 100644
-> --- a/block/blk-exec.c
-> +++ b/block/blk-exec.c
-> @@ -55,6 +55,11 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
->  	rq->rq_disk = bd_disk;
->  	rq->end_io = done;
->  
-> +	if (WARN_ON(blk_rq_is_internal(rq))) {
-> +		blk_mq_end_request(rq, BLK_STS_NOTSUPP);
-> +		return;
-> +	}
+> +/**
+> + * scsi_get_internal_cmd - allocate an intenral SCSI command
+                                          ^^^^^^^^
+                                          internal?
+> + * @sdev: SCSI device from which to allocate the command
+> + * @data_direction: Data direction for the allocated command
+> + * @op_flags: request allocation flags
+> + *
+> + * Allocates a SCSI command for internal LLDD use.
+> + */
+> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+> +					int data_direction, int op_flags)
+
+How about using enum dma_data_direction for data_direction and unsigned
+int, or even better, a new __bitwise type for op_flags?
+
+> +{
+> +	struct request *rq;
+> +	struct scsi_cmnd *scmd;
+> +	blk_mq_req_flags_t flags = 0;
+> +	unsigned int op = REQ_INTERNAL | op_flags;
 > +
->  	blk_account_io_start(rq);
+> +	op |= (data_direction == DMA_TO_DEVICE) ?
+> +		REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
+> +	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
+> +	if (IS_ERR(rq))
+> +		return NULL;
+> +	scmd = blk_mq_rq_to_pdu(rq);
+> +	scmd->request = rq;
+> +	scmd->device = sdev;
+> +	return scmd;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
 
-Isn't it recommended to use WARN_ON_ONCE() instead of WARN_ON()?
+Since the 'flags' variable always has the value 0, can it be left out?
 
->  #define REQ_DRV			(1ULL << __REQ_DRV)
->  #define REQ_SWAP		(1ULL << __REQ_SWAP)
-> +#define REQ_INTERNAL		(1ULL << __REQ_INTERNAL)
+> +/**
+> + * scsi_put_internal_cmd - free an internal SCSI command
+> + * @scmd: SCSI command to be freed
+> + */
+> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd)
+> +{
+> +	struct request *rq = blk_mq_rq_from_pdu(scmd);
+> +
+> +	if (blk_rq_is_internal(rq))
+> +		blk_mq_free_request(rq);
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_put_internal_cmd);
 
-How about introducing a __bitwise type for the REQ_ flags such that
-sparse can check whether the proper type of flags has been passed to a
-function?
+How about triggering a warning for the !blk_rq_is_internal(rq) case
+instead of silently ignoring regular SCSI commands?
 
 Thanks,
 
