@@ -2,106 +2,89 @@ Return-Path: <SRS0=bO3J=AJ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B12AC433E0
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 09:19:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50BCDC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 10:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32D9B20724
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 09:19:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="au3J6bdV"
+	by mail.kernel.org (Postfix) with ESMTP id 2DF5820708
+	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 10:13:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726125AbgF1JTD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Jun 2020 05:19:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40614 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726069AbgF1JTD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2020 05:19:03 -0400
-Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58C86C061794
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Jun 2020 02:19:03 -0700 (PDT)
-Received: by mail-io1-xd41.google.com with SMTP id i4so14077913iov.11
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Jun 2020 02:19:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=dW/2t4TGrHfqrhLgODfFGEWXYiT6XSNFiipUQzG/5wQ=;
-        b=au3J6bdVtYOguBaAkuUK9HPOQxjaib95ywCDiYO8PB8Qmo2f4bu7NurqBgO6U6hWqc
-         QyD6PLmnBLmvbDNh09nI5bogHSD+66BNNBjqU+dTAXDDYnhBaZC8VU813N495dkH/MDD
-         ze4ztDOx2P95Ccwj7obUU8DOg4wj48sGjBOIqIf23W+EgfoU2a5PB7S/wtiKTOBMrk0l
-         Gpn8MqX6GGoB9VQdzgzK4l1lJeV8VtZKhY4u4Ropqy3Nu6yDHHWHL0OB/HBZ9Bcmccof
-         hqR3smdH3zIhUF4zXeL4lVeFuE+25+6bToxpO7i6pnLpm0PcLYaA2EuorsXPR6GNVnoy
-         Qs5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=dW/2t4TGrHfqrhLgODfFGEWXYiT6XSNFiipUQzG/5wQ=;
-        b=Y9gMztIrtJ8iNpDpC919c7i1jv8cAzvuy6dFhKyQxfWuLSbWjmt/9nCfEpdqlJhv+v
-         BRBtN6C1bRrnBi9HOffwl5mJxb8SNN+xyW3I4kD87CunNzhNh4vmPPs51l/dRNwuAdxz
-         l9Z4CEKabItQSu2X8KeKhdbLUTWFjxd2FJaWsYmrMzGqVwpYgM7vgG4s3B+lGY1tN3+U
-         krfAbyLiWo6XdNB6STlL/Lw5akRkIdEQWFdl+sFCEhVSjFPuGF7dS68/OmgAIm1Dn0kx
-         hv3oHc8AgEtu4Xf9Z5GNm39dj1ovu+YyVvDvm3A4KAF7nZhRo0vhF+4DqJioV+LA7Y0Y
-         ewQg==
-X-Gm-Message-State: AOAM531C/O8K5hn3ziv371ZeqqvpPh8gqNJNsYV//5SlAJjGPbRP9xNd
-        Je+X5l6qknN6TQfCde8Msh4oOthVIdWuRxs230g=
-X-Google-Smtp-Source: ABdhPJx9jYrlK1sOsTqkbOQcpFe6Ij+S5VUQsqiNuJfkoyvCC18tMHHrBxPKDnc55XAS3feDnVrtyrfePUDfdg2dqss=
-X-Received: by 2002:a6b:9042:: with SMTP id s63mr11910778iod.195.1593335942709;
- Sun, 28 Jun 2020 02:19:02 -0700 (PDT)
+        id S1725935AbgF1KNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Jun 2020 06:13:38 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51162 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725921AbgF1KNi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 28 Jun 2020 06:13:38 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 40634ACCC;
+        Sun, 28 Jun 2020 10:13:37 +0000 (UTC)
+Subject: Re: [PATCH 02/22] block: add flag for internal commands
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        John Garry <john.garry@huawei.com>,
+        Don Brace <don.brace@microchip.de>, linux-scsi@vger.kernel.org
+References: <20200625140124.17201-1-hare@suse.de>
+ <20200625140124.17201-3-hare@suse.de>
+ <3576e7ea-02d3-fc48-a66b-4dcc1bf6a8c2@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <f63e5192-aa06-a69a-fabd-083a876a2a51@suse.de>
+Date:   Sun, 28 Jun 2020 12:13:35 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Received: by 2002:a5e:8b07:0:0:0:0:0 with HTTP; Sun, 28 Jun 2020 02:19:02
- -0700 (PDT)
-In-Reply-To: <SN6PR04MB46402B987856A3A8472106A0FC910@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <CAKR_QVKaRMshWKGEhLpRK40yix1UP1ZMaoDJPBHFBdazc7L0cA@mail.gmail.com>
- <SN6PR04MB46402B987856A3A8472106A0FC910@SN6PR04MB4640.namprd04.prod.outlook.com>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Sun, 28 Jun 2020 11:19:02 +0200
-Message-ID: <CAKR_QVJBic2HLHY1YCYkLW7rOwgcdBHTM-YKAjp=NDX8q1uopw@mail.gmail.com>
-Subject: Re: ufs-bsg node not created
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <3576e7ea-02d3-fc48-a66b-4dcc1bf6a8c2@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/06/2020, Avri Altman <Avri.Altman@wdc.com> wrote:
-> Hi Tom,
->
->>
->> Hi
->>
->> I'm trying to use the ufs-bsg transport for SSD debug tool and facing
->> an issue where there is no ufs-bsg node created either in /dev or
->> /dev/bsg.
-> ufs-bsg is a bsg node designed to communicate with a ufs devices,
-> using non-scsi commands, but a ufs-specific protocol, which your ssd doesn't
-> speak.
-> So you can't use it with any non-ufs devices.
-> To create it you need to open its config switch - CONFIG_SCSI_UFS_BSG.
->
-> Maybe try using the sg driver?
->
-> Thanks,
-> Avri
->
->
+On 6/28/20 5:43 AM, Bart Van Assche wrote:
+> On 2020-06-25 07:01, Hannes Reinecke wrote:
+>> diff --git a/block/blk-exec.c b/block/blk-exec.c
+>> index 85324d53d072..86e8968cfa90 100644
+>> --- a/block/blk-exec.c
+>> +++ b/block/blk-exec.c
+>> @@ -55,6 +55,11 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+>>   	rq->rq_disk = bd_disk;
+>>   	rq->end_io = done;
+>>   
+>> +	if (WARN_ON(blk_rq_is_internal(rq))) {
+>> +		blk_mq_end_request(rq, BLK_STS_NOTSUPP);
+>> +		return;
+>> +	}
+>> +
+>>   	blk_account_io_start(rq);
+> 
+> Isn't it recommended to use WARN_ON_ONCE() instead of WARN_ON()?
+> 
+Depends on the frequency, but yeah, we could.
 
-CONFIG_BLK_DEV_BSG, CONFIG_BLK_DEV_BSGLIB, CONFIG_SCSI_UFS_BSG were
-already enabled.
-Issuing a firmware info command but passing /dev/sda as a node
-returned expected result, so the drive is at least partially supported
-by the tool.
-Anyway, after inspection of the drive with DMM the point of failure
-appears to be at hardware level so the tool won't be much of a use.
-It's Micron M600 m2 disk btw.
+>>   #define REQ_DRV			(1ULL << __REQ_DRV)
+>>   #define REQ_SWAP		(1ULL << __REQ_SWAP)
+>> +#define REQ_INTERNAL		(1ULL << __REQ_INTERNAL)
+> 
+> How about introducing a __bitwise type for the REQ_ flags such that
+> sparse can check whether the proper type of flags has been passed to a
+> function?
+> 
+Possibly, but that would be a different patchset.
+I'd rather not introduce it here as it would convolute this patchset 
+even more.
 
-Thanks, Tom
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
