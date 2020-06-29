@@ -2,125 +2,219 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E276AC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BFF8C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEB6C206E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC01A206E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731068AbgF2TL1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:11:27 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53590 "EHLO mx2.suse.de"
+        id S1730400AbgF2TLu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:11:50 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53728 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731050AbgF2TLZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:11:25 -0400
+        id S1731067AbgF2TL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:11:27 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id A3AFAACB8;
-        Mon, 29 Jun 2020 14:59:56 +0000 (UTC)
-Subject: Re: [PATCH 07/22] csiostor: use internal command for LUN reset
-To:     John Garry <john.garry@huawei.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
+        by mx2.suse.de (Postfix) with ESMTP id 243C4B0A5;
+        Mon, 29 Jun 2020 07:20:56 +0000 (UTC)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         Bart van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>, linux-scsi@vger.kernel.org
+        Don Brace <don.brace@microchip.com>,
+        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 11/22] scsi: revamp host device handling
+Date:   Mon, 29 Jun 2020 09:20:10 +0200
+Message-Id: <20200629072021.9864-12-hare@suse.de>
+X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200629072021.9864-1-hare@suse.de>
 References: <20200629072021.9864-1-hare@suse.de>
- <20200629072021.9864-8-hare@suse.de>
- <4567ba10-c024-8e37-7aef-7ea13025952e@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <efa3cdb0-260a-9490-db24-ca544aacfb99@suse.de>
-Date:   Mon, 29 Jun 2020 16:59:56 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
-MIME-Version: 1.0
-In-Reply-To: <4567ba10-c024-8e37-7aef-7ea13025952e@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/29/20 3:51 PM, John Garry wrote:
-> On 29/06/2020 08:20, Hannes Reinecke wrote:
->> When issuing a LUN reset we should be allocating an
->> internal command to avoid overwriting the original command.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   drivers/scsi/csiostor/csio_scsi.c | 48 
->> +++++++++++++++++++++++----------------
->>   1 file changed, 29 insertions(+), 19 deletions(-)
->>
->> diff --git a/drivers/scsi/csiostor/csio_scsi.c 
->> b/drivers/scsi/csiostor/csio_scsi.c
->> index 00cf33573136..27001fdcdcac 100644
->> --- a/drivers/scsi/csiostor/csio_scsi.c
->> +++ b/drivers/scsi/csiostor/csio_scsi.c
->> @@ -2057,10 +2057,12 @@ csio_tm_cbfn(struct csio_hw *hw, struct 
->> csio_ioreq *req)
->>   static int
->>   csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
->>   {
->> -    struct csio_lnode *ln = shost_priv(cmnd->device->host);
->> +    struct scsi_cmnd *reset_cmnd;
->> +    struct scsi_device *sdev = cmnd->device;
->> +    struct csio_lnode *ln = shost_priv(sdev->host);
->>       struct csio_hw *hw = csio_lnode_to_hw(ln);
->>       struct csio_scsim *scsim = csio_hw_to_scsim(hw);
->> -    struct csio_rnode *rn = (struct csio_rnode 
->> *)(cmnd->device->hostdata);
->> +    struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
->>       struct csio_ioreq *ioreq = NULL;
->>       struct csio_scsi_qset *sqset;
->>       unsigned long flags;
->> @@ -2073,13 +2075,13 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
->>           goto fail;
->>       csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
->> -              cmnd->device->lun, rn->flowid, rn->scsi_id);
->> +              sdev->lun, rn->flowid, rn->scsi_id);
->>       if (!csio_is_lnode_ready(ln)) {
->>           csio_err(hw,
->>                "LUN reset cannot be issued on non-ready"
->>                " local node vnpi:0x%x (LUN:%llu)\n",
->> -             ln->vnp_flowid, cmnd->device->lun);
->> +             ln->vnp_flowid, sdev->lun);
->>           goto fail;
->>       }
->> @@ -2099,17 +2101,22 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
->>           csio_err(hw,
->>                "LUN reset cannot be issued on non-ready"
->>                " remote node ssni:0x%x (LUN:%llu)\n",
->> -             rn->flowid, cmnd->device->lun);
->> +             rn->flowid, sdev->lun);
->>           goto fail;
->>       }
->> +    reset_cmnd = scsi_get_internal_cmd(sdev, DMA_NONE, REQ_NOWAIT);
-> 
-> out of curiosity, do we use the tag at all or need to allocate a request 
-> here?
-> 
-> it seems that the current code just scribbles on the scmd host scribble 
-> parts, and now we use the internal scmd host scribble parts instead - so 
-> I'm not sure what we're really improving here.
-> 
+Ensure that the host device is excluded from scanning by setting
+the BLIST_NOLUN flag, and avoid it being presented in sysfs.
+Also move the device id from using the ->this_id value as target
+id (which is a bit odd as it's typically is set to -1 anyway) to
+using ->max_channel + 1 as the channel number and '0' as the
+target id.
+With that the host device is now handled like any other scsi device,
+which means we can drop the scsi_put_host_dev() function and let
+scsi_forget_host() etc handle the deallocation.
+We only need to ensure that the host device is deallocated last
+is the driver might need it to send commands during teardown.
 
-Primary goal is to register the TMF with the block layer to make it 
-aware that some command is outstanding.
-Probably not that crucial, so I'll be dropping it for the next round.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_devinfo.c |  1 +
+ drivers/scsi/scsi_scan.c    | 55 ++++++++++++++++++++++++---------------------
+ include/scsi/scsi_host.h    | 13 ++++++-----
+ 3 files changed, 37 insertions(+), 32 deletions(-)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index eed31021e788..9d55bfbd347d 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -195,6 +195,7 @@ static struct {
+ 	{"Intel", "Multi-Flex", NULL, BLIST_NO_RSOC},
+ 	{"iRiver", "iFP Mass Driver", NULL, BLIST_NOT_LOCKABLE | BLIST_INQUIRY_36},
+ 	{"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
++	{"LINUX", "VIRTUALLUN", NULL, BLIST_NOLUN},
+ 	{"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
+ 	{"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 34470605fd0a..a24919fbd93d 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1094,6 +1094,15 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 	if (!sdev)
+ 		goto out;
+ 
++	if (scsi_device_is_host_dev(sdev)) {
++		bflags = scsi_get_device_flags(sdev,
++					       sdev->vendor,
++					       sdev->model);
++		if (bflagsp)
++			*bflagsp = bflags;
++		return SCSI_SCAN_LUN_PRESENT;
++	}
++
+ 	result = kmalloc(result_len, GFP_KERNEL |
+ 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
+ 	if (!result)
+@@ -1712,6 +1721,9 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+ 		/* If device is already visible, skip adding it to sysfs */
+ 		if (sdev->is_visible)
+ 			continue;
++		/* Host devices should never be visible in sysfs */
++		if (scsi_device_is_host_dev(sdev))
++			continue;
+ 		if (!scsi_host_scan_allowed(shost) ||
+ 		    scsi_sysfs_add_sdev(sdev) != 0)
+ 			__scsi_remove_device(sdev);
+@@ -1875,12 +1887,16 @@ EXPORT_SYMBOL(scsi_scan_host);
+ 
+ void scsi_forget_host(struct Scsi_Host *shost)
+ {
+-	struct scsi_device *sdev;
++	struct scsi_device *sdev, *host_sdev = NULL;
+ 	unsigned long flags;
+ 
+  restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	list_for_each_entry(sdev, &shost->__devices, siblings) {
++		if (scsi_device_is_host_dev(sdev)) {
++			host_sdev = sdev;
++			continue;
++		}
+ 		if (sdev->sdev_state == SDEV_DEL)
+ 			continue;
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+@@ -1888,10 +1904,13 @@ void scsi_forget_host(struct Scsi_Host *shost)
+ 		goto restart;
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
++	/* Remove host device last, might be needed to send commands */
++	if (host_sdev)
++		__scsi_remove_device(host_sdev);
+ }
+ 
+ /**
+- * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
++ * scsi_get_host_dev - Create a virtual scsi_device to the host adapter
+  * @shost: Host that needs a scsi_device
+  *
+  * Lock status: None assumed.
+@@ -1899,13 +1918,12 @@ void scsi_forget_host(struct Scsi_Host *shost)
+  * Returns:     The scsi_device or NULL
+  *
+  * Notes:
+- *	Attach a single scsi_device to the Scsi_Host - this should
+- *	be made to look like a "pseudo-device" that points to the
+- *	HA itself.
+- *
+- *	Note - this device is not accessible from any high-level
+- *	drivers (including generics), which is probably not
+- *	optimal.  We can add hooks later to attach.
++ *	Attach a single scsi_device to the Scsi_Host. The primary aim
++ *	for this device is to serve as a container from which valid
++ *	scsi commands can be allocated from. Each scsi command will carry
++ *	an unused/free command tag, which then can be used by the LLDD to
++ *	send internal or passthrough commands without having to find a
++ *	valid command tag internally.
+  */
+ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+ {
+@@ -1915,7 +1933,8 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+ 	mutex_lock(&shost->scan_mutex);
+ 	if (!scsi_host_scan_allowed(shost))
+ 		goto out;
+-	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
++	starget = scsi_alloc_target(&shost->shost_gendev,
++				    shost->max_channel + 1, 0);
+ 	if (!starget)
+ 		goto out;
+ 
+@@ -1933,22 +1952,6 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(scsi_get_host_dev);
+ 
+-/**
+- * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
+- * @sdev: Host device to be freed
+- *
+- * Lock status: None assumed.
+- *
+- * Returns:     Nothing
+- */
+-void scsi_free_host_dev(struct scsi_device *sdev)
+-{
+-	BUG_ON(sdev->id != sdev->host->this_id);
+-
+-	__scsi_remove_device(sdev);
+-}
+-EXPORT_SYMBOL(scsi_free_host_dev);
+-
+ /**
+  * scsi_device_is_host_dev - Check if a scsi device is a host device
+  * @sdev: SCSI device to test
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index a6a11fe9bbc0..7ee369772c5f 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -786,14 +786,15 @@ void scsi_host_busy_iter(struct Scsi_Host *,
+ struct class_container;
+ 
+ /*
+- * These three functions are used to allocate, free, and test for
+- * a pseudo device which will connect to the host adapter itself rather
+- * than any physical device.  You must deallocate when you are done with the
+- * thing.  This physical pseudo-device isn't real and won't be available
++ * These functions are used to allocate and test a pseudo device
++ * which will refer to the host adapter itself rather than any
++ * physical device.  The device will be deallocated together with
++ * all other scsi devices, so there is no need to have a separate
++ * function to free it.
++ * This device will not show up in sysfs and won't be available
+  * from any high-level drivers.
+  */
+-extern void scsi_free_host_dev(struct scsi_device *);
+-extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
++struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
+ bool scsi_device_is_host_dev(struct scsi_device *);
+ 
+ /*
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.16.4
+
