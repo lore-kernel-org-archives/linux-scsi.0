@@ -2,220 +2,227 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C325FC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 18:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0282EC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 18:43:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1BD521D81
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 18:39:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6CFB2064B
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 18:43:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="dBGZkDTd";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="JL0TTEX3"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="G0wScVvd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726800AbgF2Sj3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 14:39:29 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:42831 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726945AbgF2Sj0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 14:39:26 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1593455965; x=1624991965;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=Fi4Qc1kyO4KhHCUDXadR5jElj0yT2HGsYPuWQV4SzOI=;
-  b=dBGZkDTdkG3wO/bpr5ISIe4fuVTMRQW8bQhG7x0t1dwf3XYHKc2in0SC
-   r9qBKujscBhQcD+eRyszQ2IqgYk0ZGkrPNlXV/02S4ROR1avMC4yu1n8I
-   S6ROpE5g4AOYp80g+QUmPF3u9Wx9qxdUIrMtsMrnk2TcSPEBIjLJg1uly
-   xO95znQmYFWTvJ38mHcWMfUW8TNtyO8N7H6r1Nlrub21UFbKH/lW+4o8V
-   7GdxYiApWwwyU3O367I/aBOrfK/jVdeFXzyM8yTgD3F4eU7LZE8wSJdqO
-   2z9eZx4Z4JE/9oigCFTMD/GZr0pybUTVKFUqN7ue1MxrFYMOAZ9uA1S5Y
-   Q==;
-IronPort-SDR: 1eQiwi1efRDukQ0HrELHc4bvpKQ9oz7YvehHVk/oyaLL8/p4Mp/6mHww9+Snms8LotAJ0mGnlc
- Wx3MdCkCXpq956ChezJV3rAgxFqJb5EcKIqRSDBnPuu5rnXooddE2ldh0rvzQWrzKz/TnV/qdf
- vVEoW7LDmVyKzSENR/P4LJDLd9CGZAJAbXV9mGAcyfb0dVyzZjEg7fUgaEWb+SFdDQ2O07wqzl
- GfisGIPYfcOciTVL8RNCS2G1+oO2mEY271BBZkDz8rTDWSOwWivnyxZgQDy6bwohQozy92qbaL
- Luo=
-X-IronPort-AV: E=Sophos;i="5.75,294,1589212800"; 
-   d="scan'208";a="142510458"
-Received: from mail-mw2nam12lp2049.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.49])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Jun 2020 13:17:04 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KhmktBnDvODW930R0sFMlbeU9QVcma3YmadFp8LjOOEoNIGB5B+6gn/q7ZbHBdoT7IUcqL0F/hdW/kjwvC2QqPH5gPpqwJcbJni/t8SLFU1Q4YJ5rSmqyIWqJU0nT9ZhDmx1rmyZk8tGRqeDxUElG+fE6kmwwqKoerKYUEGkWUCvkoVvD2QTuAu5YC+THg1ctNLDwq4faZvJn/zLH0/PPCkD3fX7ZyhGyoE0BnfR0G9rUMheh2UU//utt7HAt5j1zelUgBvO5T3aIblDtoQyD9WpOinBMbbhnnUhiOp8px4/RTHyKWvmf3fSHfacMO3zMA6hDau69HZfNqX44uk+AQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Fi4Qc1kyO4KhHCUDXadR5jElj0yT2HGsYPuWQV4SzOI=;
- b=esRfo5RcM+4B4iwImcSTinrrJ9y3c97wgkMGFNStyU2uHp2sBRp1zgYJVM6j1Bt1QdpBs1/5LZkAYKQpPTStKspa10D+SIBlEJgHZbObYJgCs2RFg+ek89adUqk5kGGIbtTBGvwC00gefFCOwfao8jz6EJQW+fRkcmxzSOtXwaSLHZMMqJe1GFdBPTjJqjLsb7p9xtbIKIXxksX+tWCdkdv6MbOTxw6DExlgp6dwzNMLL9ix7kyA+XccP8tvxlvXS7GEd6nMcwvJFySt0zWlepZxw5+CA5jnrAVV+81NSVePmgVmFlESRtFZS3Hs13fA0YbH7PO24MmB239IE81QgA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Fi4Qc1kyO4KhHCUDXadR5jElj0yT2HGsYPuWQV4SzOI=;
- b=JL0TTEX3yW7B8r5lFuoCV6w1bYBGHM/Z0a7Ph0IxLjY5+C5I+Koso5CafUx/Of4spQVx+58J5VR0YVr6yBh5VgpvkiCEgr3VGLGssBPslzqeH8Al934Xtwg5lxjaTF/jUS784r8a6lelv05cLbToYTZ2BbLohW6ydwRSUNytf1o=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN6PR04MB4192.namprd04.prod.outlook.com (2603:10b6:805:3a::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3131.23; Mon, 29 Jun
- 2020 05:17:02 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::9cbe:995f:c25f:d288%6]) with mapi id 15.20.3131.026; Mon, 29 Jun 2020
- 05:17:02 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Subject: RE: [RFC PATCH v3 0/5] scsi: ufs: Add Host Performance Booster
- Support
-Thread-Topic: [RFC PATCH v3 0/5] scsi: ufs: Add Host Performance Booster
- Support
-Thread-Index: AQHWSQaiS38tkGk5ikmxTYEvPlxKOqjvFlDg
-Date:   Mon, 29 Jun 2020 05:17:02 +0000
-Message-ID: <SN6PR04MB4640D6DD37E365DF02CC9D14FC6E0@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <CGME20200623010201epcms2p11aebdf1fbc719b409968cba997507114@epcms2p1>
- <963815509.21592879582091.JavaMail.epsvc@epcpadp2>
-In-Reply-To: <963815509.21592879582091.JavaMail.epsvc@epcpadp2>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2a00:a040:188:8f6c:213f:a600:6b7:4650]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: e0af448a-05dd-43f2-d357-08d81beba7fc
-x-ms-traffictypediagnostic: SN6PR04MB4192:
-x-microsoft-antispam-prvs: <SN6PR04MB4192FA4E9429652B8AA4D9A6FC6E0@SN6PR04MB4192.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:309;
-x-forefront-prvs: 044968D9E1
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 62sUJVWZAYOTRUaH+J2V7994LXj5xwaR7RtJWKQF1098r4+JRcrSvwVIHx5MCsO6Bl5UYe7hJQF/TQVNQ8a79viGHJF8hFd5zyNzOJ5vsv9VaAFBk8HJlKSWRLQH0kx/AdX4+lYOWTjK8xAo+fgKfgnqnqJRhRd028SVMSgNv5F1wW0fmM4jpqe03dWwUl/meLTOu+dVIJJIrPkTZtuIaCIevIp9lJtje//w/A+ttKXBBLku++ZAFksnRke7DhUkXkwFY6jKJ7b/T3WfaZc8gZLDCVfItXRYKfitA4AeaBbRvsAP41k2T/JYDtF1irgaQvTDDvOP5oJb/tZ5e0iUe0Vf8dVyE+jltYcBYgT3jG9yER5M06aHg2ikC1TYLh49r24TgvQj5+kJex/piAkrddmEjrSZvUlULR29za6yoKlq2zJy9MLKysS5JpXz+DyN
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(39860400002)(346002)(396003)(366004)(376002)(64756008)(316002)(186003)(71200400001)(9686003)(83380400001)(53546011)(6506007)(7416002)(5660300002)(86362001)(33656002)(55016002)(966005)(8676002)(4326008)(8936002)(52536014)(66946007)(66476007)(66556008)(66446008)(478600001)(7696005)(110136005)(54906003)(76116006)(2906002)(921003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: pq6ohv7PUcbLi9GbXLb0owpG5d1upR0FA1Mo0UwSm5ILg4E0tYyVPPKXyfgzW1DJqIwi0SVIZFt2qoDQhEn09iPaiICqw0DVFcW/HqHLZqpr3lSv5VA2XjodGXgZnufWCmGP03iplkuM79mHSj+CneChP7twqHj3rLpbMw7ElyxDiUs66xQDN3tstM2ghAK2d41yyNNgaKkq+iHYAtaOR2aPgowlQ8mTg7kVshgl8V3qa9AyuCMLELWCfuJi1LMqUZQCF2hgVANizmBQh4WoLwMJl+AG0Q1IStwUbasxd8wSFB1eONQdt/ZRFnuv2SAuwlIyHVhPGgXBZQ/zOQdpPQKrj9LDEMzVlONGF4Wq9xZ4MS//fBmrIh5+gbb4ZmCXZqK3r8qkNjXX4jAEYNI+HQx3zboRAOuTtEluH69K2X3e6fJFK6xfYGgUTAGm8TdUre21ZW+5dGB0s8zPcTqmdStzRNuqwIgj4hlXaSICj0iFS18MuClnEpkneqHa/Fsyh5mPIsnQNZV5IDiiacmJWG/mu7dMYYGYOJCPFh6YeXizHpz88fdMApMoImypG7YQ
-x-ms-exchange-transport-forked: True
+        id S1726824AbgF2Snq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 14:43:46 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:63877 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726153AbgF2Snj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 14:43:39 -0400
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200629102354epoutp03132295923ecaf9322b18b44722c0a29a~c-LfmH79U0684206842epoutp03e
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 10:23:54 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200629102354epoutp03132295923ecaf9322b18b44722c0a29a~c-LfmH79U0684206842epoutp03e
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1593426234;
+        bh=gq8XNEz6DfOt51iMcSSB/6Jvegbfc40c/aYHfEzFe4E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
+        b=G0wScVvdJ9ZMsIysEo1QewrnxsPi+rS7exn3iRRUiImfoJAQqp1BpeMTn9CqhnTuw
+         Kafr1vdTDZRti0d1rRYFMgn9F5EJiNzZWQHCCuEY7crI3J3uV01sOD7LGf+zsvtCdu
+         jHdO0zGp9ZDemDk8pToV1mdhIZkj3OZsc8kBCRMA=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20200629102354epcas2p32620640889b12a08d23ef5ca933d9549~c-LfLV0yh2931829318epcas2p3_;
+        Mon, 29 Jun 2020 10:23:54 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.189]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 49wNr82JNszMqYkc; Mon, 29 Jun
+        2020 10:23:52 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4F.E2.18874.631C9FE5; Mon, 29 Jun 2020 19:23:50 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20200629102350epcas2p4f4ef326c55c897479643ebcd3e132f50~c-LbGLIPS3182431824epcas2p4Q;
+        Mon, 29 Jun 2020 10:23:50 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200629102350epsmtrp23711665e3648542f1633b7acfdb356d3~c-LbFi2Ez0132801328epsmtrp2P;
+        Mon, 29 Jun 2020 10:23:50 +0000 (GMT)
+X-AuditID: b6c32a46-519ff700000049ba-6a-5ef9c136db28
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E5.A1.08382.531C9FE5; Mon, 29 Jun 2020 19:23:50 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200629102349epsmtip25210435e2d4de3ebdd3c2a12134c8cdd~c-La8M02U0942409424epsmtip2e;
+        Mon, 29 Jun 2020 10:23:49 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [RFC PATCH v2 1/2] ufs: support various values per device
+Date:   Mon, 29 Jun 2020 19:15:55 +0900
+Message-Id: <21f8e3dd4d68f9ef4009e0a05cfac1ee01dd7213.1593412974.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1593412974.git.kwmad.kim@samsung.com>
+In-Reply-To: <cover.1593412974.git.kwmad.kim@samsung.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrEKsWRmVeSWpSXmKPExsWy7bCmqa7ZwZ9xBkdnyFnc3HKUxaL7+g42
+        ByaPvi2rGD0+b5ILYIrKsclITUxJLVJIzUvOT8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21
+        VXLxCdB1y8wBGq+kUJaYUwoUCkgsLlbSt7Mpyi8tSVXIyC8usVVKLUjJKTA0LNArTswtLs1L
+        10vOz7UyNDAwMgWqTMjJOLqoiaXgtGTFj6N97A2MzaJdjJwcEgImEgtWvmPrYuTiEBLYwShx
+        4udCdgjnE6NES99jqMw3Rom7c/czw7S8av3LCJHYyyix6PEcKOcHo8T3NZOYQKrYBDQlnt6c
+        CmaLCMhJbF7+lQXEZhZQl9g14QRYXFjASeLTwY/sIDaLgKrE+ScXWEFsXoFoiWdr1rNAbJOT
+        uHmuE2wzp4ClxIvb19HYXEA1/ewSU97+hGpwkbh46icrhC0s8er4FnYIW0ri87u9bBB2vcS+
+        qQ2sEM09jBJP9/1jhEgYS8x61g5kcwBdqimxfpc+iCkhoCxx5BbU/XwSHYf/skOEeSU62oQg
+        GpUlfk2aDDVEUmLmzTtQWz0kOi5/ZoWED9Cm9t6JjBMY5WchLFjAyLiKUSy1oDg3PbXYqMAI
+        Ofo2MYITk5bbDsYpbz/oHWJk4mA8xCjBwawkwvvZ+lucEG9KYmVValF+fFFpTmrxIUZTYEBO
+        ZJYSTc4Hpsa8knhDUyMzMwNLUwtTMyMLJXHeesULcUIC6YklqdmpqQWpRTB9TBycUg1MLZfX
+        feZ/OtmwcUnI9jNRUQsyG96/XmgZ/OPGXdH1uRuPcMb7Lu/lD2p4sr5N57CF+OZsn+ZFC+y2
+        vvi/LmThNMVTansd8/6eTI3yc/my7RVf0MuCi6feLKu54u14fc0UteaNoo7bYlUTTBIVN0/I
+        2LjWm+3bq2Tx5YUrbQ4yporYXl38qbZPu/0gr9+abSq+OnVKbtNzlm/Jrg81+J9Wun+ZxFm/
+        pmje5+e95oWd+Ol2oURh59fSB8qvTB7yx83qEVt4invCIWW/FSZ9zGceNDOe/qX9N8fm7FSD
+        t89y+/3NVM6z8PutbTkWv96o9MsvjUP2HnYM7w9muYWffCWTaFHquk5yWvBFcb+1M1+VKLEU
+        ZyQaajEXFScCAKTok+/VAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphluLIzCtJLcpLzFFi42LZdlhJXtfs4M84g6l7GS1ubjnKYtF9fQeb
+        A5NH35ZVjB6fN8kFMEVx2aSk5mSWpRbp2yVwZRxd1MRScFqy4sfRPvYGxmbRLkZODgkBE4lX
+        rX8ZQWwhgd2MEv+aUyHikhIndj5nhLCFJe63HGHtYuQCqvnGKLHo2V42kASbgKbE05tTmUBs
+        EQE5ic3Lv7KA2MwC6hK7JpwAiwsLOEl8OviRHcRmEVCVOP/kAiuIzSsQLfFszXoWiAVyEjfP
+        dTKD2JwClhIvbl8HsjmAlllIfDkUh0N4AqPAAkaGVYySqQXFuem5xYYFhnmp5XrFibnFpXnp
+        esn5uZsYwQGlpbmDcfuqD3qHGJk4GA8xSnAwK4nwfrb+FifEm5JYWZValB9fVJqTWnyIUZqD
+        RUmc90bhwjghgfTEktTs1NSC1CKYLBMHp1QD0+KFidJ/GC0DMu4rbWzLF4g12LxF7OjeXWwC
+        P+saZjhrXK/+aLEnd0d0XsUB/vKtZVl5P6bOPJ4U/EIjnKVU9PyVJq5Pjv0X34WZ/NsUdOF/
+        3fL2SzHz4zoOrJjhlD2Jt+RSwl/nVzy8qurPwh0/nk4XulAecOqABr/UcuEvVw72yuaK+l2v
+        mserf2xNjb6jevPR4kjXw+717uxMR21eRYQu+uixlaXH9Nhp6TPT1si+YV3Bbfw6MSfd/MyC
+        Fbn7i2vkN39yUO6qEXbnszO6MElm4+EZaScYnv36tV8mPfiTjmNyUGTJlTfWU0PfZi6qO6Ai
+        kJf189k6uSt8ofqJklyv93OrsTfeVZI6oGysxFKckWioxVxUnAgAf78415cCAAA=
+X-CMS-MailID: 20200629102350epcas2p4f4ef326c55c897479643ebcd3e132f50
+X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e0af448a-05dd-43f2-d357-08d81beba7fc
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jun 2020 05:17:02.0695
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8qq/jJtIIwYxZYrhKvYaexAy5BeZtnQl9+nGnEaL6pjCESqD9QTNg/eR8JvhuzIT6h//bOrr5gCmD/UObw5JTA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4192
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200629102350epcas2p4f4ef326c55c897479643ebcd3e132f50
+References: <cover.1593412974.git.kwmad.kim@samsung.com>
+        <CGME20200629102350epcas2p4f4ef326c55c897479643ebcd3e132f50@epcas2p4.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SWYgbm8tb25lIGVsc2Ugb2JqZWN0cywgbWF5YmUgeW91IGNhbiBzdWJtaXQgeW91ciBwYXRjaGVz
-IGFzIG5vbi1SRkMgZm9yIHJldmlldz8NCg0KVGhhbmtzLA0KQXZyaQ0KDQo+IC0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IERhZWp1biBQYXJrIDxkYWVqdW43LnBhcmtAc2Ftc3Vu
-Zy5jb20+DQo+IFNlbnQ6IFR1ZXNkYXksIEp1bmUgMjMsIDIwMjAgNDowMiBBTQ0KPiBUbzogQXZy
-aSBBbHRtYW4gPEF2cmkuQWx0bWFuQHdkYy5jb20+OyBqZWpiQGxpbnV4LmlibS5jb207DQo+IG1h
-cnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tOyBhc3V0b3NoZEBjb2RlYXVyb3JhLm9yZzsNCj4gc3Rh
-bmxleS5jaHVAbWVkaWF0ZWsuY29tOyBjYW5nQGNvZGVhdXJvcmEub3JnOyBodW9iZWFuQGdtYWls
-LmNvbTsNCj4gYnZhbmFzc2NoZUBhY20ub3JnOyB0b21hcy53aW5rbGVyQGludGVsLmNvbTsgQUxJ
-TSBBS0hUQVINCj4gPGFsaW0uYWtodGFyQHNhbXN1bmcuY29tPjsgRGFlanVuIFBhcmsgPGRhZWp1
-bjcucGFya0BzYW1zdW5nLmNvbT4NCj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBs
-aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBTYW5nLXlvb24gT2gNCj4gPHNhbmd5b29uLm9o
-QHNhbXN1bmcuY29tPjsgU3VuZy1KdW4gUGFyaw0KPiA8c3VuZ2p1bjA3LnBhcmtAc2Ftc3VuZy5j
-b20+OyB5b25nbXl1bmcgbGVlDQo+IDx5bWh1bmdyeS5sZWVAc2Ftc3VuZy5jb20+OyBKaW55b3Vu
-ZyBDSE9JIDxqLQ0KPiB5b3VuZy5jaG9pQHNhbXN1bmcuY29tPjsgQWRlbCBDaG9pIDxhZGVsLmNo
-b2lAc2Ftc3VuZy5jb20+OyBCb1JhbQ0KPiBTaGluIDxib3JhbS5zaGluQHNhbXN1bmcuY29tPg0K
-PiBTdWJqZWN0OiBbUkZDIFBBVENIIHYzIDAvNV0gc2NzaTogdWZzOiBBZGQgSG9zdCBQZXJmb3Jt
-YW5jZSBCb29zdGVyIFN1cHBvcnQNCj4gDQo+IENBVVRJT046IFRoaXMgZW1haWwgb3JpZ2luYXRl
-ZCBmcm9tIG91dHNpZGUgb2YgV2VzdGVybiBEaWdpdGFsLiBEbyBub3QgY2xpY2sNCj4gb24gbGlu
-a3Mgb3Igb3BlbiBhdHRhY2htZW50cyB1bmxlc3MgeW91IHJlY29nbml6ZSB0aGUgc2VuZGVyIGFu
-ZCBrbm93IHRoYXQNCj4gdGhlIGNvbnRlbnQgaXMgc2FmZS4NCj4gDQo+IA0KPiBDaGFuZ2Vsb2c6
-DQo+IA0KPiB2MiAtPiB2Mw0KPiAxLiBBZGQgY2hlY2tpbmcgaW5wdXQgbW9kdWxlIHBhcmFtZXRl
-ciB2YWx1ZS4NCj4gMi4gQ2hhbmdlIGJhc2UgY29tbWl0IGZyb20gNS44L3Njc2ktcXVldWUgdG8g
-NS45L3Njc2ktcXVldWUuDQo+IDMuIENsZWFudXAgZm9yIHVudXNlZCB2YXJpYWJsZXMgYW5kIGxh
-YmVsLg0KPiANCj4gdjEgLT4gdjINCj4gMS4gQ2hhbmdlIHRoZSBmdWxsIGJvaWxlcnBsYXRlIHRl
-eHQgdG8gU1BEWCBzdHlsZS4NCj4gMi4gQWRvcHQgZHluYW1pYyBhbGxvY2F0aW9uIGZvciBzdWIt
-cmVnaW9uIGRhdGEgc3RydWN0dXJlLg0KPiAzLiBDbGVhbnVwLg0KPiANCj4gTkFORCBmbGFzaCBt
-ZW1vcnktYmFzZWQgc3RvcmFnZSBkZXZpY2VzIHVzZSBGbGFzaCBUcmFuc2xhdGlvbiBMYXllciAo
-RlRMKQ0KPiB0byB0cmFuc2xhdGUgbG9naWNhbCBhZGRyZXNzZXMgb2YgSS9PIHJlcXVlc3RzIHRv
-IGNvcnJlc3BvbmRpbmcgZmxhc2gNCj4gbWVtb3J5IGFkZHJlc3Nlcy4gTW9iaWxlIHN0b3JhZ2Ug
-ZGV2aWNlcyB0eXBpY2FsbHkgaGF2ZSBSQU0gd2l0aA0KPiBjb25zdHJhaW5lZCBzaXplLCB0aHVz
-IGxhY2sgaW4gbWVtb3J5IHRvIGtlZXAgdGhlIHdob2xlIG1hcHBpbmcgdGFibGUuDQo+IFRoZXJl
-Zm9yZSwgbWFwcGluZyB0YWJsZXMgYXJlIHBhcnRpYWxseSByZXRyaWV2ZWQgZnJvbSBOQU5EIGZs
-YXNoIG9uDQo+IGRlbWFuZCwgY2F1c2luZyByYW5kb20tcmVhZCBwZXJmb3JtYW5jZSBkZWdyYWRh
-dGlvbi4NCj4gDQo+IFRvIGltcHJvdmUgcmFuZG9tIHJlYWQgcGVyZm9ybWFuY2UsIEpFU0QyMjAt
-MyAoSFBCIHYxLjApIHByb3Bvc2VzIEhQQg0KPiAoSG9zdCBQZXJmb3JtYW5jZSBCb29zdGVyKSB3
-aGljaCB1c2VzIGhvc3Qgc3lzdGVtIG1lbW9yeSBhcyBhIGNhY2hlIGZvcg0KPiB0aGUNCj4gRlRM
-IG1hcHBpbmcgdGFibGUuIEJ5IHVzaW5nIEhQQiwgRlRMIGRhdGEgY2FuIGJlIHJlYWQgZnJvbSBo
-b3N0IG1lbW9yeQ0KPiBmYXN0ZXIgdGhhbiBmcm9tIE5BTkQgZmxhc2ggbWVtb3J5Lg0KPiANCj4g
-VGhlIGN1cnJlbnQgdmVyc2lvbiBvbmx5IHN1cHBvcnRzIHRoZSBEQ00gKGRldmljZSBjb250cm9s
-IG1vZGUpLg0KPiBUaGlzIHBhdGNoIGNvbnNpc3RzIG9mIDQgcGFydHMgdG8gc3VwcG9ydCBIUEIg
-ZmVhdHVyZS4NCj4gDQo+IDEpIFVGUy1mZWF0dXJlIGxheWVyDQo+IDIpIEhQQiBwcm9iZSBhbmQg
-aW5pdGlhbGl6YXRpb24gcHJvY2Vzcw0KPiAzKSBSRUFEIC0+IEhQQiBSRUFEIHVzaW5nIGNhY2hl
-ZCBtYXAgaW5mb3JtYXRpb24NCj4gNCkgTDJQIChsb2dpY2FsIHRvIHBoeXNpY2FsKSBtYXAgbWFu
-YWdlbWVudA0KPiANCj4gVGhlIFVGUy1mZWF0dXJlIGlzIGFuIGFkZGl0aW9uYWwgbGF5ZXIgdG8g
-YXZvaWQgdGhlIHN0cnVjdHVyZSBpbiB3aGljaCB0aGUNCj4gVUZTLWNvcmUgZHJpdmVyIGFuZCB0
-aGUgVUZTLWZlYXR1cmUgYXJlIGVudGFuZ2xlZCB3aXRoIGVhY2ggb3RoZXIgaW4gYQ0KPiBzaW5n
-bGUgbW9kdWxlLg0KPiBCeSBhZGRpbmcgdGhlIGxheWVyLCBVRlMtZmVhdHVyZXMgY29tcG9zZWQg
-b2YgdmFyaW91cyBjb21iaW5hdGlvbnMgY2FuIGJlDQo+IHN1cHBvcnRlZC4gQWxzbywgZXZlbiBp
-ZiBhIG5ldyBmZWF0dXJlIGlzIGFkZGVkLCBtb2RpZmljYXRpb24gb2YgdGhlDQo+IFVGUy1jb3Jl
-IGRyaXZlciBjYW4gYmUgbWluaW1pemVkLg0KPiANCj4gSW4gdGhlIEhQQiBwcm9iZSBhbmQgaW5p
-dCBwcm9jZXNzLCB0aGUgZGV2aWNlIGluZm9ybWF0aW9uIG9mIHRoZSBVRlMgaXMNCj4gcXVlcmll
-ZC4gQWZ0ZXIgY2hlY2tpbmcgc3VwcG9ydGVkIGZlYXR1cmVzLCB0aGUgZGF0YSBzdHJ1Y3R1cmUg
-Zm9yIHRoZSBIUEINCj4gaXMgaW5pdGlhbGl6ZWQgYWNjb3JkaW5nIHRvIHRoZSBkZXZpY2UgaW5m
-b3JtYXRpb24uDQo+IA0KPiBBIHJlYWQgSS9PIGluIHRoZSBhY3RpdmUgc3ViLXJlZ2lvbiB3aGVy
-ZSB0aGUgbWFwIGlzIGNhY2hlZCBpcyBjaGFuZ2VkIHRvDQo+IEhQQiBSRUFEIGJ5IHRoZSBIUEIg
-bW9kdWxlLg0KPiANCj4gVGhlIEhQQiBtb2R1bGUgbWFuYWdlcyB0aGUgTDJQIG1hcCB1c2luZyBp
-bmZvcm1hdGlvbiByZWNlaXZlZCBmcm9tIHRoZQ0KPiBkZXZpY2UuIEZvciBhY3RpdmUgc3ViLXJl
-Z2lvbiwgdGhlIEhQQiBtb2R1bGUgY2FjaGVzIHRocm91Z2ggdWZzaHBiX21hcA0KPiByZXF1ZXN0
-LiBGb3IgdGhlIGluLWFjdGl2ZSByZWdpb24sIHRoZSBIUEIgbW9kdWxlIGRpc2NhcmRzIHRoZSBM
-MlAgbWFwLg0KPiBXaGVuIGEgd3JpdGUgSS9PIG9jY3VycyBpbiBhbiBhY3RpdmUgc3ViLXJlZ2lv
-biBhcmVhLCBhc3NvY2lhdGVkIGRpcnR5DQo+IGJpdG1hcCBjaGVja2VkIGFzIGRpcnR5IGZvciBw
-cmV2ZW50aW5nIHN0YWxlIHJlYWQuDQo+IA0KPiBIUEIgaXMgc2hvd24gdG8gaGF2ZSBhIHBlcmZv
-cm1hbmNlIGltcHJvdmVtZW50IG9mIDU4IC0gNjclIGZvciByYW5kb20NCj4gcmVhZA0KPiB3b3Jr
-bG9hZC4gWzFdDQo+IA0KPiBUaGlzIHNlcmllcyBwYXRjaGVzIGFyZSBiYXNlZCBvbiB0aGUgNS45
-L3Njc2ktcXVldWUgYnJhbmNoLg0KPiANCj4gWzFdOg0KPiBodHRwczovL3d3dy51c2VuaXgub3Jn
-L2NvbmZlcmVuY2UvaG90c3RvcmFnZTE3L3Byb2dyYW0vcHJlc2VudGF0aW9uL2plbw0KPiBuZw0K
-PiANCj4gRGFlanVuIHBhcmsgKDUpOg0KPiAgc2NzaTogdWZzOiBBZGQgVUZTIGZlYXR1cmUgcmVs
-YXRlZCBwYXJhbWV0ZXINCj4gIHNjc2k6IHVmczogQWRkIFVGUyBmZWF0dXJlIGxheWVyDQo+ICBz
-Y3NpOiB1ZnM6IEludHJvZHVjZSBIUEIgbW9kdWxlDQo+ICBzY3NpOiB1ZnM6IEwyUCBtYXAgbWFu
-YWdlbWVudCBmb3IgSFBCIHJlYWQNCj4gIHNjc2k6IHVmczogUHJlcGFyZSBIUEIgcmVhZCBmb3Ig
-Y2FjaGVkIHN1Yi1yZWdpb24NCj4gDQo+ICBkcml2ZXJzL3Njc2kvdWZzL0tjb25maWcgICAgICB8
-ICAgIDkgKw0KPiAgZHJpdmVycy9zY3NpL3Vmcy9NYWtlZmlsZSAgICAgfCAgICAzICstDQo+ICBk
-cml2ZXJzL3Njc2kvdWZzL3Vmcy5oICAgICAgICB8ICAgMTIgKw0KPiAgZHJpdmVycy9zY3NpL3Vm
-cy91ZnNmZWF0dXJlLmMgfCAgMTQ4ICsrKw0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNmZWF0dXJl
-LmggfCAgIDY5ICsrDQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jICAgICB8ICAgMjMgKy0N
-Cj4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggICAgIHwgICAgMyArDQo+ICBkcml2ZXJzL3Nj
-c2kvdWZzL3Vmc2hwYi5jICAgICB8IDE5OTYgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrDQo+ICBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hwYi5oICAgICB8ICAyMzQgKysrKysNCj4g
-IDkgZmlsZXMgY2hhbmdlZCwgMjQ5NCBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0KPiAg
-Y3JlYXRlZCBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvdWZzL3Vmc2ZlYXR1cmUuYw0KPiAgY3Jl
-YXRlZCBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvdWZzL3Vmc2ZlYXR1cmUuaA0KPiAgY3JlYXRl
-ZCBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvdWZzL3Vmc2hwYi5jDQo+ICBjcmVhdGVkIG1vZGUg
-MTAwNjQ0IGRyaXZlcnMvc2NzaS91ZnMvdWZzaHBiLmgNCg==
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+
+Respective UFS devices have their own characteristics and
+many of them could be a form of numbers, such as timeout
+and a number of retires. This introduces the way to set
+those things per specific device vendor or specific device.
+
+I wrote this like the style of ufs_fixups stuffs.
+---
+ drivers/scsi/ufs/ufs_quirks.h | 13 +++++++++++++
+ drivers/scsi/ufs/ufshcd.c     | 39 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h     |  1 +
+ 3 files changed, 53 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index 2a00414..f074093 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -29,6 +29,19 @@ struct ufs_dev_fix {
+ 	unsigned int quirk;
+ };
+ 
++enum dev_val_type {
++	DEV_VAL_FDEVICEINIT	= 0x0,
++	DEV_VAL_NUM,
++};
++
++struct ufs_dev_value {
++	u16 wmanufacturerid;
++	u8 *model;
++	u32 key;
++	u32 val;
++	bool enable;
++};
++
+ #define END_FIX { }
+ 
+ /* add specific device quirk */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 52abe82..7b6f13a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -207,6 +207,21 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 	END_FIX
+ };
+ 
++static const struct ufs_dev_value ufs_dev_values[] = {
++	{0, 0, 0, 0, false},
++};
++
++static inline bool
++ufs_get_dev_specific_value(struct ufs_hba *hba,
++			   enum dev_val_type type, u32 *val)
++{
++	if (!ufs_dev_values[type].enable)
++		return false;
++
++	*val = hba->dev_value[type];
++	return true;
++}
++
+ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba);
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie);
+ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+@@ -6923,11 +6938,35 @@ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_fixup_dev_quirks);
+ 
++void ufshcd_set_dev_values(struct ufs_hba *hba, struct ufs_dev_value *value)
++{
++	struct ufs_dev_value *f;
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++
++	if (!value)
++		return;
++
++	for (f = value; f->val; f++) {
++		if ((f->wmanufacturerid == dev_info->wmanufacturerid ||
++					f->wmanufacturerid == UFS_ANY_VENDOR) &&
++				((dev_info->model &&
++				  STR_PRFX_EQUAL(f->model, dev_info->model)) ||
++				 !strcmp(f->model, UFS_ANY_MODEL))) {
++			f->enable = true;
++			hba->dev_value[f->key] = f->val;
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(ufshcd_set_dev_values);
++
+ static void ufs_fixup_device_setup(struct ufs_hba *hba)
+ {
+ 	/* fix by general quirk table */
+ 	ufshcd_fixup_dev_quirks(hba, ufs_fixups);
+ 
++	/* set device specific values */
++	ufshcd_set_dev_values(hba, ufs_dev_values);
++
+ 	/* allow vendors to fix quirks */
+ 	ufshcd_vops_fixup_dev_quirks(hba);
+ }
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index c774012..f221ca7 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -670,6 +670,7 @@ struct ufs_hba {
+ 
+ 	/* Device deviations from standard UFS device spec. */
+ 	unsigned int dev_quirks;
++	u32 dev_value[DEV_VAL_NUM];
+ 
+ 	struct blk_mq_tag_set tmf_tag_set;
+ 	struct request_queue *tmf_queue;
+-- 
+2.7.4
+
