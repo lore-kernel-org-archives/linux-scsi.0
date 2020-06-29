@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B87AC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0000C433DF
 	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A6AA206E9
+	by mail.kernel.org (Postfix) with ESMTP id D89B220723
 	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729872AbgF2TL3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1731077AbgF2TL3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 29 Jun 2020 15:11:29 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53706 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53722 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731061AbgF2TL0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:11:26 -0400
+        id S1731066AbgF2TL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:11:27 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 24866B0B3;
+        by mx2.suse.de (Postfix) with ESMTP id 1E9C0B083;
         Mon, 29 Jun 2020 07:20:56 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -31,9 +31,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Don Brace <don.brace@microchip.com>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/22] scsi: Use dummy inquiry data for the host device
-Date:   Mon, 29 Jun 2020 09:20:09 +0200
-Message-Id: <20200629072021.9864-11-hare@suse.de>
+Subject: [PATCH 09/22] scsi: use real inquiry data when initialising devices
+Date:   Mon, 29 Jun 2020 09:20:08 +0200
+Message-Id: <20200629072021.9864-10-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200629072021.9864-1-hare@suse.de>
 References: <20200629072021.9864-1-hare@suse.de>
@@ -42,86 +42,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Attach the dummy inquiry data to the scsi host device and use it
-to check if any given device is a scsi host device.
+Use dummy inquiry data when initialising devices and not just
+some 'nullnullnull' string.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_scan.c  | 17 +++++++++++++++--
- drivers/scsi/scsi_sysfs.c |  3 ++-
- include/scsi/scsi_host.h  |  7 ++++---
- 3 files changed, 21 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_scan.c | 34 +++++++++++++++++++++++++---------
+ 1 file changed, 25 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 871c7609c159..34470605fd0a 100644
+index f2437a7570ce..871c7609c159 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -1920,9 +1920,11 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+@@ -81,7 +81,27 @@
+ #define SCSI_SCAN_TARGET_PRESENT	1
+ #define SCSI_SCAN_LUN_PRESENT		2
+ 
+-static const char *scsi_null_device_strs = "nullnullnullnull";
++/*
++ * Dummy inquiry for virtual LUNs:
++ *
++ * standard INQUIRY: [qualifier indicates no connected LU]
++ *  PQual=1  Device_type=31  RMB=0  LU_CONG=0  version=0x05  [SPC-3]
++ *  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
++ *  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
++ *  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
++ *  [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
++ *    length=36 (0x24)   Peripheral device type: no physical device on this lu
++ * Vendor identification: LINUX
++ * Product identification: VIRTUALLUN
++ * Product revision level: 1.0
++ */
++static const unsigned char scsi_null_inquiry[36] = {
++	0x3f, 0x00, 0x05, 0x02, 0x1f, 0x00, 0x00, 0x00,
++	0x4c, 0x49, 0x4e, 0x55, 0x58, 0x20, 0x20, 0x20,
++	0x56, 0x49, 0x52, 0x54, 0x55, 0x41, 0x4c, 0x4c,
++	0x55, 0x4e, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
++	0x31, 0x2e, 0x30, 0x20
++};
+ 
+ #define MAX_SCSI_LUNS	512
+ 
+@@ -224,9 +244,10 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	if (!sdev)
  		goto out;
  
- 	sdev = scsi_alloc_sdev(starget, 0, NULL);
--	if (sdev)
-+	if (sdev) {
- 		sdev->borken = 0;
--	else
-+		sdev->inquiry = (unsigned char *)scsi_null_inquiry;
-+		sdev->inquiry_len = sizeof(scsi_null_inquiry);
-+	} else
- 		scsi_target_reap(starget);
- 	put_device(&starget->dev);
-  out:
-@@ -1947,3 +1949,14 @@ void scsi_free_host_dev(struct scsi_device *sdev)
- }
- EXPORT_SYMBOL(scsi_free_host_dev);
+-	sdev->vendor = scsi_null_device_strs;
+-	sdev->model = scsi_null_device_strs;
+-	sdev->rev = scsi_null_device_strs;
++	sdev->type = scsi_null_inquiry[0] & 0x1f;
++	sdev->vendor = scsi_null_inquiry + 8;
++	sdev->model = scsi_null_inquiry + 16;
++	sdev->rev = scsi_null_inquiry + 32;
+ 	sdev->host = shost;
+ 	sdev->queue_ramp_up_period = SCSI_DEFAULT_RAMP_UP_PERIOD;
+ 	sdev->id = starget->id;
+@@ -253,11 +274,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	 * slave_configure function */
+ 	sdev->max_device_blocked = SCSI_DEFAULT_DEVICE_BLOCKED;
  
-+/**
-+ * scsi_device_is_host_dev - Check if a scsi device is a host device
-+ * @sdev: SCSI device to test
-+ *
-+ * Returns: true if @sdev is a host device, false otherwise
-+ */
-+bool scsi_device_is_host_dev(struct scsi_device *sdev)
-+{
-+	return ((const unsigned char *)sdev->inquiry == scsi_null_inquiry);
-+}
-+EXPORT_SYMBOL_GPL(scsi_device_is_host_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 163dbcb741c1..eeed2fcf9510 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -485,7 +485,8 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 		kfree_rcu(vpd_pg80, rcu);
- 	if (vpd_pg89)
- 		kfree_rcu(vpd_pg89, rcu);
--	kfree(sdev->inquiry);
-+	if (!scsi_device_is_host_dev(sdev))
-+		kfree(sdev->inquiry);
- 	kfree(sdev);
- 
- 	if (parent)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b94938e87e3a..a6a11fe9bbc0 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -786,14 +786,15 @@ void scsi_host_busy_iter(struct Scsi_Host *,
- struct class_container;
- 
- /*
-- * These two functions are used to allocate and free a pseudo device
-- * which will connect to the host adapter itself rather than any
-- * physical device.  You must deallocate when you are done with the
-+ * These three functions are used to allocate, free, and test for
-+ * a pseudo device which will connect to the host adapter itself rather
-+ * than any physical device.  You must deallocate when you are done with the
-  * thing.  This physical pseudo-device isn't real and won't be available
-  * from any high-level drivers.
-  */
- extern void scsi_free_host_dev(struct scsi_device *);
- extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
-+bool scsi_device_is_host_dev(struct scsi_device *);
- 
- /*
-  * DIF defines the exchange of protection information between
+-	/*
+-	 * Some low level driver could use device->type
+-	 */
+-	sdev->type = -1;
+-
+ 	/*
+ 	 * Assume that the device will have handshaking problems,
+ 	 * and then fix this field later if it turns out it
 -- 
 2.16.4
 
