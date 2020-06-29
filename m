@@ -2,74 +2,124 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D95C433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C83C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DA5020702
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:21:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A719D20781
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732155AbgF2TVN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:21:13 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2407 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732153AbgF2TVL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:21:11 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id 0F2D671B550EB6D0FDA0;
-        Mon, 29 Jun 2020 16:34:19 +0100 (IST)
-Received: from [127.0.0.1] (10.210.170.8) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 29 Jun
- 2020 16:34:17 +0100
-Subject: About sbitmap_bitmap_show() and cleared bits (was Re: [PATCH RFC v7
- 07/12] blk-mq: Add support in hctx_tags_bitmap_show() for a shared sbitmap)
-To:     <axboe@kernel.dk>, <linux-block@vger.kernel.org>
-CC:     Hannes Reinecke <hare@suse.de>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <don.brace@microsemi.com>,
-        <kashyap.desai@broadcom.com>, <sumit.saxena@broadcom.com>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>, <hare@suse.com>,
-        <hch@lst.de>, <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-scsi@vger.kernel.org>, <esc.storagedev@microsemi.com>,
-        <chenxiang66@hisilicon.com>, <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-8-git-send-email-john.garry@huawei.com>
- <9f4741c5-d117-d764-cf3a-a57192a788c3@suse.de>
- <aad6efa3-2d7f-ca68-d239-44ea187c8017@huawei.com>
- <7ed6ccf1-6ad9-1df7-f55d-4ed6cac1e08d@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <8ffd5c22-f644-3436-0a9f-2e08c220525e@huawei.com>
-Date:   Mon, 29 Jun 2020 16:32:42 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <7ed6ccf1-6ad9-1df7-f55d-4ed6cac1e08d@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.170.8]
-X-ClientProxiedBy: lhreml715-chm.china.huawei.com (10.201.108.66) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S1731880AbgF2TVg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:21:36 -0400
+Received: from mx2.suse.de ([195.135.220.15]:59540 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732220AbgF2TVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:21:35 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 655B1B11F;
+        Mon, 29 Jun 2020 07:20:56 +0000 (UTC)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        Don Brace <don.brace@microchip.com>,
+        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 15/22] hpsa: move hpsa_hba_inquiry after scsi_add_host()
+Date:   Mon, 29 Jun 2020 09:20:14 +0200
+Message-Id: <20200629072021.9864-16-hare@suse.de>
+X-Mailer: git-send-email 2.16.4
+In-Reply-To: <20200629072021.9864-1-hare@suse.de>
+References: <20200629072021.9864-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi all,
+Move hpsa_hba_inquiry to after scsi_add_host() so that the host
+is fully initialized.
 
-I noticed that sbitmap_bitmap_show() only shows set bits and does not 
-consider cleared bits. Is that the proper thing to do?
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Don Brace <don.brace@microchip.com>
+---
+ drivers/scsi/hpsa.c | 37 +++++++++++++++++++------------------
+ 1 file changed, 19 insertions(+), 18 deletions(-)
 
-I ask, as from trying to support sbitmap_bitmap_show() for hostwide 
-shared tags feature, we currently use blk_mq_queue_tag_busy_iter() to 
-find active requests (and associated tags/bits) for a particular hctx. 
-So, AFAICT, would give a change in behavior for sbitmap_bitmap_show(), 
-in that it would effectively show set and not cleared bits.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 81d0414e2117..db0142a16a72 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5839,6 +5839,22 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+ 	return 0;
+ }
+ 
++static void hpsa_hba_inquiry(struct ctlr_info *h)
++{
++	int rc;
++
++#define HBA_INQUIRY_BYTE_COUNT 64
++	h->hba_inquiry_data = kmalloc(HBA_INQUIRY_BYTE_COUNT, GFP_KERNEL);
++	if (!h->hba_inquiry_data)
++		return;
++	rc = hpsa_scsi_do_inquiry(h, RAID_CTLR_LUNID, 0,
++		h->hba_inquiry_data, HBA_INQUIRY_BYTE_COUNT);
++	if (rc != 0) {
++		kfree(h->hba_inquiry_data);
++		h->hba_inquiry_data = NULL;
++	}
++}
++
+ static int hpsa_scsi_add_host(struct ctlr_info *h)
+ {
+ 	int rv;
+@@ -5848,6 +5864,9 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
+ 		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
+ 		return rv;
+ 	}
++
++	hpsa_hba_inquiry(h);
++
+ 	scsi_scan_host(h->scsi_host);
+ 	return 0;
+ }
+@@ -7901,22 +7920,6 @@ static int hpsa_pci_init(struct ctlr_info *h)
+ 	return err;
+ }
+ 
+-static void hpsa_hba_inquiry(struct ctlr_info *h)
+-{
+-	int rc;
+-
+-#define HBA_INQUIRY_BYTE_COUNT 64
+-	h->hba_inquiry_data = kmalloc(HBA_INQUIRY_BYTE_COUNT, GFP_KERNEL);
+-	if (!h->hba_inquiry_data)
+-		return;
+-	rc = hpsa_scsi_do_inquiry(h, RAID_CTLR_LUNID, 0,
+-		h->hba_inquiry_data, HBA_INQUIRY_BYTE_COUNT);
+-	if (rc != 0) {
+-		kfree(h->hba_inquiry_data);
+-		h->hba_inquiry_data = NULL;
+-	}
+-}
+-
+ static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
+ {
+ 	int rc, i;
+@@ -8825,8 +8828,6 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* Turn the interrupts on so we can service requests */
+ 	h->access.set_intr_mask(h, HPSA_INTR_ON);
+ 
+-	hpsa_hba_inquiry(h);
+-
+ 	h->lastlogicals = kzalloc(sizeof(*(h->lastlogicals)), GFP_KERNEL);
+ 	if (!h->lastlogicals)
+ 		dev_info(&h->pdev->dev,
+-- 
+2.16.4
 
-Any thoughts on this?
-
-Thanks!
