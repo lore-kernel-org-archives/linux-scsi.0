@@ -2,118 +2,108 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6478C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 21:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A94FFC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 21:43:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FD9F2072D
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 21:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90776206E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 21:43:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728591AbgF2VjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 17:39:13 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2413 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727023AbgF2VjK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 17:39:10 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 2162EE3E60B9BA6859F6;
-        Mon, 29 Jun 2020 14:53:33 +0100 (IST)
-Received: from [127.0.0.1] (10.210.170.8) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 29 Jun
- 2020 14:53:32 +0100
-Subject: Re: [PATCH 07/22] csiostor: use internal command for LUN reset
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
-        <linux-scsi@vger.kernel.org>
-References: <20200629072021.9864-1-hare@suse.de>
- <20200629072021.9864-8-hare@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <4567ba10-c024-8e37-7aef-7ea13025952e@huawei.com>
-Date:   Mon, 29 Jun 2020 14:51:58 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S2403977AbgF2Vn1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 17:43:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37564 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727856AbgF2Sht (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 14:37:49 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F69DC0307BF
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 09:10:58 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id d4so8513181pgk.4
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 09:10:58 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RlQWlBCNOVUz5rnKN/A0l9ccTp1Tr+uhfNqQfaAVD3w=;
+        b=sa+I3ptICK2ncSZ3O3v5a7/fy1hIESZWgxAqkYg+kmo1XD9J1Owx3yZT58CXFtsUWy
+         TX89W3NV/YDY/foqSmbzMOlN5VUiczsz9OlWBLovPx2rJ2NNyeGXnN+8gr3aXE3DzVr5
+         /OIaxKO3dAAzV4CwP58RpM0QE0hCYvgUoXB0llC9wO0AXg4UYIZHNkvkuO1UbcndhhPO
+         NJn+foz5B5IKC2+jvdkbHsMZw80Yo4/9K3g/N2zniVBLLAdM82n2b85ctUmD81lKjHym
+         RGB/IlsTLmoW1ujdJGE29EElsm1rrOi1JLsrb7v2kVSHq3zrPY3RBFmKcaTd3Di3ZG5O
+         sy8A==
+X-Gm-Message-State: AOAM531U4R18aibFl//haPAwwExnl6SnGVrGXqWPsk7WsgkoE758EIxU
+        QBrK8A4kHmYbeYj3qbsFTEU=
+X-Google-Smtp-Source: ABdhPJz9aDksWYFvkX5t3mASZH1UeQfv+Qrn8X07syxTLUSuwZarzCkzTAchWvAJeMlBgVqnaEJBNQ==
+X-Received: by 2002:a65:4908:: with SMTP id p8mr10823336pgs.214.1593447057702;
+        Mon, 29 Jun 2020 09:10:57 -0700 (PDT)
+Received: from localhost.localdomain (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id 199sm238328pgc.79.2020.06.29.09.10.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Jun 2020 09:10:56 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>, Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ch: Do not read past the end of vendor_labels[]
+Date:   Mon, 29 Jun 2020 09:10:51 -0700
+Message-Id: <20200629161051.14943-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <20200629072021.9864-8-hare@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.170.8]
-X-ClientProxiedBy: lhreml715-chm.china.huawei.com (10.201.108.66) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29/06/2020 08:20, Hannes Reinecke wrote:
-> When issuing a LUN reset we should be allocating an
-> internal command to avoid overwriting the original command.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/csiostor/csio_scsi.c | 48 +++++++++++++++++++++++----------------
->   1 file changed, 29 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-> index 00cf33573136..27001fdcdcac 100644
-> --- a/drivers/scsi/csiostor/csio_scsi.c
-> +++ b/drivers/scsi/csiostor/csio_scsi.c
-> @@ -2057,10 +2057,12 @@ csio_tm_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
->   static int
->   csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
->   {
-> -	struct csio_lnode *ln = shost_priv(cmnd->device->host);
-> +	struct scsi_cmnd *reset_cmnd;
-> +	struct scsi_device *sdev = cmnd->device;
-> +	struct csio_lnode *ln = shost_priv(sdev->host);
->   	struct csio_hw *hw = csio_lnode_to_hw(ln);
->   	struct csio_scsim *scsim = csio_hw_to_scsim(hw);
-> -	struct csio_rnode *rn = (struct csio_rnode *)(cmnd->device->hostdata);
-> +	struct csio_rnode *rn = (struct csio_rnode *)(sdev->hostdata);
->   	struct csio_ioreq *ioreq = NULL;
->   	struct csio_scsi_qset *sqset;
->   	unsigned long flags;
-> @@ -2073,13 +2075,13 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
->   		goto fail;
->   
->   	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
-> -		      cmnd->device->lun, rn->flowid, rn->scsi_id);
-> +		      sdev->lun, rn->flowid, rn->scsi_id);
->   
->   	if (!csio_is_lnode_ready(ln)) {
->   		csio_err(hw,
->   			 "LUN reset cannot be issued on non-ready"
->   			 " local node vnpi:0x%x (LUN:%llu)\n",
-> -			 ln->vnp_flowid, cmnd->device->lun);
-> +			 ln->vnp_flowid, sdev->lun);
->   		goto fail;
->   	}
->   
-> @@ -2099,17 +2101,22 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
->   		csio_err(hw,
->   			 "LUN reset cannot be issued on non-ready"
->   			 " remote node ssni:0x%x (LUN:%llu)\n",
-> -			 rn->flowid, cmnd->device->lun);
-> +			 rn->flowid, sdev->lun);
->   		goto fail;
->   	}
->   
-> +	reset_cmnd = scsi_get_internal_cmd(sdev, DMA_NONE, REQ_NOWAIT);
+This patch fixes the following gcc 10 compiler error:
 
-out of curiosity, do we use the tag at all or need to allocate a request 
-here?
+In function 'memcpy',
+    inlined from 'ch_ioctl' at drivers/scsi/ch.c:666:4:
+./include/linux/string.h:377:4: error: call to '__read_overflow2' declared with attribute error: detected read beyond size of object passed as 2nd parameter
+  377 |    __read_overflow2();
+      |    ^~~~~~~~~~~~~~~~~~
 
-it seems that the current code just scribbles on the scmd host scribble 
-parts, and now we use the internal scmd host scribble parts instead - so 
-I'm not sure what we're really improving here.
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/ch.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-Thanks
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index b81b397366db..b675a01380eb 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -651,19 +651,23 @@ static long ch_ioctl(struct file *file,
+ 		memset(&vparams,0,sizeof(vparams));
+ 		if (ch->counts[CHET_V1]) {
+ 			vparams.cvp_n1  = ch->counts[CHET_V1];
+-			memcpy(vparams.cvp_label1,vendor_labels[0],16);
++			strncpy(vparams.cvp_label1, vendor_labels[0],
++				ARRAY_SIZE(vparams.cvp_label1));
+ 		}
+ 		if (ch->counts[CHET_V2]) {
+ 			vparams.cvp_n2  = ch->counts[CHET_V2];
+-			memcpy(vparams.cvp_label2,vendor_labels[1],16);
++			strncpy(vparams.cvp_label2, vendor_labels[1],
++				ARRAY_SIZE(vparams.cvp_label2));
+ 		}
+ 		if (ch->counts[CHET_V3]) {
+ 			vparams.cvp_n3  = ch->counts[CHET_V3];
+-			memcpy(vparams.cvp_label3,vendor_labels[2],16);
++			strncpy(vparams.cvp_label3, vendor_labels[2],
++				ARRAY_SIZE(vparams.cvp_label3));
+ 		}
+ 		if (ch->counts[CHET_V4]) {
+ 			vparams.cvp_n4  = ch->counts[CHET_V4];
+-			memcpy(vparams.cvp_label4,vendor_labels[3],16);
++			strncpy(vparams.cvp_label4, vendor_labels[3],
++				ARRAY_SIZE(vparams.cvp_label4));
+ 		}
+ 		if (copy_to_user(argp, &vparams, sizeof(vparams)))
+ 			return -EFAULT;
