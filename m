@@ -2,161 +2,87 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B34C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B47C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:51:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9AF820663
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:49:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D8E420786
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:51:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KuLONa1c"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ara8FOJJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389364AbgF2UtR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:49:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43388 "EHLO
+        id S2389789AbgF2Uvp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 16:51:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731490AbgF2TNl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 15:13:41 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F7AFC006975;
-        Mon, 29 Jun 2020 04:39:48 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id z17so12532243edr.9;
-        Mon, 29 Jun 2020 04:39:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=WTfHJ+utCfQx7YKFHmm/ny5jRigzHEJ9WNfHacuDI3w=;
-        b=KuLONa1cg6xDZijoZAyKxcyxwV+Po09umfjENbkXy2SQ1ewe6l3vR65CViCuqAVg+f
-         Am7bl4E2iF3CCZvx1CIttp2rMlDSmvSk+RY7EdB/B19nwOBe6+mlctraRZFqOmJIfVi4
-         UFzUnbVSgsdWZracchkgfWTVXaFQw3t3/V6kOT5q3uq8shEWN9q1UDn/O6/vWOb7TG1Y
-         TgEa6MmvuDR8ODrzEm4zulGE770MCHN6/biEOF+Vp44E2o7fRnJzSYRjG/I2aJn1CqjF
-         QftT1p4ra4ncA53JqbwkheY0KEDQoeBpjiOY5opm9kR4EATiBtvpCaOr1Lc28LRO9BDj
-         8MJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=WTfHJ+utCfQx7YKFHmm/ny5jRigzHEJ9WNfHacuDI3w=;
-        b=cficyTtPBLWT4lqOUIAtsUychOycaNrOovhp0y/X82PH8NCR/qXsdGoObTZ704/uu1
-         GllgX2EfLtpW8rhfP6uxvZ6sYcQCOjoDqUUUQG4g+KI2FDMGktz10vUmwV3jWiuaPsqY
-         OmfXv+F6CiSs+pudbkJBtacEq5SsIqmr02AYEYQ1a+JHqeuJiBvEJeuLmYH9AkrmsbtC
-         ulaQxT18tbWGD5aWS57P09XERDpGpFSqHOSno5DAlEz/oDaADOmC8wmcZ545yUglAJKF
-         3PzybN1qi58uvycUfqV1D/NMGQTXzGN56TcgxMmraLNjRtqT+1JAZcmiW+XAYl4KtguG
-         LZRA==
-X-Gm-Message-State: AOAM5303keVJjvYwFfM7PRtteBMhv24MPpwjV+G53a5GePfwTBI0gDhR
-        zTLqduZ02tktHoVL8PTx3fc=
-X-Google-Smtp-Source: ABdhPJybHrHYkEkw00NMQsOah2B9BMMVMgmwZOJeI47p5PFFY4rTp6n10j1aNmdl2oyLDSTMwZE+mg==
-X-Received: by 2002:a50:d0cc:: with SMTP id g12mr17402310edf.57.1593430786919;
-        Mon, 29 Jun 2020 04:39:46 -0700 (PDT)
-Received: from ubuntu-laptop ([2a01:598:b88e:dd15:40fc:c0bc:1cfd:2755])
-        by smtp.googlemail.com with ESMTPSA id v23sm27507658edr.94.2020.06.29.04.39.44
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 29 Jun 2020 04:39:46 -0700 (PDT)
-Message-ID: <c9b71fcb1f072dcf55f3e13da6dd8ccc145d7c74.camel@gmail.com>
-Subject: Re: [RFC PATCH v3 0/5] scsi: ufs: Add Host Performance Booster
- Support
-From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Date:   Mon, 29 Jun 2020 13:39:42 +0200
-In-Reply-To: <SN6PR04MB46402436A9E1FFE70967C444FC6E0@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <CGME20200623010201epcms2p11aebdf1fbc719b409968cba997507114@epcms2p1>
-         <963815509.21592879582091.JavaMail.epsvc@epcpadp2>
-         <948f573d136b39410f7d610e5019aafc9c04fe62.camel@gmail.com>
-         <SN6PR04MB464004B3DC7FB046A1E38F43FC6E0@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <94775ad5c35b68d457fdca5a6c89908e227d14af.camel@gmail.com>
-         <SN6PR04MB46402436A9E1FFE70967C444FC6E0@SN6PR04MB4640.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S1731378AbgF2TN1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 15:13:27 -0400
+Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8697C014A47;
+        Mon, 29 Jun 2020 01:10:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=uAiRDghuOCMpDAFAHvQM5BdGNUMLZuFGW1APRakoSus=; b=ara8FOJJmyGTsZZYwrSNPjWLqN
+        qQal0ttJBdaZfhpLC0Z/0FVu0TGsBscGI7gHKZlxfygbnCKljVmd6EliGkUjiCeua5Lqlw+SqUGri
+        YDF/uUjkMqsGFUIUIlu6dP/HMLfagIiCfP7CnCNO/HR3E0DtZg3r6JVkQbErGPJrBmWjpHJNnZqFi
+        dvaPuTG2pAlmYGYVTzI+Iei0zvDBYbJVhGbqE40iWteYnODY0StwXQAzxsjKFuSER8akZL6L3IWxR
+        XnPxi6siVqTpD8pKccFNJr5E7a4Iutb0TtgFybcU7WiUAYpmFodShSUWbg4RziXqhwwdibXeVKeVq
+        /ShvQPnw==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jporL-0007T7-3F; Mon, 29 Jun 2020 08:09:47 +0000
+Date:   Mon, 29 Jun 2020 09:09:47 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Simon Arlott <simon@octiron.net>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH (v2)] scsi: sd: add parameter to stop disks before reboot
+Message-ID: <20200629080947.GA28551@infradead.org>
+References: <e726ffd8-8897-4a79-c3d6-6271eda8aebb@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e726ffd8-8897-4a79-c3d6-6271eda8aebb@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2020-06-29 at 11:06 +0000, Avri Altman wrote:
-> > 
-> > Hi Avri
-> > 
-> > On Mon, 2020-06-29 at 05:24 +0000, Avri Altman wrote:
-> > > Hi Bean,
-> > > > 
-> > > > Hi Daejun
-> > > > 
-> > > > Seems you intentionally ignored to give you comments on my
-> > > > suggestion.
-> > > > let me provide the reason.
-> > > > 
-> > > > Before submitting your next version patch, please check your
-> > > > L2P
-> > > > mapping HPB reqeust submission logical algorithem. I have did
-> > > > performance comparison testing on 4KB, there are about 13%
-> > > > performance
-> > > > drop. Also the hit count is lower. I don't know if this is
-> > > > related
-> > > > to
-> > > > your current work queue scheduling, since you didn't add the
-> > > > timer
-> > > > for
-> > > > each HPB request.
-> > > 
-> > > In device control mode, the various decisions,
-> > > and specifically those that are causing repetitive evictions,
-> > > are made by the device.
-> > > Is this the issue that you are referring to?
-> > > 
-> > 
-> > For this device mode, if HPB mapping table of the active region
-> > becomes
-> > dirty in the UFS device side, there is repetitive inactive rsp, but
-> > it
-> > is not the reason for the condition I mentioned here.
-> > 
-> > > As for the driver, do you see any issue that is causing
-> > > unnecessary
-> > > latency?
-> > > 
-> > 
-> > In Daejun's patch, it now uses work_queue, and as long there is new
-> > RSP of
-> > thesubregion to be activated, the driver will queue "work" to this
-> > work
-> > queue, actually, this is deferred work. we don't know when it will
-> > be
-> > scheduled/finished. we need to optimize it.
+On Sun, Jun 28, 2020 at 07:32:51PM +0100, Simon Arlott wrote:
+> I need to use "reboot=p" on my desktop because one of the PCIe devices
+> does not appear after a warm boot. This results in a very cold boot
+> because the BIOS turns the PSU off and on.
 > 
-> But those "to-do" lists are checked on every completion interrupt and
-> on every resume.
-> Do you see any scenario in which the "to-be-activated" or "to-be-
-> inactivate" work is getting starved?
+> The scsi sd shutdown process does not send a stop command to disks
+> before the reboot happens (stop commands are only sent for a shutdown).
 > 
+> The result is that all of my SSDs experience a sudden power loss on
+> every reboot, which is undesirable behaviour because it could cause data
+> to be corrupted. These events are recorded in the SMART attributes.
+> 
+> Add a "stop_before_reboot" module parameter that can be used to control
+> the shutdown behaviour of disks before a reboot. The default will be
+> the existing behaviour (disks are not stopped).
+> 
+>   sd_mod.stop_before_reboot=<integer>
+>     0 = disabled (default)
+>     1 = enabled
+> 
+> The behaviour on shutdown is unchanged: all disks are unconditionally
+> stopped.
 
-let me run more testing cases, will back to you if there is new
-updates.
-
-Thanks,
-Bean
-
-
+What happened to the suggestion to treat reboot=p like a poweroff
+instead?  That seems to be fundamentally the right thing to do.
