@@ -2,70 +2,100 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.2 required=3.0 tests=DATE_IN_PAST_12_24,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF6EEC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 363A7C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:35:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A77C020672
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15B5820672
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:35:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389029AbgF2Uev (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:34:51 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59454 "EHLO mx2.suse.de"
+        id S2389002AbgF2Ueu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 16:34:50 -0400
+Received: from mx2.suse.de ([195.135.220.15]:59504 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732198AbgF2TVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1732209AbgF2TVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 29 Jun 2020 15:21:34 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 58D87B0BA;
-        Mon, 29 Jun 2020 07:20:56 +0000 (UTC)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/22] snic: check for started requests in snic_hba_reset_cmpl_handler()
-Date:   Mon, 29 Jun 2020 09:20:13 +0200
-Message-Id: <20200629072021.9864-15-hare@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200629072021.9864-1-hare@suse.de>
-References: <20200629072021.9864-1-hare@suse.de>
+        by mx2.suse.de (Postfix) with ESMTP id CFDB4AC5E;
+        Mon, 29 Jun 2020 07:01:43 +0000 (UTC)
+Date:   Mon, 29 Jun 2020 09:01:43 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+        Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: Re: [PATCH 7/9] qla2xxx: Fix a Coverity complaint in
+ qla2100_fw_dump()
+Message-ID: <20200629070143.n6gzn5yymeq2tfmt@beryllium.lan>
+References: <20200614223921.5851-1-bvanassche@acm.org>
+ <20200614223921.5851-8-bvanassche@acm.org>
+ <20200623083354.2fldcoancxym6s6n@beryllium.lan>
+ <c0b9309f-0da6-f5f5-d1c3-4b01986d9e72@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c0b9309f-0da6-f5f5-d1c3-4b01986d9e72@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-snic_hba_reset_cmpl_handler() is using scsi_host_find_tag() to
-map id to a scsi command. However, as per discussion on the mailinglist
-scsi_host_find_tag() might return a non-started request, so we need
-to check the returned command with blk_mq_request_started() to avoid
-the function tripping over a non-initialized command.
+Hi Bart,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/snic/snic_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Sun, Jun 28, 2020 at 03:31:37PM -0700, Bart Van Assche wrote:
+> On 2020-06-23 01:33, Daniel Wagner wrote:
+> > On Sun, Jun 14, 2020 at 03:39:19PM -0700, Bart Van Assche wrote:
+> >> @@ -1063,7 +1063,8 @@ qla2100_fw_dump(scsi_qla_host_t *vha)
+> >>  	}
+> >>  
+> >>  	if (rval == QLA_SUCCESS)
+> >> -		qla2xxx_copy_queues(ha, &fw->risc_ram[cnt]);
+> >> +		qla2xxx_copy_queues(ha, (char *)fw +
+> >> +				    offsetof(typeof(*fw), risc_ram) + cnt);
+> > 
+> > This looks pretty ugly to me. Any chance to write this in a way it's
+> > understandable by humans and coverity is not annoyed?
+> > 
+> > Do I understand it correctly, it's valid to read after the end of risc_ram?
+> 
+> Doesn't the function qla2xxx_copy_queues() write to the pointer passed
+> as the second argument instead of reading?
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 9f9a497beb5c..b000a926e194 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -1020,7 +1020,7 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	}
- 
- 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
--	if (!sc) {
-+	if (!sc || !blk_mq_request_started(sc->request)) {
- 		atomic64_inc(&snic->s_stats.io.sc_null);
- 		SNIC_HOST_ERR(snic->shost,
- 			      "reset_cmpl: sc is NULL - Hdr Stat %s Tag 0x%x\n",
--- 
-2.16.4
+Yes, it seems to copy the request queue and the response queue
+to the pointer. Funny, it returns a pointer offset which only uses
+the size of the response queue which is used py qla2xxx_copy_eft.
+Looking at I would swear qla2xxx_copy_eft overwrites data from
+qla2xxx_copy_queues.
 
+> A possible alternative can be found below. The only reason I can think
+> of why this works is because the qla2100_fw_dump structure is occurs in
+> a union and because there is probably a larger structure present in the
+> same union. I would like to specify a size for the queue_dump[] array
+> but I am not sure where to get that information from.
+
+Yes, this would be indeed a good thing.
+
+> Subject: [PATCH] qla2xxx: Fix a Coverity complaint in qla2100_fw_dump()
+> 
+> 'cnt' can exceed the size of the risc_ram[] array. Prevent that Coverity
+> complains by rewriting an address calculation expression. This patch
+> fixes the following Coverity complaint:
+> 
+> CID 337803 (#1 of 1): Out-of-bounds read (OVERRUN)
+> 109. overrun-local: Overrunning array of 122880 bytes at byte offset
+> 122880 by dereferencing pointer &fw->risc_ram[cnt].
+
+Much better, now I get it :)
+
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
+
+Thanks,
+Daniel
