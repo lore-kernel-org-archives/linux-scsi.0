@@ -1,456 +1,180 @@
-Return-Path: <SRS0=bO3J=AJ=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C142C433E5
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 23:02:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C73AC433E1
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 00:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 206682076E
-	for <linux-scsi@archiver.kernel.org>; Sun, 28 Jun 2020 23:02:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 273202072D
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 00:13:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="d1TgNHyT";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="hzbcsgQ9"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qXVVp9Wb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726711AbgF1XCH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 28 Jun 2020 19:02:07 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:2007 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726546AbgF1XCA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2020 19:02:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1593385320; x=1624921320;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=VQdZjUpGpzPxTBS+Y1rg+pb4zhbVAOjXX96uDCZCMzU=;
-  b=d1TgNHyTVo8Wdyc4BRMCsrkeMxL6Wu0lQgPNAI/W7ks0nTvr/iK+hb/V
-   5rNEU3aURI7biLR5chXCVRFVAJUwMMLHjDelcznc+i0GWeZC13X8bfwie
-   Cxw6jt+MlvD36WnzvnvswLStZdvXri60F2xC3VLSLY17WXL3X5tE9O98x
-   JFjgF15plHGqCn+bswMxG7NJwtJSxr21/tYUzo7/SQuW3K15YqkazvkbC
-   Y4FN0TGx42RgXx5bqlHHwrludUVC2saviqOvKbcxpNyoE/QQdlXaZ3nE2
-   4TLV3GzL6i9FTuGdu+Cl0wIACeSGzmWZdzmuccVrYqqBhGySFVNRObl+o
-   w==;
-IronPort-SDR: Nxi5Y0bAdsNKzewJ0Qqv+QrTWj4Jt4IvNvOb7EumPX5j6YJrhNFWcU90Gy/vopFoSJnx2aTMdC
- myOrmfyCrqmLnroHUqvdbr+lh/hrmFkH1v57pYibXEM0kSamm7mGWwFC+9TuL8AAVKVCZWXcVK
- pPUYUHw70qa9my4wO54tS8A5ozUklDXs6VYEHo6+8TtkjxzXnS7VzfAdAhVxpL80NFSj8Zxhvz
- 8hDJAVOmd+2R/llOzyXvul51ZXTMn3QRYrAezvB3GSyRQ96cJ4BbBxsEP8Njv06neQN+x5cq7b
- wZY=
-X-IronPort-AV: E=Sophos;i="5.75,293,1589212800"; 
-   d="scan'208";a="145457407"
-Received: from mail-mw2nam12lp2046.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.46])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Jun 2020 07:01:59 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ee1pr3cN1X7COfXGZq3OCstTjC6leRU5WaZkH+HvNu6ou0H2kVRkQVfNcqa8O9XhNO2leFqypuhm+oEXqKrXa0y25TPLGjavV/VaUATn+0h5Sfv3NWsRQ/2wlFenanZS8RdfHUi/D4H0yRjEyGKRw38azSX4FqKJx3x5GYYhiPXIbC1vl0+3F9DPclUFxOdrhmvyNYLTx3bSZkXx/5OocN51xW3gjCBZSoXAu6PWmrbNCQPQCFWlvTHOGAUMI+1d2APj/t69m2nSZqVjyPVwBNkIu2YPPgqpJl1GGGmAOd4PtJC2zsMoVpx2VXdxH9Wulq9Xm/HptdDgb345GcwCPg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e3IMlmPpP8bNkwD8bNTWv/UTt3aY69ikCOLCRsL+ux4=;
- b=i2d7ZAG1wKS9S1h5XQDZX3roG7XHiR4jYzqI/jUpCwQwZldnrq/wHd7sO7rj2449oBLlao82BwGYsRgNy7bivoiDuvWGdbwiViUu8Tls/WoR98BeKGyobJ53Uy+Sm8Qk21G9Bq14axJHVT6JkGcxVCAseY5QXqIU5BsyoWTyIYkUnaNF3oArU9xmxvZ8mBl1z/75yARE15AqiCvZSeHUipRrdguwBdGzEg3aFccATA87CQUYgyvcy5WSvHfbFnQ83Lb6XUE6AdpsfUDWab/LNX92qHxXIZgC6dQrLnE+U+mj4f/kNvtqPordMu5KozXcXhOxO6SmEg2uXU/egvhLCg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=e3IMlmPpP8bNkwD8bNTWv/UTt3aY69ikCOLCRsL+ux4=;
- b=hzbcsgQ9Q8rWCY5DFWUY8AXb7bPfmVn8zVeMK5FvbMKKtAzuVa3xaFEn9FrxTKM9Mh7+5q22MKswOIzq6MB4DWCPSgCXzPFw8ErnqfJdqPfWI9pRWx0J9MfeTlv+HHUYQYIH+lL/OVJTp/17IC5XD6qWApRSEcFTMmmRt8wd6/c=
-Authentication-Results: kernel.dk; dkim=none (message not signed)
- header.d=none;kernel.dk; dmarc=none action=none header.from=wdc.com;
-Received: from MN2PR04MB6223.namprd04.prod.outlook.com (2603:10b6:208:db::14)
- by MN2PR04MB5965.namprd04.prod.outlook.com (2603:10b6:208:d9::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3131.20; Sun, 28 Jun
- 2020 23:01:57 +0000
-Received: from MN2PR04MB6223.namprd04.prod.outlook.com
- ([fe80::899f:1d14:ad80:400e]) by MN2PR04MB6223.namprd04.prod.outlook.com
- ([fe80::899f:1d14:ad80:400e%4]) with mapi id 15.20.3131.026; Sun, 28 Jun 2020
- 23:01:57 +0000
-From:   =?UTF-8?q?Matias=20Bj=C3=B8rling?= <matias.bjorling@wdc.com>
-To:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, damien.lemoal@wdc.com,
-        niklas.cassel@wdc.com, hans.holmberg@wdc.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        =?UTF-8?q?Matias=20Bj=C3=B8rling?= <matias.bjorling@wdc.com>
-Subject: [PATCH 2/2] block: add BLKSETDESCZONE ioctl for Zoned Block Devices
-Date:   Sun, 28 Jun 2020 23:01:02 +0000
-Message-Id: <20200628230102.26990-3-matias.bjorling@wdc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200628230102.26990-1-matias.bjorling@wdc.com>
-References: <20200628230102.26990-1-matias.bjorling@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: AM5PR0202CA0018.eurprd02.prod.outlook.com
- (2603:10a6:203:69::28) To MN2PR04MB6223.namprd04.prod.outlook.com
- (2603:10b6:208:db::14)
+        id S1726465AbgF2ANg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 28 Jun 2020 20:13:36 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46916 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726350AbgF2ANg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jun 2020 20:13:36 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05T08stq026656;
+        Mon, 29 Jun 2020 00:13:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=nf/pH693pK95+3C0v0zgkOwnWp0br/VkiuBJYye+DOw=;
+ b=qXVVp9WbDg8zgp0rUGelYosNSWBm4gPNETXuqGquCN/xCvQz+AF6IXntT5xUnzYdxSgn
+ HFsKcevUganbOiTPG16dgTXzz01oJplAGuYK9WB3HhZkhyb3WiA0WTZjLjl3k2wvEXIX
+ rWOzlkO2zUUkNjXNFrGoEk6yJVzy24MZvTkCnCswc+SqcoAYz8gnqYS+/gKLIGtEctC7
+ lxIG6UUhYtHisA0DYLjsrCOrDGpYc4c410VusE6htxPAjWr+q28kvLw0EhacVpJBrixo
+ 8FEcqly1VFjtLH5IxVLr5MApVVqJHFQ1nkuao9Kk6JhL1EPS6rMEV3enBjLnlf5okOzF hw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 31wxrmupk0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 29 Jun 2020 00:13:29 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05T0CXH1069935;
+        Mon, 29 Jun 2020 00:13:28 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 31xg0xu5rj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 29 Jun 2020 00:13:28 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05T0DQNl003139;
+        Mon, 29 Jun 2020 00:13:26 GMT
+Received: from [192.168.0.110] (/183.246.145.120)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 29 Jun 2020 00:11:44 +0000
+Subject: Re: [PATCH 1/2] workqueue: don't always set __WQ_ORDERED implicitly
+To:     Lai Jiangshan <jiangshanlai+lkml@gmail.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, lduncan@suse.com,
+        michael.christie@oracle.com
+References: <20200611100717.27506-1-bob.liu@oracle.com>
+ <CAJhGHyDQLuoCkjwnze_6ZOLwXPtbNxnjxOr=fqqqsR_yxB9xtA@mail.gmail.com>
+From:   Bob Liu <bob.liu@oracle.com>
+Message-ID: <52fa1d81-e585-37eb-55e5-0ed07ce7adc0@oracle.com>
+Date:   Mon, 29 Jun 2020 08:11:34 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ninja.localdomain (87.116.37.42) by AM5PR0202CA0018.eurprd02.prod.outlook.com (2603:10a6:203:69::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3131.21 via Frontend Transport; Sun, 28 Jun 2020 23:01:55 +0000
-X-Mailer: git-send-email 2.17.1
-X-Originating-IP: [87.116.37.42]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 3ea5eda5-a4b0-48e8-ce3f-08d81bb741b1
-X-MS-TrafficTypeDiagnostic: MN2PR04MB5965:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <MN2PR04MB5965AD06C3B66A493677129DF1910@MN2PR04MB5965.namprd04.prod.outlook.com>
-WDCIPOUTBOUND: EOP-TRUE
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
-X-Forefront-PRVS: 0448A97BF2
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Ctj47+tfFFkkjPAB2ypCVK8ZsBJ0UR1L0KYsLrhs8Amfzf+dB11qRbJ8T4j0MdFbNVlXtkak16S8UlaSgloVfYfGWDrb7RLf4Ue8VS+QydQngV03piLaoEpUYw/925Q/XeOGFcUIvuVnYeCgBDJdJbsKeCczXtYUbx+c/Y0YY1QdZpO3O8tN98d65F9PnOPV6BMd45sPJBnQf0z2+SqtD/EWwq4wDwNFBmRjA/ZgpplglqBIUnY9kqzhGDqqZvy9Q5jouvGX31gFkj6HtykGeqSLw2pGzpCefJ+01wTOlCXUnIMIozXh5BhJ5HFeyN9PLk/PM5dI055XDqyDF8IM6A==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6223.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(346002)(136003)(366004)(396003)(39850400004)(376002)(6486002)(4326008)(2616005)(956004)(1076003)(86362001)(6636002)(66946007)(316002)(66556008)(66476007)(30864003)(186003)(6512007)(26005)(6666004)(66574015)(6506007)(8936002)(2906002)(83380400001)(36756003)(5660300002)(52116002)(16526019)(478600001)(8676002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: h7teW06JigNX+KSm4554LpriddLUKTHB/qFxKbmkf9DC/ChMO5oNXo5efLhmgnbya/xgcJ1b8LbJI6nXXeNcPr6gPxur9K5/0YrGRDYbHhLWBXWNjRlqEVzqZmyboQM7BBk3paByHoqIVefG074gVuMhRP54Ke0q0KbDGSmm8PtP+uNIy6Opc9UuC5Hy5qxOMlLpXxdQ21o1s/hzKaMYmNyFWKF60jpo6QTMnGrTQlWMo2YmvcJxORjVIXHG3l1S5W81MT4WpUHgXsQqiHqBGh8ETK7oKJtJt8yfqPh9xnQR97d5YzfkS97MXfQhVSNqGHS7iz3FO06f6OB4p/NZ39KiBFHlKW32FpoEBb8xx8A5HY6OpkE0nogizbguKDWXEMvFAErHFfUWUr5R5ezVI0p488vh/m1tLKYFBROFaLURoQT2Pq5S9vIxCptmETWdpyhG3fIlgVih7sSfUcf28Kbju1tyyaCQeLgwjI4BAaY=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3ea5eda5-a4b0-48e8-ce3f-08d81bb741b1
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6223.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2020 23:01:57.2049
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: TTjvcw8LB3fy39jTPL5hHZyj0SDWk+hQ94TvLGm20BtChx+G0F50nC4T16H11RRfY1OUENEjuFPPYmO+fD2+KA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB5965
+In-Reply-To: <CAJhGHyDQLuoCkjwnze_6ZOLwXPtbNxnjxOr=fqqqsR_yxB9xtA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9666 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
+ mlxlogscore=999 suspectscore=0 bulkscore=0 mlxscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006290000
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9666 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1011
+ malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
+ lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006280181
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The NVMe Zoned Namespace Command Set adds support for associating
-data to a zone through the Zone Descriptor Extension feature.
+On 6/28/20 11:54 PM, Lai Jiangshan wrote:
+> On Thu, Jun 11, 2020 at 6:29 PM Bob Liu <bob.liu@oracle.com> wrote:
+>>
+>> Current code always set 'Unbound && max_active == 1' workqueues to ordered
+>> implicitly, while this may be not an expected behaviour for some use cases.
+>>
+>> E.g some scsi and iscsi workqueues(unbound && max_active = 1) want to be bind
+>> to different cpu so as to get better isolation, but their cpumask can't be
+>> changed because WQ_ORDERED is set implicitly.
+> 
+> Hello
+> 
+> If I read the code correctly, the reason why their cpumask can't
+> be changed is because __WQ_ORDERED_EXPLICIT, not __WQ_ORDERED.
+> 
+>>
+>> This patch adds a flag __WQ_ORDERED_DISABLE and also
+>> create_singlethread_workqueue_noorder() to offer an new option.
+>>
+>> Signed-off-by: Bob Liu <bob.liu@oracle.com>
+>> ---
+>>  include/linux/workqueue.h | 4 ++++
+>>  kernel/workqueue.c        | 4 +++-
+>>  2 files changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+>> index e48554e..4c86913 100644
+>> --- a/include/linux/workqueue.h
+>> +++ b/include/linux/workqueue.h
+>> @@ -344,6 +344,7 @@ enum {
+>>         __WQ_ORDERED            = 1 << 17, /* internal: workqueue is ordered */
+>>         __WQ_LEGACY             = 1 << 18, /* internal: create*_workqueue() */
+>>         __WQ_ORDERED_EXPLICIT   = 1 << 19, /* internal: alloc_ordered_workqueue() */
+>> +       __WQ_ORDERED_DISABLE    = 1 << 20, /* internal: don't set __WQ_ORDERED implicitly */
+>>
+>>         WQ_MAX_ACTIVE           = 512,    /* I like 512, better ideas? */
+>>         WQ_MAX_UNBOUND_PER_CPU  = 4,      /* 4 * #cpus for unbound wq */
+>> @@ -433,6 +434,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+>>  #define create_singlethread_workqueue(name)                            \
+>>         alloc_ordered_workqueue("%s", __WQ_LEGACY | WQ_MEM_RECLAIM, name)
+>>
+>> +#define create_singlethread_workqueue_noorder(name)                    \
+>> +       alloc_workqueue("%s", WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | \
+>> +                       WQ_UNBOUND | __WQ_ORDERED_DISABLE, 1, (name))
+> 
+> I think using __WQ_ORDERED without __WQ_ORDERED_EXPLICIT is what you
+> need, in which case cpumask is allowed to be changed.
+> 
 
-To allow user-space to associate data to a zone, add support through
-the BLKSETDESCZONE ioctl. The ioctl requires that it is issued to
-a zoned block device, and that it supports the Zone Descriptor
-Extension feature. Support is detected through the
-the zone_desc_ext_bytes sysfs queue entry for the specific block
-device. A value larger than zero communicates that the device supports
-the feature.
+I don't think so, see function workqueue_apply_unbound_cpumask():
 
-The ioctl associates data to a zone by issuing a Zone Management Send
-command with the Zone Send Action set as the Set Zone Descriptor
-Extension.
+wq_unbound_cpumask_store()
+ > workqueue_set_unbound_cpumask()
+   > workqueue_apply_unbound_cpumask() {
+     ...
+5276                 /* creating multiple pwqs breaks ordering guarantee */
+5277                 if (wq->flags & __WQ_ORDERED)
+5278                         continue;
+                     	  ^^^^
+                          Here will skip apply cpumask if only __WQ_ORDERED is set.
 
-For the command to complete successfully, the specified zone must be
-in the Empty state, and active resources must be available. On
-success, the specified zone is transioned to Closed state by the
-device. If less data is supplied by user-space then reported by the
-the Zone Descriptor Extension size, the rest is zero-filled. If more
-data or no data is supplied by user-space, the ioctl fails.
+5280                 ctx = apply_wqattrs_prepare(wq, wq->unbound_attrs);
 
-To issue the ioctl, a new blk_zone_set_desc data structure is defined.
-It has following parameters:
+     }
 
- * the sector of the specific zone.
- * the length of the data to be associated to the zone.
- * any flags be used by the ioctl. None is defined.
- * data associated to the zone.
+Thanks for your review.
+Bob
 
-The data is laid out after the flags parameter, and it is the caller's
-responsibility to allocate memory for the data that is specified in the
-length parameter.
-
-Signed-off-by: Matias Bjørling <matias.bjorling@wdc.com>
----
- block/blk-zoned.c             | 108 ++++++++++++++++++++++++++++++++++
- block/ioctl.c                 |   2 +
- drivers/nvme/host/core.c      |   3 +
- drivers/nvme/host/nvme.h      |   9 +++
- drivers/nvme/host/zns.c       |  11 ++++
- include/linux/blk_types.h     |   2 +
- include/linux/blkdev.h        |   9 ++-
- include/uapi/linux/blkzoned.h |  20 ++++++-
- 8 files changed, 162 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 81152a260354..4dc40ec006a2 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -259,6 +259,50 @@ int blkdev_zone_mgmt(struct block_device *bdev, enum req_opf op,
- }
- EXPORT_SYMBOL_GPL(blkdev_zone_mgmt);
- 
-+/**
-+ * blkdev_zone_set_desc - Execute a zone management set zone descriptor
-+ *                        extension operation on a zone
-+ * @bdev:	Target block device
-+ * @sector:	Start sector of the zone to operate on
-+ * @data:	Pointer to the data that is to be associated to the zone
-+ * @gfp_mask:	Memory allocation flags (for bio_alloc)
-+ *
-+ * Description:
-+ *    Associate zone descriptor extension data to a specified zone.
-+ *    The block device must support zone descriptor extensions.
-+ *    i.e., by exposing a positive zone descriptor extension size.
-+ */
-+int blkdev_zone_set_desc(struct block_device *bdev, sector_t sector,
-+			 struct page *data, gfp_t gfp_mask)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+	sector_t zone_sectors = blk_queue_zone_sectors(q);
-+	struct bio_vec bio_vec;
-+	struct bio bio;
-+
-+	if (!blk_queue_is_zoned(q))
-+		return -EOPNOTSUPP;
-+
-+	if (bdev_read_only(bdev))
-+		return -EPERM;
-+
-+	/* Check alignment (handle eventual smaller last zone) */
-+	if (sector & (zone_sectors - 1))
-+		return -EINVAL;
-+
-+	bio_init(&bio, &bio_vec, 1);
-+	bio.bi_opf = REQ_OP_ZONE_SET_DESC | REQ_SYNC;
-+	bio.bi_iter.bi_sector = sector;
-+	bio_set_dev(&bio, bdev);
-+	bio_add_page(&bio, data, queue_zone_desc_ext_bytes(q), 0);
-+
-+	/* This may take a while, so be nice to others */
-+	cond_resched();
-+
-+	return submit_bio_wait(&bio);
-+}
-+EXPORT_SYMBOL_GPL(blkdev_zone_set_desc);
-+
- struct zone_report_args {
- 	struct blk_zone __user *zones;
- };
-@@ -370,6 +414,70 @@ int blkdev_zone_mgmt_ioctl(struct block_device *bdev, fmode_t mode,
- 				GFP_KERNEL);
- }
- 
-+/*
-+ * BLKSETDESCZONE ioctl processing.
-+ * Called from blkdev_ioctl.
-+ */
-+int blkdev_zone_set_desc_ioctl(struct block_device *bdev, fmode_t mode,
-+			       unsigned int cmd, unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct request_queue *q;
-+	struct blk_zone_set_desc zsd;
-+	void *zsd_data;
-+	int ret;
-+
-+	if (!argp)
-+		return -EINVAL;
-+
-+	q = bdev_get_queue(bdev);
-+	if (!q)
-+		return -ENXIO;
-+
-+	if (!blk_queue_is_zoned(q))
-+		return -ENOTTY;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
-+
-+	if (!queue_zone_desc_ext_bytes(q))
-+		return -EOPNOTSUPP;
-+
-+	if (copy_from_user(&zsd, argp, sizeof(struct blk_zone_set_desc)))
-+		return -EFAULT;
-+
-+	/* no flags is currently supported */
-+	if (zsd.flags)
-+		return -ENOTTY;
-+
-+	if (!zsd.len || zsd.len > queue_zone_desc_ext_bytes(q))
-+		return -ENOTTY;
-+
-+	/* allocate the size of the zone descriptor extension and fill
-+	 * with the data in the user data buffer. If the data size is less
-+	 * than the zone descriptor extension size, then the rest of the
-+	 * zone description extension data buffer is zero-filled.
-+	 */
-+	zsd_data = (void *) get_zeroed_page(GFP_KERNEL);
-+	if (!zsd_data)
-+		return -ENOMEM;
-+
-+	if (copy_from_user(zsd_data, argp + sizeof(struct blk_zone_set_desc),
-+			   zsd.len)) {
-+		ret = -EFAULT;
-+		goto free;
-+	}
-+
-+	ret = blkdev_zone_set_desc(bdev, zsd.sector, virt_to_page(zsd_data),
-+	      GFP_KERNEL);
-+free:
-+	free_page((unsigned long) zsd_data);
-+	return ret;
-+}
-+
- static inline unsigned long *blk_alloc_zone_bitmap(int node,
- 						   unsigned int nr_zones)
- {
-diff --git a/block/ioctl.c b/block/ioctl.c
-index bdb3bbb253d9..b9744705835b 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -515,6 +515,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
- 	case BLKCLOSEZONE:
- 	case BLKFINISHZONE:
- 		return blkdev_zone_mgmt_ioctl(bdev, mode, cmd, arg);
-+	case BLKSETDESCZONE:
-+		return blkdev_zone_set_desc_ioctl(bdev, mode, cmd, arg);
- 	case BLKGETZONESZ:
- 		return put_uint(argp, bdev_zone_sectors(bdev));
- 	case BLKGETNRZONES:
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index e961910da4ac..b8f25b0d00ad 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -776,6 +776,9 @@ blk_status_t nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
- 	case REQ_OP_ZONE_FINISH:
- 		ret = nvme_setup_zone_mgmt_send(ns, req, cmd, NVME_ZONE_FINISH);
- 		break;
-+	case REQ_OP_ZONE_SET_DESC:
-+		ret = nvme_setup_zone_set_desc(ns, req, cmd);
-+		break;
- 	case REQ_OP_WRITE_ZEROES:
- 		ret = nvme_setup_write_zeroes(ns, req, cmd);
- 		break;
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index 662f95fbd909..5bd5a437b038 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -708,6 +708,9 @@ int nvme_report_zones(struct gendisk *disk, sector_t sector,
- blk_status_t nvme_setup_zone_mgmt_send(struct nvme_ns *ns, struct request *req,
- 				       struct nvme_command *cmnd,
- 				       enum nvme_zone_mgmt_action action);
-+
-+blk_status_t nvme_setup_zone_set_desc(struct nvme_ns *ns, struct request *req,
-+				       struct nvme_command *cmnd);
- #else
- #define nvme_report_zones NULL
- 
-@@ -718,6 +721,12 @@ static inline blk_status_t nvme_setup_zone_mgmt_send(struct nvme_ns *ns,
- 	return BLK_STS_NOTSUPP;
- }
- 
-+static inline blk_status_t nvme_setup_zone_set_desc(struct nvme_ns *ns,
-+		struct request *req, struct nvme_command *cmnd)
-+{
-+	return BLK_STS_NOTSUPP;
-+}
-+
- static inline int nvme_update_zone_info(struct gendisk *disk,
- 					struct nvme_ns *ns,
- 					unsigned lbaf)
-diff --git a/drivers/nvme/host/zns.c b/drivers/nvme/host/zns.c
-index 5792d953a8f3..bfa64cc685d3 100644
---- a/drivers/nvme/host/zns.c
-+++ b/drivers/nvme/host/zns.c
-@@ -239,3 +239,14 @@ blk_status_t nvme_setup_zone_mgmt_send(struct nvme_ns *ns, struct request *req,
- 
- 	return BLK_STS_OK;
- }
-+
-+blk_status_t nvme_setup_zone_set_desc(struct nvme_ns *ns, struct request *req,
-+		struct nvme_command *c)
-+{
-+	c->zms.opcode = nvme_cmd_zone_mgmt_send;
-+	c->zms.nsid = cpu_to_le32(ns->head->ns_id);
-+	c->zms.slba = cpu_to_le64(nvme_sect_to_lba(ns, blk_rq_pos(req)));
-+	c->zms.action = NVME_ZONE_SET_DESC_EXT;
-+
-+	return BLK_STS_OK;
-+}
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index ccb895f911b1..53b7b05b0004 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -316,6 +316,8 @@ enum req_opf {
- 	REQ_OP_ZONE_FINISH	= 12,
- 	/* write data at the current zone write pointer */
- 	REQ_OP_ZONE_APPEND	= 13,
-+	/* associate zone desc extension data to a zone */
-+	REQ_OP_ZONE_SET_DESC	= 14,
- 
- 	/* SCSI passthrough using struct scsi_request */
- 	REQ_OP_SCSI_IN		= 32,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 2ed55055f68d..c5f092dd5aa3 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -370,7 +370,8 @@ extern int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
- 				     unsigned int cmd, unsigned long arg);
- extern int blkdev_zone_mgmt_ioctl(struct block_device *bdev, fmode_t mode,
- 				  unsigned int cmd, unsigned long arg);
--
-+extern int blkdev_zone_set_desc_ioctl(struct block_device *bdev, fmode_t mode,
-+				      unsigned int cmd, unsigned long arg);
- #else /* CONFIG_BLK_DEV_ZONED */
- 
- static inline unsigned int blkdev_nr_zones(struct gendisk *disk)
-@@ -392,6 +393,12 @@ static inline int blkdev_zone_mgmt_ioctl(struct block_device *bdev,
- 	return -ENOTTY;
- }
- 
-+static inline int blkdev_zone_set_desc_ioctl(struct block_device *bdev,
-+					     fmode_t mode, unsigned int cmd,
-+					     unsigned long arg)
-+{
-+	return -ENOTTY;
-+}
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- struct request_queue {
-diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index 42c3366cc25f..68abda9abf33 100644
---- a/include/uapi/linux/blkzoned.h
-+++ b/include/uapi/linux/blkzoned.h
-@@ -142,6 +142,20 @@ struct blk_zone_range {
- 	__u64		nr_sectors;
- };
- 
-+/**
-+ * struct blk_zone_set_desc - BLKSETDESCZONE ioctl requests
-+ * @sector: Starting sector of the zone to operate on.
-+ * @flags: Feature flags.
-+ * @len: size, in bytes, of the data to be associated to the zone.
-+ * @data: data to be associated.
-+ */
-+struct blk_zone_set_desc {
-+	__u64		sector;
-+	__u32		flags;
-+	__u32		len;
-+	__u8		data[0];
-+};
-+
- /**
-  * Zoned block device ioctl's:
-  *
-@@ -158,6 +172,10 @@ struct blk_zone_range {
-  *                The 512 B sector range must be zone aligned.
-  * @BLKFINISHZONE: Mark the zones as full in the specified sector range.
-  *                 The 512 B sector range must be zone aligned.
-+ * @BLKSETDESCZONE: Set zone description extension data for the zone
-+ *                  in the specified sector. On success, the zone
-+ *                  will transition to the closed zone state.
-+ *                  The 512B sector must be zone aligned.
-  */
- #define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
- #define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
-@@ -166,5 +184,5 @@ struct blk_zone_range {
- #define BLKOPENZONE	_IOW(0x12, 134, struct blk_zone_range)
- #define BLKCLOSEZONE	_IOW(0x12, 135, struct blk_zone_range)
- #define BLKFINISHZONE	_IOW(0x12, 136, struct blk_zone_range)
--
-+#define BLKSETDESCZONE	_IOW(0x12, 137, struct blk_zone_set_desc)
- #endif /* _UAPI_BLKZONED_H */
--- 
-2.17.1
+> Just use alloc_workqueue() with __WQ_ORDERED and max_active=1. It can
+> be wrapped as a new function or macro, but I don't think> create_singlethread_workqueue_noorder() is a good name for it.
+> 
+>>  extern void destroy_workqueue(struct workqueue_struct *wq);
+>>
+>>  struct workqueue_attrs *alloc_workqueue_attrs(void);
+>> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+>> index 4e01c44..2167013 100644
+>> --- a/kernel/workqueue.c
+>> +++ b/kernel/workqueue.c
+>> @@ -4237,7 +4237,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
+>>          * on NUMA.
+>>          */
+>>         if ((flags & WQ_UNBOUND) && max_active == 1)
+>> -               flags |= __WQ_ORDERED;
+>> +               /* the caller may don't want __WQ_ORDERED to be set implicitly. */
+>> +               if (!(flags & __WQ_ORDERED_DISABLE))
+>> +                       flags |= __WQ_ORDERED;
+>>
+>>         /* see the comment above the definition of WQ_POWER_EFFICIENT */
+>>         if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
+>> --
+>> 2.9.5
+>>
 
