@@ -7,53 +7,54 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3423EC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 22:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBAA3C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 22:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19C4220702
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 22:55:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD48520780
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 22:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728493AbgF2WzL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 18:55:11 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:35846 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728467AbgF2WzK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 18:55:10 -0400
-Received: by mail-pl1-f194.google.com with SMTP id j4so7677227plk.3
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 15:55:09 -0700 (PDT)
+        id S1728556AbgF2WzM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 18:55:12 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:33819 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728467AbgF2WzM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 18:55:12 -0400
+Received: by mail-pl1-f196.google.com with SMTP id o1so1102855plk.1
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 15:55:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HZ7cTZEpamxkssXb8i/G6iTr/lV89FSt/1GQloGQWP8=;
-        b=kTgNIY+0+08Qk4A/11R6235fiB98CYt0aO4MkfGQwpkJajB/t3ZjslKJvWCfpsjDbG
-         MZ65wdravZpNM5U5PuGL7RTfKxFnM8L9dhVnEBxqZkkiXt+aWoXmEYuNtScDH+tsk8Du
-         z/uhQenHkABECFtNJciUbhpAvChJQI2jlBqISktJUtcHqxaEqDotlH9i2amXxRDAOyTM
-         UidokMuptj1o2Dyp1xp9uCAOBGxruOlPaABjHs5TP0zPjroVl1wF7DbVi6l42NERvU3S
-         UrWazmZYTs+y5z1zh9uAdY0uuNY16DQHHpWTtgiwCSvPVRJHEJ6tbFSprZqNpPQqHT2Q
-         lMhA==
-X-Gm-Message-State: AOAM533d3w5xfZjTmM5CSk512jj9Sp2kB/9Yfy1P8AmUIxhxL3y4BJJS
-        /N+WZj5w7D6WypLFf0jgB8E=
-X-Google-Smtp-Source: ABdhPJxyVp1sNRk9M+h+4gggPOTGcDEMbVZVQ2vIJTpe9bQgbkvJyypEbL/ZBD2PXPXDBFKMBqP2ZA==
-X-Received: by 2002:a17:90b:2350:: with SMTP id ms16mr11288250pjb.224.1593471309534;
-        Mon, 29 Jun 2020 15:55:09 -0700 (PDT)
+        bh=g9xVjHzCg0wskyJL6JySNkn8fsSLAlFJ7WsgYLGLYKs=;
+        b=W5x9NLh9Jjpj6nuV7YwQFKdFAnTGpLhxnkHU0j+hk4tGtbL9X9rqJ02eXivLUarY0u
+         MfjRXvcKky6yMRXkqyo6bieM46u5il3NF2rRdkhT18wzR6M2dPCtDYqIu1+NH7kSTpL/
+         Mipto1z3BayDQAe463ETB3GmJdUXe5ycoXcmZ3sxh4brPGnvpP2Nkt2aV/1Dybq4ImQp
+         vaIScxatXivV387TpdZkYF3WRnTs3kDmaDT82aeKGRJ/28s0Q3pbsIwm5+GHFp6tcdDB
+         8NSGFaUE4ecgZDXyNZ2LpOMUoS73TGYtRt+RAnv3w7Q9guNVTWtOuhQoK3LbAZEvSKhr
+         eT0A==
+X-Gm-Message-State: AOAM532/5suheJzZ/KemqkrcxaGWp1m8Gp7o8TUnBtauBq8I6Agx2MtE
+        hYXFe98iElhSVtVdg87588s3BCeOPMY=
+X-Google-Smtp-Source: ABdhPJw54926qGuhEC1hmuKcUYyqXl+qVy/SK7uV/TjRhU0KTpRFQUJtvNXKzJxxb6mZ1BrNVnhAEQ==
+X-Received: by 2002:a17:902:7b89:: with SMTP id w9mr3658339pll.175.1593471311072;
+        Mon, 29 Jun 2020 15:55:11 -0700 (PDT)
 Received: from localhost.localdomain (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id mr8sm478379pjb.5.2020.06.29.15.55.08
+        by smtp.gmail.com with ESMTPSA id mr8sm478379pjb.5.2020.06.29.15.55.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jun 2020 15:55:08 -0700 (PDT)
+        Mon, 29 Jun 2020 15:55:10 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Daniel Wagner <dwagner@suse.de>,
+        Shyam Sundar <ssundar@marvell.com>,
         Nilesh Javali <njavali@marvell.com>,
         Quinn Tran <qutran@marvell.com>,
         Himanshu Madhani <himanshu.madhani@oracle.com>,
         Martin Wilck <mwilck@suse.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v2 3/9] qla2xxx: Make qla82xx_flash_wait_write_finish() easier to read
-Date:   Mon, 29 Jun 2020 15:54:48 -0700
-Message-Id: <20200629225454.22863-4-bvanassche@acm.org>
+Subject: [PATCH v2 4/9] qla2xxx: Initialize 'n' before using it
+Date:   Mon, 29 Jun 2020 15:54:49 -0700
+Message-Id: <20200629225454.22863-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200629225454.22863-1-bvanassche@acm.org>
 References: <20200629225454.22863-1-bvanassche@acm.org>
@@ -64,12 +65,17 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Return early instead of having a single return statement at the end of this
-function. This patch fixes the following sparse warning:
+The following code:
+	qla82xx_rom_fast_read(ha, 0, &n)
+only initializes 'n' if it succeeds. Since 'n' may be reported in a debug
+message even if no ROM reads succeeded, initialize 'n' to zero.
 
-qla_nx.c:1018: qla82xx_flash_wait_write_finish() error: uninitialized symbol 'val'.
+This patch fixes the following sparse warning:
+
+qla_nx.c:1218: qla82xx_pinit_from_rom() error: uninitialized symbol 'n'.
 
 Reviewed-by: Daniel Wagner <dwagner@suse.de>
+Reviewed-by: Shyam Sundar <ssundar@marvell.com>
 Cc: Nilesh Javali <njavali@marvell.com>
 Cc: Quinn Tran <qutran@marvell.com>
 Cc: Himanshu Madhani <himanshu.madhani@oracle.com>
@@ -77,44 +83,18 @@ Cc: Martin Wilck <mwilck@suse.com>
 Cc: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/qla_nx.c | 19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 0baf55b7e88f..ff365b434a02 100644
+index ff365b434a02..71273eb634d3 100644
 --- a/drivers/scsi/qla2xxx/qla_nx.c
 +++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -966,26 +966,21 @@ qla82xx_read_status_reg(struct qla_hw_data *ha, uint32_t *val)
- static int
- qla82xx_flash_wait_write_finish(struct qla_hw_data *ha)
- {
--	long timeout = 0;
--	uint32_t done = 1 ;
- 	uint32_t val;
--	int ret = 0;
-+	int i, ret;
- 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
- 
- 	qla82xx_wr_32(ha, QLA82XX_ROMUSB_ROM_ABYTE_CNT, 0);
--	while ((done != 0) && (ret == 0)) {
-+	for (i = 0; i < 50000; i++) {
- 		ret = qla82xx_read_status_reg(ha, &val);
--		done = val & 1;
--		timeout++;
-+		if (ret < 0 || (val & 1) == 0)
-+			return ret;
- 		udelay(10);
- 		cond_resched();
--		if (timeout >= 50000) {
--			ql_log(ql_log_warn, vha, 0xb00d,
--			    "Timeout reached waiting for write finish.\n");
--			return -1;
--		}
- 	}
--	return ret;
-+	ql_log(ql_log_warn, vha, 0xb00d,
-+	       "Timeout reached waiting for write finish.\n");
-+	return -1;
- }
- 
- static int
+@@ -1167,6 +1167,7 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
+ 	 * Offset 4: Offset and number of addr/value pairs
+ 	 * that present in CRB initialize sequence
+ 	 */
++	n = 0;
+ 	if (qla82xx_rom_fast_read(ha, 0, &n) != 0 || n != 0xcafecafeUL ||
+ 	    qla82xx_rom_fast_read(ha, 4, &n) != 0) {
+ 		ql_log(ql_log_fatal, vha, 0x006e,
