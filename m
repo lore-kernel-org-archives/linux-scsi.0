@@ -2,61 +2,53 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8FBC433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93765C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:26:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D48220702
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:23:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 811B3206F1
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:26:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730276AbgF2TXc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:23:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45108 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732285AbgF2TWo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 15:22:44 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA0B7C030F39;
-        Mon, 29 Jun 2020 09:56:52 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id z5so8569340pgb.6;
-        Mon, 29 Jun 2020 09:56:52 -0700 (PDT)
+        id S1732462AbgF2T04 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:26:56 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:41301 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732388AbgF2T0y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 15:26:54 -0400
+Received: by mail-pl1-f194.google.com with SMTP id f2so7473405plr.8
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 12:26:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=/ma/F8azHfAAlX2tIXoGzMQscfg5HcD+VaBkA6I2zHQ=;
-        b=pZER90CeOCVTshThob8SMWZGTPpq0Mux+NuRers8/6P2d0f4w05GGRSqD38aYcR8ZZ
-         12G9obczqcC1AFF562uQjh3gP+CYReqnp1GfE2ls8ZNYxhGZ8NeOzFlvLYb4fhQVTgw+
-         drDHEyhfRZQThZRHWbPqaYsosoDZyprHv0VWmIDHGBLihzGeKEW0eUIgUpLq+zjzfJEV
-         X9MSU4N34Sr3VrhXDbKxq8GarIAoqKX/BUhbleGf2EDvUpLtuhQyVdQohOUDokASKovU
-         v3hSmeogbUBwwqUUhpG8mhxfAVv22+KxEWOweLvDxOTbSO7NhguMdtjuQ0vGSyPpoGsK
-         D5GA==
-X-Gm-Message-State: AOAM533Xpd0YJw46l0YjdEqWsLVYGUk6Y0tfaYip9Hybi9VKGvLmjZ6u
-        2LYZypdyLwl/pyRziGdgk2w=
-X-Google-Smtp-Source: ABdhPJxAvEhIQPLv4qR5l3ldPDQeKRXPQEDzt66dAti3bw4uNmWPcIma5kppyybAmSHb90GeBtGz8A==
-X-Received: by 2002:a63:5110:: with SMTP id f16mr10872564pgb.377.1593449812186;
-        Mon, 29 Jun 2020 09:56:52 -0700 (PDT)
+        bh=AXtl2nxmEkz7cjQdmD1ArGk35lrhZK2hWx0Qu+var4M=;
+        b=JKNjyY73uWFyxWyTj463hA1ue21KaW4AbUtdoHFyQ05EgwxjElJgZonFRExeMA+hiJ
+         clS1Dndt1cZoAa+p+m52XQY2dgAH5tepwIBuBjj++lhotV1rlvv+Nl1kxaZSa/5aK3u1
+         jxDWGZretGpcm4NcGwhsHvJrtX5IQyEMfXbqeqt17MQ2nErRuNnxCDgXQ+rZzD9z7h67
+         fZNj1CuHbKtcnGntVxuHC3VmvnCSxochwEKCNqBAm1aX+T7ku3n2o0H2w+sBiHCDlRsS
+         aJdFupgytOvC3v1SKBfVD6ub1qF56VIfqMsH8fJGIg1AEGRyp6g/m/Ix9m1SC3KGug0a
+         SF/A==
+X-Gm-Message-State: AOAM530fvIAGz/0pPbno7h+nKqspzmynXLA5KLXtirrVUVo/TTMvpmLB
+        Oq7W2qddy+Xf9ODyk2/r8U3d1RAl
+X-Google-Smtp-Source: ABdhPJyhBYTDemlgmALSAioH6By1uI1sW/m/tJsq6ukupdfwl+eGXMBXMTwdGzdt65AZhuZRCqVKvw==
+X-Received: by 2002:a17:90a:cb0e:: with SMTP id z14mr16689129pjt.140.1593458813685;
+        Mon, 29 Jun 2020 12:26:53 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id a30sm258527pfr.87.2020.06.29.09.56.50
+        by smtp.gmail.com with ESMTPSA id r203sm439229pfr.30.2020.06.29.12.26.52
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 Jun 2020 09:56:51 -0700 (PDT)
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>
-Cc:     jejb@linux.ibm.com, Can Guo <cang@codeaurora.org>,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@puri.sm
-References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
- <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
- <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
- <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
- <20200626154441.GA296771@rowland.harvard.edu>
- <c19f1938-ae47-2357-669d-5b4021aec154@puri.sm>
- <20200629161536.GA405175@rowland.harvard.edu>
+        Mon, 29 Jun 2020 12:26:53 -0700 (PDT)
+Subject: Re: [PATCH] ch: Do not read past the end of vendor_labels[]
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Hannes Reinecke <hare@suse.de>
+References: <20200629161051.14943-1-bvanassche@acm.org>
+ <CAK8P3a1H0H82fp_kLDnE4=SihDO4PgB+jDiLjfmUsPfdFYXoCQ@mail.gmail.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -81,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <df54c02f-dbe9-08d5-fec8-835788caf164@acm.org>
-Date:   Mon, 29 Jun 2020 09:56:49 -0700
+Message-ID: <6504926f-3cca-3fe8-464c-9a1c4d8943d3@acm.org>
+Date:   Mon, 29 Jun 2020 12:26:51 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <20200629161536.GA405175@rowland.harvard.edu>
+In-Reply-To: <CAK8P3a1H0H82fp_kLDnE4=SihDO4PgB+jDiLjfmUsPfdFYXoCQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -95,67 +87,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-06-29 09:15, Alan Stern wrote:
-> Aha.  Looking at this more closely, it's apparent that the code in 
-> blk-core.c contains a logic bug: It assumes that if the BLK_MQ_REQ_PREEMPT 
-> flag is set then the request can be issued regardless of the queue's 
-> runtime status.  That is not correct when the queue is suspended.
+On 2020-06-29 11:33, Arnd Bergmann wrote:
+> On Mon, Jun 29, 2020 at 6:11 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>> diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+>> index b81b397366db..b675a01380eb 100644
+>> --- a/drivers/scsi/ch.c
+>> +++ b/drivers/scsi/ch.c
+>> @@ -651,19 +651,23 @@ static long ch_ioctl(struct file *file,
+>>                 memset(&vparams,0,sizeof(vparams));
+>>                 if (ch->counts[CHET_V1]) {
+>>                         vparams.cvp_n1  = ch->counts[CHET_V1];
+>> -                       memcpy(vparams.cvp_label1,vendor_labels[0],16);
+>> +                       strncpy(vparams.cvp_label1, vendor_labels[0],
+>> +                               ARRAY_SIZE(vparams.cvp_label1));
+>>                 }
+> 
+> Against which tree is this? I see in mainline the correct
+> 
+>       strncpy(vparams.cvp_label1,vendor_labels[0],16);
+> 
+> rather than the broken memcpy. If this was changed recently to the
+> broken version, maybe send a revert, or add a "Fixes" tag?
 
-Please clarify why this is not correct.
+Hi Arnd,
 
-> Index: usb-devel/block/blk-core.c
-> ===================================================================
-> --- usb-devel.orig/block/blk-core.c
-> +++ usb-devel/block/blk-core.c
-> @@ -423,7 +423,8 @@ int blk_queue_enter(struct request_queue
->  			 * responsible for ensuring that that counter is
->  			 * globally visible before the queue is unfrozen.
->  			 */
-> -			if (pm || !blk_queue_pm_only(q)) {
-> +			if ((pm && q->rpm_status != RPM_SUSPENDED) ||
-> +			    !blk_queue_pm_only(q)) {
->  				success = true;
->  			} else {
->  				percpu_ref_put(&q->q_usage_counter);
-
-Does the above change make it impossible to bring a suspended device
-back to the RPM_ACTIVE state if the BLK_MQ_REQ_NOWAIT flag is set?
-
-> @@ -448,8 +449,7 @@ int blk_queue_enter(struct request_queue
->  
->  		wait_event(q->mq_freeze_wq,
->  			   (!q->mq_freeze_depth &&
-> -			    (pm || (blk_pm_request_resume(q),
-> -				    !blk_queue_pm_only(q)))) ||
-> +			    blk_pm_resume_queue(pm, q)) ||
->  			   blk_queue_dying(q));
->  		if (blk_queue_dying(q))
->  			return -ENODEV;
-> Index: usb-devel/block/blk-pm.h
-> ===================================================================
-> --- usb-devel.orig/block/blk-pm.h
-> +++ usb-devel/block/blk-pm.h
-> @@ -6,11 +6,14 @@
->  #include <linux/pm_runtime.h>
->  
->  #ifdef CONFIG_PM
-> -static inline void blk_pm_request_resume(struct request_queue *q)
-> +static inline int blk_pm_resume_queue(const bool pm, struct request_queue *q)
->  {
-> -	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-> -		       q->rpm_status == RPM_SUSPENDING))
-> -		pm_request_resume(q->dev);
-> +	if (!q->dev || !blk_queue_pm_only(q))
-> +		return 1;	/* Nothing to do */
-> +	if (pm && q->rpm_status != RPM_SUSPENDED)
-> +		return 1;	/* Request allowed */
-> +	pm_request_resume(q->dev);
-> +	return 0;
->  }
-
-Does the above change, especially the " && q->rpm_status !=
-RPM_SUSPENDED" part, make it impossible to bring a suspended device back
-to the RPM_ACTIVE state?
+Thanks for having taken a look. This patch applies to Martin's for-next
+branch. The most recent ch patch I found in Linus' master branch is "ch:
+remove ch_mutex()" from February 2020. I haven't found any more recent
+ch patches in the linux-next/master branch either. Have I perhaps been
+looking at the wrong repository or the wrong branch?
 
 Thanks,
 
