@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B584C433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E43C433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84923206E9
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29067206E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:11:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730340AbgF2TLt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:11:49 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53698 "EHLO mx2.suse.de"
+        id S1731056AbgF2TL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:11:26 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53584 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731058AbgF2TL1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:11:27 -0400
+        id S1730446AbgF2TLZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jun 2020 15:11:25 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 21F33B08C;
+        by mx2.suse.de (Postfix) with ESMTP id 8801BB122;
         Mon, 29 Jun 2020 07:20:56 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -31,9 +31,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Don Brace <don.brace@microchip.com>,
         John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/22] snic: use tagset iter for traversing commands
-Date:   Mon, 29 Jun 2020 09:20:12 +0200
-Message-Id: <20200629072021.9864-14-hare@suse.de>
+Subject: [PATCH 20/22] aacraid: store target id in host_scribble
+Date:   Mon, 29 Jun 2020 09:20:19 +0200
+Message-Id: <20200629072021.9864-21-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200629072021.9864-1-hare@suse.de>
 References: <20200629072021.9864-1-hare@suse.de>
@@ -42,534 +42,176 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use the tagset iter to traverse active commands during device and
-hba reset.
+The probe_container mechanism requires a target id to be present,
+even if the device itself isn't present (yet).
+As we're now allocating internal commands the target id of the
+device is immutable, so store the requested target id in the
+host_scribble field.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/snic/snic_scsi.c | 366 +++++++++++++++++++++---------------------
- 1 file changed, 187 insertions(+), 179 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 53 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 38 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 8aa9ae75fe89..9f9a497beb5c 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -1645,90 +1645,97 @@ snic_abort_cmd(struct scsi_cmnd *sc)
- 	return ret;
- }
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 2b868f8db8ff..e1ba5e65a66f 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -608,9 +608,11 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
  
-+struct snic_cmd_pending_iter_data {
-+	struct snic *snic;
-+	struct scsi_device *sdev;
-+	int ret;
-+};
- 
--
--static int
--snic_is_abts_pending(struct snic *snic, struct scsi_cmnd *lr_sc)
-+static bool
-+snic_is_abts_pending_iter(struct scsi_cmnd *sc, void *data, bool reserved)
+ static int aac_probe_container_callback2(struct scsi_cmnd * scsicmd)
  {
-+	struct snic_cmd_pending_iter_data *iter_data = data;
- 	struct snic_req_info *rqi = NULL;
--	struct scsi_cmnd *sc = NULL;
--	struct scsi_device *lr_sdev = NULL;
- 	spinlock_t *io_lock = NULL;
--	u32 tag;
- 	unsigned long flags;
+-	struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
++	struct aac_dev *dev = (struct aac_dev *)(scsicmd->device->host->hostdata);
++	struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
  
--	if (lr_sc)
--		lr_sdev = lr_sc->device;
-+	if (reserved)
-+		return true;
+-	if ((fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
++	if (scmd_id(scsicmd) < dev->maximum_num_containers &&
++	    (fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
+ 		return aac_scsi_cmd(scsicmd);
  
--	/* walk through the tag map, an dcheck if IOs are still pending in fw*/
--	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		io_lock = snic_io_lock_tag(snic, tag);
--
--		spin_lock_irqsave(io_lock, flags);
--		sc = scsi_host_find_tag(snic->shost, tag);
--
--		if (!sc || (lr_sc && (sc->device != lr_sdev || sc == lr_sc))) {
--			spin_unlock_irqrestore(io_lock, flags);
-+	if (iter_data->sdev && iter_data->sdev != sc->device)
-+		return true;
- 
--			continue;
--		}
-+	io_lock = snic_io_lock_hash(iter_data->snic, sc);
-+	spin_lock_irqsave(io_lock, flags);
- 
--		rqi = (struct snic_req_info *) CMD_SP(sc);
--		if (!rqi) {
--			spin_unlock_irqrestore(io_lock, flags);
-+	rqi = (struct snic_req_info *) CMD_SP(sc);
-+	if (!rqi) {
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return true;
-+	}
- 
--			continue;
--		}
-+	/*
-+	 * Found IO that is still pending w/ firmware and belongs to
-+	 * the LUN that is under reset, if lr_sc != NULL
-+	 */
-+	SNIC_SCSI_DBG(iter_data->snic->shost, "Found IO in %s on LUN\n",
-+		      snic_ioreq_state_to_str(CMD_STATE(sc)));
- 
--		/*
--		 * Found IO that is still pending w/ firmware and belongs to
--		 * the LUN that is under reset, if lr_sc != NULL
--		 */
--		SNIC_SCSI_DBG(snic->shost, "Found IO in %s on LUN\n",
--			      snic_ioreq_state_to_str(CMD_STATE(sc)));
-+	if (CMD_STATE(sc) == SNIC_IOREQ_ABTS_PENDING)
-+		iter_data->ret = 1;
-+	spin_unlock_irqrestore(io_lock, flags);
- 
--		if (CMD_STATE(sc) == SNIC_IOREQ_ABTS_PENDING) {
--			spin_unlock_irqrestore(io_lock, flags);
-+	return true;
-+}
- 
--			return 1;
--		}
-+static int
-+snic_is_abts_pending(struct snic *snic, struct scsi_device *lr_sdev)
-+{
-+	struct snic_cmd_pending_iter_data iter_data = {
-+		.snic = snic,
-+		.sdev = lr_sdev,
-+		.ret = 0,
-+	};
- 
--		spin_unlock_irqrestore(io_lock, flags);
--	}
-+	/* walk through the tag map, an dcheck if IOs are still pending in fw*/
-+	scsi_host_busy_iter(snic->shost,
-+			    snic_is_abts_pending_iter, &iter_data);
- 
--	return 0;
-+	return iter_data.ret;
- } /* end of snic_is_abts_pending */
- 
--static int
--snic_dr_clean_single_req(struct snic *snic,
--			 u32 tag,
--			 struct scsi_device *lr_sdev)
-+static bool
-+snic_dr_clean_single_req(struct scsi_cmnd *sc, void *data, bool reserved)
- {
- 	struct snic_req_info *rqi = NULL;
- 	struct snic_tgt *tgt = NULL;
--	struct scsi_cmnd *sc = NULL;
- 	spinlock_t *io_lock = NULL;
- 	u32 sv_state = 0, tmf = 0;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
- 	unsigned long flags;
- 	int ret = 0;
-+	struct snic_cmd_pending_iter_data *iter_data = data;
-+	struct snic *snic = iter_data->snic;
- 
--	io_lock = snic_io_lock_tag(snic, tag);
--	spin_lock_irqsave(io_lock, flags);
--	sc = scsi_host_find_tag(snic->shost, tag);
-+	if (reserved)
-+		return true;
- 
--	/* Ignore Cmd that don't belong to Lun Reset device */
--	if (!sc || sc->device != lr_sdev)
--		goto skip_clean;
-+	if (sc->device != iter_data->sdev)
-+		return true;
- 
-+	io_lock = snic_io_lock_hash(snic, sc);
-+	spin_lock_irqsave(io_lock, flags);
- 	rqi = (struct snic_req_info *) CMD_SP(sc);
--
--	if (!rqi)
--		goto skip_clean;
-+	if (!rqi) {
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return true;
-+	}
+ 	scsicmd->result = DID_NO_CONNECT << 16;
+@@ -623,6 +625,7 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 	struct fsa_dev_info *fsa_dev_ptr;
+ 	int (*callback)(struct scsi_cmnd *);
+ 	struct scsi_cmnd * scsicmd = (struct scsi_cmnd *)context;
++	int cid = scmd_id(scsicmd);
+ 	int i;
  
  
--	if (CMD_STATE(sc) == SNIC_IOREQ_ABTS_PENDING)
--		goto skip_clean;
-+	if (CMD_STATE(sc) == SNIC_IOREQ_ABTS_PENDING) {
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return true;
-+	}
+@@ -630,12 +633,15 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 		return;
  
+ 	scsicmd->SCp.Status = 0;
++	if (scsicmd->host_scribble)
++		cid = *(int *)scsicmd->host_scribble;
++
+ 	fsa_dev_ptr = fibptr->dev->fsa_dev;
+-	if (fsa_dev_ptr) {
++	if (fsa_dev_ptr && cid < fibptr->dev->maximum_num_containers) {
+ 		struct aac_mount * dresp = (struct aac_mount *) fib_data(fibptr);
+ 		__le32 sup_options2;
  
- 	if ((CMD_FLAGS(sc) & SNIC_DEVICE_RESET) &&
-@@ -1737,8 +1744,8 @@ snic_dr_clean_single_req(struct snic *snic,
- 		SNIC_SCSI_DBG(snic->shost,
- 			      "clean_single_req: devrst is not pending sc 0x%p\n",
- 			      sc);
--
--		goto skip_clean;
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return true;
+-		fsa_dev_ptr += scmd_id(scsicmd);
++		fsa_dev_ptr += cid;
+ 		sup_options2 =
+ 			fibptr->dev->supplement_adapter_info.supported_options2;
+ 
+@@ -670,7 +676,6 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 		scsicmd->SCp.Status = le32_to_cpu(dresp->count);
  	}
+ 	aac_fib_complete(fibptr);
+-	aac_fib_free(fibptr);
+ 	callback = (int (*)(struct scsi_cmnd *))(scsicmd->SCp.ptr);
+ 	scsicmd->SCp.ptr = NULL;
+ 	(*callback)(scsicmd);
+@@ -682,6 +687,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 	struct scsi_cmnd * scsicmd;
+ 	struct aac_mount * dresp;
+ 	struct aac_query_mount *dinfo;
++	int cid;
+ 	int status;
  
- 	SNIC_SCSI_DBG(snic->shost,
-@@ -1781,7 +1788,7 @@ snic_dr_clean_single_req(struct snic *snic,
- 	if (ret) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "clean_single_req_err:sc %p, tag %d abt failed. tm_tag %d flags 0x%llx\n",
--			      sc, tag, rqi->tm_tag, CMD_FLAGS(sc));
-+			      sc, snic_cmd_tag(sc), rqi->tm_tag, CMD_FLAGS(sc));
- 
- 		spin_lock_irqsave(io_lock, flags);
- 		rqi = (struct snic_req_info *) CMD_SP(sc);
-@@ -1792,8 +1799,9 @@ snic_dr_clean_single_req(struct snic *snic,
- 		if (CMD_STATE(sc) == SNIC_IOREQ_ABTS_PENDING)
- 			CMD_STATE(sc) = sv_state;
- 
--		ret = 1;
--		goto skip_clean;
-+		iter_data->ret = 1;
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return false;
+ 	dresp = (struct aac_mount *) fib_data(fibptr);
+@@ -694,10 +700,15 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 		}
  	}
- 
- 	spin_lock_irqsave(io_lock, flags);
-@@ -1810,7 +1818,8 @@ snic_dr_clean_single_req(struct snic *snic,
- 	rqi = (struct snic_req_info *) CMD_SP(sc);
- 	if (!rqi) {
- 		CMD_FLAGS(sc) |= SNIC_IO_ABTS_TERM_REQ_NULL;
--		goto skip_clean;
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return true;;
- 	}
- 	rqi->abts_done = NULL;
- 
-@@ -1818,14 +1827,13 @@ snic_dr_clean_single_req(struct snic *snic,
- 	if (CMD_ABTS_STATUS(sc) == SNIC_INVALID_CODE) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "clean_single_req_err:sc %p tag %d abt still pending w/ fw, tm_tag %d flags 0x%llx\n",
--			      sc, tag, rqi->tm_tag, CMD_FLAGS(sc));
-+			      sc, snic_cmd_tag(sc), rqi->tm_tag, CMD_FLAGS(sc));
- 
- 		CMD_FLAGS(sc) |= SNIC_IO_ABTS_TERM_DONE;
--		ret = 1;
+ 	scsicmd = (struct scsi_cmnd *) context;
 -
--		goto skip_clean;
-+		iter_data->ret = 1;
-+		spin_unlock_irqrestore(io_lock, flags);
-+		return false;
- 	}
+ 	if (!aac_valid_context(scsicmd, fibptr))
+ 		return;
 -
- 	CMD_STATE(sc) = SNIC_IOREQ_ABTS_COMPLETE;
- 	CMD_SP(sc) = NULL;
- 	spin_unlock_irqrestore(io_lock, flags);
-@@ -1835,39 +1843,31 @@ snic_dr_clean_single_req(struct snic *snic,
- 	sc->result = (DID_ERROR << 16);
- 	sc->scsi_done(sc);
- 
--	ret = 0;
--
--	return ret;
--
--skip_clean:
--	spin_unlock_irqrestore(io_lock, flags);
--
--	return ret;
-+	return true;
- } /* end of snic_dr_clean_single_req */
- 
- static int
--snic_dr_clean_pending_req(struct snic *snic, struct scsi_cmnd *lr_sc)
-+snic_dr_clean_pending_req(struct snic *snic, struct scsi_device *lr_sdev)
- {
--	struct scsi_device *lr_sdev = lr_sc->device;
--	u32 tag = 0;
- 	int ret = FAILED;
-+	struct snic_cmd_pending_iter_data iter_data = {
-+		.snic = snic,
-+		.sdev = lr_sdev,
-+		.ret = 0,
-+	};
- 
--	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		if (tag == snic_cmd_tag(lr_sc))
--			continue;
-+	scsi_host_busy_iter(snic->shost,
-+			    snic_dr_clean_single_req, &iter_data);
-+	if (iter_data.ret) {
-+		SNIC_HOST_ERR(snic->shost, "clean_err = %d\n", iter_data.ret);
- 
--		ret = snic_dr_clean_single_req(snic, tag, lr_sdev);
--		if (ret) {
--			SNIC_HOST_ERR(snic->shost, "clean_err:tag = %d\n", tag);
--
--			goto clean_err;
--		}
-+		goto clean_err;
- 	}
- 
- 	schedule_timeout(msecs_to_jiffies(100));
- 
- 	/* Walk through all the cmds and check abts status. */
--	if (snic_is_abts_pending(snic, lr_sc)) {
-+	if (snic_is_abts_pending(snic, lr_sdev)) {
- 		ret = FAILED;
- 
- 		goto clean_err;
-@@ -1954,7 +1954,7 @@ snic_dr_finish(struct snic *snic, struct scsi_cmnd *sc)
- 	 * succeeds.
- 	 */
- 
--	ret = snic_dr_clean_pending_req(snic, sc);
-+	ret = snic_dr_clean_pending_req(snic, sc->device);
- 	if (ret) {
- 		spin_lock_irqsave(io_lock, flags);
- 		SNIC_SCSI_DBG(snic->shost,
-@@ -2411,77 +2411,79 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
- 		complete(rqi->abts_done);
- }
- 
--/*
-- * snic_scsi_cleanup: Walks through tag map and releases the reqs
-- */
--static void
--snic_scsi_cleanup(struct snic *snic)
-+static bool
-+snic_scsi_cleanup_iter(struct scsi_cmnd *sc, void *data, bool rsvd)
- {
-+	struct snic *snic = data;
- 	struct snic_req_info *rqi = NULL;
--	struct scsi_cmnd *sc = NULL;
- 	spinlock_t *io_lock = NULL;
- 	unsigned long flags;
--	int tag;
-+	int tag = snic_cmd_tag(sc);
- 	u64 st_time = 0;
- 
--	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
--
--	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		io_lock = snic_io_lock_tag(snic, tag);
--		spin_lock_irqsave(io_lock, flags);
--		sc = scsi_host_find_tag(snic->shost, tag);
--		if (unlikely(snic_tmreq_pending(sc))) {
--			/*
--			 * When FW Completes reset w/o sending completions
--			 * for outstanding ios.
--			 */
--			snic_cmpl_pending_tmreq(snic, sc);
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
--
--		rqi = (struct snic_req_info *) CMD_SP(sc);
--		if (!rqi) {
--			spin_unlock_irqrestore(io_lock, flags);
-+	io_lock = snic_io_lock_hash(snic, sc);
-+	spin_lock_irqsave(io_lock, flags);
-+	if (unlikely(snic_tmreq_pending(sc))) {
-+		/*
-+		 * When FW Completes reset w/o sending completions
-+		 * for outstanding ios.
-+		 */
-+		snic_cmpl_pending_tmreq(snic, sc);
-+		spin_unlock_irqrestore(io_lock, flags);
- 
--			goto cleanup;
--		}
-+		return true;
++	cid = scmd_id(scsicmd);
++	if (scsicmd->host_scribble)
++		cid = *(int *)scsicmd->host_scribble;
++	if (cid >= fibptr->dev->maximum_num_containers) {
++		_aac_probe_container2(context, fibptr);
++		return;
 +	}
-+	rqi = (struct snic_req_info *) CMD_SP(sc);
-+	if (!rqi) {
-+		spin_unlock_irqrestore(io_lock, flags);
-+		goto cleanup;
-+	}
+ 	aac_fib_init(fibptr);
  
--		SNIC_SCSI_DBG(snic->shost,
--			      "sc_clean: sc %p, rqi %p, tag %d flags 0x%llx\n",
--			      sc, rqi, tag, CMD_FLAGS(sc));
-+	SNIC_SCSI_DBG(snic->shost,
-+		      "sc_clean: sc %p, rqi %p, tag %d flags 0x%llx\n",
-+		      sc, rqi, tag, CMD_FLAGS(sc));
- 
--		CMD_SP(sc) = NULL;
--		CMD_FLAGS(sc) |= SNIC_SCSI_CLEANUP;
--		spin_unlock_irqrestore(io_lock, flags);
--		st_time = rqi->start_time;
-+	CMD_SP(sc) = NULL;
-+	CMD_FLAGS(sc) |= SNIC_SCSI_CLEANUP;
-+	spin_unlock_irqrestore(io_lock, flags);
-+	st_time = rqi->start_time;
- 
--		SNIC_HOST_INFO(snic->shost,
--			       "sc_clean: Releasing rqi %p : flags 0x%llx\n",
--			       rqi, CMD_FLAGS(sc));
-+	SNIC_HOST_INFO(snic->shost,
-+		       "sc_clean: Releasing rqi %p : flags 0x%llx\n",
-+		       rqi, CMD_FLAGS(sc));
- 
--		snic_release_req_buf(snic, rqi, sc);
-+	snic_release_req_buf(snic, rqi, sc);
- 
- cleanup:
--		sc->result = DID_TRANSPORT_DISRUPTED << 16;
--		SNIC_HOST_INFO(snic->shost,
--			       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
--			       sc, sc->request->tag, CMD_FLAGS(sc), rqi,
--			       jiffies_to_msecs(jiffies - st_time));
-+	sc->result = DID_TRANSPORT_DISRUPTED << 16;
-+	SNIC_HOST_INFO(snic->shost,
-+		       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
-+		       sc, tag, CMD_FLAGS(sc), rqi,
-+		       jiffies_to_msecs(jiffies - st_time));
- 
--		/* Update IO stats */
--		snic_stats_update_io_cmpl(&snic->s_stats);
-+	/* Update IO stats */
-+	snic_stats_update_io_cmpl(&snic->s_stats);
- 
--		if (sc->scsi_done) {
--			SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
--				 jiffies_to_msecs(jiffies - st_time), 0,
--				 SNIC_TRC_CMD(sc),
--				 SNIC_TRC_CMD_STATE_FLAGS(sc));
-+	if (sc->scsi_done) {
-+		SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
-+			 jiffies_to_msecs(jiffies - st_time), 0,
-+			 SNIC_TRC_CMD(sc),
-+			 SNIC_TRC_CMD_STATE_FLAGS(sc));
- 
--			sc->scsi_done(sc);
--		}
-+		sc->scsi_done(sc);
- 	}
-+	return true;
-+}
-+
-+/*
-+ * snic_scsi_cleanup: Walks through tag map and releases the reqs
-+ */
-+static void
-+snic_scsi_cleanup(struct snic *snic)
-+{
-+	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
-+
-+	scsi_host_busy_iter(snic->shost, snic_scsi_cleanup_iter, snic);
- } /* end of snic_scsi_cleanup */
- 
- void
-@@ -2578,6 +2580,40 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
- 	return ret;
- } /* end of snic_internal_abort_io */
- 
-+struct snic_tgt_scsi_abort_io_iter_data {
-+	struct snic *snic;
-+	struct snic_tgt *tgt;
-+	int tmf;
-+	int abt_cnt;
-+};
-+
-+static bool
-+snic_tgt_scsi_abort_io_iter(struct scsi_cmnd *sc, void *data, bool reserved)
-+{
-+	struct snic_tgt_scsi_abort_io_iter_data *iter_data = data;
-+	struct snic_tgt *sc_tgt = NULL;
-+	int ret;
-+
-+	if (reserved)
-+		return true;
-+
-+	sc_tgt = starget_to_tgt(scsi_target(sc->device));
-+	if (sc_tgt != iter_data->tgt)
-+		return true;
-+
-+	ret = snic_internal_abort_io(iter_data->snic, sc, iter_data->tmf);
-+	if (ret < 0) {
-+		SNIC_HOST_ERR(iter_data->snic->shost,
-+			      "tgt_abt_io: Tag %x, Failed w err = %d\n",
-+			      snic_cmd_tag(sc), ret);
-+		return true;
-+	}
-+
-+	if (ret == SUCCESS)
-+		iter_data->abt_cnt++;
-+	return true;
-+}
-+
- /*
-  * snic_tgt_scsi_abort_io : called by snic_tgt_del
-  */
-@@ -2585,11 +2621,10 @@ int
- snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
- {
- 	struct snic *snic = NULL;
--	struct scsi_cmnd *sc = NULL;
--	struct snic_tgt *sc_tgt = NULL;
--	spinlock_t *io_lock = NULL;
--	unsigned long flags;
--	int ret = 0, tag, abt_cnt = 0, tmf = 0;
-+	struct snic_tgt_scsi_abort_io_iter_data iter_data = {
-+		.tgt = tgt,
-+		.abt_cnt = 0,
-+	};
- 
- 	if (!tgt)
- 		return -1;
-@@ -2598,43 +2633,16 @@ snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
- 	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: Cleaning Pending IOs.\n");
- 
- 	if (tgt->tdata.typ == SNIC_TGT_DAS)
--		tmf = SNIC_ITMF_ABTS_TASK;
-+		iter_data.tmf = SNIC_ITMF_ABTS_TASK;
+ 	dinfo = (struct aac_query_mount *)fib_data(fibptr);
+@@ -708,7 +719,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
  	else
--		tmf = SNIC_ITMF_ABTS_TASK_TERM;
--
--	for (tag = 0; tag < snic->max_tag_id; tag++) {
--		io_lock = snic_io_lock_tag(snic, tag);
--
--		spin_lock_irqsave(io_lock, flags);
--		sc = scsi_host_find_tag(snic->shost, tag);
--		if (!sc) {
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
-+		iter_data.tmf = SNIC_ITMF_ABTS_TASK_TERM;
-+	iter_data.snic = snic;
+ 		dinfo->command = cpu_to_le32(VM_NameServe64);
  
--		sc_tgt = starget_to_tgt(scsi_target(sc->device));
--		if (sc_tgt != tgt) {
--			spin_unlock_irqrestore(io_lock, flags);
--
--			continue;
--		}
--		spin_unlock_irqrestore(io_lock, flags);
--
--		ret = snic_internal_abort_io(snic, sc, tmf);
--		if (ret < 0) {
--			SNIC_HOST_ERR(snic->shost,
--				      "tgt_abt_io: Tag %x, Failed w err = %d\n",
--				      tag, ret);
--
--			continue;
--		}
--
--		if (ret == SUCCESS)
--			abt_cnt++;
--	}
-+	scsi_host_busy_iter(snic->shost,
-+			    snic_tgt_scsi_abort_io_iter, &iter_data);
+-	dinfo->count = cpu_to_le32(scmd_id(scsicmd));
++	dinfo->count = cpu_to_le32(cid);
+ 	dinfo->type = cpu_to_le32(FT_FILESYS);
+ 	scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
  
--	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", abt_cnt);
-+	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n",
-+		      iter_data.abt_cnt);
+@@ -731,10 +742,20 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
  
+ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(struct scsi_cmnd *))
+ {
++	struct aac_dev * dev;
+ 	struct fib * fibptr;
+ 	int status = -ENOMEM;
++	int cid = scmd_id(scsicmd);
+ 
+-	if ((fibptr = aac_fib_alloc((struct aac_dev *)scsicmd->device->host->hostdata))) {
++	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
++	if (scsicmd->host_scribble) {
++		cid = *(int *)scsicmd->host_scribble;
++		if (cid > dev->maximum_num_containers) {
++			status = -ENODEV;
++			goto out_status;
++		}
++	}
++	if ((fibptr = aac_fib_alloc(dev))) {
+ 		struct aac_query_mount *dinfo;
+ 
+ 		aac_fib_init(fibptr);
+@@ -747,7 +768,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 		else
+ 			dinfo->command = cpu_to_le32(VM_NameServe);
+ 
+-		dinfo->count = cpu_to_le32(scmd_id(scsicmd));
++		dinfo->count = cpu_to_le32(cid);
+ 		dinfo->type = cpu_to_le32(FT_FILESYS);
+ 		scsicmd->SCp.ptr = (char *)callback;
+ 		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
+@@ -771,10 +792,11 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 			aac_fib_free(fibptr);
+ 		}
+ 	}
++out_status:
+ 	if (status < 0) {
+-		struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
+-		if (fsa_dev_ptr) {
+-			fsa_dev_ptr += scmd_id(scsicmd);
++		struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
++		if (fsa_dev_ptr && cid < dev->maximum_num_containers) {
++			fsa_dev_ptr += cid;
+ 			if ((fsa_dev_ptr->valid & 1) == 0) {
+ 				fsa_dev_ptr->valid = 0;
+ 				return (*callback)(scsicmd);
+@@ -794,7 +816,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+  */
+ static int aac_probe_container_callback1(struct scsi_cmnd * scsicmd)
+ {
+-	scsicmd->device = NULL;
++	scsicmd->host_scribble = NULL;
  	return 0;
- } /* end of snic_tgt_scsi_abort_io */
+ }
+ 
+@@ -815,6 +837,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
+ 		return -ENOMEM;
+ 	}
+ 	scsicmd->scsi_done = aac_probe_container_scsi_done;
++	scsicmd->host_scribble = (unsigned char *)&cid;
+ 
+ 	scsicmd->device = scsidev;
+ 	scsidev->sdev_state = 0;
+@@ -822,7 +845,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
+ 	scsidev->host = dev->scsi_host_ptr;
+ 
+ 	if (_aac_probe_container(scsicmd, aac_probe_container_callback1) == 0)
+-		while (scsicmd->device == scsidev)
++		while (scsicmd->host_scribble == (unsigned char *)&cid)
+ 			schedule();
+ 	kfree(scsidev);
+ 	status = scsicmd->SCp.Status;
 -- 
 2.16.4
 
