@@ -2,100 +2,162 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.2 required=3.0 tests=DATE_IN_PAST_12_24,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 363A7C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9114C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:36:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15B5820672
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:35:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CE1420724
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 20:36:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389002AbgF2Ueu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 16:34:50 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59504 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732209AbgF2TVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 15:21:34 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id CFDB4AC5E;
-        Mon, 29 Jun 2020 07:01:43 +0000 (UTC)
-Date:   Mon, 29 Jun 2020 09:01:43 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Martin Wilck <mwilck@suse.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: Re: [PATCH 7/9] qla2xxx: Fix a Coverity complaint in
- qla2100_fw_dump()
-Message-ID: <20200629070143.n6gzn5yymeq2tfmt@beryllium.lan>
-References: <20200614223921.5851-1-bvanassche@acm.org>
- <20200614223921.5851-8-bvanassche@acm.org>
- <20200623083354.2fldcoancxym6s6n@beryllium.lan>
- <c0b9309f-0da6-f5f5-d1c3-4b01986d9e72@acm.org>
+        id S2389477AbgF2UgT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 16:36:19 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2411 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2389025AbgF2UgS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Jun 2020 16:36:18 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id B4D83568CB3E09B0F2DE;
+        Mon, 29 Jun 2020 13:50:17 +0100 (IST)
+Received: from [127.0.0.1] (10.210.170.8) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 29 Jun
+ 2020 13:50:16 +0100
+Subject: Re: [PATCH 03/22] scsi: add scsi_{get,put}_internal_cmd() helper
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        Don Brace <don.brace@microchip.com>,
+        <linux-scsi@vger.kernel.org>
+References: <20200629072021.9864-1-hare@suse.de>
+ <20200629072021.9864-4-hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <e211779a-d95c-de3a-5beb-6bf0311733fe@huawei.com>
+Date:   Mon, 29 Jun 2020 13:48:42 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c0b9309f-0da6-f5f5-d1c3-4b01986d9e72@acm.org>
+In-Reply-To: <20200629072021.9864-4-hare@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.170.8]
+X-ClientProxiedBy: lhreml715-chm.china.huawei.com (10.201.108.66) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
-On Sun, Jun 28, 2020 at 03:31:37PM -0700, Bart Van Assche wrote:
-> On 2020-06-23 01:33, Daniel Wagner wrote:
-> > On Sun, Jun 14, 2020 at 03:39:19PM -0700, Bart Van Assche wrote:
-> >> @@ -1063,7 +1063,8 @@ qla2100_fw_dump(scsi_qla_host_t *vha)
-> >>  	}
-> >>  
-> >>  	if (rval == QLA_SUCCESS)
-> >> -		qla2xxx_copy_queues(ha, &fw->risc_ram[cnt]);
-> >> +		qla2xxx_copy_queues(ha, (char *)fw +
-> >> +				    offsetof(typeof(*fw), risc_ram) + cnt);
-> > 
-> > This looks pretty ugly to me. Any chance to write this in a way it's
-> > understandable by humans and coverity is not annoyed?
-> > 
-> > Do I understand it correctly, it's valid to read after the end of risc_ram?
+On 29/06/2020 08:20, Hannes Reinecke wrote:
+> Add helper functions to allow LLDDs to allocate and free
+> internal commands.
 > 
-> Doesn't the function qla2xxx_copy_queues() write to the pointer passed
-> as the second argument instead of reading?
-
-Yes, it seems to copy the request queue and the response queue
-to the pointer. Funny, it returns a pointer offset which only uses
-the size of the response queue which is used py qla2xxx_copy_eft.
-Looking at I would swear qla2xxx_copy_eft overwrites data from
-qla2xxx_copy_queues.
-
-> A possible alternative can be found below. The only reason I can think
-> of why this works is because the qla2100_fw_dump structure is occurs in
-> a union and because there is probably a larger structure present in the
-> same union. I would like to specify a size for the queue_dump[] array
-> but I am not sure where to get that information from.
-
-Yes, this would be indeed a good thing.
-
-> Subject: [PATCH] qla2xxx: Fix a Coverity complaint in qla2100_fw_dump()
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/scsi/scsi_lib.c    | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>   include/scsi/scsi_device.h |  4 ++++
+>   2 files changed, 48 insertions(+)
 > 
-> 'cnt' can exceed the size of the risc_ram[] array. Prevent that Coverity
-> complains by rewriting an address calculation expression. This patch
-> fixes the following Coverity complaint:
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0ba7a65e7c8d..c2277eff4e06 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1903,6 +1903,50 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
+>   	blk_mq_free_tag_set(&shost->tag_set);
+>   }
+>   
+> +/**
+> + * scsi_get_internal_cmd - allocate an internal SCSI command
+> + * @sdev: SCSI device from which to allocate the command
+> + * @data_direction: Data direction for the allocated command
+> + * @op_flags: request allocation flags
+> + *
+> + * Allocates a SCSI command for internal LLDD use.
+> + */
+> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+> +	enum dma_data_direction data_direction, int op_flags)
+> +{
+> +	struct request *rq;
+> +	struct scsi_cmnd *scmd;
+> +	blk_mq_req_flags_t flags = 0;
+> +	unsigned int op = REQ_INTERNAL | op_flags;
+> +
+> +	op |= (data_direction == DMA_TO_DEVICE) ?
+> +		REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
+
+As an aside, REQ_OP_SCSI_OUT seems to have same effect as 
+REQ_OP_SCSI_IN, as we only ever check if either is set, here:
+
+bool blk_op_is_scsi(unsigned int op)
+{
+	return op == REQ_OP_SCSI_OUT || op == REQ_OP_SCSI_IN;
+}
+
+but maybe I missed something.
+
+> +	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
+> +	if (IS_ERR(rq))
+> +		return NULL;
+> +	scmd = blk_mq_rq_to_pdu(rq);
+> +	scmd->request = rq;
+> +	scmd->device = sdev;
+> +	return scmd;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
+> +
+> +/**
+> + * scsi_put_internal_cmd - free an internal SCSI command
+> + * @scmd: SCSI command to be freed
+> + *
+> + * Check if @scmd is an internal command, and call
+> + * blk_mq_free_request() if true.
+> + */
+> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd)
+> +{
+> +	struct request *rq = blk_mq_rq_from_pdu(scmd);
+> +
+> +	if (blk_rq_is_internal(rq))
+> +		blk_mq_free_request(rq);
+
+I haven't gone through all users in the series, but is it worth warning 
+when we're passed a scmd which isn't an internal command? Doing so seems 
+a programming error which we should yell about.
+
+Thanks
+
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_put_internal_cmd);
+> +
+>   /**
+>    * scsi_device_from_queue - return sdev associated with a request_queue
+>    * @q: The request queue to return the sdev from
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index bc5909033d13..2759a538adae 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -8,6 +8,7 @@
+>   #include <linux/blkdev.h>
+>   #include <scsi/scsi.h>
+>   #include <linux/atomic.h>
+> +#include <linux/dma-direction.h>
+>   
+>   struct device;
+>   struct request_queue;
+> @@ -460,6 +461,9 @@ static inline int scsi_execute_req(struct scsi_device *sdev,
+>   	return scsi_execute(sdev, cmd, data_direction, buffer,
+>   		bufflen, NULL, sshdr, timeout, retries,  0, 0, resid);
+>   }
+> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+> +	enum dma_data_direction data_direction, int op_flags);
+> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
+>   extern void sdev_disable_disk_events(struct scsi_device *sdev);
+>   extern void sdev_enable_disk_events(struct scsi_device *sdev);
+>   extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
 > 
-> CID 337803 (#1 of 1): Out-of-bounds read (OVERRUN)
-> 109. overrun-local: Overrunning array of 122880 bytes at byte offset
-> 122880 by dereferencing pointer &fw->risc_ram[cnt].
 
-Much better, now I get it :)
-
-Reviewed-by: Daniel Wagner <dwagner@suse.de>
-
-Thanks,
-Daniel
