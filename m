@@ -2,255 +2,167 @@ Return-Path: <SRS0=wv9C=AK=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48520C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:42:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F2EC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:43:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 271412082F
-	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:42:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B5FC2082F
+	for <linux-scsi@archiver.kernel.org>; Mon, 29 Jun 2020 19:43:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=javigon-com.20150623.gappssmtp.com header.i=@javigon-com.20150623.gappssmtp.com header.b="IWRI9ZZW"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="SPMC12hx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729568AbgF2TmU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:42:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48434 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387431AbgF2TmT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 15:42:19 -0400
-Received: from mail-ed1-x541.google.com (mail-ed1-x541.google.com [IPv6:2a00:1450:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83833C03E97E
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 12:42:19 -0700 (PDT)
-Received: by mail-ed1-x541.google.com with SMTP id d15so13978345edm.10
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 12:42:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=javigon-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=qPRWIOr57ZYTUxHr8TbMRvU0I6oEVGESocMJLPUw7ak=;
-        b=IWRI9ZZWLmSqGaFLlS/Q6+qqYEFfzGMcZO3qmaAQ222cW5zAaZhN5PnKbKVGkZFa9P
-         1aJerDy40vcxH8EXTXo/GOJj58Rru+hjCZrXQVluj99YOX1GJPZkpk9DjI6INTAuhVsb
-         D6AWuWbM4FmHFpre6LyWjdPXgbAI12W25S66rAFqRfrJEiv0IwdqrG1ar8NQVW3XUKqs
-         oEV36lnW27cU1eFXGVDPYNS1uEOX+5khJ6iktErth6Ud4c3dYDclRZS9upgG4nYCde2E
-         kwP+AA0xNE2iAO3zu/Ah5/tr6V7SEIB3G+SOw4DaRZIwUEsGb+7O7daxFKwPsZ2PBrDN
-         cYRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=qPRWIOr57ZYTUxHr8TbMRvU0I6oEVGESocMJLPUw7ak=;
-        b=sjt5eU5+9whEOWFqJ5iejIO9C402rKYOOZe6RrOk/XBsVWGUdejAEkHVapfuSayd1k
-         pn7G+xniX7nrdWRHsI8vwEhlOS+jEVzBEvCgTARuHrYFjzRG23DlUZX2tdfUUMuh9JRx
-         27HsXi0KsbMy4XhHl25uXPKPYlsI5szJp7D+Lmak5l2RPp3z9PoduhGUar3HOKPEzWxd
-         7q4laxcMZYm/r+L4sqHeBahoPJYaCJLuX/tkEA5iPWjlXXZUVIwvtOkeZwS4YZ7NHf6Q
-         DPVJWEcMOsI0VLA18lIxE6JXj+0FNifAMEXbAZdpBj7ylZaFH0lIjpZ4r8/Xskj5RvPA
-         vkUw==
-X-Gm-Message-State: AOAM533YGRSpw8RKYv5J2tywGFc0Kx9TEhfEigvsTu7P0AcMazZa8zVV
-        KrvSVj9r0Fm6diuwD7yWYTWpxw==
-X-Google-Smtp-Source: ABdhPJyGAI3oTGH5RV/GlMVT+ru8LjoquevNNsqLlOGBediZBG3+4tQ6abxqVDJntY6y9wJG9eSZ2Q==
-X-Received: by 2002:aa7:da8d:: with SMTP id q13mr15080761eds.339.1593459738252;
-        Mon, 29 Jun 2020 12:42:18 -0700 (PDT)
-Received: from localhost (5.186.127.235.cgn.fibianet.dk. [5.186.127.235])
-        by smtp.gmail.com with ESMTPSA id c4sm371603ejb.17.2020.06.29.12.42.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jun 2020 12:42:17 -0700 (PDT)
-Date:   Mon, 29 Jun 2020 21:42:16 +0200
-From:   Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>
-To:     Niklas Cassel <niklas.cassel@wdc.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org
-Subject: Re: [PATCH 2/2] block: add max_active_zones to blk-sysfs
-Message-ID: <20200629194216.iykvd74rw6d7vqpl@MacBook-Pro.localdomain>
-References: <20200616102546.491961-1-niklas.cassel@wdc.com>
- <20200616102546.491961-3-niklas.cassel@wdc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200616102546.491961-3-niklas.cassel@wdc.com>
+        id S1731075AbgF2Tns (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:43:48 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:20251 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387884AbgF2Tng (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 15:43:36 -0400
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200629064802epoutp03e37bf8054b140ece24bb4aa48e2e0830~c8PAXLeku0599605996epoutp03F
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2020 06:48:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200629064802epoutp03e37bf8054b140ece24bb4aa48e2e0830~c8PAXLeku0599605996epoutp03F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1593413282;
+        bh=5X4YGRD6u1tf1xanJ6XnnURVxKYSn66IhirKFzp306A=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=SPMC12hxUgafWKEWNFEiPmg9UAySkWDoyVAvbrzXlGQPmJTMtNIcmsVfOYMSfHZkW
+         3eid/LP3jYkmdG1ZWyNS4s1GNWAk18a8OBoY2IP0rKEciqHORMZQXU+N2znZ8Vrj/E
+         7PBWqyZI7Q5uOPsqlyy72B9l739OBPSFcobayJd4=
+Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p1.samsung.com
+        (KnoxPortal) with ESMTP id
+        20200629064801epcas1p11b707090a0db8eb35b02cca951d76ea7~c8O--hFfq2909229092epcas1p1N;
+        Mon, 29 Jun 2020 06:48:01 +0000 (GMT)
+Mime-Version: 1.0
+Subject: [PATCH v4 0/5] scsi: ufs: Add Host Performance Booster Support
+Reply-To: daejun7.park@samsung.com
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <231786897.01593413281727.JavaMail.epsvc@epcpadp2>
+Date:   Mon, 29 Jun 2020 15:43:23 +0900
+X-CMS-MailID: 20200629064323epcms2p787baba58a416fef7fdd3927f8da701da
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20200629064323epcms2p787baba58a416fef7fdd3927f8da701da
+References: <CGME20200629064323epcms2p787baba58a416fef7fdd3927f8da701da@epcms2p7>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16.06.2020 12:25, Niklas Cassel wrote:
->Add a new max_active zones definition in the sysfs documentation.
->This definition will be common for all devices utilizing the zoned block
->device support in the kernel.
->
->Export max_active_zones according to this new definition for NVMe Zoned
->Namespace devices, ZAC ATA devices (which are treated as SCSI devices by
->the kernel), and ZBC SCSI devices.
->
->Add the new max_active_zones struct member to the request_queue, rather
->than as a queue limit, since this property cannot be split across stacking
->drivers.
->
->For SCSI devices, even though max active zones is not part of the ZBC/ZAC
->spec, export max_active_zones as 0, signifying "no limit".
->
->Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->---
-> Documentation/block/queue-sysfs.rst |  7 +++++++
-> block/blk-sysfs.c                   | 14 +++++++++++++-
-> drivers/nvme/host/zns.c             |  1 +
-> drivers/scsi/sd_zbc.c               |  1 +
-> include/linux/blkdev.h              | 20 ++++++++++++++++++++
-> 5 files changed, 42 insertions(+), 1 deletion(-)
->
->diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
->index f01cf8530ae4..f261a5c84170 100644
->--- a/Documentation/block/queue-sysfs.rst
->+++ b/Documentation/block/queue-sysfs.rst
->@@ -117,6 +117,13 @@ Maximum number of elements in a DMA scatter/gather list with integrity
-> data that will be submitted by the block layer core to the associated
-> block driver.
->
->+max_active_zones (RO)
->+---------------------
->+For zoned block devices (zoned attribute indicating "host-managed" or
->+"host-aware"), the sum of zones belonging to any of the zone states:
->+EXPLICIT OPEN, IMPLICIT OPEN or CLOSED, is limited by this value.
->+If this value is 0, there is no limit.
->+
-> max_open_zones (RO)
-> -------------------
-> For zoned block devices (zoned attribute indicating "host-managed" or
->diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
->index fa42961e9678..624bb4d85fc7 100644
->--- a/block/blk-sysfs.c
->+++ b/block/blk-sysfs.c
->@@ -310,6 +310,11 @@ static ssize_t queue_max_open_zones_show(struct request_queue *q, char *page)
-> 	return queue_var_show(queue_max_open_zones(q), page);
-> }
->
->+static ssize_t queue_max_active_zones_show(struct request_queue *q, char *page)
->+{
->+	return queue_var_show(queue_max_active_zones(q), page);
->+}
->+
-> static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
-> {
-> 	return queue_var_show((blk_queue_nomerges(q) << 1) |
->@@ -677,6 +682,11 @@ static struct queue_sysfs_entry queue_max_open_zones_entry = {
-> 	.show = queue_max_open_zones_show,
-> };
->
->+static struct queue_sysfs_entry queue_max_active_zones_entry = {
->+	.attr = {.name = "max_active_zones", .mode = 0444 },
->+	.show = queue_max_active_zones_show,
->+};
->+
-> static struct queue_sysfs_entry queue_nomerges_entry = {
-> 	.attr = {.name = "nomerges", .mode = 0644 },
-> 	.show = queue_nomerges_show,
->@@ -776,6 +786,7 @@ static struct attribute *queue_attrs[] = {
-> 	&queue_zoned_entry.attr,
-> 	&queue_nr_zones_entry.attr,
-> 	&queue_max_open_zones_entry.attr,
->+	&queue_max_active_zones_entry.attr,
-> 	&queue_nomerges_entry.attr,
-> 	&queue_rq_affinity_entry.attr,
-> 	&queue_iostats_entry.attr,
->@@ -803,7 +814,8 @@ static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
-> 		(!q->mq_ops || !q->mq_ops->timeout))
-> 			return 0;
->
->-	if (attr == &queue_max_open_zones_entry.attr &&
->+	if ((attr == &queue_max_open_zones_entry.attr ||
->+	     attr == &queue_max_active_zones_entry.attr) &&
-> 	    !blk_queue_is_zoned(q))
-> 		return 0;
->
->diff --git a/drivers/nvme/host/zns.c b/drivers/nvme/host/zns.c
->index af156529f3b6..502070763266 100644
->--- a/drivers/nvme/host/zns.c
->+++ b/drivers/nvme/host/zns.c
->@@ -83,6 +83,7 @@ int nvme_update_zone_info(struct gendisk *disk, struct nvme_ns *ns,
-> 	q->limits.zoned = BLK_ZONED_HM;
-> 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
-> 	blk_queue_max_open_zones(q, le32_to_cpu(id->mor) + 1);
->+	blk_queue_max_active_zones(q, le32_to_cpu(id->mar) + 1);
-> free_data:
-> 	kfree(id);
-> 	return status;
->diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
->index aa3564139b40..d8b2c49d645b 100644
->--- a/drivers/scsi/sd_zbc.c
->+++ b/drivers/scsi/sd_zbc.c
->@@ -721,6 +721,7 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
-> 		blk_queue_max_open_zones(q, 0);
-> 	else
-> 		blk_queue_max_open_zones(q, sdkp->zones_max_open);
->+	blk_queue_max_active_zones(q, 0);
-> 	nr_zones = round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
->
-> 	/* READ16/WRITE16 is mandatory for ZBC disks */
->diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->index 2f332f00501d..3776140f8f20 100644
->--- a/include/linux/blkdev.h
->+++ b/include/linux/blkdev.h
->@@ -521,6 +521,7 @@ struct request_queue {
-> 	unsigned long		*conv_zones_bitmap;
-> 	unsigned long		*seq_zones_wlock;
-> 	unsigned int		max_open_zones;
->+	unsigned int		max_active_zones;
-> #endif /* CONFIG_BLK_DEV_ZONED */
->
-> 	/*
->@@ -741,6 +742,17 @@ static inline unsigned int queue_max_open_zones(const struct request_queue *q)
-> {
-> 	return q->max_open_zones;
-> }
->+
->+static inline void blk_queue_max_active_zones(struct request_queue *q,
->+		unsigned int max_active_zones)
->+{
->+	q->max_active_zones = max_active_zones;
->+}
->+
->+static inline unsigned int queue_max_active_zones(const struct request_queue *q)
->+{
->+	return q->max_active_zones;
->+}
-> #else /* CONFIG_BLK_DEV_ZONED */
-> static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
-> {
->@@ -764,6 +776,14 @@ static inline unsigned int queue_max_open_zones(const struct request_queue *q)
-> {
-> 	return 0;
-> }
->+static inline void blk_queue_max_active_zones(struct request_queue *q,
->+		unsigned int max_active_zones)
->+{
->+}
->+static inline unsigned int queue_max_active_zones(const struct request_queue *q)
->+{
->+	return 0;
->+}
-> #endif /* CONFIG_BLK_DEV_ZONED */
->
-> static inline bool rq_is_sync(struct request *rq)
->-- 
->2.26.2
->
->
->_______________________________________________
->linux-nvme mailing list
->linux-nvme@lists.infradead.org
->http://lists.infradead.org/mailman/listinfo/linux-nvme
 
-Looks good to me
+Changelog:
 
-Reviewed-by: Javier González <javier@javigon.com>
+v3 -> v4
+1. Cleanup.
+
+v2 -> v3
+1. Add checking input module parameter value.
+2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
+3. Cleanup for unused variables and label.
+
+v1 -> v2
+1. Change the full boilerplate text to SPDX style.
+2. Adopt dynamic allocation for sub-region data structure.
+3. Cleanup.
+
+NAND flash memory-based storage devices use Flash Translation Layer (FTL)
+to translate logical addresses of I/O requests to corresponding flash
+memory addresses. Mobile storage devices typically have RAM with
+constrained size, thus lack in memory to keep the whole mapping table.
+Therefore, mapping tables are partially retrieved from NAND flash on
+demand, causing random-read performance degradation.
+
+To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
+(Host Performance Booster) which uses host system memory as a cache for the
+FTL mapping table. By using HPB, FTL data can be read from host memory
+faster than from NAND flash memory. 
+
+The current version only supports the DCM (device control mode).
+This patch consists of 4 parts to support HPB feature.
+
+1) UFS-feature layer
+2) HPB probe and initialization process
+3) READ -> HPB READ using cached map information
+4) L2P (logical to physical) map management
+
+The UFS-feature is an additional layer to avoid the structure in which the
+UFS-core driver and the UFS-feature are entangled with each other in a 
+single module.
+By adding the layer, UFS-features composed of various combinations can be
+supported. Also, even if a new feature is added, modification of the 
+UFS-core driver can be minimized.
+
+In the HPB probe and init process, the device information of the UFS is
+queried. After checking supported features, the data structure for the HPB
+is initialized according to the device information.
+
+A read I/O in the active sub-region where the map is cached is changed to
+HPB READ by the HPB module.
+
+The HPB module manages the L2P map using information received from the
+device. For active sub-region, the HPB module caches through ufshpb_map
+request. For the in-active region, the HPB module discards the L2P map.
+When a write I/O occurs in an active sub-region area, associated dirty
+bitmap checked as dirty for preventing stale read.
+
+HPB is shown to have a performance improvement of 58 - 67% for random read
+workload. [1]
+
+This series patches are based on the 5.9/scsi-queue branch.
+
+[1]:
+https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
+
+Daejun park (5):
+ scsi: ufs: Add UFS feature related parameter
+ scsi: ufs: Add UFS feature layer
+ scsi: ufs: Introduce HPB module
+ scsi: ufs: L2P map management for HPB read
+ scsi: ufs: Prepare HPB read for cached sub-region
+ 
+ drivers/scsi/ufs/Kconfig      |    9 +
+ drivers/scsi/ufs/Makefile     |    3 +-
+ drivers/scsi/ufs/ufs.h        |   12 +
+ drivers/scsi/ufs/ufsfeature.c |  148 +++
+ drivers/scsi/ufs/ufsfeature.h |   69 ++
+ drivers/scsi/ufs/ufshcd.c     |   19 +
+ drivers/scsi/ufs/ufshcd.h     |    3 +
+ drivers/scsi/ufs/ufshpb.c     | 1997 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshpb.h     |  234 +++++
+ 9 files changed, 2493 insertions(+), 1 deletion(-)
+ created mode 100644 drivers/scsi/ufs/ufsfeature.c
+ created mode 100644 drivers/scsi/ufs/ufsfeature.h
+ created mode 100644 drivers/scsi/ufs/ufshpb.c
+ created mode 100644 drivers/scsi/ufs/ufshpb.h
