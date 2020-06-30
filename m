@@ -2,194 +2,223 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF016C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 03:34:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DF6C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 04:23:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCC93206A5
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 03:34:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9A61207E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 04:23:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gplmF9qv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729155AbgF3DeD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 23:34:03 -0400
-Received: from comms.puri.sm ([159.203.221.185]:33008 "EHLO comms.puri.sm"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728949AbgF3DeB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Jun 2020 23:34:01 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 046DEDF73A;
-        Mon, 29 Jun 2020 20:33:30 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id wD5O5quhdx5D; Mon, 29 Jun 2020 20:33:29 -0700 (PDT)
-Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
-To:     Alan Stern <stern@rowland.harvard.edu>
-Cc:     Bart Van Assche <bvanassche@acm.org>, jejb@linux.ibm.com,
-        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel@puri.sm
-References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
- <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
- <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
- <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
- <20200626154441.GA296771@rowland.harvard.edu>
- <c19f1938-ae47-2357-669d-5b4021aec154@puri.sm>
- <20200629161536.GA405175@rowland.harvard.edu>
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-Autocrypt: addr=martin.kepplinger@puri.sm; keydata=
- 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
- ekMtxgNYb/8oDry09UFHbGHLsWn6oBo=
-Message-ID: <823057f0-95cf-bfcf-c39f-ca5d7abe2372@puri.sm>
-Date:   Tue, 30 Jun 2020 05:33:25 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
-In-Reply-To: <20200629161536.GA405175@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726368AbgF3EXw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 00:23:52 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:56257 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726264AbgF3EXv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 00:23:51 -0400
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200630042348epoutp045b5b7455045363f715059b27ff6bb8ca~dN6XH1fBY2014320143epoutp04Q
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2020 04:23:48 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200630042348epoutp045b5b7455045363f715059b27ff6bb8ca~dN6XH1fBY2014320143epoutp04Q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1593491028;
+        bh=h4hpE3FKkVtePSSSMQRCT+rFKhK6RlC6FH2mLfLLni4=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=gplmF9qvbiCOlobgwTBqbYYKX76CZ8chhUtOs2obxuJbzyqgzk+oQLs9p/GiD7IV3
+         J2QD+yzLlZBAUoJIolAqiSv1mBmAQ90N0L92lFX2/rB2trZ0YCn2JMezeScOezIEz0
+         Q9jFhuZMLIG05ChTmHPRD3WMU5tfTFbM8cDpAKrI=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200630042348epcas1p232c387232e76dd71e9b7864784658650~dN6W9F6nX0634906349epcas1p2D;
+        Tue, 30 Jun 2020 04:23:48 +0000 (GMT)
+Received: from epsmges1p1.samsung.com (unknown [182.195.40.163]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 49wrp95qwHzMqYks; Tue, 30 Jun
+        2020 04:23:45 +0000 (GMT)
+Received: from epcas1p3.samsung.com ( [182.195.41.47]) by
+        epsmges1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        FD.B4.18978.15EBAFE5; Tue, 30 Jun 2020 13:23:45 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200630042345epcas1p286198fd196b4a5facf72cbd439105de5~dN6UMfPAs2718027180epcas1p2l;
+        Tue, 30 Jun 2020 04:23:45 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200630042345epsmtrp1700fcbf92634967289da254230bcb52e~dN6UL4hzx2668226682epsmtrp1X;
+        Tue, 30 Jun 2020 04:23:45 +0000 (GMT)
+X-AuditID: b6c32a35-603ff70000004a22-41-5efabe51eb5c
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        93.AC.08303.15EBAFE5; Tue, 30 Jun 2020 13:23:45 +0900 (KST)
+Received: from grantjung02 (unknown [10.214.113.116]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200630042345epsmtip28e8e15f1c1bfc653a92af8f9258cc998~dN6UDOu0g1521715217epsmtip2d;
+        Tue, 30 Jun 2020 04:23:45 +0000 (GMT)
+From:   "Grant Jung" <grant.jung@samsung.com>
+To:     "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
+        <linux-scsi@vger.kernel.org>
+In-Reply-To: <1ca1a52df36ad3393c0487537832cf7f0a7e1260.1593412974.git.kwmad.kim@samsung.com>
+Subject: RE: [RFC PATCH v2 2/2] ufs: change the way to complete fDeviceInit
+Date:   Tue, 30 Jun 2020 13:23:44 +0900
+Message-ID: <047001d64e96$3e3dd970$bab98c50$@samsung.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQFK3dcLjmJa+k4JeQp1dmQok7cMGwJjn9aGAdeRtSqp5YfbwA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrAKsWRmVeSWpSXmKPExsWy7bCmvm7gvl9xBg+e6Fnc3HKUxaL7+g42
+        ByaPvi2rGD0+b5ILYIrKsclITUxJLVJIzUvOT8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21
+        VXLxCdB1y8wBGq+kUJaYUwoUCkgsLlbSt7Mpyi8tSVXIyC8usVVKLUjJKTA0KNArTswtLs1L
+        10vOz7UyNDAwMgWqTMjJeDCvvqBbpuLp4hcsDYxbxboYOTkkBEwkWmedYO1i5OIQEtjBKNHf
+        f5EdwvnEKLFtYT8TSJWQwGdGiYm7OWA6pm15zQhRtItR4vjSnVDOK0aJmR19jCBVbALaEhN3
+        fQbrFhHwlPhz/DY7iM0pECOxeMkzZhBbWMBbYtOx6UC7OThYBFQlrr+WBgnzClhK/Huzmx3C
+        FpQ4OfMJC4jNDDRy2cLXzBBHKEj8fLqMFWK8k8TUR1MZIWpEJGZ3tjGD3CMhcIpdYt3j2SwQ
+        DS4SWycuYIKwhSVeHd/CDmFLSbzsb2OHaGhnlJg6p40VwulglGg5dBeqylji0+fPjCCXMgto
+        SqzfpQ8RVpTY+Xsu1GY+iXdfe8CekRDglehoE4IoUZE4ufEWK8yuB/vmQT3gIXHo9RTWCYyK
+        s5D8OQvJn7OQ/DMLYfECRpZVjGKpBcW56anFhgWGyJG9iRGc9LRMdzBOfPtB7xAjEwfjIUYJ
+        DmYlEd7TBr/ihHhTEiurUovy44tKc1KLDzGaAgN+IrOUaHI+MO3mlcQbmhoZGxtbmJiZm5ka
+        K4nzistciBMSSE8sSc1OTS1ILYLpY+LglGpgivvdsGdVvrHDgY2Lzn3jCJvwSmf9Jdvs2PDn
+        zyJOVuo2xX3k0z/T5NoqseKL21Ov7h+L71fumP/g+q51tt+PrXvst3OSqmeNw7Xkr195t39o
+        cpmaudv7zMKOkOM7X1lIshcVKDM95g55//qmZ8fSl5eulj6SfDf56ykeV3XWc/MWvOyVfn26
+        el0Kxwdro21d75Ry1pzrFvNc+OBurPvxFQ6MpwoPdDassOX8nvswhWdPVNG9+fuX+SppFL0N
+        iS5bs2A5i+Dqy2ULsjbJ5T+bJrnzW71wjlB7YE1I2vOu1maxWN/zbfVu27T6OGyZbZlFdzvr
+        sB0IE9I/xatUv2WBz70LGgs3P699/onZ/NKet0osxRmJhlrMRcWJAGmfavkDBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLLMWRmVeSWpSXmKPExsWy7bCSvG7gvl9xBhf+sFrc3HKUxaL7+g42
+        ByaPvi2rGD0+b5ILYIrisklJzcksSy3St0vgypg6YQF7wWrpigNrbRoYL4p2MXJySAiYSEzb
+        8pqxi5GLQ0hgB6NE/8knjBAJKYnFlx8wdzFyANnCEocPF0PUvGCUmLB8BzNIDZuAtsTEXZ+Z
+        QGwRAW+J02/3sEMU3WKUOLXkONggToEYicVLnoE1CAMVbTo2nRVkKIuAqsT119IgYV4BS4l/
+        b3azQ9iCEidnPmEBsZmB5vc+bGWEsZctfM0McZuCxM+ny1gh9jpJTH00FapGRGJ2ZxvzBEah
+        WUhGzUIyahaSUbOQtCxgZFnFKJlaUJybnltsWGCUl1quV5yYW1yal66XnJ+7iREc4lpaOxj3
+        rPqgd4iRiYPxEKMEB7OSCO9pg19xQrwpiZVVqUX58UWlOanFhxilOViUxHm/zloYJySQnliS
+        mp2aWpBaBJNl4uCUamDS75xyZe0WgRU1k598fXl3v4Hm4jfsBzIuTO++65f5cLoEv0n1iW+J
+        ecy+MiVLz2Rc2nDlZ9AuxRdrLrHd2/jrZWVZDktLbOdFVk1OX5u/Pz9y39f9080tv2bR5Qcz
+        ZnmLbdse5W17/+bLORM7VurLr2XfvirGJUbO0lucYWuSK//11t0V9nfezr7NYH9NYse0g+7F
+        P2Z2bMyd86XK/VTwDwG/evmKPys/sjsK6fQ/XPJuc8r5hE1cdZNn9iZc3n741kU2yVNC/ps+
+        f9/v0On3+EABc+sE9R8u4ZcEf+mlZ3XtM+M9NtM/xbttm9Orgw4NPzi+GjXfn/ZXab9BvtKX
+        ypjFi2zCTf553ueXMpHrU2Ipzkg01GIuKk4EAOdT4LXgAgAA
+X-CMS-MailID: 20200630042345epcas1p286198fd196b4a5facf72cbd439105de5
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: SVC_REQ_APPROVE
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200629102355epcas2p13f8714a906291e5444adfb2f5ac2c469
+References: <cover.1593412974.git.kwmad.kim@samsung.com>
+        <CGME20200629102355epcas2p13f8714a906291e5444adfb2f5ac2c469@epcas2p1.samsung.com>
+        <1ca1a52df36ad3393c0487537832cf7f0a7e1260.1593412974.git.kwmad.kim@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 29.06.20 18:15, Alan Stern wrote:
-> On Mon, Jun 29, 2020 at 11:42:59AM +0200, Martin Kepplinger wrote:
->>
->>
->> On 26.06.20 17:44, Alan Stern wrote:
->>> Martin's best approach would be to add some debugging code to find out why 
->>> blk_queue_enter() isn't calling bkl_pm_request_resume(), or why that call 
->>> doesn't lead to pm_request_resume().
->>>
->>> Alan Stern
->>>
->>
->> Hi Alan,
->>
->> blk_queue_enter() always - especially when sd is runtime suspended and I
->> try to mount as above - sets success to be true for me, so never
->> continues down to bkl_pm_request_resume(). All I see is "PM: Removing
->> info for No Bus:sda1".
-> 
-> Aha.  Looking at this more closely, it's apparent that the code in 
-> blk-core.c contains a logic bug: It assumes that if the BLK_MQ_REQ_PREEMPT 
-> flag is set then the request can be issued regardless of the queue's 
-> runtime status.  That is not correct when the queue is suspended.
-> 
-> Below is my attempt to fix this up.  I'm not sure that the patch is 
-> entirely correct, but it should fix this logic bug.  I would appreciate a 
-> critical review.
-> 
-> Martin, does this fix the problem?
-> 
+> Currently, UFS driver checks if fDeviceInit is cleared at several times,
+> not period. This patch is to wait its completion with the period, not
+> retrying.
+> Many device vendors usually provides the specification on it with just
+> period, not a combination of a number of retrying and period. So it could
+> be proper to regard to the information coming from device vendors.
+>=20
+> I first added one device specific value regarding the information.
+>=20
+> Signed-off-by: Kiwoong Kim <kwmad.kim=40samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c =7C 36 ++++++++++++++++++++++++------------
+>  1 file changed, 24 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> 7b6f13a..27afdf0 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> =40=40 -208,6 +208,7 =40=40 static struct ufs_dev_fix ufs_fixups=5B=5D =
+=3D =7B  =7D;
+>=20
+>  static const struct ufs_dev_value ufs_dev_values=5B=5D =3D =7B
+> +	=7BUFS_VENDOR_TOSHIBA, UFS_ANY_MODEL, DEV_VAL_FDEVICEINIT, 2000,
+> false=7D,
+>  	=7B0, 0, 0, 0, false=7D,
+>  =7D;
+>=20
+> =40=40 -4162,9 +4163,12 =40=40 EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
+>   */
+>  static int ufshcd_complete_dev_init(struct ufs_hba *hba)  =7B
+> -	int i;
+> +	u32 dev_init_compl_in_ms =3D 500;
 
-not quite: mounting works and resuming itself indeed happens now when
-copying a file, but the I/O itself doesn't, but says "device offline or
-changed":
+I think default timeout value is too small. Most UFS vendors which are Sams=
+ung, Kioxia, SKHynix, Micron and WD want to set more than 1 seconds for a w=
+orst case of fdeviceinit. We need to add many quirks for every ufs vendors =
+if the default value is 500ms.
 
-[  167.167615] sd 0:0:0:0: [sda] tag#0 UNKNOWN(0x2003) Result:
-hostbyte=0x00 driverbyte=0x08 cmd_age=0s
-[  167.167630] sd 0:0:0:0: [sda] tag#0 Sense Key : 0x6 [current]
-[  167.167638] sd 0:0:0:0: [sda] tag#0 ASC=0x28 ASCQ=0x0
-[  167.167648] sd 0:0:0:0: [sda] tag#0 CDB: opcode=0x28 28 00 00 00 24
-c2 00 00 01 00
-[  167.167658] blk_update_request: I/O error, dev sda, sector 9410 op
-0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[  167.178327] FAT-fs (sda1): FAT read failed (blocknr 1218)
-[  167.183895] sd 0:0:0:0: [sda] tag#0 device offline or changed
-[  167.189695] blk_update_request: I/O error, dev sda, sector 5101888 op
-0x0:(READ) flags 0x80700 phys_seg 8 prio class 0
-[  167.200510] sd 0:0:0:0: [sda] tag#0 device offline or changed
+> +	unsigned long timeout;
+>  	int err;
+>  	bool flag_res =3D true;
+> +	bool is_dev_val;
+> +	u32 val;
+>=20
+>  	err =3D ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+>  		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL); =40=40 -4175,20 +4179,28
+> =40=40 static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+>  		goto out;
+>  	=7D
+>=20
+> -	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
+> -	for (i =3D 0; i < 1000 && =21err && flag_res; i++)
+> -		err =3D ufshcd_query_flag_retry(hba,
+> UPIU_QUERY_OPCODE_READ_FLAG,
+> -			QUERY_FLAG_IDN_FDEVICEINIT, 0, &flag_res);
+> +	/* Poll fDeviceInit flag to be cleared */
+> +	is_dev_val =3D ufs_get_dev_specific_value(hba, DEV_VAL_FDEVICEINIT,
+> &val);
+> +	dev_init_compl_in_ms =3D (is_dev_val) ? val : 500;
+> +	timeout =3D jiffies + msecs_to_jiffies(dev_init_compl_in_ms);
+> +	do =7B
+> +		err =3D ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+> +					QUERY_FLAG_IDN_FDEVICEINIT, 0,
+> &flag_res);
+> +		if (=21flag_res)
+> +			break;
+> +		usleep_range(1000, 2000);
 
+How about think to increase the value of usleep() to 5 =7E 10ms. I think 1 =
+=7E 2ms is too small.
 
-and a later try to copy a file only yields (mostly my own debug prints):
+> +	=7D while (time_before(jiffies, timeout));
+>=20
+> -	if (err)
+> +	if (err) =7B
+>  		dev_err(hba->dev,
+> -			=22%s reading fDeviceInit flag failed with error %d=5Cn=22,
+> -			__func__, err);
+> -	else if (flag_res)
+> +				=22%s reading fDeviceInit flag failed with
+> error %d=5Cn=22,
+> +				__func__, err);
+> +	=7D else if (flag_res) =7B
+>  		dev_err(hba->dev,
+> -			=22%s fDeviceInit was not cleared by the device=5Cn=22,
+> -			__func__);
+> -
+> +				=22%s fDeviceInit was not cleared by the
+> device=5Cn=22,
+> +				__func__);
+> +		err =3D -EBUSY;
+> +	=7D
+>  out:
+>  	return err;
+>  =7D
+> --
+> 2.7.4
 
+Thanks for this patch. We are changing this code and value for all projects=
+.
+Fdeviceinit fail is one of most frequently happened defects. So it's import=
+ant to set with proper value.
 
-[  371.110798] blk_queue_enter: wait_event: pm=0
-[  371.300666] scsi_runtime_resume
-[  371.303834] scsi_runtime_resume
-[  371.307007] scsi_runtime_resume
-[  371.310213] sd 0:0:0:0: [sda] tag#0 device offline or changed
-[  371.316011] blk_update_request: I/O error, dev sda, sector 5101888 op
-0x0:(READ) flags 0x0 phys_seg 1 prio class 0
-[  372.560690] scsi_runtime_suspend
-[  372.563968] scsi_runtime_suspend
-[  372.567237] scsi_runtime_suspend
+BR
+Grant
 
-thanks Alan for taking the time and trying to fix this! you're close.
-what is missing?
-
-                                martin
