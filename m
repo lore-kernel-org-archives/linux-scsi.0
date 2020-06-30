@@ -2,137 +2,156 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67794C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 10:47:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69966C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 10:47:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 468D3207E8
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 10:47:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 422DD20780
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 10:47:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="JghRnR4n"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="JPm7VwxR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732581AbgF3Krn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 06:47:43 -0400
-Received: from mail1.bemta25.messagelabs.com ([195.245.230.68]:27916 "EHLO
-        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732631AbgF3Krj (ORCPT
+        id S1732651AbgF3Krp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 06:47:45 -0400
+Received: from mail1.bemta26.messagelabs.com ([85.158.142.113]:15403 "EHLO
+        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732510AbgF3Krk (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Jun 2020 06:47:39 -0400
+        Tue, 30 Jun 2020 06:47:40 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
         s=200619tsfj; t=1593514056; i=@ts.fujitsu.com;
-        bh=gQMkEbnPQliZZuub1+zprC/Nu9Y9s2qt+0zyanguP1U=;
-        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        b=JghRnR4n+L6vcBwKrIhDqPCop0JXXNEwyQJafKmM9rdEEPUbKBUe2tuOXjlMXCuau
-         1scxvEzOmMpX22gSGMWvr8weaWccDeWrzcoZliSzcx4fPNKZXG7125AGGoLiR4DV/K
-         ZkpdCZDj1eni2VTu95mTPWav+xy7C/MnH5TejWfzBYY+3B9DrfpGkeH0FAHyhs3MWY
-         fhQ21q5YIjcMHOUSoG8Yq5/izy7cRFLSBInMkrX+099bQVipQ2ai8IQ8I/Bsvb1akP
-         e2aK5N3VqdxOe4+LU7xkF0n2rfCbA3uuuE3HjpRlIed01+2XFf4Mg1UidHCYIA0+qJ
-         IEqN8uthAIcSQ==
-Received: from [100.112.197.119] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-4.bemta.az-b.eu-west-1.aws.symcld.net id 11/88-16187-7481BFE5; Tue, 30 Jun 2020 10:47:35 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrDLMWRWlGSWpSXmKPExsViZ8MxRddd4ne
-  cwYlPqhbd13ewWSw//o/J4u+kG6wWrUvfMjmweHx8eovF4/MmuQCmKNbMvKT8igTWjJevPrEV
-  3OSt2LbmE2sD42fuLkYuDiGByYwSy9/dZ4dwpjNKNHZMZ+5i5ORgEzCQWDHpPgtIQkRgDaPEy
-  jvzwBLMAnoS0/6tYwexhQXcJV73HWEFsVkEVCX2LjvFCGLzCthJPD38lg3ElhCQl+g4MJkFxO
-  YUsJdYe/g0mC0EVLN280y2CYzcCxgZVjFaJBVlpmeU5CZm5ugaGhjoGhoa6RpaWugaWpjpJVb
-  pJumlluqWpxaX6BrqJZYX6xVX5ibnpOjlpZZsYgQGSkrBsV07GN++/qB3iFGSg0lJlPfev19x
-  QnxJ+SmVGYnFGfFFpTmpxYcYZTg4lCR428V+xwkJFqWmp1akZeYAgxYmLcHBoyTC2y4ElOYtL
-  kjMLc5Mh0idYlSUEuddCdInAJLIKM2Da4NFyiVGWSlhXkYGBgYhnoLUotzMElT5V4ziHIxKwr
-  wJ4kBTeDLzSuCmvwJazAS0+JrWL5DFJYkIKakGJpVXz05qtfxZLuZYL+K/wzjo0rHdQWfr/n6
-  tEbghl6d/y9piQ2uhpNLiQ/qXPv9y8Ph0rPz9/pNZhbsfRXtO0T4f5S75b+fF729P2303eNCX
-  HhKRdWQZz7yJGlvVD2ufnXh/yZ6VKU2vGbYVSz1feWWqdliU98tfa8UObGpa0Le/w8mrefGkO
-  KmeizqeGfrZpY/PmUU9XTe3c93NZdNdPu2U+T0rJd8tuFTiyARmA2EP7cI5zBVhdty1npE/u+
-  KXORi+iVESlyw5M7Ej+Lg6e4yBn6v80YIvvIJTxHl7Lx1S7jkU/GzKa7dZtl9vqIk8meD81fh
-  u6Laz7UlTBZ6zKlx51nG48ZGdrhz7h6vf/imxFGckGmoxFxUnAgB0N5PpDwMAAA==
+        bh=uzwwfKMyrBAypom2X1E4BHvjFp4urHBOJhUxT8iANSk=;
+        h=From:To:Cc:Subject:Date:Message-Id;
+        b=JPm7VwxRqPfNo354K6ydy2P+4w7xipbEX95kZ+N+0hAdOSJ+9Rg+YeLbuPdsr6o+w
+         N6bix9gtt7Q0aMs4is+j+nkR9HwfRcIb/8PkJDdaWJnC+zCluENddxmwyWcXcBx0LX
+         iLkqcUbG6hIT/aR/Ldtin9bx+fYeDYqF3+IgH7KCmBlwvyrNUkQ8dISlVJWfodSqT4
+         QFNdXg4APa7uNwZ7KpeLTAxz77jgu5KobvPVcK3mecFx7Dn7iV++5S8w29uwHk/k9a
+         U20ls95kPwPdC1EVwy6z9Crij3KVY7r3oao8qiIE7oTpvrFoIyL3R2tvxghpGGvmX5
+         TAcmsQKyeMsfw==
+Received: from [100.113.4.241] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-2.bemta.az-b.eu-central-1.aws.symcld.net id 77/DC-49188-7481BFE5; Tue, 30 Jun 2020 10:47:35 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrILMWRWlGSWpSXmKPExsViZ8MxRddd4ne
+  cwYajyhbd13ewWSw//o/J4u+kG6wWrUvfMjmweHx8eovF4/MmuQCmKNbMvKT8igTWjG+bbrIV
+  tMtUnJq1gqmBcYp4FyMXh5DAZEaJudc+MEM40xkl1h/4y9LFyMnBJmAgsWLSfRaQhIjAGkaJl
+  XfmMYMkmAX0JKb9W8cOYgsLeElMbdwHZrMIqEqcm7KQDcTmFbCTuNi1FWyQhIC8RMeBySwTGD
+  kXMDKsYrRMKspMzyjJTczM0TU0MNA1NDTWNdc1MjbUS6zSTdJLLdVNTs0rKUoEyuollhfrFVf
+  mJuek6OWllmxiBPo+pZD9+Q7GVW8+6B1ilORgUhLlvffvV5wQX1J+SmVGYnFGfFFpTmrxIUYZ
+  Dg4lCd6n4r/jhASLUtNTK9Iyc4BhCJOW4OBREuHdD5LmLS5IzC3OTIdInWLU5bj5fskiZiGWv
+  Py8VClx3pViQEUCIEUZpXlwI2AxcYlRVkqYl5GBgUGIpyC1KDezBFX+FaM4B6OSMG8CyCqezL
+  wSuE2vgI5gAjrimtYvkCNKEhFSUg1Mel/lVkl4a7Ct2+Bd3fVHiyXPK0nmtb/GpttJfvuyHR9
+  6yp2LEi2btUQ47eG3pJ+Wl30S3i2Z5Lsj6obQ00/bP9ln/rN0Vuxe8uX4wT1z358T6Tqzo2uR
+  4Ow5H98dk50Xo39w6yEuPV+/M39c7jm77W6ayq6o6XboU3RZP0e9l8O22zG26+qSGO9fP2//+
+  as0+3edJ/+nX7vd//CpuSmjw7S03HAjtwbPLbW1nrds7Lr6Jy2Z88NFK/CjzuqrjlmNUyo87i
+  iJZd5q/fn+gOP0WydWFL8xetPW1cp37/Vz564D8a8Ea6Yf45/CfcP6Q8eWNF1H/v9f87YkBpf
+  8Vq4qnbR9sqrRit6Ybqmk0m8WSizFGYmGWsxFxYkAkcT9BgQDAAA=
 X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-18.tower-291.messagelabs.com!1593514054!485001!1
+X-Msg-Ref: server-12.tower-248.messagelabs.com!1593514054!1288548!1
 X-Originating-IP: [62.60.8.148]
 X-SYMC-ESS-Client-Auth: outbound-route-from=pass
 X-StarScan-Received: 
 X-StarScan-Version: 9.50.2; banners=-,-,-
 X-VirusChecked: Checked
-Received: (qmail 21498 invoked from network); 30 Jun 2020 10:47:35 -0000
+Received: (qmail 18769 invoked from network); 30 Jun 2020 10:47:35 -0000
 Received: from unknown (HELO mailhost1.uk.fujitsu.com) (62.60.8.148)
-  by server-18.tower-291.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 30 Jun 2020 10:47:35 -0000
+  by server-12.tower-248.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 30 Jun 2020 10:47:35 -0000
 Received: from x-serv01 ([172.17.38.52])
-        by mailhost1.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 05UAlU9s025883;
-        Tue, 30 Jun 2020 11:47:30 +0100
+        by mailhost1.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 05UAlRoN025845;
+        Tue, 30 Jun 2020 11:47:27 +0100
 Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
-        by x-serv01 (Postfix) with ESMTP id 7786A20721;
-        Tue, 30 Jun 2020 12:47:30 +0200 (CEST)
+        by x-serv01 (Postfix) with ESMTP id 9583720251;
+        Tue, 30 Jun 2020 12:47:24 +0200 (CEST)
 From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Mike Christie <michael.christie@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: [RFC PATCH 3/8] scsi: target: tcmu: Use priv pointer in se_cmd
-Date:   Tue, 30 Jun 2020 12:47:04 +0200
-Message-Id: <20200630104709.23066-4-bstroesser@ts.fujitsu.com>
+Subject: [RFC PATCH 0/8] scsi: target: tcmu: Add TMR notification for tcmu
+Date:   Tue, 30 Jun 2020 12:47:01 +0200
+Message-Id: <20200630104709.23066-1-bstroesser@ts.fujitsu.com>
 X-Mailer: git-send-email 2.12.3
-In-Reply-To: <20200630104709.23066-1-bstroesser@ts.fujitsu.com>
-References: <20200630104709.23066-1-bstroesser@ts.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We initialize and clean up the se_cmd's priv pointer
-under cmd_ring_lock to point to the corresponding tcmu_cmd.
+TCM/LIO core handles TMRs without involving backends.
+But TMR completion message is sent to initiator only after
+commands aborted by the TMR are completed by the backend.
+Especially in case of tcmu backend, if userspace executes long
+running commands and therefore initiator sends ABORT_TASK on
+timeout, the ABORT itself can time out if core still waits for
+userspace/tcmu to complete the command.
 
-In the patch that implements tmr_notify callback in
-tcmu we will use the priv pointer.
+It would be very helpful for userspace to get a notification
+about received TMR and which commands were aborted by that TMR.
+Then userspace can decide whether to cancel command processing,
+ and it can send command completion earlier than it would
+without TMR notification.
+It is also helpful for userspace traces and device emulation to
+get notification about TMR events.
 
-Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
----
- drivers/target/target_core_user.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+So this patch series in the first two patches implements in
+core the usage of a new optional backend callback for TMR
+notifications. The core calls it before core waits for
+completion of aborted commands (params: se_dev, TMR type,
+and list of se_cmds aborted by this TMR).
+Of course other backends than tcmu can use this part of the
+series also to implement their own TMR notification if
+necessary.
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 82e476d48194..c900e3dd25aa 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -541,6 +541,8 @@ tcmu_get_block_page(struct tcmu_dev *udev, uint32_t dbi)
- 
- static inline void tcmu_free_cmd(struct tcmu_cmd *tcmu_cmd)
- {
-+	if (tcmu_cmd->se_cmd)
-+		tcmu_cmd->se_cmd->priv = NULL;
- 	kfree(tcmu_cmd->dbi);
- 	kmem_cache_free(tcmu_cmd_cache, tcmu_cmd);
- }
-@@ -1109,10 +1111,11 @@ tcmu_queue_cmd(struct se_cmd *se_cmd)
- 		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 
- 	mutex_lock(&udev->cmdr_lock);
-+	se_cmd->priv = tcmu_cmd;
- 	ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
--	mutex_unlock(&udev->cmdr_lock);
- 	if (ret < 0)
- 		tcmu_free_cmd(tcmu_cmd);
-+	mutex_unlock(&udev->cmdr_lock);
- 	return scsi_ret;
- }
- 
-@@ -1179,7 +1182,6 @@ static void tcmu_handle_completion(struct tcmu_cmd *cmd, struct tcmu_cmd_entry *
- 		target_complete_cmd(cmd->se_cmd, entry->rsp.scsi_status);
- 
- out:
--	cmd->se_cmd = NULL;
- 	tcmu_cmd_free_data(cmd, cmd->dbi_cnt);
- 	tcmu_free_cmd(cmd);
- }
-@@ -1285,6 +1287,7 @@ static void tcmu_check_expired_ring_cmd(struct tcmu_cmd *cmd)
- 	set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
- 	list_del_init(&cmd->queue_entry);
- 	se_cmd = cmd->se_cmd;
-+	se_cmd->priv = NULL;
- 	cmd->se_cmd = NULL;
- 
- 	pr_debug("Timing out inflight cmd %u on dev %s.\n",
+The further six patches implement the TMR notify callback for
+tcmu. The new configFS attribute tmr_notification allows to
+switch on TMR messages on the cmd ring. The default of the
+attribute is the old behavior without TMR info on the ring, but
+with following changes:
+ - if tcmu receives an already aborted command, it immediately
+   rejects it. So it will never appear in userspace.
+ - if tcmu finds, that according to TMR notification a cmd on
+   the qfull_queue was aborted, tcmu removes it from qfull_queue
+   and completes it immediately. So userspace will not 'see'
+   those commands.
+
+When attribute tmr_notification is set to 1, tcmu additionally
+prepares a list of cmd_ids from those commands, that are aborted
+by the TMR and are active in cmd ring (not timed out).
+This list together with the TMR type is either immediately
+written to cmd ring (new TMR entry type) or queued in a separate
+tmr queue if ring space is too small.
+TMRs in the tmr queue do not time out. If ring space becomes
+available, tcmu moves TMRs from tmr queue to ring with higher
+priority than cmds from qfull queue.
+
+This mechanism makes sure that userspace receives TMR
+notifications as early as possible. Userspace can use the
+list of cmd_ids attached to the TMR notification to identify
+aborted commands from its list of received and not yet completed
+commands. In case userspace has meanwhile completed some of the
+cmd_ids on the list, it can just ignore these cmd_ids.
+A possible new command having the cmd_id as one of the aborted
+commands will always appear on the ring after the TMR
+notification.
+
+Bodo Stroesser (8):
+  scsi: target: Modify core_tmr_abort_task()
+  scsi: target: Add tmr_notify backend function
+  scsi: target: tcmu: Use priv pointer in se_cmd
+  scsi: target: tcmu: Do not queue aborted commands
+  scsi: target: tcmu: Factor out new helper ring_insert_padding
+  scsi: target: tcmu: Fix and simplify timeout handling
+  scsi: target: tcmu: Implement tmr_notify callback
+  scsi: target: tcmu: Make TMR notification optional
+
+ drivers/target/target_core_tmr.c       |  36 +++-
+ drivers/target/target_core_transport.c |   1 +
+ drivers/target/target_core_user.c      | 377 +++++++++++++++++++++++++++------
+ include/target/target_core_backend.h   |   2 +
+ include/target/target_core_base.h      |   1 +
+ include/uapi/linux/target_core_user.h  |  25 +++
+ 6 files changed, 369 insertions(+), 73 deletions(-)
+
 -- 
 2.12.3
 
