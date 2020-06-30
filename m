@@ -7,119 +7,117 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4B6AC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 23:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3972EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 23:37:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8164320780
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 23:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1118920722
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 23:37:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zHzAgH+5"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nXiq9CU3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726776AbgF3Xfu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 19:35:50 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:35498 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726435AbgF3Xft (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 19:35:49 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UNWGTv011121;
-        Tue, 30 Jun 2020 23:35:41 GMT
+        id S1726297AbgF3Xhs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 19:37:48 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51628 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725930AbgF3Xhs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 19:37:48 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UNWKeX049509;
+        Tue, 30 Jun 2020 23:37:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=6YsuJ3mlzl9g2yunSMZCeNPAfaw2piOOPLje1+wpPwA=;
- b=zHzAgH+5djDBbt8n/o8+vmprB4OK1lW5/1vKHgpXJEwiBp7NhpJeMZ0cih+hJyGOhadv
- nNh1Qas6SNmjKp6t5T8XU5CEdnsTKc99tucT5CGnZOt3WO9SD5JJhBUvea9LB4vD/N4e
- gHTk0EMptJsfyL2jMWzEJgA1brFdg1IIwc/rUyKDjyFKtp6Qlzrm4ybSyDZtP3lllzlL
- 1nUG+aOb2bVQEun0HmfBO8Mc7NUnlaCzhAMJ3F5Zyt5YPQ2bDV2kSRsgsN78ozwhzI2Z
- Z3JzuJY02eoYIC8BEL67lDzFvecEftx1G8rZCWPuAMRK0andjIaU6AaJZ3PDPJF+7/hk kw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31wxrn7c00-1
+ bh=zIO5U64GcqdsevyjRjq2sBrQMtWI9BikmKZ41stJGWQ=;
+ b=nXiq9CU34yRnnzbrfd11WcBnciGr1wBb9ZBF++33UthLwbIi/VsbS6P5y/0RCBRoVoKZ
+ NPVTWFRv2Pvt4zhc3bJl2djze98CXgVwZ3lyh12AxIXObhfaQgRPX9zpIM0C5mVekXS9
+ 2d/n4qzzh1cpRSOQ1j9UawPwUvlF92hr+MYCNEyFUuxkU4bo+h0qSBaVGbfJkIRTN36g
+ 7GR6ayLBgD/u6cqXCkuXM2bHbe/a9Ip2/lyS8Li+WT/CFVWIFeL0y/Hp/6nOZuhyLXvZ
+ /AidzTEOP4nzMcePPRj6hcFDnUNtJmE1R4/WYsZt5sGbCh3OO1+ve9ljFjeAHD9k0xOn IQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 31xx1dv8cm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 30 Jun 2020 23:35:41 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UNWhWt137113;
-        Tue, 30 Jun 2020 23:35:40 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 31xg14ps08-1
+        Tue, 30 Jun 2020 23:37:41 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UNWcMt187560;
+        Tue, 30 Jun 2020 23:35:41 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 31y52jj1q2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 30 Jun 2020 23:35:40 +0000
+        Tue, 30 Jun 2020 23:35:41 +0000
 Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05UNZaXr002884;
-        Tue, 30 Jun 2020 23:35:39 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05UNZZFk008583;
+        Tue, 30 Jun 2020 23:35:40 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 30 Jun 2020 23:35:36 +0000
+        with ESMTP ; Tue, 30 Jun 2020 23:35:35 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     cleech@redhat.com, lduncan@suse.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
-Subject: [PATCH 3/4] iscsi class: optimize work queue flush use
-Date:   Tue, 30 Jun 2020 18:35:33 -0500
-Message-Id: <1593560134-28148-4-git-send-email-michael.christie@oracle.com>
+Subject: [PATCH 1/4] iscsi class: make sure the block/recovery work are done
+Date:   Tue, 30 Jun 2020 18:35:31 -0500
+Message-Id: <1593560134-28148-2-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1593560134-28148-1-git-send-email-michael.christie@oracle.com>
 References: <1593560134-28148-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 bulkscore=0 mlxscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006300163
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
- priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
- malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
- lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 mlxscore=0
+ adultscore=0 suspectscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2006300163
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015 adultscore=0
+ suspectscore=0 mlxlogscore=999 cotscore=-2147483648 lowpriorityscore=0
+ malwarescore=0 phishscore=0 impostorscore=0 mlxscore=0 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006300163
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need for one session to flush the entire
-iscsi_eh_timer_workq when removing/unblocking a session. During removal
-we need to make sure our works are not running anymore. And
-iscsi_unblock_session only needs to make sure it's work is done. The
-unblock work function will flush/cancel the works it has conflicts with.
+When max_active=1 we knew the block work was always before the
+unblock and the recovery work had either run or was pending behind the
+unblock. With the patch to enable max_active=2:
+
+commit 3ce419662dd4c9cf8db7869c4972ad51ccdf2ee3
+Author: Bob Liu <bob.liu@oracle.com>
+Date:   Tue May 5 09:19:08 2020 +0800
+
+    scsi: iscsi: Register sysfs for iscsi workqueue
+
+for the iscsi_eh_timer_workq we could have the block or recovery work
+works on different threads than the unblock. __iscsi_unblock_session
+only tries to cancel the recovery work and so the block work could be
+running still, or the recovery work could be running (non pending state)
+or we could race and the unblock work could run cancel_delayed_work then
+the block work could queue the recovery work.
+
+This patches fixes this by making sure the block and recovery works are
+done before updating the session state and its devices.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 2be28d8..2b3af43 100644
+index f4cc08e..bbf2eb7 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1979,10 +1979,11 @@ void iscsi_unblock_session(struct iscsi_cls_session *session)
- {
- 	queue_work(iscsi_eh_timer_workq, &session->unblock_work);
+@@ -1947,10 +1947,11 @@ static void __iscsi_unblock_session(struct work_struct *work)
+ 
+ 	ISCSI_DBG_TRANS_SESSION(session, "Unblocking session\n");
  	/*
--	 * make sure all the events have completed before tell the driver
--	 * it is safe
-+	 * Blocking the session can be done from any context so we only
-+	 * queue the block work. Make sure the unblock work has completed
-+	 * because it flushes/cancels the other works and updates the state.
+-	 * The recovery and unblock work get run from the same workqueue,
+-	 * so try to cancel it if it was going to run after this unblock.
++	 * Make sure we do not race with the block or recovery work, so
++	 * they can't overwrite our state update here.
  	 */
--	flush_workqueue(iscsi_eh_timer_workq);
-+	flush_work(&session->unblock_work);
- }
- EXPORT_SYMBOL_GPL(iscsi_unblock_session);
- 
-@@ -2206,11 +2207,9 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
- 	list_del(&session->sess_list);
- 	spin_unlock_irqrestore(&sesslock, flags);
- 
--	/* make sure there are no blocks/unblocks queued */
--	flush_workqueue(iscsi_eh_timer_workq);
--	/* make sure the timedout callout is not running */
--	if (!cancel_delayed_work(&session->recovery_work))
--		flush_workqueue(iscsi_eh_timer_workq);
+-	cancel_delayed_work(&session->recovery_work);
 +	flush_work(&session->block_work);
-+	flush_work(&session->unblock_work);
 +	cancel_delayed_work_sync(&session->recovery_work);
- 	/*
- 	 * If we are blocked let commands flow again. The lld or iscsi
- 	 * layer should set up the queuecommand to fail commands.
+ 	spin_lock_irqsave(&session->lock, flags);
+ 	session->state = ISCSI_SESSION_LOGGED_IN;
+ 	spin_unlock_irqrestore(&session->lock, flags);
 -- 
 1.8.3.1
 
