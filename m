@@ -2,188 +2,137 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD560C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 16:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D318C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 17:12:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A243020722
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 16:52:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D69F52077D
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 17:12:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="kObW4YDq";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="kObW4YDq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qBp9Bkd+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389721AbgF3Qwr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 12:52:47 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41186 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389698AbgF3Qwr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Jun 2020 12:52:47 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id A11488EE16A;
-        Tue, 30 Jun 2020 09:52:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1593535966;
-        bh=/q1l/DETEEQ6NEwyQ4GIcg7kfuhEPGqB6TCuFiuyl7M=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=kObW4YDqwQrtz8WG5KaQncNPhSuFnA95768PFrEML86kMnfAzW6gwspa4SOyyKek5
-         XunK+8Ha2olv/rPBfRT3I4x4+Ug6tP5n0LXRGKJ88uFJ64Q7XG8luPUQEqrZjupA9m
-         bAxvIGcSK3GX+Su3CY0CYeQ5+bC6s/uBYDJdhx1o=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id aElH3yqf2I_p; Tue, 30 Jun 2020 09:52:46 -0700 (PDT)
-Received: from [153.66.254.194] (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 0B78B8EE079;
-        Tue, 30 Jun 2020 09:52:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1593535966;
-        bh=/q1l/DETEEQ6NEwyQ4GIcg7kfuhEPGqB6TCuFiuyl7M=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=kObW4YDqwQrtz8WG5KaQncNPhSuFnA95768PFrEML86kMnfAzW6gwspa4SOyyKek5
-         XunK+8Ha2olv/rPBfRT3I4x4+Ug6tP5n0LXRGKJ88uFJ64Q7XG8luPUQEqrZjupA9m
-         bAxvIGcSK3GX+Su3CY0CYeQ5+bC6s/uBYDJdhx1o=
-Message-ID: <1593535964.4124.2.camel@HansenPartnership.com>
-Subject: Re: [RFC] scsi: target: tcmu: running 32bit userspace on 64bit
- kernel
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Date:   Tue, 30 Jun 2020 09:52:44 -0700
-In-Reply-To: <364c13da-6d4f-c28b-36b3-082db8c3de58@ts.fujitsu.com>
-References: <364c13da-6d4f-c28b-36b3-082db8c3de58@ts.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S2387434AbgF3RMW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 13:12:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50566 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729963AbgF3RMV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 13:12:21 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F143C061755;
+        Tue, 30 Jun 2020 10:12:21 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id dr13so21439137ejc.3;
+        Tue, 30 Jun 2020 10:12:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=hLjY+FiejsKCHtdjZ2X5AG1Wh8QL9+hOBzArfxVt15s=;
+        b=qBp9Bkd+bZcKlIGx6Z9Kc30AXs6nEXO8oRuh2kHPe1me1YuqwxMpQQotWwJAoWvdS8
+         a6Mrxv1/phr4YSLPV7NPqwEAA3wKuJl455FYOqK3Y9pKm+4+z1ts+0MCd579LepC7xO+
+         0pd40N8nWIiy/44TDVRRzJ2NA0CY2DvN8dYUCczzJxlpv8y7l5RCWWO07FrsN+leH/F1
+         QxE4Tf7DCfGHyvEi32QPMwoG5cbIsx1s3q+R5ejMn0kFe4A+gZbC1bFYO0aSj25kA0sO
+         1Ie5WDR/Cco30yQ/hSHaklpDnkrCo1/XoWkEHeZJNRdGvzVHjR3/VwNx2aIfxA6ghRFN
+         GlKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=hLjY+FiejsKCHtdjZ2X5AG1Wh8QL9+hOBzArfxVt15s=;
+        b=r4DxTuqW/0XtQQ4OaGXYkAJtSb4hdeEX46mAMJIstl5VIo6qC4p/BKAlbRWFWDMgaB
+         rAGmkITpep3MAIzusoyYd8q4DRW62oouyeVsmAMHlF4l736FVoBd6O4L7ka1BybxcHg7
+         xJmdjG13MTcHPbPxSFOLEc7Hy2UfXYzVG3EuPJNh3g0xWp99/pGXUe6XLBBjattuCEgB
+         Dp0Q6VKY3Nh0vlWjYzGs5patbp27uJyOaJRNWW55lJasZs/KCsEvN2JDVOcr6+pSfTOJ
+         Hu2KTzmftRhoiYkiiGM6jLaFAAEtvKdCCBtDT5OCQhT9H0tFFC7PxWIRuSuzPnDczSPy
+         eiqA==
+X-Gm-Message-State: AOAM533+XmDZqMGEI1L5Nbe0E7GVSEd6S6+4VHGNZxffyrmK/432/W6P
+        pXGNg9I5RemuQjoZZH1llHw=
+X-Google-Smtp-Source: ABdhPJy/WiZXMjLukD00/Pj3vPe0LoKDdDGPP1BLeXkJAELpuKNhsZYuZ/vw/t2EYG6lMRHMuhnqMQ==
+X-Received: by 2002:a17:906:178b:: with SMTP id t11mr8136eje.489.1593537140016;
+        Tue, 30 Jun 2020 10:12:20 -0700 (PDT)
+Received: from andrea (ip-213-220-210-175.net.upcbroadband.cz. [213.220.210.175])
+        by smtp.gmail.com with ESMTPSA id g8sm3704441edk.13.2020.06.30.10.12.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jun 2020 10:12:19 -0700 (PDT)
+Date:   Tue, 30 Jun 2020 19:12:13 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     t-mabelt@microsoft.com
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
+        skarade@microsoft.com, Andres Beltran <lkmlabelt@gmail.com>,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "David S . Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v3 0/3] Drivers: hv: vmbus: vmbus_requestor data
+ structure for VMBus hardening
+Message-ID: <20200630171213.GA12948@andrea>
+References: <20200630153200.1537105-1-lkmlabelt@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200630153200.1537105-1-lkmlabelt@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-06-30 at 18:49 +0200, Bodo Stroesser wrote:
-> Hi,
+On Tue, Jun 30, 2020 at 11:31:57AM -0400, Andres Beltran wrote:
+> Currently, VMbus drivers use pointers into guest memory as request IDs
+> for interactions with Hyper-V. To be more robust in the face of errors
+> or malicious behavior from a compromised Hyper-V, avoid exposing
+> guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
+> bad request ID that is then treated as the address of a guest data
+> structure with no validation. Instead, encapsulate these memory
+> addresses and provide small integers as request IDs.
 > 
-> When using tcmu it might happen, that userspace application cannot be
-> built as 64 bit program even on a 64 bit host due to existing 32 bit
-> libraries that must be used, e.g. for compression, encryption,
-> deduplication, ...
+> The first patch creates the definitions for the data structure, provides
+> helper methods to generate new IDs and retrieve data, and
+> allocates/frees the memory needed for vmbus_requestor.
 > 
-> Currently this only works with manual changes in userspace include
-> file target_core_user.h due to a missing padding field in
-> struct tcmu_cmd_entry.
+> The second and third patches make use of vmbus_requestor to send request
+> IDs to Hyper-V in storvsc and netvsc respectively.
 > 
-> Here are field offsets printed by a small program on a 64 bit host,
-> compiled as 64 bit program and as 32 bit:
+> Thanks.
+> Andres Beltran
 > 
-> Devel:~ # gcc -o print_offsets print_offsets.c
-> Devel:~ # ./print_offsets
-> Offset of tcmu_cmd_entry.hdr.len_op          = 0000
-> Offset of tcmu_cmd_entry.hdr.cmd_id          = 0004
-> Offset of tcmu_cmd_entry.hdr.kflags          = 0006
-> Offset of tcmu_cmd_entry.hdr.uflags          = 0007
-> 
-> Offset of tcmu_cmd_entry.req.iov_cnt         = 0008
-> Offset of tcmu_cmd_entry.req.iov_bidi_cnt    = 000c
-> Offset of tcmu_cmd_entry.req.iov_dif_cnt     = 0010
-> Offset of tcmu_cmd_entry.req.cdb_off         = 0018
-> Offset of tcmu_cmd_entry.req.iov[0]          = 0030
-> 
-> Offset of tcmu_cmd_entry.rsp.scsi_status     = 0008
-> Offset of tcmu_cmd_entry.rsp.read_len        = 000c
-> Offset of tcmu_cmd_entry.rsp.sense_buffer[0] = 0010
-> 
-> Size of struct tcmu_cmd_entry = 0070
-> 
-> 
-> Devel:~ # gcc -m32 -o print_offsets print_offsets.c
-> Devel:~ # ./print_offsets
-> Offset of tcmu_cmd_entry.hdr.len_op          = 0000
-> Offset of tcmu_cmd_entry.hdr.cmd_id          = 0004
-> Offset of tcmu_cmd_entry.hdr.kflags          = 0006
-> Offset of tcmu_cmd_entry.hdr.uflags          = 0007
-> 
-> Offset of tcmu_cmd_entry.req.iov_cnt         = 0008
-> Offset of tcmu_cmd_entry.req.iov_bidi_cnt    = 000c
-> Offset of tcmu_cmd_entry.req.iov_dif_cnt     = 0010
-> Offset of tcmu_cmd_entry.req.cdb_off         = 0014
-> Offset of tcmu_cmd_entry.req.iov[0]          = 002c
-> 
-> Offset of tcmu_cmd_entry.rsp.scsi_status     = 0008
-> Offset of tcmu_cmd_entry.rsp.read_len        = 000c
-> Offset of tcmu_cmd_entry.rsp.sense_buffer[0] = 0010
-> 
-> Size of struct tcmu_cmd_entry = 0070
-> 
-> 
-> The offset of the fields req.cdb_off and req.iov differ for 64-bit
-> and 32-bit compilation.
-> 
-> That means:
->  - 64-bit application on 64-bit host works well
->  - 32-bit application on 32-bit host works well
->  - 32-bit application on 64-bit host fails.
-> 
-> Unfortunately I don't see a way to fix this problem such, that
-> 32-bit application runs fine on 32-bit and 64-bit host without
-> breaking compatibility.
-> 
-> So I'm wondering whether the following change would be a viable
-> solution:
-> 
-> diff --git a/include/uapi/linux/target_core_user.h
-> b/include/uapi/linux/target_core_user.h
-> --- a/include/uapi/linux/target_core_user.h
-> +++ b/include/uapi/linux/target_core_user.h
-> @@ -114,6 +114,9 @@ struct tcmu_cmd_entry {
->  			__u32 iov_cnt;
->  			__u32 iov_bidi_cnt;
->  			__u32 iov_dif_cnt;
-> +#ifdef APPL32BIT_ON_KERNEL64BIT
-> +			__u32 __pad9;
-> +#endif
->  			__u64 cdb_off;
->  			__u64 __pad1;
->  			__u64 __pad2;
-> 
-> 
-> Using this change we can do:
-> 
-> Devel:~ # gcc -m32 -DAPPL32BIT_ON_KERNEL64BIT -o print_offsets
-> print_offsets.c
-> Devel:~ # ./print_offsets
-> Offset of tcmu_cmd_entry.hdr.len_op          = 0000
-> Offset of tcmu_cmd_entry.hdr.cmd_id          = 0004
-> Offset of tcmu_cmd_entry.hdr.kflags          = 0006
-> Offset of tcmu_cmd_entry.hdr.uflags          = 0007
-> 
-> Offset of tcmu_cmd_entry.req.iov_cnt         = 0008
-> Offset of tcmu_cmd_entry.req.iov_bidi_cnt    = 000c
-> Offset of tcmu_cmd_entry.req.iov_dif_cnt     = 0010
-> Offset of tcmu_cmd_entry.req.cdb_off         = 0018
-> Offset of tcmu_cmd_entry.req.iov[0]          = 0030
-> 
-> Offset of tcmu_cmd_entry.rsp.scsi_status     = 0008
-> Offset of tcmu_cmd_entry.rsp.read_len        = 000c
-> Offset of tcmu_cmd_entry.rsp.sense_buffer[0] = 0010
-> 
-> Size of struct tcmu_cmd_entry = 0070
-> 
-> 
-> So we can compile a 32-bit application that works on 64-bit kernel
-> without need to manipulate the include file prepared by the kernel.
-> 
-> What do you think? Do you know a better solution?
+> Tested-by: Andrea Parri <parri.andrea@gmail.com>
 
-Can you not use something similar to the compat_ioctl mechanism?  the
-job of the compat layer is to re-layout the input and output structures
-to impedance match between 32 and 64 bit.
+Em, I don't expect the changes introduced since v1 to have any observable
+effects, but I really don't know: I should be able to complete my testing
+of this by tomorrow or so; for now, please just ignore this tag.
 
-James
+Thanks,
+  Andrea
 
+
+> 
+> Cc: linux-scsi@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: David S. Miller <davem@davemloft.net>
+> 
+> Andres Beltran (3):
+>   Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
+>     hardening
+>   scsi: storvsc: Use vmbus_requestor to generate transaction IDs for
+>     VMBus hardening
+>   hv_netvsc: Use vmbus_requestor to generate transaction IDs for VMBus
+>     hardening
+> 
+>  drivers/hv/channel.c              | 154 ++++++++++++++++++++++++++++++
+>  drivers/net/hyperv/hyperv_net.h   |  13 +++
+>  drivers/net/hyperv/netvsc.c       |  79 ++++++++++++---
+>  drivers/net/hyperv/rndis_filter.c |   1 +
+>  drivers/scsi/storvsc_drv.c        |  85 ++++++++++++++---
+>  include/linux/hyperv.h            |  22 +++++
+>  6 files changed, 329 insertions(+), 25 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
