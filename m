@@ -2,125 +2,116 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 639FAC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 15:32:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A83AC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 15:59:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 412DD20771
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 15:32:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="t81FJtYH"
+	by mail.kernel.org (Postfix) with ESMTP id 1D5D8206A1
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 15:59:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389471AbgF3PcJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 11:32:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35086 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389403AbgF3PcI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 11:32:08 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E148C061755;
-        Tue, 30 Jun 2020 08:32:08 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id t6so10129951pgq.1;
-        Tue, 30 Jun 2020 08:32:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version:reply-to
-         :content-transfer-encoding;
-        bh=MkaGNDtMY/NRjHtJ37AHiDdfQpm5dAJJXn18jrcf3a0=;
-        b=t81FJtYHDU1oMziHtEQddR8ifoGMD/S3rfdbwL0W9hzjL5KMbw1Rh+vhMsBDxwMQSd
-         hBf2mL5chtfCyG+W3F8V+3yjtXPlelee6+tyV4CGMYCepdnJz6CD1Ec6b9wj23zMEDHC
-         RR5pYGTPkuh8egT/qdjvZhNuatHwsR7hdVbKLmwaLSxxghv7ZCVm+CCsNljmyC72qe3P
-         GR02iT15ifnSaZJf36C+VymnzWDHNIbmih0RadoKUcvhht01bzfnNNRPwDbOhpAhrMv5
-         4wpN1l1afxo64RXLzCSpAzzU6XDdK7EpGFEwP4ayArDKfoaO8+7aHEe4Hsu61y6gF8BC
-         YLyQ==
+        id S2389836AbgF3P7E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 11:59:04 -0400
+Received: from mail-pj1-f68.google.com ([209.85.216.68]:52062 "EHLO
+        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730478AbgF3P7E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 11:59:04 -0400
+Received: by mail-pj1-f68.google.com with SMTP id l6so6567693pjq.1;
+        Tue, 30 Jun 2020 08:59:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :reply-to:content-transfer-encoding;
-        bh=MkaGNDtMY/NRjHtJ37AHiDdfQpm5dAJJXn18jrcf3a0=;
-        b=Ewm91QXTEEOjAg5SEnS/1IKpt07shoYhe7Pf6S0mqghbHZ9zaCzl0lzdtiLtK3LHRu
-         T+zD532GKyNnJSCXt3TuRk6EzonwTZXy3N27eIvwEs8A+mCrFA2VsnTxDoR68GIR1eKB
-         hVG0NyDf9Kug++kWIafx7CBYDw0Lg89KMS3bTpDKtK+mOAYdVHn+sjVxbzBW9KDJNFiR
-         EI7uMSdyPYSuGVK6kJuGGpzoXa4KjHTFsRjX3+r8Pc0xxJiEt/pcrhIH9C3F8K4YjYP2
-         RZ3fpNo/haWMijVroJN4QtsGLWXetYSvwkQq91fjQmy0qOCPEVoBhLQ2FuEXJvQ9XKFU
-         qTLQ==
-X-Gm-Message-State: AOAM533raV7Zjo+CG7TvFZ0TV+E5fS4kvLhyHw/8OIjo68fznT9M8gZV
-        w0Rvf3RYQ3GCTS21Xgl8W3s=
-X-Google-Smtp-Source: ABdhPJwRsXEuMGybs81Dv5ER0nufXLdqv1A8Hw5GNQ9lgs8VOgl+sBpBo332N7IT3uzVbb623krG5g==
-X-Received: by 2002:a63:6e08:: with SMTP id j8mr15426916pgc.187.1593531127662;
-        Tue, 30 Jun 2020 08:32:07 -0700 (PDT)
-Received: from localhost.localdomain ([131.107.174.194])
-        by smtp.gmail.com with ESMTPSA id 140sm3067433pfz.154.2020.06.30.08.32.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Jun 2020 08:32:07 -0700 (PDT)
-From:   Andres Beltran <lkmlabelt@gmail.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org
-Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikelley@microsoft.com, parri.andrea@gmail.com,
-        skarade@microsoft.com, Andres Beltran <lkmlabelt@gmail.com>,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: [PATCH v3 0/3] Drivers: hv: vmbus: vmbus_requestor data structure for VMBus hardening
-Date:   Tue, 30 Jun 2020 11:31:57 -0400
-Message-Id: <20200630153200.1537105-1-lkmlabelt@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=B6Sn/t65YbjgGNKeJPVMw6gVh6flAq80bGjJD0LBtBE=;
+        b=AIzxHSE3ZUNsZff0cH2PhDI8uciLUdklmOlA4hucj7w4ZveAwAk0Jd0IOd1Geqk6/e
+         LLDawVoDZRH4QQgaC6pzzutrYB03k3SjJL66UMD7UeGILeRJbGnNXBsDA+Nl5Ivnoreg
+         pY1d8b+l6bWauHPLt1g4YfSY50hMZQ7ojxUZE49/FuFil4ZJnuKD0I8pb+J2nVMmthDy
+         S+w1/AT5HB6Rt20z43h4IuIG5omzsEdmq4LheQg4q4mhaCQ6Irfj3AW3qjPuubyUuEbc
+         J5KSEd9G7ou5taWLgOnAvVmrJ4ibFT1F9/A/BT2mtFNskSGddv/0Mef7F2bDby62Whuy
+         ppNw==
+X-Gm-Message-State: AOAM531Lf7RXPukwQuhBlgNFTRZaFPVGg47+FxutCllaeH9my1/JcyJb
+        FDZrsxVX8nRbAy0XjxxYHLU=
+X-Google-Smtp-Source: ABdhPJzowE0CGYA5o9ggUG5LZTA7zFqp51Mk7kAHF8grf/QQSQu9WmeVe8trsboMaoog3epQdJt6Ig==
+X-Received: by 2002:a17:902:162:: with SMTP id 89mr18106470plb.211.1593532742709;
+        Tue, 30 Jun 2020 08:59:02 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id m14sm3130812pgn.83.2020.06.30.08.59.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 30 Jun 2020 08:59:01 -0700 (PDT)
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+To:     Alan Stern <stern@rowland.harvard.edu>,
+        Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     jejb@linux.ibm.com, Can Guo <cang@codeaurora.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel@puri.sm
+References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
+ <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
+ <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
+ <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
+ <20200626154441.GA296771@rowland.harvard.edu>
+ <c19f1938-ae47-2357-669d-5b4021aec154@puri.sm>
+ <20200629161536.GA405175@rowland.harvard.edu>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <5231c57d-3f4e-1853-d4d5-cf7f04a32246@acm.org>
+Date:   Tue, 30 Jun 2020 08:59:00 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Reply-To: t-mabelt@microsoft.com
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200629161536.GA405175@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently, VMbus drivers use pointers into guest memory as request IDs
-for interactions with Hyper-V. To be more robust in the face of errors
-or malicious behavior from a compromised Hyper-V, avoid exposing
-guest memory addresses to Hyper-V. Also avoid Hyper-V giving back a
-bad request ID that is then treated as the address of a guest data
-structure with no validation. Instead, encapsulate these memory
-addresses and provide small integers as request IDs.
+On 2020-06-29 09:15, Alan Stern wrote:
+> Aha.  Looking at this more closely, it's apparent that the code in 
+> blk-core.c contains a logic bug: It assumes that if the BLK_MQ_REQ_PREEMPT 
+> flag is set then the request can be issued regardless of the queue's 
+> runtime status.  That is not correct when the queue is suspended.
 
-The first patch creates the definitions for the data structure, provides
-helper methods to generate new IDs and retrieve data, and
-allocates/frees the memory needed for vmbus_requestor.
+Are you sure of this? In the past (legacy block layer) no requests were
+processed for queues in state RPM_SUSPENDED. However, that function and
+its successor blk_pm_allow_request() are gone. The following code was
+removed by commit 7cedffec8e75 ("block: Make blk_get_request() block for
+non-PM requests while suspended").
 
-The second and third patches make use of vmbus_requestor to send request
-IDs to Hyper-V in storvsc and netvsc respectively.
+static struct request *blk_pm_peek_request(struct request_queue *q,
+                                           struct request *rq)
+{
+        if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+            (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
+                return NULL;
+        else
+                return rq;
+}
 
-Thanks.
-Andres Beltran
-
-Tested-by: Andrea Parri <parri.andrea@gmail.com>
-
-Cc: linux-scsi@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: David S. Miller <davem@davemloft.net>
-
-Andres Beltran (3):
-  Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus
-    hardening
-  scsi: storvsc: Use vmbus_requestor to generate transaction IDs for
-    VMBus hardening
-  hv_netvsc: Use vmbus_requestor to generate transaction IDs for VMBus
-    hardening
-
- drivers/hv/channel.c              | 154 ++++++++++++++++++++++++++++++
- drivers/net/hyperv/hyperv_net.h   |  13 +++
- drivers/net/hyperv/netvsc.c       |  79 ++++++++++++---
- drivers/net/hyperv/rndis_filter.c |   1 +
- drivers/scsi/storvsc_drv.c        |  85 ++++++++++++++---
- include/linux/hyperv.h            |  22 +++++
- 6 files changed, 329 insertions(+), 25 deletions(-)
-
--- 
-2.25.1
-
+Bart.
