@@ -2,127 +2,182 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59C8EC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 17:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E91EC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 17:32:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E15120723
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 17:27:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60CB1206C0
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 17:32:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="BRSKzxnB";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="VWuZK2mf"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="TbbSn6O8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728319AbgF3R1y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 13:27:54 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41608 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725872AbgF3R1x (ORCPT
+        id S2387766AbgF3Rce (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 13:32:34 -0400
+Received: from mail29.static.mailgun.info ([104.130.122.29]:10483 "EHLO
+        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730171AbgF3Rcd (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Jun 2020 13:27:53 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id E216E8EE16A;
-        Tue, 30 Jun 2020 10:27:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1593538073;
-        bh=9Xn6UBDIxLFSPMg8h37zOBFki+CeA2g+YUJAv6sqZ7M=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=BRSKzxnBmfxjg4UhkyGTjUzkwMqxHxPWHJGu+hmjVJPVvDG1zQi+cj+BM5owPqmyP
-         qxXY8m+s3A4fkZk+x2YMa/dfIW5jwlwXrvVkfZShlQUQuaRs7MSPpgNTBYOTtx9suR
-         iEEF5riwiDYA6TkhPvb+0aF1PdnYaQfEQJAUA/9I=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id MbachUaXS8a6; Tue, 30 Jun 2020 10:27:52 -0700 (PDT)
-Received: from [153.66.254.194] (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Tue, 30 Jun 2020 13:32:33 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1593538352; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=ZFcSwfI5UdhOXhdrQZvHHPaea1ggOYoJbFhXiurrIwM=; b=TbbSn6O88PmpM4+Ql3+xdrFj5qqpo+O2QPBXyAe5IMhA2nZHwA52dIq16pkgiQqa9zdLpMLH
+ zPgPIxRLCGaXz8mulnLvjjS2tNTVdBrTRQY3DGONs+Lj2YfaYAFVQFd4LF7qs4NaZZgKnEH8
+ 9hnVXevGuoA7zBiFNzdprnoIDRA=
+X-Mailgun-Sending-Ip: 104.130.122.29
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n11.prod.us-west-2.postgun.com with SMTP id
+ 5efb772aad153efa34f14357 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 30 Jun 2020 17:32:26
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id E593CC433CA; Tue, 30 Jun 2020 17:32:25 +0000 (UTC)
+Received: from [192.168.8.176] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 6E77D8EE079;
-        Tue, 30 Jun 2020 10:27:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1593538072;
-        bh=9Xn6UBDIxLFSPMg8h37zOBFki+CeA2g+YUJAv6sqZ7M=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=VWuZK2mfBUs2DqHwcrlqPFe7pBIO3rvXh4c1QCDh4tzI4TFN40qfYYl40bm1Jbx/U
-         IWTU9kQ/MMYR1CC2pidu/qiNDMXlYxfzU0fHFiFSJ58eL/J0IAjVq/2R1WMf7+VASy
-         GVdaVQxWiCV/Ta6btEewZQ0SyLjHhhG2rHP5i7FU=
-Message-ID: <1593538071.4124.7.camel@HansenPartnership.com>
-Subject: Re: [RFC] scsi: target: tcmu: running 32bit userspace on 64bit
- kernel
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Date:   Tue, 30 Jun 2020 10:27:51 -0700
-In-Reply-To: <2cc4fd9e-e96d-725b-c047-4bd26af604a6@ts.fujitsu.com>
-References: <364c13da-6d4f-c28b-36b3-082db8c3de58@ts.fujitsu.com>
-         <1593535964.4124.2.camel@HansenPartnership.com>
-         <2cc4fd9e-e96d-725b-c047-4bd26af604a6@ts.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D29B9C433C8;
+        Tue, 30 Jun 2020 17:32:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D29B9C433C8
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v2] scsi: ufs: Disable WriteBooster capability in
+ non-supported UFS device
+To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, avri.altman@wdc.com,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc:     beanhuo@micron.com, cang@codeaurora.org, matthias.bgg@gmail.com,
+        bvanassche@acm.org, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
+        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
+        chaotian.jing@mediatek.com, cc.chou@mediatek.com
+References: <20200624074110.21919-1-stanley.chu@mediatek.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <7f826f0c-6ed1-b3a3-72c9-aae0a1680e23@codeaurora.org>
+Date:   Tue, 30 Jun 2020 10:32:23 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
+MIME-Version: 1.0
+In-Reply-To: <20200624074110.21919-1-stanley.chu@mediatek.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-06-30 at 19:17 +0200, Bodo Stroesser wrote:
-> On 2020-06-30 18:52, James Bottomley wrote:
-> > On Tue, 2020-06-30 at 18:49 +0200, Bodo Stroesser wrote:
-[...]
-> > > So we can compile a 32-bit application that works on 64-bit
-> > > kernel without need to manipulate the include file prepared by
-> > > the kernel.
-> > > 
-> > > What do you think? Do you know a better solution?
-> > 
-> > Can you not use something similar to the compat_ioctl
-> > mechanism?  the job of the compat layer is to re-layout the input
-> > and output structures to impedance match between 32 and 64 bit.
-> > 
-> > James
-> > 
+On 6/24/2020 12:41 AM, Stanley Chu wrote:
+> If UFS device is not qualified to enter the detection of WriteBooster
+> probing by disallowed UFS version or device quirks, then WriteBooster
+> capability in host shall be disabled to prevent any WriteBooster
+> operations in the future.
 > 
-> struct tcmu_cmd_entry is prepared by kernel and exposed to userspace
-> via an mmap()ed uio device. From tcmu module point of view it is
-> vmalloc area.
+> Fixes: 3d17b9b5ab11 ("scsi: ufs: Add write booster feature support")
+> Signed-off-by: Stanley Chu <stanley.chu@mediatek.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 35 +++++++++++++++++++----------------
+>   1 file changed, 19 insertions(+), 16 deletions(-)
 > 
-> So there is no 'glue' code that could do conversion.
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-OK, so can't you do it like a vdso then?  For them we detect on mmap
-what the architectural model is and map different areas depending on
-that, so effectively you have a 64 and a 32 bit layout area and which
-one you map depends on the architecture type you see coming into the
-setup call.  You expect only one to be mapped and you only do extra
-conversions on the impedance mismatch case.
 
-> I'm not sure whether there is a way for tcmu to find out, what kind
-> of userspace application is running. If it would know, it probably
-> could prepare the entries accordingly.
-
-I forget if the vdso switch is exposed outside the architecture, but an
-inspection of the code should tell you.
-
-> But worst case it could happen that entries prepared for 32-bit,
-> after application stop and start, then are read by a new application
-> version that is 64-bit ...
-
-The userspace application absolutely knows its binary model.  The
-kernel sort of knows (its known in the ELF32 execution model and the
-like).
-
-> Maybe we could add an configFS attribute allowing userspace to
-> configure tcmu accordingly. A change of this attribute could also
-> flush existing tcmu_cmd_entries. But that would mean that userspace
-> application has to take care.
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f173ad1bd79f..c62bd47beeaa 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6847,21 +6847,31 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
+>   
+>   static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+>   {
+> +	struct ufs_dev_info *dev_info = &hba->dev_info;
+>   	u8 lun;
+>   	u32 d_lu_wb_buf_alloc;
+>   
+>   	if (!ufshcd_is_wb_allowed(hba))
+>   		return;
+> +	/*
+> +	 * Probe WB only for UFS-2.2 and UFS-3.1 (and later) devices or
+> +	 * UFS devices with quirk UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES
+> +	 * enabled
+> +	 */
+> +	if (!(dev_info->wspecversion >= 0x310 ||
+> +	      dev_info->wspecversion == 0x220 ||
+> +	     (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES)))
+> +		goto wb_disabled;
+>   
+>   	if (hba->desc_size[QUERY_DESC_IDN_DEVICE] <
+>   	    DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP + 4)
+>   		goto wb_disabled;
+>   
+> -	hba->dev_info.d_ext_ufs_feature_sup =
+> +	dev_info->d_ext_ufs_feature_sup =
+>   		get_unaligned_be32(desc_buf +
+>   				   DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+>   
+> -	if (!(hba->dev_info.d_ext_ufs_feature_sup & UFS_DEV_WRITE_BOOSTER_SUP))
+> +	if (!(dev_info->d_ext_ufs_feature_sup & UFS_DEV_WRITE_BOOSTER_SUP))
+>   		goto wb_disabled;
+>   
+>   	/*
+> @@ -6870,17 +6880,17 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+>   	 * a max of 1 lun would have wb buffer configured.
+>   	 * Now only shared buffer mode is supported.
+>   	 */
+> -	hba->dev_info.b_wb_buffer_type =
+> +	dev_info->b_wb_buffer_type =
+>   		desc_buf[DEVICE_DESC_PARAM_WB_TYPE];
+>   
+> -	hba->dev_info.b_presrv_uspc_en =
+> +	dev_info->b_presrv_uspc_en =
+>   		desc_buf[DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN];
+>   
+> -	if (hba->dev_info.b_wb_buffer_type == WB_BUF_MODE_SHARED) {
+> -		hba->dev_info.d_wb_alloc_units =
+> +	if (dev_info->b_wb_buffer_type == WB_BUF_MODE_SHARED) {
+> +		dev_info->d_wb_alloc_units =
+>   		get_unaligned_be32(desc_buf +
+>   				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
+> -		if (!hba->dev_info.d_wb_alloc_units)
+> +		if (!dev_info->d_wb_alloc_units)
+>   			goto wb_disabled;
+>   	} else {
+>   		for (lun = 0; lun < UFS_UPIU_MAX_WB_LUN_ID; lun++) {
+> @@ -6891,7 +6901,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+>   					(u8 *)&d_lu_wb_buf_alloc,
+>   					sizeof(d_lu_wb_buf_alloc));
+>   			if (d_lu_wb_buf_alloc) {
+> -				hba->dev_info.wb_dedicated_lu = lun;
+> +				dev_info->wb_dedicated_lu = lun;
+>   				break;
+>   			}
+>   		}
+> @@ -6977,14 +6987,7 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>   
+>   	ufs_fixup_device_setup(hba);
+>   
+> -	/*
+> -	 * Probe WB only for UFS-3.1 devices or UFS devices with quirk
+> -	 * UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES enabled
+> -	 */
+> -	if (dev_info->wspecversion >= 0x310 ||
+> -	    dev_info->wspecversion == 0x220 ||
+> -	    (hba->dev_quirks & UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES))
+> -		ufshcd_wb_probe(hba, desc_buf);
+> +	ufshcd_wb_probe(hba, desc_buf);
+>   
+>   	/*
+>   	 * ufshcd_read_string_desc returns size of the string
 > 
-> Isn't the compiler definition easier to use?
 
-Well, yes, but that's an ABI change which I thought you were trying to
-avoid?
 
-James
-
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
