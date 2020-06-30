@@ -2,139 +2,133 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E9EEC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 18:37:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CDA1C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 19:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1610206CB
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 18:37:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="Nwd/YjD2"
+	by mail.kernel.org (Postfix) with ESMTP id 5213320702
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 19:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733118AbgF3ShQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 14:37:16 -0400
-Received: from mail-co1nam11on2122.outbound.protection.outlook.com ([40.107.220.122]:26663
-        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725963AbgF3ShP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Jun 2020 14:37:15 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=joqCd6iMJFdFk1M5cxaaIB3ROHoklWuuR+kV01nqd3FnOLAxASHoYh56IeYMUo3BrEU44EiwMAfpcb0EtASOwkNQqGFMFHU+GnKkEWh5NYRwsolOt/YrsbBMz3EVoAJN21dzJsLqktd6txExtZ0BGmxHsu4qi9w9zxkvq/SVj4hIf3lWVFq+bF1CE/NZTDxA9W5TRxV4v98RSA/pBL/QCAV5M/qnnkRPBf4eTpPujLrQy1cK7MEX2LzcK4codXESx7yOeOT5CLXVDCs7KHojdsrjliQFIX8iDBzEyb7tefyfLCE0F3+1QRoGDJW2J9Q7bxTg5M9G27VELfVg5Fdvpg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dyasgmgxhSunXp9NuFtZ1g4nY1hUZkSUJqtZ6C49sVk=;
- b=IUUOH8+fP2Axv2cpPdhwcvdoOJz1rNrDRBQ81YuDphxJbUTt4UGDw/g3JFcmq5T4ZzfGn8qAxL58+lB/UKk6A9Rgb1nYQeyYml5zPN/5+MDI128goaX7nQe2+J35KYAQqHJM/hcKTJ1jv/NM4QKdjLdyGTMJzWTJTtrjKmcnCKmLrLYxtiQQOjOuaBHt6gHAT6mw6uDnJaoimUO8sxb6XNP3P1di+KT7p0yoesbjlYbcPtyRQonV0D5A+FkpaHS7WTFR3F38jiABM15232KBT6tef2G83E4qMUcrYKulAaXoEvIvM8EoTvtflax26cg8pQl4yPHLx8l6mavfoybsxQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dyasgmgxhSunXp9NuFtZ1g4nY1hUZkSUJqtZ6C49sVk=;
- b=Nwd/YjD2YE0ExNuJcIH83hONgTTkziAimRCpc2fNYNEkse4+uunp1DvNP6q9xbPTFKDkm3VvD2HW7xryjbT417nB+ByNyQckTI4F2zD+sdqbvfW18rdw3SaGM+wymn8xpJvRvGlpo/cTIUDvfALzKG5J+WE/C8oHrOTxCpZhelg=
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com (2603:10b6:302:a::16)
- by MW2PR2101MB1050.namprd21.prod.outlook.com (2603:10b6:302:a::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.1; Tue, 30 Jun
- 2020 18:37:03 +0000
-Received: from MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::fc14:3ca6:8a8:7407]) by MW2PR2101MB1052.namprd21.prod.outlook.com
- ([fe80::fc14:3ca6:8a8:7407%8]) with mapi id 15.20.3174.001; Tue, 30 Jun 2020
- 18:37:03 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Andres Beltran <t-mabelt@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>
-CC:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        Saruhan Karademir <skarade@microsoft.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH v3 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Thread-Topic: [PATCH v3 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Thread-Index: AQHWTvOfu6o2DHFLz0esRnWglbS5VajxfLkQ
-Date:   Tue, 30 Jun 2020 18:37:03 +0000
-Message-ID: <MW2PR2101MB1052A1A033D539E8B1476DA7D76F0@MW2PR2101MB1052.namprd21.prod.outlook.com>
-References: <20200630153200.1537105-1-lkmlabelt@gmail.com>
- <20200630153200.1537105-3-lkmlabelt@gmail.com>
-In-Reply-To: <20200630153200.1537105-3-lkmlabelt@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2020-06-30T18:37:01Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=5ae8c8e6-c82d-4e41-8e9a-71db50331799;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0
-authentication-results: microsoft.com; dkim=none (message not signed)
- header.d=none;microsoft.com; dmarc=none action=none
- header.from=microsoft.com;
-x-originating-ip: [24.22.167.197]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: b2555057-04bb-4477-fab2-08d81d249558
-x-ms-traffictypediagnostic: MW2PR2101MB1050:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MW2PR2101MB10502BEA517D5BAE3275D71BD76F0@MW2PR2101MB1050.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:1332;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: K85g+zD9B/u0fDp34vcnULYBiORLbiyMN7HKmN4sM8BSqF/D2UBLhfcTOZgK4ujKcdXA+fbVDM+mzA7+TTAUYRr97IV9sDLOXdlfSG2/qEMZlD0NRw+lrfi7IulIwpCasrbW+8JI57KfZ7ElpliRD/GPbDeZ5Q989TPKB5VzIp5nHl/Xv+r3IzBM2TQzRafUL4W+I+bW2uFQrzpR+WB4beuYsIEEMoPK49k8t/pN4MtQyjsWy39LbE8oxV+KSfVaarvSB2C2qtBLU46OfzYDsv0eppe8/OMGB1+rv0gmFDpjYXTZg2sdwXbAv6qpYtkhQaQkmdnrJVxjAl3JRZOgBw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR2101MB1052.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(346002)(376002)(396003)(366004)(136003)(39860400002)(33656002)(4744005)(83380400001)(55016002)(5660300002)(9686003)(52536014)(110136005)(54906003)(66476007)(66446008)(4326008)(82960400001)(478600001)(66946007)(82950400001)(66556008)(64756008)(76116006)(10290500003)(86362001)(8936002)(186003)(2906002)(8990500004)(316002)(6506007)(8676002)(7696005)(26005)(71200400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: mFL6mDW4cOKdV76NGeQg4GEt6I/yEJWtYqQPZ081dbCFLIQ9UQsqcdgsXGSeV5hLGOuUWFSAvY5zN/rOOTxc0yka/ejgIhip4iI6BZO5gg/bCR9pM6Kk8Ni3Br8PwwunpAVH7cCNdxJEnTnfb8OpR3SO+I+6M1vdZbGtSm6QZPwYfCbKp4BYp7E20KZgRwIq3CAFlHxRslPceE0tDqRoBM+cghS50lBkdhYHhYxszCgNwJaXmLcy1MMT1Zp1cPhwMtDSCTpt8SLK5pQtrSLHhnRwYrXD2w//svq7pt5Kw9iroUyLPJ7WoGctjd8+TdaVpJC1/Ohm8pXbZtxwlkCzkzGVcXLsnRPP6IEvaFTvhcacMjoXdh0HQwKG9N7q9xUzyHSk1shEOZYsx5XGxq6L2BEMj+jo/jVWU7KThdKJQbSAYsweRq76EnK4M+VKRPcG4oKE3s0vMafeS4wujsboB5/Va/Kkd2DsIEdmOOU5hBNqBheESDIxgkplC0pKS8fh
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727817AbgF3TXR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 15:23:17 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:33181 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726283AbgF3TXP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 15:23:15 -0400
+Received: by mail-pg1-f196.google.com with SMTP id o13so7432903pgf.0;
+        Tue, 30 Jun 2020 12:23:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=QZj82NExrpqYflGaBGVJcXnUJ+dW5BAAUFbwh+Xp7LQ=;
+        b=R+7mCDgQh+w1hRzONP69RgRvJesLAmf7fQduJrPWLPYnkQX2co6khxzc/a1l5lfChV
+         c7oaYsqN1cijlu5pbCs9uzQSmXpu9XH5/ftrep4fMOkk8lIpyNfzlBDKCcCaL9gHM91Y
+         1tc7D4AcJMjgPngKvxNHnPe0UPjKN40qZpX2A8AHgVN/ucu6gVHLNl3d2+kkIGPqAwoT
+         WL2+twvrjtJTFJQTWihlI1yszf8stei94QrTZAHK0rAZE4tTbaQyoR+2Tl+CDrDgaqvN
+         0f/omCx1EpKGZ7+T1YebfZREzM4DU2P7CI5dI4VNYEebaxtsotxEX9aGIrHD1KIs9mlJ
+         uvsQ==
+X-Gm-Message-State: AOAM5325Tjnw4tw0oVxLXz2I6WwjrY1kT35IPEE0UtayeMqR5/2U4HPL
+        mJnrnzAIShhzV1WvX/o/ViXTFZPs
+X-Google-Smtp-Source: ABdhPJy6ltsGoEORnSiK/nWRrBOWV5/GjQVTUu0isSo6QlXsWUDfPgUgPSrSJxRzqCV+GTP2Gu40LQ==
+X-Received: by 2002:a62:e206:: with SMTP id a6mr13526628pfi.24.1593544995157;
+        Tue, 30 Jun 2020 12:23:15 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id o2sm2880575pjp.53.2020.06.30.12.23.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 30 Jun 2020 12:23:14 -0700 (PDT)
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     Martin Kepplinger <martin.kepplinger@puri.sm>, jejb@linux.ibm.com,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
+ <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
+ <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
+ <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
+ <20200626154441.GA296771@rowland.harvard.edu>
+ <c19f1938-ae47-2357-669d-5b4021aec154@puri.sm>
+ <20200629161536.GA405175@rowland.harvard.edu>
+ <5231c57d-3f4e-1853-d4d5-cf7f04a32246@acm.org>
+ <20200630180255.GA459638@rowland.harvard.edu>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <1804723c-4aaf-a820-d3ef-e70125017cad@acm.org>
+Date:   Tue, 30 Jun 2020 12:23:12 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MW2PR2101MB1052.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b2555057-04bb-4477-fab2-08d81d249558
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jun 2020 18:37:03.3420
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ec19mJpwKa+gR0qu26I/bgy11fVO6tgIPgw8bAzBvkESTZ1XGT/8aanbCqKaeXmMPA4TM4UVhjs9TwdD+OhQ6X4l0LmaHJIGe9MEdaifUGA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB1050
+In-Reply-To: <20200630180255.GA459638@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Andres Beltran <lkmlabelt@gmail.com> Sent: Tuesday, June 30, 2020 8:3=
-2 AM
->=20
-> Currently, pointers to guest memory are passed to Hyper-V as
-> transaction IDs in storvsc. In the face of errors or malicious
-> behavior in Hyper-V, storvsc should not expose or trust the transaction
-> IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> use small integers generated by vmbus_requestor as requests
-> (transaction) IDs.
->=20
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> ---
-> Changes in v2:
->         - Add casts to unsigned long to fix warnings on 32bit.
->=20
->  drivers/scsi/storvsc_drv.c | 85 +++++++++++++++++++++++++++++++++-----
->  1 file changed, 74 insertions(+), 11 deletions(-)
->=20
+On 2020-06-30 11:02, Alan Stern wrote:
+> Right now there doesn't seem to be any mechanism for resuming the queue 
+> if an REQ_PREEMPT request is added while the queue is suspended.
 
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+I do not agree with the above statement. My understanding is that resuming
+happens as follows if a request is submitted against a runtime suspended
+queue owned by a SCSI LLD:
+
+blk_queue_enter()
+  -> blk_pm_request_resume()
+    -> pm_request_resume(dev)
+      -> __pm_runtime_resume(dev, RPM_ASYNC)
+        -> rpm_resume(dev, RPM_ASYNC)
+          -> dev->power.request = RPM_REQ_RESUME;
+          -> queue_work(pm_wq, &dev->power.work)
+            -> pm_runtime_work()
+              -> rpm_resume(dev, RPM_NOWAIT)
+                -> callback = scsi_runtime_resume;
+                -> rpm_callback(callback, dev);
+                  -> scsi_runtime_resume(dev);
+                    -> sdev_runtime_resume(dev);
+                      -> blk_pre_runtime_resume(sdev->request_queue);
+                        -> q->rpm_status = RPM_RESUMING;
+                      -> sd_resume(dev);
+                        -> sd_start_stop_device(sdkp);
+                          -> sd_pm_ops.runtime_resume == scsi_execute(sdp, START);
+                            -> blk_get_request(..., ..., BLK_MQ_REQ_PREEMPT)
+                              -> blk_mq_alloc_request()
+                                -> blk_queue_enter()
+                                -> __blk_mq_alloc_request()
+                            -> blk_execute_rq()
+                            -> blk_put_request()
+                      -> blk_post_runtime_resume(sdev->request_queue);
+                        -> q->rpm_status = RPM_ACTIVE;
+                        -> pm_runtime_mark_last_busy(q->dev);
+                        -> pm_request_autosuspend(q->dev);
+
+Bart.
