@@ -2,181 +2,107 @@ Return-Path: <SRS0=aUil=AL=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B8BC433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 22:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA63C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 23:32:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E2B0206A1
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 22:05:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V1pPr+lF"
+	by mail.kernel.org (Postfix) with ESMTP id 542102073E
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 23:32:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726432AbgF3WFE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 18:05:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39486 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726095AbgF3WFD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 18:05:03 -0400
-Received: from mail-ej1-x644.google.com (mail-ej1-x644.google.com [IPv6:2a00:1450:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 957A5C061755;
-        Tue, 30 Jun 2020 15:05:03 -0700 (PDT)
-Received: by mail-ej1-x644.google.com with SMTP id rk21so22264243ejb.2;
-        Tue, 30 Jun 2020 15:05:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=egQ4BGWJwteRFV/3C15qu/VRsp09Uh379he2OhRxJJ8=;
-        b=V1pPr+lFhTYqoW/4omk3CaH3Hf+C4ij4nQON94pVIYsWtSgRFLcwm8nft6SEbzhzx2
-         zMCtzuoT74tgtD0bODXapszHHhjYKQmEDpHmV+WhKstXK/4LxrBajJkmmXxww5QUcZAd
-         PhyEtvfOiCtXFQ1YtdI9mhLJavjVT1YEJEtoaKIP89SpsbmHibnkHxQZA+3+d3lS6/7f
-         gPqVwm5dTmB0ZI8eyUiKmusm3lhyfeG7aZ534CT27RvAWfsjIrmZoZ1WAHJhCmN9GYhZ
-         lE20YVysD4eeC3gdry/OpzFduLt29M9ujf0cy2Dk61qCOV6SmhN6x5mZfDcsfATCGr1o
-         UJNg==
+        id S1726346AbgF3XcC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 30 Jun 2020 19:32:02 -0400
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:35871 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726245AbgF3XcC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 19:32:02 -0400
+Received: by mail-pj1-f67.google.com with SMTP id h22so10200526pjf.1;
+        Tue, 30 Jun 2020 16:32:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=egQ4BGWJwteRFV/3C15qu/VRsp09Uh379he2OhRxJJ8=;
-        b=NBhqr9ALgZni5Dt8YLwB56/vQEZp7zJW1DGpzeK9EWzUR+SrYSM1Nx15eXwxrv5Lz8
-         PV+ayQp41GcnbhOharXbCSDp9n2oHTZmlXrjqpmJ5xso7VEge5rEjw2lsDjFXhzgv76k
-         n6ZnUjPjuqFnaV+vQQmIPoPHzG4eUxY7it8H/paA6cNkcAnjCDDVnNjLC8w/sraHOe4/
-         9+XL8JtQk22cB/Mo1UwvpBWlNaPeB2H2Jzs8b90eC3sFkmi98y3wdoGF4RfnoQJX+qQt
-         0Rn+WQhoFZaelRBJFy4z7UAGPHDaz9tkSNk7qdI1EveBfU5zu55WmxS23IsLxQ4VCyc/
-         urjw==
-X-Gm-Message-State: AOAM532n7Ph2QXbEPAQG2fTYHapzkbx9+7Zxf1Prvd6CZ+PZPOiLgjYN
-        74llwAkyFke2EFTbVgW/bPk=
-X-Google-Smtp-Source: ABdhPJxpEuRlMZt7mHPtT9izVdh8n98vXpyGSKNTHsCn7YZ7BR8/f9ldhCEaS1UqOUyzZHOUZpxnrg==
-X-Received: by 2002:a17:906:7802:: with SMTP id u2mr20688743ejm.478.1593554702359;
-        Tue, 30 Jun 2020 15:05:02 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bfcc0.dynamic.kabel-deutschland.de. [95.91.252.192])
-        by smtp.googlemail.com with ESMTPSA id z1sm3054870ejb.41.2020.06.30.15.05.01
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 30 Jun 2020 15:05:01 -0700 (PDT)
-Message-ID: <fd205a23c433aea43f846c37cf1f521c114cdd68.camel@gmail.com>
-Subject: Re: [RFC PATCH v3 0/5] scsi: ufs: Add Host Performance Booster
- Support
-From:   Bean Huo <huobean@gmail.com>
-To:     daejun7.park@samsung.com,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-Date:   Wed, 01 Jul 2020 00:05:00 +0200
-In-Reply-To: <231786897.01593479281798.JavaMail.epsvc@epcpadp2>
-References: <60647cf00d9db6818488a714b48b9b6e2a1eb728.camel@gmail.com>
-         <948f573d136b39410f7d610e5019aafc9c04fe62.camel@gmail.com>
-         <963815509.21592879582091.JavaMail.epsvc@epcpadp2>
-         <336371513.41593411482259.JavaMail.epsvc@epcpadp2>
-         <CGME20200623010201epcms2p11aebdf1fbc719b409968cba997507114@epcms2p1>
-         <231786897.01593479281798.JavaMail.epsvc@epcpadp2>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=D4bNFQKvTqaRlrQMzRLTGcVLE92xZT7rS/otpfCsklU=;
+        b=BTgI41VCkM9PnVYtwnak5EaI6tQpsig9M27hQdnrJMTZWhHZZEtnZcw5fuMFu8Kh1n
+         dr+MUKlAtTzkwp9xflZCFDIdrI8emLrStOsHHyv3/m/mVnx6otVH+HA380k/b9eLdV3b
+         Vkrz0tBs/CiJYrA9pyYWK20ddPtzXnQGH+teo2t6RhfAqT6/feQ7dLFJwQQN5KIGAh8K
+         GvzDbPybCGkx7ZlIBDb3gJ9HOx0qlZ8q9NmIJqpoVb8nRVIjqMqVQVpgd1GUUt81+ZkD
+         Bq5XlkZA4bBj4IBMMcZxivyhZafwWiyUo4Q1GPP1Wr35ZavB4IovGcqoSybT+/sP37kw
+         MXxA==
+X-Gm-Message-State: AOAM533ZrzWPpaURijuIBYgungWINK7z23kKlZHI6WgmFkWW0YqJHoGq
+        O0w5mVxTqIwOHX675n0JiFEp9vSl
+X-Google-Smtp-Source: ABdhPJw8ZgO5iG258LcTHKSCDYOYGHhhsLRF4CJU9MnZ+JpUwEU39ckwQBr4f6PsWnCodMm2uWUfiw==
+X-Received: by 2002:a17:90b:213:: with SMTP id fy19mr24131066pjb.41.1593559921165;
+        Tue, 30 Jun 2020 16:32:01 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id w6sm3141299pjy.15.2020.06.30.16.31.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 30 Jun 2020 16:32:00 -0700 (PDT)
+Subject: Re: [PATCH] scsi: sd: add runtime pm to open / release
+To:     Alan Stern <stern@rowland.harvard.edu>
+Cc:     Martin Kepplinger <martin.kepplinger@puri.sm>, jejb@linux.ibm.com,
+        Can Guo <cang@codeaurora.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel@puri.sm
+References: <20200623111018.31954-1-martin.kepplinger@puri.sm>
+ <ed9ae198-4c68-f82b-04fc-2299ab16df96@acm.org>
+ <eccacce9-393c-ca5d-e3b3-09961340e0db@puri.sm>
+ <1379e21d-c51a-3710-e185-c2d7a9681fb7@acm.org>
+ <20200626154441.GA296771@rowland.harvard.edu>
+ <c19f1938-ae47-2357-669d-5b4021aec154@puri.sm>
+ <20200629161536.GA405175@rowland.harvard.edu>
+ <5231c57d-3f4e-1853-d4d5-cf7f04a32246@acm.org>
+ <20200630180255.GA459638@rowland.harvard.edu>
+ <1804723c-4aaf-a820-d3ef-e70125017cad@acm.org>
+ <20200630193802.GA463609@rowland.harvard.edu>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <f17e9ebe-fc75-fb51-cc9b-851fa219f31b@acm.org>
+Date:   Tue, 30 Jun 2020 16:31:58 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
+MIME-Version: 1.0
+In-Reply-To: <20200630193802.GA463609@rowland.harvard.edu>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-06-30 at 10:05 +0900, Daejun Park wrote:
-> Hi Bean,
-> > On Mon, 2020-06-29 at 15:15 +0900, Daejun Park wrote:
-> > > > Seems you intentionally ignored to give you comments on my
-> > > > suggestion.
-> > > > let me provide the reason.
-> > > 
-> > > Sorry! I replied to your comment (
-> > > 
-https://protect2.fireeye.com/url?k=be575021-e3854728-be56db6e-0cc47a31cdf8-6c7d0e1e42762b92&q=1&u=https%3A%2F%2Flkml.org%2Flkml%2F2020%2F6%2F15%2F1492
-> > > ),
-> > > but you didn't reply on that. I thought you agreed because you
-> > > didn't
-> > > send
-> > > any more comments.
-> > > 
-> > > 
-> > > > Before submitting your next version patch, please check your
-> > > > L2P
-> > > > mapping HPB reqeust submission logical algorithem. I have did
-> > > 
-> > > We are also reviewing the code that you submitted before.
-> > > It seems to be a performance improvement as it sends a map
-> > > request
-> > > directly.
-> > > 
-> > > > performance comparison testing on 4KB, there are about 13%
-> > > > performance
-> > > > drop. Also the hit count is lower. I don't know if this is
-> > > > related
-> > > > to
-> > > 
-> > > It is interesting that there is actually a performance
-> > > improvement. 
-> > > Could you share the test environment, please? However, I think
-> > > stability is
-> > > important to HPB driver. We have tested our method with the real
-> > > products and
-> > > the HPB 1.0 driver is based on that.
-> > 
-> > I just run fio benchmark tool with --rw=randread, --bs=4kb, --
-> > size=8G/10G/64G/100G. and see what performance diff with the direct
-> > submission approach.
-> 
-> Thanks!
-> 
-> > > After this patch, your approach can be done as an incremental
-> > > patch?
-> > > I would
-> > > like to test the patch that you submitted and verify it.
-> > > 
-> > > > your current work queue scheduling, since you didn't add the
-> > > > timer
-> > > > for
-> > > > each HPB request.
-> > 
-> > Taking into consideration of the HPB 2.0, can we submit the HPB
-> > write
-> > request to the SCSI layer? if not, it will be a direct submission
-> > way.
-> > why not directly use direct way? or maybe you have a more advisable
-> > approach to work around this. would you please share with us.
-> > appreciate.
-> 
-> I am considering a direct submission way for the next version.
-> We will implement the write buffer command of HPB 2.0, after patching
-> HPB 1.0.
-> 
-> As for the direct submission of HPB releated command including HPB
-> write
-> buffer, I think we'd better discuss the right approach in depth
-> before
-> moving on to the next step.
-> 
+On 2020-06-30 12:38, Alan Stern wrote:
+> Assume that BLK_MQ_REQ_PREEMPT is set in flags.  Then where exactly 
+> does blk_queue_enter(q, flags) call blk_pm_request_resume(q)?
 
-Hi Daejun
-If you need reference code, you can freely copy my code from my RFC v3
-patchset. or if you need my side testing support, just let me, I can
-help you test your code.
+Please take a look at how the *current* implementation of runtime power
+management works. Your question is relevant for the old implementation
+of runtime power management but not for the current implementation.
 
-Thanks,
-Bean
-
+Bart.
 
