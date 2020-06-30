@@ -4,148 +4,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F9AC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 01:08:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C4EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 01:36:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7B202078B
-	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 01:08:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C6ED2078A
+	for <linux-scsi@archiver.kernel.org>; Tue, 30 Jun 2020 01:36:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mP4gYR51"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bl0FBDhh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728240AbgF3BIF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 29 Jun 2020 21:08:05 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:61732 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728220AbgF3BIE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 21:08:04 -0400
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200630010802epoutp011fa2b43016b8d58090928952a74aa2d7~dLPb67lUU1575215752epoutp01M
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2020 01:08:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200630010802epoutp011fa2b43016b8d58090928952a74aa2d7~dLPb67lUU1575215752epoutp01M
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1593479282;
-        bh=YGYwcMBNENiLw/VSkmKokq8wHpV1ERBPe5z3zZVvL/s=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=mP4gYR51+KoKKg92dgCmtf8ZsRRWFXS++MBjPkqZdtwpnKwB25hRDmhdZw/nNw55N
-         GoujU+NmSotv9T41A6rr7vX6wktg3cMumlbAXPc2UXMlAOtQIM/KwYp5HG/+bbxGIw
-         AskZ0CKkwAUNf8LjgQ6HqmYAyCOWtfntXBtKRmbE=
-Received: from epcpadp2 (unknown [182.195.40.12]) by epcas1p4.samsung.com
-        (KnoxPortal) with ESMTP id
-        20200630010801epcas1p4b2643a224cc2759a324e973a0c6241e3~dLPbV2_iA1813518135epcas1p4o;
-        Tue, 30 Jun 2020 01:08:01 +0000 (GMT)
-Mime-Version: 1.0
-Subject: Re: [RFC PATCH v3 0/5] scsi: ufs: Add Host Performance Booster
- Support
-Reply-To: daejun7.park@samsung.com
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bean Huo <huobean@gmail.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "tomas.winkler@intel.com" <tomas.winkler@intel.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sang-yoon Oh <sangyoon.oh@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Adel Choi <adel.choi@samsung.com>,
-        BoRam Shin <boram.shin@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <60647cf00d9db6818488a714b48b9b6e2a1eb728.camel@gmail.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <231786897.01593479281798.JavaMail.epsvc@epcpadp2>
-Date:   Tue, 30 Jun 2020 10:05:38 +0900
-X-CMS-MailID: 20200630010538epcms2p1672c42825cc42e92b2e3ec6bac79ee2b
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20200623010201epcms2p11aebdf1fbc719b409968cba997507114
-References: <60647cf00d9db6818488a714b48b9b6e2a1eb728.camel@gmail.com>
-        <948f573d136b39410f7d610e5019aafc9c04fe62.camel@gmail.com>
-        <963815509.21592879582091.JavaMail.epsvc@epcpadp2>
-        <336371513.41593411482259.JavaMail.epsvc@epcpadp2>
-        <CGME20200623010201epcms2p11aebdf1fbc719b409968cba997507114@epcms2p1>
+        id S1728085AbgF3Bf5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 29 Jun 2020 21:35:57 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:52236 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726389AbgF3Bf4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jun 2020 21:35:56 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05U1WBlo153474;
+        Tue, 30 Jun 2020 01:35:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=OUNGZwr+OmzhqOUgJ6oGRD8TLp0+pcY4v95Lq0350pI=;
+ b=Bl0FBDhhzL3I57zT5O88Xoc77lEtECkASCiRMzuvpbBi5Oisa6qdjxZ06rF5tvmfKqzH
+ LSKKsRbMjKKVHouel51ib72ByZbewYFkfhu86CEoiCxmJdA3HJO3nW72LgPOE8pAxDJG
+ 5ZKuLgPm1lF90i3ZqdZrK8/9vC9Oig0TzMwZV4zjLhzUtt9gthPY7+FQIPBQJR3ZpZHa
+ rJPkNWvb14Cag97xS9fXDAKmbW9HNvBqr3IpPeDPIbR48kLZ9kDiYAUZT/yBKRbq9LvL
+ 0rB730eeOZBVQzJvJV16XonjQDasPXkRUCsF/G6t63LkDG/eiOe5EpyH97EHPSMhx1JG Bw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 31xx1dpau4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 30 Jun 2020 01:35:22 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05U1YWAR016444;
+        Tue, 30 Jun 2020 01:35:22 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 31y52h663r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 30 Jun 2020 01:35:21 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05U1Z7Ki008590;
+        Tue, 30 Jun 2020 01:35:12 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 30 Jun 2020 01:35:07 +0000
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Simon Arlott <simon@octiron.net>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Pavel Machek <pavel@ucw.cz>,
+        Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH (v2)] scsi: sd: add parameter to stop disks before reboot
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1bll1fi9u.fsf@ca-mkp.ca.oracle.com>
+References: <e726ffd8-8897-4a79-c3d6-6271eda8aebb@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+        <20200629080947.GA28551@infradead.org>
+Date:   Mon, 29 Jun 2020 21:35:04 -0400
+In-Reply-To: <20200629080947.GA28551@infradead.org> (Christoph Hellwig's
+        message of "Mon, 29 Jun 2020 09:09:47 +0100")
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9667 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 mlxscore=0
+ adultscore=0 suspectscore=1 bulkscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006300009
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9667 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1011 adultscore=0
+ suspectscore=1 mlxlogscore=999 cotscore=-2147483648 lowpriorityscore=0
+ malwarescore=0 phishscore=0 impostorscore=0 mlxscore=0 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006300008
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bean,
-> On Mon, 2020-06-29 at 15:15 +0900, Daejun Park wrote:
-> > > Seems you intentionally ignored to give you comments on my
-> > > suggestion.
-> > > let me provide the reason.
-> > 
-> > Sorry! I replied to your comment (
-> > https://protect2.fireeye.com/url?k=be575021-e3854728-be56db6e-0cc47a31cdf8-6c7d0e1e42762b92&q=1&u=https%3A%2F%2Flkml.org%2Flkml%2F2020%2F6%2F15%2F1492),
-> > but you didn't reply on that. I thought you agreed because you didn't
-> > send
-> > any more comments.
-> > 
-> > 
-> > > Before submitting your next version patch, please check your L2P
-> > > mapping HPB reqeust submission logical algorithem. I have did
-> > 
-> > We are also reviewing the code that you submitted before.
-> > It seems to be a performance improvement as it sends a map request
-> > directly.
-> > 
-> > > performance comparison testing on 4KB, there are about 13%
-> > > performance
-> > > drop. Also the hit count is lower. I don't know if this is related
-> > > to
-> > 
-> > It is interesting that there is actually a performance improvement. 
-> > Could you share the test environment, please? However, I think
-> > stability is
-> > important to HPB driver. We have tested our method with the real
-> > products and
-> > the HPB 1.0 driver is based on that.
-> 
-> I just run fio benchmark tool with --rw=randread, --bs=4kb, --
-> size=8G/10G/64G/100G. and see what performance diff with the direct
-> submission approach.
 
-Thanks!
+Christoph,
 
-> > After this patch, your approach can be done as an incremental patch?
-> > I would
-> > like to test the patch that you submitted and verify it.
-> > 
-> > > your current work queue scheduling, since you didn't add the timer
-> > > for
-> > > each HPB request.
-> > 
-> 
-> Taking into consideration of the HPB 2.0, can we submit the HPB write
-> request to the SCSI layer? if not, it will be a direct submission way.
-> why not directly use direct way? or maybe you have a more advisable
-> approach to work around this. would you please share with us.
-> appreciate.
+> What happened to the suggestion to treat reboot=p like a poweroff
+> instead?  That seems to be fundamentally the right thing to do.
 
-I am considering a direct submission way for the next version.
-We will implement the write buffer command of HPB 2.0, after patching HPB 1.0.
+I agree!
 
-As for the direct submission of HPB releated command including HPB write
-buffer, I think we'd better discuss the right approach in depth before
-moving on to the next step.
-
-Thanks,
-Daejun
+-- 
+Martin K. Petersen	Oracle Linux Engineering
