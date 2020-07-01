@@ -2,89 +2,175 @@ Return-Path: <SRS0=yW27=AM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C84C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 16:53:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9223AC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 18:37:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3958207C4
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 16:53:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593622435;
-	bh=Hfe5HwP2aw9t1r4VEHxhETqCfmXJeV53dYWyXDkCYbY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=R/5m7xIZakuAlL2KKQYlYi/R1d9SgS73v11IvYhQ/S7RyW6Fsla2jKHj/b09Gs3Go
-	 frnyjDR0t7FmpObiZEw0TrbTxmVJeNtsRLOGx5CFZZpB4OH+3sJm4HDiE7H497+RWB
-	 UQq9igwRAH/6y9nv+j/rOXHYJ1u/Zb4QyYBk0v4w=
+	by mail.kernel.org (Postfix) with ESMTP id 74B4520853
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 18:37:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732743AbgGAQxq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jul 2020 12:53:46 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:35638 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732376AbgGAQxo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 12:53:44 -0400
-Received: by mail-wr1-f66.google.com with SMTP id z2so2556407wrp.2;
-        Wed, 01 Jul 2020 09:53:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=W4aGIA2sVJUTFvh2lVc0/GV3kZcbHmAaStG8roUdCNw=;
-        b=gIrprbonIy7G7RMYu/VoAhSVIYYfOEP67ud/4mRHrbK1r4VScHIPT8STviwrB4D7f8
-         q29TzkF1sx5IWkB9esI5lATDeFyJijcIyDvhprWshxFKwURC2iKD4xP5wVpk0dla4PRw
-         tejf0L4GOs6rhCM7Prxib05+270pzwp4v+hPHAcBsixD8lMcUyE465ASvtU8SDwoLY00
-         2cqKqAqKWvwCMYB76DjH/udHBaVNT80bYX2n4MeOEzC81UJJC6m6X0vxXlLpeU7/AVFw
-         cz3o+fYlfm21GeyZZxBSZN4dkQJ+giRonaHnfoXeVEg/SOoFWtTge8ODLDt7JfD4BOlw
-         y4rA==
-X-Gm-Message-State: AOAM533/HdQz1PTMu4YMcj788w80Sy3wZWFqwHTuOYhI/vW8kC28UnHQ
-        tnEIG4rIn/NHwjLyU0sSXGE=
-X-Google-Smtp-Source: ABdhPJwDeOcChvL4k1hvA2Wrl3bOGcuv+/K+qh4jbWPUqi49VCCIXQ4o5bN2tWQsS2duRI5B5elz0g==
-X-Received: by 2002:a5d:458a:: with SMTP id p10mr27066648wrq.184.1593622421731;
-        Wed, 01 Jul 2020 09:53:41 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id n14sm8290457wro.81.2020.07.01.09.53.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Jul 2020 09:53:41 -0700 (PDT)
-Date:   Wed, 1 Jul 2020 16:53:39 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     t-mabelt@microsoft.com
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
-        parri.andrea@gmail.com, Andres Beltran <lkmlabelt@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20200701165339.chtxkixnkocnjw5u@liuwe-devbox-debian-v2>
-References: <20200701001221.2540-1-lkmlabelt@gmail.com>
- <20200701001221.2540-3-lkmlabelt@gmail.com>
+        id S1728193AbgGAShV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jul 2020 14:37:21 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:34369 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1725440AbgGAShU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 14:37:20 -0400
+Received: (qmail 508077 invoked by uid 1000); 1 Jul 2020 14:37:18 -0400
+Date:   Wed, 1 Jul 2020 14:37:18 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>, martin.petersen@oracle.com
+Cc:     Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org
+Subject: [PATCH v2] SCSI and block: Simplify resume handling
+Message-ID: <20200701183718.GA507293@rowland.harvard.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200701001221.2540-3-lkmlabelt@gmail.com>
-User-Agent: NeoMutt/20180716
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 30, 2020 at 08:12:20PM -0400, Andres Beltran wrote:
-> Currently, pointers to guest memory are passed to Hyper-V as
-> transaction IDs in storvsc. In the face of errors or malicious
-> behavior in Hyper-V, storvsc should not expose or trust the transaction
-> IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> use small integers generated by vmbus_requestor as requests
-> (transaction) IDs.
-> 
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
+Commit 05d18ae1cc8a ("scsi: pm: Balance pm_only counter of request
+queue during system resume") fixed a problem in the block layer's
+runtime-PM code: blk_set_runtime_active() failed to call
+blk_clear_pm_only().  However, the commit's implementation was
+awkward; it forced the SCSI system-resume handler to choose whether to
+call blk_post_runtime_resume() or blk_set_runtime_active(), depending
+on whether or not the SCSI device had previously been runtime
+suspended.
 
-James and Martin, FYI I'm going to take this patch via hyperv tree
-because it depends on the first patch.
+This patch simplifies the situation considerably by adding the missing
+function call directly into blk_set_runtime_active() (under the
+condition that the queue is not already in the RPM_ACTIVE state).
+This allows the SCSI routine to revert back to its original form.
+Furthermore, making this change reveals that blk_post_runtime_resume()
+(in its success pathway) does exactly the same thing as
+blk_set_runtime_active().  The duplicate code is easily removed by
+making one routine call the other.
 
-Wei.
+No functional changes are intended.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Can Guo <cang@codeaurora.org>
+CC: Bart Van Assche <bvanassche@acm.org>
+
+---
+
+v2:	Don't call blk_clear_pm_only() if the queue's RPM status was
+	already set to RPM_ACTIVE.  This happens during a system resume
+	if the device was not in runtime suspend beforehand.
+
+Martin:
+
+Since you merged the oritinal 05d18ae1cc8a commit, I'm submitting this to
+you as an update.  If you would prefer to have it go by way of the
+block-layer tree, let me know and I'll resend it.
+
+
+[as1939b]
+
+
+ block/blk-pm.c         |   30 +++++++++++++++---------------
+ drivers/scsi/scsi_pm.c |   10 ++--------
+ 2 files changed, 17 insertions(+), 23 deletions(-)
+
+Index: usb-devel/block/blk-pm.c
+===================================================================
+--- usb-devel.orig/block/blk-pm.c
++++ usb-devel/block/blk-pm.c
+@@ -164,30 +164,21 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+  *
+  * Description:
+  *    Update the queue's runtime status according to the return value of the
+- *    device's runtime_resume function. If it is successfully resumed, process
+- *    the requests that are queued into the device's queue when it is resuming
+- *    and then mark last busy and initiate autosuspend for it.
++ *    device's runtime_resume function. If the resume was successful, call
++ *    blk_set_runtime_active() to do the real work of restarting the queue.
+  *
+  *    This function should be called near the end of the device's
+  *    runtime_resume callback.
+  */
+ void blk_post_runtime_resume(struct request_queue *q, int err)
+ {
+-	if (!q->dev)
+-		return;
+-
+-	spin_lock_irq(&q->queue_lock);
+ 	if (!err) {
+-		q->rpm_status = RPM_ACTIVE;
+-		pm_runtime_mark_last_busy(q->dev);
+-		pm_request_autosuspend(q->dev);
+-	} else {
++		blk_set_runtime_active(q);
++	} else if (q->dev) {
++		spin_lock_irq(&q->queue_lock);
+ 		q->rpm_status = RPM_SUSPENDED;
++		spin_unlock_irq(&q->queue_lock);
+ 	}
+-	spin_unlock_irq(&q->queue_lock);
+-
+-	if (!err)
+-		blk_clear_pm_only(q);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
+ 
+@@ -204,15 +195,24 @@ EXPORT_SYMBOL(blk_post_runtime_resume);
+  * This function can be used in driver's resume hook to correct queue
+  * runtime PM status and re-enable peeking requests from the queue. It
+  * should be called before first request is added to the queue.
++ *
++ * This function is also called by blk_post_runtime_resume() for successful
++ * runtime resumes.  It does everything necessary to restart the queue.
+  */
+ void blk_set_runtime_active(struct request_queue *q)
+ {
+ 	if (q->dev) {
++		int old_status;
++
+ 		spin_lock_irq(&q->queue_lock);
++		old_status = q->rpm_status;
+ 		q->rpm_status = RPM_ACTIVE;
+ 		pm_runtime_mark_last_busy(q->dev);
+ 		pm_request_autosuspend(q->dev);
+ 		spin_unlock_irq(&q->queue_lock);
++
++		if (old_status != RPM_ACTIVE)
++			blk_clear_pm_only(q);
+ 	}
+ }
+ EXPORT_SYMBOL(blk_set_runtime_active);
+Index: usb-devel/drivers/scsi/scsi_pm.c
+===================================================================
+--- usb-devel.orig/drivers/scsi/scsi_pm.c
++++ usb-devel/drivers/scsi/scsi_pm.c
+@@ -80,10 +80,6 @@ static int scsi_dev_type_resume(struct d
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
+ 
+ 	if (err == 0) {
+-		bool was_runtime_suspended;
+-
+-		was_runtime_suspended = pm_runtime_suspended(dev);
+-
+ 		pm_runtime_disable(dev);
+ 		err = pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
+@@ -97,10 +93,8 @@ static int scsi_dev_type_resume(struct d
+ 		 */
+ 		if (!err && scsi_is_sdev_device(dev)) {
+ 			struct scsi_device *sdev = to_scsi_device(dev);
+-			if (was_runtime_suspended)
+-				blk_post_runtime_resume(sdev->request_queue, 0);
+-			else
+-				blk_set_runtime_active(sdev->request_queue);
++
++			blk_set_runtime_active(sdev->request_queue);
+ 		}
+ 	}
+ 
+
