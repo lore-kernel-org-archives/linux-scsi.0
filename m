@@ -2,116 +2,97 @@ Return-Path: <SRS0=yW27=AM=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 321D5C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 03:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2491AC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 04:28:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BEF4206EB
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 03:23:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZjMmz7t4"
+	by mail.kernel.org (Postfix) with ESMTP id 06A64206CB
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Jul 2020 04:28:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726444AbgGADXt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 30 Jun 2020 23:23:49 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:45322 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725862AbgGADXt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jun 2020 23:23:49 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0613IBvI151984;
-        Wed, 1 Jul 2020 03:23:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=dg/1C3xLoyHGDDIp3rRy9JJ505zSZt2XCWqsk48jMQQ=;
- b=ZjMmz7t4mJzdvULtnsX4hM9fw4rBBGsDBw9oPsi1gh6aZRChVlE+I8C8aSYmtWuQQJYv
- TJneqVicGhTUvIkL/MF1s90Vej31ca4e0LaHywz1blOUwOHJ1q1EZPAXDtq+XoSOpkzI
- B/ryWIvjqtIjMIwXNDLOL7cIdRRIFcWilcNbHFpveIb8PlZ7//XwAFhdXXiEOywJSGw7
- xsNWazmNwLYyjDmbbvo9S4sOjkIgCLZwIlkyAe5cg4XSlCSbGV+feVZLm8nxqVIF2pco
- TlqXgcbjS6GxOktxy1u0gtXo9JjJqKSyGFT1Hllg/aiwbQj6r4bKiSWh2AzV8IYJPYJW 3A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31wxrn7wxb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 01 Jul 2020 03:23:44 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0613IhWU056760;
-        Wed, 1 Jul 2020 03:23:44 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 31xg1544sy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jul 2020 03:23:44 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0613Nf9l026041;
-        Wed, 1 Jul 2020 03:23:42 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 01 Jul 2020 03:23:41 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
+        id S1725875AbgGAE2w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jul 2020 00:28:52 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:45392 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725272AbgGAE2w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 00:28:52 -0400
+Received: by mail-pl1-f193.google.com with SMTP id g17so9385716plq.12
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2020 21:28:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=Xw6gfv7I3b2IomrbSBMZmB/u2fkKZqYajXzlt9Ie9Jk=;
+        b=faZd9DDU/DUfv2QL1br/aWMHXVCDCxzZNvZbszJ7pFz6i3MnfNwW6UuXFKVaTTBX8j
+         +OiEIOL3jotAFBBB9Uug5/0PknFw+vKCWnXBb3bp15BbKHVr669ZxX2cJPucz2UHK7QJ
+         U47lOwoWbU6fkkzyTIyPX6oDCjRIKY/cs3q/p9ffdOrgxzhgAwBftKuQRe17Lwn3WlAP
+         udEEbKvA8OboG6bMI40OJLXRGZfF9Zw6L4WFzw1fDw57MAxrrlbRg8XqMWPpj6EUliLw
+         GHlai4I0gkPSVa8TItrF364WkgKa5Qqbk2hmWYZLU6OLgkPywa/aX7GrfabIHYdvB0e/
+         91+A==
+X-Gm-Message-State: AOAM531fmCyp318Mg49sv1jRNi9z89NoWnJkqSBntl2MCPdl/wJrbspz
+        RUUQV0hHCOFY+No86saQ0qgzf73z
+X-Google-Smtp-Source: ABdhPJy+4KoSmSsOcUcDvSPaGy/lu/a1sbvQ2T+uhXc8gp+RGmGWKWD8LYKsG4EC3gohG4dbitQi1g==
+X-Received: by 2002:a17:90b:f97:: with SMTP id ft23mr22706037pjb.21.1593577728731;
+        Tue, 30 Jun 2020 21:28:48 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id k100sm3687913pjb.57.2020.06.30.21.28.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 30 Jun 2020 21:28:47 -0700 (PDT)
 Subject: Re: [PATCH v2 0/9] qla2xxx patches for kernel v5.9
-Date:   Tue, 30 Jun 2020 23:23:40 -0400
-Message-Id: <159357380640.11551.3183785758303195996.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200629225454.22863-1-bvanassche@acm.org>
+To:     Himanshu Madhani <himanshu.madhani@oracle.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi@vger.kernel.org
 References: <20200629225454.22863-1-bvanassche@acm.org>
+ <02A19F4D-965A-4C3A-B542-6132489D7C94@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <11ed4054-635b-2c62-2240-e272dd95dccc@acm.org>
+Date:   Tue, 30 Jun 2020 21:28:46 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=943 suspectscore=0 bulkscore=0 mlxscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007010021
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=953
- priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1011
- malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
- lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2007010021
+In-Reply-To: <02A19F4D-965A-4C3A-B542-6132489D7C94@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 29 Jun 2020 15:54:45 -0700, Bart Van Assche wrote:
-
-> This patch series includes cleanup patches and also patches that address
-> complaints from several static source code analyzers. Please consider these
-> patches for kernel v5.9.
+On 2020-06-29 16:26, Himanshu Madhani wrote:
+> I had reviewed this series earlier and provided Reviewed-by tag. 
 > 
-> Thanks,
-> 
-> Bart.
-> 
-> [...]
+> https://lore.kernel.org/linux-scsi/EAC19A51-7256-4D5D-9DBB-D30CEF8551E9@oracle.com/
 
-Applied to 5.9/scsi-queue, thanks!
+Thank you Himanshu for the reviews. I appreciate this. I promise to
+check Reviewed-by tags more carefully in the future when reposting a
+patch series.
 
-[1/9] scsi: qla2xxx: Check the size of struct fcp_hdr at compile time
-      https://git.kernel.org/mkp/scsi/c/a7f474542ea3
-[2/9] scsi: qla2xxx: Remove the __packed annotation from struct fcp_hdr and fcp_hdr_le
-      https://git.kernel.org/mkp/scsi/c/f1e12bee55e6
-[3/9] scsi: qla2xxx: Make qla82xx_flash_wait_write_finish() easier to read
-      https://git.kernel.org/mkp/scsi/c/2f91a0a03c2d
-[4/9] scsi: qla2xxx: Initialize 'n' before using it
-      https://git.kernel.org/mkp/scsi/c/67668b5b13c7
-[5/9] scsi: qla2xxx: Remove a superfluous cast
-      https://git.kernel.org/mkp/scsi/c/9bb013584a5e
-[6/9] scsi: qla2xxx: Make __qla2x00_alloc_iocbs() initialize 32 bits of request_t.handle
-      https://git.kernel.org/mkp/scsi/c/f8f12bda53ea
-[7/9] scsi: qla2xxx: Fix a Coverity complaint in qla2100_fw_dump()
-      https://git.kernel.org/mkp/scsi/c/57fec9f24e58
-[8/9] scsi: qla2xxx: Make qla2x00_restart_isp() easier to read
-      https://git.kernel.org/mkp/scsi/c/f85a299f5ec5
-[9/9] scsi: qla2xxx: Introduce a function for computing the debug message prefix
-      https://git.kernel.org/mkp/scsi/c/e7019c95c40d
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
