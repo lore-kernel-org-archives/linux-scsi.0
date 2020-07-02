@@ -7,126 +7,149 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4505CC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F35C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:43:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16EAD207D4
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:43:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0D5B2082F
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:43:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Qnb7mlRB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="D8GaqqeU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728209AbgGBBnc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jul 2020 21:43:32 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:51518 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727805AbgGBBna (ORCPT
+        id S1728279AbgGBBnk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jul 2020 21:43:40 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33912 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726135AbgGBBna (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 21:43:30 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621cMHd153751;
-        Thu, 2 Jul 2020 01:43:26 GMT
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621cwbn155834;
+        Thu, 2 Jul 2020 01:43:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=f3kfZHXzfTx2LxdfncZVcUA3z5V5f5QIMVGhDWfe+Hs=;
- b=Qnb7mlRBW/TMZS6wVDQQ3B0V0/AlwTvaGPf5xZZkeLduHN0TVXAauVjzKv+Q6Rq1rgFm
- 6M4kzJrXCpEGsNTJ70SeCzx9HcTaDxGiR5eHeQ7hglU5O0vxDPXPa12D8s1dvLrC851W
- qHEkc34dxWkwjlsJJ+m1TbpENBpI+Y1b8Ayd0JYPTVrwaG4cdMxGqTWnCDtgoFOMuPlo
- jbfl8iuEZFH6T0rEUdNXpWE2Nf9uRQ51+xve+tj/Y+nRwSHau+DLx/iG7ORcx0cJpJmk
- KoXn9Tt4gurS62pypsrO4zxywlPZVl+6FD6leNAPNqYrfdVwxi0f7WtbtgU73BfGftEA KA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31wxrndng3-1
+ bh=fK14tJ8EapNLd8Lo5gCESUlnZUEqFu1GK84uDjIBzWU=;
+ b=D8GaqqeUQLYO1GfS/Ow25clYWVzgneGlXlDNoIweVSyCGwZsb2r8vS0ON5XPsQRdwsml
+ XGH2Mw22iRMLTDSEAlI1xQjyARofW+XvNV32Vhdp7E6wZUYGXGVS3Mz/Rh16v+vUwblA
+ UE/cW7h4/cAQ7Z6/MKR2IEQS12MPoLsjzf+r6d1ZyvAkqXWr6ZhYOlrsMZjjHvl1vLgQ
+ cK/bXEr8iENAC0uMgGMv3kbuXRKB4Yzm9B/Q0tvhPAUDv/Qyw5vfEpVq9KUTnXGj79Ao
+ TgjooIYqsTX6gOD/suAV99FIpouq5W1A9fVFEAyxwsLASfEQzdOZrHh98G9s0Kz3LlPd TQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 31xx1e2hur-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 02 Jul 2020 01:43:26 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621glFh050725;
-        Thu, 2 Jul 2020 01:43:25 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 31xg17stfy-1
+        Thu, 02 Jul 2020 01:43:28 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621bqLd181516;
+        Thu, 2 Jul 2020 01:43:27 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 31xg204ty9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 02 Jul 2020 01:43:25 +0000
+        Thu, 02 Jul 2020 01:43:27 +0000
 Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0621hPVZ022102;
-        Thu, 2 Jul 2020 01:43:25 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0621hQpD017167;
+        Thu, 2 Jul 2020 01:43:26 GMT
 Received: from ol2.localdomain (/73.88.28.6)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 02 Jul 2020 01:43:25 +0000
+        with ESMTP ; Thu, 02 Jul 2020 01:43:26 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     martin.petersen@oracle.com, bstroesser@ts.fujitsu.com,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH 4/7] target: fix iscsi transport id parsing
-Date:   Wed,  1 Jul 2020 20:43:20 -0500
-Message-Id: <1593654203-12442-5-git-send-email-michael.christie@oracle.com>
+Subject: [PATCH 7/7] target: handle short iSIDs
+Date:   Wed,  1 Jul 2020 20:43:23 -0500
+Message-Id: <1593654203-12442-8-git-send-email-michael.christie@oracle.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1593654203-12442-1-git-send-email-michael.christie@oracle.com>
 References: <1593654203-12442-1-git-send-email-michael.christie@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 bulkscore=0 mlxscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007020010
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
- priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
- malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
- lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=999 adultscore=0 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2007020009
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015 adultscore=0
+ suspectscore=0 mlxlogscore=999 cotscore=-2147483648 lowpriorityscore=0
+ malwarescore=0 phishscore=0 impostorscore=0 mlxscore=0 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2007020009
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The length passed in the ADDITIONAL LENGTH field includes padding and
-the terminating NULL for the last field (name or isid depending on the
-format), so we should not also try to calculate that and then double add
-that to the returned length.
+SPC4 has:
+
+The first ISCSI INITIATOR SESSION ID field byte containing an ASCII
+null character terminates the ISCSI INITIATOR SESSION ID field without
+regard for the specified length of the iSCSI TransportID or the contents
+of the ADDITIONAL LENGTH field.
+----------------------------------------
+
+which sounds like we can get an iSID shorter than 12 chars. SPC and
+the iSCSI RFC do not say how to handle that case other than just
+cutting off the iSID. This patch just makes sure that if we get an
+iSID like that, we only copy/send that string.
+
+There is no OS that does this right now, so there was no test case.
+I did test with sg utils to check it works as expected and nothing
+breaks.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/target/target_core_fabric_lib.c | 22 ++++------------------
- 1 file changed, 4 insertions(+), 18 deletions(-)
+ drivers/target/target_core_fabric_lib.c | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index 1e031d8..81bc8ec 100644
+index 1d2762a..6600ae4 100644
 --- a/drivers/target/target_core_fabric_lib.c
 +++ b/drivers/target/target_core_fabric_lib.c
-@@ -265,9 +265,7 @@ static char *iscsi_parse_pr_out_transport_id(
- 	char **port_nexus_ptr)
+@@ -132,6 +132,7 @@ static int iscsi_get_pr_transport_id(
+ 	unsigned char *buf)
  {
- 	char *p;
--	u32 tid_len, padding;
- 	int i;
--	u16 add_len;
- 	u8 format_code = (buf[0] & 0xc0);
- 	/*
- 	 * Check for FORMAT CODE 00b or 01b from spc4r17, section 7.5.4.6:
-@@ -293,23 +291,11 @@ static char *iscsi_parse_pr_out_transport_id(
- 	 */
- 	if (out_tid_len) {
- 		/* The shift works thanks to integer promotion rules */
--		add_len = get_unaligned_be16(&buf[2]);
+ 	u32 off = 4, padding = 0;
++	int isid_len;
+ 	u16 len = 0;
+ 
+ 	spin_lock_irq(&se_nacl->nacl_sess_lock);
+@@ -184,11 +185,11 @@ static int iscsi_get_pr_transport_id(
+ 		buf[off++] = 0x2c; /* ASCII Character: "," */
+ 		buf[off++] = 0x30; /* ASCII Character: "0" */
+ 		buf[off++] = 0x78; /* ASCII Character: "x" */
++		len += 5;
+ 
+-		memcpy(buf + off, pr_reg->pr_reg_isid, 12);
+-		off += 12;
 -
--		tid_len = strlen(&buf[4]);
--		tid_len += 4; /* Add four bytes for iSCSI Transport ID header */
--		tid_len += 1; /* Add one byte for NULL terminator */
--		padding = ((-tid_len) & 3);
--		if (padding != 0)
--			tid_len += padding;
--
--		if ((add_len + 4) != tid_len) {
--			pr_debug("LIO-Target Extracted add_len: %hu "
--				"does not match calculated tid_len: %u,"
--				" using tid_len instead\n", add_len+4, tid_len);
--			*out_tid_len = tid_len;
--		} else
--			*out_tid_len = (add_len + 4);
-+		*out_tid_len = get_unaligned_be16(&buf[2]);
-+		/* Add four bytes for iSCSI Transport ID header */
-+		*out_tid_len += 4;
+-		len += 17;
++		isid_len = sprintf(buf + off, "%s", pr_reg->pr_reg_isid);
++		off += isid_len;
++		len += isid_len;
  	}
+ 	buf[off] = '\0';
+ 	len += 1;
+@@ -234,7 +235,7 @@ static int iscsi_get_pr_transport_id_len(
+ 	 */
+ 	if (pr_reg->isid_present_at_reg) {
+ 		len += 5; /* For ",i,0x" ASCII separator */
+-		len += 12; /* For iSCSI Initiator Session ID */
++		len += strlen(pr_reg->pr_reg_isid);
+ 		*format_code = 1;
+ 	} else
+ 		*format_code = 0;
+@@ -318,6 +319,16 @@ static char *iscsi_parse_pr_out_transport_id(
+ 		 * iscsi_target.c:lio_sess_get_initiator_sid()
+ 		 */
+ 		for (i = 0; i < 12; i++) {
++			/*
++			 * The first ISCSI INITIATOR SESSION ID field byte
++			 * containing an ASCII null character terminates the
++			 * ISCSI INITIATOR SESSION ID field without regard for
++			 * the specified length of the iSCSI TransportID or the
++			 * contents of the ADDITIONAL LENGTH field.
++			 */
++			if (*p == '\0')
++				break;
 +
- 	/*
- 	 * Check for ',i,0x' separator between iSCSI Name and iSCSI Initiator
- 	 * Session ID as defined in Table 390 - iSCSI initiator port TransportID
+ 			if (isdigit(*p)) {
+ 				p++;
+ 				continue;
 -- 
 1.8.3.1
 
