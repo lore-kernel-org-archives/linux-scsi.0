@@ -2,91 +2,131 @@ Return-Path: <SRS0=HQac=AN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 919E7C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FF8C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:32:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B062206BE
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95A8B20748
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:32:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="CgwZgTOh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QOwKTU9c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729096AbgGBBck (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jul 2020 21:32:40 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:32759 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728551AbgGBBcj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 21:32:39 -0400
-X-UUID: 362059a602234cf295d44ba4d16ec340-20200702
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Fi9mrlEmH73T+Qs6zhoiNlw3NLg/Wea1yifZo8JP4Y0=;
-        b=CgwZgTOhBxzcJIIsXa1MesRryiPmjqC2lXgtysirnwkJ1Xsey+fsObHbO3yYDM+QY7wYeMLonWegUj8sTU7RByWh/LN13iAEPyohjXt8+AOKEZ4OaipRhRC9ZWsEB2djGRmfbiuZlC+0AX0J1RKwW3fSwz/whxBtTqc8vCI0kWQ=;
-X-UUID: 362059a602234cf295d44ba4d16ec340-20200702
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 261882455; Thu, 02 Jul 2020 09:32:35 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs02n2.mediatek.inc (172.21.101.101) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 2 Jul 2020 09:32:24 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 2 Jul 2020 09:32:20 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <bvanassche@acm.org>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [RFC PATCH v1] scsi: ufs: Quiesce all scsi devices before shutdown
-Date:   Thu, 2 Jul 2020 09:32:10 +0800
-Message-ID: <20200702013210.22958-1-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        id S1728374AbgGBBcx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jul 2020 21:32:53 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:45492 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729371AbgGBBcv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 21:32:51 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621WfTa136986;
+        Thu, 2 Jul 2020 01:32:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=vaZaX1ir5Zb1TVHSIoFRZjKaxeNs0OKZeLdBYH3VCtA=;
+ b=QOwKTU9caKOjWO0S6h20YfbZFG2YdyB+Br6Ofz2hw+RFQWoHrVXwcL9dp33eQGti2vC5
+ uNVHGIuFhlOy0vg3Et0gs2TfaBc7mavPQiuL74Th2u+zho9z4cedq07fb5QO5FGoyhEL
+ Mr8dAOjOvv9UDG114mkveRn5GbLLB2tLKS3Z87J7s7eKGHjMhjwvCpHSMJ95b6X+Ga//
+ ExRVPcFHrZwbeqaR4hES78SAAn2an/wrQLKvYQCXYO3gieswVZfrJ555MzaRcZIA02rX
+ 2FuMSBplDVOkyd5SYE8I9gD6oVSgQ1EKZFjYn95Mx2+SdOSTJ2Z5uIMDUieGh5QWwr3O 9w== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31wxrndmt6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 02 Jul 2020 01:32:44 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621Nqes099091;
+        Thu, 2 Jul 2020 01:32:44 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 31xg204jay-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 02 Jul 2020 01:32:43 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0621WdIF018036;
+        Thu, 2 Jul 2020 01:32:42 GMT
+Received: from [20.15.0.2] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 02 Jul 2020 01:32:39 +0000
+Subject: Re: [PATCH 3/3] iscsi class: remove sessdestroylist
+To:     Lee Duncan <lduncan@suse.com>, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com
+References: <1593632868-6808-1-git-send-email-michael.christie@oracle.com>
+ <1593632868-6808-4-git-send-email-michael.christie@oracle.com>
+ <986df663-f499-9a18-2fb2-d2f06b01c078@suse.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <4f538077-bd06-de66-9b0d-f86ec982beb2@oracle.com>
+Date:   Wed, 1 Jul 2020 20:32:38 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 18A2182863CD6381535D3CFD5930C92F55638ED85AF7A2AFA65EACC53C1742932000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <986df663-f499-9a18-2fb2-d2f06b01c078@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=999 adultscore=0 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007020007
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
+ malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
+ lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007020008
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Q3VycmVudGx5IEkvTyByZXF1ZXN0IGNvdWxkIGJlIHN0aWxsIHN1Ym1pdHRlZCB0byBVRlMgZGV2
-aWNlIHdoaWxlDQpVRlMgaXMgd29ya2luZyBvbiBzaHV0ZG93biBmbG93LiBUaGlzIG1heSBsZWFk
-IHRvIHJhY2luZyBhcyBiZWxvdw0Kc2NlbmFyaW9zIGFuZCBmaW5hbGx5IHN5c3RlbSBtYXkgY3Jh
-c2ggZHVlIHRvIHVuY2xvY2tlZCByZWdpc3Rlcg0KYWNjZXNzZXMuDQoNClRvIGZpeCB0aGlzIGtp
-bmQgb2YgaXNzdWVzLCBzcGVjaWZpY2FsbHkgcXVpZXNjZSBhbGwgU0NTSSBkZXZpY2VzDQpiZWZv
-cmUgVUZTIHNodXRkb3duIHRvIGJsb2NrIGFsbCBJL08gcmVxdWVzdCBzZW5kaW5nIGZyb20gYmxv
-Y2sNCmxheWVyLg0KDQpFeGFtcGxlIG9mIHJhY2luZyBzY2VuYXJpbzogV2hpbGUgVUZTIGRldmlj
-ZSBpcyBydW50aW1lLXN1c3BlbmRlZA0KDQpUaHJlYWQgIzE6IEV4ZWN1dGluZyBVRlMgc2h1dGRv
-d24gZmxvdywgZS5nLiwNCiAgICAgICAgICAgdWZzaGNkX3N1c3BlbmQoVUZTX1NIVVRET1dOX1BN
-KQ0KVGhyZWFkICMyOiBFeGVjdXRpbmcgcnVudGltZSByZXN1bWUgZmxvdyB0cmlnZ2VyZWQgYnkg
-SS9PIHJlcXVlc3QsDQogICAgICAgICAgIGUuZy4sIHVmc2hjZF9yZXN1bWUoVUZTX1JVTlRJTUVf
-UE0pDQoNClRoaXMgYnJlYWtzIHRoZSBhc3N1bXB0aW9uIHRoYXQgVUZTIFBNIGZsb3dzIGNhbiBu
-b3QgYmUgcnVubmluZw0KY29uY3VycmVudGx5IGFuZCB0aHVzIHNvbWUgdW5leHBlY3RlZCByYWNp
-bmcgYmVoYXZpb3IgbWF5IGhhcHBlbi4NCg0KU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0
-YW5sZXkuY2h1QG1lZGlhdGVrLmNvbT4NCi0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMg
-fCA0ICsrKysNCiAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspDQoNCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYw0K
-aW5kZXggNTkzNThiYjc1MDE0Li5jYWRmYTkwMDY5NzIgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3Nj
-c2kvdWZzL3Vmc2hjZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQpAQCAtODU5
-OSwxMCArODU5OSwxNCBAQCBFWFBPUlRfU1lNQk9MKHVmc2hjZF9ydW50aW1lX2lkbGUpOw0KIGlu
-dCB1ZnNoY2Rfc2h1dGRvd24oc3RydWN0IHVmc19oYmEgKmhiYSkNCiB7DQogCWludCByZXQgPSAw
-Ow0KKwlzdHJ1Y3Qgc2NzaV90YXJnZXQgKnN0YXJnZXQ7DQogDQogCWlmICghaGJhLT5pc19wb3dl
-cmVkKQ0KIAkJZ290byBvdXQ7DQogDQorCWxpc3RfZm9yX2VhY2hfZW50cnkoc3RhcmdldCwgJmhi
-YS0+aG9zdC0+X190YXJnZXRzLCBzaWJsaW5ncykNCisJCXNjc2lfdGFyZ2V0X3F1aWVzY2Uoc3Rh
-cmdldCk7DQorDQogCWlmICh1ZnNoY2RfaXNfdWZzX2Rldl9wb3dlcm9mZihoYmEpICYmIHVmc2hj
-ZF9pc19saW5rX29mZihoYmEpKQ0KIAkJZ290byBvdXQ7DQogDQotLSANCjIuMTguMA0K
+On 7/1/20 3:56 PM, Lee Duncan wrote:
+> On 7/1/20 12:47 PM, Mike Christie wrote:
+>> Just delete the sess from the session list instead of adding it to some
+>> list we never use.
+>>
+>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+>> ---
+>>  drivers/scsi/scsi_transport_iscsi.c | 6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+>> index 80b442a2b4c8..60e6bde1e96c 100644
+>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>> @@ -1623,7 +1623,6 @@ static DEFINE_MUTEX(rx_queue_mutex);
+>>  static DEFINE_MUTEX(conn_mutex);
+>>  
+>>  static LIST_HEAD(sesslist);
+>> -static LIST_HEAD(sessdestroylist);
+>>  static DEFINE_SPINLOCK(sesslock);
+>>  static LIST_HEAD(connlist);
+>>  static LIST_HEAD(connlist_err);
+>> @@ -2203,7 +2202,8 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
+>>  	ISCSI_DBG_TRANS_SESSION(session, "Removing session\n");
+>>  
+>>  	spin_lock_irqsave(&sesslock, flags);
+>> -	list_del(&session->sess_list);
+>> +	if (!list_empty(&session->sess_list))
+>> +		list_del(&session->sess_list);
+>>  	spin_unlock_irqrestore(&sesslock, flags);
+>>  
+>>  	flush_work(&session->block_work);
+>> @@ -3678,7 +3678,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+>>  
+>>  			/* Prevent this session from being found again */
+>>  			spin_lock_irqsave(&sesslock, flags);
+>> -			list_move(&session->sess_list, &sessdestroylist);
+>> +			list_del_init(&session->sess_list);
+>>  			spin_unlock_irqrestore(&sesslock, flags);
+>>  
+>>  			queue_work(iscsi_destroy_workq, &session->destroy_work);
+>>
+> 
+> So is sessdestroylist still needed?
 
+Yes. I'm not sure what happened. It got added in a recent patch and that was the only use.
