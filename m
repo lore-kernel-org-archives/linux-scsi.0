@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE414C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:27:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 674D5C433E3
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0AA120874
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:27:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D7B0206BE
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 01:28:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593653251;
+	s=default; t=1593653315;
 	bh=HvLjSETqSGwPJTCtt7FAZ1rCHmOP8smwQD4IRxTnFBE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Iw5LlJeUSsm5Cp1faPM7V/eQozA5is7imqvXcgGhjxq7QArzvZ9OXx3zFZw5D/x+N
-	 /F60NE5gEfHm1EF1kwr2YQuWtDDWs1UxxGuloRIQX5kkvhcMKBVj3wBpNjc9BtP9QQ
-	 S15pyPqQ9pwftMzW4ozZl/ogtS+4QK5H4vni6cKI=
+	b=lUtsJ9jJj2eO4jgR+F8vQPDqTrCXLbUkNeYw9NXWGHC1x3QVTD3rhTkIQpYXmiCDJ
+	 bAgVTPjyD59mi8JnZt2XhspSPtpCqBVUSb/cVrS16sW/QInUj7E8I4733Mq7AHAU6n
+	 C3V2u+h2u4hLZPiPqXeNHT2Bc4gcVL0/8qN6i1YA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729500AbgGBB1a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jul 2020 21:27:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59366 "EHLO mail.kernel.org"
+        id S1729551AbgGBB1j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jul 2020 21:27:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59580 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728997AbgGBB12 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Jul 2020 21:27:28 -0400
+        id S1728554AbgGBB1i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 1 Jul 2020 21:27:38 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C523E20874;
-        Thu,  2 Jul 2020 01:27:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 97FAD20874;
+        Thu,  2 Jul 2020 01:27:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593653247;
+        s=default; t=1593653257;
         bh=HvLjSETqSGwPJTCtt7FAZ1rCHmOP8smwQD4IRxTnFBE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E0IZfI30Q5wESIvsbXAEdCI8CfZfs3/0uWoWXtem+Et/VqMLj1VKchMDstXbhPXAI
-         GUNiBR6YecriMPfuvLfxF2LzhJwJ6YW8BEX92jK6SBzxwO6+swmWHf5C9bkLvWNsBC
-         ocHaiw2ZCxiQfkdcKI+F4PScuKycbZcFc3IppZL4=
+        b=OqRkZaoEFo7c9lLLFI6OKK0Ww2adKEqUE/Dp3NkeWrWxXWvvQkVsUpzdOBYL0Qx3i
+         HpVczDj7Rm1et5QABN/FImWQNRQZm2utAZxP0oxnR0mQdSSW/eHRbJBL7nmMIBF20M
+         aDwWnauesTYwh4MC28YgkCqjhFprZh6QqdZSSoLE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Tomas Henzl <thenzl@redhat.com>,
@@ -45,12 +45,12 @@ Cc:     Tomas Henzl <thenzl@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 12/13] scsi: mptscsih: Fix read sense data size
-Date:   Wed,  1 Jul 2020 21:27:11 -0400
-Message-Id: <20200702012712.2701986-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 6/7] scsi: mptscsih: Fix read sense data size
+Date:   Wed,  1 Jul 2020 21:27:28 -0400
+Message-Id: <20200702012729.2702141-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200702012712.2701986-1-sashal@kernel.org>
-References: <20200702012712.2701986-1-sashal@kernel.org>
+In-Reply-To: <20200702012729.2702141-1-sashal@kernel.org>
+References: <20200702012729.2702141-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
