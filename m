@@ -2,500 +2,255 @@ Return-Path: <SRS0=HQac=AN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C815CC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 10:23:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D12AEC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 12:38:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A97EB20747
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 10:23:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A981B20890
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 12:38:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hRZclOtQ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="AiuW+uwK";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Fh5MTprj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728407AbgGBKXf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jul 2020 06:23:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37368 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727860AbgGBKXe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2020 06:23:34 -0400
-Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9228FC08C5C1
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2020 03:23:34 -0700 (PDT)
-Received: by mail-qt1-x842.google.com with SMTP id h23so20836058qtr.0
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2020 03:23:34 -0700 (PDT)
+        id S1729098AbgGBMiC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jul 2020 08:38:02 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:2323 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726343AbgGBMiB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2020 08:38:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1593693482; x=1625229482;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=JCI54Bdej8DlAhUNBSA1OAoClLY+QCJsRGXtDxXSAhg=;
+  b=AiuW+uwKYC2mDHMrLauXbE1hdHI2xjoVgjjrR+/CEhE+K8kbyHmJa0GJ
+   nNHU/EyJKR033oYroX6h1j/c7Fa3o2jzGlRW6t8EWJ583VrL5OHoA8WD1
+   v4TNKlAkc2TpLvCaKfVTC9/X3NM8fbE1jfuMWcM9OOyfHsGU1gdTwJZhC
+   HeGRXifXtD5XvOCylnQZLgoBY1Ba7s0NxyisHAI117iRfnPPCaxnsnaob
+   ZqmI/Aje3OTHpTOw+uKfJ7zQgh3Gp9NFOmmdBql9mlz2CF6H1OUiw/nvL
+   gU6rVct0yBMtc42gBfbOc9A1QoslPo6Xtv7jyBWWPFYlMiK3wMp9Elbi9
+   Q==;
+IronPort-SDR: sAs2j1i6hKoOjq5sp0EzGtUbv9VQyCXY+mFwrLvMx2qu0rQuh8QL+7iY+VTcJBsjiT2r1/iVoO
+ +d8ZZtlzX7CYKl6r7SPTBQw4X94XcQaBnzhEjqJ1r0TxGr9w28o1hyiuTCn/OvQz+StjBgFJq3
+ mOKHxdvHSNy6jRSAGqAAEgCwQ07T3B42gCu/RLU4KYjNUhw6/7lruQTFbuVNTw9LrQikIZQzTd
+ JkOiNd8Bu3hkXRDWkt8vWUq4d3x55siJY5Tveey4B4htjrPTUM3+HirXbpAHqKK48gkM9V1LOi
+ Wf8=
+X-IronPort-AV: E=Sophos;i="5.75,304,1589212800"; 
+   d="scan'208";a="142826912"
+Received: from mail-dm6nam12lp2172.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.172])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Jul 2020 20:38:00 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QO4iN7vC9lniEcsWrwbnkMA/cg6olsWsNrSEooPHXHJJPhmvc4x4HC4nwl89DSjpnGF/+wX3J28+EK0awhc8HLZqSaiIpKdMd62KNtZacEb0ioOpdxWdWZnPrvQI2G3EWnEuhOH6LejGMBOVSVpZO24IDkqUYTxjZDLuSAMyNguoa9B1YIAlU3lhQ0if6+ViC6yqx6Jc88KgzHcNCJ0mRdX4rx5nsEQlqToljg1hsOKnjsGHu5hYXd48Pi+EeJrdLwXy7IJ08eQ7S7fpkzgOTGqTbX+jgHqJ4M1Y96z4+EQldHO4cnFUED3bMGu3ktQr5BvjSj5qTDddRUfFcavEDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gQpgfT6tBMrrPBVx103zmYnEnWq8urPCkbHAz1qBzx4=;
+ b=HWP0b46Gqzcbn0t4dbPz5pHpns1cZyDkcYq5+WNIdmzKFJGUXQpIMB6oXsE1GmnvCqLmKJhCsSjZvMgCBKL/4Cqw/qtGr7XomzQ4bQgtKVTXWu6gqCH0MeVPXfyfQPGhLZocatBiBU3WuZlQkqqxDsNjVQPENELbxBJ399YnRNK7I+NKBogilUMwPjXBOC3JLJvRGTFgbyW0J2/1mjlyiDKNJGXekeT5QWzsXKpUyUeZQ8U/ACD/OlaEv2txEyr3Xe//wdvCF+mH1KElo4JBxcnBHRXHBLOz2HL92qm8DRU6SclIbK+3X9p7NSf0RIX1xSP+MdiIpvuzc9Ofyx686w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:references:in-reply-to:mime-version:thread-index:date
-         :message-id:subject:to:cc;
-        bh=89FcpnPciL7Gq+aGDoxiVag8If3+LnzHi2dNWlhAwi0=;
-        b=hRZclOtQqi2trvksHv14Rg8G5Nep7axCvQFqcElW8E3QUH3TK17nTG5xTd8iELYLw8
-         +LWvf2Ze7RB9vi9ip0gA5ywRLXlHhcwfRSWdmFxq6guXNOwswkF169Oi8aAoxlmO8lax
-         SzI7YR2Y8H/o1hIi7CokiM6EO3Mu3fPquBq0o=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:references:in-reply-to:mime-version
-         :thread-index:date:message-id:subject:to:cc;
-        bh=89FcpnPciL7Gq+aGDoxiVag8If3+LnzHi2dNWlhAwi0=;
-        b=KYf6OhPHEaclTtkf8KojCGywnEhnmCsiyLDUXxKG6k0cg11lX3XWbLnk6fg0c58xAA
-         J/h8DI8LGnF3kq/ppEZkD7Bn9CclHczoFPx4FPxdW57h4Sk9kS/IHRqYsZw9eI4QD6VY
-         Q94988qE/WlSmD5XKUKeBUylpE6wO0Xb+2hCy9BrIKKkeKH+LonaUBjEB4xoWOQLqLah
-         Eb3OTaaQ4mGuXMkAO0xuBgiu+OQgqaC0tAra6KEQQVzK0vZ7Ve5nsRJNSZTrHNxFkNoZ
-         avEwHHUNO0MbdYjm+cznl7x4hKqmwFeMn+jWf8xYxgwvprkFk5Hbl5xNO7lVlnKVgX4z
-         Ubgw==
-X-Gm-Message-State: AOAM5313xthis4i5yB/Ddcjp6jDOAz3d4NHIVK4ZdpzRUaRK++XHeySw
-        DU+bNPQgM0tCq4tG8RM9pk9QG5wVIkyKlik2uDtESw==
-X-Google-Smtp-Source: ABdhPJzZpu9uf5JzEPa7tOlg1DGNa6bJhDidBAywu3Ks8V+17TItfifnksWX4AkYFqSDy+hNS/MkdrZjRorpbh9KEsI=
-X-Received: by 2002:ac8:4f50:: with SMTP id i16mr14250590qtw.216.1593685413543;
- Thu, 02 Jul 2020 03:23:33 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com> <1591810159-240929-11-git-send-email-john.garry@huawei.com>
-In-Reply-To: <1591810159-240929-11-git-send-email-john.garry@huawei.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gQpgfT6tBMrrPBVx103zmYnEnWq8urPCkbHAz1qBzx4=;
+ b=Fh5MTprjZ1SoJMZMJoKx+xFsj4whO+BDVYkokuxZmvO1wJHu9lN6zMjzPDXW+EIGUhe928eWnUGEkSFlxMmebqhRTO9sI7JTuj9KxI6PnoosUZSXJEHMA7Yhmvv7wTdSQRm9mj4nvPGlB2zQNHShIq4MROTA13evd9a0emUxtMU=
+Received: from BYAPR04MB5112.namprd04.prod.outlook.com (2603:10b6:a03:45::10)
+ by BYAPR04MB4677.namprd04.prod.outlook.com (2603:10b6:a03:14::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3131.20; Thu, 2 Jul
+ 2020 12:37:57 +0000
+Received: from BYAPR04MB5112.namprd04.prod.outlook.com
+ ([fe80::a442:4836:baba:c84b]) by BYAPR04MB5112.namprd04.prod.outlook.com
+ ([fe80::a442:4836:baba:c84b%6]) with mapi id 15.20.3131.036; Thu, 2 Jul 2020
+ 12:37:57 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+CC:     Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] block: add max_open_zones to blk-sysfs
+Thread-Topic: [PATCH 1/2] block: add max_open_zones to blk-sysfs
+Thread-Index: AQHWQ8iO/B03U39S+Uih8dmO//K+66j0U6aA
+Date:   Thu, 2 Jul 2020 12:37:57 +0000
+Message-ID: <20200702123755.GA609677@localhost.localdomain>
+References: <20200616102546.491961-1-niklas.cassel@wdc.com>
+ <20200616102546.491961-2-niklas.cassel@wdc.com>
+ <CY4PR04MB3751C2C03ACCA263541DA348E76F0@CY4PR04MB3751.namprd04.prod.outlook.com>
+In-Reply-To: <CY4PR04MB3751C2C03ACCA263541DA348E76F0@CY4PR04MB3751.namprd04.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: wdc.com; dkim=none (message not signed)
+ header.d=none;wdc.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [85.224.200.150]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 89a1fe45-8594-4606-b1a3-08d81e84bf92
+x-ms-traffictypediagnostic: BYAPR04MB4677:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BYAPR04MB4677C9DC1F9369FD2F3F6858F26D0@BYAPR04MB4677.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-forefront-prvs: 0452022BE1
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 1AnAPR4mS1PPUvEMSGnA+XMWmyQ0J1d3+O+HSc14Vp94aOy1pO65T/Vl/8d/+e33RYv0A7U0fqtF/gwJ28kWnax6rkq1cVm94GmU5gZJfY7k1ZIFakWw3sfgmpgTYMDPVM7SGzuEdjjUpBpBxDyzAoUcR29ex4qV1QSXJM82kNmVIu3UnloVfWxQ7T8KY+BmWNOSzKqLbuulWajVsRNh1DNJB3g6cSi53wRgi8NrqkwNUNU1fkK8Tp0esu3hv32gqo7iKtAxjNmHX1KoPchD+vk+ZpgdBG0S3PrfG5IjAK+W1tM0qnrrxQI1aDNtUDR7yugVkiHMN/YJPH4xGfsAQMeGwIb2vDZt8DoL2utiQ6/Ij4snKnyJ6pZkTic3gQktOte+iYmp1DOc0iUzOjyraw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB5112.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(66946007)(66476007)(66556008)(91956017)(76116006)(64756008)(66446008)(5660300002)(71200400001)(1076003)(6506007)(53546011)(186003)(33656002)(26005)(83380400001)(6486002)(86362001)(498600001)(966005)(7416002)(6636002)(6862004)(8676002)(4326008)(6512007)(9686003)(8936002)(54906003)(2906002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: NKZTHbqYLri73P18MfGgfqnJDLw00/h8DDYJIhX78HrgrLyxZaS8+R79pWdi1KR2AktgETE+h/mrqZvF2lpgQfFK5noAbocmfo6W9WoQErQhhxNl/u1cIdjqcYXnagQDbBWSzgCZgyTwuDswv2LGxEwNbsnPnZUZ3fUAHQHcqDGbRdzT8RODbIEeQQOUecruMA5dbRdVrJf0oIKxdMlMoKsTvderb4BcjktgQ/36ePO5zKfHAgT1/0z5zjyNpc8JfaI+7SjZRcO6MdCmzcrPKNgsjkEfKVXvfD3xUzKCj9/0DqUcb8csYee2byGu+ZE0ZVr+Jbh+Xsbv7hzDkjJn0xpO6EX4nAM5pVK92vD6M8oBQjo3O4mb6VqRQaNdGn86aul1IIB4CxakuhyMyyviYokzzav3pFdcxiSOR0HxHOybZsy5+FDqOZXXsKkXufgZH0LPrHrS73ra+uMcUNQIerWBZ4FANq7jhv9aREyy/v84qe6abqaXsafiLW5xG7Pn
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <22FC15E947CE2648B994A6E81934AA5F@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQBVjmvxAE7FMYb7GtMRWGcwtMcECgFIs823q+pblpA=
-Date:   Thu, 2 Jul 2020 15:53:31 +0530
-Message-ID: <d55972999b9370f947c20537e41b49bf@mail.gmail.com>
-Subject: RE: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB5112.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 89a1fe45-8594-4606-b1a3-08d81e84bf92
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Jul 2020 12:37:57.0514
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: vYVYXf+Pe468K8HyOI66baYyl2rX65IsUdoREgUzMF1oNvxbMTtEM0N33EeQO7w9Lw1bmb7T/ngpvaY2aRvloQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4677
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->
-> From: Hannes Reinecke <hare@suse.com>
->
-> Fusion adapters can steer completions to individual queues, and we now
-have
-> support for shared host-wide tags.
-> So we can enable multiqueue support for fusion adapters and drop the
-hand-
-> crafted interrupt affinity settings.
+On Tue, Jun 30, 2020 at 01:49:41AM +0000, Damien Le Moal wrote:
+> On 2020/06/16 19:28, Niklas Cassel wrote:
+> > diff --git a/drivers/nvme/host/zns.c b/drivers/nvme/host/zns.c
+> > index c08f6281b614..af156529f3b6 100644
+> > --- a/drivers/nvme/host/zns.c
+> > +++ b/drivers/nvme/host/zns.c
+> > @@ -82,6 +82,7 @@ int nvme_update_zone_info(struct gendisk *disk, struc=
+t nvme_ns *ns,
+> > =20
+> >  	q->limits.zoned =3D BLK_ZONED_HM;
+> >  	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
+> > +	blk_queue_max_open_zones(q, le32_to_cpu(id->mor) + 1);
+> >  free_data:
+> >  	kfree(id);
+> >  	return status;
+> > diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> > index 183a20720da9..aa3564139b40 100644
+> > --- a/drivers/scsi/sd_zbc.c
+> > +++ b/drivers/scsi/sd_zbc.c
+> > @@ -717,6 +717,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsi=
+gned char *buf)
+> >  	/* The drive satisfies the kernel restrictions: set it up */
+> >  	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
+> >  	blk_queue_required_elevator_features(q, ELEVATOR_F_ZBD_SEQ_WRITE);
+> > +	if (sdkp->zones_max_open =3D=3D U32_MAX)
+> > +		blk_queue_max_open_zones(q, 0);
+> > +	else
+> > +		blk_queue_max_open_zones(q, sdkp->zones_max_open);
+>=20
+> This is correct only for host-managed drives. Host-aware models define th=
+e
+> "OPTIMAL NUMBER OF OPEN SEQUENTIAL WRITE PREFERRED ZONES" instead of a ma=
+ximum
+> number of open sequential write required zones.
+>=20
+> Since the standard does not actually explicitly define what the value of =
+the
+> maximum number of open sequential write required zones should be for a
+> host-aware drive, I would suggest to always have the max_open_zones value=
+ set to
+> 0 for host-aware disks.
 
-Shared host tag is primarily introduced for completeness of CPU hotplug as
-discussed earlier -
-https://lwn.net/Articles/819419/
+Isn't this already the case?
 
-How shall I test CPU hotplug on megaraid_sas driver ? My understanding is
-- This RFC + patch set from above link is required for it. I could not see
-above series is committed.
-Am I missing anything. ?
+At least according to the comments:
 
-We do not want to completely move to shared host tag. It will be shared
-host tag support by default, but user should have choice to go back to
-legacy path.
-We will completely move to shared host tag path once it is stable and no
-more field issue observed over a period of time. -
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/dri=
+vers/scsi/sd_zbc.c?h=3Dv5.8-rc3#n555
 
-Updated <megaraid_sas> patch will looks like this -
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/dri=
+vers/scsi/sd_zbc.c?h=3Dv5.8-rc3#n561
 
-diff --git a/megaraid_sas_base.c b/megaraid_sas_base.c
-index 0066833..3b503cb 100644
---- a/megaraid_sas_base.c
-+++ b/megaraid_sas_base.c
-@@ -37,6 +37,7 @@
- #include <linux/poll.h>
- #include <linux/vmalloc.h>
- #include <linux/irq_poll.h>
-+#include <linux/blk-mq-pci.h>
+We seem to set
 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -113,6 +114,10 @@ unsigned int enable_sdev_max_qd;
- module_param(enable_sdev_max_qd, int, 0444);
- MODULE_PARM_DESC(enable_sdev_max_qd, "Enable sdev max qd as can_queue.
-Default: 0");
+sdkp->zones_max_open =3D 0;
 
-+int host_tagset_disabled = 0;
-+module_param(host_tagset_disabled, int, 0444);
-+MODULE_PARM_DESC(host_tagset_disabled, "Shared host tagset enable/disable
-Default: enable(1)");
-+
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux.pdl@broadcom.com");
-@@ -3115,6 +3120,18 @@ megasas_bios_param(struct scsi_device *sdev, struct
-block_device *bdev,
-        return 0;
- }
+for host-aware, and
 
-+static int megasas_map_queues(struct Scsi_Host *shost)
-+{
-+       struct megasas_instance *instance;
-+       instance = (struct megasas_instance *)shost->hostdata;
-+
-+       if (instance->host->nr_hw_queues == 1)
-+               return 0;
-+
-+       return
-blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
-+                       instance->pdev,
-instance->low_latency_index_start);
-+}
-+
- static void megasas_aen_polling(struct work_struct *work);
+sdkp->zones_max_open =3D get_unaligned_be32(&buf[16]);
 
- /**
-@@ -3423,8 +3440,10 @@ static struct scsi_host_template megasas_template =
-{
-        .eh_timed_out = megasas_reset_timer,
-        .shost_attrs = megaraid_host_attrs,
-        .bios_param = megasas_bios_param,
-+       .map_queues = megasas_map_queues,
-        .change_queue_depth = scsi_change_queue_depth,
-        .max_segment_size = 0xffffffff,
-+       .host_tagset = 1,
- };
+for host-managed.
 
- /**
-@@ -6793,7 +6812,21 @@ static int megasas_io_attach(struct
-megasas_instance *instance)
-        host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
-        host->max_lun = MEGASAS_MAX_LUN;
-        host->max_cmd_len = 16;
-+       host->nr_hw_queues = 1;
+So the blk_queue_max_open_zones(q, sdkp->zones_max_open) call in
+sd_zbc_read_zones() should already export this new sysfs property
+as 0 for host-aware disks.
 
-+       /* Use shared host tagset only for fusion adaptors
-+        * if there are more than one managed interrupts.
-+        */
-+       if ((instance->adapter_type != MFI_SERIES) &&
-+               (instance->msix_vectors > 0) &&
-+               !host_tagset_disabled &&
-+               instance->smp_affinity_enable)
-+               host->nr_hw_queues = instance->msix_vectors -
-+                       instance->low_latency_index_start;
-+
-+       dev_info(&instance->pdev->dev, "Max firmware commands: %d"
-+               " for nr_hw_queues = %d\n", instance->max_fw_cmds,
-+               host->nr_hw_queues);
-        /*
-         * Notify the mid-layer about the new controller
-         */
-@@ -8842,6 +8875,7 @@ static int __init megasas_init(void)
-                msix_vectors = 1;
-                rdpq_enable = 0;
-                dual_qdepth_disable = 1;
-+               host_tagset_disabled = 1;
-        }
 
-        /*
-diff --git a/megaraid_sas_fusion.c b/megaraid_sas_fusion.c
-index 319f241..14d4f35 100755
---- a/megaraid_sas_fusion.c
-+++ b/megaraid_sas_fusion.c
-@@ -373,24 +373,28 @@ megasas_get_msix_index(struct megasas_instance
-*instance,
- {
-        int sdev_busy;
+Kind regards,
+Niklas
 
--       /* nr_hw_queue = 1 for MegaRAID */
--       struct blk_mq_hw_ctx *hctx =
--               scmd->device->request_queue->queue_hw_ctx[0];
--
--       sdev_busy = atomic_read(&hctx->nr_active);
-+       /* TBD - if sml remove device_busy in future, driver
-+        * should track counter in internal structure.
-+        */
-+       sdev_busy = atomic_read(&scmd->device->device_busy);
+>=20
+> >  	nr_zones =3D round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_bloc=
+ks);
+> > =20
+> >  	/* READ16/WRITE16 is mandatory for ZBC disks */
+> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > index 8fd900998b4e..2f332f00501d 100644
+> > --- a/include/linux/blkdev.h
+> > +++ b/include/linux/blkdev.h
+> > @@ -520,6 +520,7 @@ struct request_queue {
+> >  	unsigned int		nr_zones;
+> >  	unsigned long		*conv_zones_bitmap;
+> >  	unsigned long		*seq_zones_wlock;
+> > +	unsigned int		max_open_zones;
+> >  #endif /* CONFIG_BLK_DEV_ZONED */
+> > =20
+> >  	/*
+> > @@ -729,6 +730,17 @@ static inline bool blk_queue_zone_is_seq(struct re=
+quest_queue *q,
+> >  		return true;
+> >  	return !test_bit(blk_queue_zone_no(q, sector), q->conv_zones_bitmap);
+> >  }
+> > +
+> > +static inline void blk_queue_max_open_zones(struct request_queue *q,
+> > +		unsigned int max_open_zones)
+> > +{
+> > +	q->max_open_zones =3D max_open_zones;
+> > +}
+> > +
+> > +static inline unsigned int queue_max_open_zones(const struct request_q=
+ueue *q)
+> > +{
+> > +	return q->max_open_zones;
+> > +}
+> >  #else /* CONFIG_BLK_DEV_ZONED */
+> >  static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
+> >  {
+> > @@ -744,6 +756,14 @@ static inline unsigned int blk_queue_zone_no(struc=
+t request_queue *q,
+> >  {
+> >  	return 0;
+> >  }
+> > +static inline void blk_queue_max_open_zones(struct request_queue *q,
+> > +		unsigned int max_open_zones)
+> > +{
+> > +}
+>=20
+> Why is this one necessary ? For the !CONFIG_BLK_DEV_ZONED case, no driver=
+ should
+> ever call this function.
 
-        if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
--           sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
-+           sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH)) {
-                cmd->request_desc->SCSIIO.MSIxIndex =
-                        mega_mod64((atomic64_add_return(1,
-&instance->high_iops_outstanding) /
-                                        MR_HIGH_IOPS_BATCH_COUNT),
-instance->low_latency_index_start);
--       else if (instance->msix_load_balance)
-+       } else if (instance->msix_load_balance) {
-                cmd->request_desc->SCSIIO.MSIxIndex =
-                        (mega_mod64(atomic64_add_return(1,
-&instance->total_io_count),
-                                instance->msix_vectors));
--       else
-+       } else if (instance->host->nr_hw_queues > 1) {
-+               u32 tag = blk_mq_unique_tag(scmd->request);
-+               cmd->request_desc->SCSIIO.MSIxIndex =
-blk_mq_unique_tag_to_hwq(tag) +
-+                       instance->low_latency_index_start;
-+       } else {
-                cmd->request_desc->SCSIIO.MSIxIndex =
-                        instance->reply_map[raw_smp_processor_id()];
-+       }
- }
-
- /**
-@@ -970,9 +974,6 @@ megasas_alloc_cmds_fusion(struct megasas_instance
-*instance)
-        if (megasas_alloc_cmdlist_fusion(instance))
-                goto fail_exit;
-
--       dev_info(&instance->pdev->dev, "Configured max firmware commands:
-%d\n",
--                instance->max_fw_cmds);
--
-        /* The first 256 bytes (SMID 0) is not used. Don't add to the cmd
-list */
-        io_req_base = fusion->io_request_frames +
-MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
-        io_req_base_phys = fusion->io_request_frames_phys +
-MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE;
-
-Kashyap
-
->
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas.h        |  1 -
->  drivers/scsi/megaraid/megaraid_sas_base.c   | 59 +++++++--------------
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 24 +++++----
->  3 files changed, 32 insertions(+), 52 deletions(-)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
-> b/drivers/scsi/megaraid/megaraid_sas.h
-> index af2c7a2a9565..b27a34a5f5de 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -2261,7 +2261,6 @@ enum MR_PERF_MODE {
->
->  struct megasas_instance {
->
-> -	unsigned int *reply_map;
->  	__le32 *producer;
->  	dma_addr_t producer_h;
->  	__le32 *consumer;
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 00668335c2af..e6bb2a64d51c 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -37,6 +37,7 @@
->  #include <linux/poll.h>
->  #include <linux/vmalloc.h>
->  #include <linux/irq_poll.h>
-> +#include <linux/blk-mq-pci.h>
->
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_cmnd.h>
-> @@ -3115,6 +3116,19 @@ megasas_bios_param(struct scsi_device *sdev,
-> struct block_device *bdev,
->  	return 0;
->  }
->
-> +static int megasas_map_queues(struct Scsi_Host *shost) {
-> +	struct megasas_instance *instance;
-> +
-> +	instance = (struct megasas_instance *)shost->hostdata;
-> +
-> +	if (!instance->smp_affinity_enable)
-> +		return 0;
-> +
-> +	return blk_mq_pci_map_queues(&shost-
-> >tag_set.map[HCTX_TYPE_DEFAULT],
-> +			instance->pdev,
-instance->low_latency_index_start);
-> +}
-> +
->  static void megasas_aen_polling(struct work_struct *work);
->
->  /**
-> @@ -3423,8 +3437,10 @@ static struct scsi_host_template
-> megasas_template = {
->  	.eh_timed_out = megasas_reset_timer,
->  	.shost_attrs = megaraid_host_attrs,
->  	.bios_param = megasas_bios_param,
-> +	.map_queues = megasas_map_queues,
->  	.change_queue_depth = scsi_change_queue_depth,
->  	.max_segment_size = 0xffffffff,
-> +	.host_tagset = 1,
->  };
->
->  /**
-> @@ -5708,34 +5724,6 @@ megasas_setup_jbod_map(struct
-> megasas_instance *instance)
->  		instance->use_seqnum_jbod_fp = false;  }
->
-> -static void megasas_setup_reply_map(struct megasas_instance *instance)
--{
-> -	const struct cpumask *mask;
-> -	unsigned int queue, cpu, low_latency_index_start;
-> -
-> -	low_latency_index_start = instance->low_latency_index_start;
-> -
-> -	for (queue = low_latency_index_start; queue < instance-
-> >msix_vectors; queue++) {
-> -		mask = pci_irq_get_affinity(instance->pdev, queue);
-> -		if (!mask)
-> -			goto fallback;
-> -
-> -		for_each_cpu(cpu, mask)
-> -			instance->reply_map[cpu] = queue;
-> -	}
-> -	return;
-> -
-> -fallback:
-> -	queue = low_latency_index_start;
-> -	for_each_possible_cpu(cpu) {
-> -		instance->reply_map[cpu] = queue;
-> -		if (queue == (instance->msix_vectors - 1))
-> -			queue = low_latency_index_start;
-> -		else
-> -			queue++;
-> -	}
-> -}
-> -
->  /**
->   * megasas_get_device_list -	Get the PD and LD device list from FW.
->   * @instance:			Adapter soft state
-> @@ -6158,8 +6146,6 @@ static int megasas_init_fw(struct megasas_instance
-> *instance)
->  			goto fail_init_adapter;
->  	}
->
-> -	megasas_setup_reply_map(instance);
-> -
->  	dev_info(&instance->pdev->dev,
->  		"current msix/online cpus\t: (%d/%d)\n",
->  		instance->msix_vectors, (unsigned int)num_online_cpus());
-> @@ -6793,6 +6779,9 @@ static int megasas_io_attach(struct
-> megasas_instance *instance)
->  	host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
->  	host->max_lun = MEGASAS_MAX_LUN;
->  	host->max_cmd_len = 16;
-> +	if (instance->adapter_type != MFI_SERIES && instance->msix_vectors
-> > 0)
-> +		host->nr_hw_queues = instance->msix_vectors -
-> +			instance->low_latency_index_start;
->
->  	/*
->  	 * Notify the mid-layer about the new controller @@ -6960,11
-> +6949,6 @@ static inline int megasas_alloc_mfi_ctrl_mem(struct
-> megasas_instance *instance)
->   */
->  static int megasas_alloc_ctrl_mem(struct megasas_instance *instance)  {
-> -	instance->reply_map = kcalloc(nr_cpu_ids, sizeof(unsigned int),
-> -				      GFP_KERNEL);
-> -	if (!instance->reply_map)
-> -		return -ENOMEM;
-> -
->  	switch (instance->adapter_type) {
->  	case MFI_SERIES:
->  		if (megasas_alloc_mfi_ctrl_mem(instance))
-> @@ -6981,8 +6965,6 @@ static int megasas_alloc_ctrl_mem(struct
-> megasas_instance *instance)
->
->  	return 0;
->   fail:
-> -	kfree(instance->reply_map);
-> -	instance->reply_map = NULL;
->  	return -ENOMEM;
->  }
->
-> @@ -6995,7 +6977,6 @@ static int megasas_alloc_ctrl_mem(struct
-> megasas_instance *instance)
->   */
->  static inline void megasas_free_ctrl_mem(struct megasas_instance
-> *instance)  {
-> -	kfree(instance->reply_map);
->  	if (instance->adapter_type == MFI_SERIES) {
->  		if (instance->producer)
->  			dma_free_coherent(&instance->pdev->dev,
-> sizeof(u32), @@ -7683,8 +7664,6 @@ megasas_resume(struct pci_dev
-> *pdev)
->  			goto fail_reenable_msix;
->  	}
->
-> -	megasas_setup_reply_map(instance);
-> -
->  	if (instance->adapter_type != MFI_SERIES) {
->  		megasas_reset_reply_desc(instance);
->  		if (megasas_ioc_init_fusion(instance)) { diff --git
-> a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 319f241da4b6..8e25b700988e 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -373,24 +373,24 @@ megasas_get_msix_index(struct megasas_instance
-> *instance,  {
->  	int sdev_busy;
->
-> -	/* nr_hw_queue = 1 for MegaRAID */
-> -	struct blk_mq_hw_ctx *hctx =
-> -		scmd->device->request_queue->queue_hw_ctx[0];
-> +	struct blk_mq_hw_ctx *hctx = scmd->request->mq_hctx;
->
->  	sdev_busy = atomic_read(&hctx->nr_active);
->
->  	if (instance->perf_mode == MR_BALANCED_PERF_MODE &&
-> -	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH))
-> +	    sdev_busy > (data_arms * MR_DEVICE_HIGH_IOPS_DEPTH)) {
->  		cmd->request_desc->SCSIIO.MSIxIndex =
->  			mega_mod64((atomic64_add_return(1, &instance-
-> >high_iops_outstanding) /
->  					MR_HIGH_IOPS_BATCH_COUNT),
-> instance->low_latency_index_start);
-> -	else if (instance->msix_load_balance)
-> +	} else if (instance->msix_load_balance) {
->  		cmd->request_desc->SCSIIO.MSIxIndex =
->  			(mega_mod64(atomic64_add_return(1, &instance-
-> >total_io_count),
->  				instance->msix_vectors));
-> -	else
-> -		cmd->request_desc->SCSIIO.MSIxIndex =
-> -			instance->reply_map[raw_smp_processor_id()];
-> +	} else {
-> +		u32 tag = blk_mq_unique_tag(scmd->request);
-> +
-> +		cmd->request_desc->SCSIIO.MSIxIndex =
-> blk_mq_unique_tag_to_hwq(tag) + instance->low_latency_index_start;
-> +	}
->  }
->
->  /**
-> @@ -3326,7 +3326,7 @@ megasas_build_and_issue_cmd_fusion(struct
-> megasas_instance *instance,  {
->  	struct megasas_cmd_fusion *cmd, *r1_cmd = NULL;
->  	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
-> -	u32 index;
-> +	u32 index, blk_tag, unique_tag;
->
->  	if ((megasas_cmd_type(scmd) == READ_WRITE_LDIO) &&
->  		instance->ldio_threshold &&
-> @@ -3342,7 +3342,9 @@ megasas_build_and_issue_cmd_fusion(struct
-> megasas_instance *instance,
->  		return SCSI_MLQUEUE_HOST_BUSY;
->  	}
->
-> -	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
-> +	unique_tag = blk_mq_unique_tag(scmd->request);
-> +	blk_tag = blk_mq_unique_tag_to_tag(unique_tag);
-> +	cmd = megasas_get_cmd_fusion(instance, blk_tag);
->
->  	if (!cmd) {
->  		atomic_dec(&instance->fw_outstanding);
-> @@ -3383,7 +3385,7 @@ megasas_build_and_issue_cmd_fusion(struct
-> megasas_instance *instance,
->  	 */
->  	if (cmd->r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
->  		r1_cmd = megasas_get_cmd_fusion(instance,
-> -				(scmd->request->tag + instance-
-> >max_fw_cmds));
-> +				(blk_tag + instance->max_fw_cmds));
->  		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
->  	}
->
-> --
-> 2.26.2
+Will remove in v2.=
