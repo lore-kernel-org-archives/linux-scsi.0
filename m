@@ -7,228 +7,197 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BF1C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 02:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75562C433E1
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 02:19:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 042BF2070C
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 02:19:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D37F2070C
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 02:19:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="oPPhuM5P"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Ju6YLoyG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727846AbgGBCTr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Jul 2020 22:19:47 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:14949 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726305AbgGBCTq (ORCPT
+        id S1727921AbgGBCTs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Jul 2020 22:19:48 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:23316 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726192AbgGBCTq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jul 2020 22:19:46 -0400
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200702021942epoutp04d89d1d93429d672f820d9445d10d16be~dzglTgX702403724037epoutp04J
-        for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2020 02:19:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200702021942epoutp04d89d1d93429d672f820d9445d10d16be~dzglTgX702403724037epoutp04J
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200702021943epoutp03a1d1148d15a761c445760f49c0ccc42f~dzgmlg9_g0502705027epoutp03i
+        for <linux-scsi@vger.kernel.org>; Thu,  2 Jul 2020 02:19:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200702021943epoutp03a1d1148d15a761c445760f49c0ccc42f~dzgmlg9_g0502705027epoutp03i
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1593656382;
-        bh=gq8XNEz6DfOt51iMcSSB/6Jvegbfc40c/aYHfEzFe4E=;
+        s=mail20170921; t=1593656384;
+        bh=Ey4NFKPAdZv5rk1Pqo4Qwzaczl5dhs7AIM0WQFb0Ftg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
-        b=oPPhuM5PQ621QEfdjksn7MxwFYHBUmMVMUY8bl7p9F58NdPPx6Nots8FylOi7/5Oz
-         WTisukhMoD601RAMHDmI9wTJ3B2mMoEPVcsD/qXY9s+m8S2cFqHtsUExhlKWxcGt8F
-         Scg8gSnrq5LoLxEwWx7geh1MuCVj7znvrdByON6U=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        b=Ju6YLoyGrroDpUWVND9QH5oTDvMcZEz01ZPtRBmnaR6XjBgg1PENuPZLvkfra8ztD
+         cfjPNAnQBuPau1SHlKCS02dl7KCcIvsibh9D2NGJoO6L2jQr5q6MEaTUR5bQbXoCgf
+         ZGYXp63p0a/ZbU/zLxqVvkH1CyUNTPXcXdSM9UY8=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
         epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20200702021941epcas2p254c359ef50127b5ae3c31eb87e61531e~dzgkuvrSB1209212092epcas2p2r;
-        Thu,  2 Jul 2020 02:19:41 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.40.186]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 49y1y34dfgzMqYlp; Thu,  2 Jul
-        2020 02:19:39 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        12.25.18874.A344DFE5; Thu,  2 Jul 2020 11:19:38 +0900 (KST)
+        20200702021943epcas2p2dbd47d20de2141dbf17cc5b168ecf949~dzgl7BToX2428124281epcas2p2v;
+        Thu,  2 Jul 2020 02:19:43 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 49y1y51tXwzMqYkl; Thu,  2 Jul
+        2020 02:19:41 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        6E.11.19322.B344DFE5; Thu,  2 Jul 2020 11:19:39 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200702021938epcas2p249e149341d6227a2c10ab25a8695f579~dzghBzkWo1209212092epcas2p2m;
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200702021938epcas2p35eadff66139b6a42d438fa3ee868a29a~dzgh3V_au2388723887epcas2p3H;
         Thu,  2 Jul 2020 02:19:38 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200702021938epsmtrp2763b804baf71e26c9b8471fc868ba1bb~dzghBCp8Z1404614046epsmtrp20;
+        20200702021938epsmtrp23648e4828fc10f08348fff2074c053c4~dzgh2iyhk1404614046epsmtrp21;
         Thu,  2 Jul 2020 02:19:38 +0000 (GMT)
-X-AuditID: b6c32a46-519ff700000049ba-f9-5efd443a1661
+X-AuditID: b6c32a45-797ff70000004b7a-44-5efd443b69bb
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B1.AE.08382.9344DFE5; Thu,  2 Jul 2020 11:19:37 +0900 (KST)
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        4E.80.08303.A344DFE5; Thu,  2 Jul 2020 11:19:38 +0900 (KST)
 Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
         epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200702021937epsmtip13c7625f64ca8015993088f2c9ea70208~dzggw7-Sh2260422604epsmtip1B;
-        Thu,  2 Jul 2020 02:19:37 +0000 (GMT)
+        20200702021938epsmtip1cdf2143388f0bab08349716fd2efff12~dzghqWWGN2097820978epsmtip1M;
+        Thu,  2 Jul 2020 02:19:38 +0000 (GMT)
 From:   Kiwoong Kim <kwmad.kim@samsung.com>
 To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
         avri.altman@wdc.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, beanhuo@micron.com,
         asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org
 Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1 1/2] ufs: support various values per device
-Date:   Thu,  2 Jul 2020 11:11:48 +0900
-Message-Id: <464c059503bf1262e01bb16ea9b0726bc179be8c.1593655834.git.kwmad.kim@samsung.com>
+Subject: [PATCH v1 2/2] ufs: change the way to complete fDeviceInit
+Date:   Thu,  2 Jul 2020 11:11:49 +0900
+Message-Id: <854db3aecefab74495f4661cafc8cf116e4eaa85.1593655834.git.kwmad.kim@samsung.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1593655834.git.kwmad.kim@samsung.com>
 In-Reply-To: <cover.1593655834.git.kwmad.kim@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjk+LIzCtJLcpLzFFi42LZdljTVNfK5W+cwdz//BYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFotubGOyuLnlKItF9/UdbBbLj/9jcuDyuHzF2+NyXy+T
-        x4RFBxg9vq/vYPP4+PQWi0ffllWMHp83yXm0H+hmCuCIyrHJSE1MSS1SSM1Lzk/JzEu3VfIO
-        jneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMAbpRSaEsMacUKBSQWFyspG9nU5RfWpKqkJFf
-        XGKrlFqQklNgaFigV5yYW1yal66XnJ9rZWhgYGQKVJmQk3F0URNLwWnJih9H+9gbGJtFuxg5
-        OSQETCRmTjzO3sXIxSEksINRYuXKV0wQzidGiYULj7JCON8YJTq2bgFyOMBaVpy3gojvZZS4
-        efo5C4Tzg1Fi+fl+VpC5bAKaEk9vTgUbJSJwg1FiTvNhsASzgLrErgknmEBsYQE7iQPXzoPZ
-        LAKqEn3NTWA2r0C0xJ5FIFNBDpSTuHmukxnE5hSwlDi07yojKpsLqOYnu8SWpldsEA0uEkuu
-        nWOEsIUlXh3fwg5hS0l8frcXqqZeYt/UBlaI5h5Giaf7/kE1GEvMetbOCPInM9AL63fpQ7ys
-        LHHkFgvE/XwSHYf/skOEeSU62oQgGpUlfk2aDDVEUmLmzTtQWz0kTnR/B9sqBLLpx06eCYzy
-        sxDmL2BkXMUollpQnJueWmxUYIQce5sYwQlSy20H45S3H/QOMTJxMB5ilOBgVhLhPW3wK06I
-        NyWxsiq1KD++qDQntfgQoykwHCcyS4km5wNTdF5JvKGpkZmZgaWphamZkYWSOG+94oU4IYH0
-        xJLU7NTUgtQimD4mDk6pBqbpm4urfrLGTJsh9t2GT/mLT3Siq+fsE5Hivvubu19G95caBa7a
-        kaiZH2qtPn1J+eRZmqxuXPnWSl/4p5k9OP2t6e/O6vBAni+m3J6bbvZHrVFvmf2Z7/A1x5eG
-        s5XXPny8VHVvPv8dBslpstPmFGZN2TF/SVWIX9kh2RUzptqHF57Z/OrkQyeWXd/6b7xe/OrV
-        pw3zjzgaRa/5p5dr8avR1eohs/6uQ9ret9tZdmo+OD7dVCdUb/qjZb+v2q9/7H5QOty//+Pp
-        Er2Nd33N61h0GWOOcbz0fGYzx9Cz36SN9zZHIzvfinkvQzKu7I4LlRHxWVhmW3Tygcftcr2f
-        T+2vSi3Jnu6R+GzvWg794HlKLMUZiYZazEXFiQBDPd9eGQQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrDLMWRmVeSWpSXmKPExsWy7bCSnK6ly984g9dXjS0ezNvGZrG37QS7
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmplk+LIzCtJLcpLzFFi42LZdljTTNfa5W+cQeNdM4sH87axWextO8Fu
+        8fLnVTaLgw87WSymffjJbPFp/TJWi0U3tjFZ3NxylMWi+/oONovlx/8xOXB5XL7i7XG5r5fJ
+        Y8KiA4we39d3sHl8fHqLxaNvyypGj8+b5DzaD3QzBXBE5dhkpCampBYppOYl56dk5qXbKnkH
+        xzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAN2opFCWmFMKFApILC5W0rezKcovLUlVyMgv
+        LrFVSi1IySkwNCzQK07MLS7NS9dLzs+1MjQwMDIFqkzIydj+8h5rQa9oxcTb+1gbGDsEuxg5
+        OSQETCQufvjL2sXIxSEksINR4tqag4wQzidGiZPL90E5n4GcvvnsMC33/l2CatnFKLF+000o
+        5wejRPO8icwgVWwCmhJPb05lAkmICNxglJjTfJgVJMEsoC6xa8IJJhBbWMBZ4u6N0yxdjBwc
+        LAKqErNXZ4GEeQWiJd41HGCE2CYncfNcJ9hMTgFLiUP7rjKisyUEfrJL9O92hbBdJO78XAd1
+        qbDEq+NboGwpic/v9rJB2PUS+6Y2gB0tIdDDKPF03z+oQcYSs561M4Lcwwz0wPpd+iCmhICy
+        xJFbLBDX80l0HP7LDhHmlehoE4JoVJb4NWky1BBJiZk370CVeEisO5gGCR2gRTOuvmKdwCg/
+        C2H+AkbGVYxiqQXFuempxUYFhsiRt4kRnB61XHcwTn77Qe8QIxMH4yFGCQ5mJRHe0wa/4oR4
+        UxIrq1KL8uOLSnNSiw8xmgJDcSKzlGhyPjBB55XEG5oamZkZWJpamJoZWSiJ8+YqXogTEkhP
+        LEnNTk0tSC2C6WPi4JRqYBK5qbXKzHfdxqjuXLmrt9Q325qGnNaK3tcveH7frW63Z+kfNaOb
+        bnPLvJn6YdWE2Zs7W83FJ627NHPtqo7v2zo8NjuFLyhP/nB2gaiYWDqfS+iF8MdCte4u//JW
+        RzWEz7xW19h0oFgkgmHyFVuTLw9cHmxdsrnr2JLLH49d0c3yjIp+dI/BtXcLq/QrLsM5fR2X
+        TX9s8ZSYo95ksDlFTeXGrXnz1VV6VnzXkpllca3h2NnPUxVfFuwMNYwXaz57/EKAz46bs9w3
+        sc3w0uE4XKm4//uZBr7s77E39/YzRUf6Xrh0IdFzoq3au9vKKkyK39jZDH0OnJsQwaPDszWq
+        e+Vl7qDj62y1iks5RRg/WCixFGckGmoxFxUnAgAsEvQhGAQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrDLMWRmVeSWpSXmKPExsWy7bCSnK6Vy984g1frDCwezNvGZrG37QS7
         xcufV9ksDj7sZLGY9uEns8Wn9ctYLRbd2MZkcXPLURaL7us72CyWH//H5MDlcfmKt8flvl4m
-        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMARxWWTkpqTWZZapG+XwJVxdFETS8Fp
-        yYofR/vYGxibRbsYOTgkBEwkVpy36mLk4hAS2M0oceLiA9YuRk6guKTEiZ3PGSFsYYn7LUdY
-        IYq+MUpcOr2EHSTBJqAp8fTmVCaQhIjAI0aJ3zM7wRLMAuoSuyacYAKxhQXsJA5cOw9mswio
-        SvQ1N4HZvALREnsWPWeB2CAncfNcJzOIzSlgKXFo31WwzUICFhJrnjxjxCU+gVFgASPDKkbJ
-        1ILi3PTcYsMCw7zUcr3ixNzi0rx0veT83E2M4ADX0tzBuH3VB71DjEwcjIcYJTiYlUR4Txv8
-        ihPiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6NwYZyQQHpiSWp2ampBahFMlomDU6qBKdGpkE3x
-        2b0HTYombFsc1xVECd16nLU/lfHCkoQtlcxT1t1WPljV9kL1y7ulbT68t5jW3SrpN5nj8uWi
-        c+K0N021P8Kmbi/7XpjEX/PNYsa9+jsn/NyPMKw941gcoOlb6/csf9qJvPkv41OihWKTU5Yd
-        3lrRmTNJ+ddJBynXlx0VM1I/PfO/033ZtF6rYo9RwsKpDy93xBUbes+3UqxoVmcxWrfetZbh
-        tzavwNQnq/+ukzSqPffm/nU9i8f/+RItxRdfKLp+lEcjf6XXXbtqA+NZOjIBp43Db0urMfXO
-        urKq9v2ufN5nWR/STbZdvx1WZ7u6ZtHMyscS3JWtReuEVQuc1l3YEPxg7txDJnd5lViKMxIN
-        tZiLihMBDE0xwN8CAAA=
-X-CMS-MailID: 20200702021938epcas2p249e149341d6227a2c10ab25a8695f579
+        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMARxWWTkpqTWZZapG+XwJWx/eU91oJe
+        0YqJt/exNjB2CHYxcnJICJhI3Pt3ibWLkYtDSGAHo8SRY8/YIRKSEid2PmeEsIUl7rccgSr6
+        xiix5vh6FpAEm4CmxNObU5lAEiICjxglfs/sBOtmFlCX2DXhBBOILSzgLHH3xmmgBg4OFgFV
+        idmrs0DCvALREu8aDkAtkJO4ea6TGcTmFLCUOLTvKlhcSMBCYs2TZ4y4xCcwCixgZFjFKJla
+        UJybnltsWGCUl1quV5yYW1yal66XnJ+7iREc4FpaOxj3rPqgd4iRiYPxEKMEB7OSCO9pg19x
+        QrwpiZVVqUX58UWlOanFhxilOViUxHm/zloYJySQnliSmp2aWpBaBJNl4uCUamCKzst/fmtB
+        56e1Z4+Eluol5RcENK0+/CehddWpHZKpLn/qpwTarzdaajr96AbXe5Ken5hXeEqJaLl7JzaV
+        Xj8nVJzYNKvIsePPpdz8To9F7RaXN6yr8nkULDTx09cjtTwxfudC2zXZ76kuOfX3K/uEhhyZ
+        r5bh4fKlL7a1zyt8OPWncffyB090dWYxsHYzWyxv++IX/1OA08D6Zsfamschj6d/qdy4/b+I
+        klNzuvqevGeTtsuffmy7dbtAkjTTbe3uqz/0emwOue5x71jKJX/1ueHUv4UnDF5NXn1ywouf
+        nfWt9QmzQycwHk3dtlL+zoEev0tPHSv4k03CYn/Z/N187FOv7dkPW2aYL81MSVRWYinOSDTU
+        Yi4qTgQA2UJZXN8CAAA=
+X-CMS-MailID: 20200702021938epcas2p35eadff66139b6a42d438fa3ee868a29a
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200702021938epcas2p249e149341d6227a2c10ab25a8695f579
+X-CMS-RootMailID: 20200702021938epcas2p35eadff66139b6a42d438fa3ee868a29a
 References: <cover.1593655834.git.kwmad.kim@samsung.com>
-        <CGME20200702021938epcas2p249e149341d6227a2c10ab25a8695f579@epcas2p2.samsung.com>
+        <CGME20200702021938epcas2p35eadff66139b6a42d438fa3ee868a29a@epcas2p3.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Currently, UFS driver checks if fDeviceInit
+is cleared at several times, not period. This patch
+is to wait its completion with the period, not retrying.
+Many device vendors usually provides the specification on
+it with just period, not a combination of a number of retrying
+and period. So it could be proper to regard to the information
+coming from device vendors.
+
+I first added one device specific value regarding the information.
+
 Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-
-Respective UFS devices have their own characteristics and
-many of them could be a form of numbers, such as timeout
-and a number of retires. This introduces the way to set
-those things per specific device vendor or specific device.
-
-I wrote this like the style of ufs_fixups stuffs.
 ---
- drivers/scsi/ufs/ufs_quirks.h | 13 +++++++++++++
- drivers/scsi/ufs/ufshcd.c     | 39 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h     |  1 +
- 3 files changed, 53 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 36 ++++++++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index 2a00414..f074093 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -29,6 +29,19 @@ struct ufs_dev_fix {
- 	unsigned int quirk;
- };
- 
-+enum dev_val_type {
-+	DEV_VAL_FDEVICEINIT	= 0x0,
-+	DEV_VAL_NUM,
-+};
-+
-+struct ufs_dev_value {
-+	u16 wmanufacturerid;
-+	u8 *model;
-+	u32 key;
-+	u32 val;
-+	bool enable;
-+};
-+
- #define END_FIX { }
- 
- /* add specific device quirk */
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 52abe82..7b6f13a 100644
+index 7b6f13a..717afed 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -207,6 +207,21 @@ static struct ufs_dev_fix ufs_fixups[] = {
- 	END_FIX
+@@ -208,6 +208,7 @@ static struct ufs_dev_fix ufs_fixups[] = {
  };
  
-+static const struct ufs_dev_value ufs_dev_values[] = {
-+	{0, 0, 0, 0, false},
-+};
-+
-+static inline bool
-+ufs_get_dev_specific_value(struct ufs_hba *hba,
-+			   enum dev_val_type type, u32 *val)
-+{
-+	if (!ufs_dev_values[type].enable)
-+		return false;
-+
-+	*val = hba->dev_value[type];
-+	return true;
-+}
-+
- static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba);
- static void ufshcd_async_scan(void *data, async_cookie_t cookie);
- static int ufshcd_reset_and_restore(struct ufs_hba *hba);
-@@ -6923,11 +6938,35 @@ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
- }
- EXPORT_SYMBOL_GPL(ufshcd_fixup_dev_quirks);
+ static const struct ufs_dev_value ufs_dev_values[] = {
++	{UFS_VENDOR_TOSHIBA, UFS_ANY_MODEL, DEV_VAL_FDEVICEINIT, 2000, false},
+ 	{0, 0, 0, 0, false},
+ };
  
-+void ufshcd_set_dev_values(struct ufs_hba *hba, struct ufs_dev_value *value)
-+{
-+	struct ufs_dev_value *f;
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+
-+	if (!value)
-+		return;
-+
-+	for (f = value; f->val; f++) {
-+		if ((f->wmanufacturerid == dev_info->wmanufacturerid ||
-+					f->wmanufacturerid == UFS_ANY_VENDOR) &&
-+				((dev_info->model &&
-+				  STR_PRFX_EQUAL(f->model, dev_info->model)) ||
-+				 !strcmp(f->model, UFS_ANY_MODEL))) {
-+			f->enable = true;
-+			hba->dev_value[f->key] = f->val;
-+		}
-+	}
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_set_dev_values);
-+
- static void ufs_fixup_device_setup(struct ufs_hba *hba)
+@@ -4162,9 +4163,12 @@ EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
+  */
+ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
  {
- 	/* fix by general quirk table */
- 	ufshcd_fixup_dev_quirks(hba, ufs_fixups);
+-	int i;
++	u32 dev_init_compl_in_ms = 1000;
++	unsigned long timeout;
+ 	int err;
+ 	bool flag_res = true;
++	bool is_dev_val;
++	u32 val;
  
-+	/* set device specific values */
-+	ufshcd_set_dev_values(hba, ufs_dev_values);
-+
- 	/* allow vendors to fix quirks */
- 	ufshcd_vops_fixup_dev_quirks(hba);
+ 	err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+ 		QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL);
+@@ -4175,20 +4179,28 @@ static int ufshcd_complete_dev_init(struct ufs_hba *hba)
+ 		goto out;
+ 	}
+ 
+-	/* poll for max. 1000 iterations for fDeviceInit flag to clear */
+-	for (i = 0; i < 1000 && !err && flag_res; i++)
+-		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+-			QUERY_FLAG_IDN_FDEVICEINIT, 0, &flag_res);
++	/* Poll fDeviceInit flag to be cleared */
++	is_dev_val = ufs_get_dev_specific_value(hba, DEV_VAL_FDEVICEINIT, &val);
++	dev_init_compl_in_ms = (is_dev_val) ? val : 500;
++	timeout = jiffies + msecs_to_jiffies(dev_init_compl_in_ms);
++	do {
++		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
++					QUERY_FLAG_IDN_FDEVICEINIT, 0, &flag_res);
++		if (!flag_res)
++			break;
++		usleep_range(5, 10);
++	} while (time_before(jiffies, timeout));
+ 
+-	if (err)
++	if (err) {
+ 		dev_err(hba->dev,
+-			"%s reading fDeviceInit flag failed with error %d\n",
+-			__func__, err);
+-	else if (flag_res)
++				"%s reading fDeviceInit flag failed with error %d\n",
++				__func__, err);
++	} else if (flag_res) {
+ 		dev_err(hba->dev,
+-			"%s fDeviceInit was not cleared by the device\n",
+-			__func__);
+-
++				"%s fDeviceInit was not cleared by the device\n",
++				__func__);
++		err = -EBUSY;
++	}
+ out:
+ 	return err;
  }
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c774012..f221ca7 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -670,6 +670,7 @@ struct ufs_hba {
- 
- 	/* Device deviations from standard UFS device spec. */
- 	unsigned int dev_quirks;
-+	u32 dev_value[DEV_VAL_NUM];
- 
- 	struct blk_mq_tag_set tmf_tag_set;
- 	struct request_queue *tmf_queue;
 -- 
 2.7.4
 
