@@ -2,111 +2,134 @@ Return-Path: <SRS0=HQac=AN=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63EBCC433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 17:23:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78E3BC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 18:19:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F29B20760
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 17:23:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 582FB20870
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Jul 2020 18:19:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ZY+GL/Rm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727800AbgGBRXZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Jul 2020 13:23:25 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:33260 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726997AbgGBRXY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2020 13:23:24 -0400
-Received: by mail-pg1-f193.google.com with SMTP id o13so10814545pgf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Jul 2020 10:23:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=ie850xtyEe/v2GabNmC+LlwHavkLu2bE7v1dtHSoEMY=;
-        b=gHEuJfc7tT1XcMoqLBD0g2uzuZR3TmRLWyo0sO1hGjJA2NuflJZc6Xn82OQcF268Jy
-         6uxjxpbklibtzSQ0z2urzAJtuUY6Xcyrxxrd7ye8/dTQdii4HYd9fcvPkquvhcu/ao4h
-         HmizwCjaF7Qm5lvsrxf0bezf59gfFenrXYo1rSCezJ34kuMq61YIRx7bk0nTJc22u71e
-         yWmdtBEUgxE8qRUuqgzUalrq+RtD2hydKTiqFlRm10r9bLddirfobE6ID9+OAPjpnHRL
-         kxXZy4vuDuu2DuOci7MFyad++4AWFrnfOWLnNfcb0Qay7qTGT8rFg59ZHA0TDGNvity1
-         xpgQ==
-X-Gm-Message-State: AOAM530XJUAG5j4j+efCEtol0Kf69CoBUswlMrnK9/L8QohhAuEHTSZb
-        edPiI9+2KChX0gUbq9JcSkZvrB6+
-X-Google-Smtp-Source: ABdhPJwu96P4sztkHTkLk4ESQeTJwVggqbBH3sL47Jgk+6+3URbo3t1okvOOmx20yBJBM4siwU/5NA==
-X-Received: by 2002:a63:5623:: with SMTP id k35mr26770376pgb.325.1593710603318;
-        Thu, 02 Jul 2020 10:23:23 -0700 (PDT)
-Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id u13sm8203178pjy.40.2020.07.02.10.23.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Jul 2020 10:23:22 -0700 (PDT)
-Subject: Re: [PATCH] scsi: allow state transitions BLOCK -> BLOCK
-To:     Hannes Reinecke <hare@suse.de>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        id S1727936AbgGBSTq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Jul 2020 14:19:46 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:23401 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726980AbgGBSTp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Jul 2020 14:19:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1593713985; x=1625249985;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=kaofhYnEjFP3lo+xOFaqTZIKdftbO3b5N4EGAllPI2s=;
+  b=ZY+GL/Rm8RuSC9w0Qc+9U8WJcZ9Ess3ik9ZwTfYc1E3jI1epaTd2pXDA
+   /bMsCnjEc9FpBPrE0Mv0hn/mlWzmyG/wVN3nHcqVLeKtTnErYJlGFEX9s
+   Pu/lf0CIeguLDGbVo1fReZHOXw7xbmN3Ha0IwcClBUN039JiVSbnYi2PD
+   RHtgt4prt2fiCwTRr1NK17KNKxbU8hOsXfmMa8r4eS9qtGZ8OVttxnc5t
+   Z62B6cjw91o5cRP9cLFTm6tC+OkkF5dZgXsih6Pl8Av/QYi5tziwKgWpq
+   YWMuevXzJaRGmuN/Gxj/gshj+lF0Yfnbtol2fURWAgVHPDDIaLUEAJ5S9
+   w==;
+IronPort-SDR: ad/jl1w7OGIDaF71IAnfAhfyns68EbYgwL+Z38N1IkEMalZuWNkzC7PtxPNeoj+h5ozyFE+Aqt
+ +nl4HmyejW9e9Z3mpv5VecJbHOAZb4osJT1bpD9qSR3lATuoPZSPBN2L+xcZmpdW6/KoCtIjpd
+ fKlc0U5al2tn155kj3gnM5ZN0mt4oVz+jhPtMGsOacYz9Cd+AzwdJ/6fx92WtPFAy58uZ5Aw/G
+ pHKVUc6STAjJrsGuB/LntP4D/nWJfFxEwpgbyhtwCz9QNOoqHZw/1/HdPnLw13lk8ZCFq/6C+H
+ g5c=
+X-IronPort-AV: E=Sophos;i="5.75,305,1589212800"; 
+   d="scan'208";a="142854296"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Jul 2020 02:19:45 +0800
+IronPort-SDR: NSPBQXlbP7gQwWw5lR1JxQthNFp4QoSFwRhGuDfk0PH6UwGCy7BzGTTPjSS11pCpuxNrkP4Zdr
+ dfME74CVab0F2zOGhRklHeLI0ePqAX68s=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2020 11:08:32 -0700
+IronPort-SDR: 8F+GWDrALYAMncJ4kzkXRhtyvKSoOfqJw1w2evNh1U+HuqCi7+BZszvO2GN5Q7dz84aRoGKV/e
+ TyGqZMigUMFQ==
+WDCIronportException: Internal
+Received: from caiyi-lt.ad.shared (HELO localhost.hgst.com) ([10.86.58.119])
+  by uls-op-cesaip01.wdc.com with ESMTP; 02 Jul 2020 11:19:40 -0700
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-References: <20200702142436.98336-1-hare@suse.de>
- <1593700443.9652.2.camel@HansenPartnership.com>
- <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <2dd291ba-1e59-5e88-de96-5d3965f20317@acm.org>
-Date:   Thu, 2 Jul 2020 10:23:21 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: [PATCH v2 0/2] Export max open zones and max active zones to sysfs
+Date:   Thu,  2 Jul 2020 20:19:20 +0200
+Message-Id: <20200702181922.24190-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-02 08:14, Hannes Reinecke wrote:
-> On 7/2/20 4:34 PM, James Bottomley wrote:
->> On Thu, 2020-07-02 at 16:24 +0200, Hannes Reinecke wrote:
->>> scsi_transport_srp.c will call scsi_target_block() repeatedly
->>> without calling scsi_target_unblock() first.
->>> So allow the idempotent state transition BLOCK -> BLOCK to avoid
->>> a warning here.
->>
->> That really doesn't sound like a good idea.  Block and unblock should
->> be matched pairs and since you don't have a running->running transition
->> allowed this implies that srp calls block many times but unblock only
->> once.  It really sounds like srp needs fixing.
->>
-> That was what I was planning first, but then SRP has a weird mix of states, calling scsi_target_block()/scsi_target_unblock() on all sorts of places.
+Export max open zones and max active zones to sysfs.
 
-It is not clear to me how the SRP transport code could call
-scsi_target_block() twice without calling scsi_target_unblock() in
-between? All these calls are serialized by the rport mutex.
-scsi_target_block() is called when the port state is changed to
-SRP_RPORT_BLOCKED. scsi_target_unblock() is called when the port
-state is changed into another state than SRP_RPORT_BLOCKED.
+Since this patch series depends on the Zoned Namespace Command Set series
+that has been picked up in the nvme-5.9 branch in the nvme git tree,
+I have based this series upon nvme-5.9.
 
-Bart.
+Jens, Christoph, I don't know how you usually sync stuff,
+perhaps the nvme-5.9 branch could be merged into
+linux-block/for-next, once now, and once later (like usual),
+to ease with integration patches like this, that changes
+code belonging to the block layer, but depending on commits
+in the nvme tree. I have a feeling that this series will not
+be the one series depending on the ZNS patches for this coming
+merge window.
+
+
+
+All zoned block devices in the kernel utilize the "zoned block device
+support" (CONFIG_BLK_DEV_ZONED).
+
+The Zoned Namespace Command Set Specification defines two different
+resource limits: Max Open Resources and Max Active Resources.
+
+The ZAC and ZBC standards define a MAXIMUM NUMBER OF OPEN SEQUENTIAL WRITE
+REQUIRED ZONES field.
+
+
+Since the ZNS Max Open Resources field has the same purpose as the ZAC/ZBC
+field, (the ZNS field is 0's based, the ZAC/ZBC field isn't), create a
+common "max_open_zones" definition in the sysfs documentation, and export
+both the ZNS field and the ZAC/ZBC field according to this new common
+definition.
+
+The ZNS Max Active Resources field does not have an equivalent field in
+ZAC/ZBC, however, since both ZAC/ZBC and ZNS utilize the "zoned block
+device support" in the kernel, create a "max_active_zones" definition in
+the sysfs documentation, similar to "max_open_zones", and export it
+according to this new definition. For ZAC/ZBC devices, this field will be
+exported as 0, meaning "no limit".
+
+Changes since v1:
+-Picked up Javier's Reviewed-by tags.
+-Reworded commit message (Damien).
+-Dropped unused stubs for setting MAR/MOR when building without
+ CONFIG_BLK_DEV_ZONED (Damien).
+
+Niklas Cassel (2):
+  block: add max_open_zones to blk-sysfs
+  block: add max_active_zones to blk-sysfs
+
+ Documentation/block/queue-sysfs.rst | 14 +++++++++++++
+ block/blk-sysfs.c                   | 27 ++++++++++++++++++++++++
+ drivers/nvme/host/zns.c             |  2 ++
+ drivers/scsi/sd_zbc.c               |  5 +++++
+ include/linux/blkdev.h              | 32 +++++++++++++++++++++++++++++
+ 5 files changed, 80 insertions(+)
+
+-- 
+2.26.2
+
