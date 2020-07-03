@@ -7,67 +7,68 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 356D9C433E0
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 04:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF5EC433E0
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 04:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C0AA206DF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 04:04:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AE97206DF
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 04:04:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="biUv6dks"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gZloYcKa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725915AbgGCEEF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jul 2020 00:04:05 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33752 "EHLO
+        id S1725972AbgGCEEJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jul 2020 00:04:09 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:33814 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725294AbgGCEEF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2020 00:04:05 -0400
+        with ESMTP id S1725294AbgGCEEJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jul 2020 00:04:09 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0633wvwI096861;
-        Fri, 3 Jul 2020 04:04:03 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0633wv3N096864;
+        Fri, 3 Jul 2020 04:04:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=L1u2fFDuKIWsO31WN0vUswf3Y8+lDWU8GKw7EIyCEJw=;
- b=biUv6dksOzySz2iLGbz94Sk0l0j467gV2YWoDaWAkN7hTdlXOvxNkRsrkCSx2dUEwaQA
- BxLJ8+q66vnhtiSFsJg5NfeFeg8l9dIF2pkL2ByjMQcM/AXqlY0iHZuvj/a5SGuNj1ot
- FQBmyAMN4Q0FJsopVXzNnS7HEHpNsom0B74KGG9aFs1+IQJV1foGxo4QqmRgeN9Ecq1i
- LqRgMnqRE5eJv8nSH5+wbmQDjNmj2YZuPlH/2EXEdHbUodEgOBHk1rq5NsYsJq/a5Dxm
- JGU8PxjL4V58x2vdgYmyXxE+P6jms8Xln7fbgmIeO2vg0ZROioumKGXllGwTH2+KYJeO qA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 31wxrnkp4p-1
+ bh=iyMM3nlF9phvfL2xAlL1dPVvLw+GV8+D1vqtYApdbiM=;
+ b=gZloYcKaxNaoN7Zyw07lqmCdnsU/8keRdMfKhIMcviDIXfDaeMqQr9j15LSZUok5HoTt
+ IoeQZRoTlhb2D3a95VDIgpGCI8uGZVneIq1VwlyKdht9W4H90tve/7xMAFcUVbvaR09U
+ /AeOJnR73n8fCO7+EallqkcBGizG02ZlLn7y36AbTDOTft7Qr5beG+6ayDVCkLQTnVyy
+ C0HOACSKc0E88HE2sUcTvZsxogfVeFk5yE3AKg1anKGffSGpsITyNHz4ocO1iWe3P2iG
+ bx+jdT8sBhSlAqaXpIpJ8Gy8bovaptJNH4bW3BDzCczBDcEuHaWahqk26S7xyHCBdyAz IQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31wxrnkp4w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 03 Jul 2020 04:04:03 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0633whqV161967;
-        Fri, 3 Jul 2020 04:04:03 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 31xfvwnc9b-1
+        Fri, 03 Jul 2020 04:04:07 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0633vuIb063561;
+        Fri, 3 Jul 2020 04:04:07 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 31xg21ytfn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 03 Jul 2020 04:04:02 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 063442qm003299;
-        Fri, 3 Jul 2020 04:04:02 GMT
+        Fri, 03 Jul 2020 04:04:06 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 063446Vu002604;
+        Fri, 3 Jul 2020 04:04:06 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 03 Jul 2020 04:04:02 +0000
+        with ESMTP ; Fri, 03 Jul 2020 04:04:05 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/14] lpfc: Update lpfc to revision 12.8.0.2
-Date:   Fri,  3 Jul 2020 00:03:55 -0400
-Message-Id: <159374899164.14731.8353105103067375009.b4-ty@oracle.com>
+To:     Nilesh Javali <njavali@marvell.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH v4 0/2] qla2xxx SAN Congestion Management (SCM) support
+Date:   Fri,  3 Jul 2020 00:03:57 -0400
+Message-Id: <159374899164.14731.8657061725127309547.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200630215001.70793-1-jsmart2021@gmail.com>
-References: <20200630215001.70793-1-jsmart2021@gmail.com>
+In-Reply-To: <20200630102229.29660-1-njavali@marvell.com>
+References: <20200630102229.29660-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9670 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 spamscore=0
- phishscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=784 adultscore=0 mlxscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2007030027
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9670 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=793
  priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
  malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
  lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
@@ -78,45 +79,25 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 30 Jun 2020 14:49:47 -0700, James Smart wrote:
+On Tue, 30 Jun 2020 03:22:27 -0700, Nilesh Javali wrote:
 
-> Update lpfc to revision 12.8.0.2
+> Martin,
 > 
-> Patch set contains fixes as a couple of small additions, and two larger
-> additions - blk_io_poll support and a different log message facility.
+> Please apply the updated qla2xxx patch series implementing SAN
+> Congestion Management (SCM) support to the scsi tree at your
+> earliest convenience.
 > 
-> The patches were cut against Martin's 5.9/scsi-queue tree
+> We will follow this up with another patchset to add SCM statistics to
+> the scsi transport fc, as recommended by James.
 > 
 > [...]
 
 Applied to 5.9/scsi-queue, thanks!
 
-[01/14] scsi: lpfc: Fix unused assignment in lpfc_sli4_bsg_link_diag_test
-        https://git.kernel.org/mkp/scsi/c/e5fcb81d40d4
-[02/14] scsi: lpfc: Fix missing MDS functionality
-        https://git.kernel.org/mkp/scsi/c/c93764a65b4b
-[04/14] scsi: lpfc: Fix NVMe rport deregister and registration during ADISC
-        https://git.kernel.org/mkp/scsi/c/9806c984d43a
-[05/14] scsi: lpfc: Fix oops due to overrun when reading SLI3 data
-        https://git.kernel.org/mkp/scsi/c/d91e3abb682b
-[06/14] scsi: lpfc: Fix stack trace seen while setting rrq active
-        https://git.kernel.org/mkp/scsi/c/9dace1fa91ca
-[07/14] scsi: lpfc: Fix shost refcount mismatch when deleting vport
-        https://git.kernel.org/mkp/scsi/c/03dbfe0668e6
-[08/14] scsi: lpfc: Fix kdump hang on PPC
-        https://git.kernel.org/mkp/scsi/c/86ee57a97a17
-[09/14] scsi: lpfc: Fix language in 0373 message to reflect non-error message
-        https://git.kernel.org/mkp/scsi/c/28ed7374401b
-[10/14] scsi: lpfc: Allow applications to issue Common Set Features mailbox command
-        https://git.kernel.org/mkp/scsi/c/45bc44270f0c
-[11/14] scsi: lpfc: Add support to display if adapter dumps are available
-        https://git.kernel.org/mkp/scsi/c/f0020e428af7
-[12/14] scsi: lpfc: Add blk_io_poll support for latency improvment
-        https://git.kernel.org/mkp/scsi/c/317aeb83c92b
-[13/14] scsi: lpfc: Add an internal trace log buffer
-        https://git.kernel.org/mkp/scsi/c/372c187b8a70
-[14/14] scsi: lpfc: Update lpfc version to 12.8.0.2
-        https://git.kernel.org/mkp/scsi/c/3fed58b94e3d
+[1/2] scsi: qla2xxx: Change in PUREX to handle FPIN ELS requests
+      https://git.kernel.org/mkp/scsi/c/62e9dd177732
+[2/2] scsi: qla2xxx: SAN congestion management implementation
+      https://git.kernel.org/mkp/scsi/c/9f2475fe7406
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
