@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D8D0C433E4
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 13:01:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA3B1C433E3
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 13:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8955D206B7
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 13:01:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9261220B80
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 13:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726766AbgGCNBm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jul 2020 09:01:42 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53374 "EHLO mx2.suse.de"
+        id S1726765AbgGCNBl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jul 2020 09:01:41 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53346 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726670AbgGCNBc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Jul 2020 09:01:32 -0400
+        id S1726687AbgGCNBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Jul 2020 09:01:35 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C6A8EAF5B;
+        by mx2.suse.de (Postfix) with ESMTP id D846CAF73;
         Fri,  3 Jul 2020 13:01:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -31,9 +31,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Don Brace <don.brace@microchip.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/21] hpsa: move hpsa_hba_inquiry after scsi_add_host()
-Date:   Fri,  3 Jul 2020 15:01:15 +0200
-Message-Id: <20200703130122.111448-15-hare@suse.de>
+Subject: [PATCH 19/21] aacraid: store target id in host_scribble
+Date:   Fri,  3 Jul 2020 15:01:20 +0200
+Message-Id: <20200703130122.111448-20-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200703130122.111448-1-hare@suse.de>
 References: <20200703130122.111448-1-hare@suse.de>
@@ -42,84 +42,176 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move hpsa_hba_inquiry to after scsi_add_host() so that the host
-is fully initialized.
+The probe_container mechanism requires a target id to be present,
+even if the device itself isn't present (yet).
+As we're now allocating internal commands the target id of the
+device is immutable, so store the requested target id in the
+host_scribble field.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/hpsa.c | 37 +++++++++++++++++++------------------
- 1 file changed, 19 insertions(+), 18 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 53 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 38 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 81d0414e2117..db0142a16a72 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -5839,6 +5839,22 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
- 	return 0;
- }
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 2b868f8db8ff..e1ba5e65a66f 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -608,9 +608,11 @@ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
  
-+static void hpsa_hba_inquiry(struct ctlr_info *h)
-+{
-+	int rc;
-+
-+#define HBA_INQUIRY_BYTE_COUNT 64
-+	h->hba_inquiry_data = kmalloc(HBA_INQUIRY_BYTE_COUNT, GFP_KERNEL);
-+	if (!h->hba_inquiry_data)
-+		return;
-+	rc = hpsa_scsi_do_inquiry(h, RAID_CTLR_LUNID, 0,
-+		h->hba_inquiry_data, HBA_INQUIRY_BYTE_COUNT);
-+	if (rc != 0) {
-+		kfree(h->hba_inquiry_data);
-+		h->hba_inquiry_data = NULL;
-+	}
-+}
-+
- static int hpsa_scsi_add_host(struct ctlr_info *h)
+ static int aac_probe_container_callback2(struct scsi_cmnd * scsicmd)
  {
- 	int rv;
-@@ -5848,6 +5864,9 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
- 		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
- 		return rv;
+-	struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
++	struct aac_dev *dev = (struct aac_dev *)(scsicmd->device->host->hostdata);
++	struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
+ 
+-	if ((fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
++	if (scmd_id(scsicmd) < dev->maximum_num_containers &&
++	    (fsa_dev_ptr[scmd_id(scsicmd)].valid & 1))
+ 		return aac_scsi_cmd(scsicmd);
+ 
+ 	scsicmd->result = DID_NO_CONNECT << 16;
+@@ -623,6 +625,7 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 	struct fsa_dev_info *fsa_dev_ptr;
+ 	int (*callback)(struct scsi_cmnd *);
+ 	struct scsi_cmnd * scsicmd = (struct scsi_cmnd *)context;
++	int cid = scmd_id(scsicmd);
+ 	int i;
+ 
+ 
+@@ -630,12 +633,15 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 		return;
+ 
+ 	scsicmd->SCp.Status = 0;
++	if (scsicmd->host_scribble)
++		cid = *(int *)scsicmd->host_scribble;
++
+ 	fsa_dev_ptr = fibptr->dev->fsa_dev;
+-	if (fsa_dev_ptr) {
++	if (fsa_dev_ptr && cid < fibptr->dev->maximum_num_containers) {
+ 		struct aac_mount * dresp = (struct aac_mount *) fib_data(fibptr);
+ 		__le32 sup_options2;
+ 
+-		fsa_dev_ptr += scmd_id(scsicmd);
++		fsa_dev_ptr += cid;
+ 		sup_options2 =
+ 			fibptr->dev->supplement_adapter_info.supported_options2;
+ 
+@@ -670,7 +676,6 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
+ 		scsicmd->SCp.Status = le32_to_cpu(dresp->count);
  	}
-+
-+	hpsa_hba_inquiry(h);
-+
- 	scsi_scan_host(h->scsi_host);
+ 	aac_fib_complete(fibptr);
+-	aac_fib_free(fibptr);
+ 	callback = (int (*)(struct scsi_cmnd *))(scsicmd->SCp.ptr);
+ 	scsicmd->SCp.ptr = NULL;
+ 	(*callback)(scsicmd);
+@@ -682,6 +687,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 	struct scsi_cmnd * scsicmd;
+ 	struct aac_mount * dresp;
+ 	struct aac_query_mount *dinfo;
++	int cid;
+ 	int status;
+ 
+ 	dresp = (struct aac_mount *) fib_data(fibptr);
+@@ -694,10 +700,15 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 		}
+ 	}
+ 	scsicmd = (struct scsi_cmnd *) context;
+-
+ 	if (!aac_valid_context(scsicmd, fibptr))
+ 		return;
+-
++	cid = scmd_id(scsicmd);
++	if (scsicmd->host_scribble)
++		cid = *(int *)scsicmd->host_scribble;
++	if (cid >= fibptr->dev->maximum_num_containers) {
++		_aac_probe_container2(context, fibptr);
++		return;
++	}
+ 	aac_fib_init(fibptr);
+ 
+ 	dinfo = (struct aac_query_mount *)fib_data(fibptr);
+@@ -708,7 +719,7 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 	else
+ 		dinfo->command = cpu_to_le32(VM_NameServe64);
+ 
+-	dinfo->count = cpu_to_le32(scmd_id(scsicmd));
++	dinfo->count = cpu_to_le32(cid);
+ 	dinfo->type = cpu_to_le32(FT_FILESYS);
+ 	scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
+ 
+@@ -731,10 +742,20 @@ static void _aac_probe_container1(void * context, struct fib * fibptr)
+ 
+ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(struct scsi_cmnd *))
+ {
++	struct aac_dev * dev;
+ 	struct fib * fibptr;
+ 	int status = -ENOMEM;
++	int cid = scmd_id(scsicmd);
+ 
+-	if ((fibptr = aac_fib_alloc((struct aac_dev *)scsicmd->device->host->hostdata))) {
++	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
++	if (scsicmd->host_scribble) {
++		cid = *(int *)scsicmd->host_scribble;
++		if (cid > dev->maximum_num_containers) {
++			status = -ENODEV;
++			goto out_status;
++		}
++	}
++	if ((fibptr = aac_fib_alloc(dev))) {
+ 		struct aac_query_mount *dinfo;
+ 
+ 		aac_fib_init(fibptr);
+@@ -747,7 +768,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 		else
+ 			dinfo->command = cpu_to_le32(VM_NameServe);
+ 
+-		dinfo->count = cpu_to_le32(scmd_id(scsicmd));
++		dinfo->count = cpu_to_le32(cid);
+ 		dinfo->type = cpu_to_le32(FT_FILESYS);
+ 		scsicmd->SCp.ptr = (char *)callback;
+ 		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
+@@ -771,10 +792,11 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+ 			aac_fib_free(fibptr);
+ 		}
+ 	}
++out_status:
+ 	if (status < 0) {
+-		struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
+-		if (fsa_dev_ptr) {
+-			fsa_dev_ptr += scmd_id(scsicmd);
++		struct fsa_dev_info *fsa_dev_ptr = dev->fsa_dev;
++		if (fsa_dev_ptr && cid < dev->maximum_num_containers) {
++			fsa_dev_ptr += cid;
+ 			if ((fsa_dev_ptr->valid & 1) == 0) {
+ 				fsa_dev_ptr->valid = 0;
+ 				return (*callback)(scsicmd);
+@@ -794,7 +816,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
+  */
+ static int aac_probe_container_callback1(struct scsi_cmnd * scsicmd)
+ {
+-	scsicmd->device = NULL;
++	scsicmd->host_scribble = NULL;
  	return 0;
  }
-@@ -7901,22 +7920,6 @@ static int hpsa_pci_init(struct ctlr_info *h)
- 	return err;
- }
  
--static void hpsa_hba_inquiry(struct ctlr_info *h)
--{
--	int rc;
--
--#define HBA_INQUIRY_BYTE_COUNT 64
--	h->hba_inquiry_data = kmalloc(HBA_INQUIRY_BYTE_COUNT, GFP_KERNEL);
--	if (!h->hba_inquiry_data)
--		return;
--	rc = hpsa_scsi_do_inquiry(h, RAID_CTLR_LUNID, 0,
--		h->hba_inquiry_data, HBA_INQUIRY_BYTE_COUNT);
--	if (rc != 0) {
--		kfree(h->hba_inquiry_data);
--		h->hba_inquiry_data = NULL;
--	}
--}
--
- static int hpsa_init_reset_devices(struct pci_dev *pdev, u32 board_id)
- {
- 	int rc, i;
-@@ -8825,8 +8828,6 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	/* Turn the interrupts on so we can service requests */
- 	h->access.set_intr_mask(h, HPSA_INTR_ON);
+@@ -815,6 +837,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
+ 		return -ENOMEM;
+ 	}
+ 	scsicmd->scsi_done = aac_probe_container_scsi_done;
++	scsicmd->host_scribble = (unsigned char *)&cid;
  
--	hpsa_hba_inquiry(h);
--
- 	h->lastlogicals = kzalloc(sizeof(*(h->lastlogicals)), GFP_KERNEL);
- 	if (!h->lastlogicals)
- 		dev_info(&h->pdev->dev,
+ 	scsicmd->device = scsidev;
+ 	scsidev->sdev_state = 0;
+@@ -822,7 +845,7 @@ int aac_probe_container(struct aac_dev *dev, int cid)
+ 	scsidev->host = dev->scsi_host_ptr;
+ 
+ 	if (_aac_probe_container(scsicmd, aac_probe_container_callback1) == 0)
+-		while (scsicmd->device == scsidev)
++		while (scsicmd->host_scribble == (unsigned char *)&cid)
+ 			schedule();
+ 	kfree(scsidev);
+ 	status = scsicmd->SCp.Status;
 -- 
 2.16.4
 
