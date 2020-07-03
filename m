@@ -2,26 +2,25 @@ Return-Path: <SRS0=NMWN=AO=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DD71C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8481CC433E1
 	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 13:01:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D0122070A
+	by mail.kernel.org (Postfix) with ESMTP id 6E3712070A
 	for <linux-scsi@archiver.kernel.org>; Fri,  3 Jul 2020 13:01:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726660AbgGCNBb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Jul 2020 09:01:31 -0400
-Received: from mx2.suse.de ([195.135.220.15]:53232 "EHLO mx2.suse.de"
+        id S1726676AbgGCNBd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Jul 2020 09:01:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53140 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726534AbgGCNB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1726074AbgGCNB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 3 Jul 2020 09:01:29 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 9DBC5AF37;
+        by mx2.suse.de (Postfix) with ESMTP id 7C5DDAE17;
         Fri,  3 Jul 2020 13:01:27 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -31,84 +30,146 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         John Garry <john.garry@huawei.com>,
         Don Brace <don.brace@microchip.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 07/21] scsi: use real inquiry data when initialising devices
-Date:   Fri,  3 Jul 2020 15:01:08 +0200
-Message-Id: <20200703130122.111448-8-hare@suse.de>
+Subject: [PATCHv6 00/21] scsi: enable reserved commands for LLDDs
+Date:   Fri,  3 Jul 2020 15:01:01 +0200
+Message-Id: <20200703130122.111448-1-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20200703130122.111448-1-hare@suse.de>
-References: <20200703130122.111448-1-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use dummy inquiry data when initialising devices and not just
-some 'nullnullnull' string.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/scsi_scan.c | 34 +++++++++++++++++++++++++---------
- 1 file changed, 25 insertions(+), 9 deletions(-)
+quite some drivers use internal commands for various purposes, most
+commonly sending TMFs or querying the HBA status.
+While these commands use the same submission mechanism than normal
+I/O commands, they will not be counted as outstanding commands,
+requiring those drivers to implement their own mechanism to figure
+out outstanding commands.
+The block layer already has the concept of 'reserved' tags for
+precisely this purpose, namely non-I/O tags which live off a separate
+tag pool. That guarantees that these commands can always be sent,
+and won't be influenced by tag starvation from the I/O tag pool.
+This patchset enables the use of reserved tags for the SCSI midlayer
+by allocating a virtual LUN for the HBA itself which just serves
+as a resource to allocate valid tags from.
+This removes quite some hacks which were required for some
+drivers (eg. fnic or snic), and allows the use of tagset
+iterators within the drivers.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index f2437a7570ce..871c7609c159 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -81,7 +81,27 @@
- #define SCSI_SCAN_TARGET_PRESENT	1
- #define SCSI_SCAN_LUN_PRESENT		2
- 
--static const char *scsi_null_device_strs = "nullnullnullnull";
-+/*
-+ * Dummy inquiry for virtual LUNs:
-+ *
-+ * standard INQUIRY: [qualifier indicates no connected LU]
-+ *  PQual=1  Device_type=31  RMB=0  LU_CONG=0  version=0x05  [SPC-3]
-+ *  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
-+ *  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-+ *  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-+ *  [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
-+ *    length=36 (0x24)   Peripheral device type: no physical device on this lu
-+ * Vendor identification: LINUX
-+ * Product identification: VIRTUALLUN
-+ * Product revision level: 1.0
-+ */
-+static const unsigned char scsi_null_inquiry[36] = {
-+	0x3f, 0x00, 0x05, 0x02, 0x1f, 0x00, 0x00, 0x00,
-+	0x4c, 0x49, 0x4e, 0x55, 0x58, 0x20, 0x20, 0x20,
-+	0x56, 0x49, 0x52, 0x54, 0x55, 0x41, 0x4c, 0x4c,
-+	0x55, 0x4e, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
-+	0x31, 0x2e, 0x30, 0x20
-+};
- 
- #define MAX_SCSI_LUNS	512
- 
-@@ -224,9 +244,10 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	if (!sdev)
- 		goto out;
- 
--	sdev->vendor = scsi_null_device_strs;
--	sdev->model = scsi_null_device_strs;
--	sdev->rev = scsi_null_device_strs;
-+	sdev->type = scsi_null_inquiry[0] & 0x1f;
-+	sdev->vendor = scsi_null_inquiry + 8;
-+	sdev->model = scsi_null_inquiry + 16;
-+	sdev->rev = scsi_null_inquiry + 32;
- 	sdev->host = shost;
- 	sdev->queue_ramp_up_period = SCSI_DEFAULT_RAMP_UP_PERIOD;
- 	sdev->id = starget->id;
-@@ -253,11 +274,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	 * slave_configure function */
- 	sdev->max_device_blocked = SCSI_DEFAULT_DEVICE_BLOCKED;
- 
--	/*
--	 * Some low level driver could use device->type
--	 */
--	sdev->type = -1;
--
- 	/*
- 	 * Assume that the device will have handshaking problems,
- 	 * and then fix this field later if it turns out it
+The entire patchset can be found at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git reserved-tags.v6
+
+As usual, comments and reviews are welcome.
+
+Changes to v5:
+- Remove patch for csiostor
+- Warn on normal commands in scsi_put_reserved_cmd()
+- Fixup aacraid to not only scsi_put_internal_cmd() for
+  reserved commands
+- Add 'nr_reserved_cmds' field to host template
+- Reshuffle patches
+
+Changes to v4:
+- Fixup kbuild warning
+- Include reviews from Bart
+
+Changes to v3:
+- Kill gdth
+- Only convert fnic, snic, hpsa, and aacraid
+- Drop command emulation for pseudo host device
+- make 'can_queue' exclude the number or reserved tags
+- Drop persistent commands proposal
+- Sanitize host device handling
+
+Changes to v2:
+- Update patches from John Garry
+- Use virtual LUN as suggested by Christoph
+- Improve SCSI Host device to present a real SCSI device
+- Implement 'persistent' commands for AENs
+- Convert Megaraid SAS
+
+Changes to v1:
+- Make scsi_{get, put}_reserved_cmd() for Scsi host
+- Previously we separate scsi_{get, put}_reserved_cmd() for sdev
+  and scsi_host_get_reserved_cmd() for the host
+- Fix how Scsi_Host.can_queue is set in the virtio-scsi change
+- Drop Scsi_Host.use_reserved_cmd_q
+- Drop scsi_is_reserved_cmd()
+- Add support in libsas and associated HBA drivers
+- Allocate reserved command in slow task
+- Switch hisi_sas to use reserved Scsi command
+- Reorder the series a little
+- Some tidying
+	      
+
+Hannes Reinecke (21):
+  scsi: drop gdth driver
+  block: add flag for internal commands
+  scsi: add scsi_{get,put}_internal_cmd() helper
+  fnic: use internal commands
+  fnic: use scsi_host_busy_iter() to traverse commands
+  fnic: check for started requests in fnic_wq_copy_cleanup_handler()
+  scsi: use real inquiry data when initialising devices
+  scsi: Use dummy inquiry data for the host device
+  scsi: revamp host device handling
+  snic: use reserved commands
+  snic: use tagset iter for traversing commands
+  snic: check for started requests in snic_hba_reset_cmpl_handler()
+  scsi: implement reserved command handling
+  hpsa: move hpsa_hba_inquiry after scsi_add_host()
+  hpsa: use reserved commands
+  hpsa: use scsi_host_busy_iter() to traverse outstanding commands
+  hpsa: drop refcount field from CommandList
+  aacraid: move scsi_add_host()
+  aacraid: store target id in host_scribble
+  aacraid: use scsi_get_internal_cmd()
+  aacraid: use scsi_host_busy_iter() to traverse outstanding commands
+
+ Documentation/kbuild/makefiles.rst                 |    4 +-
+ Documentation/process/magic-number.rst             |    2 -
+ Documentation/scsi/scsi-parameters.rst             |    3 -
+ Documentation/userspace-api/ioctl/ioctl-number.rst |    1 -
+ block/blk-exec.c                                   |    5 +
+ drivers/scsi/Kconfig                               |   14 -
+ drivers/scsi/Makefile                              |    2 -
+ drivers/scsi/aacraid/aachba.c                      |  137 +-
+ drivers/scsi/aacraid/aacraid.h                     |   10 +-
+ drivers/scsi/aacraid/commctrl.c                    |   25 +-
+ drivers/scsi/aacraid/comminit.c                    |    2 +-
+ drivers/scsi/aacraid/commsup.c                     |  109 +-
+ drivers/scsi/aacraid/dpcsup.c                      |    2 +-
+ drivers/scsi/aacraid/linit.c                       |  175 +-
+ drivers/scsi/fnic/fnic_scsi.c                      |  944 ++---
+ drivers/scsi/gdth.c                                | 4323 --------------------
+ drivers/scsi/gdth.h                                |  981 -----
+ drivers/scsi/gdth_ioctl.h                          |  251 --
+ drivers/scsi/gdth_proc.c                           |  586 ---
+ drivers/scsi/gdth_proc.h                           |   18 -
+ drivers/scsi/hosts.c                               |    3 +
+ drivers/scsi/hpsa.c                                |  368 +-
+ drivers/scsi/hpsa.h                                |    3 +-
+ drivers/scsi/hpsa_cmd.h                            |    1 -
+ drivers/scsi/scsi_devinfo.c                        |    1 +
+ drivers/scsi/scsi_lib.c                            |   55 +-
+ drivers/scsi/scsi_scan.c                           |   96 +-
+ drivers/scsi/scsi_sysfs.c                          |    3 +-
+ drivers/scsi/snic/snic.h                           |    4 +-
+ drivers/scsi/snic/snic_main.c                      |    7 +
+ drivers/scsi/snic/snic_scsi.c                      |  525 ++-
+ include/linux/blk_types.h                          |    2 +
+ include/linux/blkdev.h                             |    5 +
+ include/scsi/scsi_device.h                         |    4 +
+ include/scsi/scsi_host.h                           |   36 +-
+ 35 files changed, 1233 insertions(+), 7474 deletions(-)
+ delete mode 100644 drivers/scsi/gdth.c
+ delete mode 100644 drivers/scsi/gdth.h
+ delete mode 100644 drivers/scsi/gdth_ioctl.h
+ delete mode 100644 drivers/scsi/gdth_proc.c
+ delete mode 100644 drivers/scsi/gdth_proc.h
+
 -- 
 2.16.4
 
