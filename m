@@ -2,115 +2,181 @@ Return-Path: <SRS0=95cY=AR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 747CAC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 14:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10AC4C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 15:14:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47C4F206CB
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 14:48:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JrCEisNA"
+	by mail.kernel.org (Postfix) with ESMTP id ED6DD20724
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 15:14:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729354AbgGFOsW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jul 2020 10:48:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58872 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729304AbgGFOsW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 10:48:22 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12C6AC061794
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Jul 2020 07:48:22 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id z15so29989126wrl.8
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Jul 2020 07:48:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=cBZ2scPa5H+r50RUQxyW3XJ5xsh/nqsYrlxmo7w/e8w=;
-        b=JrCEisNAfZ3q+hI01mukf0VgotpSmwx/3EA0lVL93a9mhJjLYMKTr+edgUYovIQUWC
-         SOY7omUcDRq5G+Xjm8XrP5dCgnVehYA1I4Buebae7Mn7NzmVwqZI0UKX87V9dTORYxUB
-         a9rlOdz8FbHuOYJutbG76thBXURF+ZbxXGeCc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=cBZ2scPa5H+r50RUQxyW3XJ5xsh/nqsYrlxmo7w/e8w=;
-        b=cwXkXrwTTeQbuLGa/mLXnTnyobsHJB8c3UMhXFPaXvqJxs24vKUnW7h0oPUwFqRQC+
-         NB/zoB8Yqd2WoKqBLP43yiNQ1UE2HVtkK+p+L2MSW9wtM01lpwuR+4SWBRDwngF95ukq
-         A7ZJpaW7ECzo/vmS00elEfCBoaj5lrSjSMWyIPxglnQhtBpbbGB9Hpg8+RARiyQDyFHt
-         MYb3zAo1LNjFW8D4nF8YNGASXmCJCPt/Nz5YT15RabzjaO7TuoAD5GZ2p3G90SbdipFT
-         7ezoKTveotXS/kO02F5e0gCy7jtLAiLL9BoMVrwpbmLy+mQNizBssCGUoxf5VhoiFiAR
-         oICA==
-X-Gm-Message-State: AOAM531bKViSu41h1+Z8MYXxdTwvRsbki+fzcW//X6FGq3CWOij6BLeW
-        UH/meD95nY6tYLEZ8kTsBMlLCiw9Tsg=
-X-Google-Smtp-Source: ABdhPJyDCzhSaOmHq049kLL6PXnNNhsPb7sswh46NV21Ro6z1vjnWiqyJZwkoucKnfUQ+ZjY+/JaTA==
-X-Received: by 2002:a5d:55cb:: with SMTP id i11mr46581284wrw.28.1594046900665;
-        Mon, 06 Jul 2020 07:48:20 -0700 (PDT)
-Received: from [10.230.185.151] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id c136sm19604644wmd.10.2020.07.06.07.48.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Jul 2020 07:48:20 -0700 (PDT)
-Subject: Re: [PATCH][next] scsi: lpfc: fix less than zero comparison on
- unsigned int computation
-To:     Colin King <colin.king@canonical.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20200706130820.487271-1-colin.king@canonical.com>
-From:   James Smart <james.smart@broadcom.com>
-Message-ID: <44692d32-d522-43ff-de74-a1faa432a911@broadcom.com>
-Date:   Mon, 6 Jul 2020 07:48:16 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1729438AbgGFPOi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jul 2020 11:14:38 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:55325 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1729297AbgGFPOi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 11:14:38 -0400
+Received: (qmail 703322 invoked by uid 1000); 6 Jul 2020 11:14:36 -0400
+Date:   Mon, 6 Jul 2020 11:14:36 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     martin.petersen@oracle.com, Can Guo <cang@codeaurora.org>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: [PATCH v3] SCSI and block: Simplify resume handling
+Message-ID: <20200706151436.GA702867@rowland.harvard.edu>
+References: <20200701183718.GA507293@rowland.harvard.edu>
+ <9e824700-dfd1-5d71-5e91-833c35ea55eb@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <20200706130820.487271-1-colin.king@canonical.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9e824700-dfd1-5d71-5e91-833c35ea55eb@acm.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Commit 05d18ae1cc8a ("scsi: pm: Balance pm_only counter of request
+queue during system resume") fixed a problem in the block layer's
+runtime-PM code: blk_set_runtime_active() failed to call
+blk_clear_pm_only().  However, the commit's implementation was
+awkward; it forced the SCSI system-resume handler to choose whether to
+call blk_post_runtime_resume() or blk_set_runtime_active(), depending
+on whether or not the SCSI device had previously been runtime
+suspended.
 
-On 7/6/2020 6:08 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> The expressions start_idx - dbg_cnt is evaluated using unsigned int
-> arthithmetic (since these variables are unsigned ints) and hence can
-> never be less than zero, so the less than comparison is never true.
-> Re-write the expression to check for start_idx being less than dbg_cnt.
->
-> Addresses-Coverity: ("Unsigned compared against 0")
-> Fixes: 372c187b8a70 ("scsi: lpfc: Add an internal trace log buffer")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 7285b0114837..ce5afe7b11d0 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -14152,7 +14152,7 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
->   		if ((start_idx + dbg_cnt) > (DBG_LOG_SZ - 1)) {
->   			temp_idx = (start_idx + dbg_cnt) % DBG_LOG_SZ;
->   		} else {
-> -			if ((start_idx - dbg_cnt) < 0) {
-> +			if (start_idx < dbg_cnt) {
->   				start_idx = DBG_LOG_SZ - (dbg_cnt - start_idx);
->   				temp_idx = 0;
->   			} else {
+This patch simplifies the situation considerably by adding the missing
+function call directly into blk_set_runtime_active() (under the
+condition that the queue is not already in the RPM_ACTIVE state).
+This allows the SCSI routine to revert back to its original form.
+Furthermore, making this change reveals that blk_post_runtime_resume()
+(in its success pathway) does exactly the same thing as
+blk_set_runtime_active().  The duplicate code is easily removed by
+making one routine call the other.
 
-Thanks Colin - I was about to send a patch for this. Has this fix and 
-one a couple of lines further down. I will post it shortly.
+No functional changes are intended.
 
--- james
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Can Guo <cang@codeaurora.org>
+CC: Bart Van Assche <bvanassche@acm.org>
 
+---
+
+v3:	Arrange the code in blk_pm_post_runtime_resume() and
+	blk_set_runtime_active() so that the "if (!q->dev)" tests and
+	early returns come first, as in the other nearby functions.
+
+v2:	Don't call blk_clear_pm_only() if the queue's RPM status was
+	already set to RPM_ACTIVE.  This happens during a system resume
+	if the device was not in runtime suspend beforehand.
+
+
+[as1939c]
+
+
+ block/blk-pm.c         |   41 ++++++++++++++++++++++-------------------
+ drivers/scsi/scsi_pm.c |   10 ++--------
+ 2 files changed, 24 insertions(+), 27 deletions(-)
+
+Index: usb-devel/block/blk-pm.c
+===================================================================
+--- usb-devel.orig/block/blk-pm.c
++++ usb-devel/block/blk-pm.c
+@@ -164,9 +164,8 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+  *
+  * Description:
+  *    Update the queue's runtime status according to the return value of the
+- *    device's runtime_resume function. If it is successfully resumed, process
+- *    the requests that are queued into the device's queue when it is resuming
+- *    and then mark last busy and initiate autosuspend for it.
++ *    device's runtime_resume function. If the resume was successful, call
++ *    blk_set_runtime_active() to do the real work of restarting the queue.
+  *
+  *    This function should be called near the end of the device's
+  *    runtime_resume callback.
+@@ -175,19 +174,13 @@ void blk_post_runtime_resume(struct requ
+ {
+ 	if (!q->dev)
+ 		return;
+-
+-	spin_lock_irq(&q->queue_lock);
+ 	if (!err) {
+-		q->rpm_status = RPM_ACTIVE;
+-		pm_runtime_mark_last_busy(q->dev);
+-		pm_request_autosuspend(q->dev);
++		blk_set_runtime_active(q);
+ 	} else {
++		spin_lock_irq(&q->queue_lock);
+ 		q->rpm_status = RPM_SUSPENDED;
++		spin_unlock_irq(&q->queue_lock);
+ 	}
+-	spin_unlock_irq(&q->queue_lock);
+-
+-	if (!err)
+-		blk_clear_pm_only(q);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
+ 
+@@ -204,15 +197,25 @@ EXPORT_SYMBOL(blk_post_runtime_resume);
+  * This function can be used in driver's resume hook to correct queue
+  * runtime PM status and re-enable peeking requests from the queue. It
+  * should be called before first request is added to the queue.
++ *
++ * This function is also called by blk_post_runtime_resume() for successful
++ * runtime resumes.  It does everything necessary to restart the queue.
+  */
+ void blk_set_runtime_active(struct request_queue *q)
+ {
+-	if (q->dev) {
+-		spin_lock_irq(&q->queue_lock);
+-		q->rpm_status = RPM_ACTIVE;
+-		pm_runtime_mark_last_busy(q->dev);
+-		pm_request_autosuspend(q->dev);
+-		spin_unlock_irq(&q->queue_lock);
+-	}
++	int old_status;
++
++	if (!q->dev)
++		return;
++
++	spin_lock_irq(&q->queue_lock);
++	old_status = q->rpm_status;
++	q->rpm_status = RPM_ACTIVE;
++	pm_runtime_mark_last_busy(q->dev);
++	pm_request_autosuspend(q->dev);
++	spin_unlock_irq(&q->queue_lock);
++
++	if (old_status != RPM_ACTIVE)
++		blk_clear_pm_only(q);
+ }
+ EXPORT_SYMBOL(blk_set_runtime_active);
+Index: usb-devel/drivers/scsi/scsi_pm.c
+===================================================================
+--- usb-devel.orig/drivers/scsi/scsi_pm.c
++++ usb-devel/drivers/scsi/scsi_pm.c
+@@ -80,10 +80,6 @@ static int scsi_dev_type_resume(struct d
+ 	dev_dbg(dev, "scsi resume: %d\n", err);
+ 
+ 	if (err == 0) {
+-		bool was_runtime_suspended;
+-
+-		was_runtime_suspended = pm_runtime_suspended(dev);
+-
+ 		pm_runtime_disable(dev);
+ 		err = pm_runtime_set_active(dev);
+ 		pm_runtime_enable(dev);
+@@ -97,10 +93,8 @@ static int scsi_dev_type_resume(struct d
+ 		 */
+ 		if (!err && scsi_is_sdev_device(dev)) {
+ 			struct scsi_device *sdev = to_scsi_device(dev);
+-			if (was_runtime_suspended)
+-				blk_post_runtime_resume(sdev->request_queue, 0);
+-			else
+-				blk_set_runtime_active(sdev->request_queue);
++
++			blk_set_runtime_active(sdev->request_queue);
+ 		}
+ 	}
+ 
