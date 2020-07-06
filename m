@@ -2,62 +2,61 @@ Return-Path: <SRS0=95cY=AR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5589C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:41:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9ACCC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 790552074F
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:41:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C53C72073E
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:41:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="iQDlDeBW"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="N33jIdZT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728306AbgGFGlY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jul 2020 02:41:24 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:57783 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725889AbgGFGlX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 02:41:23 -0400
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200706064119epoutp03253eceaca1f5d13da520c7b6f67b90c7~fFqJepArO0859008590epoutp03p
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Jul 2020 06:41:19 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200706064119epoutp03253eceaca1f5d13da520c7b6f67b90c7~fFqJepArO0859008590epoutp03p
+        id S1727923AbgGFGlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jul 2020 02:41:37 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:57949 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725889AbgGFGlh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 02:41:37 -0400
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200706064133epoutp01ba591021a2c58690b37b7e2bb217bad8~fFqWrcTBN0527905279epoutp01Z
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Jul 2020 06:41:33 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200706064133epoutp01ba591021a2c58690b37b7e2bb217bad8~fFqWrcTBN0527905279epoutp01Z
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1594017679;
-        bh=V0Klo71k/7rAdue/UGf2C0R7LeG17mCEedS4PxSJfJg=;
+        s=mail20170921; t=1594017693;
+        bh=2+gUSuN152Je6omL4HYFPCSWAmErOliiB+cafj8FqPQ=;
         h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=iQDlDeBWf1frVO8EJlHQxQcZDv/AkyWc2bPQw9UVBJvkUf4KNS7DqiWdqwJbKwd4l
-         2xogFjP4ksft/wdXDeXkHCSplzm6JZoHBBYOYuu1CkzCwZgR7naBnI3DYjhLcX7/C0
-         gh0Ng5yJIdKTCtW3C25cqkggWgZGJY0MSp/jFaWs=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20200706064118epcas2p39b9f5e87dddc97e98d9db3a398639b30~fFqIfJmok2423824238epcas2p3J;
-        Mon,  6 Jul 2020 06:41:18 +0000 (GMT)
+        b=N33jIdZTVlxgMEHWZaL4FxLKGYtG0QL/maaWgax5oTNFhu455jPqGnEOXaDmTKeZU
+         WoZ0FWqUTE/Ixn6PXucrEY+sUgGXhTa9H7DYnkO8Aviu33+rz7zU+FKGKEcogLhvhu
+         Z1dgsZXT59IIC3CQWeNsBqDvZiREJJ+f3LbPi0HA=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20200706064132epcas2p2dac3465fa1c8e48ec5eade419c3ecbdd~fFqVgSO7h2635126351epcas2p2h;
+        Mon,  6 Jul 2020 06:41:32 +0000 (GMT)
 Received: from epsmges2p3.samsung.com (unknown [182.195.40.185]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4B0bZ42N7GzMqYlh; Mon,  6 Jul
-        2020 06:41:16 +0000 (GMT)
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4B0bZM36LmzMqYl3; Mon,  6 Jul
+        2020 06:41:31 +0000 (GMT)
 Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
         epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        0E.EC.27441.C87C20F5; Mon,  6 Jul 2020 15:41:16 +0900 (KST)
+        66.0D.27441.B97C20F5; Mon,  6 Jul 2020 15:41:31 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
         epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200706064115epcas2p29ee3e8a0da5e0deb539f7ddb958c4ed7~fFqFXHA0r3096530965epcas2p2g;
-        Mon,  6 Jul 2020 06:41:15 +0000 (GMT)
+        20200706064130epcas2p2a3335ddd53ddfeabb06c46cb8a0b24e6~fFqTUSGRU0322703227epcas2p2Z;
+        Mon,  6 Jul 2020 06:41:30 +0000 (GMT)
 Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200706064115epsmtrp2909d4dbed539fdf06fd4d6e80f3ee26b~fFqFTnRz60224202242epsmtrp2K;
-        Mon,  6 Jul 2020 06:41:15 +0000 (GMT)
-X-AuditID: b6c32a47-fafff70000006b31-14-5f02c78c3ef1
+        20200706064130epsmtrp266cb8a2c4a7472c5ca8dc6ddedc23024~fFqTTdcIX0223602236epsmtrp2c;
+        Mon,  6 Jul 2020 06:41:30 +0000 (GMT)
+X-AuditID: b6c32a47-fc5ff70000006b31-68-5f02c79bd048
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
         epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        E6.47.08382.B87C20F5; Mon,  6 Jul 2020 15:41:15 +0900 (KST)
+        AD.47.08382.A97C20F5; Mon,  6 Jul 2020 15:41:30 +0900 (KST)
 Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip2.samsung.com
         (KnoxPortal) with ESMTPA id
-        20200706064115epsmtip2db44d4ab4c6814640e57d264b649302c~fFqFE76_T2297622976epsmtip2R;
-        Mon,  6 Jul 2020 06:41:15 +0000 (GMT)
+        20200706064130epsmtip258a41d48f03db0f0e9e275b07b6384f7~fFqTDc3Nq2159921599epsmtip2R;
+        Mon,  6 Jul 2020 06:41:30 +0000 (GMT)
 From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
 To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
         <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
@@ -66,124 +65,73 @@ To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
         <cang@codeaurora.org>, <bvanassche@acm.org>,
         <grant.jung@samsung.com>, <sc.suh@samsung.com>,
         <hy50.seo@samsung.com>, <sh425.lee@samsung.com>
-In-Reply-To: <SN6PR04MB464035D0414922EEE0545CA6FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
-Subject: RE: [RFC PATCH v3 1/2] ufs: introduce a callback to get info of
- command completion
-Date:   Mon, 6 Jul 2020 15:41:14 +0900
-Message-ID: <000501d65360$72259600$5670c200$@samsung.com>
+In-Reply-To: <SN6PR04MB4640F8152119C231A6EB46FEFC680@SN6PR04MB4640.namprd04.prod.outlook.com>
+Subject: RE: [RFC PATCH v3 2/2] exynos-ufs: implement dbg_register_dump and
+ compl_xfer_req
+Date:   Mon, 6 Jul 2020 15:41:29 +0900
+Message-ID: <000601d65360$7b181530$71483f90$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQGzyCHOhCeJxiopSPNZAUTahmxpDALbRwriAcIz1fABN91Hp6kQhcog
+Thread-Index: AQGzyCHOhCeJxiopSPNZAUTahmxpDALD+MYCAgaLp3MCKFW59akHmdNA
 Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCJsWRmVeSWpSXmKPExsWy7bCmmW7PcaZ4g965ghYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCy6r+9gs1h+/B+TRdfdG4wW
-        S/+9ZXHg9bh8xdvjcl8vk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5tB/oZgrgiMqxyUhN
-        TEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXLzAE6WUmhLDGnFCgU
-        kFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYGhYoFecmFtcmpeul5yfa2VoYGBkClSZkJOx9tFH
-        poIG4YrDK38xNTDO4O1i5OCQEDCRWDNZqIuRi0NIYAejxMrDx5ghnE+MEnMvL2GEcL4xSqw/
-        MYGli5ETrOPgq5NQVXsZJWZd2MoC4bxglDjTuZERpIpNQFti2sPdrCAJEYH7TBJHdj4Aa+cU
-        iJXYvuIdE4gtDGRf2jiFHcRmEVCRWLD3AZjNK2ApMfXefhYIW1Di5MwnYDYz0NBlC18zQ5yh
-        IPHz6TJWEFtEwE3iVO80ZogaEYnZnW1g50kIHOGQONjykRHiUxeJf3/4IHqFJV4d38IOYUtJ
-        fH63lw3CrpfYN7WBFaK3h1Hi6b5/jBAJY4lZz9rB5jALaEqs36UPMVJZ4sgtqNP4JDoO/2WH
-        CPNKdLQJQTQqS/yaNBlqiKTEzJt3oLZ6SPQtm8c+gVFxFpInZyF5chaSZ2Yh7F3AyLKKUSy1
-        oDg3PbXYqMAYObI3MYKTs5b7DsYZbz/oHWJk4mA8xCjBwawkwturzRgvxJuSWFmVWpQfX1Sa
-        k1p8iNEUGOwTmaVEk/OB+SGvJN7Q1MjMzMDS1MLUzMhCSZy32OpCnJBAemJJanZqakFqEUwf
-        EwenVAOTz94vS74dvRY52773csU/4SWPLFwDDz4yPXJgwrwp3tvf9pTMObqsY+miCtUX3/PX
-        nvR8pbJUM32Sn5D6SfYN/NdlHvCvFvXgDz295PBphu3TGU+5i/4MENcNvJ9y2PVM6GovPd+W
-        tc43JSzfsbb9MmK9G9TYuKzg5bsA7iitzv7qlUlvd7w9ULubo602f//7BXYPaxg9LF9suWW9
-        2K/e0O7HGtnXRZqP3k2XjNvcXCbosq9hd/JpnjTnk/LZ+3fqOUcGft/7yl1JuMNYRnopJ/PM
-        yY8+bbRQ2SA943a7xF9v38Cdd78e6TlT7vG2e//rrccDFCZVTxHRZC0oy5fV45x38OiMR7la
-        TUKNN27cU2Ipzkg01GIuKk4EANenqedXBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCIsWRmVeSWpSXmKPExsWy7bCSvG73caZ4g6kdXBYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCy6r+9gs1h+/B+TRdfdG4wW
-        S/+9ZXHg9bh8xdvjcl8vk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5tB/oZgrgiOKySUnN
-        ySxLLdK3S+DK+Hk3uuCqUMWR5qVsDYyveboYOTkkBEwkDr46ydzFyMUhJLCbUeLesjZ2iISk
-        xImdzxkhbGGJ+y1HWCGKnjFKPJ17jQUkwSagLTHt4W6whIjAWyaJO7cvM0FUrWaS+PKknRWk
-        ilMgVmL7indMILawQLTErMd7wOIsAioSC/Y+AFvHK2ApMfXefhYIW1Di5MwnYDYz0Ibeh62M
-        MPayha+ZIU5SkPj5dBnYHBEBN4lTvdOYIWpEJGZ3tjFPYBSahWTULCSjZiEZNQtJywJGllWM
-        kqkFxbnpucWGBYZ5qeV6xYm5xaV56XrJ+bmbGMERqaW5g3H7qg96hxiZOBgPMUpwMCuJ8PZq
-        M8YL8aYkVlalFuXHF5XmpBYfYpTmYFES571RuDBOSCA9sSQ1OzW1ILUIJsvEwSnVwNSsuqmb
-        Y49Sy573TKJntl+f0Z4VUBXYENpVxC6/Ydv3xrBuzccvL2/ryXTk+bXQyPg4x5W8N7VRSVPD
-        wsuDP57xZ0+4sOSBTXXlLzY9EfayvbcZvDezFG6ZJP9P1MHvwdcj8vf2Oc6Yrah9t1VSPCaR
-        ScT1g+mBhLYponMnRh05b1/A2W4TPlu1m8HlZP8kfzaX9b+LVee4cjNmSlT/PLhvtd1MNr9z
-        O7nWW9roPZ29vK0v79SkU2d8HKr0/bbsWMvRkS594N79mUumenjxtuZ8lT9tm+Aw7Uf//OLr
-        QsJ9DnkOU5dn2Wf+Xe0l/NawK9xmwec1j4vkbF/Mrsy8dXqn9qos22/vRNyuZuyRV2Ipzkg0
-        1GIuKk4EAA23AeU3AwAA
-X-CMS-MailID: 20200706064115epcas2p29ee3e8a0da5e0deb539f7ddb958c4ed7
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmme7s40zxBneWiVk8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7Lovr6DzWL58X9MFl13bzBa
+        LP33lsWB1+PyFW+Py329TB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAIyrHJiM1
+        MSW1SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNctMwfoZCWFssScUqBQ
+        QGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpOgaFhgV5xYm5xaV66XnJ+rpWhgYGRKVBlQk7G7stL
+        WAuuM1Zs/72ZvYFxCWMXIyeHhICJxLkrN4BsLg4hgR2MEksvn2CHcD4xSnxe0A9WJSTwjVFi
+        wQwVmI4pS7czQRTtZZR48+o+G4TzglHi0bTJzCBVbALaEtMe7mYFSYgI3GeSOLLzAQtIglMg
+        VmJa8z4gm4NDWCBG4sEZO5Awi4CKxLKrK5lAwrwClhI7DzOBhHkFBCVOznwC1sksIC+x/e0c
+        ZogjFCR+Pl3GCmKLCLhJHG34wQhRIyIxu7ONGWSthMAJDolZR9rYIBpcJDYfuQdlC0u8Or6F
+        HcKWkvj8bi9UvF5i39QGVojmHkaJp/v+QQPJWGLWs3ZGkOOYBTQl1u/SBzElBJQljtyCuo1P
+        ouPwX3aIMK9ER5sQRKOyxK9Jk6GGSErMvHkHaquHxNcHd5gnMCrOQvLlLCRfzkLyzSyEvQsY
+        WVYxiqUWFOempxYbFRgjx/UmRnBq1nLfwTjj7Qe9Q4xMHIyHGCU4mJVEeHu1GeOFeFMSK6tS
+        i/Lji0pzUosPMZoCg30is5Rocj4wO+SVxBuaGpmZGViaWpiaGVkoifMWW12IExJITyxJzU5N
+        LUgtgulj4uCUamBSyj+cKWRRO68i6O7DjRIFy45q769QYyk12dDYFvM9we52vnglxzrbhY3+
+        S+/N3sod1nNtS6f3kgfPr/CmvPebniHI9WzDhLVBFpr7vSTW9wdvW7dD9+U2oci5esJ3Trpp
+        lbfNDHs9c/nXXWWmAXs5D54qC/5q8OiVnKDE/0P9/5nWLZ7uM+VnT02i1ntLw7f/05W+/XZb
+        k7pnbuzD8JCt9l9nvulYfFEyU/b/vG7RxyfOHJXi6L96x9jscO6fudXTlColGoN9C66q7hX8
+        vMtJ60wr+6qpVySyEvJerf20q+Tjzuk1vWs3MDx44LHh6bmqTw9FtnGYPHhqff98yQo95dNc
+        ivIsgSo6k20vH8lQUmIpzkg01GIuKk4EAEh+xFRWBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCIsWRmVeSWpSXmKPExsWy7bCSvO6s40zxBseucFk8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7Lovr6DzWL58X9MFl13bzBa
+        LP33lsWB1+PyFW+Py329TB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAI4rLJiU1
+        J7MstUjfLoErY/flJawF1xkrtv/ezN7AuISxi5GTQ0LARGLK0u1MXYxcHEICuxklzndvY4ZI
+        SEqc2PkcqkhY4n7LEVaIomeMEt+3bGADSbAJaEtMe7gbLCEi8JZJ4s7ty1CjVjNJvJx3lgWk
+        ilMgVmJa8z4wW1ggSmJ1x36wsSwCKhLLrq4EauDg4BWwlNh5mAkkzCsgKHFy5hOwcmagBb0P
+        WxkhbHmJ7W/nQF2nIPHz6TJWEFtEwE3iaMMPqBoRidmdbcwTGIVmIRk1C8moWUhGzULSsoCR
+        ZRWjZGpBcW56brFhgWFearlecWJucWleul5yfu4mRnBEamnuYNy+6oPeIUYmDsZDjBIczEoi
+        vL3ajPFCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeW8ULowTEkhPLEnNTk0tSC2CyTJxcEo1MCU7
+        9Fx7Zl/6+kJEc9LrZ/G3T635XsAfffyaJfcTxtOCTNJ5q9vmRvd7z55tZin53biLLyFXSZP5
+        OJOA0+qPMnwK+0wMD9iX/uT+NLOn+HT0bXP9XYdWl1kzz4zPsX4w6+CMpnUFdxYHmDZ3rlP9
+        wmGsXL3/95VE23Up8kbv15utmDqT7YPMpxPT5vLJ7qsKci1TEimJKy8T1L2xZo+7vYKyw7n8
+        /Z81lOddv8j18GDYEtNXO/x/NrEWrVZODOoX6JQyXbfef2KkV4zm8bl7C47tnDaR/fOs0kO3
+        OiomSOgJagpN6fXe4rpjeZ7WFo4eAU17E/7lCmzGZ6Wv72GOmPK3+5HLDPaNk2c667QnKrEU
+        ZyQaajEXFScCAFymtnY3AwAA
+X-CMS-MailID: 20200706064130epcas2p2a3335ddd53ddfeabb06c46cb8a0b24e6
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200703053854epcas2p12c65dc7bf34f99354482104f51805b5d
+X-CMS-RootMailID: 20200703053855epcas2p17dc1463fae3cfb0f8db0adb5e1c5a328
 References: <cover.1593752220.git.kwmad.kim@samsung.com>
-        <CGME20200703053854epcas2p12c65dc7bf34f99354482104f51805b5d@epcas2p1.samsung.com>
-        <93c364a2285a6c8eaaed6e0f68bbc8376ae7519e.1593752220.git.kwmad.kim@samsung.com>
-        <SN6PR04MB464035D0414922EEE0545CA6FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
+        <CGME20200703053855epcas2p17dc1463fae3cfb0f8db0adb5e1c5a328@epcas2p1.samsung.com>
+        <9a3f8f8fed39aa7e07e20cf1ff25c708919ff2ea.1593752220.git.kwmad.kim@samsung.com>
+        <SN6PR04MB4640F8152119C231A6EB46FEFC680@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > Some SoC specific might need command history for various reasons, such
-> > as stacking command contexts in system memory to check for debugging
-> > in the future or scaling some DVFS knobs to boost IO throughput.
-> >
-> > What you would do with the information could be variant per SoC
-> > vendor.
-> >
-> > Signed-off-by: Kiwoong Kim <kwmad.kim=40samsung.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c =7C 2 ++
-> >  drivers/scsi/ufs/ufshcd.h =7C 8 ++++++++
-> >  2 files changed, 10 insertions(+)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 52abe82..3326236 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > =40=40 -4882,6 +4882,7 =40=40 static void __ufshcd_transfer_req_compl(s=
-truct
-> > ufs_hba *hba,
-> >         for_each_set_bit(index, &completed_reqs, hba->nutrs) =7B
-> >                 lrbp =3D &hba->lrb=5Bindex=5D;
-> >                 cmd =3D lrbp->cmd;
-> > +               ufshcd_vops_compl_xfer_req(hba, index, (cmd) ? true :
-> > + false);
-> >                 if (cmd) =7B
-> >                         ufshcd_add_command_trace(hba, index, =22complet=
-e=22);
-> >                         result =3D ufshcd_transfer_rsp_status(hba,
-> > lrbp); =40=40 -4890,6 +4891,7 =40=40 static void
-> > __ufshcd_transfer_req_compl(struct
-> > ufs_hba *hba,
-> >                         /* Mark completed command as NULL in LRB */
-> >                         lrbp->cmd =3D NULL;
-> >                         lrbp->compl_time_stamp =3D ktime_get();
-> > +
-> >                         /* Do not touch lrbp after scsi done */
-> >                         cmd->scsi_done(cmd);
-> >                         __ufshcd_release(hba); diff --git
-> > a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
-> > c774012..5cf9f99 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > =40=40 -307,6 +307,7 =40=40 struct ufs_hba_variant_ops =7B
-> >         void    (*config_scaling_param)(struct ufs_hba *hba,
-> >                                         struct devfreq_dev_profile *pro=
-file,
-> >                                         void *data);
-> > +       void    (*compl_xfer_req)(struct ufs_hba *hba, int tag, bool
-> is_scsi);
-> Maybe add it right after setup_xfer_req?
-> Makes more sense as it is its counterpart.
->=20
+> > This patch implements callbacks dbg_register_dump and compl_xfer_req
+> > to store IO contexts or print them.
+> Each callback deserves its own patch.
+> 
 > Thanks,
 > Avri
->=20
-> >  =7D;
 
 Got it
 
