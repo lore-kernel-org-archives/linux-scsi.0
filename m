@@ -2,56 +2,51 @@ Return-Path: <SRS0=95cY=AR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F37ACC433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 02:30:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB669C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 02:41:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8FC620747
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 02:30:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B27620747
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 02:41:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728647AbgGFCaH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 5 Jul 2020 22:30:07 -0400
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:33560 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728566AbgGFCaH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2020 22:30:07 -0400
-Received: by mail-pj1-f65.google.com with SMTP id gc15so5872261pjb.0
-        for <linux-scsi@vger.kernel.org>; Sun, 05 Jul 2020 19:30:06 -0700 (PDT)
+        id S1728633AbgGFClL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 5 Jul 2020 22:41:11 -0400
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:39582 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726684AbgGFClL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Jul 2020 22:41:11 -0400
+Received: by mail-pj1-f66.google.com with SMTP id b92so16352837pjc.4;
+        Sun, 05 Jul 2020 19:41:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:autocrypt
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=OSQfOVSrGE86t/p2weAgH+JgNr0Q5olZkfN8ToK5eEE=;
-        b=kipP1EdcWeTu3Q63XLqWSTj65718x4+1W9VWfdGzLFrs6Jh1v7TYbWMgJIC6epCyeg
-         yL/8tI/FM6xsRftH+YG0Af7sMhvlGbDB/1j7zzRDK79t7KkUVlGdeO3DWpiUK6onPPnB
-         kYN9Iwikvw0+HEMQhbN076KSDKaCwULcNhDR1kONIpQlYtA70DvIes8nrIkLxjVet+z5
-         G076YaUcZ1kx77b/F2XKj3fKzBwlrXglHuc1x8VxWfHRPNS38FyAJSNdoet1ZeYJlsPi
-         91s+MHujwXKkPYTRF+PjwA/lIsXawltCwJurg2nGpEZug4DHgbInSxWKZhjBKoRALWmc
-         Mryg==
-X-Gm-Message-State: AOAM530NTgMZALe3pSaID7M3JYqxefZJ/cTOKKyOamG5W/7VBkYLO1qt
-        KUiXqx/8zwLZN02BWhIPGFU9J++m
-X-Google-Smtp-Source: ABdhPJztpFZHVIcN6GBTaHU427rSWrkpnFpMv3BJ4Z4dkJbiKx31Xt9ZSW1kXeXDIB2LS8P4F1Z+yA==
-X-Received: by 2002:a17:90a:35c:: with SMTP id 28mr38428263pjf.63.1594002605803;
-        Sun, 05 Jul 2020 19:30:05 -0700 (PDT)
+        bh=81NTEqDyZvRshxK436Y1/22euKYv5lsQgXKxLCuXD2E=;
+        b=GEDxe16suR7P+4rnKI/uZq6yII1eninz7Y6UXphu2HMcowaUlnAvBJ4w3Jkv0YK0ms
+         8W5PwADgB1A30Oh5R9RDEZE1LCXytpZw9DIpFra/hDi3+pgZUAf/TFu5sai/6WDnmpUC
+         LPfdYDVrPN4xHAVDtgki7DnCAzfi7pzcZa+OkpqrTmytLtIAyMVcSvMKFsh3KG0+Nuyu
+         Jyap0WKvcnupm4yChb4yUmmNJpigqmYBrrDwU2DhLjTNoXJBEa095OnwdXvMlVQhJT8L
+         NiT/VFG38/Cm2//NKPbCUW9bjIjIIarmsFdLr/ZmsVZ5PepKBbcpzs9auk+ov8zw2y3z
+         z2fw==
+X-Gm-Message-State: AOAM533zFqHeIeImBt+fStic3dgmHy1U++LKiN3ym7na0JyxWAs0dfU8
+        Oc570VDfKPJUkwxCkHVcC1DUHDWG
+X-Google-Smtp-Source: ABdhPJyo99JpoklWM+tc9dEeSPA6GAkADROtb/hL1h8tP63d31sWgyKW00TNP5b/4zcd/cQDTtEs6Q==
+X-Received: by 2002:a17:90a:f2c3:: with SMTP id gt3mr33462329pjb.92.1594003269735;
+        Sun, 05 Jul 2020 19:41:09 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id u128sm16464617pfu.148.2020.07.05.19.30.04
+        by smtp.gmail.com with ESMTPSA id 199sm17815077pgc.79.2020.07.05.19.41.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 05 Jul 2020 19:30:04 -0700 (PDT)
+        Sun, 05 Jul 2020 19:41:08 -0700 (PDT)
+Subject: Re: [PATCH v2] SCSI and block: Simplify resume handling
+To:     Alan Stern <stern@rowland.harvard.edu>, martin.petersen@oracle.com
+Cc:     Can Guo <cang@codeaurora.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org
+References: <20200701183718.GA507293@rowland.harvard.edu>
 From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi: allow state transitions BLOCK -> BLOCK
-To:     Hannes Reinecke <hare@suse.de>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-References: <20200702142436.98336-1-hare@suse.de>
- <1593700443.9652.2.camel@HansenPartnership.com>
- <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
- <2dd291ba-1e59-5e88-de96-5d3965f20317@acm.org>
- <819ce023-93c3-249d-2221-97438f229e03@suse.de>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
  LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
@@ -75,60 +70,70 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <b4842dfd-f385-64a9-6421-03765f60d0d9@acm.org>
-Date:   Sun, 5 Jul 2020 19:30:03 -0700
+Message-ID: <9e824700-dfd1-5d71-5e91-833c35ea55eb@acm.org>
+Date:   Sun, 5 Jul 2020 19:41:07 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <819ce023-93c3-249d-2221-97438f229e03@suse.de>
+In-Reply-To: <20200701183718.GA507293@rowland.harvard.edu>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-02 22:30, Hannes Reinecke wrote:
-> And it's called from srp_reconnect_rport() and __rport_fail_io_fast(),
-> so we have this call chain:
-> 
-> srp_reconnect_rport()
->   - scsi_target_block()
->   -> __rport_fail_io_fast()
->        - scsi_target_block()
+On 2020-07-01 11:37, Alan Stern wrote:
+>  void blk_post_runtime_resume(struct request_queue *q, int err)
+>  {
+> -	if (!q->dev)
+> -		return;
+> -
+> -	spin_lock_irq(&q->queue_lock);
+>  	if (!err) {
+> -		q->rpm_status = RPM_ACTIVE;
+> -		pm_runtime_mark_last_busy(q->dev);
+> -		pm_request_autosuspend(q->dev);
+> -	} else {
+> +		blk_set_runtime_active(q);
+> +	} else if (q->dev) {
+> +		spin_lock_irq(&q->queue_lock);
+>  		q->rpm_status = RPM_SUSPENDED;
+> +		spin_unlock_irq(&q->queue_lock);
+>  	}
+> -	spin_unlock_irq(&q->queue_lock);
+> -
+> -	if (!err)
+> -		blk_clear_pm_only(q);
+>  }
+>  EXPORT_SYMBOL(blk_post_runtime_resume);
 
-How about the (untested) patch below?
+I'd like to keep the if (!q->dev) check at the start of the function instead
+of moving it to the middle of the function to keep the symmetry with the
+existing runtime power management functions in the same source file.
 
+>  void blk_set_runtime_active(struct request_queue *q)
+>  {
+>  	if (q->dev) {
+> +		int old_status;
+> +
+>  		spin_lock_irq(&q->queue_lock);
+> +		old_status = q->rpm_status;
+>  		q->rpm_status = RPM_ACTIVE;
+>  		pm_runtime_mark_last_busy(q->dev);
+>  		pm_request_autosuspend(q->dev);
+>  		spin_unlock_irq(&q->queue_lock);
+> +
+> +		if (old_status != RPM_ACTIVE)
+> +			blk_clear_pm_only(q);
+>  	}
+>  }
 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index d4d1104fac99..bfb240675f06 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -402,13 +402,9 @@ static void __rport_fail_io_fast(struct srp_rport *rport)
+Since this function is being modified, please change the if (q->dev) into
+if (!q->dev) return since returning early is the recommended kernel coding
+style.
 
- 	lockdep_assert_held(&rport->mutex);
+Thanks,
 
-+	WARN_ON_ONCE(rport->state != SRP_RPORT_BLOCKED);
- 	if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
- 		return;
--	/*
--	 * Call scsi_target_block() to wait for ongoing shost->queuecommand()
--	 * calls before invoking i->f->terminate_rport_io().
--	 */
--	scsi_target_block(rport->dev.parent);
- 	scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
-
- 	/* Involve the LLD if possible to terminate all I/O on the rport. */
-@@ -569,9 +565,9 @@ int srp_reconnect_rport(struct srp_rport *rport)
- 		 * and dev_loss off. Mark the port as failed and start the TL
- 		 * failure timers if these had not yet been started.
- 		 */
-+		WARN_ON_ONCE(srp_rport_set_state(rport, SRP_RPORT_BLOCKED));
-+		scsi_target_block(rport->dev.parent);
- 		__rport_fail_io_fast(rport);
--		scsi_target_unblock(&shost->shost_gendev,
--				    SDEV_TRANSPORT_OFFLINE);
- 		__srp_start_tl_fail_timers(rport);
- 	} else if (rport->state != SRP_RPORT_BLOCKED) {
- 		scsi_target_unblock(&shost->shost_gendev,
+Bart.
