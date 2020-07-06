@@ -2,146 +2,86 @@ Return-Path: <SRS0=95cY=AR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EA75C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 08:45:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E797C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 09:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49E2520772
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 08:45:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C5B62073E
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 09:19:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qBxefRx9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728605AbgGFIpJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jul 2020 04:45:09 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46002 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728404AbgGFIpJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Jul 2020 04:45:09 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 3571CB16F;
-        Mon,  6 Jul 2020 08:45:07 +0000 (UTC)
-Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     John Garry <john.garry@huawei.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        don.brace@microsemi.com, Sumit Saxena <sumit.saxena@broadcom.com>,
-        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-11-git-send-email-john.garry@huawei.com>
- <d55972999b9370f947c20537e41b49bf@mail.gmail.com>
- <e61593f8-5ee7-5763-9d02-d0ea13aeb49f@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <b63d200f-9221-ceff-f32c-342fdbd21555@suse.de>
-Date:   Mon, 6 Jul 2020 10:45:06 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
-MIME-Version: 1.0
-In-Reply-To: <e61593f8-5ee7-5763-9d02-d0ea13aeb49f@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1728299AbgGFJTU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jul 2020 05:19:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36012 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728024AbgGFJTU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 05:19:20 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BC3EC061794;
+        Mon,  6 Jul 2020 02:19:19 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id g20so33929686edm.4;
+        Mon, 06 Jul 2020 02:19:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=uJDsGDl+X2ZKKpTpyKbLqB34JLNShecgKArfkfRBOuY=;
+        b=qBxefRx9tPHhfU+1Zb11sBZfxVz64rVd//oqIOptQevIkczC3RiKzomZDHElgWLKMy
+         0eAtRM7tnCOLaNc6CLzs5z8YzCuF88k+BXDY6VMAyX8dXXvQ3T7jP+ushtZyh3jKLiM5
+         nV8BbqzEl/jpCGjk4JKqU1fePHvEZJawqUse9tbz59tPmWBNdlzBv768/3jRPJblRL8E
+         0kdJFaQn8Y4uDbbGP8KdsjLWD74+4DG/n3E/cIkWYjNkKTpbF1cUR8CncxJJ/XQ0XAP/
+         iIg9ig7K25bO5rQz0wnkCr9ZcFFwdr67jTRobSCPMpxQZJt7ASNZXSvqK0+Da3x8GOgO
+         RoYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=uJDsGDl+X2ZKKpTpyKbLqB34JLNShecgKArfkfRBOuY=;
+        b=m0gxO2VNalG+JlQ6x6DbXBAJofRLb3UHY/6HCJy5sFLjHidcaKbkYJ+ZRlkvxkEEKx
+         y2Ah4Rb6dW47kpqiyC4kp1fUEN+mtCto+q1Q9TU7V1AX0w7Ub6whrufu6H6tKs0GR9wQ
+         w/dlzdjP4BOe1Zw0sWQDJMbyGHif0EC9gDvBCllOxM+AkYzPvem/0bPQinHCEjxXzqE/
+         gWQ8j/CrdAFOMoEuASkmNFtv2bgw7NTi0vddcFBvabFPr+L4DoRQTLVZFN8MUpTn+OlL
+         s2eqiA0VbdLDUjpmvjgG/RnTz9ohCGdMuKg41gFb+waWHriqDp4fhpQ8Z88EBlpUNPS5
+         T2Fg==
+X-Gm-Message-State: AOAM532JBJ+JCy0sJu1QI8rlLu1gpwkNyV5Wv5rQLWzX+Jj6FNjwtiKF
+        RCVsPgSBGnQ3ODCzgdBqyoQ=
+X-Google-Smtp-Source: ABdhPJxl058d4i42jzDH9WOoApcArUEd6u/r9fZVDiaoK7X1Aziv18hS/pWpFKP9nRU3Uj7WZbD3oA==
+X-Received: by 2002:aa7:c341:: with SMTP id j1mr57003950edr.197.1594027158353;
+        Mon, 06 Jul 2020 02:19:18 -0700 (PDT)
+Received: from ubuntu-laptop.micron.com ([165.225.203.62])
+        by smtp.gmail.com with ESMTPSA id d23sm15975386eja.27.2020.07.06.02.19.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jul 2020 02:19:17 -0700 (PDT)
+From:   Bean Huo <huobean@gmail.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v1 0/2] make UFS dev_cmd more readable
+Date:   Mon,  6 Jul 2020 11:19:03 +0200
+Message-Id: <20200706091905.12885-1-huobean@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/6/20 10:23 AM, John Garry wrote:
-> On 02/07/2020 11:23, Kashyap Desai wrote:
-[ .. ]
->> My understanding is
->> - This RFC + patch set from above link is required for it. I could not
->> see
->> above series is committed.
-> 
-> It is committed and part of 5.8-rc1
-> 
-> The latest rc should have some scheduler fixes also.
-> 
-> I also note that there has been much churn on blk-mq tag code lately,
-> and something may be broken, so I plan to verify latest rc myself soon.
-> 
->> Am I missing anything. ?
-> 
-> You could also add this from Hannes (and add megaraid sas support):
-> 
-> https://lore.kernel.org/linux-scsi/20200629072021.9864-1-hare@suse.de/T/#t
-> 
-> That is, if it is required. I am not sure if megaraid sas uses
-> "internal" commands which needs to be guarded against cpu hotplug. Nor
-> would any of these commands be used during a test. For hisi_sas testing,
-> I did not bother adding support, and I guess that you don't need to either.
-> 
-Oh, it certainly uses internal commands, most notably to set up the
-queue mapping :-)
+From: Bean Huo <beanhuo@micron.com>
 
-The idea of the 'internal command' patchset is to let the block-layer
-control _all_ tags, be it for internal or 'normal' I/O.
-With that we can do away with all the tag mapping etc these drivers have
-to do (cf the hpsa conversion for an example).
-And only then we can safely use the blk layer busy iterators, knowing
-that all tags are accounted for and a 1:1 mapping between tags and
-internal hardware resources exist.
-Originally I thought it would help for CPU hotplug, too, but typically
-the internal commands are not bound to any specific CPU, so they
-typically will not accounted for when looking at the CPU-related resources.
-But that depends on the driver etc, so it's hard to give a guideline.
 
-Cheers,
+Bean Huo (2):
+  scsi: ufs: differentiate dev_cmd trace message
+  scsi: ufs: change ufshcd_comp_devman_upiu() to
+    ufshcd_compose_devman_upiu()
 
-Hannes
+ drivers/scsi/ufs/ufshcd.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.17.1
+
