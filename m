@@ -2,210 +2,140 @@ Return-Path: <SRS0=95cY=AR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BF5C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 11:35:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DDEC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 12:33:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB5F52073E
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 11:35:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AE7520771
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 12:33:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="lPr8SP/j"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="Fp99ucXr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728921AbgGFLfI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jul 2020 07:35:08 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:40328 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728875AbgGFLfI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 07:35:08 -0400
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200706113504epoutp029dbf862bbfa011887405323ce573fe7e~fJqno5S0H1277212772epoutp02Q
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Jul 2020 11:35:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200706113504epoutp029dbf862bbfa011887405323ce573fe7e~fJqno5S0H1277212772epoutp02Q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1594035304;
-        bh=wZP33tOC6Ppxb5tO7IRudsucTwq11oS9eQkAgtTcVsE=;
-        h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=lPr8SP/j/qZT9XSl8de0dcFUKcVKDahxNY0Fetc/Hb6xMf6XdG89HnZQGFubVvtnY
-         RxnXH9EAUWVqR/n/I5AMKOZYyybi6ETY+dqVgU7X6BedlvzqtPzaxxOnRJ7mpvfLQE
-         kp7bqKS18YAqV4r+/izBlXZ/9qTbqdGBoQuhvIgw=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200706113503epcas1p196304a5963ba181e0f7cfc692e03b66e~fJqnN_AfI1408014080epcas1p1C;
-        Mon,  6 Jul 2020 11:35:03 +0000 (GMT)
-Received: from epsmges1p4.samsung.com (unknown [182.195.40.159]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4B0k524lM7zMqYkY; Mon,  6 Jul
-        2020 11:35:02 +0000 (GMT)
-Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
-        epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        99.62.28581.66C030F5; Mon,  6 Jul 2020 20:35:02 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-        20200706113502epcas1p477aaca8ed42c91c53282823b001b9574~fJqlprsUp2106321063epcas1p4a;
-        Mon,  6 Jul 2020 11:35:02 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200706113502epsmtrp17f25f1b23e23e88d884586e89014008d~fJqlou_KF1254812548epsmtrp1L;
-        Mon,  6 Jul 2020 11:35:02 +0000 (GMT)
-X-AuditID: b6c32a38-2cdff70000006fa5-f8-5f030c66a30e
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        79.82.08382.56C030F5; Mon,  6 Jul 2020 20:35:02 +0900 (KST)
-Received: from grantjung02 (unknown [10.214.113.116]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200706113501epsmtip1cc700886249d0c43aad092fdc37a1b6d~fJqlZgT6c3030530305epsmtip1y;
-        Mon,  6 Jul 2020 11:35:01 +0000 (GMT)
-From:   "Grant Jung" <grant.jung@samsung.com>
-To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
-        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <bvanassche@acm.org>, <sc.suh@samsung.com>,
-        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>
-In-Reply-To: <SN6PR04MB464046C39B0B2AC5E36A7BF5FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
-Subject: RE: [RFC PATCH v3 1/2] ufs: support various values per device
-Date:   Mon, 6 Jul 2020 20:35:01 +0900
-Message-ID: <478701d65389$7c936df0$75ba49d0$@samsung.com>
+        id S1729107AbgGFMdO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jul 2020 08:33:14 -0400
+Received: from mail1.bemta25.messagelabs.com ([195.245.230.4]:57224 "EHLO
+        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728414AbgGFMdN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 08:33:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1594038789; i=@ts.fujitsu.com;
+        bh=5P/tzgpiXbU1DXaEWQbTeSMFpDxg7TlK9Ly6pJZbOzk=;
+        h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=Fp99ucXrV9bjot/rBb+4vRGaLA8uiwpbIDYTyCeSdOgrXSI9mLvHmOmna9rusbww7
+         zrxOe2KBpCUOLoctoAdVhP/jmdHsLKt36rCxZuKG/ik32Hsj3G7nQbCLBSsjKWLULf
+         ZS7r3s41iKn30Wh42p2Xvl5QHtdpvVH9rGif7VAQhCq/ChaWaxikRnplWRvihPr13M
+         xMT6l8MbjHIipZ3YLj2kAOLmHL+ubic4VEWHJKGkAwRv8cG6tm8LdtFAa+AwLb47mo
+         CfNu0ZVgP5EDbUht7iQo2zv8lunwGDqFAOLbSDP1WTUNM6HEPYXPM7rINpOS9DRQMp
+         0gLK2LGQeeN0Q==
+Received: from [100.112.194.55] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-4.bemta.az-a.eu-west-1.aws.symcld.net id AD/A6-17694-40A130F5; Mon, 06 Jul 2020 12:33:08 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrFIsWRWlGSWpSXmKPExsViZ8MxVZdFijn
+  e4P05GYtpH34yW+xZNInJovv6DjaL5cf/MVn8nXSD1aJ16VsmBzaPy1e8PT4+vcXisfl0tcfn
+  TXIBLFGsmXlJ+RUJrBmfN55gLvjBW/Hp2lmmBsbJ3F2MXBxCApMYJc4f3cUO4fQzSsx/1M/ax
+  cjJISzgLHHpylZGEFtEwEhixumTLCBFzALrGCVuv1rOAtHxkEli0Y+pLCBVbAIGEism3QezeQ
+  UcJR5+mgJmswioSOxc/pKpi5GDQ1QgXOLZCn+IEkGJkzOfgJVwCthJvGpeCLaYWcBMYt7mh8w
+  QtrjErSfzmSBsbYllC18zT2Dkn4WkfRaSlllIWmYhaVnAyLKK0SKpKDM9oyQ3MTNH19DAQNfQ
+  0EjX0BKIjcz0Eqt0E/VSS3XLU4tLdA31EsuL9Yorc5NzUvTyUks2MQKjIaXgQN0OxgevP+gdY
+  pTkYFIS5d0kxBwvxJeUn1KZkVicEV9UmpNafIhRhoNDSYLXXwIoJ1iUmp5akZaZA4xMmLQEB4
+  +SCK8bSJq3uCAxtzgzHSJ1ilGX4/aGJYuYhVjy8vNSpcR5PcSBigRAijJK8+BGwJLEJUZZKWF
+  eRgYGBiGegtSi3MwSVPlXjOIcjErCvOYgq3gy80rgNr0COoIJ6IhGESaQI0oSEVJSDUyP5up9
+  LT7ae3Rq0Ym0o/fndnA2inTF3nxcIN3SNLnygrLnYWOzDh1f18uzP52LtrctjN+5UMKzaY9pU
+  5emzao/Kwuq4ptFVuYuYC5Psn14zzbr2kabuQEXGF8LzOcLVvBY8LdG6HJTml/PtUNxRyvm3z
+  KQ+3F01hMmttCSIy7PCr5NONNddWbSU4H5zseYtPjfl6xkSImx2/Dq1Syph5uaQ1mkLTz+L9j
+  F8F1cUTX6QreGYinr6+un5FKS+c1m65s4bQoQE1ezfJLu3ZYnLfcq20GcRzc4qKBb57k5Q1n3
+  9Iyq5pXH1moX+noslp9rynTJzj2YKW6RTvdp95d3Hwc1vY8+v56zXCfkWYWDEktxRqKhFnNRc
+  SIAUML9jI0DAAA=
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-4.tower-267.messagelabs.com!1594038787!308851!1
+X-Originating-IP: [62.60.8.149]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 1834 invoked from network); 6 Jul 2020 12:33:08 -0000
+Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
+  by server-4.tower-267.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 6 Jul 2020 12:33:08 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 066CWqle012075;
+        Mon, 6 Jul 2020 13:32:59 +0100
+Received: from [172.17.39.90] (unknown [172.17.39.90])
+        by x-serv01 (Postfix) with ESMTP id 6831B20057;
+        Mon,  6 Jul 2020 14:32:44 +0200 (CEST)
+Subject: Re: [RFC PATCH 10/10] target: export sessions via configfs
+To:     Michael Christie <michael.christie@oracle.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+References: <1593232509-13720-1-git-send-email-michael.christie@oracle.com>
+ <1593232509-13720-11-git-send-email-michael.christie@oracle.com>
+ <24118898-006c-0538-6685-b4902f9eee48@ts.fujitsu.com>
+ <8e557b7a-aebc-7b3c-d02f-637cff0fd4b9@oracle.com>
+ <2e70df6e-560f-590f-721c-2532f7af3d50@ts.fujitsu.com>
+ <7642F0BE-2E98-47FA-B1B9-00CA083B6530@oracle.com>
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Message-ID: <2dc8a518-01c8-fa28-dac5-3fe0162d2f62@ts.fujitsu.com>
+Date:   Mon, 6 Jul 2020 14:32:42 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
+In-Reply-To: <7642F0BE-2E98-47FA-B1B9-00CA083B6530@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQHu1pDNEI1WArg19xfehYJkuPyuggFIo2zFASntDDcCTmR2VaijUmSg
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmnm4aD3O8wepZihYP5m1js9jbdoLd
-        4uXPq2wWBx92slhM+/CT2eLT+mWsFqsXP2CxWHRjG5PFzS1HWSy6r+9gs1h+/B+TRdfdG4wW
-        S/+9ZXHg9bh8xdvjcl8vk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5tB/oZgrgiMqxyUhN
-        TEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXLzAE6WUmhLDGnFCgU
-        kFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYGhQoFecmFtcmpeul5yfa2VoYGBkClSZkJOx/e8z
-        toIm0Yq2IwdYGhi/83cxcnBICJhInO+162Lk4hAS2MEocXvhQ9YuRk4g5xOjxLwjyRCJb4wS
-        Ow7+YAFJgDSs/rCEFSKxl1Hi0JvZjBDOK0aJ5Ut72UGq2AS0JSbu+swEkhAReMcksebMFrC5
-        nAKxEtv2XGYB2S0s4CbxYEcRSJhFQEXi/4k1jCA2r4ClxPxZ+1ggbEGJkzOfgNnMQDOXLXzN
-        DHGFgsTPp8tYQcaIAI358VcMokREYnZnGzPIWgmBMxwS99qfsEK86SIxf4EJRKuwxKvjW9gh
-        bCmJl/1t7BD1/YwS63pOs0A4E4CcdQehlhlLfPr8mRFkELOApsT6XfoQYUWJnb/nMkIs5pN4
-        97UHahevREebEESJisTJjbdYYXY92DcPaqKHRN+Ou6wTGBVnIflyFpIvZyF5ZxbC4gWMLKsY
-        xVILinPTU4sNC0yQ43oTIzg1a1nsYJz79oPeIUYmDsZDjBIczEoivL3ajPFCvCmJlVWpRfnx
-        RaU5qcWHGE2B4T6RWUo0OR+YHfJK4g1NjYyNjS1MzMzNTI2VxHlPWl2IExJITyxJzU5NLUgt
-        gulj4uCUamDKbjwyTeW6beXRewf942fpX5Q07LF5ZiYvPVViTvtpt3C56/G1ylviNr6w8lb2
-        eCh1wHDrJMUoDZfLquIZX199rfxkzPj49QxezbNirnxSujv2xyYYmLoHHIwXWSrafVf5vMj0
-        yuar29JTrN7p2um/9JlkLWM4hT94c/y3Zf5eTReeat74fGrn/e7O2ClOuTFP77fKhzZqXOtN
-        PPso6OqbyufNXzsUcu78OKBbm9z06v5fzzNM+1Nbbwen75C/zXM00F15w4kTNR0N/9TfHJq0
-        M/9ngZCn66KIRfpGMvEhf3ZlfRMTmN2U5uqyfvGFfpXNzkw7Zk1xi3veXT/x8orI0skT40K5
-        P+xj7L4dUK/EUpyRaKjFXFScCABjxEINVgQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrIIsWRmVeSWpSXmKPExsWy7bCSnG4aD3O8QU8vk8WDedvYLPa2nWC3
-        ePnzKpvFwYedLBbTPvxktvi0fhmrxerFD1gsFt3YxmRxc8tRFovu6zvYLJYf/8dk0XX3BqPF
-        0n9vWRx4PS5f8fa43NfL5DFh0QFGj+/rO9g8Pj69xeLRt2UVo8fnTXIe7Qe6mQI4orhsUlJz
-        MstSi/TtErgyDu56z1pwVKSiZc0v1gbGHfxdjJwcEgImEqs/LGEFsYUEdjNKfLugBBGXklh8
-        +QFzFyMHkC0scfhwcRcjF1DJC0aJJ+/usIHUsAloS0zc9ZkJJCEi8IdJYtrPM0wQVauZJE5c
-        OcIMUsUpECuxbc9lFpBJwgJuEg92FIGEWQRUJP6fWMMIYvMKWErMn7WPBcIWlDg58wmYzQy0
-        oPdhKyOMvWzha2aI4xQkfj5dxgoyUgRo5I+/YhAlIhKzO9uYJzAKzUIyaRaSSbOQTJqFpGUB
-        I8sqRsnUguLc9NxiwwLDvNRyveLE3OLSvHS95PzcTYzgWNTS3MG4fdUHvUOMTByMhxglOJiV
-        RHh7tRnjhXhTEiurUovy44tKc1KLDzFKc7AoifPeKFwYJySQnliSmp2aWpBaBJNl4uCUamAK
-        e3rlvzTLbadjfc2bfVT+cj0UrrubluiueTrp5duvqy9eVteZbLimsJpl64url9XMPp5LD1fd
-        VGfzu8kopLxWe9eyX3df1/hUWx9Ku7j9Q8b7Gftc2d+Wbu75H7Wtz0H81h2BV1xL0wT/NXQK
-        HpnEnxoWcWLZIpcPjrvLFXXOt6SJO7no9J3sCG5zOHdlfnRsbl711cWWj469P7nr+XtZn648
-        Ts4lKh8aJRn3730998CqK5+2/zBlrJvKkX4wY6aSY7z8nh+qRcKvLA/srowyqXb94TplxTsr
-        W5P7yyaw1j7fqRFy+oJM+uYbz5nDZO+lNx7v9WFN5nKX3hf86KSMRHS0aVOgnnxBRPvX3GtK
-        LMUZiYZazEXFiQDfheS8NAMAAA==
-X-CMS-MailID: 20200706113502epcas1p477aaca8ed42c91c53282823b001b9574
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200703053756epcas2p1f32da04da87c8f56a6052caada95fb9a
-References: <cover.1593753896.git.kwmad.kim@samsung.com>
-        <CGME20200703053756epcas2p1f32da04da87c8f56a6052caada95fb9a@epcas2p1.samsung.com>
-        <dc21b368f44c8a9a257d1b00549e3b5aeec00755.1593753896.git.kwmad.kim@samsung.com>
-        <SN6PR04MB464046C39B0B2AC5E36A7BF5FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > Respective UFS devices have their own characteristics and many of them
-> > could be a form of numbers, such as timeout and a number of retires.
-> > This introduces the way to set those things per specific device vendor
-> > or specific device.
-> >
-> > I wrote this like the style of ufs_fixups stuffs.
-> >
-> > Signed-off-by: Kiwoong Kim <kwmad.kim=40samsung.com>
-> This patch legitimize quirks of all kinds and shapes.
-> I am not sure that we should allow it.
->=20
->=20
-> > ---
-> >  drivers/scsi/ufs/ufs_quirks.h =7C 13 +++++++++++++
-> >  drivers/scsi/ufs/ufshcd.c     =7C 39
-> > +++++++++++++++++++++++++++++++++++++++
-> >  drivers/scsi/ufs/ufshcd.h     =7C  1 +
-> >  3 files changed, 53 insertions(+)
-> >
-> > diff --git a/drivers/scsi/ufs/ufs_quirks.h
-> > b/drivers/scsi/ufs/ufs_quirks.h index 2a00414..f074093 100644
-> > --- a/drivers/scsi/ufs/ufs_quirks.h
-> > +++ b/drivers/scsi/ufs/ufs_quirks.h
-> > =40=40 -29,6 +29,19 =40=40 struct ufs_dev_fix =7B
-> >         unsigned int quirk;
-> >  =7D;
-> >
-> > +enum dev_val_type =7B
-> > +       DEV_VAL_FDEVICEINIT     =3D 0x0,
->=20
->             /* keep last */
-> > +       DEV_VAL_NUM,
-> > +=7D;
-> > +
-> > +struct ufs_dev_value =7B
-> > +       u16 wmanufacturerid;
-> > +       u8 *model;
-> > +       u32 key;
-> > +       u32 val;
-> > +       bool enable;
-> > +=7D;
-> > +
-> >  =23define END_FIX =7B =7D
-> >
-> >  /* add specific device quirk */
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 52abe82..b26f182 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > =40=40 -207,6 +207,21 =40=40 static struct ufs_dev_fix ufs_fixups=5B=5D=
- =3D =7B
-> >         END_FIX
-> >  =7D;
-> >
-> > +static const struct ufs_dev_value ufs_dev_values=5B=5D =3D =7B
-> > +       =7B0, 0, 0, 0, false=7D,
-> > +=7D;
-> > +
-> > +static inline bool
-> > +ufs_get_dev_specific_value(struct ufs_hba *hba,
-> > +                          enum dev_val_type type, u32 *val) =7B
-> If (ARRAY_SIZE(ufs_dev_values) <=3D type)
->     return false;
->=20
->=20
-> Thanks,
-> Avri
 
-There is no specification for fdeviceinit timeout value like eMMC CMD1 whic=
-h is 1s.
-Usually this value is small but can be increased under some abnormal situat=
-ion like SPO(fdeviceinit after Sudden Power Off).
-I think that 1000 retries take less than 1 second but it is inaccurate and =
-not enough. Some UFS vendor wants 1.5s.
-Moreover, the latency of resuming ufs driver can be dependent on this value=
- when vcc and vccq is off during suspend.
-So it's bad to set with big value to apply all UFS devices.
-=20
-I wonder quirk is needed for that.
 
-BR
-Grant
+On 2020-07-03 23:19, Michael Christie wrote:
 
+...
+
+>> Why is the cfgfs_sess_supp flag per tpg? It seems to be set if either
+>> tpg/sessions or any acl/sessions folder is created.
+>> So what will happen here if e.g session for an acl is created while
+>> only tpg/sessions exists?
+>=20
+> Ah yeah, that is bogus. I am still working on an issue in this code. I =
+wasn=E2=80=99t expecting a line by line and just a general review of cfgf=
+s vs sysfs :) Sorry about that.
+>=20
+> I originally made it so when we make the tpg and before it is enabled y=
+ou had to do mkdir sessions on the tpg to signal the kernel that the app =
+supports the new interface. The kernel would then make the acl sessions d=
+ir for you.
+>=20
+> I was tracking down a bug in that though, and for the posting I made it=
+ so userspace had to create the acl sessions dir. While cutting and pasti=
+ng the code I forgot to fix up that code.
+
+Ah, ok. Please see below.
+>=20
+>=20
+>=20
+>> Do we need an similar flag per acl also?
+>> And if we have a per acl and the tpg flag I think they should be remov=
+ed
+>> when user removes an empty sessions folder.
+>=20
+> It=E2=80=99s just a lot easier to leave it set if userspace has enabled=
+ it once. You actually need to take into account if the tpg is enabled, a=
+nd then you have some issues with the drivers that have their own nexus i=
+nterface, and then there are different userspace code paths that handle t=
+his.
+>=20
+> I don=E2=80=99t think it=E2=80=99s going to be common to mix and match =
+updated and non-updated tools, so once its set, it=E2=80=99s set. If you =
+disagree let me know. It can be done.
+
+I see no need for such a mix.
+
+If it works like you described above - kernel creates acl/sessions dirs
+after user created tpg/sessions - I think it is really fine.
