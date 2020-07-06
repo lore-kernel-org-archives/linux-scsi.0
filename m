@@ -2,91 +2,109 @@ Return-Path: <SRS0=95cY=AR=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3D5C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A2D1C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE4642075B
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:07:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="u7wVUTpX"
+	by mail.kernel.org (Postfix) with ESMTP id D9B702075B
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Jul 2020 06:22:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728835AbgGFGHN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Jul 2020 02:07:13 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:35226 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728747AbgGFGHN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jul 2020 02:07:13 -0400
-X-UUID: 28bcc605ca014749835e2b07ab78cbe5-20200706
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=TEVJ+Nr51pohIXBKHppotISQ5SGWi6nMpNvyxh0dqh4=;
-        b=u7wVUTpXFHtcf3DF+PloFy7FAEuFtIm37rJC/+n3PjG/OrXb3g35FOVe/ndJTZ9nM38v1bW6U4sgeAJ6yn8z/ZO/cH/lIDjJR8sjKtF/ASlWENP0SfTXKYfLBYWBmiI9epAS3VDHl6SSRYTFu4MI9yMvUSsUrrQwq8ppuVfPfRg=;
-X-UUID: 28bcc605ca014749835e2b07ab78cbe5-20200706
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 2011109653; Mon, 06 Jul 2020 14:07:09 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 6 Jul 2020 14:07:05 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 6 Jul 2020 14:07:05 +0800
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
-        <jejb@linux.ibm.com>, <bvanassche@acm.org>
-CC:     <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
-        <cang@codeaurora.org>, <matthias.bgg@gmail.com>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <kuohong.wang@mediatek.com>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <andy.teng@mediatek.com>, <chaotian.jing@mediatek.com>,
-        <cc.chou@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v1 1/2] scsi: ufs: Simplify completion timestamp for SCSI and query commands
-Date:   Mon, 6 Jul 2020 14:07:06 +0800
-Message-ID: <20200706060707.32608-2-stanley.chu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20200706060707.32608-1-stanley.chu@mediatek.com>
-References: <20200706060707.32608-1-stanley.chu@mediatek.com>
+        id S1728862AbgGFGWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Jul 2020 02:22:06 -0400
+Received: from mx2.suse.de ([195.135.220.15]:46190 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728828AbgGFGWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Jul 2020 02:22:06 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 9E95BB157;
+        Mon,  6 Jul 2020 06:22:04 +0000 (UTC)
+Subject: Re: [PATCH] scsi: allow state transitions BLOCK -> BLOCK
+To:     Bart Van Assche <bvanassche@acm.org>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+References: <20200702142436.98336-1-hare@suse.de>
+ <1593700443.9652.2.camel@HansenPartnership.com>
+ <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
+ <2dd291ba-1e59-5e88-de96-5d3965f20317@acm.org>
+ <819ce023-93c3-249d-2221-97438f229e03@suse.de>
+ <b4842dfd-f385-64a9-6421-03765f60d0d9@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <97d4882d-2f26-de93-672a-6395e8fedf0c@suse.de>
+Date:   Mon, 6 Jul 2020 08:22:03 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <b4842dfd-f385-64a9-6421-03765f60d0d9@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-U2ltcGxpZnkgcmVjb3JkaW5nIGNvbW1hbmQgY29tcGxldGlvbiB0aW1lIGluDQpfX3Vmc2hjZF90
-cmFuc2Zlcl9yZXFfY29tcGwoKSBieSBhc3NpZ25pbmcgbHJicC0+Y29tcGxfdGltZV9zdGFtcA0K
-aW4gYW4gdW5pZmllZCBsb2NhdGlvbi4NCg0KU2lnbmVkLW9mZi1ieTogU3RhbmxleSBDaHUgPHN0
-YW5sZXkuY2h1QG1lZGlhdGVrLmNvbT4NCi0tLQ0KIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMg
-fCAzICstLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMiBkZWxldGlvbnMoLSkN
-Cg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kv
-dWZzL3Vmc2hjZC5jDQppbmRleCAxOGRhMmQ2NGY5ZmEuLjcxZThkN2M3ODJiZCAxMDA2NDQNCi0t
-LSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCisrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZz
-aGNkLmMNCkBAIC00ODgxLDYgKzQ4ODEsNyBAQCBzdGF0aWMgdm9pZCBfX3Vmc2hjZF90cmFuc2Zl
-cl9yZXFfY29tcGwoc3RydWN0IHVmc19oYmEgKmhiYSwNCiANCiAJZm9yX2VhY2hfc2V0X2JpdChp
-bmRleCwgJmNvbXBsZXRlZF9yZXFzLCBoYmEtPm51dHJzKSB7DQogCQlscmJwID0gJmhiYS0+bHJi
-W2luZGV4XTsNCisJCWxyYnAtPmNvbXBsX3RpbWVfc3RhbXAgPSBrdGltZV9nZXQoKTsNCiAJCWNt
-ZCA9IGxyYnAtPmNtZDsNCiAJCWlmIChjbWQpIHsNCiAJCQl1ZnNoY2RfYWRkX2NvbW1hbmRfdHJh
-Y2UoaGJhLCBpbmRleCwgImNvbXBsZXRlIik7DQpAQCAtNDg4OSwxMyArNDg5MCwxMSBAQCBzdGF0
-aWMgdm9pZCBfX3Vmc2hjZF90cmFuc2Zlcl9yZXFfY29tcGwoc3RydWN0IHVmc19oYmEgKmhiYSwN
-CiAJCQljbWQtPnJlc3VsdCA9IHJlc3VsdDsNCiAJCQkvKiBNYXJrIGNvbXBsZXRlZCBjb21tYW5k
-IGFzIE5VTEwgaW4gTFJCICovDQogCQkJbHJicC0+Y21kID0gTlVMTDsNCi0JCQlscmJwLT5jb21w
-bF90aW1lX3N0YW1wID0ga3RpbWVfZ2V0KCk7DQogCQkJLyogRG8gbm90IHRvdWNoIGxyYnAgYWZ0
-ZXIgc2NzaSBkb25lICovDQogCQkJY21kLT5zY3NpX2RvbmUoY21kKTsNCiAJCQlfX3Vmc2hjZF9y
-ZWxlYXNlKGhiYSk7DQogCQl9IGVsc2UgaWYgKGxyYnAtPmNvbW1hbmRfdHlwZSA9PSBVVFBfQ01E
-X1RZUEVfREVWX01BTkFHRSB8fA0KIAkJCWxyYnAtPmNvbW1hbmRfdHlwZSA9PSBVVFBfQ01EX1RZ
-UEVfVUZTX1NUT1JBR0UpIHsNCi0JCQlscmJwLT5jb21wbF90aW1lX3N0YW1wID0ga3RpbWVfZ2V0
-KCk7DQogCQkJaWYgKGhiYS0+ZGV2X2NtZC5jb21wbGV0ZSkgew0KIAkJCQl1ZnNoY2RfYWRkX2Nv
-bW1hbmRfdHJhY2UoaGJhLCBpbmRleCwNCiAJCQkJCQkiZGV2X2NvbXBsZXRlIik7DQotLSANCjIu
-MTguMA0K
+On 7/6/20 4:30 AM, Bart Van Assche wrote:
+> On 2020-07-02 22:30, Hannes Reinecke wrote:
+>> And it's called from srp_reconnect_rport() and __rport_fail_io_fast(),
+>> so we have this call chain:
+>>
+>> srp_reconnect_rport()
+>>    - scsi_target_block()
+>>    -> __rport_fail_io_fast()
+>>         - scsi_target_block()
+> 
+> How about the (untested) patch below?
+> 
+> 
+> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+> index d4d1104fac99..bfb240675f06 100644
+> --- a/drivers/scsi/scsi_transport_srp.c
+> +++ b/drivers/scsi/scsi_transport_srp.c
+> @@ -402,13 +402,9 @@ static void __rport_fail_io_fast(struct srp_rport *rport)
+> 
+>   	lockdep_assert_held(&rport->mutex);
+> 
+> +	WARN_ON_ONCE(rport->state != SRP_RPORT_BLOCKED);
+>   	if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
+>   		return;
+> -	/*
+> -	 * Call scsi_target_block() to wait for ongoing shost->queuecommand()
+> -	 * calls before invoking i->f->terminate_rport_io().
+> -	 */
+> -	scsi_target_block(rport->dev.parent);
+>   	scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
+> 
+>   	/* Involve the LLD if possible to terminate all I/O on the rport. */
+> @@ -569,9 +565,9 @@ int srp_reconnect_rport(struct srp_rport *rport)
+>   		 * and dev_loss off. Mark the port as failed and start the TL
+>   		 * failure timers if these had not yet been started.
+>   		 */
+> +		WARN_ON_ONCE(srp_rport_set_state(rport, SRP_RPORT_BLOCKED));
+> +		scsi_target_block(rport->dev.parent);
+>   		__rport_fail_io_fast(rport);
+> -		scsi_target_unblock(&shost->shost_gendev,
+> -				    SDEV_TRANSPORT_OFFLINE);
+>   		__srp_start_tl_fail_timers(rport);
+>   	} else if (rport->state != SRP_RPORT_BLOCKED) {
+>   		scsi_target_unblock(&shost->shost_gendev,
+> 
+That will still have a duplicate call as scsi_target_block() has been 
+called already (cf scsi_target_block() in line 539 right at the start of 
+srp_reconnect_rport()).
 
+(And I don't think we need the WARN_ON_ONCE() here; we are checking for 
+rport->state == SRP_RPORT_BLOCKED just before that line...)
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
