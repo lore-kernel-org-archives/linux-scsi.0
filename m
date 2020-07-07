@@ -5,106 +5,126 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF6CC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 810CDC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8802C20738
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FAD52073E
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nTK6Gzvx"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pjWCUJEZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728309AbgGGOBa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jul 2020 10:01:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47898 "EHLO
+        id S1728337AbgGGOBj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jul 2020 10:01:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728184AbgGGOBI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:08 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7412C08C5E1
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:07 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id l2so45149520wmf.0
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:07 -0700 (PDT)
+        with ESMTP id S1728073AbgGGOBD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:03 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 172FBC061755
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:03 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id 17so46585638wmo.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=+O/0d2wA9ZSFy1o93OfBEO3S/Is3leUo2WVahG+2iA4=;
-        b=nTK6GzvxFufmNCuaB/22HJzPW+ctnvIE8XhiHfh2DBolWX8XmkjKWKRNr6mcxfuVz8
-         2WFBe65mFhxIVpnvZUmNUjMcVuK2FTAFkp+J3gGwUC4AlolozrT3b/Fbb60/HtruCkDS
-         ZFMYuIBgwEfx3BrXjKfO5OG2bHyOu5swAPB9FW8MB2jhMHzER4Ho4vK4bfgYXhLqaoVt
-         jMEq9w6X5RaHLgoHJVqa5MNFhySGuagwInfbdzMqtS0MAMRVCSCE9jr1+nW/vN1kcAH3
-         A2d47G3UPS0UAasKFBCDbKN1r8wQWyWvO/k/t37a8JY9yAFqotKwsU1CLWNDeGzhIv7P
-         W0VA==
+        bh=jN1nbT1sxQbFlRXUCBfggkW/hnjjJGCQVCG/NPTfu6Y=;
+        b=pjWCUJEZwyPxA5RaPU66fCI6rKNgDNOxWlKt8d8YsnOGnz9+M2K1koQ7iG9eKhjaFx
+         g8YYXzC7TkDHe9hJ+8+ILM1uoCB/M+MHWG34tN2gn70O8IytBqRJWMHsFxODpQitWvEe
+         sT1z3OQLglHZy7jLwHM8UGQsPz8CNy8aRD+rEndm5AA2TpFh6opalazJ6fET6JTQdH6o
+         +tipp3x4BsKQaEnJZRxgT8WT7DN2KIDtAgsdP5DvogsK2YWShtueljfN3tKDaAN+lpu2
+         YLnIN4NNKIPdCd2/DMVhL0hcCLI01P4Qqh9eyPNxWoFhcq6sDnQe2S9JbIZ4IQOte1b9
+         to+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=+O/0d2wA9ZSFy1o93OfBEO3S/Is3leUo2WVahG+2iA4=;
-        b=XqbKzF3ltYp9F2sUYpAZi+ZECyx/Q1YMWZn+3hF5ZHHkfcjT2PoJRzexzNoSA7XhjS
-         h2sbADEGuzSzIohn7ZzET59AbxCubHVDq/J/x41pqM8Esbz/AnWF5Q+7NY8AUCAlJk2i
-         y8ihpWVJ6WeTN4q4uTphySBPTKedIysvEOyA23V3Z7UQR/0aZSTp+fT/LSN0yDsdn6Ao
-         sgUeSNFvZdYkrRBCCIXI9LFVPtRXvEr6ruWQd1zbGa3pf+YqaD4P+gwq5le+hhcaTjFp
-         oJMnQ3S5b8BdM4DPoMjTPMAphkWr+hQovWCXRnr+l1A7N1PUnspCH8a8cYo4ESF5xzZt
-         JRnQ==
-X-Gm-Message-State: AOAM531v4hK4/IUuy+ljEJ5jOwXLTnxwPlI9D79p7hj7S5Ra/XNzeAQH
-        ztfJSan5wg8SLOzDQSyqSqaLhA==
-X-Google-Smtp-Source: ABdhPJzjM2K9XAyP9w+5m7Z7UU2SGA9mOLFx1eo+L5yKfK4NKKE8aJpkHASyHiSvhRZcJmp0gwpGkg==
-X-Received: by 2002:a7b:c09a:: with SMTP id r26mr4281624wmh.176.1594130466648;
-        Tue, 07 Jul 2020 07:01:06 -0700 (PDT)
+        bh=jN1nbT1sxQbFlRXUCBfggkW/hnjjJGCQVCG/NPTfu6Y=;
+        b=mcApt7Lfocpid/R8wJvCTy+Daya8/13PATonmZSoU4ncgt0j5z7IQ/oZaxf9ISk756
+         tt/V56b0L5QqwaUFA3z1Fjn9M13inc7HFMXK8q6k5QeFIY+v92F6JDmTLfnOfI1dbt34
+         wnfgAh+RpJpUl5J2M3b068qf1Zk32cAo3Ov12pDLsAQ0OtbbylbQf84o8KrxmXpKheHd
+         X7KMPyl5Zr1Eqh4K2Y5hpD4i7P2hxbK0xHZt5rHKwYWh1xt+4586xmuLCdo5mUMEGpDR
+         ZkS9S3gjb7CNUejlEnZYDsZnvd+T9f5PBfcxE85HI70PYspMkk2iOtXTlnyn/hmWolX2
+         yZrw==
+X-Gm-Message-State: AOAM5316cPnHPxX7l9EU+xMh7TAhaGtuJD+eVi+58Uxl6hbdMGd+doCf
+        bAx+Q8yM24DubxDC7S9pVGtv5gDm8w8=
+X-Google-Smtp-Source: ABdhPJzUV97sKhk0cTprn9h4VIm8fJrhl/nqYSZ5hY14wPRhadSv020fwC6sc7z+gXrJDrbeBjfV5A==
+X-Received: by 2002:a1c:4303:: with SMTP id q3mr4547681wma.134.1594130461172;
+        Tue, 07 Jul 2020 07:01:01 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.01.05
+        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.01.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2020 07:01:06 -0700 (PDT)
+        Tue, 07 Jul 2020 07:01:00 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        "Juergen E. Fischer" <fischer@norbit.de>
-Subject: [PATCH 06/10] scsi: aha152x: Remove unused variable 'ret'
-Date:   Tue,  7 Jul 2020 15:00:51 +0100
-Message-Id: <20200707140055.2956235-7-lee.jones@linaro.org>
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Atul Mukker <Atul.Mukker@lsi.com>,
+        Sreenivas Bagalkote <Sreenivas.Bagalkote@lsi.com>,
+        Manoj Jose <Manoj.Jose@lsi.com>, megaraidlinux@lsi.com,
+        megaraidlinux.pdl@broadcom.com
+Subject: [PATCH 02/10] scsi: megaraid: megaraid_mbox: Fix some kerneldoc bitrot
+Date:   Tue,  7 Jul 2020 15:00:47 +0100
+Message-Id: <20200707140055.2956235-3-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200707140055.2956235-1-lee.jones@linaro.org>
 References: <20200707140055.2956235-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks to be unused since 2014.
+Some function parameters have changed without updating the documentation.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/aha152x.c: In function ‘datai_run’:
- drivers/scsi/aha152x.c:2033:9: warning: variable ‘data’ set but not used [-Wunused-but-set-variable]
- 2033 | int data;
- | ^~~~
+ drivers/scsi/megaraid/megaraid_mbox.c:3314: warning: Excess function parameter 'level' description in 'megaraid_mbox_display_scb'
+ drivers/scsi/megaraid/megaraid_mbox.c:3985: warning: Function parameter or member 'dev' not described in 'megaraid_sysfs_show_app_hndl'
+ drivers/scsi/megaraid/megaraid_mbox.c:3985: warning: Function parameter or member 'attr' not described in 'megaraid_sysfs_show_app_hndl'
+ drivers/scsi/megaraid/megaraid_mbox.c:3985: warning: Excess function parameter 'cdev' description in 'megaraid_sysfs_show_app_hndl'
 
-Cc: "Juergen E. Fischer" <fischer@norbit.de>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: Atul Mukker <Atul.Mukker@lsi.com>
+Cc: Sreenivas Bagalkote <Sreenivas.Bagalkote@lsi.com>
+Cc: Manoj Jose <Manoj.Jose@lsi.com>
+Cc: megaraidlinux@lsi.com
+Cc: megaraidlinux.pdl@broadcom.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/aha152x.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index 90f97df1c42a4..d8e19afa7a140 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -2030,8 +2030,7 @@ static void datai_run(struct Scsi_Host *shpnt)
- 				    fifodata, GETPORT(FIFOSTAT));
- 			SETPORT(DMACNTRL0, ENDMA|_8BIT);
- 			while(fifodata>0) {
--				int data;
--				data=GETPORT(DATAPORT);
-+				GETPORT(DATAPORT);
- 				fifodata--;
- 				DATA_LEN++;
- 			}
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 8f918df631bfe..cace28dd81ad8 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3304,7 +3304,6 @@ megaraid_mbox_fire_sync_cmd(adapter_t *adapter)
+  * megaraid_mbox_display_scb - display SCB information, mostly debug purposes
+  * @adapter		: controller's soft state
+  * @scb			: SCB to be displayed
+- * @level		: debug level for console print
+  *
+  * Diplay information about the given SCB iff the current debug level is
+  * verbose.
+@@ -3972,7 +3971,8 @@ megaraid_sysfs_get_ldmap(adapter_t *adapter)
+ 
+ /**
+  * megaraid_sysfs_show_app_hndl - display application handle for this adapter
+- * @cdev	: class device object representation for the host
++ * @dev		: device object representation for the host
++ * @attr	: unused
+  * @buf		: buffer to send data to
+  *
+  * Display the handle used by the applications while executing management
 -- 
 2.25.1
 
