@@ -2,150 +2,108 @@ Return-Path: <SRS0=EBgm=AS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 941E1C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 17:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D27FAC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 18:12:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75C1A20708
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 17:59:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594144755;
-	bh=G4gbjeCawk42jom0IDqx7cs+gNSByJwNSXM44xofNEU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=D3eGS0v7L0U7H+K3pRS+MB7agJjCiYoZ7mQ9g1OiYUCbTu4AROSSXYI3TIbLqzHun
-	 LGe5GKbQy/iTUxHEcf/PCOwgeD986aBgPSO+elV6K2wETqYVTWbMz2Z6+kgLXL9kjD
-	 lmn6Rsx445SNfoNQSUCLEDa2uEDm/pWSdu/cFP78=
+	by mail.kernel.org (Postfix) with ESMTP id B568C20720
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 18:12:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NLyyVFbf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728100AbgGGR7P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jul 2020 13:59:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53468 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727791AbgGGR7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Jul 2020 13:59:15 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B693E206E2;
-        Tue,  7 Jul 2020 17:59:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594144753;
-        bh=G4gbjeCawk42jom0IDqx7cs+gNSByJwNSXM44xofNEU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PkQ8Dw7B/PGpugkaFUPLmCtRhNH8gEUZbMIyj3KIXGMJ+W2kUFMJ2n5FJ+XEarVBD
-         QHSf6ggMTrTBN1KrL01+cGys39wHiIHrAcAcjGMFWpXGbQJ5YOWPgOUMNwApf18/fI
-         8Ayw33vByKvJcldiJpETjJhwfNH4JqNE0Ls4/x/A=
-Date:   Tue, 7 Jul 2020 10:59:12 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     'Satya Tangirala' <satyat@google.com>, linux-scsi@vger.kernel.org,
-        'Avri Altman' <avri.altman@wdc.com>,
-        'Barani Muthukumaran' <bmuthuku@qti.qualcomm.com>,
-        'Kuohong Wang' <kuohong.wang@mediatek.com>,
-        'Kim Boojin' <boojin.kim@samsung.com>
-Subject: Re: [PATCH v4 0/3] Inline Encryption Support for UFS
-Message-ID: <20200707175912.GA839@sol.localdomain>
-References: <CGME20200706200432epcas5p1d276cdebadfecc3984de37a80c4b19f2@epcas5p1.samsung.com>
- <20200706200414.2027450-1-satyat@google.com>
- <000001d65485$1e819280$5b84b780$@samsung.com>
+        id S1728211AbgGGSMH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jul 2020 14:12:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59070 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727834AbgGGSMH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 14:12:07 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB457C061755
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 11:12:06 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id l17so86739wmj.0
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 11:12:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=dkBGZFFrCFaqqtw2dRtcsDkg6EDJqwN1Ag4JpnmvXE0=;
+        b=NLyyVFbfJQcGzxnQAhzuP9IWH4cBGwOkHvRTVHy7EmlYu877w37ArkMeHogVl2ySlm
+         YeADM9JYuwx9Ps6Aa9mRTMui4YBBm5XJXfOpsS+OWtvDusfwButaxMJ8F+pMTB58fTdw
+         cP16lfPTR7nSBCfpR5nmCeHVQseIlH5qg8gTo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=dkBGZFFrCFaqqtw2dRtcsDkg6EDJqwN1Ag4JpnmvXE0=;
+        b=qcOHm2wybcU33C81t1JtPGHUwb8j54LqTmTHryu669WfaJvgd3q45+PH0Rh7plJDS/
+         VMExBjQOhqWRmXgeyZInfsu9TBEiB8mwTejX+o08tGk3KV9HVhggsS3rrwy48pOHdCNz
+         406PN8RU3fWqhNrOT7zb/DrGgATNbQb905Sct+AejlYwukCQfdJDMKxD3rCskVd/s8UU
+         Atfu0ppOB7682flvjLSONF4Iu3ZDfTELf0v7t/mIY08bW4eCoS8zVdJQvMxT46WGTzmo
+         o/U0VAvuJgMuWmTXvG1Ai8/FepPxXt6B1rr/kgJVkVw2bwS+kK4TAjKXsHCB/CvczWu7
+         d9gw==
+X-Gm-Message-State: AOAM532vOqa14oe4C0nV56Mh/ax6jioKyrO4uz8xgQ0ci6ETdWwZ/wjS
+        h0KD53z733bIBaA/aQAHE8mJzkib3Ug=
+X-Google-Smtp-Source: ABdhPJx80fTYHbVtP4tLN7pHRKrDlRSW1jaNL//yM4e+PTmPZAQS/FYK//pDzT11nfP43EpwYlgB+g==
+X-Received: by 2002:a7b:cd10:: with SMTP id f16mr5505804wmj.86.1594145525392;
+        Tue, 07 Jul 2020 11:12:05 -0700 (PDT)
+Received: from [192.168.1.237] (ip68-5-85-189.oc.oc.cox.net. [68.5.85.189])
+        by smtp.gmail.com with ESMTPSA id k11sm2247410wrd.23.2020.07.07.11.12.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 07 Jul 2020 11:12:04 -0700 (PDT)
+Subject: Re: linux-next: Tree for Jul 7 (scsi/lpfc/lpfc_init.c)
+To:     Randy Dunlap <rdunlap@infradead.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        dick kennedy <dick.kennedy@broadcom.com>
+References: <20200707180800.549b561b@canb.auug.org.au>
+ <2f85f3c4-a58b-f225-a533-86e209a4651c@infradead.org>
+From:   James Smart <james.smart@broadcom.com>
+Message-ID: <7ae1c7e3-ce8d-836b-1ae7-d4d00bd8f95c@broadcom.com>
+Date:   Tue, 7 Jul 2020 11:12:00 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <2f85f3c4-a58b-f225-a533-86e209a4651c@infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <000001d65485$1e819280$5b84b780$@samsung.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 07, 2020 at 11:06:14PM +0530, Alim Akhtar wrote:
-> Hi Satya,
-> 
-> > -----Original Message-----
-> > From: Satya Tangirala <satyat@google.com>
-> > Sent: 07 July 2020 01:34
-> > To: linux-scsi@vger.kernel.org; Avri Altman <avri.altman@wdc.com>; Alim
-> > Akhtar <alim.akhtar@samsung.com>
-> > Cc: Barani Muthukumaran <bmuthuku@qti.qualcomm.com>; Kuohong Wang
-> > <kuohong.wang@mediatek.com>; Kim Boojin <boojin.kim@samsung.com>;
-> > Satya Tangirala <satyat@google.com>
-> > Subject: [PATCH v4 0/3] Inline Encryption Support for UFS
-> > 
-> > This patch series adds support for inline encryption to UFS using the inline
-> > encryption support in the block layer. It follows the JEDEC UFSHCI v2.1
-> > specification, which defines inline encryption for UFS.
-> > 
-> > This patch series previously went through a number of iterations as part of the
-> > "Inline Encryption Support" patchset (last version was v13:
-> > https://lkml.kernel.org/r/20200514003727.69001-1-satyat@google.com).
-> > This patch series is rebased on v5.8-rc4.
-> > 
-> > Patch 1 introduces the crypto registers and struct definitions defined in the
-> > UFSHCI v2.1 spec.
-> > 
-> > Patch 2 introduces functions to manipulate the UFS inline encryption hardware
-> > (again in line with the UFSHCI v2.1 spec) via the block layer keyslot manager.
-> > Device specific drivers must set the UFSHCD_CAP_CRYPTO in hba->caps before
-> > ufshcd_hba_init_crypto is called to opt-in to inline encryption support.
-> > 
-> > Patch 3 wires up ufshcd.c with the UFS crypto API introduced in Patch 2.
-> > 
-> > This patch series has been tested on some Qualcomm chipsets (on the db845c,
-> > sm8150-mtp and sm8250-mtp) using some additional patches at
-> > https://lkml.kernel.org/linux-scsi/20200501045111.665881-1-
-> > ebiggers@kernel.org/
-> > and on some Mediatek chipsets using the additional patch in
-> > https://lkml.kernel.org/linux-scsi/20200304022101.14165-1-
-> > stanley.chu@mediatek.com/.
-> > These additional patches are required because these chipsets need certain
-> > additional behaviour not specified within the UFSHCI v2.1 spec.
-> > 
-> > Thanks a lot to all the folks who tested this out!
-> > 
-> > Changes v3 => v4:
-> >  - fix incorrect patch folding
-> >  - some cleanups from Eric
-> > 
-> > Changes v2 => v3:
-> >  - introduce ufshcd_prepare_req_desc_hdr_crypto to clean up code slightly
-> >  - split up ufshcd_hba_init_crypto into ufshcd_hba_init_crypto_capabilities
-> >    and ufshcd_init_crypto. The first function is called from
-> >    ufshcd_hba_capabilities, and only reads crypto capabilities from device
-> >    registers and sets up appropriate crypto structures. The second function
-> >    is called from ufshcd_init, and actually initializes the inline crypto
-> >    hardware.
-> > 
-> > Changes v1 => v2
-> >  - handle OCS_DEVICE_FATAL_ERROR explicitly in ufshcd_transfer_rsp_status
-> > 
-> > Satya Tangirala (3):
-> >   scsi: ufs: UFS driver v2.1 spec crypto additions
-> >   scsi: ufs: UFS crypto API
-> >   scsi: ufs: Add inline encryption support to UFS
-> > 
-> >  drivers/scsi/ufs/Kconfig         |   9 ++
-> >  drivers/scsi/ufs/Makefile        |   1 +
-> >  drivers/scsi/ufs/ufshcd-crypto.c | 238 +++++++++++++++++++++++++++++++
-> > drivers/scsi/ufs/ufshcd-crypto.h |  77 ++++++++++
-> >  drivers/scsi/ufs/ufshcd.c        |  49 ++++++-
-> >  drivers/scsi/ufs/ufshcd.h        |  24 ++++
-> >  drivers/scsi/ufs/ufshci.h        |  67 ++++++++-
-> >  7 files changed, 456 insertions(+), 9 deletions(-)  create mode 100644
-> > drivers/scsi/ufs/ufshcd-crypto.c  create mode 100644 drivers/scsi/ufs/ufshcd-
-> > crypto.h
-> > 
-> Looks Good to me.
-> I donâ€™t have a platform to test this series though.
-> It will be good to get a Tested-by tags for this series.
-> 
-> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-> 
+On 7/7/2020 10:09 AM, Randy Dunlap wrote:
+> On 7/7/20 1:08 AM, Stephen Rothwell wrote:
+>> Hi all,
+>>
+>> Changes since 20200706:
+>>
+> on i386:
+>
+> when CONFIG_ACPI is not set/enabled:
+>
+>
+> ../drivers/scsi/lpfc/lpfc_init.c:1265:15: error: implicit declaration of function 'get_cpu_idle_time'; did you mean 'get_cpu_device'? [-Werror=implicit-function-declaration]
+>
+>
+> The cpufreq people want justification for using
+> get_cpu_idle_time().  Please see
+> https://lore.kernel.org/linux-scsi/20200707030943.xkocccy6qy2c3hrx@vireshk-i7/
+>
+>
+>
 
-There's information about testing in the cover letter and commit messages
-already.  But feel free to also add my Tested-by to all three patches:
+The driver is using cpu utilization in order to choose between softirq 
+or work queues in handling an interrupt. Less-utilized, softirq is used. 
+higher utilized, work queue is used.  The utilization is checked 
+periodically via a heartbeat.
 
-Tested-by: Eric Biggers <ebiggers@google.com> # db845c
+-- james
 
-- Eric
