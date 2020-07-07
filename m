@@ -5,69 +5,66 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F9AC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF6CC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 922772073E
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8802C20738
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FCjmwtor"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nTK6Gzvx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728190AbgGGOBI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jul 2020 10:01:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47890 "EHLO
+        id S1728309AbgGGOBa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jul 2020 10:01:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728184AbgGGOBH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:07 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF144C08C5EE
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:06 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id l17so43400836wmj.0
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:06 -0700 (PDT)
+        with ESMTP id S1728184AbgGGOBI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:08 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7412C08C5E1
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:07 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id l2so45149520wmf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=y26Vcc37Y6OJEhG8oY+4cT2VI5Efu0cSqIbZ+fS/jqU=;
-        b=FCjmwtorz6vctEvTWYfiq6Y8f6Fbx+tEDfnlJ4nB5DOyvJmPt//qLYZCSdT1zX1nkk
-         mMz1faRYby4rbkKcS+C0KGL5LFQsQMep3SxKa7N+B2i1kW5PZG1LACp9KoGKNKPdmk8m
-         6hra1t1Pec7tsMfKPiVo1jeEFbuslPDFkGBfig7Q/5HqW4xYOeM+z55AMZcbFr+NAgss
-         fYetrg61K4XOj+wS/l8gsTVbPAWiGPTFH+H2WweP8zHXhhd7zDVcK0TMGzGQZIQFufB8
-         cAsc2iPIbGETO8T8H7n5QpZYZeq56MrH9mxqxuUsRROd9RQBI/lsaprFh99AYJ+RXasi
-         eoRw==
+        bh=+O/0d2wA9ZSFy1o93OfBEO3S/Is3leUo2WVahG+2iA4=;
+        b=nTK6GzvxFufmNCuaB/22HJzPW+ctnvIE8XhiHfh2DBolWX8XmkjKWKRNr6mcxfuVz8
+         2WFBe65mFhxIVpnvZUmNUjMcVuK2FTAFkp+J3gGwUC4AlolozrT3b/Fbb60/HtruCkDS
+         ZFMYuIBgwEfx3BrXjKfO5OG2bHyOu5swAPB9FW8MB2jhMHzER4Ho4vK4bfgYXhLqaoVt
+         jMEq9w6X5RaHLgoHJVqa5MNFhySGuagwInfbdzMqtS0MAMRVCSCE9jr1+nW/vN1kcAH3
+         A2d47G3UPS0UAasKFBCDbKN1r8wQWyWvO/k/t37a8JY9yAFqotKwsU1CLWNDeGzhIv7P
+         W0VA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=y26Vcc37Y6OJEhG8oY+4cT2VI5Efu0cSqIbZ+fS/jqU=;
-        b=JP/GWlmmDOHl4kk6egl4rce84oirzeEb8IW5GLx9YphsaBXNaoQWlYuRT8I34teVDW
-         Oc7Z5Kt8fzA7Yhg+OzF86fb87P36eqUXMgcJ36BqaaSNmUoNKWGbP3k2wadgNKNQBnyT
-         xCIfcbU5FI507JTYTyT9zLVe9N6vNZ3J0gc/qz2JiQjYzOQiQ9av+1q6/AMbKWKX/j3T
-         eQfyLI/EY84t8N0J4knL+lV8Op8KzO2+6/HCv5GuSZHGpUWA0Cuh1cXHfSkLsAOoonPd
-         Jokd21LJJgjG4wVkcdfffKrLbCjY0KGptmEs+K1DOvF5VPQlPU+9HPM7Z1I6nvtn6fv6
-         lFKQ==
-X-Gm-Message-State: AOAM531BjRKKznhI0sX22M22biDarYcCItM4ouImPYDKotFKJIXX/EtQ
-        GS8Y8C78hvgOKxJnzL1EY3YZyQ==
-X-Google-Smtp-Source: ABdhPJz9FiSCfYQyexg75B2J0366VKNTbJB4HFjPBXFZA9hl6Dsav7GSP0byu0+b/dcrkwrBbF/fFw==
-X-Received: by 2002:a1c:804c:: with SMTP id b73mr4286540wmd.59.1594130465582;
-        Tue, 07 Jul 2020 07:01:05 -0700 (PDT)
+        bh=+O/0d2wA9ZSFy1o93OfBEO3S/Is3leUo2WVahG+2iA4=;
+        b=XqbKzF3ltYp9F2sUYpAZi+ZECyx/Q1YMWZn+3hF5ZHHkfcjT2PoJRzexzNoSA7XhjS
+         h2sbADEGuzSzIohn7ZzET59AbxCubHVDq/J/x41pqM8Esbz/AnWF5Q+7NY8AUCAlJk2i
+         y8ihpWVJ6WeTN4q4uTphySBPTKedIysvEOyA23V3Z7UQR/0aZSTp+fT/LSN0yDsdn6Ao
+         sgUeSNFvZdYkrRBCCIXI9LFVPtRXvEr6ruWQd1zbGa3pf+YqaD4P+gwq5le+hhcaTjFp
+         oJMnQ3S5b8BdM4DPoMjTPMAphkWr+hQovWCXRnr+l1A7N1PUnspCH8a8cYo4ESF5xzZt
+         JRnQ==
+X-Gm-Message-State: AOAM531v4hK4/IUuy+ljEJ5jOwXLTnxwPlI9D79p7hj7S5Ra/XNzeAQH
+        ztfJSan5wg8SLOzDQSyqSqaLhA==
+X-Google-Smtp-Source: ABdhPJzjM2K9XAyP9w+5m7Z7UU2SGA9mOLFx1eo+L5yKfK4NKKE8aJpkHASyHiSvhRZcJmp0gwpGkg==
+X-Received: by 2002:a7b:c09a:: with SMTP id r26mr4281624wmh.176.1594130466648;
+        Tue, 07 Jul 2020 07:01:06 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.01.04
+        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.01.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2020 07:01:04 -0700 (PDT)
+        Tue, 07 Jul 2020 07:01:06 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        megaraidlinux.pdl@broadcom.com
-Subject: [PATCH 05/10] scsi: megaraid: megaraid_sas_base: Provide prototypes for non-static functions
-Date:   Tue,  7 Jul 2020 15:00:50 +0100
-Message-Id: <20200707140055.2956235-6-lee.jones@linaro.org>
+        "Juergen E. Fischer" <fischer@norbit.de>
+Subject: [PATCH 06/10] scsi: aha152x: Remove unused variable 'ret'
+Date:   Tue,  7 Jul 2020 15:00:51 +0100
+Message-Id: <20200707140055.2956235-7-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200707140055.2956235-1-lee.jones@linaro.org>
 References: <20200707140055.2956235-1-lee.jones@linaro.org>
@@ -79,63 +76,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For Megaraid DebugFS functions called from 'megaraid_sas_base.c'.
+Looks to be unused since 2014.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/megaraid/megaraid_sas_debugfs.c:102:6: warning: no previous prototype for ‘megasas_init_debugfs’ [-Wmissing-prototypes]
- 102 | void megasas_init_debugfs(void)
- | ^~~~~~~~~~~~~~~~~~~~
- drivers/scsi/megaraid/megaraid_sas_debugfs.c:112:6: warning: no previous prototype for ‘megasas_exit_debugfs’ [-Wmissing-prototypes]
- 112 | void megasas_exit_debugfs(void)
- | ^~~~~~~~~~~~~~~~~~~~
- drivers/scsi/megaraid/megaraid_sas_debugfs.c:122:1: warning: no previous prototype for ‘megasas_setup_debugfs’ [-Wmissing-prototypes]
- 122 | megasas_setup_debugfs(struct megasas_instance *instance)
- | ^~~~~~~~~~~~~~~~~~~~~
- drivers/scsi/megaraid/megaraid_sas_debugfs.c:161:6: warning: no previous prototype for ‘megasas_destroy_debugfs’ [-Wmissing-prototypes]
- 161 | void megasas_destroy_debugfs(struct megasas_instance *instance)
- | ^~~~~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/aha152x.c: In function ‘datai_run’:
+ drivers/scsi/aha152x.c:2033:9: warning: variable ‘data’ set but not used [-Wunused-but-set-variable]
+ 2033 | int data;
+ | ^~~~
 
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: megaraidlinux.pdl@broadcom.com
+Cc: "Juergen E. Fischer" <fischer@norbit.de>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 4 ----
- drivers/scsi/megaraid/megaraid_sas_fusion.h | 6 ++++++
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/aha152x.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 00668335c2afc..1ccd72b1cbe7f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -202,10 +202,6 @@ static bool support_pci_lane_margining;
- static spinlock_t poll_aen_lock;
- 
- extern struct dentry *megasas_debugfs_root;
--extern void megasas_init_debugfs(void);
--extern void megasas_exit_debugfs(void);
--extern void megasas_setup_debugfs(struct megasas_instance *instance);
--extern void megasas_destroy_debugfs(struct megasas_instance *instance);
- 
- void
- megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 30de4b01f7035..5f657d2ba733a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -1388,4 +1388,10 @@ int megasas_check_mpio_paths(struct megasas_instance *instance,
- 			      struct scsi_cmnd *scmd);
- void megasas_fusion_ocr_wq(struct work_struct *work);
- 
-+/* DebugFS Prototypes */
-+void megasas_init_debugfs(void);
-+void megasas_exit_debugfs(void);
-+void megasas_setup_debugfs(struct megasas_instance *instance);
-+void megasas_destroy_debugfs(struct megasas_instance *instance);
-+
- #endif /* _MEGARAID_SAS_FUSION_H_ */
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 90f97df1c42a4..d8e19afa7a140 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -2030,8 +2030,7 @@ static void datai_run(struct Scsi_Host *shpnt)
+ 				    fifodata, GETPORT(FIFOSTAT));
+ 			SETPORT(DMACNTRL0, ENDMA|_8BIT);
+ 			while(fifodata>0) {
+-				int data;
+-				data=GETPORT(DATAPORT);
++				GETPORT(DATAPORT);
+ 				fifodata--;
+ 				DATA_LEN++;
+ 			}
 -- 
 2.25.1
 
