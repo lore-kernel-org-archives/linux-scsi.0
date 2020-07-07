@@ -2,158 +2,107 @@ Return-Path: <SRS0=EBgm=AS=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 608A6C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 13:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9EAC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4952720738
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 13:56:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FC652075B
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dBcHaJgD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726946AbgGGN40 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jul 2020 09:56:26 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2434 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726805AbgGGN40 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Jul 2020 09:56:26 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id D346FCE63AE14E4E85B7;
-        Tue,  7 Jul 2020 14:56:24 +0100 (IST)
-Received: from [127.0.0.1] (10.47.9.47) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 7 Jul 2020
- 14:56:24 +0100
-Subject: Re: [PATCH 03/21] scsi: add scsi_{get,put}_internal_cmd() helper
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
-        <linux-scsi@vger.kernel.org>
-References: <20200703130122.111448-1-hare@suse.de>
- <20200703130122.111448-4-hare@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <59afc2bc-a5e2-89d8-0843-03b082c53bb0@huawei.com>
-Date:   Tue, 7 Jul 2020 14:54:43 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1728061AbgGGOBC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jul 2020 10:01:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47852 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727090AbgGGOBB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:01 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 355AEC061755
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:01 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id 17so46585551wmo.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=ZLWYFu8kb1BK0vYr47DoG19cZZy4irme69VcrjTwQ6E=;
+        b=dBcHaJgD24aprqBmfheHZZJ/02Un4ePwTgSuWV0qJltGAhKjZJ+jax2Rsz4WQvNMtl
+         H3tshEqaE10oB9P9UPfJ+0JHokUGzwrnD/TWTdFkDhSdm/UCYiNJ755SDJi1rbvyWqtg
+         zk+K/Qb6/6K5QO+pBmYAMjCKVyUFD2o2NLTCmKg3oiU0g58EMzJ4wCB8Rhj8SaeLGS4k
+         csnB4Y7CWjhJy/Dgu5RYFaQOaw6Zmz/17F8Ynx5A//PAdRG7t3u2KZ2VTxynKul48+rl
+         TPIHaQhDL1AeiEMRzucUS8l4+Xr60IOFu214FcMPh3XBa1ZAr6Tcc+BuJCuZqJ0Q27i8
+         s+lA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=ZLWYFu8kb1BK0vYr47DoG19cZZy4irme69VcrjTwQ6E=;
+        b=HpM5WC1RCXv/FwvX0mDyjqyxTaR4Hj4EW6HJuFMQ/baGP4E9TeuXQpH1Zjwsinli0T
+         Aqu10BYTw2joYk0cPh+IQTbtbuAgxnv/LWeU2zywMQk3UJj1i/2YilqPWTkLm1ic2H4R
+         z/NG0nBnijFWwL/ZGqko0+DPQGZb/MFNwTKu9MsfgODTSzzS1/kcmus+/cKkWRu3HO/l
+         aCTXBHkXgQYZTpZJVYcr+jBz3EfNgAznjHlmkWG4PdxFzehbkbT056rhlYHlx2pLlbLN
+         QuK6niXPPVCdhOXvZKaroymy1IEYt8OY7waFKlo08quUvY3U4wgDj/pKVe9Mhq+U7cAa
+         oPzw==
+X-Gm-Message-State: AOAM533+09TySn/UH7U5aU/szkNtmsSKRtwjlzFLtRqqh0CoLjSwuKAR
+        vsVrBS5+o/CTV98wyUpY+jsJIw==
+X-Google-Smtp-Source: ABdhPJzFeqLsqMW/HY0+6KXgycLe3ZNW1nII6mHUP330UVnEIVjP/xD19B92OtkG/G51zwQoFxazfg==
+X-Received: by 2002:a7b:c09a:: with SMTP id r26mr4280907wmh.176.1594130459913;
+        Tue, 07 Jul 2020 07:00:59 -0700 (PDT)
+Received: from localhost.localdomain ([2.27.35.206])
+        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.00.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jul 2020 07:00:59 -0700 (PDT)
+From:   Lee Jones <lee.jones@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        megaraidlinux.pdl@broadcom.com
+Subject: [PATCH 01/10] scsi: megaraid: megaraid_mm: Strip excess function param description
+Date:   Tue,  7 Jul 2020 15:00:46 +0100
+Message-Id: <20200707140055.2956235-2-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200707140055.2956235-1-lee.jones@linaro.org>
+References: <20200707140055.2956235-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20200703130122.111448-4-hare@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.9.47]
-X-ClientProxiedBy: lhreml742-chm.china.huawei.com (10.201.108.192) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 03/07/2020 14:01, Hannes Reinecke wrote:
-> Add helper functions to allow LLDDs to allocate and free
-> internal commands.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+Fixes the following W=1 kernel build warning(s):
 
-Not sure how Christoph feels about this now, but FWIW:
-Reviewed-by: John Garry <john.garry@huawei.com>
+ drivers/scsi/megaraid/megaraid_mm.c:105: warning: Excess function parameter 'inode' description in 'mraid_mm_ioctl'
 
-But a couple of comments, below.
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: megaraidlinux.pdl@broadcom.com
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/megaraid/megaraid_mm.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> ---
->   drivers/scsi/scsi_lib.c    | 45 +++++++++++++++++++++++++++++++++++++++++++++
->   include/scsi/scsi_device.h |  4 ++++
->   2 files changed, 49 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 0ba7a65e7c8d..1d5c1b9a1203 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1903,6 +1903,51 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
->   	blk_mq_free_tag_set(&shost->tag_set);
->   }
->   
-> +/**
-> + * scsi_get_internal_cmd - allocate an internal SCSI command
-> + * @sdev: SCSI device from which to allocate the command
-> + * @data_direction: Data direction for the allocated command
-> + * @op_flags: request allocation flags
-> + *
-> + * Allocates a SCSI command for internal LLDD use.
-> + */
-> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
-> +	enum dma_data_direction data_direction, int op_flags)
-> +{
-> +	struct request *rq;
-> +	struct scsi_cmnd *scmd;
-> +	blk_mq_req_flags_t flags = 0;
-> +	unsigned int op = REQ_INTERNAL | op_flags;
-
-nit: some people like ordering local variables in reverse Christmas tree 
-style when possible, but I don't really care.
-
-> +
-> +	op |= (data_direction == DMA_TO_DEVICE) ?
-> +		REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN;
-> +	rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
-> +	if (IS_ERR(rq))
-> +		return NULL;
-> +	scmd = blk_mq_rq_to_pdu(rq);
-> +	scmd->request = rq;
-> +	scmd->device = sdev;
-> +	return scmd;
-> +}
-> +EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
-> +
-> +/**
-> + * scsi_put_internal_cmd - free an internal SCSI command
-> + * @scmd: SCSI command to be freed
-> + *
-> + * Check if @scmd is an internal command, and call
-> + * blk_mq_free_request() if true.
-> + */
-> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd)
-> +{
-> +	struct request *rq = blk_mq_rq_from_pdu(scmd);
-> +
-> +	if (WARN_ON(!blk_rq_is_internal(rq)))
-> +		return;
-> +	blk_mq_free_request(rq);
-> +}
-> +EXPORT_SYMBOL_GPL(scsi_put_internal_cmd);
-> +
->   /**
->    * scsi_device_from_queue - return sdev associated with a request_queue
->    * @q: The request queue to return the sdev from
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index bc5909033d13..2759a538adae 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -8,6 +8,7 @@
->   #include <linux/blkdev.h>
->   #include <scsi/scsi.h>
->   #include <linux/atomic.h>
-> +#include <linux/dma-direction.h>
->   
->   struct device;
->   struct request_queue;
-> @@ -460,6 +461,9 @@ static inline int scsi_execute_req(struct scsi_device *sdev,
->   	return scsi_execute(sdev, cmd, data_direction, buffer,
->   		bufflen, NULL, sshdr, timeout, retries,  0, 0, resid);
->   }
-> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
-> +	enum dma_data_direction data_direction, int op_flags);
-> +void scsi_put_internal_cmd(struct scsi_cmnd *scmd); >   extern void sdev_disable_disk_events(struct scsi_device *sdev);
->   extern void sdev_enable_disk_events(struct scsi_device *sdev);
->   extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
-
-If I go to delete all these externs so we can be consistent, will 
-someone complain?
-
-> 
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index e83163c668845..8df53446641ac 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -95,7 +95,6 @@ mraid_mm_open(struct inode *inode, struct file *filep)
+ 
+ /**
+  * mraid_mm_ioctl - module entry-point for ioctls
+- * @inode	: inode (ignored)
+  * @filep	: file operations pointer (ignored)
+  * @cmd		: ioctl command
+  * @arg		: user ioctl packet
+-- 
+2.25.1
 
