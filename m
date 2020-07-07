@@ -7,64 +7,67 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 855A8C433E2
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC77C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60D6720738
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39BB02073E
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 14:01:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XmmS1R2D"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HBvBoIuz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728248AbgGGOBL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jul 2020 10:01:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47910 "EHLO
+        id S1728280AbgGGOBO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jul 2020 10:01:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728232AbgGGOBK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:10 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F70C08C5E1
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:10 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id 22so43400995wmg.1
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:10 -0700 (PDT)
+        with ESMTP id S1728264AbgGGOBN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 10:01:13 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F655C08C5E1
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 07:01:13 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id f7so42241391wrw.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 07:01:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=5akYiP5XbUbIIHU3yZTiMoBU1iltsAOw/hCtwfTaVJc=;
-        b=XmmS1R2D9LdImdLyKuJbGDYLB/QYqj96CLTES0Hlurxb83iEVSOZjhC74NA3FNUelQ
-         x3wmfifyk/fKrMiPve8zbbTsvCV7UcsUd0OxmveVMbfZwHXFFXHwDPeEzSChk1mVG4Wn
-         v/FiUOq1EMMxM1DAtPF1xArvV707BeOj3E83i07QtyqPbhBYlv/MO2ydJxGqSbYoENE2
-         /Y3K5hBOFPGk1oPCkuhHZ8pqhicPWsd+S3xOKp9cFFrb3L1tBG7goNQFL/EXHs7MhYTO
-         /UzKa3qSDPe5HHpccqJfVZYdAKYVlTdKk0TfXV4htQ2UPmq+q71tTFVWoqyA1m/5QveK
-         K14w==
+        bh=Otr0IW/lc2aubOhQuGn1p9ls5bh+wk/N6Wv8oEf4Osw=;
+        b=HBvBoIuzw1P53PX21z9xl0S2Ei5cCmdfti89y/X22YhzPD8leJdxCyYAe5MqjAAObx
+         t1E1P2P9Mt2oi9isgC0/LHnqeHNKZYWtJaO+qhuy07fzjZUTGXrc+CimfVho9ZGf/ZWU
+         FDKy8A+01W+GzzbMSh0NL/QIw5GrC1SzMU8Ku91XKRykA1P90kFf0lvjwOf9VATuJ2AA
+         9517Y+eDIrAIT5wZd8ZZtjlif5PsJkDCzQ/IYlFfSzlxY79jehb6IrMwyQxTx7/P8qGZ
+         eTJ9g4UC2LIojpNdHyExhVDGr4hCe53uRJOxLjIosZU7CLcCCZeB1c2aAfcu+QhcE4go
+         aC+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5akYiP5XbUbIIHU3yZTiMoBU1iltsAOw/hCtwfTaVJc=;
-        b=t7bCuSfhMDVAOMAL9KkeVG7gmo5fAkbZC0u1uYjkq2zNW+nyDP6K2LBWyoWDY5zyRI
-         aLhbAx95tVBjoRCikmw5N/4XxlT6c65sNkooZ3DTn6fTzvlGIsxTMP/TKR7/yvyjPPqL
-         yRl0+OpY1zpe2lESrsUrxYIvza7HH+iNUgtD8F5WoTyWotGdQQVK2h+7iaIbI/B+JwAg
-         maknt+3OoxP+ptdmp+ZQoV9fsTGBPAMv9OMoFys9/IkoW0WYUN5NQc6AqM8eT1ETzAPX
-         6nfrGPwAJGAATCbi09IaQp1/cIV5Of3YRrnM0bEwVNGPMflo94uwF8x904D/U+tbaZQH
-         lQMg==
-X-Gm-Message-State: AOAM533oXDRpd2Q2rcELHWoGWPmT4N91+Ot1pdabOgPqgVXBXMcgg/C3
-        8zArxYkQ8Xwfx3PNqmzlC7gcMXfsErw=
-X-Google-Smtp-Source: ABdhPJwF1qF3Syu4cPqExQf8v8cF2iIj2GQcEkvKs7cauiEiajVIwpD26hksjr8q2pDY/chIhqABXg==
-X-Received: by 2002:a1c:7916:: with SMTP id l22mr4167207wme.115.1594130469133;
-        Tue, 07 Jul 2020 07:01:09 -0700 (PDT)
+        bh=Otr0IW/lc2aubOhQuGn1p9ls5bh+wk/N6Wv8oEf4Osw=;
+        b=TPM6kgCBZ3vZCzFcyNoUxr4c9on2tlrN6axoelFDrMHBxvSuD76j6XzBfNzuZp8W+n
+         pXeglBd4JmoC3O0Jpu4YGkPrctDZy9vbT3ZtR5zaQn/3H0xUaRmqvG/FhBSxGEqLVGb6
+         FX+CLKmxgLPld3myMbYnWVC/4PBsVawo5EWk2OJo/sORc6vHrDjWyZJf0P/YPVWFftRZ
+         NJC2YZw5BNWmtW7r3pymi+DLMAVSLUXzjAU3LfOF1kiatCuJv5cgfxZiYRGiGwCvAyw1
+         LS16xRsZ9+bmAHlosilYsUClGY9IlRSpVREO2HpSvnjAMggoGnUxNs/V3Ic2XnjzhA8M
+         AJ4Q==
+X-Gm-Message-State: AOAM5311LFbOW8Vkjuhx7ErEp5GUjrzbX8of+gb3Go0mXZQg3wGHmP3z
+        e+w2fcjIOo5BTvsFjpNOaRMJRw==
+X-Google-Smtp-Source: ABdhPJyMIkqrJx6U0TAgCC1Ldg2yjfRozO5omk7C8zyrNAPXTCsDDxyptx/G91iGoIUhvFmHoTGxBQ==
+X-Received: by 2002:adf:e647:: with SMTP id b7mr57813003wrn.170.1594130471901;
+        Tue, 07 Jul 2020 07:01:11 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.01.07
+        by smtp.gmail.com with ESMTPSA id z25sm1102823wmk.28.2020.07.07.07.01.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2020 07:01:08 -0700 (PDT)
+        Tue, 07 Jul 2020 07:01:11 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-Subject: [PATCH 08/10] scsi: pcmcia: nsp_cs: Remove unused variable 'dummy'
-Date:   Tue,  7 Jul 2020 15:00:53 +0100
-Message-Id: <20200707140055.2956235-9-lee.jones@linaro.org>
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        megaraidlinux.pdl@broadcom.com
+Subject: [PATCH 10/10] scsi: megaraid: megaraid_sas: Convert forward-declarations to prototypes
+Date:   Tue,  7 Jul 2020 15:00:55 +0100
+Message-Id: <20200707140055.2956235-11-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200707140055.2956235-1-lee.jones@linaro.org>
 References: <20200707140055.2956235-1-lee.jones@linaro.org>
@@ -76,42 +79,134 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There is no need to populate an unused variable, even if the read is required.
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/pcmcia/nsp_cs.c: In function ‘nsp_cs_message’:
- drivers/scsi/pcmcia/nsp_cs.c:143:2: warning: function ‘nsp_cs_message’ might be a candidate for ‘gnu_printf’ format attribute [-Wsuggest-attribute=format]
- drivers/scsi/pcmcia/nsp_cs.c: In function ‘nsp_fifo_count’:
- drivers/scsi/pcmcia/nsp_cs.c:692:24: warning: variable ‘dummy’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/megaraid/megaraid_sas_base.c:240:5: warning: no previous prototype for ‘megasas_readl’ [-Wmissing-prototypes]
+ 240 | u32 megasas_readl(struct megasas_instance *instance,
+ | ^~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:301:21: warning: no previous prototype for ‘megasas_get_cmd’ [-Wmissing-prototypes]
+ 301 | struct megasas_cmd *megasas_get_cmd(struct megasas_instance
+ | ^~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:327:1: warning: no previous prototype for ‘megasas_return_cmd’ [-Wmissing-prototypes]
+ 327 | megasas_return_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ | ^~~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:1088:1: warning: no previous prototype for ‘megasas_issue_polled’ [-Wmissing-prototypes]
+ 1088 | megasas_issue_polled(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ | ^~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:2149:6: warning: no previous prototype for ‘megaraid_sas_kill_hba’ [-Wmissing-prototypes]
+ 2149 | void megaraid_sas_kill_hba(struct megasas_instance *instance)
+ | ^~~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:2186:1: warning: no previous prototype for ‘megasas_check_and_restore_queue_depth’ [-Wmissing-prototypes]
+ 2186 | megasas_check_and_restore_queue_depth(struct megasas_instance *instance)
+ | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:2263:6: warning: no previous prototype for ‘megasas_start_timer’ [-Wmissing-prototypes]
+ 2263 | void megasas_start_timer(struct megasas_instance *instance)
+ | ^~~~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:2579:5: warning: no previous prototype for ‘megasas_sriov_start_heartbeat’ [-Wmissing-prototypes]
+ 2579 | int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+ | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:4292:6: warning: no previous prototype for ‘megasas_free_cmds’ [-Wmissing-prototypes]
+ 4292 | void megasas_free_cmds(struct megasas_instance *instance)
+ | ^~~~~~~~~~~~~~~~~
+ drivers/scsi/megaraid/megaraid_sas_base.c:4329:5: warning: no previous prototype for ‘megasas_alloc_cmds’ [-Wmissing-prototypes]
+ 4329 | int megasas_alloc_cmds(struct megasas_instance *instance)
+ | ^~~~~~~~~~~~~~~~~~
 
-Cc: YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: megaraidlinux.pdl@broadcom.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/pcmcia/nsp_cs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        | 25 +++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 29 ---------------------
+ 2 files changed, 24 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index 57a78f84f97ab..8655ff1249bbc 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -690,14 +690,14 @@ static int nsp_fifo_count(struct scsi_cmnd *SCpnt)
- {
- 	unsigned int base = SCpnt->device->host->io_port;
- 	unsigned int count;
--	unsigned int l, m, h, dummy;
-+	unsigned int l, m, h;
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index af2c7a2a95657..5c8037fca5fc6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2683,8 +2683,31 @@ void megasas_return_cmd_fusion(struct megasas_instance *instance,
+ 	struct megasas_cmd_fusion *cmd);
+ int megasas_issue_blocked_cmd(struct megasas_instance *instance,
+ 	struct megasas_cmd *cmd, int timeout);
+-void __megasas_return_cmd(struct megasas_instance *instance,
++void megasas_return_cmd(struct megasas_instance *instance,
+ 	struct megasas_cmd *cmd);
++u32 megasas_readl(struct megasas_instance *instance,
++		  const volatile void __iomem *addr);
++void megasas_free_cmds(struct megasas_instance *instance);
++struct megasas_cmd *megasas_get_cmd(struct megasas_instance *instance);
++void megaraid_sas_kill_hba(struct megasas_instance *instance);
++void megasas_complete_cmd(struct megasas_instance *instance,
++		     struct megasas_cmd *cmd, u8 alt_status);
++int wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
++		  int seconds);
++
++int megasas_alloc_cmds(struct megasas_instance *instance);
++int megasas_clear_intr_fusion(struct megasas_instance *instance);
++int megasas_issue_polled(struct megasas_instance *instance,
++			 struct megasas_cmd *cmd);
++void megasas_check_and_restore_queue_depth(struct megasas_instance *instance);
++
++int megasas_transition_to_ready(struct megasas_instance *instance, int ocr);
++void megaraid_sas_kill_hba(struct megasas_instance *instance);
++
++extern u32 megasas_dbg_lvl;
++int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
++				  int initial);
++void megasas_start_timer(struct megasas_instance *instance);
  
- 	nsp_index_write(base, POINTERCLR, POINTER_CLEAR | ACK_COUNTER);
+ void megasas_return_mfi_mpt_pthr(struct megasas_instance *instance,
+ 	struct megasas_cmd *cmd_mfi, struct megasas_cmd_fusion *cmd_fusion);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index a0cf55776361c..fd0f40bc1795d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -48,34 +48,7 @@
+ #include "megaraid_sas.h"
  
- 	l     = nsp_index_read(base, TRANSFERCOUNT);
- 	m     = nsp_index_read(base, TRANSFERCOUNT);
- 	h     = nsp_index_read(base, TRANSFERCOUNT);
--	dummy = nsp_index_read(base, TRANSFERCOUNT); /* required this! */
-+	nsp_index_read(base, TRANSFERCOUNT); /* required this! */
  
- 	count = (h << 16) | (m << 8) | (l << 0);
+-extern void megasas_free_cmds(struct megasas_instance *instance);
+-extern struct megasas_cmd *megasas_get_cmd(struct megasas_instance
+-					   *instance);
+-extern void
+-megasas_complete_cmd(struct megasas_instance *instance,
+-		     struct megasas_cmd *cmd, u8 alt_status);
+-int
+-wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
+-	      int seconds);
+-
+-void
+-megasas_return_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd);
+-int megasas_alloc_cmds(struct megasas_instance *instance);
+-int
+-megasas_clear_intr_fusion(struct megasas_instance *instance);
+-int
+-megasas_issue_polled(struct megasas_instance *instance,
+-		     struct megasas_cmd *cmd);
+-void
+-megasas_check_and_restore_queue_depth(struct megasas_instance *instance);
+-
+-int megasas_transition_to_ready(struct megasas_instance *instance, int ocr);
+-void megaraid_sas_kill_hba(struct megasas_instance *instance);
  
+-extern u32 megasas_dbg_lvl;
+-int megasas_sriov_start_heartbeat(struct megasas_instance *instance,
+-				  int initial);
+-void megasas_start_timer(struct megasas_instance *instance);
+ extern struct megasas_mgmt_info megasas_mgmt_info;
+ extern unsigned int resetwaittime;
+ extern unsigned int dual_qdepth_disable;
+@@ -84,8 +57,6 @@ static void megasas_free_reply_fusion(struct megasas_instance *instance);
+ static inline
+ void megasas_configure_queue_sizes(struct megasas_instance *instance);
+ static void megasas_fusion_crash_dump(struct megasas_instance *instance);
+-extern u32 megasas_readl(struct megasas_instance *instance,
+-			 const volatile void __iomem *addr);
+ 
+ /**
+  * megasas_adp_reset_wait_for_ready -	initiate chip reset and wait for
 -- 
 2.25.1
 
