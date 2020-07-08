@@ -2,155 +2,99 @@ Return-Path: <SRS0=1cZD=AT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4226AC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24987C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:12:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 168912078A
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03BA2206C3
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:12:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kTKeuYMJ"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zLDzhhyo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728890AbgGHMC0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 08:02:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55318 "EHLO
+        id S1728926AbgGHMMO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 08:12:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728770AbgGHMC0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:26 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AD0EC08E6DC
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:26 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id l17so2734898wmj.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:26 -0700 (PDT)
+        with ESMTP id S1728803AbgGHMMN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:12:13 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 682E9C08E6DC
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:12:13 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id o11so48760482wrv.9
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:12:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=DEuQ0isQDZs4z6XMYzEe+OOf6ezHgXSzxswYMqwj6a4=;
-        b=kTKeuYMJiUQcuxilaT9rXVewbfHw8SfFhgcTG5QDP5p55FBn3j+/Pt2Tj5AQaT3mNc
-         jOHmQaoGDGfsJQ7GhFxVBNMbIRp48CHrWPdDJjSOrsmfHMY3rp3a+sYtj6oPuoliZzMw
-         WNdJypkf/t9nRJ9RERASarhQ3shh6G4z4rYN8VOdDhzpbXAQ3XW3fwHDjwE+9wprv0mN
-         eMWQxXxUveuWUoNRWcSvVwZF7qWOU7WC4yq4xifQoyuQ64upmvixE8vkN6ml+AKb1b8p
-         /ut5TfdlDFd1bQy4JqQK+pkath1zDxsYycX1/Re8MuRMhyan3ul2cXdcWYmeWryt3LQs
-         qO7g==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=dSkqKeCZdW90TMEdN9Flg+YLJ8bt6+9TzGKCz9DbybY=;
+        b=zLDzhhyoreQIgEIR+ugQTfkKH6LFYLjo4qAI1sYIrgLdTPOOh3JOZs8KwZZPSQy4KV
+         hy9OApK1AgcwFoenOaV33cNHbCOgmN0UOoWlJmVO2YGDMonyIjBkSAvHifjPCHQwROpv
+         pOPrOS3R7g2YUNMHAk6wDbmgHvE7C+djIhTe7qg8SJB7O7S87v8hh/sOtJ9/mxY1Sin5
+         PjCePV5bktTU06z9dpLw2dHoBZKb7qtaS9nj+iRlV6p35Gu5OAyRb5XjvHtJwYlVECB5
+         b3+EYzR4g9A4hCWTCkGxnuVVhjliGkx+qPXcqtGolTTc11MW+ccNQn5wRRjfX3J1EROb
+         bH2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=DEuQ0isQDZs4z6XMYzEe+OOf6ezHgXSzxswYMqwj6a4=;
-        b=Du1FcMi1VsNWI4yK5bsjuwEaAsO6TKzCsv0jCwkp5CbOoIFhQEf4P3VV2Ez8x4GdGF
-         yhhNE3Xt/sUPasn2FnZgMH6tQ0xS9oeFtYVIgs2HtkmJKwURXqtcdq0bgVcHzmRP3Chk
-         8b6l7C0Z0/9FXpnOP+dQPwNinWrZ75Tt6UGcVZeGh1LYkfsHDieaNOFc0GVIsRwBmaNL
-         7M5jEQRWtoLzD5mACJbHePQuVNIwXAIBMXUP+lduIbOV4oeCqdEg8fzRswwdC569wMiA
-         SqtwjuzPVk5JEsoJo9oH6epR4ZNtMR54PXO05u+3s+z/LeoT2HyL6FNuZs/qQ0OO3CHV
-         H8kA==
-X-Gm-Message-State: AOAM533C9XNKzwZVLlfTtb7509mz+LRHXGGK8jpFhacETUUT4cfl5gaP
-        3i8cma75jnRm8RgDk+CFvTrsZw==
-X-Google-Smtp-Source: ABdhPJx73gz4OHGK9q9TrCi5i7d6kqBovv7MtsV5YduvjgG7QbypnkpYq6Vk4YcwDOzaOFFX/3WtxQ==
-X-Received: by 2002:a7b:cf16:: with SMTP id l22mr9786555wmg.68.1594209744661;
-        Wed, 08 Jul 2020 05:02:24 -0700 (PDT)
-Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.23
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=dSkqKeCZdW90TMEdN9Flg+YLJ8bt6+9TzGKCz9DbybY=;
+        b=QIO5QjPHut8BmbPOw7q3/N+FOPPycqo78ruLYFg/XF8aggnU8yRqpH8goMdFt0Ml9O
+         P/6ojSCsPi0CVH1cSZBw2NsJKoupcbQFeJFl7zMBgW4LLgRuWO1xFrvWF6aMCgagmax6
+         Yhf1Nvzq8RazeEu+A3vlA/Iu8xfQNRhoWYvhFF7DjZ8YjfrVAFFd/5ZQuDEn4yWUWTo2
+         O9aEQ9Qufwdf811A1bLWzuKmBHE6x8JOdDvReYen5rmEYAZtbNCBQAv5S2RlElTPXHC+
+         +tf+euNm9d/l6Gj5Y2ynC5TuEanjVui9n+vdOU1tPt845ht0qRXmMVCYEhBIznDF4zmR
+         kd3A==
+X-Gm-Message-State: AOAM531YAF9DX5yYR11T55SOn+Z+DyDnHljJ+Cl2a8aar16MIvIsfaLl
+        BZh8ffXflbK2NDx+7sf2FxU2aA==
+X-Google-Smtp-Source: ABdhPJyqs3RsyDoSQ2yeKo0pKmqEfzGMbFQvw9N5l4jbOqxFffm4z8X+KKhpGC42G5O+NaxRNj/wpQ==
+X-Received: by 2002:a5d:54c9:: with SMTP id x9mr61729854wrv.247.1594210332080;
+        Wed, 08 Jul 2020 05:12:12 -0700 (PDT)
+Received: from dell ([2.27.35.206])
+        by smtp.gmail.com with ESMTPSA id t141sm6455156wmt.26.2020.07.08.05.12.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 05:02:23 -0700 (PDT)
+        Wed, 08 Jul 2020 05:12:11 -0700 (PDT)
+Date:   Wed, 8 Jul 2020 13:12:09 +0100
 From:   Lee Jones <lee.jones@linaro.org>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 00/30] Fix a bunch more SCSI related W=1 warnings
-Date:   Wed,  8 Jul 2020 13:01:51 +0100
-Message-Id: <20200708120221.3386672-1-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.25.1
+To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 03/30] scsi: libfc: fc_disc: trivial: Fix spelling
+ mistake of 'discovery'
+Message-ID: <20200708121209.GS3500@dell>
+References: <20200708120221.3386672-1-lee.jones@linaro.org>
+ <20200708120221.3386672-4-lee.jones@linaro.org>
+ <SN4PR0401MB35986D7CECA87EA6EB9CEFA99B670@SN4PR0401MB3598.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <SN4PR0401MB35986D7CECA87EA6EB9CEFA99B670@SN4PR0401MB3598.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This set is part of a larger effort attempting to clean-up W=1
-kernel builds, which are currently overwhelmingly riddled with
-niggly little warnings.
+On Wed, 08 Jul 2020, Johannes Thumshirn wrote:
 
-Slowly working through the SCSI related ones.  There are many.
+> Looks good,
+> 
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> 
+> I think Martin can fold this one into the original one
 
-Lee Jones (30):
-  scsi: libfc: fc_exch: Supply some missing kerneldoc struct/function
-    attributes/params
-  include: scsi: scsi_transport_fc: Match HBA Attribute Length with
-    HBAAPI V2.0 definitions
-  scsi: libfc: fc_disc: trivial: Fix spelling mistake of 'discovery'
-  scsi: fcoe: fcoe: Fix various kernel-doc infringements
-  scsi: fcoe: fcoe_ctlr: Fix a myriad of documentation issues
-  scsi: fcoe: fcoe_transport: Correct some kernel-doc issues
-  scsi: bnx2fc: bnx2fc_fcoe: Repair a range of kerneldoc issues
-  scsi: qedf: qedf_main: Demote obvious misuse of kerneldoc to standard
-    comment blocks
-  scsi: qedf: qedf_main: Remove set but not checked variable 'tmp'
-  scsi: libfc: fc_lport: Repair function parameter documentation
-  scsi: libfc: fc_rport: Fix a couple of misdocumented function
-    parameters
-  scsi: libfc: fc_fcp: Provide missing and repair existing function
-    documentation
-  scsi: libfc: fc_rport: Fix bitrotted function parameter and copy/paste
-    error
-  scsi: bnx2fc: bnx2fc_hwi: Fix a couple  of bitrotted function
-    documentation headers
-  scsi: arcmsr: arcmsr_hba: Remove some set but unused variables
-  scsi: arcmsr: arcmsr_hba: Make room for the trailing NULL, even if it
-    is over-written
-  scsi: qedf: qedf_io: Remove a whole host of unused variables
-  scsi: bnx2fc: bnx2fc_tgt: Demote obvious misuse of kerneldoc to
-    standard comment blocks
-  scsi: aic7xxx: aic7xxx_osm: Remove unused variable 'tinfo'
-  scsi: aic7xxx: aic7xxx_osm: Remove unused variable 'ahc'
-  scsi: aic7xxx: aic7xxx_osm: Remove unused variable 'targ'
-  scsi: aic7xxx: aic7xxx_osm: Fix 'amount_xferred' set but not used
-    issue
-  scsi: qedf: qedf_debugfs: Demote obvious misuse of kerneldoc to
-    standard comment blocks
-  scsi: aacraid: linit: Provide suggested curly braces around empty body
-    of if()
-  scsi: aacraid: linit: Fix a couple of small kerneldoc issues
-  scsi: aic94xx: aic94xx_init: Demote seemingly unintentional kerneldoc
-    header
-  scsi: pm8001: pm8001_init: Demote obvious misuse of kerneldoc and
-    update others
-  scsi: aic94xx: aic94xx_hwi: Repair kerneldoc formatting error and
-    remove extra param
-  scsi: aacraid: aachba: Fix a bunch of function doc formatting errors
-  scsi: qla4xxx: ql4_init: Provide a missing function param description
-    and fix formatting
-
- drivers/scsi/aacraid/aachba.c       | 17 +++-------------
- drivers/scsi/aacraid/linit.c        |  6 +++---
- drivers/scsi/aic7xxx/aic7xxx_osm.c  | 13 ++----------
- drivers/scsi/aic94xx/aic94xx_hwi.c  |  3 +--
- drivers/scsi/aic94xx/aic94xx_init.c |  2 +-
- drivers/scsi/arcmsr/arcmsr_hba.c    | 31 ++++++++++++-----------------
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c   | 18 ++++++++---------
- drivers/scsi/bnx2fc/bnx2fc_hwi.c    |  6 +++---
- drivers/scsi/bnx2fc/bnx2fc_tgt.c    |  7 +++----
- drivers/scsi/fcoe/fcoe.c            | 10 ++++------
- drivers/scsi/fcoe/fcoe_ctlr.c       | 26 ++++++++++++------------
- drivers/scsi/fcoe/fcoe_transport.c  |  4 +++-
- drivers/scsi/libfc/fc_disc.c        |  2 +-
- drivers/scsi/libfc/fc_exch.c        |  7 ++++++-
- drivers/scsi/libfc/fc_fcp.c         | 11 ++++++----
- drivers/scsi/libfc/fc_lport.c       |  7 +++++--
- drivers/scsi/libfc/fc_rport.c       |  4 ++--
- drivers/scsi/pm8001/pm8001_init.c   | 30 ++++++++++++++--------------
- drivers/scsi/qedf/qedf_debugfs.c    | 18 ++++++++---------
- drivers/scsi/qedf/qedf_io.c         | 30 ++++------------------------
- drivers/scsi/qedf/qedf_main.c       | 10 ++++------
- drivers/scsi/qla4xxx/ql4_init.c     |  7 ++++---
- include/scsi/fc/fc_ms.h             |  4 ++--
- 23 files changed, 115 insertions(+), 158 deletions(-)
+Obviously I'd be okay with that, but it will depend on whether his
+tree is able to be rebased.  Many public trees are unrebasable (if
+that's a word).
 
 -- 
-2.25.1
-
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
