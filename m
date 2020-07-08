@@ -3,114 +3,157 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A379EC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 07:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4DC8C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 07:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81BA820760
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 07:42:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5DED20656
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 07:44:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vEex7B05"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="EmTcMM/9";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Agdd9gub"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726831AbgGHHmt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 03:42:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43150 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726821AbgGHHms (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 03:42:48 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7570DC08E6DC
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 00:42:48 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id j4so45360968wrp.10
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 00:42:48 -0700 (PDT)
+        id S1726081AbgGHHod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 03:44:33 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:4305 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725787AbgGHHod (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 03:44:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1594194273; x=1625730273;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=eKKE01ogBFT6sTtm0lxtksTtkrzJ9Uv9W81tbjwnIJA=;
+  b=EmTcMM/9OwMTlbrQ9JwxyE2/HeHHV2OflCywedDM+yAnotXEzb9BrdN1
+   +VtOgP+R4I1SJNeC+LWy91i/PM4ldxOO2gV7VV7vFKYDHrRO1Mxk3V3Nt
+   /8QpOTEks2XoUNbUWE5AKehp7QRyMrbtJEs+kzZssV+q8bKWzcmK27WxF
+   eN6/8voEE1hfwQvIy+K7qbutLuevm5pn+Hwr/PI1aGCQ+ugtuAWQR5Dqz
+   GgF1rFuwfrV2Ox1fxT5p5ndAHtBOXwexkjD4FbAlBs+CRqWvkLW/oVfrd
+   IcEYUYt6phtt9rhdxBe864sInX1Rmh2fiUgtqlFSSW5nwZfVeZJ+tn28r
+   Q==;
+IronPort-SDR: xojyc2B9puJRzFzmLf+HJJeNEroA86brNMOwYbHaS3bH6RYSGSkP581ETyT7gtBz5MV81kAgq8
+ TK+7Vd3jl/5Ukp2fPXSoVKj348tTsmxp7CgaL0UFCh9axH/YaBYOarGjj2iUmuuaH6B+TVvVs+
+ D0daOkLsXnmr6A6NbQJmkkKr0R3PhlrKY46wYfojKX+Z8GRXp33PD432qFBOnmQzx5rCzOUSJq
+ 9irLIRElsGGm0V1f1krRjmCbSFbPtnaAwji7rfFQsyNRqjzHDiFmCJSBdB4cFMqIzUHa4nWdHU
+ Pxw=
+X-IronPort-AV: E=Sophos;i="5.75,327,1589212800"; 
+   d="scan'208";a="143229738"
+Received: from mail-dm6nam10lp2101.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.101])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Jul 2020 15:44:32 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HbNsjr8/B5saZiaoTs4Zw25AZW2rDQE36BPy3dm4eYs8ChMEUQeudExo9ckKWdzL9Tr1o9TSmb427fwmOwo+g3CQvkGa5WlAKfeRseXfdVsScEVCwiF73fIetfnEULinoKG9/2qbsGZdb5i7tztjfoyDKJPAfMpZGgmX9edWjkHinGUfIZNfBsitcT8Zs6wRvg9m4TA62//3dncRkNCKMX+XhenN+b7m56HQ1LWJlQGBvYQ4rQtyKx+h6oUHwNyqsOPEEVrj8kCKfbhXhV8z60EE6Z4f6k9kzu9MNvhcAjPms6ZIc4KHEWC4wdZDHGcpD8DFJOj5fSHMwSQQt7wutw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eKKE01ogBFT6sTtm0lxtksTtkrzJ9Uv9W81tbjwnIJA=;
+ b=mIEWx2dUcdvvYhhgl/dfs4NDs9nX4oWeVevzefA5Iz2/teba3hNN0KhTAKqs1ilVjdvKAgWrsOwg0Ak8uSIFvwIdm/lkWMHxpnKqw1wkwJGmLh4/AHnTk85J3cIqsEYfLw164X2kB4cIvpdwzAuAk320ZUbfZ8rgfNYMeiqLBxuEyCEuAfaNsM4alh95KeoXtse8pzT8emMe41/nHA6o/L4KIChjJNzAZzdv24wxNdvGDMSffLzL9Rj1+AWtWTe0/kYPaKaL8nEf4afTXXWSuwSAXUvNdj4PcuSUkk5+Ik7xMc8zQmBQ5JJD5n9l20Ah+ufdTSMpGzf/z8r/qok3RQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=zLm2rrNY/P1iFEyvAZXKtr97lStg8qv5v/wgetsdpFs=;
-        b=vEex7B05G5y1iygv/ohVu5raEK7ymKtpvYsY2XBzumAF2c4/SUjNXunQXWdSiBmuN5
-         u+ilhJT/3jjddZzmBtWjANdox7i+CmV1H7UIXE2eKKynR/H6gHMecRaQ0CLtq8A948Ei
-         hEBOlEiyZepgdnL5BUNVs8LOzrMlLAHIQsiFbgmt7yN2Hjz7rtNu9sTktvxWZ/SA6uBW
-         8CXH/4JEN2DwnXbOOWolglCoyM+9zmFVl9wtQNqVnWWDMFgJgsV+hfALLQptYblPfWT/
-         ka/Ra/1ViY+ksSBMZQj2QwLOs1YqLcqy2Yo+thvwKgyKrtiDs4xk9Sir2AMDdCmkmfuW
-         TIHQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=zLm2rrNY/P1iFEyvAZXKtr97lStg8qv5v/wgetsdpFs=;
-        b=o+ELZ7jQ6WtN3E2fcBUz/eVyoMqj2pfn4jBLDfB4wNkOYjvEtHC1GQOB6ce7HHGOUn
-         +WFHU1UEu4quTePEO8G0k+XM4FKyZfsYPQTQQxSH44khwtVCUm9wTiQrFEs5bv7BNibk
-         3ARnKVgqfLufarF3AfJlXnJLXwB5dJKNHywl2L49q2pvIXPldlwGZ0jrz5os/hDnrcLw
-         WEVOS4TQ2lLn7L2TYaBTDXlIqMsN4LX2Vb7dKVIyhJFlJbNhVHk3UDA/pF36nh0nPLed
-         wtLefDc0CnwU7VfOvEqmKyyvwgxOwCIYQCEPn8YblIRyEIR2Z2yDxQstygMttggl4XBt
-         0f6Q==
-X-Gm-Message-State: AOAM530vSIhkxFggEvjwnXv+MDzeSLWcws2yYGVreY9H2kZJ/ZBLwwNZ
-        eVz0S+O8qcQa/JNhKAMRZCvq+A==
-X-Google-Smtp-Source: ABdhPJwJACBLMUWDth5Oz10uveB1b+8QT918SIxv5bMSFZvhT3RCp60i/z3xW7rPfFGt18GjjZIitw==
-X-Received: by 2002:adf:f203:: with SMTP id p3mr29076638wro.331.1594194167231;
-        Wed, 08 Jul 2020 00:42:47 -0700 (PDT)
-Received: from dell ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id t2sm4692315wma.43.2020.07.08.00.42.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 00:42:46 -0700 (PDT)
-Date:   Wed, 8 Jul 2020 08:42:44 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 00/10] Fix a bunch SCSI related W=1 warnings
-Message-ID: <20200708074244.GP3500@dell>
-References: <20200707140055.2956235-1-lee.jones@linaro.org>
- <CY4PR04MB3751BE9A73158B811D163EADE7670@CY4PR04MB3751.namprd04.prod.outlook.com>
- <20200708065136.GL3500@dell>
- <CY4PR04MB3751007285A0EB45A206A95BE7670@CY4PR04MB3751.namprd04.prod.outlook.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eKKE01ogBFT6sTtm0lxtksTtkrzJ9Uv9W81tbjwnIJA=;
+ b=Agdd9gubRtx/DIGvhzp9/gv44HD8SkEIEZQc4yTigOeY0MNKgyBbGoMxSkn9GBVQDK2z3KiskbrPCTZoruKAUIXpNWsxgIN5RfsIcTl1vYUlX88bWqnLW5oSdGjPYT9MWP4vf7o0iSYcHISs5mJLEu5Fl3/aK2RTD2xrinD2w+I=
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
+ by SN6PR04MB4576.namprd04.prod.outlook.com (2603:10b6:805:ad::30) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3153.27; Wed, 8 Jul
+ 2020 07:44:28 +0000
+Received: from SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::1c80:dad0:4a83:2ef2]) by SN6PR04MB4640.namprd04.prod.outlook.com
+ ([fe80::1c80:dad0:4a83:2ef2%4]) with mapi id 15.20.3153.029; Wed, 8 Jul 2020
+ 07:44:28 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Satya Tangirala <satyat@google.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>
+CC:     Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Kuohong Wang <kuohong.wang@mediatek.com>,
+        Kim Boojin <boojin.kim@samsung.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Stanley Chu <stanley.chu@mediatek.com>
+Subject: RE: [PATCH v4 2/3] scsi: ufs: UFS crypto API
+Thread-Topic: [PATCH v4 2/3] scsi: ufs: UFS crypto API
+Thread-Index: AQHWU9CtW7JqpEm0eEqAtqn0oJ9GSqj9P+KA
+Date:   Wed, 8 Jul 2020 07:44:28 +0000
+Message-ID: <SN6PR04MB4640E8B9BB10FD5A5C2740D1FC670@SN6PR04MB4640.namprd04.prod.outlook.com>
+References: <20200706200414.2027450-1-satyat@google.com>
+ <20200706200414.2027450-3-satyat@google.com>
+In-Reply-To: <20200706200414.2027450-3-satyat@google.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: google.com; dkim=none (message not signed)
+ header.d=none;google.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [77.138.4.172]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 222b63b7-f66c-4284-3229-08d82312bea6
+x-ms-traffictypediagnostic: SN6PR04MB4576:
+x-microsoft-antispam-prvs: <SN6PR04MB45763778D5FA714681E5DFFCFC670@SN6PR04MB4576.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-forefront-prvs: 04583CED1A
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: GNIxJPXQNDkMmTsb65+qIXgTuXGA9aIDgEsc9AuIy2MVBktMrJK+1VBUnbEBCMtW1Pv7xSlvK/VsmH+F08xjs2ZF5cZnwVavilXA0qkb6PZlnMfSY5QFXw8flOq88Ilwwv+dWvHvjDSQRogjQkqEUck/19ZubHDe4T96ahNOjdzHSpT7sBhaU7adIpKG+YBKQ2LQP9MQlVTUB9LB3Qn2/9k202/lo/JHWliKqN+v5p5kqhogtoasUZHC0sITWg7rxMK1itwWC/q6Q58OxEC6b/OtnD2mXli54+aP8/QRvZ8C/CfuzMecjaEgzUxlCM95wgww8Z//WKlVjtZN0p3t+g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(86362001)(66476007)(66556008)(8676002)(76116006)(64756008)(66446008)(71200400001)(66946007)(9686003)(55016002)(33656002)(8936002)(6506007)(26005)(186003)(7696005)(498600001)(110136005)(2906002)(54906003)(4326008)(5660300002)(52536014);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: GKgTnAAMtbl24B+p3iqb/Fxh/D7tdlr9k2QAlOof9QAxKnTT89wZD/0otrAMAz3EVH9chI8Hdqs1OEwSCT40qxT7uCSi5RG1Ef7+cPWPi8hs6dnvXQ9/Mp4++gQU/YMOaZezD3avJJHj5YB7JRsu3zrhEfzPx4/AZ4SQtZyaNbB+NrWHBSy8ZwdsKaC9tU4DzMNrSK4VXnlVTlSUtkr308Z1zVKcLfADynvUZclwKTb1eE33x6kAqp42eego67qSsp0fh9pzMg0BjdBQiTYjB8Kxw6lD9wO8I9UwtSDyf9FaS2RdRjWMk6TT1EB6FQkUIqqQ97iFPD+zko3T+J2Kt7lKiBZZOVFgSfN33Z6mElQqLttw5GN8tr4spHOI5VmUGUzBlmWNx4XAT1mTTDsq7mt6tdc40+1ScrUYDQM816QbPWmuuPKZ6TqQNvbFmCgceTdtyLif+p5XP7OkZkOVNY3jA59Cb4b+8Ycmt7zuYHc=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CY4PR04MB3751007285A0EB45A206A95BE7670@CY4PR04MB3751.namprd04.prod.outlook.com>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 222b63b7-f66c-4284-3229-08d82312bea6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2020 07:44:28.6402
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CrcKpHezjztd7uo/jbYLY2H0Rizf/raT3/B5DLCR/X78U7N3QKAMXbpLkA7aDlSDaqFvthVo0gRNj10h4NyNKw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4576
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 08 Jul 2020, Damien Le Moal wrote:
-
-> On 2020/07/08 15:51, Lee Jones wrote:
-> > On Wed, 08 Jul 2020, Damien Le Moal wrote:
-> > 
-> >> On 2020/07/07 23:01, Lee Jones wrote:
-> >>> This set is part of a larger effort attempting to clean-up W=1
-> >>> kernel builds, which are currently overwhelmingly riddled with
-> >>> niggly little warnings.
-> >>>
-> >>> There are a whole lot more of these.  More fixes to follow.
-> >>
-> >> Hi Lee,
-> >>
-> >> I posted a series doing that cleanup for megaraid, mpt3sas sd and sd_zbc yesterday.
-> >>
-> >> https://www.spinics.net/lists/linux-scsi/msg144023.html
-> >>
-> >> Probably could merge the series since yours touches other drivers too.
-> > 
-> > Do you have plans to fix anything else, or should I continue?
-> 
-> I only fixed the warnings for the drivers enabled on my test setup. No real plan
-> to continue with other drivers for now.
-> 
-> My series did not touch aha, pcmcia and libfc, so these should still apply.
-
-Great.  Thanks for letting me know.
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+PiArDQo+ICtzdGF0aWMgZW51bSBibGtfY3J5cHRvX21vZGVfbnVtDQo+ICt1ZnNoY2RfZmluZF9i
+bGtfY3J5cHRvX21vZGUodW5pb24gdWZzX2NyeXB0b19jYXBfZW50cnkgY2FwKQ0KPiArew0KPiAr
+ICAgICAgIGludCBpOw0KPiArDQo+ICsgICAgICAgZm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUo
+dWZzX2NyeXB0b19hbGdzKTsgaSsrKSB7DQo+ICsgICAgICAgICAgICAgICBCVUlMRF9CVUdfT04o
+VUZTX0NSWVBUT19LRVlfU0laRV9JTlZBTElEICE9IDApOw0KPiArICAgICAgICAgICAgICAgaWYg
+KHVmc19jcnlwdG9fYWxnc1tpXS51ZnNfYWxnID09IGNhcC5hbGdvcml0aG1faWQgJiYNCj4gKyAg
+ICAgICAgICAgICAgICAgICB1ZnNfY3J5cHRvX2FsZ3NbaV0udWZzX2tleV9zaXplID09IGNhcC5r
+ZXlfc2l6ZSkgew0KPiArICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gaTsNCj4gKyAgICAg
+ICAgICAgICAgIH0NCj4gKyAgICAgICB9DQo+ICsgICAgICAgcmV0dXJuIEJMS19FTkNSWVBUSU9O
+X01PREVfSU5WQUxJRDsNCkJMS19FTkNSWVBUSU9OX01PREVfSU5WQUxJRCBpcyAwLCBidXQgMCBp
+cyBhIHZhbGlkIG1vZGUgbnVtPw0KDQo+ICt9DQo+ICsNCj4gKy8qKg0KPiArICogdWZzaGNkX2hi
+YV9pbml0X2NyeXB0b19jYXBhYmlsaXRpZXMgLSBSZWFkIGNyeXB0byBjYXBhYmlsaXRpZXMsIGlu
+aXQgY3J5cHRvDQo+ICsgKiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZmll
+bGRzIGluIGhiYQ0KPiArICogQGhiYTogUGVyIGFkYXB0ZXIgaW5zdGFuY2UNCj4gKyAqDQo+ICsg
+KiBSZXR1cm46IDAgaWYgY3J5cHRvIHdhcyBpbml0aWFsaXplZCBvciBpcyBub3Qgc3VwcG9ydGVk
+LCBlbHNlIGEgLWVycm5vIHZhbHVlLg0KPiArICovDQo+ICtpbnQgdWZzaGNkX2hiYV9pbml0X2Ny
+eXB0b19jYXBhYmlsaXRpZXMoc3RydWN0IHVmc19oYmEgKmhiYSkNCj4gK3sNCj4gKyAgICAgICBp
+bnQgY2FwX2lkeDsNCj4gKyAgICAgICBpbnQgZXJyID0gMDsNCj4gKyAgICAgICBlbnVtIGJsa19j
+cnlwdG9fbW9kZV9udW0gYmxrX21vZGVfbnVtOw0KPiArDQo+ICsgICAgICAgLyoNCj4gKyAgICAg
+ICAgKiBEb24ndCB1c2UgY3J5cHRvIGlmIGVpdGhlciB0aGUgaGFyZHdhcmUgZG9lc24ndCBhZHZl
+cnRpc2UgdGhlDQo+ICsgICAgICAgICogc3RhbmRhcmQgY3J5cHRvIGNhcGFiaWxpdHkgYml0ICpv
+ciogaWYgdGhlIHZlbmRvciBzcGVjaWZpYyBkcml2ZXINCj4gKyAgICAgICAgKiBoYXNuJ3QgYWR2
+ZXJ0aXNlZCB0aGF0IGNyeXB0byBpcyBzdXBwb3J0ZWQuDQo+ICsgICAgICAgICovDQo+ICsgICAg
+ICAgaWYgKCEoaGJhLT5jYXBhYmlsaXRpZXMgJiBNQVNLX0NSWVBUT19TVVBQT1JUKSB8fA0KPiAr
+ICAgICAgICAgICAhKGhiYS0+Y2FwcyAmIFVGU0hDRF9DQVBfQ1JZUFRPKSkNCj4gKyAgICAgICAg
+ICAgICAgIGdvdG8gb3V0Ow0KPiArDQo+ICsgICAgICAgaGJhLT5jcnlwdG9fY2FwYWJpbGl0aWVz
+LnJlZ192YWwgPQ0KPiArICAgICAgICAgICAgICAgICAgICAgICBjcHVfdG9fbGUzMih1ZnNoY2Rf
+cmVhZGwoaGJhLCBSRUdfVUZTX0NDQVApKTsNCj4gKyAgICAgICBoYmEtPmNyeXB0b19jZmdfcmVn
+aXN0ZXIgPQ0KPiArICAgICAgICAgICAgICAgKHUzMiloYmEtPmNyeXB0b19jYXBhYmlsaXRpZXMu
+Y29uZmlnX2FycmF5X3B0ciAqIDB4MTAwOw0KVGhpcyBkZXNlcnZlIGEgY29tbWVudCwgZS5nLiAN
+ClVGU0hDSSBzYXlzOg0KVGhlIGFkZHJlc3MgZm9yIGVudHJ5IHggb2YgdGhlIHgtQ1JZUFRPQ0ZH
+IGFycmF5IGlzIGNhbGN1bGF0ZWQgYXMgZm9sbG93czoNCkFERFIgKHgtQ1JZUFRPQ0ZHKSA9IFVG
+U19IQ0lfQkFTRSArIENGR1BUUioxMDBoICsgeCo4MGgNCg0K
