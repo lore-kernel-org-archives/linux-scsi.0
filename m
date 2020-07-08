@@ -2,128 +2,143 @@ Return-Path: <SRS0=1cZD=AT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88441C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF57C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60BA120739
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9327620739
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mi0iFHJd";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="rfRqADEW"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Z3S73qsa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729287AbgGHMEN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 08:04:13 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:41427 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729286AbgGHMEK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:04:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1594209849; x=1625745849;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=31WOsdALl/hRE/HiwpNFxdLflG96c00HIMvr9kklsGc=;
-  b=mi0iFHJdbCnEIiinGG+0W2q02pClYHLx5Kn4MgzUAOJ+NQMk4WE4OvmT
-   vHB4prHlsdQ4niv64SjjtZSO46LCDwX0KpYeClp8wGjspSrUgk3DBxDps
-   CZKSsKD2KTEJSKlgIrivZusBz0Jg8MasSQ5iWmlcTdzPCxO21bg1+CObY
-   1p7+n1VpHRhCr1VA5Sz/qV4SDV70vsoTi5dnOIIKccISNIQj9OkwAUL46
-   vjWSAL9ZmwjXEsltSxpCFOgE7EyTcWLBrRvkchvq+3DrOcQUclZKPbwt+
-   sUe804wRFkrxU6w+aeaBwXj0dXZkgG89L1ViC749lBP3ri92tt8maOoDX
-   Q==;
-IronPort-SDR: sA+taxLlKmTAbOvT2X6PA/1F+3+MPpOLNduCJnckav4ALqp4/TtlqjSCpf07LKVqdWrOfrQLhV
- LGhHURY/3wjas4HDyjdLzTyhWT3gtQ63NRfW44VFvkSuos7Xiw7UBlRrOkyrNYJWD/gP4WlLbI
- 8Jqock6tEbQ40Nmzb6Y8cksSr3lBQKKB8OVDxSaqhKLUWxu1O9wbJyScPriPIYx9HuWKDUIT7Z
- lnMUnEEfFT1uYU0C1NcCcqqc3La8vSGlVitbGjkBQIKBOs1q3B3Fcuap7Sy9WHpzCoXdL/ubLA
- +hU=
-X-IronPort-AV: E=Sophos;i="5.75,327,1589212800"; 
-   d="scan'208";a="143246171"
-Received: from mail-bn7nam10lp2100.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.100])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Jul 2020 20:04:08 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MVuDjpI+Tc48dAyLei5soa3vZsIZx65wfL/26M/rcXacJiitp5U5dox2QN+W2smzupZZe7cwiOd98bhNHwk+DP26XiXcyvw31JfXhjIY1bBALLSnHWPF5lIGFThHeWXFN66z95WyQ3H0EDPFrnlMnrW2ottgckQpFoAWAfgnVnjc1Df8HaM8WzX1u0tU8/58EGHBvibmm/iU3w5RAVvF32w5sdyanxEZl+z+3qyS49El28OUbiIs4+i8YIB9bh3opT7iy9g50Fkv2h3+ybw9+zrewjg5QneUCZ1aXTKsV+p0Y1P2k0v3gVKga3ABsvdDyKxX6n2dK6wgqy1s3KCRxg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=31WOsdALl/hRE/HiwpNFxdLflG96c00HIMvr9kklsGc=;
- b=IK8uE+YHeYPvjKhsLWiAT9kGsd0M5se8Qb2tD1qoriONv10YRY2l4YQR5zQ1K/aXK3DV8BhhApBdVuvbtHyxlFOc1BenUAqqEcQJXMzNgBwpOlWj2h0xe/XTtK80O3FQVmEZC0aQmzq06DzNbrf8t98VvjPc8w19Cpfems09d/3nv8jkI0ESpuyMFz12TGtLgmvr3TQ+KuuoHpOYyi8HcGZeUXgAhw1V5CTvcN6nLP7uEP9EyK9ScJQXeGXlNVTHiLKE3tjkO5B8JOnjvWG+FbmHhbiEN285Aqo+b4SGVyJiDfVl/pmrcNmwwzieddzabXtnqgm5Fgoa0nrWgAumfA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1729086AbgGHMCp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 08:02:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55394 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729064AbgGHMCm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:42 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1AE3C08E6DC
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:40 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id w3so2727773wmi.4
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=31WOsdALl/hRE/HiwpNFxdLflG96c00HIMvr9kklsGc=;
- b=rfRqADEWm48QVgBjMDrmxcNOe2Zj4W12a7MojbyAygtYU+5RL5kMwmcmlkjhQr3NZYZNeBlQW87DIfD/pHcbwFAcAkGViKYh/qIod8CKw7QTCvybiPf9oTnRqrqCYBGjWEppBxXkQdfCvmpFusOWBVKPO9RD/xXvQyyc3Hbr8dc=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN6PR04MB4687.namprd04.prod.outlook.com
- (2603:10b6:805:aa::22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.22; Wed, 8 Jul
- 2020 12:04:07 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::1447:186c:326e:30b2]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::1447:186c:326e:30b2%7]) with mapi id 15.20.3153.031; Wed, 8 Jul 2020
- 12:04:07 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Lee Jones <lee.jones@linaro.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Uxo2DH0sWgHFikhlDzsPIQecz45jNH2LIUT7ZFPJRdc=;
+        b=Z3S73qsah5B8+M25GHxcQW+vj3SVCTqzm1ZlGRZ0+H8kgseFbUABdfEfgOjC57ppOK
+         Q97RVVqZ637x9jvt5B2zLnHqSjfhVMYGCu1bls1xTQ3YttGwRZGOZfAa7PBYMTI2ClVg
+         SmMBa+L1gVMEbt8QpDFbITW3gGVAhE4favEtUYlxg5OuzdFwhtOwoYqhXRkLSdDi/DDe
+         fao1vr/hLdJ69C2pQdevkwSQz4cST/FiGxoBI9rzcw72I4tfvpnVIa4HcJ5oWMTDRLEi
+         geLBR44wwsUeYQbwIi+/mky8bLBcjUfK1HtyoqvSLiBmpEeGxzTLGSg7/8+OApchBLhj
+         PaYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Uxo2DH0sWgHFikhlDzsPIQecz45jNH2LIUT7ZFPJRdc=;
+        b=B/FIWxrNH5xN4c34ntazqIxF1wy95OQFT5PXBU7rv+VSZqeipJLkisiII1jCZ723j6
+         tz+QfSbBkmfZqTRh9bnlPTBkPt2hbYp1wtUmr4wBS05LFaQhdMWzieh0ehZTxLx2kt/V
+         tvNsZSz0ab22E7OsqYTqFGqYNh5VN1VI4+9Nt9mz2QwwrwXndoOCQO3LBjs0PQikJeh5
+         IxupC/4G4q0rLXq9IWR8ya8Nsf8rc/qiqzYyGVfPhU0Kur3yifyB8K4qGSRIy6QshezC
+         MrviUbmmmg2eG07LgihC978bZPIlIlhzBjIzUwtpuOQv8q/kZ427Y+Z1728BoAoApWkH
+         ZqSQ==
+X-Gm-Message-State: AOAM533YJ8y9ij9dpMeDjl8R7d/yfnu0DJa3INdJoNS+ZoInW/9lYJLD
+        GxHwSj1rAYqUZAjd+8ig62i7EVccMGE=
+X-Google-Smtp-Source: ABdhPJxFIlIFPqh41Y8DKlp3BF/310Wa9qNRIhGkrdPXnp1+GeFiGn2wK8WWSc2XAV6/+rhh3J8i6g==
+X-Received: by 2002:a1c:2485:: with SMTP id k127mr8790621wmk.138.1594209759339;
+        Wed, 08 Jul 2020 05:02:39 -0700 (PDT)
+Received: from localhost.localdomain ([2.27.35.206])
+        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Jul 2020 05:02:38 -0700 (PDT)
+From:   Lee Jones <lee.jones@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>,
         Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/30] scsi: libfc: fc_disc: trivial: Fix spelling mistake
- of 'discovery'
-Thread-Topic: [PATCH 03/30] scsi: libfc: fc_disc: trivial: Fix spelling
- mistake of 'discovery'
-Thread-Index: AQHWVR+pi6nQBSqyRkaYFJ9Wxo86QA==
-Date:   Wed, 8 Jul 2020 12:04:07 +0000
-Message-ID: <SN4PR0401MB35986D7CECA87EA6EB9CEFA99B670@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Subject: [PATCH 10/30] scsi: libfc: fc_lport: Repair function parameter documentation
+Date:   Wed,  8 Jul 2020 13:02:01 +0100
+Message-Id: <20200708120221.3386672-11-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200708120221.3386672-1-lee.jones@linaro.org>
 References: <20200708120221.3386672-1-lee.jones@linaro.org>
- <20200708120221.3386672-4-lee.jones@linaro.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: linaro.org; dkim=none (message not signed)
- header.d=none;linaro.org; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: d257d037-3ff9-488a-8347-08d82337040e
-x-ms-traffictypediagnostic: SN6PR04MB4687:
-x-microsoft-antispam-prvs: <SN6PR04MB4687F18E6046F680002F5C689B670@SN6PR04MB4687.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:4125;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: eAhv7LYqUCYbAxCq2aFFd3op5TEqaHNj2olWnUNWpZlaJYERdcwUATs0qkApSeKD3F1PDsY5J4t4zCZG68fFsuIN0u+ONAAU0UKopPRKr3fitoK9zroBH+Fcb97YjRZK11ES1rvHl9F17XapIklM/sDvoU3YEiXFJg9gvYch19s4xGq+1Su0nBTjXvzwqkByHz33geQazG9nHY6UCn6YsQs2NlaQu1s93Xzrx5BVgyhQQyY94t2B2qKKaM0J+DoTbBn8NvqnpgkIbBLjgNTEM+yqzmdR6ohZ8/aRE52ItJS1b9ifYP3wZftM+RbpzUUKRCPSMTXimJLCuaYyoqoGEw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(396003)(366004)(39860400002)(376002)(346002)(136003)(91956017)(8936002)(6506007)(26005)(186003)(52536014)(4326008)(7696005)(9686003)(86362001)(54906003)(5660300002)(110136005)(8676002)(558084003)(71200400001)(316002)(66946007)(64756008)(66446008)(55016002)(33656002)(2906002)(76116006)(478600001)(66556008)(66476007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: +pxVyklUQjXfiIygJOAQtJkiOJjzpBUMreYKJegdf6B95hjt60QWPrfifJeGhUTXBy27GNrBNUPDcZeeL9F74kJ0JX84lzXLIxQqb/7juQa4qRUXn+02ad8uCCsVNbPznyLOGth80htEV0o+abpP59XrtgsYLR7oOLV0Qr0X8aLcJtO1y0NoqFuc40mHw6KMeCLwnBkyx3CTEOa5tOTVWq73+lXEB2mtSLNzxvMsk2L7Ja6+X2T+vTOkYvLN8Yd3xETqTLp2prcy0aUBwA40yY2uPe/FB/6A3tt2fdh78CW8l6dkTFSyh1r6J1IjOj1gWCWo2H875kqWBp1NO3630nyhPWjB4Qx9DwDRC/XWrJNwkaTCtyqCVEp0rvvgZku4NhprrWzZUpflxh9CWJPW336L4zJzEfX8xdl/YrIT3fUaewwiFAL1Xql1PBsN3WMSWspnU5/3yBEgozAFnEOODTN7No9qv2SL6t9jqY16tcd88MmRpoE8o3wu82dmh1CZ
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d257d037-3ff9-488a-8347-08d82337040e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2020 12:04:07.0140
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: EMRpTRwlks6JBdR9/+9J6d74U751LVypd/jSvWWU8qqAQle7B7iZKs4vszIvCoVXMTq8/LIS3/NPEHRBojChI41O1/GBPwDNCjNNHLBDAN4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB4687
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,=0A=
-=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
-=0A=
-I think Martin can fold this one into the original one=0A=
+Either misdocumentation and/or bitrot.
+
+Fixes the following W=1 kernel build warning(s):
+
+ drivers/scsi/libfc/fc_lport.c:412: warning: Function parameter or member 'in_fp' not described in 'fc_lport_recv_echo_req'
+ drivers/scsi/libfc/fc_lport.c:412: warning: Excess function parameter 'fp' description in 'fc_lport_recv_echo_req'
+ drivers/scsi/libfc/fc_lport.c:447: warning: Function parameter or member 'in_fp' not described in 'fc_lport_recv_rnid_req'
+ drivers/scsi/libfc/fc_lport.c:447: warning: Excess function parameter 'fp' description in 'fc_lport_recv_rnid_req'
+ drivers/scsi/libfc/fc_lport.c:1330: warning: Function parameter or member 'state' not described in 'fc_lport_enter_ns'
+ drivers/scsi/libfc/fc_lport.c:1428: warning: Function parameter or member 'state' not described in 'fc_lport_enter_ms'
+ drivers/scsi/libfc/fc_lport.c:1939: warning: Function parameter or member 'tov' not described in 'fc_lport_els_request'
+
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/libfc/fc_lport.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 684c5e361a286..b84dbc316df15 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -405,7 +405,7 @@ static void fc_lport_recv_rlir_req(struct fc_lport *lport, struct fc_frame *fp)
+ /**
+  * fc_lport_recv_echo_req() - Handle received ECHO request
+  * @lport: The local port receiving the ECHO
+- * @fp:	   ECHO request frame
++ * @in_fp: ECHO request frame
+  */
+ static void fc_lport_recv_echo_req(struct fc_lport *lport,
+ 				   struct fc_frame *in_fp)
+@@ -440,7 +440,7 @@ static void fc_lport_recv_echo_req(struct fc_lport *lport,
+ /**
+  * fc_lport_recv_rnid_req() - Handle received Request Node ID data request
+  * @lport: The local port receiving the RNID
+- * @fp:	   The RNID request frame
++ * @in_fp: The RNID request frame
+  */
+ static void fc_lport_recv_rnid_req(struct fc_lport *lport,
+ 				   struct fc_frame *in_fp)
+@@ -1325,6 +1325,7 @@ static void fc_lport_enter_scr(struct fc_lport *lport)
+ /**
+  * fc_lport_enter_ns() - register some object with the name server
+  * @lport: Fibre Channel local port to register
++ * @state: Local port state
+  */
+ static void fc_lport_enter_ns(struct fc_lport *lport, enum fc_lport_state state)
+ {
+@@ -1423,6 +1424,7 @@ static void fc_lport_enter_dns(struct fc_lport *lport)
+ /**
+  * fc_lport_enter_ms() - management server commands
+  * @lport: Fibre Channel local port to register
++ * @state: Local port state
+  */
+ static void fc_lport_enter_ms(struct fc_lport *lport, enum fc_lport_state state)
+ {
+@@ -1932,6 +1934,7 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+  * @job:   The BSG Passthrough job
+  * @lport: The local port sending the request
+  * @did:   The destination port id
++ * @tov:   The timeout period (in ms)
+  */
+ static int fc_lport_els_request(struct bsg_job *job,
+ 				struct fc_lport *lport,
+-- 
+2.25.1
+
