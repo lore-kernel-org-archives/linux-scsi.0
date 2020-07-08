@@ -1,379 +1,171 @@
-Return-Path: <SRS0=EBgm=AS=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=1cZD=AT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C415C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 23:47:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 936E2C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 00:53:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 729E72067D
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Jul 2020 23:47:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67321206DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 00:53:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D5NXNwWS"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="DqBma3Wt";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="jNwBG9iE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729162AbgGGXrF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Jul 2020 19:47:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54478 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727945AbgGGXrE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 19:47:04 -0400
-Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC9D4C061755;
-        Tue,  7 Jul 2020 16:47:04 -0700 (PDT)
-Received: by mail-il1-x142.google.com with SMTP id r12so30338703ilh.4;
-        Tue, 07 Jul 2020 16:47:04 -0700 (PDT)
+        id S1729207AbgGHAxf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Jul 2020 20:53:35 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:27068 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728397AbgGHAxe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jul 2020 20:53:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1594169615; x=1625705615;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=clSAGmlBmjfboZW8M/2lBGCiv4n2RapGSdlYooShIh8=;
+  b=DqBma3WtLuB5B19DLyh+tYIGpMaptODkHbHPsNKJBYbyyEuKsbSkIdj1
+   U8lp1Wk8Txr5pi1qbjjuBKgbC2Xnx+8AtIJMd6h2Y5goAY6rfv04OsLV5
+   7kiMbPNXq19BcSJq2yaQxDfAWixGwHVR0m6Rp1CLTdG4bBIebMiz7odgs
+   03nMHclh76yv4zNza6B8aBsgdO0giA57xNnRYO+mC2YLrsHhdfxdE7VMq
+   DQuR3iaPogFHBYcniEJAuHby74Q/NXr6Su2FTZ1tSZUeMWaGfAQnsYsQM
+   L1jUswDJKf+WLh+olB4vyPPjXMkpqMde9+bGp4HoEIoAs9/emFfL7FoXI
+   w==;
+IronPort-SDR: 5+Q2cb471rMuEq4RhXP9yKLzZ0yh5Mpvl1EJB6KhncyVZzD8HQCz+1HniAyimPD9nxkn5epn+j
+ bV+zk5JNRLxPIiDOatLhqUgg54giV9nYQgO6901GGSqMUnLTZdUKP83Lw52MzHyqKW09N2+Dzn
+ x0NTyvzJDRWog2IoulXybD7EvOYlpnFcv50+qC2AblX0EuWaT9jTPE79y9uOFa23KJMd7+77r4
+ ZInCHrAEu6he5hsGCx77GpkjkAFf7+gJGe6/mPf5tnE2lElkAxJDD8R24pBT3wmOT9HIdbYcsA
+ VFA=
+X-IronPort-AV: E=Sophos;i="5.75,325,1589212800"; 
+   d="scan'208";a="146189227"
+Received: from mail-mw2nam12lp2042.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.42])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Jul 2020 08:53:34 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fkEaAJNkssnkU4hSRa5A4ViD2Vbv+ekjczNtoBH8mXK5bo+LFIvOpCnJ0oIFVJ2pwQltbBtNas5dhff4u61ttZyhaDaEars7QU1hGfrdYPuqVvJHXvS6JaqPW9qV8IwP253eAiKNGTSvCE46/t0mWon0oxJoAoW3JbrmkmJYAX35/7NQoFFd79skH4vIA5hnxe5jB1jiCVSMaSA1IztiMTH9S2PvLqzRN9xtapeAzHELW7leojKkaFPODlZuHMT7xq2rjQtL1vCcQSdNRwP17mGGiuKZ07QaOE9pMH1lFc6SpzgdiJo54nf5cD23+v+sWPx1wx3HhOgVXLFcC/c/dQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4DChKgcbQDZSpZ2A4Yp/dK8eAFVlE6ZSSwtdQ83hcLo=;
+ b=cJYCS5nb7v4+IYMA+v7QLP2OLJ57oL/a9zxBrF+ziQcoxdQMsHKLI2oPO/FFwdZmpkAMldKsOSsOJpy6bV1j7LFBhfpW4dONup3g1NSjiiNJ+hKCiW/9Oq7EkLoOlUtUOktwuG+cYItjLS+BdaNRpjGR71kKsaL6D28lPK8t05fc1pip13TzFXbCx8BXKJPyUlj9Gx0quoSH+d94C8IGds+6ioVtDNM+0yMJ5c7eh+ga2pSoJRatpzXdkuWp614SPi4jmgRZueFXZBKyOJAWxicyPMksxT63XyUqQ+R1ClPStNrk84/I2ZMtUDWe0JJTbjtTswAawM1tzKeVnOdI+A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ybul3LGGAgC6kLJc/MQdcNhaERTgXJ94V235EelCsV4=;
-        b=D5NXNwWSr85UNreMMxn+qcLBXV9MCMP9TNS6r+RbZBNJTjYLSnbIuLMoLzDm/bK3o2
-         BB8JAD6uW48WQ/Gqkn9TTB3Pb9Kn1JQeBiFrYAMSIBA4/163Uk/C63LG6RemrdFmdPRI
-         PKkkH1aMbP998tKh5TqktSBGh3Mw8MqfJ1d6nnDbMN/VzxXadBy4goXf9vl2HTFnnIOh
-         LLECxy12gkODth5ka2uFOdreF4bSsuGzZezbGMlY8q07UI+YkwWNgkbjB5SiuFbEY5uU
-         nztsZ1KMmPNKbiCIS5C/8YGCBnEFU+77C50/zzceURm27vB4gxPTmyO8lwxiBuolm6ns
-         8l1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ybul3LGGAgC6kLJc/MQdcNhaERTgXJ94V235EelCsV4=;
-        b=krT2BxbtfrUQryTF9nY49JG0l1giXRmeLHs4lFSEeeHFcfcFU+DNveeajNR5wUvIvD
-         hbxIJSnogQK0JxnhEclkCJ1pOv34dvK4Hhw43huAo+a+Jggypz6kTnWvgMJt0Cfy10Di
-         M7KL/uOiUHcFJhyExeSA8nkmi/sHtssJRkKbeLlUm9nxlOh2UkPKV3OkUrIaY61udB9d
-         71VuUO1+INUuoZVpABj47R9RldgF+VlJcR5hjqfDgjXUI7KoNtqqWCGVN5mIqjtmaKxB
-         f01JrNz+7up8FbHT1bKjhVBlPJMFmqW1rWM3Ng1vp6B0LtH9byflq2xx8zinka7jCCNC
-         eOVw==
-X-Gm-Message-State: AOAM530j+SKWue4fSplkbTzxBpGxUPoxDduOOKrYbSODurfbBp1kwSa8
-        nBXFbdClh25Wki7HwGVjicJq9Ld7h+w=
-X-Google-Smtp-Source: ABdhPJxSK2gBri8l5wjxnCFEZ2gFJboZkBifHSNRXb0GLXYe7oWWej4VTyo7cO18nJk1hlibxm+V/Q==
-X-Received: by 2002:a92:8544:: with SMTP id f65mr38983214ilh.42.1594165623934;
-        Tue, 07 Jul 2020 16:47:03 -0700 (PDT)
-Received: from Ryzen-9-3900X.localdomain ([107.152.99.41])
-        by smtp.gmail.com with ESMTPSA id v13sm12615832iox.12.2020.07.07.16.47.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2020 16:47:03 -0700 (PDT)
-Date:   Tue, 7 Jul 2020 16:47:00 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     t-mabelt@microsoft.com
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mikelley@microsoft.com,
-        parri.andrea@gmail.com, Andres Beltran <lkmlabelt@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20200707234700.GA218@Ryzen-9-3900X.localdomain>
-References: <20200701001221.2540-1-lkmlabelt@gmail.com>
- <20200701001221.2540-3-lkmlabelt@gmail.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4DChKgcbQDZSpZ2A4Yp/dK8eAFVlE6ZSSwtdQ83hcLo=;
+ b=jNwBG9iErO5+v6JcOlZa1sGhgsxVzMsIZE8Iz0XH6XbOHQuIwJOxzwwiwcQ8l5kNbkHDMW0Vxkkfa+BJ733pwJo0dJ7Ng7prA1oK7ZYllaB3QZwSgEijRjQwKPl/KDslXB4vekmuiC+6yiIHEM+t6j6q/CVzdujnIMH9hD71E/c=
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
+ by CY4PR04MB1048.namprd04.prod.outlook.com (2603:10b6:910:54::26) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.21; Wed, 8 Jul
+ 2020 00:53:31 +0000
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::c593:f271:eebe:ac7]) by CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::c593:f271:eebe:ac7%9]) with mapi id 15.20.3153.022; Wed, 8 Jul 2020
+ 00:53:31 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     Lee Jones <lee.jones@linaro.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 00/10] Fix a bunch SCSI related W=1 warnings
+Thread-Topic: [PATCH 00/10] Fix a bunch SCSI related W=1 warnings
+Thread-Index: AQHWVGcrhLvM8odGu0iXEs5vj7X/Jw==
+Date:   Wed, 8 Jul 2020 00:53:31 +0000
+Message-ID: <CY4PR04MB3751BE9A73158B811D163EADE7670@CY4PR04MB3751.namprd04.prod.outlook.com>
+References: <20200707140055.2956235-1-lee.jones@linaro.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: linaro.org; dkim=none (message not signed)
+ header.d=none;linaro.org; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.182.57]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 1359bf35-c28e-4e0d-28bc-08d822d955c9
+x-ms-traffictypediagnostic: CY4PR04MB1048:
+x-microsoft-antispam-prvs: <CY4PR04MB104823A9C649DE0CF3DD4429E7670@CY4PR04MB1048.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:6108;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: p87655vbi9r+//VowYu2Z2lmtwqpgQWqCpMLl1x2YU4+J8vujsM6emXK7pbv5uH0fhtIXQ+bKiacQbNOFkMheT66RBPs2yFzDicnAxnk2o7D72jE3rL5PJd0gbfelV4KdX7i4SKE8YUFDg4Ks2VCJOdG4SOsNvmyvQynrRkjP42MQW52fBMjsJtAPznEFYvv4ONCmPuneo1WQOL0BrmoU+WIySu2iaScMPH9jD1nyZaQGdtXhB3OIxR0u6dsWapq1Uusjgxkna8/2mgrMNIOojJCgWcYxWAf4If0rJc1ON5r84q2JBUBXVJGeEXDTX1OpPH7z3rxDJ2dv9Sti4P8RCQZgmUHtBBTLgfD/ltdIHBSKMZd4IkklH3HEv9ysmwwBXYuCyQSNGJOFy9BkpXxnw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(136003)(39860400002)(346002)(396003)(376002)(33656002)(8676002)(6506007)(26005)(53546011)(71200400001)(83380400001)(76116006)(66446008)(66476007)(66946007)(64756008)(66556008)(91956017)(52536014)(5660300002)(86362001)(186003)(2906002)(966005)(9686003)(55016002)(478600001)(8936002)(7696005)(316002)(4326008)(110136005)(54906003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: vMulLS5oAPtC6fp5WdLBx4uh6H5zXr2uTd5/lzFgm9HUMeoam6N3fYHXT3Tsg+JcU4HewRMOspNF/dqfVgtWSOkfTrfBabuWqObof1jWp1QgzHNW1bUeCZFZGmA9b5f1DJEq0YGXggGKJZzj0O/QX/eH/VOOxEHP39bEhpeQX48K6Xjm4uICMP/C8VoXByO9+9ZeEWZmi9KOBu+arHtJJR36QOmJ9GIHLIG2Cv4A+cuHxCUysCcxVS4qi2oOVEUyUmD/3FpcEqy1Z30QusDWscYYfVyL9MGZCVqCzDp/dp4xLm9FJSFPw39rXk2HJH1nq2dRgD5lnOSK3+1hmifEDX00fNfl7JKorVpvALa4fSybS3FZPlcQ2+7l68X5mWQXVpQjbzVTnyZPKH/LuLVsLs/UokFA5v2mwLvajW6UYCTCvTLS4rJgeOv4r9p4dFYrNP2zWYL027L+QqZF2/iEeWmoL2RmpDgfBIEMntEm/gpEm0dEwnArMBZ2RKh7W9NY
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200701001221.2540-3-lkmlabelt@gmail.com>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1359bf35-c28e-4e0d-28bc-08d822d955c9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2020 00:53:31.4569
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Ch3DEtVksP+2qdjWCCJlPcq8gyH9VRXMsW0EUXJ+/2p0n5ObSh3W+1uqI+HiRhyJ9C/w9Lo1P0y3KTUBVjCSDQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB1048
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Andres,
-
-On Tue, Jun 30, 2020 at 08:12:20PM -0400, Andres Beltran wrote:
-> Currently, pointers to guest memory are passed to Hyper-V as
-> transaction IDs in storvsc. In the face of errors or malicious
-> behavior in Hyper-V, storvsc should not expose or trust the transaction
-> IDs returned by Hyper-V to be valid guest memory addresses. Instead,
-> use small integers generated by vmbus_requestor as requests
-> (transaction) IDs.
-> 
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
-> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
-> ---
-> Changes in v2:
->         - Add casts to unsigned long to fix warnings on 32bit.
-> 
->  drivers/scsi/storvsc_drv.c | 85 +++++++++++++++++++++++++++++++++-----
->  1 file changed, 74 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 624467e2590a..6d2df1f0fe6d 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -399,6 +399,7 @@ static int storvsc_timeout = 180;
->  static struct scsi_transport_template *fc_transport_template;
->  #endif
->  
-> +static struct scsi_host_template scsi_driver;
->  static void storvsc_on_channel_callback(void *context);
->  
->  #define STORVSC_MAX_LUNS_PER_TARGET			255
-> @@ -698,6 +699,12 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
->  
->  	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
->  
-> +	/*
-> +	 * The size of vmbus_requestor is an upper bound on the number of requests
-> +	 * that can be in-progress at any one time across all channels.
-> +	 */
-> +	new_sc->rqstor_size = scsi_driver.can_queue;
-> +
->  	ret = vmbus_open(new_sc,
->  			 storvsc_ringbuffer_size,
->  			 storvsc_ringbuffer_size,
-> @@ -726,6 +733,7 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
->  	struct storvsc_cmd_request *request;
->  	struct vstor_packet *vstor_packet;
->  	int ret, t;
-> +	u64 rqst_id;
->  
->  	/*
->  	 * If the number of CPUs is artificially restricted, such as
-> @@ -760,14 +768,23 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
->  	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
->  	vstor_packet->sub_channel_count = num_sc;
->  
-> +	rqst_id = vmbus_next_request_id(&device->channel->requestor,
-> +					(unsigned long)request);
-> +	if (rqst_id == VMBUS_RQST_ERROR) {
-> +		dev_err(dev, "No request id available\n");
-> +		return;
-> +	}
-> +
->  	ret = vmbus_sendpacket(device->channel, vstor_packet,
->  			       (sizeof(struct vstor_packet) -
->  			       vmscsi_size_delta),
-> -			       (unsigned long)request,
-> +			       rqst_id,
->  			       VM_PKT_DATA_INBAND,
->  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->  
->  	if (ret != 0) {
-> +		/* Reclaim request ID to avoid leak of IDs */
-> +		vmbus_request_addr(&device->channel->requestor, rqst_id);
->  		dev_err(dev, "Failed to create sub-channel: err=%d\n", ret);
->  		return;
->  	}
-> @@ -818,20 +835,31 @@ static int storvsc_execute_vstor_op(struct hv_device *device,
->  {
->  	struct vstor_packet *vstor_packet;
->  	int ret, t;
-> +	u64 rqst_id;
->  
->  	vstor_packet = &request->vstor_packet;
->  
->  	init_completion(&request->wait_event);
->  	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
->  
-> +	rqst_id = vmbus_next_request_id(&device->channel->requestor,
-> +					(unsigned long)request);
-> +	if (rqst_id == VMBUS_RQST_ERROR) {
-> +		dev_err(&device->device, "No request id available\n");
-> +		return -EAGAIN;
-> +	}
-> +
->  	ret = vmbus_sendpacket(device->channel, vstor_packet,
->  			       (sizeof(struct vstor_packet) -
->  			       vmscsi_size_delta),
-> -			       (unsigned long)request,
-> +			       rqst_id,
->  			       VM_PKT_DATA_INBAND,
->  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> -	if (ret != 0)
-> +	if (ret != 0) {
-> +		/* Reclaim request ID to avoid leak of IDs */
-> +		vmbus_request_addr(&device->channel->requestor, rqst_id);
->  		return ret;
-> +	}
->  
->  	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
->  	if (t == 0)
-> @@ -1233,9 +1261,17 @@ static void storvsc_on_channel_callback(void *context)
->  	foreach_vmbus_pkt(desc, channel) {
->  		void *packet = hv_pkt_data(desc);
->  		struct storvsc_cmd_request *request;
-> +		u64 cmd_rqst;
->  
-> -		request = (struct storvsc_cmd_request *)
-> -			((unsigned long)desc->trans_id);
-> +		cmd_rqst = vmbus_request_addr(&channel->requestor,
-> +					      desc->trans_id);
-> +		if (cmd_rqst == VMBUS_RQST_ERROR) {
-> +			dev_err(&device->device,
-> +				"Incorrect transaction id\n");
-> +			continue;
-> +		}
-> +
-> +		request = (struct storvsc_cmd_request *)(unsigned long)cmd_rqst;
->  
->  		if (request == &stor_device->init_request ||
->  		    request == &stor_device->reset_request) {
-> @@ -1256,6 +1292,12 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
->  
->  	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
->  
-> +	/*
-> +	 * The size of vmbus_requestor is an upper bound on the number of requests
-> +	 * that can be in-progress at any one time across all channels.
-> +	 */
-> +	device->channel->rqstor_size = scsi_driver.can_queue;
-> +
->  	ret = vmbus_open(device->channel,
->  			 ring_size,
->  			 ring_size,
-> @@ -1369,6 +1411,7 @@ static int storvsc_do_io(struct hv_device *device,
->  	int ret = 0;
->  	const struct cpumask *node_mask;
->  	int tgt_cpu;
-> +	u64 rqst_id;
->  
->  	vstor_packet = &request->vstor_packet;
->  	stor_device = get_out_stor_device(device);
-> @@ -1463,6 +1506,13 @@ static int storvsc_do_io(struct hv_device *device,
->  
->  	vstor_packet->operation = VSTOR_OPERATION_EXECUTE_SRB;
->  
-> +	rqst_id = vmbus_next_request_id(&outgoing_channel->requestor,
-> +					(unsigned long)request);
-> +	if (rqst_id == VMBUS_RQST_ERROR) {
-> +		dev_err(&device->device, "No request id available\n");
-> +		return -EAGAIN;
-> +	}
-> +
->  	if (request->payload->range.len) {
->  
->  		ret = vmbus_sendpacket_mpb_desc(outgoing_channel,
-> @@ -1470,18 +1520,21 @@ static int storvsc_do_io(struct hv_device *device,
->  				vstor_packet,
->  				(sizeof(struct vstor_packet) -
->  				vmscsi_size_delta),
-> -				(unsigned long)request);
-> +				rqst_id);
->  	} else {
->  		ret = vmbus_sendpacket(outgoing_channel, vstor_packet,
->  			       (sizeof(struct vstor_packet) -
->  				vmscsi_size_delta),
-> -			       (unsigned long)request,
-> +			       rqst_id,
->  			       VM_PKT_DATA_INBAND,
->  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
->  	}
->  
-> -	if (ret != 0)
-> +	if (ret != 0) {
-> +		/* Reclaim request ID to avoid leak of IDs */
-> +		vmbus_request_addr(&outgoing_channel->requestor, rqst_id);
->  		return ret;
-> +	}
->  
->  	atomic_inc(&stor_device->num_outstanding_req);
->  
-> @@ -1562,7 +1615,7 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
->  	struct storvsc_cmd_request *request;
->  	struct vstor_packet *vstor_packet;
->  	int ret, t;
-> -
-> +	u64 rqst_id;
->  
->  	stor_device = get_out_stor_device(device);
->  	if (!stor_device)
-> @@ -1577,14 +1630,24 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
->  	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
->  	vstor_packet->vm_srb.path_id = stor_device->path_id;
->  
-> +	rqst_id = vmbus_next_request_id(&device->channel->requestor,
-> +					(unsigned long)&stor_device->reset_request);
-> +	if (rqst_id == VMBUS_RQST_ERROR) {
-> +		dev_err(&device->device, "No request id available\n");
-> +		return FAILED;
-> +	}
-> +
->  	ret = vmbus_sendpacket(device->channel, vstor_packet,
->  			       (sizeof(struct vstor_packet) -
->  				vmscsi_size_delta),
-> -			       (unsigned long)&stor_device->reset_request,
-> +			       rqst_id,
->  			       VM_PKT_DATA_INBAND,
->  			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> -	if (ret != 0)
-> +	if (ret != 0) {
-> +		/* Reclaim request ID to avoid leak of IDs */
-> +		vmbus_request_addr(&device->channel->requestor, rqst_id);
->  		return FAILED;
-> +	}
->  
->  	t = wait_for_completion_timeout(&request->wait_event, 5*HZ);
->  	if (t == 0)
-> -- 
-> 2.25.1
-> 
-
-This patch has landed in linux-next as of next-20200707 and now I can no
-longer boot the WSL2 lightweight VM.
-
-PS C:\Users\natec> wsl -d ubuntu
-The virtual machine or container was forcefully exited.
-
-$ git bisect log
-# bad: [5b2a702f85b3285fcde0309aadacc13a36c70fc7] Add linux-next specific files for 20200707
-# good: [bfe91da29bfad9941d5d703d45e29f0812a20724] Merge tag 'for-linus' of git://git.kernel.org/pub/scm/virt/kvm/kvm
-git bisect start 'origin/master' 'origin/stable'
-# good: [885913a4d03f7f5fbd2c75121ea8c42f58185cc5] Merge remote-tracking branch 'crypto/master'
-git bisect good 885913a4d03f7f5fbd2c75121ea8c42f58185cc5
-# good: [4a902a00a463f60b1630577a32e142800707c576] Merge remote-tracking branch 'regulator/for-next'
-git bisect good 4a902a00a463f60b1630577a32e142800707c576
-# good: [e48c950eb83e19d532ea49112211b01c6210377a] Merge remote-tracking branch 'thunderbolt/next'
-git bisect good e48c950eb83e19d532ea49112211b01c6210377a
-# good: [0a299abc3a2127d9711517904a1e5c751985b5a5] Merge remote-tracking branch 'rtc/rtc-next'
-git bisect good 0a299abc3a2127d9711517904a1e5c751985b5a5
-# good: [6de62f5629875029fbd8d79d7fa9c45e8dbea966] kcov: make some symbols static
-git bisect good 6de62f5629875029fbd8d79d7fa9c45e8dbea966
-# bad: [9103b615924bf7594a7651a9777e0cf177201dbd] Merge remote-tracking branch 'auxdisplay/auxdisplay'
-git bisect bad 9103b615924bf7594a7651a9777e0cf177201dbd
-# good: [ed0e825a5c0f00aec12f79e8aef4b37dbb5a94f1] Merge remote-tracking branch 'kspp/for-next/kspp'
-git bisect good ed0e825a5c0f00aec12f79e8aef4b37dbb5a94f1
-# good: [563bebf9d7625b579a13b79a4981fdd3097d9bce] Merge remote-tracking branch 'nvmem/for-next'
-git bisect good 563bebf9d7625b579a13b79a4981fdd3097d9bce
-# good: [efd8e353a542e79995681d98a4849eeeb1ce3809] Drivers: hv: vmbus: Add vmbus_requestor data structure for VMBus hardening
-git bisect good efd8e353a542e79995681d98a4849eeeb1ce3809
-# good: [27586ca786a729cda6c807621a1494900a56e7bc] XArray: Handle retry entries within xas_find_marked
-git bisect good 27586ca786a729cda6c807621a1494900a56e7bc
-# bad: [11478f56f20e3be6d11043b501f3090375af4492] hv_netvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
-git bisect bad 11478f56f20e3be6d11043b501f3090375af4492
-# bad: [8e569d774e1e73afabf1fbf40d11fcb8462ddffa] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardeninggit bisect bad 8e569d774e1e73afabf1fbf40d11fcb8462ddffa
-# first bad commit: [8e569d774e1e73afabf1fbf40d11fcb8462ddffa] scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening
-
-If I revert this commit, everything works fine:
-
-PS C:\Users\natec> wsl --shutdown
-PS C:\Users\natec> wsl -d ubuntu -- /bin/bash
-nathan@Ryzen-9-3900X:/mnt/c/Users/natec$ cat /proc/version
-Linux version 5.8.0-rc4-next-20200707-microsoft-standard+ (nathan@Ryzen-9-3900X) (gcc (Ubuntu 9.3.0-10ubuntu2) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #1 SMP Tue Jul 7 16:35:06 MST 2020
-nathan@Ryzen-9-3900X:/mnt/c/Users/natec$ git -C ~/src/linux-next lo -2
-0ff017dff922 (HEAD -> master) Revert "scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening"
-5b2a702f85b3 (tag: next-20200707, origin/master, origin/HEAD) Add linux-next specific files for 20200707
-nathan@Ryzen-9-3900X:/mnt/c/Users/natec$
-
-The kernel was built using the following commands:
-
-$ mkdir -p out/x86_64
-
-$ curl -LSso out/x86_64/.config https://github.com/microsoft/WSL2-Linux-Kernel/raw/linux-msft-wsl-4.19.y/Microsoft/config-wsl
-
-$ scripts/config --file out/x86_64/.config -d RAID6_PQ_BENCHMARK -e NET_9P_VIRTIO
-
-$ make -skj"$(nproc)" O=out/x86_64 olddefconfig bzImage
-
-I don't really know how to get more information than this as WSL seems
-rather opaque but I am happy to provide any information.
-
-Cheers,
-Nathan
+On 2020/07/07 23:01, Lee Jones wrote:=0A=
+> This set is part of a larger effort attempting to clean-up W=3D1=0A=
+> kernel builds, which are currently overwhelmingly riddled with=0A=
+> niggly little warnings.=0A=
+> =0A=
+> There are a whole lot more of these.  More fixes to follow.=0A=
+=0A=
+Hi Lee,=0A=
+=0A=
+I posted a series doing that cleanup for megaraid, mpt3sas sd and sd_zbc ye=
+sterday.=0A=
+=0A=
+https://www.spinics.net/lists/linux-scsi/msg144023.html=0A=
+=0A=
+Probably could merge the series since yours touches other drivers too.=0A=
+=0A=
+> =0A=
+> Lee Jones (10):=0A=
+>   scsi: megaraid: megaraid_mm: Strip excess function param description=0A=
+>   scsi: megaraid: megaraid_mbox: Fix some kerneldoc bitrot=0A=
+>   scsi: fdomain: Mark 'fdomain_pm_ops' as __maybe_unused=0A=
+>   scsi: megaraid: megaraid_sas_fusion: Fix-up a whole myriad of=0A=
+>     kerneldoc misdemeanours=0A=
+>   scsi: megaraid: megaraid_sas_base: Provide prototypes for non-static=0A=
+>     functions=0A=
+>   scsi: aha152x: Remove unused variable 'ret'=0A=
+>   scsi: pcmcia: nsp_cs: Use new __printf() format notation=0A=
+>   scsi: pcmcia: nsp_cs: Remove unused variable 'dummy'=0A=
+>   scsi: libfc: fc_disc: Fix-up some incorrectly referenced function=0A=
+>     parameters=0A=
+>   scsi: megaraid: megaraid_sas: Convert forward-declarations to=0A=
+>     prototypes=0A=
+> =0A=
+>  drivers/scsi/aha152x.c                      |   3 +-=0A=
+>  drivers/scsi/fdomain.h                      |   2 +-=0A=
+>  drivers/scsi/libfc/fc_disc.c                |   6 +-=0A=
+>  drivers/scsi/megaraid/megaraid_mbox.c       |   4 +-=0A=
+>  drivers/scsi/megaraid/megaraid_mm.c         |   1 -=0A=
+>  drivers/scsi/megaraid/megaraid_sas.h        |  25 ++++-=0A=
+>  drivers/scsi/megaraid/megaraid_sas_base.c   |   4 -=0A=
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 102 ++++++++------------=
+=0A=
+>  drivers/scsi/megaraid/megaraid_sas_fusion.h |   6 ++=0A=
+>  drivers/scsi/pcmcia/nsp_cs.c                |   5 +-=0A=
+>  10 files changed, 81 insertions(+), 77 deletions(-)=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
