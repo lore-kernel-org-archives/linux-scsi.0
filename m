@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E15C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E303FC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:02:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1169C20739
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:02:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C13F320772
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:02:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="G220Ai4w"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="UVVJVhkk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729159AbgGHMCz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 08:02:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55460 "EHLO
+        id S1729164AbgGHMC6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 08:02:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729147AbgGHMCy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:54 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB421C08C5DC
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:53 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id z13so48673469wrw.5
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:53 -0700 (PDT)
+        with ESMTP id S1729088AbgGHMC4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:56 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5FF5C08E6DC
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:55 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id q5so48642101wru.6
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Gv6x0VpkNH1KBubo4tbm9ETrzBqqoMdr5YdMKsMLhQk=;
-        b=G220Ai4wYV+H9LPdaGJhcn08dRDAI9AZc/Sag2LiLOJpLSclfGTa1nEe8XtWtJQKQv
-         Uzl3wfDFpi1fa9rWO/jY2L/m80DRo3XcKjxexcx/3WPL/NuvUbyiMWNIFBffi9ghjKTq
-         JdOqkEjXw7xEJ3VkVQJGR1fwzHuXGIMfRDm8Bp/LG6Z55flahyb50r/hi/tT1Kh5Qr8F
-         k6Z+Tnjc6b03u4VyL3sHc7jaaWOOM83IIPLihSYksQvwhhrYidTyn2eDM1xfyiATcsCz
-         w8i2IMbw+BkePHEPgumwuveLujmIrM6NIQF4F2jOhVJbwGMaVuVwh4Wfq+tPeyEhNjRi
-         Us4A==
+        bh=Sy/K8f8HsXXHV/Uh8PtUz+jEUwEZnfQCudyYCgnVPrY=;
+        b=UVVJVhkkvXU5mQaYO7/e6LDc6Bn+WyCrxwonvgA5bXcIDKlvL9UZyftgtkF/mFygO9
+         Y92+vMSrt60fiM8wodrySHgosdmXqwjvaG1WzE9xIhuct+M/8L+96nZZbbCOnULeiPeN
+         ZTVXO+EZChxwre/ooWZwMBRtGz/N4IHmc4b4dzDo4XBqs5IZVDEKI/RWuz/xu4Y/nxll
+         oEOYdjvrgnEqGvYKb2wvkiCLmtuI4POA5MgvjqNTPNlGUFedPELjVCNPRZUakEPFg46j
+         idt6O3eIE1ZjoTHSb6RgXUs5GAOkd/qW1jc7JHesY4MaWWwu08UKU8pn5Lj+Y/aThEDi
+         CgaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Gv6x0VpkNH1KBubo4tbm9ETrzBqqoMdr5YdMKsMLhQk=;
-        b=le8JjniZoto/rN0G/QiU+4wxpegRKy8w7yVoXaNEaIFbgqKM6vuNvpJPgNi88a53Gr
-         2FDmc21J22ovro7iRj9c+5rx5q/ght0ELs8pDS5PmeUphgSZ0vGwsdT4xhCpgSxFmCgQ
-         ZvvecFGKMb9PiLoupslA96I2M5BOeaLrBsMU2r9fWT0dCyTAHRAuDgodPyVaRYW2/noQ
-         UkHj5xhCylBIFccCqhO0SQXB/YwM0mwjgxUsgY9pTJaiWb1IHLbtCq04T/BhdV7jAWf9
-         L+2FY+o32OqBjCkt+oW/wXx+/pU4vPkNE+qFrQggaL1oY8FvQwiv2CowmTNVSDxSaO1n
-         Zvpg==
-X-Gm-Message-State: AOAM53247/dAvp1w07Jg80Mt7qcDNhbsUMI/NOr9IOw/oMKRn+cVH9VD
-        dgFVKWmVl33iKoxpbVJgabp/qA==
-X-Google-Smtp-Source: ABdhPJxBZ5+wTaIVpUTRzBASxtW3kmeSXLXBjvGGO/osSrQr7g/mocW02GIZju2wbYKAuDeAP8ePCA==
-X-Received: by 2002:adf:f711:: with SMTP id r17mr59508450wrp.409.1594209772642;
-        Wed, 08 Jul 2020 05:02:52 -0700 (PDT)
+        bh=Sy/K8f8HsXXHV/Uh8PtUz+jEUwEZnfQCudyYCgnVPrY=;
+        b=gTPpeeYTsuj8lRjp6D2akJmcjGPNhaJfCq7sAW/jE7Xwm9JEAwK6/o8Xf8ZHPVUzPG
+         lhP55OXPiMt4Nzl+NqfE01tHujj3txC4JFnH8Og6AklqLSNzRm3Wp8Ql8gG53d+qhwTa
+         nOcpBqxPSymnc9jBWf+/7EEGTpT1O9kDjy8XhYhOw+oYTz1B0nl/vyXpQ1qH1WXUo2w+
+         ZvJL1sAPxcWr+RJ53cgAldNmslBALK0f8olIlP76CMfwObqgpbF+blc7pOgeR/AjAmAP
+         3naCqVzGtnoAj9gEDAZ6WZ03E8xlfI96oprjEM88y5Snd0jU2oPsmyM1fHLu0LvjokmG
+         1CgQ==
+X-Gm-Message-State: AOAM530+e0BZZruNV078cwjpyat/6Ebyz60lWO6RUQMYy3qyY8flXA7z
+        6ckdQuTS/uSIItKaG61u5ebHwQ==
+X-Google-Smtp-Source: ABdhPJwhGEqPkcJyX2dv/WqMG7iM0VhAhQCXAAfNOLSl+0U4picjbr+HsPGcLq6WylxaF+kkxtJ1Ow==
+X-Received: by 2002:adf:efc9:: with SMTP id i9mr61722445wrp.77.1594209774488;
+        Wed, 08 Jul 2020 05:02:54 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.51
+        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 05:02:52 -0700 (PDT)
+        Wed, 08 Jul 2020 05:02:53 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -64,9 +64,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.com>,
         "Daniel M. Eischen" <deischen@iworks.InterWorks.org>,
         Doug Ledford <dledford@redhat.com>
-Subject: [PATCH 19/30] scsi: aic7xxx: aic7xxx_osm: Remove unused variable 'tinfo'
-Date:   Wed,  8 Jul 2020 13:02:10 +0100
-Message-Id: <20200708120221.3386672-20-lee.jones@linaro.org>
+Subject: [PATCH 20/30] scsi: aic7xxx: aic7xxx_osm: Remove unused variable 'ahc'
+Date:   Wed,  8 Jul 2020 13:02:11 +0100
+Message-Id: <20200708120221.3386672-21-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200708120221.3386672-1-lee.jones@linaro.org>
 References: <20200708120221.3386672-1-lee.jones@linaro.org>
@@ -78,46 +78,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks like none of the artifact from  ahc_fetch_transinfo() are used anymore.
+Looks as though 'ahc' hasn't been used since 2005.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/aic7xxx/aic7xxx_osm.c: In function ‘ahc_linux_target_alloc’:
- drivers/scsi/aic7xxx/aic7xxx_osm.c:567:30: warning: variable ‘tinfo’ set but not used [-Wunused-but-set-variable]
- 567 | struct ahc_initiator_tinfo *tinfo;
- | ^~~~~
+ drivers/scsi/aic7xxx/aic7xxx_osm.c: In function ‘ahc_linux_slave_configure’:
+ drivers/scsi/aic7xxx/aic7xxx_osm.c:674:20: warning: variable ‘ahc’ set but not used [-Wunused-but-set-variable]
+ 674 | struct ahc_softc *ahc;
+ | ^~~
 
 Cc: Hannes Reinecke <hare@suse.com>
 Cc: "Daniel M. Eischen" <deischen@iworks.InterWorks.org>
 Cc: Doug Ledford <dledford@redhat.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/aic7xxx/aic7xxx_osm.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/scsi/aic7xxx/aic7xxx_osm.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
 diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 2edfa0594f183..32bfe20d79cc1 100644
+index 32bfe20d79cc1..cc4c7b1781466 100644
 --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
 +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -564,8 +564,6 @@ ahc_linux_target_alloc(struct scsi_target *starget)
- 	struct scsi_target **ahc_targp = ahc_linux_target_in_softc(starget);
- 	unsigned short scsirate;
- 	struct ahc_devinfo devinfo;
--	struct ahc_initiator_tinfo *tinfo;
--	struct ahc_tmode_tstate *tstate;
- 	char channel = starget->channel + 'A';
- 	unsigned int our_id = ahc->our_id;
- 	unsigned int target_offset;
-@@ -612,9 +610,6 @@ ahc_linux_target_alloc(struct scsi_target *starget)
- 			spi_max_offset(starget) = 0;
- 		spi_min_period(starget) = 
- 			ahc_find_period(ahc, scsirate, maxsync);
+@@ -666,10 +666,6 @@ ahc_linux_slave_alloc(struct scsi_device *sdev)
+ static int
+ ahc_linux_slave_configure(struct scsi_device *sdev)
+ {
+-	struct	ahc_softc *ahc;
 -
--		tinfo = ahc_fetch_transinfo(ahc, channel, ahc->our_id,
--					    starget->id, &tstate);
- 	}
- 	ahc_compile_devinfo(&devinfo, our_id, starget->id,
- 			    CAM_LUN_WILDCARD, channel,
+-	ahc = *((struct ahc_softc **)sdev->host->hostdata);
+-
+ 	if (bootverbose)
+ 		sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+ 
 -- 
 2.25.1
 
