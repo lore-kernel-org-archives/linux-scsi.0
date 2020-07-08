@@ -7,109 +7,112 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 838CEC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA2A4C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6353720772
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB58520772
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pxXV0EYb"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WTS0XP84"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729081AbgGHMCo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 08:02:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55398 "EHLO
+        id S1729098AbgGHME0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 08:04:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729056AbgGHMCl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:41 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E9A8C08E763
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:41 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id o2so2740289wmh.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:41 -0700 (PDT)
+        with ESMTP id S1729043AbgGHMCj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:39 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786B6C08E763
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:39 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id 17so2743113wmo.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=PUEEoaUyF+s08hE4dARneQxf1Covum7aHqB9FrCQqkg=;
-        b=pxXV0EYbO/Efhe2l4FrwNUHf3aw91pdWOupfVC6/0ixxbUMs5OuGizocqMJNMZzYDb
-         p99Kk593i/aTNpYlRIHL4qJnB+nMqMw5jpLA3QI34FM1tvDcip5cse0QZ0ymPnhQvGMR
-         M8yLIIYKhbXqe242v/hCKN4SQHrpvSyAO/8cRKhfaUYiksC872hREKWmbbgcoaE2vNws
-         LwiK4DKh2h8n34GK46+eoruCag26JNpB5IbScXXbhULDPH9Ukye4/J++DodbIP+z4iG7
-         AbnL2aAKpoqL44rwUWi29SoDwp/az05LGAWp7NPAznlDkT14oMqei6dkKRqkf/CvCQ2K
-         lUTw==
+        bh=8R5JqiLjYcza4fbV6goyYqcdxR7v8Q2JkVSQFyfGqhI=;
+        b=WTS0XP84AmmKQrGU8ziMJ3EGhNUnOurEbGXIkTmbQAGMR/dlruCblCEvvVvGWA3O0k
+         MimUKfmmpbWohYE7vF5UIRsPJBDLsf4+VRtZNZOBzkN0vafEWFgpVT0bzbGM2ARDQP9j
+         k2gYk3QaC3Vwm4/QfiIwQMXscCbndCduFjGyN2Xfv/a8nLlvohHaafqRerLHrCPZqKwY
+         TaLJVAjOlqGYB6OE9H9T9FebrRMhImG9jr4fRCwSF510Yl7lr8+2AElxYOOBELn5CuTQ
+         PCnhte0ZuTJh4en1CTY0nf6YBtHNI4mvLnzvWtbQiF6czj5H3Ov8gsqKLxnwI3J+iYKy
+         LMDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=PUEEoaUyF+s08hE4dARneQxf1Covum7aHqB9FrCQqkg=;
-        b=nnKWa/eF5bz2mtNd86AbeRsHO535zd/gEYWNzhwq7U4tQ9oS098lpUdJrsvkr62hJ4
-         fw1qxsjzo2eAGZembyOtSWDtuG9PmRSlOdxQK7DWhY3GEtZrVY636mXFolZvmDgOR1BM
-         oERtIQTMLdRqL8y/30MLdlHAZq6ERGYPLmfB8rzFEVH2ZsrYNGECfkYTSdORKaE920SH
-         9oyrvdWLtLf9C/Hj4BhdeISHWmrSEVALUlLBMOmONRpdHyJC1blorqhiOskrEpdX/yUf
-         YWrZLQtzjAmr6kCcq0Ak64Qe2k4u5k134LccoGWLbYG+F7YPyqd02cXP8csniPUufxtu
-         7hVA==
-X-Gm-Message-State: AOAM5339LxmYFcsxIVgbtoFbYkDh4tbimiRBnszgxsJqfyLQTXgNPztg
-        Gbi3vSQIqO0YDXaXLDcgGeqn4Q==
-X-Google-Smtp-Source: ABdhPJzxdA+vdJ9AscwTb1wWQzpErI8U1G4NExOlK6INLjHkDA9iMum4ZAxybvC6e7lyHjZyUYKJlg==
-X-Received: by 2002:a1c:6354:: with SMTP id x81mr8672065wmb.98.1594209760335;
-        Wed, 08 Jul 2020 05:02:40 -0700 (PDT)
+        bh=8R5JqiLjYcza4fbV6goyYqcdxR7v8Q2JkVSQFyfGqhI=;
+        b=BCEqacpLNav0G34euivF9O/JYrCN5+s13oE9KDGucdaicvNeIz1DB6dmtUFnZHBLSW
+         i3AsJsMObefQ2cy5PcZSepOulY4NlOLPQ0b7qymXh4iT1pV31+MjQDwcrgaPr1yK/nDJ
+         kyxvwmgHLU2jjG/0olQHIrxUzhFwBO06vwYbUII/CzjggXoot8LvIQmmmFfzaG9AgGRJ
+         fJm7ChxkdDlMcKNNEEt6GKCzNuzE4X4mUd7m41E0hi4YurLP+WxSVcbOcZomojd2dCIz
+         ce26yKkm+tdCZ1t5CF9TvI5HARoPBs4H3sDmnvqSLARLjUc21SwNfW4nBbWJcnklXvpv
+         vTHw==
+X-Gm-Message-State: AOAM530+RUsi85QXlE6PL1fxu1S2k//DKlY/dgy7R4ld8haOtC6Gg832
+        7laV8Qq0qdA3UF+RnqnOHIli6UtVnAY=
+X-Google-Smtp-Source: ABdhPJzNHZRM3aKgz5exfCRDRHqYWEiH/AAdFnW93fxIFV5+7uoZn9heFMe5b+YngdabAe4i2GsUbQ==
+X-Received: by 2002:a1c:28a:: with SMTP id 132mr8926950wmc.109.1594209758143;
+        Wed, 08 Jul 2020 05:02:38 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.39
+        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 05:02:39 -0700 (PDT)
+        Wed, 08 Jul 2020 05:02:37 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/30] scsi: libfc: fc_rport: Fix a couple of misdocumented function parameters
-Date:   Wed,  8 Jul 2020 13:02:02 +0100
-Message-Id: <20200708120221.3386672-12-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@cavium.com
+Subject: [PATCH 09/30] scsi: qedf: qedf_main: Remove set but not checked variable 'tmp'
+Date:   Wed,  8 Jul 2020 13:02:00 +0100
+Message-Id: <20200708120221.3386672-10-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200708120221.3386672-1-lee.jones@linaro.org>
 References: <20200708120221.3386672-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Looks like the return value of readw() has never been checked.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/libfc/fc_rport.c:129: warning: Function parameter or member 'port_id' not described in 'fc_rport_create'
- drivers/scsi/libfc/fc_rport.c:129: warning: Excess function parameter 'ids' description in 'fc_rport_create'
- drivers/scsi/libfc/fc_rport.c:1452: warning: Function parameter or member 'rdata_arg' not described in 'fc_rport_logo_resp'
- drivers/scsi/libfc/fc_rport.c:1452: warning: Excess function parameter 'lport_arg' description in 'fc_rport_logo_resp'
+ drivers/scsi/qedf/qedf_main.c: In function ‘__qedf_probe’:
+ drivers/scsi/qedf/qedf_main.c:3203:6: warning: variable ‘tmp’ set but not used [-Wunused-but-set-variable]
 
-Cc: Hannes Reinecke <hare@suse.de>
+Cc: QLogic-Storage-Upstream@cavium.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/libfc/fc_rport.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 278d15ff1c5ae..ea99e69d4d89c 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -121,7 +121,7 @@ EXPORT_SYMBOL(fc_rport_lookup);
- /**
-  * fc_rport_create() - Create a new remote port
-  * @lport: The local port this remote port will be associated with
-- * @ids:   The identifiers for the new remote port
-+ * @port_id:   The identifiers for the new remote port
-  *
-  * The remote port will start in the INIT state.
-  */
-@@ -1445,7 +1445,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
-  * fc_rport_logo_resp() - Handler for logout (LOGO) responses
-  * @sp:	       The sequence the LOGO was on
-  * @fp:	       The LOGO response frame
-- * @lport_arg: The local port
-+ * @rport_arg: The local port
-  */
- static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			       void *rdata_arg)
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index a77a74fad6a7e..47fc14f5ed9d7 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3199,7 +3199,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	void *task_start, *task_end;
+ 	struct qed_slowpath_params slowpath_params;
+ 	struct qed_probe_params qed_params;
+-	u16 tmp;
+ 
+ 	/*
+ 	 * When doing error recovery we didn't reap the lport so don't try
+@@ -3393,9 +3392,9 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	    "Writing %d to primary and secondary BDQ doorbell registers.\n",
+ 	    qedf->bdq_prod_idx);
+ 	writew(qedf->bdq_prod_idx, qedf->bdq_primary_prod);
+-	tmp = readw(qedf->bdq_primary_prod);
++	readw(qedf->bdq_primary_prod);
+ 	writew(qedf->bdq_prod_idx, qedf->bdq_secondary_prod);
+-	tmp = readw(qedf->bdq_secondary_prod);
++	readw(qedf->bdq_secondary_prod);
+ 
+ 	qed_ops->common->set_power_state(qedf->cdev, PCI_D0);
+ 
 -- 
 2.25.1
 
