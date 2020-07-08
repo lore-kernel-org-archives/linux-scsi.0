@@ -2,117 +2,131 @@ Return-Path: <SRS0=1cZD=AT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59FCBC433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 09:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3108C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 09:29:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 391BC2065C
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 09:25:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594200317;
-	bh=9P7yqkllILNHB0enkXbV3ddephYjxosBT/dqFb1WhtA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=c+cTxBpi7uKv+qBnPf+jG6U6/s85drhTKjSGsa3h4wsXhB4CWkA89dFB5VaG5NJaC
-	 RmvX0LZGi3a5ZeXfC531SAAqiBcwBWWVTIXEs8tcXxbyUzpplKhiBauV+KAkqrgdUr
-	 arTNy40VEa0Xev09hQ+J6L9J5qIdFqB7Ztq8Qr1U=
+	by mail.kernel.org (Postfix) with ESMTP id DD1572065D
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 09:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728066AbgGHJZR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 05:25:17 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33311 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726144AbgGHJZQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 05:25:16 -0400
-Received: by mail-wr1-f68.google.com with SMTP id f18so40028466wrs.0;
-        Wed, 08 Jul 2020 02:25:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=HHEXoSacTXtSlDKUw+15Jl9wo7TTVCqG6nV23+yAmOY=;
-        b=Kq21Rv+cNcUM9uVAoTM8ZD6HzjRyj8vTo636vyZCF7CFRZvmUS52zSeCMGKtytNzQi
-         9+Ahx1+VERT1Yqv6pBHLkkKcUsXrKKrt6HeIoVe/PeeKtn8+Hz/X3TXNr78XAZMHkFpy
-         TEH7BJwQRI0dTRSmhozndr3ybbNuA1dY7XzN6WRTSLwtSNge/v3k8XxBw3sQ3bnZc+FN
-         qU9BNxUIie9AmFzlVITpndZxHC8DGCdwrFg5ysSq/IyeVgUpMp0+Dh2dBqQH9yLJX5k/
-         ZPvEaz1oujEFJxU7O1FJkPWjnzmTibxoTPnsd9m/rR2K4/1TR02AdhRtZvaHDa7dHpDe
-         F56g==
-X-Gm-Message-State: AOAM531zx3ZB8Tk5uqssgDONu48BXPwuUSMosOdBuApCUA4qcsiU066S
-        36cnDCA4tD+EoQI5lfuEBCrNn3+X
-X-Google-Smtp-Source: ABdhPJzzs/pKIjoQFtFDc1tJJR5LO6koOXolKGudMz2NmyNrXczooElRgYoirakpBhV1oDJvMtDDAQ==
-X-Received: by 2002:adf:c185:: with SMTP id x5mr62928897wre.403.1594200314078;
-        Wed, 08 Jul 2020 02:25:14 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id k20sm5075886wmi.27.2020.07.08.02.25.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 02:25:13 -0700 (PDT)
-Date:   Wed, 8 Jul 2020 09:25:12 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     t-mabelt@microsoft.com, kys@microsoft.com, haiyangz@microsoft.com,
-        sthemmin@microsoft.com, wei.liu@kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikelley@microsoft.com, parri.andrea@gmail.com,
-        Andres Beltran <lkmlabelt@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20200708092512.muse7szgxyihazvv@liuwe-devbox-debian-v2>
-References: <20200701001221.2540-1-lkmlabelt@gmail.com>
- <20200701001221.2540-3-lkmlabelt@gmail.com>
- <20200707234700.GA218@Ryzen-9-3900X.localdomain>
- <20200708092105.7af7sf2olpaysh33@liuwe-devbox-debian-v2>
+        id S1728113AbgGHJ3j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 05:29:39 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2437 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726847AbgGHJ3i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 8 Jul 2020 05:29:38 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 3D5F768536842D96E145;
+        Wed,  8 Jul 2020 10:29:37 +0100 (IST)
+Received: from [127.0.0.1] (10.210.171.111) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1913.5; Wed, 8 Jul 2020
+ 10:29:36 +0100
+Subject: Re: [PATCH 02/21] block: add flag for internal commands
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Bart van Assche <bvanassche@acm.org>,
+        Don Brace <don.brace@microchip.com>,
+        <linux-scsi@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20200703130122.111448-1-hare@suse.de>
+ <20200703130122.111448-3-hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <699d432d-eb5e-a928-5391-c31643620b27@huawei.com>
+Date:   Wed, 8 Jul 2020 10:27:56 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200708092105.7af7sf2olpaysh33@liuwe-devbox-debian-v2>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20200703130122.111448-3-hare@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.210.171.111]
+X-ClientProxiedBy: lhreml709-chm.china.huawei.com (10.201.108.58) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 08, 2020 at 09:21:05AM +0000, Wei Liu wrote:
-[...]
-> > If I revert this commit, everything works fine:
-> > 
-> > PS C:\Users\natec> wsl --shutdown
-> > PS C:\Users\natec> wsl -d ubuntu -- /bin/bash
-> > nathan@Ryzen-9-3900X:/mnt/c/Users/natec$ cat /proc/version
-> > Linux version 5.8.0-rc4-next-20200707-microsoft-standard+ (nathan@Ryzen-9-3900X) (gcc (Ubuntu 9.3.0-10ubuntu2) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #1 SMP Tue Jul 7 16:35:06 MST 2020
-> > nathan@Ryzen-9-3900X:/mnt/c/Users/natec$ git -C ~/src/linux-next lo -2
-> > 0ff017dff922 (HEAD -> master) Revert "scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening"
-> > 5b2a702f85b3 (tag: next-20200707, origin/master, origin/HEAD) Add linux-next specific files for 20200707
-> > nathan@Ryzen-9-3900X:/mnt/c/Users/natec$
-> > 
-> > The kernel was built using the following commands:
-> > 
-> > $ mkdir -p out/x86_64
-> > 
-> > $ curl -LSso out/x86_64/.config https://github.com/microsoft/WSL2-Linux-Kernel/raw/linux-msft-wsl-4.19.y/Microsoft/config-wsl
-> > 
-> > $ scripts/config --file out/x86_64/.config -d RAID6_PQ_BENCHMARK -e NET_9P_VIRTIO
-> > 
-> > $ make -skj"$(nproc)" O=out/x86_64 olddefconfig bzImage
-> > 
-> > I don't really know how to get more information than this as WSL seems
-> > rather opaque but I am happy to provide any information.
+On 03/07/2020 14:01, Hannes Reinecke wrote:
+
++linux-block
+
+I figure that linux-block should be cc'ed here
+
+> Some drivers require to allocate requests for internal command
+> submission. These request will never be passed through the block
+> layer, but nevertheless require a valid tag to avoid them clashing
+> with normal I/O commands.
+> This patch adds a new request flag REQ_INTERNAL to mark such
+> requests and a terminates any such commands in blk_execute_rq_nowait()
+> with a WARN_ON_ONCE to signal such an invalid usage.
 > 
-> Linux kernel uses Hyper-V's crash reporting facility to spit out
-> information when it dies. It is said that you can see that information
-> in the "Event Viewer" program.
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   block/blk-exec.c          | 5 +++++
+>   include/linux/blk_types.h | 2 ++
+>   include/linux/blkdev.h    | 5 +++++
+>   3 files changed, 12 insertions(+)
 > 
-> (I've never tried this though -- not using WSL2)
+> diff --git a/block/blk-exec.c b/block/blk-exec.c
+> index 85324d53d072..6869877e0d21 100644
+> --- a/block/blk-exec.c
+> +++ b/block/blk-exec.c
+> @@ -55,6 +55,11 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+>   	rq->rq_disk = bd_disk;
+>   	rq->end_io = done;
+>   
+> +	if (WARN_ON_ONCE(blk_rq_is_internal(rq))) {
+> +		blk_mq_end_request(rq, BLK_STS_NOTSUPP);
+> +		return;
+> +	}
+> +
+>   	blk_account_io_start(rq);
+>   
+>   	/*
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index ccb895f911b1..e386c43e4d77 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -360,6 +360,7 @@ enum req_flag_bits {
+>   	/* for driver use */
+>   	__REQ_DRV,
+>   	__REQ_SWAP,		/* swapping request. */
+> +	__REQ_INTERNAL,		/* driver-internal command */
+>   	__REQ_NR_BITS,		/* stops here */
+>   };
+>   
+> @@ -384,6 +385,7 @@ enum req_flag_bits {
+>   
+>   #define REQ_DRV			(1ULL << __REQ_DRV)
+>   #define REQ_SWAP		(1ULL << __REQ_SWAP)
+> +#define REQ_INTERNAL		(1ULL << __REQ_INTERNAL)
+>   
+>   #define REQ_FAILFAST_MASK \
+>   	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 8fd900998b4e..d09210d4591e 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -273,6 +273,11 @@ static inline bool blk_rq_is_passthrough(struct request *rq)
+>   	return blk_rq_is_scsi(rq) || blk_rq_is_private(rq);
+>   }
+>   
+> +static inline bool blk_rq_is_internal(struct request *rq)
+> +{
+> +	return rq->cmd_flags & REQ_INTERNAL;
+> +}
+> +
+>   static inline bool bio_is_passthrough(struct bio *bio)
+>   {
+>   	unsigned op = bio_op(bio);
 > 
 
-If this doesn't work, another idea is to install a traditional VM on
-Hyper-V and replace the kernel with your own.
-
-With such setup, you should be able to add an emulated serial port to
-the VM and grab more information.
-
-Wei.
