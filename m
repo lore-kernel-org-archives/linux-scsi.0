@@ -2,143 +2,130 @@ Return-Path: <SRS0=1cZD=AT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8683C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 06:36:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83899C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 06:51:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1528206E2
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 06:36:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52B4A2075B
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 06:51:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Emkqrh5v";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="gG07h0Cv"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ouuuKxdH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729647AbgGHGgJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 02:36:09 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:21441 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728603AbgGHGgJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 02:36:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1594190168; x=1625726168;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=3CH9GdHU3s1QUBcxBk3cYEQamiPDgJXuZ3YV/4Ia0Xs=;
-  b=Emkqrh5vZCdA09jRcE4rPw5J8qfVe+OjrcNt3bDQnKTmjCvc49ndp5Cc
-   EDRHp8DaACvChSjAywQ2PvH+c05EFh34hNzSqvh4L3nVXzzR35xE8vHqY
-   0Ibdcvbkwx9QtU9ykMU3g+jf0pmaARR7PCqnFiCqpB/zw6WSffvtBbTaP
-   wgR7SJpll7WBDHfgTk+JflCg5bMzDAWABHvFouVTTqXEBFOA6R+4z8cZQ
-   wt/rTBgN2+8agcxc/OcqCbbVSv3xdJEVqx8Y6jrsjUDCiiPdEa/1DYLJD
-   ge23pwo1RlMIyGpMND9OO/2oZ94gXKe46/q6TCqzLAglbgSD8WYHqL2Fr
-   Q==;
-IronPort-SDR: Km1a8iNnYWsvp9wwL0bdgQFjuZdB1F8YVOiM9v/PnuzQcLm1xUhwLPwQGDRMAumZgEa2X12N1c
- hq5C3oaLDh3JCCCqHhcaLu9LokbhGnKDOBKSqWCvuJ5NRTGGnAbY//4J9f8eQjdZuaapEWeTWp
- AcG5bGIoub6O4E2VpXiZZGU5NIe9t71g0GJVIzMFdAYgboCUWu3XexkpbW1p75OEE8OTy8Cuf7
- Tb2i6bCDxo4ZuV9jj0Gwk1Q5B6nR2vVnQguRzvnyzb8r+wdGId8AVIgmQrXE8FhCGztoWIHRPD
- lsM=
-X-IronPort-AV: E=Sophos;i="5.75,326,1589212800"; 
-   d="scan'208";a="142071008"
-Received: from mail-dm6nam11lp2171.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.171])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Jul 2020 14:36:08 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OngMrCYrz8Xo2NbBYNW7ON/jJKgRZ7cpcB4VVc8YeJ4i9Q4xNIoOqs8J0fPByYmrcb7QOaL9ZX6l99dNbx4RpsrkiVWI4HNMd5WKR9/ZF+J5J2I3Sa2ffmlkkexQUip9xUdg0r6ngOmuC5KIDpSLw7LqI6d4u172K9ePjQGateXw5pJfCQ1NH4zGhuc1fUXwMtCDvyGrbW/+OubTzRsY/kKkMRIMCPewYuD3s+Pe3iVhyFMcIyCELHaXBBjYvr2GNzoBOZvI7adfKbGDvOoSwjD10cn9Caz5FuomzeCFvjJQZWgpquYMK17Z7rbwPMQ0mntvG9CL5WcHBiKkBxaplQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3CH9GdHU3s1QUBcxBk3cYEQamiPDgJXuZ3YV/4Ia0Xs=;
- b=dlKJPqznsp9w2Enfvr26QrKg7bem78F1/KVdFM3GuWrF3MvpWr/WpvptxN6Ct6GmDYilwdWjcEEXUillDUPPQL4ZvSSECRhMtaRqZa1QmADI0pY9ifcojnoS8OCSy57EKCLCz1yyHDfAgY0v+5iTBqlvlyI6r39RIzOGOkPCLhu7hFHYY/eKafRio4kbxHc2DkxpfIgar2co57tpa3TRNeATLk8WUDGrWgJPy+Ia1MwEGjhzHiGvw/SFVhpp3e2EpEixp8dmbfRk9C7OHAesnv3wQgpmz6vLNeHG8nNCs/tFN/Kxp9rGmA0eu92n4yyXfgfosWWFHdExlJvYs6iBmQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1729888AbgGHGvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 02:51:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34946 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729878AbgGHGvD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 02:51:03 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C1F2C061755
+        for <linux-scsi@vger.kernel.org>; Tue,  7 Jul 2020 23:51:03 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id z13so47638498wrw.5
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Jul 2020 23:51:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3CH9GdHU3s1QUBcxBk3cYEQamiPDgJXuZ3YV/4Ia0Xs=;
- b=gG07h0Cv/UWh4j7E8RWaR8NvZh4P4Imu6+Yic8clAsiIv3z1Mp6CEEWzW1AJhslHCpmKGamz1Z/dFcoNL7T5GNnCjguSU0eZZsvhHFgtsfKcYuXFkpW0GoVg6pTpokOr1KHNC2FFbbR3+7hBXh0LQGITZcQfCelk7OY02P3tL7E=
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
- by CY4PR0401MB3585.namprd04.prod.outlook.com (2603:10b6:910:8a::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3153.29; Wed, 8 Jul
- 2020 06:36:07 +0000
-Received: from CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::c593:f271:eebe:ac7]) by CY4PR04MB3751.namprd04.prod.outlook.com
- ([fe80::c593:f271:eebe:ac7%9]) with mapi id 15.20.3153.022; Wed, 8 Jul 2020
- 06:36:07 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=UPMya7moYhhnMKKD/72V5a8nk/96x/JX4lIchhXhdNU=;
+        b=ouuuKxdH0sx9kAJcJ0Enu16VyRuKqrXi0g6HpKof7a9Mkp0+zcyU01h7Cbg1JX9Vxt
+         hU03Wo7ok1GAfr4Xc6A1Ze8YB4mYRbeTdjfyT0AehhIa3HCQM8C1+BbcVObqMIn6WXG/
+         O+QvgMsS9GSjm9yRCRi6uC3ALxzJW71EXx2r2JmejsDnJ5OCLnt2wocUfBNT1Jo2nfyP
+         VknRgzVDu44hul58DyV4lNZdz/HG1l/q2fo4n9Fqwlrk0Ra5ey6Qxp9a0UItIU5aWuxG
+         BaPrT5FH+6iVOehi3sR6o4KqlurYQpkEZ0gXL0w42ucDpR8a8yG7U6pOaiAs235ALlFy
+         80mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=UPMya7moYhhnMKKD/72V5a8nk/96x/JX4lIchhXhdNU=;
+        b=Bi231wXTflOnr6rDc3251xR26FO0pPcLa3Uf+9OBkA8U0RkRIVopPby0Jlf//0nbE5
+         5fVMmJz92QuY0+E0zSKjjMZc5PnC04XT7xO77a8l4fu3ofh6PiQnTDRExG4tqXWn2MY/
+         FiqBI0kVxuj4ZZRLYuFPiUPTL+hVU19kaTmHYRViM0jKroOa+ZLntspUhr1qBL56F9T5
+         vQnREdje7+jdHZmBfM7MSouY0exGsQwf6bnU//CZPsLwsvcbAkVKhSBQ55thGY+uOXro
+         ykCUfGu04vpWIFEPY2zXEiTHMaQZU+llNEJT7IE7ro9q3yJ1oSn/Rh8cmke5xEJW+cik
+         Kwhg==
+X-Gm-Message-State: AOAM532qJIamcVAXVDknmjRPL+gAjpPfbX63b5/qPhH+FKoexZQoEuEy
+        5BeoVUHk/JjjXnIVi6Ke4jfX4K2Hisk=
+X-Google-Smtp-Source: ABdhPJzWPqvJRETNtxsc0Gl81kU0pHSXcli4uTnNtAk5HAOUrPJxj7AFF251Tq1oqLcgTnWq742fEg==
+X-Received: by 2002:adf:dd4a:: with SMTP id u10mr56265406wrm.169.1594191062177;
+        Tue, 07 Jul 2020 23:51:02 -0700 (PDT)
+Received: from dell ([2.27.35.206])
+        by smtp.gmail.com with ESMTPSA id u23sm4572650wru.94.2020.07.07.23.51.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Jul 2020 23:51:01 -0700 (PDT)
+Date:   Wed, 8 Jul 2020 07:51:00 +0100
+From:   Lee Jones <lee.jones@linaro.org>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: Re: [PATCH] Fix compilation warnings
-Thread-Topic: [PATCH] Fix compilation warnings
-Thread-Index: AQHWVO6lyTJEF+xa70ydBmVTw6k6yQ==
-Date:   Wed, 8 Jul 2020 06:36:07 +0000
-Message-ID: <CY4PR04MB37518ABAB2C3A0B33C4A5EC6E7670@CY4PR04MB3751.namprd04.prod.outlook.com>
-References: <20200706123344.451738-1-damien.lemoal@wdc.com>
- <159418844430.5433.1895709179695846503.b4-ty@oracle.com>
- <CY4PR04MB37514AB91F1C8EFF3411AA2AE7670@CY4PR04MB3751.namprd04.prod.outlook.com>
- <yq15zay1pvi.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [129.253.182.57]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: a7abd28e-ce7f-42db-5942-08d82309320a
-x-ms-traffictypediagnostic: CY4PR0401MB3585:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR0401MB358519660E7C77CFCBCEE4A6E7670@CY4PR0401MB3585.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:862;
-x-forefront-prvs: 04583CED1A
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: XBnCzbRaq2Q/DeppigFfF0CjYhQwz2OjL7zf9DUfh6+GCsKAZbp/lZzsdaOUh7AdfVmGbfBIxiwVyBeio2efgdTzkylE4fwcNiBEbsGLvnQcokQWNFw2Z/PhHrafGFzpNNhrgv31qcoQA1ON/K0xcs2QqL+Xhs2JRMeC81A8HJVg+PaQyeeutTNdnKuuNVyVxQjlotQfU98BTPNKuHbpBVrLZpgCItisvBafbl3cS7elubMkXZbkwk/LYt3ng62Qca9e+U+HE9SYU1hLsVeUVTa/0x7r+nvuCDL90CSJfc+xsdOW3i7c7oTNCmCTtZJS
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(376002)(396003)(346002)(136003)(366004)(7696005)(71200400001)(4326008)(66556008)(66476007)(6506007)(91956017)(53546011)(64756008)(478600001)(66446008)(66946007)(76116006)(26005)(55016002)(6916009)(8936002)(54906003)(316002)(8676002)(5660300002)(186003)(86362001)(4744005)(9686003)(33656002)(2906002)(52536014);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: 24D1NSqevyKcgM8mXHUvo7el8pOu94MaN4cJdefNxGmd21B0U2UbnimFsO44g1UrlVlbFxRI7Rv/Ajrl+AyyntIkOzSM7XBojyVt6/fGAaQ5bjSApCiKf5wujlT+kNGT1pTsHPO2szzhNloj1zGpUvTH1YDfXgWqIkNLHkWBYSjY/oiZqcQF4BhDISCKvsr2Gqpda5oE5byBkvIC5Bzpm1Pj9oMHeDaZesUaprGRI/G6hQA40qguyouNcq+Pc+VgOkiAK/OcQE/3AoRoLEmhw5Qc155L660reZyP1jEg8HCTPJ3lBbZEdV4jEUXbIxdnGqCCBWygUKP3lnbu1bRRhLQU5m83m4VwV4dxBBb4jCfEqM+kmmKwQM7VcOjKycjmrMwvNlR/PIVW4GKbxwlPShP3NBJUmYlj4B3Uev5foLL0bKM1WfgdgQFuQcS8zyYkBYXYOmqvFPM9GevapBeFfRNIzxLvTcMBOW20miCpNHDPknnxG5JqaGVoi6F2LHZK
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 00/10] Fix a bunch SCSI related W=1 warnings
+Message-ID: <20200708065100.GK3500@dell>
+References: <20200707140055.2956235-1-lee.jones@linaro.org>
+ <159418828150.5152.12521251265216774568.b4-ty@oracle.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a7abd28e-ce7f-42db-5942-08d82309320a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2020 06:36:07.2562
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: zCb5yVOdbGW0oaFe2oR3oePKKLVu4HunzUqGKOvWGSBHLsszaxBvSxFUKa9gUolZeCPLY9DNUxwmaEparrwLMw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR0401MB3585
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <159418828150.5152.12521251265216774568.b4-ty@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020/07/08 15:33, Martin K. Petersen wrote:=0A=
-> =0A=
-> Damien,=0A=
-> =0A=
->> By the way, the patch mentioned above is not part of that series and=0A=
->> should go in 5.8/scsi-fixes, no ?=0A=
-> =0A=
-> Oh, sorry. I replied to the wrong ty email.=0A=
-=0A=
-I thought so :)=0A=
-=0A=
-> =0A=
-> I amended the offending mpt3sas commit in 5.8/scsi-fixes.=0A=
-=0A=
-Thanks !=0A=
-=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+On Wed, 08 Jul 2020, Martin K. Petersen wrote:
+
+> On Tue, 7 Jul 2020 15:00:45 +0100, Lee Jones wrote:
+> 
+> > This set is part of a larger effort attempting to clean-up W=1
+> > kernel builds, which are currently overwhelmingly riddled with
+> > niggly little warnings.
+> > 
+> > There are a whole lot more of these.  More fixes to follow.
+> > 
+> > Lee Jones (10):
+> >   scsi: megaraid: megaraid_mm: Strip excess function param description
+> >   scsi: megaraid: megaraid_mbox: Fix some kerneldoc bitrot
+> >   scsi: fdomain: Mark 'fdomain_pm_ops' as __maybe_unused
+> >   scsi: megaraid: megaraid_sas_fusion: Fix-up a whole myriad of
+> >     kerneldoc misdemeanours
+> >   scsi: megaraid: megaraid_sas_base: Provide prototypes for non-static
+> >     functions
+> >   scsi: aha152x: Remove unused variable 'ret'
+> >   scsi: pcmcia: nsp_cs: Use new __printf() format notation
+> >   scsi: pcmcia: nsp_cs: Remove unused variable 'dummy'
+> >   scsi: libfc: fc_disc: Fix-up some incorrectly referenced function
+> >     parameters
+> >   scsi: megaraid: megaraid_sas: Convert forward-declarations to
+> >     prototypes
+> > 
+> > [...]
+> 
+> Applied to 5.9/scsi-queue, thanks!
+> 
+> [03/10] scsi: fdomain: Mark 'fdomain_pm_ops' as __maybe_unused
+>         https://git.kernel.org/mkp/scsi/c/4be1fa2b55a8
+> [06/10] scsi: aha152x: Remove unused variable 'ret'
+>         https://git.kernel.org/mkp/scsi/c/3c011793aca7
+> [07/10] scsi: pcmcia: nsp_cs: Use new __printf() format notation
+>         https://git.kernel.org/mkp/scsi/c/af0b55d06004
+> [08/10] scsi: pcmcia: nsp_cs: Remove unused variable 'dummy'
+>         https://git.kernel.org/mkp/scsi/c/97a33483425d
+> [09/10] scsi: libfc: fc_disc: Fix-up some incorrectly referenced function parameters
+>         https://git.kernel.org/mkp/scsi/c/b1987c884585
+
+Thanks Martin.
+
+Out of interest, do you know of any other efforts to fix W=1 warnings
+in SCSI?  I was going to clean the whole sub-system, but I really
+would like to avoid duplicating efforts if at all possible.
+
+-- 
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
