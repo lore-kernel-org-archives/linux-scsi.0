@@ -7,151 +7,100 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C984C433DF
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8113CC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0618020739
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6076720739
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 12:04:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wYVP4yTr"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ePpcXke5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728933AbgGHMEB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 08:04:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55440 "EHLO
+        id S1729101AbgGHMCr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 08:02:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729122AbgGHMCu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:50 -0400
+        with ESMTP id S1729091AbgGHMCp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 08:02:45 -0400
 Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A227AC08E6DC
-        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:49 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id s10so48633707wrw.12
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31FA1C08C5DC
+        for <linux-scsi@vger.kernel.org>; Wed,  8 Jul 2020 05:02:45 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id z2so26409632wrp.2
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Jul 2020 05:02:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=sZwSMA5UIb7oM9+D5j+l12KsCqeP4op1hhjOFtyL2ps=;
-        b=wYVP4yTrdIb3gPXKLBwSIe8aCHTr6bqSOLL6eZHfT2SvX4q7eX66ukJezKlb3lJqzz
-         CMDoawaoFMDHzHmDGUCKQ6z7g/1iBWboIw+C6XhatxXuamWkI+POzEoQS8TVmKkIoHjn
-         lDqKVIY9a1/orsCpupEsEuTM39RugV8ru6SmhANSET57A7VpxrvkQJ+SE2M2lcl2jD0b
-         n2EXTHaIJfjG7vIhxcWdJTpZqeBDEtlI96662m8C4+2T7wWh/+pZOhrRQB1snq6rGvuy
-         ldFuM1a634U11GCgiL8GLL8ONxQ1GezKf3CdyRcJet9PeWu1yxrI1x04pzhr6hv//mrS
-         SmrA==
+        bh=RqlEHKoTUXwkwwzl23khP5gj2PQF0+ph23LGhTCUMbw=;
+        b=ePpcXke5tXclT2fBQPujnmP2l9hoUTUx+VX/MZTSmyivctPiQwNyHOIJQlMnwrCBq4
+         qWa4BcdVq8Or6fdbX0k/F0sMw7F1z2FPsLCG6vfeo/Ms9fJiAiI+kr9alWl7+HrhZ1Aj
+         Oc/Zwx5s4NaFdZYy5PTIXbExIKG5C9bSb3+XM4igB+fncFS/rjaHORj/Y30mC4C7tZjw
+         KEvyZbNlV1OzL8BHUCIPhlWAQCVgLNWFWn45Hs2oS5LVejnDrzhid9+8IiugOJUIhMn5
+         ySriXNtKzfvJ1mSZxGj+5zuwVDSYli87Cz3vLmSGTjG7DwPM3xyVCaUDtx5zTBFeLgjr
+         X1Qw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=sZwSMA5UIb7oM9+D5j+l12KsCqeP4op1hhjOFtyL2ps=;
-        b=i56wROMmpppp9KqXicCHXXSHR0DyMEVvFSreLC8QnQCjEHTWdTa2uAsH4WVjAgLsGg
-         CA//nCS/S1aQr/3KDRf2gEBYioz4pSCy+Cdk5MAJGcHPzP7HAUc77BJkTl9Nb09JhMdw
-         vqa537BLAeIPSCmgpr0ME2NSXZRC2PNlFugM+N7suaB41BJtsmtLO/iE0QODAJMiwa4x
-         XBC8DMH5F/dcmwhOyJALajtCX7ddzubJWAjkzBkM2J/ba+Thov0VNSC3UzyKdG92turT
-         nydf54i/D45fBX3nnSzXXGAo4dkU/5oC9Ov21JCIrAYBIfTAU05zZjpadrwK6Ihbvool
-         lp/w==
-X-Gm-Message-State: AOAM5331ENgS9eybv+hYwxwccJ0dhHA8apsoPHup8i/d5bNI2vwuMhBb
-        sx1sncPzfwo91woErbQO17pkow==
-X-Google-Smtp-Source: ABdhPJzUhN5+/7ZGY9cHq+7oMDlNaKPxbiI8XirtTADjCEmOj88jT3VDHFhh0FBXmjOTu9U+a4GNVg==
-X-Received: by 2002:a5d:6412:: with SMTP id z18mr56966206wru.310.1594209767822;
-        Wed, 08 Jul 2020 05:02:47 -0700 (PDT)
+        bh=RqlEHKoTUXwkwwzl23khP5gj2PQF0+ph23LGhTCUMbw=;
+        b=md+15FC46IwDpkW8DecYlM9IbFF1HJ62aeOnGZQ3eEy1qRDLiXyoybdhTEVNK/ZL5+
+         9yviglX0kgQvNg9Tmr2sW7T1pOYQk408qJGBylu4pgCkrC8uVUEQaiYbGmof5E/2ihMu
+         CqZbd2HS0uCxW5saO5CoEqgNuNwlp04GdjiaUadL0MdZZYD1Cv+mPTDamJIIbSUxY7Yn
+         FBUW2OmgGxPtY3GmrKXY6QhqMTmX+k1VRTejS30tII/HnrI+XJ2P4OE+syT7g0YBzU43
+         gGhSTQ1nlt2/nsTJ1pA+tcU3uIgcP8yI8igKNz8anE/Wo0jnPXOoFnPpA/stWQFaKRMz
+         wqng==
+X-Gm-Message-State: AOAM533ZHow8eBq+gHcwOv3cLQ/fgZRKw/gW8mdQWYZ2q+wLLKyH0azf
+        9IPJsyWk9lonx8Ggdg9pItqq0w==
+X-Google-Smtp-Source: ABdhPJybgCUfC2v2G2nkcbaN94RRipdwi48CXMSX3irN5Cb2W43ouvBk5Pn7IZE/DcQiUbAbUj4GhA==
+X-Received: by 2002:adf:efc9:: with SMTP id i9mr61721571wrp.77.1594209763930;
+        Wed, 08 Jul 2020 05:02:43 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.46
+        by smtp.gmail.com with ESMTPSA id m62sm3964997wmm.42.2020.07.08.05.02.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 05:02:47 -0700 (PDT)
+        Wed, 08 Jul 2020 05:02:42 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>, support@areca.com.tw
-Subject: [PATCH 16/30] scsi: arcmsr: arcmsr_hba: Make room for the trailing NULL, even if it is over-written
-Date:   Wed,  8 Jul 2020 13:02:07 +0100
-Message-Id: <20200708120221.3386672-17-lee.jones@linaro.org>
+        Lee Jones <lee.jones@linaro.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 13/30] scsi: libfc: fc_rport: Fix bitrotted function parameter and copy/paste error
+Date:   Wed,  8 Jul 2020 13:02:04 +0100
+Message-Id: <20200708120221.3386672-14-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200708120221.3386672-1-lee.jones@linaro.org>
 References: <20200708120221.3386672-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ensure we do not copy the final one (which is not overwitten).
+Description should state 'remote' port, not 'local'.
 
 Fixes the following W=1 kernel build warning(s):
 
- In file included from include/linux/bitmap.h:9,
- from include/linux/nodemask.h:95,
- from include/linux/mmzone.h:17,
- from include/linux/gfp.h:6,
- from include/linux/umh.h:4,
- from include/linux/kmod.h:9,
- from include/linux/module.h:16,
- from drivers/scsi/arcmsr/arcmsr_hba.c:47:
- In function ‘strncpy’,
- inlined from ‘arcmsr_handle_virtual_command’ at drivers/scsi/arcmsr/arcmsr_hba.c:3055:3:
- include/linux/string.h:297:30: warning: ‘__builtin_strncpy’ output truncated before terminating nul copying 4 bytes from a string of the same length [-Wstringop-truncation]
- 297 | #define __underlying_strncpy __builtin_strncpy
- | ^
- include/linux/string.h:307:9: note: in expansion of macro ‘__underlying_strncpy’
- 307 | return __underlying_strncpy(p, q, size);
- | ^~~~~~~~~~~~~~~~~~~~
- In function ‘strncpy’,
- inlined from ‘arcmsr_handle_virtual_command’ at drivers/scsi/arcmsr/arcmsr_hba.c:3053:3:
- include/linux/string.h:297:30: warning: ‘__builtin_strncpy’ output truncated before terminating nul copying 16 bytes from a string of the same length [-Wstringop-truncation]
- 297 | #define __underlying_strncpy __builtin_strncpy
- | ^
- include/linux/string.h:307:9: note: in expansion of macro ‘__underlying_strncpy’
- 307 | return __underlying_strncpy(p, q, size);
- | ^~~~~~~~~~~~~~~~~~~~
- In function ‘strncpy’,
- inlined from ‘arcmsr_handle_virtual_command’ at drivers/scsi/arcmsr/arcmsr_hba.c:3051:3:
- include/linux/string.h:297:30: warning: ‘__builtin_strncpy’ output truncated before terminating nul copying 8 bytes from a string of the same length [-Wstringop-truncation]
- 297 | #define __underlying_strncpy __builtin_strncpy
- | ^
- include/linux/string.h:307:9: note: in expansion of macro ‘__underlying_strncpy’
- 307 | return __underlying_strncpy(p, q, size);
- | ^~~~~~~~~~~~~~~~~~~~
+ drivers/scsi/libfc/fc_rport.c:1452: warning: Function parameter or member 'rdata_arg' not described in 'fc_rport_logo_resp'
+ drivers/scsi/libfc/fc_rport.c:1452: warning: Excess function parameter 'rport_arg' description in 'fc_rport_logo_resp'
 
-Cc: support@areca.com.tw
+Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/libfc/fc_rport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 1c252934409c7..5feed135eb26c 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -3031,7 +3031,7 @@ static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
- {
- 	switch (cmd->cmnd[0]) {
- 	case INQUIRY: {
--		unsigned char inqdata[36];
-+		unsigned char inqdata[37];
- 		char *buffer;
- 		struct scatterlist *sg;
- 
-@@ -3048,16 +3048,16 @@ static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
- 		/* ISO, ECMA, & ANSI versions */
- 		inqdata[4] = 31;
- 		/* length of additional data */
--		strncpy(&inqdata[8], "Areca   ", 8);
-+		strncpy(&inqdata[8], "Areca   ", 9);
- 		/* Vendor Identification */
--		strncpy(&inqdata[16], "RAID controller ", 16);
-+		strncpy(&inqdata[16], "RAID controller ", 17);
- 		/* Product Identification */
--		strncpy(&inqdata[32], "R001", 4); /* Product Revision */
-+		strncpy(&inqdata[32], "R001", 5); /* Product Revision */
- 
- 		sg = scsi_sglist(cmd);
- 		buffer = kmap_atomic(sg_page(sg)) + sg->offset;
- 
--		memcpy(buffer, inqdata, sizeof(inqdata));
-+		memcpy(buffer, inqdata, sizeof(inqdata) - 1);
- 		sg = scsi_sglist(cmd);
- 		kunmap_atomic(buffer - sg->offset);
- 
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index ea99e69d4d89c..18663a82865f9 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1445,7 +1445,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
+  * fc_rport_logo_resp() - Handler for logout (LOGO) responses
+  * @sp:	       The sequence the LOGO was on
+  * @fp:	       The LOGO response frame
+- * @rport_arg: The local port
++ * @rdata_arg: The remote port
+  */
+ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			       void *rdata_arg)
 -- 
 2.25.1
 
