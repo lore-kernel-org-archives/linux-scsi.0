@@ -2,124 +2,132 @@ Return-Path: <SRS0=1cZD=AT=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC075C433E3
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 13:12:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39803C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 13:14:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C573920774
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 13:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18F1820774
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Jul 2020 13:14:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eUbL/alO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729393AbgGHNMe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Jul 2020 09:12:34 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42164 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729299AbgGHNMd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 09:12:33 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 068D24vW039729;
-        Wed, 8 Jul 2020 09:12:26 -0400
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 325d2cbtde-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 08 Jul 2020 09:12:26 -0400
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 068DCOVK022487;
-        Wed, 8 Jul 2020 13:12:24 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma06fra.de.ibm.com with ESMTP id 322h1ga8d9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 08 Jul 2020 13:12:24 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 068DCLs954001720
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 8 Jul 2020 13:12:21 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3302EAE04D;
-        Wed,  8 Jul 2020 13:12:21 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 26106AE05D;
-        Wed,  8 Jul 2020 13:12:21 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.28.177])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Wed,  8 Jul 2020 13:12:21 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1jt9s3-000LlJ-U0; Wed, 08 Jul 2020 15:12:19 +0200
-Date:   Wed, 8 Jul 2020 15:12:19 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, Julian Wiedmann <jwi@linux.ibm.com>,
-        linux-s390@vger.kernel.org, Vasily Gorbik <gor@linux.ibm.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Fedor Loshakov <loshakov@linux.ibm.com>,
-        linux-doc@vger.kernel.org,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        George Spelvin <lkml@sdf.org>
-Subject: Re: [PATCH 0/7] zfcp: cleanups and small changes for 5.9
-Message-ID: <20200708131219.GA7244@t480-pf1aa2c2>
-References: <cover.1593780621.git.bblock@linux.ibm.com>
- <159418828149.5152.2055440250302680177.b4-ty@oracle.com>
+        id S1729413AbgGHNOW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Jul 2020 09:14:22 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:23880 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729342AbgGHNOW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Jul 2020 09:14:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594214061;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=EPlubzdeO1N8nnamED7jRgJlXhz9Zxm09E8mHQcV5LY=;
+        b=eUbL/alOvUg2XYYCWg4SapjeBpYGrHUOsEkdxudfLOIhx6EXxEzyDLIft0VXhfcwBQlG2a
+        Dw8kTMaIAzYxL2fFHGbtv+gmqUeC+Wjoe8WoicYXO50BR1vYrVG5LklHBnzsoXPvK1Dl4Z
+        C0PH79GvLSpGCvCoz4WGjJKAsZuGWOE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-377-5dGBQHyYMWSAXXme704YwQ-1; Wed, 08 Jul 2020 09:14:19 -0400
+X-MC-Unique: 5dGBQHyYMWSAXXme704YwQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7388E1005510;
+        Wed,  8 Jul 2020 13:14:18 +0000 (UTC)
+Received: from localhost (ovpn-12-49.pek2.redhat.com [10.72.12.49])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 74B23797FE;
+        Wed,  8 Jul 2020 13:14:14 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: core: run queue in case of IO queueing failure
+Date:   Wed,  8 Jul 2020 21:14:05 +0800
+Message-Id: <20200708131405.3346107-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <159418828149.5152.2055440250302680177.b4-ty@oracle.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-07-08_11:2020-07-08,2020-07-08 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- lowpriorityscore=0 mlxscore=0 clxscore=1015 impostorscore=0 spamscore=0
- suspectscore=0 cotscore=-2147483648 adultscore=0 mlxlogscore=999
- bulkscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2007080091
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 08, 2020 at 02:06:45AM -0400, Martin K. Petersen wrote:
-> On Fri, 3 Jul 2020 15:19:56 +0200, Benjamin Block wrote:
-> 
-> > here are some cleanups and small changes for zfcp I'd like to include in
-> > 5.9 if possible.
-> > 
-> > One of the changes touches documentation in `Documentation/scsi/`, so I
-> > put Jonathan on To, hope that was correct. I hope you can still pull
-> > this all in one go to minimize work. IBM did retire some old URLs and
-> > content from our public website, so we have to clean that up in the
-> > documentation so there are not dead links. I changed these in the hopes
-> > we can minimize documentation churn going forward, just to replace URLs.
-> > 
-> > [...]
-> 
-> Applied to 5.9/scsi-queue, thanks!
-> 
-> [1/7] scsi: zfcp: Use prandom_u32_max() for backoff
->       https://git.kernel.org/mkp/scsi/c/0cd0e57ec858
-> [2/7] scsi: zfcp: Fix an outdated comment for zfcp_qdio_send()
->       https://git.kernel.org/mkp/scsi/c/459ad085d87b
-> [3/7] scsi: docs: Update outdated link to IBM developerworks
->       https://git.kernel.org/mkp/scsi/c/b9789bfbfe9d
-> [4/7] scsi: docs: Remove invalid link and update text for zfcp kernel config
->       https://git.kernel.org/mkp/scsi/c/c06de6e28c9e
-> [5/7] scsi: zfcp: Clean up zfcp_erp_action_ready()
->       https://git.kernel.org/mkp/scsi/c/b43cdb5ac856
-> [6/7] scsi: zfcp: Replace open-coded list move
->       https://git.kernel.org/mkp/scsi/c/6bcb7c171a0c
-> [7/7] scsi: zfcp: Avoid benign overflow of the Request Queue's free-level
->       https://git.kernel.org/mkp/scsi/c/c3bfffa5ec69
-> 
+IO requests may be held in scheduler queue because of resource contention.
+However, not like normal completion, when queueing request failed, we don't
+ask block layer to queue these requests, so IO hang[1] is caused.
 
-Thanks Martin!
+Fix this issue by run queue when IO request failure happens.
 
+[1] IO hang log by running heavy IO with removing scsi device
+
+[   39.054963] scsi 13:0:0:0: rejecting I/O to dead device
+[   39.058700] scsi 13:0:0:0: rejecting I/O to dead device
+[   39.087855] sd 13:0:0:1: [sdd] Synchronizing SCSI cache
+[   39.088909] scsi 13:0:0:1: rejecting I/O to dead device
+[   39.095351] scsi 13:0:0:1: rejecting I/O to dead device
+[   39.096962] scsi 13:0:0:1: rejecting I/O to dead device
+[  247.021859] INFO: task scsi-stress-rem:813 blocked for more than 122 seconds.
+[  247.023258]       Not tainted 5.8.0-rc2 #8
+[  247.024069] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  247.025331] scsi-stress-rem D    0   813    802 0x00004000
+[  247.025334] Call Trace:
+[  247.025354]  __schedule+0x504/0x55f
+[  247.027987]  schedule+0x72/0xa8
+[  247.027991]  blk_mq_freeze_queue_wait+0x63/0x8c
+[  247.027994]  ? do_wait_intr_irq+0x7a/0x7a
+[  247.027996]  blk_cleanup_queue+0x4b/0xc9
+[  247.028000]  __scsi_remove_device+0xf6/0x14e
+[  247.028002]  scsi_remove_device+0x21/0x2b
+[  247.029037]  sdev_store_delete+0x58/0x7c
+[  247.029041]  kernfs_fop_write+0x10d/0x14f
+[  247.031281]  vfs_write+0xa2/0xdf
+[  247.032670]  ksys_write+0x6b/0xb3
+[  247.032673]  do_syscall_64+0x56/0x82
+[  247.034053]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[  247.034059] RIP: 0033:0x7f69f39e9008
+[  247.036330] Code: Bad RIP value.
+[  247.036331] RSP: 002b:00007ffdd8116498 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[  247.037613] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f69f39e9008
+[  247.039714] RDX: 0000000000000002 RSI: 000055cde92a0ab0 RDI: 0000000000000001
+[  247.039715] RBP: 000055cde92a0ab0 R08: 000000000000000a R09: 00007f69f3a79e80
+[  247.039716] R10: 000000000000000a R11: 0000000000000246 R12: 00007f69f3abb780
+[  247.039717] R13: 0000000000000002 R14: 00007f69f3ab6740 R15: 0000000000000002
+
+Cc: linux-block@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 534b85e87c80..4d7fab9e8af9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1694,6 +1694,16 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		 */
+ 		if (req->rq_flags & RQF_DONTPREP)
+ 			scsi_mq_uninit_cmd(cmd);
++
++		/*
++		 * Requests may be held in block layer queue because of
++		 * resource contention. We usually run queue in normal
++		 * completion for queuing these requests again. Block layer
++		 * will finish this failed request simply, run queue in case
++		 * of IO queueing failure so that requests can get chance to
++		 * be finished.
++		 */
++		scsi_run_queue(q);
+ 		break;
+ 	}
+ 	return ret;
 -- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+2.25.2
+
