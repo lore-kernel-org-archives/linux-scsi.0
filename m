@@ -2,164 +2,127 @@ Return-Path: <SRS0=/8H4=AU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98EE9C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 19:31:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 859E7C433DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 19:37:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7266520775
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 19:31:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CC4D206DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 19:37:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="sjI6DwpF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RM+NcPrK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726261AbgGITbA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jul 2020 15:31:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37170 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726213AbgGITa7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 15:30:59 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 873CEC08C5CE
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jul 2020 12:30:59 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id q15so3203108wmj.2
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2020 12:30:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=L+LwzgLNEgol7CXfPapnfKmz3dkEdqHIky+sLEe7mDM=;
-        b=sjI6DwpFKsR6gK/VMhtAGOCdKTzdrmwVAONuYp4qgTpkS93cRn3Y7CxugSZ96WKmCk
-         Do6BGNye0fYKu163ytYi3CmCrlrvogHvHiVRjPVQK3mXHkxV6xjheqJoAh5T45DHLSn4
-         jmcfvD2epFdPOYhj6dYwqF9hG1lL/zKXS7g7VtWnX1O2cNsbOus0swj//UwryID4sHEz
-         pT6j6wULZXCpjfW18nr8vyKj6TbvzE26gaILJYyOQ+/XsC+lmcXpfWKaICSb4FOoAAt9
-         RyvcUwC7exvH/uGGx1bb7HSYKo+4g1MlJdwrmUFC0fPaBEQlWlHU/AuVIHMMMeswlq2h
-         6gSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=L+LwzgLNEgol7CXfPapnfKmz3dkEdqHIky+sLEe7mDM=;
-        b=D0nfyCl4Yngnk3unBJxelQKvmiJdceH6RObutp3KXll299V1qlxEP3xoDHU2pe4hzv
-         73CxzkWud1CLlt3/QA9Ck/D5gMIdhXkVp/l7sYNw1aYD0rWfgVtBUOA4970KKoHWhgOm
-         4OdSouByHD8l6Jv5r/1mnrbgvRTbV/tksJdqBnvVRZw+CcpTXXQD42RLa/PZTjUpfTj2
-         tN1HG8Y/kG7I/28a8UwG1dF9jCAG+/PM2Fm9116afPPaXS+skUXlqJppjT/3MEMxtgaz
-         YFxF6rVTKCTzOB/+Wg51rVk08kAmAYMUBHuzFMW3zBIiWANWkrvhXNFn6Kta5FZG2Ser
-         o7KQ==
-X-Gm-Message-State: AOAM530mg4xU9XVE/FSfJC/D+7H5942m9rIjYgPswRI18WNp1Gn0EKXC
-        Wd+LzAzliwn4+mxlAUiS7CwBUw==
-X-Google-Smtp-Source: ABdhPJwGEKhh/PCpKUnxXNb35yPFp0vg18Wi1RCEtzRH5rArf/zDzv+9pwDPdE7RWQ4lF0uKeKBwyA==
-X-Received: by 2002:a1c:c242:: with SMTP id s63mr1479379wmf.146.1594323058275;
-        Thu, 09 Jul 2020 12:30:58 -0700 (PDT)
-Received: from dell ([109.180.115.154])
-        by smtp.gmail.com with ESMTPSA id n16sm5919830wmc.40.2020.07.09.12.30.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2020 12:30:57 -0700 (PDT)
-Date:   Thu, 9 Jul 2020 20:30:55 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     James Bottomley <jejb@linux.ibm.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 24/24] scsi: aic7xxx: aic79xx_osm: Remove set but unused
- variabes 'saved_scsiid' and 'saved_modes'
-Message-ID: <20200709193055.GA3500@dell>
-References: <20200709174556.7651-1-lee.jones@linaro.org>
- <20200709174556.7651-25-lee.jones@linaro.org>
- <1594318443.10411.14.camel@linux.ibm.com>
+        id S1726759AbgGITho (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jul 2020 15:37:44 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38482 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726213AbgGITho (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 15:37:44 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 069JWerv006149;
+        Thu, 9 Jul 2020 19:37:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=UU/JaDNo7nq3M6nXNlc8uGnAJ2g+0bGqx+PhDh4JV2k=;
+ b=RM+NcPrKRIxNncxn0OsxZES7BfvJ3+7LN/Hr2eSSU0pQxGonl0NrDCJvD4wExDK14rWU
+ COyCIHCGCyQcNM9RD3dxq2TPyq88JGB+zO+RrX4RTT8dolY5ekGYVNFBaAp0CsldQX3f
+ ufxqGftkXSxi5tBtED7w+OmGCXirFX3t0MZXd5hRyALFC8DnnNyFr1N+cOTYi6LEl49/
+ +boNckUepJI4kcYzUho+bMpQEZoCU8psz6QsigJkCRcYiA6a8lMHCp95NsiV+zQoGjLb
+ GN3BgL7AQDKPlzDjFyPR/KzlEzcRThhaPiPfxvJMFaBKCcv3H+w/bc4fXcYAEoqcn3AW Ww== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 325y0akt2v-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 09 Jul 2020 19:37:39 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 069JTJTb105778;
+        Thu, 9 Jul 2020 19:37:39 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 325k3hfqg8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 09 Jul 2020 19:37:39 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 069JbceI009921;
+        Thu, 9 Jul 2020 19:37:38 GMT
+Received: from [20.15.0.8] (/73.88.28.6)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 09 Jul 2020 12:37:37 -0700
+Subject: Re: [PATCH -next] scsi: target: Remove unused variable 'tpg'
+To:     Wei Yongjun <weiyongjun1@huawei.com>,
+        Hulk Robot <hulkci@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20200709114636.69256-1-weiyongjun1@huawei.com>
+From:   Mike Christie <michael.christie@oracle.com>
+Message-ID: <d2cbe2c2-f4f3-7d70-1c87-22619e13126a@oracle.com>
+Date:   Thu, 9 Jul 2020 14:37:36 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20200709114636.69256-1-weiyongjun1@huawei.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1594318443.10411.14.camel@linux.ibm.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9677 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 spamscore=0 mlxscore=0 adultscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007090132
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9677 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 clxscore=1011 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007090132
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 09 Jul 2020, James Bottomley wrote:
-
-> On Thu, 2020-07-09 at 18:45 +0100, Lee Jones wrote:
-> > Haven't been used since 2006.
-> > 
-> > Fixes the following W=1 kernel build warning(s):
-> > 
-> >  drivers/scsi/aic7xxx/aic79xx_osm.c: In function
-> > ‘ahd_linux_queue_abort_cmd’:
-> >  drivers/scsi/aic7xxx/aic79xx_osm.c:2155:17: warning: variable
-> > ‘saved_modes’ set but not used [-Wunused-but-set-variable]
-> >  drivers/scsi/aic7xxx/aic79xx_osm.c:2148:9: warning: variable
-> > ‘saved_scsiid’ set but not used [-Wunused-but-set-variable]
-> > 
-> > Cc: Hannes Reinecke <hare@suse.com>
-> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
-> > ---
-> >  drivers/scsi/aic7xxx/aic79xx_osm.c | 6 ++----
-> >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > index 3782a20d58885..b0c6701f64a83 100644
-> > --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > @@ -2141,14 +2141,12 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> > *cmd)
-> >  	u_int  saved_scbptr;
-> >  	u_int  active_scbptr;
-> >  	u_int  last_phase;
-> > -	u_int  saved_scsiid;
-> >  	u_int  cdb_byte;
-> >  	int    retval;
-> >  	int    was_paused;
-> >  	int    paused;
-> >  	int    wait;
-> >  	int    disconnected;
-> > -	ahd_mode_state saved_modes;
-> >  	unsigned long flags;
-> >  
-> >  	pending_scb = NULL;
-> > @@ -2239,7 +2237,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> > *cmd)
-> >  		goto done;
-> >  	}
-> >  
-> > -	saved_modes = ahd_save_modes(ahd);
-> > +	ahd_save_modes(ahd);
+On 7/9/20 6:46 AM, Wei Yongjun wrote:
+> Gcc report warning as follows:
 > 
-> Well, this is clearly wrong, since ahd_save_modes has no side effects.
-
-Great.  Thanks for letting me know.
-
-I tend to err on the side of caution with these types of fix-ups.
-
-I will remove it.
-
-> However, I think it also means there's a bug in this code:
+> drivers/target/target_core_pr.c:1162:26: warning:
+>  variable 'tpg' set but not used [-Wunused-but-set-variable]
+>  1162 |  struct se_portal_group *tpg;
+>       |                          ^~~
 > 
-> >  	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
+> After commit 63c9ffe473d3 ("scsi: target: Check enforce_pr_isids
+> during registration"), 'tpg' is never used, so removing it to
+> avoid build warning.
 > 
-> You can't do this without later restoring the mode, so someone needs to
-> figure out where the missing ahd_restore_modes() should go.
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+>  drivers/target/target_core_pr.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> >  	last_phase = ahd_inb(ahd, LASTPHASE);
-> >  	saved_scbptr = ahd_get_scbptr(ahd);
-> > @@ -2257,7 +2255,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> > *cmd)
-> >  	 * passed in command.  That command is currently active on
-> > the
-> >  	 * bus or is in the disconnected state.
-> >  	 */
-> > -	saved_scsiid = ahd_inb(ahd, SAVED_SCSIID);
-> > +	ahd_inb(ahd, SAVED_SCSIID);
+> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+> index 300b03b1b696..8fc88654bff6 100644
+> --- a/drivers/target/target_core_pr.c
+> +++ b/drivers/target/target_core_pr.c
+> @@ -1159,7 +1159,6 @@ static struct t10_pr_registration *__core_scsi3_locate_pr_reg(
+>  {
+>  	struct t10_reservation *pr_tmpl = &dev->t10_pr;
+>  	struct t10_pr_registration *pr_reg, *pr_reg_tmp;
+> -	struct se_portal_group *tpg;
+>  
+>  	spin_lock(&pr_tmpl->registration_lock);
+>  	list_for_each_entry_safe(pr_reg, pr_reg_tmp,
+> @@ -1170,7 +1169,6 @@ static struct t10_pr_registration *__core_scsi3_locate_pr_reg(
+>  		if (pr_reg->pr_reg_nacl != nacl)
+>  			continue;
+>  
+> -		tpg = pr_reg->pr_reg_nacl->se_tpg;
+>  		/*
+>  		 * If this registration does NOT contain a fabric provided
+>  		 * ISID, then we have found a match.
 > 
-> I think this can just go.
 
-Happy to remove it also.
+Sorry. That was my fault. Thanks.
 
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+
