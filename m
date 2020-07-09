@@ -5,113 +5,115 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABE4C433E2
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:46:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E6DC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39772207D0
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:46:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 735B5207F9
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:46:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="F/1o22f0"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VesfxsaF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728709AbgGIRqj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jul 2020 13:46:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49008 "EHLO
+        id S1728459AbgGIRqt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jul 2020 13:46:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728663AbgGIRqZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 13:46:25 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5967DC08E6DC
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jul 2020 10:46:25 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id l2so2758710wmf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2020 10:46:25 -0700 (PDT)
+        with ESMTP id S1728648AbgGIRqW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 13:46:22 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17651C08E6DC
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jul 2020 10:46:22 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id f7so3318060wrw.1
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2020 10:46:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=npmbMmGwXmpaLu61Oedwmcs3qT0N7Ml8rtlLxMj9sy4=;
-        b=F/1o22f0o/hLVmprlDU9Qr//sGwjrN5uBf5VsCAcjtijVd/dT2CI6MVzsvcskMRGpZ
-         +7cVcba0uHIIcgEY9PEBnLie35L9sAdxl1kb5OP4V/14j6/iSyuyPkpHNPh6umlOFV5P
-         JAcC8hsTvn+aAiUw9vEP7h1rTfAOwi1xSxFifbmG7f+W9zEmx/J1szmQPv5cF9isaQz2
-         11rRmpTP/QRS6mWFSA1OvmVkmlXzipShH9+vRqUKXADfPgY9EtY61uynWcnPhndfAzSS
-         jEiICGMcO0EtQPWeUAviR025+ZT/97yCIFkrUBkeDpLOoWW52ZX0T/yiI18fZit3cQkl
-         dbqg==
+        bh=XHlEfo3tdu7fpK4dx4b1MtHnaLwguM9Twh58pG6oyd8=;
+        b=VesfxsaFFBKFlk9a9thYrVO38tZFUIsXefQpeuQaw8W8zrnsJ6vUqOtgK2Ak4YziVP
+         SAMUUQZT8+evcb3M8m1ZVqmUtNYL8Rnkub3E3tFQUMxT+MJd1UFZrrynIrBhOJC/OCUR
+         iif8eqkIRWByhR4s1B2m/awq1KuBDP5E9pjlGmzfhv3hq78ZpFA6jmfuJxb1Xowjx8qC
+         /f4Z+MhPjjAI7u2iGyboKKcpmTG5YzMnYT1OSWxNGuOg2y5YfkUo9eOK+x2fEmeaPSxQ
+         onsYPfz7Ong2fnJtK8U0qd6zZddcDgvw9vgobA377uZw6ps0DoKK21yIP3eA5NXb3iuO
+         sPZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=npmbMmGwXmpaLu61Oedwmcs3qT0N7Ml8rtlLxMj9sy4=;
-        b=IWMNL2hElfLeiXsuOb84ANA88M63Ct7gvMJ+ZxYdGS1ubWMWTMeAlf2dMYJnPwwIzW
-         jy3SbLNJBAdvfB7PU7Rs2QpD8fBtiNxrJVsrKDySfU1gkl+eHDmBpTcjq/fCKPGVDAtM
-         XGx5Ubiiyo6JxPnXwm66SEeiQI9v71fjpI05vQe/sg9N7jyG4EIfeec2mzsjhgN6Bw2z
-         rSDROlTWJu4GNjHZJE0DrnYqrjCKKC61CG68J1DpXfzQ8XO3FtqANM3Qsj4tIBX3VcD3
-         nIDa83J+VaSCTJ/hhfgd/bngmON846Mv28dKltQcdcmBGWwJHmNyVtSWAYEOHDJRjRWF
-         sRaA==
-X-Gm-Message-State: AOAM530xXkyytSvQj0vy3IkmnWzzVle2Grf7jtoNfZBlc4SIxgN5Qw+Z
-        //oYmhTz+EU9hZ8liEJhsTb6Tg==
-X-Google-Smtp-Source: ABdhPJyK0cTHJi/HHlU/eCy0bAteTij1tSUpRhma9IuaO7nlZzYQAcrF4E3VmyYJ9+nrGYNfRBh1Fg==
-X-Received: by 2002:a7b:ce87:: with SMTP id q7mr1170635wmj.39.1594316784135;
-        Thu, 09 Jul 2020 10:46:24 -0700 (PDT)
+        bh=XHlEfo3tdu7fpK4dx4b1MtHnaLwguM9Twh58pG6oyd8=;
+        b=V9ZGRiNSrIIPlRBf6KhFN+5gRGKw9myFePAJvRMwcdCX43Z1iLrApsG4XfVr2a9NQh
+         +LuttL5RhK0ji7gqyyPlP/7K0ZgoJK+FYSab+F7iLnCTnCpf9NU8Qc47qgI57zxx38wQ
+         Mlupz7SIOzYY2uaGiLjTrt1dvYj2XWCQWcY3ZDdKFICllBV3vf5EI2NwlMD5Z+6dxTrO
+         Lp9D/Ut8hU9pfUvbxzVaIjdY7hPuEExdn5lq1ObZPD2Gu6p0XT0qZRGX70qxHMfZPs7a
+         tAsIOPI+MWKdg8R/K8d4mEbYDOyev0MZY2OPMEmwnYpA6rPv/7IGkYceVjLRzFBT9pFO
+         9AOA==
+X-Gm-Message-State: AOAM530shCNH4MwNOHBf4+YzOlvsyyuW7RoOZEXSPM666wVBUVoaXZqj
+        1f52ZgSVEuv+scVa3nK5KyxThQ==
+X-Google-Smtp-Source: ABdhPJzy5HBCuvGp2iVQ86W6+Mz0CNvvbimic6tKdTb+zeyOYZkAgFLlD+bWSTCF7ehNYJab+WbGFg==
+X-Received: by 2002:a5d:6987:: with SMTP id g7mr63785648wru.79.1594316780854;
+        Thu, 09 Jul 2020 10:46:20 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id f15sm6063854wrx.91.2020.07.09.10.46.23
+        by smtp.gmail.com with ESMTPSA id f15sm6063854wrx.91.2020.07.09.10.46.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2020 10:46:23 -0700 (PDT)
+        Thu, 09 Jul 2020 10:46:20 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 22/24] scsi: aic7xxx: aic79xx_osm: Remove unused variables 'wait' and 'paused'
-Date:   Thu,  9 Jul 2020 18:45:54 +0100
-Message-Id: <20200709174556.7651-23-lee.jones@linaro.org>
+        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
+        Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
+        linux-drivers@broadcom.com
+Subject: [PATCH 19/24] scsi: be2iscsi: be_mgmt: Add missing function parameter description
+Date:   Thu,  9 Jul 2020 18:45:51 +0100
+Message-Id: <20200709174556.7651-20-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200709174556.7651-1-lee.jones@linaro.org>
 References: <20200709174556.7651-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It looks like they have never actually been used.
+Also promote fully documented function header to kerneldoc.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/aic7xxx/aic79xx_osm.c: In function ‘ahd_linux_dev_reset’:
- drivers/scsi/aic7xxx/aic79xx_osm.c:782:9: warning: variable ‘wait’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/aic7xxx/aic79xx_osm.c:781:9: warning: variable ‘paused’ set but not used [-Wunused-but-set-variable]
+ drivers/scsi/be2iscsi/be_mgmt.c:112: warning: Function parameter or member 'phba' not described in 'mgmt_open_connection'
 
-Cc: Hannes Reinecke <hare@suse.com>
+Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>
+Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
+Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Cc: linux-drivers@broadcom.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/scsi/be2iscsi/be_mgmt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 9235b6283c0b3..8e43ff86e0a60 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -775,16 +775,13 @@ ahd_linux_dev_reset(struct scsi_cmnd *cmd)
- 	struct scb *reset_scb;
- 	u_int  cdb_byte;
- 	int    retval = SUCCESS;
--	int    paused;
--	int    wait;
- 	struct	ahd_initiator_tinfo *tinfo;
- 	struct	ahd_tmode_tstate *tstate;
- 	unsigned long flags;
- 	DECLARE_COMPLETION_ONSTACK(done);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index a2d69b287c7bb..96d6e384b2b25 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -97,6 +97,7 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
  
- 	reset_scb = NULL;
--	paused = FALSE;
--	wait = FALSE;
-+
- 	ahd = *(struct ahd_softc **)cmd->device->host->hostdata;
+ /**
+  * mgmt_open_connection()- Establish a TCP CXN
++ * @phba: driver priv structure
+  * @dst_addr: Destination Address
+  * @beiscsi_ep: ptr to device endpoint struct
+  * @nonemb_cmd: ptr to memory allocated for command
+@@ -209,7 +210,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	return tag;
+ }
  
- 	scmd_printk(KERN_INFO, cmd,
+-/*
++/**
+  * beiscsi_exec_nemb_cmd()- execute non-embedded MBX cmd
+  * @phba: driver priv structure
+  * @nonemb_cmd: DMA address of the MBX command to be issued
 -- 
 2.25.1
 
