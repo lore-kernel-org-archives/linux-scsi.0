@@ -2,124 +2,147 @@ Return-Path: <SRS0=/8H4=AU=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32C7DC433E1
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 18:01:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7CAC433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 18:14:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F88020775
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 18:01:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NpBWWMz4"
+	by mail.kernel.org (Postfix) with ESMTP id C4361207DF
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 18:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726755AbgGISBd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jul 2020 14:01:33 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:30180 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726661AbgGISBc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 14:01:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594317690;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RMDjyEYcFI6gdBDQideBKxDS0JZBtvUdaUYhw9E2e5k=;
-        b=NpBWWMz4WjtY4x9hDfADJQLgaHk4NCyu1os8Ne/tUIbfsiO6Q26ES7VOt5B46+v69tMjZ2
-        bhw4kIv0qxCt6QGipxbMyuZK7SjFw0kzTgUegzWtYy4i1mqRAoXMm7RnyiJjnDWAs0Tw0B
-        zlwXHRxntSjrFRX+bKPqWjJG3VnUyWg=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-271-SaSIyg-dPFCV9w0K2PSULw-1; Thu, 09 Jul 2020 14:01:28 -0400
-X-MC-Unique: SaSIyg-dPFCV9w0K2PSULw-1
-Received: by mail-wm1-f70.google.com with SMTP id q20so2946870wme.3
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2020 11:01:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=RMDjyEYcFI6gdBDQideBKxDS0JZBtvUdaUYhw9E2e5k=;
-        b=Xxsc7Rliyle1UUQiovnx3Xrqj/1t7Ae/MtnqAKlDykchxG3KJ5YOCvKAdXYyHwoCzA
-         7VTFsb8R42nMRazfGK9PpArCPoQWgnCozVSsb9n/7qpzaYKCfbCdVZiuyvnzaNhHvSoa
-         yyORGnrCElFzvd/waa4tjQGutYypub+OV4nqGxK8eJnaOGFGCdLK/kXZeDWG2lfBKiht
-         DQfgryDJVMu79AA++rUNWfdpbfyGn/zhglRsmqhygGa5qANUTAyH8KPrC7/nOlFgWJH0
-         0fluJT8A1PZOuEtUv+V1LzXuFD/vKy01PLRTd5A05kjWLLXIXYFIxtX0YF6Vx+88T0DG
-         OEGA==
-X-Gm-Message-State: AOAM531JCjDDz/2fUSlAk1dRHeSW4x84GNQf9IG0QNLWwBduKThseo+1
-        rEzIVlno9rvCy7OCVd/WD43e2buni+VDxPYlZxBs8+iLdV++NcTwf4E4pP9evulIt0I4ZjVlV1W
-        /ahha/jDMNaWSkuyYMm2o/A==
-X-Received: by 2002:adf:efc9:: with SMTP id i9mr68299607wrp.77.1594317687695;
-        Thu, 09 Jul 2020 11:01:27 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzry8iHdlGY/tXFHdCmrjjNroFcuFEkfGZh1gKUcbnkdVacPAMWf+y7WZrotWreuoms1y+FXg==
-X-Received: by 2002:adf:efc9:: with SMTP id i9mr68299581wrp.77.1594317687435;
-        Thu, 09 Jul 2020 11:01:27 -0700 (PDT)
-Received: from ?IPv6:2001:b07:6468:f312:9541:9439:cb0f:89c? ([2001:b07:6468:f312:9541:9439:cb0f:89c])
-        by smtp.gmail.com with ESMTPSA id w17sm6397333wra.42.2020.07.09.11.01.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Jul 2020 11:01:26 -0700 (PDT)
-Subject: Re: [PATCH 12/24] scsi: virtio_scsi: Demote seemingly unintentional
- kerneldoc header
-To:     Lee Jones <lee.jones@linaro.org>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        virtualization@lists.linux-foundation.org
+        id S1726801AbgGISOS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Jul 2020 14:14:18 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:16130 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726684AbgGISOS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 14:14:18 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 069I31LZ133946;
+        Thu, 9 Jul 2020 14:14:11 -0400
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 325ktt3j8e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Jul 2020 14:14:11 -0400
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 069I9Zv1010074;
+        Thu, 9 Jul 2020 18:14:10 GMT
+Received: from b03cxnp08026.gho.boulder.ibm.com (b03cxnp08026.gho.boulder.ibm.com [9.17.130.18])
+        by ppma02dal.us.ibm.com with ESMTP id 325k1nt6f4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 09 Jul 2020 18:14:10 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08026.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 069IE6AH29032934
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 9 Jul 2020 18:14:06 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6121D78066;
+        Thu,  9 Jul 2020 18:14:09 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 404DE78063;
+        Thu,  9 Jul 2020 18:14:08 +0000 (GMT)
+Received: from [153.66.254.194] (unknown [9.80.239.156])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Thu,  9 Jul 2020 18:14:07 +0000 (GMT)
+Message-ID: <1594318443.10411.14.camel@linux.ibm.com>
+Subject: Re: [PATCH 24/24] scsi: aic7xxx: aic79xx_osm: Remove set but unused
+ variabes 'saved_scsiid' and 'saved_modes'
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     Lee Jones <lee.jones@linaro.org>, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Date:   Thu, 09 Jul 2020 11:14:03 -0700
+In-Reply-To: <20200709174556.7651-25-lee.jones@linaro.org>
 References: <20200709174556.7651-1-lee.jones@linaro.org>
- <20200709174556.7651-13-lee.jones@linaro.org>
-From:   Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <ab85392c-2095-4023-4e20-503ee248a538@redhat.com>
-Date:   Thu, 9 Jul 2020 20:01:25 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
-MIME-Version: 1.0
-In-Reply-To: <20200709174556.7651-13-lee.jones@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+         <20200709174556.7651-25-lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-09_09:2020-07-09,2020-07-09 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ clxscore=1011 bulkscore=0 mlxlogscore=929 phishscore=0 suspectscore=0
+ impostorscore=0 lowpriorityscore=0 malwarescore=0 priorityscore=1501
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007090122
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/07/20 19:45, Lee Jones wrote:
-> This is the only use of kerneldoc in the sourcefile and no
-> descriptions are provided.
+On Thu, 2020-07-09 at 18:45 +0100, Lee Jones wrote:
+> Haven't been used since 2006.
 > 
 > Fixes the following W=1 kernel build warning(s):
 > 
->  drivers/scsi/virtio_scsi.c:109: warning: Function parameter or member 'vscsi' not described in 'virtscsi_complete_cmd'
->  drivers/scsi/virtio_scsi.c:109: warning: Function parameter or member 'buf' not described in 'virtscsi_complete_cmd'
+>  drivers/scsi/aic7xxx/aic79xx_osm.c: In function
+> ‘ahd_linux_queue_abort_cmd’:
+>  drivers/scsi/aic7xxx/aic79xx_osm.c:2155:17: warning: variable
+> ‘saved_modes’ set but not used [-Wunused-but-set-variable]
+>  drivers/scsi/aic7xxx/aic79xx_osm.c:2148:9: warning: variable
+> ‘saved_scsiid’ set but not used [-Wunused-but-set-variable]
 > 
-> Cc: "Michael S. Tsirkin" <mst@redhat.com>
-> Cc: Jason Wang <jasowang@redhat.com>
-> Cc: Paolo Bonzini <pbonzini@redhat.com>
-> Cc: Stefan Hajnoczi <stefanha@redhat.com>
-> Cc: virtualization@lists.linux-foundation.org
+> Cc: Hannes Reinecke <hare@suse.com>
 > Signed-off-by: Lee Jones <lee.jones@linaro.org>
 > ---
->  drivers/scsi/virtio_scsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/aic7xxx/aic79xx_osm.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 0e0910c5b9424..56875467e4984 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -100,7 +100,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
->  		scsi_set_resid(sc, resid);
->  }
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> index 3782a20d58885..b0c6701f64a83 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -2141,14 +2141,12 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
+> *cmd)
+>  	u_int  saved_scbptr;
+>  	u_int  active_scbptr;
+>  	u_int  last_phase;
+> -	u_int  saved_scsiid;
+>  	u_int  cdb_byte;
+>  	int    retval;
+>  	int    was_paused;
+>  	int    paused;
+>  	int    wait;
+>  	int    disconnected;
+> -	ahd_mode_state saved_modes;
+>  	unsigned long flags;
 >  
-> -/**
-> +/*
->   * virtscsi_complete_cmd - finish a scsi_cmd and invoke scsi_done
->   *
->   * Called with vq_lock held.
-> 
+>  	pending_scb = NULL;
+> @@ -2239,7 +2237,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
+> *cmd)
+>  		goto done;
+>  	}
+>  
+> -	saved_modes = ahd_save_modes(ahd);
+> +	ahd_save_modes(ahd);
 
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+Well, this is clearly wrong, since ahd_save_modes has no side effects.
+
+However, I think it also means there's a bug in this code:
+
+>  	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
+
+You can't do this without later restoring the mode, so someone needs to
+figure out where the missing ahd_restore_modes() should go.
+
+>  	last_phase = ahd_inb(ahd, LASTPHASE);
+>  	saved_scbptr = ahd_get_scbptr(ahd);
+> @@ -2257,7 +2255,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
+> *cmd)
+>  	 * passed in command.  That command is currently active on
+> the
+>  	 * bus or is in the disconnected state.
+>  	 */
+> -	saved_scsiid = ahd_inb(ahd, SAVED_SCSIID);
+> +	ahd_inb(ahd, SAVED_SCSIID);
+
+I think this can just go.
+
+James
 
