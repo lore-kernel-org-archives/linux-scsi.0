@@ -7,525 +7,109 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF3AC433DF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC25C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:47:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED845207DD
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:47:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B66772078B
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 17:47:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wlTGqbaY"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="CvSWq06V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728775AbgGIRrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728769AbgGIRrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 9 Jul 2020 13:47:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48938 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728544AbgGIRqN (ORCPT
+        with ESMTP id S1728556AbgGIRqN (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jul 2020 13:46:13 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9408BC08C5DC
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Jul 2020 10:46:12 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id l2so2758082wmf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2020 10:46:12 -0700 (PDT)
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F701C08C5DD
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Jul 2020 10:46:13 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id a6so6738467wmm.0
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Jul 2020 10:46:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=EB1Ee82K4f4wX+Lz3kbrIOyla+XpjuhxPTOuxM4xsjo=;
-        b=wlTGqbaYKKbdbcljkIiscVzW5oCvUGHOy9PkQij41adWFo5Ao+AiY95JgIsZq6F+Xi
-         fiBA0Ph19tkA6hnBX7ZUVPgs2zLLzQAQhofyMFAfQLVcN9XAInBj3Bw8z6NX5Sy29hLy
-         6mT5440E1R6ECW8PyU4RgxMXSwwaamU6z3Lrg0IQB08cqX1F65YLgf/l/stE6DWjBlKc
-         6TMoP38JU1vabIZngDJGS2LK+7FAkGX4ZXnhM069E6fkSA6toesvUxMTN+fgTp4c14DU
-         5aWuBQL+ek/AYBYKXAX1C8Hj0tguuf715AsYSexx70pfqY0C6XyxMFVOtHiHctEp8YVI
-         6b4g==
+        bh=0WOUOFAj8gaRXgS5sweCsL/cD71WeCkTEB0KFrBJobo=;
+        b=CvSWq06VbUcXSRnwGyqDxlPEPhqHonrMdhFqWh5wU+7F2EYTLjHQmon8jTG/Er9Oga
+         K9zUwv08GqGI/dj1oPeifOcYIJUghMnSKcrS62TjwBLdO1k87bxM6GqW44Lajy21s/2+
+         jjgGm/VwZJohS57A+4L2J3n/28TOKy3ZZR+Df+H/y8p8nTeiLTKTW//YvdAc5Xpx793E
+         Wc0sELO/g+ZCdC9NNbDx7kILpoBIOilGSVjBay+WBHB87FJrNLDzIE3Y4R2uae1Q360+
+         zQmlM8Co6yVmfzXPDgcv+cWm3jlTn46fOJtRqf+/VD1MQQmbBkp4gZWa4SQiTSwFolS+
+         Wbcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=EB1Ee82K4f4wX+Lz3kbrIOyla+XpjuhxPTOuxM4xsjo=;
-        b=NflKOAm/h92Ws1Zy/8Z3B0c9biunHOqqTe51HLOcI32sGWh4lJgnM94D8YF00Dd/gs
-         5SZMon4KoKhXvSTZt9q+NQfmZwpddsdSAzRA4t09mTvyA/fGqQ9X+SyAg3E7lroynA1o
-         uC5OLMIdwziC+n9Ddr+AZIIL91rV7aIKElF+Faen6UBOwHI2Q+4o0fpWq3NCSYjZQ2LE
-         TTgZ5auu2DEhfuvC3klpXDx0W7+QlwpJn7egIqPn7Nv1oGpZvU+0B+MqEFBpMxfiOOrw
-         KzfFlsJPyyQkxR4cU+ueDB6OJetprjLJdV8jpMM3rpw+Shodjl6uHPPz/ISnDv28dfBY
-         a/KA==
-X-Gm-Message-State: AOAM530uzYDvtxHWTvpr2/feuIuqEFb0Gwg7SPx8cnj9s+hE7YevjoYA
-        CLHLkNuft6X8DKvfdGHKZAR7gg==
-X-Google-Smtp-Source: ABdhPJxWupSKpxGU0qQNn+rMJfGf7vY3RKCaXDIdpEIidoV6wavbDiWZ73ZqQP16t5ADN3ga+95Suw==
-X-Received: by 2002:a05:600c:2295:: with SMTP id 21mr1076145wmf.29.1594316770921;
-        Thu, 09 Jul 2020 10:46:10 -0700 (PDT)
+        bh=0WOUOFAj8gaRXgS5sweCsL/cD71WeCkTEB0KFrBJobo=;
+        b=i0yZGw+Vuddtq8DUP0jlcNOTctBXenFUa2W0O+MHWTL9Xo/eHyBzp08t50itU8NzVr
+         qftDJtGw537j12JVoqYAjoqRqLPQGE/KyQm+4h5p0gYwIqeUrASoNDEwd3qUL0OYqAmL
+         MrAUKC8BqaW09KCg1dZvjn03m+O9Uk1EEf8i5ZRsGqhIQDOwa+NE5qPRazOE6geP5jd0
+         ibIs0ooh+NK7wwpcjGrx3m33XBpCiDKLcJfyd7W/avp2wsHY8tRMrW6PMomM20AqIFZj
+         cYn5rTyVdd3/X/AgBYTR78Xziewj5+GR28QBPTb+uDkFy9c8w7qU7/agc0K1vas0UNnp
+         ULLQ==
+X-Gm-Message-State: AOAM533hGRpCApjf4/tELl4p2XH99VrX4ouSjBpzlkcACZzb+V14zaYp
+        4q4/0AXunHzvO5kMi9uJS+22ow==
+X-Google-Smtp-Source: ABdhPJw+UQAw1tDMHZVupmnJNtYCNeMbSVRrkvixR673N+nHXclQOrE9d9MM6uM6P20WxHqHRzGBvg==
+X-Received: by 2002:a7b:cd10:: with SMTP id f16mr1169293wmj.86.1594316771965;
+        Thu, 09 Jul 2020 10:46:11 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.35.206])
-        by smtp.gmail.com with ESMTPSA id f15sm6063854wrx.91.2020.07.09.10.46.09
+        by smtp.gmail.com with ESMTPSA id f15sm6063854wrx.91.2020.07.09.10.46.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Jul 2020 10:46:10 -0700 (PDT)
+        Thu, 09 Jul 2020 10:46:11 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>,
-        Brian King <brking@us.ibm.com>
-Subject: [PATCH 11/24] scsi: ipr: Fix a mountain of kerneldoc misdemeanours
-Date:   Thu,  9 Jul 2020 18:45:43 +0100
-Message-Id: <20200709174556.7651-12-lee.jones@linaro.org>
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        virtualization@lists.linux-foundation.org
+Subject: [PATCH 12/24] scsi: virtio_scsi: Demote seemingly unintentional kerneldoc header
+Date:   Thu,  9 Jul 2020 18:45:44 +0100
+Message-Id: <20200709174556.7651-13-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200709174556.7651-1-lee.jones@linaro.org>
 References: <20200709174556.7651-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Mainly misspellings and/or missing function parameter descriptions.
+This is the only use of kerneldoc in the sourcefile and no
+descriptions are provided.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/ipr.c:10100:15: warning: variable ‘int_reg’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/ipr.c:679: warning: Function parameter or member 'fast_done' not described in 'ipr_init_ipr_cmnd'
- drivers/scsi/ipr.c:697: warning: Function parameter or member 'hrrq' not described in '__ipr_get_free_ipr_cmnd'
- drivers/scsi/ipr.c:697: warning: Excess function parameter 'ioa_cfg' description in '__ipr_get_free_ipr_cmnd'
- drivers/scsi/ipr.c:1297: warning: Function parameter or member 'buffer' not described in '__ipr_format_res_path'
- drivers/scsi/ipr.c:1297: warning: Excess function parameter 'buf' description in '__ipr_format_res_path'
- drivers/scsi/ipr.c:1321: warning: Function parameter or member 'buffer' not described in 'ipr_format_res_path'
- drivers/scsi/ipr.c:1321: warning: Excess function parameter 'buf' description in 'ipr_format_res_path'
- drivers/scsi/ipr.c:1400: warning: Excess function parameter 'cfgtew' description in 'ipr_clear_res_target'
- drivers/scsi/ipr.c:2679: warning: Function parameter or member 't' not described in 'ipr_timeout'
- drivers/scsi/ipr.c:2679: warning: Excess function parameter 'ipr_cmd' description in 'ipr_timeout'
- drivers/scsi/ipr.c:2712: warning: Function parameter or member 't' not described in 'ipr_oper_timeout'
- drivers/scsi/ipr.c:2712: warning: Excess function parameter 'ipr_cmd' description in 'ipr_oper_timeout'
- drivers/scsi/ipr.c:3494: warning: Function parameter or member 'attr' not described in 'ipr_show_fw_version'
- drivers/scsi/ipr.c:3528: warning: Function parameter or member 'attr' not described in 'ipr_show_log_level'
- drivers/scsi/ipr.c:3551: warning: Function parameter or member 'attr' not described in 'ipr_store_log_level'
- drivers/scsi/ipr.c:3551: warning: Function parameter or member 'count' not described in 'ipr_store_log_level'
- drivers/scsi/ipr.c:3586: warning: Function parameter or member 'attr' not described in 'ipr_store_diagnostics'
- drivers/scsi/ipr.c:3642: warning: Function parameter or member 'dev' not described in 'ipr_show_adapter_state'
- drivers/scsi/ipr.c:3642: warning: Function parameter or member 'attr' not described in 'ipr_show_adapter_state'
- drivers/scsi/ipr.c:3642: warning: Excess function parameter 'class_dev' description in 'ipr_show_adapter_state'
- drivers/scsi/ipr.c:3671: warning: Function parameter or member 'attr' not described in 'ipr_store_adapter_state'
- drivers/scsi/ipr.c:3722: warning: Function parameter or member 'attr' not described in 'ipr_store_reset_adapter'
- drivers/scsi/ipr.c:3783: warning: Function parameter or member 'attr' not described in 'ipr_store_iopoll_weight'
- drivers/scsi/ipr.c:3783: warning: Function parameter or member 'count' not described in 'ipr_store_iopoll_weight'
- drivers/scsi/ipr.c:3883: warning: Function parameter or member 'sglist' not described in 'ipr_free_ucode_buffer'
- drivers/scsi/ipr.c:3883: warning: Excess function parameter 'p_dnld' description in 'ipr_free_ucode_buffer'
- drivers/scsi/ipr.c:4074: warning: Function parameter or member 'dev' not described in 'ipr_store_update_fw'
- drivers/scsi/ipr.c:4074: warning: Function parameter or member 'attr' not described in 'ipr_store_update_fw'
- drivers/scsi/ipr.c:4074: warning: Excess function parameter 'class_dev' description in 'ipr_store_update_fw'
- drivers/scsi/ipr.c:4149: warning: Function parameter or member 'attr' not described in 'ipr_show_fw_type'
- drivers/scsi/ipr.c:4489: warning: Excess function parameter 'reason' description in 'ipr_change_queue_depth'
- drivers/scsi/ipr.c:4660: warning: Function parameter or member 'attr' not described in 'ipr_show_raw_mode'
- drivers/scsi/ipr.c:4688: warning: Function parameter or member 'attr' not described in 'ipr_store_raw_mode'
- drivers/scsi/ipr.c:4688: warning: Function parameter or member 'count' not described in 'ipr_store_raw_mode'
- drivers/scsi/ipr.c:5069: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_cmnd_is_free'
- drivers/scsi/ipr.c:5108: warning: Function parameter or member 'ioa_cfg' not described in 'ipr_wait_for_ops'
- drivers/scsi/ipr.c:5108: warning: Excess function parameter 'ipr_cmd' description in 'ipr_wait_for_ops'
- drivers/scsi/ipr.c:5272: warning: Function parameter or member 'deadline' not described in 'ipr_sata_reset'
- drivers/scsi/ipr.c:5453: warning: Function parameter or member 't' not described in 'ipr_abort_timeout'
- drivers/scsi/ipr.c:5453: warning: Excess function parameter 'ipr_cmd' description in 'ipr_abort_timeout'
- drivers/scsi/ipr.c:5578: warning: Function parameter or member 'shost' not described in 'ipr_scan_finished'
- drivers/scsi/ipr.c:5578: warning: Function parameter or member 'elapsed_time' not described in 'ipr_scan_finished'
- drivers/scsi/ipr.c:5578: warning: Excess function parameter 'scsi_cmd' description in 'ipr_scan_finished'
- drivers/scsi/ipr.c:5704: warning: Function parameter or member 'number' not described in 'ipr_isr_eh'
- drivers/scsi/ipr.c:6278: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_gen_sense'
- drivers/scsi/ipr.c:6278: warning: Excess function parameter 'ioasa' description in 'ipr_gen_sense'
- drivers/scsi/ipr.c:6278: warning: Excess function parameter 'sense_buf' description in 'ipr_gen_sense'
- drivers/scsi/ipr.c:6711: warning: Function parameter or member 'host' not described in 'ipr_ioa_info'
- drivers/scsi/ipr.c:6711: warning: Excess function parameter 'scsi_host' description in 'ipr_ioa_info'
- drivers/scsi/ipr.c:7606: warning: Function parameter or member 'res_handle' not described in 'ipr_build_mode_sense'
- drivers/scsi/ipr.c:7606: warning: Excess function parameter 'res' description in 'ipr_build_mode_sense'
- drivers/scsi/ipr.c:7947: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_ioafp_set_caching_parameters'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'flags' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'page' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'dma_addr' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'xfer_len' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:8280: warning: Function parameter or member 't' not described in 'ipr_reset_timer_done'
- drivers/scsi/ipr.c:8280: warning: Excess function parameter 'ipr_cmd' description in 'ipr_reset_timer_done'
- drivers/scsi/ipr.c:9486: warning: bad line:
- drivers/scsi/ipr.c:9609: warning: Function parameter or member 'ioa_cfg' not described in 'ipr_free_all_resources'
- drivers/scsi/ipr.c:9609: warning: Excess function parameter 'ipr_cmd' description in 'ipr_free_all_resources'
- drivers/scsi/ipr.c:10071: warning: Function parameter or member 'irq' not described in 'ipr_test_intr'
- drivers/scsi/ipr.c:10071: warning: Function parameter or member 'devp' not described in 'ipr_test_intr'
- drivers/scsi/ipr.c:10071: warning: Excess function parameter 'pdev' description in 'ipr_test_intr'
- drivers/scsi/ipr.c:10098: warning: Function parameter or member 'ioa_cfg' not described in 'ipr_test_msi'
- drivers/scsi/ipr.c:10538: warning: Function parameter or member 'pdev' not described in 'ipr_probe'
- drivers/scsi/ipr.c:10538: warning: Function parameter or member 'dev_id' not described in 'ipr_probe'
- drivers/scsi/ipr.c:10794: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_halt_done'
- drivers/scsi/ipr.c:10805: warning: Function parameter or member 'nb' not described in 'ipr_halt'
- drivers/scsi/ipr.c:10805: warning: Function parameter or member 'event' not described in 'ipr_halt'
- drivers/scsi/ipr.c:10805: warning: Function parameter or member 'buf' not described in 'ipr_halt'
+ drivers/scsi/virtio_scsi.c:109: warning: Function parameter or member 'vscsi' not described in 'virtscsi_complete_cmd'
+ drivers/scsi/virtio_scsi.c:109: warning: Function parameter or member 'buf' not described in 'virtscsi_complete_cmd'
 
-Cc: Brian King <brking@us.ibm.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Jason Wang <jasowang@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Stefan Hajnoczi <stefanha@redhat.com>
+Cc: virtualization@lists.linux-foundation.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/ipr.c | 73 ++++++++++++++++++++++++++++++++--------------
- 1 file changed, 51 insertions(+), 22 deletions(-)
+ drivers/scsi/virtio_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 7d86f4ca266c8..f85020904099e 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -670,6 +670,7 @@ static void ipr_reinit_ipr_cmnd(struct ipr_cmnd *ipr_cmd)
- /**
-  * ipr_init_ipr_cmnd - Initialize an IPR Cmnd block
-  * @ipr_cmd:	ipr command struct
-+ * @fast_done:	fast done function call-back
-  *
-  * Return value:
-  * 	none
-@@ -687,7 +688,7 @@ static void ipr_init_ipr_cmnd(struct ipr_cmnd *ipr_cmd,
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 0e0910c5b9424..56875467e4984 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -100,7 +100,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
+ 		scsi_set_resid(sc, resid);
+ }
  
- /**
-  * __ipr_get_free_ipr_cmnd - Get a free IPR Cmnd block
-- * @ioa_cfg:	ioa config struct
-+ * @hrrq:	hrr queue
+-/**
++/*
+  * virtscsi_complete_cmd - finish a scsi_cmd and invoke scsi_done
   *
-  * Return value:
-  * 	pointer to ipr command struct
-@@ -1287,7 +1288,7 @@ static int ipr_is_same_device(struct ipr_resource_entry *res,
- /**
-  * __ipr_format_res_path - Format the resource path for printing.
-  * @res_path:	resource path
-- * @buf:	buffer
-+ * @buffer:	buffer
-  * @len:	length of buffer provided
-  *
-  * Return value:
-@@ -1310,7 +1311,7 @@ static char *__ipr_format_res_path(u8 *res_path, char *buffer, int len)
-  * ipr_format_res_path - Format the resource path for printing.
-  * @ioa_cfg:	ioa config struct
-  * @res_path:	resource path
-- * @buf:	buffer
-+ * @buffer:	buffer
-  * @len:	length of buffer provided
-  *
-  * Return value:
-@@ -1391,7 +1392,6 @@ static void ipr_update_res_entry(struct ipr_resource_entry *res,
-  * ipr_clear_res_target - Clear the bit in the bit map representing the target
-  * 			  for the resource.
-  * @res:	resource entry struct
-- * @cfgtew:	config table entry wrapper struct
-  *
-  * Return value:
-  *      none
-@@ -2667,7 +2667,7 @@ static void ipr_process_error(struct ipr_cmnd *ipr_cmd)
- 
- /**
-  * ipr_timeout -  An internally generated op has timed out.
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
-  *
-  * This function blocks host requests and initiates an
-  * adapter reset.
-@@ -2700,7 +2700,7 @@ static void ipr_timeout(struct timer_list *t)
- 
- /**
-  * ipr_oper_timeout -  Adapter timed out transitioning to operational
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
-  *
-  * This function blocks host requests and initiates an
-  * adapter reset.
-@@ -3484,6 +3484,7 @@ static struct bin_attribute ipr_trace_attr = {
- /**
-  * ipr_show_fw_version - Show the firmware version
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3518,6 +3519,7 @@ static struct device_attribute ipr_fw_version_attr = {
- /**
-  * ipr_show_log_level - Show the adapter's error logging level
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3540,7 +3542,9 @@ static ssize_t ipr_show_log_level(struct device *dev,
- /**
-  * ipr_store_log_level - Change the adapter's error logging level
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-+ * @count:	buffer size
-  *
-  * Return value:
-  * 	number of bytes printed to buffer
-@@ -3571,6 +3575,7 @@ static struct device_attribute ipr_log_level_attr = {
- /**
-  * ipr_store_diagnostics - IOA Diagnostics interface
-  * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -3631,7 +3636,8 @@ static struct device_attribute ipr_diagnostics_attr = {
- 
- /**
-  * ipr_show_adapter_state - Show the adapter's state
-- * @class_dev:	device struct
-+ * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3657,6 +3663,7 @@ static ssize_t ipr_show_adapter_state(struct device *dev,
- /**
-  * ipr_store_adapter_state - Change adapter state
-  * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -3708,6 +3715,7 @@ static struct device_attribute ipr_ioa_state_attr = {
- /**
-  * ipr_store_reset_adapter - Reset the adapter
-  * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -3749,6 +3757,7 @@ static int ipr_iopoll(struct irq_poll *iop, int budget);
-  /**
-  * ipr_show_iopoll_weight - Show ipr polling mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3772,7 +3781,9 @@ static ssize_t ipr_show_iopoll_weight(struct device *dev,
- /**
-  * ipr_store_iopoll_weight - Change the adapter's polling mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-+ * @count:	buffer size
-  *
-  * Return value:
-  *	number of bytes printed to buffer
-@@ -3871,7 +3882,7 @@ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
- 
- /**
-  * ipr_free_ucode_buffer - Frees a microcode download buffer
-- * @p_dnld:		scatter/gather list pointer
-+ * @sglist:		scatter/gather list pointer
-  *
-  * Free a DMA'able ucode download buffer previously allocated with
-  * ipr_alloc_ucode_buffer
-@@ -4059,7 +4070,8 @@ static int ipr_update_ioa_ucode(struct ipr_ioa_cfg *ioa_cfg,
- 
- /**
-  * ipr_store_update_fw - Update the firmware on the adapter
-- * @class_dev:	device struct
-+ * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -4139,6 +4151,7 @@ static struct device_attribute ipr_update_fw_attr = {
- /**
-  * ipr_show_fw_type - Show the adapter's firmware type.
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -4480,7 +4493,6 @@ static int ipr_free_dump(struct ipr_ioa_cfg *ioa_cfg) { return 0; };
-  * ipr_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-- * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-@@ -4650,6 +4662,7 @@ static struct device_attribute ipr_resource_type_attr = {
- /**
-  * ipr_show_raw_mode - Show the adapter's raw mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -4677,7 +4690,9 @@ static ssize_t ipr_show_raw_mode(struct device *dev,
- /**
-  * ipr_store_raw_mode - Change the adapter's raw mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-+ * @count:		buffer size
-  *
-  * Return value:
-  * 	number of bytes printed to buffer
-@@ -5060,7 +5075,7 @@ static int ipr_match_lun(struct ipr_cmnd *ipr_cmd, void *device)
- 
- /**
-  * ipr_cmnd_is_free - Check if a command is free or not
-- * @ipr_cmd	ipr command struct
-+ * @ipr_cmd:	ipr command struct
-  *
-  * Returns:
-  *	true / false
-@@ -5096,7 +5111,7 @@ static int ipr_match_res(struct ipr_cmnd *ipr_cmd, void *resource)
- 
- /**
-  * ipr_wait_for_ops - Wait for matching commands to complete
-- * @ipr_cmd:	ipr command struct
-+ * @ioa_cfg:	ioa config struct
-  * @device:		device to match (sdev)
-  * @match:		match function to use
-  *
-@@ -5261,6 +5276,7 @@ static int ipr_device_reset(struct ipr_ioa_cfg *ioa_cfg,
-  * ipr_sata_reset - Reset the SATA port
-  * @link:	SATA link to reset
-  * @classes:	class of the attached device
-+ * @deadline:	unused
-  *
-  * This function issues a SATA phy reset to the affected ATA link.
-  *
-@@ -5440,7 +5456,7 @@ static void ipr_bus_reset_done(struct ipr_cmnd *ipr_cmd)
- 
- /**
-  * ipr_abort_timeout - An abort task has timed out
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
-  *
-  * This function handles when an abort task times out. If this
-  * happens we issue a bus reset since we have resources tied
-@@ -5569,7 +5585,8 @@ static int ipr_cancel_op(struct scsi_cmnd *scsi_cmd)
- 
- /**
-  * ipr_eh_abort - Abort a single op
-- * @scsi_cmd:	scsi command struct
-+ * @shost:           scsi host struct
-+ * @elapsed_time:    elapsed time
-  *
-  * Return value:
-  *	0 if scan in progress / 1 if scan is complete
-@@ -5696,6 +5713,7 @@ static irqreturn_t ipr_handle_other_interrupt(struct ipr_ioa_cfg *ioa_cfg,
-  * ipr_isr_eh - Interrupt service routine error handler
-  * @ioa_cfg:	ioa config struct
-  * @msg:	message to log
-+ * @number:	various meanings depending on the caller/message
-  *
-  * Return value:
-  * 	none
-@@ -6268,8 +6286,7 @@ static void ipr_dump_ioasa(struct ipr_ioa_cfg *ioa_cfg,
- 
- /**
-  * ipr_gen_sense - Generate SCSI sense data from an IOASA
-- * @ioasa:		IOASA
-- * @sense_buf:	sense data buffer
-+ * @ipr_cmd:	ipr command struct
-  *
-  * Return value:
-  * 	none
-@@ -6702,7 +6719,7 @@ static int ipr_ioctl(struct scsi_device *sdev, unsigned int cmd,
- 
- /**
-  * ipr_info - Get information about the card/driver
-- * @scsi_host:	scsi host struct
-+ * @host:	scsi host struct
-  *
-  * Return value:
-  * 	pointer to buffer with description string
-@@ -7592,7 +7609,7 @@ static int ipr_ioafp_mode_select_page28(struct ipr_cmnd *ipr_cmd)
- /**
-  * ipr_build_mode_sense - Builds a mode sense command
-  * @ipr_cmd:	ipr command struct
-- * @res:		resource entry struct
-+ * @res_handle:		resource entry struct
-  * @parm:		Byte 2 of mode sense command
-  * @dma_addr:	DMA address of mode sense buffer
-  * @xfer_len:	Size of DMA buffer
-@@ -7939,6 +7956,7 @@ static void ipr_build_ioa_service_action(struct ipr_cmnd *ipr_cmd,
- /**
-  * ipr_ioafp_set_caching_parameters - Issue Set Cache parameters service
-  * action
-+ * @ipr_cmd:	ipr command struct
-  *
-  * Return value:
-  *	none
-@@ -7975,6 +7993,10 @@ static int ipr_ioafp_set_caching_parameters(struct ipr_cmnd *ipr_cmd)
- /**
-  * ipr_ioafp_inquiry - Send an Inquiry to the adapter.
-  * @ipr_cmd:	ipr command struct
-+ * @flags:	flags to send
-+ * @page:	page to inquire
-+ * @dma_addr:	DMA address
-+ * @xfer_len:	transfer data length
-  *
-  * This utility function sends an inquiry to the adapter.
-  *
-@@ -8265,7 +8287,7 @@ static int ipr_ioafp_identify_hrrq(struct ipr_cmnd *ipr_cmd)
- 
- /**
-  * ipr_reset_timer_done - Adapter reset timer function
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
-  *
-  * Description: This function is used in adapter reset processing
-  * for timing events. If the reset_cmd pointer in the IOA
-@@ -9483,7 +9505,6 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
-  * Description: This is the second phase of adapter initialization
-  * This function takes care of initilizing the adapter to the point
-  * where it can accept new commands.
--
-  * Return value:
-  * 	0 on success / -EIO on failure
-  **/
-@@ -9597,7 +9618,7 @@ static void ipr_free_irqs(struct ipr_ioa_cfg *ioa_cfg)
- 
- /**
-  * ipr_free_all_resources - Free all allocated resources for an adapter.
-- * @ipr_cmd:	ipr command struct
-+ * @ioa_cfg:	ioa config struct
-  *
-  * This function frees all allocated resources for the
-  * specified adapter.
-@@ -10059,7 +10080,8 @@ static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg,
- 
- /**
-  * ipr_test_intr - Handle the interrupt generated in ipr_test_msi().
-- * @pdev:		PCI device struct
-+ * @devp:		PCI device struct
-+ * @irq:		IRQ number
-  *
-  * Description: Simply set the msi_received flag to 1 indicating that
-  * Message Signaled Interrupts are supported.
-@@ -10085,6 +10107,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
- 
- /**
-  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
-+ * @ioa_cfg:		ioa config struct
-  * @pdev:		PCI device struct
-  *
-  * Description: This routine sets up and initiates a test interrupt to determine
-@@ -10530,6 +10553,8 @@ static void ipr_remove(struct pci_dev *pdev)
- 
- /**
-  * ipr_probe - Adapter hot plug add entry point
-+ * @pdev:	pci device struct
-+ * @dev_id:	pci device ID
-  *
-  * Return value:
-  * 	0 on success / non-zero on failure
-@@ -10786,6 +10811,7 @@ static struct pci_driver ipr_driver = {
- 
- /**
-  * ipr_halt_done - Shutdown prepare completion
-+ * @ipr_cmd:   ipr command struct
-  *
-  * Return value:
-  * 	none
-@@ -10797,6 +10823,9 @@ static void ipr_halt_done(struct ipr_cmnd *ipr_cmd)
- 
- /**
-  * ipr_halt - Issue shutdown prepare to all adapters
-+ * @nb: Notifier block
-+ * @event: Notifier event
-+ * @buf: Notifier data (unused)
-  *
-  * Return value:
-  * 	NOTIFY_OK on success / NOTIFY_DONE on failure
+  * Called with vq_lock held.
 -- 
 2.25.1
 
