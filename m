@@ -1,37 +1,38 @@
-Return-Path: <SRS0=/8H4=AU=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=WTMl=AV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D5C3C433E0
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 20:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5E1C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jul 2020 06:33:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A01D20672
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Jul 2020 20:56:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BB022077D
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jul 2020 06:33:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="qje773zA"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="luB6hwR4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726816AbgGIU4M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Jul 2020 16:56:12 -0400
-Received: from mout.web.de ([212.227.17.12]:42939 "EHLO mout.web.de"
+        id S1727121AbgGJGdC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jul 2020 02:33:02 -0400
+Received: from mout.web.de ([212.227.17.12]:60185 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726213AbgGIU4L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Jul 2020 16:56:11 -0400
+        id S1727050AbgGJGdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Jul 2020 02:33:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1594328148;
-        bh=25PBfwofqpYcfnQfB5TODkB8Oa0DXvIt4BdkJKGuJBk=;
+        s=dbaedf251592; t=1594362762;
+        bh=VSjkdBzvkGVrNT496rxp9Bw1WUlP3ENwOMf0SJfm364=;
         h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=qje773zAmD1f4Fe02ewAEcogKpw8x6oQ0MyN3lmjJ1TwQaVjJN2DN45ZEIJv7pkLx
-         GI7g8/jkD9vw8Uhei347kQl/76aW8jZ3NKRHyk21pKE/gnORE0UNrkrUr0pAmxmmql
-         wHQ9k/6akVGjkgHbnOua1GlwW9AN89t3K4438188=
+        b=luB6hwR4i7nRJjgxqtglc/ZyD+mjMLPZp2iT5Cl5HTYC4JxCZ0wrGM6JrxeaPfevU
+         PCka1t6FKs8HhoRGOsgzzoqVrOoRMjDTCbs91FE4vGwN4jscHn8Llq5WIrcRwAFkNS
+         i+Nq9kc8/RVmJoihbj7I4RUcElpGM5+Izv6Gud5I=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([2.244.81.209]) by smtp.web.de (mrweb101
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0M6mL2-1kng6i1PQi-00wRrr; Thu, 09
- Jul 2020 22:55:48 +0200
+Received: from [192.168.1.2] ([93.135.129.239]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1N1u6d-1krgVX0c5R-012Jmp; Fri, 10
+ Jul 2020 08:32:42 +0200
 Subject: Re: [PATCH] scsi: virtio_scsi: Remove unnecessary condition checks
 To:     Paolo Bonzini <pbonzini@redhat.com>,
         Xianting Tian <xianting_tian@126.com>,
@@ -89,8 +90,8 @@ Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
  x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
  pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
-Message-ID: <072edd61-9b00-4c63-804f-e98bf271b683@web.de>
-Date:   Thu, 9 Jul 2020 22:55:46 +0200
+Message-ID: <8eb9a827-45f1-e71c-0cbf-1c29acd8e310@web.de>
+Date:   Fri, 10 Jul 2020 08:32:33 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
@@ -98,29 +99,29 @@ In-Reply-To: <e87746e6-813e-7c0e-e21e-5921e759da5d@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-GB
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:2z9+KJz3jWsgHHQ4rbuCJap3wZt7E+Qo+O2KXBNCUnqljNihlEJ
- EdgUiaF8rRhbFguE/M04oKVbKaJqjVybRdjGWdJQVVJtUpfcrj9baHgeqg1L2VgJe1ShbkT
- NmMfUirnkush5ndlcv6DzpPRAiDucpVVmmJKBFEkTQx54uBLQ5XOjm9XtQCSmjH6YDLkk3h
- /No7DFON7QbW+WfqT/FLg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:8x9yh20XVHw=:lVcyL0nnjk3YqchssiW6aQ
- 7EBXo8VKzyAW2qkjw2p/hs8hega1+KTEAQBi6R+/B15dLm3rwBevHAw+BkblOgpJ3WiS13flq
- Ku5s9YseXkRofjpnR3hCYVWjGxZxypVevKT5QIzRvL1l02yNXIpbW3Sa5UPJK5JCe7qr++d77
- +gcMEabVKA8Cz95DLVl7dnRwq8EsedgsoHu9/yqvbPK2IRLMcwihOw/+xYi5gUCsbmQOD/RRK
- faQPdenR8S7cgYOupgo+VMShyXq5r+Fe8U8Xxd4tvopsCnleHEGmt9+Uf1ii7SlD9N2jg0EmU
- aPB8m6IoKPs9LbjG/zoxNp7kMgFwx7QrCHFRFSclh+D8hLRsU0ChlCs/67qjkQLNumQyCQVWj
- gJyNsyUrE5RjOExoUjX0IiEpU/Jm2WtZXL6UidNmc4zCI6yAysXXQJe4JNyJ3iQ6Mw20l1sBQ
- gU+K+C4BbV0q0jezvnhXWv+r2IC9UJ/Y0sZycFK+U9xp8U17OMeaXeP1X7+UXjiQbGBVIlNRb
- wXV1Vj9rmx6FbAESJtTREu//V3pvJQ1FSOPizUzwBOwKqxIucY6Z1LhE6WpG/BzQQxmXQ4mWt
- xdjkZEs17+Z6Kn7Kd1gabIPm/+3UHXt3XQeCswua/2tT5IKFIbJ97WvobZNtAa9vRW2HxUHfY
- wIBoMUlgOC+bkWyPbAQZzNxGMMCe21rd5gIK0XKq4W2TSjrwAUnLe/IDX14vH8EjXuvfozbpT
- zgdbtjhDSnJbThvM2UNZSYsAsX+sVBQrisMEMyuInUHxn1wjDIPjI5P8UhRwLcX8Y8TVUiCvo
- Sgff4p7PX8I0sqkke8qMcVh2LLCvXFNY/HpEE7zd979fdMxZLdq6e5SN5GcgdwIo7AniFWriY
- 4Z9vIMOxqepxcVTn0fuic0v/Srvu8HBi17N9+sWoqS0BbGHQTwGKaefL+Z2TRl5xFd/5hdDrt
- uiYgRJP3A1U5ebBrfCjXQqcC+naRWUUW4V9DhrwSvu8n/1gzxv1TN90J8BBYZU/xfhy1B9qn2
- TwGqXLrSR6YA3W8oags1DBfhLuOBXbbNQ8LumlYofp/AT0lHDKESgEPOtogr/bi3xaycJy74L
- aE1DvZC8MBrIW+6CkVTZ2wMo8HGLuQOWcQ+rC0IO691je2q5DcIIerYF3zl37ttpla7alfDol
- GkfsykWKgpijNj+8fGkVGgWZUVBpLFAqj3xWqkSHo8jg3FjCsqPqKo2jgNQ6wxcJZX6XCQVeJ
- p+r2EGY1SYbIiLvz9QVJseSgeSMPsX7rlgPUM3w==
+X-Provags-ID: V03:K1:FX8FryPsmDViqZC962m+4pWDswlnK0V23fb+GXCb9B8DsrzKIVX
+ /Gpa47Lg1rGyg9CeIk40gidvRDCiBv/8l/d89KQtqdM8s1gtegZW2Us4yxQ3+5z9P98S6km
+ 5Ga5Nh5MU6nbh6D3AWdoK6YjbjWz2iVZya5SIBrjxfzh2MotWESRdx2/8ko/HagQjZn46Gv
+ o1Mca4OZXEV8z4JFGZWCA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:GzZE6VK4dOQ=:t83HzhaOTridvOKZEMYg4s
+ 37je6YWVvcLbOOeADbRW293V13Skt9rKaCjupP6EDdG5Yo3fXCvhdsz4QsOaDAhvf2lZJYvLw
+ eABTTxVWPSeQ8+1gNzHIWf/Kh7yHLDjqEynFnX1qc7E6qGm5M255uWQdH6OHn4xeXYYG2lMuL
+ nUKRAENTDtZhssKrwAurgRCABZAn9/B6darxqgvrnJeYWme1ZeFke6xxW3bibQyc1CAAtdG+6
+ KNZqHajoAfIGP2fBzh1Q1UUofwtKjjya+Dyc7FyIwLWT1+JwNQIfFGQnbzs1RXKa7FfzneiVM
+ xMjilyCMNd3aZrIt6GdKTeLyDwFQ3ygVbtjS7xtmyjGk3srowDcF36OPWf+XuawMYGpKJray3
+ hv+D8F9z0FjWCecV7qQGOsuBVTki8FDJXpSVmLnemkngS7MDP5igzBDNCLPLy1TVuiZwnl947
+ OpRbRBGmX6/x3nH5XBAbPZviVQs4XB95HMNCiD5tOQAJxp5Fif3ba3PVmez1v3ez5BBkA35yy
+ ih7ihcLip9xXoHoMsBAjVUOSiygCh2W2wBKuYfk8cE6iQ3F/+EVUURAj8+P2VSNryfgk7zVn7
+ 6DsyS0yhGSbi4/Z78nW5aFCg7cgJnNhbqOY1wP9IQEmYJ1wY/VH4LRCxrO0m1Tf9PIq+HeLNS
+ KQWK/1BXDyvizekBx2AmRE6c5O0R3ySHWtRI8JbnuDxhzzolv9ZrZxVVfI8y1R0qX8+a+jP+A
+ VXXkARNs5US0hCzukvqtXP+OQi7D0e5NsWeoA9dvi6GzS6fEiHjJHILbW1XXueQW5Y1q87NyN
+ i3zce6VY5Mm/QWUSyrNzrhMjdmjjKfja4Gn6MjRWsVsvl5fGOKJFgi+lNFplfDOVsEiuVpIrr
+ aYZmbpwYT+nZQ0qVNi9U+d3K4aV6f5TJ22Gt/FoGgMw8YkY78cARo4ABVGZKFdvvKtEqj8a1y
+ YgOC3+gjjw892t6It2ygotT8skx22qXtbrmBQEr3oz26gj3oIFiJgy4R13lX3k0UzBVptEPXO
+ uSHZsOSA2ElSChxDsgBtVR8pBvKYEGpRkAvaUvHYYs9F7qswVd/GV3e43PlKzLUOF1mkmBJlY
+ V3uV5HJ3pWmC9JmhhL/8fZHLqHJrhGVCqS+v/6FCs4Ad9ZhXYUIYPupcxKG/UpnjjvQeeJzVo
+ lwxUypPvrnrgLsxNM2JsMP6BSThb4CxujB0rB19MChinhdJvINDZ2n/eJ51otPCe2RzszVjkT
+ z3+KgY7HKaOr7Pzx03aSZpVQh0YeVF3ObYPgAQQ==
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -139,12 +140,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 >
 > The point of the patch is precisely to simplify the code,
 
-I propose another bit of fine-tuning there.
+I suggest to reconsider also Linux coding style aspects
+for the implementation of the function =E2=80=9Cinit=E2=80=9D.
+https://elixir.bootlin.com/linux/v5.8-rc4/source/drivers/scsi/virtio_scsi.=
+c#L980
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/dr=
+ivers/scsi/virtio_scsi.c?id=3D42f82040ee66db13525dc6f14b8559890b2f4c1c#n98=
+0
+
+ 	if (!virtscsi_cmd_cache) {
+ 		pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
+-		goto error;
++		return -ENOMEM;
+	}
+
+
+See also:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
+cumentation/process/coding-style.rst?id=3D42f82040ee66db13525dc6f14b855989=
+0b2f4c1c#n461
 
 
 > executing a couple more instruction is not an issue.
 
-Can an additional label help here besides a possible identifier renaming?
+With which update steps would like to achieve such a code variant?
+
+destroy_pool:
+	mempool_destroy(virtscsi_cmd_pool);
+	virtscsi_cmd_pool =3D NULL;
+destroy_cache:
+	kmem_cache_destroy(virtscsi_cmd_cache);
+	virtscsi_cmd_cache =3D NULL;
+	return ret;
+
 
 Regards,
 Markus
