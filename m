@@ -2,147 +2,117 @@ Return-Path: <SRS0=WTMl=AV=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2D45C433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jul 2020 08:12:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C378C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jul 2020 10:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBF212078B
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jul 2020 08:12:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33B0920767
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Jul 2020 10:48:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="HPyP3npW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726774AbgGJIMJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Jul 2020 04:12:09 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2451 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726496AbgGJIMI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Jul 2020 04:12:08 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 05DA8F45D4E6DACBDC9E;
-        Fri, 10 Jul 2020 09:12:07 +0100 (IST)
-Received: from [127.0.0.1] (10.47.5.154) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Fri, 10 Jul
- 2020 09:12:05 +0100
-Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     Kashyap Desai <kashyap.desai@broadcom.com>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <don.brace@microsemi.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>, <hare@suse.com>,
-        <hch@lst.de>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-11-git-send-email-john.garry@huawei.com>
- <d55972999b9370f947c20537e41b49bf@mail.gmail.com>
- <e61593f8-5ee7-5763-9d02-d0ea13aeb49f@huawei.com>
- <92ba1829c9e822e4239a7cdfd94acbce@mail.gmail.com>
- <10d36c09-9d5b-92e9-23ac-ea1a2628e7d9@huawei.com>
- <0563e53f843c97de1a5a035fae892bf8@mail.gmail.com>
- <61299951-97dc-b2be-c66c-024dfbd3a1cb@huawei.com>
- <b49c33ebda36b8f116a51bc5c430eb9d@mail.gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
-Date:   Fri, 10 Jul 2020 09:10:21 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <b49c33ebda36b8f116a51bc5c430eb9d@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.5.154]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S1727844AbgGJKsr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Jul 2020 06:48:47 -0400
+Received: from mail3.bemta25.messagelabs.com ([195.245.230.81]:39580 "EHLO
+        mail3.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727837AbgGJKsq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Jul 2020 06:48:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1594378124; i=@ts.fujitsu.com;
+        bh=tK3FIVROxYjkLrzhtoyLVijq5QAfznqa/3uJx7/8R3M=;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
+        b=HPyP3npWaMvZnXZHexmY6VPFbUOpmQLCAydn2V0FnkJ3encAvX1SKvVXvZiKSUrfN
+         uLtytrbsrP2WQ3PeLkowP7UcjVn88E41148dvmuwC3x1eajmxwZrOoe7ptlepBUod0
+         TskQSWoS5EKxLUhSEvQ6lJ4TdGm/I5bEqLkFw5V4kjKlhNe8VAan2DFDPnVxULlGic
+         +6Pi1ubJOY4J6VxaNi5giZM6cDZILEI2nR1/dfnb6FO9KWsmnt0xkHsFek5OiseYyc
+         EewUlPvLTVnWj/CZMgVsCBxn/+741QaJU32cxHMm7MF9WsMmH9c0NvDk20UQ0+belJ
+         WZ4/SCvv02A4A==
+Received: from [100.112.199.31] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-1.bemta.az-b.eu-west-1.aws.symcld.net id 86/AA-12842-B87480F5; Fri, 10 Jul 2020 10:48:43 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrNLMWRWlGSWpSXmKPExsViZ8MRqtvtzhF
+  vsLdNy6L7+g42i+XH/zFZ/J10g9WidelbJgcWj49Pb7F4fN4kF8AUxZqZl5RfkcCa8X/GMcaC
+  rxwV/Y9KGxifsHcxcnEICUxmlDh27gwrhDOdUWL3nYdsXYycHGwCBhIrJt1nAUmICKxhlFh5Z
+  x4zSIJZQE9i2r917CC2sICbxNV/51hBbBYBVYnJDRfBbF4BO4lNj7pYQGwJAXmJjgOTwWxOAX
+  uJ/V3/wGwhoJpdfQ9ZJzByL2BkWMVokVSUmZ5RkpuYmaNraGCga2hopGtoaa5raGyul1ilm6S
+  XWqpbnlpcomuol1herFdcmZuck6KXl1qyiREYJikFRzt3MP569UHvEKMkB5OSKO+0j+zxQnxJ
+  +SmVGYnFGfFFpTmpxYcYZTg4lCR4+1054oUEi1LTUyvSMnOAIQuTluDgURLhne8ClOYtLkjML
+  c5Mh0idYlSUEuf95wyUEABJZJTmwbXB4uQSo6yUMC8jAwODEE9BalFuZgmq/CtGcQ5GJaAKkO
+  08mXklcNNfAS1mAlp8lIMNZHFJIkJKqoHJa7F3rc7/z8F3drIsWC4vc9pjdrKqiMhlzY5ok/Z
+  Oq0NTEgXs/HuSp9+Qec7kVhJxTHSN/pMdQVw7Ky4rHLfd0SEk+pnzH+ulNO8t9nt3xjA8qalY
+  Mlnb98ekohtWlVMtZcuEFTbHiLm3F3119HrW8ed/rFPLLYHquVZ7fNe9NtljqmYyL30Xf+Sbu
+  W2zrhx/tsijrLPrCKuNj13Zmxm6ncab492Cj3zg+HNxv5hRt+aGRZ4uuuw5W66cMzrn+tCT9T
+  jfwrvORj3OwhMiZvSHKU74PWuRw1JdsYjSlbteGBZ6fGjdE7P0uu/ctE/LNrYvZ1zr9/rvZ72
+  Tc7O+WUgd4evk+iSh133QhPXmnEIlluKMREMt5qLiRAB3TamcDgMAAA==
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-7.tower-285.messagelabs.com!1594378122!183263!1
+X-Originating-IP: [62.60.8.85]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 26041 invoked from network); 10 Jul 2020 10:48:43 -0000
+Received: from unknown (HELO mailhost4.uk.fujitsu.com) (62.60.8.85)
+  by server-7.tower-285.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 10 Jul 2020 10:48:43 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost4.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06AAmgXO025765;
+        Fri, 10 Jul 2020 11:48:42 +0100
+Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
+        by x-serv01 (Postfix) with ESMTP id 6944F20699;
+        Fri, 10 Jul 2020 12:48:42 +0200 (CEST)
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Subject: [PATCH 4/8] scsi: target: tcmu: Do not queue aborted commands
+Date:   Fri, 10 Jul 2020 12:48:13 +0200
+Message-Id: <20200710104817.19462-5-bstroesser@ts.fujitsu.com>
+X-Mailer: git-send-email 2.12.3
+In-Reply-To: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
+References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+If tcmu receives an already aborted command, tcmu_queue_cmd()
+should reject it.
 
->>
->> https://github.com/hisilicon/kernel-dev/commits/private-topic-blk-mq-
->> shared-tags-rfc-v8
-> I tested this repo + megaraid_sas shared hosttag driver. This repo (5.8-rc)
-> has CPU hotplug patch.
-> " bf0beec0607d blk-mq: drain I/O when all CPUs in a hctx are offline"
-> 
-> Looking at description of above patch and changes, it looks like
-> megaraid_sas driver can still work without shared host tag for this feature.
-> 
-> I observe CPU hotplug works irrespective of shared host tag
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+---
+ drivers/target/target_core_user.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Can you be clear exactly what you mean by "irrespective of shared host tag"?
-
-Do you mean that for your test Scsi_Host.nr_hw_queues is set to expose 
-hw queues and scsi_host_template.map_queues = blk_mq_pci_map_queues(), 
-but you just don't set the host_tagset flag?
-
-  in megaraid_sas
-> on 5.8-rc.
-> 
-> Without shared host tag, megaraid driver will expose single hctx and all the
-> CPU will be mapped to hctx0.
-
-right
-
-> Any CPU offline event will have " blk_mq_hctx_notify_offline" callback in
-> blk-mq module. If we do not have this callback/patch, we will see IO
-> timeout.
-> blk_mq_hctx_notify_offline callback will make sure all the outstanding on
-> hctx0 is cleared and only after it is cleared, CPU will go offline.
-
-But that is only for when the last CPU for the hctx is going offline. If 
-nr_hw_queues == 1, then hctx0 would cover all CPUs, so that would never 
-occur during normal operation. See initial check in 
-blk_mq_hctx_notify_offline():
-
-static int blk_mq_hctx_notify_offline(unsigned int cpu, struct 
-hlist_node *node)
-{
-	if (!cpumask_test_cpu(cpu, hctx->cpumask) ||
-	    !blk_mq_last_cpu_in_hctx(cpu, hctx))
-		return 0;
-
-> 
-> megaraid_sas driver has  internal reply_queue mapping which helps to get IO
-> completion on same cpu.  Driver get msix index from that table based on "
-> raw_smp_processor_id".
-> If table is mapped correctly at probe time,  It is not possible to pick
-> entry of offline CPU.
-> 
-> Am I missing anything ?
-
-Not sure, I think I need to be clear exactly what you're doing.
-
-> 
-> If you can help me to understand why we need shared host tag for CPU
-> hotplug, I can try to frame some test case for possible reproduction.
-
-I think it's best explained in cover letter for "blk-mq: Facilitate a 
-shared sbitmap per tagset".
-
-See points "HBA HW queues are required to be mapped to that of the 
-blk-mq hctx", "HBA LLDD would have to generate this tag internally", and 
-"blk-mq assumes the host may accept (Scsi_host.can_queue * #hw queue) 
-commands".
-> 
->> I just updated to include the change to have Scsi_Host.host_tagset in
->> 4291f617a02b commit ("scsi: Add host and host template flag
->> 'host_tagset'")
->>
->> megaraid sas support is not on the branch yet, but I think everything else
->> required is. And it is mutable, so I'd clone it now if I were you - or
->> just replace
->> the required patch onto your v7 branch.
-> I am working on this.
-> 
-
-Great, thanks
+diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+index b06b18d1b135..25c480fde9ee 100644
+--- a/drivers/target/target_core_user.c
++++ b/drivers/target/target_core_user.c
+@@ -1103,8 +1103,8 @@ tcmu_queue_cmd(struct se_cmd *se_cmd)
+ 	struct se_device *se_dev = se_cmd->se_dev;
+ 	struct tcmu_dev *udev = TCMU_DEV(se_dev);
+ 	struct tcmu_cmd *tcmu_cmd;
+-	sense_reason_t scsi_ret;
+-	int ret;
++	sense_reason_t scsi_ret = TCM_CHECK_CONDITION_ABORT_CMD;
++	int ret = -1;
+ 
+ 	tcmu_cmd = tcmu_alloc_cmd(se_cmd);
+ 	if (!tcmu_cmd)
+@@ -1112,7 +1112,8 @@ tcmu_queue_cmd(struct se_cmd *se_cmd)
+ 
+ 	mutex_lock(&udev->cmdr_lock);
+ 	se_cmd->priv = tcmu_cmd;
+-	ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
++	if (!(se_cmd->transport_state & CMD_T_ABORTED))
++		ret = queue_cmd_ring(tcmu_cmd, &scsi_ret);
+ 	if (ret < 0)
+ 		tcmu_free_cmd(tcmu_cmd);
+ 	mutex_unlock(&udev->cmdr_lock);
+-- 
+2.12.3
 
