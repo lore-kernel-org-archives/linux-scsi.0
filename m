@@ -2,57 +2,57 @@ Return-Path: <SRS0=csMy=AX=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 527EAC433E1
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jul 2020 03:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB6AC433E0
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jul 2020 04:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38B212076D
-	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jul 2020 03:21:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB24C20748
+	for <linux-scsi@archiver.kernel.org>; Sun, 12 Jul 2020 04:13:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727827AbgGLDVV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Jul 2020 23:21:21 -0400
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:37981 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725892AbgGLDVV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Jul 2020 23:21:21 -0400
-Received: by mail-pj1-f68.google.com with SMTP id k5so4538803pjg.3;
-        Sat, 11 Jul 2020 20:21:20 -0700 (PDT)
+        id S1727946AbgGLENK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 12 Jul 2020 00:13:10 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:37697 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726281AbgGLENJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jul 2020 00:13:09 -0400
+Received: by mail-pg1-f193.google.com with SMTP id d4so4526967pgk.4
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Jul 2020 21:13:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=/xlF8D0YRhQkJt0cwXY5nQaiVavowdpy7MweO/IsN48=;
-        b=i/+cYjrtV3PSXd9nRA3f0h6yZAK1CQcFc9qyy9zZ0u1fX2rSq08JRJMezBRHPvlM5q
-         s2VzSFiKCIbsQetZk6vkGcXDEUQrpG3Kx5yQ/7KZmQAM2088wkN0uMuyhzZ0wdEFfCMG
-         wmpOxQScGdeLdmUvC69ulAOsOBLWTyuh+whmtvuSymD9slrKwBzXdt0Z+rUz+ifqZy10
-         khPjUJAv6PVkmPyKv6RR3OojPAlqKjjmk6yS8wDdxLz5g082bVRoXYhgYNb72k3mkIra
-         vFP6MWxmP1rWFqhscbr1bZUvxSfkSur2LKuqguyhZzJdZ2v5+F/q9T/QqYoZT++ho0jq
-         9P5g==
-X-Gm-Message-State: AOAM53175e0U9aBWrtSx1HMshnGgzVGd2Abkc/JTZRW2G/opjVWZ6E45
-        CgqPRw42/yth0DDhqjEbcP3RPEU0
-X-Google-Smtp-Source: ABdhPJzXmEbUDGyIuGAaVXGgQaDU4PJB2eOJ5b7IxTqEBZ4e+uzIDi437EURznXXRWI60suwSG0TMg==
-X-Received: by 2002:a17:90a:db0b:: with SMTP id g11mr13404424pjv.11.1594524080197;
-        Sat, 11 Jul 2020 20:21:20 -0700 (PDT)
+        bh=Q+Iuxj2tV4jqU+Jkl7CgmY/3MT6AJ7nvgpdZ/2MJldg=;
+        b=R0F+yBGH8h/pHnuTC2srIWp09sjM729+xAmHh1mQb3IgR5Ui81SyFjV0X1fYLb4e9B
+         j93v8vHA+0Fytn2B2QLb2j6U7aDvVZyYKb2zZ2F7jNX/Nrz92oRN61OYyhhJE8cnUXwP
+         XicPMlCXuwveKVUiuIrNXC+AIWudob3ZG8uMMU26q8tZLjvSVPddCnDjHyCbBJJ1F+5V
+         +JOorpYIKNoc2I4te+OIaugmqBFkbYiRJRocpFdKGbE6RJzt/lHaBhySiUrPou6DazLh
+         V3sEFbVSAwSlgW8PkC47jjG+uXYYM7QhFAqMEq0soVqkW5PdmptErA6BaQRw3x9IzvQW
+         MkeQ==
+X-Gm-Message-State: AOAM531iDomw6UUeueYNQ9BhDdxLoZp6y7QyF1qoJ9uzXWyJJ6xxEWyk
+        LoCmEc7EGiq7qK45Msadcy4piRvR
+X-Google-Smtp-Source: ABdhPJyhW0VP5abOcT7EEhif0JSoYBIp1g4BJ8SDw1BKsFZyYVSPD8NCoq+JWZu5V1l9mlNyZwbMBQ==
+X-Received: by 2002:aa7:8391:: with SMTP id u17mr23928072pfm.156.1594527188617;
+        Sat, 11 Jul 2020 21:13:08 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id z26sm10462649pfr.187.2020.07.11.20.21.18
+        by smtp.gmail.com with ESMTPSA id y7sm10350718pjy.54.2020.07.11.21.13.07
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 11 Jul 2020 20:21:19 -0700 (PDT)
-Subject: Re: [RFC PATCH v3] scsi: ufs: Quiesce all scsi devices before
- shutdown
-To:     Stanley Chu <stanley.chu@mediatek.com>, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     beanhuo@micron.com, asutoshd@codeaurora.org, cang@codeaurora.org,
-        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kuohong.wang@mediatek.com, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, andy.teng@mediatek.com,
-        chaotian.jing@mediatek.com, cc.chou@mediatek.com
-References: <20200706132218.21171-1-stanley.chu@mediatek.com>
+        Sat, 11 Jul 2020 21:13:07 -0700 (PDT)
+Subject: Re: [PATCH] scsi: allow state transitions BLOCK -> BLOCK
+To:     Hannes Reinecke <hare@suse.de>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+References: <20200702142436.98336-1-hare@suse.de>
+ <1593700443.9652.2.camel@HansenPartnership.com>
+ <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
+ <2dd291ba-1e59-5e88-de96-5d3965f20317@acm.org>
+ <819ce023-93c3-249d-2221-97438f229e03@suse.de>
+ <b4842dfd-f385-64a9-6421-03765f60d0d9@acm.org>
+ <97d4882d-2f26-de93-672a-6395e8fedf0c@suse.de>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -77,12 +77,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <2465978d-28d3-e30f-248e-87333c789743@acm.org>
-Date:   Sat, 11 Jul 2020 20:21:17 -0700
+Message-ID: <a2db3f6a-44de-2d2c-6dd1-69d5af8f7e84@acm.org>
+Date:   Sat, 11 Jul 2020 21:13:06 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200706132218.21171-1-stanley.chu@mediatek.com>
+In-Reply-To: <97d4882d-2f26-de93-672a-6395e8fedf0c@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -91,56 +91,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-06 06:22, Stanley Chu wrote:
-> +static void ufshcd_cleanup_queue(struct scsi_device *sdev, void *data)
-> +{
-> +	if (sdev->request_queue)
-> +		blk_cleanup_queue(sdev->request_queue);
-> +}
-
-No SCSI LLD should ever call blk_cleanup_queue() directly for
-sdev->request_queue. Only the SCSI core should call blk_cleanup_queue()
-directly for that queue.
-
->  int ufshcd_shutdown(struct ufs_hba *hba)
->  {
->  	int ret = 0;
-> +	struct scsi_target *starget;
->  
->  	if (!hba->is_powered)
->  		goto out;
-> @@ -8612,7 +8632,25 @@ int ufshcd_shutdown(struct ufs_hba *hba)
->  			goto out;
->  	}
->  
-> +	/*
-> +	 * Quiesce all SCSI devices to prevent any non-PM requests sending
-> +	 * from block layer during and after shutdown.
-> +	 *
-> +	 * Here we can not use blk_cleanup_queue() since PM requests
-> +	 * (with BLK_MQ_REQ_PREEMPT flag) are still required to be sent
-> +	 * through block layer. Therefore SCSI command queued after the
-> +	 * scsi_target_quiesce() call returned will block until
-> +	 * blk_cleanup_queue() is called.
-> +	 *
-> +	 * Besides, scsi_target_"un"quiesce (e.g., scsi_target_resume) can
-> +	 * be ignored since shutdown is one-way flow.
-> +	 */
-> +	ufshcd_scsi_for_each_sdev(ufshcd_quiece_sdev);
-> +
->  	ret = ufshcd_suspend(hba, UFS_SHUTDOWN_PM);
-> +
-> +	/* Set queue as dying to not block queueing commands */
-> +	ufshcd_scsi_for_each_sdev(ufshcd_cleanup_queue);
->  out:
->  	if (ret)
->  		dev_err(hba->dev, "%s failed, err %d\n", __func__, ret);
+On 2020-07-05 23:22, Hannes Reinecke wrote:
+> That will still have a duplicate call as scsi_target_block() has been called already (cf scsi_target_block() in line 539 right at the start of srp_reconnect_rport()).
 > 
+> (And I don't think we need the WARN_ON_ONCE() here; we are checking for rport->state == SRP_RPORT_BLOCKED just before that line...)
 
-What is the purpose of ufshcd_shutdown()? Why does this function exist?
-How about removing the calls to ufshcd_shutdown() and invoking power down
-code from inside sd_suspend_common() instead?
+How about the patch below? The approach implemented by that
+patch is only to call scsi_target_block() after a successful
+transition to the SRP_RPORT_BLOCKED state and to only call
+scsi_target_unblock() when leaving the SRP_RPORT_BLOCKED state.
 
 Thanks,
 
 Bart.
+
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index d4d1104fac99..0334f86f0879 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -402,13 +402,9 @@ static void __rport_fail_io_fast(struct srp_rport *rport)
+
+ 	lockdep_assert_held(&rport->mutex);
+
++	WARN_ON_ONCE(rport->state != SRP_RPORT_BLOCKED);
+ 	if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
+ 		return;
+-	/*
+-	 * Call scsi_target_block() to wait for ongoing shost->queuecommand()
+-	 * calls before invoking i->f->terminate_rport_io().
+-	 */
+-	scsi_target_block(rport->dev.parent);
+ 	scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
+
+ 	/* Involve the LLD if possible to terminate all I/O on the rport. */
+@@ -541,7 +537,8 @@ int srp_reconnect_rport(struct srp_rport *rport)
+ 	res = mutex_lock_interruptible(&rport->mutex);
+ 	if (res)
+ 		goto out;
+-	scsi_target_block(&shost->shost_gendev);
++	if (srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0)
++		scsi_target_block(&shost->shost_gendev);
+ 	res = rport->state != SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODEV;
+ 	pr_debug("%s (state %d): transport.reconnect() returned %d\n",
+ 		 dev_name(&shost->shost_gendev), rport->state, res);
+@@ -569,9 +566,9 @@ int srp_reconnect_rport(struct srp_rport *rport)
+ 		 * and dev_loss off. Mark the port as failed and start the TL
+ 		 * failure timers if these had not yet been started.
+ 		 */
++		WARN_ON_ONCE(srp_rport_set_state(rport, SRP_RPORT_BLOCKED));
++		scsi_target_block(rport->dev.parent);
+ 		__rport_fail_io_fast(rport);
+-		scsi_target_unblock(&shost->shost_gendev,
+-				    SDEV_TRANSPORT_OFFLINE);
+ 		__srp_start_tl_fail_timers(rport);
+ 	} else if (rport->state != SRP_RPORT_BLOCKED) {
+ 		scsi_target_unblock(&shost->shost_gendev,
