@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A4AC43446
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5DB8C43445
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 286992072D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C161E2072D
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="baJtv+z+"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="CeT9LqTK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729543AbgGMIBF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 04:01:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52568 "EHLO
+        id S1729523AbgGMIA6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 04:00:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729353AbgGMIA3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:29 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD78C08C5DB
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:28 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id a6so14743700wrm.4
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:28 -0700 (PDT)
+        with ESMTP id S1729386AbgGMIAa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:30 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30E84C061794
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:30 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id 17so12196118wmo.1
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=9ZgkQ7bdc1wuAXRYHhS8n4ys9/FLwMulTL97bGrK6Pg=;
-        b=baJtv+z+i4BdwY1fkELNipK3Dnb5fnGWphS0Xgl7xgPQoanLW/l0N/wuHE0Ktb2aC8
-         oZG/F0tbD7fS7sCeVK6xguclTpNWCxHyxsh/29qRaCm9jld5xT4LT3B4riMznNeH7+q9
-         VWEN0Arkpaw8BzFJ01UWbsK19U67y4UkEkcvByynvlIKeUuQaRC49nKAHicBCCTkaa2b
-         NT7zn2rMDd5xXHZVLzMJjji4yQSvW03xcLrfm/WV5q3Rs4V4eoyvBPRhrUGl/Ju/FNhF
-         VCFPOda9DRUnL7uqPv/r9binxhL1Dt1CBLVgtho/8Ce/yI+ZRNNpbkcGTf7QEdE/J8Ms
-         IKzw==
+        bh=XHlEfo3tdu7fpK4dx4b1MtHnaLwguM9Twh58pG6oyd8=;
+        b=CeT9LqTKAntJxO532RBKZSD2MmXajdTP2Z6TZsjFUos2Dy3AqQiKeqmzOQXLOdup5K
+         oR9Jfvpc/IaLI5DHKjLZ3nTEB8sF7UYyDL/vrYeDWJPRBIq19lwaOe71zTjcxb8EEYZJ
+         IHb63tKO7l/kaliVaH9+00BPFG2fPoqIMa4p7jFFQ+VJjSMs6z1wx8Q2skmsuMUqQQBo
+         QEqn0NETKhS4uJDnyliVRpRQEe348zA7tfix6tX0dSpRIadSxns7p8COhLJLS9QdLhFt
+         J2M/PHpxAxBC76pHYM3RFjlQi3JH+L/QEkYTospzXYKTUlDLQ2OBFM9bLkvfhMhrp4Ky
+         sygg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=9ZgkQ7bdc1wuAXRYHhS8n4ys9/FLwMulTL97bGrK6Pg=;
-        b=e7QUAf8Wtv2eS2GofkiVLMd9WvsPYZ+IWq5gqIZ8l8iPeJlQr4wL+yPgaGod2lJ5RT
-         m9ZklYc1++opJAXmNdfPjdBYmikVHZxZQgY/r6a3Xi5KyyBURJTqI+CtFH7HUNAA5MvX
-         KAk3WonVvpeSrjH5wSrNzRHyMvB9MqZuoTJIaYxgAi/E/g2ov+tB1OFWOqBrFkmHREvQ
-         /43ADBHPmzjec0WrtwM9WKR4ot64t2tuVRQHF6xcfmLj91637HI18XgcYr52I9JLHxub
-         iKTXpu8jQeK9vP99EmzSjNLlfaaVN700JMEMKQdGsOKYzsWk9/Rqk1q8a8+d9cZOenK5
-         N1QQ==
-X-Gm-Message-State: AOAM532YtjBwBPTkSlnSWe+n5iZosM7vC47y62qcMiz33UpW+fY0XjPg
-        oS7xvYov9GS/t16BGJPLTX2fRw==
-X-Google-Smtp-Source: ABdhPJxd3p7O61j7UOZQOlPtiEVXjyxjCLg/KpD1jSQ/g2VyxYglRfGMmYsYvWB1ofWoVaYUwh3q7w==
-X-Received: by 2002:a5d:6288:: with SMTP id k8mr76209953wru.373.1594627227678;
-        Mon, 13 Jul 2020 01:00:27 -0700 (PDT)
+        bh=XHlEfo3tdu7fpK4dx4b1MtHnaLwguM9Twh58pG6oyd8=;
+        b=Vn4UyD7S5u+saM1EuxcrELa4Xh8cF+91tI6yamKWh8rVfJp2ZlDlkHpgcHNCNuTubT
+         danTFa3IRqpjMdkcAv+xgX8HIrNixGc9LcncQQl61TQLWNDQ+V53NqFyMyYZ1e+iuhRs
+         x2F5KfMTJ4mS/RQX6J8mS4BOEe0PmBSsHr35V4LQ+eu5cAceqXOwfhEophE7mmAJayW0
+         dbCfoZM3L6hwtOuyrhBSKzWTZUzuOLMFgF70L9nRAKWhq5sXmlAIa06VL15BHlVPpAj6
+         JT6E2gWbQ9QXve93ocPTGfLtCJPi13UD2/CuqMETtQXYym8a4L9htTNQVcMLg4kh5Erq
+         vqPg==
+X-Gm-Message-State: AOAM533ceUnsupliQqKTouimFbEWELHZzFtjhI1bSvUxycuvtCHoEX2m
+        dnZZC/VmpGeYGDnRs+5BkGtBoQ==
+X-Google-Smtp-Source: ABdhPJx88Pdx/IGjrSfBIXgCCFIBL5KfuufE/J4dRq+ZR/F1RbBZER6j/AS7USDE5pUVx4WBY8NA3w==
+X-Received: by 2002:a1c:408b:: with SMTP id n133mr17672302wma.88.1594627228848;
+        Mon, 13 Jul 2020 01:00:28 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.26
+        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 01:00:27 -0700 (PDT)
+        Mon, 13 Jul 2020 01:00:28 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -65,9 +65,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Ketan Mukadam <ketan.mukadam@broadcom.com>,
         Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
         linux-drivers@broadcom.com
-Subject: [PATCH v2 18/24] scsi: be2iscsi: be_main: Fix misdocumentation of 'pcontext'
-Date:   Mon, 13 Jul 2020 08:59:55 +0100
-Message-Id: <20200713080001.128044-19-lee.jones@linaro.org>
+Subject: [PATCH v2 19/24] scsi: be2iscsi: be_mgmt: Add missing function parameter description
+Date:   Mon, 13 Jul 2020 08:59:56 +0100
+Message-Id: <20200713080001.128044-20-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200713080001.128044-1-lee.jones@linaro.org>
 References: <20200713080001.128044-1-lee.jones@linaro.org>
@@ -78,16 +78,11 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Also demote unintentional kerneldoc header.
+Also promote fully documented function header to kerneldoc.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/be2iscsi/be_main.c:986: warning: Function parameter or member 'pcontext' not described in 'alloc_wrb_handle'
- drivers/scsi/be2iscsi/be_main.c:986: warning: Excess function parameter 'pwrb_context' description in 'alloc_wrb_handle'
- drivers/scsi/be2iscsi/be_main.c:1409: warning: Function parameter or member 'beiscsi_conn' not described in 'beiscsi_complete_pdu'
- drivers/scsi/be2iscsi/be_main.c:1409: warning: Function parameter or member 'phdr' not described in 'beiscsi_complete_pdu'
- drivers/scsi/be2iscsi/be_main.c:1409: warning: Function parameter or member 'pdata' not described in 'beiscsi_complete_pdu'
- drivers/scsi/be2iscsi/be_main.c:1409: warning: Function parameter or member 'dlen' not described in 'beiscsi_complete_pdu'
+ drivers/scsi/be2iscsi/be_mgmt.c:112: warning: Function parameter or member 'phba' not described in 'mgmt_open_connection'
 
 Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>
 Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
@@ -95,31 +90,30 @@ Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Cc: linux-drivers@broadcom.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/be2iscsi/be_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_mgmt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 9b81cfbbc5c53..8dc2e0824ad78 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -977,7 +977,7 @@ beiscsi_get_wrb_handle(struct hwi_wrb_context *pwrb_context,
-  * alloc_wrb_handle - To allocate a wrb handle
-  * @phba: The hba pointer
-  * @cid: The cid to use for allocation
-- * @pwrb_context: ptr to ptr to wrb context
-+ * @pcontext: ptr to ptr to wrb context
-  *
-  * This happens under session_lock until submission to chip
-  */
-@@ -1394,7 +1394,7 @@ static void hwi_complete_cmd(struct beiscsi_conn *beiscsi_conn,
- 	spin_unlock_bh(&session->back_lock);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index a2d69b287c7bb..96d6e384b2b25 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -97,6 +97,7 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 
+ /**
+  * mgmt_open_connection()- Establish a TCP CXN
++ * @phba: driver priv structure
+  * @dst_addr: Destination Address
+  * @beiscsi_ep: ptr to device endpoint struct
+  * @nonemb_cmd: ptr to memory allocated for command
+@@ -209,7 +210,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	return tag;
  }
  
--/**
-+/*
-  * ASYNC PDUs include
-  * a. Unsolicited NOP-In (target initiated NOP-In)
-  * b. ASYNC Messages
+-/*
++/**
+  * beiscsi_exec_nemb_cmd()- execute non-embedded MBX cmd
+  * @phba: driver priv structure
+  * @nonemb_cmd: DMA address of the MBX command to be issued
 -- 
 2.25.1
 
