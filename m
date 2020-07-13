@@ -2,136 +2,148 @@ Return-Path: <SRS0=+RX4=AY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EE8C433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C62DAC433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 09:24:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D22B20758
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:44:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F2CB206F0
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 09:24:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jqjOU+yG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729412AbgGMIo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 04:44:28 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2453 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725830AbgGMIo1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Jul 2020 04:44:27 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id BC0F5B83E6F9ECA54EDD;
-        Mon, 13 Jul 2020 09:44:26 +0100 (IST)
-Received: from [127.0.0.1] (10.47.2.10) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 13 Jul
- 2020 09:44:25 +0100
-Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     Kashyap Desai <kashyap.desai@broadcom.com>, <axboe@kernel.dk>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <don.brace@microsemi.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        <ming.lei@redhat.com>, <bvanassche@acm.org>, <hare@suse.com>,
-        <hch@lst.de>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-11-git-send-email-john.garry@huawei.com>
- <d55972999b9370f947c20537e41b49bf@mail.gmail.com>
- <e61593f8-5ee7-5763-9d02-d0ea13aeb49f@huawei.com>
- <92ba1829c9e822e4239a7cdfd94acbce@mail.gmail.com>
- <10d36c09-9d5b-92e9-23ac-ea1a2628e7d9@huawei.com>
- <0563e53f843c97de1a5a035fae892bf8@mail.gmail.com>
- <61299951-97dc-b2be-c66c-024dfbd3a1cb@huawei.com>
- <b49c33ebda36b8f116a51bc5c430eb9d@mail.gmail.com>
- <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
- <34a832717fef4702b143ea21aa12b79e@mail.gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
-Date:   Mon, 13 Jul 2020 09:42:40 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <34a832717fef4702b143ea21aa12b79e@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
+        id S1727890AbgGMJYC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 05:24:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37146 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726360AbgGMJYC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 05:24:02 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15072C061755;
+        Mon, 13 Jul 2020 02:24:02 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id p20so15820393ejd.13;
+        Mon, 13 Jul 2020 02:24:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=sofQEr77nb5Ely19uo5I4O8yF49URxlzQJXvD20UsaM=;
+        b=jqjOU+yGnniOCBRAVDqOKYRcKSkWuB5y2Mg2AReSnpmzCReczYmKiwpFjTQJS4MKCz
+         KTMyOnKxP8KqW/CdAKR/oIgNhgysH4RUeCQZ61SPYzJkqk3N/3S4KGefN8MyyCIvdP04
+         tOWPtPS6h+hXvFVbo97jkUj/xLdU6++lLAXqJCelAHgxVZk9/WGggx41DKh97u8KoCzg
+         enRUqaaNoKe9lcGGVQk0UGbLlHSdRruopDzvLvGoQuhGDuuj1U855oBDxmtKDSJtrzkb
+         R2qqf82jRmJEUyCjXgipsQ/psyciOeuo3/q1HhNugvp/cggah0XPnmwoA8pQ41B6UwQb
+         sliw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=sofQEr77nb5Ely19uo5I4O8yF49URxlzQJXvD20UsaM=;
+        b=Wov0RJDsWTUo57r4E7I5yWwmiFvMgo+jLo5K4LbXLOHYO/Nn5uLrP1iooyJmj3EB9J
+         pbnukd3g26AGGhrUojCMccMVsgJampI6xo5p6ftuO4lzw7YZFgFYoKHHwSyt4RAbD/9l
+         +1zl1bn6u7eE5sxr7DEaO0XBK9IEM2x0gUedb1LBt1ILpfe5O2zVxtkQG03jhLf4lNIH
+         ZxXqY9LPHDrnHr77LlIBjVUqREhslGftujs7jSzS4KIXg8GlQcIQZS4w/9o+Jl9WAqfy
+         iF0IOPy7+5cc/zaE8JPPgKpN4rXzWA+WM9tTk06Tf89sjvJKW8N6B/WeoXe7esMFYjT0
+         mmpA==
+X-Gm-Message-State: AOAM530KvDqE8YYcCqKfeJOg23ySSYZefwMrcgOUBCVglh1zwOM/M3kg
+        aSgfrkIHMmjjpTDC8seN5yo=
+X-Google-Smtp-Source: ABdhPJxXvnR2RE6nAjCq0int+k3+MO50374W4zcpVHBgcH2ksNPYtLBLUQPJ/5A2CdO9k4XT3K/wcA==
+X-Received: by 2002:a17:906:6a4f:: with SMTP id n15mr71246081ejs.378.1594632240598;
+        Mon, 13 Jul 2020 02:24:00 -0700 (PDT)
+Received: from ubuntu-laptop ([2a01:598:b890:27f4:19a2:9a9c:4216:daf1])
+        by smtp.googlemail.com with ESMTPSA id o17sm9366918ejb.105.2020.07.13.02.23.57
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 13 Jul 2020 02:24:00 -0700 (PDT)
+Message-ID: <65b3b5bb56d2be8e365aae2163227aac7a71e600.camel@gmail.com>
+Subject: Re: [PATCH v5 0/5] scsi: ufs: Add Host Performance Booster Support
+From:   Bean Huo <huobean@gmail.com>
+To:     daejun7.park@samsung.com, Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <Avri.Altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "tomas.winkler@intel.com" <tomas.winkler@intel.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Date:   Mon, 13 Jul 2020 11:23:52 +0200
+In-Reply-To: <963815509.21594603681971.JavaMail.epsvc@epcpadp2>
+References: <91dcecde-dd0d-c930-7c45-56ba144e748c@acm.org>
+         <SN6PR04MB464097E646395C000C2DCAC3FC640@SN6PR04MB4640.namprd04.prod.outlook.com>
+         <963815509.21593732182531.JavaMail.epsvc@epcpadp2>
+         <231786897.01594251001808.JavaMail.epsvc@epcpadp1>
+         <336371513.41594280882718.JavaMail.epsvc@epcpadp2>
+         <SN6PR04MB464021F98E8EDF7C79D6CB4FFC640@SN6PR04MB4640.namprd04.prod.outlook.com>
+         <CGME20200702231936epcms2p81557f83504ef1c1e81bfc81a0143a5b4@epcms2p7>
+         <963815509.21594603681971.JavaMail.epsvc@epcpadp2>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.2.10]
-X-ClientProxiedBy: lhreml739-chm.china.huawei.com (10.201.108.189) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/07/2020 08:55, Kashyap Desai wrote:
->> ring normal operation. See initial check in
->> blk_mq_hctx_notify_offline():
->>
->> static int blk_mq_hctx_notify_offline(unsigned int cpu, struct hlist_node
->> *node) {
->> 	if (!cpumask_test_cpu(cpu, hctx->cpumask) ||
->> 	    !blk_mq_last_cpu_in_hctx(cpu, hctx))
->> 		return 0;
->>
-> Thanks John for this pointer. I missed this part and now I understood what
-> was happening in my testing.
-
-JFYI, I always have this as a sanity check for my testing:
-
-void irq_shutdown(struct irq_desc *desc)
-{
-+	pr_err("%s irq%d\n", __func__, desc->irq_data.irq);
-+
-	if (irqd_is_started(&desc->irq_data)) {
-		desc->depth = 1;
-		if (desc->irq_data.chip->irq_shutdown) {
-
-> There were more than one CPU mapped to one msix index in my earlier testing
-> and because of that I could see Interrupt migration happens on available CPU
-> from affinity mask. So my earlier testing was incorrect.
+On Mon, 2020-07-13 at 10:27 +0900, Daejun Park wrote:
+> Hi Bart,
 > 
-> Now I am consistently able to reproduce issue - Best setup is have 1:1
-> mapping of CPU to MSIX vector mapping. I used 128 logical CPU and 128 msix
-> vectors and I noticed IO timeout without this RFC (without host_tagset).
-> I did not noticed IO timeout with RFC (with host_tagset.) I will update this
-> data in Driver's commit message.
-
-ok, great. That's what we want. I'm not sure exactly what your test 
-consists of, though.
-
+> > > Bart - how do you want to proceed?
+> > 
+> > Hi Avri and Daejun,
+> > 
+> > As far as I can see none of the five patches have Reviewed-by tags
+> > yet. I
+> > think that Martin expects formal reviews for this patch series from
+> > one or
+> > more reviewers who are not colleagues of the author of this patch
+> > series.
+> > 
+> > Note: recently I have been more busy than usual, hence the delayed
+> > reply.
 > 
-> Just for my understanding -
-> What if we have below code in blk_mq_hctx_notify_offline, CPU hotplug should
-> work for megaraid_sas driver without this RFC (without shared host tagset).
-> Right ?
-
-> If answer is yes, will there be any side effect of having below code in
-> block layer ?
+> Thank you for replying to the email even though you are busy.
 > 
-
-Sorry, I'm sure sure what you're getting at with this change, below.
-
-It seems that you're trying to drain hctx0 (which is your only hctx, as 
-nr_hw_queues = 0 without this patchset) and set it inactive whenever any 
-CPU is offlined. If so, that's not right.
-
-> static int blk_mq_hctx_notify_offline(unsigned int cpu, struct hlist_node
->   *node) {
->   	if (hctx->queue->nr_hw_queues > 1
-> 	    && (!cpumask_test_cpu(cpu, hctx->cpumask) ||
->   	    !blk_mq_last_cpu_in_hctx(cpu, hctx)))
->   		return 0;
+> Arvi, Bean - if patches looks ok, can this series have your reviewed-
+> by tag?
 > 
-> I also noticed nr_hw_queues are now exposed in sysfs -
-> 
-> /sys/devices/pci0000:85/0000:85:00.0/0000:86:00.0/0000:87:04.0/0000:8b:00.0/0000:8c:00.0/0000:8d:00.0/host14/scsi_host/host14/nr_hw_queues:128
-> .
+> Thanks,
+> Daejun
 
-That's on my v8 wip branch, so I guess you're picking it up from there.
+Hi Daejun
+
+
+I only can give my tested-by tag since I preliminary tested it and it
+works. However, as I said in the previous email, there is performance
+downgrade comparing to the direct submission approach, also, we should
+think about HPB 2.0.
+
+Anyway, if Avri wants firstly make this series patch mainlined,
+performance fixup later, this is fine to me. I can add and fix it
+later.
+
+BTW, you should rebase your this series set patch since there are
+conflicts with latest Martin' git repo, after that, you can add my
+tested-by tag.
+
+
+Tested-by: Bean Huo <beanhuo@micron.com>
+
 
 Thanks,
-John
+Bean
+
+
+
