@@ -2,167 +2,123 @@ Return-Path: <SRS0=+RX4=AY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 208EEC433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 06:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C810C433E6
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 080C12065F
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 06:19:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B06920674
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kMQi+LF4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729094AbgGMGT4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 02:19:56 -0400
-Received: from mx2.suse.de ([195.135.220.15]:43290 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729007AbgGMGT4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Jul 2020 02:19:56 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 7E530AD3F;
-        Mon, 13 Jul 2020 06:19:56 +0000 (UTC)
-Subject: Re: [PATCH] scsi: allow state transitions BLOCK -> BLOCK
-To:     Bart Van Assche <bvanassche@acm.org>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-References: <20200702142436.98336-1-hare@suse.de>
- <1593700443.9652.2.camel@HansenPartnership.com>
- <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
- <2dd291ba-1e59-5e88-de96-5d3965f20317@acm.org>
- <819ce023-93c3-249d-2221-97438f229e03@suse.de>
- <b4842dfd-f385-64a9-6421-03765f60d0d9@acm.org>
- <97d4882d-2f26-de93-672a-6395e8fedf0c@suse.de>
- <a2db3f6a-44de-2d2c-6dd1-69d5af8f7e84@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <b31a9be0-1e42-f49f-d5e7-e4568dafa8b2@suse.de>
-Date:   Mon, 13 Jul 2020 08:19:53 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S1729139AbgGMHrA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 03:47:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50330 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729049AbgGMHqz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 03:46:55 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CBCBC08C5DD
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:46:55 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id f139so12170847wmf.5
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:46:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=DmqYn8cL7eqDFwNGfmdwoQHTEQPwopRMh0yPN6WNGOc=;
+        b=kMQi+LF463/qxHEfKGPGvCd2c6A2f6xdj3zZKG62HaLhW8tV06HUqvCtmNufbjrIdu
+         +r8xls+i2UHhzWACB73k0OoRRj72ou0OQ7r1zeWimj+ntzHg+CFP9fmpyJghgJkXjJw2
+         A05uGrWkzxgx82ApMTP8wqs03s9phPr++cD16/GYWchOzyqTxHwiRbqo1Ti/3YL4CJdL
+         1oI53ro3+ZySyLW27dLpxBvokNzD2PUv9mcRHuC9gs1CzeL3E0ICDp/IkeEJ97/ZAv46
+         hoZrC/IoAlccRJpK6OjveW//uzODgE0RYRvPXuTpnzfhNkdxuY/0noyO/8IWnS5hR8iF
+         ZKAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=DmqYn8cL7eqDFwNGfmdwoQHTEQPwopRMh0yPN6WNGOc=;
+        b=b4HEdLH8cIX6VlWgyfQJ+QReVOJY+Dnm+9NBEv72+DqS04dAkJz7i3YJn1IM6iA0gg
+         +S5mXFXCFrhDbFtjcvDXvSkP2lK87OinMDctrZjWd/LpB70tWrYLoj1nD+/FPn2efRGo
+         uFOe+TdP1m3uZ+QWU7sFugJqZen+c7x7v652Ny6W4MTA1dcXJj6zZ9uXLqEaoGxHVmbh
+         OiqbigmknMwwOA+Tb9V6q1pEI2UyxlFOnEarOa+YiqJ1blGvR3ZKRU78FoGKHnfQnECL
+         qBTIJRTrx71CTwzcNFP/lfqNu4BujiEIcX5V6vsv487jDWyI2v5SHXiGoyxCPXnq57mH
+         j2hA==
+X-Gm-Message-State: AOAM533/qMcyKU5grwlcEUoIKJ879MaaXmGeaUUq4Ss7Tqm5th4aEuLw
+        VGMO7qIrDW+amlxsioCC5QCF3JPMm7E=
+X-Google-Smtp-Source: ABdhPJxYPfD3jt/wvcLfJGWG+I9epedTnVYg39jHCJvCocIhbmxWOlTXNJ6eiKgn70cyJoojayZiGA==
+X-Received: by 2002:a1c:a557:: with SMTP id o84mr17773676wme.42.1594626414066;
+        Mon, 13 Jul 2020 00:46:54 -0700 (PDT)
+Received: from localhost.localdomain ([2.31.163.6])
+        by smtp.gmail.com with ESMTPSA id k11sm25142488wrd.23.2020.07.13.00.46.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2020 00:46:53 -0700 (PDT)
+From:   Lee Jones <lee.jones@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v2 06/29] scsi: fcoe: fcoe_transport: Correct some kernel-doc issues
+Date:   Mon, 13 Jul 2020 08:46:22 +0100
+Message-Id: <20200713074645.126138-7-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200713074645.126138-1-lee.jones@linaro.org>
+References: <20200713074645.126138-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <a2db3f6a-44de-2d2c-6dd1-69d5af8f7e84@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/12/20 6:13 AM, Bart Van Assche wrote:
-> On 2020-07-05 23:22, Hannes Reinecke wrote:
->> That will still have a duplicate call as scsi_target_block() has been called already (cf scsi_target_block() in line 539 right at the start of srp_reconnect_rport()).
->>
->> (And I don't think we need the WARN_ON_ONCE() here; we are checking for rport->state == SRP_RPORT_BLOCKED just before that line...)
-> 
-> How about the patch below? The approach implemented by that
-> patch is only to call scsi_target_block() after a successful
-> transition to the SRP_RPORT_BLOCKED state and to only call
-> scsi_target_unblock() when leaving the SRP_RPORT_BLOCKED state.
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-> index d4d1104fac99..0334f86f0879 100644
-> --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -402,13 +402,9 @@ static void __rport_fail_io_fast(struct srp_rport *rport)
-> 
->   	lockdep_assert_held(&rport->mutex);
-> 
-> +	WARN_ON_ONCE(rport->state != SRP_RPORT_BLOCKED);
->   	if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
->   		return;
-> -	/*
-> -	 * Call scsi_target_block() to wait for ongoing shost->queuecommand()
-> -	 * calls before invoking i->f->terminate_rport_io().
-> -	 */
-> -	scsi_target_block(rport->dev.parent);
->   	scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
-> 
->   	/* Involve the LLD if possible to terminate all I/O on the rport. */
-> @@ -541,7 +537,8 @@ int srp_reconnect_rport(struct srp_rport *rport)
->   	res = mutex_lock_interruptible(&rport->mutex);
->   	if (res)
->   		goto out;
-> -	scsi_target_block(&shost->shost_gendev);
-> +	if (srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0)
-> +		scsi_target_block(&shost->shost_gendev);
->   	res = rport->state != SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODEV;
->   	pr_debug("%s (state %d): transport.reconnect() returned %d\n",
->   		 dev_name(&shost->shost_gendev), rport->state, res);
-> @@ -569,9 +566,9 @@ int srp_reconnect_rport(struct srp_rport *rport)
->   		 * and dev_loss off. Mark the port as failed and start the TL
->   		 * failure timers if these had not yet been started.
->   		 */
-> +		WARN_ON_ONCE(srp_rport_set_state(rport, SRP_RPORT_BLOCKED));
-> +		scsi_target_block(rport->dev.parent);
->   		__rport_fail_io_fast(rport);
-> -		scsi_target_unblock(&shost->shost_gendev,
-> -				    SDEV_TRANSPORT_OFFLINE);
->   		__srp_start_tl_fail_timers(rport);
->   	} else if (rport->state != SRP_RPORT_BLOCKED) {
->   		scsi_target_unblock(&shost->shost_gendev,
-> 
+Mainly due to misdocumentation or bitrotted descriptions.
 
-That doesn't look correct.
-We just set the portstate to 'blocked' in the first hunk.
-So the only way for this bit to make any sense would be if the portstate 
-would _not_ blocked, _and_ we have a valid state transition to 'blocked'.
-But this cannot happen, as the state can't change in between those two 
-calls, and the first state change didn't succeed. So this state change 
-won't succeed, either, and the WARN_ON will always trigger here.
+Fixes the following W=1 kernel build warning(s):
 
-Plus this whole hunk is reached from an if condition:
+ drivers/scsi/fcoe/fcoe_transport.c:396: warning: Function parameter or member 'skb' not described in 'fcoe_check_wait_queue'
+ drivers/scsi/fcoe/fcoe_transport.c:447: warning: Function parameter or member 't' not described in 'fcoe_queue_timer'
+ drivers/scsi/fcoe/fcoe_transport.c:447: warning: Excess function parameter 'lport' description in 'fcoe_queue_timer'
+ drivers/scsi/fcoe/fcoe_transport.c:682: warning: Function parameter or member 'netdev' not described in 'fcoe_netdev_map_lookup'
 
-	} else if (rport->state == SRP_RPORT_RUNNING) {
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/fcoe/fcoe_transport.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-which (after the first hunk) is never viable, as the transition RUNNINNG 
--> BLOCKED is allowed. Hence the first hunk will always transition to 
-BLOCKED, and this whole block can never be reached.
-
-I think this should be sufficient:
-
-diff --git a/drivers/scsi/scsi_transport_srp.c 
-b/drivers/scsi/scsi_transport_srp.c
-index d4d1104fac99..180b323f46b8 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -404,11 +404,6 @@ static void __rport_fail_io_fast(struct srp_rport 
-*rport)
-
-         if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
-                 return;
--       /*
--        * Call scsi_target_block() to wait for ongoing 
-shost->queuecommand()
--        * calls before invoking i->f->terminate_rport_io().
--        */
--       scsi_target_block(rport->dev.parent);
-         scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
-
-         /* Involve the LLD if possible to terminate all I/O on the 
-rport. */
-@@ -570,8 +565,6 @@ int srp_reconnect_rport(struct srp_rport *rport)
-                  * failure timers if these had not yet been started.
-                  */
-                 __rport_fail_io_fast(rport);
--               scsi_target_unblock(&shost->shost_gendev,
--                                   SDEV_TRANSPORT_OFFLINE);
-                 __srp_start_tl_fail_timers(rport);
-         } else if (rport->state != SRP_RPORT_BLOCKED) {
-                 scsi_target_unblock(&shost->shost_gendev,
-
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index a20ddc301c89e..6e187d0e71fd2 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -382,6 +382,7 @@ EXPORT_SYMBOL_GPL(fcoe_clean_pending_queue);
+ /**
+  * fcoe_check_wait_queue() - Attempt to clear the transmit backlog
+  * @lport: The local port whose backlog is to be cleared
++ * @skb: The received FIP packet
+  *
+  * This empties the wait_queue, dequeues the head of the wait_queue queue
+  * and calls fcoe_start_io() for each packet. If all skb have been
+@@ -439,7 +440,7 @@ EXPORT_SYMBOL_GPL(fcoe_check_wait_queue);
+ 
+ /**
+  * fcoe_queue_timer() - The fcoe queue timer
+- * @lport: The local port
++ * @t: Timer context use to obtain the FCoE port
+  *
+  * Calls fcoe_check_wait_queue on timeout
+  */
+@@ -672,6 +673,7 @@ static void fcoe_del_netdev_mapping(struct net_device *netdev)
+ /**
+  * fcoe_netdev_map_lookup - find the fcoe transport that matches the netdev on which
+  * it was created
++ * @netdev: The net device that the FCoE interface is on
+  *
+  * Returns : ptr to the fcoe transport that supports this netdev or NULL
+  * if not found.
 -- 
-Dr. Hannes Reinecke            Teamlead Storage & Networking
-hare@suse.de                               +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.25.1
+
