@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C810C433E6
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8B5AC433E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:46:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B06920674
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5AA220674
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:46:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kMQi+LF4"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Dgdv43SM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729139AbgGMHrA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 03:47:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50330 "EHLO
+        id S1729107AbgGMHq6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 03:46:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729049AbgGMHqz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 03:46:55 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CBCBC08C5DD
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:46:55 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id f139so12170847wmf.5
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:46:55 -0700 (PDT)
+        with ESMTP id S1729085AbgGMHq5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 03:46:57 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7768AC061755
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:46:57 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id a6so14659796wrm.4
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:46:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=DmqYn8cL7eqDFwNGfmdwoQHTEQPwopRMh0yPN6WNGOc=;
-        b=kMQi+LF463/qxHEfKGPGvCd2c6A2f6xdj3zZKG62HaLhW8tV06HUqvCtmNufbjrIdu
-         +r8xls+i2UHhzWACB73k0OoRRj72ou0OQ7r1zeWimj+ntzHg+CFP9fmpyJghgJkXjJw2
-         A05uGrWkzxgx82ApMTP8wqs03s9phPr++cD16/GYWchOzyqTxHwiRbqo1Ti/3YL4CJdL
-         1oI53ro3+ZySyLW27dLpxBvokNzD2PUv9mcRHuC9gs1CzeL3E0ICDp/IkeEJ97/ZAv46
-         hoZrC/IoAlccRJpK6OjveW//uzODgE0RYRvPXuTpnzfhNkdxuY/0noyO/8IWnS5hR8iF
-         ZKAg==
+        bh=CbDIhrckRx3GTebLwLuoUtbus6UaS40hQs+7mAaRUqY=;
+        b=Dgdv43SMguTbFfpAEBrGAMFtotvNXSMP4bcEVucw8MOl/jsg7uMMgAe8AQXfW3dk2j
+         Mf2ROLifHH1Vr3gSBOFKsCZ25nrUuOMaIBLZyItBlBHNZ7hC3RCd7ue5F+kjuCvW+PGD
+         tSlROBZdMCQIL8T3OY3Is5S0gX7ZyuEXZI1uCCoygGC4g/7sG7lNkkRbba7uDZuudODp
+         sTWYN4RJr/u+Mjd41GbT52bHNLEi8SlaiuWkLnpbB2/X9mufq8Gi5mjY1ryxPjCdqNe2
+         ngHRRdC73MUn5Q6BpVu/Dsbk+ICGMc+aJVOYQjydWVsOzdBHdM3gIdBqz3mwFbevoVDz
+         ts6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=DmqYn8cL7eqDFwNGfmdwoQHTEQPwopRMh0yPN6WNGOc=;
-        b=b4HEdLH8cIX6VlWgyfQJ+QReVOJY+Dnm+9NBEv72+DqS04dAkJz7i3YJn1IM6iA0gg
-         +S5mXFXCFrhDbFtjcvDXvSkP2lK87OinMDctrZjWd/LpB70tWrYLoj1nD+/FPn2efRGo
-         uFOe+TdP1m3uZ+QWU7sFugJqZen+c7x7v652Ny6W4MTA1dcXJj6zZ9uXLqEaoGxHVmbh
-         OiqbigmknMwwOA+Tb9V6q1pEI2UyxlFOnEarOa+YiqJ1blGvR3ZKRU78FoGKHnfQnECL
-         qBTIJRTrx71CTwzcNFP/lfqNu4BujiEIcX5V6vsv487jDWyI2v5SHXiGoyxCPXnq57mH
-         j2hA==
-X-Gm-Message-State: AOAM533/qMcyKU5grwlcEUoIKJ879MaaXmGeaUUq4Ss7Tqm5th4aEuLw
-        VGMO7qIrDW+amlxsioCC5QCF3JPMm7E=
-X-Google-Smtp-Source: ABdhPJxYPfD3jt/wvcLfJGWG+I9epedTnVYg39jHCJvCocIhbmxWOlTXNJ6eiKgn70cyJoojayZiGA==
-X-Received: by 2002:a1c:a557:: with SMTP id o84mr17773676wme.42.1594626414066;
-        Mon, 13 Jul 2020 00:46:54 -0700 (PDT)
+        bh=CbDIhrckRx3GTebLwLuoUtbus6UaS40hQs+7mAaRUqY=;
+        b=MGB+Pi030sLWbBmP4JS0ahT3/PIDWDx9OHAhxyqb3ZjWkKCwEqMhz0IOwYDReP7+mq
+         RhntzAjbeAVWoVEbQDDmdXxbno8VxNy3WfOyxgb5THo/SyGNejtjEXx8cikT5+zPuHWU
+         xkOzupJ6HQ0JPvJxlyoKxq+PpRuPWqn2wfgHOvfX5V8t3rACERC+6xUEiAgD+PNZM4d0
+         cToTasjrIRtWvN+wbQDVHOO6wuLVU3YoWTKoFPP6OCX8vExHNSpYxBJNYftc1NbZohP/
+         z2+Jt5W/6paxgLIbG4Fvzym0QtfdGQdaKSP1BzpgF2RqHiDBVezdFOLKPPz90j3KsXUM
+         ejKQ==
+X-Gm-Message-State: AOAM531CTo4ZM/y8dLNQTWC4bPScSReo+PrmqDnmh//iadGaewSskS2t
+        z5nzfLaRB0HOVLpXEvBCmaGtUQ==
+X-Google-Smtp-Source: ABdhPJxNjGlKKAba0B1VMYG/5vUA34uYc5xVMQo7SYVX64LCfQfLFDRbnQ3uxd7YvKo9aYvgj1yRpw==
+X-Received: by 2002:a5d:658a:: with SMTP id q10mr78336227wru.220.1594626416215;
+        Mon, 13 Jul 2020 00:46:56 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id k11sm25142488wrd.23.2020.07.13.00.46.53
+        by smtp.gmail.com with ESMTPSA id k11sm25142488wrd.23.2020.07.13.00.46.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 00:46:53 -0700 (PDT)
+        Mon, 13 Jul 2020 00:46:55 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v2 06/29] scsi: fcoe: fcoe_transport: Correct some kernel-doc issues
-Date:   Mon, 13 Jul 2020 08:46:22 +0100
-Message-Id: <20200713074645.126138-7-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@cavium.com
+Subject: [PATCH v2 08/29] scsi: qedf: qedf_main: Demote obvious misuse of kerneldoc to standard comment blocks
+Date:   Mon, 13 Jul 2020 08:46:24 +0100
+Message-Id: <20200713074645.126138-9-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200713074645.126138-1-lee.jones@linaro.org>
 References: <20200713074645.126138-1-lee.jones@linaro.org>
@@ -75,50 +75,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Mainly due to misdocumentation or bitrotted descriptions.
+No attempt has been made to document either of the demoted functions here.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/fcoe/fcoe_transport.c:396: warning: Function parameter or member 'skb' not described in 'fcoe_check_wait_queue'
- drivers/scsi/fcoe/fcoe_transport.c:447: warning: Function parameter or member 't' not described in 'fcoe_queue_timer'
- drivers/scsi/fcoe/fcoe_transport.c:447: warning: Excess function parameter 'lport' description in 'fcoe_queue_timer'
- drivers/scsi/fcoe/fcoe_transport.c:682: warning: Function parameter or member 'netdev' not described in 'fcoe_netdev_map_lookup'
+ drivers/scsi/qedf/qedf_main.c:1027: warning: Function parameter or member 'lport' not described in 'qedf_xmit'
+ drivers/scsi/qedf/qedf_main.c:1027: warning: Function parameter or member 'fp' not described in 'qedf_xmit'
+ drivers/scsi/qedf/qedf_main.c:1426: warning: Function parameter or member 'lport' not described in 'qedf_rport_event_handler'
+ drivers/scsi/qedf/qedf_main.c:1426: warning: Function parameter or member 'rdata' not described in 'qedf_rport_event_handler'
+ drivers/scsi/qedf/qedf_main.c:1426: warning: Function parameter or member 'event' not described in 'qedf_rport_event_handler'
 
-Cc: Hannes Reinecke <hare@suse.de>
+Cc: QLogic-Storage-Upstream@cavium.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/fcoe/fcoe_transport.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/qedf/qedf_main.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index a20ddc301c89e..6e187d0e71fd2 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -382,6 +382,7 @@ EXPORT_SYMBOL_GPL(fcoe_clean_pending_queue);
- /**
-  * fcoe_check_wait_queue() - Attempt to clear the transmit backlog
-  * @lport: The local port whose backlog is to be cleared
-+ * @skb: The received FIP packet
-  *
-  * This empties the wait_queue, dequeues the head of the wait_queue queue
-  * and calls fcoe_start_io() for each packet. If all skb have been
-@@ -439,7 +440,7 @@ EXPORT_SYMBOL_GPL(fcoe_check_wait_queue);
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 36b1ca2dadbb5..a77a74fad6a7e 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1019,9 +1019,8 @@ static int qedf_xmit_l2_frame(struct qedf_rport *fcport, struct fc_frame *fp)
+ 	return rc;
+ }
  
- /**
-  * fcoe_queue_timer() - The fcoe queue timer
-- * @lport: The local port
-+ * @t: Timer context use to obtain the FCoE port
-  *
-  * Calls fcoe_check_wait_queue on timeout
+-/**
++/*
+  * qedf_xmit - qedf FCoE frame transmit function
+- *
   */
-@@ -672,6 +673,7 @@ static void fcoe_del_netdev_mapping(struct net_device *netdev)
- /**
-  * fcoe_netdev_map_lookup - find the fcoe transport that matches the netdev on which
-  * it was created
-+ * @netdev: The net device that the FCoE interface is on
-  *
-  * Returns : ptr to the fcoe transport that supports this netdev or NULL
-  * if not found.
+ static int qedf_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ {
+@@ -1415,7 +1414,7 @@ static void qedf_cleanup_fcport(struct qedf_ctx *qedf,
+ 	kref_put(&rdata->kref, fc_rport_destroy);
+ }
+ 
+-/**
++/*
+  * This event_callback is called after successful completion of libfc
+  * initiated target login. qedf can proceed with initiating the session
+  * establishment.
 -- 
 2.25.1
 
