@@ -2,146 +2,121 @@ Return-Path: <SRS0=+RX4=AY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8232C43469
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA70C43466
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B85732072D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:02:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96FDF2073A
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:02:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="shosgGIq"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="u90mu1uE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726571AbgGMIAK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1728617AbgGMIAK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Mon, 13 Jul 2020 04:00:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52446 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725969AbgGMIAK (ORCPT
+        with ESMTP id S1726360AbgGMIAK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:10 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED20AC061755
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:09 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id f7so14761048wrw.1
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F17AC08C5DD
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:10 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id o11so14775208wrv.9
         for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=g0025PyTY/eWJewtXJ8I/jkg/HPx62AopbKf5qsThd0=;
-        b=shosgGIqEV5Mi43/el0Qv3n5SrwGOeatsv60Jx9hdx9avXnYhxdW+EndMvsg1rCMjv
-         shGen7E57TNPkoGMqud+THaV6Pxm5a1cFSN6eJHKBEgy7yv4jFRHSFf7f/eI9o8m9zNx
-         fQ6UB5BXKUASSQZX4ijyMpS7qqQ7EtQqCB4U4PFCY5Z3UAtutQ3ZPu9eccfAugAxDvzy
-         A7cVnIeVlLgB7VEEpche2qEH/rMQNUvpv+jsED0gn2TRhxSWffJUk5M/R2dbASwUvjaF
-         X1lLwy4wo3Bv//etcDgghdkUqRB+Xy1/GjvCTbSuCMnajegNbsvInGm5DwUue+WQJFea
-         0ZXQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=+HM3pvSE2JuDZ5Kc5EJ0B/qyBhrrEM7iialxYUUhb/4=;
+        b=u90mu1uENJfv42WQrr4sPLX09MrjDa6vroB7o+MEKc0HVsOVjzzYhFRBmi4LomvAHJ
+         19XJjQxmv/FGSKG4HiGnLg93xo/JlRpijQz94rqfPzTApnPD7Em6lAZKb93CaoNhvwKh
+         vXyE70gCKUaQhtl0J7ye9p7SY6Bx1VsBj9pXMxkL+SPqPlvszcneSFaxPbMcX6fPTLb8
+         4TM58j9gsBFH7mKR6xZewVmGNIeWsjiJdcpd5CBCkNn7+1PMIUu4pqLqSKsYqC2PpNln
+         WVnPwiXP5f0o6E/sLPnCbFPKW4YulHfMnddz/bXDuTcKGhH1zbpqKVeF8cEcq+EulVwm
+         zUVQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=g0025PyTY/eWJewtXJ8I/jkg/HPx62AopbKf5qsThd0=;
-        b=j7Zir4O/FHAQMO4d3f1VctoF/8rEw8wn8nUfRSoYqzLEi27LJO9LY7jGqbiuu4t/A2
-         W/daA3+vhXysyEIbhl9r9f2rsRzsxhWapQmVFXY1GomBP+VCVhB1TW5Aa5O8ZnHUXARy
-         ytIkjwpRWdLeq7tYHd/cWbDSrR/mH41tgVkbCARWZQzjePOuAOvQLA4LAilU3w2MaPqs
-         ZeJKIuDelVrBicIB8ZBCWQmhcxL9YoRd2AYK7iMmYHTuxx/1Jvj2PhJRgfDWNA40oQgn
-         e6FlgW35PN69hoz+O0ix5BGBWPuOjEkBrnkq2Im5WoPDYHMs+CMi0E9pUwIzQ4WlAi3g
-         5v8g==
-X-Gm-Message-State: AOAM530+ciUDKR6Y+/D98vp65kKCceYj9/Xve59tXWe1UVEwgNgkR3rH
-        StVrGazVlnB1VZwYbyKeO9CxNA==
-X-Google-Smtp-Source: ABdhPJwOcTyhG/RhUEn4cJVs5ajgV1jbVXvClhi9FjHPoCdiHUpma4xUuuP55L87YUuycheYAyP02A==
-X-Received: by 2002:a5d:464e:: with SMTP id j14mr78277009wrs.393.1594627207673;
-        Mon, 13 Jul 2020 01:00:07 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=+HM3pvSE2JuDZ5Kc5EJ0B/qyBhrrEM7iialxYUUhb/4=;
+        b=Ls/idrxK71ZGkc5YAz/TcuppIazXKRwXbwLVJdIasvS1Y2NDuoj6F9X54EWo03MOer
+         npHLlwVIJ0pNhW49awI9T9l80CUPILp0CeKufq+csHwwhoqt+2MvXWH4i94kuIeovjGX
+         mxnrV4ar/3bYAcPFpvMI9PeA3/x1Nh9NH6rPIKJU2d7HvvwvbzkgXU2bxrG5JyK9+C57
+         TANWSu4IV1w9Fwzp8Ak2SIvswV6tBy0hScBJPEsfd4faUTCZCBke78xiQqo7Sa1V8N8Q
+         nlgcs0PGhXgUFc9FeKUv7C259rJasLwFulJJxVZANtGMM1HWNNcmTx+k1q2dVA8hWyC5
+         SanQ==
+X-Gm-Message-State: AOAM533NLmsdSg2PIONp9QpwWV0jS44MrVZ7clPSwxFLxPYkJkyH/xaH
+        9lXBmW6X8RB4jBVSb2S+wDoLGQ==
+X-Google-Smtp-Source: ABdhPJwq1WiUMeXrjichLdO4rSnqr9PqPnI9d1e3unEYlTcbaL8MMSizXuzJG4lfZkLLNgl4n3WlhQ==
+X-Received: by 2002:a5d:4a01:: with SMTP id m1mr77435792wrq.250.1594627208654;
+        Mon, 13 Jul 2020 01:00:08 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.06
+        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 01:00:06 -0700 (PDT)
+        Mon, 13 Jul 2020 01:00:08 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH v2 00/24] Set 3: Fix another set of SCSI related W=1 warnings
-Date:   Mon, 13 Jul 2020 08:59:37 +0100
-Message-Id: <20200713080001.128044-1-lee.jones@linaro.org>
+        Lee Jones <lee.jones@linaro.org>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
+Subject: [PATCH v2 01/24] scsi: aacraid: aachba: Repair two kerneldoc headers
+Date:   Mon, 13 Jul 2020 08:59:38 +0100
+Message-Id: <20200713080001.128044-2-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200713080001.128044-1-lee.jones@linaro.org>
+References: <20200713080001.128044-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This set is part of a larger effort attempting to clean-up W=1
-kernel builds, which are currently overwhelmingly riddled with
-niggly little warnings.
+The function headers for aac_get_config_status() and aac_get_containers()
+have suffered bitrot where the documentation hasn't kept up with the API.
 
-Slowly working through the SCSI related ones.  There are many.
+Fixes the following W=1 kernel build warning(s):
 
-This brings the total of W=1 SCSI wanings from 1690 in v5.8-rc1 to 1109.
+ drivers/scsi/aacraid/aachba.c:358: warning: Function parameter or member 'dev' not described in 'aac_get_config_status'
+ drivers/scsi/aacraid/aachba.c:358: warning: Function parameter or member 'commit_flag' not described in 'aac_get_config_status'
+ drivers/scsi/aacraid/aachba.c:358: warning: Excess function parameter 'common' description in 'aac_get_config_status'
+ drivers/scsi/aacraid/aachba.c:450: warning: Function parameter or member 'dev' not described in 'aac_get_containers'
+ drivers/scsi/aacraid/aachba.c:450: warning: Excess function parameter 'common' description in 'aac_get_containers'
 
-Changelog:
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/aacraid/aachba.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-v1 => v2
- - Collected *-bys
- - Removed inert function-calls when removing unused variables
-   - As suggested by James Bottomley
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 7ae1e545a255c..769af4ca9ca97 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -350,7 +350,8 @@ static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
  
-Lee Jones (24):
-  scsi: aacraid: aachba: Repair two kerneldoc headers
-  scsi: aacraid: commctrl: Fix a few kerneldoc issues
-  scsi: aacraid: dpcsup: Fix logical bug when !DBG
-  scsi: aacraid: dpcsup: Remove unused variable 'status'
-  scsi: aacraid: dpcsup: Demote partially documented function header
-  scsi: aic94xx: aic94xx_seq: Document 'lseq' and repair
-    asd_update_port_links() header
-  scsi: aacraid: commsup: Fix a bunch of function header issues
-  scsi: aic94xx: aic94xx_scb: Fix a couple of formatting and bitrot
-    issues
-  scsi: aacraid: rx: Fill in the very parameter descriptions for
-    rx_sync_cmd()
-  scsi: pm8001: pm8001_ctl: Provide descriptions for the many
-    undocumented 'attr's
-  scsi: ipr: Fix a mountain of kerneldoc misdemeanours
-  scsi: virtio_scsi: Demote seemingly unintentional kerneldoc header
-  scsi: ipr: Remove a bunch of set but checked variables
-  scsi: ipr: Fix struct packed-not-aligned issues
-  scsi: myrs: Demote obvious misuse of kerneldoc to standard comment
-    blocks
-  scsi: megaraid: Fix a whole bunch of function header formatting issues
-  scsi: be2iscsi: be_iscsi: Fix API/documentation slip
-  scsi: be2iscsi: be_main: Fix misdocumentation of 'pcontext'
-  scsi: be2iscsi: be_mgmt: Add missing function parameter description
-  scsi: lpfc: lpfc_nvme: Correct some pretty obvious misdocumentation
-  scsi: aic7xxx: aic79xx_osm: Remove unused variable 'ahd'
-  scsi: aic7xxx: aic79xx_osm: Remove unused variables 'wait' and
-    'paused'
-  scsi: aic7xxx: aic79xx_osm: Fix 'amount_xferred' set but not used
-    issue
-  scsi: aic7xxx: aic79xx_osm: Remove set but unused variabes
-    'saved_scsiid' and 'saved_modes'
-
- drivers/scsi/aacraid/aachba.c      |   5 +-
- drivers/scsi/aacraid/commctrl.c    |  14 +-
- drivers/scsi/aacraid/commsup.c     |  12 +-
- drivers/scsi/aacraid/dpcsup.c      |  15 +-
- drivers/scsi/aacraid/rx.c          |  12 +-
- drivers/scsi/aic7xxx/aic79xx_osm.c |  14 +-
- drivers/scsi/aic94xx/aic94xx_scb.c |   6 +-
- drivers/scsi/aic94xx/aic94xx_seq.c |   6 +-
- drivers/scsi/be2iscsi/be_iscsi.c   |  11 +-
- drivers/scsi/be2iscsi/be_main.c    |   4 +-
- drivers/scsi/be2iscsi/be_mgmt.c    |   3 +-
- drivers/scsi/ipr.c                 |  90 +++++++-----
- drivers/scsi/ipr.h                 |   4 +-
- drivers/scsi/lpfc/lpfc_nvme.c      |  38 +++--
- drivers/scsi/megaraid.c            | 218 ++++++++++++++---------------
- drivers/scsi/myrs.c                |  34 ++---
- drivers/scsi/pm8001/pm8001_ctl.c   |  14 ++
- drivers/scsi/virtio_scsi.c         |   2 +-
- 18 files changed, 273 insertions(+), 229 deletions(-)
-
+ /**
+  *	aac_get_config_status	-	check the adapter configuration
+- *	@common: adapter to query
++ *	@dev: aac driver data
++ *	@commit_flag: force sending CT_COMMIT_CONFIG
+  *
+  *	Query config status, and commit the configuration if needed.
+  */
+@@ -442,7 +443,7 @@ static void aac_expose_phy_device(struct scsi_cmnd *scsicmd)
+ 
+ /**
+  *	aac_get_containers	-	list containers
+- *	@common: adapter to probe
++ *	@dev: aac driver data
+  *
+  *	Make a list of all containers on this controller
+  */
 -- 
 2.25.1
 
