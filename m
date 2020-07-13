@@ -7,123 +7,201 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3E7C433F4
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 474AAC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEABF2073A
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BF8A20720
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 07:47:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KHL9TfqH"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vV+NVLZb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729478AbgGMHrb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 03:47:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50484 "EHLO
+        id S1729516AbgGMHrk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 03:47:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729430AbgGMHrU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 03:47:20 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39DD4C08C5DB
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:47:20 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id o8so12308042wmh.4
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:47:20 -0700 (PDT)
+        with ESMTP id S1729423AbgGMHrT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 03:47:19 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 287A7C061755
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:47:19 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id l2so12174727wmf.0
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 00:47:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XQHRlmYiMy5z0WnxtNKRalmwQyJTVSmo3hN7/2Qvzas=;
-        b=KHL9TfqHuic2Hz/gCGjHqEV4aXb+rqiIxhW2H0SIf95PQRa4bMGKzxcKNY/V0HaQCh
-         FV3WMI7KMqZvdJMZLQIqhkncE2ybjODT8FbtRsxDnKV+4nRN9UaArVXi4PibDxnCCBgh
-         Ga86GDhHwA3vJDwJOPNCgFmgF2wgxvnOjM7T1IXrGAtLr5AN6fKxkJGta0KvX7tr0g/v
-         08KZHR0URgb652sx8tDibXdv/bjWR5rZvhMtIpKtL+K9M+MoW+jJe8/n9qMF8rmDJq6A
-         bDBxqpp+t/g4wU79ff6v94+pBQFa0Pz5/QlwG64QEbTWP7WxFnU32Eiml8L1gkX7+TQF
-         NRGw==
+        bh=d7D7AfDQQG73fSw4f21gOz4vhVntWScnapCoKvjgVSM=;
+        b=vV+NVLZbcCzd4H3LMTl7g1rbRAL4pQW36HVzYwkRoNO7H8voiAmmb1Ft/Ig7C9LqAN
+         5NElhgHT2E+DngzMp3xd9PzgBACBMSL8PKud4STlFQNDR488sZRESJlnOIhg6LCGA4IP
+         rDwVwXp+sxZclZMMgDjZKriAl/1M+xdQKZqbKpi7WqPwgOpauWacugk41diIdooz92zq
+         ZFF00fG+2EZXpSQFE6auRlu+aBEMoFFJLmUV2WwFzybWIeyjeiqTcanXL20tvjoiTyHN
+         fsYhJ+CxX5aXYUhwoJeEzHlNhHW7gQeq7rpZl5sAHNPl8Z8VepXO+NMz/87JgOQTHgAn
+         PSbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XQHRlmYiMy5z0WnxtNKRalmwQyJTVSmo3hN7/2Qvzas=;
-        b=f/fFJc0DWSkl/TXn1o8HPvro3zJEAx8jUwypUjvqw4y2G/f0OVo6ImUelH5li71GFd
-         tOe/shE5P2tKk0WwOaxwXTsakTK3acBHWLP1017o92ifZKhWBOyaZA6Np87BaF/M6d9g
-         3t6PAYIrgCMk3Rw1SLoOoyowwONgjJJ4xIQVh32vq5ypXhglyNi9LSPimz+erLhtqoxO
-         +GvbekU+DkEvnIR1RRAauZBJVcc4drZSlgAr2Dlf8sL07pL2PnZtdNiw4gxAElLUTAoz
-         2Yv6H4jj0U2AXwJCL9WR8oEzovSAyD3bwdRYbpwe+7d58E4bJJLpudz26hYtCuZhWGYq
-         8R1A==
-X-Gm-Message-State: AOAM533+NvWi0QnrNw2jHTDlxDSmr0I/UfFJWp2cJVUFMkKBdRoRGUXi
-        bBzo7KU50g7WTT8Hw1gOtqSYL2heGOo=
-X-Google-Smtp-Source: ABdhPJzgwrMYUQqLwI6VoW0qfTZcKcx1xciX4lkFCkQBG7dWKtjqLa9Y5l1ZR3O6y0+SbRr5gKv1Lg==
-X-Received: by 2002:a1c:4d11:: with SMTP id o17mr17319246wmh.134.1594626438923;
-        Mon, 13 Jul 2020 00:47:18 -0700 (PDT)
+        bh=d7D7AfDQQG73fSw4f21gOz4vhVntWScnapCoKvjgVSM=;
+        b=F279f82pSQzR9dY/ztK5vcq27l34P5IcW7Af4MQZzH4lGYx+GGkzZ7loh3b8DMW5/j
+         s6lNjEAjVkDqhS8Bb+q7aPLv8uHCvQhUBwDRUWs3b5YqEalh7txzzUYBPkzvvnSq9Bwz
+         nryRMFV1L99ukHTN44uuwO92WZFJ7V+PWewaOo3lKrqSKb71dC5L83U5cj2wQ4RTqX+4
+         hFe6ojOum3vWZc5I+65E36EEjdibFLj2R7pnocX7WXk4wdkRKFv8p9mnf1fnreO0ZUXb
+         CQUODIurhH18cfe9I7SygpqcxUb6mkeSdASByZXnltzNivLsbt3jRSdWq3Oi1/qoSdSU
+         E9NQ==
+X-Gm-Message-State: AOAM530IysRWZBGBSRDnndbHHVe/4UxhlpLvZhUB+Gs2zADkivzg42L8
+        Ye1tOLuFVd6iwshz13UcIxc9FA==
+X-Google-Smtp-Source: ABdhPJykgxeFl6MQNLKyLJskduUzPTsaisKDntI4PdPBhkHl/h6r0YVhcfokuRCVg5muKjhfySfqNA==
+X-Received: by 2002:a7b:cd10:: with SMTP id f16mr18044156wmj.86.1594626437839;
+        Mon, 13 Jul 2020 00:47:17 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id k11sm25142488wrd.23.2020.07.13.00.47.17
+        by smtp.gmail.com with ESMTPSA id k11sm25142488wrd.23.2020.07.13.00.47.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 00:47:18 -0700 (PDT)
+        Mon, 13 Jul 2020 00:47:17 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        QLogic-Storage-Upstream@qlogic.com
-Subject: [PATCH v2 29/29] scsi: qla4xxx: ql4_init: Provide a missing function param description and fix formatting
-Date:   Mon, 13 Jul 2020 08:46:45 +0100
-Message-Id: <20200713074645.126138-30-lee.jones@linaro.org>
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
+Subject: [PATCH v2 28/29] scsi: aacraid: aachba: Fix a bunch of function doc formatting errors
+Date:   Mon, 13 Jul 2020 08:46:44 +0100
+Message-Id: <20200713074645.126138-29-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200713074645.126138-1-lee.jones@linaro.org>
 References: <20200713074645.126138-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Kerneldoc function parameter references need to be in the format '@.*: ',
-else the kerneldoc checker gets confused.
+And a few missing/excessive parameter descriptions.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/qla4xxx/ql4_init.c: In function ‘ql4xxx_set_mac_number’:
- drivers/scsi/qla4xxx/ql4_init.c:17:10: warning: variable ‘func_number’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/qla4xxx/ql4_init.c: In function ‘qla4xxx_pci_config’:
- drivers/scsi/qla4xxx/ql4_init.c:664:6: warning: variable ‘status’ set but not used [-Wunused-but-set-variable]
-from  drivers/scsi/qla4xxx/ql4_init.c:9:
-from  drivers/scsi/qla4xxx/ql4_init.c:9:
- drivers/scsi/qla4xxx/ql4_init.c:953: warning: Function parameter or member 'is_reset' not described in 'qla4xxx_initialize_adapter'
- drivers/scsi/qla4xxx/ql4_init.c:1168: warning: Function parameter or member 'ha' not described in 'qla4xxx_process_ddb_changed'
- drivers/scsi/qla4xxx/ql4_init.c:1168: warning: Function parameter or member 'fw_ddb_index' not described in 'qla4xxx_process_ddb_changed'
- drivers/scsi/qla4xxx/ql4_init.c:1168: warning: Function parameter or member 'state' not described in 'qla4xxx_process_ddb_changed'
- drivers/scsi/qla4xxx/ql4_init.c:1168: warning: Function parameter or member 'conn_err' not described in 'qla4xxx_process_ddb_changed'
+ drivers/scsi/aacraid/aachba.c:358: warning: Function parameter or member 'dev' not described in 'aac_get_config_status'
+ drivers/scsi/aacraid/aachba.c:358: warning: Function parameter or member 'commit_flag' not described in 'aac_get_config_status'
+ drivers/scsi/aacraid/aachba.c:358: warning: Excess function parameter 'common' description in 'aac_get_config_status'
+ drivers/scsi/aacraid/aachba.c:450: warning: Function parameter or member 'dev' not described in 'aac_get_containers'
+ drivers/scsi/aacraid/aachba.c:450: warning: Excess function parameter 'common' description in 'aac_get_containers'
+ drivers/scsi/aacraid/aachba.c:568: warning: Function parameter or member 'scsicmd' not described in 'aac_get_container_name'
+ drivers/scsi/aacraid/aachba.c:796: warning: Function parameter or member 'scsicmd' not described in 'aac_probe_container_callback1'
+ drivers/scsi/aacraid/aachba.c:796: warning: Excess function parameter 'dev' description in 'aac_probe_container_callback1'
+ drivers/scsi/aacraid/aachba.c:796: warning: Excess function parameter 'cid' description in 'aac_probe_container_callback1'
+ drivers/scsi/aacraid/aachba.c:1105: warning: Function parameter or member 'scsicmd' not described in 'aac_get_container_serial'
+ drivers/scsi/aacraid/aachba.c:1961: warning: Excess function parameter 'phys_luns' description in 'aac_set_safw_attr_all_targets'
+ drivers/scsi/aacraid/aachba.c:1961: warning: Excess function parameter 'rescan' description in 'aac_set_safw_attr_all_targets'
+ drivers/scsi/aacraid/aachba.c:3394: warning: Cannot understand  *
+ on line 3394 - I thought it was a doc line
+ drivers/scsi/aacraid/aachba.c:3687: warning: Cannot understand  *
+ on line 3687 - I thought it was a doc line
+ drivers/scsi/aacraid/aachba.c:3752: warning: Cannot understand  *
+ on line 3752 - I thought it was a doc line
+ drivers/scsi/aacraid/aachba.c:3795: warning: Cannot understand  *
+ on line 3795 - I thought it was a doc line
 
-Cc: QLogic-Storage-Upstream@qlogic.com
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/qla4xxx/ql4_init.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 2bf5e3e639e1a..5963127f7d2ef 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -945,6 +945,7 @@ void qla4xxx_free_ddb_index(struct scsi_qla_host *ha)
- /**
-  * qla4xxx_initialize_adapter - initiailizes hba
-  * @ha: Pointer to host adapter structure.
-+ * @is_reset: Is this init path or reset path
-  *
-  * This routine parforms all of the steps necessary to initialize the adapter.
-  *
-@@ -1156,9 +1157,9 @@ int qla4xxx_flash_ddb_change(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 2b868f8db8ffe..7ae1e545a255c 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -561,7 +561,7 @@ static void get_container_name_callback(void *context, struct fib * fibptr)
+ 	scsicmd->scsi_done(scsicmd);
+ }
+ 
+-/**
++/*
+  *	aac_get_container_name	-	get container name, none blocking.
+  */
+ static int aac_get_container_name(struct scsi_cmnd * scsicmd)
+@@ -786,8 +786,7 @@ static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(stru
  
  /**
-  * qla4xxx_process_ddb_changed - process ddb state change
-- * @ha - Pointer to host adapter structure.
-- * @fw_ddb_index - Firmware's device database index
-- * @state - Device state
-+ * @ha: Pointer to host adapter structure.
-+ * @fw_ddb_index: Firmware's device database index
-+ * @state: Device state
+  *	aac_probe_container		-	query a logical volume
+- *	@dev: device to query
+- *	@cid: container identifier
++ * @scsicmd: the scsi command block
   *
-  * This routine processes a Decive Database Changed AEN Event.
-  **/
+  *	Queries the controller about the given volume. The volume information
+  *	is updated in the struct fsa_dev_info structure rather than returned.
+@@ -1098,7 +1097,7 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
+ 	scsicmd->scsi_done(scsicmd);
+ }
+ 
+-/**
++/*
+  *	aac_get_container_serial - get container serial, none blocking.
+  */
+ static int aac_get_container_serial(struct scsi_cmnd * scsicmd)
+@@ -1952,8 +1951,6 @@ static int aac_get_safw_attr_all_targets(struct aac_dev *dev)
+ /**
+  *	aac_set_safw_attr_all_targets-	update current hba map with data from FW
+  *	@dev:	aac_dev structure
+- *	@phys_luns: FW information from report phys luns
+- *	@rescan: Indicates scan type
+  *
+  *	Update our hba map with the information gathered from the FW
+  */
+@@ -3391,15 +3388,12 @@ int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ }
+ 
+ /**
+- *
+  * aac_srb_callback
+  * @context: the context set in the fib - here it is scsi cmd
+  * @fibptr: pointer to the fib
+  *
+  * Handles the completion of a scsi command to a non dasd device
+- *
+  */
+-
+ static void aac_srb_callback(void *context, struct fib * fibptr)
+ {
+ 	struct aac_srb_reply *srbreply;
+@@ -3684,13 +3678,11 @@ static void hba_resp_task_failure(struct aac_dev *dev,
+ }
+ 
+ /**
+- *
+  * aac_hba_callback
+  * @context: the context set in the fib - here it is scsi cmd
+  * @fibptr: pointer to the fib
+  *
+  * Handles the completion of a native HBA scsi command
+- *
+  */
+ void aac_hba_callback(void *context, struct fib *fibptr)
+ {
+@@ -3749,14 +3741,12 @@ void aac_hba_callback(void *context, struct fib *fibptr)
+ }
+ 
+ /**
+- *
+  * aac_send_srb_fib
+  * @scsicmd: the scsi command block
+  *
+  * This routine will form a FIB and fill in the aac_srb from the
+  * scsicmd passed in.
+  */
+-
+ static int aac_send_srb_fib(struct scsi_cmnd* scsicmd)
+ {
+ 	struct fib* cmd_fibcontext;
+@@ -3792,7 +3782,6 @@ static int aac_send_srb_fib(struct scsi_cmnd* scsicmd)
+ }
+ 
+ /**
+- *
+  * aac_send_hba_fib
+  * @scsicmd: the scsi command block
+  *
 -- 
 2.25.1
 
