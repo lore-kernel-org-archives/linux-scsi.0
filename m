@@ -2,234 +2,150 @@ Return-Path: <SRS0=+RX4=AY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F6BC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 12:03:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D7CBC433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 12:13:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C4B4120738
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 12:03:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 672C92072D
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 12:13:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="PvBA2+UX"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="PXCMlqwb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729308AbgGMMDQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 08:03:16 -0400
-Received: from mail1.bemta26.messagelabs.com ([85.158.142.5]:44548 "EHLO
-        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728714AbgGMMDP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Jul 2020 08:03:15 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1594641791; i=@ts.fujitsu.com;
-        bh=yhSSR7qg+pE8SmNPWkjJ/NF2m44tgnURWl3Sk2hN0as=;
-        h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=PvBA2+UXKjHvGWpCjz/Qt2FPLUtY+sxeJ6Ks9WuNwfMBKJ0+DOR6DxwCWK0ZxcXsR
-         vBTT3MXFLICpsifJqXkzwmN1ubBnP1XM1vZXBTQI8Ki5jg66WSBKvvTguwQ5tft+bG
-         9AhE0AyneXnRtP6Rbzpp3DNUIkCZFn2Ym1VZ+I2raEo8Oc7daIVbLEmrdqdmrl5RfV
-         Q1TUXKpyxpOsf5MILbCIgU1Q5rD2rgZm8q3YYjLhWPEP1zek8WHb0THKr8oKKJpqMU
-         GS3d1SagWWRvP5FqzKSS4yfUbB9d0+6l6CR5qJIeK9VzWmjJDEcypW9Ya061PXR3+8
-         LuerL8pzQC6eg==
-Received: from [100.113.2.20] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-5.bemta.az-a.eu-central-1.aws.symcld.net id AA/F9-13954-E7D4C0F5; Mon, 13 Jul 2020 12:03:10 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrAIsWRWlGSWpSXmKPExsViZ8MxVbfOlyf
-  e4MFeNYvu6zvYLJYf/8dk8XfSDVaL1qVvmRxYPD4+vcXi8XmTXABTFGtmXlJ+RQJrxqPddQVf
-  tSp2Tr7C2MB4XbWLkYtDSGAyo0Rf5zomCKefUeLrnY9sXYycHMICXhJr/s5hA0mICKxhlFj0e
-  ilU1VJGiYP/loNVsQkYSKyYdJ8FxOYVcJQ4ffgMM4jNIqAq8XHLP8YuRg4OUYFwiWcr/CFKBC
-  VOznwCVs4pYCex+ctMsHJmATOJeZsfQtniEreezGeCsLUlli18zTyBkW8WkvZZSFpmIWmZhaR
-  lASPLKkbLpKLM9IyS3MTMHF1DAwNdQ0NjXUNdI2MzvcQq3US91FLd5NS8kqJEoKxeYnmxXnFl
-  bnJOil5easkmRmBApxQyvtnB+PX1B71DjJIcTEqivAUePPFCfEn5KZUZicUZ8UWlOanFhxhlO
-  DiUJHjnewLlBItS01Mr0jJzgNEFk5bg4FES4bXzAkrzFhck5hZnpkOkTjEqSonzWoAkBEASGa
-  V5cG2wiL7EKCslzMvIwMAgxFOQWpSbWYIq/4pRnINRSZh3FcgUnsy8Erjpr4AWMwEt5vnHCbK
-  4JBEhJdXANHc9u0yO5MnMjMsGXi9/7Yuwdv7SlhzUsvZV8vNN5pKGtvFlbOLfLi5ePTm6XnlS
-  2JMn7ybF9sQa/Ll/lYfBZjZDx8ZQw+nSDb8f7JhuEyUYHFJxn2WZ9KkUwY6MszInyqvPLT/4v
-  rtH+rd7Qly7nZWGhufaGZqfE78t/3CG9Vw9q3airOHM1X8TJ6fMcD9gYxcY89XspItxVN+1ut
-  11BmxtTtVrtW48qRYt+uXzIDZi1gnb/JsCQifnJ0z0UOTMZFfcbBnPyuU9wWjb86m5x49cn3+
-  yNWWC3en1HzfOZmd5ybJ8xasrrGuXZz/kiV58Iyawnq9LfptTUEvqDaUHubLPQ1cyuk8rFN7+
-  Uni/EktxRqKhFnNRcSIABS6+Z2MDAAA=
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-7.tower-228.messagelabs.com!1594641790!1051113!1
-X-Originating-IP: [62.60.8.149]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.2; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 1854 invoked from network); 13 Jul 2020 12:03:10 -0000
-Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
-  by server-7.tower-228.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 13 Jul 2020 12:03:10 -0000
-Received: from x-serv01 ([172.17.38.52])
-        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06DC397c024110;
-        Mon, 13 Jul 2020 13:03:09 +0100
-Received: from [172.17.39.90] (unknown [172.17.39.90])
-        by x-serv01 (Postfix) with ESMTP id 811BD20375;
-        Mon, 13 Jul 2020 14:03:06 +0200 (CEST)
-Subject: Re: [PATCH 7/8] scsi: target: tcmu: Implement tmr_notify callback
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
- <20200710104817.19462-8-bstroesser@ts.fujitsu.com>
- <24d9afb0-3ea9-e83b-acf0-b44f04583a6e@oracle.com>
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Message-ID: <b8bb9898-6ff8-2ffb-47d6-d96534c6d315@ts.fujitsu.com>
-Date:   Mon, 13 Jul 2020 14:03:04 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S1729668AbgGMMNZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 08:13:25 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:27328 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726586AbgGMMNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Jul 2020 08:13:25 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1594642404; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=QmzfPs8eZRl2dgcyf60Wj7Bm3TCq28QlYUw6T4kFc3o=;
+ b=PXCMlqwboW7Aw9qC6NN+T9W3Xld8duTLgO4Gl4R2nNrpA7zgpTv2Ti165mPj1F0kuV36+oYp
+ FJ0YjZLD0jD2pXECIOVTnRgVQasd51VMXRoP5nUQQnxww+6fvL4MJ7Tr3xy1Y1YuNa3bXO+j
+ hh5FSNuQK9NqZ297cjjokxrMVlo=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5f0c4fd9166c1c5494da358b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 13 Jul 2020 12:13:13
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 84DC8C433AD; Mon, 13 Jul 2020 12:13:12 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7E466C433C8;
+        Mon, 13 Jul 2020 12:13:11 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <24d9afb0-3ea9-e83b-acf0-b44f04583a6e@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 13 Jul 2020 20:13:11 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     daejun7.park@samsung.com
+Cc:     avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, asutoshd@codeaurora.org,
+        beanhuo@micron.com, stanley.chu@mediatek.com, bvanassche@acm.org,
+        tomas.winkler@intel.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sang-yoon Oh <sangyoon.oh@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        yongmyung lee <ymhungry.lee@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Adel Choi <adel.choi@samsung.com>,
+        BoRam Shin <boram.shin@samsung.com>
+Subject: Re: [PATCH v6 1/5] scsi: ufs: Add UFS feature related parameter
+In-Reply-To: <231786897.01594636801601.JavaMail.epsvc@epcpadp1>
+References: <963815509.21594636682161.JavaMail.epsvc@epcpadp2>
+ <CGME20200713103423epcms2p8442ee7cc22395e4a4cedf224f95c45e8@epcms2p3>
+ <231786897.01594636801601.JavaMail.epsvc@epcpadp1>
+Message-ID: <dbc1c3ffaf66ec41236365c5b259d948@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-12 03:15, Mike Christie wrote:
-> On 7/10/20 5:48 AM, Bodo Stroesser wrote:
+On 2020-07-13 18:38, Daejun Park wrote:
+> This is a patch for parameters to be used for UFS features layer and 
+> HPB
+> module.
+> 
+> Tested-by: Bean Huo <beanhuo@micron.com>
+> Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 
-...
+Reviewed-by: Can Guo <cang@codeaurora.org>
 
->> @@ -844,6 +854,9 @@ static bool is_ring_space_avail(struct tcmu_dev=20
->> *udev, struct tcmu_cmd *cmd,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return false;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
->> +=C2=A0=C2=A0=C2=A0 if (!data_needed)
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return true;
->> +
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* try to check and get the data blocks=
- as needed */
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 space =3D spc_bitmap_free(udev->data_bi=
-tmap, udev->dbi_thresh);
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if ((space * DATA_BLOCK_SIZE) < data_ne=
-eded) {
->> @@ -1106,6 +1119,61 @@ static int queue_cmd_ring(struct tcmu_cmd=20
->> *tcmu_cmd, sense_reason_t *scsi_err)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 1;
->> =C2=A0 }
->> +/*
->=20
-> We do 2 stars for this type of comment:
->=20
-> /**
->=20
->> + * queue_tmr_ring - queue tmr info to ring or internally
->> + *
->=20
-> No extra newline.
->=20
-
-Ah, thank you. I'll fix both.
->> @@ -1141,6 +1209,85 @@ static void tcmu_set_next_deadline(struct=20
->> list_head *queue,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 del_timer(timer=
-);
->> =C2=A0 }
->> +static int
->> +tcmu_tmr_type(enum tcm_tmreq_table tmf)
->> +{
->> +=C2=A0=C2=A0=C2=A0 switch (tmf) {
->> +=C2=A0=C2=A0=C2=A0 case TMR_ABORT_TASK:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 return TCMU_TMR_ABORT_TASK;
->> +=C2=A0=C2=A0=C2=A0 case TMR_ABORT_TASK_SET:=C2=A0=C2=A0=C2=A0 return =
-TCMU_TMR_ABORT_TASK_SET;
->> +=C2=A0=C2=A0=C2=A0 case TMR_CLEAR_ACA:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 return TCMU_TMR_CLEAR_ACA;
->> +=C2=A0=C2=A0=C2=A0 case TMR_CLEAR_TASK_SET:=C2=A0=C2=A0=C2=A0 return =
-TCMU_TMR_CLEAR_TASK_SET;
->> +=C2=A0=C2=A0=C2=A0 case TMR_LUN_RESET:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 return TCMU_TMR_LUN_RESET;
->> +=C2=A0=C2=A0=C2=A0 case TMR_TARGET_WARM_RESET:=C2=A0=C2=A0=C2=A0 retu=
-rn TCMU_TMR_TARGET_WARM_RESET;
->> +=C2=A0=C2=A0=C2=A0 case TMR_TARGET_COLD_RESET:=C2=A0=C2=A0=C2=A0 retu=
-rn TCMU_TMR_TARGET_COLD_RESET;
->> +=C2=A0=C2=A0=C2=A0 case TMR_LUN_RESET_PRO:=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 return TCMU_TMR_LUN_RESET_PRO;
->> +=C2=A0=C2=A0=C2=A0 default:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 return TCMU_TMR_UNKNOWN;
->> +=C2=A0=C2=A0=C2=A0 }
->> +}
->> +
->> +static void
->> +tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct list_head *cmd_list=
-)
->> +{
->> +=C2=A0=C2=A0=C2=A0 int i =3D 0, cmd_cnt =3D 0;
->> +=C2=A0=C2=A0=C2=A0 bool unqueued =3D false;
->> +=C2=A0=C2=A0=C2=A0 uint16_t *cmd_ids =3D NULL;
->> +=C2=A0=C2=A0=C2=A0 struct tcmu_cmd *cmd;
->> +=C2=A0=C2=A0=C2=A0 struct se_cmd *se_cmd;
->> +=C2=A0=C2=A0=C2=A0 struct tcmu_tmr *tmr;
->> +=C2=A0=C2=A0=C2=A0 struct tcmu_dev *dev =3D TCMU_DEV(se_dev);
->> +
->> +=C2=A0=C2=A0=C2=A0 mutex_lock(&dev->cmdr_lock);
->> +
->> +=C2=A0=C2=A0=C2=A0 // First we check for aborted commands in qfull_qu=
-eue
->=20
-> I know the coding style doc does not say to never use // anymore, but=20
-> just use the same style we have already in the rest of the code for=20
-> single line comments:
->=20
-> /* comment */
->=20
->=20
-
-Ok, I'll fix.
-
->> +struct tcmu_tmr_entry {
->> +=C2=A0=C2=A0=C2=A0 struct tcmu_cmd_entry_hdr hdr;
->> +
->> +#define TCMU_TMR_UNKNOWN=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0
->> +#define TCMU_TMR_ABORT_TASK=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- 1
->> +#define TCMU_TMR_ABORT_TASK_SET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 2
->> +#define TCMU_TMR_CLEAR_ACA=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-3
->> +#define TCMU_TMR_CLEAR_TASK_SET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 4
->> +#define TCMU_TMR_LUN_RESET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-5
->> +#define TCMU_TMR_TARGET_WARM_RESET=C2=A0=C2=A0=C2=A0 6
->> +#define TCMU_TMR_TARGET_COLD_RESET=C2=A0=C2=A0=C2=A0 7
->> +/* Pseudo reset due to received PR OUT */
->> +#define TCMU_TMR_LUN_RESET_PRO=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 128
->> +=C2=A0=C2=A0=C2=A0 __u8 tmr_type;
->> +
->> +=C2=A0=C2=A0=C2=A0 __u8 __pad1;
->> +=C2=A0=C2=A0=C2=A0 __u16 __pad2;
->> +=C2=A0=C2=A0=C2=A0 __u32 cmd_cnt;
->> +=C2=A0=C2=A0=C2=A0 __u64 __pad3;
->> +=C2=A0=C2=A0=C2=A0 __u64 __pad4;
->> +=C2=A0=C2=A0=C2=A0 __u16 cmd_ids[0];
->> +} __packed;
->> +
->=20
-> Is this new request and the tmr_notify callback just supposed to clean=20
-> up the requested commands or is it supposed to perform the actions of=20
-> the task management function defined in the specs?
->=20
-> The callback name makes it feel like it's just a notification, but the=20
-> names above make it seem like we are supposed to execute the TMF in=20
-> userspace. But if the latter, then how do we notify the kernel if the=20
-> TMF was successful or failed?
-
-My plan is to have a notification only. IMHO userspace (and also tcmu
-or another backend) must not interfere with core's TMR handling.
-The new callback tmr_notify just allows backend to be helpful during
-TMR handling by completing in core aborted, but in backend/userspace
-still running commands early.
-
-Do you refer to the TCMU_TMR_* definitions? I just defined these names
-because TMR_* definitions are in target_core_base.h which is not exposed
-to userspace programs. Knowing the type of TMR that aborted a command is
-useful at least for userspace tracing.
-
-BTW: I hope there are enough padding fields in the tcmu_tmr_entry to
-allow additional session info later?
+> ---
+>  drivers/scsi/ufs/ufs.h | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index f8ab16f30fdc..ae557b8d3eba 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -122,6 +122,7 @@ enum flag_idn {
+>  	QUERY_FLAG_IDN_WB_EN                            = 0x0E,
+>  	QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN                 = 0x0F,
+>  	QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
+> +	QUERY_FLAG_IDN_HPB_RESET                        = 0x11,
+>  };
+> 
+>  /* Attribute idn for Query requests */
+> @@ -195,6 +196,9 @@ enum unit_desc_param {
+>  	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
+>  	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
+>  	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
+> +	UNIT_DESC_HPB_LU_MAX_ACTIVE_REGIONS	= 0x23,
+> +	UNIT_DESC_HPB_LU_PIN_REGION_START_OFFSET	= 0x25,
+> +	UNIT_DESC_HPB_LU_NUM_PIN_REGIONS	= 0x27,
+>  	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
+>  };
+> 
+> @@ -235,6 +239,8 @@ enum device_desc_param {
+>  	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
+>  	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
+>  	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
+> +	DEVICE_DESC_PARAM_HPB_VER		= 0x40,
+> +	DEVICE_DESC_PARAM_HPB_CONTROL		= 0x42,
+>  	DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP	= 0x4F,
+>  	DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN	= 0x53,
+>  	DEVICE_DESC_PARAM_WB_TYPE		= 0x54,
+> @@ -283,6 +289,10 @@ enum geometry_desc_param {
+>  	GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS	= 0x3E,
+>  	GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR	= 0x42,
+>  	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
+> +	GEOMETRY_DESC_HPB_REGION_SIZE		= 0x48,
+> +	GEOMETRY_DESC_HPB_NUMBER_LU		= 0x49,
+> +	GEOMETRY_DESC_HPB_SUBREGION_SIZE	= 0x4A,
+> +	GEOMETRY_DESC_HPB_DEVICE_MAX_ACTIVE_REGIONS	= 0x4B,
+>  	GEOMETRY_DESC_PARAM_WB_MAX_ALLOC_UNITS	= 0x4F,
+>  	GEOMETRY_DESC_PARAM_WB_MAX_WB_LUNS	= 0x53,
+>  	GEOMETRY_DESC_PARAM_WB_BUFF_CAP_ADJ	= 0x54,
+> @@ -327,6 +337,7 @@ enum {
+> 
+>  /* Possible values for dExtendedUFSFeaturesSupport */
+>  enum {
+> +	UFS_DEV_HPB_SUPPORT		= BIT(7),
+>  	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+>  };
+> 
+> @@ -537,6 +548,7 @@ struct ufs_dev_info {
+>  	u8 *model;
+>  	u16 wspecversion;
+>  	u32 clk_gating_wait_us;
+> +	u8 b_ufs_feature_sup;
+>  	u32 d_ext_ufs_feature_sup;
+>  	u8 b_wb_buffer_type;
+>  	u32 d_wb_alloc_units;
+> 
+> base-commit: b53293fa662e28ae0cdd40828dc641c09f133405
