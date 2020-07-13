@@ -7,525 +7,761 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48508C433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C49C433EA
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:00:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1354A2072D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:00:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7873E20758
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:00:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VpAhhBUG"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QL5G7NgD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729264AbgGMIAW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 04:00:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52520 "EHLO
+        id S1729370AbgGMIAa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 04:00:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729244AbgGMIAV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:21 -0400
-Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5492CC061794
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:21 -0700 (PDT)
-Received: by mail-wm1-x343.google.com with SMTP id o8so12341262wmh.4
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:21 -0700 (PDT)
+        with ESMTP id S1729331AbgGMIA1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:27 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09C4AC08C5DF
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:27 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id s10so14702785wrw.12
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=EB1Ee82K4f4wX+Lz3kbrIOyla+XpjuhxPTOuxM4xsjo=;
-        b=VpAhhBUGsGTosEsQ0dXvwysf4egG19rBIQYkaz1ArmHODF3O+nfwIPWMcDk5Sgfa1z
-         lQV9XY7VNmH8eUpmY60Y7oAUm81Ezp7PDr5iuftYMlxdL+P34EWLCZ6QRoaeZgeb6mpv
-         nblocbP/rq2yqbAL1S2daEC3bn53cTW+bTgXKHOCjkAGGJWCLPLehSyQmwYExFMqFKW3
-         zvBHP138KQi/GruKsQ83zVBuQVRqJ1Yc6wPf6i8rcTzAr5jbvfV5FTFpYVHtBZN0dWNl
-         tR/mySJxx95RVn4H3Vl9Q3w/L71igX4etUg4ybGPIgOiCCAdsuPIzWHgvxJ3pldIrdTL
-         kMnQ==
+        bh=Sg8dC1PqQ5ZLNgANJj8CFd/WU9c7Mby6GC87AahLWX8=;
+        b=QL5G7NgDJ8Z71PwJEviN0E/67S+0jtmZVTSk1xlJDO6sbpVh2CinTnVSzZSxg5ONHf
+         AkO+R4XN7oLFKNGOzcZM+/0VSAySqrptBqdsHShaf8rhU/BV8wgSvXqPZMnHLA1gyL1U
+         /DmyiYyIWaY5ClzE4NNj13NxLYZcHjGHt+JWJo3tVttfXQlAcjFk44N8cPX/zsXm0tQk
+         PTLKf7yp/N/rTxV6aaVpTJNoTCAtgRgfRi7mACz8oKuI06HMvaVEFfJM+voM4OnsMNy8
+         4rmdLIe8iyUaoDkIAtgyjXz7ORj6D50LV+BgGyjmVu+04PZI/VkJOMkW2SUbwB2zIqnW
+         zsVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=EB1Ee82K4f4wX+Lz3kbrIOyla+XpjuhxPTOuxM4xsjo=;
-        b=XEzgC2YCNNmFce6e3Z3cniHgBDjgz9otKp6MyjGSwNTiP3I8wzxzZZy219+W5Bojib
-         YbXsMZwAlpdqZmnIGmUnQuhRX2mQMfp+6fyxcTW0Pyjep12wH6dmNqd1ZRaVqu+hflUD
-         vSKlHVsbfLM+z2DFQQUFu7GDMybxQZuUy1N6dnZ71EzQJltyICgnWIV+HeiExxQM1GZM
-         l8rWMa3BJ5b7uteH+5Z6Kas2oSe14z0QdjW/JeCVe3TG5Cy+eYSyCyFfmQIoZARdRgTA
-         4KLLtBzaeqFxEpHinRnTm5MNf9EouX8ylgKq2cQm/qxrhsDcQY/ABOkEBbVNZQ51rSU5
-         IFwQ==
-X-Gm-Message-State: AOAM533d7HwCTIZSgr44KVKnWBjtSQp3HrPzLj1tZuJIrwvpDBcLO+c1
-        HWLgEtw1lefud/ENl8bBax9H1w==
-X-Google-Smtp-Source: ABdhPJxwtx3c6Zus1PQb5YHDu1hDMkgOQjr7NuEbryPggSNrHNE0T50lanXyA5CSgE7UEc5jtN3XDw==
-X-Received: by 2002:a7b:c4d8:: with SMTP id g24mr16749924wmk.127.1594627219765;
-        Mon, 13 Jul 2020 01:00:19 -0700 (PDT)
+        bh=Sg8dC1PqQ5ZLNgANJj8CFd/WU9c7Mby6GC87AahLWX8=;
+        b=T5+Vmkc7GOWwf8xMdPn23gNeSf83MraoDxCEl8d5+yRXxJg5BWRa1tXvyomoTd2nhi
+         hcA1At//yfHsYIHhI8jve0IWjdXsiLSNnxHg8TgCyxckwPbG1dXyzEAT/49iie5zMV6W
+         xsMzysNOptCKkXT7LG4IR3pHLVl+D374yvR9IwV8u0I+cuzb09gEM5o6HfkF6tiu23/J
+         uDNjajMjc349r1nC1+6gVinHalGwssA74vWcf7UsjpiKBNtrAnzDbKqZKBV6urSp8pv8
+         CmjG/qY3uJTVX2o3y5J8WLWhYL/lstr1f5l5TmgGU7pi9qsglp72Aq1GIvrLGIL7FuOX
+         wUfg==
+X-Gm-Message-State: AOAM533JIZ3BDbAbzB/LCCf+0RkzUY4dcwOnmpc9Lh92kV2rk4Rs95nR
+        wFYhhBBFg/zXuRcrSj/S8MkZ4Q==
+X-Google-Smtp-Source: ABdhPJzZTcp6W3446KAM7cXY8u0Hjoukft8o+wf5vZMo2oOhQBuzQuegIYc+pQD9i5vWCfIZnB+M9A==
+X-Received: by 2002:a5d:464e:: with SMTP id j14mr78278262wrs.393.1594627225544;
+        Mon, 13 Jul 2020 01:00:25 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.18
+        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 01:00:18 -0700 (PDT)
+        Mon, 13 Jul 2020 01:00:24 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Brian King <brking@us.ibm.com>
-Subject: [PATCH v2 11/24] scsi: ipr: Fix a mountain of kerneldoc misdemeanours
-Date:   Mon, 13 Jul 2020 08:59:48 +0100
-Message-Id: <20200713080001.128044-12-lee.jones@linaro.org>
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Christoph Hellwig <hch@lst.de>, Seokmann.Ju@lsil.com,
+        sju@lsil.com, megaraidlinux.pdl@broadcom.com
+Subject: [PATCH v2 16/24] scsi: megaraid: Fix a whole bunch of function header formatting issues
+Date:   Mon, 13 Jul 2020 08:59:53 +0100
+Message-Id: <20200713080001.128044-17-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200713080001.128044-1-lee.jones@linaro.org>
 References: <20200713080001.128044-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Mainly misspellings and/or missing function parameter descriptions.
+Plus a couple of API catch-ups.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/ipr.c:10100:15: warning: variable ‘int_reg’ set but not used [-Wunused-but-set-variable]
- drivers/scsi/ipr.c:679: warning: Function parameter or member 'fast_done' not described in 'ipr_init_ipr_cmnd'
- drivers/scsi/ipr.c:697: warning: Function parameter or member 'hrrq' not described in '__ipr_get_free_ipr_cmnd'
- drivers/scsi/ipr.c:697: warning: Excess function parameter 'ioa_cfg' description in '__ipr_get_free_ipr_cmnd'
- drivers/scsi/ipr.c:1297: warning: Function parameter or member 'buffer' not described in '__ipr_format_res_path'
- drivers/scsi/ipr.c:1297: warning: Excess function parameter 'buf' description in '__ipr_format_res_path'
- drivers/scsi/ipr.c:1321: warning: Function parameter or member 'buffer' not described in 'ipr_format_res_path'
- drivers/scsi/ipr.c:1321: warning: Excess function parameter 'buf' description in 'ipr_format_res_path'
- drivers/scsi/ipr.c:1400: warning: Excess function parameter 'cfgtew' description in 'ipr_clear_res_target'
- drivers/scsi/ipr.c:2679: warning: Function parameter or member 't' not described in 'ipr_timeout'
- drivers/scsi/ipr.c:2679: warning: Excess function parameter 'ipr_cmd' description in 'ipr_timeout'
- drivers/scsi/ipr.c:2712: warning: Function parameter or member 't' not described in 'ipr_oper_timeout'
- drivers/scsi/ipr.c:2712: warning: Excess function parameter 'ipr_cmd' description in 'ipr_oper_timeout'
- drivers/scsi/ipr.c:3494: warning: Function parameter or member 'attr' not described in 'ipr_show_fw_version'
- drivers/scsi/ipr.c:3528: warning: Function parameter or member 'attr' not described in 'ipr_show_log_level'
- drivers/scsi/ipr.c:3551: warning: Function parameter or member 'attr' not described in 'ipr_store_log_level'
- drivers/scsi/ipr.c:3551: warning: Function parameter or member 'count' not described in 'ipr_store_log_level'
- drivers/scsi/ipr.c:3586: warning: Function parameter or member 'attr' not described in 'ipr_store_diagnostics'
- drivers/scsi/ipr.c:3642: warning: Function parameter or member 'dev' not described in 'ipr_show_adapter_state'
- drivers/scsi/ipr.c:3642: warning: Function parameter or member 'attr' not described in 'ipr_show_adapter_state'
- drivers/scsi/ipr.c:3642: warning: Excess function parameter 'class_dev' description in 'ipr_show_adapter_state'
- drivers/scsi/ipr.c:3671: warning: Function parameter or member 'attr' not described in 'ipr_store_adapter_state'
- drivers/scsi/ipr.c:3722: warning: Function parameter or member 'attr' not described in 'ipr_store_reset_adapter'
- drivers/scsi/ipr.c:3783: warning: Function parameter or member 'attr' not described in 'ipr_store_iopoll_weight'
- drivers/scsi/ipr.c:3783: warning: Function parameter or member 'count' not described in 'ipr_store_iopoll_weight'
- drivers/scsi/ipr.c:3883: warning: Function parameter or member 'sglist' not described in 'ipr_free_ucode_buffer'
- drivers/scsi/ipr.c:3883: warning: Excess function parameter 'p_dnld' description in 'ipr_free_ucode_buffer'
- drivers/scsi/ipr.c:4074: warning: Function parameter or member 'dev' not described in 'ipr_store_update_fw'
- drivers/scsi/ipr.c:4074: warning: Function parameter or member 'attr' not described in 'ipr_store_update_fw'
- drivers/scsi/ipr.c:4074: warning: Excess function parameter 'class_dev' description in 'ipr_store_update_fw'
- drivers/scsi/ipr.c:4149: warning: Function parameter or member 'attr' not described in 'ipr_show_fw_type'
- drivers/scsi/ipr.c:4489: warning: Excess function parameter 'reason' description in 'ipr_change_queue_depth'
- drivers/scsi/ipr.c:4660: warning: Function parameter or member 'attr' not described in 'ipr_show_raw_mode'
- drivers/scsi/ipr.c:4688: warning: Function parameter or member 'attr' not described in 'ipr_store_raw_mode'
- drivers/scsi/ipr.c:4688: warning: Function parameter or member 'count' not described in 'ipr_store_raw_mode'
- drivers/scsi/ipr.c:5069: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_cmnd_is_free'
- drivers/scsi/ipr.c:5108: warning: Function parameter or member 'ioa_cfg' not described in 'ipr_wait_for_ops'
- drivers/scsi/ipr.c:5108: warning: Excess function parameter 'ipr_cmd' description in 'ipr_wait_for_ops'
- drivers/scsi/ipr.c:5272: warning: Function parameter or member 'deadline' not described in 'ipr_sata_reset'
- drivers/scsi/ipr.c:5453: warning: Function parameter or member 't' not described in 'ipr_abort_timeout'
- drivers/scsi/ipr.c:5453: warning: Excess function parameter 'ipr_cmd' description in 'ipr_abort_timeout'
- drivers/scsi/ipr.c:5578: warning: Function parameter or member 'shost' not described in 'ipr_scan_finished'
- drivers/scsi/ipr.c:5578: warning: Function parameter or member 'elapsed_time' not described in 'ipr_scan_finished'
- drivers/scsi/ipr.c:5578: warning: Excess function parameter 'scsi_cmd' description in 'ipr_scan_finished'
- drivers/scsi/ipr.c:5704: warning: Function parameter or member 'number' not described in 'ipr_isr_eh'
- drivers/scsi/ipr.c:6278: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_gen_sense'
- drivers/scsi/ipr.c:6278: warning: Excess function parameter 'ioasa' description in 'ipr_gen_sense'
- drivers/scsi/ipr.c:6278: warning: Excess function parameter 'sense_buf' description in 'ipr_gen_sense'
- drivers/scsi/ipr.c:6711: warning: Function parameter or member 'host' not described in 'ipr_ioa_info'
- drivers/scsi/ipr.c:6711: warning: Excess function parameter 'scsi_host' description in 'ipr_ioa_info'
- drivers/scsi/ipr.c:7606: warning: Function parameter or member 'res_handle' not described in 'ipr_build_mode_sense'
- drivers/scsi/ipr.c:7606: warning: Excess function parameter 'res' description in 'ipr_build_mode_sense'
- drivers/scsi/ipr.c:7947: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_ioafp_set_caching_parameters'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'flags' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'page' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'dma_addr' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:7986: warning: Function parameter or member 'xfer_len' not described in 'ipr_ioafp_inquiry'
- drivers/scsi/ipr.c:8280: warning: Function parameter or member 't' not described in 'ipr_reset_timer_done'
- drivers/scsi/ipr.c:8280: warning: Excess function parameter 'ipr_cmd' description in 'ipr_reset_timer_done'
- drivers/scsi/ipr.c:9486: warning: bad line:
- drivers/scsi/ipr.c:9609: warning: Function parameter or member 'ioa_cfg' not described in 'ipr_free_all_resources'
- drivers/scsi/ipr.c:9609: warning: Excess function parameter 'ipr_cmd' description in 'ipr_free_all_resources'
- drivers/scsi/ipr.c:10071: warning: Function parameter or member 'irq' not described in 'ipr_test_intr'
- drivers/scsi/ipr.c:10071: warning: Function parameter or member 'devp' not described in 'ipr_test_intr'
- drivers/scsi/ipr.c:10071: warning: Excess function parameter 'pdev' description in 'ipr_test_intr'
- drivers/scsi/ipr.c:10098: warning: Function parameter or member 'ioa_cfg' not described in 'ipr_test_msi'
- drivers/scsi/ipr.c:10538: warning: Function parameter or member 'pdev' not described in 'ipr_probe'
- drivers/scsi/ipr.c:10538: warning: Function parameter or member 'dev_id' not described in 'ipr_probe'
- drivers/scsi/ipr.c:10794: warning: Function parameter or member 'ipr_cmd' not described in 'ipr_halt_done'
- drivers/scsi/ipr.c:10805: warning: Function parameter or member 'nb' not described in 'ipr_halt'
- drivers/scsi/ipr.c:10805: warning: Function parameter or member 'event' not described in 'ipr_halt'
- drivers/scsi/ipr.c:10805: warning: Function parameter or member 'buf' not described in 'ipr_halt'
+ drivers/scsi/megaraid.c:133: warning: Function parameter or member 'adapter' not described in 'mega_setup_mailbox'
+ drivers/scsi/megaraid.c:356: warning: Function parameter or member 'adapter' not described in 'mega_runpendq'
+ drivers/scsi/megaraid.c:424: warning: Function parameter or member 'adapter' not described in 'mega_allocate_scb'
+ drivers/scsi/megaraid.c:424: warning: Function parameter or member 'cmd' not described in 'mega_allocate_scb'
+ drivers/scsi/megaraid.c:456: warning: Function parameter or member 'adapter' not described in 'mega_get_ldrv_num'
+ drivers/scsi/megaraid.c:456: warning: Function parameter or member 'cmd' not described in 'mega_get_ldrv_num'
+ drivers/scsi/megaraid.c:456: warning: Function parameter or member 'channel' not described in 'mega_get_ldrv_num'
+ drivers/scsi/megaraid.c:519: warning: Function parameter or member 'adapter' not described in 'mega_build_cmd'
+ drivers/scsi/megaraid.c:519: warning: Function parameter or member 'cmd' not described in 'mega_build_cmd'
+ drivers/scsi/megaraid.c:519: warning: Function parameter or member 'busy' not described in 'mega_build_cmd'
+ drivers/scsi/megaraid.c:951: warning: Function parameter or member 'adapter' not described in 'mega_prepare_passthru'
+ drivers/scsi/megaraid.c:951: warning: Function parameter or member 'scb' not described in 'mega_prepare_passthru'
+ drivers/scsi/megaraid.c:951: warning: Function parameter or member 'cmd' not described in 'mega_prepare_passthru'
+ drivers/scsi/megaraid.c:951: warning: Function parameter or member 'channel' not described in 'mega_prepare_passthru'
+ drivers/scsi/megaraid.c:951: warning: Function parameter or member 'target' not described in 'mega_prepare_passthru'
+ drivers/scsi/megaraid.c:1016: warning: Function parameter or member 'adapter' not described in 'mega_prepare_extpassthru'
+ drivers/scsi/megaraid.c:1016: warning: Function parameter or member 'scb' not described in 'mega_prepare_extpassthru'
+ drivers/scsi/megaraid.c:1016: warning: Function parameter or member 'cmd' not described in 'mega_prepare_extpassthru'
+ drivers/scsi/megaraid.c:1016: warning: Function parameter or member 'channel' not described in 'mega_prepare_extpassthru'
+ drivers/scsi/megaraid.c:1016: warning: Function parameter or member 'target' not described in 'mega_prepare_extpassthru'
+ drivers/scsi/megaraid.c:1097: warning: Function parameter or member 'adapter' not described in 'issue_scb'
+ drivers/scsi/megaraid.c:1097: warning: Function parameter or member 'scb' not described in 'issue_scb'
+ drivers/scsi/megaraid.c:1176: warning: Function parameter or member 'adapter' not described in 'issue_scb_block'
+ drivers/scsi/megaraid.c:1176: warning: Function parameter or member 'raw_mbox' not described in 'issue_scb_block'
+ drivers/scsi/megaraid.c:1259: warning: Function parameter or member 'irq' not described in 'megaraid_isr_iomapped'
+ drivers/scsi/megaraid.c:1259: warning: Function parameter or member 'devp' not described in 'megaraid_isr_iomapped'
+ drivers/scsi/megaraid.c:1335: warning: Function parameter or member 'irq' not described in 'megaraid_isr_memmapped'
+ drivers/scsi/megaraid.c:1335: warning: Function parameter or member 'devp' not described in 'megaraid_isr_memmapped'
+ drivers/scsi/megaraid.c:1413: warning: Function parameter or member 'adapter' not described in 'mega_cmd_done'
+ drivers/scsi/megaraid.c:1413: warning: Function parameter or member 'completed' not described in 'mega_cmd_done'
+ drivers/scsi/megaraid.c:1413: warning: Function parameter or member 'nstatus' not described in 'mega_cmd_done'
+ drivers/scsi/megaraid.c:1413: warning: Function parameter or member 'status' not described in 'mega_cmd_done'
+ drivers/scsi/megaraid.c:1933: warning: Function parameter or member 'adapter' not described in 'megaraid_abort_and_reset'
+ drivers/scsi/megaraid.c:1933: warning: Function parameter or member 'cmd' not described in 'megaraid_abort_and_reset'
+ drivers/scsi/megaraid.c:1933: warning: Function parameter or member 'aor' not described in 'megaraid_abort_and_reset'
+ drivers/scsi/megaraid.c:2031: warning: Function parameter or member 'dma_handle' not described in 'mega_allocate_inquiry'
+ drivers/scsi/megaraid.c:2031: warning: Function parameter or member 'pdev' not described in 'mega_allocate_inquiry'
+ drivers/scsi/megaraid.c:2055: warning: Function parameter or member 'm' not described in 'proc_show_config'
+ drivers/scsi/megaraid.c:2055: warning: Function parameter or member 'v' not described in 'proc_show_config'
+ drivers/scsi/megaraid.c:2119: warning: Function parameter or member 'm' not described in 'proc_show_stat'
+ drivers/scsi/megaraid.c:2119: warning: Function parameter or member 'v' not described in 'proc_show_stat'
+ drivers/scsi/megaraid.c:2154: warning: Function parameter or member 'm' not described in 'proc_show_mbox'
+ drivers/scsi/megaraid.c:2154: warning: Function parameter or member 'v' not described in 'proc_show_mbox'
+ drivers/scsi/megaraid.c:2181: warning: Function parameter or member 'm' not described in 'proc_show_rebuild_rate'
+ drivers/scsi/megaraid.c:2181: warning: Function parameter or member 'v' not described in 'proc_show_rebuild_rate'
+ drivers/scsi/megaraid.c:2224: warning: Function parameter or member 'm' not described in 'proc_show_battery'
+ drivers/scsi/megaraid.c:2224: warning: Function parameter or member 'v' not described in 'proc_show_battery'
+ drivers/scsi/megaraid.c:2328: warning: Function parameter or member 'm' not described in 'proc_show_pdrv'
+ drivers/scsi/megaraid.c:2328: warning: Function parameter or member 'adapter' not described in 'proc_show_pdrv'
+ drivers/scsi/megaraid.c:2328: warning: Function parameter or member 'channel' not described in 'proc_show_pdrv'
+ drivers/scsi/megaraid.c:2443: warning: Function parameter or member 'm' not described in 'proc_show_pdrv_ch0'
+ drivers/scsi/megaraid.c:2443: warning: Function parameter or member 'v' not described in 'proc_show_pdrv_ch0'
+ drivers/scsi/megaraid.c:2457: warning: Function parameter or member 'm' not described in 'proc_show_pdrv_ch1'
+ drivers/scsi/megaraid.c:2457: warning: Function parameter or member 'v' not described in 'proc_show_pdrv_ch1'
+ drivers/scsi/megaraid.c:2471: warning: Function parameter or member 'm' not described in 'proc_show_pdrv_ch2'
+ drivers/scsi/megaraid.c:2471: warning: Function parameter or member 'v' not described in 'proc_show_pdrv_ch2'
+ drivers/scsi/megaraid.c:2485: warning: Function parameter or member 'm' not described in 'proc_show_pdrv_ch3'
+ drivers/scsi/megaraid.c:2485: warning: Function parameter or member 'v' not described in 'proc_show_pdrv_ch3'
+ drivers/scsi/megaraid.c:2502: warning: Function parameter or member 'm' not described in 'proc_show_rdrv'
+ drivers/scsi/megaraid.c:2502: warning: Function parameter or member 'adapter' not described in 'proc_show_rdrv'
+ drivers/scsi/megaraid.c:2502: warning: Function parameter or member 'start' not described in 'proc_show_rdrv'
+ drivers/scsi/megaraid.c:2502: warning: Function parameter or member 'end' not described in 'proc_show_rdrv'
+ drivers/scsi/megaraid.c:2684: warning: Function parameter or member 'm' not described in 'proc_show_rdrv_10'
+ drivers/scsi/megaraid.c:2684: warning: Function parameter or member 'v' not described in 'proc_show_rdrv_10'
+ drivers/scsi/megaraid.c:2698: warning: Function parameter or member 'm' not described in 'proc_show_rdrv_20'
+ drivers/scsi/megaraid.c:2698: warning: Function parameter or member 'v' not described in 'proc_show_rdrv_20'
+ drivers/scsi/megaraid.c:2712: warning: Function parameter or member 'm' not described in 'proc_show_rdrv_30'
+ drivers/scsi/megaraid.c:2712: warning: Function parameter or member 'v' not described in 'proc_show_rdrv_30'
+ drivers/scsi/megaraid.c:2726: warning: Function parameter or member 'm' not described in 'proc_show_rdrv_40'
+ drivers/scsi/megaraid.c:2726: warning: Function parameter or member 'v' not described in 'proc_show_rdrv_40'
+ drivers/scsi/megaraid.c:2739: warning: Function parameter or member 'index' not described in 'mega_create_proc_entry'
+ drivers/scsi/megaraid.c:2739: warning: Function parameter or member 'parent' not described in 'mega_create_proc_entry'
+ drivers/scsi/megaraid.c:2796: warning: Function parameter or member 'sdev' not described in 'megaraid_biosparam'
+ drivers/scsi/megaraid.c:2796: warning: Function parameter or member 'bdev' not described in 'megaraid_biosparam'
+ drivers/scsi/megaraid.c:2796: warning: Function parameter or member 'capacity' not described in 'megaraid_biosparam'
+ drivers/scsi/megaraid.c:2796: warning: Function parameter or member 'geom' not described in 'megaraid_biosparam'
+ drivers/scsi/megaraid.c:2865: warning: Function parameter or member 'adapter' not described in 'mega_init_scb'
+ drivers/scsi/megaraid.c:2945: warning: Function parameter or member 'inode' not described in 'megadev_open'
+ drivers/scsi/megaraid.c:2945: warning: Function parameter or member 'filep' not described in 'megadev_open'
+ drivers/scsi/megaraid.c:2969: warning: Function parameter or member 'filep' not described in 'megadev_ioctl'
+ drivers/scsi/megaraid.c:2969: warning: Function parameter or member 'cmd' not described in 'megadev_ioctl'
+ drivers/scsi/megaraid.c:2969: warning: Function parameter or member 'arg' not described in 'megadev_ioctl'
+ drivers/scsi/megaraid.c:3383: warning: Function parameter or member 'arg' not described in 'mega_m_to_n'
+ drivers/scsi/megaraid.c:3383: warning: Function parameter or member 'uioc' not described in 'mega_m_to_n'
+ drivers/scsi/megaraid.c:3574: warning: Function parameter or member 'adapter' not described in 'mega_is_bios_enabled'
+ drivers/scsi/megaraid.c:3607: warning: Function parameter or member 'adapter' not described in 'mega_enum_raid_scsi'
+ drivers/scsi/megaraid.c:3661: warning: Function parameter or member 'adapter' not described in 'mega_get_boot_drv'
+ drivers/scsi/megaraid.c:3728: warning: Function parameter or member 'adapter' not described in 'mega_support_random_del'
+ drivers/scsi/megaraid.c:3757: warning: Function parameter or member 'adapter' not described in 'mega_support_ext_cdb'
+ drivers/scsi/megaraid.c:3787: warning: Function parameter or member 'adapter' not described in 'mega_del_logdrv'
+ drivers/scsi/megaraid.c:3787: warning: Function parameter or member 'logdrv' not described in 'mega_del_logdrv'
+ drivers/scsi/megaraid.c:3872: warning: Function parameter or member 'adapter' not described in 'mega_get_max_sgl'
+ drivers/scsi/megaraid.c:3917: warning: Function parameter or member 'adapter' not described in 'mega_support_cluster'
+ drivers/scsi/megaraid.c:3962: warning: Function parameter or member 'adapter' not described in 'mega_adapinq'
+ drivers/scsi/megaraid.c:3962: warning: Function parameter or member 'dma_handle' not described in 'mega_adapinq'
+ drivers/scsi/megaraid.c:4071: warning: Function parameter or member 'adapter' not described in 'mega_internal_command'
+ drivers/scsi/megaraid.c:4071: warning: Function parameter or member 'mc' not described in 'mega_internal_command'
+ drivers/scsi/megaraid.c:4071: warning: Function parameter or member 'pthru' not described in 'mega_internal_command'
 
-Cc: Brian King <brking@us.ibm.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Seokmann.Ju@lsil.com
+Cc: sju@lsil.com
+Cc: megaraidlinux.pdl@broadcom.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/ipr.c | 73 ++++++++++++++++++++++++++++++++--------------
- 1 file changed, 51 insertions(+), 22 deletions(-)
+ drivers/scsi/megaraid.c | 218 ++++++++++++++++++++--------------------
+ 1 file changed, 109 insertions(+), 109 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 7d86f4ca266c8..f85020904099e 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -670,6 +670,7 @@ static void ipr_reinit_ipr_cmnd(struct ipr_cmnd *ipr_cmd)
- /**
-  * ipr_init_ipr_cmnd - Initialize an IPR Cmnd block
-  * @ipr_cmd:	ipr command struct
-+ * @fast_done:	fast done function call-back
-  *
-  * Return value:
-  * 	none
-@@ -687,7 +688,7 @@ static void ipr_init_ipr_cmnd(struct ipr_cmnd *ipr_cmd,
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index f27ffd088c8ae..2d57836d1607f 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -124,7 +124,7 @@ static int trace_level;
  
  /**
-  * __ipr_get_free_ipr_cmnd - Get a free IPR Cmnd block
-- * @ioa_cfg:	ioa config struct
-+ * @hrrq:	hrr queue
+  * mega_setup_mailbox()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
   *
-  * Return value:
-  * 	pointer to ipr command struct
-@@ -1287,7 +1288,7 @@ static int ipr_is_same_device(struct ipr_resource_entry *res,
- /**
-  * __ipr_format_res_path - Format the resource path for printing.
-  * @res_path:	resource path
-- * @buf:	buffer
-+ * @buffer:	buffer
-  * @len:	length of buffer provided
+  * Allocates a 8 byte aligned memory for the handshake mailbox.
+  */
+@@ -178,9 +178,9 @@ mega_setup_mailbox(adapter_t *adapter)
+ }
+ 
+ 
+-/*
++/**
+  * mega_query_adapter()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
   *
-  * Return value:
-@@ -1310,7 +1311,7 @@ static char *__ipr_format_res_path(u8 *res_path, char *buffer, int len)
-  * ipr_format_res_path - Format the resource path for printing.
-  * @ioa_cfg:	ioa config struct
-  * @res_path:	resource path
-- * @buf:	buffer
-+ * @buffer:	buffer
-  * @len:	length of buffer provided
-  *
-  * Return value:
-@@ -1391,7 +1392,6 @@ static void ipr_update_res_entry(struct ipr_resource_entry *res,
-  * ipr_clear_res_target - Clear the bit in the bit map representing the target
-  * 			  for the resource.
-  * @res:	resource entry struct
-- * @cfgtew:	config table entry wrapper struct
-  *
-  * Return value:
-  *      none
-@@ -2667,7 +2667,7 @@ static void ipr_process_error(struct ipr_cmnd *ipr_cmd)
+  * Issue the adapter inquiry commands to the controller and find out
+  * information and parameter about the devices attached
+@@ -347,7 +347,7 @@ mega_query_adapter(adapter_t *adapter)
  
  /**
-  * ipr_timeout -  An internally generated op has timed out.
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
+  * mega_runpendq()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
   *
-  * This function blocks host requests and initiates an
-  * adapter reset.
-@@ -2700,7 +2700,7 @@ static void ipr_timeout(struct timer_list *t)
+  * Runs through the list of pending requests.
+  */
+@@ -358,10 +358,10 @@ mega_runpendq(adapter_t *adapter)
+ 		__mega_runpendq(adapter);
+ }
+ 
+-/*
++/**
+  * megaraid_queue()
+- * @scmd - Issue this scsi command
+- * @done - the callback hook into the scsi mid-layer
++ * @scmd: Issue this scsi command
++ * @done: the callback hook into the scsi mid-layer
+  *
+  * The command queuing entry point for the mid-layer.
+  */
+@@ -413,8 +413,8 @@ static DEF_SCSI_QCMD(megaraid_queue)
  
  /**
-  * ipr_oper_timeout -  Adapter timed out transitioning to operational
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
+  * mega_allocate_scb()
+- * @adapter - pointer to our soft state
+- * @cmd - scsi command from the mid-layer
++ * @adapter: pointer to our soft state
++ * @cmd: scsi command from the mid-layer
   *
-  * This function blocks host requests and initiates an
-  * adapter reset.
-@@ -3484,6 +3484,7 @@ static struct bin_attribute ipr_trace_attr = {
- /**
-  * ipr_show_fw_version - Show the firmware version
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3518,6 +3519,7 @@ static struct device_attribute ipr_fw_version_attr = {
- /**
-  * ipr_show_log_level - Show the adapter's error logging level
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3540,7 +3542,9 @@ static ssize_t ipr_show_log_level(struct device *dev,
- /**
-  * ipr_store_log_level - Change the adapter's error logging level
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-+ * @count:	buffer size
-  *
-  * Return value:
-  * 	number of bytes printed to buffer
-@@ -3571,6 +3575,7 @@ static struct device_attribute ipr_log_level_attr = {
- /**
-  * ipr_store_diagnostics - IOA Diagnostics interface
-  * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -3631,7 +3636,8 @@ static struct device_attribute ipr_diagnostics_attr = {
+  * Allocate a SCB structure. This is the central structure for controller
+  * commands.
+@@ -444,9 +444,9 @@ mega_allocate_scb(adapter_t *adapter, struct scsi_cmnd *cmd)
  
  /**
-  * ipr_show_adapter_state - Show the adapter's state
-- * @class_dev:	device struct
-+ * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
+  * mega_get_ldrv_num()
+- * @adapter - pointer to our soft state
+- * @cmd - scsi mid layer command
+- * @channel - channel on the controller
++ * @adapter: pointer to our soft state
++ * @cmd: scsi mid layer command
++ * @channel: channel on the controller
   *
-  * Return value:
-@@ -3657,6 +3663,7 @@ static ssize_t ipr_show_adapter_state(struct device *dev,
- /**
-  * ipr_store_adapter_state - Change adapter state
-  * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -3708,6 +3715,7 @@ static struct device_attribute ipr_ioa_state_attr = {
- /**
-  * ipr_store_reset_adapter - Reset the adapter
-  * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
-  *
-@@ -3749,6 +3757,7 @@ static int ipr_iopoll(struct irq_poll *iop, int budget);
-  /**
-  * ipr_show_iopoll_weight - Show ipr polling mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -3772,7 +3781,9 @@ static ssize_t ipr_show_iopoll_weight(struct device *dev,
- /**
-  * ipr_store_iopoll_weight - Change the adapter's polling mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-+ * @count:	buffer size
-  *
-  * Return value:
-  *	number of bytes printed to buffer
-@@ -3871,7 +3882,7 @@ static struct ipr_sglist *ipr_alloc_ucode_buffer(int buf_len)
+  * Calculate the logical drive number based on the information in scsi command
+  * and the channel number.
+@@ -503,9 +503,9 @@ mega_get_ldrv_num(adapter_t *adapter, struct scsi_cmnd *cmd, int channel)
  
  /**
-  * ipr_free_ucode_buffer - Frees a microcode download buffer
-- * @p_dnld:		scatter/gather list pointer
-+ * @sglist:		scatter/gather list pointer
+  * mega_build_cmd()
+- * @adapter - pointer to our soft state
+- * @cmd - Prepare using this scsi command
+- * @busy - busy flag if no resources
++ * @adapter: pointer to our soft state
++ * @cmd: Prepare using this scsi command
++ * @busy: busy flag if no resources
   *
-  * Free a DMA'able ucode download buffer previously allocated with
-  * ipr_alloc_ucode_buffer
-@@ -4059,7 +4070,8 @@ static int ipr_update_ioa_ucode(struct ipr_ioa_cfg *ioa_cfg,
+  * Prepares a command and scatter gather list for the controller. This routine
+  * also finds out if the commands is intended for a logical drive or a
+@@ -937,11 +937,11 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cmd, int *busy)
  
  /**
-  * ipr_store_update_fw - Update the firmware on the adapter
-- * @class_dev:	device struct
-+ * @dev:	device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  * @count:	buffer size
+  * mega_prepare_passthru()
+- * @adapter - pointer to our soft state
+- * @scb - our scsi control block
+- * @cmd - scsi command from the mid-layer
+- * @channel - actual channel on the controller
+- * @target - actual id on the controller.
++ * @adapter: pointer to our soft state
++ * @scb: our scsi control block
++ * @cmd: scsi command from the mid-layer
++ * @channel: actual channel on the controller
++ * @target: actual id on the controller.
   *
-@@ -4139,6 +4151,7 @@ static struct device_attribute ipr_update_fw_attr = {
- /**
-  * ipr_show_fw_type - Show the adapter's firmware type.
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -4480,7 +4493,6 @@ static int ipr_free_dump(struct ipr_ioa_cfg *ioa_cfg) { return 0; };
-  * ipr_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-- * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-@@ -4650,6 +4662,7 @@ static struct device_attribute ipr_resource_type_attr = {
- /**
-  * ipr_show_raw_mode - Show the adapter's raw mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-  *
-  * Return value:
-@@ -4677,7 +4690,9 @@ static ssize_t ipr_show_raw_mode(struct device *dev,
- /**
-  * ipr_store_raw_mode - Change the adapter's raw mode
-  * @dev:	class device struct
-+ * @attr:	device attribute (unused)
-  * @buf:	buffer
-+ * @count:		buffer size
-  *
-  * Return value:
-  * 	number of bytes printed to buffer
-@@ -5060,7 +5075,7 @@ static int ipr_match_lun(struct ipr_cmnd *ipr_cmd, void *device)
+  * prepare a command for the scsi physical devices.
+  */
+@@ -1000,11 +1000,11 @@ mega_prepare_passthru(adapter_t *adapter, scb_t *scb, struct scsi_cmnd *cmd,
  
  /**
-  * ipr_cmnd_is_free - Check if a command is free or not
-- * @ipr_cmd	ipr command struct
-+ * @ipr_cmd:	ipr command struct
+  * mega_prepare_extpassthru()
+- * @adapter - pointer to our soft state
+- * @scb - our scsi control block
+- * @cmd - scsi command from the mid-layer
+- * @channel - actual channel on the controller
+- * @target - actual id on the controller.
++ * @adapter: pointer to our soft state
++ * @scb: our scsi control block
++ * @cmd: scsi command from the mid-layer
++ * @channel: actual channel on the controller
++ * @target: actual id on the controller.
   *
-  * Returns:
-  *	true / false
-@@ -5096,7 +5111,7 @@ static int ipr_match_res(struct ipr_cmnd *ipr_cmd, void *resource)
+  * prepare a command for the scsi physical devices. This rountine prepares
+  * commands for devices which can take extended CDBs (>10 bytes)
+@@ -1085,8 +1085,8 @@ __mega_runpendq(adapter_t *adapter)
  
  /**
-  * ipr_wait_for_ops - Wait for matching commands to complete
-- * @ipr_cmd:	ipr command struct
-+ * @ioa_cfg:	ioa config struct
-  * @device:		device to match (sdev)
-  * @match:		match function to use
+  * issue_scb()
+- * @adapter - pointer to our soft state
+- * @scb - scsi control block
++ * @adapter: pointer to our soft state
++ * @scb: scsi control block
   *
-@@ -5261,6 +5276,7 @@ static int ipr_device_reset(struct ipr_ioa_cfg *ioa_cfg,
-  * ipr_sata_reset - Reset the SATA port
-  * @link:	SATA link to reset
-  * @classes:	class of the attached device
-+ * @deadline:	unused
-  *
-  * This function issues a SATA phy reset to the affected ATA link.
-  *
-@@ -5440,7 +5456,7 @@ static void ipr_bus_reset_done(struct ipr_cmnd *ipr_cmd)
+  * Post a command to the card if the mailbox is available, otherwise return
+  * busy. We also take the scb from the pending list if the mailbox is
+@@ -1166,8 +1166,8 @@ mega_busywait_mbox (adapter_t *adapter)
  
  /**
-  * ipr_abort_timeout - An abort task has timed out
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
+  * issue_scb_block()
+- * @adapter - pointer to our soft state
+- * @raw_mbox - the mailbox
++ * @adapter: pointer to our soft state
++ * @raw_mbox: the mailbox
   *
-  * This function handles when an abort task times out. If this
-  * happens we issue a bus reset since we have resources tied
-@@ -5569,7 +5585,8 @@ static int ipr_cancel_op(struct scsi_cmnd *scsi_cmd)
+  * Issue a scb in synchronous and non-interrupt mode
+  */
+@@ -1247,8 +1247,8 @@ issue_scb_block(adapter_t *adapter, u_char *raw_mbox)
  
  /**
-  * ipr_eh_abort - Abort a single op
-- * @scsi_cmd:	scsi command struct
-+ * @shost:           scsi host struct
-+ * @elapsed_time:    elapsed time
+  * megaraid_isr_iomapped()
+- * @irq - irq
+- * @devp - pointer to our soft state
++ * @irq: irq
++ * @devp: pointer to our soft state
   *
-  * Return value:
-  *	0 if scan in progress / 1 if scan is complete
-@@ -5696,6 +5713,7 @@ static irqreturn_t ipr_handle_other_interrupt(struct ipr_ioa_cfg *ioa_cfg,
-  * ipr_isr_eh - Interrupt service routine error handler
-  * @ioa_cfg:	ioa config struct
-  * @msg:	message to log
-+ * @number:	various meanings depending on the caller/message
-  *
-  * Return value:
-  * 	none
-@@ -6268,8 +6286,7 @@ static void ipr_dump_ioasa(struct ipr_ioa_cfg *ioa_cfg,
+  * Interrupt service routine for io-mapped controllers.
+  * Find out if our device is interrupting. If yes, acknowledge the interrupt
+@@ -1323,8 +1323,8 @@ megaraid_isr_iomapped(int irq, void *devp)
  
  /**
-  * ipr_gen_sense - Generate SCSI sense data from an IOASA
-- * @ioasa:		IOASA
-- * @sense_buf:	sense data buffer
-+ * @ipr_cmd:	ipr command struct
+  * megaraid_isr_memmapped()
+- * @irq - irq
+- * @devp - pointer to our soft state
++ * @irq: irq
++ * @devp: pointer to our soft state
   *
-  * Return value:
-  * 	none
-@@ -6702,7 +6719,7 @@ static int ipr_ioctl(struct scsi_device *sdev, unsigned int cmd,
+  * Interrupt service routine for memory-mapped controllers.
+  * Find out if our device is interrupting. If yes, acknowledge the interrupt
+@@ -1401,10 +1401,10 @@ megaraid_isr_memmapped(int irq, void *devp)
+ }
+ /**
+  * mega_cmd_done()
+- * @adapter - pointer to our soft state
+- * @completed - array of ids of completed commands
+- * @nstatus - number of completed commands
+- * @status - status of the last command completed
++ * @adapter: pointer to our soft state
++ * @completed: array of ids of completed commands
++ * @nstatus: number of completed commands
++ * @status: status of the last command completed
+  *
+  * Complete the commands and call the scsi mid-layer callback hooks.
+  */
+@@ -1921,9 +1921,9 @@ megaraid_reset(struct scsi_cmnd *cmd)
  
  /**
-  * ipr_info - Get information about the card/driver
-- * @scsi_host:	scsi host struct
-+ * @host:	scsi host struct
+  * megaraid_abort_and_reset()
+- * @adapter - megaraid soft state
+- * @cmd - scsi command to be aborted or reset
+- * @aor - abort or reset flag
++ * @adapter: megaraid soft state
++ * @cmd: scsi command to be aborted or reset
++ * @aor: abort or reset flag
   *
-  * Return value:
-  * 	pointer to buffer with description string
-@@ -7592,7 +7609,7 @@ static int ipr_ioafp_mode_select_page28(struct ipr_cmnd *ipr_cmd)
- /**
-  * ipr_build_mode_sense - Builds a mode sense command
-  * @ipr_cmd:	ipr command struct
-- * @res:		resource entry struct
-+ * @res_handle:		resource entry struct
-  * @parm:		Byte 2 of mode sense command
-  * @dma_addr:	DMA address of mode sense buffer
-  * @xfer_len:	Size of DMA buffer
-@@ -7939,6 +7956,7 @@ static void ipr_build_ioa_service_action(struct ipr_cmnd *ipr_cmd,
- /**
-  * ipr_ioafp_set_caching_parameters - Issue Set Cache parameters service
-  * action
-+ * @ipr_cmd:	ipr command struct
-  *
-  * Return value:
-  *	none
-@@ -7975,6 +7993,10 @@ static int ipr_ioafp_set_caching_parameters(struct ipr_cmnd *ipr_cmd)
- /**
-  * ipr_ioafp_inquiry - Send an Inquiry to the adapter.
-  * @ipr_cmd:	ipr command struct
-+ * @flags:	flags to send
-+ * @page:	page to inquire
-+ * @dma_addr:	DMA address
-+ * @xfer_len:	transfer data length
-  *
-  * This utility function sends an inquiry to the adapter.
-  *
-@@ -8265,7 +8287,7 @@ static int ipr_ioafp_identify_hrrq(struct ipr_cmnd *ipr_cmd)
+  * Try to locate the scsi command in the pending queue. If found and is not
+  * issued to the controller, abort/reset it. Otherwise return failure
+@@ -2021,8 +2021,8 @@ free_local_pdev(struct pci_dev *pdev)
  
  /**
-  * ipr_reset_timer_done - Adapter reset timer function
-- * @ipr_cmd:	ipr command struct
-+ * @t: Timer context used to fetch ipr command struct
+  * mega_allocate_inquiry()
+- * @dma_handle - handle returned for dma address
+- * @pdev - handle to pci device
++ * @dma_handle: handle returned for dma address
++ * @pdev: handle to pci device
   *
-  * Description: This function is used in adapter reset processing
-  * for timing events. If the reset_cmd pointer in the IOA
-@@ -9483,7 +9505,6 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
-  * Description: This is the second phase of adapter initialization
-  * This function takes care of initilizing the adapter to the point
-  * where it can accept new commands.
--
-  * Return value:
-  * 	0 on success / -EIO on failure
-  **/
-@@ -9597,7 +9618,7 @@ static void ipr_free_irqs(struct ipr_ioa_cfg *ioa_cfg)
+  * allocates memory for inquiry structure
+  */
+@@ -2045,8 +2045,8 @@ mega_free_inquiry(void *inquiry, dma_addr_t dma_handle, struct pci_dev *pdev)
  
  /**
-  * ipr_free_all_resources - Free all allocated resources for an adapter.
-- * @ipr_cmd:	ipr command struct
-+ * @ioa_cfg:	ioa config struct
+  * proc_show_config()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
   *
-  * This function frees all allocated resources for the
-  * specified adapter.
-@@ -10059,7 +10080,8 @@ static int ipr_request_other_msi_irqs(struct ipr_ioa_cfg *ioa_cfg,
+  * Display configuration information about the controller.
+  */
+@@ -2109,8 +2109,8 @@ proc_show_config(struct seq_file *m, void *v)
  
  /**
-  * ipr_test_intr - Handle the interrupt generated in ipr_test_msi().
-- * @pdev:		PCI device struct
-+ * @devp:		PCI device struct
-+ * @irq:		IRQ number
+  * proc_show_stat()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
   *
-  * Description: Simply set the msi_received flag to 1 indicating that
-  * Message Signaled Interrupts are supported.
-@@ -10085,6 +10107,7 @@ static irqreturn_t ipr_test_intr(int irq, void *devp)
+  * Display statistical information about the I/O activity.
+  */
+@@ -2143,8 +2143,8 @@ proc_show_stat(struct seq_file *m, void *v)
  
  /**
-  * ipr_test_msi - Test for Message Signaled Interrupt (MSI) support.
-+ * @ioa_cfg:		ioa config struct
-  * @pdev:		PCI device struct
+  * proc_show_mbox()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
   *
-  * Description: This routine sets up and initiates a test interrupt to determine
-@@ -10530,6 +10553,8 @@ static void ipr_remove(struct pci_dev *pdev)
+  * Display mailbox information for the last command issued. This information
+  * is good for debugging.
+@@ -2171,8 +2171,8 @@ proc_show_mbox(struct seq_file *m, void *v)
  
  /**
-  * ipr_probe - Adapter hot plug add entry point
-+ * @pdev:	pci device struct
-+ * @dev_id:	pci device ID
+  * proc_show_rebuild_rate()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
   *
-  * Return value:
-  * 	0 on success / non-zero on failure
-@@ -10786,6 +10811,7 @@ static struct pci_driver ipr_driver = {
+  * Display current rebuild rate
+  */
+@@ -2214,8 +2214,8 @@ proc_show_rebuild_rate(struct seq_file *m, void *v)
  
  /**
-  * ipr_halt_done - Shutdown prepare completion
-+ * @ipr_cmd:   ipr command struct
+  * proc_show_battery()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
   *
-  * Return value:
-  * 	none
-@@ -10797,6 +10823,9 @@ static void ipr_halt_done(struct ipr_cmnd *ipr_cmd)
+  * Display information about the battery module on the controller.
+  */
+@@ -2317,9 +2317,9 @@ mega_print_inquiry(struct seq_file *m, char *scsi_inq)
  
  /**
-  * ipr_halt - Issue shutdown prepare to all adapters
-+ * @nb: Notifier block
-+ * @event: Notifier event
-+ * @buf: Notifier data (unused)
+  * proc_show_pdrv()
+- * @m - Synthetic file construction data
+- * @page - buffer to write the data in
+- * @adapter - pointer to our soft state
++ * @m: Synthetic file construction data
++ * @adapter: pointer to our soft state
++ * @channel: channel on the controller
   *
-  * Return value:
-  * 	NOTIFY_OK on success / NOTIFY_DONE on failure
+  * Display information about the physical drives.
+  */
+@@ -2433,8 +2433,8 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter, int channel)
+ 
+ /**
+  * proc_show_pdrv_ch0()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display information about the physical drives on physical channel 0.
+  */
+@@ -2447,8 +2447,8 @@ proc_show_pdrv_ch0(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_pdrv_ch1()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display information about the physical drives on physical channel 1.
+  */
+@@ -2461,8 +2461,8 @@ proc_show_pdrv_ch1(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_pdrv_ch2()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display information about the physical drives on physical channel 2.
+  */
+@@ -2475,8 +2475,8 @@ proc_show_pdrv_ch2(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_pdrv_ch3()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display information about the physical drives on physical channel 3.
+  */
+@@ -2489,10 +2489,10 @@ proc_show_pdrv_ch3(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_rdrv()
+- * @m - Synthetic file construction data
+- * @adapter - pointer to our soft state
+- * @start - starting logical drive to display
+- * @end - ending logical drive to display
++ * @m: Synthetic file construction data
++ * @adapter: pointer to our soft state
++ * @start: starting logical drive to display
++ * @end: ending logical drive to display
+  *
+  * We do not print the inquiry information since its already available through
+  * /proc/scsi/scsi interface
+@@ -2674,8 +2674,8 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter, int start, int end )
+ 
+ /**
+  * proc_show_rdrv_10()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display real time information about the logical drives 0 through 9.
+  */
+@@ -2688,8 +2688,8 @@ proc_show_rdrv_10(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_rdrv_20()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display real time information about the logical drives 0 through 9.
+  */
+@@ -2702,8 +2702,8 @@ proc_show_rdrv_20(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_rdrv_30()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display real time information about the logical drives 0 through 9.
+  */
+@@ -2716,8 +2716,8 @@ proc_show_rdrv_30(struct seq_file *m, void *v)
+ 
+ /**
+  * proc_show_rdrv_40()
+- * @m - Synthetic file construction data
+- * @v - File iterator
++ * @m: Synthetic file construction data
++ * @v: File iterator
+  *
+  * Display real time information about the logical drives 0 through 9.
+  */
+@@ -2729,8 +2729,8 @@ proc_show_rdrv_40(struct seq_file *m, void *v)
+ 
+ /**
+  * mega_create_proc_entry()
+- * @index - index in soft state array
+- * @parent - parent node for this /proc entry
++ * @index: index in soft state array
++ * @parent: parent node for this /proc entry
+  *
+  * Creates /proc entries for our controllers.
+  */
+@@ -2785,7 +2785,7 @@ static inline void mega_create_proc_entry(int index, struct proc_dir_entry *pare
+ #endif
+ 
+ 
+-/**
++/*
+  * megaraid_biosparam()
+  *
+  * Return the disk geometry for a particular disk
+@@ -2854,7 +2854,7 @@ megaraid_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 
+ /**
+  * mega_init_scb()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Allocate memory for the various pointers in the scb structures:
+  * scatter-gather list pointer, passthru and extended passthru structure
+@@ -2934,8 +2934,8 @@ mega_init_scb(adapter_t *adapter)
+ 
+ /**
+  * megadev_open()
+- * @inode - unused
+- * @filep - unused
++ * @inode: unused
++ * @filep: unused
+  *
+  * Routines for the character/ioctl interface to the driver. Find out if this
+  * is a valid open. 
+@@ -2954,10 +2954,9 @@ megadev_open (struct inode *inode, struct file *filep)
+ 
+ /**
+  * megadev_ioctl()
+- * @inode - Our device inode
+- * @filep - unused
+- * @cmd - ioctl command
+- * @arg - user buffer
++ * @filep: unused
++ * @cmd: ioctl command
++ * @arg: user buffer
+  *
+  * ioctl entry point for our private ioctl interface. We move the data in from
+  * the user space, prepare the command (if necessary, convert the old MIMD
+@@ -3370,8 +3369,8 @@ megadev_unlocked_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 
+ /**
+  * mega_m_to_n()
+- * @arg - user address
+- * @uioc - new ioctl structure
++ * @arg: user address
++ * @uioc: new ioctl structure
+  *
+  * A thin layer to convert older mimd interface ioctl structure to NIT ioctl
+  * structure
+@@ -3496,10 +3495,10 @@ mega_m_to_n(void __user *arg, nitioctl_t *uioc)
+ 	return 0;
+ }
+ 
+-/*
++/**
+  * mega_n_to_m()
+- * @arg - user address
+- * @mc - mailbox command
++ * @arg: user address
++ * @mc: mailbox command
+  *
+  * Updates the status information to the application, depending on application
+  * conforms to older mimd ioctl interface or newer NIT ioctl interface
+@@ -3565,7 +3564,7 @@ mega_n_to_m(void __user *arg, megacmd_t *mc)
+ 
+ /**
+  * mega_is_bios_enabled()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * issue command to find out if the BIOS is enabled for this controller
+  */
+@@ -3596,7 +3595,7 @@ mega_is_bios_enabled(adapter_t *adapter)
+ 
+ /**
+  * mega_enum_raid_scsi()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Find out what channels are RAID/SCSI. This information is used to
+  * differentiate the virtual channels and physical channels and to support
+@@ -3651,7 +3650,7 @@ mega_enum_raid_scsi(adapter_t *adapter)
+ 
+ /**
+  * mega_get_boot_drv()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Find out which device is the boot device. Note, any logical drive or any
+  * phyical device (e.g., a CDROM) can be designated as a boot device.
+@@ -3718,7 +3717,7 @@ mega_get_boot_drv(adapter_t *adapter)
+ 
+ /**
+  * mega_support_random_del()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Find out if this controller supports random deletion and addition of
+  * logical drives
+@@ -3748,7 +3747,7 @@ mega_support_random_del(adapter_t *adapter)
+ 
+ /**
+  * mega_support_ext_cdb()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Find out if this firmware support cdblen > 10
+  */
+@@ -3776,8 +3775,8 @@ mega_support_ext_cdb(adapter_t *adapter)
+ 
+ /**
+  * mega_del_logdrv()
+- * @adapter - pointer to our soft state
+- * @logdrv - logical drive to be deleted
++ * @adapter: pointer to our soft state
++ * @logdrv: logical drive to be deleted
+  *
+  * Delete the specified logical drive. It is the responsibility of the user
+  * app to let the OS know about this operation.
+@@ -3862,7 +3861,7 @@ mega_do_del_logdrv(adapter_t *adapter, int logdrv)
+ 
+ /**
+  * mega_get_max_sgl()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Find out the maximum number of scatter-gather elements supported by this
+  * version of the firmware
+@@ -3908,7 +3907,7 @@ mega_get_max_sgl(adapter_t *adapter)
+ 
+ /**
+  * mega_support_cluster()
+- * @adapter - pointer to our soft state
++ * @adapter: pointer to our soft state
+  *
+  * Find out if this firmware support cluster calls.
+  */
+@@ -3950,8 +3949,8 @@ mega_support_cluster(adapter_t *adapter)
+ #ifdef CONFIG_PROC_FS
+ /**
+  * mega_adapinq()
+- * @adapter - pointer to our soft state
+- * @dma_handle - DMA address of the buffer
++ * @adapter: pointer to our soft state
++ * @dma_handle: DMA address of the buffer
+  *
+  * Issue internal commands while interrupts are available.
+  * We only issue direct mailbox commands from within the driver. ioctl()
+@@ -3983,11 +3982,12 @@ mega_adapinq(adapter_t *adapter, dma_addr_t dma_handle)
+ }
+ 
+ 
+-/** mega_internal_dev_inquiry()
+- * @adapter - pointer to our soft state
+- * @ch - channel for this device
+- * @tgt - ID of this device
+- * @buf_dma_handle - DMA address of the buffer
++/**
++ * mega_internal_dev_inquiry()
++ * @adapter: pointer to our soft state
++ * @ch: channel for this device
++ * @tgt: ID of this device
++ * @buf_dma_handle: DMA address of the buffer
+  *
+  * Issue the scsi inquiry for the specified device.
+  */
+@@ -4056,9 +4056,9 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, u8 tgt,
+ 
+ /**
+  * mega_internal_command()
+- * @adapter - pointer to our soft state
+- * @mc - the mailbox command
+- * @pthru - Passthru structure for DCDB commands
++ * @adapter: pointer to our soft state
++ * @mc: the mailbox command
++ * @pthru: Passthru structure for DCDB commands
+  *
+  * Issue the internal commands in interrupt mode.
+  * The last argument is the address of the passthru structure if the command
 -- 
 2.25.1
 
