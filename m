@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5DB8C43445
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D495C433F8
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C161E2072D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BF5420758
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="CeT9LqTK"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ivoW9Lui"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729523AbgGMIA6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 04:00:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52578 "EHLO
+        id S1729360AbgGMIA3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 04:00:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729386AbgGMIAa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:30 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30E84C061794
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:30 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id 17so12196118wmo.1
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:30 -0700 (PDT)
+        with ESMTP id S1729350AbgGMIA2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:28 -0400
+Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3027C061755
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:27 -0700 (PDT)
+Received: by mail-wr1-x444.google.com with SMTP id z2so14768716wrp.2
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XHlEfo3tdu7fpK4dx4b1MtHnaLwguM9Twh58pG6oyd8=;
-        b=CeT9LqTKAntJxO532RBKZSD2MmXajdTP2Z6TZsjFUos2Dy3AqQiKeqmzOQXLOdup5K
-         oR9Jfvpc/IaLI5DHKjLZ3nTEB8sF7UYyDL/vrYeDWJPRBIq19lwaOe71zTjcxb8EEYZJ
-         IHb63tKO7l/kaliVaH9+00BPFG2fPoqIMa4p7jFFQ+VJjSMs6z1wx8Q2skmsuMUqQQBo
-         QEqn0NETKhS4uJDnyliVRpRQEe348zA7tfix6tX0dSpRIadSxns7p8COhLJLS9QdLhFt
-         J2M/PHpxAxBC76pHYM3RFjlQi3JH+L/QEkYTospzXYKTUlDLQ2OBFM9bLkvfhMhrp4Ky
-         sygg==
+        bh=bOkk/AOE4a1rIKIblem9cC9W1YA+YYErwB4kADkbA6U=;
+        b=ivoW9LuiqFryL5aujmOFCwfClhS0ODYgoFhI6l1yi1CHg//IVHm2ugcAs+/VhXZeAV
+         dxPbFvu0tGc8lIoZxq1kmj45ehBJpZYF1C3M/CjwYxWkygqc40oilXBB/gAmTY95yyNd
+         skd1c+bXcGfOSeZVqJVM1DRzzqP3/teEpAjWRWIiFMv0mEF3sLpat+UOWUJTsR481VxT
+         4148aRlBKjJwdM7NzB7IxpS8nwRq5zkpcvoiIb+BO5vRmzz6H5kb1+yY8kVtB1rQE4K+
+         kFSESLOpv6cuYA0qFQWJVkVSFvOt7TwbF0u4zCB4hfQGqVq3UxWPge/o/aCT9BRyUOZd
+         7k2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XHlEfo3tdu7fpK4dx4b1MtHnaLwguM9Twh58pG6oyd8=;
-        b=Vn4UyD7S5u+saM1EuxcrELa4Xh8cF+91tI6yamKWh8rVfJp2ZlDlkHpgcHNCNuTubT
-         danTFa3IRqpjMdkcAv+xgX8HIrNixGc9LcncQQl61TQLWNDQ+V53NqFyMyYZ1e+iuhRs
-         x2F5KfMTJ4mS/RQX6J8mS4BOEe0PmBSsHr35V4LQ+eu5cAceqXOwfhEophE7mmAJayW0
-         dbCfoZM3L6hwtOuyrhBSKzWTZUzuOLMFgF70L9nRAKWhq5sXmlAIa06VL15BHlVPpAj6
-         JT6E2gWbQ9QXve93ocPTGfLtCJPi13UD2/CuqMETtQXYym8a4L9htTNQVcMLg4kh5Erq
-         vqPg==
-X-Gm-Message-State: AOAM533ceUnsupliQqKTouimFbEWELHZzFtjhI1bSvUxycuvtCHoEX2m
-        dnZZC/VmpGeYGDnRs+5BkGtBoQ==
-X-Google-Smtp-Source: ABdhPJx88Pdx/IGjrSfBIXgCCFIBL5KfuufE/J4dRq+ZR/F1RbBZER6j/AS7USDE5pUVx4WBY8NA3w==
-X-Received: by 2002:a1c:408b:: with SMTP id n133mr17672302wma.88.1594627228848;
-        Mon, 13 Jul 2020 01:00:28 -0700 (PDT)
+        bh=bOkk/AOE4a1rIKIblem9cC9W1YA+YYErwB4kADkbA6U=;
+        b=FVd7z+bl+cjn+4ucM/by0gatcCE8JXjuK9abGDEA1yB1UnIS9ciD8OYYZWWkGH0Evg
+         k90//e0Y7BIpCmNZOASRR9vkZ12eje0Z8HQo6x4Nypzfvt09CNfN4vGea/RcX+VvCQV/
+         zjrreLDyRbINo0Ei09rv7Xw7dUC4U3lm8zdRR2W81g/NG++mbiPl3JjcOA9oRm94pS/O
+         R55cEFiHG0XRz8OcWWZop1VJbGuQvhPaMd/8OaQzpGznNX3GC7gpf4wHiW4Irx3NR87B
+         Y4tNnBk1jI7bcEQ83wWVghce5DRRzu9PV/1SSRdGfhDmQtmVI+rb2MXhViU7qfiM85Q4
+         flLQ==
+X-Gm-Message-State: AOAM5338v6f1I6bFyPcoA0RPnBeSa56p0/SSPCu82D88loMH6M8xvIMq
+        HYb52cOEzR1Z3uiEEvrpIpGWnFc7yc4=
+X-Google-Smtp-Source: ABdhPJzHD/4IVzBNdJENKx1a6mXcOPjXpA6cothz9YdYC7Zo+cS9T082RvQ7n9AJqR6XQqvEe1YA2A==
+X-Received: by 2002:adf:8024:: with SMTP id 33mr84296402wrk.117.1594627226531;
+        Mon, 13 Jul 2020 01:00:26 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.27
+        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 01:00:28 -0700 (PDT)
+        Mon, 13 Jul 2020 01:00:26 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
@@ -65,9 +65,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Ketan Mukadam <ketan.mukadam@broadcom.com>,
         Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
         linux-drivers@broadcom.com
-Subject: [PATCH v2 19/24] scsi: be2iscsi: be_mgmt: Add missing function parameter description
-Date:   Mon, 13 Jul 2020 08:59:56 +0100
-Message-Id: <20200713080001.128044-20-lee.jones@linaro.org>
+Subject: [PATCH v2 17/24] scsi: be2iscsi: be_iscsi: Fix API/documentation slip
+Date:   Mon, 13 Jul 2020 08:59:54 +0100
+Message-Id: <20200713080001.128044-18-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200713080001.128044-1-lee.jones@linaro.org>
 References: <20200713080001.128044-1-lee.jones@linaro.org>
@@ -78,11 +78,19 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Also promote fully documented function header to kerneldoc.
+And add descriptions for a couple of missing function parameters.
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/be2iscsi/be_mgmt.c:112: warning: Function parameter or member 'phba' not described in 'mgmt_open_connection'
+ drivers/scsi/be2iscsi/be_iscsi.c:38: warning: Function parameter or member 'ep' not described in 'beiscsi_session_create'
+ drivers/scsi/be2iscsi/be_iscsi.c:173: warning: Function parameter or member 'is_leading' not described in 'beiscsi_conn_bind'
+ drivers/scsi/be2iscsi/be_iscsi.c:998: warning: Function parameter or member 'beiscsi_ep' not described in 'beiscsi_free_ep'
+ drivers/scsi/be2iscsi/be_iscsi.c:998: warning: Excess function parameter 'ep' description in 'beiscsi_free_ep'
+ drivers/scsi/be2iscsi/be_iscsi.c:1039: warning: Function parameter or member 'non_blocking' not described in 'beiscsi_open_conn'
+ drivers/scsi/be2iscsi/be_iscsi.c:1135: warning: Function parameter or member 'shost' not described in 'beiscsi_ep_connect'
+ drivers/scsi/be2iscsi/be_iscsi.c:1135: warning: Excess function parameter 'scsi_host' description in 'beiscsi_ep_connect'
+ drivers/scsi/be2iscsi/be_iscsi.c:1236: warning: Function parameter or member 'beiscsi_ep' not described in 'beiscsi_conn_close'
+ drivers/scsi/be2iscsi/be_iscsi.c:1236: warning: Excess function parameter 'ep' description in 'beiscsi_conn_close'
 
 Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>
 Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>
@@ -90,30 +98,68 @@ Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Cc: linux-drivers@broadcom.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/be2iscsi/be_mgmt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_iscsi.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index a2d69b287c7bb..96d6e384b2b25 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -97,6 +97,7 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 2058d50d62e12..fe10575bce7f0 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -27,6 +27,7 @@ extern struct iscsi_transport beiscsi_iscsi_transport;
  
  /**
-  * mgmt_open_connection()- Establish a TCP CXN
-+ * @phba: driver priv structure
-  * @dst_addr: Destination Address
-  * @beiscsi_ep: ptr to device endpoint struct
-  * @nonemb_cmd: ptr to memory allocated for command
-@@ -209,7 +210,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 	return tag;
- }
+  * beiscsi_session_create - creates a new iscsi session
++ * @ep: pointer to iscsi ep
+  * @cmds_max: max commands supported
+  * @qdepth: max queue depth supported
+  * @initial_cmdsn: initial iscsi CMDSN
+@@ -164,6 +165,7 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
+  * @cls_session: pointer to iscsi cls session
+  * @cls_conn: pointer to iscsi cls conn
+  * @transport_fd: EP handle(64 bit)
++ * @is_leading: indicate if this is the session leading connection (MCS)
+  *
+  * This function binds the TCP Conn with iSCSI Connection and Session.
+  */
+@@ -992,7 +994,7 @@ static void beiscsi_put_cid(struct beiscsi_hba *phba, unsigned short cid)
  
--/*
-+/**
-  * beiscsi_exec_nemb_cmd()- execute non-embedded MBX cmd
-  * @phba: driver priv structure
-  * @nonemb_cmd: DMA address of the MBX command to be issued
+ /**
+  * beiscsi_free_ep - free endpoint
+- * @ep:	pointer to iscsi endpoint structure
++ * @beiscsi_ep: pointer to device endpoint struct
+  */
+ static void beiscsi_free_ep(struct beiscsi_endpoint *beiscsi_ep)
+ {
+@@ -1027,9 +1029,10 @@ static void beiscsi_free_ep(struct beiscsi_endpoint *beiscsi_ep)
+ 
+ /**
+  * beiscsi_open_conn - Ask FW to open a TCP connection
+- * @ep:	endpoint to be used
++ * @beiscsi_ep: pointer to device endpoint struct
+  * @src_addr: The source IP address
+  * @dst_addr: The Destination  IP address
++ * @non_blocking: blocking or non-blocking call
+  *
+  * Asks the FW to open a TCP connection
+  */
+@@ -1123,7 +1126,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 
+ /**
+  * beiscsi_ep_connect - Ask chip to create TCP Conn
+- * @scsi_host: Pointer to scsi_host structure
++ * @shost: Pointer to scsi_host structure
+  * @dst_addr: The IP address of Target
+  * @non_blocking: blocking or non-blocking call
+  *
+@@ -1228,7 +1231,7 @@ static void beiscsi_flush_cq(struct beiscsi_hba *phba)
+ 
+ /**
+  * beiscsi_conn_close - Invalidate and upload connection
+- * @ep: The iscsi endpoint
++ * @beiscsi_ep: pointer to device endpoint struct
+  *
+  * Returns 0 on success,  -1 on failure.
+  */
 -- 
 2.25.1
 
