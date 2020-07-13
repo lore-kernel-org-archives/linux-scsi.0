@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF88C43461
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2E6CC43463
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A7202077D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B57FA2072D
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 08:01:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="F40StJ0J"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="O9xRYkKf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729636AbgGMIBk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 04:01:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52496 "EHLO
+        id S1729646AbgGMIBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 04:01:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729175AbgGMIAR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:17 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83762C061755
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:17 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id r12so14701421wrj.13
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:17 -0700 (PDT)
+        with ESMTP id S1729139AbgGMIAP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 04:00:15 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76DCBC061755
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:15 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id l17so12368133wmj.0
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 01:00:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=kZ+k2VRrvfDu4ASYD2+0hveDy1rv8dVhxsnPb7NP+X0=;
-        b=F40StJ0JDEughnyCZdC4zD4CADMmCEX+GdBEWIJkmZ4vaNaxG08FHoT+/Ef3TpqKA3
-         7Et7t+js1PLlhqegkg0tIN0YJqr48NIpDRJnspa8qwGRfPXtK8InR88gY+tBDjmthXWu
-         LdsNkMqwMVf+7qtfHRX0VC4ySJSllCd8lDC+WBL/rn8wYOuCXOY9g9zAsdjX7QWTrHab
-         5JGTxWMne7/Mw0z5Qm+5dy2eGxyP6uTW90jT+krRISw7A0f4KcCD/Iz8yX2++EC+XHLK
-         jgSWFQv0ZnAfzNgc+sLHNl/IxNWRhKtqbHR30Seku+m8gD3eN1XR0y4U5brZNTEVvL94
-         pspw==
+        bh=RfY0NWdcaY2EP3FmoORbq4kbjZDAFhNLFjss0f92Lio=;
+        b=O9xRYkKfJFOUSu6r6sulvmymmV/K0Q48jvoehWofsopiMUzkbVLj/jQtjzkQQgZS4W
+         I70gNWxE74qk5fb0fPDjkZiRMbH+BEVIDJRzoM0YWFiDNDhtVj8z7wjYR39SmFBntJDB
+         RTyinMEu4DZIKP5iSiTLdZ9rjo4Eso4pEhONj+dwWQxLErHb07mWAXkSrJvgdArSei6l
+         k6O7QW2vrRlDj5tAk1Akio7Uwmo5sqAhxtB2TBJ14pjmuT95LntdC4NtuPWjIqMkDZqq
+         ZPl3ECDb+i6LP7rJqb8WZIgsjLwVfXMVKr222PEiC7UAnuoiVnlA3ILEjYxJVFFyh6oa
+         Bc8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=kZ+k2VRrvfDu4ASYD2+0hveDy1rv8dVhxsnPb7NP+X0=;
-        b=KrZAN8fWi4EJmwCzzWr1SmMlqQCcjrXHynJpocr1Xsf91YDI03w7KIxRrks/LB1azF
-         wLAHvmq0hDccbCKS4duiK4vZRUcxDqs44j+GdcXNiDFROJLxvfaBgKlxvhkuGknFNmc+
-         WDonaOwDi0K/g6BLVAGnEWms/w0rUzd/FcBQHvVJsB2SUUe38Mjawlhve8jNHc3wROvW
-         W8ezmZ3gUKwnwXDaswbf/yAglnDwTe4z8OcJY8ATO9kHI28ay6FVDGr+OrQLMEzfqxcu
-         1Nt5JO5oIbV4mnTsk1Whwkq3fKWYSUlZ5GMSmEP/UipcqmWe5M1btEZ+cuqQI8H7d7vC
-         jRIw==
-X-Gm-Message-State: AOAM533T//6Vi02PL57/Qymqh3CM/koe6k7Y9PeH4NN9mTBMsjqFfypQ
-        jEwLA4RiDbAuGp/7Ymo/AKgdWw==
-X-Google-Smtp-Source: ABdhPJwEk2RTfsYPZCrwW/6JZss9ehBe6X5OJOmh5OKgO1/Gr7DZGwQlNRj0NwRoqP3KYf6vv5xpoQ==
-X-Received: by 2002:a5d:6a04:: with SMTP id m4mr76716494wru.418.1594627216305;
-        Mon, 13 Jul 2020 01:00:16 -0700 (PDT)
+        bh=RfY0NWdcaY2EP3FmoORbq4kbjZDAFhNLFjss0f92Lio=;
+        b=CqEc+D6axOCWXjXyofQAwiwN4Jc4n2Omu6iP0Eu8wkeFJ7tRFx7X/5svVJbtS8TC2J
+         Ndjl09ckwfRfqnZLsvAVZFRkJgbyWaYOvttLtYlxnMeSgeluR6IXysBYjScbPzZ4pj38
+         YQxe+ZxBrL3cDqcvReecuvfk3ir9GzjPjGGvQua9aqQv/HYMIlXDbOAxjJPJRNN06orI
+         Bz64N5wVSyr21D7+RC6rVYz/LnAfi15nC/zVV8DK0hr/nhSkrPxBIW7qqMlSkc8fUtYd
+         ktu3ECBtp3jjGiXJTenEPcVwv7qSpJvC8DXomdpXbRq280GKO/DihkweOFtPJHGFvi8Q
+         Xgtg==
+X-Gm-Message-State: AOAM530EfC04qiTzlW3sPVFvnDPq5saPSqZBMkyX6Zr8pb+3RcJwNXYE
+        gh71YYQwj3dcWvDVeaONdMtWeA==
+X-Google-Smtp-Source: ABdhPJxXd85K+swID9T4RkK43CBRG3ojcaY5XxDJZVBFei+PqLdZeUuO9fArANTpD3xoZn2O+8MnIA==
+X-Received: by 2002:a1c:5418:: with SMTP id i24mr17024203wmb.47.1594627214244;
+        Mon, 13 Jul 2020 01:00:14 -0700 (PDT)
 Received: from localhost.localdomain ([2.31.163.6])
-        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.15
+        by smtp.gmail.com with ESMTPSA id 33sm24383549wri.16.2020.07.13.01.00.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 01:00:15 -0700 (PDT)
+        Mon, 13 Jul 2020 01:00:13 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
         Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH v2 08/24] scsi: aic94xx: aic94xx_scb: Fix a couple of formatting and bitrot issues
-Date:   Mon, 13 Jul 2020 08:59:45 +0100
-Message-Id: <20200713080001.128044-9-lee.jones@linaro.org>
+Subject: [PATCH v2 06/24] scsi: aic94xx: aic94xx_seq: Document 'lseq' and repair asd_update_port_links() header
+Date:   Mon, 13 Jul 2020 08:59:43 +0100
+Message-Id: <20200713080001.128044-7-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200713080001.128044-1-lee.jones@linaro.org>
 References: <20200713080001.128044-1-lee.jones@linaro.org>
@@ -75,45 +75,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Kerneldoc format should be '@.*: ', else the checker gets confused.
-
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/aic94xx/aic94xx_scb.c:137: warning: Function parameter or member 'phy' not described in 'asd_get_attached_sas_addr'
- drivers/scsi/aic94xx/aic94xx_scb.c:137: warning: Function parameter or member 'sas_addr' not described in 'asd_get_attached_sas_addr'
- drivers/scsi/aic94xx/aic94xx_scb.c:860: warning: Function parameter or member 't' not described in 'asd_ascb_timedout'
- drivers/scsi/aic94xx/aic94xx_scb.c:860: warning: Excess function parameter 'data' description in 'asd_ascb_timedout'
+ drivers/scsi/aic94xx/aic94xx_seq.c:587: warning: Function parameter or member 'lseq' not described in 'asd_init_lseq_mip'
+ drivers/scsi/aic94xx/aic94xx_seq.c:674: warning: Function parameter or member 'lseq' not described in 'asd_init_lseq_mdp'
+ drivers/scsi/aic94xx/aic94xx_seq.c:958: warning: Function parameter or member 'lseq' not described in 'asd_init_lseq_cio'
+ drivers/scsi/aic94xx/aic94xx_seq.c:1364: warning: Function parameter or member 'asd_ha' not described in 'asd_update_port_links'
+ drivers/scsi/aic94xx/aic94xx_seq.c:1364: warning: Function parameter or member 'phy' not described in 'asd_update_port_links'
+ drivers/scsi/aic94xx/aic94xx_seq.c:1364: warning: Excess function parameter 'sas_phy' description in 'asd_update_port_links'
 
 Cc: Luben Tuikov <luben_tuikov@adaptec.com>
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/aic94xx/aic94xx_scb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_seq.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
-index 4a80ec08f0c96..c264b4b56970b 100644
---- a/drivers/scsi/aic94xx/aic94xx_scb.c
-+++ b/drivers/scsi/aic94xx/aic94xx_scb.c
-@@ -123,8 +123,8 @@ static unsigned ord_phy(struct asd_ha_struct *asd_ha, struct asd_phy *phy)
+diff --git a/drivers/scsi/aic94xx/aic94xx_seq.c b/drivers/scsi/aic94xx/aic94xx_seq.c
+index 11853ec29d87a..c0f685c86851b 100644
+--- a/drivers/scsi/aic94xx/aic94xx_seq.c
++++ b/drivers/scsi/aic94xx/aic94xx_seq.c
+@@ -582,6 +582,7 @@ static void asd_init_cseq_scratch(struct asd_ha_struct *asd_ha)
+ /**
+  * asd_init_lseq_mip -- initialize LSEQ Mode independent pages 0-3
+  * @asd_ha: pointer to host adapter structure
++ * @lseq:  link sequencer
+  */
+ static void asd_init_lseq_mip(struct asd_ha_struct *asd_ha, u8 lseq)
+ {
+@@ -669,6 +670,7 @@ static void asd_init_lseq_mip(struct asd_ha_struct *asd_ha, u8 lseq)
+ /**
+  * asd_init_lseq_mdp -- initialize LSEQ mode dependent pages.
+  * @asd_ha: pointer to host adapter structure
++ * @lseq:  link sequencer
+  */
+ static void asd_init_lseq_mdp(struct asd_ha_struct *asd_ha,  int lseq)
+ {
+@@ -953,6 +955,7 @@ static void asd_init_cseq_cio(struct asd_ha_struct *asd_ha)
+ /**
+  * asd_init_lseq_cio -- initialize LmSEQ CIO registers
+  * @asd_ha: pointer to host adapter structure
++ * @lseq:  link sequencer
+  */
+ static void asd_init_lseq_cio(struct asd_ha_struct *asd_ha, int lseq)
+ {
+@@ -1345,7 +1348,8 @@ int asd_start_seqs(struct asd_ha_struct *asd_ha)
  
  /**
-  * asd_get_attached_sas_addr -- extract/generate attached SAS address
-- * phy: pointer to asd_phy
-- * sas_addr: pointer to buffer where the SAS address is to be written
-+ * @phy: pointer to asd_phy
-+ * @sas_addr: pointer to buffer where the SAS address is to be written
+  * asd_update_port_links -- update port_map_by_links and phy_is_up
+- * @sas_phy: pointer to the phy which has been added to a port
++ * @asd_ha: pointer to host adapter structure
++ * @phy: pointer to the phy which has been added to a port
   *
-  * This function extracts the SAS address from an IDENTIFY frame
-  * received.  If OOB is SATA, then a SAS address is generated from the
-@@ -847,7 +847,7 @@ void asd_build_initiate_link_adm_task(struct asd_ascb *ascb, int phy_id,
- 
- /**
-  * asd_ascb_timedout -- called when a pending SCB's timer has expired
-- * @data: unsigned long, a pointer to the ascb in question
-+ * @t: Timer context used to fetch the SCB
-  *
-  * This is the default timeout function which does the most necessary.
-  * Upper layers can implement their own timeout function, say to free
+  * 1) When a link reset has completed and we got BYTES DMAED with a
+  * valid frame we call this function for that phy, to indicate that
 -- 
 2.25.1
 
