@@ -2,124 +2,179 @@ Return-Path: <SRS0=+RX4=AY=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31129C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 11:23:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54EFBC433E0
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 11:40:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1016C2072D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 11:23:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AF4420738
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Jul 2020 11:40:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="I3YD8cpE"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="rA7G+zTi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729318AbgGMLXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 07:23:30 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:42723 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728950AbgGMLX2 (ORCPT
+        id S1729580AbgGMLkM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 07:40:12 -0400
+Received: from mail1.bemta26.messagelabs.com ([85.158.142.115]:38483 "EHLO
+        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726586AbgGMLkM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Jul 2020 07:23:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594639405;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Cp13jJuIIl8muXNVHzNvpxZz6DmTE1jSSxstK7LrSuw=;
-        b=I3YD8cpEE4+NDUiKJZs0nC847r4KvTlXO5w+cYdNCz+RB7DA8nBMVFq5U5oA0C2vP7ilN4
-        1k00JdZlNvegDiGid8fBmAQMLoZK41kC7W6zXQUD9re9jvSDfRqRqyWc7uPdFwTuy+YGPS
-        v5nOrzgpFjA04oerRdCrjUnVpQjj1rA=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-119-tF8m5n3uMlWNZxCbR__v7g-1; Mon, 13 Jul 2020 07:23:23 -0400
-X-MC-Unique: tF8m5n3uMlWNZxCbR__v7g-1
-Received: by mail-wm1-f70.google.com with SMTP id z74so12987760wmc.4
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Jul 2020 04:23:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Cp13jJuIIl8muXNVHzNvpxZz6DmTE1jSSxstK7LrSuw=;
-        b=uZYQvzSjFlSrv4wUzTUGAXqpSbhFqETbZfgvdlfuc0TL0e3zKTqP7+R2rkwk/xF+ZB
-         s8L6/KObPCSvrWXnd0wFGaVQwIMGsRzvLrBTQw+PuuCSzAu/+8IK6E7ztye/DKySCBf/
-         oRUkL5RHFff6exfKRZOIHA/TjRdMIp4RU45qJ71e7SbYVpP3jRwqaPd4sZB+P/UQ7XLW
-         e5swS2M/E4q0QHWIOgtPeAT1STOcc7iy9D89x/YDC1F3bMn9KFieeA+rTti77ca8Yz7p
-         5j800dn2Xqc21S1zXLWi8/V03gXlMgoEoCf6YP5oulVOfcRX8YF4k9eUE3nvXdbuiakc
-         1Acg==
-X-Gm-Message-State: AOAM531PkDzC7H5XEHPq97DcMQ3GyhY1pHy01dL7givEYA+vIgQ24qQY
-        E5grrYPywymxaHKNF+3Ds5M9eeFcD7xhW5/ZpBldHxpNJeKzzqc9q9UnmQk4AHM7YA4i0fgbV3P
-        9Q8bMiE4FmG/yr7vUqbgECg==
-X-Received: by 2002:adf:84e2:: with SMTP id 89mr82610820wrg.139.1594639402329;
-        Mon, 13 Jul 2020 04:23:22 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxzoCrHCmvHA+9tYCCZvkKCKZhV/F4YlMxW4KU+tbDXUAXf+8nTnhjTJ8IHP6HmlwcPSxo1PQ==
-X-Received: by 2002:adf:84e2:: with SMTP id 89mr82610801wrg.139.1594639402164;
-        Mon, 13 Jul 2020 04:23:22 -0700 (PDT)
-Received: from redhat.com (bzq-79-180-10-140.red.bezeqint.net. [79.180.10.140])
-        by smtp.gmail.com with ESMTPSA id m16sm25473869wro.0.2020.07.13.04.23.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 04:23:21 -0700 (PDT)
-Date:   Mon, 13 Jul 2020 07:23:13 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jason Wang <jasowang@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        virtualization@lists.linux-foundation.org,
-        Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH v2 12/24] scsi: virtio_scsi: Demote seemingly
- unintentional kerneldoc header
-Message-ID: <20200713071453-mutt-send-email-mst@kernel.org>
-References: <20200713080001.128044-1-lee.jones@linaro.org>
- <20200713080001.128044-13-lee.jones@linaro.org>
+        Mon, 13 Jul 2020 07:40:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1594640409; i=@ts.fujitsu.com;
+        bh=zX8aArxIPWFWC1A4AX3KP2qqMpq3f5jMdIZ5wsPRAF0=;
+        h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=rA7G+zTiGMBqKN2PdCymWU7z2/X5qcrSe2U+D6QiDZBoAAZAGXlEffI6BuaQvK8na
+         tpvpos2CJkKZSe4m5esQiEMX9PliArNnpSLbn2HKDbmfYq2NBHlfAhM61M8FA8R33C
+         GlzMEa+yzkyh05SyGxUhFXkgwK8f6cZuibUC40Cpj8XPru0/AZjdRkTYyEKbj7wYvp
+         n1JfWgpc1c8CDnLdArcBPPCboV4wRsv7Sw4aMmzOpcP+OHzhsEnkE60Lpj7EusRzj0
+         3u5Ggiof80sDyF7VFnOGDh1tw+hNU/XDcKfV6K/DyFhoHcSlCwAybuUvA4JU4vftOJ
+         2JyvlwoDeu+aw==
+Received: from [100.113.4.20] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-4.bemta.az-b.eu-central-1.aws.symcld.net id AC/75-24114-9184C0F5; Mon, 13 Jul 2020 11:40:09 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrAIsWRWlGSWpSXmKPExsViZ8MxVVfCgyf
+  e4OpsM4vu6zvYLJYf/8dk8XfSDVaL1qVvmRxYPD4+vcXi8XmTXABTFGtmXlJ+RQJrxoqP59kK
+  rihVzPu3hKWB8atcFyMXh5DAZEaJrd17mCGcfkaJlV+vAzmcHMICbhLfXi1gB0mICKxhlFj0e
+  ikTRNVSRon9p96xglSxCRhIrJh0nwXE5hVwlGjb+YsRxGYRUJV4euo8WxcjB4eoQLjEsxX+EC
+  WCEidnPgEr5xSwk5jw/hbYMmYBM4l5mx9C2eISt57MZ4KwtSWWLXzNPIGRbxaS9llIWmYhaZm
+  FpGUBI8sqRoukosz0jJLcxMwcXUMDA11DQ2NdMyBLL7FKN0kvtVQ3OTWvpCgRKKmXWF6sV1yZ
+  m5yTopeXWrKJERjQKYVsXDsYn77+oHeIUZKDSUmU944mT7wQX1J+SmVGYnFGfFFpTmrxIUYZD
+  g4lCd5VrkA5waLU9NSKtMwcYHTBpCU4eJREeBvdgNK8xQWJucWZ6RCpU4yKUuK8CSAJAZBERm
+  keXBssoi8xykoJ8zIyMDAI8RSkFuVmlqDKv2IU52BUEub9DjKFJzOvBG76K6DFTECLef5xgiw
+  uSURISTUwTS9L/rXzx1L3uWp/mRRuvrE4/2Ni5T6LklvG6r8bLt45E7t0evU7f1vu/1l7dt6d
+  tT711XIDgdN/9lycteDARnuhO2kJwdLTl1+6VL30dWpJ8t+aGS/PHftzxX77hpbHBnd1an9K7
+  L8R4n98sopd5Tzv7c/tiqefipE3tHLYpGb2Nsp2R5DypdR/UesnLT6/46uX/UoFReV/bcd6DB
+  l28mXrTDXqTnv/XaR5c3X+rZ4JAlNMeW/73mKd8WTtnOVhpx3lba5lXsm/9/my7S++NyvWGr+
+  aoLavYfHM6z/+dTAeeq9Ym3N8lSFXo/wbD7N3Duqnfd++SbEWfXM+ZWqQAO9WtbXiMTErxSde
+  WqZ4OeeqEktxRqKhFnNRcSIALwGGQWMDAAA=
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-28.tower-248.messagelabs.com!1594640408!182167!1
+X-Originating-IP: [62.60.8.149]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 6144 invoked from network); 13 Jul 2020 11:40:08 -0000
+Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
+  by server-28.tower-248.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 13 Jul 2020 11:40:08 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06DBe7qR009502;
+        Mon, 13 Jul 2020 12:40:08 +0100
+Received: from [172.17.39.90] (unknown [172.17.39.90])
+        by x-serv01 (Postfix) with ESMTP id 05C7D20489;
+        Mon, 13 Jul 2020 13:40:06 +0200 (CEST)
+Subject: Re: [PATCH 2/8] scsi: target: Add tmr_notify backend function
+To:     Mike Christie <michael.christie@oracle.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
+ <20200710104817.19462-3-bstroesser@ts.fujitsu.com>
+ <5c163079-563c-e3e5-2a9c-478a310bd022@oracle.com>
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Message-ID: <1cd113df-1140-5148-c41c-541e4d2ce1b9@ts.fujitsu.com>
+Date:   Mon, 13 Jul 2020 13:40:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200713080001.128044-13-lee.jones@linaro.org>
+In-Reply-To: <5c163079-563c-e3e5-2a9c-478a310bd022@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 13, 2020 at 08:59:49AM +0100, Lee Jones wrote:
-> This is the only use of kerneldoc in the sourcefile and no
-> descriptions are provided.
-> 
-> Fixes the following W=1 kernel build warning(s):
-> 
->  drivers/scsi/virtio_scsi.c:109: warning: Function parameter or member 'vscsi' not described in 'virtscsi_complete_cmd'
->  drivers/scsi/virtio_scsi.c:109: warning: Function parameter or member 'buf' not described in 'virtscsi_complete_cmd'
-> 
-> Cc: "Michael S. Tsirkin" <mst@redhat.com>
-> Cc: Jason Wang <jasowang@redhat.com>
-> Cc: Stefan Hajnoczi <stefanha@redhat.com>
-> Cc: virtualization@lists.linux-foundation.org
-> Signed-off-by: Lee Jones <lee.jones@linaro.org>
-> Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+On 2020-07-12 01:27, Mike Christie wrote:
+> On 7/10/20 5:48 AM, Bodo Stroesser wrote:
+>> Target core is modified to call an optional backend
+>> callback function if a TMR is received or commands
+>> are aborted implicitly after a PR command was received.
+>> The backend function takes as parameters the se_dev, the
+>> type of the TMR, and the list of aborted commands.
+>> If no commands were aborted, an empty list is supplied.
+>>
+>> Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+>> ---
+>> =C2=A0 drivers/target/target_core_tmr.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0 | 16 +++++++++++++++-
+>> =C2=A0 drivers/target/target_core_transport.c |=C2=A0 1 +
+>> =C2=A0 include/target/target_core_backend.h=C2=A0=C2=A0 |=C2=A0 2 ++
+>> =C2=A0 include/target/target_core_base.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ |=C2=A0 1 +
+>> =C2=A0 4 files changed, 19 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/target/target_core_tmr.c=20
+>> b/drivers/target/target_core_tmr.c
+>> index b65d7a0a5df1..39d93357db65 100644
+>> --- a/drivers/target/target_core_tmr.c
+>> +++ b/drivers/target/target_core_tmr.c
+>> @@ -116,6 +116,7 @@ void core_tmr_abort_task(
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct se_tmr_req *tmr,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct se_session *se_sess)
+>> =C2=A0 {
+>> +=C2=A0=C2=A0=C2=A0 LIST_HEAD(aborted_list);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct se_cmd *se_cmd, *next;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned long flags;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool rc;
+>> @@ -144,7 +145,7 @@ void core_tmr_abort_task(
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!rc)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 continue;
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 list_del_init(&se_cmd->sta=
+te_list);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 list_move_tail(&se_cmd->st=
+ate_list, &aborted_list);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 se_cmd->state_a=
+ctive =3D false;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_irq=
+restore(&dev->execute_task_lock, flags);
+>> @@ -157,6 +158,11 @@ void core_tmr_abort_task(
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 WARN_ON_ONCE(transport_lookup_tmr_lun(tmr->task_cmd) <
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (dev->transport->tmr_no=
+tify)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 de=
+v->transport->tmr_notify(dev, TMR_ABORT_TASK,
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 &aborted_list);
+>> +
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 list_del_init(&se_cmd->sta=
+te_list);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 target_put_cmd_=
+and_wait(se_cmd);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 printk("ABORT_T=
+ASK: Sending TMR_FUNCTION_COMPLETE for"
+>> @@ -167,6 +173,9 @@ void core_tmr_abort_task(
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_irqrestore(&dev->execute_ta=
+sk_lock, flags);
+>> +=C2=A0=C2=A0=C2=A0 if (dev->transport->tmr_notify)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dev->transport->tmr_notify=
+(dev, TMR_ABORT_TASK, &aborted_list);
+>=20
+> Is this needed? It seems like the backend can't do anything because=20
+> there isn't enough info.
+>=20
+> I saw in tcmu_tmr_notify it looks when then happens we can still do=20
+> queue_tmr_ring, but there would be no commands. Was that intentional?
 
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Yes, it is intentional. I see two purposes for backend tmr notification:
 
-Pls merge with the rest of the patches (which tree is this for?)
+1) Allow backend (userspace) to cancel long running command execution if
+    possible, which then makes the core more 'responsive' to TMRs
 
-> ---
->  drivers/scsi/virtio_scsi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 0e0910c5b9424..56875467e4984 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -100,7 +100,7 @@ static void virtscsi_compute_resid(struct scsi_cmnd *sc, u32 resid)
->  		scsi_set_resid(sc, resid);
->  }
->  
-> -/**
-> +/*
->   * virtscsi_complete_cmd - finish a scsi_cmd and invoke scsi_done
->   *
->   * Called with vq_lock held.
-> -- 
-> 2.25.1
-
+2) Tracing. If a userspace device emulation does tracing, it would be
+    good to see an ABORT_TASK in trace even if core does not find the
+    aborted cmd. The reason for this e.g. can be, that userspace and tcmu
+    complete a command while initiator times out and sends ABORT_TASK.
+    In that case ABORT_TASK in trace is helpful, because initiator will
+    not accept the command completion but start some error handling.
+    Without the ABORT_TASK entry the trace would not show the reason for
+    error handling.
