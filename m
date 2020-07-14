@@ -2,87 +2,89 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 355BAC433E8
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:54:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9587C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 11:11:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DCEF22200
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:54:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0B0F21D90
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 11:11:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727029AbgGNKym (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 06:54:42 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2475 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726766AbgGNKym (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 06:54:42 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 1DDF1E633BEEA8E59113;
-        Tue, 14 Jul 2020 11:54:40 +0100 (IST)
-Received: from [127.0.0.1] (10.47.10.169) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 14 Jul
- 2020 11:54:38 +0100
-Subject: Re: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-To:     Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>
-CC:     <don.brace@microsemi.com>, <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
-        <sumit.saxena@broadcom.com>, <bvanassche@acm.org>, <hare@suse.com>,
-        <hch@lst.de>, <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-13-git-send-email-john.garry@huawei.com>
- <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
- <3b3ead84-5d2f-dcf2-33d5-6aa12d5d9f7e@suse.de>
- <4319615a-220b-3629-3bf4-1e7fd2d27b92@huawei.com>
- <20200714080631.GA600766@T590>
- <3584bcc3-830a-d50d-bb55-8ac0b686cdc0@huawei.com>
- <799af415-cb02-278e-1af2-c6179a94a8a8@suse.de> <20200714104437.GB602708@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <2da0e06c-f6b5-ee5a-1806-e5356ccf8841@huawei.com>
-Date:   Tue, 14 Jul 2020 11:52:52 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <20200714104437.GB602708@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.10.169]
-X-ClientProxiedBy: lhreml738-chm.china.huawei.com (10.201.108.188) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S1727825AbgGNLL7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 07:11:59 -0400
+Received: from out1.zte.com.cn ([202.103.147.172]:3532 "EHLO mxct.zte.com.cn"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726252AbgGNLL7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 07:11:59 -0400
+X-Greylist: delayed 932 seconds by postgrey-1.27 at vger.kernel.org; Tue, 14 Jul 2020 07:11:58 EDT
+Received: from mse-fl1.zte.com.cn (unknown [10.30.14.238])
+        by Forcepoint Email with ESMTPS id 58476E37E1D18590D425;
+        Tue, 14 Jul 2020 18:56:24 +0800 (CST)
+Received: from notes_smtp.zte.com.cn (notes_smtp.zte.com.cn [10.30.1.239])
+        by mse-fl1.zte.com.cn with ESMTP id 06EAuIRN053109;
+        Tue, 14 Jul 2020 18:56:18 +0800 (GMT-8)
+        (envelope-from wang.yi59@zte.com.cn)
+Received: from fox-host8.localdomain ([10.74.120.8])
+          by szsmtp06.zte.com.cn (Lotus Domino Release 8.5.3FP6)
+          with ESMTP id 2020071418563168-4282341 ;
+          Tue, 14 Jul 2020 18:56:31 +0800 
+From:   Yi Wang <wang.yi59@zte.com.cn>
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, xue.zhihong@zte.com.cn,
+        wang.yi59@zte.com.cn, wang.liang82@zte.com.cn,
+        Liao Pingfang <liao.pingfang@zte.com.cn>
+Subject: [PATCH] scsi: imm: Remove superfluous breaks
+Date:   Tue, 14 Jul 2020 18:59:27 +0800
+Message-Id: <1594724367-11593-1-git-send-email-wang.yi59@zte.com.cn>
+X-Mailer: git-send-email 1.8.3.1
+X-MIMETrack: Itemize by SMTP Server on SZSMTP06/server/zte_ltd(Release 8.5.3FP6|November
+ 21, 2013) at 2020-07-14 18:56:31,
+        Serialize by Router on notes_smtp/zte_ltd(Release 9.0.1FP7|August  17, 2016) at
+ 2020-07-14 18:56:20,
+        Serialize complete at 2020-07-14 18:56:20
+X-MAIL: mse-fl1.zte.com.cn 06EAuIRN053109
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> 
-> In my machine, there are 32 queues(32 cpu cores), each queue has 1013
-> tags, so there can be 32*1013 requests coming from block layer, meantime
-> smartpqi can only handles 1013 requests. I guess it isn't hard to
-> trigger softlock by running heavy/concurrent smartpqi IO.
+From: Liao Pingfang <liao.pingfang@zte.com.cn>
 
-Since pqi_alloc_io_request() does not use spinlock, disable preemption, 
-etc., so I guess that there is more of a chance of simply IO timeout.
+Remove superfluous breaks, as there is a "return" before them.
 
-But I see in pqi_get_physical_disk_info() that there is some 
-intelligence to set the queue depth, which may reduce chance of timeout 
-(by reducing disk queue depth). Not sure.
+Signed-off-by: Liao Pingfang <liao.pingfang@zte.com.cn>
+Signed-off-by: Yi Wang <wang.yi59@zte.com.cn>
+---
+ drivers/scsi/imm.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-> 
->>
->> And the point of this patchset is exactly that the block layer will only
->> send up to 'can_queue' requests, irrespective on how many hardware
->> queues are present.
-> 
-> That is only true for shared tags.
-> 
-
-Thanks,
-John
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 2519fb7..1459b14 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -903,7 +903,6 @@ static int imm_engine(imm_struct *dev, struct scsi_cmnd *cmd)
+ 			w_ctr(ppb, 0x4);
+ 		}
+ 		return 0;	/* Finished */
+-		break;
+ 
+ 	default:
+ 		printk("imm: Invalid scsi phase\n");
+@@ -969,10 +968,8 @@ static int imm_abort(struct scsi_cmnd *cmd)
+ 	case 1:		/* Have not connected to interface */
+ 		dev->cur_cmd = NULL;	/* Forget the problem */
+ 		return SUCCESS;
+-		break;
+ 	default:		/* SCSI command sent, can not abort */
+ 		return FAILED;
+-		break;
+ 	}
+ }
+ 
+-- 
+2.9.5
 
