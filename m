@@ -7,56 +7,57 @@ X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 254F7C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 03:41:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE4D6C433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 03:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A7B720890
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 03:41:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1A6E206F0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 03:47:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726766AbgGNDlx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Jul 2020 23:41:53 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:36905 "EHLO
+        id S1726545AbgGNDrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Jul 2020 23:47:22 -0400
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:50315 "EHLO
         mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726768AbgGNDlx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 23:41:53 -0400
-Received: by mail-pj1-f67.google.com with SMTP id o22so884210pjw.2;
-        Mon, 13 Jul 2020 20:41:52 -0700 (PDT)
+        with ESMTP id S1726435AbgGNDrW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jul 2020 23:47:22 -0400
+Received: by mail-pj1-f67.google.com with SMTP id k71so933826pje.0;
+        Mon, 13 Jul 2020 20:47:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=FIkoYpJoY156GHlaAk/Z9PrJ8CxCxosbs70run2YrjM=;
-        b=nJS6RLlihVTrdRIr5nFAJUTDBXqio16yilTPkLc2Bp8bqTekx0ob9iuRmkl2zMVnIi
-         2WKIKcATTG9QsPdrS7ZXCUWzPjllfl4su7gR0jBuLztx8LraBw6N283/Dta9VnfdfpFB
-         hP3sbe4C/Jo75jvVEQ3ErECwj2Mmxe0wuQX69L8cHKsY6i4tQltOjQNipa+Pghyhg7B4
-         myNDjtrxsPx03cskVhG4A5TyDYtEeWfiHEFddxv8mhgh2mzbflFN9nv48Hd1QAD71km5
-         63gLSzgQAnpXODZj71I/5kCyyIwOVB9nzstL55vlWnhUAd3FzhHfI7hUL8xL8Zi8kRLV
-         sJGA==
-X-Gm-Message-State: AOAM532oCwdHYrXi7uvvl5Lxik30Qch6eyoON3oEBWGAdA75nM5E/ycd
-        Tf66kg6u96xDw4FFYYkoCi/o3IK4
-X-Google-Smtp-Source: ABdhPJzV0zDlFgGwGnecA8mDKdz1bBhuAchtA+8ZGU5FLtvGqIRgsog41df9pB3T3jZp/n6J7DC7Wg==
-X-Received: by 2002:a17:90a:d3d7:: with SMTP id d23mr2479430pjw.232.1594698111736;
-        Mon, 13 Jul 2020 20:41:51 -0700 (PDT)
+        bh=ZW7X7MiMm0piZVcnl+najW7cQiAtAEIaX/u1ZH2T6cM=;
+        b=Bkxhn/73U045pf9sq5AaCbHqGuJz4CSD34ZXPdbHu+w7LT2k9XxWrOOhilvtJmYCyq
+         Wy9GIRbgQmPziLjh0z0nBBtCKilhqawBQ1jRBPhmE6myBr6wNEzlxzwKi3SL4QlkeZSy
+         RC4dGod7P5p5o4m/Czb7WVX6gnyZLNgQ1zVhEmJ/48c8h8EhtZXQpAIKUdzm5YvUsabb
+         tDWRLx1V2u2AbpeZWluO/bPeEcL3LYlb1m/tYSNhgGIu3zrIe5YwwPNuBd0Ug4+gqlwg
+         RfnT7vFkg4nKLcLBH1PSrvmLbIp3RrcR2rBPRL/Q8Y0NPkKv39G7uDukXkfOAebA1wG6
+         Iy0g==
+X-Gm-Message-State: AOAM532XVh2kzQ2/YrGE5/Dgqgmjesm5EpSJ/0qk8Xwcu95xjgLPWBh1
+        BrEp8D1+AUuJBqrbZxlSvLeG1NOP
+X-Google-Smtp-Source: ABdhPJw4nTTlAcX8d+BhUjxjdiFwhbDwVyk1t/I78GmhUejlpVVnVlmgNC4Agenn3OiQSj2VnHfthA==
+X-Received: by 2002:a17:902:a50c:: with SMTP id s12mr2162224plq.119.1594698440688;
+        Mon, 13 Jul 2020 20:47:20 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id x3sm15749338pfn.154.2020.07.13.20.41.50
+        by smtp.gmail.com with ESMTPSA id az16sm890478pjb.7.2020.07.13.20.47.18
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Jul 2020 20:41:50 -0700 (PDT)
-Subject: Re: [PATCH v2 2/4] scsi: ufs: Fix imbalanced scsi_block_reqs_cnt
- caused by ufshcd_hold()
+        Mon, 13 Jul 2020 20:47:19 -0700 (PDT)
+Subject: Re: [PATCH v2 3/4] ufs: ufs-qcom: Fix a few BUGs in func
+ ufs_qcom_dump_dbg_regs()
 To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
         rnayak@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
 References: <1594693693-22466-1-git-send-email-cang@codeaurora.org>
- <1594693693-22466-3-git-send-email-cang@codeaurora.org>
+ <1594693693-22466-4-git-send-email-cang@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -81,12 +82,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <5470be4c-cfa4-ebe5-a817-e53f26c7eaf6@acm.org>
-Date:   Mon, 13 Jul 2020 20:41:49 -0700
+Message-ID: <7b0f8a73-d49d-eb7d-defe-8e77a49064ae@acm.org>
+Date:   Mon, 13 Jul 2020 20:47:18 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <1594693693-22466-3-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1594693693-22466-4-git-send-email-cang@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -96,49 +97,64 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020-07-13 19:28, Can Guo wrote:
-> The scsi_block_reqs_cnt increased in ufshcd_hold() is supposed to be
-> decreased back in ufshcd_ungate_work() in a paired way. However, if
-> specific ufshcd_hold/release sequences are met, it is possible that
-> scsi_block_reqs_cnt is increased twice but only one ungate work is
-> queued. To make sure scsi_block_reqs_cnt is handled by ufshcd_hold() and
-> ufshcd_ungate_work() in a paired way, increase it only if queue_work()
-> returns true.
+> Dumping testbus registers needs to sleep a bit intermittently as there are
+> too many of them. Skip them for those contexts where sleep is not allowed.
+> 
+> Meanwhile, if ufs_qcom_dump_dbg_regs() calls ufs_qcom_testbus_config() from
+> ufshcd_suspend/resume and/or clk gate/ungate context, pm_runtime_get_sync()
+> and ufshcd_hold() will cause racing problems. Fix it by removing the
+> unnecessary calls of pm_runtime_get_sync() and ufshcd_hold().
 > 
 > Signed-off-by: Can Guo <cang@codeaurora.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  drivers/scsi/ufs/ufs-qcom.c | 17 +++++++----------
+>  1 file changed, 7 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index ebf7a95..33214bb 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1611,12 +1611,12 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
->  		 */
->  		/* fallthrough */
->  	case CLKS_OFF:
-> -		ufshcd_scsi_block_requests(hba);
->  		hba->clk_gating.state = REQ_CLKS_ON;
->  		trace_ufshcd_clk_gating(dev_name(hba->dev),
->  					hba->clk_gating.state);
-> -		queue_work(hba->clk_gating.clk_gating_workq,
-> -			   &hba->clk_gating.ungate_work);
-> +		if (queue_work(hba->clk_gating.clk_gating_workq,
-> +			       &hba->clk_gating.ungate_work))
-> +			ufshcd_scsi_block_requests(hba);
->  		/*
->  		 * fall through to check if we should wait for this
->  		 * work to be done or not.
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 2e6ddb5..3743c17 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1604,9 +1604,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+>  	 */
+>  	}
+>  	mask <<= offset;
+> -
+> -	pm_runtime_get_sync(host->hba->dev);
+> -	ufshcd_hold(host->hba, false);
+>  	ufshcd_rmwl(host->hba, TEST_BUS_SEL,
+>  		    (u32)host->testbus.select_major << 19,
+>  		    REG_UFS_CFG1);
+> @@ -1619,8 +1616,6 @@ int ufs_qcom_testbus_config(struct ufs_qcom_host *host)
+>  	 * committed before returning.
+>  	 */
+>  	mb();
+> -	ufshcd_release(host->hba);
+> -	pm_runtime_put_sync(host->hba->dev);
+>  
+>  	return 0;
+>  }
+> @@ -1658,11 +1653,13 @@ static void ufs_qcom_dump_dbg_regs(struct ufs_hba *hba)
+>  
+>  	/* sleep a bit intermittently as we are dumping too much data */
+>  	ufs_qcom_print_hw_debug_reg_all(hba, NULL, ufs_qcom_dump_regs_wrapper);
+> -	udelay(1000);
+> -	ufs_qcom_testbus_read(hba);
+> -	udelay(1000);
+> -	ufs_qcom_print_unipro_testbus(hba);
+> -	udelay(1000);
+> +	if (in_task()) {
+> +		udelay(1000);
+> +		ufs_qcom_testbus_read(hba);
+> +		udelay(1000);
+> +		ufs_qcom_print_unipro_testbus(hba);
+> +		udelay(1000);
+> +	}
+>  }
 
-Since "ungate_work" involves calling ufshcd_scsi_unblock_requests() and
-since this patch changes the order in which ufshcd_scsi_block_requests()
-and queue_work() are called, I think this patch introduces a race
-condition. Has it been considered to leave the ufshcd_scsi_block_requests()
-call where it is and to call ufshcd_scsi_unblock_requests() if
-queue_work() fails?
+It is not clear to me how udelay() calls can help in code that takes long
+since these functions use busy-waiting? Should the udelay() calls perhaps
+be changed into cond_resched() calls?
 
 Thanks,
 
 Bart.
-
-
