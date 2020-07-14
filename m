@@ -2,115 +2,139 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7ECCC433EA
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B23A0C433F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8438C2251D
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:23:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JMk16yBQ"
+	by mail.kernel.org (Postfix) with ESMTP id 8D4992251E
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594737568;
+	bh=ZMywclo+5R/Gc/XvHS3+MFq+PuAks1cUnMcIkj5lS4k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=hFAOzeAJdf+4pV26eyBzPdj03Kav2bJBJV1Rd1jatBnpfj1/tjPct2rH99WP1MimT
+	 2Cyxd2y7uk+qLZyowya7G9/wzL7YVDXZVzLTczH4EJlm2X//Vc8JjNvAZA0bLGWS4B
+	 u0BLbWsOPAYzXYhTeCLO6yn3wW10wdMaaTWsibGA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728777AbgGNOXd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 10:23:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53060 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728767AbgGNOX2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 10:23:28 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4F12C061794
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 07:23:27 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id s10so21925247wrw.12
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 07:23:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=+XB0FMKuppgq4ltckLknQrvpl9WV3rgpMyG5Av27BWg=;
-        b=JMk16yBQUPUZ6gxqBeByLmVDx4mOjjb1cQBJz7HbdIRAau3VnH8I3fIB5KgOV9F428
-         jVz+WcRwlk6q7PmehC9LV2k2R3Q239BZKoOp03NTTHlCoubklxgj4X9lx6Hv1DTi2veR
-         6K+iWUCaicRDpcZr1orM7MTz7Lf2ieJCRSPJYj1NaPqRzdsMjsus5LZBSwAcPfnzqc65
-         DCHBqYgBwUJ7V0UUZD9PS8RGH9USZvFwehH/HNEkwMPejvRM4mVUsU8GVM109mcQUxO1
-         9UhyNCvlziedmeMebcDBeo22muADCSJiX0umqAJDV5EVQGp07JJmmuaAUIkOGAS03g0N
-         q6iQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=+XB0FMKuppgq4ltckLknQrvpl9WV3rgpMyG5Av27BWg=;
-        b=OR99YWCnXgfxTkUCRuVkU19YtNnKysZaZoe05AjekX6fTAQJtPXO99Z3AR5IDlLCZH
-         L1gZMDeZeRxB2W4juSFbJFvh1LWd3qQJ02s7DpKDcfTioUGD9M3DNRJW2FLGMTjyJe6U
-         Gvrhhaz+1V+C4ts/eAk+0JzKXnWOUhTYmTJ5IdP5T5gajcm18w/KK3U/G+xmBjURfSD6
-         dhlatR/+Gn3vbuXVWGE7B7JjZg+H+dNvCK/yHZnFZKMRYDlOTo+MA3wYE2ipiffTfeBv
-         p9DYwxiyKSZgxBgkb144ianYaMpIdoVQQuNmxkEe/DqRdz7rBBQspjNTm6+1TKEbIWKT
-         vWHw==
-X-Gm-Message-State: AOAM530IP3uXLGohuYFJ5c72Re7frIWcERSc4SZQ6f98mIAyvkyZdubc
-        RWVWF2L1q16idvv8mtZW+Nky1A==
-X-Google-Smtp-Source: ABdhPJxhrqDOQ6E+DeR8LfASUhGAMwlZ4Mg3y3JEhR8OJgyB3KcvVv/uXU3ze5rXDoW8FSqffXqNyA==
-X-Received: by 2002:adf:e908:: with SMTP id f8mr5844532wrm.3.1594736606613;
-        Tue, 14 Jul 2020 07:23:26 -0700 (PDT)
-Received: from dell ([2.31.163.61])
-        by smtp.gmail.com with ESMTPSA id j6sm29991962wro.25.2020.07.14.07.23.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2020 07:23:26 -0700 (PDT)
-Date:   Tue, 14 Jul 2020 15:23:24 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 05/29] scsi: fcoe: fcoe_ctlr: Fix a myriad of
- documentation issues
-Message-ID: <20200714142324.GC1398296@dell>
-References: <20200713074645.126138-1-lee.jones@linaro.org>
- <20200713074645.126138-6-lee.jones@linaro.org>
- <yq1lfjmqji1.fsf@ca-mkp.ca.oracle.com>
+        id S1728945AbgGNOj2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 10:39:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54716 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728932AbgGNOj0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 10:39:26 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D5C9B2256D;
+        Tue, 14 Jul 2020 14:39:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594737565;
+        bh=ZMywclo+5R/Gc/XvHS3+MFq+PuAks1cUnMcIkj5lS4k=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=O2/8sE/97MnDtfsmmLsz+E6qNBEGVGVow+oDigAZSVf7YHX+E8rYs1jecrUPlLAer
+         bvC535YQ+BZ/QR5eWLKM8icmdch+K285lypNuewYNQ/UU1QMSISrmEO5jGKgPwsqmg
+         8F4HwfinyYZUXCJkidv4g1AIoGCdt0ahrHdfLfYs=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 09/18] scsi: mpt3sas: Fix unlock imbalance
+Date:   Tue, 14 Jul 2020 10:39:05 -0400
+Message-Id: <20200714143914.4035489-9-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200714143914.4035489-1-sashal@kernel.org>
+References: <20200714143914.4035489-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <yq1lfjmqji1.fsf@ca-mkp.ca.oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 14 Jul 2020, Martin K. Petersen wrote:
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-> 
-> Lee,
+[ Upstream commit cb551b8dc079d2ef189145782627c99cb68c0255 ]
 
-Ah, you are alive.  I was beginning to worry. :)
+In BRM_status_show(), if the condition "!ioc->is_warpdrive" tested on entry
+to the function is true, a "goto out" is called. This results in unlocking
+ioc->pci_access_mutex without this mutex lock being taken.  This generates
+the following splat:
 
-I have more fixes for you, but didn't want to send them until these
-have been merged.
+[ 1148.539883] mpt3sas_cm2: BRM_status_show: BRM attribute is only for warpdrive
+[ 1148.547184]
+[ 1148.548708] =====================================
+[ 1148.553501] WARNING: bad unlock balance detected!
+[ 1148.558277] 5.8.0-rc3+ #827 Not tainted
+[ 1148.562183] -------------------------------------
+[ 1148.566959] cat/5008 is trying to release lock (&ioc->pci_access_mutex) at:
+[ 1148.574035] [<ffffffffc070b7a3>] BRM_status_show+0xd3/0x100 [mpt3sas]
+[ 1148.580574] but there are no more locks to release!
+[ 1148.585524]
+[ 1148.585524] other info that might help us debug this:
+[ 1148.599624] 3 locks held by cat/5008:
+[ 1148.607085]  #0: ffff92aea3e392c0 (&p->lock){+.+.}-{3:3}, at: seq_read+0x34/0x480
+[ 1148.618509]  #1: ffff922ef14c4888 (&of->mutex){+.+.}-{3:3}, at: kernfs_seq_start+0x2a/0xb0
+[ 1148.630729]  #2: ffff92aedb5d7310 (kn->active#224){.+.+}-{0:0}, at: kernfs_seq_start+0x32/0xb0
+[ 1148.643347]
+[ 1148.643347] stack backtrace:
+[ 1148.655259] CPU: 73 PID: 5008 Comm: cat Not tainted 5.8.0-rc3+ #827
+[ 1148.665309] Hardware name: HGST H4060-S/S2600STB, BIOS SE5C620.86B.02.01.0008.031920191559 03/19/2019
+[ 1148.678394] Call Trace:
+[ 1148.684750]  dump_stack+0x78/0xa0
+[ 1148.691802]  lock_release.cold+0x45/0x4a
+[ 1148.699451]  __mutex_unlock_slowpath+0x35/0x270
+[ 1148.707675]  BRM_status_show+0xd3/0x100 [mpt3sas]
+[ 1148.716092]  dev_attr_show+0x19/0x40
+[ 1148.723664]  sysfs_kf_seq_show+0x87/0x100
+[ 1148.731193]  seq_read+0xbc/0x480
+[ 1148.737882]  vfs_read+0xa0/0x160
+[ 1148.744514]  ksys_read+0x58/0xd0
+[ 1148.751129]  do_syscall_64+0x4c/0xa0
+[ 1148.757941]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[ 1148.766240] RIP: 0033:0x7f1230566542
+[ 1148.772957] Code: Bad RIP value.
+[ 1148.779206] RSP: 002b:00007ffeac1bcac8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[ 1148.790063] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f1230566542
+[ 1148.800284] RDX: 0000000000020000 RSI: 00007f1223460000 RDI: 0000000000000003
+[ 1148.810474] RBP: 00007f1223460000 R08: 00007f122345f010 R09: 0000000000000000
+[ 1148.820641] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000000000
+[ 1148.830728] R13: 0000000000000003 R14: 0000000000020000 R15: 0000000000020000
 
-> > @@ -3015,9 +3016,8 @@ static void fcoe_ctlr_disc_recv(struct fc_lport *lport, struct fc_frame *fp)
-> >  	fc_frame_free(fp);
-> >  }
-> >  
-> > -/**
-> > +/*
-> >   * fcoe_ctlr_disc_recv - start discovery for VN2VN mode.
-> > - * @fip: The FCoE controller
-> >   *
-> >   * This sets a flag indicating that remote ports should be created
-> >   * and started for the peers we discover.  We use the disc_callback
-> 
-> s/fcoe_ctlr_disc_recv/fcoe_ctlr_disc_start/ ?
+Fix this by returning immediately instead of jumping to the out label.
 
-Yes, I spotted it.  Hence my earlier comment to Hannes:
+Link: https://lore.kernel.org/r/20200701085254.51740-1-damien.lemoal@wdc.com
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- "Look at the function below it (in your local copy). ;)"
-
-Do you want me to fix that up here as well?
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index b95f7d062ea44..82c4ecc16f191 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2921,7 +2921,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 	if (!ioc->is_warpdrive) {
+ 		ioc_err(ioc, "%s: BRM attribute is only for warpdrive\n",
+ 			__func__);
+-		goto out;
++		return 0;
+ 	}
+ 	/* pci_access_mutex lock acquired by sysfs show path */
+ 	mutex_lock(&ioc->pci_access_mutex);
 -- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+2.25.1
+
