@@ -2,214 +2,125 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50843C433EB
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F7EC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:41:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 271C7205CB
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:40:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DCFD20890
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:41:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726908AbgGNHjN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 03:39:13 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2471 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726867AbgGNHjM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 03:39:12 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id 364EF8FD5691EF94FDA6;
-        Tue, 14 Jul 2020 08:39:10 +0100 (IST)
-Received: from [127.0.0.1] (10.47.10.169) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 14 Jul
- 2020 08:39:08 +0100
+        id S1726062AbgGNHlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 03:41:37 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60792 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725876AbgGNHlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 03:41:37 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 4315EB0A5;
+        Tue, 14 Jul 2020 07:41:37 +0000 (UTC)
 Subject: Re: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-From:   John Garry <john.garry@huawei.com>
-To:     <don.brace@microsemi.com>, Hannes Reinecke <hare@suse.de>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
-        <sumit.saxena@broadcom.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <hare@suse.com>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>
+To:     John Garry <john.garry@huawei.com>, don.brace@microsemi.com
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        shivasharan.srikanteshwara@broadcom.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        megaraidlinux.pdl@broadcom.com
 References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
  <1591810159-240929-13-git-send-email-john.garry@huawei.com>
-Message-ID: <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
-Date:   Tue, 14 Jul 2020 08:37:23 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+ <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <3b3ead84-5d2f-dcf2-33d5-6aa12d5d9f7e@suse.de>
+Date:   Tue, 14 Jul 2020 09:41:34 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <1591810159-240929-13-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.10.169]
-X-ClientProxiedBy: lhreml738-chm.china.huawei.com (10.201.108.188) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/06/2020 18:29, John Garry wrote:
-> From: Hannes Reinecke <hare@suse.de>
+On 7/14/20 9:37 AM, John Garry wrote:
+> On 10/06/2020 18:29, John Garry wrote:
+>> From: Hannes Reinecke <hare@suse.de>
+>>
+>> The smart array HBAs can steer interrupt completion, so this
+>> patch switches the implementation to use multiqueue and enables
+>> 'host_tagset' as the HBA has a shared host-wide tagset.
+>>
 > 
-> The smart array HBAs can steer interrupt completion, so this
-> patch switches the implementation to use multiqueue and enables
-> 'host_tagset' as the HBA has a shared host-wide tagset.
+> Hi Don,
 > 
-
-Hi Don,
-
-I am preparing the next iteration of this series, and we're getting 
-close to dropping the RFC tags. The series has grown a bit, and I am not 
-sure what to do with hpsa support.
-
-The latest versions of this series have not been tested for hpsa, AFAIK. 
-Can you let me know if you can test and review this patch? Or someone 
-else let me know it's tested (Hannes?)
-
-Thanks
-
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/scsi/hpsa.c | 44 +++++++-------------------------------------
->   drivers/scsi/hpsa.h |  1 -
->   2 files changed, 7 insertions(+), 38 deletions(-)
+> I am preparing the next iteration of this series, and we're getting
+> close to dropping the RFC tags. The series has grown a bit, and I am not
+> sure what to do with hpsa support.
 > 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index 1e9302e99d05..f807f9bdae85 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -980,6 +980,7 @@ static struct scsi_host_template hpsa_driver_template = {
->   	.shost_attrs = hpsa_shost_attrs,
->   	.max_sectors = 2048,
->   	.no_write_same = 1,
-> +	.host_tagset = 1,
->   };
->   
->   static inline u32 next_command(struct ctlr_info *h, u8 q)
-> @@ -1144,12 +1145,14 @@ static void dial_up_lockup_detection_on_fw_flash_complete(struct ctlr_info *h,
->   static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
->   	struct CommandList *c, int reply_queue)
->   {
-> +	u32 blk_tag = blk_mq_unique_tag(c->scsi_cmd->request);
-> +
->   	dial_down_lockup_detection_during_fw_flash(h, c);
->   	atomic_inc(&h->commands_outstanding);
->   	if (c->device)
->   		atomic_inc(&c->device->commands_outstanding);
->   
-> -	reply_queue = h->reply_map[raw_smp_processor_id()];
-> +	reply_queue = blk_mq_unique_tag_to_hwq(blk_tag);
->   	switch (c->cmd_type) {
->   	case CMD_IOACCEL1:
->   		set_ioaccel1_performant_mode(h, c, reply_queue);
-> @@ -5653,8 +5656,6 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
->   	/* Get the ptr to our adapter structure out of cmd->host. */
->   	h = sdev_to_hba(cmd->device);
->   
-> -	BUG_ON(cmd->request->tag < 0);
-> -
->   	dev = cmd->device->hostdata;
->   	if (!dev) {
->   		cmd->result = DID_NO_CONNECT << 16;
-> @@ -5830,7 +5831,7 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
->   	sh->hostdata[0] = (unsigned long) h;
->   	sh->irq = pci_irq_vector(h->pdev, 0);
->   	sh->unique_id = sh->irq;
-> -
-> +	sh->nr_hw_queues = h->msix_vectors > 0 ? h->msix_vectors : 1;
->   	h->scsi_host = sh;
->   	return 0;
->   }
-> @@ -5856,7 +5857,8 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
->    */
->   static int hpsa_get_cmd_index(struct scsi_cmnd *scmd)
->   {
-> -	int idx = scmd->request->tag;
-> +	u32 blk_tag = blk_mq_unique_tag(scmd->request);
-> +	int idx = blk_mq_unique_tag_to_tag(blk_tag);
->   
->   	if (idx < 0)
->   		return idx;
-> @@ -7456,26 +7458,6 @@ static void hpsa_disable_interrupt_mode(struct ctlr_info *h)
->   	h->msix_vectors = 0;
->   }
->   
-> -static void hpsa_setup_reply_map(struct ctlr_info *h)
-> -{
-> -	const struct cpumask *mask;
-> -	unsigned int queue, cpu;
-> -
-> -	for (queue = 0; queue < h->msix_vectors; queue++) {
-> -		mask = pci_irq_get_affinity(h->pdev, queue);
-> -		if (!mask)
-> -			goto fallback;
-> -
-> -		for_each_cpu(cpu, mask)
-> -			h->reply_map[cpu] = queue;
-> -	}
-> -	return;
-> -
-> -fallback:
-> -	for_each_possible_cpu(cpu)
-> -		h->reply_map[cpu] = 0;
-> -}
-> -
->   /* If MSI/MSI-X is supported by the kernel we will try to enable it on
->    * controllers that are capable. If not, we use legacy INTx mode.
->    */
-> @@ -7872,9 +7854,6 @@ static int hpsa_pci_init(struct ctlr_info *h)
->   	if (err)
->   		goto clean1;
->   
-> -	/* setup mapping between CPU and reply queue */
-> -	hpsa_setup_reply_map(h);
-> -
->   	err = hpsa_pci_find_memory_BAR(h->pdev, &h->paddr);
->   	if (err)
->   		goto clean2;	/* intmode+region, pci */
-> @@ -8613,7 +8592,6 @@ static struct workqueue_struct *hpsa_create_controller_wq(struct ctlr_info *h,
->   
->   static void hpda_free_ctlr_info(struct ctlr_info *h)
->   {
-> -	kfree(h->reply_map);
->   	kfree(h);
->   }
->   
-> @@ -8622,14 +8600,6 @@ static struct ctlr_info *hpda_alloc_ctlr_info(void)
->   	struct ctlr_info *h;
->   
->   	h = kzalloc(sizeof(*h), GFP_KERNEL);
-> -	if (!h)
-> -		return NULL;
-> -
-> -	h->reply_map = kcalloc(nr_cpu_ids, sizeof(*h->reply_map), GFP_KERNEL);
-> -	if (!h->reply_map) {
-> -		kfree(h);
-> -		return NULL;
-> -	}
->   	return h;
->   }
->   
-> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-> index f8c88fc7b80a..ea4a609e3eb7 100644
-> --- a/drivers/scsi/hpsa.h
-> +++ b/drivers/scsi/hpsa.h
-> @@ -161,7 +161,6 @@ struct bmic_controller_parameters {
->   #pragma pack()
->   
->   struct ctlr_info {
-> -	unsigned int *reply_map;
->   	int	ctlr;
->   	char	devname[8];
->   	char    *product_name;
-> 
+> The latest versions of this series have not been tested for hpsa, AFAIK.
+> Can you let me know if you can test and review this patch? Or someone
+> else let me know it's tested (Hannes?)
+> I'll give it a go.
 
+Which git repository should I base the tests on?
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
