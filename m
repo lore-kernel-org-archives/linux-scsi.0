@@ -2,101 +2,72 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF9BC433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 04:59:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07860C433E6
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 06:47:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 800372193E
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 04:59:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zhsoOm3N"
+	by mail.kernel.org (Postfix) with ESMTP id DAA52221F0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 06:47:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725906AbgGNE7B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 00:59:01 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:37574 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725355AbgGNE7A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 00:59:00 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06E4vVSk172890;
-        Tue, 14 Jul 2020 04:58:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=RLaIa/I6HqRzn5xMEjyR5F2vSVuUvzsasBEBKIz7svU=;
- b=zhsoOm3NZNSSQMgisgcq6QD2vVXgA/S6vynvztS2yl26tIUafm+61Jf5q2TRQaiBBR0w
- CCmbqDRmIdWZEfGNwEoQ+sExJSEZxqvsJI/yvSlIYadJQLUfMqoTPKzRn5AI/OFIkNDY
- Enx6+Spd5SkD/bNw50cEthoUHa319RHzRkDGuK8HRWhenoPxm8qTFExXazkbxZrdga5+
- mSAJgEv1kRYCFTbomIuMFG2ZsCfNW/JoE9OamvzNjYoLiqe+Wt/4xPWgGp1dTz8XtL2x
- FR5SKHPbsZJ3jRPRHsi+1boI77K4CyeV+YgZy7hb9Ki1d0uIsuN/z/j7oRjpgBgl6A2t ww== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 3275cm2x2x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 14 Jul 2020 04:58:53 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06E4vXi2174066;
-        Tue, 14 Jul 2020 04:58:53 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 327qb2nuhr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jul 2020 04:58:53 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06E4wpuq025057;
-        Tue, 14 Jul 2020 04:58:51 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 13 Jul 2020 21:58:51 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>, hare@suse.de,
-        jejb@linux.vnet.ibm.com
-Subject: Re: [PATCH 0/2] scsi_debug: every_nth cleanup, url + version
-Date:   Tue, 14 Jul 2020 00:58:41 -0400
-Message-Id: <159470266468.11195.13663399469617326524.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200712182927.72044-1-dgilbert@interlog.com>
-References: <20200712182927.72044-1-dgilbert@interlog.com>
+        id S1726252AbgGNGro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 02:47:44 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54560 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725925AbgGNGro (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 02:47:44 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 315BFACC6;
+        Tue, 14 Jul 2020 06:47:45 +0000 (UTC)
+Subject: Re: [PATCH v2 01/29] scsi: libfc: fc_exch: Supply some missing
+ kerneldoc struct/function attributes/params
+To:     Lee Jones <lee.jones@linaro.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20200713074645.126138-1-lee.jones@linaro.org>
+ <20200713074645.126138-2-lee.jones@linaro.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <2256a33b-3fc7-d9e9-ecb5-5160c7525b14@suse.de>
+Date:   Tue, 14 Jul 2020 08:47:41 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
+In-Reply-To: <20200713074645.126138-2-lee.jones@linaro.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9681 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007140037
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9681 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 priorityscore=1501
- bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007140037
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, 12 Jul 2020 14:29:25 -0400, Douglas Gilbert wrote:
-
-> It was becoming hard to follow exactly when to expect the error
-> injection facilities in this driver to fire. Sometimes injected
-> errors just didn't seem to happen.
+On 7/13/20 9:46 AM, Lee Jones wrote:
+> Fixes the following W=1 kernel build warning(s):
 > 
-> The error injection design was too complicated for what was
-> required. Simplify it and make it more consistent. The second
-> patch in this set does some housekeeping.
+>   drivers/scsi/libfc/fc_exch.c:66: warning: Function parameter or member 'left' not described in 'fc_exch_pool'
+>   drivers/scsi/libfc/fc_exch.c:66: warning: Function parameter or member 'right' not described in 'fc_exch_pool'
+>   drivers/scsi/libfc/fc_exch.c:100: warning: Function parameter or member 'lport' not described in 'fc_exch_mgr'
+>   drivers/scsi/libfc/fc_exch.c:727: warning: Function parameter or member 'ep' not described in 'fc_invoke_resp'
+>   drivers/scsi/libfc/fc_exch.c:727: warning: Function parameter or member 'sp' not described in 'fc_invoke_resp'
+>   drivers/scsi/libfc/fc_exch.c:727: warning: Function parameter or member 'fp' not described in 'fc_invoke_resp'
 > 
-> [...]
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> ---
+>   drivers/scsi/libfc/fc_exch.c | 7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Applied to 5.9/scsi-queue, thanks!
+Cheers,
 
-[1/2] scsi: scsi_debug: every_nth triggered error injection
-      https://git.kernel.org/mkp/scsi/c/3a90a63d02b8
-[2/2] scsi: scsi_debug: Update documentation url and bump version
-      https://git.kernel.org/mkp/scsi/c/30f67481a18b
-
+Hannes
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
