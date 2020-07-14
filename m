@@ -2,276 +2,166 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8203C433E7
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 21:18:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51942C433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 21:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D36520658
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 21:18:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26A3D2064C
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 21:40:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="P9kf152C"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hl2mRBj5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728315AbgGNVSn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 17:18:43 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:9520 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726446AbgGNVSn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 17:18:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1594761557; x=1626297557;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=WffFE44kU2ggfRwThMbpz3r9alO8QRLyGr1rkdfJfx0=;
-  b=P9kf152C3S4TFjVJC9F8t4wE9Kq+F5r+kxnYMpxXhP8jOu+HFPAlH8wp
-   3goz0yKthYhLwocWKoJ5aZuzY0qSmZ4u4VnMMhUe+iYgMkv/82O8RNSAz
-   kBPbyOvHmMGGa3JnN8/O2wWgT4SGAz8EYKT6MCoTSr63Gq2b+gsCGE635
-   KyBYhicYtS6SLQSv+5lxLfWyNq7FZIHyGEbz4EY7HusNuCZV+LYPr1dLU
-   709nF/BKJui82UCrhY++rUs3NQ5O9LfA04NXXhMIEmbAlVM35Qxf3Ry87
-   8FFiDMKztl//bQEFQCQAs3350KDTbPqA40BnkHTNe5P3LpIvBdhS3KaUA
-   A==;
-IronPort-SDR: T4zsodjCb0BBRibUoLAiR1YACdZS+cByxHGnsxx27KT0Mh4UmuxFn5TuGqfKkmmwb6k9sgRTyU
- qI+KiFU6avxynls/An4X+cHuHEoDJbUb8TpwDWYhVGFAfRGz33YfP/SIdOdkbOHOSPwr68w56z
- r0A748ghXWHutu8Fh0/OTIqxIEfBlx74L77s/tJdptI70jviuhZ5Zxo7BYwIic2pcpzBBXfNcM
- XF9jQzXbEgigxNXhmesOjLAuT6jCkhHRXCKW90dULS7a7K6DqyAmWWJN0SceDpiCHQpAXHnb/9
- 6Zc=
-X-IronPort-AV: E=Sophos;i="5.75,352,1589212800"; 
-   d="scan'208";a="245491618"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Jul 2020 05:19:16 +0800
-IronPort-SDR: 5nHZXhDyxloA6lWOceljG/ah/jKXa7X2e15SUiFiG4x3+s4MwAAkhRY044S043KFokDvn5dzzm
- D/C/5sa2a9iFAVrn7Qo3QahfagYqcXnWs=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2020 14:06:35 -0700
-IronPort-SDR: w1osPDgaPNeLW7r/e7WVVYlYwfeHy6h72qPQzg7oUoH+EyKkhcF6L/uqjwcBjp9PI+vynnl4h/
- dX4OXZDHTvcA==
-WDCIronportException: Internal
-Received: from usa003306.ad.shared (HELO localhost.hgst.com) ([10.86.57.226])
-  by uls-op-cesaip01.wdc.com with ESMTP; 14 Jul 2020 14:18:37 -0700
-From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Niklas Cassel <niklas.cassel@wdc.com>,
-        =?UTF-8?q?Javier=20Gonz=C3=A1lez?= <javier@javigon.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH v3 1/2] block: add max_open_zones to blk-sysfs
-Date:   Tue, 14 Jul 2020 23:18:23 +0200
-Message-Id: <20200714211824.759224-2-niklas.cassel@wdc.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200714211824.759224-1-niklas.cassel@wdc.com>
-References: <20200714211824.759224-1-niklas.cassel@wdc.com>
+        id S1728326AbgGNVj4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 17:39:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37206 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727999AbgGNVjz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 17:39:55 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D7C3C061794
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 14:39:55 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id j4so239429wrp.10
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 14:39:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=cmHcwmTccT13ZJXcb7SBLzTw/UgSDiTbBWL8nKbEfh8=;
+        b=hl2mRBj5TXYfXXlig2eChw0XasjMiOrb9AtRFxZdbPyHE59r5Wap6WzQTySOdEQUJI
+         tgFQc7fupgoqDrRc4Wn0CrupPbdEojws4yyp8xGLozYqdZ+6dSzfYy9qzKGkM5FV2Oot
+         JbUj+RtfHk/mhyglpCa+/0ezOc66UcAQVwVY/q5jd1U8RZZvcfbf5rWZ8jh+w0OB4ndd
+         BOAIKcnWA4EHnVvIftC76Fk+nsHIzerjm0BABgGduehlIa3KOS9RIL5mJPZMwTxnzhFc
+         6g0zZxbsTIbeQwd0MMdLVYaPZjRj2G5QXPIswenRv7L1YSXMhp26dAtHy6ZelPtw6+o6
+         cbyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=cmHcwmTccT13ZJXcb7SBLzTw/UgSDiTbBWL8nKbEfh8=;
+        b=PS4G/5/8YmVJQCcvDzKcsHdg3CR96ISD/AgsK7kIIoGfx1gt0BPKwLHo1AfTCsPGtS
+         5eZaGsi870hX7jXfV0WebjKPbf3UbZMfPPqYpb7LbWMrerr1Ut1RPmU5c13or/VVQ5Ue
+         7psQ3tFPh5FNHAJiCLVcRtMqmiNG553qwjjvnhhbj/hqdTcQl85AfBkxBdMqibTEODmM
+         brYfjA/+n4UUzAP1TdwKWc1eG4AD2OR29RThLM72gEOS23HVP78s0JsH7eaU/8C4xxZT
+         K967wnfkwn2RRcidpj8FJl6OaInnbClFJFCIfTX0CFjQRP72Ecbav/ZTMFMEsrLxsuJ8
+         AuOA==
+X-Gm-Message-State: AOAM532VImxenl8FYkZOdz0Oia9QDiIlYaDiuVBQIH6MjcergI1Xgumt
+        RfYK1/oPTrJsCrUh9kSBs+g8LQ==
+X-Google-Smtp-Source: ABdhPJxIEccNsYzkB+5beVgvKTvwXqRGoyrdzYXHMD7gkZ4Eq4nfKYrUQld8CLXdiaS/LHOlv5+6SQ==
+X-Received: by 2002:a5d:5388:: with SMTP id d8mr7829244wrv.35.1594762793831;
+        Tue, 14 Jul 2020 14:39:53 -0700 (PDT)
+Received: from dell ([2.31.163.61])
+        by smtp.gmail.com with ESMTPSA id v18sm26479wrv.49.2020.07.14.14.39.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2020 14:39:53 -0700 (PDT)
+Date:   Tue, 14 Jul 2020 22:39:51 +0100
+From:   Lee Jones <lee.jones@linaro.org>
+To:     James Bottomley <jejb@linux.ibm.com>
+Cc:     Hannes Reinecke <hare@suse.de>, martin.petersen@oracle.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH v2 24/24] scsi: aic7xxx: aic79xx_osm: Remove set but
+ unused variabes 'saved_scsiid' and 'saved_modes'
+Message-ID: <20200714213951.GL1398296@dell>
+References: <20200713080001.128044-1-lee.jones@linaro.org>
+ <20200713080001.128044-25-lee.jones@linaro.org>
+ <559e47de-fa26-9ae5-a3c5-4adeae606309@suse.de>
+ <1594741430.4545.15.camel@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <1594741430.4545.15.camel@linux.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add a new max_open_zones definition in the sysfs documentation.
-This definition will be common for all devices utilizing the zoned block
-device support in the kernel.
+On Tue, 14 Jul 2020, James Bottomley wrote:
 
-Export max open zones according to this new definition for NVMe Zoned
-Namespace devices, ZAC ATA devices (which are treated as SCSI devices by
-the kernel), and ZBC SCSI devices.
+> On Tue, 2020-07-14 at 09:46 +0200, Hannes Reinecke wrote:
+> > On 7/13/20 10:00 AM, Lee Jones wrote:
+> > > Haven't been used since 2006.
+> > > 
+> > > Fixes the following W=1 kernel build warning(s):
+> > > 
+> > >  drivers/scsi/aic7xxx/aic79xx_osm.c: In function
+> > > ‘ahd_linux_queue_abort_cmd’:
+> > >  drivers/scsi/aic7xxx/aic79xx_osm.c:2155:17: warning: variable
+> > > ‘saved_modes’ set but not used [-Wunused-but-set-variable]
+> > >  drivers/scsi/aic7xxx/aic79xx_osm.c:2148:9: warning: variable
+> > > ‘saved_scsiid’ set but not used [-Wunused-but-set-variable]
+> > > 
+> > > Cc: Hannes Reinecke <hare@suse.com>
+> > > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> > > ---
+> > >  drivers/scsi/aic7xxx/aic79xx_osm.c | 4 ----
+> > >  1 file changed, 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> > > b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> > > index 3782a20d58885..140c4e74ddd7e 100644
+> > > --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> > > +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> > > @@ -2141,14 +2141,12 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
+> > > *cmd)
+> > >  	u_int  saved_scbptr;
+> > >  	u_int  active_scbptr;
+> > >  	u_int  last_phase;
+> > > -	u_int  saved_scsiid;
+> > >  	u_int  cdb_byte;
+> > >  	int    retval;
+> > >  	int    was_paused;
+> > >  	int    paused;
+> > >  	int    wait;
+> > >  	int    disconnected;
+> > > -	ahd_mode_state saved_modes;
+> > >  	unsigned long flags;
+> > >  
+> > >  	pending_scb = NULL;
+> > > @@ -2239,7 +2237,6 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
+> > > *cmd)
+> > >  		goto done;
+> > >  	}
+> > >  
+> > > -	saved_modes = ahd_save_modes(ahd);
+> > >  	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
+> > >  	last_phase = ahd_inb(ahd, LASTPHASE);
+> > >  	saved_scbptr = ahd_get_scbptr(ahd);
+> > > @@ -2257,7 +2254,6 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
+> > > *cmd)
+> > >  	 * passed in command.  That command is currently active on
+> > > the
+> > >  	 * bus or is in the disconnected state.
+> > >  	 */
+> > > -	saved_scsiid = ahd_inb(ahd, SAVED_SCSIID);
+> > >  	if (last_phase != P_BUSFREE
+> > >  	    && SCB_GET_TAG(pending_scb) == active_scbptr) {
+> > >  
+> > > 
+> > 
+> > Reviewed-by: Hannes Reinecke <hare@suse.de>
+> 
+> Hey, you don't get to do that ... I asked you to figure out why we're
+> missing an ahd_restore_modes().  Removing the ahd_save_modes() is
+> cosmetic: it gets rid of a warning but doesn't fix the problem.  I'd
+> rather keep the warning until the problem is fixed and the problem is
+> we need a mode save/restore around the ahd_set_modes() which is only
+> partially implemented in this function.
 
-Add the new max_open_zones member to struct request_queue, rather
-than as a queue limit, since this property cannot be split across stacking
-drivers.
+I had a look.  Traced it back to the dawn of time (time == Git), then
+delved even further back by downloading and trawling through ~10-15
+tarballs.  It looks as though drivers/scsi/aic7xxx/aic79xx_osm.c was
+upstreamed in v2.5.60, nearly 20 years ago.  'saved_modes' has been
+unused since at least then.  If no one has complained in 2 decades,
+I'd say it probably isn't an issue worth perusing.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-Reviewed-by: Javier González <javier@javigon.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- Documentation/ABI/testing/sysfs-block |  9 +++++++++
- Documentation/block/queue-sysfs.rst   |  7 +++++++
- block/blk-sysfs.c                     | 15 +++++++++++++++
- drivers/nvme/host/zns.c               |  1 +
- drivers/scsi/sd_zbc.c                 |  4 ++++
- include/linux/blkdev.h                | 25 +++++++++++++++++++++++++
- 6 files changed, 61 insertions(+)
-
-diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
-index ed8c14f161ee..f151d9cf90de 100644
---- a/Documentation/ABI/testing/sysfs-block
-+++ b/Documentation/ABI/testing/sysfs-block
-@@ -273,6 +273,15 @@ Description:
- 		device ("host-aware" or "host-managed" zone model). For regular
- 		block devices, the value is always 0.
- 
-+What:		/sys/block/<disk>/queue/max_open_zones
-+Date:		July 2020
-+Contact:	Niklas Cassel <niklas.cassel@wdc.com>
-+Description:
-+		For zoned block devices (zoned attribute indicating
-+		"host-managed" or "host-aware"), the sum of zones belonging to
-+		any of the zone states: EXPLICIT OPEN or IMPLICIT OPEN,
-+		is limited by this value. If this value is 0, there is no limit.
-+
- What:		/sys/block/<disk>/queue/chunk_sectors
- Date:		September 2016
- Contact:	Hannes Reinecke <hare@suse.com>
-diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
-index 6a8513af9201..f01cf8530ae4 100644
---- a/Documentation/block/queue-sysfs.rst
-+++ b/Documentation/block/queue-sysfs.rst
-@@ -117,6 +117,13 @@ Maximum number of elements in a DMA scatter/gather list with integrity
- data that will be submitted by the block layer core to the associated
- block driver.
- 
-+max_open_zones (RO)
-+-------------------
-+For zoned block devices (zoned attribute indicating "host-managed" or
-+"host-aware"), the sum of zones belonging to any of the zone states:
-+EXPLICIT OPEN or IMPLICIT OPEN, is limited by this value.
-+If this value is 0, there is no limit.
-+
- max_sectors_kb (RW)
- -------------------
- This is the maximum number of kilobytes that the block layer will allow
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index be67952e7be2..414f04579d77 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -306,6 +306,11 @@ static ssize_t queue_nr_zones_show(struct request_queue *q, char *page)
- 	return queue_var_show(blk_queue_nr_zones(q), page);
- }
- 
-+static ssize_t queue_max_open_zones_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(queue_max_open_zones(q), page);
-+}
-+
- static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show((blk_queue_nomerges(q) << 1) |
-@@ -668,6 +673,11 @@ static struct queue_sysfs_entry queue_nr_zones_entry = {
- 	.show = queue_nr_zones_show,
- };
- 
-+static struct queue_sysfs_entry queue_max_open_zones_entry = {
-+	.attr = {.name = "max_open_zones", .mode = 0444 },
-+	.show = queue_max_open_zones_show,
-+};
-+
- static struct queue_sysfs_entry queue_nomerges_entry = {
- 	.attr = {.name = "nomerges", .mode = 0644 },
- 	.show = queue_nomerges_show,
-@@ -766,6 +776,7 @@ static struct attribute *queue_attrs[] = {
- 	&queue_nonrot_entry.attr,
- 	&queue_zoned_entry.attr,
- 	&queue_nr_zones_entry.attr,
-+	&queue_max_open_zones_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
-@@ -793,6 +804,10 @@ static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
- 		(!q->mq_ops || !q->mq_ops->timeout))
- 			return 0;
- 
-+	if (attr == &queue_max_open_zones_entry.attr &&
-+	    !blk_queue_is_zoned(q))
-+		return 0;
-+
- 	return attr->mode;
- }
- 
-diff --git a/drivers/nvme/host/zns.c b/drivers/nvme/host/zns.c
-index 04e5b991c00c..3d80b9cf6bfc 100644
---- a/drivers/nvme/host/zns.c
-+++ b/drivers/nvme/host/zns.c
-@@ -96,6 +96,7 @@ int nvme_update_zone_info(struct gendisk *disk, struct nvme_ns *ns,
- 
- 	q->limits.zoned = BLK_ZONED_HM;
- 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
-+	blk_queue_max_open_zones(q, le32_to_cpu(id->mor) + 1);
- free_data:
- 	kfree(id);
- 	return status;
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 183a20720da9..aa3564139b40 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -717,6 +717,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buf)
- 	/* The drive satisfies the kernel restrictions: set it up */
- 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
- 	blk_queue_required_elevator_features(q, ELEVATOR_F_ZBD_SEQ_WRITE);
-+	if (sdkp->zones_max_open == U32_MAX)
-+		blk_queue_max_open_zones(q, 0);
-+	else
-+		blk_queue_max_open_zones(q, sdkp->zones_max_open);
- 	nr_zones = round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
- 
- 	/* READ16/WRITE16 is mandatory for ZBC disks */
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 69ad13dacd48..8f558c6fd18b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -513,6 +513,7 @@ struct request_queue {
- 	unsigned int		nr_zones;
- 	unsigned long		*conv_zones_bitmap;
- 	unsigned long		*seq_zones_wlock;
-+	unsigned int		max_open_zones;
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- 	/*
-@@ -722,6 +723,17 @@ static inline bool blk_queue_zone_is_seq(struct request_queue *q,
- 		return true;
- 	return !test_bit(blk_queue_zone_no(q, sector), q->conv_zones_bitmap);
- }
-+
-+static inline void blk_queue_max_open_zones(struct request_queue *q,
-+		unsigned int max_open_zones)
-+{
-+	q->max_open_zones = max_open_zones;
-+}
-+
-+static inline unsigned int queue_max_open_zones(const struct request_queue *q)
-+{
-+	return q->max_open_zones;
-+}
- #else /* CONFIG_BLK_DEV_ZONED */
- static inline unsigned int blk_queue_nr_zones(struct request_queue *q)
- {
-@@ -737,6 +749,10 @@ static inline unsigned int blk_queue_zone_no(struct request_queue *q,
- {
- 	return 0;
- }
-+static inline unsigned int queue_max_open_zones(const struct request_queue *q)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- static inline bool rq_is_sync(struct request *rq)
-@@ -1520,6 +1536,15 @@ static inline sector_t bdev_zone_sectors(struct block_device *bdev)
- 	return 0;
- }
- 
-+static inline unsigned int bdev_max_open_zones(struct block_device *bdev)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (q)
-+		return queue_max_open_zones(q);
-+	return 0;
-+}
-+
- static inline int queue_dma_alignment(const struct request_queue *q)
- {
- 	return q ? q->dma_alignment : 511;
 -- 
-2.26.2
-
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
