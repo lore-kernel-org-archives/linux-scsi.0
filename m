@@ -3,96 +3,106 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E65EBC433E5
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:50:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 356BEC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:59:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C195B2064C
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:50:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MZtjLnyz"
+	by mail.kernel.org (Postfix) with ESMTP id 14A8322596
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:59:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594745998;
+	bh=hfGULgx6cVGhSXYUjwr08O37iYZjxDOqExPxcVgLX20=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=noZkfH3lRM9FJn9qM8cvqGdct7OQuom+0lq2FpNbO6PPsMi9FmW3ljahmObVxYVGK
+	 GIUl2bEc8IuO50w3gI0Us/hGs6TWa5NX0k9UDAKFijAKNAVnD4t7I1gm2+oeaFElPQ
+	 Bbi17ZeJw5Jv6Bw6MrfkABCSBly9F2BnsvAHycac=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728672AbgGNQuO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 12:50:14 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:43392 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726798AbgGNQuO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 12:50:14 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06EGli7o134803;
-        Tue, 14 Jul 2020 16:50:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=wDW+LJY/xmnT0U8mvYNtybMehN5jP3JYQycycM6EqFg=;
- b=MZtjLnyz53tnSf1bGYfuISkZZoXeCnD6A8pq1PQBCn3E7bjq5/OvrDrrpKcEjX+xCHEO
- nzkdmUHxWFvTq3ZM7oRL7/lmXHBdwSjiqUDNgkjNwrHw0m8BCsYjP/6wic9yzQG6iumY
- 8nxH+4sketoMPhlxGStNb96NFgfQoJnMXnS1EZTFmqD5aj1NmcTTl7eQv0VcDlJ/2t1Q
- opXajAVDsScL/O20vuOSd9NuSyvOoM8NQOMFPbODkimELqU4j6FSmCegJebSIgfhhiSK
- UXy4q/dzrGG7hu4XuKk0hEfegntCD+Y4s4Y+rjxwmwlGjnsMg1CNt2nEqErwjGEh1nxz zw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 32762nedux-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 14 Jul 2020 16:50:08 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06EGlZEb149400;
-        Tue, 14 Jul 2020 16:50:07 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 327qb4mkr6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jul 2020 16:50:07 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06EGo6Vq031596;
-        Tue, 14 Jul 2020 16:50:06 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Jul 2020 09:50:05 -0700
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 05/29] scsi: fcoe: fcoe_ctlr: Fix a myriad of
- documentation issues
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1y2nmoxcu.fsf@ca-mkp.ca.oracle.com>
-References: <20200713074645.126138-1-lee.jones@linaro.org>
-        <20200713074645.126138-6-lee.jones@linaro.org>
-        <yq1lfjmqji1.fsf@ca-mkp.ca.oracle.com> <20200714142324.GC1398296@dell>
-Date:   Tue, 14 Jul 2020 12:50:03 -0400
-In-Reply-To: <20200714142324.GC1398296@dell> (Lee Jones's message of "Tue, 14
-        Jul 2020 15:23:24 +0100")
+        id S1728491AbgGNQ75 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 12:59:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43072 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726062AbgGNQ75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 12:59:57 -0400
+Received: from mail-oi1-f180.google.com (mail-oi1-f180.google.com [209.85.167.180])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 86F6F22573;
+        Tue, 14 Jul 2020 16:59:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594745996;
+        bh=hfGULgx6cVGhSXYUjwr08O37iYZjxDOqExPxcVgLX20=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=IVz7G9dnWJcklodZApZc+PE5LAOinEhXCAeRs+OuKyMHKcXp6G+gxfBhVLZoEU2sY
+         4CU08uJ83+WTma1I/1NOONviXlQFiTvrHqLn9vSGpSzTZj11cVLhZnIcs3jOn6wIqr
+         hF+k1mUe7Aq7JpFhneCOfHaWFIQbMw3vp6ahg/00=
+Received: by mail-oi1-f180.google.com with SMTP id y22so14447106oie.8;
+        Tue, 14 Jul 2020 09:59:56 -0700 (PDT)
+X-Gm-Message-State: AOAM530BGP4k/iCXXCGa4o2lgFjlj1PoYolIHYUoN+8A2fnuqSqow4wm
+        XY8XrycO8XRQfnisL4Z2k7zQKU3JVF0JWb57Xw==
+X-Google-Smtp-Source: ABdhPJwv5DtvHNqkpG1lMxmy6zg7lYTz/pvjdCAG8t+hqEI7IbsYj4R6P0ANEAPuU+Zw88Djpz3Btrixh7w8DMOHHd8=
+X-Received: by 2002:aca:bb82:: with SMTP id l124mr4592017oif.106.1594745995936;
+ Tue, 14 Jul 2020 09:59:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9681 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 spamscore=0 phishscore=0 suspectscore=1 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007140122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9681 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- clxscore=1015 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
- bulkscore=0 suspectscore=1 phishscore=0 adultscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007140122
+References: <20200710072013.177481-1-ebiggers@kernel.org> <20200710072013.177481-4-ebiggers@kernel.org>
+ <yq1ft9uqj6u.fsf@ca-mkp.ca.oracle.com> <20200714161516.GA1064009@gmail.com>
+ <CAL_Jsq+t1h4w8C361vguw1co_vnbMKs3q4qWR4=jwAKr1Vm80g@mail.gmail.com> <20200714164353.GB1064009@gmail.com>
+In-Reply-To: <20200714164353.GB1064009@gmail.com>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Tue, 14 Jul 2020 10:59:44 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqK-wUuo6azYseC35R=Q509=h9-v4gFvcvy8wXrDgSw5ZQ@mail.gmail.com>
+Message-ID: <CAL_JsqK-wUuo6azYseC35R=Q509=h9-v4gFvcvy8wXrDgSw5ZQ@mail.gmail.com>
+Subject: Re: [PATCH v6 3/5] arm64: dts: sdm845: add Inline Crypto Engine
+ registers and clock
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        SCSI <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Satya Tangirala <satyat@google.com>,
+        Steev Klimaszewski <steev@kali.org>,
+        Thara Gopinath <thara.gopinath@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-Lee,
-
-> Yes, I spotted it.  Hence my earlier comment to Hannes:
+On Tue, Jul 14, 2020 at 10:43 AM Eric Biggers <ebiggers@kernel.org> wrote:
 >
->  "Look at the function below it (in your local copy). ;)"
+> On Tue, Jul 14, 2020 at 10:35:12AM -0600, Rob Herring wrote:
+> > On Tue, Jul 14, 2020 at 10:15 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > >
+> > > On Tue, Jul 14, 2020 at 10:16:04AM -0400, Martin K. Petersen wrote:
+> > > >
+> > > > Eric,
+> > > >
+> > > > > Add the vendor-specific registers and clock for Qualcomm ICE (Inline
+> > > > > Crypto Engine) to the device tree node for the UFS host controller on
+> > > > > sdm845, so that the ufs-qcom driver will be able to use inline crypto.
+> > > >
+> > > > I would like to see an Acked-by for this patch before I merge it.
+> > > >
+> > >
+> > > Andy, Bjorn, or Rob: can you give Acked-by?
+> >
+> > DTS changes should go in via the QCom tree.
+> >
 >
-> Do you want me to fix that up here as well?
+> So, the DTS patch can't be applied without the driver patches since then the
+> driver would misinterpret the ICE registers as the dev_ref_clk_ctrl registers.
 
-I can fix it up.
+That sounds broken, but there's no context here for me to comment
+further. DTS changes should work with old/stable kernels. I'd suggest
+you get a review from Bjorn on the driver first.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Rob
