@@ -4,51 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A474C43463
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F7EC4345A
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:44:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 270B52064B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:43:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A5FC206F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:44:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594737814;
-	bh=6Hipu7uWNfRUtHM/Af23/Iw1ZjSCu359/UrYQ+9V0vY=;
+	s=default; t=1594737868;
+	bh=Yl21JdGd0aDIm44jfQ3dqKB33jyFSYMfu+vyS93JraU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Aod6io+N86/fv2t4hB1awVFoTaQvtqIblNxNRJSWpQslcOxT3NN/qaSLX2NdfH20b
-	 lF+hh7YbuNGjx/ZQUgwJsxILSW0BeROfl9zD6V8YIIMxo0tRbvAiLOzOzBanEYZI0Q
-	 uhbJpGAS0cP5iKwwIaveIr4W2S89Mongwg3P5ZXg=
+	b=GIjE95xc8ZGOTB8J5F9wEn4J9jtt4xIZcDDmkkj8psOw5I0l0wEMt3OoGn6qfD+Ha
+	 Q1pFT0o1MmI2ZMsUQJaU5ij7O0vKgmjfswL+xD1VMmddMvTKkSyEx8XWgcV9h4pqr8
+	 1WDTfUTM4xSY+WJAt7Eug3IobJhYCA8n9wsj6nMY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729001AbgGNOje (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 10:39:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54922 "EHLO mail.kernel.org"
+        id S1729617AbgGNOoA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 10:44:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54658 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728987AbgGNOjd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 10:39:33 -0400
+        id S1728922AbgGNOjW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 10:39:22 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6785F22525;
-        Tue, 14 Jul 2020 14:39:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D630222C8;
+        Tue, 14 Jul 2020 14:39:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594737573;
-        bh=6Hipu7uWNfRUtHM/Af23/Iw1ZjSCu359/UrYQ+9V0vY=;
+        s=default; t=1594737562;
+        bh=Yl21JdGd0aDIm44jfQ3dqKB33jyFSYMfu+vyS93JraU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=i4RP6hQvBOffpW8nQ72ssP4qrvnPXpv8uAJxFdr+R1FLDkExnpYkJsMZq9SBmVVvO
-         KzCXgNS0s0yfbvW7hk2TzP2ynYEpOCwv92GClDaBsbNtzIuN5CglWAGCc/kO9nuCH4
-         jFC+XX5EXm8x5+GRxvAVRm524zV3CLomAQzKcBhs=
+        b=hlXzy7bmWUDnc0FEb9bhHvgqkL7gaD3ixJKbmqxgVRkyuNIoNEzSagKhz99TNfdqF
+         WUiAH3D8IIIySeLFsvftmuJx9VnWoaSdQOguRcd12Y0WNQytbIl0H/EXTMzYEuSzvA
+         KXEsMznlFtk3eokKW+h8jxALMlG5O8cPQziNaPws=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     Tom Rix <trix@redhat.com>, James Bottomley <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 15/18] scsi: mpt3sas: Fix error returns in BRM_status_show
-Date:   Tue, 14 Jul 2020 10:39:11 -0400
-Message-Id: <20200714143914.4035489-15-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 5.4 06/18] scsi: scsi_transport_spi: Fix function pointer check
+Date:   Tue, 14 Jul 2020 10:39:02 -0400
+Message-Id: <20200714143914.4035489-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200714143914.4035489-1-sashal@kernel.org>
 References: <20200714143914.4035489-1-sashal@kernel.org>
@@ -61,78 +59,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+From: Tom Rix <trix@redhat.com>
 
-[ Upstream commit 0fd181456aa0826057adbfb6c79c40f4083cfd75 ]
+[ Upstream commit 5aee52c44d9170591df65fafa1cd408acc1225ce ]
 
-BRM_status_show() has several error branches, but none of them record the
-error in the error return.
+clang static analysis flags several null function pointer problems.
 
-Also while at it remove the manual mutex_unlock() of the pci_access_mutex
-in case of an ongoing pci error recovery or host removal and jump to the
-cleanup label instead.
+drivers/scsi/scsi_transport_spi.c:374:1: warning: Called function pointer is null (null dereference) [core.CallAndMessage]
+spi_transport_max_attr(offset, "%d\n");
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: We can safely jump to out from here as io_unit_pg3 is initialized to
-NULL and if it hasn't been allocated, kfree() skips the NULL pointer.
+Reviewing the store_spi_store_max macro
 
-[mkp: compilation warning]
+	if (i->f->set_##field)
+		return -EINVAL;
 
-Link: https://lore.kernel.org/r/20200701131454.5255-1-johannes.thumshirn@wdc.com
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
-Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+should be
+
+	if (!i->f->set_##field)
+		return -EINVAL;
+
+Link: https://lore.kernel.org/r/20200627133242.21618-1-trix@redhat.com
+Reviewed-by: James Bottomley <jejb@linux.ibm.com>
+Signed-off-by: Tom Rix <trix@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 82c4ecc16f191..d5a62fea8fe3e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -2925,15 +2925,14 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	}
- 	/* pci_access_mutex lock acquired by sysfs show path */
- 	mutex_lock(&ioc->pci_access_mutex);
--	if (ioc->pci_error_recovery || ioc->remove_host) {
--		mutex_unlock(&ioc->pci_access_mutex);
--		return 0;
--	}
-+	if (ioc->pci_error_recovery || ioc->remove_host)
-+		goto out;
- 
- 	/* allocate upto GPIOVal 36 entries */
- 	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
- 	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
- 	if (!io_unit_pg3) {
-+		rc = -ENOMEM;
- 		ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%d) bytes\n",
- 			__func__, sz);
- 		goto out;
-@@ -2943,6 +2942,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	    0) {
- 		ioc_err(ioc, "%s: failed reading iounit_pg3\n",
- 			__func__);
-+		rc = -EINVAL;
- 		goto out;
- 	}
- 
-@@ -2950,12 +2950,14 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 		ioc_err(ioc, "%s: iounit_pg3 failed with ioc_status(0x%04x)\n",
- 			__func__, ioc_status);
-+		rc = -EINVAL;
- 		goto out;
- 	}
- 
- 	if (io_unit_pg3->GPIOCount < 25) {
- 		ioc_err(ioc, "%s: iounit_pg3->GPIOCount less than 25 entries, detected (%d) entries\n",
- 			__func__, io_unit_pg3->GPIOCount);
-+		rc = -EINVAL;
- 		goto out;
- 	}
- 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index f8661062ef954..f3d5b1bbd5aa7 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -339,7 +339,7 @@ store_spi_transport_##field(struct device *dev, 			\
+ 	struct spi_transport_attrs *tp					\
+ 		= (struct spi_transport_attrs *)&starget->starget_data;	\
+ 									\
+-	if (i->f->set_##field)						\
++	if (!i->f->set_##field)						\
+ 		return -EINVAL;						\
+ 	val = simple_strtoul(buf, NULL, 0);				\
+ 	if (val > tp->max_##field)					\
 -- 
 2.25.1
 
