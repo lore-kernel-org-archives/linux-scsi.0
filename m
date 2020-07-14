@@ -2,92 +2,119 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39614C433E1
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E95DBC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:14:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1234321D7A
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:00:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C781F21897
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:14:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EiBe0bVD"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KykNrRHP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726384AbgGNKAt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 06:00:49 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:60034 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725906AbgGNKAs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 06:00:48 -0400
-X-UUID: bed1a5133baf41409bc26c71107765b3-20200714
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=ysgoiQZkd6yevHeAk27WbwaWZS5sYS8VuJlnh1+Ohgc=;
-        b=EiBe0bVDnv7jLZLq4iiF2Jf9Beill+ZoiWu8CI0AAXdo4Q+9vDg3yvfnw46EmODy2IJu+AenpcWe9PGGKXa69pQ92gKPKsGO0wUstZ8rKzWX1c3XncZti/QiMNi8DXcFv9kUlcSlHJECMN3m7u3UZVwCDGHQGl1mFYXyu0xmcL4=;
-X-UUID: bed1a5133baf41409bc26c71107765b3-20200714
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1712766276; Tue, 14 Jul 2020 18:00:43 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 14 Jul 2020 18:00:40 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 14 Jul 2020 18:00:41 +0800
-Message-ID: <1594720842.22878.38.camel@mtkswgap22>
-Subject: RE: [PATCH v3] scsi: ufs: Cleanup completed request without
- interrupt notification
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Avri Altman <Avri.Altman@wdc.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
-Date:   Tue, 14 Jul 2020 18:00:42 +0800
-In-Reply-To: <SN6PR04MB46404C9EC8C29F75E5D1E45BFC610@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200706132113.21096-1-stanley.chu@mediatek.com>
-         <SN6PR04MB4640BEAFE18BDC933FC7EC95FC640@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <1594517160.10600.33.camel@mtkswgap22>
-         <SN6PR04MB4640F34CAA25B3CB58F94CABFC630@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <1594716527.22878.28.camel@mtkswgap22>
-         <SN6PR04MB46404C9EC8C29F75E5D1E45BFC610@SN6PR04MB4640.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726609AbgGNKO5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 06:14:57 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:48918 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725952AbgGNKO4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 06:14:56 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594721695;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=eK+gRiV5wR55qDimLkvlx5oZ6+faA3C9UnHWXxdJQp4=;
+        b=KykNrRHPbx+J9m4nlUYNWbcxxT+QedUMx+v5kJ59dhFKjRplfnx52MzcxH6KpxB1gEvsdg
+        hxGDejfoTFECQpW5qFxUA2KdO+z17MbotnCI1daO53biSp8fLMh8xVD3xndwgD/UXuCj5S
+        8CihzaSZvJlWIa130WwYznhj33s2pr4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-10-2qr_FMNFPAC0ct7ewZ-Adw-1; Tue, 14 Jul 2020 06:14:50 -0400
+X-MC-Unique: 2qr_FMNFPAC0ct7ewZ-Adw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 272E08014D4;
+        Tue, 14 Jul 2020 10:14:48 +0000 (UTC)
+Received: from T590 (ovpn-13-177.pek2.redhat.com [10.72.13.177])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AFFEB60BEC;
+        Tue, 14 Jul 2020 10:14:37 +0000 (UTC)
+Date:   Tue, 14 Jul 2020 18:14:32 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Hannes Reinecke <hare@suse.de>, don.brace@microsemi.com,
+        axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        bvanassche@acm.org, hare@suse.com, hch@lst.de,
+        shivasharan.srikanteshwara@broadcom.com,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
+        megaraidlinux.pdl@broadcom.com
+Subject: Re: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
+Message-ID: <20200714101432.GA602708@T590>
+References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
+ <1591810159-240929-13-git-send-email-john.garry@huawei.com>
+ <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
+ <3b3ead84-5d2f-dcf2-33d5-6aa12d5d9f7e@suse.de>
+ <4319615a-220b-3629-3bf4-1e7fd2d27b92@huawei.com>
+ <20200714080631.GA600766@T590>
+ <3584bcc3-830a-d50d-bb55-8ac0b686cdc0@huawei.com>
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3584bcc3-830a-d50d-bb55-8ac0b686cdc0@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQXZyaSwNCg0KT24gVHVlLCAyMDIwLTA3LTE0IGF0IDA5OjI5ICswMDAwLCBBdnJpIEFsdG1h
-biB3cm90ZToNCj4gPiA+ID4gPiA+ICtjbGVhbnVwOg0KPiA+ID4gPiA+ID4gKyAgICAgICBzcGlu
-X2xvY2tfaXJxc2F2ZShob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCj4gPiA+ID4gPiA+ICsgICAg
-ICAgaWYgKCF0ZXN0X2JpdCh0YWcsICZoYmEtPm91dHN0YW5kaW5nX3JlcXMpKSB7DQo+ID4gPiBJ
-cyB0aGlzIG5lZWRlZD8gIGl0IHdhcyBhbHJlYWR5IGNoZWNrZWQgaW4gbGluZSA2NDM5Lg0KPiA+
-ID4NCj4gPiANCj4gPiBJIGFtIHdvcnJpZWQgYWJvdXQgdGhlIGNhc2UgdGhhdCBpbnRlcnJ1cHQg
-Y29tZXMgdmVyeSBsYXRlbHkuIA0KPiBzY3NpIHRpbWVvdXQgaXMgMzBzZWMgLSBkbyB5b3UgZXhw
-ZWN0IGFuIGludGVycnVwdCB0byBhcnJpdmUgYWZ0ZXIgdGhhdD8NCj4gDQoNClllYWgsIEkgYWdy
-ZWUgdGhhdCBhIDMwcyBkZWxheWVkIGludGVycnVwdCBzb3VuZHMga2luZCBvZiByaWRpY3Vsb3Vz
-Lg0KVGhpcyBjaGVja2luZyBpcyBqdXN0IHRvIG1ha2UgdGhlIGNsZWFudXAgZmxvdyBzYWZlci4N
-Cg0KVGhhbmtzLA0KU3RhbmxleSBDaHUNCg0K
+On Tue, Jul 14, 2020 at 10:53:32AM +0100, John Garry wrote:
+> On 14/07/2020 09:06, Ming Lei wrote:
+> > > v7 is here:
+> > > 
+> > > https://github.com/hisilicon/kernel-dev/commits/private-topic-blk-mq-shared-tags-rfc-v7
+> > > 
+> > > So that should be good to test with for now.
+> > > 
+> > > And I was going to ask this same question about smartpqi, so can you please
+> > > let me know about this one?
+> 
+> Hi Ming,
+> 
+> > smartpqi is real MQ HBA, do you need any change wrt. shared tags?
+> 
+> Is it really?
+
+Yes, it is.
+
+pqi_register_scsi():
+        shost->nr_hw_queues = ctrl_info->num_queue_groups;
+
+pqi_enable_msix_interrupts():
+        num_vectors_enabled = pci_alloc_irq_vectors(ctrl_info->pci_dev,
+                        PQI_MIN_MSIX_VECTORS, ctrl_info->num_queue_groups,
+                        PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+
+> 
+> As I see, today it maintains a single tagset per HBA. So Hannes' change in
+
+No, each hw queue has one independent tagset for smartpqi.
+
+> this series seems ok. However, I do worry that mainline code may be wrong,
+> as block layer may send can_queue * nr_hw_queues requests, when it seems the
+> HBA can only handle can_queue requests.
+
+I have one machine in which all system are installed on smartpqi disks,
+and I almost work on the system everyday, so far so good with this real
+MQ style.
+
+Can you explain a bit why you worry the mainline code may be wrong?
+
+
+Thanks,
+Ming
 
