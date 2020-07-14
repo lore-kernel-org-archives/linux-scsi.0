@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C508CC4345B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C01DDC4345F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:41:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A27DC2255F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94B8B223C6
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:41:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594737578;
-	bh=vnz8ROALb5gubnj68vO1PvMNUEb7QYnW9YoPnbZSgck=;
+	s=default; t=1594737669;
+	bh=8/u2v9f1AS4A+vYFzNeZgTlwKWH2MAHgTKw+YPnZWRA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=z244iynDfk5Zul8Zc7iNv6jd/WkQD2bvm7GSP5Rg1gND5uRx1YsAQSzDGecD6LeBf
-	 tn2amfeqzVCsNrwGtcahRLrhRpv7Qr+bJ7sVcdRGkCSuew2msqq7FS7fWndDPxmbXr
-	 8REdWzqUPoTuxSm8aRVOavNo1eKbozd9vOLWwpBc=
+	b=yzGXkr4og7mxsyFHPLeZ6HaJKqX7rFqkDbvcSE63NZdLaRXiTUWb6YhKHxRGyxoTr
+	 Ssw7wRUJCb7lrW6u0NLTh5S21ziFr2i32oFqhzgP0wPfO2spajdYMj4HZx4ZHsS9RS
+	 jkMIsDE1kirDqraS5nEkEKweDXIFSYe58TCVrsvg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729021AbgGNOjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 10:39:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54974 "EHLO mail.kernel.org"
+        id S1729468AbgGNOk7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 10:40:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56372 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729005AbgGNOjf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 10:39:35 -0400
+        id S1729375AbgGNOk2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 10:40:28 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D3B022251E;
-        Tue, 14 Jul 2020 14:39:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5F85B22248;
+        Tue, 14 Jul 2020 14:40:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594737574;
-        bh=vnz8ROALb5gubnj68vO1PvMNUEb7QYnW9YoPnbZSgck=;
+        s=default; t=1594737628;
+        bh=8/u2v9f1AS4A+vYFzNeZgTlwKWH2MAHgTKw+YPnZWRA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cBMpdyKY9keHvtx6CNo/PwyZpE4hTl+jwI721cTBgT0hWGWyqM0nq60BAkFeBq64a
-         ieytY4CkzSAj079APHtbKUaCPU8rZYfD5hiQoKNHSpjzkJqpwaSsLQfnOqL4TFXCx7
-         iDgUWd9AA0Ot3BgwCjVamoXR5n7GKlokkw46UYKA=
+        b=Ss019hXWgrOf4tIPazNCgre28tsRnq87h+dSJpgrVjfLMqSZZkC7Nl4kj6nVKR2Sj
+         mT/b2BHf9iLhELhKSMY5lLcRIItOPLlQfvIe3iEgA/uKNsKQIhVB1m6ONdgNzdebPU
+         EXmoxcp/3npUEb4TJNavC6itinDxNFZJt1HW1wZk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Steve Schremmer <steve.schremmer@netapp.com>,
+Cc:     Tom Rix <trix@redhat.com>, James Bottomley <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 16/18] scsi: dh: Add Fujitsu device to devinfo and dh lists
-Date:   Tue, 14 Jul 2020 10:39:12 -0400
-Message-Id: <20200714143914.4035489-16-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.4 3/9] scsi: scsi_transport_spi: Fix function pointer check
+Date:   Tue, 14 Jul 2020 10:40:17 -0400
+Message-Id: <20200714144024.4036118-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200714143914.4035489-1-sashal@kernel.org>
-References: <20200714143914.4035489-1-sashal@kernel.org>
+In-Reply-To: <20200714144024.4036118-1-sashal@kernel.org>
+References: <20200714144024.4036118-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,45 +59,48 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Steve Schremmer <steve.schremmer@netapp.com>
+From: Tom Rix <trix@redhat.com>
 
-[ Upstream commit e094fd346021b820f37188aaa6b502c7490ab5b5 ]
+[ Upstream commit 5aee52c44d9170591df65fafa1cd408acc1225ce ]
 
-Add FUJITSU ETERNUS_AHB
+clang static analysis flags several null function pointer problems.
 
-Link: https://lore.kernel.org/r/DM6PR06MB5276CCA765336BD312C4282E8C660@DM6PR06MB5276.namprd06.prod.outlook.com
-Signed-off-by: Steve Schremmer <steve.schremmer@netapp.com>
+drivers/scsi/scsi_transport_spi.c:374:1: warning: Called function pointer is null (null dereference) [core.CallAndMessage]
+spi_transport_max_attr(offset, "%d\n");
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Reviewing the store_spi_store_max macro
+
+	if (i->f->set_##field)
+		return -EINVAL;
+
+should be
+
+	if (!i->f->set_##field)
+		return -EINVAL;
+
+Link: https://lore.kernel.org/r/20200627133242.21618-1-trix@redhat.com
+Reviewed-by: James Bottomley <jejb@linux.ibm.com>
+Signed-off-by: Tom Rix <trix@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_devinfo.c | 1 +
- drivers/scsi/scsi_dh.c      | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/scsi/scsi_transport_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index df14597752ec8..fb5a7832353ce 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -239,6 +239,7 @@ static struct {
- 	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"LENOVO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
-+	{"FUJITSU", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"SanDisk", "Cruzer Blade", NULL, BLIST_TRY_VPD_PAGES |
- 		BLIST_INQUIRY_36},
- 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index 42f0550d6b11f..6f41e4b5a2b85 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -63,6 +63,7 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
- 	{"LSI", "INF-01-00",		"rdac", },
- 	{"ENGENIO", "INF-01-00",	"rdac", },
- 	{"LENOVO", "DE_Series",		"rdac", },
-+	{"FUJITSU", "ETERNUS_AHB",	"rdac", },
- 	{NULL, NULL,			NULL },
- };
- 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 319868f3f6743..083cd11ce7d7d 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -353,7 +353,7 @@ store_spi_transport_##field(struct device *dev, 			\
+ 	struct spi_transport_attrs *tp					\
+ 		= (struct spi_transport_attrs *)&starget->starget_data;	\
+ 									\
+-	if (i->f->set_##field)						\
++	if (!i->f->set_##field)						\
+ 		return -EINVAL;						\
+ 	val = simple_strtoul(buf, NULL, 0);				\
+ 	if (val > tp->max_##field)					\
 -- 
 2.25.1
 
