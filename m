@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A3BC433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:47:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6C8C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:47:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32BB320890
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:47:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 242A320890
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:47:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725906AbgGNHrD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 03:47:03 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34702 "EHLO mx2.suse.de"
+        id S1726785AbgGNHrq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 03:47:46 -0400
+Received: from mx2.suse.de ([195.135.220.15]:35106 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725821AbgGNHrD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 03:47:03 -0400
+        id S1725816AbgGNHrq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 03:47:46 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 682BEAD68;
-        Tue, 14 Jul 2020 07:47:03 +0000 (UTC)
-Subject: Re: [PATCH v2 23/24] scsi: aic7xxx: aic79xx_osm: Fix 'amount_xferred'
- set but not used issue
+        by mx2.suse.de (Postfix) with ESMTP id A4DFCAD68;
+        Tue, 14 Jul 2020 07:47:46 +0000 (UTC)
+Subject: Re: [PATCH v2 21/24] scsi: aic7xxx: aic79xx_osm: Remove unused
+ variable 'ahd'
 To:     Lee Jones <lee.jones@linaro.org>, jejb@linux.ibm.com,
         martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Hannes Reinecke <hare@suse.com>
 References: <20200713080001.128044-1-lee.jones@linaro.org>
- <20200713080001.128044-24-lee.jones@linaro.org>
+ <20200713080001.128044-22-lee.jones@linaro.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -76,12 +76,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <3d7e9489-5e07-2cb6-058c-c63194056b5a@suse.de>
-Date:   Tue, 14 Jul 2020 09:47:00 +0200
+Message-ID: <f9f25f97-ec01-f1b1-ca4e-074838141606@suse.de>
+Date:   Tue, 14 Jul 2020 09:47:43 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200713080001.128044-24-lee.jones@linaro.org>
+In-Reply-To: <20200713080001.128044-22-lee.jones@linaro.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,41 +90,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/13/20 10:00 AM, Lee Jones wrote:
-> 'amount_xferred' is used, but only in certain circumstances.  Place
-> the same stipulations on the defining/allocating of 'amount_xferred'
-> as is placed when using it.
-> 
-> We've been careful not to change any of the ordering semantics here.
+On 7/13/20 9:59 AM, Lee Jones wrote:
+> Hasn't been used since 2005.
 > 
 > Fixes the following W=1 kernel build warning(s):
 > 
->  drivers/scsi/aic7xxx/aic79xx_osm.c: In function ‘ahd_done’:
->  drivers/scsi/aic7xxx/aic79xx_osm.c:1796:12: warning: variable ‘amount_xferred’ set but not used [-Wunused-but-set-variable]
+>  drivers/scsi/aic7xxx/aic79xx_osm.c: In function ‘ahd_linux_slave_configure’:
+>  drivers/scsi/aic7xxx/aic79xx_osm.c:703:20: warning: variable ‘ahd’ set but not used [-Wunused-but-set-variable]
 > 
 > Cc: Hannes Reinecke <hare@suse.com>
 > Signed-off-by: Lee Jones <lee.jones@linaro.org>
 > ---
->  drivers/scsi/aic7xxx/aic79xx_osm.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/aic7xxx/aic79xx_osm.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
 > diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> index 8e43ff86e0a60..3782a20d58885 100644
+> index dc4fe334efd01..9235b6283c0b3 100644
 > --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
 > +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> @@ -1787,10 +1787,12 @@ ahd_done(struct ahd_softc *ahd, struct scb *scb)
->  	 */
->  	cmd->sense_buffer[0] = 0;
->  	if (ahd_get_transaction_status(scb) == CAM_REQ_INPROG) {
-> +#ifdef AHD_REPORT_UNDERFLOWS
->  		uint32_t amount_xferred;
+> @@ -700,9 +700,6 @@ ahd_linux_slave_alloc(struct scsi_device *sdev)
+>  static int
+>  ahd_linux_slave_configure(struct scsi_device *sdev)
+>  {
+> -	struct	ahd_softc *ahd;
+> -
+> -	ahd = *((struct ahd_softc **)sdev->host->hostdata);
+>  	if (bootverbose)
+>  		sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
 >  
->  		amount_xferred =
->  		    ahd_get_transfer_length(scb) - ahd_get_residual(scb);
-> +#endif
->  		if ((scb->flags & SCB_TRANSMISSION_ERROR) != 0) {
->  #ifdef AHD_DEBUG
->  			if ((ahd_debug & AHD_SHOW_MISC) != 0) {
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
