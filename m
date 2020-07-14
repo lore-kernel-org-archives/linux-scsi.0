@@ -2,173 +2,362 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA68C433DF
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:16:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13911C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:22:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1097722507
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:16:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9F932253A
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 16:22:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="I0PUQ3An";
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="ETJmUEU3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VCthaUNb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728169AbgGNQQ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 12:16:28 -0400
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51448 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726062AbgGNQQ2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 12:16:28 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id EDFAB8EE2B2;
-        Tue, 14 Jul 2020 09:16:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1594743387;
-        bh=zj4zPpnz8gKFgQPcU3+Qo9Rl6yyucZ9c0mmOJtbRMEs=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=I0PUQ3AnoMDvtTqrRRadZJX4DR2mbkaipasHpp14RwY1g4CXmHSMUSXayLOGPBGvK
-         xKM9Md1bpG175XS6BxTVhZGitZF49djqXssNXZev3N6oU8AUs8pIpADiysfXUdCkVm
-         smh06sApGkkDNeqTNVDZi9zA+GlkgvG+SIENukIY=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 54R1TIPtZajK; Tue, 14 Jul 2020 09:16:26 -0700 (PDT)
-Received: from [153.66.254.194] (unknown [50.35.76.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DB6938EE272;
-        Tue, 14 Jul 2020 09:16:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
-        s=20151216; t=1594743386;
-        bh=zj4zPpnz8gKFgQPcU3+Qo9Rl6yyucZ9c0mmOJtbRMEs=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ETJmUEU39dXmBwJz5QOhySuA34Kuk5Gb+b5mX4f5O+pYi9+ruRJzYMXNn035Dw36j
-         to6M5CnlfHteiXPDGDxbbQGX7qFl6GXPKVggqJxrGBZtuGoK4Is8N2vWTV8udjbvjf
-         NHNgLpMx0IM6KbE/KE8tvZuHt3UZd+DUFU6niQVk=
-Message-ID: <1594743384.4545.25.camel@HansenPartnership.com>
-Subject: Re: [PATCH] aic79xx: restore modes when exiting
- ahd_linux_queue_abort_cmd()
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Date:   Tue, 14 Jul 2020 09:16:24 -0700
-In-Reply-To: <20200714160301.4482-1-hare@suse.de>
-References: <20200714160301.4482-1-hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1728793AbgGNQWJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 12:22:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43340 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725876AbgGNQWI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 12:22:08 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90D2DC061755;
+        Tue, 14 Jul 2020 09:22:08 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id d1so1978238plr.8;
+        Tue, 14 Jul 2020 09:22:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version:reply-to
+         :content-transfer-encoding;
+        bh=FlItk2MK7XxdFE4d5aoXbUM3v/bheo7oeECnveTRdVw=;
+        b=VCthaUNb2pATJTLkx6/zsst5Sej7Cl+8dDvTtLsfjBb32h4lXVJqeqMdq6jO8qlqw4
+         HTeAyc6RitfdWcVlPsrOx8JzSc8ngLXod8adKN8BmSdV+GUxYB8DfhKyvIxzS96ADX6S
+         86bYMnrPwxzg9lRejD9muye6WxU3bWowgB9XD8njNG6zdaTG7yGRDQ7pPelXe4VAcnI6
+         L4UaDK6EWyfjxRt4lWePJJwDLZUtUIOYkK44o+y7V96Phx5U6vnRVImQ7BI9Amun5qnP
+         NxmE1/lDQ1JPHICRaA4KQ2AFBhNDBVHMW0dZTrYeRoxyNOO+Ry1ubByy4i/J/E8LXrxs
+         Aphw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :reply-to:content-transfer-encoding;
+        bh=FlItk2MK7XxdFE4d5aoXbUM3v/bheo7oeECnveTRdVw=;
+        b=ZRUJVU6b0fKFoXKuPKvXg3oMzjfHJR5ca1cqRvnzGDJxaLg/oM8l1bDlxkDJxiOiJC
+         3Hm5p0PYWWaoqHahNIlSaUkvZO+a1bNI29JtTTDpBI8R+UAg2xDrXX2eVzYFOaRvOGRG
+         wMh7Gef2pRPvxY0ho99zO72TZD0QLDihHu199M3Q8EdtID/GG4oMs8ZNxIpz6ug3kvuI
+         +tzcl7ux3sDVvsWcYSEaA39OycPYnxtT04coDgQqF5fuLEfoxHmPl1kvm8zv0ApbHqQA
+         d/iQqUI9yvS+ZtNqoD7oLgbmc6Z1kcShsBiWxyESSCTC/QeHb3IqVjORPiilpwpDkc13
+         UNTw==
+X-Gm-Message-State: AOAM530/9AIFhq0aywf0r/e/9Wddt6yF3JNUcfq8PkXx2g5/CCbreitf
+        ogb7Uo7v7VvQ/d57F2ZYphE=
+X-Google-Smtp-Source: ABdhPJyT8ng3JcpIy0v5+cZuW36aWa5VBG5uY2ci6490knzWo72wblf78ZvFoZoTkAGBj2YVohvn5w==
+X-Received: by 2002:a17:90a:e50c:: with SMTP id t12mr5406916pjy.209.1594743728138;
+        Tue, 14 Jul 2020 09:22:08 -0700 (PDT)
+Received: from localhost.localdomain ([131.107.147.194])
+        by smtp.gmail.com with ESMTPSA id i67sm18668629pfg.13.2020.07.14.09.22.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2020 09:22:07 -0700 (PDT)
+From:   Andres Beltran <lkmlabelt@gmail.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org
+Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mikelley@microsoft.com, parri.andrea@gmail.com,
+        skarade@microsoft.com, Andres Beltran <lkmlabelt@gmail.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH] Drivers: hv: vmbus: Copy packets sent by Hyper-V out of the ring buffer
+Date:   Tue, 14 Jul 2020 12:22:03 -0400
+Message-Id: <20200714162203.5138-1-lkmlabelt@gmail.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Reply-To: t-mabelt@microsoft.com
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2020-07-14 at 18:03 +0200, Hannes Reinecke wrote:
-> ahd_linux_queue_abort_cmd() calls ahd_save_modes() without calling
-> ahd_restore_modes() before exiting.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/aic7xxx/aic79xx_osm.c | 23 +++++++----------------
->  1 file changed, 7 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> index dc4fe334efd0..abb5447f1de4 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> @@ -2147,7 +2147,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  	u_int  last_phase;
->  	u_int  saved_scsiid;
->  	u_int  cdb_byte;
-> -	int    retval;
-> +	int    retval = SUCCESS;
->  	int    was_paused;
->  	int    paused;
->  	int    wait;
-> @@ -2185,8 +2185,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  		 * so we must not still own the command.
->  		 */
->  		scmd_printk(KERN_INFO, cmd, "Is not an active
-> device\n");
-> -		retval = SUCCESS;
-> -		goto no_cmd;
-> +		goto done;
->  	}
->  
->  	/*
-> @@ -2199,7 +2198,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  
->  	if (pending_scb == NULL) {
->  		scmd_printk(KERN_INFO, cmd, "Command not found\n");
-> -		goto no_cmd;
-> +		goto done;
->  	}
->  
->  	if ((pending_scb->flags & SCB_RECOVERY_SCB) != 0) {
-> @@ -2207,7 +2206,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  		 * We can't queue two recovery actions using the
-> same SCB
->  		 */
->  		retval = FAILED;
-> -		goto  done;
-> +		goto done;
->  	}
->  
->  	/*
-> @@ -2222,7 +2221,7 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  
->  	if ((pending_scb->flags & SCB_ACTIVE) == 0) {
->  		scmd_printk(KERN_INFO, cmd, "Command already
-> completed\n");
-> -		goto no_cmd;
-> +		goto done;
->  	}
->  
->  	printk("%s: At time of recovery, card was %spaused\n",
-> @@ -2239,7 +2238,6 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  		printk("%s:%d:%d:%d: Cmd aborted from QINFIFO\n",
->  		       ahd_name(ahd), cmd->device->channel, 
->  		       cmd->device->id, (u8)cmd->device->lun);
-> -		retval = SUCCESS;
->  		goto done;
->  	}
->  
-> @@ -2336,17 +2334,10 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> *cmd)
->  	} else {
->  		scmd_printk(KERN_INFO, cmd, "Unable to deliver
-> message\n");
->  		retval = FAILED;
-> -		goto done;
->  	}
->  
-> -no_cmd:
-> -	/*
-> -	 * Our assumption is that if we don't have the command, no
-> -	 * recovery action was required, so we return
-> success.  Again,
-> -	 * the semantics of the mid-layer recovery engine are not
-> -	 * well defined, so this may change in time.
-> -	 */
-> -	retval = SUCCESS;
-> +
-> +	ahd_restore_modes(ahd, saved_modes);
->  done:
->  	if (paused)
->  		ahd_unpause(ahd);
+Pointers to ring-buffer packets sent by Hyper-V are used within the
+guest VM. Hyper-V can send packets with erroneous values or modify
+packet fields after they are processed by the guest. To defend
+against these scenarios, return a copy of the incoming VMBus packet
+after validating its length and offset fields in hv_pkt_iter_first().
+In this way, the packet can no longer be modified by the host.
 
-Yes, that looks correct to me ... is there any way to test it?
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Andres Beltran <lkmlabelt@gmail.com>
+---
+ drivers/hv/channel.c              |  9 +++--
+ drivers/hv/hyperv_vmbus.h         |  2 +-
+ drivers/hv/ring_buffer.c          | 61 ++++++++++++++++++++++++++++---
+ drivers/net/hyperv/hyperv_net.h   |  7 ++++
+ drivers/net/hyperv/netvsc.c       |  2 +
+ drivers/net/hyperv/rndis_filter.c |  2 +
+ drivers/scsi/storvsc_drv.c        | 12 ++++++
+ include/linux/hyperv.h            |  9 +++++
+ 8 files changed, 95 insertions(+), 9 deletions(-)
 
-James
+diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
+index c16ddd3e5ce1..369628fe811d 100644
+--- a/drivers/hv/channel.c
++++ b/drivers/hv/channel.c
+@@ -206,12 +206,15 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
+ 	newchannel->onchannel_callback = onchannelcallback;
+ 	newchannel->channel_callback_context = context;
+ 
+-	err = hv_ringbuffer_init(&newchannel->outbound, page, send_pages);
++	if (!newchannel->max_pkt_size)
++		newchannel->max_pkt_size = VMBUS_DEFAULT_MAX_PKT_SIZE;
++
++	err = hv_ringbuffer_init(&newchannel->outbound, page, send_pages, 0);
+ 	if (err)
+ 		goto error_clean_ring;
+ 
+-	err = hv_ringbuffer_init(&newchannel->inbound,
+-				 &page[send_pages], recv_pages);
++	err = hv_ringbuffer_init(&newchannel->inbound, &page[send_pages],
++				 recv_pages, newchannel->max_pkt_size);
+ 	if (err)
+ 		goto error_clean_ring;
+ 
+diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
+index 40e2b9f91163..ff755e5d65fd 100644
+--- a/drivers/hv/hyperv_vmbus.h
++++ b/drivers/hv/hyperv_vmbus.h
+@@ -174,7 +174,7 @@ extern int hv_synic_cleanup(unsigned int cpu);
+ void hv_ringbuffer_pre_init(struct vmbus_channel *channel);
+ 
+ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
+-		       struct page *pages, u32 pagecnt);
++		       struct page *pages, u32 pagecnt, u32 max_pkt_size);
+ 
+ void hv_ringbuffer_cleanup(struct hv_ring_buffer_info *ring_info);
+ 
+diff --git a/drivers/hv/ring_buffer.c b/drivers/hv/ring_buffer.c
+index 356e22159e83..172d78256445 100644
+--- a/drivers/hv/ring_buffer.c
++++ b/drivers/hv/ring_buffer.c
+@@ -190,7 +190,7 @@ void hv_ringbuffer_pre_init(struct vmbus_channel *channel)
+ 
+ /* Initialize the ring buffer. */
+ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
+-		       struct page *pages, u32 page_cnt)
++		       struct page *pages, u32 page_cnt, u32 max_pkt_size)
+ {
+ 	int i;
+ 	struct page **pages_wraparound;
+@@ -232,6 +232,14 @@ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
+ 		sizeof(struct hv_ring_buffer);
+ 	ring_info->priv_read_index = 0;
+ 
++	/* Initialize buffer that holds copies of incoming packets */
++	if (max_pkt_size) {
++		ring_info->pkt_buffer = kmalloc(max_pkt_size, GFP_KERNEL);
++		if (!ring_info->pkt_buffer)
++			return -ENOMEM;
++		ring_info->pkt_buffer_size = max_pkt_size;
++	}
++
+ 	spin_lock_init(&ring_info->ring_lock);
+ 
+ 	return 0;
+@@ -244,6 +252,9 @@ void hv_ringbuffer_cleanup(struct hv_ring_buffer_info *ring_info)
+ 	vunmap(ring_info->ring_buffer);
+ 	ring_info->ring_buffer = NULL;
+ 	mutex_unlock(&ring_info->ring_buffer_mutex);
++
++	kfree(ring_info->pkt_buffer);
++	ring_info->pkt_buffer_size = 0;
+ }
+ 
+ /* Write to the ring buffer. */
+@@ -395,16 +406,56 @@ struct vmpacket_descriptor *hv_pkt_iter_first(struct vmbus_channel *channel)
+ {
+ 	struct hv_ring_buffer_info *rbi = &channel->inbound;
+ 	struct vmpacket_descriptor *desc;
++	struct vmpacket_descriptor *desc_copy;
++	u32 bytes_avail, pkt_len, pkt_offset;
+ 
+ 	hv_debug_delay_test(channel, MESSAGE_DELAY);
+-	if (hv_pkt_iter_avail(rbi) < sizeof(struct vmpacket_descriptor))
++
++	bytes_avail = hv_pkt_iter_avail(rbi);
++	if (bytes_avail < sizeof(struct vmpacket_descriptor))
+ 		return NULL;
+ 
+ 	desc = hv_get_ring_buffer(rbi) + rbi->priv_read_index;
+-	if (desc)
+-		prefetch((char *)desc + (desc->len8 << 3));
++	if (!desc)
++		return desc;
++
++	/*
++	 * Ensure the compiler does not use references to incoming Hyper-V values (which
++	 * could change at any moment) when reading local variables later in the code
++	 */
++	pkt_len = READ_ONCE(desc->len8) << 3;
++	pkt_offset = READ_ONCE(desc->offset8) << 3;
++
++	/*
++	 * If pkt_len is invalid, set it to the smaller of hv_pkt_iter_avail() and
++	 * rbi->pkt_buffer_size
++	 */
++	if (rbi->pkt_buffer_size < bytes_avail)
++		bytes_avail = rbi->pkt_buffer_size;
++
++	if (pkt_len <= sizeof(struct vmpacket_descriptor) || pkt_len > bytes_avail)
++		pkt_len = bytes_avail;
++
++	/*
++	 * If pkt_offset it is invalid, arbitrarily set it to
++	 * the size of vmpacket_descriptor
++	 */
++	if (pkt_offset < sizeof(struct vmpacket_descriptor) || pkt_offset >= pkt_len)
++		pkt_offset = sizeof(struct vmpacket_descriptor);
++
++	/* Copy the Hyper-V packet out of the ring buffer */
++	desc_copy = (struct vmpacket_descriptor *)rbi->pkt_buffer;
++	memcpy(desc_copy, desc, pkt_len);
++
++	/*
++	 * Hyper-V could still change len8 and offset8 after the earlier read.
++	 * Ensure that desc_copy has legal values for len8 and offset8 that
++	 * are consistent with the copy we just made
++	 */
++	desc_copy->len8 = pkt_len >> 3;
++	desc_copy->offset8 = pkt_offset >> 3;
+ 
+-	return desc;
++	return desc_copy;
+ }
+ EXPORT_SYMBOL_GPL(hv_pkt_iter_first);
+ 
+diff --git a/drivers/net/hyperv/hyperv_net.h b/drivers/net/hyperv/hyperv_net.h
+index f43b614f2345..a394f73b9821 100644
+--- a/drivers/net/hyperv/hyperv_net.h
++++ b/drivers/net/hyperv/hyperv_net.h
+@@ -860,6 +860,13 @@ static inline u32 netvsc_rqstor_size(unsigned long ringbytes)
+ 	       ringbytes / NETVSC_MIN_IN_MSG_SIZE;
+ }
+ 
++#define NETVSC_MAX_XFER_PAGE_RANGES 375
++#define NETVSC_XFER_HEADER_SIZE(rng_cnt) \
++		(offsetof(struct vmtransfer_page_packet_header, ranges) + \
++		(rng_cnt) * sizeof(struct vmtransfer_page_range))
++#define NETVSC_MAX_PKT_SIZE (NETVSC_XFER_HEADER_SIZE(NETVSC_MAX_XFER_PAGE_RANGES) + \
++		sizeof(struct nvsp_message) + (sizeof(u32) * VRSS_SEND_TAB_SIZE))
++
+ struct multi_send_data {
+ 	struct sk_buff *skb; /* skb containing the pkt */
+ 	struct hv_netvsc_packet *pkt; /* netvsc pkt pending */
+diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+index 79b907a29433..9585df459841 100644
+--- a/drivers/net/hyperv/netvsc.c
++++ b/drivers/net/hyperv/netvsc.c
+@@ -1473,6 +1473,8 @@ struct netvsc_device *netvsc_device_add(struct hv_device *device,
+ 
+ 	/* Open the channel */
+ 	device->channel->rqstor_size = netvsc_rqstor_size(netvsc_ring_bytes);
++	device->channel->max_pkt_size = NETVSC_MAX_PKT_SIZE;
++
+ 	ret = vmbus_open(device->channel, netvsc_ring_bytes,
+ 			 netvsc_ring_bytes,  NULL, 0,
+ 			 netvsc_channel_cb, net_device->chan_table);
+diff --git a/drivers/net/hyperv/rndis_filter.c b/drivers/net/hyperv/rndis_filter.c
+index 10489ba44a09..6de0f4e0db7b 100644
+--- a/drivers/net/hyperv/rndis_filter.c
++++ b/drivers/net/hyperv/rndis_filter.c
+@@ -1115,6 +1115,8 @@ static void netvsc_sc_open(struct vmbus_channel *new_sc)
+ 	nvchan->channel = new_sc;
+ 
+ 	new_sc->rqstor_size = netvsc_rqstor_size(netvsc_ring_bytes);
++	new_sc->max_pkt_size = NETVSC_MAX_PKT_SIZE;
++
+ 	ret = vmbus_open(new_sc, netvsc_ring_bytes,
+ 			 netvsc_ring_bytes, NULL, 0,
+ 			 netvsc_channel_cb, nvchan);
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 6d2df1f0fe6d..e28627cc4606 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -414,6 +414,14 @@ static void storvsc_on_channel_callback(void *context);
+ #define STORVSC_IDE_MAX_TARGETS				1
+ #define STORVSC_IDE_MAX_CHANNELS			1
+ 
++/*
++ * Upper bound on the size of a storvsc packet. vmscsi_size_delta is not
++ * included in the calculation because it is set after STORVSC_MAX_PKT_SIZE
++ * is used in storvsc_connect_to_vsp
++ */
++#define STORVSC_MAX_PKT_SIZE (sizeof(struct vmpacket_descriptor) +\
++			      sizeof(struct vstor_packet))
++
+ struct storvsc_cmd_request {
+ 	struct scsi_cmnd *cmd;
+ 
+@@ -698,6 +706,7 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+ 		return;
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
++	new_sc->max_pkt_size = STORVSC_MAX_PKT_SIZE;
+ 
+ 	/*
+ 	 * The size of vmbus_requestor is an upper bound on the number of requests
+@@ -1289,8 +1298,11 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
+ {
+ 	struct vmstorage_channel_properties props;
+ 	int ret;
++	struct storvsc_device *stor_device;
+ 
+ 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
++	stor_device = get_out_stor_device(device);
++	device->channel->max_pkt_size = STORVSC_MAX_PKT_SIZE;
+ 
+ 	/*
+ 	 * The size of vmbus_requestor is an upper bound on the number of requests
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index d8194924983d..3524d9e481c5 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -133,6 +133,10 @@ struct hv_ring_buffer_info {
+ 	 * being freed while the ring buffer is being accessed.
+ 	 */
+ 	struct mutex ring_buffer_mutex;
++
++	/* Buffer that holds a copy of an incoming host packet */
++	void *pkt_buffer;
++	u32 pkt_buffer_size;
+ };
+ 
+ 
+@@ -738,6 +742,8 @@ struct vmbus_device {
+ 	bool perf_device;
+ };
+ 
++#define VMBUS_DEFAULT_MAX_PKT_SIZE 4096
++
+ struct vmbus_channel {
+ 	struct list_head listentry;
+ 
+@@ -959,6 +965,9 @@ struct vmbus_channel {
+ 	/* request/transaction ids for VMBus */
+ 	struct vmbus_requestor requestor;
+ 	u32 rqstor_size;
++
++	/* The max size of a packet on this channel */
++	u32 max_pkt_size;
+ };
+ 
+ u64 vmbus_next_request_id(struct vmbus_requestor *rqstor, u64 rqst_addr);
+-- 
+2.25.1
 
