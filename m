@@ -2,88 +2,70 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E7AC433E2
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 11:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F349CC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 11:41:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A16A92084C
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 11:12:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2A2222201
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 11:41:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UaU0W+oQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727021AbgGNLM0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 07:12:26 -0400
-Received: from mxhk.zte.com.cn ([63.217.80.70]:64252 "EHLO mxhk.zte.com.cn"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726252AbgGNLMZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 07:12:25 -0400
-Received: from mse-fl1.zte.com.cn (unknown [10.30.14.238])
-        by Forcepoint Email with ESMTPS id 8CAE283169AF9C415B1D;
-        Tue, 14 Jul 2020 18:56:27 +0800 (CST)
-Received: from notes_smtp.zte.com.cn (notes_smtp.zte.com.cn [10.30.1.239])
-        by mse-fl1.zte.com.cn with ESMTP id 06EAuMpw053112;
-        Tue, 14 Jul 2020 18:56:22 +0800 (GMT-8)
-        (envelope-from wang.yi59@zte.com.cn)
-Received: from fox-host8.localdomain ([10.74.120.8])
-          by szsmtp06.zte.com.cn (Lotus Domino Release 8.5.3FP6)
-          with ESMTP id 2020071418563631-4282342 ;
-          Tue, 14 Jul 2020 18:56:36 +0800 
-From:   Yi Wang <wang.yi59@zte.com.cn>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, xue.zhihong@zte.com.cn,
-        wang.yi59@zte.com.cn, wang.liang82@zte.com.cn,
-        Liao Pingfang <liao.pingfang@zte.com.cn>
-Subject: [PATCH] scsi: ppa: Remove superfluous breaks
-Date:   Tue, 14 Jul 2020 18:59:31 +0800
-Message-Id: <1594724371-11677-1-git-send-email-wang.yi59@zte.com.cn>
-X-Mailer: git-send-email 1.8.3.1
-X-MIMETrack: Itemize by SMTP Server on SZSMTP06/server/zte_ltd(Release 8.5.3FP6|November
- 21, 2013) at 2020-07-14 18:56:36,
-        Serialize by Router on notes_smtp/zte_ltd(Release 9.0.1FP7|August  17, 2016) at
- 2020-07-14 18:56:25,
-        Serialize complete at 2020-07-14 18:56:25
-X-MAIL: mse-fl1.zte.com.cn 06EAuMpw053112
+        id S1726431AbgGNLl3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 07:41:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56078 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726332AbgGNLl3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 07:41:29 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08707C061755
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 04:41:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=W0uP5OtIAUnRAOSsv9mZUTtRrqIXBcSYHKHXkgH+zcU=; b=UaU0W+oQnktbZ+jzn1GQ3zkWP+
+        yI0Q/AasO1ZkfnI7GhMT0bLwTfaNDok2j7KUgIh0SwogAZAxMRHBCk4E09kGkLgCmehFE0EuL7R55
+        FMx8EZvE+sSVPmIpsI/LgwX1WvBXRRGnAYOzV65XsdDZkajlvLIdSiWeOmeRPX6q3ub/99zWcyZvr
+        GFJc9QKBxXMQZWo+eMLXiFcWBnb6HoqLXwExiOnvDjQmibaCKz79R3T4Pw8rCqQgTjoFnltXj6eRW
+        9ZLrP62rYIdisaVSp/4gLJZbZNE8SLJ7ht6wVxDQ374yF5rnMDqlYd7i3uqa/StT4o8HRG55b8q7s
+        vZBlanIw==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jvJJL-0007xb-0i; Tue, 14 Jul 2020 11:41:23 +0000
+Date:   Tue, 14 Jul 2020 12:41:22 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Benjamin Block <bblock@linux.ibm.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Julian Wiedmann <jwi@linux.ibm.com>,
+        Fedor Loshakov <loshakov@linux.ibm.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/3] scsi: Rename slave_configure to sdev_configure
+Message-ID: <20200714114122.GA12769@casper.infradead.org>
+References: <20200706193920.6897-1-willy@infradead.org>
+ <20200706193920.6897-4-willy@infradead.org>
+ <20200714082631.GB7244@t480-pf1aa2c2>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200714082631.GB7244@t480-pf1aa2c2>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Liao Pingfang <liao.pingfang@zte.com.cn>
+On Tue, Jul 14, 2020 at 10:26:31AM +0200, Benjamin Block wrote:
+> > @@ -428,7 +428,7 @@ static struct scsi_host_template zfcp_scsi_host_template = {
+> >  	.eh_target_reset_handler = zfcp_scsi_eh_target_reset_handler,
+> >  	.eh_host_reset_handler	 = zfcp_scsi_eh_host_reset_handler,
+> >  	.sdev_prep		 = zfcp_scsi_sdev_prep,
+> > -	.slave_configure	 = zfcp_scsi_slave_configure,
+> > +	.sdev_configure	 = zfcp_scsi_sdev_configure,
+> 
+> Please fix the alignment.
 
-Remove superfluous breaks, as there is a "return" before them.
-
-Signed-off-by: Liao Pingfang <liao.pingfang@zte.com.cn>
-Signed-off-by: Yi Wang <wang.yi59@zte.com.cn>
----
- drivers/scsi/ppa.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-index a406cc8..0ae800c 100644
---- a/drivers/scsi/ppa.c
-+++ b/drivers/scsi/ppa.c
-@@ -779,7 +779,6 @@ static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
- 			    (DID_OK << 16) + (h << 8) + (l & STATUS_MASK);
- 		}
- 		return 0;	/* Finished */
--		break;
- 
- 	default:
- 		printk(KERN_ERR "ppa: Invalid scsi phase\n");
-@@ -847,10 +846,8 @@ static int ppa_abort(struct scsi_cmnd *cmd)
- 	case 1:		/* Have not connected to interface */
- 		dev->cur_cmd = NULL;	/* Forget the problem */
- 		return SUCCESS;
--		break;
- 	default:		/* SCSI command sent, can not abort */
- 		return FAILED;
--		break;
- 	}
- }
- 
--- 
-2.9.5
-
+sed doesn't kow how to do that.
