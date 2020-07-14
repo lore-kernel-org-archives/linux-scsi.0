@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A031C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:44:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBFFC43459
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:45:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 59CD92064B
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:44:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 630DA208C3
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:45:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594737891;
-	bh=GAFcz6VMhCl4x1qHq3sS9k3Cf5CjbBVOHTbT3FSCZ9s=;
+	s=default; t=1594737912;
+	bh=E9kOmYvx3YB9KGGH3MDEv+MFY5zgfWQoOjXQAr6Pwbo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=O6m95manZX9ccWyP/wS2BHqT+bvSxAyfThDZAYv0UXiq6FPZWr+ltYAv2cmpDT6ps
-	 CDgOMN9Us2XXnLxzf2O++9Gs+rBvLHxWvaZkSi1Opd8XcburJky/063li47sGWJgUF
-	 FIZOu62eaz2M8MTdmEqqI4wak2mM7aOuTJJQ+NNc=
+	b=fMQ3s/JCXfhQyuP0fhv8uDmfEf5dbbEBIMemRjoG8PXiBJSf7oJrHEYNQEz9SuFq+
+	 E7YC8EOBW/ceuafPu4rXxKV7j4PC+0FhusAxu0o0sr3ptOV/5suIbbLMAojOAzsza7
+	 B9eytDzCYa0omy4j9CtJbQsHfCfu6AarqlQHh9IA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728842AbgGNOjL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 10:39:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54404 "EHLO mail.kernel.org"
+        id S1728722AbgGNOjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 10:39:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54286 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728798AbgGNOjK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 10:39:10 -0400
+        id S1728696AbgGNOjD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 10:39:03 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EE5C622527;
-        Tue, 14 Jul 2020 14:39:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7A66122516;
+        Tue, 14 Jul 2020 14:39:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594737549;
-        bh=GAFcz6VMhCl4x1qHq3sS9k3Cf5CjbBVOHTbT3FSCZ9s=;
+        s=default; t=1594737542;
+        bh=E9kOmYvx3YB9KGGH3MDEv+MFY5zgfWQoOjXQAr6Pwbo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ePr7SY9VMpffNn9QlDsz/b2dcsC5UdQOmQJJiD/wFTL/fmlY1FfMiHc/OTehBsi/5
-         yYhPw28FoYSwiYqY8zl9ufXwC8TO0MEZa3oWVcX2VQv5BT2Uf/XzORnbojiZVYOJUy
-         As+9UvGIOauQmJB/TI0KYLTTGFT/0gQXVwmKlpec=
+        b=Ip7uAwBbrWMFqmFE0rYMXSK0Mk0qGCo0zGOBx45DNTw8s5W0ki6290TGZrYxsc2ml
+         LEuhmXOajYeGS5pBKxhQkZrGVPECDDKYXB/QrPVolesuKcgaYFo8lzQt4GRk5zENDz
+         EckDrIgXJ6x1JRrb3QlmD60D2ifJ4vBnqbPa4vHQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
+Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 16/19] scsi: mpt3sas: Fix error returns in BRM_status_show
-Date:   Tue, 14 Jul 2020 10:38:46 -0400
-Message-Id: <20200714143849.4035283-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 10/19] scsi: mpt3sas: Fix unlock imbalance
+Date:   Tue, 14 Jul 2020 10:38:40 -0400
+Message-Id: <20200714143849.4035283-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200714143849.4035283-1-sashal@kernel.org>
 References: <20200714143849.4035283-1-sashal@kernel.org>
@@ -61,78 +61,80 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
 
-[ Upstream commit 0fd181456aa0826057adbfb6c79c40f4083cfd75 ]
+[ Upstream commit cb551b8dc079d2ef189145782627c99cb68c0255 ]
 
-BRM_status_show() has several error branches, but none of them record the
-error in the error return.
+In BRM_status_show(), if the condition "!ioc->is_warpdrive" tested on entry
+to the function is true, a "goto out" is called. This results in unlocking
+ioc->pci_access_mutex without this mutex lock being taken.  This generates
+the following splat:
 
-Also while at it remove the manual mutex_unlock() of the pci_access_mutex
-in case of an ongoing pci error recovery or host removal and jump to the
-cleanup label instead.
+[ 1148.539883] mpt3sas_cm2: BRM_status_show: BRM attribute is only for warpdrive
+[ 1148.547184]
+[ 1148.548708] =====================================
+[ 1148.553501] WARNING: bad unlock balance detected!
+[ 1148.558277] 5.8.0-rc3+ #827 Not tainted
+[ 1148.562183] -------------------------------------
+[ 1148.566959] cat/5008 is trying to release lock (&ioc->pci_access_mutex) at:
+[ 1148.574035] [<ffffffffc070b7a3>] BRM_status_show+0xd3/0x100 [mpt3sas]
+[ 1148.580574] but there are no more locks to release!
+[ 1148.585524]
+[ 1148.585524] other info that might help us debug this:
+[ 1148.599624] 3 locks held by cat/5008:
+[ 1148.607085]  #0: ffff92aea3e392c0 (&p->lock){+.+.}-{3:3}, at: seq_read+0x34/0x480
+[ 1148.618509]  #1: ffff922ef14c4888 (&of->mutex){+.+.}-{3:3}, at: kernfs_seq_start+0x2a/0xb0
+[ 1148.630729]  #2: ffff92aedb5d7310 (kn->active#224){.+.+}-{0:0}, at: kernfs_seq_start+0x32/0xb0
+[ 1148.643347]
+[ 1148.643347] stack backtrace:
+[ 1148.655259] CPU: 73 PID: 5008 Comm: cat Not tainted 5.8.0-rc3+ #827
+[ 1148.665309] Hardware name: HGST H4060-S/S2600STB, BIOS SE5C620.86B.02.01.0008.031920191559 03/19/2019
+[ 1148.678394] Call Trace:
+[ 1148.684750]  dump_stack+0x78/0xa0
+[ 1148.691802]  lock_release.cold+0x45/0x4a
+[ 1148.699451]  __mutex_unlock_slowpath+0x35/0x270
+[ 1148.707675]  BRM_status_show+0xd3/0x100 [mpt3sas]
+[ 1148.716092]  dev_attr_show+0x19/0x40
+[ 1148.723664]  sysfs_kf_seq_show+0x87/0x100
+[ 1148.731193]  seq_read+0xbc/0x480
+[ 1148.737882]  vfs_read+0xa0/0x160
+[ 1148.744514]  ksys_read+0x58/0xd0
+[ 1148.751129]  do_syscall_64+0x4c/0xa0
+[ 1148.757941]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[ 1148.766240] RIP: 0033:0x7f1230566542
+[ 1148.772957] Code: Bad RIP value.
+[ 1148.779206] RSP: 002b:00007ffeac1bcac8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[ 1148.790063] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f1230566542
+[ 1148.800284] RDX: 0000000000020000 RSI: 00007f1223460000 RDI: 0000000000000003
+[ 1148.810474] RBP: 00007f1223460000 R08: 00007f122345f010 R09: 0000000000000000
+[ 1148.820641] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000000000
+[ 1148.830728] R13: 0000000000000003 R14: 0000000000020000 R15: 0000000000020000
 
-Note: We can safely jump to out from here as io_unit_pg3 is initialized to
-NULL and if it hasn't been allocated, kfree() skips the NULL pointer.
+Fix this by returning immediately instead of jumping to the out label.
 
-[mkp: compilation warning]
-
-Link: https://lore.kernel.org/r/20200701131454.5255-1-johannes.thumshirn@wdc.com
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+Link: https://lore.kernel.org/r/20200701085254.51740-1-damien.lemoal@wdc.com
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Signed-off-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index e94e72de2fc68..983e568ff2317 100644
+index 62e552838565f..e94e72de2fc68 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3149,15 +3149,14 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+@@ -3145,7 +3145,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 	if (!ioc->is_warpdrive) {
+ 		ioc_err(ioc, "%s: BRM attribute is only for warpdrive\n",
+ 			__func__);
+-		goto out;
++		return 0;
  	}
  	/* pci_access_mutex lock acquired by sysfs show path */
  	mutex_lock(&ioc->pci_access_mutex);
--	if (ioc->pci_error_recovery || ioc->remove_host) {
--		mutex_unlock(&ioc->pci_access_mutex);
--		return 0;
--	}
-+	if (ioc->pci_error_recovery || ioc->remove_host)
-+		goto out;
- 
- 	/* allocate upto GPIOVal 36 entries */
- 	sz = offsetof(Mpi2IOUnitPage3_t, GPIOVal) + (sizeof(u16) * 36);
- 	io_unit_pg3 = kzalloc(sz, GFP_KERNEL);
- 	if (!io_unit_pg3) {
-+		rc = -ENOMEM;
- 		ioc_err(ioc, "%s: failed allocating memory for iounit_pg3: (%d) bytes\n",
- 			__func__, sz);
- 		goto out;
-@@ -3167,6 +3166,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	    0) {
- 		ioc_err(ioc, "%s: failed reading iounit_pg3\n",
- 			__func__);
-+		rc = -EINVAL;
- 		goto out;
- 	}
- 
-@@ -3174,12 +3174,14 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
- 		ioc_err(ioc, "%s: iounit_pg3 failed with ioc_status(0x%04x)\n",
- 			__func__, ioc_status);
-+		rc = -EINVAL;
- 		goto out;
- 	}
- 
- 	if (io_unit_pg3->GPIOCount < 25) {
- 		ioc_err(ioc, "%s: iounit_pg3->GPIOCount less than 25 entries, detected (%d) entries\n",
- 			__func__, io_unit_pg3->GPIOCount);
-+		rc = -EINVAL;
- 		goto out;
- 	}
- 
 -- 
 2.25.1
 
