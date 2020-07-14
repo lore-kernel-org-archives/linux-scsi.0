@@ -2,255 +2,164 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F56C433E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 06:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF39C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 06:58:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17086221E8
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 06:52:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="rwvfB412";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="f2JFxFO3"
+	by mail.kernel.org (Postfix) with ESMTP id 93C82221ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 06:58:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbgGNGwv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 02:52:51 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24318 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726722AbgGNGwu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 02:52:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1594709570; x=1626245570;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version;
-  bh=Avkoxfh98Zhryp94ARj25o90gHvUf8lpZO8PF7rVWW8=;
-  b=rwvfB412dlyow9PxLAAI5ensLHof/F5/m+tRYPwvJBbHbAFNHYcO40WG
-   vkm59GeVQiq0J2f/6BO7IcbxMdDNuvAldvOBfioweFVmsRBzt7MW78nhg
-   TOaisEBvvyZPoz3elSchwYO4dZAzN0p8MCdjUw+hsveZzJ8iqWe4fIEaD
-   WVB8FaTm0A68oGCH70vQ3JEsvGgBZ8tNBMxjHAH+nb2EGo43ng2nQkYoo
-   qqqmw3oOTnQ9OxUSReqdw7XMeNTu2dQawyxteSzU0GaxyLJBGYsBwpM0c
-   xNiy9F+ZwOinDQaKzMQWvWmSCz4s09Tn+vVJBtLSRw5IkfJk6aqIDITCZ
-   g==;
-IronPort-SDR: Ajr7HmIiUlgtfJLYpvntKU/tPmop48zB85CX/zwnZ5feh9W+itWtyOK3/pJZc1Aqum2mq34oGP
- vF6HBZFU6AhNM/WX1YCJ43mgwverAVrymFXFgWDSlG+HbKnI9jja15rV3F983Gf4ItR6TedK0H
- 2+S/N1wTHKNYfL1Lh3lQmD1VBqqvDQmtjG24Bv4PGb6FlrwDJmup4kc4gbCX1MowcXpUxg7l6o
- pJ7OORu4yt5Abz42foKruQc+BnNJmCUa24yF9AuVTxc/9BQXX1j+jxlR7A7sYlId5JTurFHJj0
- cng=
-X-IronPort-AV: E=Sophos;i="5.75,350,1589212800"; 
-   d="scan'208";a="143701281"
-Received: from mail-mw2nam10lp2102.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.102])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Jul 2020 14:52:49 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hkMgzDhRoa/h0nGMa+DZtEyUThc3RDpkvuq5Qjrf83W8kXNiXUXHiuOZ1dKByF2uGEaJgykELXgvld3r4d8YQjJPiq6ooHJQGGS+SiqmHCKZ0lbtUaJVD0GnaI5VezxRN88aKNTokUS0Teyrx+P5/qoRpg5qv0DXSib1u0tZpPXnNYpE4kEn5ZNLpdeu/IziTzepVJrjb0OKG+rvmqPtzfFk2iMzryi7FfwG12NaRS8d4atwYWDA9eT0qBT3+uO6s86Sp6jz26hMr8XlhF2Hhe6vxstwkTnDstXkHuj8XTU/cS6+Sh0Bm9at/8Hl4c+L+iCvGesq0JK1H5O60HqYbw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Avkoxfh98Zhryp94ARj25o90gHvUf8lpZO8PF7rVWW8=;
- b=GbBr4rROimVc1YzKeVhuVPHri3dtXxVMmxFeGLZNX2UzakWpSUCcUBJkTWqXSGTGl3uJx32Q8hvDYnUwq99J98pMX4NO2anVYSHfRVp5ZZuPhvINI3BorMBtHaLsAg23Qj7RedEuPRSVa28gKBWVv59W9Te852QjqrhId7Kq8j5KLBD0RNqvCSxNALf88JtF2PQ01HVkNW2gErOw8zN+CyXHGpwU2XVOVBUxC4mmKrl3PQ1ER0lMl4eKYXXpaewLfsLk10GZIf4oAVojLMKz5a/qJnhUUhoGURSy+wHPrlYMhc5Nz4deeq4rJ7aKwSvKw3MA/eDZOjGSGYlspMZuCA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Avkoxfh98Zhryp94ARj25o90gHvUf8lpZO8PF7rVWW8=;
- b=f2JFxFO3tXyeOXBZtif2xyV+m1Vi+ufd1sysYIBAdUQxtAyZOqwvEh+KMDXvJCQG5LJezsulDyyzD03gqNUYX8jnMVVdc8BwLUDTKfTNSzMKV/EgQJyxyJ197DDNYOo2ZilEZdrpVpoKtGtjnFBPkZRmwCnpXKmPmmlx8H0x+f4=
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com (2603:10b6:805:a4::19)
- by SN2PR04MB2173.namprd04.prod.outlook.com (2603:10b6:804:9::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.22; Tue, 14 Jul
- 2020 06:52:46 +0000
-Received: from SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::1c80:dad0:4a83:2ef2]) by SN6PR04MB4640.namprd04.prod.outlook.com
- ([fe80::1c80:dad0:4a83:2ef2%4]) with mapi id 15.20.3174.025; Tue, 14 Jul 2020
- 06:52:46 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     SEO HOYOUNG <hy50.seo@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "grant.jung@samsung.com" <grant.jung@samsung.com>
-Subject: RE: [RFC PATCH v1] scsi: ufs: modify write booster
-Thread-Topic: [RFC PATCH v1] scsi: ufs: modify write booster
-Thread-Index: AQHWWQeLXwaekXNY8UmcbodY5rX5g6kGm9kQ
-Date:   Tue, 14 Jul 2020 06:52:46 +0000
-Message-ID: <SN6PR04MB4640C3D4BEB8307112C5F42EFC610@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <CGME20200713111949epcas2p47da38b91548e7a13123380b9a7093642@epcas2p4.samsung.com>
- <20200713112022.169887-1-hy50.seo@samsung.com>
-In-Reply-To: <20200713112022.169887-1-hy50.seo@samsung.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: samsung.com; dkim=none (message not signed)
- header.d=none;samsung.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [212.25.79.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: 27e99718-ee9b-4108-5013-08d827c28425
-x-ms-traffictypediagnostic: SN2PR04MB2173:
-x-microsoft-antispam-prvs: <SN2PR04MB2173FAA203B86AA5369C8AABFC610@SN2PR04MB2173.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: OyK4r/3iXEQuPhxjFapGTCsM9qp2wVBHaCBG6d7bjpXZd1N+qnid3zozBHg9araQMa2XwfcV5hqrQRUb+x0ObNu0kiM8yHv+gdzDU4+vj5pBI5WwE8DeGpTqA8CePdBkWJbYZ5APUHt/kMg3Rn1tEDB1Pzqj7YeuXccDolrce2Q3O5km2kjM7MqifuRvoaiersffqjsB3sbfOY++BxfW9CkayZkKOH5oOcxgKgluwFGp0tkl+on7fBuRd5NXhxBl3JrhPOTwivGCKrKbGHfq5hhW1qzBPNVDUqqKmi1UsfY0+7/RiZTNylmimP1h9M8ggi/8/OxGZVz8wz4bLcrfPqzjNUkGUnFfSB/qQRT3PFdwQMIpYVnKAG96CaVQscHk1xsgaRak7TIRB0RcOERYqQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR04MB4640.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(136003)(39860400002)(376002)(366004)(346002)(396003)(5660300002)(7696005)(66946007)(55016002)(76116006)(478600001)(9686003)(26005)(64756008)(66476007)(66556008)(66446008)(83380400001)(7416002)(2906002)(6506007)(316002)(8936002)(33656002)(86362001)(110136005)(186003)(71200400001)(52536014)(8676002)(21314003)(921003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: Xr5U9D2yvOrWYK9P3PXfy5mACg2evI3c8iOq6KiR9MIFstTXXExUk1LzhEpfbpSYAsEwMfFrsdExqpD+o5JiZN0a7QaLZNR3fDTMCC2YfATrJJQARN3oGpYkMmFy7X+iYBy91w0QzEGjV01GRCAL8ByW8poZCewA5Bc9EiAo1v2exS4BthMxNQCYQq8xVh3X/s9pkW4uPfr3NCbbX2sNPG1NnmmszOnjlYyo2OyS14/BFZ4b0nZ0pPZpoWqXtY87xKeqs6EgEVilTnX/ghWiRFh1aDOCVWgu1rnttY2mDUenT6sXB2I+aAVG+GAQqsgj35pvL8hzHVj7b8QKbN2G17w3j81QBJ/O1Pa8IJM19jUax+9HHxOZM48oBU+omdZYsCCZn2fxIGgWCmKPrYDTOJrlHVfeyfgeL6dIdYku1kMlTVwkzhfWRxzrtLEhqm+1yC5lOhm5jyx2tgJ0R2AtUNl89XPorr+VFRW7QmEE4Ws=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1726675AbgGNG6L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 02:58:11 -0400
+Received: from mx2.suse.de ([195.135.220.15]:34884 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725945AbgGNG6J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 02:58:09 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 400D6AEAA;
+        Tue, 14 Jul 2020 06:58:10 +0000 (UTC)
+Subject: Re: [PATCH v2 04/29] scsi: fcoe: fcoe: Fix various kernel-doc
+ infringements
+To:     Lee Jones <lee.jones@linaro.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20200713074645.126138-1-lee.jones@linaro.org>
+ <20200713074645.126138-5-lee.jones@linaro.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <06bc5e03-04b0-7e09-18f4-d9fd536b714b@suse.de>
+Date:   Tue, 14 Jul 2020 08:58:06 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR04MB4640.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 27e99718-ee9b-4108-5013-08d827c28425
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Jul 2020 06:52:46.5472
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: EAOwVZulpo0s5bNypqQTLWXvV4mf6aL6w6gp2fOrkLxTLKQxZgRwlqnmiCSxeX737GXpTQ1wl8uzebI9UziarA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN2PR04MB2173
+In-Reply-To: <20200713074645.126138-5-lee.jones@linaro.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGksDQoNCj4gDQo+IEFkZCB2ZW5kb3Igc3BlY2lmaWMgZnVuY3Rpb25zIGZvciBXQg0KPiBVc2Ug
-Y2FsbGJhY2sgYWRkaXRpb25hbCBzZXR0aW5nIHdoZW4gdXNlIHdyaXRlIGJvb3N0ZXIuDQo+IA0K
-PiBTaWduZWQtb2ZmLWJ5OiBTRU8gSE9ZT1VORyA8aHk1MC5zZW9Ac2Ftc3VuZy5jb20+DQpJZiB5
-b3UgYXJlIGludHJvZHVjaW5nIGEgbmV3IHZvcHMgLSB5b3VyIHNlcmllcyBzaG91bGQgaW5jbHVk
-ZSB5b3VyIGltcGxlbWVudGF0aW9uLA0KT3RoZXJ3aXNlIHdoeSBpbnRyb2R1Y2UgYSB2b3AgdGhh
-dCBub2JvZHkgdXNlcz8NCg0KDQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuYyB8
-IDIzICsrKysrKysrKysrKysrKystLS0tLQ0KPiAgZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaCB8
-IDQzICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiAgMiBmaWxlcyBj
-aGFuZ2VkLCA2MSBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5j
-DQo+IGluZGV4IGVmYzBhNmNiZmUyMi4uZWZhMTZiZjRmZDc2IDEwMDY0NA0KPiAtLS0gYS9kcml2
-ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMN
-Cj4gQEAgLTMzMDYsMTEgKzMzMDYsMTEgQEAgaW50IHVmc2hjZF9yZWFkX3N0cmluZ19kZXNjKHN0
-cnVjdCB1ZnNfaGJhICpoYmEsDQo+IHU4IGRlc2NfaW5kZXgsDQo+ICAgKg0KPiAgICogUmV0dXJu
-IDAgaW4gY2FzZSBvZiBzdWNjZXNzLCBub24temVybyBvdGhlcndpc2UNCj4gICAqLw0KPiAtc3Rh
-dGljIGlubGluZSBpbnQgdWZzaGNkX3JlYWRfdW5pdF9kZXNjX3BhcmFtKHN0cnVjdCB1ZnNfaGJh
-ICpoYmEsDQo+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBp
-bnQgbHVuLA0KPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ZW51bSB1bml0X2Rlc2NfcGFyYW0gcGFyYW1fb2Zmc2V0LA0KPiAtICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgdTggKnBhcmFtX3JlYWRfYnVmLA0KPiAtICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdTMyIHBhcmFtX3NpemUpDQo+
-ICtpbnQgdWZzaGNkX3JlYWRfdW5pdF9kZXNjX3BhcmFtKHN0cnVjdCB1ZnNfaGJhICpoYmEsDQo+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaW50IGx1biwNCj4gKyAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBlbnVtIHVuaXRfZGVzY19wYXJhbSBwYXJhbV9vZmZzZXQsDQo+
-ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdTggKnBhcmFtX3JlYWRfYnVmLA0KPiAr
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHUzMiBwYXJhbV9zaXplKQ0KPiAgew0KPiAg
-ICAgICAgIC8qDQo+ICAgICAgICAgICogVW5pdCBkZXNjcmlwdG9ycyBhcmUgb25seSBhdmFpbGFi
-bGUgZm9yIGdlbmVyYWwgcHVycG9zZSBMVXMgKExVTiBpZA0KPiBAQCAtMzMyMiw2ICszMzIyLDcg
-QEAgc3RhdGljIGlubGluZSBpbnQNCj4gdWZzaGNkX3JlYWRfdW5pdF9kZXNjX3BhcmFtKHN0cnVj
-dCB1ZnNfaGJhICpoYmEsDQo+ICAgICAgICAgcmV0dXJuIHVmc2hjZF9yZWFkX2Rlc2NfcGFyYW0o
-aGJhLCBRVUVSWV9ERVNDX0lETl9VTklULCBsdW4sDQo+ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgcGFyYW1fb2Zmc2V0LCBwYXJhbV9yZWFkX2J1ZiwgcGFyYW1fc2l6ZSk7
-DQo+ICB9DQo+ICtFWFBPUlRfU1lNQk9MX0dQTCh1ZnNoY2RfcmVhZF91bml0X2Rlc2NfcGFyYW0p
-Ow0KQXJlIHlvdSBleHBvcnRpbmcgdGhpcyBiZWNhdXNlIHlvdSBuZWVkIHVmc2ZlYXR1cmVzIHRv
-IHVzZSBpdD8NCklmIHNvLCB5b3UgbmVlZCB0byB3YWl0IHVudGlsIGl0IGlzIG1lcmdlZCwgaWYg
-bm90LCBhZGQgYW4gZXhwbGFuYXRpb24gaW4geW91ciBjb21taXQgbG9nLg0KDQo+IA0KPiAgc3Rh
-dGljIGludCB1ZnNoY2RfZ2V0X3JlZl9jbGtfZ2F0aW5nX3dhaXQoc3RydWN0IHVmc19oYmEgKmhi
-YSkNCj4gIHsNCj4gQEAgLTUyNTcsNiArNTI1OCwxMCBAQCBzdGF0aWMgaW50IHVmc2hjZF93Yl9j
-dHJsKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGJvb2wNCj4gZW5hYmxlKQ0KPiANCj4gICAgICAgICBp
-ZiAoIShlbmFibGUgXiBoYmEtPndiX2VuYWJsZWQpKQ0KPiAgICAgICAgICAgICAgICAgcmV0dXJu
-IDA7DQo+ICsNCj4gKyAgICAgICBpZiAoIXVmc2hjZF93Yl9jdHJsX3ZlbmRvcihoYmEsIGVuYWJs
-ZSkpDQo+ICsgICAgICAgICAgICAgICByZXR1cm4gMDsNCklmIHRoZSB2b3AgZmFpbCBqdXN0IGtl
-ZXAgZ29pbmcgd2l0aCB0aGUgc3RhbmRhcmQgaW1wbGVtZW50YXRpb24/DQoNCj4gKw0KPiAgICAg
-ICAgIGlmIChlbmFibGUpDQo+ICAgICAgICAgICAgICAgICBvcGNvZGUgPSBVUElVX1FVRVJZX09Q
-Q09ERV9TRVRfRkxBRzsNCj4gICAgICAgICBlbHNlDQo+IEBAIC02NjEwLDYgKzY2MTUsOCBAQCBz
-dGF0aWMgaW50IHVmc2hjZF9yZXNldF9hbmRfcmVzdG9yZShzdHJ1Y3QgdWZzX2hiYQ0KPiAqaGJh
-KQ0KPiAgICAgICAgIGludCBlcnIgPSAwOw0KPiAgICAgICAgIGludCByZXRyaWVzID0gTUFYX0hP
-U1RfUkVTRVRfUkVUUklFUzsNCj4gDQo+ICsgICAgICAgdWZzaGNkX3Jlc2V0X3ZlbmRvcihoYmEp
-Ow0KV2hhdCByZXNldCBoYXMgdG8gZG8gd2l0aCBXQj8NCklmIHlvdSBhcmUgY2hhbmdpbmcgdGhl
-IGZsb3csIG5lZWQgdG8gZG8gdGhhdCBpbiBhIGRpZmZlcmVudCBwYXRjaCwgd2l0aCBhIHByb3Bl
-ciBjb21taXQgbG9nLg0KDQo+ICsNCj4gICAgICAgICBkbyB7DQo+ICAgICAgICAgICAgICAgICAv
-KiBSZXNldCB0aGUgYXR0YWNoZWQgZGV2aWNlICovDQo+ICAgICAgICAgICAgICAgICB1ZnNoY2Rf
-dm9wc19kZXZpY2VfcmVzZXQoaGJhKTsNCj4gQEAgLTY5MDMsNiArNjkxMCw5IEBAIHN0YXRpYyB2
-b2lkIHVmc2hjZF93Yl9wcm9iZShzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiB1OCAqZGVzY19idWYp
-DQo+ICAgICAgICAgaWYgKCEoZGV2X2luZm8tPmRfZXh0X3Vmc19mZWF0dXJlX3N1cCAmDQo+IFVG
-U19ERVZfV1JJVEVfQk9PU1RFUl9TVVApKQ0KPiAgICAgICAgICAgICAgICAgZ290byB3Yl9kaXNh
-YmxlZDsNCj4gDQo+ICsgICAgICAgaWYgKCF1ZnNoY2Rfd2JfYWxsb2NfdW5pdHNfdmVuZG9yKGhi
-YSkpDQo+ICsgICAgICAgICAgICAgICByZXR1cm47DQo+ICsNCj4gICAgICAgICAvKg0KPiAgICAg
-ICAgICAqIFdCIG1heSBiZSBzdXBwb3J0ZWQgYnV0IG5vdCBjb25maWd1cmVkIHdoaWxlIHByb3Zp
-c2lvbmluZy4NCj4gICAgICAgICAgKiBUaGUgc3BlYyBzYXlzLCBpbiBkZWRpY2F0ZWQgd2IgYnVm
-ZmVyIG1vZGUsDQo+IEBAIC04MjYwLDYgKzgyNzAsNyBAQCBzdGF0aWMgaW50IHVmc2hjZF9zdXNw
-ZW5kKHN0cnVjdCB1ZnNfaGJhICpoYmEsDQo+IGVudW0gdWZzX3BtX29wIHBtX29wKQ0KPiAgICAg
-ICAgICAgICAgICAgICAgICAgICAvKiBtYWtlIHN1cmUgdGhhdCBhdXRvIGJrb3BzIGlzIGRpc2Fi
-bGVkICovDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIHVmc2hjZF9kaXNhYmxlX2F1dG9fYmtv
-cHMoaGJhKTsNCj4gICAgICAgICAgICAgICAgIH0NCj4gKw0KPiAgICAgICAgICAgICAgICAgLyoN
-Cj4gICAgICAgICAgICAgICAgICAqIElmIGRldmljZSBuZWVkcyB0byBkbyBCS09QIG9yIFdCIGJ1
-ZmZlciBmbHVzaCBkdXJpbmcNCj4gICAgICAgICAgICAgICAgICAqIEhpYmVybjgsIGtlZXAgZGV2
-aWNlIHBvd2VyIG1vZGUgYXMgImFjdGl2ZSBwb3dlciBtb2RlIg0KPiBAQCAtODI3Myw2ICs4Mjg0
-LDggQEAgc3RhdGljIGludCB1ZnNoY2Rfc3VzcGVuZChzdHJ1Y3QgdWZzX2hiYSAqaGJhLA0KPiBl
-bnVtIHVmc19wbV9vcCBwbV9vcCkNCj4gICAgICAgICAgICAgICAgICAgICAgICAgdWZzaGNkX3di
-X25lZWRfZmx1c2goaGJhKSk7DQo+ICAgICAgICAgfQ0KPiANCj4gKyAgICAgICB1ZnNoY2Rfd2Jf
-dG9nZ2xlX2ZsdXNoX3ZlbmRvcihoYmEsIHBtX29wKTsNCj4gKw0KPiAgICAgICAgIGlmIChyZXFf
-ZGV2X3B3cl9tb2RlICE9IGhiYS0+Y3Vycl9kZXZfcHdyX21vZGUpIHsNCj4gICAgICAgICAgICAg
-ICAgIGlmICgodWZzaGNkX2lzX3J1bnRpbWVfcG0ocG1fb3ApICYmICFoYmEtPmF1dG9fYmtvcHNf
-ZW5hYmxlZCkNCj4gfHwNCj4gICAgICAgICAgICAgICAgICAgICAhdWZzaGNkX2lzX3J1bnRpbWVf
-cG0ocG1fb3ApKSB7DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oIGIv
-ZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiBpbmRleCA2NTZjMDY5MWM4NTguLmRlYjk1Nzdl
-MGVhYSAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiArKysgYi9k
-cml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5oDQo+IEBAIC0yNTQsNiArMjU0LDEzIEBAIHN0cnVjdCB1
-ZnNfcHdyX21vZGVfaW5mbyB7DQo+ICAgICAgICAgc3RydWN0IHVmc19wYV9sYXllcl9hdHRyIGlu
-Zm87DQo+ICB9Ow0KPiANCj4gK3N0cnVjdCB1ZnNfd2Jfb3BzIHsNCj4gKyAgICAgICBpbnQgKCp3
-Yl90b2dnbGVfZmx1c2hfdmVuZG9yKShzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBlbnVtIHVmc19wbV9v
-cA0KPiBwbV9vcCk7DQo+ICsgICAgICAgaW50ICgqd2JfYWxsb2NfdW5pdHNfdmVuZG9yKShzdHJ1
-Y3QgdWZzX2hiYSAqaGJhKTsNCj4gKyAgICAgICBpbnQgKCp3Yl9jdHJsX3ZlbmRvcikoc3RydWN0
-IHVmc19oYmEgKmhiYSwgYm9vbCBlbmFibGUpOw0KPiArICAgICAgIGludCAoKndiX3Jlc2V0X3Zl
-bmRvcikoc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBmb3JjZSk7DQo+ICt9Ow0KPiArDQo+ICAv
-KioNCj4gICAqIHN0cnVjdCB1ZnNfaGJhX3ZhcmlhbnRfb3BzIC0gdmFyaWFudCBzcGVjaWZpYyBj
-YWxsYmFja3MNCj4gICAqIEBuYW1lOiB2YXJpYW50IG5hbWUNCj4gQEAgLTc1Miw2ICs3NTksNyBA
-QCBzdHJ1Y3QgdWZzX2hiYSB7DQo+ICAgICAgICAgc3RydWN0IHJlcXVlc3RfcXVldWUgICAgKmJz
-Z19xdWV1ZTsNCj4gICAgICAgICBib29sIHdiX2J1Zl9mbHVzaF9lbmFibGVkOw0KPiAgICAgICAg
-IGJvb2wgd2JfZW5hYmxlZDsNCj4gKyAgICAgICBzdHJ1Y3QgdWZzX3diX29wcyAqd2Jfb3BzOw0K
-VGhpcyBhY3R1YWxseSBzaG91bGQgbm90IGJlIGRpcmVjdGx5IHVuZGVyIHVmc19oYmEsIGJ1dCBh
-IG1lbWJlciBvZiBoYmEtPnZvcHMsDQphbmQgYWxzbyBwbGVhc2UgZm9sbG93IHRoZSB2b3AgbmFt
-aW5nIGNvbnZlbnRpb24sIGUuZy4gdWZzaGNkX3ZvcHNfd2RfeHh4DQoNCg0KPiAgICAgICAgIHN0
-cnVjdCBkZWxheWVkX3dvcmsgcnBtX2Rldl9mbHVzaF9yZWNoZWNrX3dvcms7DQo+IA0KPiAgI2lm
-ZGVmIENPTkZJR19TQ1NJX1VGU19DUllQVE8NCj4gQEAgLTEwMDQsNiArMTAxMiwxMCBAQCBpbnQg
-dWZzaGNkX2V4ZWNfcmF3X3VwaXVfY21kKHN0cnVjdCB1ZnNfaGJhDQo+ICpoYmEsDQo+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgdTggKmRlc2NfYnVmZiwgaW50ICpidWZmX2xlbiwNCj4g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlbnVtIHF1ZXJ5X29wY29kZSBkZXNjX29wKTsN
-Cj4gDQo+ICtpbnQgdWZzaGNkX3JlYWRfdW5pdF9kZXNjX3BhcmFtKHN0cnVjdCB1ZnNfaGJhICpo
-YmEsDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaW50IGx1biwgZW51bSB1bml0
-X2Rlc2NfcGFyYW0gcGFyYW1fb2Zmc2V0LA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIHU4ICpwYXJhbV9yZWFkX2J1ZiwgdTMyIHBhcmFtX3NpemUpOw0KPiArDQo+ICAvKiBXcmFw
-cGVyIGZ1bmN0aW9ucyBmb3Igc2FmZWx5IGNhbGxpbmcgdmFyaWFudCBvcGVyYXRpb25zICovDQo+
-ICBzdGF0aWMgaW5saW5lIGNvbnN0IGNoYXIgKnVmc2hjZF9nZXRfdmFyX25hbWUoc3RydWN0IHVm
-c19oYmEgKmhiYSkNCj4gIHsNCj4gQEAgLTExODEsNCArMTE5MywzNSBAQCBzdGF0aWMgaW5saW5l
-IHU4IHVmc2hjZF9zY3NpX3RvX3VwaXVfbHVuKHVuc2lnbmVkDQo+IGludCBzY3NpX2x1bikNCj4g
-IGludCB1ZnNoY2RfZHVtcF9yZWdzKHN0cnVjdCB1ZnNfaGJhICpoYmEsIHNpemVfdCBvZmZzZXQs
-IHNpemVfdCBsZW4sDQo+ICAgICAgICAgICAgICAgICAgICAgIGNvbnN0IGNoYXIgKnByZWZpeCk7
-DQo+IA0KPiArc3RhdGljIGlubGluZSBpbnQgdWZzaGNkX3diX3RvZ2dsZV9mbHVzaF92ZW5kb3Io
-c3RydWN0IHVmc19oYmEgKmhiYSwgZW51bQ0KPiB1ZnNfcG1fb3AgcG1fb3ApDQo+ICt7DQo+ICsg
-ICAgICAgaWYgKCFoYmEtPndiX29wcyB8fCAhaGJhLT53Yl9vcHMtPndiX3RvZ2dsZV9mbHVzaF92
-ZW5kb3IpDQo+ICsgICAgICAgICAgICAgICByZXR1cm4gLTE7DQo+ICsNCj4gKyAgICAgICByZXR1
-cm4gaGJhLT53Yl9vcHMtPndiX3RvZ2dsZV9mbHVzaF92ZW5kb3IoaGJhLCBwbV9vcCk7DQo+ICt9
-DQo+ICsNCj4gK3N0YXRpYyBpbnQgdWZzaGNkX3diX2FsbG9jX3VuaXRzX3ZlbmRvcihzdHJ1Y3Qg
-dWZzX2hiYSAqaGJhKQ0KPiArew0KPiArICAgICAgIGlmICghaGJhLT53Yl9vcHMgfHwgIWhiYS0+
-d2Jfb3BzLT53Yl9hbGxvY191bml0c192ZW5kb3IpDQo+ICsgICAgICAgICAgICAgICByZXR1cm4g
-LTE7DQo+ICsNCj4gKyAgICAgICByZXR1cm4gaGJhLT53Yl9vcHMtPndiX2FsbG9jX3VuaXRzX3Zl
-bmRvcihoYmEpOw0KPiArfQ0KPiArDQo+ICtzdGF0aWMgaW50IHVmc2hjZF93Yl9jdHJsX3ZlbmRv
-cihzdHJ1Y3QgdWZzX2hiYSAqaGJhLCBib29sIGVuYWJsZSkNCj4gK3sNCj4gKyAgICAgICBpZiAo
-IWhiYS0+d2Jfb3BzIHx8ICFoYmEtPndiX29wcy0+d2JfY3RybF92ZW5kb3IpDQo+ICsgICAgICAg
-ICAgICAgICByZXR1cm4gLTE7DQo+ICsNCj4gKyAgICAgICByZXR1cm4gaGJhLT53Yl9vcHMtPndi
-X2N0cmxfdmVuZG9yKGhiYSwgZW5hYmxlKTsNCj4gK30NCj4gKw0KPiArc3RhdGljIGludCB1ZnNo
-Y2RfcmVzZXRfdmVuZG9yKHN0cnVjdCB1ZnNfaGJhICpoYmEpDQo+ICt7DQo+ICsgICAgICAgaWYg
-KCFoYmEtPndiX29wcyB8fCAhaGJhLT53Yl9vcHMtPndiX3Jlc2V0X3ZlbmRvcikNCj4gKyAgICAg
-ICAgICAgICAgIHJldHVybiAtMTsNCj4gKw0KPiArICAgICAgIHJldHVybiBoYmEtPndiX29wcy0+
-d2JfcmVzZXRfdmVuZG9yKGhiYSwgZmFsc2UpOw0KPiArfQ0KPiAgI2VuZGlmIC8qIEVuZCBvZiBI
-ZWFkZXIgKi8NCj4gLS0NCj4gMi4yNi4wDQoNCg==
+On 7/13/20 9:46 AM, Lee Jones wrote:
+> A couple of headers make no attempt to document their associated function
+> parameters.  Others looks as if they are suffering with a little bitrot.
+> 
+> Fixes the following W=1 kernel build warning(s):
+> 
+>   drivers/scsi/fcoe/fcoe.c:654: warning: Function parameter or member 'lport' not described in 'fcoe_netdev_features_change'
+>   drivers/scsi/fcoe/fcoe.c:654: warning: Function parameter or member 'netdev' not described in 'fcoe_netdev_features_change'
+>   drivers/scsi/fcoe/fcoe.c:2039: warning: Function parameter or member 'ctlr_dev' not described in 'fcoe_ctlr_mode'
+>   drivers/scsi/fcoe/fcoe.c:2039: warning: Excess function parameter 'cdev' description in 'fcoe_ctlr_mode'
+>   drivers/scsi/fcoe/fcoe.c:2144: warning: Function parameter or member 'fcoe' not described in 'fcoe_dcb_create'
+>   drivers/scsi/fcoe/fcoe.c:2144: warning: Excess function parameter 'netdev' description in 'fcoe_dcb_create'
+>   drivers/scsi/fcoe/fcoe.c:2144: warning: Excess function parameter 'port' description in 'fcoe_dcb_create'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'lport' not described in 'fcoe_elsct_send'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'did' not described in 'fcoe_elsct_send'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'fp' not described in 'fcoe_elsct_send'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'op' not described in 'fcoe_elsct_send'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'resp' not described in 'fcoe_elsct_send'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'arg' not described in 'fcoe_elsct_send'
+>   drivers/scsi/fcoe/fcoe.c:2627: warning: Function parameter or member 'timeout' not described in 'fcoe_elsct_send'
+> 
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> ---
+>   drivers/scsi/fcoe/fcoe.c | 10 ++++------
+>   1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index cb41d166e0c0f..0f9274960dc6b 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -645,7 +645,7 @@ static int fcoe_lport_config(struct fc_lport *lport)
+>   	return 0;
+>   }
+>   
+> -/**
+> +/*
+>    * fcoe_netdev_features_change - Updates the lport's offload flags based
+>    * on the LLD netdev's FCoE feature flags
+>    */
+> @@ -2029,7 +2029,7 @@ static int fcoe_ctlr_enabled(struct fcoe_ctlr_device *cdev)
+>   
+>   /**
+>    * fcoe_ctlr_mode() - Switch FIP mode
+> - * @cdev: The FCoE Controller that is being modified
+> + * @ctlr_dev: The FCoE Controller that is being modified
+>    *
+>    * When the FIP mode has been changed we need to update
+>    * the multicast addresses to ensure we get the correct
+> @@ -2136,9 +2136,7 @@ static bool fcoe_match(struct net_device *netdev)
+>   
+>   /**
+>    * fcoe_dcb_create() - Initialize DCB attributes and hooks
+> - * @netdev: The net_device object of the L2 link that should be queried
+> - * @port: The fcoe_port to bind FCoE APP priority with
+> - * @
+> + * @fcoe:   The new FCoE interface
+>    */
+>   static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+>   {
+> @@ -2609,7 +2607,7 @@ static void fcoe_logo_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+>   	fc_lport_logo_resp(seq, fp, lport);
+>   }
+>   
+> -/**
+> +/*
+>    * fcoe_elsct_send - FCoE specific ELS handler
+>    *
+>    * This does special case handling of FIP encapsualted ELS exchanges for FCoE,
+> 
+I'd rather convert this and the fcoe_netdev_features_change to proper 
+kerneldocs:
+
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index cb41d166e0c0..151fe4c53b07 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -646,8 +646,12 @@ static int fcoe_lport_config(struct fc_lport *lport)
+  }
+
+  /**
+- * fcoe_netdev_features_change - Updates the lport's offload flags based
+- * on the LLD netdev's FCoE feature flags
++ * fcoe_netdev_features_change - Updates the lport's offload flags
++ * @lport:  The local port that is associated with the net device
++ * @netdev: The associated net device
++ *
++ * Update the @lport offload flags based on the FCoE feature flags
++ * from the LLD @netdev.
+   */
+  static void fcoe_netdev_features_change(struct fc_lport *lport,
+                                         struct net_device *netdev)
+@@ -2611,6 +2615,13 @@ static void fcoe_logo_resp(struct fc_seq *seq, 
+struct fc_frame *fp, void *arg)
+
+  /**
+   * fcoe_elsct_send - FCoE specific ELS handler
++ * @lport: Local port
++ * @did: Destination ID
++ * @fp: FCoE frame
++ * @op: ELS operation
++ * @resp: Response callback
++ * @arg: Argument for the response callback
++ * @timeout: Timeout for the ELS response
+   *
+   * This does special case handling of FIP encapsualted ELS exchanges 
+for FCoE,
+   * using FCoE specific response handlers and passing the FIP controller as
+
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke            Teamlead Storage & Networking
+hare@suse.de                               +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
