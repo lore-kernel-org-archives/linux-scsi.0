@@ -2,159 +2,194 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B38BC433FB
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 08:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8E2C433E3
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 09:13:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A60E221F0
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 08:51:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAA7021D7D
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 09:13:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XYw1XUIH"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LshnPlZA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726934AbgGNIuv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 04:50:51 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:41661 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726848AbgGNIun (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 04:50:43 -0400
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200714085041euoutp0197c61b54c008e3e9e641bb6f111dcc01~hklYVA4H52506025060euoutp017
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 08:50:41 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200714085041euoutp0197c61b54c008e3e9e641bb6f111dcc01~hklYVA4H52506025060euoutp017
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1594716641;
-        bh=VLFLNyWnSpIRJnk0XeNogmxEcT9OMWW6Yb73NwYw8Y8=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=XYw1XUIHm5U031DLpMWPTb5L2/uFSHBOawwlx12SaAN0iyuTQ8+SVhRl/gHIOa3KK
-         wOw0vSe94ENPuu+pllU/598yZqjVR0D9BCjtj0jMG60dd+DuOMxeW2jf4Okg2jTDpL
-         mq88yy8pDJIKHCw3SwCzK0z5d/wkAv+ba2WgiB48=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200714085040eucas1p2aaa79e2d5dc64673223ccf2a51b0ef18~hklX3OkFv0510105101eucas1p2H;
-        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 73.4E.06318.0E17D0F5; Tue, 14
-        Jul 2020 09:50:40 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200714085040eucas1p1466b8ae92a0931477aa7e7896782bb75~hklXZqd-60985509855eucas1p1J;
-        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200714085040eusmtrp16a8ff47070fcb695f8df8e4225a46c9f~hklXZEA4n1070310703eusmtrp1a;
-        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
-X-AuditID: cbfec7f5-371ff700000018ae-27-5f0d71e09d70
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 44.49.06314.0E17D0F5; Tue, 14
-        Jul 2020 09:50:40 +0100 (BST)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200714085040eusmtip1096180abd51ac9e3b88b39447902e762~hklXAJcP60922009220eusmtip1d;
-        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
-Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     tasleson@redhat.com, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
-Date:   Tue, 14 Jul 2020 10:50:39 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
+        id S1726715AbgGNJNU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 05:13:20 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:38490 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725833AbgGNJNU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 05:13:20 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1594717998; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=OpGstJziG3b+lewJ4OJkEErFnXU4CBYWekCcjmKdfZw=;
+ b=LshnPlZAzMp5FaSHCr3Eh+LHeFDZeVZ/wURHFdr0nREf4PewMrmUoJi/LxG2pEkubO/m4qJ/
+ wgwUIka0XxqUpYODF8QVK7Z0LDpquBU2zUpnRBLivjVI3B/NjmvinvjYkL2ufJ690DDlbG1L
+ 1t9AL9HGeoOpYZIhNCNxOMXEAiU=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n18.prod.us-west-2.postgun.com with SMTP id
+ 5f0d772e166c1c5494060808 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 14 Jul 2020 09:13:18
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 452A4C433B1; Tue, 14 Jul 2020 09:13:17 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 270ABC433C8;
+        Tue, 14 Jul 2020 09:13:16 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <20200714081750.GB862637@kroah.com>
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprIKsWRmVeSWpSXmKPExsWy7djPc7oPCnnjDa59t7JoXryezWLvLW2L
-        YzseMVl0X9/BZnHx3k12B1aP/XPXsHu833eVzePzJrkA5igum5TUnMyy1CJ9uwSujNZzYQVP
-        eCs+T7rM2MC4hLuLkYNDQsBE4k2rQBcjF4eQwApGibOPJzN1MXICOV8YJXbs0oKwPzNKPD7o
-        AWKD1O94cYQVomE5o8TJCZNYIJy3jBLbV15kBJkqLGAnsfhnIUiDiICxRP/ZWewgNrNArsTF
-        6w0sIDabgJXExPZVjCA2L1D5m4/3weIsAqoSBw9sAKsXFYiQ+PTgMCtEjaDEyZlPwGo4BQwk
-        DretZYWYKS5x68l8JghbXmL72znMEIdOZpc4/YwPwnaR+P7zMzuELSzx6vgWKFtG4vTkHrD7
-        JQTWMUr87XjBDOFsZ5RYPvkfG0SVtcSdc7/YQB5jFtCUWL9LHyLsKHH3yDsWSCjySdx4Kwhx
-        A5/EpG3TmSHCvBIdbUIQ1WoSG5ZtYINZ27VzJfMERqVZSD6bheSbWUi+mYWwdwEjyypG8dTS
-        4tz01GLjvNRyveLE3OLSvHS95PzcTYzAhHL63/GvOxj3/Uk6xCjAwajEwyvhzxMvxJpYVlyZ
-        e4hRgoNZSYTX6ezpOCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8xotexgoJpCeWpGanphakFsFk
-        mTg4pRoYszeLGAi8ruDYuHHXl7WF3JwN09+mZ9llzzku7sSwMDtBs+GwufH6zQ5KotI+Dz4v
-        7HmWvkGrJ87CKfZE67xH33vn5HP8FH/8oe7Bze33nidbsm7nZpoxi+3dfBGbIMNA1d/B5z/c
-        v+JRGL0xqH8X8/mGUNmDXOxJXretz5oW11xqSTbewMOlxFKckWioxVxUnAgAMqAYaSQDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xu7oPCnnjDdbfkLBoXryezWLvLW2L
-        YzseMVl0X9/BZnHx3k12B1aP/XPXsHu833eVzePzJrkA5ig9m6L80pJUhYz84hJbpWhDCyM9
-        Q0sLPSMTSz1DY/NYKyNTJX07m5TUnMyy1CJ9uwS9jNZzYQVPeCs+T7rM2MC4hLuLkZNDQsBE
-        YseLI6xdjFwcQgJLGSWO/n3O1sXIAZSQkTi+vgyiRljiz7UuNoia14wSRz5MAasRFrCTWPyz
-        EKRGRMBYov/sLHYQm1kgV+L9gTnMEPWNzBJzNnQxgyTYBKwkJravYgSxeYF633y8zwJiswio
-        Shw8sAGsWVQgQuLwjllQNYISJ2c+AavhFDCQONy2lhVigbrEn3mXmCFscYlbT+YzQdjyEtvf
-        zmGewCg0C0n7LCQts5C0zELSsoCRZRWjSGppcW56brGhXnFibnFpXrpecn7uJkZgHG079nPz
-        DsZLG4MPMQpwMCrx8Er488QLsSaWFVfmHmKU4GBWEuF1Ons6Tog3JbGyKrUoP76oNCe1+BCj
-        KdBzE5mlRJPzgTGeVxJvaGpobmFpaG5sbmxmoSTO2yFwMEZIID2xJDU7NbUgtQimj4mDU6qB
-        0eRTOu/X1UpM33b/dXs+8VeOj9zZS+FnNyzbeGLmdF2GE52eW3kZ3zy/dsKc4ZjHrJKi+qWt
-        hnwcxh3feD6YP7See7lvit7KxvpbEwOlff5Y9u6ds7HCbN+nw1fzF+RbPXijZ7EjuP5Owv/n
-        3TVpHm8elbne4jgZdGeJua7dYVNd1lkrH+Vx1imxFGckGmoxFxUnAgB3pXUJuQIAAA==
-X-CMS-MailID: 20200714085040eucas1p1466b8ae92a0931477aa7e7896782bb75
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee
-References: <20200623191749.115200-1-tasleson@redhat.com>
-        <20200623191749.115200-6-tasleson@redhat.com>
-        <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
-        <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
-        <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
-        <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
-        <20200714081750.GB862637@kroah.com>
+Date:   Tue, 14 Jul 2020 17:13:16 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, rnayak@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        saravanak@google.com, salyzyn@google.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Nitin Rawat <nitirawa@codeaurora.org>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] scsi: ufs: Fix up and simplify error recovery
+ mechanism
+In-Reply-To: <47e7a4ec9a0404bc6d01818fcdad90eb@codeaurora.org>
+References: <1594693693-22466-1-git-send-email-cang@codeaurora.org>
+ <1594693693-22466-5-git-send-email-cang@codeaurora.org>
+ <fe00619c-f337-397f-9ccf-7babda095210@acm.org>
+ <47e7a4ec9a0404bc6d01818fcdad90eb@codeaurora.org>
+Message-ID: <5fb1e82c97a480e5330337a240a12633@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Bart,
 
-On 7/14/20 10:17 AM, Greg Kroah-Hartman wrote:
-> On Tue, Jul 14, 2020 at 10:06:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
->>
->> Hi Tony,
->>
->> On 7/9/20 11:18 PM, Tony Asleson wrote:
->>> Hi Bartlomiej,
->>>
->>> On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
->>>> The root source of problem is that libata transport uses different
->>>> naming scheme for ->tdev devices (please see dev_set_name() in
->>>> ata_t{dev,link,port}_add()) than libata core for its logging
->>>> functionality (ata_{dev,link,port}_printk()).
->>>>
->>>> Since libata transport is part of sysfs ABI we should be careful
->>>> to not break it so one idea for solving the issue is to convert
->>>> ata_t{dev,link,port}_add() to use libata logging naming scheme and
->>>> at the same time add sysfs symlinks for the old libata transport
->>>> naming scheme.
+On 2020-07-14 12:26, Can Guo wrote:
+> Hi Bart,
 > 
-> Given the age of the current implementation, what suddenly broke that
-> requires this to change at this point in time?
+> On 2020-07-14 11:52, Bart Van Assche wrote:
+>> On 2020-07-13 19:28, Can Guo wrote:
+>>> o Queue eh_work on a single threaded workqueue to avoid concurrency 
+>>> between
+>>>   eh_works.
+>> 
+>> Please use another approach (mutex?) to serialize error handling. 
+>> There are
+>> already way too workqueues in a running Linux system.
+>> 
 
-Unfortunately when adding libata transport classes (+ at the same
-time embedding struct device-s in libata dev/link/port objects) in
-the past someone has decided to use different naming scheme than
-the one used for standard libata log messages (which use printk()
-without any reference to struct device-s in libata dev/link/port
-objects).
+Yeah, mutex works, but in this change, we need to flush the eh_work. As 
+per
+test, in real cases, flush_work can trigger warnings if the work is 
+queued on
+system_wq. Please check func check_flush_dependency().
 
-Now we would like to use dev_printk() for standard libata logging
-functionality as this is required for 2 pending patchsets:
+>>> o According to the UFSHCI JEDEC spec, hibern8 enter/exit error occurs 
+>>> when
+>>>   the link is broken. This actaully applies to any power mode change
+>>>   operations. In this change, if a power mode change operation 
+>>> (including
+>>>   AH8 enter/exit) fails, mark the link state as UIC_LINK_BROKEN_STATE 
+>>> and
+>>>   schedule eh_work. eh_work needs to do full reset and restore to 
+>>> recover
+>>>   the link back to active. Before the link state is recovered to 
+>>> active by
+>>>   eh_work, any power mode change attempts just return -ENOLINK to 
+>>> avoid
+>>>   consecutive HW error.
+>>> 
+>>> o To avoid concurrency between eh_work and link recovery, remove link
+>>>   recovery from hibern8 enter/exit func. If hibern8 enter/exit func 
+>>> fails,
+>>>   simply return error code and let eh_work run in parallel.
+>>> 
+>>> o Recover UFS hba runtime PM error in eh_work. If 
+>>> ufschd_suspend/resume
+>>>   fails due to UFS error, e.g. hibern8 enter/exit error and SSU cmd 
+>>> error,
+>>>   the runtime PM framework saves the error to 
+>>> dev.power.runtime_error.
+>>>   After that, hba runtime suspend/resume would not be invoked anymore 
+>>> until
+>>>   dev.power.runtime_error is cleared. The runtime PM error can be 
+>>> recovered
+>>>   in eh_work by calling pm_runtime_set_active() after reset and 
+>>> restore
+>>>   succeeds. Meanwhile, if pm_runtime_set_active() returns no error, 
+>>> which
+>>>   means dev.power.runtime_error is cleared, we also need to 
+>>> explicitly
+>>>   resume those scsi devices under hba in case any of them has failed 
+>>> to be
+>>>   resumed due to hba runtime resume error.
+>>> 
+>>> o Fix a racing problem between eh_work and ufshcd_suspend/resume. In 
+>>> the
+>>>   old code, it blocks scsi requests before schedules eh_work, but 
+>>> when
+>>>   eh_work calls pm_runtime_get_sync(), if ufshcd_suspend/resume is 
+>>> sending
+>>>   a scsi cmd, most likely the SSU cmd, pm_runtime_get_sync() will 
+>>> never
+>>>   return because scsi requests were blocked. To fix this racing 
+>>> problem,
+>>>   o Don't block scsi requests before schedule eh_work, but let 
+>>> eh_work
+>>>     block scsi requests when eh_work is ready to start error 
+>>> recovery.
+>>>   o Meanwhile, if eh_work is schueduled due to fatal error, don't 
+>>> requeue
+>>>     the scsi cmds sent from ufshcd_suspend/resume path, but simply 
+>>> let the
+>>>     scsi cmds fail. If the scsi cmds fail, hba runtime suspend/resume 
+>>> fails
+>>>     too, but it does hurt since eh_work recovers hba runtime PM 
+>>> error.
+>>> 
+>>> o Move host/regs dump in ufshcd_check_errors() to eh_work because 
+>>> heavy
+>>>   dump in IRQ context can lead to stability issues. In addition, some 
+>>> clean
+>>>   up in ufshcd_print_host_regs() and ufshcd_print_host_state().
+>> 
+>> The above list is a long list. To me that is a sign that this patch 
+>> needs to
+>> be split into multiple patches.
+>> 
+>> Thanks,
+>> 
+>> Bart.
+> 
+> Sure, will split it into a few patches.
+> 
+> Thanks,
+> 
+> Can Guo.
 
-- move DPRINTK to dynamic debugging (from Hannes Reinecke)
+I tried, but I find it hard to split it as it works as a whole, it is a 
+refactor
+change rather than a mixture of multiple fixes. I will try to refine the 
+commit
+msg in next version. So it goes just as it is now.
 
-- add persistent durable identifier storage log messages (from Tony)
+Thanks,
 
-but we don't want to change standard libata log messages and
-confuse users..
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Can Guo.
