@@ -2,36 +2,38 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27898C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:19:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEDC0C433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:37:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 114E822200
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:19:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7D692220E
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 10:37:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726715AbgGNKTL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 06:19:11 -0400
-Received: from mx2.suse.de ([195.135.220.15]:41154 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726398AbgGNKTK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 06:19:10 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 20EBDACF9;
-        Tue, 14 Jul 2020 10:19:11 +0000 (UTC)
+        id S1726936AbgGNKhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 06:37:03 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2474 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725841AbgGNKhD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 06:37:03 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id D9682A742BCD71BD03E6;
+        Tue, 14 Jul 2020 11:37:01 +0100 (IST)
+Received: from [127.0.0.1] (10.47.10.169) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 14 Jul
+ 2020 11:37:00 +0100
 Subject: Re: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-To:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>
-Cc:     don.brace@microsemi.com, axboe@kernel.dk, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, bvanassche@acm.org, hare@suse.com,
-        hch@lst.de, shivasharan.srikanteshwara@broadcom.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        megaraidlinux.pdl@broadcom.com
+To:     Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>
+CC:     <don.brace@microsemi.com>, <axboe@kernel.dk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
+        <sumit.saxena@broadcom.com>, <bvanassche@acm.org>, <hare@suse.com>,
+        <hch@lst.de>, <shivasharan.srikanteshwara@broadcom.com>,
+        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
+        <megaraidlinux.pdl@broadcom.com>
 References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
  <1591810159-240929-13-git-send-email-john.garry@huawei.com>
  <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
@@ -39,107 +41,44 @@ References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
  <4319615a-220b-3629-3bf4-1e7fd2d27b92@huawei.com>
  <20200714080631.GA600766@T590>
  <3584bcc3-830a-d50d-bb55-8ac0b686cdc0@huawei.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <799af415-cb02-278e-1af2-c6179a94a8a8@suse.de>
-Date:   Tue, 14 Jul 2020 12:19:07 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+ <799af415-cb02-278e-1af2-c6179a94a8a8@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <6b19a455-56a2-c278-5443-ccb3e3cb0379@huawei.com>
+Date:   Tue, 14 Jul 2020 11:35:14 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <3584bcc3-830a-d50d-bb55-8ac0b686cdc0@huawei.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <799af415-cb02-278e-1af2-c6179a94a8a8@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.10.169]
+X-ClientProxiedBy: lhreml738-chm.china.huawei.com (10.201.108.188) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/14/20 11:53 AM, John Garry wrote:
-> On 14/07/2020 09:06, Ming Lei wrote:
->>> v7 is here:
->>>
->>> https://github.com/hisilicon/kernel-dev/commits/private-topic-blk-mq-shared-tags-rfc-v7
->>>
->>>
->>> So that should be good to test with for now.
->>>
->>> And I was going to ask this same question about smartpqi, so can you
->>> please
->>> let me know about this one?
-> 
-> Hi Ming,
-> 
->> smartpqi is real MQ HBA, do you need any change wrt. shared tags?
-> 
-> Is it really?
-> 
-> As I see, today it maintains a single tagset per HBA. So Hannes' change
-> in this series seems ok. However, I do worry that mainline code may be
-> wrong, as block layer may send can_queue * nr_hw_queues requests, when
-> it seems the HBA can only handle can_queue requests.
-> 
-Correct. There is only one tagset per host, even if the host supports
-several queues (guess why it's called smart PQI :-).
-And mainline code isn't really wrong, it just allocates the next free
-tag from the host tagset; it's not using the block-layer tags at all.
-Precisely because the block layer currently cannot guarantee that tags
-are unique per host.
+On 14/07/2020 11:19, Hannes Reinecke wrote:
+> Correct. There is only one tagset per host, even if the host supports
+> several queues (guess why it's called smart PQI:-).
+> And mainline code isn't really wrong, it just allocates the next free
+> tag from the host tagset; it's not using the block-layer tags at all.
+> Precisely because the block layer currently cannot guarantee that tags
+> are unique per host.
 
-And the point of this patchset is exactly that the block layer will only
-send up to 'can_queue' requests, irrespective on how many hardware
-queues are present.
+ok, but it's not exemplary in what it does. And I suppose that's why it 
+needs to spin indefinitely for a free tag in pqi_alloc_io_request(), 
+instead of failing immediately when none are free.
 
-But anyway, I'll test it on smartpqi, too.
+> 
+> And the point of this patchset is exactly that the block layer will only
+> send up to 'can_queue' requests, irrespective on how many hardware
+> queues are present.
+> 
+> But anyway, I'll test it on smartpqi, too.
+> 
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Great, thanks.
