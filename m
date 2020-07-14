@@ -2,159 +2,180 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CD6BC433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 17:43:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D73DFC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 17:45:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4663622582
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 17:43:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B29D822518
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 17:45:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xBxxGz+u"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Fz2CaHw4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729017AbgGNRnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 13:43:31 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58248 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728087AbgGNRnb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 13:43:31 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06EHbCS6038412;
-        Tue, 14 Jul 2020 17:43:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=cT8Q+dv6j7yYW42I9DFOWwbEvMCTW7Knov93etRKROM=;
- b=xBxxGz+uXttWLW13Ox6Lg+whVN/TSIEjEzLMQxls34PBtNN3rtiHxZUhvEbMdND+Tq0b
- biokbx9MFz988dLNlzQTkESyQpYGMhUJPMHutHB4QQ8L9aAjQSZonRt3ioqYwqGMm+P/
- +SZfiK/ksbFbwfXFCPYcj5prsG3oQpZ939IDWlcHHfc1WbShTbedHkMmwSJwXdT532/j
- aFak2U0iV66ybPu6GzkuCLWXJQtONX9b6DpxNbX53jOhUgqjz/Ap6yTKIc4woCZzto1t
- mA27c4+/rIJcheXNiI1yymXhT1aVAxlP0uJEyWj3BeQCG7oabdwYsCBP5BivtFD71PJ7 Hw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 32762neqa3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 14 Jul 2020 17:43:27 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06EHWdlM151505;
-        Tue, 14 Jul 2020 17:43:27 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 327qby4pet-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jul 2020 17:43:27 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06EHhQoL027343;
-        Tue, 14 Jul 2020 17:43:26 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Jul 2020 10:43:26 -0700
-Subject: Re: [PATCH 1/8] scsi: target: Modify core_tmr_abort_task()
-To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
+        id S1728170AbgGNRpy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 13:45:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56514 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726817AbgGNRpx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 13:45:53 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A706EC061755
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 10:45:53 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id o22so1864367pjw.2
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 10:45:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=tVliAqqQDVvhnzfDBoh+v8KAMLuUTT7NGBnmCPc2FXg=;
+        b=Fz2CaHw4Q8pZ7Z72Ik9NVLGcBXRdhwUyIAXQRNSyBTAvvdjOPzD2EAZk2Xw/nNqCwG
+         RAmtngscT9rF07IQ6vHRYBtB8LCz45HKWhF8muTECEpavS82XcBdLD9R/hHdKQWpHA9L
+         gpjaDsMdlOhiFRa/7rvz2/KyTqBJNPl2CmuXU/wqiwXxuUipa47K0WWB4E2/w6tmrc+t
+         6Tt1ZmQXADleUj3nD7sSGoZVggaKElgmLa+wYub0Jgw/ujmO6M5FMh3c8ewVZnR+0ZRM
+         WnIHovwOfRb/WFuGC0bbUXHvzjbfyUQesvjq2G4kzl5/xzC4M1X75fI6a8bRwdf45R17
+         E7tA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=tVliAqqQDVvhnzfDBoh+v8KAMLuUTT7NGBnmCPc2FXg=;
+        b=J3LnCESzuiRjUUHLjavpLVmTKoXM4G9G8gNSL0y6OEsMLNsWQl0tOYyjgk7QbbClGf
+         WrRwU4Ntp6HNezYFnUx8M8zc0/r1oXH6eZRF64/yTqgofsYFUkZDKd/gYf8z5n3WhBiK
+         AxDUS5giNTOSJC6DiSrjNAbpu1qAEaU2PQE+4Wgp4dfXD6eA/kZ9088QaQrN29erwExY
+         lqa/FavRUQrvP0i1zaW2jDFJmf4UVAAXg8XyYXnkoOSXuBxPxYfbGbQ6HLOj391zr+Fl
+         P6luR6R8xc9pF/VGvot5yYBJNcogu1VvvUZRm9zhyv16r3lH5imv0gVd+aigyx+6cPRX
+         d/5Q==
+X-Gm-Message-State: AOAM531ODMfGMn46kMIJNimRONt+gofhiEziHktZzEgUSuR4H3xv8Nrf
+        pOn21Gm/PBC1IYbqDN/aQ/C+WQ==
+X-Google-Smtp-Source: ABdhPJxSfb0jOWvlwrBgf0dTH54bqHKW54WeTjK2DbDxwPq4jh0TErDAWVVDYcAhKyV1B+Ax+52Ieg==
+X-Received: by 2002:a17:90a:368c:: with SMTP id t12mr5851799pjb.90.1594748752811;
+        Tue, 14 Jul 2020 10:45:52 -0700 (PDT)
+Received: from builder.lan (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id c125sm18072972pfa.119.2020.07.14.10.45.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2020 10:45:52 -0700 (PDT)
+Date:   Tue, 14 Jul 2020 10:43:45 -0700
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Rob Herring <robh+dt@kernel.org>, Andy Gross <agross@kernel.org>,
+        SCSI <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        John Stultz <john.stultz@linaro.org>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
- <20200710104817.19462-2-bstroesser@ts.fujitsu.com>
- <ea36fcc0-d01c-eba1-748f-d5cfa39fa105@oracle.com>
- <0f660dc9-40ee-75a4-2924-761769d9cd38@ts.fujitsu.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <e4d54aed-88fa-eeed-fe9a-20e627c3841a@oracle.com>
-Date:   Tue, 14 Jul 2020 12:43:37 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        Satya Tangirala <satyat@google.com>,
+        Steev Klimaszewski <steev@kali.org>,
+        Thara Gopinath <thara.gopinath@linaro.org>
+Subject: Re: [PATCH v6 3/5] arm64: dts: sdm845: add Inline Crypto Engine
+ registers and clock
+Message-ID: <20200714174345.GE1218486@builder.lan>
+References: <20200710072013.177481-1-ebiggers@kernel.org>
+ <20200710072013.177481-4-ebiggers@kernel.org>
+ <yq1ft9uqj6u.fsf@ca-mkp.ca.oracle.com>
+ <20200714161516.GA1064009@gmail.com>
+ <CAL_Jsq+t1h4w8C361vguw1co_vnbMKs3q4qWR4=jwAKr1Vm80g@mail.gmail.com>
+ <20200714164353.GB1064009@gmail.com>
+ <CAL_JsqK-wUuo6azYseC35R=Q509=h9-v4gFvcvy8wXrDgSw5ZQ@mail.gmail.com>
+ <20200714171203.GC1064009@gmail.com>
+ <20200714173111.GG388985@builder.lan>
 MIME-Version: 1.0
-In-Reply-To: <0f660dc9-40ee-75a4-2924-761769d9cd38@ts.fujitsu.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007140129
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- clxscore=1015 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
- bulkscore=0 suspectscore=0 phishscore=0 adultscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007140129
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200714173111.GG388985@builder.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/13/20 6:39 AM, Bodo Stroesser wrote:
-> On 2020-07-12 02:49, Mike Christie wrote:
->> On 7/10/20 5:48 AM, Bodo Stroesser wrote:
-> 
-> ...
-> 
->>> @@ -137,11 +138,16 @@ void core_tmr_abort_task(
->>>           printk("ABORT_TASK: Found referenced %s task_tag: %llu\n",
->>>               se_cmd->se_tfo->fabric_name, ref_tag);
->>> -        if (!__target_check_io_state(se_cmd, se_sess,
->>> -                         dev->dev_attrib.emulate_tas))
->>> +        spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
->>> +        rc = __target_check_io_state(se_cmd, se_sess, 0);
->>> +        spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
->>> +        if (!rc)
->>>               continue;
->>> -        spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
->>> +        list_del_init(&se_cmd->state_list);
->>
->> Do we only want to do this if in the next patch tmr_notify can 
->> successfully accept the tmr?
-> 
-> This change does not modify behavior of the core. Please see how
-> core_tmr_drain_state_list() uses state_list to queue commands after
-> successfully calling __target_check_io_state() for later call of 
-> target_put_cmd_and_wait().
-> 
-> This patch just unifies ABORT_TASK and LUN_RESET handling such,
-> that in next patch we can call tmr_notify handler with a list of
-> aborted commands in both cases. The list uses the state_list list_head
-> in the se_cmd.
-> 
->>
->> If tmr_notify can't allocate memory for the abort case, we would 
->> delete it from the list. Later the initiator would send a LUN_RESET 
->> but core_tmr_drain_state_list won't see it and pass it to the 
->> tmr_notify call.
->>
-> 
-> tmr_notify handler will not and must not modify the list of aborted
-> cmds. So if backend just does nothing for whatever reason we will end
-> up with the "old" behavior of the core as it was before the change.
-> 
-> The general idea is to send info about received TMRs together with the
-> list of aborted commands to the backend, to allow TMR tracing and
-> canceling of aborted commands. But backend must not interfere with TMR
-> processing in core.
+On Tue 14 Jul 10:31 PDT 2020, Bjorn Andersson wrote:
 
-I don't think we are talking about the same thing.
+> On Tue 14 Jul 10:12 PDT 2020, Eric Biggers wrote:
+> 
+> > On Tue, Jul 14, 2020 at 10:59:44AM -0600, Rob Herring wrote:
+> > > On Tue, Jul 14, 2020 at 10:43 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > > >
+> > > > On Tue, Jul 14, 2020 at 10:35:12AM -0600, Rob Herring wrote:
+> > > > > On Tue, Jul 14, 2020 at 10:15 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > > > > >
+> > > > > > On Tue, Jul 14, 2020 at 10:16:04AM -0400, Martin K. Petersen wrote:
+> > > > > > >
+> > > > > > > Eric,
+> > > > > > >
+> > > > > > > > Add the vendor-specific registers and clock for Qualcomm ICE (Inline
+> > > > > > > > Crypto Engine) to the device tree node for the UFS host controller on
+> > > > > > > > sdm845, so that the ufs-qcom driver will be able to use inline crypto.
+> > > > > > >
+> > > > > > > I would like to see an Acked-by for this patch before I merge it.
+> > > > > > >
+> > > > > >
+> > > > > > Andy, Bjorn, or Rob: can you give Acked-by?
+> > > > >
+> > > > > DTS changes should go in via the QCom tree.
+> > > > >
+> > > >
+> > > > So, the DTS patch can't be applied without the driver patches since then the
+> > > > driver would misinterpret the ICE registers as the dev_ref_clk_ctrl registers.
+> > > 
+> > > That sounds broken, but there's no context here for me to comment
+> > > further. DTS changes should work with old/stable kernels. I'd suggest
+> > > you get a review from Bjorn on the driver first.
+> > > 
+> > 
+> > The "breaking" change is that the dev_ref_clk_ctrl registers are now identified
+> > by name instead of assumed to be index 1.
+> > 
+> > A reviewer had complained about the device-mapper bindings of this driver before
+> > (https://lkml.kernel.org/r/158334171487.7173.5606223900174949177@swboyd.mtv.corp.google.com).
+> > Changing to identifying the registers by name seemed like an improvement.
+> > 
+> > If needed I can add a hole at index 1 to make the DTS changes work with
+> > old/stable kernels too, but I didn't know that is a requirement.  (Normally for
+> > Linux kernel development, kernel-internal refactoring is always allowed
+> > upstream.)  If I do this, would this hack have to be carried forever, or would
+> > we be able to fix it up eventually?  Is there any deprecation period for DTS, or
+> > do the latest DTS have to work with a 20 year old kernel?
+> > 
+> 
+> The problem here is that DT binding refactoring is not kernel-internal.
+> It's two different projects living in the same git.
+> 
+> There's a wish from various people that we make sure that new DTS
+> continues to work with existing kernels. This is a nice in theory
+> there's a lot of examples where we simply couldn't anticipate how future
+> bindings would look. A particular example is that this prohibits most
+> advancement in power management.
+> 
+> 
+> But afaict what you describe above would make a new kernel failing to
+> operate with the old DTS and that we have agreed to avoid.
+> So I think the appropriate way to deal with this is to request the reg
+> byname to detect the new binding and if that fails then assume that
+> index 1 is dev_ref_clk_ctrl.
+> 
 
-For the abort case, let's say tmr_notify fails. So for the tcmu case, 
-the tmr does not get queued and userspace never knows about it. The 
-initiator then sends a LUN reset. For the reset, the tmr_notify call's 
-list will be missing the command that got the abort, right? How will the 
-backend know to clean up that command during the LUN reset handling?
+I took another look at the git history and I can't find a single dts -
+either upstream or in any downstream tree - that specifies that second
+reg.
+
+So per my argument below, if you could include a patch that just removes
+the "dev_ref_clk_ctrl_mem" reference from the binding and driver I would
+be happy to r-b that and ack this patch.
+
+Regards,
+Bjorn
 
 > 
->>> +        se_cmd->state_active = false;
->>> +
->>> +        spin_unlock_irqrestore(&dev->execute_task_lock, flags);
->>>           /*
->>>            * Ensure that this ABORT request is visible to the LU RESET
->>> @@ -159,7 +165,7 @@ void core_tmr_abort_task(
->>>           atomic_long_inc(&dev->aborts_complete);
->>>           return;
->>>       }
->>> -    spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
->>> +    spin_unlock_irqrestore(&dev->execute_task_lock, flags);
->>>       printk("ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for 
->>> ref_tag: %lld\n",
->>>               tmr->ref_task_tag);
->>>
->>
-
+> There are cases where we just decide not to be backwards compatible, but
+> it's pretty rare. As for deprecation, I think 1-2 LTS releases is
+> sufficient, at that time scale it doesn't make sense to sit with an old
+> DTB anyways (given the current pace of advancements in the kernel).
+> 
+> Regards,
+> Bjorn
