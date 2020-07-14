@@ -2,175 +2,159 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD1DC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 08:48:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B38BC433FB
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 08:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6808521835
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 08:48:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A60E221F0
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 08:51:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="CeMkR8ga"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XYw1XUIH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726698AbgGNIs4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 04:48:56 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:36211 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725816AbgGNIsz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 04:48:55 -0400
-X-UUID: 3903e3c2fbc144aa922f777f0f419ab5-20200714
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=vnbU38YH1fLWZ3HM1C/sYvZdgYd9jxLvr3eoKT0+obM=;
-        b=CeMkR8gaz97ktebcZOfMScpiZiYEL8ViFxBqbs2kvvq2VV2GQMtVjBE6hdfWffvoTfRfJbd4SVnwjVTpaVpRE10hgixtSTmxoXVJkhHrgBXdMsoEbw9PSEvWO1Cst3MCCy4YGSRZkyU+ILnBIo1/3/VLqK3KBdabyjJSqtutY2A=;
-X-UUID: 3903e3c2fbc144aa922f777f0f419ab5-20200714
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1406989274; Tue, 14 Jul 2020 16:48:48 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs02n1.mediatek.inc (172.21.101.77) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 14 Jul 2020 16:48:46 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 14 Jul 2020 16:48:46 +0800
-Message-ID: <1594716527.22878.28.camel@mtkswgap22>
-Subject: RE: [PATCH v3] scsi: ufs: Cleanup completed request without
- interrupt notification
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Avri Altman <Avri.Altman@wdc.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kuohong.wang@mediatek.com" <kuohong.wang@mediatek.com>,
-        "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
-        "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
-        "andy.teng@mediatek.com" <andy.teng@mediatek.com>,
-        "chaotian.jing@mediatek.com" <chaotian.jing@mediatek.com>,
-        "cc.chou@mediatek.com" <cc.chou@mediatek.com>
-Date:   Tue, 14 Jul 2020 16:48:47 +0800
-In-Reply-To: <SN6PR04MB4640F34CAA25B3CB58F94CABFC630@SN6PR04MB4640.namprd04.prod.outlook.com>
-References: <20200706132113.21096-1-stanley.chu@mediatek.com>
-         <SN6PR04MB4640BEAFE18BDC933FC7EC95FC640@SN6PR04MB4640.namprd04.prod.outlook.com>
-         <1594517160.10600.33.camel@mtkswgap22>
-         <SN6PR04MB4640F34CAA25B3CB58F94CABFC630@SN6PR04MB4640.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S1726934AbgGNIuv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 04:50:51 -0400
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:41661 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726848AbgGNIun (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 04:50:43 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200714085041euoutp0197c61b54c008e3e9e641bb6f111dcc01~hklYVA4H52506025060euoutp017
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 08:50:41 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200714085041euoutp0197c61b54c008e3e9e641bb6f111dcc01~hklYVA4H52506025060euoutp017
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594716641;
+        bh=VLFLNyWnSpIRJnk0XeNogmxEcT9OMWW6Yb73NwYw8Y8=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=XYw1XUIHm5U031DLpMWPTb5L2/uFSHBOawwlx12SaAN0iyuTQ8+SVhRl/gHIOa3KK
+         wOw0vSe94ENPuu+pllU/598yZqjVR0D9BCjtj0jMG60dd+DuOMxeW2jf4Okg2jTDpL
+         mq88yy8pDJIKHCw3SwCzK0z5d/wkAv+ba2WgiB48=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200714085040eucas1p2aaa79e2d5dc64673223ccf2a51b0ef18~hklX3OkFv0510105101eucas1p2H;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 73.4E.06318.0E17D0F5; Tue, 14
+        Jul 2020 09:50:40 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200714085040eucas1p1466b8ae92a0931477aa7e7896782bb75~hklXZqd-60985509855eucas1p1J;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200714085040eusmtrp16a8ff47070fcb695f8df8e4225a46c9f~hklXZEA4n1070310703eusmtrp1a;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+X-AuditID: cbfec7f5-371ff700000018ae-27-5f0d71e09d70
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 44.49.06314.0E17D0F5; Tue, 14
+        Jul 2020 09:50:40 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200714085040eusmtip1096180abd51ac9e3b88b39447902e762~hklXAJcP60922009220eusmtip1d;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     tasleson@redhat.com, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
+Date:   Tue, 14 Jul 2020 10:50:39 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20200714081750.GB862637@kroah.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprIKsWRmVeSWpSXmKPExsWy7djPc7oPCnnjDa59t7JoXryezWLvLW2L
+        YzseMVl0X9/BZnHx3k12B1aP/XPXsHu833eVzePzJrkA5igum5TUnMyy1CJ9uwSujNZzYQVP
+        eCs+T7rM2MC4hLuLkYNDQsBE4k2rQBcjF4eQwApGibOPJzN1MXICOV8YJXbs0oKwPzNKPD7o
+        AWKD1O94cYQVomE5o8TJCZNYIJy3jBLbV15kBJkqLGAnsfhnIUiDiICxRP/ZWewgNrNArsTF
+        6w0sIDabgJXExPZVjCA2L1D5m4/3weIsAqoSBw9sAKsXFYiQ+PTgMCtEjaDEyZlPwGo4BQwk
+        DretZYWYKS5x68l8JghbXmL72znMEIdOZpc4/YwPwnaR+P7zMzuELSzx6vgWKFtG4vTkHrD7
+        JQTWMUr87XjBDOFsZ5RYPvkfG0SVtcSdc7/YQB5jFtCUWL9LHyLsKHH3yDsWSCjySdx4Kwhx
+        A5/EpG3TmSHCvBIdbUIQ1WoSG5ZtYINZ27VzJfMERqVZSD6bheSbWUi+mYWwdwEjyypG8dTS
+        4tz01GLjvNRyveLE3OLSvHS95PzcTYzAhHL63/GvOxj3/Uk6xCjAwajEwyvhzxMvxJpYVlyZ
+        e4hRgoNZSYTX6ezpOCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8xotexgoJpCeWpGanphakFsFk
+        mTg4pRoYszeLGAi8ruDYuHHXl7WF3JwN09+mZ9llzzku7sSwMDtBs+GwufH6zQ5KotI+Dz4v
+        7HmWvkGrJ87CKfZE67xH33vn5HP8FH/8oe7Bze33nidbsm7nZpoxi+3dfBGbIMNA1d/B5z/c
+        v+JRGL0xqH8X8/mGUNmDXOxJXretz5oW11xqSTbewMOlxFKckWioxVxUnAgAMqAYaSQDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xu7oPCnnjDdbfkLBoXryezWLvLW2L
+        YzseMVl0X9/BZnHx3k12B1aP/XPXsHu833eVzePzJrkA5ig9m6L80pJUhYz84hJbpWhDCyM9
+        Q0sLPSMTSz1DY/NYKyNTJX07m5TUnMyy1CJ9uwS9jNZzYQVPeCs+T7rM2MC4hLuLkZNDQsBE
+        YseLI6xdjFwcQgJLGSWO/n3O1sXIAZSQkTi+vgyiRljiz7UuNoia14wSRz5MAasRFrCTWPyz
+        EKRGRMBYov/sLHYQm1kgV+L9gTnMEPWNzBJzNnQxgyTYBKwkJravYgSxeYF633y8zwJiswio
+        Shw8sAGsWVQgQuLwjllQNYISJ2c+AavhFDCQONy2lhVigbrEn3mXmCFscYlbT+YzQdjyEtvf
+        zmGewCg0C0n7LCQts5C0zELSsoCRZRWjSGppcW56brGhXnFibnFpXrpecn7uJkZgHG079nPz
+        DsZLG4MPMQpwMCrx8Er488QLsSaWFVfmHmKU4GBWEuF1Ons6Tog3JbGyKrUoP76oNCe1+BCj
+        KdBzE5mlRJPzgTGeVxJvaGpobmFpaG5sbmxmoSTO2yFwMEZIID2xJDU7NbUgtQimj4mDU6qB
+        0eRTOu/X1UpM33b/dXs+8VeOj9zZS+FnNyzbeGLmdF2GE52eW3kZ3zy/dsKc4ZjHrJKi+qWt
+        hnwcxh3feD6YP7See7lvit7KxvpbEwOlff5Y9u6ds7HCbN+nw1fzF+RbPXijZ7EjuP5Owv/n
+        3TVpHm8elbne4jgZdGeJua7dYVNd1lkrH+Vx1imxFGckGmoxFxUnAgB3pXUJuQIAAA==
+X-CMS-MailID: 20200714085040eucas1p1466b8ae92a0931477aa7e7896782bb75
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee
+References: <20200623191749.115200-1-tasleson@redhat.com>
+        <20200623191749.115200-6-tasleson@redhat.com>
+        <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
+        <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
+        <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
+        <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+        <20200714081750.GB862637@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQXZyaSwNCg0KU29ycnkgZm9yIHRoZSBsYXRlIHJlc3BvbnNlLg0KDQpPbiBTdW4sIDIwMjAt
-MDctMTIgYXQgMTA6MDQgKzAwMDAsIEF2cmkgQWx0bWFuIHdyb3RlOg0KPiANCj4gPiANCj4gPiBI
-aSBBdnJpLA0KPiA+IA0KPiA+IE9uIFRodSwgMjAyMC0wNy0wOSBhdCAwODozMSArMDAwMCwgQXZy
-aSBBbHRtYW4gd3JvdGU6DQo+ID4gPiA+DQo+ID4gPiA+IElmIHNvbWVob3cgbm8gaW50ZXJydXB0
-IG5vdGlmaWNhdGlvbiBpcyByYWlzZWQgZm9yIGEgY29tcGxldGVkIHJlcXVlc3QNCj4gPiA+ID4g
-YW5kIGl0cyBkb29yYmVsbCBiaXQgaXMgY2xlYXJlZCBieSBob3N0LCBVRlMgZHJpdmVyIG5lZWRz
-IHRvIGNsZWFudXANCj4gPiA+ID4gaXRzIG91dHN0YW5kaW5nIGJpdCBpbiB1ZnNoY2RfYWJvcnQo
-KS4NCj4gPiA+IFRoZW9yZXRpY2FsbHksIHRoaXMgY2FzZSBpcyBhbHJlYWR5IGFjY291bnRlZCBm
-b3IgLQ0KPiA+ID4gU2VlIGxpbmUgNjQwNzogYSBwcm9wZXIgZXJyb3IgaXMgaXNzdWVkIGFuZCBl
-dmVudHVhbGx5IG91dHN0YW5kaW5nIHJlcSBpcw0KPiA+IGNsZWFyZWQuDQo+ID4gPg0KPiA+ID4g
-Q2FuIHlvdSBnbyBvdmVyIHRoZSBzY2VuYXJpbyB5b3UgYXJlIGF0dGVuZGluZyBsaW5lIGJ5IGxp
-bmUsDQo+ID4gPiBBbmQgZXhwbGFpbiB3aHkgdWZzaGNkX2Fib3J0IGRvZXMgbm90IGFjY291bnQg
-Zm9yIGl0Pw0KPiA+IA0KPiA+IFN1cmUuDQo+ID4gDQo+ID4gSWYgYSByZXF1ZXN0IHVzaW5nIHRh
-ZyBOIGlzIGNvbXBsZXRlZCBieSBVRlMgZGV2aWNlIHdpdGhvdXQgaW50ZXJydXB0DQo+ID4gbm90
-aWZpY2F0aW9uIHRpbGwgdGltZW91dCBoYXBwZW5zLCB1ZnNoY2RfYWJvcnQoKSB3aWxsIGJlIGlu
-dm9rZWQuDQo+ID4gDQo+ID4gU2luY2UgcmVxdWVzdCBjb21wbGV0aW9uIGZsb3cgaXMgbm90IGV4
-ZWN1dGVkLCBjdXJyZW50IHN0YXR1cyBtYXkgYmUNCj4gPiANCj4gPiAtIFRhZyBOIGluIGhiYS0+
-b3V0c3RhbmRpbmdfcmVxcyBpcyBzZXQNCj4gPiAtIFRhZyBOIGluIGRvb3JiZWxsIHJlZ2lzdGVy
-IGlzIG5vdCBzZXQNCj4gPiANCj4gPiBJbiB0aGlzIGNhc2UsIHVmc2hjZF9hYm9ydCgpIGZsb3cg
-d291bGQgYmUNCj4gPiANCj4gPiAtIFRoaXMgbG9nIGlzIHByaW50ZWQ6ICJ1ZnNoY2RfYWJvcnQ6
-IGNtZCB3YXMgY29tcGxldGVkLCBidXQgd2l0aG91dCBhDQo+ID4gbm90aWZ5aW5nIGludHIsIHRh
-ZyA9IE4iDQo+ID4gLSBUaGlzIGxvZyBpcyBwcmludGVkOiAidWZzaGNkX2Fib3J0OiBEZXZpY2Ug
-YWJvcnQgdGFzayBhdCB0YWcgTiINCj4gPiAtIElmIGhiYS0+cmVxX2Fib3J0X3NraXAgaXMgemVy
-bywgUVVFUllfVEFTSyBjb21tYW5kIGlzIHNlbnQNCj4gPiAtIERldmljZSByZXNwb25kcyAiVVBJ
-VV9UQVNLX01BTkFHRU1FTlRfRlVOQ19DT01QTCINCj4gPiAtIFRoaXMgbG9nIGlzIHByaW50ZWQ6
-ICJ1ZnNoY2RfYWJvcnQ6IGNtZCBhdCB0YWcgTiBub3QgcGVuZGluZyBpbiB0aGUNCj4gPiBkZXZp
-Y2UuIg0KPiA+IC0gRG9vcmJlbGwgdGVsbHMgdGhhdCB0YWcgTiBpcyBub3Qgc2V0LCBzbyB0aGUg
-ZHJpdmVyIGdvZXMgdG8gbGFiZWwNCj4gPiAib3V0IiB3aXRoIHRoaXMgbG9nIHByaW50ZWQ6ICJ1
-ZnNoY2RfYWJvcnQ6IGNtZCBhdCB0YWcgJWQgc3VjY2Vzc2Z1bGx5DQo+ID4gY2xlYXJlZCBmcm9t
-IERCLiINCj4gPiAtIEluIGxhYmVsICJvdXQiIHNlY3Rpb24sIG5vIGNsZWFudXAgd2lsbCBiZSBt
-YWRlLCBhbmQgdGhlbiB1ZnNoY2RfYWJvcnQNCj4gPiBleGl0cw0KPiA+IC0gVGhpcyByZXF1ZXN0
-IHdpbGwgYmUgcmUtcXVldWVkIHRvIHJlcXVlc3QgcXVldWUgYnkgU0NTSSB0aW1lb3V0DQo+ID4g
-aGFuZGxlcg0KPiA+IA0KPiA+IE5vdywgSW5jb25zaXN0ZW50IHN0YXRlIHNob3dzLXVwOiBBIHJl
-cXVlc3QgaXMgInJlLXF1ZXVlZCIgYnV0IGl0cw0KPiA+IGNvcnJlc3BvbmRpbmcgcmVzb3VyY2Ug
-aW4gVUZTIGxheWVyIGlzIG5vdCBjbGVhcmVkLCBiZWxvdyBmbG93IHdpbGwNCj4gPiB0cmlnZ2Vy
-IGJhZCB0aGluZ3MsDQo+ID4gDQo+ID4gLSBBIG5ldyByZXF1ZXN0IHdpdGggdGFnIE0gaXMgZmlu
-aXNoZWQNCj4gPiAtIEludGVycnVwdCBpcyByYWlzZWQgYW5kIHVmc2hjZF90cmFuc2Zlcl9yZXFf
-Y29tcGwoKSBmb3VuZCBib3RoIHRhZyBODQo+ID4gYW5kIE0gY2FuIHByb2Nlc3MgdGhlIGNvbXBs
-ZXRpb24gZmxvdw0KPiA+IC0gVGhlIHBvc3QtcHJvY2Vzc2luZyBmbG93IGZvciB0YWcgTiB3aWxs
-IGJlIGV4ZWN1dGVkIHdoaWxlIGl0cyByZXF1ZXN0DQo+ID4gaXMgc3RpbGwgYWxpdmUNCj4gPiAN
-Cj4gPiBJIGFtIHNvcnJ5IHRoYXQgYmVsb3cgbWVzc2FnZXMgYXJlIG9ubHkgZm9yIG9sZCBrZXJu
-ZWwgaW4gbm9uLWJsay1tcQ0KPiA+IGNhc2UuIEhvd2V2ZXIgYWJvdmUgc2NlbmFyaW8gd2lsbCBh
-bHNvIHRyaWdnZXIgYmFkIHRoaW5nIGluIGJsay1tcSBjYXNlLg0KPiANCj4gT2suICBUaGFua3Mu
-DQo+IA0KPiA+IA0KPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4gT3RoZXJ3aXNlLCBzeXN0ZW0gbWF5
-IGNyYXNoIGJ5IGJlbG93IGFibm9ybWFsIGZsb3c6DQo+ID4gPiA+DQo+ID4gPiA+IEFmdGVyIHRo
-aXMgcmVxdWVzdCBpcyByZXF1ZXVlZCBieSBTQ1NJIGxheWVyIHdpdGggaXRzDQo+ID4gPiA+IG91
-dHN0YW5kaW5nIGJpdCBzZXQsIHRoZSBuZXh0IGNvbXBsZXRlZCByZXF1ZXN0IHdpbGwgdHJpZ2dl
-cg0KPiA+ID4gPiB1ZnNoY2RfdHJhbnNmZXJfcmVxX2NvbXBsKCkgdG8gaGFuZGxlIGFsbCAiY29t
-cGxldGVkIG91dHN0YW5kaW5nDQo+ID4gPiA+IGJpdHMiLiBJbiB0aGlzIHRpbWUsIHRoZSAiYWJu
-b3JtYWwgb3V0c3RhbmRpbmcgYml0IiB3aWxsIGJlIGRldGVjdGVkDQo+ID4gPiA+IGFuZCB0aGUg
-InJlcXVldWVkIHJlcXVlc3QiIHdpbGwgYmUgY2hvc2VuIHRvIGV4ZWN1dGUgcmVxdWVzdA0KPiA+
-ID4gPiBwb3N0LXByb2Nlc3NpbmcgZmxvdy4gVGhpcyBpcyB3cm9uZyBhbmQgYmxrX2ZpbmlzaF9y
-ZXF1ZXN0KCkgd2lsbA0KPiA+ID4gPiBCVUdfT04gYmVjYXVzZSB0aGlzIHJlcXVlc3QgaXMgc3Rp
-bGwgImFsaXZlIi4NCj4gPiA+ID4NCj4gPiA+ID4gSXQgaXMgd29ydGggbWVudGlvbmluZyB0aGF0
-IGJlZm9yZSB1ZnNoY2RfYWJvcnQoKSBjbGVhbnMgdGhlIHRpbWVkLW91dA0KPiA+ID4gPiByZXF1
-ZXN0LCBkcml2ZXIgbmVlZCB0byBjaGVjayBhZ2FpbiBpZiB0aGlzIHJlcXVlc3QgaXMgcmVhbGx5
-IG5vdA0KPiA+ID4gPiBoYW5kbGVkIGJ5IF9fdWZzaGNkX3RyYW5zZmVyX3JlcV9jb21wbCgpIHll
-dCBiZWNhdXNlIGl0IG1heSBiZQ0KPiA+ID4gPiBwb3NzaWJsZSB0aGF0IHRoZSBpbnRlcnJ1cHQg
-Y29tZXMgdmVyeSBsYXRlbHkgYmVmb3JlIHRoZSBjbGVhbmluZy4NCj4gPiA+IFdoYXQgZG8geW91
-IG1lYW4/IFdoeSBjaGVja2luZyB0aGUgb3V0c3RhbmRpbmcgcmVxcyBpc24ndCBlbm91Z2g/DQo+
-ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBTdGFubGV5IENodSA8c3Rhbmxl
-eS5jaHVAbWVkaWF0ZWsuY29tPg0KPiA+ID4gPiAtLS0NCj4gPiA+ID4gIGRyaXZlcnMvc2NzaS91
-ZnMvdWZzaGNkLmMgfCA5ICsrKysrKystLQ0KPiA+ID4gPiAgMSBmaWxlIGNoYW5nZWQsIDcgaW5z
-ZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4gPiA+ID4NCj4gPiA+ID4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+
-ID4gPiA+IGluZGV4IDg2MDNiMDcwNDVhNi4uZjIzZmIxNGRmOWY2IDEwMDY0NA0KPiA+ID4gPiAt
-LS0gYS9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4gPiA+ICsrKyBiL2RyaXZlcnMvc2Nz
-aS91ZnMvdWZzaGNkLmMNCj4gPiA+ID4gQEAgLTY0NjIsNyArNjQ2Miw3IEBAIHN0YXRpYyBpbnQg
-dWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gPiA+ID4gICAgICAgICAgICAg
-ICAgICAgICAgICAgLyogY29tbWFuZCBjb21wbGV0ZWQgYWxyZWFkeSAqLw0KPiA+ID4gPiAgICAg
-ICAgICAgICAgICAgICAgICAgICBkZXZfZXJyKGhiYS0+ZGV2LCAiJXM6IGNtZCBhdCB0YWcgJWQg
-c3VjY2Vzc2Z1bGx5IGNsZWFyZWQNCj4gPiBmcm9tDQo+ID4gPiA+IERCLlxuIiwNCj4gPiA+ID4g
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBfX2Z1bmNfXywgdGFnKTsNCj4gPiA+ID4g
-LSAgICAgICAgICAgICAgICAgICAgICAgZ290byBvdXQ7DQo+ID4gPiA+ICsgICAgICAgICAgICAg
-ICAgICAgICAgIGdvdG8gY2xlYW51cDsNCj4gPiA+IEJ1dCB5b3UndmUgYXJyaXZlZCBoZXJlIG9u
-bHkgaWYgKCEodGVzdF9iaXQodGFnLCAmaGJhLT5vdXRzdGFuZGluZ19yZXFzKSkpIC0NCj4gPiA+
-IFNlZSBsaW5lIDY0MDAuDQo+ID4gPg0KPiA+ID4gPiAgICAgICAgICAgICAgICAgfSBlbHNlIHsN
-Cj4gPiA+ID4gICAgICAgICAgICAgICAgICAgICAgICAgZGV2X2VycihoYmEtPmRldiwNCj4gPiA+
-ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiJXM6IG5vIHJlc3BvbnNlIGZyb20g
-ZGV2aWNlLiB0YWcgPSAlZCwgZXJyICVkXG4iLA0KPiA+ID4gPiBAQCAtNjQ5Niw5ICs2NDk2LDE0
-IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2Fib3J0KHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gPiA+
-ID4gICAgICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiA+ID4gPiAgICAgICAgIH0NCj4gPiA+ID4N
-Cj4gPiA+ID4gK2NsZWFudXA6DQo+ID4gPiA+ICsgICAgICAgc3Bpbl9sb2NrX2lycXNhdmUoaG9z
-dC0+aG9zdF9sb2NrLCBmbGFncyk7DQo+ID4gPiA+ICsgICAgICAgaWYgKCF0ZXN0X2JpdCh0YWcs
-ICZoYmEtPm91dHN0YW5kaW5nX3JlcXMpKSB7DQo+IElzIHRoaXMgbmVlZGVkPyAgaXQgd2FzIGFs
-cmVhZHkgY2hlY2tlZCBpbiBsaW5lIDY0MzkuDQo+IA0KDQpJIGFtIHdvcnJpZWQgYWJvdXQgdGhl
-IGNhc2UgdGhhdCBpbnRlcnJ1cHQgY29tZXMgdmVyeSBsYXRlbHkuIEZvcg0KZXhhbXBsZSwgaWYg
-aW50ZXJydXB0IGZpbmFsbHkgY29tZXMgd2hpbGUgdWZzaGNkX2Fib3J0KCkgaXMgaGFuZGxpbmcN
-CnRoaXMgY29tbWFuZCwgdGhlbiBwcm9iYWJseSB0aGlzIGNvbW1hbmQgbWF5IGJlIGNvbXBsZXRl
-ZCBmaXJzdCBieQ0KaW50ZXJydXB0IGhhbmRsZXIuIEluIHRoaXMgY2FzZSwgdWZzaGNkX2Fib3J0
-KCkgc2hhbGwgbm90IGNsZWFyIHRoaXMNCmNvbW1hbmQgYWdhaW4uIEluIGNvbnRyYXN0LCBpZiB1
-ZnNoY2RfYWJvcnQoKSBjbGVhcnMgdGhpcyBjb21tYW5kIGZpcnN0LA0KdGhlbiBpbnRlcnJ1cHQg
-c2hhbGwgbm90IGNvbXBsZXRlIGl0LiBUaHVzIGhlcmUgY2hlY2tpbmcNCmhiYS0+b3V0c3RhbmRp
-bmdfcmVxIHdpdGggaG9zdCBsb2NrIGhlbGQgaXMgcmVxdWlyZWQgdG8gcHJldmVudCBhYm92ZQ0K
-cmFjaW5nLg0KDQpUaGFua3MsDQpTdGFubGV5IENodQ0KDQoNCg==
 
+On 7/14/20 10:17 AM, Greg Kroah-Hartman wrote:
+> On Tue, Jul 14, 2020 at 10:06:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+>>
+>> Hi Tony,
+>>
+>> On 7/9/20 11:18 PM, Tony Asleson wrote:
+>>> Hi Bartlomiej,
+>>>
+>>> On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
+>>>> The root source of problem is that libata transport uses different
+>>>> naming scheme for ->tdev devices (please see dev_set_name() in
+>>>> ata_t{dev,link,port}_add()) than libata core for its logging
+>>>> functionality (ata_{dev,link,port}_printk()).
+>>>>
+>>>> Since libata transport is part of sysfs ABI we should be careful
+>>>> to not break it so one idea for solving the issue is to convert
+>>>> ata_t{dev,link,port}_add() to use libata logging naming scheme and
+>>>> at the same time add sysfs symlinks for the old libata transport
+>>>> naming scheme.
+> 
+> Given the age of the current implementation, what suddenly broke that
+> requires this to change at this point in time?
+
+Unfortunately when adding libata transport classes (+ at the same
+time embedding struct device-s in libata dev/link/port objects) in
+the past someone has decided to use different naming scheme than
+the one used for standard libata log messages (which use printk()
+without any reference to struct device-s in libata dev/link/port
+objects).
+
+Now we would like to use dev_printk() for standard libata logging
+functionality as this is required for 2 pending patchsets:
+
+- move DPRINTK to dynamic debugging (from Hannes Reinecke)
+
+- add persistent durable identifier storage log messages (from Tony)
+
+but we don't want to change standard libata log messages and
+confuse users..
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
