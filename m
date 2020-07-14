@@ -4,51 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B23A0C433F8
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C508CC4345B
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D4992251E
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A27DC2255F
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 14:39:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594737568;
-	bh=ZMywclo+5R/Gc/XvHS3+MFq+PuAks1cUnMcIkj5lS4k=;
+	s=default; t=1594737578;
+	bh=vnz8ROALb5gubnj68vO1PvMNUEb7QYnW9YoPnbZSgck=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hFAOzeAJdf+4pV26eyBzPdj03Kav2bJBJV1Rd1jatBnpfj1/tjPct2rH99WP1MimT
-	 2Cyxd2y7uk+qLZyowya7G9/wzL7YVDXZVzLTczH4EJlm2X//Vc8JjNvAZA0bLGWS4B
-	 u0BLbWsOPAYzXYhTeCLO6yn3wW10wdMaaTWsibGA=
+	b=z244iynDfk5Zul8Zc7iNv6jd/WkQD2bvm7GSP5Rg1gND5uRx1YsAQSzDGecD6LeBf
+	 tn2amfeqzVCsNrwGtcahRLrhRpv7Qr+bJ7sVcdRGkCSuew2msqq7FS7fWndDPxmbXr
+	 8REdWzqUPoTuxSm8aRVOavNo1eKbozd9vOLWwpBc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728945AbgGNOj2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 10:39:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54716 "EHLO mail.kernel.org"
+        id S1729021AbgGNOjg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 10:39:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54974 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728932AbgGNOj0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 10:39:26 -0400
+        id S1729005AbgGNOjf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 10:39:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D5C9B2256D;
-        Tue, 14 Jul 2020 14:39:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D3B022251E;
+        Tue, 14 Jul 2020 14:39:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594737565;
-        bh=ZMywclo+5R/Gc/XvHS3+MFq+PuAks1cUnMcIkj5lS4k=;
+        s=default; t=1594737574;
+        bh=vnz8ROALb5gubnj68vO1PvMNUEb7QYnW9YoPnbZSgck=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O2/8sE/97MnDtfsmmLsz+E6qNBEGVGVow+oDigAZSVf7YHX+E8rYs1jecrUPlLAer
-         bvC535YQ+BZ/QR5eWLKM8icmdch+K285lypNuewYNQ/UU1QMSISrmEO5jGKgPwsqmg
-         8F4HwfinyYZUXCJkidv4g1AIoGCdt0ahrHdfLfYs=
+        b=cBMpdyKY9keHvtx6CNo/PwyZpE4hTl+jwI721cTBgT0hWGWyqM0nq60BAkFeBq64a
+         ieytY4CkzSAj079APHtbKUaCPU8rZYfD5hiQoKNHSpjzkJqpwaSsLQfnOqL4TFXCx7
+         iDgUWd9AA0Ot3BgwCjVamoXR5n7GKlokkw46UYKA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     Steve Schremmer <steve.schremmer@netapp.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 09/18] scsi: mpt3sas: Fix unlock imbalance
-Date:   Tue, 14 Jul 2020 10:39:05 -0400
-Message-Id: <20200714143914.4035489-9-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 16/18] scsi: dh: Add Fujitsu device to devinfo and dh lists
+Date:   Tue, 14 Jul 2020 10:39:12 -0400
+Message-Id: <20200714143914.4035489-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200714143914.4035489-1-sashal@kernel.org>
 References: <20200714143914.4035489-1-sashal@kernel.org>
@@ -61,80 +58,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+From: Steve Schremmer <steve.schremmer@netapp.com>
 
-[ Upstream commit cb551b8dc079d2ef189145782627c99cb68c0255 ]
+[ Upstream commit e094fd346021b820f37188aaa6b502c7490ab5b5 ]
 
-In BRM_status_show(), if the condition "!ioc->is_warpdrive" tested on entry
-to the function is true, a "goto out" is called. This results in unlocking
-ioc->pci_access_mutex without this mutex lock being taken.  This generates
-the following splat:
+Add FUJITSU ETERNUS_AHB
 
-[ 1148.539883] mpt3sas_cm2: BRM_status_show: BRM attribute is only for warpdrive
-[ 1148.547184]
-[ 1148.548708] =====================================
-[ 1148.553501] WARNING: bad unlock balance detected!
-[ 1148.558277] 5.8.0-rc3+ #827 Not tainted
-[ 1148.562183] -------------------------------------
-[ 1148.566959] cat/5008 is trying to release lock (&ioc->pci_access_mutex) at:
-[ 1148.574035] [<ffffffffc070b7a3>] BRM_status_show+0xd3/0x100 [mpt3sas]
-[ 1148.580574] but there are no more locks to release!
-[ 1148.585524]
-[ 1148.585524] other info that might help us debug this:
-[ 1148.599624] 3 locks held by cat/5008:
-[ 1148.607085]  #0: ffff92aea3e392c0 (&p->lock){+.+.}-{3:3}, at: seq_read+0x34/0x480
-[ 1148.618509]  #1: ffff922ef14c4888 (&of->mutex){+.+.}-{3:3}, at: kernfs_seq_start+0x2a/0xb0
-[ 1148.630729]  #2: ffff92aedb5d7310 (kn->active#224){.+.+}-{0:0}, at: kernfs_seq_start+0x32/0xb0
-[ 1148.643347]
-[ 1148.643347] stack backtrace:
-[ 1148.655259] CPU: 73 PID: 5008 Comm: cat Not tainted 5.8.0-rc3+ #827
-[ 1148.665309] Hardware name: HGST H4060-S/S2600STB, BIOS SE5C620.86B.02.01.0008.031920191559 03/19/2019
-[ 1148.678394] Call Trace:
-[ 1148.684750]  dump_stack+0x78/0xa0
-[ 1148.691802]  lock_release.cold+0x45/0x4a
-[ 1148.699451]  __mutex_unlock_slowpath+0x35/0x270
-[ 1148.707675]  BRM_status_show+0xd3/0x100 [mpt3sas]
-[ 1148.716092]  dev_attr_show+0x19/0x40
-[ 1148.723664]  sysfs_kf_seq_show+0x87/0x100
-[ 1148.731193]  seq_read+0xbc/0x480
-[ 1148.737882]  vfs_read+0xa0/0x160
-[ 1148.744514]  ksys_read+0x58/0xd0
-[ 1148.751129]  do_syscall_64+0x4c/0xa0
-[ 1148.757941]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[ 1148.766240] RIP: 0033:0x7f1230566542
-[ 1148.772957] Code: Bad RIP value.
-[ 1148.779206] RSP: 002b:00007ffeac1bcac8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
-[ 1148.790063] RAX: ffffffffffffffda RBX: 0000000000020000 RCX: 00007f1230566542
-[ 1148.800284] RDX: 0000000000020000 RSI: 00007f1223460000 RDI: 0000000000000003
-[ 1148.810474] RBP: 00007f1223460000 R08: 00007f122345f010 R09: 0000000000000000
-[ 1148.820641] R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000000000
-[ 1148.830728] R13: 0000000000000003 R14: 0000000000020000 R15: 0000000000020000
-
-Fix this by returning immediately instead of jumping to the out label.
-
-Link: https://lore.kernel.org/r/20200701085254.51740-1-damien.lemoal@wdc.com
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Acked-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Link: https://lore.kernel.org/r/DM6PR06MB5276CCA765336BD312C4282E8C660@DM6PR06MB5276.namprd06.prod.outlook.com
+Signed-off-by: Steve Schremmer <steve.schremmer@netapp.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ drivers/scsi/scsi_dh.c      | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b95f7d062ea44..82c4ecc16f191 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -2921,7 +2921,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
- 	if (!ioc->is_warpdrive) {
- 		ioc_err(ioc, "%s: BRM attribute is only for warpdrive\n",
- 			__func__);
--		goto out;
-+		return 0;
- 	}
- 	/* pci_access_mutex lock acquired by sysfs show path */
- 	mutex_lock(&ioc->pci_access_mutex);
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index df14597752ec8..fb5a7832353ce 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -239,6 +239,7 @@ static struct {
+ 	{"LSI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"ENGENIO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"LENOVO", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
++	{"FUJITSU", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ 	{"SanDisk", "Cruzer Blade", NULL, BLIST_TRY_VPD_PAGES |
+ 		BLIST_INQUIRY_36},
+ 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 42f0550d6b11f..6f41e4b5a2b85 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -63,6 +63,7 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+ 	{"LSI", "INF-01-00",		"rdac", },
+ 	{"ENGENIO", "INF-01-00",	"rdac", },
+ 	{"LENOVO", "DE_Series",		"rdac", },
++	{"FUJITSU", "ETERNUS_AHB",	"rdac", },
+ 	{NULL, NULL,			NULL },
+ };
+ 
 -- 
 2.25.1
 
