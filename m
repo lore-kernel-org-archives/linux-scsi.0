@@ -2,39 +2,36 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F7EC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A25C433E4
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:45:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DCFD20890
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:41:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F0AD20890
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 07:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726062AbgGNHlh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 03:41:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60792 "EHLO mx2.suse.de"
+        id S1726477AbgGNHpS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 03:45:18 -0400
+Received: from mx2.suse.de ([195.135.220.15]:34064 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725876AbgGNHlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 03:41:37 -0400
+        id S1725780AbgGNHpR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Jul 2020 03:45:17 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4315EB0A5;
-        Tue, 14 Jul 2020 07:41:37 +0000 (UTC)
-Subject: Re: [PATCH RFC v7 12/12] hpsa: enable host_tagset and switch to MQ
-To:     John Garry <john.garry@huawei.com>, don.brace@microsemi.com
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        ming.lei@redhat.com, bvanassche@acm.org, hare@suse.com, hch@lst.de,
-        shivasharan.srikanteshwara@broadcom.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        esc.storagedev@microsemi.com, chenxiang66@hisilicon.com,
-        megaraidlinux.pdl@broadcom.com
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-13-git-send-email-john.garry@huawei.com>
- <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
+        by mx2.suse.de (Postfix) with ESMTP id 90415AD68;
+        Tue, 14 Jul 2020 07:45:17 +0000 (UTC)
+Subject: Re: [PATCH v2 15/24] scsi: myrs: Demote obvious misuse of kerneldoc
+ to standard comment blocks
+To:     Lee Jones <lee.jones@linaro.org>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@kernel.org>, Linux GmbH <hare@suse.com>,
+        "Leonard N. Zubkoff" <lnz@dandelion.com>
+References: <20200713080001.128044-1-lee.jones@linaro.org>
+ <20200713080001.128044-16-lee.jones@linaro.org>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -80,12 +77,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <3b3ead84-5d2f-dcf2-33d5-6aa12d5d9f7e@suse.de>
-Date:   Tue, 14 Jul 2020 09:41:34 +0200
+Message-ID: <270f544a-19ef-cf71-220c-54e349dc6bfc@suse.de>
+Date:   Tue, 14 Jul 2020 09:45:14 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <939891db-a584-1ff7-d6a0-3857e4257d3e@huawei.com>
+In-Reply-To: <20200713080001.128044-16-lee.jones@linaro.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -94,27 +91,73 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/14/20 9:37 AM, John Garry wrote:
-> On 10/06/2020 18:29, John Garry wrote:
->> From: Hannes Reinecke <hare@suse.de>
->>
->> The smart array HBAs can steer interrupt completion, so this
->> patch switches the implementation to use multiqueue and enables
->> 'host_tagset' as the HBA has a shared host-wide tagset.
->>
+On 7/13/20 9:59 AM, Lee Jones wrote:
+> No attempt has been made to document any of the demoted functions here.
 > 
-> Hi Don,
+> Fixes the following W=1 kernel build warning(s):
 > 
-> I am preparing the next iteration of this series, and we're getting
-> close to dropping the RFC tags. The series has grown a bit, and I am not
-> sure what to do with hpsa support.
+>  drivers/scsi/myrs.c:94: warning: Function parameter or member 'cmd_blk' not described in 'myrs_reset_cmd'
+>  drivers/scsi/myrs.c:105: warning: Function parameter or member 'cs' not described in 'myrs_qcmd'
+>  drivers/scsi/myrs.c:105: warning: Function parameter or member 'cmd_blk' not described in 'myrs_qcmd'
+>  drivers/scsi/myrs.c:130: warning: Function parameter or member 'cs' not described in 'myrs_exec_cmd'
+>  drivers/scsi/myrs.c:130: warning: Function parameter or member 'cmd_blk' not described in 'myrs_exec_cmd'
+>  drivers/scsi/myrs.c:149: warning: Function parameter or member 'cs' not described in 'myrs_report_progress'
+>  drivers/scsi/myrs.c:149: warning: Function parameter or member 'ldev_num' not described in 'myrs_report_progress'
+>  drivers/scsi/myrs.c:149: warning: Function parameter or member 'msg' not described in 'myrs_report_progress'
+>  drivers/scsi/myrs.c:149: warning: Function parameter or member 'blocks' not described in 'myrs_report_progress'
+>  drivers/scsi/myrs.c:149: warning: Function parameter or member 'size' not described in 'myrs_report_progress'
+>  drivers/scsi/myrs.c:160: warning: Function parameter or member 'cs' not described in 'myrs_get_ctlr_info'
+>  drivers/scsi/myrs.c:222: warning: Function parameter or member 'cs' not described in 'myrs_get_ldev_info'
+>  drivers/scsi/myrs.c:222: warning: Function parameter or member 'ldev_num' not described in 'myrs_get_ldev_info'
+>  drivers/scsi/myrs.c:222: warning: Function parameter or member 'ldev_info' not described in 'myrs_get_ldev_info'
+>  drivers/scsi/myrs.c:310: warning: Function parameter or member 'cs' not described in 'myrs_get_pdev_info'
+>  drivers/scsi/myrs.c:310: warning: Function parameter or member 'channel' not described in 'myrs_get_pdev_info'
+>  drivers/scsi/myrs.c:310: warning: Function parameter or member 'target' not described in 'myrs_get_pdev_info'
+>  drivers/scsi/myrs.c:310: warning: Function parameter or member 'lun' not described in 'myrs_get_pdev_info'
+>  drivers/scsi/myrs.c:310: warning: Function parameter or member 'pdev_info' not described in 'myrs_get_pdev_info'
+>  drivers/scsi/myrs.c:353: warning: Function parameter or member 'cs' not described in 'myrs_dev_op'
+>  drivers/scsi/myrs.c:353: warning: Function parameter or member 'opcode' not described in 'myrs_dev_op'
+>  drivers/scsi/myrs.c:353: warning: Function parameter or member 'opdev' not described in 'myrs_dev_op'
+>  drivers/scsi/myrs.c:379: warning: Function parameter or member 'cs' not described in 'myrs_translate_pdev'
+>  drivers/scsi/myrs.c:379: warning: Function parameter or member 'channel' not described in 'myrs_translate_pdev'
+>  drivers/scsi/myrs.c:379: warning: Function parameter or member 'target' not described in 'myrs_translate_pdev'
+>  drivers/scsi/myrs.c:379: warning: Function parameter or member 'lun' not described in 'myrs_translate_pdev'
+>  drivers/scsi/myrs.c:379: warning: Function parameter or member 'devmap' not described in 'myrs_translate_pdev'
+>  drivers/scsi/myrs.c:422: warning: Function parameter or member 'cs' not described in 'myrs_get_event'
+>  drivers/scsi/myrs.c:422: warning: Function parameter or member 'event_num' not described in 'myrs_get_event'
+>  drivers/scsi/myrs.c:422: warning: Function parameter or member 'event_buf' not described in 'myrs_get_event'
+>  drivers/scsi/myrs.c:484: warning: Function parameter or member 'cs' not described in 'myrs_enable_mmio_mbox'
+>  drivers/scsi/myrs.c:484: warning: Function parameter or member 'enable_mbox_fn' not described in 'myrs_enable_mmio_mbox'
+>  drivers/scsi/myrs.c:584: warning: Function parameter or member 'cs' not described in 'myrs_get_config'
+>  drivers/scsi/myrs.c:688: warning: cannot understand function prototype: 'struct '
+>  drivers/scsi/myrs.c:1967: warning: Function parameter or member 'dev' not described in 'myrs_is_raid'
+>  drivers/scsi/myrs.c:1980: warning: Function parameter or member 'dev' not described in 'myrs_get_resync'
+>  drivers/scsi/myrs.c:2005: warning: Function parameter or member 'dev' not described in 'myrs_get_state'
+>  drivers/scsi/myrs.c:2343: warning: bad line:   the Error Status Register when the driver performs the BIOS handshaking.
+>  drivers/scsi/myrs.c:2344: warning: bad line:   It returns true for fatal errors and false otherwise.
+>  drivers/scsi/myrs.c:2349: warning: Function parameter or member 'cs' not described in 'myrs_err_status'
+>  drivers/scsi/myrs.c:2349: warning: Function parameter or member 'status' not described in 'myrs_err_status'
+>  drivers/scsi/myrs.c:2349: warning: Function parameter or member 'parm0' not described in 'myrs_err_status'
+>  drivers/scsi/myrs.c:2349: warning: Function parameter or member 'parm1' not described in 'myrs_err_status'
 > 
-> The latest versions of this series have not been tested for hpsa, AFAIK.
-> Can you let me know if you can test and review this patch? Or someone
-> else let me know it's tested (Hannes?)
-> I'll give it a go.
+> Cc: Hannes Reinecke <hare@kernel.org>
+> Cc: Linux GmbH <hare@suse.com>
 
-Which git repository should I base the tests on?
+Please, do fix your mailer/script.
+This is my company e-mail address, but my name is actually the same even
+when working for the company ...
+
+> Cc: "Leonard N. Zubkoff" <lnz@dandelion.com>
+> Signed-off-by: Lee Jones <lee.jones@linaro.org>
+> ---
+>  drivers/scsi/myrs.c | 34 +++++++++++++++++-----------------
+>  1 file changed, 17 insertions(+), 17 deletions(-)
+> 
+I had been wanting to convert this to proper kernel-doc style, but never
+found the time to actually do it.
+So this will serve for now.
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
