@@ -2,138 +2,233 @@ Return-Path: <SRS0=xC/A=AZ=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAEC6C433E6
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 18:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE21DC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 20:02:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 827CC229C6
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 18:16:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC33A21D7B
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Jul 2020 20:02:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="wq+M71is";
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="cVMsjAKX"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EJQo63Fg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728505AbgGNSQr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 14:16:47 -0400
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:26979 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725951AbgGNSQr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 14:16:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1594750606; x=1626286606;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=na+Ibqf+AW6YpDYrcuOlrNWt4lYykIrxxdesauMF5Zc=;
-  b=wq+M71isp5CKo3xRcUvbQTYec58VP26wY9x3XuK/1KpDrVpSDAvd6B30
-   zYYMOwsLZ0YCqNByZvfa+T2FXrtX6w7FSvTrQEy/Gse1E5HpYxklI56FR
-   eFJaJpK+gEflLqcuxQkgMpQvbJIcClNKgog6qPWFHlwMSZJ9i2zRDcgz0
-   TPaIe9EskIRb2ZxrNne5bekV78FPBhNX9pfuwTeVURxMjekO1dVgnrBJM
-   UhzuwTn5IS64pl5kQinI3FgAVmAvP9VnG0m0AXWJ3Ruz+Uxb9hmmsK6Vw
-   oJVVnu4Kxf8DStl/vj0dJqcnqiMIQevcZyH65qqmpkKK/yfjcU75+VbAt
-   w==;
-IronPort-SDR: 8+dg8eddM2iRLgeJXQQDUB52iyOR1cItgv2Xhvzhc1V2z+Z51W76T+bsKjmRgsinY2/xT8oNJ6
- TU3pf5b3ux6LKEmKcTtHBNl6j+iToh87xIh1PLyJ0Qb9PxoHs5mS8+xwSgkL2/pQ/zjcty1I6J
- 006vDMQmBYD7ENED5mDMH8WawYWxvqSiTTZAtR2J8EQmBLddCFs3lcVuYcbIQk3AxW00jds3ca
- el6JSmd8ttZwhP56dRc/B7+JqEY7+83YDbTi90ue/BesEIKhUlnMmiUi9LYQ0ouAp/bgLDUxCv
- I6Q=
-X-IronPort-AV: E=Sophos;i="5.75,352,1589266800"; 
-   d="scan'208";a="81836617"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Jul 2020 11:16:45 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 14 Jul 2020 11:16:45 -0700
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1979.3 via Frontend
- Transport; Tue, 14 Jul 2020 11:16:14 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KemL7XzX2ewotMXh9uMgMGEz3svzxHsM5L4nbbSUtfwWvYnlJIYUzV78aT9Ns4ZwrsEm0rbE4/Jy9fFVAtMZ/MJKVPakuza4JQMsZFYWqhAvo4eOz7i4xY7R7j8HVld0I6AJCIbFn/y+rNj4zRhvEjZkhbGIJYNTxIZ5V4u3rXmRDY38E+lY/sM1fjng0/n8tqBDA7azN3SxsfYp9cpyGJI7ZEATIc82WwD38egazYZsVHW8jnD8iCt1ZAwsosHNx5tv6jElkhHzzoVgMEKCdf/p1HMUGxv2s2ktUCm7ZSJGCyTRvEP0ND1k9YpXDIF8XPuTD7D9b+wk69tXFPAu+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=na+Ibqf+AW6YpDYrcuOlrNWt4lYykIrxxdesauMF5Zc=;
- b=Wtjz0q8y2xYivp9Z7iL7J63YGzy30wVHAyQuIle7wNyNixVSkkvWdq3URSEHMmrHQLGFTO8uX3bHTvYHVKtHYQ89CotTV2vcFd1gDclvPJVdGpm6k2Cap+z44Qf48rVtz0Pe5E+DKxRdffwOXG8peCG3bneSVW+7U0nGC6KD3hjnCbL5U8WDbr/W72/qnkasoBqUf5P3TYZThh47k76KaFRh1ExQ/rfcPA4HpReh5CzRr797dbcwwEpQ+Y1aTGVv8DGMeFkajzmc9lHCllA581FV8NSh1EduihIjIzJgTp+6f7g8n175QyftOzleb+b16OX2jJsOHPaLHV2L3uPbiA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+        id S1729723AbgGNUCf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 16:02:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50270 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729238AbgGNUCe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 16:02:34 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD9DAC061794
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 13:02:34 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id s189so3027866pgc.13
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 13:02:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=na+Ibqf+AW6YpDYrcuOlrNWt4lYykIrxxdesauMF5Zc=;
- b=cVMsjAKX6Do/a8ziq5HRjziY2CiFIYwuQcq+MOeuov6X5Xa5+xSFIbK0WYXSXpJacQHolbhgPXen5H5EWCg2vdde5j+3c7oHYtrwZ0i56yGtA0+74k91ib5pTLdMmPSt0i0GdNHIDFT4Vuxbh1s2aNNqBfF9sMn3NNA7n6bP8q4=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SN6PR11MB3184.namprd11.prod.outlook.com (2603:10b6:805:bd::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.24; Tue, 14 Jul
- 2020 18:16:44 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::14d2:e9a7:be92:6dbb]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::14d2:e9a7:be92:6dbb%7]) with mapi id 15.20.3174.025; Tue, 14 Jul 2020
- 18:16:42 +0000
-From:   <Don.Brace@microchip.com>
-To:     <john.garry@huawei.com>, <don.brace@microsemi.com>, <hare@suse.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
-        <sumit.saxena@broadcom.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>, <hare@suse.de>
-Subject: RE: [PATCH RFC v7 11/12] smartpqi: enable host tagset
-Thread-Topic: [PATCH RFC v7 11/12] smartpqi: enable host tagset
-Thread-Index: AQHWP01dB/wvCfQYy0iNVvGjZRulPKkHQ2oAgAAEKgCAABwicA==
-Date:   Tue, 14 Jul 2020 18:16:42 +0000
-Message-ID: <SN6PR11MB28486DB217EFB23F26321236E1610@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-12-git-send-email-john.garry@huawei.com>
- <a8afea5c-97f2-ac84-f4b5-155963bebb2c@huawei.com>
- <786e0b9d-ab42-aaf6-f552-072010892778@huawei.com>
-In-Reply-To: <786e0b9d-ab42-aaf6-f552-072010892778@huawei.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=microchip.com;
-x-originating-ip: [76.30.208.15]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 96863841-c98e-4db0-b980-08d828220fab
-x-ms-traffictypediagnostic: SN6PR11MB3184:
-x-microsoft-antispam-prvs: <SN6PR11MB3184F2547EA7C5EA84CB55B7E1610@SN6PR11MB3184.namprd11.prod.outlook.com>
-x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:5516;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: iLI7YXnNKWJTaPPXhdbq0IwT4eZkedOvLN4nfHx0BahGaXexBDy13kNmOf0yb3DN5ewfZbWkXQ3VNwY+KM+ZKXdxqK5OJBDgBZ9AnNe5C2zYoViWswzp+KBUNpWghN4dAiBw9ZufkgrOVS6EwoLs4LKIZRSYfftHtHJMFoAxXlUdBXop4Xvh6ewKiXT7OkaVpqxDQXZwSd33UsbsbwrcG4LNT8/L2352+zKrNkpmAhgr6LsQHFnoOKA6f8cjflRsv4D3JfFvd2Na7poogi4gRCSX5JIiBpnIJ/HTHhdZArAGmmrcMWhR1I8MObfNLRQAAoIt25ITvQ7vHiLCZRm7iw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(39850400004)(366004)(376002)(346002)(136003)(396003)(2906002)(55016002)(33656002)(9686003)(186003)(26005)(558084003)(4326008)(66946007)(66476007)(66556008)(52536014)(66446008)(5660300002)(64756008)(71200400001)(86362001)(76116006)(6506007)(54906003)(478600001)(8676002)(110136005)(7696005)(8936002)(316002)(7416002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata: wLLSblUiD5l+HCXAG8s7ozUytKiqPdLlmwF0ckm8WrTyDjJ9Z0zdeVAypuaYeze4OsK/wSC/JOm8tl9Xi8/r97aNev7cI7tVQ6mnz1t+ZqeBufej8SdJMBV7eXNH5OO8sWtPf7pOkE8oeDNilxp+WV0aC6ASq8Qx5Cpu1O62Pw/M8R6UQvJItq0vPuo81ulGhBCLAFlDwYSQ/0ENRS6hehcSOjPKCNcAJX/3uaO6rV1TP0E7SCUpg1NUkzq9AWvJR5f0UiAl4OvTu+Ld9GHg9pChDYlgH37Ir02acVwj6JLYyIq68HeRxmCjr6WKuL2xCv7I/zszC4McXBQ7RjdZiJEWifbASFuHJtTQzWWve4aV/qc4vFjUsCkDEfUsqnix62fi1nw1IczB+Fv9tXcHheFRb1kxT1N2wkr7utEl2LOwftJXcRgWexrZywGwT/Ju2akHLj4O5UoKHHt4WF9cul+hmwkxleLpoTQVGttxgcg=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Rj7n2FEi3btNvRiXOO95ZgZW2mJPBVEmXrIlW5n92HE=;
+        b=EJQo63FgUyR1rd5T3rjkMbtG3Y3uJp/ZJF1UiISxu+YQSssbpPE+uB6yPx+AV8ZgT0
+         aUiNAocQQw4V2Kg3Q7RYjIqxJF9zxusE9OTzJ9kkaxZeScYnY4kP5os+IMQcunyG8arU
+         i8M5BMmcdes2oYK8RpGAzLHAoDEqfpf11/brt0Ftgii5nRAQdRnJdomX7Lzhc2ydwOQn
+         yQRQHWf64Te5x1y2UPwEzEtX/8g48OC02IgG23NWiAVqceB0wLpC4YF11VA5zGBqF65G
+         7BHKiq5A2qbqE02EibFGQQu9V6Js0Iog8tjUrlvfL6qvH1pVGc2IHm2Ys4ZlcWlGMpVy
+         6LKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Rj7n2FEi3btNvRiXOO95ZgZW2mJPBVEmXrIlW5n92HE=;
+        b=cvNmuoCl3NckSg2Mttc4Y2U3BMb7/o6lah7wit4kAt0P/EM2Mtc4xJBf1Dlwudo7hZ
+         Qt/yh9mDWzrWUOL0iCLkDE4E3rR2VyYPHE5fNDlShE8RIbu+qeMda3zyEAHcV6+DS5vr
+         X7Qo7I5lMyNgSBDU+shQIGrRKiW4ac47xbtEwy6EzUTkAYYVBBJIylQCI0UqwMkRO+ry
+         420FBCsiO7bhomdFNOYCTezpx0Ku2TC7v4Jm8jaV1tnkoF7j55884esCHck1zdwC+JRQ
+         Hxm6Uk3ZGDOCafFWxXLREBGEy71XPKYKiCuU1aGRxU1RoUOYBF2lw4lagQZu2CZMhMTm
+         VL2g==
+X-Gm-Message-State: AOAM533nSQcuue0dE99NxPNc8G7imqeeKW9I4GffvFMgOct651EBmDtT
+        GT9KdBmV2qWqPB2UYTAP56LFBg==
+X-Google-Smtp-Source: ABdhPJwJy7HkTTdvIuylyd0YSn5b3RgvXjveXkOJmC0QWWm2KuLx8toxk9W4hVduZo2tCSHPhkrfEw==
+X-Received: by 2002:a62:52cd:: with SMTP id g196mr5690485pfb.178.1594756953980;
+        Tue, 14 Jul 2020 13:02:33 -0700 (PDT)
+Received: from builder.lan (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id i66sm39133pfc.12.2020.07.14.13.02.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jul 2020 13:02:33 -0700 (PDT)
+Date:   Tue, 14 Jul 2020 13:00:27 -0700
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Rob Herring <robh+dt@kernel.org>, Andy Gross <agross@kernel.org>,
+        SCSI <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Satya Tangirala <satyat@google.com>,
+        Steev Klimaszewski <steev@kali.org>,
+        Thara Gopinath <thara.gopinath@linaro.org>
+Subject: Re: [PATCH v6 3/5] arm64: dts: sdm845: add Inline Crypto Engine
+ registers and clock
+Message-ID: <20200714200027.GH388985@builder.lan>
+References: <20200710072013.177481-4-ebiggers@kernel.org>
+ <yq1ft9uqj6u.fsf@ca-mkp.ca.oracle.com>
+ <20200714161516.GA1064009@gmail.com>
+ <CAL_Jsq+t1h4w8C361vguw1co_vnbMKs3q4qWR4=jwAKr1Vm80g@mail.gmail.com>
+ <20200714164353.GB1064009@gmail.com>
+ <CAL_JsqK-wUuo6azYseC35R=Q509=h9-v4gFvcvy8wXrDgSw5ZQ@mail.gmail.com>
+ <20200714171203.GC1064009@gmail.com>
+ <20200714173111.GG388985@builder.lan>
+ <20200714174345.GE1218486@builder.lan>
+ <20200714175718.GD1064009@gmail.com>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 96863841-c98e-4db0-b980-08d828220fab
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Jul 2020 18:16:42.8337
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: HKN4FwKUD3Or0R4+JCNe4pp20/ruRUSxhSSfaez2r4nd2r7dfXywMWW3NMbj76koTlkPXlsSSmVxY2MEAAkKsw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3184
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200714175718.GD1064009@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-U3ViamVjdDogUmU6IFtQQVRDSCBSRkMgdjcgMTEvMTJdIHNtYXJ0cHFpOiBlbmFibGUgaG9zdCB0
-YWdzZXQNCg0KDQpCb3RoIHRoZSBkcml2ZXIgYXV0aG9yIGFuZCBteXNlbGYgZG8gbm90IHdhbnQg
-dG8gY2hhbmdlIGhvdyBjb21tYW5kcyBhcmUgcHJvY2Vzc2VkIGluIHRoZSBzbWFydHBxaSBkcml2
-ZXIuDQoNCk5hay4NCg==
+On Tue 14 Jul 10:57 PDT 2020, Eric Biggers wrote:
+
+> On Tue, Jul 14, 2020 at 10:43:45AM -0700, Bjorn Andersson wrote:
+> > On Tue 14 Jul 10:31 PDT 2020, Bjorn Andersson wrote:
+> > 
+> > > On Tue 14 Jul 10:12 PDT 2020, Eric Biggers wrote:
+> > > 
+> > > > On Tue, Jul 14, 2020 at 10:59:44AM -0600, Rob Herring wrote:
+> > > > > On Tue, Jul 14, 2020 at 10:43 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > > > > >
+> > > > > > On Tue, Jul 14, 2020 at 10:35:12AM -0600, Rob Herring wrote:
+> > > > > > > On Tue, Jul 14, 2020 at 10:15 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > > > > > > >
+> > > > > > > > On Tue, Jul 14, 2020 at 10:16:04AM -0400, Martin K. Petersen wrote:
+> > > > > > > > >
+> > > > > > > > > Eric,
+> > > > > > > > >
+> > > > > > > > > > Add the vendor-specific registers and clock for Qualcomm ICE (Inline
+> > > > > > > > > > Crypto Engine) to the device tree node for the UFS host controller on
+> > > > > > > > > > sdm845, so that the ufs-qcom driver will be able to use inline crypto.
+> > > > > > > > >
+> > > > > > > > > I would like to see an Acked-by for this patch before I merge it.
+> > > > > > > > >
+> > > > > > > >
+> > > > > > > > Andy, Bjorn, or Rob: can you give Acked-by?
+> > > > > > >
+> > > > > > > DTS changes should go in via the QCom tree.
+> > > > > > >
+> > > > > >
+> > > > > > So, the DTS patch can't be applied without the driver patches since then the
+> > > > > > driver would misinterpret the ICE registers as the dev_ref_clk_ctrl registers.
+> > > > > 
+> > > > > That sounds broken, but there's no context here for me to comment
+> > > > > further. DTS changes should work with old/stable kernels. I'd suggest
+> > > > > you get a review from Bjorn on the driver first.
+> > > > > 
+> > > > 
+> > > > The "breaking" change is that the dev_ref_clk_ctrl registers are now identified
+> > > > by name instead of assumed to be index 1.
+> > > > 
+> > > > A reviewer had complained about the device-mapper bindings of this driver before
+> > > > (https://lkml.kernel.org/r/158334171487.7173.5606223900174949177@swboyd.mtv.corp.google.com).
+> > > > Changing to identifying the registers by name seemed like an improvement.
+> > > > 
+> > > > If needed I can add a hole at index 1 to make the DTS changes work with
+> > > > old/stable kernels too, but I didn't know that is a requirement.  (Normally for
+> > > > Linux kernel development, kernel-internal refactoring is always allowed
+> > > > upstream.)  If I do this, would this hack have to be carried forever, or would
+> > > > we be able to fix it up eventually?  Is there any deprecation period for DTS, or
+> > > > do the latest DTS have to work with a 20 year old kernel?
+> > > > 
+> > > 
+> > > The problem here is that DT binding refactoring is not kernel-internal.
+> > > It's two different projects living in the same git.
+> > > 
+> > > There's a wish from various people that we make sure that new DTS
+> > > continues to work with existing kernels. This is a nice in theory
+> > > there's a lot of examples where we simply couldn't anticipate how future
+> > > bindings would look. A particular example is that this prohibits most
+> > > advancement in power management.
+> > > 
+> > > 
+> > > But afaict what you describe above would make a new kernel failing to
+> > > operate with the old DTS and that we have agreed to avoid.
+> > > So I think the appropriate way to deal with this is to request the reg
+> > > byname to detect the new binding and if that fails then assume that
+> > > index 1 is dev_ref_clk_ctrl.
+> > > 
+> > 
+> > I took another look at the git history and I can't find a single dts -
+> > either upstream or in any downstream tree - that specifies that second
+> > reg.
+> > 
+> > So per my argument below, if you could include a patch that just removes
+> > the "dev_ref_clk_ctrl_mem" reference from the binding and driver I would
+> > be happy to r-b that and ack this patch.
+> > 
+> > Regards,
+> > Bjorn
+> > 
+> > > 
+> > > There are cases where we just decide not to be backwards compatible, but
+> > > it's pretty rare. As for deprecation, I think 1-2 LTS releases is
+> > > sufficient, at that time scale it doesn't make sense to sit with an old
+> > > DTB anyways (given the current pace of advancements in the kernel).
+> > > 
+> 
+> Great, I'll remove the driver support for "dev_ref_clk_ctrl" then.  However,
+> that doesn't solve the problem of the new DTS breaking old drivers, since old
+> drivers assume that reg[1] is dev_ref_clk_ctrl.
+> 
+> This patch makes the DTS look like:
+> 
+> 	reg = <0 0x01d84000 0 0x2500>,
+> 	      <0 0x01d90000 0 0x8000>;
+> 	reg-names = "std", "ice";
+> 
+> The "ice" registers are new and are accessed by name instead of by index.
+> 
+> But these also happen to be in reg[1].  Old drivers will see that reg[1] is
+> present and assume it is dev_ref_clk_ctrl.
+> 
+> To work around this, I could leave a blank reg[1] entry:
+> 
+> 	reg = <0 0x01d84000 0 0x2500>,
+> 	      <0 0 0 0>,
+> 	      <0 0x01d90000 0 0x8000>;
+> 	reg-names = "std", "dev_ref_clk_ctrl", "ice";
+> 
+> Do I need to do that?
+> 
+
+No, let's not complicate it without good reason. SDM845 has hw_ver.major
+== 3, so we're not taking the else-path in ufs_qcom_init(). So I should
+be able to just merge this patch for 5.9 through the qcom tree after
+all (your code handles that it's not there and the existing code doesn't
+care).
+
+
+The two platforms that I can find that has UFS controller of
+hw_ver.major == 1 is APQ8084 and MSM8994, so I simply didn't look at an
+old enough downstream tree (msm-3.10) to find anyone specifying reg[1].
+The reg specified is however coming from the TLMM (pinctrl-msm) hardware
+block, so it should not be directly remapped in the UFS driver...
+
+But regardless, that has not been seen in an upstream dts and per your
+patch 2 we would add that reg by name when that happens.
+There's recent activity on upstreaming more of the MSM8994 support, so
+perhaps then it's best to leave this snippet in the driver for now.
+
+
+Summary: Martin merges (merged?) patch 1, 2, 4 and 5 in the scsi tree,
+I'll merge this patch as is in the qcom tree and we'll just leave the
+dev_ref_clk handling as is for now then.
+
+Regards,
+Bjorn
