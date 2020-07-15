@@ -2,180 +2,137 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00,DEAR_SOMETHING,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64812C433EC
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 18:46:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9EFC433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 18:58:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4093420787
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 18:46:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEE022072E
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 18:58:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wxOhec9H"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZgCneT8J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726929AbgGOSqf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 14:46:35 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:47516 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726670AbgGOSqf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 14:46:35 -0400
-X-Greylist: delayed 1342 seconds by postgrey-1.27 at vger.kernel.org; Wed, 15 Jul 2020 14:46:34 EDT
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FIHt6R157655;
-        Wed, 15 Jul 2020 18:24:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=5G0BjHWUZxMdn9E6mO29m9CW3V2ay0SjzvoKoZdc+kA=;
- b=wxOhec9HTklACdHIkRD+Ze2e2v8sac4hGH4Glfj5j/W+QfwWKwZFOrsKfgsv0SwswCq/
- mKC5eMhVxyS5+iVDZ528oAOi0Ox87+uRpbd1FFgyO6wKkuHU39+RkUG1hqSHnf0PDyPP
- 2wXgepdcPIWs07GUsAXgINo1/Kb81MER3F5zKJnG8Fy9iMiw+8rSGNwnDoseMJrv4eex
- sWlYmzlAIBNhinVyTlTcjSKenChYW6ry2OEZxHFqtXfAtmIjrRIq4dXTOL586zfx02RM
- ItZalVOvKs6CFTSvsvsjDNpdOFfO5QyyY8zERevPLDTxnji7uE1xdvZYlS5hS8hMK/M9 4g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 327s65kaqp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 18:24:09 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FIDf8O016092;
-        Wed, 15 Jul 2020 18:24:09 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 327q0rr6r8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 18:24:09 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06FIO8GC026106;
-        Wed, 15 Jul 2020 18:24:08 GMT
-Received: from [20.15.0.202] (/73.88.28.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 11:24:08 -0700
-Subject: Re: [PATCH 1/8] scsi: target: Modify core_tmr_abort_task()
-To:     Bodo Stroesser <bstroesser@ts.fujitsu.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
- <20200710104817.19462-2-bstroesser@ts.fujitsu.com>
- <ea36fcc0-d01c-eba1-748f-d5cfa39fa105@oracle.com>
- <0f660dc9-40ee-75a4-2924-761769d9cd38@ts.fujitsu.com>
- <e4d54aed-88fa-eeed-fe9a-20e627c3841a@oracle.com>
- <980ec328-f604-556b-400a-1404c56e34ae@ts.fujitsu.com>
-From:   Mike Christie <michael.christie@oracle.com>
-Message-ID: <a263f857-a582-d262-b347-20687502ee91@oracle.com>
-Date:   Wed, 15 Jul 2020 13:24:19 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <980ec328-f604-556b-400a-1404c56e34ae@ts.fujitsu.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150142
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 impostorscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150142
+        id S1726479AbgGOS6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 14:58:37 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:56063 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726356AbgGOS6h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 14:58:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594839515;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GfN5FrFwoPZiuEJ7K6Xen4CKWGB8Kx4OmilKIATqRi4=;
+        b=ZgCneT8JXy2TmzTdsNWLiJpTfrQVq3F0JazjiWOIM9K8Sj+S8ZKqc6EdLphdKHbexlcR9r
+        vPYETIA7uo0/UlEro3LfRSpk0p0cZ6o6sXwWy0KkprybnLB5GHKNwcbiaR/ZfWhySt6W4R
+        qIUSGyuhTlJN6+KuJRIqv1yW7AnQYok=
+Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com
+ [209.85.167.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-87-RweWh1kaNYO4PmVRta210Q-1; Wed, 15 Jul 2020 14:58:29 -0400
+X-MC-Unique: RweWh1kaNYO4PmVRta210Q-1
+Received: by mail-oi1-f199.google.com with SMTP id v77so1296890oie.7
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 11:58:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=GfN5FrFwoPZiuEJ7K6Xen4CKWGB8Kx4OmilKIATqRi4=;
+        b=kXbrDaysyJmBnKZ9muHPtn1o77VKQwhFyGUSLgilU8RfcXW2slv1wMUElLz809EDnz
+         dxuZpcYBiQZlxQ5HNkBnfHZ92g3Ob57dWXSuEfVefd0Olrn85ZNJHq0FPYXzCUd935Y3
+         R9zfqOJ5RFbVBv1sL40PfDWrM2/JAoHxVcomYiUsP1c0uLJ7P44FRFfk3CS1TUWRLbx6
+         kg4OiEXff592JXvxNttd700P7qOHVNz5NsMkot6UomyMBjSxE+JT5lYhUMAQZ8sraMjO
+         Jv8gMlk61a3yNiJFvSi4En0aZ/kuT3P6Y4XZK9mb4BrEmrfLDeo51E2AfZgv0OQxwFD1
+         PnYQ==
+X-Gm-Message-State: AOAM531jpz8XCrhYn9bpW3QJ9qtP8+yaT6R1F4KNWaaiXwMUy0FogsMq
+        qjKdWKBVJ3gjV0eKn86pMexaEblm2zNqxC3Uoj/Fyrm22G0DXkDVXdnfBxd7oP0iEFPsPVYMkv0
+        zfOh4QTDDThLzABKQEOGj6Q==
+X-Received: by 2002:aca:b809:: with SMTP id i9mr1017804oif.174.1594839508419;
+        Wed, 15 Jul 2020 11:58:28 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwUMLSZWOmUvNQJ95SnZwddIaMf5Effm0NK3kHRaT2syjr3l/N1FcQnITnQX8bM/dKfPl6m/A==
+X-Received: by 2002:aca:b809:: with SMTP id i9mr1017788oif.174.1594839508089;
+        Wed, 15 Jul 2020 11:58:28 -0700 (PDT)
+Received: from loberhel7laptop ([2600:6c64:4e80:f1:4a17:2cf9:6a8a:f150])
+        by smtp.gmail.com with ESMTPSA id u144sm534910oia.40.2020.07.15.11.58.27
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 15 Jul 2020 11:58:27 -0700 (PDT)
+Message-ID: <1918fb75221de129f39fd1d2b889010afd9347ff.camel@redhat.com>
+Subject: Re: LIO Scsi Target
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Lee Duncan <lduncan@suse.com>,
+        Sadegh Ali <sadegh.ali.2084@gmail.com>,
+        linux-scsi@vger.kernel.org
+Date:   Wed, 15 Jul 2020 14:58:25 -0400
+In-Reply-To: <43b31e85-9d9c-c3ef-a008-83510a968ee7@suse.com>
+References: <CA+RHgKLt=ZOu_nnL6oX=LJVtJWE9i+ARE6A_VmGLeJaU1mYtSg@mail.gmail.com>
+         <43b31e85-9d9c-c3ef-a008-83510a968ee7@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/15/20 9:25 AM, Bodo Stroesser wrote:
-> On 2020-07-14 19:43, Mike Christie wrote:
->> On 7/13/20 6:39 AM, Bodo Stroesser wrote:
->>> On 2020-07-12 02:49, Mike Christie wrote:
->>>> On 7/10/20 5:48 AM, Bodo Stroesser wrote:
->>>
->>> ...
->>>
->>>>> @@ -137,11 +138,16 @@ void core_tmr_abort_task(
->>>>>           printk("ABORT_TASK: Found referenced %s task_tag: %llu\n",
->>>>>               se_cmd->se_tfo->fabric_name, ref_tag);
->>>>> -        if (!__target_check_io_state(se_cmd, se_sess,
->>>>> -                         dev->dev_attrib.emulate_tas))
->>>>> +        spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
->>>>> +        rc = __target_check_io_state(se_cmd, se_sess, 0);
->>>>> +        spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
->>>>> +        if (!rc)
->>>>>               continue;
->>>>> -        spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
->>>>> +        list_del_init(&se_cmd->state_list);
->>>>
->>>> Do we only want to do this if in the next patch tmr_notify can 
->>>> successfully accept the tmr?
->>>
->>> This change does not modify behavior of the core. Please see how
->>> core_tmr_drain_state_list() uses state_list to queue commands after
->>> successfully calling __target_check_io_state() for later call of 
->>> target_put_cmd_and_wait().
->>>
->>> This patch just unifies ABORT_TASK and LUN_RESET handling such,
->>> that in next patch we can call tmr_notify handler with a list of
->>> aborted commands in both cases. The list uses the state_list list_head
->>> in the se_cmd.
->>>
->>>>
->>>> If tmr_notify can't allocate memory for the abort case, we would 
->>>> delete it from the list. Later the initiator would send a LUN_RESET 
->>>> but core_tmr_drain_state_list won't see it and pass it to the 
->>>> tmr_notify call.
->>>>
->>>
->>> tmr_notify handler will not and must not modify the list of aborted
->>> cmds. So if backend just does nothing for whatever reason we will end
->>> up with the "old" behavior of the core as it was before the change.
->>>
->>> The general idea is to send info about received TMRs together with the
->>> list of aborted commands to the backend, to allow TMR tracing and
->>> canceling of aborted commands. But backend must not interfere with TMR
->>> processing in core.
->>
->> I don't think we are talking about the same thing.
+On Wed, 2020-07-15 at 11:16 -0700, Lee Duncan wrote:
+> On 7/15/20 12:48 AM, Sadegh Ali wrote:
+> > Dear sir
+> > 
+> > we are considering to build SCSI Target system with ZFS filesystem
+> > backend using Linux
+> > I searched that two modules are available for Linux SCSI target,
+> > LIO, and SCST
+> > but it seems LIO project that streamed to the kernel is not updated
+> > for a while (about 7 years)
+> > Is the LIO module project dead? or suspended?
+> > Is any person or community available to respond to technical
+> > problems
+> > and fix bugs or develop new features or support new hardware?
+> > 
+> > with best regards
+> > 
 > 
-> Yeah, probably I misunderstood.
 > 
->>
->> For the abort case, let's say tmr_notify fails.So for the tcmu case, 
->> the tmr does not get queued and userspace never knows about it.
+> targetcli-fb and friends has replaced the lio-utils for interfacing
+> with
+> the LIO subsystem in the kernel. All targetcli-fb really does is make
+> interacting with LIO much easier. But you could theoretically roll
+> your
+> own LIO commands, since the interface is sysfs. Targetcli-fb is in
+> python, and quite user-friendly IMHO.
 > 
-> True.
+> SCST is still around, but I believe it's user-space only. (Forgive me
+> if
+> I'm wrong here, but it's been a while since I looked at SCST.)
 > 
-> For the tcmu case tmr_notify can fail only if kmalloc(..., GFP_KERNEL)
-> fails.
+> I'd suggest using something like btrfs instead of zfs, since btrfs is
+> getting much better now -- even Debian has taken the hint from SUSE
+> and
+> started using it. :)
 > 
->> The initiator then sends a LUN reset. For the reset, the tmr_notify 
->> call's list will be missing the command that got the abort, right?
+> Check out the "Kernel Target Devel" list (target-devel at vger).
 > 
-> Yes.
+> Much of the kernel target development recently has been to include
+> other
+> non-iSCSI target support IMHO.
 > 
-> In core, the LUN RESET will wait in core_tmr_drain_tmr_list for the
-> previous ABORT_TASK to complete, while the ABORT_TASK itself waits for
-> the aborted command to complete in core_tmr_abort_task.
+> There is also a cool new extension to targetcli called tcmu-runner,
+> that
+> allows you to add new functionality to targetcli without having to
+> hack
+> on the kernel.
 > 
-> So, when LUN_RESET handling comes to calling core_tmr_drain_state_list,
-> the aborted command will definitely already be done.
-> 
->> How will the backend know to clean up that command during the LUN 
->> reset handling?
->>
-> 
-> It will not know, so core just has to wait until backend completes the
-> aborted cmd - maybe after long time - just like it always did before my
-> change.
 
-Ah I see. When I made the original comment and was asking about if the 
-callback was supposed to perform some of the TMF operations I was 
-thinking we were going to change up a lot of this code.
+Thanks Lee, I will check it out.
+The issues I was having are mainly qla2xxx target in the kernel, and I
+had been working with Marvell to stabilize that in upstream.
+various lockups and other workqueue relateed issues. It been a while.
+I will try latest upstream and see if its any better than it was for me
+a couple years back.
 
-I think your idea where it's more of a way to notify the modules and we 
-are not changing any of this behavior is better since no one wants to 
-get into that :)
 
-Seems ok to me.
