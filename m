@@ -2,225 +2,160 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77383C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 03:00:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56226C433E0
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 03:09:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E34A2075B
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 03:00:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594782009;
-	bh=Q1/AL7i6//X7DGOC0aUjYBysA97LK5ggVXlEVqZIrqA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=BTorg5J4DKNw1JIswjR7am1Kzn3y9TFXeYJOFwYTApv/wEGl1G4TjTrwGYcBTm3FY
-	 +xF0PRDDJaJ7gov2Xd42kPxJhhvusP2X7uPndsfE6dV9Dvzdsc0/0I+Ud783AbHs84
-	 ZuAxUjSVOxkUltDg9fWKg/+y73T/VWa3c/tQkiMs=
+	by mail.kernel.org (Postfix) with ESMTP id 32B4420729
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 03:09:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fs4j+aLr";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="wqoguLH4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728449AbgGODAI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Jul 2020 23:00:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41296 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728067AbgGODAH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Jul 2020 23:00:07 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DD6C12072D;
-        Wed, 15 Jul 2020 03:00:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594782006;
-        bh=Q1/AL7i6//X7DGOC0aUjYBysA97LK5ggVXlEVqZIrqA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YsML1mu5LjQTRvIw4/R/aTa+SOkxQO9fEFM/5g6IiF2wIUoNfBdh9CJhLsyJy3BWz
-         aR0c6lMCyB09wEp3cSn+s3p7RlRgGoNepCQdhHPuG203z93lNg5VRl3GxRRalbzQYr
-         D79oyMrmDrYG7/wBRVKMMsPWxEmbKXydEoAYTF+E=
-Date:   Tue, 14 Jul 2020 20:00:04 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Rob Herring <robh+dt@kernel.org>, Andy Gross <agross@kernel.org>,
-        SCSI <linux-scsi@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        linux-fscrypt@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
-        Can Guo <cang@codeaurora.org>,
-        Elliot Berman <eberman@codeaurora.org>,
-        John Stultz <john.stultz@linaro.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Satya Tangirala <satyat@google.com>,
-        Steev Klimaszewski <steev@kali.org>,
-        Thara Gopinath <thara.gopinath@linaro.org>
-Subject: Re: [PATCH v6 3/5] arm64: dts: sdm845: add Inline Crypto Engine
- registers and clock
-Message-ID: <20200715030004.GB38091@sol.localdomain>
-References: <yq1ft9uqj6u.fsf@ca-mkp.ca.oracle.com>
- <20200714161516.GA1064009@gmail.com>
- <CAL_Jsq+t1h4w8C361vguw1co_vnbMKs3q4qWR4=jwAKr1Vm80g@mail.gmail.com>
- <20200714164353.GB1064009@gmail.com>
- <CAL_JsqK-wUuo6azYseC35R=Q509=h9-v4gFvcvy8wXrDgSw5ZQ@mail.gmail.com>
- <20200714171203.GC1064009@gmail.com>
- <20200714173111.GG388985@builder.lan>
- <20200714174345.GE1218486@builder.lan>
- <20200714175718.GD1064009@gmail.com>
- <20200714200027.GH388985@builder.lan>
+        id S1728048AbgGODJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Jul 2020 23:09:24 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:27396 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726782AbgGODJY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jul 2020 23:09:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1594782571; x=1626318571;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=c7uP6CNiLriQf15GT3Pg906gB/7/Xi4bXuH9p5E5Brg=;
+  b=fs4j+aLrokSl8kLVCAMVnsTsLEgosi9UmrvynQCZ3qKegcGGkcHkrF/u
+   wP7CZwTpzcmP4008w/L9fSNzxfJb8ETLTW29BOe/BQBip+i71lB0yoxzj
+   u++xr9F+11ylPJl0dobCo2E4wK4t1GeDcgsdqT9dBhDXysGTKAR9X0DSk
+   shGbhJn3zuxM0bMXHj5+mZ+f/lP3VI0jZNwaji5ZKUdYWNjbQW2TpnZps
+   BvpuEUs/7RXaaJ66D1KtzhL1bl403xgWlkYGXYI49uC66ApM1gXlp5T/a
+   14H0CmkA1uLr5Ywi9po08+UHRjbhmFmAfE9rwskC37gigKB5xIci7lGHP
+   w==;
+IronPort-SDR: ka8pFelQCpZuJbiS/foIK2QRLYWOC/YysYGMPruSCOv76gJaA9ze3iqqXLZBVvjBpPXmx9WBYY
+ UmVFBeJrzd1arxpdOeT5iU1Gf4CDne0E4MWy4QCNxglh5pPz71sPKI3wy/uaLPOBljI9XNE+NJ
+ iXUk9TjxRK6l9ZnDHNsbcfuKOK3KBet1/Pb5RT4K/WhhXqxmeA6/6wEi271Ibi7CmhfjHwkoTe
+ TpvDVTB79aTCJmaQqkkISm4tZH23Wa6ZhSH4yXJjzuuXRTyb7emDCKKa0ilh+s6dPFtlYh638u
+ zHc=
+X-IronPort-AV: E=Sophos;i="5.75,353,1589212800"; 
+   d="scan'208";a="245512846"
+Received: from mail-mw2nam10lp2103.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.103])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Jul 2020 11:09:29 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KKUQwOXAGiNxMO7sKPPFF9yHZbWnZ1k2XONgjUbLSOcLxiagImrDZrOTg7SpoS2KvFzKJclDjm7VaU9HSW/BJcXLzbgwJfhu7sUGu4fU/raMa3STD9jgzqvRmL3a3Bv6/QEg3BTODLaujCAAZzgc7d13UaXgo0TAtRR2Na9PvL7nNQrvN7+o2B1xvndVnKRKJyCfdZFRK8np9RIlzzkYwPriB1vG8ztS4NzBKwbTA3yT8zSE96ZTvJD0XcarxBh7SGb0PknEjLR/18Hc4w20cUwEgbSoNO/iFJG9lZKapjx3ME5R1UZ3h+4g36VYLLMyJAUg8I+31PWY7wBJ2m8ysg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=22ltt7OmbMoTALpdMclcynaNURV4JQG3+HJ7LFSQkXk=;
+ b=ima2UCOSQMvKUgCt6cca/k+VYMXYaqqRJXig3Xg6NjIQ8PnCWH5X7gE5+Kn9bWbprTE/zgH73CUhzkoXtlQhHj5o/zDR8YfVujwFCnpRjdrriQThQkUva0USug1xpOMNePbEtSd70HW0ynprl2K2Txq3OeKARmVFvbTd5wruZKlEQmziW2t1TW39uvt6b3vTUUfutl75LiIRiqpr9s31DKawSCo4CfUEcaHh9suFKMOj/y5BubOm8zszrIFxviOfInyK2VhX4Q0Zs1zuj16cmUeEhddfVKY9f5BgvBVxzO43l5WT/ZpuZZRMU3ZABesCd7doiD+rj2xIEiMEcXKYxw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=22ltt7OmbMoTALpdMclcynaNURV4JQG3+HJ7LFSQkXk=;
+ b=wqoguLH4N2gQRWOzYN3P1gQNsblGIqxndlAfouI/ghp/d6JWYT5uTEe0lNFvhBo0PI8lqlYQGeEgR0hkUBr3EGKVl60SQt9gh5LehJrIj+/GH1fDzK6bRSGx3M/Q/hm3AsvP+M42LcuHjtCbsOuRx+mJbm7Zm1fTeLWO8yjRfNI=
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
+ by CY4PR04MB0726.namprd04.prod.outlook.com (2603:10b6:903:e3::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3195.18; Wed, 15 Jul
+ 2020 03:09:21 +0000
+Received: from CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::d9e5:135e:cfd9:4de0]) by CY4PR04MB3751.namprd04.prod.outlook.com
+ ([fe80::d9e5:135e:cfd9:4de0%7]) with mapi id 15.20.3174.022; Wed, 15 Jul 2020
+ 03:09:21 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     YueHaibing <yuehaibing@huawei.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next] scsi: sd_zbc: Remove unused inline functions
+Thread-Topic: [PATCH -next] scsi: sd_zbc: Remove unused inline functions
+Thread-Index: AQHWWlN7NKge4SNix0SXkuH3KHfQTg==
+Date:   Wed, 15 Jul 2020 03:09:20 +0000
+Message-ID: <CY4PR04MB3751AB30CAB7C9012D2FC4E3E77E0@CY4PR04MB3751.namprd04.prod.outlook.com>
+References: <20200715025523.34620-1-yuehaibing@huawei.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: huawei.com; dkim=none (message not signed)
+ header.d=none;huawei.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [129.253.182.57]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 1be8309b-0225-43ac-ad95-08d8286c782e
+x-ms-traffictypediagnostic: CY4PR04MB0726:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <CY4PR04MB0726CE98727A8567C7936909E77E0@CY4PR04MB0726.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:324;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: KBKEP3tk7nNj1YcHhQg2RklnHu0vTy2f5WK9xncXjcY2wAedWyEBkiZO8By1xw9qbPjiD6hphAFti0uVGnRcxTDADRXjilebWTWo2OQnn6skTYIf9QsCcxhAP+rUQZCPF4HZHIqWhPzfRnWkY0YZMExuggU53FaUm4WHC1S8NUdqQdNy0K7CiiUXtBeGPZX8AWAgNBzxg4lZavqfF4xezBCofpCMW/e26M/0ptVQu0ASc9KgAdxt/ivfUxdtXeMXSqemy2A1KRUuUdbYx0jVG8HPLE+/O6qyEBf4hAa/mBxiNT40Klm9g7TottzDOhOW29mgFF6lSCPRZZohfI7ulw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(346002)(366004)(396003)(376002)(39860400002)(136003)(66946007)(91956017)(76116006)(9686003)(8676002)(8936002)(33656002)(7696005)(52536014)(83380400001)(6506007)(53546011)(66446008)(66556008)(66476007)(64756008)(4744005)(4326008)(26005)(186003)(5660300002)(71200400001)(6636002)(55016002)(2906002)(478600001)(110136005)(316002)(54906003)(86362001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: /iTJCBXJfHmSsEkENxwauBODbgpLw4bd8n/t8DwGNu22Oo+byYImD1SzWg8gjOEO9aSMzX8OkvpsjLrNr8YNe8wG+qA7nYDpRvEDf3tFr+aBZvmhQZSCOQwnjYUEi7Li6R+426HoUp35/dnZR3Lu68JXwMJGtyHs4HN1Y6eap6QMdKmwc4HUqwlzpSfLQA8rMVWtHK69GYEgcfcyna5tuiu4VvKY1yoD0VEJD0jxFGfnjrT78fbuPmtU5+dp1PJRCRmtfdKZvXquKj1Q60DAis1vGdz6uQbjbbk6RPsRPFLaJ5pXqdiqKURboH1BWO6pqyZBdMgyHhRDKWStnOg3THp5dzfjL7988IU1D9YZ53jvrXZPguum53AGnT2A90A0r267TjS1fZEKLoDmts+jDWWJUi4aZqZB5EysDYvoXwgGoU53nz+7iAoyuW6ESJjDOyy1uUgNtgFHjbn2Irwd3hfXto/rwHK1gVem1eqa1+7o4P9rYVwnd8hhchP9UESL
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200714200027.GH388985@builder.lan>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1be8309b-0225-43ac-ad95-08d8286c782e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jul 2020 03:09:21.0069
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3bz9kbCVupz9TTymCmsyE95ve35zLI5PafQ4rN2jB4V/1c+VVbwHYYt5OArY77ilfSvn0vBhyi01FGdfqyA0TA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0726
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 14, 2020 at 01:00:27PM -0700, Bjorn Andersson wrote:
-> On Tue 14 Jul 10:57 PDT 2020, Eric Biggers wrote:
-> 
-> > On Tue, Jul 14, 2020 at 10:43:45AM -0700, Bjorn Andersson wrote:
-> > > On Tue 14 Jul 10:31 PDT 2020, Bjorn Andersson wrote:
-> > > 
-> > > > On Tue 14 Jul 10:12 PDT 2020, Eric Biggers wrote:
-> > > > 
-> > > > > On Tue, Jul 14, 2020 at 10:59:44AM -0600, Rob Herring wrote:
-> > > > > > On Tue, Jul 14, 2020 at 10:43 AM Eric Biggers <ebiggers@kernel.org> wrote:
-> > > > > > >
-> > > > > > > On Tue, Jul 14, 2020 at 10:35:12AM -0600, Rob Herring wrote:
-> > > > > > > > On Tue, Jul 14, 2020 at 10:15 AM Eric Biggers <ebiggers@kernel.org> wrote:
-> > > > > > > > >
-> > > > > > > > > On Tue, Jul 14, 2020 at 10:16:04AM -0400, Martin K. Petersen wrote:
-> > > > > > > > > >
-> > > > > > > > > > Eric,
-> > > > > > > > > >
-> > > > > > > > > > > Add the vendor-specific registers and clock for Qualcomm ICE (Inline
-> > > > > > > > > > > Crypto Engine) to the device tree node for the UFS host controller on
-> > > > > > > > > > > sdm845, so that the ufs-qcom driver will be able to use inline crypto.
-> > > > > > > > > >
-> > > > > > > > > > I would like to see an Acked-by for this patch before I merge it.
-> > > > > > > > > >
-> > > > > > > > >
-> > > > > > > > > Andy, Bjorn, or Rob: can you give Acked-by?
-> > > > > > > >
-> > > > > > > > DTS changes should go in via the QCom tree.
-> > > > > > > >
-> > > > > > >
-> > > > > > > So, the DTS patch can't be applied without the driver patches since then the
-> > > > > > > driver would misinterpret the ICE registers as the dev_ref_clk_ctrl registers.
-> > > > > > 
-> > > > > > That sounds broken, but there's no context here for me to comment
-> > > > > > further. DTS changes should work with old/stable kernels. I'd suggest
-> > > > > > you get a review from Bjorn on the driver first.
-> > > > > > 
-> > > > > 
-> > > > > The "breaking" change is that the dev_ref_clk_ctrl registers are now identified
-> > > > > by name instead of assumed to be index 1.
-> > > > > 
-> > > > > A reviewer had complained about the device-mapper bindings of this driver before
-> > > > > (https://lkml.kernel.org/r/158334171487.7173.5606223900174949177@swboyd.mtv.corp.google.com).
-> > > > > Changing to identifying the registers by name seemed like an improvement.
-> > > > > 
-> > > > > If needed I can add a hole at index 1 to make the DTS changes work with
-> > > > > old/stable kernels too, but I didn't know that is a requirement.  (Normally for
-> > > > > Linux kernel development, kernel-internal refactoring is always allowed
-> > > > > upstream.)  If I do this, would this hack have to be carried forever, or would
-> > > > > we be able to fix it up eventually?  Is there any deprecation period for DTS, or
-> > > > > do the latest DTS have to work with a 20 year old kernel?
-> > > > > 
-> > > > 
-> > > > The problem here is that DT binding refactoring is not kernel-internal.
-> > > > It's two different projects living in the same git.
-> > > > 
-> > > > There's a wish from various people that we make sure that new DTS
-> > > > continues to work with existing kernels. This is a nice in theory
-> > > > there's a lot of examples where we simply couldn't anticipate how future
-> > > > bindings would look. A particular example is that this prohibits most
-> > > > advancement in power management.
-> > > > 
-> > > > 
-> > > > But afaict what you describe above would make a new kernel failing to
-> > > > operate with the old DTS and that we have agreed to avoid.
-> > > > So I think the appropriate way to deal with this is to request the reg
-> > > > byname to detect the new binding and if that fails then assume that
-> > > > index 1 is dev_ref_clk_ctrl.
-> > > > 
-> > > 
-> > > I took another look at the git history and I can't find a single dts -
-> > > either upstream or in any downstream tree - that specifies that second
-> > > reg.
-> > > 
-> > > So per my argument below, if you could include a patch that just removes
-> > > the "dev_ref_clk_ctrl_mem" reference from the binding and driver I would
-> > > be happy to r-b that and ack this patch.
-> > > 
-> > > Regards,
-> > > Bjorn
-> > > 
-> > > > 
-> > > > There are cases where we just decide not to be backwards compatible, but
-> > > > it's pretty rare. As for deprecation, I think 1-2 LTS releases is
-> > > > sufficient, at that time scale it doesn't make sense to sit with an old
-> > > > DTB anyways (given the current pace of advancements in the kernel).
-> > > > 
-> > 
-> > Great, I'll remove the driver support for "dev_ref_clk_ctrl" then.  However,
-> > that doesn't solve the problem of the new DTS breaking old drivers, since old
-> > drivers assume that reg[1] is dev_ref_clk_ctrl.
-> > 
-> > This patch makes the DTS look like:
-> > 
-> > 	reg = <0 0x01d84000 0 0x2500>,
-> > 	      <0 0x01d90000 0 0x8000>;
-> > 	reg-names = "std", "ice";
-> > 
-> > The "ice" registers are new and are accessed by name instead of by index.
-> > 
-> > But these also happen to be in reg[1].  Old drivers will see that reg[1] is
-> > present and assume it is dev_ref_clk_ctrl.
-> > 
-> > To work around this, I could leave a blank reg[1] entry:
-> > 
-> > 	reg = <0 0x01d84000 0 0x2500>,
-> > 	      <0 0 0 0>,
-> > 	      <0 0x01d90000 0 0x8000>;
-> > 	reg-names = "std", "dev_ref_clk_ctrl", "ice";
-> > 
-> > Do I need to do that?
-> > 
-> 
-> No, let's not complicate it without good reason. SDM845 has hw_ver.major
-> == 3, so we're not taking the else-path in ufs_qcom_init(). So I should
-> be able to just merge this patch for 5.9 through the qcom tree after
-> all (your code handles that it's not there and the existing code doesn't
-> care).
-> 
-> 
-> The two platforms that I can find that has UFS controller of
-> hw_ver.major == 1 is APQ8084 and MSM8994, so I simply didn't look at an
-> old enough downstream tree (msm-3.10) to find anyone specifying reg[1].
-> The reg specified is however coming from the TLMM (pinctrl-msm) hardware
-> block, so it should not be directly remapped in the UFS driver...
-> 
-> But regardless, that has not been seen in an upstream dts and per your
-> patch 2 we would add that reg by name when that happens.
-> There's recent activity on upstreaming more of the MSM8994 support, so
-> perhaps then it's best to leave this snippet in the driver for now.
-> 
-> 
-> Summary: Martin merges (merged?) patch 1, 2, 4 and 5 in the scsi tree,
-> I'll merge this patch as is in the qcom tree and we'll just leave the
-> dev_ref_clk handling as is for now then.
-> 
-
-Okay, great.  So an old DTS with the new driver isn't a problem because no DTS
-has ever declared dev_ref_clk_ctrl.  And a new DTS with an old driver is a less
-important case, and also not really a problem here since breakage would only
-occur if we added the ICE registers to an older SoC that has hw_ver.major == 1.
-
-Maybe you'd like to provide your Acked-by on patches 2 and 5?
-
-My instinct is always to remove code that has never been used.  But sure, if you
-think the dev_ref_clk_ctrl code might be used soon, we can keep it for now.
-
-- Eric
+On 2020/07/15 11:56, YueHaibing wrote:=0A=
+> They are never used, so can remove it.=0A=
+> =0A=
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>=0A=
+> ---=0A=
+>  drivers/scsi/sd.h | 6 ------=0A=
+>  1 file changed, 6 deletions(-)=0A=
+> =0A=
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h=0A=
+> index 3a74f4b45134..27c0f4e9b1d4 100644=0A=
+> --- a/drivers/scsi/sd.h=0A=
+> +++ b/drivers/scsi/sd.h=0A=
+> @@ -229,17 +229,11 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi=
+_cmnd *cmd, sector_t *lba,=0A=
+>  =0A=
+>  #else /* CONFIG_BLK_DEV_ZONED */=0A=
+>  =0A=
+> -static inline int sd_zbc_init(void)=0A=
+> -{=0A=
+> -	return 0;=0A=
+> -}=0A=
+> -=0A=
+>  static inline int sd_zbc_init_disk(struct scsi_disk *sdkp)=0A=
+>  {=0A=
+>  	return 0;=0A=
+>  }=0A=
+>  =0A=
+> -static inline void sd_zbc_exit(void) {}=0A=
+>  static inline void sd_zbc_release_disk(struct scsi_disk *sdkp) {}=0A=
+>  =0A=
+>  static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,=0A=
+> =0A=
+=0A=
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
