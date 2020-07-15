@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 110A1C433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 08:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF7D2C43446
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 08:35:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2AB420936
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 08:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DC1F206F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 08:35:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="SvshDLgy"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mc+boQkg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729582AbgGOIKG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 04:10:06 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:44881 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727871AbgGOIKE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 04:10:04 -0400
+        id S1729199AbgGOIfV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 04:35:21 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:46766 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730199AbgGOIfU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 04:35:20 -0400
 Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200715081001epoutp017148b09960b57c9f619460e95cbfb32e~h3rKI_QXw2778327783epoutp01i
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 08:10:01 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200715081001epoutp017148b09960b57c9f619460e95cbfb32e~h3rKI_QXw2778327783epoutp01i
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200715083515epoutp02f43afa447c653823575d8e38474a0a66~h4BL9TbdE0838908389epoutp02N
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 08:35:15 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200715083515epoutp02f43afa447c653823575d8e38474a0a66~h4BL9TbdE0838908389epoutp02N
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1594800601;
-        bh=Bd3G0GecD7yF+wJXC0OW6GCJUv0k+fkChRRrKxDYycE=;
+        s=mail20170921; t=1594802115;
+        bh=9lFI7VGYR7Ejqu8MSPZbVA78HowkJB2DLWHW06Qk2Po=;
         h=From:To:In-Reply-To:Subject:Date:References:From;
-        b=SvshDLgydzSAjJNj/eYp8L7WVG3gREjD/L0LtyekP10E/m9nmPgCF7iW9sUYgqXjv
-         FD1crvpcGXz8C2NwF4/v+a79UiUOCIr+pxobM9L8uhqQI1ESbNr8JMmQi1Y8RLsKGM
-         mqpmJPRdjRJmAGVPBE2BJTwV1TaHgKOwNPep4zxM=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20200715081000epcas2p1a4bc532700c4641f508ab7fd005fd76a~h3rJesS9E1536915369epcas2p1I;
-        Wed, 15 Jul 2020 08:10:00 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.40.191]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4B696F476YzMqYkj; Wed, 15 Jul
-        2020 08:09:57 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        F0.67.27013.5D9BE0F5; Wed, 15 Jul 2020 17:09:57 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20200715080956epcas2p34e2bb44abbfe8dfb7dfcc3325bdc78fb~h3rFtDrU61446014460epcas2p37;
-        Wed, 15 Jul 2020 08:09:56 +0000 (GMT)
+        b=mc+boQkgJqIEA4yJvV7LtmuQixeqPCXv7yprdfXvyrClw6e93aJUKRJO9qz8q2ouB
+         njnABLcAWNZitIz/ZiTirzQ4Hy5+nKqijB1bZRVvjmA7Eez5a40HCnRuyl/sIp3xnU
+         wrZ1tPeUYbYaCtjYq/3fLXdJ3dQISuE+S0/MQjT0=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20200715083514epcas2p270864fb69b7978744cc6aa446ba56eb1~h4BLVyZqc0602706027epcas2p2l;
+        Wed, 15 Jul 2020 08:35:14 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.190]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4B69gN0FwzzMqYkf; Wed, 15 Jul
+        2020 08:35:12 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        0E.81.18874.EBFBE0F5; Wed, 15 Jul 2020 17:35:10 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20200715083509epcas2p4b41545ff0dbb744a15601512552cb9bd~h4BG6hL3V2095820958epcas2p4m;
+        Wed, 15 Jul 2020 08:35:09 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200715080956epsmtrp1e214ed1ed881a0ab1d373bda06eaa3db~h3rFsUwVj3077630776epsmtrp1m;
-        Wed, 15 Jul 2020 08:09:56 +0000 (GMT)
-X-AuditID: b6c32a48-d35ff70000006985-44-5f0eb9d59237
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200715083509epsmtrp2a001af461fddf8a56100d56ea1fb109a~h4BG5shKR2373323733epsmtrp2D;
+        Wed, 15 Jul 2020 08:35:09 +0000 (GMT)
+X-AuditID: b6c32a46-a92a8a80000049ba-f6-5f0ebfbeef4b
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        33.3A.08303.4D9BE0F5; Wed, 15 Jul 2020 17:09:56 +0900 (KST)
+        A1.DC.08303.DBFBE0F5; Wed, 15 Jul 2020 17:35:09 +0900 (KST)
 Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip1.samsung.com
         (KnoxPortal) with ESMTPA id
-        20200715080956epsmtip15e563ce8c43b7db5e99989726dc9cade~h3rFbs1rv0726707267epsmtip1Y;
-        Wed, 15 Jul 2020 08:09:56 +0000 (GMT)
+        20200715083509epsmtip112b2f079ad8f913d66bcd07a6a71af20~h4BGozVlI1656116561epsmtip1J;
+        Wed, 15 Jul 2020 08:35:09 +0000 (GMT)
 From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
 To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
         <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
@@ -66,158 +66,311 @@ To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
         <cang@codeaurora.org>, <bvanassche@acm.org>,
         <grant.jung@samsung.com>, <sc.suh@samsung.com>,
         <hy50.seo@samsung.com>, <sh425.lee@samsung.com>
-In-Reply-To: <SN6PR04MB46407E21E411B7E785C3B3C1FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
-Subject: RE: [RFC PATCH v3 2/2] ufs: change the way to complete fDeviceInit
-Date:   Wed, 15 Jul 2020 17:09:56 +0900
-Message-ID: <01f501d65a7f$53aab090$fb0011b0$@samsung.com>
+In-Reply-To: <SN6PR04MB4640958B96D370146EA86334FC660@SN6PR04MB4640.namprd04.prod.outlook.com>
+Subject: RE: [RFC PATCH v1] ufs: introduce async ufs interface
+ initialization
+Date:   Wed, 15 Jul 2020 17:35:09 +0900
+Message-ID: <000001d65a82$d98c7ec0$8ca57c40$@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQHu1pDNEI1WArg19xfehYJkuPyuggIodicAAU/VsrgCNqJMqaip2GAA
+Thread-Index: AQJf3Lb61o2624A7HIYY502pzJR6wwGotN4cAhHmw+Kn13WSUA==
 Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmme7VnXzxBme2slo8mLeNzWJv2wl2
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmqe6+/XzxBkcf81k8mLeNzWJv2wl2
         i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7Lovr6DzWL58X9MFl13bzBa
         LP33lsWB1+PyFW+Py329TB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAIyrHJiM1
         MSW1SCE1Lzk/JTMv3VbJOzjeOd7UzMBQ19DSwlxJIS8xN9VWycUnQNctMwfoZCWFssScUqBQ
-        QGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpOgaFhgV5xYm5xaV66XnJ+rpWhgYGRKVBlQk7Giekn
-        mAr2y1Qs29bK2MA4QbSLkZNDQsBEYsrE66xdjFwcQgI7GCUuzG5hh3A+MUpsvfSaDcL5zChx
-        5vpbRpiWH3PfMUEkdgElTvxjAkkICbxglPj6Tw7EZhPQlpj2cDfYXBGB+0wSR3Y+YOli5ODg
-        FIiVeDFBAKRGWMBb4lPnVVYQm0VAVWLtvG4WEJtXwFJiz6lPjBC2oMTJmU/A4sxAM5ctfM0M
-        cYSCxM+ny8B6RQTcJGZdgogzC4hIzO5sg6o5wSGxfxo/hO0icXHbJ1YIW1ji1fEt7BC2lMTL
-        /jYou15i39QGsJslBHoYJZ7u+wf1sbHErGftjCD3MwtoSqzfpQ9iSggoSxy5BXUan0TH4b/s
-        EGFeiY42IYhGZYlfkyZDDZGUmHnzDtQmD4nDN7ezTmBUnIXkyVlInpyF5JlZCHsXMLKsYhRL
-        LSjOTU8tNiowQY7rTYzg1KzlsYNx9tsPeocYmTgYDzFKcDArifDycPHGC/GmJFZWpRblxxeV
-        5qQWH2I0BQb7RGYp0eR8YHbIK4k3NDUyMzOwNLUwNTOyUBLnfWd1IU5IID2xJDU7NbUgtQim
-        j4mDU6qBKe/u1LWP2k58rHjBE9fbph57UcfyibloBn9uwCGRI1OW2saZzj5rKbZMqWX3Et2z
-        hevP7rHdbS7M4f1s2v/ISEb5fadjJBjPTlv0+Iuyn0R8Z8ipelMjiZDJ8d/2Cfju4H24putT
-        R6c8O3uNmaNPmU/0U9Xv0sFH94ntZ7L05+lsEeFXZ1GZ4rV6Dt9dnfWt5m2uVfaS/458F41b
-        ual7rhLn7IW6gknzmy+tiNKXfrKp5dFWsZUC3BpxkYdm95W+P/9z+n1ujys7mje71UgwOjNe
-        XGd7rHSfr7xQW5ydB+/xkgZdN7E953aLP/t04RD3oqJDr3UWCL+6plmXocjiPvNW9NFXj3dZ
-        bvhtGSmsxFKckWioxVxUnAgA/f01ylYEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMIsWRmVeSWpSXmKPExsWy7bCSnO6VnXzxBpMnqlo8mLeNzWJv2wl2
+        QGJxsZK+nU1RfmlJqkJGfnGJrVJqQUpOgaFhgV5xYm5xaV66XnJ+rpWhgYGRKVBlQk7G7b5r
+        bAWLXSs+3brC2MC4Qr+LkZNDQsBEYsvPg6xdjFwcQgI7GCWWbZvGBOF8YpRY+OURO0iVkMBn
+        Rokrq6xhOvZ8vAVVtItRYtWSDlaIoheMEl8mpIDYbALaEtMe7gYbKyJwn0niyM4HLCAJToFY
+        ia0HuphAbGEBf4lPc5eCxVkEVCV+btrOBmLzClhKrNk0lRHCFpQ4OfMJWA0z0NBlC18zQ1yh
+        IPHz6TKgBRxAC5wkZmzNgSgRkZjd2cYMsldC4ASHxNmFD6HqXST2bYeYLyEgLPHq+BZ2CFtK
+        4vO7vVDxeol9UxtYIZp7GCWe7vvHCJEwlpj1rJ0RZBmzgKbE+l36IKaEgLLEkVtQp/FJdBz+
+        yw4R5pXoaBOCaFSW+DVpMtQQSYmZN+9AbfWQWH/zM9sERsVZSJ6cheTJWUi+mYWwdwEjyypG
+        sdSC4tz01GKjAiPkuN7ECE7NWm47GKe8/aB3iJGJg/EQowQHs5IILw8Xb7wQb0piZVVqUX58
+        UWlOavEhRlNgsE9klhJNzgdmh7ySeENTIzMzA0tTC1MzIwslcd56xQtxQgLpiSWp2ampBalF
+        MH1MHJxSDUwLUuQdbZnifbanP9y4zENDLlqgOzNo89rAsIPWD5sYBDatlg2xMvMMc9lnftxk
+        g5dUXsJ85oLDt7f2mL1T7Fyw7b5qVA/v8Vs+BTKVIYwG3yTfpvd8+zf3qqre9N5+x1esvFem
+        2Fc5fb1iWnNOwaeei9ctUfKb/Ky/7DutXl1XTHmV6n744/aeJ0FLSh9cni6Q91o2ccuveX8K
+        EtzkA44s47+wrbI2R7G2+diOXSUBalWtZ96tka63rTqQelKVW1j+woM1u54bN9iuqteexG4g
+        cDFnw+7KxybbXOJVZmqXpgbNWZe+RM/p2I+zvsqnTpTvMGF33l1gnrHn7D7J+UmXrt7LiUlK
+        VO1YKqLnpcRSnJFoqMVcVJwIAA93pShWBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMIsWRmVeSWpSXmKPExsWy7bCSnO7e/XzxBpOmaFk8mLeNzWJv2wl2
         i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7Lovr6DzWL58X9MFl13bzBa
         LP33lsWB1+PyFW+Py329TB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAI4rLJiU1
-        J7MstUjfLoEr4+LimWwFrTIVt7YfYWpgvCTSxcjJISFgIvFj7jsmEFtIYAejxOdbfhBxSYkT
-        O58zQtjCEvdbjrB2MXIB1TxjlPh7cBtYA5uAtsS0h7vBEiICb5kk7ty+zARRtZpJ4l/bcfYu
-        Rg4OToFYiRcTBEAahAW8JT51XmUFsVkEVCXWzutmAbF5BSwl9pz6xAhhC0qcnPkELM4MtKD3
-        YSsjjL1s4WtmiIsUJH4+XQY2R0TATWLWJYg4s4CIxOzONuYJjEKzkIyahWTULCSjZiFpWcDI
-        sopRMrWgODc9t9iwwCgvtVyvODG3uDQvXS85P3cTIzgetbR2MO5Z9UHvECMTB+MhRgkOZiUR
-        Xh4u3ngh3pTEyqrUovz4otKc1OJDjNIcLErivF9nLYwTEkhPLEnNTk0tSC2CyTJxcEo1MK1g
-        vJru9UYxi+lrpc9ddd1MFoMD99jXMUT5iFXKPrkjfzkp/rQL/6578hHuMkli1hNV/7xSSDqy
-        7qDDDQ+TNycP9i7iyeb6/K1Iae4x3691D3x9Jy549ZvJbs+VF8orDZdHimw7svnid9ftRfbV
-        0X2Xvq279lHmyOWquXLR/u2nDzzS60rcx1ik4JCzYFtG65QDHizBVofu1K1L3tVQHyHZYreh
-        4k7ZNhmDv9NlOKb3smR4Cihv2Me/4g/f1rp5EhZWBtmF9yfdUj/w6OMpYaXlV63jGnpzBYU6
-        +O/096sZc05zsTpl7iC9n+PGrR9zpKo1me4tV3n+9fZ8wa2nZPvz37tvVpat/DtNPmCmrhJL
-        cUaioRZzUXEiAIiYPtc2AwAA
-X-CMS-MailID: 20200715080956epcas2p34e2bb44abbfe8dfb7dfcc3325bdc78fb
+        J7MstUjfLoErY9vSzewF510q3k67z9TAuEevi5GTQ0LARGLPx1tMXYxcHEICOxglDqw+yAyR
+        kJQ4sfM5I4QtLHG/5QgrRNEzRomPO3vBitgEtCWmPdwNlhAReMskcef2ZahRLxkllrZuYQWp
+        4hSIldh6oAsowcEhLOAr8eivBkiYRUBV4uem7WwgNq+ApcSaTVMZIWxBiZMzn7CA2MxAC57e
+        fApnL1v4Guo6BYmfT5exgowUEXCSmLE1B6JERGJ2ZxvzBEahWUgmzUIyaRaSSbOQtCxgZFnF
+        KJlaUJybnltsWGCUl1quV5yYW1yal66XnJ+7iREcj1paOxj3rPqgd4iRiYPxEKMEB7OSCC8P
+        F2+8EG9KYmVValF+fFFpTmrxIUZpDhYlcd6vsxbGCQmkJ5akZqemFqQWwWSZODilGphMRBkP
+        /f0y4bYNx+/6Pyay7rf0Tk4SbQ3UmeyjKPKLZ8GlH88i286EPtPZtfqrc9HxTy8crfgM9jdo
+        iHOc/pLP+6m5cYr2u6A1vKffPL1gvSpvn9hdy3usntLzRHxnttkFTldds6PibIPY9Np3W/uW
+        +z4Vs9i8V2jpgnvNdtMCT76+nSmcEx/JHq7N8eHwmteV0ju3aRXx3GCVNF/9KeZfYYVR2WET
+        xYPOuaXLJi8QcGM/wyM02fqe9SuRlxKrZ2kwRl7a+35psd5b06LC6c4lRQ9OL+59vfyk6r4D
+        jx/43olZIXw5s7vXdwlDfckuk+tTDwvM3HJm/+PLOfllN0xPV3Q4TfoXmPzM6cT0c5uZlFiK
+        MxINtZiLihMBAi8ntjYDAAA=
+X-CMS-MailID: 20200715083509epcas2p4b41545ff0dbb744a15601512552cb9bd
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200703053757epcas2p3416b0a10e4419015da549a9c4bfbf37f
-References: <cover.1593753896.git.kwmad.kim@samsung.com>
-        <CGME20200703053757epcas2p3416b0a10e4419015da549a9c4bfbf37f@epcas2p3.samsung.com>
-        <08bc1641fdce941175596fe106fd5c02161683bf.1593753896.git.kwmad.kim@samsung.com>
-        <SN6PR04MB46407E21E411B7E785C3B3C1FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
+X-CMS-RootMailID: 20200702082826epcas2p2face6d1689c2f5efc1dcdb53c19804b8
+References: <CGME20200702082826epcas2p2face6d1689c2f5efc1dcdb53c19804b8@epcas2p2.samsung.com>
+        <1593678039-139543-1-git-send-email-kwmad.kim@samsung.com>
+        <SN6PR04MB4640958B96D370146EA86334FC660@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > Currently, UFS driver checks if fDeviceInit is cleared at several
-> > times, not period. This patch is to wait its completion with the
-> > period, not retrying.
-> > Many device vendors usually provides the specification on it with just
-> > period, not a combination of a number of retrying and period. So it
-> > could be proper to regard to the information coming from device
-> > vendors.
+> Hi,
+>=20
 > >
-> > I first added one device specific value regarding the information.
+> > When you set uic_link_state during sleep statae to UIC_LINK_OFF_STATE,
+> > UFS driver does interface initialization that is a series of some
+> > steps including fDeviceInit and thus, You might feel that its latency
+> > is a little bit longer.
+> >
+> > This patch is run it asynchronously to reduce system wake-up time.
+> Can you share your initial testing findings?
+> How much time does it save?
+For this, you can refer to the Grant's comment and
+As you might know, the time reduction relies on devices,
+situations - after spo or not or whatever.
+The thing is that system wake-up time is very important for product makers
+and the period that I'm seeing on this is not an amount that you can ignore=
+.
+
+>=20
 > >
 > > Signed-off-by: Kiwoong Kim <kwmad.kim=40samsung.com>
-> I still think that this patch alone is fine, and you don't need its
-> predecessor.
-> The spec requires polling, so this is a form of a more-effective-polling:
-> so be it.
-
-If what you're mentioning 'effective' means being able to just wait for
-some long time upon completion of being cleared, it's not proper in real
-products because fDeviceInit latency usually has the biggest overhead of
-steps run during boot and some companies often try to manage its latency
-as KPI. The method like a combination of retrying and small delay make them
-harder to make it.
-Or if I understand what you meant, please let me know.
-
->=20
->=20
 > > ---
-> >  drivers/scsi/ufs/ufshcd.c =7C 36 ++++++++++++++++++++++++------------
-> >  1 file changed, 24 insertions(+), 12 deletions(-)
+> >  drivers/scsi/ufs/Kconfig  =7C  10 ++++
+> >  drivers/scsi/ufs/ufshcd.c =7C 120
+> > ++++++++++++++++++++++++++++++++++---------
+> > ---
+> >  2 files changed, 100 insertions(+), 30 deletions(-)
 > >
+> > diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig index
+> > 8cd9026..723e7cb 100644
+> > --- a/drivers/scsi/ufs/Kconfig
+> > +++ b/drivers/scsi/ufs/Kconfig
+> > =40=40 -172,3 +172,13 =40=40 config SCSI_UFS_EXYNOS
+> >
+> >           Select this if you have UFS host controller on EXYNOS chipset=
+.
+> >           If unsure, say N.
+> > +
+> > +config SCSI_UFSHCD_ASYNC_INIT
+> > +       bool =22Asynchronous UFS interface initialization support=22
+> > +       depends on SCSI_UFSHCD
+> > +       default n
+> > +       ---help---
+> > +       This selects the support of doing UFS interface initialization
+> > +       asynchronously when you set link state to link off,
+> > +       i.e. UIC_LINK_OFF_STATE, to reduce system wake-up time.
+> > +       Select this if you have UFS Host Controller.
+> Maybe replace this config switch with platform capability?
+> So each platform vendor can choose if he is using a sync vs async init?
+Got it.
+
+>=20
 > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index b26f182..6c08ed2 100644
+> > index 52abe82..b65d38c 100644
 > > --- a/drivers/scsi/ufs/ufshcd.c
 > > +++ b/drivers/scsi/ufs/ufshcd.c
-> > =40=40 -208,6 +208,7 =40=40 static struct ufs_dev_fix ufs_fixups=5B=5D =
-=3D =7B  =7D;
+> > =40=40 -8319,6 +8319,80 =40=40 static int ufshcd_suspend(struct ufs_hba=
+ *hba,
+> > enum ufs_pm_op pm_op)
+> >         return ret;
+> >  =7D
 > >
-> >  static const struct ufs_dev_value ufs_dev_values=5B=5D =3D =7B
-> > +       =7BUFS_VENDOR_TOSHIBA, UFS_ANY_MODEL, DEV_VAL_FDEVICEINIT, 2000=
-,
-> > false=7D,
-> >         =7B0, 0, 0, 0, false=7D,
-> >  =7D;
-> >
-> > =40=40 -4162,9 +4163,12 =40=40 EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode=
-);
-> >   */
-> >  static int ufshcd_complete_dev_init(struct ufs_hba *hba)  =7B
-> > -       int i;
-> > +       u32 dev_init_compl_in_ms =3D 1000;
-> > +       unsigned long timeout;
-> >         int err;
-> >         bool flag_res =3D true;
-> > +       bool is_dev_val;
-> > +       u32 val;
-> >
-> >         err =3D ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG=
-,
-> >                 QUERY_FLAG_IDN_FDEVICEINIT, 0, NULL); =40=40 -4175,20
-> > +4179,28 =40=40 static int ufshcd_complete_dev_init(struct ufs_hba *hba=
-)
-> >                 goto out;
-> >         =7D
-> >
-> > -       /* poll for max. 1000 iterations for fDeviceInit flag to clear =
-*/
-> > -       for (i =3D 0; i < 1000 && =21err && flag_res; i++)
-> > -               err =3D ufshcd_query_flag_retry(hba,
-> > UPIU_QUERY_OPCODE_READ_FLAG,
-> > -                       QUERY_FLAG_IDN_FDEVICEINIT, 0, &flag_res);
-> > +       /* Poll fDeviceInit flag to be cleared */
-> > +       is_dev_val =3D ufs_get_dev_specific_value(hba,
-> > + DEV_VAL_FDEVICEINIT,
-> > &val);
-> > +       dev_init_compl_in_ms =3D (is_dev_val) ? val : 500;
-> If you want dev_init_compl_in_ms to take its default 1,000, you should:
-> dev_init_compl_in_ms =3D (=21is_dev_val) ? : val;
-Got it.
+> > +static int ufshcd_post_resume(struct ufs_hba *hba)
+> Why do you need to move this code around?
+> If its async - then there is no shared code - you go through the full ini=
+t
+> flow, and just goto out?
+With SCSI_UFSHCD_ASYNC_INIT, ufshcd_reset_and_restore would be run by
+worker asynchronously and in this case, some stuffs that are supposed to ru=
+n
+after completion of ufshcd_reset_and_restore without SCSI_UFSHCD_ASYNC_INIT=
+.
+So the stuffs should be run somewhere in kworker context.
+That's why I teared it.
 
 >=20
-> > +       timeout =3D jiffies + msecs_to_jiffies(dev_init_compl_in_ms);
+> > +=7B
+> > +       int ret;
+> > +
+> > +       if (=21ufshcd_is_ufs_dev_active(hba)) =7B
+> > +               ret =3D ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MOD=
+E);
+> > +               if (ret)
+> > +                       goto out;
+> > +       =7D
+> > +
+> > +       if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+> > +               ufshcd_enable_auto_bkops(hba);
+> > +       else
+> > +               /*
+> > +                * If BKOPs operations are urgently needed at this mome=
+nt
+> then
+> > +                * keep auto-bkops enabled or else disable it.
+> > +                */
+> > +               ufshcd_urgent_bkops(hba);
+> > +
+> > +       hba->clk_gating.is_suspended =3D false;
+> > +
+> > +       if (hba->clk_scaling.is_allowed)
+> > +               ufshcd_resume_clkscaling(hba);
+> > +
+> > +       /* Enable Auto-Hibernate if configured */
+> > +       ufshcd_auto_hibern8_enable(hba);
+> > +
+> > +       if (hba->dev_info.b_rpm_dev_flush_capable) =7B
+> > +               hba->dev_info.b_rpm_dev_flush_capable =3D false;
+> > +               cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+> > +       =7D
+> > +
+> > +       /* Schedule clock gating in case of no access to UFS device yet
+> */
+> > +       ufshcd_release(hba);
+> > +out:
+> > +       return ret;
+> > +=7D
+> > +
+> > +=23if defined(SCSI_UFSHCD_ASYNC_INIT)
+> > +static void ufshcd_async_resume(void *data, async_cookie_t cookie) =7B
+> > +       struct ufs_hba *hba =3D (struct ufs_hba *)data;
+> > +       unsigned long flags;
+> > +       int ret =3D 0;
+> > +       int retries =3D 2;
+> > +
+> > +       /* transition to block requests */
+> > +       spin_lock_irqsave(hba->host->host_lock, flags);
+> > +       hba->ufshcd_state =3D UFSHCD_STATE_RESET;
+> > +       spin_unlock_irqrestore(hba->host->host_lock, flags);
+> > +
+> > +       /* initialize, instead of set_old_link_state ?? */
 > > +       do =7B
-> > +               err =3D ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_F=
-LAG,
-> > +                                       QUERY_FLAG_IDN_FDEVICEINIT, 0, =
-&flag_res);
-> > +               if (=21flag_res)
-> > +                       break;
-> > +               usleep_range(5, 10);
-> Per Grant's comment:
-> usleep_range(5000, 10000);=20
-Got it.
+> > +               ret =3D ufshcd_reset_and_restore(hba);
+> > +               if (ret) =7B
+> > +                       dev_err(hba->dev, =22%s: reset and restore fail=
+ed=5Cn=22,
+> > +                                       __func__);
+> > +                       spin_lock_irqsave(hba->host->host_lock, flags);
+> > +                       hba->ufshcd_state =3D UFSHCD_STATE_ERROR;
+> > +                       hba->pm_op_in_progress =3D 0;
+> > +                       spin_unlock_irqrestore(hba->host->host_lock, fl=
+ags);
+> > +                       return;
+> > +               =7D
+> > +               ret =3D ufshcd_post_resume(hba);
+> > +       =7D while (ret && --retries);
+> > +       if (ret)
+> > +               goto reset;
+> > +
+> > +       hba->pm_op_in_progress =3D 0;
+> > +       if (ret)
+> > +               ufshcd_update_reg_hist(&hba->ufs_stats.resume_err,
+> > +(u32)ret); =7D =23endif
+> > +
+> >  /**
+> >   * ufshcd_resume - helper function for resume operations
+> >   * =40hba: per adapter instance
+> > =40=40 -8370,6 +8444,14 =40=40 static int ufshcd_resume(struct ufs_hba =
+*hba,
+> > enum ufs_pm_op pm_op)
+> >                  * A full initialization of the host and the device is
+> >                  * required since the link was put to off during suspen=
+d.
+> >                  */
+> > +=23if defined(SCSI_UFSHCD_ASYNC_INIT)
+> > +               /*
+> > +                * Assuems error free since ufshcd_probe_hba failure is
+> > +                * uncorrectable.
+> > +                */
+> > +               ufshcd_async_schedule(ufshcd_async_resume, hba);
+> > +               goto out_new;
+> > +=23else
+> >                 ret =3D ufshcd_reset_and_restore(hba);
+> >                 /*
+> >                  * ufshcd_reset_and_restore() should have already =40=
+=40
+> > -8377,38 +8459,12 =40=40 static int ufshcd_resume(struct ufs_hba *hba,
+> > enum ufs_pm_op pm_op)
+> >                  */
+> >                 if (ret =7C=7C =21ufshcd_is_link_active(hba))
+> >                         goto vendor_suspend;
+> > +=23endif
+> >         =7D
+> >
+> > -       if (=21ufshcd_is_ufs_dev_active(hba)) =7B
+> > -               ret =3D ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MOD=
+E);
+> > -               if (ret)
+> > -                       goto set_old_link_state;
+> > -       =7D
+> > -
+> > -       if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
+> > -               ufshcd_enable_auto_bkops(hba);
+> > -       else
+> > -               /*
+> > -                * If BKOPs operations are urgently needed at this mome=
+nt
+> then
+> > -                * keep auto-bkops enabled or else disable it.
+> > -                */
+> > -               ufshcd_urgent_bkops(hba);
+> > -
+> > -       hba->clk_gating.is_suspended =3D false;
+> > -
+> > -       if (hba->clk_scaling.is_allowed)
+> > -               ufshcd_resume_clkscaling(hba);
+> > -
+> > -       /* Enable Auto-Hibernate if configured */
+> > -       ufshcd_auto_hibern8_enable(hba);
+> > -
+> > -       if (hba->dev_info.b_rpm_dev_flush_capable) =7B
+> > -               hba->dev_info.b_rpm_dev_flush_capable =3D false;
+> > -               cancel_delayed_work(&hba->rpm_dev_flush_recheck_work);
+> > -       =7D
+> > -
+> > -       /* Schedule clock gating in case of no access to UFS device yet
+> */
+> > -       ufshcd_release(hba);
+> > +       ret =3D ufshcd_post_resume(hba);
+> > +       if (ret)
+> > +               goto set_old_link_state;
+> >
+> >         goto out;
+> >
+> > =40=40 -8427,6 +8483,10 =40=40 static int ufshcd_resume(struct ufs_hba =
+*hba,
+> > enum ufs_pm_op pm_op)
+> >         hba->pm_op_in_progress =3D 0;
+> >         if (ret)
+> >                 ufshcd_update_reg_hist(&hba->ufs_stats.resume_err,
+> > (u32)ret);
+> > +       /* For async init, pm_op_in_progress still needs to be one */
+> > +=23if defined(SCSI_UFSHCD_ASYNC_INIT)
+> > +out_new:
+> > +=23endif
+> >         return ret;
+> >  =7D
+>=20
+> Thanks,
+> Avri
+>=20
+> >
+> > --
+> > 2.7.4
+
+
 
 Thanks.
 Kiwoong Kim
