@@ -2,131 +2,202 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA75C433E5
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E94A3C433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 08:03:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 867312064C
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:57:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 937782064C
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 08:03:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="O9iczD9P";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="sCkBZ92I"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="FRLa7Zdp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729563AbgGOH5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 03:57:39 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:52328 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729001AbgGOH5i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 03:57:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1594799859; x=1626335859;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=O9iczD9Pd+O8quIbzq1tOkAZyDLlqShlTpCDvS2Dut7EKUE5shm1L8SU
-   SuY2aBrVo9x1QgXMU8fNV3qMfhqp5Gt++0zdc4FXJR9qnub7B8Vs/I4RC
-   z/s5482HGIkbGHw25C0cpCJY6JC+uO7K18to7JE7bmWuDWC7eP8N2GFtH
-   IM0gGx7PfRDmEE0HVYFeqhIzUyPIN/22w8Nnxh2aJdwTpadnJgTJm6MeB
-   u6mZjAJiRaPcSSVy59WkF7jXj2CzNw/rStjXwIEUBh28GRB+yA2nnOE8F
-   RZM2bJcaSNBPN9udKnM7NCvEXwmsD9KsCcMZ7O/ARq8/qz68aSYP1q5Bw
-   w==;
-IronPort-SDR: cX5KbMLntV7xLJ+Bn/z1O3Yyy/Btz42Tddl3YPt4JKAVsZEnwmL3aNPpAuXWYEh+iuZuGL5sOg
- fxKEApQ/ELsH5jZLhcuGhCfjmzNNx9bP+llzARFfTxaVWXhvt//zoBYIMrPIopEqvz/sRhr5Wk
- uW5AkPT31WjzdjcOD9WhLwqbwa0Dd2gwoK2w+Y8v0vqBJAFx1rL78BfnbFVCR+iTEnDIYTaoji
- 10O2my9vEhBHMcWilY52FfbtcwptYpJKdb4rRcuDxv1T5ro151N+5CGnvxebhOhJEoq6/T25xJ
- n+A=
-X-IronPort-AV: E=Sophos;i="5.75,354,1589212800"; 
-   d="scan'208";a="146812075"
-Received: from mail-bn7nam10lp2106.outbound.protection.outlook.com (HELO NAM10-BN7-obe.outbound.protection.outlook.com) ([104.47.70.106])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Jul 2020 15:57:37 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Py5I41y3KEraBgknF37gZsZpWiYi/mALkVUPs83fjIHA3cIecJteMVqMD1I7cDKAJZmTOLT9lBFvkoe8V+Xc7qMVMXdPMy8BrSuFfNEIcN5KEmZ2n6CsLYp9afZk32tOqBMANJCH8YOYGAT9j7++KHAj4TYOP1g0K1sCIMHe5ShIgpS7YByAAHTtF69rtMkNVziGlJYyjm7da9bIcoPLEngBYSCqmLpuvz+TRQ4MetWJW1ucpTntwzzql17GShhJY7KqMEv+qttdAwwleCVE4+YCiPagAEuTSueJBQU2P3WhkEyBLzJ4NtXYHn+n7L1vlTJiE0aqpn8W2A7fUTiwxQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=oWP3grGaURt7/ECUyvC4N2LNhw4L7/aZWGkZlCsFWZKO088xQkp656qQgOcqJBok8MjLdr6+TLR+s2Uq2CHPTRatCQ0OOsox4auihqAObcpTyutp3GRhEDrDyrhTAgbnpvURC0qw76iKCWtLvuxgwwdupTVAnmihtG9aFnFqCknlkWugLbk2qRk2hiZSF2qUSoEAVxFgExzX646SrhL3ClooZ2DixHkgEm6H4OOZufskczgQOAwlnCmHJcIw6cpkW5iy4aZwSjj/WXLilXdZA9v1KXS6ShPomE55ka47sNlpy6R+Z7Nt3UF9A54DstdmmeBL7EqQAc1MYQ/4PG7uLg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=sCkBZ92IEwaGExdKaa3YCD4jbNOUlQWXyYWwInFdhxq5lvlQ/TZxHQho5vwdY9zEPl3p4Hd+O+HeI2ZLMPY4Anh0AKxc/WL/3HfV00iPwRvppfCZ2PSkV5z63C97H5WX0BaCt2mBVkTNZ7uHvkq9LftckdGwtdfH3UeQYIyi1iM=
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- (2603:10b6:803:47::21) by SN6PR04MB5248.namprd04.prod.outlook.com
- (2603:10b6:805:fc::29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.22; Wed, 15 Jul
- 2020 07:57:35 +0000
-Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::1447:186c:326e:30b2]) by SN4PR0401MB3598.namprd04.prod.outlook.com
- ([fe80::1447:186c:326e:30b2%7]) with mapi id 15.20.3174.026; Wed, 15 Jul 2020
- 07:57:35 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     =?iso-8859-1?Q?Javier_Gonz=E1lez?= <javier@javigon.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH v3 2/2] block: add max_active_zones to blk-sysfs
-Thread-Topic: [PATCH v3 2/2] block: add max_active_zones to blk-sysfs
-Thread-Index: AQHWWiRjfWZ6hdXePEOmoN+no96YEA==
-Date:   Wed, 15 Jul 2020 07:57:35 +0000
-Message-ID: <SN4PR0401MB3598093418CA2F80F019C70E9B7E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200714211824.759224-1-niklas.cassel@wdc.com>
- <20200714211824.759224-3-niklas.cassel@wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: wdc.com; dkim=none (message not signed)
- header.d=none;wdc.com; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [2001:a62:1515:bd01:853f:9b43:c773:dd89]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: d3dc1485-a16c-4906-4e77-08d82894bc70
-x-ms-traffictypediagnostic: SN6PR04MB5248:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR04MB5248A8FBBF187FA097314BEA9B7E0@SN6PR04MB5248.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1728;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: i42W09O+1nTo+ObjXOkLQjE7JyOLwA1eoN1C6FNXKPtOOcfV/w3pIJHWqJ5XLU/shvSJzKlViSEbby8Ifx0xvZ5jaFr6Zsj2MKln8ucYFZYphEYw/5S14hoGMNvTArDnix5XoxFplYFV8ParUKICwLhhdg53OECMpW3mE8FI0v0h5vaZ7HvUBB/dS1aGS2dmSHJk4xIcpi5BU6d9amsRU4S5k/mPTI3eywkPKg3SoNZI/fh7aBTTiUyiIOOalfTyoJTs/HwTMWJClaONGQTop/WgoOI57tvzjQ4+pM8/30E4yTs8SrnvcHhHP4f6P44n//nm5HvwEEIelpO6LQ/Kbg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(366004)(396003)(136003)(376002)(346002)(478600001)(54906003)(8936002)(7696005)(7416002)(186003)(9686003)(110136005)(2906002)(6506007)(4326008)(55016002)(52536014)(33656002)(71200400001)(5660300002)(66446008)(64756008)(558084003)(19618925003)(4270600006)(76116006)(91956017)(66476007)(66556008)(66946007)(86362001)(316002)(8676002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: iv4I8vgzFjqjlNuq5x+pUwpVyItUOmMqnevtNtyZBlCylDGiC86w6MLQY1X/2ukD9cWRSncqEkt/p1XWzoP5BZmIRr5EeDdkJvBKMzpp9Dbn+h99/Ym6hyI21ai0BnLNx8Lou2aluPB4Yipi/c0nuZPATTTCLTceuOz6ndzx3l1A6LmeW7daSMIBh2r+zTS4fg2p3SLa6Iq5JOXfErxn9Lmw88/Rc/710XtEeI4yLWlLIJbf1MXWI/dlCpFi3HyEoytHgFlpWfJbHnLsEiAAupc/y/JZptqwGfyP4FdVIli9+tiPv9wWI6Q0GbAQQ6U7CeZeumbcT8sXMShGdiLCWYAku/5urMGGoJpuDm6Cz3NzuDMrDfFInmuyiaMLE7RvGfMwEeJna6+e+Fk20+FXsMCDCuGYWQ84bYqgja9CUYXAXUrpnNFLmFf4rWAULTl5gShGa8FAgDISPnFqPk25yVX/IYMWYae1w1sUwS3m77+7UP2aNL45aROVqUA0mnLkU3prAPSSLR1nFpDlXbNED7SxMWLIcgkzqYUq5OjqwIYZvCocQd2fp3WgmuMjE+nP
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S1729579AbgGOIDo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 04:03:44 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:41010 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729001AbgGOIDn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 04:03:43 -0400
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200715080340epoutp01b35ac6eee1611cdc1e672a9272f417c5~h3lnbWZB62234222342epoutp01d
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 08:03:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200715080340epoutp01b35ac6eee1611cdc1e672a9272f417c5~h3lnbWZB62234222342epoutp01d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594800220;
+        bh=3cryH2VZEYKkL8mhkjPdWfwqKL0MS1pbtQP8BzwwVf0=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=FRLa7ZdpSTmxlbhhbvrNk6pGwpmu0dsCWHZ/hm8x1FsGxYLJe1sVFM8r2zUQXzSwI
+         Yppl7O4hMXyD0i7K8ZIyMEXJoMS+cppOOxc+3DxX9gNJeOdHw/EDQyLJ4JYTOQxxkR
+         ohK25INLAyB6YMLOgVwEVJ81isFQ7WNrOSMIJRDM=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20200715080339epcas2p42c8450fa3808ae542b5d2a7c527bf7e3~h3lm4MIdv0323003230epcas2p47;
+        Wed, 15 Jul 2020 08:03:39 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.181]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4B68yw6CMWzMqYkr; Wed, 15 Jul
+        2020 08:03:36 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        46.CE.18874.858BE0F5; Wed, 15 Jul 2020 17:03:36 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200715080336epcas2p1552c56dd96a74fa6d9f427811de9ed9e~h3ljeohZs0749907499epcas2p1-;
+        Wed, 15 Jul 2020 08:03:36 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200715080336epsmtrp1b43ef18dbf292cd7a15f18016449eb84~h3ljd3UC02635726357epsmtrp1F;
+        Wed, 15 Jul 2020 08:03:36 +0000 (GMT)
+X-AuditID: b6c32a46-a92a8a80000049ba-6b-5f0eb8583b65
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        13.89.08303.858BE0F5; Wed, 15 Jul 2020 17:03:36 +0900 (KST)
+Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20200715080336epsmtip212b39533670fe4d18c679f085a918850~h3ljNS6PT0763807638epsmtip2C;
+        Wed, 15 Jul 2020 08:03:36 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Avri Altman'" <Avri.Altman@wdc.com>,
+        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <bvanassche@acm.org>,
+        <grant.jung@samsung.com>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>
+In-Reply-To: <SN6PR04MB464046C39B0B2AC5E36A7BF5FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
+Subject: RE: [RFC PATCH v3 1/2] ufs: support various values per device
+Date:   Wed, 15 Jul 2020 17:03:35 +0900
+Message-ID: <01f401d65a7e$70f5bba0$52e132e0$@samsung.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d3dc1485-a16c-4906-4e77-08d82894bc70
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jul 2020 07:57:35.2993
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: euL1MeDHGcgwD9HRnEvmgxKarLxpahT7HxKhteCmWC7RhuS6fjFK8gGSbXexTQU4LASHLM2zJLxHhF+GM5tjXi6wsNsWG6xzZGTxnxysh8Y=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB5248
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHu1pDNEI1WArg19xfehYJkuPyuggFIo2zFASntDDcCTmR2VaixRx3Q
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrEJsWRmVeSWpSXmKPExsWy7bCmhW7EDr54g4vtBhYP5m1js9jbdoLd
+        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCy6r+9gs1h+/B+TRdfdG4wW
+        S/+9ZXHg9bh8xdvjcl8vk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5tB/oZgrgiMqxyUhN
+        TEktUkjNS85PycxLt1XyDo53jjc1MzDUNbS0MFdSyEvMTbVVcvEJ0HXLzAE6WUmhLDGnFCgU
+        kFhcrKRvZ1OUX1qSqpCRX1xiq5RakJJTYGhYoFecmFtcmpeul5yfa2VoYGBkClSZkJMxpfUM
+        c8FuwYqdvaoNjL94uhg5OCQETCSOtNh1MXJxCAnsYJS41j6THcL5xCjRsmIhK4TzmVFi5fEJ
+        LF2MnGAds97dYIFI7GKUeLq7E6rlBaPEtL/bWUGq2AS0JaY93A3WLiJwn0niyM4HYO2cArES
+        2/ZcZgFZLizgJvFgRxFImEVAVeLFz3ZGEJtXwFJia+M+ZghbUOLkzCdgrcwC8hLb385hhrhC
+        QeLn02Vgu0SAxhxd3c4MUSMiMbuzDarmDIfErCOVELaLxI1lh5ggbGGJV8e3sEPYUhIv+9ug
+        7HqJfVMbwG6WEOgB+mzfP0aIhLHErGcgx3EALdCUWL9LHxJ2yhJHbkGdxifRcfgvO0SYV6Kj
+        TQiiUVni16TJUEMkJWbevAO1yUOib8dd1gmMirOQPDkLyZOzkDwzC2HvAkaWVYxiqQXFuemp
+        xUYFRshRvYkRnJi13HYwTnn7Qe8QIxMH4yFGCQ5mJRFeHi7eeCHelMTKqtSi/Pii0pzU4kOM
+        psBgn8gsJZqcD8wNeSXxhqZGZmYGlqYWpmZGFkrivPWKF+KEBNITS1KzU1MLUotg+pg4OKUa
+        mJaaqM7fMbdbNn7BL2Xv6wz6tw1vfFt9ajZv/YbXhyWbuVen28xZfdPb7tDzPcoM1b/qNl2+
+        4tq/Ye2FufKdXrkT2RRa/t7wMnphzzy9mNlolwxz6aHLfKebFQ31Dz4P8HkoMMl7i/1jVSG9
+        f9rMSs+arzzwPL11j/4WAdHKLttFV4z962ZVH1SN8XA6vsrR+sttpjXmshZbtOr5dpVz7vY8
+        N0ncVM4qeW6kU+ffyayu9iHSq/lZUxlPG9w/1nQtUnR5iq96RJdI//Mbj2V2bgvzOPQ2YM5V
+        b8crUyw27heIe7Tsye1uHXnGGgb/QufwvMpisaaZc91Trt6KfFp5rK3mqBFn9ssQ9aSwab+M
+        lFiKMxINtZiLihMBYjF33lUEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMIsWRmVeSWpSXmKPExsWy7bCSvG7EDr54gxktvBYP5m1js9jbdoLd
+        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCy6r+9gs1h+/B+TRdfdG4wW
+        S/+9ZXHg9bh8xdvjcl8vk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5tB/oZgrgiOKySUnN
+        ySxLLdK3S+DKmNJ6hrlgt2DFzl7VBsZfPF2MnBwSAiYSs97dYOli5OIQEtjBKLG3ZS47REJS
+        4sTO54wQtrDE/ZYjrBBFzxglbq0+AFbEJqAtMe3hbrCEiMBbJok7ty8zQVStZpI4ceUIM0gV
+        p0CsxLY9l4F2cHAIC7hJPNhRBBJmEVCVePGzHWwDr4ClxNbGfcwQtqDEyZlPWEBsZqAFvQ9b
+        GSFseYntb+cwQ1ykIPHz6TJWEFsEaOTR1e3MEDUiErM725gnMArNQjJqFpJRs5CMmoWkZQEj
+        yypGydSC4tz03GLDAqO81HK94sTc4tK8dL3k/NxNjOB41NLawbhn1Qe9Q4xMHIyHGCU4mJVE
+        eHm4eOOFeFMSK6tSi/Lji0pzUosPMUpzsCiJ836dtTBOSCA9sSQ1OzW1ILUIJsvEwSnVwOQZ
+        Mz90wYvNmewPmvXOWYR9yp+usD5D2uX150OCKud0C1wtdbpX3Hq+wi0uR7Bj9WVBqZ8f8ww9
+        ZjnHP15km7ui5u0V55n3j2kf8LfhfZ58LqRNc/o1ZZlrbYemty3288vdlsB3KI4/WvyudE31
+        TjPhCf4FvvoX/75mVIlv+Lid+V9oevjC3c2rqli6p5y6ELWLNamssnvyA2cuZt8Xb4sZXR1S
+        Kou5Mu6saDz557T/sc3LL6x4GDzv5l65SHUOvg6NGz06gTwbvn7Xf3rp7svQd4mhKR6G+k3P
+        uI0eyKif01/yI9Z8j9xulkVtHbcm/lzzIHLd7DOr3nz1PH6kfP/2G3eD2eZd7pN9dXG+1UUl
+        luKMREMt5qLiRABS5N30NgMAAA==
+X-CMS-MailID: 20200715080336epcas2p1552c56dd96a74fa6d9f427811de9ed9e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200703053756epcas2p1f32da04da87c8f56a6052caada95fb9a
+References: <cover.1593753896.git.kwmad.kim@samsung.com>
+        <CGME20200703053756epcas2p1f32da04da87c8f56a6052caada95fb9a@epcas2p1.samsung.com>
+        <dc21b368f44c8a9a257d1b00549e3b5aeec00755.1593753896.git.kwmad.kim@samsung.com>
+        <SN6PR04MB464046C39B0B2AC5E36A7BF5FC680@SN6PR04MB4640.namprd04.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+> > Respective UFS devices have their own characteristics and many of them
+> > could be a form of numbers, such as timeout and a number of retires.
+> > This introduces the way to set those things per specific device vendor
+> > or specific device.
+> >
+> > I wrote this like the style of ufs_fixups stuffs.
+> >
+> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> This patch legitimize quirks of all kinds and shapes.
+> I am not sure that we should allow it.
+If you're concerning the name 'quirk' literally, I can change the way
+to use another values by device tree or whatever.
+Or do you concern introducing various values?
+
+> 
+> 
+> > ---
+> >  drivers/scsi/ufs/ufs_quirks.h | 13 +++++++++++++
+> >  drivers/scsi/ufs/ufshcd.c     | 39
+> > +++++++++++++++++++++++++++++++++++++++
+> >  drivers/scsi/ufs/ufshcd.h     |  1 +
+> >  3 files changed, 53 insertions(+)
+> >
+> > diff --git a/drivers/scsi/ufs/ufs_quirks.h
+> > b/drivers/scsi/ufs/ufs_quirks.h index 2a00414..f074093 100644
+> > --- a/drivers/scsi/ufs/ufs_quirks.h
+> > +++ b/drivers/scsi/ufs/ufs_quirks.h
+> > @@ -29,6 +29,19 @@ struct ufs_dev_fix {
+> >         unsigned int quirk;
+> >  };
+> >
+> > +enum dev_val_type {
+> > +       DEV_VAL_FDEVICEINIT     = 0x0,
+> 
+>             /* keep last */
+> > +       DEV_VAL_NUM,
+> > +};
+> > +
+> > +struct ufs_dev_value {
+> > +       u16 wmanufacturerid;
+> > +       u8 *model;
+> > +       u32 key;
+> > +       u32 val;
+> > +       bool enable;
+> > +};
+> > +
+> >  #define END_FIX { }
+> >
+> >  /* add specific device quirk */
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 52abe82..b26f182 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -207,6 +207,21 @@ static struct ufs_dev_fix ufs_fixups[] = {
+> >         END_FIX
+> >  };
+> >
+> > +static const struct ufs_dev_value ufs_dev_values[] = {
+> > +       {0, 0, 0, 0, false},
+> > +};
+> > +
+> > +static inline bool
+> > +ufs_get_dev_specific_value(struct ufs_hba *hba,
+> > +                          enum dev_val_type type, u32 *val) {
+> If (ARRAY_SIZE(ufs_dev_values) <= type)
+>     return false;
+> 
+> 
+> Thanks,
+> Avri
+Got it.
+
+Thanks.
+Kiwoong Kim
+
