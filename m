@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A20C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB09CC433E5
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:48:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C7E1206F4
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:48:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F0922072E
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:48:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="FW1+6jbn"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="HGRz47B3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729438AbgGOHsI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 03:48:08 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:31379 "EHLO
+        id S1729444AbgGOHsK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 03:48:10 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:31404 "EHLO
         mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729377AbgGOHsH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 03:48:07 -0400
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200715074803epoutp03666b8b4e7091f00009d08239bedefcbe~h3X_wkoXq1563615636epoutp03B
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 07:48:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200715074803epoutp03666b8b4e7091f00009d08239bedefcbe~h3X_wkoXq1563615636epoutp03B
+        with ESMTP id S1729430AbgGOHsJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 03:48:09 -0400
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200715074804epoutp03d98735fb370ca86424e67186721b3ac9~h3X--ju5e1592215922epoutp03r
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 07:48:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200715074804epoutp03d98735fb370ca86424e67186721b3ac9~h3X--ju5e1592215922epoutp03r
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1594799283;
-        bh=WzinotoHMl+6qWjtls4Q749DNmSppu/jolSUz7lm4x8=;
+        s=mail20170921; t=1594799284;
+        bh=8xOeQ3Mw86ciSgBzQ3w+8aDLYwqSJxwEJ6HIro0l/s4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
-        b=FW1+6jbnvitzNv6+YpxRx7x1TcW9jOS2X0w8euYzIGSzbAQ+0D9/We2yBwx6/g3H5
-         g1guC1GssIq4D9GSiruwBF9JGi1IIkGamozX7udj5CxsTAOrxX3NNmTq7iFsjwRhPo
-         NIz5PwtH+pF4+GCK8+6KmBSNSIcCYKOtEv/dkLjE=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-        20200715074802epcas2p21a1dd13be1d39c7fb7ef650353e1e6b7~h3X9-fqpU0609106091epcas2p2p;
-        Wed, 15 Jul 2020 07:48:02 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.186]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4B68cw4kk7zMqYks; Wed, 15 Jul
-        2020 07:48:00 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        7E.54.27441.FA4BE0F5; Wed, 15 Jul 2020 16:47:59 +0900 (KST)
+        b=HGRz47B3XhCiz3WPBHoC53al/kgKgJyDL1WN6kOcz9YIzm8bBQKE4Gob8mztZCewV
+         ebIwC53+aiE+c+USJ+OelFNQfCyy/dTht8IFgZQmgkGjOpWfAizb+EEtUoswzSzJpB
+         Lt9J3+TVdHws0fqaFalbTPiVV36FrpH1f5gC1Occ=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20200715074804epcas2p16edd3d57232ae6e05f1f5a63e558dedf~h3X-c0pSx2828228282epcas2p1M;
+        Wed, 15 Jul 2020 07:48:04 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4B68cx0RrRzMqYmK; Wed, 15 Jul
+        2020 07:48:01 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+        43.0A.27013.FA4BE0F5; Wed, 15 Jul 2020 16:48:00 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200715074758epcas2p117bed09c65271199ac0008a5a1564570~h3X6YLak12828628286epcas2p1m;
-        Wed, 15 Jul 2020 07:47:58 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200715074759epcas2p2a2046f8fc8548601d644089c141ab7cd~h3X6y50Bf2918829188epcas2p2i;
+        Wed, 15 Jul 2020 07:47:59 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200715074758epsmtrp20488cd24a0a4f05abf5f44ff69b5d145~h3X6XTe6Z3059830598epsmtrp2f;
-        Wed, 15 Jul 2020 07:47:58 +0000 (GMT)
-X-AuditID: b6c32a47-fc5ff70000006b31-66-5f0eb4af562b
+        20200715074759epsmtrp2c7bd5c868f2643c20e0bfb223d101058~h3X6yLmDl3059630596epsmtrp2b;
+        Wed, 15 Jul 2020 07:47:59 +0000 (GMT)
+X-AuditID: b6c32a48-d35ff70000006985-04-5f0eb4af2a17
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B2.00.08382.EA4BE0F5; Wed, 15 Jul 2020 16:47:58 +0900 (KST)
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        A2.97.08303.FA4BE0F5; Wed, 15 Jul 2020 16:47:59 +0900 (KST)
 Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
         epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200715074758epsmtip24299d7d3fd2b5ea6dd7f2030ad8a8c36~h3X6GTK_72959329593epsmtip2W;
-        Wed, 15 Jul 2020 07:47:58 +0000 (GMT)
+        20200715074759epsmtip24060bb84902a7442bc85ca7947d3e216~h3X6iAncN2906829068epsmtip2r;
+        Wed, 15 Jul 2020 07:47:59 +0000 (GMT)
 From:   Kiwoong Kim <kwmad.kim@samsung.com>
 To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
         avri.altman@wdc.com, jejb@linux.ibm.com,
@@ -66,464 +66,217 @@ To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
         grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
         sh425.lee@samsung.com
 Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v6 2/3] ufs: exynos: introduce command history
-Date:   Wed, 15 Jul 2020 16:39:56 +0900
-Message-Id: <f7052ccb43695b21fca28eb846bf2ee9d5bc7809.1594798514.git.kwmad.kim@samsung.com>
+Subject: [PATCH v6 3/3] ufs: exynos: implement dbg_register_dump
+Date:   Wed, 15 Jul 2020 16:39:57 +0900
+Message-Id: <a8ae2f2c4c9a2422ffb2318d7bb92e21154d6cf1.1594798514.git.kwmad.kim@samsung.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1594798514.git.kwmad.kim@samsung.com>
 In-Reply-To: <cover.1594798514.git.kwmad.kim@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJJsWRmVeSWpSXmKPExsWy7bCmqe76LXzxBkfPsVs8mLeNzWJv2wl2
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprOJsWRmVeSWpSXmKPExsWy7bCmhe6GLXzxBnsnsVg8mLeNzWJv2wl2
         i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7K4ueUoi0X39R1sFsuP/2Oy
         6Lp7g9Fi6b+3LA58HpeveHtc7utl8piw6ACjx/f1HWweH5/eYvHo27KK0ePzJjmP9gPdTAEc
         UTk2GamJKalFCql5yfkpmXnptkrewfHO8aZmBoa6hpYW5koKeYm5qbZKLj4Bum6ZOUB3KymU
         JeaUAoUCEouLlfTtbIryS0tSFTLyi0tslVILUnIKDA0L9IoTc4tL89L1kvNzrQwNDIxMgSoT
-        cjJ2Hn/BWrA1sWLxww62BsbrAV2MnBwSAiYSr9omMnUxcnEICexglOjd0g3lfGKU+DS/jxWk
-        SkjgG6PEyqmxMB1TXs9khijayyjx6/1SqKIfjBLr18qA2GwCmhJPb04FmyQisJlJ4tWC+8wg
-        CWYBdYldE04wgdjCAnYSD4/fAmtmEVCVmHJ7CWMXIwcHr0C0RPMsZohlchI3z3WC2ZwClhLr
-        Jp1nR2VzAdVM5ZDoO36CFaLBReLl/09MELawxKvjW9ghbCmJz+/2skHY9RL7pjawQjT3MEo8
-        3fePESJhLDHrWTvYEcxAH6zfpQ9iSggoSxy5xQJxPp9Ex+G/7BBhXomONiGIRmWJX5MmQw2R
-        lJh58w7UVg+J+zvnQAMUaNPOK8eZJzDKz0JYsICRcRWjWGpBcW56arFRgTFy5G1iBKdRLfcd
-        jDPeftA7xMjEwXiIUYKDWUmEl4eLN16INyWxsiq1KD++qDQntfgQoykwHCcyS4km5wMTeV5J
-        vKGpkZmZgaWphamZkYWSOG+x1YU4IYH0xJLU7NTUgtQimD4mDk6pBiY7afNv8u84kxW99ZK/
-        Kn0s+mnWoPI44fKhYu9ZG1Sm6cfxa9ZKJofuact/eKmupOjY605z3jcpz9Wuvv/e92lSa7fM
-        JVXZr8UOR9a4nw54UF0h8Ku8tZT5///NzmeelV7lnPq+aeZqFxafG3csnDh1VtvkH9qUtsfx
-        1xGzW/0Xjpk7hv6p3N709LvM87pZajnnL3mdLD9WG1Xgzv0347vnOpZcxfiPNZJ3j3NlfOyL
-        vG/+SqTeN/6K/5qH8efuC8uce9tQx1nIytt237ivZNljle7HfzKOTTOW2eL4/77BLr9TeVqu
-        2XuvTdXXMTq00PfP4SfepWUHlyhein4VuXRHgvkOH2vVA1ddFh3UzVViKc5INNRiLipOBAA6
-        zB0FLAQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPLMWRmVeSWpSXmKPExsWy7bCSvO66LXzxBku+als8mLeNzWJv2wl2
+        cjKmPOlnL+gzqvgweSp7A+MbzS5GTg4JAROJA6+/snQxcnEICexglDj46CCU84lR4vir0+wQ
+        zmdGia5PjYwwLbvudrJBJHYxSuyd9J4ZwvnBKDF/w3F2kCo2AU2JpzenMoEkRAQ2M0m8WnCf
+        GSTBLKAusWvCCaAEB4ewgIPEk8YAEJNFQFXica84iMkrEC2x/agVxC45iZvnOsEaOQUsJdZN
+        Os+OzpYQmMohsW6KJ4TtIrFq5mUmCFtY4tXxLVA1UhKf3+1lg7DrJfZNbWAFuUxCoIdR4um+
+        f1CPGUvMetbOCHIDM9D563fpg5gSAsoSR26xQNzOJ9Fx+C87RJhXoqNNCKJRWeLXpMlQQyQl
+        Zt68A7XVQ+JZxwswWwhk06zLkhMY5WchzF/AyLiKUSy1oDg3PbXYqMAEOeo2MYJTqJbHDsbZ
+        bz/oHWJk4mA8xCjBwawkwsvDxRsvxJuSWFmVWpQfX1Sak1p8iNEUGIgTmaVEk/OBSTyvJN7Q
+        1MjMzMDS1MLUzMhCSZz3ndWFOCGB9MSS1OzU1ILUIpg+Jg5OqQam6KcXd/RvL+tPZnvQMLfz
+        dKZlHYedl8XEduubV6ZuKAz9YiQ88/Hs+dePH+f9Iv3pzxzXu5xPz1i+7qqXWL9gwZ8vRh5H
+        jnKvCLr7U6vPbs9SP9Fl7Wdv8fPyvLHv/HX5RrjftHkPt5WyzjghcqbP+anBvA0T6j4eN8k5
+        9bZS+9IDoVOPJeccvTtzw+egeUI7GMIPHj7vc/2Z5+YLJb7qmW8Cgiw2/FdWuDX54OctYnEb
+        QlP/CRxp/e45aXpQw+kqBoVZ/go3yuJbO6Kya5d8ZuPp1mvaftr0VsPt6ivOoXmskttjp14R
+        9drauDUr0LpyztMlu4O0NUOutnEam73O8k6XOfHn0r9dJ6crmi+fNlGJpTgj0VCLuag4EQAK
+        xIPZKgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrHLMWRmVeSWpSXmKPExsWy7bCSvO76LXzxBgf/c1g8mLeNzWJv2wl2
         i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7K4ueUoi0X39R1sFsuP/2Oy
         6Lp7g9Fi6b+3LA58HpeveHtc7utl8piw6ACjx/f1HWweH5/eYvHo27KK0ePzJjmP9gPdTAEc
-        UVw2Kak5mWWpRfp2CVwZO4+/YC3Ymlix+GEHWwPj9YAuRk4OCQETiSmvZzKD2EICuxklrlyv
-        hYhLSpzY+ZwRwhaWuN9yhLWLkQuo5hujxMG3C8ESbAKaEk9vTmUCSYgIHGaS+L/1OTtIgllA
-        XWLXhBNMILawgJ3Ew+O3WEFsFgFViSm3lwA1c3DwCkRLNM9ihlggJ3HzXCeYzSlgKbFu0nl2
-        iIMsJDa9e8+IS3wCo8ACRoZVjJKpBcW56bnFhgWGeanlesWJucWleel6yfm5mxjBcaCluYNx
-        +6oPeocYmTgYDzFKcDArifDycPHGC/GmJFZWpRblxxeV5qQWH2KU5mBREue9UbgwTkggPbEk
-        NTs1tSC1CCbLxMEp1cCkbL0qe3bHK8MPnpK77OQUJjbc/GqirF3Ww8X5m6lx/hFnCxmHq6xJ
-        UWtNLytFPmqTLGbXCTtjebnp5tXWa2aSi9kfRx3az//i7ILs66bLdzBM3zbd8edr8dI5c+cf
-        CTUtktjP9GjPYYu17Kc0/JNMT3x6JtbssvZZ/ryPP+1tvfzURTk832w18FJmaXsdI2Zt++PT
-        3D9TItZEtTUK9U3Ut+XxLW1w/vzd6P6EbzWB7MfzPvEVT07ePCl/Tol38t1t/fuPR/x3P7bb
-        bm6rqo/jn1Q7H5k46bsP7r2bd1L03bmMVQbLSlJWbXvjtLvT6cPFmFqXr5XHXyy/KOa37sWC
-        /lU1PuZPm9VmKD4+c2e6EktxRqKhFnNRcSIAEQTicPICAAA=
-X-CMS-MailID: 20200715074758epcas2p117bed09c65271199ac0008a5a1564570
+        UVw2Kak5mWWpRfp2CVwZU570sxf0GVV8mDyVvYHxjWYXIyeHhICJxK67nWxdjFwcQgI7GCVO
+        fZ/FCpGQlDix8zkjhC0scb/lCCtE0TdGiTf7tjKDJNgENCWe3pzKBJIQETjMJPF/63N2kASz
+        gLrErgkngBIcHMICDhJPGgNATBYBVYnHveIgJq9AtMT2o1YQ4+Ukbp7rBJvIKWApsW7SebAh
+        QgIWEpvevWfEJT6BUWABI8MqRsnUguLc9NxiwwKjvNRyveLE3OLSvHS95PzcTYzgKNDS2sG4
+        Z9UHvUOMTByMhxglOJiVRHh5uHjjhXhTEiurUovy44tKc1KLDzFKc7AoifN+nbUwTkggPbEk
+        NTs1tSC1CCbLxMEp1cBkYCH1RnbNx6k33vxn/Vbd0G3tFnT/3lf3knptpYRfbxfLPX6y9oe7
+        6uQZXzccmSKyeb1hSq1jaPzbJBcbvzOMzoKSGpWHlfJsN6jkcoWsWtO580NXWfuvb1WC58Ne
+        7TjpdmL9GpsAY4/KaLEpW+dFfVz+Paqsm5/lyqnrhQIyE7f9exiW/9BToGT/ttzGpQ9LHNd+
+        eTajfR7/tNAlRs9ffxR8uCttzvx9dcpz/81eNe1RaPW/k6LxyfMuZCeGVF8qWD5tluSB8Hmi
+        NzmZtticfG1+mL2u7e6Whmj760dmaSukt5/ffHzTLqYTa28fN7AJ6Zh4ZItLYw7nT6l5+S//
+        /mZsczz+c35t7ZXvD2NjXJRYijMSDbWYi4oTAcYhL/vxAgAA
+X-CMS-MailID: 20200715074759epcas2p2a2046f8fc8548601d644089c141ab7cd
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200715074758epcas2p117bed09c65271199ac0008a5a1564570
+X-CMS-RootMailID: 20200715074759epcas2p2a2046f8fc8548601d644089c141ab7cd
 References: <cover.1594798514.git.kwmad.kim@samsung.com>
-        <CGME20200715074758epcas2p117bed09c65271199ac0008a5a1564570@epcas2p1.samsung.com>
+        <CGME20200715074759epcas2p2a2046f8fc8548601d644089c141ab7cd@epcas2p2.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This includes functions to record contexts of incoming commands
-in a circular queue. ufshcd.c has already some function
-tracer calls to get command history but ftrace would be
-gone when system dies before you get the information,
-such as panic cases.
+At present, I just add command history print and
+you can add various vendor regions.
 
-This patch also implements callbacks compl_xfer_req
-to store IO contexts at completion times.
+I tried this with force error injection to verify
+this:
 
-When you turn on CONFIG_SCSI_UFS_EXYNOS_CMD_LOG,
-the driver collects the information from incoming commands
-in the circular queue.
+[  421.876751] exynos-ufs 13100000.ufs: :---------------------------------------------------
+[  421.876767] exynos-ufs 13100000.ufs: :\x09\x09SCSI CMD(19262)
+[  421.876779] exynos-ufs 13100000.ufs: :---------------------------------------------------
+[  421.876793] exynos-ufs 13100000.ufs: :OP, TAG, LBA, SCT, RETRIES, STIME, ETIME, REQS\x0a
+...
+[  421.876979] exynos-ufs 13100000.ufs: : 0x2a, 00, 0x0012f1ae, 0x10000, 5, 415979836143, 0, 0x0
+[  421.876991] exynos-ufs 13100000.ufs: : 0x2a, 00, 0x00f7ddbc, 0x410000, 5, 416246257103, 0, 0x0
+[  421.877004] exynos-ufs 13100000.ufs: : 0x2a, 01, 0x00130e62, 0x80000, 5, 416246296834, 0, 0x1
+[  421.877017] exynos-ufs 13100000.ufs: : 0x2a, 02, 0x0085597f, 0x40000, 5, 416246309988, 0, 0x3
+[  421.877030] exynos-ufs 13100000.ufs: : 0x2a, 03, 0x00855985, 0x240000, 5, 416246331373, 0, 0x7
+...
+[  421.877206] exynos-ufs 13100000.ufs: : 0x2a, 00, 0x0012f1b9, 0x10000, 5, 417676828598, 0, 0x0
+[  421.877217] exynos-ufs 13100000.ufs: : 0x2a, 00, 0x0012f1ba, 0x10000, 5, 417677462136, 0, 0x0
 
 Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 Tested-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
- drivers/scsi/ufs/Kconfig          |  14 +++
- drivers/scsi/ufs/Makefile         |   1 +
- drivers/scsi/ufs/ufs-exynos-dbg.c | 199 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs-exynos-if.h  |  17 ++++
- drivers/scsi/ufs/ufs-exynos.c     |  27 ++++++
- drivers/scsi/ufs/ufs-exynos.h     |  29 ++++++
- 6 files changed, 287 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufs-exynos-dbg.c
- create mode 100644 drivers/scsi/ufs/ufs-exynos-if.h
+ drivers/scsi/ufs/Kconfig          |  2 +-
+ drivers/scsi/ufs/ufs-exynos-dbg.c | 11 +++++------
+ drivers/scsi/ufs/ufs-exynos.c     | 13 ++++++++++++-
+ drivers/scsi/ufs/ufs-exynos.h     | 10 ++++++++--
+ 4 files changed, 26 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 8cd9026..c946d8f 100644
+index c946d8f..b906ff8 100644
 --- a/drivers/scsi/ufs/Kconfig
 +++ b/drivers/scsi/ufs/Kconfig
-@@ -172,3 +172,17 @@ config SCSI_UFS_EXYNOS
+@@ -181,7 +181,7 @@ config SCSI_UFS_EXYNOS_DBG
+ 	  This selects EXYNOS specific functions to get and even print
+ 	  some information to see what's happening at both command
+ 	  issue time completion time.
+-	  The information may contain gerernal things as well as
++	  The information may contain general things as well as
+ 	  EXYNOS specific, such as vendor specific hardware contexts.
  
- 	  Select this if you have UFS host controller on EXYNOS chipset.
- 	  If unsure, say N.
-+
-+config SCSI_UFS_EXYNOS_DBG
-+	bool "EXYNOS specific debug functions"
-+	default n
-+	depends on SCSI_UFS_EXYNOS
-+	help
-+	  This selects EXYNOS specific functions to get and even print
-+	  some information to see what's happening at both command
-+	  issue time completion time.
-+	  The information may contain gerernal things as well as
-+	  EXYNOS specific, such as vendor specific hardware contexts.
-+
-+	  Select this if you want to get and print the information.
-+	  If unsure, say N.
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index f0c5b95..ee09961 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -5,6 +5,7 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
- obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
- obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
- obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
-+obj-$(CONFIG_SCSI_UFS_EXYNOS_DBG) += ufs-exynos-dbg.o
- obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
- ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+ 	  Select this if you want to get and print the information.
 diff --git a/drivers/scsi/ufs/ufs-exynos-dbg.c b/drivers/scsi/ufs/ufs-exynos-dbg.c
-new file mode 100644
-index 0000000..e1f1452
---- /dev/null
+index e1f1452..bd1f4be 100644
+--- a/drivers/scsi/ufs/ufs-exynos-dbg.c
 +++ b/drivers/scsi/ufs/ufs-exynos-dbg.c
-@@ -0,0 +1,199 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * UFS Exynos debugging functions
-+ *
-+ * Copyright (C) 2020 Samsung Electronics Co., Ltd.
-+ * Author: Kiwoong Kim <kwmad.kim@samsung.com>
-+ *
-+ */
-+#include <linux/platform_device.h>
-+#include <linux/module.h>
-+#include <asm-generic/unaligned.h>
-+#include "ufshcd.h"
-+#include "ufs-exynos-if.h"
-+
-+#define MAX_CMD_LOGS    32
-+
-+struct cmd_data {
-+	unsigned int tag;
-+	u32 sct;
+@@ -74,6 +74,7 @@ static void ufs_s_print_cmd_log(struct ufs_s_dbg_mgr *mgr, struct device *dev)
+ 	dev_err(dev, ":OP, TAG, LBA, SCT, RETRIES, STIME, ETIME, REQS\n\n");
+ 
+ 	idx = (last == max - 1) ? 0 : last + 1;
++	data = &cmd_info->data[idx];
+ 	for (i = 0 ; i < max ; i++, data = &cmd_info->data[idx]) {
+ 		dev_err(dev, ": 0x%02x, %02d, 0x%08llx, 0x%04x, %d, %llu, %llu, 0x%llx",
+ 			data->op, data->tag, data->lba, data->sct, data->retries,
+@@ -122,9 +123,7 @@ void exynos_ufs_dump_info(struct ufs_exynos_handle *handle, struct device *dev)
+ 
+ 	mgr->time = cpu_clock(raw_smp_processor_id());
+ 
+-#ifdef CONFIG_SCSI_UFS_EXYNOS_CMD_LOG
+ 	ufs_s_print_cmd_log(mgr, dev);
+-#endif
+ 
+ 	if (mgr->first_time == 0ULL)
+ 		mgr->first_time = mgr->time;
+@@ -139,8 +138,8 @@ void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
+ 	struct scsi_cmnd *cmd = hba->lrb[tag].cmd;
+ 	int cpu = raw_smp_processor_id();
+ 	struct cmd_data *cmd_log = &mgr->cmd_log;	/* temp buffer to put */
+-	u64 lba = 0;
+-	u32 sct = 0;
 +	u64 lba;
-+	u64 start_time;
-+	u64 end_time;
-+	u64 outstanding_reqs;
-+	int retries;
-+	u8 op;
-+};
-+
-+struct ufs_cmd_info {
-+	u32 total;
-+	u32 last;
-+	struct cmd_data data[MAX_CMD_LOGS];
-+	struct cmd_data *pdata[MAX_CMD_LOGS];
-+};
-+
-+/*
-+ * This structure points out several contexts on debugging
-+ * per one host instant.
-+ * Now command history exists in here but later handle may
-+ * contains some mmio base addresses including vendor specific
-+ * regions to get hardware contexts.
-+ */
-+struct ufs_s_dbg_mgr {
-+	struct ufs_exynos_handle *handle;
-+	int active;
-+	u64 first_time;
-+	u64 time;
-+
-+	/* cmd log */
-+	struct ufs_cmd_info cmd_info;
-+	struct cmd_data cmd_log;		/* temp buffer to put */
-+	spinlock_t cmd_lock;
-+};
-+
-+static void ufs_s_print_cmd_log(struct ufs_s_dbg_mgr *mgr, struct device *dev)
-+{
-+	struct ufs_cmd_info *cmd_info = &mgr->cmd_info;
-+	struct cmd_data *data;
-+	u32 i, idx;
-+	u32 last;
-+	u32 max = MAX_CMD_LOGS;
-+	unsigned long flags;
-+	u32 total;
-+
-+	spin_lock_irqsave(&mgr->cmd_lock, flags);
-+	total = cmd_info->total;
-+	if (cmd_info->total < max)
-+		max = cmd_info->total;
-+	last = (cmd_info->last + MAX_CMD_LOGS - 1) % MAX_CMD_LOGS;
-+	spin_unlock_irqrestore(&mgr->cmd_lock, flags);
-+
-+	dev_err(dev, ":---------------------------------------------------\n");
-+	dev_err(dev, ":\t\tSCSI CMD(%u)\n", total - 1);
-+	dev_err(dev, ":---------------------------------------------------\n");
-+	dev_err(dev, ":OP, TAG, LBA, SCT, RETRIES, STIME, ETIME, REQS\n\n");
-+
-+	idx = (last == max - 1) ? 0 : last + 1;
-+	for (i = 0 ; i < max ; i++, data = &cmd_info->data[idx]) {
-+		dev_err(dev, ": 0x%02x, %02d, 0x%08llx, 0x%04x, %d, %llu, %llu, 0x%llx",
-+			data->op, data->tag, data->lba, data->sct, data->retries,
-+			data->start_time, data->end_time, data->outstanding_reqs);
-+		idx = (idx == max - 1) ? 0 : idx + 1;
-+	}
-+}
-+
-+static void ufs_s_put_cmd_log(struct ufs_s_dbg_mgr *mgr,
-+			      struct cmd_data *cmd_data)
-+{
-+	struct ufs_cmd_info *cmd_info = &mgr->cmd_info;
-+	unsigned long flags;
-+	struct cmd_data *pdata;
-+
-+	spin_lock_irqsave(&mgr->cmd_lock, flags);
-+	pdata = &cmd_info->data[cmd_info->last];
-+	++cmd_info->total;
-+	++cmd_info->last;
-+	cmd_info->last = cmd_info->last % MAX_CMD_LOGS;
-+	spin_unlock_irqrestore(&mgr->cmd_lock, flags);
-+
-+	pdata->op = cmd_data->op;
-+	pdata->tag = cmd_data->tag;
-+	pdata->lba = cmd_data->lba;
-+	pdata->sct = cmd_data->sct;
-+	pdata->retries = cmd_data->retries;
-+	pdata->start_time = cmd_data->start_time;
-+	pdata->end_time = 0;
-+	pdata->outstanding_reqs = cmd_data->outstanding_reqs;
-+	cmd_info->pdata[cmd_data->tag] = pdata;
-+}
-+
-+/*
-+ * EXTERNAL FUNCTIONS
-+ *
-+ * There are two classes that are to initialize data structures for debug
-+ * and to define actual behavior.
-+ */
-+void exynos_ufs_dump_info(struct ufs_exynos_handle *handle, struct device *dev)
-+{
-+	struct ufs_s_dbg_mgr *mgr = (struct ufs_s_dbg_mgr *)handle->private;
-+
-+	if (mgr->active == 0)
-+		goto out;
-+
-+	mgr->time = cpu_clock(raw_smp_processor_id());
-+
-+#ifdef CONFIG_SCSI_UFS_EXYNOS_CMD_LOG
-+	ufs_s_print_cmd_log(mgr, dev);
-+#endif
-+
-+	if (mgr->first_time == 0ULL)
-+		mgr->first_time = mgr->time;
-+out:
-+	return;
-+}
-+
-+void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
-+			      struct ufs_hba *hba, int tag)
-+{
-+	struct ufs_s_dbg_mgr *mgr = (struct ufs_s_dbg_mgr *)handle->private;
-+	struct scsi_cmnd *cmd = hba->lrb[tag].cmd;
-+	int cpu = raw_smp_processor_id();
-+	struct cmd_data *cmd_log = &mgr->cmd_log;	/* temp buffer to put */
-+	u64 lba = 0;
-+	u32 sct = 0;
-+
-+	if (mgr->active == 0)
-+		return;
-+
-+	cmd_log->start_time = cpu_clock(cpu);
-+	cmd_log->op = cmd->cmnd[0];
-+	cmd_log->tag = tag;
-+
-+	/* This function runtime is protected by spinlock from outside */
-+	cmd_log->outstanding_reqs = hba->outstanding_reqs;
-+
-+	/* Now assume using WRITE_10 and READ_10 */
-+	put_unaligned(cpu_to_le32(*(u32 *)cmd->cmnd[2]), &lba);
-+	put_unaligned(cpu_to_le16(*(u16 *)cmd->cmnd[7]), &sct);
-+	if (cmd->cmnd[0] != UNMAP)
-+		cmd_log->lba = lba;
-+
-+	cmd_log->sct = sct;
-+	cmd_log->retries = cmd->allowed;
-+
-+	ufs_s_put_cmd_log(mgr, cmd_log);
-+}
-+
-+void exynos_ufs_cmd_log_end(struct ufs_exynos_handle *handle,
-+			    struct ufs_hba *hba, int tag)
-+{
-+	struct ufs_s_dbg_mgr *mgr = (struct ufs_s_dbg_mgr *)handle->private;
-+	struct ufs_cmd_info *cmd_info = &mgr->cmd_info;
-+	int cpu = raw_smp_processor_id();
-+
-+	if (mgr->active == 0)
-+		return;
-+
-+	cmd_info->pdata[tag]->end_time = cpu_clock(cpu);
-+}
-+
-+int exynos_ufs_init_dbg(struct ufs_exynos_handle *handle, struct device *dev)
-+{
-+	struct ufs_s_dbg_mgr *mgr;
-+
-+	mgr = devm_kzalloc(dev, sizeof(struct ufs_s_dbg_mgr), GFP_KERNEL);
-+	if (!mgr)
-+		return -ENOMEM;
-+	handle->private = (void *)mgr;
-+	mgr->handle = handle;
-+	mgr->active = 1;
-+
-+	/* cmd log */
-+	spin_lock_init(&mgr->cmd_lock);
-+
-+	return 0;
-+}
-+MODULE_AUTHOR("Kiwoong Kim <kwmad.kim@samsung.com>");
-+MODULE_DESCRIPTION("Exynos UFS debug information");
-+MODULE_LICENSE("GPL v2");
-+MODULE_VERSION("0.1");
-diff --git a/drivers/scsi/ufs/ufs-exynos-if.h b/drivers/scsi/ufs/ufs-exynos-if.h
-new file mode 100644
-index 0000000..c746f59
---- /dev/null
-+++ b/drivers/scsi/ufs/ufs-exynos-if.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * UFS Exynos debugging functions
-+ *
-+ * Copyright (C) 2020 Samsung Electronics Co., Ltd.
-+ * Author: Kiwoong Kim <kwmad.kim@samsung.com>
-+ *
-+ */
-+#ifndef _UFS_EXYNOS_IF_H_
-+#define _UFS_EXYNOS_IF_H_
-+
-+/* more members would be added in the future */
-+struct ufs_exynos_handle {
-+	void *private;
-+};
-+
-+#endif /* _UFS_EXYNOS_IF_H_ */
++	u32 sct;
+ 
+ 	if (mgr->active == 0)
+ 		return;
+@@ -153,8 +152,8 @@ void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
+ 	cmd_log->outstanding_reqs = hba->outstanding_reqs;
+ 
+ 	/* Now assume using WRITE_10 and READ_10 */
+-	put_unaligned(cpu_to_le32(*(u32 *)cmd->cmnd[2]), &lba);
+-	put_unaligned(cpu_to_le16(*(u16 *)cmd->cmnd[7]), &sct);
++	lba = get_unaligned_be32(&cmd->cmnd[2]);
++	sct = get_unaligned_be32(&cmd->cmnd[7]);
+ 	if (cmd->cmnd[0] != UNMAP)
+ 		cmd_log->lba = lba;
+ 
 diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-index 440f2af..53b9d6e 100644
+index 53b9d6e..be2e74f 100644
 --- a/drivers/scsi/ufs/ufs-exynos.c
 +++ b/drivers/scsi/ufs/ufs-exynos.c
-@@ -700,12 +700,26 @@ static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
- 	return 0;
- }
- 
-+static void exynos_ufs_cmd_log(struct ufs_hba *hba, int tag, int start)
-+{
-+	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
-+	struct ufs_exynos_handle *handle = &ufs->handle;
-+
-+	if (start == 1)
-+		exynos_ufs_cmd_log_start(handle, hba, tag);
-+	else if (start == 2)
-+		exynos_ufs_cmd_log_end(handle, hba, tag);
-+}
-+
- static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
- 						int tag, bool op)
- {
- 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
- 	u32 type;
- 
-+	if (op)
-+		exynos_ufs_cmd_log(hba, tag, 1);
-+
- 	type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
- 
- 	if (op)
-@@ -714,6 +728,12 @@ static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
- 		hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
- }
- 
-+static void exynos_ufs_compl_xfer_req(struct ufs_hba *hba, int tag, bool op)
-+{
-+	if (op)
-+		exynos_ufs_cmd_log(hba, tag, 0);
-+}
-+
- static void exynos_ufs_specify_nexus_t_tm_req(struct ufs_hba *hba,
- 						int tag, u8 func)
- {
-@@ -1008,6 +1028,12 @@ static int exynos_ufs_init(struct ufs_hba *hba)
- 		goto out;
- 	exynos_ufs_specify_phy_time_attr(ufs);
- 	exynos_ufs_config_smu(ufs);
-+
-+	/* init dbg */
-+	ret = exynos_ufs_init_dbg(&ufs->handle, dev);
-+	if (ret)
-+		return ret;
-+	spin_lock_init(&ufs->dbg_lock);
+@@ -1033,7 +1033,6 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 	ret = exynos_ufs_init_dbg(&ufs->handle, dev);
+ 	if (ret)
+ 		return ret;
+-	spin_lock_init(&ufs->dbg_lock);
  	return 0;
  
  phy_off:
-@@ -1217,6 +1243,7 @@ static struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
- 	.link_startup_notify		= exynos_ufs_link_startup_notify,
- 	.pwr_change_notify		= exynos_ufs_pwr_change_notify,
- 	.setup_xfer_req			= exynos_ufs_specify_nexus_t_xfer_req,
-+	.compl_xfer_req			= exynos_ufs_compl_xfer_req,
- 	.setup_task_mgmt		= exynos_ufs_specify_nexus_t_tm_req,
+@@ -1236,6 +1235,17 @@ static int exynos_ufs_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return 0;
+ }
+ 
++static void exynos_ufs_dbg_register_dump(struct ufs_hba *hba)
++{
++	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
++
++	if (!test_and_set_bit(EXYNOS_UFS_DBG_DUMP_CXT, &ufs->dbg_flag)) {
++		exynos_ufs_dump_info(&ufs->handle, hba->dev);
++		clear_bit(EXYNOS_UFS_DBG_DUMP_CXT, &ufs->dbg_flag);
++	}
++	return;
++}
++
+ static struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+ 	.name				= "exynos_ufs",
+ 	.init				= exynos_ufs_init,
+@@ -1248,6 +1258,7 @@ static struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
  	.hibern8_notify			= exynos_ufs_hibern8_notify,
  	.suspend			= exynos_ufs_suspend,
+ 	.resume				= exynos_ufs_resume,
++	.dbg_register_dump		= exynos_ufs_dbg_register_dump,
+ };
+ 
+ static int exynos_ufs_probe(struct platform_device *pdev)
 diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
-index 76d6e39..b9cb517 100644
+index b9cb517..cd752eb 100644
 --- a/drivers/scsi/ufs/ufs-exynos.h
 +++ b/drivers/scsi/ufs/ufs-exynos.h
-@@ -8,6 +8,7 @@
- 
- #ifndef _UFS_EXYNOS_H_
- #define _UFS_EXYNOS_H_
-+#include "ufs-exynos-if.h"
- 
- /*
-  * UNIPRO registers
-@@ -212,6 +213,10 @@ struct exynos_ufs {
- #define EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL	BIT(2)
- #define EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX	BIT(3)
+@@ -215,8 +215,8 @@ struct exynos_ufs {
  #define EXYNOS_UFS_OPT_USE_SW_HIBERN8_TIMER	BIT(4)
-+
-+	struct ufs_exynos_handle handle;
-+	spinlock_t dbg_lock;
-+	int under_dump;
+ 
+ 	struct ufs_exynos_handle handle;
+-	spinlock_t dbg_lock;
+-	int under_dump;
++	unsigned long dbg_flag;
++#define EXYNOS_UFS_DBG_DUMP_CXT			BIT(0)
  };
  
  #define for_each_ufs_rx_lane(ufs, i) \
-@@ -284,4 +289,28 @@ struct exynos_ufs_uic_attr exynos7_uic_attr = {
- 	.rx_hs_g3_prep_sync_len_cap	= PREP_LEN(0xf),
- 	.pa_dbg_option_suite		= 0x30103,
- };
+@@ -297,6 +297,7 @@ void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
+ void exynos_ufs_cmd_log_end(struct ufs_exynos_handle *handle,
+ 			    struct ufs_hba *hba, int tag);
+ int exynos_ufs_init_dbg(struct ufs_exynos_handle *handle, struct device *dev);
++void exynos_ufs_dump_info(struct ufs_exynos_handle *handle, struct device *dev);
+ #else
+ void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
+ 			      struct ufs_hba *hba, int tag)
+@@ -312,5 +313,10 @@ int exynos_ufs_init_dbg(struct ufs_exynos_handle *handle, struct device *dev)
+ {
+ 	return 0;
+ }
 +
-+/* public function declarations */
-+#ifdef CONFIG_SCSI_UFS_EXYNOS_DBG
-+void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
-+			      struct ufs_hba *hba, int tag);
-+void exynos_ufs_cmd_log_end(struct ufs_exynos_handle *handle,
-+			    struct ufs_hba *hba, int tag);
-+int exynos_ufs_init_dbg(struct ufs_exynos_handle *handle, struct device *dev);
-+#else
-+void exynos_ufs_cmd_log_start(struct ufs_exynos_handle *handle,
-+			      struct ufs_hba *hba, int tag)
++void exynos_ufs_dump_info(struct ufs_exynos_handle *handle, struct device *dev)
 +{
++	return;
 +}
-+
-+void exynos_ufs_cmd_log_end(struct ufs_exynos_handle *handle,
-+			    struct ufs_hba *hba, int tag)
-+{
-+}
-+
-+int exynos_ufs_init_dbg(struct ufs_exynos_handle *handle, struct device *dev)
-+{
-+	return 0;
-+}
-+#endif
+ #endif
  #endif /* _UFS_EXYNOS_H_ */
 -- 
 2.7.4
