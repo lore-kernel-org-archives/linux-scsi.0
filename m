@@ -7,93 +7,99 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A841BC433E1
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 20:20:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17C5CC433E5
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 20:26:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 888F020657
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 20:20:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E61FB2067D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 20:26:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="u/O2MEJT"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xgv/D8j3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726873AbgGOUUN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 16:20:13 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42278 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726446AbgGOUUN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 16:20:13 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKC9aj035619;
-        Wed, 15 Jul 2020 20:19:56 GMT
+        id S1726742AbgGOU0l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 16:26:41 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:44752 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726650AbgGOU0l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 16:26:41 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKMCqn138840;
+        Wed, 15 Jul 2020 20:26:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=peZ+vRId/ykXQLD5oamoNCCTsVfZ602Lx7lqj/8gGks=;
- b=u/O2MEJT5hTpPHg2Knqp+4T+7D7JXuVwi2Hs8num47piMyNm1pZRlhcJ+1oVV2SBvHZw
- T3SECeP+gkVSb8vWHAgM6Yt4p3yx8AP/26iFTHygrsmXr/itr73U/S0ioarUSRAdM4Ke
- yfcuPTBF0EZOkuQ/+kixeHDFUzZPNF1tpZX5SqlYfzn+QYmCTFuq9OKfNRmZHZQOMsmn
- xNKhFEFZ7G/nXN6vBuKNwNZO+vDiW4Y6+GgQOojFl8TOd90t4hrTOTxv9mB7vi63D58+
- /GNz10w2JShFFzjVLMb4LmrhWi2A6oRdfj+v4MrX55SEzA9csHdJ28g2Bvdcn8TSncgd Mg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 3274urdnvq-1
+ bh=mimElBGzRy++HHr8M1BmEAFebpsIASVMSvpGFuvyC9o=;
+ b=xgv/D8j35MegC9dWwKwQATBSnLryPKBXKAwk1HfXq182J38cdJ6K8crPsqnDB3LGgfBq
+ 4g4eqr25nVdNCtX3CyYw4KONNY1NuZW2dwsJfufzcJkz41uwhgqRzvnYnn5RYc2nQLrz
+ FW+nFFSrhXzvWZaT4FTjboCoOrRoUlA0XaMlKfXAGez2TAz1NH4Dt5SWjMbhr9toaGRO
+ v1rqgtQuAQWExJtOo91GmyJatymfAcKdew1SncwCrL1k3aTOVhnDO/zClQTpkLEDPPNj
+ naUH0GAgJvcbqK9XH+mvZg7sLjrU2mHJ5uJQ1RebPaV+YMjVQ+LcDmgAcbVONbvp8cDw zQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 327s65kwkk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 20:19:56 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKHeuL107174;
-        Wed, 15 Jul 2020 20:19:55 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 327q0rxbcv-1
+        Wed, 15 Jul 2020 20:26:37 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKHeK6190290;
+        Wed, 15 Jul 2020 20:26:37 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 327qb8qxxp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 20:19:55 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06FKJmxW006290;
-        Wed, 15 Jul 2020 20:19:48 GMT
+        Wed, 15 Jul 2020 20:26:37 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FKQaP1010372;
+        Wed, 15 Jul 2020 20:26:36 GMT
 Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 13:19:47 -0700
-To:     Niklas Cassel <niklas.cassel@wdc.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v3 0/2] Export max open zones and max active zones to sysfs
+        with ESMTP ; Wed, 15 Jul 2020 13:26:36 -0700
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        support@areca.com.tw
+Subject: Re: [PATCH 16/30] scsi: arcmsr: arcmsr_hba: Make room for the
+ trailing NULL, even if it is over-written
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 Organization: Oracle Corporation
-Message-ID: <yq1mu40o7jj.fsf@ca-mkp.ca.oracle.com>
-References: <20200714211824.759224-1-niklas.cassel@wdc.com>
-Date:   Wed, 15 Jul 2020 16:19:42 -0400
-In-Reply-To: <20200714211824.759224-1-niklas.cassel@wdc.com> (Niklas Cassel's
-        message of "Tue, 14 Jul 2020 23:18:22 +0200")
+Message-ID: <yq1h7u8o7ck.fsf@ca-mkp.ca.oracle.com>
+References: <20200708120221.3386672-1-lee.jones@linaro.org>
+        <20200708120221.3386672-17-lee.jones@linaro.org>
+Date:   Wed, 15 Jul 2020 16:26:33 -0400
+In-Reply-To: <20200708120221.3386672-17-lee.jones@linaro.org> (Lee Jones's
+        message of "Wed, 8 Jul 2020 13:02:07 +0100")
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 phishscore=0 suspectscore=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 spamscore=0 phishscore=0 suspectscore=1 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007150156
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ phishscore=0 mlxscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
+ clxscore=1011 bulkscore=0 mlxlogscore=999 impostorscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2007150156
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- suspectscore=1 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150155
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
-Niklas,
+Lee,
 
-> Export max open zones and max active zones to sysfs.
+> Ensure we do not copy the final one (which is not overwitten).
+>
+> -		strncpy(&inqdata[8], "Areca   ", 8);
+> +		strncpy(&inqdata[8], "Areca   ", 9);
+>  		/* Vendor Identification */
+> -		strncpy(&inqdata[16], "RAID controller ", 16);
+> +		strncpy(&inqdata[16], "RAID controller ", 17);
+>  		/* Product Identification */
+> -		strncpy(&inqdata[32], "R001", 4); /* Product Revision */
+> +		strncpy(&inqdata[32], "R001", 5); /* Product Revision */
 
-Looks fine.
+SCSI INQUIRY strings are fixed length and not NULL-terminated. Please
+address this warning using either memcpy() or strlcpy().
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
