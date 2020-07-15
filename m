@@ -2,223 +2,181 @@ Return-Path: <SRS0=lXiU=A3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83306C433E1
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 00:21:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE516C433E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 00:27:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51D1D2071B
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 00:21:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 921CE2072E
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 00:27:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="RBAjREdu"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="LKuyCYAF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726996AbgGPAV4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 20:21:56 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([51.163.158.102]:54089 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726479AbgGPAVz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Jul 2020 20:21:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1594858911;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=4aboOAVC4klHj3nApQsfXqTKmCEryMLUxkhEwLtEhdQ=;
-        b=RBAjREduuOuL8H8fALf58vq8WQQfwWaZqA2YUIv8uQAllCb39ymsWzaq1YCnV8ZrsDANNF
-        EUmiSUwIrk2y71HtvOZsrLBVpLxcyZkCTvp7xF8mkqKxiNZOmiaJ01Ej3rWPLOrTQr12V6
-        CEbZcaeXA/eAPRCaJzENkyIZJ7/agDs=
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com
- (mail-vi1eur05lp2176.outbound.protection.outlook.com [104.47.17.176])
- (Using TLS) by relay.mimecast.com with ESMTP id
- de-mta-25-UKzKCd2QOHmIHoNRWDJurQ-1; Thu, 16 Jul 2020 02:21:50 +0200
-X-MC-Unique: UKzKCd2QOHmIHoNRWDJurQ-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iN83eZSEspmEMjtLrTghyfN3hiFWuykCIVw6PqbCIhLBaYzhmy+d3kUI7GvfLY4jsySqHNAbcGQucdVX3smhEFzm7KkTsULTlkht6EXgbUEvCmdIjVWkFsCWBWCTpou/8mGfz51Jlfjcjppi1WpZ3QlbqfUBvG5SQ2dUgeihGsz0mD0omcts/jibqIvhBhvzL/5vJA6n8HBNdy4BnAOcpeZ1PvA22JZY8YRG8efCt25FeAi5RmEsqNRMV1AKvJah4Jt99nGpPy6oHpA/hIuZXqkv+xgmmOVi/YIhx4iN2/tVpl2Txx1IKOLgOxbMTb+itDOIICVm5G62WZqzJbpnuQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4aboOAVC4klHj3nApQsfXqTKmCEryMLUxkhEwLtEhdQ=;
- b=i797jF+ldkvkPtwwSi2bA/k2Jvisss5MKHW4bV+nStvel13mAqHXXZ/yHLEfk9r2u4RvThp/P4NQI/ykR1RQ7BHN9xU7/YCJoQ1UvehHyVb7baxJlJNyA6qvF4mHdlhrL53J2d6+OS48oXQxu3peLYISIIepIC5JywDtogyWMTg/0qpgeepf/tJPAB2vftJW6uX0cwn1MWAm/7hqFaf/5cAO/Wco5bwunSln88K0QI4uWkElDYCALw+/K+eQyDZsL5cqapsVq9zN9+P1Rh9suELiIKnXd4kofKJ63444bn8cWttgk8wO1ZfBOS3M5V/Fj7q7bUuO7dcVimnKbFIJ/g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AM6PR04MB5927.eurprd04.prod.outlook.com (2603:10a6:20b:a8::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3195.17; Thu, 16 Jul
- 2020 00:21:48 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::b948:ad31:5db0:e954]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::b948:ad31:5db0:e954%6]) with mapi id 15.20.3174.026; Thu, 16 Jul 2020
- 00:21:48 +0000
-Subject: Re: LIO Scsi Target
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Sadegh Ali <sadegh.ali.2084@gmail.com>,
-        linux-scsi@vger.kernel.org
-References: <CA+RHgKLt=ZOu_nnL6oX=LJVtJWE9i+ARE6A_VmGLeJaU1mYtSg@mail.gmail.com>
- <43b31e85-9d9c-c3ef-a008-83510a968ee7@suse.com>
- <416369e6-236e-7c15-48f0-5e7045501397@acm.org>
-From:   Lee Duncan <lduncan@suse.com>
-Autocrypt: addr=lduncan@suse.com; keydata=
- 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
- Xd8p+B+giaT8a1b5hWuz85V0
-Message-ID: <c88000bc-f9bb-d57e-b0ad-ee5956b24628@suse.com>
-Date:   Wed, 15 Jul 2020 17:21:42 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
-In-Reply-To: <416369e6-236e-7c15-48f0-5e7045501397@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM0PR04CA0047.eurprd04.prod.outlook.com
- (2603:10a6:208:1::24) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+        id S1726778AbgGPA1Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 20:27:25 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:56663 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726479AbgGPA1Y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 20:27:24 -0400
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200716002721epoutp02bc9171b38bb3d9d724c9f87040e48178~iFAfWOI5W0985909859epoutp02i
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jul 2020 00:27:21 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200716002721epoutp02bc9171b38bb3d9d724c9f87040e48178~iFAfWOI5W0985909859epoutp02i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594859241;
+        bh=3+ccxZmxOKKjD+qACON/DRmLamaCcOQyZMOiME9hmgI=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=LKuyCYAFtoun6DN0YqPQ0APfBUR7pgUNHP2NQpi5CgOEm01rXZ16dH+IdqvtSBpu5
+         3cyyCeNR2eZgyX1n8Py3fp04HOqKSGDPjpUWDMk8eHXHrR/iqdC6YZSu83d7Z9DczN
+         pmuCLYw47qxAU2Xgxgq1D9ODUGMiUPP+HNFM+IdI=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20200716002721epcas5p2f3c66ca084ed0f5b5b6f5f27c17f4108~iFAemzUhr3009330093epcas5p2K;
+        Thu, 16 Jul 2020 00:27:21 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        30.E8.09703.9EE9F0F5; Thu, 16 Jul 2020 09:27:21 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200715182604epcas5p1ec9a4e49ab8499c0cfdb3044e8bd7c60~iAFDCOB6w3082830828epcas5p1B;
+        Wed, 15 Jul 2020 18:26:04 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200715182604epsmtrp2f2864d015dc8accbae9c0050ff6c91d3~iAFC_ohTF0427404274epsmtrp2Y;
+        Wed, 15 Jul 2020 18:26:04 +0000 (GMT)
+X-AuditID: b6c32a4a-4b5ff700000025e7-a3-5f0f9ee94311
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        5D.39.08303.C3A4F0F5; Thu, 16 Jul 2020 03:26:04 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200715182559epsmtip2af529e172b3c953d9e6ddd437a496f67~iAE_F2oqk0899808998epsmtip2f;
+        Wed, 15 Jul 2020 18:25:58 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
+        <linux-scsi@vger.kernel.org>, <avri.altman@wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <asutoshd@codeaurora.org>,
+        <cang@codeaurora.org>, <bvanassche@acm.org>,
+        <grant.jung@samsung.com>, <sc.suh@samsung.com>,
+        <hy50.seo@samsung.com>, <sh425.lee@samsung.com>
+In-Reply-To: <cover.1594798514.git.kwmad.kim@samsung.com>
+Subject: RE: [PATCH v6 0/3] ufs: exynos: introduce the way to get cmd info
+Date:   Wed, 15 Jul 2020 23:55:56 +0530
+Message-ID: <075101d65ad5$66348460$329d8d20$@samsung.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.20.3] (73.25.22.216) by AM0PR04CA0047.eurprd04.prod.outlook.com (2603:10a6:208:1::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3195.17 via Frontend Transport; Thu, 16 Jul 2020 00:21:47 +0000
-X-Originating-IP: [73.25.22.216]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e6364e56-f0d1-4ba6-1c66-08d8291e3a91
-X-MS-TrafficTypeDiagnostic: AM6PR04MB5927:
-X-Microsoft-Antispam-PRVS: <AM6PR04MB59276AB974EAC4C8697A1B49DA7F0@AM6PR04MB5927.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GVuGMHK6+IfXL4vKHuDrXdzKXxFJi6boeYUBAhEU7kWrjdeJxhME01OXCr2YaXqVHiPM7fAaS3UemxU6J9d2dfnUQeFT90L8O/RHlwJL5Gqzd1hLkwBw8ZWUzKpdphfJzr9EFWZmgC1UOupx1B/2SdXoajs50vhDrTXh1y92V8nt44urtKoBEDUA1pmE+w7r3UZUfTgazuGcVYHJwvvExLZ6FoeLK1TQjACOqFIm8Y8t+3/jZ3aY3v3uhV41gIdRv9wR7XP51o3wv3pwox0/2EGI+6YnpPa3MY7g/7Ux7BA0DvpZFl/MUJVHZZV+2iKOMFSwcoJtg51EQxi+mApA3T/TSYNEOIBuYQgvoJ4k9Tk5dg0BD4nk0WuuQXkGUfHP11YySAdG7RShNEAaem8deN+vPHOM/KlJWdoXt8Dju+uOYuz4JCIwayY3qmQn1wa5LPD0rdGfwrEFGbDZAqSjtQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(346002)(376002)(39860400002)(366004)(136003)(396003)(8936002)(36756003)(8676002)(52116002)(16576012)(86362001)(5660300002)(66556008)(2906002)(66476007)(316002)(26005)(31686004)(66946007)(186003)(6486002)(6666004)(956004)(16526019)(31696002)(83380400001)(53546011)(3480700007)(966005)(478600001)(7116003)(2616005)(110136005)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: IBqK8lOyBbx4ZwoSjbDQ63wM0EUH/MSwte6DU36cMG16/5CleGR5P0AP3bqjBJKSjZqWGi0v12tuhTom38hX/OT1iSTX9Dh2AwX7FKefGREWGnsbWThTwNMF00UJNSfGohF5R2nvC0QEA7KE7rI2whcpeEIfv5j5pW6fz4EZ05Tv0bNrALCdr2sA0FDObCDxvHyYB60sID+fjnAFs3zPIr+/dQafdNRU+1DJCOYLooGTiDTjBrhrIjZ3h9+OAGTvj1bdDISQta8U/8WPBENTiSdRMlHkwZRKhAziYTBHjxX+JZWxeJ//15pt2Usqubztmo0gwTjPcJl0+Hu2wHyghYmLfXhJ2NYlXd+M+bQGymR3ANHmtPfSKPcahf12Ha8CTQf1Ag9QVAhptsFkMv0MEohoEBkqgzcoVE+TrUMz6f7nk9hPgtCHSv+nm1WR07LR+u7eqNWiH6myWrodBsg2cdqzofuYSio3FqTmsZGoYjo=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e6364e56-f0d1-4ba6-1c66-08d8291e3a91
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jul 2020 00:21:48.3470
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: u2Hvvp6p9o6Qz9WEhe5dIDpgq/X+dd0XN905r725Q4j59gDmMKk6DvUbPJ+7X5QeKuOAp3jCP90xz28BNK+Sfw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5927
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHAd02kf0hzbk2A6kTf3xoH16zPTwGHGd1aqSiC/5A=
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLKsWRmVeSWpSXmKPExsWy7bCmuu7LefzxBnPusFjsbTvBbvHy51U2
+        i4MPO1kspn34yWzxaf0yVotff9ezW6xe/IDFYtGNbUwWN7ccZbHovr6DzWL58X9MFl13bzBa
+        LP33lsWB1+PyFW+Py329TB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAI4rLJiU1
+        J7MstUjfLoErY9vXbuaCiwIVG78uYWtgPMTbxcjJISFgIrHt33rWLkYuDiGB3YwS6352QDmf
+        GCV+rZsF5XxmlPi2ZBorTMv54/ugErsYJa4t62SCcN4wSpz+doURpIpNQFdix+I2NpCEiMBt
+        Jom1RzvZQRKcApYS6yadB7OFBbwkvvavZgaxWQRUJc53ngezeYFqvs3fwAphC0qcnPmEBcRm
+        FtCWWLbwNTPEGQoSP58uA6sREbCSeLjjAhtEjbjE0Z89zCCLJQROcEj07jrIBtHgIjHr+SYW
+        CFtY4tXxLewQtpTE53d7gWo4gOxsiZ5dxhDhGoml845BldtLHLgyhwWkhFlAU2L9Ln2IsKzE
+        1FPrmCDW8kn0/n7CBBHnldgxD8ZWlWh+dxVqjLTExO5uaCh6SLzqOsY0gVFxFpIvZyH5chaS
+        b2YhbF7AyLKKUTK1oDg3PbXYtMAoL7Vcrzgxt7g0L10vOT93EyM4xWl57WB8+OCD3iFGJg7G
+        Q4wSHMxKIrw8XLzxQrwpiZVVqUX58UWlOanFhxilOViUxHmVfpyJExJITyxJzU5NLUgtgsky
+        cXBKNTD12+3+YuUqKXhpskytq+RxBjVV18/uYgI5zvWqv0QVJOZ4TAqs2yDtnOlVmrdJyfLn
+        XLXfVesezHKaPP9mtM1iNcN2sYLk+9H6PnNPlW5eczc/+MLsU+rvyuaXitmqXLqRJnl4tXTk
+        gr2HrI+YbNMU0G94oXr268SfrbMu3D2795l2SMt2X/WElvl/FD1vG+y5YWLwlG3yvm0f826H
+        lG6fHDvt+dOtn67PZ3rwYu/Cjnsblq45yN735cOErNNl859KCGyx4bIVf3ht+uyIaTz6H3+2
+        3VNiEpq/ntulft6Xuu0Gx0SfVJ7nr59St3Sylyzf7djGNbXWi8WuHPGI2GPrcCApKT15e8S5
+        SbvW1FTnKbEUZyQaajEXFScCAJ4TOqXgAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsWy7bCSvK6NF3+8wbfPmhZ7206wW7z8eZXN
+        4uDDThaLaR9+Mlt8Wr+M1eLX3/XsFqsXP2CxWHRjG5PFzS1HWSy6r+9gs1h+/B+TRdfdG4wW
+        S/+9ZXHg9bh8xdvjcl8vk8eERQcYPb6v72Dz+Pj0FotH35ZVjB6fN8l5tB/oZgrgiOKySUnN
+        ySxLLdK3S+DKWLvtG0vBLIGK1ivH2RoYe3m7GDk5JARMJM4f38faxcjFISSwg1Hi/vpn7BAJ
+        aYnrGydA2cISK/89Z4coesUo0X1hCgtIgk1AV2LH4jY2kISIwGsmiXtnfjFBVHUxSqxY+p8Z
+        pIpTwFJi3aTzYKOEBbwkvvavBouzCKhKnO88D2bzAtV8m7+BFcIWlDg58wnYBmYBbYmnN5/C
+        2csWvmaGOElB4ufTZWD1IgJWEg93XGCDqBGXOPqzh3kCo9AsJKNmIRk1C8moWUhaFjCyrGKU
+        TC0ozk3PLTYsMMpLLdcrTswtLs1L10vOz93ECI5JLa0djHtWfdA7xMjEwXiIUYKDWUmEl4eL
+        N16INyWxsiq1KD++qDQntfgQozQHi5I479dZC+OEBNITS1KzU1MLUotgskwcnFINTPs8p845
+        xnryfuWLrI/S904Utm8236HVtSrxzUmDrL2b97YUaoUFtvPvDXhQcnS3veKKKT3cC9/ulNgY
+        dZrx8IXax+d9xO3lGlZHx7Lfi/J94PQm4E3h9CVvVJgF1XfOuhlXtb9pv9bq6g6jE43yU3ef
+        UtotFhGa31vT9+9+yoeOlandd/tyL68X/zvvTVmwf8LKQ+9N9CdY3WtdH/Xgk/6kub5fX29W
+        /TSv7OoG1am6J+PmT75SyW+69v7PD18bw9V6A1KCjz2fGC5568f3yauXMnz7rLZ8a3+cxv0f
+        jrYZ/5l2xr5JmH56FZviY8f117Q8Es2/sxtu/e8lJ3+5V/RW2pXqCz3T93GvLp7O/0hLiaU4
+        I9FQi7moOBEAyDDvGTgDAAA=
+X-CMS-MailID: 20200715182604epcas5p1ec9a4e49ab8499c0cfdb3044e8bd7c60
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200715074757epcas2p344b4e188af3221655c1697405b9e17f4
+References: <CGME20200715074757epcas2p344b4e188af3221655c1697405b9e17f4@epcas2p3.samsung.com>
+        <cover.1594798514.git.kwmad.kim@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/15/20 5:06 PM, Bart Van Assche wrote:
-> On 2020-07-15 11:16, Lee Duncan wrote:
->> SCST is still around, but I believe it's user-space only. (Forgive me if
->> I'm wrong here, but it's been a while since I looked at SCST.)
-> 
-> Hi Lee,
-> 
-> That may be a misunderstanding :-) Almost all of SCST runs in the
-> kernel, except the code for accepting connections from an iSCSI
-> initiator. The SCST configuration tool (scstadmin) is a user space tool
-> that interacts with the SCST kernel modules through the SCST sysfs
-> interface. SCST still has a significant user base despite not being
-> upstream.
-> 
->> There is also a cool new extension to targetcli called tcmu-runner, that
->> allows you to add new functionality to targetcli without having to hack
->> on the kernel.
-> 
-> My understanding is that the design of tcmu-runner is strongly inspired
-> by the design of the scst_user driver. Something that's unfortunate is
-> that we can't ask Shaohua Li anymore about the design of tcmu-runner
-> (see also
-> https://lore.kernel.org/lkml/398a74fa-6566-8d0d-6434-e68ff3763656@kernel.dk/).
-> 
-> Bart.
-> 
-> 
+Hi Kiwoong,
 
-Thanks Bart! Good info. I will update my personal (brain) database on SCST.
--- 
-Lee
+> -----Original Message-----
+> From: Kiwoong Kim <kwmad.kim=40samsung.com>
+> Sent: 15 July 2020 13:10
+> To: linux-scsi=40vger.kernel.org; alim.akhtar=40samsung.com;
+> avri.altman=40wdc.com; jejb=40linux.ibm.com; martin.petersen=40oracle.com=
+;
+> beanhuo=40micron.com; asutoshd=40codeaurora.org; cang=40codeaurora.org;
+> bvanassche=40acm.org; grant.jung=40samsung.com; sc.suh=40samsung.com;
+> hy50.seo=40samsung.com; sh425.lee=40samsung.com
+> Cc: Kiwoong Kim <kwmad.kim=40samsung.com>
+> Subject: =5BPATCH v6 0/3=5D ufs: exynos: introduce the way to get cmd inf=
+o
+>=20
+> v5 -> v6
+> replace put_aligned with get_unaligned_be32 to set lba and sct fix null p=
+ointer
+> access symptom
+>=20
+> v4 -> v5
+> Rebased on Stanley's patch (scsi: ufs: Fix and simplify ..
+> Change cmd history print order
+> rename config to SCSI_UFS_EXYNOS_DBG
+> feature functions in ufs-exynos-dbg.c by SCSI_UFS_EXYNOS_DBG
+>=20
+> v3 -> v4
+> seperate respective implementations of the callbacks change the location =
+of
+> compl_xfer_req related stuffs fix null pointer access
+>=20
+> v2 -> v3
+> fix build errors
+>=20
+> v1 -> v2
+> change callbacks
+> allocate memory for ufs_s_dbg_mgr dynamically, not static way
+>=20
+> Kiwoong Kim (3):
+>   ufs: introduce a callback to get info of command completion
+>   ufs: exynos: introduce command history
+>   ufs: exynos: implement dbg_register_dump
+>=20
+>  drivers/scsi/ufs/Kconfig          =7C  14 +++
+>  drivers/scsi/ufs/Makefile         =7C   1 +
+>  drivers/scsi/ufs/ufs-exynos-dbg.c =7C 198
+> ++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-exynos-if.h  =7C  17 ++++
+>  drivers/scsi/ufs/ufs-exynos.c     =7C  38 ++++++++
+>  drivers/scsi/ufs/ufs-exynos.h     =7C  35 +++++++
+>  drivers/scsi/ufs/ufshcd.c         =7C   1 +
+>  drivers/scsi/ufs/ufshcd.h         =7C   8 ++
+>  8 files changed, 312 insertions(+)
+>  create mode 100644 drivers/scsi/ufs/ufs-exynos-dbg.c  create mode 100644
+> drivers/scsi/ufs/ufs-exynos-if.h
+>=20
+This series looks good to me.
+Reviewed-by: Alim Akhtar <alim.akhtar=40samsung.com>
+Thanks,
+> --
+> 2.7.4
+
 
