@@ -2,195 +2,129 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00,DEAR_SOMETHING,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4390EC433F7
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:08:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49B7EC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:48:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AF2F20658
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:08:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 199D32065E
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:48:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="pMCZBLD6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MistEjbo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728263AbgGOPIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 11:08:23 -0400
-Received: from mail1.bemta26.messagelabs.com ([85.158.142.116]:11028 "EHLO
-        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728258AbgGOPIX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Jul 2020 11:08:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1594825699; i=@ts.fujitsu.com;
-        bh=+aWXyOKNNKHS06EuFEiaWqOjbis73NHLsKzghyqTnyY=;
-        h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=pMCZBLD61SuzNdopXsJ2LTXwPxTPswOO281mCNsLrT5vbFLEY5beO6KiBP7Q6zTnc
-         WsnGaIndgkQHoIM5IlUAeKTShMagixmysC2ZZeaICXbyY5bHEv8pVudUlukKsaSerE
-         R32tmSbnt4/dZHOam6h+v7GaKuj0xF9/jKfzt49jzNB1eqI8KQcEU2KdPdbK5Jwuaj
-         77UmTyXrTBbTSW+XadQ9hienajg8d6UKxcUKPGZWDcvgPoAldQf1smEsqt8i4NgcME
-         yMyySyzTNyXA5EBDZ95LRiRj2j4RAJ47DtqoUR7LkhALVa2kbF7Nxkmk33VspAuyBm
-         sMmpj1Pm81b8Q==
-Received: from [100.113.4.243] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-5.bemta.az-b.eu-central-1.aws.symcld.net id 02/53-08547-2EB1F0F5; Wed, 15 Jul 2020 15:08:18 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrAIsWRWlGSWpSXmKPExsViZ8MxVfeRNH+
-  8wZH7mhbd13ewWSw//o/J4u+kG6wWrUvfMjmweHx8eovF4/MmuQCmKNbMvKT8igTWjGPv97MW
-  9CpWbNnQzt7A+Fe6i5GLQ0hgMqPEijlH2CGcfkaJswc3sXUxcnIIC3hJrPk7hw0kISKwhlFi0
-  eulTFBVTBLLLt0Bq2ITMJBYMek+C4jNK+AoMWtJB5DNwcEioCox45YsiCkqEC7xbIU/RIWgxM
-  mZT8CqOQXsJDZN+MYKYjMLmEnM2/yQGcIWl7j1ZD4ThK0tsWzha+YJjHyzkLTPQtIyC0nLLCQ
-  tCxhZVjFaJhVlpmeU5CZm5ugaGhjoGhoa65rrGhoZ6iVW6SbppZbqJqfmlRQlAmX1EsuL9Yor
-  c5NzUvTyUks2MQIDOqWQvXIH49o3H/QOMUpyMCmJ8kYw88cL8SXlp1RmJBZnxBeV5qQWH2KU4
-  eBQkuDdLQmUEyxKTU+tSMvMAUYXTFqCg0dJhPc4SJq3uCAxtzgzHSJ1ilFRSpx3jRRQQgAkkV
-  GaB9cGi+hLjLJSwryMDAwMQjwFqUW5mSWo8q8YxTkYlYR5q0Gm8GTmlcBNfwW0mAlo8cbPvCC
-  LSxIRUlINTIu6dANdKoqf/4/RyxO51PivRu2yask2l2WPLZ2WnDnt/njqtPtZhvJBEqe+tr/e
-  bZ0vOjul2CBIx+Kch2ka+5bVTMvSDXlubxM4M+18MVfk413PLh7O2+x55V3H/hDrQv9GYHytt
-  9c6edj9UErWkvmqr/xPf60+KvFmXeZEweqYd8Vsyi/dLY9fSf4f8GjzsSmb1Wav14gOUFTXmL
-  +vXsdp2nkO5Zy5F96sN1l6stHNUTu25OMNx51Kt4/ILny0VijpgsqPf1syvDZrflj6weg6Q0J
-  Ryao8+Wf8Xg/jfFuzjr2RSq2Zf2ju/4U/WdceqKs59VqPfdsDu7XvNj94JfXW8bly5KYCV/em
-  U0bzcpRYijMSDbWYi4oTAaCdcrhjAwAA
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-18.tower-238.messagelabs.com!1594825698!646500!1
-X-Originating-IP: [62.60.8.149]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.2; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 26417 invoked from network); 15 Jul 2020 15:08:18 -0000
-Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
-  by server-18.tower-238.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Jul 2020 15:08:18 -0000
-Received: from x-serv01 ([172.17.38.52])
-        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06FF8C9Q032372;
-        Wed, 15 Jul 2020 16:08:12 +0100
-Received: from [172.17.39.90] (unknown [172.17.39.90])
-        by x-serv01 (Postfix) with ESMTP id 01E1820375;
-        Wed, 15 Jul 2020 17:08:11 +0200 (CEST)
-Subject: Re: [PATCH 7/8] scsi: target: tcmu: Implement tmr_notify callback
-To:     Mike Christie <michael.christie@oracle.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
- <20200710104817.19462-8-bstroesser@ts.fujitsu.com>
- <24d9afb0-3ea9-e83b-acf0-b44f04583a6e@oracle.com>
- <b8bb9898-6ff8-2ffb-47d6-d96534c6d315@ts.fujitsu.com>
- <a32b8b9e-c993-6709-b71e-3fbf80d0bdf3@oracle.com>
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Message-ID: <53776e18-675a-3eea-4be8-703433a247dd@ts.fujitsu.com>
-Date:   Wed, 15 Jul 2020 17:08:10 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
-MIME-Version: 1.0
-In-Reply-To: <a32b8b9e-c993-6709-b71e-3fbf80d0bdf3@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+        id S1726768AbgGOPsB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 11:48:01 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:29724 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725798AbgGOPsB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 11:48:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594828079;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=iHRFc2t+vxhrXbB4a0ddJym0nqFkKQ1CneMHAp3EP0A=;
+        b=MistEjboQt4maTewc1IAnZeyhcOijmZMmbyO/UQxn5sQH2y+dIdQWmCJtHxpyiTj7lHWl8
+        vUKrCv/3/K1q6AmdvJG1BUhGxZb0THV5YKOl5JHLz0mnydUWr/zaqtzSqSZWUDQtpNbNOR
+        5Byk3Z0LlbgbVf/lenMmZ55D5UoZLOc=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-359-Zn1II6kCOjeDVyaVfwm5Eg-1; Wed, 15 Jul 2020 11:47:56 -0400
+X-MC-Unique: Zn1II6kCOjeDVyaVfwm5Eg-1
+Received: by mail-qk1-f200.google.com with SMTP id 124so1739638qko.8
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 08:47:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=iHRFc2t+vxhrXbB4a0ddJym0nqFkKQ1CneMHAp3EP0A=;
+        b=IiUz2Pu+6pIjbYSf8HQn4RMApana7g/8Ft6ighhKUmpNWX7T1L80Sc6/TcVNT/9Ogi
+         mlgQL1wdhxQHbR+BBkvSwnB9CxSncjNDO/2WM91peXWBdWuQ7mfw9w5kNKNv/iEaZc0o
+         kdl0ep5E7DBUu2E+wmOL9CPoZB/C6t5uPGV+ZgwUbceq5W4A/yujCm456WK+IezoDvWQ
+         Df0LZN9oCXKd0QRwis50U/CYXg99THH82z5DPQyt5WqAjf0Z5cMjQ7FqsgPhZm8Py+G9
+         PIQqNeNLZ/3LDUKWIAcIOUXWePHFAvMYktRJ5RSr3V59ClnGABQ4G+xNJ8egNo9oZ7Mp
+         uGyA==
+X-Gm-Message-State: AOAM532PoBNLrtMzgG1HV7ERW7ES0GpBnUuaLD4bdHaG1+XQC4bEYsay
+        97bE3SIKbll/FTbxip8MYkiufkaN32pDgfonhl1d1PXDBhaIRzJ4wUr/GXTzMGTFffln4axuy3l
+        ZZcOlNP7GPzuJ/WaGWkkSoQ==
+X-Received: by 2002:a0c:e78b:: with SMTP id x11mr10368798qvn.103.1594828075863;
+        Wed, 15 Jul 2020 08:47:55 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxoPg6AWzuYhYMB3P6ZIMZeVVFTzrE46L7B67emNHDfJpmmsAzsqQYypmVe3I5Af+tOfiD7Sg==
+X-Received: by 2002:a0c:e78b:: with SMTP id x11mr10368775qvn.103.1594828075533;
+        Wed, 15 Jul 2020 08:47:55 -0700 (PDT)
+Received: from loberhel7laptop ([2600:6c64:4e80:f1:4a17:2cf9:6a8a:f150])
+        by smtp.gmail.com with ESMTPSA id q29sm3835897qtc.10.2020.07.15.08.47.54
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 15 Jul 2020 08:47:54 -0700 (PDT)
+Message-ID: <a72b9fb8249f99b7a5387c0d2c493108c37fd339.camel@redhat.com>
+Subject: Re: LIO Scsi Target
+From:   Laurence Oberman <loberman@redhat.com>
+To:     Sadegh Ali <sadegh.ali.2084@gmail.com>, linux-scsi@vger.kernel.org
+Date:   Wed, 15 Jul 2020 11:47:53 -0400
+In-Reply-To: <88d19544aa6d74d5780379eef0ffa1012d30066a.camel@redhat.com>
+References: <CA+RHgKLt=ZOu_nnL6oX=LJVtJWE9i+ARE6A_VmGLeJaU1mYtSg@mail.gmail.com>
+         <88d19544aa6d74d5780379eef0ffa1012d30066a.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-14 20:10, Mike Christie wrote:
-> On 7/13/20 7:03 AM, Bodo Stroesser wrote:
->> On 2020-07-12 03:15, Mike Christie wrote:
->>> On 7/10/20 5:48 AM, Bodo Stroesser wrote:
->>
+On Wed, 2020-07-15 at 10:11 -0400, Laurence Oberman wrote:
+> On Wed, 2020-07-15 at 12:18 +0430, Sadegh Ali wrote:
+> > Dear sir
+> > 
+> > we are considering to build SCSI Target system with ZFS filesystem
+> > backend using Linux
+> > I searched that two modules are available for Linux SCSI target,
+> > LIO,
+> > and SCST
+> > but it seems LIO project that streamed to the kernel is not updated
+> > for a while (about 7 years)
+> > Is the LIO module project dead? or suspended?
+> > Is any person or community available to respond to technical
+> > problems
+> > and fix bugs or develop new features or support new hardware?
+> > 
+> > with best regards
+> > 
+> 
+> There has definitely been a pause in the LIO target code updates.
+> In fact we use it a lot here (qla2xxx and SRP) at Red Hat but we have
+> remained on the 4.5 kernel with my jammer patch in the lab because
+> later updates have been  seeing lots of problems.
+> I reported this to Marvell and they were looking into it but its been
+> a
+> long time.
+> 
+> The ISCSI module is very stable but my issues had been mostly with
+> the
+> qla2xxx target module.
+> 
+> Many vendors who have this in their products took a snapshot many
+> kernels back and I am not sure how much has been shared back to
+> upstream.
+> 
+> I have not tested recent upstream kernels for ages so I am also
+> intrested to know who has been using either the qla2xxx modules or
+> the
+> SRP module successfully with recent kernels.
+> 
+> Regards
+> Laurence
 
-...
+I should made it clearer that this comment below meant I had not tested
+recent upstream kernel LIO modules qla2xxx and SRP.
+I run the 4.5 kernel with a jammer patch for both qla2xxx and SRPtarget support in my lab. 
 
->>>> +struct tcmu_tmr_entry {
->>>> +=C2=A0=C2=A0=C2=A0 struct tcmu_cmd_entry_hdr hdr;
->>>> +
->>>> +#define TCMU_TMR_UNKNOWN=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-0
->>>> +#define TCMU_TMR_ABORT_TASK=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- 1
->>>> +#define TCMU_TMR_ABORT_TASK_SET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 2
->>>> +#define TCMU_TMR_CLEAR_ACA=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- 3
->>>> +#define TCMU_TMR_CLEAR_TASK_SET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 4
->>>> +#define TCMU_TMR_LUN_RESET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- 5
->>>> +#define TCMU_TMR_TARGET_WARM_RESET=C2=A0=C2=A0=C2=A0 6
->>>> +#define TCMU_TMR_TARGET_COLD_RESET=C2=A0=C2=A0=C2=A0 7
->>>> +/* Pseudo reset due to received PR OUT */
->>>> +#define TCMU_TMR_LUN_RESET_PRO=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 128
->>>> +=C2=A0=C2=A0=C2=A0 __u8 tmr_type;
->>>> +
->>>> +=C2=A0=C2=A0=C2=A0 __u8 __pad1;
->>>> +=C2=A0=C2=A0=C2=A0 __u16 __pad2;
->>>> +=C2=A0=C2=A0=C2=A0 __u32 cmd_cnt;
->>>> +=C2=A0=C2=A0=C2=A0 __u64 __pad3;
->>>> +=C2=A0=C2=A0=C2=A0 __u64 __pad4;
->>>> +=C2=A0=C2=A0=C2=A0 __u16 cmd_ids[0];
->>>> +} __packed;
->>>> +
->>>
->>> Is this new request and the tmr_notify callback just supposed to=20
->>> clean up the requested commands or is it supposed to perform the=20
->>> actions of the task management function defined in the specs?
->>>
->>> The callback name makes it feel like it's just a notification, but=20
->>> the names above make it seem like we are supposed to execute the TMF=20
->>> in userspace. But if the latter, then how do we notify the kernel if=20
->>> the TMF was successful or failed?
->>
->> My plan is to have a notification only. IMHO userspace (and also tcmu
->> or another backend) must not interfere with core's TMR handling.
->> The new callback tmr_notify just allows backend to be helpful during
->> TMR handling by completing in core aborted, but in backend/userspace
->> still running commands early.
->>
->> Do you refer to the TCMU_TMR_* definitions? I just defined these names
->> because TMR_* definitions are in target_core_base.h which is not expos=
-ed
->> to userspace programs. Knowing the type of TMR that aborted a command =
-is
->> useful at least for userspace tracin
->=20
-> I see where you are going. Makes sense to me now.
->=20
->>
->> BTW: I hope there are enough padding fields in the tcmu_tmr_entry to
->> allow additional session info later?
->=20
-> Yes.
->=20
-> One question on that. Were you going to use the tcmu_cmd_entry_hdr=20
-> flags, or add a flag field to tcmu_tmr_entry?
+"I have not tested recent upstream kernels for ages so I am also
+intrested to know who has been using either the qla2xxx modules or the
+SRP module successfully with recent kernels."
 
-The header has a flag field, tcmu_cmd_entry has not. So I didn't
-give tcmu_tmr_entry a flags field.
-We already use the header's uflags for the flag that tells tcmu that
-user defined an explicit length for data transfer to initiator.
-So, if a new flag is necessary I'd prefer to use header's kflags.
-
->=20
-> Or will userspace just know its enabled because we would eventually add=
-=20
-> a add/delete session callback to the backend modules. And from the add=20
-> callout, we would then notify userspace of the new session and that=20
-> other commands like tcmu_tmr_entry have session info in it.
->=20
-
-It is still not completely clear to me how you want to send session info
-to userspace. I assume session id will be written into a renamed padding
-field in cmd and tmr. That would be compatible to old userspace tools.
-Since session IDs start at 1, new userspace can easily see that there is
-a valid session ID.
-
-If userspace finds a session id it not knows yet, it could retrieve
-session info from sysFS or configFS.
-
-But even then at least if a session is removed I think we will need a
-new tcmu_XXXXX_entry type telling userspace which session ID now is
-invalid.
-Therefore I assume that a new attribute in configFS is needed to switch
-on the per default deactivated session ID notification. Otherwise
-existing userspace tools might print errors or even exit if they see an
-entry type they don't know.
-If userspace via configFS attribute can switch session info on and off,
-there probably is no need for flags, right?
