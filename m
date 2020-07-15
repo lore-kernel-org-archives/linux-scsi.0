@@ -2,81 +2,159 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FBE5C433E0
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:30:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EC2CC433E2
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FFEA2074B
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:30:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 550E12064C
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:48:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="A1+DEpWF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729323AbgGOHaP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 03:30:15 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2480 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728888AbgGOHaP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Jul 2020 03:30:15 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
-        by Forcepoint Email with ESMTP id E78918ACBCDD2BA09E4F;
-        Wed, 15 Jul 2020 08:30:10 +0100 (IST)
-Received: from [127.0.0.1] (10.47.6.38) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Wed, 15 Jul
- 2020 08:30:09 +0100
-Subject: Re: [PATCH RFC v7 11/12] smartpqi: enable host tagset
-To:     <Don.Brace@microchip.com>, <don.brace@microsemi.com>,
-        <hare@suse.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <kashyap.desai@broadcom.com>,
-        <sumit.saxena@broadcom.com>, <ming.lei@redhat.com>,
-        <bvanassche@acm.org>, <hch@lst.de>,
-        <shivasharan.srikanteshwara@broadcom.com>,
-        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <esc.storagedev@microsemi.com>, <chenxiang66@hisilicon.com>,
-        <megaraidlinux.pdl@broadcom.com>, <hare@suse.de>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-12-git-send-email-john.garry@huawei.com>
- <a8afea5c-97f2-ac84-f4b5-155963bebb2c@huawei.com>
- <786e0b9d-ab42-aaf6-f552-072010892778@huawei.com>
- <SN6PR11MB28486DB217EFB23F26321236E1610@SN6PR11MB2848.namprd11.prod.outlook.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <dad8d9de-ef36-e412-db04-644bca623c01@huawei.com>
-Date:   Wed, 15 Jul 2020 08:28:23 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <SN6PR11MB28486DB217EFB23F26321236E1610@SN6PR11MB2848.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.6.38]
-X-ClientProxiedBy: lhreml728-chm.china.huawei.com (10.201.108.79) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
+        id S1729427AbgGOHsF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 03:48:05 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:30853 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729036AbgGOHsE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 03:48:04 -0400
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20200715074801epoutp04df1cbc420d0b280a9f3d670518a6c74f~h3X8dIHaB1256012560epoutp04R
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 07:48:01 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20200715074801epoutp04df1cbc420d0b280a9f3d670518a6c74f~h3X8dIHaB1256012560epoutp04R
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594799281;
+        bh=d9j6ewS3eviWkU6b3q9DxQvJgvOD9n1O9xJ2RYwvxIE=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=A1+DEpWFyuJAmqL/d4TeV4n4I/qaO/tZObx4vH+tQiaiQ4ec0eKmBDy/n/cQK5AMW
+         qCGho2vUiLIotvz9OP5qnNG842aoQb7AVUGkDTP1nMPffANPLTKDdarIof6jBi+Fu5
+         bZBl/pZ7B9E0ADdfebtMAFqDGNGCniTgoIfjqdH0=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20200715074800epcas2p10c63043490bcd54883c131f95169f56d~h3X7xVGf82829028290epcas2p1q;
+        Wed, 15 Jul 2020 07:48:00 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.182]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4B68cs5MFnzMqYks; Wed, 15 Jul
+        2020 07:47:57 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        DD.55.18874.DA4BE0F5; Wed, 15 Jul 2020 16:47:57 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20200715074757epcas2p344b4e188af3221655c1697405b9e17f4~h3X4ykLnQ2933129331epcas2p3M;
+        Wed, 15 Jul 2020 07:47:57 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200715074757epsmtrp14ebe53f14f85ab66e55a26f4f4633ec6~h3X4xwh3T1918819188epsmtrp1i;
+        Wed, 15 Jul 2020 07:47:57 +0000 (GMT)
+X-AuditID: b6c32a46-519ff700000049ba-3a-5f0eb4ad78c7
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C1.00.08382.CA4BE0F5; Wed, 15 Jul 2020 16:47:57 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.36.155.120]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200715074756epsmtip296ce2e589bfffc6dd18d0e53706bc67c~h3X4jUAJj2957629576epsmtip29;
+        Wed, 15 Jul 2020 07:47:56 +0000 (GMT)
+From:   Kiwoong Kim <kwmad.kim@samsung.com>
+To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
+        grant.jung@samsung.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com
+Cc:     Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v6 0/3] ufs: exynos: introduce the way to get cmd info
+Date:   Wed, 15 Jul 2020 16:39:54 +0900
+Message-Id: <cover.1594798514.git.kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmk+LIzCtJLcpLzFFi42LZdljTXHftFr54g3fdGhYP5m1js9jbdoLd
+        4uXPq2wWBx92slhM+/CT2eLT+mWsFr/+rme3WL34AYvFohvbmCxubjnKYtF9fQebxfLj/5gs
+        uu7eYLRY+u8tiwOfx+Ur3h6X+3qZPCYsOsDo8X19B5vHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBH
+        VI5NRmpiSmqRQmpecn5KZl66rZJ3cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtDdSgpl
+        iTmlQKGAxOJiJX07m6L80pJUhYz84hJbpdSClJwCQ8MCveLE3OLSvHS95PxcK0MDAyNToMqE
+        nIz/L/cwFazgqrhwcT97A+N0ji5GTg4JAROJyScPMXcxcnEICexglPj2+hSU84lR4tjsyVDO
+        N0aJ09c2sMO0XPt2ihEisZdRouNXF1TVD0aJL/e2sYBUsQloSjy9OZUJJCEisJlJ4tWC+8wg
+        CWYBdYldE04wgdjCAm4ST5Z3sYLYLAKqEseWnAKzeQUsJP63LmKBWCcncfNcJ9gGCYGf7BK9
+        5/+zQiRcJB6uu8wMYQtLvDq+Beo+KYmX/W1Qdr3EvqkNrBDNPYwST/f9Y4RIGEvMetYOZHMA
+        XaQpsX6XPogpIaAsceQWC8SdfBIdh/+yQ4R5JTrahCAalSV+TZoMNURSYubNO1CbPCRedR0D
+        e0tIIFbi5pmlrBMYZWchzF/AyLiKUSy1oDg3PbXYqMAIOZo2MYJTo5bbDsYpbz/oHWJk4mA8
+        xCjBwawkwsvDxRsvxJuSWFmVWpQfX1Sak1p8iNEUGF4TmaVEk/OByTmvJN7Q1MjMzMDS1MLU
+        zMhCSZy3XvFCnJBAemJJanZqakFqEUwfEwenVANT8/QEhjesG5pefstLi62ZsW3Ps8gTvGtc
+        DpYEzMx+EqGi0XX6/1fV6DXsL3gvaR3v+L0uYsrxR2UbQlwuNCy/aeD7duNf5u2fC+zamcsS
+        +Rq8A+79k1ix0fWeasd04afcGvXRu63O31G/73MqifVo/pkjnLL8vKf4ov8+XiO935pFfNqK
+        vRPecqn3sWWs1p8eYDL3xS8rqeQnPoUntnEd6pz37ZG0ZYv24fvTLnKvVNNdL652QGTy0Yfs
+        75k3yN86tzLqdGGrUi9r+lmu02df7+31UX0RdnZrm7ez5W+liVK3bfccWip1kKVg5ZlHTyTu
+        eK4w+lln1hu67LXt70WdrRXef14aTTm15au/aNPKPCWW4oxEQy3mouJEAN51b60WBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrILMWRmVeSWpSXmKPExsWy7bCSvO7aLXzxBm9nM1o8mLeNzWJv2wl2
+        i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7K4ueUoi0X39R1sFsuP/2Oy
+        6Lp7g9Fi6b+3LA58HpeveHtc7utl8piw6ACjx/f1HWweH5/eYvHo27KK0ePzJjmP9gPdTAEc
+        UVw2Kak5mWWpRfp2CVwZ/1/uYSpYwVVx4eJ+9gbG6RxdjJwcEgImEte+nWLsYuTiEBLYzSix
+        8eRsZoiEpMSJnc8ZIWxhifstR1ghir4xSjTdv8gOkmAT0JR4enMqE0hCROAwk8T/rc/BEswC
+        6hK7JpxgArGFBdwknizvYgWxWQRUJY4tOQVm8wpYSPxvXcQCsUFO4ua5TuYJjDwLGBlWMUqm
+        FhTnpucWGxYY5qWW6xUn5haX5qXrJefnbmIEh6qW5g7G7as+6B1iZOJgPMQowcGsJMLLw8Ub
+        L8SbklhZlVqUH19UmpNafIhRmoNFSZz3RuHCOCGB9MSS1OzU1ILUIpgsEwenVAPTpn/PFFfa
+        TOC/uMhtlSlv36bNHluXJ0vfP39vYcjL7WXbE7JllB6cK937yKyztndlxt2q4BP2lZ2bnvLd
+        urv+iT8rb9z9BMOHwpXXlQ0mrd6o3rPM/GdemKwC9zdn9XZ2mdW7F+yaNtFBRagx45r+sSPT
+        bj0Nlzt/mjOA78mVWWH+9S+jBThzTaY4aOkf6l/4bcPVQMlbPAk7L66Ja5QuteyIOWHnvv4o
+        85pitTNsLDw5v1QexLp/Y+JeMefVgbu7/kV9+inqoShV73Tj7DHJANUTovnWjkp8abfvHJ3r
+        kqyU9z/McnrmyQebSly5PQ2mnZ5/9ivHYoU57cnqEcHmN21vtdyPOjWF3fuKrpaWEktxRqKh
+        FnNRcSIABNRJ8sQCAAA=
+X-CMS-MailID: 20200715074757epcas2p344b4e188af3221655c1697405b9e17f4
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
 X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20200715074757epcas2p344b4e188af3221655c1697405b9e17f4
+References: <CGME20200715074757epcas2p344b4e188af3221655c1697405b9e17f4@epcas2p3.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/07/2020 19:16, Don.Brace@microchip.com wrote:
-> Subject: Re: [PATCH RFC v7 11/12] smartpqi: enable host tagset
-> 
-> 
-> Both the driver author and myself do not want to change how commands are processed in the smartpqi driver.
-> 
-> Nak.
-> 
+v5 -> v6
+replace put_aligned with get_unaligned_be32 to set lba and sct
+fix null pointer access symptom
 
-ok, your call. But it still seems that the driver should set the 
-host_tagset flag.
+v4 -> v5
+Rebased on Stanley's patch (scsi: ufs: Fix and simplify ..
+Change cmd history print order
+rename config to SCSI_UFS_EXYNOS_DBG
+feature functions in ufs-exynos-dbg.c by SCSI_UFS_EXYNOS_DBG
 
-Anyway, can you also let us know your stance on the hpsa change in this 
-series?
+v3 -> v4
+seperate respective implementations of the callbacks
+change the location of compl_xfer_req related stuffs
+fix null pointer access
 
-https://lore.kernel.org/linux-scsi/1591810159-240929-1-git-send-email-john.garry@huawei.com/T/#m1057b8a8c23a9bf558a048817a1cda4a576291b2
+v2 -> v3
+fix build errors
 
-thanks
+v1 -> v2
+change callbacks
+allocate memory for ufs_s_dbg_mgr dynamically, not static way
 
+Kiwoong Kim (3):
+  ufs: introduce a callback to get info of command completion
+  ufs: exynos: introduce command history
+  ufs: exynos: implement dbg_register_dump
+
+ drivers/scsi/ufs/Kconfig          |  14 +++
+ drivers/scsi/ufs/Makefile         |   1 +
+ drivers/scsi/ufs/ufs-exynos-dbg.c | 198 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos-if.h  |  17 ++++
+ drivers/scsi/ufs/ufs-exynos.c     |  38 ++++++++
+ drivers/scsi/ufs/ufs-exynos.h     |  35 +++++++
+ drivers/scsi/ufs/ufshcd.c         |   1 +
+ drivers/scsi/ufs/ufshcd.h         |   8 ++
+ 8 files changed, 312 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-dbg.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos-if.h
+
+-- 
+2.7.4
 
