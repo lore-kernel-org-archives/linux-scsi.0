@@ -7,81 +7,81 @@ X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2092DC433EB
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4390EC433F7
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:08:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B69F5205CB
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 14:26:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AF2F20658
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:08:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="qmKZCR9s"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="pMCZBLD6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728534AbgGOO0L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 10:26:11 -0400
-Received: from mail1.bemta25.messagelabs.com ([195.245.230.2]:44567 "EHLO
-        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725819AbgGOO0J (ORCPT
+        id S1728263AbgGOPIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 11:08:23 -0400
+Received: from mail1.bemta26.messagelabs.com ([85.158.142.116]:11028 "EHLO
+        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728258AbgGOPIX (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Jul 2020 10:26:09 -0400
+        Wed, 15 Jul 2020 11:08:23 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1594823165; i=@ts.fujitsu.com;
-        bh=y2XFR0UAO5pdByWxUg+B/R6uemx1n0gYUH4Ehm6FZqw=;
+        s=200619tsfj; t=1594825699; i=@ts.fujitsu.com;
+        bh=+aWXyOKNNKHS06EuFEiaWqOjbis73NHLsKzghyqTnyY=;
         h=Subject:To:References:From:Message-ID:Date:MIME-Version:
          In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=qmKZCR9sNnCsD5IoN5gVWSN6M2Y2kuM65yfYNylWWW+8yf8wWNRRdosYyG74lrkEn
-         nxNI1HCXC5J0JnDwrAgIlX4zE5uJYf6KR2ByvoJ4KDGOvhPZZjeEJCwHMrY2HQCsry
-         yvoBw8/d1lWT3gkQid0aXDbgUdE1IeXMKDCMSmmcnPJobaXFXhgZTyO6u362HjuQtj
-         27RODxUCqTXL4m9EPOXkAAmKjWU/SVTOwQ8BWUfPViioSKLt7w7q89dbu0sEio8Vqj
-         lrqRjqNb77w4cS0gusymg/PbU7Wlo1RVGDyps66zWWwr/uQ2YI5NXHf07rTdyOqkMj
-         p38l8/UMZoA7g==
-Received: from [100.112.192.107] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-2.bemta.az-a.eu-west-1.aws.symcld.net id 54/E4-44658-DF11F0F5; Wed, 15 Jul 2020 14:26:05 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDIsWRWlGSWpSXmKPExsViZ8MRqvtHkD/
-  e4Mc9E4vu6zvYLJYf/8dk8XfSDVaL1qVvmRxYPD4+vcXi8XmTXABTFGtmXlJ+RQJrxrdPS1kL
-  1qtXrNi9hqWBcbdSFyMXh5DAZEaJl8c2MkM4/YwSb2+sBXI4OYQFnCXmbHvPBpIQEVjDKLHo9
-  VImqComietLr4FVsQkYSKyYdJ8FxOYVcJS4/XUxI4jNIqAq8WjSQ6A4B4eoQLjEsxX+ECWCEi
-  dnPgEr5xSwk3hzcxdYObOAmcS8zQ+ZIWxxiVtP5jNB2NoSyxa+Zp7AyDcLSfssJC2zkLTMQtK
-  ygJFlFaNFUlFmekZJbmJmjq6hgYGuoaGRrqGlqa6hqaFeYpVuol5qqW55anGJLpBbXqxXXJmb
-  nJOil5dasokRGNApBYen72Dsf/NB7xCjJAeTkihvBDN/vBBfUn5KZUZicUZ8UWlOavEhRhkOD
-  iUJXklgjAgJFqWmp1akZeYAowsmLcHBoyTC2yIAlOYtLkjMLc5Mh0idYtTlaHk0bxGzEEtefl
-  6qlDivE0iRAEhRRmke3AhYpF9ilJUS5mVkYGAQ4ilILcrNLEGVf8UozsGoJMx7nx9oCk9mXgn
-  cpldARzABHbHxMy/IESWJCCmpBqZQ4+hkjZv1t/M9woMPS1iebqz0XqM3k5dp9oMtGy9beC5j
-  Tblye88BcYPTxS5fF3CsKRNftHTf197QGQK3hP+erHIPZJncIHiZIzShO2PLO6Gl2xseCBj+E
-  Nwm8MSNPYth180E09inTU3bpAWNDh/ke5Hv3W76jE0ki/nh4/dvfdTSPAOn6MpXW94L/zXV17
-  dHfqaLwia2hVwHi+Yu7359Mrjhyakg3xcmLe3q1h7vnSd1Ne7wSFSuWCwtH/Ni9dUVQfrp28+
-  lv2yvECi2rPD5JV3+c6Epz5wmBcNv05iKXl2pTJfkyy+ceb9RtsLY8fdv7YOdUbcEZI1etD/k
-  4q14fHpC5WFZnclH01oVlFiKMxINtZiLihMBTMOBGG8DAAA=
+        b=pMCZBLD61SuzNdopXsJ2LTXwPxTPswOO281mCNsLrT5vbFLEY5beO6KiBP7Q6zTnc
+         WsnGaIndgkQHoIM5IlUAeKTShMagixmysC2ZZeaICXbyY5bHEv8pVudUlukKsaSerE
+         R32tmSbnt4/dZHOam6h+v7GaKuj0xF9/jKfzt49jzNB1eqI8KQcEU2KdPdbK5Jwuaj
+         77UmTyXrTBbTSW+XadQ9hienajg8d6UKxcUKPGZWDcvgPoAldQf1smEsqt8i4NgcME
+         yMyySyzTNyXA5EBDZ95LRiRj2j4RAJ47DtqoUR7LkhALVa2kbF7Nxkmk33VspAuyBm
+         sMmpj1Pm81b8Q==
+Received: from [100.113.4.243] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-5.bemta.az-b.eu-central-1.aws.symcld.net id 02/53-08547-2EB1F0F5; Wed, 15 Jul 2020 15:08:18 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrAIsWRWlGSWpSXmKPExsViZ8MxVfeRNH+
+  8wZH7mhbd13ewWSw//o/J4u+kG6wWrUvfMjmweHx8eovF4/MmuQCmKNbMvKT8igTWjGPv97MW
+  9CpWbNnQzt7A+Fe6i5GLQ0hgMqPEijlH2CGcfkaJswc3sXUxcnIIC3hJrPk7hw0kISKwhlFi0
+  eulTFBVTBLLLt0Bq2ITMJBYMek+C4jNK+AoMWtJB5DNwcEioCox45YsiCkqEC7xbIU/RIWgxM
+  mZT8CqOQXsJDZN+MYKYjMLmEnM2/yQGcIWl7j1ZD4ThK0tsWzha+YJjHyzkLTPQtIyC0nLLCQ
+  tCxhZVjFaJhVlpmeU5CZm5ugaGhjoGhoa65rrGhoZ6iVW6SbppZbqJqfmlRQlAmX1EsuL9Yor
+  c5NzUvTyUks2MQIDOqWQvXIH49o3H/QOMUpyMCmJ8kYw88cL8SXlp1RmJBZnxBeV5qQWH2KU4
+  eBQkuDdLQmUEyxKTU+tSMvMAUYXTFqCg0dJhPc4SJq3uCAxtzgzHSJ1ilFRSpx3jRRQQgAkkV
+  GaB9cGi+hLjLJSwryMDAwMQjwFqUW5mSWo8q8YxTkYlYR5q0Gm8GTmlcBNfwW0mAlo8cbPvCC
+  LSxIRUlINTIu6dANdKoqf/4/RyxO51PivRu2yask2l2WPLZ2WnDnt/njqtPtZhvJBEqe+tr/e
+  bZ0vOjul2CBIx+Kch2ka+5bVTMvSDXlubxM4M+18MVfk413PLh7O2+x55V3H/hDrQv9GYHytt
+  9c6edj9UErWkvmqr/xPf60+KvFmXeZEweqYd8Vsyi/dLY9fSf4f8GjzsSmb1Wav14gOUFTXmL
+  +vXsdp2nkO5Zy5F96sN1l6stHNUTu25OMNx51Kt4/ILny0VijpgsqPf1syvDZrflj6weg6Q0J
+  Ryao8+Wf8Xg/jfFuzjr2RSq2Zf2ju/4U/WdceqKs59VqPfdsDu7XvNj94JfXW8bly5KYCV/em
+  U0bzcpRYijMSDbWYi4oTAaCdcrhjAwAA
 X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-17.tower-267.messagelabs.com!1594823164!274048!1
-X-Originating-IP: [62.60.8.85]
+X-Msg-Ref: server-18.tower-238.messagelabs.com!1594825698!646500!1
+X-Originating-IP: [62.60.8.149]
 X-SYMC-ESS-Client-Auth: outbound-route-from=pass
 X-StarScan-Received: 
 X-StarScan-Version: 9.50.2; banners=-,-,-
 X-VirusChecked: Checked
-Received: (qmail 5499 invoked from network); 15 Jul 2020 14:26:04 -0000
-Received: from unknown (HELO mailhost4.uk.fujitsu.com) (62.60.8.85)
-  by server-17.tower-267.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Jul 2020 14:26:04 -0000
+Received: (qmail 26417 invoked from network); 15 Jul 2020 15:08:18 -0000
+Received: from unknown (HELO mailhost2.uk.fujitsu.com) (62.60.8.149)
+  by server-18.tower-238.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Jul 2020 15:08:18 -0000
 Received: from x-serv01 ([172.17.38.52])
-        by mailhost4.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06FEQ0iD017578;
-        Wed, 15 Jul 2020 15:26:00 +0100
+        by mailhost2.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06FF8C9Q032372;
+        Wed, 15 Jul 2020 16:08:12 +0100
 Received: from [172.17.39.90] (unknown [172.17.39.90])
-        by x-serv01 (Postfix) with ESMTP id 82E6D20489;
-        Wed, 15 Jul 2020 16:25:51 +0200 (CEST)
-Subject: Re: [PATCH 1/8] scsi: target: Modify core_tmr_abort_task()
+        by x-serv01 (Postfix) with ESMTP id 01E1820375;
+        Wed, 15 Jul 2020 17:08:11 +0200 (CEST)
+Subject: Re: [PATCH 7/8] scsi: target: tcmu: Implement tmr_notify callback
 To:     Mike Christie <michael.christie@oracle.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 References: <20200710104817.19462-1-bstroesser@ts.fujitsu.com>
- <20200710104817.19462-2-bstroesser@ts.fujitsu.com>
- <ea36fcc0-d01c-eba1-748f-d5cfa39fa105@oracle.com>
- <0f660dc9-40ee-75a4-2924-761769d9cd38@ts.fujitsu.com>
- <e4d54aed-88fa-eeed-fe9a-20e627c3841a@oracle.com>
+ <20200710104817.19462-8-bstroesser@ts.fujitsu.com>
+ <24d9afb0-3ea9-e83b-acf0-b44f04583a6e@oracle.com>
+ <b8bb9898-6ff8-2ffb-47d6-d96534c6d315@ts.fujitsu.com>
+ <a32b8b9e-c993-6709-b71e-3fbf80d0bdf3@oracle.com>
 From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Message-ID: <980ec328-f604-556b-400a-1404c56e34ae@ts.fujitsu.com>
-Date:   Wed, 15 Jul 2020 16:25:47 +0200
+Message-ID: <53776e18-675a-3eea-4be8-703433a247dd@ts.fujitsu.com>
+Date:   Wed, 15 Jul 2020 17:08:10 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <e4d54aed-88fa-eeed-fe9a-20e627c3841a@oracle.com>
+In-Reply-To: <a32b8b9e-c993-6709-b71e-3fbf80d0bdf3@oracle.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
@@ -90,129 +90,107 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-14 19:43, Mike Christie wrote:
-> On 7/13/20 6:39 AM, Bodo Stroesser wrote:
->> On 2020-07-12 02:49, Mike Christie wrote:
+On 2020-07-14 20:10, Mike Christie wrote:
+> On 7/13/20 7:03 AM, Bodo Stroesser wrote:
+>> On 2020-07-12 03:15, Mike Christie wrote:
 >>> On 7/10/20 5:48 AM, Bodo Stroesser wrote:
 >>
->> ...
->>
->>>> @@ -137,11 +138,16 @@ void core_tmr_abort_task(
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 printk("ABORT=
-_TASK: Found referenced %s task_tag: %llu\n",
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 se_cmd->se_tfo->fabric_name, ref_tag);
->>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!__target_check_io_s=
-tate(se_cmd, se_sess,
->>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- dev->dev_attrib.emulate_tas))
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_lock_irqsave(&se_se=
-ss->sess_cmd_lock, flags);
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rc =3D __target_check_io=
-_state(se_cmd, se_sess, 0);
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_irqrestore(&=
-se_sess->sess_cmd_lock, flags);
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!rc)
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 continue;
->>>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_irqrestore(&=
-se_sess->sess_cmd_lock, flags);
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 list_del_init(&se_cmd->s=
-tate_list);
->>>
->>> Do we only want to do this if in the next patch tmr_notify can=20
->>> successfully accept the tmr?
->>
->> This change does not modify behavior of the core. Please see how
->> core_tmr_drain_state_list() uses state_list to queue commands after
->> successfully calling __target_check_io_state() for later call of=20
->> target_put_cmd_and_wait().
->>
->> This patch just unifies ABORT_TASK and LUN_RESET handling such,
->> that in next patch we can call tmr_notify handler with a list of
->> aborted commands in both cases. The list uses the state_list list_head
->> in the se_cmd.
->>
->>>
->>> If tmr_notify can't allocate memory for the abort case, we would=20
->>> delete it from the list. Later the initiator would send a LUN_RESET=20
->>> but core_tmr_drain_state_list won't see it and pass it to the=20
->>> tmr_notify call.
->>>
->>
->> tmr_notify handler will not and must not modify the list of aborted
->> cmds. So if backend just does nothing for whatever reason we will end
->> up with the "old" behavior of the core as it was before the change.
->>
->> The general idea is to send info about received TMRs together with the
->> list of aborted commands to the backend, to allow TMR tracing and
->> canceling of aborted commands. But backend must not interfere with TMR
->> processing in core.
->=20
-> I don't think we are talking about the same thing.
 
-Yeah, probably I misunderstood.
+...
 
->=20
-> For the abort case, let's say tmr_notify fails.So for the tcmu case,=20
-> the tmr does not get queued and userspace never knows about it.
-
-True.
-
-For the tcmu case tmr_notify can fail only if kmalloc(..., GFP_KERNEL)
-fails.
-
-> The=20
-> initiator then sends a LUN reset. For the reset, the tmr_notify call's=20
-> list will be missing the command that got the abort, right?
-
-Yes.
-
-In core, the LUN RESET will wait in core_tmr_drain_tmr_list for the
-previous ABORT_TASK to complete, while the ABORT_TASK itself waits for
-the aborted command to complete in core_tmr_abort_task.
-
-So, when LUN_RESET handling comes to calling core_tmr_drain_state_list,
-the aborted command will definitely already be done.
-
-> How will the=20
-> backend know to clean up that command during the LUN reset handling?
->=20
-
-It will not know, so core just has to wait until backend completes the
-aborted cmd - maybe after long time - just like it always did before my
-change.
-
-I don't see a clean way for error handling if tmr notification fails
-in backend. Do you have an idea?
-
-Regarding tcmu I think if we run into OOM, then losing tmr notifications
-might be one of the smallest problems.
-
->>
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 se_cmd->state_active =3D=
- false;
+>>>> +struct tcmu_tmr_entry {
+>>>> +=C2=A0=C2=A0=C2=A0 struct tcmu_cmd_entry_hdr hdr;
 >>>> +
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_irqrestore(&=
-dev->execute_task_lock, flags);
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * Ensur=
-e that this ABORT request is visible to the LU RESET
->>>> @@ -159,7 +165,7 @@ void core_tmr_abort_task(
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 atomic_long_i=
-nc(&dev->aborts_complete);
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
->>>> -=C2=A0=C2=A0=C2=A0 spin_unlock_irqrestore(&se_sess->sess_cmd_lock, =
-flags);
->>>> +=C2=A0=C2=A0=C2=A0 spin_unlock_irqrestore(&dev->execute_task_lock, =
-flags);
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 printk("ABORT_TASK: Sending TMR_TASK_=
-DOES_NOT_EXIST for=20
->>>> ref_tag: %lld\n",
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 tmr->ref_task_tag);
->>>>
+>>>> +#define TCMU_TMR_UNKNOWN=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
+0
+>>>> +#define TCMU_TMR_ABORT_TASK=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ 1
+>>>> +#define TCMU_TMR_ABORT_TASK_SET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 2
+>>>> +#define TCMU_TMR_CLEAR_ACA=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ 3
+>>>> +#define TCMU_TMR_CLEAR_TASK_SET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 4
+>>>> +#define TCMU_TMR_LUN_RESET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ 5
+>>>> +#define TCMU_TMR_TARGET_WARM_RESET=C2=A0=C2=A0=C2=A0 6
+>>>> +#define TCMU_TMR_TARGET_COLD_RESET=C2=A0=C2=A0=C2=A0 7
+>>>> +/* Pseudo reset due to received PR OUT */
+>>>> +#define TCMU_TMR_LUN_RESET_PRO=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0 128
+>>>> +=C2=A0=C2=A0=C2=A0 __u8 tmr_type;
+>>>> +
+>>>> +=C2=A0=C2=A0=C2=A0 __u8 __pad1;
+>>>> +=C2=A0=C2=A0=C2=A0 __u16 __pad2;
+>>>> +=C2=A0=C2=A0=C2=A0 __u32 cmd_cnt;
+>>>> +=C2=A0=C2=A0=C2=A0 __u64 __pad3;
+>>>> +=C2=A0=C2=A0=C2=A0 __u64 __pad4;
+>>>> +=C2=A0=C2=A0=C2=A0 __u16 cmd_ids[0];
+>>>> +} __packed;
+>>>> +
 >>>
+>>> Is this new request and the tmr_notify callback just supposed to=20
+>>> clean up the requested commands or is it supposed to perform the=20
+>>> actions of the task management function defined in the specs?
+>>>
+>>> The callback name makes it feel like it's just a notification, but=20
+>>> the names above make it seem like we are supposed to execute the TMF=20
+>>> in userspace. But if the latter, then how do we notify the kernel if=20
+>>> the TMF was successful or failed?
+>>
+>> My plan is to have a notification only. IMHO userspace (and also tcmu
+>> or another backend) must not interfere with core's TMR handling.
+>> The new callback tmr_notify just allows backend to be helpful during
+>> TMR handling by completing in core aborted, but in backend/userspace
+>> still running commands early.
+>>
+>> Do you refer to the TCMU_TMR_* definitions? I just defined these names
+>> because TMR_* definitions are in target_core_base.h which is not expos=
+ed
+>> to userspace programs. Knowing the type of TMR that aborted a command =
+is
+>> useful at least for userspace tracin
 >=20
+> I see where you are going. Makes sense to me now.
+>=20
+>>
+>> BTW: I hope there are enough padding fields in the tcmu_tmr_entry to
+>> allow additional session info later?
+>=20
+> Yes.
+>=20
+> One question on that. Were you going to use the tcmu_cmd_entry_hdr=20
+> flags, or add a flag field to tcmu_tmr_entry?
+
+The header has a flag field, tcmu_cmd_entry has not. So I didn't
+give tcmu_tmr_entry a flags field.
+We already use the header's uflags for the flag that tells tcmu that
+user defined an explicit length for data transfer to initiator.
+So, if a new flag is necessary I'd prefer to use header's kflags.
+
+>=20
+> Or will userspace just know its enabled because we would eventually add=
+=20
+> a add/delete session callback to the backend modules. And from the add=20
+> callout, we would then notify userspace of the new session and that=20
+> other commands like tcmu_tmr_entry have session info in it.
+>=20
+
+It is still not completely clear to me how you want to send session info
+to userspace. I assume session id will be written into a renamed padding
+field in cmd and tmr. That would be compatible to old userspace tools.
+Since session IDs start at 1, new userspace can easily see that there is
+a valid session ID.
+
+If userspace finds a session id it not knows yet, it could retrieve
+session info from sysFS or configFS.
+
+But even then at least if a session is removed I think we will need a
+new tcmu_XXXXX_entry type telling userspace which session ID now is
+invalid.
+Therefore I assume that a new attribute in configFS is needed to switch
+on the per default deactivated session ID notification. Otherwise
+existing userspace tools might print errors or even exit if they see an
+entry type they don't know.
+If userspace via configFS attribute can switch session info on and off,
+there probably is no need for flags, right?
