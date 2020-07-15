@@ -2,183 +2,158 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B20B0C433E4
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 06:30:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F305C433E2
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 905E220663
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 06:30:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 083952067D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 07:13:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="H/hExH6+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="WHqI1xFd";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="yZF5XYZP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728245AbgGOGag (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 02:30:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33846 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725924AbgGOGag (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 02:30:36 -0400
-Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8DA8C061794
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 23:30:35 -0700 (PDT)
-Received: by mail-wm1-x341.google.com with SMTP id f18so4297693wml.3
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jul 2020 23:30:35 -0700 (PDT)
+        id S1729129AbgGOHNE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 03:13:04 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:3611 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725852AbgGOHND (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 03:13:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1594797183; x=1626333183;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=msjwwbNWKGYFzztsmuet64eAWgkeOd24Upq8nR9hXSQ=;
+  b=WHqI1xFdwupA4DVNIY1FD+7PhZhaCexuPbvrrXxaMsfpdoTGFwyrbqL7
+   uaWmALcMgVCLoILC5tCxrCZujkKSFVV0VFrsbpwHK8jrLcXdlpGxPGnUo
+   4XHAEnUrhKgPq9xMOfvpcbv33LzTjmxzfH8BtkHWNaTfvhQmuppsNuM99
+   7wH5/sRqQWD+2rZuSKJ4tbg0P+Xp6/kSHCtQpTBKMryQYRAD2AgE5gr7t
+   P7j2MEyJM2YMPUEd+jODKsc6rwMQwlbjZL7C8jw6cM60PPLzviOqESDw1
+   RyOITTAZx2qaa1FwM9kNjPv5P5wxlBtKluLITKeJvV+gMhwvtdhQPZzbd
+   g==;
+IronPort-SDR: opjAh9+4vVesX5rrvdT0reHg03iqFxmoYw2VQ7JTMCSFnjJsXP8FME2H5CTdcJSToDGlbipDWw
+ S7eJnbGdYS8lsBkRAmWV5hkhDM+QalJRQCqh6sCMN3x35NlkrGSEoVE2Ltc7ty4QqrVzWqY1CP
+ vjaR96/elzry4VceHdvROZvVJeYEKWHfX2ZOepYW/6Sx1BloVyhiSaWSq2ErGZVXdQ2o3G6W3o
+ AcDXIWIS0/hUBjAfNwmUTw7NS/oKx+HORXfruWqPZXaX4PEllEmNPGznMngdZSCou0CGzJpUvN
+ P0U=
+X-IronPort-AV: E=Sophos;i="5.75,354,1589212800"; 
+   d="scan'208";a="251758557"
+Received: from mail-co1nam11lp2174.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.174])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Jul 2020 15:13:02 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ld2Q8W24sUuNyDby61s/pt6zM7oFxkqPdKYpa3/kZCjsDE0v32IDbjTgIFnMmQKKiKWtB7j0Fej7XxXDubLOnY6aC8MH1OqoXBbG5dJNcWI4uUdsf3FEUvxuMMWIuhCbfQLyqyi0kfvLytyOo2tPLDFk9AnSxQOf3Yt5qZVPADj5BLD9EiVOSzn1Igt+2NOyV8U6lFuOsnHl6kcvITOiWnpwYPCokhCJ3zisqm/Jsutue750ZVJQz+U/irjbI3Z4AcFa520ur+tf4ew770ZRzdgeJhDjEfZUgRdukU/VtzsbPIXF25U6Zb2yt0n0UcImHnCcCx3gxIgL1hKP9cA1sA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x34sS4202OAoCMMR9DMEl7bdSI97NwkEZ7mNYmQw770=;
+ b=b4hFcRBQacF3oFyspchC+GZxs48eF0gbHUds2VqnaT5z1D/k3v6VVCBb207If/240CxfI33912FZkeK6Gw5elqiXnPIc6qA3REhFXzNp7diavaKWZfDrhHdIkjRJwp1vkAQvOrBOINGQbZJlKlCZlLMuVZa8a5cTijYLF1fkgLlymSDJOVLG7/nvrCzlIDz43/6Sq1J9O+dZ4RyAyH/lATB0L2cTqpjs7jVD5Kk5BjEPvaXyMBGWC3hIZCWJUJ78bIFCo11tvwSWCNAVAKGPOZHoCJMArhlUu07lEJA9rkk6/ypQeJj8JO/vd8d711bEl4zcuRSaw+Py+zObZ+Dbyw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=pW+E9VMEkuNif/eMT9oEhAwUc+yvfIgFOHLRgw3DUS0=;
-        b=H/hExH6+GtecEFWkgKRt3cttKcMeGN+R1qPxATBZxISPIv0YJJi9Nkm8bJ8GpUZoUY
-         mXXU2Ehufq79mAA16BrMohYpZh6uY6GK+8GNOOiGEDvt5ZNVf1IejWhl9o+F1MO1eInn
-         gspsd8Rh9NU4PFHle6JgA0R9pJCeDIkbgcklf1E/xHNAALl6piz4dlXJ5G7Tb23nKCxB
-         LFyRaTgmvC+Y8f0GG5mBLNGvX+wEF6GYF6I9RhuueG5Lv0mK0dqtV6Voko6dXJy/eYaN
-         nxALTrtF+8txn82MO9uOGeM74sk2NoRe0giLr7hLwjuNdnOicadlz0dgAE0vWuSFQumP
-         L1jg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=pW+E9VMEkuNif/eMT9oEhAwUc+yvfIgFOHLRgw3DUS0=;
-        b=B3JzpqjGzzTh8spIl9HZbwpymSoC4b+b/JMI5a9+3KMzH+WZZpaRsIzKjZUYGpKhbZ
-         3KDk0Q/g+84IL682Y+8YjLOPTITuXRSnL8hKNepIrGMeVwiYdwJA3zQKGdLa/zl8pHrA
-         4HsoJPSh+WAzUtolstx/WOUSkI2naBruZR7Tx9kyVUCiXAv4QHNNaSO645jn7vRdLht6
-         RkXV/cR9I0Ke2KW3QxC8Stje7nvGH0qWxWUUGn7+ta6x6RFg7xImZKQI5Q9Zoeny46AX
-         +0cG5+8SbkQa786MmjcsoTrWSg+gActBhcFIbcjqjW6HHF651BXqHcOK44ZkYII7tlF4
-         wSuQ==
-X-Gm-Message-State: AOAM531wLcevt9tCY7//fQTyEJN+qWvdBhyHMyRavb2krMX+MsBX+AYT
-        9JnhtledcHv50JW8mZsJFrX09Q==
-X-Google-Smtp-Source: ABdhPJwVXfUMJKYeBCAI/pLQG8nNOZJC9J50UYu2eXR+TuYeMCeXSgAx9qXKQhWnrNmmUUHQ5dvCcA==
-X-Received: by 2002:a7b:ca4c:: with SMTP id m12mr7089891wml.33.1594794634586;
-        Tue, 14 Jul 2020 23:30:34 -0700 (PDT)
-Received: from dell ([2.31.163.61])
-        by smtp.gmail.com with ESMTPSA id g3sm2119227wrb.59.2020.07.14.23.30.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2020 23:30:34 -0700 (PDT)
-Date:   Wed, 15 Jul 2020 07:30:32 +0100
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     James Bottomley <jejb@linux.ibm.com>, martin.petersen@oracle.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH v2 24/24] scsi: aic7xxx: aic79xx_osm: Remove set but
- unused variabes 'saved_scsiid' and 'saved_modes'
-Message-ID: <20200715063032.GN1398296@dell>
-References: <20200713080001.128044-1-lee.jones@linaro.org>
- <20200713080001.128044-25-lee.jones@linaro.org>
- <559e47de-fa26-9ae5-a3c5-4adeae606309@suse.de>
- <1594741430.4545.15.camel@linux.ibm.com>
- <20200714213951.GL1398296@dell>
- <708d8fb0-512f-a1d3-79d2-50bccda0264c@suse.de>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x34sS4202OAoCMMR9DMEl7bdSI97NwkEZ7mNYmQw770=;
+ b=yZF5XYZPnAtPITU6ul/F6rd5vYS7xr1n8ILIRsSUOCILItXPZvYQXCYVpcpbGbGym7OxCkUJbt17WYF1RQVFAq6sjFNc1ORuJtKFEv5znRWwUqoG0Emu0OWXtR4JUZifNaG4NaS+tWAIs7ws+f4tbmQDbj2aHZ4CWhE6eHb4rHc=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN6PR04MB5117.namprd04.prod.outlook.com
+ (2603:10b6:805:93::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3174.22; Wed, 15 Jul
+ 2020 07:13:01 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::1447:186c:326e:30b2]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::1447:186c:326e:30b2%7]) with mapi id 15.20.3174.026; Wed, 15 Jul 2020
+ 07:13:01 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     YueHaibing <yuehaibing@huawei.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next] scsi: sd_zbc: Remove unused inline functions
+Thread-Topic: [PATCH -next] scsi: sd_zbc: Remove unused inline functions
+Thread-Index: AQHWWlN7tw0Ukte+lEm+AJYSZqNavQ==
+Date:   Wed, 15 Jul 2020 07:13:01 +0000
+Message-ID: <SN4PR0401MB3598D09525BDB81C1FDF24E79B7E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200715025523.34620-1-yuehaibing@huawei.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: huawei.com; dkim=none (message not signed)
+ header.d=none;huawei.com; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [2001:a62:1515:bd01:853f:9b43:c773:dd89]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 79fee731-43d8-4187-9a3e-08d8288e82d9
+x-ms-traffictypediagnostic: SN6PR04MB5117:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SN6PR04MB511750EC8A24AC1DB19A52BB9B7E0@SN6PR04MB5117.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:489;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 8T1x7EC9go/jfrUvv4E+oXEFaFaZBQWRMPJaHV63POX6XkWCTJrFDzF+LpsBcfe0X87BF4/W2HWXEY0cp4IWkdQ9aCOEPkxWmJmjcz8MMTcmoGRuXkodRtUh4r8aQN3azl1KyEJ+QsET3uDU29oSR2h0RibTWmDzFIqsYNupwQK5E7EG7uxGgumlBwq4E61HNC7LhrzGaD3J1E3iEcGBQya7RjQkCe905o34TV0AxLKLvwGeoH1ZJCkYcB/989hdZVLvbs7y8nOF9DSqmG5w3QgBoi8aw39w13/fPcHeYvaXr1UIvmtpKgCv8lKnFFBDwlmdDuDFvw7S97zRrNVNug==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(376002)(136003)(346002)(366004)(39860400002)(396003)(76116006)(4744005)(4326008)(5660300002)(53546011)(8676002)(83380400001)(33656002)(186003)(91956017)(66946007)(66476007)(52536014)(64756008)(66446008)(66556008)(9686003)(478600001)(8936002)(55016002)(2906002)(71200400001)(110136005)(7696005)(6636002)(54906003)(316002)(86362001)(6506007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: YB+kibQ3d9L5Io+K8wX/ph25swuRCLNRN5SC1eLoOfnDCwYYtYXG80K91SDhM9BwlUtFcwsw/oyhdDdD6G7eDbdKlaLqS1LDiUKAbwO2x9xjtpYYkOVqd4RiK4n16PSeMKAmsrbaYZcqR4H9Z3KhGQwAWb/HlhYLXSyIy8sjhtELgmdWafl4QaGI2PuDJizzEJ2X0dC46N3x/0os+kNon/BQt8TBpGPhm5jgLlUHIg6TrbbCozkRuh8f8wolkRhCBl7ekFSchCUWlCvO0cs9eCMjMZFRRrdkM/93Rx6nzRKxSydLFgcsbn0epspA9u8gf4wFsWjjCm6UML8P2D3l/po6/SmyS3W5ScJmRPBjSwSSEkSuPmRplAi66oahoXE9Eo0LaO/qzxRUEeU2O5GbpUHKRE76WL2z/KI4dZ65RoXqSiA/gpR/8u2FyZCx3G6Jxazn2JpRbf/DiNiC0jmiwL8/F8jY/yyP6TrUCInjHb/ShhYTeDtkCqo4eJqPtn1wvlg3Rf9pJCzJR2BZ8Y52ySx1m7U+mym7+IeYGFnLs7L6729pncUL80ySoNFggotw
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <708d8fb0-512f-a1d3-79d2-50bccda0264c@suse.de>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 79fee731-43d8-4187-9a3e-08d8288e82d9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Jul 2020 07:13:01.7861
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 9j1jgt6jw0hvZ6W497UAQk09HsGZjkP8jysWKEGGgflxut+xvfmUcswZKyzoTnCA5+6lCupiy3U78rhseDJDhHwN9XIKX5FGxDfJOT/7Sno=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR04MB5117
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 15 Jul 2020, Hannes Reinecke wrote:
-
-> On 7/14/20 11:39 PM, Lee Jones wrote:
-> > On Tue, 14 Jul 2020, James Bottomley wrote:
-> > 
-> > > On Tue, 2020-07-14 at 09:46 +0200, Hannes Reinecke wrote:
-> > > > On 7/13/20 10:00 AM, Lee Jones wrote:
-> > > > > Haven't been used since 2006.
-> > > > > 
-> > > > > Fixes the following W=1 kernel build warning(s):
-> > > > > 
-> > > > >   drivers/scsi/aic7xxx/aic79xx_osm.c: In function
-> > > > > ‘ahd_linux_queue_abort_cmd’:
-> > > > >   drivers/scsi/aic7xxx/aic79xx_osm.c:2155:17: warning: variable
-> > > > > ‘saved_modes’ set but not used [-Wunused-but-set-variable]
-> > > > >   drivers/scsi/aic7xxx/aic79xx_osm.c:2148:9: warning: variable
-> > > > > ‘saved_scsiid’ set but not used [-Wunused-but-set-variable]
-> > > > > 
-> > > > > Cc: Hannes Reinecke <hare@suse.com>
-> > > > > Signed-off-by: Lee Jones <lee.jones@linaro.org>
-> > > > > ---
-> > > > >   drivers/scsi/aic7xxx/aic79xx_osm.c | 4 ----
-> > > > >   1 file changed, 4 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > > > > b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > > > > index 3782a20d58885..140c4e74ddd7e 100644
-> > > > > --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > > > > +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> > > > > @@ -2141,14 +2141,12 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> > > > > *cmd)
-> > > > >   	u_int  saved_scbptr;
-> > > > >   	u_int  active_scbptr;
-> > > > >   	u_int  last_phase;
-> > > > > -	u_int  saved_scsiid;
-> > > > >   	u_int  cdb_byte;
-> > > > >   	int    retval;
-> > > > >   	int    was_paused;
-> > > > >   	int    paused;
-> > > > >   	int    wait;
-> > > > >   	int    disconnected;
-> > > > > -	ahd_mode_state saved_modes;
-> > > > >   	unsigned long flags;
-> > > > >   	pending_scb = NULL;
-> > > > > @@ -2239,7 +2237,6 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> > > > > *cmd)
-> > > > >   		goto done;
-> > > > >   	}
-> > > > > -	saved_modes = ahd_save_modes(ahd);
-> > > > >   	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
-> > > > >   	last_phase = ahd_inb(ahd, LASTPHASE);
-> > > > >   	saved_scbptr = ahd_get_scbptr(ahd);
-> > > > > @@ -2257,7 +2254,6 @@ ahd_linux_queue_abort_cmd(struct scsi_cmnd
-> > > > > *cmd)
-> > > > >   	 * passed in command.  That command is currently active on
-> > > > > the
-> > > > >   	 * bus or is in the disconnected state.
-> > > > >   	 */
-> > > > > -	saved_scsiid = ahd_inb(ahd, SAVED_SCSIID);
-> > > > >   	if (last_phase != P_BUSFREE
-> > > > >   	    && SCB_GET_TAG(pending_scb) == active_scbptr) {
-> > > > > 
-> > > > 
-> > > > Reviewed-by: Hannes Reinecke <hare@suse.de>
-> > > 
-> > > Hey, you don't get to do that ... I asked you to figure out why we're
-> > > missing an ahd_restore_modes().  Removing the ahd_save_modes() is
-> > > cosmetic: it gets rid of a warning but doesn't fix the problem.  I'd
-> > > rather keep the warning until the problem is fixed and the problem is
-> > > we need a mode save/restore around the ahd_set_modes() which is only
-> > > partially implemented in this function.
-> > 
-> > I had a look.  Traced it back to the dawn of time (time == Git), then
-> > delved even further back by downloading and trawling through ~10-15
-> > tarballs.  It looks as though drivers/scsi/aic7xxx/aic79xx_osm.c was
-> > upstreamed in v2.5.60, nearly 20 years ago.  'saved_modes' has been
-> > unused since at least then.  If no one has complained in 2 decades,
-> > I'd say it probably isn't an issue worth perusing.
-> > 
-> That's not really the point; this function is the first stage of error
-> recovery. And the only real way of exercising this is to inject a command
-> timeout, which is nearly impossible without dedicated hardware.
-> So this function will have a very limited exposure, but nevertheless a quite
-> crucial function.
-> Hence I'm not quite agree with your reasoning, and rather would have it
-> fixed.
-
-100% agree.
-
-> But as we're having an alternative fix now, it might be best if you could
-> drop it from your patchset and we'll fix it separately.
-
-Sounds good.  Thanks.
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+On 15/07/2020 04:56, YueHaibing wrote:=0A=
+> They are never used, so can remove it.=0A=
+> =0A=
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>=0A=
+> ---=0A=
+>  drivers/scsi/sd.h | 6 ------=0A=
+>  1 file changed, 6 deletions(-)=0A=
+> =0A=
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h=0A=
+> index 3a74f4b45134..27c0f4e9b1d4 100644=0A=
+> --- a/drivers/scsi/sd.h=0A=
+> +++ b/drivers/scsi/sd.h=0A=
+> @@ -229,17 +229,11 @@ blk_status_t sd_zbc_prepare_zone_append(struct scsi=
+_cmnd *cmd, sector_t *lba,=0A=
+>  =0A=
+>  #else /* CONFIG_BLK_DEV_ZONED */=0A=
+>  =0A=
+> -static inline int sd_zbc_init(void)=0A=
+> -{=0A=
+> -	return 0;=0A=
+> -}=0A=
+> -=0A=
+>  static inline int sd_zbc_init_disk(struct scsi_disk *sdkp)=0A=
+>  {=0A=
+>  	return 0;=0A=
+>  }=0A=
+>  =0A=
+> -static inline void sd_zbc_exit(void) {}=0A=
+>  static inline void sd_zbc_release_disk(struct scsi_disk *sdkp) {}=0A=
+>  =0A=
+>  static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,=0A=
+> =0A=
+=0A=
+Woops that looks like some leftover from development. My bad.=0A=
+=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
