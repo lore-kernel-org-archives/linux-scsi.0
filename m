@@ -2,129 +2,223 @@ Return-Path: <SRS0=K8op=A2=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=BAYES_00,DEAR_SOMETHING,
-	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49B7EC433DF
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:48:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D912AC433DF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 16:05:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 199D32065E
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 15:48:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3BBD20663
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 16:05:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MistEjbo"
+	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="VjOkhfMl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726768AbgGOPsB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 11:48:01 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:29724 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725798AbgGOPsB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 11:48:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594828079;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iHRFc2t+vxhrXbB4a0ddJym0nqFkKQ1CneMHAp3EP0A=;
-        b=MistEjboQt4maTewc1IAnZeyhcOijmZMmbyO/UQxn5sQH2y+dIdQWmCJtHxpyiTj7lHWl8
-        vUKrCv/3/K1q6AmdvJG1BUhGxZb0THV5YKOl5JHLz0mnydUWr/zaqtzSqSZWUDQtpNbNOR
-        5Byk3Z0LlbgbVf/lenMmZ55D5UoZLOc=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-359-Zn1II6kCOjeDVyaVfwm5Eg-1; Wed, 15 Jul 2020 11:47:56 -0400
-X-MC-Unique: Zn1II6kCOjeDVyaVfwm5Eg-1
-Received: by mail-qk1-f200.google.com with SMTP id 124so1739638qko.8
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jul 2020 08:47:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=iHRFc2t+vxhrXbB4a0ddJym0nqFkKQ1CneMHAp3EP0A=;
-        b=IiUz2Pu+6pIjbYSf8HQn4RMApana7g/8Ft6ighhKUmpNWX7T1L80Sc6/TcVNT/9Ogi
-         mlgQL1wdhxQHbR+BBkvSwnB9CxSncjNDO/2WM91peXWBdWuQ7mfw9w5kNKNv/iEaZc0o
-         kdl0ep5E7DBUu2E+wmOL9CPoZB/C6t5uPGV+ZgwUbceq5W4A/yujCm456WK+IezoDvWQ
-         Df0LZN9oCXKd0QRwis50U/CYXg99THH82z5DPQyt5WqAjf0Z5cMjQ7FqsgPhZm8Py+G9
-         PIQqNeNLZ/3LDUKWIAcIOUXWePHFAvMYktRJ5RSr3V59ClnGABQ4G+xNJ8egNo9oZ7Mp
-         uGyA==
-X-Gm-Message-State: AOAM532PoBNLrtMzgG1HV7ERW7ES0GpBnUuaLD4bdHaG1+XQC4bEYsay
-        97bE3SIKbll/FTbxip8MYkiufkaN32pDgfonhl1d1PXDBhaIRzJ4wUr/GXTzMGTFffln4axuy3l
-        ZZcOlNP7GPzuJ/WaGWkkSoQ==
-X-Received: by 2002:a0c:e78b:: with SMTP id x11mr10368798qvn.103.1594828075863;
-        Wed, 15 Jul 2020 08:47:55 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxoPg6AWzuYhYMB3P6ZIMZeVVFTzrE46L7B67emNHDfJpmmsAzsqQYypmVe3I5Af+tOfiD7Sg==
-X-Received: by 2002:a0c:e78b:: with SMTP id x11mr10368775qvn.103.1594828075533;
-        Wed, 15 Jul 2020 08:47:55 -0700 (PDT)
-Received: from loberhel7laptop ([2600:6c64:4e80:f1:4a17:2cf9:6a8a:f150])
-        by smtp.gmail.com with ESMTPSA id q29sm3835897qtc.10.2020.07.15.08.47.54
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 15 Jul 2020 08:47:54 -0700 (PDT)
-Message-ID: <a72b9fb8249f99b7a5387c0d2c493108c37fd339.camel@redhat.com>
-Subject: Re: LIO Scsi Target
-From:   Laurence Oberman <loberman@redhat.com>
-To:     Sadegh Ali <sadegh.ali.2084@gmail.com>, linux-scsi@vger.kernel.org
-Date:   Wed, 15 Jul 2020 11:47:53 -0400
-In-Reply-To: <88d19544aa6d74d5780379eef0ffa1012d30066a.camel@redhat.com>
-References: <CA+RHgKLt=ZOu_nnL6oX=LJVtJWE9i+ARE6A_VmGLeJaU1mYtSg@mail.gmail.com>
-         <88d19544aa6d74d5780379eef0ffa1012d30066a.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-5.el7) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1725834AbgGOQFS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 12:05:18 -0400
+Received: from mail1.bemta26.messagelabs.com ([85.158.142.115]:56057 "EHLO
+        mail1.bemta26.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726820AbgGOQEd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Jul 2020 12:04:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
+        s=200619tsfj; t=1594829056; i=@ts.fujitsu.com;
+        bh=njKgnlVsP2C9AT7Io1jysuyEan8v3y+kYvMV91SWmKk=;
+        h=From:To:Cc:Subject:Date:Message-Id;
+        b=VjOkhfMloLpaVrYDgKJNdUsyCtlOcwQ1Y3LZc+6MDtFx9wEjlGHtvB0mNbV8f1COb
+         iMct6rT3pJ19ctxqcF7c2AHJupl/fXrQf6I1E4sWXAnnabag2jJcN6CNZbbHpGmWY/
+         EiPlyEi45zEnbP76qcBP1ORgW4fIafl7yfjO1+UkbMdXmTu6kikxOABxHqyVDs8wqu
+         1BgZYLVAPzmE7Rsn3tL7E8kHw7iUm43PBBbauO5CP6L0zZOZ8ZObYUa1v6HHhwccRL
+         xUgR8MdIwf56bHj/duyOh0soXKx8jrq3F2ppkTIwRdgfGnEtNwGnadllzuoUtQ1jjr
+         1bvQXFihQe07A==
+Received: from [100.113.4.177] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
+        by server-4.bemta.az-b.eu-central-1.aws.symcld.net id 35/4C-24114-FF82F0F5; Wed, 15 Jul 2020 16:04:15 +0000
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCLMWRWlGSWpSXmKPExsViZ8MRovtfgz/
+  e4OweRYvu6zvYLJYf/8dk8XfSDVaL1qVvmRxYPD4+vcXi8XmTXABTFGtmXlJ+RQJrxoVvngVn
+  VSsufnnE0sC4QqGLkYtDSGAyo8TShp3MEM50Ron9jb+Yuhg5OdgEDCRWTLrPApIQEVjDKLHyz
+  jxmkASzgJ7EtH/r2EFsYQFHiQnT5oA1sAioSrzf/I8FxOYVsJOYfP40I4gtISAv0XFgMssERs
+  4FjAyrGC2TijLTM0pyEzNzdA0NDHQNDY11zXQNLcz0Eqt0k/RSS3WTU/NKihKBsnqJ5cV6xZW
+  5yTkpenmpJZsYgZ5PKWTbtYPx8+sPeocYJTmYlER5I5j544X4kvJTKjMSizPii0pzUosPMcpw
+  cChJ8DKoA+UEi1LTUyvSMnOAQQiTluDgURLh1QZJ8xYXJOYWZ6ZDpE4xKkqJ815QA0oIgCQyS
+  vPg2mCBf4lRVkqYl5GBgUGIpyC1KDezBFX+FaM4B6OSMG8xyHiezLwSuOmvgBYzAS3e+JkXZH
+  FJIkJKqoGJ+WjfcVFllimGHQ48N2LXbVjK6J3q1HtGzWRRv+X79vnmFjZPfX2nNoYZneAUyJ7
+  8Uva3l49GiajRjj8PLunnbhVxMIlfcEyNtUvOTGR1U8FxxYPbHrw6sn/Hng/L36sd09wTvy/j
+  dDVra46gUcuJUxeabvu2bLPYwZe03LrQRMykvUp9uQzXh+j9M8IEf7j0rCqptE/tqrA8OjfU9
+  dvDWQfFmmIen5C6XpZz/37EHTfNNWpFt7zSHt0p2eY31+5A2iqVgsdzop85lyxn7xdYrPSqXW
+  Njxu09+6Y13ds5qbTMriaFT28Vh1jZUYs1CevWVIbUdpzyu6d6au1iszcFD8v+cMpOPtyy4Gr
+  yTU0lluKMREMt5qLiRAAZAUJ99wIAAA==
+X-Env-Sender: bstroesser@ts.fujitsu.com
+X-Msg-Ref: server-20.tower-238.messagelabs.com!1594829054!654744!1
+X-Originating-IP: [62.60.8.84]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.50.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 19948 invoked from network); 15 Jul 2020 16:04:15 -0000
+Received: from unknown (HELO mailhost3.uk.fujitsu.com) (62.60.8.84)
+  by server-20.tower-238.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 15 Jul 2020 16:04:15 -0000
+Received: from x-serv01 ([172.17.38.52])
+        by mailhost3.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06FG4Exk029131;
+        Wed, 15 Jul 2020 17:04:14 +0100
+Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
+        by x-serv01 (Postfix) with ESMTP id 6452220468;
+        Wed, 15 Jul 2020 18:04:11 +0200 (CEST)
+From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
+Subject: [PATCH] scsi: target: loop: Fix handling of aborted TMRs
+Date:   Wed, 15 Jul 2020 18:04:03 +0200
+Message-Id: <20200715160403.12578-1-bstroesser@ts.fujitsu.com>
+X-Mailer: git-send-email 2.12.3
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2020-07-15 at 10:11 -0400, Laurence Oberman wrote:
-> On Wed, 2020-07-15 at 12:18 +0430, Sadegh Ali wrote:
-> > Dear sir
-> > 
-> > we are considering to build SCSI Target system with ZFS filesystem
-> > backend using Linux
-> > I searched that two modules are available for Linux SCSI target,
-> > LIO,
-> > and SCST
-> > but it seems LIO project that streamed to the kernel is not updated
-> > for a while (about 7 years)
-> > Is the LIO module project dead? or suspended?
-> > Is any person or community available to respond to technical
-> > problems
-> > and fix bugs or develop new features or support new hardware?
-> > 
-> > with best regards
-> > 
-> 
-> There has definitely been a pause in the LIO target code updates.
-> In fact we use it a lot here (qla2xxx and SRP) at Red Hat but we have
-> remained on the 4.5 kernel with my jammer patch in the lab because
-> later updates have been  seeing lots of problems.
-> I reported this to Marvell and they were looking into it but its been
-> a
-> long time.
-> 
-> The ISCSI module is very stable but my issues had been mostly with
-> the
-> qla2xxx target module.
-> 
-> Many vendors who have this in their products took a snapshot many
-> kernels back and I am not sure how much has been shared back to
-> upstream.
-> 
-> I have not tested recent upstream kernels for ages so I am also
-> intrested to know who has been using either the qla2xxx modules or
-> the
-> SRP module successfully with recent kernels.
-> 
-> Regards
-> Laurence
+If an ABORT_TASK TMR is aborted by a LUN_RESET, core calls
+tcm_loop's aborted_task fabric callback for the ABORT_TASK.
 
-I should made it clearer that this comment below meant I had not tested
-recent upstream kernel LIO modules qla2xxx and SRP.
-I run the 4.5 kernel with a jammer patch for both qla2xxx and SRPtarget support in my lab. 
+The aborted_task callback is not prepared to handle aborted TMRs,
+but is an empty function which is ok for aborted SCSI cmds only.
+So it does not wake up tcm_loop_issue_tmr() sleeping in
+wait_for_completion(). Therefore scmd_eh_abort_handler
+hangs forever and we get the following messages:
 
-"I have not tested recent upstream kernels for ages so I am also
-intrested to know who has been using either the qla2xxx modules or the
-SRP module successfully with recent kernels."
+INFO: task kworker/u48:1:31216 blocked for more than 3932 seconds.
+      Tainted: G           OE     5.8.0-rc1+ #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kworker/u48:1   D    0 31216      2 0x00004000
+Workqueue: scsi_tmf_14 scmd_eh_abort_handler [scsi_mod]
+Call Trace:
+ __schedule+0x2aa/0x6d0
+ schedule+0x42/0xb0
+ schedule_timeout+0x1ba/0x280
+ ? __queue_work+0x13b/0x3d0
+ ? kmem_cache_alloc_trace+0x1e6/0x200
+ wait_for_completion+0x7f/0xd0
+ tcm_loop_issue_tmr.isra.10+0xc1/0x110 [tcm_loop]
+ tcm_loop_abort_task+0x3d/0x50 [tcm_loop]
+ scmd_eh_abort_handler+0x91/0x230 [scsi_mod]
+ process_one_work+0x166/0x370
+ worker_thread+0x49/0x3e0
+ ? rescuer_thread+0x320/0x320
+ kthread+0xfc/0x130
+ ? kthread_bind+0x10/0x10
+ ret_from_fork+0x22/0x30
+
+Fix:
+After calling the aborted_task callback the core immediately
+releases the se_cmd that represents the ABORT_TASK. The woken
+up thread (tcm_loop_issue_tmr) therefore must not access se_cmd
+and tl_cmd in case of aborted TMRs.
+
+So I changed aborted_task and queue_tm_rsp to transfer result
+code from se_cmd to tcm_loop_issue_tmr's stack and added the
+missing wake_up() to aborted_task.
+Now tcm_loop_issue_tmr after waking up no longer accesses se_cmd
+and tl_cmd. Therefore tcm_loop_issue_tmr no longer needs to call
+target_put_sess_cmd and flag TARGET_SCF_ACK_KREF is no longer
+needed in se_cmd.
+
+Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
+---
+ drivers/target/loopback/tcm_loop.c | 39 ++++++++++++++++++++++----------------
+ drivers/target/loopback/tcm_loop.h |  4 +++-
+ 2 files changed, 26 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 16d5a4e117a2..0968bc8b6640 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -199,6 +199,7 @@ static int tcm_loop_issue_tmr(struct tcm_loop_tpg *tl_tpg,
+ 	struct tcm_loop_nexus *tl_nexus;
+ 	struct tcm_loop_cmd *tl_cmd;
+ 	int ret = TMR_FUNCTION_FAILED, rc;
++	DECLARE_COMPLETION_ONSTACK(compl);
+ 
+ 	/*
+ 	 * Locate the tl_nexus and se_sess pointers
+@@ -213,26 +214,23 @@ static int tcm_loop_issue_tmr(struct tcm_loop_tpg *tl_tpg,
+ 	if (!tl_cmd)
+ 		return ret;
+ 
+-	init_completion(&tl_cmd->tmr_done);
++	tl_cmd->is_tmr = true;
++	tl_cmd->tmr_done = &compl;
++	tl_cmd->tmr_result = &ret;
+ 
+ 	se_cmd = &tl_cmd->tl_se_cmd;
+ 	se_sess = tl_tpg->tl_nexus->se_sess;
+ 
+ 	rc = target_submit_tmr(se_cmd, se_sess, tl_cmd->tl_sense_buf, lun,
+-			       NULL, tmr, GFP_KERNEL, task,
+-			       TARGET_SCF_ACK_KREF);
+-	if (rc < 0)
+-		goto release;
+-	wait_for_completion(&tl_cmd->tmr_done);
+-	ret = se_cmd->se_tmr_req->response;
+-	target_put_sess_cmd(se_cmd);
++			       NULL, tmr, GFP_KERNEL, task, 0);
++	if (rc < 0) {
++		kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
++		return ret;
++	}
+ 
+-out:
+-	return ret;
++	wait_for_completion(tl_cmd->tmr_done);
+ 
+-release:
+-	kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
+-	goto out;
++	return ret;
+ }
+ 
+ static int tcm_loop_abort_task(struct scsi_cmnd *sc)
+@@ -590,13 +588,22 @@ static void tcm_loop_queue_tm_rsp(struct se_cmd *se_cmd)
+ 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
+ 				struct tcm_loop_cmd, tl_se_cmd);
+ 
+-	/* Wake up tcm_loop_issue_tmr(). */
+-	complete(&tl_cmd->tmr_done);
++	/* Set tmr result and wake up tcm_loop_issue_tmr(). */
++	*tl_cmd->tmr_result = se_cmd->se_tmr_req->response;
++	complete(tl_cmd->tmr_done);
+ }
+ 
+ static void tcm_loop_aborted_task(struct se_cmd *se_cmd)
+ {
+-	return;
++	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
++				struct tcm_loop_cmd, tl_se_cmd);
++
++	if (!tl_cmd->is_tmr)
++		return;
++
++	/* Set tmr result and wake up tcm_loop_issue_tmr(). */
++	*tl_cmd->tmr_result = TMR_FUNCTION_REJECTED;
++	complete(tl_cmd->tmr_done);
+ }
+ 
+ static char *tcm_loop_dump_proto_id(struct tcm_loop_hba *tl_hba)
+diff --git a/drivers/target/loopback/tcm_loop.h b/drivers/target/loopback/tcm_loop.h
+index d3110909a213..e7615b9f5ed1 100644
+--- a/drivers/target/loopback/tcm_loop.h
++++ b/drivers/target/loopback/tcm_loop.h
+@@ -17,7 +17,9 @@ struct tcm_loop_cmd {
+ 	/* The TCM I/O descriptor that is accessed via container_of() */
+ 	struct se_cmd tl_se_cmd;
+ 	struct work_struct work;
+-	struct completion tmr_done;
++	struct completion *tmr_done;
++	bool is_tmr;
++	int *tmr_result;
+ 	/* Sense buffer that will be mapped into outgoing status */
+ 	unsigned char tl_sense_buf[TRANSPORT_SENSE_BUFFER];
+ };
+-- 
+2.12.3
 
