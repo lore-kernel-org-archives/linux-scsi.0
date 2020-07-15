@@ -8,95 +8,99 @@ X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE35C433E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 21:34:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7953C433E1
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 22:14:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FC2D20771
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 21:34:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E3BD2067D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Jul 2020 22:14:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qCP6k6b2"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vkhBKsVB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727121AbgGOVd7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Jul 2020 17:33:59 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:50954 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726670AbgGOVd7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 17:33:59 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FLXDYE060310;
-        Wed, 15 Jul 2020 21:33:56 GMT
+        id S1726786AbgGOWOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Jul 2020 18:14:44 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:33234 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726356AbgGOWOo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jul 2020 18:14:44 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FMCAoO045272;
+        Wed, 15 Jul 2020 22:14:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2020-01-29;
- bh=6i7a/+Ftd2K970NxwLayuhRouIazIIIQDDJat+whMFw=;
- b=qCP6k6b2urUJzM8nWGTncHRnyyhNQjJ+3oK/tIG08Wg51I1dsW4Z9S1VBwYOTRN+Txri
- YwtvswTAk1QSMuGX1Zp1jgOzeaJEYdHCEiniFN5HEQGZWZaHyPSYAOiTV1ZrsFII1Sf/
- lD383z+II+mnmn93OFAdWZ/nI0rJM1OLSV5sSFNYy3OR9HxEAatj1VaCcCHMmN5FqTgA
- j4O420kqdLKIjL4HYutIx+MsdMAh8uAaKuN2L/93PFaJaFQRGENdO8dOLGEyna9TAb2S
- 3IHa5ayoC4yaDTnG3igutk2RbXbKTxUQw5St4J623Y55jEJY8HaRsDdvKQwSuqEk2i5Q oA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 3275cmdw9d-1
+ bh=8sHwCXaJlPee7iaeG7qRDAiXL2dPUm4R5r4YOc9GKEE=;
+ b=vkhBKsVBn+EE8FWIht7/Jug5Bx4vboNZDqgBqO+uSXEdFRuzhVv3KBUh1tRy9rVZEH4w
+ gj9Rw8I235B2YY6AwsuLN7TOFujXmUMw2b8lS/M0JdTDoht8pJ030LvQeaQNG1GRBC2r
+ h7h1qTjKxEyX0Dt6SrO4CYd68+4ptRguNSKUMYcamn7k6A7Jy0rh0RADCr6q+nNV5Jpc
+ zYjGYU2XorhntDpkuxD93KkJFACp+pIvtCj9HABZkryCEQjgKgN00yy9XHVzQD+GHAHk
+ s/qFprD4VWgGNXncx3HZVHX9Ds0NJGIVH+0zhQihBLheUH9tc4HfgGdOrY9+2LhL4KKw gA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 3274ure3hm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 21:33:56 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FLXsS1090662;
-        Wed, 15 Jul 2020 21:33:56 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 327qb8x2ek-1
+        Wed, 15 Jul 2020 22:14:41 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FMDeMU086762;
+        Wed, 15 Jul 2020 22:14:41 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 32a4cretjj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 21:33:56 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FLXs7j016123;
-        Wed, 15 Jul 2020 21:33:54 GMT
+        Wed, 15 Jul 2020 22:14:41 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FMEebg025161;
+        Wed, 15 Jul 2020 22:14:40 GMT
 Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 14:33:54 -0700
+        with ESMTP ; Wed, 15 Jul 2020 15:14:39 -0700
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To:     James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org
 Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        sasikumar.pc@broadcom.com, anand.lodnoor@broadcom.com,
-        "# v5 . 3+" <stable@vger.kernel.org>, sankar.patra@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        kiran-kumar.kasturi@broadcom.com, sumit.saxena@broadcom.com,
-        kashyap.desai@broadcom.com
-Subject: Re: [PATCH] megaraid_sas: remove undefined ENABLE_IRQ_POLL macro
-Date:   Wed, 15 Jul 2020 17:33:52 -0400
-Message-Id: <159484881799.21031.14072399069865189813.b4-ty@oracle.com>
+        Martin George <Martin.George@netapp.com>
+Subject: Re: [PATCH] lpfc: nvme remote port devloss_tmo from lldd
+Date:   Wed, 15 Jul 2020 18:14:32 -0400
+Message-Id: <159484884354.21107.6383523575322246851.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200715120153.20512-1-chandrakanth.patil@broadcom.com>
-References: <20200715120153.20512-1-chandrakanth.patil@broadcom.com>
+In-Reply-To: <20200714211412.11773-1-jsmart2021@gmail.com>
+References: <20200714211412.11773-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=851 malwarescore=0
- mlxscore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007150161
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 priorityscore=1501
- bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=867 clxscore=1011 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
+ suspectscore=0 bulkscore=0 adultscore=0 phishscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150161
+ definitions=main-2007150165
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ suspectscore=0 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007150165
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 15 Jul 2020 17:31:53 +0530, Chandrakanth Patil wrote:
+On Tue, 14 Jul 2020 14:14:12 -0700, James Smart wrote:
 
-> Issue:
-> As ENABLE_IRQ_POLL macro is undefined, the check for ENABLE_IRQ_POLL
-> macro in ISR will always be false leads to irq polling non-functional.
+> Nvme-fc allows the driver to specify a default devloss_tmo value when
+> registering the remote port. The lpfc driver is currently not doing so
+> although it is implementing a driver internal node loss value of 30s
+> which also is used on the scsi fc remote port. As no devloss_tmo is set,
+> the nvme-fc transport defaults to 60s. So there's competing timers.
 > 
-> Fix:
-> Remove ENABLE_IRQ_POLL check from isr
+> Additionally, due to the competing timers, its possible the nvme rport
+> is removed but the scsi rport remains. Its possible that the scsi fc
+> rport, which was registered for the nvme port even if it doesn't utilize
+> the scsi protocol, had been tuned to not match either the 60s (nvme-fc
+> default) or 30s (lldd default), it gets out of whack. The lldd will
+> defer to the scsi fc rport as long as the scsi fc rport has not had its
+> devloss_tmo expire.
+> 
+> [...]
 
-Applied to 5.8/scsi-fixes, thanks!
+Applied to 5.9/scsi-queue, thanks!
 
-[1/1] scsi: megaraid_sas: Remove undefined ENABLE_IRQ_POLL macro
-      https://git.kernel.org/mkp/scsi/c/07d3f0455002
+[1/1] scsi: lpfc: NVMe remote port devloss_tmo from lldd
+      https://git.kernel.org/mkp/scsi/c/1f5468231476
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
