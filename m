@@ -2,51 +2,51 @@ Return-Path: <SRS0=lXiU=A3=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,FUZZY_XPILL,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BC0C433DF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 11:57:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB2AC433F1
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 11:57:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A29D20739
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 11:57:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F91920739
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Jul 2020 11:57:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="CCUyYlhs"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="emwHvaNa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728605AbgGPL4T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Jul 2020 07:56:19 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44682 "EHLO
+        id S1728516AbgGPLz7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Jul 2020 07:55:59 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20468 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728560AbgGPL4K (ORCPT
+        by vger.kernel.org with ESMTP id S1726855AbgGPLzx (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Jul 2020 07:56:10 -0400
+        Thu, 16 Jul 2020 07:55:53 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06GBp9RQ006988;
-        Thu, 16 Jul 2020 04:56:04 -0700
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06GBp71f006965;
+        Thu, 16 Jul 2020 04:55:43 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=pfpt0818;
- bh=PlA4RzAJR9YFl0MnIxZgbgOrkusD5Be4UXjW1sBuecc=;
- b=CCUyYlhsDRlM8IxO7ExLf++tCQ3FbkyZdlxIuyXKhWIks415GIE81fuHqQN9CaLFIu9s
- 733D5Itur31VAhZb1ImzG16ik+K0HS6Vow5k/8pgCfEsDhRZHC2L2gBJUAqIjC1QIl7m
- EhDqpWkvy48nnpIUj5vP/xo2rugTIngsIdkEib8D6XlQ5DOdZMmpAeKmkFN4ar0YB6r1
- PXCPJGNMzdAYSOoC7edAi4/w3uhQ4pdsPGEaefeY908s8jfL7dWs5EcDme3LhiPqaL2u
- dcGo8xKbaXkFIb0hVdoOGnU9Dyxd0axnSbAgRZl//fpw6j0W8KplbGEZWFAQygFJl0qT fg== 
+ bh=H0eTXvkjoBMJkIXZqngjS4Z26jA/lcJ57BKEa4UA4FY=;
+ b=emwHvaNa4yrzMfIyHFEfppc77BUSd+suLDfQi8vOCaN5811RvfuNAXEvqeT3zg89ATMO
+ gGLoTxWLW+JQenPtTrdban9KP9mmK9fjZFR5uDt2MuGEUDw2xmI7ZVWbXm5Bi/wuaq6S
+ EwiKjH2VPRp1ue8wX0ml9oSbetOz1okS4e9GdRiBUf8L5GyGYvYYdt39OIKOfn3iHL/P
+ v0LJUjh35MOjnospERnxPalVotdlzAs/mUTWyGV1z9cryuV7Wy6oSRf8AVV5nXT4liZ6
+ kEcKhWE8m48UzoRWyhdMGWZfboqlTRemisBsLfO+2jsSr0N//j6DNKPhF4Wu9ltDqJ4j hA== 
 Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 328mmhyg1t-2
+        by mx0b-0016f401.pphosted.com with ESMTP id 328mmhyg0p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Thu, 16 Jul 2020 04:56:04 -0700
+        Thu, 16 Jul 2020 04:55:42 -0700
 Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH04.marvell.com
  (10.93.176.84) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 16 Jul
- 2020 04:56:03 -0700
+ 2020 04:55:41 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 16 Jul 2020 04:56:03 -0700
+ Transport; Thu, 16 Jul 2020 04:55:41 -0700
 Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
-        by maili.marvell.com (Postfix) with ESMTP id 397903F703F;
-        Thu, 16 Jul 2020 04:55:58 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id D48E23F703F;
+        Thu, 16 Jul 2020 04:55:36 -0700 (PDT)
 From:   Alexander Lobakin <alobakin@marvell.com>
 To:     "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -60,9 +60,9 @@ CC:     Alexander Lobakin <alobakin@marvell.com>,
         <GR-everest-linux-l2@marvell.com>,
         <QLogic-Storage-Upstream@cavium.com>, <netdev@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH net-next 06/13] qed: add support for Forward Error Correction
-Date:   Thu, 16 Jul 2020 14:54:39 +0300
-Message-ID: <20200716115446.994-7-alobakin@marvell.com>
+Subject: [PATCH net-next 01/13] qed: convert link mode from u32 to bitmap
+Date:   Thu, 16 Jul 2020 14:54:34 +0300
+Message-ID: <20200716115446.994-2-alobakin@marvell.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200716115446.994-1-alobakin@marvell.com>
 References: <20200716115446.994-1-alobakin@marvell.com>
@@ -76,344 +76,992 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add all necessary routines for reading supported FEC modes from NVM and
-querying FEC control to the MFW (if the running version supports it).
+Currently qed driver already ran out of 32 bits to store link modes,
+and this doesn't allow to add and support more speeds.
+Convert link mode to bitmap that will always have enough space for
+any number of speeds and modes.
+
+This involves changes in qede and qedf as well, as they use definitions
+from shared "qed_if.h".
+
+Misc: add build-time check that qed_lm_map[] is always synchronized with
+enum qed_link_mode_bits.
 
 Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
 Signed-off-by: Igor Russkikh <irusskikh@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed_dev.c  | 54 +++++++++++++++-------
- drivers/net/ethernet/qlogic/qed/qed_hsi.h  | 24 +++++++++-
- drivers/net/ethernet/qlogic/qed/qed_main.c |  6 +++
- drivers/net/ethernet/qlogic/qed/qed_mcp.c  | 47 +++++++++++++++----
- drivers/net/ethernet/qlogic/qed/qed_mcp.h  |  4 ++
- include/linux/qed/qed_if.h                 | 13 ++++++
- 6 files changed, 121 insertions(+), 27 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed_main.c    | 287 ++++++++++--------
+ .../net/ethernet/qlogic/qede/qede_ethtool.c   | 247 +++++++--------
+ drivers/scsi/qedf/qedf_main.c                 |  77 +++--
+ include/linux/qed/qed_if.h                    |  90 +++---
+ 4 files changed, 374 insertions(+), 327 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-index 491a6dbb5d73..d929556247a5 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-@@ -3968,7 +3968,7 @@ static int qed_hw_get_resc(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 
- static int qed_hw_get_nvm_info(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- {
--	u32 port_cfg_addr, link_temp, nvm_cfg_addr, device_capabilities;
-+	u32 port_cfg_addr, link_temp, nvm_cfg_addr, device_capabilities, fc;
- 	u32 nvm_cfg1_offset, mf_mode, addr, generic_cont0, core_cfg;
- 	struct qed_mcp_link_capabilities *p_caps;
- 	struct qed_mcp_link_params *link;
-@@ -4081,16 +4081,38 @@ static int qed_hw_get_nvm_info(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 	p_hwfn->mcp_info->link_capabilities.default_speed_autoneg =
- 		link->speed.autoneg;
- 
--	link_temp &= NVM_CFG1_PORT_DRV_FLOW_CONTROL_MASK;
--	link_temp >>= NVM_CFG1_PORT_DRV_FLOW_CONTROL_OFFSET;
--	link->pause.autoneg = !!(link_temp &
--				 NVM_CFG1_PORT_DRV_FLOW_CONTROL_AUTONEG);
--	link->pause.forced_rx = !!(link_temp &
--				   NVM_CFG1_PORT_DRV_FLOW_CONTROL_RX);
--	link->pause.forced_tx = !!(link_temp &
--				   NVM_CFG1_PORT_DRV_FLOW_CONTROL_TX);
-+	fc = GET_MFW_FIELD(link_temp, NVM_CFG1_PORT_DRV_FLOW_CONTROL);
-+	link->pause.autoneg = !!(fc & NVM_CFG1_PORT_DRV_FLOW_CONTROL_AUTONEG);
-+	link->pause.forced_rx = !!(fc & NVM_CFG1_PORT_DRV_FLOW_CONTROL_RX);
-+	link->pause.forced_tx = !!(fc & NVM_CFG1_PORT_DRV_FLOW_CONTROL_TX);
- 	link->loopback_mode = 0;
- 
-+	if (p_hwfn->mcp_info->capabilities &
-+	    FW_MB_PARAM_FEATURE_SUPPORT_FEC_CONTROL) {
-+		switch (GET_MFW_FIELD(link_temp,
-+				      NVM_CFG1_PORT_FEC_FORCE_MODE)) {
-+		case NVM_CFG1_PORT_FEC_FORCE_MODE_NONE:
-+			p_caps->fec_default |= QED_FEC_MODE_NONE;
-+			break;
-+		case NVM_CFG1_PORT_FEC_FORCE_MODE_FIRECODE:
-+			p_caps->fec_default |= QED_FEC_MODE_FIRECODE;
-+			break;
-+		case NVM_CFG1_PORT_FEC_FORCE_MODE_RS:
-+			p_caps->fec_default |= QED_FEC_MODE_RS;
-+			break;
-+		case NVM_CFG1_PORT_FEC_FORCE_MODE_AUTO:
-+			p_caps->fec_default |= QED_FEC_MODE_AUTO;
-+			break;
-+		default:
-+			DP_VERBOSE(p_hwfn, NETIF_MSG_LINK,
-+				   "unknown FEC mode in 0x%08x\n", link_temp);
-+		}
-+	} else {
-+		p_caps->fec_default = QED_FEC_MODE_UNSUPPORTED;
-+	}
-+
-+	link->fec = p_caps->fec_default;
-+
- 	if (p_hwfn->mcp_info->capabilities & FW_MB_PARAM_FEATURE_SUPPORT_EEE) {
- 		link_temp = qed_rd(p_hwfn, p_ptt, port_cfg_addr +
- 				   offsetof(struct nvm_cfg1_port, ext_phy));
-@@ -4122,14 +4144,12 @@ static int qed_hw_get_nvm_info(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 		p_caps->default_eee = QED_MCP_EEE_UNSUPPORTED;
- 	}
- 
--	DP_VERBOSE(p_hwfn,
--		   NETIF_MSG_LINK,
--		   "Read default link: Speed 0x%08x, Adv. Speed 0x%08x, AN: 0x%02x, PAUSE AN: 0x%02x EEE: %02x [%08x usec]\n",
--		   link->speed.forced_speed,
--		   link->speed.advertised_speeds,
--		   link->speed.autoneg,
--		   link->pause.autoneg,
--		   p_caps->default_eee, p_caps->eee_lpi_timer);
-+	DP_VERBOSE(p_hwfn, NETIF_MSG_LINK,
-+		   "Read default link: Speed 0x%08x, Adv. Speed 0x%08x, AN: 0x%02x, PAUSE AN: 0x%02x, EEE: 0x%02x [0x%08x usec], FEC: 0x%02x\n",
-+		   link->speed.forced_speed, link->speed.advertised_speeds,
-+		   link->speed.autoneg, link->pause.autoneg,
-+		   p_caps->default_eee, p_caps->eee_lpi_timer,
-+		   p_caps->fec_default);
- 
- 	if (IS_LEAD_HWFN(p_hwfn)) {
- 		struct qed_dev *cdev = p_hwfn->cdev;
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index 93d33c9cf145..7c1d4efffbff 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -11566,8 +11566,15 @@ struct eth_phy_cfg {
- #define EEE_TX_TIMER_USEC_AGGRESSIVE_TIME	0x100
- #define EEE_TX_TIMER_USEC_LATENCY_TIME		0x6000
- 
--	u32 feature_config_flags;
--#define ETH_EEE_MODE_ADV_LPI		(1 << 0)
-+	u32					deprecated;
-+
-+	u32					fec_mode;
-+#define FEC_FORCE_MODE_MASK			0x000000ff
-+#define FEC_FORCE_MODE_OFFSET			0
-+#define FEC_FORCE_MODE_NONE			0x00
-+#define FEC_FORCE_MODE_FIRECODE			0x01
-+#define FEC_FORCE_MODE_RS			0x02
-+#define FEC_FORCE_MODE_AUTO			0x07
- };
- 
- struct port_mf_cfg {
-@@ -11934,6 +11941,11 @@ struct public_port {
- #define LINK_STATUS_MAC_REMOTE_FAULT			0x02000000
- #define LINK_STATUS_UNSUPPORTED_SPD_REQ			0x04000000
- 
-+#define LINK_STATUS_FEC_MODE_MASK			0x38000000
-+#define LINK_STATUS_FEC_MODE_NONE			(0 << 27)
-+#define LINK_STATUS_FEC_MODE_FIRECODE_CL74		(1 << 27)
-+#define LINK_STATUS_FEC_MODE_RS_CL91			(2 << 27)
-+
- 	u32 link_status1;
- 	u32 ext_phy_fw_version;
- 	u32 drv_phy_cfg_addr;
-@@ -12553,6 +12565,7 @@ struct public_drv_mb {
- #define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_MASK		0x0000FFFF
- #define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_OFFSET	0
- #define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_EEE		0x00000002
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_FEC_CONTROL	0x00000004
- #define DRV_MB_PARAM_FEATURE_SUPPORT_FUNC_VLINK		0x00010000
- 
- /* DRV_MSG_CODE_DEBUG_DATA_SEND parameters */
-@@ -12641,6 +12654,7 @@ struct public_drv_mb {
- 	/* Get MFW feature support response */
- #define FW_MB_PARAM_FEATURE_SUPPORT_SMARTLINQ		0x00000001
- #define FW_MB_PARAM_FEATURE_SUPPORT_EEE			0x00000002
-+#define FW_MB_PARAM_FEATURE_SUPPORT_FEC_CONTROL		0x00000020
- #define FW_MB_PARAM_FEATURE_SUPPORT_VLINK		0x00010000
- 
- #define FW_MB_PARAM_LOAD_DONE_DID_EFUSE_ERROR		BIT(0)
-@@ -13091,6 +13105,12 @@ struct nvm_cfg1_port {
- #define NVM_CFG1_PORT_DRV_FLOW_CONTROL_AUTONEG			0x1
- #define NVM_CFG1_PORT_DRV_FLOW_CONTROL_RX			0x2
- #define NVM_CFG1_PORT_DRV_FLOW_CONTROL_TX			0x4
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_MASK			0x000e0000
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_OFFSET			17
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_NONE			0x0
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_FIRECODE			0x1
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_RS				0x2
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_AUTO			0x7
- 
- 	u32							phy_cfg;
- 	u32							mgmt_traffic;
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
-index 1639210044a7..768d6ab5395f 100644
+index 4c5f5bd91359..8a0b8da19547 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_main.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
-@@ -1596,6 +1596,9 @@ static int qed_set_link(struct qed_dev *cdev, struct qed_link_params *params)
- 		memcpy(&link_params->eee, &params->eee,
- 		       sizeof(link_params->eee));
+@@ -1456,10 +1456,11 @@ static bool qed_can_link_change(struct qed_dev *cdev)
  
-+	if (params->override_flags & QED_LINK_OVERRIDE_FEC_CONFIG)
-+		link_params->fec = params->fec;
+ static int qed_set_link(struct qed_dev *cdev, struct qed_link_params *params)
+ {
+-	struct qed_hwfn *hwfn;
+ 	struct qed_mcp_link_params *link_params;
++	QED_LM_DECLARE(sup_caps);
++	struct qed_hwfn *hwfn;
+ 	struct qed_ptt *ptt;
+-	u32 sup_caps;
++	u32 as;
+ 	int rc;
+ 
+ 	if (!cdev)
+@@ -1482,57 +1483,79 @@ static int qed_set_link(struct qed_dev *cdev, struct qed_link_params *params)
+ 		return -EBUSY;
+ 
+ 	link_params = qed_mcp_get_link_params(hwfn);
++	if (!link_params)
++		return -ENODATA;
 +
- 	rc = qed_mcp_set_link(hwfn, ptt, params->link_up);
+ 	if (params->override_flags & QED_LINK_OVERRIDE_SPEED_AUTONEG)
+ 		link_params->speed.autoneg = params->autoneg;
++
+ 	if (params->override_flags & QED_LINK_OVERRIDE_SPEED_ADV_SPEEDS) {
+-		link_params->speed.advertised_speeds = 0;
+-		sup_caps = QED_LM_1000baseT_Full_BIT |
+-			   QED_LM_1000baseKX_Full_BIT |
+-			   QED_LM_1000baseX_Full_BIT;
+-		if (params->adv_speeds & sup_caps)
+-			link_params->speed.advertised_speeds |=
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G;
+-		sup_caps = QED_LM_10000baseT_Full_BIT |
+-			   QED_LM_10000baseKR_Full_BIT |
+-			   QED_LM_10000baseKX4_Full_BIT |
+-			   QED_LM_10000baseR_FEC_BIT |
+-			   QED_LM_10000baseCR_Full_BIT |
+-			   QED_LM_10000baseSR_Full_BIT |
+-			   QED_LM_10000baseLR_Full_BIT |
+-			   QED_LM_10000baseLRM_Full_BIT;
+-		if (params->adv_speeds & sup_caps)
+-			link_params->speed.advertised_speeds |=
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G;
+-		if (params->adv_speeds & QED_LM_20000baseKR2_Full_BIT)
+-			link_params->speed.advertised_speeds |=
+-				NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G;
+-		sup_caps = QED_LM_25000baseKR_Full_BIT |
+-			   QED_LM_25000baseCR_Full_BIT |
+-			   QED_LM_25000baseSR_Full_BIT;
+-		if (params->adv_speeds & sup_caps)
+-			link_params->speed.advertised_speeds |=
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G;
+-		sup_caps = QED_LM_40000baseLR4_Full_BIT |
+-			   QED_LM_40000baseKR4_Full_BIT |
+-			   QED_LM_40000baseCR4_Full_BIT |
+-			   QED_LM_40000baseSR4_Full_BIT;
+-		if (params->adv_speeds & sup_caps)
+-			link_params->speed.advertised_speeds |=
+-				NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G;
+-		sup_caps = QED_LM_50000baseKR2_Full_BIT |
+-			   QED_LM_50000baseCR2_Full_BIT |
+-			   QED_LM_50000baseSR2_Full_BIT;
+-		if (params->adv_speeds & sup_caps)
+-			link_params->speed.advertised_speeds |=
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G;
+-		sup_caps = QED_LM_100000baseKR4_Full_BIT |
+-			   QED_LM_100000baseSR4_Full_BIT |
+-			   QED_LM_100000baseCR4_Full_BIT |
+-			   QED_LM_100000baseLR4_ER4_Full_BIT;
+-		if (params->adv_speeds & sup_caps)
+-			link_params->speed.advertised_speeds |=
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G;
++		as = 0;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_1000baseT_Full, sup_caps);
++		__set_bit(QED_LM_1000baseKX_Full, sup_caps);
++		__set_bit(QED_LM_1000baseX_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_10000baseT_Full, sup_caps);
++		__set_bit(QED_LM_10000baseKR_Full, sup_caps);
++		__set_bit(QED_LM_10000baseKX4_Full, sup_caps);
++		__set_bit(QED_LM_10000baseR_FEC, sup_caps);
++		__set_bit(QED_LM_10000baseCR_Full, sup_caps);
++		__set_bit(QED_LM_10000baseSR_Full, sup_caps);
++		__set_bit(QED_LM_10000baseLR_Full, sup_caps);
++		__set_bit(QED_LM_10000baseLRM_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_20000baseKR2_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_25000baseKR_Full, sup_caps);
++		__set_bit(QED_LM_25000baseCR_Full, sup_caps);
++		__set_bit(QED_LM_25000baseSR_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_40000baseLR4_Full, sup_caps);
++		__set_bit(QED_LM_40000baseKR4_Full, sup_caps);
++		__set_bit(QED_LM_40000baseCR4_Full, sup_caps);
++		__set_bit(QED_LM_40000baseSR4_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_50000baseKR2_Full, sup_caps);
++		__set_bit(QED_LM_50000baseCR2_Full, sup_caps);
++		__set_bit(QED_LM_50000baseSR2_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G;
++
++		qed_link_mode_zero(sup_caps);
++		__set_bit(QED_LM_100000baseKR4_Full, sup_caps);
++		__set_bit(QED_LM_100000baseSR4_Full, sup_caps);
++		__set_bit(QED_LM_100000baseCR4_Full, sup_caps);
++		__set_bit(QED_LM_100000baseLR4_ER4_Full, sup_caps);
++
++		if (qed_link_mode_intersects(params->adv_speeds, sup_caps))
++			as |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G;
++
++		link_params->speed.advertised_speeds = as;
+ 	}
++
+ 	if (params->override_flags & QED_LINK_OVERRIDE_SPEED_FORCED_SPEED)
+ 		link_params->speed.forced_speed = params->forced_speed;
+ 	if (params->override_flags & QED_LINK_OVERRIDE_PAUSE_CONFIG) {
+@@ -1644,7 +1667,7 @@ static int qed_get_link_data(struct qed_hwfn *hwfn,
  
- 	qed_ptt_release(hwfn, ptt);
-@@ -1929,6 +1932,9 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+ static void qed_fill_link_capability(struct qed_hwfn *hwfn,
+ 				     struct qed_ptt *ptt, u32 capability,
+-				     u32 *if_capability)
++				     unsigned long *if_caps)
+ {
+ 	u32 media_type, tcvr_state, tcvr_type;
+ 	u32 speed_mask, board_cfg;
+@@ -1667,113 +1690,117 @@ static void qed_fill_link_capability(struct qed_hwfn *hwfn,
+ 
+ 	switch (media_type) {
+ 	case MEDIA_DA_TWINAX:
+-		*if_capability |= QED_LM_FIBRE_BIT;
++		__set_bit(QED_LM_FIBRE, if_caps);
++
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G)
+-			*if_capability |= QED_LM_20000baseKR2_Full_BIT;
++			__set_bit(QED_LM_20000baseKR2_Full, if_caps);
++
+ 		/* For DAC media multiple speed capabilities are supported*/
+ 		capability = capability & speed_mask;
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G)
+-			*if_capability |= QED_LM_1000baseKX_Full_BIT;
++			__set_bit(QED_LM_1000baseKX_Full, if_caps);
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G)
+-			*if_capability |= QED_LM_10000baseCR_Full_BIT;
++			__set_bit(QED_LM_10000baseCR_Full, if_caps);
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G)
+-			*if_capability |= QED_LM_40000baseCR4_Full_BIT;
++			__set_bit(QED_LM_40000baseCR4_Full, if_caps);
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G)
+-			*if_capability |= QED_LM_25000baseCR_Full_BIT;
++			__set_bit(QED_LM_25000baseCR_Full, if_caps);
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
+-			*if_capability |= QED_LM_50000baseCR2_Full_BIT;
++			__set_bit(QED_LM_50000baseCR2_Full, if_caps);
+ 		if (capability &
+-			NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G)
+-			*if_capability |= QED_LM_100000baseCR4_Full_BIT;
++		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G)
++			__set_bit(QED_LM_100000baseCR4_Full, if_caps);
++
+ 		break;
+ 	case MEDIA_BASE_T:
+-		*if_capability |= QED_LM_TP_BIT;
++		__set_bit(QED_LM_TP, if_caps);
++
+ 		if (board_cfg & NVM_CFG1_PORT_PORT_TYPE_EXT_PHY) {
+ 			if (capability &
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G) {
+-				*if_capability |= QED_LM_1000baseT_Full_BIT;
+-			}
++			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G)
++				__set_bit(QED_LM_1000baseT_Full, if_caps);
+ 			if (capability &
+-			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G) {
+-				*if_capability |= QED_LM_10000baseT_Full_BIT;
+-			}
++			    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G)
++				__set_bit(QED_LM_10000baseT_Full, if_caps);
+ 		}
++
+ 		if (board_cfg & NVM_CFG1_PORT_PORT_TYPE_MODULE) {
+-			*if_capability |= QED_LM_FIBRE_BIT;
++			__set_bit(QED_LM_FIBRE, if_caps);
++
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_1000BASET)
+-				*if_capability |= QED_LM_1000baseT_Full_BIT;
++				__set_bit(QED_LM_1000baseT_Full, if_caps);
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_BASET)
+-				*if_capability |= QED_LM_10000baseT_Full_BIT;
++				__set_bit(QED_LM_10000baseT_Full, if_caps);
+ 		}
++
+ 		break;
+ 	case MEDIA_SFP_1G_FIBER:
+ 	case MEDIA_SFPP_10G_FIBER:
+ 	case MEDIA_XFP_FIBER:
+ 	case MEDIA_MODULE_FIBER:
+-		*if_capability |= QED_LM_FIBRE_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G) {
++		__set_bit(QED_LM_FIBRE, if_caps);
++
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G) {
+ 			if ((tcvr_type == ETH_TRANSCEIVER_TYPE_1G_LX) ||
+ 			    (tcvr_type == ETH_TRANSCEIVER_TYPE_1G_SX))
+-				*if_capability |= QED_LM_1000baseKX_Full_BIT;
++				__set_bit(QED_LM_1000baseKX_Full, if_caps);
+ 		}
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G) {
++
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G) {
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_SR)
+-				*if_capability |= QED_LM_10000baseSR_Full_BIT;
++				__set_bit(QED_LM_10000baseSR_Full, if_caps);
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_LR)
+-				*if_capability |= QED_LM_10000baseLR_Full_BIT;
++				__set_bit(QED_LM_10000baseLR_Full, if_caps);
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_LRM)
+-				*if_capability |= QED_LM_10000baseLRM_Full_BIT;
++				__set_bit(QED_LM_10000baseLRM_Full, if_caps);
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_ER)
+-				*if_capability |= QED_LM_10000baseR_FEC_BIT;
++				__set_bit(QED_LM_10000baseR_FEC, if_caps);
+ 		}
++
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G)
+-			*if_capability |= QED_LM_20000baseKR2_Full_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G) {
++			__set_bit(QED_LM_20000baseKR2_Full, if_caps);
++
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G) {
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_25G_SR)
+-				*if_capability |= QED_LM_25000baseSR_Full_BIT;
++				__set_bit(QED_LM_25000baseSR_Full, if_caps);
+ 		}
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G) {
++
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G) {
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_40G_LR4)
+-				*if_capability |= QED_LM_40000baseLR4_Full_BIT;
++				__set_bit(QED_LM_40000baseLR4_Full, if_caps);
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_40G_SR4)
+-				*if_capability |= QED_LM_40000baseSR4_Full_BIT;
++				__set_bit(QED_LM_40000baseSR4_Full, if_caps);
+ 		}
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
+-			*if_capability |= QED_LM_50000baseKR2_Full_BIT;
++
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
++			__set_bit(QED_LM_50000baseKR2_Full, if_caps);
++
+ 		if (capability &
+ 		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G) {
+ 			if (tcvr_type == ETH_TRANSCEIVER_TYPE_100G_SR4)
+-				*if_capability |= QED_LM_100000baseSR4_Full_BIT;
++				__set_bit(QED_LM_100000baseSR4_Full, if_caps);
+ 		}
+ 
+ 		break;
+ 	case MEDIA_KR:
+-		*if_capability |= QED_LM_Backplane_BIT;
++		__set_bit(QED_LM_Backplane, if_caps);
++
+ 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G)
+-			*if_capability |= QED_LM_20000baseKR2_Full_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G)
+-			*if_capability |= QED_LM_1000baseKX_Full_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G)
+-			*if_capability |= QED_LM_10000baseKR_Full_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G)
+-			*if_capability |= QED_LM_25000baseKR_Full_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G)
+-			*if_capability |= QED_LM_40000baseKR4_Full_BIT;
+-		if (capability &
+-		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
+-			*if_capability |= QED_LM_50000baseKR2_Full_BIT;
++			__set_bit(QED_LM_20000baseKR2_Full, if_caps);
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G)
++			__set_bit(QED_LM_1000baseKX_Full, if_caps);
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G)
++			__set_bit(QED_LM_10000baseKR_Full, if_caps);
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G)
++			__set_bit(QED_LM_25000baseKR_Full, if_caps);
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G)
++			__set_bit(QED_LM_40000baseKR4_Full, if_caps);
++		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
++			__set_bit(QED_LM_50000baseKR2_Full, if_caps);
+ 		if (capability &
+ 		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G)
+-			*if_capability |= QED_LM_100000baseKR4_Full_BIT;
++			__set_bit(QED_LM_100000baseKR4_Full, if_caps);
++
+ 		break;
+ 	case MEDIA_UNSPECIFIED:
+ 	case MEDIA_NOT_PRESENT:
+@@ -1806,26 +1833,27 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+ 
+ 	/* TODO - at the moment assume supported and advertised speed equal */
+ 	if (link_caps.default_speed_autoneg)
+-		if_link->supported_caps |= QED_LM_Autoneg_BIT;
++		__set_bit(QED_LM_Autoneg, if_link->supported_caps);
+ 	if (params.pause.autoneg ||
+ 	    (params.pause.forced_rx && params.pause.forced_tx))
+-		if_link->supported_caps |= QED_LM_Asym_Pause_BIT;
++		__set_bit(QED_LM_Asym_Pause, if_link->supported_caps);
+ 	if (params.pause.autoneg || params.pause.forced_rx ||
+ 	    params.pause.forced_tx)
+-		if_link->supported_caps |= QED_LM_Pause_BIT;
++		__set_bit(QED_LM_Pause, if_link->supported_caps);
++
++	qed_link_mode_copy(if_link->advertised_caps, if_link->supported_caps);
+ 
+-	if_link->advertised_caps = if_link->supported_caps;
+ 	if (params.speed.autoneg)
+-		if_link->advertised_caps |= QED_LM_Autoneg_BIT;
++		__set_bit(QED_LM_Autoneg, if_link->advertised_caps);
  	else
- 		__clear_bit(QED_LM_Autoneg, if_link->advertised_caps);
+-		if_link->advertised_caps &= ~QED_LM_Autoneg_BIT;
++		__clear_bit(QED_LM_Autoneg, if_link->advertised_caps);
  
-+	if_link->sup_fec = link_caps.fec_default;
-+	if_link->active_fec = params.fec;
-+
- 	/* Fill link advertised capability */
+ 	/* Fill link advertised capability*/
  	qed_fill_link_capability(hwfn, ptt, params.speed.advertised_speeds,
- 				 if_link->advertised_caps);
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.c b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-index b10a92488630..78c0d3a2d164 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-@@ -1446,6 +1446,25 @@ static void qed_mcp_handle_link_change(struct qed_hwfn *p_hwfn,
- 	if (p_hwfn->mcp_info->capabilities & FW_MB_PARAM_FEATURE_SUPPORT_EEE)
- 		qed_mcp_read_eee_config(p_hwfn, p_ptt, p_link);
+-				 &if_link->advertised_caps);
++				 if_link->advertised_caps);
+ 	/* Fill link supported capability*/
+ 	qed_fill_link_capability(hwfn, ptt, link_caps.speed_capabilities,
+-				 &if_link->supported_caps);
++				 if_link->supported_caps);
  
-+	if (p_hwfn->mcp_info->capabilities &
-+	    FW_MB_PARAM_FEATURE_SUPPORT_FEC_CONTROL) {
-+		switch (status & LINK_STATUS_FEC_MODE_MASK) {
-+		case LINK_STATUS_FEC_MODE_NONE:
-+			p_link->fec_active = QED_FEC_MODE_NONE;
-+			break;
-+		case LINK_STATUS_FEC_MODE_FIRECODE_CL74:
-+			p_link->fec_active = QED_FEC_MODE_FIRECODE;
-+			break;
-+		case LINK_STATUS_FEC_MODE_RS_CL91:
-+			p_link->fec_active = QED_FEC_MODE_RS;
-+			break;
-+		default:
-+			p_link->fec_active = QED_FEC_MODE_AUTO;
-+		}
-+	} else {
-+		p_link->fec_active = QED_FEC_MODE_UNSUPPORTED;
-+	}
+ 	if (link.link_up)
+ 		if_link->speed = link.speed;
+@@ -1845,30 +1873,29 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+ 		if_link->pause_config |= QED_LINK_PAUSE_TX_ENABLE;
+ 
+ 	/* Link partner capabilities */
+-	if (link.partner_adv_speed &
+-	    QED_LINK_PARTNER_SPEED_1G_FD)
+-		if_link->lp_caps |= QED_LM_1000baseT_Full_BIT;
 +
- 	qed_link_update(p_hwfn, p_ptt);
- out:
- 	spin_unlock_bh(&p_hwfn->mcp_info->link_lock);
-@@ -1456,8 +1475,8 @@ int qed_mcp_set_link(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, bool b_up)
- 	struct qed_mcp_link_params *params = &p_hwfn->mcp_info->link_input;
- 	struct qed_mcp_mb_params mb_params;
- 	struct eth_phy_cfg phy_cfg;
-+	u32 cmd, fec_bit = 0;
- 	int rc = 0;
--	u32 cmd;
++	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_1G_FD)
++		__set_bit(QED_LM_1000baseT_Full, if_link->lp_caps);
+ 	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_10G)
+-		if_link->lp_caps |= QED_LM_10000baseKR_Full_BIT;
++		__set_bit(QED_LM_10000baseKR_Full, if_link->lp_caps);
+ 	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_20G)
+-		if_link->lp_caps |= QED_LM_20000baseKR2_Full_BIT;
++		__set_bit(QED_LM_20000baseKR2_Full, if_link->lp_caps);
+ 	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_25G)
+-		if_link->lp_caps |= QED_LM_25000baseKR_Full_BIT;
++		__set_bit(QED_LM_25000baseKR_Full, if_link->lp_caps);
+ 	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_40G)
+-		if_link->lp_caps |= QED_LM_40000baseLR4_Full_BIT;
++		__set_bit(QED_LM_40000baseLR4_Full, if_link->lp_caps);
+ 	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_50G)
+-		if_link->lp_caps |= QED_LM_50000baseKR2_Full_BIT;
++		__set_bit(QED_LM_50000baseKR2_Full, if_link->lp_caps);
+ 	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_100G)
+-		if_link->lp_caps |= QED_LM_100000baseKR4_Full_BIT;
++		__set_bit(QED_LM_100000baseKR4_Full, if_link->lp_caps);
  
- 	/* Set the shmem configuration according to params */
- 	memset(&phy_cfg, 0, sizeof(phy_cfg));
-@@ -1489,16 +1508,27 @@ int qed_mcp_set_link(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt, bool b_up)
- 				   EEE_TX_TIMER_USEC_MASK;
+ 	if (link.an_complete)
+-		if_link->lp_caps |= QED_LM_Autoneg_BIT;
+-
++		__set_bit(QED_LM_Autoneg, if_link->lp_caps);
+ 	if (link.partner_adv_pause)
+-		if_link->lp_caps |= QED_LM_Pause_BIT;
++		__set_bit(QED_LM_Pause, if_link->lp_caps);
+ 	if (link.partner_adv_pause == QED_LINK_PARTNER_ASYMMETRIC_PAUSE ||
+ 	    link.partner_adv_pause == QED_LINK_PARTNER_BOTH_PAUSE)
+-		if_link->lp_caps |= QED_LM_Asym_Pause_BIT;
++		__set_bit(QED_LM_Asym_Pause, if_link->lp_caps);
+ 
+ 	if (link_caps.default_eee == QED_MCP_EEE_UNSUPPORTED) {
+ 		if_link->eee_supported = false;
+diff --git a/drivers/net/ethernet/qlogic/qede/qede_ethtool.c b/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
+index d3fc7403d095..f47167cfa382 100644
+--- a/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
++++ b/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
+@@ -419,75 +419,78 @@ static int qede_set_priv_flags(struct net_device *dev, u32 flags)
+ }
+ 
+ struct qede_link_mode_mapping {
+-	u32 qed_link_mode;
+-	u32 ethtool_link_mode;
++	u32			qed_link_mode;
++	u32			ethtool_link_mode;
+ };
+ 
++#define QEDE_ETHTOOL_LM_MAP(mode)					\
++{									\
++	.qed_link_mode		= QED_LM_##mode,			\
++	.ethtool_link_mode	= ETHTOOL_LINK_MODE_##mode##_BIT,	\
++}
++
+ static const struct qede_link_mode_mapping qed_lm_map[] = {
+-	{QED_LM_FIBRE_BIT, ETHTOOL_LINK_MODE_FIBRE_BIT},
+-	{QED_LM_Autoneg_BIT, ETHTOOL_LINK_MODE_Autoneg_BIT},
+-	{QED_LM_Asym_Pause_BIT, ETHTOOL_LINK_MODE_Asym_Pause_BIT},
+-	{QED_LM_Pause_BIT, ETHTOOL_LINK_MODE_Pause_BIT},
+-	{QED_LM_1000baseT_Full_BIT, ETHTOOL_LINK_MODE_1000baseT_Full_BIT},
+-	{QED_LM_10000baseT_Full_BIT, ETHTOOL_LINK_MODE_10000baseT_Full_BIT},
+-	{QED_LM_TP_BIT, ETHTOOL_LINK_MODE_TP_BIT},
+-	{QED_LM_Backplane_BIT, ETHTOOL_LINK_MODE_Backplane_BIT},
+-	{QED_LM_1000baseKX_Full_BIT, ETHTOOL_LINK_MODE_1000baseKX_Full_BIT},
+-	{QED_LM_10000baseKX4_Full_BIT, ETHTOOL_LINK_MODE_10000baseKX4_Full_BIT},
+-	{QED_LM_10000baseKR_Full_BIT, ETHTOOL_LINK_MODE_10000baseKR_Full_BIT},
+-	{QED_LM_10000baseKR_Full_BIT, ETHTOOL_LINK_MODE_10000baseKR_Full_BIT},
+-	{QED_LM_10000baseR_FEC_BIT, ETHTOOL_LINK_MODE_10000baseR_FEC_BIT},
+-	{QED_LM_20000baseKR2_Full_BIT, ETHTOOL_LINK_MODE_20000baseKR2_Full_BIT},
+-	{QED_LM_40000baseKR4_Full_BIT, ETHTOOL_LINK_MODE_40000baseKR4_Full_BIT},
+-	{QED_LM_40000baseCR4_Full_BIT, ETHTOOL_LINK_MODE_40000baseCR4_Full_BIT},
+-	{QED_LM_40000baseSR4_Full_BIT, ETHTOOL_LINK_MODE_40000baseSR4_Full_BIT},
+-	{QED_LM_40000baseLR4_Full_BIT, ETHTOOL_LINK_MODE_40000baseLR4_Full_BIT},
+-	{QED_LM_25000baseCR_Full_BIT, ETHTOOL_LINK_MODE_25000baseCR_Full_BIT},
+-	{QED_LM_25000baseKR_Full_BIT, ETHTOOL_LINK_MODE_25000baseKR_Full_BIT},
+-	{QED_LM_25000baseSR_Full_BIT, ETHTOOL_LINK_MODE_25000baseSR_Full_BIT},
+-	{QED_LM_50000baseCR2_Full_BIT, ETHTOOL_LINK_MODE_50000baseCR2_Full_BIT},
+-	{QED_LM_50000baseKR2_Full_BIT, ETHTOOL_LINK_MODE_50000baseKR2_Full_BIT},
+-	{QED_LM_100000baseKR4_Full_BIT,
+-		ETHTOOL_LINK_MODE_100000baseKR4_Full_BIT},
+-	{QED_LM_100000baseSR4_Full_BIT,
+-		ETHTOOL_LINK_MODE_100000baseSR4_Full_BIT},
+-	{QED_LM_100000baseCR4_Full_BIT,
+-		ETHTOOL_LINK_MODE_100000baseCR4_Full_BIT},
+-	{QED_LM_100000baseLR4_ER4_Full_BIT,
+-		ETHTOOL_LINK_MODE_100000baseLR4_ER4_Full_BIT},
+-	{QED_LM_50000baseSR2_Full_BIT, ETHTOOL_LINK_MODE_50000baseSR2_Full_BIT},
+-	{QED_LM_1000baseX_Full_BIT, ETHTOOL_LINK_MODE_1000baseX_Full_BIT},
+-	{QED_LM_10000baseCR_Full_BIT, ETHTOOL_LINK_MODE_10000baseCR_Full_BIT},
+-	{QED_LM_10000baseSR_Full_BIT, ETHTOOL_LINK_MODE_10000baseSR_Full_BIT},
+-	{QED_LM_10000baseLR_Full_BIT, ETHTOOL_LINK_MODE_10000baseLR_Full_BIT},
+-	{QED_LM_10000baseLRM_Full_BIT, ETHTOOL_LINK_MODE_10000baseLRM_Full_BIT},
++	QEDE_ETHTOOL_LM_MAP(FIBRE),
++	QEDE_ETHTOOL_LM_MAP(Autoneg),
++	QEDE_ETHTOOL_LM_MAP(Asym_Pause),
++	QEDE_ETHTOOL_LM_MAP(Pause),
++	QEDE_ETHTOOL_LM_MAP(1000baseT_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseT_Full),
++	QEDE_ETHTOOL_LM_MAP(TP),
++	QEDE_ETHTOOL_LM_MAP(Backplane),
++	QEDE_ETHTOOL_LM_MAP(1000baseKX_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseKX4_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseKR_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseR_FEC),
++	QEDE_ETHTOOL_LM_MAP(20000baseKR2_Full),
++	QEDE_ETHTOOL_LM_MAP(40000baseKR4_Full),
++	QEDE_ETHTOOL_LM_MAP(40000baseCR4_Full),
++	QEDE_ETHTOOL_LM_MAP(40000baseSR4_Full),
++	QEDE_ETHTOOL_LM_MAP(40000baseLR4_Full),
++	QEDE_ETHTOOL_LM_MAP(25000baseCR_Full),
++	QEDE_ETHTOOL_LM_MAP(25000baseKR_Full),
++	QEDE_ETHTOOL_LM_MAP(25000baseSR_Full),
++	QEDE_ETHTOOL_LM_MAP(50000baseCR2_Full),
++	QEDE_ETHTOOL_LM_MAP(50000baseKR2_Full),
++	QEDE_ETHTOOL_LM_MAP(100000baseKR4_Full),
++	QEDE_ETHTOOL_LM_MAP(100000baseSR4_Full),
++	QEDE_ETHTOOL_LM_MAP(100000baseCR4_Full),
++	QEDE_ETHTOOL_LM_MAP(100000baseLR4_ER4_Full),
++	QEDE_ETHTOOL_LM_MAP(50000baseSR2_Full),
++	QEDE_ETHTOOL_LM_MAP(1000baseX_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseCR_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseSR_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseLR_Full),
++	QEDE_ETHTOOL_LM_MAP(10000baseLRM_Full),
+ };
+ 
+-#define QEDE_DRV_TO_ETHTOOL_CAPS(caps, lk_ksettings, name)	\
+-{								\
+-	int i;							\
+-								\
+-	for (i = 0; i < ARRAY_SIZE(qed_lm_map); i++) {		\
+-		if ((caps) & (qed_lm_map[i].qed_link_mode))	\
+-			__set_bit(qed_lm_map[i].ethtool_link_mode,\
+-				  lk_ksettings->link_modes.name); \
+-	}							\
++static_assert(ARRAY_SIZE(qed_lm_map) == QED_LM_COUNT);
++
++static void qede_drv_to_ethtool_caps(const unsigned long *qed_caps,
++				     unsigned long *ethtool_caps)
++{
++	u32 i;
++
++	for (i = 0; i < ARRAY_SIZE(qed_lm_map); i++)
++		if (test_bit(qed_lm_map[i].qed_link_mode, qed_caps))
++			__set_bit(qed_lm_map[i].ethtool_link_mode,
++				  ethtool_caps);
+ }
+ 
+-#define QEDE_ETHTOOL_TO_DRV_CAPS(caps, lk_ksettings, name)	\
+-{								\
+-	int i;							\
+-								\
+-	for (i = 0; i < ARRAY_SIZE(qed_lm_map); i++) {		\
+-		if (test_bit(qed_lm_map[i].ethtool_link_mode,	\
+-			     lk_ksettings->link_modes.name))	\
+-			caps |= qed_lm_map[i].qed_link_mode;	\
+-	}							\
++static void qede_ethtool_to_drv_caps(unsigned long *qed_caps,
++				     const unsigned long *ethtool_caps)
++{
++	u32 i;
++
++	for (i = 0; i < ARRAY_SIZE(qed_lm_map); i++)
++		if (test_bit(qed_lm_map[i].ethtool_link_mode, ethtool_caps))
++			__set_bit(qed_lm_map[i].qed_link_mode, qed_caps);
+ }
+ 
+ static int qede_get_link_ksettings(struct net_device *dev,
+ 				   struct ethtool_link_ksettings *cmd)
+ {
++	typeof(cmd->link_modes) *link_modes = &cmd->link_modes;
+ 	struct ethtool_link_settings *base = &cmd->base;
+ 	struct qede_dev *edev = netdev_priv(dev);
+ 	struct qed_link_output current_link;
+@@ -498,13 +501,16 @@ static int qede_get_link_ksettings(struct net_device *dev,
+ 	edev->ops->common->get_link(edev->cdev, &current_link);
+ 
+ 	ethtool_link_ksettings_zero_link_mode(cmd, supported);
+-	QEDE_DRV_TO_ETHTOOL_CAPS(current_link.supported_caps, cmd, supported)
++	qede_drv_to_ethtool_caps(current_link.supported_caps,
++				 link_modes->supported);
+ 
+ 	ethtool_link_ksettings_zero_link_mode(cmd, advertising);
+-	QEDE_DRV_TO_ETHTOOL_CAPS(current_link.advertised_caps, cmd, advertising)
++	qede_drv_to_ethtool_caps(current_link.advertised_caps,
++				 link_modes->advertising);
+ 
+ 	ethtool_link_ksettings_zero_link_mode(cmd, lp_advertising);
+-	QEDE_DRV_TO_ETHTOOL_CAPS(current_link.lp_caps, cmd, lp_advertising)
++	qede_drv_to_ethtool_caps(current_link.lp_caps,
++				 link_modes->lp_advertising);
+ 
+ 	if ((edev->state == QEDE_STATE_OPEN) && (current_link.link_up)) {
+ 		base->speed = current_link.speed;
+@@ -530,7 +536,7 @@ static int qede_set_link_ksettings(struct net_device *dev,
+ 	struct qede_dev *edev = netdev_priv(dev);
+ 	struct qed_link_output current_link;
+ 	struct qed_link_params params;
+-	u32 sup_caps;
++	QED_LM_DECLARE(sup_caps);
+ 
+ 	if (!edev->ops || !edev->ops->common->can_link_change(edev->cdev)) {
+ 		DP_INFO(edev, "Link settings are not allowed to be changed\n");
+@@ -542,105 +548,81 @@ static int qede_set_link_ksettings(struct net_device *dev,
+ 
+ 	params.override_flags |= QED_LINK_OVERRIDE_SPEED_ADV_SPEEDS;
+ 	params.override_flags |= QED_LINK_OVERRIDE_SPEED_AUTONEG;
++
+ 	if (base->autoneg == AUTONEG_ENABLE) {
+-		if (!(current_link.supported_caps & QED_LM_Autoneg_BIT)) {
++		if (!test_bit(QED_LM_Autoneg, current_link.supported_caps)) {
+ 			DP_INFO(edev, "Auto negotiation is not supported\n");
+ 			return -EOPNOTSUPP;
+ 		}
+ 
+ 		params.autoneg = true;
+ 		params.forced_speed = 0;
+-		QEDE_ETHTOOL_TO_DRV_CAPS(params.adv_speeds, cmd, advertising)
++
++		qede_ethtool_to_drv_caps(params.adv_speeds,
++					 cmd->link_modes.advertising);
+ 	} else {		/* forced speed */
+ 		params.override_flags |= QED_LINK_OVERRIDE_SPEED_FORCED_SPEED;
+ 		params.autoneg = false;
+ 		params.forced_speed = base->speed;
++
++		qed_link_mode_zero(sup_caps);
++
+ 		switch (base->speed) {
+ 		case SPEED_1000:
+-			sup_caps = QED_LM_1000baseT_Full_BIT |
+-					QED_LM_1000baseKX_Full_BIT |
+-					QED_LM_1000baseX_Full_BIT;
+-			if (!(current_link.supported_caps & sup_caps)) {
+-				DP_INFO(edev, "1G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = current_link.supported_caps &
+-						sup_caps;
++			__set_bit(QED_LM_1000baseT_Full, sup_caps);
++			__set_bit(QED_LM_1000baseKX_Full, sup_caps);
++			__set_bit(QED_LM_1000baseX_Full, sup_caps);
+ 			break;
+ 		case SPEED_10000:
+-			sup_caps = QED_LM_10000baseT_Full_BIT |
+-					QED_LM_10000baseKR_Full_BIT |
+-					QED_LM_10000baseKX4_Full_BIT |
+-					QED_LM_10000baseR_FEC_BIT |
+-					QED_LM_10000baseCR_Full_BIT |
+-					QED_LM_10000baseSR_Full_BIT |
+-					QED_LM_10000baseLR_Full_BIT |
+-					QED_LM_10000baseLRM_Full_BIT;
+-			if (!(current_link.supported_caps & sup_caps)) {
+-				DP_INFO(edev, "10G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = current_link.supported_caps &
+-						sup_caps;
++			__set_bit(QED_LM_10000baseT_Full, sup_caps);
++			__set_bit(QED_LM_10000baseKR_Full, sup_caps);
++			__set_bit(QED_LM_10000baseKX4_Full, sup_caps);
++			__set_bit(QED_LM_10000baseR_FEC, sup_caps);
++			__set_bit(QED_LM_10000baseCR_Full, sup_caps);
++			__set_bit(QED_LM_10000baseSR_Full, sup_caps);
++			__set_bit(QED_LM_10000baseLR_Full, sup_caps);
++			__set_bit(QED_LM_10000baseLRM_Full, sup_caps);
+ 			break;
+ 		case SPEED_20000:
+-			if (!(current_link.supported_caps &
+-			    QED_LM_20000baseKR2_Full_BIT)) {
+-				DP_INFO(edev, "20G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = QED_LM_20000baseKR2_Full_BIT;
++			__set_bit(QED_LM_20000baseKR2_Full, sup_caps);
+ 			break;
+ 		case SPEED_25000:
+-			sup_caps = QED_LM_25000baseKR_Full_BIT |
+-					QED_LM_25000baseCR_Full_BIT |
+-					QED_LM_25000baseSR_Full_BIT;
+-			if (!(current_link.supported_caps & sup_caps)) {
+-				DP_INFO(edev, "25G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = current_link.supported_caps &
+-						sup_caps;
++			__set_bit(QED_LM_25000baseKR_Full, sup_caps);
++			__set_bit(QED_LM_25000baseCR_Full, sup_caps);
++			__set_bit(QED_LM_25000baseSR_Full, sup_caps);
+ 			break;
+ 		case SPEED_40000:
+-			sup_caps = QED_LM_40000baseLR4_Full_BIT |
+-					QED_LM_40000baseKR4_Full_BIT |
+-					QED_LM_40000baseCR4_Full_BIT |
+-					QED_LM_40000baseSR4_Full_BIT;
+-			if (!(current_link.supported_caps & sup_caps)) {
+-				DP_INFO(edev, "40G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = current_link.supported_caps &
+-						sup_caps;
++			__set_bit(QED_LM_40000baseLR4_Full, sup_caps);
++			__set_bit(QED_LM_40000baseKR4_Full, sup_caps);
++			__set_bit(QED_LM_40000baseCR4_Full, sup_caps);
++			__set_bit(QED_LM_40000baseSR4_Full, sup_caps);
+ 			break;
+ 		case SPEED_50000:
+-			sup_caps = QED_LM_50000baseKR2_Full_BIT |
+-					QED_LM_50000baseCR2_Full_BIT |
+-					QED_LM_50000baseSR2_Full_BIT;
+-			if (!(current_link.supported_caps & sup_caps)) {
+-				DP_INFO(edev, "50G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = current_link.supported_caps &
+-						sup_caps;
++			__set_bit(QED_LM_50000baseKR2_Full, sup_caps);
++			__set_bit(QED_LM_50000baseCR2_Full, sup_caps);
++			__set_bit(QED_LM_50000baseSR2_Full, sup_caps);
+ 			break;
+ 		case SPEED_100000:
+-			sup_caps = QED_LM_100000baseKR4_Full_BIT |
+-					QED_LM_100000baseSR4_Full_BIT |
+-					QED_LM_100000baseCR4_Full_BIT |
+-					QED_LM_100000baseLR4_ER4_Full_BIT;
+-			if (!(current_link.supported_caps & sup_caps)) {
+-				DP_INFO(edev, "100G speed not supported\n");
+-				return -EINVAL;
+-			}
+-			params.adv_speeds = current_link.supported_caps &
+-						sup_caps;
++			__set_bit(QED_LM_100000baseKR4_Full, sup_caps);
++			__set_bit(QED_LM_100000baseSR4_Full, sup_caps);
++			__set_bit(QED_LM_100000baseCR4_Full, sup_caps);
++			__set_bit(QED_LM_100000baseLR4_ER4_Full, sup_caps);
+ 			break;
+ 		default:
+ 			DP_INFO(edev, "Unsupported speed %u\n", base->speed);
+ 			return -EINVAL;
+ 		}
++
++		if (!qed_link_mode_intersects(current_link.supported_caps,
++					      sup_caps)) {
++			DP_INFO(edev, "%uG speed not supported\n",
++				base->speed / 1000);
++			return -EINVAL;
++		}
++
++		qed_link_mode_and(params.adv_speeds,
++				  current_link.supported_caps,
++				  sup_caps);
  	}
  
-+	if (p_hwfn->mcp_info->capabilities &
-+	    FW_MB_PARAM_FEATURE_SUPPORT_FEC_CONTROL) {
-+		if (params->fec & QED_FEC_MODE_NONE)
-+			fec_bit |= FEC_FORCE_MODE_NONE;
-+		else if (params->fec & QED_FEC_MODE_FIRECODE)
-+			fec_bit |= FEC_FORCE_MODE_FIRECODE;
-+		else if (params->fec & QED_FEC_MODE_RS)
-+			fec_bit |= FEC_FORCE_MODE_RS;
-+		else if (params->fec & QED_FEC_MODE_AUTO)
-+			fec_bit |= FEC_FORCE_MODE_AUTO;
+ 	params.link_up = true;
+@@ -1006,13 +988,16 @@ static int qede_set_pauseparam(struct net_device *dev,
+ 
+ 	memset(&params, 0, sizeof(params));
+ 	params.override_flags |= QED_LINK_OVERRIDE_PAUSE_CONFIG;
 +
-+		SET_MFW_FIELD(phy_cfg.fec_mode, FEC_FORCE_MODE, fec_bit);
-+	}
+ 	if (epause->autoneg) {
+-		if (!(current_link.supported_caps & QED_LM_Autoneg_BIT)) {
++		if (!test_bit(QED_LM_Autoneg, current_link.supported_caps)) {
+ 			DP_INFO(edev, "autoneg not supported\n");
+ 			return -EINVAL;
+ 		}
 +
- 	p_hwfn->b_drv_link_init = b_up;
- 
- 	if (b_up) {
- 		DP_VERBOSE(p_hwfn, NETIF_MSG_LINK,
--			   "Configuring Link: Speed 0x%08x, Pause 0x%08x, adv_speed 0x%08x, loopback 0x%08x, features 0x%08x\n",
--			   phy_cfg.speed,
--			   phy_cfg.pause,
--			   phy_cfg.adv_speed,
--			   phy_cfg.loopback_mode,
--			   phy_cfg.feature_config_flags);
-+			   "Configuring Link: Speed 0x%08x, Pause 0x%08x, adv_speed 0x%08x, loopback 0x%08x, FEC 0x%08x\n",
-+			   phy_cfg.speed, phy_cfg.pause, phy_cfg.adv_speed,
-+			   phy_cfg.loopback_mode, phy_cfg.fec_mode);
- 	} else {
- 		DP_VERBOSE(p_hwfn, NETIF_MSG_LINK,
- 			   "Resetting link\n");
-@@ -3805,7 +3835,8 @@ int qed_mcp_set_capabilities(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 	u32 mcp_resp, mcp_param, features;
- 
- 	features = DRV_MB_PARAM_FEATURE_SUPPORT_PORT_EEE |
--		   DRV_MB_PARAM_FEATURE_SUPPORT_FUNC_VLINK;
-+		   DRV_MB_PARAM_FEATURE_SUPPORT_FUNC_VLINK |
-+		   DRV_MB_PARAM_FEATURE_SUPPORT_PORT_FEC_CONTROL;
- 
- 	return qed_mcp_cmd(p_hwfn, p_ptt, DRV_MSG_CODE_FEATURE_SUPPORT,
- 			   features, &mcp_resp, &mcp_param);
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.h b/drivers/net/ethernet/qlogic/qed/qed_mcp.h
-index cf678b6966f8..5e50405854e6 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_mcp.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.h
-@@ -38,11 +38,13 @@ struct qed_mcp_link_params {
- 	struct qed_mcp_link_pause_params	pause;
- 	u32					loopback_mode;
- 	struct qed_link_eee_params		eee;
-+	u32					fec;
- };
- 
- struct qed_mcp_link_capabilities {
- 	u32					speed_capabilities;
- 	bool					default_speed_autoneg;
-+	u32					fec_default;
- 	enum qed_mcp_eee_mode			default_eee;
- 	u32					eee_lpi_timer;
- 	u8					eee_speed_caps;
-@@ -88,6 +90,8 @@ struct qed_mcp_link_state {
- 	bool					eee_active;
- 	u8					eee_adv_caps;
- 	u8					eee_lp_adv_caps;
+ 		params.pause_config |= QED_LINK_PAUSE_AUTONEG_ENABLE;
+ 	}
 +
-+	u32					fec_active;
- };
+ 	if (epause->rx_pause)
+ 		params.pause_config |= QED_LINK_PAUSE_RX_ENABLE;
+ 	if (epause->tx_pause)
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 36b1ca2dadbb..4f4f786f3710 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -441,6 +441,7 @@ static void qedf_update_link_speed(struct qedf_ctx *qedf,
+ 	struct qed_link_output *link)
+ {
+ 	struct fc_lport *lport = qedf->lport;
++	QED_LM_DECLARE(sup_caps);
  
- struct qed_mcp_function_info {
+ 	lport->link_speed = FC_PORTSPEED_UNKNOWN;
+ 	lport->link_supported_speeds = FC_PORTSPEED_UNKNOWN;
+@@ -474,40 +475,60 @@ static void qedf_update_link_speed(struct qedf_ctx *qedf,
+ 	 * Set supported link speed by querying the supported
+ 	 * capabilities of the link.
+ 	 */
+-	if ((link->supported_caps & QED_LM_10000baseT_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseKX4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseR_FEC_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseCR_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseSR_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseLR_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseLRM_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_10000baseKR_Full_BIT)) {
++
++	qed_link_mode_zero(sup_caps);
++	__set_bit(QED_LM_10000baseT_Full, sup_caps);
++	__set_bit(QED_LM_10000baseKX4_Full, sup_caps);
++	__set_bit(QED_LM_10000baseR_FEC, sup_caps);
++	__set_bit(QED_LM_10000baseCR_Full, sup_caps);
++	__set_bit(QED_LM_10000baseSR_Full, sup_caps);
++	__set_bit(QED_LM_10000baseLR_Full, sup_caps);
++	__set_bit(QED_LM_10000baseLRM_Full, sup_caps);
++	__set_bit(QED_LM_10000baseKR_Full, sup_caps);
++
++	if (qed_link_mode_intersects(link->supported_caps, sup_caps))
+ 		lport->link_supported_speeds |= FC_PORTSPEED_10GBIT;
+-	}
+-	if ((link->supported_caps & QED_LM_25000baseKR_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_25000baseCR_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_25000baseSR_Full_BIT)) {
++
++	qed_link_mode_zero(sup_caps);
++	__set_bit(QED_LM_25000baseKR_Full, sup_caps);
++	__set_bit(QED_LM_25000baseCR_Full, sup_caps);
++	__set_bit(QED_LM_25000baseSR_Full, sup_caps);
++
++	if (qed_link_mode_intersects(link->supported_caps, sup_caps))
+ 		lport->link_supported_speeds |= FC_PORTSPEED_25GBIT;
+-	}
+-	if ((link->supported_caps & QED_LM_40000baseLR4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_40000baseKR4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_40000baseCR4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_40000baseSR4_Full_BIT)) {
++
++	qed_link_mode_zero(sup_caps);
++	__set_bit(QED_LM_40000baseLR4_Full, sup_caps);
++	__set_bit(QED_LM_40000baseKR4_Full, sup_caps);
++	__set_bit(QED_LM_40000baseCR4_Full, sup_caps);
++	__set_bit(QED_LM_40000baseSR4_Full, sup_caps);
++
++	if (qed_link_mode_intersects(link->supported_caps, sup_caps))
+ 		lport->link_supported_speeds |= FC_PORTSPEED_40GBIT;
+-	}
+-	if ((link->supported_caps & QED_LM_50000baseKR2_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_50000baseCR2_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_50000baseSR2_Full_BIT)) {
++
++	qed_link_mode_zero(sup_caps);
++	__set_bit(QED_LM_50000baseKR2_Full, sup_caps);
++	__set_bit(QED_LM_50000baseCR2_Full, sup_caps);
++	__set_bit(QED_LM_50000baseSR2_Full, sup_caps);
++
++	if (qed_link_mode_intersects(link->supported_caps, sup_caps))
+ 		lport->link_supported_speeds |= FC_PORTSPEED_50GBIT;
+-	}
+-	if ((link->supported_caps & QED_LM_100000baseKR4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_100000baseSR4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_100000baseCR4_Full_BIT) ||
+-	    (link->supported_caps & QED_LM_100000baseLR4_ER4_Full_BIT)) {
++
++	qed_link_mode_zero(sup_caps);
++	__set_bit(QED_LM_100000baseKR4_Full, sup_caps);
++	__set_bit(QED_LM_100000baseSR4_Full, sup_caps);
++	__set_bit(QED_LM_100000baseCR4_Full, sup_caps);
++	__set_bit(QED_LM_100000baseLR4_ER4_Full, sup_caps);
++
++	if (qed_link_mode_intersects(link->supported_caps, sup_caps))
+ 		lport->link_supported_speeds |= FC_PORTSPEED_100GBIT;
+-	}
+-	if (link->supported_caps & QED_LM_20000baseKR2_Full_BIT)
++
++	qed_link_mode_zero(sup_caps);
++	__set_bit(QED_LM_20000baseKR2_Full, sup_caps);
++
++	if (qed_link_mode_intersects(link->supported_caps, sup_caps))
+ 		lport->link_supported_speeds |= FC_PORTSPEED_20GBIT;
++
+ 	fc_host_supported_speeds(lport->host) = lport->link_supported_speeds;
+ }
+ 
 diff --git a/include/linux/qed/qed_if.h b/include/linux/qed/qed_if.h
-index b9212b3057af..1b5286d454bf 100644
+index 8a6e3ad436d1..a039f8519829 100644
 --- a/include/linux/qed/qed_if.h
 +++ b/include/linux/qed/qed_if.h
-@@ -710,6 +710,14 @@ enum qed_link_mode_bits {
- 								  (lm2),      \
- 								  QED_LM_COUNT)
+@@ -662,41 +662,54 @@ enum qed_protocol {
+ };
  
-+enum qed_fec_mode {
-+	QED_FEC_MODE_NONE			= BIT(0),
-+	QED_FEC_MODE_FIRECODE			= BIT(1),
-+	QED_FEC_MODE_RS				= BIT(2),
-+	QED_FEC_MODE_AUTO			= BIT(3),
-+	QED_FEC_MODE_UNSUPPORTED		= BIT(4),
-+};
+ enum qed_link_mode_bits {
+-	QED_LM_FIBRE_BIT = BIT(0),
+-	QED_LM_Autoneg_BIT = BIT(1),
+-	QED_LM_Asym_Pause_BIT = BIT(2),
+-	QED_LM_Pause_BIT = BIT(3),
+-	QED_LM_1000baseT_Full_BIT = BIT(4),
+-	QED_LM_10000baseT_Full_BIT = BIT(5),
+-	QED_LM_10000baseKR_Full_BIT = BIT(6),
+-	QED_LM_20000baseKR2_Full_BIT = BIT(7),
+-	QED_LM_25000baseKR_Full_BIT = BIT(8),
+-	QED_LM_40000baseLR4_Full_BIT = BIT(9),
+-	QED_LM_50000baseKR2_Full_BIT = BIT(10),
+-	QED_LM_100000baseKR4_Full_BIT = BIT(11),
+-	QED_LM_TP_BIT = BIT(12),
+-	QED_LM_Backplane_BIT = BIT(13),
+-	QED_LM_1000baseKX_Full_BIT = BIT(14),
+-	QED_LM_10000baseKX4_Full_BIT = BIT(15),
+-	QED_LM_10000baseR_FEC_BIT = BIT(16),
+-	QED_LM_40000baseKR4_Full_BIT = BIT(17),
+-	QED_LM_40000baseCR4_Full_BIT = BIT(18),
+-	QED_LM_40000baseSR4_Full_BIT = BIT(19),
+-	QED_LM_25000baseCR_Full_BIT = BIT(20),
+-	QED_LM_25000baseSR_Full_BIT = BIT(21),
+-	QED_LM_50000baseCR2_Full_BIT = BIT(22),
+-	QED_LM_100000baseSR4_Full_BIT = BIT(23),
+-	QED_LM_100000baseCR4_Full_BIT = BIT(24),
+-	QED_LM_100000baseLR4_ER4_Full_BIT = BIT(25),
+-	QED_LM_50000baseSR2_Full_BIT = BIT(26),
+-	QED_LM_1000baseX_Full_BIT = BIT(27),
+-	QED_LM_10000baseCR_Full_BIT = BIT(28),
+-	QED_LM_10000baseSR_Full_BIT = BIT(29),
+-	QED_LM_10000baseLR_Full_BIT = BIT(30),
+-	QED_LM_10000baseLRM_Full_BIT = BIT(31),
+-	QED_LM_COUNT = 32
++	QED_LM_FIBRE,
++	QED_LM_Autoneg,
++	QED_LM_Asym_Pause,
++	QED_LM_Pause,
++	QED_LM_1000baseT_Full,
++	QED_LM_10000baseT_Full,
++	QED_LM_10000baseKR_Full,
++	QED_LM_20000baseKR2_Full,
++	QED_LM_25000baseKR_Full,
++	QED_LM_40000baseLR4_Full,
++	QED_LM_50000baseKR2_Full,
++	QED_LM_100000baseKR4_Full,
++	QED_LM_TP,
++	QED_LM_Backplane,
++	QED_LM_1000baseKX_Full,
++	QED_LM_10000baseKX4_Full,
++	QED_LM_10000baseR_FEC,
++	QED_LM_40000baseKR4_Full,
++	QED_LM_40000baseCR4_Full,
++	QED_LM_40000baseSR4_Full,
++	QED_LM_25000baseCR_Full,
++	QED_LM_25000baseSR_Full,
++	QED_LM_50000baseCR2_Full,
++	QED_LM_100000baseSR4_Full,
++	QED_LM_100000baseCR4_Full,
++	QED_LM_100000baseLR4_ER4_Full,
++	QED_LM_50000baseSR2_Full,
++	QED_LM_1000baseX_Full,
++	QED_LM_10000baseCR_Full,
++	QED_LM_10000baseSR_Full,
++	QED_LM_10000baseLR_Full,
++	QED_LM_10000baseLRM_Full,
++	QED_LM_COUNT,
+ };
+ 
++#define QED_LM_DECLARE(lm)			DECLARE_BITMAP((lm),	      \
++							       QED_LM_COUNT)
++
++#define qed_link_mode_zero(lm)			bitmap_zero((lm), QED_LM_COUNT)
++#define qed_link_mode_copy(dst, src)		bitmap_copy((dst), (src),     \
++							    QED_LM_COUNT)
++#define qed_link_mode_and(dst, src1, src2)	bitmap_and((dst),	      \
++							   (src1), (src2),    \
++							   QED_LM_COUNT)
++#define qed_link_mode_intersects(lm1, lm2)	bitmap_intersects((lm1),      \
++								  (lm2),      \
++								  QED_LM_COUNT)
 +
  struct qed_link_params {
- 	bool					link_up;
+ 	bool	link_up;
  
-@@ -720,6 +728,7 @@ struct qed_link_params {
- #define QED_LINK_OVERRIDE_PAUSE_CONFIG		BIT(3)
- #define QED_LINK_OVERRIDE_LOOPBACK_MODE		BIT(4)
- #define QED_LINK_OVERRIDE_EEE_CONFIG		BIT(5)
-+#define QED_LINK_OVERRIDE_FEC_CONFIG		BIT(6)
- 
- 	bool					autoneg;
- 	QED_LM_DECLARE(adv_speeds);
-@@ -738,6 +747,7 @@ struct qed_link_params {
- #define QED_LINK_LOOPBACK_MAC			BIT(4)
- 
- 	struct qed_link_eee_params		eee;
-+	u32					fec;
- };
- 
- struct qed_link_output {
-@@ -758,6 +768,9 @@ struct qed_link_output {
- 	bool					eee_active;
- 	u8					sup_caps;
- 	struct qed_link_eee_params		eee;
+@@ -708,7 +721,9 @@ struct qed_link_params {
+ #define QED_LINK_OVERRIDE_EEE_CONFIG            BIT(5)
+ 	u32	override_flags;
+ 	bool	autoneg;
+-	u32	adv_speeds;
 +
-+	u32					sup_fec;
-+	u32					active_fec;
- };
++	QED_LM_DECLARE(adv_speeds);
++
+ 	u32	forced_speed;
+ #define QED_LINK_PAUSE_AUTONEG_ENABLE           BIT(0)
+ #define QED_LINK_PAUSE_RX_ENABLE                BIT(1)
+@@ -726,10 +741,9 @@ struct qed_link_params {
+ struct qed_link_output {
+ 	bool	link_up;
  
- struct qed_probe_params {
+-	/* In QED_LM_* defs */
+-	u32	supported_caps;
+-	u32	advertised_caps;
+-	u32	lp_caps;
++	QED_LM_DECLARE(supported_caps);
++	QED_LM_DECLARE(advertised_caps);
++	QED_LM_DECLARE(lp_caps);
+ 
+ 	u32	speed;                  /* In Mb/s */
+ 	u8	duplex;                 /* In DUPLEX defs */
 -- 
 2.25.1
 
