@@ -2,110 +2,160 @@ Return-Path: <SRS0=tLTu=A4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B134C433E4
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:34:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD3BAC433E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:45:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 232612070E
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:34:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B36720734
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:45:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="SNvuhoJT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726359AbgGQKeD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jul 2020 06:34:03 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2496 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725912AbgGQKeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jul 2020 06:34:02 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 192DCD1A857AB92C51D8;
-        Fri, 17 Jul 2020 11:34:01 +0100 (IST)
-Received: from [127.0.0.1] (10.210.167.164) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Fri, 17 Jul
- 2020 11:34:00 +0100
-Subject: Re: [PATCH 02/21] block: add flag for internal commands
-To:     Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Bart van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
-        <linux-scsi@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20200703130122.111448-1-hare@suse.de>
- <20200703130122.111448-3-hare@suse.de>
- <699d432d-eb5e-a928-5391-c31643620b27@huawei.com>
- <1577e01a-445d-3843-389f-6f4b004461c0@kernel.dk>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <09c655ad-c82e-5393-62f0-aef19429e9a6@huawei.com>
-Date:   Fri, 17 Jul 2020 11:32:11 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1726200AbgGQKpX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jul 2020 06:45:23 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42116 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725912AbgGQKpW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Jul 2020 06:45:22 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06HAf5HS000706;
+        Fri, 17 Jul 2020 03:45:17 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=pfpt0818;
+ bh=kUUV0lqEb9Xz6K+RwOiQpvVDxu/YkSCqofPspW+1YoY=;
+ b=SNvuhoJTEhg9HEnJEQNY54Czw4gqsE8vAPqmFYgEDU4/RCHpjgXS6vtG2qdCVQojVGCR
+ aKbI7iXyvDWR+pZtsUL5aNssyCVtK/OR/Wr3phptilEW8C7043wn8SiJ6kNSZQkFBTWE
+ XV9rK1BBXS4z+1PHwT/vHAbDKY2TGplo5XwDTh+bWgDMzl3t3XnxuxnVTF6kgpwMW/ZE
+ Rb14Hs/PnqetbHJ60fazMYU3R/Vgqi3b9vgcVeqhjx4oFc83Nwu0lEaeavOOjlBWvlKe
+ /PZwBI+vv2+b+W1y9Q7TVeDSqbREhuivL5c04Q9fKh1HGjcfSTlW6cs/0ovS7BCX4xi3 aA== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 328mmj43he-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 17 Jul 2020 03:45:17 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 17 Jul
+ 2020 03:45:15 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 17 Jul 2020 03:45:15 -0700
+Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
+        by maili.marvell.com (Postfix) with ESMTP id 52CE13F703F;
+        Fri, 17 Jul 2020 03:45:11 -0700 (PDT)
+From:   Alexander Lobakin <alobakin@marvell.com>
+To:     Jakub Kicinski <kuba@kernel.org>
+CC:     Alexander Lobakin <alobakin@marvell.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Igor Russkikh <irusskikh@marvell.com>,
+        Michal Kalderon <michal.kalderon@marvell.com>,
+        Ariel Elior <aelior@marvell.com>,
+        "Denis Bolotin" <denis.bolotin@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <GR-everest-linux-l2@marvell.com>,
+        <QLogic-Storage-Upstream@marvell.com>, <netdev@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH net-next 10/13] qed: add support for new port modes
+Date:   Fri, 17 Jul 2020 13:44:37 +0300
+Message-ID: <20200717104437.523-1-alobakin@marvell.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200716181853.502dd619@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+References: <20200716115446.994-1-alobakin@marvell.com>,
+ <20200716181853.502dd619@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 MIME-Version: 1.0
-In-Reply-To: <1577e01a-445d-3843-389f-6f4b004461c0@kernel.dk>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.167.164]
-X-ClientProxiedBy: lhreml741-chm.china.huawei.com (10.201.108.191) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-17_06:2020-07-17,2020-07-17 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 09/07/2020 21:02, Jens Axboe wrote:
-> On 7/8/20 3:27 AM, John Garry wrote:
->> On 03/07/2020 14:01, Hannes Reinecke wrote:
->>
->> +linux-block
->>
->> I figure that linux-block should be cc'ed here
->>
->>> Some drivers require to allocate requests for internal command
->>> submission. These request will never be passed through the block
->>> layer, but nevertheless require a valid tag to avoid them clashing
->>> with normal I/O commands.
->>> This patch adds a new request flag REQ_INTERNAL to mark such
->>> requests and a terminates any such commands in blk_execute_rq_nowait()
->>> with a WARN_ON_ONCE to signal such an invalid usage.
+From: Jakub Kicinski <kuba@kernel.org>
+Date: Thu, 16 Jul 2020 18:18:57 -0700
 
-So if these requests will never be passed through the block layer - as 
-you say - then why add a check for this? Surely you will find out in 
-nasty and obvious ways that it should be done.
+Hi Jakub,
 
-Thanks,
-John
-
->>>
->>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>> ---
->>>    block/blk-exec.c          | 5 +++++
->>>    include/linux/blk_types.h | 2 ++
->>>    include/linux/blkdev.h    | 5 +++++
->>>    3 files changed, 12 insertions(+)
->>>
->>> diff --git a/block/blk-exec.c b/block/blk-exec.c
->>> index 85324d53d072..6869877e0d21 100644
->>> --- a/block/blk-exec.c
->>> +++ b/block/blk-exec.c
->>> @@ -55,6 +55,11 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
->>>    	rq->rq_disk = bd_disk;
->>>    	rq->end_io = done;
->>>    
->>> +	if (WARN_ON_ONCE(blk_rq_is_internal(rq))) {
->>> +		blk_mq_end_request(rq, BLK_STS_NOTSUPP);
->>> +		return;
->>> +	}
->>> +
->>>    	blk_account_io_start(rq);
+> On Thu, 16 Jul 2020 14:54:43 +0300 Alexander Lobakin wrote:
+>> These ports ship on new boards revisions and are supported by newer
+>> firmware versions.
+>> 
+>> Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
+>> Signed-off-by: Igor Russkikh <irusskikh@marvell.com>
 > 
-> The whole concept seems very odd, and then there's this seemingly
-> randomly placed check and error condition. As I haven't seen the
-> actual use case for this, hard to make suggestions though.
+> What is the driver actually doing with them, tho?
 > 
+> Looks like you translate some firmware specific field to a driver
+> specific field, but I can't figure out what part of the code cares
+> about hw_info.port_mode
 
+You're right, we just check NVM port type for validity and store it
+for the case of future expansions. Is that OK or I should do smth
+with that?
+
+>> diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
+>> index 6a1d12da7910..63fcbd5a295a 100644
+>> --- a/drivers/net/ethernet/qlogic/qed/qed.h
+>> +++ b/drivers/net/ethernet/qlogic/qed/qed.h
+>> @@ -257,6 +257,11 @@ enum QED_PORT_MODE {
+>>  	QED_PORT_MODE_DE_1X25G,
+>>  	QED_PORT_MODE_DE_4X25G,
+>>  	QED_PORT_MODE_DE_2X10G,
+>> +	QED_PORT_MODE_DE_2X50G_R1,
+>> +	QED_PORT_MODE_DE_4X50G_R1,
+>> +	QED_PORT_MODE_DE_1X100G_R2,
+>> +	QED_PORT_MODE_DE_2X100G_R2,
+>> +	QED_PORT_MODE_DE_1X100G_R4,
+>>  };
+>>  
+>>  enum qed_dev_cap {
+>> diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+>> index d929556247a5..4bad836d0f74 100644
+>> --- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
+>> +++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+>> @@ -4026,6 +4026,21 @@ static int qed_hw_get_nvm_info(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
+>>  	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X25G:
+>>  		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_4X25G;
+>>  		break;
+>> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X50G_R1:
+>> +		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_2X50G_R1;
+>> +		break;
+>> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_4X50G_R1:
+>> +		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_4X50G_R1;
+>> +		break;
+>> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R2:
+>> +		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_1X100G_R2;
+>> +		break;
+>> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X100G_R2:
+>> +		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_2X100G_R2;
+>> +		break;
+>> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R4:
+>> +		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_1X100G_R4;
+>> +		break;
+>>  	default:
+>>  		DP_NOTICE(p_hwfn, "Unknown port mode in 0x%08x\n", core_cfg);
+>>  		break;
+>> diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+>> index a4a845579fd2..debc55923251 100644
+>> --- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+>> +++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
+>> @@ -13015,6 +13015,11 @@ struct nvm_cfg1_glob {
+>>  #define NVM_CFG1_GLOB_NETWORK_PORT_MODE_1X25G			0xd
+>>  #define NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X25G			0xe
+>>  #define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X10G			0xf
+>> +#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X50G_R1		0x11
+>> +#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_4X50G_R1		0x12
+>> +#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R2		0x13
+>> +#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X100G_R2		0x14
+>> +#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R4		0x15
+>>  
+>>  	u32							e_lane_cfg1;
+>>  	u32							e_lane_cfg2;
+
+Al
