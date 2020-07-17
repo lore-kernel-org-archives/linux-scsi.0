@@ -2,129 +2,116 @@ Return-Path: <SRS0=tLTu=A4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD60C433E8
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2009C433E3
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:49:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26C552076A
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:46:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594982765;
-	bh=rZapR1AUEnvLCYrdT7Q3VIe+xXAVHBF0NtVoiuhw0Xk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=By4dN+5geEnPvfcn240mXFP0Y/ehhvmhoCp8PNMeFHK4EyfK3alhUKXd5LJwPOks6
-	 Qh4Kn7oiEL1BX9c8DqIsg5P/reiqw5QSs0jSnK+WlyyynNak9t5PhYmunjWUznxAkR
-	 XuBcQwoYXb3uDrA941XqbNKgAK3igB64XjoNG0Wg=
+	by mail.kernel.org (Postfix) with ESMTP id CBD3520734
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:49:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="RC/p++b7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726627AbgGQKqB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jul 2020 06:46:01 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:39659 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725950AbgGQKqA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2020 06:46:00 -0400
-Received: by mail-wm1-f67.google.com with SMTP id w3so16348932wmi.4;
-        Fri, 17 Jul 2020 03:45:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=YY3ppYqGw7E84eMLDXJRCrVaF4QNTh9fLWccSr6uIiU=;
-        b=q6vAVxzxV9v9Hc1VUylqc3MpqQA/2f0ffFMvjlCtDJBseVmPgBamutlxqC1j9QUcEG
-         Pl38ceaZ3aM/+gVtIS94k2GKvOpML+BIHVZsB9VSehAeuc3Y0ifAmudu1X4xh2N7eUy7
-         Lfm4c+QopFTdS3CZQ7Gm8r6k9R1pWGRb6bYXdglBUpPgrTg5vzhWzDlcBnnVhC5I6r7s
-         qD0DkgApDdLC4NlOqF/YkWA2dJXp0OCMnWjxG0Z/wNgpb0TlhO8P+Iwl9v7AhEey8LP8
-         XYcyrKs75aZYAp+kRCcEgZXGI+5aUNQS1V1Tcfk7onOhO7Kzw9MRx1ZI8Y6qYYhZ1mt/
-         tqCA==
-X-Gm-Message-State: AOAM533a+6OdoMURg40PDcvCC0+JGHF69GobB0iPRASZBKEIpCD41i4U
-        BKWMGRYprNdUxC6sGgAoVK8=
-X-Google-Smtp-Source: ABdhPJyhkmGPpU8Pjdo+zQaFtP5F2glKmnDGK4/R8D94Ro/V3FiLZzWM3hGJtJ1M/nt5LnzZf8f/Ww==
-X-Received: by 2002:a1c:7c16:: with SMTP id x22mr8270458wmc.76.1594982758313;
-        Fri, 17 Jul 2020 03:45:58 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id u2sm12011620wml.16.2020.07.17.03.45.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2020 03:45:57 -0700 (PDT)
-Date:   Fri, 17 Jul 2020 10:45:56 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     t-mabelt@microsoft.com, kys@microsoft.com, haiyangz@microsoft.com,
-        sthemmin@microsoft.com, wei.liu@kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mikelley@microsoft.com, parri.andrea@gmail.com,
-        Andres Beltran <lkmlabelt@gmail.com>,
+        id S1726221AbgGQKtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jul 2020 06:49:43 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13406 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725912AbgGQKtm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Jul 2020 06:49:42 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06HAgfch010272;
+        Fri, 17 Jul 2020 03:49:39 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pfpt0818;
+ bh=LI15vtc1sBeo327JWQg5OChc27nKdjqnS+CvYVaEkSI=;
+ b=RC/p++b7vs/nXZkKXSTqs4tbnWek2/uCjopTPXaUIqUoTA53FqZuxC1ZQfrdOlCQQLJO
+ vo6KuivqdPbfVWmmBB1r2Rk45bHKyVGbN5C++65f4dbvbRE3UN3/3wDzpI3o0LSdCjyT
+ TLQlst4pYryyh7C0CwMHCPUBoNkv0qog9kftWoIK5Y61+WvImWhWs3EL3ZinzYH/2QsJ
+ CgomND5vicxMogd6qyrhI9wNNysNfgGkVhrLZbLQQ87Hla7VR1LEAZz9r6eSyjM4Xvza
+ TSXtJm9siMq4e+oy6EyOKvGRgvLsgXpVA7bw/wQB1cEQNPsG1gGZ2lHycy0p6WiXAiIF yw== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 32ap7vcw11-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 17 Jul 2020 03:49:39 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 17 Jul
+ 2020 03:49:38 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Fri, 17 Jul 2020 03:49:38 -0700
+Received: from [10.193.54.28] (NN-LT0019.marvell.com [10.193.54.28])
+        by maili.marvell.com (Postfix) with ESMTP id 8D2FC3F7041;
+        Fri, 17 Jul 2020 03:49:34 -0700 (PDT)
+Subject: Re: [EXT] Re: [PATCH net-next 10/13] qed: add support for new port
+ modes
+To:     Jakub Kicinski <kuba@kernel.org>,
+        Alexander Lobakin <alobakin@marvell.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     "David S. Miller" <davem@davemloft.net>,
+        Michal Kalderon <mkalderon@marvell.com>,
+        Ariel Elior <aelior@marvell.com>,
+        Denis Bolotin <dbolotin@marvell.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] scsi: storvsc: Use vmbus_requestor to generate
- transaction IDs for VMBus hardening
-Message-ID: <20200717104556.ul5s6hmtlerjpi3g@liuwe-devbox-debian-v2>
-References: <20200701001221.2540-1-lkmlabelt@gmail.com>
- <20200701001221.2540-3-lkmlabelt@gmail.com>
- <20200707234700.GA218@Ryzen-9-3900X.localdomain>
- <20200708092105.7af7sf2olpaysh33@liuwe-devbox-debian-v2>
- <20200708092512.muse7szgxyihazvv@liuwe-devbox-debian-v2>
+        GR-everest-linux-l2 <GR-everest-linux-l2@marvell.com>,
+        <QLogic-Storage-Upstream@cavium.com>, <netdev@vger.kernel.org>
+References: <20200716115446.994-1-alobakin@marvell.com>
+ <20200716115446.994-11-alobakin@marvell.com>
+ <20200716181853.502dd619@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+From:   Igor Russkikh <irusskikh@marvell.com>
+Message-ID: <27939848-7e83-2897-36f9-44f47d1bfb9c@marvell.com>
+Date:   Fri, 17 Jul 2020 13:49:33 +0300
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200708092512.muse7szgxyihazvv@liuwe-devbox-debian-v2>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20200716181853.502dd619@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-17_06:2020-07-17,2020-07-17 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 08, 2020 at 09:25:12AM +0000, Wei Liu wrote:
-> On Wed, Jul 08, 2020 at 09:21:05AM +0000, Wei Liu wrote:
-> [...]
-> > > If I revert this commit, everything works fine:
-> > > 
-> > > PS C:\Users\natec> wsl --shutdown
-> > > PS C:\Users\natec> wsl -d ubuntu -- /bin/bash
-> > > nathan@Ryzen-9-3900X:/mnt/c/Users/natec$ cat /proc/version
-> > > Linux version 5.8.0-rc4-next-20200707-microsoft-standard+ (nathan@Ryzen-9-3900X) (gcc (Ubuntu 9.3.0-10ubuntu2) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #1 SMP Tue Jul 7 16:35:06 MST 2020
-> > > nathan@Ryzen-9-3900X:/mnt/c/Users/natec$ git -C ~/src/linux-next lo -2
-> > > 0ff017dff922 (HEAD -> master) Revert "scsi: storvsc: Use vmbus_requestor to generate transaction IDs for VMBus hardening"
-> > > 5b2a702f85b3 (tag: next-20200707, origin/master, origin/HEAD) Add linux-next specific files for 20200707
-> > > nathan@Ryzen-9-3900X:/mnt/c/Users/natec$
-> > > 
-> > > The kernel was built using the following commands:
-> > > 
-> > > $ mkdir -p out/x86_64
-> > > 
-> > > $ curl -LSso out/x86_64/.config https://github.com/microsoft/WSL2-Linux-Kernel/raw/linux-msft-wsl-4.19.y/Microsoft/config-wsl
-> > > 
-> > > $ scripts/config --file out/x86_64/.config -d RAID6_PQ_BENCHMARK -e NET_9P_VIRTIO
-> > > 
-> > > $ make -skj"$(nproc)" O=out/x86_64 olddefconfig bzImage
-> > > 
-> > > I don't really know how to get more information than this as WSL seems
-> > > rather opaque but I am happy to provide any information.
-> > 
-> > Linux kernel uses Hyper-V's crash reporting facility to spit out
-> > information when it dies. It is said that you can see that information
-> > in the "Event Viewer" program.
-> > 
-> > (I've never tried this though -- not using WSL2)
-> > 
+
+
+> ----------------------------------------------------------------------
+> On Thu, 16 Jul 2020 14:54:43 +0300 Alexander Lobakin wrote:
+>> These ports ship on new boards revisions and are supported by newer
+>> firmware versions.
+>>
+>> Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
+>> Signed-off-by: Igor Russkikh <irusskikh@marvell.com>
 > 
-> If this doesn't work, another idea is to install a traditional VM on
-> Hyper-V and replace the kernel with your own.
+> What is the driver actually doing with them, tho?
 > 
-> With such setup, you should be able to add an emulated serial port to
-> the VM and grab more information.
+> Looks like you translate some firmware specific field to a driver
+> specific field, but I can't figure out what part of the code cares
+> about hw_info.port_mode
 
-Hi Nathan, do you need more help on this?
+Hi Jakub,
 
-MSFT is also working on reproducing this internally.
+You are right, this info is never used/reported.
 
-We're ~2 weeks away from the next merge window so it would be good if we
-can get to the bottom of this as quickly as possible.
+Alexander is extending already existing non used field with new values from
+our latest hardware revisions.
 
-Wei.
+I thought devlink info could be a good place to output such kind of information.
 
-> 
-> Wei.
+Thats basically a layout of *Physical* ports on device - quite useful info I
+think.
+
+Important thing is these ports may not be directly mapped to PCI PFs. So
+reading `ethtool eth*` may not explain you the real device capabilities.
+
+Do you think it makes sense adding such info to `devlink info` then?
+
+Thanks
+  Igor
