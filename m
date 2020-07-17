@@ -2,191 +2,130 @@ Return-Path: <SRS0=tLTu=A4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA105C433E3
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 16:12:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10354C433E0
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 18:32:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A55B2076A
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 16:12:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ts.fujitsu.com header.i=@ts.fujitsu.com header.b="CSO3KqOJ"
+	by mail.kernel.org (Postfix) with ESMTP id DC5F420759
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 18:32:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1595010721;
+	bh=YHFPycUTgsDF1UJGgyC7LWsiRop+4nEUMYmTmNXt6f0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=f/tA/Y2vW039s4vmmVJStVtjx+ey4ZaqffLQGi/6mAj5hlAZdkPPBzeJJdMPOXsbO
+	 NgQjF0icOFKnZDy3/McSER0CVmmgjt40YOzmC8TG4m2chtA08xJ3NvQmzgBsNw/nU2
+	 +WBgMlNbIgqSvfoQkMEJRrDACASppzd/5se0Jo1Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727094AbgGQQMe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jul 2020 12:12:34 -0400
-Received: from mail1.bemta25.messagelabs.com ([195.245.230.68]:33401 "EHLO
-        mail1.bemta25.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726633AbgGQQMd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jul 2020 12:12:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ts.fujitsu.com;
-        s=200619tsfj; t=1595002350; i=@ts.fujitsu.com;
-        bh=egmweCa5pZm/0eaUhgjJ9HDsMmuNSgWkgH65Ktkuo60=;
-        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        b=CSO3KqOJaayWskJ3mCWrDoUxAGQYXUqDHBhr0iGq6mKnm+V1rTxDM9qf8H1WVqL6u
-         mTYVoHZwYMx084qgji3mmb54JJvY8F+w8Awyhz7bZn7BAcYaWpDVVnrkwc0wJiyhPx
-         3+JrC+YDELzU9pU3eXkyY4DD1o0l08/ER4igYH3YLEOuB46ugDROhRqrKxuAtJDX4m
-         nX8o4wvAu+eP3KU2LWKh2WafXtROUU+0xRIRJJQ0X2JFg0ZHQRLxbi4+L+7T0Ze9zQ
-         /FQ3vVZYV2QltNiW0Ebddk0SI3MLe8QI8Sut87VPOfibLFRKKxqln/k7n6ySgZHMSO
-         ZmFBYCLT3PI4g==
-Received: from [100.112.197.196] (using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256 bits))
-        by server-4.bemta.az-b.eu-west-1.aws.symcld.net id 0B/BA-16187-EEDC11F5; Fri, 17 Jul 2020 16:12:30 +0000
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrNLMWRWlGSWpSXmKPExsViZ8MRovvurGC
-  8waTtrBbd13ewWSw//o/J4u+kG6wWrUvfMjmweHx8eovF4/MmuQCmKNbMvKT8igTWjAdrGpgL
-  HslX3Jns28B4TrqLkYtDSGAyo8SeWcdZIZzpjBJLrneydTFycrAJGEismHSfBSQhIrCGUWLln
-  XnMIAlmAT2Jaf/WsYPYwgKuErPefGcCsVkEVCUOdC5nBbF5Bewk3m45zwhiSwjIS3QcmMwCYn
-  MK2EvM/nYQLC4EVPNg3VvmCYzcCxgZVjFaJBVlpmeU5CZm5ugaGhjoGhoa6RpaWugamhvrJVb
-  pJumlluqWpxaX6BrqJZYX6xVX5ibnpOjlpZZsYgSGSUrBsbU7GHvefNA7xCjJwaQkytu2SjBe
-  iC8pP6UyI7E4I76oNCe1+BCjDAeHkgSv+CmgnGBRanpqRVpmDjBkYdISHDxKIrzGZ4DSvMUFi
-  bnFmekQqVOMilLivGIgCQGQREZpHlwbLE4uMcpKCfMyMjAwCPEUpBblZpagyr9iFOdgVBLmDQ
-  OZwpOZVwI3/RXQYiagxRs/84IsLklESEk1ME3k5y9c4u2xN3hBsdnWZ7J2dxcE5Owy2K3bdtd
-  z9gLPm9PZZ2zf5ijMNk18K8/Mq66zzsqdenFe7tE8Fn6Xv3eN0qIcz1uGN7S0eP6+WnHbyMFk
-  c2SpNXPUdQWpuS7bQv6rZetPitB2zblV/mVyg3kf302BE2+SfiixGhqZ39tiu/6o5qH8MieZR
-  /t9dn10f90SfO1bPNOrq3MF1kXMuWSRvTDg/vtJegqHONUWPA//0LJizURjznVep6KmHcrjOZ
-  X23iLuzMeEc5cOdl/9ez2wmF0+W0bY7tzEiq//p86eJncztiRq2qKXTL+M7veeL8mWKq4XuHR
-  +6QQ3sR3/H14rk37ZoRorXb+da0bGxXNKLMUZiYZazEXFiQCbAK+BDgMAAA==
-X-Env-Sender: bstroesser@ts.fujitsu.com
-X-Msg-Ref: server-17.tower-287.messagelabs.com!1595002349!316577!1
-X-Originating-IP: [62.60.8.84]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.50.2; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 24145 invoked from network); 17 Jul 2020 16:12:29 -0000
-Received: from unknown (HELO mailhost3.uk.fujitsu.com) (62.60.8.84)
-  by server-17.tower-287.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 17 Jul 2020 16:12:29 -0000
-Received: from x-serv01 ([172.17.38.52])
-        by mailhost3.uk.fujitsu.com (8.14.5/8.14.5) with SMTP id 06HGCNg3009778;
-        Fri, 17 Jul 2020 17:12:23 +0100
-Received: from VTC.emeia.fujitsu.local (unknown [172.17.38.7])
-        by x-serv01 (Postfix) with ESMTP id F226C20489;
-        Fri, 17 Jul 2020 18:12:20 +0200 (CEST)
-From:   Bodo Stroesser <bstroesser@ts.fujitsu.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     Bodo Stroesser <bstroesser@ts.fujitsu.com>
-Subject: [PATCH v2 2/8] scsi: target: Add tmr_notify backend function
-Date:   Fri, 17 Jul 2020 18:12:06 +0200
-Message-Id: <20200717161212.10731-3-bstroesser@ts.fujitsu.com>
-X-Mailer: git-send-email 2.12.3
-In-Reply-To: <20200717161212.10731-1-bstroesser@ts.fujitsu.com>
-References: <20200717161212.10731-1-bstroesser@ts.fujitsu.com>
+        id S1728089AbgGQSb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jul 2020 14:31:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46986 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726322AbgGQSb6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Jul 2020 14:31:58 -0400
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.7])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B7E7E20759;
+        Fri, 17 Jul 2020 18:31:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1595010717;
+        bh=YHFPycUTgsDF1UJGgyC7LWsiRop+4nEUMYmTmNXt6f0=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=uY9z5GFL5wr9rt4JseHttadmmmHwUKrbMZC7HgrilpDBbLcfMJ2gEvc+V/2fDE5eb
+         F5GgYkSlQGORe/913kjxedtpgOCqZlw2b6Kyim2kaNlGn/FNl35LVOk8YiJE7P9a+M
+         pgiizxg6DiK9ve2OxtLVmUGdWpfoYYOSFGSWrsWA=
+Date:   Fri, 17 Jul 2020 11:31:55 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Igor Russkikh <irusskikh@marvell.com>
+Cc:     Alexander Lobakin <alobakin@marvell.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Michal Kalderon <mkalderon@marvell.com>,
+        Ariel Elior <aelior@marvell.com>,
+        Denis Bolotin <dbolotin@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        GR-everest-linux-l2 <GR-everest-linux-l2@marvell.com>,
+        <QLogic-Storage-Upstream@cavium.com>, <netdev@vger.kernel.org>
+Subject: Re: [EXT] Re: [PATCH net-next 10/13] qed: add support for new port
+ modes
+Message-ID: <20200717113155.1a9234b3@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <27939848-7e83-2897-36f9-44f47d1bfb9c@marvell.com>
+References: <20200716115446.994-1-alobakin@marvell.com>
+        <20200716115446.994-11-alobakin@marvell.com>
+        <20200716181853.502dd619@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <27939848-7e83-2897-36f9-44f47d1bfb9c@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Target core is modified to call an optional backend
-callback function if a TMR is received or commands
-are aborted implicitly after a PR command was received.
-The backend function takes as parameters the se_dev, the
-type of the TMR, and the list of aborted commands.
-If no commands were aborted, an empty list is supplied.
+On Fri, 17 Jul 2020 13:49:33 +0300 Igor Russkikh wrote:
+> > ----------------------------------------------------------------------
+> > On Thu, 16 Jul 2020 14:54:43 +0300 Alexander Lobakin wrote:  
+> >> These ports ship on new boards revisions and are supported by newer
+> >> firmware versions.
+> >>
+> >> Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
+> >> Signed-off-by: Igor Russkikh <irusskikh@marvell.com>  
+> > 
+> > What is the driver actually doing with them, tho?
+> > 
+> > Looks like you translate some firmware specific field to a driver
+> > specific field, but I can't figure out what part of the code cares
+> > about hw_info.port_mode  
+> 
+> Hi Jakub,
+> 
+> You are right, this info is never used/reported.
+> 
+> Alexander is extending already existing non used field with new values from
+> our latest hardware revisions.
+> 
+> I thought devlink info could be a good place to output such kind of information.
+> 
+> Thats basically a layout of *Physical* ports on device - quite useful info I
+> think.
+> 
+> Important thing is these ports may not be directly mapped to PCI PFs. So
+> reading `ethtool eth*` may not explain you the real device capabilities.
+> 
+> Do you think it makes sense adding such info to `devlink info` then?
 
-Signed-off-by: Bodo Stroesser <bstroesser@ts.fujitsu.com>
----
- drivers/target/target_core_tmr.c       | 16 +++++++++++++++-
- drivers/target/target_core_transport.c |  1 +
- include/target/target_core_backend.h   |  2 ++
- include/target/target_core_base.h      |  1 +
- 4 files changed, 19 insertions(+), 1 deletion(-)
+Devlink port has information about physical port, which don't have to
+map 1:1 to netdevs. It also has lanes and port splitting which you may
+want to report.
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index b65d7a0a5df1..39d93357db65 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -116,6 +116,7 @@ void core_tmr_abort_task(
- 	struct se_tmr_req *tmr,
- 	struct se_session *se_sess)
- {
-+	LIST_HEAD(aborted_list);
- 	struct se_cmd *se_cmd, *next;
- 	unsigned long flags;
- 	bool rc;
-@@ -144,7 +145,7 @@ void core_tmr_abort_task(
- 		if (!rc)
- 			continue;
- 
--		list_del_init(&se_cmd->state_list);
-+		list_move_tail(&se_cmd->state_list, &aborted_list);
- 		se_cmd->state_active = false;
- 
- 		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
-@@ -157,6 +158,11 @@ void core_tmr_abort_task(
- 			WARN_ON_ONCE(transport_lookup_tmr_lun(tmr->task_cmd) <
- 					0);
- 
-+		if (dev->transport->tmr_notify)
-+			dev->transport->tmr_notify(dev, TMR_ABORT_TASK,
-+						   &aborted_list);
-+
-+		list_del_init(&se_cmd->state_list);
- 		target_put_cmd_and_wait(se_cmd);
- 
- 		printk("ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for"
-@@ -167,6 +173,9 @@ void core_tmr_abort_task(
- 	}
- 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
- 
-+	if (dev->transport->tmr_notify)
-+		dev->transport->tmr_notify(dev, TMR_ABORT_TASK, &aborted_list);
-+
- 	printk("ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for ref_tag: %lld\n",
- 			tmr->ref_task_tag);
- 	tmr->response = TMR_TASK_DOES_NOT_EXIST;
-@@ -318,6 +327,11 @@ static void core_tmr_drain_state_list(
- 	}
- 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
- 
-+	if (dev->transport->tmr_notify)
-+		dev->transport->tmr_notify(dev, preempt_and_abort_list ?
-+					   TMR_LUN_RESET_PRO : TMR_LUN_RESET,
-+					   &drain_task_list);
-+
- 	while (!list_empty(&drain_task_list)) {
- 		cmd = list_entry(drain_task_list.next, struct se_cmd, state_list);
- 		list_del_init(&cmd->state_list);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index e6e1fa68de54..9fb0be0aa620 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2946,6 +2946,7 @@ static const char *target_tmf_name(enum tcm_tmreq_table tmf)
- 	case TMR_LUN_RESET:		return "LUN_RESET";
- 	case TMR_TARGET_WARM_RESET:	return "TARGET_WARM_RESET";
- 	case TMR_TARGET_COLD_RESET:	return "TARGET_COLD_RESET";
-+	case TMR_LUN_RESET_PRO:		return "LUN_RESET_PRO";
- 	case TMR_UNKNOWN:		break;
- 	}
- 	return "(?)";
-diff --git a/include/target/target_core_backend.h b/include/target/target_core_backend.h
-index f51452e3b984..6336780d83a7 100644
---- a/include/target/target_core_backend.h
-+++ b/include/target/target_core_backend.h
-@@ -40,6 +40,8 @@ struct target_backend_ops {
- 	ssize_t (*show_configfs_dev_params)(struct se_device *, char *);
- 
- 	sense_reason_t (*parse_cdb)(struct se_cmd *cmd);
-+	void (*tmr_notify)(struct se_device *se_dev, enum tcm_tmreq_table,
-+			   struct list_head *aborted_cmds);
- 	u32 (*get_device_type)(struct se_device *);
- 	sector_t (*get_blocks)(struct se_device *);
- 	sector_t (*get_alignment_offset_lbas)(struct se_device *);
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 18c3f277b770..549947d407cf 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -207,6 +207,7 @@ enum tcm_tmreq_table {
- 	TMR_LUN_RESET		= 5,
- 	TMR_TARGET_WARM_RESET	= 6,
- 	TMR_TARGET_COLD_RESET	= 7,
-+	TMR_LUN_RESET_PRO	= 0x80,
- 	TMR_UNKNOWN		= 0xff,
- };
- 
--- 
-2.12.3
 
+For now please make sure to not include any dead code in your
+submissions (register defines etc. may be okay), perhaps try:
+
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+index d929556247a5..4bad836d0f74 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
+@@ -4026,6 +4026,21 @@ static int qed_hw_get_nvm_info(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
+ 	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X25G:
+ 		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_4X25G;
+ 		break;
++	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X50G_R1:
++	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_4X50G_R1:
++	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R2:
++	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X100G_R2:
++	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R4:
++		/* TODO: set port_mode when it's actually used */
++		break;
+ 	default:
+ 		DP_NOTICE(p_hwfn, "Unknown port mode in 0x%08x\n", core_cfg);
+ 		break;
+
+And see if it will pass the muster.
+
+Dead code makes it harder to review the patches.
