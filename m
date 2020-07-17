@@ -2,153 +2,109 @@ Return-Path: <SRS0=tLTu=A4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC2D4C433E3
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 19:27:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D6BC433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 19:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89D5A2064C
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 19:27:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FB2320684
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 19:47:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="yIvI0olh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Xz/ZdGIF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728592AbgGQT1M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jul 2020 15:27:12 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:64984 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727999AbgGQT1L (ORCPT
+        id S1728795AbgGQTrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jul 2020 15:47:23 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:57244 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728739AbgGQTrX (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jul 2020 15:27:11 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06HJQCto017519;
-        Fri, 17 Jul 2020 12:27:09 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=pfpt0818;
- bh=palg9+Cwha2/Apktwa1QnMjhU+VZ5A2f4++3ln+xwns=;
- b=yIvI0olhLxL+GCxtCsByQtsee2G7kmJ3VV3BQhuLvu5GhHG7lpkuXMUXVHf3BbxLezD2
- TsIpfTwVGg87FEfpJ+x7nPgKhIAgkisJdQcGPVfWPnQb8G5GqaX/l82ykKEc8vIDg8YJ
- ImIPXSsfBV7i6MjZuCf4mz8V5Ou0ablKXPpV2VCuFNbP2/KHvfe1K4LaR7eFmkz0c0hd
- VnWTOnxE0LhphSIIgAXROuNBDToENRhXHUcGhi6wHDr53yh58OVqg7LouIUZLqQNdTlV
- xENcg15GgfTTyOD9brFweYFu9Zbuol1z9SQfh8prLh1tQ6C2c9h5neEVTl4WLPmHwGAw qQ== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 32ap7ven3u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 17 Jul 2020 12:27:09 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Fri, 17 Jul
- 2020 12:27:07 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 17 Jul 2020 12:27:08 -0700
-Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
-        by maili.marvell.com (Postfix) with ESMTP id F0B703F7041;
-        Fri, 17 Jul 2020 12:27:03 -0700 (PDT)
-From:   Alexander Lobakin <alobakin@marvell.com>
-To:     Jakub Kicinski <kuba@kernel.org>
-CC:     Alexander Lobakin <alobakin@marvell.com>,
-        Igor Russkikh <irusskikh@marvell.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Michal Kalderon <mkalderon@marvell.com>,
-        Ariel Elior <aelior@marvell.com>,
-        Denis Bolotin <dbolotin@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        GR-everest-linux-l2 <GR-everest-linux-l2@marvell.com>,
-        <QLogic-Storage-Upstream@marvell.com>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH net-next 10/13] qed: add support for new port modes
-Date:   Fri, 17 Jul 2020 22:26:33 +0300
-Message-ID: <20200717192633.181-1-alobakin@marvell.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200717113155.1a9234b3@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-References: <20200717113155.1a9234b3@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <20200716115446.994-1-alobakin@marvell.com>
- <20200716115446.994-11-alobakin@marvell.com>
- <20200716181853.502dd619@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <27939848-7e83-2897-36f9-44f47d1bfb9c@marvell.com>
+        Fri, 17 Jul 2020 15:47:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595015241;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=eCmhCWwIJ6CKG2s7cwMGJnhsahUrbS+DMabjHA0qqv0=;
+        b=Xz/ZdGIFUuB8BGfAwexFL99+fXJeMTrKS6q5Zf39xhLmIPNrD5PMAh/IDWyxPn21pgmSuE
+        iiy8ci9MevF6bB7Bv7J2NEESDdPjC4Q5T0npIXFUrsA+AFEQpdLSg4TxYAJ/s7PsMy/4TA
+        hMZI0/1vYB9AnrR6PifEmL6uhQia5U0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-115-9SgCXpOSO7mFrw412bUIFw-1; Fri, 17 Jul 2020 15:47:19 -0400
+X-MC-Unique: 9SgCXpOSO7mFrw412bUIFw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 52E3C100CC85;
+        Fri, 17 Jul 2020 19:47:18 +0000 (UTC)
+Received: from [10.3.128.8] (unknown [10.3.128.8])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AEDEB10013C4;
+        Fri, 17 Jul 2020 19:47:16 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+References: <20200623191749.115200-1-tasleson@redhat.com>
+ <20200623191749.115200-6-tasleson@redhat.com>
+ <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
+ <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
+ <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
+ <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+ <20200714081750.GB862637@kroah.com>
+ <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
+ <20200717100610.GA2667456@kroah.com>
+ <e6517dd6-b6b6-ead3-2e60-03832e0c43bf@samsung.com>
+From:   Tony Asleson <tasleson@redhat.com>
+Organization: Red Hat
+Message-ID: <84fec7af-3f51-c956-d2ca-41581e0f3cbb@redhat.com>
+Date:   Fri, 17 Jul 2020 14:47:15 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-07-17_09:2020-07-17,2020-07-17 signatures=0
+In-Reply-To: <e6517dd6-b6b6-ead3-2e60-03832e0c43bf@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Date: Fri, 17 Jul 2020 11:31:55 -0700
-From: Jakub Kicinski <kuba@kernel.org>
+On 7/17/20 5:27 AM, Bartlomiej Zolnierkiewicz wrote:
+> 
+> On 7/17/20 12:06 PM, Greg Kroah-Hartman wrote:
+> 
+>> Just use the device name and don't worry about it, I doubt anyone will
+>> notice, unless the name is _really_ different.
+>
+> Well, Geert has noticed and complained pretty quickly:
+> 
+> https://lore.kernel.org/linux-ide/alpine.DEB.2.21.2003241414490.21582@ramsan.of.borg/
+> 
+> Anyway, I don't insist that hard on keeping the old names and
+> I won't be the one handling potential bug-reports.. (added Jens to Cc:).
 
-> On Fri, 17 Jul 2020 13:49:33 +0300 Igor Russkikh wrote:
->>> ----------------------------------------------------------------------
->>> On Thu, 16 Jul 2020 14:54:43 +0300 Alexander Lobakin wrote:  
->>>> These ports ship on new boards revisions and are supported by newer
->>>> firmware versions.
->>>>
->>>> Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
->>>> Signed-off-by: Igor Russkikh <irusskikh@marvell.com>  
->>> 
->>> What is the driver actually doing with them, tho?
->>> 
->>> Looks like you translate some firmware specific field to a driver
->>> specific field, but I can't figure out what part of the code cares
->>> about hw_info.port_mode  
->> 
->> Hi Jakub,
->> 
->> You are right, this info is never used/reported.
->> 
->> Alexander is extending already existing non used field with new values from
->> our latest hardware revisions.
->> 
->> I thought devlink info could be a good place to output such kind of information.
->> 
->> Thats basically a layout of *Physical* ports on device - quite useful info I
->> think.
->> 
->> Important thing is these ports may not be directly mapped to PCI PFs. So
->> reading `ethtool eth*` may not explain you the real device capabilities.
->> 
->> Do you think it makes sense adding such info to `devlink info` then?
->
-> Devlink port has information about physical port, which don't have to
-> map 1:1 to netdevs. It also has lanes and port splitting which you may
-> want to report.
->
->
-> For now please make sure to not include any dead code in your
-> submissions (register defines etc. may be okay), perhaps try:
+I would think having sysfs use one naming convention and the logging
+using another would be confusing for users, but apparently they've
+managed this long with that.
 
-I think it would be better to drop this struct member at all since it's
-really not used anywhere. There'll be no problem to add it back anytime
-we might need it, but for now it seems unreasonable to keep it "just in
-case".
 
-Got it, thanks, will send v2 soon.
+It appears changes are being rejected because of logging content
+differences, implying we shouldn't be changing printk usage to dev_printk.
 
-> diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-> index d929556247a5..4bad836d0f74 100644
-> --- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
-> +++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-> @@ -4026,6 +4026,21 @@ static int qed_hw_get_nvm_info(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
->  	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X25G:
->  		p_hwfn->hw_info.port_mode = QED_PORT_MODE_DE_4X25G;
->  		break;
-> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X50G_R1:
-> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_4X50G_R1:
-> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R2:
-> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X100G_R2:
-> +	case NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R4:
-> +		/* TODO: set port_mode when it's actually used */
-> +		break;
->  	default:
->  		DP_NOTICE(p_hwfn, "Unknown port mode in 0x%08x\n", core_cfg);
->  		break;
->
-> And see if it will pass the muster.
->
-> Dead code makes it harder to review the patches.
+Should I re-work my changes to support dev_printk path in addition to
+utilizing printk_emit functionality so that we can avoid user space
+visible log changes?  I don't see a way to make the transition from
+printk to dev_printk without having user visible changes to message content.
+
+Thanks
+-Tony
+
