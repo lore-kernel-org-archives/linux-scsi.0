@@ -2,72 +2,113 @@ Return-Path: <SRS0=tLTu=A4=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80713C433E1
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 09:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D884C433DF
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67207206F4
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 09:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A46C2076A
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 10:06:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594980382;
+	bh=JbyDqpmt2sPD/UxN3Y83aUYetjdoycCBc3mkCb5lonQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=GpxCgrsiT9ZV+HdEyUOZWv9JrBY0XTgSGgkzGZhMliXQ/2saNc/yDPiRTG5kqT9VN
+	 y/r4gIs5uRwvYUjcMSPD+nBgjSkYA0cCF7zWC37VAQR3Y19FcD4leVfMmLOx3HQvPO
+	 xNHqVjJfVpz3sZNsuyydFL63A+xzwlfnvRHWjVx8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbgGQJJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jul 2020 05:09:03 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:8317 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726037AbgGQJJC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jul 2020 05:09:02 -0400
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id A91A7461920954F64C90;
-        Fri, 17 Jul 2020 17:08:57 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS404-HUB.china.huawei.com
- (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Fri, 17 Jul 2020
- 17:08:46 +0800
-From:   Ye Bin <yebin10@huawei.com>
-To:     <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
-CC:     <bvanassche@acm.org>, <sashal@kernel.org>,
-        Ye Bin <yebin10@huawei.com>
-Subject: [PATCH] scsi: core: Fix "scsi: core: add scsi_host_(block,unblock) helper function"
-Date:   Fri, 17 Jul 2020 17:09:20 +0800
-Message-ID: <20200717090921.29243-1-yebin10@huawei.com>
-X-Mailer: git-send-email 2.25.4
+        id S1726201AbgGQKGV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jul 2020 06:06:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35880 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725864AbgGQKGU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Jul 2020 06:06:20 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5C2C22063A;
+        Fri, 17 Jul 2020 10:06:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594980378;
+        bh=JbyDqpmt2sPD/UxN3Y83aUYetjdoycCBc3mkCb5lonQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=b4vI/unL9mzCnUrhkILocriCxzMcWN/IBsmvvfkg0pVfilr//N/UGySLWP/PMZgcZ
+         niis0Q1Rz7TvGRkDaaY9Cq+6E3rQ+DSx0OQlb1uWXtopx8kIWFkx9PW9e6LnvgNyuB
+         jD0Jml31eD6fF9mz+UqNFXup1VYel/JqYYMMsyBo=
+Date:   Fri, 17 Jul 2020 12:06:10 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc:     tasleson@redhat.com, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
+Message-ID: <20200717100610.GA2667456@kroah.com>
+References: <20200623191749.115200-1-tasleson@redhat.com>
+ <20200623191749.115200-6-tasleson@redhat.com>
+ <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
+ <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
+ <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
+ <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+ <20200714081750.GB862637@kroah.com>
+ <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In commit 4dea170f4fb2 ("scsi: core: Fix incorrect usage of shost_for_each_device")
-fix usage of shost_for_each_device in function scsi_host_block.
+On Tue, Jul 14, 2020 at 10:50:39AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> On 7/14/20 10:17 AM, Greg Kroah-Hartman wrote:
+> > On Tue, Jul 14, 2020 at 10:06:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> >>
+> >> Hi Tony,
+> >>
+> >> On 7/9/20 11:18 PM, Tony Asleson wrote:
+> >>> Hi Bartlomiej,
+> >>>
+> >>> On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
+> >>>> The root source of problem is that libata transport uses different
+> >>>> naming scheme for ->tdev devices (please see dev_set_name() in
+> >>>> ata_t{dev,link,port}_add()) than libata core for its logging
+> >>>> functionality (ata_{dev,link,port}_printk()).
+> >>>>
+> >>>> Since libata transport is part of sysfs ABI we should be careful
+> >>>> to not break it so one idea for solving the issue is to convert
+> >>>> ata_t{dev,link,port}_add() to use libata logging naming scheme and
+> >>>> at the same time add sysfs symlinks for the old libata transport
+> >>>> naming scheme.
+> > 
+> > Given the age of the current implementation, what suddenly broke that
+> > requires this to change at this point in time?
+> 
+> Unfortunately when adding libata transport classes (+ at the same
+> time embedding struct device-s in libata dev/link/port objects) in
+> the past someone has decided to use different naming scheme than
+> the one used for standard libata log messages (which use printk()
+> without any reference to struct device-s in libata dev/link/port
+> objects).
+> 
+> Now we would like to use dev_printk() for standard libata logging
+> functionality as this is required for 2 pending patchsets:
+> 
+> - move DPRINTK to dynamic debugging (from Hannes Reinecke)
+> 
+> - add persistent durable identifier storage log messages (from Tony)
+> 
+> but we don't want to change standard libata log messages and
+> confuse users..
 
-Fix: 2bb955840c1d("scsi: core: add scsi_host_(block,unblock) helper function")
-Signed-off-by: Ye Bin <yebin10@huawei.com>
----
- drivers/scsi/scsi_lib.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+All of that mess with symlinks just for a common debug printk?  That
+seems excessive :)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f3bf2648105c..65fde27b8b08 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2811,8 +2811,10 @@ scsi_host_block(struct Scsi_Host *shost)
- 		mutex_lock(&sdev->state_mutex);
- 		ret = scsi_internal_device_block_nowait(sdev);
- 		mutex_unlock(&sdev->state_mutex);
--		if (ret)
-+		if (ret) {
-+			scsi_device_put(sdev);
- 			break;
-+		}
- 	}
- 
- 	/*
--- 
-2.25.4
+Just use the device name and don't worry about it, I doubt anyone will
+notice, unless the name is _really_ different.
 
+thanks,
+
+greg k-h
