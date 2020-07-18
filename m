@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F403C433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 20:22:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6DEC433E2
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 20:26:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 632462073E
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 20:22:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6293320657
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 20:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727943AbgGRUWb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jul 2020 16:22:31 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44084 "EHLO
+        id S1727096AbgGRUZ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jul 2020 16:25:59 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:44257 "EHLO
         mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726801AbgGRUWb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2020 16:22:31 -0400
-Received: by mail-pg1-f193.google.com with SMTP id j19so8330209pgm.11;
-        Sat, 18 Jul 2020 13:22:30 -0700 (PDT)
+        with ESMTP id S1726916AbgGRUZ6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2020 16:25:58 -0400
+Received: by mail-pg1-f193.google.com with SMTP id j19so8332316pgm.11;
+        Sat, 18 Jul 2020 13:25:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=WgiU3sE9W5l55r+mqCm7ZyiWtQixr0nXZ9gsgnHQhWY=;
-        b=cWek8xpAN7az/pQNCoOjyfHdi0wwoPcd1JR4OjPKRhWzhNhk/JBbX9PrF0OV1WWr1W
-         zvKmub/BRtRjJ8Rpe3qmhkXN4xU6zkuFc/aRiY9Nt2H+TvBByF/vdQ6OMKnZpSatHGWD
-         FTW2V2A772QwtQBE68T3MWaTWAg3J2R8TZYljitVkILcf+TiqbXXW/fRzXhJf6TZ3hQC
-         D/HNhQPnuSvOsQw6npcU6v1KmWekBerSXdg7iaKUYCzpYRE1cGydFGhR7Min2F89DuLT
-         F86nEy7QWUtErfcegr/C8i795kvnlm/XBIM5zcueDrGymMNbJKbCSjA4Zlr6Y4dup1HD
-         bXXw==
-X-Gm-Message-State: AOAM531xpcaLRZIyI0p7OLzvG7oImdlaaq94Ofbk1l22KdpEb+juVYRj
-        CtTd1QdpUDvOurXU/u/Ly6M=
-X-Google-Smtp-Source: ABdhPJyur9FOx7tbAKc1TU72nd7zqKdBOZYn762UQkuR8YcXcDRpnd/Hx3oLDnFNNpWlRnm3lAf/dg==
-X-Received: by 2002:a63:b18:: with SMTP id 24mr14130324pgl.406.1595103750250;
-        Sat, 18 Jul 2020 13:22:30 -0700 (PDT)
+        bh=mgFAz3AhMPggh8gTyoyGEbJWp9KY0vdf8a981yFIJ6k=;
+        b=UI5BaOvF5S3bsKNDOjtoukPK4hfRlDvTsW0eVMk631YST6BnlRgbP/q7jEdrUdfM0J
+         9OpFnrr9AMnoatugPSEoBiSQfRrIgQgdfyRSfkmiS20dTz47jpczD49FQYgp+lKUUxaO
+         A0vN/YMIOWojXIU69sXzeXlm67JezPz9keapOScogW7znUzTQo9xJSHusq98XxNDJ63t
+         1aCneEfRYcG8933uA4u61i975F9xS1LPEAHPQSItLpbV43c17erAqIhlDjBZrizOC/ZK
+         Z60vxGIR+Kw4bzegUoMoQXgUAecmn7X3es7P2g2Btoo8kJRXrdXxPFvpSUuYhlIffQzO
+         MJAQ==
+X-Gm-Message-State: AOAM530qzXeP9MXIvXopQGbH7LGBU5PLM6pY3/vqx9EFTLYD5IbifMNu
+        DRvqWM7T2qyH4HOfKDUl/oA=
+X-Google-Smtp-Source: ABdhPJwqRgznEsDKeY9UbN4csmXPzHZIHNsg5ey3lrCcMSMPMzwPmnCZOZrENoow1aTUzVPRwPCnnw==
+X-Received: by 2002:a63:7054:: with SMTP id a20mr13087288pgn.17.1595103957944;
+        Sat, 18 Jul 2020 13:25:57 -0700 (PDT)
 Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id a33sm10854379pgl.75.2020.07.18.13.22.28
+        by smtp.gmail.com with ESMTPSA id lw5sm6516373pjb.37.2020.07.18.13.25.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 18 Jul 2020 13:22:28 -0700 (PDT)
-Subject: Re: [PATCH] scsi: core: run queue in case of IO queueing failure
-To:     Ming Lei <ming.lei@redhat.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20200708131405.3346107-1-ming.lei@redhat.com>
+        Sat, 18 Jul 2020 13:25:57 -0700 (PDT)
+Subject: Re: [PATCH v2] scsi: scsi_transport_sas: add missing newline when
+ printing 'enable' by sysfs
+To:     Xiongfeng Wang <wangxiongfeng2@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, john.garry@huawei.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        guohanjun@huawei.com
+References: <1594975472-12486-1-git-send-email-wangxiongfeng2@huawei.com>
 From:   Bart Van Assche <bvanassche@acm.org>
 Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
@@ -73,12 +73,12 @@ Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
  //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
  mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
  goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <bd3039d4-0c24-ad67-bdfe-85096ad60721@acm.org>
-Date:   Sat, 18 Jul 2020 13:22:27 -0700
+Message-ID: <88b08a41-55b2-ae5d-fbe5-24439429855f@acm.org>
+Date:   Sat, 18 Jul 2020 13:25:55 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200708131405.3346107-1-ming.lei@redhat.com>
+In-Reply-To: <1594975472-12486-1-git-send-email-wangxiongfeng2@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -87,37 +87,23 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-08 06:14, Ming Lei wrote:
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 534b85e87c80..4d7fab9e8af9 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1694,6 +1694,16 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->  		 */
->  		if (req->rq_flags & RQF_DONTPREP)
->  			scsi_mq_uninit_cmd(cmd);
-> +
-> +		/*
-> +		 * Requests may be held in block layer queue because of
-> +		 * resource contention. We usually run queue in normal
-> +		 * completion for queuing these requests again. Block layer
-> +		 * will finish this failed request simply, run queue in case
-> +		 * of IO queueing failure so that requests can get chance to
-> +		 * be finished.
-> +		 */
-> +		scsi_run_queue(q);
->  		break;
->  	}
->  	return ret;
+On 2020-07-17 01:44, Xiongfeng Wang wrote:
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+> index 182fd25..e443dee 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -563,7 +563,7 @@ static ssize_t do_sas_phy_enable(struct device *dev,
+>  {
+>  	struct sas_phy *phy = transport_class_to_phy(dev);
+>  
+> -	return snprintf(buf, 20, "%d", phy->enabled);
+> +	return snprintf(buf, 20, "%d\n", phy->enabled);
+>  }
 
-So this patch causes blk_mq_run_hw_queues() to be called synchronously
-from inside blk_mq_run_hw_queues()? Wouldn't it be better to avoid such
-recursion and to run the queue asynchronously instead of synchronously
-from inside scsi_queue_rq()? The following code already exists in
-scsi_end_request():
+For future sysfs show function patches, please use PAGE_SIZE as second
+snprintf() argument or use sprintf() instead of snprintf() because in
+this case it is clear that no output buffer overflow will happen. Using
+any other size argument than PAGE_SIZE makes patches like the above
+harder to verify than necessary. Anyway:
 
-	blk_mq_run_hw_queues(q, true);
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart van Assche <bvanassche@acm.org>
