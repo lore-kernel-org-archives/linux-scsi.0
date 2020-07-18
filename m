@@ -1,110 +1,139 @@
-Return-Path: <SRS0=tLTu=A4=vger.kernel.org=linux-scsi-owner@kernel.org>
+Return-Path: <SRS0=8IEi=A5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D6BC433DF
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 19:47:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75122C433E2
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 02:51:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FB2320684
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Jul 2020 19:47:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Xz/ZdGIF"
+	by mail.kernel.org (Postfix) with ESMTP id 5A7112070E
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 02:51:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728795AbgGQTrX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Jul 2020 15:47:23 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:57244 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728739AbgGQTrX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Jul 2020 15:47:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595015241;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eCmhCWwIJ6CKG2s7cwMGJnhsahUrbS+DMabjHA0qqv0=;
-        b=Xz/ZdGIFUuB8BGfAwexFL99+fXJeMTrKS6q5Zf39xhLmIPNrD5PMAh/IDWyxPn21pgmSuE
-        iiy8ci9MevF6bB7Bv7J2NEESDdPjC4Q5T0npIXFUrsA+AFEQpdLSg4TxYAJ/s7PsMy/4TA
-        hMZI0/1vYB9AnrR6PifEmL6uhQia5U0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-115-9SgCXpOSO7mFrw412bUIFw-1; Fri, 17 Jul 2020 15:47:19 -0400
-X-MC-Unique: 9SgCXpOSO7mFrw412bUIFw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 52E3C100CC85;
-        Fri, 17 Jul 2020 19:47:18 +0000 (UTC)
-Received: from [10.3.128.8] (unknown [10.3.128.8])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id AEDEB10013C4;
-        Fri, 17 Jul 2020 19:47:16 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-References: <20200623191749.115200-1-tasleson@redhat.com>
- <20200623191749.115200-6-tasleson@redhat.com>
- <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
- <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
- <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
- <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
- <20200714081750.GB862637@kroah.com>
- <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
- <20200717100610.GA2667456@kroah.com>
- <e6517dd6-b6b6-ead3-2e60-03832e0c43bf@samsung.com>
-From:   Tony Asleson <tasleson@redhat.com>
-Organization: Red Hat
-Message-ID: <84fec7af-3f51-c956-d2ca-41581e0f3cbb@redhat.com>
-Date:   Fri, 17 Jul 2020 14:47:15 -0500
+        id S1726898AbgGRCvx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Jul 2020 22:51:53 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:38381 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726262AbgGRCvv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jul 2020 22:51:51 -0400
+Received: by mail-pg1-f195.google.com with SMTP id e8so7539526pgc.5
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Jul 2020 19:51:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=QfsHcoowj1NE3YZrGcTNFUHa1RrpnCcez76hIDwRoVs=;
+        b=qDsKwaVVOgk0549tbAM6zouejCM8ZrMjupUyUW0+mxWvIXltI5xWtteT8kHYYRUd46
+         rTtaQAIEiTAjiKr3jtvxjvhPwx3W7pZ6vFMZWLos/DZrQtr4X7M41UNl+1CEKW/zVcyB
+         Q2BPMwDsCuor6g4XecutFLB4vhq2jklJJNWpANpUFzEqdHPH1yrTCik4yVSgsExn0f8P
+         f80dufwSxRPsdCyVGL72Fsspz2ziOxA9hHmA9uHti3LuHrT48taBAWucq6YPy5BSJ4IL
+         R+n5o+EBS82f/rhWEEEjh/mH7IVpKwceKH5pWmw/AdrbGnUMEfyEfr6AJHajzQt8fXOu
+         7ptw==
+X-Gm-Message-State: AOAM531kSsLF19ZsuVxFAJQLIVMP6mleJ7xsuxEVxis4rXls8vKLn3Yp
+        Lh36jhaShYEbOofBrb2DzL7dDWb8
+X-Google-Smtp-Source: ABdhPJylQ0wZDHqfy4XruBrMwrz/ptJIfGiZvVRzl7HhAYmVrkvISZUS9u7i0BbKhcKgJk+Ycedb2g==
+X-Received: by 2002:a63:1e4d:: with SMTP id p13mr10548873pgm.387.1595040710322;
+        Fri, 17 Jul 2020 19:51:50 -0700 (PDT)
+Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id g26sm8884437pfq.205.2020.07.17.19.51.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 17 Jul 2020 19:51:49 -0700 (PDT)
+Subject: Re: [PATCH] scsi: allow state transitions BLOCK -> BLOCK
+To:     Hannes Reinecke <hare@suse.de>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+References: <20200702142436.98336-1-hare@suse.de>
+ <1593700443.9652.2.camel@HansenPartnership.com>
+ <0c1ce7fc-98ba-0a14-d1a7-889bf1ce794f@suse.de>
+ <2dd291ba-1e59-5e88-de96-5d3965f20317@acm.org>
+ <819ce023-93c3-249d-2221-97438f229e03@suse.de>
+ <b4842dfd-f385-64a9-6421-03765f60d0d9@acm.org>
+ <97d4882d-2f26-de93-672a-6395e8fedf0c@suse.de>
+ <a2db3f6a-44de-2d2c-6dd1-69d5af8f7e84@acm.org>
+ <b31a9be0-1e42-f49f-d5e7-e4568dafa8b2@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
+ mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
+ LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
+ fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
+ AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
+ 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
+ AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
+ igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
+ Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
+ jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
+ macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
+ CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
+ RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
+ PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
+ eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
+ lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
+ T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
+ ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
+ CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
+ oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
+ //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
+ mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
+ goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
+Message-ID: <68eb8671-e8ea-4a52-0679-f7c4e0c0ee3b@acm.org>
+Date:   Fri, 17 Jul 2020 19:51:47 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <e6517dd6-b6b6-ead3-2e60-03832e0c43bf@samsung.com>
+In-Reply-To: <b31a9be0-1e42-f49f-d5e7-e4568dafa8b2@suse.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/17/20 5:27 AM, Bartlomiej Zolnierkiewicz wrote:
+On 2020-07-12 23:19, Hannes Reinecke wrote:
+> I think this should be sufficient:
 > 
-> On 7/17/20 12:06 PM, Greg Kroah-Hartman wrote:
+> diff --git a/drivers/scsi/scsi_transport_srp.c
+> b/drivers/scsi/scsi_transport_srp.c
+> index d4d1104fac99..180b323f46b8 100644
+> --- a/drivers/scsi/scsi_transport_srp.c
+> +++ b/drivers/scsi/scsi_transport_srp.c
+> @@ -404,11 +404,6 @@ static void __rport_fail_io_fast(struct srp_rport
+> *rport)
 > 
->> Just use the device name and don't worry about it, I doubt anyone will
->> notice, unless the name is _really_ different.
->
-> Well, Geert has noticed and complained pretty quickly:
+>         if (srp_rport_set_state(rport, SRP_RPORT_FAIL_FAST))
+>                 return;
+> -       /*
+> -        * Call scsi_target_block() to wait for ongoing
+> shost->queuecommand()
+> -        * calls before invoking i->f->terminate_rport_io().
+> -        */
+> -       scsi_target_block(rport->dev.parent);
+>         scsi_target_unblock(rport->dev.parent, SDEV_TRANSPORT_OFFLINE);
 > 
-> https://lore.kernel.org/linux-ide/alpine.DEB.2.21.2003241414490.21582@ramsan.of.borg/
-> 
-> Anyway, I don't insist that hard on keeping the old names and
-> I won't be the one handling potential bug-reports.. (added Jens to Cc:).
+>         /* Involve the LLD if possible to terminate all I/O on the
+> rport. */
+> @@ -570,8 +565,6 @@ int srp_reconnect_rport(struct srp_rport *rport)
+>                  * failure timers if these had not yet been started.
+>                  */
+>                 __rport_fail_io_fast(rport);
+> -               scsi_target_unblock(&shost->shost_gendev,
+> -                                   SDEV_TRANSPORT_OFFLINE);
+>                 __srp_start_tl_fail_timers(rport);
+>         } else if (rport->state != SRP_RPORT_BLOCKED) {
+>                 scsi_target_unblock(&shost->shost_gendev,
 
-I would think having sysfs use one naming convention and the logging
-using another would be confusing for users, but apparently they've
-managed this long with that.
+Adding a comment like this above __rport_fail_io_fast() would be welcome:
 
+/*
+ * scsi_target_block() must have been called before this function is
+ * called to guarantee that no .queuecommand() calls are in progress.
+ */
 
-It appears changes are being rejected because of logging content
-differences, implying we shouldn't be changing printk usage to dev_printk.
+Otherwise the above patch looks fine to me.
 
-Should I re-work my changes to support dev_printk path in addition to
-utilizing printk_emit functionality so that we can avoid user space
-visible log changes?  I don't see a way to make the transition from
-printk to dev_printk without having user visible changes to message content.
-
-Thanks
--Tony
-
+Bart.
