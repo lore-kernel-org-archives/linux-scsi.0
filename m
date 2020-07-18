@@ -8,68 +8,71 @@ X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D62FDC433E0
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 09:57:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4E29C433E2
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 09:57:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACCE121775
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 09:57:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A4B12074B
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 09:57:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y+qahgw9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MCRCqn9l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726418AbgGRJ47 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jul 2020 05:56:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53934 "EHLO
+        id S1726647AbgGRJ5h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jul 2020 05:57:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgGRJ47 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2020 05:56:59 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33A36C0619D2;
-        Sat, 18 Jul 2020 02:56:59 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id j20so6621599pfe.5;
-        Sat, 18 Jul 2020 02:56:59 -0700 (PDT)
+        with ESMTP id S1726232AbgGRJ5g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2020 05:57:36 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F89CC0619D2;
+        Sat, 18 Jul 2020 02:57:36 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id a14so6626945pfi.2;
+        Sat, 18 Jul 2020 02:57:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=5Nc15vAXVbMSZCDESpnXXbvL3leXVpnRqbUAuKmF2mI=;
-        b=Y+qahgw9kKVEL0xt0wNc+wgeHHf+DZdBTBYjOYUiLJ8EUnxkZxbVm9nqP9fuNsvO9t
-         trfThw7s2kaqmUeMKdoOiXErDEzvLtQ/jT1j6jkWUjiScdMQO+ekX5lDhpXHb8dA1hCU
-         L36xGLWknx0NZzufrYpubwA+S5s9q1yoVj7804nsJJrCo1LIld8NBnD2nP8xPZSobsmC
-         P0sHkR8mVDtsghyKenf6i4RcUN6IFa/GSCs8/iix4DqpAQhgvQngwgSVBvIYgJcmV1Jr
-         P8gfrXsMY5H75pmpTbfUX3WYR5AKpWBNUz4ZKWVMX8jmo3QH/1OyNXtkIPrBVIX6FChZ
-         oApg==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=f1LOZp5JlzkmUbPeyK+AOPbtRtPHkw4Fri+hBp79l4E=;
+        b=MCRCqn9lVjazk2tH5HwpFZ3/BSrnqin99DexBMzdZTFiI/pGNeDl2Dp1Y6N4rgWP1Q
+         SVhB1v+fIXrDoo6zuAUCIH4fkCB+b93yMuq8psqSA48nJrjYYDyzfAAg1NZSSeFCcx9w
+         h8fq7i0ZrsjvE+T6sGD9ehdMvFkf5oDoBr7ZAZDqZ1RVft1rbv6xW8sTyC0M4vkuN+1y
+         5gi+v4kGlcn/QGmTB/Ps6ZWTSpojjEZoABXcCJ4MR/0IuNF/1/nLM6ui/j/AhHDlTl4Y
+         ToNFlo4l0t07yckBjbff5tz18LSwiQhSr5B23VIgUr3smZLmGPw9uLnN8SJjPx6HXL00
+         stWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=5Nc15vAXVbMSZCDESpnXXbvL3leXVpnRqbUAuKmF2mI=;
-        b=FIlqmRSkuspDNr7G3ke7mDg6SpY3e+mm+VVYdng0T+WayLbaGvFSfBhIMuSeiFOqSb
-         sO2ZqUpVgsM6+I5o5tROZ6CEwZ9VXsfqSJooHSvU1wBlTXb9rgtUmVhHF7re4oQPz1EO
-         utXIkBNCLKkOHs8rkIURWXdJ/D4zXe44WRGedtDA08i6p8MD++V5aMpe/aYb7HzzH6xF
-         wnf9sveFjU9KN3jDrymruV2fixrd/RxEgWPS5DB1qtIjs42KTeTzaFbuFQlRXO/SPef1
-         UYk2C0Wb2gkVQGEGgRASTo3VrbekteAD7oZlCUcVMgJEREEginIh34uj40+PLW+N2fKd
-         Y3WA==
-X-Gm-Message-State: AOAM532cpA9SlVV7/FAhdfwtP6RdPu+hIpHj6RyWw2dGoQB3ENPk9/fj
-        RFXlfErx1R8b/UXWBg4yqW8=
-X-Google-Smtp-Source: ABdhPJypWiVE50rNw07qu4g4Tq4DJq6wqlPfrjkdaAJjhEBYvoC9Fh1tKIipPLiOdG2ADoLgxrVqag==
-X-Received: by 2002:a65:60ce:: with SMTP id r14mr12384959pgv.85.1595066218560;
-        Sat, 18 Jul 2020 02:56:58 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=f1LOZp5JlzkmUbPeyK+AOPbtRtPHkw4Fri+hBp79l4E=;
+        b=IbcsvkV7t5jBhYr1FbsGj4GsL7zCJZwIE9kKTioombw7MAkTlSFZB6ggKQn4aARqhK
+         RUMrylZUNHlJC2R12vzYLDKvGRKtQO+Y/uQi2jo467NW3k3UO6SGpio97BLioIjcyfru
+         J6I0SLaD3pocSPxFqEbd/5rhRiyrS916XB+K36f0UVVAmmfLwD38cbRGBfOgesgcsHk4
+         B+9fXqJBbXTylq45K/gcTIxl/xieFVZkV4AQIWHU0ldivg7JDdTT+u9S8IDsuc/IPeqC
+         lbgNU5aApiRxoo1gEOpvNHkyBJiz0eTf67r782cmFYwgFn5My9TQi7iLVuBBEyXaabj6
+         SQUw==
+X-Gm-Message-State: AOAM531uzHLhM6LiTYXHtZ3Zn6NQjPKXIRgL9by98nXn+AumJt+l5sWB
+        3xPXO4a5rX6rm1FqE2PB+8A=
+X-Google-Smtp-Source: ABdhPJyFZ2s76luE3gMN3so6bUPjtIJQCnsr/mzREBif6Finz0nRHydcITkUbIYgtz1678mJQki9Mg==
+X-Received: by 2002:a62:7f55:: with SMTP id a82mr11389773pfd.61.1595066255879;
+        Sat, 18 Jul 2020 02:57:35 -0700 (PDT)
 Received: from blackclown ([103.88.82.25])
-        by smtp.gmail.com with ESMTPSA id q96sm4525877pja.0.2020.07.18.02.56.55
+        by smtp.gmail.com with ESMTPSA id h18sm10252353pfr.186.2020.07.18.02.57.32
         (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Sat, 18 Jul 2020 02:56:57 -0700 (PDT)
-Date:   Sat, 18 Jul 2020 15:26:44 +0530
+        Sat, 18 Jul 2020 02:57:35 -0700 (PDT)
+Date:   Sat, 18 Jul 2020 15:27:21 +0530
 From:   Suraj Upadhyay <usuraj35@gmail.com>
 To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com
 Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] scsi: megaraid: Remove pci-dma-compat wrapper APIs.
-Message-ID: <55829944e20fb558dd3a42f11bfef42b7095e3cd.1595066170.git.usuraj35@gmail.com>
+Subject: [PATCH 2/2] scsi: megaraid: Remove remaining pci-dma-compat wrapper
+ APIs.
+Message-ID: <a4372635a7500dcc23d6a30ada74e0f875814f11.1595066170.git.usuraj35@gmail.com>
+References: <55829944e20fb558dd3a42f11bfef42b7095e3cd.1595066170.git.usuraj35@gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="/04w6evG8XlLl3ft"
+        protocol="application/pgp-signature"; boundary="8t9RHnE3ZwKMSgU+"
 Content-Disposition: inline
+In-Reply-To: <55829944e20fb558dd3a42f11bfef42b7095e3cd.1595066170.git.usuraj35@gmail.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -77,7 +80,7 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---/04w6evG8XlLl3ft
+--8t9RHnE3ZwKMSgU+
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
@@ -87,9 +90,9 @@ should go away as it creates unnecessary midlayering
 for include/linux/dma-mapping.h APIs, instead use dma-mapping.h
 APIs directly.
 
-The patch has been generated with the coccinelle script below and has
-been hand modified to replace GFP_ with correct flags based on the
-context.
+The patch has been generated with the coccinelle script below
+and has been hand modified to replace GFP_ with correct flags based on
+the context.
 
 Compile-tested.
 
@@ -175,225 +178,336 @@ Compile-tested.
 
 Signed-off-by: Suraj Upadhyay <usuraj35@gmail.com>
 ---
- drivers/scsi/megaraid.c | 66 ++++++++++++++++++++++-------------------
- 1 file changed, 36 insertions(+), 30 deletions(-)
+ drivers/scsi/megaraid.c | 125 +++++++++++++++++++++-------------------
+ 1 file changed, 65 insertions(+), 60 deletions(-)
 
 diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 0484ee52ae80..16bcdffeab37 100644
+index 16bcdffeab37..ed06aafeeedc 100644
 --- a/drivers/scsi/megaraid.c
 +++ b/drivers/scsi/megaraid.c
-@@ -133,8 +133,10 @@ mega_setup_mailbox(adapter_t *adapter)
- {
- 	unsigned long	align;
-=20
--	adapter->una_mbox64 =3D pci_alloc_consistent(adapter->dev,
--			sizeof(mbox64_t), &adapter->una_mbox64_dma);
-+	adapter->una_mbox64 =3D dma_alloc_coherent(&adapter->dev->dev,
-+						 sizeof(mbox64_t),
-+						 &adapter->una_mbox64_dma,
-+						 GFP_KERNEL);
-=20
- 	if( !adapter->una_mbox64 ) return -1;
- 	=09
-@@ -222,8 +224,9 @@ mega_query_adapter(adapter_t *adapter)
- 		mraid_inquiry		*inq;
- 		dma_addr_t		dma_handle;
-=20
--		ext_inq =3D pci_alloc_consistent(adapter->dev,
--				sizeof(mraid_ext_inquiry), &dma_handle);
-+		ext_inq =3D dma_alloc_coherent(&adapter->dev->dev,
-+					     sizeof(mraid_ext_inquiry),
-+					     &dma_handle, GFP_KERNEL);
-=20
- 		if( ext_inq =3D=3D NULL ) return -1;
-=20
-@@ -243,8 +246,9 @@ mega_query_adapter(adapter_t *adapter)
- 		mega_8_to_40ld(inq, inquiry3,
- 				(mega_product_info *)&adapter->product_info);
-=20
--		pci_free_consistent(adapter->dev, sizeof(mraid_ext_inquiry),
--				ext_inq, dma_handle);
-+		dma_free_coherent(&adapter->dev->dev,
-+				  sizeof(mraid_ext_inquiry), ext_inq,
-+				  dma_handle);
-=20
- 	} else {		/*adapter supports 40ld */
- 		adapter->flag |=3D BOARD_40LD;
-@@ -253,9 +257,9 @@ mega_query_adapter(adapter_t *adapter)
- 		 * get product_info, which is static information and will be
- 		 * unchanged
- 		 */
--		prod_info_dma_handle =3D pci_map_single(adapter->dev, (void *)
--				&adapter->product_info,
--				sizeof(mega_product_info), PCI_DMA_FROMDEVICE);
-+		prod_info_dma_handle =3D dma_map_single(&adapter->dev->dev,
-+						      (void *)&adapter->product_info,
-+						      sizeof(mega_product_info), DMA_FROM_DEVICE);
-=20
- 		mbox->m_out.xferaddr =3D prod_info_dma_handle;
-=20
-@@ -267,8 +271,8 @@ mega_query_adapter(adapter_t *adapter)
- 				"Product_info cmd failed with error: %d\n",
- 				retval);
-=20
--		pci_unmap_single(adapter->dev, prod_info_dma_handle,
--				sizeof(mega_product_info), PCI_DMA_FROMDEVICE);
-+		dma_unmap_single(&adapter->dev->dev, prod_info_dma_handle,
-+				 sizeof(mega_product_info), DMA_FROM_DEVICE);
+@@ -2355,7 +2355,8 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter=
+, int channel)
  	}
 =20
 =20
-@@ -645,7 +649,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cm=
-d, int *busy)
- 			scb->raw_mbox[2] =3D MEGA_RESERVATION_STATUS;
- 			scb->raw_mbox[3] =3D ldrv_num;
+-	scsi_inq =3D pci_alloc_consistent(pdev, 256, &scsi_inq_dma_handle);
++	scsi_inq =3D dma_alloc_coherent(&pdev->dev, 256, &scsi_inq_dma_handle,
++				      GFP_KERNEL);
+ 	if( scsi_inq =3D=3D NULL ) {
+ 		seq_puts(m, "memory not available for scsi inq.\n");
+ 		goto free_inquiry;
+@@ -2428,7 +2429,7 @@ proc_show_pdrv(struct seq_file *m, adapter_t *adapter=
+, int channel)
+ 	}
 =20
--			scb->dma_direction =3D PCI_DMA_NONE;
-+			scb->dma_direction =3D DMA_NONE;
+ free_pci:
+-	pci_free_consistent(pdev, 256, scsi_inq, scsi_inq_dma_handle);
++	dma_free_coherent(&pdev->dev, 256, scsi_inq, scsi_inq_dma_handle);
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+ free_pdev:
+@@ -2548,8 +2549,8 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter=
+, int start, int end )
+ 			raid_inq.logdrv_info.num_ldrv;
+ 	}
 =20
- 			return scb;
- #else
-@@ -709,7 +713,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cm=
-d, int *busy)
- 				mbox->m_out.cmd =3D MEGA_MBOXCMD_PASSTHRU;
- 			}
+-	disk_array =3D pci_alloc_consistent(pdev, array_sz,
+-			&disk_array_dma_handle);
++	disk_array =3D dma_alloc_coherent(&pdev->dev, array_sz,
++					&disk_array_dma_handle, GFP_KERNEL);
 =20
--			scb->dma_direction =3D PCI_DMA_FROMDEVICE;
-+			scb->dma_direction =3D DMA_FROM_DEVICE;
+ 	if( disk_array =3D=3D NULL ) {
+ 		seq_puts(m, "memory not available.\n");
+@@ -2668,8 +2669,8 @@ proc_show_rdrv(struct seq_file *m, adapter_t *adapter=
+, int start, int end )
+ 	}
 =20
- 			pthru->numsgelements =3D mega_build_sglist(adapter, scb,
- 				&pthru->dataxferaddr, &pthru->dataxferlen);
-@@ -839,10 +843,10 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *=
-cmd, int *busy)
- 			 * If it is a read command
- 			 */
- 			if( (*cmd->cmnd & 0x0F) =3D=3D 0x08 ) {
--				scb->dma_direction =3D PCI_DMA_FROMDEVICE;
-+				scb->dma_direction =3D DMA_FROM_DEVICE;
- 			}
- 			else {
--				scb->dma_direction =3D PCI_DMA_TODEVICE;
-+				scb->dma_direction =3D DMA_TO_DEVICE;
- 			}
+ free_pci:
+-	pci_free_consistent(pdev, array_sz, disk_array,
+-			disk_array_dma_handle);
++	dma_free_coherent(&pdev->dev, array_sz, disk_array,
++			  disk_array_dma_handle);
+ free_inquiry:
+ 	mega_free_inquiry(inquiry, dma_handle, pdev);
+ free_pdev:
+@@ -2887,9 +2888,9 @@ mega_init_scb(adapter_t *adapter)
 =20
- 			/* Calculate Scatter-Gather info */
-@@ -877,7 +881,7 @@ mega_build_cmd(adapter_t *adapter, struct scsi_cmnd *cm=
-d, int *busy)
+ 		scb->idx =3D i;
 =20
- 			scb->raw_mbox[3] =3D ldrv_num;
-=20
--			scb->dma_direction =3D PCI_DMA_NONE;
-+			scb->dma_direction =3D DMA_NONE;
-=20
- 			return scb;
- #endif
-@@ -971,7 +975,7 @@ mega_prepare_passthru(adapter_t *adapter, scb_t *scb, s=
-truct scsi_cmnd *cmd,
- 	memcpy(pthru->cdb, cmd->cmnd, cmd->cmd_len);
-=20
- 	/* Not sure about the direction */
--	scb->dma_direction =3D PCI_DMA_BIDIRECTIONAL;
-+	scb->dma_direction =3D DMA_BIDIRECTIONAL;
-=20
- 	/* Special Code for Handling READ_CAPA/ INQ using bounce buffers */
- 	switch (cmd->cmnd[0]) {
-@@ -1035,7 +1039,7 @@ mega_prepare_extpassthru(adapter_t *adapter, scb_t *s=
-cb,
- 	memcpy(epthru->cdb, cmd->cmnd, cmd->cmd_len);
-=20
- 	/* Not sure about the direction */
--	scb->dma_direction =3D PCI_DMA_BIDIRECTIONAL;
-+	scb->dma_direction =3D DMA_BIDIRECTIONAL;
-=20
- 	switch(cmd->cmnd[0]) {
- 	case INQUIRY:
-@@ -1813,25 +1817,25 @@ mega_free_sgl(adapter_t *adapter)
- 		scb =3D &adapter->scb_list[i];
-=20
- 		if( scb->sgl64 ) {
--			pci_free_consistent(adapter->dev,
+-		scb->sgl64 =3D pci_alloc_consistent(adapter->dev,
 -				sizeof(mega_sgl64) * adapter->sglen,
--				scb->sgl64,
--				scb->sgl_dma_addr);
-+			dma_free_coherent(&adapter->dev->dev,
-+					  sizeof(mega_sgl64) * adapter->sglen,
-+					  scb->sgl64, scb->sgl_dma_addr);
+-				&scb->sgl_dma_addr);
++		scb->sgl64 =3D dma_alloc_coherent(&adapter->dev->dev,
++						sizeof(mega_sgl64) * adapter->sglen,
++						&scb->sgl_dma_addr, GFP_KERNEL);
 =20
- 			scb->sgl64 =3D NULL;
+ 		scb->sgl =3D (mega_sglist *)scb->sgl64;
+=20
+@@ -2899,9 +2900,9 @@ mega_init_scb(adapter_t *adapter)
+ 			return -1;
  		}
 =20
- 		if( scb->pthru ) {
--			pci_free_consistent(adapter->dev, sizeof(mega_passthru),
--				scb->pthru, scb->pthru_dma_addr);
-+			dma_free_coherent(&adapter->dev->dev,
-+					  sizeof(mega_passthru), scb->pthru,
-+					  scb->pthru_dma_addr);
+-		scb->pthru =3D pci_alloc_consistent(adapter->dev,
+-				sizeof(mega_passthru),
+-				&scb->pthru_dma_addr);
++		scb->pthru =3D dma_alloc_coherent(&adapter->dev->dev,
++						sizeof(mega_passthru),
++						&scb->pthru_dma_addr, GFP_KERNEL);
 =20
- 			scb->pthru =3D NULL;
+ 		if( !scb->pthru ) {
+ 			dev_warn(&adapter->dev->dev, "RAID: Can't allocate passthru\n");
+@@ -2909,9 +2910,9 @@ mega_init_scb(adapter_t *adapter)
+ 			return -1;
  		}
 =20
- 		if( scb->epthru ) {
--			pci_free_consistent(adapter->dev,
+-		scb->epthru =3D pci_alloc_consistent(adapter->dev,
 -				sizeof(mega_ext_passthru),
--				scb->epthru, scb->epthru_dma_addr);
-+			dma_free_coherent(&adapter->dev->dev,
-+					  sizeof(mega_ext_passthru),
-+					  scb->epthru, scb->epthru_dma_addr);
+-				&scb->epthru_dma_addr);
++		scb->epthru =3D dma_alloc_coherent(&adapter->dev->dev,
++						 sizeof(mega_ext_passthru),
++						 &scb->epthru_dma_addr, GFP_KERNEL);
 =20
- 			scb->epthru =3D NULL;
- 		}
-@@ -2004,7 +2008,7 @@ make_local_pdev(adapter_t *adapter, struct pci_dev **=
-pdev)
+ 		if( !scb->epthru ) {
+ 			dev_warn(&adapter->dev->dev,
+@@ -3151,9 +3152,9 @@ megadev_ioctl(struct file *filep, unsigned int cmd, u=
+nsigned long arg)
+ 		if( uioc.uioc_rmbox[0] =3D=3D MEGA_MBOXCMD_PASSTHRU ) {
+ 			/* Passthru commands */
 =20
- 	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
+-			pthru =3D pci_alloc_consistent(pdev,
+-					sizeof(mega_passthru),
+-					&pthru_dma_hndl);
++			pthru =3D dma_alloc_coherent(&pdev->dev,
++						   sizeof(mega_passthru),
++						   &pthru_dma_hndl, GFP_KERNEL);
 =20
--	if( pci_set_dma_mask(*pdev, DMA_BIT_MASK(32)) !=3D 0 ) {
-+	if(dma_set_mask(&(*pdev)->dev, DMA_BIT_MASK(32)) !=3D 0 ) {
- 		kfree(*pdev);
- 		return -1;
+ 			if( pthru =3D=3D NULL ) {
+ 				free_local_pdev(pdev);
+@@ -3171,9 +3172,9 @@ megadev_ioctl(struct file *filep, unsigned int cmd, u=
+nsigned long arg)
+ 			if( copy_from_user(pthru, upthru,
+ 						sizeof(mega_passthru)) ) {
+=20
+-				pci_free_consistent(pdev,
+-						sizeof(mega_passthru), pthru,
+-						pthru_dma_hndl);
++				dma_free_coherent(&pdev->dev,
++						  sizeof(mega_passthru),
++						  pthru, pthru_dma_hndl);
+=20
+ 				free_local_pdev(pdev);
+=20
+@@ -3184,15 +3185,16 @@ megadev_ioctl(struct file *filep, unsigned int cmd,=
+ unsigned long arg)
+ 			 * Is there a data transfer
+ 			 */
+ 			if( pthru->dataxferlen ) {
+-				data =3D pci_alloc_consistent(pdev,
+-						pthru->dataxferlen,
+-						&data_dma_hndl);
++				data =3D dma_alloc_coherent(&pdev->dev,
++							  pthru->dataxferlen,
++							  &data_dma_hndl,
++							  GFP_KERNEL);
+=20
+ 				if( data =3D=3D NULL ) {
+-					pci_free_consistent(pdev,
+-							sizeof(mega_passthru),
+-							pthru,
+-							pthru_dma_hndl);
++					dma_free_coherent(&pdev->dev,
++							  sizeof(mega_passthru),
++							  pthru,
++							  pthru_dma_hndl);
+=20
+ 					free_local_pdev(pdev);
+=20
+@@ -3257,13 +3259,13 @@ megadev_ioctl(struct file *filep, unsigned int cmd,=
+ unsigned long arg)
+=20
+ freemem_and_return:
+ 			if( pthru->dataxferlen ) {
+-				pci_free_consistent(pdev,
+-						pthru->dataxferlen, data,
+-						data_dma_hndl);
++				dma_free_coherent(&pdev->dev,
++						  pthru->dataxferlen, data,
++						  data_dma_hndl);
+ 			}
+=20
+-			pci_free_consistent(pdev, sizeof(mega_passthru),
+-					pthru, pthru_dma_hndl);
++			dma_free_coherent(&pdev->dev, sizeof(mega_passthru),
++					  pthru, pthru_dma_hndl);
+=20
+ 			free_local_pdev(pdev);
+=20
+@@ -3276,8 +3278,10 @@ megadev_ioctl(struct file *filep, unsigned int cmd, =
+unsigned long arg)
+ 			 * Is there a data transfer
+ 			 */
+ 			if( uioc.xferlen ) {
+-				data =3D pci_alloc_consistent(pdev,
+-						uioc.xferlen, &data_dma_hndl);
++				data =3D dma_alloc_coherent(&pdev->dev,
++							  uioc.xferlen,
++							  &data_dma_hndl,
++							  GFP_KERNEL);
+=20
+ 				if( data =3D=3D NULL ) {
+ 					free_local_pdev(pdev);
+@@ -3297,9 +3301,9 @@ megadev_ioctl(struct file *filep, unsigned int cmd, u=
+nsigned long arg)
+ 				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							uioc.xferlen) ) {
+=20
+-					pci_free_consistent(pdev,
+-							uioc.xferlen,
+-							data, data_dma_hndl);
++					dma_free_coherent(&pdev->dev,
++							  uioc.xferlen, data,
++							  data_dma_hndl);
+=20
+ 					free_local_pdev(pdev);
+=20
+@@ -3320,9 +3324,9 @@ megadev_ioctl(struct file *filep, unsigned int cmd, u=
+nsigned long arg)
+=20
+ 			if( rval ) {
+ 				if( uioc.xferlen ) {
+-					pci_free_consistent(pdev,
+-							uioc.xferlen, data,
+-							data_dma_hndl);
++					dma_free_coherent(&pdev->dev,
++							  uioc.xferlen, data,
++							  data_dma_hndl);
+ 				}
+=20
+ 				free_local_pdev(pdev);
+@@ -3342,9 +3346,8 @@ megadev_ioctl(struct file *filep, unsigned int cmd, u=
+nsigned long arg)
+ 			}
+=20
+ 			if( uioc.xferlen ) {
+-				pci_free_consistent(pdev,
+-						uioc.xferlen, data,
+-						data_dma_hndl);
++				dma_free_coherent(&pdev->dev, uioc.xferlen,
++						  data, data_dma_hndl);
+ 			}
+=20
+ 			free_local_pdev(pdev);
+@@ -4010,8 +4013,8 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, =
+u8 tgt,
+ 	 */
+ 	if( make_local_pdev(adapter, &pdev) !=3D 0 ) return -1;
+=20
+-	pthru =3D pci_alloc_consistent(pdev, sizeof(mega_passthru),
+-			&pthru_dma_handle);
++	pthru =3D dma_alloc_coherent(&pdev->dev, sizeof(mega_passthru),
++				   &pthru_dma_handle, GFP_KERNEL);
+=20
+ 	if( pthru =3D=3D NULL ) {
+ 		free_local_pdev(pdev);
+@@ -4047,8 +4050,8 @@ mega_internal_dev_inquiry(adapter_t *adapter, u8 ch, =
+u8 tgt,
+=20
+ 	rval =3D mega_internal_command(adapter, &mc, pthru);
+=20
+-	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
+-			pthru_dma_handle);
++	dma_free_coherent(&pdev->dev, sizeof(mega_passthru), pthru,
++			  pthru_dma_handle);
+=20
+ 	free_local_pdev(pdev);
+=20
+@@ -4273,8 +4276,10 @@ megaraid_probe_one(struct pci_dev *pdev, const struc=
+t pci_device_id *id)
+ 	/*
+ 	 * Allocate buffer to issue internal commands.
+ 	 */
+-	adapter->mega_buffer =3D pci_alloc_consistent(adapter->dev,
+-		MEGA_BUFFER_SIZE, &adapter->buf_dma_handle);
++	adapter->mega_buffer =3D dma_alloc_coherent(&adapter->dev->dev,
++						  MEGA_BUFFER_SIZE,
++						  &adapter->buf_dma_handle,
++						  GFP_KERNEL);
+ 	if (!adapter->mega_buffer) {
+ 		dev_warn(&pdev->dev, "out of RAM\n");
+ 		goto out_host_put;
+@@ -4433,10 +4438,10 @@ megaraid_probe_one(struct pci_dev *pdev, const stru=
+ct pci_device_id *id)
+=20
+ 	/* Set the Mode of addressing to 64 bit if we can */
+ 	if ((adapter->flag & BOARD_64BIT) && (sizeof(dma_addr_t) =3D=3D 8)) {
+-		pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++		dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
+ 		adapter->has_64bit_addr =3D 1;
+ 	} else  {
+-		pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+ 		adapter->has_64bit_addr =3D 0;
  	}
-@@ -2028,14 +2032,16 @@ free_local_pdev(struct pci_dev *pdev)
- static inline void *
- mega_allocate_inquiry(dma_addr_t *dma_handle, struct pci_dev *pdev)
- {
--	return pci_alloc_consistent(pdev, sizeof(mega_inquiry3), dma_handle);
-+	return dma_alloc_coherent(&pdev->dev, sizeof(mega_inquiry3),
-+				  dma_handle, GFP_KERNEL);
- }
+ 	=09
+@@ -4475,15 +4480,15 @@ megaraid_probe_one(struct pci_dev *pdev, const stru=
+ct pci_device_id *id)
+ 	return 0;
 =20
+  out_free_mbox:
+-	pci_free_consistent(adapter->dev, sizeof(mbox64_t),
+-			adapter->una_mbox64, adapter->una_mbox64_dma);
++	dma_free_coherent(&adapter->dev->dev, sizeof(mbox64_t),
++			  adapter->una_mbox64, adapter->una_mbox64_dma);
+  out_free_irq:
+ 	free_irq(adapter->host->irq, adapter);
+  out_free_scb_list:
+ 	kfree(adapter->scb_list);
+  out_free_cmd_buffer:
+-	pci_free_consistent(adapter->dev, MEGA_BUFFER_SIZE,
+-			adapter->mega_buffer, adapter->buf_dma_handle);
++	dma_free_coherent(&adapter->dev->dev, MEGA_BUFFER_SIZE,
++			  adapter->mega_buffer, adapter->buf_dma_handle);
+  out_host_put:
+ 	scsi_host_put(host);
+  out_iounmap:
+@@ -4557,11 +4562,11 @@ megaraid_remove_one(struct pci_dev *pdev)
+ 	sprintf(buf, "hba%d", adapter->host->host_no);
+ 	remove_proc_subtree(buf, mega_proc_dir_entry);
 =20
- static inline void
- mega_free_inquiry(void *inquiry, dma_addr_t dma_handle, struct pci_dev *pd=
-ev)
- {
--	pci_free_consistent(pdev, sizeof(mega_inquiry3), inquiry, dma_handle);
-+	dma_free_coherent(&pdev->dev, sizeof(mega_inquiry3), inquiry,
-+			  dma_handle);
- }
+-	pci_free_consistent(adapter->dev, MEGA_BUFFER_SIZE,
+-			adapter->mega_buffer, adapter->buf_dma_handle);
++	dma_free_coherent(&adapter->dev->dev, MEGA_BUFFER_SIZE,
++			  adapter->mega_buffer, adapter->buf_dma_handle);
+ 	kfree(adapter->scb_list);
+-	pci_free_consistent(adapter->dev, sizeof(mbox64_t),
+-			adapter->una_mbox64, adapter->una_mbox64_dma);
++	dma_free_coherent(&adapter->dev->dev, sizeof(mbox64_t),
++			  adapter->una_mbox64, adapter->una_mbox64_dma);
 =20
-=20
+ 	scsi_host_put(host);
+ 	pci_disable_device(pdev);
 --=20
 2.17.1
 
 
---/04w6evG8XlLl3ft
+--8t9RHnE3ZwKMSgU+
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8Sx1wACgkQ+gRsbIfe
-744fJRAAs4MQ3a1gzOQg93JJWwvNZa6FE6GTM+pfhHtaSjYuHHnpnqVjAtCUabLM
-GQvIt7kDpnJufnqBXrESdIslhV1KDtG+VK8T4kh0jZZ6DfXdZNKay8fIsAEQt+Lg
-ukMhp44IF3FrWHFh8LA8OsTyYtbAr41Lp91ENNygJ0fcyOuk5meCSzxmakxX2mZs
-iKn2iP/dy6PWfiRO6yh+MA4DYxZHd1robsu5p534hdxh4m1Y5ExT33c6OnoUGm4i
-ksobhvp4exhYcn5VIGzfhRc0b+vGjDNj2HHqGOHrTN0ZlHyFFvAurERkJq5T7pNf
-tv46XJkIz3r0+sfRwCDtq5Tf9+o0JKhdz4aJZZBmHGTDOhGLouJHrYPy2EkljSFb
-kK4HYmsxnI710EShMBzCjBajRvOLKHg40+iutEYzSgaiTLkBQ5hjDnlMF+M6bW1p
-FTWeY/zQfm6ObOlM1glJrSFSsbJoMN5eEizoOsA7LKbT6xfguw56ECUBLWMov+VL
-zS4NBNdON1WCwLquG68/t283hGpf47Ubxh714AxTxp+AUOyK5f5SYwp2frVilOvn
-4LhjmVXtdYrVqlCGFjrFN/TdcQpreqlgfYfdRZZwsXPluj2vMF2EF+r2ZaKt4RYJ
-gn4zZBKHaJq1apVdhuVvpDY5o/DlFdljRL51BhSNbg+8AXg8YqE=
-=OCOK
+iQIzBAABCgAdFiEE7AbCa0kOsMJ4cx0j+gRsbIfe744FAl8Sx4AACgkQ+gRsbIfe
+747BJxAApNzcHFpUfSPpJKu+/Rgn4CS7hLkYj9ucuAfkSZMrhQ460rSaO9gPHRv9
+wOlyYFxI6jDn/g0s3Vee5IxOEIT+6U7NeRQz+U4Tj351Sg7Pwz7o7OymLEoBKpo0
+OsCr6vAFMjzuSQEW0DgyV0xUGgYk0c5kcfhyyf/6OM+J5VLGglqlInThd38PvPWx
+S6Ms7NcoOLCOX9nyniSxbOwCLFD1ctVYoKcHk8nyZX4+alV9EgeA+ViJuXdlVLP1
+Kh6zF4dVZaRMN1myw0Sfs1/GpKBCT28nDttAEoRnbBfy0WZwrnrFhKO0Jhqxf7Sl
+LKA7EjFxqNFPVvbC45f1PzN4/2rU9OYBbvpaMlB5RQ4V8HxSKPD6f3vtr2PBMigX
+Lx2FoEtgMTjX5f2vY6wxeJdTmFen8AxJjBEHAscU0Js8AO6P1k5J4mdLcfAvNvP7
+1hH28oRd26v5b3aBTtymScoYgktdzkr8DDL2x7ZJ/79qfTA52qkdaX/qWg09eIKF
+ln0oqPiMBxdbrUP8mv8MfGSaoMo++Pzs+2GjCTRq7+YF3QlbGogEgEILCm1dX1A7
+RsHe1rhVer2eGu8TLxprPivMs+VxAqu6bArnrkyRsmTweYsRs7YUHI9d5JiPHlMV
+Km8vEdmW8H3Oh4b2/DCYlZzRTs4aFzDkSxOAr4NOLj0xyeAJQ3E=
+=2cms
 -----END PGP SIGNATURE-----
 
---/04w6evG8XlLl3ft--
+--8t9RHnE3ZwKMSgU+--
