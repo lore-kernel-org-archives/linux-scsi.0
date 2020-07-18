@@ -2,113 +2,104 @@ Return-Path: <SRS0=8IEi=A5=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A7AEC433E1
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 13:24:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A71AC433E1
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 17:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C32B2074B
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 13:24:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 488212177B
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Jul 2020 17:04:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Xkrwrg8W";
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="blXCJjEe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726611AbgGRNYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 18 Jul 2020 09:24:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57346 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726569AbgGRNYx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jul 2020 09:24:53 -0400
-Received: from smtp.al2klimov.de (smtp.al2klimov.de [IPv6:2a01:4f8:c0c:1465::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E41AC0619D2;
-        Sat, 18 Jul 2020 06:24:53 -0700 (PDT)
-Received: from authenticated-user (PRIMARY_HOSTNAME [PUBLIC_IP])
-        by smtp.al2klimov.de (Postfix) with ESMTPA id 94017BC07E;
-        Sat, 18 Jul 2020 13:24:48 +0000 (UTC)
-From:   "Alexander A. Klimov" <grandmaster@al2klimov.de>
-To:     don.brace@microsemi.com, corbet@lwn.net,
-        esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     "Alexander A. Klimov" <grandmaster@al2klimov.de>
-Subject: [PATCH] scsi: smartpqi: Replace HTTP links with HTTPS ones
-Date:   Sat, 18 Jul 2020 15:24:42 +0200
-Message-Id: <20200718132442.24208-1-grandmaster@al2klimov.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: +++++
-Authentication-Results: smtp.al2klimov.de;
-        auth=pass smtp.auth=aklimov@al2klimov.de smtp.mailfrom=grandmaster@al2klimov.de
+        id S1726973AbgGRREp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 18 Jul 2020 13:04:45 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37404 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726604AbgGRREp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 18 Jul 2020 13:04:45 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 058F58EE07B;
+        Sat, 18 Jul 2020 10:04:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1595091885;
+        bh=JMRpUVstGbmDoJPJdDp8Sz4EDdV+jhAXdx6hF7IqQPw=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Xkrwrg8WHzCBVqWH1J30iare5qlbLbxtfILRXn+iQ2YTEeyb3hLTnv58eZqWgnrwd
+         st84pYuDADZ4N/eZf+OfbkGGkDnNYk6rf6RbqHYRh6vqMLnBkY8etMNuiSuauhxu4t
+         t3fFU8Hgi0MCehb0d4KYKPAb771eUubPOolOPQK0=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id tRP8SKbe9NaN; Sat, 18 Jul 2020 10:04:43 -0700 (PDT)
+Received: from [153.66.254.194] (unknown [50.35.76.230])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 885A48EE064;
+        Sat, 18 Jul 2020 10:04:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1595091883;
+        bh=JMRpUVstGbmDoJPJdDp8Sz4EDdV+jhAXdx6hF7IqQPw=;
+        h=Subject:From:To:Cc:Date:From;
+        b=blXCJjEe+tznwmEcLKrz9iwxKpM9yAuWCwLs3CgEOphqfPq2npUmsWP3koLafdBE1
+         tHiacL0N5a61Y3RtJPz/R3KhHEWJ4ef7iXM24hrGoDzjQPaLISS4eOCG28QvuVMxW7
+         CVZBKu51+a4PgFcRjZ5xyZY8hjz8Q1HMTBcMhF40=
+Message-ID: <1595091880.3281.5.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.8-rc5
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 18 Jul 2020 10:04:40 -0700
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rationale:
-Reduces attack surface on kernel devs opening the links for MITM
-as HTTPS traffic is much harder to manipulate.
+One small driver fix.  Although the one liner makes it sound like a
+cosmetic change, it's a regression fix for the megaraid_sas driver.
 
-Deterministic algorithm:
-For each file:
-  If not .svg:
-    For each line:
-      If doesn't contain `\bxmlns\b`:
-        For each link, `\bhttp://[^# \t\r\n]*(?:\w|/)`:
-	  If neither `\bgnu\.org/license`, nor `\bmozilla\.org/MPL\b`:
-            If both the HTTP and HTTPS versions
-            return 200 OK and serve the same content:
-              Replace HTTP with HTTPS.
+The patch is available here:
 
-Signed-off-by: Alexander A. Klimov <grandmaster@al2klimov.de>
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Chandrakanth Patil (1):
+      scsi: megaraid_sas: Remove undefined ENABLE_IRQ_POLL macro
+
+And the diffstat:
+
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+With full diff below
+
+James
+
 ---
- Continuing my work started at 93431e0607e5.
- See also: git log --oneline '--author=Alexander A. Klimov <grandmaster@al2klimov.de>' v5.7..master
- (Actually letting a shell for loop submit all this stuff for me.)
 
- If there are any URLs to be removed completely
- or at least not (just) HTTPSified:
- Just clearly say so and I'll *undo my change*.
- See also: https://lkml.org/lkml/2020/6/27/64
-
- If there are any valid, but yet not changed URLs:
- See: https://lkml.org/lkml/2020/6/26/837
-
- If you apply the patch, please let me know.
-
- Sorry again to all maintainers who complained about subject lines.
- Now I realized that you want an actually perfect prefixes,
- not just subsystem ones.
- I tried my best...
- And yes, *I could* (at least half-)automate it.
- Impossible is nothing! :)
-
-
- Documentation/scsi/smartpqi.rst | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/scsi/smartpqi.rst b/Documentation/scsi/smartpqi.rst
-index a7de27352c6f..38dafc70b4cd 100644
---- a/Documentation/scsi/smartpqi.rst
-+++ b/Documentation/scsi/smartpqi.rst
-@@ -5,7 +5,7 @@ SMARTPQI - Microsemi Smart PQI Driver
- =====================================
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 319f241da4b6..fcf03f733e41 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3739,10 +3739,8 @@ static irqreturn_t megasas_isr_fusion(int irq, void *devp)
+ 	if (instance->mask_interrupts)
+ 		return IRQ_NONE;
  
- This file describes the smartpqi SCSI driver for Microsemi
--(http://www.microsemi.com) PQI controllers. The smartpqi driver
-+(https://www.microsemi.com) PQI controllers. The smartpqi driver
- is the next generation SCSI driver for Microsemi Corp. The smartpqi
- driver is the first SCSI driver to implement the PQI queuing model.
+-#if defined(ENABLE_IRQ_POLL)
+ 	if (irq_context->irq_poll_scheduled)
+ 		return IRQ_HANDLED;
+-#endif
  
-@@ -19,8 +19,8 @@ when configuring the kernel.
- 
- For more information on the PQI Queuing Interface, please see:
- 
--- http://www.t10.org/drafts.htm
--- http://www.t10.org/members/w_pqi2.htm
-+- https://www.t10.org/drafts.htm
-+- https://www.t10.org/members/w_pqi2.htm
- 
- Supported devices
- =================
--- 
-2.27.0
-
+ 	if (!instance->msix_vectors) {
+ 		mfiStatus = instance->instancet->clear_intr(instance);
