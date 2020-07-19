@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B09FC433ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jul 2020 20:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C545C433F2
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jul 2020 20:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5A39208DB
-	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jul 2020 20:15:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F29422B4E
+	for <linux-scsi@archiver.kernel.org>; Sun, 19 Jul 2020 20:15:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="FgEmxss3"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="a4fJGorx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726730AbgGSUPv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jul 2020 16:15:51 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46108 "EHLO
+        id S1726824AbgGSUP6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jul 2020 16:15:58 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14374 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726582AbgGSUPi (ORCPT
+        by vger.kernel.org with ESMTP id S1726582AbgGSUP4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 19 Jul 2020 16:15:38 -0400
+        Sun, 19 Jul 2020 16:15:56 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06JKDQiE014975;
-        Sun, 19 Jul 2020 13:15:33 -0700
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06JKFgdm017938;
+        Sun, 19 Jul 2020 13:15:52 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=pfpt0818;
- bh=gqHzddxXNL1kLeB7UxsH/ZDxivMxLXQstkcfoKf/b78=;
- b=FgEmxss3O7uz9Ab6vZzEMVFnrsQlCbDz8D2YkhkeI7719GQF28/7NQvCpC+NTWqPm+i9
- Jge99Z7PhrWUzkwqTBuQTeOuX7h2UCA6I+BNzYJWVeh7mstA5tBXUZ9weuXOTYlmCNcG
- XJG5Zs6nurhn8UiuKOGa4zteCGAPzgdvVBjdjEunwZYhJjsHHA7ZPkvV6Rw4kgVY+oIi
- d0Z5TxgoOMUHV72jfKhYji2vO4nKgi6kzfM4MLose0r8PkqqfnTiY7jw4lZQHJJti8Ff
- b5USfHY7j9FPEw0o51aSvqJOhMi4yvYZblqB0+PAXkgja6aZtTl+dtHZvvI3ehTiSeE/ BA== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 32c0kkbf32-1
+ bh=mmPjUSFdMND1ZpSzT0MvJ8Gk26aDdePDNpVRUQly/Lo=;
+ b=a4fJGorxs31JmIFwy8e0MtBJ68SrN6GU/15l7LktXows4Ej6/Mg0z3k/5JBkUYrTZOh5
+ cYAEOsj8ssItk6RFJH+rU0PvzrGnIhpsvwCWkKxXhvogihFughgPl8vvP4Qw346cQhFY
+ YUnhZ2XHzjwAEsKLz7rnb5BL6DM9T0+hgBFVmNRGEb+Z6VdMc22OchAqNJo2xyq4avk8
+ Zj3HIm41vvjf0hlxoNYZp3Kq2jAdVT6U/dC+sF3gylRGJvXtD8y1rsz4HCmln7Wh7q6p
+ fMSPrSNxPJHRkZiiI2fOuJ0SDql/e5cM75AznMDMg26QjYXj1yYQdDzQl+dL/xRGtz+o Mw== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 32c0kkbf4m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Sun, 19 Jul 2020 13:15:33 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 19 Jul
- 2020 13:15:31 -0700
+        Sun, 19 Jul 2020 13:15:52 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Sun, 19 Jul
+ 2020 13:15:50 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sun, 19 Jul 2020 13:15:31 -0700
+ Transport; Sun, 19 Jul 2020 13:15:50 -0700
 Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
-        by maili.marvell.com (Postfix) with ESMTP id 807793F703F;
-        Sun, 19 Jul 2020 13:15:27 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id E64B23F703F;
+        Sun, 19 Jul 2020 13:15:45 -0700 (PDT)
 From:   Alexander Lobakin <alobakin@marvell.com>
 To:     "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -60,9 +60,9 @@ CC:     Alexander Lobakin <alobakin@marvell.com>,
         <GR-everest-linux-l2@marvell.com>,
         <QLogic-Storage-Upstream@marvell.com>, <netdev@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 net-next 03/14] qed: add support for multi-rate transceivers
-Date:   Sun, 19 Jul 2020 23:14:42 +0300
-Message-ID: <20200719201453.3648-4-alobakin@marvell.com>
+Subject: [PATCH v2 net-next 07/14] qede: format qede{,_vf}_ethtool_ops
+Date:   Sun, 19 Jul 2020 23:14:46 +0300
+Message-ID: <20200719201453.3648-8-alobakin@marvell.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200719201453.3648-1-alobakin@marvell.com>
 References: <20200719201453.3648-1-alobakin@marvell.com>
@@ -76,231 +76,166 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set the corresponding advertised and supported link modes according
-to the detected transceiver type and device capabilities.
+Prior to adding new callbacks, format qede ethtool_ops structs to make
+declarations more fancy and readable.
 
 Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
 Signed-off-by: Igor Russkikh <irusskikh@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed_hsi.h  |   4 +
- drivers/net/ethernet/qlogic/qed/qed_main.c | 112 ++++++++++++++++-----
- drivers/net/ethernet/qlogic/qed/qed_mcp.c  |   9 +-
- 3 files changed, 98 insertions(+), 27 deletions(-)
+ .../net/ethernet/qlogic/qede/qede_ethtool.c   | 137 +++++++++---------
+ 1 file changed, 68 insertions(+), 69 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index 0d0a109d94b4..ebc25b34e491 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -12027,6 +12027,10 @@ struct public_port {
- #define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_CR	0x34
- #define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_LR	0x35
- #define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_AOC	0x36
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_SR	0x37
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_LR	0x38
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_SR	0x39
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_LR	0x3a
+diff --git a/drivers/net/ethernet/qlogic/qede/qede_ethtool.c b/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
+index f47167cfa382..f5851a6ae729 100644
+--- a/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
++++ b/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
+@@ -2059,78 +2059,77 @@ static int qede_get_dump_data(struct net_device *dev,
+ }
  
- 	u32 wol_info;
- 	u32 wol_pkt_len;
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
-index 8a0b8da19547..9df27c3f5cab 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_main.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
-@@ -1695,21 +1695,38 @@ static void qed_fill_link_capability(struct qed_hwfn *hwfn,
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G)
- 			__set_bit(QED_LM_20000baseKR2_Full, if_caps);
+ static const struct ethtool_ops qede_ethtool_ops = {
+-	.supported_coalesce_params = ETHTOOL_COALESCE_USECS,
+-	.get_link_ksettings = qede_get_link_ksettings,
+-	.set_link_ksettings = qede_set_link_ksettings,
+-	.get_drvinfo = qede_get_drvinfo,
+-	.get_regs_len = qede_get_regs_len,
+-	.get_regs = qede_get_regs,
+-	.get_wol = qede_get_wol,
+-	.set_wol = qede_set_wol,
+-	.get_msglevel = qede_get_msglevel,
+-	.set_msglevel = qede_set_msglevel,
+-	.nway_reset = qede_nway_reset,
+-	.get_link = qede_get_link,
+-	.get_coalesce = qede_get_coalesce,
+-	.set_coalesce = qede_set_coalesce,
+-	.get_ringparam = qede_get_ringparam,
+-	.set_ringparam = qede_set_ringparam,
+-	.get_pauseparam = qede_get_pauseparam,
+-	.set_pauseparam = qede_set_pauseparam,
+-	.get_strings = qede_get_strings,
+-	.set_phys_id = qede_set_phys_id,
+-	.get_ethtool_stats = qede_get_ethtool_stats,
+-	.get_priv_flags = qede_get_priv_flags,
+-	.set_priv_flags = qede_set_priv_flags,
+-	.get_sset_count = qede_get_sset_count,
+-	.get_rxnfc = qede_get_rxnfc,
+-	.set_rxnfc = qede_set_rxnfc,
+-	.get_rxfh_indir_size = qede_get_rxfh_indir_size,
+-	.get_rxfh_key_size = qede_get_rxfh_key_size,
+-	.get_rxfh = qede_get_rxfh,
+-	.set_rxfh = qede_set_rxfh,
+-	.get_ts_info = qede_get_ts_info,
+-	.get_channels = qede_get_channels,
+-	.set_channels = qede_set_channels,
+-	.self_test = qede_self_test,
+-	.get_module_info = qede_get_module_info,
+-	.get_module_eeprom = qede_get_module_eeprom,
+-	.get_eee = qede_get_eee,
+-	.set_eee = qede_set_eee,
+-
+-	.get_tunable = qede_get_tunable,
+-	.set_tunable = qede_set_tunable,
+-	.flash_device = qede_flash_device,
+-	.get_dump_flag = qede_get_dump_flag,
+-	.get_dump_data = qede_get_dump_data,
+-	.set_dump = qede_set_dump,
++	.supported_coalesce_params	= ETHTOOL_COALESCE_USECS,
++	.get_link_ksettings		= qede_get_link_ksettings,
++	.set_link_ksettings		= qede_set_link_ksettings,
++	.get_drvinfo			= qede_get_drvinfo,
++	.get_regs_len			= qede_get_regs_len,
++	.get_regs			= qede_get_regs,
++	.get_wol			= qede_get_wol,
++	.set_wol			= qede_set_wol,
++	.get_msglevel			= qede_get_msglevel,
++	.set_msglevel			= qede_set_msglevel,
++	.nway_reset			= qede_nway_reset,
++	.get_link			= qede_get_link,
++	.get_coalesce			= qede_get_coalesce,
++	.set_coalesce			= qede_set_coalesce,
++	.get_ringparam			= qede_get_ringparam,
++	.set_ringparam			= qede_set_ringparam,
++	.get_pauseparam			= qede_get_pauseparam,
++	.set_pauseparam			= qede_set_pauseparam,
++	.get_strings			= qede_get_strings,
++	.set_phys_id			= qede_set_phys_id,
++	.get_ethtool_stats		= qede_get_ethtool_stats,
++	.get_priv_flags			= qede_get_priv_flags,
++	.set_priv_flags			= qede_set_priv_flags,
++	.get_sset_count			= qede_get_sset_count,
++	.get_rxnfc			= qede_get_rxnfc,
++	.set_rxnfc			= qede_set_rxnfc,
++	.get_rxfh_indir_size		= qede_get_rxfh_indir_size,
++	.get_rxfh_key_size		= qede_get_rxfh_key_size,
++	.get_rxfh			= qede_get_rxfh,
++	.set_rxfh			= qede_set_rxfh,
++	.get_ts_info			= qede_get_ts_info,
++	.get_channels			= qede_get_channels,
++	.set_channels			= qede_set_channels,
++	.self_test			= qede_self_test,
++	.get_module_info		= qede_get_module_info,
++	.get_module_eeprom		= qede_get_module_eeprom,
++	.get_eee			= qede_get_eee,
++	.set_eee			= qede_set_eee,
++	.get_tunable			= qede_get_tunable,
++	.set_tunable			= qede_set_tunable,
++	.flash_device			= qede_flash_device,
++	.get_dump_flag			= qede_get_dump_flag,
++	.get_dump_data			= qede_get_dump_data,
++	.set_dump			= qede_set_dump,
+ };
  
--		/* For DAC media multiple speed capabilities are supported*/
--		capability = capability & speed_mask;
-+		/* For DAC media multiple speed capabilities are supported */
-+		capability |= speed_mask;
-+
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G)
- 			__set_bit(QED_LM_1000baseKX_Full, if_caps);
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G)
- 			__set_bit(QED_LM_10000baseCR_Full, if_caps);
-+
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G)
--			__set_bit(QED_LM_40000baseCR4_Full, if_caps);
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_40G_CR4:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_CR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_CR:
-+				__set_bit(QED_LM_40000baseCR4_Full, if_caps);
-+			default:
-+				break;
-+			}
-+
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G)
- 			__set_bit(QED_LM_25000baseCR_Full, if_caps);
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
- 			__set_bit(QED_LM_50000baseCR2_Full, if_caps);
-+
- 		if (capability &
- 		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G)
--			__set_bit(QED_LM_100000baseCR4_Full, if_caps);
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_100G_CR4:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_CR:
-+				__set_bit(QED_LM_100000baseCR4_Full, if_caps);
-+			default:
-+				break;
-+			}
+ static const struct ethtool_ops qede_vf_ethtool_ops = {
+-	.supported_coalesce_params = ETHTOOL_COALESCE_USECS,
+-	.get_link_ksettings = qede_get_link_ksettings,
+-	.get_drvinfo = qede_get_drvinfo,
+-	.get_msglevel = qede_get_msglevel,
+-	.set_msglevel = qede_set_msglevel,
+-	.get_link = qede_get_link,
+-	.get_coalesce = qede_get_coalesce,
+-	.set_coalesce = qede_set_coalesce,
+-	.get_ringparam = qede_get_ringparam,
+-	.set_ringparam = qede_set_ringparam,
+-	.get_strings = qede_get_strings,
+-	.get_ethtool_stats = qede_get_ethtool_stats,
+-	.get_priv_flags = qede_get_priv_flags,
+-	.get_sset_count = qede_get_sset_count,
+-	.get_rxnfc = qede_get_rxnfc,
+-	.set_rxnfc = qede_set_rxnfc,
+-	.get_rxfh_indir_size = qede_get_rxfh_indir_size,
+-	.get_rxfh_key_size = qede_get_rxfh_key_size,
+-	.get_rxfh = qede_get_rxfh,
+-	.set_rxfh = qede_set_rxfh,
+-	.get_channels = qede_get_channels,
+-	.set_channels = qede_set_channels,
+-	.get_tunable = qede_get_tunable,
+-	.set_tunable = qede_set_tunable,
++	.supported_coalesce_params	= ETHTOOL_COALESCE_USECS,
++	.get_link_ksettings		= qede_get_link_ksettings,
++	.get_drvinfo			= qede_get_drvinfo,
++	.get_msglevel			= qede_get_msglevel,
++	.set_msglevel			= qede_set_msglevel,
++	.get_link			= qede_get_link,
++	.get_coalesce			= qede_get_coalesce,
++	.set_coalesce			= qede_set_coalesce,
++	.get_ringparam			= qede_get_ringparam,
++	.set_ringparam			= qede_set_ringparam,
++	.get_strings			= qede_get_strings,
++	.get_ethtool_stats		= qede_get_ethtool_stats,
++	.get_priv_flags			= qede_get_priv_flags,
++	.get_sset_count			= qede_get_sset_count,
++	.get_rxnfc			= qede_get_rxnfc,
++	.set_rxnfc			= qede_set_rxnfc,
++	.get_rxfh_indir_size		= qede_get_rxfh_indir_size,
++	.get_rxfh_key_size		= qede_get_rxfh_key_size,
++	.get_rxfh			= qede_get_rxfh,
++	.set_rxfh			= qede_set_rxfh,
++	.get_channels			= qede_get_channels,
++	.set_channels			= qede_set_channels,
++	.get_tunable			= qede_get_tunable,
++	.set_tunable			= qede_set_tunable,
+ };
  
- 		break;
- 	case MEDIA_BASE_T:
-@@ -1727,10 +1744,15 @@ static void qed_fill_link_capability(struct qed_hwfn *hwfn,
- 		if (board_cfg & NVM_CFG1_PORT_PORT_TYPE_MODULE) {
- 			__set_bit(QED_LM_FIBRE, if_caps);
- 
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_1000BASET)
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_1000BASET:
- 				__set_bit(QED_LM_1000baseT_Full, if_caps);
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_BASET)
-+				break;
-+			case ETH_TRANSCEIVER_TYPE_10G_BASET:
- 				__set_bit(QED_LM_10000baseT_Full, if_caps);
-+			default:
-+				break;
-+			}
- 		}
- 
- 		break;
-@@ -1739,47 +1761,85 @@ static void qed_fill_link_capability(struct qed_hwfn *hwfn,
- 	case MEDIA_XFP_FIBER:
- 	case MEDIA_MODULE_FIBER:
- 		__set_bit(QED_LM_FIBRE, if_caps);
-+		capability |= speed_mask;
- 
--		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G) {
--			if ((tcvr_type == ETH_TRANSCEIVER_TYPE_1G_LX) ||
--			    (tcvr_type == ETH_TRANSCEIVER_TYPE_1G_SX))
-+		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G)
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_1G_LX:
-+			case ETH_TRANSCEIVER_TYPE_1G_SX:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_SR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_LR:
- 				__set_bit(QED_LM_1000baseKX_Full, if_caps);
--		}
-+			default:
-+				break;
-+			}
- 
--		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G) {
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_SR)
-+		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G)
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_10G_SR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_SR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_SR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_SR:
- 				__set_bit(QED_LM_10000baseSR_Full, if_caps);
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_LR)
-+				break;
-+			case ETH_TRANSCEIVER_TYPE_10G_LR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_LR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_LR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_LR:
- 				__set_bit(QED_LM_10000baseLR_Full, if_caps);
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_LRM)
-+				break;
-+			case ETH_TRANSCEIVER_TYPE_10G_LRM:
- 				__set_bit(QED_LM_10000baseLRM_Full, if_caps);
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_10G_ER)
-+				break;
-+			case ETH_TRANSCEIVER_TYPE_10G_ER:
- 				__set_bit(QED_LM_10000baseR_FEC, if_caps);
--		}
-+			default:
-+				break;
-+			}
- 
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G)
- 			__set_bit(QED_LM_20000baseKR2_Full, if_caps);
- 
--		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G) {
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_25G_SR)
-+		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G)
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_25G_SR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_SR:
- 				__set_bit(QED_LM_25000baseSR_Full, if_caps);
--		}
-+			default:
-+				break;
-+			}
- 
--		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G) {
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_40G_LR4)
-+		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G)
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_40G_LR4:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_LR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_LR:
- 				__set_bit(QED_LM_40000baseLR4_Full, if_caps);
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_40G_SR4)
-+				break;
-+			case ETH_TRANSCEIVER_TYPE_40G_SR4:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_SR:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_SR:
- 				__set_bit(QED_LM_40000baseSR4_Full, if_caps);
--		}
-+			default:
-+				break;
-+			}
- 
- 		if (capability & NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G)
- 			__set_bit(QED_LM_50000baseKR2_Full, if_caps);
- 
- 		if (capability &
--		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G) {
--			if (tcvr_type == ETH_TRANSCEIVER_TYPE_100G_SR4)
-+		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G)
-+			switch (tcvr_type) {
-+			case ETH_TRANSCEIVER_TYPE_100G_SR4:
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_SR:
- 				__set_bit(QED_LM_100000baseSR4_Full, if_caps);
--		}
-+				break;
-+			case ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_LR:
-+				__set_bit(QED_LM_100000baseLR4_ER4_Full,
-+					  if_caps);
-+			default:
-+				break;
-+			}
- 
- 		break;
- 	case MEDIA_KR:
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.c b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-index 2d12bb27560c..b10a92488630 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-@@ -2193,6 +2193,11 @@ int qed_mcp_trans_speed_mask(struct qed_hwfn *p_hwfn,
- 		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G |
- 		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G;
- 		break;
-+	case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_SR:
-+	case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_LR:
-+		*p_speed_mask = NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G |
-+				NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G;
-+		break;
- 	case ETH_TRANSCEIVER_TYPE_40G_CR4:
- 	case ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_CR:
- 		*p_speed_mask = NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G |
-@@ -2223,8 +2228,10 @@ int qed_mcp_trans_speed_mask(struct qed_hwfn *p_hwfn,
- 		*p_speed_mask = NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G;
- 		break;
- 	case ETH_TRANSCEIVER_TYPE_10G_BASET:
-+	case ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_SR:
-+	case ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_LR:
- 		*p_speed_mask = NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G |
--		    NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G;
-+				NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G;
- 		break;
- 	default:
- 		DP_INFO(p_hwfn, "Unknown transceiver type 0x%x\n",
+ void qede_set_ethtool_ops(struct net_device *dev)
 -- 
 2.25.1
 
