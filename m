@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58DE1C433E6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D5DDC433E5
 	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42045208B3
+	by mail.kernel.org (Postfix) with ESMTP id 0B291208B3
 	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726730AbgGTC55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1726687AbgGTC55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 19 Jul 2020 22:57:57 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:42968 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:42973 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726612AbgGTC55 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 19 Jul 2020 22:57:57 -0400
+        id S1726617AbgGTC54 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 19 Jul 2020 22:57:56 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 0D56320425A;
+        by smtp.infotech.no (Postfix) with ESMTP id 4545020425B;
         Mon, 20 Jul 2020 04:57:55 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id k4G78Bhunc8M; Mon, 20 Jul 2020 04:57:53 +0200 (CEST)
+        with ESMTP id qJ3vBswFCJhB; Mon, 20 Jul 2020 04:57:53 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id A41CA204269;
-        Mon, 20 Jul 2020 04:57:50 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id B625A20423F;
+        Mon, 20 Jul 2020 04:57:51 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v5 5/9] scsi_error: use xarray lookup instead of wrappers
-Date:   Sun, 19 Jul 2020 22:57:38 -0400
-Message-Id: <20200720025742.349296-6-dgilbert@interlog.com>
+Subject: [PATCH v5 6/9] scsi: avoid pointless memory allocation in scsi_alloc_target()
+Date:   Sun, 19 Jul 2020 22:57:39 -0400
+Message-Id: <20200720025742.349296-7-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200720025742.349296-1-dgilbert@interlog.com>
 References: <20200720025742.349296-1-dgilbert@interlog.com>
@@ -47,130 +47,63 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Hannes Reinecke <hare@suse.de>
 
-For SCSI EH most shost_for_each_sdev() calls are just to filter
-out devices for specific targets or channels.
-These calls can be made more efficient using direct xarray
-lookup and iterators.
+As we already know the index of the requested target in
+scsi_alloc_target() we can try to fetch it first before trying
+to allocate a new one. This will save us a pointless memory
+allocation in case the target is already present and uncontended.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/scsi.c       |  2 +-
- drivers/scsi/scsi_error.c | 35 ++++++++++++++++++++++-------------
- drivers/scsi/scsi_priv.h  |  2 ++
- 3 files changed, 25 insertions(+), 14 deletions(-)
+ drivers/scsi/scsi_scan.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 6a1d8c6bd8f9..296cecd61d3a 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -652,7 +652,7 @@ EXPORT_SYMBOL(__scsi_iterate_devices_unlocked);
-  * @id:		ID of the target
-  *
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 8afb71c036d5..41818111808e 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -387,7 +387,7 @@ static void scsi_target_reap_ref_put(struct scsi_target *starget)
+  * is responsible for both reaping and doing a last put
   */
--static struct scsi_target *__scsi_target_lookup(struct Scsi_Host *shost,
-+struct scsi_target *__scsi_target_lookup(struct Scsi_Host *shost,
- 					 u16 channel, u16 id)
+ static struct scsi_target *scsi_alloc_target(struct device *parent,
+-					     int channel, uint id)
++					     u16 channel, u16 id)
  {
- 	return xa_load(&shost->__targets, (channel << 16) | id);
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 927b1e641842..02605c848365 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -643,7 +643,9 @@ EXPORT_SYMBOL_GPL(scsi_check_sense);
- static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
- {
- 	struct scsi_host_template *sht = sdev->host->hostt;
-+	struct scsi_target *starget;
- 	struct scsi_device *tmp_sdev;
-+	unsigned long lun_idx = 0;
- 
- 	if (!sht->track_queue_depth ||
- 	    sdev->queue_depth >= sdev->max_queue_depth)
-@@ -661,10 +663,9 @@ static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
- 	 * Walk all devices of a target and do
- 	 * ramp up on them.
- 	 */
--	shost_for_each_device(tmp_sdev, sdev->host) {
--		if (tmp_sdev->channel != sdev->channel ||
--		    tmp_sdev->id != sdev->id ||
--		    tmp_sdev->queue_depth == sdev->max_queue_depth)
-+	starget = __scsi_target_lookup(sdev->host, sdev->channel, sdev->id);
-+	xa_for_each(&starget->__devices, lun_idx, tmp_sdev) {
-+		if (tmp_sdev->queue_depth == sdev->max_queue_depth)
- 			continue;
- 
- 		scsi_change_queue_depth(tmp_sdev, tmp_sdev->queue_depth + 1);
-@@ -675,14 +676,15 @@ static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
- static void scsi_handle_queue_full(struct scsi_device *sdev)
- {
- 	struct scsi_host_template *sht = sdev->host->hostt;
-+	struct scsi_target *starget = sdev->sdev_target;
- 	struct scsi_device *tmp_sdev;
-+	unsigned long lun_idx = 0;
- 
- 	if (!sht->track_queue_depth)
- 		return;
- 
--	shost_for_each_device(tmp_sdev, sdev->host) {
--		if (tmp_sdev->channel != sdev->channel ||
--		    tmp_sdev->id != sdev->id)
-+	xa_for_each(&starget->__devices, lun_idx, tmp_sdev) {
-+		if (tmp_sdev->sdev_state == SDEV_DEL)
- 			continue;
- 		/*
- 		 * We do not know the number of commands that were at
-@@ -2273,10 +2275,16 @@ int scsi_error_handler(void *data)
-  */
- void scsi_report_bus_reset(struct Scsi_Host *shost, int channel)
- {
-+	struct scsi_target *starget;
- 	struct scsi_device *sdev;
-+	unsigned long tid = 0;
- 
--	__shost_for_each_device(sdev, shost) {
--		if (channel == sdev_channel(sdev))
-+	xa_for_each(&shost->__targets, tid, starget) {
-+		unsigned long lun_idx = 0;
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct device *dev = NULL;
+@@ -397,7 +397,23 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	struct scsi_target *starget;
+ 	struct scsi_target *found_target;
+ 	int error, ref_got;
+-	unsigned long tid;
++	unsigned long tid = (channel << 16) | id;
 +
-+		if (starget->channel != channel)
-+			continue;
-+		xa_for_each(&starget->__devices, lun_idx, sdev)
- 			__scsi_report_device_reset(sdev, NULL);
- 	}
- }
-@@ -2306,13 +2314,14 @@ EXPORT_SYMBOL(scsi_report_bus_reset);
-  */
- void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
- {
-+	struct scsi_target *starget;
- 	struct scsi_device *sdev;
-+	unsigned long lun_idx = 0;
++	/*
++	 * Try if the target is already present, and save us
++	 * a pointless memory allocation if so.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	found_target = xa_load(&shost->__targets, tid);
++	if (found_target) {
++		get_device(&found_target->dev);
++		if (kref_get_unless_zero(&found_target->reap_ref)) {
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			return found_target;
++		}
++		put_device(&found_target->dev);
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
  
--	__shost_for_each_device(sdev, shost) {
--		if (channel == sdev_channel(sdev) &&
--		    target == sdev_id(sdev))
-+	starget = __scsi_target_lookup(shost, channel, target);
-+	if (starget)
-+		xa_for_each(&starget->__devices, lun_idx, sdev)
- 			__scsi_report_device_reset(sdev, NULL);
--	}
- }
- EXPORT_SYMBOL(scsi_report_device_reset);
- 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 22b6585e28b4..0a87c95359aa 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -49,6 +49,8 @@ enum scsi_devinfo_key {
- 	SCSI_DEVINFO_SPI,
- };
- 
-+extern struct scsi_target *__scsi_target_lookup(struct Scsi_Host *shost,
-+						u16 channel, u16 id);
- extern blist_flags_t scsi_get_device_flags(struct scsi_device *sdev,
- 					   const unsigned char *vendor,
- 					   const unsigned char *model);
+ 	starget = kzalloc(size, GFP_KERNEL);
+ 	if (!starget) {
+@@ -418,7 +434,6 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
+-	tid = scsi_target_index(starget);
+  retry:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	found_target = xa_load(&shost->__targets, tid);
 -- 
 2.25.1
 
