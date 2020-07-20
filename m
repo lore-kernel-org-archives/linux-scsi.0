@@ -2,201 +2,194 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCF2C433EA
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:58:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC231C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:16:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8C8C208B3
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:58:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96B152065F
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:16:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726755AbgGTC6A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jul 2020 22:58:00 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:42982 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726710AbgGTC57 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 19 Jul 2020 22:57:59 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id F158620424C;
-        Mon, 20 Jul 2020 04:57:56 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id bJ8DBlrfTAx6; Mon, 20 Jul 2020 04:57:55 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (host-45-78-251-166.dyn.295.ca [45.78.251.166])
-        by smtp.infotech.no (Postfix) with ESMTPA id CA10A20426D;
-        Mon, 20 Jul 2020 04:57:52 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v5 7/9] scsi: add starget_to_shost() specialization
-Date:   Sun, 19 Jul 2020 22:57:40 -0400
-Message-Id: <20200720025742.349296-8-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200720025742.349296-1-dgilbert@interlog.com>
-References: <20200720025742.349296-1-dgilbert@interlog.com>
+        id S1726015AbgGTGQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 02:16:56 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:48380 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725805AbgGTGQ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Jul 2020 02:16:56 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id F053821341B1D8D5B252;
+        Mon, 20 Jul 2020 14:16:53 +0800 (CST)
+Received: from [127.0.0.1] (10.74.219.194) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Mon, 20 Jul 2020
+ 14:16:45 +0800
+Subject: Re: [PATCH v1 07/15] scsi: hisi_sas_v3_hw: use generic power
+ management
+To:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bjorn Helgaas <bjorn@helgaas.com>,
+        Adam Radford <aradford@gmail.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        Hannes Reinecke <hare@suse.com>,
+        Bradley Grove <linuxdrivers@attotech.com>,
+        John Garry <john.garry@huawei.com>,
+        Don Brace <don.brace@microsemi.com>,
+        James Smart <james.smart@broadcom.com>,
+        "Dick Kennedy" <dick.kennedy@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Jack Wang <jinpu.wang@cloud.ionos.com>,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>
+References: <20200717063438.175022-1-vaibhavgupta40@gmail.com>
+ <20200717063438.175022-8-vaibhavgupta40@gmail.com>
+CC:     Shuah Khan <skhan@linuxfoundation.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-kernel-mentees@lists.linuxfoundation.org>,
+        <linux-scsi@vger.kernel.org>, <esc.storagedev@microsemi.com>,
+        <megaraidlinux.pdl@broadcom.com>,
+        <MPT-FusionLinux.pdl@broadcom.com>
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Message-ID: <367bd5d3-f0a6-2bd7-2945-3095c827dbe6@hisilicon.com>
+Date:   Mon, 20 Jul 2020 14:16:45 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
+In-Reply-To: <20200717063438.175022-8-vaibhavgupta40@gmail.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.74.219.194]
+X-CFilter-Loop: Reflected
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the SCSI mid-layer object tree the host level and the target
-level under it can be separated by transport supplied objects.
-For example the SCSI SAS transport inserts SAS port objects.
-To cope with this is a generic way there is function called
-dev_to_host() function that loops back up the 'device' object
-hierarchy asking at each level: "Are you a shost object?".
+Hi Vaibhav,
 
-It does the job but it is not particulary efficient in the case
-where the given object is a SCSI target. This is because when
-a SCSI target object is created it knows its SCSI host object
-and can hold that pointer value. So as long as a SCSI target
-cannot change its parent SCSI host object "midstream" then
-following that pointer (which is what starget_to_shost() does)
-is safe and faster.
+ÔÚ 2020/7/17 14:34, Vaibhav Gupta Ð´µÀ:
+> With legacy PM, drivers themselves were responsible for managing the
+> device's power states and takes care of register states.
+>
+> After upgrading to the generic structure, PCI core will take care of
+> required tasks and drivers should do only device-specific operations.
+>
+> The driver was calling pci_save/restore_state(), pci_choose_state(),
+> pci_enable/disable_device() and pci_set_power_state() which is no more
+> needed.
+>
+> Compile-tested only.
+>
+> Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/scsi.c           |  2 +-
- drivers/scsi/scsi_scan.c      | 11 ++++++-----
- drivers/scsi/scsi_sysfs.c     |  2 +-
- include/scsi/scsi_device.h    |  8 ++++++++
- include/scsi/scsi_transport.h |  2 +-
- 5 files changed, 17 insertions(+), 8 deletions(-)
+Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+Just a small comment, below.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 296cecd61d3a..9d0ce5959866 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -761,7 +761,7 @@ struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *starget,
- 						 u64 lun)
- {
- 	struct scsi_device *sdev;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 41818111808e..5f4b8ed31a76 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -217,7 +217,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- {
- 	struct scsi_device *sdev;
- 	int display_failure_msg = 1, ret;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
- 		       GFP_KERNEL);
-@@ -305,7 +305,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- static void scsi_target_destroy(struct scsi_target *starget)
- {
- 	struct device *dev = &starget->dev;
--	struct Scsi_Host *shost = dev_to_shost(dev->parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	unsigned long flags;
- 	unsigned long tid = scsi_target_index(starget);
- 
-@@ -424,6 +424,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 	device_initialize(dev);
- 	kref_init(&starget->reap_ref);
- 	dev->parent = get_device(parent);
-+	starget->parent_shost = shost;		/* redundant but faster */
- 	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
- 	dev->bus = &scsi_bus_type;
- 	dev->type = &scsi_target_type;
-@@ -1055,7 +1056,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
- 	unsigned char *result;
- 	blist_flags_t bflags;
- 	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 
- 	/*
- 	 * The rescan flag is used as an optimization, the first scan of a
-@@ -1205,7 +1206,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- {
- 	uint max_dev_lun;
- 	u64 sparse_lun, lun;
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 
- 	SCSI_LOG_SCAN_BUS(3, starget_printk(KERN_INFO, starget,
- 		"scsi scan: Sequential scan\n"));
-@@ -1303,7 +1304,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
- 	struct scsi_lun *lunp, *lun_data;
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdev;
--	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	int ret = 0;
- 
- 	/*
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index e30a058c6b33..0b5ede1b8ebe 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1477,7 +1477,7 @@ EXPORT_SYMBOL(scsi_remove_device);
- 
- static void __scsi_remove_target(struct scsi_target *starget)
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	unsigned long flags;
- 	struct scsi_device *sdev, *sdev_next;
- 	unsigned long lun_idx = 0;
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 390a150cdaca..5292787246ca 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -281,12 +281,14 @@ enum scsi_target_state {
-  * scsi_target: representation of a scsi target, for now, this is only
-  * used for single_lun devices. If no one has active IO to the target,
-  * starget_sdev_user is NULL, else it points to the active sdev.
-+ * * Invariant: starg->parent_shost == dev_to_shost(starg->dev.parent)
-  */
- struct scsi_target {
- 	struct scsi_device	*starget_sdev_user;
- 	struct list_head	siblings;
- 	struct xarray		__devices;
- 	struct device		dev;
-+	struct Scsi_Host        *parent_shost;	/* redundant but faster */
- 	struct kref		reap_ref; /* last put renders target invisible */
- 	u16			channel;
- 	u16			id; /* target id ... replace
-@@ -326,6 +328,12 @@ static inline u32 scsi_target_index(struct scsi_target *starget)
- 	return (starget->channel << 16) | (starget->id);
- }
- 
-+/* This is faster that doing dev_to_shost(starg->dev.parent) */
-+static inline struct Scsi_Host *starget_to_shost(struct scsi_target *starg)
-+{
-+	return starg->parent_shost;
-+}
-+
- #define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
- static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
- {
-diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
-index a0458bda3148..5a2337ded7b0 100644
---- a/include/scsi/scsi_transport.h
-+++ b/include/scsi/scsi_transport.h
-@@ -70,7 +70,7 @@ scsi_transport_reserve_device(struct scsi_transport_template * t, int space)
- static inline void *
- scsi_transport_target_data(struct scsi_target *starget)
- {
--	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-+	struct Scsi_Host *shost = starget_to_shost(starget);
- 	return (u8 *)starget->starget_data
- 		+ shost->transportt->target_private_offset;
- 
--- 
-2.25.1
+> ---
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 32 ++++++++------------------
+>   1 file changed, 10 insertions(+), 22 deletions(-)
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> index 55e2321a65bc..45605a520bc8 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> @@ -3374,13 +3374,13 @@ enum {
+>   	hip08,
+>   };
+>   
+> -static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
+> +static int __maybe_unused hisi_sas_v3_suspend(struct device *dev_d)
+>   {
+> +	struct pci_dev *pdev = to_pci_dev(dev_d);
+>   	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+>   	struct hisi_hba *hisi_hba = sha->lldd_ha;
+>   	struct device *dev = hisi_hba->dev;
+>   	struct Scsi_Host *shost = hisi_hba->shost;
+> -	pci_power_t device_state;
+>   	int rc;
+>   
+>   	if (!pdev->pm_cap) {
+> @@ -3406,21 +3406,15 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
+>   
+>   	hisi_sas_init_mem(hisi_hba);
+>   
+> -	device_state = pci_choose_state(pdev, state);
+> -	dev_warn(dev, "entering operating state [D%d]\n",
+> -			device_state);
+
+Please retain above print to keep consistence with the print in function 
+hisi_sas_v3_resume().
+
+> -	pci_save_state(pdev);
+> -	pci_disable_device(pdev);
+> -	pci_set_power_state(pdev, device_state);
+> -
+>   	hisi_sas_release_tasks(hisi_hba);
+>   
+>   	sas_suspend_ha(sha);
+>   	return 0;
+>   }
+>   
+> -static int hisi_sas_v3_resume(struct pci_dev *pdev)
+> +static int __maybe_unused hisi_sas_v3_resume(struct device *dev_d)
+>   {
+> +	struct pci_dev *pdev = to_pci_dev(dev_d);
+>   	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
+>   	struct hisi_hba *hisi_hba = sha->lldd_ha;
+>   	struct Scsi_Host *shost = hisi_hba->shost;
+> @@ -3430,16 +3424,8 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
+>   
+>   	dev_warn(dev, "resuming from operating state [D%d]\n",
+>   		 device_state);
+> -	pci_set_power_state(pdev, PCI_D0);
+> -	pci_enable_wake(pdev, PCI_D0, 0);
+> -	pci_restore_state(pdev);
+> -	rc = pci_enable_device(pdev);
+> -	if (rc) {
+> -		dev_err(dev, "enable device failed during resume (%d)\n", rc);
+> -		return rc;
+> -	}
+> +	device_wakeup_disable(dev_d);
+>   
+> -	pci_set_master(pdev);
+>   	scsi_unblock_requests(shost);
+>   	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
+>   
+> @@ -3447,7 +3433,6 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
+>   	rc = hw_init_v3_hw(hisi_hba);
+>   	if (rc) {
+>   		scsi_remove_host(shost);
+> -		pci_disable_device(pdev);
+>   		return rc;
+>   	}
+>   	hisi_hba->hw->phys_init(hisi_hba);
+> @@ -3468,13 +3453,16 @@ static const struct pci_error_handlers hisi_sas_err_handler = {
+>   	.reset_done	= hisi_sas_reset_done_v3_hw,
+>   };
+>   
+> +static SIMPLE_DEV_PM_OPS(hisi_sas_v3_pm_ops,
+> +			 hisi_sas_v3_suspend,
+> +			 hisi_sas_v3_resume);
+> +
+>   static struct pci_driver sas_v3_pci_driver = {
+>   	.name		= DRV_NAME,
+>   	.id_table	= sas_v3_pci_table,
+>   	.probe		= hisi_sas_v3_probe,
+>   	.remove		= hisi_sas_v3_remove,
+> -	.suspend	= hisi_sas_v3_suspend,
+> -	.resume		= hisi_sas_v3_resume,
+> +	.driver.pm	= &hisi_sas_v3_pm_ops,
+>   	.err_handler	= &hisi_sas_err_handler,
+>   };
+>   
+
 
