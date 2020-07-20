@@ -2,138 +2,158 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D714EC433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C01BBC433E3
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:55:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF12C22C9C
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:34:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92336208B3
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:55:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SBJP45LE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726530AbgGTCeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jul 2020 22:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58514 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726225AbgGTCeW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jul 2020 22:34:22 -0400
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A69A0C0619D2;
-        Sun, 19 Jul 2020 19:26:46 -0700 (PDT)
-Received: by mail-pl1-x644.google.com with SMTP id 72so7985522ple.0;
-        Sun, 19 Jul 2020 19:26:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=mRInm97ThyXWZaerbiKXgP4Kpz4u0q1Z2GFefeCRJKM=;
-        b=i0pv65+JvBwRkEdQGw72oVSSqrLfTt1otcVdbe79WeAIW9Xsjx8IAjKg2YjZq+X8hs
-         6DecQVP54iJS/iqfWTNOJPBSJlvSIrx3yQgwMEC9JKBRu8KnxzG18RJ8O0gfj07HQQNi
-         83V6fjbnYKoTD7K+38GDRtdEElDYCuWBhLgT6ESdyTyQ3NXHuNhjgRkm/bLQS05lb+wb
-         E/WPl39HBnpVph1lbYfSiRB+bRApD7+5pG0gQKycUJ8OpB2PEWtNd/5YzjuLu3i7tNE0
-         wJyhXqIFPXXrCQyWlllRN4S1cVPu/G5iWekVASqGqXQIjzX3gRA1DOmp+QXve9sUEJ01
-         F2lA==
-X-Gm-Message-State: AOAM533lhtQmCAGp/YI97W5Q5KDfhdy/7avOZd9lTDFq5azDJQI4FwSr
-        HKRvLMvClxCAeQGssLHfWWk=
-X-Google-Smtp-Source: ABdhPJyUROynzXgjzcvWnMZpvrWHklgi3CGyipijlWgrGs3rrdR3/zHJgWTHyMQROldxJu5cD2kJHQ==
-X-Received: by 2002:a17:902:7484:: with SMTP id h4mr15868188pll.243.1595212005881;
-        Sun, 19 Jul 2020 19:26:45 -0700 (PDT)
-Received: from [192.168.50.147] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id m20sm12526487pgn.62.2020.07.19.19.26.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Jul 2020 19:26:44 -0700 (PDT)
-Subject: Re: [PATCH] scsi: core: run queue in case of IO queueing failure
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     James Bottomley <James.Bottomley@hansenpartnership.com>,
+        id S1726730AbgGTCzL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jul 2020 22:55:11 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:37555 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726225AbgGTCzL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jul 2020 22:55:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595213709;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Y2lZucPvH8YTGFtx2kv9Ey2gk+9GxAGGFi8c5GbSU7A=;
+        b=SBJP45LEQ9ntRs8ki8gCIwzHp7Ru1mLAeWLpHg4eWoyt+SroahwmoUFia97RLek2isgoBy
+        XLCeh1SAH5Git9s942txej0dENPImdjMHYrQckWU+bPK9NwqMs80C1UbuN7hjeX8QdBCfj
+        2RYNsI1otHynZTGP2xlaTgcWMv90n48=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-290-wF3uT3IjPCy-chxQSGzfcg-1; Sun, 19 Jul 2020 22:55:07 -0400
+X-MC-Unique: wF3uT3IjPCy-chxQSGzfcg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D852410059A9;
+        Mon, 20 Jul 2020 02:55:05 +0000 (UTC)
+Received: from localhost (ovpn-13-88.pek2.redhat.com [10.72.13.88])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EE05B5F9DB;
+        Mon, 20 Jul 2020 02:55:01 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20200708131405.3346107-1-ming.lei@redhat.com>
- <bd3039d4-0c24-ad67-bdfe-85096ad60721@acm.org> <20200720013213.GA791101@T590>
-From:   Bart Van Assche <bvanassche@acm.org>
-Autocrypt: addr=bvanassche@acm.org; prefer-encrypt=mutual; keydata=
- mQENBFSOu4oBCADcRWxVUvkkvRmmwTwIjIJvZOu6wNm+dz5AF4z0FHW2KNZL3oheO3P8UZWr
- LQOrCfRcK8e/sIs2Y2D3Lg/SL7qqbMehGEYcJptu6mKkywBfoYbtBkVoJ/jQsi2H0vBiiCOy
- fmxMHIPcYxaJdXxrOG2UO4B60Y/BzE6OrPDT44w4cZA9DH5xialliWU447Bts8TJNa3lZKS1
- AvW1ZklbvJfAJJAwzDih35LxU2fcWbmhPa7EO2DCv/LM1B10GBB/oQB5kvlq4aA2PSIWkqz4
- 3SI5kCPSsygD6wKnbRsvNn2mIACva6VHdm62A7xel5dJRfpQjXj2snd1F/YNoNc66UUTABEB
- AAG0JEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPokBOQQTAQIAIwUCVI67
- igIbAwcLCQgHAwIBBhUIAgkKCwQWAgMBAh4BAheAAAoJEHFcPTXFzhAJ8QkH/1AdXblKL65M
- Y1Zk1bYKnkAb4a98LxCPm/pJBilvci6boefwlBDZ2NZuuYWYgyrehMB5H+q+Kq4P0IBbTqTa
- jTPAANn62A6jwJ0FnCn6YaM9TZQjM1F7LoDX3v+oAkaoXuq0dQ4hnxQNu792bi6QyVdZUvKc
- macVFVgfK9n04mL7RzjO3f+X4midKt/s+G+IPr4DGlrq+WH27eDbpUR3aYRk8EgbgGKvQFdD
- CEBFJi+5ZKOArmJVBSk21RHDpqyz6Vit3rjep7c1SN8s7NhVi9cjkKmMDM7KYhXkWc10lKx2
- RTkFI30rkDm4U+JpdAd2+tP3tjGf9AyGGinpzE2XY1K5AQ0EVI67igEIAKiSyd0nECrgz+H5
- PcFDGYQpGDMTl8MOPCKw/F3diXPuj2eql4xSbAdbUCJzk2ETif5s3twT2ER8cUTEVOaCEUY3
- eOiaFgQ+nGLx4BXqqGewikPJCe+UBjFnH1m2/IFn4T9jPZkV8xlkKmDUqMK5EV9n3eQLkn5g
- lco+FepTtmbkSCCjd91EfThVbNYpVQ5ZjdBCXN66CKyJDMJ85HVr5rmXG/nqriTh6cv1l1Js
- T7AFvvPjUPknS6d+BETMhTkbGzoyS+sywEsQAgA+BMCxBH4LvUmHYhpS+W6CiZ3ZMxjO8Hgc
- ++w1mLeRUvda3i4/U8wDT3SWuHcB3DWlcppECLkAEQEAAYkBHwQYAQIACQUCVI67igIbDAAK
- CRBxXD01xc4QCZ4dB/0QrnEasxjM0PGeXK5hcZMT9Eo998alUfn5XU0RQDYdwp6/kMEXMdmT
- oH0F0xB3SQ8WVSXA9rrc4EBvZruWQ+5/zjVrhhfUAx12CzL4oQ9Ro2k45daYaonKTANYG22y
- //x8dLe2Fv1By4SKGhmzwH87uXxbTJAUxiWIi1np0z3/RDnoVyfmfbbL1DY7zf2hYXLLzsJR
- mSsED/1nlJ9Oq5fALdNEPgDyPUerqHxcmIub+pF0AzJoYHK5punqpqfGmqPbjxrJLPJfHVKy
- goMj5DlBMoYqEgpbwdUYkH6QdizJJCur4icy8GUNbisFYABeoJ91pnD4IGei3MTdvINSZI5e
-Message-ID: <e3fdd46a-4d33-cb57-7b2d-68f2cf5d22cc@acm.org>
-Date:   Sun, 19 Jul 2020 19:26:43 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH V2] scsi: core: run queue in case of IO queueing failure
+Date:   Mon, 20 Jul 2020 10:54:35 +0800
+Message-Id: <20200720025435.812030-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20200720013213.GA791101@T590>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2020-07-19 18:32, Ming Lei wrote:
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index b9adee0a9266..9798fbffe307 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -564,6 +564,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
->  	scsi_uninit_cmd(cmd);
->  }
->  
-> +static void scsi_run_queue_async(struct scsi_device *sdev)
-> +{
-> +	if (scsi_target(sdev)->single_lun ||
-> +	    !list_empty(&sdev->host->starved_list))
-> +		kblockd_schedule_work(&sdev->requeue_work);
-> +	else
-> +		blk_mq_run_hw_queues(sdev->request_queue, true);
-> +}
-> +
->  /* Returns false when no more bytes to process, true if there are more */
->  static bool scsi_end_request(struct request *req, blk_status_t error,
->  		unsigned int bytes)
-> @@ -608,11 +617,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
->  
->  	__blk_mq_end_request(req, error);
->  
-> -	if (scsi_target(sdev)->single_lun ||
-> -	    !list_empty(&sdev->host->starved_list))
-> -		kblockd_schedule_work(&sdev->requeue_work);
-> -	else
-> -		blk_mq_run_hw_queues(q, true);
-> +	scsi_run_queue_async(sdev);
->  
->  	percpu_ref_put(&q->q_usage_counter);
->  	return false;
-> @@ -1721,6 +1726,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->  		 */
->  		if (req->rq_flags & RQF_DONTPREP)
->  			scsi_mq_uninit_cmd(cmd);
-> +		scsi_run_queue_async(sdev);
->  		break;
->  	}
->  	return ret;
+IO requests may be held in scheduler queue because of resource contention.
+However, not like normal completion, when queueing request failed, we don't
+ask block layer to queue these requests, so IO hang[1] is caused.
 
-Looks good to me. Feel free to add:
+Fix this issue by run queue when IO request failure happens.
 
+[1] IO hang log by running heavy IO with removing scsi device
+
+[   39.054963] scsi 13:0:0:0: rejecting I/O to dead device
+[   39.058700] scsi 13:0:0:0: rejecting I/O to dead device
+[   39.087855] sd 13:0:0:1: [sdd] Synchronizing SCSI cache
+[   39.088909] scsi 13:0:0:1: rejecting I/O to dead device
+[   39.095351] scsi 13:0:0:1: rejecting I/O to dead device
+[   39.096962] scsi 13:0:0:1: rejecting I/O to dead device
+[  247.021859] INFO: task scsi-stress-rem:813 blocked for more than 122 seconds.
+[  247.023258]       Not tainted 5.8.0-rc2 #8
+[  247.024069] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  247.025331] scsi-stress-rem D    0   813    802 0x00004000
+[  247.025334] Call Trace:
+[  247.025354]  __schedule+0x504/0x55f
+[  247.027987]  schedule+0x72/0xa8
+[  247.027991]  blk_mq_freeze_queue_wait+0x63/0x8c
+[  247.027994]  ? do_wait_intr_irq+0x7a/0x7a
+[  247.027996]  blk_cleanup_queue+0x4b/0xc9
+[  247.028000]  __scsi_remove_device+0xf6/0x14e
+[  247.028002]  scsi_remove_device+0x21/0x2b
+[  247.029037]  sdev_store_delete+0x58/0x7c
+[  247.029041]  kernfs_fop_write+0x10d/0x14f
+[  247.031281]  vfs_write+0xa2/0xdf
+[  247.032670]  ksys_write+0x6b/0xb3
+[  247.032673]  do_syscall_64+0x56/0x82
+[  247.034053]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[  247.034059] RIP: 0033:0x7f69f39e9008
+[  247.036330] Code: Bad RIP value.
+[  247.036331] RSP: 002b:00007ffdd8116498 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[  247.037613] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f69f39e9008
+[  247.039714] RDX: 0000000000000002 RSI: 000055cde92a0ab0 RDI: 0000000000000001
+[  247.039715] RBP: 000055cde92a0ab0 R08: 000000000000000a R09: 00007f69f3a79e80
+[  247.039716] R10: 000000000000000a R11: 0000000000000246 R12: 00007f69f3abb780
+[  247.039717] R13: 0000000000000002 R14: 00007f69f3ab6740 R15: 0000000000000002
+
+Cc: linux-block@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+V2:
+	- add scsi_run_queue_async() for running queue from async context,
+	  otherwise we may risk to overflow stack
+
+ drivers/scsi/scsi_lib.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b9adee0a9266..9798fbffe307 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -564,6 +564,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
+ 	scsi_uninit_cmd(cmd);
+ }
+ 
++static void scsi_run_queue_async(struct scsi_device *sdev)
++{
++	if (scsi_target(sdev)->single_lun ||
++	    !list_empty(&sdev->host->starved_list))
++		kblockd_schedule_work(&sdev->requeue_work);
++	else
++		blk_mq_run_hw_queues(sdev->request_queue, true);
++}
++
+ /* Returns false when no more bytes to process, true if there are more */
+ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 		unsigned int bytes)
+@@ -608,11 +617,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 
+ 	__blk_mq_end_request(req, error);
+ 
+-	if (scsi_target(sdev)->single_lun ||
+-	    !list_empty(&sdev->host->starved_list))
+-		kblockd_schedule_work(&sdev->requeue_work);
+-	else
+-		blk_mq_run_hw_queues(q, true);
++	scsi_run_queue_async(sdev);
+ 
+ 	percpu_ref_put(&q->q_usage_counter);
+ 	return false;
+@@ -1721,6 +1726,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 		 */
+ 		if (req->rq_flags & RQF_DONTPREP)
+ 			scsi_mq_uninit_cmd(cmd);
++		scsi_run_queue_async(sdev);
+ 		break;
+ 	}
+ 	return ret;
+-- 
+2.25.2
+
