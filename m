@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37FA1C433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0B95C43446
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D4A422B4E
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B66A22B4E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727986AbgGTGgl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 02:36:41 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:7802 "EHLO
+        id S1727844AbgGTGgo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 02:36:44 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:37302 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727844AbgGTGgb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 02:36:31 -0400
-IronPort-SDR: KvUbKwUTy5M2D49K2iGm92Ey8nhRgRc3Ytj+rqMnTWBprpp2WsXihksuyOub5Yz5CLr2iH9IgP
- JMM1/dVYAKcP/zcP25xY5BA/Cuuq+dVJPVb0lgxCUdzOmANzO/FvjQfzlR5BvWp29PRWR+aFwY
- vipRfMtPq2B4yydBIG88tT6hBVx/YokaPn+wS3iN8JBYZFNs6H1JT418lRPy+XXsIzI2LXuVTt
- 6dbRTpIFsiUA7/pPVVXTbgPWNOVaTeT6aG7flxvN2zj6KEE2xHqi7gyd9AJ/EYFTGYU6EIdn7I
- BF8=
+        with ESMTP id S1727993AbgGTGgn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 02:36:43 -0400
+IronPort-SDR: 1bhBPoxRfoWpenN51sP7ytFESUB26sgwG0UKDhXN7oS5VedifGGtgCRPTn9o7oVhF5v7yKZwjy
+ e69ZXuQNdKE7t+zZDj0gYmDKRGuLnQI5BAaquouiHLNUyaLwCIl7vdZJ7gi4xAAFLgWWtql7ry
+ UzLnntfFjB5kqaGOck6463cDXe8nRTz49UcErZwwBhDGq4nOzNHLuklFRgQs7ElgF5BOZpknAU
+ YLNPrH4Th7RXgjadsfsdiYSRhRL4i0WufnZ/pFDUtj7XKiC9LhLznwvYG19+aS8EoqvtOgUvzj
+ uXY=
 X-IronPort-AV: E=Sophos;i="5.75,374,1589266800"; 
-   d="scan'208";a="47226983"
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by labrats.qualcomm.com with ESMTP; 19 Jul 2020 23:36:30 -0700
+   d="scan'208";a="29044590"
+Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
+  by labrats.qualcomm.com with ESMTP; 19 Jul 2020 23:36:04 -0700
 Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 19 Jul 2020 23:36:29 -0700
+  by ironmsg04-sd.qualcomm.com with ESMTP; 19 Jul 2020 23:36:03 -0700
 Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
-        id 9B59722DA5; Sun, 19 Jul 2020 23:36:29 -0700 (PDT)
+        id 294B122DA5; Sun, 19 Jul 2020 23:36:03 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
@@ -45,11 +45,10 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Bart Van Assche <bvanassche@acm.org>,
-        Satya Tangirala <satyat@google.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 6/8] scsi: ufs: Recover hba runtime PM error in error handler
-Date:   Sun, 19 Jul 2020 23:35:53 -0700
-Message-Id: <1595226956-7779-7-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v4 1/8] scsi: ufs: Add checks before setting clk-gating states
+Date:   Sun, 19 Jul 2020 23:35:48 -0700
+Message-Id: <1595226956-7779-2-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1595226956-7779-1-git-send-email-cang@codeaurora.org>
 References: <1595226956-7779-1-git-send-email-cang@codeaurora.org>
@@ -58,209 +57,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Current error handler cannot work well or recover hba runtime PM error if
-ufshcd_suspend/resume has failed due to UFS errors, e.g. hibern8 enter/exit
-error or SSU cmd error. When this happens, error handler may fail doing
-full reset and restore because error handler always assumes that powers,
-IRQs and clocks are ready after pm_runtime_get_sync returns, but actually
-they are not if ufshcd_reusme fails [1]. Besides, if ufschd_suspend/resume
-fails due to UFS error, runtime PM framework saves the error value to
-dev.power.runtime_error. After that, hba dev runtime suspend/resume would
-not be invoked anymore unless runtime_error is cleared [2].
-
-In case of ufshcd_suspend/resume fails due to UFS errors, for scenario [1],
-error handler cannot assume anything of pm_runtime_get_sync, meaning error
-handler should explicitly turn ON powers, IRQs and clocks again. To get the
-hba runtime PM work as regard for scenario [2], error handler can clear the
-runtime_error by calling pm_runtime_set_active() if full reset and restore
-succeeds. And, more important, if pm_runtime_set_active() returns no error,
-which means runtime_error has been cleared, we also need to resume those
-scsi devices under hba in case any of them has failed to be resumed due to
-hba runtime resume failure. This is to unblock blk_queue_enter in case
-there are bios waiting inside it.
-
-In addition, if ufshcd_resume errors out, ufshcd_release in ufshcd_resume
-would be skipped. After hba runtime PM error is recovered in error handler,
-we should do ufshcd_release once to get clock gating back to work.
+Clock gating features can be turned on/off selectively which means its
+state information is only important if it is enabled. This change makes
+sure that we only look at state of clk-gating if it is enabled.
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 90 +++++++++++++++++++++++++++++++++++++++++++----
- drivers/scsi/ufs/ufshcd.h |  1 +
- 2 files changed, 85 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c01743a..68705a1 100644
+index cdff7e5..99bd3e4 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -15,6 +15,7 @@
- #include <linux/of.h>
- #include <linux/bitfield.h>
- #include <linux/blk-pm.h>
-+#include <linux/blkdev.h>
- #include "ufshcd.h"
- #include "ufs_quirks.h"
- #include "unipro.h"
-@@ -229,6 +230,10 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba);
- static int ufshcd_change_power_mode(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode);
- static void ufshcd_schedule_eh_work(struct ufs_hba *hba);
-+static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
-+static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
-+static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
-+					 struct ufs_vreg *vreg);
- static int ufshcd_wb_buf_flush_enable(struct ufs_hba *hba);
- static int ufshcd_wb_buf_flush_disable(struct ufs_hba *hba);
- static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable);
-@@ -5553,6 +5558,77 @@ static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+@@ -1839,6 +1839,8 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	if (!ufshcd_is_clkgating_allowed(hba))
+ 		return;
+ 
++	hba->clk_gating.state = CLKS_ON;
++
+ 	hba->clk_gating.delay_ms = 150;
+ 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
+ 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
+@@ -2541,7 +2543,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		err = SCSI_MLQUEUE_HOST_BUSY;
+ 		goto out;
  	}
- }
+-	WARN_ON(hba->clk_gating.state != CLKS_ON);
++	WARN_ON(ufshcd_is_clkgating_allowed(hba) &&
++		(hba->clk_gating.state != CLKS_ON));
  
-+static void ufshcd_err_handler_prepare(struct ufs_hba *hba)
-+{
-+	pm_runtime_get_sync(hba->dev);
-+	/*
-+	 * Don't assume anything of pm_runtime_get_sync(), if resume fails,
-+	 * irq and clocks can be OFF, and powers can be OFF or in LPM.
-+	 */
-+	ufshcd_setup_vreg(hba, true);
-+	ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
-+	ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq2);
-+	ufshcd_setup_hba_vreg(hba, true);
-+	ufshcd_enable_irq(hba);
-+
-+	ufshcd_hold(hba, false);
-+	if (!ufshcd_is_clkgating_allowed(hba))
-+		ufshcd_setup_clocks(hba, true);
-+
-+	if (ufshcd_is_clkscaling_supported(hba)) {
-+		cancel_work_sync(&hba->clk_scaling.suspend_work);
-+		cancel_work_sync(&hba->clk_scaling.resume_work);
-+		ufshcd_suspend_clkscaling(hba);
+ 	lrbp = &hba->lrb[tag];
+ 
+@@ -8315,8 +8318,11 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		/* If link is active, device ref_clk can't be switched off */
+ 		__ufshcd_setup_clocks(hba, false, true);
+ 
+-	hba->clk_gating.state = CLKS_OFF;
+-	trace_ufshcd_clk_gating(dev_name(hba->dev), hba->clk_gating.state);
++	if (ufshcd_is_clkgating_allowed(hba)) {
++		hba->clk_gating.state = CLKS_OFF;
++		trace_ufshcd_clk_gating(dev_name(hba->dev),
++					hba->clk_gating.state);
 +	}
-+}
-+
-+static void ufshcd_err_handler_unprepare(struct ufs_hba *hba)
-+{
-+	/* If clk_gating is held by pm ops, release it */
-+	if (pm_runtime_active(hba->dev) && hba->clk_gating.held_by_pm) {
-+		hba->clk_gating.held_by_pm = false;
-+		ufshcd_release(hba);
+ 
+ 	/* Put the host controller in low power mode if possible */
+ 	ufshcd_hba_vreg_set_lpm(hba);
+@@ -8456,6 +8462,11 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	if (hba->clk_scaling.is_allowed)
+ 		ufshcd_suspend_clkscaling(hba);
+ 	ufshcd_setup_clocks(hba, false);
++	if (ufshcd_is_clkgating_allowed(hba)) {
++		hba->clk_gating.state = CLKS_OFF;
++		trace_ufshcd_clk_gating(dev_name(hba->dev),
++					hba->clk_gating.state);
 +	}
-+	ufshcd_release(hba);
-+	if (ufshcd_is_clkscaling_supported(hba))
-+		ufshcd_resume_clkscaling(hba);
-+	pm_runtime_put(hba->dev);
-+}
-+
-+#ifdef CONFIG_PM
-+static void ufshcd_recover_pm_error(struct ufs_hba *hba)
-+{
-+	struct Scsi_Host *shost = hba->host;
-+	struct scsi_device *sdev;
-+	struct request_queue *q;
-+	int ret;
-+
-+	/*
-+	 * Set RPM status of hba device to RPM_ACTIVE,
-+	 * this also clears its runtime error.
-+	 */
-+	ret = pm_runtime_set_active(hba->dev);
-+	/*
-+	 * If hba device had runtime error, we also need to resume those
-+	 * scsi devices under hba in case any of them has failed to be
-+	 * resumed due to hba runtime resume failure. This is to unblock
-+	 * blk_queue_enter in case there are bios waiting inside it.
-+	 */
-+	if (!ret) {
-+		list_for_each_entry(sdev, &shost->__devices, siblings) {
-+			q = sdev->request_queue;
-+			if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-+						q->rpm_status == RPM_SUSPENDING))
-+				pm_request_resume(q->dev);
-+		}
-+	}
-+}
-+#else
-+static inline void ufshcd_recover_pm_error(struct ufs_hba *hba)
-+{
-+}
-+#endif
-+
- /**
-  * ufshcd_err_handler - handle UFS errors that require s/w attention
-  * @work: pointer to work structure
-@@ -5580,9 +5656,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	}
- 	ufshcd_set_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	pm_runtime_get_sync(hba->dev);
--	ufshcd_hold(hba, false);
--
-+	ufshcd_err_handler_prepare(hba);
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 
-@@ -5661,10 +5735,12 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		hba->force_reset = false;
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		err = ufshcd_reset_and_restore(hba);
--		spin_lock_irqsave(hba->host->host_lock, flags);
- 		if (err)
- 			dev_err(hba->dev, "%s: reset and restore failed with err %d\n",
- 					__func__, err);
-+		else
-+			ufshcd_recover_pm_error(hba);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
- 	}
- 
- skip_err_handling:
-@@ -5679,8 +5755,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	ufshcd_clear_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	ufshcd_scsi_unblock_requests(hba);
--	ufshcd_release(hba);
--	pm_runtime_put_sync(hba->dev);
-+	ufshcd_err_handler_unprepare(hba);
- }
- 
- /**
-@@ -8232,6 +8307,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 * just gate the clocks.
- 	 */
- 	ufshcd_hold(hba, false);
-+	hba->clk_gating.held_by_pm = true;
- 	hba->clk_gating.is_suspended = true;
- 
- 	if (hba->clk_scaling.is_allowed) {
-@@ -8351,6 +8427,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	hba->clk_gating.is_suspended = false;
- 	hba->dev_info.b_rpm_dev_flush_capable = false;
- 	ufshcd_release(hba);
-+	hba->clk_gating.held_by_pm = false;
  out:
- 	if (hba->dev_info.b_rpm_dev_flush_capable) {
- 		schedule_delayed_work(&hba->rpm_dev_flush_recheck_work,
-@@ -8457,6 +8534,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 
- 	/* Schedule clock gating in case of no access to UFS device yet */
- 	ufshcd_release(hba);
-+	hba->clk_gating.held_by_pm = false;
- 
- 	goto out;
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 83e5cd9..585e58b 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -354,6 +354,7 @@ struct ufs_clk_gating {
- 	struct device_attribute delay_attr;
- 	struct device_attribute enable_attr;
- 	bool is_enabled;
-+	bool held_by_pm;
- 	int active_reqs;
- 	struct workqueue_struct *clk_gating_workq;
- };
+ 	hba->pm_op_in_progress = 0;
+ 	if (ret)
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
