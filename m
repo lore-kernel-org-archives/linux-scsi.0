@@ -2,158 +2,353 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C01BBC433E3
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5598C433DF
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:57:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92336208B3
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:55:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SBJP45LE"
+	by mail.kernel.org (Postfix) with ESMTP id 8BC74208B3
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 02:57:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726730AbgGTCzL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 19 Jul 2020 22:55:11 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:37555 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726225AbgGTCzL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jul 2020 22:55:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595213709;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Y2lZucPvH8YTGFtx2kv9Ey2gk+9GxAGGFi8c5GbSU7A=;
-        b=SBJP45LEQ9ntRs8ki8gCIwzHp7Ru1mLAeWLpHg4eWoyt+SroahwmoUFia97RLek2isgoBy
-        XLCeh1SAH5Git9s942txej0dENPImdjMHYrQckWU+bPK9NwqMs80C1UbuN7hjeX8QdBCfj
-        2RYNsI1otHynZTGP2xlaTgcWMv90n48=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-290-wF3uT3IjPCy-chxQSGzfcg-1; Sun, 19 Jul 2020 22:55:07 -0400
-X-MC-Unique: wF3uT3IjPCy-chxQSGzfcg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D852410059A9;
-        Mon, 20 Jul 2020 02:55:05 +0000 (UTC)
-Received: from localhost (ovpn-13-88.pek2.redhat.com [10.72.13.88])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EE05B5F9DB;
-        Mon, 20 Jul 2020 02:55:01 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH V2] scsi: core: run queue in case of IO queueing failure
-Date:   Mon, 20 Jul 2020 10:54:35 +0800
-Message-Id: <20200720025435.812030-1-ming.lei@redhat.com>
+        id S1726531AbgGTC5w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 19 Jul 2020 22:57:52 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:42926 "EHLO smtp.infotech.no"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726312AbgGTC5w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 19 Jul 2020 22:57:52 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by smtp.infotech.no (Postfix) with ESMTP id 65A2720425C;
+        Mon, 20 Jul 2020 04:57:49 +0200 (CEST)
+X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
+Received: from smtp.infotech.no ([127.0.0.1])
+        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id kvvDbrvZihg7; Mon, 20 Jul 2020 04:57:46 +0200 (CEST)
+Received: from xtwo70.bingwo.ca (host-45-78-251-166.dyn.295.ca [45.78.251.166])
+        by smtp.infotech.no (Postfix) with ESMTPA id E95EC20424C;
+        Mon, 20 Jul 2020 04:57:45 +0200 (CEST)
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
+Subject: [PATCH v5 1/9] scsi: convert target lookup to xarray
+Date:   Sun, 19 Jul 2020 22:57:34 -0400
+Message-Id: <20200720025742.349296-2-dgilbert@interlog.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200720025742.349296-1-dgilbert@interlog.com>
+References: <20200720025742.349296-1-dgilbert@interlog.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-IO requests may be held in scheduler queue because of resource contention.
-However, not like normal completion, when queueing request failed, we don't
-ask block layer to queue these requests, so IO hang[1] is caused.
+From: Hannes Reinecke <hare@suse.de>
 
-Fix this issue by run queue when IO request failure happens.
+Use an xarray instead of lists for holding the scsi targets.
+I've also shortened the 'channel' and 'id' values to 16 bit
+as none of the drivers requires a full 32bit range for either
+of them, and by shortening them we can use them as the index
+into the xarray for storing the scsi_target pointer.
 
-[1] IO hang log by running heavy IO with removing scsi device
-
-[   39.054963] scsi 13:0:0:0: rejecting I/O to dead device
-[   39.058700] scsi 13:0:0:0: rejecting I/O to dead device
-[   39.087855] sd 13:0:0:1: [sdd] Synchronizing SCSI cache
-[   39.088909] scsi 13:0:0:1: rejecting I/O to dead device
-[   39.095351] scsi 13:0:0:1: rejecting I/O to dead device
-[   39.096962] scsi 13:0:0:1: rejecting I/O to dead device
-[  247.021859] INFO: task scsi-stress-rem:813 blocked for more than 122 seconds.
-[  247.023258]       Not tainted 5.8.0-rc2 #8
-[  247.024069] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  247.025331] scsi-stress-rem D    0   813    802 0x00004000
-[  247.025334] Call Trace:
-[  247.025354]  __schedule+0x504/0x55f
-[  247.027987]  schedule+0x72/0xa8
-[  247.027991]  blk_mq_freeze_queue_wait+0x63/0x8c
-[  247.027994]  ? do_wait_intr_irq+0x7a/0x7a
-[  247.027996]  blk_cleanup_queue+0x4b/0xc9
-[  247.028000]  __scsi_remove_device+0xf6/0x14e
-[  247.028002]  scsi_remove_device+0x21/0x2b
-[  247.029037]  sdev_store_delete+0x58/0x7c
-[  247.029041]  kernfs_fop_write+0x10d/0x14f
-[  247.031281]  vfs_write+0xa2/0xdf
-[  247.032670]  ksys_write+0x6b/0xb3
-[  247.032673]  do_syscall_64+0x56/0x82
-[  247.034053]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[  247.034059] RIP: 0033:0x7f69f39e9008
-[  247.036330] Code: Bad RIP value.
-[  247.036331] RSP: 002b:00007ffdd8116498 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-[  247.037613] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f69f39e9008
-[  247.039714] RDX: 0000000000000002 RSI: 000055cde92a0ab0 RDI: 0000000000000001
-[  247.039715] RBP: 000055cde92a0ab0 R08: 000000000000000a R09: 00007f69f3a79e80
-[  247.039716] R10: 000000000000000a R11: 0000000000000246 R12: 00007f69f3abb780
-[  247.039717] R13: 0000000000000002 R14: 00007f69f3ab6740 R15: 0000000000000002
-
-Cc: linux-block@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
-V2:
-	- add scsi_run_queue_async() for running queue from async context,
-	  otherwise we may risk to overflow stack
+ drivers/scsi/hosts.c       |  4 +++-
+ drivers/scsi/scsi.c        | 32 +++++++++++++++----------
+ drivers/scsi/scsi_scan.c   | 49 ++++++++++++++++----------------------
+ drivers/scsi/scsi_sysfs.c  | 16 +++++++++----
+ include/scsi/scsi_device.h | 15 ++++++++----
+ include/scsi/scsi_host.h   |  2 +-
+ 6 files changed, 65 insertions(+), 53 deletions(-)
 
- drivers/scsi/scsi_lib.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b9adee0a9266..9798fbffe307 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -564,6 +564,15 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
- 	scsi_uninit_cmd(cmd);
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 7ec91c3a66ca..be599c855701 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -189,6 +189,8 @@ void scsi_remove_host(struct Scsi_Host *shost)
+ 	transport_unregister_device(&shost->shost_gendev);
+ 	device_unregister(&shost->shost_dev);
+ 	device_del(&shost->shost_gendev);
++	WARN_ON(!xa_empty(&shost->__targets));
++	xa_destroy(&shost->__targets);
  }
+ EXPORT_SYMBOL(scsi_remove_host);
  
-+static void scsi_run_queue_async(struct scsi_device *sdev)
+@@ -383,7 +385,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	spin_lock_init(shost->host_lock);
+ 	shost->shost_state = SHOST_CREATED;
+ 	INIT_LIST_HEAD(&shost->__devices);
+-	INIT_LIST_HEAD(&shost->__targets);
++	xa_init_flags(&shost->__targets, XA_FLAGS_LOCK_IRQ);
+ 	INIT_LIST_HEAD(&shost->eh_cmd_q);
+ 	INIT_LIST_HEAD(&shost->starved_list);
+ 	init_waitqueue_head(&shost->host_wait);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 56c24a73e0c7..d601424e32b2 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -575,6 +575,19 @@ struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
+ }
+ EXPORT_SYMBOL(__scsi_iterate_devices);
+ 
++/**
++ * __scsi_target_lookup  -  find a target based on channel and target id
++ * @shost:	SCSI host pointer
++ * @channel:	channel number of the target
++ * @id:		ID of the target
++ *
++ */
++static struct scsi_target *__scsi_target_lookup(struct Scsi_Host *shost,
++					 u16 channel, u16 id)
 +{
-+	if (scsi_target(sdev)->single_lun ||
-+	    !list_empty(&sdev->host->starved_list))
-+		kblockd_schedule_work(&sdev->requeue_work);
-+	else
-+		blk_mq_run_hw_queues(sdev->request_queue, true);
++	return xa_load(&shost->__targets, (channel << 16) | id);
 +}
 +
- /* Returns false when no more bytes to process, true if there are more */
- static bool scsi_end_request(struct request *req, blk_status_t error,
- 		unsigned int bytes)
-@@ -608,11 +617,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ /**
+  * starget_for_each_device  -  helper to walk all devices of a target
+  * @starget:	target whose devices we want to iterate over.
+@@ -701,19 +714,14 @@ EXPORT_SYMBOL(scsi_device_lookup_by_target);
+  * really want to use scsi_device_lookup instead.
+  **/
+ struct scsi_device *__scsi_device_lookup(struct Scsi_Host *shost,
+-		uint channel, uint id, u64 lun)
++		u16 channel, u16 id, u64 lun)
+ {
+-	struct scsi_device *sdev;
++	struct scsi_target *starget;
  
- 	__blk_mq_end_request(req, error);
+-	list_for_each_entry(sdev, &shost->__devices, siblings) {
+-		if (sdev->sdev_state == SDEV_DEL)
+-			continue;
+-		if (sdev->channel == channel && sdev->id == id &&
+-				sdev->lun ==lun)
+-			return sdev;
+-	}
+-
+-	return NULL;
++	starget = __scsi_target_lookup(shost, channel, id);
++	if (!starget)
++		return NULL;
++	return __scsi_device_lookup_by_target(starget, lun);
+ }
+ EXPORT_SYMBOL(__scsi_device_lookup);
  
--	if (scsi_target(sdev)->single_lun ||
--	    !list_empty(&sdev->host->starved_list))
--		kblockd_schedule_work(&sdev->requeue_work);
--	else
--		blk_mq_run_hw_queues(q, true);
-+	scsi_run_queue_async(sdev);
+@@ -729,7 +737,7 @@ EXPORT_SYMBOL(__scsi_device_lookup);
+  * needs to be released with scsi_device_put once you're done with it.
+  **/
+ struct scsi_device *scsi_device_lookup(struct Scsi_Host *shost,
+-		uint channel, uint id, u64 lun)
++		u16 channel, u16 id, u64 lun)
+ {
+ 	struct scsi_device *sdev;
+ 	unsigned long flags;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index f2437a7570ce..9fc35b6cbc30 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -309,6 +309,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ 	struct device *dev = &starget->dev;
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+ 	unsigned long flags;
++	unsigned long tid = scsi_target_index(starget);
  
- 	percpu_ref_put(&q->q_usage_counter);
- 	return false;
-@@ -1721,6 +1726,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		 */
- 		if (req->rq_flags & RQF_DONTPREP)
- 			scsi_mq_uninit_cmd(cmd);
-+		scsi_run_queue_async(sdev);
- 		break;
+ 	BUG_ON(starget->state == STARGET_DEL);
+ 	starget->state = STARGET_DEL;
+@@ -316,7 +317,7 @@ static void scsi_target_destroy(struct scsi_target *starget)
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	if (shost->hostt->target_destroy)
+ 		shost->hostt->target_destroy(starget);
+-	list_del_init(&starget->siblings);
++	xa_erase(&shost->__targets, tid);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	put_device(dev);
+ }
+@@ -341,27 +342,6 @@ int scsi_is_target_device(const struct device *dev)
+ }
+ EXPORT_SYMBOL(scsi_is_target_device);
+ 
+-static struct scsi_target *__scsi_find_target(struct device *parent,
+-					      int channel, uint id)
+-{
+-	struct scsi_target *starget, *found_starget = NULL;
+-	struct Scsi_Host *shost = dev_to_shost(parent);
+-	/*
+-	 * Search for an existing target for this sdev.
+-	 */
+-	list_for_each_entry(starget, &shost->__targets, siblings) {
+-		if (starget->id == id &&
+-		    starget->channel == channel) {
+-			found_starget = starget;
+-			break;
+-		}
+-	}
+-	if (found_starget)
+-		get_device(&found_starget->dev);
+-
+-	return found_starget;
+-}
+-
+ /**
+  * scsi_target_reap_ref_release - remove target from visibility
+  * @kref: the reap_ref in the target being released
+@@ -417,6 +397,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	struct scsi_target *starget;
+ 	struct scsi_target *found_target;
+ 	int error, ref_got;
++	unsigned long tid;
+ 
+ 	starget = kzalloc(size, GFP_KERNEL);
+ 	if (!starget) {
+@@ -433,27 +414,37 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	starget->id = id;
+ 	starget->channel = channel;
+ 	starget->can_queue = 0;
+-	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
+ 	starget->state = STARGET_CREATED;
+ 	starget->scsi_level = SCSI_2;
+ 	starget->max_target_blocked = SCSI_DEFAULT_TARGET_BLOCKED;
++	tid = scsi_target_index(starget);
+  retry:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-
+-	found_target = __scsi_find_target(parent, channel, id);
+-	if (found_target)
++	found_target = xa_load(&shost->__targets, tid);
++	if (found_target) {
++		get_device(&found_target->dev);
+ 		goto found;
+-
+-	list_add_tail(&starget->siblings, &shost->__targets);
++	}
++	error = xa_insert(&shost->__targets, tid, starget, GFP_ATOMIC);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
++	if (error) {
++		dev_printk(KERN_ERR, dev,
++			     "target %u:%u index allocation failed, error %d\n",
++			     channel, id, error);
++		put_device(dev);
++		kfree(starget);
++		return NULL;
++	}
+ 	/* allocate and add */
+ 	transport_setup_device(dev);
+ 	if (shost->hostt->target_alloc) {
+ 		error = shost->hostt->target_alloc(starget);
+ 
+ 		if(error) {
+-			dev_printk(KERN_ERR, dev, "target allocation failed, error %d\n", error);
++			dev_printk(KERN_ERR, dev,
++				   "target %u:%u allocation failed, error %d\n",
++				   channel, id, error);
+ 			/* don't want scsi_target_reap to do the final
+ 			 * put because it will be under the host lock */
+ 			scsi_target_destroy(starget);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 163dbcb741c1..83bdcb032853 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1511,16 +1511,21 @@ static void __scsi_remove_target(struct scsi_target *starget)
+ void scsi_remove_target(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-	struct scsi_target *starget;
++	struct scsi_target *starget, *starget_next;
++	unsigned long tid = 0;
+ 	unsigned long flags;
+ 
+-restart:
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	list_for_each_entry(starget, &shost->__targets, siblings) {
++	starget = xa_find(&shost->__targets, &tid, UINT_MAX, XA_PRESENT);
++	while (starget) {
++		starget_next = xa_find_after(&shost->__targets, &tid,
++					     UINT_MAX, XA_PRESENT);
+ 		if (starget->state == STARGET_DEL ||
+ 		    starget->state == STARGET_REMOVE ||
+-		    starget->state == STARGET_CREATED_REMOVE)
++		    starget->state == STARGET_CREATED_REMOVE) {
++			starget = starget_next;
+ 			continue;
++		}
+ 		if (starget->dev.parent == dev || &starget->dev == dev) {
+ 			kref_get(&starget->reap_ref);
+ 			if (starget->state == STARGET_CREATED)
+@@ -1530,8 +1535,9 @@ void scsi_remove_target(struct device *dev)
+ 			spin_unlock_irqrestore(shost->host_lock, flags);
+ 			__scsi_remove_target(starget);
+ 			scsi_target_reap(starget);
+-			goto restart;
++			spin_lock_irqsave(shost->host_lock, flags);
+ 		}
++		starget = starget_next;
  	}
- 	return ret;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index bc5909033d13..867559eca33d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -121,7 +121,7 @@ struct scsi_device {
+ 
+ 	unsigned long last_queue_ramp_up;	/* last queue ramp up time */
+ 
+-	unsigned int id, channel;
++	u16 id, channel;
+ 	u64 lun;
+ 	unsigned int manufacturer;	/* Manufacturer of device, for using 
+ 					 * vendor-specific cmd's */
+@@ -291,8 +291,8 @@ struct scsi_target {
+ 	struct list_head	devices;
+ 	struct device		dev;
+ 	struct kref		reap_ref; /* last put renders target invisible */
+-	unsigned int		channel;
+-	unsigned int		id; /* target id ... replace
++	u16			channel;
++	u16			id; /* target id ... replace
+ 				     * scsi_device.id eventually */
+ 	unsigned int		create:1; /* signal that it needs to be added */
+ 	unsigned int		single_lun:1;	/* Indicates we should only
+@@ -324,6 +324,11 @@ struct scsi_target {
+ 	/* starget_data must be the last element!!!! */
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
++static inline u32 scsi_target_index(struct scsi_target *starget)
++{
++	return (starget->channel << 16) | (starget->id);
++}
++
+ #define to_scsi_target(d)	container_of(d, struct scsi_target, dev)
+ static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
+ {
+@@ -348,9 +353,9 @@ extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
+ extern int __must_check scsi_device_get(struct scsi_device *);
+ extern void scsi_device_put(struct scsi_device *);
+ extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
+-					      uint, uint, u64);
++					      u16, u16, u64);
+ extern struct scsi_device *__scsi_device_lookup(struct Scsi_Host *,
+-						uint, uint, u64);
++						u16, u16, u64);
+ extern struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *,
+ 							u64);
+ extern struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 46ef8cccc982..d0a765dd995a 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -528,7 +528,7 @@ struct Scsi_Host {
+ 	 * access this list directly from a driver.
+ 	 */
+ 	struct list_head	__devices;
+-	struct list_head	__targets;
++	struct xarray		__targets;
+ 	
+ 	struct list_head	starved_list;
+ 
 -- 
-2.25.2
+2.25.1
 
