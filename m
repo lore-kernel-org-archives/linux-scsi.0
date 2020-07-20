@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAE41C433E1
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 21:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1465DC433E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 21:53:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A52A1208E4
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 21:52:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E10D2208E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 21:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726811AbgGTVwx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 17:52:53 -0400
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:52323 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726691AbgGTVwx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 17:52:53 -0400
-IronPort-SDR: 70AXjcBYHQBA3ZMOneKpD5xjkpa2fOyS9iSTsvNvXZwv5b2h25IkkmSwVf/rLdOzFLYtRm4SL/
- m3wZgLO8wACHXbmSFNIVFxbzRQ6ZHA3tbFRC16hEeLyDwFmApJaHM3F9owvhSdm3YQ9l3RIt5+
- oPK2S45Z6XWNJTA+RvF+EHfCLlU1xV77ojo8y7/IZvYr/toe0/Jufl+MhJWvJv/9O5e/ViiJYx
- +ixUlX/PuPyee70L/4QxVeUkD88Cp2pnlM2MaqmfN31WWk0v06+uQnGimi34I0228ZoQGoureK
- rtQ=
+        id S1726907AbgGTVxF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 17:53:05 -0400
+Received: from esa6.microchip.iphmx.com ([216.71.154.253]:18961 "EHLO
+        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726691AbgGTVxF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 17:53:05 -0400
+IronPort-SDR: 5+I1Vj0XtYa786FC6mVR6qUBRqMfDxxe+0jh2o55K+CV5t+Vww5ls0Nwbcp/Zo6DD+Pz1tLAuo
+ xuqSJQu3V0oryNtkcW9jr4wNzY0B7OwO4Ltb/lQF5Gw0g+q7FtZzIU++S15Xq+IhprbvmHh8v/
+ NEkqxy0YqtovtvW19o+gK4d1FREwfNzXHUUw7UwI5zhVeW0gq9Ydti4AuGgeoKDHbLb4GiTRui
+ 08rZHf/lpDMp5qm2rncDbj+6sVDj8GN8WNtqCe8eOO7ngAuHBJ78905/eJfsJmPAka3qQrEejH
+ QiI=
 X-IronPort-AV: E=Sophos;i="5.75,375,1589266800"; 
-   d="scan'208";a="88394290"
+   d="scan'208";a="19897266"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 20 Jul 2020 14:52:52 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 20 Jul 2020 14:53:04 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Mon, 20 Jul 2020 14:52:52 -0700
-Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
- Transport; Mon, 20 Jul 2020 14:52:12 -0700
-Subject: [PATCH 1/4] hpsa: correct rare oob condition
+ 15.1.1979.3; Mon, 20 Jul 2020 14:53:03 -0700
+Received: from [127.0.1.1] (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.1979.3 via Frontend
+ Transport; Mon, 20 Jul 2020 14:53:03 -0700
+Subject: [PATCH 3/4] hpsa: increase ctlr eh timeout
 From:   Don Brace <don.brace@microsemi.com>
 To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
@@ -44,8 +44,8 @@ To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jejb@linux.vnet.ibm.com>, <joseph.szczypek@hpe.com>,
         <POSWALD@suse.com>
 CC:     <linux-scsi@vger.kernel.org>
-Date:   Mon, 20 Jul 2020 16:52:51 -0500
-Message-ID: <159528197176.24772.14659026352708896249.stgit@brunhilda>
+Date:   Mon, 20 Jul 2020 16:53:03 -0500
+Message-ID: <159528198335.24772.7963614374905470122.stgit@brunhilda>
 In-Reply-To: <159528193513.24772.2142294136346611232.stgit@brunhilda>
 References: <159528193513.24772.2142294136346611232.stgit@brunhilda>
 User-Agent: StGit/0.23-dirty
@@ -57,70 +57,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-There are some rare conditions where a spare
-is first in the device list causing an array
-out-of-bounds condition.
+Increase the timeout value for commands sent to
+the controller device.
+
+- controller can become slow to respond to INQUIRIES
+  resulting in the SML off-lining the controller
+  device.
+- when large RAID volumes are created along with
+  I/O stress, the controller can be slow to respond
+  to INQUIRIES.
+  - set/sense config along with device resets
+    can delay controller responses.
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ drivers/scsi/hpsa.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 81d0414e2117..9b1edc541ed0 100644
+index 9b1edc541ed0..bd96bb6d0e0a 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3443,9 +3443,14 @@ static void hpsa_get_enclosure_info(struct ctlr_info *h,
- 	struct ErrorInfo *ei = NULL;
- 	struct bmic_sense_storage_box_params *bssbp = NULL;
- 	struct bmic_identify_physical_device *id_phys = NULL;
--	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-+	struct ext_report_lun_entry *rle;
- 	u16 bmic_device_index = 0;
+@@ -2134,6 +2134,7 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
+ }
  
-+	if (rle_index < 0 || rle_index >= HPSA_MAX_PHYS_LUN)
-+		return;
-+
-+	rle = &rlep->LUN[rle_index];
-+
- 	encl_dev->eli =
- 		hpsa_get_enclosure_logical_identifier(h, scsi3addr);
- 
-@@ -4174,6 +4179,9 @@ static void hpsa_get_ioaccel_drive_info(struct ctlr_info *h,
- 	int rc;
- 	struct ext_report_lun_entry *rle;
- 
-+	if (rle_index < 0 || rle_index >= HPSA_MAX_PHYS_LUN)
-+		return;
-+
- 	rle = &rlep->LUN[rle_index];
- 
- 	dev->ioaccel_handle = rle->ioaccel_handle;
-@@ -4198,7 +4206,12 @@ static void hpsa_get_path_info(struct hpsa_scsi_dev_t *this_device,
- 	struct ReportExtendedLUNdata *rlep, int rle_index,
- 	struct bmic_identify_physical_device *id_phys)
+ /* configure scsi device based on internal per-device structure */
++#define CTLR_TIMEOUT (120 * HZ)
+ static int hpsa_slave_configure(struct scsi_device *sdev)
  {
--	struct ext_report_lun_entry *rle = &rlep->LUN[rle_index];
-+	struct ext_report_lun_entry *rle;
-+
-+	if (rle_index < 0 || rle_index >= HPSA_MAX_PHYS_LUN)
-+		return;
-+
-+	rle = &rlep->LUN[rle_index];
- 
- 	if ((rle->device_flags & 0x08) && this_device->ioaccel_handle)
- 		this_device->hba_ioaccel_enabled = 1;
-@@ -4420,7 +4433,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
- 		/*
- 		 * Skip over some devices such as a spare.
- 		 */
--		if (!tmpdevice->external && physical_device) {
-+		if (phys_dev_index >= 0 && !tmpdevice->external &&
-+			physical_device) {
- 			skip_device = hpsa_skip_device(h, lunaddrbytes,
- 					&physdev_list->LUN[phys_dev_index]);
- 			if (skip_device)
+ 	struct hpsa_scsi_dev_t *sd;
+@@ -2149,6 +2150,9 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
+ 			sdev->eh_timeout = HPSA_EH_PTRAID_TIMEOUT;
+ 			blk_queue_rq_timeout(sdev->request_queue,
+ 						HPSA_EH_PTRAID_TIMEOUT);
++		} else if (is_hba_lunid(sd->scsi3addr)) {
++			sdev->eh_timeout = CTLR_TIMEOUT;
++			blk_queue_rq_timeout(sdev->request_queue, CTLR_TIMEOUT);
+ 		} else {
+ 			queue_depth = sd->queue_depth != 0 ?
+ 					sd->queue_depth : sdev->host->can_queue;
 
