@@ -2,456 +2,227 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3651CC433E0
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 16:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35AA6C433E2
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 17:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0910E207DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 16:55:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ntlAYlAY"
+	by mail.kernel.org (Postfix) with ESMTP id 14AB0208E4
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 17:07:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1595264838;
+	bh=B5ArgmwyVC+EJANIQwZaJ8ZAOjT0Xwve9/XQnU5HYQc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=w5aAooK7f06vcgCSQfy8UoK++M5Msi0ZlWUGx49i32vFrUoTHB63NHQxCGs9Jd1uZ
+	 IvujTX9Smvd7B7H/3S6WccginEk7ePoHWkyHqY3v6TxHUWpcVdeTU0o2Sw3HJg+NiP
+	 fbsNpAYUvITcV5KY6Ru53Qe++wY5crJrUD9WZJh4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729178AbgGTQzW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 12:55:22 -0400
-Received: from mail29.static.mailgun.info ([104.130.122.29]:19171 "EHLO
-        mail29.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728876AbgGTQzW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Jul 2020 12:55:22 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595264120; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: To:
- Subject: Sender; bh=UIzNvmV+ELxYTOAXP4k3FzNVCR/8qyxuqB7kxehhtOU=; b=ntlAYlAYKLDPQuqnhQQ7ikrASohSfHEGBDfnK789LMeKMqjJe/Zf2hUbka92/4GifLYvnPJm
- uLkXr42z/b0JkFBrfZTmDyujDgcwo65xm9H7SOSkiCdEiIF1LomAqIYtWct4kjSxxZ6PyRq9
- iaNW+ynUFgfw7M1yfx3JRWPPSLk=
-X-Mailgun-Sending-Ip: 104.130.122.29
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5f15cc6a65270fa5955ca78c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Jul 2020 16:55:06
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 408C2C433CA; Mon, 20 Jul 2020 16:55:05 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1729850AbgGTRHR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 13:07:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45508 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728827AbgGTRHQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Jul 2020 13:07:16 -0400
+Received: from gmail.com (unknown [104.132.1.76])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1BBD3C433C6;
-        Mon, 20 Jul 2020 16:55:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1BBD3C433C6
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [RFC PATCH v2 3/3] scsi: ufs: add vendor specific write booster
- To support the fuction of writebooster by vendor. The WB behavior that the
- vendor wants is slightly different. But we have to support it
-To:     SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, bvanassche@acm.org, grant.jung@samsung.com
-References: <cover.1595240433.git.hy50.seo@samsung.com>
- <CGME20200720103951epcas2p246072985a70a459f0acb31d339298a47@epcas2p2.samsung.com>
- <5be595eb83365ec97a8ee0ddafb748029ee8cdf9.1595240433.git.hy50.seo@samsung.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <588c1a29-38b9-8c5f-d9c5-899272b9f3a3@codeaurora.org>
-Date:   Mon, 20 Jul 2020 09:55:02 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        by mail.kernel.org (Postfix) with ESMTPSA id 305C2207DF;
+        Mon, 20 Jul 2020 17:07:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1595264835;
+        bh=B5ArgmwyVC+EJANIQwZaJ8ZAOjT0Xwve9/XQnU5HYQc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QpQNGYKsi4lyU8zzMxaKgrZhfKSd0hpN1Ip06Kl2//oQaw4BJDTRfv4q5e/pZyHdA
+         KJA+MEqlFwKiQZxFFKjjDeXmwdbe8c27wakrmL057BOIR6fT53hKvMtN1DpgIzFJkV
+         n+7D1sqmUjuU0Ya+zJR+0Tjl+K20ZD0Ertw6FAPg=
+Date:   Mon, 20 Jul 2020 10:07:13 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Rob Herring <robh+dt@kernel.org>, Andy Gross <agross@kernel.org>,
+        SCSI <linux-scsi@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-fscrypt@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Barani Muthukumaran <bmuthuku@qti.qualcomm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Elliot Berman <eberman@codeaurora.org>,
+        John Stultz <john.stultz@linaro.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Satya Tangirala <satyat@google.com>,
+        Steev Klimaszewski <steev@kali.org>,
+        Thara Gopinath <thara.gopinath@linaro.org>
+Subject: Re: [PATCH v6 3/5] arm64: dts: sdm845: add Inline Crypto Engine
+ registers and clock
+Message-ID: <20200720170713.GD1292162@gmail.com>
+References: <20200714161516.GA1064009@gmail.com>
+ <CAL_Jsq+t1h4w8C361vguw1co_vnbMKs3q4qWR4=jwAKr1Vm80g@mail.gmail.com>
+ <20200714164353.GB1064009@gmail.com>
+ <CAL_JsqK-wUuo6azYseC35R=Q509=h9-v4gFvcvy8wXrDgSw5ZQ@mail.gmail.com>
+ <20200714171203.GC1064009@gmail.com>
+ <20200714173111.GG388985@builder.lan>
+ <20200714174345.GE1218486@builder.lan>
+ <20200714175718.GD1064009@gmail.com>
+ <20200714200027.GH388985@builder.lan>
+ <20200715030004.GB38091@sol.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <5be595eb83365ec97a8ee0ddafb748029ee8cdf9.1595240433.git.hy50.seo@samsung.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200715030004.GB38091@sol.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/20/2020 3:40 AM, SEO HOYOUNG wrote:
-> Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
-> ---
->   drivers/scsi/ufs/Makefile     |   1 +
->   drivers/scsi/ufs/ufs-exynos.c |   6 +
->   drivers/scsi/ufs/ufs_ctmwb.c  | 279 ++++++++++++++++++++++++++++++++++
->   drivers/scsi/ufs/ufs_ctmwb.h  |  27 ++++
->   4 files changed, 313 insertions(+)
->   create mode 100644 drivers/scsi/ufs/ufs_ctmwb.c
->   create mode 100644 drivers/scsi/ufs/ufs_ctmwb.h
+On Tue, Jul 14, 2020 at 08:00:04PM -0700, Eric Biggers wrote:
+> On Tue, Jul 14, 2020 at 01:00:27PM -0700, Bjorn Andersson wrote:
+> > On Tue 14 Jul 10:57 PDT 2020, Eric Biggers wrote:
+> > 
+> > > On Tue, Jul 14, 2020 at 10:43:45AM -0700, Bjorn Andersson wrote:
+> > > > On Tue 14 Jul 10:31 PDT 2020, Bjorn Andersson wrote:
+> > > > 
+> > > > > On Tue 14 Jul 10:12 PDT 2020, Eric Biggers wrote:
+> > > > > 
+> > > > > > On Tue, Jul 14, 2020 at 10:59:44AM -0600, Rob Herring wrote:
+> > > > > > > On Tue, Jul 14, 2020 at 10:43 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > > > > > > >
+> > > > > > > > On Tue, Jul 14, 2020 at 10:35:12AM -0600, Rob Herring wrote:
+> > > > > > > > > On Tue, Jul 14, 2020 at 10:15 AM Eric Biggers <ebiggers@kernel.org> wrote:
+> > > > > > > > > >
+> > > > > > > > > > On Tue, Jul 14, 2020 at 10:16:04AM -0400, Martin K. Petersen wrote:
+> > > > > > > > > > >
+> > > > > > > > > > > Eric,
+> > > > > > > > > > >
+> > > > > > > > > > > > Add the vendor-specific registers and clock for Qualcomm ICE (Inline
+> > > > > > > > > > > > Crypto Engine) to the device tree node for the UFS host controller on
+> > > > > > > > > > > > sdm845, so that the ufs-qcom driver will be able to use inline crypto.
+> > > > > > > > > > >
+> > > > > > > > > > > I would like to see an Acked-by for this patch before I merge it.
+> > > > > > > > > > >
+> > > > > > > > > >
+> > > > > > > > > > Andy, Bjorn, or Rob: can you give Acked-by?
+> > > > > > > > >
+> > > > > > > > > DTS changes should go in via the QCom tree.
+> > > > > > > > >
+> > > > > > > >
+> > > > > > > > So, the DTS patch can't be applied without the driver patches since then the
+> > > > > > > > driver would misinterpret the ICE registers as the dev_ref_clk_ctrl registers.
+> > > > > > > 
+> > > > > > > That sounds broken, but there's no context here for me to comment
+> > > > > > > further. DTS changes should work with old/stable kernels. I'd suggest
+> > > > > > > you get a review from Bjorn on the driver first.
+> > > > > > > 
+> > > > > > 
+> > > > > > The "breaking" change is that the dev_ref_clk_ctrl registers are now identified
+> > > > > > by name instead of assumed to be index 1.
+> > > > > > 
+> > > > > > A reviewer had complained about the device-mapper bindings of this driver before
+> > > > > > (https://lkml.kernel.org/r/158334171487.7173.5606223900174949177@swboyd.mtv.corp.google.com).
+> > > > > > Changing to identifying the registers by name seemed like an improvement.
+> > > > > > 
+> > > > > > If needed I can add a hole at index 1 to make the DTS changes work with
+> > > > > > old/stable kernels too, but I didn't know that is a requirement.  (Normally for
+> > > > > > Linux kernel development, kernel-internal refactoring is always allowed
+> > > > > > upstream.)  If I do this, would this hack have to be carried forever, or would
+> > > > > > we be able to fix it up eventually?  Is there any deprecation period for DTS, or
+> > > > > > do the latest DTS have to work with a 20 year old kernel?
+> > > > > > 
+> > > > > 
+> > > > > The problem here is that DT binding refactoring is not kernel-internal.
+> > > > > It's two different projects living in the same git.
+> > > > > 
+> > > > > There's a wish from various people that we make sure that new DTS
+> > > > > continues to work with existing kernels. This is a nice in theory
+> > > > > there's a lot of examples where we simply couldn't anticipate how future
+> > > > > bindings would look. A particular example is that this prohibits most
+> > > > > advancement in power management.
+> > > > > 
+> > > > > 
+> > > > > But afaict what you describe above would make a new kernel failing to
+> > > > > operate with the old DTS and that we have agreed to avoid.
+> > > > > So I think the appropriate way to deal with this is to request the reg
+> > > > > byname to detect the new binding and if that fails then assume that
+> > > > > index 1 is dev_ref_clk_ctrl.
+> > > > > 
+> > > > 
+> > > > I took another look at the git history and I can't find a single dts -
+> > > > either upstream or in any downstream tree - that specifies that second
+> > > > reg.
+> > > > 
+> > > > So per my argument below, if you could include a patch that just removes
+> > > > the "dev_ref_clk_ctrl_mem" reference from the binding and driver I would
+> > > > be happy to r-b that and ack this patch.
+> > > > 
+> > > > Regards,
+> > > > Bjorn
+> > > > 
+> > > > > 
+> > > > > There are cases where we just decide not to be backwards compatible, but
+> > > > > it's pretty rare. As for deprecation, I think 1-2 LTS releases is
+> > > > > sufficient, at that time scale it doesn't make sense to sit with an old
+> > > > > DTB anyways (given the current pace of advancements in the kernel).
+> > > > > 
+> > > 
+> > > Great, I'll remove the driver support for "dev_ref_clk_ctrl" then.  However,
+> > > that doesn't solve the problem of the new DTS breaking old drivers, since old
+> > > drivers assume that reg[1] is dev_ref_clk_ctrl.
+> > > 
+> > > This patch makes the DTS look like:
+> > > 
+> > > 	reg = <0 0x01d84000 0 0x2500>,
+> > > 	      <0 0x01d90000 0 0x8000>;
+> > > 	reg-names = "std", "ice";
+> > > 
+> > > The "ice" registers are new and are accessed by name instead of by index.
+> > > 
+> > > But these also happen to be in reg[1].  Old drivers will see that reg[1] is
+> > > present and assume it is dev_ref_clk_ctrl.
+> > > 
+> > > To work around this, I could leave a blank reg[1] entry:
+> > > 
+> > > 	reg = <0 0x01d84000 0 0x2500>,
+> > > 	      <0 0 0 0>,
+> > > 	      <0 0x01d90000 0 0x8000>;
+> > > 	reg-names = "std", "dev_ref_clk_ctrl", "ice";
+> > > 
+> > > Do I need to do that?
+> > > 
+> > 
+> > No, let's not complicate it without good reason. SDM845 has hw_ver.major
+> > == 3, so we're not taking the else-path in ufs_qcom_init(). So I should
+> > be able to just merge this patch for 5.9 through the qcom tree after
+> > all (your code handles that it's not there and the existing code doesn't
+> > care).
+> > 
+> > 
+> > The two platforms that I can find that has UFS controller of
+> > hw_ver.major == 1 is APQ8084 and MSM8994, so I simply didn't look at an
+> > old enough downstream tree (msm-3.10) to find anyone specifying reg[1].
+> > The reg specified is however coming from the TLMM (pinctrl-msm) hardware
+> > block, so it should not be directly remapped in the UFS driver...
+> > 
+> > But regardless, that has not been seen in an upstream dts and per your
+> > patch 2 we would add that reg by name when that happens.
+> > There's recent activity on upstreaming more of the MSM8994 support, so
+> > perhaps then it's best to leave this snippet in the driver for now.
+> > 
+> > 
+> > Summary: Martin merges (merged?) patch 1, 2, 4 and 5 in the scsi tree,
+> > I'll merge this patch as is in the qcom tree and we'll just leave the
+> > dev_ref_clk handling as is for now then.
+> > 
 > 
-> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-> index 9810963bc049..b1ba36c7d66f 100644
-> --- a/drivers/scsi/ufs/Makefile
-> +++ b/drivers/scsi/ufs/Makefile
-> @@ -5,6 +5,7 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
->   obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
->   obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->   obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
-> +obj-$(CONFIG_SCSI_UFS_VENDOR_WB) += ufs_ctmwb.o
->   obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
->   ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
->   ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
-> diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-> index 32b61ba77241..f127f5f2bf36 100644
-> --- a/drivers/scsi/ufs/ufs-exynos.c
-> +++ b/drivers/scsi/ufs/ufs-exynos.c
-> @@ -22,6 +22,9 @@
->   
-
-To me it looks like, you want to have your own flush policy & 
-initializations etc, is that understanding correct?
-I don't understand why though. The current implementation is spec 
-compliant. If there're benefits that you see in this implementation, 
-please highlight those. It'd be interesting to see that.
-
-
->   #include "ufs-exynos.h"
->   
-> +#ifdef CONFIG_SCSI_UFS_VENDOR_WB
-> +#include "ufs_ctmwb.h"
-> +#endif
->   /*
->    * Exynos's Vendor specific registers for UFSHCI
->    */
-> @@ -989,6 +992,9 @@ static int exynos_ufs_init(struct ufs_hba *hba)
->   		goto phy_off;
->   
->   	ufs->hba = hba;
-> +#ifdef CONFIG_SCSI_UFS_VENDOR_WB
-> +	ufs->hba->wb_ops = ufshcd_ctmwb_init();
-> +#endif
->   	ufs->opts = ufs->drv_data->opts;
->   	ufs->rx_sel_idx = PA_MAXDATALANES;
->   	if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX)
-> diff --git a/drivers/scsi/ufs/ufs_ctmwb.c b/drivers/scsi/ufs/ufs_ctmwb.c
-> new file mode 100644
-> index 000000000000..ab39f40721ae
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs_ctmwb.c
-> @@ -0,0 +1,279 @@
-> +#include "ufshcd.h"
-> +#include "ufshci.h"
-> +#include "ufs_ctmwb.h"
-> +
-> +static struct ufshba_ctmwb hba_ctmwb;
-> +
-> +/* Query request retries */
-> +#define QUERY_REQ_RETRIES 3
-> +
-> +static int ufshcd_query_attr_retry(struct ufs_hba *hba,
-> +	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
-> +	u32 *attr_val)
-> +{
-> +	int ret = 0;
-> +	u32 retries;
-> +
-> +	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
-> +		ret = ufshcd_query_attr(hba, opcode, idn, index,
-> +						selector, attr_val);
-> +		if (ret)
-> +			dev_dbg(hba->dev, "%s: failed with error %d, retries %d\n",
-> +				__func__, ret, retries);
-> +		else
-> +			break;
-> +	}
-> +
-> +	if (ret)
-> +		dev_err(hba->dev,
-> +			"%s: query attribute, idn %d, failed with error %d after %d retires\n",
-> +			__func__, idn, ret, QUERY_REQ_RETRIES);
-> +	return ret;
-> +}
-> +
-> +static int ufshcd_query_flag_retry(struct ufs_hba *hba,
-> +	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
-> +{
-> +	int ret;
-> +	int retries;
-> +
-> +	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
-> +		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
-> +		if (ret)
-> +			dev_dbg(hba->dev,
-> +				"%s: failed with error %d, retries %d\n",
-> +				__func__, ret, retries);
-> +		else
-> +			break;
-> +	}
-> +
-> +	if (ret)
-> +		dev_err(hba->dev,
-> +			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retries\n",
-> +			__func__, (int)opcode, (int)idn, ret, retries);
-> +	return ret;
-> +}
-> +
-> +static int ufshcd_reset_ctmwb(struct ufs_hba *hba, bool force)
-> +{
-> +	int err = 0;
-> +
-> +	if (!hba_ctmwb.support_ctmwb)
-> +		return 0;
-> +
-> +	if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
-> +		dev_info(hba->dev, "%s: turbo write already disabled. ctmwb_state = %d\n",
-> +			__func__, hba_ctmwb.ufs_ctmwb_state);
-> +		return 0;
-> +	}
-> +
-> +	if (ufshcd_is_ctmwb_err(hba_ctmwb))
-> +		dev_err(hba->dev, "%s: previous turbo write control was failed.\n",
-> +			__func__);
-> +
-> +	if (force)
-> +		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-> +				QUERY_FLAG_IDN_WB_EN, NULL);
-> +
-> +	if (err) {
-> +		ufshcd_set_ctmwb_err(hba_ctmwb);
-> +		dev_err(hba->dev, "%s: disable turbo write failed. err = %d\n",
-> +			__func__, err);
-> +	} else {
-> +		ufshcd_set_ctmwb_off(hba_ctmwb);
-> +		dev_info(hba->dev, "%s: ufs turbo write disabled \n", __func__);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int ufshcd_get_ctmwb_buf_status(struct ufs_hba *hba, u32 *status)
-> +{
-> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> +			QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE, 0, 0, status);
-> +}
-> +
-> +static int ufshcd_ctmwb_manual_flush_ctrl(struct ufs_hba *hba, int en)
-> +{
-> +	int err = 0;
-> +
-> +	dev_info(hba->dev, "%s: %sable turbo write manual flush\n",
-> +				__func__, en ? "en" : "dis");
-> +	if (en) {
-> +		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-> +					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
-> +		if (err)
-> +			dev_err(hba->dev, "%s: enable turbo write failed. err = %d\n",
-> +				__func__, err);
-> +	} else {
-> +		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-> +					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
-> +		if (err)
-> +			dev_err(hba->dev, "%s: disable turbo write failed. err = %d\n",
-> +				__func__, err);
-> +	}
-> +
-> +	return err;
-> +}
-> +
-> +static int ufshcd_ctmwb_flush_ctrl(struct ufs_hba *hba)
-> +{
-> +	int err = 0;
-> +	u32 curr_status = 0;
-> +
-> +	err = ufshcd_get_ctmwb_buf_status(hba, &curr_status);
-> +
-> +	if (!err && (curr_status <= UFS_WB_MANUAL_FLUSH_THRESHOLD)) {
-> +		dev_info(hba->dev, "%s: enable ctmwb manual flush, buf status : %d\n",
-> +				__func__, curr_status);
-> +		scsi_block_requests(hba->host);
-> +		err = ufshcd_ctmwb_manual_flush_ctrl(hba, 1);
-> +		if (!err) {
-> +			mdelay(100);
-> +			err = ufshcd_ctmwb_manual_flush_ctrl(hba, 0);
-> +			if (err)
-> +				dev_err(hba->dev, "%s: disable ctmwb manual flush failed. err = %d\n",
-> +						__func__, err);
-> +		} else
-> +			dev_err(hba->dev, "%s: enable ctmwb manual flush failed. err = %d\n",
-> +					__func__, err);
-> +		scsi_unblock_requests(hba->host);
-> +	}
-> +	return err;
-> +}
-> +
-> +static int ufshcd_ctmwb_ctrl(struct ufs_hba *hba, bool enable)
-> +{
-> +	int err;
-> +#if 0
-Did you miss removing these #if 0?
-
-> +	if (!hba->support_ctmwb)
-> +		return;
-> +
-> +	if (hba->pm_op_in_progress) {
-> +		dev_err(hba->dev, "%s: ctmwb ctrl during pm operation is not allowed.\n",
-> +			__func__);
-> +		return;
-> +	}
-> +
-> +	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
-> +		dev_err(hba->dev, "%s: ufs host is not available.\n",
-> +			__func__);
-> +		return;
-> +	}
-> +	if (ufshcd_is_ctmwb_err(hba_ctmwb))
-> +		dev_err(hba->dev, "%s: previous turbo write control was failed.\n",
-> +			__func__);
-> +#endif
-> +	if (enable) {
-> +		if (ufshcd_is_ctmwb_on(hba_ctmwb)) {
-> +			dev_err(hba->dev, "%s: turbo write already enabled. ctmwb_state = %d\n",
-> +				__func__, hba_ctmwb.ufs_ctmwb_state);
-> +			return 0;
-> +		}
-> +		pm_runtime_get_sync(hba->dev);
-> +		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-> +					QUERY_FLAG_IDN_WB_EN, NULL);
-> +		if (err) {
-> +			ufshcd_set_ctmwb_err(hba_ctmwb);
-> +			dev_err(hba->dev, "%s: enable turbo write failed. err = %d\n",
-> +				__func__, err);
-> +		} else {
-> +			ufshcd_set_ctmwb_on(hba_ctmwb);
-> +			dev_info(hba->dev, "%s: ufs turbo write enabled \n", __func__);
-> +		}
-> +	} else {
-> +		if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
-> +			dev_err(hba->dev, "%s: turbo write already disabled. ctmwb_state = %d\n",
-> +				__func__, hba_ctmwb.ufs_ctmwb_state);
-> +			return 0;
-> +		}
-> +		pm_runtime_get_sync(hba->dev);
-> +		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
-> +					QUERY_FLAG_IDN_WB_EN, NULL);
-> +		if (err) {
-> +			ufshcd_set_ctmwb_err(hba_ctmwb);
-> +			dev_err(hba->dev, "%s: disable turbo write failed. err = %d\n",
-> +				__func__, err);
-> +		} else {
-> +			ufshcd_set_ctmwb_off(hba_ctmwb);
-> +			dev_info(hba->dev, "%s: ufs turbo write disabled \n", __func__);
-What is 'turbo write'?
-> +		}
-> +	}
-> +
-> +	pm_runtime_put_sync(hba->dev);
-> +
-> +	return 0;
-> +}
-> +
-> +/**
-> + * ufshcd_get_ctmwbbuf_unit - get ctmwb buffer alloc units
-> + * @sdev: pointer to SCSI device
-> + *
-> + * Read dLUNumTurboWriteBufferAllocUnits in UNIT Descriptor
-> + * to check if LU supports turbo write feature
-> + */
-> +static int ufshcd_get_ctmwbbuf_unit(struct ufs_hba *hba)
-> +{
-> +	struct scsi_device *sdev = hba->sdev_ufs_device;
-> +	struct ufshba_ctmwb *hba_ctmwb = (struct ufshba_ctmwb *)hba->wb_ops;
-> +	int ret = 0;
-> +
-> +	u32 dLUNumTurboWriteBufferAllocUnits = 0;
-> +	u8 desc_buf[4];
-> +
-> +	if (!hba_ctmwb->support_ctmwb)
-> +		return 0;
-> +
-> +	ret = ufshcd_read_unit_desc_param(hba,
-> +			ufshcd_scsi_to_upiu_lun(sdev->lun),
-> +			UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS,
-> +			desc_buf,
-> +			sizeof(dLUNumTurboWriteBufferAllocUnits));
-> +
-> +	/* Some WLUN doesn't support unit descriptor */
-> +	if ((ret == -EOPNOTSUPP) || scsi_is_wlun(sdev->lun)){
-> +		hba_ctmwb->support_ctmwb_lu = false;
-> +		dev_info(hba->dev,"%s: do not support WB\n", __func__);
-> +		return 0;
-> +	}
-> +
-> +	dLUNumTurboWriteBufferAllocUnits = ((desc_buf[0] << 24)|
-> +			(desc_buf[1] << 16) |
-> +			(desc_buf[2] << 8) |
-> +			desc_buf[3]);
-> +
-> +	if (dLUNumTurboWriteBufferAllocUnits) {
-> +		hba_ctmwb->support_ctmwb_lu = true;
-> +		dev_info(hba->dev, "%s: LU %d supports ctmwb, ctmwbbuf unit : 0x%x\n",
-> +				__func__, (int)sdev->lun, dLUNumTurboWriteBufferAllocUnits);
-> +	} else
-> +		hba_ctmwb->support_ctmwb_lu = false;
-> +
-> +	return 0;
-> +}
-> +
-> +static inline int ufshcd_ctmwb_toggle_flush(struct ufs_hba *hba, enum ufs_pm_op pm_op)
-> +{
-> +	ufshcd_ctmwb_flush_ctrl(hba);
-> +
-> +	if (ufshcd_is_system_pm(pm_op))
-> +		ufshcd_reset_ctmwb(hba, true);
-> +
-> +	return 0;
-> +}
-> +
-> +static struct ufs_wb_ops exynos_ctmwb_ops = {
-> +	.wb_toggle_flush_vendor = ufshcd_ctmwb_toggle_flush,
-> +	.wb_alloc_units_vendor = ufshcd_get_ctmwbbuf_unit,
-> +	.wb_ctrl_vendor = ufshcd_ctmwb_ctrl,
-> +	.wb_reset_vendor = ufshcd_reset_ctmwb,
-> +};
-> +
-> +struct ufs_wb_ops *ufshcd_ctmwb_init(void)
-> +{
-> +	hba_ctmwb.support_ctmwb = 1;
-> +
-> +	return &exynos_ctmwb_ops;
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_ctmwb_init);
-> +
-> diff --git a/drivers/scsi/ufs/ufs_ctmwb.h b/drivers/scsi/ufs/ufs_ctmwb.h
-> new file mode 100644
-> index 000000000000..073e21a4900b
-> --- /dev/null
-> +++ b/drivers/scsi/ufs/ufs_ctmwb.h
-> @@ -0,0 +1,27 @@
-> +#ifndef _UFS_CTMWB_H_
-> +#define _UFS_CTMWB_H_
-> +
-> +enum ufs_ctmwb_state {
-> +       UFS_WB_OFF_STATE	= 0,    /* turbo write disabled state */
-> +       UFS_WB_ON_STATE	= 1,            /* turbo write enabled state */
-> +       UFS_WB_ERR_STATE	= 2,            /* turbo write error state */
-> +};
-> +
-> +#define ufshcd_is_ctmwb_off(hba) ((hba).ufs_ctmwb_state == UFS_WB_OFF_STATE)
-> +#define ufshcd_is_ctmwb_on(hba) ((hba).ufs_ctmwb_state == UFS_WB_ON_STATE)
-> +#define ufshcd_is_ctmwb_err(hba) ((hba).ufs_ctmwb_state == UFS_WB_ERR_STATE)
-> +#define ufshcd_set_ctmwb_off(hba) ((hba).ufs_ctmwb_state = UFS_WB_OFF_STATE)
-> +#define ufshcd_set_ctmwb_on(hba) ((hba).ufs_ctmwb_state = UFS_WB_ON_STATE)
-> +#define ufshcd_set_ctmwb_err(hba) ((hba).ufs_ctmwb_state = UFS_WB_ERR_STATE)
-> +
-> +#define UFS_WB_MANUAL_FLUSH_THRESHOLD	5
-> +
-> +struct ufshba_ctmwb {
-> +	enum ufs_ctmwb_state ufs_ctmwb_state;
-> +	bool support_ctmwb;
-> +
-> +	bool support_ctmwb_lu;
-> +};
-> +
-> +struct ufs_wb_ops *ufshcd_ctmwb_init(void);
-> +#endif
+> Okay, great.  So an old DTS with the new driver isn't a problem because no DTS
+> has ever declared dev_ref_clk_ctrl.  And a new DTS with an old driver is a less
+> important case, and also not really a problem here since breakage would only
+> occur if we added the ICE registers to an older SoC that has hw_ver.major == 1.
+> 
+> Maybe you'd like to provide your Acked-by on patches 2 and 5?
+> 
+> My instinct is always to remove code that has never been used.  But sure, if you
+> think the dev_ref_clk_ctrl code might be used soon, we can keep it for now.
 > 
 
--Asutosh
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+Ping?
