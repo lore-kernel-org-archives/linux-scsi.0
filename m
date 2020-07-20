@@ -2,118 +2,86 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12016C433E5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 15:30:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21AF0C433FC
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 16:41:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E778322482
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 15:30:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB18C206E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 16:41:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="fTHeSVsV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zaXxxhUw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728568AbgGTPaP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 11:30:15 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:31446 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726899AbgGTPaO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Jul 2020 11:30:14 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06KFU3jJ028595;
-        Mon, 20 Jul 2020 08:30:07 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=pfpt0818;
- bh=0xdZMKt+U7nc+qc2EGzH2Mt6XJPg3diT9cpjObCq0HM=;
- b=fTHeSVsV9iwWiZp0fu3DMWqzeZjVWtoh0abil1mm6B0C6HvhFnpLzSV4IMjEZcadQAHI
- AEcWL7+3OLOVLexYbT8uD9VMPMOze6ANAB4jucQWS++hgM3trIwKiWMcTnThU3SZXc5X
- Pfic51wcgSVsCc7D00aQPJPVRmObeXD6EY8GjHun1VLmbD6jF8GJEf0pPcxBO9z2kn/x
- mDW16wLnuYhN9UquJtfMj/eMt4kTXFwY8u3HCf9xdH3oa3HUBO1hSwvN/YJBIzxpIjAI
- u0kSZnw+ifw7H0W951Ok/aOfkDXYrD38QAw1QYXP2y9d7Ud0M9MZMKJEdavqWiweHxAP nA== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 32bxenf600-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 20 Jul 2020 08:30:06 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 20 Jul
- 2020 08:30:05 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 20 Jul
- 2020 08:30:04 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 20 Jul 2020 08:30:04 -0700
-Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
-        by maili.marvell.com (Postfix) with ESMTP id 46C623F703F;
-        Mon, 20 Jul 2020 08:29:59 -0700 (PDT)
-From:   Alexander Lobakin <alobakin@marvell.com>
-To:     Joe Perches <joe@perches.com>
-CC:     Alexander Lobakin <alobakin@marvell.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Igor Russkikh <irusskikh@marvell.com>,
-        Michal Kalderon <michal.kalderon@marvell.com>,
-        Ariel Elior <aelior@marvell.com>,
-        "Denis Bolotin" <denis.bolotin@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <GR-everest-linux-l2@marvell.com>,
-        <QLogic-Storage-Upstream@marvell.com>, <netdev@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 net-next 01/14] qed: convert link mode from u32 to bitmap
-Date:   Mon, 20 Jul 2020 18:29:30 +0300
-Message-ID: <20200720152930.8485-1-alobakin@marvell.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <de4b0ef6b1b7b58acc184d1d7e80456f6c3b56c0.camel@perches.com>
-References: <de4b0ef6b1b7b58acc184d1d7e80456f6c3b56c0.camel@perches.com>
- <20200719212100.GM1383417@lunn.ch>
- <20200719201453.3648-1-alobakin@marvell.com>
- <20200719201453.3648-2-alobakin@marvell.com>
- <20200720092306.355-1-alobakin@marvell.com>
+        id S2388827AbgGTQlS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 12:41:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48460 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731196AbgGTQlR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 12:41:17 -0400
+Received: from merlin.infradead.org (merlin.infradead.org [IPv6:2001:8b0:10b:1231::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBFE2C061794;
+        Mon, 20 Jul 2020 09:41:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=vIy+LTW5jYYBV4hfqVnhhtl8us5VhtAtJu0nO6I1cmE=; b=zaXxxhUwzfepAs+QKhex2X36fE
+        DuGzdqN4ZfvkT7AKp2dhrmQcXq3vupumdc9035lGjEKd5Go59nUEwulRTxU8Trpb/Ex3nsuM2YqRV
+        D4I5n7Dn2fB5WtStJHI3ygoGBDaJ4OkixvGAC49N6P/2HqrpJnIQiqfzUBDxTauDaNA7JR7QsRkFs
+        ntz+Lasmq+m+5tdKvnM5Ill/Tzzu4mroMqdF0sqp9EWd27QCQqkaGa4bsWrwJXLk+g0vAFME87GWW
+        KkVHf6BzkLee7//0dkWecbqpW92OMBV1MC39ZmdYB0dCq/nq/hk3r5VxQMe3y/9ag4u5zbyyZcLwH
+        ke/1Zf/g==;
+Received: from [2601:1c0:6280:3f0::19c2]
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jxYqn-0005vn-4l; Mon, 20 Jul 2020 16:41:13 +0000
+Subject: Re: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+To:     Stephen Rothwell <sfr@canb.auug.org.au>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Santosh Yaraganavi <santosh.sy@samsung.com>,
+        Vinayak Holikatti <h.vinayak@samsung.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Seungwon Jeon <essuuj@gmail.com>
+References: <20200720194225.17de9962@canb.auug.org.au>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
+Date:   Mon, 20 Jul 2020 09:41:09 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-07-20_09:2020-07-20,2020-07-20 signatures=0
+In-Reply-To: <20200720194225.17de9962@canb.auug.org.au>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Joe,
+On 7/20/20 2:42 AM, Stephen Rothwell wrote:
+> Hi all,
+> 
+> Changes since 20200717:
+> 
 
-From: Joe Perches <joe@perches.com>
-Date: Mon, 20 Jul 2020 08:19:52 -0700
+on x86_64:
 
-> On Mon, 2020-07-20 at 12:23 +0300, Alexander Lobakin wrote:
->> Date: Sun, 19 Jul 2020 23:21:00 +0200 From: Andrew Lunn <andrew@lunn.ch>
->>> On Sun, Jul 19, 2020 at 11:14:40PM +0300, Alexander Lobakin wrote:
->>>> Currently qed driver already ran out of 32 bits to store link modes,
->>>> and this doesn't allow to add and support more speeds.
->>>> Convert link mode to bitmap that will always have enough space for
->>>> any number of speeds and modes.
-> []
->>> Why not just throw away all these QED_LM_ defines and use the kernel
->>> link modes? The fact you are changing the u32 to a bitmap suggests the
->>> hardware does not use them.
->> 
->> I've just double-checked, and you're right, management firmware operates
->> with NVM_* definitions, while QED_LM_* are used only in QED and QEDE to
->> fill Ethtool link settings.
->> I didn't notice this while working on the series, but it would be really
->> a lot better to just use generic definitions.
->> So I'll send v3 soon.
->
-> While you're at it, why are you using __set_bit and not set_bit?
+WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
+  Depends on [n]: OF [=n] && (ARCH_EXYNOS || COMPILE_TEST [=y])
+  Selected by [y]:
+  - SCSI_UFS_EXYNOS [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && SCSI_UFSHCD_PLATFORM [=y] && (ARCH_EXYNOS || COMPILE_TEST [=y])
 
-Because I'm filling link modes and don't need any atomicity at all.
-If you refer linkmode_*() functions [1], they also use non-atomic
-variants of bitops.
 
-Al
+There are no build errors since <linux/of.h> provides stubs for
+functions when CONFIG_OF is not enabled.
 
-[1] https://elixir.bootlin.com/linux/v5.8-rc4/source/include/linux/linkmode.h
+But new warnings are not OK.
+
+thanks.
+-- 
+~Randy
+Reported-by: Randy Dunlap <rdunlap@infradead.org>
