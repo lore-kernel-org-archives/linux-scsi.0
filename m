@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 741B3C433F1
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 18:09:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38CCAC43445
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 18:09:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F23422482
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 18:09:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EB0322482
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 18:09:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="mmbjBXEl"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="r6tSz0ml"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733295AbgGTSJL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 14:09:11 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:10650 "EHLO
+        id S2389262AbgGTSJa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 14:09:30 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:63034 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729029AbgGTSJJ (ORCPT
+        by vger.kernel.org with ESMTP id S2389251AbgGTSJX (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Jul 2020 14:09:09 -0400
+        Mon, 20 Jul 2020 14:09:23 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06KHtqtF024216;
-        Mon, 20 Jul 2020 11:09:04 -0700
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06KHtqID024225;
+        Mon, 20 Jul 2020 11:09:18 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=pfpt0818;
- bh=dj2hvRHTv7WmYRoePHxiWZT0a+Yyb8TB3pWFl6TCnF8=;
- b=mmbjBXEl1eI2/TjFnxC2ivqx3N+RRqByzq6rz7fqUN5bu+7D8Rf6N6YR3ijBCuVJ89O+
- 78ZcUDQzlxny8FnoZzWrtkFfxvmz1/5McK1Kzo9CEOYf2NOyFkhLbApLyjs7t897AkN2
- kA5c9vVeTCfUMqmFJ6uYmGkh/1cU8FUcQNI81IvXOwdOj0/lhp42Q+fe/SIiNlNonXiz
- 6wIbYfEBc+pAmd4v0NvAGFE2ZRbQqnyvswpBP4DyW/bZOVc55DEkyVQaiKCeUeIykI7/
- PyuoBKAH3Ac9my2zdtse2LtW7uCSMt6r7691Gu4D1qRy5eWWcCYllnsY5Ueo90gmYYB9 +g== 
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 32c0kkf8vq-1
+ bh=9pYExr+cNdN0CDx0ex7jSFCDugxXCRMevldkMQjg8UE=;
+ b=r6tSz0mlh0KZRpcetihzGCutJt0C4X7tgfg7QYXwREe7SvcQonFmPxnA/yB/tntB+Pce
+ wMcEnmFrpBdZ9dx4v+Mde5kd4QbJggmY/h7MqHqdjruPEHzs/3I1CKTL6RB0A5B4jq6S
+ w0ORZ/lGICt5EGEoenhIflVcQB27RO+XS6dJ6beCtqZWWGgO4UmP4r2eextNJJLGKPDb
+ l+l2z1sFyswO6rXoRGv3pNnm2iyAE96k4OtpdX+UKb0ikOA1o45WfYBsKQ3OkuRS88Vp
+ DNSz17ptBeeDc2gRUAvKMjJp5RIlCsb77uyG16e122VWO3L9rcioJFleUoKx+Sripjw1 9g== 
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 32c0kkf8wp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 20 Jul 2020 11:09:03 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH02.marvell.com
- (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 20 Jul
- 2020 11:09:02 -0700
+        Mon, 20 Jul 2020 11:09:18 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by SC-EXCH03.marvell.com
+ (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 20 Jul
+ 2020 11:09:16 -0700
 Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 20 Jul
- 2020 11:09:01 -0700
+ 2020 11:09:15 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 20 Jul 2020 11:09:01 -0700
+ Transport; Mon, 20 Jul 2020 11:09:15 -0700
 Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
-        by maili.marvell.com (Postfix) with ESMTP id C8B0A3F7040;
-        Mon, 20 Jul 2020 11:08:56 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 00FA63F703F;
+        Mon, 20 Jul 2020 11:09:10 -0700 (PDT)
 From:   Alexander Lobakin <alobakin@marvell.com>
 To:     "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -64,9 +64,9 @@ CC:     Alexander Lobakin <alobakin@marvell.com>,
         <GR-everest-linux-l2@marvell.com>,
         <QLogic-Storage-Upstream@marvell.com>, <netdev@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 net-next 03/16] qede: populate supported link modes maps on module init
-Date:   Mon, 20 Jul 2020 21:08:02 +0300
-Message-ID: <20200720180815.107-4-alobakin@marvell.com>
+Subject: [PATCH v3 net-next 06/16] qed: use transceiver data to fill link partner's advertising speeds
+Date:   Mon, 20 Jul 2020 21:08:05 +0300
+Message-ID: <20200720180815.107-7-alobakin@marvell.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200720180815.107-1-alobakin@marvell.com>
 References: <20200720180815.107-1-alobakin@marvell.com>
@@ -80,237 +80,106 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify and lighten qede_set_link_ksettings() by declaring static link
-modes maps and populating them on module init. This way we save plenty
-of text size at the low expense of __ro_after_init and __initconst data
-(the latter will be purged after module init is done).
+Currently qed driver does not take into consideration transceiver's
+capabilities when generating link partner's speed advertisement. This
+leads to e.g. incorrect ethtool link info on 10GbaseT modules.
+Use transceiver info not only for advertisement and support arrays, but
+also for link partner's abilities to fix it.
+
+Misc: fix a couple of comments nearby.
 
 Signed-off-by: Alexander Lobakin <alobakin@marvell.com>
 Signed-off-by: Igor Russkikh <irusskikh@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qede/qede.h       |   2 +
- .../net/ethernet/qlogic/qede/qede_ethtool.c   | 158 ++++++++++++------
- drivers/net/ethernet/qlogic/qede/qede_main.c  |   2 +
- 3 files changed, 108 insertions(+), 54 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed_main.c | 49 +++++++++++++---------
+ 1 file changed, 29 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/ethernet/qlogic/qede/qede.h b/drivers/net/ethernet/qlogic/qede/qede.h
-index 8adda5dc9e88..f1d7f73de902 100644
---- a/drivers/net/ethernet/qlogic/qede/qede.h
-+++ b/drivers/net/ethernet/qlogic/qede/qede.h
-@@ -557,6 +557,8 @@ void qede_update_rx_prod(struct qede_dev *edev, struct qede_rx_queue *rxq);
- int qede_add_tc_flower_fltr(struct qede_dev *edev, __be16 proto,
- 			    struct flow_cls_offload *f);
- 
-+void qede_forced_speed_maps_init(void);
-+
- #define RX_RING_SIZE_POW	13
- #define RX_RING_SIZE		((u16)BIT(RX_RING_SIZE_POW))
- #define NUM_RX_BDS_MAX		(RX_RING_SIZE - 1)
-diff --git a/drivers/net/ethernet/qlogic/qede/qede_ethtool.c b/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
-index 0a564b06d697..7a985307cdd5 100644
---- a/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
-+++ b/drivers/net/ethernet/qlogic/qede/qede_ethtool.c
-@@ -196,6 +196,96 @@ static const char qede_tests_str_arr[QEDE_ETHTOOL_TEST_MAX][ETH_GSTRING_LEN] = {
- 	"Nvram (online)\t\t",
- };
- 
-+/* Forced speed capabilities maps */
-+
-+struct qede_forced_speed_map {
-+	u32		speed;
-+	__ETHTOOL_DECLARE_LINK_MODE_MASK(caps);
-+
-+	const u32	*cap_arr;
-+	u32		arr_size;
-+};
-+
-+#define QEDE_FORCED_SPEED_MAP(value)					\
-+{									\
-+	.speed		= SPEED_##value,				\
-+	.cap_arr	= qede_forced_speed_##value,			\
-+	.arr_size	= ARRAY_SIZE(qede_forced_speed_##value),	\
-+}
-+
-+static const u32 qede_forced_speed_1000[] __initconst = {
-+	ETHTOOL_LINK_MODE_1000baseT_Full_BIT,
-+	ETHTOOL_LINK_MODE_1000baseKX_Full_BIT,
-+	ETHTOOL_LINK_MODE_1000baseX_Full_BIT,
-+};
-+
-+static const u32 qede_forced_speed_10000[] __initconst = {
-+	ETHTOOL_LINK_MODE_10000baseT_Full_BIT,
-+	ETHTOOL_LINK_MODE_10000baseKR_Full_BIT,
-+	ETHTOOL_LINK_MODE_10000baseKX4_Full_BIT,
-+	ETHTOOL_LINK_MODE_10000baseR_FEC_BIT,
-+	ETHTOOL_LINK_MODE_10000baseCR_Full_BIT,
-+	ETHTOOL_LINK_MODE_10000baseSR_Full_BIT,
-+	ETHTOOL_LINK_MODE_10000baseLR_Full_BIT,
-+	ETHTOOL_LINK_MODE_10000baseLRM_Full_BIT,
-+};
-+
-+static const u32 qede_forced_speed_20000[] __initconst = {
-+	ETHTOOL_LINK_MODE_20000baseKR2_Full_BIT,
-+};
-+
-+static const u32 qede_forced_speed_25000[] __initconst = {
-+	ETHTOOL_LINK_MODE_25000baseKR_Full_BIT,
-+	ETHTOOL_LINK_MODE_25000baseCR_Full_BIT,
-+	ETHTOOL_LINK_MODE_25000baseSR_Full_BIT,
-+};
-+
-+static const u32 qede_forced_speed_40000[] __initconst = {
-+	ETHTOOL_LINK_MODE_40000baseLR4_Full_BIT,
-+	ETHTOOL_LINK_MODE_40000baseKR4_Full_BIT,
-+	ETHTOOL_LINK_MODE_40000baseCR4_Full_BIT,
-+	ETHTOOL_LINK_MODE_40000baseSR4_Full_BIT,
-+};
-+
-+static const u32 qede_forced_speed_50000[] __initconst = {
-+	ETHTOOL_LINK_MODE_50000baseKR2_Full_BIT,
-+	ETHTOOL_LINK_MODE_50000baseCR2_Full_BIT,
-+	ETHTOOL_LINK_MODE_50000baseSR2_Full_BIT,
-+};
-+
-+static const u32 qede_forced_speed_100000[] __initconst = {
-+	ETHTOOL_LINK_MODE_100000baseKR4_Full_BIT,
-+	ETHTOOL_LINK_MODE_100000baseSR4_Full_BIT,
-+	ETHTOOL_LINK_MODE_100000baseCR4_Full_BIT,
-+	ETHTOOL_LINK_MODE_100000baseLR4_ER4_Full_BIT,
-+};
-+
-+static struct qede_forced_speed_map qede_forced_speed_maps[] __ro_after_init = {
-+	QEDE_FORCED_SPEED_MAP(1000),
-+	QEDE_FORCED_SPEED_MAP(10000),
-+	QEDE_FORCED_SPEED_MAP(20000),
-+	QEDE_FORCED_SPEED_MAP(25000),
-+	QEDE_FORCED_SPEED_MAP(40000),
-+	QEDE_FORCED_SPEED_MAP(50000),
-+	QEDE_FORCED_SPEED_MAP(100000),
-+};
-+
-+void __init qede_forced_speed_maps_init(void)
-+{
-+	struct qede_forced_speed_map *map;
-+	u32 i;
-+
-+	for (i = 0; i < ARRAY_SIZE(qede_forced_speed_maps); i++) {
-+		map = qede_forced_speed_maps + i;
-+
-+		linkmode_set_bit_array(map->cap_arr, map->arr_size, map->caps);
-+		map->cap_arr = NULL;
-+		map->arr_size = 0;
-+	}
-+}
-+
-+/* Ethtool callbacks */
-+
- static void qede_get_strings_stats_txq(struct qede_dev *edev,
- 				       struct qede_tx_queue *txq, u8 **buf)
- {
-@@ -458,10 +548,11 @@ static int qede_set_link_ksettings(struct net_device *dev,
- 				   const struct ethtool_link_ksettings *cmd)
- {
- 	const struct ethtool_link_settings *base = &cmd->base;
--	__ETHTOOL_DECLARE_LINK_MODE_MASK(sup_caps);
- 	struct qede_dev *edev = netdev_priv(dev);
-+	const struct qede_forced_speed_map *map;
- 	struct qed_link_output current_link;
- 	struct qed_link_params params;
-+	u32 i;
- 
- 	if (!edev->ops || !edev->ops->common->can_link_change(edev->cdev)) {
- 		DP_INFO(edev, "Link settings are not allowed to be changed\n");
-@@ -489,65 +580,24 @@ static int qede_set_link_ksettings(struct net_device *dev,
- 		params.autoneg = false;
- 		params.forced_speed = base->speed;
- 
--		phylink_zero(sup_caps);
-+		for (i = 0; i < ARRAY_SIZE(qede_forced_speed_maps); i++) {
-+			map = qede_forced_speed_maps + i;
- 
--		switch (base->speed) {
--		case SPEED_1000:
--			phylink_set(sup_caps, 1000baseT_Full);
--			phylink_set(sup_caps, 1000baseKX_Full);
--			phylink_set(sup_caps, 1000baseX_Full);
--			break;
--		case SPEED_10000:
--			phylink_set(sup_caps, 10000baseT_Full);
--			phylink_set(sup_caps, 10000baseKR_Full);
--			phylink_set(sup_caps, 10000baseKX4_Full);
--			phylink_set(sup_caps, 10000baseR_FEC);
--			phylink_set(sup_caps, 10000baseCR_Full);
--			phylink_set(sup_caps, 10000baseSR_Full);
--			phylink_set(sup_caps, 10000baseLR_Full);
--			phylink_set(sup_caps, 10000baseLRM_Full);
--			break;
--		case SPEED_20000:
--			phylink_set(sup_caps, 20000baseKR2_Full);
--			break;
--		case SPEED_25000:
--			phylink_set(sup_caps, 25000baseKR_Full);
--			phylink_set(sup_caps, 25000baseCR_Full);
--			phylink_set(sup_caps, 25000baseSR_Full);
--			break;
--		case SPEED_40000:
--			phylink_set(sup_caps, 40000baseLR4_Full);
--			phylink_set(sup_caps, 40000baseKR4_Full);
--			phylink_set(sup_caps, 40000baseCR4_Full);
--			phylink_set(sup_caps, 40000baseSR4_Full);
--			break;
--		case SPEED_50000:
--			phylink_set(sup_caps, 50000baseKR2_Full);
--			phylink_set(sup_caps, 50000baseCR2_Full);
--			phylink_set(sup_caps, 50000baseSR2_Full);
--			break;
--		case SPEED_100000:
--			phylink_set(sup_caps, 100000baseKR4_Full);
--			phylink_set(sup_caps, 100000baseSR4_Full);
--			phylink_set(sup_caps, 100000baseCR4_Full);
--			phylink_set(sup_caps, 100000baseLR4_ER4_Full);
--			break;
--		default:
--			DP_INFO(edev, "Unsupported speed %u\n", base->speed);
--			return -EINVAL;
--		}
-+			if (base->speed != map->speed ||
-+			    !linkmode_intersects(current_link.supported_caps,
-+						 map->caps))
-+				continue;
- 
--		if (!linkmode_intersects(current_link.supported_caps,
--					 sup_caps)) {
--			DP_INFO(edev, "%uG speed not supported\n",
--				base->speed / 1000);
--			return -EINVAL;
-+			linkmode_and(params.adv_speeds,
-+				     current_link.supported_caps, map->caps);
-+			goto set_link;
- 		}
- 
--		linkmode_and(params.adv_speeds, current_link.supported_caps,
--			     sup_caps);
-+		DP_INFO(edev, "Unsupported speed %u\n", base->speed);
-+		return -EINVAL;
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
+index 172a107f9299..2be9ed39c450 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_main.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
+@@ -1879,6 +1879,27 @@ static void qed_fill_link_capability(struct qed_hwfn *hwfn,
  	}
+ }
  
-+set_link:
- 	params.link_up = true;
- 	edev->ops->common->set_link(edev->cdev, &params);
- 
-diff --git a/drivers/net/ethernet/qlogic/qede/qede_main.c b/drivers/net/ethernet/qlogic/qede/qede_main.c
-index a653dd0e5c22..6f2171dc0dea 100644
---- a/drivers/net/ethernet/qlogic/qede/qede_main.c
-+++ b/drivers/net/ethernet/qlogic/qede/qede_main.c
-@@ -263,6 +263,8 @@ int __init qede_init(void)
- 
- 	pr_info("qede_init: %s\n", version);
- 
-+	qede_forced_speed_maps_init();
++static void qed_lp_caps_to_speed_mask(u32 caps, u32 *speed_mask)
++{
++	*speed_mask = 0;
 +
- 	qed_ops = qed_get_eth_ops();
- 	if (!qed_ops) {
- 		pr_notice("Failed to get qed ethtool operations\n");
++	if (caps &
++	    (QED_LINK_PARTNER_SPEED_1G_FD | QED_LINK_PARTNER_SPEED_1G_HD))
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G;
++	if (caps & QED_LINK_PARTNER_SPEED_10G)
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G;
++	if (caps & QED_LINK_PARTNER_SPEED_20G)
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G;
++	if (caps & QED_LINK_PARTNER_SPEED_25G)
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G;
++	if (caps & QED_LINK_PARTNER_SPEED_40G)
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G;
++	if (caps & QED_LINK_PARTNER_SPEED_50G)
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G;
++	if (caps & QED_LINK_PARTNER_SPEED_100G)
++		*speed_mask |= NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G;
++}
++
+ static void qed_fill_link(struct qed_hwfn *hwfn,
+ 			  struct qed_ptt *ptt,
+ 			  struct qed_link_output *if_link)
+@@ -1886,7 +1907,7 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+ 	struct qed_mcp_link_capabilities link_caps;
+ 	struct qed_mcp_link_params params;
+ 	struct qed_mcp_link_state link;
+-	u32 media_type;
++	u32 media_type, speed_mask;
+ 
+ 	memset(if_link, 0, sizeof(*if_link));
+ 
+@@ -1917,13 +1938,18 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+ 	else
+ 		phylink_clear(if_link->advertised_caps, Autoneg);
+ 
+-	/* Fill link advertised capability*/
++	/* Fill link advertised capability */
+ 	qed_fill_link_capability(hwfn, ptt, params.speed.advertised_speeds,
+ 				 if_link->advertised_caps);
+-	/* Fill link supported capability*/
++
++	/* Fill link supported capability */
+ 	qed_fill_link_capability(hwfn, ptt, link_caps.speed_capabilities,
+ 				 if_link->supported_caps);
+ 
++	/* Fill partner advertised capability */
++	qed_lp_caps_to_speed_mask(link.partner_adv_speed, &speed_mask);
++	qed_fill_link_capability(hwfn, ptt, speed_mask, if_link->lp_caps);
++
+ 	if (link.link_up)
+ 		if_link->speed = link.speed;
+ 
+@@ -1941,23 +1967,6 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+ 	if (params.pause.forced_tx)
+ 		if_link->pause_config |= QED_LINK_PAUSE_TX_ENABLE;
+ 
+-	/* Link partner capabilities */
+-
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_1G_FD)
+-		phylink_set(if_link->lp_caps, 1000baseT_Full);
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_10G)
+-		phylink_set(if_link->lp_caps, 10000baseKR_Full);
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_20G)
+-		phylink_set(if_link->lp_caps, 20000baseKR2_Full);
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_25G)
+-		phylink_set(if_link->lp_caps, 25000baseKR_Full);
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_40G)
+-		phylink_set(if_link->lp_caps, 40000baseLR4_Full);
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_50G)
+-		phylink_set(if_link->lp_caps, 50000baseKR2_Full);
+-	if (link.partner_adv_speed & QED_LINK_PARTNER_SPEED_100G)
+-		phylink_set(if_link->lp_caps, 100000baseKR4_Full);
+-
+ 	if (link.an_complete)
+ 		phylink_set(if_link->lp_caps, Autoneg);
+ 	if (link.partner_adv_pause)
 -- 
 2.25.1
 
