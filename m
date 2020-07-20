@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C30E4C433F2
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:38:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1DBC433E7
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:39:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A604D22B4D
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:38:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BF7B22B4D
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:39:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="srTKLcUk"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B4d1TREX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728491AbgGTNiw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 09:38:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48446 "EHLO
+        id S1728512AbgGTNjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 09:39:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725936AbgGTNiv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 09:38:51 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56EB6C061794;
-        Mon, 20 Jul 2020 06:38:51 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id md7so10123364pjb.1;
-        Mon, 20 Jul 2020 06:38:51 -0700 (PDT)
+        with ESMTP id S1725936AbgGTNjA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 09:39:00 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE181C061794;
+        Mon, 20 Jul 2020 06:39:00 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id cv18so20057pjb.1;
+        Mon, 20 Jul 2020 06:39:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=WwDPleRnNmF5nIya5pCRA/s+OZ7smPPXMDZ4egsrQq8=;
-        b=srTKLcUk8HebhhSPqZECa68ZYvqmIBEEJHZLxD64ASuiBlRaZ582SQBExeJt0rnGXv
-         zdBGY80UkV8b8lQt0Ec9pJmVerBbQmDrkWjqXWfaYVoY7egex0QQBk6W5/ynmwao5UkD
-         fHtDFJENW6zYilGkiVZi1h7Xf/UmHG/vT239U1/C+PbNf6XErDln+vgxyCe3Fdd0LSCs
-         Ho9FKOQyLYkWuVNTqXnXCcXV6W/swtNYbJr3McVzVO9pWctAP8a38Gln396NYDGGP6IJ
-         hNqRGMxxQFMHyyB2Djuk1nls4MUtc32XYQRH/HGan+9TBp9bxUYydOYxm3jbf1VpCf4c
-         6FOg==
+        bh=/GCE+/FYllLy+TOYN4GoKJYK0VrKnaCYbpKeP52SQWs=;
+        b=B4d1TREXa82wCs/PkGf2EtZXnwSbBF7lnkjsfFG899yjLCIslSm8vr/8QoCgqhEGzD
+         RQJGDWJI9+a7L55TWMRqfJ2lw4RDUsgsP/CZvIpC50MEVIZnRCT9mgFLddaY9IM4NKWz
+         Z0ENStkmaDZLIty06C/19kkdK4p82VbPsu2kzHu5YvKPfiTwdwuaZ9ghmifsySCYKF/w
+         kE3uCEew70Ecd7qQuJar3kzChYsRBGPIviXL7HMGfun2fJHC1Y1Jd+z5p/OEEIrorLyo
+         rwC/LMyR3ETryPNIeOwc2HLpRgs04sjlVC/sge7+fjZcft/rjT6QbMmK0Uo8Wi3vjsn4
+         9MYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=WwDPleRnNmF5nIya5pCRA/s+OZ7smPPXMDZ4egsrQq8=;
-        b=miengSoPEGk2AwOjFCrO94GSUQaSNGIn8PzEn3z8KeY8YM0yBJYgVMSxeoJJzYW+DU
-         XfV/vEBUnDDfGwUkLq95bz5b8DhJ2L+mOGK1Sr7MXwUfzbD0XeqklTKqV2rjuL0f5tV/
-         QOTXWaMg5ykIgrec9dyJR6RqVEzkanPrh/eJzmGvJO1ercR3lZ6Q5Ewl1NyJ1g3hjuBL
-         7YyrWOMlYgBrYRnC0pTQRmLu+wG0dfqoX85vd0XXPxXgeXvg7cLwN87FnSis+bQ++d84
-         6evrdSCaXLvXJ6To2h7pRqcISmd2mLJ2N/w6yKv4PzmPVpTF7+GOYgiK9caVB2k46tP0
-         xieg==
-X-Gm-Message-State: AOAM530yzsUsxD4lpvqAFubRtaTk33HUYWDt8DoCKFtA5mN7ajzcKuXq
-        6PmxMKKYWeQ8ohW41sQFHN8=
-X-Google-Smtp-Source: ABdhPJzhxWkMegVPPIMDV/AO8rBKSdJjRz/A+cntjd7+YbWn+VkyqFp6HBuEO10AOZp2eEYX+9tyGw==
-X-Received: by 2002:a17:902:9a0a:: with SMTP id v10mr17929936plp.134.1595252330830;
-        Mon, 20 Jul 2020 06:38:50 -0700 (PDT)
+        bh=/GCE+/FYllLy+TOYN4GoKJYK0VrKnaCYbpKeP52SQWs=;
+        b=rRVvVsgq0Q4zoLwo9ujYdmiU0d4hUkb/DUezjk6oNEu5eiaPjcsdblpCQ5gzTXM2hm
+         h5VCKXPt0pZDcWoIIPv+xykb74W28kxhsSFSHokUdkvN0iYZq2FK7Vj/cSvnsnEJlfmM
+         BEfpXhDSzIu5A0G/mMB3U+wL91NpNiwotT7wA2T0F12HNMlkIbqZy+8OApoH19w/oEHZ
+         AWYpdj6Dnudo+YUhd0BufIcTOEFdixb35wlxHwDOQ122WFte1UK5x32dmTZj84HGCvft
+         uYhTvEPJ3yjS6PcqDfMhm1sd27YBD/hG83sim2NAbhB2o686UC28WxUshaUTmFuiSA8H
+         4o3w==
+X-Gm-Message-State: AOAM5339WucrppBnKdzQgBLhWc6RDLZWErKLJi3yE8UuNRZvTGLhRaVJ
+        gH1y0aAUQREBNVzyNacIOgE=
+X-Google-Smtp-Source: ABdhPJzeG38yziq9r9EWFQ7JBYzr950YQRdEON+ENFUoi7fOfnfrbKxQS6e9JaohJ12kWr38kpZcqA==
+X-Received: by 2002:a17:902:e903:: with SMTP id k3mr18223253pld.148.1595252340209;
+        Mon, 20 Jul 2020 06:39:00 -0700 (PDT)
 Received: from varodek.iballbatonwifi.com ([103.105.153.67])
-        by smtp.gmail.com with ESMTPSA id s6sm17042183pfd.20.2020.07.20.06.38.43
+        by smtp.gmail.com with ESMTPSA id s6sm17042183pfd.20.2020.07.20.06.38.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2020 06:38:50 -0700 (PDT)
+        Mon, 20 Jul 2020 06:38:59 -0700 (PDT)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -87,9 +87,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v2 14/15] scsi: mvumi: use generic power management
-Date:   Mon, 20 Jul 2020 19:04:27 +0530
-Message-Id: <20200720133427.454400-15-vaibhavgupta40@gmail.com>
+Subject: [PATCH v2 15/15] scsi: pmcraid: use generic power management
+Date:   Mon, 20 Jul 2020 19:04:28 +0530
+Message-Id: <20200720133427.454400-16-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
 References: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
@@ -108,51 +108,51 @@ above mentioned, device-independent, jobs.
 
 This driver makes use of PCI helper functions like
 pci_save/restore_state(), pci_enable/disable_device(),
-pci_set_power_state() and pci_set_master() to do required operations. In
-generic mode, they are no longer needed.
+pci_set_power_state() and to do required operations. In generic mode, they
+are no longer needed.
 
 Change function parameter in both .suspend() and .resume() to
-"struct device*" type. Use dev_get_drvdata() to get drv data.
+"struct device*" type. Use to_pci_dev() to get "struct pci_dev*" variable.
+
+In function pmcraid_resume(), earlier, the variable "rc" was set by
+pci_enable_device() which is now removed. Since PCI core does the required
+job, initialize "rc" with 0 value when declaring it.
 
 Compile-tested only.
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/mvumi.c | 49 ++++++++++----------------------------------
- 1 file changed, 11 insertions(+), 38 deletions(-)
+ drivers/scsi/pmcraid.c | 44 +++++++++++-------------------------------
+ 1 file changed, 11 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 8906aceda4c4..7a6ef8264e47 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -2558,7 +2558,7 @@ static void mvumi_detach_one(struct pci_dev *pdev)
- 
- /**
-  * mvumi_shutdown -	Shutdown entry point
-- * @device:		Generic device structure
-+ * @pdev:		PCI device structure
-  */
- static void mvumi_shutdown(struct pci_dev *pdev)
- {
-@@ -2567,47 +2567,28 @@ static void mvumi_shutdown(struct pci_dev *pdev)
- 	mvumi_flush_cache(mhba);
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index aa9ae2ae8579..b6b70ac2e2ee 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -5237,54 +5237,39 @@ static void pmcraid_remove(struct pci_dev *pdev)
+ 	return;
  }
  
--static int __maybe_unused mvumi_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int __maybe_unused mvumi_suspend(struct device *dev)
+-#ifdef CONFIG_PM
+ /**
+  * pmcraid_suspend - driver suspend entry point for power management
+- * @pdev:   PCI device structure
+- * @state:  PCI power state to suspend routine
++ * @dev:   Device structure
+  *
+  * Return Value - 0 always
+  */
+-static int pmcraid_suspend(struct pci_dev *pdev, pm_message_t state)
++static int __maybe_unused pmcraid_suspend(struct device *dev)
  {
--	struct mvumi_hba *mhba = NULL;
 +	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct pmcraid_instance *pinstance = pci_get_drvdata(pdev);
  
--	mhba = pci_get_drvdata(pdev);
-+	struct mvumi_hba *mhba = pci_get_drvdata(pdev);
- 	mvumi_flush_cache(mhba);
- 
--	pci_set_drvdata(pdev, mhba);
- 	mhba->instancet->disable_intr(mhba);
--	free_irq(mhba->pdev->irq, mhba);
- 	mvumi_unmap_pci_addr(pdev, mhba->base_addr);
--	pci_release_regions(pdev);
+ 	pmcraid_shutdown(pdev);
+ 	pmcraid_disable_interrupts(pinstance, ~0);
+ 	pmcraid_kill_tasklets(pinstance);
+-	pci_set_drvdata(pinstance->pdev, pinstance);
+ 	pmcraid_unregister_interrupt_handler(pinstance);
 -	pci_save_state(pdev);
 -	pci_disable_device(pdev);
 -	pci_set_power_state(pdev, pci_choose_state(pdev, state));
@@ -160,74 +160,76 @@ index 8906aceda4c4..7a6ef8264e47 100644
  	return 0;
  }
  
--static int __maybe_unused mvumi_resume(struct pci_dev *pdev)
-+static int __maybe_unused mvumi_resume(struct device *dev)
+ /**
+  * pmcraid_resume - driver resume entry point PCI power management
+- * @pdev: PCI device structure
++ * @dev: Device structure
+  *
+  * Return Value - 0 in case of success. Error code in case of any failure
+  */
+-static int pmcraid_resume(struct pci_dev *pdev)
++static int __maybe_unused pmcraid_resume(struct device *dev)
  {
- 	int ret;
--	struct mvumi_hba *mhba = NULL;
--
--	mhba = pci_get_drvdata(pdev);
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct pmcraid_instance *pinstance = pci_get_drvdata(pdev);
+ 	struct Scsi_Host *host = pinstance->host;
+-	int rc;
 -
 -	pci_set_power_state(pdev, PCI_D0);
 -	pci_enable_wake(pdev, PCI_D0, 0);
 -	pci_restore_state(pdev);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct mvumi_hba *mhba = pci_get_drvdata(pdev);
- 
--	ret = pci_enable_device(pdev);
--	if (ret) {
--		dev_err(&pdev->dev, "enable device failed\n");
--		return ret;
+-
+-	rc = pci_enable_device(pdev);
+-
+-	if (rc) {
+-		dev_err(&pdev->dev, "resume: Enable device failed\n");
+-		return rc;
 -	}
++	int rc = 0;
+ 
+-	pci_set_master(pdev);
 +	device_wakeup_disable(dev);
  
--	ret = mvumi_pci_set_master(pdev);
- 	ret = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
--	if (ret)
--		goto fail;
--	ret = pci_request_regions(mhba->pdev, MV_DRIVER_NAME);
- 	if (ret)
- 		goto fail;
- 	ret = mvumi_map_pci_addr(mhba->pdev, mhba->base_addr);
-@@ -2627,12 +2608,6 @@ static int __maybe_unused mvumi_resume(struct pci_dev *pdev)
- 		goto unmap_pci_addr;
- 	}
+ 	if (sizeof(dma_addr_t) == 4 ||
+ 	    dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)))
+@@ -5337,18 +5322,10 @@ static int pmcraid_resume(struct pci_dev *pdev)
+ 	scsi_host_put(host);
  
--	ret = request_irq(mhba->pdev->irq, mvumi_isr_handler, IRQF_SHARED,
--				"mvumi", mhba);
--	if (ret) {
--		dev_err(&pdev->dev, "failed to register IRQ\n");
--		goto unmap_pci_addr;
--	}
- 	mhba->instancet->enable_intr(mhba);
- 
- 	return 0;
-@@ -2642,11 +2617,12 @@ static int __maybe_unused mvumi_resume(struct pci_dev *pdev)
- release_regions:
- 	pci_release_regions(pdev);
- fail:
+ disable_device:
 -	pci_disable_device(pdev);
  
- 	return ret;
+ 	return rc;
  }
  
-+static SIMPLE_DEV_PM_OPS(mvumi_pm_ops, mvumi_suspend, mvumi_resume);
-+
- static struct pci_driver mvumi_pci_driver = {
+-#else
+-
+-#define pmcraid_suspend NULL
+-#define pmcraid_resume  NULL
+-
+-#endif /* CONFIG_PM */
+-
+ /**
+  * pmcraid_complete_ioa_reset - Called by either timer or tasklet during
+  *				completion of the ioa reset
+@@ -5836,6 +5813,8 @@ static int pmcraid_probe(struct pci_dev *pdev,
+ 	return -ENODEV;
+ }
  
- 	.name = MV_DRIVER_NAME,
-@@ -2654,10 +2630,7 @@ static struct pci_driver mvumi_pci_driver = {
- 	.probe = mvumi_probe_one,
- 	.remove = mvumi_detach_one,
- 	.shutdown = mvumi_shutdown,
--#ifdef CONFIG_PM
--	.suspend = mvumi_suspend,
--	.resume = mvumi_resume,
--#endif
-+	.driver.pm = &mvumi_pm_ops,
++static SIMPLE_DEV_PM_OPS(pmcraid_pm_ops, pmcraid_suspend, pmcraid_resume);
++
+ /*
+  * PCI driver structure of pmcraid driver
+  */
+@@ -5844,8 +5823,7 @@ static struct pci_driver pmcraid_driver = {
+ 	.id_table = pmcraid_pci_table,
+ 	.probe = pmcraid_probe,
+ 	.remove = pmcraid_remove,
+-	.suspend = pmcraid_suspend,
+-	.resume = pmcraid_resume,
++	.driver.pm = &pmcraid_pm_ops,
+ 	.shutdown = pmcraid_shutdown
  };
  
- module_pci_driver(mvumi_pci_driver);
 -- 
 2.27.0
 
