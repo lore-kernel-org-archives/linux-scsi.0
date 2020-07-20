@@ -2,89 +2,94 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D39D8C433DF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:35:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AD3BC433EA
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB46822B4D
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:35:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ACEB20709
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726017AbgGTGf7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 02:35:59 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:11233 "EHLO
+        id S1727867AbgGTGgJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 02:36:09 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:5831 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725805AbgGTGf7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 02:35:59 -0400
-IronPort-SDR: UyeMC1NXP3NId5cm3UeQ/8VtiIslobAvHaFFiz80mOAYr1TSBDPRjLONfzIKe48TWW9LdqA6b4
- GJ/APUVGY+rsveBXWJxq7Q64QnJePmcBKrVFzHPffn+lMoO+WmyHivOMPxM2EKDE20cs24lnev
- Z4NEFHsOe7xJVNebsMKSFHxgEnvGExcWY+LLTL5YAWmJGrqfceRzB4d+KVH2ktEyBCRPk9svhi
- YYJAw3uBhY8sfHbsQwxoAu+IIr8CNpBPzmRYtBRSSnrZEfGRA9Jbgpw1jhQXHPCnk1icFsutMl
- pLg=
+        with ESMTP id S1726612AbgGTGgH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 02:36:07 -0400
+IronPort-SDR: bA0f+rOOMxZIZUWQsidAv72INfEBHAxg9rtWxwPTbHu6uAeBGSyPDrdV77lU57plbpVvbcyuhU
+ Flp6EUPbi9kNXF9g89XqON2RILUAHdodnJ3Az3hI2aezCjPLtZ3deTYsxyfMzxQIA/2bZ7Xcqo
+ akWtlqj0lHf6yrTO8l2mKPf86csu/V7IPNJK1zCqfq/juvxtAYxsxfirETe4EsVwxm88+5xVZJ
+ L8P2KDZQmLWFKXR7FWMW2hRC913Rkt+Oy6982KTSGBnKOzPB/HV5Vw0ljL21ACf8Bou09rNJ1U
+ 0nE=
 X-IronPort-AV: E=Sophos;i="5.75,374,1589266800"; 
-   d="scan'208";a="47226980"
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by labrats.qualcomm.com with ESMTP; 19 Jul 2020 23:35:59 -0700
+   d="scan'208";a="47226981"
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by labrats.qualcomm.com with ESMTP; 19 Jul 2020 23:36:07 -0700
 Received: from pacamara-linux.qualcomm.com ([192.168.140.135])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 19 Jul 2020 23:35:58 -0700
+  by ironmsg03-sd.qualcomm.com with ESMTP; 19 Jul 2020 23:36:06 -0700
 Received: by pacamara-linux.qualcomm.com (Postfix, from userid 359480)
-        id 6F0FF22DA5; Sun, 19 Jul 2020 23:35:58 -0700 (PDT)
+        id D891622DA5; Sun, 19 Jul 2020 23:36:06 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, rnayak@codeaurora.org,
         sh425.lee@samsung.com, linux-scsi@vger.kernel.org,
         kernel-team@android.com, saravanak@google.com, salyzyn@google.com,
         cang@codeaurora.org
-Subject: [PATCH v4 0/8] Fix up and simplify error recovery mechanism
-Date:   Sun, 19 Jul 2020 23:35:47 -0700
-Message-Id: <1595226956-7779-1-git-send-email-cang@codeaurora.org>
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v4 2/8] scsi: ufs: Fix imbalanced scsi_block_reqs_cnt caused by ufshcd_hold()
+Date:   Sun, 19 Jul 2020 23:35:49 -0700
+Message-Id: <1595226956-7779-3-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1595226956-7779-1-git-send-email-cang@codeaurora.org>
+References: <1595226956-7779-1-git-send-email-cang@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The changes have been tested with error injections of multiple error types (and
-all kinds of mixture of them) during runtime, e.g. hibern8 enter/ exit error,
-power mode change error and fatal/non-fatal error from IRQ context. During the
-test, error injections happen randomly across all contexts, e.g. clk scaling,
-clk gate/ungate, runtime suspend/resume and IRQ.
+The scsi_block_reqs_cnt increased in ufshcd_hold() is supposed to be
+decreased back in ufshcd_ungate_work() in a paired way. However, if
+specific ufshcd_hold/release sequences are met, it is possible that
+scsi_block_reqs_cnt is increased twice but only one ungate work is
+queued. To make sure scsi_block_reqs_cnt is handled by ufshcd_hold() and
+ufshcd_ungate_work() in a paired way, increase it only if queue_work()
+returns true.
 
-There are a few more fixes to resolve other minor problems based on the main
-change, such as LINERESET handling and racing btw error handler and system
-suspend/resume/shutdown, but they will be pushed after this series is taken,
-due to there are already too many lines in these changes.
+Signed-off-by: Can Guo <cang@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Change since v3:
-- Split the original change "scsi: ufs: Fix up and simplify error recovery mechanism" into 5 changes
-
-Change since v2:
-- Incorporate Bart's comment to change "scsi: ufs: Add checks before setting clk-gating states"
-- Revised the commit msg of change "scsi: ufs: Fix up and simplify error recovery mechanism"
-
-Change since v1:
-- Fixed a compilation error in case that CONFIG_PM is N
-
-
-Can Guo (8):
-  scsi: ufs: Add checks before setting clk-gating states
-  scsi: ufs: Fix imbalanced scsi_block_reqs_cnt caused by ufshcd_hold()
-  ufs: ufs-qcom: Fix a few BUGs in func ufs_qcom_dump_dbg_regs()
-  scsi: ufs: Add some debug infos to ufshcd_print_host_state
-  scsi: ufs: Fix concurrency of error handler and other error recovery
-    paths
-  scsi: ufs: Recover hba runtime PM error in error handler
-  scsi: ufs: Move dumps in IRQ handler to error handler
-  scsi: ufs: Fix a racing problem btw error handler and runtime PM ops
-
- drivers/scsi/ufs/ufs-qcom.c  |  17 +-
- drivers/scsi/ufs/ufs-sysfs.c |   1 +
- drivers/scsi/ufs/ufshcd.c    | 499 +++++++++++++++++++++++++++----------------
- drivers/scsi/ufs/ufshcd.h    |  15 ++
- 4 files changed, 333 insertions(+), 199 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 99bd3e4..2907828 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1611,12 +1611,12 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 		 */
+ 		/* fallthrough */
+ 	case CLKS_OFF:
+-		ufshcd_scsi_block_requests(hba);
+ 		hba->clk_gating.state = REQ_CLKS_ON;
+ 		trace_ufshcd_clk_gating(dev_name(hba->dev),
+ 					hba->clk_gating.state);
+-		queue_work(hba->clk_gating.clk_gating_workq,
+-			   &hba->clk_gating.ungate_work);
++		if (queue_work(hba->clk_gating.clk_gating_workq,
++			       &hba->clk_gating.ungate_work))
++			ufshcd_scsi_block_requests(hba);
+ 		/*
+ 		 * fall through to check if we should wait for this
+ 		 * work to be done or not.
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
