@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D44AC433E5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C417C433F7
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:37:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36F1222B4D
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:37:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0B1122CB1
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 13:37:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N3fETepz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PBs20ij9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728164AbgGTNhp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 09:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48264 "EHLO
+        id S1728251AbgGTNhy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 09:37:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726383AbgGTNhp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 09:37:45 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0200FC061794;
-        Mon, 20 Jul 2020 06:37:45 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id m9so9070218pfh.0;
-        Mon, 20 Jul 2020 06:37:44 -0700 (PDT)
+        with ESMTP id S1726383AbgGTNhy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 09:37:54 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 008A2C061794;
+        Mon, 20 Jul 2020 06:37:53 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id p3so10313992pgh.3;
+        Mon, 20 Jul 2020 06:37:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=oHOwkj4fnhtZnaXLc1XXpmlO0WhcrZr5c89iPSNlAKc=;
-        b=N3fETepzmOozX/AxOkoCUFSDqCpy0ZzL2Rs4rgiRCwW4aDxyzCdhb8wb1BZvzRhQ65
-         AlH8lGu3Ff1vJwY4/wqtUmaPXnEjyAEw+C0+ALch561vPqpwi3jIDRbIwct37jI9NIJn
-         I8y8Otjt3arzq7cjPvA4ZarBcHL6cK6kE56NjAsKiQTmZ8tTcVY4HK0aGyXih5pfTORS
-         mGF1qZnF8aWUNkA+cCvXTcEfcKSmTh6phJa1M6ApdVSV49gerGNLC3hvL6VttAyGktzE
-         /50/T+qmqpxZbVuTrKEGa6u2sfhIFY0e3rfLTt4cDrSwsyPdl5VZzCsHT8o68oC1haog
-         dAKg==
+        bh=qP/lw2OrWNJnMcQg/XtLZOmUZ9RFHua2vKNQYNPkmuc=;
+        b=PBs20ij9CfDSVkVn+RaQUG5fj1gktc26Oy0Dvr3oNVU7k7ZDL8JOe7QDjkS9LUSG9I
+         pwtiUs9nWtk3BWxeYWPo+WzpVRP5d8iXegrjhrVm6Gd4kqTheF9Jj9mwAQfFvdxvOUwo
+         a5Ri3SR9GFVjaHAFXbyV11Z7LU++RkSknIgHN/FnZexLX1c8Htq7vz1VcPr8JZ8w/1Pr
+         4N8LojHNPFXXfaoo9q8+0Ip0idFJ6hZx8DAp6hrR30Y/dfWejFidBhhIaItfuY0icKSE
+         ZBwchB6V7hv3t+v6/woqqhWTBHkDSb489gMTN6tDSXC/5j+f9qy/Zx1aAUdp2ei7NHBO
+         SIfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=oHOwkj4fnhtZnaXLc1XXpmlO0WhcrZr5c89iPSNlAKc=;
-        b=ru1aObsy6E4zS87GuGBb6/VXOu8/0myArDTgjyCe+Aj4/U21nyME9D81hurPJzaZxG
-         G6TaqpomNxPXBB9PcSiBI5NgtRaTUPuDb+JNiR8cvYpF/rBkgyUijsiOOaIleMqkmoi7
-         vj7dKKnKI3f3/2gvlAoTGMlZdQCVaUOXwcTyhQeQnYBGk5q9DFNOFS7rIO1cD6NzKbwv
-         +w2aKecnBTYyooHsngAqWTdSyLORcExdUlSngd3CwZ6aFInwj6JsbWNs3qbw8RqprX0G
-         AyzOh7ndVpU/2zfH0UPXcszy+DDUO0OCjDu5gffYoFoB87JsIHT2JNU3U3k86Oe9u/Bq
-         3CeA==
-X-Gm-Message-State: AOAM532SxFQawjAiBFlj7ovzndmCN5Kt75Ngveaz4SPlhU3a10KEQBrb
-        2b0lzdDuL+otmGXnws1AA58=
-X-Google-Smtp-Source: ABdhPJxJRIM4Ewl/jQRBvdKQ4coKSOKXgbX+ilJAvVkMgETBOGrwClaYe3O8p9u6ps7Ck5oEnYkA4A==
-X-Received: by 2002:aa7:8557:: with SMTP id y23mr19420720pfn.148.1595252264494;
-        Mon, 20 Jul 2020 06:37:44 -0700 (PDT)
+        bh=qP/lw2OrWNJnMcQg/XtLZOmUZ9RFHua2vKNQYNPkmuc=;
+        b=jNQkRjDIeaFRJQLVia5NYsyN4pTmwRH8lkXjW+BfRFB6sGz3WcXF0d0dN8+nBMHAix
+         o59Dlnb2zrLF8PQuCvhfPJWIb1AqpbCoEeiFXRo3bKnjacGFcnMlulwF1Kh1gI5ILeZp
+         00POoAscrfpPdFC5Up54Cq9CUE0hMDVgjBJlh1fiokFhbXq15dSNh+siHSY3MyYxV3Rn
+         ma5mD1D5tLH24InsvpNYfb08BxsFmokZDEo9/Kl6tSsmskocIuyYm3LYCH93CwL0FTsU
+         1Vfddwu7YtR4vgvucOSJZnxAvFtpk9exvb5Yy2IMX0K2xG4R+kiWKButaumbRm9zpxpo
+         +whQ==
+X-Gm-Message-State: AOAM531ASDs7g8FNr1zEctsk/I3U+21Bfusf1vDaTtncGvqto2kiVLO7
+        YSkykCd5vKJNTmiBquyT8+4=
+X-Google-Smtp-Source: ABdhPJxVcEI9vj+VkSrnExQJ5pjS1IaJwUzUyKXnm+2ao+8/m0qxgbZ0qslCpMyjvURUTfAG8Oazgg==
+X-Received: by 2002:a63:ce15:: with SMTP id y21mr18997162pgf.163.1595252273465;
+        Mon, 20 Jul 2020 06:37:53 -0700 (PDT)
 Received: from varodek.iballbatonwifi.com ([103.105.153.67])
-        by smtp.gmail.com with ESMTPSA id s6sm17042183pfd.20.2020.07.20.06.37.36
+        by smtp.gmail.com with ESMTPSA id s6sm17042183pfd.20.2020.07.20.06.37.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2020 06:37:43 -0700 (PDT)
+        Mon, 20 Jul 2020 06:37:53 -0700 (PDT)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -87,9 +87,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com,
         megaraidlinux.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v2 07/15] scsi: hisi_sas_v3_hw: use generic power management
-Date:   Mon, 20 Jul 2020 19:04:20 +0530
-Message-Id: <20200720133427.454400-8-vaibhavgupta40@gmail.com>
+Subject: [PATCH v2 08/15] scsi: mpt3sas_scsih: use generic power management
+Date:   Mon, 20 Jul 2020 19:04:21 +0530
+Message-Id: <20200720133427.454400-9-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
 References: <20200720133427.454400-1-vaibhavgupta40@gmail.com>
@@ -114,99 +114,108 @@ Compile-tested only.
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 32 +++++++++-----------------
- 1 file changed, 11 insertions(+), 21 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 36 +++++++++++-----------------
+ 1 file changed, 14 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 55e2321a65bc..824bfbe1abbb 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3374,13 +3374,13 @@ enum {
- 	hip08,
- };
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 08fc4b381056..f3c6e68b2921 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -10829,44 +10829,40 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return rv;
+ }
  
--static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int __maybe_unused hisi_sas_v3_suspend(struct device *dev_d)
+-#ifdef CONFIG_PM
+ /**
+  * scsih_suspend - power management suspend main entry point
+- * @pdev: PCI device struct
+- * @state: PM state change to (usually PCI_D3)
++ * @dev: Device struct
+  *
+  * Return: 0 success, anything else error.
+  */
+-static int
+-scsih_suspend(struct pci_dev *pdev, pm_message_t state)
++static int __maybe_unused
++scsih_suspend(struct device *dev)
  {
-+	struct pci_dev *pdev = to_pci_dev(dev_d);
- 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
- 	struct hisi_hba *hisi_hba = sha->lldd_ha;
- 	struct device *dev = hisi_hba->dev;
- 	struct Scsi_Host *shost = hisi_hba->shost;
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
 -	pci_power_t device_state;
- 	int rc;
  
- 	if (!pdev->pm_cap) {
-@@ -3406,12 +3406,7 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
- 
- 	hisi_sas_init_mem(hisi_hba);
- 
+ 	mpt3sas_base_stop_watchdog(ioc);
+ 	flush_scheduled_work();
+ 	scsi_block_requests(shost);
+ 	_scsih_nvme_shutdown(ioc);
 -	device_state = pci_choose_state(pdev, state);
--	dev_warn(dev, "entering operating state [D%d]\n",
--			device_state);
+-	ioc_info(ioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+-		 pdev, pci_name(pdev), device_state);
++	ioc_info(ioc, "pdev=0x%p, slot=%s, entering suspended state\n",
++		 pdev, pci_name(pdev));
+ 
 -	pci_save_state(pdev);
--	pci_disable_device(pdev);
+ 	mpt3sas_base_free_resources(ioc);
 -	pci_set_power_state(pdev, device_state);
-+	dev_warn(dev, "entering suspend state\n");
- 
- 	hisi_sas_release_tasks(hisi_hba);
- 
-@@ -3419,8 +3414,9 @@ static int hisi_sas_v3_suspend(struct pci_dev *pdev, pm_message_t state)
  	return 0;
  }
  
--static int hisi_sas_v3_resume(struct pci_dev *pdev)
-+static int __maybe_unused hisi_sas_v3_resume(struct device *dev_d)
+ /**
+  * scsih_resume - power management resume main entry point
+- * @pdev: PCI device struct
++ * @dev: Device struct
+  *
+  * Return: 0 success, anything else error.
+  */
+-static int
+-scsih_resume(struct pci_dev *pdev)
++static int __maybe_unused
++scsih_resume(struct device *dev)
  {
-+	struct pci_dev *pdev = to_pci_dev(dev_d);
- 	struct sas_ha_struct *sha = pci_get_drvdata(pdev);
- 	struct hisi_hba *hisi_hba = sha->lldd_ha;
- 	struct Scsi_Host *shost = hisi_hba->shost;
-@@ -3430,16 +3426,8 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
++	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 	pci_power_t device_state = pdev->current_state;
+@@ -10875,9 +10871,7 @@ scsih_resume(struct pci_dev *pdev)
+ 	ioc_info(ioc, "pdev=0x%p, slot=%s, previous operating state [D%d]\n",
+ 		 pdev, pci_name(pdev), device_state);
  
- 	dev_warn(dev, "resuming from operating state [D%d]\n",
- 		 device_state);
 -	pci_set_power_state(pdev, PCI_D0);
 -	pci_enable_wake(pdev, PCI_D0, 0);
 -	pci_restore_state(pdev);
--	rc = pci_enable_device(pdev);
--	if (rc) {
--		dev_err(dev, "enable device failed during resume (%d)\n", rc);
--		return rc;
--	}
-+	device_wakeup_disable(dev_d);
++	device_wakeup_disable(dev);
+ 	ioc->pdev = pdev;
+ 	r = mpt3sas_base_map_resources(ioc);
+ 	if (r)
+@@ -10888,7 +10882,6 @@ scsih_resume(struct pci_dev *pdev)
+ 	mpt3sas_base_start_watchdog(ioc);
+ 	return 0;
+ }
+-#endif /* CONFIG_PM */
  
--	pci_set_master(pdev);
- 	scsi_unblock_requests(shost);
- 	clear_bit(HISI_SAS_REJECT_CMD_BIT, &hisi_hba->flags);
- 
-@@ -3447,7 +3435,6 @@ static int hisi_sas_v3_resume(struct pci_dev *pdev)
- 	rc = hw_init_v3_hw(hisi_hba);
- 	if (rc) {
- 		scsi_remove_host(shost);
--		pci_disable_device(pdev);
- 		return rc;
- 	}
- 	hisi_hba->hw->phys_init(hisi_hba);
-@@ -3468,13 +3455,16 @@ static const struct pci_error_handlers hisi_sas_err_handler = {
- 	.reset_done	= hisi_sas_reset_done_v3_hw,
+ /**
+  * scsih_pci_error_detected - Called when a PCI error is detected.
+@@ -11162,6 +11155,8 @@ static struct pci_error_handlers _mpt3sas_err_handler = {
+ 	.resume		= scsih_pci_resume,
  };
  
-+static SIMPLE_DEV_PM_OPS(hisi_sas_v3_pm_ops,
-+			 hisi_sas_v3_suspend,
-+			 hisi_sas_v3_resume);
++static SIMPLE_DEV_PM_OPS(scsih_pm_ops, scsih_suspend, scsih_resume);
 +
- static struct pci_driver sas_v3_pci_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= sas_v3_pci_table,
- 	.probe		= hisi_sas_v3_probe,
- 	.remove		= hisi_sas_v3_remove,
--	.suspend	= hisi_sas_v3_suspend,
--	.resume		= hisi_sas_v3_resume,
-+	.driver.pm	= &hisi_sas_v3_pm_ops,
- 	.err_handler	= &hisi_sas_err_handler,
+ static struct pci_driver mpt3sas_driver = {
+ 	.name		= MPT3SAS_DRIVER_NAME,
+ 	.id_table	= mpt3sas_pci_table,
+@@ -11169,10 +11164,7 @@ static struct pci_driver mpt3sas_driver = {
+ 	.remove		= scsih_remove,
+ 	.shutdown	= scsih_shutdown,
+ 	.err_handler	= &_mpt3sas_err_handler,
+-#ifdef CONFIG_PM
+-	.suspend	= scsih_suspend,
+-	.resume		= scsih_resume,
+-#endif
++	.driver.pm	= &scsih_pm_ops,
  };
  
+ /**
 -- 
 2.27.0
 
