@@ -2,149 +2,108 @@ Return-Path: <SRS0=rv89=A7=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD787C433E2
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 09:20:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C27C5C433FB
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 09:23:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C726A21775
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 09:20:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A15DB21775
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Jul 2020 09:23:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marvell.com header.i=@marvell.com header.b="GpfalX26"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728000AbgGTJUT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 05:20:19 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:2504 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727780AbgGTJUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Jul 2020 05:20:18 -0400
-Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
-        by Forcepoint Email with ESMTP id 0A685CB9C9AD4A7FB5F7;
-        Mon, 20 Jul 2020 10:20:17 +0100 (IST)
-Received: from [127.0.0.1] (10.210.170.208) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 20 Jul
- 2020 10:20:15 +0100
-Subject: Re: [PATCH RFC v7 10/12] megaraid_sas: switch fusion adapters to MQ
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "don.brace@microsemi.com" <don.brace@microsemi.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "hare@suse.com" <hare@suse.com>, "hch@lst.de" <hch@lst.de>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "esc.storagedev@microsemi.com" <esc.storagedev@microsemi.com>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>,
-        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>
-References: <1591810159-240929-1-git-send-email-john.garry@huawei.com>
- <1591810159-240929-11-git-send-email-john.garry@huawei.com>
- <d55972999b9370f947c20537e41b49bf@mail.gmail.com>
- <e61593f8-5ee7-5763-9d02-d0ea13aeb49f@huawei.com>
- <92ba1829c9e822e4239a7cdfd94acbce@mail.gmail.com>
- <10d36c09-9d5b-92e9-23ac-ea1a2628e7d9@huawei.com>
- <0563e53f843c97de1a5a035fae892bf8@mail.gmail.com>
- <61299951-97dc-b2be-c66c-024dfbd3a1cb@huawei.com>
- <b49c33ebda36b8f116a51bc5c430eb9d@mail.gmail.com>
- <13d6b63e-3aa8-68fa-29ab-a4c202024280@huawei.com>
- <34a832717fef4702b143ea21aa12b79e@mail.gmail.com>
- <1dcf2bb9-142c-7bb8-9207-5a1b792eb3f9@huawei.com>
- <e69dc243174664efd414a4cd0176e59d@mail.gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <4fa30c15-1b94-8b1c-83a8-f1f91f4d8c66@huawei.com>
-Date:   Mon, 20 Jul 2020 10:18:22 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S1728172AbgGTJXs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 05:23:48 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42004 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727961AbgGTJXr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Jul 2020 05:23:47 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06K963Fj001059;
+        Mon, 20 Jul 2020 02:23:37 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=pfpt0818;
+ bh=9Pdq+syVPGsE7NiIyror1875Q3xdqrQ6j+hVF3yHZjg=;
+ b=GpfalX26qtABHMyMnlaBzTPipHdhsk1hzqJXVsyAoggEenmtwV2vXAH1lQza9vbkg5K4
+ cTVgEuoovRPHhc0cDG/R+yuClPKQogoGUjK1xd0dxzeakTK44GYxn+CHA+cOwEUmK1gQ
+ 4xGQfJoTym1DJAQmZKTzZggp1Mago54Xn9hU46zgKqSkFW89OQzP8oLocbayARihnPRe
+ o6ZyFtG2i0mPii2CrzH8+v5Wji+WXtF+YLmVUxH33vSbHdmGZcSr1oQJ7hqj3vVqvToQ
+ Oin3Y0pnW42+hE3AhkQI1GlASHz+SK948L8IhZPl3j+CY4g822NrBKjD0E0p0Oar8dVU BA== 
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 32c0kkda03-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 20 Jul 2020 02:23:37 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by SC-EXCH02.marvell.com
+ (10.93.176.82) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 20 Jul
+ 2020 02:23:34 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 20 Jul 2020 02:23:34 -0700
+Received: from NN-LT0049.marvell.com (NN-LT0049.marvell.com [10.193.54.6])
+        by maili.marvell.com (Postfix) with ESMTP id 37CDE3F703F;
+        Mon, 20 Jul 2020 02:23:29 -0700 (PDT)
+From:   Alexander Lobakin <alobakin@marvell.com>
+To:     Andrew Lunn <andrew@lunn.ch>
+CC:     Alexander Lobakin <alobakin@marvell.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Igor Russkikh <irusskikh@marvell.com>,
+        Michal Kalderon <michal.kalderon@marvell.com>,
+        "Ariel Elior" <aelior@marvell.com>,
+        Denis Bolotin <denis.bolotin@marvell.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <GR-everest-linux-l2@marvell.com>,
+        <QLogic-Storage-Upstream@marvell.com>, <netdev@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 net-next 01/14] qed: convert link mode from u32 to bitmap
+Date:   Mon, 20 Jul 2020 12:23:06 +0300
+Message-ID: <20200720092306.355-1-alobakin@marvell.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200719212100.GM1383417@lunn.ch>
+References: <20200719212100.GM1383417@lunn.ch>
+ <20200719201453.3648-1-alobakin@marvell.com>
+ <20200719201453.3648-2-alobakin@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <e69dc243174664efd414a4cd0176e59d@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.210.170.208]
-X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-20_05:2020-07-17,2020-07-20 signatures=0
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20/07/2020 08:23, Kashyap Desai wrote:
+Date: Sun, 19 Jul 2020 23:21:00 +0200
+From: Andrew Lunn <andrew@lunn.ch>
 
-Hi Kashyap,
+> On Sun, Jul 19, 2020 at 11:14:40PM +0300, Alexander Lobakin wrote:
+>> Currently qed driver already ran out of 32 bits to store link modes,
+>> and this doesn't allow to add and support more speeds.
+>> Convert link mode to bitmap that will always have enough space for
+>> any number of speeds and modes.
+>
+> Hi Alexander
 
->> John - I did more testing on v8 wip branch.  CPU hotplug is working as
->> expected, 
+Hi Andrew!
 
-Good to hear.
+> Why not just throw away all these QED_LM_ defines and use the kernel
+> link modes? The fact you are changing the u32 to a bitmap suggests the
+> hardware does not use them.
 
-but I still see some performance issue on Logical Volumes.
->>
->> I created 8 Drives Raid-0 VD on MR controller and below is performance
->> impact of this RFC. Looks like contention is on single <sdev>.
->>
->> I used command - "numactl -N 1  fio 1vd.fio --iodepth=128 --bs=4k --
->> rw=randread --cpus_allowed_policy=split --ioscheduler=none --
->> group_reporting --runtime=200 --numjobs=1"
->> IOPS without RFC = 300K IOPS with RFC = 230K.
->>
->> Perf top (shared host tag. IOPS = 230K)
->>
->> 13.98%  [kernel]        [k] sbitmap_any_bit_set
+I've just double-checked, and you're right, management firmware operates
+with NVM_* definitions, while QED_LM_* are used only in QED and QEDE to
+fill Ethtool link settings.
+I didn't notice this while working on the series, but it would be really
+a lot better to just use generic definitions.
+So I'll send v3 soon.
 
-I guess that this comes from the blk_mq_hctx_has_pending() -> 
-sbitmap_any_bit_set(&hctx->ctx_map) call. The 
-list_empty_careful(&hctx->dispatch) and blk_mq_sched_has_work(hctx) 
-[when scheduler=none] calls look pretty lightweight.
-
->>       6.43%  [kernel]        [k] blk_mq_run_hw_queue
-> blk_mq_run_hw_queue function take more CPU which is called from "
-> scsi_end_request"
-> It looks like " blk_mq_hctx_has_pending" handles only elevator (scheduler)
-> case. If  queue has ioscheduler=none, we can skip. I case of scheduler=none,
-> IO will be pushed to hardware queue and it by pass software queue.
-> Based on above understanding, I added below patch and I can see performance
-> scale back to expectation.
-> 
-> Ming mentioned that - we cannot remove blk_mq_run_hw_queues() from IO
-> completion path otherwise we may see IO hang. So I have just modified
-> completion path assuming it is only required for IO scheduler case.
-> https://www.spinics.net/lists/linux-block/msg55049.html
-> 
-> Please review and let me know if this is good or we have to address with
-> proper fix.
-> 
-
-So what you're doing looks reasonable, but I would be concerned about 
-missing the blk_mq_run_hw_queue() -> blk_mq_hctx_has_pending() -> 
-list_empty_careful(&hctx->dispatch) check - if it's not really needed 
-there, then why not remove?
-
-Hi Ming, any opinion on this?
-
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 1be7ac5a4040..b6a5b41b7fc2 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -1559,6 +1559,9 @@ void blk_mq_run_hw_queues(struct request_queue *q,
-> bool async)
->          struct blk_mq_hw_ctx *hctx;
->          int i;
-> 
-> +       if (!q->elevator)
-> +               return;
-> +
->          queue_for_each_hw_ctx(q, hctx, i) {
->                  if (blk_mq_hctx_stopped(hctx))
->                          continue;
-> 
+>      Andrew
 
 Thanks,
-John
-
+Al
