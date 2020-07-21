@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29CFEC433EA
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 09:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E223FC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 09:57:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04ACD20729
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 09:56:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3E1020729
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 09:57:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="tWs6bCvx"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="WwSwtO5a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729081AbgGUJ4z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 05:56:55 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:35428 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726188AbgGUJ4y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 05:56:54 -0400
+        id S1729095AbgGUJ5E (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 05:57:04 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:43768 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729092AbgGUJ5D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 05:57:03 -0400
 Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200721095652epoutp02e60189da4542b9cae1188eb8a99e1727~jvAKtjZJB3265932659epoutp02Z
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:56:52 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200721095652epoutp02e60189da4542b9cae1188eb8a99e1727~jvAKtjZJB3265932659epoutp02Z
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20200721095659epoutp03e4b93f48438a88a1fd144f424e431879~jvAREj4372931329313epoutp03v
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:56:59 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20200721095659epoutp03e4b93f48438a88a1fd144f424e431879~jvAREj4372931329313epoutp03v
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1595325412;
-        bh=pj2Pzo6iSbBr4ooSY6SDbdkWoHZuW2p1oFSErEspwRA=;
+        s=mail20170921; t=1595325419;
+        bh=rd4VJL9aR4XGc0vFytnDoTMRfRCxRzDDk60H09CpOXM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tWs6bCvxD1Fb750VuJBXiVF/JTEe+h57W6zhsfNLb0BzukVS/ThQ3BNbtWkeq9Vsm
-         KpXog07dyls59o4hB6Q0BfLrhPUs4PsH24kB4ipWQIPYyIuYaM+YPwnEMchZJ6vwga
-         5Nci0L+ukaa9e9+90uHX7aNg6OFDSVZtaYZi72Bg=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20200721095652epcas2p3a7d298bb4f4ab77bcbc0cce777e351bb~jvAKDeeio2048120481epcas2p3g;
-        Tue, 21 Jul 2020 09:56:52 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.40.182]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4B9vBn5x1BzMqYkY; Tue, 21 Jul
-        2020 09:56:49 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        51.F1.19322.0EBB61F5; Tue, 21 Jul 2020 18:56:48 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        b=WwSwtO5ajmSstCTu2+tlAJBR7F/owKiiEcJxmG9IdmrIZiSa28bA0CKWAo+4k3ox+
+         u55/vS4O+FjnpyGlSPUXUMu3r1hva0XAmGYd5YD+TJIBri3SdXCmW/bszmXD0bMBrV
+         TUShcQROGJvYDRi7rCmdimlB6L43JNxx9yDQ+iS0=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20200721095659epcas2p469651b7e3c0f27e25003fef5f6539294~jvAQq5HoO2747527475epcas2p4g;
+        Tue, 21 Jul 2020 09:56:59 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.184]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4B9vBw2XcszMqYkZ; Tue, 21 Jul
+        2020 09:56:56 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        D6.82.27441.7EBB61F5; Tue, 21 Jul 2020 18:56:55 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
         epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200721095648epcas2p18c3d496076ecd1537e47081c19dbb97e~jvAHAXLMA1027410274epcas2p1Z;
-        Tue, 21 Jul 2020 09:56:48 +0000 (GMT)
+        20200721095655epcas2p13c10101ef53de47384762754271c1ca5~jvAM7aQtQ0338903389epcas2p1K;
+        Tue, 21 Jul 2020 09:56:55 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200721095648epsmtrp123df3627a0e4239c399e5a6bd380cea9~jvAG-t55n3088630886epsmtrp10;
-        Tue, 21 Jul 2020 09:56:48 +0000 (GMT)
-X-AuditID: b6c32a45-7adff70000004b7a-c6-5f16bbe00fbe
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200721095655epsmtrp228418f30d2a710935b9e6621b2ddbf0f~jvAM6rB1m0181101811epsmtrp2a;
+        Tue, 21 Jul 2020 09:56:55 +0000 (GMT)
+X-AuditID: b6c32a47-fc5ff70000006b31-d7-5f16bbe7e322
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        F5.3A.08303.0EBB61F5; Tue, 21 Jul 2020 18:56:48 +0900 (KST)
+        7A.3A.08303.6EBB61F5; Tue, 21 Jul 2020 18:56:55 +0900 (KST)
 Received: from rack03.dsn.sec.samsung.com (unknown [12.36.155.109]) by
         epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200721095648epsmtip2728182b7a523aa64fc426264cf70f1a4~jvAGzoqb50305103051epsmtip21;
-        Tue, 21 Jul 2020 09:56:48 +0000 (GMT)
+        20200721095654epsmtip2e0651e38156d9db62de112dca8a54e2f~jvAMwl4Lh0498004980epsmtip2E;
+        Tue, 21 Jul 2020 09:56:54 +0000 (GMT)
 From:   SEO HOYOUNG <hy50.seo@samsung.com>
 To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
         avri.altman@wdc.com, jejb@linux.ibm.com,
@@ -65,211 +65,419 @@ To:     linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
         asutoshd@codeaurora.org, cang@codeaurora.org, bvanassche@acm.org,
         grant.jung@samsung.com
 Cc:     SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [RFC PATCH v3 1/3] scsi: ufs: modify write booster
-Date:   Tue, 21 Jul 2020 18:57:10 +0900
-Message-Id: <90ad671ed4a2b4f6035e9858153a13f7c00a1904.1595325064.git.hy50.seo@samsung.com>
+Subject: [RFC PATCH v3 3/3] scsi: ufs: add vendor specific write booster
+Date:   Tue, 21 Jul 2020 18:57:12 +0900
+Message-Id: <f509c9bc4847f3f0527fb0c8a5b0aa68c223418e.1595325064.git.hy50.seo@samsung.com>
 X-Mailer: git-send-email 2.26.0
 In-Reply-To: <cover.1595325064.git.hy50.seo@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPJsWRmVeSWpSXmKPExsWy7bCmme6D3WLxBr/uWVs8mLeNzWJv2wl2
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPJsWRmVeSWpSXmKPExsWy7bCmqe7z3WLxBp1r1CwezNvGZrG37QS7
+        xcufV9ksDj7sZLGY9uEns8Wn9ctYLX79Xc9usXrxAxaLRTe2MVl0X9/BZrH8+D8mB26Py1e8
+        PS739TJ5TFh0gNHj+/oONo+PT2+xePRtWcXo8XmTnEf7gW6mAI6oHJuM1MSU1CKF1Lzk/JTM
+        vHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoEOVFMoSc0qBQgGJxcVK+nY2Rfml
+        JakKGfnFJbZKqQUpOQWGhgV6xYm5xaV56XrJ+blWhgYGRqZAlQk5GbM/XGAq2B1a0X+vnamB
+        ca5bFyMnh4SAicS55U9Yuhi5OIQEdjBKrG7YwwrhfGKU2P/vDZTzmVHi1vZXbDAthy/PZIJI
+        7GKU6PtzHSwhJPCDUWL5Sg8Qm01AQ2LNsUNgRSICHxgljq6YzQqSYBZQk/h8dxkLiC0s4CFx
+        bFYXI4jNIqAq8fXDXrBBvAJREj8Oz2CB2CYvsajhNxOIzSlgIXF29nl2iBpBiZMzn7BAzJSX
+        aN46mxlkmYTATA6JA0veMEM0u0hc/bOZEcIWlnh1fAs7hC0l8fndXqh36iWm3FvFAtHcwyix
+        Z8UJJoiEscSsZ+1AzRxAGzQl1u/SBzElBJQljtyC2ssn0XH4LztEmFeio00IolFJ4szc21Bh
+        CYmDs3Mgwh4S93cuh4ZbN6NE0/kupgmMCrOQfDMLyTezEPYuYGRexSiWWlCcm55abFRgjBzD
+        mxjBKVfLfQfjjLcf9A4xMnEwHmKU4GBWEuGdyCMcL8SbklhZlVqUH19UmpNafIjRFBjWE5ml
+        RJPzgUk/ryTe0NTIzMzA0tTC1MzIQkmct9jqQpyQQHpiSWp2ampBahFMHxMHp1QDU/jy0FUf
+        +9q+rrMTSovVqpguPu3Z7Spn7uJdEQ1zal23vLWqS54k3d216kR7ivNBea+SjpurQ3i9pgYZ
+        mnLdP95za/naL3W87MLehsbPlGqZ8lb7Zb6Pu3fSqGAtr9e0dwltH9jCJp1vuBOb0h38/U7C
+        5+s+oj9fLe7ZrD93wtYSzpk+WT9XPs/nndMgqpGSaHtUPOHpxPy5jLONc00iqkxei5VdYfR7
+        fcnjQSJb9gMuqavGPzOivqkr9erttdP8kVekwWzw5N8E88KsnBU+s9p/u5vb506Rq5K2Tn17
+        a1vksY0uPPlcBxNOZ3y+bGPF9DUka54+14cD+V4bahMkK5Od3eN+c3FYHpyx6a8SS3FGoqEW
+        c1FxIgD+5dOOQgQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrBLMWRmVeSWpSXmKPExsWy7bCSvO7z3WLxBgumM1o8mLeNzWJv2wl2
         i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7Lovr6DzWL58X9MDtwel694
-        e1zu62XymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxROTYZqYkpqUUKqXnJ+SmZ
-        eem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkouPgG6bpk5QIcqKZQl5pQChQISi4uV9O1sivJL
-        S1IVMvKLS2yVUgtScgoMDQv0ihNzi0vz0vWS83OtDA0MjEyBKhNyMqb+msRYsE+94ubEPYwN
-        jDsUuhg5OSQETCQmv17G1sXIxSEksINR4vOxeywQzidGicWL9zNCOJ8ZJbavbWOGaXmw8hwb
-        iC0ksItRYv2EBIiiH4wSL96/ZAFJsAloSKw5dogJJCEi8IFR4uiK2awgCWYBNYnPd5eBFQkL
-        WEusPr4VLM4ioCpxcd8csA28AlESXbePsUBsk5dY1PCbCcTmFLCQODv7PDtEjaDEyZlPWCBm
-        yks0b53NDLJMQmAuh8S0R7vZIZpdJE5PXsIKYQtLvDq+BSouJfGyvw3KrpeYcm8VC0RzD6PE
-        nhUnmCASxhKznrUDA4ADaIOmxPpd+iCmhICyxJFbUHv5JDoO/2WHCPNKdLQJQTQqSZyZexsq
-        LCFxcHYORNhDovfQEnZIWHUzSpz+sJ9tAqPCLCTfzELyzSyEvQsYmVcxiqUWFOempxYbFRgi
-        x/AmRnDK1XLdwTj57Qe9Q4xMHIyHGCU4mJVEeCfyCMcL8aYkVlalFuXHF5XmpBYfYjQFhvVE
-        ZinR5Hxg0s8riTc0NTIzM7A0tTA1M7JQEufNVbwQJySQnliSmp2aWpBaBNPHxMEp1cCk3+np
-        z+cf6FCda/9XfvozR1bmvEe18Vn3X5ic96pPtFMNOZP78V2y+J3u3x57zXbaPL5ceHp7hOlC
-        hQLXezplj24xXRDbePR1MVPP2hc+G+v0s0xNM0oWLdRfsf3NMf+PktXLTk1erZYhVXTMf8ep
-        ++vq7UrX3NBWSWXc0SM01fgL+/y8bb6T9q88xX2wxHhK6J9vvCt+uZ3V2pSj9PrbEmuTo6Wz
-        5jv7Z/9OSza9f7EuLiU/kNerSP7fjOecr6QE5s5+bi8bkeGe4eh9o/mF74HDnBnzlO8dE7iv
-        H6l/wtv2RdaOl63yB2e+efC/SPbLCxPhlgbd/dEfzskfsTxvbvyu/aHfuicb1v+S/35OiaU4
-        I9FQi7moOBEAvcDEP0IEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrBLMWRmVeSWpSXmKPExsWy7bCSvO6D3WLxBtuXaFo8mLeNzWJv2wl2
-        i5c/r7JZHHzYyWIx7cNPZotP65exWvz6u57dYvXiBywWi25sY7Lovr6DzWL58X9MDtwel694
-        e1zu62XymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxRXDYpqTmZZalF+nYJXBlT
-        f01iLNinXnFz4h7GBsYdCl2MnBwSAiYSD1aeY+ti5OIQEtjBKDHrzBd2iISExP/FTUwQtrDE
-        /ZYjrBBF3xglvh9qZQVJsAloSKw5dgisSETgD6PEpNNxIDazgJrE57vLWEBsYQFridXHt4LV
-        swioSlzcN4cZxOYViJLoun2MBWKBvMSiht9gczgFLCTOzj4PdAQH0DJzidlXCyHKBSVOznzC
-        AjFeXqJ562zmCYwCs5CkZiFJLWBkWsUomVpQnJueW2xYYJSXWq5XnJhbXJqXrpecn7uJERwZ
-        Wlo7GPes+qB3iJGJg/EQowQHs5II70Qe4Xgh3pTEyqrUovz4otKc1OJDjNIcLErivF9nLYwT
-        EkhPLEnNTk0tSC2CyTJxcEo1MEm0NfIsrlLV+TfZZmWNP0NHqqnfzwqW6Jzg0F++l6ctc65J
-        nXN/Tc2diZr9cVv+Xcje4baDqaj2EmecrIfXY99zT3S1yiZ8Sfn68mXJ/hkffp6pnbblSaJC
-        cOZqDdHd9nttd9V/eunImSa2br/GAbWlxdy/bn163/TV+MgBQe5XvS/ePn3BOmnJ+lVlr/p2
-        nRJZejhlpct9S32WyAVJZ9Y4H5kpnX6dK/eCd+m1C56vj3PKWGzkDebsjr9RWpO944LEZyYe
-        98c/5jUey9N4uXqT6QbbNL0HweGVly1Pn3Blq2jz1z69Ub5/SduVCbyRxRoMnx6uTWDa/XK+
-        c/VknuiHXlbV0xbLF8jbh5/h3aLEUpyRaKjFXFScCACzzpPb+wIAAA==
-X-CMS-MailID: 20200721095648epcas2p18c3d496076ecd1537e47081c19dbb97e
+        e1zu62XymLDoAKPH9/UdbB4fn95i8ejbsorR4/MmOY/2A91MARxRXDYpqTmZZalF+nYJXBmz
+        P1xgKtgdWtF/r52pgXGuWxcjJ4eEgInE4cszmboYuTiEBHYwSqzre80KkZCQ+L+4iQnCFpa4
+        33KEFaLoG6PEj4577CAJNgENiTXHDoEViQj8YZSYdDoOxGYWUJP4fHcZC4gtLOAhcWxWFyOI
+        zSKgKvH1w142EJtXIErix+EZLBAL5CUWNfwGm8MpYCFxdvZ5oPkcQMvMJWZfLYQoF5Q4OfMJ
+        C8R4eYnmrbOZJzAKzEKSmoUktYCRaRWjZGpBcW56brFhgVFearlecWJucWleul5yfu4mRnBk
+        aGntYNyz6oPeIUYmDsZDjBIczEoivBN5hOOFeFMSK6tSi/Lji0pzUosPMUpzsCiJ836dtTBO
+        SCA9sSQ1OzW1ILUIJsvEwSnVwJR5d2WyfNQK7vtFzZcqZjFxfWSbc4+h+OIdsxg3/iPtZVru
+        ahmG3j5v7snemJBi65nG+H9q0utN9aqH2xLrj2gLL+yfpJl8+PmrtKWlNVeyNk7eG7J15g8z
+        rqP6i4UL/Bev2aK8czXDy6XVJV6OordMOju+2ZXtm/yvccetGw7pk1WFErnN+CPcHiRySq26
+        eDu3pGr+DtNnRwsvyybrpd3oXP9T/tv+V2UPou/GL9XzmHV26cc8p5XTm9cpLPxY+67LJiG7
+        4GSNblBd9N7CS9OVVJZe3hLm/Do4KPZH+00v3SM7fNNymO6vSttSUHI6/l5M54OvZzRC++Un
+        VTAft+kRFRC3kG9SPfnBsrGJR4mlOCPRUIu5qDgRAPtTHKj7AgAA
+X-CMS-MailID: 20200721095655epcas2p13c10101ef53de47384762754271c1ca5
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20200721095648epcas2p18c3d496076ecd1537e47081c19dbb97e
+X-CMS-RootMailID: 20200721095655epcas2p13c10101ef53de47384762754271c1ca5
 References: <cover.1595325064.git.hy50.seo@samsung.com>
-        <CGME20200721095648epcas2p18c3d496076ecd1537e47081c19dbb97e@epcas2p1.samsung.com>
+        <CGME20200721095655epcas2p13c10101ef53de47384762754271c1ca5@epcas2p1.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add vendor specific functions for WB
-Use callback additional setting when use write booster.
+To support the fuction of writebooster by vendor.
+The WB behavior that the vendor wants is slightly different.
+But we have to support it
 
 Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 22 +++++++++++++++-----
- drivers/scsi/ufs/ufshcd.h | 43 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 60 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/Makefile     |   1 +
+ drivers/scsi/ufs/ufs-exynos.c |   6 +
+ drivers/scsi/ufs/ufs_ctmwb.c  | 270 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs_ctmwb.h  |  26 ++++
+ 4 files changed, 303 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs_ctmwb.c
+ create mode 100644 drivers/scsi/ufs/ufs_ctmwb.h
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index efc0a6cbfe22..9261519e7e9a 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3306,11 +3306,11 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
-  *
-  * Return 0 in case of success, non-zero otherwise
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 9810963bc049..b1ba36c7d66f 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-d
+ obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
+ obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
+ obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
++obj-$(CONFIG_SCSI_UFS_VENDOR_WB) += ufs_ctmwb.o
+ obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
+ ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index 32b61ba77241..f127f5f2bf36 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -22,6 +22,9 @@
+ 
+ #include "ufs-exynos.h"
+ 
++#ifdef CONFIG_SCSI_UFS_VENDOR_WB
++#include "ufs_ctmwb.h"
++#endif
+ /*
+  * Exynos's Vendor specific registers for UFSHCI
   */
--static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
--					      int lun,
--					      enum unit_desc_param param_offset,
--					      u8 *param_read_buf,
--					      u32 param_size)
-+int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
-+				int lun,
-+				enum unit_desc_param param_offset,
-+				u8 *param_read_buf,
-+				u32 param_size)
- {
- 	/*
- 	 * Unit descriptors are only available for general purpose LUs (LUN id
-@@ -3322,6 +3322,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
- 				      param_offset, param_read_buf, param_size);
- }
-+EXPORT_SYMBOL_GPL(ufshcd_read_unit_desc_param);
+@@ -989,6 +992,9 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 		goto phy_off;
  
- static int ufshcd_get_ref_clk_gating_wait(struct ufs_hba *hba)
- {
-@@ -5257,6 +5258,10 @@ static int ufshcd_wb_ctrl(struct ufs_hba *hba, bool enable)
- 
- 	if (!(enable ^ hba->wb_enabled))
- 		return 0;
+ 	ufs->hba = hba;
++#ifdef CONFIG_SCSI_UFS_VENDOR_WB
++	ufs->hba->wb_ops = ufshcd_ctmwb_init();
++#endif
+ 	ufs->opts = ufs->drv_data->opts;
+ 	ufs->rx_sel_idx = PA_MAXDATALANES;
+ 	if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX)
+diff --git a/drivers/scsi/ufs/ufs_ctmwb.c b/drivers/scsi/ufs/ufs_ctmwb.c
+new file mode 100644
+index 000000000000..e1cad936ebb3
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs_ctmwb.c
+@@ -0,0 +1,270 @@
++#include "ufshcd.h"
++#include "ufshci.h"
++#include "ufs_ctmwb.h"
 +
-+	if (!ufshcd_wb_ctrl_vendor(hba, enable))
++static struct ufshba_ctmwb hba_ctmwb;
++
++/* Query request retries */
++#define QUERY_REQ_RETRIES 3
++
++static int ufshcd_query_attr_retry(struct ufs_hba *hba,
++	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
++	u32 *attr_val)
++{
++	int ret = 0;
++	u32 retries;
++
++	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
++		ret = ufshcd_query_attr(hba, opcode, idn, index,
++						selector, attr_val);
++		if (ret)
++			dev_dbg(hba->dev, "%s: failed with error %d, retries %d\n",
++				__func__, ret, retries);
++		else
++			break;
++	}
++
++	if (ret)
++		dev_err(hba->dev,
++			"%s: query attribute, idn %d, failed with error %d after %d retires\n",
++			__func__, idn, ret, QUERY_REQ_RETRIES);
++	return ret;
++}
++
++static int ufshcd_query_flag_retry(struct ufs_hba *hba,
++	enum query_opcode opcode, enum flag_idn idn, bool *flag_res)
++{
++	int ret;
++	int retries;
++
++	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
++		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
++		if (ret)
++			dev_dbg(hba->dev,
++				"%s: failed with error %d, retries %d\n",
++				__func__, ret, retries);
++		else
++			break;
++	}
++
++	if (ret)
++		dev_err(hba->dev,
++			"%s: query attribute, opcode %d, idn %d, failed with error %d after %d retries\n",
++			__func__, (int)opcode, (int)idn, ret, retries);
++	return ret;
++}
++
++static int ufshcd_reset_ctmwb(struct ufs_hba *hba, bool force)
++{
++	int err = 0;
++
++	if (!ufshcd_is_wb_allowed(hba))
 +		return 0;
 +
- 	if (enable)
- 		opcode = UPIU_QUERY_OPCODE_SET_FLAG;
- 	else
-@@ -6610,6 +6615,8 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba)
- 	int err = 0;
- 	int retries = MAX_HOST_RESET_RETRIES;
- 
-+	ufshcd_reset_vendor(hba);
++	if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
++		dev_info(hba->dev, "%s: write booster already disabled. ctmwb_state = %d\n",
++			__func__, hba_ctmwb.ufs_ctmwb_state);
++		return 0;
++	}
 +
- 	do {
- 		/* Reset the attached device */
- 		ufshcd_vops_device_reset(hba);
-@@ -6903,6 +6910,9 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	if (!(dev_info->d_ext_ufs_feature_sup & UFS_DEV_WRITE_BOOSTER_SUP))
- 		goto wb_disabled;
- 
-+	if (!ufshcd_wb_alloc_units_vendor(hba))
-+		return;
++	if (ufshcd_is_ctmwb_err(hba_ctmwb))
++		dev_err(hba->dev, "%s: previous write booster control was failed.\n",
++			__func__);
 +
- 	/*
- 	 * WB may be supported but not configured while provisioning.
- 	 * The spec says, in dedicated wb buffer mode,
-@@ -8273,6 +8283,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 			ufshcd_wb_need_flush(hba));
- 	}
- 
-+	ufshcd_wb_toggle_flush_vendor(hba, pm_op);
++	if (force)
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
++				QUERY_FLAG_IDN_WB_EN, NULL);
 +
- 	if (req_dev_pwr_mode != hba->curr_dev_pwr_mode) {
- 		if ((ufshcd_is_runtime_pm(pm_op) && !hba->auto_bkops_enabled) ||
- 		    !ufshcd_is_runtime_pm(pm_op)) {
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 656c0691c858..deb9577e0eaa 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -254,6 +254,13 @@ struct ufs_pwr_mode_info {
- 	struct ufs_pa_layer_attr info;
- };
- 
-+struct ufs_wb_ops {
-+	int (*wb_toggle_flush_vendor)(struct ufs_hba *hba, enum ufs_pm_op pm_op);
-+	int (*wb_alloc_units_vendor)(struct ufs_hba *hba);
-+	int (*wb_ctrl_vendor)(struct ufs_hba *hba, bool enable);
-+	int (*wb_reset_vendor)(struct ufs_hba *hba, bool force);
++	if (err) {
++		ufshcd_set_ctmwb_err(hba_ctmwb);
++		dev_err(hba->dev, "%s: disable write booster failed. err = %d\n",
++			__func__, err);
++	} else {
++		ufshcd_set_ctmwb_off(hba_ctmwb);
++		dev_info(hba->dev, "%s: ufs write booster disabled \n", __func__);
++	}
++
++	return 0;
++}
++
++static int ufshcd_get_ctmwb_buf_status(struct ufs_hba *hba, u32 *status)
++{
++	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++			QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE, 0, 0, status);
++}
++
++static int ufshcd_ctmwb_manual_flush_ctrl(struct ufs_hba *hba, int en)
++{
++	int err = 0;
++
++	dev_info(hba->dev, "%s: %sable write booster manual flush\n",
++				__func__, en ? "en" : "dis");
++	if (en) {
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
++		if (err)
++			dev_err(hba->dev, "%s: enable write booster failed. err = %d\n",
++				__func__, err);
++	} else {
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
++					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
++		if (err)
++			dev_err(hba->dev, "%s: disable write booster failed. err = %d\n",
++				__func__, err);
++	}
++
++	return err;
++}
++
++static int ufshcd_ctmwb_flush_ctrl(struct ufs_hba *hba)
++{
++	int err = 0;
++	u32 curr_status = 0;
++
++	err = ufshcd_get_ctmwb_buf_status(hba, &curr_status);
++
++	if (!err && (curr_status <= UFS_WB_MANUAL_FLUSH_THRESHOLD)) {
++		dev_info(hba->dev, "%s: enable ctmwb manual flush, buf status : %d\n",
++				__func__, curr_status);
++		scsi_block_requests(hba->host);
++		err = ufshcd_ctmwb_manual_flush_ctrl(hba, 1);
++		if (!err) {
++			mdelay(100);
++			err = ufshcd_ctmwb_manual_flush_ctrl(hba, 0);
++			if (err)
++				dev_err(hba->dev, "%s: disable ctmwb manual flush failed. err = %d\n",
++						__func__, err);
++		} else
++			dev_err(hba->dev, "%s: enable ctmwb manual flush failed. err = %d\n",
++					__func__, err);
++		scsi_unblock_requests(hba->host);
++	}
++	return err;
++}
++
++static int ufshcd_ctmwb_ctrl(struct ufs_hba *hba, bool enable)
++{
++	int err;
++
++	if (!ufshcd_is_wb_allowed(hba))
++		return 0;
++
++	if (hba->pm_op_in_progress) {
++		dev_err(hba->dev, "%s: ctmwb ctrl during pm operation is not allowed.\n",
++			__func__);
++		return 0;
++	}
++
++	if (ufshcd_is_ctmwb_err(hba_ctmwb))
++		dev_err(hba->dev, "%s: previous write booster control was failed.\n",
++			__func__);
++	if (enable) {
++		if (ufshcd_is_ctmwb_on(hba_ctmwb)) {
++			dev_err(hba->dev, "%s: write booster already enabled. ctmwb_state = %d\n",
++				__func__, hba_ctmwb.ufs_ctmwb_state);
++			return 0;
++		}
++		pm_runtime_get_sync(hba->dev);
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_SET_FLAG,
++					QUERY_FLAG_IDN_WB_EN, NULL);
++		if (err) {
++			ufshcd_set_ctmwb_err(hba_ctmwb);
++			dev_err(hba->dev, "%s: enable write booster failed. err = %d\n",
++				__func__, err);
++		} else {
++			ufshcd_set_ctmwb_on(hba_ctmwb);
++			dev_info(hba->dev, "%s: ufs write booster enabled \n", __func__);
++		}
++	} else {
++		if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
++			dev_err(hba->dev, "%s: write booster already disabled. ctmwb_state = %d\n",
++				__func__, hba_ctmwb.ufs_ctmwb_state);
++			return 0;
++		}
++		pm_runtime_get_sync(hba->dev);
++		err = ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_CLEAR_FLAG,
++					QUERY_FLAG_IDN_WB_EN, NULL);
++		if (err) {
++			ufshcd_set_ctmwb_err(hba_ctmwb);
++			dev_err(hba->dev, "%s: disable write booster failed. err = %d\n",
++				__func__, err);
++		} else {
++			ufshcd_set_ctmwb_off(hba_ctmwb);
++			dev_info(hba->dev, "%s: ufs write booster disabled \n", __func__);
++		}
++	}
++
++	pm_runtime_put_sync(hba->dev);
++
++	return 0;
++}
++
++/**
++ * ufshcd_get_ctmwbbuf_unit - get ctmwb buffer alloc units
++ * @sdev: pointer to SCSI device
++ *
++ * Read dLUNumTurboWriteBufferAllocUnits in UNIT Descriptor
++ * to check if LU supports write booster feature
++ */
++static int ufshcd_get_ctmwbbuf_unit(struct ufs_hba *hba)
++{
++	struct scsi_device *sdev = hba->sdev_ufs_device;
++	struct ufshba_ctmwb *hba_ctmwb = (struct ufshba_ctmwb *)hba->wb_ops;
++	int ret = 0;
++
++	u32 dLUNumTurboWriteBufferAllocUnits = 0;
++	u8 desc_buf[4];
++
++	if (!ufshcd_is_wb_allowed(hba))
++		return 0;
++
++	ret = ufshcd_read_unit_desc_param(hba,
++			ufshcd_scsi_to_upiu_lun(sdev->lun),
++			UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS,
++			desc_buf,
++			sizeof(dLUNumTurboWriteBufferAllocUnits));
++
++	/* Some WLUN doesn't support unit descriptor */
++	if ((ret == -EOPNOTSUPP) || scsi_is_wlun(sdev->lun)){
++		hba_ctmwb->support_ctmwb_lu = false;
++		dev_info(hba->dev,"%s: do not support WB\n", __func__);
++		return 0;
++	}
++
++	dLUNumTurboWriteBufferAllocUnits = ((desc_buf[0] << 24)|
++			(desc_buf[1] << 16) |
++			(desc_buf[2] << 8) |
++			desc_buf[3]);
++
++	if (dLUNumTurboWriteBufferAllocUnits) {
++		hba_ctmwb->support_ctmwb_lu = true;
++		dev_info(hba->dev, "%s: LU %d supports ctmwb, ctmwbbuf unit : 0x%x\n",
++				__func__, (int)sdev->lun, dLUNumTurboWriteBufferAllocUnits);
++	} else
++		hba_ctmwb->support_ctmwb_lu = false;
++
++	return 0;
++}
++
++static inline int ufshcd_ctmwb_toggle_flush(struct ufs_hba *hba, enum ufs_pm_op pm_op)
++{
++	ufshcd_ctmwb_flush_ctrl(hba);
++
++	if (ufshcd_is_system_pm(pm_op))
++		ufshcd_reset_ctmwb(hba, true);
++
++	return 0;
++}
++
++static struct ufs_wb_ops exynos_ctmwb_ops = {
++	.wb_toggle_flush_vendor = ufshcd_ctmwb_toggle_flush,
++	.wb_alloc_units_vendor = ufshcd_get_ctmwbbuf_unit,
++	.wb_ctrl_vendor = ufshcd_ctmwb_ctrl,
++	.wb_reset_vendor = ufshcd_reset_ctmwb,
 +};
 +
- /**
-  * struct ufs_hba_variant_ops - variant specific callbacks
-  * @name: variant name
-@@ -752,6 +759,7 @@ struct ufs_hba {
- 	struct request_queue	*bsg_queue;
- 	bool wb_buf_flush_enabled;
- 	bool wb_enabled;
-+	struct ufs_wb_ops *wb_ops;
- 	struct delayed_work rpm_dev_flush_recheck_work;
- 
- #ifdef CONFIG_SCSI_UFS_CRYPTO
-@@ -1004,6 +1012,10 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 			     u8 *desc_buff, int *buff_len,
- 			     enum query_opcode desc_op);
- 
-+int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
-+				int lun, enum unit_desc_param param_offset,
-+				u8 *param_read_buf, u32 param_size);
-+
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
- {
-@@ -1181,4 +1193,35 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix);
- 
-+static inline int ufshcd_wb_toggle_flush_vendor(struct ufs_hba *hba, enum ufs_pm_op pm_op)
++struct ufs_wb_ops *ufshcd_ctmwb_init(void)
 +{
-+	if (!hba->wb_ops || !hba->wb_ops->wb_toggle_flush_vendor)
-+		return -1;
-+
-+	return hba->wb_ops->wb_toggle_flush_vendor(hba, pm_op);
++	return &exynos_ctmwb_ops;
 +}
++EXPORT_SYMBOL_GPL(ufshcd_ctmwb_init);
+diff --git a/drivers/scsi/ufs/ufs_ctmwb.h b/drivers/scsi/ufs/ufs_ctmwb.h
+new file mode 100644
+index 000000000000..e88b71824a2f
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs_ctmwb.h
+@@ -0,0 +1,26 @@
++#ifndef _UFS_CTMWB_H_
++#define _UFS_CTMWB_H_
 +
-+static int ufshcd_wb_alloc_units_vendor(struct ufs_hba *hba)
-+{
-+	if (!hba->wb_ops || !hba->wb_ops->wb_alloc_units_vendor)
-+		return -1;
++enum ufs_ctmwb_state {
++       UFS_WB_OFF_STATE	= 0,    /* turbo write disabled state */
++       UFS_WB_ON_STATE	= 1,            /* turbo write enabled state */
++       UFS_WB_ERR_STATE	= 2,            /* turbo write error state */
++};
 +
-+	return hba->wb_ops->wb_alloc_units_vendor(hba);
-+}
++#define ufshcd_is_ctmwb_off(hba) ((hba).ufs_ctmwb_state == UFS_WB_OFF_STATE)
++#define ufshcd_is_ctmwb_on(hba) ((hba).ufs_ctmwb_state == UFS_WB_ON_STATE)
++#define ufshcd_is_ctmwb_err(hba) ((hba).ufs_ctmwb_state == UFS_WB_ERR_STATE)
++#define ufshcd_set_ctmwb_off(hba) ((hba).ufs_ctmwb_state = UFS_WB_OFF_STATE)
++#define ufshcd_set_ctmwb_on(hba) ((hba).ufs_ctmwb_state = UFS_WB_ON_STATE)
++#define ufshcd_set_ctmwb_err(hba) ((hba).ufs_ctmwb_state = UFS_WB_ERR_STATE)
 +
-+static int ufshcd_wb_ctrl_vendor(struct ufs_hba *hba, bool enable)
-+{
-+	if (!hba->wb_ops || !hba->wb_ops->wb_ctrl_vendor)
-+		return -1;
++#define UFS_WB_MANUAL_FLUSH_THRESHOLD	5
 +
-+	return hba->wb_ops->wb_ctrl_vendor(hba, enable);
-+}
++struct ufshba_ctmwb {
++	enum ufs_ctmwb_state ufs_ctmwb_state;
 +
-+static int ufshcd_reset_vendor(struct ufs_hba *hba)
-+{
-+	if (!hba->wb_ops || !hba->wb_ops->wb_reset_vendor)
-+		return -1;
++	bool support_ctmwb_lu;
++};
 +
-+	return hba->wb_ops->wb_reset_vendor(hba, false);
-+}
- #endif /* End of Header */
++struct ufs_wb_ops *ufshcd_ctmwb_init(void);
++#endif
 -- 
 2.26.0
 
