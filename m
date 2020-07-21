@@ -2,115 +2,118 @@ Return-Path: <SRS0=19hD=BA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 715FDC433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 03:53:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B6FC433E1
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 06:00:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B4422073A
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 03:53:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9E9A2070A
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 06:00:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fIQAccwU"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Oin4IWeq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbgGUDxm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 23:53:42 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:60536 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726483AbgGUDxl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 23:53:41 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L3qA24112249;
-        Tue, 21 Jul 2020 03:53:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=Hae8qZiU6oxGkWbIdmeIVzwih5cB0PyxfAehCZi0GKk=;
- b=fIQAccwUl2oSiF+OzhKCU8k129xAJ4VBoqwDhelw0R4nWaOr1bSJxtLuhp37rdCPG1+s
- Gs4JQHp2QiUufWDvYicmRMKoFxBHFAGGthbIvHMKYUZITIiMAmnPkHDrAHPPA87O5WT3
- TEjuRwxhjsC0JY8vvyEcFzpAEsC+0G/3tW7CiRBvkdziXbcR812gAxmX8s9abpFpWhXc
- aeBZT6ovQF1/9sTTU4/sKrlrv6KfRFuP5okn9Avg5Y56L/iUBzK8Xd84rF8+j2yRVGwH
- cvzElihnbxL5v+DDADsdvzwHdDJo/GDzxE/aU9ogCXbTxfQ3UXdq6F6PCeBLekg1VqJd qA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 32bpkb2p91-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 21 Jul 2020 03:53:19 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L3gxYE027396;
-        Tue, 21 Jul 2020 03:51:18 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 32dnmqfhyd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jul 2020 03:51:18 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06L3pFpg029749;
-        Tue, 21 Jul 2020 03:51:15 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 20 Jul 2020 20:51:15 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     scott.teel@microchip.com, gerry.morong@microchip.com,
-        POSWALD@suse.com, Justin.Lindley@microchip.com,
-        scott.benesh@microchip.com, bader.alisaleh@microchip.com,
-        Kevin.Barnett@microchip.com, jejb@linux.vnet.ibm.com,
-        joseph.szczypek@hpe.com, Don Brace <don.brace@microsemi.com>,
-        hch@infradead.org, mahesh.rajashekhara@microchip.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/4] hpsa updates
-Date:   Mon, 20 Jul 2020 23:51:14 -0400
-Message-Id: <159530346022.8195.14374929657475608298.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <159528193513.24772.2142294136346611232.stgit@brunhilda>
-References: <159528193513.24772.2142294136346611232.stgit@brunhilda>
+        id S1726003AbgGUGAj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 02:00:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60380 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725294AbgGUGAj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 02:00:39 -0400
+Received: from mail-ot1-x344.google.com (mail-ot1-x344.google.com [IPv6:2607:f8b0:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EED4C061794
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2020 23:00:39 -0700 (PDT)
+Received: by mail-ot1-x344.google.com with SMTP id t18so14202850otq.5
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Jul 2020 23:00:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=UB1qEkT2Gd35QYm4XiZEmSlBQHbBcT98mLtV3t38Jf0=;
+        b=Oin4IWeqDezw+GwOEqd/xudoesid0s8I9tlM+g6tW3AIGcORFW5ckFJswd9lDV3aXT
+         /mzfZXQh97D+uTrcWSAcafZaKoNMjQLyAo4LQqwSdILgMh70ZLjj4V7tO4XeM8MJ5P/9
+         oyQ7EmwVCfFw30TGpKxuzzfotKUg5pVWRBq00=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=UB1qEkT2Gd35QYm4XiZEmSlBQHbBcT98mLtV3t38Jf0=;
+        b=jc6JPBWuPFMzp7F54/F3JJd3B2MWLArltoRDLjlhfrsP+WiJ+Y25BdCLnWoo7qqdjY
+         gKVe02Pt9YRAD/g+uJuY8brbIrFpaIUd6q00GNVrDZ30pCKEFh4AmGdX58nJ3dZUDP5g
+         tnR9dCKsBkVQCkMmxg0SEUjRA5EQEwNbLMM44S80F4cOLjeLpk2+l+FhCwzdvPnUdwz0
+         yMXwsLTcilElP2eVJmR0guar1iINOPp90EmM2TcWwGO1vOIyh6wkrQFU8KKLH8SQionA
+         5RD6iO1RlXSu5rHraWu8GhjL45GioNO6bQg6nSkVifUTQZq1mcsbuI91AZ/1TJfBsEuu
+         6TzQ==
+X-Gm-Message-State: AOAM530VP0edYH+dR/sWU0VEl4hRwk3VY37K5oJbbYhsqVtr+VZErvPi
+        RCXdZymribmriXZi2iMWtJXVYUPzhTCuK6Dg0Zacwfmm1RB6vDRv
+X-Google-Smtp-Source: ABdhPJwQYBmS13sD7c2xYwjWQfrlzHq1OXS3AYbvmG9tChpro6Tw1fUJclXYWtBhw9YfF+tdISfBQGWWH1Rjy14qnRI=
+X-Received: by 2002:a05:6830:151a:: with SMTP id k26mr23824412otp.363.1595311238310;
+ Mon, 20 Jul 2020 23:00:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9688 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 suspectscore=0 mlxscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007210024
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9688 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 adultscore=0 priorityscore=1501 impostorscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007210025
+References: <20200709133144.8363-1-thenzl@redhat.com>
+In-Reply-To: <20200709133144.8363-1-thenzl@redhat.com>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Tue, 21 Jul 2020 11:30:12 +0530
+Message-ID: <CAL2rwxpsQ0LL06RT-+qWcEHYDCg8xfF1Cx3hc+v5xR6w7Q_CHQ@mail.gmail.com>
+Subject: Re: [PATCH V2] megaraid_sas: clear affinity hint
+To:     Tomas Henzl <thenzl@redhat.com>
+Cc:     Linux SCSI List <linux-scsi@vger.kernel.org>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 20 Jul 2020 16:52:46 -0500, Don Brace wrote:
+On Thu, Jul 9, 2020 at 7:01 PM Tomas Henzl <thenzl@redhat.com> wrote:
+>
+> To avoid a warning in free_irq, clear the affinity hint.
+>
+> Fixes: f0b9e7bdc309e8cc63a640009715626376e047c6 ("scsi: megaraid_sas: Set affinity for high IOPS reply queues")
+>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Looks good to me.
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-> These patches are based on Linus's tree
-> 
-> The changes are:
-> hpsa-correct-rare-oob-condition
->  - Rare condition where a spare is first in
->    PHYS LUN list.
-> hpsa-increase-qd-for-external-luns
->  - Improve performance for PTRAID devices
->    - Such as MSA devices.
-> hpsa-increase-ctlr-eh-timeout
->  - Increase timeout for commands issued to
->    controller device.
->  - Improve multipath failover handling.
-> hpsa-bump-version
-
-Applied to 5.9/scsi-queue, thanks!
-
-[1/4] scsi: hpsa: Correct rare oob condition
-      https://git.kernel.org/mkp/scsi/c/a1cc279c246a
-[2/4] scsi: hpsa: Increase queue depth for external LUNs
-      https://git.kernel.org/mkp/scsi/c/3fcb972bc1d7
-[3/4] scsi: hpsa: Increase controller error handling timeout
-      https://git.kernel.org/mkp/scsi/c/c73deaf3b001
-[4/4] scsi: hpsa: Bump version
-      https://git.kernel.org/mkp/scsi/c/afea24189508
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> ---
+> V2: Added 'Fixes' and low_latency_index_start check as
+> asked by Sumit.
+>
+>  drivers/scsi/megaraid/megaraid_sas_base.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index a378facdd..b40279ae5 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -5596,9 +5596,13 @@ megasas_setup_irqs_msix(struct megasas_instance *instance, u8 is_probe)
+>                         &instance->irq_context[i])) {
+>                         dev_err(&instance->pdev->dev,
+>                                 "Failed to register IRQ for vector %d.\n", i);
+> -                       for (j = 0; j < i; j++)
+> +                       for (j = 0; j < i; j++) {
+> +                               if (j < instance->low_latency_index_start)
+> +                                       irq_set_affinity_hint(
+> +                                               pci_irq_vector(pdev, j), NULL);
+>                                 free_irq(pci_irq_vector(pdev, j),
+>                                          &instance->irq_context[j]);
+> +                       }
+>                         /* Retry irq register for IO_APIC*/
+>                         instance->msix_vectors = 0;
+>                         instance->msix_load_balance = false;
+> @@ -5636,6 +5640,9 @@ megasas_destroy_irqs(struct megasas_instance *instance) {
+>
+>         if (instance->msix_vectors)
+>                 for (i = 0; i < instance->msix_vectors; i++) {
+> +                       if (i < instance->low_latency_index_start)
+> +                               irq_set_affinity_hint(
+> +                                   pci_irq_vector(instance->pdev, i), NULL);
+>                         free_irq(pci_irq_vector(instance->pdev, i),
+>                                  &instance->irq_context[i]);
+>                 }
+> --
+> 2.21.3
+>
