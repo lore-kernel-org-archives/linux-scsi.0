@@ -2,162 +2,139 @@ Return-Path: <SRS0=19hD=BA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA92C43459
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 17:42:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA7FC433DF
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 17:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BB78207DD
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 17:42:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 928DC20792
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 17:43:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IM0ImzkI"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="J8tZUgfP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730831AbgGURmO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 13:42:14 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:35009 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730805AbgGURmH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 13:42:07 -0400
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200721174204epoutp01b17ea3c9c72a2f687a45c222c2161b4a~j1WVOTnHQ0802408024epoutp010
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 17:42:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200721174204epoutp01b17ea3c9c72a2f687a45c222c2161b4a~j1WVOTnHQ0802408024epoutp010
+        id S1730065AbgGURnP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 13:43:15 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:21492 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727873AbgGURnN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 13:43:13 -0400
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20200721174311epoutp026e24d98ad5b6999f0906105bfedd4bbc~j1XUBYLo10033500335epoutp02t
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 17:43:11 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20200721174311epoutp026e24d98ad5b6999f0906105bfedd4bbc~j1XUBYLo10033500335epoutp02t
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1595353324;
-        bh=jjP9Yogd6RPQu0KtJN58TDx/6/d93a8jjg+K17x3bAI=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=IM0ImzkInVStP3hSOG/Qk3XmMpXbqvws4PfzncHL1VFiirR2aSNifKdS2R8EWpiRf
-         NIH82hryfsTDaStjUmzFRwaet+LC5DFhPH1XL8qIRmzN6dq/fjoFQOeBJYrsxLJbea
-         dhDH2G0pGv8fwU9xdOxVVR9YhgH9X1KdaHxJAgHg=
+        s=mail20170921; t=1595353391;
+        bh=ZwShZO+a014PmzFpaNLdKgRd8zKHz3dFayyZSE6/gEY=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=J8tZUgfPdN9+uvSNrzLtVKBtSYRj2KjJn3va4Xh5GY51MuCYn91VGAmyOsXRT1f13
+         gn5TcsOB4s1qcLyD7gkxSKwPtQYP5LSc5pDQbC1FxQYPze4+OBO5rE0PLlQvWOLL0w
+         KxXTPYWc4oV8Tu8QRXz3v8C6B4Urs741QrDuJBa8=
 Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
         epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-        20200721174203epcas5p30337de22dce96877606a12f2feede272~j1WUPOFFE1008610086epcas5p3p;
-        Tue, 21 Jul 2020 17:42:03 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        20200721174310epcas5p335ed36a6c3d8824f09eed1e504140cef~j1XTascMm2150421504epcas5p3J;
+        Tue, 21 Jul 2020 17:43:10 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
         epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        62.9E.09475.AE8271F5; Wed, 22 Jul 2020 02:42:02 +0900 (KST)
+        E0.AE.09475.E29271F5; Wed, 22 Jul 2020 02:43:10 +0900 (KST)
 Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200721174202epcas5p1cf62a9357c8c8fffa978946005ebf551~j1WTZqnTo0836208362epcas5p1S;
-        Tue, 21 Jul 2020 17:42:02 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200721174310epcas5p2a448e38c6e4d5e36e9f0417f5ddced6d~j1XS6wqD00695306953epcas5p2X;
+        Tue, 21 Jul 2020 17:43:10 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
         epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200721174202epsmtrp2976177db6d3fdf6bad357ca2a8f31fd3~j1WTY6MIP1506815068epsmtrp2g;
-        Tue, 21 Jul 2020 17:42:02 +0000 (GMT)
-X-AuditID: b6c32a4b-39fff70000002503-50-5f1728ea0c91
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        35.77.08382.9E8271F5; Wed, 22 Jul 2020 02:42:01 +0900 (KST)
-Received: from alimakhtar02 (unknown [107.108.234.165]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200721174159epsmtip2f651e157973aa10613138d5ff8901959~j1WRVSoUN2332023320epsmtip2C;
-        Tue, 21 Jul 2020 17:41:59 +0000 (GMT)
-From:   "Alim Akhtar" <alim.akhtar@samsung.com>
-To:     "'Randy Dunlap'" <rdunlap@infradead.org>,
-        "'Stephen Rothwell'" <sfr@canb.auug.org.au>,
-        "'Linux Next Mailing List'" <linux-next@vger.kernel.org>
-Cc:     "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
-        "'linux-scsi'" <linux-scsi@vger.kernel.org>,
-        "'Santosh Yaraganavi'" <santosh.sy@samsung.com>,
-        "'Vinayak Holikatti'" <h.vinayak@samsung.com>,
-        "'Seungwon Jeon'" <essuuj@gmail.com>
-In-Reply-To: <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
-Subject: RE: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
-Date:   Tue, 21 Jul 2020 23:11:57 +0530
-Message-ID: <06a601d65f86$3d8aeee0$b8a0cca0$@samsung.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQIWmKFrqc6cTichonS6aOkZQnVssAH33GmqAhZA11+ocWkksA==
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKKsWRmVeSWpSXmKPExsWy7bCmpu4rDfF4g+nvLS2WX1jCZHF51xw2
-        i4ML2xgtuq/vYLN4e2c6i8XWvVfZHdg8Gm/cYPPYOesuu8fmFVoenzfJBbBEcdmkpOZklqUW
-        6dslcGWs7p/LVHCZq+Lo7bdsDYzPOboYOTkkBEwkpjSvYu9i5OIQEtjNKLH59V5WCOcTo8Tn
-        aS9ZIJxvjBLXP21ih2nZvHkFI0RiL6PE78Nv2CCcN4wSr5b0sYJUsQnoSuxY3AaWEBGYzijx
-        4WkXmMMs8JNR4uwtkBZODk4BR4mGztksILawgJXEnDO7wLpZBFQlvp05wAhi8wpYShx82A1l
-        C0qcnPkErJ5ZQFti2cLXzBA3KUj8fLoMrFdEwEmi798uJogacYmjP3ugalo5JD6ek4ewXSR+
-        zj7BCGELS7w6vgXqNymJz+/2At3GAWRnS/TsMoYI10gsnXeMBcK2lzhwZQ4LSAmzgKbE+l36
-        EJv4JHp/P2GC6OSV6GgTgqhWlWh+dxWqU1piYnc3K4TtIdG+fQHrBEbFWUj+moXkr1lI7p+F
-        sGwBI8sqRsnUguLc9NRi0wLjvNRyveLE3OLSvHS95PzcTYzglKPlvYPx0YMPeocYmTgYDzFK
-        cDArifDqMIrHC/GmJFZWpRblxxeV5qQWH2KU5mBREudV+nEmTkggPbEkNTs1tSC1CCbLxMEp
-        1cA021Vdo28F40TWWVn37Z9MmRCY4Barouy2817qJZUKl22bxMJ888yYdd7MrhaPU1q2tML+
-        U8AcYVW13y7ZXhuuPozftF9p+yZx93Xu+7yvb9QQe5EXeKiB/VXhR92s1+/ZPiUnHTsnrK4t
-        Wa267ZLfVJ7vm/lYG3qv+Mg6nBJTyuhkcK1kcSoTFj8t/yzI0PTmywMnbpxo/Bi9g9nt0Yf8
-        G2snsp3mKNZ5MM/bWrLssmiy23KdoN9bZ/21UJcSvhhk4bmF/+DFF937VfeqeS+N99FuKWFP
-        tjnFyu7xSt1JTD7z94fJWXria1P3zPvppKCxbMeEv24r9dccKWw+dbPpU+jWmqP9nFv2Ta9k
-        uKzEUpyRaKjFXFScCAAzuE6aqAMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJLMWRmVeSWpSXmKPExsWy7bCSvO4rDfF4gxehFssvLGGyuLxrDpvF
-        wYVtjBbd13ewWby9M53FYuveq+wObB6NN26weeycdZfdY/MKLY/Pm+QCWKK4bFJSczLLUov0
-        7RK4MlbcsC/o4Ko49mYTcwPjIo4uRk4OCQETic2bVzB2MXJxCAnsZpR48WYZK0RCWuL6xgns
-        ELawxMp/z9khil4xSvy4eJ8ZJMEmoCuxY3EbG0hCRGA6o8T5vi/MIA6zwG9GiVNtG1ggWvYy
-        Shz4dBJsFqeAo0RD52wWEFtYwEpizpldYPtYBFQlvp05wAhi8wpYShx82A1lC0qcnPkErJ5Z
-        QFvi6c2ncPayha+ZIe5TkPj5FOJuEQEnib5/u5ggasQljv7sYZ7AKDwLyahZSEbNQjJqFpKW
-        BYwsqxglUwuKc9Nziw0LDPNSy/WKE3OLS/PS9ZLzczcxgmNHS3MH4/ZVH/QOMTJxMB5ilOBg
-        VhLh1WEUjxfiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6NwYZyQQHpiSWp2ampBahFMlomDU6qB
-        Kb8mt6Pa8JLnnUfODx+GzFqzafcktbbE3+snyi35GT9n1THrnr8savLbFhz6sVxtBv8iT73L
-        h9/tLCle+HvTizBLE0fR14/KOK8FeW2+fcxQTsnC/4mm85fXO2KUjuv9F8/5ZHhQOVGR66bs
-        eYeX07fGeEkrFXneuNq+UnzC14fX5ZoePXrygneiMM/7pdqrdfu+cidaer/x071VfiK+NDr/
-        +7vWtY1/+ho7JpWlnP26/9kWrq+BbE887pkX+02ofX79nm5Dqf4etiU1ntd+B367bjSltMZy
-        wWq1ZR5pu7ZouIXc2Wi+V2rrkbCsb9ybly4OEb+TWre2omL18psdbwNEMiKrmB9bH4gyWfVT
-        Ll+JpTgj0VCLuag4EQA4T0MvDAMAAA==
-X-CMS-MailID: 20200721174202epcas5p1cf62a9357c8c8fffa978946005ebf551
+        20200721174310epsmtrp28e2598294da7cb61cade478620ec7117~j1XS6InEC1645216452epsmtrp2S;
+        Tue, 21 Jul 2020 17:43:10 +0000 (GMT)
+X-AuditID: b6c32a4b-389ff70000002503-cb-5f17292e4e1e
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        F3.0F.08303.E29271F5; Wed, 22 Jul 2020 02:43:10 +0900 (KST)
+Received: from Jaguar.sa.corp.samsungelectronics.net (unknown
+        [107.108.73.139]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200721174309epsmtip1a926f9aacd2120d4a58cfd5150322e5f~j1XR9CuGi1048510485epsmtip1E;
+        Tue, 21 Jul 2020 17:43:09 +0000 (GMT)
+From:   Alim Akhtar <alim.akhtar@samsung.com>
+To:     martin.petersen@oracle.com
+Cc:     rdunlap@infradead.org, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, sfr@canb.auug.org.au,
+        Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH -next] scsi: ufs: Fix 'unmet direct dependencies' config
+ warning
+Date:   Tue, 21 Jul 2020 22:50:21 +0530
+Message-Id: <20200721172021.28922-1-alim.akhtar@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrNIsWRmVeSWpSXmKPExsWy7bCmlq6epni8wafzehYP5m1js3j58yqb
+        Rff1HWwWy4//Y7J4e2c6i8XWvVfZHdg8Gm/cYPPYvELL4+PTWywefVtWMXp83iTn0X6gmymA
+        LYrLJiU1J7MstUjfLoEr4+70TraCA5wV/04dZm5g/MnexcjJISFgInH87ku2LkYuDiGB3YwS
+        Z9dvYoVwPjFKdJx/ww7hfGaUuLtgGlzL2vaPzBCJXYwSJ8/+h+pvYZJYtbmPEaSKTUBb4u70
+        LUwgtoiAnMSk19+YQIqYBToZJR593wxWJCwQJNF+/hobiM0ioCrx+PFuVhCbV8BG4vOtHawQ
+        6+QlVm84ALZOQmAVu8TBBaeZIBIuEtvObICyhSVeHd8CdZ+UxOd3e4GGcgDZ2RI9u4whwjUS
+        S+cdY4Gw7SUOXJnDAlLCLKApsX6XPkiYWYBPovf3EyaITl6JjjYhiGpVieZ3V6E6pSUmdndD
+        XeYhMWPbSbDrhQRiJT59u8s6gVFmFsLQBYyMqxglUwuKc9NTi00LjPNSy/WKE3OLS/PS9ZLz
+        czcxguNby3sH46MHH/QOMTJxMB5ilOBgVhLh1WEUjxfiTUmsrEotyo8vKs1JLT7EKM3BoiTO
+        q/TjTJyQQHpiSWp2ampBahFMlomDU6qBScRL4khzOyuvX9FSrRrtNE6uE2ZlOy1m7ioS7bPk
+        W/byX3FX6L+WhgnRT6SdP/fvXOzMdViUdXO29M+Tm+q3vfUvWBj6ziHg7r6TLP72bSKbj0x5
+        wCCXK1GzcpV61YJejSqWE78W1Tl+k5Y+nXpr9+Kcr9U7s/le7NgbzTtb+mvEvX9H3GWj7009
+        MGPKlil9Ey+U2zTfmvR1dftHL8f4qwGnvWJtsxvaTHa73pDccvneAsm0xYueLknpOuFXzWjC
+        vf7Tsuh3lstWHReOjN54fLNCkMu5lWJn/25hZf564KeWonD7h4tCjYwrnt/K9z4v0aJ9wuHg
+        +rJTmfIF5S+rjgdkW2/VuHR0atXJ4PI355VYijMSDbWYi4oTAQwcLGBeAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrHJMWRmVeSWpSXmKPExsWy7bCSnK6epni8weS3AhYP5m1js3j58yqb
+        Rff1HWwWy4//Y7J4e2c6i8XWvVfZHdg8Gm/cYPPYvELL4+PTWywefVtWMXp83iTn0X6gmymA
+        LYrLJiU1J7MstUjfLoEr4+70TraCA5wV/04dZm5g/MnexcjJISFgIrG2/SMziC0ksINRYvFt
+        XYi4tMT1jROgaoQlVv57DmRzAdU0MUlcv7McrIFNQFvi7vQtTCC2iICcxKTX35hAipgF+hkl
+        Hq7/D9YtLBAg8eLaF7AiFgFVicePd7OC2LwCNhKfb+1ghdggL7F6wwHmCYw8CxgZVjFKphYU
+        56bnFhsWGOWllusVJ+YWl+al6yXn525iBAeRltYOxj2rPugdYmTiYDzEKMHBrCTCq8MoHi/E
+        m5JYWZValB9fVJqTWnyIUZqDRUmc9+ushXFCAumJJanZqakFqUUwWSYOTqkGJuaEhuPMCl7l
+        p/+y2x/Qe8QT0cn1bbPac85SneeW8XzpEv+5+SU3tO/Yk/v72APZtl+Mk2e37joW3nnt3BXl
+        P3bCqckXD1ltuKdWLaI6ceJP5YfVWabnPWxtnLuu5q6Y7XpGTHP+PanOdUGPOnsMFOo1P0+I
+        8ymoNTDxl0liSZ9h993uRIio9vvZrG3n49UYToVH26tN1fxiFWMaeUXh0YQuowuVy9y4N+wW
+        iI+Z37D4dJhG+QRv43e3jztzhn1y1ZwpoHPMWfOc+IwSbtXcr+Uvlon+LPwxszFG4b2/7LOI
+        uQJNfHfKFY9+n2HtaOzA9+TUW8fJxoxLy1JTE7pkkmrcv39VM1iYWXYhzFqJpTgj0VCLuag4
+        EQAJPADCkQIAAA==
+X-CMS-MailID: 20200721174310epcas5p2a448e38c6e4d5e36e9f0417f5ddced6d
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
-X-CMS-RootMailID: 20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4
-References: <20200720194225.17de9962@canb.auug.org.au>
-        <CGME20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4@epcas5p2.samsung.com>
-        <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
+X-CMS-RootMailID: 20200721174310epcas5p2a448e38c6e4d5e36e9f0417f5ddced6d
+References: <CGME20200721174310epcas5p2a448e38c6e4d5e36e9f0417f5ddced6d@epcas5p2.samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Randy,
+With !CONFIG_OF and SCSI_UFS_EXYNOS selected, the below
+warning is given:
 
-> -----Original Message-----
-> From: Randy Dunlap <rdunlap=40infradead.org>
-> Sent: 20 July 2020 22:11
-> To: Stephen Rothwell <sfr=40canb.auug.org.au>; Linux Next Mailing List <l=
-inux-
-> next=40vger.kernel.org>
-> Cc: Linux Kernel Mailing List <linux-kernel=40vger.kernel.org>; linux-scs=
-i <linux-
-> scsi=40vger.kernel.org>; Santosh Yaraganavi <santosh.sy=40samsung.com>;
-> Vinayak Holikatti <h.vinayak=40samsung.com>; Alim Akhtar
-> <alim.akhtar=40samsung.com>; Seungwon Jeon <essuuj=40gmail.com>
-> Subject: Re: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
->=20
-> On 7/20/20 2:42 AM, Stephen Rothwell wrote:
-> > Hi all,
-> >
-> > Changes since 20200717:
-> >
->=20
-> on x86_64:
->=20
-> WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
->   Depends on =5Bn=5D: OF =5B=3Dn=5D && (ARCH_EXYNOS =7C=7C COMPILE_TEST =
-=5B=3Dy=5D)
->   Selected by =5By=5D:
->   - SCSI_UFS_EXYNOS =5B=3Dy=5D && SCSI_LOWLEVEL =5B=3Dy=5D && SCSI =5B=3D=
-y=5D &&
-> SCSI_UFSHCD_PLATFORM =5B=3Dy=5D && (ARCH_EXYNOS =7C=7C COMPILE_TEST =5B=
-=3Dy=5D)
->=20
-Thanks, will post a patch shortly.
->=20
-> There are no build errors since <linux/of.h> provides stubs for functions=
- when
-> CONFIG_OF is not enabled.
->=20
-> But new warnings are not OK.
->=20
-> thanks.
-> --
-> =7ERandy
-> Reported-by: Randy Dunlap <rdunlap=40infradead.org>
+WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
+  Depends on [n]: OF [=n] && (ARCH_EXYNOS || COMPILE_TEST [=y])
+  Selected by [y]:
+  - SCSI_UFS_EXYNOS [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && SCSI_UFSHCD_PLATFORM [=y] && (ARCH_EXYNOS || COMPILE_TEST [=y])
+
+Fix it by removing PHY_SAMSUNG_UFS dependency.
+
+Reported-by: Randy Dunlap <rdunlap@infradead.org>
+Signed-off-by: Alim Akhtar <alim.akhtar@samsung.com>
+---
+ drivers/scsi/ufs/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 46a4542f37eb..590768758fc6 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -164,7 +164,6 @@ config SCSI_UFS_BSG
+ config SCSI_UFS_EXYNOS
+ 	tristate "EXYNOS specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && (ARCH_EXYNOS || COMPILE_TEST)
+-	select PHY_SAMSUNG_UFS
+ 	help
+ 	  This selects the EXYNOS specific additions to UFSHCD platform driver.
+ 	  UFS host on EXYNOS includes HCI and UNIPRO layer, and associates with
+
+base-commit: ab8be66e724ecf4bffb2895c9c91bbd44fa687c7
+-- 
+2.17.1
 
