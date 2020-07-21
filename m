@@ -7,67 +7,67 @@ X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85BDEC433E3
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6295DC433EA
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 599062077D
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:09:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3046F2077D
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 11:09:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Rtpwkvgp";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="Zt4OJA+l"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="WYipmML3";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="sIbDG+Y/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729786AbgGULJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 07:09:29 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:32106 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729565AbgGULJU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 07:09:20 -0400
+        id S1729682AbgGULIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 07:08:50 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:28175 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729647AbgGULIq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 07:08:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1595329759; x=1626865759;
+  t=1595329726; x=1626865726;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=N5dhqBRhDEy/yn79YudoO4zA2LKbqYtf20pFz0eOHKs=;
-  b=RtpwkvgpndqOS98LVhZKHyiwRGkSKCqylj1o498ajTzzMwyPrS+Ddlzj
-   p2/V2PzAY+iqcovECyRu3U7MhuFU4oM9CylObrS/bzStLWh0p3k1ESOYD
-   Z8VdBJz65m04v3HQJcVZp9Lbul/a1rZKltK3493UHb6h5Zu+7Jo+HRwHW
-   fS98UFXoAfysp/Li4NFIJ+GM7WVugfppbyYW6k3SmCa/U9ZNu5NtfKVCu
-   iGWN7yXjBaJd34t6T5sn6JZM3GjkA3ekqnxJgYX1tcHS9IFublBMiqAQG
-   bdwLhiVgi5b+ntOz2MEQ3aCj9p50Kx/xSoNMjUuTWlJYAg03ZznXtNaYI
-   A==;
-IronPort-SDR: fzaxD7TyosAp/YwzYsF6MEhpyasbJXr7phnMMqI/jZO2Fh9gHz8TrbwAh7C6MkDGjYUfM3EqqY
- NwbbMrUA9xzN0mob9e4EsSbgZb9wgsQVbdS6bJUCfCyQwaZrUGhKW43LrgEyWqBkGnHni7RYXm
- cKeYm2vJzYWJcgK8Sx0aYF3qW8sRu+cixk0G211on/wAJ4swa53+QI3M1dyhB5spbyoCADwsTe
- Dr1Ft9R/9zr3drGHVxZRs3YrWJtDoeq3tzy/Ilv89+kn71qSqvkV/+menyF6AitT/ACBOsbg/t
- A8g=
+  bh=GxkgTXW1uqE93KuW8wrEgu3CEhk1EzooCuCq2Z/dzeg=;
+  b=WYipmML3+zK1NSwxebmIUUBi78BuJYYVbSBF2jLWu+SPvQrJiFc4uCfp
+   KHiwrO0cc/ZJQBsYFNwyBFdBA2wpQ2r04P2X1k+YYbL6K7THH5JrQS3Pm
+   Nb2py1NjizpKTGdBIbvz1ImgsBioAcTCeDc3qupxIBg/z81dipHNArBzG
+   T4r66R1N/TMbrfGmQEeqr6wHqbiSL66xASWvmcCJYGYtMEqbJd5SVZyqg
+   X6ZY8bmmysaa30X+04yNfD+UlG+1MoQ7IHASFs4PWt6l5tZOhcKPHpd29
+   XJ2YwEnrxlEjUFj6YWFaAr8Kx4palnyVbzeMfBvbmpnMp4YZk6VOboHBQ
+   w==;
+IronPort-SDR: 69GzNWJsWctOH0+YFvs22U4d2Hz8gYY4R1q7VlGfChIjcF6cD9LYILKvxRhpF7BTnVejz9W6Ae
+ 8W908C9a75qdIHRufsQfk86LxIjDPbn+0VZlvxKi3T4FTeCgORLRtpI39KbZsYKxTFMxsgTcVc
+ xrqVpAO7Kx5qmAu0FVtLvh3GahuPW3tj/Y/XZ4YSgdZb/2o5GyI8TD/woGl6moTNMJK0hBXSBp
+ aysgXICZBh7GS3BmMdISV+qd8nO8mFAslYq0cXJOsqPFwJFvwsxukTXisau8bNjpw0vnNWFVzy
+ k0Y=
 X-IronPort-AV: E=Sophos;i="5.75,378,1589212800"; 
-   d="scan'208";a="144275930"
-Received: from mail-mw2nam12lp2042.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.42])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Jul 2020 19:09:17 +0800
+   d="scan'208";a="143102529"
+Received: from mail-dm6nam12lp2174.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.174])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Jul 2020 19:08:43 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WMLnuGHEvL6q1WYRR4ddT9HM6lxmzmhhscy2g3efafz5Yix4oYNg+BFg0aPflKUtVhfxUyV3S9rO2oPoMmHdPFlbS5lcpmEVpEELSbpb8Q5sWImH/K7WKwk/mSHZdxbbHzPLRZgKGtqXZhvBVk8V93HCeoYCZXBIV3WfZegmcZRvtR4ekngtFymta3MtnI6IJavES0anVjda5KuuTktTd8o8AzVhAawuBHlEP/HrKcABxkWpfVjpWxRtyNwMEIykwfmjj//GChBAWO67+SqmQJjwOt18td3ei+GgZWOzE2p+9JeAkZQCoGPYYRanH3Aj6tPutI8YCpVf6eYhhPkt2g==
+ b=BMlf0rr5MoFpOLOpCVhxsbHAmX5324IMQx87NsKnEHLf+P3JtZJavZzUSTF6X4dlPjstTXAyx7M5tg8CCQkiBWuTGsNo6o99/Swgh2xsMGl1q2GquaIFXibVH2fSe8yJCgdt8TsZ+Gk2OD7mKjO9zTYzEipPfCj5VFsMN2GEmN5LQtr3Ck6z8v3NxYLg/qzmDFFxEdI39VOP+EA7ObsRpZFzpaY/q5jPs1CIk+Iaf0FlYLzWyG6TXnDJ/ywtJWIC2zQZK3SCiStolVgAhuefcqzGwK1iDDE8tdKOlxSbdzok5ibuGJUnw/GGw/h8UzqCKwdlPBjs5nCn1N7GZCa1JA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iEN6FavZSDqoi1vTM7Yi/g47UteRnUXWdSqu5rCGr9c=;
- b=Q3hYHzNnPU6W0z6PeYY9/pCkpu/2n1OJSxI3fT6cLoEOt56cgY27uDpR9koBNT9Si+mUdOQiCPNWFb+nSgQQSaMsYNQFQV9t6+MjwEEWKPkmG/gfNWtB3Ro5l8ypHMaeahhQ7MjIA4Pr14QxQlc6vdSdLook/0SsNg7TPQ6CIcmiaNkiUpsrPVzI7ftd4pNcyIIJ1YY6K4nHP+7T/8Qn9wT+AiqMS76MVlxymHatZEDsKiXkIlE/ftkaigG5i4WYtKnvJ3HLZsDJGJ1PbmNNwMeV1OcMDO/hL3dO635f3LLYP2vOYWL7PVzYPGWr7Ohs2atms4/zugvp9mbwlHiNMQ==
+ bh=z4v1I5m7OABcKfWLpv3al52trVS03+DKq6uRaF1Nohc=;
+ b=cvRMS4mqilMady+vIsukTQERgPSqVA3+A/TR+xkah65jRfcxWc3wTRwZm/7Q7avFBWYRa5ko34QrtuDMKJW7trd3uh9TEEFKEKwKKf0Pwm/bNyFzSYdKycZhv3h9248SRogTNefMvMMhb5q+j6UbogmXG2Xm2fIV+AqM1tQQ2rCIm60U2cqrGzR40VSwLAgSJe8dv+3RBE+XeOiPCzqucIJki3QYXs0v5BYijojSHUJYXDmILVaQVssHTEk9bPMhvgio6PHwsKYjR7N3uaV4pDWQKSpvnv54QFRWtXsH+pe9I8AhTCWqqYQFQAs/kN5IWDQ2TQLAtDwvNeelrSlycA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iEN6FavZSDqoi1vTM7Yi/g47UteRnUXWdSqu5rCGr9c=;
- b=Zt4OJA+lRVOfnnyOtYOVcrnzHrc0XNUEGngKPu3RzZRWqpr79Yp5Mty9tVmnhZabCQ44D3tZQ/At+seI8c1Y3Jf7nZm/NTA2r92sWyY+rM00Z5s9/jQitQfq4cFf1dbfLkpa5vFdOAco1+rwLWmmomSGje3XGPiJ7SaN3WoluaM=
+ bh=z4v1I5m7OABcKfWLpv3al52trVS03+DKq6uRaF1Nohc=;
+ b=sIbDG+Y/bMe2KGOaK8kaw8kW33dcXRnMfbRJ+ac+pi59Y2rP3FMm4X4uQMA3K0kb1iHj1YYEpeWU8s/nU6J20ggeRysgqDjgM3r13WOF02lVjF4khu4YMBzNX/c10Q4C1492kAExd6o3KOUGmF9pIF5xrB0wmi8vRA13L2GZcqs=
 Received: from CY4PR04MB3751.namprd04.prod.outlook.com (2603:10b6:903:ec::14)
  by CY4PR04MB0422.namprd04.prod.outlook.com (2603:10b6:903:bd::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3195.17; Tue, 21 Jul
- 2020 11:09:16 +0000
+ 2020 11:08:41 +0000
 Received: from CY4PR04MB3751.namprd04.prod.outlook.com
  ([fe80::d9e5:135e:cfd9:4de0]) by CY4PR04MB3751.namprd04.prod.outlook.com
  ([fe80::d9e5:135e:cfd9:4de0%7]) with mapi id 15.20.3195.025; Tue, 21 Jul 2020
- 11:09:16 +0000
+ 11:08:41 +0000
 From:   Damien Le Moal <Damien.LeMoal@wdc.com>
 To:     Maxim Levitsky <mlevitsk@redhat.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
@@ -98,13 +98,13 @@ CC:     Keith Busch <kbusch@kernel.org>,
         <virtualization@lists.linux-foundation.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Alex Dubov <oakad@yahoo.com>
-Subject: Re: [PATCH 04/10] block: nbd: use blk_is_valid_logical_block_size
-Thread-Topic: [PATCH 04/10] block: nbd: use blk_is_valid_logical_block_size
-Thread-Index: AQHWX01TPRBfw0JfSk+HzrCJWVECoA==
-Date:   Tue, 21 Jul 2020 11:09:15 +0000
-Message-ID: <CY4PR04MB3751EED308BB3AE6E028E3DFE7780@CY4PR04MB3751.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 03/10] block: loop: use blk_is_valid_logical_block_size
+Thread-Topic: [PATCH 03/10] block: loop: use blk_is_valid_logical_block_size
+Thread-Index: AQHWX01LIw4xf3qcak+F7qOi/18XOA==
+Date:   Tue, 21 Jul 2020 11:08:40 +0000
+Message-ID: <CY4PR04MB375172789B9725F132B94216E7780@CY4PR04MB3751.namprd04.prod.outlook.com>
 References: <20200721105239.8270-1-mlevitsk@redhat.com>
- <20200721105239.8270-5-mlevitsk@redhat.com>
+ <20200721105239.8270-4-mlevitsk@redhat.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -114,30 +114,30 @@ authentication-results: redhat.com; dkim=none (message not signed)
 x-originating-ip: [129.253.182.57]
 x-ms-publictraffictype: Email
 x-ms-office365-filtering-ht: Tenant
-x-ms-office365-filtering-correlation-id: dce41ae4-c311-42c5-8e51-08d82d6681e1
+x-ms-office365-filtering-correlation-id: a9163c0e-ae63-4cb8-2841-08d82d666d0a
 x-ms-traffictypediagnostic: CY4PR04MB0422:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CY4PR04MB0422D5637E8014B9B18622F9E7780@CY4PR04MB0422.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <CY4PR04MB0422245941CD28F6B5CD6814E7780@CY4PR04MB0422.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:1284;
+x-ms-oob-tlc-oobclassifiers: OLM:4125;
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: h4H4zjAD09DAR+pt8CFir6YH3ZmySVvLU2rC+5eOHFwePlMnME2yk1Pzo84pP3YXegpTg0Zd57+GbaZav2ITUQ+Gn9V+jVF6djFffw9QiQSmF8eMl9d9eZ0PYsQMdItTyzqBd3QHLCjrgUDYFmEYfYjjTpgOXoLsg/Yjpts2Yd4In7YyL48vHhPoxNdoDcnfAw0nIeuT2Sql5G0o3QUlkHzJ7iECE4wsqe2zEVTwWnvhzWL41s7rxb2WrKN1CH0Wikwr7w/SuzMDMtTbygHu4x7QEe1KaKhVqJoAryrfOLzEJb9tHPRWgUuYJZYopMYY6jJwB7gFpqE/UbxJRbMRng==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(376002)(396003)(346002)(366004)(39860400002)(136003)(110136005)(2906002)(478600001)(316002)(8936002)(7416002)(86362001)(7696005)(54906003)(55016002)(6506007)(26005)(53546011)(186003)(9686003)(4326008)(91956017)(52536014)(5660300002)(71200400001)(66446008)(66556008)(76116006)(83380400001)(64756008)(66476007)(33656002)(8676002)(66946007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: mt5CajmB72pum/P0yPi5sQjetWBc6tRbU8/4r3+tY0x703IhgHWzFPPz/kb10RVauywr5dh3FQt5AZ1moytke3F0/nP+rIi5m7zKfBf3ZpmHwwD72ovVHw7awkYSGfej06XpG+4wYgD18OYwqv2J5qretqRhN7MEzqypHTG6YHFbl22dx3JlGUz6dfYFAlrS+Xl3nikDcwHUaL0We3YNw2JC+kH4AVZFVcftyQDtWtATs1ruqol+kt1MKbtOTGi5hG0DGgvm5EalBhXOvoFvFfhA25sMpBouc8VUbdlHQ7/QTYAywVwd+ySVj3YuqsEmTcnPKeJxSB6ruaCMFYBKrpmrQIUehhHRa4Cf8lTzLuUOwbhY/1xyojgNfwrST2VkUVTKxwQ3dgnKZEnSZ3w8QtnTQT06ux/F6lVr8y28UeO3hqNhqidHSqAKCRglEiYI+AaTxTjuKhkNYaLWBMbGFXj92BnMCGBM+Y5WBSS+RuYv6+B6X9mgYiTz+bPs3Rz6
+x-microsoft-antispam-message-info: 83pl7kM0JCnEywOtKelAGhwCie72ilBeWbJnQrwj2TZvQYY8AeqfO2OW0ujMnVvQuDTaOvpW2Gtl8KgR9MGk3uuoLu2Ud7+u0p1phzL+P1XTo5lllBVGlz3BKn3rocaIYcQoaH82HxAIgqyCutarBzMYJ1LGWdAYPqYm5h3VaTO2wxHeaVzlm7364dXQ+j51i63NVEfyKSbobRAnMoQg3+z7VSy7zohKn1rx01kSQViXcYgQKhjhEud1OV4UM8mxNOqZ0/YbP1hKyyNdZ3/v0XD7fdZa/DYSxqGXQp3LscZyF1+h2vSIL91/E6V7gphWBYnaGSird4FCSzrB8gBuTw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY4PR04MB3751.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(366004)(110136005)(2906002)(8936002)(7416002)(498600001)(86362001)(7696005)(54906003)(55016002)(6506007)(26005)(53546011)(186003)(9686003)(4326008)(91956017)(52536014)(5660300002)(71200400001)(66446008)(66556008)(76116006)(83380400001)(64756008)(66476007)(33656002)(8676002)(66946007);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 2xoQL2q/JObW6TZmyf/bgFbkH000F1lpmw1XCNVXEZXEEhAU51RCphoBmwcAsWl7iZxIWjRu9qkJwv0dIKIO8Ulz57rpYE43TAexR+7pu0XRlrXMX4LwAVTJaQLewTEWFZy3qt/Vz2uCOpqn+njjewMIGyKo1tUQUV7fccc3CNmCY9xmBGxLUBhWB89t24c1DDtYKzaFOvAHm5DJo0Ww+ema1VD1FvHQO5gtDiCLJWwlgb27Gca9Wi98AakpMtLkcUE0H1bvR3vqcEl1md/Kl08Zkn2BhpyDaiFrpHo3UREUDWu1FFfag9mfaOYlfa+PYbaCD1j+vocadE82eMRzArWdoGAkam6jXaELMOSuv+GOIEOWfqRZ4VNBg5az2DLuerqeSVOrkOkgmdvrHfHdHsE3aWdC8iz12E6yjx0+li5cyve+X4BPIeSDd5pkgad413FpG2X7pOo36V1j137WH1ErKAo+T5BnLoW5mDUe4zoEFzBWteaz/ANTc2W9A9wx
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: CY4PR04MB3751.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dce41ae4-c311-42c5-8e51-08d82d6681e1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jul 2020 11:09:15.8723
+X-MS-Exchange-CrossTenant-Network-Message-Id: a9163c0e-ae63-4cb8-2841-08d82d666d0a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jul 2020 11:08:40.9532
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: gwSpojT8CvgOo1b5AE150AYx7HiLfSz9eJQpzzFQ4hy7hW9Ht+sLc22+M/tJH2GVIxTetzYwtWHh15y69XFFCA==
+X-MS-Exchange-CrossTenant-userprincipalname: Y2HEtUYBTXMrMgPO9H1FDdhJf8Bozws/9cnksKGUAyYDjx8KjxdfvY4+82NUgZZ97imWYQAsTTnZolBXxdVOeQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB0422
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
@@ -145,53 +145,65 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 2020/07/21 19:54, Maxim Levitsky wrote:=0A=
-> This allows to remove nbd's own check for valid block size=0A=
+> This allows to remove loop's own check for supported block size=0A=
 > =0A=
 > Signed-off-by: Maxim Levitsky <mlevitsk@redhat.com>=0A=
 > ---=0A=
->  drivers/block/nbd.c | 12 ++----------=0A=
->  1 file changed, 2 insertions(+), 10 deletions(-)=0A=
+>  drivers/block/loop.c | 23 +++++------------------=0A=
+>  1 file changed, 5 insertions(+), 18 deletions(-)=0A=
 > =0A=
-> diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c=0A=
-> index ce7e9f223b20b..2cd9c4e824f8b 100644=0A=
-> --- a/drivers/block/nbd.c=0A=
-> +++ b/drivers/block/nbd.c=0A=
-> @@ -1347,14 +1347,6 @@ static void nbd_clear_sock_ioctl(struct nbd_device=
- *nbd,=0A=
->  		nbd_config_put(nbd);=0A=
+> diff --git a/drivers/block/loop.c b/drivers/block/loop.c=0A=
+> index 475e1a738560d..9984c8f824271 100644=0A=
+> --- a/drivers/block/loop.c=0A=
+> +++ b/drivers/block/loop.c=0A=
+> @@ -228,19 +228,6 @@ static void __loop_update_dio(struct loop_device *lo=
+, bool dio)=0A=
+>  		blk_mq_unfreeze_queue(lo->lo_queue);=0A=
 >  }=0A=
 >  =0A=
-> -static bool nbd_is_valid_blksize(unsigned long blksize)=0A=
+> -/**=0A=
+> - * loop_validate_block_size() - validates the passed in block size=0A=
+> - * @bsize: size to validate=0A=
+> - */=0A=
+> -static int=0A=
+> -loop_validate_block_size(unsigned short bsize)=0A=
 > -{=0A=
-> -	if (!blksize || !is_power_of_2(blksize) || blksize < 512 ||=0A=
-> -	    blksize > PAGE_SIZE)=0A=
-> -		return false;=0A=
-> -	return true;=0A=
+> -	if (bsize < 512 || bsize > PAGE_SIZE || !is_power_of_2(bsize))=0A=
+> -		return -EINVAL;=0A=
+> -=0A=
+> -	return 0;=0A=
 > -}=0A=
 > -=0A=
->  static void nbd_set_cmd_timeout(struct nbd_device *nbd, u64 timeout)=0A=
->  {=0A=
->  	nbd->tag_set.timeout =3D timeout * HZ;=0A=
-> @@ -1379,7 +1371,7 @@ static int __nbd_ioctl(struct block_device *bdev, s=
-truct nbd_device *nbd,=0A=
->  	case NBD_SET_BLKSIZE:=0A=
->  		if (!arg)=0A=
->  			arg =3D NBD_DEF_BLKSIZE;=0A=
-> -		if (!nbd_is_valid_blksize(arg))=0A=
-> +		if (!blk_is_valid_logical_block_size(arg))=0A=
->  			return -EINVAL;=0A=
->  		nbd_size_set(nbd, arg,=0A=
->  			     div_s64(config->bytesize, arg));=0A=
-> @@ -1811,7 +1803,7 @@ static int nbd_genl_size_set(struct genl_info *info=
-, struct nbd_device *nbd)=0A=
->  		bsize =3D nla_get_u64(info->attrs[NBD_ATTR_BLOCK_SIZE_BYTES]);=0A=
->  		if (!bsize)=0A=
->  			bsize =3D NBD_DEF_BLKSIZE;=0A=
-> -		if (!nbd_is_valid_blksize(bsize)) {=0A=
-> +		if (!blk_is_valid_logical_block_size(bsize)) {=0A=
->  			printk(KERN_ERR "Invalid block size %llu\n", bsize);=0A=
->  			return -EINVAL;=0A=
->  		}=0A=
+>  /**=0A=
+>   * loop_set_size() - sets device size and notifies userspace=0A=
+>   * @lo: struct loop_device to set the size for=0A=
+> @@ -1119,9 +1106,10 @@ static int loop_configure(struct loop_device *lo, =
+fmode_t mode,=0A=
+>  	}=0A=
+>  =0A=
+>  	if (config->block_size) {=0A=
+> -		error =3D loop_validate_block_size(config->block_size);=0A=
+> -		if (error)=0A=
+> +		if (!blk_is_valid_logical_block_size(config->block_size)) {=0A=
+> +			error =3D -EINVAL;=0A=
+>  			goto out_unlock;=0A=
+> +		}=0A=
+>  	}=0A=
+>  =0A=
+>  	error =3D loop_set_status_from_info(lo, &config->info);=0A=
+> @@ -1607,9 +1595,8 @@ static int loop_set_block_size(struct loop_device *=
+lo, unsigned long arg)=0A=
+>  	if (lo->lo_state !=3D Lo_bound)=0A=
+>  		return -ENXIO;=0A=
+>  =0A=
+> -	err =3D loop_validate_block_size(arg);=0A=
+> -	if (err)=0A=
+> -		return err;=0A=
+> +	if (!blk_is_valid_logical_block_size(arg))=0A=
+> +		return -EINVAL;=0A=
+>  =0A=
+>  	if (lo->lo_queue->limits.logical_block_size =3D=3D arg)=0A=
+>  		return 0;=0A=
 > =0A=
 =0A=
 Looks good to me.=0A=
