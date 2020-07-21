@@ -2,514 +2,138 @@ Return-Path: <SRS0=19hD=BA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DE0C433E0
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:18:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB68C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:41:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C183F2077D
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:18:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99EA9207BB
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:41:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ltn6KmiB"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Egp5H4pu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728443AbgGUQS2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:18:28 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:13638 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726890AbgGUQS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Jul 2020 12:18:28 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1595348306; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: To:
- Subject: Sender; bh=D0JRDdY3vGfOJd4W/NS+sOExftjUlzeyBwYuJ1y5IUE=; b=Ltn6KmiBGwqZ3GhDi9ylmBaHwUosDuefxNwlnsUmoyk4lr1gIFq8irCqjXk8Hvui4zV/xiLX
- JIBh2ipeRtSoO5Aph3B+B+Prc+QWODvx7zdml17TnarY7naw1/HWgiAzVI6+ginU0oXBFIMz
- XgRssrXihpap79kGz/uMl3yQ6JM=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
- 5f1715485b75bcda604beadf (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 21 Jul 2020 16:18:16
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D62CAC433CA; Tue, 21 Jul 2020 16:18:15 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 728BFC433C9;
-        Tue, 21 Jul 2020 16:18:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 728BFC433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [RFC PATCH v2 3/3] scsi: ufs: add vendor specific write booster
- To support the fuction of writebooster by vendor. The WB behavior that the
- vendor wants is slightly different. But we have to support it
-To:     =?UTF-8?B?7ISc7Zi47JiB?= <hy50.seo@samsung.com>,
-        linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, bvanassche@acm.org, grant.jung@samsung.com
-References: <cover.1595240433.git.hy50.seo@samsung.com>
- <CGME20200720103951epcas2p246072985a70a459f0acb31d339298a47@epcas2p2.samsung.com>
- <5be595eb83365ec97a8ee0ddafb748029ee8cdf9.1595240433.git.hy50.seo@samsung.com>
- <588c1a29-38b9-8c5f-d9c5-899272b9f3a3@codeaurora.org>
- <02dd01d65f43$fc837710$f58a6530$@samsung.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <91b86407-c9ee-9d3a-c01c-654deba72e75@codeaurora.org>
-Date:   Tue, 21 Jul 2020 09:18:12 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1730311AbgGUQl4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 12:41:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46772 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730224AbgGUQlz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:41:55 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70DE7C0619DA
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:41:55 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id f2so21819024wrp.7
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:41:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=GSRBp5WStd9Y481S5Og1e8mziqqocuxpn4+5CH6s/V4=;
+        b=Egp5H4pu2L6EzccLlHAMIwLTK50EpvvWcuSavl6dxS+o+rUQRPDp2XpTYnTjUS+KUi
+         uWcXXe2s/Ehz/WZYWK2zGL15XByi2KO1f61XaLxkMeIDIT6YezDvsqTSLn0cpcs0b5Eu
+         kvPRw32tr4a3i05MdWTSX7LKYf9m30098UCHy2q6dMk7VTOVwfgnXeBjXhBultigxuwp
+         JZo16vd/sGh2ag2xaKw/9nNAVBmihuOg6m+UxZsxeeN1B0T/jgcOA8YIh3thO5XR5/fu
+         khqpOmb/LS+svniR+y9VvCrP1z5dJnmhYAt49FVHboj+QnXVIAb28S4oHvg0xgmu1agu
+         Z2QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=GSRBp5WStd9Y481S5Og1e8mziqqocuxpn4+5CH6s/V4=;
+        b=KnCCuBXJSh6MZTdfZx5ZVXrNJ50nqHDTiz47z0Zlag6UpY2stpkmospbR5XVW2vmRg
+         K7r53Vv4cxelfWFtmbj90/ZGyus3WXiOA5uzp1kLHv8IUZRHPgpVINeUsVtyH/FTaYZw
+         zDZfR5aDwwrRu14pbDN+x87MiDkOolvgXX62SMpzstfjKod2TtkswM7EPC7prlalgKDr
+         bF7xA1Axc/dXRR8aJhxEdXY16NE4HiFLK9e764ME6iYRy+bgjsjNcDg9Q8n6A3RFceX5
+         KVeaHd1OC8VP+DAaS9LMlhjGYG14MPOMF4OGErr+LSGo8jT/vPICWg8GrYllgvyhPNwC
+         XZoQ==
+X-Gm-Message-State: AOAM530K3KTEdshQZsNAqFFHtSeMK25ILnW5Y9M60irpVjM9Fgfu4qh3
+        CVRHGrwyxez/E5RBrDABdwE62w==
+X-Google-Smtp-Source: ABdhPJwR9PfgqrQM6xiiXqEdTd0R303eL546jC1FrUf25+Zxk9wVW2r7JsLFudeclns7p1DZw05OZQ==
+X-Received: by 2002:a05:6000:10c4:: with SMTP id b4mr25734756wrx.50.1595349714031;
+        Tue, 21 Jul 2020 09:41:54 -0700 (PDT)
+Received: from localhost.localdomain ([2.27.167.94])
+        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.41.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jul 2020 09:41:53 -0700 (PDT)
+From:   Lee Jones <lee.jones@linaro.org>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>, support@areca.com.tw,
+        kernel test robot <lkp@intel.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH 01/40] scsi: arcmsr: arcmsr_hba: Remove statement with no effect
+Date:   Tue, 21 Jul 2020 17:41:09 +0100
+Message-Id: <20200721164148.2617584-2-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200721164148.2617584-1-lee.jones@linaro.org>
+References: <20200721164148.2617584-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <02dd01d65f43$fc837710$f58a6530$@samsung.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/21/2020 2:47 AM, 서호영 wrote:
-> 
-> 
->> -----Original Message-----
->> From: asutoshd=codeaurora.org@mg.codeaurora.org
->> [mailto:asutoshd=codeaurora.org@mg.codeaurora.org] On Behalf Of Asutosh
->> Das (asd)
->> Sent: Tuesday, July 21, 2020 1:55 AM
->> To: SEO HOYOUNG; linux-scsi@vger.kernel.org; alim.akhtar@samsung.com;
->> avri.altman@wdc.com; jejb@linux.ibm.com; martin.petersen@oracle.com;
->> beanhuo@micron.com; cang@codeaurora.org; bvanassche@acm.org;
->> grant.jung@samsung.com
->> Subject: Re: [RFC PATCH v2 3/3] scsi: ufs: add vendor specific write
->> booster To support the fuction of writebooster by vendor. The WB behavior
->> that the vendor wants is slightly different. But we have to support it
->>
->> On 7/20/2020 3:40 AM, SEO HOYOUNG wrote:
->>> Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
->>> ---
->>>    drivers/scsi/ufs/Makefile     |   1 +
->>>    drivers/scsi/ufs/ufs-exynos.c |   6 +
->>>    drivers/scsi/ufs/ufs_ctmwb.c  | 279 ++++++++++++++++++++++++++++++++++
->>>    drivers/scsi/ufs/ufs_ctmwb.h  |  27 ++++
->>>    4 files changed, 313 insertions(+)
->>>    create mode 100644 drivers/scsi/ufs/ufs_ctmwb.c
->>>    create mode 100644 drivers/scsi/ufs/ufs_ctmwb.h
->>>
->>> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
->>> index 9810963bc049..b1ba36c7d66f 100644
->>> --- a/drivers/scsi/ufs/Makefile
->>> +++ b/drivers/scsi/ufs/Makefile
->>> @@ -5,6 +5,7 @@ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-
->> pltfrm.o ufshcd-dwc.o tc-d
->>>    obj-$(CONFIG_SCSI_UFS_CDNS_PLATFORM) += cdns-pltfrm.o
->>>    obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
->>>    obj-$(CONFIG_SCSI_UFS_EXYNOS) += ufs-exynos.o
->>> +obj-$(CONFIG_SCSI_UFS_VENDOR_WB) += ufs_ctmwb.o
->>>    obj-$(CONFIG_SCSI_UFSHCD) += ufshcd-core.o
->>>    ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
->>>    ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
->>> diff --git a/drivers/scsi/ufs/ufs-exynos.c
->>> b/drivers/scsi/ufs/ufs-exynos.c index 32b61ba77241..f127f5f2bf36
->>> 100644
->>> --- a/drivers/scsi/ufs/ufs-exynos.c
->>> +++ b/drivers/scsi/ufs/ufs-exynos.c
->>> @@ -22,6 +22,9 @@
->>>
->>
->> To me it looks like, you want to have your own flush policy &
->> initializations etc, is that understanding correct?
->> I don't understand why though. The current implementation is spec
->> compliant. If there're benefits that you see in this implementation,
->> please highlight those. It'd be interesting to see that.
-> 
-> Yes. I want to own flush policy, initialization..
-> I already know current implementation is spec compliant.
-> But some vendor want to change flush policy.
-Ok. It'd be interesting to know the benefits of your flush policy over 
-the current one. If it's better, we can replace the current policy, perhaps?
-So please can you highlight those benefits.
-> So we modify below code.
-> Additionally when use below code, we can use WB without UFS 3.1 devices
-I guess non-standard stuff should be kept out of ufshcd.c to vendor 
-specific files, which I guess you're doing.
->>
->>
->>>    #include "ufs-exynos.h"
->>>
->>> +#ifdef CONFIG_SCSI_UFS_VENDOR_WB
->>> +#include "ufs_ctmwb.h"
->>> +#endif
->>>    /*
->>>     * Exynos's Vendor specific registers for UFSHCI
->>>     */
->>> @@ -989,6 +992,9 @@ static int exynos_ufs_init(struct ufs_hba *hba)
->>>    		goto phy_off;
->>>
->>>    	ufs->hba = hba;
->>> +#ifdef CONFIG_SCSI_UFS_VENDOR_WB
->>> +	ufs->hba->wb_ops = ufshcd_ctmwb_init(); #endif
->>>    	ufs->opts = ufs->drv_data->opts;
->>>    	ufs->rx_sel_idx = PA_MAXDATALANES;
->>>    	if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX) diff --git
->>> a/drivers/scsi/ufs/ufs_ctmwb.c b/drivers/scsi/ufs/ufs_ctmwb.c new file
->>> mode 100644 index 000000000000..ab39f40721ae
->>> --- /dev/null
->>> +++ b/drivers/scsi/ufs/ufs_ctmwb.c
->>> @@ -0,0 +1,279 @@
->>> +#include "ufshcd.h"
->>> +#include "ufshci.h"
->>> +#include "ufs_ctmwb.h"
->>> +
->>> +static struct ufshba_ctmwb hba_ctmwb;
->>> +
->>> +/* Query request retries */
->>> +#define QUERY_REQ_RETRIES 3
->>> +
->>> +static int ufshcd_query_attr_retry(struct ufs_hba *hba,
->>> +	enum query_opcode opcode, enum attr_idn idn, u8 index, u8 selector,
->>> +	u32 *attr_val)
->>> +{
->>> +	int ret = 0;
->>> +	u32 retries;
->>> +
->>> +	 for (retries = QUERY_REQ_RETRIES; retries > 0; retries--) {
->>> +		ret = ufshcd_query_attr(hba, opcode, idn, index,
->>> +						selector, attr_val);
->>> +		if (ret)
->>> +			dev_dbg(hba->dev, "%s: failed with error %d,
->> retries %d\n",
->>> +				__func__, ret, retries);
->>> +		else
->>> +			break;
->>> +	}
->>> +
->>> +	if (ret)
->>> +		dev_err(hba->dev,
->>> +			"%s: query attribute, idn %d, failed with error %d
->> after %d retires\n",
->>> +			__func__, idn, ret, QUERY_REQ_RETRIES);
->>> +	return ret;
->>> +}
->>> +
->>> +static int ufshcd_query_flag_retry(struct ufs_hba *hba,
->>> +	enum query_opcode opcode, enum flag_idn idn, bool *flag_res) {
->>> +	int ret;
->>> +	int retries;
->>> +
->>> +	for (retries = 0; retries < QUERY_REQ_RETRIES; retries++) {
->>> +		ret = ufshcd_query_flag(hba, opcode, idn, flag_res);
->>> +		if (ret)
->>> +			dev_dbg(hba->dev,
->>> +				"%s: failed with error %d, retries %d\n",
->>> +				__func__, ret, retries);
->>> +		else
->>> +			break;
->>> +	}
->>> +
->>> +	if (ret)
->>> +		dev_err(hba->dev,
->>> +			"%s: query attribute, opcode %d, idn %d, failed with
->> error %d after %d retries\n",
->>> +			__func__, (int)opcode, (int)idn, ret, retries);
->>> +	return ret;
->>> +}
->>> +
->>> +static int ufshcd_reset_ctmwb(struct ufs_hba *hba, bool force) {
->>> +	int err = 0;
->>> +
->>> +	if (!hba_ctmwb.support_ctmwb)
->>> +		return 0;
->>> +
->>> +	if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
->>> +		dev_info(hba->dev, "%s: turbo write already disabled.
->> ctmwb_state = %d\n",
->>> +			__func__, hba_ctmwb.ufs_ctmwb_state);
->>> +		return 0;
->>> +	}
->>> +
->>> +	if (ufshcd_is_ctmwb_err(hba_ctmwb))
->>> +		dev_err(hba->dev, "%s: previous turbo write control was
->> failed.\n",
->>> +			__func__);
->>> +
->>> +	if (force)
->>> +		err = ufshcd_query_flag_retry(hba,
->> UPIU_QUERY_OPCODE_CLEAR_FLAG,
->>> +				QUERY_FLAG_IDN_WB_EN, NULL);
->>> +
->>> +	if (err) {
->>> +		ufshcd_set_ctmwb_err(hba_ctmwb);
->>> +		dev_err(hba->dev, "%s: disable turbo write failed. err
->> = %d\n",
->>> +			__func__, err);
->>> +	} else {
->>> +		ufshcd_set_ctmwb_off(hba_ctmwb);
->>> +		dev_info(hba->dev, "%s: ufs turbo write disabled \n",
->> __func__);
->>> +	}
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static int ufshcd_get_ctmwb_buf_status(struct ufs_hba *hba, u32
->>> +*status) {
->>> +	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->>> +			QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE, 0, 0, status); }
->>> +
->>> +static int ufshcd_ctmwb_manual_flush_ctrl(struct ufs_hba *hba, int
->>> +en) {
->>> +	int err = 0;
->>> +
->>> +	dev_info(hba->dev, "%s: %sable turbo write manual flush\n",
->>> +				__func__, en ? "en" : "dis");
->>> +	if (en) {
->>> +		err = ufshcd_query_flag_retry(hba,
->> UPIU_QUERY_OPCODE_SET_FLAG,
->>> +					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
->>> +		if (err)
->>> +			dev_err(hba->dev, "%s: enable turbo write failed. err
->> = %d\n",
->>> +				__func__, err);
->>> +	} else {
->>> +		err = ufshcd_query_flag_retry(hba,
->> UPIU_QUERY_OPCODE_CLEAR_FLAG,
->>> +					QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN, NULL);
->>> +		if (err)
->>> +			dev_err(hba->dev, "%s: disable turbo write failed. err
->> = %d\n",
->>> +				__func__, err);
->>> +	}
->>> +
->>> +	return err;
->>> +}
->>> +
->>> +static int ufshcd_ctmwb_flush_ctrl(struct ufs_hba *hba) {
->>> +	int err = 0;
->>> +	u32 curr_status = 0;
->>> +
->>> +	err = ufshcd_get_ctmwb_buf_status(hba, &curr_status);
->>> +
->>> +	if (!err && (curr_status <= UFS_WB_MANUAL_FLUSH_THRESHOLD)) {
->>> +		dev_info(hba->dev, "%s: enable ctmwb manual flush, buf
->> status : %d\n",
->>> +				__func__, curr_status);
->>> +		scsi_block_requests(hba->host);
->>> +		err = ufshcd_ctmwb_manual_flush_ctrl(hba, 1);
->>> +		if (!err) {
->>> +			mdelay(100);
->>> +			err = ufshcd_ctmwb_manual_flush_ctrl(hba, 0);
->>> +			if (err)
->>> +				dev_err(hba->dev, "%s: disable ctmwb manual
->> flush failed. err = %d\n",
->>> +						__func__, err);
->>> +		} else
->>> +			dev_err(hba->dev, "%s: enable ctmwb manual flush
->> failed. err = %d\n",
->>> +					__func__, err);
->>> +		scsi_unblock_requests(hba->host);
->>> +	}
->>> +	return err;
->>> +}
->>> +
->>> +static int ufshcd_ctmwb_ctrl(struct ufs_hba *hba, bool enable) {
->>> +	int err;
->>> +#if 0
->> Did you miss removing these #if 0?
-> I will modify this code.
->>
->>> +	if (!hba->support_ctmwb)
->>> +		return;
->>> +
->>> +	if (hba->pm_op_in_progress) {
->>> +		dev_err(hba->dev, "%s: ctmwb ctrl during pm operation is not
->> allowed.\n",
->>> +			__func__);
->>> +		return;
->>> +	}
->>> +
->>> +	if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
->>> +		dev_err(hba->dev, "%s: ufs host is not available.\n",
->>> +			__func__);
->>> +		return;
->>> +	}
->>> +	if (ufshcd_is_ctmwb_err(hba_ctmwb))
->>> +		dev_err(hba->dev, "%s: previous turbo write control was
->> failed.\n",
->>> +			__func__);
->>> +#endif
->>> +	if (enable) {
->>> +		if (ufshcd_is_ctmwb_on(hba_ctmwb)) {
->>> +			dev_err(hba->dev, "%s: turbo write already enabled.
->> ctmwb_state = %d\n",
->>> +				__func__, hba_ctmwb.ufs_ctmwb_state);
->>> +			return 0;
->>> +		}
->>> +		pm_runtime_get_sync(hba->dev);
->>> +		err = ufshcd_query_flag_retry(hba,
->> UPIU_QUERY_OPCODE_SET_FLAG,
->>> +					QUERY_FLAG_IDN_WB_EN, NULL);
->>> +		if (err) {
->>> +			ufshcd_set_ctmwb_err(hba_ctmwb);
->>> +			dev_err(hba->dev, "%s: enable turbo write failed. err
->> = %d\n",
->>> +				__func__, err);
->>> +		} else {
->>> +			ufshcd_set_ctmwb_on(hba_ctmwb);
->>> +			dev_info(hba->dev, "%s: ufs turbo write enabled \n",
->> __func__);
->>> +		}
->>> +	} else {
->>> +		if (ufshcd_is_ctmwb_off(hba_ctmwb)) {
->>> +			dev_err(hba->dev, "%s: turbo write already disabled.
->> ctmwb_state = %d\n",
->>> +				__func__, hba_ctmwb.ufs_ctmwb_state);
->>> +			return 0;
->>> +		}
->>> +		pm_runtime_get_sync(hba->dev);
->>> +		err = ufshcd_query_flag_retry(hba,
->> UPIU_QUERY_OPCODE_CLEAR_FLAG,
->>> +					QUERY_FLAG_IDN_WB_EN, NULL);
->>> +		if (err) {
->>> +			ufshcd_set_ctmwb_err(hba_ctmwb);
->>> +			dev_err(hba->dev, "%s: disable turbo write failed. err
->> = %d\n",
->>> +				__func__, err);
->>> +		} else {
->>> +			ufshcd_set_ctmwb_off(hba_ctmwb);
->>> +			dev_info(hba->dev, "%s: ufs turbo write disabled \n",
->> __func__);
->> What is 'turbo write'?
-> I wrote it wrong. I will collect it.
-> 
->>> +		}
->>> +	}
->>> +
->>> +	pm_runtime_put_sync(hba->dev);
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +/**
->>> + * ufshcd_get_ctmwbbuf_unit - get ctmwb buffer alloc units
->>> + * @sdev: pointer to SCSI device
->>> + *
->>> + * Read dLUNumTurboWriteBufferAllocUnits in UNIT Descriptor
->>> + * to check if LU supports turbo write feature  */ static int
->>> +ufshcd_get_ctmwbbuf_unit(struct ufs_hba *hba) {
->>> +	struct scsi_device *sdev = hba->sdev_ufs_device;
->>> +	struct ufshba_ctmwb *hba_ctmwb = (struct ufshba_ctmwb *)hba->wb_ops;
->>> +	int ret = 0;
->>> +
->>> +	u32 dLUNumTurboWriteBufferAllocUnits = 0;
->>> +	u8 desc_buf[4];
->>> +
->>> +	if (!hba_ctmwb->support_ctmwb)
->>> +		return 0;
->>> +
->>> +	ret = ufshcd_read_unit_desc_param(hba,
->>> +			ufshcd_scsi_to_upiu_lun(sdev->lun),
->>> +			UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS,
->>> +			desc_buf,
->>> +			sizeof(dLUNumTurboWriteBufferAllocUnits));
->>> +
->>> +	/* Some WLUN doesn't support unit descriptor */
->>> +	if ((ret == -EOPNOTSUPP) || scsi_is_wlun(sdev->lun)){
->>> +		hba_ctmwb->support_ctmwb_lu = false;
->>> +		dev_info(hba->dev,"%s: do not support WB\n", __func__);
->>> +		return 0;
->>> +	}
->>> +
->>> +	dLUNumTurboWriteBufferAllocUnits = ((desc_buf[0] << 24)|
->>> +			(desc_buf[1] << 16) |
->>> +			(desc_buf[2] << 8) |
->>> +			desc_buf[3]);
->>> +
->>> +	if (dLUNumTurboWriteBufferAllocUnits) {
->>> +		hba_ctmwb->support_ctmwb_lu = true;
->>> +		dev_info(hba->dev, "%s: LU %d supports ctmwb, ctmwbbuf unit :
->> 0x%x\n",
->>> +				__func__, (int)sdev->lun,
->> dLUNumTurboWriteBufferAllocUnits);
->>> +	} else
->>> +		hba_ctmwb->support_ctmwb_lu = false;
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static inline int ufshcd_ctmwb_toggle_flush(struct ufs_hba *hba, enum
->>> +ufs_pm_op pm_op) {
->>> +	ufshcd_ctmwb_flush_ctrl(hba);
->>> +
->>> +	if (ufshcd_is_system_pm(pm_op))
->>> +		ufshcd_reset_ctmwb(hba, true);
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static struct ufs_wb_ops exynos_ctmwb_ops = {
->>> +	.wb_toggle_flush_vendor = ufshcd_ctmwb_toggle_flush,
->>> +	.wb_alloc_units_vendor = ufshcd_get_ctmwbbuf_unit,
->>> +	.wb_ctrl_vendor = ufshcd_ctmwb_ctrl,
->>> +	.wb_reset_vendor = ufshcd_reset_ctmwb, };
->>> +
->>> +struct ufs_wb_ops *ufshcd_ctmwb_init(void) {
->>> +	hba_ctmwb.support_ctmwb = 1;
->>> +
->>> +	return &exynos_ctmwb_ops;
->>> +}
->>> +EXPORT_SYMBOL_GPL(ufshcd_ctmwb_init);
->>> +
->>> diff --git a/drivers/scsi/ufs/ufs_ctmwb.h
->>> b/drivers/scsi/ufs/ufs_ctmwb.h new file mode 100644 index
->>> 000000000000..073e21a4900b
->>> --- /dev/null
->>> +++ b/drivers/scsi/ufs/ufs_ctmwb.h
->>> @@ -0,0 +1,27 @@
->>> +#ifndef _UFS_CTMWB_H_
->>> +#define _UFS_CTMWB_H_
->>> +
->>> +enum ufs_ctmwb_state {
->>> +       UFS_WB_OFF_STATE	= 0,    /* turbo write disabled state */
->>> +       UFS_WB_ON_STATE	= 1,            /* turbo write enabled state */
->>> +       UFS_WB_ERR_STATE	= 2,            /* turbo write error state */
->>> +};
->>> +
->>> +#define ufshcd_is_ctmwb_off(hba) ((hba).ufs_ctmwb_state ==
->>> +UFS_WB_OFF_STATE) #define ufshcd_is_ctmwb_on(hba)
->>> +((hba).ufs_ctmwb_state == UFS_WB_ON_STATE) #define
->>> +ufshcd_is_ctmwb_err(hba) ((hba).ufs_ctmwb_state == UFS_WB_ERR_STATE)
->>> +#define ufshcd_set_ctmwb_off(hba) ((hba).ufs_ctmwb_state =
->>> +UFS_WB_OFF_STATE) #define ufshcd_set_ctmwb_on(hba)
->>> +((hba).ufs_ctmwb_state = UFS_WB_ON_STATE) #define
->>> +ufshcd_set_ctmwb_err(hba) ((hba).ufs_ctmwb_state = UFS_WB_ERR_STATE)
->>> +
->>> +#define UFS_WB_MANUAL_FLUSH_THRESHOLD	5
->>> +
->>> +struct ufshba_ctmwb {
->>> +	enum ufs_ctmwb_state ufs_ctmwb_state;
->>> +	bool support_ctmwb;
->>> +
->>> +	bool support_ctmwb_lu;
->>> +};
->>> +
->>> +struct ufs_wb_ops *ufshcd_ctmwb_init(void); #endif
->>>
->>
->> -Asutosh
->>
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
->> Linux Foundation Collaborative Project
-> 
+According to LKP, commit [no upstream SHA yet] ("scsi: arcmsr: Remove
+some set but unused variables") can be furthered to remove the entire
+statement and not just the unused variable read into.
 
--Asutosh
+Snipped LKP report:
 
+ config: x86_64-randconfig-m001-20200719
+ compiler: gcc-9 (Debian 9.3.0-14) 9.3.0
+
+ New smatch warnings:
+  drivers/scsi/arcmsr/arcmsr_hba.c:1490 arcmsr_done4abort_postqueue() warn: statement has no effect 8
+  drivers/scsi/arcmsr/arcmsr_hba.c:2459 arcmsr_hbaD_postqueue_isr() warn: statement has no effect 8
+  drivers/scsi/arcmsr/arcmsr_hba.c:3526 arcmsr_hbaD_polling_ccbdone() warn: statement has no effect 8
+
+ 1a4f550a09f89e Nick Cheng  2007-09-13  1401  static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
+ 1a4f550a09f89e Nick Cheng  2007-09-13  1402  {
+ [...]
+ 18bc435e0a1de2 Lee Jones   2020-07-13 @1490                             pmu->done_qbuffer[doneq_index & 0xFFF].addressHigh;
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ Delete this line.
+ [...]
+
+Cc: support@areca.com.tw
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 5feed135eb26c..23e9e12d588f6 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1487,7 +1487,6 @@ static void arcmsr_done4abort_postqueue(struct AdapterControlBlock *acb)
+ 					((toggle ^ 0x4000) + 1);
+ 				doneq_index = pmu->doneq_index;
+ 				spin_unlock_irqrestore(&acb->doneq_lock, flags);
+-				pmu->done_qbuffer[doneq_index & 0xFFF].addressHigh;
+ 				addressLow = pmu->done_qbuffer[doneq_index &
+ 					0xFFF].addressLow;
+ 				ccb_cdb_phy = (addressLow & 0xFFFFFFF0);
+@@ -2456,7 +2455,6 @@ static void arcmsr_hbaD_postqueue_isr(struct AdapterControlBlock *acb)
+ 			pmu->doneq_index = index_stripped ? (index_stripped | toggle) :
+ 				((toggle ^ 0x4000) + 1);
+ 			doneq_index = pmu->doneq_index;
+-			pmu->done_qbuffer[doneq_index & 0xFFF].addressHigh;
+ 			addressLow = pmu->done_qbuffer[doneq_index &
+ 				0xFFF].addressLow;
+ 			ccb_cdb_phy = (addressLow & 0xFFFFFFF0);
+@@ -3523,7 +3521,6 @@ static int arcmsr_hbaD_polling_ccbdone(struct AdapterControlBlock *acb,
+ 				((toggle ^ 0x4000) + 1);
+ 		doneq_index = pmu->doneq_index;
+ 		spin_unlock_irqrestore(&acb->doneq_lock, flags);
+-		pmu->done_qbuffer[doneq_index & 0xFFF].addressHigh;
+ 		flag_ccb = pmu->done_qbuffer[doneq_index & 0xFFF].addressLow;
+ 		ccb_cdb_phy = (flag_ccb & 0xFFFFFFF0);
+ 		if (acb->cdb_phyadd_hipart)
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.25.1
+
