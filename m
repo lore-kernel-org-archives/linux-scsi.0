@@ -2,188 +2,99 @@ Return-Path: <SRS0=19hD=BA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E3CC433F1
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 01:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7186FC433E0
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 03:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B92B82077D
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 01:43:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50116207DD
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 03:01:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QW6TtArH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I7bxTayP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726127AbgGUBly (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Jul 2020 21:41:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46930 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725857AbgGUBlx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 21:41:53 -0400
-Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F1CEC061794;
-        Mon, 20 Jul 2020 18:41:53 -0700 (PDT)
-Received: by mail-qk1-x741.google.com with SMTP id l23so10009636qkk.0;
-        Mon, 20 Jul 2020 18:41:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8bstVRUrGPJ0lCiCnj7LHZc0J9SM5E5yFAiOW2I9qf8=;
-        b=QW6TtArHN2b50+YGhcQawK9YMJ9h6vXyUvupD27jRcbudQoah6JkLugiKJL7UaO3B5
-         rG3iEb4J5vZU9iH5srS+NuGdeXAokciX/0Pl9g8lt+LGrN6KgCaorqcaW7X7+9KMQPLx
-         jgV6RI/pNnhfu5VeTHMAwzXZkq3FvJwEgUVEoCCRrxV9bu/kpXB/JMZo/584oR2mscCN
-         GR40RYZiRerP/ahrSQ20coooLo5SXrTELDpPT6uD3vvjXgFuLZiPV1Q63noLwETwu7JV
-         zGvKiKxP+BG3DqK3sX6xCkn1PxTE5JbXm2SzzFLPZflUtCrW40GPdpL8czkQ/3KMb30b
-         bwzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=8bstVRUrGPJ0lCiCnj7LHZc0J9SM5E5yFAiOW2I9qf8=;
-        b=Yh+w2vFbtjg77BfmGW+OoNOWuP8aKx2JumgcM9ZhxnDqtUloZjS1lggiyLMErx/GH4
-         aueM1WJLzxDR/vIhRvALU445I6p0SSMym9NRgjsAIIF8welROLuvYYt7oj98nie6gVHy
-         QrWWiAEI627oa6KYih8E8coLCAVrux02sJt3opVcWGcy0nayxM3Ej4cT3ruhRT9LOtou
-         xgB0cv8ocGxBjou1rsG/QeHnEtR/I0jktGwnF3vo9jYMvIuZlXE2LhtABQ5oMUoYM5cB
-         jONxZP8vgP+EiZ96GuE651uy4Wk+nyxYJJcl4hSubnuBDJnKdR9rSvDTmuCwNVAjAdYm
-         FlNQ==
-X-Gm-Message-State: AOAM533tsrhi2JVEKQ3MAqIAlkVREmGP7lsyq2PTdBnR0ixapqS3/SOH
-        alfO2uxktDIhm7X+yZfmin0=
-X-Google-Smtp-Source: ABdhPJyKw3SIVq8WkVYsXJsIEQhxcFrAgeMCPTKXbdHpcU93on/N8Mve+8Zu/INbE+P0yfVMwaiGfA==
-X-Received: by 2002:a37:b6c6:: with SMTP id g189mr25421630qkf.206.1595295712682;
-        Mon, 20 Jul 2020 18:41:52 -0700 (PDT)
-Received: from auth1-smtp.messagingengine.com (auth1-smtp.messagingengine.com. [66.111.4.227])
-        by smtp.gmail.com with ESMTPSA id 16sm1181454qkv.48.2020.07.20.18.41.51
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 20 Jul 2020 18:41:51 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailauth.nyi.internal (Postfix) with ESMTP id A3DAD27C0054;
-        Mon, 20 Jul 2020 21:41:50 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute3.internal (MEProxy); Mon, 20 Jul 2020 21:41:50 -0400
-X-ME-Sender: <xms:3UcWX3RBGlHgUEoWbF9fx31vQxvRe7UdAKnCGhE8fZbe3acSzutEtg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduiedrgeehgdegjecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenog
-    fuohhrthgvugftvggtihhpvdculdegtddmnecujfgurhephffvufffkffoggfgsedtkeer
-    tdertddtnecuhfhrohhmpeeuohhquhhnucfhvghnghcuoegsohhquhhnrdhfvghnghesgh
-    hmrghilhdrtghomheqnecuggftrfgrthhtvghrnhepieeuveejleehudetfeevfeelgfej
-    teefhedvkedukefggedugefhudfhteevjedunecuffhomhgrihhnpehkvghrnhgvlhdroh
-    hrghenucfkphephedvrdduheehrdduuddurdejudenucevlhhushhtvghrufhiiigvpedt
-    necurfgrrhgrmhepmhgrihhlfhhrohhmpegsohhquhhnodhmvghsmhhtphgruhhthhhpvg
-    hrshhonhgrlhhithihqdeiledvgeehtdeigedqudejjeekheehhedvqdgsohhquhhnrdhf
-    vghngheppehgmhgrihhlrdgtohhmsehfihigmhgvrdhnrghmvg
-X-ME-Proxy: <xmx:3UcWX4wy4lXSDfaY7sWLIi8rEuqept9YGmudQw2AP9GayArbaWbbAA>
-    <xmx:3UcWX82lKcOf_ckSM3VoK2PSmH6oggIZoxF6vWflfA5I7fvX0JUjsw>
-    <xmx:3UcWX3AykWf7oB-XhhbRFyF6ZRW0hg5RhnxSSFehYyB1CrubaxAyVg>
-    <xmx:3kcWXw61CfiF_ug0TJeAz1OjNhDoUibLgiCy7E3FQxi6h-XztBHPelNnBv4>
-Received: from localhost (unknown [52.155.111.71])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 5B1B0306005F;
-        Mon, 20 Jul 2020 21:41:49 -0400 (EDT)
-From:   Boqun Feng <boqun.feng@gmail.com>
-To:     linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Jiri Kosina <jikos@kernel.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Boqun Feng <boqun.feng@gmail.com>
-Subject: [RFC 00/11] Hyper-V: Support PAGE_SIZE larger than 4K
-Date:   Tue, 21 Jul 2020 09:41:24 +0800
-Message-Id: <20200721014135.84140-1-boqun.feng@gmail.com>
-X-Mailer: git-send-email 2.27.0
+        id S1726715AbgGUDBi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Jul 2020 23:01:38 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:58360 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725857AbgGUDBh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jul 2020 23:01:37 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L2xuZO034873;
+        Tue, 21 Jul 2020 03:01:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=BfyDp+A4E+pt+CPpx+ryDFjwpPWwrUNlImTb2ITcdHQ=;
+ b=I7bxTayP/atAFI3lf31TS9/Hw0kIctQrUAP6pVg70KaR1cdEDmEA1dB01i22qDKl6sHb
+ tb1czF/RyWkcgTJ/8F47rOTGFwNMTJQBAR5KCPqmfMeIjJmwdj/dSUFVGUY26N1GuITG
+ ZlJW5Hf33jnVTF5/9s1hBvKhLaXJfY3Ls+a0gruk9Ueu/H1MFZOFiFQWYf2GzZmpkAuU
+ UfjXTAdr6+SeuHRp8mH1lXVtA8rMtiavak+aRLDg4oUXr5Gi0LfJh/G2gmjfa9ybkv2h
+ iPGjN4USk02+UBbvi7kJq6bEDpdoJh3S+GP861ev7pcfKPWeQPebmZYObVnzGX3zyHCL EQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 32bpkb2j92-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 21 Jul 2020 03:01:33 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L2vwoa153714;
+        Tue, 21 Jul 2020 03:01:33 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 32dnae66bm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 21 Jul 2020 03:01:33 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06L31Vb5030934;
+        Tue, 21 Jul 2020 03:01:31 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 20 Jul 2020 20:01:31 -0700
+To:     Can Guo <cang@codeaurora.org>
+Cc:     Alan Stern <stern@rowland.harvard.edu>, martin.petersen@oracle.com,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH v3] SCSI and block: Simplify resume handling
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1k0yxinet.fsf@ca-mkp.ca.oracle.com>
+References: <20200701183718.GA507293@rowland.harvard.edu>
+        <9e824700-dfd1-5d71-5e91-833c35ea55eb@acm.org>
+        <20200706151436.GA702867@rowland.harvard.edu>
+        <269bdaab-797e-f54c-11af-46561220b448@acm.org>
+Date:   Mon, 20 Jul 2020 23:01:28 -0400
+In-Reply-To: <269bdaab-797e-f54c-11af-46561220b448@acm.org> (Bart Van Assche's
+        message of "Wed, 8 Jul 2020 20:29:43 -0700")
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9688 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 bulkscore=0
+ adultscore=0 phishscore=0 spamscore=0 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007210019
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9688 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bulkscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 adultscore=0 priorityscore=1501 impostorscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007210019
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patchset add the necessary changes to support guests whose page
-size is larger than 4K.
 
-Hyper-V always uses 4K as the page size and expects the same page size
-when communicating with guests. That is, all the "pfn"s in the
-hypervisor-guest communication protocol are the page numbers in the unit
-of HV_HYP_PAGE_SIZE rather than PAGE_SIZE. To support guests with larger
-page size, we need to convert between these two page sizes correctly in
-the hypervisor-guest communication, which is basically what this
-patchset does.
+> This patch looks good to me. Can, since this patch modifies code in
+> which you recently fixed a bug, would it be possible to test this
+> patch?
 
-In this conversion, one challenge is how to handle the ringbuffer. A
-ringbuffer has two parts: a header and a data part, both of which want
-to be PAGE_SIZE aligned in the guest, because we use the "double
-mapping" trick to map the data part twice in the guest virtual address
-space for faster wrap-around and ease to process data in place. However,
-the Hyper-V hypervisor always treats the ringbuffer headers as 4k pages.
-To overcome this gap, we enlarge the hv_ring_buffer structure to be
-always PAGE_SIZE aligned, and introduce the gpadl type concept to allow
-vmbus_establish_gpadl() to handle ringbuffer cases specially. Note that
-gpadl type is only meaningful to the guest, there is no such concept in
-Hyper-V hypervisor.
+Can: Please verify Alan's patch:
 
-This patchset consists of 11 patches:
+	https://patchwork.kernel.org/patch/11646029/
+        
+Bart: A proper review tag would be appreciated.
 
-Patch 1~4: Introduce the types of gpadl, so that we can handle
-	   ringbuffer when PAGE_SIZE != HV_HYP_PAGE_SIZE, and also fix
-	   a few places where we should use HV_HYP_PAGE_SIZE other than
-	   PAGE_SIZE.
-
-Patch 5~6: Add a few helper functions to help calculate the hvpfn (page
-	   number in the unit of HV_HYP_PAGE_SIZE) and other related
-	   data. So that we can use them in the code of drivers.
-
-Patch 7~11: Use the helpers and change the driver code accordingly to
-	    make net/input/util/storage driver work with PAGE_SIZE !=
-	    HV_HYP_PAGE_SIZE
-
-I've done some tests with PAGE_SIZE=64k and PAGE_SIZE=16k configurations
-on ARM64 guests (with Michael's patchset[1] for ARM64 Hyper-V guest
-support), nothing major breaks yet ;-) (I could observe an error caused
-by unaligned firmware data, but it's better to have it fixed in the
-Hyper-V).
-
-Looking forwards to comments and suggestions!
-
-Regards,
-Boqun
-
-[1]: https://lore.kernel.org/lkml/1584200119-18594-1-git-send-email-mikelley@microsoft.com/
-
-Boqun Feng (11):
-  Drivers: hv: vmbus: Always use HV_HYP_PAGE_SIZE for gpadl
-  Drivers: hv: vmbus: Move __vmbus_open()
-  Drivers: hv: vmbus: Introduce types of GPADL
-  Drivers: hv: Use HV_HYP_PAGE in hv_synic_enable_regs()
-  Drivers: hv: vmbus: Move virt_to_hvpfn() to hyperv header
-  hv: hyperv.h: Introduce some hvpfn helper functions
-  hv_netvsc: Use HV_HYP_PAGE_SIZE for Hyper-V communication
-  Input: hyperv-keyboard: Make ringbuffer at least take two pages
-  HID: hyperv: Make ringbuffer at least take two pages
-  Driver: hv: util: Make ringbuffer at least take two pages
-  scsi: storvsc: Support PAGE_SIZE larger than 4K
-
- drivers/hid/hid-hyperv.c              |   4 +-
- drivers/hv/channel.c                  | 452 +++++++++++++++-----------
- drivers/hv/hv.c                       |   4 +-
- drivers/hv/hv_util.c                  |  16 +-
- drivers/input/serio/hyperv-keyboard.c |   4 +-
- drivers/net/hyperv/netvsc.c           |   2 +-
- drivers/net/hyperv/netvsc_drv.c       |  46 +--
- drivers/net/hyperv/rndis_filter.c     |  12 +-
- drivers/scsi/storvsc_drv.c            |  27 +-
- include/linux/hyperv.h                |  63 +++-
- 10 files changed, 400 insertions(+), 230 deletions(-)
+Thanks!
 
 -- 
-2.27.0
-
+Martin K. Petersen	Oracle Linux Engineering
