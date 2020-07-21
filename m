@@ -2,171 +2,162 @@ Return-Path: <SRS0=19hD=BA=vger.kernel.org=linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BAAEC433F4
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA92C43459
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 17:42:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AD9D20720
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:44:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BB78207DD
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 17:42:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Bv94QDt4"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IM0ImzkI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730418AbgGUQoz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:44:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46778 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730267AbgGUQl4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:41:56 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B8EDC061794
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:41:56 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id s10so21793490wrw.12
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:41:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=MFwQcwbTCB4l24rfJy2kTJtSqlwy97lYiWoNwLDhtXE=;
-        b=Bv94QDt4unIJ9g6Le3faZvrFcIGk8efu0t9DqrS9Xe08GS0yPhgYLxpm3bthoS7g55
-         nQNup9hMbn2X2yPbAOWhgH8tQDdAyWHw1prXNyp7r9c8ppXY8cpTAHc7CraqSCTcZG1i
-         1WBRGKsTma+ozlyHK+r7tVJXIMgXQDd5/7aT4O9iV5mpG3WG27LUu0UgQpStGfpKOMQK
-         +550kpZLqGZJTiGepFqNu1W7hEw9EhUmL3gAf3/gML+wuw8aGgI6R52np4j913upCqnT
-         vICorkCyskx2FcuQNX7m5S8QYF2CtPvzLGAh6f4udf8kBVn8/OQWLtFynPs5vppYtOfO
-         twuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=MFwQcwbTCB4l24rfJy2kTJtSqlwy97lYiWoNwLDhtXE=;
-        b=G1MIbDfxB/mZffpavPG/GYzllO3uSfFzKUES8EMTSIzNKon5yNApRu/xykfTIsgVhN
-         uRcYh8EmRL9znRThzKuVGdiMUD4FNqmaLzvkRIabQR6XGwcg8JnW6W15TAZxf0dGGShu
-         JfeNpxaE0Sqyb8TTajq3mOJwOI9izf1SqYV3EzsmQWC6+YKqUdOk6JBoQLj/H4uqL7PF
-         lW+7fjjD3AQDDZYksiSLHBv8aKLt7lPAefCezFozOgwILxcuzemrN1KDvjZXzk1KHpMB
-         KblmJbQomebq5HMxDSryGv0Ar8Gid2moRmeQP5dXgGlfteg50cEf6FKhsDUyAtWZYQgy
-         D++w==
-X-Gm-Message-State: AOAM530Avb5mcV9pB0QkUWvsoc4mtNpD/GcMfLcaPdYr/49JBV/STh52
-        goGtjmiLWgMwlrszl3VpYuIuCw==
-X-Google-Smtp-Source: ABdhPJziFCqK2L01y45cgu4AI91SmHbfPnd9DnO0wdmDYr2+DTfRQR7mUrBTtZTp8tF2s3kh4I46rw==
-X-Received: by 2002:adf:df91:: with SMTP id z17mr964095wrl.149.1595349715049;
-        Tue, 21 Jul 2020 09:41:55 -0700 (PDT)
-Received: from localhost.localdomain ([2.27.167.94])
-        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.41.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 09:41:54 -0700 (PDT)
-From:   Lee Jones <lee.jones@linaro.org>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 02/40] scsi: aic7xxx: aic79xx_core: Remove a bunch of unused variables
-Date:   Tue, 21 Jul 2020 17:41:10 +0100
-Message-Id: <20200721164148.2617584-3-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200721164148.2617584-1-lee.jones@linaro.org>
-References: <20200721164148.2617584-1-lee.jones@linaro.org>
+        id S1730831AbgGURmO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 13:42:14 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:35009 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730805AbgGURmH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 13:42:07 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20200721174204epoutp01b17ea3c9c72a2f687a45c222c2161b4a~j1WVOTnHQ0802408024epoutp010
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 17:42:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20200721174204epoutp01b17ea3c9c72a2f687a45c222c2161b4a~j1WVOTnHQ0802408024epoutp010
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1595353324;
+        bh=jjP9Yogd6RPQu0KtJN58TDx/6/d93a8jjg+K17x3bAI=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=IM0ImzkInVStP3hSOG/Qk3XmMpXbqvws4PfzncHL1VFiirR2aSNifKdS2R8EWpiRf
+         NIH82hryfsTDaStjUmzFRwaet+LC5DFhPH1XL8qIRmzN6dq/fjoFQOeBJYrsxLJbea
+         dhDH2G0pGv8fwU9xdOxVVR9YhgH9X1KdaHxJAgHg=
+Received: from epsmges5p3new.samsung.com (unknown [182.195.42.75]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+        20200721174203epcas5p30337de22dce96877606a12f2feede272~j1WUPOFFE1008610086epcas5p3p;
+        Tue, 21 Jul 2020 17:42:03 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        62.9E.09475.AE8271F5; Wed, 22 Jul 2020 02:42:02 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200721174202epcas5p1cf62a9357c8c8fffa978946005ebf551~j1WTZqnTo0836208362epcas5p1S;
+        Tue, 21 Jul 2020 17:42:02 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200721174202epsmtrp2976177db6d3fdf6bad357ca2a8f31fd3~j1WTY6MIP1506815068epsmtrp2g;
+        Tue, 21 Jul 2020 17:42:02 +0000 (GMT)
+X-AuditID: b6c32a4b-39fff70000002503-50-5f1728ea0c91
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        35.77.08382.9E8271F5; Wed, 22 Jul 2020 02:42:01 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.108.234.165]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200721174159epsmtip2f651e157973aa10613138d5ff8901959~j1WRVSoUN2332023320epsmtip2C;
+        Tue, 21 Jul 2020 17:41:59 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Randy Dunlap'" <rdunlap@infradead.org>,
+        "'Stephen Rothwell'" <sfr@canb.auug.org.au>,
+        "'Linux Next Mailing List'" <linux-next@vger.kernel.org>
+Cc:     "'Linux Kernel Mailing List'" <linux-kernel@vger.kernel.org>,
+        "'linux-scsi'" <linux-scsi@vger.kernel.org>,
+        "'Santosh Yaraganavi'" <santosh.sy@samsung.com>,
+        "'Vinayak Holikatti'" <h.vinayak@samsung.com>,
+        "'Seungwon Jeon'" <essuuj@gmail.com>
+In-Reply-To: <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
+Subject: RE: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+Date:   Tue, 21 Jul 2020 23:11:57 +0530
+Message-ID: <06a601d65f86$3d8aeee0$b8a0cca0$@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIWmKFrqc6cTichonS6aOkZQnVssAH33GmqAhZA11+ocWkksA==
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKKsWRmVeSWpSXmKPExsWy7bCmpu4rDfF4g+nvLS2WX1jCZHF51xw2
+        i4ML2xgtuq/vYLN4e2c6i8XWvVfZHdg8Gm/cYPPYOesuu8fmFVoenzfJBbBEcdmkpOZklqUW
+        6dslcGWs7p/LVHCZq+Lo7bdsDYzPOboYOTkkBEwkpjSvYu9i5OIQEtjNKLH59V5WCOcTo8Tn
+        aS9ZIJxvjBLXP21ih2nZvHkFI0RiL6PE78Nv2CCcN4wSr5b0sYJUsQnoSuxY3AaWEBGYzijx
+        4WkXmMMs8JNR4uwtkBZODk4BR4mGztksILawgJXEnDO7wLpZBFQlvp05wAhi8wpYShx82A1l
+        C0qcnPkErJ5ZQFti2cLXzBA3KUj8fLoMrFdEwEmi798uJogacYmjP3ugalo5JD6ek4ewXSR+
+        zj7BCGELS7w6vgXqNymJz+/2At3GAWRnS/TsMoYI10gsnXeMBcK2lzhwZQ4LSAmzgKbE+l36
+        EJv4JHp/P2GC6OSV6GgTgqhWlWh+dxWqU1piYnc3K4TtIdG+fQHrBEbFWUj+moXkr1lI7p+F
+        sGwBI8sqRsnUguLc9NRi0wLjvNRyveLE3OLSvHS95PzcTYzglKPlvYPx0YMPeocYmTgYDzFK
+        cDArifDqMIrHC/GmJFZWpRblxxeV5qQWH2KU5mBREudV+nEmTkggPbEkNTs1tSC1CCbLxMEp
+        1cA021Vdo28F40TWWVn37Z9MmRCY4Barouy2817qJZUKl22bxMJ888yYdd7MrhaPU1q2tML+
+        U8AcYVW13y7ZXhuuPozftF9p+yZx93Xu+7yvb9QQe5EXeKiB/VXhR92s1+/ZPiUnHTsnrK4t
+        Wa267ZLfVJ7vm/lYG3qv+Mg6nBJTyuhkcK1kcSoTFj8t/yzI0PTmywMnbpxo/Bi9g9nt0Yf8
+        G2snsp3mKNZ5MM/bWrLssmiy23KdoN9bZ/21UJcSvhhk4bmF/+DFF937VfeqeS+N99FuKWFP
+        tjnFyu7xSt1JTD7z94fJWXria1P3zPvppKCxbMeEv24r9dccKWw+dbPpU+jWmqP9nFv2Ta9k
+        uKzEUpyRaKjFXFScCAAzuE6aqAMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJLMWRmVeSWpSXmKPExsWy7bCSvO4rDfF4gxehFssvLGGyuLxrDpvF
+        wYVtjBbd13ewWby9M53FYuveq+wObB6NN26weeycdZfdY/MKLY/Pm+QCWKK4bFJSczLLUov0
+        7RK4MlbcsC/o4Ko49mYTcwPjIo4uRk4OCQETic2bVzB2MXJxCAnsZpR48WYZK0RCWuL6xgns
+        ELawxMp/z9khil4xSvy4eJ8ZJMEmoCuxY3EbG0hCRGA6o8T5vi/MIA6zwG9GiVNtG1ggWvYy
+        Shz4dBJsFqeAo0RD52wWEFtYwEpizpldYPtYBFQlvp05wAhi8wpYShx82A1lC0qcnPkErJ5Z
+        QFvi6c2ncPayha+ZIe5TkPj5FOJuEQEnib5/u5ggasQljv7sYZ7AKDwLyahZSEbNQjJqFpKW
+        BYwsqxglUwuKc9Nziw0LDPNSy/WKE3OLS/PS9ZLzczcxgmNHS3MH4/ZVH/QOMTJxMB5ilOBg
+        VhLh1WEUjxfiTUmsrEotyo8vKs1JLT7EKM3BoiTOe6NwYZyQQHpiSWp2ampBahFMlomDU6qB
+        Kb8mt6Pa8JLnnUfODx+GzFqzafcktbbE3+snyi35GT9n1THrnr8savLbFhz6sVxtBv8iT73L
+        h9/tLCle+HvTizBLE0fR14/KOK8FeW2+fcxQTsnC/4mm85fXO2KUjuv9F8/5ZHhQOVGR66bs
+        eYeX07fGeEkrFXneuNq+UnzC14fX5ZoePXrygneiMM/7pdqrdfu+cidaer/x071VfiK+NDr/
+        +7vWtY1/+ho7JpWlnP26/9kWrq+BbE887pkX+02ofX79nm5Dqf4etiU1ntd+B367bjSltMZy
+        wWq1ZR5pu7ZouIXc2Wi+V2rrkbCsb9ybly4OEb+TWre2omL18psdbwNEMiKrmB9bH4gyWfVT
+        Ll+JpTgj0VCLuag4EQA4T0MvDAMAAA==
+X-CMS-MailID: 20200721174202epcas5p1cf62a9357c8c8fffa978946005ebf551
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4
+References: <20200720194225.17de9962@canb.auug.org.au>
+        <CGME20200720164116epcas5p2021c67d1778e737d7c695f6bdbc5b2d4@epcas5p2.samsung.com>
+        <e6112633-61c9-fa80-8479-fe90bb360868@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Question: Can 'ahd_inb(ahd, LQISTAT2);' also be safely removed?
+Hi Randy,
 
-Fixes the following W=1 kernel build warning(s):
-
- drivers/scsi/aic7xxx/aic79xx_core.c: In function ‘ahd_dump_sglist’:
- drivers/scsi/aic7xxx/aic79xx_core.c:1738:14: warning: variable ‘len’ set but not used [-Wunused-but-set-variable]
- 1738 | uint32_t len;
- | ^~~
- drivers/scsi/aic7xxx/aic79xx_core.c: In function ‘ahd_handle_seqint’:
- drivers/scsi/aic7xxx/aic79xx_core.c:1911:26: warning: variable ‘tinfo’ set but not used [-Wunused-but-set-variable]
- 1911 | struct ahd_transinfo *tinfo;
- | ^~~~~
- drivers/scsi/aic7xxx/aic79xx_core.c: In function ‘ahd_handle_transmission_error’:
- drivers/scsi/aic7xxx/aic79xx_core.c:2672:8: warning: variable ‘lqistat2’ set but not used [-Wunused-but-set-variable]
- 2672 | u_int lqistat2;
- | ^~~~~~~~
- drivers/scsi/aic7xxx/aic79xx_core.c: In function ‘ahd_update_pending_scbs’:
- drivers/scsi/aic7xxx/aic79xx_core.c:4221:31: warning: variable ‘tinfo’ set but not used [-Wunused-but-set-variable]
- 4221 | struct ahd_initiator_tinfo *tinfo;
- | ^~~~~
-
-Cc: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/scsi/aic7xxx/aic79xx_core.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index e4a09b93d00ce..243e763085a61 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -1735,10 +1735,8 @@ ahd_dump_sglist(struct scb *scb)
- 			sg_list = (struct ahd_dma64_seg*)scb->sg_list;
- 			for (i = 0; i < scb->sg_count; i++) {
- 				uint64_t addr;
--				uint32_t len;
- 
- 				addr = ahd_le64toh(sg_list[i].addr);
--				len = ahd_le32toh(sg_list[i].len);
- 				printk("sg[%d] - Addr 0x%x%x : Length %d%s\n",
- 				       i,
- 				       (uint32_t)((addr >> 32) & 0xFFFFFFFF),
-@@ -1908,7 +1906,6 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
- 			struct	scb *scb;
- 			struct	ahd_initiator_tinfo *targ_info;
- 			struct	ahd_tmode_tstate *tstate;
--			struct	ahd_transinfo *tinfo;
- 			u_int	scbid;
- 
- 			/*
-@@ -1941,7 +1938,6 @@ ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
- 							devinfo.our_scsiid,
- 							devinfo.target,
- 							&tstate);
--			tinfo = &targ_info->curr;
- 			ahd_set_width(ahd, &devinfo, MSG_EXT_WDTR_BUS_8_BIT,
- 				      AHD_TRANS_ACTIVE, /*paused*/TRUE);
- 			ahd_set_syncrate(ahd, &devinfo, /*period*/0,
-@@ -2669,7 +2665,6 @@ ahd_handle_transmission_error(struct ahd_softc *ahd)
- 	struct	scb *scb;
- 	u_int	scbid;
- 	u_int	lqistat1;
--	u_int	lqistat2;
- 	u_int	msg_out;
- 	u_int	curphase;
- 	u_int	lastphase;
-@@ -2680,7 +2675,7 @@ ahd_handle_transmission_error(struct ahd_softc *ahd)
- 	scb = NULL;
- 	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
- 	lqistat1 = ahd_inb(ahd, LQISTAT1) & ~(LQIPHASE_LQ|LQIPHASE_NLQ);
--	lqistat2 = ahd_inb(ahd, LQISTAT2);
-+	ahd_inb(ahd, LQISTAT2);
- 	if ((lqistat1 & (LQICRCI_NLQ|LQICRCI_LQ)) == 0
- 	 && (ahd->bugs & AHD_NLQICRC_DELAYED_BUG) != 0) {
- 		u_int lqistate;
-@@ -4218,13 +4213,11 @@ ahd_update_pending_scbs(struct ahd_softc *ahd)
- 	pending_scb_count = 0;
- 	LIST_FOREACH(pending_scb, &ahd->pending_scbs, pending_links) {
- 		struct ahd_devinfo devinfo;
--		struct ahd_initiator_tinfo *tinfo;
- 		struct ahd_tmode_tstate *tstate;
- 
- 		ahd_scb_devinfo(ahd, &devinfo, pending_scb);
--		tinfo = ahd_fetch_transinfo(ahd, devinfo.channel,
--					    devinfo.our_scsiid,
--					    devinfo.target, &tstate);
-+		ahd_fetch_transinfo(ahd, devinfo.channel, devinfo.our_scsiid,
-+				    devinfo.target, &tstate);
- 		if ((tstate->auto_negotiate & devinfo.target_mask) == 0
- 		 && (pending_scb->flags & SCB_AUTO_NEGOTIATE) != 0) {
- 			pending_scb->flags &= ~SCB_AUTO_NEGOTIATE;
--- 
-2.25.1
+> -----Original Message-----
+> From: Randy Dunlap <rdunlap=40infradead.org>
+> Sent: 20 July 2020 22:11
+> To: Stephen Rothwell <sfr=40canb.auug.org.au>; Linux Next Mailing List <l=
+inux-
+> next=40vger.kernel.org>
+> Cc: Linux Kernel Mailing List <linux-kernel=40vger.kernel.org>; linux-scs=
+i <linux-
+> scsi=40vger.kernel.org>; Santosh Yaraganavi <santosh.sy=40samsung.com>;
+> Vinayak Holikatti <h.vinayak=40samsung.com>; Alim Akhtar
+> <alim.akhtar=40samsung.com>; Seungwon Jeon <essuuj=40gmail.com>
+> Subject: Re: linux-next: Tree for Jul 20 (scsi/ufs/exynos)
+>=20
+> On 7/20/20 2:42 AM, Stephen Rothwell wrote:
+> > Hi all,
+> >
+> > Changes since 20200717:
+> >
+>=20
+> on x86_64:
+>=20
+> WARNING: unmet direct dependencies detected for PHY_SAMSUNG_UFS
+>   Depends on =5Bn=5D: OF =5B=3Dn=5D && (ARCH_EXYNOS =7C=7C COMPILE_TEST =
+=5B=3Dy=5D)
+>   Selected by =5By=5D:
+>   - SCSI_UFS_EXYNOS =5B=3Dy=5D && SCSI_LOWLEVEL =5B=3Dy=5D && SCSI =5B=3D=
+y=5D &&
+> SCSI_UFSHCD_PLATFORM =5B=3Dy=5D && (ARCH_EXYNOS =7C=7C COMPILE_TEST =5B=
+=3Dy=5D)
+>=20
+Thanks, will post a patch shortly.
+>=20
+> There are no build errors since <linux/of.h> provides stubs for functions=
+ when
+> CONFIG_OF is not enabled.
+>=20
+> But new warnings are not OK.
+>=20
+> thanks.
+> --
+> =7ERandy
+> Reported-by: Randy Dunlap <rdunlap=40infradead.org>
 
