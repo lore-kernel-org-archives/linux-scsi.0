@@ -7,69 +7,64 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B36C3C433E4
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:44:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2673FC433E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:44:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90BB122482
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:44:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06C3F207BB
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:44:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="LpGWutRN"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="OobXBbuj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730312AbgGUQoO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:44:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46930 "EHLO
+        id S1730311AbgGUQoT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 12:44:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730668AbgGUQm0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:42:26 -0400
-Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AC29C0619DD
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:26 -0700 (PDT)
-Received: by mail-wm1-x342.google.com with SMTP id c80so3493579wme.0
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:26 -0700 (PDT)
+        with ESMTP id S1730663AbgGUQmZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:42:25 -0400
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5141DC0619DA
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:25 -0700 (PDT)
+Received: by mail-wm1-x341.google.com with SMTP id f18so3544924wml.3
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=NlNHMHfamoMPmJrUb8frNLzKxuzuwwYQiNIBCGNRN3Y=;
-        b=LpGWutRNDDGbBfDluzeZmrFjdybeakSXXV6IzwT/bs2I8ayF22tzzT9Qy4UeMGsh+1
-         sDN+M+xKUjurEqBlsNLJzpn/VCb0P4cPgwcmdRYkUPSMFfq1eHX0kPDcPDwmw9hQsJdz
-         feF2XVv0JdW4gpsABcL2PM6LUgi6p3U+aEl0q+8nhtaZDzVPM2ODjwE70cDvHZXkgBST
-         dgf8/0x0YbaehjZgzG21wmFt8cH6zoB5Fx27Im5NV5XPTm+mWSlX1+CbNmjQHX6zieO/
-         6ubx2pyw92+bs3yhriJOZHhtIf/gTD4Q/U/J+Z+sCue/dzmf8nkSduhEYYd4dMZ6CaYo
-         BpsA==
+        bh=/DfSYRPuRwDcPXXqc0SkXKNuKhOq3WxfJnslE6gkykI=;
+        b=OobXBbuj8BXy7mxmqZ9lX3C6YZTdndsi68EQRxDPxDSwvzxVt94A1vr9qebthKSX1E
+         BSkIMCjgIQ6E6GmrSI09RyBhj1JSIZ/hBcjTF79Sc5FY5DjB7JmuHTqPmliMEs15EPqu
+         oQmSniWokczz+cHa6qzQWZNx3zxSwq6kKvgTv5WGCC02AvUm7R4/J7jpiJ8LYNBrt9jQ
+         EKyXMgmeSAGjBa5g9d1vvyqa8lF+2334CXDSHWnN/YyCNFnxnVjan8hn1ezjAV7WngP+
+         fX2D6NI4rvxEim8PZUjsFVI8kBUttfPPpK4M5RIQ87JxJoNLgQH7xFiJY9HhNVwXEP7Y
+         /6zg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=NlNHMHfamoMPmJrUb8frNLzKxuzuwwYQiNIBCGNRN3Y=;
-        b=dynh+b/Y9Xc7D3rjkfiw1j5rI82Zkwg8WGjpelc8svukNux5ib6oGAItT2iGB3Fon9
-         NHXm7vPEmtyT4njCJwmiavRszGPNPtwNin5n3yl+VUioYbUDr14ZpbbyHf1yFA4EGNCE
-         +stvVbuCy5nuCAWCfXXUylKcIg47zVDFNUgi1r/fsElZhMRTcb+viO06JNpkClQbni3g
-         4iaZCkNdrawFYJrro9offWvHESsraFRGtnd6WvbeEGeplcf55ZYSs3ueFLiPiV8C5OO1
-         DGSW1TWCUCIAC2103XFcEnwqU/YMyKCAHQAWJyy5SxoI+Vel5a+vr4zSmeRiH5ks4TB9
-         H54A==
-X-Gm-Message-State: AOAM5313Oq8+vZ/h2Fm/6sgeUl7rKdyO74qV9sYmvZKbFMHXLHuj5gde
-        HZBcmoQ4cdgRSGAmMwhad/1PfA==
-X-Google-Smtp-Source: ABdhPJwHJOCPpMHirhA5AzA1uKZfGURLoMQ//Npq9re6B1i5CNE254w0YYLI3gaarCY06m7S3TvxKw==
-X-Received: by 2002:a1c:6354:: with SMTP id x81mr4633604wmb.98.1595349745126;
-        Tue, 21 Jul 2020 09:42:25 -0700 (PDT)
-Received: from localhost.localdomain ([2.27.167.94])
-        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.42.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=/DfSYRPuRwDcPXXqc0SkXKNuKhOq3WxfJnslE6gkykI=;
+        b=RGyuls5MlnFRMW5gqR2uwKThHLVow80mhFOEzwk1LpbMYYGzc6I3KisIv9Y4Cav6Zz
+         lhXCafSIlV49dPmCd/StFmZa3+qK9GtqtsxyrOrC4yKVxseUkNL0Hn0+qvjimYSNSTmC
+         mByysqVN2E8pellHcqVsyv9h655i6lWwR5cXAs7f8pL3wYv3XEMMDgZS89pCXcekHhFg
+         xSRWGIlQqOc9svyCOUGjttdsaCpNXvMfW94otgyvQ+ovJwjcYugRlUhCV7IZOPeAlXo6
+         aqPMLEMq9vHtoJgmaYdP3IoeQqymZiWoRweVsKZD2E5kcEgBdxOutH8X/cSjCyDYR7xV
+         49zw==
+X-Gm-Message-State: AOAM530so2RCK+dMdLrBaMm69mvj2Thj3GdtEp669GImXMkCNKFsDuSY
+        tspjOQGLmofQxY6HUUy/c7+dcR2cVeM=
+X-Google-Smtp-Source: ABdhPJydaVuSz6VEZdqx4BxqlWT6OyeufNBNKbKgo2Mb6MJzngrznAqYt3BAmNRT2WLVVJ7G+2OS4Q==
+X-Received: by 2002:a05:600c:204d:: with SMTP id p13mr4778452wmg.88.1595349744035;
         Tue, 21 Jul 2020 09:42:24 -0700 (PDT)
+Received: from localhost.localdomain ([2.27.167.94])
+        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.42.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jul 2020 09:42:23 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org
-Subject: [PATCH 20/40] scsi: lpfc: lpfc_sli: Remove unused variable 'pg_addr'
-Date:   Tue, 21 Jul 2020 17:41:28 +0100
-Message-Id: <20200721164148.2617584-21-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@qlogic.com
+Subject: [PATCH 19/40] scsi: qla4xxx: ql4_nx: Move 'qla4_82xx_reg_tbl' to the only place its used
+Date:   Tue, 21 Jul 2020 17:41:27 +0100
+Message-Id: <20200721164148.2617584-20-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200721164148.2617584-1-lee.jones@linaro.org>
 References: <20200721164148.2617584-1-lee.jones@linaro.org>
@@ -83,38 +78,77 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/lpfc/lpfc_sli.c: In function ‘lpfc_wq_create’:
- drivers/scsi/lpfc/lpfc_sli.c:15810:16: warning: variable ‘pg_addr’ set but not used [-Wunused-but-set-variable]
- 15810 | unsigned long pg_addr;
- | ^~~~~~~
+ In file included from drivers/scsi/qla4xxx/ql4_def.h:43,
+ from drivers/scsi/qla4xxx/ql4_mbx.c:9:
+ drivers/scsi/qla4xxx/ql4_nx.h:602:23: warning: ‘qla4_82xx_reg_tbl’ defined but not used [-Wunused-const-variable=]
+ 602 | static const uint32_t qla4_82xx_reg_tbl[] = {
+ | ^~~~~~~~~~~~~~~~~
+ [...]
+ NB: Lots of these
 
-Cc: James Smart <james.smart@broadcom.com>
-Cc: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: Sumit Semwal <sumit.semwal@linaro.org>
-Cc: "Christian König" <christian.koenig@amd.com>
-Cc: linux-media@vger.kernel.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: linaro-mm-sig@lists.linaro.org
+Cc: QLogic-Storage-Upstream@qlogic.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_nx.h | 17 -----------------
+ drivers/scsi/qla4xxx/ql4_os.c | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 92fc6527e7ee6..86e5f8c75ba4e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -15998,9 +15998,9 @@ lpfc_wq_create(struct lpfc_hba *phba, struct lpfc_queue *wq,
- 					wq->queue_id, pci_barset, db_offset,
- 					wq->dpp_id, dpp_barset, dpp_offset);
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ql4_nx.h
+index 98fe78613eb7b..b7a6e7f169ca9 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.h
++++ b/drivers/scsi/qla4xxx/ql4_nx.h
+@@ -599,23 +599,6 @@ enum qla_regs {
+ 	QLA8XXX_CRB_TEMP_STATE,
+ };
  
-+#ifdef CONFIG_X86
- 			/* Enable combined writes for DPP aperture */
- 			pg_addr = (unsigned long)(wq->dpp_regaddr) & PAGE_MASK;
--#ifdef CONFIG_X86
- 			rc = set_memory_wc(pg_addr, 1);
- 			if (rc) {
- 				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-static const uint32_t qla4_82xx_reg_tbl[] = {
+-	QLA82XX_PEG_HALT_STATUS1,
+-	QLA82XX_PEG_HALT_STATUS2,
+-	QLA82XX_PEG_ALIVE_COUNTER,
+-	QLA82XX_CRB_DRV_ACTIVE,
+-	QLA82XX_CRB_DEV_STATE,
+-	QLA82XX_CRB_DRV_STATE,
+-	QLA82XX_CRB_DRV_SCRATCH,
+-	QLA82XX_CRB_DEV_PART_INFO,
+-	QLA82XX_CRB_DRV_IDC_VERSION,
+-	QLA82XX_FW_VERSION_MAJOR,
+-	QLA82XX_FW_VERSION_MINOR,
+-	QLA82XX_FW_VERSION_SUB,
+-	CRB_CMDPEG_STATE,
+-	CRB_TEMP_STATE,
+-};
+-
+ /* Every driver should use these Device State */
+ #define QLA8XXX_DEV_COLD		1
+ #define QLA8XXX_DEV_INITIALIZING	2
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 27064c602dc70..2572f7aef8f88 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -188,6 +188,23 @@ static int qla4xxx_sysfs_ddb_logout_sid(struct iscsi_cls_session *cls_sess);
+ static struct qla4_8xxx_legacy_intr_set legacy_intr[] =
+     QLA82XX_LEGACY_INTR_CONFIG;
+ 
++static const uint32_t qla4_82xx_reg_tbl[] = {
++	QLA82XX_PEG_HALT_STATUS1,
++	QLA82XX_PEG_HALT_STATUS2,
++	QLA82XX_PEG_ALIVE_COUNTER,
++	QLA82XX_CRB_DRV_ACTIVE,
++	QLA82XX_CRB_DEV_STATE,
++	QLA82XX_CRB_DRV_STATE,
++	QLA82XX_CRB_DRV_SCRATCH,
++	QLA82XX_CRB_DEV_PART_INFO,
++	QLA82XX_CRB_DRV_IDC_VERSION,
++	QLA82XX_FW_VERSION_MAJOR,
++	QLA82XX_FW_VERSION_MINOR,
++	QLA82XX_FW_VERSION_SUB,
++	CRB_CMDPEG_STATE,
++	CRB_TEMP_STATE,
++};
++
+ static const uint32_t qla4_83xx_reg_tbl[] = {
+ 	QLA83XX_PEG_HALT_STATUS1,
+ 	QLA83XX_PEG_HALT_STATUS2,
 -- 
 2.25.1
 
