@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9A44C433F8
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 10:55:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A6D5C433E2
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 10:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89B1A2073A
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 10:55:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F9D2065E
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 10:55:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D/wdza+A"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GVBh5eoW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729428AbgGUKzG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 06:55:06 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:46560 "EHLO
+        id S1729463AbgGUKzY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 06:55:24 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:27966 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728028AbgGUKzF (ORCPT
+        by vger.kernel.org with ESMTP id S1728028AbgGUKzW (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Jul 2020 06:55:05 -0400
+        Tue, 21 Jul 2020 06:55:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595328904;
+        s=mimecast20190719; t=1595328920;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xgMI0PUysaqC29ZhpllDxU2MZgp5OTSppOCpTSOb14s=;
-        b=D/wdza+AVIj8gJlc3gELCshQS92ZfLEv56cJfXrhdF4trp6rH740vZ5aJkW57wHji2bFC5
-        sSe6accOtICRnRYKpporTwSM4N5vf9CbsdKHwLUFXelhPjTxm+lyHw4bNiLt5Cea+gT+cs
-        DQoWcXCDIMxLybXQblxZnxvK/f9k7wA=
+        bh=SJjcpKw0ZA3kjqBFD5ZKn58x1VX76xeTbrTHk9kDWMo=;
+        b=GVBh5eoWWTyRsccK902MlQ2TX9xI1an+5KES22KnruMk4snydYoiQ6mvoM29+peYSLkcaW
+        vqA78HF/D2ri+RX8cIpO6uuKegQg1dYtxR1sGrl2YtMlK6zxI/xT+FcP8nmNgRUyjwhxOL
+        mGOD8ea8vm7tRA2Ju8pvDY+aWbG2vis=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-288-aJsSQekbMPSFFHYbUkQrHg-1; Tue, 21 Jul 2020 06:55:03 -0400
-X-MC-Unique: aJsSQekbMPSFFHYbUkQrHg-1
+ us-mta-133-ev4DS7OXNkerwJINJoEjIA-1; Tue, 21 Jul 2020 06:55:18 -0400
+X-MC-Unique: ev4DS7OXNkerwJINJoEjIA-1
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EF672107ACCA;
-        Tue, 21 Jul 2020 10:54:59 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AE4E98015FB;
+        Tue, 21 Jul 2020 10:55:15 +0000 (UTC)
 Received: from localhost.localdomain (unknown [10.35.206.163])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 23A671C4;
-        Tue, 21 Jul 2020 10:54:49 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5CF461C4;
+        Tue, 21 Jul 2020 10:55:00 +0000 (UTC)
 From:   Maxim Levitsky <mlevitsk@redhat.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Keith Busch <kbusch@kernel.org>,
@@ -74,9 +74,9 @@ Cc:     Keith Busch <kbusch@kernel.org>,
         NET DRIVERS), "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Alex Dubov <oakad@yahoo.com>,
         Maxim Levitsky <mlevitsk@redhat.com>
-Subject: [PATCH 07/10] block: mspro_blk: use blk_is_valid_logical_block_size
-Date:   Tue, 21 Jul 2020 13:52:36 +0300
-Message-Id: <20200721105239.8270-8-mlevitsk@redhat.com>
+Subject: [PATCH 08/10] block: nvme: use blk_is_valid_logical_block_size
+Date:   Tue, 21 Jul 2020 13:52:37 +0300
+Message-Id: <20200721105239.8270-9-mlevitsk@redhat.com>
 In-Reply-To: <20200721105239.8270-1-mlevitsk@redhat.com>
 References: <20200721105239.8270-1-mlevitsk@redhat.com>
 MIME-Version: 1.0
@@ -87,28 +87,50 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This replaces manual checking in the driver
+
 Signed-off-by: Maxim Levitsky <mlevitsk@redhat.com>
 ---
- drivers/memstick/core/mspro_block.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/nvme/host/core.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
-index cd6b8d4f23350..86c9eb0aef512 100644
---- a/drivers/memstick/core/mspro_block.c
-+++ b/drivers/memstick/core/mspro_block.c
-@@ -1199,6 +1199,12 @@ static int mspro_block_init_disk(struct memstick_dev *card)
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index add040168e67e..8014b3046992a 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -1849,10 +1849,16 @@ static void nvme_update_disk_info(struct gendisk *disk,
+ 	unsigned short bs = 1 << ns->lba_shift;
+ 	u32 atomic_bs, phys_bs, io_opt = 0;
  
- 	msb->page_size = be16_to_cpu(sys_info->unit_size);
- 
-+	if (!(blk_is_valid_logical_block_size(msb->page_size))) {
-+		dev_warn(&card->dev,
-+			 "unsupported block size %d", msb->page_size);
-+		return -EINVAL;
-+	}
+-	if (ns->lba_shift > PAGE_SHIFT) {
+-		/* unsupported block size, set capacity to 0 later */
++	/*
++	 * The block layer can't support LBA sizes larger than the page size
++	 * yet, so catch this early and don't allow block I/O.
++	 */
 +
- 	mutex_lock(&mspro_block_disk_lock);
- 	disk_id = idr_alloc(&mspro_block_disk_idr, card, 0, 256, GFP_KERNEL);
- 	mutex_unlock(&mspro_block_disk_lock);
++	if (!blk_is_valid_logical_block_size(bs)) {
+ 		bs = (1 << 9);
++		capacity = 0;
+ 	}
++
+ 	blk_mq_freeze_queue(disk->queue);
+ 	blk_integrity_unregister(disk);
+ 
+@@ -1887,13 +1893,6 @@ static void nvme_update_disk_info(struct gendisk *disk,
+ 	blk_queue_io_min(disk->queue, phys_bs);
+ 	blk_queue_io_opt(disk->queue, io_opt);
+ 
+-	/*
+-	 * The block layer can't support LBA sizes larger than the page size
+-	 * yet, so catch this early and don't allow block I/O.
+-	 */
+-	if (ns->lba_shift > PAGE_SHIFT)
+-		capacity = 0;
+-
+ 	/*
+ 	 * Register a metadata profile for PI, or the plain non-integrity NVMe
+ 	 * metadata masquerading as Type 0 if supported, otherwise reject block
 -- 
 2.26.2
 
