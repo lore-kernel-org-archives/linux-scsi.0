@@ -4,67 +4,67 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D1CC433EA
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 044F7C433FB
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:43:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0B3220792
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:43:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D361320792
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Jul 2020 16:43:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="UQ2hj2xg"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SEGxwNgS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730867AbgGUQng (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:43:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47012 "EHLO
+        id S1730745AbgGUQml (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Jul 2020 12:42:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730752AbgGUQmm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:42:42 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4980EC0619DB
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:42 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id b6so21834539wrs.11
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:42 -0700 (PDT)
+        with ESMTP id S1730703AbgGUQmk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jul 2020 12:42:40 -0400
+Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD990C061794
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:39 -0700 (PDT)
+Received: by mail-wm1-x344.google.com with SMTP id f18so3545557wml.3
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Jul 2020 09:42:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=7qx4BAfYgDhhPFQDU/HlyqhYfKsFS4W9mjWfkuFuELo=;
-        b=UQ2hj2xg+Ir7KK2smznJVWTNOEUecpXzU+TAPLzCs6aF3Wyo8+OYyOfbAvGh5Gxmac
-         s2GKxxFFysDjGsh2Z7jd2ZE416w9W8E2GolsKMgXWJx1IfSOlFbdPGHM8jljcMIyjDRl
-         mDxD2wZ0uC1LO0xOeui+6tWArVFjAIJDSTnP7F0kiLOqlLtdaA4BNpiTD+5wE1yAvAdz
-         tIQ4LT1G/dlRmBxhY6HEzD+xNDZZ5RS439RU+8GAzFHUD1aij52J0VjE+Pl8fgmzGj4D
-         apYHyYOKUhJlUG3H9CPtP5W5UYPfyMPQfsKYMU64oqjbiEi5r29DpgXY8ZP7oX2aLJqn
-         cyvA==
+        bh=GNx0HLKx8SNwi5NCKk3KgzSECetqXmKRuN1En1r1+so=;
+        b=SEGxwNgS+ohPWrCnMOok63z4miMvvk9BALkOQD6nUPnCKwDIAL0tSQ2WB9phectVUC
+         CUpsIcMZQUm2j+QIXsLcT7A6VkkkX5MWG02OcL7pVqK30gf2quvJAkxFXVHtIK/cbK6X
+         /Bok12nkAqg21bEFbjZ6aXLLNXQkemfIfBQyhjL/nwn9MsDeZprwbmz9Cyh1ntafR+E+
+         EMSPG06ow6zLVICMRHFeRN9LOKnTND3cT+DkIXoQUhumMmNQ6b/P9hMUCw8z5fY2ZCLy
+         Y2KsGwI83xPLeVzLdNBMP6rFxPD8MMGS8DO9UyHe2Ls57tH5KbZRx5WzRU2tXISNXDLU
+         hngg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7qx4BAfYgDhhPFQDU/HlyqhYfKsFS4W9mjWfkuFuELo=;
-        b=Am3oZuXm8wsMG02/YUVUf7/0UXmNSENgxKN+eSF2Fkn0TGjr98ppobHG4zCfxvr/qc
-         2GOjZbr0TKLtjEM92GUZRkYfXeYqq9zg9Aqb76PIdHihRfAIXpQ40CeLEejiGfa0plbg
-         fVpFuuenrIDdxU5cJMRrNhJC3mKJzs5/lDtkiQMEpiEzChxU9/dJWiU2tZYC02fFZ25f
-         RC0o4Jx3I7EdY9+Kx4UqnyWv0WmEfQOv6KRmuaottWCb13Ta5/Ki0SGV9KgOpDB+wqCE
-         zMdX9lT6oWotRuNwm6vKlDyK3dlIIdEMG0NmbMz493pO0OVj0189Obnydlf6C8kQc0rq
-         T9cQ==
-X-Gm-Message-State: AOAM533QwDPv3t/1pX7B2b5fPcwRKubVHlcWEnY/hFNSMB7G7rlnU76O
-        3P84fGYf/dvICuDk5pbLb72Slg==
-X-Google-Smtp-Source: ABdhPJza5eVdSeLB7HzXvhvbIEwD9pYzG9hkDzvYndt+77Ma1UqLtJqNJ76R7lpCbMqX/7lkigosJw==
-X-Received: by 2002:a5d:6651:: with SMTP id f17mr29597442wrw.29.1595349761060;
-        Tue, 21 Jul 2020 09:42:41 -0700 (PDT)
+        bh=GNx0HLKx8SNwi5NCKk3KgzSECetqXmKRuN1En1r1+so=;
+        b=Ck2uM7vP5RqLYJSMGp3vz4nE36zb+Z23uwQDI5XahNh9EdIlyBM64hsmurSsaqxJRy
+         GYX7DyiYzz1UCChS83tUk6dVtoO1h0t2CfrccEiUTWsobYEx98fNmjpErV4uyoZAHuuU
+         58NCvO0ugkrMczvAf6rOeq36R7ojY6kz3DKVyGp1NR1sw5gUv+Q4W7VrPi6muBH5Yzp3
+         ZbescaNZJxdBnKKYqgFbYVU50mCIdTAZBkW4st9LFV+cxAod8dziKUUj+EZRurnskLse
+         SKDpvuy4uXtX38ZHGgDSap9ovrfunDJfnmdO/J63+Tr/YnmEoMWS9Qkw/S6L91PWwyTd
+         nrCw==
+X-Gm-Message-State: AOAM532rY081hJzQgxeBor8Tf3vTbDH8lSydPPaPMXuprQnEz+rI6rif
+        SuvlKYNJW11Wn4C3tz5Ji8Nr7A==
+X-Google-Smtp-Source: ABdhPJxkqvmxb9k9EDUl+XhDKXZeqvSH8vbe1NbQeXiyNhsQ6SYWAsuS6uS16leWhm1jQWtAiDHPyQ==
+X-Received: by 2002:a1c:7209:: with SMTP id n9mr4884978wmc.150.1595349758608;
+        Tue, 21 Jul 2020 09:42:38 -0700 (PDT)
 Received: from localhost.localdomain ([2.27.167.94])
-        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.42.40
+        by smtp.gmail.com with ESMTPSA id m4sm3933524wmi.48.2020.07.21.09.42.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Jul 2020 09:42:40 -0700 (PDT)
+        Tue, 21 Jul 2020 09:42:38 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         Lee Jones <lee.jones@linaro.org>,
-        Saurav Girepunje <saurav.girepunje@gmail.com>
-Subject: [PATCH 31/40] scsi: csiostor: csio_init: Fix misnamed function parameter
-Date:   Tue, 21 Jul 2020 17:41:39 +0100
-Message-Id: <20200721164148.2617584-32-lee.jones@linaro.org>
+        QLogic-Storage-Upstream@qlogic.com
+Subject: [PATCH 29/40] scsi: qla4xxx: ql4_init: Document qla4xxx_process_ddb()'s 'conn_err'
+Date:   Tue, 21 Jul 2020 17:41:37 +0100
+Message-Id: <20200721164148.2617584-30-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200721164148.2617584-1-lee.jones@linaro.org>
 References: <20200721164148.2617584-1-lee.jones@linaro.org>
@@ -77,28 +77,26 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/scsi/csiostor/csio_init.c:595: warning: Function parameter or member 'pln' not described in 'csio_shost_init'
- drivers/scsi/csiostor/csio_init.c:595: warning: Excess function parameter 'os_pln' description in 'csio_shost_init'
+ drivers/scsi/qla4xxx/ql4_init.c:1170: warning: Function parameter or member 'conn_err' not described in 'qla4xxx_process_ddb_changed'
 
-Cc: Saurav Girepunje <saurav.girepunje@gmail.com>
+Cc: QLogic-Storage-Upstream@qlogic.com
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/scsi/csiostor/csio_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla4xxx/ql4_init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
-index 8dea7d53788a9..390b07bf92b97 100644
---- a/drivers/scsi/csiostor/csio_init.c
-+++ b/drivers/scsi/csiostor/csio_init.c
-@@ -582,7 +582,7 @@ csio_hw_free(struct csio_hw *hw)
-  * @hw:		The HW module.
-  * @dev:	The device associated with this invocation.
-  * @probe:	Called from probe context or not?
-- * @os_pln:	Parent lnode if any.
-+ * @pln:	Parent lnode if any.
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 4afd43610f68f..4a7ef971a387c 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -1161,6 +1161,7 @@ int qla4xxx_flash_ddb_change(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+  * @ha: Pointer to host adapter structure.
+  * @fw_ddb_index: Firmware's device database index
+  * @state: Device state
++ * @conn_err: Unused
   *
-  * Allocates lnode structure via scsi_host_alloc, initializes
-  * shost, initializes lnode module and registers with SCSI ML
+  * This routine processes a Decive Database Changed AEN Event.
+  **/
 -- 
 2.25.1
 
